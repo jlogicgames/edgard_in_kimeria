@@ -1,0 +1,45 @@
+[workspace]
+members = ["."]
+
+[package]
+name = "edgard_in_kimeria"
+version = "0.0.1"
+edition = "2024"
+description = "Edgard in Kimeria — Bevy port of the Flutter/Flame platformer."
+license = "MIT"
+publish = false
+
+[dependencies]
+# `wav` is not a default feature, and every sound in assets/audio is an 8-bit
+# PCM .wav; without it rodio panics on the first sound played.
+bevy = { version = "0.19", features = ["wav"] }
+bevy_ecs_tiled = "0.13"
+bevy_ecs_tilemap = "0.19"
+rand = "0.9"
+
+[features]
+default = []
+# `cargo run --features dev`
+#   file_watcher:    hot-reloads anything under assets/, WGSL included. This is
+#                    the reason the feature exists.
+#   dynamic_linking: links Bevy as a shared library. Measured on this crate,
+#                    touching one file: 3.4s -> 2.5s. Modest, and it makes the
+#                    binary depend on libbevy_dylib from target/.
+dev = ["bevy/dynamic_linking", "bevy/file_watcher"]
+
+# Debug builds are unplayable without optimised dependencies (sprite decode,
+# tilemap upload). Keep our own crate cheap to rebuild.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Shipping build. Conventional settings, not a tuned result: no frame-rate
+# comparison against a plain --release build has been made. Costs about 6
+# minutes from clean and yields a 56 MB binary.
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
