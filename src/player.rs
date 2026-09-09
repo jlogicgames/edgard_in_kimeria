@@ -550,11 +550,17 @@ fn update_bullet_time(
     };
     let player_box = hitbox.world_rect(mirrored_pos(**pos, hitbox, size.x, facing.right));
 
-    let near_bat = bats.iter().any(|(bat_pos, bat_hitbox, bat_size, bat_facing)| {
-        let bat_box =
-            bat_hitbox.world_rect(mirrored_pos(**bat_pos, bat_hitbox, bat_size.x, bat_facing.right));
-        rect_distance(player_box, bat_box) < BAT_SLOWDOWN_RANGE
-    });
+    let near_bat = bats
+        .iter()
+        .any(|(bat_pos, bat_hitbox, bat_size, bat_facing)| {
+            let bat_box = bat_hitbox.world_rect(mirrored_pos(
+                **bat_pos,
+                bat_hitbox,
+                bat_size.x,
+                bat_facing.right,
+            ));
+            rect_distance(player_box, bat_box) < BAT_SLOWDOWN_RANGE
+        });
 
     let target = if near_bat { SLOW_TIME_SCALE } else { 1.0 };
     if (virtual_time.relative_speed() - target).abs() > f32::EPSILON {

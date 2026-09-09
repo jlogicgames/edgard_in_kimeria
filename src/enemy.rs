@@ -397,7 +397,14 @@ fn red_mob_attack_state(
 fn touch_damage(
     mut commands: Commands,
     players: Query<
-        (&GamePos, &Hitbox, &BoxSize, &Facing, &PlayerStatus, &PlayerRoutine),
+        (
+            &GamePos,
+            &Hitbox,
+            &BoxSize,
+            &Facing,
+            &PlayerStatus,
+            &PlayerRoutine,
+        ),
         With<Player>,
     >,
     bats: Query<(&GamePos, &Hitbox, &BoxSize, &Facing), (With<Bat>, Without<Dying>)>,
@@ -412,8 +419,12 @@ fn touch_damage(
     let player_box = hitbox.world_rect(mirrored_pos(**pos, hitbox, size.x, facing.right));
 
     for (bat_pos, bat_hitbox, bat_size, bat_facing) in &bats {
-        let bat_box =
-            bat_hitbox.world_rect(mirrored_pos(**bat_pos, bat_hitbox, bat_size.x, bat_facing.right));
+        let bat_box = bat_hitbox.world_rect(mirrored_pos(
+            **bat_pos,
+            bat_hitbox,
+            bat_size.x,
+            bat_facing.right,
+        ));
         if !player_box.intersect(bat_box).is_empty() && !status.attacking {
             commands.trigger(PlayerKilled);
             return;
@@ -424,8 +435,12 @@ fn touch_damage(
         if mob.kind != MobKind::Yellow {
             continue;
         }
-        let mob_box =
-            mob_hitbox.world_rect(mirrored_pos(**mob_pos, mob_hitbox, mob_size.x, mob_facing.right));
+        let mob_box = mob_hitbox.world_rect(mirrored_pos(
+            **mob_pos,
+            mob_hitbox,
+            mob_size.x,
+            mob_facing.right,
+        ));
         if !player_box.intersect(mob_box).is_empty() && !status.attacking {
             commands.trigger(EnemyStomped {
                 entity,
