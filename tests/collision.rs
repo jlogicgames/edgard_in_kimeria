@@ -100,8 +100,16 @@ fn facing_left_mirrors_the_hitbox_in_place() {
     // x = pos.x + 19 .. + 30, versus pos.x + 18 .. + 29 facing right. Only 1px
     // apart — nothing like Flame's anchor-relative scale flip, which would
     // reflect the hitbox all the way out past the box's left edge.
-    let low_wall = block(BlockKind::Solid, Vec2::new(99.0, 20.0), Vec2::new(1.0, 40.0));
-    let high_wall = block(BlockKind::Solid, Vec2::new(110.0, 20.0), Vec2::new(1.0, 40.0));
+    let low_wall = block(
+        BlockKind::Solid,
+        Vec2::new(99.0, 20.0),
+        Vec2::new(1.0, 40.0),
+    );
+    let high_wall = block(
+        BlockKind::Solid,
+        Vec2::new(110.0, 20.0),
+        Vec2::new(1.0, 40.0),
+    );
 
     // Facing right: hitbox is x = 99..110. Touches `low_wall`'s far edge (no
     // overlap) and falls just short of `high_wall`.
