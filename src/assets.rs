@@ -37,11 +37,15 @@ const SOUND_PATHS: &[&str] = &[
     "audio/disappear.wav",
 ];
 
+/// Looping background music, by asset path.
+const MUSIC_MAIN_MENU: &str = "audio/main_menu.mp3";
+
 /// Handles held during [`AppState::Loading`] so nothing is dropped mid-load.
 #[derive(Resource, Default)]
 struct LoadingHandles {
     images: Vec<Handle<Image>>,
     sounds: Vec<Handle<AudioSource>>,
+    music_main_menu: Handle<AudioSource>,
 }
 
 /// Everything spawn code needs, resolved once at startup.
@@ -49,6 +53,8 @@ struct LoadingHandles {
 pub struct GameAssets {
     pub images: HashMap<String, Handle<Image>>,
     pub sounds: HashMap<String, Handle<AudioSource>>,
+    /// Looping track for [`AppState::MainMenu`].
+    pub music_main_menu: Handle<AudioSource>,
     pub player: AnimationSet,
     pub bat: AnimationSet,
     pub yellow_mob: AnimationSet,
@@ -89,6 +95,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(LoadingHandles {
         images: IMAGE_PATHS.iter().map(|p| asset_server.load(*p)).collect(),
         sounds: SOUND_PATHS.iter().map(|p| asset_server.load(*p)).collect(),
+        music_main_menu: asset_server.load(MUSIC_MAIN_MENU),
     });
 }
 
@@ -104,7 +111,8 @@ fn finish_loading(
         .images
         .iter()
         .map(|h| h.id().untyped())
-        .chain(handles.sounds.iter().map(|h| h.id().untyped()));
+        .chain(handles.sounds.iter().map(|h| h.id().untyped()))
+        .chain(std::iter::once(handles.music_main_menu.id().untyped()));
     for id in pending {
         match asset_server.get_load_state(id) {
             Some(LoadState::Loaded) => {}
@@ -137,7 +145,13 @@ fn finish_loading(
             .size()
     };
 
-    let assets = build_game_assets(&image_map, &size_of, &mut layouts, sound_map);
+    let assets = build_game_assets(
+        &image_map,
+        &size_of,
+        &mut layouts,
+        sound_map,
+        handles.music_main_menu.clone(),
+    );
     commands.insert_resource(assets);
     commands.remove_resource::<LoadingHandles>();
     next_state.set(AppState::MainMenu);
@@ -152,6 +166,7 @@ fn build_game_assets(
     size_of: &dyn Fn(&str) -> UVec2,
     layouts: &mut Assets<TextureAtlasLayout>,
     sounds: HashMap<String, Handle<AudioSource>>,
+    music_main_menu: Handle<AudioSource>,
 ) -> GameAssets {
     let mut clip = |path: &str, spec: ClipSpec| -> AnimationClip {
         spec.build(image_map[path].clone(), size_of(path), layouts)
@@ -317,6 +332,7 @@ fn build_game_assets(
     GameAssets {
         images: image_map.clone(),
         sounds,
+        music_main_menu,
         player,
         bat,
         yellow_mob,

@@ -5,14 +5,15 @@ members = ["."]
 name = "edgard_in_kimeria"
 version = "0.0.1"
 edition = "2024"
-description = "Edgard in Kimeria — Bevy port of the Flutter/Flame platformer."
+description = "Edgard in Kimeria"
 license = "MIT"
 publish = false
 
 [dependencies]
-# `wav` is not a default feature, and every sound in assets/audio is an 8-bit
-# PCM .wav; without it rodio panics on the first sound played.
-bevy = { version = "0.19", features = ["wav"] }
+# `wav` is not a default feature, and every one-shot sound in assets/audio is an
+# 8-bit PCM .wav; without it rodio panics on the first sound played. `mp3` is
+# likewise off by default and is needed to decode the main-menu music track.
+bevy = { version = "0.19", features = ["wav", "mp3"] }
 bevy_ecs_tiled = "0.13"
 bevy_ecs_tilemap = "0.19"
 rand = "0.9"
