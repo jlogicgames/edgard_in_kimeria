@@ -58,51 +58,71 @@ impl Plugin for AudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<PlaySound>()
             .add_systems(Update, (play_sounds, advance_music_fades))
-            .add_systems(OnEnter(AppState::MainMenu), start_menu_music)
-            .add_systems(OnExit(AppState::MainMenu), fade_out_menu_music);
+            .add_systems(
+                Update,
+                // `AppState::Loading` has no `GameAssets` yet, and this
+                // version's default error handler panics on a missing `Res`
+                // rather than skipping the system, unlike an `Option<Res<_>>`
+                // parameter (used in `play_sounds`) would.
+                sync_menu_music.run_if(resource_exists::<GameAssets>),
+            );
     }
 }
 
-/// Loops `assets/audio/main_menu.mp3` while the main menu is up, fading it in
-/// from silence.
-fn start_menu_music(mut commands: Commands, settings: Res<GameSettings>, assets: Res<GameAssets>) {
-    if !settings.play_sounds {
-        return;
-    }
-    commands.spawn((
-        AudioPlayer(assets.music_main_menu.clone()),
-        PlaybackSettings::LOOP.with_volume(Volume::Linear(0.0)),
-        MusicFade {
-            elapsed: 0.0,
-            duration: MUSIC_FADE_IN,
-            from: 0.0,
-            to: settings.sound_volume,
-            despawn_on_end: false,
-        },
-        MainMenuMusic,
-        Name::new("Music:main_menu"),
-    ));
-}
-
-/// Ramp the menu music down to silence, then despawn it once it lands there.
-fn fade_out_menu_music(
+/// Keeps `assets/audio/main_menu.mp3` looping while either the main menu or
+/// its About screen is up — the two are one continuous "in the menu" session
+/// from the player's perspective, so ducking the music out and fading it
+/// back in when About opens would be a jarring blip for no reason. Mirrors
+/// the `sync_menu_fog`/`sync_menu_fireflies` idiom in `ui.rs`: idempotent,
+/// driven by comparing the wanted state to what already exists.
+fn sync_menu_music(
     mut commands: Commands,
-    music: Query<(Entity, Option<&AudioSink>), With<MainMenuMusic>>,
+    state: Res<State<AppState>>,
+    settings: Res<GameSettings>,
+    assets: Res<GameAssets>,
+    music: Query<(Entity, Option<&AudioSink>, Option<&MusicFade>), With<MainMenuMusic>>,
 ) {
-    for (entity, sink) in &music {
-        // No sink yet means the track has not actually started; nothing to fade.
-        let Some(sink) = sink else {
-            commands.entity(entity).despawn();
-            continue;
-        };
-        let from = sink.volume().to_linear();
-        commands.entity(entity).insert(MusicFade {
-            elapsed: 0.0,
-            duration: MUSIC_FADE_OUT,
-            from,
-            to: 0.0,
-            despawn_on_end: true,
-        });
+    let want = matches!(state.get(), AppState::MainMenu | AppState::About);
+    match (want, music.iter().next()) {
+        (true, None) => {
+            if settings.play_sounds {
+                commands.spawn((
+                    AudioPlayer(assets.music_main_menu.clone()),
+                    PlaybackSettings::LOOP.with_volume(Volume::Linear(0.0)),
+                    MusicFade {
+                        elapsed: 0.0,
+                        duration: MUSIC_FADE_IN,
+                        from: 0.0,
+                        to: settings.sound_volume,
+                        despawn_on_end: false,
+                    },
+                    MainMenuMusic,
+                    Name::new("Music:main_menu"),
+                ));
+            }
+        }
+        (false, Some((entity, sink, fade))) => {
+            // Already fading toward silence: let `advance_music_fades` run
+            // it to completion instead of resetting the ramp every frame.
+            if fade.is_some_and(|f| f.to == 0.0) {
+                return;
+            }
+            // No sink yet means the track has not actually started; nothing
+            // to fade.
+            let Some(sink) = sink else {
+                commands.entity(entity).despawn();
+                return;
+            };
+            let from = sink.volume().to_linear();
+            commands.entity(entity).insert(MusicFade {
+                elapsed: 0.0,
+                duration: MUSIC_FADE_OUT,
+                from,
+                to: 0.0,
+                despawn_on_end: true,
+            });
+        }
+        _ => {}
     }
 }
 

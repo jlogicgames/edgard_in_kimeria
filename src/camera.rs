@@ -51,8 +51,10 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnExit(AppState::Loading), spawn_camera)
-            .add_systems(Update, (follow_player, scroll_backdrop));
+        app.add_systems(OnExit(AppState::Loading), spawn_camera).add_systems(
+            Update,
+            (follow_player, scroll_backdrop, sync_backdrop_visibility),
+        );
     }
 }
 
@@ -156,4 +158,19 @@ fn scroll_backdrop(time: Res<Time<Real>>, mut query: Query<(&Backdrop, &mut Tran
             transform.translation.x += backdrop.tile_width;
         }
     }
+}
+
+/// The main menu and its About screen show only the forest fog behind them, so
+/// the sky backdrop is hidden there and restored everywhere else.
+fn sync_backdrop_visibility(
+    state: Res<State<AppState>>,
+    mut query: Query<&mut Visibility, With<Backdrop>>,
+) {
+    let Ok(mut visibility) = query.single_mut() else {
+        return;
+    };
+    *visibility = match state.get() {
+        AppState::MainMenu | AppState::About => Visibility::Hidden,
+        _ => Visibility::Visible,
+    };
 }

@@ -35,10 +35,14 @@ const SOUND_PATHS: &[&str] = &[
     "audio/collect.wav",
     "audio/bounce.wav",
     "audio/disappear.wav",
+    "audio/button_click.wav",
 ];
 
 /// Looping background music, by asset path.
 const MUSIC_MAIN_MENU: &str = "audio/main_menu.mp3";
+
+const FONT_BUTTON: &str = "fonts/NanoPlus.ttf";
+const FONT_TEXT: &str = "fonts/QuestSquare.ttf";
 
 /// Handles held during [`AppState::Loading`] so nothing is dropped mid-load.
 #[derive(Resource, Default)]
@@ -46,6 +50,8 @@ struct LoadingHandles {
     images: Vec<Handle<Image>>,
     sounds: Vec<Handle<AudioSource>>,
     music_main_menu: Handle<AudioSource>,
+    font_button: Handle<Font>,
+    font_text: Handle<Font>,
 }
 
 /// Everything spawn code needs, resolved once at startup.
@@ -55,6 +61,10 @@ pub struct GameAssets {
     pub sounds: HashMap<String, Handle<AudioSource>>,
     /// Looping track for [`AppState::MainMenu`].
     pub music_main_menu: Handle<AudioSource>,
+    /// Menu button labels.
+    pub font_button: Handle<Font>,
+    /// Everything else in the menus: headings, body copy, the HUD counter.
+    pub font_text: Handle<Font>,
     pub player: AnimationSet,
     pub bat: AnimationSet,
     pub yellow_mob: AnimationSet,
@@ -96,6 +106,8 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
         images: IMAGE_PATHS.iter().map(|p| asset_server.load(*p)).collect(),
         sounds: SOUND_PATHS.iter().map(|p| asset_server.load(*p)).collect(),
         music_main_menu: asset_server.load(MUSIC_MAIN_MENU),
+        font_button: asset_server.load(FONT_BUTTON),
+        font_text: asset_server.load(FONT_TEXT),
     });
 }
 
@@ -112,7 +124,9 @@ fn finish_loading(
         .iter()
         .map(|h| h.id().untyped())
         .chain(handles.sounds.iter().map(|h| h.id().untyped()))
-        .chain(std::iter::once(handles.music_main_menu.id().untyped()));
+        .chain(std::iter::once(handles.music_main_menu.id().untyped()))
+        .chain(std::iter::once(handles.font_button.id().untyped()))
+        .chain(std::iter::once(handles.font_text.id().untyped()));
     for id in pending {
         match asset_server.get_load_state(id) {
             Some(LoadState::Loaded) => {}
@@ -151,6 +165,8 @@ fn finish_loading(
         &mut layouts,
         sound_map,
         handles.music_main_menu.clone(),
+        handles.font_button.clone(),
+        handles.font_text.clone(),
     );
     commands.insert_resource(assets);
     commands.remove_resource::<LoadingHandles>();
@@ -167,6 +183,8 @@ fn build_game_assets(
     layouts: &mut Assets<TextureAtlasLayout>,
     sounds: HashMap<String, Handle<AudioSource>>,
     music_main_menu: Handle<AudioSource>,
+    font_button: Handle<Font>,
+    font_text: Handle<Font>,
 ) -> GameAssets {
     let mut clip = |path: &str, spec: ClipSpec| -> AnimationClip {
         spec.build(image_map[path].clone(), size_of(path), layouts)
@@ -333,6 +351,8 @@ fn build_game_assets(
         images: image_map.clone(),
         sounds,
         music_main_menu,
+        font_button,
+        font_text,
         player,
         bat,
         yellow_mob,

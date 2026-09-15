@@ -50,6 +50,7 @@ pub enum AppState {
     #[default]
     Loading,
     MainMenu,
+    About,
     Playing,
     Paused,
     GameOver,
