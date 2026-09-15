@@ -144,37 +144,42 @@ impl Plugin for UiPlugin {
             OnEnter(AppState::MainMenu),
             (reset_camera_for_menu, despawn_hud_for_menu, spawn_main_menu).chain(),
         )
-            .add_systems(
-                OnEnter(AppState::About),
-                (reset_camera_for_menu, despawn_hud_for_menu, spawn_about_menu).chain(),
+        .add_systems(
+            OnEnter(AppState::About),
+            (
+                reset_camera_for_menu,
+                despawn_hud_for_menu,
+                spawn_about_menu,
             )
-            .add_systems(OnEnter(AppState::Paused), spawn_pause_menu)
-            .add_systems(OnEnter(AppState::GameOver), spawn_game_over)
-            .add_systems(OnEnter(AppState::Playing), spawn_hud)
-            .add_systems(
-                Update,
-                (
-                    focus_on_hover,
-                    handle_menu_navigation,
-                    ensure_default_focus,
-                    activate_focused_button,
-                    handle_buttons,
-                )
-                    .chain(),
+                .chain(),
+        )
+        .add_systems(OnEnter(AppState::Paused), spawn_pause_menu)
+        .add_systems(OnEnter(AppState::GameOver), spawn_game_over)
+        .add_systems(OnEnter(AppState::Playing), spawn_hud)
+        .add_systems(
+            Update,
+            (
+                focus_on_hover,
+                handle_menu_navigation,
+                ensure_default_focus,
+                activate_focused_button,
+                handle_buttons,
             )
-            .add_systems(
-                Update,
-                (
-                    update_coin_counter,
-                    resume_on_escape,
-                    sync_menu_fog,
-                    sync_menu_fireflies,
-                    animate_buttons,
-                    play_hover_sound,
-                    advance_appear,
-                    animate_breathing_title,
-                ),
-            );
+                .chain(),
+        )
+        .add_systems(
+            Update,
+            (
+                update_coin_counter,
+                resume_on_escape,
+                sync_menu_fog,
+                sync_menu_fireflies,
+                animate_buttons,
+                play_hover_sound,
+                advance_appear,
+                animate_breathing_title,
+            ),
+        );
     }
 }
 
@@ -426,7 +431,12 @@ fn spawn_about_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
             // body text was lost in mostly-empty black space.
             panel_sized(Val::Px(580.0), Val::Px(460.0), PANEL_BG),
             children![
-                heading("About", 42.0, assets.font_text.clone(), AppearAnim::new(0, now)),
+                heading(
+                    "About",
+                    42.0,
+                    assets.font_text.clone(),
+                    AppearAnim::new(0, now)
+                ),
                 (
                     Text::new(ABOUT_TEXT),
                     // QuestSquare's glyphs sit small in their em-box — at the
@@ -459,7 +469,12 @@ fn spawn_pause_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
         children![(
             panel(false),
             children![
-                heading("Pause Menu", 24.0, assets.font_text.clone(), AppearAnim::new(0, now)),
+                heading(
+                    "Pause Menu",
+                    24.0,
+                    assets.font_text.clone(),
+                    AppearAnim::new(0, now)
+                ),
                 button(
                     MenuAction::Resume,
                     "Resume",
@@ -490,7 +505,12 @@ fn spawn_game_over(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
         children![(
             panel(false),
             children![
-                heading("Game Over", 24.0, assets.font_text.clone(), AppearAnim::new(0, now)),
+                heading(
+                    "Game Over",
+                    24.0,
+                    assets.font_text.clone(),
+                    AppearAnim::new(0, now)
+                ),
                 button(
                     MenuAction::PlayAgain,
                     "Play Again",
@@ -597,8 +617,10 @@ fn handle_menu_navigation(
         return;
     }
 
-    let mut ordered: Vec<(Entity, u32, bool)> =
-        buttons.iter().map(|(e, index, has)| (e, index.0, has)).collect();
+    let mut ordered: Vec<(Entity, u32, bool)> = buttons
+        .iter()
+        .map(|(e, index, has)| (e, index.0, has))
+        .collect();
     if ordered.is_empty() {
         return;
     }
@@ -669,7 +691,13 @@ fn animate_buttons(
         let pressed = *interaction == Interaction::Pressed;
         let active = pressed || *interaction == Interaction::Hovered || focused;
 
-        let target_scale = if pressed { 0.94 } else if active { 1.08 } else { 1.0 };
+        let target_scale = if pressed {
+            0.94
+        } else if active {
+            1.08
+        } else {
+            1.0
+        };
         anim.scale += (target_scale - anim.scale) * t;
         transform.scale = Vec2::splat(anim.scale);
 
