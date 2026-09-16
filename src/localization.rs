@@ -90,12 +90,16 @@ impl Msg {
             (LanguageLabel, English) => "Language",
             (LanguageLabel, Ukrainian) => "Мова",
 
-            (ControlsHelp, English) => "Use WASD or Arrow Keys for movement.\n\
+            (ControlsHelp, English) => {
+                "Use WASD or Arrow Keys for movement.\n\
                 J to jump. K to attack. L to interact.\n\
-                Collect as many stars as you can and avoid enemies!",
-            (ControlsHelp, Ukrainian) => "Використовуйте WASD або стрілки для руху.\n\
+                Collect as many stars as you can and avoid enemies!"
+            }
+            (ControlsHelp, Ukrainian) => {
+                "Використовуйте WASD або стрілки для руху.\n\
                 J — стрибок. K — атака. L — взаємодія.\n\
-                Зберіть якомога більше зірок і уникайте ворогів!",
+                Зберіть якомога більше зірок і уникайте ворогів!"
+            }
 
             (MenuHint, English) => {
                 "Arrows/Tab to move - Enter/Space/A to confirm - Esc/B to go back"
@@ -104,16 +108,20 @@ impl Msg {
                 "Стрілки/Tab — рух - Enter/Пробіл/A — підтвердити - Esc/B — назад"
             }
 
-            (AboutBody, English) => "Edgard in Kimeria\n\n\
+            (AboutBody, English) => {
+                "Edgard in Kimeria\n\n\
                 Use WASD or Arrow Keys for movement.\n\
                 J to jump. K to attack. L to interact.\n\
                 Escape to pause.\n\
-                Collect as many stars as you can and avoid enemies!",
-            (AboutBody, Ukrainian) => "Едгард у Кімерії\n\n\
+                Collect as many stars as you can and avoid enemies!"
+            }
+            (AboutBody, Ukrainian) => {
+                "Едгард у Кімерії\n\n\
                 Використовуйте WASD або стрілки для руху.\n\
                 J — стрибок. K — атака. L — взаємодія.\n\
                 Escape — пауза.\n\
-                Зберіть якомога більше зірок і уникайте ворогів!",
+                Зберіть якомога більше зірок і уникайте ворогів!"
+            }
         }
     }
 }
