@@ -9,6 +9,7 @@ struct FogParams {
     ground_add: f32,
     fade: f32,
     time: f32,
+    _padding: vec2<f32>,
 };
 
 @group(#{MATERIAL_BIND_GROUP}) @binding(0) var<uniform> params: FogParams;

@@ -42,6 +42,7 @@ pub(super) fn hydrate_fog(
                         ground_add: 0.0,
                         fade: 1.0,
                         time: 0.0,
+                        _padding: Vec2::ZERO,
                     },
                 })),
                 Transform::from_xyz(0.0, 0.0, z::FOG),
