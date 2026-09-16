@@ -1,0 +1,7 @@
+[build]
+target = "index.html"
+dist = "dist"
+public_url = "/edgard_in_kimeria_rs/"
+
+[serve]
+port = 8080

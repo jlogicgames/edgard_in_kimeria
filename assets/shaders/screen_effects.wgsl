@@ -28,7 +28,6 @@ struct ScreenEffects {
     time: f32,
     /// Viewport width / height, for the ripple's aspect correction.
     aspect: f32,
-    _padding: f32,
 };
 
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;

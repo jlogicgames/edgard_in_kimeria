@@ -53,9 +53,11 @@ pub struct ScreenEffects {
     pub chroma_intensity: f32,
     pub chroma_shift: f32,
     pub time: f32,
+    /// Viewport width / height, for the ripple's aspect correction. 12 scalar
+    /// fields after the leading `Vec2` already total 48 bytes — a multiple of
+    /// 16 — so no trailing padding is needed to satisfy WebGL2's uniform
+    /// buffer alignment; adding one here previously broke it (52 bytes).
     pub aspect: f32,
-    /// Keeps the block a multiple of 16 bytes for WebGL2.
-    pub _padding: f32,
 }
 
 /// A live ripple. Values match the `RippleEffect` the Dart built on coin pickup.

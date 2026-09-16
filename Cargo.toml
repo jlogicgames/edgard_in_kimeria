@@ -18,6 +18,17 @@ bevy_ecs_tiled = "0.13"
 bevy_ecs_tilemap = "0.19"
 rand = "0.9"
 
+# wgpu's WebGPU backend isn't available in enough browsers yet; WebGL2 is the
+# broadly-supported fallback for the wasm32 target. Cargo unifies this with
+# the `bevy` dependency above, so native builds are unaffected.
+#
+# `rand` pulls in `getrandom`, which refuses to pick a source on
+# wasm32-unknown-unknown unless told to use the browser's `crypto` API; see
+# the matching `--cfg` in .cargo/config.toml.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+bevy = { version = "0.19", features = ["webgl2"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
 [features]
 default = []
 # `cargo run --features dev`

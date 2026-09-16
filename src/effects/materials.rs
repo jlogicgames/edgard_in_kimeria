@@ -75,6 +75,9 @@ pub struct FogParams {
     pub ground_add: f32,
     pub fade: f32,
     pub time: f32,
+    /// The 5 fields above total 24 bytes; WebGL2 requires uniform buffer
+    /// bindings to be a multiple of 16. Pads to 32.
+    pub _padding: Vec2,
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Clone)]

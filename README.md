@@ -76,6 +76,22 @@ panics naming the first asset it could not find, with the full path it looked in
 Verified by running the release binary from `/` with `CARGO_MANIFEST_DIR` and
 `BEVY_ASSET_ROOT` unset.
 
+### Web
+
+```sh
+rustup target add wasm32-unknown-unknown
+cargo install trunk
+trunk serve            # http://127.0.0.1:8080, rebuilds on change
+trunk build --release  # writes dist/
+```
+
+The `wasm32-unknown-unknown` target needs WebGL2 (`bevy/webgl2`, since wgpu's
+WebGPU backend isn't broadly supported yet) and `getrandom`'s `wasm_js`
+backend, enabled via a `--cfg` in `.cargo/config.toml`; both are wired up
+already, so a plain `trunk build` picks them up. `Trunk.toml` sets
+`public_url` for the GitHub Pages path this repo publishes to
+(`.github/workflows/deploy-web.yml`, on every push to `main`).
+
 ## Assets
 
 `assets/fonts/NanoPlus.ttf` (button labels) and `assets/fonts/QuestSquare.ttf`
