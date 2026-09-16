@@ -54,7 +54,11 @@ impl Plugin for CameraPlugin {
         app.add_systems(OnExit(AppState::Loading), spawn_camera)
             .add_systems(
                 Update,
-                (follow_player, scroll_backdrop, sync_backdrop_visibility),
+                (
+                    follow_player,
+                    scroll_backdrop.run_if(in_gameplay),
+                    sync_backdrop_visibility,
+                ),
             );
     }
 }
@@ -161,8 +165,23 @@ fn scroll_backdrop(time: Res<Time<Real>>, mut query: Query<(&Backdrop, &mut Tran
     }
 }
 
-/// The main menu and its About screen show only the forest fog behind them, so
-/// the sky backdrop is hidden there and restored everywhere else.
+/// The sky only belongs to an actual level (`forest-1` / `forest`), so it
+/// runs and shows for the states a level is loaded in — not the other way
+/// round. Whitelisting the gameplay states, rather than blacklisting each
+/// menu, means a future menu state (there have already been three: MainMenu,
+/// About, Options) can't reintroduce this by omission.
+fn is_gameplay_state(state: &AppState) -> bool {
+    matches!(
+        state,
+        AppState::Playing | AppState::Paused | AppState::GameOver
+    )
+}
+
+fn in_gameplay(state: Res<State<AppState>>) -> bool {
+    is_gameplay_state(state.get())
+}
+
+/// See [`is_gameplay_state`]: the backdrop is visible only while a level is loaded.
 fn sync_backdrop_visibility(
     state: Res<State<AppState>>,
     mut query: Query<&mut Visibility, With<Backdrop>>,
@@ -170,8 +189,9 @@ fn sync_backdrop_visibility(
     let Ok(mut visibility) = query.single_mut() else {
         return;
     };
-    *visibility = match state.get() {
-        AppState::MainMenu | AppState::About => Visibility::Hidden,
-        _ => Visibility::Visible,
+    *visibility = if is_gameplay_state(state.get()) {
+        Visibility::Visible
+    } else {
+        Visibility::Hidden
     };
 }
