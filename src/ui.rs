@@ -55,6 +55,9 @@ enum MenuAction {
     Play,
     About,
     Options,
+    /// Never constructed on wasm32 — no button spawns it there, see
+    /// `spawn_main_menu_buttons`.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     Exit,
     Back,
     Resume,
@@ -399,8 +402,15 @@ fn spawn_main_menu(
         DespawnOnExit(AppState::MainMenu),
         children![(
             panel_with_bg(true, MENU_BG),
-            children![
-                (
+            // Not the `children!` macro: the button row's length depends on
+            // the target (native has an Exit button, web doesn't — see
+            // `spawn_main_menu_buttons`), so it needs ordinary control flow
+            // rather than a fixed list of expressions. `SpawnWith` is the
+            // `SpawnableList` for exactly that: an `FnOnce` given a spawner
+            // to call `.spawn()` on directly, mixed here with the
+            // `Spawn`-wrapped single bundles either side of it.
+            Children::spawn((
+                Spawn((
                     Text::new(Msg::Title.t(lang)),
                     // QuestSquare reads small at its nominal size (see the
                     // About screen's note on this); the game's own title is
@@ -415,42 +425,71 @@ fn spawn_main_menu(
                     TextColor(TEXT_COLOR),
                     AppearAnim::new(0, now),
                     BreathingTitle,
-                ),
-                button(
-                    MenuAction::Play,
-                    Msg::Play.t(lang),
-                    40.0,
-                    0,
-                    assets.font_button.clone(),
-                    AppearAnim::new(1, now),
-                ),
-                button(
-                    MenuAction::About,
-                    Msg::About.t(lang),
-                    28.0,
-                    1,
-                    assets.font_button.clone(),
-                    AppearAnim::new(2, now),
-                ),
-                button(
-                    MenuAction::Options,
-                    Msg::Options.t(lang),
-                    28.0,
-                    2,
-                    assets.font_button.clone(),
-                    AppearAnim::new(3, now),
-                ),
-                button(
-                    MenuAction::Exit,
-                    Msg::Exit.t(lang),
-                    28.0,
-                    3,
-                    assets.font_button.clone(),
-                    AppearAnim::new(4, now),
-                ),
-                menu_hint(assets.font_text.clone(), AppearAnim::new(5, now), lang),
-            ],
+                )),
+                {
+                    let font_button = assets.font_button.clone();
+                    SpawnWith(move |parent: &mut ChildSpawner| {
+                        spawn_main_menu_buttons(parent, font_button, lang, now);
+                    })
+                },
+                Spawn(menu_hint(
+                    assets.font_text.clone(),
+                    AppearAnim::new(MAIN_MENU_BUTTON_COUNT + 1, now),
+                    lang,
+                )),
+            )),
         )],
+    ));
+}
+
+/// Native only: quitting a browser tab from inside the page isn't something
+/// `AppExit` can do, and closing it out from under the player without so much
+/// as a confirmation is worse than not offering the button — so the web
+/// build simply doesn't spawn it. `MenuAction::Exit` and its handler stay for
+/// native.
+#[cfg(not(target_arch = "wasm32"))]
+const MAIN_MENU_BUTTON_COUNT: u32 = 4;
+#[cfg(target_arch = "wasm32")]
+const MAIN_MENU_BUTTON_COUNT: u32 = 3;
+
+fn spawn_main_menu_buttons(
+    parent: &mut ChildSpawner,
+    font_button: Handle<Font>,
+    lang: Language,
+    now: f32,
+) {
+    parent.spawn(button(
+        MenuAction::Play,
+        Msg::Play.t(lang),
+        40.0,
+        0,
+        font_button.clone(),
+        AppearAnim::new(1, now),
+    ));
+    parent.spawn(button(
+        MenuAction::About,
+        Msg::About.t(lang),
+        28.0,
+        1,
+        font_button.clone(),
+        AppearAnim::new(2, now),
+    ));
+    parent.spawn(button(
+        MenuAction::Options,
+        Msg::Options.t(lang),
+        28.0,
+        2,
+        font_button.clone(),
+        AppearAnim::new(3, now),
+    ));
+    #[cfg(not(target_arch = "wasm32"))]
+    parent.spawn(button(
+        MenuAction::Exit,
+        Msg::Exit.t(lang),
+        28.0,
+        3,
+        font_button,
+        AppearAnim::new(4, now),
     ));
 }
 
