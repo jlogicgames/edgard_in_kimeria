@@ -168,6 +168,16 @@ fn run_capture(
                 .observe(save_to_disk(path));
         }
         if capture.elapsed >= capture.delay && *state.get() == AppState::MainMenu {
+            // `EIK_CAPTURE_ABOUT` only exists to screenshot a menu screen
+            // during development, so unlike the rest of this harness it's
+            // compiled out unless `--features dev` is passed — no env-var
+            // lookup for it in a release build.
+            #[cfg(feature = "dev")]
+            if std::env::var("EIK_CAPTURE_ABOUT").is_ok() {
+                next_state.set(AppState::About);
+                capture.started = true;
+                return;
+            }
             loads.write(LoadLevel(capture.level));
             next_state.set(AppState::Playing);
             capture.started = true;

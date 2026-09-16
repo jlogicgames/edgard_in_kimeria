@@ -67,7 +67,7 @@ executable**. So a distribution is the binary with `assets/` beside it:
 ```
 edgard_in_kimeria
 assets/
-├── audio/  images/  shaders/  tiles/
+├── audio/  fonts/  images/  shaders/  tiles/
 ```
 
 Copying only the executable fails loudly rather than silently: `AppState::Loading`
@@ -75,6 +75,16 @@ panics naming the first asset it could not find, with the full path it looked in
 
 Verified by running the release binary from `/` with `CARGO_MANIFEST_DIR` and
 `BEVY_ASSET_ROOT` unset.
+
+## Assets
+
+`assets/fonts/NanoPlus.ttf` (button labels) and `assets/fonts/QuestSquare.ttf`
+(everything else — headings, body copy, the HUD counter) are pixel fonts from
+[spicygame.itch.io/fonts](https://spicygame.itch.io/fonts). Grab any other
+face from that same page if a future screen needs one, so the whole UI keeps
+a consistent source. Note that QuestSquare's glyphs sit noticeably smaller in
+their em-box than NanoPlus's — matching them visually needs a bigger nominal
+`font_size` on the QuestSquare side, not the same number.
 
 ## Layout
 
@@ -178,7 +188,7 @@ Verified by scripted capture runs (`src/dev.rs`) unless noted.
 - [x] Trigger → actionable wall removal and torch toggle
 - [x] Checkpoint → next level, with wrap
 - [x] Death, respawn, life count, game over
-- [x] Torch, firefly, fog, rain ambience
+- [x] Torch, firefly, rain ambience
 - [x] Ripple and chroma glitch post process
 - [x] HUD, main menu, pause menu, game over screen
 - [x] Audio playback (needs Bevy's non-default `wav` feature; every sound is
@@ -195,6 +205,11 @@ Changes where matching the original exactly would have been wrong or impossible.
   The Dart's `moveTo(..., speed: 500)` in `onLoad` was meant to *place* the
   camera; because Flame rebuilt the camera per level at the origin, it produced
   a long pan before play became visible.
+- **Fog moved from the `forest` level to the main menu/About screen.** The
+  `FogEffect`/`FogMaterial` shader is unchanged — the Dart's `forest` fog —
+  but the level no longer spawns it; `ui.rs`'s `MenuFog` spawns it behind
+  the menu panel instead, parented to the camera so it doubles as the
+  menu's animated backdrop.
 - **Rain is a fixed recycled pool.** Each Dart drop scheduled a replacement on
   completion *and* the first drop spawned 60 more, so the population grew
   without bound.
@@ -259,5 +274,12 @@ EIK_CAPTURE=/tmp/shots EIK_CAPTURE_INPUT=run EIK_CAPTURE_LEVEL=1 \
 `EIK_CAPTURE_INPUT` accepts `run`, `left`, `fx` (also fires the shader effects),
 `cycle` (hops between levels), `checkpoint` (reaches one, exercising the
 disappear animation and its three-second delay), and `pause`. `EIK_CAPTURE_DELAY` lingers on the
-main menu first. `EIK_INVULNERABLE`, `EIK_DEBUG_DRAW`, `EIK_CHROMA_GLITCH` and
-`EIK_DEBUG_TILEMAP` set the matching switches at startup.
+main menu first. `EIK_CAPTURE_ABOUT` goes to the About screen instead of
+loading a level — the only way to see a non-gameplay menu's actual layout
+without a mouse. **Unlike every other switch on this page, it only exists in
+a `--features dev` build: the code behind it is `#[cfg(feature = "dev")]`, so
+a plain `cargo run` / release build does not compile that branch at all — the
+env var does nothing there, not even a lookup, because the `std::env::var`
+call itself is not in the binary.** `EIK_INVULNERABLE`, `EIK_DEBUG_DRAW`,
+`EIK_CHROMA_GLITCH` and `EIK_DEBUG_TILEMAP` set the matching switches at
+startup and, like the rest of this harness, work in every build.
