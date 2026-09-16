@@ -775,8 +775,12 @@ fn handle_menu_navigation(
     buttons: Query<(Entity, &MenuButtonIndex, Has<Focused>)>,
 ) {
     let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
-    let gamepad_down = gamepads.iter().any(|g| g.just_pressed(GamepadButton::DPadDown));
-    let gamepad_up = gamepads.iter().any(|g| g.just_pressed(GamepadButton::DPadUp));
+    let gamepad_down = gamepads
+        .iter()
+        .any(|g| g.just_pressed(GamepadButton::DPadDown));
+    let gamepad_up = gamepads
+        .iter()
+        .any(|g| g.just_pressed(GamepadButton::DPadUp));
     let down = keys.just_pressed(KeyCode::ArrowDown)
         || (keys.just_pressed(KeyCode::Tab) && !shift)
         || gamepad_down;
@@ -834,9 +838,9 @@ fn activate_focused_button(
     let confirm = keys.just_pressed(KeyCode::Enter)
         || keys.just_pressed(KeyCode::NumpadEnter)
         || keys.just_pressed(KeyCode::Space)
-        || gamepads.iter().any(|g| {
-            g.just_pressed(GamepadButton::South) || g.just_pressed(GamepadButton::Start)
-        });
+        || gamepads
+            .iter()
+            .any(|g| g.just_pressed(GamepadButton::South) || g.just_pressed(GamepadButton::Start));
     if !confirm {
         return;
     }
@@ -988,9 +992,9 @@ fn resume_on_escape(
     mut next_state: ResMut<NextState<AppState>>,
 ) {
     let back = keys.just_pressed(KeyCode::Escape)
-        || gamepads.iter().any(|g| {
-            g.just_pressed(GamepadButton::East) || g.just_pressed(GamepadButton::Select)
-        });
+        || gamepads
+            .iter()
+            .any(|g| g.just_pressed(GamepadButton::East) || g.just_pressed(GamepadButton::Select));
     if *state.get() == AppState::Paused && back {
         next_state.set(AppState::Playing);
     }

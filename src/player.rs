@@ -210,7 +210,9 @@ fn read_input(
     mut query: Query<(&mut PlayerInput, &PlayerStatus, &PlayerRoutine), With<Player>>,
 ) {
     let pause = keys.just_pressed(KeyCode::Escape)
-        || gamepads.iter().any(|g| g.just_pressed(GamepadButton::Start));
+        || gamepads
+            .iter()
+            .any(|g| g.just_pressed(GamepadButton::Start));
     if pause {
         next_state.set(AppState::Paused);
         return;
