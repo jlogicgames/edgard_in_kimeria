@@ -52,6 +52,10 @@ const CONTROLS_HELP: &str = "Use WASD or Arrow Keys for movement.\n\
 J to jump. K to attack. L to interact.\n\
 Collect as many stars as you can and avoid enemies!";
 
+/// Shown on every menu panel so the keyboard/gamepad path is discoverable,
+/// not just clickable buttons.
+const MENU_HINT: &str = "Arrows/Tab to move - Enter/Space/A to confirm - Esc/B to go back";
+
 const ABOUT_TEXT: &str = "Edgard in Kimeria\n\n\
 Use WASD or Arrow Keys for movement.\n\
 J to jump. K to attack. L to interact.\n\
@@ -289,6 +293,16 @@ fn help_text(font: Handle<Font>, appear: AppearAnim) -> impl Bundle {
     )
 }
 
+fn menu_hint(font: Handle<Font>, appear: AppearAnim) -> impl Bundle {
+    (
+        Text::new(MENU_HINT),
+        TextFont::from_font_size(14.0).with_font(font),
+        TextColor(TEXT_COLOR),
+        TextLayout::justify(Justify::Center),
+        appear,
+    )
+}
+
 // --- menus ------------------------------------------------------------------
 
 /// Keeps exactly one [`MenuFog`] entity alive while the main menu or About
@@ -416,6 +430,7 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
                     assets.font_button.clone(),
                     AppearAnim::new(3, now),
                 ),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(4, now)),
             ],
         )],
     ));
@@ -491,7 +506,8 @@ fn spawn_pause_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
                     assets.font_button.clone(),
                     AppearAnim::new(2, now),
                 ),
-                help_text(assets.font_text.clone(), AppearAnim::new(3, now)),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(3, now)),
+                help_text(assets.font_text.clone(), AppearAnim::new(4, now)),
             ],
         )],
     ));
@@ -519,6 +535,7 @@ fn spawn_game_over(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
                     assets.font_button.clone(),
                     AppearAnim::new(1, now),
                 ),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(2, now)),
             ],
         )],
     ));
@@ -603,16 +620,24 @@ fn focus_on_hover(
     }
 }
 
-/// Moves [`Focused`] between a menu's buttons with the arrow keys or
-/// Tab/Shift+Tab, so a screen can be worked without a mouse.
+/// Moves [`Focused`] between a menu's buttons with the arrow keys,
+/// Tab/Shift+Tab, or a gamepad's D-pad, so a screen can be worked without a
+/// mouse.
 fn handle_menu_navigation(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
+    gamepads: Query<&Gamepad>,
     buttons: Query<(Entity, &MenuButtonIndex, Has<Focused>)>,
 ) {
     let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
-    let down = keys.just_pressed(KeyCode::ArrowDown) || (keys.just_pressed(KeyCode::Tab) && !shift);
-    let up = keys.just_pressed(KeyCode::ArrowUp) || (keys.just_pressed(KeyCode::Tab) && shift);
+    let gamepad_down = gamepads.iter().any(|g| g.just_pressed(GamepadButton::DPadDown));
+    let gamepad_up = gamepads.iter().any(|g| g.just_pressed(GamepadButton::DPadUp));
+    let down = keys.just_pressed(KeyCode::ArrowDown)
+        || (keys.just_pressed(KeyCode::Tab) && !shift)
+        || gamepad_down;
+    let up = keys.just_pressed(KeyCode::ArrowUp)
+        || (keys.just_pressed(KeyCode::Tab) && shift)
+        || gamepad_up;
     if !down && !up {
         return;
     }
@@ -653,15 +678,20 @@ fn ensure_default_focus(
     }
 }
 
-/// Enter/Space "clicks" the focused button — the keyboard/gamepad equivalent
-/// of a mouse press, feeding the same [`Interaction`] `handle_buttons` reads.
+/// Enter/Space/gamepad-South "clicks" the focused button — the
+/// keyboard/gamepad equivalent of a mouse press, feeding the same
+/// [`Interaction`] `handle_buttons` reads.
 fn activate_focused_button(
     keys: Res<ButtonInput<KeyCode>>,
+    gamepads: Query<&Gamepad>,
     mut focused: Query<&mut Interaction, With<Focused>>,
 ) {
     let confirm = keys.just_pressed(KeyCode::Enter)
         || keys.just_pressed(KeyCode::NumpadEnter)
-        || keys.just_pressed(KeyCode::Space);
+        || keys.just_pressed(KeyCode::Space)
+        || gamepads.iter().any(|g| {
+            g.just_pressed(GamepadButton::South) || g.just_pressed(GamepadButton::Start)
+        });
     if !confirm {
         return;
     }
@@ -798,13 +828,19 @@ fn handle_buttons(
     }
 }
 
-/// Escape resumes as well as pauses, matching `game.pause()`'s toggle.
+/// Escape (or a gamepad's East/Select button) resumes as well as pauses,
+/// matching `game.pause()`'s toggle.
 fn resume_on_escape(
     keys: Res<ButtonInput<KeyCode>>,
+    gamepads: Query<&Gamepad>,
     state: Res<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    if *state.get() == AppState::Paused && keys.just_pressed(KeyCode::Escape) {
+    let back = keys.just_pressed(KeyCode::Escape)
+        || gamepads.iter().any(|g| {
+            g.just_pressed(GamepadButton::East) || g.just_pressed(GamepadButton::Select)
+        });
+    if *state.get() == AppState::Paused && back {
         next_state.set(AppState::Playing);
     }
 }
