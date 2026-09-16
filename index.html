@@ -17,6 +17,38 @@
       }
     </style>
     <!--
+      Browsers refuse to start an AudioContext until a user gesture. cpal
+      (Bevy's web audio backend) creates one at startup and gives up silently
+      when the resume() it tries is rejected, so without this the game is
+      muted until something happens to resume that exact context — which
+      nothing here does on its own. This runs as a classic (non-module)
+      script, so it executes before Trunk's module script below and can wrap
+      the AudioContext constructor before cpal calls it; then any of the
+      listed events on the page resumes every context that's still suspended.
+    -->
+    <script>
+      (function () {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        var contexts = [];
+        function Wrapped() {
+          var ctx = new (Function.prototype.bind.apply(Ctx, [null].concat([].slice.call(arguments))))();
+          contexts.push(ctx);
+          return ctx;
+        }
+        Wrapped.prototype = Ctx.prototype;
+        window.AudioContext = window.webkitAudioContext = Wrapped;
+        function unlock() {
+          contexts.forEach(function (ctx) {
+            if (ctx.state === "suspended") ctx.resume();
+          });
+        }
+        ["pointerdown", "keydown", "touchstart"].forEach(function (evt) {
+          document.addEventListener(evt, unlock);
+        });
+      })();
+    </script>
+    <!--
       data-wasm-opt="0": the wasm-opt binary trunk downloads rejects the
       bulk-memory instructions rustc's wasm32-unknown-unknown target emits by
       default, failing the build outright. Skip it rather than chase a
