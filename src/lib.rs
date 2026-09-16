@@ -32,6 +32,7 @@ pub mod effects;
 pub mod enemy;
 pub mod items;
 pub mod level;
+pub mod localization;
 pub mod objects;
 pub mod player;
 pub mod ui;
@@ -51,6 +52,7 @@ pub enum AppState {
     Loading,
     MainMenu,
     About,
+    Options,
     Playing,
     Paused,
     GameOver,
@@ -69,6 +71,9 @@ pub struct GameSettings {
     /// Debug aid with no counterpart in the original: ignores lethal damage so
     /// a level can be walked end to end. Toggled with F2.
     pub invulnerable: bool,
+    /// UI display language, changed from the main menu's Options page. Has
+    /// no counterpart in the Dart original, which only ever shipped English.
+    pub language: crate::localization::Language,
 }
 
 impl Default for GameSettings {
@@ -79,6 +84,7 @@ impl Default for GameSettings {
             debug_draw: false,
             chroma_glitch: false,
             invulnerable: false,
+            language: crate::localization::Language::default(),
         }
     }
 }

@@ -69,12 +69,13 @@ impl Plugin for AudioPlugin {
     }
 }
 
-/// Keeps `assets/audio/main_menu.mp3` looping while either the main menu or
-/// its About screen is up — the two are one continuous "in the menu" session
-/// from the player's perspective, so ducking the music out and fading it
-/// back in when About opens would be a jarring blip for no reason. Mirrors
-/// the `sync_menu_fog`/`sync_menu_fireflies` idiom in `ui.rs`: idempotent,
-/// driven by comparing the wanted state to what already exists.
+/// Keeps `assets/audio/main_menu.mp3` looping while the main menu or any of
+/// its sub-screens (About, Options) is up — they're one continuous "in the
+/// menu" session from the player's perspective, so ducking the music out and
+/// fading it back in when one of them opens would be a jarring blip for no
+/// reason. Mirrors the `sync_menu_fog`/`sync_menu_fireflies` idiom in
+/// `ui.rs`: idempotent, driven by comparing the wanted state to what already
+/// exists.
 fn sync_menu_music(
     mut commands: Commands,
     state: Res<State<AppState>>,
@@ -82,7 +83,10 @@ fn sync_menu_music(
     assets: Res<GameAssets>,
     music: Query<(Entity, Option<&AudioSink>, Option<&MusicFade>), With<MainMenuMusic>>,
 ) {
-    let want = matches!(state.get(), AppState::MainMenu | AppState::About);
+    let want = matches!(
+        state.get(),
+        AppState::MainMenu | AppState::About | AppState::Options
+    );
     match (want, music.iter().next()) {
         (true, None) => {
             if settings.play_sounds {

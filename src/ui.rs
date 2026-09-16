@@ -20,7 +20,8 @@ use crate::audio::PlaySound;
 use crate::camera::MainCamera;
 use crate::effects::{Firefly, FogEffect, MenuFirefly};
 use crate::level::{LevelEntity, LevelMap, LoadLevel};
-use crate::{AppState, GameProgress, LOGICAL_RESOLUTION};
+use crate::localization::{Language, Msg};
+use crate::{AppState, GameProgress, GameSettings, LOGICAL_RESOLUTION};
 
 const PANEL_BG: Color = Color::srgb(0.0, 0.0, 0.0);
 /// The main menu leaves its fog backdrop visible, so its panel is a tint
@@ -48,30 +49,18 @@ const BREATHE_AMPLITUDE: f32 = 0.035;
 /// Radians per second of the title's breathing sine wave.
 const BREATHE_SPEED: f32 = 2.0;
 
-const CONTROLS_HELP: &str = "Use WASD or Arrow Keys for movement.\n\
-J to jump. K to attack. L to interact.\n\
-Collect as many stars as you can and avoid enemies!";
-
-/// Shown on every menu panel so the keyboard/gamepad path is discoverable,
-/// not just clickable buttons.
-const MENU_HINT: &str = "Arrows/Tab to move - Enter/Space/A to confirm - Esc/B to go back";
-
-const ABOUT_TEXT: &str = "Edgard in Kimeria\n\n\
-Use WASD or Arrow Keys for movement.\n\
-J to jump. K to attack. L to interact.\n\
-Escape to pause.\n\
-Collect as many stars as you can and avoid enemies!";
-
 /// Which menu button an entity is, so one handler can serve every menu.
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuAction {
     Play,
     About,
+    Options,
     Exit,
     Back,
     Resume,
     ExitToMenu,
     PlayAgain,
+    SetLanguage(Language),
 }
 
 #[derive(Component)]
@@ -154,6 +143,15 @@ impl Plugin for UiPlugin {
                 reset_camera_for_menu,
                 despawn_hud_for_menu,
                 spawn_about_menu,
+            )
+                .chain(),
+        )
+        .add_systems(
+            OnEnter(AppState::Options),
+            (
+                reset_camera_for_menu,
+                despawn_hud_for_menu,
+                spawn_options_menu,
             )
                 .chain(),
         )
@@ -283,9 +281,9 @@ fn heading(text: &str, font_size: f32, font: Handle<Font>, appear: AppearAnim) -
     )
 }
 
-fn help_text(font: Handle<Font>, appear: AppearAnim) -> impl Bundle {
+fn help_text(font: Handle<Font>, appear: AppearAnim, lang: Language) -> impl Bundle {
     (
-        Text::new(CONTROLS_HELP),
+        Text::new(Msg::ControlsHelp.t(lang)),
         TextFont::from_font_size(14.0).with_font(font),
         TextColor(TEXT_COLOR),
         TextLayout::justify(Justify::Center),
@@ -293,9 +291,9 @@ fn help_text(font: Handle<Font>, appear: AppearAnim) -> impl Bundle {
     )
 }
 
-fn menu_hint(font: Handle<Font>, appear: AppearAnim) -> impl Bundle {
+fn menu_hint(font: Handle<Font>, appear: AppearAnim, lang: Language) -> impl Bundle {
     (
-        Text::new(MENU_HINT),
+        Text::new(Msg::MenuHint.t(lang)),
         TextFont::from_font_size(14.0).with_font(font),
         TextColor(TEXT_COLOR),
         TextLayout::justify(Justify::Center),
@@ -313,7 +311,10 @@ fn sync_menu_fog(
     state: Res<State<AppState>>,
     existing: Query<Entity, With<MenuFog>>,
 ) {
-    let want_fog = matches!(state.get(), AppState::MainMenu | AppState::About);
+    let want_fog = matches!(
+        state.get(),
+        AppState::MainMenu | AppState::About | AppState::Options
+    );
     match (want_fog, existing.iter().next()) {
         (true, None) => {
             commands.spawn((FogEffect::default(), MenuFog, Name::new("MenuFog")));
@@ -358,7 +359,10 @@ fn sync_menu_fireflies(
     state: Res<State<AppState>>,
     existing: Query<Entity, With<MenuFirefly>>,
 ) {
-    let want = matches!(state.get(), AppState::MainMenu | AppState::About);
+    let want = matches!(
+        state.get(),
+        AppState::MainMenu | AppState::About | AppState::Options
+    );
     if want {
         if existing.iter().next().is_none() {
             let mut rng = rand::rng();
@@ -382,8 +386,14 @@ fn sync_menu_fireflies(
     }
 }
 
-fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Time<Real>>) {
+fn spawn_main_menu(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    settings: Res<GameSettings>,
+    time: Res<Time<Real>>,
+) {
     let now = time.elapsed_secs();
+    let lang = settings.language;
     commands.spawn((
         overlay_root("MainMenu"),
         DespawnOnExit(AppState::MainMenu),
@@ -391,7 +401,7 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
             panel_with_bg(true, MENU_BG),
             children![
                 (
-                    Text::new("Edgard in Kimeria"),
+                    Text::new(Msg::Title.t(lang)),
                     // QuestSquare reads small at its nominal size (see the
                     // About screen's note on this); the game's own title is
                     // the most prominent text on screen, so it gets by far
@@ -408,7 +418,7 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
                 ),
                 button(
                     MenuAction::Play,
-                    "Play",
+                    Msg::Play.t(lang),
                     40.0,
                     0,
                     assets.font_button.clone(),
@@ -416,28 +426,42 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
                 ),
                 button(
                     MenuAction::About,
-                    "About",
+                    Msg::About.t(lang),
                     28.0,
                     1,
                     assets.font_button.clone(),
                     AppearAnim::new(2, now),
                 ),
                 button(
-                    MenuAction::Exit,
-                    "Exit",
+                    MenuAction::Options,
+                    Msg::Options.t(lang),
                     28.0,
                     2,
                     assets.font_button.clone(),
                     AppearAnim::new(3, now),
                 ),
-                menu_hint(assets.font_text.clone(), AppearAnim::new(4, now)),
+                button(
+                    MenuAction::Exit,
+                    Msg::Exit.t(lang),
+                    28.0,
+                    3,
+                    assets.font_button.clone(),
+                    AppearAnim::new(4, now),
+                ),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(5, now), lang),
             ],
         )],
     ));
 }
 
-fn spawn_about_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Time<Real>>) {
+fn spawn_about_menu(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    settings: Res<GameSettings>,
+    time: Res<Time<Real>>,
+) {
     let now = time.elapsed_secs();
+    let lang = settings.language;
     commands.spawn((
         overlay_root("About"),
         DespawnOnExit(AppState::About),
@@ -447,13 +471,13 @@ fn spawn_about_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
             panel_sized(Val::Px(580.0), Val::Px(460.0), PANEL_BG),
             children![
                 heading(
-                    "About",
+                    Msg::About.t(lang),
                     42.0,
                     assets.font_text.clone(),
                     AppearAnim::new(0, now)
                 ),
                 (
-                    Text::new(ABOUT_TEXT),
+                    Text::new(Msg::AboutBody.t(lang)),
                     // QuestSquare's glyphs sit small in their em-box — at the
                     // same nominal size it reads noticeably smaller than
                     // NanoPlus on the buttons, so it needs a bigger number to
@@ -465,7 +489,7 @@ fn spawn_about_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
                 ),
                 button(
                     MenuAction::Back,
-                    "Back",
+                    Msg::Back.t(lang),
                     28.0,
                     0,
                     assets.font_button.clone(),
@@ -476,8 +500,84 @@ fn spawn_about_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
     ));
 }
 
-fn spawn_pause_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<Time<Real>>) {
+/// The main menu's language page: one button per [`Language`], each of which
+/// sets [`GameSettings::language`] and returns to the main menu — which then
+/// re-spawns (via `OnEnter(AppState::MainMenu)`) with every label in the
+/// newly chosen language.
+fn spawn_options_menu(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    settings: Res<GameSettings>,
+    time: Res<Time<Real>>,
+) {
     let now = time.elapsed_secs();
+    let lang = settings.language;
+    let english_label = if lang == Language::English {
+        format!("> {}", Language::English.native_name())
+    } else {
+        Language::English.native_name().to_string()
+    };
+    let ukrainian_label = if lang == Language::Ukrainian {
+        format!("> {}", Language::Ukrainian.native_name())
+    } else {
+        Language::Ukrainian.native_name().to_string()
+    };
+    commands.spawn((
+        overlay_root("Options"),
+        DespawnOnExit(AppState::Options),
+        children![(
+            panel(false),
+            children![
+                heading(
+                    Msg::Options.t(lang),
+                    24.0,
+                    assets.font_text.clone(),
+                    AppearAnim::new(0, now)
+                ),
+                heading(
+                    Msg::LanguageLabel.t(lang),
+                    16.0,
+                    assets.font_text.clone(),
+                    AppearAnim::new(1, now)
+                ),
+                button(
+                    MenuAction::SetLanguage(Language::English),
+                    &english_label,
+                    24.0,
+                    0,
+                    assets.font_button.clone(),
+                    AppearAnim::new(2, now),
+                ),
+                button(
+                    MenuAction::SetLanguage(Language::Ukrainian),
+                    &ukrainian_label,
+                    24.0,
+                    1,
+                    assets.font_button.clone(),
+                    AppearAnim::new(3, now),
+                ),
+                button(
+                    MenuAction::Back,
+                    Msg::Back.t(lang),
+                    28.0,
+                    2,
+                    assets.font_button.clone(),
+                    AppearAnim::new(4, now),
+                ),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(5, now), lang),
+            ],
+        )],
+    ));
+}
+
+fn spawn_pause_menu(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    settings: Res<GameSettings>,
+    time: Res<Time<Real>>,
+) {
+    let now = time.elapsed_secs();
+    let lang = settings.language;
     commands.spawn((
         overlay_root("PauseMenu"),
         DespawnOnExit(AppState::Paused),
@@ -485,14 +585,14 @@ fn spawn_pause_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
             panel(false),
             children![
                 heading(
-                    "Pause Menu",
+                    Msg::PauseMenu.t(lang),
                     24.0,
                     assets.font_text.clone(),
                     AppearAnim::new(0, now)
                 ),
                 button(
                     MenuAction::Resume,
-                    "Resume",
+                    Msg::Resume.t(lang),
                     28.0,
                     0,
                     assets.font_button.clone(),
@@ -500,21 +600,27 @@ fn spawn_pause_menu(mut commands: Commands, assets: Res<GameAssets>, time: Res<T
                 ),
                 button(
                     MenuAction::ExitToMenu,
-                    "Exit to Menu",
+                    Msg::ExitToMenu.t(lang),
                     28.0,
                     1,
                     assets.font_button.clone(),
                     AppearAnim::new(2, now),
                 ),
-                menu_hint(assets.font_text.clone(), AppearAnim::new(3, now)),
-                help_text(assets.font_text.clone(), AppearAnim::new(4, now)),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(3, now), lang),
+                help_text(assets.font_text.clone(), AppearAnim::new(4, now), lang),
             ],
         )],
     ));
 }
 
-fn spawn_game_over(mut commands: Commands, assets: Res<GameAssets>, time: Res<Time<Real>>) {
+fn spawn_game_over(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    settings: Res<GameSettings>,
+    time: Res<Time<Real>>,
+) {
     let now = time.elapsed_secs();
+    let lang = settings.language;
     commands.spawn((
         overlay_root("GameOver"),
         DespawnOnExit(AppState::GameOver),
@@ -522,20 +628,20 @@ fn spawn_game_over(mut commands: Commands, assets: Res<GameAssets>, time: Res<Ti
             panel(false),
             children![
                 heading(
-                    "Game Over",
+                    Msg::GameOver.t(lang),
                     24.0,
                     assets.font_text.clone(),
                     AppearAnim::new(0, now)
                 ),
                 button(
                     MenuAction::PlayAgain,
-                    "Play Again",
+                    Msg::PlayAgain.t(lang),
                     28.0,
                     0,
                     assets.font_button.clone(),
                     AppearAnim::new(1, now),
                 ),
-                menu_hint(assets.font_text.clone(), AppearAnim::new(2, now)),
+                menu_hint(assets.font_text.clone(), AppearAnim::new(2, now), lang),
             ],
         )],
     ));
@@ -793,6 +899,7 @@ fn handle_buttons(
     mut exit: MessageWriter<AppExit>,
     mut sounds: MessageWriter<PlaySound>,
     mut progress: ResMut<GameProgress>,
+    mut settings: ResMut<GameSettings>,
 ) {
     for (interaction, action) in &interactions {
         if *interaction != Interaction::Pressed {
@@ -805,6 +912,11 @@ fn handle_buttons(
                 next_state.set(AppState::Playing);
             }
             MenuAction::About => next_state.set(AppState::About),
+            MenuAction::Options => next_state.set(AppState::Options),
+            MenuAction::SetLanguage(lang) => {
+                settings.language = *lang;
+                next_state.set(AppState::MainMenu);
+            }
             MenuAction::Exit => {
                 exit.write(AppExit::Success);
             }
