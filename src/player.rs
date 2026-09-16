@@ -204,11 +204,14 @@ pub fn spawn_player(commands: &mut Commands, assets: &GameAssets, at: ObjectPlac
 /// Port of `onKeyEvent`. WASD/arrows move, J jumps, K attacks, L interacts.
 fn read_input(
     keys: Res<ButtonInput<KeyCode>>,
+    gamepads: Query<&Gamepad>,
     mut next_state: ResMut<NextState<AppState>>,
     mut triggers: MessageWriter<TriggerActivated>,
     mut query: Query<(&mut PlayerInput, &PlayerStatus, &PlayerRoutine), With<Player>>,
 ) {
-    if keys.just_pressed(KeyCode::Escape) {
+    let pause = keys.just_pressed(KeyCode::Escape)
+        || gamepads.iter().any(|g| g.just_pressed(GamepadButton::Start));
+    if pause {
         next_state.set(AppState::Paused);
         return;
     }
