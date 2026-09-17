@@ -1,10 +1,8 @@
 //! Headless tests for the trigger -> actionable wiring.
 //!
-//! In the Dart a `Trigger` walked `parent.children`, filtered for `Actionable`
-//! with a matching `targetId`, and called `performAction()` on each. The port
-//! replaces that with a `TriggerActivated` message and one handler per kind of
+//! A `TriggerActivated` message is handled by one handler per kind of
 //! actionable, so this checks the two ends still meet: only matching ids react,
-//! and each kind does what its Dart `performAction` did.
+//! and each kind performs its expected action.
 //!
 //! This path is awkward to confirm by playing — it needs the player to stand in
 //! a 16px trigger and press a key on exactly the right frame.

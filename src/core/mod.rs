@@ -1,10 +1,8 @@
 //! Actor primitives shared by the player and every enemy.
 //!
-//! The Flame original expressed these as class inheritance (`Actor`) plus two
-//! mixins (`GravityMixin`, `CollideMixin`) that reached into the owning
-//! component's mutable state. Here they are plain data components; the behaviour
-//! that used to live in the mixins lives in [`collision`] as free functions that
-//! the player and enemy systems call in the same order the Dart did.
+//! These are plain data components; the shared behaviour lives in
+//! [`collision`] as free functions that the player and enemy systems call in
+//! the same order every fixed step.
 
 use bevy::prelude::*;
 
@@ -22,7 +20,7 @@ pub struct GamePos(pub Vec2);
 #[derive(Component, Debug, Default, Clone, Copy, Deref, DerefMut)]
 pub struct BoxSize(pub Vec2);
 
-/// Render depth. Mirrors Flame's integer `priority`.
+/// Render depth.
 #[derive(Component, Debug, Default, Clone, Copy, Deref, DerefMut)]
 pub struct ZLayer(pub f32);
 
@@ -46,9 +44,8 @@ pub mod z {
 #[derive(Component, Debug, Default, Clone, Copy, Deref, DerefMut)]
 pub struct Velocity(pub Vec2);
 
-/// Which way the actor faces. Replaces Flame's `scale.x` sign trick, which the
-/// original collision math had to compensate for; [`collision::overlaps`] keeps
-/// that compensation, now driven by this flag instead of a render transform.
+/// Which way the actor faces. [`collision::overlaps`] uses this flag, rather
+/// than a render transform, to mirror the hitbox for collision math.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Facing {
     pub right: bool,
@@ -93,9 +90,9 @@ impl Hitbox {
     }
 }
 
-/// Gravity tuning. The Dart added `gravityAcceleration` to velocity once per
-/// *fixed step* rather than scaling by dt, so these are per-step values, not
-/// per-second ones. Preserved verbatim to keep jump arcs identical.
+/// Gravity tuning. Applied to velocity once per *fixed step* rather than
+/// scaled by dt, so these are per-step values, not per-second ones. Chosen to
+/// keep jump arcs feeling consistent.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Gravity {
     pub acceleration: f32,
@@ -117,7 +114,7 @@ impl Default for Gravity {
 #[derive(Component, Debug, Default, Clone, Copy, Deref, DerefMut)]
 pub struct Grounded(pub bool);
 
-/// Contact flags the Dart kept as loose `bool` fields on `CollideMixin`.
+/// Contact flags for an actor's physical state this step.
 #[derive(Component, Debug, Default, Clone, Copy)]
 pub struct ContactState {
     pub in_quicksand: bool,
@@ -130,9 +127,9 @@ pub struct ContactState {
     pub escalator: Option<Entity>,
 }
 
-/// The animation states an actor can be in. Union of the Dart `ActorState` and
-/// the per-enemy `State` enums, which were three separate, partly-overlapping
-/// enums that could not be handled generically.
+/// The animation states an actor can be in — one enum shared by the player
+/// and every enemy, rather than several separate, partly-overlapping
+/// per-type enums.
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ActorState {
     #[default]
@@ -147,7 +144,7 @@ pub enum ActorState {
     Climbing,
 }
 
-/// Fixed physics rate. Flame ran an explicit accumulator at this step.
+/// Fixed physics rate.
 pub const FIXED_TIMESTEP_HZ: f64 = 60.0;
 
 /// Ordering for the fixed-step physics pipeline.

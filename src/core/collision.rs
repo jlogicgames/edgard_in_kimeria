@@ -1,19 +1,19 @@
-//! AABB collision resolution, ported from `utils.dart` + `collide_mixin.dart`.
+//! AABB collision resolution.
 //!
-//! The Dart mixin walked `Level`'s three lists (collision blocks, then
-//! escalators, then falling platforms) in that order and `break`-ed on the first
+//! Resolution walks the world's three lists (collision blocks, then
+//! escalators, then falling platforms) in that order and breaks on the first
 //! resolved contact. Order and early-exit are load-bearing — resolving against a
-//! different block first moves the actor somewhere else — so the port keeps both
-//! exactly, snapshotting the world into [`CollisionWorld`] so the resolution
-//! functions can stay plain and callable in the same sequence.
+//! different block first moves the actor somewhere else — so [`CollisionWorld`]
+//! snapshots the world once per step, keeping both exact and letting the
+//! resolution functions stay plain and callable in the same sequence.
 
 use bevy::prelude::*;
 
 use super::{ContactState, Facing, GamePos, Grounded, Hitbox, Velocity};
 
-/// What a collision block does on contact. In Dart these were four independent
-/// `bool` fields that could contradict each other; here the states that the
-/// resolver actually branches on are mutually exclusive by construction.
+/// What a collision block does on contact. Modeled as an enum so the states
+/// the resolver actually branches on are mutually exclusive by construction,
+/// rather than independent `bool` fields that could contradict each other.
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum BlockKind {
     /// Blocks from every side.
@@ -139,9 +139,9 @@ pub fn collect_collision_world(
 /// Bevy's sprite renders as a fixed box anchored at `actor_pos` — `flip_x`
 /// only mirrors the texture inside it, it never moves the box — so facing
 /// left must mirror the hitbox *in place* within that same `box_width`,
-/// rather than reflecting it out past the box the way a literal port of
-/// Flame's anchor-relative `scale.x = -1` trick would (that reflection
-/// leaves the hitbox sitting entirely outside the drawn sprite).
+/// rather than reflecting it out past the box the way a naive anchor-relative
+/// flip (`scale.x = -1`) would — that reflection leaves the hitbox sitting
+/// entirely outside the drawn sprite.
 fn hitbox_left_x(actor_pos_x: f32, hitbox: &Hitbox, box_width: f32, facing_right: bool) -> f32 {
     if facing_right {
         actor_pos_x + hitbox.offset.x
@@ -150,8 +150,6 @@ fn hitbox_left_x(actor_pos_x: f32, hitbox: &Hitbox, box_width: f32, facing_right
     }
 }
 
-/// Port of `checkCollision` in `utils.dart`.
-///
 /// One adjustment looks arbitrary but is deliberate: quicksand and one-way
 /// platforms shift the tested edge so the actor sinks into the former and
 /// lands only on top of the latter.
@@ -184,7 +182,7 @@ pub fn overlaps(
         && fixed_x + width > block.pos.x
 }
 
-/// Convenience for surfaces, which the Dart tested as non-platform blocks.
+/// Convenience for surfaces, tested the same way as non-platform blocks.
 fn overlaps_surface(
     actor_pos: Vec2,
     hitbox: &Hitbox,
@@ -304,18 +302,17 @@ pub fn apply_gravity(
     pos.y += velocity.y * dt;
 }
 
-/// Things vertical resolution discovered that the caller must act on, since the
-/// Dart did it through direct method calls on sibling components.
+/// Things vertical resolution discovered that the caller must act on, since
+/// resolution itself has no access to the sibling components those actions need.
 #[derive(Debug, Default)]
 pub struct VerticalOutcome {
     /// Landed on a platform that has not started falling yet: trigger its fall.
     pub trigger_fall: Option<Entity>,
-    /// Struck a falling platform while moving upward. The Dart called
-    /// `collidedWithActor()` on the actor here, which for the player is a death.
+    /// Struck a falling platform while moving upward, which for the player is
+    /// a death.
     pub hit_platform_from_below: bool,
 }
 
-/// Port of `checkVerticalCollisions`.
 pub fn resolve_vertical(body: &mut ActorBody, world: &CollisionWorld) -> VerticalOutcome {
     let mut outcome = VerticalOutcome::default();
     body.contact.escalator = None;

@@ -4,13 +4,12 @@
 //! `bevy_ecs_tiled` does spawn an entity per Tiled object, but those carry the
 //! plugin's own transforms and no gameplay meaning. Rather than adopt and patch
 //! them, this module reads the raw [`tiled::Map`] out of the loaded asset and
-//! spawns its own entities in Tiled space — the same data the Dart `Level` read
-//! from `flame_tiled`, so the two spawn paths can be compared directly.
+//! spawns its own entities in Tiled space.
 //!
 //! Layer offsets are deliberately ignored when reading object coordinates. The
-//! `SpawnPoints` layer of `forest.tmx` carries `offsety="-16"`, and the Dart read
-//! `spawnPoint.y` raw, so honouring the offset here would shift every entity in
-//! that level 16px against the original.
+//! `SpawnPoints` layer of `forest.tmx` carries `offsety="-16"`, and honouring
+//! that offset here would shift every entity in that level 16px from its
+//! intended position.
 
 use bevy::prelude::*;
 use bevy_ecs_tiled::prelude::*;
@@ -20,7 +19,7 @@ use crate::core::{BlockKind, BoxSize, CollisionBlock, GamePos, ZLayer, z};
 use crate::{AppState, GameProgress, LEVEL_NAMES};
 
 /// Marks everything belonging to the currently loaded level, so a reload is one
-/// query rather than Flame's `removeWhere((c) => c is Level)`.
+/// query.
 ///
 /// Systems that despawn their own level-scoped entities (a finished explosion,
 /// a stomped enemy, a collected coin) must use `try_despawn`: a level unload can
@@ -194,7 +193,7 @@ fn placement(object: &tiled::Object) -> ObjectPlacement {
 /// Reads a numeric property, accepting either the `int` or `float` Tiled type.
 ///
 /// The maps use both for the same conceptual field (`Intensity` is `int`,
-/// `offNeg` is `float`), which Dart's dynamic `getValue` hid.
+/// `offNeg` is `float`).
 pub fn prop_f32(object: &tiled::Object, key: &str) -> Option<f32> {
     match object.properties.get(key)? {
         tiled::PropertyValue::FloatValue(v) => Some(*v),

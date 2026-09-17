@@ -1,4 +1,4 @@
-//! Moving and triggered platforms: `escalator.dart` and `falling_platform.dart`.
+//! Moving and triggered platforms: escalators and falling platforms.
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -13,7 +13,7 @@ use crate::level::{LevelEntity, ObjectPlacement};
 use crate::player::TriggerActivated;
 
 /// Escalators measure their patrol range in 32px units, unlike the enemies'
-/// 16px. Preserved from the Dart, where the two constants also differed.
+/// 16px.
 const ESCALATOR_TILE_SIZE: f32 = 32.0;
 const ESCALATOR_SPEED: f32 = 50.0;
 /// Warning time between being stepped on and dropping.
@@ -33,8 +33,7 @@ pub struct Escalator {
     pub running: bool,
 }
 
-/// Lifecycle of a falling platform, replacing three interleaved
-/// `Future.delayed` callbacks and a Flame `MoveByEffect`.
+/// Lifecycle of a falling platform.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FallPhase {
     Idle,

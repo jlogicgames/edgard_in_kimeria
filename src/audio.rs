@@ -1,9 +1,8 @@
 //! One-shot sound playback.
 //!
-//! Flame needed `AudioPool`s (pre-warmed players, `maxPlayers: 3`) and a silent
-//! priming play at startup to dodge first-play latency. Bevy decodes on a mixer
-//! thread and an `AudioPlayer` entity is cheap, so a sound is just an entity
-//! that despawns when it finishes — no pooling, no warm-up.
+//! Bevy decodes on a mixer thread and an `AudioPlayer` entity is cheap, so a
+//! sound is just an entity that despawns when it finishes — no pooling, no
+//! warm-up.
 
 use bevy::audio::{AudioSinkPlayback, Volume};
 use bevy::prelude::*;

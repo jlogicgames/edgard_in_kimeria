@@ -1,11 +1,9 @@
 //! Asset loading and clip construction.
 //!
-//! Flame could call `images.loadAllImages()` and then read sizes synchronously
-//! from a cache. Bevy's asset pipeline is async, so the port adds an explicit
-//! [`AppState::Loading`] step: it waits for every sheet, then builds the atlas
-//! layouts (which need real image dimensions) once, up front. That also removes
-//! the `Future.delayed(Duration(seconds: 1))` the Dart used to paper over the
-//! same race when swapping levels.
+//! Bevy's asset pipeline is async and image sizes aren't known until a sheet
+//! finishes loading, so there's an explicit [`AppState::Loading`] step: it
+//! waits for every sheet, then builds the atlas layouts (which need real
+//! image dimensions) once, up front. That avoids a race when swapping levels.
 
 use bevy::asset::LoadState;
 use bevy::platform::collections::HashMap;
@@ -28,7 +26,7 @@ const IMAGE_PATHS: &[&str] = &[
     "images/background/sky.png",
 ];
 
-/// One-shot sounds, by asset path. Names match the Dart `FlameAudio.play` calls.
+/// One-shot sounds, by asset path.
 const SOUND_PATHS: &[&str] = &[
     "audio/jump.wav",
     "audio/hit.wav",
@@ -173,10 +171,9 @@ fn finish_loading(
     next_state.set(AppState::MainMenu);
 }
 
-/// Frame layouts transcribed from the Dart `_loadAllAnimations` methods.
+/// Frame layouts for every actor's animation clips.
 ///
-/// Row offsets are kept in the `48 * n` / `32 * n` form the original used so the
-/// two can be diffed line by line.
+/// Row offsets are kept in the `48 * n` / `32 * n` form for readability.
 fn build_game_assets(
     image_map: &HashMap<String, Handle<Image>>,
     size_of: &dyn Fn(&str) -> UVec2,

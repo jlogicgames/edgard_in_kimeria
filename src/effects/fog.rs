@@ -16,9 +16,7 @@ pub struct FogEffect {
     elapsed: f32,
 }
 
-/// Fog is parented to the camera so it always covers the view, which is what
-/// the Dart achieved by copying `camera.visibleWorldRect` into the component
-/// every frame.
+/// Fog is parented to the camera so it always covers the view.
 pub(super) fn hydrate_fog(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -37,7 +35,7 @@ pub(super) fn hydrate_fog(
                 MeshMaterial2d(materials.add(FogMaterial {
                     params: FogParams {
                         size: LOGICAL_RESOLUTION,
-                        // Uniform values the Dart passed literally.
+                        // Literal uniform values.
                         ground_pos: 0.0,
                         ground_add: 0.0,
                         fade: 1.0,

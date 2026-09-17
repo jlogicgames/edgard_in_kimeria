@@ -1,15 +1,10 @@
 //! HUD and menus.
 //!
-//! The original drew these as Flutter widgets floating above the game canvas,
-//! toggled by name through Flame's `overlays` map — a second UI framework,
-//! composited separately, with lifetimes managed by hand.
-//!
-//! The port uses Bevy's own `bevy_ui`: the menus are four small trees of nodes,
+//! Built with Bevy's own `bevy_ui`: the menus are four small trees of nodes,
 //! nothing here wants immediate-mode or a docking/inspector toolkit, and staying
 //! native means one render path and no extra dependency. Each menu is tagged
-//! `DespawnOnExit(state)`, so the state machine cleans it up — the class of bug
-//! the Dart risked every time it paired an `overlays.add` with a matching
-//! `overlays.remove` in a different file.
+//! `DespawnOnExit(state)`, so the state machine cleans it up automatically,
+//! rather than requiring a manually paired add/remove in a different file.
 
 use bevy::color::Mix;
 use bevy::prelude::*;

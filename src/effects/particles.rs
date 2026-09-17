@@ -1,6 +1,6 @@
 //! The generic short-lived sprite particle shared by every CPU emitter
-//! (currently just the torch — fireflies and rain drive their own sprite
-//! directly, since neither needs a lifespan/shrink/fade curve).
+//! (currently just the torch — fireflies drive their own sprite
+//! directly, since it doesn't need a lifespan/shrink/fade curve).
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;

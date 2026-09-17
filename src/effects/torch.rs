@@ -1,8 +1,6 @@
 //! A flame: a flickering glow plus three particle emitters.
 //!
-//! The Dart's `_weightedSparkles` feedback loop (each sparkle nudged the glow by
-//! a distance-weighted amount, decremented by a delayed callback) is replaced by
-//! modulating the glow from the live particle count directly — the same visual
+//! The glow is modulated from the live particle count directly — a visual
 //! pulse without a hand-maintained running total that could drift.
 
 use bevy::prelude::*;
@@ -31,7 +29,6 @@ pub struct Torch {
 
 impl Torch {
     pub fn new(intensity: i32, target_id: String) -> Self {
-        // `_baseRadius` / `_baseAlpha` from `Torch.onLoad`.
         let base_radius = (4.0 + intensity as f32 * 0.06).clamp(3.0, 40.0);
         let base_alpha = (18.0 + intensity as f32 * 0.22).clamp(8.0, 220.0) / 255.0;
         Self {
@@ -48,7 +45,7 @@ impl Torch {
         }
     }
 
-    /// `toggleFire`. Relighting restores the Dart's fixed intensity of 200.
+    /// Relighting restores a fixed intensity of 200.
     pub fn set_lit(&mut self, lit: bool) {
         self.lit = lit;
         self.intensity = if lit { 200 } else { 0 };
@@ -67,16 +64,15 @@ impl Torch {
 #[derive(Component)]
 pub(super) struct TorchGlow;
 
-/// `position` is the flame's centre, as the Dart placed torches with
-/// `Anchor.center` at the middle of their Tiled object.
+/// `position` is the flame's centre, at the middle of the Tiled object.
 pub fn spawn_torch(
     commands: &mut Commands,
     at: ObjectPlacement,
     intensity: i32,
     target_id: String,
 ) -> Entity {
-    // The level spawner passes the object's top-left; the Dart added half the
-    // size to centre the flame.
+    // The level spawner passes the object's top-left; add half the size to
+    // centre the flame.
     let centre = at.pos + at.size / 2.0;
     commands
         .spawn((
@@ -140,7 +136,6 @@ pub(super) fn drive_torches(
             .flicker
             .lerp(0.75 + rng.random::<f32>() * 0.6, (dt * 8.0).min(1.0));
         let radius = torch.base_radius * torch.flicker;
-        // The Dart's glow was `Colors.greenAccent` behind a blur mask.
         glow_sprite.color = Color::srgb(0.4, 1.0, 0.6).with_alpha(torch.base_alpha * torch.flicker);
         glow_sprite.custom_size = Some(Vec2::splat(radius * 4.0));
 
@@ -201,16 +196,14 @@ pub(super) fn drive_torches(
             }
         }
 
-        // Mid sparkles: the dense green burst, scaled by intensity as
-        // `midSparkleBurst` was.
+        // Mid sparkles: the dense green burst, scaled by intensity.
         torch.sparkle_timer -= dt;
         if torch.sparkle_timer <= 0.0 {
             torch.sparkle_timer = 0.08 + rng.random::<f32>() * 0.18;
             let burst = ((torch.intensity as f32 * (0.8 + rng.random::<f32>() * 0.4)) as i32)
                 .clamp(10, 300)
-                // The Dart spawned every spark as its own component; capping the
-                // burst keeps a 300-intensity torch from adding 300 entities
-                // several times a second.
+                // Capping the burst keeps a 300-intensity torch from adding
+                // hundreds of entities several times a second.
                 .min(40);
             for _ in 0..burst {
                 let from = centre

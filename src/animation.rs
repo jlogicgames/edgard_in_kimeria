@@ -1,8 +1,7 @@
-//! Sprite-sheet animation, ported from Flame's `SpriteAnimationGroupComponent`.
+//! Sprite-sheet animation.
 //!
-//! Flame let a component hold a `Map<State, SpriteAnimation>` and swap `current`.
-//! The equivalent here is an [`ActorState`] component that systems write freely
-//! plus [`AnimationSet`]/[`AnimationPlayer`], which notice the change and drive
+//! An [`ActorState`] component that systems write freely, plus
+//! [`AnimationSet`]/[`AnimationPlayer`], which notice the change and drive
 //! the atlas index. Gameplay code never touches frames or timers.
 
 use bevy::platform::collections::HashMap;
@@ -12,9 +11,9 @@ use crate::core::ActorState;
 
 /// One animation: a private atlas layout whose indices are exactly its frames.
 ///
-/// Per-clip layouts rather than one grid over the sheet, because Flame's
-/// `amountPerRow` lets a clip wrap at a width that need not match the sheet's
-/// real column count — the 7-frame player attack wraps at 4 on a 5-wide sheet.
+/// Per-clip layouts rather than one grid over the sheet, because a clip's
+/// wrap width need not match the sheet's real column count — the 7-frame
+/// player attack wraps at 4 on a 5-wide sheet.
 #[derive(Debug, Clone)]
 pub struct AnimationClip {
     pub image: Handle<Image>,
@@ -33,7 +32,7 @@ pub struct ClipSpec {
     /// Top-left of the first frame.
     pub origin: UVec2,
     pub frames: usize,
-    /// Frames per row before wrapping; Flame's `amountPerRow`.
+    /// Frames per row before wrapping.
     pub per_row: usize,
     pub step_time: f32,
     pub looping: bool,
@@ -64,8 +63,8 @@ impl ClipSpec {
     /// Builds the clip, clamping each frame rect to the image.
     ///
     /// Two sheets (`FallingOn.png`, `Grey On (32x8).png`) declare a frame taller
-    /// than the file actually is; Flame padded the overflow with transparency.
-    /// Clamping reproduces the visible result without asking wgpu for pixels
+    /// than the file actually is; the overflow is meant to render as transparent
+    /// padding. Clamping reproduces the visible result without asking wgpu for pixels
     /// that do not exist, which would be a hard error rather than empty space.
     pub fn build(
         &self,
@@ -112,7 +111,7 @@ impl AnimationSet {
     }
 }
 
-/// Playback cursor. Replaces Flame's `animationTicker`.
+/// Playback cursor.
 #[derive(Component, Debug, Default)]
 pub struct AnimationPlayer {
     elapsed: f32,
@@ -121,11 +120,11 @@ pub struct AnimationPlayer {
     current: Option<ActorState>,
     /// True once a non-looping clip has shown its last frame.
     ///
-    /// Gameplay code polls this where the Dart wrote
-    /// `await animationTicker?.completed`. Awaiting a future mid-update meant
-    /// the rest of that method ran an arbitrary number of frames later, with no
-    /// guarantee the entity still existed; a polled flag makes the wait explicit
-    /// and keeps every state transition inside the schedule.
+    /// Gameplay code polls this rather than awaiting completion: awaiting
+    /// mid-update would let the rest of that logic run an arbitrary number of
+    /// frames later, with no guarantee the entity still existed; a polled flag
+    /// makes the wait explicit and keeps every state transition inside the
+    /// schedule.
     pub finished: bool,
 }
 
@@ -134,7 +133,7 @@ impl AnimationPlayer {
         self.frame
     }
 
-    /// Restarts the current clip. Flame's `animationTicker.reset()`.
+    /// Restarts the current clip.
     pub fn reset(&mut self) {
         self.elapsed = 0.0;
         self.frame = 0;

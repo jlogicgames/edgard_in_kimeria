@@ -1,15 +1,13 @@
 //! Pickups and interactables: collectables, bombs, checkpoints, triggers and the
 //! trigger-driven `Actionable` objects.
 //!
-//! In Flame each of these overrode `onCollisionStart` and reached across into
-//! the player, or walked `parent.children` to find matching `Actionable`s. Here
-//! contact is one overlap system per kind and the trigger wiring is a
+//! Contact is one overlap system per kind and the trigger wiring is a
 //! [`TriggerActivated`] message, so nothing needs a handle on anything else.
 //!
-//! Note on hitboxes: the Dart gave coins and bombs an 8px `CircleHitbox`
-//! inscribed in their 16x16 sprite. The port tests the enclosing box instead,
-//! which differs only within a pixel at the corners and keeps every contact test
-//! in the game on one code path.
+//! Note on hitboxes: coins and bombs have a 16x16 sprite but tests use the
+//! enclosing box rather than a circle inscribed within it, which differs only
+//! within a pixel at the corners and keeps every contact test in the game on
+//! one code path.
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -48,7 +46,6 @@ pub struct Trigger {
 }
 
 /// Links an object to the [`Trigger`] that switches it, by shared name.
-/// Replaces the `Actionable` Dart mixin.
 #[derive(Component)]
 pub struct Actionable {
     pub target_id: String,
@@ -124,8 +121,7 @@ pub fn spawn_bomb(commands: &mut Commands, assets: &GameAssets, at: ObjectPlacem
     ));
 }
 
-/// Checkpoints have no sprite: the Dart's flag animations were commented out and
-/// the component rendered nothing but its debug box.
+/// Checkpoints have no sprite; the component renders nothing but its debug box.
 pub fn spawn_checkpoint(commands: &mut Commands, at: ObjectPlacement) {
     commands.spawn((
         Checkpoint,

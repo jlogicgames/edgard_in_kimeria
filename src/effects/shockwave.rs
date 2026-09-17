@@ -8,7 +8,6 @@ use crate::level::LevelEntity;
 
 use super::materials::{ShockwaveMaterial, ShockwaveParams};
 
-/// `ShockwaveEffect` defaults from `collectable.dart`.
 const SHOCKWAVE_DURATION: f32 = 0.6;
 const SHOCKWAVE_MAX_RADIUS: f32 = 64.0;
 const SHOCKWAVE_RING_WIDTH: f32 = 8.0;
@@ -46,8 +45,8 @@ pub(super) fn hydrate_shockwaves(
                     center: Vec2::splat(0.5),
                     time: 0.0,
                     progress: 0.0,
-                    // The Dart converted pixels to UV by dividing by the larger
-                    // quad dimension; the quad is square, so both use `extent`.
+                    // Pixels convert to UV by dividing by the larger quad
+                    // dimension; the quad is square, so both use `extent`.
                     max_radius: (SHOCKWAVE_MAX_RADIUS / extent).clamp(0.0, 1.0),
                     width: (SHOCKWAVE_RING_WIDTH / extent).clamp(0.001, 1.0),
                 },

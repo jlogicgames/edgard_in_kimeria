@@ -1,10 +1,8 @@
-//! The player controller, ported from `player.dart`.
+//! The player controller.
 //!
-//! The Dart class mixed input, physics, animation, damage and camera work into
-//! one 570-line component whose async methods (`await animationTicker.completed`)
-//! suspended mid-update and resumed frames later. Here the same behaviour is
-//! split into systems, and every wait that used to be an `await` is an explicit
-//! [`PlayerRoutine`] the schedule can see.
+//! Input, physics, animation, damage and camera work are split into separate
+//! systems, and every multi-frame wait is an explicit [`PlayerRoutine`] the
+//! schedule can see.
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -24,8 +22,8 @@ const MOVE_SPEED: f32 = 100.0;
 const GRAVITY: f32 = 9.8;
 const JUMP_FORCE: f32 = 260.0;
 const TERMINAL_VELOCITY: f32 = 300.0;
-/// `kNumberOfTries`. Note the Dart decremented *before* testing for zero, so
-/// this allows four deaths, not three; kept as-is.
+/// Note: the decrement happens *before* testing for zero, so this allows
+/// four deaths, not three; kept as-is.
 const NUMBER_OF_TRIES: i32 = 3;
 /// Below this y the player has fallen out of the level.
 const DEATH_PLANE_Y: f32 = 380.0;
@@ -73,11 +71,10 @@ impl Default for PlayerStatus {
     }
 }
 
-/// A multi-step sequence that used to be written with `await`.
+/// A multi-step sequence, encoded explicitly as data.
 ///
 /// Encoding it as data means the player cannot be halfway through a respawn and
-/// simultaneously accepting input, which the Dart guarded with ad-hoc
-/// `isGotHit` / `isReachedCheckpoint` flags checked in three places.
+/// simultaneously accepting input.
 #[derive(Component, Debug, Default, PartialEq)]
 pub enum PlayerRoutine {
     #[default]
@@ -91,7 +88,7 @@ pub enum PlayerRoutine {
 }
 
 impl PlayerRoutine {
-    /// The Dart skipped the whole physics block while either flag was set.
+    /// Whether the whole physics block should be skipped this frame.
     fn blocks_control(&self) -> bool {
         !matches!(self, PlayerRoutine::Active)
     }
@@ -155,8 +152,8 @@ impl Plugin for PlayerPlugin {
 }
 
 pub fn spawn_player(commands: &mut Commands, assets: &GameAssets, at: ObjectPlacement) {
-    // The Dart hard-coded 48x48 and ignored the Tiled object's size, which in
-    // `forest.tmx` is a non-integer 48.88. Keeping the hard-coded value.
+    // Hard-coded 48x48, ignoring the Tiled object's size, which in
+    // `forest.tmx` is a non-integer 48.88.
     let size = Vec2::splat(48.0);
     // Grouped into sub-bundles by concern; a flat tuple would also exceed the
     // 15-element limit `Bundle` is implemented up to.
@@ -222,8 +219,8 @@ fn read_input(
         let left = keys.any_pressed([KeyCode::KeyA, KeyCode::ArrowLeft]);
         let right = keys.any_pressed([KeyCode::KeyD, KeyCode::ArrowRight]);
 
-        // The Dart froze steering during an attack but kept tracking the keys so
-        // movement could resume when the swing finished.
+        // Steering freezes during an attack but keys are still tracked so
+        // movement can resume when the swing finishes.
         input.horizontal = if status.attacking {
             0.0
         } else {
@@ -423,15 +420,13 @@ fn update_state(
     *state = next;
 }
 
-/// Mirrors the sprite to match [`Facing`], and drives the flip that the original
-/// achieved with a negative scale.
+/// Mirrors the sprite to match [`Facing`].
 ///
 /// The sprite's box stays anchored at [`GamePos`] regardless of facing —
 /// `flip_x` only mirrors the texture in place — so the rendered character never
 /// jumps sideways when it turns around. [`collision::overlaps`] mirrors the
 /// hitbox to match this same fixed box instead of swinging it to the other
-/// side, which is what a naive port of Flame's anchor-relative scale flip
-/// would do.
+/// side.
 pub fn apply_facing(mut query: Query<(&Facing, &mut Sprite), Changed<Facing>>) {
     for (facing, mut sprite) in &mut query {
         sprite.flip_x = !facing.right;
@@ -491,7 +486,7 @@ fn resolve_attack(
             continue;
         }
 
-        // The swing ends with its animation; the Dart awaited the same ticker.
+        // The swing ends with its animation.
         if animation.finished {
             status.attacking = false;
             continue;
@@ -542,9 +537,9 @@ fn attack_rect(pos: Vec2, hitbox: &Hitbox, facing_right: bool) -> Rect {
     Rect::from_corners(min, min + Vec2::new(37.0, hitbox.size.y + 14.0))
 }
 
-/// Bullet time near a bat: the Dart scaled gameplay `dt` by hand while leaving
-/// animation on real time. Bevy already separates those two clocks, so this is
-/// just a relative-speed change on the virtual clock, which `FixedUpdate` reads.
+/// Bullet time near a bat: Bevy separates the gameplay and real-time clocks,
+/// so this is just a relative-speed change on the virtual clock, which
+/// `FixedUpdate` reads.
 fn update_bullet_time(
     mut virtual_time: ResMut<Time<Virtual>>,
     players: Query<(&GamePos, &Hitbox, &BoxSize, &Facing), With<Player>>,
@@ -584,7 +579,7 @@ fn rect_distance(a: Rect, b: Rect) -> f32 {
     (dx * dx + dy * dy).sqrt()
 }
 
-/// Drives the death and checkpoint sequences that were `await` chains in Dart.
+/// Drives the death and checkpoint sequences.
 fn advance_routines(
     time: Res<Time<Real>>,
     mut next_state: ResMut<NextState<AppState>>,

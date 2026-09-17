@@ -1,9 +1,8 @@
-//! Tests for the ported AABB resolution.
+//! Tests for AABB resolution.
 //!
-//! This is the code most likely to drift from the original: `utils.dart`'s
-//! `checkCollision` has three coordinate fixups whose reasons are not obvious
-//! from the arithmetic, and `collide_mixin.dart` depends on list order and
-//! early exit. Each case here is derived from the Dart, not from the Rust.
+//! This is code that is easy to get subtly wrong: collision checking has
+//! three coordinate fixups whose reasons are not obvious from the
+//! arithmetic, and resolution depends on list order and early exit.
 
 use bevy::prelude::*;
 use edgard_in_kimeria::core::collision::{
@@ -98,8 +97,8 @@ fn facing_left_mirrors_the_hitbox_in_place() {
     // facing (Bevy's `flip_x` only mirrors the texture, it never moves the
     // box), so facing left must mirror the hitbox *within* that same box:
     // x = pos.x + 19 .. + 30, versus pos.x + 18 .. + 29 facing right. Only 1px
-    // apart — nothing like Flame's anchor-relative scale flip, which would
-    // reflect the hitbox all the way out past the box's left edge.
+    // apart — not an anchor-relative scale flip, which would reflect the
+    // hitbox all the way out past the box's left edge.
     let low_wall = block(
         BlockKind::Solid,
         Vec2::new(99.0, 20.0),
@@ -333,7 +332,7 @@ fn landing_on_an_untriggered_platform_asks_it_to_fall() {
     let outcome = collision::resolve_vertical(&mut actor.body(), &world);
     assert_eq!(outcome.trigger_fall, Some(platform.entity));
 
-    // Rising into the same platform is lethal instead, as in the Dart.
+    // Rising into the same platform is lethal instead.
     let mut riser = Actor::new(Vec2::new(0.0, 160.0), Vec2::new(0.0, -120.0));
     let outcome = collision::resolve_vertical(&mut riser.body(), &world);
     assert!(outcome.hit_platform_from_below);
@@ -350,7 +349,7 @@ fn gravity_accumulates_per_step_and_clamps_at_terminal_velocity() {
     let mut velocity = Velocity(Vec2::ZERO);
     let mut pos = GamePos(Vec2::ZERO);
 
-    // The Dart added the acceleration once per fixed step without scaling by dt.
+    // Acceleration is added once per fixed step without scaling by dt.
     collision::apply_gravity(&mut velocity, &mut pos, &gravity, 1.0 / 60.0);
     assert_eq!(velocity.y, 9.8);
 

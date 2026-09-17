@@ -1,14 +1,12 @@
-//! `Material2d` wrappers around the ported WGSL shaders.
+//! `Material2d` wrappers around the WGSL shaders.
 //!
-//! Flutter's `FragmentProgram` took a flat list of floats set by index, which is
-//! why the Dart is full of `_shader.setFloat(4, ...)` with a comment naming the
-//! uniform. Here each shader gets a named uniform struct, so a reordered field
-//! is a compile error instead of a silently wrong effect.
+//! Each shader gets a named uniform struct, so a reordered field is a compile
+//! error instead of a silently wrong effect.
 //!
-//! All three blend with straight alpha. The Dart drew the shockwave with
-//! `BlendMode.plus`; reproducing additive blending would mean overriding the
-//! pipeline's blend state in `specialize`, and on this game's dark backdrop the
-//! visible difference is a slightly softer ring, so straight alpha is used.
+//! All three blend with straight alpha. True additive blending for the
+//! shockwave would mean overriding the pipeline's blend state in
+//! `specialize`, and on this game's dark backdrop the visible difference is
+//! a slightly softer ring, so straight alpha is used.
 
 use bevy::prelude::*;
 use bevy::render::render_resource::{AsBindGroup, ShaderType};
