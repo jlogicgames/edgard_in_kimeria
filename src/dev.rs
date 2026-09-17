@@ -1,7 +1,6 @@
 //! Development helpers: debug gizmos and a scripted capture mode.
 //!
-//! Flame had `debugMode = true` on every component, which drew hitboxes
-//! unconditionally. Here the same information is drawn with gizmos behind
+//! Hitboxes and other debug information are drawn with gizmos behind
 //! [`GameSettings::debug_draw`], toggled at runtime with F1.
 //!
 //! The capture harness exists because a windowed game cannot be verified from a

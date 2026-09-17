@@ -1,5 +1,5 @@
 //! Visual effects: shader quads (shockwave, explosion, fog) and CPU particles
-//! (torch, fireflies, rain).
+//! (torch, fireflies).
 //!
 //! Each effect gets its own submodule; this file only wires them into one
 //! `EffectsPlugin` and holds the [`ParticleTextures`] every CPU particle
@@ -13,10 +13,8 @@
 //!
 //! # Scheduling
 //!
-//! The Dart drove every particle with nested `Future.delayed` chains that kept
-//! firing after their component was removed (each guarded by an `isMounted`
-//! check bolted on afterwards). Here emitters are timers on components, so a
-//! despawned emitter simply stops existing.
+//! Emitters are timers on components, so a despawned emitter simply stops
+//! existing — no dangling callback can fire after its component is gone.
 
 use bevy::prelude::*;
 use bevy::sprite_render::Material2dPlugin;
@@ -29,7 +27,6 @@ mod explosion;
 mod firefly;
 mod fog;
 mod particles;
-mod rain;
 mod shockwave;
 mod torch;
 
@@ -39,7 +36,6 @@ pub use firefly::{Firefly, MenuFirefly};
 pub use fog::FogEffect;
 pub use particles::Particle;
 pub use postprocess::spawn_ripple;
-pub use rain::RainDrop;
 pub use shockwave::{ShockwaveEffect, spawn_shockwave};
 pub use torch::{Torch, spawn_torch, toggle_torches};
 
@@ -47,7 +43,7 @@ use crate::AppState;
 use materials::{ExplosionMaterial, FogMaterial, ShockwaveMaterial};
 
 /// Soft radial dot used for every glow particle, generated rather than shipped
-/// so there is no new binary asset in a port that reuses the originals.
+/// as a texture asset.
 #[derive(Resource)]
 pub struct ParticleTextures {
     pub glow: Handle<Image>,
@@ -88,7 +84,6 @@ impl Plugin for EffectsPlugin {
             (
                 particles::advance_particles,
                 torch::drive_torches,
-                rain::drive_rain,
                 torch::toggle_torches,
             )
                 .run_if(in_state(AppState::Playing)),
@@ -120,8 +115,8 @@ fn generate_particle_textures(mut commands: Commands, mut images: ResMut<Assets<
 
 /// A white disc whose alpha falls off as `(1 - r)^falloff`.
 ///
-/// A high `falloff` gives a hard-edged dot (fireflies, rain); a low one gives
-/// the blurred glow the Dart got from `MaskFilter.blur`.
+/// A high `falloff` gives a hard-edged dot (fireflies); a low one gives
+/// a blurred glow.
 fn radial_gradient(size: u32, falloff: f32) -> Image {
     use bevy::asset::RenderAssetUsages;
     use bevy::image::Image;

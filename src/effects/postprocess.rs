@@ -1,24 +1,16 @@
 //! Screen-space post processing: the ripple and the chromatic-aberration glitch.
 //!
-//! # What this replaces
+//! # Approach
 //!
-//! Flutter gave the Dart two very different hooks for the same job. The ripple
-//! used a `Decorator` that re-recorded the whole scene into a `Picture`, called
-//! `toImageSync` on it *every frame*, fed that image to a shader and disposed
-//! it — a full CPU-side rasterisation per frame. The glitch used Flame's
-//! `PostProcess`, which is closer to a real post pass.
-//!
-//! Bevy has one right answer for both: a render-graph node in `Core2d`'s
-//! `PostProcess` set that reads the view target and writes a distorted copy.
-//! No per-frame image allocation, and both effects share the single pass.
+//! Both effects share one render-graph node in `Core2d`'s `PostProcess` set
+//! that reads the view target and writes a distorted copy. No per-frame image
+//! allocation, and both effects share the single pass.
 //!
 //! # Turning them on
 //!
-//! The ripple fires on coin pickup, as before. The glitch is driven by
-//! [`ChromaGlitch`], a port of `ChromaGlitchManager` — which in the Dart was
-//! **never constructed anywhere**, so the effect could not run. It is ported in
-//! full and left disabled by default so the game looks as it did; set
-//! `GameSettings::chroma_glitch` to see it.
+//! The ripple fires on coin pickup. The glitch is driven by [`ChromaGlitch`],
+//! which is left disabled by default; set `GameSettings::chroma_glitch` to see
+//! it.
 
 use bevy::core_pipeline::{Core2dSystems, FullscreenShader, schedule::Core2d};
 use bevy::prelude::*;
@@ -60,14 +52,14 @@ pub struct ScreenEffects {
     pub aspect: f32,
 }
 
-/// A live ripple. Values match the `RippleEffect` the Dart built on coin pickup.
+/// A live ripple, spawned on coin pickup.
 #[derive(Component, Debug)]
 pub struct RippleEffect {
     /// World-space centre, projected to UV each frame as the camera moves.
     pub centre_world: Vec2,
     pub elapsed: f32,
     pub duration: f32,
-    /// Pixels; converted to UV against the viewport width, as the Dart did.
+    /// Pixels; converted to UV against the viewport width.
     pub max_radius: f32,
     pub strength: f32,
     pub frequency: f32,
@@ -116,7 +108,7 @@ impl Default for ChromaGlitch {
 }
 
 impl ChromaGlitch {
-    /// 0..1 across the poison's range, as the Dart's `poisonLevel` getter.
+    /// 0..1 across the poison's range.
     pub fn poison_level(&self) -> f32 {
         ((self.current_shift - self.initial_shift) / (self.max_shift - self.initial_shift))
             .clamp(0.0, 1.0)
@@ -208,9 +200,8 @@ fn drive_screen_effects(
     effects.aspect = view_size.x / view_size.y;
 
     // --- ripple ---
-    // The Dart hand-rolled this projection (world -> viewfinder -> viewport ->
-    // canvas) across 30 lines because Flame's camera exposed no helper. The
-    // orthographic area is already the visible world rect, so it is two divides.
+    // The orthographic area is already the visible world rect, so projecting
+    // world space to UV is just two divides.
     if let Some(ripple) = ripples.iter().next() {
         let camera_pos = camera_transform.translation().truncate();
         let world_min = camera_pos + ortho.area.min;
@@ -227,7 +218,7 @@ fn drive_screen_effects(
         effects.ripple_center = uv;
         effects.ripple_progress = progress;
         effects.ripple_max_radius = ripple.max_radius / view_size.x;
-        // Strength fades out over the ripple's life, as the Dart did each frame.
+        // Strength fades out over the ripple's life.
         effects.ripple_strength = (ripple.strength * (1.0 - progress)) / view_size.x;
         effects.ripple_frequency = ripple.frequency;
         effects.ripple_decay = ripple.decay;

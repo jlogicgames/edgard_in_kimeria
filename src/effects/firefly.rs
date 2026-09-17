@@ -226,7 +226,7 @@ pub(super) fn drive_fireflies(
                     firefly.timer = 0.0;
                     firefly.particle = Some(entity);
                     firefly.flight = Some(Flight {
-                        // 3-7s, the Dart's "2-5x longer" lifespan.
+                        // 3-7s lifespan.
                         duration: 3.0 + rng.random::<f32>() * 4.0,
                         start,
                         control,
@@ -248,7 +248,7 @@ pub(super) fn drive_fireflies(
                     firefly.flight = None;
                     continue;
                 }
-                // Quadratic Bezier, as in the Dart renderer.
+                // Quadratic Bezier.
                 let inv = 1.0 - t;
                 let position =
                     flight.start * inv * inv + flight.control * 2.0 * inv * t + flight.end * t * t;

@@ -1,12 +1,11 @@
-//! Edgard in Kimeria — a Bevy port of the Flutter/Flame original.
+//! Edgard in Kimeria — a Bevy game.
 //!
 //! # Coordinate convention
 //!
 //! Gameplay runs in **Tiled space**: origin at the map's top-left, `+y` pointing
-//! *down*, entity positions anchored at their top-left corner. This is what the
-//! Flame original used, and keeping it means the ported physics is a literal
-//! translation of the Dart rather than a sign-flipped rewrite that has to be
-//! re-derived (and re-debugged) from scratch.
+//! *down*, entity positions anchored at their top-left corner. Keeping this
+//! convention throughout the physics avoids a sign-flipped rewrite that would
+//! have to be re-derived (and re-debugged) from scratch.
 //!
 //! Bevy renders y-up, so [`core::GamePos`] is the source of truth and
 //! [`core::sync_transforms`] projects it onto [`Transform`] once per frame:
@@ -40,14 +39,13 @@ pub mod ui;
 /// Logical resolution the game is authored against; the window letterboxes to it.
 pub const LOGICAL_RESOLUTION: Vec2 = Vec2::new(640.0, 360.0);
 
-/// Top-level app state. Replaces Flame's `overlays` + `isGameStarted` flag.
+/// Top-level app state.
 ///
 /// Menu entities are tagged `DespawnOnExit(state)`, so leaving a state cleans up
-/// its UI without the manual `overlays.remove(...)` bookkeeping the Dart needed.
+/// its UI automatically.
 #[derive(States, Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AppState {
     /// Waits for every sprite sheet and sound before anything can spawn.
-    /// Flame's synchronous image cache made this step implicit.
     #[default]
     Loading,
     MainMenu,
@@ -58,21 +56,19 @@ pub enum AppState {
     GameOver,
 }
 
-/// Runtime toggles that were `bool` fields on the Dart `EdgardInKimeria` class.
+/// Runtime toggles for the game.
 #[derive(Resource, Debug, Clone)]
 pub struct GameSettings {
     pub play_sounds: bool,
     pub sound_volume: f32,
-    /// Draw hitbox/collision-block gizmos. `debugMode = true` in the Dart source.
+    /// Draw hitbox/collision-block gizmos.
     pub debug_draw: bool,
-    /// Enables the chromatic-aberration glitch. Off by default: its Dart
-    /// manager was never constructed, so the effect never ran in the original.
+    /// Enables the chromatic-aberration glitch. Off by default.
     pub chroma_glitch: bool,
-    /// Debug aid with no counterpart in the original: ignores lethal damage so
-    /// a level can be walked end to end. Toggled with F2.
+    /// Debug aid: ignores lethal damage so a level can be walked end to end.
+    /// Toggled with F2.
     pub invulnerable: bool,
-    /// UI display language, changed from the main menu's Options page. Has
-    /// no counterpart in the Dart original, which only ever shipped English.
+    /// UI display language, changed from the main menu's Options page.
     pub language: crate::localization::Language,
 }
 
@@ -96,7 +92,7 @@ pub struct GameProgress {
     pub current_level: usize,
 }
 
-/// The level rotation, in the order the Dart `levelNames` list had them.
+/// The level rotation, in play order.
 pub const LEVEL_NAMES: [&str; 2] = ["forest-1", "forest"];
 
 /// Everything the game needs, as one plugin so `main.rs` stays a launcher.

@@ -1,15 +1,14 @@
 //! Camera rig and scrolling backdrop.
 //!
-//! Flame gave this away for free: `CameraComponent.withFixedResolution` handled
-//! letterboxing, `viewfinder.anchor` set the follow origin, `moveTo(..., speed:)`
-//! eased toward a target, and `camera.backdrop` drew a `ParallaxComponent`
-//! behind the world. Bevy has no camera-follow or parallax built in, so all four
-//! are reproduced here explicitly:
+//! Bevy has no camera-follow or parallax built in, so fixed-resolution
+//! letterboxing, anchored follow, eased movement toward a target, and a
+//! scrolling backdrop are all reproduced here explicitly:
 //!
-//! - fixed resolution -> [`ScalingMode::AutoMin`], which letterboxes the same way;
-//! - anchored follow  -> [`follow_player`], converting Flame's top-left target
-//!   into a centre-anchored Bevy translation;
-//! - `moveTo(speed:)`  -> a capped move toward the target, same 500 px/s;
+//! - fixed resolution -> [`ScalingMode::AutoMin`], which letterboxes to a
+//!   fixed logical resolution;
+//! - anchored follow  -> [`follow_player`], converting a top-left follow
+//!   target into a centre-anchored Bevy translation;
+//! - eased movement    -> a capped move toward the target, at 500 px/s;
 //! - backdrop          -> [`scroll_backdrop`], a tiled sprite parented to the
 //!   camera so it tracks the view without entering world space.
 
@@ -20,7 +19,7 @@ use crate::core::{GamePos, z};
 use crate::player::Player;
 use crate::{AppState, LOGICAL_RESOLUTION};
 
-/// `moveTo(..., speed: 500)` in the Dart.
+/// Camera follow speed, in px/s.
 const FOLLOW_SPEED: f32 = 500.0;
 /// `kLeftFollow` / `kUpFollow`: how far into the viewport the player sits.
 const LEFT_FOLLOW: f32 = 200.0;
@@ -33,11 +32,6 @@ pub struct MainCamera;
 
 /// Cleared whenever a level loads, so the first frame snaps to the player
 /// instead of gliding in from the world origin.
-///
-/// The Dart called `camera.moveTo(startingPosition - (200, 200), speed: 500)` in
-/// the player's `onLoad`, which was meant to *place* the camera; because Flame
-/// rebuilt the camera per level at the origin, it actually produced a long pan
-/// across the map before play became visible. Snapping is what the call was for.
 #[derive(Component, Default)]
 pub struct CameraPlaced(pub bool);
 
@@ -109,11 +103,10 @@ fn spawn_camera(mut commands: Commands, assets: Res<GameAssets>, images: Res<Ass
         ));
 }
 
-/// Port of `_updateCameraPosition`.
-///
-/// The Dart moved the camera's *top-left* to a point offset from the player,
-/// with a wider lead when facing left. Bevy positions a camera by its centre, so
-/// the target is that top-left plus half the viewport, then negated into y-up.
+/// The follow target is computed as the camera's *top-left* point offset from
+/// the player, with a wider lead when facing left. Bevy positions a camera by
+/// its centre, so the target is that top-left plus half the viewport, then
+/// negated into y-up.
 fn follow_player(
     time: Res<Time<Real>>,
     player: Query<(&GamePos, &crate::core::Facing), With<Player>>,
@@ -126,7 +119,7 @@ fn follow_player(
         return;
     };
 
-    // `hitbox.width` for the player is 11; the Dart folded it into the offsets.
+    // The player's hitbox is 11 px wide; that's folded into the offsets below.
     const HITBOX_WIDTH: f32 = 11.0;
     let top_left = if facing.right {
         Vec2::new(pos.x - LEFT_FOLLOW - HITBOX_WIDTH, pos.y - UP_FOLLOW)

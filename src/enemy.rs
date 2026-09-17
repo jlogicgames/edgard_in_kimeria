@@ -1,12 +1,7 @@
-//! Enemies, ported from `enemy.dart`, `bat.dart`, `yellow_mob.dart` and
-//! `red_mob.dart`.
+//! Enemy types: bats, and yellow and red mobs.
 //!
-//! The Dart had `Enemy` as a base class that `Bat` extended directly while the
-//! two mobs extended it *and* mixed in gravity and collision — so a bat carried
-//! velocity and ground state it never used, and `red_mob.dart` redeclared the
-//! `State` enum, shadowing the base one. Here the shared parts are components
-//! (`Enemy`, `MoveRange`, `Patrol`) and each behaviour is its own system, so a
-//! bat simply has no [`Gravity`].
+//! The shared parts are components (`Enemy`, `MoveRange`, `Patrol`) and each
+//! behaviour is its own system, so a bat simply has no [`Gravity`].
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -262,11 +257,9 @@ fn ground_mob_ai(
     let Ok((player_pos, player_size, _player_facing, player_routine)) = player.single() else {
         return;
     };
-    // Dart read `player.x + playerOffset`, where `playerOffset` (`-width` when
-    // flipped) existed only to undo the `position.x += width` side effect of
-    // Flame's `flipHorizontallyAroundCenter`. Bevy flips with `Sprite::flip_x`
-    // and never moves `GamePos`, so that offset must not be reintroduced here:
-    // `GamePos` is already the sprite's world-space left edge in both facings.
+    // Bevy flips with `Sprite::flip_x` and never moves `GamePos`, so no extra
+    // offset should be applied here: `GamePos` is already the sprite's
+    // world-space left edge in both facings.
     let player_x = player_pos.x;
 
     for (
@@ -292,10 +285,9 @@ fn ground_mob_ai(
         let in_attack_range = {
             let player_left = player_x;
             let player_right = player_left + player_size.x;
-            // Dart centred this window on the mob's raw `position.x`, which
-            // `flipHorizontallyAroundCenter` shifts by `+width` while flipped —
-            // i.e. onto the sprite's visual centre when it faces the player.
-            // Bevy keeps `GamePos` at the left edge, so add that shift back.
+            // This window is centred on the mob's visual centre, i.e. its
+            // sprite centre when it faces the player. Bevy keeps `GamePos` at
+            // the left edge, so add that shift back.
             let mob_ref_x = pos.x + if facing.right { 0.0 } else { size.x };
             player_left >= mob_ref_x - RED_MOB_ATTACK_RANGE
                 && player_right <= mob_ref_x + RED_MOB_ATTACK_RANGE
@@ -318,9 +310,8 @@ fn ground_mob_ai(
                 animation.reset();
             } else {
                 if in_range {
-                    // Dart's `position.x + yellowMobOffset` normalised to the
-                    // sprite's world-space left edge in both facings; that is
-                    // just `pos.x` here (see `player_x` above).
+                    // `pos.x` is already the sprite's world-space left edge
+                    // in both facings (see `player_x` above).
                     let mob_x = pos.x;
                     mob.target_direction = if player_x < mob_x { -1.0 } else { 1.0 };
                     velocity.x = mob.target_direction * MOB_RUN_SPEED;
@@ -389,11 +380,11 @@ fn red_mob_attack_state(
     }
 }
 
-/// Contact damage, replacing Flame's `onCollisionStart` on the player.
+/// Contact damage between enemies and the player.
 ///
-/// Only the cases the Dart actually handled are here: a bat kills on touch, a
-/// yellow mob resolves stomp-or-kill, and a red mob damages only mid-swing
-/// (handled in [`ground_mob_ai`]).
+/// Only three cases are handled here: a bat kills on touch, a yellow mob
+/// resolves stomp-or-kill, and a red mob damages only mid-swing (handled in
+/// [`ground_mob_ai`]).
 fn touch_damage(
     mut commands: Commands,
     players: Query<
@@ -494,8 +485,7 @@ fn on_enemy_stomped(
     }
 }
 
-/// Removes an enemy once its death animation has played out. The Dart awaited
-/// the ticker inside `collidedWithActor` and then called `removeFromParent`.
+/// Removes an enemy once its death animation has played out.
 fn despawn_dead_enemies(
     mut commands: Commands,
     query: Query<(Entity, &AnimationPlayer), With<Dying>>,
