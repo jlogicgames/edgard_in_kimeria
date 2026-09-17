@@ -198,7 +198,7 @@ pub fn spawn_player(commands: &mut Commands, assets: &GameAssets, at: ObjectPlac
     ));
 }
 
-/// Port of `onKeyEvent`. WASD/arrows move, J jumps, K attacks, L interacts.
+/// Port of `onKeyEvent`. WASD/arrows move, J/Z jumps, K/X attacks, L/C interacts.
 fn read_input(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
@@ -226,9 +226,9 @@ fn read_input(
         } else {
             (right as i32 - left as i32) as f32
         };
-        input.jump_held = keys.pressed(KeyCode::KeyJ) && !status.attacking;
-        input.attack_pressed = keys.just_pressed(KeyCode::KeyK);
-        input.interact_pressed = keys.just_pressed(KeyCode::KeyL);
+        input.jump_held = keys.any_pressed([KeyCode::KeyJ, KeyCode::KeyZ]) && !status.attacking;
+        input.attack_pressed = keys.any_just_pressed([KeyCode::KeyK, KeyCode::KeyX]);
+        input.interact_pressed = keys.any_just_pressed([KeyCode::KeyL, KeyCode::KeyC]);
 
         if input.interact_pressed && !routine.blocks_control() && !status.trigger_id.is_empty() {
             triggers.write(TriggerActivated {
