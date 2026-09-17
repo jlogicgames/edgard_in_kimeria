@@ -2,8 +2,8 @@
 
 A 2D platformer built with Rust and Bevy 0.19.
 
-Controls: **WASD / arrows** move, **J** jump, **K** attack, **L** interact,
-**Esc** pause. Debug keys: **F1** hitbox gizmos, **F2** invulnerability,
+Controls: **WASD / arrows** move, **J**/**Z** jump, **K**/**X** attack,
+**L**/**C** interact, **Esc** pause. Debug keys: **F1** hitbox gizmos, **F2** invulnerability,
 **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a checkpoint.
 
 ## Building and running

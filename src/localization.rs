@@ -92,12 +92,12 @@ impl Msg {
 
             (ControlsHelp, English) => {
                 "Use WASD or Arrow Keys for movement.\n\
-                J to jump. K to attack. L to interact.\n\
+                J/Z to jump. K/X to attack. L/C to interact.\n\
                 Collect as many stars as you can and avoid enemies!"
             }
             (ControlsHelp, Ukrainian) => {
                 "Використовуйте WASD або стрілки для руху.\n\
-                J — стрибок. K — атака. L — взаємодія.\n\
+                J/Z — стрибок. K/X — атака. L/C — взаємодія.\n\
                 Зберіть якомога більше зірок і уникайте ворогів!"
             }
 
@@ -111,14 +111,14 @@ impl Msg {
             (AboutBody, English) => {
                 "Edgard in Kimeria\n\n\
                 Use WASD or Arrow Keys for movement.\n\
-                J to jump. K to attack. L to interact.\n\
+                J/Z to jump. K/X to attack. L/C to interact.\n\
                 Escape to pause.\n\
                 Collect as many stars as you can and avoid enemies!"
             }
             (AboutBody, Ukrainian) => {
                 "Едгард у Кімерії\n\n\
                 Використовуйте WASD або стрілки для руху.\n\
-                J — стрибок. K — атака. L — взаємодія.\n\
+                J/Z — стрибок. K/X — атака. L/C — взаємодія.\n\
                 Escape — пауза.\n\
                 Зберіть якомога більше зірок і уникайте ворогів!"
             }
