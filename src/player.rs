@@ -32,6 +32,8 @@ const BAT_SLOWDOWN_RANGE: f32 = 50.0;
 const SLOW_TIME_SCALE: f32 = 0.5;
 /// How long the wall-jump push-off ignores steering input.
 const WALL_JUMP_LOCKOUT: f32 = 0.1;
+/// Left-stick tilt below this magnitude doesn't count as a direction.
+const STICK_DEADZONE: f32 = 0.3;
 
 #[derive(Component)]
 pub struct Player;
@@ -198,7 +200,8 @@ pub fn spawn_player(commands: &mut Commands, assets: &GameAssets, at: ObjectPlac
     ));
 }
 
-/// Port of `onKeyEvent`. WASD/arrows move, J/Z jumps, K/X attacks, L/C interacts.
+/// Port of `onKeyEvent`. WASD/arrows/left stick move, J/Z/South jumps,
+/// K/X/West/East attacks, L/C/North interacts.
 fn read_input(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
@@ -215,9 +218,23 @@ fn read_input(
         return;
     }
 
+    let gamepad_left = gamepads
+        .iter()
+        .any(|g| g.pressed(GamepadButton::DPadLeft) || g.left_stick().x < -STICK_DEADZONE);
+    let gamepad_right = gamepads
+        .iter()
+        .any(|g| g.pressed(GamepadButton::DPadRight) || g.left_stick().x > STICK_DEADZONE);
+    let gamepad_jump = gamepads.iter().any(|g| g.pressed(GamepadButton::South));
+    let gamepad_attack = gamepads
+        .iter()
+        .any(|g| g.any_just_pressed([GamepadButton::West, GamepadButton::East]));
+    let gamepad_interact = gamepads
+        .iter()
+        .any(|g| g.just_pressed(GamepadButton::North));
+
     for (mut input, status, routine) in &mut query {
-        let left = keys.any_pressed([KeyCode::KeyA, KeyCode::ArrowLeft]);
-        let right = keys.any_pressed([KeyCode::KeyD, KeyCode::ArrowRight]);
+        let left = keys.any_pressed([KeyCode::KeyA, KeyCode::ArrowLeft]) || gamepad_left;
+        let right = keys.any_pressed([KeyCode::KeyD, KeyCode::ArrowRight]) || gamepad_right;
 
         // Steering freezes during an attack but keys are still tracked so
         // movement can resume when the swing finishes.
@@ -226,9 +243,12 @@ fn read_input(
         } else {
             (right as i32 - left as i32) as f32
         };
-        input.jump_held = keys.any_pressed([KeyCode::KeyJ, KeyCode::KeyZ]) && !status.attacking;
-        input.attack_pressed = keys.any_just_pressed([KeyCode::KeyK, KeyCode::KeyX]);
-        input.interact_pressed = keys.any_just_pressed([KeyCode::KeyL, KeyCode::KeyC]);
+        input.jump_held =
+            (keys.any_pressed([KeyCode::KeyJ, KeyCode::KeyZ]) || gamepad_jump) && !status.attacking;
+        input.attack_pressed =
+            keys.any_just_pressed([KeyCode::KeyK, KeyCode::KeyX]) || gamepad_attack;
+        input.interact_pressed =
+            keys.any_just_pressed([KeyCode::KeyL, KeyCode::KeyC]) || gamepad_interact;
 
         if input.interact_pressed && !routine.blocks_control() && !status.trigger_id.is_empty() {
             triggers.write(TriggerActivated {
