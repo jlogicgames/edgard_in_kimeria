@@ -7,7 +7,12 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -85,6 +90,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private float musicVolumeTarget = 0f;
 
     private Menu mainMenu, aboutMenu, optionsMenu, pauseMenu, gameOverMenu;
+
+    private FrameBuffer glitchBuffer;
+    private float glitchTime = 0f;
 
     @Override
     public void create() {
@@ -213,17 +221,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (levelVisible && level != null) {
-            batch.setProjectionMatrix(camera.combined);
-            batch.begin();
-            level.render(batch, visibleWorldRect(reusableVisibleRect));
-            batch.end();
-
-            if (debugDraw) {
-                shapeRenderer.setProjectionMatrix(camera.combined);
-                shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-                level.renderDebug(shapeRenderer);
-                shapeRenderer.end();
+        boolean glitched = uiState == UiState.PAUSED && level != null;
+        if (glitched) {
+            glitchTime += dt;
+            renderGlitchedWorld();
+        } else {
+            glitchTime = 0f;
+            if (levelVisible && level != null) {
+                renderWorld();
             }
         }
 
@@ -241,6 +246,83 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
         overlay.flushText(batch);
         batch.end();
+    }
+
+    private void renderWorld() {
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        level.render(batch, visibleWorldRect(reusableVisibleRect));
+        batch.end();
+
+        if (debugDraw) {
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            level.renderDebug(shapeRenderer);
+            shapeRenderer.end();
+        }
+    }
+
+    /**
+     * While paused, the frozen world is drawn into an offscreen buffer and blitted
+     * to the screen through the chromatic-aberration shader. The HUD and pause menu
+     * draw afterwards in the regular UI pass, so they stay crisp. Only the paused
+     * path pays for the extra pass; normal play renders straight to the screen.
+     */
+    private void renderGlitchedWorld() {
+        ensureGlitchBuffer();
+        glitchBuffer.begin();
+        Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        renderWorld();
+        glitchBuffer.end(); // resets the GL viewport to the whole window
+        uiViewport.apply();
+
+        ShaderProgram shader = Shaders.load("chroma_glitch.frag");
+        batch.setProjectionMatrix(screenCamera.combined);
+        batch.disableBlending(); // straight copy: the buffer's alpha is not meaningful
+        batch.begin();
+        batch.setShader(shader);
+        shader.setUniformf("uTime", glitchTime);
+        shader.setUniformf("uIntensity", 1f);
+        // The buffer is filled by the same Y-down camera as the screen, so its
+        // (bottom-up) texture already lands the right way up here -- no flip.
+        batch.draw(glitchBuffer.getColorBufferTexture(), 0, 0, LOGICAL_W, LOGICAL_H);
+        batch.setShader(null);
+        batch.end();
+        batch.enableBlending();
+    }
+
+    /** (Re)creates the offscreen buffer to match the on-screen game area, in backbuffer pixels. */
+    private void ensureGlitchBuffer() {
+        float hdpi = Gdx.graphics.getBackBufferWidth() / (float) Math.max(1, Gdx.graphics.getWidth());
+        int w = Math.max(1, Math.round(uiViewport.getScreenWidth() * hdpi));
+        int h = Math.max(1, Math.round(uiViewport.getScreenHeight() * hdpi));
+        if (glitchBuffer != null && glitchBuffer.getWidth() == w && glitchBuffer.getHeight() == h) return;
+        if (glitchBuffer != null) glitchBuffer.dispose();
+        glitchBuffer = new PixmapBackedFrameBuffer(w, h);
+    }
+
+    /**
+     * A {@link FrameBuffer} whose color texture is allocated from a blank {@link Pixmap}.
+     * The stock buffer allocates it with {@code glTexImage2D(..., null)}, which the
+     * gdx-teavm web backend's dev (non-obfuscated) build crashes on
+     * ({@code ArrayBufferView is not defined}); uploading a pixmap takes the same path
+     * as every other texture and works on all backends.
+     */
+    private static final class PixmapBackedFrameBuffer extends FrameBuffer {
+        PixmapBackedFrameBuffer(int width, int height) {
+            super(Pixmap.Format.RGBA8888, width, height, false);
+        }
+
+        @Override
+        protected Texture createTexture(FrameBufferTextureAttachmentSpec attachmentSpec) {
+            // Runs from the super constructor, so read the size from the builder, not from fields.
+            Pixmap blank = new Pixmap(bufferBuilder.width, bufferBuilder.height, Pixmap.Format.RGBA8888);
+            Texture texture = new Texture(new PixmapTextureData(blank, null, false, true));
+            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            texture.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
+            return texture;
+        }
     }
 
     private void updateMenuMusic(float dt, boolean want) {
@@ -366,6 +448,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         batch.dispose();
         shapeRenderer.dispose();
         menuMusic.dispose();
+        if (glitchBuffer != null) glitchBuffer.dispose();
         Shaders.dispose();
         SoftDot.dispose();
     }
