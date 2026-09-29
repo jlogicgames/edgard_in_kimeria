@@ -91,6 +91,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private Music menuMusic;
     private float musicVolume = 0f;
     private float musicVolumeTarget = 0f;
+    // Our own record of whether play() has been issued. Music.isPlaying() can stay false on the web
+    // backend until the AudioContext is unlocked, so polling it would queue a new copy every frame.
+    private boolean menuMusicPlaying = false;
 
     private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, pauseMenu, gameOverMenu;
 
@@ -388,11 +391,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         } else if (musicVolume > musicVolumeTarget) {
             musicVolume = Math.max(musicVolumeTarget, musicVolume - (1f / MUSIC_FADE_OUT) * dt);
         }
-        if (musicVolume > 0f && !menuMusic.isPlaying()) {
+        if (musicVolume > 0f && !menuMusicPlaying) {
             menuMusic.play();
+            menuMusicPlaying = true;
         }
-        if (musicVolume <= 0f && menuMusic.isPlaying()) {
+        if (musicVolume <= 0f && menuMusicPlaying) {
             menuMusic.stop();
+            menuMusicPlaying = false;
         }
         menuMusic.setVolume(musicVolume);
     }
