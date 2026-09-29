@@ -27,6 +27,9 @@ public class GamepadInput {
 
     private float horizontal;
     private boolean jumpHeld;
+    // A also confirms menu buttons; a press that a menu consumed must not
+    // count as a jump once play starts, so jump stays off until A is released.
+    private boolean jumpSuppressed;
 
     private Controller controller() {
         var list = Controllers.getControllers();
@@ -83,7 +86,14 @@ public class GamepadInput {
         if (horizontal == 0f && Math.abs(axisX) > AXIS_DEADZONE) {
             horizontal = Math.signum(axisX);
         }
-        jumpHeld = confirm;
+        if (!confirm) jumpSuppressed = false;
+        jumpHeld = confirm && !jumpSuppressed;
+    }
+
+    /** Ignores the A button for jumping until it is released (call when a menu used the press). */
+    public void suppressJumpUntilRelease() {
+        jumpSuppressed = true;
+        jumpHeld = false;
     }
 
     private static float safeAxis(Controller c, int index) {
