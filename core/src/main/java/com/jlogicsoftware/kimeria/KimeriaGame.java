@@ -1,8 +1,10 @@
 package com.jlogicsoftware.kimeria;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -33,6 +35,7 @@ import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
 import com.jlogicsoftware.kimeria.world.Level;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -139,10 +142,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
         ), this::backToMainMenu);
 
-        optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, List.of(
-            new MenuItem(() -> Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), () -> language = language.next()),
-            new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
-        ), this::backToMainMenu);
+        // Only the desktop window can be switched; the web canvas and mobile screens
+        // don't offer a windowed mode to opt into.
+        List<MenuItem> optionItems = new ArrayList<>();
+        optionItems.add(new MenuItem(() -> Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), () -> language = language.next()));
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            optionItems.add(new MenuItem(
+                () -> Msg.DISPLAY_LABEL.t(language) + ": "
+                    + (Gdx.graphics.isFullscreen() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
+                this::toggleFullscreen));
+        }
+        optionItems.add(new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu));
+        optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu);
 
         pauseMenu = new Menu(() -> Msg.PAUSE_MENU.t(language), null, List.of(
             new MenuItem(() -> Msg.RESUME.t(language), this::resumeGame),
@@ -157,6 +168,19 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             }),
             new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
         ), this::exitToMainMenu);
+    }
+
+    /** Switches between fullscreen and the windowed size, and remembers the choice for the next launch. */
+    private void toggleFullscreen() {
+        boolean fullscreen = !Gdx.graphics.isFullscreen();
+        if (fullscreen) {
+            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+        } else {
+            Gdx.graphics.setWindowedMode(Settings.WINDOWED_WIDTH, Settings.WINDOWED_HEIGHT);
+        }
+        Preferences prefs = Gdx.app.getPreferences(Settings.PREFS_NAME);
+        prefs.putBoolean(Settings.KEY_FULLSCREEN, fullscreen);
+        prefs.flush();
     }
 
     private void resumeGame() {
