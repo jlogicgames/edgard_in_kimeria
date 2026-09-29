@@ -123,6 +123,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void buildMenus() {
+        // Esc/B on the root menu has nowhere to go back to; park the selection on Exit
+        // (a second Enter confirms) rather than quitting on a stray keypress.
         mainMenu = new Menu(null, null, List.of(
             new MenuItem(() -> Msg.PLAY.t(language), () -> {
                 gameStarted = true;
@@ -131,7 +133,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
             new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS),
             new MenuItem(() -> Msg.EXIT.t(language), () -> Gdx.app.exit())
-        ), null);
+        ), () -> mainMenu.selected = mainMenu.items.size() - 1);
 
         aboutMenu = new Menu(() -> Msg.ABOUT.t(language), null, List.of(
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
@@ -143,24 +145,29 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         ), this::backToMainMenu);
 
         pauseMenu = new Menu(() -> Msg.PAUSE_MENU.t(language), null, List.of(
-            new MenuItem(() -> Msg.RESUME.t(language), () -> {
-                gameStarted = true;
-                uiState = UiState.PLAYING;
-            }),
-            new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), () -> {
-                gameStarted = false;
-                reset();
-                uiState = UiState.MAIN_MENU;
-            })
-        ), null);
+            new MenuItem(() -> Msg.RESUME.t(language), this::resumeGame),
+            new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
+        ), this::resumeGame);
 
         gameOverMenu = new Menu(() -> Msg.GAME_OVER.t(language), null, List.of(
             new MenuItem(() -> Msg.PLAY_AGAIN.t(language), () -> {
                 reset();
                 gameStarted = true;
                 uiState = UiState.PLAYING;
-            })
-        ), null);
+            }),
+            new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
+        ), this::exitToMainMenu);
+    }
+
+    private void resumeGame() {
+        gameStarted = true;
+        uiState = UiState.PLAYING;
+    }
+
+    private void exitToMainMenu() {
+        gameStarted = false;
+        reset();
+        uiState = UiState.MAIN_MENU;
     }
 
     private void backToMainMenu() {
@@ -191,6 +198,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     public void render() {
         float dt = Gdx.graphics.getDeltaTime();
         gamepad.update();
+        UiState stateAtFrameStart = uiState;
 
         if (levelLoadDelay > 0) {
             levelLoadDelay -= dt;
@@ -242,7 +250,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             menuBackdrop.render(batch);
         }
         overlay.beginFrame();
-        renderOverlay();
+        renderOverlay(uiState == stateAtFrameStart);
         overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
         overlay.flushText(batch);
         batch.end();
@@ -365,7 +373,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         return v;
     }
 
-    private void renderOverlay() {
+    /**
+     * @param acceptActions false on the frame the UI state changed under us (e.g. Esc paused
+     *                      the game in {@code Player}), so that same keypress can't also
+     *                      activate the pause menu's Back/Resume
+     */
+    private void renderOverlay(boolean acceptActions) {
         Vector2 mouse = mouseLogical();
         boolean clicked = Gdx.input.justTouched();
         // Only up/down (and Tab/Shift+Tab) move through these vertical button
@@ -380,7 +393,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             || gamepad.menuDown();
         boolean confirm = Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
             || gamepad.confirm();
-        boolean back = Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.back();
+        boolean back = Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.back()
+            || (uiState == UiState.PAUSED && gamepad.pausePressed());
+        if (!acceptActions) {
+            confirm = false;
+            back = false;
+        }
 
         Menu menu = switch (uiState) {
             case MAIN_MENU -> mainMenu;

@@ -11,8 +11,10 @@ full menu system, localization, gamepad support, dev hotkeys).
 Controls: **WASD / arrows** move, **J** jump, **K** attack, **L** interact, **Esc** pause.
 Gamepad: **left stick / D-pad** move, **South** jump, **West**/**East** attack, **North**
 interact, **Start** pause. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
-**Esc/B** back. Debug keys: **F1** hitbox gizmos, **F2** invulnerability, **F3** spawn
-shockwave + ripple, **F4** advance level, **F5** reach a checkpoint.
+**Esc/B** back (Esc/B/Start resume from the pause menu; on the main menu they select
+Exit; on game over they return to the main menu). Debug keys: **F1** hitbox gizmos, **F2**
+invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
+checkpoint.
 
 ## Building and running
 
