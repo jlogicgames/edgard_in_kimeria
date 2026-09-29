@@ -84,8 +84,8 @@ Two different causes produce this same crash:
 - [x] English/Ukrainian localization, switchable from Options
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
 - [x] Dev hotkeys (F1–F5, see Controls above)
-- [ ] Chromatic-aberration glitch post-process — present in the Rust version, off by
-      default there too; not ported (see Deviations below)
+- [x] Chromatic-aberration glitch post-process — applied to the frozen world while paused
+      (the pause menu and HUD stay crisp); see Deviations below
 
 ## Deviations from the source projects
 
@@ -99,9 +99,11 @@ Two different causes produce this same crash:
   filters (`SpriteBatch` has no blur-mask equivalent). Visual language (flickering core
   flame, rising embers, drifting smoke, green magic sparkles) is kept, tuned down from an
   early pass that over-saturated to white with too many concurrent additive particles.
-- **The chromatic-aberration glitch post-process wasn't ported.** It's off by default in
-  the Rust version and dead code in the Flame version (never instantiated) — not reachable
-  in either source this drew from.
+- **The chromatic-aberration glitch is a pause effect, not an ambient one.** It's off by
+  default in the Rust version and dead code in the Flame version; here it's shown only
+  while paused, on the frozen world (`chroma_glitch.frag`, drawn from an offscreen
+  `FrameBuffer` that is only rendered while paused, so normal play is unchanged). The HUD
+  and pause menu draw afterwards, unaffected.
 - **No touch controls** (on-screen joystick/jump button) — present in the Rust version,
   out of scope for a desktop-first port.
 - **Menus are hand-drawn immediate-mode UI**, not Scene2D, to avoid pulling in a full
