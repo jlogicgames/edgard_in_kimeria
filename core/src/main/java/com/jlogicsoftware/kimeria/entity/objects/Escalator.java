@@ -48,10 +48,12 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
             rangePos = x + offPos * TILE_SIZE;
         }
 
-        String offImage = "images/objects/Grey Off.png";
-        String onImage = "images/objects/Grey On (32x8).png";
-        // Both sheets are 8px tall (Grey Off.png: 32x8, one frame; Grey On
-        // (32x8).png: 256x8, 8 frames in a single row) -- not the 16px the
+        String offImage = "images/objects/GreyOff.png";
+        String onImage = "images/objects/GreyOn.png";
+        // Filenames deliberately have no spaces or parentheses: the gdx-teavm
+        // dev server 404s on percent-encoded paths, which broke the web build.
+        // Both sheets are 8px tall (GreyOff.png: 32x8, one frame; GreyOn.png:
+        // 256x8, 8 frames in a single row) -- not the 16px the
         // original Dart code assumed, and without an explicit amountPerRow
         // the default (>4 frames wraps at 4-per-row) would also have sliced
         // the single-row "on" sheet into two bogus rows.
