@@ -5,7 +5,7 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 /** Port of Rust's {@code localization::Msg} UI message catalog. */
 public enum Msg {
     TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, EXIT_TO_MENU, PLAY_AGAIN,
-    PAUSE_MENU, GAME_OVER, LANGUAGE_LABEL, CONTROLS_HELP, MENU_HINT, ABOUT_BODY;
+    PAUSE_MENU, GAME_OVER, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, CONTROLS_HELP, MENU_HINT, ABOUT_BODY;
 
     public String t(Language lang) {
         boolean en = lang == ENGLISH;
@@ -22,6 +22,9 @@ public enum Msg {
             case PAUSE_MENU -> en ? "Pause Menu" : "Меню паузи";
             case GAME_OVER -> en ? "Game Over" : "Гру закінчено";
             case LANGUAGE_LABEL -> en ? "Language" : "Мова";
+            case DISPLAY_LABEL -> en ? "Display" : "Екран";
+            case FULLSCREEN -> en ? "Fullscreen" : "Повноекранний";
+            case WINDOWED -> en ? "Windowed" : "У вікні";
             case CONTROLS_HELP -> en
                 ? "Use WASD or Arrow Keys for movement.\nJ to jump. K to attack. L to interact.\nCollect as many coins as you can and avoid enemies!"
                 : "Використовуйте WASD або стрілки для руху.\nJ — стрибок. K — атака. L — взаємодія.\nЗберіть якомога більше монет і уникайте ворогів!";

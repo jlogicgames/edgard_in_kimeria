@@ -84,6 +84,8 @@ Two different causes produce this same crash:
 - [x] HUD, main menu, About, Options, pause menu, game over screen
 - [x] Keyboard, mouse and gamepad menu navigation
 - [x] English/Ukrainian localization, switchable from Options
+- [x] Desktop build starts fullscreen; Options has a Display toggle to opt into a windowed
+      1280x720 window, remembered across launches (`~/.prefs/edgard-in-kimeria`)
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
 - [x] Dev hotkeys (F1–F5, see Controls above)
 - [x] Chromatic-aberration glitch post-process — applied to the frozen world while paused
@@ -108,6 +110,9 @@ Two different causes produce this same crash:
   and pause menu draw afterwards, unaffected.
 - **No touch controls** (on-screen joystick/jump button) — present in the Rust version,
   out of scope for a desktop-first port.
+- **Fullscreen is desktop-only.** There is no mobile module in this repo yet (see "No touch
+  controls" above), and the web build stays in its canvas, so neither shows the Display
+  option; a future mobile backend is fullscreen by nature.
 - **Menus are hand-drawn immediate-mode UI**, not Scene2D, to avoid pulling in a full
   Scene2D skin for a handful of simple screens.
 
