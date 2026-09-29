@@ -50,7 +50,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {MAIN_MENU, ABOUT, OPTIONS, PLAYING, PAUSED, GAME_OVER}
+    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, PLAYING, PAUSED, GAME_OVER}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     private static final List<String> LEVEL_NAMES = List.of("forest-1", "forest");
@@ -74,7 +74,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private MenuBackdrop menuBackdrop;
     private final GamepadInput gamepad = new GamepadInput();
 
-    private UiState uiState = UiState.MAIN_MENU;
+    private UiState uiState;
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
     private boolean gameStarted = false;
@@ -92,7 +92,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private float musicVolume = 0f;
     private float musicVolumeTarget = 0f;
 
-    private Menu mainMenu, aboutMenu, optionsMenu, pauseMenu, gameOverMenu;
+    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, pauseMenu, gameOverMenu;
 
     private FrameBuffer glitchBuffer;
     private float glitchTime = 0f;
@@ -120,23 +120,41 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         menuMusic.setVolume(0f);
 
         buildMenus();
+        // Browsers block audio until the page gets a user gesture, so the web build opens on a
+        // one-button screen whose click/keypress unlocks it; other platforms go straight to the menu.
+        uiState = isWeb() ? UiState.WEB_START : UiState.MAIN_MENU;
 
         player = new Player(assets, this, 0, 0);
         startLoadingLevel();
     }
 
+    private boolean isWeb() {
+        return Gdx.app.getType() == Application.ApplicationType.WebGL;
+    }
+
     private void buildMenus() {
+        // No back action: there is nothing behind this screen to return to.
+        webStartMenu = new Menu(null, null, List.of(
+            new MenuItem(() -> Msg.PLAY.t(language), this::backToMainMenu)
+        ), null);
+
         // Esc/B on the root menu has nowhere to go back to; park the selection on Exit
-        // (a second Enter confirms) rather than quitting on a stray keypress.
-        mainMenu = new Menu(null, null, List.of(
+        // (a second Enter confirms) rather than quitting on a stray keypress. A browser tab
+        // can't be closed by the page, so the web build has no Exit at all.
+        List<MenuItem> mainItems = new ArrayList<>(List.of(
             new MenuItem(() -> Msg.PLAY.t(language), () -> {
                 gameStarted = true;
                 uiState = UiState.PLAYING;
             }),
             new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
-            new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS),
-            new MenuItem(() -> Msg.EXIT.t(language), () -> Gdx.app.exit())
-        ), () -> mainMenu.selected = mainMenu.items.size() - 1);
+            new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS)
+        ));
+        if (!isWeb()) {
+            mainItems.add(new MenuItem(() -> Msg.EXIT.t(language), () -> Gdx.app.exit()));
+        }
+        mainMenu = new Menu(null, null, mainItems, () -> {
+            if (!isWeb()) mainMenu.selected = mainMenu.items.size() - 1;
+        });
 
         aboutMenu = new Menu(() -> Msg.ABOUT.t(language), null, List.of(
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
@@ -241,13 +259,16 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // level loading behind the scenes.
         boolean levelVisible = uiState == UiState.PLAYING || uiState == UiState.PAUSED || uiState == UiState.GAME_OVER;
         boolean menuBackdropActive = !levelVisible;
+        // Stay silent until the start screen has been dismissed: the click that dismisses it is
+        // what lets the browser start the music.
+        boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START;
 
         if (levelVisible && levelLoadDelay <= 0 && level != null) {
             level.update(dt * timeScale);
         }
 
         menuBackdrop.update(dt);
-        updateMenuMusic(dt, menuBackdropActive);
+        updateMenuMusic(dt, musicWanted);
         handleDevHotkeys();
 
         camera.position.set(cameraTarget.x + LOGICAL_W / 2f, cameraTarget.y + LOGICAL_H / 2f, 0);
@@ -412,6 +433,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // lists -- left/right are left free for a possible horizontal
         // control (e.g. the Options language toggle) rather than doubling
         // as up/down, which reads backwards in a vertical list.
+        boolean webStart = uiState == UiState.WEB_START;
         boolean navUp = Gdx.input.isKeyJustPressed(Input.Keys.UP)
             || (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT))
             || gamepad.menuUp();
@@ -422,12 +444,21 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             || gamepad.confirm();
         boolean back = Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.back()
             || (uiState == UiState.PAUSED && gamepad.pausePressed());
+        if (webStart) {
+            // Only mouse/touch/keyboard count as a user gesture for browser autoplay rules; a
+            // gamepad button press does not, so it must not dismiss the start screen.
+            confirm = Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
+            back = false;
+            navUp = false;
+            navDown = false;
+        }
         if (!acceptActions) {
             confirm = false;
             back = false;
         }
 
         Menu menu = switch (uiState) {
+            case WEB_START -> webStartMenu;
             case MAIN_MENU -> mainMenu;
             case ABOUT -> aboutMenu;
             case OPTIONS -> optionsMenu;
@@ -446,6 +477,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Runnable onActivate = () -> playSound("button_click");
 
         float cx = LOGICAL_W / 2f;
+        if (webStart) {
+            overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, 0.35f);
+            overlay.title(batch, Msg.TITLE.t(language), cx, 90);
+            overlay.buttons(batch, menu, cx, 170f, mouse, clicked, confirm, back, () -> {}, onActivate);
+            return; // no menu hint: it mentions gamepad/Esc controls that do nothing here
+        }
         if (uiState == UiState.MAIN_MENU) {
             // The main menu leaves the fog/firefly backdrop visible -- just a tint, not a solid card.
             overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, 0.35f);
