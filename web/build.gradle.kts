@@ -11,6 +11,8 @@ dependencies {
     implementation("com.github.xpenatan.gdx-teavm:gdx-controllers-web:1.6.2")
 }
 
+val faviconDir = layout.projectDirectory.dir("src/main/webapp")
+
 gdxTeaVM {
     assets(rootProject.file("assets"))
 
@@ -25,6 +27,9 @@ gdxTeaVM {
         devServer {
             enabled = true
             autoReload = true
+            // Serve favicon.ico from the site root (the plugin's generated
+            // index.html has no <link rel="icon">, so browsers request it).
+            staticDirs.from(faviconDir)
         }
     }
 
@@ -32,5 +37,16 @@ gdxTeaVM {
     // produces the static, minified output the GitHub Pages workflow deploys.
     js("release") {
         obfuscated = true
+    }
+}
+
+// The release build's generated index.html has no <link rel="icon">, so browsers
+// request /favicon.ico from the root; copy it next to index.html.
+tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach {
+    doLast {
+        copy {
+            from(faviconDir)
+            into(layout.buildDirectory.dir("dist/js/release/webapp"))
+        }
     }
 }
