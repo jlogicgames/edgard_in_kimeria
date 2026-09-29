@@ -199,6 +199,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         float dt = Gdx.graphics.getDeltaTime();
         gamepad.update();
         UiState stateAtFrameStart = uiState;
+        if (stateAtFrameStart != UiState.PLAYING && gamepad.confirm()) {
+            gamepad.suppressJumpUntilRelease();
+        }
 
         if (levelLoadDelay > 0) {
             levelLoadDelay -= dt;
