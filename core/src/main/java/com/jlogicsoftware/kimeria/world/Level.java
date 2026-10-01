@@ -9,6 +9,7 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.effects.FogEffect;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
+import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
@@ -197,6 +198,17 @@ public class Level implements WorldObject {
                 escalator.performAction();
             }
         }
+    }
+
+    /**
+     * The most recently spawned coin ripple still running, or null. Like Dart and Rust, only
+     * one is drawn at a time, so a second coin collected mid-ripple takes over from the first.
+     */
+    public RippleEffect activeRipple() {
+        for (int i = objects.size() - 1; i >= 0; i--) {
+            if (objects.get(i) instanceof RippleEffect ripple && !ripple.isRemoved()) return ripple;
+        }
+        return null;
     }
 
     @Override

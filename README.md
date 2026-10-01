@@ -100,11 +100,11 @@ Two different causes produce this same crash:
 
 ## Deviations from the source projects
 
-- **The coin-pickup ripple no longer distorts the rendered background.** The Flame
-  original captures the whole scene through a global shader and displaces its pixels;
-  reproducing that needs an offscreen framebuffer capture-and-redraw per ripple. Since
-  it's a one-off cosmetic flourish, it's the same expanding-ring shader as the heart
-  pickup's shockwave, tinted gold, instead.
+- **Only one coin ripple shows at a time.** As in the Flame and Bevy versions, the ripple
+  distorts the rendered scene (`screen_effects.frag`, drawn from an offscreen buffer that is
+  only rendered while a ripple or the pause glitch is live), and collecting a second coin
+  mid-ripple takes over from the first. The wave phase travels with time, as in Rust; Flame
+  freezes it.
 - **`Torch`'s particle system is a pooled-particle reimplementation**, not a port of
   dozens of independent per-particle timers driving Skia canvas draws with blur mask
   filters (`SpriteBatch` has no blur-mask equivalent). Visual language (flickering core
@@ -112,9 +112,9 @@ Two different causes produce this same crash:
   early pass that over-saturated to white with too many concurrent additive particles.
 - **The chromatic-aberration glitch is a pause effect, not an ambient one.** It's off by
   default in the Rust version and dead code in the Flame version; here it's shown only
-  while paused, on the frozen world (`chroma_glitch.frag`, drawn from an offscreen
-  `FrameBuffer` that is only rendered while paused, so normal play is unchanged). The HUD
-  and pause menu draw afterwards, unaffected.
+  while paused, on the frozen world (`screen_effects.frag`, drawn from an offscreen
+  `FrameBuffer` that is only rendered while paused or while a ripple is live, so normal play
+  is unchanged). The HUD and pause menu draw afterwards, unaffected.
 - **Touch controls have no pause button yet.** The on-screen stick and three action buttons
   (`ui.TouchControls`) only show on devices that report a touch screen, so a touch-only player
   can't open the pause menu.

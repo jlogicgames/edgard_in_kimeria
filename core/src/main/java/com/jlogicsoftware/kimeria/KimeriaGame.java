@@ -109,7 +109,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, pauseMenu, gameOverMenu;
 
-    private FrameBuffer glitchBuffer;
+    /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
+    private FrameBuffer sceneBuffer;
     private float glitchTime = 0f;
 
     @Override
@@ -327,14 +328,16 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         boolean glitched = uiState == UiState.PAUSED && level != null;
+        RippleEffect ripple = levelVisible && level != null ? level.activeRipple() : null;
         if (glitched) {
             glitchTime += dt;
-            renderGlitchedWorld();
         } else {
             glitchTime = 0f;
-            if (levelVisible && level != null) {
-                renderWorld();
-            }
+        }
+        if (glitched || ripple != null) {
+            renderPostProcessedWorld(glitched, ripple);
+        } else if (levelVisible && level != null) {
+            renderWorld();
         }
 
         // HUD + overlays draw in fixed logical screen space (not affected by world camera).
@@ -369,43 +372,52 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     /**
-     * While paused, the frozen world is drawn into an offscreen buffer and blitted
-     * to the screen through the chromatic-aberration shader. The HUD and pause menu
-     * draw afterwards in the regular UI pass, so they stay crisp. Only the paused
-     * path pays for the extra pass; normal play renders straight to the screen.
+     * Draws the world into an offscreen buffer and blits it to the screen through
+     * {@code screen_effects.frag}, which applies the pause glitch and/or the coin ripple's
+     * scene distortion in one pass (ripple first, then the chroma shift). The HUD and pause
+     * menu draw afterwards in the regular UI pass, so they stay crisp. Only frames with a
+     * live effect pay for the extra pass; otherwise the world renders straight to the screen.
+     *
+     * @param ripple the ripple to distort the scene with, or null for none
      */
-    private void renderGlitchedWorld() {
-        ensureGlitchBuffer();
-        glitchBuffer.begin();
+    private void renderPostProcessedWorld(boolean glitched, RippleEffect ripple) {
+        ensureSceneBuffer();
+        sceneBuffer.begin();
         Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         renderWorld();
-        glitchBuffer.end(); // resets the GL viewport to the whole window
+        sceneBuffer.end(); // resets the GL viewport to the whole window
         uiViewport.apply();
 
-        ShaderProgram shader = Shaders.load("chroma_glitch.frag");
+        ShaderProgram shader = Shaders.load("screen_effects.frag");
         batch.setProjectionMatrix(screenCamera.combined);
         batch.disableBlending(); // straight copy: the buffer's alpha is not meaningful
         batch.begin();
         batch.setShader(shader);
+        // The shader is shared by both effects, so every uniform is set on every frame.
         shader.setUniformf("uTime", glitchTime);
-        shader.setUniformf("uIntensity", 1f);
+        shader.setUniformf("uIntensity", glitched ? 1f : 0f);
+        if (ripple != null) {
+            ripple.apply(shader, cameraTarget.x, cameraTarget.y, LOGICAL_W, LOGICAL_H);
+        } else {
+            RippleEffect.disable(shader);
+        }
         // The buffer is filled by the same Y-down camera as the screen, so its
         // (bottom-up) texture already lands the right way up here -- no flip.
-        batch.draw(glitchBuffer.getColorBufferTexture(), 0, 0, LOGICAL_W, LOGICAL_H);
+        batch.draw(sceneBuffer.getColorBufferTexture(), 0, 0, LOGICAL_W, LOGICAL_H);
         batch.setShader(null);
         batch.end();
         batch.enableBlending();
     }
 
     /** (Re)creates the offscreen buffer to match the on-screen game area, in backbuffer pixels. */
-    private void ensureGlitchBuffer() {
+    private void ensureSceneBuffer() {
         float hdpi = Gdx.graphics.getBackBufferWidth() / (float) Math.max(1, Gdx.graphics.getWidth());
         int w = Math.max(1, Math.round(uiViewport.getScreenWidth() * hdpi));
         int h = Math.max(1, Math.round(uiViewport.getScreenHeight() * hdpi));
-        if (glitchBuffer != null && glitchBuffer.getWidth() == w && glitchBuffer.getHeight() == h) return;
-        if (glitchBuffer != null) glitchBuffer.dispose();
-        glitchBuffer = new PixmapBackedFrameBuffer(w, h);
+        if (sceneBuffer != null && sceneBuffer.getWidth() == w && sceneBuffer.getHeight() == h) return;
+        if (sceneBuffer != null) sceneBuffer.dispose();
+        sceneBuffer = new PixmapBackedFrameBuffer(w, h);
     }
 
     /**
@@ -578,7 +590,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         batch.dispose();
         shapeRenderer.dispose();
         menuMusic.dispose();
-        if (glitchBuffer != null) glitchBuffer.dispose();
+        if (sceneBuffer != null) sceneBuffer.dispose();
         Shaders.dispose();
         SoftDot.dispose();
     }
