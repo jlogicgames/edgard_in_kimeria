@@ -171,3 +171,18 @@ needed re-encoding from `WAVE_FORMAT_EXTENSIBLE` to plain PCM — libGDX's WAV d
 rejects the former. The GLSL shaders under `assets/shaders/*.frag` are ported from the
 Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in Flutter's
 `runtime_effect.glsl` macros) to plain desktop GLSL consumed via libGDX's `ShaderProgram`.
+
+### Known JVM / Gradle startup warnings
+
+`./gradlew run` and the packaged build start with no JVM `WARNING:` lines on JDK 25+:
+`lwjgl3/build.gradle.kts` passes `--enable-native-access=ALL-UNNAMED` (libGDX's
+`SharedLibraryLoader` calls the restricted `System::load`) and selects LWJGL's FFM memory
+backend instead of its `sun.misc.Unsafe` one. Two cases remain, both outside our scripts:
+
+- **Running the fat jar with `java -jar`** (`buildDesktop`) still prints LWJGL's
+  `sun.misc.Unsafe::objectFieldOffset` warning on JDK 25. The jar's flattened layout drops
+  LWJGL's multi-release FFM classes, so the backend can't be switched there. The warning is
+  harmless; the jar's manifest already carries `Enable-Native-Access`.
+- **`packageDesktop`** prints one Gradle deprecation ("Invocation of Task.project at
+  execution time") from `org.beryx.runtime` 2.0.1, its latest release. It needs a plugin
+  fix upstream.
