@@ -9,6 +9,7 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.effects.FogEffect;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
+import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
@@ -61,6 +62,8 @@ public class Level implements WorldObject {
 
     private final Assets assets;
     private final GameContext game;
+    /** Screen-fixed drifting clouds behind the world; null on levels without a sky. */
+    private SkyBackground sky;
 
     /** Queues {@code obj} to join {@link #objects} after the current update pass finishes. */
     public void queueSpawn(WorldObject obj) {
@@ -85,6 +88,7 @@ public class Level implements WorldObject {
             objects.add(new FogEffect(visibleWorldRect));
         }
         if ("forest-1".equals(levelName)) {
+            sky = new SkyBackground(assets);
             for (int i = 0; i < 48; i++) {
                 objects.add(new RainDrop(new Vector2(map.widthPx(), map.heightPx()), visibleWorldRect));
             }
@@ -197,6 +201,7 @@ public class Level implements WorldObject {
 
     @Override
     public void update(float dt) {
+        if (sky != null) sky.update(dt);
         for (Escalator e : escalators) e.update(dt);
         for (FallingPlatform p : fallingPlatforms) p.update(dt);
         for (WorldObject o : objects) o.update(dt);
@@ -237,6 +242,7 @@ public class Level implements WorldObject {
     }
 
     public void render(Batch batch, Rectangle visibleWorldRect) {
+        if (sky != null) sky.render(batch, visibleWorldRect);
         renderBackground(batch, visibleWorldRect);
         for (Escalator e : escalators) e.render(batch);
         for (FallingPlatform p : fallingPlatforms) p.render(batch);
