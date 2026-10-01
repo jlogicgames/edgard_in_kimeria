@@ -6,8 +6,8 @@ import com.badlogic.gdx.controllers.Controllers;
 
 /**
  * Generic gamepad polling, matching the Rust version's README: left
- * stick/D-pad move, South (A) jump, West/East (X/B) attack, North (Y)
- * interact, Start pause; Up/Down/Left/Right or the stick navigate menus,
+ * stick/D-pad move, South (A) jump, West/East (X/B) attack or interact
+ * (context-sensitive), North (Y) shoot, Start pause; Up/Down/Left/Right or the stick navigate menus,
  * A confirms, B goes back. Uses {@link ControllerMapping}'s generic
  * Xbox-style button indices, which gdx-controllers resolves per-OS/per-pad,
  * so this isn't tied to one specific controller brand.
@@ -19,10 +19,10 @@ public class GamepadInput {
     private static final float AXIS_DEADZONE = 0.4f;
     private static final float AXIS_MENU_DEADZONE = 0.6f;
 
-    private boolean prevConfirm, prevBack, prevPause, prevAttack, prevInteract;
+    private boolean prevConfirm, prevBack, prevPause, prevAction, prevShoot;
     private boolean prevUp, prevDown, prevLeft, prevRight;
 
-    private boolean confirmEdge, backEdge, pauseEdge, attackEdge, interactEdge;
+    private boolean confirmEdge, backEdge, pauseEdge, actionEdge, shootEdge;
     private boolean upEdge, downEdge, leftEdge, rightEdge;
 
     private float horizontal;
@@ -47,8 +47,8 @@ public class GamepadInput {
         boolean confirm = button(c, m, m == null ? -1 : m.buttonA);
         boolean back = button(c, m, m == null ? -1 : m.buttonB);
         boolean pause = button(c, m, m == null ? -1 : m.buttonStart);
-        boolean attack = button(c, m, m == null ? -1 : m.buttonX) || button(c, m, m == null ? -1 : m.buttonB);
-        boolean interact = button(c, m, m == null ? -1 : m.buttonY);
+        boolean action = button(c, m, m == null ? -1 : m.buttonX) || button(c, m, m == null ? -1 : m.buttonB);
+        boolean shoot = button(c, m, m == null ? -1 : m.buttonY);
 
         float axisX = c == null ? 0f : safeAxis(c, m.axisLeftX);
         float axisY = c == null ? 0f : safeAxis(c, m.axisLeftY);
@@ -65,8 +65,8 @@ public class GamepadInput {
         confirmEdge = confirm && !prevConfirm;
         backEdge = back && !prevBack;
         pauseEdge = pause && !prevPause;
-        attackEdge = attack && !prevAttack;
-        interactEdge = interact && !prevInteract;
+        actionEdge = action && !prevAction;
+        shootEdge = shoot && !prevShoot;
         upEdge = up && !prevUp;
         downEdge = down && !prevDown;
         leftEdge = left && !prevLeft;
@@ -75,8 +75,8 @@ public class GamepadInput {
         prevConfirm = confirm;
         prevBack = back;
         prevPause = pause;
-        prevAttack = attack;
-        prevInteract = interact;
+        prevAction = action;
+        prevShoot = shoot;
         prevUp = up;
         prevDown = down;
         prevLeft = left;
@@ -141,11 +141,13 @@ public class GamepadInput {
         return jumpHeld;
     }
 
-    public boolean attackPressed() {
-        return attackEdge;
+    /** The context-sensitive Attack/Interact button (West or East). */
+    public boolean actionPressed() {
+        return actionEdge;
     }
 
-    public boolean interactPressed() {
-        return interactEdge;
+    /** The Shoot button (North). */
+    public boolean shootPressed() {
+        return shootEdge;
     }
 }

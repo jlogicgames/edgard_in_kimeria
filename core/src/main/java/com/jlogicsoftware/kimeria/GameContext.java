@@ -2,6 +2,8 @@ package com.jlogicsoftware.kimeria;
 
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
+import com.jlogicsoftware.kimeria.localization.Language;
+import com.jlogicsoftware.kimeria.ui.TouchControls;
 
 /**
  * Everything an entity needs from the running game, mirroring what Dart
@@ -11,6 +13,13 @@ public interface GameContext {
     Assets assets();
 
     GamepadInput gamepad();
+
+    TouchControls touch();
+
+    Language language();
+
+    /** True while the player overlaps a trigger zone, i.e. the action button interacts instead of attacking. */
+    boolean interactAvailable();
 
     /** Debug aid (F2): ignores lethal damage so a level can be walked end to end. */
     boolean invulnerable();
