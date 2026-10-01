@@ -89,6 +89,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
     private boolean gameStarted = false;
+    private boolean pendingFullscreenToggle = false;
 
     private float timeScale = 1f;
     private boolean playSounds = true;
@@ -194,8 +195,17 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         ), this::exitToMainMenu);
     }
 
-    /** Switches between fullscreen and the windowed size, and remembers the choice for the next launch. */
+    /**
+     * Asks for the window mode to be switched. The switch itself is deferred to the start of the
+     * next {@link #render()}: the menu fires from inside a render pass, and on LWJGL3 changing the
+     * window mode refreshes the window by re-entering {@code render()} while the batch is open.
+     */
     private void toggleFullscreen() {
+        pendingFullscreenToggle = true;
+    }
+
+    /** Switches between fullscreen and the windowed size, and remembers the choice for the next launch. */
+    private void applyFullscreenToggle() {
         boolean fullscreen = !Gdx.graphics.isFullscreen();
         if (fullscreen) {
             Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
@@ -264,6 +274,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     @Override
     public void render() {
+        // Cleared before applying: the mode switch may re-enter render() on desktop.
+        if (pendingFullscreenToggle) {
+            pendingFullscreenToggle = false;
+            applyFullscreenToggle();
+        }
         float dt = Gdx.graphics.getDeltaTime();
         gamepad.update();
         UiState stateAtFrameStart = uiState;
