@@ -554,12 +554,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             return; // no menu hint: it mentions gamepad/Esc controls that do nothing here
         }
         if (uiState == UiState.MAIN_MENU) {
-            overlay.title(batch, Msg.TITLE.t(language), cx, 14);
+            float titleY = 14f, titleBottom = 54f, hintTop = LOGICAL_H - 24f;
+            overlay.title(batch, Msg.TITLE.t(language), cx, titleY);
 
-            float startY = 70f;
+            // Centre the button list in the space between the title and the hint line.
+            float startY = titleBottom + (hintTop - titleBottom - Overlay.buttonsHeight(menu)) / 2f;
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
-            float afterButtons = startY + Overlay.buttonsHeight(menu) + 14f;
-            overlay.body(batch, Msg.CONTROLS_HELP.t(language), cx, afterButtons, 480f);
         } else {
             float panelW = 320f;
             String aboutBody = uiState == UiState.ABOUT ? Msg.ABOUT_BODY.t(language) : null;
