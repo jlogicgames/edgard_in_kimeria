@@ -1,5 +1,5 @@
-val gdxVersion: String by project
-val appName: String by project
+val gdxVersion = project.property("gdxVersion") as String
+val appName = project.property("appName") as String
 
 plugins {
     application
@@ -25,7 +25,7 @@ sourceSets {
     }
 }
 
-val fontBakerImplementation: Configuration by configurations.getting
+val fontBakerImplementation: Configuration = configurations.getByName("fontBakerImplementation")
 
 dependencies {
     fontBakerImplementation(project(":core"))
@@ -57,6 +57,22 @@ configurations.all {
     }
 }
 
+// libGDX's SharedLibraryLoader calls System.load, a restricted method: JDK 24+
+// warns on it and a future JDK will block it unless native access is enabled.
+// The classpath is the unnamed module, hence ALL-UNNAMED.
+val nativeAccessArgs = listOf("--enable-native-access=ALL-UNNAMED")
+
+// LWJGL's default memory backend on JDK 25+ still uses sun.misc.Unsafe, which
+// JDK 25 warns about (terminally deprecated). LWJGL 3.4 ships an FFM-based
+// backend for JDK 25+ instead; it is only in the multi-release part of the
+// jar, so pick it only when the JVM that runs the game (and, for jpackage,
+// supplies the bundled JRE) is that new. Not applied to the fat jar, whose
+// flattened layout drops the multi-release classes.
+val lwjglMemoryArgs =
+    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25))
+        listOf("-Dorg.lwjgl.system.memoryBackend=org.lwjgl.system.MemoryBackendFFM")
+    else listOf()
+
 application {
     mainClass.set("com.jlogicsoftware.kimeria.lwjgl3.Lwjgl3Launcher")
 }
@@ -72,6 +88,9 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes["Main-Class"] = "com.jlogicsoftware.kimeria.lwjgl3.Lwjgl3Launcher"
+        // `java -jar` has no command line to put --enable-native-access on;
+        // JDK 24+ honours this manifest attribute instead (older JDKs ignore it).
+        attributes["Enable-Native-Access"] = "ALL-UNNAMED"
     }
     dependsOn(configurations.runtimeClasspath)
     from({ configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) } })
@@ -88,7 +107,7 @@ runtime {
     launcher {
         noConsole = true
         val isMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX
-        jvmArgs = if (isMac) listOf("-XstartOnFirstThread") else listOf()
+        jvmArgs = nativeAccessArgs + lwjglMemoryArgs + if (isMac) listOf("-XstartOnFirstThread") else listOf()
     }
 
     jpackage {
@@ -112,6 +131,7 @@ runtime {
 }
 
 tasks.named<JavaExec>("run") {
+    jvmArgs(nativeAccessArgs + lwjglMemoryArgs)
     // macOS needs -XstartOnFirstThread for LWJGL3/GLFW to create a window.
     if (System.getProperty("os.name").lowercase().contains("mac")) {
         jvmArgs("-XstartOnFirstThread")

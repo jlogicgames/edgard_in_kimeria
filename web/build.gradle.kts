@@ -3,8 +3,8 @@ import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 
-val gdxVersion: String by project
-val appName: String by project
+val gdxVersion = project.property("gdxVersion") as String
+val appName = project.property("appName") as String
 
 plugins {
     id("com.github.xpenatan.gdx-teavm") version "1.6.2"

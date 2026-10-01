@@ -1,4 +1,4 @@
-val gdxVersion: String by project
+val gdxVersion = project.property("gdxVersion") as String
 
 dependencies {
     api("com.badlogicgames.gdx:gdx:$gdxVersion")
