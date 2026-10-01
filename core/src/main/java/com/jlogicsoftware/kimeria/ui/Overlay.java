@@ -36,6 +36,14 @@ import java.util.List;
 public class Overlay {
     public static final float BUTTON_W = 220f, BUTTON_H = 40f, BUTTON_GAP = 8f;
 
+    private static final Color IDLE_BORDER = new Color(0.45f, 0.45f, 0.52f, 1f);
+    private static final Color IDLE_FILL = new Color(0.10f, 0.10f, 0.14f, 0.92f);
+    private static final Color HOVER_FILL = new Color(0.27f, 0.27f, 0.36f, 0.96f);
+    private static final Color SELECTED_BORDER = new Color(1f, 0.82f, 0.3f, 1f);
+    private static final Color IDLE_TEXT = new Color(0.78f, 0.78f, 0.82f, 1f);
+    private static final Color HOVER_TEXT = Color.WHITE;
+    private static final Color SELECTED_TEXT = new Color(1f, 0.82f, 0.3f, 1f);
+
     private final BitmapFont titleFont;
     private final BitmapFont bodyFont;
     private final BitmapFont buttonFont;
@@ -43,12 +51,15 @@ public class Overlay {
     private final Matrix4 textProjection;
     private final float logicalHeight;
     private final List<Runnable> textQueue = new ArrayList<>();
+    private Vector2 lastMouse;
+    private final float markerW;
 
     public Overlay(Assets assets, float logicalWidth, float logicalHeight) {
         titleFont = assets.font(30);
         bodyFont = assets.font(15);
         buttonFont = assets.font(20);
         hintFont = assets.font(13);
+        markerW = new GlyphLayout(buttonFont, "<").width;
         this.logicalHeight = logicalHeight;
 
         OrthographicCamera textCamera = new OrthographicCamera();
@@ -147,22 +158,34 @@ public class Overlay {
         int n = menu.items.size();
         float bx = centerX - BUTTON_W / 2f;
 
+        // Only a real mouse move may pull the selection onto the button under the cursor. A cursor
+        // that merely rests over a button must not undo keyboard/gamepad navigation every frame.
+        boolean mouseMoved = mouseLogical != null
+            && (lastMouse == null || lastMouse.x != mouseLogical.x || lastMouse.y != mouseLogical.y);
+        lastMouse = mouseLogical == null ? null : new Vector2(mouseLogical);
+
         for (int i = 0; i < n; i++) {
             float by = startY + i * (BUTTON_H + BUTTON_GAP);
-            boolean hovered = mouseLogical != null && new Rectangle(bx, by, BUTTON_W, BUTTON_H).contains(mouseLogical.x, mouseLogical.y);
-            if (hovered && menu.selected != i) {
+            boolean hovered = mouseLogical != null
+                && mouseLogical.x >= bx && mouseLogical.x <= bx + BUTTON_W
+                && mouseLogical.y >= by && mouseLogical.y <= by + BUTTON_H;
+            if (hovered && mouseMoved && menu.selected != i) {
                 menu.selected = i;
                 onHover.run();
             }
+            if (hovered && mouseClicked) menu.selected = i;
             boolean selected = menu.selected == i;
 
+            // Three distinct looks: idle (dark, quiet), hovered (lighter fill), selected (gold
+            // frame, gold label and > < markers). Hovered + selected stack.
             if (selected) {
-                batch.setColor(1f, 1f, 1f, 1f);
+                batch.setColor(SELECTED_BORDER);
                 batch.draw(Shaders.whiteQuad(), bx - 3, by - 3, BUTTON_W + 6, BUTTON_H + 6);
-                batch.setColor(0.85f, 0.85f, 0.85f, 1f);
             } else {
-                batch.setColor(0.75f, 0.75f, 0.75f, 1f);
+                batch.setColor(IDLE_BORDER);
+                batch.draw(Shaders.whiteQuad(), bx - 1, by - 1, BUTTON_W + 2, BUTTON_H + 2);
             }
+            batch.setColor(hovered ? HOVER_FILL : IDLE_FILL);
             batch.draw(Shaders.whiteQuad(), bx, by, BUTTON_W, BUTTON_H);
             batch.setColor(Color.WHITE);
 
@@ -170,9 +193,14 @@ public class Overlay {
             GlyphLayout layout = new GlyphLayout(buttonFont, label);
             float labelX = bx + (BUTTON_W - layout.width) / 2f;
             float labelYFromTop = by + (BUTTON_H - layout.height) / 2f;
+            Color textColor = selected ? SELECTED_TEXT : hovered ? HOVER_TEXT : IDLE_TEXT;
             textQueue.add(() -> {
-                buttonFont.setColor(Color.BLACK);
+                buttonFont.setColor(textColor);
                 buttonFont.draw(batch, layout, labelX, toTextY(labelYFromTop));
+                if (selected) {
+                    buttonFont.draw(batch, ">", bx + 10f, toTextY(labelYFromTop));
+                    buttonFont.draw(batch, "<", bx + BUTTON_W - 10f - markerW, toTextY(labelYFromTop));
+                }
                 buttonFont.setColor(Color.WHITE);
             });
 
