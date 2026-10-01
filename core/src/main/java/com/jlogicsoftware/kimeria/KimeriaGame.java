@@ -50,7 +50,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, PLAYING, PAUSED, GAME_OVER}
+    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, LOADING, PLAYING, PAUSED, GAME_OVER}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -75,6 +75,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private Overlay overlay;
     private MenuBackdrop menuBackdrop;
     private final GamepadInput gamepad = new GamepadInput();
+
+    /** Everything needed to begin a run; a save/load system would fill this from the chosen save. */
+    private record StartData(int levelIndex, int coins) {
+        static StartData newGame() {
+            return new StartData(0, 0);
+        }
+    }
 
     private UiState uiState;
     private int currentLevelIndex = 0;
@@ -128,9 +135,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
         // one-button screen whose click/keypress unlocks it; other platforms go straight to the menu.
         uiState = isWeb() ? UiState.WEB_START : UiState.MAIN_MENU;
-
-        player = new Player(assets, this, 0, 0);
-        startLoadingLevel();
+        // No player or level yet: they are built by startGame() once the player picks what to play.
     }
 
     private boolean isWeb() {
@@ -147,10 +152,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // (a second Enter confirms) rather than quitting on a stray keypress. A browser tab
         // can't be closed by the page, so the web build has no Exit at all.
         List<MenuItem> mainItems = new ArrayList<>(List.of(
-            new MenuItem(() -> Msg.PLAY.t(language), () -> {
-                gameStarted = true;
-                uiState = UiState.PLAYING;
-            }),
+            new MenuItem(() -> Msg.PLAY.t(language), () -> startGame(StartData.newGame())),
             new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
             new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS)
         ));
@@ -184,11 +186,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         ), this::resumeGame);
 
         gameOverMenu = new Menu(() -> Msg.GAME_OVER.t(language), null, List.of(
-            new MenuItem(() -> Msg.PLAY_AGAIN.t(language), () -> {
-                reset();
-                gameStarted = true;
-                uiState = UiState.PLAYING;
-            }),
+            new MenuItem(() -> Msg.PLAY_AGAIN.t(language), () -> startGame(StartData.newGame())),
             new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
         ), this::exitToMainMenu);
     }
@@ -212,17 +210,37 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void exitToMainMenu() {
-        gameStarted = false;
-        reset();
+        releaseGame();
         uiState = UiState.MAIN_MENU;
+    }
+
+    /** Drops the level and player so nothing stays alive behind the menus. */
+    private void releaseGame() {
+        gameStarted = false;
+        levelLoadDelay = -1f;
+        level = null;
+        player = null;
+        coinsCollected = 0;
+        currentLevelIndex = 0;
     }
 
     private void backToMainMenu() {
         uiState = UiState.MAIN_MENU;
     }
 
+    /** Builds the player and level from {@code data}, behind the loading screen. */
+    private void startGame(StartData data) {
+        currentLevelIndex = Math.floorMod(data.levelIndex(), LEVEL_NAMES.size());
+        coinsCollected = data.coins();
+        player = new Player(assets, this, 0, 0);
+        startLoadingLevel();
+    }
+
     private void startLoadingLevel() {
+        level = null; // the previous level is released while the loading screen shows
+        gameStarted = false;
         levelLoadDelay = 1f; // mirrors the original's Future.delayed(1s) before (re)loading a level
+        uiState = UiState.LOADING;
     }
 
     private void loadLevel() {
@@ -254,6 +272,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             levelLoadDelay -= dt;
             if (levelLoadDelay <= 0) {
                 loadLevel();
+                gameStarted = true;
+                uiState = UiState.PLAYING;
             }
         }
 
@@ -265,10 +285,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         boolean levelVisible = uiState == UiState.PLAYING || uiState == UiState.PAUSED || uiState == UiState.GAME_OVER;
         boolean menuBackdropActive = !levelVisible;
         // Stay silent until the start screen has been dismissed: the click that dismisses it is
-        // what lets the browser start the music.
-        boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START;
+        // what lets the browser start the music. Loading is the start of a run, so fade it out.
+        boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START && uiState != UiState.LOADING;
 
-        if (levelVisible && levelLoadDelay <= 0 && level != null) {
+        if (levelVisible && level != null) {
             level.update(dt * timeScale);
         }
 
@@ -476,8 +496,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case OPTIONS -> optionsMenu;
             case PAUSED -> pauseMenu;
             case GAME_OVER -> gameOverMenu;
-            case PLAYING -> null;
+            case LOADING, PLAYING -> null;
         };
+        if (uiState == UiState.LOADING) {
+            overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
+            overlay.title(batch, Msg.LOADING.t(language), LOGICAL_W / 2f, LOGICAL_H / 2f - 15f);
+            return;
+        }
         if (menu == null) return;
 
         if (navUp || navDown) {
@@ -525,13 +550,6 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
 
         overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - 12);
-    }
-
-    public void reset() {
-        coinsCollected = 0;
-        currentLevelIndex = 0;
-        player = new Player(assets, this, 0, 0);
-        startLoadingLevel();
     }
 
     @Override
