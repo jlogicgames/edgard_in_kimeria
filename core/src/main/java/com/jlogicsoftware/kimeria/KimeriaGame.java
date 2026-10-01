@@ -53,6 +53,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, PLAYING, PAUSED, GAME_OVER}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
+    /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
+    private static final float MENU_TINT_ALPHA = 0.2f;
     private static final List<String> LEVEL_NAMES = List.of("forest-1", "forest");
     private static final float MUSIC_FADE_IN = 2f, MUSIC_FADE_OUT = 1f;
 
@@ -277,7 +279,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         camera.position.set(cameraTarget.x + LOGICAL_W / 2f, cameraTarget.y + LOGICAL_H / 2f, 0);
         camera.update();
 
-        Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
+        // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
+        if (menuBackdropActive) {
+            Gdx.gl.glClearColor(0.16f, 0.16f, 0.19f, 1f);
+        } else {
+            Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
+        }
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         boolean glitched = uiState == UiState.PAUSED && level != null;
@@ -482,15 +489,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Runnable onActivate = () -> playSound("button_click");
 
         float cx = LOGICAL_W / 2f;
+        // Every menu screen shares this full-screen tint over the fog/firefly backdrop -- no solid card.
+        overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
         if (webStart) {
-            overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, 0.35f);
             overlay.title(batch, Msg.TITLE.t(language), cx, 90);
             overlay.buttons(batch, menu, cx, 170f, mouse, clicked, confirm, back, () -> {}, onActivate);
             return; // no menu hint: it mentions gamepad/Esc controls that do nothing here
         }
         if (uiState == UiState.MAIN_MENU) {
-            // The main menu leaves the fog/firefly backdrop visible -- just a tint, not a solid card.
-            overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, 0.35f);
             overlay.title(batch, Msg.TITLE.t(language), cx, 14);
 
             float startY = 70f;
@@ -505,7 +511,6 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             float panelH = Math.max(160f, contentH);
             float panelX = cx - panelW / 2f;
             float panelY = LOGICAL_H / 2f - panelH / 2f;
-            overlay.panel(batch, panelX, panelY, panelW, panelH, 0.94f);
 
             float y = panelY + 30f;
             if (menu.titleText() != null) {
