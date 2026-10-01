@@ -8,9 +8,13 @@ A 2D platformer, ported to Java and [libGDX](https://libgdx.com/) from the proje
 Flutter/Flame version (with reference to its separate Rust/Bevy version for feature parity —
 full menu system, localization, gamepad support, dev hotkeys).
 
-Controls: **WASD / arrows** move, **J** jump, **K** attack, **L** interact, **Esc** pause.
-Gamepad: **left stick / D-pad** move, **South** jump, **West**/**East** attack, **North**
-interact, **Start** pause. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
+Controls are three action buttons — **Jump**, **Shoot** and a context-sensitive
+**Attack/Interact** — plus movement. **WASD / arrows** move, **J** jump, **K** attack (or
+interact while the player is inside a trigger zone — walls, torches, escalators), **L** shoot,
+**Esc** pause. Gamepad: **left stick / D-pad** move, **South** jump, **West**/**East**
+attack/interact, **North** shoot, **Start** pause. Touch devices get an on-screen stick and the
+same three buttons; the Attack/Interact button relabels itself inside a trigger zone. Shoot is
+bound everywhere but inert until the ranged attack (fireball or throwing knife) is built. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
 **Esc/B** back (Esc/B/Start resume from the pause menu; on the desktop main menu they select
 Exit; on game over they return to the main menu). Debug keys: **F1** hitbox gizmos, **F2**
 invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
@@ -111,11 +115,12 @@ Two different causes produce this same crash:
   while paused, on the frozen world (`chroma_glitch.frag`, drawn from an offscreen
   `FrameBuffer` that is only rendered while paused, so normal play is unchanged). The HUD
   and pause menu draw afterwards, unaffected.
-- **No touch controls** (on-screen joystick/jump button) — present in the Rust version,
-  out of scope for a desktop-first port.
-- **Fullscreen is desktop-only.** There is no mobile module in this repo yet (see "No touch
-  controls" above), and the web build stays in its canvas, so neither shows the Display
-  option; a future mobile backend is fullscreen by nature.
+- **Touch controls have no pause button yet.** The on-screen stick and three action buttons
+  (`ui.TouchControls`) only show on devices that report a touch screen, so a touch-only player
+  can't open the pause menu.
+- **Fullscreen is desktop-only.** There is no mobile module in this repo yet, and the web build
+  stays in its canvas, so neither shows the Display option; a future mobile backend is
+  fullscreen by nature.
 - **Menus are hand-drawn immediate-mode UI**, not Scene2D, to avoid pulling in a full
   Scene2D skin for a handful of simple screens.
 
@@ -148,6 +153,7 @@ Package layout:
 - `ui.*` — HUD, menus, keyboard/gamepad/mouse navigation
 - `localization.*` — `Msg`/`Language`, English and Ukrainian
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
+- `ui.TouchControls` — on-screen stick and Jump / Shoot / Attack-Interact buttons
 - `KimeriaGame` — the whole game and its menu states in one place
 
 A fixed-timestep physics accumulator (matching the source projects) was tried and dropped:

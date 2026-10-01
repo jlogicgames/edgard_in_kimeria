@@ -29,6 +29,7 @@ import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.Hud;
+import com.jlogicsoftware.kimeria.ui.TouchControls;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
@@ -72,6 +73,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private Player player;
     private Level level;
     private Hud hud;
+    private TouchControls touchControls;
     private Overlay overlay;
     private MenuBackdrop menuBackdrop;
     private final GamepadInput gamepad = new GamepadInput();
@@ -124,6 +126,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         uiViewport = new FitViewport(LOGICAL_W, LOGICAL_H, screenCamera);
 
         hud = new Hud(assets, this, LOGICAL_W, LOGICAL_H);
+        touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
         menuBackdrop = new MenuBackdrop();
 
@@ -264,6 +267,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         float dt = Gdx.graphics.getDeltaTime();
         gamepad.update();
         UiState stateAtFrameStart = uiState;
+        touchControls.update(stateAtFrameStart == UiState.PLAYING);
         if (stateAtFrameStart != UiState.PLAYING && gamepad.confirm()) {
             gamepad.suppressJumpUntilRelease();
         }
@@ -323,6 +327,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         batch.begin();
         if (uiState == UiState.PLAYING || uiState == UiState.PAUSED) {
             hud.render(batch);
+            if (uiState == UiState.PLAYING) touchControls.render(batch);
         }
         if (menuBackdropActive) {
             menuBackdrop.render(batch);
@@ -573,6 +578,21 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     @Override
     public GamepadInput gamepad() {
         return gamepad;
+    }
+
+    @Override
+    public TouchControls touch() {
+        return touchControls;
+    }
+
+    @Override
+    public Language language() {
+        return language;
+    }
+
+    @Override
+    public boolean interactAvailable() {
+        return player != null && player.canInteract();
     }
 
     @Override

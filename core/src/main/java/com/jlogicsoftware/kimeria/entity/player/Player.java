@@ -175,6 +175,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private void readInput() {
         if (!game.isGameStarted()) return;
         var gamepad = game.gamepad();
+        var touch = game.touch();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed()) {
             game.pause();
@@ -182,31 +183,45 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
         boolean left = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean right = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
-        float gamepadX = gamepad.horizontal();
+        float padX = gamepad.horizontal() + touch.horizontal();
 
         if (!isAttacking) {
             horizontalMovement = 0;
-            if (left || gamepadX < 0) horizontalMovement -= 1;
-            if (right || gamepadX > 0) horizontalMovement += 1;
+            if (left || padX < 0) horizontalMovement -= 1;
+            if (right || padX > 0) horizontalMovement += 1;
         }
 
-        isJumping = (Gdx.input.isKeyPressed(Input.Keys.J) || gamepad.jumpHeld()) && !isAttacking;
+        isJumping = (Gdx.input.isKeyPressed(Input.Keys.J) || gamepad.jumpHeld() || touch.jumpHeld()) && !isAttacking;
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K) || gamepad.attackPressed()) {
-            if (!isAttacking && onGround && !isJumping && !clambering) {
+        // The one "other" button: interacts inside a trigger zone, attacks everywhere else.
+        if (Gdx.input.isKeyJustPressed(Input.Keys.K) || gamepad.actionPressed() || touch.actionPressed()) {
+            if (canInteract()) {
+                interact();
+            } else if (!isAttacking && onGround && !isJumping && !clambering) {
                 isAttacking = true;
             }
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.L) || gamepad.interactPressed()) {
-            if (!collideWithTriggerId.isEmpty()) {
-                for (Trigger trigger : level.triggers) {
-                    if (trigger.targetId.equals(collideWithTriggerId)) {
-                        level.activateTrigger(trigger);
-                    }
-                }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L) || gamepad.shootPressed() || touch.shootPressed()) {
+            shoot();
+        }
+    }
+
+    /** Whether the action button currently interacts (player is inside a {@link Trigger} zone) rather than attacks. */
+    public boolean canInteract() {
+        return !collideWithTriggerId.isEmpty();
+    }
+
+    private void interact() {
+        for (Trigger trigger : level.triggers) {
+            if (trigger.targetId.equals(collideWithTriggerId)) {
+                level.activateTrigger(trigger);
             }
         }
+    }
+
+    /** Shoot button hook: the ranged attack (fireball or throwing knife) is a separate, not yet built feature. */
+    private void shoot() {
     }
 
     private void updatePlayerState() {
