@@ -178,7 +178,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         var touch = game.touch();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed()) {
-            game.pause();
+            game.togglePause();
         }
 
         boolean left = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);

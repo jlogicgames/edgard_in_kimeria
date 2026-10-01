@@ -50,7 +50,7 @@ public interface GameContext {
 
     void triggerGameOver();
 
-    void pause();
+    void togglePause();
 
     boolean isSlowTime();
 

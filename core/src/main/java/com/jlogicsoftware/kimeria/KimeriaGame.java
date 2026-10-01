@@ -700,8 +700,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         uiState = UiState.GAME_OVER;
     }
 
+    // Not named pause(): that is ApplicationListener.pause(), which libGDX calls when the window
+    // is minimized, and toggling the game from there left the main menu replaced by an empty level.
     @Override
-    public void pause() {
+    public void togglePause() {
         gameStarted = !gameStarted;
         uiState = gameStarted ? UiState.PLAYING : UiState.PAUSED;
     }
