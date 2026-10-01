@@ -32,7 +32,12 @@ public final class Shaders {
         });
     }
 
-    /** A 1x1 white texture region used to draw a shader-only quad through SpriteBatch. */
+    /**
+     * A 1x1 white texture region used to draw a shader-only quad through SpriteBatch.
+     * Flipped vertically like {@code Assets.region}: the game renders through a Y-down
+     * camera, so without the flip {@code v_texCoords.y} would run bottom-to-top and the
+     * Flutter shaders (which assume Y-down) would come out upside down.
+     */
     public static TextureRegion whiteQuad() {
         if (whitePixel == null) {
             Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -41,7 +46,9 @@ public final class Shaders {
             whitePixel = new Texture(pm);
             pm.dispose();
         }
-        return new TextureRegion(whitePixel);
+        TextureRegion region = new TextureRegion(whitePixel);
+        region.flip(false, true);
+        return region;
     }
 
     public static void dispose() {

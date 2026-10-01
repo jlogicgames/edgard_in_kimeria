@@ -90,14 +90,17 @@ public class TiledMapData {
 
             for (XmlEl groupEl : mapEl.children("objectgroup")) {
                 String groupName = groupEl.attr("name", "");
+                // Tiled draws every object in a group shifted by the layer offset; mirror that.
+                float offsetX = floatAttr(groupEl, "offsetx", 0);
+                float offsetY = floatAttr(groupEl, "offsety", 0);
                 List<TiledObject> objects = new ArrayList<>();
                 for (XmlEl objEl : groupEl.children("object")) {
                     TiledObject obj = new TiledObject();
                     obj.id = intAttr(objEl, "id", 0);
                     obj.name = objEl.attr("name", "");
                     obj.type = objEl.hasAttr("type") ? objEl.attr("type", "") : objEl.attr("class", "");
-                    obj.x = floatAttr(objEl, "x", 0);
-                    obj.y = floatAttr(objEl, "y", 0);
+                    obj.x = floatAttr(objEl, "x", 0) + offsetX;
+                    obj.y = floatAttr(objEl, "y", 0) + offsetY;
                     obj.width = floatAttr(objEl, "width", 0);
                     obj.height = floatAttr(objEl, "height", 0);
                     XmlEl propsEl = objEl.firstChild("properties");
