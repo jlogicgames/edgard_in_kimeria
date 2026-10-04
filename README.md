@@ -162,6 +162,31 @@ the accumulator would sometimes step physics twice in one rendered frame and zer
 the next — invisible in an FPS counter but visible as jittery movement. `Player` instead
 steps physics once per rendered frame with that frame's own (clamped) delta.
 
+### Game state, progress and saves
+
+Gameplay rules and their rationale are in [docs/DECISIONS.md](docs/DECISIONS.md). The
+parts that shape the code:
+
+- **A run is described by `KimeriaGame.StartData`** (level index, coins). `startGame(data)`
+  builds a player and a level from it, and `Continue` and `New Game` are just two ways of
+  producing a `StartData`: `New Game` uses `StartData.newGame()`, `Continue` uses the saved one.
+- **Saved progress** lives in the same libGDX `Preferences` file as settings
+  (`Settings.PREFS_NAME`), under its own keys in `Settings`: the next level index and the coin
+  count at that point. The save is written when a level is completed, never mid-level, and read
+  once when the main menu is built or shown. "A save exists" is a single predicate that the main
+  menu uses to decide whether to show `Continue`.
+- **The main menu hides `Continue` until a save exists.** `Menu` takes a fixed list of
+  `MenuItem`s today, so `MenuItem` needs an optional visibility predicate (default: always
+  visible) that `Menu` honours when drawing and navigating (skipping hidden items, keeping
+  the selection on a visible one). Rebuilding the list on every state change would also work but
+  loses the selection, so the predicate is the intended approach.
+- **`New Game` over an existing save asks for confirmation** before overwriting it, using the
+  same `Menu` mechanism as the other screens (a small confirm menu state).
+- **Death does not touch the save.** It resets the level in memory (see D3), with a fast path
+  that bypasses the loading screen, and the save only changes on level completion.
+- **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;
+  *Continue* on the main menu loads a saved run into a fresh `StartData`.
+
 ## Assets
 
 Images, audio and Tiled maps are copied verbatim from the Flame project's `assets/`.
