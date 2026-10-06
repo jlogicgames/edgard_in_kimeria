@@ -167,13 +167,14 @@ steps physics once per rendered frame with that frame's own (clamped) delta.
 Gameplay rules and their rationale are in [docs/DECISIONS.md](docs/DECISIONS.md). The
 parts that shape the code:
 
-- **A run is described by `KimeriaGame.StartData`** (level index, coins). `startGame(data)`
+- **A run is described by `KimeriaGame.StartData`** (level index, coins; coins are not saved,
+  so `Continue` starts them at 0). `startGame(data)`
   builds a player and a level from it, and `Continue` and `New Game` are just two ways of
   producing a `StartData`: `New Game` uses `StartData.newGame()`, `Continue` uses the saved one.
 - **Saved progress** lives in the same libGDX `Preferences` file as settings
-  (`Settings.PREFS_NAME`), under its own keys in `Settings`: the next level index and the coin
-  count at that point. The save is written when a level is completed, never mid-level, and read
-  once when the main menu is built or shown. "A save exists" is a single predicate that the main
+  (`Settings.PREFS_NAME`), under its own key in `Settings`: the next level index and nothing else
+  (coins are temporary, see D8). The save is written automatically when a level is completed (no manual save), never mid-level
+  (completing the last level writes level 1), and read once when the main menu is built or shown. "A save exists" is a single predicate that the main
   menu uses to decide whether to show `Continue`.
 - **The main menu hides `Continue` until a save exists.** `Menu` takes a fixed list of
   `MenuItem`s today, so `MenuItem` needs an optional visibility predicate (default: always
