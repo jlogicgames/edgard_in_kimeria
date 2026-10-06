@@ -78,8 +78,15 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - **New Game** is always shown. If a save exists, it asks for confirmation before replacing
     it.
   - Progress is saved when a level is completed (reaching the `Checkpoint` exit) and holds the
-    next level to play. It is not saved mid-level, consistent with D3. Continue starts that
-    level from its beginning.
+    next level to play, and nothing else. It is not saved mid-level, consistent with D3.
+    Continue starts that level from its beginning.
+  - Saving is **automatic**. The game writes the save the moment a level is completed, with no
+    save button, no prompt and no manual save slots. The player never has to save.
+  - The save holds **only the level**. Coins are a temporary mechanic (D6) that will be
+    removed, so they are not saved and a continued run starts with 0 coins. Do not add coins
+    to the save format.
+  - Completing the **last level** resets the save to level 1, so Continue then starts the
+    game over from the first level.
   - **Continue** (a saved run, from the main menu) is different from **Resume** (unpausing the
     current run, from the pause menu). The names stay distinct.
 - **Why:** Standard for games with progress, and the same shape as Katana Zero's menu. The
