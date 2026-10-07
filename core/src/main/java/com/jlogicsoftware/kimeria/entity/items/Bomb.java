@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.entity.items;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.effects.BombExplosionEffect;
@@ -27,6 +28,12 @@ public class Bomb extends Entity {
         this.spawner = spawner;
         animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, 32, 0);
         animation.setPlayMode(Animation.PlayMode.LOOP);
+    }
+
+    /** The bomb as drawn (10x13 inside its 16x16 frame), so grazing the empty corners of the frame is not lethal. */
+    public Rectangle hitboxBounds() {
+        float sx = size.x / 16f, sy = size.y / 16f;
+        return new Rectangle(position.x + 3 * sx, position.y + 2 * sy, 10 * sx, 13 * sy);
     }
 
     public void collideWithPlayer() {

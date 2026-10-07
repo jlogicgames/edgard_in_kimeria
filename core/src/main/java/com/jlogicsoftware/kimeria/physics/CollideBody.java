@@ -33,10 +33,19 @@ public interface CollideBody extends GravityBody {
     }
 
     default void checkHorizontalCollisions(Level level) {
-        for (CollisionBlock block : level.collisionBlocks) {
+        checkHorizontalCollisions(level.collisionBlocks);
+    }
+
+    default void checkHorizontalCollisions(Iterable<CollisionBlock> blocks) {
+        for (CollisionBlock block : blocks) {
             if (!block.isActive()) continue;
             if (block.isQuickSand()) {
                 setInQuickSand(CollisionUtils.checkCollision(this, block));
+            } else if (block.isPlatform()) {
+                // One-way platforms only support from above. Their overlap test is built for
+                // landing (it even adds a catch-up margin at rest, e.g. at a jump's apex), so using
+                // it sideways snapped actors across the platform to its far edge.
+                continue;
             } else if (block.isWall()) {
                 if (CollisionUtils.checkCollision(this, block)) {
                     if (velocity().x > 0) {

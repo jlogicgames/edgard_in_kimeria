@@ -47,8 +47,9 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 ## D5. Hits must be fair
 
 - **Status:** Accepted
-- **Decision:** Hit and stomp checks use entity hitboxes, which are smaller than the sprites. No
-  enemy kills from a distance the player cannot see, and enemies never teleport.
+- **Decision:** Hit and stomp checks use entity hitboxes, which are smaller than the sprite frames
+  (sizing in D10). No enemy kills from a distance the player cannot see (an enemy hitbox
+  overhangs its drawn body by about a pixel, no more), and enemies never teleport.
 - **Why:** Instant death is only acceptable when every death is understandable.
 - **Tracked in:** #44
 
@@ -114,3 +115,44 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   swap keeps the About text honest and the behaviour predictable. Z/X/C is the usual
   left-hand cluster beside the arrows.
 - **Tracked in:** #42
+
+## D10. Hitbox and collision conventions
+
+- **Status:** Accepted
+- **Decision:** Every actor follows the same rules, so a new enemy or item cannot reintroduce
+  the "dies from nowhere / teleports at a wall" class of bug (#44).
+  - **Hitboxes are the single source of truth.** Contact, stomp, sword hits and aggro all use
+    the body `Hitbox`, never the sprite box or raw `position`/`size`. Every hitbox is smaller
+    than its sprite frame, and the sizing is deliberately in the player's favour: the
+    **player's** hitbox is slightly *smaller* than the drawn body (forgiving near misses), an
+    **enemy's** body hitbox is slightly *larger* than its drawn body (easy to hit and stomp).
+    Anything lethal that is not an actor (a bomb) gets a hitbox that matches the art.
+  - **An enemy has two boxes when it needs them.** The body hitbox (generous) is what the sword
+    and stomps hit and what terrain collides with. The **hurtbox** (`Enemy.hurtbox`) is what
+    kills the player on touch, and never reaches past the drawn art, so an enemy cannot kill
+    before it visibly touches. Without a separate hurtbox the body is both.
+  - **Hitboxes are rectangles**, for every actor including the bat, so what is drawn in F1 is
+    exactly what is tested. A circle `Hitbox` is still supported and tested as a real circle
+    (`CollisionUtils.overlaps`), but nothing uses one now.
+  - **Turning pivots about the body hitbox centre.** Boxes are authored once, for the
+    right-facing sprite, in sprite space. Facing left mirrors them (and the art) about the
+    centre of the body hitbox, in `Actor.boundsOf` / `Actor.render`. The body therefore never
+    moves when an actor turns. Never mirror about the sprite centre: with an off-centre
+    hitbox that shifts the body sideways on every turn, which pushes it into walls.
+  - **A melee attack is its own collider**, authored the same way (RedMob's whip, the player's
+    sword). It is dangerous only on its active frames, after a wind-up that is long enough to
+    react to. Enemies start the wind-up when that collider, as it will be at the strike,
+    overlaps the player, so there is no separate trigger distance that can drift out of sync.
+    F1 draws attack colliders: yellow while winding up, magenta while dangerous.
+  - **A stomp** needs the player moving down and with their feet above the enemy's top edge on
+    the previous frame (`Enemy.isStomp`). Any other contact hurts the player and leaves the
+    enemy alone. A sword hit kills; a dying enemy is harmless.
+  - **One-way platforms** (`Platform`, `FallingPlatform`, `Escalator`) support only from
+    above. They are ignored by horizontal collision; their landing test (feet-based, with a
+    catch-up margin at rest) is only valid vertically.
+- **Why:** Instant death is only acceptable when every death is understandable (D5), and the
+  deaths players reported all came from geometry that did not match what was drawn.
+- **Known gap:** collision resolution only pushes an actor out of a wall while it is moving
+  (`velocity.x != 0`). Nothing in the current levels embeds a stationary actor in a wall, but
+  a block that activates around an actor (a toggled `Actionable` wall) could. Not fixed yet.
+- **Tracked in:** #44

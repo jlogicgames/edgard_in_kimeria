@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
+import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
@@ -281,16 +282,34 @@ public class Level implements WorldObject {
                 drawHitbox(sr, actor);
             }
         }
+
+        // What kills on touch, where it differs from the body box.
+        sr.setColor(1f, 0.55f, 0.1f, 1f);
+        for (WorldObject o : objects) {
+            if (o instanceof Enemy<?> enemy && enemy.hasSeparateHurtbox()) {
+                Rectangle r = enemy.hurtBounds();
+                sr.rect(r.x, r.y, r.width, r.height);
+            }
+        }
+
+        // Melee attack colliders: yellow while winding up, magenta on the frames that hurt.
+        for (WorldObject o : objects) {
+            if (o instanceof Enemy<?> enemy && enemy.attackBounds() != null) {
+                Rectangle r = enemy.attackBounds();
+                if (enemy.isAttackActive()) sr.setColor(1f, 0.2f, 1f, 1f);
+                else sr.setColor(1f, 0.9f, 0.2f, 1f);
+                sr.rect(r.x, r.y, r.width, r.height);
+            }
+        }
     }
 
     private static void drawHitbox(ShapeRenderer sr, Actor<?> actor) {
         Hitbox hb = actor.hitbox;
+        Rectangle b = actor.hitboxBounds();
         if (hb.radius > 0) {
-            sr.circle(actor.centerX(), actor.centerY(), hb.radius);
+            sr.circle(b.x + b.width / 2f, b.y + b.height / 2f, hb.radius);
         } else if (hb.width > 0 && hb.height > 0) {
-            float x = actor.getX() + actor.facingAwareOffsetX();
-            float y = actor.getY() + hb.offsetY;
-            sr.rect(x, y, hb.width, hb.height);
+            sr.rect(b.x, b.y, b.width, b.height);
         }
     }
 }

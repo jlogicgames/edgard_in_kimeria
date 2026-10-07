@@ -37,11 +37,11 @@ public enum Msg {
             case OFF -> en ? "Off" : "Вимк.";
             case LOADING -> en ? "Loading..." : "Завантаження...";
             case ABOUT_BODY -> en
-                ? "Edgard in Kimeria\n\nUse A/D for movement.\nJ to jump. L to shoot.\nK to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!"
-                : "Едгард у Кімерії\n\nВикористовуйте A/D для руху.\nJ — стрибок. L — постріл.\nK — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!";
+                ? "Edgard in Kimeria\n\nUse A/D for movement.\nJ to jump. L to shoot.\nK to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!\nJump on an enemy from above to stomp it. Touching it from the side or below is deadly."
+                : "Едгард у Кімерії\n\nВикористовуйте A/D для руху.\nJ — стрибок. L — постріл.\nK — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!\nСтрибніть на ворога зверху, щоб розчавити його. Дотик збоку чи знизу смертельний.";
             case ABOUT_BODY_LEFT_HANDED -> en
-                ? "Edgard in Kimeria\n\nUse the Arrow Keys for movement.\nZ to jump. C to shoot.\nX to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!"
-                : "Едгард у Кімерії\n\nВикористовуйте стрілки для руху.\nZ — стрибок. C — постріл.\nX — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!";
+                ? "Edgard in Kimeria\n\nUse the Arrow Keys for movement.\nZ to jump. C to shoot.\nX to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!\nJump on an enemy from above to stomp it. Touching it from the side or below is deadly."
+                : "Едгард у Кімерії\n\nВикористовуйте стрілки для руху.\nZ — стрибок. C — постріл.\nX — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!\nСтрибніть на ворога зверху, щоб розчавити його. Дотик збоку чи знизу смертельний.";
             case ABOUT_GAMEPAD -> en
                 ? "Gamepad: left stick/D-pad to move, A to jump, X/B to attack or interact, Y to shoot, Start to pause."
                 : "Геймпад: лівий стік/D-pad - рух, A - стрибок, X/B - атака або взаємодія, Y - постріл, Start - пауза.";

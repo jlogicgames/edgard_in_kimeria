@@ -48,8 +48,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private boolean attackHitboxAdded = false;
     private float attackElapsed = 0f;
     private final Rectangle attackHitbox = new Rectangle();
+    /** The sword's reach, authored for the right-facing sprite: 17px past the body in front, 9px behind it. */
+    private static final Hitbox SWORD_HITBOX = Hitbox.rect(9, 12, 37, 36);
 
     private boolean isGotHit = false;
+    private float previousFeetY;
     private boolean isReachedCheckpoint = false;
     private RespawnPhase respawnPhase = RespawnPhase.NONE;
     private float checkpointTimer = 0f;
@@ -95,6 +98,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return isGotHit;
     }
 
+    /** World Y of the hitbox's bottom edge at the start of this frame's physics step, before the player moved. */
+    public float previousFeetY() {
+        return previousFeetY;
+    }
+
     @Override
     public void update(float dt) {
         updateBulletTime(dt);
@@ -128,6 +136,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // has no networked/replay determinism requirement that would need
         // fixed steps.
         float stepDt = Math.min(dt, 0.05f);
+        previousFeetY = position.y + hitbox.offsetY + hitbox.height;
         checkAttackCollisions(stepDt);
         updatePlayerState();
         updatePlayerMovement(stepDt);
@@ -370,20 +379,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
         velocity.x = 0;
 
         if (!attackHitboxAdded) {
-            float w = 37, h = hitbox.height + 14;
-            float x = facingRight
-                ? 16 - hitbox.offsetX + hitbox.width
-                : hitbox.offsetX - 20 + hitbox.width;
-            float y = hitbox.offsetY - 14;
-            attackHitbox.set(position.x + x, position.y + y, w, h);
             attackHitboxAdded = true;
             attackElapsed = 0f;
-        } else {
-            attackHitbox.x = position.x + (facingRight
-                ? 16 - hitbox.offsetX + hitbox.width
-                : hitbox.offsetX - 20 + hitbox.width);
-            attackHitbox.y = position.y + hitbox.offsetY - 14;
         }
+        attackHitbox.set(boundsOf(SWORD_HITBOX));
 
         attackElapsed += dt;
         var anim = animations.get(State.ATTACKING);
@@ -396,8 +395,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
         for (var obj : level.objects) {
             if (obj instanceof Enemy<?> enemy) {
-                Rectangle enemyRect = new Rectangle(enemy.getX(), enemy.getY(), enemy.getWidth(), enemy.getHeight());
-                if (attackHitbox.overlaps(enemyRect)) {
+                if (enemy.hitboxOverlaps(attackHitbox)) {
                     enemy.collidedWithActor(true);
                     break;
                 }
@@ -422,13 +420,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
         for (var obj : level.objects) {
             if (obj instanceof Collectable c && overlapsEntity(c)) {
                 c.collideWithPlayer();
-            } else if (obj instanceof Bat bat && !isAttacking && overlapsEntity(bat)) {
-                bat.collidedWithActor(false);
-            } else if (obj instanceof com.jlogicsoftware.kimeria.entity.enemy.YellowMob mob && !isAttacking && overlapsEntity(mob)) {
-                mob.collidedWithActor(false);
+            } else if (obj instanceof Enemy<?> enemy && !isAttacking && enemy.hitboxOverlaps(hitboxBounds())) {
+                enemy.collidedWithActor(false);
             } else if (obj instanceof Checkpoint cp && overlapsEntity(cp)) {
                 reachedCheckpoint();
-            } else if (obj instanceof Bomb bomb && overlapsEntity(bomb)) {
+            } else if (obj instanceof Bomb bomb && hitboxBounds().overlaps(bomb.hitboxBounds())) {
                 bomb.collideWithPlayer();
                 respawn();
             } else if (obj instanceof Trigger trigger && overlapsEntity(trigger)) {
