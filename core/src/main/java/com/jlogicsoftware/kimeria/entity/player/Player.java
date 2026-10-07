@@ -29,7 +29,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
     private static final int NUMBER_OF_TRIES = 3;
-    private static final float LEFT_FOLLOW = 200f;
     private static final float UP_FOLLOW = 200f;
 
     private final GameContext game;
@@ -63,6 +62,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         super(x, y, 48, 48, State.class);
         this.game = game;
         startingPosition.set(x, y);
+        viewHalfWidth = game.logicalResolution().x / 2f;
         hitbox = Hitbox.rect(18, 26, 11, 22);
         loadAnimations(assets);
         setState(State.IDLE);
@@ -88,7 +88,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Called once by {@link Level} right after the player is placed at its spawn point. */
     public void spawned() {
         startingPosition.set(position);
-        game.moveCameraTo(new Vector2(startingPosition.x - 200, startingPosition.y - 200), 500);
+        resetCamera();
     }
 
     public boolean isGotHit() {
@@ -158,19 +158,42 @@ public class Player extends Actor<Player.State> implements CollideBody {
         else if (!nearBat && game.isSlowTime()) game.setNormalTime();
     }
 
-    // Flipping direction jumps the look-ahead target by ~LEFT_FOLLOW +
-    // 2*hitbox.width (~220px) in one frame. At the original 500px/s chase
-    // speed that's a ~0.44s linear pan with an abrupt start/stop -- reads as
-    // a jarring "whip", easily mistaken for a frame-rate drop. A faster
-    // chase speed resolves the same jump in a fraction of the time.
+    // The camera used to pick one of two look-ahead targets from facingRight,
+    // ~220px apart, so every left/right tap re-aimed it and the screen
+    // jittered. Horizontally it now follows a focus point inside a dead zone
+    // around the player: the focus stays put while the player moves within
+    // the zone and is only pushed along once the player reaches a border.
+    // Turning around changes nothing until the opposite border is reached.
+    // Vertically there is no slack; the camera tracks the player's Y.
     private static final float CAMERA_CHASE_SPEED = 1400f;
+    private static final float CAMERA_RESET_SPEED = 500f;
+    /** Dead zone width as a multiple of the hitbox width; tune by feel. */
+    private static final float DEAD_ZONE_WIDTH_FACTOR = 3f;
+
+    /** World X the camera is centred on; only moves when the player leaves the dead zone. */
+    private float cameraFocusX;
+    private float viewHalfWidth;
 
     private void updateCameraPosition() {
-        if (facingRight) {
-            game.moveCameraTo(new Vector2(position.x - LEFT_FOLLOW - hitbox.width, position.y - UP_FOLLOW), CAMERA_CHASE_SPEED);
-        } else {
-            game.moveCameraTo(new Vector2(position.x - LEFT_FOLLOW * 2 - hitbox.width * 3, position.y - UP_FOLLOW), CAMERA_CHASE_SPEED);
-        }
+        // centerX() ignores facing, unlike the hitbox, so turning in place can't nudge the zone.
+        cameraFocusX = clampToZone(cameraFocusX, centerX(), hitbox.width * DEAD_ZONE_WIDTH_FACTOR);
+        game.moveCameraTo(cameraTarget(cameraFocusX, position.y), CAMERA_CHASE_SPEED);
+    }
+
+    /** Re-centres the dead zone on the player and pans the camera there (level start, respawn). */
+    private void resetCamera() {
+        cameraFocusX = centerX();
+        game.moveCameraTo(cameraTarget(cameraFocusX, startingPosition.y), CAMERA_RESET_SPEED);
+    }
+
+    private Vector2 cameraTarget(float focusX, float playerY) {
+        return new Vector2(focusX - viewHalfWidth, playerY - UP_FOLLOW);
+    }
+
+    /** Returns {@code focus} moved the least distance needed to lie within {@code zoneWidth} centred on {@code playerX}. */
+    static float clampToZone(float focus, float playerX, float zoneWidth) {
+        float half = zoneWidth / 2f;
+        return Math.max(playerX - half, Math.min(playerX + half, focus));
     }
 
     private void readInput() {
@@ -303,6 +326,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 facingRight = true;
                 velocity.setZero();
                 position.set(startingPosition);
+                resetCamera();
                 respawnPhase = RespawnPhase.APPEARING;
                 setState(State.APPEARING);
             }
@@ -311,7 +335,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 isGotHit = false;
                 setState(State.IDLE);
                 respawnPhase = RespawnPhase.NONE;
-                game.moveCameraTo(new Vector2(startingPosition.x - 200, startingPosition.y - 200), 500);
+                resetCamera();
 
                 if (numberOfLives > 0) {
                     numberOfLives -= 1;
