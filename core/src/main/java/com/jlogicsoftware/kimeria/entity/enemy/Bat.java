@@ -2,6 +2,7 @@ package com.jlogicsoftware.kimeria.entity.enemy;
 
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.entity.Hitbox;
 
 /** Port of Dart's {@code Bat}: patrols a fixed horizontal or vertical range, never touches the ground. */
 public class Bat extends Enemy<Bat.State> {
@@ -17,7 +18,10 @@ public class Bat extends Enemy<Bat.State> {
         super(assets, game, "Bat", x, y, w, h, offNeg, offPos, State.class);
         this.isVertical = isVertical;
         moveDirection = 1;
-        hitbox = com.jlogicsoftware.kimeria.entity.Hitbox.circle(8);
+        // Art spans x 0..16, y 3..14 of the 16x16 frame. The body (sword, stomp) covers it fully; what
+        // kills on touch is a smaller box inside it, so the empty air around the wings is safe.
+        hitbox = Hitbox.rect(0, 2, 16, 13);
+        hurtbox = Hitbox.rect(3, 4, 10, 9);
 
         if (isVertical) {
             rangeNeg = y - offNeg * TILE_SIZE;
@@ -55,14 +59,7 @@ public class Bat extends Enemy<Bat.State> {
     }
 
     @Override
-    public void collidedWithActor(boolean gotHit) {
-        boolean stompedFromAbove = player.velocity.y > 0 && player.getY() + player.getHeight() > position.y;
-        if (gotHit || stompedFromAbove) {
-            if (game.playSounds()) game.playSound("bounce");
-            setState(State.HIT);
-            pendingRemoval = true;
-        } else {
-            player.collidedWithActor(false);
-        }
+    protected void setDefeated() {
+        setState(State.HIT);
     }
 }

@@ -3,6 +3,8 @@ package com.jlogicsoftware.kimeria.entity;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.physics.CollisionUtils;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -57,12 +59,37 @@ public abstract class Actor<S extends Enum<S>> extends Entity {
     }
 
     /**
-     * Horizontal hitbox offset, adjusted for facing direction: the hitbox is
-     * authored for the unflipped sprite, and mirrors around the sprite
-     * center when {@link #facingRight} is false.
+     * Sprite-space X of the line this actor turns around: the centre of its body hitbox (or of
+     * the sprite box if it has none). Turning mirrors everything about this line, so the body
+     * stays exactly where it is and only the art and any attached boxes swap sides. Mirroring
+     * about the sprite centre instead shifted an off-centre hitbox sideways on every turn.
      */
+    protected float pivotX() {
+        float w = hitbox.radius > 0 ? hitbox.radius * 2 : hitbox.width;
+        return w > 0 ? hitbox.offsetX + w / 2f : size.x / 2f;
+    }
+
+    /** Horizontal hitbox offset for collision code. The body hitbox never moves when turning. */
     public float facingAwareOffsetX() {
-        return facingRight ? hitbox.offsetX : size.x - hitbox.offsetX - hitbox.width;
+        return hitbox.offsetX;
+    }
+
+    /** The hitbox in world space as a new rectangle (circles become their bounding square). */
+    public Rectangle hitboxBounds() {
+        return boundsOf(hitbox);
+    }
+
+    /** True when this actor's body hitbox (round if it is a circle) overlaps {@code rect}. */
+    public boolean hitboxOverlaps(Rectangle rect) {
+        return CollisionUtils.overlaps(hitbox, hitboxBounds(), rect);
+    }
+
+    /** Any box authored for the unflipped sprite, placed in world space and mirrored about {@link #pivotX()} when facing left. */
+    public Rectangle boundsOf(Hitbox box) {
+        float w = box.radius > 0 ? box.radius * 2 : box.width;
+        float h = box.radius > 0 ? box.radius * 2 : box.height;
+        float offsetX = facingRight ? box.offsetX : 2 * pivotX() - box.offsetX - w;
+        return new Rectangle(position.x + offsetX, position.y + box.offsetY, w, h);
     }
 
     public void collidedWithActor(boolean gotHit) {
@@ -73,8 +100,7 @@ public abstract class Actor<S extends Enum<S>> extends Entity {
         Animation<TextureRegion> anim = animations.get(current);
         if (anim == null) return;
         TextureRegion frame = anim.getKeyFrame(stateTime);
-        float w = facingRight ? size.x : -size.x;
-        float x = facingRight ? position.x : position.x + size.x;
-        batch.draw(frame, x, position.y, w, size.y);
+        if (facingRight) batch.draw(frame, position.x, position.y, size.x, size.y);
+        else batch.draw(frame, position.x + 2 * pivotX(), position.y, -size.x, size.y);
     }
 }

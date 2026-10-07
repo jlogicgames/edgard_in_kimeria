@@ -14,10 +14,8 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
 
     private static final float STEP_TIME = 0.05f;
     private static final float RUN_SPEED = 80f;
-    private static final float BOUNCE_HEIGHT = 260f;
 
     private float targetDirection = -1;
-    private boolean gotStomped = false;
     private boolean clambering, wallJumping, inQuickSand;
     private Escalator currentEscalator;
     private Level level;
@@ -25,7 +23,9 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
     public YellowMob(Assets assets, GameContext game, float x, float y, float w, float h,
                       float offNeg, float offPos) {
         super(assets, game, "yellow_mob", x, y, w, h, offNeg, offPos, State.class);
-        hitbox = Hitbox.rect(10, 6, 14, 26);
+        // Art body is x 7..25, y 5..32; the hitbox is a pixel larger on each open side (D10).
+        hitbox = Hitbox.rect(6, 4, 20, 28);
+        hurtbox = Hitbox.rect(10, 6, 14, 26); // what kills on touch stays inside the art
 
         putAnimation(State.IDLE, spriteAnimation(4, STEP_TIME, 48, 32, 0, 32 * 5), true);
         putAnimation(State.RUN, spriteAnimation(4, STEP_TIME, 48, 32, 0, 32), true);
@@ -42,35 +42,22 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
 
     @Override
     public void updateEnemy(float dt) {
-        if (!gotStomped) {
-            updateState();
-            movement(dt);
-            checkHorizontalCollisions(level);
-            applyGravity(dt);
-            checkVerticalCollisions(level, dt);
-        }
+        updateState();
+        movement(dt);
+        checkHorizontalCollisions(level);
+        applyGravity(dt);
+        checkVerticalCollisions(level, dt);
     }
 
     private void movement(float dt) {
         velocity.x = 0;
-        float playerOffset = player.facingRight ? 0 : -player.getWidth();
-        float mobOffset = facingRight ? 0 : -size.x;
-
         if (playerInRange()) {
-            targetDirection = (player.getX() + playerOffset < position.x + mobOffset) ? -1 : 1;
+            targetDirection = directionToPlayer(targetDirection);
             velocity.x = targetDirection * RUN_SPEED;
         }
 
         moveDirection = MathUtils.lerp(moveDirection, targetDirection, 0.1f);
         position.x += velocity.x * dt;
-    }
-
-    private boolean playerInRange() {
-        float playerOffset = player.facingRight ? 0 : -player.getWidth();
-        return player.getX() + playerOffset >= rangeNeg
-            && player.getX() + playerOffset <= rangePos
-            && player.getY() + player.getHeight() > position.y
-            && player.getY() < position.y + size.y;
     }
 
     private void updateState() {
@@ -81,27 +68,13 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
     }
 
     @Override
-    public void collidedWithActor(boolean gotHit) {
-        boolean stompedFromAbove = player.velocity.y > 0 && player.getY() + player.getHeight() > position.y;
-        if (gotHit || stompedFromAbove) {
-            if (game.playSounds()) game.playSound("bounce");
-            gotStomped = true;
-            setState(State.HIT);
-            if (!gotHit) player.velocity.y = -BOUNCE_HEIGHT;
-            pendingRemoval = true;
-        } else {
-            player.collidedWithActor(false);
-        }
+    protected void setDefeated() {
+        setState(State.HIT);
     }
 
     @Override
     public Hitbox hitbox() {
         return hitbox;
-    }
-
-    @Override
-    public float facingAwareOffsetX() {
-        return super.facingAwareOffsetX();
     }
 
     @Override

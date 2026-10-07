@@ -1,8 +1,10 @@
 package com.jlogicsoftware.kimeria.physics;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Collidable;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.entity.Hitbox;
 
 /** Port of Dart's {@code utils.dart} {@code checkCollision} plus small AABB helpers. */
 public final class CollisionUtils {
@@ -12,6 +14,21 @@ public final class CollisionUtils {
     public static boolean aabb(float x1, float y1, float w1, float h1,
                                 float x2, float y2, float w2, float h2) {
         return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
+    }
+
+    /**
+     * Overlap of a hitbox shape with a plain rectangle. {@code bounds} is where the shape sits in
+     * the world (its bounding square for a circle). A circle only counts where it is really
+     * round, so a bat's corners (inside the bounding square) don't hit anything.
+     */
+    public static boolean overlaps(Hitbox box, Rectangle bounds, Rectangle rect) {
+        if (!(box.radius > 0)) return bounds.overlaps(rect);
+        float cx = bounds.x + bounds.width / 2f;
+        float cy = bounds.y + bounds.height / 2f;
+        float nearestX = Math.max(rect.x, Math.min(cx, rect.x + rect.width));
+        float nearestY = Math.max(rect.y, Math.min(cy, rect.y + rect.height));
+        float dx = cx - nearestX, dy = cy - nearestY;
+        return dx * dx + dy * dy < box.radius * box.radius;
     }
 
     /** Simple entity-vs-entity overlap using the actor's hitbox (facing-aware on X). */

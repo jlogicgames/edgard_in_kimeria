@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.entity.enemy;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
@@ -14,21 +15,30 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
 
     private static final float STEP_TIME = 0.1f;
     private static final float RUN_SPEED = 80f;
-    private static final float BOUNCE_HEIGHT = 260f;
-    private static final float ATTACK_RANGE = 65f;
+    // The attack animation has 4 frames of STEP_TIME * 2 each: two wind-up frames (raised arm),
+    // one strike frame (whip out) and one recovery frame. Only the strike frame is dangerous.
+    private static final float ATTACK_FRAME_TIME = STEP_TIME * 2;
+    private static final float WINDUP_TIME = ATTACK_FRAME_TIME * 2;
+    private static final float ATTACK_TIME = ATTACK_FRAME_TIME * 4;
 
+    private final Hitbox attackHitbox;
     private Level level;
     private float targetDirection = -1;
-    private boolean gotStomped = false;
     private boolean isAttacking = false;
-    private float attackTimer = 0f;
+    private float attackElapsed = 0f;
     private boolean clambering, inQuickSand;
     private Escalator currentEscalator;
 
     public RedMob(Assets assets, GameContext game, float x, float y, float w, float h,
                   float offNeg, float offPos) {
         super(assets, game, "Mobs", x, y, w, h, offNeg, offPos, State.class);
-        hitbox = Hitbox.rect(10, 6, 14, 26);
+        // The art body is x 7..25, y 5..32 of the 48x32 frame; the hitbox is a pixel larger on each
+        // open side (bottom stays on the feet), so enemies are easy to hit and stomp (D10).
+        hitbox = Hitbox.rect(6, 4, 20, 28);
+        // What kills on touch stays inside the art, as it was originally.
+        hurtbox = Hitbox.rect(10, 6, 14, 26);
+        // The whip as drawn in the strike frame: from the body's front edge to its tip at x=32.
+        attackHitbox = Hitbox.rect(26, 4, 6, 28);
 
         putAnimation(State.IDLE, spriteAnimation(4, STEP_TIME, 48, 32, 0, 32 * 5), true);
         putAnimation(State.RUN, spriteAnimation(4, STEP_TIME, 48, 32, 0, 32), true);
@@ -46,14 +56,11 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
 
     @Override
     public void updateEnemy(float dt) {
-        if (gotStomped) return;
-
         if (isAttacking) {
-            attackTimer -= dt;
-            if (attackTimer <= 0) {
+            attackElapsed += dt;
+            if (attackElapsed >= ATTACK_TIME) {
                 isAttacking = false;
                 setState(State.IDLE);
-                position.x += 300;
             }
         } else {
             updateState();
@@ -67,14 +74,11 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
 
     private void movement(float dt) {
         velocity.x = 0;
-        float playerOffset = player.facingRight ? 0 : -player.getWidth();
-        float mobOffset = facingRight ? 0 : -size.x;
-
         if (playerInAttackRange()) {
             performAttack();
             return;
         } else if (playerInRange()) {
-            targetDirection = (player.getX() + playerOffset < position.x + mobOffset) ? -1 : 1;
+            targetDirection = directionToPlayer(targetDirection);
             velocity.x = targetDirection * RUN_SPEED;
         }
 
@@ -82,24 +86,19 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
         position.x += velocity.x * dt;
     }
 
-    private boolean playerInRange() {
-        float playerOffset = player.facingRight ? 0 : -player.getWidth();
-        return player.getX() + playerOffset >= rangeNeg
-            && player.getX() + playerOffset <= rangePos
-            && player.getY() + player.getHeight() > position.y
-            && player.getY() < position.y + size.y;
+    /** The mob winds up as soon as the whip, where it will land, reaches the player. */
+    private boolean playerInAttackRange() {
+        return attackBounds().overlaps(player.hitboxBounds());
     }
 
-    private boolean playerInAttackRange() {
-        float playerOffset = player.facingRight ? 0 : -player.getWidth();
-        float playerLeft = player.getX() + playerOffset;
-        float playerRight = playerLeft + player.getWidth();
-        float mobLeft = position.x - ATTACK_RANGE;
-        float mobRight = position.x + ATTACK_RANGE;
-        float mobTop = position.y;
-        float mobBottom = position.y + size.y;
-        return playerLeft >= mobLeft && playerRight <= mobRight
-            && player.getY() + player.getHeight() > mobTop && player.getY() < mobBottom;
+    @Override
+    public Rectangle attackBounds() {
+        return boundsOf(attackHitbox);
+    }
+
+    @Override
+    public boolean isAttackActive() {
+        return isAttacking && attackElapsed >= WINDUP_TIME && attackElapsed < WINDUP_TIME + ATTACK_FRAME_TIME;
     }
 
     private void updateState() {
@@ -112,29 +111,19 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     private void performAttack() {
         if (isAttacking || player.isGotHit()) return;
         isAttacking = true;
+        attackElapsed = 0f;
         setState(State.ATTACK);
-        var anim = animations.get(State.ATTACK);
-        attackTimer = anim.getAnimationDuration();
     }
 
     private void checkAttackCollision() {
-        if (isAttacking && playerInAttackRange()) {
+        if (isAttackActive() && attackBounds().overlaps(player.hitboxBounds())) {
             player.collidedWithActor(false);
         }
     }
 
     @Override
-    public void collidedWithActor(boolean gotHit) {
-        boolean stompedFromAbove = player.velocity.y > 0 && player.getY() + player.getHeight() > position.y;
-        if (gotHit || stompedFromAbove) {
-            if (game.playSounds()) game.playSound("bounce");
-            gotStomped = true;
-            setState(State.HIT);
-            if (!gotHit) player.velocity.y = -BOUNCE_HEIGHT;
-            pendingRemoval = true;
-        } else {
-            player.collidedWithActor(false);
-        }
+    protected void setDefeated() {
+        setState(State.HIT);
     }
 
     @Override
