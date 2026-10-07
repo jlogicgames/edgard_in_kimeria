@@ -48,7 +48,9 @@ public class Hud {
         // text projection's bottom-left-origin y.
         float yFromTop = ICON_Y + (ICON_SIZE - layout.height) / 2f;
 
-        Matrix4 previous = batch.getProjectionMatrix();
+        // A copy: setProjectionMatrix() overwrites the batch's own matrix in place, so a bare reference
+        // would already hold the text projection when it is "restored" below.
+        Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
         font.setColor(Color.WHITE);
         font.draw(batch, layout, x, logicalHeight - yFromTop);
