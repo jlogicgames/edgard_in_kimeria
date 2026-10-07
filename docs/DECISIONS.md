@@ -13,6 +13,8 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Decision:** The game is a puzzle-platformer with arcade elements. Puzzles and precision
   come first. Any disputed design question is settled by asking what Katana Zero does.
 - **Why:** One reference avoids re-arguing every detail and keeps the feel consistent.
+- **Exceptions:** a deliberate departure from Katana Zero is recorded as its own decision with
+  its reasoning (D11).
 - **Tracked in:** #47
 
 ## D2. One hit kills, attempts are unlimited
@@ -23,18 +25,28 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Why:** Strict hits only feel fair when failing is cheap. Lives and game over fight that.
 - **Tracked in:** #45
 
-## D3. Death resets the whole level, and respawn is instant
+## D3. Death resets the current room, and respawn is instant
 
 - **Status:** Accepted
-- **Decision:** On death the entire level returns to its initial state (player, enemies, items,
-  traps, coin counter), so every attempt starts identically. Respawn takes well under half a
-  second. The respawn point is always the level start. There are no mid-level checkpoints.
-  The `Checkpoint` object is the level exit that loads the next level.
-- **Why:** Matches Katana Zero. Deterministic attempts are what make precision puzzles
-  learnable. Because there are no mid-level saves, levels must stay short.
-- **Also applies to** the pause menu's *Restart Level*: it is a fresh attempt at the current
-  level, with the coin counter back to its value at level start. It does not touch the save.
-- **Tracked in:** #45, #47, #51
+- **Decision:**
+  - A level is a chain of **rooms**, as in Katana Zero. A room may span several screens; what
+    is capped is how much a retry costs to replay, not the screen count. A level without room
+    markers is one room.
+  - On death the **current room** returns to its initial state (player, enemies, items,
+    traps, artifacts picked up in it), so every attempt at a room starts identically. The
+    player respawns at the room's entrance.
+  - **Rooms already passed keep their state** for the rest of the level: killed enemies stay
+    dead, destroyed things stay destroyed, collected artifacts stay collected.
+  - Respawn takes well under half a second. The camera returns to the entrance with a fast,
+    eased pan of fixed duration (about 0.3 to 0.4 s, whatever the distance), never a hard cut,
+    and the player appears as it arrives.
+  - The `Checkpoint` object is the level exit that loads the next level. There are no other
+    checkpoints.
+- **Why:** Deterministic attempts make precision puzzles learnable, as in Katana Zero. A reset
+  that throws the player far back (TMNT: Shredder's Revenge) makes dying tedious instead of
+  cheap; keeping passed rooms, as Expendabros keeps what was destroyed, means a death costs
+  only the room being attempted. A hard camera cut disorients, so the camera always pans.
+- **Tracked in:** #45, #47, #60
 
 ## D4. Stomp is allowed, from above only
 
@@ -58,16 +70,26 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 ## D6. Collectables
 
 - **Status:** Accepted
-- **Decision:** Hearts are removed, since there is nothing for them to restore. Coins are a
-  proof-of-concept counter only. The real design, to be built later, is N artifacts that must all
-  be collected to finish the game. Do not balance around coins.
-- **Tracked in:** #46, #47
+- **Decision:**
+  - Hearts are removed, since there is nothing for them to restore.
+  - Coins are a proof-of-concept counter only. Do not balance around coins.
+  - The real design, to be built later, is **artifacts**. They are **optional**: the game can be
+    finished without them. Each level and the boss have two outcomes, a normal one and a full
+    one when all of that level's artifacts are collected.
+  - An artifact **counts once the player leaves its room** (enters the next room or reaches
+    the level exit). Dying before that returns it to its place (D3).
+- **Why:** Optional artifacts put the hardest challenges on side paths, as Celeste does with
+  its strawberries, so players who are not after mastery can still finish while those who are
+  have a reason to explore.
+- **Tracked in:** #46, #47, #60
 
 ## D7. Traps are deterministic puzzle elements
 
 - **Status:** Accepted
 - **Decision:** Bombs are the first of many planned traps. Every trap behaves the same on each
-  attempt and warns the player before it can kill. This is guaranteed by the level reset (D3).
+  attempt and warns the player before it can kill. This is guaranteed by the room reset (D3).
+  Every trap takes its warning time from one shared place, so the assist option for longer
+  warnings (D11) applies to every trap, including new ones.
 - **Tracked in:** #47
 
 ## D8. Main menu has Continue and New Game
@@ -81,7 +103,7 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - **New Game** is always shown. If a save exists, it asks for confirmation before replacing
     it.
   - Progress is saved when a level is completed (reaching the `Checkpoint` exit) and holds the
-    next level to play, and nothing else. It is not saved mid-level, consistent with D3.
+    next level to play, and nothing else. It is not saved mid-level or per room.
     Continue starts that level from its beginning.
   - Saving is **automatic**. The game writes the save the moment a level is completed, with no
     save button, no prompt and no manual save slots. The player never has to save.
@@ -158,3 +180,31 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   (`velocity.x != 0`). Nothing in the current levels embeds a stationary actor in a wall, but
   a block that activates around an actor (a toggled `Actionable` wall) could. Not fixed yet.
 - **Tracked in:** #44
+
+## D11. Assist mode, a deliberate exception to D1
+
+- **Status:** Accepted
+- **Decision:**
+  - Settings have an **Assist** section of independent toggles, as in Dead Cells and Celeste,
+    not a single "easy mode".
+  - Assist never shames or penalises: no "you are playing on easy" labels, no locked endings,
+    no reduced rewards.
+  - The first option is **longer trap warnings** (D7). Other options (game speed, wider jump
+    windows, skipping a room, invulnerability) are candidates only, each to be decided on its
+    own.
+- **Why:** Katana Zero has no assist mode, but the audience is wider than hardcore players.
+  One hit kills (D2) stays the default; assist lets more players finish without changing it.
+- **Tracked in:** #59
+
+## D12. Jumping needs a fresh press, with a short buffer
+
+- **Status:** Accepted
+- **Decision:**
+  - A jump needs a new press. Holding the button through a landing never jumps again (no
+    auto-bunnyhop).
+  - A press made shortly before the player can jump (about 0.1 s, tuned by feel) is buffered
+    and fires on the first frame a jump is possible.
+  - Coyote time (jumping just after walking off a ledge) already exists and stays.
+- **Why:** Holding jump a little too long before a ledge or a trap fired an unintended jump,
+  and an early press was silently lost. Both cause deaths the player does not understand (D5).
+- **Tracked in:** #58
