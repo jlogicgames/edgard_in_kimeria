@@ -9,14 +9,16 @@ Flutter/Flame version (with reference to its separate Rust/Bevy version for feat
 full menu system, localization, gamepad support, dev hotkeys).
 
 Controls are three action buttons — **Jump**, **Shoot** and a context-sensitive
-**Attack/Interact** — plus movement. **WASD / arrows** move, **J** jump, **K** attack (or
+**Attack/Interact** — plus movement. **A / D** move, **J** jump, **K** attack (or
 interact while the player is inside a trigger zone — walls, torches, escalators), **L** shoot,
-**Esc** pause. **Left-handed mode** (Options) swaps the keyboard to **arrows** move, **Z** jump,
-**X** attack/interact, **C** shoot (replacing the default keys while on) and mirrors the touch
-layout. Gamepad: **left stick / D-pad** move, **South** jump, **West**/**East**
+**Esc** pause. Gamepad: **left stick / D-pad** move, **South** jump, **West**/**East**
 attack/interact, **North** shoot, **Start** pause. Touch devices get an on-screen stick and the
-same three buttons (stick left, buttons right; mirrored in left-handed mode); the
-Attack/Interact button relabels itself inside a trigger zone. Shoot is bound everywhere but inert until the ranged attack (fireball or throwing knife) is built. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
+same three buttons (stick left, buttons right); the Attack/Interact button relabels itself inside
+a trigger zone. **Left-handed mode** (Options) mirrors all three. Touch: stick right, buttons
+left. Keyboard: **arrows** move, **Z** jump, **X** attack/interact, **C** shoot (the two key sets
+are disjoint, so the arrows work only in this mode). Gamepad: **right stick** moves and the
+D-pad takes the face buttons' place (**Down** jump, **Left**/**Right** attack/interact, **Up**
+shoot); menus and **Start** are the same in both modes. Shoot is bound everywhere but inert until the ranged attack (fireball or throwing knife) is built. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
 **Esc/B** back (Esc/B/Start resume from the pause menu; on the desktop main menu they select
 Exit; on game over they return to the main menu). Debug keys: **F1** hitbox gizmos, **F2**
 invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a

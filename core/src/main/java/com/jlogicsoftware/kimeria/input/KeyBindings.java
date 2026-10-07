@@ -4,14 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 
 /**
- * Keyboard bindings for the two handedness modes. The left-handed set <em>replaces</em> the
- * default one while the mode is on (rather than adding to it): WASD and J/K/L sit under the
- * left and right hand respectively, so keeping them live would put a second, conflicting
- * control scheme under the hand that is now meant to be doing the other job.
+ * Keyboard bindings for the two handedness modes. The sets are disjoint: each mode answers only
+ * to its own keys, and the arrow keys belong to the left-handed set alone. Keeping both live
+ * would put a second, conflicting control scheme under the hand that is meant to be doing the
+ * other job.
  */
 public enum KeyBindings {
-    /** Movement on the left hand (WASD or arrows), actions on the right (J/K/L). */
-    RIGHT_HANDED(new int[]{Keys.A, Keys.LEFT}, new int[]{Keys.D, Keys.RIGHT}, Keys.J, Keys.K, Keys.L),
+    /** Movement on the left hand (A/D), actions on the right (J/K/L). */
+    RIGHT_HANDED(new int[]{Keys.A}, new int[]{Keys.D}, Keys.J, Keys.K, Keys.L),
     /** Movement on the arrow keys (right hand), actions on Z/X/C (left hand). */
     LEFT_HANDED(new int[]{Keys.LEFT}, new int[]{Keys.RIGHT}, Keys.Z, Keys.X, Keys.C);
 

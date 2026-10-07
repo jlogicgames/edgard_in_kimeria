@@ -301,7 +301,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             applyFullscreenToggle();
         }
         float dt = Gdx.graphics.getDeltaTime();
-        gamepad.update();
+        gamepad.update(leftHanded);
         UiState stateAtFrameStart = uiState;
         touchControls.update(stateAtFrameStart == UiState.PLAYING);
         if (stateAtFrameStart != UiState.PLAYING && gamepad.confirm()) {
@@ -582,9 +582,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
             float panelW = 320f;
-            String aboutBody = uiState == UiState.ABOUT
-                ? (leftHanded ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language)
-                : null;
+            String aboutBody = uiState == UiState.ABOUT ? aboutText() : null;
             float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
@@ -604,6 +602,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
 
         overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - 12);
+    }
+
+    /** About text for the current handedness; the gamepad line appears only while a controller is connected. */
+    private String aboutText() {
+        String body = (leftHanded ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language);
+        if (!gamepad.isConnected()) return body;
+        return body + "\n\n" + (leftHanded ? Msg.ABOUT_GAMEPAD_LEFT_HANDED : Msg.ABOUT_GAMEPAD).t(language);
     }
 
     @Override
