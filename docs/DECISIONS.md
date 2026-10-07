@@ -32,7 +32,9 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   The `Checkpoint` object is the level exit that loads the next level.
 - **Why:** Matches Katana Zero. Deterministic attempts are what make precision puzzles
   learnable. Because there are no mid-level saves, levels must stay short.
-- **Tracked in:** #45, #47
+- **Also applies to** the pause menu's *Restart Level*: it is a fresh attempt at the current
+  level, with the coin counter back to its value at level start. It does not touch the save.
+- **Tracked in:** #45, #47, #51
 
 ## D4. Stomp is allowed, from above only
 

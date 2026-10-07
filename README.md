@@ -19,7 +19,7 @@ left. Keyboard: **arrows** move, **Z** jump, **X** attack/interact, **C** shoot 
 are disjoint, so the arrows work only in this mode). Gamepad: **right stick** moves and the
 D-pad takes the face buttons' place (**Down** jump, **Left**/**Right** attack/interact, **Up**
 shoot); menus and **Start** are the same in both modes. Shoot is bound everywhere but inert until the ranged attack (fireball or throwing knife) is built. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
-**Esc/B** back (Esc/B/Start resume from the pause menu; on the desktop main menu they select
+**Esc/B** back (Esc/B/Start resume from the pause menu, which also offers **Restart Level**; on the desktop main menu they select
 Exit; on game over they return to the main menu). Debug keys: **F1** hitbox gizmos, **F2**
 invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
 checkpoint.

@@ -88,6 +88,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private UiState uiState;
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
+    /** Coin count when the current level began; a restart (and later a death reset) goes back to it. */
+    private int levelStartCoins = 0;
     private boolean gameStarted = false;
     private boolean pendingFullscreenToggle = false;
 
@@ -194,6 +196,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
         pauseMenu = new Menu(() -> Msg.PAUSE_MENU.t(language), null, List.of(
             new MenuItem(() -> Msg.RESUME.t(language), this::resumeGame),
+            new MenuItem(() -> Msg.RESTART_LEVEL.t(language), this::restartLevel),
             new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
         ), this::resumeGame);
 
@@ -243,6 +246,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         uiState = UiState.PLAYING;
     }
 
+    /**
+     * Starts the current level over from its beginning, as a fresh attempt (D3): a new player, a
+     * rebuilt level and the coin count from when the level began. The save is not touched.
+     */
+    private void restartLevel() {
+        coinsCollected = levelStartCoins;
+        timeScale = 1f; // bullet time near a bat must not leak into the new attempt
+        pauseMenu.selected = 0; // so the next pause does not open on Restart Level
+        player = new Player(assets, this, 0, 0);
+        startLoadingLevel();
+    }
+
     private void exitToMainMenu() {
         releaseGame();
         uiState = UiState.MAIN_MENU;
@@ -278,6 +293,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void loadLevel() {
+        levelStartCoins = coinsCollected;
         Rectangle visible = new Rectangle();
         level = new Level(assets, this, player, LEVEL_NAMES.get(currentLevelIndex), () -> visibleWorldRect(visible));
     }
