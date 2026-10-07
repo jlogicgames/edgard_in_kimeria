@@ -4,7 +4,7 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 
 /** Port of Rust's {@code localization::Msg} UI message catalog. */
 public enum Msg {
-    TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, EXIT_TO_MENU, PLAY_AGAIN,
+    TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU, PLAY_AGAIN,
     PAUSE_MENU, GAME_OVER, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING,
     ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ON, OFF;
 
@@ -18,6 +18,7 @@ public enum Msg {
             case EXIT -> en ? "Exit" : "Вихід";
             case BACK -> en ? "Back" : "Назад";
             case RESUME -> en ? "Resume" : "Продовжити";
+            case RESTART_LEVEL -> en ? "Restart Level" : "Почати рівень знову";
             case EXIT_TO_MENU -> en ? "Exit to Menu" : "Вийти в меню";
             case PLAY_AGAIN -> en ? "Play Again" : "Грати знову";
             case PAUSE_MENU -> en ? "Pause Menu" : "Меню паузи";
