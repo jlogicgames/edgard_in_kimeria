@@ -5,8 +5,8 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 /** Port of Rust's {@code localization::Msg} UI message catalog. */
 public enum Msg {
     TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, EXIT_TO_MENU, PLAY_AGAIN,
-    PAUSE_MENU, GAME_OVER, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, LOADING,
-    ATTACK, INTERACT, SHOOT;
+    PAUSE_MENU, GAME_OVER, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING,
+    ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ON, OFF;
 
     public String t(Language lang) {
         boolean en = lang == ENGLISH;
@@ -32,10 +32,22 @@ public enum Msg {
             case ATTACK -> en ? "Attack" : "Атака";
             case INTERACT -> en ? "Interact" : "Взаємодія";
             case SHOOT -> en ? "Shoot" : "Постріл";
+            case LEFT_HANDED_LABEL -> en ? "Left-handed" : "Для шульг";
+            case ON -> en ? "On" : "Увімк.";
+            case OFF -> en ? "Off" : "Вимк.";
             case LOADING -> en ? "Loading..." : "Завантаження...";
             case ABOUT_BODY -> en
-                ? "Edgard in Kimeria\n\nUse WASD or Arrow Keys for movement.\nJ to jump. L to shoot.\nK to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!"
-                : "Едгард у Кімерії\n\nВикористовуйте WASD або стрілки для руху.\nJ — стрибок. L — постріл.\nK — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!";
+                ? "Edgard in Kimeria\n\nUse A/D for movement.\nJ to jump. L to shoot.\nK to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!"
+                : "Едгард у Кімерії\n\nВикористовуйте A/D для руху.\nJ — стрибок. L — постріл.\nK — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!";
+            case ABOUT_BODY_LEFT_HANDED -> en
+                ? "Edgard in Kimeria\n\nUse the Arrow Keys for movement.\nZ to jump. C to shoot.\nX to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!"
+                : "Едгард у Кімерії\n\nВикористовуйте стрілки для руху.\nZ — стрибок. C — постріл.\nX — атака, а в зоні тригера — взаємодія.\nEscape — пауза.\nЗберіть якомога більше монет і уникайте ворогів!";
+            case ABOUT_GAMEPAD -> en
+                ? "Gamepad: left stick/D-pad to move, A to jump, X/B to attack or interact, Y to shoot, Start to pause."
+                : "Геймпад: лівий стік/D-pad - рух, A - стрибок, X/B - атака або взаємодія, Y - постріл, Start - пауза.";
+            case ABOUT_GAMEPAD_LEFT_HANDED -> en
+                ? "Gamepad: right stick to move, D-pad down to jump, left/right to attack or interact, up to shoot, Start to pause."
+                : "Геймпад: правий стік - рух, D-pad вниз - стрибок, вліво/вправо - атака або взаємодія, вгору - постріл, Start - пауза.";
         };
     }
 }

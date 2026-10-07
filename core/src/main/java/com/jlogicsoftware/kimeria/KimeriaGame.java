@@ -97,6 +97,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private boolean debugDraw = false;
     private boolean invulnerable = false;
     private Language language = Language.ENGLISH;
+    private boolean leftHanded = Settings.DEFAULT_LEFT_HANDED;
 
     private float levelLoadDelay = -1f;
 
@@ -135,6 +136,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/main_menu.mp3"));
         menuMusic.setLooping(true);
         menuMusic.setVolume(0f);
+
+        leftHanded = Gdx.app.getPreferences(Settings.PREFS_NAME)
+            .getBoolean(Settings.KEY_LEFT_HANDED, Settings.DEFAULT_LEFT_HANDED);
 
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
@@ -182,6 +186,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                     + (Gdx.graphics.isFullscreen() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
                 this::toggleFullscreen));
         }
+        optionItems.add(new MenuItem(
+            () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
+            this::toggleLeftHanded));
         optionItems.add(new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu));
         optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu);
 
@@ -216,6 +223,19 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Preferences prefs = Gdx.app.getPreferences(Settings.PREFS_NAME);
         prefs.putBoolean(Settings.KEY_FULLSCREEN, fullscreen);
         prefs.flush();
+    }
+
+    /** Flips left-handed mode and remembers the choice; touch layout and key bindings read it live. */
+    private void toggleLeftHanded() {
+        leftHanded = !leftHanded;
+        Preferences prefs = Gdx.app.getPreferences(Settings.PREFS_NAME);
+        prefs.putBoolean(Settings.KEY_LEFT_HANDED, leftHanded);
+        prefs.flush();
+    }
+
+    @Override
+    public boolean leftHanded() {
+        return leftHanded;
     }
 
     private void resumeGame() {
@@ -281,7 +301,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             applyFullscreenToggle();
         }
         float dt = Gdx.graphics.getDeltaTime();
-        gamepad.update();
+        gamepad.update(leftHanded);
         UiState stateAtFrameStart = uiState;
         touchControls.update(stateAtFrameStart == UiState.PLAYING);
         if (stateAtFrameStart != UiState.PLAYING && gamepad.confirm()) {
@@ -562,7 +582,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
             float panelW = 320f;
-            String aboutBody = uiState == UiState.ABOUT ? Msg.ABOUT_BODY.t(language) : null;
+            String aboutBody = uiState == UiState.ABOUT ? aboutText() : null;
             float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
@@ -582,6 +602,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
 
         overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - 12);
+    }
+
+    /** About text for the current handedness; the gamepad line appears only while a controller is connected. */
+    private String aboutText() {
+        String body = (leftHanded ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language);
+        if (!gamepad.isConnected()) return body;
+        return body + "\n\n" + (leftHanded ? Msg.ABOUT_GAMEPAD_LEFT_HANDED : Msg.ABOUT_GAMEPAD).t(language);
     }
 
     @Override

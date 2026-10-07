@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.Trigger;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
+import com.jlogicsoftware.kimeria.input.KeyBindings;
 import com.jlogicsoftware.kimeria.physics.CollideBody;
 import com.jlogicsoftware.kimeria.world.Level;
 
@@ -181,8 +182,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
             game.togglePause();
         }
 
-        boolean left = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
-        boolean right = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+        var keys = KeyBindings.of(game.leftHanded());
+
+        boolean left = keys.moveLeftHeld();
+        boolean right = keys.moveRightHeld();
         float padX = gamepad.horizontal() + touch.horizontal();
 
         if (!isAttacking) {
@@ -191,10 +194,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
             if (right || padX > 0) horizontalMovement += 1;
         }
 
-        isJumping = (Gdx.input.isKeyPressed(Input.Keys.J) || gamepad.jumpHeld() || touch.jumpHeld()) && !isAttacking;
+        isJumping = (keys.jumpHeld() || gamepad.jumpHeld() || touch.jumpHeld()) && !isAttacking;
 
         // The one "other" button: interacts inside a trigger zone, attacks everywhere else.
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K) || gamepad.actionPressed() || touch.actionPressed()) {
+        if (keys.actionJustPressed() || gamepad.actionPressed() || touch.actionPressed()) {
             if (canInteract()) {
                 interact();
             } else if (!isAttacking && onGround && !isJumping && !clambering) {
@@ -202,7 +205,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             }
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.L) || gamepad.shootPressed() || touch.shootPressed()) {
+        if (keys.shootJustPressed() || gamepad.shootPressed() || touch.shootPressed()) {
             shoot();
         }
     }
@@ -379,8 +382,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void resumeMovementAfterAttack() {
-        boolean left = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
-        boolean right = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+        var keys = KeyBindings.of(game.leftHanded());
+        boolean left = keys.moveLeftHeld();
+        boolean right = keys.moveRightHeld();
         horizontalMovement = 0;
         if (left) horizontalMovement -= 1;
         if (right) horizontalMovement += 1;

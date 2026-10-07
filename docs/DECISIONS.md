@@ -92,3 +92,25 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Why:** Standard for games with progress, and the same shape as Katana Zero's menu. The
   confirmation guards a destructive action.
 - **Tracked in:** #48
+
+## D9. Left-handed mode swaps the key bindings and mirrors touch
+
+- **Status:** Accepted
+- **Decision:**
+  - One **Left-handed** option (Options menu, saved across launches) switches both input
+    methods at once, immediately, with no restart.
+  - **Touch:** the layout is mirrored horizontally (stick right, buttons left), keeping the
+    relative arrangement of Jump / Shoot / Attack-Interact. Hit areas mirror with the drawing.
+  - **Keyboard:** movement is the **arrow keys**; **Z** jump, **X** attack/interact, **C**
+    shoot. The two sets are **disjoint**: the arrow keys work only in this mode, and
+    A/D and J/K/L work only in the default mode.
+  - **Gamepad:** southpaw layout. The **right stick** moves and the D-pad takes the face
+    buttons' place: **Down** jump, **Left**/**Right** attack/interact, **Up** shoot. As with the
+    keyboard, the sets are disjoint (left stick and D-pad left/right do not move the player in
+    this mode). Start still pauses and menu navigation is identical in both modes.
+  - The About screen lists the keyboard bindings for the current mode.
+- **Why:** Keeping the default keys live in parallel would leave a second control scheme under
+  the hand that is meant to be doing the other job, and A/D sit under the same hand as Z/X/C. A clean
+  swap keeps the About text honest and the behaviour predictable. Z/X/C is the usual
+  left-hand cluster beside the arrows.
+- **Tracked in:** #42

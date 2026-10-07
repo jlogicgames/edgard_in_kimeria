@@ -12,8 +12,13 @@ import com.badlogic.gdx.controllers.Controllers;
  * Xbox-style button indices, which gdx-controllers resolves per-OS/per-pad,
  * so this isn't tied to one specific controller brand.
  *
+ * <p>In left-handed mode the <em>gameplay</em> layout is mirrored, southpaw style: the right
+ * stick moves, and the face buttons trade places with the D-pad (Down jump, Left/Right
+ * attack or interact, Up shoot). Start still pauses, and menu navigation is the same in both
+ * modes.
+ *
  * <p>One instance polls edges (just-pressed) across frames; call
- * {@link #update()} once per frame before reading edge getters.
+ * {@link #update(boolean)} once per frame before reading edge getters.
  */
 public class GamepadInput {
     private static final float AXIS_DEADZONE = 0.4f;
@@ -31,6 +36,11 @@ public class GamepadInput {
     // count as a jump once play starts, so jump stays off until A is released.
     private boolean jumpSuppressed;
 
+    /** Whether a controller is currently connected (on the web, only after its first button press). */
+    public boolean isConnected() {
+        return controller() != null;
+    }
+
     private Controller controller() {
         var list = Controllers.getControllers();
         return list.size == 0 ? null : list.first();
@@ -40,15 +50,14 @@ public class GamepadInput {
         return c != null && index != ControllerMapping.UNDEFINED && c.getButton(index);
     }
 
-    public void update() {
+    /** @param leftHanded selects the mirrored gameplay layout; menu input is unaffected. */
+    public void update(boolean leftHanded) {
         Controller c = controller();
         ControllerMapping m = c == null ? null : c.getMapping();
 
         boolean confirm = button(c, m, m == null ? -1 : m.buttonA);
         boolean back = button(c, m, m == null ? -1 : m.buttonB);
         boolean pause = button(c, m, m == null ? -1 : m.buttonStart);
-        boolean action = button(c, m, m == null ? -1 : m.buttonX) || button(c, m, m == null ? -1 : m.buttonB);
-        boolean shoot = button(c, m, m == null ? -1 : m.buttonY);
 
         float axisX = c == null ? 0f : safeAxis(c, m.axisLeftX);
         float axisY = c == null ? 0f : safeAxis(c, m.axisLeftY);
@@ -56,6 +65,13 @@ public class GamepadInput {
         boolean dpadDown = button(c, m, m == null ? -1 : m.buttonDpadDown);
         boolean dpadLeft = button(c, m, m == null ? -1 : m.buttonDpadLeft);
         boolean dpadRight = button(c, m, m == null ? -1 : m.buttonDpadRight);
+
+        // Gameplay buttons: the face buttons, or in left-handed mode the D-pad in their place.
+        boolean jumpButton = leftHanded ? dpadDown : confirm;
+        boolean action = leftHanded
+            ? dpadLeft || dpadRight
+            : button(c, m, m == null ? -1 : m.buttonX) || button(c, m, m == null ? -1 : m.buttonB);
+        boolean shoot = leftHanded ? dpadUp : button(c, m, m == null ? -1 : m.buttonY);
 
         boolean up = dpadUp || axisY < -AXIS_MENU_DEADZONE;
         boolean down = dpadDown || axisY > AXIS_MENU_DEADZONE;
@@ -82,12 +98,17 @@ public class GamepadInput {
         prevLeft = left;
         prevRight = right;
 
-        horizontal = (dpadLeft ? -1f : 0f) + (dpadRight ? 1f : 0f);
-        if (horizontal == 0f && Math.abs(axisX) > AXIS_DEADZONE) {
-            horizontal = Math.signum(axisX);
+        if (leftHanded) {
+            float moveX = c == null ? 0f : safeAxis(c, m.axisRightX);
+            horizontal = Math.abs(moveX) > AXIS_DEADZONE ? Math.signum(moveX) : 0f;
+        } else {
+            horizontal = (dpadLeft ? -1f : 0f) + (dpadRight ? 1f : 0f);
+            if (horizontal == 0f && Math.abs(axisX) > AXIS_DEADZONE) {
+                horizontal = Math.signum(axisX);
+            }
         }
-        if (!confirm) jumpSuppressed = false;
-        jumpHeld = confirm && !jumpSuppressed;
+        if (!jumpButton) jumpSuppressed = false;
+        jumpHeld = jumpButton && !jumpSuppressed;
     }
 
     /** Ignores the A button for jumping until it is released (call when a menu used the press). */
@@ -141,12 +162,12 @@ public class GamepadInput {
         return jumpHeld;
     }
 
-    /** The context-sensitive Attack/Interact button (West or East). */
+    /** The context-sensitive Attack/Interact button (West or East; D-pad Left or Right when left-handed). */
     public boolean actionPressed() {
         return actionEdge;
     }
 
-    /** The Shoot button (North). */
+    /** The Shoot button (North; D-pad Up when left-handed). */
     public boolean shootPressed() {
         return shootEdge;
     }
