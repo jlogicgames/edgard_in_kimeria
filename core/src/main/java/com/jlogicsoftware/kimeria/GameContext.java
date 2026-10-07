@@ -18,6 +18,9 @@ public interface GameContext {
 
     Language language();
 
+    /** Left-handed mode: mirrored touch layout and the left-hand keyboard bindings. */
+    boolean leftHanded();
+
     /** True while the player overlaps a trigger zone, i.e. the action button interacts instead of attacking. */
     boolean interactAvailable();
 
