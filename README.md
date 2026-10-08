@@ -1,6 +1,6 @@
 # Edgard in Kimeria
 
-**[Play in your browser](https://jlogicgames.github.io/edgard_in_kimeria_java/)** — the
+**[Play in your browser](https://jlogicgames.github.io/edgard_in_kimeria/)** — the
 web build, deployed automatically from `main` (see
 [`.github/workflows/deploy-web.yml`](.github/workflows/deploy-web.yml)).
 
