@@ -51,7 +51,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, LOADING, PLAYING, PAUSED, GAME_OVER}
+    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, LOADING, PLAYING, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -94,6 +94,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private boolean pendingFullscreenToggle = false;
 
     private float timeScale = 1f;
+    /** Set by a death; the room is rebuilt at the start of the next frame (see {@link #rebuildRoom()}). */
+    private boolean roomResetPending = false;
+    private final Vector2 panFrom = new Vector2(), panTo = new Vector2();
+    private float panDuration = 0f, panElapsed = 0f;
+    private boolean cameraPanning = false;
     private boolean playSounds = true;
     private float soundVolume = 1f;
     private boolean debugDraw = false;
@@ -110,7 +115,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     // backend until the AudioContext is unlocked, so polling it would queue a new copy every frame.
     private boolean menuMusicPlaying = false;
 
-    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, pauseMenu, gameOverMenu;
+    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, pauseMenu;
 
     /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
     private FrameBuffer sceneBuffer;
@@ -199,11 +204,6 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             new MenuItem(() -> Msg.RESTART_LEVEL.t(language), this::restartLevel),
             new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
         ), this::resumeGame);
-
-        gameOverMenu = new Menu(() -> Msg.GAME_OVER.t(language), null, List.of(
-            new MenuItem(() -> Msg.PLAY_AGAIN.t(language), () -> startGame(StartData.newGame())),
-            new MenuItem(() -> Msg.EXIT_TO_MENU.t(language), this::exitToMainMenu)
-        ), this::exitToMainMenu);
     }
 
     /**
@@ -252,7 +252,6 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      */
     private void restartLevel() {
         coinsCollected = levelStartCoins;
-        timeScale = 1f; // bullet time near a bat must not leak into the new attempt
         pauseMenu.selected = 0; // so the next pause does not open on Restart Level
         player = new Player(assets, this, 0, 0);
         startLoadingLevel();
@@ -288,6 +287,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void startLoadingLevel() {
         level = null; // the previous level is released while the loading screen shows
         gameStarted = false;
+        // Neither a bat's bullet time nor a death's slow motion may leak into the next level, and a
+        // reset still waiting for its frame (a death just before Restart or Exit) is moot now.
+        timeScale = 1f;
+        roomResetPending = false;
+        cameraPanning = false;
         levelLoadDelay = 1f; // mirrors the original's Future.delayed(1s) before (re)loading a level
         uiState = UiState.LOADING;
     }
@@ -296,6 +300,21 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         levelStartCoins = coinsCollected;
         Rectangle visible = new Rectangle();
         level = new Level(assets, this, player, LEVEL_NAMES.get(currentLevelIndex), () -> visibleWorldRect(visible));
+    }
+
+    /**
+     * Rebuilds the current room for a fresh attempt (D3) without the loading screen: new level, new
+     * player, enemies, items, traps and falling platforms in their initial state, and the coin
+     * count from when the room was entered. Until rooms exist (#60) that is the whole level; the
+     * room-sized version only has to narrow what {@link #loadLevel()} builds.
+     */
+    private void rebuildRoom() {
+        roomResetPending = false;
+        coinsCollected = levelStartCoins;
+        timeScale = 1f;
+        player = new Player(assets, this, 0, 0);
+        loadLevel();
+        player.arriveAfterReset();
     }
 
     private Rectangle visibleWorldRect(Rectangle out) {
@@ -334,18 +353,22 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
 
         // The level (with the player, enemies, etc.) only runs/shows while
-        // actually playing/paused/game-over -- the main menu and its About/
+        // actually playing/paused -- the main menu and its About/
         // Options sub-screens show only the decorative fog+firefly backdrop
         // behind them, matching the Rust version, not a live view of the
         // level loading behind the scenes.
-        boolean levelVisible = uiState == UiState.PLAYING || uiState == UiState.PAUSED || uiState == UiState.GAME_OVER;
+        boolean levelVisible = uiState == UiState.PLAYING || uiState == UiState.PAUSED;
         boolean menuBackdropActive = !levelVisible;
         // Stay silent until the start screen has been dismissed: the click that dismisses it is
         // what lets the browser start the music. Loading is the start of a run, so fade it out.
         boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START && uiState != UiState.LOADING;
 
+        if (roomResetPending && uiState == UiState.PLAYING) {
+            rebuildRoom();
+        }
         if (levelVisible && level != null) {
             level.update(dt * timeScale);
+            if (gameStarted) advanceCameraPan(dt);
         }
 
         menuBackdrop.update(dt);
@@ -563,7 +586,6 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case ABOUT -> aboutMenu;
             case OPTIONS -> optionsMenu;
             case PAUSED -> pauseMenu;
-            case GAME_OVER -> gameOverMenu;
             case LOADING, PLAYING -> null;
         };
         if (uiState == UiState.LOADING) {
@@ -739,8 +761,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
-    public void triggerGameOver() {
-        uiState = UiState.GAME_OVER;
+    public void resetRoom() {
+        roomResetPending = true;
     }
 
     // Not named pause(): that is ApplicationListener.pause(), which libGDX calls when the window
@@ -767,7 +789,37 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
+    public void setTimeScale(float scale) {
+        timeScale = scale;
+    }
+
+    @Override
+    public void panCameraTo(Vector2 target, float seconds) {
+        panFrom.set(cameraTarget);
+        panTo.set(target);
+        panDuration = seconds;
+        panElapsed = 0f;
+        cameraPanning = true;
+    }
+
+    @Override
+    public boolean isCameraPanning() {
+        return cameraPanning;
+    }
+
+    /** Real time, so the slow motion of a death does not stretch the pan that follows it. */
+    private void advanceCameraPan(float dt) {
+        if (!cameraPanning) return;
+        panElapsed += dt;
+        float t = Math.min(1f, panElapsed / panDuration);
+        float eased = t * t * (3f - 2f * t); // smoothstep: eases in and out
+        cameraTarget.set(panFrom).lerp(panTo, eased);
+        if (t >= 1f) cameraPanning = false;
+    }
+
+    @Override
     public void moveCameraTo(Vector2 target, float speed) {
+        if (cameraPanning) return;
         float dt = Gdx.graphics.getDeltaTime();
         float maxStep = speed * dt;
         float dx = target.x - cameraTarget.x;

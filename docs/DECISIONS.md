@@ -37,9 +37,13 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     player respawns at the room's entrance.
   - **Rooms already passed keep their state** for the rest of the level: killed enemies stay
     dead, destroyed things stay destroyed, collected artifacts stay collected.
-  - Respawn takes well under half a second. The camera returns to the entrance with a fast,
-    eased pan of fixed duration (about 0.3 to 0.4 s, whatever the distance), never a hard cut,
-    and the player appears as it arrives.
+  - Death plays in slow motion, as in Katana Zero (about 0.7 s of real time at a fifth of
+    normal speed), so the player sees what killed them and does not walk into it twice. Only
+    the hit animation is cut short, not played to its end. A fall into a pit has nothing to
+    look at and skips the slow motion.
+  - Then the respawn is instant: well under half a second. The camera returns to the entrance
+    with a fast, eased pan of fixed duration (about 0.3 to 0.4 s, whatever the distance), never
+    a hard cut, and the player appears as it arrives.
   - The `Checkpoint` object is the level exit that loads the next level. There are no other
     checkpoints.
 - **Why:** Deterministic attempts make precision puzzles learnable, as in Katana Zero. A reset

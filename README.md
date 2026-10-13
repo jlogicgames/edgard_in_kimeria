@@ -20,7 +20,7 @@ are disjoint, so the arrows work only in this mode). Gamepad: **right stick** mo
 D-pad takes the face buttons' place (**Down** jump, **Left**/**Right** attack/interact, **Up**
 shoot); menus and **Start** are the same in both modes. Shoot is bound everywhere but inert until the ranged attack (fireball or throwing knife) is built. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
 **Esc/B** back (Esc/B/Start resume from the pause menu, which also offers **Restart Level**; on the desktop main menu they select
-Exit; on game over they return to the main menu). Debug keys: **F1** hitbox gizmos, **F2**
+Exit). Debug keys: **F1** hitbox gizmos, **F2**
 invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
 checkpoint.
 
@@ -116,10 +116,10 @@ Two different causes produce this same crash:
       losing contact
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Trigger → actionable wall removal and torch toggle
-- [x] Checkpoint → next level, with wrap; death, respawn, life count, game over
+- [x] Checkpoint → next level, with wrap; death in slow motion, then an instant room reset and respawn (no lives)
 - [x] Torch, firefly, rain ambience; fog effect
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
-- [x] HUD, main menu, About, Options, pause menu, game over screen
+- [x] HUD, main menu, About, Options, pause menu
 - [x] Keyboard, mouse and gamepad menu navigation
 - [x] English/Ukrainian localization, switchable from Options
 - [x] Desktop build starts fullscreen; Options has a Display toggle to opt into a windowed

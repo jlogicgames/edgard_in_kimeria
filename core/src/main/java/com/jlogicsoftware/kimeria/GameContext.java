@@ -51,7 +51,12 @@ public interface GameContext {
 
     void loadNextLevel();
 
-    void triggerGameOver();
+    /**
+     * Asks for the current room to be rebuilt from scratch with a fresh player (death, D3). Takes
+     * effect at the start of the next frame, never mid-update, and skips the loading screen. Until
+     * rooms exist (#60) the room is the whole level.
+     */
+    void resetRoom();
 
     void togglePause();
 
@@ -61,8 +66,19 @@ public interface GameContext {
 
     void setNormalTime();
 
+    /** Sets the world's time scale (1 = normal); the death slow-motion uses it. */
+    void setTimeScale(float scale);
+
     /** Smoothly moves the world camera toward {@code target} at {@code speed} px/s. */
     void moveCameraTo(Vector2 target, float speed);
+
+    /**
+     * Pans the camera to {@code target} in exactly {@code seconds} of real time, easing in and out,
+     * whatever the distance. Chase moves are ignored until it lands.
+     */
+    void panCameraTo(Vector2 target, float seconds);
+
+    boolean isCameraPanning();
 
     Vector2 logicalResolution();
 }

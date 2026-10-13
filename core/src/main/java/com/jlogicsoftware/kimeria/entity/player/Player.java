@@ -24,11 +24,20 @@ import com.jlogicsoftware.kimeria.world.Level;
 public class Player extends Actor<Player.State> implements CollideBody {
     public enum State {IDLE, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING}
 
-    private enum RespawnPhase {NONE, HIT, APPEARING}
+    /**
+     * Death and respawn, Katana Zero style. DYING: the world slows to a crawl so the player sees
+     * what killed them. RESETTING: the game rebuilds the room on its next frame and replaces this
+     * player. ARRIVING (on the new player): the camera pans back while the sprite appears.
+     */
+    private enum RespawnPhase {NONE, DYING, RESETTING, ARRIVING}
 
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
-    private static final int NUMBER_OF_TRIES = 3;
+    /** Real seconds the death slow motion lasts, and how slow the world runs during it. */
+    private static final float DEATH_SLOWMO_SECONDS = 0.7f;
+    private static final float DEATH_TIME_SCALE = 0.2f;
+    /** Longest real frame the death timer will count, so a stalled window cannot skip the slow motion. */
+    private static final float MAX_REAL_STEP = 0.05f;
     private static final float UP_FOLLOW = 200f;
 
     private final GameContext game;
@@ -56,10 +65,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private boolean isReachedCheckpoint = false;
     private RespawnPhase respawnPhase = RespawnPhase.NONE;
     private float checkpointTimer = 0f;
+    private float deathTimer = 0f;
     public String collideWithTriggerId = "";
 
     private final Vector2 startingPosition = new Vector2();
-    public int numberOfLives = NUMBER_OF_TRIES;
 
     public Player(Assets assets, GameContext game, float x, float y) {
         super(x, y, 48, 48, State.class);
@@ -105,14 +114,16 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     @Override
     public void update(float dt) {
-        updateBulletTime(dt);
-        updateCameraPosition();
-
         if (respawnPhase != RespawnPhase.NONE) {
+            // Bullet time and the camera chase are off while dying: the death owns both.
+            // Dying and arriving take no other input, but pausing must stay possible.
+            if (game.isGameStarted() && pausePressed()) game.togglePause();
             tickAnimation(dt);
-            handleRespawnPhase(dt);
+            handleRespawnPhase();
             return;
         }
+        updateBulletTime(dt);
+        updateCameraPosition();
         if (isReachedCheckpoint) {
             tickAnimation(dt);
             checkpointTimer -= dt;
@@ -175,7 +186,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     // Turning around changes nothing until the opposite border is reached.
     // Vertically there is no slack; the camera tracks the player's Y.
     private static final float CAMERA_CHASE_SPEED = 1400f;
-    private static final float CAMERA_RESET_SPEED = 500f;
+    /** Respawn pan: fixed length whatever the distance, never a hard cut (D3). */
+    private static final float CAMERA_PAN_SECONDS = 0.35f;
     /** Dead zone width as a multiple of the hitbox width; tune by feel. */
     private static final float DEAD_ZONE_WIDTH_FACTOR = 3f;
 
@@ -192,7 +204,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Re-centres the dead zone on the player and pans the camera there (level start, respawn). */
     private void resetCamera() {
         cameraFocusX = centerX();
-        game.moveCameraTo(cameraTarget(cameraFocusX, startingPosition.y), CAMERA_RESET_SPEED);
+        game.panCameraTo(cameraTarget(cameraFocusX, startingPosition.y), CAMERA_PAN_SECONDS);
     }
 
     private Vector2 cameraTarget(float focusX, float playerY) {
@@ -205,14 +217,16 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return Math.max(playerX - half, Math.min(playerX + half, focus));
     }
 
+    private boolean pausePressed() {
+        return Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || game.gamepad().pausePressed();
+    }
+
     private void readInput() {
         if (!game.isGameStarted()) return;
         var gamepad = game.gamepad();
         var touch = game.touch();
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed()) {
-            game.togglePause();
-        }
+        if (pausePressed()) game.togglePause();
 
         var keys = KeyBindings.of(game.leftHanded());
 
@@ -299,7 +313,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             if (wallJumpTimer <= 0) wallJumping = false;
         }
 
-        if (position.y > 380) respawn();
+        if (position.y > 380) die(false);
     }
 
     private void playerJump(float dt) {
@@ -321,41 +335,53 @@ public class Player extends Actor<Player.State> implements CollideBody {
         isJumping = false;
     }
 
-    private void respawn() {
+    /**
+     * @param showCause whether to slow time so the player can see what killed them. A fall into a
+     *                  pit has nothing to look at (the player is off screen), so it resets at once.
+     */
+    private void die(boolean showCause) {
         if (isGotHit || game.invulnerable()) return;
         if (game.playSounds()) game.playSound("hit");
         isGotHit = true;
-        respawnPhase = RespawnPhase.HIT;
+        velocity.setZero();
+        horizontalMovement = 0;
         setState(State.HIT);
+        if (showCause) {
+            respawnPhase = RespawnPhase.DYING;
+            deathTimer = 0f;
+            game.setTimeScale(DEATH_TIME_SCALE);
+        } else {
+            requestRoomReset();
+        }
     }
 
-    private void handleRespawnPhase(float dt) {
-        if (respawnPhase == RespawnPhase.HIT) {
+    private void requestRoomReset() {
+        respawnPhase = RespawnPhase.RESETTING;
+        game.resetRoom();
+    }
+
+    private void handleRespawnPhase() {
+        if (respawnPhase == RespawnPhase.DYING) {
+            // Real time: the world is slowed, but the slow motion is a fixed length of it.
+            if (game.isGameStarted()) deathTimer += Math.min(Gdx.graphics.getDeltaTime(), MAX_REAL_STEP);
+            if (deathTimer >= DEATH_SLOWMO_SECONDS) requestRoomReset();
+        } else if (respawnPhase == RespawnPhase.ARRIVING) {
             if (isCurrentAnimationFinished()) {
-                facingRight = true;
-                velocity.setZero();
-                position.set(startingPosition);
-                resetCamera();
-                respawnPhase = RespawnPhase.APPEARING;
-                setState(State.APPEARING);
-            }
-        } else if (respawnPhase == RespawnPhase.APPEARING) {
-            if (isCurrentAnimationFinished()) {
-                isGotHit = false;
                 setState(State.IDLE);
                 respawnPhase = RespawnPhase.NONE;
-                resetCamera();
-
-                if (numberOfLives > 0) {
-                    numberOfLives -= 1;
-                } else {
-                    numberOfLives = NUMBER_OF_TRIES;
-                    game.setGameStarted(false);
-                    game.triggerGameOver();
-                    removeFromParent();
-                }
             }
         }
+    }
+
+    /**
+     * Called on the player built for a fresh room attempt, right after the level placed it: shows
+     * the appear animation while the camera pans back (started by {@link #spawned()}), and takes
+     * input again on the first frame after it. Held keys then act at once.
+     */
+    public void arriveAfterReset() {
+        facingRight = true;
+        respawnPhase = RespawnPhase.ARRIVING;
+        setState(State.APPEARING);
     }
 
     /** F5 dev hotkey: reach a checkpoint without walking to one. */
@@ -426,7 +452,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 reachedCheckpoint();
             } else if (obj instanceof Bomb bomb && hitboxBounds().overlaps(bomb.hitboxBounds())) {
                 bomb.collideWithPlayer();
-                respawn();
+                die(true);
             } else if (obj instanceof Trigger trigger && overlapsEntity(trigger)) {
                 touchingTrigger = true;
                 collideWithTriggerId = trigger.targetId;
@@ -441,7 +467,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     @Override
     public void collidedWithActor(boolean gotHit) {
-        respawn();
+        die(true);
     }
 
     // -- CollideBody / GravityBody plumbing --
