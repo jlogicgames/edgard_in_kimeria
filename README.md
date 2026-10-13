@@ -36,10 +36,12 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ./gradlew runWeb     # web build, dev server with auto-reload
 ./gradlew buildWeb   # static, minified output at web/build/dist/js/release/webapp/
+
+./gradlew runDev     # desktop, development only: edits show up in the running game
 ```
 
 (`./gradlew` is the Gradle wrapper committed to this repo — no separate Gradle install
-needed. `run`/`buildDesktop`/`packageDesktop`/`runWeb`/`buildWeb` are root-level aliases
+needed. `run`/`runDev`/`buildDesktop`/`packageDesktop`/`runWeb`/`buildWeb` are root-level aliases
 for the underlying per-module tasks, so no module path or plugin-generated task name
 needs memorizing. `packageDesktop` uses the
 [badass-runtime](https://github.com/beryx/badass-runtime-plugin) plugin's `jpackage`
@@ -51,6 +53,31 @@ builds all three on a Windows/macOS/Linux matrix. The web build uses the
 bytecode to JavaScript via [TeaVM](https://teavm.org/) — see `web/build.gradle.kts` and
 `web/src/main/java/.../WebLauncher.java`. `.github/workflows/deploy-web.yml` builds and
 deploys the release output to GitHub Pages on every push to `main`.)
+
+### Live editing (`./gradlew runDev`)
+
+Development only. Leave `runDev` running and edit code, images, levels or shaders: the game in
+the window updates within about two seconds (the sources and `assets/` are polled once a
+second). Like Flutter, it picks the least disruptive way for each change:
+
+- **Hot reload, the run keeps going** — a method-body edit is swapped into the live classes;
+  an edited image is re-uploaded into the same texture; an edited sound or shader is reloaded
+  on its next use (a shader that does not compile is rejected and the old one keeps running);
+  an edited `.tmx`/`.tsx` rebuilds the current level with the player left where they stood
+  (enemies and items reset).
+- **Hot restart, back to the main menu** — when the JVM cannot redefine the change: adding or
+  removing a field, method, class member or **lambda**, or editing a fonts/music file. A game
+  that crashed also restarts on the next save. **F7** forces a restart.
+- A source file that does not compile prints its errors and the running game stays as it was.
+
+Limits of hot reload: `static final` constants are inlined into their users and static
+initializers do not rerun, so edits to those need a restart (F7); a texture replaced by one of
+a different size keeps its old regions. Gradle is not involved after startup: `DevLauncher`
+compiles `core` itself into `core/build/dev-classes`.
+
+None of this can reach a release. It lives in the separate `dev` source set of `lwjgl3`
+(`lwjgl3/src/dev`), which only `runDev` uses; the game jar, `packageDesktop` and CI build from
+`main`, and `core` has no reference to it.
 
 ### Troubleshooting: window fails to open with a `Checks.check` NullPointerException
 
@@ -159,6 +186,8 @@ Package layout:
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
 - `ui.TouchControls` — on-screen stick and Jump / Shoot / Attack-Interact buttons
 - `KimeriaGame` — the whole game and its menu states in one place
+- `lwjgl3/src/dev` — `runDev`'s launcher, compiler, watcher and reloader (`DevHost`); a source
+  set of its own that no release build includes, see "Live editing" above
 
 A fixed-timestep physics accumulator (matching the source projects) was tried and dropped:
 even at a rock-steady 60fps average, real frame durations wobble slightly around 1/60, so

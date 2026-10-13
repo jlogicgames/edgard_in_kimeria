@@ -27,6 +27,12 @@ tasks.register("run") {
     dependsOn(":lwjgl3:run")
 }
 
+// Development only: the desktop game with hot reload / hot restart on source and
+// asset changes, see README. Never part of a release build.
+tasks.register("runDev") {
+    dependsOn(":lwjgl3:runDev")
+}
+
 // Same idea for the web build's plugin-generated task names, which are long
 // because they encode module + platform + JS-vs-Wasm + variant.
 tasks.register("runWeb") {

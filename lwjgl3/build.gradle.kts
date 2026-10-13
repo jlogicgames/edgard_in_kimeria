@@ -130,11 +130,13 @@ runtime {
     }
 }
 
-tasks.named<JavaExec>("run") {
-    jvmArgs(nativeAccessArgs + lwjglMemoryArgs)
+// JVM arguments both `run` and `runDev` need to open a window on this machine.
+val desktopLaunchArgs: List<String> = buildList {
+    addAll(nativeAccessArgs)
+    addAll(lwjglMemoryArgs)
     // macOS needs -XstartOnFirstThread for LWJGL3/GLFW to create a window.
     if (System.getProperty("os.name").lowercase().contains("mac")) {
-        jvmArgs("-XstartOnFirstThread")
+        add("-XstartOnFirstThread")
 
         // On some very new macOS builds, LWJGL's bundled GLFW native fails
         // to enumerate monitors (glfwGetPrimaryMonitor() returns NULL,
@@ -144,9 +146,64 @@ tasks.named<JavaExec>("run") {
         val systemGlfw = listOf("/opt/homebrew/lib/libglfw.dylib", "/usr/local/lib/libglfw.dylib")
             .map(::File).firstOrNull { it.exists() }
         if (systemGlfw != null) {
-            jvmArgs("-Dorg.lwjgl.glfw.libname=${systemGlfw.absolutePath}")
+            add("-Dorg.lwjgl.glfw.libname=${systemGlfw.absolutePath}")
         }
     }
+}
+
+tasks.named<JavaExec>("run") {
+    jvmArgs(desktopLaunchArgs)
     standardInput = System.`in`
     workingDir = rootProject.file("assets")
+}
+
+// ---- Development only: hot reload / hot restart ----
+//
+// Everything below, and the whole src/dev tree, exists only for `./gradlew runDev`. It is a
+// separate source set with its own classpath: tasks.jar, the fat jar, jpackage and CI build from
+// `main` alone, so none of it can reach a release build, and core has no reference to it.
+sourceSets {
+    create("dev") {
+        java.srcDir("src/dev/java")
+    }
+}
+
+val devImplementation: Configuration = configurations.getByName("devImplementation")
+val devRuntimeOnly: Configuration = configurations.getByName("devRuntimeOnly")
+
+dependencies {
+    devImplementation("com.badlogicgames.gdx:gdx:$gdxVersion")
+    devImplementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
+    // Not :core -- DevHost loads core itself, from freshly compiled classes, in a throwaway
+    // class loader. Only what core needs from its parent loader goes here.
+    devRuntimeOnly("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
+    devRuntimeOnly("com.badlogicgames.gdx-controllers:gdx-controllers-core:2.2.4")
+    devRuntimeOnly("com.badlogicgames.gdx-controllers:gdx-controllers-desktop:2.2.4")
+}
+
+// The JVM only accepts class redefinition from an agent jar with these manifest attributes.
+val devAgentJar = tasks.register<Jar>("devAgentJar") {
+    archiveClassifier.set("dev-agent")
+    from(sourceSets["dev"].output)
+    manifest {
+        attributes(
+            "Premain-Class" to "com.jlogicsoftware.kimeria.lwjgl3.dev.DevAgent",
+            "Can-Redefine-Classes" to "true"
+        )
+    }
+}
+
+tasks.register<JavaExec>("runDev") {
+    group = "application"
+    description = "Dev only: runs the game with hot reload (state kept) and hot restart (state reset) on source and asset changes."
+    dependsOn(devAgentJar)
+    classpath = sourceSets["dev"].runtimeClasspath
+    mainClass.set("com.jlogicsoftware.kimeria.lwjgl3.dev.DevLauncher")
+    workingDir = rootProject.file("assets")
+    standardInput = System.`in`
+    doFirst {
+        jvmArgs(desktopLaunchArgs)
+        jvmArgs("-javaagent:${devAgentJar.get().archiveFile.get().asFile.absolutePath}")
+        jvmArgs("-Dkimeria.dev.root=${rootProject.projectDir.absolutePath}")
+    }
 }
