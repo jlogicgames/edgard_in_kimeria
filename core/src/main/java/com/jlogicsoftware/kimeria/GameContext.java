@@ -56,8 +56,8 @@ public interface GameContext {
 
     /**
      * Asks for the current room to be rebuilt from scratch with a fresh player (death, D3). Takes
-     * effect at the start of the next frame, never mid-update, and skips the loading screen. Until
-     * rooms exist (#60) the room is the whole level.
+     * effect at the start of the next frame, never mid-update, and skips the loading screen.
+     * Passed rooms retain their state; maps without room markers use the whole level.
      */
     void resetRoom();
 

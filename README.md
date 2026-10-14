@@ -218,14 +218,25 @@ parts that shape the code:
   loses the selection, so the predicate is the intended approach.
 - **`New Game` over an existing save asks for confirmation** before overwriting it, using the
   same `Menu` mechanism as the other screens (a small confirm menu state).
-- **Death does not touch the save.** It resets the level in memory (see D3), with a fast path
+- **Death does not touch the save.** It resets the current room in memory (see D3), with a fast path
   that bypasses the loading screen, and the save only changes on level completion.
 - **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;
   *Continue* on the main menu loads a saved run into a fresh `StartData`.
 
+## Rooms
+
+`forest` contains two rooms, with the original course followed by a new forest
+course featuring an ascending optional coin route and different enemy encounters.
+At the first room's exit, the scene fades out and in (0.25 seconds each way).
+The hero and camera relocate under full black, without a hero transition animation.
+Death resets only the active room; previous rooms' collections remain kept.
+`forest-1` has no markers and continues to behave as one room. See
+[Rooms in Tiled](docs/ROOMS.md) for authoring, retry rules, and manual checks.
+
 ## Assets
 
-Images, audio and Tiled maps are copied verbatim from the Flame project's `assets/`.
+Images, audio and the original Tiled maps come from the Flame project's `assets/`.
+`forest` has since been extended to two rooms in the same tileset.
 Fonts (`NanoPlus.ttf`, `QuestSquare.ttf`) and `main_menu.mp3`/`button_click.wav` are pulled
 from the Rust version, which has them and the Flame baseline doesn't. `button_click.wav`
 needed re-encoding from `WAVE_FORMAT_EXTENSIBLE` to plain PCM — libGDX's WAV decoder

@@ -21,10 +21,17 @@ public class Collectable extends Entity {
     private final Animation<TextureRegion> animation;
     private float stateTime = 0f;
     private boolean collected = false;
+    private final Runnable onPickup;
 
     public Collectable(Assets assets, GameContext game, Consumer<WorldObject> spawner,
                         String name, float x, float y, float w, float h) {
+        this(assets, game, spawner, name, x, y, w, h, () -> {});
+    }
+
+    public Collectable(Assets assets, GameContext game, Consumer<WorldObject> spawner,
+                        String name, float x, float y, float w, float h, Runnable onPickup) {
         super(x, y, w, h);
+        this.onPickup = onPickup;
         this.name = name;
         this.game = game;
         this.spawner = spawner;
@@ -39,6 +46,7 @@ public class Collectable extends Entity {
     public void collideWithPlayer() {
         if (collected) return;
         collected = true;
+        onPickup.run();
         if (game.playSounds()) game.playSound("collect");
 
         if ("Coin".equals(name)) {

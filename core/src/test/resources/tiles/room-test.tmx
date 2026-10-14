@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="40" height="23" tilewidth="16" tileheight="16">
+ <objectgroup name="Rooms">
+  <object name="one" type="Room" x="0" y="0" width="320" height="368"/>
+  <object name="one" type="RoomStart" x="32" y="272"><point/></object>
+  <object name="one" type="RoomExit" x="272" y="272" width="32" height="48"/>
+  <object name="two" type="Room" x="320" y="0" width="320" height="368"/>
+  <object name="two" type="RoomStart" x="352" y="272"><point/></object>
+ </objectgroup>
+ <objectgroup name="SpawnPoints">
+  <object id="1" type="Player" x="32" y="272" width="48" height="48"/>
+  <object id="2" type="Trigger" name="door" x="96" y="288" width="32" height="32"/>
+  <object id="3" type="Actionable" name="door" x="160" y="272" width="16" height="48">
+   <properties><property name="type" value="Wall"/></properties>
+  </object>
+  <object id="4" type="FallingPlatform" x="192" y="272" width="32" height="16"/>
+  <object id="5" type="Escalator" x="224" y="240" width="32" height="16">
+   <properties><property name="offPos" value="3"/><property name="isVertical" value="true"/></properties>
+  </object>
+  <object id="6" type="Checkpoint" x="592" y="288" width="16" height="32"/>
+ </objectgroup>
+ <objectgroup name="Collisions">
+  <object id="7" x="0" y="320" width="320" height="48"/>
+  <object id="8" x="320" y="320" width="320" height="48"/>
+ </objectgroup>
+</map>

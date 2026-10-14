@@ -34,6 +34,8 @@ import com.jlogicsoftware.kimeria.tiled.TiledObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.function.Supplier;
 
 /**
@@ -44,7 +46,7 @@ import java.util.function.Supplier;
 public class Level implements WorldObject {
     public final String name;
     public final TiledMapData map;
-    public final Player player;
+    public Player player;
 
     public final List<CollisionBlock> collisionBlocks = new ArrayList<>();
     public final List<Escalator> escalators = new ArrayList<>();
@@ -66,6 +68,64 @@ public class Level implements WorldObject {
     private final GameContext game;
     /** Screen-fixed drifting clouds behind the world; null on levels without a sky. */
     private SkyBackground sky;
+    public final RoomLayout roomLayout;
+    private int currentRoom;
+    private final List<WorldObject> ambience = new ArrayList<>();
+    /** Retained objects are frozen after leaving; they are never rebuilt by a later death. */
+    private record PassedRoom(List<WorldObject> objects, List<CollisionBlock> collisions,
+                              List<Escalator> escalators, List<FallingPlatform> platforms) { }
+    private final List<PassedRoom> passedRooms = new ArrayList<>();
+    private final Set<Integer> pendingPickups = new HashSet<>();
+    private final Set<Integer> keptPickups = new HashSet<>();
+
+    public Rectangle currentRoomBounds() { return roomLayout.rooms.get(currentRoom).bounds(); }
+    public boolean atRoomExit() {
+        Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
+        return exit != null && player.canLeaveRoom() && exit.overlaps(player.hitboxBounds());
+    }
+    public void recordPickup(int id) { pendingPickups.add(id); }
+    public void keepPickups() { keptPickups.addAll(pendingPickups); pendingPickups.clear(); }
+    public Set<Integer> keptPickups() { return Set.copyOf(keptPickups); }
+
+    public void enterNextRoom(Player nextPlayer) {
+        if (currentRoom + 1 >= roomLayout.rooms.size()) throw new IllegalStateException("No next room");
+        keepPickups();
+        passedRooms.add(new PassedRoom(List.copyOf(objects), List.copyOf(collisionBlocks),
+            List.copyOf(escalators), List.copyOf(fallingPlatforms)));
+        currentRoom++;
+        resetCurrentRoom(nextPlayer);
+    }
+
+    /** Dev-only map reload: keep a valid position and activate its room without a transition. */
+    public void reloadAt(Vector2 savedPosition) {
+        for (int i = 0; i < roomLayout.rooms.size(); i++) {
+            if (roomLayout.rooms.get(i).bounds().contains(savedPosition.x + player.size.x / 2,
+                                                        savedPosition.y + player.size.y / 2)) {
+                currentRoom = i;
+                resetCurrentRoom(player);
+                player.position.set(savedPosition);
+                game.panCameraTo(player.roomCameraTarget(), 0.35f);
+                return;
+            }
+        }
+        // If the edited map removed this position, keep the first room's safe entrance.
+    }
+
+    public void resetCurrentRoom(Player nextPlayer) {
+        objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); fallingPlatforms.clear();
+        pendingSpawns.clear(); pendingPickups.clear();
+        player = nextPlayer;
+        spawnObjects();
+        addCollisions();
+        placePlayer();
+    }
+
+    private void placePlayer() {
+        player.position.set(roomLayout.rooms.get(currentRoom).entrance());
+        player.facingRight = true;
+        player.setLevel(this);
+        player.spawned();
+    }
 
     /** Queues {@code obj} to join {@link #objects} after the current update pass finishes. */
     public void queueSpawn(WorldObject obj) {
@@ -80,34 +140,45 @@ public class Level implements WorldObject {
         this.name = levelName;
         this.map = TiledMapData.load("tiles/" + levelName + ".tmx", assets);
 
+        roomLayout = new RoomLayout(map);
+        // Fail early on ambiguous ownership and cross-room trigger links.
+        for (TiledObject o : map.layer("SpawnPoints")) {
+            int owner = roomLayout.owner(o);
+            if ("Trigger".equals(o.type)) for (TiledObject target : map.layer("SpawnPoints")) {
+                if (("Actionable".equals(target.type) || "Escalator".equals(target.type))
+                    && o.name.equals(target.name) && roomLayout.owner(target) != owner)
+                    throw new IllegalArgumentException("Trigger crosses room boundary: " + o.name);
+            }
+        }
+        for (TiledObject o : map.layer("Collisions")) roomLayout.owner(o);
         spawnObjects();
         addCollisions();
 
         if ("forest".equals(levelName)) {
             for (int i = 0; i < 24; i++) {
-                objects.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
+                ambience.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
             }
-            objects.add(new FogEffect(visibleWorldRect));
+            ambience.add(new FogEffect(visibleWorldRect));
         }
         if ("forest-1".equals(levelName)) {
             sky = new SkyBackground(assets);
             for (int i = 0; i < 48; i++) {
-                objects.add(new RainDrop(new Vector2(map.widthPx(), map.heightPx()), visibleWorldRect));
+                ambience.add(new RainDrop(new Vector2(map.widthPx(), map.heightPx()), visibleWorldRect));
             }
         }
 
-        player.setLevel(this);
-        player.spawned();
+        placePlayer();
     }
 
     private void spawnObjects() {
         for (TiledObject o : map.layer("SpawnPoints")) {
+            if (roomLayout.owner(o) != currentRoom) continue;
             switch (o.type) {
                 case "Player" -> {
                     player.position.set(o.x, o.y);
                     player.facingRight = true;
                 }
-                case "Collectable" -> objects.add(new Collectable(assets, game, this::queueSpawn, o.name, o.x, o.y, o.width, o.height));
+                case "Collectable" -> objects.add(new Collectable(assets, game, this::queueSpawn, o.name, o.x, o.y, o.width, o.height, () -> recordPickup(o.id)));
                 case "Bat" -> {
                     boolean vertical = o.propBool("isVertical", false);
                     Bat bat = new Bat(assets, game, o.x, o.y, o.width, o.height, vertical,
@@ -173,6 +244,7 @@ public class Level implements WorldObject {
 
     private void addCollisions() {
         for (TiledObject o : map.layer("Collisions")) {
+            if (roomLayout.owner(o) != currentRoom) continue;
             CollisionBlock block = switch (o.type) {
                 case "Platform" -> CollisionBlock.platform(o.x, o.y, o.width, o.height);
                 case "QuickSand" -> CollisionBlock.quickSand(o.x, o.y, o.width, o.height);
@@ -215,6 +287,7 @@ public class Level implements WorldObject {
     @Override
     public void update(float dt) {
         if (sky != null) sky.update(dt);
+        for (WorldObject o : ambience) o.update(dt);
         for (Escalator e : escalators) e.update(dt);
         for (FallingPlatform p : fallingPlatforms) p.update(dt);
         for (WorldObject o : objects) o.update(dt);
@@ -260,6 +333,7 @@ public class Level implements WorldObject {
         for (Escalator e : escalators) e.render(batch);
         for (FallingPlatform p : fallingPlatforms) p.render(batch);
         for (WorldObject o : objects) o.render(batch);
+        for (WorldObject o : ambience) o.render(batch);
         if (!player.isRemoved()) player.render(batch);
     }
 

@@ -44,6 +44,15 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - Then the respawn is instant: well under half a second. The camera returns to the entrance
     with a fast, eased pan of fixed duration (about 0.3 to 0.4 s, whatever the distance), never
     a hard cut, and the player appears as it arrives.
+  - Entering the next room uses a whole-scene **fade out → fade in**: about 0.25 s
+    each way, in real time. The world and input freeze during it. The room, player
+    position, and camera switch only at full black; at least one black frame is
+    shown. The hero has no disappearance/appearance animation for this transition.
+    Death retains the separate respawn animation and eased camera return above.
+  - Rooms are traversed forward through explicit exit zones. Passed rooms are
+    frozen with their state retained. The camera is bounded by the current room;
+    a room smaller than the viewport is centred on that axis.
+  - Tiled authoring and transition behaviour are documented in [ROOMS.md](ROOMS.md).
   - The `Checkpoint` object is the level exit that loads the next level. There are no other
     checkpoints.
 - **Why:** Deterministic attempts make precision puzzles learnable, as in Katana Zero. A reset

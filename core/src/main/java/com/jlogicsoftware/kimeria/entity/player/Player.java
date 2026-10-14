@@ -104,6 +104,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
         resetCamera();
     }
 
+    /** A lethal overlap wins over a room exit on the same frame. */
+    public boolean canLeaveRoom() {
+        return respawnPhase == RespawnPhase.NONE && !isReachedCheckpoint;
+    }
+
+    /** Camera relocation happens under the room transition's fully black frame. */
+    public Vector2 roomCameraTarget() { return cameraTarget(centerX(), position.y); }
+
     public boolean isGotHit() {
         return isGotHit;
     }
@@ -214,7 +222,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private Vector2 cameraTarget(float focusX, float playerY) {
-        return new Vector2(focusX - viewHalfWidth, playerY - UP_FOLLOW);
+        Rectangle room = level.currentRoomBounds();
+        float viewWidth = viewHalfWidth * 2;
+        float viewHeight = game.logicalResolution().y;
+        float x = room.width <= viewWidth ? room.x + (room.width - viewWidth) / 2
+            : Math.max(room.x, Math.min(room.x + room.width - viewWidth, focusX - viewHalfWidth));
+        float y = room.height <= viewHeight ? room.y + (room.height - viewHeight) / 2
+            : Math.max(room.y, Math.min(room.y + room.height - viewHeight, playerY - UP_FOLLOW));
+        return new Vector2(x, y);
     }
 
     /** Returns {@code focus} moved the least distance needed to lie within {@code zoneWidth} centred on {@code playerX}. */
@@ -413,6 +428,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void reachedCheckpoint() {
+        level.keepPickups();
         isReachedCheckpoint = true;
         if (game.playSounds()) game.playSound("disappear");
         setState(State.DISAPPEARING);

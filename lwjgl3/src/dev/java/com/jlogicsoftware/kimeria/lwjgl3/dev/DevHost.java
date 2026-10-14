@@ -315,7 +315,8 @@ final class DevHost implements ApplicationListener {
             System.err.println("[dev] level " + name + " does not load, keeping the old one: " + e.getCause());
             return;
         }
-        position.set(saved);
+        Object reloadedLevel = get(game, "level");
+        reloadedLevel.getClass().getMethod("reloadAt", Vector2.class).invoke(reloadedLevel, saved);
         done.add("level " + name);
     }
 

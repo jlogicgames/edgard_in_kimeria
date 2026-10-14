@@ -35,6 +35,7 @@ import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
 import com.jlogicsoftware.kimeria.world.Level;
+import com.jlogicsoftware.kimeria.world.RoomFade;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,8 +89,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private UiState uiState;
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
-    /** Coin count when the current level began; a restart (and later a death reset) goes back to it. */
+    /** Coin count when the level began; Restart Level goes back to it. */
     private int levelStartCoins = 0;
+    private int roomStartCoins = 0;
+    private final RoomFade roomFade = new RoomFade();
     private boolean gameStarted = false;
     private boolean pendingFullscreenToggle = false;
 
@@ -282,6 +285,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** Drops the level and player so nothing stays alive behind the menus. */
     private void releaseGame() {
+        roomFade.cancel();
         gameStarted = false;
         levelLoadDelay = -1f;
         level = null;
@@ -309,6 +313,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // reset still waiting for its frame (a death just before Restart or Exit) is moot now.
         timeScale = 1f;
         roomResetPending = false;
+        roomFade.cancel();
         cameraPanning = false;
         levelLoadDelay = 1f; // mirrors the original's Future.delayed(1s) before (re)loading a level
         uiState = UiState.LOADING;
@@ -316,23 +321,29 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void loadLevel() {
         levelStartCoins = coinsCollected;
+        roomStartCoins = coinsCollected;
         Rectangle visible = new Rectangle();
         level = new Level(assets, this, player, LEVEL_NAMES.get(currentLevelIndex), () -> visibleWorldRect(visible));
     }
 
-    /**
-     * Rebuilds the current room for a fresh attempt (D3) without the loading screen: new level, new
-     * player, enemies, items, traps and falling platforms in their initial state, and the coin
-     * count from when the room was entered. Until rooms exist (#60) that is the whole level; the
-     * room-sized version only has to narrow what {@link #loadLevel()} builds.
-     */
+    /** Rebuilds only the active room, at a frame boundary without reloading the map. */
     private void rebuildRoom() {
         roomResetPending = false;
-        coinsCollected = levelStartCoins;
+        coinsCollected = roomStartCoins;
         timeScale = 1f;
         player = new Player(assets, this, 0, 0);
-        loadLevel();
+        level.resetCurrentRoom(player);
         player.arriveAfterReset();
+    }
+
+    private void enterNextRoom() {
+        roomStartCoins = coinsCollected;
+        timeScale = 1f;
+        player = new Player(assets, this, 0, 0);
+        level.enterNextRoom(player);
+        cameraTarget.set(player.roomCameraTarget());
+        cameraPanning = false;
+        gamepad.suppressJumpUntilRelease();
     }
 
     private Rectangle visibleWorldRect(Rectangle out) {
@@ -384,9 +395,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (roomResetPending && uiState == UiState.PLAYING) {
             rebuildRoom();
         }
-        if (levelVisible && level != null) {
-            level.update(dt * timeScale);
-            if (gameStarted) advanceCameraPan(dt);
+        if (levelVisible && level != null && gameStarted) {
+            if (roomFade.active()) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed()) togglePause();
+                else roomFade.update(dt, this::enterNextRoom);
+            } else {
+                level.update(dt * timeScale);
+                if (gameStarted) advanceCameraPan(dt);
+                if (gameStarted && !roomResetPending && level.atRoomExit()) {
+                    player.resetJumpInput();
+                    roomFade.start();
+                }
+            }
         }
 
         menuBackdrop.update(dt);
@@ -427,9 +447,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (menuBackdropActive) {
             menuBackdrop.render(batch);
         }
+        if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
-        overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
+        if (!roomFade.active()) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
         overlay.flushText(batch);
         batch.end();
     }
