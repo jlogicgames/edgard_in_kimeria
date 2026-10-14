@@ -4,8 +4,8 @@ A level is one TMX map containing an ordered chain of rooms. `forest` now has tw
 rooms: the original 1280 px course and a shorter 672 px forest course with an
 ascending optional coin route, a RedMob, and a vertical bat. The second course
 ends at its relocated Checkpoint and no longer includes a bomb or quicksand.
-`forest-1` remains an unmarked, single-room level. Room replay-time targets and
-measured playthrough timings are still pending in #70.
+`forest-1` remains an unmarked, single-room level. Replay budgets and measured
+routes for #70 are recorded below.
 
 ## Authoring
 
@@ -68,6 +68,76 @@ implemented (D6). Restart Level resets all rooms and the level-entry coin count.
 Saved progress remains per level (D8). A dev-mode TMX reload keeps the player
 in the room containing its position; if that position was removed from the map,
 it falls back to the first entrance.
+
+## Replay budget (#70)
+
+The target for a **mastered successful required route is at most 20 seconds**.
+An optional route collecting all existing room pickups has a separate **30 second**
+budget. These are level-authoring targets, not player deadlines: exploring,
+learning, and taking longer never cause a failure or penalty. A room may span
+several screens. Split or rework a room when a demonstrated route cannot meet
+its budget; do not exempt a long required segment by calling it optional.
+
+Measure from the first frame in which the player can act at the entrance to
+first overlap with RoomExit or the final Checkpoint. Include deliberate waiting,
+combat, interaction, backtracking, and bat-induced slow motion in **real elapsed
+play time**. Exclude loading, pauses, the death/respawn presentation before input
+returns, room fades, and the final Checkpoint's disappearance delay. Do not
+include failed attempts or initial discovery in a mastered-route measurement.
+Record collection detours separately instead of adding them to the required route.
+
+### Reference measurements — 2026-10-14
+
+The shipped maps at revision `f174d8d` (PR #76) were exercised with the production
+`Level.update` and `Player.update` logic by `RoomReplayTest`. The driver sends
+ordinary A/D/J/K keyboard input at 60 frames per real second. Enemies, lethal
+contact, bombs, quicksand, moving/falling platforms, triggers, and 0.5-speed bat
+proximity remain enabled. Invulnerability and trap assist are off. Each route
+succeeds on a fresh attempt and repeats twice after `resetCurrentRoom`, with the
+same elapsed time and no deaths. Both collection routes collect all three room
+coins. The first level has no collectables, so it needs no separate detour.
+
+| Level / room | Width | Required route | All room pickups | Result |
+| --- | ---: | ---: | ---: | --- |
+| `forest-1` / unmarked room | 640 px | 5.32 s | None | Within 20 s |
+| `forest` / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
+| `forest` / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
+
+The revised canopy is 608 px shorter than its previous 1280 px layout (47.5%).
+Its required route has no bomb or quicksand; the ascending platforms and their
+optional pickups remain. The first two rooms already meet the budgets and need
+no additional split for replay cost. Teaching and threat readability still have
+their own review in #73/#75.
+
+The required routes run forward, jumping obstacles and hazards, using normal
+sword attacks near grounded enemies and wall jumps at tall walls. In `forest-1`,
+K activates the wall trigger before reaching the level exit. The forest-entry
+collection route waits 40 frames (0.67 s, included in its time), takes the coin
+behind the entrance, follows the raised route to the upper coin, then returns
+from about x=400 to x=330 for the ground coin before continuing to RoomExit.
+The canopy collection route follows the ascending platforms before dropping
+back to the ground coin and Checkpoint. The exact press thresholds and route
+control are executable in `RoomReplayTest`; they are a reference successful
+route, not a claim that beginners will finish at these speeds.
+
+Reproduce all five measurements with:
+
+```sh
+./gradlew :core:test --tests '*RoomReplayTest'
+```
+
+These are **headless gameplay measurements**, not a recorded human playtest.
+Texture/font rendering and camera drawing are omitted; an alias of the exact
+`forest-1.tmx` file skips only its decorative sky/rain, which have no collision,
+AI, or movement role. Map contents and all gameplay objects are retained.
+This measures the replay cost at 60 fps; visual readability, input comfort, and
+behaviour at other frame rates require the full playtest in #75. Rerun these
+routes and record new timings whenever map geometry or gameplay timing changes.
+
+Measured map SHA-256 values:
+
+- `forest.tmx`: `bf227d733af41d97f575b1d16bcebb6cf408590b26f19510942ffc19f2b88f96`
+- `forest-1.tmx`: `1ae0a0ce7b92582010462d55b7688385974e831ae34de904a5f542249a02206e`
 
 ## Manual checks
 

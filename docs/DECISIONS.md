@@ -32,6 +32,12 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - A level is a chain of **rooms**, as in Katana Zero. A room may span several screens; what
     is capped is how much a retry costs to replay, not the screen count. A level without room
     markers is one room.
+  - A mastered required route should replay in **at most 20 seconds**; collecting
+    all optional room pickups has a separate **30 second** target. These guide
+    room authoring, never impose a timer on the player. Measure active real time,
+    including combat, waiting, and slow motion, from usable entrance input to the
+    exit contact; exclude loading, pauses, fades, and death/exit presentation.
+    Reference routes and results are recorded in [ROOMS.md](ROOMS.md) (#70).
   - On death the **current room** returns to its initial state (player, enemies, items,
     traps, artifacts picked up in it), so every attempt at a room starts identically. The
     player respawns at the room's entrance.
