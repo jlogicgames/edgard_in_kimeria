@@ -52,7 +52,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private Escalator currentEscalator;
 
     public float horizontalMovement = 0f;
-    private boolean isJumping = false;
+    private final JumpBuffer jumpBuffer = new JumpBuffer();
     private boolean isAttacking = false;
     private boolean attackHitboxAdded = false;
     private float attackElapsed = 0f;
@@ -99,6 +99,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     /** Called once by {@link Level} right after the player is placed at its spawn point. */
     public void spawned() {
+        resetJumpInput();
         startingPosition.set(position);
         resetCamera();
     }
@@ -114,7 +115,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     @Override
     public void update(float dt) {
+        if (!game.isGameStarted()) return;
         if (respawnPhase != RespawnPhase.NONE) {
+            resetJumpInput();
             // Bullet time and the camera chase are off while dying: the death owns both.
             // Dying and arriving take no other input, but pausing must stay possible.
             if (game.isGameStarted() && pausePressed()) game.togglePause();
@@ -135,6 +138,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         }
 
         readInput();
+        if (!game.isGameStarted()) return;
 
         // A fixed 1/60 accumulator here (as in the original) fights the
         // renderer's own variable frame time: even at a rock-steady 60fps
@@ -154,6 +158,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         checkHorizontalCollisions(level);
         applyGravity(stepDt);
         checkVerticalCollisions(level, stepDt);
+        // Landing or grabbing a wall can make a buffered press usable in this very frame.
+        tryJump(0f);
         checkGameplayOverlaps();
 
         tickAnimation(dt);
@@ -226,7 +232,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
         var gamepad = game.gamepad();
         var touch = game.touch();
 
-        if (pausePressed()) game.togglePause();
+        if (pausePressed()) {
+            game.togglePause();
+            return;
+        }
 
         var keys = KeyBindings.of(game.leftHanded());
 
@@ -240,13 +249,13 @@ public class Player extends Actor<Player.State> implements CollideBody {
             if (right || padX > 0) horizontalMovement += 1;
         }
 
-        isJumping = (keys.jumpHeld() || gamepad.jumpHeld() || touch.jumpHeld()) && !isAttacking;
+        jumpBuffer.update(Gdx.graphics.getDeltaTime(), keys.jumpHeld(), gamepad.jumpHeld(), touch.jumpHeld());
 
         // The one "other" button: interacts inside a trigger zone, attacks everywhere else.
         if (keys.actionJustPressed() || gamepad.actionPressed() || touch.actionPressed()) {
             if (canInteract()) {
                 interact();
-            } else if (!isAttacking && onGround && !isJumping && !clambering) {
+            } else if (!isAttacking && onGround && !jumpBuffer.pending() && !clambering) {
                 isAttacking = true;
             }
         }
@@ -292,7 +301,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void updatePlayerMovement(float dt) {
-        if (isJumping && (onGround || clambering)) playerJump(dt);
+        tryJump(dt);
 
         if (velocity.y > gravityAcceleration() * 15) onGround = false; // coyote time
 
@@ -332,7 +341,17 @@ public class Player extends Actor<Player.State> implements CollideBody {
         }
         position.y += velocity.y * dt;
         onGround = false;
-        isJumping = false;
+    }
+
+    private void tryJump(float dt) {
+        if (jumpBuffer.consume(!isAttacking && respawnPhase == RespawnPhase.NONE && (onGround || clambering))) {
+            playerJump(dt);
+        }
+    }
+
+    /** Used at gameplay boundaries so held or queued menu/death input cannot jump. */
+    public void resetJumpInput() {
+        jumpBuffer.reset();
     }
 
     /**
@@ -343,6 +362,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (isGotHit || game.invulnerable()) return;
         if (game.playSounds()) game.playSound("hit");
         isGotHit = true;
+        resetJumpInput();
         velocity.setZero();
         horizontalMovement = 0;
         setState(State.HIT);
@@ -376,9 +396,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /**
      * Called on the player built for a fresh room attempt, right after the level placed it: shows
      * the appear animation while the camera pans back (started by {@link #spawned()}), and takes
-     * input again on the first frame after it. Held keys then act at once.
+     * input again on the first frame after it. Movement can stay held; jumping needs a new press.
      */
     public void arriveAfterReset() {
+        resetJumpInput();
         facingRight = true;
         respawnPhase = RespawnPhase.ARRIVING;
         setState(State.APPEARING);

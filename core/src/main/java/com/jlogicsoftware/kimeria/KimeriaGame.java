@@ -242,6 +242,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void resumeGame() {
+        if (player != null) player.resetJumpInput();
         gameStarted = true;
         uiState = UiState.PLAYING;
     }
@@ -769,6 +770,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     // is minimized, and toggling the game from there left the main menu replaced by an empty level.
     @Override
     public void togglePause() {
+        if (player != null) player.resetJumpInput();
         gameStarted = !gameStarted;
         uiState = gameStarted ? UiState.PLAYING : UiState.PAUSED;
     }
