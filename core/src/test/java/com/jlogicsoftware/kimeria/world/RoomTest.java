@@ -11,6 +11,7 @@ import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
+import com.jlogicsoftware.kimeria.effects.BombExplosionEffect;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
@@ -90,6 +91,33 @@ class RoomTest {
         for (int i = 0; i < 4; i++) level.resetCurrentRoom(player());
         assertEquals(count, level.objects.size());
         assertEquals(new Vector2(64, 272), level.player.position);
+    }
+    @Test void bombDamagesThePlayerOnlyAtDetonationAndRetryDiscardsItsPendingEffect() {
+        Level level = forest();
+        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        Rectangle playerBounds = level.player.hitboxBounds();
+        level.player.position.add(bomb.centerX() - playerBounds.x, bomb.centerY() - playerBounds.y);
+        bomb.collideWithPlayer();
+        bomb.update(0.5f);
+        assertFalse(level.player.isGotHit());
+        bomb.update(0.31f);
+        assertTrue(level.player.isGotHit());
+        level.resetCurrentRoom(player()); // Effect is still queued, not yet in objects.
+        level.update(0f);
+        assertFalse(level.objects.stream().anyMatch(BombExplosionEffect.class::isInstance));
+        Bomb restored = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        restored.update(10f);
+        assertFalse(restored.isRemoved());
+        restored.collideWithPlayer();
+        restored.update(0.5f);
+        assertFalse(restored.isRemoved());
+        restored.update(0.31f);
+        assertTrue(restored.isRemoved());
+        assertFalse(level.player.isGotHit(), "The respawned player is outside the blast");
+        level.update(0f);
+        assertTrue(level.objects.stream().anyMatch(BombExplosionEffect.class::isInstance));
+        level.resetCurrentRoom(player()); // Also discard an effect already added to objects.
+        assertFalse(level.objects.stream().anyMatch(BombExplosionEffect.class::isInstance));
     }
     @Test void nextRoomKeepsPassedStateAndOnlyResetsItsOwnPickups() {
         Level level = forest();

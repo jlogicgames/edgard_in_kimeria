@@ -112,10 +112,24 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   Implementation rule: obtain `game.trapWarnings()` and call `duration(baseSeconds)` once
   when a timed warning starts. Store that result for the countdown; repeated contact must
   not restart it. Scale only the warning, never movement or cooldowns. Falling platforms use
-  `TrapWarnings.FALLING_PLATFORM_SECONDS` (1 s normally, 1.5 s with assist). Bombs are still
-  static contact mines with no timed warning; any future timed bomb behaviour must use
-  this same source.
-- **Tracked in:** #47
+  `TrapWarnings.FALLING_PLATFORM_SECONDS` (1 s normally, 1.5 s with assist).
+- **Contact bombs (#71):** The art-sized 10x13 activation hitbox starts a one-shot countdown
+  of `TrapWarnings.BOMB_SECONDS` (0.8 s normally, 1.2 s with assist). The sprite alternates
+  warm tint and normal art every 0.15 s without disappearing. Leaving does not cancel the
+  countdown; repeated contact and setting changes do not restart or rescale it. At detonation,
+  check the player's current hitbox against a 64x64 square centered on the bomb exactly once,
+  then remove the bomb. The cosmetic shader uses a separate 64x64 quad, with its origin
+  at the bomb's visible bottom and 85% of its height above that point, so the original plume rises
+  from the ground rather than the quad's center. Fade just above the baseline, with no
+  visible pixels below it, and fade before removal. The lethal
+  square, including its corners, is deliberate: no shader sampling,
+  circular hitbox or expanding lethal wave. Assist changes only the warning duration.
+- **Future trap contract:** Keep activation, warning and lethal event distinct. Each trap owns
+  its state and samples shared timing once at activation. Spawn transient effects through
+  `Level.queueSpawn`; never leave damage in a cosmetic effect. Room retries rebuild idle traps
+  and discard both active and queued effects. No trap base class is needed yet: bombs and
+  falling platforms share timing and reset rules but have different activation/damage logic.
+- **Tracked in:** #47, #71
 
 ## D8. Main menu has Continue and New Game
 

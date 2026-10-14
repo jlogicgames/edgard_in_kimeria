@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
@@ -114,6 +115,37 @@ class RoomReplayTest {
     }
 
     private Player player() { return new Player(assets, game, 0, 0); }
+
+    @Test void touchingABombThroughGameplayStartsAWarningInsteadOfImmediateDeath() {
+        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        Rectangle hitbox = level.player.hitboxBounds();
+        level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
+        level.player.update(0f); // Use the real gameplay overlap path to activate it.
+        assertFalse(level.player.isGotHit());
+        bomb.update(0.5f);
+        level.player.update(0f); // A continued overlap must not restart the warning.
+        assertFalse(level.player.isGotHit());
+        bomb.update(0.31f);
+        assertTrue(level.player.isGotHit());
+    }
+
+    @Test void playerCanEscapeAnActivatedBombAndReturnDuringItsCosmeticEffect() {
+        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        Rectangle hitbox = level.player.hitboxBounds();
+        level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
+        Vector2 contactPosition = new Vector2(level.player.position);
+        level.player.update(0f);
+        level.player.position.x += 80f;
+        bomb.update(0.81f);
+        assertTrue(bomb.isRemoved());
+        assertFalse(level.player.isGotHit());
+        level.player.position.set(contactPosition);
+        level.update(0f); // Drain the explosion effect into the room.
+        level.update(0f); // Real gameplay updates that effect without applying more damage.
+        assertFalse(level.player.isGotHit());
+    }
 
     private void measure(String route, boolean canopy, boolean collect, int delayFrames, float[] jumps) {
         String mapName = route.equals("forest-1") ? "replay-forest-1" : "forest";

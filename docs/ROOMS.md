@@ -141,6 +141,48 @@ Measured map SHA-256 values:
 
 ## Manual checks
 
+### Bomb warning checks (#71)
+
+With Assist off, touch a bomb in `forest`: contact must be safe, the sprite must
+alternate warm tint and normal art for 0.8 s, then explode once. Repeat with
+Assist on (1.2 s). Check readability against the forest background at normal
+scale; the bomb must stay visible throughout. Repeated contact must not restart
+the countdown, and leaving must not cancel it. Stay inside the centered 64x64
+blast square to die; leave it before detonation to survive. Passing through the
+remaining shader effect after detonation must be safe. Die during the warning
+and after the explosion: each retry must restore an idle bomb with no old effect.
+Pause during warning and resume: the countdown must resume with the game.
+
+Verification on 2026-10-14: automated tests cover standard/assisted timing,
+settings changes during warning, repeated contact, square corners/edges, tint
+alternation and batch color restoration, damage at detonation, and active/queued
+effect cleanup on retry. The checks above are **pending a visual playtest**;
+headless tests do not establish in-game warning readability.
+
+Explosion shader follow-up on 2026-10-14: retain the original upward fire/smoke
+shapes and palette. Place the origin at 85% of the 64x64 quad's height, aligned
+with the art-sized hitbox's bottom in world space, excluding the sprite frame's
+transparent bottom row. Fade just above that baseline, with no visible pixels
+below it. This leaves room above for rising smoke. Use soft border transparency and a fade to zero before
+removal. The cosmetic quad is shifted upward; the centered lethal square remains
+64x64. A WebGL render check with the actual `quad.vert` and `bomb_explosion.frag`
+sampled 61 lifetime positions: compilation/linking succeeded, no GL errors,
+transparent outer edges throughout, and a fully transparent final frame.
+An early/middle/late visual comparison confirmed the original plume rising from
+the lower part of the quad. The noise loops and draw size are unchanged. This is
+an isolated shader check, not a full gameplay playtest.
+
+Actual desktop capture follow-up on 2026-10-14: running `forest` at a 0.001 s
+world step reproduced the below-ground explosion at approximately 0.05 s into
+the effect. The shader-only check missed libGDX's `TextureRegion` adjustment of
+a 1x1 texture to UV 0.25..0.75. That moved the 0.85 ground origin outside the
+quad. `Shaders.whiteQuad` now explicitly restores full 0..1 coordinates, keeping
+the Y-down flip. A second desktop capture at the same effect time shows fire
+above the ground at the original bomb location. Actual GL texture coordinates
+were checked at runtime; `ShadersTest` also guards against the 1x1 inset.
+
+### Room transition checks
+
 Start New Game and use F4 to reach `forest` (the second level); F2 optionally
 makes the traversal invulnerable. Walk through the original room to its far-right
 exit and verify fade out, a black midpoint, and fade in at the second entrance,

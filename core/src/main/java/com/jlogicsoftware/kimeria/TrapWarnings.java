@@ -9,6 +9,7 @@ import com.badlogic.gdx.Preferences;
  */
 public final class TrapWarnings {
     public static final float FALLING_PLATFORM_SECONDS = 1f;
+    public static final float BOMB_SECONDS = 0.8f;
     private static final float ASSIST_MULTIPLIER = 1.5f;
     private boolean longer = Settings.DEFAULT_LONGER_TRAP_WARNINGS;
 

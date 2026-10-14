@@ -201,7 +201,9 @@ public class Level implements WorldObject {
                     mob.setLevel(this);
                     objects.add(mob);
                 }
-                case "Bomb" -> objects.add(new Bomb(assets, game, this::queueSpawn, o.x, o.y, o.width, o.height));
+                case "Bomb" -> objects.add(new Bomb(assets, game, this::queueSpawn, blast -> {
+                    if (blast.overlaps(player.hitboxBounds())) player.collidedWithActor(false);
+                }, o.x, o.y, o.width, o.height));
                 case "Torch" -> {
                     int intensity = (int) o.propFloat("Intensity", 80);
                     objects.add(new Torch(o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, ""));

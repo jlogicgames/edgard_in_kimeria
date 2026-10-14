@@ -10,6 +10,7 @@ varying vec2 v_texCoords;
 uniform vec2 uSize;
 uniform float uTime;
 uniform float uProgress; // 0..1
+uniform float uOriginY; // ground baseline within the quad (Y-down UV)
 
 vec3 n_rand3(vec3 p) {
     vec3 r = fract(sin(vec3(
@@ -92,11 +93,12 @@ void main() {
     vec3 smokePal2 = vec3(0.5, 0.45, 0.6);
 
     vec2 uv = v_texCoords;
-    vec2 center = vec2(0.5, 0.4);
+    vec2 center = vec2(0.5, uOriginY);
     vec2 p = uv - center;
     p.x *= uSize.x / uSize.y;
     p *= 7.0;
-    float t = max(uProgress, 0.01);
+    float progress = clamp(uProgress, 0.0, 1.0);
+    float t = max(progress, 0.01);
 
     float bpl = 4.0;
     float spl = 3.0;
@@ -122,8 +124,13 @@ void main() {
     vec3 color = bw * boomCol + (1.0 - bw) * smokeCol;
     float alpha = bw * boomA + (1.0 - bw) * smokeA;
 
-    float groundFade = smoothstep(0.18, 0.0, p.y / 7.0);
-    alpha *= groundFade;
+    // Fade just above the visible bomb base; nothing may extend beneath the ground.
+    // Reversed smoothstep edges have undefined GLSL behaviour.
+    float groundFade = 1.0 - smoothstep(-0.03, 0.0, uv.y - uOriginY);
+    vec2 border = min(uv, vec2(1.0) - uv);
+    float edgeFade = smoothstep(0.0, 0.04, min(border.x, border.y));
+    float lifeFade = 1.0 - smoothstep(0.65, 1.0, progress);
+    alpha *= groundFade * edgeFade * lifeFade;
 
     gl_FragColor = vec4(color, alpha);
 }

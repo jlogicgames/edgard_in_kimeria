@@ -489,7 +489,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 reachedCheckpoint();
             } else if (obj instanceof Bomb bomb && hitboxBounds().overlaps(bomb.hitboxBounds())) {
                 bomb.collideWithPlayer();
-                die(true);
             } else if (obj instanceof Trigger trigger && overlapsEntity(trigger)) {
                 touchingTrigger = true;
                 collideWithTriggerId = trigger.targetId;

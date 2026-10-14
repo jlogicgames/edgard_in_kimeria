@@ -47,7 +47,14 @@ public final class Shaders {
             pm.dispose();
         }
         TextureRegion region = new TextureRegion(whitePixel);
-        region.flip(false, true);
+        // TextureRegion insets a 1x1 region to UV 0.25..0.75 to prevent atlas
+        // bleeding. Procedural shaders need the whole 0..1 domain: with the
+        // inset, a ground origin at 0.85 lies outside the rendered quad.
+        // Set each bound directly, since setRegion applies that inset again.
+        region.setU(0f);
+        region.setU2(1f);
+        region.setV(1f);
+        region.setV2(0f);
         return region;
     }
 
