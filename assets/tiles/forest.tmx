@@ -38,7 +38,6 @@
   </object>
   <object id="37" name="Coin" type="Collectable" x="336" y="320" width="16" height="16"/>
   <object id="39" name="Coin" type="Collectable" x="368" y="240" width="16" height="16"/>
-  <object id="40" name="Heart" type="Collectable" x="656" y="320" width="16" height="16"/>
   <object id="41" name="Bat" type="Bat" x="272" y="240" width="16" height="16">
    <properties>
     <property name="isVertical" type="bool" value="true"/>

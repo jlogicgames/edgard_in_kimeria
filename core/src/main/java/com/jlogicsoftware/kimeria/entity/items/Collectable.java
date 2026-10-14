@@ -6,13 +6,12 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
-import com.jlogicsoftware.kimeria.effects.ShockwaveEffect;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 
 import java.util.function.Consumer;
 
-/** Port of Dart's {@code Collectable}: coins and hearts. */
+/** Port of Dart's {@code Collectable}: coins with a pickup ripple. */
 public class Collectable extends Entity {
     private static final float STEP_TIME = 0.3f;
 
@@ -29,8 +28,7 @@ public class Collectable extends Entity {
         this.name = name;
         this.game = game;
         this.spawner = spawner;
-        float originY = "Heart".equals(name) ? 16 : 0;
-        animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, 0, originY);
+        animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, 0, 0);
         animation.setPlayMode(Animation.PlayMode.LOOP);
     }
 
@@ -46,9 +44,6 @@ public class Collectable extends Entity {
         if ("Coin".equals(name)) {
             game.addCoin();
             spawner.accept(new RippleEffect(centerX(), centerY(), 0.75f, 300f, 12f, 60f, 20f));
-        }
-        if ("Heart".equals(name)) {
-            spawner.accept(new ShockwaveEffect(centerX(), centerY(), 0.6f, 64f, 8f));
         }
         removeFromParent();
     }

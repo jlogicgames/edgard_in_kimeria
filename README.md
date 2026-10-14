@@ -111,7 +111,7 @@ Two different causes produce this same crash:
 - [x] Tilemap rendering from the unmodified `.tmx`/`.tsx`, with viewport culling
 - [x] Bat, Yellow mob, Red mob — patrol/chase/attack, bullet time near a Bat
 - [x] Sword attack killing enemies
-- [x] Collectables (coin + ripple, heart + shockwave), Bomb (explosion, kills player)
+- [x] Collectables (coin + ripple), Bomb (explosion, kills player)
 - [x] Falling platform — warning torch, delay, drop; carries the player down without
       losing contact
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it

@@ -1,6 +1,6 @@
 // Ported from the original Flutter runtime_effect shader (assets in the
 // Dart/Flame source, shaders/shockwave.frag): an expanding thin ring used
-// for pickups. FlutterFragCoord()/uSize is replaced with the quad's own
+// by the F3 debug hotkey. FlutterFragCoord()/uSize is replaced with the quad's own
 // interpolated v_texCoords, since this is drawn as a normal textured quad
 // through SpriteBatch instead of a Flutter Canvas shader.
 #ifdef GL_ES

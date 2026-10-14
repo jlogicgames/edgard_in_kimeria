@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.jlogicsoftware.kimeria.entity.Entity;
 
-/** Port of Dart's {@code ShockwaveEffect}: an expanding thin ring, used for the heart pickup. */
+/** Port of Dart's {@code ShockwaveEffect}: an expanding thin ring, used by the F3 debug hotkey. */
 public class ShockwaveEffect extends Entity {
     private final float duration;
     private float elapsed = 0f;
