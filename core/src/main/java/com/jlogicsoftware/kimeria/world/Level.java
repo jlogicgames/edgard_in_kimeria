@@ -147,7 +147,7 @@ public class Level implements WorldObject {
                     escalators.add(escalator);
                 }
                 case "FallingPlatform" -> {
-                    FallingPlatform platform = new FallingPlatform(assets, o.x, o.y, o.width, o.height, this::queueSpawn);
+                    FallingPlatform platform = new FallingPlatform(assets, o.x, o.y, o.width, o.height, this::queueSpawn, game.trapWarnings());
                     fallingPlatforms.add(platform);
                 }
                 default -> {

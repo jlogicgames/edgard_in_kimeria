@@ -120,6 +120,8 @@ Two different causes produce this same crash:
 - [x] Torch, firefly, rain ambience; fog effect
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
 - [x] HUD, main menu, About, Options, pause menu
+- [x] Options → Assist → Longer trap warnings: an independent, persisted toggle (off by default)
+      giving falling platforms a 1.5 s warning instead of 1 s, with no penalties
 - [x] Keyboard, mouse and gamepad menu navigation
 - [x] English/Ukrainian localization, switchable from Options
 - [x] Desktop build starts fullscreen; Options has a Display toggle to opt into a windowed

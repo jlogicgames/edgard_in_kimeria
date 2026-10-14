@@ -156,7 +156,8 @@ public class Overlay {
                          Vector2 mouseLogical, boolean mouseClicked, boolean confirmPressed, boolean backPressed,
                          Runnable onHover, Runnable onActivate) {
         int n = menu.items.size();
-        float bx = centerX - BUTTON_W / 2f;
+        float buttonW = menu.buttonWidth;
+        float bx = centerX - buttonW / 2f;
 
         // Only a real mouse move may pull the selection onto the button under the cursor. A cursor
         // that merely rests over a button must not undo keyboard/gamepad navigation every frame.
@@ -167,7 +168,7 @@ public class Overlay {
         for (int i = 0; i < n; i++) {
             float by = startY + i * (BUTTON_H + BUTTON_GAP);
             boolean hovered = mouseLogical != null
-                && mouseLogical.x >= bx && mouseLogical.x <= bx + BUTTON_W
+                && mouseLogical.x >= bx && mouseLogical.x <= bx + buttonW
                 && mouseLogical.y >= by && mouseLogical.y <= by + BUTTON_H;
             if (hovered && mouseMoved && menu.selected != i) {
                 menu.selected = i;
@@ -180,18 +181,18 @@ public class Overlay {
             // frame, gold label and > < markers). Hovered + selected stack.
             if (selected) {
                 batch.setColor(SELECTED_BORDER);
-                batch.draw(Shaders.whiteQuad(), bx - 3, by - 3, BUTTON_W + 6, BUTTON_H + 6);
+                batch.draw(Shaders.whiteQuad(), bx - 3, by - 3, buttonW + 6, BUTTON_H + 6);
             } else {
                 batch.setColor(IDLE_BORDER);
-                batch.draw(Shaders.whiteQuad(), bx - 1, by - 1, BUTTON_W + 2, BUTTON_H + 2);
+                batch.draw(Shaders.whiteQuad(), bx - 1, by - 1, buttonW + 2, BUTTON_H + 2);
             }
             batch.setColor(hovered ? HOVER_FILL : IDLE_FILL);
-            batch.draw(Shaders.whiteQuad(), bx, by, BUTTON_W, BUTTON_H);
+            batch.draw(Shaders.whiteQuad(), bx, by, buttonW, BUTTON_H);
             batch.setColor(Color.WHITE);
 
             String label = menu.items.get(i).label.get();
             GlyphLayout layout = new GlyphLayout(buttonFont, label);
-            float labelX = bx + (BUTTON_W - layout.width) / 2f;
+            float labelX = bx + (buttonW - layout.width) / 2f;
             float labelYFromTop = by + (BUTTON_H - layout.height) / 2f;
             Color textColor = selected ? SELECTED_TEXT : hovered ? HOVER_TEXT : IDLE_TEXT;
             textQueue.add(() -> {
@@ -199,7 +200,7 @@ public class Overlay {
                 buttonFont.draw(batch, layout, labelX, toTextY(labelYFromTop));
                 if (selected) {
                     buttonFont.draw(batch, ">", bx + 10f, toTextY(labelYFromTop));
-                    buttonFont.draw(batch, "<", bx + BUTTON_W - 10f - markerW, toTextY(labelYFromTop));
+                    buttonFont.draw(batch, "<", bx + buttonW - 10f - markerW, toTextY(labelYFromTop));
                 }
                 buttonFont.setColor(Color.WHITE);
             });

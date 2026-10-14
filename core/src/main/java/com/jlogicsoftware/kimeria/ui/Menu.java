@@ -18,9 +18,16 @@ public class Menu {
     public final Supplier<String> body;
     public final List<MenuItem> items;
     public final Runnable onBack;
+    public final float buttonWidth;
     public int selected = 0;
 
     public Menu(Supplier<String> title, Supplier<String> body, List<MenuItem> items, Runnable onBack) {
+        this(title, body, items, onBack, Overlay.BUTTON_W);
+    }
+
+    public Menu(Supplier<String> title, Supplier<String> body, List<MenuItem> items, Runnable onBack,
+                float buttonWidth) {
+        this.buttonWidth = buttonWidth;
         this.title = title;
         this.body = body;
         this.items = items;

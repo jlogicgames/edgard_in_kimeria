@@ -21,6 +21,9 @@ public interface GameContext {
     /** Left-handed mode: mirrored touch layout and the left-hand keyboard bindings. */
     boolean leftHanded();
 
+    /** Shared warning timing for every timed trap. */
+    TrapWarnings trapWarnings();
+
     /** True while the player overlaps a trigger zone, i.e. the action button interacts instead of attacking. */
     boolean interactAvailable();
 

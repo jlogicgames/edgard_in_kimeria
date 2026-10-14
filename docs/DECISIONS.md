@@ -94,6 +94,12 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   attempt and warns the player before it can kill. This is guaranteed by the room reset (D3).
   Every trap takes its warning time from one shared place, so the assist option for longer
   warnings (D11) applies to every trap, including new ones.
+  Implementation rule: obtain `game.trapWarnings()` and call `duration(baseSeconds)` once
+  when a timed warning starts. Store that result for the countdown; repeated contact must
+  not restart it. Scale only the warning, never movement or cooldowns. Falling platforms use
+  `TrapWarnings.FALLING_PLATFORM_SECONDS` (1 s normally, 1.5 s with assist). Bombs are still
+  static contact mines with no timed warning; any future timed bomb behaviour must use
+  this same source.
 - **Tracked in:** #47
 
 ## D8. Main menu has Continue and New Game
@@ -193,8 +199,10 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     not a single "easy mode".
   - Assist never shames or penalises: no "you are playing on easy" labels, no locked endings,
     no reduced rewards.
-  - The first option is **longer trap warnings** (D7). Other options (game speed, wider jump
-    windows, skipping a room, invulnerability) are candidates only, each to be decided on its
+  - The first option is **longer trap warnings** (D7), under Options → Assist: an independent
+    On/Off toggle, off by default, multiplying timed warnings by 1.5. It is saved in the same
+    player preferences as the other settings and restored at startup. Other options (game speed,
+    wider jump windows, skipping a room, invulnerability) are candidates only, each to be decided on its
     own.
 - **Why:** Katana Zero has no assist mode, but the audience is wider than hardcore players.
   One hit kills (D2) stays the default; assist lets more players finish without changing it.

@@ -51,7 +51,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, LOADING, PLAYING, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -104,6 +104,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private boolean debugDraw = false;
     private boolean invulnerable = false;
     private Language language = Language.ENGLISH;
+    private final TrapWarnings trapWarnings = new TrapWarnings();
     private boolean leftHanded = Settings.DEFAULT_LEFT_HANDED;
 
     private float levelLoadDelay = -1f;
@@ -115,7 +116,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     // backend until the AudioContext is unlocked, so polling it would queue a new copy every frame.
     private boolean menuMusicPlaying = false;
 
-    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, pauseMenu;
+    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, assistMenu, pauseMenu;
 
     /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
     private FrameBuffer sceneBuffer;
@@ -146,6 +147,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
         leftHanded = Gdx.app.getPreferences(Settings.PREFS_NAME)
             .getBoolean(Settings.KEY_LEFT_HANDED, Settings.DEFAULT_LEFT_HANDED);
+
+        trapWarnings.load(Gdx.app.getPreferences(Settings.PREFS_NAME));
 
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
@@ -196,8 +199,17 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         optionItems.add(new MenuItem(
             () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
             this::toggleLeftHanded));
+        optionItems.add(new MenuItem(() -> Msg.ASSIST.t(language), () -> uiState = UiState.ASSIST));
         optionItems.add(new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu));
         optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu);
+
+        assistMenu = new Menu(() -> Msg.ASSIST.t(language), null, List.of(
+            new MenuItem(
+                () -> Msg.LONGER_TRAP_WARNINGS.t(language) + ": "
+                    + (trapWarnings.longer() ? Msg.ON : Msg.OFF).t(language),
+                () -> trapWarnings.toggle(Gdx.app.getPreferences(Settings.PREFS_NAME))),
+            new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
+        ), () -> uiState = UiState.OPTIONS, 440f);
 
         pauseMenu = new Menu(() -> Msg.PAUSE_MENU.t(language), null, List.of(
             new MenuItem(() -> Msg.RESUME.t(language), this::resumeGame),
@@ -239,6 +251,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     @Override
     public boolean leftHanded() {
         return leftHanded;
+    }
+
+    @Override
+    public TrapWarnings trapWarnings() {
+        return trapWarnings;
     }
 
     private void resumeGame() {
@@ -586,6 +603,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case MAIN_MENU -> mainMenu;
             case ABOUT -> aboutMenu;
             case OPTIONS -> optionsMenu;
+            case ASSIST -> assistMenu;
             case PAUSED -> pauseMenu;
             case LOADING, PLAYING -> null;
         };

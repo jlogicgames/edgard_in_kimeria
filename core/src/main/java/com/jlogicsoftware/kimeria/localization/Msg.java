@@ -6,7 +6,7 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 public enum Msg {
     TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU,
     PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING,
-    ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ON, OFF;
+    ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ASSIST, LONGER_TRAP_WARNINGS, ON, OFF;
 
     public String t(Language lang) {
         boolean en = lang == ENGLISH;
@@ -32,6 +32,8 @@ public enum Msg {
             case INTERACT -> en ? "Interact" : "Взаємодія";
             case SHOOT -> en ? "Shoot" : "Постріл";
             case LEFT_HANDED_LABEL -> en ? "Left-handed" : "Для шульг";
+            case ASSIST -> en ? "Assist" : "Допомога";
+            case LONGER_TRAP_WARNINGS -> en ? "Longer trap warnings" : "Довші попередження пасток";
             case ON -> en ? "On" : "Увімк.";
             case OFF -> en ? "Off" : "Вимк.";
             case LOADING -> en ? "Loading..." : "Завантаження...";
