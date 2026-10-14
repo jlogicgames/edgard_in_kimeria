@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 public class Bomb extends Entity {
     private static final float STEP_TIME = 0.1f;
     private static final float BLAST_SIZE = 64f;
-    private static final float FLASH_SECONDS = 0.15f;
+    private static final float WARNING_FLASH_INTERVAL_SECONDS = 0.15f;
     private enum State { IDLE, WARNING, EXPLODED }
 
     private final GameContext game;
@@ -48,7 +48,7 @@ public class Bomb extends Entity {
     public void collideWithPlayer() {
         if (state != State.IDLE || isRemoved()) return;
         state = State.WARNING;
-        warningRemaining = game.trapWarnings().duration(TrapWarnings.BOMB_SECONDS);
+        warningRemaining = game.trapWarnings().duration(TrapWarnings.DEFAULT_WARNING_SECONDS);
         warningElapsed = 0f;
     }
 
@@ -78,7 +78,7 @@ public class Bomb extends Entity {
     public void render(Batch batch) {
         if (isRemoved()) return;
         float previousColor = batch.getPackedColor();
-        if (state == State.WARNING && (int) (warningElapsed / FLASH_SECONDS) % 2 == 0) {
+        if (state == State.WARNING && (int) (warningElapsed / WARNING_FLASH_INTERVAL_SECONDS) % 2 == 0) {
             // Alternate warm tint and normal art; never hide the activation footprint.
             var color = batch.getColor();
             batch.setColor(color.r, color.g * 0.35f, color.b * 0.2f, color.a);

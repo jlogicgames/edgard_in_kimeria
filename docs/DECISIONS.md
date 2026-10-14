@@ -114,7 +114,8 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   not restart it. Scale only the warning, never movement or cooldowns. Falling platforms use
   `TrapWarnings.FALLING_PLATFORM_SECONDS` (1 s normally, 1.5 s with assist).
 - **Contact bombs (#71):** The art-sized 10x13 activation hitbox starts a one-shot countdown
-  of `TrapWarnings.BOMB_SECONDS` (0.8 s normally, 1.2 s with assist). The sprite alternates
+  of `TrapWarnings.DEFAULT_WARNING_SECONDS` (0.8 s normally, 1.2 s with assist), a shared
+  default available to future traps. The sprite alternates
   warm tint and normal art every 0.15 s without disappearing. Leaving does not cancel the
   countdown; repeated contact and setting changes do not restart or rescale it. At detonation,
   check the player's current hitbox against a 64x64 square centered on the bomb exactly once,
