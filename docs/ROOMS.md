@@ -1,9 +1,11 @@
 # Rooms in Tiled
 
 A level is one TMX map containing an ordered chain of rooms. `forest` now has two
-rooms: the original course and a second forest course with an ascending optional
-coin route, changed enemy encounters, and a bomb later in the room. `forest-1`
-remains an unmarked, single-room level.
+rooms: the original 1280 px course and a shorter 672 px forest course with an
+ascending optional coin route, a RedMob, and a vertical bat. The second course
+ends at its relocated Checkpoint and no longer includes a bomb or quicksand.
+`forest-1` remains an unmarked, single-room level. Room replay-time targets and
+measured playthrough timings are still pending in #70.
 
 ## Authoring
 
