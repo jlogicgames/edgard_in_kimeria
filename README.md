@@ -128,6 +128,11 @@ Two different causes produce this same crash:
 - [x] Desktop build starts fullscreen; Options has a Display toggle to opt into a windowed
       1280x720 window, remembered across launches (`~/.prefs/edgard-in-kimeria`)
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
+- [x] NES-style story intro on every new game: centered English/Ukrainian scrolling text,
+      black fades and a separate placeholder music loop; any fresh key, gamepad button or
+      click/tap skips with a shared picture/music fade (menu holds do not skip it).
+      `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
+      `Msg.INTRO_STORY` when the final music and story are available.
 - [x] Dev hotkeys (F1–F5, see Controls above)
 - [x] Chromatic-aberration glitch post-process — applied to the frozen world while paused
       (the pause menu and HUD stay crisp); see Deviations below

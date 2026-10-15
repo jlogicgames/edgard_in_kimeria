@@ -30,6 +30,10 @@ public class GamepadInput {
     private boolean confirmEdge, backEdge, pauseEdge, actionEdge, shootEdge;
     private boolean upEdge, downEdge, leftEdge, rightEdge;
 
+    private Controller buttonController;
+    private boolean[] heldButtons = new boolean[0];
+    private boolean anyButtonEdge;
+
     private float horizontal;
     private boolean jumpHeld;
     // A also confirms menu buttons; a press that a menu consumed must not
@@ -54,6 +58,18 @@ public class GamepadInput {
     public void update(boolean leftHanded) {
         Controller c = controller();
         ControllerMapping m = c == null ? null : c.getMapping();
+        anyButtonEdge = false;
+        if (c != buttonController) {
+            buttonController = c;
+            heldButtons = new boolean[c == null ? 0 : c.getMaxButtonIndex() + 1];
+        }
+        if (c != null) {
+            for (int i = c.getMinButtonIndex(); i < heldButtons.length; i++) {
+                boolean down = c.getButton(i);
+                anyButtonEdge |= down && !heldButtons[i];
+                heldButtons[i] = down;
+            }
+        }
 
         boolean confirm = button(c, m, m == null ? -1 : m.buttonA);
         boolean back = button(c, m, m == null ? -1 : m.buttonB);
@@ -140,6 +156,10 @@ public class GamepadInput {
 
     public boolean menuRight() {
         return rightEdge;
+    }
+
+    public boolean anyButtonPressed() {
+        return anyButtonEdge;
     }
 
     public boolean confirm() {

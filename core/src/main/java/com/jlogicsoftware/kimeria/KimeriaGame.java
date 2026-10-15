@@ -26,6 +26,8 @@ import com.jlogicsoftware.kimeria.effects.ShockwaveEffect;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
+import com.jlogicsoftware.kimeria.input.IntroInput;
+import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.Hud;
@@ -52,7 +54,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, INTRO, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -113,6 +115,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private float levelLoadDelay = -1f;
 
+    private IntroScreen intro;
+    private final IntroInput introInput = new IntroInput();
+    private Music introMusic;
+    private boolean introMusicPlaying;
+
     private Music menuMusic;
     private float musicVolume = 0f;
     private float musicVolumeTarget = 0f;
@@ -148,6 +155,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/main_menu.mp3"));
         menuMusic.setLooping(true);
         menuMusic.setVolume(0f);
+        // Preload before New Game so the first intro frame never loads text, fonts or audio.
+        introMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/intro.wav"));
+        introMusic.setLooping(true);
+        introMusic.setVolume(0f);
+        Shaders.whiteQuad();
 
         leftHanded = Gdx.app.getPreferences(Settings.PREFS_NAME)
             .getBoolean(Settings.KEY_LEFT_HANDED, Settings.DEFAULT_LEFT_HANDED);
@@ -175,7 +187,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // (a second Enter confirms) rather than quitting on a stray keypress. A browser tab
         // can't be closed by the page, so the web build has no Exit at all.
         List<MenuItem> mainItems = new ArrayList<>(List.of(
-            new MenuItem(() -> Msg.PLAY.t(language), () -> startGame(StartData.newGame())),
+            new MenuItem(() -> Msg.PLAY.t(language), this::newGame),
             new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
             new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS)
         ));
@@ -301,6 +313,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         uiState = UiState.MAIN_MENU;
     }
 
+    private void newGame() {
+        String text = Msg.INTRO_STORY.t(language);
+        intro = new IntroScreen(text,
+            overlay.bodyHeight(text, LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f), LOGICAL_H);
+        introInput.reset(Gdx.input);
+        uiState = UiState.INTRO;
+    }
+
     /** Builds the player and level from {@code data}, behind the loading screen. */
     private void startGame(StartData data) {
         artifacts.clear();
@@ -386,13 +406,24 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             }
         }
 
+        if (uiState == UiState.INTRO) {
+            if (introInput.skipPressed(Gdx.input) || gamepad.anyButtonPressed()) intro.skip();
+            // Let the menu track fade to silence before starting the intro's envelope.
+            if (musicVolume <= 0f || intro.state() == IntroScreen.State.FADE_OUT) intro.update(dt);
+            updateIntroMusic();
+            if (intro.done()) {
+                intro = null;
+                startGame(StartData.newGame());
+            }
+        }
+
         // The level (with the player, enemies, etc.) only runs/shows while
         // actually playing/paused -- the main menu and its About/
         // Options sub-screens show only the decorative fog+firefly backdrop
         // behind them, matching the Rust version, not a live view of the
         // level loading behind the scenes.
         boolean levelVisible = uiState == UiState.PLAYING || uiState == UiState.PAUSED;
-        boolean menuBackdropActive = !levelVisible;
+        boolean menuBackdropActive = !levelVisible && uiState != UiState.INTRO;
         // Stay silent until the start screen has been dismissed: the click that dismisses it is
         // what lets the browser start the music. Loading is the start of a run, so fade it out.
         boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START && uiState != UiState.LOADING;
@@ -422,7 +453,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         camera.update();
 
         // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
-        if (menuBackdropActive) {
+        if (uiState == UiState.INTRO) {
+            Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+        } else if (menuBackdropActive) {
             Gdx.gl.glClearColor(0.16f, 0.16f, 0.19f, 1f);
         } else {
             Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
@@ -455,8 +488,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
-        if (!roomFade.active()) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
+        if (!roomFade.active() && uiState != UiState.INTRO) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
         overlay.flushText(batch);
+        // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
+        if (uiState == UiState.INTRO) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
         batch.end();
     }
 
@@ -546,6 +581,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
     }
 
+    private void updateIntroMusic() {
+        float volume = playSounds ? soundVolume * intro.volume() : 0f;
+        introMusic.setVolume(volume);
+        if (volume > 0f && !introMusicPlaying) {
+            introMusic.play();
+            introMusicPlaying = true;
+        } else if (volume <= 0f && introMusicPlaying) {
+            introMusic.stop();
+            introMusicPlaying = false;
+        }
+    }
+
     private void updateMenuMusic(float dt, boolean want) {
         musicVolumeTarget = (want && playSounds) ? soundVolume : 0f;
         if (musicVolume < musicVolumeTarget) {
@@ -594,6 +641,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      *                      activate the pause menu's Back/Resume
      */
     private void renderOverlay(boolean acceptActions) {
+        if (uiState == UiState.INTRO) {
+            overlay.body(batch, intro.text(), LOGICAL_W / 2f, intro.textTop(),
+                LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f);
+            return;
+        }
         Vector2 mouse = mouseLogical();
         boolean clicked = Gdx.input.justTouched();
         // Only up/down (and Tab/Shift+Tab) move through these vertical button
@@ -631,7 +683,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case OPTIONS -> optionsMenu;
             case ASSIST -> assistMenu;
             case PAUSED -> pauseMenu;
-            case LOADING, PLAYING -> null;
+            case INTRO, LOADING, PLAYING -> null;
         };
         if (uiState == UiState.LOADING) {
             overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
@@ -700,6 +752,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         batch.dispose();
         shapeRenderer.dispose();
         menuMusic.dispose();
+        introMusic.dispose();
         if (sceneBuffer != null) sceneBuffer.dispose();
         Shaders.dispose();
         SoftDot.dispose();

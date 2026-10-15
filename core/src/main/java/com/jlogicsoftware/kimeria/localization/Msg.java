@@ -5,7 +5,7 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 /** Port of Rust's {@code localization::Msg} UI message catalog. */
 public enum Msg {
     TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU,
-    PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING,
+    PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING, INTRO_STORY,
     ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ASSIST, LONGER_TRAP_WARNINGS, ON, OFF;
 
     public String t(Language lang) {
@@ -36,6 +36,9 @@ public enum Msg {
             case LONGER_TRAP_WARNINGS -> en ? "Longer trap warnings" : "Довші попередження пасток";
             case ON -> en ? "On" : "Увімк.";
             case OFF -> en ? "Off" : "Вимк.";
+            case INTRO_STORY -> en
+                ? "Beyond the sleeping forest lies Kimeria.\n\nOnce, its paths led travelers home. Now a shadow has fallen over the land, and no one returns from the trees.\n\nAt the edge of the forest, Edgard hears a distant call. Somewhere in the darkness, a light still waits.\n\nWith courage as his guide, he takes the first step."
+                : "За сонним лісом лежить Кімерія.\n\nКолись її стежки вели мандрівників додому. Тепер тінь укрила цей край, і ніхто не повертається з лісу.\n\nНа узліссі Едгард чує далекий поклик. Десь у темряві ще чекає світло.\n\nСповнений відваги, він робить перший крок.";
             case LOADING -> en ? "Loading..." : "Завантаження...";
             case ABOUT_BODY -> en
                 ? "Edgard in Kimeria\n\nUse A/D for movement.\nJ to jump. L to shoot.\nK to attack, or to interact inside a trigger zone.\nEscape to pause.\nCollect as many coins as you can and avoid enemies!\nJump on an enemy from above to stomp it. Touching it from the side or below is deadly."
