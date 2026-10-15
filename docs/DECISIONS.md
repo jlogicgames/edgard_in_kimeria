@@ -155,10 +155,12 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - **Continue** is hidden (not just disabled) until a save exists, because it is impossible
     to continue without having started.
   - **New Game** is always shown. If a save exists, it asks for confirmation before replacing
-    it.
+    it. Confirmation clears the old save; the new run creates a save only on its first
+    level completion. Cancelling preserves the old save.
   - Progress is saved when a level is completed (reaching the `Checkpoint` exit) and holds the
     next level to play, and nothing else. It is not saved mid-level or per room.
-    Continue starts that level from its beginning.
+    Continue starts that level from its beginning. Missing, malformed or out-of-range indices
+    hide Continue (for example, after removing levels).
   - Saving is **automatic**. The game writes the save the moment a level is completed, with no
     save button, no prompt and no manual save slots. The player never has to save.
   - The save holds **only the level**. Coins are a temporary mechanic (D6) that will be

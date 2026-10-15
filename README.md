@@ -121,6 +121,8 @@ Two different causes produce this same crash:
 - [x] Torch, firefly, rain ambience; fog effect
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
 - [x] HUD, main menu, About, Options, pause menu
+- [x] Continue / New Game with overwrite confirmation and automatic level-only saves
+      on desktop and web; finishing the last level saves the first level (#48)
 - [x] Options → Assist → Longer trap warnings: an independent, persisted toggle (off by default)
       giving falling platforms a 1.5 s warning instead of 1 s, with no penalties
 - [x] Keyboard, mouse and gamepad menu navigation
@@ -213,17 +215,20 @@ parts that shape the code:
   builds a player and a level from it, and `Continue` and `New Game` are just two ways of
   producing a `StartData`: `New Game` uses `StartData.newGame()`, `Continue` uses the saved one.
 - **Saved progress** lives in the same libGDX `Preferences` file as settings
-  (`Settings.PREFS_NAME`), under its own key in `Settings`: the next level index and nothing else
+  (`Settings.PREFS_NAME`), under `Settings.KEY_NEXT_LEVEL`, managed by `SavedProgress`: the next level index and nothing else
   (coins are temporary, see D8). The save is written automatically when a level is completed (no manual save), never mid-level
   (completing the last level writes level 1), and read once when the main menu is built or shown. "A save exists" is a single predicate that the main
   menu uses to decide whether to show `Continue`.
-- **The main menu hides `Continue` until a save exists.** `Menu` takes a fixed list of
-  `MenuItem`s today, so `MenuItem` needs an optional visibility predicate (default: always
-  visible) that `Menu` honours when drawing and navigating (skipping hidden items, keeping
-  the selection on a visible one). Rebuilding the list on every state change would also work but
-  loses the selection, so the predicate is the intended approach.
+- **The main menu hides `Continue` until a save exists.** `MenuItem` has an optional visibility predicate
+  (default: always visible), honoured by layout, drawing, mouse and keyboard/gamepad navigation.
+  Continue is preselected whenever the main menu opens with a valid save.
+  Missing, malformed or out-of-range saved indices hide Continue; no index is clamped.
 - **`New Game` over an existing save asks for confirmation** before overwriting it, using the
-  same `Menu` mechanism as the other screens (a small confirm menu state).
+  same `Menu` mechanism as the other screens (a small confirm menu state, Cancel selected
+  by default). Confirming clears the old save before the story intro; no new save exists
+  until the first level is completed. Cancelling leaves progress untouched.
+- **Persistence uses each platform’s libGDX `Preferences` backend** and flushes every write:
+  desktop preferences are stored on disk, web preferences in browser local storage.
 - **Death does not touch the save.** It resets the current room in memory (see D3), with a fast path
   that bypasses the loading screen, and the save only changes on level completion.
 - **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;

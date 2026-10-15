@@ -131,8 +131,8 @@ public class Overlay {
 
     /** Height a button list for {@code menu} will occupy, for callers laying out a screen around it. */
     public static float buttonsHeight(Menu menu) {
-        int n = menu.items.size();
-        return n * BUTTON_H + (n - 1) * BUTTON_GAP;
+        int n = menu.visibleCount();
+        return n * BUTTON_H + Math.max(0, n - 1) * BUTTON_GAP;
     }
 
     /**
@@ -156,6 +156,7 @@ public class Overlay {
                          Vector2 mouseLogical, boolean mouseClicked, boolean confirmPressed, boolean backPressed,
                          Runnable onHover, Runnable onActivate) {
         int n = menu.items.size();
+        menu.ensureVisibleSelection();
         float buttonW = menu.buttonWidth;
         float bx = centerX - buttonW / 2f;
 
@@ -165,8 +166,10 @@ public class Overlay {
             && (lastMouse == null || lastMouse.x != mouseLogical.x || lastMouse.y != mouseLogical.y);
         lastMouse = mouseLogical == null ? null : new Vector2(mouseLogical);
 
+        int row = 0;
         for (int i = 0; i < n; i++) {
-            float by = startY + i * (BUTTON_H + BUTTON_GAP);
+            if (!menu.items.get(i).visible.getAsBoolean()) continue;
+            float by = startY + row++ * (BUTTON_H + BUTTON_GAP);
             boolean hovered = mouseLogical != null
                 && mouseLogical.x >= bx && mouseLogical.x <= bx + buttonW
                 && mouseLogical.y >= by && mouseLogical.y <= by + BUTTON_H;
@@ -208,6 +211,7 @@ public class Overlay {
             if (hovered && mouseClicked) {
                 onActivate.run();
                 menu.confirmSelected();
+                return; // An action may change the menu or its visibility; never activate twice.
             }
         }
 

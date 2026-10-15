@@ -4,7 +4,7 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 
 /** Port of Rust's {@code localization::Msg} UI message catalog. */
 public enum Msg {
-    TITLE, PLAY, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU,
+    TITLE, PLAY, CONTINUE, NEW_GAME, NEW_GAME_CONFIRMATION, CONFIRM, CANCEL, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU,
     PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING, INTRO_STORY,
     ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ASSIST, LONGER_TRAP_WARNINGS, ON, OFF;
 
@@ -13,6 +13,13 @@ public enum Msg {
         return switch (this) {
             case TITLE -> en ? "Edgard in Kimeria" : "Едгард у Кімерії";
             case PLAY -> en ? "Play" : "Грати";
+            case CONTINUE -> en ? "Continue" : "Продовжити гру";
+            case NEW_GAME -> en ? "New Game" : "Нова гра";
+            case NEW_GAME_CONFIRMATION -> en
+                ? "Start a new game? Your saved progress will be replaced."
+                : "Почати нову гру? Збережений прогрес буде замінено.";
+            case CONFIRM -> en ? "Confirm" : "Підтвердити";
+            case CANCEL -> en ? "Cancel" : "Скасувати";
             case ABOUT -> en ? "About" : "Про гру";
             case OPTIONS -> en ? "Options" : "Налаштування";
             case EXIT -> en ? "Exit" : "Вихід";

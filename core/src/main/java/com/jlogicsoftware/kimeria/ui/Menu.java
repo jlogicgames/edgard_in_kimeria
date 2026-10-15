@@ -32,6 +32,7 @@ public class Menu {
         this.body = body;
         this.items = items;
         this.onBack = onBack;
+        ensureVisibleSelection();
     }
 
     public String titleText() {
@@ -43,12 +44,39 @@ public class Menu {
     }
 
     public void moveSelection(int delta) {
-        int n = items.size();
-        selected = ((selected + delta) % n + n) % n;
+        ensureVisibleSelection();
+        int count = visibleCount();
+        if (count == 0) return;
+        int direction = delta < 0 ? -1 : 1;
+        int steps = (int) (Math.abs((long) delta) % count);
+        for (int step = 0; step < steps; step++) {
+            do {
+                selected = Math.floorMod(selected + direction, items.size());
+            } while (!items.get(selected).visible.getAsBoolean());
+        }
+    }
+
+    public int visibleCount() {
+        int count = 0;
+        for (MenuItem item : items) if (item.visible.getAsBoolean()) count++;
+        return count;
+    }
+
+    /** Preserves a visible selection, or selects the first visible item; -1 if none exist. */
+    public void ensureVisibleSelection() {
+        if (selected >= 0 && selected < items.size() && items.get(selected).visible.getAsBoolean()) return;
+        selected = -1;
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).visible.getAsBoolean()) {
+                selected = i;
+                return;
+            }
+        }
     }
 
     public void confirmSelected() {
-        items.get(selected).action.run();
+        ensureVisibleSelection();
+        if (selected >= 0) items.get(selected).action.run();
     }
 
     public void back() {

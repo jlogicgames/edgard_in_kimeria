@@ -54,7 +54,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, INTRO, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -81,13 +81,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private MenuBackdrop menuBackdrop;
     private final GamepadInput gamepad = new GamepadInput();
 
-    /** Everything needed to begin a run; a save/load system would fill this from the chosen save. */
+    /** Everything needed to begin a run; Continue fills this from saved progress. */
     private record StartData(int levelIndex, int coins) {
         static StartData newGame() {
             return new StartData(0, 0);
         }
     }
 
+    private SavedProgress savedProgress;
     private UiState uiState;
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
@@ -127,7 +128,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     // backend until the AudioContext is unlocked, so polling it would queue a new copy every frame.
     private boolean menuMusicPlaying = false;
 
-    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, assistMenu, pauseMenu;
+    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, assistMenu, pauseMenu, confirmNewGameMenu;
 
     /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
     private FrameBuffer sceneBuffer;
@@ -166,6 +167,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
         trapWarnings.load(Gdx.app.getPreferences(Settings.PREFS_NAME));
 
+        savedProgress = new SavedProgress(Gdx.app.getPreferences(Settings.PREFS_NAME), LEVEL_NAMES.size());
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
         // one-button screen whose click/keypress unlocks it; other platforms go straight to the menu.
@@ -187,7 +189,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // (a second Enter confirms) rather than quitting on a stray keypress. A browser tab
         // can't be closed by the page, so the web build has no Exit at all.
         List<MenuItem> mainItems = new ArrayList<>(List.of(
-            new MenuItem(() -> Msg.PLAY.t(language), this::newGame),
+            new MenuItem(() -> Msg.CONTINUE.t(language), this::continueGame, savedProgress::exists),
+            new MenuItem(() -> Msg.NEW_GAME.t(language), this::requestNewGame),
             new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
             new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS)
         ));
@@ -197,6 +200,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         mainMenu = new Menu(null, null, mainItems, () -> {
             if (!isWeb()) mainMenu.selected = mainMenu.items.size() - 1;
         });
+
+        confirmNewGameMenu = new Menu(() -> Msg.NEW_GAME.t(language),
+            () -> Msg.NEW_GAME_CONFIRMATION.t(language), List.of(
+                new MenuItem(() -> Msg.CONFIRM.t(language), this::newGame),
+                new MenuItem(() -> Msg.CANCEL.t(language), this::backToMainMenu)
+            ), this::backToMainMenu);
 
         aboutMenu = new Menu(() -> Msg.ABOUT.t(language), null, List.of(
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
@@ -294,7 +303,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void exitToMainMenu() {
         releaseGame();
-        uiState = UiState.MAIN_MENU;
+        backToMainMenu();
     }
 
     /** Drops the level and player so nothing stays alive behind the menus. */
@@ -310,10 +319,27 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void backToMainMenu() {
+        savedProgress.reload();
+        mainMenu.selected = 0;
+        mainMenu.ensureVisibleSelection();
         uiState = UiState.MAIN_MENU;
     }
 
+    private void continueGame() {
+        if (savedProgress.exists()) startGame(new StartData(savedProgress.nextLevelIndex(), 0));
+    }
+
+    private void requestNewGame() {
+        if (savedProgress.exists()) {
+            confirmNewGameMenu.selected = 1; // Cancel is the safe default.
+            uiState = UiState.CONFIRM_NEW_GAME;
+        } else {
+            newGame();
+        }
+    }
+
     private void newGame() {
+        savedProgress.clear();
         String text = Msg.INTRO_STORY.t(language);
         intro = new IntroScreen(text,
             overlay.bodyHeight(text, LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f), LOGICAL_H);
@@ -679,6 +705,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Menu menu = switch (uiState) {
             case WEB_START -> webStartMenu;
             case MAIN_MENU -> mainMenu;
+            case CONFIRM_NEW_GAME -> confirmNewGameMenu;
             case ABOUT -> aboutMenu;
             case OPTIONS -> optionsMenu;
             case ASSIST -> assistMenu;
@@ -717,7 +744,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
             float panelW = 320f;
-            String aboutBody = uiState == UiState.ABOUT ? aboutText() : null;
+            String aboutBody = uiState == UiState.ABOUT ? aboutText() : menu.bodyText();
             float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
@@ -859,6 +886,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         } else {
             currentLevelIndex = 0;
         }
+        savedProgress.save(currentLevelIndex);
         startLoadingLevel();
     }
 

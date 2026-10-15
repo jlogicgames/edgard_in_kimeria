@@ -7,6 +7,8 @@ package com.jlogicsoftware.kimeria;
  */
 public final class Settings {
     public static final String PREFS_NAME = "edgard-in-kimeria";
+    /** Zero-based next level; absence means no saved run. */
+    public static final String KEY_NEXT_LEVEL = "next-level";
     public static final String KEY_FULLSCREEN = "fullscreen";
     public static final boolean DEFAULT_FULLSCREEN = true;
 
