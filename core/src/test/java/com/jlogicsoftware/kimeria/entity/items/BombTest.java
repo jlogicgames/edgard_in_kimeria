@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.Settings;
 import com.jlogicsoftware.kimeria.effects.BombExplosionEffect;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class BombTest {
         return new Bomb(assets, game, effects::add, blasts::add, 100, 100, 16, 16);
     }
     private void toggleAssist() {
-        warnings.toggle(new HeadlessPreferences(new FileHandle(directory.resolve("prefs.xml").toFile())));
+        warnings.toggle(new Settings(new HeadlessPreferences(new FileHandle(directory.resolve("prefs.xml").toFile()))));
     }
 
     @Test void contactWarnsWithoutDamageAndRepeatedContactCannotPostponeTheBlast() {

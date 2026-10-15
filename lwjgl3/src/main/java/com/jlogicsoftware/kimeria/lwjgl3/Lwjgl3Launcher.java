@@ -14,8 +14,8 @@ public class Lwjgl3Launcher {
         config.setForegroundFPS(60);
         // Fullscreen unless the player opted out in Options. The choice is read straight
         // from the preferences file the game writes, since Gdx.app doesn't exist yet.
-        boolean fullscreen = new Lwjgl3Preferences(Settings.PREFS_NAME, ".prefs/")
-            .getBoolean(Settings.KEY_FULLSCREEN, Settings.DEFAULT_FULLSCREEN);
+        boolean fullscreen = Settings.load(() -> new Lwjgl3Preferences(Settings.PREFS_NAME, ".prefs/"))
+            .get(Settings.FULLSCREEN);
         if (fullscreen) {
             config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
         } else {

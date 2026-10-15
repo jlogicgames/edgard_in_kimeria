@@ -126,9 +126,14 @@ Two different causes produce this same crash:
 - [x] Options → Assist → Longer trap warnings: an independent, persisted toggle (off by default)
       giving falling platforms a 1.5 s warning instead of 1 s, with no penalties
 - [x] Keyboard, mouse and gamepad menu navigation
-- [x] English/Ukrainian localization, switchable from Options
+- [x] English/Ukrainian localization, switchable from Options and remembered across launches
+- [x] Shared local settings for language, display mode, left-handed controls and trap-warning
+      assist; missing or invalid values use defaults (English on first launch, regardless of
+      system locale). Settings use desktop preferences / browser local storage and keep
+      level-only saves in the same file without overwriting them.
 - [x] Desktop build starts fullscreen; Options has a Display toggle to opt into a windowed
-      1280x720 window, remembered across launches (`~/.prefs/edgard-in-kimeria`)
+      1280x720 window; the mode is remembered across launches (`~/.prefs/edgard-in-kimeria`).
+      Window size and position are not persisted.
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
 - [x] NES-style story intro on every new game: centered English/Ukrainian scrolling text,
       black fades and a separate placeholder music loop; any fresh key, gamepad button or
@@ -229,6 +234,11 @@ parts that shape the code:
   until the first level is completed. Cancelling leaves progress untouched.
 - **Persistence uses each platform’s libGDX `Preferences` backend** and flushes every write:
   desktop preferences are stored on disk, web preferences in browser local storage.
+  `Settings` loads one snapshot, exposes typed option keys and flushes each changed setting
+  through one write path. A failed settings read uses defaults; failed settings writes keep
+  the choice for the current session and report the storage error. The desktop launcher uses
+  the same helper with `Lwjgl3Preferences` before libGDX starts. Mobile will use its platform
+  backend through `Gdx.app.getPreferences`; there is no mobile module to run or verify yet.
 - **Death does not touch the save.** It resets the current room in memory (see D3), with a fast path
   that bypasses the loading screen, and the save only changes on level completion.
 - **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;

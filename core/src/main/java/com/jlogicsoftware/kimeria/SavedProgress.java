@@ -18,7 +18,7 @@ public final class SavedProgress {
     /** Invalid or removed levels hide Continue, without modifying other preferences. */
     public void reload() {
         nextLevel = -1;
-        if (!preferences.contains(Settings.KEY_NEXT_LEVEL)) return;
+        if (preferences == null || !preferences.contains(Settings.KEY_NEXT_LEVEL)) return;
         try {
             int saved = preferences.getInteger(Settings.KEY_NEXT_LEVEL);
             if (saved >= 0 && saved < levelCount) nextLevel = saved;
@@ -40,15 +40,19 @@ public final class SavedProgress {
         if (nextLevelIndex < 0 || nextLevelIndex >= levelCount) {
             throw new IllegalArgumentException("Invalid next level");
         }
-        preferences.putInteger(Settings.KEY_NEXT_LEVEL, nextLevelIndex);
-        preferences.flush();
+        if (preferences != null) {
+            preferences.putInteger(Settings.KEY_NEXT_LEVEL, nextLevelIndex);
+            preferences.flush();
+        }
         nextLevel = nextLevelIndex;
     }
 
     /** New Game removes the old run; no new save exists until a level is completed. */
     public void clear() {
-        preferences.remove(Settings.KEY_NEXT_LEVEL);
-        preferences.flush();
+        if (preferences != null) {
+            preferences.remove(Settings.KEY_NEXT_LEVEL);
+            preferences.flush();
+        }
         nextLevel = -1;
     }
 }

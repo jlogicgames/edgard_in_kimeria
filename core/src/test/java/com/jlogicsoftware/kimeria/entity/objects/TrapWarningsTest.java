@@ -25,7 +25,7 @@ class TrapWarningsTest {
     @Test
     void absentSettingKeepsTheStandardWarning() {
         TrapWarnings warnings = new TrapWarnings();
-        warnings.load(preferences());
+        warnings.load(new Settings(preferences()));
         assertFalse(warnings.longer());
         assertEquals(1f, warnings.duration(TrapWarnings.FALLING_PLATFORM_SECONDS));
     }
@@ -35,18 +35,18 @@ class TrapWarningsTest {
         Preferences prefs = preferences();
         prefs.putBoolean(Settings.KEY_LEFT_HANDED, true);
         TrapWarnings warnings = new TrapWarnings();
-        warnings.load(prefs);
-        warnings.toggle(prefs);
+        warnings.load(new Settings(prefs));
+        warnings.toggle(new Settings(prefs));
 
         TrapWarnings relaunched = new TrapWarnings();
-        relaunched.load(preferences());
+        relaunched.load(new Settings(preferences()));
         assertTrue(relaunched.longer());
         assertEquals(1.5f, relaunched.duration(1f));
         assertEquals(3f, relaunched.duration(2f));
-        relaunched.toggle(preferences());
+        relaunched.toggle(new Settings(preferences()));
 
         TrapWarnings afterDisable = new TrapWarnings();
-        afterDisable.load(preferences());
+        afterDisable.load(new Settings(preferences()));
         assertFalse(afterDisable.longer());
         assertEquals(2f, afterDisable.duration(2f));
         assertTrue(preferences().getBoolean(Settings.KEY_LEFT_HANDED));
@@ -56,7 +56,7 @@ class TrapWarningsTest {
     void platformsUseTheSharedWarningAndRepeatedContactDoesNotRestartIt() {
         TrapWarnings warnings = new TrapWarnings();
         FallingPlatform normal = platform(warnings);
-        warnings.toggle(preferences());
+        warnings.toggle(new Settings(preferences()));
         FallingPlatform assisted = platform(warnings);
         assisted.collideWithActor();
         normal.update(1f);

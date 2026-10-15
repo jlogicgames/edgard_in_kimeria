@@ -163,6 +163,8 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     hide Continue (for example, after removing levels).
   - Saving is **automatic**. The game writes the save the moment a level is completed, with no
     save button, no prompt and no manual save slots. The player never has to save.
+  - Settings and progress share `Settings.PREFS_NAME`, with separate keys. Settings writes
+    update only the changed setting; clearing a run removes only `KEY_NEXT_LEVEL`.
   - The save holds **only the level**. Coins are a temporary mechanic (D6) that will be
     removed, so they are not saved and a continued run starts with 0 coins. Do not add coins
     to the save format.

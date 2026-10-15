@@ -4,7 +4,6 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -110,7 +109,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private float soundVolume = 1f;
     private boolean debugDraw = false;
     private boolean invulnerable = false;
-    private Language language = Language.ENGLISH;
+    private Settings settings;
+    private Language language = Settings.DEFAULT_LANGUAGE;
     private final TrapWarnings trapWarnings = new TrapWarnings();
     private boolean leftHanded = Settings.DEFAULT_LEFT_HANDED;
 
@@ -162,12 +162,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         introMusic.setVolume(0f);
         Shaders.whiteQuad();
 
-        leftHanded = Gdx.app.getPreferences(Settings.PREFS_NAME)
-            .getBoolean(Settings.KEY_LEFT_HANDED, Settings.DEFAULT_LEFT_HANDED);
-
-        trapWarnings.load(Gdx.app.getPreferences(Settings.PREFS_NAME));
-
-        savedProgress = new SavedProgress(Gdx.app.getPreferences(Settings.PREFS_NAME), LEVEL_NAMES.size());
+        settings = Settings.load(() -> Gdx.app.getPreferences(Settings.PREFS_NAME));
+        language = settings.get(Settings.LANGUAGE);
+        leftHanded = settings.get(Settings.LEFT_HANDED);
+        trapWarnings.load(settings);
+        savedProgress = new SavedProgress(settings.preferences(), LEVEL_NAMES.size());
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
         // one-button screen whose click/keypress unlocks it; other platforms go straight to the menu.
@@ -214,7 +213,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Only the desktop window can be switched; the web canvas and mobile screens
         // don't offer a windowed mode to opt into.
         List<MenuItem> optionItems = new ArrayList<>();
-        optionItems.add(new MenuItem(() -> Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), () -> language = language.next()));
+        optionItems.add(new MenuItem(() -> Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), this::toggleLanguage));
         if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
             optionItems.add(new MenuItem(
                 () -> Msg.DISPLAY_LABEL.t(language) + ": "
@@ -232,7 +231,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             new MenuItem(
                 () -> Msg.LONGER_TRAP_WARNINGS.t(language) + ": "
                     + (trapWarnings.longer() ? Msg.ON : Msg.OFF).t(language),
-                () -> trapWarnings.toggle(Gdx.app.getPreferences(Settings.PREFS_NAME))),
+                () -> trapWarnings.toggle(settings)),
             new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
         ), () -> uiState = UiState.OPTIONS, 440f);
 
@@ -260,17 +259,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         } else {
             Gdx.graphics.setWindowedMode(Settings.WINDOWED_WIDTH, Settings.WINDOWED_HEIGHT);
         }
-        Preferences prefs = Gdx.app.getPreferences(Settings.PREFS_NAME);
-        prefs.putBoolean(Settings.KEY_FULLSCREEN, fullscreen);
-        prefs.flush();
+        settings.set(Settings.FULLSCREEN, Gdx.graphics.isFullscreen());
+    }
+
+    private void toggleLanguage() {
+        language = language.next();
+        settings.set(Settings.LANGUAGE, language);
     }
 
     /** Flips left-handed mode and remembers the choice; touch layout and key bindings read it live. */
     private void toggleLeftHanded() {
         leftHanded = !leftHanded;
-        Preferences prefs = Gdx.app.getPreferences(Settings.PREFS_NAME);
-        prefs.putBoolean(Settings.KEY_LEFT_HANDED, leftHanded);
-        prefs.flush();
+        settings.set(Settings.LEFT_HANDED, leftHanded);
     }
 
     @Override
