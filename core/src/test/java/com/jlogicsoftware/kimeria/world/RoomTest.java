@@ -6,10 +6,12 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.effects.BombExplosionEffect;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
@@ -27,11 +29,13 @@ class RoomTest {
         }
     };
     private final AtomicInteger coins = new AtomicInteger();
+    private final ArtifactInventory artifacts = new ArtifactInventory();
     private final GameContext game = (GameContext) Proxy.newProxyInstance(GameContext.class.getClassLoader(),
         new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
             case "logicalResolution" -> new Vector2(640, 360);
             case "trapWarnings" -> new TrapWarnings();
             case "coinsCollected" -> coins.get();
+            case "artifacts" -> artifacts;
             case "addCoin" -> { coins.incrementAndGet(); yield null; }
             default -> method.getReturnType() == boolean.class ? false : null;
         });
@@ -150,6 +154,53 @@ class RoomTest {
         assertEquals(new Vector2(1344, 272), level.player.position);
         assertEquals(Player.State.IDLE, level.player.getState());
         assertEquals(1280, level.player.roomCameraTarget().x);
+    }
+
+    private Collectable artifact(Level level, ItemType type) {
+        return level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
+            .filter(item -> item.type() == type).findFirst().orElseThrow();
+    }
+
+    @Test void artifactPickupIsProvisionalAndDeathRestoresItWithoutChangingCoins() {
+        Level level = forest();
+        Collectable chicken = artifact(level, ItemType.CHICKEN);
+        chicken.collideWithPlayer();
+        chicken.collideWithPlayer();
+        assertEquals(1, artifacts.items().size());
+        assertEquals(ItemType.CHICKEN, artifacts.items().get(0).type());
+        assertEquals(0, coins.get());
+        assertTrue(chicken.isRemoved());
+        assertEquals(1f, artifacts.bossEnergyMultiplier("forest"));
+        level.resetCurrentRoom(player());
+        assertTrue(artifacts.items().isEmpty());
+        assertFalse(artifact(level, ItemType.CHICKEN).isCollected());
+    }
+
+    @Test void roomExitKeepsChickenAndLevelExitKeepsKeyAndUnlocksFullOutcome() {
+        Level level = forest();
+        artifact(level, ItemType.CHICKEN).collideWithPlayer();
+        level.enterNextRoom(player());
+        artifact(level, ItemType.KEY).collideWithPlayer();
+        assertEquals(2, artifacts.items().size());
+        assertEquals(1f, artifacts.bossEnergyMultiplier("forest"), "Key is still provisional");
+        level.resetCurrentRoom(player());
+        assertEquals(1, artifacts.items().size());
+        assertEquals(ItemType.CHICKEN, artifacts.items().get(0).type());
+        artifact(level, ItemType.KEY).collideWithPlayer();
+        level.player.debugTriggerCheckpoint();
+        assertEquals(0.1f, artifacts.bossEnergyMultiplier("forest"));
+        level.resetCurrentRoom(player());
+        assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.KEY));
+        assertEquals(2, artifacts.items().size());
+    }
+
+    @Test void levelCanBeCompletedWithoutAnyArtifacts() {
+        Level level = forest();
+        level.enterNextRoom(player());
+        level.player.debugTriggerCheckpoint();
+        assertEquals(Player.State.DISAPPEARING, level.player.getState());
+        assertTrue(artifacts.items().isEmpty());
+        assertEquals(1f, artifacts.bossEnergyMultiplier("forest"));
     }
 
     @Test void retryRebuildsDestroyedWallsAndMovingTrapsWithoutStaleCollisionReferences() {

@@ -9,6 +9,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Matrix4;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Port of Dart's {@code Hud}: coin icon + count, drawn in fixed logical
@@ -21,6 +25,7 @@ public class Hud {
 
     private final GameContext game;
     private final TextureRegion coinIcon;
+    private final Map<ItemType, TextureRegion> artifactIcons = new EnumMap<>(ItemType.class);
     private final BitmapFont font;
     private final Matrix4 textProjection;
     private final float logicalHeight;
@@ -29,6 +34,9 @@ public class Hud {
         this.game = game;
         this.logicalHeight = logicalHeight;
         this.coinIcon = assets.region("images/Items.png", 0, 0, 16, 16);
+        for (ItemType type : new ItemType[]{ItemType.CHICKEN, ItemType.KEY}) {
+            artifactIcons.put(type, assets.region("images/Items.png", type.spriteX, type.spriteY, 16, 16));
+        }
         this.font = assets.font(20);
 
         OrthographicCamera textCamera = new OrthographicCamera();
@@ -43,6 +51,11 @@ public class Hud {
         String text = String.valueOf(game.coinsCollected());
         GlyphLayout layout = new GlyphLayout(font, text);
         float x = ICON_X + ICON_SIZE + 8f;
+        float artifactX = x + layout.width + 16f;
+        for (var pickup : game.artifacts().items()) {
+            batch.draw(artifactIcons.get(pickup.type()), artifactX, ICON_Y, ICON_SIZE, ICON_SIZE);
+            artifactX += ICON_SIZE + 8f;
+        }
         // Vertically center the label on the icon's own center, both
         // measured "distance from top" before converting to the Y-up
         // text projection's bottom-left-origin y.

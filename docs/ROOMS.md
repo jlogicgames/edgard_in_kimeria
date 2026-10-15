@@ -141,6 +141,23 @@ Measured map SHA-256 values:
 
 ## Manual checks
 
+### Artifact checks (#72)
+
+In `forest`, collect Chicken in room one: it disappears and its icon appears after the
+coin count without increasing that count. Die before leaving: the icon disappears and
+Chicken returns. Collect it again and leave the room: a later death must keep Chicken.
+Repeat for Key in room two, then reach the level Checkpoint to secure both. Restart Level
+must restore the inventory from level entry, and exiting to the main menu must clear it.
+Finishing without either artifact must remain possible.
+
+Verification on 2026-10-15: automated tests cover gameplay contact, duplicate pickup,
+two-frame animation cadence, no/partial/full collection, room rollback, securing items
+at both room and level exits, cross-level identity/retention, and level restart. The full
+secured forest set yields a boss starting-energy multiplier of 0.1; all other sets yield
+1. A hidden desktop GL render check confirmed upright sprites, both animation frames,
+and the single HUD row after a six-digit coin count. This is an isolated rendering check;
+full traversal/readability and actual boss combat remain unverified (there is no boss yet).
+
 ### Bomb warning checks (#71)
 
 With Assist off, touch a bomb in `forest`: contact must be safe, the sprite must

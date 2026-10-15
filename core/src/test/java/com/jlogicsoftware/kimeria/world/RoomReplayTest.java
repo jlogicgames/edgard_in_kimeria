@@ -12,10 +12,13 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
+import com.jlogicsoftware.kimeria.entity.items.Collectable;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
@@ -38,6 +41,7 @@ class RoomReplayTest {
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private float timeScale = 1f;
     private int coins;
+    private final ArtifactInventory artifacts = new ArtifactInventory();
     private TouchControls touch;
     private final GamepadInput pad = new GamepadInput();
     private final TrapWarnings warnings = new TrapWarnings(); // assist stays off
@@ -60,6 +64,7 @@ class RoomReplayTest {
             case "setTimeScale" -> { timeScale = (float) args[0]; yield null; }
             case "addCoin" -> { coins++; yield null; }
             case "coinsCollected" -> coins;
+            case "artifacts" -> artifacts;
             // Invulnerability and sound are off; camera callbacks do not affect physics.
             default -> method.getReturnType() == boolean.class ? false : null;
         });
@@ -115,6 +120,22 @@ class RoomReplayTest {
     }
 
     private Player player() { return new Player(assets, game, 0, 0); }
+
+    @Test void gameplayContactCollectsTheChickenAndRoomRetryRestoresIt() {
+        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Collectable chicken = level.objects.stream().filter(Collectable.class::isInstance)
+            .map(Collectable.class::cast).filter(item -> item.type() == ItemType.CHICKEN).findFirst().orElseThrow();
+        Rectangle hitbox = level.player.hitboxBounds();
+        level.player.position.add(chicken.centerX() - hitbox.x, chicken.centerY() - hitbox.y);
+        level.player.update(0f);
+        assertTrue(chicken.isCollected());
+        assertEquals(1, artifacts.items().size());
+        assertEquals(0, coins);
+        level.resetCurrentRoom(player());
+        assertTrue(artifacts.items().isEmpty());
+        assertTrue(level.objects.stream().anyMatch(o -> o instanceof Collectable c
+            && c.type() == ItemType.CHICKEN && !c.isCollected()));
+    }
 
     @Test void touchingABombThroughGameplayStartsAWarningInsteadOfImmediateDeath() {
         Level level = new Level(assets, game, player(), "forest", Rectangle::new);

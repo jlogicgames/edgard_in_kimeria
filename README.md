@@ -111,7 +111,8 @@ Two different causes produce this same crash:
 - [x] Tilemap rendering from the unmodified `.tmx`/`.tsx`, with viewport culling
 - [x] Bat, Yellow mob, Red mob — patrol/chase/attack, bullet time near a Bat
 - [x] Sword attack killing enemies
-- [x] Collectables (coin + ripple), Bomb (explosion, kills player)
+- [x] Collectables (coin, chicken, key + pickup ripple), artifact HUD and room rollback;
+      Bomb (explosion, kills player)
 - [x] Falling platform — warning torch, delay, drop; carries the player down without
       losing contact
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
@@ -232,6 +233,25 @@ The hero and camera relocate under full black, without a hero transition animati
 Death resets only the active room; previous rooms' collections remain kept.
 `forest-1` has no markers and continues to behave as one room. See
 [Rooms in Tiled](docs/ROOMS.md) for authoring, retry rules, and manual checks.
+
+## Optional artifacts
+
+`forest` has two test artifacts: Chicken and Key, using the existing `Items.png` frames.
+Tiled accepts object types `Chicken` and `Key` (also `chiken`), or `Collectable` with the
+item name. No map edits are needed for the current placements. World items animate like
+coins; collected icons appear in one row beside the coin counter, without adding coins.
+
+Items are provisional until the room/level exit. Death restores the current room's items;
+secured artifacts survive later deaths and level transitions. Restart Level restores its
+entry inventory. A new/continued run or exit to the main menu clears it.
+No artifact data is written to preferences or saves.
+
+The full `forest` set gives `game.artifacts().bossEnergyMultiplier("forest") == 0.1f`;
+zero, one, or provisional artifacts give `1f`. Artifacts from other levels do not complete
+this set, and `forest-1` has no full-set reward. A future boss must apply the multiplier
+once to its starting energy. **There is no boss encounter yet**, so #72 remains open for
+that integration and final optional challenge placement. See D6 in
+[Design decisions](docs/DECISIONS.md).
 
 ## Assets
 

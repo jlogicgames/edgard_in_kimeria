@@ -52,6 +52,8 @@ public interface GameContext {
 
     int coinsCollected();
 
+    ArtifactInventory artifacts();
+
     void loadNextLevel();
 
     /**

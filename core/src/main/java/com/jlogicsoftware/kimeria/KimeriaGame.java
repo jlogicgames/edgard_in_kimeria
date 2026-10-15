@@ -89,6 +89,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private UiState uiState;
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
+    private final ArtifactInventory artifacts = new ArtifactInventory();
     /** Coin count when the level began; Restart Level goes back to it. */
     private int levelStartCoins = 0;
     private int roomStartCoins = 0;
@@ -272,6 +273,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      * rebuilt level and the coin count from when the level began. The save is not touched.
      */
     private void restartLevel() {
+        artifacts.restartLevel();
         coinsCollected = levelStartCoins;
         pauseMenu.selected = 0; // so the next pause does not open on Restart Level
         player = new Player(assets, this, 0, 0);
@@ -285,6 +287,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** Drops the level and player so nothing stays alive behind the menus. */
     private void releaseGame() {
+        artifacts.clear();
         roomFade.cancel();
         gameStarted = false;
         levelLoadDelay = -1f;
@@ -300,6 +303,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** Builds the player and level from {@code data}, behind the loading screen. */
     private void startGame(StartData data) {
+        artifacts.clear();
         currentLevelIndex = Math.floorMod(data.levelIndex(), LEVEL_NAMES.size());
         coinsCollected = data.coins();
         player = new Player(assets, this, 0, 0);
@@ -320,6 +324,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void loadLevel() {
+        artifacts.beginLevel();
         levelStartCoins = coinsCollected;
         roomStartCoins = coinsCollected;
         Rectangle visible = new Rectangle();
@@ -791,7 +796,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
+    public ArtifactInventory artifacts() { return artifacts; }
+
+    @Override
     public void loadNextLevel() {
+        if (level != null) level.keepPickups();
         if (currentLevelIndex < LEVEL_NAMES.size() - 1) {
             currentLevelIndex++;
         } else {

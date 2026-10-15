@@ -11,11 +11,11 @@ import com.jlogicsoftware.kimeria.entity.WorldObject;
 
 import java.util.function.Consumer;
 
-/** Port of Dart's {@code Collectable}: coins with a pickup ripple. */
+/** Animated coins and artifacts, sharing pickup sound and ripple. */
 public class Collectable extends Entity {
     private static final float STEP_TIME = 0.3f;
 
-    private final String name;
+    private final ItemType type;
     private final GameContext game;
     private final Consumer<WorldObject> spawner;
     private final Animation<TextureRegion> animation;
@@ -32,10 +32,10 @@ public class Collectable extends Entity {
                         String name, float x, float y, float w, float h, Runnable onPickup) {
         super(x, y, w, h);
         this.onPickup = onPickup;
-        this.name = name;
+        this.type = ItemType.fromMapName(name);
         this.game = game;
         this.spawner = spawner;
-        animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, 0, 0);
+        animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, type.spriteX, type.spriteY);
         animation.setPlayMode(Animation.PlayMode.LOOP);
     }
 
@@ -43,16 +43,18 @@ public class Collectable extends Entity {
         return collected;
     }
 
+    public ItemType type() { return type; }
+
     public void collideWithPlayer() {
         if (collected) return;
         collected = true;
         onPickup.run();
         if (game.playSounds()) game.playSound("collect");
 
-        if ("Coin".equals(name)) {
+        if (type == ItemType.COIN) {
             game.addCoin();
-            spawner.accept(new RippleEffect(centerX(), centerY(), 0.75f, 300f, 12f, 60f, 20f));
         }
+        spawner.accept(new RippleEffect(centerX(), centerY(), 0.75f, 300f, 12f, 60f, 20f));
         removeFromParent();
     }
 

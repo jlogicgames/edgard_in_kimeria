@@ -92,15 +92,29 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Decision:**
   - Hearts are removed, since there is nothing for them to restore.
   - Coins are a proof-of-concept counter only. Do not balance around coins.
-  - The real design, to be built later, is **artifacts**. They are **optional**: the game can be
-    finished without them. Each level and the boss have two outcomes, a normal one and a full
-    one when all of that level's artifacts are collected.
+  - **Artifacts** are optional: the game can be finished without them. The current test set
+    for `forest` is **Chicken + Key**; `forest-1` has no artifacts or full-set reward yet.
+    Their current map positions are test placements, not the final challenge layout.
+  - Normal outcome (zero or a partial set): the boss starts with its usual energy. Full
+    outcome (both artifacts secured from the same source level): the boss starts with
+    **one tenth of its normal energy**. There is no separate level-exit reward; the level's
+    full outcome is this advantage in the boss encounter. A level with no artifact set does
+    not qualify automatically. The rule is implemented as `bossEnergyMultiplier(level)`;
+    there is no boss entity/encounter in this repository yet, so combat integration remains
+    outstanding for #72. Apply the multiplier once when creating the boss.
   - An artifact **counts once the player leaves its room** (enters the next room or reaches
     the level exit). Dying before that returns it to its place (D3).
+  - Pickups appear immediately in a single HUD row after the coin counter, in collection
+    order. Their world sprites use two 16x16 frames at 0.3 seconds per frame, like coins.
+    Artifacts do not increase the coin counter.
+  - Secured artifacts remain available across levels in the live run. Restart Level restores
+    the inventory at level entry. New Game, Continue, and leaving the live run clear it.
+    Artifacts are not written to disk; the level-only save contract (D8)
+    is unchanged. Persistent artifacts require a separate explicit decision.
 - **Why:** Optional artifacts put the hardest challenges on side paths, as Celeste does with
   its strawberries, so players who are not after mastery can still finish while those who are
   have a reason to explore.
-- **Tracked in:** #46, #47, #60
+- **Tracked in:** #46, #47, #60, #72
 
 ## D7. Traps are deterministic puzzle elements
 

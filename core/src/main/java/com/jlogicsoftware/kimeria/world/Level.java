@@ -24,6 +24,7 @@ import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Trigger;
 import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
@@ -84,7 +85,11 @@ public class Level implements WorldObject {
         return exit != null && player.canLeaveRoom() && exit.overlaps(player.hitboxBounds());
     }
     public void recordPickup(int id) { pendingPickups.add(id); }
-    public void keepPickups() { keptPickups.addAll(pendingPickups); pendingPickups.clear(); }
+    public void keepPickups() {
+        keptPickups.addAll(pendingPickups);
+        pendingPickups.clear();
+        game.artifacts().keepRoom();
+    }
     public Set<Integer> keptPickups() { return Set.copyOf(keptPickups); }
 
     public void enterNextRoom(Player nextPlayer) {
@@ -112,6 +117,7 @@ public class Level implements WorldObject {
     }
 
     public void resetCurrentRoom(Player nextPlayer) {
+        game.artifacts().resetRoom();
         objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); fallingPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear();
         player = nextPlayer;
@@ -178,7 +184,9 @@ public class Level implements WorldObject {
                     player.position.set(o.x, o.y);
                     player.facingRight = true;
                 }
-                case "Collectable" -> objects.add(new Collectable(assets, game, this::queueSpawn, o.name, o.x, o.y, o.width, o.height, () -> recordPickup(o.id)));
+                case "Collectable" -> spawnCollectable(o, ItemType.fromMapName(o.name));
+                case "Chicken", "chicken", "chiken", "Chiken" -> spawnCollectable(o, ItemType.CHICKEN);
+                case "Key", "key" -> spawnCollectable(o, ItemType.KEY);
                 case "Bat" -> {
                     boolean vertical = o.propBool("isVertical", false);
                     Bat bat = new Bat(assets, game, o.x, o.y, o.width, o.height, vertical,
@@ -227,6 +235,14 @@ public class Level implements WorldObject {
                 }
             }
         }
+    }
+
+    private void spawnCollectable(TiledObject o, ItemType type) {
+        if (type != ItemType.COIN && game.artifacts().contains(name, o.id)) return;
+        objects.add(new Collectable(assets, game, this::queueSpawn, type.name(), o.x, o.y, o.width, o.height, () -> {
+            recordPickup(o.id);
+            if (type != ItemType.COIN) game.artifacts().collect(name, o.id, type);
+        }));
     }
 
     private void spawnActionable(TiledObject o) {
