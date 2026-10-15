@@ -185,7 +185,7 @@ public class Level implements WorldObject {
                     player.facingRight = true;
                 }
                 case "Collectable" -> spawnCollectable(o, ItemType.fromMapName(o.name));
-                case "Chicken", "chicken", "chiken", "Chiken" -> spawnCollectable(o, ItemType.CHICKEN);
+                case "Chicken", "chicken" -> spawnCollectable(o, ItemType.CHICKEN);
                 case "Key", "key" -> spawnCollectable(o, ItemType.KEY);
                 case "Bat" -> {
                     boolean vertical = o.propBool("isVertical", false);

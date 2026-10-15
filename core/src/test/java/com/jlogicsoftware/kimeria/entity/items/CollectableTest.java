@@ -35,7 +35,7 @@ class CollectableTest {
             item.update(0.3f); item.render(batch);
             assertEquals(List.of(frames.get(0), frames.get(1), frames.get(0)), rendered);
         }
-        assertEquals(ItemType.CHICKEN, ItemType.fromMapName("chiken"));
+        assertEquals(ItemType.CHICKEN, ItemType.fromMapName("Chicken"));
     }
 
     @Test void pickupRunsItsEffectsOnlyOnceAndArtifactsDoNotAddCoins() {

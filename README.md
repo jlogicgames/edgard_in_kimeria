@@ -237,7 +237,7 @@ Death resets only the active room; previous rooms' collections remain kept.
 ## Optional artifacts
 
 `forest` has two test artifacts: Chicken and Key, using the existing `Items.png` frames.
-Tiled accepts object types `Chicken` and `Key` (also `chiken`), or `Collectable` with the
+Tiled accepts object types `Chicken` and `Key`, or `Collectable` with the
 item name. No map edits are needed for the current placements. World items animate like
 coins; collected icons appear in one row beside the coin counter, without adding coins.
 

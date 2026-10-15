@@ -16,7 +16,7 @@ public enum ItemType {
     public static ItemType fromMapName(String name) {
         return switch (name.toLowerCase(Locale.ROOT)) {
             case "coin" -> COIN;
-            case "chicken", "chiken" -> CHICKEN;
+            case "chicken" -> CHICKEN;
             case "key" -> KEY;
             default -> throw new IllegalArgumentException("Unknown collectable: " + name);
         };
