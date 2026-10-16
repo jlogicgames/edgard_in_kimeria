@@ -55,17 +55,19 @@ class RoomTest {
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNull(layout.rooms.get(0).exit());
     }
-    @Test void forestHasTwoCompleteRoomsAndOnlyOneFinalCheckpoint() {
+    @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(2, layout.rooms.size());
+        assertEquals(3, layout.rooms.size());
         for (var o : map.layer("SpawnPoints")) layout.owner(o);
         for (var o : map.layer("Collisions")) layout.owner(o);
         assertNotNull(layout.rooms.get(0).exit());
-        assertNull(layout.rooms.get(1).exit());
+        assertNotNull(layout.rooms.get(1).exit());
+        assertNull(layout.rooms.get(2).exit());
         var checkpoints = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
-        assertEquals(1, checkpoints.size());
-        assertEquals(1, layout.owner(checkpoints.get(0)));
+        assertTrue(checkpoints.isEmpty());
+        var boss = map.layer("SpawnPoints").stream().filter(o -> "Boss".equals(o.type)).findFirst().orElseThrow();
+        assertEquals(2, layout.owner(boss));
     }
     @Test void malformedRoomsFailInsteadOfSilentlyBecomingWholeLevel() {
         TiledMapData map = map("forest");
@@ -140,10 +142,10 @@ class RoomTest {
         secondCoin.collideWithPlayer();
         level.resetCurrentRoom(player());
         assertEquals(1, level.keptPickups().size());
-        assertTrue(level.objects.stream().anyMatch(Checkpoint.class::isInstance));
+        assertFalse(level.objects.stream().anyMatch(Checkpoint.class::isInstance));
         assertTrue(enemy.isRemoved());
         level.player.debugTriggerCheckpoint();
-        assertEquals(Player.State.DISAPPEARING, level.player.getState());
+        assertEquals(Player.State.IDLE, level.player.getState(), "Debug checkpoint cannot bypass boss");
     }
     @Test void hotReloadInSecondRoomKeepsPositionAndCorrectRespawnEntrance() {
         Level level = forest();
@@ -170,37 +172,38 @@ class RoomTest {
         assertEquals(ItemType.CHICKEN, artifacts.items().get(0).type());
         assertEquals(0, coins.get());
         assertTrue(chicken.isRemoved());
-        assertEquals(1f, artifacts.bossEnergyMultiplier("forest"));
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest"));
         level.resetCurrentRoom(player());
         assertTrue(artifacts.items().isEmpty());
         assertFalse(artifact(level, ItemType.CHICKEN).isCollected());
     }
 
-    @Test void roomExitKeepsChickenAndLevelExitKeepsKeyAndUnlocksFullOutcome() {
+    @Test void roomExitsKeepArtifactsWithoutAutomaticCombatBonus() {
         Level level = forest();
         artifact(level, ItemType.CHICKEN).collideWithPlayer();
         level.enterNextRoom(player());
         artifact(level, ItemType.KEY).collideWithPlayer();
         assertEquals(2, artifacts.items().size());
-        assertEquals(1f, artifacts.bossEnergyMultiplier("forest"), "Key is still provisional");
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest"), "Key is still provisional");
         level.resetCurrentRoom(player());
         assertEquals(1, artifacts.items().size());
         assertEquals(ItemType.CHICKEN, artifacts.items().get(0).type());
         artifact(level, ItemType.KEY).collideWithPlayer();
-        level.player.debugTriggerCheckpoint();
-        assertEquals(0.1f, artifacts.bossEnergyMultiplier("forest"));
+        level.enterNextRoom(player());
+        assertTrue(artifacts.hasFullSet("forest"));
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest"));
         level.resetCurrentRoom(player());
         assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.KEY));
         assertEquals(2, artifacts.items().size());
     }
 
-    @Test void levelCanBeCompletedWithoutAnyArtifacts() {
+    @Test void bossRoomCanBeEnteredWithoutAnyArtifacts() {
         Level level = forest();
         level.enterNextRoom(player());
         level.player.debugTriggerCheckpoint();
-        assertEquals(Player.State.DISAPPEARING, level.player.getState());
+        assertEquals(Player.State.IDLE, level.player.getState(), "Debug checkpoint cannot bypass boss");
         assertTrue(artifacts.items().isEmpty());
-        assertEquals(1f, artifacts.bossEnergyMultiplier("forest"));
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest"));
     }
 
     @Test void retryRebuildsDestroyedWallsAndMovingTrapsWithoutStaleCollisionReferences() {

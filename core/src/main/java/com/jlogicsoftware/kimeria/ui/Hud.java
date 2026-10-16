@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
+import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -24,6 +25,7 @@ public class Hud {
     private static final float ICON_X = 10, ICON_Y = 10, ICON_SIZE = 32;
 
     private final GameContext game;
+    private final BossHud bossHud;
     private final TextureRegion coinIcon;
     private final Map<ItemType, TextureRegion> artifactIcons = new EnumMap<>(ItemType.class);
     private final BitmapFont font;
@@ -43,9 +45,10 @@ public class Hud {
         textCamera.setToOrtho(false, logicalWidth, logicalHeight);
         textCamera.update();
         textProjection = textCamera.combined.cpy();
+        bossHud = new BossHud(assets, game, textProjection, logicalWidth, logicalHeight);
     }
 
-    public void render(SpriteBatch batch) {
+    public void render(SpriteBatch batch, Boss boss, boolean empowered) {
         batch.draw(coinIcon, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
 
         String text = String.valueOf(game.coinsCollected());
@@ -68,5 +71,6 @@ public class Hud {
         font.setColor(Color.WHITE);
         font.draw(batch, layout, x, logicalHeight - yFromTop);
         batch.setProjectionMatrix(previous);
+        bossHud.render(batch, boss, empowered);
     }
 }

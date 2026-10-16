@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -55,6 +56,13 @@ class SavedProgressTest {
     void levelCompletionPersistsNextLevelAndWrapWhileDeathLeavesItUntouched() throws Exception {
         SavedProgress progress = new SavedProgress(preferences(), 2);
         KimeriaGame game = new KimeriaGame();
+        Field assets = KimeriaGame.class.getDeclaredField("assets");
+        assets.setAccessible(true);
+        assets.set(game, new Assets() {
+            @Override public TextureRegion region(String path, float x, float y, float w, float h) {
+                return new TextureRegion();
+            }
+        });
         Field save = KimeriaGame.class.getDeclaredField("savedProgress");
         save.setAccessible(true);
         save.set(game, progress);

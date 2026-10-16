@@ -41,7 +41,7 @@ public interface GameContext {
 
     float soundVolume();
 
-    /** name is one of: jump, bounce, collect, hit, disappear */
+    /** name is one of: jump, bounce, collect, hit, disappear, boss_hit, boss_restore */
     void playSound(String name);
 
     boolean isGameStarted();

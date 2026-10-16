@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
+import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
@@ -79,10 +80,58 @@ public class Level implements WorldObject {
     private final Set<Integer> pendingPickups = new HashSet<>();
     private final Set<Integer> keptPickups = new HashSet<>();
 
+    private Boss boss;
+    private int retryBossEnergy = -1;
+
+    public Boss boss() { return boss; }
+
+    public void updatePresentation(float realDt) {
+        if (boss != null) boss.updatePresentation(realDt);
+    }
+    private boolean victory, completionSent;
+    private float shakeRemaining;
+
+    /** Checkpoints, including the debug shortcut, cannot bypass an authored boss. */
+    public boolean hasBossEncounter() {
+        return map.layer("SpawnPoints").stream().anyMatch(o -> "Boss".equals(o.type));
+    }
+
+    public void playerDied() {
+        clearCameraEffects();
+        if (boss != null) {
+            retryBossEnergy = boss.energy();
+            boss.abandonAttack();
+        }
+    }
+
+    public void bossDefeated() {
+        clearCameraEffects();
+        victory = true;
+        player.beginVictoryWalk();
+        game.setNormalTime();
+    }
+
+    public void shakeAfterBossAttack() { if (!victory) shakeRemaining = .18f; }
+    public void clearCameraEffects() { shakeRemaining = 0; }
+
+    /** Visual displacement only; narrow rooms keep their existing centred framing. */
+    public Vector2 cameraShakeOffset(Rectangle view) {
+        Rectangle room = currentRoomBounds();
+        float age = .18f - shakeRemaining;
+        float amplitude = 1.25f * Math.max(0, shakeRemaining / .18f);
+        float dx = (float) Math.sin(age * 110) * amplitude;
+        float dy = (float) Math.sin(age * 137) * amplitude;
+        if (room.width <= view.width) dx = 0;
+        else dx = Math.max(room.x, Math.min(room.x + room.width - view.width, view.x + dx)) - view.x;
+        if (room.height <= view.height) dy = 0;
+        else dy = Math.max(room.y, Math.min(room.y + room.height - view.height, view.y + dy)) - view.y;
+        return new Vector2(dx, dy);
+    }
+
     public Rectangle currentRoomBounds() { return roomLayout.rooms.get(currentRoom).bounds(); }
     public boolean atRoomExit() {
         Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
-        return exit != null && player.canLeaveRoom() && exit.overlaps(player.hitboxBounds());
+        return !victory && exit != null && player.canLeaveRoom() && exit.overlaps(player.hitboxBounds());
     }
     public void recordPickup(int id) { pendingPickups.add(id); }
     public void keepPickups() {
@@ -92,8 +141,10 @@ public class Level implements WorldObject {
     }
     public Set<Integer> keptPickups() { return Set.copyOf(keptPickups); }
 
+    public boolean hasNextRoom() { return currentRoom + 1 < roomLayout.rooms.size(); }
+
     public void enterNextRoom(Player nextPlayer) {
-        if (currentRoom + 1 >= roomLayout.rooms.size()) throw new IllegalStateException("No next room");
+        if (!hasNextRoom()) throw new IllegalStateException("No next room");
         keepPickups();
         passedRooms.add(new PassedRoom(List.copyOf(objects), List.copyOf(collisionBlocks),
             List.copyOf(escalators), List.copyOf(fallingPlatforms)));
@@ -120,10 +171,15 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); fallingPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear();
+        boss = null;
+        victory = completionSent = false;
+        clearCameraEffects();
         player = nextPlayer;
         spawnObjects();
         addCollisions();
         placePlayer();
+        if (boss != null && retryBossEnergy >= 0) boss.showRestoration(retryBossEnergy);
+        retryBossEnergy = -1;
     }
 
     private void placePlayer() {
@@ -201,6 +257,11 @@ public class Level implements WorldObject {
                     mob.setPlayer(player);
                     mob.setLevel(this);
                     objects.add(mob);
+                }
+                case "Boss" -> {
+                    boss = new Boss(assets, game, this, o.x, o.y);
+                    boss.setPlayer(player);
+                    objects.add(boss);
                 }
                 case "RedMob" -> {
                     RedMob mob = new RedMob(assets, game, o.x, o.y, o.width, o.height,
@@ -304,13 +365,42 @@ public class Level implements WorldObject {
 
     @Override
     public void update(float dt) {
+        shakeRemaining = Math.max(0, shakeRemaining - dt);
+        if (victory) {
+            if (player.victoryPausePressed()) { game.togglePause(); return; }
+            dt = Math.min(dt, .05f);
+            updateWorld(dt);
+            finishUpdate();
+            if (boss.deathFinished() && !completionSent) {
+                player.advanceVictoryWalk(dt);
+                // A room narrower than the screen is centred: walk beyond the VIEW edge too.
+                float right = currentRoomBounds().x + Math.max(currentRoomBounds().width,
+                    (currentRoomBounds().width + game.logicalResolution().x) / 2f);
+                if (player.getX() > right + player.getWidth()) {
+                    completionSent = true;
+                    keepPickups();
+                    game.loadNextLevel();
+                }
+            }
+            return;
+        }
+        updateWorld(dt);
+        player.update(dt);
+        if (boss != null) boss.resolveCombat();
+
+        finishUpdate();
+    }
+
+    /** The world keeps moving during victory; only the hero uses a protected scripted walk. */
+    private void updateWorld(float dt) {
         if (sky != null) sky.update(dt);
         for (WorldObject o : ambience) o.update(dt);
         for (Escalator e : escalators) e.update(dt);
         for (FallingPlatform p : fallingPlatforms) p.update(dt);
         for (WorldObject o : objects) o.update(dt);
-        player.update(dt);
+    }
 
+    private void finishUpdate() {
         escalators.removeIf(WorldObject::isRemoved);
         fallingPlatforms.removeIf(WorldObject::isRemoved);
         collisionBlocks.removeIf(CollisionBlock::isRemoved);

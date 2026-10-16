@@ -6,30 +6,46 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArtifactInventoryTest {
-    @Test void onlyTheCommittedCompleteSetWeakensTheBoss() {
+    @Test void artifactsAloneNeverGrantCombatBonus() {
         ArtifactInventory inventory = new ArtifactInventory();
         inventory.beginLevel();
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
         inventory.collect("forest", 94, ItemType.CHICKEN);
         inventory.keepRoom();
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
         inventory.collect("forest", 95, ItemType.KEY);
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
         inventory.keepRoom();
-        assertEquals(0.1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
         inventory.beginLevel();
-        assertEquals(0.1f, inventory.bossEnergyMultiplier("forest"), "Retained across level transitions");
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest-1"), "An empty set does not grant a reward");
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"), "Artifacts alone still grant no damage bonus");
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-1"), "An empty set does not grant a reward");
     }
 
     @Test void aKeyAloneAndArtifactsFromDifferentLevelsDoNotCompleteTheSet() {
         ArtifactInventory inventory = new ArtifactInventory();
         inventory.collect("forest", 95, ItemType.KEY);
         inventory.keepRoom();
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
         inventory.collect("other", 94, ItemType.CHICKEN);
         inventory.keepRoom();
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
+    }
+
+    @Test void consumedElixirSurvivesRoomRetryButNeverLeaksToAnotherLevelOrRun() {
+        ArtifactInventory inventory = new ArtifactInventory();
+        inventory.beginLevel();
+        inventory.drinkBossElixir("forest");
+        assertEquals(10f, inventory.bossWeaponDamageMultiplier("forest"));
+        inventory.resetRoom();
+        assertEquals(10f, inventory.bossWeaponDamageMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("other"));
+        inventory.restartLevel();
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
+        inventory.drinkBossElixir("forest"); inventory.beginLevel();
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
+        inventory.drinkBossElixir("forest"); inventory.clear();
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
     }
 
     @Test void identityUsesBothLevelAndMapObjectIdAndReturnedItemsAreImmutable() {
@@ -56,7 +72,7 @@ class ArtifactInventoryTest {
         assertEquals(1, inventory.items().size());
         assertEquals("earlier", inventory.items().get(0).level());
         assertFalse(inventory.contains("forest", 94));
-        assertEquals(1f, inventory.bossEnergyMultiplier("forest"));
+        assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest"));
         inventory.clear();
         inventory.restartLevel();
         assertTrue(inventory.items().isEmpty());

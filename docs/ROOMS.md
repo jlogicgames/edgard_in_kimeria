@@ -1,9 +1,9 @@
 # Rooms in Tiled
 
-A level is one TMX map containing an ordered chain of rooms. `forest` now has two
-rooms: the original 1280 px course and a shorter 672 px forest course with an
-ascending optional coin route, a RedMob, and a vertical bat. The second course
-ends at its relocated Checkpoint and no longer includes a bomb or quicksand.
+A level is one TMX map containing an ordered chain of rooms. `forest` has three
+rooms: the original 1280 px course, a 672 px forest course with an ascending
+optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
+leads into forest-boss. Boss death and the automatic victory walk complete the level.
 `forest-1` remains an unmarked, single-room level. Replay budgets and measured
 routes for #70 are recorded below.
 
@@ -20,7 +20,8 @@ coordinates, including any layer offset. In that layer:
 - `RoomExit`: a rectangle with the same name as its `Room`. Every room except the
   last has exactly one. Overlapping it with the player's hitbox starts a forward
   transition to the next room. The last room has no RoomExit; place the existing
-  `Checkpoint` in `SpawnPoints` there to finish the level.
+  `Checkpoint` in `SpawnPoints` there to finish a level without a boss. A boss level
+  completes only after its victory walk; Checkpoint contact and F5 are blocked throughout it.
 
 Bounds must be positive, inside the map, and must not overlap. Entrances and
 exit rectangles must fit inside their room. Duplicate, missing, orphaned, and
@@ -60,11 +61,10 @@ their runtime objects and are frozen, not recreated by a later death. Future
 rooms start their first attempt only when entered.
 
 Collected object IDs remain provisional until leaving the room or reaching the
-level Checkpoint; death before then restores those objects. The current coin
+level completion; death before then restores those objects. The current coin
 counter likewise rolls back to its room-entry value, preserving previous rooms'
-coins. This supplies room-level collection bookkeeping for future artifacts;
-artifact graphics, level outcomes, and persistent artifact saves are not yet
-implemented (D6). Restart Level resets all rooms and the level-entry coin count.
+coins. Artifact sprites and rollback use this same bookkeeping; the healer bargain
+is pending #84 and persistent artifact saves are not implemented (D6). Restart Level resets all rooms and the level-entry coin count.
 Saved progress remains per level (D8). A dev-mode TMX reload keeps the player
 in the room containing its position; if that position was removed from the map,
 it falls back to the first entrance.
@@ -146,17 +146,18 @@ Measured map SHA-256 values:
 In `forest`, collect Chicken in room one: it disappears and its icon appears after the
 coin count without increasing that count. Die before leaving: the icon disappears and
 Chicken returns. Collect it again and leave the room: a later death must keep Chicken.
-Repeat for Key in room two, then reach the level Checkpoint to secure both. Restart Level
+Repeat for Key in room two, then enter the boss chamber to secure both. Restart Level
 must restore the inventory from level entry, and exiting to the main menu must clear it.
 Finishing without either artifact must remain possible.
 
 Verification on 2026-10-15: automated tests cover gameplay contact, duplicate pickup,
 two-frame animation cadence, no/partial/full collection, room rollback, securing items
 at both room and level exits, cross-level identity/retention, and level restart. The full
-secured forest set yields a boss starting-energy multiplier of 0.1; all other sets yield
-1. A hidden desktop GL render check confirmed upright sprites, both animation frames,
+secured forest set gives no automatic combat bonus. The optional consumed elixir
+instead multiplies weapon damage by 10 (#82/#83/#84). A hidden desktop GL render check confirmed upright sprites, both animation frames,
 and the single HUD row after a six-digit coin count. This is an isolated rendering check;
-full traversal/readability and actual boss combat remain unverified (there is no boss yet).
+full traversal/readability still needs a human playtest. Current boss validation is
+recorded in [BOSS.md](BOSS.md).
 
 ### Bomb warning checks (#71)
 
@@ -206,5 +207,15 @@ exit and verify fade out, a black midpoint, and fade in at the second entrance,
 with an idle hero and no camera travel. Walk the ascending platforms in room two
 and check its optional coins. Turn F2 off, collect a coin and die: the hero must
 return to room two, its coin and hazards must reset, and room one's coin count
-must remain. Repeat a death, then finish at the far-right Checkpoint. Also pause
+must remain. Repeat a death, enter the third room, defeat the boss, and watch the
+automatic victory walk. Also pause
 mid-fade, Resume, Restart Level, and run `forest-1` without room markers.
+
+## Forest boss validation (#73/#75/#83)
+
+The historical measurements above describe the two traversal rooms before the boss room
+was authored. Their replay routes still end at their actual RoomExit; they do not measure
+the boss fight. The former canopy Checkpoint is replaced by RoomExit in the current map.
+For boss-specific rule teaching, escape, retry and victory checks, use [BOSS.md](BOSS.md).
+A human playtest is still required for discoverability and fairness; scripted movement
+and automated collision assertions alone are insufficient evidence.

@@ -10,6 +10,8 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
+import com.jlogicsoftware.kimeria.entity.enemy.Boss;
+
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
@@ -19,6 +21,9 @@ import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.input.KeyBindings;
 import com.jlogicsoftware.kimeria.physics.CollideBody;
 import com.jlogicsoftware.kimeria.world.Level;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /** Port of Dart's {@code Player}. */
 public class Player extends Actor<Player.State> implements CollideBody {
@@ -53,6 +58,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     public float horizontalMovement = 0f;
     private final JumpBuffer jumpBuffer = new JumpBuffer();
+    private final Set<Boss> bossesHit = new HashSet<>();
+    private boolean victoryWalk;
     private boolean isAttacking = false;
     private boolean attackHitboxAdded = false;
     private float attackElapsed = 0f;
@@ -62,6 +69,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     private boolean isGotHit = false;
     private float previousFeetY;
+    private float previousBodyX;
     private boolean isReachedCheckpoint = false;
     private RespawnPhase respawnPhase = RespawnPhase.NONE;
     private float checkpointTimer = 0f;
@@ -112,11 +120,36 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Camera relocation happens under the room transition's fully black frame. */
     public Vector2 roomCameraTarget() { return cameraTarget(centerX(), position.y); }
 
+    public boolean canFight() { return respawnPhase == RespawnPhase.NONE && !isReachedCheckpoint && !victoryWalk; }
+
+    public void beginVictoryWalk() {
+        victoryWalk = true;
+        isAttacking = attackHitboxAdded = false;
+        horizontalMovement = 0;
+        velocity.setZero();
+        collideWithTriggerId = "";
+        resetJumpInput();
+        facingRight = true;
+        setState(State.IDLE);
+    }
+
+    /** Scripted exit ignores terrain, hazards and camera chasing. */
+    public void advanceVictoryWalk(float dt) {
+        setState(State.RUNNING);
+        position.x += MOVE_SPEED * dt;
+        tickAnimation(dt);
+    }
+
+    public boolean victoryPausePressed() { return pausePressed(); }
+
     public boolean isGotHit() {
         return isGotHit;
     }
 
-    /** World Y of the hitbox's bottom edge at the start of this frame's physics step, before the player moved. */
+    /** Body X before this frame's movement, used to keep solid boss contact on the arrival side. */
+    public float previousBodyX() { return previousBodyX; }
+
+    /** World Y of the feet before this frame's physics step. */
     public float previousFeetY() {
         return previousFeetY;
     }
@@ -160,7 +193,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // fixed steps.
         float stepDt = Math.min(dt, 0.05f);
         previousFeetY = position.y + hitbox.offsetY + hitbox.height;
+        previousBodyX = position.x + hitbox.offsetX;
         checkAttackCollisions(stepDt);
+        if (victoryWalk) return;
         updatePlayerState();
         updatePlayerMovement(stepDt);
         checkHorizontalCollisions(level);
@@ -374,7 +409,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
      *                  pit has nothing to look at (the player is off screen), so it resets at once.
      */
     private void die(boolean showCause) {
-        if (isGotHit || game.invulnerable()) return;
+        if (isGotHit || victoryWalk || game.invulnerable()) return;
+        level.playerDied();
         if (game.playSounds()) game.playSound("hit");
         isGotHit = true;
         resetJumpInput();
@@ -428,6 +464,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void reachedCheckpoint() {
+        if (level.hasBossEncounter()) return;
         level.keepPickups();
         isReachedCheckpoint = true;
         if (game.playSounds()) game.playSound("disappear");
@@ -444,6 +481,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (!attackHitboxAdded) {
             attackHitboxAdded = true;
             attackElapsed = 0f;
+            bossesHit.clear();
         }
         attackHitbox.set(boundsOf(SWORD_HITBOX));
 
@@ -459,7 +497,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         for (var obj : level.objects) {
             if (obj instanceof Enemy<?> enemy) {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
-                    enemy.collidedWithActor(true);
+                    if (!(enemy instanceof Boss boss) || bossesHit.add(boss)) enemy.collidedWithActor(true);
                     break;
                 }
             }
@@ -483,7 +521,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         for (var obj : level.objects) {
             if (obj instanceof Collectable c && overlapsEntity(c)) {
                 c.collideWithPlayer();
-            } else if (obj instanceof Enemy<?> enemy && !isAttacking && enemy.hitboxOverlaps(hitboxBounds())) {
+            } else if (obj instanceof Enemy<?> enemy && (!isAttacking || enemy instanceof Boss) && enemy.hitboxOverlaps(hitboxBounds())) {
                 enemy.collidedWithActor(false);
             } else if (obj instanceof Checkpoint cp && overlapsEntity(cp)) {
                 reachedCheckpoint();

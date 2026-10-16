@@ -16,12 +16,14 @@ public final class ArtifactInventory {
     private final Map<Id, Pickup> kept = new LinkedHashMap<>();
     private final Map<Id, Pickup> pending = new LinkedHashMap<>();
     private final Map<Id, Pickup> levelStart = new LinkedHashMap<>();
+    private String elixirLevel;
 
     public static Set<ItemType> requiredForLevel(String level) {
         return "forest".equals(level) ? Set.of(ItemType.CHICKEN, ItemType.KEY) : Set.of();
     }
 
     public void beginLevel() {
+        elixirLevel = null;
         pending.clear();
         levelStart.clear();
         levelStart.putAll(kept);
@@ -46,12 +48,14 @@ public final class ArtifactInventory {
     public void resetRoom() { pending.clear(); }
 
     public void restartLevel() {
+        elixirLevel = null;
         pending.clear();
         kept.clear();
         kept.putAll(levelStart);
     }
 
     public void clear() {
+        elixirLevel = null;
         kept.clear();
         pending.clear();
         levelStart.clear();
@@ -70,6 +74,11 @@ public final class ArtifactInventory {
             .anyMatch(pickup -> pickup.level().equals(level) && pickup.type() == type));
     }
 
-    /** Apply once to the boss's starting energy, using the source level of its artifacts. */
-    public float bossEnergyMultiplier(String level) { return hasFullSet(level) ? 0.1f : 1f; }
+    /** Called by the healer bargain (#84) after payment and immediate consumption. Run-only. */
+    public void drinkBossElixir(String level) { elixirLevel = level; }
+
+    /** Artifacts alone never grant combat bonuses. Room retries leave consumption intact. */
+    public float bossWeaponDamageMultiplier(String level) {
+        return level.equals(elixirLevel) ? 10f : 1f;
+    }
 }

@@ -22,7 +22,8 @@ shoot); menus and **Start** are the same in both modes. Shoot is bound everywher
 **Esc/B** back (Esc/B/Start resume from the pause menu, which also offers **Restart Level**; on the desktop main menu they select
 Exit). Debug keys: **F1** hitbox gizmos, **F2**
 invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
-checkpoint.
+checkpoint, **F6** advance to the next room (no action in the last room).
+To test the forest boss from a new run: F4 to forest, then F6 twice.
 
 The web build opens on a single-button start screen (click, Enter or Space): browsers block audio
 until the page has had a user gesture, so the menu music waits for it. Other platforms skip it.
@@ -140,7 +141,7 @@ Two different causes produce this same crash:
       click/tap skips with a shared picture/music fade (menu holds do not skip it).
       `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
       `Msg.INTRO_STORY` when the final music and story are available.
-- [x] Dev hotkeys (F1–F5, see Controls above)
+- [x] Dev hotkeys (F1–F6, see Controls above)
 - [x] Chromatic-aberration glitch post-process — applied to the frozen world while paused
       (the pause menu and HUD stay crisp); see Deviations below
 
@@ -246,8 +247,20 @@ parts that shape the code:
 
 ## Rooms
 
-`forest` contains two rooms, with the original course followed by a new forest
-course featuring an ascending optional coin route and different enemy encounters.
+`forest` contains three rooms: the original course, a forest course with an ascending
+optional coin route, and the authored boss chamber. The boss starts on a throne; sword
+hits are required to defeat him. Top contact bounces safely; the solid body blocks passage
+without contact damage.
+Interrupting a normal strike triggers a flashing, uninterruptible counterattack: jump away.
+Victory plays the boss death and an automatic hero exit before completing/saving the level.
+The boss HUD uses twelve replaceable PNG segments, blood particles/impact sounds, and a short
+refill cue during the existing retry animation. A potion icon marks the active 10x effect.
+See [Boss combat](docs/BOSS.md) for art, balance and validation details.
+The healer is Edgard's recurring guide and opening narrator: he tells of the kingdom's
+fall into darkness caused by the evil sorceress L'Kardina, and guides progression through
+the game. This accepted story direction still requires updating the placeholder intro. The agreed
+pre-boss meeting (#84) and post-victory dialogue (#86) are pending implementation;
+[Story and characters](docs/STORY.md) records his role and the basis for future narrative decisions.
 At the first room's exit, the scene fades out and in (0.25 seconds each way).
 The hero and camera relocate under full black, without a hero transition animation.
 Death resets only the active room; previous rooms' collections remain kept.
@@ -266,12 +279,12 @@ secured artifacts survive later deaths and level transitions. Restart Level rest
 entry inventory. A new/continued run or exit to the main menu clears it.
 No artifact data is written to preferences or saves.
 
-The full `forest` set gives `game.artifacts().bossEnergyMultiplier("forest") == 0.1f`;
-zero, one, or provisional artifacts give `1f`. Artifacts from other levels do not complete
-this set, and `forest-1` has no full-set reward. A future boss must apply the multiplier
-once to its starting energy. **There is no boss encounter yet**, so #72 remains open for
-that integration and final optional challenge placement. See D6 in
-[Design decisions](docs/DECISIONS.md).
+Artifacts alone give no boss bonus. The optional healer elixir (#84) grants **10x sword
+damage against the forest boss**, with unchanged starting/max energy (12). The consumed
+effect survives boss-room death and clears on level restart, transition or a fresh run.
+`ArtifactInventory.drinkBossElixir(level)` is the consumption hook for #84; healer payment,
+dialogue and collection return are separate work and are not available yet. The old
+`bossEnergyMultiplier` contract has been removed to prevent stacking the two bonuses.
 
 ## Assets
 

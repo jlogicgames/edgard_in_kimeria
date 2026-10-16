@@ -59,8 +59,8 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     frozen with their state retained. The camera is bounded by the current room;
     a room smaller than the viewport is centred on that axis.
   - Tiled authoring and transition behaviour are documented in [ROOMS.md](ROOMS.md).
-  - The `Checkpoint` object is the level exit that loads the next level. There are no other
-    checkpoints.
+  - The `Checkpoint` object completes a level without a boss. A boss level completes after
+    defeat and its automatic exit walk (D13). There are no mid-level save checkpoints.
 - **Why:** Deterministic attempts make precision puzzles learnable, as in Katana Zero. A reset
   that throws the player far back (TMNT: Shredder's Revenge) makes dying tedious instead of
   cheap; keeping passed rooms, as Expendabros keeps what was destroyed, means a death costs
@@ -71,7 +71,9 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 
 - **Status:** Accepted
 - **Decision:** The player kills a bat or mob by landing on it from above, and bounces off.
-  Side or bottom contact kills the player and leaves the enemy alone. The sword is the other way
+  The forest boss is the exception: top contact bounces without hurting either actor.
+  Its solid sides and underside block passage without damage; only axe strikes kill.
+  Ordinary enemies kill the player on side or bottom contact and remain unharmed. The sword is the other way
   to kill, and it cannot be used while airborne, so the stomp is the player's only airborne
   answer. It is described in About and introduced early in the levels.
 - **Why:** Gives a second, intuitive way to deal with enemies without special rules.
@@ -91,17 +93,18 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Status:** Accepted
 - **Decision:**
   - Hearts are removed, since there is nothing for them to restore.
-  - Coins are a proof-of-concept counter only. Do not balance around coins.
+  - Coins are optional healer payment in `forest` (#82/#84); collection is never required.
+    The payment/dialogue/return feature is pending #84; the boss combat is described in
+    [BOSS.md](BOSS.md).
   - **Artifacts** are optional: the game can be finished without them. The current test set
     for `forest` is **Chicken + Key**; `forest-1` has no artifacts or full-set reward yet.
     Their current map positions are test placements, not the final challenge layout.
-  - Normal outcome (zero or a partial set): the boss starts with its usual energy. Full
-    outcome (both artifacts secured from the same source level): the boss starts with
-    **one tenth of its normal energy**. There is no separate level-exit reward; the level's
-    full outcome is this advantage in the boss encounter. A level with no artifact set does
-    not qualify automatically. The rule is implemented as `bossEnergyMultiplier(level)`;
-    there is no boss entity/encounter in this repository yet, so combat integration remains
-    outstanding for #72. Apply the multiplier once when creating the boss.
+  - The boss always starts at full normal energy. Merely holding Chicken and Key gives
+    no bonus. The optional healer bargain consumes Chicken, Key and every forest coin;
+    the hero immediately drinks the elixir, granting **10x sword damage to this boss**.
+    This replaces the former automatic 0.1 starting-energy multiplier; they never stack.
+    Consumed elixir survives boss-room death, without repeating the bargain or collection.
+    It is run-only and clears on Restart Level, leaving the level or leaving the run.
   - An artifact **counts once the player leaves its room** (enters the next room or reaches
     the level exit). Dying before that returns it to its place (D3).
   - Pickups appear immediately in a single HUD row after the coin counter, in collection
@@ -157,7 +160,7 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - **New Game** is always shown. If a save exists, it asks for confirmation before replacing
     it. Confirmation clears the old save; the new run creates a save only on its first
     level completion. Cancelling preserves the old save.
-  - Progress is saved when a level is completed (reaching the `Checkpoint` exit) and holds the
+  - Progress is saved when a level is completed (`Checkpoint` or the boss victory walk) and holds the
     next level to play, and nothing else. It is not saved mid-level or per room.
     Continue starts that level from its beginning. Missing, malformed or out-of-range indices
     hide Continue (for example, after removing levels).
@@ -165,8 +168,8 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     save button, no prompt and no manual save slots. The player never has to save.
   - Settings and progress share `Settings.PREFS_NAME`, with separate keys. Settings writes
     update only the changed setting; clearing a run removes only `KEY_NEXT_LEVEL`.
-  - The save holds **only the level**. Coins are a temporary mechanic (D6) that will be
-    removed, so they are not saved and a continued run starts with 0 coins. Do not add coins
+  - The save holds **only the level**. Coins and the consumed elixir are run-only (D6), so they are not saved and a
+    continued run starts with 0 coins and no elixir. Do not add coins
     to the save format.
   - Completing the **last level** resets the save to level 1, so Continue then starts the
     game over from the first level.
@@ -212,7 +215,8 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - **An enemy has two boxes when it needs them.** The body hitbox (generous) is what the sword
     and stomps hit and what terrain collides with. The **hurtbox** (`Enemy.hurtbox`) is what
     kills the player on touch, and never reaches past the drawn art, so an enemy cannot kill
-    before it visibly touches. Without a separate hurtbox the body is both.
+    before it visibly touches. Without a separate hurtbox the body is both for ordinary enemies;
+    the forest boss instead uses a solid harmless body and lethal axe boxes.
   - **Hitboxes are rectangles**, for every actor including the bat, so what is drawn in F1 is
     exactly what is tested. A circle `Hitbox` is still supported and tested as a real circle
     (`CollisionUtils.overlaps`), but nothing uses one now.
@@ -228,7 +232,9 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     F1 draws attack colliders: yellow while winding up, magenta while dangerous.
   - **A stomp** needs the player moving down and with their feet above the enemy's top edge on
     the previous frame (`Enemy.isStomp`). Any other contact hurts the player and leaves the
-    enemy alone. A sword hit kills; a dying enemy is harmless.
+    enemy alone, except the solid forest boss, whose body blocks without contact damage.
+    A sword hit kills ordinary enemies; boss energy and counter rules are in D13.
+    A dying enemy is harmless.
   - **One-way platforms** (`Platform`, `FallingPlatform`, `Escalator`) support only from
     above. They are ignored by horizontal collision; their landing test (feet-based, with a
     catch-up margin at rest) is only valid vertically.
@@ -268,3 +274,43 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Why:** Holding jump a little too long before a ledge or a trap fired an unintended jump,
   and an early press was silently lost. Both cause deaths the player does not understand (D5).
 - **Tracked in:** #58
+
+## D13. Forest boss (#82/#83)
+
+The boss wakes once per attempt, pursues on the ground and attacks at visible axe range.
+Its solid body blocks passage without contact damage; top contact bounces. Only active
+axe strikes kill. Sword hits emit a conspicuous crimson particle spray, including lethal hits.
+Normal melee lasts approximately 0.6222 s (two successive +50% speed increases, author revision
+on 2026-10-16); the hero remains at 0.7 s. A landed sword hit during ordinary
+pursuit, normal melee or ordinary recovery interrupts that action,
+removing its damage and completion shake, then starts a distinct, visibly warned counter.
+Further sword hits still damage the boss but cannot interrupt or restart that counter,
+including its recovery. After counter recovery, ordinary actions become interruptible again.
+Lethal damage always cancels combat. The player can jump away after sword recovery.
+Each completed attack produces one mild, room-bounded visual shake, even on a miss.
+Death resets the boss to full energy and throne at the boss-room entrance, retaining the elixir.
+Boss defeat freezes hero control, shows death, then walks the hero safely through terrain
+off the right edge. The world keeps updating throughout: fog, fire, platforms and hazards
+continue moving, while the scripted hero is protected from damage. Pause still freezes it. Only then does the existing level completion/save path run, exactly once.
+Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md](BOSS.md).
+
+
+## D14. The healer is Edgard's recurring guide
+
+- **Status:** Accepted, 2026-10-16; scenes pending implementation.
+- **Decision:** The healer (знахарь) from the optional pre-boss elixir encounter is a
+  recurring character and Edgard's guide through the journey. He narrates the very
+  beginning: darkness has descended upon the kingdom, brought about by the evil sorceress
+  L'Kardina (Л’Кардина). He provides practical explanations and advice on how to progress
+  through the game, as well as story context. He returns after the forest
+  boss, following the death animation and automatic hero exit, on a separate dialogue
+  screen before the next level. Use the same character and dialogue presentation.
+- **Why:** A familiar guide gives continuity between encounters and helps connect the
+  hero's victory to the next stage of the story. His significance extends beyond the
+  optional elixir bargain; declining it does not remove his role in the story.
+- **Constraints:** Do not replay progression dialogue on death/retry or change the fast
+  respawn and level-only save contracts. Final dialogue and new lore are still to be
+  agreed. See [STORY.md](STORY.md) for the character's role, agreed appearances and open
+  questions; consult it when extending the narrative.
+- **Tracked in:** [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84),
+  [#86](https://github.com/jlogicgames/edgard_in_kimeria/issues/86).

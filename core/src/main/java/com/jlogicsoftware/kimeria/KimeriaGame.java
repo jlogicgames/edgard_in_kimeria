@@ -454,6 +454,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // what lets the browser start the music. Loading is the start of a run, so fade it out.
         boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START && uiState != UiState.LOADING;
 
+        // Age existing effects before combat/reset creates new ones: a slow frame must not
+        // consume a newly landed hit's entire flash before it has been rendered once.
+        if (levelVisible && level != null && gameStarted && !roomFade.active()) level.updatePresentation(dt);
         if (roomResetPending && uiState == UiState.PLAYING) {
             rebuildRoom();
         }
@@ -466,6 +469,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 if (gameStarted) advanceCameraPan(dt);
                 if (gameStarted && !roomResetPending && level.atRoomExit()) {
                     player.resetJumpInput();
+                    level.clearCameraEffects();
                     roomFade.start();
                 }
             }
@@ -475,7 +479,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         updateMenuMusic(dt, musicWanted);
         handleDevHotkeys();
 
-        camera.position.set(cameraTarget.x + LOGICAL_W / 2f, cameraTarget.y + LOGICAL_H / 2f, 0);
+        Vector2 shake = level != null ? level.cameraShakeOffset(visibleWorldRect(new Rectangle())) : new Vector2();
+        camera.position.set(cameraTarget.x + LOGICAL_W / 2f + shake.x, cameraTarget.y + LOGICAL_H / 2f + shake.y, 0);
         camera.update();
 
         // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
@@ -505,7 +510,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         batch.setProjectionMatrix(screenCamera.combined);
         batch.begin();
         if (uiState == UiState.PLAYING || uiState == UiState.PAUSED) {
-            hud.render(batch);
+            hud.render(batch, level != null ? level.boss() : null,
+                level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f);
             if (uiState == UiState.PLAYING) touchControls.render(batch);
         }
         if (menuBackdropActive) {
@@ -637,7 +643,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         menuMusic.setVolume(musicVolume);
     }
 
-    /** F1 debug gizmos, F2 invulnerability, F3 shockwave+ripple, F4 next level, F5 checkpoint -- see Rust's dev.rs. */
+    /** F1 debug gizmos, F2 invulnerability, F3 shockwave+ripple, F4 next level, F5 checkpoint, F6 next room. */
     private void handleDevHotkeys() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debugDraw = !debugDraw;
         if (Gdx.input.isKeyJustPressed(Input.Keys.F2)) invulnerable = !invulnerable;
@@ -650,8 +656,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F4)) {
             loadNextLevel();
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F5)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F5) && player != null) {
             player.debugTriggerCheckpoint();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F6) && level != null && level.hasNextRoom()
+            && !roomFade.active() && player.canFight()) {
+            player.resetJumpInput();
+            level.clearCameraEffects();
+            roomFade.start();
         }
     }
 
@@ -887,6 +899,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             currentLevelIndex = 0;
         }
         savedProgress.save(currentLevelIndex);
+        // The outgoing hero may still be in the protected boss exit or checkpoint animation.
+        player = new Player(assets, this, 0, 0);
         startLoadingLevel();
     }
 
@@ -899,6 +913,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     // is minimized, and toggling the game from there left the main menu replaced by an empty level.
     @Override
     public void togglePause() {
+        if (level != null) level.clearCameraEffects();
         if (player != null) player.resetJumpInput();
         gameStarted = !gameStarted;
         uiState = gameStarted ? UiState.PLAYING : UiState.PAUSED;

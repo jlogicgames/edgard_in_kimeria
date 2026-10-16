@@ -6,11 +6,12 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 public enum Msg {
     TITLE, PLAY, CONTINUE, NEW_GAME, NEW_GAME_CONFIRMATION, CONFIRM, CANCEL, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU,
     PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING, INTRO_STORY,
-    ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ASSIST, LONGER_TRAP_WARNINGS, ON, OFF;
+    ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ASSIST, LONGER_TRAP_WARNINGS, ON, OFF, BOSS;
 
     public String t(Language lang) {
         boolean en = lang == ENGLISH;
         return switch (this) {
+            case BOSS -> en ? "Boss" : "Бос";
             case TITLE -> en ? "Edgard in Kimeria" : "Едгард у Кімерії";
             case PLAY -> en ? "Play" : "Грати";
             case CONTINUE -> en ? "Continue" : "Продовжити гру";
