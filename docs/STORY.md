@@ -71,9 +71,9 @@ when extending the story; do not treat an implementation placeholder as accepted
 
 ## Implementation status
 
-The pre-boss encounter and dialogue system are tracked in #84; the post-boss guide scene
-is tracked separately in #86. The current boss implementation proceeds directly from the
-victory exit to the next level. The existing opening story is placeholder text: it does
-not yet identify the healer as narrator or L'Kardina as the cause of the darkness. Updating
-the introduction must follow the established account above; this documentation does not
-claim that the new opening text or guidance scenes have already shipped.
+The opening now identifies the healer as narrator and L'Kardina as the cause of the
+kingdom's darkness. The pre-boss dialogue, checklist, paid elixir and collection return are
+implemented by #84; the dialogue wording and original pixel portrait placeholders need
+review in play with the author. The post-boss guide scene is tracked separately in #86.
+The current victory flow still proceeds directly to the next level after the automatic exit;
+this change does not implement that post-boss scene.

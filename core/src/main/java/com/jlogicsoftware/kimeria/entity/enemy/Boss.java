@@ -133,13 +133,14 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     @Override public void collidedWithActor(boolean weapon) {
         if (isDefeated() || abandoned || !player.canFight()) return;
         if (weapon) {
+            boolean empowered = game.artifacts().bossWeaponDamageMultiplier(level.name) > 1;
             int before = energy;
             energy = Math.max(0, energy - (int) game.artifacts().bossWeaponDamageMultiplier(level.name));
             feedback.damaged(before, energy);
             Rectangle body = hitboxBounds();
             float direction = player.hitboxBounds().x + player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
             level.queueSpawn(new BloodBurst(direction > 0 ? body.x : body.x + body.width,
-                body.y + body.height * .45f, direction, body.y + body.height));
+                body.y + body.height * .45f, direction, body.y + body.height, empowered));
             if (game.playSounds()) game.playSound("boss_hit");
             if (energy == 0) {
                 completedStrike = false;
@@ -151,6 +152,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
                 change(State.HURT);
                 if (game.playSounds()) game.playSound("bounce");
             }
+            if (empowered) level.shakeAfterEmpoweredHit();
             return;
         }
         resolveSolidContact();

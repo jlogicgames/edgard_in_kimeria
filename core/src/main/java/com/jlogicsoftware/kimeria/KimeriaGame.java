@@ -27,6 +27,9 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.input.IntroInput;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
+import com.jlogicsoftware.kimeria.ui.HealerDialogue;
+import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.Hud;
@@ -53,7 +56,7 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -116,6 +119,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private float levelLoadDelay = -1f;
 
+    private HealerDialogue healer;
+    private HealerDialogueView healerView;
+    private final IntroInput dialogueInput = new IntroInput();
+    private boolean pausedHealer;
     private IntroScreen intro;
     private final IntroInput introInput = new IntroInput();
     private Music introMusic;
@@ -128,6 +135,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     // backend until the AudioContext is unlocked, so polling it would queue a new copy every frame.
     private boolean menuMusicPlaying = false;
 
+    private boolean aboutRules;
     private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, assistMenu, pauseMenu, confirmNewGameMenu;
 
     /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
@@ -151,6 +159,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         hud = new Hud(assets, this, LOGICAL_W, LOGICAL_H);
         touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
+        healerView = new HealerDialogueView();
         menuBackdrop = new MenuBackdrop();
 
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/main_menu.mp3"));
@@ -207,6 +216,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             ), this::backToMainMenu);
 
         aboutMenu = new Menu(() -> Msg.ABOUT.t(language), null, List.of(
+            new MenuItem(() -> (aboutRules ? Msg.CONTROLS : Msg.RULES).t(language), () -> aboutRules = !aboutRules),
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
         ), this::backToMainMenu);
 
@@ -285,8 +295,15 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void resumeGame() {
         if (player != null) player.resetJumpInput();
-        gameStarted = true;
-        uiState = UiState.PLAYING;
+        if (pausedHealer) {
+            pausedHealer = false;
+            dialogueInput.reset(Gdx.input);
+            uiState = UiState.HEALER;
+            gameStarted = false;
+        } else {
+            gameStarted = true;
+            uiState = UiState.PLAYING;
+        }
     }
 
     /**
@@ -308,6 +325,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** Drops the level and player so nothing stays alive behind the menus. */
     private void releaseGame() {
+        healer = null;
+        pausedHealer = false;
         artifacts.clear();
         roomFade.cancel();
         gameStarted = false;
@@ -357,9 +376,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void startLoadingLevel() {
+        healer = null;
+        pausedHealer = false;
         level = null; // the previous level is released while the loading screen shows
         gameStarted = false;
-        // Neither a bat's bullet time nor a death's slow motion may leak into the next level, and a
+        // Death's slow motion must not leak into the next level, and a
         // reset still waiting for its frame (a death just before Restart or Exit) is moot now.
         timeScale = 1f;
         roomResetPending = false;
@@ -388,6 +409,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void enterNextRoom() {
+        if (level.healerAhead()) {
+            roomFade.cancel();
+            level.prepareHealer();
+            roomStartCoins = coinsCollected;
+            openHealer(false);
+            return;
+        }
         roomStartCoins = coinsCollected;
         timeScale = 1f;
         player = new Player(assets, this, 0, 0);
@@ -395,6 +423,42 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         cameraTarget.set(player.roomCameraTarget());
         cameraPanning = false;
         gamepad.suppressJumpUntilRelease();
+    }
+
+    private void openHealer(boolean paid) {
+        healer = new HealerDialogue(artifacts.hasIngredient(level.name, ItemType.CHICKEN),
+            artifacts.hasIngredient(level.name, ItemType.KEY),
+            level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal(),
+            level.canBrew(), paid);
+        dialogueInput.reset(Gdx.input);
+        gameStarted = false;
+        uiState = UiState.HEALER;
+    }
+
+    private void chooseHealer(HealerDialogue.Choice choice) {
+        switch (choice) {
+            case RETURN -> {
+                player = new Player(assets, this, 0, 0);
+                level.returnForCollection(player);
+                roomStartCoins = coinsCollected;
+                timeScale = 1;
+                cameraTarget.set(player.roomCameraTarget());
+                cameraPanning = false;
+                healer = null;
+                gamepad.suppressJumpUntilRelease();
+                gameStarted = true;
+                uiState = UiState.PLAYING;
+            }
+            case BREW -> { if (level.brewElixir()) { roomStartCoins = coinsCollected; openHealer(true); } }
+            case FIGHT -> {
+                level.commitBossEncounter();
+                healer = null;
+                gamepad.suppressJumpUntilRelease();
+                gameStarted = true;
+                uiState = UiState.PLAYING;
+                roomFade.start();
+            }
+        }
     }
 
     private Rectangle visibleWorldRect(Rectangle out) {
@@ -443,24 +507,28 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             }
         }
 
+        if (uiState == UiState.HEALER && stateAtFrameStart == UiState.HEALER) updateHealer(dt);
+
         // The level (with the player, enemies, etc.) only runs/shows while
         // actually playing/paused -- the main menu and its About/
         // Options sub-screens show only the decorative fog+firefly backdrop
         // behind them, matching the Rust version, not a live view of the
         // level loading behind the scenes.
-        boolean levelVisible = uiState == UiState.PLAYING || uiState == UiState.PAUSED;
-        boolean menuBackdropActive = !levelVisible && uiState != UiState.INTRO;
+        boolean levelVisible = uiState == UiState.PLAYING || (uiState == UiState.PAUSED && !pausedHealer);
+        boolean menuBackdropActive = !levelVisible && uiState != UiState.INTRO && uiState != UiState.HEALER
+            && !(uiState == UiState.PAUSED && pausedHealer);
         // Stay silent until the start screen has been dismissed: the click that dismisses it is
         // what lets the browser start the music. Loading is the start of a run, so fade it out.
         boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START && uiState != UiState.LOADING;
 
         // Age existing effects before combat/reset creates new ones: a slow frame must not
         // consume a newly landed hit's entire flash before it has been rendered once.
-        if (levelVisible && level != null && gameStarted && !roomFade.active()) level.updatePresentation(dt);
+        if (levelVisible && level != null && gameStarted && !roomFade.active()
+            && stateAtFrameStart != UiState.HEALER) level.updatePresentation(dt);
         if (roomResetPending && uiState == UiState.PLAYING) {
             rebuildRoom();
         }
-        if (levelVisible && level != null && gameStarted) {
+        if (levelVisible && level != null && gameStarted && stateAtFrameStart != UiState.HEALER) {
             if (roomFade.active()) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed()) togglePause();
                 else roomFade.update(dt, this::enterNextRoom);
@@ -484,7 +552,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         camera.update();
 
         // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
-        if (uiState == UiState.INTRO) {
+        if (uiState == UiState.INTRO || uiState == UiState.HEALER || pausedHealer) {
             Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         } else if (menuBackdropActive) {
             Gdx.gl.glClearColor(0.16f, 0.16f, 0.19f, 1f);
@@ -493,7 +561,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        boolean glitched = uiState == UiState.PAUSED && level != null;
+        boolean glitched = uiState == UiState.PAUSED && (pausedHealer || level != null);
         RippleEffect ripple = levelVisible && level != null ? level.activeRipple() : null;
         if (glitched) {
             glitchTime += dt;
@@ -501,7 +569,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             glitchTime = 0f;
         }
         if (glitched || ripple != null) {
-            renderPostProcessedWorld(glitched, ripple);
+            renderPostProcessedScene(glitched, ripple);
         } else if (levelVisible && level != null) {
             renderWorld();
         }
@@ -509,7 +577,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // HUD + overlays draw in fixed logical screen space (not affected by world camera).
         batch.setProjectionMatrix(screenCamera.combined);
         batch.begin();
-        if (uiState == UiState.PLAYING || uiState == UiState.PAUSED) {
+        if (levelVisible) {
             hud.render(batch, level != null ? level.boss() : null,
                 level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f);
             if (uiState == UiState.PLAYING) touchControls.render(batch);
@@ -520,11 +588,48 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
-        if (!roomFade.active() && uiState != UiState.INTRO) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
+        if (!roomFade.active() && uiState != UiState.INTRO && uiState != UiState.HEALER && !pausedHealer) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
         overlay.flushText(batch);
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
         if (uiState == UiState.INTRO) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
         batch.end();
+    }
+
+    /** Render only: the paused background must not poll input or advance its text. */
+    private void renderHealerScene() {
+        batch.setProjectionMatrix(screenCamera.combined);
+        batch.begin();
+        overlay.beginFrame();
+        healerView.render(batch, overlay, healer, language, level, artifacts);
+        overlay.flushText(batch);
+        batch.end();
+    }
+
+    private void updateHealer(float dt) {
+        boolean fresh = dialogueInput.skipPressed(Gdx.input);
+        if (dialogueInput.keyPressed(Input.Keys.ESCAPE)) {
+            pausedHealer = true;
+            uiState = UiState.PAUSED;
+            return;
+        }
+        healer.update(dt);
+        boolean up = dialogueInput.keyPressed(Input.Keys.UP) || dialogueInput.keyPressed(Input.Keys.W)
+            || dialogueInput.keyPressed(Input.Keys.A) || dialogueInput.keyPressed(Input.Keys.LEFT)
+            || gamepad.menuUp() || gamepad.menuLeft();
+        boolean down = dialogueInput.keyPressed(Input.Keys.DOWN) || dialogueInput.keyPressed(Input.Keys.S)
+            || dialogueInput.keyPressed(Input.Keys.D) || dialogueInput.keyPressed(Input.Keys.RIGHT)
+            || gamepad.menuDown() || gamepad.menuRight();
+        boolean confirm = dialogueInput.keyPressed(Input.Keys.ENTER) || dialogueInput.keyPressed(Input.Keys.SPACE)
+            || dialogueInput.keyPressed(leftHanded ? Input.Keys.Z : Input.Keys.J)
+            || dialogueInput.keyPressed(leftHanded ? Input.Keys.X : Input.Keys.K)
+            || dialogueInput.keyPressed(leftHanded ? Input.Keys.C : Input.Keys.L)
+            || gamepad.confirm() || gamepad.actionPressed() || gamepad.shootPressed();
+        Vector2 mouse = mouseLogical();
+        HealerDialogue.Choice choice = healer.interact(language,
+            fresh || gamepad.anyButtonPressed() || up || down,
+            up ? -1 : down ? 1 : 0, confirm,
+            dialogueInput.touchPressed() ? healerView.choiceAt(mouse, healer.choices().size()) : -1);
+        if (choice != null) chooseHealer(choice);
     }
 
     private void renderWorld() {
@@ -542,7 +647,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     /**
-     * Draws the world into an offscreen buffer and blits it to the screen through
+     * Draws the current background (world or frozen healer dialogue) into an offscreen buffer
+     * and blits it to the screen through
      * {@code screen_effects.frag}, which applies the pause glitch and/or the coin ripple's
      * scene distortion in one pass (ripple first, then the chroma shift). The HUD and pause
      * menu draw afterwards in the regular UI pass, so they stay crisp. Only frames with a
@@ -550,12 +656,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      *
      * @param ripple the ripple to distort the scene with, or null for none
      */
-    private void renderPostProcessedWorld(boolean glitched, RippleEffect ripple) {
+    private void renderPostProcessedScene(boolean glitched, RippleEffect ripple) {
         ensureSceneBuffer();
         sceneBuffer.begin();
-        Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
+        if (pausedHealer) Gdx.gl.glClearColor(0, 0, 0, 1);
+        else Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        renderWorld();
+        if (pausedHealer) renderHealerScene();
+        else renderWorld();
         sceneBuffer.end(); // resets the GL viewport to the whole window
         uiViewport.apply();
 
@@ -679,6 +787,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      *                      activate the pause menu's Back/Resume
      */
     private void renderOverlay(boolean acceptActions) {
+        if (uiState == UiState.HEALER) {
+            healerView.render(batch, overlay, healer, language, level, artifacts);
+            return;
+        }
         if (uiState == UiState.INTRO) {
             overlay.body(batch, intro.text(), LOGICAL_W / 2f, intro.textTop(),
                 LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f);
@@ -722,7 +834,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case OPTIONS -> optionsMenu;
             case ASSIST -> assistMenu;
             case PAUSED -> pauseMenu;
-            case INTRO, LOADING, PLAYING -> null;
+            case INTRO, LOADING, PLAYING, HEALER -> null;
         };
         if (uiState == UiState.LOADING) {
             overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
@@ -755,8 +867,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             float startY = titleBottom + (hintTop - titleBottom - Overlay.buttonsHeight(menu)) / 2f;
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
-            float panelW = 320f;
-            String aboutBody = uiState == UiState.ABOUT ? aboutText() : menu.bodyText();
+            float panelW = uiState == UiState.ABOUT ? 610f : 320f;
+            String aboutBody = uiState == UiState.ABOUT ? (aboutRules ? Msg.ABOUT_RULES.t(language) : aboutText()) : menu.bodyText();
             float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
@@ -883,6 +995,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
+    public void spendCoins(int amount) {
+        if (amount < 0 || amount > coinsCollected - levelStartCoins)
+            throw new IllegalArgumentException("Invalid current-level payment");
+        coinsCollected -= amount;
+    }
+
+    @Override
     public int coinsCollected() {
         return coinsCollected;
     }
@@ -917,16 +1036,6 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (player != null) player.resetJumpInput();
         gameStarted = !gameStarted;
         uiState = gameStarted ? UiState.PLAYING : UiState.PAUSED;
-    }
-
-    @Override
-    public boolean isSlowTime() {
-        return timeScale < 1f;
-    }
-
-    @Override
-    public void setSlowTime() {
-        timeScale = 0.5f;
     }
 
     @Override

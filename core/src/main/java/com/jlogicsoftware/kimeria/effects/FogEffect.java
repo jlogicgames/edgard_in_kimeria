@@ -7,7 +7,7 @@ import com.jlogicsoftware.kimeria.entity.WorldObject;
 
 import java.util.function.Supplier;
 
-/** Port of Dart's {@code FogEffect}: a full-viewport drifting fog overlay, drawn on top of everything. */
+/** Menu-only full-viewport drifting fog overlay. Gameplay levels do not create this effect. */
 public class FogEffect implements WorldObject {
     private final Supplier<Rectangle> visibleWorldRect;
     private float time = 0f;

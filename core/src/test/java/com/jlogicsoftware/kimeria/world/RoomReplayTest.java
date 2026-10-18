@@ -58,10 +58,9 @@ class RoomReplayTest {
             case "gamepad" -> pad;
             case "touch" -> touch;
             case "isGameStarted" -> true;
-            case "isSlowTime" -> timeScale < 1;
-            case "setSlowTime" -> { timeScale = .5f; yield null; }
             case "setNormalTime" -> { timeScale = 1f; yield null; }
             case "setTimeScale" -> { timeScale = (float) args[0]; yield null; }
+            case "spendCoins" -> { coins -= (int) args[0]; yield null; }
             case "addCoin" -> { coins++; yield null; }
             case "coinsCollected" -> coins;
             case "artifacts" -> artifacts;
@@ -107,7 +106,7 @@ class RoomReplayTest {
         measure("forest-1", false, false, 0, new float[]{125, 260, 540});
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
-        measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860});
+        measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860, 940});
     }
     @Test void forestCanopyRequiredRouteFitsTwentySeconds() {
         measure("forest-canopy", true, false, 0, new float[]{1400});
@@ -117,6 +116,46 @@ class RoomReplayTest {
     }
     @Test void forestCanopyAllCollectablesFitThirtySeconds() {
         measure("forest-canopy", true, true, 0, new float[]{1400, 1460, 1555});
+    }
+
+
+
+    @Test void repeatedCollectionReturnsReachMissedArtifactsWithRealMovementAndCannotFarm() {
+        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        for (int room = 0; room < 2; room++) {
+            for (var o : new java.util.ArrayList<>(level.objects)) {
+                if (o instanceof Enemy<?> enemy) enemy.collidedWithActor(true);
+                if (o instanceof Collectable c && c.type() == ItemType.COIN) c.collideWithPlayer();
+                if (o instanceof Bomb bomb) { bomb.collideWithPlayer(); bomb.update(.81f); }
+            }
+            if (room == 0) level.enterNextRoom(player());
+        }
+        level.prepareHealer();
+        assertEquals(6, coins);
+        assertTrue(artifacts.items().isEmpty());
+        for (int trip = 0; trip < 3; trip++) {
+            level.returnForCollection(player());
+            held.clear(); pressed.clear(); timeScale = 1;
+            float entry = replay(level, "forest-entry", false, 0, new float[]{95, 225, 345, 535, 860, 940}, true);
+            assertTrue(entry <= COLLECTION_LIMIT);
+            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.CHICKEN));
+            level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
+            float canopy = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555, 1640}, true);
+            assertTrue(canopy <= COLLECTION_LIMIT);
+            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.KEY));
+            level.prepareHealer();
+            assertEquals(6, coins);
+            assertEquals(6, level.forestCoinsSecured());
+            assertEquals(2, artifacts.items().size());
+            assertTrue(level.canBrew());
+            assertFalse(level.objects.stream().anyMatch(o -> o instanceof Enemy<?> || o instanceof Collectable));
+            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, canopy %.2f s%n", trip + 1, entry, canopy);
+        }
+        assertTrue(level.brewElixir());
+        assertEquals(0, coins);
+        assertTrue(artifacts.items().isEmpty());
+        assertTrue(artifacts.hasFullSet("forest"));
+
     }
 
     private Player player() { return new Player(assets, game, 0, 0); }
@@ -187,6 +226,10 @@ class RoomReplayTest {
     }
 
     private float replay(Level level, String route, boolean collect, int delayFrames, float[] jumps) {
+        return replay(level, route, collect, delayFrames, jumps, false);
+    }
+
+    private float replay(Level level, String route, boolean collect, int delayFrames, float[] jumps, boolean artifactsRoute) {
         Player player = level.player;
         int jump = 0, lastJumpFrame = -2;
         boolean actionWasDown = false;
@@ -204,6 +247,32 @@ class RoomReplayTest {
                 if (jump < jumps.length && player.position.x >= jumps[jump] && player.isOnGround()
                     && frame - lastJumpFrame > 1) {
                     held.add(Input.Keys.J); jump++; lastJumpFrame = frame;
+                }
+                if (collect && route.equals("forest-entry") && phase == 3) {
+                    // At normal speed the upper coin needs a ground jump beside its one-way platform.
+                    var upperCoin = level.objects.stream().filter(Collectable.class::isInstance)
+                        .map(Collectable.class::cast).filter(c -> c.type() == ItemType.COIN
+                            && !c.isCollected() && c.getY() < 300).findFirst().orElse(null);
+                    if (upperCoin != null) {
+                        float stop = upperCoin.getX() - player.hitbox.offsetX;
+                        if (player.position.x >= stop && player.position.x < stop + 12) {
+                            held.remove(Input.Keys.D);
+                            if (player.isOnGround() && frame - lastJumpFrame > 1) {
+                                held.add(Input.Keys.J); lastJumpFrame = frame;
+                            }
+                        }
+                    }
+                }
+                if (artifactsRoute) {
+                    ItemType target = route.equals("forest-entry") ? ItemType.CHICKEN : ItemType.KEY;
+                    float stop = target == ItemType.CHICKEN ? 430 : 1710;
+                    boolean hasTarget = artifacts.items().stream().anyMatch(p -> p.type() == target);
+                    if (!hasTarget && player.position.x >= stop && player.position.x < stop + 20) {
+                        held.remove(Input.Keys.D);
+                        if (player.isOnGround() && frame - lastJumpFrame > 1) {
+                            held.add(Input.Keys.J); lastJumpFrame = frame;
+                        }
+                    }
                 }
                 // Fresh wall-jump presses climb the two tall walls; release between presses.
                 if (player.isClambering() && frame % 16 == 0 && frame - lastJumpFrame > 1) {

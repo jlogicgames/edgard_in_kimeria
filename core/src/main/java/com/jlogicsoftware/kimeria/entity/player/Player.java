@@ -9,7 +9,6 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
-import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
@@ -159,14 +158,13 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (!game.isGameStarted()) return;
         if (respawnPhase != RespawnPhase.NONE) {
             resetJumpInput();
-            // Bullet time and the camera chase are off while dying: the death owns both.
+            // Death owns its time scale and camera; normal movement stays suspended.
             // Dying and arriving take no other input, but pausing must stay possible.
             if (game.isGameStarted() && pausePressed()) game.togglePause();
             tickAnimation(dt);
             handleRespawnPhase();
             return;
         }
-        updateBulletTime(dt);
         updateCameraPosition();
         if (isReachedCheckpoint) {
             tickAnimation(dt);
@@ -206,25 +204,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
         checkGameplayOverlaps();
 
         tickAnimation(dt);
-    }
-
-    private void updateBulletTime(float dt) {
-        boolean nearBat = false;
-        float px = position.x + facingAwareOffsetX();
-        float py = position.y + hitbox.offsetY;
-        for (var obj : level.objects) {
-            if (obj instanceof Bat bat) {
-                float bx = bat.getX(), by = bat.getY();
-                float dx = Math.max(0, Math.max(bx - (px + hitbox.width), px - (bx + bat.getWidth())));
-                float dy = Math.max(0, Math.max(by - (py + hitbox.height), py - (by + bat.getHeight())));
-                if (Math.sqrt(dx * dx + dy * dy) < 50) {
-                    nearBat = true;
-                    break;
-                }
-            }
-        }
-        if (nearBat && !game.isSlowTime()) game.setSlowTime();
-        else if (!nearBat && game.isSlowTime()) game.setNormalTime();
     }
 
     // The camera used to pick one of two look-ahead targets from facingRight,

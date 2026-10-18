@@ -36,6 +36,7 @@ class RoomTest {
             case "trapWarnings" -> new TrapWarnings();
             case "coinsCollected" -> coins.get();
             case "artifacts" -> artifacts;
+            case "spendCoins" -> { coins.addAndGet(-(int) args[0]); yield null; }
             case "addCoin" -> { coins.incrementAndGet(); yield null; }
             default -> method.getReturnType() == boolean.class ? false : null;
         });
@@ -256,4 +257,206 @@ class RoomTest {
         fade.start(); fade.cancel(); fade.update(1, switches::incrementAndGet);
         assertEquals(1, switches.get());
     }
+    private void collect(Level level, ItemType... types) {
+        var wanted = java.util.Set.of(types);
+        new java.util.ArrayList<>(level.objects).stream()
+            .filter(Collectable.class::isInstance).map(Collectable.class::cast)
+            .filter(c -> wanted.contains(c.type())).forEach(Collectable::collideWithPlayer);
+    }
+
+    @Test void healerNeedsEveryUniqueForestCoinAndPaysOnceWithoutSpendingEarlierCoins() {
+        coins.set(19); // Currency from another level.
+        Level level = forest();
+        collect(level, ItemType.COIN, ItemType.CHICKEN);
+        level.enterNextRoom(player());
+        collect(level, ItemType.COIN, ItemType.KEY);
+        assertEquals(6, level.forestCoinTotal());
+        assertFalse(level.canBrew(), "Current-room pickups must first be secured");
+        level.prepareHealer();
+        assertEquals(6, level.forestCoinsSecured());
+        assertEquals(25, coins.get());
+        coins.set(19);
+        assertFalse(level.canBrew(), "Even inconsistent inventory cannot spend prior-level currency");
+        assertFalse(level.brewElixir());
+        coins.set(25);
+        assertTrue(level.canBrew());
+        assertTrue(level.brewElixir());
+        assertEquals(19, coins.get());
+        assertTrue(artifacts.items().isEmpty());
+        assertTrue(artifacts.hasFullSet("forest"), "Payment must not erase the collection result");
+        assertEquals(10, artifacts.bossWeaponDamageMultiplier("forest"));
+        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-1"));
+        assertFalse(level.brewElixir());
+        assertEquals(19, coins.get());
+        level.commitBossEncounter();
+        assertThrows(IllegalStateException.class, () -> level.returnForCollection(player()));
+        level.enterNextRoom(player());
+        level.resetCurrentRoom(player());
+        assertEquals(10, artifacts.bossWeaponDamageMultiplier("forest"));
+        assertFalse(level.healerAhead());
+        level.bossDefeated();
+        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest"));
+    }
+
+    @Test void priorCurrencyCannotReplaceMissingForestCoinsOrIngredients() {
+        for (ItemType missing : new ItemType[]{ItemType.CHICKEN, ItemType.KEY, ItemType.COIN}) {
+            artifacts.clear(); coins.set(999);
+            Level level = forest();
+            ItemType[] wanted = java.util.Arrays.stream(ItemType.values())
+                .filter(t -> t != missing).toArray(ItemType[]::new);
+            collect(level, wanted);
+            level.enterNextRoom(player());
+            collect(level, wanted);
+            level.prepareHealer();
+            assertFalse(level.canBrew(), "Missing " + missing);
+            assertFalse(level.brewElixir());
+            assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest"));
+        }
+    }
+
+    @Test void collectionTripsKeepKillsTrapsAndUniqueCoinsAndRollbackOnlyNewPickups() {
+        Level level = forest();
+        var enemies = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance)
+            .map(o -> (com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>) o).toList();
+        var killed = enemies.get(0);
+        killed.collidedWithActor(true); // Secure a real defeat before its death animation ends.
+        var surviving = enemies.get(1);
+        surviving.position.x += 8;
+        float survivorX = surviving.getX();
+        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        bomb.collideWithPlayer(); bomb.update(.81f);
+        collect(level, ItemType.COIN); // Deliberately miss Chicken.
+        level.enterNextRoom(player());
+        collect(level, ItemType.COIN); // Deliberately miss Key.
+        level.prepareHealer();
+        assertFalse(level.canBrew());
+        assertEquals(6, level.forestCoinsSecured());
+        for (int trip = 0; trip < 3; trip++) {
+            level.returnForCollection(player());
+            assertEquals(new Vector2(64, 272), level.player.position);
+            assertEquals(6, coins.get());
+            assertFalse(level.objects.contains(killed));
+            if (trip == 0) {
+                assertTrue(level.objects.contains(surviving));
+                assertEquals(survivorX, surviving.getX());
+            }
+            assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
+            assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.COIN));
+            collect(level, ItemType.CHICKEN);
+            assertEquals(1, artifacts.items().size());
+            level.resetCurrentRoom(player()); // The new Chicken is provisional; old coins and kills are secured.
+            assertTrue(artifacts.items().isEmpty());
+            assertEquals(4, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance).count());
+            assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
+            assertNotNull(artifact(level, ItemType.CHICKEN));
+            level.enterNextRoom(player());
+            level.prepareHealer();
+            assertEquals(6, level.forestCoinsSecured());
+        }
+        level.returnForCollection(player());
+        collect(level, ItemType.CHICKEN);
+        level.enterNextRoom(player());
+        collect(level, ItemType.KEY);
+        level.prepareHealer();
+        assertTrue(level.canBrew());
+    }
+
+    @Test void warnedTrapResumesItsSavedCountdownOnReturnAndRestoresItAfterRoomDeath() {
+        Level level = forest();
+        Bomb trap = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        trap.collideWithPlayer(); trap.update(.3f);
+        level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
+        Bomb revisited = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        assertEquals(trap.snapshot(), revisited.snapshot());
+        revisited.update(.2f);
+        level.resetCurrentRoom(player());
+        Bomb retry = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        assertEquals(trap.snapshot(), retry.snapshot());
+        retry.update(.51f);
+        assertTrue(retry.isRemoved());
+    }
+
+    @Test void burnedChickenApproachAndSwitchChainsAreRestoredOnEveryCollectionTrip() {
+        Level level = forest();
+        // Exercise a future authored chain on the shipped Chicken route, without exempting it.
+        var platform = new com.jlogicsoftware.kimeria.tiled.TiledObject();
+        platform.id = 2000; platform.type = "FallingPlatform";
+        platform.x = 416; platform.y = 256; platform.width = 32; platform.height = 16;
+        level.map.layer("SpawnPoints").add(platform);
+        var trigger = new com.jlogicsoftware.kimeria.tiled.TiledObject();
+        trigger.id = 2001; trigger.type = "Trigger"; trigger.name = "approach";
+        trigger.x = 96; trigger.y = 288; trigger.width = 32; trigger.height = 32;
+        level.map.layer("SpawnPoints").add(trigger);
+        var wall = new com.jlogicsoftware.kimeria.tiled.TiledObject();
+        wall.id = 2002; wall.type = "Actionable"; wall.name = "approach";
+        wall.x = 416; wall.y = 272; wall.width = 32; wall.height = 48;
+        wall.properties.put("type", "Wall");
+        level.map.layer("SpawnPoints").add(wall);
+        var lift = new com.jlogicsoftware.kimeria.tiled.TiledObject();
+        lift.id = 2003; lift.type = "Escalator"; lift.name = "approach";
+        lift.x = 440; lift.y = 272; lift.width = 32; lift.height = 16;
+        lift.properties.put("offPos", "2");
+        level.map.layer("SpawnPoints").add(lift);
+        level.resetCurrentRoom(player());
+        for (int trip = 0; trip < 3; trip++) {
+            var falling = level.fallingPlatforms.get(0);
+            assertEquals(256, falling.getY());
+            assertFalse(falling.isRemoved());
+            assertNotNull(artifact(level, ItemType.CHICKEN));
+            var door = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Wall.class::isInstance)
+                .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow();
+            assertTrue(door.isActive());
+            assertEquals(com.jlogicsoftware.kimeria.entity.objects.Escalator.State.RUN, level.escalators.get(0).getState());
+            assertEquals(440, level.escalators.get(0).getX());
+            level.escalators.get(0).update(.25f);
+            level.activateTrigger(level.triggers.get(0));
+            assertTrue(door.isRemoved());
+            assertEquals(com.jlogicsoftware.kimeria.entity.objects.Escalator.State.IDLE, level.escalators.get(0).getState());
+            falling.collideWithActor(); falling.update(2); falling.update(2);
+            assertTrue(falling.isRemoved());
+            collect(level, ItemType.COIN);
+            level.enterNextRoom(player()); collect(level, ItemType.COIN);
+            level.prepareHealer(); level.returnForCollection(player());
+            assertNotSame(falling, level.fallingPlatforms.get(0));
+            assertEquals(6, level.forestCoinsSecured());
+        }
+        assertEquals(6, coins.get());
+        assertTrue(artifacts.items().isEmpty());
+    }
+
+    @Test void anEmptyAuthoredCoinSetNeverAutomaticallyQualifiesForTheElixir() {
+        var previous = Gdx.files;
+        HeadlessFiles files = new HeadlessFiles();
+        Gdx.files = (com.badlogic.gdx.Files) Proxy.newProxyInstance(com.badlogic.gdx.Files.class.getClassLoader(),
+            new Class<?>[]{com.badlogic.gdx.Files.class}, (proxy, method, args) -> {
+                if (method.getName().equals("internal") && args[0].equals("tiles/forest.tmx"))
+                    return files.internal("tiles/healer-empty.tmx");
+                return method.invoke(files, args);
+            });
+        try {
+            coins.set(999);
+            Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+            collect(level, ItemType.CHICKEN, ItemType.KEY);
+            level.prepareHealer();
+            assertTrue(artifacts.hasFullSet("forest"));
+            assertEquals(0, level.forestCoinTotal());
+            assertFalse(level.canBrew());
+            assertFalse(level.brewElixir());
+            assertEquals(999, coins.get());
+        } finally { Gdx.files = previous; }
+    }
+
+    @Test void fogIsAbsentFromGameplayButRetainedInTheMenu() throws Exception {
+        Level level = forest();
+        var ambience = Level.class.getDeclaredField("ambience"); ambience.setAccessible(true);
+        assertFalse(((java.util.List<?>) ambience.get(level)).stream()
+            .anyMatch(com.jlogicsoftware.kimeria.effects.FogEffect.class::isInstance));
+        level.enterNextRoom(player()); level.enterNextRoom(player());
+        assertFalse(((java.util.List<?>) ambience.get(level)).stream()
+            .anyMatch(com.jlogicsoftware.kimeria.effects.FogEffect.class::isInstance));
+        var fog = com.jlogicsoftware.kimeria.ui.MenuBackdrop.class.getDeclaredField("fog"); fog.setAccessible(true);
+        assertInstanceOf(com.jlogicsoftware.kimeria.effects.FogEffect.class,
+            fog.get(new com.jlogicsoftware.kimeria.ui.MenuBackdrop()));
+    }
+
 }

@@ -6,7 +6,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
-import com.jlogicsoftware.kimeria.effects.FogEffect;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
@@ -34,6 +33,8 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
 import com.jlogicsoftware.kimeria.tiled.TiledObject;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,7 @@ public class Level implements WorldObject {
     public final List<Escalator> escalators = new ArrayList<>();
     public final List<Trigger> triggers = new ArrayList<>();
     public final List<FallingPlatform> fallingPlatforms = new ArrayList<>();
-    /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain, fog. */
+    /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain. */
     public final List<WorldObject> objects = new ArrayList<>();
     /**
      * Objects spawned mid-frame (a coin's pickup ripple, a bomb's explosion,
@@ -73,10 +74,15 @@ public class Level implements WorldObject {
     public final RoomLayout roomLayout;
     private int currentRoom;
     private final List<WorldObject> ambience = new ArrayList<>();
-    /** Retained objects are frozen after leaving; they are never rebuilt by a later death. */
-    private record PassedRoom(List<WorldObject> objects, List<CollisionBlock> collisions,
-                              List<Escalator> escalators, List<FallingPlatform> platforms) { }
-    private final List<PassedRoom> passedRooms = new ArrayList<>();
+    /** One bounded entry per visited room: traversal objects are deliberately not retained. */
+    private record Visit(Map<Integer, Enemy<?>> enemies, Set<Integer> defeated,
+                         Map<Integer, Bomb.Snapshot> traps) { }
+    private final Map<Integer, Visit> visits = new HashMap<>();
+    private final Map<Integer, Enemy<?>> roomEnemies = new HashMap<>();
+    private final Map<Integer, Bomb> roomTraps = new HashMap<>();
+    private boolean revisiting, fightCommitted, brewed;
+    private final Set<Integer> authoredCoins = new HashSet<>();
+    private final int entryCoins;
     private final Set<Integer> pendingPickups = new HashSet<>();
     private final Set<Integer> keptPickups = new HashSet<>();
 
@@ -106,12 +112,14 @@ public class Level implements WorldObject {
 
     public void bossDefeated() {
         clearCameraEffects();
+        game.artifacts().endBossElixir(name);
         victory = true;
         player.beginVictoryWalk();
         game.setNormalTime();
     }
 
     public void shakeAfterBossAttack() { if (!victory) shakeRemaining = .18f; }
+    public void shakeAfterEmpoweredHit() { shakeRemaining = .18f; }
     public void clearCameraEffects() { shakeRemaining = 0; }
 
     /** Visual displacement only; narrow rooms keep their existing centred framing. */
@@ -146,10 +154,9 @@ public class Level implements WorldObject {
     public void enterNextRoom(Player nextPlayer) {
         if (!hasNextRoom()) throw new IllegalStateException("No next room");
         keepPickups();
-        passedRooms.add(new PassedRoom(List.copyOf(objects), List.copyOf(collisionBlocks),
-            List.copyOf(escalators), List.copyOf(fallingPlatforms)));
+        secureVisit();
         currentRoom++;
-        resetCurrentRoom(nextPlayer);
+        activateRoom(nextPlayer, true);
     }
 
     /** Dev-only map reload: keep a valid position and activate its room without a transition. */
@@ -168,10 +175,16 @@ public class Level implements WorldObject {
     }
 
     public void resetCurrentRoom(Player nextPlayer) {
+        activateRoom(nextPlayer, false);
+    }
+
+    private void activateRoom(Player nextPlayer, boolean revisit) {
+        revisiting = revisit;
         game.artifacts().resetRoom();
         objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); fallingPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear();
         boss = null;
+        roomEnemies.clear(); roomTraps.clear();
         victory = completionSent = false;
         clearCameraEffects();
         player = nextPlayer;
@@ -200,6 +213,7 @@ public class Level implements WorldObject {
         this.game = game;
         this.player = player;
         this.name = levelName;
+        this.entryCoins = game.coinsCollected();
         this.map = TiledMapData.load("tiles/" + levelName + ".tmx", assets);
 
         roomLayout = new RoomLayout(map);
@@ -213,6 +227,10 @@ public class Level implements WorldObject {
             }
         }
         for (TiledObject o : map.layer("Collisions")) roomLayout.owner(o);
+        for (TiledObject o : map.layer("SpawnPoints")) {
+            if ("Collectable".equals(o.type) && ItemType.fromMapName(o.name) == ItemType.COIN)
+                authoredCoins.add(o.id);
+        }
         spawnObjects();
         addCollisions();
 
@@ -220,7 +238,6 @@ public class Level implements WorldObject {
             for (int i = 0; i < 24; i++) {
                 ambience.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
             }
-            ambience.add(new FogEffect(visibleWorldRect));
         }
         if ("forest-1".equals(levelName)) {
             sky = new SkyBackground(assets);
@@ -232,9 +249,75 @@ public class Level implements WorldObject {
         placePlayer();
     }
 
+    public boolean healerAhead() {
+        return "forest".equals(name) && !fightCommitted && map.layer("SpawnPoints").stream()
+            .anyMatch(o -> "Boss".equals(o.type) && roomLayout.owner(o) == currentRoom + 1);
+    }
+
+    /** Securing here is idempotent, including the second call when the return is chosen. */
+    public void prepareHealer() {
+        if (!healerAhead()) throw new IllegalStateException("No healer before this room");
+        keepPickups();
+        secureVisit();
+    }
+
+    public int forestCoinTotal() { return authoredCoins.size(); }
+    public int forestCoinsSecured() {
+        return (int) authoredCoins.stream().filter(keptPickups::contains).count();
+    }
+    public boolean canBrew() {
+        return !brewed && healerAhead() && !authoredCoins.isEmpty()
+            && forestCoinsSecured() == authoredCoins.size() && game.coinsCollected() - entryCoins >= authoredCoins.size()
+            && game.artifacts().hasIngredient(name, ItemType.CHICKEN)
+            && game.artifacts().hasIngredient(name, ItemType.KEY);
+    }
+    public boolean brewElixir() {
+        if (!canBrew()) return false;
+        if (!game.artifacts().consumeIngredients(name)) return false;
+        game.spendCoins(authoredCoins.size());
+        brewed = true;
+        return true;
+    }
+    public void commitBossEncounter() {
+        if (!healerAhead()) throw new IllegalStateException("No uncommitted boss encounter");
+        prepareHealer();
+        fightCommitted = true;
+    }
+    public void returnForCollection(Player nextPlayer) {
+        if (!healerAhead()) throw new IllegalStateException("Collection return unavailable");
+        prepareHealer();
+        currentRoom = 0;
+        activateRoom(nextPlayer, true);
+    }
+
+    private void secureVisit() {
+        Set<Integer> defeated = new HashSet<>();
+        Visit previous = visits.get(currentRoom);
+        if (previous != null) defeated.addAll(previous.defeated());
+        roomEnemies.forEach((id, enemy) -> { if (enemy.isDefeated()) defeated.add(id); });
+        Map<Integer, Bomb.Snapshot> traps = new HashMap<>();
+        roomTraps.forEach((id, bomb) -> traps.put(id, bomb.snapshot()));
+        visits.put(currentRoom, new Visit(Map.copyOf(roomEnemies), Set.copyOf(defeated), Map.copyOf(traps)));
+    }
+
+    private boolean restoreRetainedObject(TiledObject o) {
+        Visit saved = visits.get(currentRoom);
+        if (saved == null) return false;
+        if (saved.defeated().contains(o.id)) return true;
+        Enemy<?> enemy = saved.enemies().get(o.id);
+        if (revisiting && enemy != null) {
+            enemy.revisit(player);
+            roomEnemies.put(o.id, enemy);
+            objects.add(enemy);
+            return true;
+        }
+        return false;
+    }
+
     private void spawnObjects() {
         for (TiledObject o : map.layer("SpawnPoints")) {
             if (roomLayout.owner(o) != currentRoom) continue;
+            if (restoreRetainedObject(o)) continue;
             switch (o.type) {
                 case "Player" -> {
                     player.position.set(o.x, o.y);
@@ -249,6 +332,7 @@ public class Level implements WorldObject {
                         o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
                     bat.setPlayer(player);
                     objects.add(bat);
+                    roomEnemies.put(o.id, bat);
                 }
                 case "Checkpoint" -> objects.add(new Checkpoint(o.x, o.y, o.width, o.height));
                 case "YellowMob" -> {
@@ -257,6 +341,7 @@ public class Level implements WorldObject {
                     mob.setPlayer(player);
                     mob.setLevel(this);
                     objects.add(mob);
+                    roomEnemies.put(o.id, mob);
                 }
                 case "Boss" -> {
                     boss = new Boss(assets, game, this, o.x, o.y);
@@ -269,10 +354,17 @@ public class Level implements WorldObject {
                     mob.setPlayer(player);
                     mob.setLevel(this);
                     objects.add(mob);
+                    roomEnemies.put(o.id, mob);
                 }
-                case "Bomb" -> objects.add(new Bomb(assets, game, this::queueSpawn, blast -> {
-                    if (blast.overlaps(player.hitboxBounds())) player.collidedWithActor(false);
-                }, o.x, o.y, o.width, o.height));
+                case "Bomb" -> {
+                    Bomb bomb = new Bomb(assets, game, this::queueSpawn, blast -> {
+                        if (blast.overlaps(player.hitboxBounds())) player.collidedWithActor(false);
+                    }, o.x, o.y, o.width, o.height);
+                    Visit saved = visits.get(currentRoom);
+                    if (saved != null && saved.traps().containsKey(o.id)) bomb.restore(saved.traps().get(o.id));
+                    roomTraps.put(o.id, bomb);
+                    if (!bomb.isRemoved()) objects.add(bomb);
+                }
                 case "Torch" -> {
                     int intensity = (int) o.propFloat("Intensity", 80);
                     objects.add(new Torch(o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, ""));
@@ -285,7 +377,7 @@ public class Level implements WorldObject {
                 case "Actionable" -> spawnActionable(o);
                 case "Escalator" -> {
                     Escalator escalator = new Escalator(assets, o.x, o.y, o.width, o.height,
-                        o.propBool("isVertical", false), o.propFloat("offNeg", 0), o.propFloat("offPos", 0), "");
+                        o.propBool("isVertical", false), o.propFloat("offNeg", 0), o.propFloat("offPos", 0), o.name);
                     escalators.add(escalator);
                 }
                 case "FallingPlatform" -> {
@@ -299,7 +391,7 @@ public class Level implements WorldObject {
     }
 
     private void spawnCollectable(TiledObject o, ItemType type) {
-        if (type != ItemType.COIN && game.artifacts().contains(name, o.id)) return;
+        if (keptPickups.contains(o.id) || (type != ItemType.COIN && game.artifacts().contains(name, o.id))) return;
         objects.add(new Collectable(assets, game, this::queueSpawn, type.name(), o.x, o.y, o.width, o.height, () -> {
             recordPickup(o.id);
             if (type != ItemType.COIN) game.artifacts().collect(name, o.id, type);

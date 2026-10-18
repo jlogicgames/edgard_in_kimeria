@@ -67,8 +67,6 @@ class BossCombatTest {
             case "gamepad" -> pad;
             case "touch" -> touch;
             case "isGameStarted" -> true;
-            case "isSlowTime" -> timeScale < 1;
-            case "setSlowTime" -> { timeScale = .5f; yield null; }
             case "setNormalTime" -> { timeScale = 1f; yield null; }
             case "setTimeScale" -> { timeScale = (float) args[0]; yield null; }
             case "addCoin" -> { coins++; yield null; }
@@ -164,7 +162,7 @@ class BossCombatTest {
         field.set(target, Enum.valueOf((Class) field.getType(), name));
     }
 
-    @Test void f6UsesTheRoomFadeAndStopsAtTheBossRoomWithoutCompletingTheLevel() throws Exception {
+    @Test void f6UsesTheRoomFadeAndStopsForHealerBeforeTheBoss() throws Exception {
         level = new Level(assets, game, player(), "forest", Rectangle::new);
         KimeriaGame running = new KimeriaGame();
         gameField(running, "assets", assets); gameField(running, "level", level);
@@ -185,9 +183,21 @@ class BossCombatTest {
             });
             assertFalse(fade.active());
         }
+        assertEquals(1280, level.currentRoomBounds().x);
+        assertNull(level.boss(), "Healer opens before entering the boss room");
+        assertFalse(running.isGameStarted());
+        var state = KimeriaGame.class.getDeclaredField("uiState"); state.setAccessible(true);
+        assertEquals("HEALER", state.get(running).toString());
+        var choose = KimeriaGame.class.getDeclaredMethod("chooseHealer", com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.class);
+        choose.setAccessible(true);
+        choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.FIGHT);
+        for (int frame = 0; frame < 4; frame++) fade.update(.25f, () -> {
+            try { enter.invoke(running); } catch (Exception e) { throw new RuntimeException(e); }
+        });
         assertEquals(1952, level.currentRoomBounds().x);
         assertEquals(new Vector2(2032, 272), level.player.position);
         assertNotNull(level.boss());
+        assertFalse(level.healerAhead());
         hotkeys.invoke(running);
         assertFalse(fade.active(), "F6 at the last room must be a no-op");
         assertEquals(0, completions);
@@ -495,15 +505,16 @@ class BossCombatTest {
         assertEquals(Vector2.Zero, shake()); frames(30); assertEquals(Vector2.Zero, shake());
     }
 
-    @Test void victoryKeepsFogFireAndHazardsRunningWithoutHarmingTheHero() throws Exception {
+    @Test void victoryKeepsFirefliesFireAndHazardsRunningWithoutHarmingTheHero() throws Exception {
         encounter();
         var ambienceField = Level.class.getDeclaredField("ambience"); ambienceField.setAccessible(true);
         List<?> ambience = (List<?>) ambienceField.get(level);
-        Object fog = ambience.stream().filter(com.jlogicsoftware.kimeria.effects.FogEffect.class::isInstance)
+        assertFalse(ambience.stream().anyMatch(com.jlogicsoftware.kimeria.effects.FogEffect.class::isInstance));
+        Object firefly = ambience.stream().filter(com.jlogicsoftware.kimeria.effects.Firefly.class::isInstance)
             .findFirst().orElseThrow();
-        var fogTime = com.jlogicsoftware.kimeria.effects.FogEffect.class.getDeclaredField("time");
-        fogTime.setAccessible(true);
-        float fogBefore = fogTime.getFloat(fog);
+        var timer = com.jlogicsoftware.kimeria.effects.Firefly.class.getDeclaredField("timer");
+        timer.setAccessible(true);
+        float before = timer.getFloat(firefly);
         int[] fireUpdates = {0};
         level.objects.add(new com.jlogicsoftware.kimeria.effects.Torch(2100, 300, 16, 16, 300, "") {
             @Override public void update(float dt) { fireUpdates[0]++; super.update(dt); }
@@ -518,11 +529,11 @@ class BossCombatTest {
         float start = level.player.getX();
         frames(30);
         assertEquals(start, level.player.getX(), "Wait for the existing death presentation");
-        assertTrue(fogTime.getFloat(fog) > fogBefore);
+        assertTrue(timer.getFloat(firefly) > before);
         assertEquals(30, fireUpdates[0]);
-        float pausedFog = fogTime.getFloat(fog);
+        float pausedFirefly = timer.getFloat(firefly);
         pressed.add(Input.Keys.ESCAPE); frames(1);
-        assertEquals(pausedFog, fogTime.getFloat(fog), "The real pause action still freezes the world");
+        assertEquals(pausedFirefly, timer.getFloat(firefly), "The real pause action still freezes the world");
         assertEquals(30, fireUpdates[0]);
         frames(40);
         assertTrue(level.player.getX() > start);
@@ -555,4 +566,129 @@ class BossCombatTest {
         assertFalse(level.player.isGotHit()); assertTrue(level.player.getX() > 2496);
         frames(100); assertEquals(1, completions);
     }
+    @Test void elixirThickensBloodAndShakesOnlyOnLandedEmpoweredSwordHits() {
+        encounter();
+        boss.collidedWithActor(true);
+        frames(0); level.update(0);
+        BloodBurst normal = level.objects.stream().filter(BloodBurst.class::isInstance).map(BloodBurst.class::cast).findFirst().orElseThrow();
+        assertEquals(32, normal.dropletCount());
+        assertEquals(Vector2.Zero, shake(), "Ordinary hit has no empowered impact shake");
+        artifacts.drinkBossElixir("forest");
+        boss.collidedWithActor(true); level.update(.01f);
+        assertEquals(1, boss.energy());
+        assertTrue(level.objects.stream().filter(BloodBurst.class::isInstance).map(BloodBurst.class::cast)
+            .anyMatch(b -> b.dropletCount() == 48));
+        assertTrue(shake().len() > 0);
+        level.clearCameraEffects();
+        boss.collidedWithActor(false);
+        assertEquals(Vector2.Zero, shake(), "Body contact cannot trigger sword-impact shake");
+        boss.collidedWithActor(true); level.update(.01f);
+        assertTrue(boss.isDefeated());
+        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest"));
+        assertTrue(shake().len() > 0, "The killing empowered hit still has its own impact shake");
+        frames(20);
+        assertEquals(Vector2.Zero, shake());
+    }
+
+    @Test void healerReturnDeathAndPaymentUseRealGameCoinBoundariesAndRestartClearsEffect() throws Exception {
+        KimeriaGame running = new KimeriaGame();
+        gameField(running, "playSounds", false);
+        gameField(running, "assets", assets);
+        gameField(running, "touchControls", touch);
+        gameField(running, "currentLevelIndex", 1);
+        gameField(running, "coinsCollected", 19);
+        gameField(running, "player", new Player(assets, running, 0, 0));
+        var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true);
+        var enter = KimeriaGame.class.getDeclaredMethod("enterNextRoom"); enter.setAccessible(true);
+        var rebuild = KimeriaGame.class.getDeclaredMethod("rebuildRoom"); rebuild.setAccessible(true);
+        var levelField = KimeriaGame.class.getDeclaredField("level"); levelField.setAccessible(true);
+        var choose = KimeriaGame.class.getDeclaredMethod("chooseHealer", com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.class);
+        choose.setAccessible(true);
+        load.invoke(running);
+        Level world = (Level) levelField.get(running);
+        Collectable securedCoin = world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
+            .filter(c -> c.type() == ItemType.COIN).findFirst().orElseThrow();
+        securedCoin.collideWithPlayer();
+        world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
+            .filter(c -> c.type() == ItemType.CHICKEN).forEach(Collectable::collideWithPlayer);
+        enter.invoke(running);
+        world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
+        enter.invoke(running); // Healer secures the canopy before opening.
+        assertEquals(23, running.coinsCollected());
+        choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.RETURN);
+        world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
+        assertEquals(25, running.coinsCollected());
+        rebuild.invoke(running);
+        assertEquals(23, running.coinsCollected(), "Only this revisit's two provisional coins roll back");
+        assertEquals(2, world.objects.stream().filter(Collectable.class::isInstance).count());
+        assertTrue(running.artifacts().hasFullSet("forest"));
+        world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
+        enter.invoke(running); enter.invoke(running);
+        choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.BREW);
+        assertEquals(19, running.coinsCollected());
+        assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest"));
+        choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.FIGHT);
+        enter.invoke(running);
+        rebuild.invoke(running);
+        assertEquals(19, running.coinsCollected(), "Boss death must not refund payment");
+        assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest"));
+        assertFalse(world.healerAhead());
+        gameField(running, "pauseMenu", new com.jlogicsoftware.kimeria.ui.Menu(null, null,
+            List.of(new com.jlogicsoftware.kimeria.ui.MenuItem(() -> "Resume", () -> {})), null));
+        var restart = KimeriaGame.class.getDeclaredMethod("restartLevel"); restart.setAccessible(true);
+        restart.invoke(running); load.invoke(running);
+        assertEquals(19, running.coinsCollected());
+        assertEquals(1, running.artifacts().bossWeaponDamageMultiplier("forest"));
+        assertTrue(running.artifacts().items().isEmpty());
+        Level restarted = (Level) levelField.get(running);
+        assertEquals(0, restarted.forestCoinsSecured());
+        assertEquals(4, restarted.objects.stream().filter(Collectable.class::isInstance).count());
+    }
+
+    @Test void escapePausesTheDialogueWithoutAdvancingTextAndResumeKeepsItsState() throws Exception {
+        for (boolean choices : new boolean[]{false, true}) {
+            KimeriaGame running = new KimeriaGame();
+            var dialogue = new com.jlogicsoftware.kimeria.ui.HealerDialogue(false, false, false, false, false);
+            if (choices) {
+                for (int i = 0; i < 8; i++) dialogue.advance(com.jlogicsoftware.kimeria.localization.Language.ENGLISH);
+                dialogue.select(1);
+            } else dialogue.update(.2f);
+            gameField(running, "healer", dialogue);
+            gameState(running, "HEALER");
+            String text = dialogue.text(com.jlogicsoftware.kimeria.localization.Language.ENGLISH);
+            int selected = dialogue.selected();
+            pressed.add(Input.Keys.ESCAPE);
+            var update = KimeriaGame.class.getDeclaredMethod("updateHealer", float.class); update.setAccessible(true);
+            update.invoke(running, 1f);
+            var origin = KimeriaGame.class.getDeclaredField("pausedHealer"); origin.setAccessible(true);
+            var state = KimeriaGame.class.getDeclaredField("uiState"); state.setAccessible(true);
+            assertEquals("PAUSED", state.get(running).toString());
+            assertTrue(origin.getBoolean(running), "The pause background must be dialogue, not the level");
+            assertEquals(text, dialogue.text(com.jlogicsoftware.kimeria.localization.Language.ENGLISH));
+            assertEquals(selected, dialogue.selected());
+            var resume = KimeriaGame.class.getDeclaredMethod("resumeGame"); resume.setAccessible(true);
+            resume.invoke(running);
+            assertEquals("HEALER", state.get(running).toString());
+            assertFalse(running.isGameStarted(), "Resume dialogue must not start the world simulation");
+            assertFalse(origin.getBoolean(running));
+            assertEquals(text, dialogue.text(com.jlogicsoftware.kimeria.localization.Language.ENGLISH));
+            assertEquals(selected, dialogue.selected());
+            pressed.clear();
+        }
+    }
+
+    @Test void batProximityKeepsNormalSpeedAndDeathStillSlowsTime() {
+        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        var bat = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Bat.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.enemy.Bat.class::cast).findFirst().orElseThrow();
+        level.player.position.set(bat.getX() - 60, bat.getY() - 26);
+        level.player.update(REAL_STEP);
+        assertFalse(level.player.isGotHit());
+        assertEquals(1f, timeScale, "A nearby bat must not change gameplay speed");
+        level.player.collidedWithActor(false);
+        assertEquals(.2f, timeScale, "Death still has its intentional slow-motion presentation");
+        level.player.update(REAL_STEP);
+        assertEquals(.2f, timeScale);
+    }
+
 }

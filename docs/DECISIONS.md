@@ -38,11 +38,15 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
     including combat, waiting, and slow motion, from usable entrance input to the
     exit contact; exclude loading, pauses, fades, and death/exit presentation.
     Reference routes and results are recorded in [ROOMS.md](ROOMS.md) (#70).
-  - On death the **current room** returns to its initial state (player, enemies, items,
-    traps, artifacts picked up in it), so every attempt at a room starts identically. The
-    player respawns at the room's entrance.
-  - **Rooms already passed keep their state** for the rest of the level: killed enemies stay
-    dead, destroyed things stay destroyed, collected artifacts stay collected.
+  - On death the **current room** resets the player, surviving enemies and traversal objects;
+    new provisional pickups roll back. On its first visit, traps also return to their initial
+    state. On a collection revisit, secured pickups and killed enemies stay absent, and traps
+    return to the state secured on the previous exit. The player respawns at the room entrance.
+    The complete first-visit/revisit policy is in [HEALER.md](HEALER.md).
+  - **Rooms already passed keep progression** for the rest of the level: killed enemies stay
+    dead and collected pickups stay collected. The optional healer collection return (D6)
+    preserves enemy/trap state but restores traversal platforms, switches and linked doors.
+    It is distinct from a same-room death reset. See [HEALER.md](HEALER.md).
   - Death plays in slow motion, as in Katana Zero (about 0.7 s of real time at a fifth of
     normal speed), so the player sees what killed them and does not walk into it twice. Only
     the hit animation is cut short, not played to its end. A fall into a pit has nothing to
@@ -66,6 +70,10 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   cheap; keeping passed rooms, as Expendabros keeps what was destroyed, means a death costs
   only the room being attempted. A hard camera cut disorients, so the camera always pans.
 - **Tracked in:** #45, #47, #60
+
+Bat proximity does not change time scale; the old proximity slow motion has been removed.
+Death retains its own slow-motion presentation. Gameplay levels have no fog; fog remains
+only in the menu backdrop.
 
 ## D4. Stomp is allowed, from above only
 
@@ -94,19 +102,29 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 - **Decision:**
   - Hearts are removed, since there is nothing for them to restore.
   - Coins are optional healer payment in `forest` (#82/#84); collection is never required.
-    The payment/dialogue/return feature is pending #84; the boss combat is described in
-    [BOSS.md](BOSS.md).
+    Dialogue, payment and collection returns are described in [HEALER.md](HEALER.md);
+    boss combat is described in [BOSS.md](BOSS.md).
   - **Artifacts** are optional: the game can be finished without them. The current test set
     for `forest` is **Chicken + Key**; `forest-1` has no artifacts or full-set reward yet.
     Their current map positions are test placements, not the final challenge layout.
   - The boss always starts at full normal energy. Merely holding Chicken and Key gives
     no bonus. The optional healer bargain consumes Chicken, Key and every forest coin;
     the hero immediately drinks the elixir, granting **10x sword damage to this boss**.
-    This replaces the former automatic 0.1 starting-energy multiplier; they never stack.
-    Consumed elixir survives boss-room death, without repeating the bargain or collection.
-    It is run-only and clears on Restart Level, leaving the level or leaving the run.
-  - An artifact **counts once the player leaves its room** (enters the next room or reaches
-    the level exit). Dying before that returns it to its place (D3).
+    Starting/max energy is unchanged; only the player's sword damage is multiplied.
+    The effect belongs only to this boss encounter and its retries until this boss is defeated;
+    clear it immediately on boss defeat. Empowered hits emit 48 thicker droplets with longer trails and shake the
+    screen. After committing to the fight, no backward return or onward passage is possible
+    until victory. The bargain/dialogue does not repeat on retry. It is run-only and also
+    clears on Restart Level, leaving the level or leaving the run.
+  - Payment consumes Chicken, Key and every unique authored forest coin, never prior-level
+    currency. Collection identities and completion remain recorded after spending. Brewing is
+    once per encounter; an empty/undefined authored coin set cannot satisfy the recipe.
+  - At healer entry and collection return, secure the current room's pickups and enemy/trap
+    state. Collection return teleports to the first room; it is not Restart Level or free
+    backward traversal. Restore platforms, switches and dependent traversal chains each time
+    a visited room is re-entered; retain enemy/trap state and collected pickup identities.
+  - An artifact **counts once secured at room/level exit or healer entry/return**.
+    Dying before that returns the new provisional pickup to its place (D3).
   - Pickups appear immediately in a single HUD row after the coin counter, in collection
     order. Their world sprites use two 16x16 frames at 0.3 seconds per frame, like coins.
     Artifacts do not increase the coin counter.
@@ -122,8 +140,10 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
 ## D7. Traps are deterministic puzzle elements
 
 - **Status:** Accepted
-- **Decision:** Bombs are the first of many planned traps. Every trap behaves the same on each
-  attempt and warns the player before it can kill. This is guaranteed by the room reset (D3).
+- **Decision:** Bombs are the first of many planned traps. Each first-visit retry starts from the same
+  trap state and warns before killing. On a healer revisit, retain the secured trap state,
+  including a partially elapsed warning or prior explosion; death restores that secured
+  baseline (D3/D6). Falling platforms are restored traversal objects on collection return.
   Every trap takes its warning time from one shared place, so the assist option for longer
   warnings (D11) applies to every trap, including new ones.
   Implementation rule: obtain `game.trapWarnings()` and call `duration(baseSeconds)` once
@@ -144,9 +164,10 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   circular hitbox or expanding lethal wave. Assist changes only the warning duration.
 - **Future trap contract:** Keep activation, warning and lethal event distinct. Each trap owns
   its state and samples shared timing once at activation. Spawn transient effects through
-  `Level.queueSpawn`; never leave damage in a cosmetic effect. Room retries rebuild idle traps
+  `Level.queueSpawn`; never leave damage in a cosmetic effect. Room retries rebuild traps from the applicable initial/secured baseline
   and discard both active and queued effects. No trap base class is needed yet: bombs and
-  falling platforms share timing and reset rules but have different activation/damage logic.
+  falling platforms share warning timing but have distinct collection-return retention rules
+  and activation/damage logic (see [HEALER.md](HEALER.md)).
 - **Tracked in:** #47, #71
 
 ## D8. Main menu has Continue and New Game
@@ -290,14 +311,14 @@ Lethal damage always cancels combat. The player can jump away after sword recove
 Each completed attack produces one mild, room-bounded visual shake, even on a miss.
 Death resets the boss to full energy and throne at the boss-room entrance, retaining the elixir.
 Boss defeat freezes hero control, shows death, then walks the hero safely through terrain
-off the right edge. The world keeps updating throughout: fog, fire, platforms and hazards
+off the right edge. The world keeps updating throughout: fireflies, fire, platforms and hazards
 continue moving, while the scripted hero is protected from damage. Pause still freezes it. Only then does the existing level completion/save path run, exactly once.
 Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md](BOSS.md).
 
 
 ## D14. The healer is Edgard's recurring guide
 
-- **Status:** Accepted, 2026-10-16; scenes pending implementation.
+- **Status:** Accepted, 2026-10-16; opening and pre-boss scene implemented, post-boss scene pending #86.
 - **Decision:** The healer (знахарь) from the optional pre-boss elixir encounter is a
   recurring character and Edgard's guide through the journey. He narrates the very
   beginning: darkness has descended upon the kingdom, brought about by the evil sorceress

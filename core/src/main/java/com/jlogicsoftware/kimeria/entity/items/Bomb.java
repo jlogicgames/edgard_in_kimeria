@@ -39,6 +39,21 @@ public class Bomb extends Entity {
         animation.setPlayMode(Animation.PlayMode.LOOP);
     }
 
+    public record Snapshot(boolean warning, boolean exploded, float remaining, float elapsed, float animationTime) { }
+
+    public Snapshot snapshot() {
+        return new Snapshot(state == State.WARNING, state == State.EXPLODED || isRemoved(),
+            warningRemaining, warningElapsed, stateTime);
+    }
+
+    public void restore(Snapshot saved) {
+        state = saved.exploded() ? State.EXPLODED : saved.warning() ? State.WARNING : State.IDLE;
+        warningRemaining = saved.remaining();
+        warningElapsed = saved.elapsed();
+        stateTime = saved.animationTime();
+        if (saved.exploded()) removeFromParent();
+    }
+
     /** Activation follows the art (10x13 inside the 16x16 frame), excluding empty corners. */
     public Rectangle hitboxBounds() {
         float sx = size.x / 16f, sy = size.y / 16f;

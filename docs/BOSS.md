@@ -83,22 +83,26 @@ Boss damage resolves after the player's sword and movement. A same-frame interru
 wins over the normal strike or its pending completion shake. Lethal sword damage wins over
 that boss's remaining attack/body damage. A hero already killed by another hazard cannot
 land a posthumous sword hit. Further hits during counter still deal damage, including 10x;
-a lethal one cancels both attack and shake. There is no recursive counter queue.
+a lethal one cancels the attack and its completion shake. An empowered sword hit still
+creates its own brief impact shake, including on the lethal hit. There is no recursive counter queue.
 
 Shake is only a render-camera offset; it never changes the chase target or collisions.
 An axis narrower than the viewport keeps its existing centred framing. In this particular
 room horizontal shake is therefore zero; vertical shake uses the eight pixels of available
-room framing. Pause, death, room transition, retry and boss death clear the effect. A
+room framing. Pause, death, room transition and retry clear the effect. Boss death clears old attack
+shake; its final empowered sword hit may start its own impact shake. A
 completed counter has its own completion shake; the interrupted normal has none.
 
 ## Retry, elixir and completion
 
 Death rebuilds the boss at full energy and throne, respawning the hero at 2032,272 with
 the existing arrival animation. Consumed elixir is run-only inventory state, outside room
-rollback. `drinkBossElixir("forest")` is #84's consumption hook after successful payment;
-there is no debug or automatic artifact activation in the shipped game. The healer,
-payment/collection return and dialogue remain #84. That feature must not reopen its bargain
-on boss retry. Restart Level, next level, New Game, Continue and exit clear the effect.
+rollback. The healer consumes Chicken, Key and all unique forest coins after verification,
+then calls `drinkBossElixir("forest")`; no automatic artifact activation occurs.
+[HEALER.md](HEALER.md) describes the implemented dialogue and collection-return policy.
+The encounter locks on choosing the fight: no return or onward passage until boss defeat,
+and no repeated bargain on retry. The effect applies only to this boss and ends immediately
+on its defeat; Restart Level, next level, New Game, Continue and exit also clear it.
 The removed `bossEnergyMultiplier` must not be restored or combined with this multiplier.
 
 Boss death immediately stops control and damaging interactions. At the end of the 0.8 s
@@ -169,7 +173,8 @@ boss sits on the throne and during the protected victory walk. It disappears wit
 or level. The label is localized (English/Ukrainian); a green potion and `x10` indicate the
 consumed elixir and remain on boss retry. No automatic artifact bonus is implied.
 
-Each landed sword swing triggers one 75 ms impact sound, a 32-droplet crimson blood spray at the contact side,
+Each landed sword swing triggers one 75 ms impact sound, a 32-droplet crimson blood spray
+at the contact side (48 droplets with 1.8x thickness, 4x trails and a brief impact shake while the elixir is active),
 and a 250 ms glow/fade over the lost slots. Counterattack hits have the same feedback without
 changing the counter's state or timer. Lethal hits still show their impact. Missing a swing
 or bouncing off the head produces no sword-damage feedback.
@@ -220,7 +225,7 @@ The lethal axe boxes follow the newly assigned rows.
 **F6** starts the normal fade into the next room, securing pickups just like the room exit.
 It ignores paused gameplay, an active fade, death/arrival, victory and the last room. It
 never completes a level or writes a save. For a fresh run: **F4** reaches forest, then
-**F6 twice** reaches forest-boss. F5 remains blocked on the boss map.
+**F6 twice** opens the healer; choose the fight to enter forest-boss. F5 remains blocked on the boss map.
 
 Regression checks cover actual F6 input dispatch and fade through both rooms, no-op in the
 last room/while paused, exact one-based art rows for every attack pose, accelerated durations,
@@ -236,12 +241,12 @@ the animation, movement and energy remain assigned as above. Counter warning and
 remain unchanged, preserving time to finish the hero's sword attack and jump away.
 
 During boss death and the protected hero exit, the entire active room now continues its
-normal update/cleanup pass: fog, fireflies, torch fire, sky/weather, moving platforms,
+normal update/cleanup pass: fireflies, torch fire, sky/weather, moving platforms,
 enemies and hazards. Queued visual effects still spawn and finish. The hero uses the same
 scripted movement and remains protected from damage and terrain. Pause still stops updates;
 completion/save is still latched exactly once after the hero leaves the viewport.
 
-The victory regression exercises real fog, a burning torch and a detonating bomb, verifies
+The victory regression exercises real fireflies, a burning torch and a detonating bomb, verifies
 movement during the exit and pause behavior, and checks that the living world cannot kill
 the scripted hero. The completion-frame interruption check follows the new attack duration.
 
@@ -279,3 +284,22 @@ The planned next story beat is a separate healer dialogue after the automatic ex
 before the next level (#86), reusing #84's character and dialogue system. The healer's
 continuing role as Edgard's guide is recorded in [STORY.md](STORY.md) and D14. This scene
 is accepted direction, not part of the currently implemented victory flow.
+
+
+## Healer integration, 2026-10-16 (#84)
+
+The pre-boss healer, one-time recipe payment and repeated collection returns are implemented;
+see [HEALER.md](HEALER.md). F6 into the final room now opens that dialogue first. The effect
+applies only to this boss encounter and ends immediately on boss defeat. While active, each
+sword hit emits 48 droplets and its own brief impact shake, including the lethal hit.
+120 core tests and desktop/TeaVM release builds pass locally. Dialogue/About rendering was
+checked in both languages. Final author review in play, including physical controller and
+touch comfort, remains open; no post-boss #86 scene is included.
+
+
+## Removed legacy ambience/mechanic
+
+Bat proximity no longer slows gameplay. Death retains its own deliberate slow-motion
+presentation. Fog is now exclusive to the menu backdrop; no traversal or boss room creates
+it. The victory regression retains firefly/torch/hazard update and pause coverage, and
+explicitly asserts that gameplay ambience contains no fog.

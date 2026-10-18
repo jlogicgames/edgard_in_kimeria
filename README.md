@@ -23,7 +23,8 @@ shoot); menus and **Start** are the same in both modes. Shoot is bound everywher
 Exit). Debug keys: **F1** hitbox gizmos, **F2**
 invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
 checkpoint, **F6** advance to the next room (no action in the last room).
-To test the forest boss from a new run: F4 to forest, then F6 twice.
+To test the forest boss from a new run: F4 to forest, then F6 twice. The second transition
+opens the healer dialogue; choose the fight to enter the boss chamber.
 
 The web build opens on a single-button start screen (click, Enter or Space): browsers block audio
 until the page has had a user gesture, so the menu music waits for it. Other platforms skip it.
@@ -110,7 +111,7 @@ Two different causes produce this same crash:
 - [x] Player movement, jump, gravity, coyote time, quicksand slowdown, wall clamber/jump
 - [x] Tile collision — solid, one-way platform, wall, quicksand
 - [x] Tilemap rendering from the unmodified `.tmx`/`.tsx`, with viewport culling
-- [x] Bat, Yellow mob, Red mob — patrol/chase/attack, bullet time near a Bat
+- [x] Bat, Yellow mob, Red mob — patrol/chase/attack, without proximity slow motion
 - [x] Sword attack killing enemies
 - [x] Collectables (coin, chicken, key + pickup ripple), artifact HUD and room rollback;
       Bomb (explosion, kills player)
@@ -119,7 +120,7 @@ Two different causes produce this same crash:
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Trigger → actionable wall removal and torch toggle
 - [x] Checkpoint → next level, with wrap; death in slow motion, then an instant room reset and respawn (no lives)
-- [x] Torch, firefly, rain ambience; fog effect
+- [x] Torch, firefly and rain ambience; fog only in menus
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
 - [x] HUD, main menu, About, Options, pause menu
 - [x] Continue / New Game with overwrite confirmation and automatic level-only saves
@@ -140,9 +141,11 @@ Two different causes produce this same crash:
       black fades and a separate placeholder music loop; any fresh key, gamepad button or
       click/tap skips with a shared picture/music fade (menu holds do not skip it).
       `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
-      `Msg.INTRO_STORY` when the final music and story are available.
+      `Msg.INTRO_STORY` when revising the healer-narrated account of Kimeria and L'Kardina.
+- [x] Optional forest healer: English/Ukrainian dialogue, recipe checklist, paid elixir and
+      repeated collection returns with retained progression and restored traversal paths
 - [x] Dev hotkeys (F1–F6, see Controls above)
-- [x] Chromatic-aberration glitch post-process — applied to the frozen world while paused
+- [x] Chromatic-aberration glitch post-process — applied to the frozen gameplay or dialogue screen while paused
       (the pause menu and HUD stay crisp); see Deviations below
 
 ## Deviations from the source projects
@@ -159,7 +162,7 @@ Two different causes produce this same crash:
   early pass that over-saturated to white with too many concurrent additive particles.
 - **The chromatic-aberration glitch is a pause effect, not an ambient one.** It's off by
   default in the Rust version and dead code in the Flame version; here it's shown only
-  while paused, on the frozen world (`screen_effects.frag`, drawn from an offscreen
+  while paused, on the frozen gameplay or healer-dialogue screen (`screen_effects.frag`, drawn from an offscreen
   `FrameBuffer` that is only rendered while paused or while a ripple is live, so normal play
   is unchanged). The HUD and pause menu draw afterwards, unaffected.
 - **Touch controls have no pause button yet.** The on-screen stick and three action buttons
@@ -258,8 +261,9 @@ refill cue during the existing retry animation. A potion icon marks the active 1
 See [Boss combat](docs/BOSS.md) for art, balance and validation details.
 The healer is Edgard's recurring guide and opening narrator: he tells of the kingdom's
 fall into darkness caused by the evil sorceress L'Kardina, and guides progression through
-the game. This accepted story direction still requires updating the placeholder intro. The agreed
-pre-boss meeting (#84) and post-victory dialogue (#86) are pending implementation;
+the game. The opening identifies him as the narrator. Before the boss, a separate NES-style dialogue
+offers an optional paid elixir or collection return (#84). The post-victory dialogue (#86)
+is still pending implementation;
 [Story and characters](docs/STORY.md) records his role and the basis for future narrative decisions.
 At the first room's exit, the scene fades out and in (0.25 seconds each way).
 The hero and camera relocate under full black, without a hero transition animation.
@@ -274,22 +278,31 @@ Tiled accepts object types `Chicken` and `Key`, or `Collectable` with the
 item name. No map edits are needed for the current placements. World items animate like
 coins; collected icons appear in one row beside the coin counter, without adding coins.
 
-Items are provisional until the room/level exit. Death restores the current room's items;
+Items are provisional until the room/level exit or healer entry/return. Death restores
+only new provisional items;
 secured artifacts survive later deaths and level transitions. Restart Level restores its
 entry inventory. A new/continued run or exit to the main menu clears it.
 No artifact data is written to preferences or saves.
 
 Artifacts alone give no boss bonus. The optional healer elixir (#84) grants **10x sword
-damage against the forest boss**, with unchanged starting/max energy (12). The consumed
-effect survives boss-room death and clears on level restart, transition or a fresh run.
-`ArtifactInventory.drinkBossElixir(level)` is the consumption hook for #84; healer payment,
-dialogue and collection return are separate work and are not available yet. The old
-`bossEnergyMultiplier` contract has been removed to prevent stacking the two bonuses.
+damage against the forest boss**, with unchanged starting/max energy (12). The healer requires Chicken, Key and **all six unique coins authored in this forest**;
+prior-level coins do not count and are not spent. Payment consumes the two artifacts and
+forest coins; collection completion remains recorded separately. The elixir is drunk at once.
+It applies only to this boss, including retries until victory, and ends on boss defeat.
+Empowered sword hits produce 48 thicker blood droplets with longer trails and a mild screen shake.
+Restart Level, transition, New Game, Continue and leaving the run clear the effect.
+
+Before committing to the fight, return to the forest entrance as often as needed. Secured
+pickups, enemy state and trap state are retained; platforms and switches/linked traversal
+objects are restored. Previously collected items and killed enemies never respawn on return.
+After choosing the fight, neither backward return nor progression past the boss is possible
+until victory. See [Healer dialogue and returns](docs/HEALER.md) for input, payment,
+room-death rollback, traversal reset policy and validation.
 
 ## Assets
 
 Images, audio and the original Tiled maps come from the Flame project's `assets/`.
-`forest` has since been extended to two rooms in the same tileset.
+`forest` has since been extended to three rooms in the same tileset.
 Fonts (`NanoPlus.ttf`, `QuestSquare.ttf`) and `main_menu.mp3`/`button_click.wav` are pulled
 from the Rust version, which has them and the Flame baseline doesn't. `button_click.wav`
 needed re-encoding from `WAVE_FORMAT_EXTENSIBLE` to plain PCM — libGDX's WAV decoder

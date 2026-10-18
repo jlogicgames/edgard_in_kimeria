@@ -52,14 +52,12 @@ public class Overlay {
     private final float logicalHeight;
     private final List<Runnable> textQueue = new ArrayList<>();
     private Vector2 lastMouse;
-    private final float markerW;
 
     public Overlay(Assets assets, float logicalWidth, float logicalHeight) {
         titleFont = assets.font(30);
         bodyFont = assets.font(15);
         buttonFont = assets.font(20);
         hintFont = assets.font(13);
-        markerW = new GlyphLayout(buttonFont, "<").width;
         this.logicalHeight = logicalHeight;
 
         OrthographicCamera textCamera = new OrthographicCamera();
@@ -104,6 +102,25 @@ public class Overlay {
             bodyFont.draw(batch, text, centerX - wrapWidth / 2f, toTextY(yFromTop), wrapWidth, Align.center, true));
     }
 
+    /** Layout the complete line once so revealing letters cannot recenter text or move wrapped words. */
+    public void dialogue(SpriteBatch batch, String text, int visibleCharacters, float x, float yFromTop, float width) {
+        GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, width, Align.left, true);
+        int source = 0, shown = 0;
+        outer: for (GlyphLayout.GlyphRun run : layout.runs) for (BitmapFont.Glyph glyph : run.glyphs) {
+            // Wrapping removes spaces at line boundaries; map rendered glyphs back to source positions.
+            while (source < text.length() && text.charAt(source) != glyph.id) source++;
+            if (source >= Math.min(text.length(), visibleCharacters)) break outer;
+            shown++;
+            source++;
+        }
+        int visibleGlyphs = shown;
+        textQueue.add(() -> {
+            var cache = bodyFont.getCache();
+            cache.setText(layout, x, toTextY(yFromTop));
+            cache.draw(batch, 0, visibleGlyphs);
+        });
+    }
+
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */
     public float bodyHeight(String text, float wrapWidth) {
         GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.center, true);
@@ -126,6 +143,28 @@ public class Overlay {
             hintFont.setColor(0.8f, 0.8f, 0.8f, 1f);
             hintFont.draw(batch, layout, rightX - layout.width, toTextY(yFromTop));
             hintFont.setColor(Color.WHITE);
+        });
+    }
+
+    /** Compact dialogue buttons share the menu's centered labels and two edge markers. */
+    public void choiceLabel(SpriteBatch batch, String label, float x, float y, float width, float height, boolean selected) {
+        buttonLabel(batch, bodyFont, label, x, y, width, height, selected,
+            selected ? SELECTED_TEXT : IDLE_TEXT);
+    }
+
+    private void buttonLabel(SpriteBatch batch, BitmapFont font, String label, float x, float y,
+                             float width, float height, boolean selected, Color color) {
+        GlyphLayout layout = new GlyphLayout(font, label);
+        float labelY = y + (height - layout.height) / 2f;
+        float markerWidth = new GlyphLayout(font, "<").width;
+        textQueue.add(() -> {
+            font.setColor(color);
+            font.draw(batch, layout, x + (width - layout.width) / 2f, toTextY(labelY));
+            if (selected) {
+                font.draw(batch, ">", x + 10, toTextY(labelY));
+                font.draw(batch, "<", x + width - 10 - markerWidth, toTextY(labelY));
+            }
+            font.setColor(Color.WHITE);
         });
     }
 
@@ -193,20 +232,9 @@ public class Overlay {
             batch.draw(Shaders.whiteQuad(), bx, by, buttonW, BUTTON_H);
             batch.setColor(Color.WHITE);
 
-            String label = menu.items.get(i).label.get();
-            GlyphLayout layout = new GlyphLayout(buttonFont, label);
-            float labelX = bx + (buttonW - layout.width) / 2f;
-            float labelYFromTop = by + (BUTTON_H - layout.height) / 2f;
             Color textColor = selected ? SELECTED_TEXT : hovered ? HOVER_TEXT : IDLE_TEXT;
-            textQueue.add(() -> {
-                buttonFont.setColor(textColor);
-                buttonFont.draw(batch, layout, labelX, toTextY(labelYFromTop));
-                if (selected) {
-                    buttonFont.draw(batch, ">", bx + 10f, toTextY(labelYFromTop));
-                    buttonFont.draw(batch, "<", bx + buttonW - 10f - markerW, toTextY(labelYFromTop));
-                }
-                buttonFont.setColor(Color.WHITE);
-            });
+            buttonLabel(batch, buttonFont, menu.items.get(i).label.get(), bx, by,
+                buttonW, BUTTON_H, selected, textColor);
 
             if (hovered && mouseClicked) {
                 onActivate.run();

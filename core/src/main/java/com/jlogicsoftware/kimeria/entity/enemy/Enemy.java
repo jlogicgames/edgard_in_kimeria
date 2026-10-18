@@ -40,6 +40,15 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
         this.offPos = offPos;
     }
 
+    public boolean isDefeated() { return pendingRemoval || isRemoved(); }
+
+    /** A rebuilt traversal graph must never leave support references pointing at old platforms. */
+    public void revisit(Player nextPlayer) {
+        setPlayer(nextPlayer);
+        setOnGround(false);
+        if (this instanceof com.jlogicsoftware.kimeria.physics.CollideBody body) body.setCurrentEscalator(null);
+    }
+
     public void setPlayer(Player player) {
         this.player = player;
     }

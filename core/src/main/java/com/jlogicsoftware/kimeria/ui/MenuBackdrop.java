@@ -14,8 +14,8 @@ import java.util.List;
 /**
  * Port of the Rust menu's fog + glowing "MenuFirefly" backdrop (see
  * {@code ui.rs}'s {@code sync_menu_fog}/{@code sync_menu_fireflies}): drawn
- * behind the Main Menu/About/Options screens, reusing the same
- * {@link FogEffect}/{@link Firefly} shader effects gameplay uses.
+ * behind the Main Menu/About/Options screens. Fog is exclusive to this backdrop;
+ * gameplay retains only its own {@link Firefly} variant.
  */
 public class MenuBackdrop {
     private static final Rectangle FIXED_RECT = new Rectangle(0, 0, 640, 360);

@@ -1,0 +1,156 @@
+# Forest healer (#84)
+
+The same healer who narrates the opening meets Edgard before `forest-boss`. The meeting
+opens at the black midpoint of the canopy exit fade, before entering the boss room.
+The world, player input and gameplay effects stop. The dedicated black dialogue screen
+shows original pixel-drawn placeholder portraits: Edgard left, healer right. The speaker's
+frame is highlighted; English and Ukrainian use the existing baked pixel font.
+
+## Dialogue and choices
+
+Text appears at 38 characters/second. A fresh keyboard/gamepad button press or tap first
+reveals the whole current line; the next fresh press advances. Held entry inputs and OS
+key repeats are ignored. Opening choices never confirms a choice with the same event.
+
+At choices, arrows/WASD or controller stick/D-pad move the selection. Enter/Space or the
+active gameplay action keys confirm; controller A and gameplay action buttons confirm.
+Navigation takes priority over confirmation, including the mirrored D-pad mappings.
+Touch/mouse selects a choice directly. Only Esc opens pause during the dialogue;
+Resume returns to the same line/choice with held inputs suppressed. Pausing freezes typing.
+The pause glitch processes the frozen dialogue (portraits, current text and choices); the
+pause menu is drawn crisply above it. The underlying gameplay room is never shown.
+
+The checklist names Chicken, Key and current-forest unique coins, with `[+]`/`[-]` markers
+and a collected/total count. Refusal text distinguishes missing ingredients, insufficient
+payment and both. If the recipe is incomplete, offer return or an unempowered fight;
+return is the initial selection. Both branches start with the healer's account of the guardian
+blocking the path and Edgard's question. If the full recipe is secured, the healer then
+acknowledges that everything is available and announces brewing, without a refusal/return offer. Advancing that announcement
+consumes the recipe and drinks the elixir automatically; there is no redundant payment choice,
+return or unempowered fight option on this branch. Selected buttons use the same two edge
+markers as the other menus. After payment, two lines acknowledge consumption and explain the encounter lock, followed
+by a single fight choice. Final wording and portrait identity need review with the author.
+
+## Recipe, payment and encounter boundary
+
+- Require secured Chicken and Key from `forest` and every authored coin identity from that
+  level. The current map has six coins. Pending pickups become secured at healer entry;
+  prior-level currency cannot replace a missing forest coin. Empty authored coin sets never
+  qualify. Each pickup identity is counted once, including after repeated visits/deaths.
+- Consume Chicken, Key and exactly this forest's coin total once; keep prior-level currency.
+  Remove the two inventory icons, immediately drink the elixir and acknowledge payment.
+  Spent artifact identities and the unique coin completion record remain separate from
+  remaining inventory/currency. No duplicate brewing or new persistent save fields exist.
+- The elixir gives 10x sword damage to this boss only; starting/max energy stays 12.
+  Each empowered hit emits 48 blood droplets instead of 32, with 1.8x thickness and 4x trails,
+  and starts a 0.18-second room-bounded impact shake. The lethal hit retains its own blood and impact shake while
+  cancelling the old attack shake. Normal hits, misses, body contact and stomps do not
+  receive this empowered feedback. Existing completed boss-attack shakes remain unchanged.
+- Choosing the fight commits the encounter. Until this boss is defeated, neither return
+  to the healer/collection route nor progression to the next level is available. Death
+  retries this boss at full energy with the elixir still active; dialogue does not repeat.
+  Boss defeat ends the elixir immediately. It never transfers to another level/boss.
+- Restart Level restores the level-entry inventory/currency and rebuilds the entire level.
+  New Game, Continue, leaving the live run and level transition clear the effect. Continue
+  still restores only the saved level, with no mid-level inventory or encounter persistence.
+
+## State policy
+
+Leaving a room secures its pickups, enemy defeats and trap state. Healer entry and return
+also secure the current room idempotently. Return teleports to the first entrance with a
+fresh idle hero and camera relocation; it does not invoke Restart Level or write a save.
+Rooms are then traversed forward again. No free backward-room navigation is added.
+
+| Content | Collection return / re-entry | Death in the active room |
+| --- | --- | --- |
+| Secured coins/artifacts | Remain absent, including paid ingredients | Remain absent |
+| New provisional pickups | Secured before leaving/returning | Roll back, including coin counter and artifact icons |
+| Secured defeated enemies | Remain absent, even if their death animation had not finished | Remain absent |
+| Surviving enemies | Resume retained position, direction, animation/AI and velocity with the new hero reference | Rebuilt at authored spawn/AI state; defeats from this attempt roll back |
+| Bomb traps | Resume secured idle/warning/exploded state; warnings do not advance off-room | Restore the last secured trap snapshot; first-visit traps start idle |
+| Moving platforms | Recreated at authored position, direction and active state | Recreated |
+| Falling / vanished platforms | Recreated idle at authored position, with warning rearmed | Recreated |
+| Switches/triggers | Recreated; links remain operable | Recreated |
+| Linked doors, actionable walls, switched torches | Restore authored state together with switches | Recreated |
+| Static collision terrain and one-way platforms | Rebuilt from the authored descriptions | Rebuilt |
+| Pickup ripples, old explosions, platform warning particles | Discarded; never replayed from a previous visit | Discarded |
+
+Platforms take the explicit restoration rule even when their fall/warning is a hazard.
+Bombs take the trap-retention rule. Enemy references to old moving supports are cleared
+before resumed physics binds them to the rebuilt traversal graph. One retained entry per
+room replaces the prior entry on each secured exit; trips do not append room snapshots.
+
+The shipped forest has static stair platforms, ordinary terrain/quicksand, bombs and
+unlinked decorative torches; it currently has no authored moving/falling platform or
+switch chain. Those objects are still covered by the restoration path and regression
+fixtures. The first level's wall trigger remains operable; escalator trigger targets use
+the authored object name, so restored chains can toggle moving platforms too. No awkward
+traversal object is excluded from rebuilding. No map geometry or existing author art was
+replaced for this feature.
+
+## Local validation, 2026-10-16
+
+120 core tests pass. New regressions cover missing Chicken/Key/coins, combined refusal,
+prior-level currency, empty authored coin sets, payment exactly once, separate completion
+and inventory, encounter lock, effect expiry on defeat, retained effect on boss retry,
+48/32 droplets and hit shake, fresh/held input, reveal/advance, safe choice navigation,
+touch target separation and both languages.
+
+Room-state tests cover repeated trips, live enemy retention, secured defeats during the
+death animation, provisional pickups after a revisit death, warning/exploded bombs,
+restored vanished platforms and linked wall/moving-platform switches. The burned-platform
+fixture misses Chicken, destroys its approach platform, returns and checks that the
+platform, Chicken and operable switch chain are restored on three collection trips while
+secured coins stay absent. It is a state/geometry regression, not a human traversal test.
+
+A separate real-physics replay on the shipped forest starts after enemies were defeated,
+a bomb detonated and coins secured but Chicken/Key missed. Ordinary A/D/J/K input then
+traverses both rooms and collects the artifacts, using the retained enemy/trap state and
+rebuilt geometry. It repeats three trips without invulnerability, additional coin pickups
+or duplicated artifacts, then pays the complete recipe. Initial revisit times are 14.78 s
+(entry) and 5.13 s (canopy); later passes are 14.25 s and 5.00 s. These cover that specific
+second-pass state, not first-time discovery or every possible surviving-enemy arrangement.
+
+Desktop and TeaVM release builds pass. A temporary hidden-window libGDX harness, using
+isolated preferences, rendered missing/ready/paid dialogue and both About pages in English
+and Ukrainian. The full text of every dialogue line fits its actual baked font and box;
+framebuffer images were visually inspected. About with controller instructions also fits
+both handedness layouts in both languages (312-pixel content panel at 640x360). The harness is not part of the shipped game.
+Only local checks were used, per the author's choice; no source was sent to Snyk.
+
+### Review in play with the author (#73/#75)
+
+- Read the introduction, every refusal/offer/payment line and choices in both languages.
+  Review temporary portraits and the healer's voice as the recurring guide.
+- Use a physical controller and touch device, in both handedness modes. Hold inputs into
+  entry, reveal, choices and Resume; navigate without confirming; pause during typing.
+- Miss pickups, return repeatedly, collect more, die before/after a room exit and compare
+  the checklist, HUD, enemies and traps. Include burned-platform approaches when authored.
+- Fight normally and with the elixir; die repeatedly, then win. Check the impact shake,
+  thicker, longer-trailed blood, effect expiry, automatic exit and absence of another healer return.
+- Verify Restart Level/New Game/Continue and a clean subsequent run. Save remains level-only.
+
+The automated movement and framebuffer checks do not replace this human acceptance pass.
+The post-victory scene belongs to #86 and is not implemented here.
+
+## Author feedback, 2026-10-18
+
+After the author's follow-up, the complete-recipe branch retains the opening guardian
+introduction and Edgard's question, then acknowledges the full recipe and announces brewing.
+A fresh advance after that fully revealed line pays and drinks automatically. Return and
+unempowered fight choices appear only when the recipe is incomplete. The gold selected
+label and both edge markers use the same renderer as ordinary menu buttons.
+
+Further author feedback: remove the top Pause button; only Esc opens the dialogue pause
+menu (Resume / Restart Level / Exit to Menu). Empowered hits now emit 48 droplets versus
+32 normally, preserving a mix of large and fine drops. Latest author
+tuning uses 1.8x droplet thickness, 4x trail length (up to 18 pixels), stronger crimson and
+wider floor splashes for an unmistakable strength-elixir hit. Lifetime and cleanup remain
+unchanged.
+
+Pause background correction: Esc is processed before rendering the pause frame. The current
+dialogue, including its exact revealed text and selected choice, is drawn into the existing
+post-process buffer; the pause menu is rendered above the glitch. A real libGDX render/input
+check asserts that the world is never rendered or updated throughout dialogue/pause/Resume,
+that text stays frozen on pause, and that Resume preserves the same dialogue state.
+123 core tests and desktop/web builds pass.

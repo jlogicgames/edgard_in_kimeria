@@ -51,4 +51,23 @@ class IntroInputTest {
         justTouched = true;
         assertTrue(intro.skipPressed(input));
     }
+    @Test void dialogueConfirmationEdgesIgnoreHeldGameplayButtonsAndResumeInput() {
+        IntroInput dialogue = new IntroInput();
+        for (int key : new int[]{Input.Keys.J, Input.Keys.K, Input.Keys.L, Input.Keys.Z, Input.Keys.X, Input.Keys.C}) {
+            java.util.Arrays.fill(down, false); java.util.Arrays.fill(justPressed, false);
+            down[key] = true; justPressed[key] = true;
+            dialogue.reset(input);
+            assertFalse(dialogue.skipPressed(input));
+            assertFalse(dialogue.keyPressed(key));
+            down[key] = false; justPressed[key] = false;
+            dialogue.skipPressed(input);
+            down[key] = true; justPressed[key] = true;
+            assertTrue(dialogue.skipPressed(input));
+            assertTrue(dialogue.keyPressed(key));
+            // OS repeats and a held key cannot select another choice.
+            assertFalse(dialogue.skipPressed(input));
+            assertFalse(dialogue.keyPressed(key));
+        }
+    }
+
 }

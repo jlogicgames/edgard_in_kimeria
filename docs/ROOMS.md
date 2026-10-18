@@ -33,12 +33,13 @@ SpawnPoints and Collisions objects belong to the room containing their initial
 rectangle's centre (left/top inclusive, right/bottom exclusive). Keep collision
 shapes, patrol routes, and interactive objects within their room. Moving objects
 retain this ownership. Trigger targets must be in the same room; cross-room
-links are rejected. Atmosphere (sky, rain, fog, fireflies) is decorative and
+links are rejected. Atmosphere (sky, rain, fireflies; fog is menu-only) is decorative and
 continues across retries. Rooms may span several screens.
 
 ## Transition and retry
 
-Room traversal is forward only. Seal physical boundaries with terrain so the
+Room exits are forward only. Before the boss, the healer can teleport the hero back to
+the first entrance for another forward collection pass (#84). Seal physical boundaries with terrain so the
 player reaches the exit trigger rather than walking into an inactive room.
 The camera stays inside the current room; if the room is smaller than the
 viewport, it is centred on that axis.
@@ -49,22 +50,24 @@ fresh idle hero are placed at its entrance and the camera relocates while the
 screen is fully black. A fully black frame is always rendered, even after a
 long frame. The scene fades in over **0.25 seconds**, then play resumes. There
 is no hero disappearance/appearance animation, inter-room camera pan, loading
-screen, or level-save write. Timing uses real time, independent of bullet time.
+screen, or level-save write. Timing uses real time, independent of death slow motion.
 Pause freezes the fade; Resume continues it. Restart Level and leaving gameplay
 cancel the transition.
 
 Death keeps the existing slow-motion/fast eased camera return and respawn
 animation. It rebuilds only the current room's enemies, items, bombs, triggers,
 mutable walls, moving platforms, and falling platforms from the already-loaded
-TMX descriptions, discarding that attempt's queued effects. Passed rooms retain
-their runtime objects and are frozen, not recreated by a later death. Future
-rooms start their first attempt only when entered.
+TMX descriptions, discarding that attempt's queued effects. Passed rooms retain their enemy/trap progression without updating. Future rooms start their
+first attempt only when entered. A healer collection return rebuilds traversal objects while
+retaining secured pickups, enemy state and trap state; see [HEALER.md](HEALER.md) for the
+first-visit/revisit death rules and the complete reset/retention policy.
 
-Collected object IDs remain provisional until leaving the room or reaching the
-level completion; death before then restores those objects. The current coin
+Collected object IDs remain provisional until leaving the room, reaching
+level completion or entering/returning from the healer; death before then restores those objects. The current coin
 counter likewise rolls back to its room-entry value, preserving previous rooms'
-coins. Artifact sprites and rollback use this same bookkeeping; the healer bargain
-is pending #84 and persistent artifact saves are not implemented (D6). Restart Level resets all rooms and the level-entry coin count.
+coins. Artifact sprites and rollback use this same bookkeeping; the optional healer bargain
+consumes the forest recipe once (#84), keeping collection identities separate from inventory.
+Persistent artifact saves are not implemented (D6). Restart Level resets all rooms and the level-entry coin count.
 Saved progress remains per level (D8). A dev-mode TMX reload keeps the player
 in the room containing its position; if that position was removed from the map,
 it falls back to the first entrance.
@@ -168,7 +171,9 @@ scale; the bomb must stay visible throughout. Repeated contact must not restart
 the countdown, and leaving must not cancel it. Stay inside the centered 64x64
 blast square to die; leave it before detonation to survive. Passing through the
 remaining shader effect after detonation must be safe. Die during the warning
-and after the explosion: each retry must restore an idle bomb with no old effect.
+and after the explosion on the first visit: each retry must restore an idle bomb with no
+old effect. A collection revisit instead restores its secured trap snapshot, as specified
+in [HEALER.md](HEALER.md).
 Pause during warning and resume: the countdown must resume with the game.
 
 Verification on 2026-10-14: automated tests cover standard/assisted timing,
@@ -207,7 +212,7 @@ exit and verify fade out, a black midpoint, and fade in at the second entrance,
 with an idle hero and no camera travel. Walk the ascending platforms in room two
 and check its optional coins. Turn F2 off, collect a coin and die: the hero must
 return to room two, its coin and hazards must reset, and room one's coin count
-must remain. Repeat a death, enter the third room, defeat the boss, and watch the
+must remain. Repeat a death, meet the healer, choose to enter the third room, defeat the boss, and watch the
 automatic victory walk. Also pause
 mid-fade, Resume, Restart Level, and run `forest-1` without room markers.
 
@@ -219,3 +224,26 @@ the boss fight. The former canopy Checkpoint is replaced by RoomExit in the curr
 For boss-specific rule teaching, escape, retry and victory checks, use [BOSS.md](BOSS.md).
 A human playtest is still required for discoverability and fairness; scripted movement
 and automated collision assertions alone are insufficient evidence.
+
+
+## Current replay measurements after removing bat slow motion
+
+The historical 2026-10-14 table above includes the superseded proximity slow motion.
+Gameplay now runs at normal speed around bats; death still owns its separate slow-motion
+presentation. Fog is created only by the menu backdrop. Enemy AI/contact, bombs, quicksand,
+platforms and triggers remain enabled in the real-input replays below, with invulnerability
+and assist off. Each route succeeds on three consecutive identical attempts, retaining the
+20 s required-route / 30 s collection-route limits.
+
+| Level / room | Required route | All room coins |
+| --- | ---: | ---: |
+| `forest-1` / unmarked | 5.32 s | No coins |
+| `forest` / `forest-entry` | 16.27 s | 20.00 s |
+| `forest` / `forest-canopy` | 5.00 s | 5.00 s |
+
+At normal speed, the entry required route uses a fresh jump before the second wall. The
+coin route pauses beside the upper coin for a ground jump into it from below the one-way
+platform, after securing the ground coin. These actions and their elapsed time are included
+in `RoomReplayTest`; no hazards or pickups are excluded. Collection returns for missed
+Chicken/Key still pass through both rooms three times without farming (14.78/5.13 s on the
+first return, 14.25/5.00 s later). Visual/game-feel acceptance remains a human playtest.

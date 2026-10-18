@@ -52,6 +52,9 @@ public interface GameContext {
 
     int coinsCollected();
 
+    /** Spend only the verified current-level payment supplied by the healer. */
+    void spendCoins(int amount);
+
     ArtifactInventory artifacts();
 
     void loadNextLevel();
@@ -64,10 +67,6 @@ public interface GameContext {
     void resetRoom();
 
     void togglePause();
-
-    boolean isSlowTime();
-
-    void setSlowTime();
 
     void setNormalTime();
 
