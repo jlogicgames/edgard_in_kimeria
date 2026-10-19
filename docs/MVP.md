@@ -3,6 +3,11 @@
 Accepted by the author on 2026-10-19. Future mechanics will expand these two existing
 levels. This MVP does not add another map, another boss, a new quest or destination.
 
+The current Chicken and Key placements in `forest` are accepted as final for this MVP
+(author decision, 2026-10-19, #72). Keep their existing positions; no relocation or
+additional artifact challenge paths are planned. Both artifacts and the healer elixir
+remain optional. `forest-1` has no artifact set or full-set reward in this MVP.
+
 ## Complete game loop
 
 1. New Game plays the existing healer-narrated opening.

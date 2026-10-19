@@ -104,9 +104,11 @@ only in the menu backdrop.
   - Coins are optional healer payment in `forest` (#82/#84); collection is never required.
     Dialogue, payment and collection returns are described in [HEALER.md](HEALER.md);
     boss combat is described in [BOSS.md](BOSS.md).
-  - **Artifacts** are optional: the game can be finished without them. The current test set
+  - **Artifacts** are optional: the game can be finished without them. The MVP set
     for `forest` is **Chicken + Key**; `forest-1` has no artifacts or full-set reward yet.
-    Their current map positions are test placements, not the final challenge layout.
+    The author accepted their existing map positions as final for the MVP on 2026-10-19
+    (#72). Keep Chicken and Key in those positions; relocating them or adding harder
+    artifact side paths is not required or planned for this MVP.
   - The boss always starts at full normal energy. Merely holding Chicken and Key gives
     no bonus. The optional healer bargain consumes Chicken, Key and every forest coin;
     the hero immediately drinks the elixir, granting **10x sword damage to this boss**.
@@ -132,9 +134,9 @@ only in the menu backdrop.
     the inventory at level entry. New Game, Continue, and leaving the live run clear it.
     Artifacts are not written to disk; the level-only save contract (D8)
     is unchanged. Persistent artifacts require a separate explicit decision.
-- **Why:** Optional artifacts put the hardest challenges on side paths, as Celeste does with
-  its strawberries, so players who are not after mastery can still finish while those who are
-  have a reason to explore.
+- **Why:** Optional artifacts give players a reason to explore without requiring collection
+  to finish. Harder side paths inspired the original design, but the accepted MVP uses the
+  existing placements and optional healer recipe without further challenge-layout work.
 - **Tracked in:** #46, #47, #60, #72
 
 ## D7. Traps are deterministic puzzle elements

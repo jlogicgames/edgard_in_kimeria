@@ -279,9 +279,11 @@ Death resets only the active room; previous rooms' collections remain kept.
 
 ## Optional artifacts
 
-`forest` has two test artifacts: Chicken and Key, using the existing `Items.png` frames.
+`forest` has two optional artifacts: Chicken and Key, using the existing `Items.png` frames.
 Tiled accepts object types `Chicken` and `Key`, or `Collectable` with the
-item name. No map edits are needed for the current placements. World items animate like
+item name. The author accepted their current positions as final for the MVP on 2026-10-19;
+no relocation or additional artifact challenge paths are planned for this MVP (#72).
+World items animate like
 coins; collected icons appear in one row beside the coin counter, without adding coins.
 
 Items are provisional until the room/level exit or healer entry/return. Death restores

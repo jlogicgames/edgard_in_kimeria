@@ -149,6 +149,11 @@ Measured map SHA-256 values:
 
 ### Artifact checks (#72)
 
+The author accepted the existing Chicken and Key positions as final for the MVP on
+2026-10-19: Chicken is object 94 at (448, 240), Key is object 95 at (1728, 208) in
+`forest.tmx`. Keep these placements; no relocation or additional artifact challenge
+paths are planned for this MVP. Collection remains optional for completion.
+
 In `forest`, collect Chicken in room one: it disappears and its icon appears after the
 coin count without increasing that count. Die before leaving: the icon disappears and
 Chicken returns. Collect it again and leave the room: a later death must keep Chicken.
