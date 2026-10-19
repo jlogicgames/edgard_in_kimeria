@@ -1,0 +1,3 @@
+interface:
+  display_name: "Kimeria: состояние комнат"
+  short_description: "Сброс комнат, возвраты и сохранение прогресса"

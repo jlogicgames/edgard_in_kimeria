@@ -1,0 +1,3 @@
+interface:
+  display_name: "Kimeria: управление"
+  short_description: "Клавиатура, геймпад, touch и переходы ввода"
