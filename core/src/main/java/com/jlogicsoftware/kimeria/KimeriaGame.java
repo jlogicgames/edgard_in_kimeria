@@ -56,12 +56,12 @@ import java.util.List;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
     private static final float MENU_TINT_ALPHA = 0.2f;
-    private static final List<String> LEVEL_NAMES = List.of("forest-1", "forest");
+    private static final List<String> LEVEL_NAMES = List.of("forest", "forest-1");
     private static final float MUSIC_FADE_IN = 2f, MUSIC_FADE_OUT = 1f;
 
     private Assets assets;
@@ -359,11 +359,32 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void newGame() {
         savedProgress.clear();
-        String text = Msg.INTRO_STORY.t(language);
+        openStory(Msg.INTRO_STORY, UiState.INTRO);
+    }
+
+    private boolean storyScreenActive() { return uiState == UiState.INTRO || uiState == UiState.ENDING; }
+
+    /** Opening and ending share the same text scroll, fade, music and fresh-input rules. */
+    private void openStory(Msg message, UiState state) {
+        String text = message.t(language);
         intro = new IntroScreen(text,
             overlay.bodyHeight(text, LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f), LOGICAL_H);
         introInput.reset(Gdx.input);
-        uiState = UiState.INTRO;
+        uiState = state;
+    }
+
+    private void updateStory(float dt) {
+        if (introInput.skipPressed(Gdx.input) || gamepad.anyButtonPressed()) intro.skip();
+        // Let the menu track fade to silence before starting the story's envelope.
+        if (musicVolume <= 0f || intro.state() == IntroScreen.State.FADE_OUT) intro.update(dt);
+        updateIntroMusic();
+        if (intro.done()) {
+            intro = null;
+            if (uiState == UiState.ENDING) {
+                savedProgress.clear();
+                backToMainMenu();
+            } else startGame(StartData.newGame());
+        }
     }
 
     /** Builds the player and level from {@code data}, behind the loading screen. */
@@ -450,6 +471,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 uiState = UiState.PLAYING;
             }
             case BREW -> { if (level.brewElixir()) { roomStartCoins = coinsCollected; openHealer(true); } }
+            case CONTINUE -> { if (healer != null && healer.postVictory()) completeLevel(); }
             case FIGHT -> {
                 level.commitBossEncounter();
                 healer = null;
@@ -496,16 +518,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             }
         }
 
-        if (uiState == UiState.INTRO) {
-            if (introInput.skipPressed(Gdx.input) || gamepad.anyButtonPressed()) intro.skip();
-            // Let the menu track fade to silence before starting the intro's envelope.
-            if (musicVolume <= 0f || intro.state() == IntroScreen.State.FADE_OUT) intro.update(dt);
-            updateIntroMusic();
-            if (intro.done()) {
-                intro = null;
-                startGame(StartData.newGame());
-            }
-        }
+        if (storyScreenActive() && uiState == stateAtFrameStart) updateStory(dt);
 
         if (uiState == UiState.HEALER && stateAtFrameStart == UiState.HEALER) updateHealer(dt);
 
@@ -515,7 +528,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // behind them, matching the Rust version, not a live view of the
         // level loading behind the scenes.
         boolean levelVisible = uiState == UiState.PLAYING || (uiState == UiState.PAUSED && !pausedHealer);
-        boolean menuBackdropActive = !levelVisible && uiState != UiState.INTRO && uiState != UiState.HEALER
+        boolean menuBackdropActive = !levelVisible && !storyScreenActive() && uiState != UiState.HEALER
             && !(uiState == UiState.PAUSED && pausedHealer);
         // Stay silent until the start screen has been dismissed: the click that dismisses it is
         // what lets the browser start the music. Loading is the start of a run, so fade it out.
@@ -543,6 +556,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             }
         }
 
+        // A victory exit can open dialogue inside Level.update on this frame.
+        levelVisible = uiState == UiState.PLAYING || (uiState == UiState.PAUSED && !pausedHealer);
+        menuBackdropActive = !levelVisible && !storyScreenActive() && uiState != UiState.HEALER
+            && !(uiState == UiState.PAUSED && pausedHealer);
         menuBackdrop.update(dt);
         updateMenuMusic(dt, musicWanted);
         handleDevHotkeys();
@@ -552,7 +569,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         camera.update();
 
         // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
-        if (uiState == UiState.INTRO || uiState == UiState.HEALER || pausedHealer) {
+        if (storyScreenActive() || uiState == UiState.HEALER || pausedHealer) {
             Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         } else if (menuBackdropActive) {
             Gdx.gl.glClearColor(0.16f, 0.16f, 0.19f, 1f);
@@ -588,10 +605,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
-        if (!roomFade.active() && uiState != UiState.INTRO && uiState != UiState.HEALER && !pausedHealer) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
+        if (!roomFade.active() && !storyScreenActive() && uiState != UiState.HEALER && !pausedHealer) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
         overlay.flushText(batch);
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
-        if (uiState == UiState.INTRO) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
+        if (storyScreenActive()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
         batch.end();
     }
 
@@ -791,7 +808,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             healerView.render(batch, overlay, healer, language, level, artifacts);
             return;
         }
-        if (uiState == UiState.INTRO) {
+        if (storyScreenActive()) {
             overlay.body(batch, intro.text(), LOGICAL_W / 2f, intro.textTop(),
                 LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f);
             return;
@@ -834,7 +851,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case OPTIONS -> optionsMenu;
             case ASSIST -> assistMenu;
             case PAUSED -> pauseMenu;
-            case INTRO, LOADING, PLAYING, HEALER -> null;
+            case INTRO, ENDING, LOADING, PLAYING, HEALER -> null;
         };
         if (uiState == UiState.LOADING) {
             overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
@@ -1011,12 +1028,26 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     @Override
     public void loadNextLevel() {
-        if (level != null) level.keepPickups();
-        if (currentLevelIndex < LEVEL_NAMES.size() - 1) {
-            currentLevelIndex++;
-        } else {
-            currentLevelIndex = 0;
+        if (uiState == UiState.ENDING) return;
+        if (healer != null && healer.postVictory()) return;
+        if (level != null && level.name.equals("forest") && level.victoryExitComplete()) {
+            healer = HealerDialogue.afterVictory();
+            dialogueInput.reset(Gdx.input);
+            gameStarted = false;
+            uiState = UiState.HEALER;
+            return;
         }
+        completeLevel();
+    }
+
+    private void completeLevel() {
+        if (level != null) level.keepPickups();
+        if (currentLevelIndex == LEVEL_NAMES.size() - 1) {
+            releaseGame();
+            openStory(Msg.ENDING_STORY, UiState.ENDING);
+            return;
+        }
+        currentLevelIndex++;
         savedProgress.save(currentLevelIndex);
         // The outgoing hero may still be in the protected boss exit or checkpoint animation.
         player = new Player(assets, this, 0, 0);

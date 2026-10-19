@@ -53,7 +53,7 @@ class SavedProgressTest {
     }
 
     @Test
-    void levelCompletionPersistsNextLevelAndWrapWhileDeathLeavesItUntouched() throws Exception {
+    void levelCompletionPersistsNextLevelWhileDeathLeavesItUntouched() throws Exception {
         SavedProgress progress = new SavedProgress(preferences(), 2);
         KimeriaGame game = new KimeriaGame();
         Field assets = KimeriaGame.class.getDeclaredField("assets");
@@ -70,7 +70,6 @@ class SavedProgressTest {
         assertEquals(1, new SavedProgress(preferences(), 2).nextLevelIndex());
         game.resetRoom();
         assertEquals(1, new SavedProgress(preferences(), 2).nextLevelIndex());
-        game.loadNextLevel();
-        assertEquals(0, new SavedProgress(preferences(), 2).nextLevelIndex());
+
     }
 }

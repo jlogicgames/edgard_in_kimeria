@@ -12,6 +12,25 @@ class HealerDialogueTest {
         assertTrue(dialogue.choosing());
     }
 
+    @Test void victoryReusesRevealRulesWithNoChoicesAndCompletesOnlyOnceInBothLanguages() {
+        for (Language language : Language.values()) {
+            HealerDialogue dialogue = HealerDialogue.afterVictory();
+            assertTrue(dialogue.postVictory());
+            for (Msg line : java.util.List.of(Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE)) {
+                assertEquals(line.t(language), dialogue.completeText(language));
+                assertEquals(line == Msg.EDGARD_DARKNESS, dialogue.edgardSpeaking());
+                assertEquals("", dialogue.text(language));
+                assertNull(dialogue.interact(language, false, 0, false, -1));
+                assertNull(dialogue.advance(language));
+                assertEquals(line.t(language), dialogue.text(language));
+                assertEquals(line == Msg.HEALER_GUIDE ? HealerDialogue.Choice.CONTINUE : null,
+                    dialogue.advance(language));
+                assertFalse(dialogue.choosing()); assertTrue(dialogue.choices().isEmpty());
+            }
+            assertNull(dialogue.advance(language));
+        }
+    }
+
     @Test void firstPressRevealsAndNextAdvancesInBothLanguagesWithoutChoosing() {
         for (Language language : Language.values()) {
             HealerDialogue dialogue = new HealerDialogue(false, false, false, false, false);

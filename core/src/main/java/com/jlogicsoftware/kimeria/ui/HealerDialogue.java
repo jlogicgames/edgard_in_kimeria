@@ -6,14 +6,25 @@ import java.util.List;
 
 /** Dialogue timeline; input edges and rendering are supplied by the host. */
 public final class HealerDialogue {
-    public enum Choice { RETURN, BREW, FIGHT }
+    public enum Choice { RETURN, BREW, FIGHT, CONTINUE }
     private final List<Msg> lines;
     private final boolean eligible, paid;
     private int line, selected;
     private float characters;
-    private boolean choosing;
+    private boolean choosing, finished;
+    private final boolean postVictory;
+
+    private HealerDialogue() {
+        eligible = paid = false;
+        postVictory = true;
+        lines = List.of(Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE);
+    }
+
+    public static HealerDialogue afterVictory() { return new HealerDialogue(); }
+    public boolean postVictory() { return postVictory; }
 
     public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid) {
+        postVictory = false;
         this.eligible = eligible;
         this.paid = paid;
         lines = paid ? List.of(Msg.HEALER_PAID, Msg.HEALER_LOCK)
@@ -28,13 +39,15 @@ public final class HealerDialogue {
         String text = lines.get(line).t(language);
         return text.substring(0, Math.min(text.length(), (int) characters));
     }
+    public boolean fullyRevealed(Language language) { return characters >= completeText(language).length(); }
     public String completeText(Language language) { return lines.get(line).t(language); }
-    public boolean edgardSpeaking() { return lines.get(line) == Msg.EDGARD_REPLY; }
+    public boolean edgardSpeaking() { return lines.get(line) == Msg.EDGARD_REPLY || lines.get(line) == Msg.EDGARD_DARKNESS; }
     public boolean choosing() { return choosing; }
     public boolean paid() { return paid; }
     public int selected() { return selected; }
     public void select(int index) { if (index >= 0 && index < choices().size()) selected = index; }
     public List<Choice> choices() {
+        if (postVictory) return List.of();
         if (paid) return List.of(Choice.FIGHT);
         return eligible ? List.of() : List.of(Choice.RETURN, Choice.FIGHT);
     }
@@ -50,10 +63,11 @@ public final class HealerDialogue {
     }
 
     public Choice advance(Language language) {
-        if (choosing) return null;
+        if (choosing || finished) return null;
         int length = completeText(language).length();
         if (characters < length) { characters = length; return null; }
         if (line + 1 < lines.size()) { line++; characters = 0; }
+        else if (postVictory) { finished = true; return Choice.CONTINUE; }
         else if (eligible && !paid) return Choice.BREW;
         else choosing = true;
         return null;

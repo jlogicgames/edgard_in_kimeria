@@ -5,6 +5,11 @@ opens at the black midpoint of the canopy exit fade, before entering the boss ro
 The world, player input and gameplay effects stop. The dedicated black dialogue screen
 shows original pixel-drawn placeholder portraits: Edgard left, healer right. The speaker's
 frame is highlighted; English and Ukrainian use the existing baked pixel font.
+In every pre/post-boss conversation Edgard's name and dialogue are white, with his
+lines aligned left. The healer's name and dialogue are green, with his lines aligned
+right. Complete-line layout stays fixed while letters reveal. A right-aligned
+`Next >` / `Далі >` prompt appears below the dialogue only after the line is fully
+revealed; it hides during typing and when choices are displayed.
 
 ## Dialogue and choices
 
@@ -83,7 +88,7 @@ room replaces the prior entry on each secured exit; trips do not append room sna
 The shipped forest has static stair platforms, ordinary terrain/quicksand, bombs and
 unlinked decorative torches; it currently has no authored moving/falling platform or
 switch chain. Those objects are still covered by the restoration path and regression
-fixtures. The first level's wall trigger remains operable; escalator trigger targets use
+fixtures. The `forest-1` wall trigger remains operable; escalator trigger targets use
 the authored object name, so restored chains can toggle moving platforms too. No awkward
 traversal object is excluded from rebuilding. No map geometry or existing author art was
 replaced for this feature.
@@ -131,7 +136,7 @@ Only local checks were used, per the author's choice; no source was sent to Snyk
 - Verify Restart Level/New Game/Continue and a clean subsequent run. Save remains level-only.
 
 The automated movement and framebuffer checks do not replace this human acceptance pass.
-The post-victory scene belongs to #86 and is not implemented here.
+The post-victory scene is implemented by #86 as described below.
 
 ## Author feedback, 2026-10-18
 
@@ -154,3 +159,30 @@ post-process buffer; the pause menu is rendered above the glitch. A real libGDX 
 check asserts that the world is never rendered or updated throughout dialogue/pause/Resume,
 that text stays frozen on pause, and that Resume preserves the same dialogue state.
 123 core tests and desktop/web builds pass.
+
+## Post-victory guide scene (#86)
+
+After the forest guardian's death animation and Edgard's complete automatic exit,
+`Level.victoryExitComplete()` gates a second meeting with the same healer. Defeat,
+damage, boss retry and ordinary room exits do not open this scene. The same dialogue
+model, portraits, speaker frames, font and reveal/advance input path are reused;
+recipe/payment UI and fight/return choices are absent.
+
+The three lines acknowledge the guardian's defeat and the open path, Edgard notes
+that darkness still hangs over the kingdom, and the healer promises to guide him
+as the journey continues. The author approved this meaning on 2026-10-19. EN/UK
+text lives in Msg; no new destination, quest or explanation of the darkness is added.
+
+A fresh final advance emits CONTINUE once. KimeriaGame then performs its existing
+first-level completion: secures pickups, advances to `forest-1`, saves index 1,
+creates a fresh hero and starts normal loading. No save is written at dialogue entry,
+and no dialogue/checkpoint flag is persisted. The second level ends the MVP campaign
+through the ending scroll instead of wrapping to the forest; see [MVP.md](MVP.md).
+Paused Restart Level still restarts the
+outgoing level; Exit leaves its existing save untouched. Continue after exit follows
+the previous completed-level save. Restart/Exit discard the conversation normally.
+
+Input and Esc pause/Resume follow the pre-boss rules above, including frozen text,
+dialogue-only pause background and held-input suppression. The new hero has no
+victory-walk lock. See [post-boss validation](POST_BOSS_VALIDATION.md) for automated,
+desktop, browser and outstanding physical-device/human checks.

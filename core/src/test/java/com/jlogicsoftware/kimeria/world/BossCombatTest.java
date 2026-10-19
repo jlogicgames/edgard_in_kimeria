@@ -103,7 +103,12 @@ class BossCombatTest {
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
         Gdx.graphics = (Graphics) Proxy.newProxyInstance(Graphics.class.getClassLoader(), new Class<?>[]{Graphics.class},
-            (proxy, method, args) -> method.getName().equals("getDeltaTime") ? REAL_STEP : null);
+            (proxy, method, args) -> switch (method.getName()) {
+                case "getDeltaTime" -> REAL_STEP;
+                case "getWidth" -> 640;
+                case "getHeight" -> 360;
+                default -> null;
+            });
         Gdx.app = (Application) Proxy.newProxyInstance(Application.class.getClassLoader(), new Class<?>[]{Application.class},
             (proxy, method, args) -> method.getName().equals("getType") ? Application.ApplicationType.HeadlessDesktop : null);
         touch = new TouchControls(assets, game, null, 640, 360);
@@ -215,17 +220,53 @@ class BossCombatTest {
 
         KimeriaGame running = new KimeriaGame();
         gameField(running, "assets", assets); gameField(running, "level", level);
-        gameField(running, "player", exiting); gameField(running, "currentLevelIndex", 1);
+        gameField(running, "player", exiting); gameField(running, "currentLevelIndex", 0);
         gameField(running, "touchControls", touch); gameField(running, "playSounds", false);
-        var progress = new com.jlogicsoftware.kimeria.SavedProgress(null, 2);
+        int[] saveWrites = {0};
+        var preferences = (com.badlogic.gdx.Preferences) Proxy.newProxyInstance(
+            com.badlogic.gdx.Preferences.class.getClassLoader(), new Class<?>[]{com.badlogic.gdx.Preferences.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "contains" -> false;
+                case "putInteger" -> proxy;
+                case "flush" -> { saveWrites[0]++; yield null; }
+                default -> null;
+            });
+        var progress = new com.jlogicsoftware.kimeria.SavedProgress(preferences, 2);
         gameField(running, "savedProgress", progress);
+        held.add(Input.Keys.K); held.add(Input.Keys.D);
         running.loadNextLevel();
-        assertEquals(0, progress.nextLevelIndex(), "Final boss must wrap to the first level");
+        var healerField = KimeriaGame.class.getDeclaredField("healer"); healerField.setAccessible(true);
+        var dialogue = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
+        assertTrue(dialogue.postVictory());
+        assertFalse(progress.exists(), "Dialogue entry must not write a save");
+        assertEquals(0, saveWrites[0]);
+        assertSame(exiting, getGamePlayer(running));
+        running.loadNextLevel();
+        assertSame(dialogue, healerField.get(running), "Duplicate completion cannot reopen the scene");
+        gameField(running, "uiViewport", new com.badlogic.gdx.utils.viewport.FitViewport(640, 360));
+        gameField(running, "healerView", new com.jlogicsoftware.kimeria.ui.HealerDialogueView());
+        var update = KimeriaGame.class.getDeclaredMethod("updateHealer", float.class); update.setAccessible(true);
+        update.invoke(running, 0f);
+        assertEquals("", dialogue.text(com.jlogicsoftware.kimeria.localization.Language.ENGLISH),
+            "Held fight and movement inputs cannot reveal the opening line");
+        held.clear(); update.invoke(running, 0f);
+        for (int i = 0; i < 6; i++) {
+            held.add(Input.Keys.K); update.invoke(running, 0f);
+            held.clear();
+            if (i < 5) update.invoke(running, 0f);
+        }
+        assertNull(healerField.get(running));
+        assertEquals(1, progress.nextLevelIndex(), "First-level boss must lead to the single-room second level");
+        var choose = KimeriaGame.class.getDeclaredMethod("chooseHealer", com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.class);
+        choose.setAccessible(true);
+        choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.CONTINUE);
+        assertEquals(1, progress.nextLevelIndex(), "Repeated final advance cannot complete another level");
+        assertEquals(1, saveWrites[0], "The entire post-boss flow writes exactly one save");
         assertFalse(running.isGameStarted(), "The loading screen still owns the transition");
         var playerField = KimeriaGame.class.getDeclaredField("player"); playerField.setAccessible(true);
         Player arriving = (Player) playerField.get(running);
         assertNotSame(exiting, arriving, "Scripted victory state must not survive into the new level");
-        // Same shipped first-level map; the alias only omits GL-only decorative sky in headless tests.
+        // Same shipped single-room second-level map; the alias only omits GL-only decorative sky in headless tests.
         Level next = new Level(assets, running, arriving, "replay-forest-1", Rectangle::new);
         gameField(running, "level", next);
         assertTrue(next.player.canFight());
@@ -242,6 +283,45 @@ class BossCombatTest {
         for (int frame = 0; frame < 50; frame++) next.update(REAL_STEP);
         held.add(Input.Keys.J); next.update(REAL_STEP); held.clear();
         assertTrue(next.player.velocity.y < 0, "Jump input must work after victory");
+    }
+
+    private Player getGamePlayer(KimeriaGame running) throws Exception {
+        var field = KimeriaGame.class.getDeclaredField("player"); field.setAccessible(true);
+        return (Player) field.get(running);
+    }
+
+    @Test void realBossExitOpensGuideOnlyAfterDeathAndWalk() throws Exception {
+        KimeriaGame running = new KimeriaGame();
+        gameField(running, "assets", assets); gameField(running, "touchControls", touch);
+        gameField(running, "currentLevelIndex", 0); gameField(running, "playSounds", false);
+        gameField(running, "player", new Player(assets, running, 0, 0));
+        var progress = new com.jlogicsoftware.kimeria.SavedProgress(null, 2);
+        gameField(running, "savedProgress", progress);
+        var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true); load.invoke(running);
+        var field = KimeriaGame.class.getDeclaredField("level"); field.setAccessible(true);
+        Level world = (Level) field.get(running);
+        world.enterNextRoom(new Player(assets, running, 0, 0));
+        world.enterNextRoom(new Player(assets, running, 0, 0));
+        gameField(running, "player", world.player);
+        running.setGameStarted(true); gameState(running, "PLAYING");
+        assertFalse(world.victoryExitComplete());
+        world.player.collidedWithActor(false);
+        assertFalse(world.victoryExitComplete(), "Damage cannot open the guide scene");
+        Player retry = new Player(assets, running, 0, 0);
+        world.resetCurrentRoom(retry); gameField(running, "player", retry);
+        running.artifacts().drinkBossElixir("forest");
+        world.boss().collidedWithActor(true); world.boss().collidedWithActor(true);
+        for (int i = 0; i < 30; i++) world.update(REAL_STEP);
+        assertFalse(world.victoryExitComplete(), "Death presentation must finish first");
+        assertTrue(running.isGameStarted());
+        for (int i = 0; i < 550; i++) world.update(REAL_STEP);
+        assertTrue(world.victoryExitComplete());
+        var healerField = KimeriaGame.class.getDeclaredField("healer"); healerField.setAccessible(true);
+        var dialogue = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
+        assertTrue(dialogue.postVictory()); assertFalse(running.isGameStarted());
+        assertFalse(progress.exists());
+        for (int i = 0; i < 100; i++) world.update(REAL_STEP);
+        assertSame(dialogue, healerField.get(running), "The completed exit sends only one callback");
     }
 
     @Test void normalUsesSeventhArtRowAndEveryCounterPoseUsesThirdRow() throws Exception {
@@ -595,7 +675,7 @@ class BossCombatTest {
         gameField(running, "playSounds", false);
         gameField(running, "assets", assets);
         gameField(running, "touchControls", touch);
-        gameField(running, "currentLevelIndex", 1);
+        gameField(running, "currentLevelIndex", 0);
         gameField(running, "coinsCollected", 19);
         gameField(running, "player", new Player(assets, running, 0, 0));
         var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true);
@@ -646,9 +726,11 @@ class BossCombatTest {
     }
 
     @Test void escapePausesTheDialogueWithoutAdvancingTextAndResumeKeepsItsState() throws Exception {
-        for (boolean choices : new boolean[]{false, true}) {
+        for (int scene = 0; scene < 3; scene++) {
+            boolean choices = scene == 1;
             KimeriaGame running = new KimeriaGame();
-            var dialogue = new com.jlogicsoftware.kimeria.ui.HealerDialogue(false, false, false, false, false);
+            var dialogue = scene == 2 ? com.jlogicsoftware.kimeria.ui.HealerDialogue.afterVictory()
+                : new com.jlogicsoftware.kimeria.ui.HealerDialogue(false, false, false, false, false);
             if (choices) {
                 for (int i = 0; i < 8; i++) dialogue.advance(com.jlogicsoftware.kimeria.localization.Language.ENGLISH);
                 dialogue.select(1);

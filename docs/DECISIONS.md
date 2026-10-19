@@ -182,7 +182,7 @@ only in the menu backdrop.
     it. Confirmation clears the old save; the new run creates a save only on its first
     level completion. Cancelling preserves the old save.
   - Progress is saved when a level is completed (`Checkpoint` or the boss victory walk) and holds the
-    next level to play, and nothing else. It is not saved mid-level or per room.
+    next level to play, and nothing else. The first-level boss route completes after its post-boss healer dialogue. It is not saved mid-level or per room.
     Continue starts that level from its beginning. Missing, malformed or out-of-range indices
     hide Continue (for example, after removing levels).
   - Saving is **automatic**. The game writes the save the moment a level is completed, with no
@@ -192,8 +192,12 @@ only in the menu backdrop.
   - The save holds **only the level**. Coins and the consumed elixir are run-only (D6), so they are not saved and a
     continued run starts with 0 coins and no elixir. Do not add coins
     to the save format.
-  - Completing the **last level** resets the save to level 1, so Continue then starts the
-    game over from the first level.
+  - The MVP order is `forest` (three rooms and boss), then `forest-1` (one room).
+    Completing the **last level** opens the ending scroll with the intro music; after
+    it finishes or is skipped, delete only the run save and return to the main menu.
+    Continue is then hidden and New Game starts a fresh run. There is no level wrap.
+    If the application closes before the ending finishes, the previous level-only save
+    remains available, so Continue restarts the second level.
   - **Continue** (a saved run, from the main menu) is different from **Resume** (unpausing the
     current run, from the pause menu). The names stay distinct.
 - **Why:** Standard for games with progress, and the same shape as Katana Zero's menu. The
@@ -318,7 +322,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 ## D14. The healer is Edgard's recurring guide
 
-- **Status:** Accepted, 2026-10-16; opening and pre-boss scene implemented, post-boss scene pending #86.
+- **Status:** Accepted, 2026-10-16; opening, pre-boss and post-boss (#86) scenes implemented.
 - **Decision:** The healer (знахарь) from the optional pre-boss elixir encounter is a
   recurring character and Edgard's guide through the journey. He narrates the very
   beginning: darkness has descended upon the kingdom, brought about by the evil sorceress
@@ -330,8 +334,24 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   hero's victory to the next stage of the story. His significance extends beyond the
   optional elixir bargain; declining it does not remove his role in the story.
 - **Constraints:** Do not replay progression dialogue on death/retry or change the fast
-  respawn and level-only save contracts. Final dialogue and new lore are still to be
-  agreed. See [STORY.md](STORY.md) for the character's role, agreed appearances and open
+  respawn and level-only save contracts. The post-boss dialogue meaning was approved
+  on 2026-10-19; no new destination or quest was added. New lore still needs agreement. See [STORY.md](STORY.md) for the character's role, agreed appearances and open
   questions; consult it when extending the narrative.
 - **Tracked in:** [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84),
   [#86](https://github.com/jlogicgames/edgard_in_kimeria/issues/86).
+
+
+## D15. Two-level MVP with a finite ending
+
+- **Status:** Accepted by the author, 2026-10-19.
+- **Decision:** First play `forest` with three rooms, the pre-boss healer and forest boss.
+  The existing death animation, automatic exit and guide dialogue lead to `forest-1`,
+  the single-room second level. Its checkpoint leads to a black scrolling ending using
+  `IntroScreen` and `audio/intro.wav`, with the same fade and fresh-input skip behavior
+  as the opening. EN/UK text says Edgard defeated every enemy, freed the kingdom of
+  monsters and brought light back to the world. After the ending, clear the saved run
+  and return to the menu; retain settings. Future mechanics expand these two levels.
+- **Why:** This is the complete playable MVP loop, with a clear beginning and ending.
+- **Persistence:** D8 remains level-only. Save index 1 after the first level's guide
+  dialogue; never write index 0 on final completion. See [MVP.md](MVP.md) for scope
+  and validation. This supersedes the former final-level wrap behavior.

@@ -5,11 +5,11 @@ import static com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
 /** Port of Rust's {@code localization::Msg} UI message catalog. */
 public enum Msg {
     TITLE, PLAY, CONTINUE, NEW_GAME, NEW_GAME_CONFIRMATION, CONFIRM, CANCEL, ABOUT, OPTIONS, EXIT, BACK, RESUME, RESTART_LEVEL, EXIT_TO_MENU,
-    PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING, INTRO_STORY,
+    PAUSE_MENU, LANGUAGE_LABEL, DISPLAY_LABEL, FULLSCREEN, WINDOWED, MENU_HINT, ABOUT_BODY, ABOUT_BODY_LEFT_HANDED, ABOUT_GAMEPAD, ABOUT_GAMEPAD_LEFT_HANDED, LOADING, INTRO_STORY, ENDING_STORY,
     ATTACK, INTERACT, SHOOT, LEFT_HANDED_LABEL, ASSIST, LONGER_TRAP_WARNINGS, ON, OFF, BOSS,
     HEALER, EDGARD, HEALER_GREETING, EDGARD_REPLY, HEALER_INGREDIENTS, HEALER_PAYMENT,
     HEALER_BOTH, HEALER_READY, HEALER_OFFER, HEALER_PAID, HEALER_LOCK, HEALER_RETURN, HEALER_BREW,
-    HEALER_FIGHT, HEALER_HINT, CHICKEN, KEY, COINS, PAID, ABOUT_RULES, RULES, CONTROLS;
+    HEALER_VICTORY, EDGARD_DARKNESS, HEALER_GUIDE, HEALER_FIGHT, HEALER_HINT, CHICKEN, KEY, COINS, PAID, ABOUT_RULES, RULES, CONTROLS;
 
     public String t(Language lang) {
         boolean en = lang == ENGLISH;
@@ -46,7 +46,16 @@ public enum Msg {
             case HEALER_RETURN -> en ? "Return to the forest entrance" : "Повернутися на початок лісу";
             case HEALER_BREW -> en ? "Pay, brew and drink" : "Сплатити, зварити й випити";
             case HEALER_FIGHT -> en ? "Enter the boss fight" : "Розпочати бій із босом";
-            case HEALER_HINT -> en ? "Press / tap: reveal, then advance" : "Натисни / торкнись: показати, далі";
+            case HEALER_VICTORY -> en
+                ? "The forest guardian is defeated, Edgard. You have opened the way ahead."
+                : "Лісового вартового переможено, Едгарде. Ти відкрив шлях далі.";
+            case EDGARD_DARKNESS -> en
+                ? "But darkness still hangs over the kingdom."
+                : "Але темрява досі нависає над королівством.";
+            case HEALER_GUIDE -> en
+                ? "Your journey continues. I will be your guide. Go on: we will meet again."
+                : "Твоя подорож триває. Я буду твоїм провідником. Рушай: ми ще зустрінемося.";
+            case HEALER_HINT -> en ? "Next >" : "Далі >";
             case CHICKEN -> en ? "Chicken" : "Курка";
             case KEY -> en ? "Key" : "Ключ";
             case COINS -> en ? "Forest coins" : "Монети лісу";
@@ -90,6 +99,9 @@ public enum Msg {
             case INTRO_STORY -> en
                 ? "I am the healer, Edgard. Listen to the story of Kimeria.\n\nDarkness has fallen over our kingdom, brought by the evil sorceress L'Kardina.\n\nYour journey leads through the forest. I will guide you and help you find the way forward.\n\nBefore its guardian, seek me out. You may gather Chicken, Key and every forest coin for my elixir - or face him with your own strength."
                 : "Я знахар, Едгарде. Послухай історію Кімерії.\n\nНаше королівство огорнула темрява, яку принесла зла чаклунка Л'Кардіна.\n\nТвій шлях пролягає через ліс. Я буду твоїм провідником і допоможу знайти дорогу вперед.\n\nПеред зустріччю з його вартовим знайди мене. Збери курку, ключ та всі монети лісу для еліксиру - або покладайся на власні сили.";
+            case ENDING_STORY -> en
+                ? "Edgard has defeated every enemy.\n\nThe kingdom is free of monsters.\n\nLight has returned to the world.\n\nTHE END"
+                : "Едгард здолав усіх ворогів.\n\nКоролівство очищено від монстрів.\n\nСвітло повернулося у світ.\n\nКІНЕЦЬ";
             case LOADING -> en ? "Loading..." : "Завантаження...";
             case ABOUT_BODY -> en
                 ? "Use A/D for movement.\nJ to jump. L to shoot.\nK to attack, or to interact inside a trigger zone.\nEscape to pause.\nJump on an enemy from above to stomp it. Ordinary enemies kill on side/bottom contact. The boss body blocks safely; his axe kills."

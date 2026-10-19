@@ -1,10 +1,13 @@
 # Rooms in Tiled
 
-A level is one TMX map containing an ordered chain of rooms. `forest` has three
+The MVP first level is `forest`; the second is `forest-1`. A level is one TMX map
+containing an ordered chain of rooms. `forest` has three
 rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
-leads into forest-boss. Boss death and the automatic victory walk complete the level.
-`forest-1` remains an unmarked, single-room level. Replay budgets and measured
+leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
+its final advance completes the level and starts normal next-level loading.
+`forest-1` is the unmarked, single-room second level; its checkpoint leads to the
+ending scroll and then the menu, with the save cleared. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 ## Authoring
@@ -98,7 +101,7 @@ contact, bombs, quicksand, moving/falling platforms, triggers, and 0.5-speed bat
 proximity remain enabled. Invulnerability and trap assist are off. Each route
 succeeds on a fresh attempt and repeats twice after `resetCurrentRoom`, with the
 same elapsed time and no deaths. Both collection routes collect all three room
-coins. The first level has no collectables, so it needs no separate detour.
+coins. The `forest-1` course has no collectables, so it needs no separate detour.
 
 | Level / room | Width | Required route | All room pickups | Result |
 | --- | ---: | ---: | ---: | --- |

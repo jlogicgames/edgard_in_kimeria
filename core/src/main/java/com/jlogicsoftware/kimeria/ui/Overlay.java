@@ -98,13 +98,17 @@ public class Overlay {
     }
 
     public void body(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth) {
-        textQueue.add(() ->
-            bodyFont.draw(batch, text, centerX - wrapWidth / 2f, toTextY(yFromTop), wrapWidth, Align.center, true));
+        body(batch, text, centerX, yFromTop, wrapWidth, Color.WHITE);
+    }
+
+    public void body(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth, Color color) {
+        GlyphLayout layout = new GlyphLayout(bodyFont, text, color, wrapWidth, Align.center, true);
+        textQueue.add(() -> bodyFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
     }
 
     /** Layout the complete line once so revealing letters cannot recenter text or move wrapped words. */
-    public void dialogue(SpriteBatch batch, String text, int visibleCharacters, float x, float yFromTop, float width) {
-        GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, width, Align.left, true);
+    public void dialogue(SpriteBatch batch, String text, int visibleCharacters, float x, float yFromTop, float width, Color color, int alignment) {
+        GlyphLayout layout = new GlyphLayout(bodyFont, text, color, width, alignment, true);
         int source = 0, shown = 0;
         outer: for (GlyphLayout.GlyphRun run : layout.runs) for (BitmapFont.Glyph glyph : run.glyphs) {
             // Wrapping removes spaces at line boundaries; map rendered glyphs back to source positions.

@@ -1,6 +1,6 @@
 package com.jlogicsoftware.kimeria.ui;
 
-/** Real-time intro timeline in logical pixels; independent of gameplay time scaling. */
+/** Real-time opening/ending story timeline in logical pixels; independent of gameplay time scaling. */
 public final class IntroScreen {
     public enum State { FADE_IN, SCROLLING, FADE_OUT, DONE }
 

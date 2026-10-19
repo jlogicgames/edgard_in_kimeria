@@ -8,6 +8,11 @@ A 2D platformer, ported to Java and [libGDX](https://libgdx.com/) from the proje
 Flutter/Flame version (with reference to its separate Rust/Bevy version for feature parity —
 full menu system, localization, gamepad support, dev hotkeys).
 
+The MVP has two playable levels: **forest** (three rooms, healer and boss), followed
+by **forest-1** (one room). After the second level, an ending scroll uses the opening
+music, celebrates the kingdom's liberation and returns to the menu with the run save
+removed. Future mechanics will expand these same two levels. See [MVP](docs/MVP.md).
+
 Controls are three action buttons — **Jump**, **Shoot** and a context-sensitive
 **Attack/Interact** — plus movement. **A / D** move, **J** jump, **K** attack (or
 interact while the player is inside a trigger zone — walls, torches, escalators), **L** shoot,
@@ -119,12 +124,12 @@ Two different causes produce this same crash:
       losing contact
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Trigger → actionable wall removal and torch toggle
-- [x] Checkpoint → next level, with wrap; death in slow motion, then an instant room reset and respawn (no lives)
+- [x] Checkpoint → next level or ending; death in slow motion, then an instant room reset and respawn (no lives)
 - [x] Torch, firefly and rain ambience; fog only in menus
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
 - [x] HUD, main menu, About, Options, pause menu
 - [x] Continue / New Game with overwrite confirmation and automatic level-only saves
-      on desktop and web; finishing the last level saves the first level (#48)
+      on desktop and web; finishing the last level shows the ending, then clears the run save
 - [x] Options → Assist → Longer trap warnings: an independent, persisted toggle (off by default)
       giving falling platforms a 1.5 s warning instead of 1 s, with no penalties
 - [x] Keyboard, mouse and gamepad menu navigation
@@ -226,7 +231,7 @@ parts that shape the code:
 - **Saved progress** lives in the same libGDX `Preferences` file as settings
   (`Settings.PREFS_NAME`), under `Settings.KEY_NEXT_LEVEL`, managed by `SavedProgress`: the next level index and nothing else
   (coins are temporary, see D8). The save is written automatically when a level is completed (no manual save), never mid-level
-  (completing the last level writes level 1), and read once when the main menu is built or shown. "A save exists" is a single predicate that the main
+  (the last level shows the ending; completing its scroll deletes the run save), and read once when the main menu is built or shown. "A save exists" is a single predicate that the main
   menu uses to decide whether to show `Continue`.
 - **The main menu hides `Continue` until a save exists.** `MenuItem` has an optional visibility predicate
   (default: always visible), honoured by layout, drawing, mouse and keyboard/gamepad navigation.
@@ -255,7 +260,8 @@ optional coin route, and the authored boss chamber. The boss starts on a throne;
 hits are required to defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
 Interrupting a normal strike triggers a flashing, uninterruptible counterattack: jump away.
-Victory plays the boss death and an automatic hero exit before completing/saving the level.
+Victory plays the boss death and an automatic hero exit, then the healer dialogue,
+before completing/saving the level.
 The boss HUD uses twelve replaceable PNG segments, blood particles/impact sounds, and a short
 refill cue during the existing retry animation. A potion icon marks the active 10x effect.
 See [Boss combat](docs/BOSS.md) for art, balance and validation details.
@@ -263,7 +269,7 @@ The healer is Edgard's recurring guide and opening narrator: he tells of the kin
 fall into darkness caused by the evil sorceress L'Kardina, and guides progression through
 the game. The opening identifies him as the narrator. Before the boss, a separate NES-style dialogue
 offers an optional paid elixir or collection return (#84). The post-victory dialogue (#86)
-is still pending implementation;
+acknowledges the victory and establishes his ongoing guidance before the next level;
 [Story and characters](docs/STORY.md) records his role and the basis for future narrative decisions.
 At the first room's exit, the scene fades out and in (0.25 seconds each way).
 The hero and camera relocate under full black, without a hero transition animation.

@@ -1,5 +1,10 @@
 # Forest boss (#83)
 
+Current MVP order: the forest boss ends **level one**. After death, automatic exit and
+the healer guide dialogue, start the single-room `forest-1` as **level two**. Its ending
+returns to the menu and clears progress; the campaign no longer wraps. See [MVP.md](MVP.md).
+Historical wrap references in the validation notes below describe earlier builds.
+
 `forest-boss` is the authored third forest room (448 × 368, entrance 2032,272).
 The author-owned Boss object (2304,304) and Boss.png are preserved. Physics settles the
 boss's feet onto y=320; its render frame is 48 × 32 regardless of the map marker's 32 × 32.

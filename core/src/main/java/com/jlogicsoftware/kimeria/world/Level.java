@@ -97,6 +97,9 @@ public class Level implements WorldObject {
     private boolean victory, completionSent;
     private float shakeRemaining;
 
+    /** True only after the death presentation and the completed automatic exit. */
+    public boolean victoryExitComplete() { return victory && completionSent; }
+
     /** Checkpoints, including the debug shortcut, cannot bypass an authored boss. */
     public boolean hasBossEncounter() {
         return map.layer("SpawnPoints").stream().anyMatch(o -> "Boss".equals(o.type));

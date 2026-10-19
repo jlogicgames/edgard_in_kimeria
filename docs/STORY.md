@@ -48,8 +48,8 @@ expanding the introduction or the healer's advice.
    After boss death and the hero's automatic exit, the same healer returns on a separate
    dialogue screen before the next playable level. The conversation acknowledges the
    victory and establishes his continuing role as guide. Reuse the character's portrait,
-   visual identity and dialogue presentation from #84. Final dialogue wording is still to
-   be agreed.
+   visual identity and dialogue presentation from #84. The author approved the three-line meaning on 2026-10-19: victory opens the path,
+   darkness remains, and the healer will guide Edgard onward. No destination is named.
 
 ### Consequences for future decisions
 
@@ -65,7 +65,7 @@ expanding the introduction or the healer's advice.
 ### Not yet decided
 
 The healer's personal name, origin, motives, relationship to the boss, exact knowledge of
-Kimeria, later destinations and quests, and final lines are not established. Neither are
+Kimeria, later destinations and quests are not established. Neither are
 specific later appearances beyond the opening and agreed forest encounters. Propose these explicitly
 when extending the story; do not treat an implementation placeholder as accepted lore.
 
@@ -74,6 +74,20 @@ when extending the story; do not treat an implementation placeholder as accepted
 The opening now identifies the healer as narrator and L'Kardina as the cause of the
 kingdom's darkness. The pre-boss dialogue, checklist, paid elixir and collection return are
 implemented by #84; the dialogue wording and original pixel portrait placeholders need
-review in play with the author. The post-boss guide scene is tracked separately in #86.
-The current victory flow still proceeds directly to the next level after the automatic exit;
-this change does not implement that post-boss scene.
+review in play with the author. The post-boss guide scene is implemented by #86 after the automatic exit and before
+normal next-level loading. It reuses the pre-boss portrait/dialogue presentation and
+introduces no new quest, destination or persistent checkpoint. See [HEALER.md](HEALER.md).
+
+
+## MVP ending — accepted 2026-10-19
+
+The playable MVP is finite: the forest's three rooms and boss form level one; the existing
+single-room `forest-1` is level two. The forest guide scene bridges these levels. After
+the second level, an ending screen in the opening's scrolling style plays the same music.
+Its EN/UK text establishes that Edgard defeated every enemy, cleared the kingdom of
+monsters and brought light back to the world. This outcome is now agreed; no new account
+of L'Kardina's fate or the mechanism of dispelling darkness is added.
+
+After the ending, the game returns to the main menu and removes the run save. A new run
+starts from the opening and the forest. Later mechanics will expand these two levels;
+additional stages and quests are outside the agreed MVP. See [MVP.md](MVP.md).

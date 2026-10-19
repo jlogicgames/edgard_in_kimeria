@@ -102,7 +102,7 @@ class RoomReplayTest {
         Gdx.input = previousInput; Gdx.files = previousFiles;
     }
 
-    @Test void firstLevelRequiredRouteFitsTwentySeconds() {
+    @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
         measure("forest-1", false, false, 0, new float[]{125, 260, 540});
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
