@@ -61,8 +61,8 @@ public enum Msg {
             case COINS -> en ? "Forest coins" : "Монети лісу";
             case PAID -> en ? "Paid - elixir drunk" : "Сплачено - еліксир випито";
             case ABOUT_RULES -> en
-                ? "One hit kills; attempts are unlimited. Retry from this room; new pickups roll back, secured ones stay kept. Tap jump for each jump. Assist extends trap warnings.\n\nCollectibles are optional. Before the forest boss, trade Chicken, Key and all forest coins for a drunk elixir: 10x damage to this boss only, until his defeat. Or fight without it."
-                : "Один удар смертельний; спроби необмежені. Повтор із цієї кімнати: нові знахідки скидаються, закріплені зберігаються. Для кожного стрибка натискай знову. Допомога подовжує попередження пасток.\n\nЗбір необов'язковий. Перед босом лісу обміняй курку, ключ та всі монети лісу на еліксир і випий: шкода лише цьому босу x10 до перемоги. Або бийся без нього.";
+                ? "One hit kills; attempts are unlimited. Retry from this room; new pickups roll back, secured ones stay kept. Tap jump for each jump. Assist extends trap warnings.\n\nChicken, Key and coins are optional. Before the forest boss, the healer can use them to brew you an elixir."
+                : "Один удар смертельний; спроби необмежені. Повтор із цієї кімнати: нові знахідки скидаються, закріплені зберігаються. Для кожного стрибка натискай знову. Допомога подовжує попередження пасток.\n\nКурка, ключ і монети необов'язкові. Перед босом лісу знахар може зварити з них еліксир.";
             case BOSS -> en ? "Boss" : "Бос";
             case TITLE -> en ? "Edgard in Kimeria" : "Едгард у Кімерії";
             case PLAY -> en ? "Play" : "Грати";
