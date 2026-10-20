@@ -61,8 +61,8 @@ public enum Msg {
             case COINS -> en ? "Forest coins" : "Монети лісу";
             case PAID -> en ? "Paid - elixir drunk" : "Сплачено - еліксир випито";
             case ABOUT_RULES -> en
-                ? "One hit kills; attempts are unlimited. Retry from this room; new pickups roll back, secured ones stay kept. Tap jump for each jump. Assist extends trap warnings.\n\nChicken, Key and coins are optional. Before the forest boss, the healer can use them to brew you an elixir."
-                : "Один удар смертельний; спроби необмежені. Повтор із цієї кімнати: нові знахідки скидаються, закріплені зберігаються. Для кожного стрибка натискай знову. Допомога подовжує попередження пасток.\n\nКурка, ключ і монети необов'язкові. Перед босом лісу знахар може зварити з них еліксир.";
+                ? "One hit kills; attempts are unlimited. Retry from this room; new pickups roll back, secured ones stay kept. Tap jump for each jump. Assist extends trap warnings."
+                : "Один удар смертельний; спроби необмежені. Повтор із цієї кімнати: нові знахідки скидаються, закріплені зберігаються. Для кожного стрибка натискай знову. Допомога подовжує попередження пасток.";
             case BOSS -> en ? "Boss" : "Бос";
             case TITLE -> en ? "Edgard in Kimeria" : "Едгард у Кімерії";
             case PLAY -> en ? "Play" : "Грати";
@@ -97,8 +97,8 @@ public enum Msg {
             case ON -> en ? "On" : "Увімк.";
             case OFF -> en ? "Off" : "Вимк.";
             case INTRO_STORY -> en
-                ? "I am the healer, Edgard. Listen to the story of Kimeria.\n\nDarkness has fallen over our kingdom, brought by the evil sorceress L'Kardina.\n\nYour journey leads through the forest. I will guide you and help you find the way forward.\n\nBefore its guardian, seek me out. You may gather Chicken, Key and every forest coin for my elixir - or face him with your own strength."
-                : "Я знахар, Едгарде. Послухай історію Кімерії.\n\nНаше королівство огорнула темрява, яку принесла зла чаклунка Л'Кардіна.\n\nТвій шлях пролягає через ліс. Я буду твоїм провідником і допоможу знайти дорогу вперед.\n\nПеред зустріччю з його вартовим знайди мене. Збери курку, ключ та всі монети лісу для еліксиру - або покладайся на власні сили.";
+                ? "I am the healer. Listen to the story of Kimeria.\n\nIn the days of King Rufardus the Wise, the sorceress L'Kardina came to our kingdom. She had been banished from a neighboring land. When Kimeria tried to drive her away as well, her fury became a terrible curse.\n\nThe sun ceased to shine. Darkness swallowed the kingdom, and eternal night settled over its sleeping lands.\n\nWord of Kimeria's misfortune reached a wandering warrior named Edgard. He set out on a long journey to overthrow the sorceress and save the kingdom.\n\nOn his way, he met me, an old healer. Beyond our meeting lay unfamiliar paths and cunning traps. I gave him my counsel, and he ventured onward.\n\nHere begins Edgard's journey through the sleeping kingdom."
+                : "Я знахар. Послухай історію Кімерії.\n\nЗа часів короля Руфардуса Мудрого до нашого королівства прийшла чаклунка Л'Кардіна. Її вигнали із сусідньої країни. Коли й у Кімерії спробували її прогнати, вона розлютилася й наклала на край страшне прокляття.\n\nСонце перестало світити. Темрява поглинула королівство, і вічна ніч огорнула його сонні землі.\n\nЗвістка про лихо Кімерії дійшла до мандрівного воїна на ім'я Едгард. Він вирушив у далеку дорогу, щоб повалити владу чаклунки й урятувати королівство.\n\nДорогою він зустрів мене, старого знахаря. Попереду чекали незнайомі стежки й підступні пастки. Я дав йому пораду, і він рушив далі.\n\nТут починається подорож Едгарда сонним королівством.";
             case ENDING_STORY -> en
                 ? "Edgard has defeated every enemy.\n\nThe kingdom is free of monsters.\n\nLight has returned to the world.\n\nTHE END"
                 : "Едгард здолав усіх ворогів.\n\nКоролівство очищено від монстрів.\n\nСвітло повернулося у світ.\n\nКІНЕЦЬ";

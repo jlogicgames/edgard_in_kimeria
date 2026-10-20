@@ -134,11 +134,11 @@ to ship screenshots, the DOSBox frame or the green background as dialogue textur
 - Author artwork review should compare the new portraits directly with these references.
 
 
-## Separate opening-text work: validation — 2026-10-20
+## Opening-text validation — 2026-10-20
 
-The following evidence was recorded for a separate working-copy opening-text change,
-which is not included in this documentation-only revision. It does not describe the
-runtime opening at this revision.
+The EN/UK opening-text change described below is now included in the game. The
+following records the earlier text/layout validation; the current verification is
+recorded separately below.
 
 All 130 core tests passed; desktop and TeaVM release web builds succeeded. A temporary
 hidden-window LWJGL harness rendered the new EN/UK opening using the actual baked
@@ -150,3 +150,18 @@ This was text/layout validation, not a new human playthrough or browser visual c
 The temporary harness was removed after use. Snyk scanning was rejected by automatic
 approval review because it could disclose source to an external service; no scan result
 is claimed.
+
+
+### Verification for the committed opening text — 2026-10-20
+
+The core suite now passes **131 tests**, with zero failures/errors/skips;
+`buildDesktop` and the TeaVM release `buildWeb` also succeed. A temporary metric
+check used the actual baked QuestSquare-15 font data and libGDX `GlyphLayout`
+with the same wrapping/alignment as `Overlay.body`. At a 512 px wrap width,
+the EN opening is 511 × 217 px and UK is 498 × 217 px; all glyphs are present.
+At the 312 px About panel width, the shortened rules are 296 × 37 px (EN) and
+299 × 52 px (UK), also with complete glyphs. This check measures font layout
+without rendering; it is not a new desktop/browser visual or human playthrough.
+The temporary checker was removed. The shipped change consists only of localized
+string values; no input, dialogue timeline, save, dependency or executable logic
+was added. Security review was local, consistent with the existing choice above.

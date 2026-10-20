@@ -18,11 +18,9 @@ revealed; it hides during typing and when choices are displayed.
 
 ## Narrative boundary
 
-The approved opening revision tells Kimeria's history and Edgard's departure without
-recipe or collection instructions. The separate runtime text change is not included
-in this documentation revision; the current committed opening still includes them. The existing pre-boss
-conversation remains the place for the implemented elixir requirements. The original
-DOS healer's seven-component remedy and trap warning are preserved in
+The opening tells Kimeria's history and Edgard's departure without recipe or collection
+instructions. The existing pre-boss conversation remains the place for the implemented
+elixir requirements. The original DOS healer's seven-component remedy and trap warning are preserved in
 [ORIGINAL_DOS.md](ORIGINAL_DOS.md) for a later narrative revision; this change does not
 rewrite the current bargain or add ingredients. Portrait replacement in #90 must take
 its character inspiration from the supplied DOS screenshots recorded there.

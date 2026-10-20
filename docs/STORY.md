@@ -38,8 +38,7 @@ is explicit; the opening must not read as an account by an unrelated, anonymous 
 Rufardus the Wise. L'Kardina was banished from a neighboring kingdom; Kimeria's attempt
 to expel her provokes the curse of eternal night. The sun stops shining. A wandering
 warrior, Edgard, hears of the disaster and sets out to save the kingdom, meeting the old
-healer on his way. These facts are approved for the revised EN/UK opening; its runtime
-text change is separate from this documentation revision.
+healer on his way. These facts now form the EN/UK opening.
 
 The opening introduces the world and Edgard's journey. **Do not include Chicken, Key,
 coins, an elixir recipe, collection instructions or a boss-shopping checklist.** Explain
@@ -61,9 +60,8 @@ future implementation is tracked separately from this narrative decision.
 
 1. **At the beginning of the game.** The healer narrates the introduction: the kingdom,
    the darkness that has fallen over it, and the evil sorceress L'Kardina who caused it.
-   The approved revision adds Rufardus, the attempted expulsion, eternal night and
-   Edgard's departure. It should omit collection and elixir instructions; those belong
-   to the healer's later encounter.
+   The account includes Rufardus, the attempted expulsion, eternal night and Edgard's
+   departure. Collection and elixir instructions belong to the healer's later encounter.
 2. **Before the forest boss — [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84).**
    The healer meets Edgard in a dedicated NES-style dialogue scene and offers the optional
    elixir bargain. Chicken, Key and all coins authored in the current forest level are
@@ -97,10 +95,9 @@ when extending the story; do not treat an implementation placeholder as accepted
 
 ## Implementation status
 
-The current committed opening identifies the healer and L'Kardina, and still includes
-collection/elixir instructions, as does About. The approved revision above moves those
-instructions to the encounter and expands the original world history in EN/UK. That
-runtime text change is outside this documentation-only revision.
+The opening tells the original world history in EN/UK, narrated by the healer, without
+recipe or collection instructions. About also leaves recipe details to the encounter.
+The revision changes localized text only; opening timing/input and save rules are unchanged.
 
 The pre-boss dialogue, checklist, paid elixir and collection return are implemented by
 #84. The author accepted the dialogue wording in play for the test version
