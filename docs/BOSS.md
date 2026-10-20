@@ -1,5 +1,10 @@
 # Forest boss (#83)
 
+**Status — 2026-10-20:** The current implementation/review stage is complete for the
+test version by author decision. Remaining release acceptance checks are deferred
+until the planned gameplay mechanics have been added and are tracked only in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
+
 Current MVP order: the forest boss ends **level one**. After death, automatic exit and
 the healer guide dialogue, start the single-room `forest-1` as **level two**. Its ending
 returns to the menu and clears progress; the campaign no longer wraps. See [MVP.md](MVP.md).
@@ -51,9 +56,13 @@ row 6 and ordinary recovery returns to row 5. The two attack sequences never sha
 | Death presentation | 0.8 s, then automatic exit at 100 px/s |
 | Completed attack shake | 0.18 s; at most 1.25 world pixels, decaying |
 
-Twelve normal swings leave room for combat movement within the 20 s mastered-room target.
-A full successful human route still needs timing; this does not establish compliance with
-that target or exempt the boss from it. The 10x rule multiplies damage, not fight duration.
+The original balance used a 20 s mastered-room target. After considering 40 s in
+D18, the author selected about 20 s mastered / 60 s first learning as an ordinary-room
+working hypothesis in D19. Evaluate boss timing separately; this revision does not
+change the boss's balance values or claim a new fight measurement.
+The author has played the full route by hand and accepted it for the test version
+(2026-10-20), but no fight time was recorded, so the earlier target acceptance rests
+on that judgment, not on a measurement. The 10x rule multiplies damage, not fight duration.
 
 Boxes below are in the right-facing 48 × 32 sprite, mirrored around the body centre:
 
@@ -120,7 +129,7 @@ save format. Checkpoint contact and F5 are blocked throughout a map containing a
 including before entering its chamber. The separate F4 developer level-skip remains a
 deliberate debug tool.
 
-## Validation and remaining playtest (#73/#75)
+## Validation record (#73/#75)
 
 `BossCombatTest` exercises the real forest map, player input and room update order with
 rendering disabled. It covers throne/wake/pursuit, one damage per swing, normal and elixir
@@ -144,32 +153,12 @@ automatic artifact bonus.
   from source and are not part of the shipped game.
 - Snyk transmission was rejected by automatic review; the author selected local checks only.
 
-Human validation is still open. Automated checks and the limited browser check above do not
-prove fairness or teachability. In a normal run with invulnerability off:
-
-1. Observe the throne before approaching. Approach just inside/outside 160 px, retreat,
-   and confirm the boss never re-seats until retry.
-2. Hit during the wind-up, axe strike and completion boundary. Confirm orange warning,
-   no old strike damage/shake, and one energy loss per swing. Jump away once sword recovery
-   ends; repeat near both walls and under the four authored platforms. Test a deliberately
-   late reaction to distinguish a fair death from an unavoidable one.
-3. Strike repeatedly during warning/counter. Confirm damage continues without restarting or
-   cancelling it. Land a lethal sword hit during counter. Complete/miss attacks, pause during
-   shake, resume, die, retry and transition: no residual shake or delayed damage.
-4. Land on the head while falling, including near an axe strike. Confirm bounce with no
-   energy loss or player death. Test side contact both idle and swinging.
-5. Complete without artifacts, then with #84's consumed elixir when that feature is available.
-   Check 12 versus 2 sword hits, unchanged starting energy, retained effect after death,
-   no repeated bargain, and a fresh effect-free run after Restart Level/Continue.
-6. Watch death and automatic exit. Hold left/jump/attack; verify the hero crosses the right
-   wall, cannot die, leaves the viewport, then completes/saves once. Try Checkpoint/F5 before
-   defeat and during exit. Check the next level on Continue.
-7. With a new player, ask them to explain head contact versus sword damage and the orange
-   warning without prompting. Record misunderstood rules for #73; do not mark teaching
-   complete merely because the scripted scenarios pass.
-8. Time at least three mastered normal fights and three elixir fights from usable entrance
-   input to boss defeat, recording failed attempts separately. Also record the fixed death
-   presentation and exit walk separately. Retain the room's 20 s target; tune on evidence.
+Human validation: the author played the boss encounter through on keyboard and on a
+physical gamepad, and accepted it for the test version (reported 2026-10-20). The elixir
+works as documented here and is accepted as is for the test version. Touch play and
+release regression/teaching/timing checks are deferred to
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#boss-combat-teaching-and-replay-time).
+The automated and limited browser checks above retain their recorded scope.
 
 ## Visible health and hit feedback
 
@@ -209,14 +198,12 @@ builds succeed. Real libGDX framebuffer checks verified normal/empty slots, Ukra
 elixir icon, partial restoration during arrival, full restoration, and sword impact during
 the counterattack. The capture harness used isolated preferences and was removed afterwards.
 
-
 Follow-up on 2026-10-16: the reported hit-and-retreat sequence was reproduced in a failing
 regression test before the fix. All **98 core tests** now pass, including repeated normal
 interruptions over three counter cycles, approach-range hits after the first counter,
 ordinary recovery interruption and nonrecursive damage during counter recovery. The full
 second attack row is used for preparation, strike and recovery; normal attack timing and
 the existing counter escape allowance are unchanged.
-
 
 ## Author adjustments, 2026-10-16
 
@@ -236,7 +223,6 @@ Regression checks cover actual F6 input dispatch and fade through both rooms, no
 last room/while paused, exact one-based art rows for every attack pose, accelerated durations,
 and removal from the room after death without stopping the exactly-once victory sequence.
 
-
 ## Additional author adjustments, 2026-10-16
 
 Attack speed increased by a further **50%**: the total multiplier is now **2.25x** the
@@ -254,7 +240,6 @@ completion/save is still latched exactly once after the hero leaves the viewport
 The victory regression exercises real fireflies, a burning torch and a detonating bomb, verifies
 movement during the exit and pause behavior, and checks that the living world cannot kill
 the scripted hero. The completion-frame interruption check follows the new attack duration.
-
 
 ## Solid body and blood, 2026-10-16
 
@@ -276,7 +261,6 @@ check confirmed the red spray is visible against the boss-room fog and backgroun
 Author tuning: blood droplet count, sizes and streak lengths were halved; floor splashes
 are thinner and colours use a darker, less saturated red to match the room palette.
 
-
 Victory transition fix: advancing to the next level now creates a fresh player before
 loading, matching room transitions and Restart Level. The protected exit flag and outgoing
 animation can no longer freeze the hero when the final boss wraps back to forest-1.
@@ -284,12 +268,10 @@ A regression completes the boss exit, invokes the real level-advance/save path, 
 movement, running animation, sword input and jumping on the shipped first-level map.
 All **105 core tests** pass; desktop and web builds succeed.
 
-
 The planned next story beat is a separate healer dialogue after the automatic exit and
 before the next level (#86), reusing #84's character and dialogue system. The healer's
 continuing role as Edgard's guide is recorded in [STORY.md](STORY.md) and D14. This scene
 is accepted direction, not part of the currently implemented victory flow.
-
 
 ## Healer integration, 2026-10-16 (#84)
 
@@ -298,9 +280,10 @@ see [HEALER.md](HEALER.md). F6 into the final room now opens that dialogue first
 applies only to this boss encounter and ends immediately on boss defeat. While active, each
 sword hit emits 48 droplets and its own brief impact shake, including the lethal hit.
 120 core tests and desktop/TeaVM release builds pass locally. Dialogue/About rendering was
-checked in both languages. Final author review in play, including physical controller and
-touch comfort, remains open; no post-boss #86 scene is included.
-
+checked in both languages. At the time of this change the post-boss #86 scene was not
+included; it has since been added (see [HEALER.md](HEALER.md) and [MVP.md](MVP.md)). The
+author has since reviewed the encounter in play on keyboard and a physical controller
+(2026-10-20); touch comfort is deferred to [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#devices-and-controls).
 
 ## Removed legacy ambience/mechanic
 

@@ -1,5 +1,10 @@
 # Forest healer (#84)
 
+**Status — 2026-10-20:** The current implementation/review stage is complete for the
+test version by author decision. Remaining release acceptance checks are deferred
+until the planned gameplay mechanics have been added and are tracked only in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
+
 The same healer who narrates the opening meets Edgard before `forest-boss`. The meeting
 opens at the black midpoint of the canopy exit fade, before entering the boss room.
 The world, player input and gameplay effects stop. The dedicated black dialogue screen
@@ -10,6 +15,27 @@ lines aligned left. The healer's name and dialogue are green, with his lines ali
 right. Complete-line layout stays fixed while letters reveal. A right-aligned
 `Next >` / `Далі >` prompt appears below the dialogue only after the line is fully
 revealed; it hides during typing and when choices are displayed.
+
+## Narrative boundary
+
+The approved opening revision tells Kimeria's history and Edgard's departure without
+recipe or collection instructions. The separate runtime text change is not included
+in this documentation revision; the current committed opening still includes them. The existing pre-boss
+conversation remains the place for the implemented elixir requirements. The original
+DOS healer's seven-component remedy and trap warning are preserved in
+[ORIGINAL_DOS.md](ORIGINAL_DOS.md) for a later narrative revision; this change does not
+rewrite the current bargain or add ingredients. Portrait replacement in #90 must take
+its character inspiration from the supplied DOS screenshots recorded there.
+
+For the future campaign, required tablet fragments and optional ingredients/coins
+have distinct roles; see [collection design](GAME_DESIGN.md#collection-and-elixirs).
+The author has selected limited coins and a spending choice between boss elixirs
+and additional fireballs. Surplus coins are not part of that direction; prices,
+income and purchase limits are still open. A second currency is unselected.
+See [campaign economy](GAME_DESIGN.md#economy-proposals) and
+[D18](DECISIONS.md#d18-directional-controls-steppe-double-jump-and-replay-target).
+These sales are not implemented in the current encounter.
+The current recipe and payment rules below remain specific to this test encounter.
 
 ## Dialogue and choices
 
@@ -34,7 +60,8 @@ acknowledges that everything is available and announces brewing, without a refus
 consumes the recipe and drinks the elixir automatically; there is no redundant payment choice,
 return or unempowered fight option on this branch. Selected buttons use the same two edge
 markers as the other menus. After payment, two lines acknowledge consumption and explain the encounter lock, followed
-by a single fight choice. Final wording and portrait identity need review with the author.
+by a single fight choice. The author reviewed the wording in play and accepted it for the
+test version (2026-10-20); the portraits remain temporary placeholders.
 
 ## Recipe, payment and encounter boundary
 
@@ -123,19 +150,17 @@ framebuffer images were visually inspected. About with controller instructions a
 both handedness layouts in both languages (312-pixel content panel at 640x360). The harness is not part of the shipped game.
 Only local checks were used, per the author's choice; no source was sent to Snyk.
 
-### Review in play with the author (#73/#75)
+### Author review completed for the test version (#73/#75)
 
-- Read the introduction, every refusal/offer/payment line and choices in both languages.
-  Review temporary portraits and the healer's voice as the recurring guide.
-- Use a physical controller and touch device, in both handedness modes. Hold inputs into
-  entry, reveal, choices and Resume; navigate without confirming; pause during typing.
-- Miss pickups, return repeatedly, collect more, die before/after a room exit and compare
-  the checklist, HUD, enemies and traps. Include burned-platform approaches when authored.
-- Fight normally and with the elixir; die repeatedly, then win. Check the impact shake,
-  thicker, longer-trailed blood, effect expiry, automatic exit and absence of another healer return.
-- Verify Restart Level/New Game/Continue and a clean subsequent run. Save remains level-only.
+The release acceptance checklist has moved to
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#dialogue-and-localization). Automated movement
+and framebuffer checks retain their recorded scope.
 
-The automated movement and framebuffer checks do not replace this human acceptance pass.
+Status (reported 2026-10-20): the author completed this review on keyboard and on a
+physical gamepad, including the pre-boss healer and the post-boss guide scene, and
+accepted it for the test version. The elixir works as documented and is accepted as is for
+the test version. The left-handed layout was also checked on keyboard. Touch devices, and
+the left-handed layout on touch and gamepad, are deferred to the pre-release list.
 The post-victory scene is implemented by #86 as described below.
 
 ## Author feedback, 2026-10-18
@@ -185,4 +210,5 @@ the previous completed-level save. Restart/Exit discard the conversation normall
 Input and Esc pause/Resume follow the pre-boss rules above, including frozen text,
 dialogue-only pause background and held-input suppression. The new hero has no
 victory-walk lock. See [post-boss validation](POST_BOSS_VALIDATION.md) for automated,
-desktop, browser and outstanding physical-device/human checks.
+desktop and browser evidence. Deferred device and release checks are tracked in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).

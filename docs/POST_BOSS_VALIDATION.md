@@ -1,5 +1,10 @@
 # Post-boss guide validation (#86) — 2026-10-19
 
+**Status — 2026-10-20:** The current implementation/review stage is complete for the
+test version by author decision. Remaining release acceptance checks are deferred
+until the planned gameplay mechanics have been added and are tracked only in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
+
 The initial checks below record the former level order/wrap. The current two-level MVP
 puts the forest boss first and `forest-1` second, followed by an ending and save deletion.
 BossCombatTest now asserts index 1 after the guide scene. See [MVP.md](MVP.md) for the
@@ -10,8 +15,8 @@ current campaign flow and its separate completion checks.
 The author approved the proposed three-line meaning during implementation: the forest
 guardian is defeated and the path is open; darkness remains over the kingdom; the healer
 will guide Edgard onward and meet him again. EN/UK wording adds no destination or quest.
-Final in-play typography/voice review by a human remains useful; approval of meaning is
-not a claim that the author reviewed every translated glyph or the temporary portraits.
+The author has since reviewed the typography and voice in play and accepted them for the
+test version (2026-10-20); the portraits remain temporary placeholders.
 
 ## Automated regressions
 
@@ -51,9 +56,14 @@ the next level. English text and speaker highlights were visually inspected. Des
 captures and font measurements cover Ukrainian; this was not a separate Ukrainian browser
 playthrough. Release compilation was also checked, but the browser run used development JS.
 
-Physical gamepad, touchscreen/multitouch, both handedness layouts on real devices,
-mobile browsers and human end-to-end play/readability review remain unverified here.
-Mouse taps and scripted keyboard input do not establish those device results.
+This automated pass did not verify a physical gamepad, touchscreen/multitouch, both
+handedness layouts on real devices, mobile browsers or a human end-to-end play. Mouse taps
+and scripted keyboard input do not establish those device results. Afterwards the author
+played end to end from New Game through the ending on keyboard and on a physical gamepad
+and confirmed the post-boss scene works (reported 2026-10-20). The author also checked the
+left-handed layout on keyboard (reported 2026-10-20). Touchscreen/multitouch, handedness on
+real touch devices and gamepad, and mobile browsers are deferred to
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#devices-and-controls); this validation stage is closed.
 
 ## Project dialogue skill
 

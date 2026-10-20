@@ -1,5 +1,10 @@
 # Story and recurring characters
 
+**Status — 2026-10-20:** The current implementation/review stage is complete for the
+test version by author decision. Remaining release acceptance checks are deferred
+until the planned gameplay mechanics have been added and are tracked only in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
+
 This document records agreed narrative roles for future story, dialogue and level-design
 work. Accepted direction is not a claim that the corresponding scenes are implemented.
 See [DECISIONS.md, D14](DECISIONS.md#d14-the-healer-is-edgards-recurring-guide).
@@ -29,15 +34,36 @@ Darkness has descended upon the kingdom. It was brought about by the evil sorcer
 **L'Kardina (Л’Кардина)**. These are accepted story facts and the healer's role as narrator
 is explicit; the opening must not read as an account by an unrelated, anonymous narrator.
 
-The precise way L'Kardina summoned the darkness, her motives and history, and the means
-of overcoming her have not been decided. Do not invent these as settled facts when
-expanding the introduction or the healer's advice.
+**Original-game source supplied by the author, 2026-10-20:** Kimeria is ruled by
+Rufardus the Wise. L'Kardina was banished from a neighboring kingdom; Kimeria's attempt
+to expel her provokes the curse of eternal night. The sun stops shining. A wandering
+warrior, Edgard, hears of the disaster and sets out to save the kingdom, meeting the old
+healer on his way. These facts are approved for the revised EN/UK opening; its runtime
+text change is separate from this documentation revision.
+
+The opening introduces the world and Edgard's journey. **Do not include Chicken, Key,
+coins, an elixir recipe, collection instructions or a boss-shopping checklist.** Explain
+those mechanics in the healer encounter. The historical seven-component remedy is
+reference material for a later healer story, not a new mechanic to implement now.
+The opening retains the healer's narrative voice without turning into a tutorial.
+
+The original also describes a spell tablet broken into four pieces, four regions, and a
+seven-component remedy. Preserve these in [Original DOS references](ORIGINAL_DOS.md).
+For the expanded campaign, the author has now selected Forest → Swamp → Steppe →
+Fortress, one required tablet fragment per stage, and optional ingredients/coins
+for the healer's boss elixirs (2026-10-20). This explicitly revises the DOS route
+and the remedy's mandatory story role. It does not add those regions or pickups
+to the current two-level build. See [full game design](GAME_DESIGN.md#campaign-structure)
+and [D16](DECISIONS.md#d16-expanded-campaign-wind-ladders-and-carried-objects);
+future implementation is tracked separately from this narrative decision.
 
 ### Agreed appearances
 
 1. **At the beginning of the game.** The healer narrates the introduction: the kingdom,
    the darkness that has fallen over it, and the evil sorceress L'Kardina who caused it.
-   This establishes the same guide who will explain the journey and its challenges.
+   The approved revision adds Rufardus, the attempted expulsion, eternal night and
+   Edgard's departure. It should omit collection and elixir instructions; those belong
+   to the healer's later encounter.
 2. **Before the forest boss — [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84).**
    The healer meets Edgard in a dedicated NES-style dialogue scene and offers the optional
    elixir bargain. Chicken, Key and all coins authored in the current forest level are
@@ -71,10 +97,15 @@ when extending the story; do not treat an implementation placeholder as accepted
 
 ## Implementation status
 
-The opening now identifies the healer as narrator and L'Kardina as the cause of the
-kingdom's darkness. The pre-boss dialogue, checklist, paid elixir and collection return are
-implemented by #84; the dialogue wording and original pixel portrait placeholders need
-review in play with the author. The post-boss guide scene is implemented by #86 after the automatic exit and before
+The current committed opening identifies the healer and L'Kardina, and still includes
+collection/elixir instructions, as does About. The approved revision above moves those
+instructions to the encounter and expands the original world history in EN/UK. That
+runtime text change is outside this documentation-only revision.
+
+The pre-boss dialogue, checklist, paid elixir and collection return are implemented by
+#84. The author accepted the dialogue wording in play for the test version
+(2026-10-20); final portrait identity and release presentation review are deferred to
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#dialogue-and-localization). The post-boss guide scene is implemented by #86 after the automatic exit and before
 normal next-level loading. It reuses the pre-boss portrait/dialogue presentation and
 introduces no new quest, destination or persistent checkpoint. See [HEALER.md](HEALER.md).
 

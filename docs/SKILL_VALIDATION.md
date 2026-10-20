@@ -1,5 +1,10 @@
 # Project skill validation — 2026-10-19
 
+**Status — 2026-10-20:** The current implementation/review stage is complete for the
+test version by author decision. Remaining release acceptance checks are deferred
+until the planned gameplay mechanics have been added and are tracked only in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
+
 Game revision: `2fbcafa`. Applied all six project skills to concrete review and
 verification scenarios against the existing game. This was a same-agent audit,
 test execution and browser check, not an independent harness evaluation or a
@@ -75,9 +80,11 @@ No injected gameplay hooks, map edits or temporary game-source changes were used
 
 Physical gamepad and multitouch behavior, native desktop/fullscreen/high-DPI
 rendering, the release web build, explosion appearance in-world, and a complete
-human boss fight were not exercised in this pass. The skills retain those
-checks for tasks that change the relevant behavior. No fairness or teaching
-acceptance is claimed.
+human boss fight were not exercised in this pass. The remaining release coverage is deferred to
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md); this audit stage is complete. Skills still
+require focused verification when a task changes the relevant behavior. This historical
+audit does not claim fairness or teaching acceptance; later author acceptance is recorded
+in [BOSS.md](BOSS.md), [ROOMS.md](ROOMS.md) and [MVP.md](MVP.md).
 
 Temporary browser context, local preview process, validator environment and
 captures were removed after the audit. Existing build caches/output were retained.

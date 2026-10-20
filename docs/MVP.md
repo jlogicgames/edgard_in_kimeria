@@ -1,5 +1,16 @@
 # Two-level MVP
 
+This document describes the existing two-level test build. The next development
+phase is a separate **mechanics MVP** for all four campaign stages, followed by
+campaign production and first external playtests; see the [roadmap](ROADMAP.md).
+The scope constraints below belong to this accepted test version, not to the
+new prototype phase or the full campaign.
+
+**Status — 2026-10-20:** The current implementation/review stage is complete for the
+test version by author decision. Remaining release acceptance checks are deferred
+until the planned gameplay mechanics have been added and are tracked only in
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
+
 Accepted by the author on 2026-10-19. Future mechanics will expand these two existing
 levels. This MVP does not add another map, another boss, a new quest or destination.
 
@@ -70,7 +81,10 @@ verify orchestration, not human traversal or normal boss defeat in that browser 
 Desktop checks and BossCombatTest cover the normal boss exit/guide boundary.
 
 Temporary harness classes/preferences and the local server were removed; retained
-captures are outside the repository. Physical controllers/touchscreens, a full human
-playthrough, subjective audio quality and final author readability review remain open.
+captures are outside the repository. After this validation the author completed a full
+human playthrough on keyboard and on a physical gamepad, and checked the left-handed layout
+on keyboard (reported 2026-10-20). Touchscreens, the left-handed layout on touch and gamepad,
+subjective audio quality and final author readability review are deferred to
+[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md); they do not keep the current MVP stage open.
 Headless music spies establish routing/envelopes; desktop `isPlaying` confirms the real
 music backend, not browser autoplay behavior.

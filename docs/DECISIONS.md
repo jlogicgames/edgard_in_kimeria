@@ -1,11 +1,18 @@
 # Design decisions
 
 A log of gameplay and product decisions. Each entry says what was decided, why, and where it
-is tracked. Technical structure lives in the Architecture section of the [README](../README.md).
+is tracked. Technical structure lives in the [development guide](DEVELOPMENT.md#architecture).
+
+The [full game design](GAME_DESIGN.md) records the expanded campaign. Later entries
+explicitly marked as future design do not claim that the current test build implements them.
 
 **Tie-breaker rule (D1): when a design question is disputed, we do what Katana Zero does.**
 
 Status: *Accepted* means decided but not necessarily built yet; the ticket shows build status.
+Current test-version implementation/review stages are complete by author decision
+(2026-10-20). Remaining release acceptance checks are deferred until the planned gameplay
+mechanics are added; see [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Design contracts and
+verification of subsequent implementation changes still apply.
 
 ## D1. Katana Zero is the design reference
 
@@ -32,9 +39,14 @@ Status: *Accepted* means decided but not necessarily built yet; the ticket shows
   - A level is a chain of **rooms**, as in Katana Zero. A room may span several screens; what
     is capped is how much a retry costs to replay, not the screen count. A level without room
     markers is one room.
-  - A mastered required route should replay in **at most 20 seconds**; collecting
-    all optional room pickups has a separate **30 second** target. These guide
-    room authoring, never impose a timer on the player. Measure active real time,
+  - A mastered route between recovery points should replay in **about 20 seconds**
+    (latest author hypothesis, 2026-10-20; D19), replacing D18's 40-second target.
+    Measure required and all-pickup routes separately. Do not pad shorter rooms to
+    reach 20 seconds or exclude a long route from review. First-time learning until
+    the first successful exit, including observation and attempts, has a separate
+    **about 60 seconds** hypothesis for ordinary rooms. These are playtest targets,
+    not verified reference-game averages or hard player deadlines. This guides room
+    authoring, never imposes a timer on the player. Measure active real time,
     including combat, waiting, and slow motion, from usable entrance input to the
     exit contact; exclude loading, pauses, fades, and death/exit presentation.
     Reference routes and results are recorded in [ROOMS.md](ROOMS.md) (#70).
@@ -332,6 +344,12 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   through the game, as well as story context. He returns after the forest
   boss, following the death animation and automatic hero exit, on a separate dialogue
   screen before the next level. Use the same character and dialogue presentation.
+- **Opening revision, 2026-10-20:** Use the author's original DOS story: Rufardus the
+  Wise, L'Kardina's expulsion and curse of eternal night, and Edgard's departure. The
+  opening is world history, with no Chicken/Key/coin checklist or elixir instructions.
+  Collection and remedy explanations belong to the healer encounter; expanding that
+  story is later work. Historical tablet pieces and seven ingredients are references,
+  not new implemented mechanics. See [ORIGINAL_DOS.md](ORIGINAL_DOS.md).
 - **Why:** A familiar guide gives continuity between encounters and helps connect the
   hero's victory to the next stage of the story. His significance extends beyond the
   optional elixir bargain; declining it does not remove his role in the story.
@@ -357,3 +375,113 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Persistence:** D8 remains level-only. Save index 1 after the first level's guide
   dialogue; never write index 0 on final completion. See [MVP.md](MVP.md) for scope
   and validation. This supersedes the former final-level wrap behavior.
+
+## D16. Expanded campaign, wind, ladders and carried objects
+
+- **Status:** Accepted direction, 2026-10-20; future design, not implemented by this entry.
+- **Decision:** The campaign has four stages, Forest → Swamp → Steppe → Fortress.
+  Each stage contains levels; levels contain short retry rooms. One required tablet
+  fragment per stage serves the goal of lifting eternal night. Ingredients and coins
+  remain optional help against bosses. Wind is the Steppe's leading mechanic.
+  Add vertical ladders. Wall jumping already exists in the current player;
+  its role or changes in the expanded campaign remain undecided.
+- **Carrying:** One object occupies one hand; sword attacks remain available.
+  The same interaction command picks up and puts down. The ranged command throws
+  a held object; with no held object it uses a fireball if ammunition is available.
+  Throwing an object does not spend fireball ammunition or also fire after the hand
+  becomes empty. Directional attack/interact arbitration is now accepted in D18
+  and tracked in #95; ladder actions and device feedback still need implementation.
+- **Retry:** Ranged ammunition follows room rollback, including pickups and their
+  sources, without duplication. Successful-room expenditure carries forward.
+  Persistent ammunition/tablet handling on Continue still needs a separate decision;
+  this entry does not extend D8's save format.
+- **Planning assumptions:** Five levels per stage and five rooms per level are a
+  working content model. The earlier three-to-five-minute first-learning hypothesis
+  has been replaced by D19's 20-second replay / 60-second first-learning hypothesis.
+  D18 subsequently accepts the coin-spending choice and double jump from the Steppe;
+  crystals, higher jumps and faster sword combos remain unselected.
+- **Why:** Preserve cheap experimentation while expanding the original's adventure,
+  with environmental mechanics and alternative combat/traversal solutions.
+- **Details:** [Campaign](GAME_DESIGN.md#campaign-structure),
+  [pacing](GAME_DESIGN.md#pacing-and-duration), [player tools](GAME_DESIGN.md#player-tools),
+  [economy proposals](GAME_DESIGN.md#economy-proposals).
+
+## D17. Maintain the game design throughout development
+
+- **Status:** Accepted documentation workflow, 2026-10-20.
+- **Decision:** Keep [GAME_DESIGN.md](GAME_DESIGN.md) current as design is discussed,
+  implemented and evaluated. Record accepted changes in the relevant section and
+  update affected topic documents with the implementation work. Keep proposals,
+  accepted direction, implemented behavior and validation evidence distinguishable.
+  Date consequential decisions here and maintain topic links in the documentation index.
+- **Why:** A one-time design snapshot drifts away from the game and obscures which
+  rules apply. The full-campaign design and test-build contracts must remain explicit.
+- **Language:** Discussion and working drafts are Russian; prepare repository
+  documents in English before a commit. A commit still requires explicit author approval.
+- **Details:** [Design maintenance](GAME_DESIGN.md#design-maintenance).
+
+## D18. Directional controls, Steppe double jump and replay target
+
+- **Status:** Accepted future direction, 2026-10-20; not implemented by this entry.
+- **Controls:** Action without an interaction direction attacks with the sword;
+  Down + Action picks up/puts down; Up + Action activates a mechanism. Ranged throws
+  the held object, or uses a fireball when empty-handed. One carried object and
+  sword availability remain as in D16. Implementation:
+  [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95).
+- **Movement progression:** Double jump becomes available starting with the Steppe.
+  Design subsequent rooms around that ability rather than an arbitrary optional
+  upgrade purchase. The unlock event and exact movement rules still need design;
+  the already implemented wall jump's future role remains undecided.
+- **Economy:** Limited coins create a real choice between the healer elixir and
+  extra fireballs. Do not author a surplus that buys every offered advantage.
+  Prices, income, purchase limits and the resulting ranged-ammunition budget still
+  need balancing. Ingredients remain recipe objects; a second currency is unselected.
+- **Replay (superseded by D19):** About 40 seconds of mastered traversal between recovery points replaced
+  the former 20-second required / 30-second collection targets in D3. Measure both
+  routes separately; short rooms need no padding. First-time learning with failed
+  attempts remains a different metric. Historical measurements retain their original
+  conditions; current replay tests still check the stricter old limits on existing maps.
+- **Why:** Keep attacks intentional, make double jump part of the authored puzzle
+  progression, preserve meaningful spending choices and bound the cost of a late mistake.
+- **Details:** [Player tools](GAME_DESIGN.md#player-tools),
+  [movement](GAME_DESIGN.md#wind-and-ladders), [economy](GAME_DESIGN.md#economy-proposals),
+  [pacing](GAME_DESIGN.md#pacing-and-duration).
+
+## D19. Test a 20-second replay and 60-second first learning
+
+- **Status:** Accepted working hypothesis, 2026-10-20; subject to playtesting.
+- **Decision:** Target about 20 seconds for a mastered successful traversal of an
+  ordinary room. Target about 60 seconds from first usable entrance input to the
+  first successful exit, including observation, planning, failed attempts and the
+  successful traversal. The successful 20 seconds are included in the 60, not added.
+- **Revision:** This supersedes D18's 40-second replay target and the earlier
+  3–5-minute first-learning model. Measure required and collection routes separately;
+  retain historical measurements under their original criteria. Short rooms need
+  no padding; hard/optional rooms and bosses require separate evaluation.
+- **Evidence:** Sources support short retries and frequent recovery points, but do
+  not establish 20/60 as a measured average for Celeste, TetherGeist or the genre.
+  Sixty seconds is our initial hypothesis, not an inferred published statistic.
+- **Validation:** Observe new players, record both metrics and deaths separately,
+  and revise the targets from evidence. These are authoring targets, not timers
+  or penalties. The provisional 100-room model now implies about 100 minutes of
+  first learning before any separately counted activities, not the previous 5–8h20.
+- **Why:** Keep retries cheap while giving the player time to read and learn a room.
+- **Details:** [Pacing](GAME_DESIGN.md#pacing-and-duration),
+  [measurement protocol](ROOMS.md#replay-budget-70),
+  [research references](GAME_DESIGN.md#research-references).
+
+## D20. Mechanics MVP before campaign production and playtests
+
+- **Status:** Accepted development sequence, 2026-10-20; detailed roadmap is a working plan.
+- **Decision:** First build a mechanics MVP covering the four stages on small
+  prototypes. Then build the full campaign and conduct the first external playtests;
+  release completion and acceptance follow. The existing two-level test MVP is the
+  starting baseline, not evidence that the new mechanics MVP is complete.
+- **Scope:** Prototype checks and author trials still happen during mechanics work.
+  First external learning/pacing playtests begin in the campaign phase on a coherent
+  playable section; the plan does not require producing all provisional 100 rooms first.
+  Dates and final content counts remain open until prototypes and measurements inform them.
+- **Why:** Validate each stage's gameplay before scaling content production, then
+  use player observations to refine learning, difficulty and campaign scope.
+- **Details:** [Roadmap](ROADMAP.md), [mechanics MVP](ROADMAP.md#mechanics-mvp),
+  [campaign and playtests](ROADMAP.md#campaign-and-playtests).
