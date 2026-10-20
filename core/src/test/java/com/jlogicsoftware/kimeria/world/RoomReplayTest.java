@@ -176,6 +176,29 @@ class RoomReplayTest {
             && c.type() == ItemType.CHICKEN && !c.isCollected()));
     }
 
+    /** The teaching order of #73: each mechanic first appears alone, and the room-one threats do not overlap. */
+    @Test void forestIntroducesStompBombAndFallingPlatformOneAtATime() {
+        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        var mobs = level.objects.stream().filter(o -> o instanceof Enemy<?> e && !e.getClass().getSimpleName().equals("Bat"))
+            .map(o -> (Enemy<?>) o).sorted(java.util.Comparator.comparingDouble(e -> e.hitboxBounds().x)).toList();
+        assertFalse(mobs.isEmpty());
+        assertEquals("YellowMob", mobs.get(0).getClass().getSimpleName(), "stomp is the first mechanic met");
+        assertTrue(mobs.get(0).hitboxBounds().x < bomb.centerX(), "the first mob comes before the bomb");
+        for (Enemy<?> mob : mobs) {
+            float gap = Math.abs(mob.hitboxBounds().x + mob.hitboxBounds().width / 2f - bomb.centerX());
+            assertTrue(gap >= 150f, "a walking enemy starts too close to the bomb: " + gap + " px");
+        }
+        assertTrue(level.fallingPlatforms.isEmpty(), "falling platforms are not introduced in the entry room");
+        level.enterNextRoom(player());
+        assertEquals(1, level.fallingPlatforms.size(), "one optional falling platform in the canopy");
+        assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "no bomb shares the canopy room");
+        float platformX = level.fallingPlatforms.get(0).getX();
+        assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?> e
+            && !e.getClass().getSimpleName().equals("Bat")
+            && Math.abs(e.hitboxBounds().x - platformX) < 64f), "no walking enemy right at the falling platform");
+    }
+
     @Test void touchingABombThroughGameplayStartsAWarningInsteadOfImmediateDeath() {
         Level level = new Level(assets, game, player(), "forest", Rectangle::new);
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();

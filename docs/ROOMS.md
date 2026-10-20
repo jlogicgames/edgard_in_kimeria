@@ -113,7 +113,7 @@ The revised canopy is 608 px shorter than its previous 1280 px layout (47.5%).
 Its required route has no bomb or quicksand; the ascending platforms and their
 optional pickups remain. The first two rooms already meet the budgets and need
 no additional split for replay cost. Teaching and threat readability still have
-their own review in #73/#75.
+their own review; see [Teaching order and walkthrough (#73)](#teaching-order-and-walkthrough-73) and #75.
 
 The required routes run forward, jumping obstacles and hazards, using normal
 sword attacks near grounded enemies and wall jumps at tall walls. In `forest-1`,
@@ -223,6 +223,79 @@ return to room two, its coin and hazards must reset, and room one's coin count
 must remain. Repeat a death, meet the healer, choose to enter the third room, defeat the boss, and watch the
 automatic victory walk. Also pause
 mid-fade, Resume, Restart Level, and run `forest-1` without room markers.
+
+## Teaching order and walkthrough (#73)
+
+Rule for the two levels: teach each of stomp, sword, falling platforms and bombs where
+it is the only new thing on screen, on forgiving ground and without a required timing
+test, then combine. `forest` (level one) teaches; `forest-1` (level two, the finale)
+combines. Optional routes stay separate from required progression; nothing here is
+tuned around coins, and no coin or artifact was added, moved or removed.
+
+Map identity: `git hash-object` of `forest.tmx` is `619bf64b559a`, of `forest-1.tmx`
+`44fbc6aa95c3`. Positions are map pixels (16 px per tile; SpawnPoints carry a -16 px
+layer offset that this text already includes in the visible position).
+
+### `forest` / `forest-entry` (required route, left to right)
+
+| x | What appears | Role |
+| ---: | --- | --- |
+| 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
+| 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
+| 240–320 | Quicksand, vertical Bat (272); optional one-way steps to the coins/Chicken | Hazard + Bat; not a taught mechanic |
+| 512–608 | Horizontal Bat (patrol now ends at about 608) and a second quicksand | Same, repeated |
+| 656 | **Bomb** (id 54), moved from 128 | **Bomb, alone**: flat ground, 0.8 s warning (1.2 s with Assist), 64 px blast |
+| 832 | YellowMob (id 16), aggro zone 752–896 | Stomp repeated, first light combination: leave the blast, then meet the mob |
+| 912, 992 | Two tall walls | Wall jump |
+| 1136 | RedMob (id 60), zone 1056–1216, just before the exit | **Sword, alone**: wind-up is visible; K or stomp |
+
+The bomb used to sit 4 tiles from the start inside the first YellowMob's patrol, so stomp
+and bomb were the first two things met and overlapped. The bomb is now about 470 px
+beyond the first mob and the bat patrol and the second mob's zone were pulled back so that
+the blast square (about 624–688) and a running escape of about 64 px overlap neither.
+
+### `forest` / `forest-canopy`
+
+| x | What appears | Role |
+| ---: | --- | --- |
+| 1344 | Start | Safe entrance |
+| 1440–1488 | One-tile step; RedMob (id 68), zone 1408–1488 | Sword again, now beside terrain |
+| 1488 | Optional one-way platform | Start of the optional climb |
+| 1568 | **FallingPlatform** (id 115, was a fixed platform) holding coin 87 | **Falling platform, alone**: 1 s warning (1.5 s with Assist). Ground is 80 px below; no enemy within 96 px; a bad landing costs only the climb |
+| 1648–1728 | One-way platform and the Key | Optional reward |
+| 1760 | Vertical Bat near the Key | Optional hazard |
+| 1872 | RoomExit | |
+
+The collapse is one-way for that attempt, so a player who lets it fall without
+reaching the next platform loses the optional Key/coin ascent until death, a room
+retry or the healer's collection return rebuilds it (D7). The required route never
+needs the platform. Every optional pickup remains reachable.
+
+### `forest-1` (level two, unchanged)
+
+Falling platforms (x 96–224, y 272), the RedMob patrol (192–512) that covers them, the
+escalators and the trigger-opened wall at 480–528 are the first time those pieces
+are combined. The falling platforms are now a second sighting rather than the first.
+By the map geometry there are 32 px between the ground and the platforms and the hero's
+hitbox is 22 px, so the course can probably also be walked underneath. This is read from
+the map, not exercised in play; the author did walk over the platforms without trouble.
+
+### Evidence and limits
+
+`RoomReplayTest` (131 core tests, all passing) re-measured every route on this layout
+with real input and hazards on, three identical attempts each: `forest-entry` 16.27 s
+required / 20.00 s all coins, `forest-canopy` 5.00 s / 5.00 s, `forest-1` 5.32 s, and the
+collection returns 14.78 / 14.25 s, unchanged from the table above. The new test
+`forestIntroducesStompBombAndFallingPlatformOneAtATime` fails on the previous layout and
+guards the order (a YellowMob before the bomb), the 150 px gap between the bomb and any
+walking enemy, no falling platform in the entry room, and a lone falling platform
+without a bomb or walking enemy nearby in the canopy.
+
+Not established: that the new spacing feels readable. A human playtest (#75) must
+check, with Assist off and on: the 64 px runway after the bomb (leave the blast without
+meeting the mob), that the shortened bat patrol still reads as a hazard over the second
+quicksand, how the canopy collapse feels on the way to the Key, and that a failure at
+each of the four mechanics can be named by the player. Scripted input is not that evidence.
 
 ## Forest boss validation (#73/#75/#83)
 
