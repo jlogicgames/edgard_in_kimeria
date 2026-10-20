@@ -113,7 +113,7 @@ The revised canopy is 608 px shorter than its previous 1280 px layout (47.5%).
 Its required route has no bomb or quicksand; the ascending platforms and their
 optional pickups remain. The first two rooms already meet the budgets and need
 no additional split for replay cost. Teaching and threat readability still have
-their own review; see [Teaching order and walkthrough (#73)](#teaching-order-and-walkthrough-73) and #75.
+their own review; see [Teaching order and walkthrough (#73/#75)](#teaching-order-and-walkthrough-7375).
 
 The required routes run forward, jumping obstacles and hazards, using normal
 sword attacks near grounded enemies and wall jumps at tall walls. In `forest-1`,
@@ -224,7 +224,7 @@ must remain. Repeat a death, meet the healer, choose to enter the third room, de
 automatic victory walk. Also pause
 mid-fade, Resume, Restart Level, and run `forest-1` without room markers.
 
-## Teaching order and walkthrough (#73)
+## Teaching order and walkthrough (#73/#75)
 
 Rule for the two levels: teach each of stomp, sword, falling platforms and bombs where
 it is the only new thing on screen, on forgiving ground and without a required timing
