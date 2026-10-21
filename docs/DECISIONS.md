@@ -339,7 +339,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Status:** Accepted, 2026-10-16; opening, pre-boss and post-boss (#86) scenes implemented.
 - **Decision:** The healer (знахарь) from the optional pre-boss elixir encounter is a
   recurring character and Edgard's guide through the journey. He narrates the very
-  beginning: darkness has descended upon the kingdom, brought about by the evil sorceress
+  beginning: darkness has descended upon the kingdom, brought about by the evil witch
   L'Kardina (Л’Кардина). He provides practical explanations and advice on how to progress
   through the game, as well as story context. He returns after the forest
   boss, following the death animation and automatic hero exit, on a separate dialogue

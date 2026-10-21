@@ -30,7 +30,7 @@ specific hints, their timing and final wording remain implementation and writing
 ### Opening account and established world facts
 
 At the very start, **the healer tells the story** and introduces the world and its kingdom.
-Darkness has descended upon the kingdom. It was brought about by the evil sorceress
+Darkness has descended upon the kingdom. It was brought about by the evil witch
 **L'Kardina (Л’Кардина)**. These are accepted story facts and the healer's role as narrator
 is explicit; the opening must not read as an account by an unrelated, anonymous narrator.
 
@@ -59,7 +59,7 @@ future implementation is tracked separately from this narrative decision.
 ### Agreed appearances
 
 1. **At the beginning of the game.** The healer narrates the introduction: the kingdom,
-   the darkness that has fallen over it, and the evil sorceress L'Kardina who caused it.
+   the darkness that has fallen over it, and the evil witch L'Kardina who caused it.
    The account includes Rufardus, the attempted expulsion, eternal night and Edgard's
    departure. Collection and elixir instructions belong to the healer's later encounter.
 2. **Before the forest boss — [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84).**

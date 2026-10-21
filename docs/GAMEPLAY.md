@@ -68,7 +68,7 @@ The boss HUD uses twelve replaceable PNG segments, blood particles/impact sounds
 refill cue during the existing retry animation. A potion icon marks the active 10x effect.
 See [Boss combat](BOSS.md) for art, balance and validation details.
 The healer is Edgard's recurring guide and opening narrator: he tells of the kingdom's
-fall into darkness caused by the evil sorceress L'Kardina, and guides progression through
+fall into darkness caused by the evil witch L'Kardina, and guides progression through
 the game. The opening identifies him as the narrator. Before the boss, a separate NES-style dialogue
 offers an optional paid elixir or collection return (#84). The post-victory dialogue (#86)
 acknowledges the victory and establishes his ongoing guidance before the next level;

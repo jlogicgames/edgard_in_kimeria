@@ -3,7 +3,7 @@
 **[Play in your browser](https://jlogicgames.github.io/edgard_in_kimeria/)**
 
 A remake and remaster of the original **1994 MS-DOS game**. In the kingdom of
-Rufardus the Wise, the banished sorceress L'Kardina casts a curse that hides the sun
+Rufardus the Wise, the banished witch L'Kardina casts a curse that hides the sun
 and plunges Kimeria into eternal night. A wandering warrior, Edgard, sets out to save
 the kingdom, guided by an old healer.
 
