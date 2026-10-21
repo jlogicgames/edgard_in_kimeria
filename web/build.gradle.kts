@@ -78,6 +78,7 @@ gdxTeaVM {
 // The release build's generated index.html has no <link rel="icon">, so browsers
 // request /favicon.ico from the root; copy it next to index.html.
 tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach {
+    dependsOn(":lwjgl3:validateLocalization")
     doLast {
         copy {
             from(faviconDir)

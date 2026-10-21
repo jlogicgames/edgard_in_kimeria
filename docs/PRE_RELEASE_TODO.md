@@ -39,7 +39,7 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
 - [ ] Play with a physical gamepad in both layouts, including the unchecked left-handed
   layout: right-stick movement and D-pad actions, disjoint bindings, unchanged menus/Start.
 - [ ] Recheck both keyboard layouts after the new mechanics, including Shoot when its
-  mechanic is implemented. Confirm About matches the selected layout in EN/UK.
+  mechanic is implemented. Confirm About matches the selected layout in all five supported languages.
 - [ ] Hold movement/action/confirm through web start, menu, opening, dialogue entry,
   choices, Resume, level loading and ending. Only the intended fresh press may act;
   navigation must not confirm a choice. Check live layout changes and persistence.
@@ -148,10 +148,13 @@ collection/recipe instructions. Keep those in the healer encounter; expansion of
 historical healer story is later work. Use [original DOS references](ORIGINAL_DOS.md)
 for portrait work in #90.
 
-Sources: [healer](HEALER.md), [post-boss guide](POST_BOSS_VALIDATION.md), [story](STORY.md).
+Sources: [healer](HEALER.md), [post-boss guide](POST_BOSS_VALIDATION.md), [story](STORY.md),
+[localization validation](LOCALIZATION_VALIDATION.md).
 
-- [ ] Read the introduction, every refusal/offer/payment line and choices in both languages.
+- [ ] Read the introduction, every refusal/offer/payment line and choices in EN/UK/PL/DE/BE.
   Review temporary portraits and the healer's voice as the recurring guide.
+- [ ] Have native speakers review Polish, German and Belarusian wording, control terminology,
+  names and the healer's voice. Technical catalog/font checks do not approve prose quality.
 - [ ] Use a physical controller and touch device, in both handedness modes. Hold inputs into
   entry, reveal, choices and Resume; navigate without confirming; pause during typing.
 - [ ] Miss pickups, return repeatedly, collect more, die before/after a room exit and compare
@@ -159,10 +162,10 @@ Sources: [healer](HEALER.md), [post-boss guide](POST_BOSS_VALIDATION.md), [story
 - [ ] Fight normally and with the elixir; die repeatedly, then win. Check the impact shake,
   thicker, longer-trailed blood, effect expiry, automatic exit and absence of another healer return.
 - [ ] Verify Restart Level/New Game/Continue and a clean subsequent run. Save remains level-only.
-- [ ] Recheck every opening, pre-boss, post-boss, ending and About line in EN/UK with
+- [ ] Recheck every opening, pre-boss, post-boss, ending and About line in EN/UK/PL/DE/BE with
   the actual baked fonts and final assets: glyphs, clipping, wrapping, speaker colors,
-  stable alignment during reveal and Next prompt visibility. Include Ukrainian in the
-  release browser run; desktop measurements do not replace that observation.
+  stable alignment during reveal and Next prompt visibility. Include all five languages in
+  the release browser run; desktop measurements do not replace that observation.
 - [ ] Review final portraits/character identity with the author; current portraits are
   placeholders. Confirm the recurring guide's voice and guidance match the added mechanics
   and agreed lore. Final assets/writing are follow-up work where replacements are needed,

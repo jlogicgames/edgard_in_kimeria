@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
@@ -185,8 +186,8 @@ public class TouchControls {
         // would already hold the text projection when it is "restored" below.
         Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
-        label(batch, action, actionX, ACTION_Y);
-        label(batch, Msg.SHOOT.t(lang), shootX, SHOOT_Y);
+        label(batch, action, actionX, ACTION_Y, BUTTON_RADIUS * 2f - 2f);
+        label(batch, Msg.SHOOT.t(lang), shootX, SHOOT_Y, BUTTON_RADIUS * 1.7f - 2f);
         batch.setProjectionMatrix(previous);
     }
 
@@ -197,9 +198,9 @@ public class TouchControls {
     }
 
     /** Centered label; {@code yFromTop} is converted to the Y-up text projection, as in {@link Hud}. */
-    private void label(SpriteBatch batch, String text, float cx, float yFromTop) {
-        GlyphLayout layout = new GlyphLayout(font, text);
+    private void label(SpriteBatch batch, String text, float cx, float yFromTop, float width) {
+        GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width, Align.center, true);
         font.setColor(Color.WHITE);
-        font.draw(batch, layout, cx - layout.width / 2f, logicalHeight - yFromTop + layout.height / 2f);
+        font.draw(batch, layout, cx - width / 2f, logicalHeight - yFromTop + layout.height / 2f);
     }
 }

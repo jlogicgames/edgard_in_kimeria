@@ -19,6 +19,8 @@ different scopes; a design decision is not evidence that a feature is implemente
 | [Forest boss](BOSS.md) | The implemented forest encounter: attacks, balance, hit feedback, retry and completion rules. Its values do not automatically apply to future bosses. |
 | [Forest healer](HEALER.md) | The implemented encounter: dialogue, recipe/payment, collection returns and the detailed state retention/reset table. |
 | [Development and implementation](DEVELOPMENT.md) | Build/run instructions, architecture, persistence backends, assets and troubleshooting. |
+| [Translation catalogs and fonts](LOCALIZATION.md) | Editing/adding translations, message context, strict validation, glyph coverage and font regeneration. |
+| [Localization validation](LOCALIZATION_VALIDATION.md) | Dated #85 test, desktop/browser rendering and persistence evidence, with human/device review limits. |
 | [Pre-release TODO](PRE_RELEASE_TODO.md) | Outstanding release acceptance checks and how to record completion. This is the active release checklist. |
 | [Project skill validation](SKILL_VALIDATION.md) | Dated evidence from the project-skill validation pass, with its limits. |
 | [Post-boss guide validation](POST_BOSS_VALIDATION.md) | Dated evidence for the boss exit → healer → next-level boundary and dialogue styling. |

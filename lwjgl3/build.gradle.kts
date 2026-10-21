@@ -43,7 +43,20 @@ tasks.register<JavaExec>("bakeFonts") {
     classpath = sourceSets["fontBaker"].runtimeClasspath
     mainClass.set("com.jlogicsoftware.kimeria.tools.FontBaker")
     workingDir = rootProject.file("assets")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
+
+val validateLocalization = tasks.register<JavaExec>("validateLocalization") {
+    group = "verification"
+    description = "Checks all catalogs, source glyphs and every shipped bitmap-font size/page."
+    classpath = sourceSets["fontBaker"].runtimeClasspath
+    mainClass.set("com.jlogicsoftware.kimeria.tools.LocalizationCheck")
+    workingDir = rootProject.file("assets")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.named("check") { dependsOn(validateLocalization) }
+tasks.named("jar") { dependsOn(validateLocalization) }
 
 // libGDX 1.14.2's gdx-backend-lwjgl3 bundles LWJGL 3.3.3, which fails to
 // enumerate monitors (glfwGetPrimaryMonitor() returns NULL) on very new

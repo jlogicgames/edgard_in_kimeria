@@ -45,7 +45,8 @@ public final class HealerDialogueView {
             : mark(inventory.hasIngredient(level.name, ItemType.CHICKEN)) + Msg.CHICKEN.t(lang) + "\n"
                 + mark(inventory.hasIngredient(level.name, ItemType.KEY)) + Msg.KEY.t(lang) + "\n"
                 + mark(level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal())
-                + Msg.COINS.t(lang) + ": " + level.forestCoinsSecured() + "/" + level.forestCoinTotal();
+                + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(level.forestCoinsSecured()),
+                    "total", Integer.toString(level.forestCoinTotal()));
         if (!dialogue.postVictory()) overlay.body(batch, checklist, 320, 48, 360);
         frame(batch, 24, 138, 592, 104, false);
         Color speakerColor = dialogue.edgardSpeaking() ? Color.WHITE : HEALER_GREEN;

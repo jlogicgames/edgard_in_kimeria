@@ -86,6 +86,23 @@ class CampaignFlowTest {
 
     @AfterEach void restore() { Gdx.input = oldInput; Gdx.files = oldFiles; Gdx.app = oldApp; }
 
+    @Test void languageMenuChangesEveryLabelImmediatelyAndPersistsAllFiveChoices() throws Exception {
+        set("settings", new Settings(prefs));
+        set("language", Language.ENGLISH);
+        Menu options = (Menu) get("optionsMenu");
+        Language expected = Language.ENGLISH;
+        for (int i = 0; i < Language.values().length; i++) {
+            assertEquals(Msg.LANGUAGE_LABEL.t(expected) + ": " + expected.nativeName(), options.items.get(0).label.get());
+            assertEquals(Msg.OPTIONS.t(expected), options.titleText());
+            options.items.get(0).action.run();
+            expected = expected.next();
+            assertEquals(expected, get("language"));
+            assertEquals(expected, new Settings(prefs).get(Settings.LANGUAGE));
+            assertEquals(Msg.NEW_GAME.t(expected), ((Menu) get("mainMenu")).items.get(1).label.get());
+        }
+        assertEquals(Language.ENGLISH, expected);
+    }
+
     @Test void openingStartsRoomBasedForestAndOnlyFirstCompletionSavesTheSecondLevel() throws Exception {
         assertEquals(List.of("forest", "forest-1"), get("LEVEL_NAMES"));
         call("newGame"); assertEquals("INTRO", state());

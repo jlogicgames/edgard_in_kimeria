@@ -103,7 +103,7 @@ Two different causes produce this same crash:
 - [x] Options → Assist → Longer trap warnings: an independent, persisted toggle (off by default)
       giving falling platforms a 1.5 s warning instead of 1 s, with no penalties
 - [x] Keyboard, mouse and gamepad menu navigation
-- [x] English/Ukrainian localization, switchable from Options and remembered across launches
+- [x] English/Ukrainian/Polish/German/Belarusian localization, switchable from Options and remembered across launches
 - [x] Shared local settings for language, display mode, left-handed controls and trap-warning
       assist; missing or invalid values use defaults (English on first launch, regardless of
       system locale). Settings use desktop preferences / browser local storage and keep
@@ -176,7 +176,8 @@ Package layout:
 - `effects.*` — particle/shader effects
 - `world.Level` — loads a `.tmx`, spawns everything, owns the per-frame update/render pass
 - `ui.*` — HUD, menus, keyboard/gamepad/mouse navigation
-- `localization.*` — `Msg`/`Language`, English and Ukrainian
+- `localization.*` — typed `Msg` keys, five UTF-8 catalogs, English fallback and strict
+  validation; see [localization](LOCALIZATION.md)
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
 - `ui.TouchControls` — on-screen stick and Jump / Shoot / Attack-Interact buttons
 - `KimeriaGame` — the whole game and its menu states in one place

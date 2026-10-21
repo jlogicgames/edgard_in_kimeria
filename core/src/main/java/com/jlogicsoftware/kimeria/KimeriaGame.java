@@ -31,6 +31,7 @@ import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.localization.Language;
+import com.jlogicsoftware.kimeria.localization.Localization;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
@@ -144,6 +145,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     @Override
     public void create() {
+        Localization.current();
         assets = new Assets();
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();

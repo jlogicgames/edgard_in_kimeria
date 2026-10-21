@@ -132,10 +132,12 @@ public class Overlay {
     }
 
     public void hint(SpriteBatch batch, String text, float centerX, float yFromTop) {
-        GlyphLayout layout = new GlyphLayout(hintFont, text);
+        float width = centerX * 2f - 32f;
+        GlyphLayout layout = new GlyphLayout(hintFont, text, Color.WHITE, width, Align.center, true);
+        float top = Math.min(yFromTop, logicalHeight - 6f - layout.height);
         textQueue.add(() -> {
             hintFont.setColor(0.8f, 0.8f, 0.8f, 1f);
-            hintFont.draw(batch, layout, centerX - layout.width / 2f, toTextY(yFromTop));
+            hintFont.draw(batch, layout, centerX - width / 2f, toTextY(top));
             hintFont.setColor(Color.WHITE);
         });
     }
@@ -178,6 +180,14 @@ public class Overlay {
         return n * BUTTON_H + Math.max(0, n - 1) * BUTTON_GAP;
     }
 
+    /** Leave space for both selection markers; drawing and mouse hit areas use the same width. */
+    public float buttonsWidth(Menu menu) {
+        float width = menu.buttonWidth;
+        for (MenuItem item : menu.items) if (item.visible.getAsBoolean())
+            width = Math.max(width, new GlyphLayout(buttonFont, item.label.get()).width + 48f);
+        return Math.min(592f, width);
+    }
+
     /**
      * Draws {@code menu}'s button list starting at {@code startY} (top edge
      * of the first button), handles mouse hover/click and keyboard/gamepad
@@ -200,7 +210,7 @@ public class Overlay {
                          Runnable onHover, Runnable onActivate) {
         int n = menu.items.size();
         menu.ensureVisibleSelection();
-        float buttonW = menu.buttonWidth;
+        float buttonW = buttonsWidth(menu);
         float bx = centerX - buttonW / 2f;
 
         // Only a real mouse move may pull the selection onto the button under the cursor. A cursor

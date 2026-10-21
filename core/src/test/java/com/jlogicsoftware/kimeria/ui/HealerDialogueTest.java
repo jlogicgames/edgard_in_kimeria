@@ -3,10 +3,22 @@ package com.jlogicsoftware.kimeria.ui;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Files;
+import com.badlogic.gdx.backends.headless.HeadlessFiles;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HealerDialogueTest {
+    private Files previousFiles;
+    @BeforeEach void catalogs() {
+        previousFiles = Gdx.files;
+        Gdx.files = new HeadlessFiles();
+    }
+    @AfterEach void restoreFiles() { Gdx.files = previousFiles; }
+
     private void toChoices(HealerDialogue dialogue, Language language) {
         for (int i = 0; i < 20 && !dialogue.choosing(); i++) dialogue.advance(language);
         assertTrue(dialogue.choosing());

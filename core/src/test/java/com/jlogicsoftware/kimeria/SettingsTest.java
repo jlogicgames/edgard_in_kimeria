@@ -21,6 +21,21 @@ class SettingsTest {
         return new HeadlessPreferences(new FileHandle(directory.resolve("settings.xml").toFile()));
     }
 
+    @Test void fiveLanguagesCycleAndSurviveRelaunchWithLegacyNamesUnchanged() {
+        assertEquals("ENGLISH", Language.ENGLISH.name());
+        assertEquals("UKRAINIAN", Language.UKRAINIAN.name());
+        Language next = Language.ENGLISH;
+        for (Language expected : Language.values()) {
+            assertEquals(expected, next);
+            Settings settings = new Settings(preferences());
+            settings.set(Settings.LANGUAGE, expected);
+            assertEquals(expected, Settings.load(this::preferences).get(Settings.LANGUAGE));
+            assertEquals(expected.name(), preferences().getString(Settings.KEY_LANGUAGE));
+            next = next.next();
+        }
+        assertEquals(Language.ENGLISH, next);
+    }
+
     @Test
     void firstLaunchUsesDocumentedDefaults() {
         Settings settings = new Settings(preferences());

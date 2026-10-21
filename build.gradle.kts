@@ -45,6 +45,12 @@ tasks.register("buildWeb") {
     dependsOn(":web:gdx_teavm_web_js_release_build")
 }
 
+tasks.register("validateLocalization") {
+    group = "verification"
+    description = "Validates all translation catalogs and shipped fonts."
+    dependsOn(":lwjgl3:validateLocalization")
+}
+
 // Same convention for the desktop fat jar, so no build target needs a
 // module path memorized.
 tasks.register("buildDesktop") {

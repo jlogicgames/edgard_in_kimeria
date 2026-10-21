@@ -16,7 +16,8 @@ arcade puzzle-platformer. [Watch a playthrough of the original](https://www.yout
   and an ending.
 - Sword combat, platforming, moving platforms, traps and optional collectibles.
 - Instant room retries with unlimited attempts; progress saves between levels.
-- English and Ukrainian, keyboard, gamepad and touch controls, plus a left-handed mode.
+- English, Ukrainian, Polish, German and Belarusian; keyboard, gamepad and touch controls,
+  plus a left-handed mode.
 
 The game is currently a two-level test version. The planned full campaign spans
 Forest, Swamp, Steppe and Fortress; see the [game design](docs/GAME_DESIGN.md) and
@@ -51,6 +52,9 @@ On Windows, use `gradlew.bat` instead of `./gradlew`.
 
 Touch devices show on-screen controls. Language and left-handed controls are available
 in Options. The Shoot action is reserved for a future ranged attack.
+
+Translations live in editable UTF-8 catalogs. See [localization](docs/LOCALIZATION.md)
+for editing, validation and font generation.
 
 ## Documentation
 

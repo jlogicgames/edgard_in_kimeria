@@ -69,26 +69,8 @@ public class Assets implements Disposable {
     }
 
     /**
-     * Every character the UI ever draws, in either language. Used only by
-     * the offline {@code FontBaker} tool (see {@code lwjgl3/src/fontBaker})
-     * that regenerates {@code assets/fonts/generated/*.fnt+.png} -- kept
-     * here, not duplicated there, so the baked charset can't drift from
-     * what {@code localization.Msg} actually needs. Public so that tool
-     * (in a different Gradle source set, off this module's own runtime
-     * classpath) can reference it without copying it.
-     */
-    public static final String CHARSET = buildCharset();
-
-    private static String buildCharset() {
-        StringBuilder sb = new StringBuilder();
-        for (char c = 32; c < 127; c++) sb.append(c); // ASCII
-        for (char c = 0x0400; c <= 0x04FF; c++) sb.append(c); // Cyrillic
-        return sb.toString();
-    }
-
-    /**
      * Loads a font pre-baked to bitmap files by {@code FontBaker} (see that
-     * class for why: the GWT/web build can't run FreeTypeFontGenerator at
+     * class for why: the TeaVM/web build can't run FreeTypeFontGenerator at
      * all, so every platform, including desktop, uses the same baked
      * files). {@code sizePx} must be one of the sizes actually baked --
      * see the call sites in {@code Overlay}/{@code Hud} and keep
