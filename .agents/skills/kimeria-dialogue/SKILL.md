@@ -1,6 +1,6 @@
 ---
 name: kimeria-dialogue
-description: Implements and reviews Edgard in Kimeria healer conversations, EN/UK dialogue text, reveal/advance timelines and dialogue-to-gameplay boundaries. Use for pre-boss choices and post-boss guide scenes.
+description: Implements and reviews Edgard in Kimeria healer conversations, localized dialogue text, reveal/advance timelines and dialogue-to-gameplay boundaries. Use for pre-boss choices and post-boss guide scenes.
 ---
 
 # Kimeria dialogue
@@ -23,9 +23,11 @@ Linear filtering applies to these detailed portraits; other textures retain thei
 embed portrait pixel matrices or dispose shared textures in the view. Verify pre-boss,
 paid and post-boss images in normal/paused scenes on desktop/web in all five languages;
 record author artwork comparison against DOS references separately from automated checks.
-Keep typed message keys in `localization/Msg.java` and text in the supported-language
-catalogs; see [localization](../../../docs/LOCALIZATION.md). Do not invent destinations,
-quests or character history; distinguish proposed wording from author-approved story.
+Keep stable typed keys in `localization/Msg.java` and text in every
+`assets/localization/*.json` catalog (currently EN/UK/PL/DE/BE); follow
+[localization](../../../docs/LOCALIZATION.md) for validation and font generation.
+Do not invent destinations, quests or character history; distinguish proposed wording
+from author-approved story.
 Post-victory dialogue has no recipe checklist, payment or fight/return choices.
 
 Trace `KimeriaGame.updateHealer`, `chooseHealer`, pause/Resume and the originating
@@ -45,12 +47,13 @@ retain level-only persistence and replace the scripted hero before gameplay resu
 See [rooms](../../../docs/ROOMS.md) and the room-state skill for lifecycle policy.
 
 Run `:core:test` (especially HealerDialogueTest, IntroInputTest, BossCombatTest and
-SavedProgressTest), `buildDesktop` and `buildWeb` as appropriate. In real desktop/web
+SavedProgressTest), `validateLocalization`, `buildDesktop` and `buildWeb` as appropriate.
+Regenerate baked fonts with `:lwjgl3:bakeFonts` when catalog edits require new glyphs. In real desktop/web
 render loops verify death → exit → dialogue → single-room second level, then ending → menu with the run save removed,
 held/released input, repeated final advances, pause/Resume and renewed movement/jump/attack.
 For scripted device checks, explicitly select language/handedness in memory so saved
 player preferences cannot invalidate the intended bindings.
-Measure every new line with the actual baked font in both languages; model tests cannot
+Measure every new line with the actual baked font in all supported languages; model tests cannot
 prove layout. Report automated checks, actual desktop/browser/device observations and
 remaining human readability/wording review separately. Validate this skill's frontmatter
 and relative documentation links when editing it.

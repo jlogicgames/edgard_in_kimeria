@@ -29,7 +29,7 @@ remain optional. `forest-1` has no artifact set or full-set reward in this MVP.
 4. Level 2, `forest-1`: the existing single-room course. Its checkpoint/disappearance
    delay opens the ending instead of wrapping back to level 1.
 5. Ending: black background, the opening's scrolling text/fade and `audio/intro.wav`.
-   EN/UK text says Edgard defeated every enemy, freed the kingdom of monsters and
+   Text in all five supported languages says Edgard defeated every enemy, freed the kingdom of monsters and
    restored light to the world. A fresh key/controller press or tap can skip with the
    same fade as the opening; held gameplay input cannot dismiss it on entry.
 6. Once the ending fades out, remove only `Settings.KEY_NEXT_LEVEL` and return to the
@@ -52,6 +52,12 @@ scroll and music follow the opening timeline. The ordinary menu track returns af
 Music still respects the existing sound option and volume.
 
 ## Validation
+
+The original MVP verification below records EN/UK checks before the language
+expansion. #85 / PR #150 subsequently added Polish, German and Belarusian; see
+[localization validation](LOCALIZATION_VALIDATION.md) for its 141-test run,
+five-language desktop/browser observations and remaining review limits. Those
+checks do not replace a final full-campaign playthrough on real devices.
 
 `CampaignFlowTest` covers the new level order and forest-first opening, first-level save,
 ending text in both languages, held-input suppression and fresh skip, intro-music

@@ -44,7 +44,9 @@ the desktop launcher must read settings before Gdx.app exists.
 - Apply settings to the running feature and restore them on startup. Fullscreen
   persists the actual resulting mode, is desktop-only, and changes outside the
   render pass; window size/position are not currently saved. Assist toggles are
-  independent and carry no reward penalties. Localize option labels EN/UK.
+  independent and carry no reward penalties. Localize option labels in every
+  `assets/localization/*.json` catalog using typed `Msg` keys; follow
+  [localization](../../../docs/LOCALIZATION.md) and run `validateLocalization`.
 - Saved progress is a zero-based next-level index only. Validate against the
   current level count; missing, malformed or out-of-range data hides Continue
   rather than clamping to an unrelated level. The MVP order is `forest` then

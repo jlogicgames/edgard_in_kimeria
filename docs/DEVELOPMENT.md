@@ -112,12 +112,12 @@ Two different causes produce this same crash:
       1280x720 window; the mode is remembered across launches (`~/.prefs/edgard-in-kimeria`).
       Window size and position are not persisted.
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
-- [x] NES-style story intro on every new game: centered English/Ukrainian scrolling text,
+- [x] NES-style story intro on every new game: centered scrolling text in all five supported languages,
       black fades and a separate placeholder music loop; any fresh key, gamepad button or
       click/tap skips with a shared picture/music fade (menu holds do not skip it).
       `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
       `Msg.INTRO_STORY` when revising the healer-narrated account of Kimeria and L'Kardina.
-- [x] Optional forest healer: English/Ukrainian dialogue, recipe checklist, paid elixir and
+- [x] Optional forest healer: dialogue in all five supported languages, recipe checklist, paid elixir and
       repeated collection returns with retained progression and restored traversal paths
 - [x] Dev hotkeys (F1–F6, see [Controls](GAMEPLAY.md#controls))
 - [x] Chromatic-aberration glitch post-process — applied to the frozen gameplay or dialogue screen while paused

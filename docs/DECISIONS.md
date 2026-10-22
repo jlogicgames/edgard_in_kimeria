@@ -368,7 +368,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   The existing death animation, automatic exit and guide dialogue lead to `forest-1`,
   the single-room second level. Its checkpoint leads to a black scrolling ending using
   `IntroScreen` and `audio/intro.wav`, with the same fade and fresh-input skip behavior
-  as the opening. EN/UK text says Edgard defeated every enemy, freed the kingdom of
+  as the opening. Localized text says Edgard defeated every enemy, freed the kingdom of
   monsters and brought light back to the world. After the ending, clear the saved run
   and return to the menu; retain settings. Future mechanics expand these two levels.
 - **Why:** This is the complete playable MVP loop, with a clear beginning and ending.

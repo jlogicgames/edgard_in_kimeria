@@ -1,6 +1,6 @@
 # Edgard in Kimeria — development roadmap
 
-**Working version — 2026-10-20.** Discussion and drafts are in Russian; committed
+**Working version — 2026-10-21.** Discussion and drafts are in Russian; committed
 documentation is in English.
 
 **Accepted sequence:** mechanics MVP for all four stages, then the full campaign
@@ -17,6 +17,13 @@ The existing test build has two forest levels, melee combat, rooms/death recover
 the healer, an elixir, the forest boss and an ending. Its accepted scope is in
 [MVP.md](MVP.md), available behavior in [GAMEPLAY.md](GAMEPLAY.md). Previous
 validation establishes only the versions checked, not future mechanics.
+
+English, Ukrainian, Polish, German and Belarusian are implemented in the current
+build by [#85](https://github.com/jlogicgames/edgard_in_kimeria/issues/85), merged in
+[PR #150](https://github.com/jlogicgames/edgard_in_kimeria/pull/150). Catalog/font
+validation and editing instructions are in [LOCALIZATION.md](LOCALIZATION.md).
+This is the language baseline for future text; native-speaker review and final
+campaign/device acceptance remain release work.
 
 **Two different meanings of MVP:**
 
@@ -222,9 +229,11 @@ Temporary assets and balance may still require refinement.
   [art direction](ART_DIRECTION.md) and [current artwork review](PORTRAITS.md).
   Recheck their readability in the final campaign/device presentation.
   Select decorative reserve ideas by their benefit to finished situations.
-- [ ] [#143](https://github.com/jlogicgames/edgard_in_kimeria/issues/143) Complete text and verify EN/UK. Extra languages in
-  [#85](https://github.com/jlogicgames/edgard_in_kimeria/issues/85) remain a separate
-  existing task; decide their inclusion in a specific release.
+- [ ] [#143](https://github.com/jlogicgames/edgard_in_kimeria/issues/143) Complete final campaign text and review all five supported languages
+  (EN/UK/PL/DE/BE), including native-speaker review of the new translations and final
+  device/layout checks. The catalog/font infrastructure from
+  [#85](https://github.com/jlogicgames/edgard_in_kimeria/issues/85) is already merged;
+  its completion does not complete this release pass.
 - [ ] [#144](https://github.com/jlogicgames/edgard_in_kimeria/issues/144) Complete the updated [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md):
   controls/both layouts, desktop/web, real devices, saves, rendering, audio and
   the full loop. Mark checks complete only with evidence for the relevant build.
@@ -246,7 +255,7 @@ does not mean completion.
 - Mark completion from concrete output, not a partial scaffold.
 - Clarify scope/dependencies before starting a block. Give new checkboxes separate
   issues without duplicating existing ones; update both checkbox and primary issue
-  when scope changes. Larger existing tasks #94, #73, #75, #90 and #85 have not
+  when scope changes. Larger existing tasks #94, #73, #75 and #90 have not
   automatically been rewritten to match this plan.
 - After prototypes/playtests, update this roadmap and the
   [living design](GAME_DESIGN.md#design-maintenance), keeping decision,

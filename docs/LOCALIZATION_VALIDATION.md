@@ -70,9 +70,10 @@ counts and choice labels were readable and stayed inside their regions. No
 page execution errors occurred in the successful verification runs.
 
 Temporary harness code, modified fixtures, server, test preferences and browser
-storage were removed after verification. Review contact sheets are retained only
-as ignored local build artifacts under `build/localization-checks/`; they are
-not required by the game or packaged in releases.
+storage were removed after verification. Review contact sheets were inspected as
+ignored local build artifacts under `build/localization-checks/`, then removed
+during the author's requested post-merge cleanup. They are not committed or
+packaged in releases; no retained screenshot artifact is claimed.
 
 ## Remaining human/device review
 

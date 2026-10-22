@@ -10,12 +10,17 @@ opens at the black midpoint of the canopy exit fade, before entering the boss ro
 The world, player input and gameplay effects stop. The dedicated black dialogue screen
 shows shared transparent PNG portraits: Edgard left, healer right. See
 [portrait assets and replacement instructions](PORTRAITS.md). The speaker's
-frame is highlighted; English and Ukrainian use the existing baked pixel font.
+frame is highlighted; all five supported languages use the shared baked pixel font.
 In every pre/post-boss conversation Edgard's name and dialogue are white, with his
 lines aligned left. The healer's name and dialogue are green, with his lines aligned
-right. Complete-line layout stays fixed while letters reveal. A right-aligned
-`Next >` / `Далі >` prompt appears below the dialogue only after the line is fully
+right. Complete-line layout stays fixed while letters reveal. A right-aligned,
+translated `Next >` prompt appears below the dialogue only after the line is fully
 revealed; it hides during typing and when choices are displayed.
+
+Localization expanded to EN/UK/PL/DE/BE in #85 / PR #150 on 2026-10-21. Text lives
+in the [UTF-8 catalogs](LOCALIZATION.md); dated EN/UK checks below retain their
+original scope. See [localization validation](LOCALIZATION_VALIDATION.md) for the
+five-language rendering/storage checks and remaining native-speaker/device review.
 
 ## Narrative boundary
 
@@ -195,8 +200,9 @@ recipe/payment UI and fight/return choices are absent.
 
 The three lines acknowledge the guardian's defeat and the open path, Edgard notes
 that darkness still hangs over the kingdom, and the healer promises to guide him
-as the journey continues. The author approved this meaning on 2026-10-19. EN/UK
-text lives in Msg; no new destination, quest or explanation of the darkness is added.
+as the journey continues. The author approved this meaning on 2026-10-19. Text lives
+in the five `assets/localization/*.json` catalogs, addressed by typed `Msg` keys;
+no new destination, quest or explanation of the darkness is added.
 
 A fresh final advance emits CONTINUE once. KimeriaGame then performs its existing
 first-level completion: secures pickups, advances to `forest-1`, saves index 1,

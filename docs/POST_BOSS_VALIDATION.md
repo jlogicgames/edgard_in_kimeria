@@ -10,6 +10,10 @@ puts the forest boss first and `forest-1` second, followed by an ending and save
 BossCombatTest now asserts index 1 after the guide scene. See [MVP.md](MVP.md) for the
 current campaign flow and its separate completion checks.
 
+The EN/UK evidence in this dated report predates #85 / PR #150. Current dialogue
+text is available in five catalogs; the later [localization checks](LOCALIZATION_VALIDATION.md)
+record their rendering coverage and native-speaker/device review limits separately.
+
 ## Implementation and author review
 
 The author approved the proposed three-line meaning during implementation: the forest

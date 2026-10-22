@@ -164,7 +164,7 @@ The automated and limited browser checks above retain their recorded scope.
 
 The active boss room shows a fixed HUD bar with twelve image segments, including while the
 boss sits on the throne and during the protected victory walk. It disappears with the room
-or level. The label is localized (English/Ukrainian); a green potion and `x10` indicate the
+or level. The label is localized in all five supported languages; a green potion and `x10` indicate the
 consumed elixir and remain on boss retry. No automatic artifact bonus is implied.
 
 Each landed sword swing triggers one 75 ms impact sound, a 32-droplet crimson blood spray

@@ -71,7 +71,10 @@ observable action and transition rather than a copy of its mapping constants.
 
 Check affected devices in the running game in both handedness modes. Browser
 controllers may appear only after their first button press. Verify mouse/touch
-coordinates after resize and letterboxing when those paths change. Update EN/UK
-About text and action labels in `localization/Msg.java` when bindings change.
+coordinates after resize and letterboxing when those paths change. Update About
+text and action labels in all `assets/localization/*.json` catalogs when bindings
+change; keep typed keys in `localization/Msg.java`. Follow
+[localization](../../../docs/LOCALIZATION.md), run `validateLocalization` and
+regenerate fonts when new glyphs are needed.
 Report device checks actually performed; keyboard simulation does not prove
 physical controller or multitouch behavior.

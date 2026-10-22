@@ -13,7 +13,7 @@ the attached screenshots, not an asserted review of the video.
 
 - README: identify the DOS remake/remaster, give a short world premise and link the
   original playthrough. Keep technical detail in the development documentation.
-- Opening (EN/UK): Rufardus the Wise, L'Kardina's banishment and attempted expulsion,
+- Opening (all five supported languages): Rufardus the Wise, L'Kardina's banishment and attempted expulsion,
   eternal night, and the wandering warrior Edgard setting out to save Kimeria. Retain
   the healer as narrator. No collection checklist, ingredients, coins or elixir tutorial.
 - Healer: current recipe explanations remain in his encounter. Expanding his story

@@ -38,7 +38,7 @@ is explicit; the opening must not read as an account by an unrelated, anonymous 
 Rufardus the Wise. L'Kardina was banished from a neighboring kingdom; Kimeria's attempt
 to expel her provokes the curse of eternal night. The sun stops shining. A wandering
 warrior, Edgard, hears of the disaster and sets out to save the kingdom, meeting the old
-healer on his way. These facts now form the EN/UK opening.
+healer on his way. These facts now form the opening in all five supported languages.
 
 The opening introduces the world and Edgard's journey. **Do not include Chicken, Key,
 coins, an elixir recipe, collection instructions or a boss-shopping checklist.** Explain
@@ -95,9 +95,14 @@ when extending the story; do not treat an implementation placeholder as accepted
 
 ## Implementation status
 
-The opening tells the original world history in EN/UK, narrated by the healer, without
+The opening tells the original world history in EN/UK/PL/DE/BE, narrated by the healer, without
 recipe or collection instructions. About also leaves recipe details to the encounter.
 The revision changes localized text only; opening timing/input and save rules are unchanged.
+
+The original EN/UK wording was preserved when #85 added Polish, German and Belarusian
+in PR #150. Translations now live in [UTF-8 catalogs](LOCALIZATION.md), with separate
+[technical validation and remaining wording/device review](LOCALIZATION_VALIDATION.md).
+This language expansion does not imply author approval of every new translation.
 
 The pre-boss dialogue, checklist, paid elixir and collection return are implemented by
 #84. The author accepted the dialogue wording in play for the test version
@@ -115,7 +120,7 @@ introduces no new quest, destination or persistent checkpoint. See [HEALER.md](H
 The playable MVP is finite: the forest's three rooms and boss form level one; the existing
 single-room `forest-1` is level two. The forest guide scene bridges these levels. After
 the second level, an ending screen in the opening's scrolling style plays the same music.
-Its EN/UK text establishes that Edgard defeated every enemy, cleared the kingdom of
+Its localized text establishes that Edgard defeated every enemy, cleared the kingdom of
 monsters and brought light back to the world. This outcome is now agreed; no new account
 of L'Kardina's fate or the mechanism of dispelling darkness is added.
 
