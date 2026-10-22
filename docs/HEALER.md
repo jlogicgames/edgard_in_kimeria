@@ -8,7 +8,8 @@ until the planned gameplay mechanics have been added and are tracked only in
 The same healer who narrates the opening meets Edgard before `forest-boss`. The meeting
 opens at the black midpoint of the canopy exit fade, before entering the boss room.
 The world, player input and gameplay effects stop. The dedicated black dialogue screen
-shows original pixel-drawn placeholder portraits: Edgard left, healer right. The speaker's
+shows shared transparent PNG portraits: Edgard left, healer right. See
+[portrait assets and replacement instructions](PORTRAITS.md). The speaker's
 frame is highlighted; English and Ukrainian use the existing baked pixel font.
 In every pre/post-boss conversation Edgard's name and dialogue are white, with his
 lines aligned left. The healer's name and dialogue are green, with his lines aligned
@@ -59,7 +60,8 @@ consumes the recipe and drinks the elixir automatically; there is no redundant p
 return or unempowered fight option on this branch. Selected buttons use the same two edge
 markers as the other menus. After payment, two lines acknowledge consumption and explain the encounter lock, followed
 by a single fight choice. The author reviewed the wording in play and accepted it for the
-test version (2026-10-20); the portraits remain temporary placeholders.
+test version (2026-10-20); replacement artwork review is recorded separately in
+[portrait validation](PORTRAITS.md#author-review).
 
 ## Recipe, payment and encounter boundary
 

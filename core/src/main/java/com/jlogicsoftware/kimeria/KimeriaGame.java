@@ -161,7 +161,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         hud = new Hud(assets, this, LOGICAL_W, LOGICAL_H);
         touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
-        healerView = new HealerDialogueView();
+        healerView = new HealerDialogueView(assets);
         menuBackdrop = new MenuBackdrop();
 
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/main_menu.mp3"));

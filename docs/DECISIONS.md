@@ -485,3 +485,21 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   use player observations to refine learning, difficulty and campaign scope.
 - **Details:** [Roadmap](ROADMAP.md), [mechanics MVP](ROADMAP.md#mechanics-mvp),
   [campaign and playtests](ROADMAP.md#campaign-and-playtests).
+
+
+## D21. Remake and remaster preserving the original artist's style
+
+- **Status:** Accepted by the author, 2026-10-22.
+- **Decision:** Make a more beautiful version of the original, with more colors,
+  finer detail, less grain and more natural illustration. Preserve the original
+  artist's style, recognizable faces, silhouettes and characteristic palette family
+  consistently across the many images still to be produced.
+- **Current baseline:** Rework Edgard and the healer with a palette of up to 256 colors,
+  detailed transparent source masters and smoothly rendered 256 × 256 portrait exports.
+  This supersedes the earlier coarse 64 × 64 / tiny-palette NES treatment for these
+  illustrations. Existing gameplay sprites are not replaced by this portrait revision.
+- **Continuity:** Use the supplied DOS originals for identity and the remaster masters
+  as style references; retain exact prompts and export settings. Review each final
+  artwork revision at game size separately from automated checks.
+- **Details:** [Art direction](ART_DIRECTION.md), [portraits](PORTRAITS.md),
+  [original references](ORIGINAL_DOS.md).

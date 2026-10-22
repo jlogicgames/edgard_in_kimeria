@@ -12,7 +12,19 @@ Paths below are relative to the repository root.
 
 Reuse `ui/HealerDialogue.java` and `ui/HealerDialogueView.java`: the same healer
 portrait, speaker highlight, typewriter and black NES-style screen serve both meetings.
-Keep EN/UK strings together in `localization/Msg.java`. Do not invent destinations,
+For artwork, follow [art direction](../../../docs/ART_DIRECTION.md) and the
+kimeria-art-direction skill: the remake/remaster preserves the original artist's
+style with richer color, less grain and more natural drawing. Dialogue portraits
+are `assets/images/portraits/edgard.png` and `healer.png` (256×256 transparent PNGs,
+up to 256 palette entries); see [replacement and review](../../../docs/PORTRAITS.md).
+Use full-image `Assets.region(path, TextureFilter.Linear)` through the shared cache,
+preserve aspect ratio inside the 64×64 logical slot and retain its single Y-down flip.
+Linear filtering applies to these detailed portraits; other textures retain their policy. Never
+embed portrait pixel matrices or dispose shared textures in the view. Verify pre-boss,
+paid and post-boss images in normal/paused scenes on desktop/web in all five languages;
+record author artwork comparison against DOS references separately from automated checks.
+Keep typed message keys in `localization/Msg.java` and text in the supported-language
+catalogs; see [localization](../../../docs/LOCALIZATION.md). Do not invent destinations,
 quests or character history; distinguish proposed wording from author-approved story.
 Post-victory dialogue has no recipe checklist, payment or fight/return choices.
 

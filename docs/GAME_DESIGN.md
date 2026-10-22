@@ -56,6 +56,15 @@ The full game's length should come from developing mechanics, new enemies,
 combined obstacles, exploration and optional challenges. Repeating a long,
 already-mastered section after every mistake must not substitute for content.
 
+## Visual identity
+
+**Accepted by the author, 2026-10-22:** remake and remaster means a more beautiful,
+more natural presentation with richer colors and less grain, preserving the original
+artist's style across all future illustrations. The portrait baseline uses 256 colors
+and finer source images. Preserve the original character designs, proportions,
+silhouettes and warm color family while improving finish and shading. Follow the
+[art direction](ART_DIRECTION.md) and [D21](DECISIONS.md#d21-remake-and-remaster-preserving-the-original-artists-style).
+
 ## Original game and remake references
 
 - The original supplies the world, characters, eternal-night curse and tablet.

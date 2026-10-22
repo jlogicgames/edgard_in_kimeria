@@ -217,7 +217,10 @@ Temporary assets and balance may still require refinement.
 - [ ] [#141](https://github.com/jlogicgames/edgard_in_kimeria/issues/141) Fix blocking/recurring playtest problems; recheck affected situations
   and the complete route to the extent needed.
 - [ ] [#142](https://github.com/jlogicgames/edgard_in_kimeria/issues/142) Finish environment, readability, animation/feedback, music and sound.
-  Replace temporary portraits — [#90](https://github.com/jlogicgames/edgard_in_kimeria/issues/90).
+  Shared PNG portraits from [#90](https://github.com/jlogicgames/edgard_in_kimeria/issues/90)
+  are implemented with the revised 256-color remake/remaster direction; see
+  [art direction](ART_DIRECTION.md) and [current artwork review](PORTRAITS.md).
+  Recheck their readability in the final campaign/device presentation.
   Select decorative reserve ideas by their benefit to finished situations.
 - [ ] [#143](https://github.com/jlogicgames/edgard_in_kimeria/issues/143) Complete text and verify EN/UK. Extra languages in
   [#85](https://github.com/jlogicgames/edgard_in_kimeria/issues/85) remain a separate

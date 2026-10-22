@@ -55,6 +55,7 @@ class BossCombatTest {
     private final GamepadInput pad = new GamepadInput();
     private final TrapWarnings warnings = new TrapWarnings(); // assist stays off
     private final Assets assets = new Assets() {
+        @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
         @Override public TextureRegion region(String path, float x, float y, float w, float h) {
             return new TextureRegion();
         }
@@ -244,7 +245,7 @@ class BossCombatTest {
         running.loadNextLevel();
         assertSame(dialogue, healerField.get(running), "Duplicate completion cannot reopen the scene");
         gameField(running, "uiViewport", new com.badlogic.gdx.utils.viewport.FitViewport(640, 360));
-        gameField(running, "healerView", new com.jlogicsoftware.kimeria.ui.HealerDialogueView());
+        gameField(running, "healerView", new com.jlogicsoftware.kimeria.ui.HealerDialogueView(assets));
         var update = KimeriaGame.class.getDeclaredMethod("updateHealer", float.class); update.setAccessible(true);
         update.invoke(running, 0f);
         assertEquals("", dialogue.text(com.jlogicsoftware.kimeria.localization.Language.ENGLISH),

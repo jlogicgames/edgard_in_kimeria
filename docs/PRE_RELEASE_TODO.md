@@ -146,13 +146,14 @@ for the test version.
 The opening was revised on 2026-10-20 using the author's DOS world history. It has no
 collection/recipe instructions. Keep those in the healer encounter; expansion of the
 historical healer story is later work. Use [original DOS references](ORIGINAL_DOS.md)
-for portrait work in #90.
+for portrait work; the shared PNGs from #90 and their author approval are recorded in
+[portrait validation](PORTRAITS.md).
 
 Sources: [healer](HEALER.md), [post-boss guide](POST_BOSS_VALIDATION.md), [story](STORY.md),
 [localization validation](LOCALIZATION_VALIDATION.md).
 
 - [ ] Read the introduction, every refusal/offer/payment line and choices in EN/UK/PL/DE/BE.
-  Review temporary portraits and the healer's voice as the recurring guide.
+  Review portrait readability on the target devices and the healer's voice as the recurring guide.
 - [ ] Have native speakers review Polish, German and Belarusian wording, control terminology,
   names and the healer's voice. Technical catalog/font checks do not approve prose quality.
 - [ ] Use a physical controller and touch device, in both handedness modes. Hold inputs into
@@ -166,10 +167,13 @@ Sources: [healer](HEALER.md), [post-boss guide](POST_BOSS_VALIDATION.md), [story
   the actual baked fonts and final assets: glyphs, clipping, wrapping, speaker colors,
   stable alignment during reveal and Next prompt visibility. Include all five languages in
   the release browser run; desktop measurements do not replace that observation.
-- [ ] Review final portraits/character identity with the author; current portraits are
-  placeholders. Confirm the recurring guide's voice and guidance match the added mechanics
-  and agreed lore. Final assets/writing are follow-up work where replacements are needed,
-  not a reason to reopen the accepted test-version implementation.
+- [x] Review the remastered 256-color dialogue portraits/character identity with the author.
+  On 2026-10-22 the author accepted this version as the style reference for future
+  illustrations; see [art direction](ART_DIRECTION.md) and [artwork review](PORTRAITS.md#author-review).
+  Physical-device readability remains a separate check above.
+- [ ] Confirm the recurring guide's voice and guidance match the added mechanics and
+  agreed lore. Final campaign assets/writing are follow-up work where replacements are
+  needed, not a reason to reopen the accepted test-version implementation.
 
 ## Rendering and audio
 

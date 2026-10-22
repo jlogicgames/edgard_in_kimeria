@@ -117,7 +117,11 @@ class HealerDialogueTest {
     }
 
     @Test void touchTargetsAreDistinctAndLargeEnoughInLogicalPixels() {
-        HealerDialogueView view = new HealerDialogueView();
+        HealerDialogueView view = new HealerDialogueView(new com.jlogicsoftware.kimeria.Assets() {
+            @Override public com.badlogic.gdx.graphics.g2d.TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) {
+                return new com.badlogic.gdx.graphics.g2d.TextureRegion();
+            }
+        });
         assertEquals(0, view.choiceAt(new Vector2(320, 260), 3));
         assertEquals(1, view.choiceAt(new Vector2(320, 290), 3));
         assertEquals(2, view.choiceAt(new Vector2(320, 320), 3));

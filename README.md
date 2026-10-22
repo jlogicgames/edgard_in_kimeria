@@ -10,6 +10,9 @@ the kingdom, guided by an old healer.
 Explore the forest, overcome enemies and cunning traps, and face its guardian in this
 arcade puzzle-platformer. [Watch a playthrough of the original](https://www.youtube.com/watch?v=8hD09QE4U3Q).
 
+The visual direction preserves the original artist's character and style while adding
+richer color, finer detail and more natural illustration. See [art direction](docs/ART_DIRECTION.md).
+
 ## About the game
 
 - Two playable levels: a three-room forest with a boss, followed by a second forest level

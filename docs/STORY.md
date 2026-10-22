@@ -101,8 +101,11 @@ The revision changes localized text only; opening timing/input and save rules ar
 
 The pre-boss dialogue, checklist, paid elixir and collection return are implemented by
 #84. The author accepted the dialogue wording in play for the test version
-(2026-10-20); final portrait identity and release presentation review are deferred to
-[PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#dialogue-and-localization). The post-boss guide scene is implemented by #86 after the automatic exit and before
+(2026-10-20). The shared PNG portraits from #90 follow the author's revised 2026-10-22 remake/remaster
+direction: richer color and more natural drawing, preserving the original artist's style.
+See [art direction](ART_DIRECTION.md) and [current portrait review](PORTRAITS.md). Release presentation/device review
+remains in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#dialogue-and-localization).
+The post-boss guide scene is implemented by #86 after the automatic exit and before
 normal next-level loading. It reuses the pre-boss portrait/dialogue presentation and
 introduces no new quest, destination or persistent checkpoint. See [HEALER.md](HEALER.md).
 

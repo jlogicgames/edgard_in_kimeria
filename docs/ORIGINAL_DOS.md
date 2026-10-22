@@ -19,7 +19,8 @@ the attached screenshots, not an asserted review of the video.
 - Healer: current recipe explanations remain in his encounter. Expanding his story
   using the original seven-component remedy is future work, not part of this revision.
 - Portraits: use these original character designs as the primary identity reference
-  when replacing the temporary portraits in [#90](https://github.com/jlogicgames/edgard_in_kimeria/issues/90).
+  for the shared PNG portraits in [#90](https://github.com/jlogicgames/edgard_in_kimeria/issues/90);
+  see [replacement instructions and author approval](PORTRAITS.md).
 
 Four tablet pieces, seven ingredients and the original four regions are historical
 source material. They are not implemented by this text update. The current test build
@@ -118,8 +119,11 @@ transcribed as displayed; full names are not supplied or inferred.
 
 ## Portrait direction for #90
 
-These are references for a redraw in the remake's existing pixel-art style, not a request
-to ship screenshots, the DOSBox frame or the green background as dialogue textures.
+The author clarified the remake/remaster direction on 2026-10-22: preserve the original
+artist's style while improving beauty, naturalness, color richness and fine detail.
+Use these references for character identity and drawing language; the green background,
+DOSBox frame and coarse hardware limitations do not belong in the new portraits.
+See [art direction](ART_DIRECTION.md).
 
 - **Edgard:** long black hair, a narrow red headband across the forehead, a stern,
   angular clean-shaven face, strong dark brows, warm ochre skin and visible shoulders.
@@ -128,7 +132,8 @@ to ship screenshots, the DOSBox frame or the green background as dialogue textur
   moustache, warm brown/ochre clothing, and a staff beside him with a red hooked top.
   Preserve his age, beard, staff and silhouette; do not substitute a generic hooded wizard.
 - Draw separate transparent image assets sized for the existing dialogue frames;
-  retain crisp pixel rendering, aspect ratio and recognition at the actual display size.
+  retain clean contours, aspect ratio and recognition at the actual display size.
+  The current portrait baseline is 256 × 256 px with up to 256 colors and smooth filtering.
 - Use the same character identities before/after the boss and during pause. This is
   portrait work; gameplay animation sprites remain outside #90.
 - Author artwork review should compare the new portraits directly with these references.

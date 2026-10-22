@@ -1,31 +1,28 @@
 package com.jlogicsoftware.kimeria.ui;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.ArtifactInventory;
+import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.world.Level;
 
-/** Original pixel-drawn placeholder portraits; no external art or asset loading. */
+/** Shared image portraits; their textures are owned by the game's Assets cache. */
 public final class HealerDialogueView {
     private static final Color HEALER_GREEN = new Color(.42f, .88f, .48f, 1f);
-    private static final String[] HERO = {
-        "................", ".....hhhhhh.....", "....hhhhhhhh....", "...hhsssssshh...",
-        "...hssessessh...", "....ssssssss....", ".....ssssss.....", "......ssss......",
-        "....rrrrrrrr....", "...rrbbbbbbrr...", "..sssbbbbbbsss..", "..sssbbbbbbsss..",
-        ".....bbbbbb.....", ".....bbbbbb.....", "....bbbbbbbb....", "....bbbbbbbb...."
-    };
-    private static final String[] GUIDE = {
-        "......gggg......", ".....gggggg.....", "....gggggggg....", "...ggssssssgg...",
-        "...gssessessg...", "....ssssssss....", "....wwssssww....", "....wwwwwwww....",
-        ".....wwwwww.....", "...gggwwwwggg...", "..gggggwwggggg..", "..ssggggggggss..",
-        "..ssggggggggss..", "....gggggggg....", "...gggggggggg...", "...gggggggggg..."
-    };
+    private final TextureRegion edgard, healer;
+
+    public HealerDialogueView(Assets assets) {
+        edgard = assets.region("images/portraits/edgard.png", Texture.TextureFilter.Linear);
+        healer = assets.region("images/portraits/healer.png", Texture.TextureFilter.Linear);
+    }
 
     public int choiceAt(Vector2 p, int count) {
         if (p.x < 40 || p.x > 600) return -1;
@@ -37,8 +34,8 @@ public final class HealerDialogueView {
         overlay.panel(batch, 0, 0, 640, 360, 1);
         frame(batch, 28, 32, 88, 88, dialogue.edgardSpeaking());
         frame(batch, 524, 32, 88, 88, !dialogue.edgardSpeaking());
-        portrait(batch, HERO, 40, 40);
-        portrait(batch, GUIDE, 536, 40);
+        portrait(batch, edgard, 40, 40);
+        portrait(batch, healer, 536, 40);
         overlay.body(batch, Msg.EDGARD.t(lang), 72, 108, 100, Color.WHITE);
         overlay.body(batch, Msg.HEALER.t(lang), 568, 108, 100, HEALER_GREEN);
         String checklist = dialogue.paid() ? Msg.PAID.t(lang)
@@ -77,20 +74,11 @@ public final class HealerDialogueView {
         batch.draw(Shaders.whiteQuad(), x + 2, y + 2, w - 4, h - 4);
         batch.setColor(1, 1, 1, 1);
     }
-    private static void portrait(SpriteBatch batch, String[] pixels, float x, float y) {
-        for (int row = 0; row < pixels.length; row++) for (int col = 0; col < pixels[row].length(); col++) {
-            switch (pixels[row].charAt(col)) {
-                case 'h' -> batch.setColor(.28f, .16f, .09f, 1);
-                case 's' -> batch.setColor(.92f, .68f, .42f, 1);
-                case 'e' -> batch.setColor(.1f, .1f, .16f, 1);
-                case 'r' -> batch.setColor(.8f, .18f, .14f, 1);
-                case 'b' -> batch.setColor(.2f, .35f, .65f, 1);
-                case 'g' -> batch.setColor(.22f, .48f, .32f, 1);
-                case 'w' -> batch.setColor(.8f, .83f, .76f, 1);
-                default -> { continue; }
-            }
-            batch.draw(Shaders.whiteQuad(), x + col * 4, y + row * 4, 4, 4);
-        }
-        batch.setColor(1, 1, 1, 1);
+    private static void portrait(SpriteBatch batch, TextureRegion image, float x, float y) {
+        // Fit the entire canvas inside the existing 64x64 slot, including non-square replacements.
+        float scale = Math.min(64f / image.getRegionWidth(), 64f / image.getRegionHeight());
+        float width = image.getRegionWidth() * scale, height = image.getRegionHeight() * scale;
+        batch.setColor(Color.WHITE);
+        batch.draw(image, x + (64 - width) / 2f, y + (64 - height) / 2f, width, height);
     }
 }

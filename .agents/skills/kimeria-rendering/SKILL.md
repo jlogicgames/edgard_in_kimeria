@@ -22,6 +22,13 @@ affected effect or UI renderer. Inspect real textures/sprite sheets before
 changing frame dimensions or orientation. Prefer existing art unless replacing
 it is part of the request.
 
+For new or revised illustrations, follow [art direction](../../../docs/ART_DIRECTION.md)
+and the kimeria-art-direction skill. The author chose a richer, finer and more natural
+remake/remaster while preserving the original artist's style. Dialogue portraits use
+256×256 PNGs with up to 256 palette entries, full-image regions and explicit linear
+filtering in their existing 64×64 logical slots; default gameplay textures remain nearest.
+Do not reintroduce coarse pixel scaling to these illustrations as a global style rule.
+
 ## Keep coordinate and state contracts intact
 
 - World, map and ordinary screen geometry use top-left Y-down coordinates.

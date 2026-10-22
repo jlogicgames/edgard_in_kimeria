@@ -36,6 +36,19 @@ public class Assets implements Disposable {
         return sounds.computeIfAbsent(path, p -> Gdx.audio.newSound(Gdx.files.internal(p)));
     }
 
+    /** Entire image, using its current dimensions and the shared Y-down orientation. */
+    public TextureRegion region(String path) {
+        Texture texture = texture(path);
+        return region(path, 0, 0, texture.getWidth(), texture.getHeight());
+    }
+
+    /** Full image with explicit filtering; filtering is shared by every region of this texture. */
+    public TextureRegion region(String path, Texture.TextureFilter filter) {
+        TextureRegion region = region(path);
+        region.getTexture().setFilter(filter, filter);
+        return region;
+    }
+
     /** A single frame region, flipped for the Y-down camera. */
     public TextureRegion region(String path, float x, float y, float w, float h) {
         TextureRegion region = new TextureRegion(texture(path), (int) x, (int) y, (int) w, (int) h);
