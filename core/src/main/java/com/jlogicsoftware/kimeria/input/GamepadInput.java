@@ -6,8 +6,7 @@ import com.badlogic.gdx.controllers.Controllers;
 
 /**
  * Generic gamepad polling, matching the Rust version's README: left
- * stick/D-pad move, South (A) jump, West/East (X/B) attack or interact
- * (context-sensitive), North (Y) shoot, Start pause; Up/Down/Left/Right or the stick navigate menus,
+ * stick/D-pad move, South (A) jump, West/East (X/B) sword (Up/Down + action selects interaction), North (Y) shoot, Start pause; Up/Down/Left/Right or the stick navigate menus,
  * A confirms, B goes back. Uses {@link ControllerMapping}'s generic
  * Xbox-style button indices, which gdx-controllers resolves per-OS/per-pad,
  * so this isn't tied to one specific controller brand.
@@ -35,6 +34,7 @@ public class GamepadInput {
     private boolean anyButtonEdge;
 
     private float horizontal;
+    private boolean gameplayUp, gameplayDown, actionHeld, shootHeld;
     private boolean jumpHeld;
     // A also confirms menu buttons; a press that a menu consumed must not
     // count as a jump once play starts, so jump stays off until A is released.
@@ -45,7 +45,7 @@ public class GamepadInput {
         return controller() != null;
     }
 
-    private Controller controller() {
+    protected Controller controller() {
         var list = Controllers.getControllers();
         return list.size == 0 ? null : list.first();
     }
@@ -88,6 +88,12 @@ public class GamepadInput {
             ? dpadLeft || dpadRight
             : button(c, m, m == null ? -1 : m.buttonX) || button(c, m, m == null ? -1 : m.buttonB);
         boolean shoot = leftHanded ? dpadUp : button(c, m, m == null ? -1 : m.buttonY);
+
+        actionHeld = action;
+        shootHeld = shoot;
+        float moveY = leftHanded && c != null ? safeAxis(c, m.axisRightY) : axisY;
+        gameplayUp = (!leftHanded && dpadUp) || moveY < -AXIS_DEADZONE;
+        gameplayDown = (!leftHanded && dpadDown) || moveY > AXIS_DEADZONE;
 
         boolean up = dpadUp || axisY < -AXIS_MENU_DEADZONE;
         boolean down = dpadDown || axisY > AXIS_MENU_DEADZONE;
@@ -174,6 +180,11 @@ public class GamepadInput {
         return pauseEdge;
     }
 
+    public boolean upHeld() { return gameplayUp; }
+    public boolean downHeld() { return gameplayDown; }
+    public boolean actionHeld() { return actionHeld; }
+    public boolean shootHeld() { return shootHeld; }
+
     public float horizontal() {
         return horizontal;
     }
@@ -182,7 +193,7 @@ public class GamepadInput {
         return jumpHeld;
     }
 
-    /** The context-sensitive Attack/Interact button (West or East; D-pad Left or Right when left-handed). */
+    /** The directional Action button (West or East; D-pad Left or Right when left-handed). */
     public boolean actionPressed() {
         return actionEdge;
     }

@@ -59,7 +59,7 @@ class LocalizationLayoutTest {
                     assertTrue(height(body, message.t(language), 556) <= 80, prefix + message);
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                     assertTrue(new GlyphLayout(body, message.t(language)).width <= 512, prefix + message);
-                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.SHOOT}) {
+                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED, Msg.DIRECTION_CONFLICT}) {
                     float width = message == Msg.SHOOT ? 52.4f : 62f;
                     assertTrue(new GlyphLayout(hint, message.t(language)).width <= width, prefix + message);
                     assertTrue(height(hint, message.t(language), width) <= 32, prefix + message);

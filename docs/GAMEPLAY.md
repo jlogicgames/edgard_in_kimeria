@@ -23,34 +23,55 @@ release acceptance checks are deferred until those mechanics are added and colle
 
 ## Controls
 
-Controls are three action buttons — **Jump**, **Shoot** and a context-sensitive
-**Attack/Interact** — plus movement. **A / D** move, **J** jump, **K** attack (or
-interact while the player is inside a trigger zone — walls, torches, escalators), **L** shoot,
-**Esc** pause. Gamepad: **left stick / D-pad** move, **South** jump, **West**/**East**
-attack/interact, **North** shoot, **Start** pause. Touch devices get an on-screen stick and the
-same three buttons (stick left, buttons right); the Attack/Interact button relabels itself inside
-a trigger zone. **Left-handed mode** (Options) mirrors all three. Touch: stick right, buttons
-left. Keyboard: **arrows** move, **Z** jump, **X** attack/interact, **C** shoot (the two key sets
-are disjoint, so the arrows work only in this mode). Gamepad: **right stick** moves and the
-D-pad takes the face buttons' place (**Down** jump, **Left**/**Right** attack/interact, **Up**
-shoot); menus and **Start** are the same in both modes. Shoot is bound everywhere but inert until the ranged attack (fireball or throwing knife) is built. Menus: **arrows/Tab** navigate, **Enter/Space/A** confirm,
-**Esc/B** back (Esc/B/Start resume from the pause menu, which also offers **Restart Level**; on the desktop main menu they select
-Exit). Debug keys: **F1** hitbox gizmos, **F2**
-invulnerability, **F3** spawn shockwave + ripple, **F4** advance level, **F5** reach a
-checkpoint, **F6** advance to the next room (no action in the last room).
-To test the forest boss from a new run: F4 to forest, then F6 twice. The second transition
-opens the healer dialogue; choose the fight to enter the boss chamber.
+Three action buttons are **Jump**, **Action** and **Ranged**. Plain Action always
+selects the grounded sword, including while carrying. **Down + Action** picks up
+one nearby object or puts it down; **Up + Action** operates one selected mechanism.
+Conflicting Up+Down consumes Action without doing anything. Holding Action never
+repeats an interaction. Ranged throws the held object without spending ammunition;
+with an empty hand it spends one fireball, if available.
 
-**Future design:** [D16](DECISIONS.md#d16-expanded-campaign-wind-ladders-and-carried-objects)
-adds vertical ladders and one carried object, with sword attacks still available,
-pick-up/put-down on interaction and throwing on the ranged command. These are
-planned rules, not available controls in this build. The author has accepted
-Action = sword, Down + Action = pick up/put down, Up + Action = mechanism,
-and Ranged = held-object throw or empty-handed fireball. Implementation is tracked
-in [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95); target selection,
-ladder integration and device feedback still need work. Double jump from the Steppe
-is also future design; see [D18](DECISIONS.md#d18-directional-controls-steppe-double-jump-and-replay-target)
-and [player tools](GAME_DESIGN.md#player-tools).
+| Device | Normal | Left-handed (Options) |
+| --- | --- | --- |
+| Keyboard | A/D horizontal, W/S vertical; J jump, K Action, L Ranged | Arrows horizontal/vertical; Z jump, X Action, C Ranged |
+| Gamepad | Left stick/D-pad horizontal/vertical; A jump, X/B Action, Y Ranged | Right stick horizontal/vertical; D-pad Down jump, Left/Right Action, Up Ranged |
+| Touch | Two-axis stick left, three buttons right | Stick right, buttons left |
+
+**Esc/Start** pauses. Menus: arrows/Tab navigate, Enter/Space/A confirm, Esc/B back;
+Esc/B/Start resumes the pause menu. Debug keys F1 colliders, F2 invulnerability,
+F3 effects, F4 next level, F5 checkpoint, F6 next room remain unchanged.
+
+The Forest entrance has a stone, portable torch and a linked light to try the new
+controls. The entire first Forest room is the teaching room: contextual pickup,
+placement, throw and mechanism labels are available at every position/height,
+including retries and collection returns. Later rooms/levels show no such teaching
+labels. This replaces the earlier 320×144 rectangle, one-time and 50 px rules.
+While holding a stone or torch near a usable lever, show its Up + Action instruction
+together with any active Put down/Throw reminder; carrying must never hide the mechanism lesson.
+This combined label stays near the lever, with Turn on/Turn off reflecting its state.
+Each new pickup arms a fixed-position Put down/Throw reminder. It fades out when
+the camera begins scrolling after the hero leaves its dead zone, and stays hidden
+for the rest of that pickup. Stopping/returning does not revive it; picking up an
+object again in the first room does. A room-edge camera clamp does not dismiss it
+merely because the hero walked, and shake/respawn pans do not count. Mechanism
+lessons remain repeatable even after the carrying reminder has expired.
+Labels slide 12 logical pixels upward: below → normal position while fading
+in over 0.18 s, then normal position → above while fading out over 0.25 s.
+There is no bottom control panel. [D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket)
+accepts exactly one carryable slot, shared by stone and torch, with its object
+always visible in the animated front hand. There is no separate pocket. Both stone
+and torch follow the front palm through turning, movement and jumps and render
+after the hero. World items retain tiny hard-edged pixel art; HUD icons use
+separate detailed images.
+Coin and fireball icons use equal 32×32 logical slots and matching count text.
+Fireball stock is at the top right in release launches. Development launches
+reserve the far-right column for FPS and shift stock left to avoid overlap.
+Pickup requires contact within a 3 px tolerance;
+touch labels also distinguish sword, pickup/place, mechanism, throw and fireball.
+Stock starts at three, persists between the two Forest levels and restores to room
+entry stock on death. The boss still requires sword hits. Full behavior, target
+selection, recovery, test evidence and the explicit **#99 ladder dependency** are in
+[Directional actions](DIRECTIONAL_CONTROLS.md). Ladders, rare refills and Steppe double
+jump remain separate work; no available ladder controls are claimed.
 
 The web build opens on a single-button start screen (click, Enter or Space): browsers block audio
 until the page has had a user gesture, so the menu music waits for it. Other platforms skip it.

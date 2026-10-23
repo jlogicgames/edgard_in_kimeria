@@ -235,14 +235,14 @@ are concrete forms of the attacks.
 | --- | --- | --- |
 | Movement and jump | Positioning, avoiding danger, precision and timing between supports. | Implemented in the test build. |
 | Melee | Remove an enemy from the right position at the right moment. | Sword implemented; current limits in D4/D10. |
-| Ranged attack | A consumable advantage against distant danger. | Accepted direction; button exists, attack not implemented. |
-| Interaction | Operate a lever or another mechanism. | Context-sensitive attack/interact button exists. |
-| Pick up and place | Move a stone or torch to change the room situation. | Same interaction button intended; carrying needs implementation/design. |
-| Throw an object | Affect something distant or place an object ahead. | Planned. |
+| Ranged attack | A consumable advantage against distant danger. | Consumable fireball implemented for the test campaign; rare refills/balance remain #98. |
+| Interaction | Operate a lever or another mechanism. | Up + Action selects a single mechanism (#95). |
+| Pick up and place | Move a stone or torch to change the room situation. | Down + Action implemented for one stone/portable torch (#95); environmental puzzles remain #97. |
+| Throw an object | Affect something distant or place an object ahead. | Implemented on Ranged; does not spend fireballs (#95). |
 | Vertical ladder | Change elevation, choose a route and movement timing. | Accepted addition; detailed controls open. |
 | Double jump | An extra airborne jump used in authored routes and wind tasks. | Accepted from Steppe; unlock and exact rules open. |
 
-The current scheme has three action buttons: jump, attack/interact and ranged.
+The current scheme has three action buttons: jump, directional action and ranged.
 Keyboard, gamepad, touch and left-handed bindings are in
 [GAMEPLAY.md](GAMEPLAY.md#controls).
 
@@ -253,7 +253,9 @@ implicitly change these existing rules.
 
 **Accepted carrying and throwing rules:**
 
-- Carry **one object in one hand**; sword melee remains available.
+- Carry **one object in one shared slot**, always visible in the front hand;
+  there is no additional pocket slot ([D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket)).
+  Sword melee remains available.
 - Pick up/place uses interaction; throwing uses the ranged button.
 - With an object held, ranged throws it. Empty-handed, it uses a fireball if ammunition
   is available. Throwing a stone or torch does not spend fireball ammunition.
@@ -261,11 +263,54 @@ implicitly change these existing rules.
   empty. This separates resource expenditure; it does not forbid multiple linked
   effects from a mechanism interaction.
 
-These rules are not implemented. Action selection is accepted below; exact target
-selection and actions allowed on ladders remain open. Carrying alone does not
+The one-slot input/state, throwing rules and deterministic target selection are implemented in
+[the #95 baseline](DIRECTIONAL_CONTROLS.md); visible front-hand stone rendering
+was completed on 2026-10-23.
+Actions allowed on ladders remain #99. Carrying alone does not
 prohibit normal movement or jumping; no such extra restrictions were accepted.
 
+### One visible carryable slot (D23)
+
+**Accepted by the author, 2026-10-23:** one carried object, always visible in front
+of the hero. The pocket-plus-hand alternative below was considered and rejected.
+[D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket) is the
+decision record, including the rationale and conditions for a future revision.
+
+| Area | One visible carried item | Pocket plus hand |
+| --- | --- | --- |
+| Readability | Show the existing sprite in the front hand, optionally repeat its identity in the HUD. | Show both occupied slots in the HUD and distinguish their roles. |
+| Commands | Existing pickup/place/throw priority can remain. | Define which slot each command uses, whether items can swap, and what happens when the destination is full. A new button is one option, not a requirement. |
+| Puzzles | Choosing what to carry and where to place it remains a constraint. | Simultaneous light and stone transport becomes possible; review planned obstacle combinations. |
+| State | Current room-owned carryable lifecycle can remain. | Define both slots at death, forward exit, collection return and level restart. Two slots do not inherently require persistent saves. |
+
+The chosen model keeps commands unambiguous and preserves choosing, placing and
+retrieving tools as puzzle decisions. Carrying both a light and a stone could
+simplify planned obstacles while making command selection and teaching more
+complex. The old invisible stone was a rendering issue, not a second slot.
+Recipe ingredients, coins and fireball ammunition remain separate resources.
+Current room lifecycle remains in force, with no new transport/save rules.
+The held stone now appears in the animated front hand, drawn after the hero just
+like the torch. One-slot state and the existing input rules remain in place.
+
+Reference examples checked against original manuals: [Super Mario World](https://www.nintendo.co.jp/clvs/manuals/common/pdf/CLV-P-SAAAE.pdf)
+uses a held item with directional throwing; [Captain Toad: Treasure Tracker](https://www.nintendo.com/eu/media/downloads/games_8/emanuals/wii_u_6/captain_toad__treasure_tracker/ElectronicManual_WiiU_CaptainToadTreasureTracker_EN.pdf)
+lets the player carry and throw turnips while a separate headlamp supplies light;
+[Oddworld: New 'n' Tasty](https://www.oddworld.com/nntinstructions/) gives throwable
+stones, meat and grenades an explicit aiming/throwing interaction. These examples
+illustrate different choices; none defines a mandatory two-slot convention.
+
 ### Making the shared button understandable
+
+[D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying)
+sets the whole first Forest room as the contextual teaching room, with repeatable
+instructions on retries and returns. The former 320×144 region is removed. A held
+stone/torch does not suppress a nearby usable mechanism's lesson: show its activation
+alongside any active placement/throwing reminder, near the mechanism. Each new pickup
+in the teaching room arms its own fixed-position reminder; the first camera scroll
+after leaving the dead zone dismisses it until the next pickup. Stopping or returning
+does not revive it. Mechanism lessons remain repeatable independently of that
+reminder, so the text cannot linger at a screen edge after travelling. Later rooms/levels omit these
+control lessons. This is presentation scope, not a change to one-slot/input rules.
 
 A shared button risks picking something up when the player wants to attack, or
 spending scarce ammunition when they meant to throw a stone. Distinguish the
@@ -283,8 +328,9 @@ remain open.
 | Ranged with an empty hand | Fireball, if ammunition is available. |
 
 Test directional conflicts with ladders and the touch stick, both handedness
-layouts, and unambiguous target selection. This is approved for implementation;
-the test build's current controls have not changed yet.
+layouts, and unambiguous target selection. Implemented in the test build on
+2026-10-22; [behavior and evidence](DIRECTIONAL_CONTROLS.md) distinguish simulated
+device tests from outstanding physical-device and ladder checks.
 
 An earlier alternative used a highlighted nearby object and a labelled contextual
 action, as in Zelda. It still conflicts with Edgard's sword during combat; a label
@@ -472,7 +518,7 @@ Further discussion must specify:
 
 1. Forest, Swamp and Fortress mechanics, plus concrete Steppe wind rules.
 2. Validation of five levels × five rooms per stage, pacing, bosses and fragment acquisition.
-3. Implementing #95, ladder actions, double-jump acquisition and the existing wall jump's campaign role.
+3. Ladder actions (#99), double-jump acquisition and the existing wall jump's campaign role; #95 dispatch is implemented.
 4. Ranged stock, rare refills and restoration after Continue.
 5. Elixir/fireball prices, coin income, recipes, purchase limits and collection/return boundaries.
 6. Persistent tablet progress and the story's conclusion.

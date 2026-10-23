@@ -24,8 +24,13 @@ public interface GameContext {
     /** Shared warning timing for every timed trap. */
     TrapWarnings trapWarnings();
 
-    /** True while the player overlaps a trigger zone, i.e. the action button interacts instead of attacking. */
+    /** True while a mechanism can be selected with Up + Action. */
     boolean interactAvailable();
+
+    default com.jlogicsoftware.kimeria.localization.Msg actionLabel() { return com.jlogicsoftware.kimeria.localization.Msg.ATTACK; }
+    default com.jlogicsoftware.kimeria.localization.Msg rangedLabel() { return com.jlogicsoftware.kimeria.localization.Msg.FIREBALL; }
+    default String actionPrompt() { return ""; }
+    default String rangedPrompt() { return ""; }
 
     /** Debug aid (F2): ignores lethal damage so a level can be walked end to end. */
     boolean invulnerable();

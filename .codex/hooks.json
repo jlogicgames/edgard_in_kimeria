@@ -1,0 +1,30 @@
+{
+  "description": "Require authored sprites for world artwork; inspect real source after edits and before finishing.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_sprite_art.py\" --hook",
+            "timeout": 10,
+            "statusMessage": "Checking sprite artwork policy"
+          }
+        ],
+        "matcher": "Bash|apply_patch|Edit|Write"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_sprite_art.py\" --hook",
+            "timeout": 10,
+            "statusMessage": "Checking sprite artwork policy"
+          }
+        ]
+      }
+    ]
+  }
+}

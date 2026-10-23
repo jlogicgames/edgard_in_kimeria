@@ -11,19 +11,22 @@ import com.badlogic.gdx.Input.Keys;
  */
 public enum KeyBindings {
     /** Movement on the left hand (A/D), actions on the right (J/K/L). */
-    RIGHT_HANDED(new int[]{Keys.A}, new int[]{Keys.D}, Keys.J, Keys.K, Keys.L),
+    RIGHT_HANDED(new int[]{Keys.A}, new int[]{Keys.D}, Keys.W, Keys.S, Keys.J, Keys.K, Keys.L),
     /** Movement on the arrow keys (right hand), actions on Z/X/C (left hand). */
-    LEFT_HANDED(new int[]{Keys.LEFT}, new int[]{Keys.RIGHT}, Keys.Z, Keys.X, Keys.C);
+    LEFT_HANDED(new int[]{Keys.LEFT}, new int[]{Keys.RIGHT}, Keys.UP, Keys.DOWN, Keys.Z, Keys.X, Keys.C);
 
     private final int[] left, right;
     private final int jump, action, shoot;
+    private final int up, down;
 
-    KeyBindings(int[] left, int[] right, int jump, int action, int shoot) {
+    KeyBindings(int[] left, int[] right, int up, int down, int jump, int action, int shoot) {
         this.left = left;
         this.right = right;
         this.jump = jump;
         this.action = action;
         this.shoot = shoot;
+        this.up = up;
+        this.down = down;
     }
 
     public static KeyBindings of(boolean leftHanded) {
@@ -41,6 +44,15 @@ public enum KeyBindings {
     public boolean jumpHeld() {
         return Gdx.input.isKeyPressed(jump);
     }
+
+    public boolean upHeld() { return Gdx.input.isKeyPressed(up); }
+    public boolean downHeld() { return Gdx.input.isKeyPressed(down); }
+    public boolean actionHeld() { return Gdx.input.isKeyPressed(action); }
+    public boolean shootHeld() { return Gdx.input.isKeyPressed(shoot); }
+    public String actionName() { return Keys.toString(action); }
+    public String rangedName() { return Keys.toString(shoot); }
+    public String upName() { return Keys.toString(up); }
+    public String downName() { return Keys.toString(down); }
 
     public boolean actionJustPressed() {
         return Gdx.input.isKeyJustPressed(action);

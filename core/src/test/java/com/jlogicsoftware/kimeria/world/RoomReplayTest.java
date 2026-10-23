@@ -255,7 +255,7 @@ class RoomReplayTest {
     private float replay(Level level, String route, boolean collect, int delayFrames, float[] jumps, boolean artifactsRoute) {
         Player player = level.player;
         int jump = 0, lastJumpFrame = -2;
-        boolean actionWasDown = false;
+        boolean actionWasDown = false, wasMechanism = false;
         // Entry collection route: get the coin behind the entrance, then return once for the ground coin.
         int phase = collect && route.equals("forest-entry") ? 0 : 1;
         for (int frame = 0; frame < 60 * COLLECTION_LIMIT; frame++) {
@@ -301,13 +301,16 @@ class RoomReplayTest {
                 if (player.isClambering() && frame % 16 == 0 && frame - lastJumpFrame > 1) {
                     held.add(Input.Keys.J); lastJumpFrame = frame;
                 }
-                boolean action = player.canInteract();
+                boolean mechanism = player.canInteract();
+                boolean action = mechanism;
                 for (var object : level.objects) if (object instanceof Enemy<?> enemy) {
                     Rectangle e = enemy.hitboxBounds(), me = player.hitboxBounds();
                     if (player.isOnGround() && e.x >= me.x && e.x - (me.x + me.width) < 18
-                        && e.y < me.y + me.height && e.y + e.height > me.y) action = true;
+                        && e.y < me.y + me.height && e.y + e.height > me.y) { action = true; mechanism = false; }
                 }
-                if (action && !actionWasDown) pressed.add(Input.Keys.K);
+                if (mechanism) held.add(Input.Keys.W);
+                if (action && (!actionWasDown || wasMechanism != mechanism)) pressed.add(Input.Keys.K);
+                wasMechanism = mechanism;
                 actionWasDown = action;
             }
             // Match KimeriaGame.render: scale the world step, but keep keyboard buffering on real time.

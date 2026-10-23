@@ -72,9 +72,13 @@ the render loop.
 | `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. The sword bonus is tenfold against this boss only. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |
 | `ABOUT_BODY*`, `ABOUT_GAMEPAD*` | Preserve exact key/button bindings for normal and left-handed modes. Key names such as J, K, L, Z, X, C identify physical controls. |
-| `ATTACK`, `INTERACT`, `SHOOT` | Compact touch labels. Attack and Interact share one context-sensitive button. Shoot is currently reserved. |
+| `ATTACK`, `INTERACT`, `SHOOT`, `PICK_UP`, `PUT_DOWN`, `THROW`, `FIREBALL`, `NO_AMMO`, `PLACE_BLOCKED`, `DIRECTION_CONFLICT` | Compact directional-action touch labels. Plain Action means sword; Up/Down selects mechanism or pickup/place. Ranged means object throw or consumable fireball. |
 | `ABOUT_RULES` | One-hit death, unlimited room retries, provisional pickup rollback and retained secured pickups. |
 | `LONGER_TRAP_WARNINGS` | The assist option extends trap warnings; it does not grant invulnerability. |
+
+The #95 binding/target prompt keys include `ACTION`, `STONE`, `TORCH`, `MECHANISM`,
+`UP`, `DOWN`, `STICK`, `LEFT_STICK`, `RIGHT_STICK`, `DPAD_UP` and `DPAD_ACTION`.
+See [directional controls](DIRECTIONAL_CONTROLS.md) for exact bindings and test scope.
 
 ## Glyph coverage and uppercase
 

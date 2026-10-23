@@ -44,17 +44,29 @@ through the wrapper; no separate installation is needed.
 
 On Windows, use `gradlew.bat` instead of `./gradlew`.
 
+Local desktop (`run`/`runDev`) and browser development targets show FPS at the
+far right and reserve space for it in the HUD. `buildDesktop` and `buildWeb`
+produce release launches without that counter; the fireball stock occupies the
+rightmost HUD position. Coin and fireball icons both use 32×32 logical slots.
+`runDev` selects debug mode through DevHost as well as the ordinary launcher's
+configuration. After updating DevHost itself, stop and restart `runDev` once:
+F7 restarts the hosted game, not the dev launcher/host.
+
 ## Basic controls
 
 | Action | Keyboard | Gamepad |
 | --- | --- | --- |
-| Move | A / D | Left stick / D-pad |
+| Move / vertical direction | A / D, W / S | Left stick / D-pad |
 | Jump | J | South button |
-| Attack / interact | K | West / East button |
+| Sword | K | West / East button |
+| Pick up / put down | S + K | Down + West / East |
+| Mechanism | W + K | Up + West / East |
+| Throw held object / fireball | L | North button |
 | Pause | Esc | Start |
 
 Touch devices show on-screen controls. Language and left-handed controls are available
-in Options. The Shoot action is reserved for a future ranged attack.
+in Options. Empty-handed ranged attacks spend one fireball; object throws spend none.
+See [directional controls](docs/DIRECTIONAL_CONTROLS.md) for both layouts and recovery rules.
 
 Translations live in editable UTF-8 catalogs. See [localization](docs/LOCALIZATION.md)
 for editing, validation and font generation.

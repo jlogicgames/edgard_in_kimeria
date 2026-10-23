@@ -125,7 +125,9 @@ final class DevHost implements ApplicationListener {
             // The parent has libGDX but not core, so every game class comes from classesDir and
             // dies with this loader: that is what makes a restart pick up structural changes.
             loader = new URLClassLoader(new URL[]{classesDir.toUri().toURL()}, DevHost.class.getClassLoader());
-            game = (ApplicationListener) loader.loadClass(GAME_CLASS).getDeclaredConstructor().newInstance();
+            // DevHost bypasses Lwjgl3Launcher, so it must select the debug game explicitly on every restart.
+            game = (ApplicationListener) loader.loadClass(GAME_CLASS)
+                .getDeclaredConstructor(boolean.class, boolean.class).newInstance(false, true);
             game.create();
             if (width > 0) game.resize(width, height);
             faulted = false;

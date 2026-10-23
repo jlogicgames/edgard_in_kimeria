@@ -22,6 +22,6 @@ public class Lwjgl3Launcher {
             config.setWindowedMode(Settings.WINDOWED_WIDTH, Settings.WINDOWED_HEIGHT);
         }
         config.setResizable(true);
-        new Lwjgl3Application(new KimeriaGame(), config);
+        new Lwjgl3Application(new KimeriaGame(false, Boolean.getBoolean("kimeria.debug")), config);
     }
 }

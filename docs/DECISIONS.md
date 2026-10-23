@@ -390,7 +390,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   a held object; with no held object it uses a fireball if ammunition is available.
   Throwing an object does not spend fireball ammunition or also fire after the hand
   becomes empty. Directional attack/interact arbitration is now accepted in D18
-  and tracked in #95; ladder actions and device feedback still need implementation.
+  and implemented in #95 with device feedback; ladder actions remain #99.
 - **Retry:** Ranged ammunition follows room rollback, including pickups and their
   sources, without duplication. Successful-room expenditure carries forward.
   Persistent ammunition/tablet handling on Continue still needs a separate decision;
@@ -427,7 +427,8 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   Down + Action picks up/puts down; Up + Action activates a mechanism. Ranged throws
   the held object, or uses a fireball when empty-handed. One carried object and
   sword availability remain as in D16. Implementation:
-  [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95).
+  [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95), implemented 2026-10-22;
+  [current contract and dependencies](DIRECTIONAL_CONTROLS.md).
 - **Movement progression:** Double jump becomes available starting with the Steppe.
   Design subsequent rooms around that ability rather than an arbitrary optional
   upgrade purchase. The unlock event and exact movement rules still need design;
@@ -503,3 +504,98 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   artwork revision at game size separately from automated checks.
 - **Details:** [Art direction](ART_DIRECTION.md), [portraits](PORTRAITS.md),
   [original references](ORIGINAL_DOS.md).
+
+
+## D22. Native world pixels and separate detailed HUD icons
+
+- **Status:** Explicit author correction, 2026-10-22.
+- **Decision:** World art keeps the existing tiny, limited-color pixel style with
+  crisp boundaries and no smoothing. New small objects use 8×8/8×16/16×16 frames
+  and at most 16 entries including binary transparency. D21's detailed portrait
+  finish is not the world sprite baseline.
+- **HUD:** Separate 128×128, up to 256-entry illustrated icons may show the same
+  objects with more detail. The world chicken and the HUD chicken keep the same
+  cooked-food identity, while their resolutions and finish differ.
+- **Presentation (clarified 2026-10-23, D24):** All item teaching is contextual and
+  repeatable throughout the entire first Forest room, including while carrying.
+  The earlier 320×144 area, one-time and 50 px limits are superseded.
+  Text fades and slides upward
+  through its normal local position. The earlier hidden carried-stone presentation
+  is superseded by D23: every carried object must be visible in the front hand.
+  The torch's animated free-front-palm attachment remains the positioning baseline.
+- **Details:** [Art direction](ART_DIRECTION.md), [directional actions](DIRECTIONAL_CONTROLS.md).
+
+## D23. One visible carried object, with no separate pocket
+
+- **Status:** Explicitly accepted by the author, 2026-10-23: “Выбираю один слот.”
+- **Decision:** The hero has exactly **one carryable slot** shared by stones,
+  portable torches and other movable puzzle objects. Its object is always visible
+  in the animated front hand, in front of the hero. A stone does not occupy a
+  separate hidden pocket; stone plus torch cannot be carried simultaneously.
+- **Controls:** Keep the existing pickup/place and ranged-throw rules. With an
+  object held, Ranged throws that object; empty-handed it can spend a fireball.
+  Sword melee, normal movement and jumping remain available while carrying.
+  No slot selection, swapping command or second-slot priority is introduced.
+- **Why:** Visible carrying communicates what the hero has without remembering
+  a hidden state. One slot preserves a meaningful puzzle choice: which tool to
+  bring, where to leave it and when to retrieve it. Two slots would remove some
+  of these choices, potentially simplifying light-plus-stone obstacles, while
+  adding ambiguity to throwing, placement, full-slot pickup and teaching across
+  keyboard, gamepad and touch. Additional inventory management is not the aim
+  of the current arcade puzzle-platforming design.
+- **Rejected alternative:** A pocket stone plus a hand torch, with two HUD slots.
+  This is not a presentation-only change: it permits simultaneous tools and
+  requires different command/state rules and puzzle balancing. Hiding a stone
+  in the renderer is not a reason to create this mechanic. A future proposal
+  should demonstrate a concrete authored puzzle need and explicitly revise D23;
+  do not reopen the decision merely because the item is hard to see.
+- **Scope:** Recipe ingredients, coins and fireball stock keep their separate
+  existing inventory/resource rules; they do not consume this carryable slot.
+  A HUD icon may mirror the held object without creating another slot. Current
+  room ownership, death/revisit reconstruction and release at forward room exit
+  remain unchanged. This decision adds no cross-room transport or save fields.
+- **Implementation status:** One-slot input/state and visible front-hand carrying
+  for both stone and torch are implemented (2026-10-23). Both use the player's
+  foreground pass and animated palm attachment. A carried-item HUD icon is not
+  implemented by this change; it remains optional presentation.
+- **Details:** [Carrying model](GAME_DESIGN.md#one-visible-carryable-slot-d23),
+  [current behavior](DIRECTIONAL_CONTROLS.md), [room lifecycle](ROOMS.md),
+  [mechanics MVP](ROADMAP.md#mechanics-mvp).
+
+## D24. The whole first room teaches, including mechanisms while carrying
+
+- **Status:** Explicit author correction, 2026-10-23.
+- **Decision:** The entire first Forest room is the tutorial scope for contextual
+  item/mechanism instructions, at all positions and heights. Use active room/level
+  identity, with no separate 320×144 rectangle or fixed travel-distance budget.
+  Instructions remain repeatable after death and on collection
+  return to this room; subsequent rooms and levels omit these teaching labels.
+- **Carrying:** Holding the one stone/torch slot must not hide a usable mechanism's
+  instruction. Near a lever, show Up + Action and its current Turn on/Turn off
+  action together with any still-active Put down/Throw reminder. Place this combined
+  label by the visible lever rather than at the earlier pickup point. Elsewhere,
+  retain the carrying label's pickup anchor. Mechanism lessons remain available
+  even after that pickup's carrying reminder has ended.
+- **Pickup reminder lifetime (clarified 2026-10-23):** Show Put down/Throw at each
+  new pickup in the first teaching room. Keep the world anchor fixed while the
+  player moves within the camera's dead zone. As soon as camera following begins
+  to scroll the room-clamped view, fade/slide this reminder out once for that
+  pickup; stopping or returning must not revive it or pin it to the viewport edge.
+  A new pickup arms it again, including retries. Use camera movement, not distance
+  walked, facing, screen shake or scripted respawn pans: movement against a clamped
+  room edge may leave the camera still. This is per pickup, not a global learned flag.
+  Existing fade/slide timings remain unchanged.
+- **Why:** The first room exists for learning. A hidden rectangle suppresses
+  instruction without communicating why, and carrying does not make a switch
+  unusable. Teaching only placement/throwing in that situation hides a valid action
+  and prevents the player from learning how their tools work together.
+- **Scope:** Reach, trigger eligibility, the one-slot model and action bindings are
+  unchanged. Context determines which instructions appear; whole-room scope does
+  not mean showing every instruction continuously. Device-specific button labels
+  and target brackets remain available outside the teaching room.
+- **Validation:** Check both handedness layouts, stone and torch, state changes,
+  first-room positions beyond the former rectangle, retries/collection returns and
+  suppression in later rooms. Scripted checks do not replace novice playtests.
+- **Tracked in:** [#131](https://github.com/jlogicgames/edgard_in_kimeria/issues/131),
+  [author clarification and playtest checks](https://github.com/jlogicgames/edgard_in_kimeria/issues/131#issuecomment-6360805528),
+  [directional actions](DIRECTIONAL_CONTROLS.md), [room authoring](ROOMS.md).

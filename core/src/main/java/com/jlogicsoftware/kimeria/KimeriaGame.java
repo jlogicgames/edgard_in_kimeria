@@ -78,6 +78,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private Player player;
     private Level level;
+    private final boolean platformTouch;
+    private final boolean debugMode;
+
+    public KimeriaGame() { this(false); }
+
+    public KimeriaGame(boolean platformTouch) { this(platformTouch, false); }
+
+    public KimeriaGame(boolean platformTouch, boolean debugMode) {
+        this.platformTouch = platformTouch;
+        this.debugMode = debugMode;
+    }
+
     private Hud hud;
     private TouchControls touchControls;
     private Overlay overlay;
@@ -96,6 +108,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
     private final ArtifactInventory artifacts = new ArtifactInventory();
+    private final RangedStock rangedStock = new RangedStock();
     /** Coin count when the level began; Restart Level goes back to it. */
     private int levelStartCoins = 0;
     private int roomStartCoins = 0;
@@ -159,7 +172,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         uiViewport = new FitViewport(LOGICAL_W, LOGICAL_H, screenCamera);
 
         hud = new Hud(assets, this, LOGICAL_W, LOGICAL_H);
-        touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H);
+        touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H, platformTouch);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
         healerView = new HealerDialogueView(assets);
         menuBackdrop = new MenuBackdrop();
@@ -314,6 +327,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      */
     private void restartLevel() {
         artifacts.restartLevel();
+        rangedStock.restartLevel();
         coinsCollected = levelStartCoins;
         pauseMenu.selected = 0; // so the next pause does not open on Restart Level
         player = new Player(assets, this, 0, 0);
@@ -330,6 +344,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         healer = null;
         pausedHealer = false;
         artifacts.clear();
+        rangedStock.reset();
         roomFade.cancel();
         gameStarted = false;
         levelLoadDelay = -1f;
@@ -392,6 +407,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     /** Builds the player and level from {@code data}, behind the loading screen. */
     private void startGame(StartData data) {
         artifacts.clear();
+        rangedStock.reset();
         currentLevelIndex = Math.floorMod(data.levelIndex(), LEVEL_NAMES.size());
         coinsCollected = data.coins();
         player = new Player(assets, this, 0, 0);
@@ -415,10 +431,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void loadLevel() {
         artifacts.beginLevel();
+        rangedStock.beginLevel();
         levelStartCoins = coinsCollected;
         roomStartCoins = coinsCollected;
         Rectangle visible = new Rectangle();
-        level = new Level(assets, this, player, LEVEL_NAMES.get(currentLevelIndex), () -> visibleWorldRect(visible));
+        level = new Level(assets, this, player, LEVEL_NAMES.get(currentLevelIndex), () -> visibleWorldRect(visible), rangedStock);
     }
 
     /** Rebuilds only the active room, at a frame boundary without reloading the map. */
@@ -596,9 +613,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // HUD + overlays draw in fixed logical screen space (not affected by world camera).
         batch.setProjectionMatrix(screenCamera.combined);
         batch.begin();
+        String fpsText = debugMode && !roomFade.active() && !storyScreenActive()
+            && uiState != UiState.HEALER && !pausedHealer ? Gdx.graphics.getFramesPerSecond() + " FPS" : "";
         if (levelVisible) {
             hud.render(batch, level != null ? level.boss() : null,
-                level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f);
+                level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f, player, fpsText);
+            if (uiState == UiState.PLAYING && !roomFade.active() && player != null) hud.renderInteractionHint(batch, player, camera, dt);
             if (uiState == UiState.PLAYING) touchControls.render(batch);
         }
         if (menuBackdropActive) {
@@ -607,7 +627,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
-        if (!roomFade.active() && !storyScreenActive() && uiState != UiState.HEALER && !pausedHealer) overlay.topRight(batch, Gdx.graphics.getFramesPerSecond() + " FPS", LOGICAL_W - 6, 6);
+        if (!fpsText.isEmpty()) overlay.topRight(batch, fpsText, LOGICAL_W - 6, 6);
         overlay.flushText(batch);
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
         if (storyScreenActive()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
@@ -949,6 +969,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     public Language language() {
         return language;
     }
+
+    @Override
+    public Msg actionLabel() { return player == null ? Msg.ATTACK : player.actionLabel(); }
+
+    @Override
+    public Msg rangedLabel() { return player == null || level == null ? Msg.FIREBALL : player.rangedLabel(); }
+
+    @Override
+    public String actionPrompt() { return player == null || level == null ? "" : player.actionPrompt(); }
+
+    @Override
+    public String rangedPrompt() { return player == null || level == null ? "" : player.rangedPrompt(); }
 
     @Override
     public boolean interactAvailable() {

@@ -217,3 +217,13 @@ Sources: [MVP](MVP.md), [post-boss validation](POST_BOSS_VALIDATION.md).
   mechanics are in place. Record any new deferral explicitly rather than marking it passed.
 - [ ] Remove temporary previews, hooks, test saves/preferences, processes, contexts and other
   artifacts created for the pass. Preserve the user's normal data and intended evidence.
+
+## Directional controls (#95)
+
+- [ ] Check a physical gamepad and physical multitouch device in both layouts: sword
+  while carrying, pickup/place, mechanism choice, throw/fireball and zero stock.
+- [ ] Check entrance practice hints/target marker at gameplay scale and after resize/
+  letterboxing, in all five languages. Automated font layout and simulated devices
+  are recorded in [directional controls](DIRECTIONAL_CONTROLS.md), not physical checks.
+- [ ] With #99, validate real ladder entry/climbing and directional-action ownership;
+  the vertical movement hook alone is not ladder integration.

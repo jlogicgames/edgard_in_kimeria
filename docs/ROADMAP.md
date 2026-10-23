@@ -64,11 +64,15 @@ playtests and one-minute learning checks with unfamiliar players belong to phase
 
 ### 1.1. Shared player tools
 
-- [ ] [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95) Implement the accepted control scheme: plain action attacks; down + action
+- [x] [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95) Implement the accepted control scheme: plain action attacks; down + action
   picks up/places; up + action operates a mechanism; ranged throws a held object
-  or fires a fireball with an empty hand.
+  or fires a fireball with an empty hand. Implemented 2026-10-22; [evidence and explicit dependencies](DIRECTIONAL_CONTROLS.md).
 - [ ] [#97](https://github.com/jlogicgames/edgard_in_kimeria/issues/97) Implement carrying one object in one hand, with the sword still available,
-  plus placing and throwing. A stone is sufficient here; add the torch in Fortress.
+  plus placing and throwing. [D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket)
+  fixes one shared carryable slot with its object always visible in the front hand;
+  no separate pocket or simultaneous stone and torch. The held stone now renders
+  in the front hand (2026-10-23); authored puzzle acceptance remains open. A stone is sufficient for the initial
+  puzzle prototype; develop authored torch/light puzzles in Fortress.
 - [ ] [#98](https://github.com/jlogicgames/edgard_in_kimeria/issues/98) Implement consumable ranged attacks and rare refills. Separate throwing
   from fireball expenditure; a single press must not perform both.
 - [ ] [#99](https://github.com/jlogicgames/edgard_in_kimeria/issues/99) Implement vertical ladders. Define entry, ascent/descent, exit,
@@ -181,6 +185,13 @@ next experiment. Four stage names/icons alone do not complete the mechanics MVP.
   Do not turn the hypotheses into a timer.
 - [ ] [#131](https://github.com/jlogicgames/edgard_in_kimeria/issues/131) Check teaching without author hints: controls, danger warnings,
   room objective and the optional route's purpose are understood.
+  [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying)
+  makes the entire first Forest room the contextual teaching scope. Include a
+  participant holding a stone/torch at a lever: activation, placement and throw
+  must all be discoverable. Each pickup's placement/throw reminder ends when camera
+  following starts after leaving the dead zone; every new pickup in this room
+  teaches again. Mechanism teaching stays repeatable independently. Verify both layouts and positions beyond the former
+  320×144 area, plus retries/returns and suppression in later rooms.
 - [ ] [#132](https://github.com/jlogicgames/edgard_in_kimeria/issues/132) Revise the level and content scope from results. Related existing tasks:
   [#73](https://github.com/jlogicgames/edgard_in_kimeria/issues/73)
   and [#75](https://github.com/jlogicgames/edgard_in_kimeria/issues/75).
@@ -263,6 +274,6 @@ does not mean completion.
 - Add calendar/effort estimates after measuring the first prototype/level.
   The 20/60-second play hypotheses and 100-minute campaign model are not development estimates.
 
-**Next output:** complete #95 and a test section with a stone, mechanism, throwing,
-consumable ranged attack and correct recovery. Then verify ladders and begin the
+**Next output:** #95 dispatch and its entrance practice section are implemented;
+finish physical-device/author acceptance, rare refills and ladders, then begin the
 short Forest-mechanic prototype.

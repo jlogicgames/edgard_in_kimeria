@@ -19,8 +19,8 @@ import com.jlogicsoftware.kimeria.localization.Msg;
 
 /**
  * On-screen controls for touch devices: a movement stick on the left and the three action
- * buttons on the right -- Jump, Shoot, and the context-sensitive Attack/Interact button, whose
- * label follows {@link GameContext#interactAvailable()}. In left-handed mode
+ * buttons on the right -- Jump, Ranged, and directional Action. Labels follow the selected
+ * command, with vertical movement on the stick. In left-handed mode
  * ({@link GameContext#leftHanded()}) the whole layout is mirrored horizontally -- stick right,
  * buttons left -- for both drawing and hit areas. Drawn and hit-tested in fixed logical
  * (640x360) space. Does nothing on devices without a touch screen.
@@ -50,19 +50,26 @@ public class TouchControls {
     private final Matrix4 textProjection;
     private final float logicalWidth, logicalHeight;
     private final boolean available;
+    private boolean previousLayout;
 
     private final Control[] claimed = new Control[MAX_POINTERS];
     private final boolean[] seen = new boolean[MAX_POINTERS];
     private final Vector2 touch = new Vector2();
 
-    private float horizontal;
+    private float horizontal, vertical;
     private boolean jumpHeld, shootHeld, actionHeld;
     private boolean prevShoot, prevAction;
     private boolean shootEdge, actionEdge;
-    private float knobDx;
+    private float knobDx, knobDy;
 
     public TouchControls(Assets assets, GameContext game, Viewport viewport, float logicalWidth, float logicalHeight) {
+        this(assets, game, viewport, logicalWidth, logicalHeight, false);
+    }
+
+    /** The TeaVM backend cannot report MultitouchScreen; the web launcher supplies browser capability. */
+    public TouchControls(Assets assets, GameContext game, Viewport viewport, float logicalWidth, float logicalHeight, boolean platformTouch) {
         this.game = game;
+        previousLayout = game.leftHanded();
         this.viewport = viewport;
         this.logicalWidth = logicalWidth;
         this.logicalHeight = logicalHeight;
@@ -77,7 +84,7 @@ public class TouchControls {
         textProjection = textCamera.combined.cpy();
 
         Application.ApplicationType type = Gdx.app.getType();
-        available = type == Application.ApplicationType.Android
+        available = platformTouch || type == Application.ApplicationType.Android
             || type == Application.ApplicationType.iOS
             || Gdx.input.isPeripheralAvailable(Input.Peripheral.MultitouchScreen);
         java.util.Arrays.fill(claimed, Control.NONE);
@@ -85,8 +92,12 @@ public class TouchControls {
 
     /** @param active true while the game is being played; touches are ignored (and unclaimed) otherwise. */
     public void update(boolean active) {
+        if (previousLayout != game.leftHanded()) {
+            java.util.Arrays.fill(claimed, Control.NONE);
+            previousLayout = game.leftHanded();
+        }
         boolean stick = false, jump = false, shoot = false, action = false;
-        float dx = 0;
+        float dx = 0, dy = 0;
         float stickX = x(STICK_X);
 
         if (available) {
@@ -102,11 +113,12 @@ public class TouchControls {
                     seen[p] = true;
                     claimed[p] = active ? hitTest(touch.x, touch.y) : Control.NONE;
                 }
-                if (!active) continue;
+                if (!active) { claimed[p] = Control.NONE; continue; }
                 switch (claimed[p]) {
                     case STICK -> {
                         stick = true;
                         dx = Math.max(-STICK_RADIUS, Math.min(STICK_RADIUS, touch.x - stickX));
+                        dy = Math.max(-STICK_RADIUS, Math.min(STICK_RADIUS, touch.y - STICK_Y));
                     }
                     case JUMP -> jump = true;
                     case SHOOT -> shoot = true;
@@ -118,7 +130,9 @@ public class TouchControls {
 
         float axis = stick ? dx / STICK_RADIUS : 0f;
         horizontal = Math.abs(axis) > STICK_DEADZONE ? Math.signum(axis) : 0f;
+        vertical = stick && Math.abs(dy / STICK_RADIUS) > STICK_DEADZONE ? Math.signum(dy) : 0;
         knobDx = stick ? dx : 0f;
+        knobDy = stick ? dy : 0f;
         jumpHeld = jump;
         shootHeld = shoot;
         actionHeld = action;
@@ -151,6 +165,12 @@ public class TouchControls {
         return horizontal;
     }
 
+    public boolean upHeld() { return vertical < 0; }
+    public boolean isAvailable() { return available; }
+    public boolean downHeld() { return vertical > 0; }
+    public boolean actionHeld() { return actionHeld; }
+    public boolean shootHeld() { return shootHeld; }
+
     public boolean jumpHeld() {
         return jumpHeld;
     }
@@ -160,7 +180,7 @@ public class TouchControls {
         return shootEdge;
     }
 
-    /** Edge-triggered: true for the one frame the Attack/Interact button goes down. */
+    /** Edge-triggered: true for the one frame the Action button goes down. */
     public boolean actionPressed() {
         return actionEdge;
     }
@@ -173,7 +193,7 @@ public class TouchControls {
         batch.setColor(1f, 1f, 1f, 0.55f);
         batch.draw(disc, stickX - STICK_RADIUS, STICK_Y - STICK_RADIUS, STICK_RADIUS * 2, STICK_RADIUS * 2);
         batch.setColor(1f, 1f, 1f, 0.85f);
-        batch.draw(knob, stickX + knobDx - KNOB_SIZE / 2, STICK_Y - KNOB_SIZE / 2, KNOB_SIZE, KNOB_SIZE);
+        batch.draw(knob, stickX + knobDx - KNOB_SIZE / 2, STICK_Y + knobDy - KNOB_SIZE / 2, KNOB_SIZE, KNOB_SIZE);
 
         drawButton(batch, jumpIcon, jumpX, JUMP_Y, BUTTON_RADIUS, jumpHeld);
         drawButton(batch, disc, actionX, ACTION_Y, BUTTON_RADIUS, actionHeld);
@@ -181,13 +201,13 @@ public class TouchControls {
         batch.setColor(Color.WHITE);
 
         var lang = game.language();
-        String action = (game.interactAvailable() ? Msg.INTERACT : Msg.ATTACK).t(lang);
+        String action = game.actionLabel().t(lang);
         // A copy: setProjectionMatrix() overwrites the batch's own matrix in place, so a bare reference
         // would already hold the text projection when it is "restored" below.
         Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
         label(batch, action, actionX, ACTION_Y, BUTTON_RADIUS * 2f - 2f);
-        label(batch, Msg.SHOOT.t(lang), shootX, SHOOT_Y, BUTTON_RADIUS * 1.7f - 2f);
+        label(batch, game.rangedLabel().t(lang), shootX, SHOOT_Y, BUTTON_RADIUS * 1.7f - 2f);
         batch.setProjectionMatrix(previous);
     }
 

@@ -59,6 +59,7 @@ gdxTeaVM {
     // Unnamed target: `./gradlew :web:gdx_teavm_web_js_run` for local dev,
     // with the TeaVM dev server rebuilding and reloading on change.
     js {
+        mainClass = "com.jlogicsoftware.kimeria.web.DebugWebLauncher"
         devServer {
             enabled = true
             autoReload = true

@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 
 import java.util.ArrayList;
@@ -36,13 +37,19 @@ public class Torch extends Entity implements Actionable {
     private final List<Particle> particles = new ArrayList<>();
     private int intensity;
     private final String targetId;
+    private final TextureRegion sprite;
     private boolean burning;
 
     private float coreTimer, emberTimer, sparkleTimer, smokeTimer, flickerTimer;
     private float lightRadius, lightAlpha;
 
     public Torch(float centerX, float centerY, float w, float h, int intensity, String targetId) {
+        this(null, centerX, centerY, w, h, intensity, targetId);
+    }
+
+    public Torch(Assets assets, float centerX, float centerY, float w, float h, int intensity, String targetId) {
         super(centerX - w / 2f, centerY - h / 2f, w, h);
+        sprite = assets == null ? null : assets.region("images/objects/torch.png", 0, 0, 8, 16);
         this.intensity = intensity;
         this.targetId = targetId == null ? "" : targetId;
         burning = intensity > 0;
@@ -62,6 +69,8 @@ public class Torch extends Entity implements Actionable {
             particles.clear();
         }
     }
+
+    public boolean isBurning() { return burning; }
 
     @Override
     public String getTargetId() {
@@ -174,6 +183,7 @@ public class Torch extends Entity implements Actionable {
 
     @Override
     public void render(Batch batch) {
+        if (sprite != null) batch.draw(sprite, centerX() - 4, centerY() - 3, 8, 16);
         TextureRegion dot = SoftDot.region();
         if (burning) {
             float flicker = 0.85f + MathUtils.random(0.3f);
@@ -198,4 +208,5 @@ public class Torch extends Entity implements Actionable {
         batch.setColor(Color.WHITE);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
+
 }

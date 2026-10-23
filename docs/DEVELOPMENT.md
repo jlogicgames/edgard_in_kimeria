@@ -1,5 +1,33 @@
 # Development and implementation
 
+## Dev FPS fix and GH Pages release audit — 2026-10-23
+
+`runDev` loads the game through DevHost rather than Lwjgl3Launcher. DevHost now
+explicitly calls the `(platformTouch=false, debugMode=true)` constructor on startup
+and hot restart. Previously the no-argument constructor silently selected release
+mode despite the `[dev]` title. Stop/restart `runDev` once after this host update;
+F7 reloads only the hosted game. An isolated real desktop window showed FPS at
+[startup](references/run-dev-fps-start.png) and after a structural-source
+[hot restart](references/run-dev-fps-hot-restart.png). The user's running dev process
+was left intact; the isolated test sources/probe were removed after verification.
+
+The published GH Pages workflow and successful
+[run 39802877036](https://github.com/jlogicgames/edgard_in_kimeria/actions/runs/39802877036)
+confirm `buildWeb`, the named release compile/build tasks, and the upload directory
+`web/build/dist/js/release/webapp`. This is already a release build. However, the
+release target only explicitly enables obfuscation; installed gdx-teavm 1.6.2
+defaults to `BALANCED` optimization and `debugInformation=false`. Strongest-supported
+optimization and a clean uploaded artifact are not enforced. Application F1–F6
+hotkeys remain reachable in release, and local output includes editor/OS metadata.
+Minification alone does not remove debug functionality or prove maximum performance.
+
+[Issue #153](https://github.com/jlogicgames/edgard_in_kimeria/issues/153) tracks
+explicit strongest-supported optimization, debug/source-map stripping, release
+gating of dev functionality, runtime-only uploads, CI artifact assertions and
+browser smoke/performance measurements. Those pipeline changes are follow-up work,
+not implemented or deployed by this audit. Desktop/web builds and all 39 relevant
+directional-action/hint-transition tests pass for the current fixes.
+
 Builds, live editing, troubleshooting, feature parity and implementation details.
 See [gameplay reference](GAMEPLAY.md) for controls and detailed game rules, or the
 [documentation index](README.md) for design and validation records.
@@ -81,6 +109,10 @@ Two different causes produce this same crash:
    The `run` task auto-detects `/opt/homebrew/lib/libglfw.dylib` (or the Intel Homebrew
    path) and passes `-Dorg.lwjgl.glfw.libname=...` when present.
 
+`input.GameplayInput` owns per-device action/ranged fresh presses and active-device
+prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
+`Carryable` and `Fireball` provide real handlers behind the directional dispatcher.
+
 ## Feature parity
 
 - [x] Player movement, jump, gravity, coyote time, quicksand slowdown, wall clamber/jump
@@ -93,7 +125,8 @@ Two different causes produce this same crash:
 - [x] Falling platform — warning torch, delay, drop; carries the player down without
       losing contact
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
-- [x] Trigger → actionable wall removal and torch toggle
+- [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
+- [x] Trigger → actionable wall removal and torch toggle via Up + Action
 - [x] Checkpoint → next level or ending; death in slow motion, then an instant room reset and respawn (no lives)
 - [x] Torch, firefly and rain ambience; fog only in menus
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
@@ -179,7 +212,7 @@ Package layout:
 - `localization.*` — typed `Msg` keys, five UTF-8 catalogs, English fallback and strict
   validation; see [localization](LOCALIZATION.md)
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
-- `ui.TouchControls` — on-screen stick and Jump / Shoot / Attack-Interact buttons
+- `ui.TouchControls` — two-axis on-screen stick and Jump / Ranged / directional Action buttons
 - `KimeriaGame` — the whole game and its menu states in one place
 - `lwjgl3/src/dev` — `runDev`'s launcher, compiler, watcher and reloader (`DevHost`); a source
   set of its own that no release build includes, see "Live editing" above
@@ -249,3 +282,19 @@ backend instead of its `sun.misc.Unsafe` one. Two cases remain, both outside our
 - **`packageDesktop`** prints one Gradle deprecation ("Invocation of Task.project at
   execution time") from `org.beryx.runtime` 2.0.1, its latest release. It needs a plugin
   fix upstream.
+
+## Sprite artwork guard
+
+`./gradlew validateSpriteArt` runs the source-art policy and new world/HUD PNG contract checks.
+The latter inspect PNG metadata with the Python standard library: world native
+dimensions, indexed palette up to 16 entries and binary alpha; HUD 128×128 indexed
+exports up to 256 entries. Legacy multi-frame sheets remain separate authored assets. Core `check`, the
+actual desktop JAR/native-packaging dependency and TeaVM release-build task depend
+on it, including when called directly instead of using the root aliases. Python 3
+is required for this developer check; no Python is shipped with the game. Asset
+export alone additionally uses Pillow. `python3 tools/test_sprite_art_guard.py`
+exercises rejection and hook exit behavior.
+
+The checked-in `.codex/hooks.json` configures synchronous PostToolUse/Stop checks.
+Review/trust it through Codex `/hooks` before automatic session enforcement; see
+[artwork rules and test limits](ART_DIRECTION.md#gameplay-sprites-and-procedural-art-prohibition-2026-10-22).

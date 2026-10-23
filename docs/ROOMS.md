@@ -374,3 +374,66 @@ driver confirm that the wall-jump references in the route descriptions are curre
 behavior. Its future role in the campaign is a design question, not a missing feature.
 This review changed documentation only. It did not rerun the full core suite or
 perform a new visual/human playtest; it does not close the deferred release checks.
+
+## Directional-controls practice revision (#95)
+
+Current teaching scope (2026-10-23, [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying)):
+the entire `forest-entry` room teaches contextual item/mechanism actions. There is
+no 320×144 subregion or fixed travel-distance limit. New practice
+objects anywhere in this room receive the same teaching; other rooms/levels do not.
+Holding a stone or torch near a usable lever shows its activation instruction
+together with any active placement/throwing reminder, anchored at the lever.
+Each pickup re-arms the carrying reminder; scrolling the camera after exiting its
+dead zone consumes that reminder until a new pickup. It must fade out rather than
+stick to the viewport edge. Mechanism lessons remain repeatable after it expires.
+Retry/collection return
+keeps this rule; no persistent lesson-completion flags are introduced.
+
+2026-10-22, `forest.tmx` SHA-256 `9d74c49bf53afefbaa6c86d020dffc0d4288a37386f911dbfb7e0261decd5b06`:
+added optional entrance objects 116 (stone), 117 (portable torch), 118 (trigger)
+and 119 (linked light). Collision geometry, enemies and collection identities are
+unchanged. See [the control contract and dependencies](DIRECTIONAL_CONTROLS.md).
+`Stone` and `CarryableTorch` are supported SpawnPoints types; give each a unique
+ID and a 12 × 12 rectangle inside its owner room. Decorative `Torch` remains
+stationary; portable torches use the explicit new type. They reset with traversal
+objects, including on collection return; they do not enter persistent inventory.
+
+[D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket), accepted
+2026-10-23, fixes one shared carryable slot and visible front-hand presentation.
+Author puzzles around choosing, placing and retrieving one object; do not assume
+a pocket stone can accompany a hand torch. Current room reconstruction and release
+at forward room exit remain in force. The decision adds no cross-room transport,
+extra inventory snapshot or persistent save field. Both stone and torch now render
+in the animated front hand; the stone's old hidden treatment was never a second slot.
+
+The production-input replay now chooses Up + Action for mechanisms and plain
+Action for sword combat. With live hazards and no fireball spending, three identical
+attempts each remain: entry 16.27 s required / 20.00 s all coins; canopy 5.00 s /
+5.00 s; forest-1 5.32 s required. Collection returns: entry 14.78 / 14.25 / 14.25 s,
+canopy 5.13 / 5.00 / 5.00 s. These still check the 20/30-second gates. This does
+not establish all-artifact coverage, new human readability or physical-device
+acceptance. The optional practice objects are not required route steps.
+
+### Close interaction revision (2026-10-22)
+
+Current `forest.tmx` SHA-256:
+`d883340f605dc849290d33395841a9de26f19070b9064d99eb9296d2dd405742`.
+Objects 116/117 retain their IDs and positions. Trigger 118 is local to the practice
+light (x=108, width=16); light 119 is at hand height (authored y=306, before -16 layer
+offset). The prior elevated light/large trigger were not needed. Collision geometry,
+collection identities and required route remain unchanged. Live-hazard replay gates
+still pass with no fireballs: entry 16.27 s required / 20.00 s all coins; canopy
+5.00 s / 5.00 s; forest-1 5.32 s, each three identical attempts. Collection-return
+measurements remain 14.78 / 14.25 / 14.25 s for entry and 5.13 / 5.00 / 5.00 s for canopy.
+This is automated route evidence, not author/novice teaching acceptance.
+
+
+### Practice lever display
+
+Forest trigger 118 (`practice-light`) retains its authored 16×16 interaction zone
+at (128,320), before SpawnPoints' -16 Y offset. Its `appearance=Lever` property
+requests a visible 16×16 up/down control at the zone's bottom centre and must link
+exactly one `Actionable` Torch by name. Selection highlights this lever, while the
+linked Torch (119) remains at its independently authored wall position. The state
+comes from the torch: up/on, down/off. No new object IDs or collision geometry are
+introduced. Room resets rebuild both objects from their authored initial state.

@@ -6,12 +6,15 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.RangedStock;
+import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
+import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
@@ -25,6 +28,7 @@ import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
+import com.jlogicsoftware.kimeria.entity.items.Lever;
 import com.jlogicsoftware.kimeria.entity.items.Trigger;
 import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
@@ -50,6 +54,14 @@ public class Level implements WorldObject {
     public final String name;
     public final TiledMapData map;
     public Player player;
+    public final RangedStock rangedStock;
+    private int roomStartAmmo;
+
+    public com.badlogic.gdx.graphics.g2d.TextureRegion objectSprite(String name) {
+        int width = name.equals("fireball") ? 16 : 8;
+        int height = name.equals("stone") ? 8 : 16;
+        return assets.region("images/objects/" + name + ".png", 0, 0, width, height);
+    }
 
     public final List<CollisionBlock> collisionBlocks = new ArrayList<>();
     public final List<Escalator> escalators = new ArrayList<>();
@@ -73,6 +85,10 @@ public class Level implements WorldObject {
     private SkyBackground sky;
     public final RoomLayout roomLayout;
     private int currentRoom;
+    /** The entire first Forest room teaches controls, including retries and collection returns. */
+    public boolean tutorialHintsActive() {
+        return name.equals("forest") && currentRoom == 0;
+    }
     private final List<WorldObject> ambience = new ArrayList<>();
     /** One bounded entry per visited room: traversal objects are deliberately not retained. */
     private record Visit(Map<Integer, Enemy<?>> enemies, Set<Integer> defeated,
@@ -182,6 +198,8 @@ public class Level implements WorldObject {
     }
 
     private void activateRoom(Player nextPlayer, boolean revisit) {
+        if (revisit) roomStartAmmo = rangedStock.count();
+        else rangedStock.restore(roomStartAmmo);
         revisiting = revisit;
         game.artifacts().resetRoom();
         objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); fallingPlatforms.clear();
@@ -212,6 +230,13 @@ public class Level implements WorldObject {
 
     public Level(Assets assets, GameContext game, Player player, String levelName,
                  Supplier<Rectangle> visibleWorldRect) {
+        this(assets, game, player, levelName, visibleWorldRect, new RangedStock());
+    }
+
+    public Level(Assets assets, GameContext game, Player player, String levelName,
+                 Supplier<Rectangle> visibleWorldRect, RangedStock rangedStock) {
+        this.rangedStock = rangedStock;
+        roomStartAmmo = rangedStock.count();
         this.assets = assets;
         this.game = game;
         this.player = player;
@@ -262,6 +287,7 @@ public class Level implements WorldObject {
         if (!healerAhead()) throw new IllegalStateException("No healer before this room");
         keepPickups();
         secureVisit();
+        roomStartAmmo = rangedStock.count();
     }
 
     public int forestCoinTotal() { return authoredCoins.size(); }
@@ -370,10 +396,12 @@ public class Level implements WorldObject {
                 }
                 case "Torch" -> {
                     int intensity = (int) o.propFloat("Intensity", 80);
-                    objects.add(new Torch(o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, ""));
+                    objects.add(new Torch(assets, o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, ""));
                 }
+                case "Stone", "CarryableTorch" -> objects.add(new Carryable(this, o.id,
+                    "Stone".equals(o.type) ? Carryable.Kind.STONE : Carryable.Kind.TORCH, o.x, o.y));
                 case "Trigger" -> {
-                    Trigger trigger = new Trigger(o.x, o.y, o.width, o.height, o.name);
+                    Trigger trigger = new Trigger(o.id, o.x, o.y, o.width, o.height, o.name);
                     objects.add(trigger);
                     triggers.add(trigger);
                 }
@@ -391,6 +419,19 @@ public class Level implements WorldObject {
                 }
             }
         }
+        spawnLevers();
+    }
+
+    private void spawnLevers() {
+        for (TiledObject o : map.layer("SpawnPoints")) {
+            if (roomLayout.owner(o) != currentRoom || !"Trigger".equals(o.type)
+                || !"Lever".equals(o.prop("appearance", ""))) continue;
+            Trigger trigger = triggers.stream().filter(t -> t.id == o.id).findFirst().orElseThrow();
+            List<Torch> linked = objects.stream().filter(object -> object instanceof Torch torch
+                && trigger.targetId.equals(torch.getTargetId())).map(Torch.class::cast).toList();
+            if (linked.size() != 1) throw new IllegalArgumentException("Lever needs exactly one linked torch: " + o.name);
+            objects.add(new Lever(assets, trigger, linked.get(0)));
+        }
     }
 
     private void spawnCollectable(TiledObject o, ItemType type) {
@@ -406,7 +447,7 @@ public class Level implements WorldObject {
         String targetId = o.name;
         if ("Torch".equals(type)) {
             int intensity = (int) o.propFloat("Intensity", 0);
-            Torch torch = new Torch(o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, targetId);
+            Torch torch = new Torch(assets, o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, targetId);
             objects.add(torch);
             if (intensity == 0) torch.toggleFire(false);
         } else if ("Wall".equals(type)) {
@@ -427,6 +468,48 @@ public class Level implements WorldObject {
             };
             collisionBlocks.add(block);
         }
+    }
+
+    /** Solid placement/flight check. One-way platforms only block placement, never horizontal flight. */
+    public boolean blocksObject(Rectangle bounds, boolean placement) {
+        if (!currentRoomBounds().contains(bounds)) return true;
+        for (CollisionBlock block : collisionBlocks) {
+            if (!block.isActive() || block.isQuickSand() || (!placement && block.isPlatform())) continue;
+            if (bounds.overlaps(new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight()))) return true;
+        }
+        for (var platform : escalators) if (bounds.overlaps(new Rectangle(platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight()))) return true;
+        for (var platform : fallingPlatforms) if (bounds.overlaps(new Rectangle(platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight()))) return true;
+        return false;
+    }
+
+    /** Feedback belongs to a visible linked object, never to the invisible trigger rectangle. */
+    public Entity mechanismFeedbackTarget(Trigger trigger) {
+        if (trigger == null) return null;
+        for (WorldObject object : objects) {
+            if (object instanceof Lever lever && !lever.isRemoved() && lever.trigger == trigger) return lever;
+        }
+        Entity nearest = null;
+        for (WorldObject object : objects) {
+            if (object instanceof Entity entity && object instanceof Actionable actionable
+                && !object.isRemoved() && trigger.targetId.equals(actionable.getTargetId())) {
+                nearest = nearerFeedbackTarget(trigger, nearest, entity);
+            }
+        }
+        for (Escalator escalator : escalators) {
+            if (!escalator.isRemoved() && trigger.targetId.equals(escalator.getTargetId()))
+                nearest = nearerFeedbackTarget(trigger, nearest, escalator);
+        }
+        return nearest;
+    }
+
+    private static Entity nearerFeedbackTarget(Trigger trigger, Entity current, Entity candidate) {
+        if (current == null) return candidate;
+        float distance = Vector2.dst2(trigger.centerX(), trigger.centerY(), candidate.centerX(), candidate.centerY());
+        float currentDistance = Vector2.dst2(trigger.centerX(), trigger.centerY(), current.centerX(), current.centerY());
+        if (distance < currentDistance || (distance == currentDistance &&
+            (candidate.getX() < current.getX() || (candidate.getX() == current.getX() && candidate.getY() < current.getY()))))
+            return candidate;
+        return current;
     }
 
     public void activateTrigger(Trigger trigger) {
@@ -481,6 +564,7 @@ public class Level implements WorldObject {
         }
         updateWorld(dt);
         player.update(dt);
+        for (WorldObject o : objects) if (o instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
 
         finishUpdate();
@@ -538,6 +622,7 @@ public class Level implements WorldObject {
         for (WorldObject o : objects) o.render(batch);
         for (WorldObject o : ambience) o.render(batch);
         if (!player.isRemoved()) player.render(batch);
+        player.renderInteractionTarget(batch);
     }
 
     /** Port of Rust's F1 debug gizmos: collision blocks in green, actor hitboxes in red. */

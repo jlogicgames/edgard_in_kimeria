@@ -212,7 +212,7 @@ class RoomTest {
         Level level = new Level(assets, game, player(), "room-test", Rectangle::new);
         var wall = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Wall.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow();
-        level.activateTrigger(level.triggers.get(0));
+        level.activateTrigger(level.triggers.stream().filter(t -> t.targetId.equals("door")).findFirst().orElseThrow());
         assertTrue(wall.isRemoved());
         var platform = level.fallingPlatforms.get(0);
         platform.collideWithActor(); platform.update(1.25f); platform.update(0.1f);
@@ -409,7 +409,7 @@ class RoomTest {
             assertEquals(com.jlogicsoftware.kimeria.entity.objects.Escalator.State.RUN, level.escalators.get(0).getState());
             assertEquals(440, level.escalators.get(0).getX());
             level.escalators.get(0).update(.25f);
-            level.activateTrigger(level.triggers.get(0));
+            level.activateTrigger(level.triggers.stream().filter(t -> t.targetId.equals("approach")).findFirst().orElseThrow());
             assertTrue(door.isRemoved());
             assertEquals(com.jlogicsoftware.kimeria.entity.objects.Escalator.State.IDLE, level.escalators.get(0).getState());
             falling.collideWithActor(); falling.update(2); falling.update(2);

@@ -43,6 +43,7 @@ tasks.register("runWeb") {
 tasks.register("buildWeb") {
     description = "Builds the static, minified web output, same as ./gradlew :web:gdx_teavm_web_js_release_build."
     dependsOn(":web:gdx_teavm_web_js_release_build")
+    dependsOn("validateSpriteArt")
 }
 
 tasks.register("validateLocalization") {
@@ -56,7 +57,18 @@ tasks.register("validateLocalization") {
 tasks.register("buildDesktop") {
     description = "Builds a runnable desktop fat jar at lwjgl3/build/libs/, same as ./gradlew :lwjgl3:jar."
     dependsOn(":lwjgl3:jar")
+    dependsOn("validateSpriteArt")
 }
+
+val validateSpriteArt = tasks.register<Exec>("validateSpriteArt") {
+    group = "verification"
+    description = "Rejects procedural artwork used instead of authored game sprites."
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "tools/check_sprite_art.py")
+}
+project(":core").tasks.named("check") { dependsOn(validateSpriteArt) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateSpriteArt) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateSpriteArt) }
 
 // Native installer/app-image (bundles its own JRE -- nothing else to
 // install to play): .exe/.msi on Windows, .app/.dmg on macOS,

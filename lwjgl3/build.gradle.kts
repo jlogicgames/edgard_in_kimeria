@@ -166,6 +166,7 @@ val desktopLaunchArgs: List<String> = buildList {
 
 tasks.named<JavaExec>("run") {
     jvmArgs(desktopLaunchArgs)
+    systemProperty("kimeria.debug", "true")
     standardInput = System.`in`
     workingDir = rootProject.file("assets")
 }
@@ -207,6 +208,7 @@ val devAgentJar = tasks.register<Jar>("devAgentJar") {
 }
 
 tasks.register<JavaExec>("runDev") {
+    systemProperty("kimeria.debug", "true")
     group = "application"
     description = "Dev only: runs the game with hot reload (state kept) and hot restart (state reset) on source and asset changes."
     dependsOn(devAgentJar)
