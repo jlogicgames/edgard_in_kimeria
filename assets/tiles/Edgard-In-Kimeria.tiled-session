@@ -32,14 +32,13 @@
         },
         "forest.tmx": {
             "expandedObjectLayers": [
-                3,
                 2
             ],
-            "scale": 0.8474,
-            "selectedLayer": 1,
+            "scale": 1.1715,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 321.57186688694827,
-                "y": 262.5678546141137
+                "x": 413.572343149808,
+                "y": 271.02005975245413
             }
         }
     },
