@@ -47,6 +47,22 @@ and quantizes authored art. The source guard/hook also checks dimensions, indexe
 palette and binary world alpha in the new world/HUD PNG exports, without a Pillow
 build dependency. Renderer checks still have to verify filtering and visual fit.
 
+## Group artwork by meaning
+
+Store related states or animation frames of the same object in one registered
+sprite sheet. The lever uses `assets/images/objects/lever.png`, 32×16, with two
+16×16 frames: up/on at x=0 and down/off at x=16. Its selected source sheet is
+`art/objects/lever-pixel.png`, with the same left-to-right order. Keep a shared
+palette, mounting plate and pivot; use texture regions instead of separate textures.
+Unrelated single-frame world objects keep their own assets. HUD illustrations use
+separate textures and filtering from world sprites; their selected detailed masters,
+including the fireball, live under `art/hud/`.
+
+Retain selected sources and exact prompts needed to reproduce current runtime art.
+Remove rejected iterations, unused masters, redundant previews and screenshots of
+superseded behavior from the change. Keep only representative current validation
+captures, with valid documentation links. Git history already records past revisions.
+
 ## Preserve the artist's identity
 
 [D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket) fixes one

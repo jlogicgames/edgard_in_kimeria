@@ -4,8 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
-WORLD = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16),
-         'lever-up': (16, 16), 'lever-down': (16, 16)}
+WORLD = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
 
 
 def export(source, target, size, pixel_art):
@@ -29,27 +28,26 @@ def export(source, target, size, pixel_art):
 
 def export_levers():
     # Preserve the shared source canvas/pivot. Independent alpha crops would move the base.
-    frames = [Image.open(ROOT / 'art/objects' / f'lever-{pose}-pixel.png').convert('RGBA')
-              for pose in ('up', 'down')]
-    if frames[0].size != frames[1].size:
-        raise ValueError('Lever poses must share a registered source canvas')
+    source = Image.open(ROOT / 'art/objects/lever-pixel.png').convert('RGBA')
+    if source.width != source.height * 2:
+        raise ValueError('Lever sheet must contain two square registered frames: up, down')
+    frames = [source.crop((i * source.height, 0, (i + 1) * source.height, source.height))
+              for i in range(2)]
     strip = Image.new('RGBA', (32, 16))
     for index, frame in enumerate(frames):
         frame.putalpha(frame.getchannel('A').point(lambda alpha: 255 if alpha >= 128 else 0))
         strip.paste(frame.resize((16, 16), Image.Resampling.NEAREST), (index * 16, 0))
     strip = strip.quantize(colors=16, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
-    for index, pose in enumerate(('up', 'down')):
-        target = ROOT / 'assets/images/objects' / f'lever-{pose}.png'
-        strip.crop((index * 16, 0, index * 16 + 16, 16)).save(target, bits=4)
-        print(target.relative_to(ROOT))
+    target = ROOT / 'assets/images/objects/lever.png'
+    strip.save(target, bits=4)
+    print(target.relative_to(ROOT))
 
 
 if __name__ == '__main__':
     for name, size in WORLD.items():
-        if name.startswith('lever-'): continue
         export(ROOT / 'art/objects' / f'{name}-pixel.png',
             ROOT / 'assets/images/objects' / f'{name}.png', size, True)
     export_levers()
     for name in ('coin', 'chicken', 'key', 'fireball'):
-        source = ROOT / 'art' / ('objects' if name == 'fireball' else 'hud') / f'{name}-master.png'
+        source = ROOT / 'art/hud' / f'{name}-master.png'
         export(source, ROOT / 'assets/images/HUD' / f'{name}.png', (128, 128), False)

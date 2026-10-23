@@ -3,13 +3,13 @@
 Mode: built-in image generation tool, transparent output. These are UI illustrations,
 never world sprites. Runtime files: `assets/images/HUD/{coin,chicken,key,fireball}.png`,
 128×128 indexed, at most 256 entries including transparency, no dithering, linear
-texture filtering in the existing 32 px item / 20 px ammunition slots.
+texture filtering in matching 32 px item and ammunition slots.
 
 Identity references are nearest-enlarged crops from original `assets/images/Items.png`:
 coin (0,0,16,16), cooked chicken on plate (32,16,16,16), key (64,16,16,16).
 The original world sheet remains unchanged. Export via `python3 tools/export_object_sprites.py`.
-Fireball reuses the earlier detailed `art/objects/fireball-master.png`; its exact
-prompt/source is in [object history](../objects/generation-prompts.md).
+The detailed fireball source is `fireball-master.png` in this directory; its
+selected-source prompt is recorded below. It is used only for the HUD.
 
 ## coin-master
 
@@ -37,4 +37,13 @@ Selected source: `exec-ef68cd90-3155-4f9b-bb1c-0242b63a7fcf.png`; stored as `key
 Exact prompt:
 
 > Create a detailed HUD inventory icon for Edgard in Kimeria. Faithful beautiful hand-painted remaster of reference: small silver key lying horizontally, square open bow at LEFT, straight shaft to RIGHT, two teeth pointing downward near right tip. Preserve recognizable plain silver key silhouette, dark contour and square hole, controlled steel gray shades and bright edge highlights. Readable at 32 pixels, source intended for 128x128/256-color HUD export. Single isolated key centered filling square canvas, true transparent background, no cast shadow, no labels, no text, no ornament. This is polished UI illustration, NOT low resolution gameplay pixel art.
+
+
+## fireball-master
+
+Selected source: imagegen `exec-6e69a005-3ffa-4e89-8c44-0df8ffc0419b.png`.
+
+Exact prompt:
+
+> One isolated magical fireball projectile sprite for a 2D side-view fantasy game. Compact round golden-white hot core surrounded by orange-red tongues of flame, a short tapered trailing flame pointing LEFT so the projectile travels RIGHT. Strong single clear silhouette, broad hand-painted colour shapes with restrained highlights, dark red edge for sky readability. Genuine transparent background, no black rectangle, no cast shadow, no floor, no environment, text or other objects. Fill 85 percent of square canvas. Finished warm ochre/red fantasy DOS-remaster artwork, clean natural contours, not photorealistic, no gritty noise or dithering. Must remain legible in a 16 by 16 logical-pixel in-game slot. This raster replaces a code-coloured glowing dot.
 

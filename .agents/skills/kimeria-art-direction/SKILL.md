@@ -52,6 +52,16 @@ own design is revised; do not silently redraw every item because the lever chang
 Check the selected viewpoint in prompts, tiny runtime exports and actual gameplay.
 Keep native pixel-art constraints, and keep character/HUD/portrait style separate.
 
+## Group related frames and keep selected sources
+
+Pack the states/animation frames of one object into one registered sprite sheet,
+with a documented order, shared palette and fixed base/pivot. Load regions of that
+texture; do not make separate texture files for the lever's up/down states.
+Keep unrelated objects separate, and never mix nearest-filtered world art with
+linear-filtered HUD art. Preserve selected source masters/sheets and exact prompts
+for reproducible exports. Remove rejected iterations, unused masters and obsolete
+or duplicate verification captures; update their documentation links at the same time.
+
 ## Gameplay artwork must be a sprite
 
 Physical game artwork (characters, enemies, items, weapons, torches, rocks,

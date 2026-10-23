@@ -17,7 +17,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
 WORLD_IMAGES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16),
-                'lever-up': (16, 16), 'lever-down': (16, 16)}
+                'lever': (32, 16)}  # Two registered 16x16 states: up/on, down/off.
 RULES = {
     'quad': re.compile(r'\b(?:Shaders\s*\.\s*)?whiteQuad\s*\('),
     'particle': re.compile(r'\bSoftDot\s*\.\s*(?:region|glowRegion)\s*\('),

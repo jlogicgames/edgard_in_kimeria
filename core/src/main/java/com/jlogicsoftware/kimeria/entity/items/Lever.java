@@ -16,8 +16,9 @@ public final class Lever extends Entity {
         super(trigger.centerX() - 8, trigger.getY() + trigger.getHeight() - 16, 16, 16);
         this.trigger = trigger;
         this.torch = torch;
-        up = assets.region("images/objects/lever-up.png", 0, 0, 16, 16);
-        down = assets.region("images/objects/lever-down.png", 0, 0, 16, 16);
+        // Registered states share one sheet: left = up/on, right = down/off.
+        up = assets.region("images/objects/lever.png", 0, 0, 16, 16);
+        down = assets.region("images/objects/lever.png", 16, 0, 16, 16);
     }
 
     public boolean isUp() { return torch.isBurning(); }
