@@ -175,6 +175,65 @@ class DirectionalActionsTest {
             com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE, 60, 308));
         frames(2);
     }
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void standingLookUsesStaticPosesAndDelayedCameraInBothLayouts(boolean left) {
+        scene(left); frames(10);
+        level.triggers.clear();
+        level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
+        float neutral = lastCameraTarget.y;
+        held.add(up()); frames(1);
+        assertEquals(Player.State.LOOK_UP, level.player.getState());
+        frames(10); assertEquals(neutral, lastCameraTarget.y, .001);
+        frames(12); assertTrue(lastCameraTarget.y < neutral, "Without an interaction, inspection starts after 0.3 s");
+        frames(140); assertEquals(neutral - 100, lastCameraTarget.y, .01);
+        held.clear(); frames(125);
+        assertEquals(Player.State.IDLE, level.player.getState());
+        assertEquals(neutral, lastCameraTarget.y, .01);
+        held.add(down()); frames(181);
+        assertEquals(Player.State.LOOK_DOWN, level.player.getState());
+        assertEquals(neutral + 150, lastCameraTarget.y, .01);
+        held.add(up()); frames(125);
+        assertEquals(Player.State.IDLE, level.player.getState());
+        assertEquals(neutral, lastCameraTarget.y, .01);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void pickupAndMechanismEachDelayInspectionForOneSecond(boolean left) {
+        for (boolean mechanism : new boolean[]{false, true}) {
+            held.clear(); scene(left); frames(10);
+            if (mechanism) level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
+            else level.triggers.clear();
+            assertNotNull(mechanism ? level.player.selectedMechanism() : level.player.selectedCarryable());
+            float neutral = lastCameraTarget.y;
+            held.add(mechanism ? up() : down()); frames(54);
+            assertEquals(mechanism ? Player.State.LOOK_UP : Player.State.LOOK_DOWN, level.player.getState());
+            assertEquals(neutral, lastCameraTarget.y, .001);
+            frames(12);
+            assertTrue(mechanism ? lastCameraTarget.y < neutral : lastCameraTarget.y > neutral);
+            frames(60);
+            assertEquals(neutral + (mechanism ? -100 : 150), lastCameraTarget.y, .01);
+        }
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void actionMovementJumpAndUiBoundariesTakePriorityOverLooking(boolean left) {
+        scene(left); frames(10);
+        held.add(up()); frames(181);
+        level.player.resetJumpInput(); frames(181);
+        assertEquals(Player.State.IDLE, level.player.getState(), "Held direction cannot leak across a UI boundary");
+        held.clear(); frames(1); held.add(up()); frames(2);
+        assertEquals(Player.State.LOOK_UP, level.player.getState());
+        held.add(action()); frames(2);
+        assertEquals(1, first.count); assertNotEquals(Player.State.LOOK_UP, level.player.getState());
+        frames(90); assertEquals(1, first.count);
+        held.clear(); frames(2); held.add(up());
+        held.add(left ? Input.Keys.RIGHT : Input.Keys.D); frames(2);
+        assertEquals(Player.State.RUNNING, level.player.getState());
+        held.clear(); frames(2); held.add(up());
+        held.add(left ? Input.Keys.Z : Input.Keys.J); frames(2);
+        assertNotEquals(Player.State.LOOK_UP, level.player.getState());
+    }
+
     private void frames(int count) {
         for (int i = 0; i < count; i++) {
             pad.update(leftHanded);
@@ -358,6 +417,23 @@ class DirectionalActionsTest {
 
     private void finger(int p, float x, int y) { fingers[p] = true; pointerX[p] = (int) x; pointerY[p] = y; }
     private float mirrored(float x) { return leftHanded ? 640 - x : x; }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void gamepadAndTouchLookThroughTheirActiveMovementStick(boolean left) {
+        scene(left); frames(10);
+        float neutral = lastCameraTarget.y;
+        int axis = left ? mapping.axisRightY : mapping.axisLeftY;
+        axes[axis] = -1; frames(181);
+        assertEquals(Player.State.LOOK_UP, level.player.getState());
+        assertTrue(lastCameraTarget.y < neutral);
+        axes[axis] = 0; frames(125);
+        finger(0, mirrored(80), 315); frames(181);
+        assertEquals(Player.State.LOOK_DOWN, level.player.getState());
+        assertEquals(neutral + 150, lastCameraTarget.y, .01);
+        finger(1, mirrored(520), 318); frames(2);
+        assertNotNull(level.player.carriedObject());
+        assertNotEquals(Player.State.LOOK_DOWN, level.player.getState());
+    }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void touchClaimsTwoPointersDragsVerticallyAndSuppressesMenuHold(boolean left) {

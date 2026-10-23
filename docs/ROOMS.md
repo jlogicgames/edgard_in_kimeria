@@ -437,3 +437,8 @@ exactly one `Actionable` Torch by name. Selection highlights this lever, while t
 linked Torch (119) remains at its independently authored wall position. The state
 comes from the torch: up/on, down/off. No new object IDs or collision geometry are
 introduced. Room resets rebuild both objects from their authored initial state.
+
+Standing inspection ([D25](DECISIONS.md#d25-standing-look-with-delayed-vertical-inspection))
+adds a deliberate vertical offset to the ordinary room-clamped camera. Horizontal
+bounds and transition ownership remain unchanged. Pose/camera inspection never
+changes the active room, collision, hero position or visible carryable attachment.

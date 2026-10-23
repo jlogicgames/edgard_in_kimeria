@@ -47,6 +47,12 @@ and quantizes authored art. The source guard/hook also checks dimensions, indexe
 palette and binary world alpha in the new world/HUD PNG exports, without a Pillow
 build dependency. Renderer checks still have to verify filtering and visual fit.
 
+The standing look poses use the first 48×48 idle frame from `Player.png`, changing
+only its head. `images/hero/Look.png` packs up/down on one 96×48 sheet. The body,
+sword, palm and boots remain pixel-identical, with the original character's 16
+opaque colors plus transparency. This is a registered legacy-character frame,
+not a new 48-pixel-wide item. See [selected sources and exact prompts](../art/hero/generation-prompts.md).
+
 ## Group artwork by meaning
 
 Store related states or animation frames of the same object in one registered

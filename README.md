@@ -57,6 +57,7 @@ F7 restarts the hosted game, not the dev launcher/host.
 | Action | Keyboard | Gamepad |
 | --- | --- | --- |
 | Move / vertical direction | A / D, W / S | Left stick / D-pad |
+| Look while standing (hold) | W / S | Movement stick up / down |
 | Jump | J | South button |
 | Sword | K | West / East button |
 | Pick up / put down | S + K | Down + West / East |

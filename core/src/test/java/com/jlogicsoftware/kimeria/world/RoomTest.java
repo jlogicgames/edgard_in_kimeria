@@ -48,6 +48,19 @@ class RoomTest {
     private Player player() { return new Player(assets, game, 0, 0); }
     private Level forest() { map("forest"); return new Level(assets, game, player(), "forest", Rectangle::new); }
 
+    @Test void cameraShakeNeverPullsAnInspectionViewBackIntoTheRoom() {
+        Level level = forest();
+        for (float y : new float[]{-400, 408}) {
+            Rectangle view = new Rectangle(0, y, 640, 360);
+            assertEquals(new Vector2(), level.cameraShakeOffset(view));
+            level.shakeAfterBossAttack();
+            Vector2 shake = level.cameraShakeOffset(view);
+            assertEquals(0, shake.y, .001, "Only shake is bounded; the inspection offset is retained");
+            assertTrue(Math.abs(shake.x) <= 1.25f);
+            level.clearCameraEffects();
+        }
+    }
+
     @Test void unmarkedMapKeepsItsOriginalPlayerEntrance() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);

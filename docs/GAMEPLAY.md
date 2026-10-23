@@ -36,6 +36,26 @@ with an empty hand it spends one fireball, if available.
 | Gamepad | Left stick/D-pad horizontal/vertical; A jump, X/B Action, Y Ranged | Right stick horizontal/vertical; D-pad Down jump, Left/Right Action, Up Ranged |
 | Touch | Two-axis stick left, three buttons right | Stick right, buttons left |
 
+Standing still on solid ground, hold Up or Down without Action/Ranged to look.
+The corresponding static head pose replaces idle immediately. After a continuous
+0.3-second hold, the camera eases vertically over one second: 100 logical pixels
+up or 150 down. Release, reverse, walk, jump, attack or interact to cancel/restart the hold;
+the camera eases back over 0.2 seconds, matching the immediate return to idle. Conflicting Up+Down selects no look.
+The full inspection distance is allowed even outside the current room or with
+the hero temporarily outside the view; horizontal room bounds remain intact. Deliberate inspection is an explicit exception to the ordinary
+vertical room clamp: current Forest rooms are only 8 px taller than the viewport.
+This changes neither hitboxes nor movement and is not crouching or ladder climbing.
+UI/layout boundaries discard the old hold and require vertical release before
+inspection can restart. A carried object stays in the unchanged front palm.
+When a reachable pickup or usable mechanism is available, allow a one-second
+hold before moving the camera, giving its pickup/activation chord priority over
+inspection. Choose this delay at the beginning of each hold; other holds keep
+0.3 seconds. A carry-only Put down/Throw reminder does not extend the delay.
+Target eligibility governs this rule even if the held look direction hides the
+other direction's teaching label, or a later room omits teaching text.
+All devices use their active movement directions; mirrored gamepad action D-pad
+buttons never double as look directions.
+
 **Esc/Start** pauses. Menus: arrows/Tab navigate, Enter/Space/A confirm, Esc/B back;
 Esc/B/Start resumes the pause menu. Debug keys F1 colliders, F2 invulnerability,
 F3 effects, F4 next level, F5 checkpoint, F6 next room remain unchanged.

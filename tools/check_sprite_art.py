@@ -132,6 +132,8 @@ def image_contracts(root):
     contracts = [(f'assets/images/objects/{name}.png', size, 16, True) for name, size in WORLD_IMAGES.items()]
     contracts += [(f'assets/images/HUD/{name}.png', (128, 128), 256, False)
                   for name in ('coin', 'chicken', 'key', 'fireball')]
+    # Character poses reuse the legacy hero's 16 opaque colors plus alpha; PNG pads to 32.
+    contracts.append(('assets/images/hero/Look.png', (96, 48), 32, True))
     for relative, size, colors, binary_alpha in contracts:
         path = root / relative
         if not path.is_file():

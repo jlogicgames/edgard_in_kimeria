@@ -9,12 +9,12 @@ public final class GameplayInput {
     private final boolean[] rangedWasHeld = {true, true, true};
     private boolean layout;
     private Device device = Device.KEYBOARD;
-    private boolean up, down, actionHeld, action, ranged;
+    private boolean up, down, actionHeld, rangedHeld, action, ranged;
 
     public void reset() {
         java.util.Arrays.fill(actionWasHeld, true);
         java.util.Arrays.fill(rangedWasHeld, true);
-        action = ranged = actionHeld = false;
+        action = ranged = actionHeld = rangedHeld = false;
     }
 
     public void update(boolean leftHanded, GamepadInput pad, TouchControls touch) {
@@ -22,7 +22,7 @@ public final class GameplayInput {
         KeyBindings keys = KeyBindings.of(leftHanded);
         boolean[] actions = {keys.actionHeld() || keys.actionJustPressed(), pad.actionHeld(), touch.actionHeld()};
         boolean[] ranges = {keys.shootHeld() || keys.shootJustPressed(), pad.shootHeld(), touch.shootHeld()};
-        action = ranged = actionHeld = false;
+        action = ranged = actionHeld = rangedHeld = false;
         Device edgeDevice = null;
         for (int i = 0; i < actions.length; i++) {
             boolean a = actions[i] && !actionWasHeld[i];
@@ -30,6 +30,7 @@ public final class GameplayInput {
             action |= a;
             ranged |= r;
             actionHeld |= actions[i];
+            rangedHeld |= ranges[i];
             if (a || r) edgeDevice = Device.values()[i];
             actionWasHeld[i] = actions[i];
             rangedWasHeld[i] = ranges[i];
@@ -44,6 +45,9 @@ public final class GameplayInput {
         down = keys.downHeld() || pad.downHeld() || touch.downHeld();
     }
 
+    /** Vertical inspection yields to either action, including a held button. */
+    public int lookDirection() { return actionHeld || rangedHeld || up == down ? 0 : up ? -1 : 1; }
+    public boolean verticalHeld() { return up || down; }
     public boolean up() { return up; }
     public boolean down() { return down; }
     public boolean actionPressed() { return action; }

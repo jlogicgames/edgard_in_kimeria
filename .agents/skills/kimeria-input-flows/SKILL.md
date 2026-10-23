@@ -33,8 +33,12 @@ a consumer. A menu mapping and a gameplay mapping may intentionally differ.
 - Movement is held; jump requires a fresh press with a short buffer and coyote
   time. Holding through landing never auto-jumps. Preserve reset/suppression when
   starting or resuming gameplay rather than clearing input on every frame.
-- Attack/Interact is one context-sensitive action. Shoot has a binding but is
-  currently inert; adding a button is not authorization to implement a weapon.
+- Action alone is sword; Down + Action picks up/places, Up + Action operates a
+  mechanism. Ranged throws the held object or spends one fireball when empty-handed.
+  Follow [directional controls](../../../docs/DIRECTIONAL_CONTROLS.md); proximity must
+  never turn a sword press into interaction. Standing Up/Down alone selects a static
+  look pose and delayed vertical inspection. Action, Ranged, horizontal movement,
+  jump and climbing take priority. Preserve release suppression at UI boundaries.
 - Default and left-handed gameplay mappings are disjoint. Use KeyBindings and
   generic controller mappings rather than scattering raw keys/button indices.
   Left-handed gamepad movement uses the right stick and D-pad actions; menu

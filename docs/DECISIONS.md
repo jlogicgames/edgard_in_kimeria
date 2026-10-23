@@ -599,3 +599,33 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Tracked in:** [#131](https://github.com/jlogicgames/edgard_in_kimeria/issues/131),
   [author clarification and playtest checks](https://github.com/jlogicgames/edgard_in_kimeria/issues/131#issuecomment-6360805528),
   [directional actions](DIRECTIONAL_CONTROLS.md), [room authoring](ROOMS.md).
+
+## D25. Standing look with delayed vertical inspection
+
+- **Status:** Accepted by the author, 2026-10-23; distance/timing are initial tuning values.
+- **Decision:** Up/Down alone while stationary and grounded immediately replaces idle
+  with a registered static head-up/head-down sprite. After 0.3 seconds, ease the camera
+  over 1 second: 100 logical pixels up or 150 down. Permit the full offset beyond current vertical room bounds
+  and even with the hero outside the view, as explicitly requested during tuning.
+  Release or another action restores the ordinary camera smoothly over 0.2 seconds, matching the restored idle pose.
+  A reversed direction starts a fresh hold: normally 0.3 s, or 1 s when a
+  reachable pickup/usable mechanism is available. Select this delay at hold start;
+  carry-only reminders do not extend it. Movement, jump, sword,
+  directional interaction, ranged, climbing and UI/room ownership take priority.
+  Held input across UI/layout boundaries cannot begin a new inspection until released.
+- **Why:** Short directional taps and interaction chords must not drag the camera.
+  A visible pose acknowledges the hold immediately, while the delay distinguishes
+  deliberate inspection. The current 368 px rooms barely exceed the 360 px viewport;
+  an explicit vertical-only exception to the normal room camera clamp is necessary
+  for a useful peek. Horizontal room limits, transitions and collision remain unchanged.
+- **Tracked in:** #95 author follow-up; ladder behavior remains #99. Details and
+  validation: [directional controls](DIRECTIONAL_CONTROLS.md).
+
+  Current author tuning: 100 px up, 150 px down; 0.3 s delay, 1 s travel,
+  0.2 s return after release (2026-10-23).
+
+  Author correction: releasing Up/Down restores idle immediately; return the camera
+  in 0.2 s so the view agrees with the hero's restored gaze (2026-10-23).
+
+  Author clarification: while standing at a pickup/activation target, wait 1 s
+  before inspection so its directional interaction can be entered first.

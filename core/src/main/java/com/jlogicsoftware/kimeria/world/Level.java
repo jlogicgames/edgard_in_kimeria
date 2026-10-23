@@ -149,9 +149,11 @@ public class Level implements WorldObject {
         float dx = (float) Math.sin(age * 110) * amplitude;
         float dy = (float) Math.sin(age * 137) * amplitude;
         if (room.width <= view.width) dx = 0;
-        else dx = Math.max(room.x, Math.min(room.x + room.width - view.width, view.x + dx)) - view.x;
+        else dx = Math.max(room.x, Math.min(room.x + room.width - view.width, view.x + dx))
+            - Math.max(room.x, Math.min(room.x + room.width - view.width, view.x));
         if (room.height <= view.height) dy = 0;
-        else dy = Math.max(room.y, Math.min(room.y + room.height - view.height, view.y + dy)) - view.y;
+        else dy = Math.max(room.y, Math.min(room.y + room.height - view.height, view.y + dy))
+            - Math.max(room.y, Math.min(room.y + room.height - view.height, view.y));
         return new Vector2(dx, dy);
     }
 

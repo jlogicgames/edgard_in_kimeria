@@ -23,6 +23,28 @@ keyboard repeats do not repeat interactions. Menu/loading/room entry, resume,
 death arrival and layout changes suppress held action/ranged input. Jump keeps its
 existing separate buffer and coyote-time implementation.
 
+## Standing look up/down (2026-10-23)
+
+Standing still on solid ground, hold Up or Down without Action/Ranged to look.
+The corresponding static head pose replaces idle immediately. After a continuous
+0.3-second hold, the camera eases vertically over one second: 100 logical pixels
+up or 150 down. Release, reverse, walk, jump, attack or interact to cancel/restart the hold;
+the camera eases back over 0.2 seconds, matching the immediate return to idle. Conflicting Up+Down selects no look.
+The full inspection distance is allowed even outside the current room or with
+the hero temporarily outside the view; horizontal room bounds remain intact. Deliberate inspection is an explicit exception to the ordinary
+vertical room clamp: current Forest rooms are only 8 px taller than the viewport.
+This changes neither hitboxes nor movement and is not crouching or ladder climbing.
+UI/layout boundaries discard the old hold and require vertical release before
+inspection can restart. A carried object stays in the unchanged front palm.
+When a reachable pickup or usable mechanism is available, allow a one-second
+hold before moving the camera, giving its pickup/activation chord priority over
+inspection. Choose this delay at the beginning of each hold; other holds keep
+0.3 seconds. A carry-only Put down/Throw reminder does not extend the delay.
+Target eligibility governs this rule even if the held look direction hides the
+other direction's teaching label, or a later room omits teaching text.
+All devices use their active movement directions; mirrored gamepad action D-pad
+buttons never double as look directions.
+
 ## Bindings and feedback
 
 | Device | Normal layout | Left-handed layout |
@@ -143,7 +165,7 @@ and exact prompts are retained under `art/objects/`; rejected viewpoints are rem
 
 ## Verification
 
-The complete PR was checked in a separate clean checkout: all 181 core tests,
+The complete PR was checked in a separate clean checkout: all 198 core tests,
 8 art-guard tests, localization (five catalogs, 83 keys), sprite-art validation,
 desktop/web release builds and dev-source compilation passed.
 `DirectionalActionsTest` exercises keyboard, simulated controller and touch in
@@ -177,3 +199,12 @@ runtime image's RGBA pixels were compared before/after export: both lever frames
 are identical to the selected standalone images, and all other runtime art is
 unchanged. The release browser loads the shared sheet and renders its lowered
 frame, local label and target brackets without console errors.
+
+Standing-look follow-up (2026-10-23): 100 logical pixels up / 150 down after a 0.3 s hold,
+1 s eased travel, 0.2 s return, per the author's tuning. Both poses use the first idle
+frame with only the head changed. The camera-shake clamp now bounds only shake,
+so it cannot cancel deliberate inspection beyond room bounds. Keyboard/browser
+inspection verifies both poses, full excursions and return; original body/palm/
+sword/feet pixels are unchanged. Physical controller/phone checks remain #101;
+real ladder traversal and ladder-zone acceptance remain #99. Novice teaching
+acceptance remains #131. These are not claimed complete by simulated tests.

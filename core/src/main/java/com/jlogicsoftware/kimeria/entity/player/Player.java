@@ -2,7 +2,6 @@ package com.jlogicsoftware.kimeria.entity.player;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
@@ -35,7 +34,7 @@ import java.util.Set;
 
 /** Port of Dart's {@code Player}. */
 public class Player extends Actor<Player.State> implements CollideBody {
-    public enum State {IDLE, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING}
+    public enum State {IDLE, LOOK_UP, LOOK_DOWN, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING}
 
     /**
      * Death and respawn, Katana Zero style. DYING: the world slows to a crawl so the player sees
@@ -67,6 +66,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public float horizontalMovement = 0f;
     private final JumpBuffer jumpBuffer = new JumpBuffer();
     private final GameplayInput gameplayInput = new GameplayInput();
+    private final LookAround look = new LookAround();
+    private boolean lookLayout;
     private Carryable carried;
     private final Vector2 carryHintAnchor = new Vector2();
     private final Vector2 carryHintCameraAnchor = new Vector2();
@@ -104,6 +105,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private void loadAnimations(Assets assets) {
         String img = "images/hero/Player.png";
         putAnimation(State.IDLE, assets.animation(img, 4, STEP_TIME, 48, 48, 0, 48 * 9), true);
+        putAnimation(State.LOOK_UP, assets.animation("images/hero/Look.png", 1, STEP_TIME, 48, 48, 0, 0), false);
+        putAnimation(State.LOOK_DOWN, assets.animation("images/hero/Look.png", 1, STEP_TIME, 48, 48, 48, 0), false);
         putAnimation(State.RUNNING, assets.animation(img, 4, STEP_TIME, 48, 48, 0, 0), true);
         putAnimation(State.JUMPING, assets.animation(img, 1, STEP_TIME, 48, 48, 0, 48 * 8), true);
         putAnimation(State.FALLING, assets.animation(img, 1, STEP_TIME, 48, 48, 0, 48 * 4), true);
@@ -122,6 +125,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public void spawned() {
         carried = null;
         carryHintVisible = false;
+        look.clear();
         resetJumpInput();
         startingPosition.set(position);
         resetCamera();
@@ -181,7 +185,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
             handleRespawnPhase();
             return;
         }
-        updateCameraPosition();
         if (isReachedCheckpoint) {
             tickAnimation(dt);
             checkpointTimer -= dt;
@@ -206,6 +209,19 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // has no networked/replay determinism requirement that would need
         // fixed steps.
         float stepDt = Math.min(dt, 0.05f);
+        if (lookLayout != game.leftHanded()) {
+            look.suppress();
+            lookLayout = game.leftHanded();
+        }
+        boolean jumpHeld = KeyBindings.of(game.leftHanded()).jumpHeld()
+            || game.gamepad().jumpHeld() || game.touch().jumpHeld();
+        boolean inspecting = !jumpHeld && onGround && horizontalMovement == 0 && !wallJumping && !clambering
+            && !isAttacking && !jumpBuffer.pending() && !victoryWalk;
+        // Give pickup/activation chords extra time before inspection moves their target.
+        // Use real eligibility: pressing Up can hide the pickup label without changing reach.
+        boolean interactionAvailable = inspecting && (selectedCarryable() != null || selectedMechanism() != null);
+        look.update(stepDt, inspecting ? gameplayInput.lookDirection() : 0,
+            gameplayInput.verticalHeld(), interactionAvailable);
         previousFeetY = position.y + hitbox.offsetY + hitbox.height;
         previousBodyX = position.x + hitbox.offsetX;
         checkAttackCollisions(stepDt);
@@ -219,6 +235,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         tryJump(0f);
         checkGameplayOverlaps();
 
+        updateCameraPosition();
         tickAnimation(dt);
     }
 
@@ -243,11 +260,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // centerX() ignores facing, unlike the hitbox, so turning in place can't nudge the zone.
         cameraFocusX = clampToZone(cameraFocusX, centerX(), hitbox.width * DEAD_ZONE_WIDTH_FACTOR);
         Vector2 target = cameraTarget(cameraFocusX, position.y);
+        // Deliberate inspection is a vertical exception to the ordinary room clamp.
+        // Current rooms are only 8px taller than the viewport; clamping the peek would erase it.
+        target.y += look.offset();
         // Compare the room-clamped camera target, not distance walked or screen shake.
         // Crossing a dead-zone edge at a room boundary does not scroll the view.
         if (carried != null && carryHintVisible && !game.isCameraPanning()
             && !target.epsilonEquals(carryHintCameraAnchor, .001f)) carryHintVisible = false;
-        game.moveCameraTo(target, CAMERA_CHASE_SPEED);
+        game.moveCameraTo(target, look.cameraSpeed(CAMERA_CHASE_SPEED));
     }
 
     /** Re-centres the dead zone on the player and pans the camera there (level start, respawn). */
@@ -329,6 +349,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         int frame = animation == null ? 0 : animation.getKeyFrameIndex(stateTime);
         int[] grip = switch (current) {
             case IDLE -> IDLE_GRIP[frame % IDLE_GRIP.length];
+            case LOOK_UP, LOOK_DOWN -> IDLE_GRIP[0];
             case RUNNING -> RUN_GRIP[frame % RUN_GRIP.length];
             case ATTACKING -> ATTACK_GRIP[frame % ATTACK_GRIP.length];
             case JUMPING -> JUMP_GRIP;
@@ -511,7 +532,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void updatePlayerState() {
-        State next = State.IDLE;
+        State next = look.direction() < 0 ? State.LOOK_UP : look.direction() > 0 ? State.LOOK_DOWN : State.IDLE;
 
         if (horizontalMovement < 0 && facingRight) {
             facingRight = false;
@@ -581,6 +602,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public void resetJumpInput() {
         jumpBuffer.reset();
         gameplayInput.reset();
+        look.suppress();
     }
 
     /**
