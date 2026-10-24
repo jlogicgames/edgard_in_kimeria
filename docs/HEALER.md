@@ -162,6 +162,29 @@ framebuffer images were visually inspected. About with controller instructions a
 both handedness layouts in both languages (312-pixel content panel at 640x360). The harness is not part of the shipped game.
 Only local checks were used, per the author's choice; no source was sent to Snyk.
 
+### Speaker-region layout audit, 2026-10-24 (#156)
+
+The baked-font regression now derives its spoken-line set from every typed `HEALER_` and
+`EDGARD_` message key, excluding the three choice labels and the separate continuation hint.
+Each catalog is measured against the view's computed two-thirds speaker region and the height
+available inside the frame. The general localization layout test no longer repeats the older
+full-width measurement.
+
+A temporary LWJGL preview used the shared `KimeriaGame` renderer, `HealerDialogueView` and
+shipped baked font to capture 55 desktop frames at 1280×720 for the five catalogs. Each set
+covers partial and complete text for both speakers, choices, paused partial text and choices,
+the paid acknowledgement/lock and all three post-victory lines. The states were seeded by the
+preview harness; this verifies presentation, not the input or gameplay transitions. Contact
+sheets were visually inspected for wrapping, portrait highlights, alignment and pause layering.
+The release TeaVM build passed. A Chromium smoke run against the TeaVM development build
+covered English full healer text, partial then complete Edgard text, fresh-Return advancement
+through refusal into choices, and Esc pause followed by Resume. The dialogue remained legible
+without clipping, and Resume preserved the fully revealed line. The browser run did not cover
+the other four catalogs, paid acknowledgement or post-victory guide; those presentation states
+are covered by the five-language desktop captures and baked-font checks above. This is not a
+native-speaker wording review; existing browser observations remain in
+[localization validation](LOCALIZATION_VALIDATION.md).
+
 ### Author review completed for the test version (#73/#75)
 
 The release acceptance checklist has moved to

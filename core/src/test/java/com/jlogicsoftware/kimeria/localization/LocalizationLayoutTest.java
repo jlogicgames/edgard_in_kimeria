@@ -53,10 +53,8 @@ class LocalizationLayoutTest {
                 assertTrue(height(body, Msg.HEALER.t(language), 100) <= 20, prefix + "speaker name");
                 assertTrue(new GlyphLayout(body, language.nativeName()).width <= 260, prefix + "language name");
                 assertTrue(height(hint, Msg.MENU_HINT.t(language), 608) <= 26, prefix + "menu hint");
-                for (Msg message : new Msg[]{Msg.HEALER_GREETING, Msg.EDGARD_REPLY, Msg.HEALER_INGREDIENTS,
-                    Msg.HEALER_PAYMENT, Msg.HEALER_BOTH, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
-                    Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE})
-                    assertTrue(height(body, message.t(language), 556) <= 80, prefix + message);
+                // Spoken healer/player lines are measured against the actual two-thirds regions
+                // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                     assertTrue(new GlyphLayout(body, message.t(language)).width <= 512, prefix + message);
                 for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED, Msg.DIRECTION_CONFLICT}) {

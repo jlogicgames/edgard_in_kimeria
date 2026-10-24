@@ -143,26 +143,36 @@ class HealerDialogueTest {
         assertEquals(42f + 556f / 3f, healer.x(), .001f);
         assertEquals(556f * 2f / 3f, edgard.width(), .001f);
         assertEquals(edgard.width(), healer.width(), .001f);
-        assertEquals(598f, edgard.x() + edgard.width(), .001f);
+        assertEquals(42f + 556f * 2f / 3f, edgard.x() + edgard.width(), .001f);
         assertEquals(598f, healer.x() + healer.width(), .001f);
         assertEquals(556f / 3f, edgard.x() + edgard.width() - healer.x(), .001f);
 
         var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-15.fnt"), false);
         var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
-        Msg[] healerLines = {Msg.HEALER_GREETING, Msg.HEALER_INGREDIENTS, Msg.HEALER_PAYMENT,
-            Msg.HEALER_BOTH, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
-            Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.HEALER_GUIDE};
-        Msg[] edgardLines = {Msg.EDGARD_REPLY, Msg.EDGARD_DARKNESS};
+        int spokenLineCount = 0;
         for (Language language : Language.values()) {
-            for (Msg message : healerLines) assertLineFits(font, message.t(language), healer.width(), language, message);
-            for (Msg message : edgardLines) assertLineFits(font, message.t(language), edgard.width(), language, message);
+            for (Msg message : Msg.values()) {
+                if (!isSpokenDialogueLine(message)) continue;
+                spokenLineCount++;
+                boolean edgardSpeaking = message.name().startsWith("EDGARD_");
+                float width = edgardSpeaking ? edgard.width() : healer.width();
+                assertLineFits(font, message.t(language), width, language, message);
+            }
         }
+        assertTrue(spokenLineCount > 0, "Typed healer/player dialogue keys must be covered");
         font.dispose();
     }
 
+    private static boolean isSpokenDialogueLine(Msg message) {
+        if (message == Msg.HEALER_RETURN || message == Msg.HEALER_BREW || message == Msg.HEALER_FIGHT
+            || message == Msg.HEALER_HINT) return false;
+        return message.name().startsWith("HEALER_") || message.name().startsWith("EDGARD_");
+    }
+
     private static void assertLineFits(BitmapFont font, String text, float width, Language language, Msg message) {
+        int alignment = message.name().startsWith("EDGARD_") ? Align.left : Align.right;
         GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width,
-            message == Msg.EDGARD_REPLY || message == Msg.EDGARD_DARKNESS ? Align.left : Align.right, true);
+            alignment, true);
         assertTrue(layout.width <= width + 1f,
             () -> language + " " + message + " exceeds speaker width: " + layout.width + " > " + width);
         assertTrue(layout.height <= HealerDialogueView.dialogueTextHeight(),
