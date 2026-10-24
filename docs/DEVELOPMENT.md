@@ -14,19 +14,56 @@ was left intact; the isolated test sources/probe were removed after verification
 The published GH Pages workflow and successful
 [run 39802877036](https://github.com/jlogicgames/edgard_in_kimeria/actions/runs/39802877036)
 confirm `buildWeb`, the named release compile/build tasks, and the upload directory
-`web/build/dist/js/release/webapp`. This is already a release build. However, the
-release target only explicitly enables obfuscation; installed gdx-teavm 1.6.2
-defaults to `BALANCED` optimization and `debugInformation=false`. Strongest-supported
-optimization and a clean uploaded artifact are not enforced. Application F1–F6
-hotkeys remain reachable in release, and local output includes editor/OS metadata.
-Minification alone does not remove debug functionality or prove maximum performance.
+`web/build/dist/js/release/webapp`. At the time, gdx-teavm 1.6.2 defaulted to
+`BALANCED` optimization and `debugInformation=false`; the release target enabled
+obfuscation only, F1–F6 were polled in release mode, and copied assets included
+editor and host metadata. Minification alone did not remove debug functionality or
+prove maximum performance.
 
-[Issue #153](https://github.com/jlogicgames/edgard_in_kimeria/issues/153) tracks
-explicit strongest-supported optimization, debug/source-map stripping, release
-gating of dev functionality, runtime-only uploads, CI artifact assertions and
-browser smoke/performance measurements. Those pipeline changes are follow-up work,
-not implemented or deployed by this audit. Desktop/web builds and all 39 relevant
-directional-action/hint-transition tests pass for the current fixes.
+### [Issue #153 release contract](https://github.com/jlogicgames/edgard_in_kimeria/issues/153) — 2026-10-24
+
+The named `release` target now explicitly selects TeaVM's strongest supported
+`AGGRESSIVE` optimization, retains obfuscation, and disables debug information and
+source maps. Its effective compile-task values are checked before compilation.
+The release entry point is `WebLauncher`; development uses a separate launcher.
+`KimeriaGame` ignores F1–F6 unless it was constructed in debug mode, which remains
+enabled for desktop `run`/`runDev` and the browser development target.
+
+`./gradlew clean buildWeb` clears prior build output and verifies the exact
+directory uploaded by Pages. The release build removes generated servlet
+metadata, Tiled project/session files, `.DS_Store`, and the authored boss-art
+README. Runtime TMX/TSX maps, all five localization catalogs, fonts, audio,
+shaders, images, and the bundled Howler MIT notice remain present. The checker
+rejects source maps, TeaVM debug sidecars, Java source/classes, editor metadata,
+OS metadata, server/dev payloads, missing runtime sentinels, or a missing Howler
+license notice. To recheck an existing build directly, run
+`python3 tools/check_web_release_artifact.py`; it always validates the repository's
+fixed Pages upload directory.
+
+The clean BALANCED baseline was built from current `main` before these changes; the
+clean AGGRESSIVE artifact uses the same main base after the release and debug-mode
+changes. Sizes below sum individual files; gzip uses level 9 per file with
+deterministic timestamps. The before/after size difference includes those code and
+artifact-cleanup changes, so it does not isolate optimization-level impact.
+
+| Build | Files | Raw total | Per-file gzip total | `app.js` raw / gzip |
+| --- | ---: | ---: | ---: | ---: |
+| BALANCED baseline | 80 | 3,870,521 B | 2,782,747 B | 672,177 / 235,771 B |
+| AGGRESSIVE release | 76 | 4,284,018 B | 2,866,193 B | 1,089,746 / 321,210 B |
+
+The final local Pages artifact was opened in the Codex in-app Chromium browser and
+reached the title screen, main menu, and forest gameplay with terrain and HUD assets
+loaded. FPS was not shown; F1, F4 and F6 did not reveal debug drawing or skip rooms.
+A reliable audio playback check and comparable browser load/frame-time measurement
+were not captured because performance instrumentation could not attach to the active
+browser profile. No measurement is inferred from bundle size. Repeat an audio and
+performance check after deployment; the deployed Pages site has not been tested by
+this change.
+
+Automated validation: `./gradlew clean buildWeb`,
+`./gradlew :core:test --tests '*BossCombatTest'`, and
+`python3 tools/test_web_release_artifact.py` pass. The separate desktop DevHost FPS
+constructor fix remains outside issue #153.
 
 Builds, live editing, troubleshooting, feature parity and implementation details.
 See [gameplay reference](GAMEPLAY.md) for controls and detailed game rules, or the

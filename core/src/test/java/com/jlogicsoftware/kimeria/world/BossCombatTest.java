@@ -180,7 +180,7 @@ class BossCombatTest {
 
     @Test void f6UsesTheRoomFadeAndStopsForHealerBeforeTheBoss() throws Exception {
         level = new Level(assets, game, player(), "forest", Rectangle::new);
-        KimeriaGame running = new KimeriaGame();
+        KimeriaGame running = new KimeriaGame(false, true);
         gameField(running, "assets", assets); gameField(running, "level", level);
         gameField(running, "player", level.player); running.setGameStarted(true);
         var hotkeys = KimeriaGame.class.getDeclaredMethod("handleDevHotkeys"); hotkeys.setAccessible(true);
@@ -217,6 +217,24 @@ class BossCombatTest {
         hotkeys.invoke(running);
         assertFalse(fade.active(), "F6 at the last room must be a no-op");
         assertEquals(0, completions);
+        pressed.clear();
+    }
+
+    @Test void developerHotkeysRequireAnExplicitDebugLaunch() throws Exception {
+        var hotkeys = KimeriaGame.class.getDeclaredMethod("handleDevHotkeys");
+        hotkeys.setAccessible(true);
+
+        KimeriaGame release = new KimeriaGame(false, false);
+        pressed.add(Input.Keys.F1);
+        pressed.add(Input.Keys.F2);
+        hotkeys.invoke(release);
+        assertFalse(release.debugDraw(), "Release launch must ignore debug drawing shortcuts");
+        assertFalse(release.invulnerable(), "Release launch must ignore the invulnerability cheat");
+
+        KimeriaGame development = new KimeriaGame(false, true);
+        hotkeys.invoke(development);
+        assertTrue(development.debugDraw(), "Explicit debug launch must retain the debug drawing shortcut");
+        assertTrue(development.invulnerable(), "Explicit debug launch must retain the invulnerability cheat");
         pressed.clear();
     }
 

@@ -2,6 +2,8 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
+import org.teavm.gradle.api.OptimizationLevel
+import org.teavm.gradle.tasks.GenerateJavaScriptTask
 
 val gdxVersion = project.property("gdxVersion") as String
 val appName = project.property("appName") as String
@@ -17,6 +19,7 @@ dependencies {
 }
 
 val faviconDir = layout.projectDirectory.dir("src/main/webapp")
+val releaseWebappDir = layout.buildDirectory.dir("dist/js/release/webapp")
 
 // TeaVM's dev server defaults to port 8080 and fails outright (with a confusing HTTP 404
 // from whatever else owns the port) when that is taken. Take the first free port instead.
@@ -73,6 +76,41 @@ gdxTeaVM {
     // produces the static, minified output the GitHub Pages workflow deploys.
     js("release") {
         obfuscated = true
+        optimization = OptimizationLevel.AGGRESSIVE
+        debugInformation = false
+        sourceMap = false
+    }
+}
+
+val releaseCompileTaskName = "gdx_teavm_web_js_release_compile"
+
+val verifyWebReleaseSettings = tasks.register("verifyWebReleaseSettings") {
+    group = "verification"
+    description = "Asserts effective TeaVM release target settings."
+    doLast {
+        val task = tasks.findByName(releaseCompileTaskName) as? GenerateJavaScriptTask
+            ?: throw GradleException("TeaVM release compile task was not registered as a JavaScript task")
+        check(task.mainClass.get() == "com.jlogicsoftware.kimeria.web.WebLauncher") {
+            "Pages release must enter through WebLauncher"
+        }
+        check(task.optimization.get() == OptimizationLevel.AGGRESSIVE) {
+            "Pages release must use TeaVM AGGRESSIVE optimization"
+        }
+        check(task.obfuscated.get()) { "Pages release must remain obfuscated" }
+        check(!task.debugInformation.get()) { "Pages release must omit TeaVM debug information" }
+        check(!task.sourceMap.get()) { "Pages release must omit source maps" }
+    }
+}
+
+tasks.matching { it.name == releaseCompileTaskName }.configureEach {
+    dependsOn(verifyWebReleaseSettings)
+    // The TeaVM task writes into a stable directory. Clear it before every
+    // compile so a removed file cannot survive from an earlier build.
+    doFirst {
+        val output = releaseWebappDir.get().asFile
+        if (output.exists() && !output.deleteRecursively()) {
+            throw GradleException("Could not remove stale Pages output directory: $output")
+        }
     }
 }
 
@@ -83,7 +121,27 @@ tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach {
     doLast {
         copy {
             from(faviconDir)
-            into(layout.buildDirectory.dir("dist/js/release/webapp"))
+            into(releaseWebappDir)
+        }
+        val serverMetadata = releaseWebappDir.get().asFile.resolve("WEB-INF")
+        if (serverMetadata.exists() && !serverMetadata.deleteRecursively()) {
+            throw GradleException("Could not remove server-only Pages metadata: $serverMetadata")
+        }
+        fileTree(releaseWebappDir.get().asFile).matching {
+            include("**/.DS_Store", "**/*.tiled-session", "**/*.tiled-project", "assets/images/ui/boss/README.md")
+        }.files.forEach {
+            if (!it.delete()) throw GradleException("Could not remove non-runtime Pages asset: $it")
         }
     }
+}
+
+tasks.register<Exec>("verifyWebReleaseArtifact") {
+    group = "verification"
+    description = "Validates the exact static artifact uploaded to GitHub Pages."
+    dependsOn("gdx_teavm_web_js_release_build")
+    workingDir = rootProject.projectDir
+    commandLine(
+        if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "tools/check_web_release_artifact.py",
+    )
 }

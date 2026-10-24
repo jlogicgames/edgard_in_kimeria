@@ -792,6 +792,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** F1 debug gizmos, F2 invulnerability, F3 shockwave+ripple, F4 next level, F5 checkpoint, F6 next room. */
     private void handleDevHotkeys() {
+        if (!debugMode) return;
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debugDraw = !debugDraw;
         if (Gdx.input.isKeyJustPressed(Input.Keys.F2)) invulnerable = !invulnerable;
         if (uiState != UiState.PLAYING || level == null) return;

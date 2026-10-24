@@ -43,6 +43,7 @@ tasks.register("runWeb") {
 tasks.register("buildWeb") {
     description = "Builds the static, minified web output, same as ./gradlew :web:gdx_teavm_web_js_release_build."
     dependsOn(":web:gdx_teavm_web_js_release_build")
+    dependsOn(":web:verifyWebReleaseArtifact")
     dependsOn("validateSpriteArt")
 }
 
