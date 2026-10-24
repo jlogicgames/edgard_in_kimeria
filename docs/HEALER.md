@@ -13,7 +13,12 @@ shows shared transparent PNG portraits: Edgard left, healer right. See
 frame is highlighted; all five supported languages use the shared baked pixel font.
 In every pre/post-boss conversation Edgard's name and dialogue are white, with his
 lines aligned left. The healer's name and dialogue are green, with his lines aligned
-right. Complete-line layout stays fixed while letters reveal. A right-aligned,
+right. Inside the dialogue frame, Edgard's spoken text wraps within the left two thirds
+of the padded text area and the healer's within the right two thirds. These regions
+intentionally overlap in the middle third because only the current speaker's line is
+shown. This applies to first and repeat meetings, brewing/payment lines and the
+post-victory guide scene; the recipe checklist, choices and `Next >` prompt keep their
+own full-width layout. Complete-line layout stays fixed while letters reveal. A right-aligned,
 translated `Next >` prompt appears below the dialogue only after the line is fully
 revealed; it hides during typing and when choices are displayed.
 

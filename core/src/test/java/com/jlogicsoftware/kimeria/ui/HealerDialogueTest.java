@@ -2,7 +2,13 @@ package com.jlogicsoftware.kimeria.ui;
 
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.backends.headless.HeadlessFiles;
@@ -128,5 +134,47 @@ class HealerDialogueTest {
         assertEquals(-1, view.choiceAt(new Vector2(320, 320), 2));
         assertEquals(-1, view.choiceAt(new Vector2(320, 150), 3));
         assertEquals(-1, view.choiceAt(new Vector2(590, 18), 2));
+    }
+
+    @Test void speakerRegionsOverlapByOneThirdAndEveryLocalizedLineFitsTheBakedFontBox() {
+        var edgard = HealerDialogueView.dialogueRegion(true);
+        var healer = HealerDialogueView.dialogueRegion(false);
+        assertEquals(42f, edgard.x(), .001f);
+        assertEquals(42f + 556f / 3f, healer.x(), .001f);
+        assertEquals(556f * 2f / 3f, edgard.width(), .001f);
+        assertEquals(edgard.width(), healer.width(), .001f);
+        assertEquals(598f, edgard.x() + edgard.width(), .001f);
+        assertEquals(598f, healer.x() + healer.width(), .001f);
+        assertEquals(556f / 3f, edgard.x() + edgard.width() - healer.x(), .001f);
+
+        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-15.fnt"), false);
+        var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
+        Msg[] healerLines = {Msg.HEALER_GREETING, Msg.HEALER_INGREDIENTS, Msg.HEALER_PAYMENT,
+            Msg.HEALER_BOTH, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
+            Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.HEALER_GUIDE};
+        Msg[] edgardLines = {Msg.EDGARD_REPLY, Msg.EDGARD_DARKNESS};
+        for (Language language : Language.values()) {
+            for (Msg message : healerLines) assertLineFits(font, message.t(language), healer.width(), language, message);
+            for (Msg message : edgardLines) assertLineFits(font, message.t(language), edgard.width(), language, message);
+        }
+        font.dispose();
+    }
+
+    private static void assertLineFits(BitmapFont font, String text, float width, Language language, Msg message) {
+        GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width,
+            message == Msg.EDGARD_REPLY || message == Msg.EDGARD_DARKNESS ? Align.left : Align.right, true);
+        assertTrue(layout.width <= width + 1f,
+            () -> language + " " + message + " exceeds speaker width: " + layout.width + " > " + width);
+        assertTrue(layout.height <= HealerDialogueView.dialogueTextHeight(),
+            () -> language + " " + message + " exceeds dialogue height: " + layout.height + " > " + HealerDialogueView.dialogueTextHeight());
+    }
+
+    private static final class MetricsTexture extends Texture {
+        MetricsTexture() { super(); }
+        @Override public int getWidth() { return 1024; }
+        @Override public int getHeight() { return 1024; }
+        @Override public int getDepth() { return 0; }
+        @Override public boolean isManaged() { return false; }
+        @Override protected void reload() {}
     }
 }

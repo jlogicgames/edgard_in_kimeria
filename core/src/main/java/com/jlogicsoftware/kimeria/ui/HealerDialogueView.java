@@ -17,7 +17,23 @@ import com.jlogicsoftware.kimeria.world.Level;
 /** Shared image portraits; their textures are owned by the game's Assets cache. */
 public final class HealerDialogueView {
     private static final Color HEALER_GREEN = new Color(.42f, .88f, .48f, 1f);
+    private static final float FRAME_X = 24f, FRAME_Y = 138f, FRAME_WIDTH = 592f, FRAME_HEIGHT = 104f;
+    private static final float TEXT_HORIZONTAL_INSET = 18f, TEXT_VERTICAL_INSET = 16f;
+    private static final float TEXT_INNER_X = FRAME_X + TEXT_HORIZONTAL_INSET;
+    private static final float TEXT_INNER_WIDTH = FRAME_WIDTH - TEXT_HORIZONTAL_INSET * 2f;
+    private static final float TEXT_INNER_Y = FRAME_Y + TEXT_VERTICAL_INSET;
+    private static final float TEXT_INNER_HEIGHT = FRAME_HEIGHT - TEXT_VERTICAL_INSET * 2f;
     private final TextureRegion edgard, healer;
+
+    record DialogueRegion(float x, float width) {}
+
+    static DialogueRegion dialogueRegion(boolean edgardSpeaking) {
+        float speakerWidth = TEXT_INNER_WIDTH * 2f / 3f;
+        float x = edgardSpeaking ? TEXT_INNER_X : TEXT_INNER_X + TEXT_INNER_WIDTH / 3f;
+        return new DialogueRegion(x, speakerWidth);
+    }
+
+    static float dialogueTextHeight() { return TEXT_INNER_HEIGHT; }
 
     public HealerDialogueView(Assets assets) {
         edgard = assets.region("images/portraits/edgard.png", Texture.TextureFilter.Linear);
@@ -45,11 +61,12 @@ public final class HealerDialogueView {
                 + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(level.forestCoinsSecured()),
                     "total", Integer.toString(level.forestCoinTotal()));
         if (!dialogue.postVictory()) overlay.body(batch, checklist, 320, 48, 360);
-        frame(batch, 24, 138, 592, 104, false);
+        frame(batch, FRAME_X, FRAME_Y, FRAME_WIDTH, FRAME_HEIGHT, false);
         Color speakerColor = dialogue.edgardSpeaking() ? Color.WHITE : HEALER_GREEN;
         int alignment = dialogue.edgardSpeaking() ? Align.left : Align.right;
+        DialogueRegion region = dialogueRegion(dialogue.edgardSpeaking());
         overlay.dialogue(batch, dialogue.completeText(lang), dialogue.text(lang).length(),
-            42, 154, 556, speakerColor, alignment);
+            region.x(), TEXT_INNER_Y, region.width(), speakerColor, alignment);
         if (dialogue.choosing()) {
             for (int i = 0; i < dialogue.choices().size(); i++) {
                 frame(batch, 40, 252 + i * 30, 560, 26, i == dialogue.selected());
