@@ -38,6 +38,8 @@
   "HEALER": "Healer",
   "EDGARD": "Edgard",
   "HEALER_GREETING": "Edgard, the forest guardian blocks your way. I can brew an elixir to strengthen your sword against him, but it won't affect magical items.",
+  "HEALER_RETURN_GREETING": "Oh! You're back.",
+  "HEALER_RETURN_CHECK": "Now then, the elixir needs Chicken, Key and every coin from this forest. Let's see what you've brought me.",
   "EDGARD_REPLY": "What do you need for the elixir?",
   "HEALER_INGREDIENTS": "The recipe needs Chicken and Key. You are missing ingredients. Check the list; payment also needs every coin from this forest.",
   "HEALER_PAYMENT": "You have the ingredients, but not enough payment. Bring every coin from this forest; coins from earlier lands do not count.",

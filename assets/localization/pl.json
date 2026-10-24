@@ -38,6 +38,8 @@
   "HEALER": "Znachor",
   "EDGARD": "Edgard",
   "HEALER_GREETING": "Edgardzie, leśny strażnik zagradza ci drogę. Mogę uwarzyć eliksir, który wzmocni twój miecz w walce z nim, ale nie wpłynie on na magiczne przedmioty.",
+  "HEALER_RETURN_GREETING": "O! Wróciłeś.",
+  "HEALER_RETURN_CHECK": "A więc eliksir wymaga kurczaka, klucza i wszystkich monet z tego lasu. Zobaczmy, co przyniosłeś.",
   "EDGARD_REPLY": "Czego potrzebujesz do eliksiru?",
   "HEALER_INGREDIENTS": "Do eliksiru potrzeba kurczaka i klucza. Brakuje ci składników. Sprawdź listę; zapłatą są też wszystkie monety z tego lasu.",
   "HEALER_PAYMENT": "Masz składniki, ale brakuje zapłaty. Przynieś wszystkie monety z tego lasu; monety z wcześniejszych krain się nie liczą.",

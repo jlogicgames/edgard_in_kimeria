@@ -95,7 +95,7 @@ public class Level implements WorldObject {
     private final Map<Integer, Visit> visits = new HashMap<>();
     private final Map<Integer, Enemy<?>> roomEnemies = new HashMap<>();
     private final Map<Integer, Bomb> roomTraps = new HashMap<>();
-    private boolean revisiting, fightCommitted, brewed;
+    private boolean revisiting, fightCommitted, brewed, healerMet;
     private final Set<Integer> authoredCoins = new HashSet<>();
     private final int entryCoins;
     private final Set<Integer> pendingPickups = new HashSet<>();
@@ -281,6 +281,14 @@ public class Level implements WorldObject {
     public boolean healerAhead() {
         return "forest".equals(name) && !fightCommitted && map.layer("SpawnPoints").stream()
             .anyMatch(o -> "Boss".equals(o.type) && roomLayout.owner(o) == currentRoom + 1);
+    }
+
+    /** Records one genuine pre-boss dialogue entry and reports whether it is a return visit. */
+    public boolean beginPreBossHealerMeeting() {
+        if (!healerAhead()) throw new IllegalStateException("No healer before this room");
+        boolean returning = healerMet;
+        healerMet = true;
+        return returning;
     }
 
     /** Securing here is idempotent, including the second call when the return is chosen. */

@@ -38,6 +38,8 @@
   "HEALER": "Heiler",
   "EDGARD": "Edgard",
   "HEALER_GREETING": "Edgard, der Waldwächter versperrt dir den Weg. Ich kann ein Elixier brauen, das dein Schwert im Kampf gegen ihn stärkt, aber magische Gegenstände bleiben davon unberührt.",
+  "HEALER_RETURN_GREETING": "Oh! Du bist zurück.",
+  "HEALER_RETURN_CHECK": "Also, für das Elixier brauche ich ein Huhn, einen Schlüssel und alle Münzen aus diesem Wald. Mal sehen, was du mitgebracht hast.",
   "EDGARD_REPLY": "Was brauchst du für das Elixier?",
   "HEALER_INGREDIENTS": "Das Rezept braucht Huhn und Schlüssel. Dir fehlen Zutaten. Sieh auf die Liste; als Bezahlung brauche ich auch alle Münzen aus diesem Wald.",
   "HEALER_PAYMENT": "Du hast die Zutaten, aber nicht genug zur Bezahlung. Bringe alle Münzen aus diesem Wald; Münzen aus früheren Gebieten zählen nicht.",

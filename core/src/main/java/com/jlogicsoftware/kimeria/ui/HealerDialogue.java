@@ -24,14 +24,20 @@ public final class HealerDialogue {
     public boolean postVictory() { return postVictory; }
 
     public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid) {
+        this(chicken, key, allCoins, eligible, paid, false);
+    }
+
+    public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid, boolean returning) {
         postVictory = false;
         this.eligible = eligible;
         this.paid = paid;
-        lines = paid ? List.of(Msg.HEALER_PAID, Msg.HEALER_LOCK)
-            : eligible ? List.of(Msg.HEALER_GREETING, Msg.EDGARD_REPLY, Msg.HEALER_READY)
-            : List.of(Msg.HEALER_GREETING, Msg.EDGARD_REPLY,
-                !chicken || !key ? (allCoins ? Msg.HEALER_INGREDIENTS : Msg.HEALER_BOTH) : !allCoins ? Msg.HEALER_PAYMENT : Msg.HEALER_READY,
-                Msg.HEALER_OFFER);
+        Msg greeting = returning ? Msg.HEALER_RETURN_GREETING : Msg.HEALER_GREETING;
+        Msg response = returning ? Msg.HEALER_RETURN_CHECK : Msg.EDGARD_REPLY;
+        if (paid) lines = List.of(Msg.HEALER_PAID, Msg.HEALER_LOCK);
+        else if (eligible) lines = List.of(greeting, response, Msg.HEALER_READY);
+        else lines = List.of(greeting, response,
+            !chicken || !key ? (allCoins ? Msg.HEALER_INGREDIENTS : Msg.HEALER_BOTH) : !allCoins ? Msg.HEALER_PAYMENT : Msg.HEALER_READY,
+            Msg.HEALER_OFFER);
     }
 
     public void update(float dt) { if (!choosing) characters += Math.max(0, dt) * 38; }

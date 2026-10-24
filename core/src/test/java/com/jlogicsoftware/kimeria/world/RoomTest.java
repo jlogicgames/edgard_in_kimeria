@@ -374,6 +374,28 @@ class RoomTest {
         assertTrue(level.canBrew());
     }
 
+    @Test void healerRecognitionBelongsToLiveLevelAcrossReturnAndRoomDeath() {
+        Level level = forest();
+        assertThrows(IllegalStateException.class, level::beginPreBossHealerMeeting);
+        level.enterNextRoom(player());
+        assertTrue(level.healerAhead());
+        level.prepareHealer(); // Preparation alone does not consume the first meeting.
+        assertFalse(level.beginPreBossHealerMeeting());
+
+        level.resetCurrentRoom(player());
+        level.prepareHealer();
+        assertTrue(level.beginPreBossHealerMeeting(), "A room death keeps recognition for the live level");
+        level.returnForCollection(player());
+        level.enterNextRoom(player());
+        level.prepareHealer();
+        assertTrue(level.beginPreBossHealerMeeting(), "Collection return keeps recognition");
+
+        Level restarted = forest();
+        restarted.enterNextRoom(player());
+        restarted.prepareHealer();
+        assertFalse(restarted.beginPreBossHealerMeeting(), "A fresh Level starts a new encounter");
+    }
+
     @Test void warnedTrapResumesItsSavedCountdownOnReturnAndRestoresItAfterRoomDeath() {
         Level level = forest();
         Bomb trap = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();

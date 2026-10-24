@@ -30,6 +30,13 @@ Do not invent destinations, quests or character history; distinguish proposed wo
 from author-approved story.
 Post-victory dialogue has no recipe checklist, payment or fight/return choices.
 
+The pre-boss first/repeat meeting flag belongs to the live `Level`. Read and mark it only
+when the game opens a genuine unpaid healer meeting; `prepareHealer()` also runs for
+collection returns and encounter commitment, so it must not consume the visit. Keep the
+flag through room death and collection return. A new `Level` on Restart Level or a new run
+starts with the first-meeting dialogue. Paid acknowledgement and `afterVictory()` remain
+separate scenes and do not count as pre-boss meetings.
+
 Trace `KimeriaGame.updateHealer`, `chooseHealer`, pause/Resume and the originating
 Level callback together. First fresh input reveals a line; a later fresh input advances.
 Opening choices consumes its event; navigation wins over confirmation. Snapshot held

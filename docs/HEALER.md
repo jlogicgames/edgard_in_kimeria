@@ -63,8 +63,8 @@ pause menu is drawn crisply above it. The underlying gameplay room is never show
 The checklist names Chicken, Key and current-forest unique coins, with `[+]`/`[-]` markers
 and a collected/total count. Refusal text distinguishes missing ingredients, insufficient
 payment and both. If the recipe is incomplete, offer return or an unempowered fight;
-return is the initial selection. Both branches start with the healer's account of the guardian
-blocking the path and Edgard's question. If the full recipe is secured, the healer then
+return is the initial selection. On the first meeting, both recipe branches start with the
+healer's account of the guardian blocking the path and Edgard's question. If the full recipe is secured, the healer then
 acknowledges that everything is available and announces brewing, without a refusal/return offer. Advancing that announcement
 consumes the recipe and drinks the elixir automatically; there is no redundant payment choice,
 return or unempowered fight option on this branch. Selected buttons use the same two edge
@@ -72,6 +72,15 @@ markers as the other menus. After payment, two lines acknowledge consumption and
 by a single fight choice. The author reviewed the wording in play and accepted it for the
 test version (2026-10-20); replacement artwork review is recorded separately in
 [portrait validation](PORTRAITS.md#author-review).
+
+The first unpaid pre-boss meeting uses the introduction above. After Edgard returns from a
+collection trip, the healer greets him as a returning visitor and restates the existing Chicken,
+Key and all-current-forest-coins recipe before checking what he brought. The following refusal,
+ready line and choices use the currently secured inventory. Later returns repeat this recognition
+and check. Recognition belongs to the live `Level`: it survives collection return and room death,
+but a full level restart or a newly loaded level begins with the first-meeting introduction again.
+Preparation, paid acknowledgement and the post-victory guide do not count as meetings. No visit
+state is written to the level-only save.
 
 ## Recipe, payment and encounter boundary
 
@@ -184,6 +193,19 @@ the other four catalogs, paid acknowledgement or post-victory guide; those prese
 are covered by the five-language desktop captures and baked-font checks above. This is not a
 native-speaker wording review; existing browser observations remain in
 [localization validation](LOCALIZATION_VALIDATION.md).
+
+For #157, the updated desktop renderer displayed the returning greeting, recipe reminder and
+current-inventory line in all five catalogs at 1280×720. The text stayed within each speaker's
+two-thirds region, with portraits, speaker highlights and continuation prompt in their expected
+positions. This presentation check does not replace native-speaker review.
+
+The #157 TeaVM browser smoke covered English in IAB Chromium. A fresh game showed the original
+first-meeting introduction; returning with no items showed the new greeting, missing-both
+checklist and choices. The recipe reminder fit its two-thirds region. Pausing during partial
+reveal and resuming retained the partial text, and a second collection return showed returning
+recognition again on the third meeting. Debug room skips and invulnerability were used to reach
+these scenes; this was not a full human route playthrough. The browser check did not cover the
+other four catalogs, which were checked with the desktop renderer above.
 
 ### Author review completed for the test version (#73/#75)
 

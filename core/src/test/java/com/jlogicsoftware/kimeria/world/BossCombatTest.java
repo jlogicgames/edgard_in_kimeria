@@ -760,6 +760,7 @@ class BossCombatTest {
         var enter = KimeriaGame.class.getDeclaredMethod("enterNextRoom"); enter.setAccessible(true);
         var rebuild = KimeriaGame.class.getDeclaredMethod("rebuildRoom"); rebuild.setAccessible(true);
         var levelField = KimeriaGame.class.getDeclaredField("level"); levelField.setAccessible(true);
+        var healerField = KimeriaGame.class.getDeclaredField("healer"); healerField.setAccessible(true);
         var choose = KimeriaGame.class.getDeclaredMethod("chooseHealer", com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.class);
         choose.setAccessible(true);
         load.invoke(running);
@@ -772,6 +773,9 @@ class BossCombatTest {
         enter.invoke(running);
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); // Healer secures the canopy before opening.
+        var firstMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_GREETING.t(com.jlogicsoftware.kimeria.localization.Language.ENGLISH),
+            firstMeeting.completeText(com.jlogicsoftware.kimeria.localization.Language.ENGLISH));
         assertEquals(23, running.coinsCollected());
         choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.RETURN);
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
@@ -782,7 +786,18 @@ class BossCombatTest {
         assertTrue(running.artifacts().hasFullSet("forest"));
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); enter.invoke(running);
+        var returningMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
+        var language = com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_RETURN_GREETING.t(language), returningMeeting.completeText(language));
+        returningMeeting.advance(language); returningMeeting.advance(language);
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_RETURN_CHECK.t(language), returningMeeting.completeText(language));
+        returningMeeting.advance(language); returningMeeting.advance(language);
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_READY.t(language), returningMeeting.completeText(language),
+            "The repeat visit checks the newly secured ingredients and coins");
         choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.BREW);
+        var paidMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_PAID.t(language), paidMeeting.completeText(language),
+            "Paid acknowledgement stays separate from repeat recognition");
         assertEquals(19, running.coinsCollected());
         assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest"));
         choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.FIGHT);

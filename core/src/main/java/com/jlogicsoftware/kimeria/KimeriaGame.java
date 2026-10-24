@@ -453,7 +453,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             roomFade.cancel();
             level.prepareHealer();
             roomStartCoins = coinsCollected;
-            openHealer(false);
+            openHealer(false, level.beginPreBossHealerMeeting());
             return;
         }
         roomStartCoins = coinsCollected;
@@ -465,11 +465,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         gamepad.suppressJumpUntilRelease();
     }
 
-    private void openHealer(boolean paid) {
+    private void openHealer(boolean paid, boolean returning) {
         healer = new HealerDialogue(artifacts.hasIngredient(level.name, ItemType.CHICKEN),
             artifacts.hasIngredient(level.name, ItemType.KEY),
             level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal(),
-            level.canBrew(), paid);
+            level.canBrew(), paid, returning);
         dialogueInput.reset(Gdx.input);
         gameStarted = false;
         uiState = UiState.HEALER;
@@ -489,7 +489,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 gameStarted = true;
                 uiState = UiState.PLAYING;
             }
-            case BREW -> { if (level.brewElixir()) { roomStartCoins = coinsCollected; openHealer(true); } }
+            case BREW -> { if (level.brewElixir()) { roomStartCoins = coinsCollected; openHealer(true, false); } }
             case CONTINUE -> { if (healer != null && healer.postVictory()) completeLevel(); }
             case FIGHT -> {
                 level.commitBossEncounter();

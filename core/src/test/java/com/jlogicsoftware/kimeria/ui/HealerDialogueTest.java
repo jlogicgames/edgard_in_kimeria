@@ -122,6 +122,40 @@ class HealerDialogueTest {
         }
     }
 
+    @Test void returningGreetingChecksCurrentRecipeStateForEveryLanguage() {
+        for (Language language : Language.values()) {
+            boolean[][] cases = {{false, true, true}, {true, false, true}, {true, true, false}, {false, true, false}};
+            Msg[] expected = {Msg.HEALER_INGREDIENTS, Msg.HEALER_INGREDIENTS, Msg.HEALER_PAYMENT, Msg.HEALER_BOTH};
+            for (int i = 0; i < cases.length; i++) {
+                boolean[] c = cases[i];
+                HealerDialogue dialogue = new HealerDialogue(c[0], c[1], c[2], false, false, true);
+                assertEquals(Msg.HEALER_RETURN_GREETING.t(language), dialogue.completeText(language));
+                assertFalse(dialogue.edgardSpeaking());
+                dialogue.advance(language); dialogue.advance(language);
+                assertEquals(Msg.HEALER_RETURN_CHECK.t(language), dialogue.completeText(language));
+                dialogue.advance(language); dialogue.advance(language);
+                assertEquals(expected[i].t(language), dialogue.completeText(language));
+                dialogue.advance(language); dialogue.advance(language);
+                assertEquals(Msg.HEALER_OFFER.t(language), dialogue.completeText(language));
+                toChoices(dialogue, language);
+                assertEquals(java.util.List.of(HealerDialogue.Choice.RETURN, HealerDialogue.Choice.FIGHT), dialogue.choices());
+                assertEquals(0, dialogue.selected(), "Return remains the initial selection after repeat visits");
+            }
+
+            HealerDialogue newlyComplete = new HealerDialogue(true, true, true, true, false, true);
+            for (Msg line : java.util.List.of(Msg.HEALER_RETURN_GREETING, Msg.HEALER_RETURN_CHECK, Msg.HEALER_READY)) {
+                assertEquals(line.t(language), newlyComplete.completeText(language));
+                newlyComplete.advance(language);
+                if (line != Msg.HEALER_READY) newlyComplete.advance(language);
+            }
+            assertEquals(HealerDialogue.Choice.BREW, newlyComplete.advance(language));
+
+            HealerDialogue paid = new HealerDialogue(false, false, false, false, true, true);
+            assertEquals(Msg.HEALER_PAID.t(language), paid.completeText(language));
+            assertFalse(paid.completeText(language).equals(Msg.HEALER_RETURN_GREETING.t(language)));
+        }
+    }
+
     @Test void touchTargetsAreDistinctAndLargeEnoughInLogicalPixels() {
         HealerDialogueView view = new HealerDialogueView(new com.jlogicsoftware.kimeria.Assets() {
             @Override public com.badlogic.gdx.graphics.g2d.TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) {
