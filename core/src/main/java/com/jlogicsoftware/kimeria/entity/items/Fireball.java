@@ -10,7 +10,7 @@ import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.physics.ProjectileStep;
 
-/** A single paid charge. Terrain and the sword-only boss stop it; ordinary enemies take one hit. */
+/** A single paid charge. Terrain blocks it; enemies and the forest boss take one hit. */
 public final class Fireball extends Entity {
     public static final float BODY_SIZE = 10;
     private static final float SPEED = 280, LIFETIME_SECONDS = 2;
@@ -36,7 +36,8 @@ public final class Fireball extends Entity {
             if (level.blocksObject(bounds, false)) { removeFromParent(); break; }
             for (var object : level.objects) if (object instanceof Enemy<?> enemy
                 && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds)) {
-                if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
+                if (enemy instanceof Boss boss) boss.hitByFireball();
+                else enemy.collidedWithActor(true);
                 removeFromParent();
                 break;
             }

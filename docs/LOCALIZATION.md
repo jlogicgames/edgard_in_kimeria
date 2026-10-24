@@ -69,7 +69,7 @@ the render loop.
 | `ENDING_STORY` | The implemented two-level test campaign's ending, not a new story branch. |
 | `CHICKEN`, `KEY`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
-| `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. The sword bonus is tenfold against this boss only. |
+| `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |
 | `ABOUT_BODY*`, `ABOUT_GAMEPAD*` | Preserve exact key/button bindings for normal and left-handed modes. Key names such as J, K, L, Z, X, C identify physical controls. |
 | `ATTACK`, `INTERACT`, `SHOOT`, `PICK_UP`, `PUT_DOWN`, `THROW`, `FIREBALL`, `NO_AMMO`, `PLACE_BLOCKED`, `DIRECTION_CONFLICT` | Compact directional-action touch labels. Plain Action means sword; Up/Down selects mechanism or pickup/place. Ranged means object throw or consumable fireball. |

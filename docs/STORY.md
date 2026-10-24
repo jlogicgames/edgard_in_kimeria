@@ -65,8 +65,9 @@ future implementation is tracked separately from this narrative decision.
 2. **Before the forest boss — [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84).**
    The healer meets Edgard in a dedicated NES-style dialogue scene and offers the optional
    elixir bargain. Chicken, Key and all coins authored in the current forest level are
-   ingredients/payment; the elixir is immediately drunk and gives 10x sword damage against
-   this boss. Edgard may proceed without it. Collection-return and payment details remain
+    ingredients/payment; the elixir is immediately drunk and gives 10x physical sword damage
+    against this boss. Magical fireballs always remove two energy; the elixir does not
+    strengthen them. Edgard may proceed without it. Collection-return and payment details remain
    specified in #84 and [D6](DECISIONS.md#d6-collectables).
 3. **After the forest boss — [#86](https://github.com/jlogicgames/edgard_in_kimeria/issues/86).**
    After boss death and the hero's automatic exit, the same healer returns on a separate

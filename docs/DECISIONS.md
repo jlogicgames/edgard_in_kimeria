@@ -123,10 +123,11 @@ only in the menu backdrop.
     artifact side paths is not required or planned for this MVP.
   - The boss always starts at full normal energy. Merely holding Chicken and Key gives
     no bonus. The optional healer bargain consumes Chicken, Key and every forest coin;
-    the hero immediately drinks the elixir, granting **10x sword damage to this boss**.
-    Starting/max energy is unchanged; only the player's sword damage is multiplied.
+    the hero immediately drinks the elixir, granting **10x physical sword damage to this boss**.
+    Starting/max energy is unchanged. Magical fireballs always remove two boss energy;
+    the elixir never increases their damage.
     The effect belongs only to this boss encounter and its retries until this boss is defeated;
-    clear it immediately on boss defeat. Empowered hits emit 48 thicker droplets with longer trails and shake the
+    clear it immediately on boss defeat. Empowered sword hits emit 48 thicker droplets with longer trails and shake the
     screen. After committing to the fight, no backward return or onward passage is possible
     until victory. The bargain/dialogue does not repeat on retry. It is run-only and also
     clears on Restart Level, leaving the level or leaving the run.
@@ -149,7 +150,7 @@ only in the menu backdrop.
 - **Why:** Optional artifacts give players a reason to explore without requiring collection
   to finish. Harder side paths inspired the original design, but the accepted MVP uses the
   existing placements and optional healer recipe without further challenge-layout work.
-- **Tracked in:** #46, #47, #60, #72
+- **Tracked in:** #46, #47, #60, #72, #155
 
 ## D7. Traps are deterministic puzzle elements
 

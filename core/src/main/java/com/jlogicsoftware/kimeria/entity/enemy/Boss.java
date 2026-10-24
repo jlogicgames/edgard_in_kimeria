@@ -16,11 +16,13 @@ import com.jlogicsoftware.kimeria.world.Level;
 public final class Boss extends Enemy<Boss.State> implements CollideBody {
     public enum State { THRONE, WALK, IDLE, NORMAL, HURT, WARNING, COUNTER, COUNTER_RECOVERY, RECOVERY, DEAD }
     public static final int MAX_ENERGY = 12;
+    private static final int FIREBALL_DAMAGE = 2;
     public static final float SPEED = 65f, WAKE_DISTANCE = 160f;
     public static final float ATTACK_SPEED = 1.5f * 1.5f;
     public static final float NORMAL_FRAME = .35f / ATTACK_SPEED, NORMAL_DURATION = NORMAL_FRAME * 4;
     public static final float HURT_DURATION = .2f, WARNING_DURATION = 1.15f;
     public static final float COUNTER_DURATION = .3f / ATTACK_SPEED, RECOVERY_DURATION = .3f, DEATH_DURATION = .8f;
+    private static final float BLOOD_IMPACT_Y_FRACTION = .45f;
     private static final Hitbox NORMAL_BOX = Hitbox.rect(24, 22, 16, 8);
     private static final Hitbox COUNTER_BOX = Hitbox.rect(24, 12, 16, 15);
     private final Level level;
@@ -134,28 +136,40 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         if (isDefeated() || abandoned || !player.canFight()) return;
         if (weapon) {
             boolean empowered = game.artifacts().bossWeaponDamageMultiplier(level.name) > 1;
-            int before = energy;
-            energy = Math.max(0, energy - (int) game.artifacts().bossWeaponDamageMultiplier(level.name));
-            feedback.damaged(before, energy);
-            Rectangle body = hitboxBounds();
-            float direction = player.hitboxBounds().x + player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
-            level.queueSpawn(new BloodBurst(direction > 0 ? body.x : body.x + body.width,
-                body.y + body.height * .45f, direction, body.y + body.height, empowered));
-            if (game.playSounds()) game.playSound("boss_hit");
-            if (energy == 0) {
-                completedStrike = false;
-                change(State.DEAD);
-                level.bossDefeated();
-            } else if (!isCounterSequence()) {
-                awakened = true;
-                completedStrike = false;
-                change(State.HURT);
-                if (game.playSounds()) game.playSound("bounce");
-            }
-            if (empowered) level.shakeAfterEmpoweredHit();
+            int damage = (int) game.artifacts().bossWeaponDamageMultiplier(level.name);
+            resolveLandedHit(damage, empowered);
             return;
         }
         resolveSolidContact();
+    }
+
+    /** A landed magical fireball always removes two energy, regardless of the sword elixir. */
+    public void hitByFireball() {
+        if (isDefeated() || abandoned || !player.canFight()) return;
+        resolveLandedHit(FIREBALL_DAMAGE, false);
+    }
+
+    /** Shared landed-hit feedback and state handling; damage and empowered visuals stay source-specific. */
+    private void resolveLandedHit(int damage, boolean empowered) {
+        int before = energy;
+        energy = Math.max(0, energy - damage);
+        feedback.damaged(before, energy);
+        Rectangle body = hitboxBounds();
+        float direction = player.hitboxBounds().x + player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
+        level.queueSpawn(new BloodBurst(direction > 0 ? body.x : body.x + body.width,
+            body.y + body.height * BLOOD_IMPACT_Y_FRACTION, direction, body.y + body.height, empowered));
+        if (game.playSounds()) game.playSound("boss_hit");
+        if (energy == 0) {
+            completedStrike = false;
+            change(State.DEAD);
+            level.bossDefeated();
+        } else if (!isCounterSequence()) {
+            awakened = true;
+            completedStrike = false;
+            change(State.HURT);
+            if (game.playSounds()) game.playSound("bounce");
+        }
+        if (empowered) level.shakeAfterEmpoweredHit();
     }
 
     /** Living body contact blocks movement but never deals damage. Axe strikes remain lethal. */

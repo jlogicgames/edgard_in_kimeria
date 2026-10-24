@@ -478,7 +478,7 @@ class DirectionalActionsTest {
         assertFalse(level.objects.stream().anyMatch(com.jlogicsoftware.kimeria.entity.items.Fireball.class::isInstance));
     }
 
-    @Test void projectilesHitOrdinaryEnemiesButCannotDamageTheSwordOnlyBoss() {
+    @Test void projectilesHitOrdinaryEnemiesAndDamageBossForTwoEnergy() {
         scene(false);
         var mob = new com.jlogicsoftware.kimeria.entity.enemy.YellowMob(assets, game, 100, 288, 48, 32, 0, 0);
         mob.setPlayer(level.player); mob.setLevel(level); level.objects.add(mob);
@@ -487,10 +487,9 @@ class DirectionalActionsTest {
         level = new Level(assets, game, player(), "forest", Rectangle::new);
         level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
         var boss = level.boss();
-        int energy = boss.energy();
         var fireball = new com.jlogicsoftware.kimeria.entity.items.Fireball(level, boss.hitboxBounds().x, boss.hitboxBounds().y, true);
         level.objects.add(fireball); fireball.update(REAL_STEP);
-        assertTrue(fireball.isRemoved()); assertEquals(energy, boss.energy());
+        assertTrue(fireball.isRemoved()); assertEquals(10, boss.energy());
     }
 
     @Test void rangedStockCrossesLevelsAndRestartRestoresLevelEntryRatherThanRefilling() {

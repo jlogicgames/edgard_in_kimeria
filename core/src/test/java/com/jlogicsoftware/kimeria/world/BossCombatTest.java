@@ -157,6 +157,16 @@ class BossCombatTest {
     private void sword() { pressed.add(Input.Keys.K); frames(1); }
     private Vector2 shake() { return level.cameraShakeOffset(new Rectangle(1856, 0, 640, 360)); }
 
+    private void fireball(boolean right) {
+        Rectangle body = boss.hitboxBounds();
+        float x = right ? body.x - com.jlogicsoftware.kimeria.entity.items.Fireball.BODY_SIZE
+            : body.x + body.width;
+        var fireball = new com.jlogicsoftware.kimeria.entity.items.Fireball(level, x, body.y, right);
+        level.objects.add(fireball);
+        fireball.update(REAL_STEP);
+        assertTrue(fireball.isRemoved());
+    }
+
     private static void gameField(KimeriaGame target, String name, Object value) throws Exception {
         var field = KimeriaGame.class.getDeclaredField(name);
         field.setAccessible(true); field.set(target, value);
@@ -421,6 +431,9 @@ class BossCombatTest {
         assertEquals(10f, artifacts.bossWeaponDamageMultiplier("forest"));
         level.player.arriveAfterReset(); frames(30);
         assertEquals(Boss.State.THRONE, retry.getState());
+        boss = retry;
+        fireball(true);
+        assertEquals(10, retry.energy(), "Magical damage remains 2 after a retry with the elixir retained");
     }
 
     @Test void aSwordSwingDealsOneHitAndNormalAndElixirNeedTwelveOrTwoSwings() {
@@ -438,6 +451,70 @@ class BossCombatTest {
         boss.collidedWithActor(true);
         assertEquals(2, boss.energy()); boss.collidedWithActor(true);
         assertTrue(boss.isDefeated());
+    }
+
+    @Test void fireballsAlwaysDealTwoDamageFromEitherSideWithOrWithoutElixir() {
+        for (boolean elixir : new boolean[]{false, true}) for (boolean right : new boolean[]{false, true}) {
+            encounter();
+            if (elixir) artifacts.drinkBossElixir("forest");
+            fireball(right);
+            assertEquals(10, boss.energy(), "elixir=" + elixir + ", right=" + right);
+            fireball(right);
+            assertEquals(8, boss.energy(), "One projectile must hit only once");
+            assertEquals(Vector2.Zero, shake(), "Fireballs never use empowered-sword impact shake");
+        }
+    }
+
+    @Test void fireballDamageClampsAnOddRemainingEnergyToZero() {
+        encounter();
+        for (int hit = 0; hit < 11; hit++) boss.collidedWithActor(true);
+        assertEquals(1, boss.energy());
+        fireball(true);
+        assertEquals(0, boss.energy());
+        assertTrue(boss.isDefeated());
+    }
+
+    @Test void sixLandedFireballsDefeatTheBossAndADeadOrAbandonedBossTakesNoMoreDamage() {
+        encounter();
+        for (int hit = 0; hit < 6; hit++) fireball(true);
+        assertEquals(0, boss.energy());
+        assertTrue(boss.isDefeated());
+        assertFalse(level.player.canFight(), "Lethal projectile hit starts protected victory");
+        assertFalse(boss.isAttackActive());
+        fireball(true);
+        assertEquals(0, boss.energy());
+
+        encounter();
+        boss.abandonAttack();
+        fireball(true);
+        assertEquals(12, boss.energy(), "An abandoned boss cannot take projectile damage");
+    }
+
+    @Test void lethalFireballDuringActiveCounterPreventsThatFramesAxeHitAndKeepsVictoryProtected() {
+        encounter(); startNormal(); sword(); outsideSwing(); frames(20);
+        assertEquals(Boss.State.WARNING, boss.getState());
+        frames(63);
+        assertEquals(Boss.State.COUNTER, boss.getState());
+        assertTrue(boss.isAttackActive());
+        Rectangle axe = boss.attackBounds();
+        level.player.position.set(axe.x, axe.y);
+        for (int hit = 0; hit < 6; hit++) fireball(true);
+        boss.resolveCombat();
+        assertTrue(boss.isDefeated());
+        assertFalse(boss.isAttackActive());
+        assertFalse(level.player.isGotHit(), "Lethal magic cancels the active axe before its same-frame resolution");
+        assertFalse(level.player.canFight(), "The victory walk blocks gameplay input");
+        level.update(REAL_STEP);
+        assertFalse(level.player.isGotHit());
+        assertFalse(level.player.canFight());
+    }
+
+    @Test void fireballHitDuringProtectedCounterDealsDamageWithoutRestartingItsTimer() {
+        encounter(); startNormal(); sword(); outsideSwing(); frames(20);
+        assertEquals(Boss.State.WARNING, boss.getState());
+        fireball(true);
+        assertEquals(9, boss.energy(), "The sword hit already removed one energy before the fireball's two");
+        assertEquals(Boss.State.WARNING, boss.getState());
     }
 
     @Test void hitAndRetreatCanInterruptAgainWhenTheNextHitArrivesDuringApproach() {

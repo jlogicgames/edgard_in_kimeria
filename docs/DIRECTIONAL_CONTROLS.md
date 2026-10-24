@@ -106,7 +106,8 @@ Fortress light puzzles remain separate work.
 A thrown object follows a gravity arc, hits terrain/ordinary enemies and comes to
 rest for reuse. A fireball flies horizontally, stops at terrain or its first enemy,
 and expires after two seconds. Both use movement substeps to catch thin obstacles.
-The Forest boss absorbs these projectiles without damage: its sword-only rule stays.
+The Forest boss absorbs thrown objects without damage. Fireballs damage it for exactly
+2 energy each, regardless of the elixir; only the sword receives the elixir's 10x bonus.
 Objects never injure the hero. Carrying does not change movement or jump behavior.
 
 Carryables belong to their authored room. They are rebuilt on retry and collection

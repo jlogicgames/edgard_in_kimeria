@@ -78,7 +78,9 @@ test version (2026-10-20); replacement artwork review is recorded separately in
   Remove the two inventory icons, immediately drink the elixir and acknowledge payment.
   Spent artifact identities and the unique coin completion record remain separate from
   remaining inventory/currency. No duplicate brewing or new persistent save fields exist.
-- The elixir gives 10x sword damage to this boss only; starting/max energy stays 12.
+- The elixir strengthens physical sword strikes tenfold against this boss only; starting/max
+  energy stays 12. Magical fireballs always remove exactly 2 energy, with or without elixir.
+  Six landed fireballs defeat the boss from full energy if ammunition is available.
   Each empowered hit emits 48 blood droplets instead of 32, with 1.8x thickness and 4x trails,
   and starts a 0.18-second room-bounded impact shake. The lethal hit retains its own blood and impact shake while
   cancelling the old attack shake. Normal hits, misses, body contact and stomps do not
@@ -163,8 +165,9 @@ and framebuffer checks retain their recorded scope.
 
 Status (reported 2026-10-20): the author completed this review on keyboard and on a
 physical gamepad, including the pre-boss healer and the post-boss guide scene, and
-accepted it for the test version. The elixir works as documented and is accepted as is for
-the test version. The left-handed layout was also checked on keyboard. Touch devices, and
+accepted that version for the test build. At that time the elixir was described as a sword
+bonus; the later correction in #155 clarifies that it does not strengthen magical fireballs.
+The left-handed layout was also checked on keyboard. Touch devices, and
 the left-handed layout on touch and gamepad, are deferred to the pre-release list.
 The post-victory scene is implemented by #86 as described below.
 

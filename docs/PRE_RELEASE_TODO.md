@@ -127,8 +127,10 @@ for the test version.
 - [ ] Land on the head while falling, including near an axe strike. Confirm bounce with no
    energy loss or player death. Test side contact both idle and swinging.
 - [ ] Complete without artifacts, then with #84's consumed elixir.
-   Check 12 versus 2 sword hits, unchanged starting energy, retained effect after death,
-   no repeated bargain, and a fresh effect-free run after Restart Level/Continue.
+   Check 12 versus 2 sword hits and six landed fireballs both with and without the elixir.
+   Confirm fireballs always remove 2 energy, starting energy and starting ammunition stay
+   unchanged, the effect persists after death, the bargain does not repeat, and Restart
+   Level/Continue starts a fresh effect-free run.
 - [ ] Watch death and automatic exit. Hold left/jump/attack; verify the hero crosses the right
    wall, cannot die, leaves the viewport, then opens the post-boss guide; its final advance completes/saves once. Try Checkpoint/F5 before
    defeat and during exit. Check the next level on Continue.

@@ -46,6 +46,7 @@ row 6 and ordinary recovery returns to row 5. The two attack sequences never sha
 | Initial/max energy | 12, with or without elixir |
 | Normal sword damage / hits required | 1 / 12 distinct swings |
 | Consumed elixir sword damage / hits required | 10 / 2 distinct swings |
+| Fireball damage with or without elixir / hits required | 2 / 6 landed fireballs |
 | Pursuit speed | 65 px/s; player remains 100 px/s |
 | Wake threshold | 160 px horizontal body-centre distance, with vertical body overlap |
 | Normal duration | approximately 0.6222 s; unchanged hero is 0.7 s |
@@ -87,17 +88,21 @@ normal attack. Previously that hit was counted only as damage; the following fra
 an uncancellable normal strike inside the already-counted player swing. Counter recovery
 is a separate state and remains protected until it finishes, avoiding recursive counters.
 
-Only the player's weapon reduces energy. Each player swing records whether it already
-hit this boss. Top contact snaps the player's feet onto the boss top and bounces at
-260 px/s without damaging either actor. The solid body blocks side and underside passage without contact damage, including while swinging.
+Sword swings and landed fireballs reduce energy. A sword swing can hit this boss once;
+each fireball removes exactly 2 energy, including with the elixir active. Six landed
+fireballs defeat a full-energy boss when ammunition is available. The elixir strengthens
+physical sword strikes only. Top contact snaps the player's feet onto the boss top and
+bounces at 260 px/s without damaging either actor. The solid body blocks side and underside passage without contact damage, including while swinging.
 Only the active axe strike kills the hero.
 Ordinary mobs and the hero's animation, input and movement timing retain their rules.
 
-Boss damage resolves after the player's sword and movement. A same-frame interruption
-wins over the normal strike or its pending completion shake. Lethal sword damage wins over
-that boss's remaining attack/body damage. A hero already killed by another hazard cannot
-land a posthumous sword hit. Further hits during counter still deal damage, including 10x;
-a lethal one cancels the attack and its completion shake. An empowered sword hit still
+Sword damage resolves after the player's movement. Fireball damage resolves when its
+projectile overlaps the boss during the world update. A same-frame interruption wins over
+the normal strike or its pending completion shake. Lethal damage wins over that boss's
+remaining attack/body damage. A hero already killed by another hazard cannot land a
+posthumous sword hit or fireball hit. Further hits during counter still deal damage without
+restarting its timer; sword hits use 1x/10x damage and fireballs use 2. A lethal hit cancels
+the attack and its completion shake. An empowered sword hit still
 creates its own brief impact shake, including on the lethal hit. There is no recursive counter queue.
 
 Shake is only a render-camera offset; it never changes the chase target or collisions.
@@ -154,8 +159,9 @@ automatic artifact bonus.
 - Snyk transmission was rejected by automatic review; the author selected local checks only.
 
 Human validation: the author played the boss encounter through on keyboard and on a
-physical gamepad, and accepted it for the test version (reported 2026-10-20). The elixir
-works as documented here and is accepted as is for the test version. Touch play and
+physical gamepad, and accepted that version for the test build (reported 2026-10-20).
+That review predates #155, which clarifies the elixir's scope for magical fireballs.
+Touch play and
 release regression/teaching/timing checks are deferred to
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#boss-combat-teaching-and-replay-time).
 The automated and limited browser checks above retain their recorded scope.
@@ -167,11 +173,13 @@ boss sits on the throne and during the protected victory walk. It disappears wit
 or level. The label is localized in all five supported languages; a green potion and `x10` indicate the
 consumed elixir and remain on boss retry. No automatic artifact bonus is implied.
 
-Each landed sword swing triggers one 75 ms impact sound, a 32-droplet crimson blood spray
+Each landed sword swing or fireball triggers one 75 ms impact sound, a 32-droplet crimson blood spray
 at the contact side (48 droplets with 1.8x thickness, 4x trails and a brief impact shake while the elixir is active),
-and a 250 ms glow/fade over the lost slots. Counterattack hits have the same feedback without
-changing the counter's state or timer. Lethal hits still show their impact. Missing a swing
-or bouncing off the head produces no sword-damage feedback.
+and a 250 ms glow/fade over the lost slots. Only an empowered sword hit uses 48 droplets
+and impact shake. Fireballs and ordinary sword hits use 32 droplets and no impact shake.
+Counterattack hits have the same feedback without changing the counter's state or timer.
+Lethal hits still show their impact. Missing a swing or bouncing off the head produces no
+sword-damage feedback.
 
 On death, remember the boss's actual remaining energy. The rebuilt boss immediately has
 full real energy, but its displayed bar fills from the remembered value to full over **250 ms**

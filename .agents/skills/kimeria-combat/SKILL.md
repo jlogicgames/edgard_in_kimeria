@@ -36,7 +36,7 @@ Implementation is under `core/src/main/java/com/jlogicsoftware/kimeria/`:
   attack is grounded-only; do not assume it is an airborne escape option when
   evaluating fairness. Dying enemies are harmless.
   The forest boss is an explicit exception: solid harmless body, safe top bounce,
-  sword-only energy damage, lethal axe only during active strike frames.
+  sword/fireball energy damage, lethal axe only during active strike frames.
 - One-way platforms resolve landing vertically and never push actors sideways.
   Verify combat near walls/platforms as well as in open space.
 
@@ -55,7 +55,8 @@ For the existing forest boss preserve, unless the request revises the design:
   Lethal sword damage cancels remaining boss attack/body damage; a hero already
   killed by another hazard cannot deliver a posthumous hit.
 - The consumed elixir multiplies sword damage, not boss energy. Its scope and
-  retry/reset lifetime follow HEALER.md; artifacts alone grant no automatic bonus.
+  retry/reset lifetime follow HEALER.md; fireballs always remove exactly 2 energy,
+  and artifacts alone grant no automatic bonus.
 - Feedback fires on a landed hit, including lethal hits. Camera shake changes
   render framing only and remains within room limits. Clear old queued damage
   and effects at the documented pause/death/transition boundaries.

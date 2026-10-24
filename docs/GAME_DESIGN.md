@@ -391,7 +391,9 @@ accepted direction, the tablet takes that mandatory role and ingredients offer
 help along the way. Seven does not become a mandatory future recipe size.
 
 The existing forest recipe is Chicken + Key + all six unique level coins. Its
-elixir multiplies sword damage by ten, reducing required hits from twelve to two.
+elixir multiplies physical sword damage by ten, reducing required swings from twelve to
+two. Magical fireballs always remove two boss energy, so six landed fireballs defeat a
+full-energy boss with or without the elixir. This does not increase starting ammunition.
 These are current test-encounter values in [HEALER.md](HEALER.md) and
 [BOSS.md](BOSS.md), not universal campaign values.
 

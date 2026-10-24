@@ -88,7 +88,7 @@ reserve the far-right column for FPS and shift stock left to avoid overlap.
 Pickup requires contact within a 3 px tolerance;
 touch labels also distinguish sword, pickup/place, mechanism, throw and fireball.
 Stock starts at three, persists between the two Forest levels and restores to room
-entry stock on death. The boss still requires sword hits. Full behavior, target
+entry stock on death. Sword and fireballs can damage the boss. Full behavior, target
 selection, recovery, test evidence and the explicit **#99 ladder dependency** are in
 [Directional actions](DIRECTIONAL_CONTROLS.md). Ladders, rare refills and Steppe double
 jump remain separate work; no available ladder controls are claimed.
@@ -100,7 +100,7 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 `forest` contains three rooms: the original course, a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
-hits are required to defeat him. Top contact bounces safely; the solid body blocks passage
+and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
 Interrupting a normal strike triggers a flashing, uninterruptible counterattack: jump away.
 Victory plays the boss death and an automatic hero exit, then the healer dialogue,
@@ -136,8 +136,10 @@ secured artifacts survive later deaths and level transitions. Restart Level rest
 entry inventory. A new/continued run or exit to the main menu clears it.
 No artifact data is written to preferences or saves.
 
-Artifacts alone give no boss bonus. The optional healer elixir (#84) grants **10x sword
-damage against the forest boss**, with unchanged starting/max energy (12). The healer requires Chicken, Key and **all six unique coins authored in this forest**;
+Artifacts alone give no boss bonus. The optional healer elixir (#84) grants **10x physical
+sword damage against the forest boss**; a magical fireball always removes 2 energy, with
+or without the elixir. The boss starts with 12 energy and six landed fireballs defeat it.
+The healer requires Chicken, Key and **all six unique coins authored in this forest**;
 prior-level coins do not count and are not spent. Payment consumes the two artifacts and
 forest coins; collection completion remains recorded separately. The elixir is drunk at once.
 It applies only to this boss, including retries until victory, and ends on boss defeat.
