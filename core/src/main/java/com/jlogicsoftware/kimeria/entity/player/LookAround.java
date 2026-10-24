@@ -1,8 +1,11 @@
 package com.jlogicsoftware.kimeria.entity.player;
 
+import com.badlogic.gdx.math.Interpolation;
+
 /** Stationary inspection: immediate pose, 0.3-second hold, then a one-second eased pan. */
 final class LookAround {
     private static final float DELAY = .3f, INTERACTION_DELAY = 1f, PAN_SECONDS = 1f, RETURN_SECONDS = .2f, UP_DISTANCE = 100f, DOWN_DISTANCE = 150f;
+    private static final float SMOOTHSTEP_MAX_SLOPE = 1.5f;
     private int direction;
     private boolean suppressed = true;
     private float held, elapsed, from, to, offset;
@@ -38,7 +41,7 @@ final class LookAround {
         }
         elapsed = Math.min(duration, elapsed + dt);
         float t = elapsed / duration;
-        offset = from + (to - from) * t * t * (3 - 2 * t);
+        offset = from + (to - from) * Interpolation.smooth.apply(t);
     }
 
     private void startPan(float target) {
@@ -63,7 +66,7 @@ final class LookAround {
 
     /** The chase must keep up with the eased return, including at its maximum speed. */
     float cameraSpeed(float followSpeed) {
-        return followSpeed + (elapsed < duration ? Math.abs(to - from) * 1.5f / duration : 0);
+        return followSpeed + (elapsed < duration ? Math.abs(to - from) * SMOOTHSTEP_MAX_SLOPE / duration : 0);
     }
 
     int direction() { return direction; }

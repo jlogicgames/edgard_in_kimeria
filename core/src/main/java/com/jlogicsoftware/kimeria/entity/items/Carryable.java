@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.effects.Torch;
+import com.jlogicsoftware.kimeria.SpriteSheets;
+import com.jlogicsoftware.kimeria.physics.ProjectileStep;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
@@ -14,6 +16,15 @@ import com.jlogicsoftware.kimeria.world.Level;
 
 /** One reusable object: rest, held, placed, thrown, then rest again. */
 public final class Carryable extends Entity {
+    public static final float BODY_SIZE = 12;
+    private static final float THROW_SPEED = 220, THROW_UPWARD_SPEED = 110;
+    private static final float GRAVITY = 600, MAX_FALL_SPEED = 300;
+    private static final float PLATFORM_TOLERANCE = .1f;
+    private static final float HELD_BODY_OFFSET_X = 5, HELD_BODY_OFFSET_Y = 8;
+    private static final float FLAME_BOUNDS_WIDTH = 8, FLAME_BOUNDS_HEIGHT = 12;
+    private static final int FLAME_INTENSITY = 80;
+    private static final float FLAME_OFFSET_X = 1, FLAME_OFFSET_Y = -7;
+
     public enum Kind { STONE, TORCH }
     public final int id;
     public final Kind kind;
@@ -21,16 +32,18 @@ public final class Carryable extends Entity {
     private final Vector2 velocity = new Vector2();
     private final Torch flame;
     private final TextureRegion sprite;
+    private final SpriteSheets.Sheet artwork;
     private Player holder;
     private boolean thrown;
 
     public Carryable(Level level, int id, Kind kind, float x, float y) {
-        super(x, y, 12, 12);
+        super(x, y, BODY_SIZE, BODY_SIZE);
         this.level = level;
         this.id = id;
         this.kind = kind;
-        sprite = level.objectSprite(kind == Kind.STONE ? "stone" : "torch");
-        flame = kind == Kind.TORCH ? new Torch(x, y, 8, 12, 80, "") : null;
+        artwork = kind == Kind.STONE ? SpriteSheets.STONE : SpriteSheets.TORCH;
+        sprite = level.objectSprite(artwork);
+        flame = kind == Kind.TORCH ? new Torch(x, y, FLAME_BOUNDS_WIDTH, FLAME_BOUNDS_HEIGHT, FLAME_INTENSITY, "") : null;
     }
 
     public Rectangle bounds() { return new Rectangle(getX(), getY(), size.x, size.y); }
@@ -41,33 +54,33 @@ public final class Carryable extends Entity {
         holder = null;
         position.set(x, y);
         thrown = throwObject;
-        velocity.set(throwObject ? (right ? 220 : -220) : 0, throwObject ? -110 : 0);
+        velocity.set(throwObject ? (right ? THROW_SPEED : -THROW_SPEED) : 0, throwObject ? -THROW_UPWARD_SPEED : 0);
     }
 
     public void followHolder() {
         if (holder == null) return;
         holder.heldObjectGrip(position);
         // Native 8x16 torch: grip is (3,12), sprite origin is (bounds.x+2,bounds.y-4).
-        position.sub(5, 8);
+        position.sub(HELD_BODY_OFFSET_X, HELD_BODY_OFFSET_Y);
     }
 
     @Override public void update(float dt) {
         if (holder != null) followHolder();
         else {
             // Substeps prevent fast throws crossing a thin wall or an enemy in one frame.
-            int steps = Math.max(1, (int) Math.ceil(Math.min(dt, .05f) / .008f));
-            float step = Math.min(dt, .05f) / steps;
+            int steps = ProjectileStep.count(dt);
+            float step = ProjectileStep.frameSeconds(dt) / steps;
             for (int i = 0; i < steps; i++) {
                 float oldY = position.y;
                 position.x += velocity.x * step;
                 if (level.blocksObject(bounds(), false)) { position.x -= velocity.x * step; velocity.x = 0; thrown = false; }
-                velocity.y = Math.min(300, velocity.y + 600 * step);
+                velocity.y = Math.min(MAX_FALL_SPEED, velocity.y + GRAVITY * step);
                 position.y += velocity.y * step;
                 for (var block : level.collisionBlocks) {
                     if (!block.isActive() || block.isQuickSand()) continue;
                     Rectangle b = new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight());
                     if (!bounds().overlaps(b)) continue;
-                    if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > b.y + .1f)) continue;
+                    if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > b.y + PLATFORM_TOLERANCE)) continue;
                     position.y = velocity.y >= 0 ? b.y - size.y : b.y + b.height;
                     velocity.setZero(); thrown = false;
                     break;
@@ -96,9 +109,9 @@ public final class Carryable extends Entity {
     }
 
     private void renderSprite(Batch batch) {
-        if (kind == Kind.STONE) batch.draw(sprite, getX() + 2, getY() + 4, 8, 8);
-        else {
-            batch.draw(sprite, getX() + 2, getY() - 4, 8, 16);
+        batch.draw(sprite, getX() + (BODY_SIZE - artwork.width()) / 2f,
+            getY() + (BODY_SIZE - artwork.height()), artwork.width(), artwork.height());
+        if (kind == Kind.TORCH) {
             positionFlame();
             flame.render(batch);
         }
@@ -106,6 +119,6 @@ public final class Carryable extends Entity {
 
     private void positionFlame() {
         // Flame emitter belongs at the torch head, not at the grip or the hero's waist.
-        flame.position.set(getX() + 1, getY() - 7);
+        flame.position.set(getX() + FLAME_OFFSET_X, getY() + FLAME_OFFSET_Y);
     }
 }

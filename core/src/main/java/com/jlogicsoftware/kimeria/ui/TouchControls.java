@@ -30,6 +30,7 @@ import com.jlogicsoftware.kimeria.localization.Msg;
  * {@link #update(boolean)} once per frame before reading anything.
  */
 public class TouchControls {
+    private static final float SHOOT_LABEL_WIDTH_SCALE = 1.7f, BUTTON_LABEL_PADDING = 2f;
     private static final int MAX_POINTERS = 5;
 
     private static final float STICK_X = 80, STICK_Y = 280, STICK_RADIUS = 44, STICK_GRAB = 76;
@@ -206,8 +207,8 @@ public class TouchControls {
         // would already hold the text projection when it is "restored" below.
         Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
-        label(batch, action, actionX, ACTION_Y, BUTTON_RADIUS * 2f - 2f);
-        label(batch, game.rangedLabel().t(lang), shootX, SHOOT_Y, BUTTON_RADIUS * 1.7f - 2f);
+        label(batch, action, actionX, ACTION_Y, BUTTON_RADIUS * 2f - BUTTON_LABEL_PADDING);
+        label(batch, game.rangedLabel().t(lang), shootX, SHOOT_Y, BUTTON_RADIUS * SHOOT_LABEL_WIDTH_SCALE - BUTTON_LABEL_PADDING);
         batch.setProjectionMatrix(previous);
     }
 

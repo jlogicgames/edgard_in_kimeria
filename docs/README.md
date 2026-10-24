@@ -22,6 +22,7 @@ different scopes; a design decision is not evidence that a feature is implemente
 | [Dialogue portraits](PORTRAITS.md) | Editable PNG locations, replacement instructions, desktop/web validation and separate author artwork approval for #90. |
 | [Forest healer](HEALER.md) | The implemented encounter: dialogue, recipe/payment, collection returns and the detailed state retention/reset table. |
 | [Development and implementation](DEVELOPMENT.md) | Build/run instructions, architecture, persistence backends, assets and troubleshooting. |
+| [Named parameters](NAMED_PARAMETERS.md) | Ownership of tuning/geometry, authored tables and automated checks |
 | [Translation catalogs and fonts](LOCALIZATION.md) | Editing/adding translations, message context, strict validation, glyph coverage and font regeneration. |
 | [Localization validation](LOCALIZATION_VALIDATION.md) | Dated #85 test, desktop/browser rendering and persistence evidence, with human/device review limits. |
 | [Pre-release TODO](PRE_RELEASE_TODO.md) | Outstanding release acceptance checks and how to record completion. This is the active release checklist. |

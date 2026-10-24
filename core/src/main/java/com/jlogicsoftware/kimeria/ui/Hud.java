@@ -26,6 +26,12 @@ import java.util.Map;
  * instead of the Y-down-camera-plus-flipped-region trick used elsewhere.
  */
 public class Hud {
+    public static final float FPS_RIGHT_MARGIN = 6, FPS_TOP_MARGIN = 6;
+    private static final float FPS_STOCK_GAP = 12, ICON_TEXT_GAP = 8, INVENTORY_GAP = 8, INVENTORY_SECTION_GAP = 16;
+    private static final String FPS_WIDTH_SAMPLE = "999 FPS";
+    private static final int COUNT_FONT_SIZE = 20, HINT_FONT_SIZE = 13;
+    private static final float HINT_WIDTH = 200, HINT_SIDE_MARGIN = 8, HINT_BOTTOM_MARGIN = 40, HINT_TOP_MARGIN = 52;
+    private static final float TEXT_SHADOW_OFFSET = 1;
     private static final float ICON_X = 10, ICON_Y = 10, ICON_SIZE = 32;
 
     private final GameContext game;
@@ -52,8 +58,8 @@ public class Hud {
             artifactIcons.put(type, assets.region("images/HUD/" + type.name().toLowerCase(java.util.Locale.ROOT) + ".png",
                 com.badlogic.gdx.graphics.Texture.TextureFilter.Linear));
         }
-        this.font = assets.font(20);
-        this.hintFont = assets.font(13);
+        this.font = assets.font(COUNT_FONT_SIZE);
+        this.hintFont = assets.font(HINT_FONT_SIZE);
 
         OrthographicCamera textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, logicalWidth, logicalHeight);
@@ -68,19 +74,19 @@ public class Hud {
         float rightEdge = logicalWidth - ICON_X;
         if (!fpsText.isEmpty()) {
             // Reserve a stable three-digit counter column; wider values can still push the HUD left.
-            float fpsWidth = Math.max(new GlyphLayout(hintFont, "999 FPS").width, new GlyphLayout(hintFont, fpsText).width);
-            rightEdge = logicalWidth - 6 - fpsWidth - 12;
+            float fpsWidth = Math.max(new GlyphLayout(hintFont, FPS_WIDTH_SAMPLE).width, new GlyphLayout(hintFont, fpsText).width);
+            rightEdge = logicalWidth - FPS_RIGHT_MARGIN - fpsWidth - FPS_STOCK_GAP;
         }
         float ammunitionX = ammunition == null ? rightEdge : rightEdge - ammunition.width;
-        if (player != null) batch.draw(fireballIcon, ammunitionX - 8 - ICON_SIZE, ICON_Y, ICON_SIZE, ICON_SIZE);
+        if (player != null) batch.draw(fireballIcon, ammunitionX - ICON_TEXT_GAP - ICON_SIZE, ICON_Y, ICON_SIZE, ICON_SIZE);
 
         String text = String.valueOf(game.coinsCollected());
         GlyphLayout layout = new GlyphLayout(font, text);
-        float x = ICON_X + ICON_SIZE + 8f;
-        float artifactX = x + layout.width + 16f;
+        float x = ICON_X + ICON_SIZE + ICON_TEXT_GAP;
+        float artifactX = x + layout.width + INVENTORY_SECTION_GAP;
         for (var pickup : game.artifacts().items()) {
             batch.draw(artifactIcons.get(pickup.type()), artifactX, ICON_Y, ICON_SIZE, ICON_SIZE);
-            artifactX += ICON_SIZE + 8f;
+            artifactX += ICON_SIZE + INVENTORY_GAP;
         }
         // Vertically center the label on the icon's own center, both
         // measured "distance from top" before converting to the Y-up
@@ -112,18 +118,18 @@ public class Hud {
         hintTransition.position(hintPosition);
         hintScreen.set(hintPosition.x, hintPosition.y, 0);
         camera.project(hintScreen, 0, 0, logicalWidth, logicalHeight);
-        float width = 200;
-        float x = Math.max(8, Math.min(logicalWidth - width - 8, hintScreen.x - width / 2));
-        float y = Math.max(40, Math.min(logicalHeight - 52, hintScreen.y));
+        float width = HINT_WIDTH;
+        float x = Math.max(HINT_SIDE_MARGIN, Math.min(logicalWidth - width - HINT_SIDE_MARGIN, hintScreen.x - width / 2));
+        float y = Math.max(HINT_BOTTOM_MARGIN, Math.min(logicalHeight - HINT_TOP_MARGIN, hintScreen.y));
         hintColor.a = hintShadow.a = hintTransition.alpha();
         GlyphLayout layout = new GlyphLayout(hintFont, text, hintColor, width, Align.center, true);
         // Grow upward: a second instruction must not cover the hero's head below the label.
-        y = Math.min(logicalHeight - 52, y + Math.max(0, layout.height - hintFont.getCapHeight()));
+        y = Math.min(logicalHeight - HINT_TOP_MARGIN, y + Math.max(0, layout.height - hintFont.getCapHeight()));
         y -= hintTransition.offsetY(); // Text projection is Y-up, slide offset is Y-down.
         Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
         GlyphLayout shadow = new GlyphLayout(hintFont, text, hintShadow, width, Align.center, true);
-        hintFont.draw(batch, shadow, x + 1, y - 1);
+        hintFont.draw(batch, shadow, x + TEXT_SHADOW_OFFSET, y - TEXT_SHADOW_OFFSET);
         hintFont.setColor(Color.WHITE);
         hintFont.draw(batch, layout, x, y);
         batch.setProjectionMatrix(previous);

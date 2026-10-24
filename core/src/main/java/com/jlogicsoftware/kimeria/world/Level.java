@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
@@ -57,10 +58,8 @@ public class Level implements WorldObject {
     public final RangedStock rangedStock;
     private int roomStartAmmo;
 
-    public com.badlogic.gdx.graphics.g2d.TextureRegion objectSprite(String name) {
-        int width = name.equals("fireball") ? 16 : 8;
-        int height = name.equals("stone") ? 8 : 16;
-        return assets.region("images/objects/" + name + ".png", 0, 0, width, height);
+    public com.badlogic.gdx.graphics.g2d.TextureRegion objectSprite(SpriteSheets.Sheet sheet) {
+        return sheet.frame(assets);
     }
 
     public final List<CollisionBlock> collisionBlocks = new ArrayList<>();

@@ -82,3 +82,11 @@ change; keep typed keys in `localization/Msg.java`. Follow
 regenerate fonts when new glyphs are needed.
 Report device checks actually performed; keyboard simulation does not prove
 physical controller or multitouch behavior.
+
+## Named control tuning
+
+Keep input delays, camera timing/distance and interaction tolerances with their
+owning mechanic. Use the item's shared body definition for placement and spawning;
+do not repeat another class's dimensions in the input dispatcher. Follow
+[parameter ownership](../../../docs/NAMED_PARAMETERS.md) and run the named-parameter
+check; its lexical pass cannot judge ownership or meaningful names.

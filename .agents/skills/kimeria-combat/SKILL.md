@@ -84,3 +84,11 @@ Use F1 in the running game for collider alignment. Check whether warning,
 escape opportunity and attack art are readable at gameplay scale. Automated
 state/collision assertions do not prove a fair fight or teachability; report
 human-playtest work still needed without claiming it passed.
+
+## Named projectile parameters
+
+Use `ProjectileStep` for shared projectile time limits and each entity's body-size
+constant for collision, placement and spawning. Keep launch speed, gravity and
+lifespan scoped to their relevant entity; artwork dimensions remain in `SpriteSheets`.
+Follow [parameter ownership](../../../docs/NAMED_PARAMETERS.md) and run the
+named-parameter check when adding or changing combat code.

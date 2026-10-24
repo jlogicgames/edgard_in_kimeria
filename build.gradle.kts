@@ -70,6 +70,17 @@ project(":core").tasks.named("check") { dependsOn(validateSpriteArt) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateSpriteArt) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateSpriteArt) }
 
+val validateNamedParameters = tasks.register<Exec>("validateNamedParameters") {
+    group = "verification"
+    description = "Rejects unnamed tuning and geometry literals in changed production code."
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "tools/check_named_parameters.py", "--base", providers.gradleProperty("namedParameterBase").getOrElse("HEAD"))
+}
+project(":core").tasks.named("check") { dependsOn(validateNamedParameters) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateNamedParameters) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateNamedParameters) }
+
 // Native installer/app-image (bundles its own JRE -- nothing else to
 // install to play): .exe/.msi on Windows, .app/.dmg on macOS,
 // .deb/.rpm/app-image on Linux, at lwjgl3/build/jpackage/. jpackage can only

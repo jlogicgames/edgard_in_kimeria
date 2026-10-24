@@ -13,11 +13,10 @@ import json
 import re
 import struct
 import sys
+from sprite_layouts import WORLD_IMAGES, PLAYER_LOOK_SIZE, HUD_ICON_SIZE, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
-WORLD_IMAGES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16),
-                'lever': (32, 16)}  # Two registered 16x16 states: up/on, down/off.
 RULES = {
     'quad': re.compile(r'\b(?:Shaders\s*\.\s*)?whiteQuad\s*\('),
     'particle': re.compile(r'\bSoftDot\s*\.\s*(?:region|glowRegion)\s*\('),
@@ -129,11 +128,11 @@ def png_contract(path, data, size, colors, binary_alpha):
 
 def image_contracts(root):
     issues = []
-    contracts = [(f'assets/images/objects/{name}.png', size, 16, True) for name, size in WORLD_IMAGES.items()]
-    contracts += [(f'assets/images/HUD/{name}.png', (128, 128), 256, False)
+    contracts = [(f'assets/images/objects/{name}.png', size, WORLD_PALETTE_SIZE, True) for name, size in WORLD_IMAGES.items()]
+    contracts += [(f'assets/images/HUD/{name}.png', HUD_ICON_SIZE, HUD_PALETTE_SIZE, False)
                   for name in ('coin', 'chicken', 'key', 'fireball')]
     # Character poses reuse the legacy hero's 16 opaque colors plus alpha; PNG pads to 32.
-    contracts.append(('assets/images/hero/Look.png', (96, 48), 32, True))
+    contracts.append(('assets/images/hero/Look.png', PLAYER_LOOK_SIZE, 32, True))
     for relative, size, colors, binary_alpha in contracts:
         path = root / relative
         if not path.is_file():

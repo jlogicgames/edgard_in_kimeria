@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
@@ -42,6 +43,21 @@ public class Player extends Actor<Player.State> implements CollideBody {
      * player. ARRIVING (on the new player): the camera pans back while the sprite appears.
      */
     private enum RespawnPhase {NONE, DYING, RESETTING, ARRIVING}
+
+    private static final int FRAME_SIZE = SpriteSheets.PLAYER.width();
+    private static final float PICKUP_REACH = 3, PLACEMENT_GAP = 2;
+    private static final float FIREBALL_SPAWN_OFFSET_Y = 3;
+    private static final float HINT_PLAYER_OFFSET_Y = 12, HINT_TARGET_OFFSET_Y = 24;
+    private static final float CAMERA_TARGET_TOLERANCE = .001f;
+    private static final float MAX_PHYSICS_FRAME_SECONDS = .05f;
+    private record Clip(State state, int frames, int row, boolean loop) { }
+    private static final Clip[] CLIPS = {
+        new Clip(State.IDLE, 4, 9, true), new Clip(State.RUNNING, 4, 0, true),
+        new Clip(State.JUMPING, 1, 8, true), new Clip(State.FALLING, 1, 4, true),
+        new Clip(State.HIT, 2, 4, false), new Clip(State.ATTACKING, 7, 1, false),
+        new Clip(State.APPEARING, 4, 3, false), new Clip(State.DISAPPEARING, 4, 6, true),
+        new Clip(State.CLIMBING, 1, 3, true)
+    };
 
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
@@ -93,7 +109,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private final Vector2 startingPosition = new Vector2();
 
     public Player(Assets assets, GameContext game, float x, float y) {
-        super(x, y, 48, 48, State.class);
+        super(x, y, FRAME_SIZE, FRAME_SIZE, State.class);
         this.game = game;
         startingPosition.set(x, y);
         viewHalfWidth = game.logicalResolution().x / 2f;
@@ -103,18 +119,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void loadAnimations(Assets assets) {
-        String img = "images/hero/Player.png";
-        putAnimation(State.IDLE, assets.animation(img, 4, STEP_TIME, 48, 48, 0, 48 * 9), true);
-        putAnimation(State.LOOK_UP, assets.animation("images/hero/Look.png", 1, STEP_TIME, 48, 48, 0, 0), false);
-        putAnimation(State.LOOK_DOWN, assets.animation("images/hero/Look.png", 1, STEP_TIME, 48, 48, 48, 0), false);
-        putAnimation(State.RUNNING, assets.animation(img, 4, STEP_TIME, 48, 48, 0, 0), true);
-        putAnimation(State.JUMPING, assets.animation(img, 1, STEP_TIME, 48, 48, 0, 48 * 8), true);
-        putAnimation(State.FALLING, assets.animation(img, 1, STEP_TIME, 48, 48, 0, 48 * 4), true);
-        putAnimation(State.HIT, assets.animation(img, 2, STEP_TIME, 48, 48, 0, 48 * 4), false);
-        putAnimation(State.ATTACKING, assets.animation(img, 7, STEP_TIME, 48, 48, 0, 48 * 1), false);
-        putAnimation(State.APPEARING, assets.animation(img, 4, STEP_TIME, 48, 48, 0, 48 * 3), false);
-        putAnimation(State.DISAPPEARING, assets.animation(img, 4, STEP_TIME, 48, 48, 0, 48 * 6), true);
-        putAnimation(State.CLIMBING, assets.animation(img, 1, STEP_TIME, 48, 48, 0, 48 * 3), true);
+        for (Clip clip : CLIPS) {
+            putAnimation(clip.state(), assets.animation(SpriteSheets.PLAYER.path(), clip.frames(), STEP_TIME,
+                FRAME_SIZE, FRAME_SIZE, 0, FRAME_SIZE * clip.row()), clip.loop());
+        }
+        putAnimation(State.LOOK_UP, new com.badlogic.gdx.graphics.g2d.Animation<>(STEP_TIME,
+            SpriteSheets.PLAYER_LOOK.frame(assets, 0, 0)), false);
+        putAnimation(State.LOOK_DOWN, new com.badlogic.gdx.graphics.g2d.Animation<>(STEP_TIME,
+            SpriteSheets.PLAYER_LOOK.frame(assets, 1, 0)), false);
     }
 
     public void setLevel(Level level) {
@@ -266,7 +278,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // Compare the room-clamped camera target, not distance walked or screen shake.
         // Crossing a dead-zone edge at a room boundary does not scroll the view.
         if (carried != null && carryHintVisible && !game.isCameraPanning()
-            && !target.epsilonEquals(carryHintCameraAnchor, .001f)) carryHintVisible = false;
+            && !target.epsilonEquals(carryHintCameraAnchor, CAMERA_TARGET_TOLERANCE)) carryHintVisible = false;
         game.moveCameraTo(target, look.cameraSpeed(CAMERA_CHASE_SPEED));
     }
 
@@ -387,7 +399,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (level == null || carried != null || !canFight()) return null;
         Rectangle reach = new Rectangle(hitboxBounds());
         // A small hand/contact tolerance, not a remote interaction radius.
-        reach.x -= 3; reach.y -= 3; reach.width += 6; reach.height += 6;
+        reach.x -= PICKUP_REACH; reach.y -= PICKUP_REACH;
+        reach.width += PICKUP_REACH * 2; reach.height += PICKUP_REACH * 2;
         Carryable best = null;
         for (var object : level.objects) if (object instanceof Carryable target && target.available() && reach.overlaps(target.bounds())) {
             if (best == null || targetDistance(target) < targetDistance(best)
@@ -398,8 +411,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     private Rectangle placementBounds() {
         Rectangle body = hitboxBounds();
-        return new Rectangle(facingRight ? body.x + body.width + 2 : body.x - 14,
-            body.y + body.height - 12, 12, 12);
+        return new Rectangle(facingRight ? body.x + body.width + PLACEMENT_GAP : body.x - (Carryable.BODY_SIZE + PLACEMENT_GAP),
+            body.y + body.height - Carryable.BODY_SIZE, Carryable.BODY_SIZE, Carryable.BODY_SIZE);
     }
 
     private void pickUpOrPlace() {
@@ -413,7 +426,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             Carryable target = selectedCarryable();
             if (target != null) {
                 carried = target;
-                carryHintAnchor.set(centerX(), getY() + 12);
+                carryHintAnchor.set(centerX(), getY() + HINT_PLAYER_OFFSET_Y);
                 carryHintCameraAnchor.set(cameraTarget(cameraFocusX, position.y));
                 carryHintVisible = true;
                 carried.pickUp(this);
@@ -430,7 +443,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             carried = null;
         } else if (level.rangedStock.spend()) {
             Rectangle body = hitboxBounds();
-            level.queueSpawn(new Fireball(level, body.x + (body.width - 10) / 2, body.y + 3, facingRight));
+            level.queueSpawn(new Fireball(level, body.x + (body.width - Fireball.BODY_SIZE) / 2, body.y + FIREBALL_SPAWN_OFFSET_Y, facingRight));
         }
     }
 
@@ -499,7 +512,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         Entity target = gameplayInput.up() ? level.mechanismFeedbackTarget(selectedMechanism()) : selectedCarryable();
         if (target == null) target = level.mechanismFeedbackTarget(selectedMechanism());
         out.set(target == null ? centerX() : target.centerX(),
-            target == null ? getY() + 12 : Math.min(target.getY() - 24, getY() + 12));
+            target == null ? getY() + HINT_PLAYER_OFFSET_Y : Math.min(target.getY() - HINT_TARGET_OFFSET_Y, getY() + HINT_PLAYER_OFFSET_Y));
     }
 
     private String actionBinding(boolean ranged, boolean up, boolean down) {

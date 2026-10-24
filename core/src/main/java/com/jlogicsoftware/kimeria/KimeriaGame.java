@@ -627,7 +627,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
-        if (!fpsText.isEmpty()) overlay.topRight(batch, fpsText, LOGICAL_W - 6, 6);
+        if (!fpsText.isEmpty()) overlay.topRight(batch, fpsText, LOGICAL_W - Hud.FPS_RIGHT_MARGIN, Hud.FPS_TOP_MARGIN);
         overlay.flushText(batch);
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
         if (storyScreenActive()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());

@@ -91,3 +91,11 @@ framebuffer while that buffer or its drawing batch is active.
 Describe what was visually observed and what remains untested. Keep temporary
 preview hooks/captures out of shipped code and remove temporary resources created
 for verification. Do not label a headless test as a rendering check.
+
+## Named rendering parameters
+
+Use existing `SpriteSheets` frame dimensions, entity body sizes and HUD layout
+constants rather than repeating widths/offset sums in consumers. FPS rendering
+and reservation share HUD's margins; map tile sizes still come from TMX. Follow
+[parameter ownership](../../../docs/NAMED_PARAMETERS.md). Run `validateNamedParameters`
+with `-PnamedParameterBase=origin/main` for a full PR audit, not just current edits.

@@ -119,3 +119,11 @@ skill for desktop/web orientation, transparency, scaling and paused presentation
 use the dialogue skill for speaker/text behavior. Record author artwork review for
 each revision separately from automated/layout checks. Approval of an older image
 does not automatically approve a new revision.
+
+## Named export and sprite formats
+
+Use `SpriteSheets` for runtime frame geometry and `tools/sprite_layouts.py` for
+exports/PNG contracts. Keep frame dimensions separate from TMX cells and collision
+bodies; retain measured palm/head/clip tables as named authored data. Follow
+[parameter ownership](../../../docs/NAMED_PARAMETERS.md), run the named-parameter
+check, and compare exported pixels after a format refactor.

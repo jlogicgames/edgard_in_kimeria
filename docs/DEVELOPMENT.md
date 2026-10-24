@@ -298,3 +298,13 @@ exercises rejection and hook exit behavior.
 The checked-in `.codex/hooks.json` configures synchronous PostToolUse/Stop checks.
 Review/trust it through Codex `/hooks` before automatic session enforcement; see
 [artwork rules and test limits](ART_DIRECTION.md#gameplay-sprites-and-procedural-art-prohibition-2026-10-22).
+
+## Named gameplay and artwork parameters
+
+Follow [parameter ownership](NAMED_PARAMETERS.md) for map cells, sprite frames,
+collision bodies, projectile timing and UI geometry. `validateNamedParameters`
+runs on core check and release packaging alongside the sprite-art check.
+Use `./gradlew validateNamedParameters -PnamedParameterBase=origin/main` to include
+committed PR changes; the default HEAD comparison checks current edits only.
+The PostToolUse/Stop hooks also run this changed-code gate. Run
+`python3 tools/test_named_parameters.py` to verify rejection and recovery behavior.

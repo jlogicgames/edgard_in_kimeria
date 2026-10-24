@@ -1,5 +1,7 @@
 package com.jlogicsoftware.kimeria.ui;
 
+import com.badlogic.gdx.math.Interpolation;
+
 import com.badlogic.gdx.math.Vector2;
 
 /** Real-time text transition; an outgoing label retains its own world anchor. */
@@ -23,7 +25,7 @@ public final class HintTransition {
         if (leaving != exiting) begin(leaving);
         if (!leaving) anchor.set(requestedAnchor);
         progress = Math.min(1, progress + dt / (exiting ? FADE_OUT : FADE_IN));
-        float eased = progress * progress * (3 - 2 * progress);
+        float eased = Interpolation.smooth.apply(progress);
         alpha = startAlpha + ((exiting ? 0 : 1) - startAlpha) * eased;
         offsetY = startOffset + ((exiting ? -SLIDE : 0) - startOffset) * eased;
         if (exiting && progress == 1) {
