@@ -12,6 +12,7 @@
   <object id="2" type="Chicken" x="80" y="304" width="16" height="16"/>
   <object id="3" type="Key" x="112" y="304" width="16" height="16"/>
   <object id="4" type="Boss" x="560" y="288" width="48" height="32"/>
+  <object id="7" name="Deadline" type="Deadline" x="-1000" y="368" width="2640" height="16"/>
  </objectgroup>
  <objectgroup name="Collisions">
   <object id="5" x="0" y="320" width="320" height="48"/>

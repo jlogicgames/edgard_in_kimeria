@@ -18,6 +18,7 @@
    <properties><property name="offPos" value="3"/><property name="isVertical" value="true"/></properties>
   </object>
   <object id="6" type="Checkpoint" x="592" y="288" width="16" height="32"/>
+  <object id="9" name="Deadline" type="Deadline" x="-1000" y="368" width="2640" height="16"/>
  </objectgroup>
  <objectgroup name="Collisions">
   <object id="7" x="0" y="320" width="320" height="48"/>

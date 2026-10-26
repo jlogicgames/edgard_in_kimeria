@@ -46,12 +46,19 @@ unknown room markers fail loading with a diagnostic instead of changing gameplay
 silently. An entirely absent or empty Rooms layer means one room covering the
 map, using the existing Player spawn.
 
-SpawnPoints and Collisions objects belong to the room containing their initial
-rectangle's centre (left/top inclusive, right/bottom exclusive). Keep collision
-shapes, patrol routes, and interactive objects within their room. Moving objects
-retain this ownership. Trigger targets must be in the same room; cross-room
-links are rejected. Atmosphere (sky, rain, fireflies; fog is menu-only) is decorative and
-continues across retries. Rooms may span several screens.
+Every playable level must have at least one positive-size rectangle with
+`type=Deadline` in `SpawnPoints`.
+It is a lethal trigger volume: player-body contact causes the same immediate room
+retry as falling into a pit, without death slow motion. Use it to close off-map
+fall paths and keep it clear of safe routes. A Deadline is level-wide rather than
+room-owned, so it may span several rooms and extend outside the map.
+
+Other SpawnPoints and Collisions objects belong to the room containing their
+initial rectangle's centre (left/top inclusive, right/bottom exclusive). Keep
+collision shapes, patrol routes, and interactive objects within their room.
+Moving objects retain this ownership. Trigger targets must be in the same room;
+cross-room links are rejected. Atmosphere (sky, rain, fireflies; fog is menu-only)
+is decorative and continues across retries. Rooms may span several screens.
 
 ## Transition and retry
 

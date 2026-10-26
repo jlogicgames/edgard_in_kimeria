@@ -792,8 +792,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
             wallJumpTimer -= dt;
             if (wallJumpTimer <= 0) wallJumping = false;
         }
-
-        if (position.y > 380) die(false);
     }
 
     private void playerJump(float dt) {
@@ -943,6 +941,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Overlap checks against collectables/enemies/checkpoint/bomb/triggers -- Dart's onCollisionStart/End. */
     private void checkGameplayOverlaps() {
         if (isReachedCheckpoint) return;
+
+        if (level.touchesDeadline(hitboxBounds())) {
+            die(false);
+            return;
+        }
 
         for (var obj : level.objects) {
             if (obj instanceof FireballRefill refill && overlapsEntity(refill)) {

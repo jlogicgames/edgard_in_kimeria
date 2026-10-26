@@ -67,7 +67,9 @@ verification of subsequent implementation changes still apply.
   - Death plays in slow motion, as in Katana Zero (about 0.7 s of real time at a fifth of
     normal speed), so the player sees what killed them and does not walk into it twice. Only
     the hit animation is cut short, not played to its end. A fall into a pit has nothing to
-    look at and skips the slow motion.
+    look at and skips the slow motion. Each level authors a `Deadline` trigger volume to
+    define where off-play falls become this instant pit death; death is not tied to a global
+    player-Y threshold. See [ROOMS.md](ROOMS.md#authoring).
   - Then the respawn is instant: well under half a second. The camera returns to the entrance
     with a fast, eased pan of fixed duration (about 0.3 to 0.4 s, whatever the distance), never
     a hard cut, and the player appears as it arrives.

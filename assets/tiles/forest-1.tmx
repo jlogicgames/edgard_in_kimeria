@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="40" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="26">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="40" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="27">
  <tileset firstgid="1" source="Forest.tsx"/>
  <layer id="1" name="Background" width="40" height="23">
   <data encoding="csv">
@@ -70,6 +70,7 @@
   <object id="23" name="FallingPlatform" type="FallingPlatform" x="160" y="272" width="32" height="16"/>
   <object id="24" name="FallingPlatform" type="FallingPlatform" x="192" y="256" width="32" height="16"/>
   <object id="25" name="Fireball" type="FireballRefill" x="312" y="176" width="16" height="16"/>
+  <object id="26" name="Deadline" type="Deadline" x="-1728" y="384" width="3872" height="16"/>
  </objectgroup>
  <objectgroup id="3" name="Collisions">
   <object id="3" x="0" y="320" width="640" height="48"/>

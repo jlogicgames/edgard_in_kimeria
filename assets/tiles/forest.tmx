@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="160" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="125">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="160" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="126">
  <tileset firstgid="1" source="Forest.tsx"/>
  <layer id="1" name="Background" width="160" height="23">
   <data encoding="csv">
@@ -152,6 +152,7 @@
   </object>
   <object id="124" name="first-ladder" type="Trigger" x="448" y="320" width="16" height="16"/>
   <object id="121" name="Fireball" type="FireballRefill" x="1824" y="320" width="16" height="16"/>
+  <object id="125" name="Deadline" type="Deadline" x="-608" y="384" width="3872" height="16"/>
  </objectgroup>
  <objectgroup id="3" name="Collisions">
   <object id="4" name="Wall" type="Wall" x="0" y="0" width="16" height="320"/>

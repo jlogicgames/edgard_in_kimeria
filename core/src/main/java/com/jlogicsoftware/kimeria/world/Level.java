@@ -71,6 +71,8 @@ public class Level implements WorldObject {
     public final List<Trigger> triggers = new ArrayList<>();
     public final List<Ladder> ladders = new ArrayList<>();
     public final List<FallingPlatform> fallingPlatforms = new ArrayList<>();
+    /** Map-authored lethal volumes that bound play space across room ownership. */
+    private final List<Rectangle> deadlines = new ArrayList<>();
     private final List<StaticPlatform> staticPlatforms = new ArrayList<>();
     /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain. */
     public final List<WorldObject> objects = new ArrayList<>();
@@ -341,6 +343,12 @@ public class Level implements WorldObject {
         roomLayout = new RoomLayout(map);
         // Fail early on ambiguous ownership and cross-room trigger links.
         for (TiledObject o : map.layer("SpawnPoints")) {
+            if ("Deadline".equals(o.type)) {
+                if (o.width <= 0 || o.height <= 0)
+                    throw new IllegalArgumentException("Deadline needs positive bounds: " + o.id);
+                deadlines.add(new Rectangle(o.x, o.y, o.width, o.height));
+                continue;
+            }
             int owner = roomLayout.owner(o);
             if ("Trigger".equals(o.type)) for (TiledObject target : map.layer("SpawnPoints")) {
                 if (("Actionable".equals(target.type) || "Escalator".equals(target.type)
@@ -349,6 +357,7 @@ public class Level implements WorldObject {
                     throw new IllegalArgumentException("Trigger crosses room boundary: " + o.name);
             }
         }
+        if (deadlines.isEmpty()) throw new IllegalArgumentException("Level needs a Deadline SpawnPoint");
         for (TiledObject o : map.layer("Collisions")) roomLayout.owner(o);
         for (TiledObject o : map.layer("SpawnPoints")) {
             if ("Collectable".equals(o.type) && ItemType.fromMapName(o.name) == ItemType.COIN)
@@ -375,6 +384,11 @@ public class Level implements WorldObject {
     public boolean healerAhead() {
         return "forest".equals(name) && !fightCommitted && map.layer("SpawnPoints").stream()
             .anyMatch(o -> "Boss".equals(o.type) && roomLayout.owner(o) == currentRoom + 1);
+    }
+
+    /** True when the player's body has entered a map-authored out-of-play volume. */
+    public boolean touchesDeadline(Rectangle playerBounds) {
+        return deadlines.stream().anyMatch(playerBounds::overlaps);
     }
 
     /** Records one genuine pre-boss dialogue entry and reports whether it is a return visit. */
@@ -503,6 +517,7 @@ public class Level implements WorldObject {
 
     private void spawnObjects() {
         for (TiledObject o : map.layer("SpawnPoints")) {
+            if ("Deadline".equals(o.type)) continue;
             if (roomLayout.owner(o) != currentRoom) continue;
             if (restoreRetainedObject(o)) continue;
             switch (o.type) {
@@ -819,7 +834,7 @@ public class Level implements WorldObject {
         player.renderInteractionTarget(batch);
     }
 
-    /** Port of Rust's F1 debug gizmos: collision blocks in green, actor hitboxes in red. */
+    /** F1 debug gizmos: collision blocks in green, Deadlines in orange, actor hitboxes in red. */
     public void renderDebug(ShapeRenderer sr) {
         sr.setColor(0.2f, 0.9f, 0.4f, 1f);
         for (CollisionBlock block : collisionBlocks) {
@@ -833,6 +848,9 @@ public class Level implements WorldObject {
 
         sr.setColor(com.badlogic.gdx.graphics.Color.SKY);
         for (Ladder ladder : ladders) sr.rect(ladder.getX(), ladder.getY(), ladder.getWidth(), ladder.getHeight());
+
+        sr.setColor(1f, 0.55f, 0.1f, 1f);
+        for (Rectangle deadline : deadlines) sr.rect(deadline.x, deadline.y, deadline.width, deadline.height);
 
         sr.setColor(0.9f, 0.3f, 0.3f, 1f);
         drawHitbox(sr, player);
