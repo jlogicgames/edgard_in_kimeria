@@ -799,3 +799,30 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   explicit put-down command.
 - **Details:** [Interaction contract](DIRECTIONAL_CONTROLS.md#interaction-controls-175),
   [gameplay controls](GAMEPLAY.md#controls), and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+
+## D31. Forest uses linked route reconfiguration
+
+- **Status:** Accepted direction, 2026-10-26 ([#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102)).
+- **Decision:** Forest's leading mechanic is route reconfiguration through visible
+  linked mechanisms. Levers change traversal supports--including ladders, bridges,
+  platforms and obstacles--so the player can observe a connection and its consequence,
+  then choose when to change the route. A lever is not an end in itself; Forest rooms
+  must create route or timing decisions rather than repeat identical nearby activations.
+- **Scope:** Ladders, carrying and throwing remain shared tools that may vary an
+  interaction, not separate mandatory Forest mechanics. Portable light remains the
+  proposed distinct mechanic for Fortress. The current toggle ladder is a technical
+  atom, not proof of a complete Forest prototype. Remote/throw activation, one-shot
+  versus reversible supports and object-specific recovery rules remain open until
+  prototyping resolves them.
+- **State contract:** D26 applies to every linked route change. From every secured
+  state created by supported actions, mandatory exits, bosses and required fragments
+  remain reachable without Restart Level. An optional reward may become unavailable
+  until Restart Level only when the consequence is legible before the commitment.
+- **Why:** This gives Forest a coherent puzzle-platforming identity: inspect the
+  space, understand a visible relationship, then act precisely. It develops the shared
+  tools without making the stage a series of lever presses or overlapping Fortress light.
+- **Next check:** #103 must test introduction, variation and a readable optional
+  consequence; #104 must establish that combining the route change with a familiar
+  enemy or hazard creates a new decision while keeping a zero-fireball required route.
+- **Details:** [Forest design](GAME_DESIGN.md#forest-linked-route-reconfiguration),
+  [D26](#d26-observe-plan-before-committing), and [roadmap](ROADMAP.md#12-forest).

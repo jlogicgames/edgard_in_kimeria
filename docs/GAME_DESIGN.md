@@ -152,13 +152,36 @@ the new mechanic creates new situations for using them.
 
 | Stage | Material for further design | Status |
 | --- | --- | --- |
-| Forest | Levers, lowered ladders, carrying objects and acting on obstacles. | Ideas from the author's notes; leading mechanic not selected. |
+| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction; short prototype and exact interaction rules remain to test. |
 | Swamp | Quicksand, unreliable footing, bridges, moving and falling platforms. | Ideas from the notes; distinguish its problems from forest switches. |
 | Steppe | Wind as a spatial property: gusts, shelter, effects on movement and objects. | Wind accepted; directions, strength, cycles and interactions need design. |
 | Fortress | Carrying, placing and throwing a torch; light affects visibility and creatures. | Preferred prototype direction; complete rules not approved. |
 
 The torch was previously considered for Steppe. Wind is now selected there;
 light remains the proposed Fortress mechanic rather than a mechanic for every stage.
+
+### Forest: linked route reconfiguration
+
+**Accepted direction (2026-10-26):** Forest's leading mechanic is changing the
+configuration of a route through visible links between a mechanism and its traversal
+supports. A lever is not the goal by itself: the player reads what it changes, then
+chooses when to lower a ladder, move a bridge or platform, or alter an obstacle.
+The result should create route and timing decisions rather than a sequence of identical
+nearby lever presses.
+
+Ladders, carrying and throwing remain shared tools. They may vary a Forest situation
+-- for example, an object may make a distant or obstructed mechanism usable -- but they
+are not separate required Forest mechanics. In particular, portable light remains the
+distinct proposed leading mechanic for Fortress. The existing toggle ladder is a useful
+technical atom for this direction, not yet evidence that the mechanic has enough variety.
+
+The Mechanics MVP should test an introduction to one visible link, a route choice with
+a legible optional consequence, and a combination with a familiar enemy or hazard.
+Under D26, every mandatory exit, boss and required fragment must remain reachable from
+each secured state produced by supported actions; an optional reward may become
+unavailable until Restart Level. Remote or throw activation, one-shot versus reversible
+supports, and the recovery rules for each new linked object remain open until a prototype
+defines them.
 
 **Author's working structure:** five levels per stage, five rooms per level.
 Validate this planning model with authored levels. Distribution of new elements,
