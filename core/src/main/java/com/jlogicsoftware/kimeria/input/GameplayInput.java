@@ -50,6 +50,7 @@ public final class GameplayInput {
     public boolean verticalHeld() { return up || down; }
     public boolean up() { return up; }
     public boolean down() { return down; }
+    public boolean actionHeld() { return actionHeld; }
     public boolean actionPressed() { return action; }
     public boolean rangedPressed() { return ranged; }
     public Device device() { return device; }
