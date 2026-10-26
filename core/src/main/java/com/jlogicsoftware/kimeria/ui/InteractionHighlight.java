@@ -11,6 +11,7 @@ public final class InteractionHighlight {
     private static final float LINE_THICKNESS = 1, ARM_LENGTH = 5;
     private static final Color OUTLINE_COLOR = new Color(0, 0, 0, .9f);
     private static final Color TARGET_COLOR = new Color(1, .82f, .3f, 1);
+    private static final Color PASSIVE_TARGET_COLOR = new Color(.72f, .75f, .8f, .72f);
 
     private InteractionHighlight() { }
 
@@ -22,6 +23,14 @@ public final class InteractionHighlight {
             w + OUTLINE_OFFSET * 2, h + OUTLINE_OFFSET * 2,
             LINE_THICKNESS + OUTLINE_OFFSET * 2, ARM_LENGTH + OUTLINE_OFFSET * 2);
         batch.setColor(TARGET_COLOR);
+        corners(batch, x, y, w, h, LINE_THICKNESS, ARM_LENGTH);
+        batch.setColor(Color.WHITE);
+    }
+
+    public static void drawPassive(Batch batch, Entity target) {
+        float x = target.getX() - TARGET_PADDING, y = target.getY() - TARGET_PADDING;
+        float w = target.getWidth() + TARGET_PADDING * 2, h = target.getHeight() + TARGET_PADDING * 2;
+        batch.setColor(PASSIVE_TARGET_COLOR);
         corners(batch, x, y, w, h, LINE_THICKNESS, ARM_LENGTH);
         batch.setColor(Color.WHITE);
     }

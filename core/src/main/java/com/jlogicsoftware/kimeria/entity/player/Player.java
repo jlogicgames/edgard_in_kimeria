@@ -508,19 +508,32 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (level == null || !canFight()) return null;
         Trigger best = null;
         for (Trigger target : level.triggers) {
-            if (target.isRemoved() || !overlapsEntity(target)) continue;
+            if (!mechanismEligible(target)) continue;
             if (best == null || targetDistance(target) < targetDistance(best)
                 || (targetDistance(target) == targetDistance(best) && target.id < best.id)) best = target;
         }
         return best;
     }
 
-    public Carryable selectedCarryable() {
-        if (level == null || carried != null || !canFight() || isAttacking || clambering || ladder != null) return null;
+    private boolean mechanismEligible(Trigger target) {
+        return level != null && canFight() && !target.isRemoved() && overlapsEntity(target);
+    }
+
+    private boolean carryablesEligible() {
+        return level != null && carried == null && canFight() && !isAttacking && !clambering && ladder == null;
+    }
+
+    private Rectangle pickupReachBounds() {
         Rectangle reach = new Rectangle(hitboxBounds());
         // A small hand/contact tolerance, not a remote interaction radius.
         reach.x -= PICKUP_REACH; reach.y -= PICKUP_REACH;
         reach.width += PICKUP_REACH * 2; reach.height += PICKUP_REACH * 2;
+        return reach;
+    }
+
+    public Carryable selectedCarryable() {
+        if (!carryablesEligible()) return null;
+        Rectangle reach = pickupReachBounds();
         Carryable best = null;
         for (var object : level.objects) if (object instanceof Carryable target && target.available() && reach.overlaps(target.bounds())) {
             if (best == null || targetDistance(target) < targetDistance(best)
@@ -716,9 +729,27 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     public void renderInteractionTarget(Batch batch) {
-        Entity target = interactionFeedbackTarget();
-        if (target == null) return;
-        InteractionHighlight.draw(batch, target);
+        Entity selectedTarget = interactionFeedbackTarget();
+        renderPassiveInteractionTargets(batch, selectedTarget);
+        if (selectedTarget != null) InteractionHighlight.draw(batch, selectedTarget);
+    }
+
+    private void renderPassiveInteractionTargets(Batch batch, Entity selectedTarget) {
+        if (level == null || !canFight()) return;
+        Set<Entity> outlined = new HashSet<>();
+        if (selectedTarget != null) outlined.add(selectedTarget);
+
+        if (carryablesEligible()) {
+            Rectangle reach = pickupReachBounds();
+            for (var object : level.objects) if (object instanceof Carryable target
+                && target.available() && reach.overlaps(target.bounds()) && outlined.add(target))
+                InteractionHighlight.drawPassive(batch, target);
+        }
+        for (Trigger trigger : level.triggers) {
+            if (!mechanismEligible(trigger)) continue;
+            Entity target = level.mechanismFeedbackTarget(trigger);
+            if (target != null && outlined.add(target)) InteractionHighlight.drawPassive(batch, target);
+        }
     }
 
     private void updatePlayerState() {
