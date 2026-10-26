@@ -9,6 +9,7 @@ public final class SpriteSheets {
     public static final Sheet FIREBALL = new Sheet("images/objects/fireball.png", 16, 16);
     public static final Sheet LEVER = new Sheet("images/objects/lever.png", 16, 16);
     public static final Sheet LADDER = new Sheet("images/objects/ladder.png", 16, 16);
+    public static final Sheet PLATFORM = new Sheet("images/objects/platform.png", 32, 16);
     public static final Sheet WALL = new Sheet("images/objects/wall-brick.png", 48, 96);
     public static final Sheet PLAYER = new Sheet("images/hero/Player.png", 48, 48);
     public static final Sheet PLAYER_LOOK = new Sheet("images/hero/Look.png", PLAYER.width(), PLAYER.height());

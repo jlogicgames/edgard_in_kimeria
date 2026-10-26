@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 from sprite_layouts import (WORLD_FRAMES, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE,
     WORLD_PALETTE_BITS, HUD_PALETTE_BITS, ALPHA_THRESHOLD, OPAQUE_ALPHA,
     LEVER_FRAME_SIZE, LEVER_FRAME_COUNT, LADDER_FRAME_SIZE, LADDER_FRAME_COUNT,
-    WALL_FRAME_SIZE, HUD_ICON_SIZE)
+    WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE)
 
 
 def export(source, target, size, pixel_art):
@@ -76,6 +76,23 @@ def export_brick_wall():
     print(target.relative_to(ROOT))
 
 
+def export_platform():
+    # Fit the authored platform silhouette to its exact native 32x16 gameplay frame.
+    source = Image.open(ROOT / 'art/objects/platform-pixel.png').convert('RGBA')
+    source.putalpha(source.getchannel('A').point(
+        lambda alpha: OPAQUE_ALPHA if alpha >= ALPHA_THRESHOLD else 0))
+    bounds = source.getchannel('A').getbbox()
+    if bounds is None:
+        raise ValueError('Platform master has no artwork')
+    artwork = source.crop(bounds).resize(PLATFORM_SIZE, Image.Resampling.NEAREST)
+    artwork = artwork.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE,
+        dither=Image.Dither.NONE)
+    target = ROOT / 'assets/images/objects/platform.png'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    artwork.save(target, bits=WORLD_PALETTE_BITS)
+    print(target.relative_to(ROOT))
+
+
 if __name__ == '__main__':
     for name, size in WORLD_FRAMES.items():
         export(ROOT / 'art/objects' / f'{name}-pixel.png',
@@ -83,6 +100,7 @@ if __name__ == '__main__':
     export_levers()
     export_ladders()
     export_brick_wall()
+    export_platform()
     for name in ('coin', 'chicken', 'key', 'fireball'):
         source = ROOT / 'art/hud' / f'{name}-master.png'
         export(source, ROOT / 'assets/images/HUD' / f'{name}.png', HUD_ICON_SIZE, False)

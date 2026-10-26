@@ -31,9 +31,11 @@ multi-frame sheet are different measurements.
 
 - **Gameplay:** preserve tiny native pixel art, low color counts, black contours,
   binary transparency, no antialiasing/dithering and nearest filtering. New torch:
-  8×16; stone: 8×8; fireball and lever poses: 16×16; each at most 16 palette entries including alpha.
+  8×16; stone: 8×8; fireball and lever poses: 16×16; static platform: 32×16; each at most 16 palette entries including alpha.
   Their render sizes match those native dimensions. Original collectable sprites
-  remain original; do not replace them with detailed UI assets.
+  remain original; do not replace them with detailed UI assets. Static platforms use
+  `assets/images/objects/platform.png`, repeated across wider collision spans; the
+  selected source is `art/objects/platform-pixel.png`.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
   roasted drumstick on its plate, silver key, gold coin and fireball. These appear

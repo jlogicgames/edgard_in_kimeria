@@ -113,3 +113,21 @@ quantizes without dithering. The centered base reaches the frame's lower edge.
 Exact revision prompt:
 
 > Use this FIRST wall sprite as the source artwork. Preserve its exact warm brown brick design, brick layout, dark outlines, pixel-art style, overall proportions, and especially its rounded, stepped lower-left and lower-right corners and centered flat bottom. Make one cleanup only: remove the solid gray background so every pixel outside the existing brick wall silhouette is fully transparent. Do not square, crop, extend, redesign, or straighten the rounded lower corners. Do not change the wall or add any background, floor, shadow, glow, or scenery. Return the complete wall centered on a transparent canvas, keeping the broad flat center of the lowest course touching the bottom canvas edge. Crisp hard pixel boundaries, no antialiasing.
+
+## Static platform (2026-10-26)
+
+Selected source: `platform-pixel.png`, generated and refined with built-in image generation.
+The uploaded screenshot is the design reference; the gray editor background and center
+guides are not part of the artwork. The exporter thresholds alpha, trims transparent
+margins, resizes the authored silhouette with nearest-neighbor sampling to 32×16, and
+quantizes without dithering. Runtime `assets/images/objects/platform.png` is an indexed
+PNG with at most 16 palette entries including transparency and binary alpha; it uses
+nearest filtering. Static collision spans repeat this 32×16 frame horizontally.
+
+Initial generation prompt:
+
+> Use case: stylized-concept. Asset type: native low-resolution world gameplay sprite for Edgard in Kimeria. Input image 1 is the author's visual reference for the platform's silhouette, earthy colors and pixel-art direction; ignore the gray editor backdrop and the thin center crosshair/guide lines. Primary request: create one single horizontal earth-and-grass platform sprite, exactly 32 pixels wide by 16 pixels tall in its intended native grid, isolated on true transparency. Match the reference closely: a flat compact platform slab with a warm tan/ochre soil top, irregular stepped underside with a dark near-black rocky shadow band, and a deep brown earth base along the bottom. Keep a strong dark outline and crisp chunky square pixel clusters; the top is level and readable as a standing surface. Compose one complete sprite occupying nearly the full 32x16 canvas, centered, with pixel boundaries aligned to a 32-column by 16-row grid. If shown enlarged, every source pixel must be an equal square. Use at most 12 flat opaque colors plus transparency. Constraints: tiny authored gameplay pixel art, hard pixel edges, binary transparency, nearest-neighbor look, no antialiasing, no gradients, no dithering, no glow, no semitransparent pixels. No background, no editor guides, no seams, no text, no characters or extra objects.
+
+Refinement prompt:
+
+> Use case: precise-object-edit. Asset type: native pixel-art world platform sprite. Image 1 is the selected platform artwork to revise. Image 2 is the author's reference for the intended sprite proportions and design. Preserve the warm tan soil top, jagged dark rocky underside, deep brown earth base, dark outline and crisp pixel-art identity. Revise the silhouette so the complete platform fills a 32:16 canvas: it must be a thick slab, about twice as tall as the thin ledge in Image 1, occupying nearly the full 32-pixel width and 16-pixel height. Match Image 2's proportions: roughly 7 rows of tan top/soil, a 2–3 row jagged near-black underside band, and 5–6 rows of deep brown earth, with only a minimal dark outline. Keep the top level and readable as a standing surface. Treat the grid as exactly 32 columns by 16 rows, with every source pixel a crisp equal square. Use at most 12 flat opaque colors plus real transparent pixels outside the silhouette. Remove the excessive empty margin above and below the object. Constraints: hand-authored-looking tiny game pixel art, no smooth lighting, no gradients, no texture noise, no dithering, no antialiasing, no semitransparent edges, no glow, no editor crosshair, no seams, no text, no other objects.

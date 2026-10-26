@@ -35,6 +35,7 @@ import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
+import com.jlogicsoftware.kimeria.entity.objects.StaticPlatform;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
 import com.jlogicsoftware.kimeria.tiled.TiledObject;
@@ -70,6 +71,7 @@ public class Level implements WorldObject {
     public final List<Trigger> triggers = new ArrayList<>();
     public final List<Ladder> ladders = new ArrayList<>();
     public final List<FallingPlatform> fallingPlatforms = new ArrayList<>();
+    private final List<StaticPlatform> staticPlatforms = new ArrayList<>();
     /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain. */
     public final List<WorldObject> objects = new ArrayList<>();
     /**
@@ -292,7 +294,8 @@ public class Level implements WorldObject {
         else rangedStock.restore(roomStartAmmo);
         revisiting = revisit;
         game.artifacts().resetRoom();
-        objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear(); fallingPlatforms.clear();
+        objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
+        fallingPlatforms.clear(); staticPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
@@ -645,7 +648,10 @@ public class Level implements WorldObject {
         for (TiledObject o : map.layer("Collisions")) {
             if (roomLayout.owner(o) != currentRoom) continue;
             CollisionBlock block = switch (o.type) {
-                case "Platform" -> CollisionBlock.platform(o.x, o.y, o.width, o.height);
+                case "Platform" -> {
+                    staticPlatforms.add(new StaticPlatform(assets, o.x, o.y, o.width, o.height));
+                    yield CollisionBlock.platform(o.x, o.y, o.width, o.height);
+                }
                 case "QuickSand" -> CollisionBlock.quickSand(o.x, o.y, o.width, o.height);
                 case "Wall" -> CollisionBlock.wall(o.x, o.y, o.width, o.height);
                 default -> CollisionBlock.plain(o.x, o.y, o.width, o.height);
@@ -804,6 +810,7 @@ public class Level implements WorldObject {
     public void render(Batch batch, Rectangle visibleWorldRect) {
         if (sky != null) sky.render(batch, visibleWorldRect);
         renderBackground(batch, visibleWorldRect);
+        for (StaticPlatform platform : staticPlatforms) platform.render(batch);
         for (Escalator e : escalators) e.render(batch);
         for (FallingPlatform p : fallingPlatforms) p.render(batch);
         for (WorldObject o : objects) o.render(batch);
