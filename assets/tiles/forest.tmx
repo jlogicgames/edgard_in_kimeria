@@ -138,11 +138,7 @@
   <object id="115" name="FallingPlatform" type="FallingPlatform" x="1568" y="256" width="32" height="16"/>
   <object id="116" name="practice-stone" type="Stone" x="64" y="320" width="12" height="12"/>
   <object id="117" name="practice-torch" type="CarryableTorch" x="96" y="320" width="12" height="12"/>
-  <object id="118" name="practice-light" type="Trigger" x="128" y="320" width="16" height="16">
-   <properties>
-    <property name="appearance" value="Lever"/>
-   </properties>
-  </object>
+  <object id="118" name="practice-light" type="Trigger" x="128" y="320" width="16" height="16"/>
   <object id="119" name="practice-light" type="Actionable" x="112" y="256" width="12" height="12">
    <properties>
     <property name="Intensity" type="int" value="0"/>
@@ -154,11 +150,7 @@
     <property name="dropDistance" type="float" value="32"/>
    </properties>
   </object>
-  <object id="124" name="first-ladder" type="Trigger" x="448" y="320" width="16" height="16">
-   <properties>
-    <property name="appearance" value="Lever"/>
-   </properties>
-  </object>
+  <object id="124" name="first-ladder" type="Trigger" x="448" y="320" width="16" height="16"/>
   <object id="121" name="Fireball" type="FireballRefill" x="1824" y="320" width="16" height="16"/>
  </objectgroup>
  <objectgroup id="3" name="Collisions">

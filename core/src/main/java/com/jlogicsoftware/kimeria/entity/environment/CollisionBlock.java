@@ -8,6 +8,7 @@ public class CollisionBlock extends Entity implements Collidable {
     private boolean platform;
     private boolean quickSand;
     private boolean wall;
+    private boolean wallClimbable = true;
     private boolean active = true;
 
     public CollisionBlock(float x, float y, float w, float h) {
@@ -55,6 +56,10 @@ public class CollisionBlock extends Entity implements Collidable {
         return wall;
     }
 
+    public boolean isWallClimbable() {
+        return wall && wallClimbable;
+    }
+
     @Override
     public boolean isActive() {
         return active;
@@ -66,6 +71,10 @@ public class CollisionBlock extends Entity implements Collidable {
 
     protected void setWall(boolean wall) {
         this.wall = wall;
+    }
+
+    protected void setWallClimbable(boolean wallClimbable) {
+        this.wallClimbable = wallClimbable;
     }
 
     @Override

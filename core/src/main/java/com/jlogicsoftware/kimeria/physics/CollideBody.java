@@ -48,16 +48,18 @@ public interface CollideBody extends GravityBody {
                 continue;
             } else if (block.isWall()) {
                 if (CollisionUtils.checkCollision(this, block)) {
+                    boolean canClamber = block.isWallClimbable() && !isOnGround();
+                    if (!canClamber) setClambering(false);
                     if (velocity().x > 0) {
                         velocity().x = 0;
                         position().x = block.getX() - facingAwareOffsetX() - hitbox().width;
-                        if (!isOnGround()) setClambering(true);
+                        if (canClamber) setClambering(true);
                         break;
                     }
                     if (velocity().x < 0) {
                         velocity().x = 0;
                         position().x = block.getX() + block.getWidth() - facingAwareOffsetX();
-                        if (!isOnGround()) setClambering(true);
+                        if (canClamber) setClambering(true);
                         break;
                     }
                 } else {

@@ -98,7 +98,7 @@ public class Level implements WorldObject {
     private record CarryableState(Carryable.Snapshot value) implements ObjectSnapshot { }
     private record TorchState(float x, float y, int intensity, boolean burning,
                               boolean removed) implements ObjectSnapshot { }
-    private record WallState(boolean active, boolean removed) implements ObjectSnapshot { }
+    private record WallState(boolean active, boolean removed, float y, boolean raised) implements ObjectSnapshot { }
     private record EscalatorState(Escalator.Snapshot value) implements ObjectSnapshot { }
     private record FallingPlatformState(FallingPlatform.Snapshot value) implements ObjectSnapshot { }
     private record LadderState(Ladder.Snapshot value) implements ObjectSnapshot { }
@@ -440,7 +440,7 @@ public class Level implements WorldObject {
         if (owner instanceof Carryable carryable) return new CarryableState(carryable.snapshot());
         if (owner instanceof Torch torch) return new TorchState(torch.getX(), torch.getY(),
             torch.intensity(), torch.isBurning(), torch.isRemoved());
-        if (owner instanceof Wall wall) return new WallState(wall.isActive(), wall.isRemoved());
+        if (owner instanceof Wall wall) return new WallState(wall.isActive(), wall.isRemoved(), wall.getY(), wall.isRaised());
         if (owner instanceof Escalator escalator) return new EscalatorState(escalator.snapshot());
         if (owner instanceof FallingPlatform platform) return new FallingPlatformState(platform.snapshot());
         if (owner instanceof Ladder ladder) return new LadderState(ladder.snapshot());
@@ -460,7 +460,7 @@ public class Level implements WorldObject {
                 torch.restoreState(state.intensity(), state.burning());
                 if (state.removed()) torch.removeFromParent();
             } else if (owner instanceof Wall wall && snapshot instanceof WallState state) {
-                wall.restoreState(state.active(), state.removed());
+                wall.restoreState(state.active(), state.removed(), state.y(), state.raised());
             } else if (owner instanceof Escalator escalator && snapshot instanceof EscalatorState state) {
                 escalator.restore(state.value());
             } else if (owner instanceof FallingPlatform platform && snapshot instanceof FallingPlatformState state) {
@@ -600,8 +600,7 @@ public class Level implements WorldObject {
 
     private void spawnLevers() {
         for (TiledObject o : map.layer("SpawnPoints")) {
-            if (roomLayout.owner(o) != currentRoom || !"Trigger".equals(o.type)
-                || !"Lever".equals(o.prop("appearance", ""))) continue;
+            if (roomLayout.owner(o) != currentRoom || !"Trigger".equals(o.type)) continue;
             Trigger trigger = triggers.stream().filter(t -> t.id == o.id).findFirst().orElseThrow();
             List<Actionable> linked = objects.stream().filter(object -> object instanceof Actionable actionable
                 && trigger.targetId.equals(actionable.getTargetId())).map(Actionable.class::cast).toList();
@@ -609,6 +608,7 @@ public class Level implements WorldObject {
             Actionable target = linked.get(0);
             if (target instanceof Torch torch) objects.add(new Lever(assets, trigger, torch));
             else if (target instanceof Ladder ladder) objects.add(new Lever(assets, trigger, ladder::isLowered));
+            else if (target instanceof Wall wall) objects.add(new Lever(assets, trigger, wall::isRaised));
             else throw new IllegalArgumentException("Lever has no visual state for linked mechanism: " + o.name);
         }
     }
@@ -631,7 +631,10 @@ public class Level implements WorldObject {
             registerRoomStateOwner(o.id, torch);
             if (intensity == 0) torch.toggleFire(false);
         } else if ("Wall".equals(type)) {
-            Wall wall = new Wall(o.x, o.y, o.width, o.height, targetId);
+            boolean verticalMovement = "vertical".equals(o.prop("movement", ""));
+            float moveDurationSeconds = o.propFloat("time", Wall.DEFAULT_MOVE_DURATION_SECONDS);
+            Wall wall = new Wall(assets, o.x, o.y, o.width, o.height, targetId,
+                verticalMovement, moveDurationSeconds);
             objects.add(wall);
             collisionBlocks.add(wall);
             registerRoomStateOwner(o.id, wall);
@@ -694,18 +697,21 @@ public class Level implements WorldObject {
     }
 
     public void activateTrigger(Trigger trigger) {
+        Set<Actionable> activated = new HashSet<>();
         for (WorldObject obj : objects) {
-            if (obj instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())) {
+            if (obj instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
+                && activated.add(actionable)) {
                 actionable.performAction();
             }
         }
         for (CollisionBlock block : collisionBlocks) {
-            if (block instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())) {
+            if (block instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
+                && activated.add(actionable)) {
                 actionable.performAction();
             }
         }
         for (Escalator escalator : escalators) {
-            if (trigger.targetId.equals(escalator.getTargetId())) {
+            if (trigger.targetId.equals(escalator.getTargetId()) && activated.add(escalator)) {
                 escalator.performAction();
             }
         }

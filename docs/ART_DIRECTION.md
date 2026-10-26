@@ -68,6 +68,16 @@ Unrelated single-frame world objects keep their own assets. HUD illustrations us
 separate textures and filtering from world sprites; their selected detailed masters,
 including the fireball, live under `art/hud/`.
 
+The moving brick wall uses `assets/images/objects/wall-brick.png` as one 48×96
+world-sprite frame. Its selected generated source is `art/objects/wall-brick-master.png`;
+the repeatable exporter trims transparent source margins, preserves the silhouette with
+nearest resizing, and anchors the flat center of the base to the frame's lower edge. The
+lower corners are rounded with crisp pixel steps, avoiding a cut-off rectangular base.
+The sprite has a distinct top course and visible masonry edges on both sides, matching the
+forest's modular block style. The runtime PNG is indexed with at most 16 palette entries,
+uses binary transparency outside the masonry, and is sampled with nearest filtering. This
+art follows the vertical collision object during motion.
+
 Retain selected sources and exact prompts needed to reproduce current runtime art.
 Remove rejected iterations, unused masters, redundant previews and screenshots of
 superseded behavior from the change. Keep only representative current validation

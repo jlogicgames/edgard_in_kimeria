@@ -13,7 +13,8 @@ import json
 import re
 import struct
 import sys
-from sprite_layouts import WORLD_IMAGES, PLAYER_LOOK_SIZE, HUD_ICON_SIZE, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE
+from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, PLAYER_LOOK_SIZE, HUD_ICON_SIZE,
+    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -96,7 +97,7 @@ def python_art_violations(path, source):
     return issues
 
 
-def png_contract(path, data, size, colors, binary_alpha):
+def png_contract(path, data, size, colors, alpha_mode):
     """Inspect PNG metadata without adding an imaging dependency to release builds."""
     if data[:8] != b'\x89PNG\r\n\x1a\n':
         return [f'{path}: not a PNG']
@@ -119,26 +120,29 @@ def png_contract(path, data, size, colors, binary_alpha):
     if mode != 3 or not palette or len(palette) // 3 > colors:
         issues.append(f'{path}: expected indexed PNG with at most {colors} palette entries including transparency')
     alpha = chunks.get(b'tRNS', b'')
-    if not alpha or 0 not in alpha:
+    if alpha_mode != 'opaque' and (not alpha or 0 not in alpha):
         issues.append(f'{path}: transparent background required')
-    if binary_alpha and any(value not in (0, 255) for value in alpha):
+    if alpha_mode == 'binary' and any(value not in (0, 255) for value in alpha):
         issues.append(f'{path}: gameplay alpha must be binary; no antialiased edges')
+    if alpha_mode == 'opaque' and any(value != 255 for value in alpha):
+        issues.append(f'{path}: full-frame world surface must be opaque')
     return issues
 
 
 def image_contracts(root):
     issues = []
-    contracts = [(f'assets/images/objects/{name}.png', size, WORLD_PALETTE_SIZE, True) for name, size in WORLD_IMAGES.items()]
-    contracts += [(f'assets/images/HUD/{name}.png', HUD_ICON_SIZE, HUD_PALETTE_SIZE, False)
+    contracts = [(f'assets/images/objects/{name}.png', size, WORLD_PALETTE_SIZE,
+        'opaque' if name in OPAQUE_WORLD_IMAGES else 'binary') for name, size in WORLD_IMAGES.items()]
+    contracts += [(f'assets/images/HUD/{name}.png', HUD_ICON_SIZE, HUD_PALETTE_SIZE, 'soft')
                   for name in ('coin', 'chicken', 'key', 'fireball')]
     # Character poses reuse the legacy hero's 16 opaque colors plus alpha; PNG pads to 32.
-    contracts.append(('assets/images/hero/Look.png', PLAYER_LOOK_SIZE, 32, True))
-    for relative, size, colors, binary_alpha in contracts:
+    contracts.append(('assets/images/hero/Look.png', PLAYER_LOOK_SIZE, 32, 'binary'))
+    for relative, size, colors, alpha_mode in contracts:
         path = root / relative
         if not path.is_file():
             issues.append(f'{relative}: missing authored image')
         else:
-            issues.extend(png_contract(relative, path.read_bytes(), size, colors, binary_alpha))
+            issues.extend(png_contract(relative, path.read_bytes(), size, colors, alpha_mode))
     return issues
 
 

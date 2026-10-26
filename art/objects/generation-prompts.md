@@ -101,3 +101,15 @@ frame 0 (top)       frame 1 (middle)
 ..OMHO....OHMO..    ..OMHO....OHMO..
 ..OMHO....OHMO..    ..OMHO....OHMO..
 ```
+
+## Moving brick wall (2026-10-26; rounded-base revision)
+
+Selected source: `wall-brick-master.png`; this restores the rounded lower silhouette
+from the first generated wall and removes its gray backing. The source has pixel-stepped
+rounded lower corners and a broad flat center base. `export_brick_wall()` thresholds
+alpha, trims transparent source margins, nearest-resizes to the 48×96 runtime frame, and
+quantizes without dithering. The centered base reaches the frame's lower edge.
+
+Exact revision prompt:
+
+> Use this FIRST wall sprite as the source artwork. Preserve its exact warm brown brick design, brick layout, dark outlines, pixel-art style, overall proportions, and especially its rounded, stepped lower-left and lower-right corners and centered flat bottom. Make one cleanup only: remove the solid gray background so every pixel outside the existing brick wall silhouette is fully transparent. Do not square, crop, extend, redesign, or straighten the rounded lower corners. Do not change the wall or add any background, floor, shadow, glow, or scenery. Return the complete wall centered on a transparent canvas, keeping the broad flat center of the lowest course touching the bottom canvas edge. Crisp hard pixel boundaries, no antialiasing.
