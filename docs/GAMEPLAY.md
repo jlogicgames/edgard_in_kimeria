@@ -29,6 +29,12 @@ one nearby object or puts it down; **Up + Action** operates one selected mechani
 Conflicting Up+Down consumes Action without doing anything. Holding Action never
 repeats an interaction. Ranged throws the held object without spending ammunition;
 with an empty hand it spends one fireball, if available.
+
+**Requested revision, pending implementation:** [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175)
+will move pickup and mechanism use to **Up + Action**. **Down + Action** will only
+place/drop a carried object and will do nothing with an empty hand. The remaining
+control rules above describe the current runtime until that issue is implemented.
+The detailed target contract is in [Directional actions](DIRECTIONAL_CONTROLS.md#requested-interaction-revision-175-pending-implementation).
 **Ladders:** Up beside a ladder (Down from its top surface) takes hold. At a grounded platform
 at least one third down the ladder, Up or Down takes hold; on its upper span and at the bottom,
 only Up does. The ladder's top is a one-way support. Up/Down climb, Left/Right steps off into

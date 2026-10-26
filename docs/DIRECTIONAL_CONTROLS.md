@@ -8,6 +8,29 @@ and [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-whi
 This document describes the current behavior; superseded artwork and intermediate
 UI captures have been removed.
 
+The author requested a control revision in [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+Its target behavior is recorded below as pending implementation. Until #175 ships,
+the runtime follows the existing #95 contract in the tables and sections that follow.
+
+## Requested interaction revision (#175; pending implementation)
+
+| Command | Target result |
+| --- | --- |
+| Action without Up/Down | Keep the grounded sword attack, including while holding an object. |
+| Up + Action | Pick up one selected nearby stone/portable torch when empty-handed, or activate one selected lever/mechanism. |
+| Down + Action | Place/drop the held object on the ground. With an empty hand, do nothing. |
+| Up + Down + Action | Consume the press without an action. Release Action before trying again. |
+| Ranged, holding an object | Keep throwing that object without spending ammunition or firing a fireball. |
+| Ranged, empty-handed | Keep spending one available charge on one fireball. With zero stock, show Empty. |
+
+When a pickup and a mechanism are both eligible, choose one deterministically and
+make the visible outline and contextual hint identify the same target that Up + Action
+will affect. Keep the existing nearest-target and Tiled-ID tie-break policy across
+both target types. Preserve pickup reach, placement validation, one-slot carrying,
+trigger behavior, and Action-chord input suppression. Apply the rule to keyboard,
+gamepad, and touch in normal and left-handed layouts. Update About text, contextual
+teaching, touch labels and every localization catalog together with the implementation.
+
 | Command | Result |
 | --- | --- |
 | Action without Up/Down | Grounded sword attack, including while holding an object. Existing recovery, wall-clamber and jump-buffer restrictions remain. |

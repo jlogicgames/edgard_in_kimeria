@@ -15,7 +15,7 @@ different scopes; a design decision is not evidence that a feature is implemente
 | [Design decisions](DECISIONS.md) | Accepted campaign decisions and rationale, including D26's observe-plan-commit rule, death, retries, input, hitboxes and saves. Accepted entries may describe planned behavior; consult implementation documents for status. |
 | [Story and recurring characters](STORY.md) | Established world facts, the healer's role, implemented appearances and unresolved narrative details. |
 | [Original DOS references](ORIGINAL_DOS.md) | Historical story, screenshot transcriptions and character references. Source material for the remake; historical mechanics and region order are not automatically remake requirements. |
-| [Directional actions](DIRECTIONAL_CONTROLS.md) | #95 controls, close pickup reach, short contextual reminders, sprite artwork, carrying/fireball refills and capacity HUD, recovery and validation/dependencies. |
+| [Directional actions](DIRECTIONAL_CONTROLS.md) | #95 controls and the requested #175 interaction rework, close pickup reach, contextual reminders, carrying/fireball refills and capacity HUD, recovery and dependencies. |
 | [Rooms in Tiled](ROOMS.md) | Map authoring, room transitions, retry/rollback rules, replay budgets and measured routes. |
 | [Rollback verification](ROLLBACK_VALIDATION.md) | #100 test and Chrome results; separate F4 defect #170. |
 | [Forest boss](BOSS.md) | The implemented forest encounter: attacks, balance, hit feedback, retry and completion rules. Its values do not automatically apply to future bosses. |

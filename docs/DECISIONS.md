@@ -442,7 +442,8 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   the held object, or uses a fireball when empty-handed. One carried object and
   sword availability remain as in D16. Implementation:
   [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95), implemented 2026-10-22;
-  [current contract and dependencies](DIRECTIONAL_CONTROLS.md).
+  [original contract and dependencies](DIRECTIONAL_CONTROLS.md). The author-requested
+  directional revision is recorded in D30 and tracked by #175.
 - **Movement progression:** Double jump becomes available starting with the Steppe.
   Design subsequent rooms around that ability rather than an arbitrary optional
   upgrade purchase. The unlock event and exact movement rules still need design;
@@ -777,3 +778,24 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Details:** [Standing look](#d25-standing-look-with-delayed-vertical-inspection),
   [directional controls](DIRECTIONAL_CONTROLS.md#standing-look-updown-2026-10-23), and
   [gameplay controls](GAMEPLAY.md#controls).
+
+## D30. One direction for pickup and mechanism interaction
+
+- **Status:** Author-directed, 2026-10-26; implementation pending in [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+- **Decision:** Up + Action is the single affirmative interaction chord. With an empty hand,
+  it picks up a selected nearby carryable or activates a selected mechanism. With an object
+  held, it remains available to activate a mechanism. Down + Action only places/drops the
+  held object; with an empty hand it does nothing. Plain Action remains the sword, and
+  Ranged keeps its throw/fireball behavior.
+- **Selection and feedback:** When both a pickup and mechanism are eligible, select the
+  nearest target across both types, with the smaller Tiled object ID breaking equal-distance
+  ties. The outline and contextual hint must identify the target that Up + Action will affect.
+- **Compatibility:** Preserve the existing pickup reach, placement checks, single carry slot,
+  trigger behavior, and directional-input suppression across keyboard, gamepad, touch and
+  both handedness layouts. Update About text, contextual labels, touch labels and all
+  localization catalogs with implementation.
+- **Why:** Pickup and mechanism use are both interactions; assigning both to Up + Action
+  gives the player one consistent direction for acting and leaves Down + Action as the
+  explicit put-down command.
+- **Details:** [Requested interaction contract](DIRECTIONAL_CONTROLS.md#requested-interaction-revision-175-pending-implementation),
+  [gameplay controls](GAMEPLAY.md#controls), and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
