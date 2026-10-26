@@ -6,7 +6,9 @@ import com.badlogic.gdx.controllers.Controllers;
 
 /**
  * Generic gamepad polling, matching the Rust version's README: left
- * stick/D-pad move, South (A) jump, West/East (X/B) sword (Up/Down + action selects interaction), North (Y) shoot, Start pause; Up/Down/Left/Right or the stick navigate menus,
+ * stick/D-pad move, South (A) jump, West/East (X/B) Action, North (Y) shoot, Start pause.
+ * Up + Action selects a pickup or mechanism; Down + Action places a held object.
+ * Up/Down/Left/Right or the stick navigate menus,
  * A confirms, B goes back. Uses {@link ControllerMapping}'s generic
  * Xbox-style button indices, which gdx-controllers resolves per-OS/per-pad,
  * so this isn't tied to one specific controller brand.

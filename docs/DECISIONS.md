@@ -781,7 +781,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 ## D30. One direction for pickup and mechanism interaction
 
-- **Status:** Author-directed, 2026-10-26; implementation pending in [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+- **Status:** Implemented 2026-10-26 ([#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175)).
 - **Decision:** Up + Action is the single affirmative interaction chord. With an empty hand,
   it picks up a selected nearby carryable or activates a selected mechanism. With an object
   held, it remains available to activate a mechanism. Down + Action only places/drops the
@@ -797,5 +797,5 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Why:** Pickup and mechanism use are both interactions; assigning both to Up + Action
   gives the player one consistent direction for acting and leaves Down + Action as the
   explicit put-down command.
-- **Details:** [Requested interaction contract](DIRECTIONAL_CONTROLS.md#requested-interaction-revision-175-pending-implementation),
+- **Details:** [Interaction contract](DIRECTIONAL_CONTROLS.md#interaction-controls-175),
   [gameplay controls](GAMEPLAY.md#controls), and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).

@@ -24,17 +24,20 @@ release acceptance checks are deferred until those mechanics are added and colle
 ## Controls
 
 Three action buttons are **Jump**, **Action** and **Ranged**. Plain Action always
-selects the grounded sword, including while carrying. **Down + Action** picks up
-one nearby object or puts it down; **Up + Action** operates one selected mechanism.
-Conflicting Up+Down consumes Action without doing anything. Holding Action never
-repeats an interaction. Ranged throws the held object without spending ammunition;
-with an empty hand it spends one fireball, if available.
+selects the grounded sword, including while carrying. **Up + Action** picks up the
+nearest eligible stone/portable torch or activates the nearest eligible mechanism;
+the smaller Tiled object ID breaks equal-distance ties across both types. While
+carrying, Up + Action remains available for mechanisms. **Down + Action** puts down
+the held object and does nothing with an empty hand. Conflicting Up+Down consumes
+Action without doing anything. Holding Action never repeats an interaction. Ranged
+throws the held object without spending ammunition; with an empty hand it spends one
+fireball, if available.
 
-**Requested revision, pending implementation:** [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175)
-will move pickup and mechanism use to **Up + Action**. **Down + Action** will only
-place/drop a carried object and will do nothing with an empty hand. The remaining
-control rules above describe the current runtime until that issue is implemented.
-The detailed target contract is in [Directional actions](DIRECTIONAL_CONTROLS.md#requested-interaction-revision-175-pending-implementation).
+The selected interaction uses the same target for its outline and contextual hint.
+On keyboard, gamepad and touch in either layout, the vertical direction joined to
+Action is consumed until released, so it cannot also start looking or climbing.
+See [Directional actions](DIRECTIONAL_CONTROLS.md#interaction-controls-175) for the
+full contract and device bindings.
 **Ladders:** Up beside a ladder (Down from its top surface) takes hold. At a grounded platform
 at least one third down the ladder, Up or Down takes hold; on its upper span and at the bottom,
 only Up does. The ladder's top is a one-way support. Up/Down climb, Left/Right steps off into
@@ -103,7 +106,8 @@ fireballs use three fixed icons without a number, with spent charges darkened.
 Fireball stock is at the top right in release launches. Development launches
 reserve the far-right column for FPS and shift stock left to avoid overlap.
 Pickup requires contact within a 3 px tolerance;
-touch labels also distinguish sword, pickup/place, mechanism, throw and fireball.
+touch labels also distinguish sword, pickup, put-down, no action, mechanism, throw
+and fireball.
 A new/continued run starts with three charges, the maximum held at once. Stock
 persists between the two Forest levels and restores to room
 entry stock on death. Sword and fireballs can damage the boss. Full behavior, target

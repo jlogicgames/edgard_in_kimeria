@@ -271,8 +271,8 @@ are concrete forms of the attacks.
 | Movement and jump | Positioning, avoiding danger, precision and timing between supports. | Implemented in the test build. |
 | Melee | Remove an enemy from the right position at the right moment. | Sword implemented; current limits in D4/D10. |
 | Ranged attack | A consumable advantage against distant danger. | Consumable fireball, capacity three and two rare single-charge pickups implemented for the test campaign (#98); campaign economy remains future work. |
-| Interaction | Operate a lever or another mechanism. | Current runtime: Up + Action selects a single mechanism (#95). Requested: Up + Action also picks up a nearby item; see [D30](DECISIONS.md#d30-one-direction-for-pickup-and-mechanism-interaction) and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175). |
-| Pick up and place | Move a stone or torch to change the room situation. | Current runtime: Down + Action picks up/places within one visible slot, and Ranged throws (#95/#97). Requested: Up + Action picks up; Down + Action only places a held item. Authored Forest puzzles remain #102–#104, Fortress light puzzles #112–#115. |
+| Interaction | Operate a lever or another mechanism. | Up + Action chooses the nearest eligible carryable or mechanism; the smaller Tiled object ID breaks equal-distance ties. While carrying, Up + Action operates a mechanism. See [D30](DECISIONS.md#d30-one-direction-for-pickup-and-mechanism-interaction) and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175). |
+| Pick up and place | Move a stone or torch to change the room situation. | Up + Action picks up a nearby item; Down + Action only puts down a held item. Ranged throws it; one visible slot is shared (#95/#97/#175). Authored Forest puzzles remain #102–#104, Fortress light puzzles #112–#115. |
 | Throw an object | Affect something distant or place an object ahead. | Implemented on Ranged; does not spend fireballs (#95). |
 | Vertical ladder | Change elevation, choose a route and movement timing. | Implemented in the test build (#99, [D28](DECISIONS.md#d28-vertical-ladders)); first Forest room. |
 | Double jump | An extra airborne jump used in authored routes and wind tasks. | Accepted from Steppe; unlock and exact rules open. |
@@ -363,20 +363,22 @@ spending scarce ammunition when they meant to throw a stone. Distinguish the
 action-selection rule from how it is displayed: the rule is accepted, hint visuals
 remain open.
 
-**Accepted scheme, [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95):**
+**Implemented scheme, [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95), revised by [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175):**
 
 | Input | Action |
 | --- | --- |
 | Action without an interaction direction | Sword attack, including while carrying. |
-| Down + action | Pick up or place an object. |
-| Up + action | Operate the selected lever/mechanism. |
+| Up + action, empty hand | Pick up the nearest eligible item or operate the nearest eligible mechanism; the smaller Tiled ID breaks equal-distance ties. |
+| Up + action, carrying | Operate an eligible mechanism. |
+| Down + action | Put down the held item; with an empty hand it does nothing. |
 | Ranged while holding an object | Throw it. |
 | Ranged with an empty hand | Fireball, if ammunition is available. |
 
 Test directional conflicts with ladders and the touch stick, both handedness
-layouts, and unambiguous target selection. Implemented in the test build on
-2026-10-22; [behavior and evidence](DIRECTIONAL_CONTROLS.md) distinguish simulated
-device tests from outstanding physical-device checks. Ladder arbitration is covered by the same simulated devices (#99).
+layouts, and unambiguous target selection. The original behavior shipped on
+2026-10-22; the interaction revision shipped on 2026-10-26. See [behavior and
+evidence](DIRECTIONAL_CONTROLS.md); simulated-device checks remain distinct from
+outstanding physical-device checks. Ladder arbitration uses the same input path (#99).
 
 An earlier alternative used a highlighted nearby object and a labelled contextual
 action, as in Zelda. It still conflicts with Edgard's sword during combat; a label

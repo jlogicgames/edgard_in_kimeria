@@ -205,13 +205,13 @@ class DirectionalActionsTest {
             else level.triggers.clear();
             assertNotNull(mechanism ? level.player.selectedMechanism() : level.player.selectedCarryable());
             float neutral = lastCameraTarget.y;
-            held.add(mechanism ? up() : down()); frames(54);
-            assertEquals(mechanism ? Player.State.LOOK_UP : Player.State.LOOK_DOWN, level.player.getState());
+            held.add(up()); frames(54);
+            assertEquals(Player.State.LOOK_UP, level.player.getState());
             assertEquals(neutral, lastCameraTarget.y, .001);
             frames(12);
-            assertTrue(mechanism ? lastCameraTarget.y < neutral : lastCameraTarget.y > neutral);
+            assertTrue(lastCameraTarget.y < neutral);
             frames(60);
-            assertEquals(neutral + (mechanism ? -100 : 150), lastCameraTarget.y, .01);
+            assertEquals(neutral - 100, lastCameraTarget.y, .01);
         }
     }
 
@@ -247,7 +247,14 @@ class DirectionalActionsTest {
     private int up() { return leftHanded ? Input.Keys.UP : Input.Keys.W; }
     private int down() { return leftHanded ? Input.Keys.DOWN : Input.Keys.S; }
     private void tap(int key) { held.add(key); pressed.add(key); frames(1); held.remove(key); frames(1); }
-    private void pickup() { held.add(down()); tap(action()); held.remove(down()); }
+    private void pickup() {
+        var mechanisms = new ArrayList<com.jlogicsoftware.kimeria.entity.items.Trigger>();
+        for (var trigger : level.triggers) mechanisms.add(trigger);
+        level.triggers.clear();
+        held.add(up()); tap(action()); held.remove(up());
+        for (var trigger : mechanisms) level.triggers.add(trigger);
+    }
+    private void putDown() { held.add(down()); tap(action()); held.remove(down()); }
 
     private void standByEntranceStone() {
         var stone = level.objects.stream()
@@ -327,9 +334,9 @@ class DirectionalActionsTest {
         assertEquals(1, first.count); assertEquals(0, second.count);
         held.add(up()); held.add(down()); tap(action()); held.clear();
         assertEquals(1, first.count); assertNull(level.player.carriedObject());
-        held.add(down()); held.add(action()); frames(1);
+        pickup();
         assertEquals(20, level.player.carriedObject().id);
-        frames(60); // Holding never turns pickup into putting down.
+        frames(60); // Holding never repeats an interaction.
         assertEquals(20, level.player.carriedObject().id);
         held.clear(); frames(1);
         tap(action()); assertEquals(Player.State.ATTACKING, level.player.getState());
@@ -430,6 +437,11 @@ class DirectionalActionsTest {
         finger(0, mirrored(80), 315); frames(181);
         assertEquals(Player.State.LOOK_DOWN, level.player.getState());
         assertEquals(neutral + 150, lastCameraTarget.y, .01);
+        var stone = level.objects.stream()
+            .filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 20)
+            .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
+        standByCarryable(stone);
+        pointerY[0] = 245; frames(1);
         finger(1, mirrored(520), 318); frames(2);
         assertNotNull(level.player.carriedObject());
         assertNotEquals(Player.State.LOOK_DOWN, level.player.getState());
@@ -438,14 +450,18 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void touchClaimsTwoPointersDragsVerticallyAndSuppressesMenuHold(boolean left) {
         scene(left);
-        finger(0, mirrored(80), 315); frames(1);
-        assertEquals(1, level.player.verticalMovement());
+        var stone = level.objects.stream()
+            .filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 20)
+            .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
+        standByCarryable(stone);
+        finger(0, mirrored(80), 245); frames(1);
+        assertEquals(-1, level.player.verticalMovement());
         finger(1, mirrored(520), 318); frames(1);
         assertNotNull(level.player.carriedObject());
-        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.PUT_DOWN, level.player.actionLabel());
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.INTERACT, level.player.actionLabel());
         frames(30); assertNotNull(level.player.carriedObject());
         fingers[1] = false; frames(1);
-        pointerY[0] = 245; // Same claimed stick, dragged upward.
+        pointerY[0] = 245; // Keep Up selected while the carried mechanism remains available.
         finger(1, mirrored(520), 318); frames(1);
         assertEquals(1, first.count); assertEquals(0, second.count);
         assertEquals(0, level.player.verticalMovement());
@@ -546,7 +562,11 @@ class DirectionalActionsTest {
         var viewport = new com.badlogic.gdx.utils.viewport.FitViewport(640, 360, camera);
         viewport.setScreenBounds(0, 0, 640, 360);
         touch = new TouchControls(assets, game, viewport, 640, 360, true);
-        finger(0, 80, 315); frames(1);
+        var stone = level.objects.stream()
+            .filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 20)
+            .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
+        standByCarryable(stone);
+        finger(0, 80, 245); frames(1);
         finger(1, 520, 318); frames(1);
         assertNotNull(level.player.carriedObject());
     }
@@ -613,13 +633,13 @@ class DirectionalActionsTest {
                 && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.TORCH)
             .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
         standByCarryable(portableTorch);
-        held.add(down()); frames(1);
+        held.add(up()); frames(1);
         var pickup = level.player.interactionFeedbackTarget();
         assertSame(level.player.selectedCarryable(), pickup);
         assertEquals(com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.TORCH,
             ((com.jlogicsoftware.kimeria.entity.items.Carryable) pickup).kind);
         assertNotSame(level.player, pickup);
-        held.add(up()); frames(1); assertNull(level.player.interactionFeedbackTarget());
+        held.remove(up()); held.add(down()); frames(1); assertNull(level.player.interactionFeedbackTarget());
         held.clear(); frames(1); assertNull(level.player.interactionFeedbackTarget());
     }
 
@@ -653,7 +673,7 @@ class DirectionalActionsTest {
         // Isolate carrying reminders here; the combined lever lesson/anchor has its own regression below.
         level.triggers.clear();
         standByEntranceStone();
-        assertTrue(level.player.contextHint().contains(left ? "Down + X" : "S + K"));
+        assertTrue(level.player.contextHint().contains(left ? "Up + X" : "W + K"));
         pickup(); frames(1);
         assertNotNull(level.player.carriedObject());
         assertTrue(level.player.contextHint().contains(left ? "C: Throw" : "L: Throw"));
@@ -780,7 +800,7 @@ class DirectionalActionsTest {
         assertEquals("", level.player.contextHint());
         level.player.position.x -= 60; frames(2);
         assertEquals("", level.player.contextHint(), "Returning/stopping must not revive the same pickup's reminder");
-        pickup(); assertNull(level.player.carriedObject()); // place
+        putDown(); assertNull(level.player.carriedObject());
         pickup(); assertSame(stone, level.player.carriedObject());
         assertTrue(level.player.contextHint().contains("Put down"), "Every new pickup in the first room teaches again");
     }
@@ -892,7 +912,7 @@ class DirectionalActionsTest {
         float height = feet();
         tap(action());
         assertNotEquals(Player.State.ATTACKING, level.player.getState(), "The sword needs footing");
-        held.add(down()); tap(action()); held.remove(down());
+        held.add(up()); tap(action()); held.remove(up());
         assertNull(level.player.carriedObject(), "Pick up and put down need footing too");
         assertTrue(level.player.onLadder());
         assertEquals(height, feet(), 1.5);

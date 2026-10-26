@@ -78,6 +78,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** The first grounded intermediate platform is slightly above half-height in the authored room. */
     private static final float LADDER_BIDIRECTIONAL_ENTRY_FRACTION = 1f / 3f;
     private record LadderEntry(Ladder ladder, boolean canClimbUp, boolean canClimbDown) { }
+    private record InteractionTarget(Carryable carryable, Trigger mechanism) { }
 
     private final GameContext game;
     private Level level;
@@ -253,7 +254,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // Use real eligibility: pressing Up can hide the pickup label without changing reach.
         boolean interactionAvailable = inspecting && (selectedCarryable() != null || selectedMechanism() != null);
         boolean interactionHighlighted = interactionFeedbackTarget() != null;
-        int lookDirection = inspecting && !interactionHighlighted ? gameplayInput.lookDirection() : 0;
+        int lookDirection = inspecting && !verticalSpentOnAction && !interactionHighlighted
+            ? gameplayInput.lookDirection() : 0;
         look.update(stepDt, lookDirection, gameplayInput.verticalHeld(), interactionAvailable && !interactionHighlighted);
         previousFeetY = position.y + hitbox.offsetY + hitbox.height;
         previousBodyX = position.x + hitbox.offsetX;
@@ -434,10 +436,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (gameplayInput.actionPressed()) {
             // Conflicting directions consume the press without attacking or interacting.
             if (gameplayInput.up() && gameplayInput.down()) { /* wait for an unambiguous press */ }
-            else if (gameplayInput.down()) pickUpOrPlace();
+            else if (gameplayInput.down()) putDownCarried();
             else if (gameplayInput.up()) {
-                Trigger target = selectedMechanism();
-                if (target != null) level.activateTrigger(target);
+                InteractionTarget target = selectedInteraction();
+                if (target != null && target.carryable() != null) pickUp(target.carryable());
+                else if (target != null) level.activateTrigger(target.mechanism());
             } else if (!isAttacking && onGround && ladder == null && !jumpBuffer.pending() && !clambering) isAttacking = true;
         }
         if (gameplayInput.rangedPressed()) shoot();
@@ -513,7 +516,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     public Carryable selectedCarryable() {
-        if (level == null || carried != null || !canFight()) return null;
+        if (level == null || carried != null || !canFight() || isAttacking || clambering || ladder != null) return null;
         Rectangle reach = new Rectangle(hitboxBounds());
         // A small hand/contact tolerance, not a remote interaction radius.
         reach.x -= PICKUP_REACH; reach.y -= PICKUP_REACH;
@@ -526,29 +529,47 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return best;
     }
 
+    /** Picks the one target Up + Action will affect, using distance then Tiled ID across both types. */
+    private InteractionTarget selectedInteraction() {
+        if (level == null || !canFight()) return null;
+        Trigger mechanism = selectedMechanism();
+        Carryable carryable = selectedCarryable();
+        if (mechanism == null) return carryable == null ? null : new InteractionTarget(carryable, null);
+        if (carryable == null) return new InteractionTarget(null, mechanism);
+        float mechanismDistance = targetDistance(mechanism);
+        float carryableDistance = targetDistance(carryable);
+        if (carryableDistance < mechanismDistance
+            || (carryableDistance == mechanismDistance && carryable.id < mechanism.id))
+            return new InteractionTarget(carryable, null);
+        return new InteractionTarget(null, mechanism);
+    }
+
+    private Entity interactionFeedbackTarget(InteractionTarget target) {
+        if (target == null) return null;
+        return target.carryable() != null ? target.carryable() : level.mechanismFeedbackTarget(target.mechanism());
+    }
+
     private Rectangle placementBounds() {
         Rectangle body = hitboxBounds();
         return new Rectangle(facingRight ? body.x + body.width + PLACEMENT_GAP : body.x - (Carryable.BODY_SIZE + PLACEMENT_GAP),
             body.y + body.height - Carryable.BODY_SIZE, Carryable.BODY_SIZE, Carryable.BODY_SIZE);
     }
 
-    private void pickUpOrPlace() {
-        if (!canFight() || isAttacking || clambering || ladder != null) return;
-        if (carried != null) {
-            Rectangle place = placementBounds();
-            if (level.blocksObject(place, true)) return;
-            carried.release(place.x, place.y, false, facingRight);
-            carried = null;
-        } else {
-            Carryable target = selectedCarryable();
-            if (target != null) {
-                carried = target;
-                carryHintAnchor.set(centerX(), getY() + HINT_PLAYER_OFFSET_Y);
-                carryHintCameraAnchor.set(cameraTarget(cameraFocusX, position.y));
-                carryHintVisible = true;
-                carried.pickUp(this);
-            }
-        }
+    private void putDownCarried() {
+        if (!canFight() || carried == null || isAttacking || clambering || ladder != null) return;
+        Rectangle place = placementBounds();
+        if (level.blocksObject(place, true)) return;
+        carried.release(place.x, place.y, false, facingRight);
+        carried = null;
+    }
+
+    private void pickUp(Carryable target) {
+        if (!canFight() || target == null || isAttacking || clambering || ladder != null) return;
+        carried = target;
+        carryHintAnchor.set(centerX(), getY() + HINT_PLAYER_OFFSET_Y);
+        carryHintCameraAnchor.set(cameraTarget(cameraFocusX, position.y));
+        carryHintVisible = true;
+        carried.pickUp(this);
     }
 
     /** Selection happens once: dropping the reference after a throw cannot fall through to a fireball. */
@@ -566,9 +587,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     public Msg actionLabel() {
         if (gameplayInput.up() && gameplayInput.down()) return Msg.DIRECTION_CONFLICT;
-        if (gameplayInput.down()) return carried == null ? Msg.PICK_UP :
+        if (gameplayInput.down()) return carried == null ? Msg.NO_ACTION :
             level.blocksObject(placementBounds(), true) ? Msg.PLACE_BLOCKED : Msg.PUT_DOWN;
-        return gameplayInput.up() ? mechanismAction(selectedMechanism()) : Msg.ATTACK;
+        if (!gameplayInput.up()) return Msg.ATTACK;
+        InteractionTarget target = selectedInteraction();
+        if (target == null) return Msg.NO_ACTION;
+        return target.carryable() != null ? Msg.PICK_UP : mechanismAction(target.mechanism());
     }
 
     private Msg mechanismAction(Trigger trigger) {
@@ -585,10 +609,13 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public String actionPrompt() {
         String target = "";
         Msg action = actionLabel();
-        if (action == Msg.PICK_UP && selectedCarryable() != null) target = " - " + selectedCarryable().label().t(game.language());
+        InteractionTarget selection = gameplayInput.up() && !gameplayInput.down() ? selectedInteraction() : null;
+        if (action == Msg.PICK_UP && selection != null && selection.carryable() != null)
+            target = " - " + selection.carryable().label().t(game.language());
         if (action == Msg.PUT_DOWN || action == Msg.PLACE_BLOCKED) target = " - " + carried.label().t(game.language());
-        if ((action == Msg.INTERACT || action == Msg.TURN_ON || action == Msg.TURN_OFF) && selectedMechanism() != null)
-            target = " - " + mechanismLabel(selectedMechanism()).t(game.language());
+        if ((action == Msg.INTERACT || action == Msg.TURN_ON || action == Msg.TURN_OFF)
+            && selection != null && selection.mechanism() != null)
+            target = " - " + mechanismLabel(selection.mechanism()).t(game.language());
         return actionBinding(false) + ": " + action.t(game.language()) + target;
     }
     public String rangedPrompt() {
@@ -604,6 +631,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (level == null || !level.tutorialHintsActive() || !canFight() || isAttacking
             || (gameplayInput.up() && gameplayInput.down())) return "";
         String interaction = interactionHint();
+        if (gameplayInput.actionHeld() && gameplayInput.verticalHeld()) return interaction;
         return interaction.isEmpty() ? ladderHint() : interaction;
     }
 
@@ -628,12 +656,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
             String carrying = place + "\n" + rangedPrompt();
             return mechanism == null ? carrying : mechanismHint(mechanism) + "\n" + carrying;
         }
-        if (gameplayInput.down()) return selectedCarryable() == null ? "" : actionPrompt();
-        if (gameplayInput.up()) return selectedMechanism() == null ? "" : actionPrompt();
-        Carryable pickup = selectedCarryable();
-        if (pickup != null) return actionBinding(false, false, true) + ": " + Msg.PICK_UP.t(game.language()) + " - " + pickup.label().t(game.language());
-        if (selectedMechanism() != null) return mechanismHint(selectedMechanism());
-        return "";
+        if (gameplayInput.down()) return "";
+        InteractionTarget target = selectedInteraction();
+        if (target == null) return "";
+        if (gameplayInput.up()) return actionPrompt();
+        if (target.carryable() != null)
+            return actionBinding(false, true, false) + ": " + Msg.PICK_UP.t(game.language())
+                + " - " + target.carryable().label().t(game.language());
+        return mechanismHint(target.mechanism());
     }
 
     private String mechanismHint(Trigger mechanism) {
@@ -651,8 +681,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         LadderEntry entry = interactionHint().isEmpty() ? ladderEntry() : null;
         if (entry != null) { out.set(entry.ladder().centerX(), getY() + HINT_PLAYER_OFFSET_Y); return; }
         if (carried != null && selectedMechanism() == null) { out.set(carryHintAnchor); return; }
-        Entity target = gameplayInput.up() ? level.mechanismFeedbackTarget(selectedMechanism()) : selectedCarryable();
-        if (target == null) target = level.mechanismFeedbackTarget(selectedMechanism());
+        InteractionTarget selection = selectedInteraction();
+        Entity target = interactionFeedbackTarget(selection);
         out.set(target == null ? centerX() : target.centerX(),
             target == null ? getY() + HINT_PLAYER_OFFSET_Y : Math.min(target.getY() - HINT_TARGET_OFFSET_Y, getY() + HINT_PLAYER_OFFSET_Y));
     }
@@ -681,9 +711,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     public Entity interactionFeedbackTarget() {
-        if (!canFight()) return null;
-        return gameplayInput.up() && !gameplayInput.down() ? level.mechanismFeedbackTarget(selectedMechanism())
-            : gameplayInput.down() && !gameplayInput.up() ? selectedCarryable() : null;
+        if (!canFight() || !gameplayInput.up() || gameplayInput.down()) return null;
+        return interactionFeedbackTarget(selectedInteraction());
     }
 
     public void renderInteractionTarget(Batch batch) {

@@ -33,8 +33,11 @@ a consumer. A menu mapping and a gameplay mapping may intentionally differ.
 - Movement is held; jump requires a fresh press with a short buffer and coyote
   time. Holding through landing never auto-jumps. Preserve reset/suppression when
   starting or resuming gameplay rather than clearing input on every frame.
-- Action alone is sword; Down + Action picks up/places, Up + Action operates a
-  mechanism. Ranged throws the held object or spends one fireball when empty-handed.
+- Action alone is sword; Up + Action picks up the nearest eligible carryable or
+  activates the nearest eligible mechanism, using distance then Tiled ID across
+  both target types. While carrying, Up + Action remains available for mechanisms.
+  Down + Action only places/drops a held object and does nothing empty-handed.
+  Ranged throws the held object or spends one fireball when empty-handed.
   Follow [directional controls](../../../docs/DIRECTIONAL_CONTROLS.md); proximity must
   never turn a sword press into interaction. Standing Up/Down alone selects a static
   look pose and delayed vertical inspection. Action, Ranged, horizontal movement,

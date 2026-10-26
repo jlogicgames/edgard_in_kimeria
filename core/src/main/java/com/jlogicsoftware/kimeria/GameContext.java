@@ -24,7 +24,7 @@ public interface GameContext {
     /** Shared warning timing for every timed trap. */
     TrapWarnings trapWarnings();
 
-    /** True while a mechanism can be selected with Up + Action. */
+    /** True while a mechanism can be selected by Up + Action. */
     boolean interactAvailable();
 
     default com.jlogicsoftware.kimeria.localization.Msg actionLabel() { return com.jlogicsoftware.kimeria.localization.Msg.ATTACK; }

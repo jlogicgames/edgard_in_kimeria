@@ -61,8 +61,8 @@ F7 restarts the hosted game, not the dev launcher/host.
 | Look while standing (hold) | W / S | Movement stick up / down |
 | Jump | J | South button |
 | Sword | K | West / East button |
-| Pick up / put down | S + K | Down + West / East |
-| Mechanism | W + K | Up + West / East |
+| Pick up / mechanism | W + K | Up + West / East |
+| Put down held object | S + K | Down + West / East |
 | Throw held object / fireball | L | North button |
 | Pause | Esc | Start |
 

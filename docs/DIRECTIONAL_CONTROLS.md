@@ -1,50 +1,44 @@
-# Directional actions (#95)
+# Directional actions (#95, #175)
 
 Implemented 2026-10-22, with the author's final tutorial/carrying clarifications
 on 2026-10-23. This replaces the proximity-based Attack/Interact priority from #22.
 Desktop and web share the same dispatcher. Accepted choices and their rationale
 are retained in [D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket)
 and [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying).
-This document describes the current behavior; superseded artwork and intermediate
-UI captures have been removed.
+This document describes the current behavior, including the interaction revision
+implemented for [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+Superseded artwork and intermediate UI captures have been removed.
 
-The author requested a control revision in [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
-Its target behavior is recorded below as pending implementation. Until #175 ships,
-the runtime follows the existing #95 contract in the tables and sections that follow.
-
-## Requested interaction revision (#175; pending implementation)
+## Interaction controls (#175)
 
 | Command | Target result |
 | --- | --- |
-| Action without Up/Down | Keep the grounded sword attack, including while holding an object. |
-| Up + Action | Pick up one selected nearby stone/portable torch when empty-handed, or activate one selected lever/mechanism. |
-| Down + Action | Place/drop the held object on the ground. With an empty hand, do nothing. |
+| Action without Up/Down | Grounded sword attack, including while holding an object. Recovery, wall-clamber and jump-buffer restrictions remain. |
+| Up + Action, empty hand | Pick up the nearest eligible stone/portable torch or activate the nearest eligible mechanism. |
+| Up + Action, carrying | Activate the nearest eligible mechanism; if none is selected, do nothing. |
+| Down + Action | Place/drop the held object. With an empty hand, do nothing. |
 | Up + Down + Action | Consume the press without an action. Release Action before trying again. |
 | Ranged, holding an object | Keep throwing that object without spending ammunition or firing a fireball. |
 | Ranged, empty-handed | Keep spending one available charge on one fireball. With zero stock, show Empty. |
 
-When a pickup and a mechanism are both eligible, choose one deterministically and
-make the visible outline and contextual hint identify the same target that Up + Action
-will affect. Keep the existing nearest-target and Tiled-ID tie-break policy across
-both target types. Preserve pickup reach, placement validation, one-slot carrying,
-trigger behavior, and Action-chord input suppression. Apply the rule to keyboard,
-gamepad, and touch in normal and left-handed layouts. Update About text, contextual
-teaching, touch labels and every localization catalog together with the implementation.
-
-| Command | Result |
-| --- | --- |
-| Action without Up/Down | Grounded sword attack, including while holding an object. Existing recovery, wall-clamber and jump-buffer restrictions remain. |
-| Down + Action | Pick up one nearby stone/portable torch, or place the held object. |
-| Up + Action | Activate exactly one selected trigger; that trigger may operate several linked objects. |
-| Up + Down + Action | Consume the press without an action. Release Action before trying again. |
-| Ranged, holding an object | Throw that object; consume the press, spend no ammunition and fire no fireball. |
-| Ranged, empty-handed | Spend one available charge on one fireball. With zero stock, show Empty. |
+When a pickup and mechanism are both eligible with an empty hand, compare their
+centres to the player's body centre and choose the nearer one; the smaller Tiled
+object ID breaks an equal-distance tie across both types. The visible outline and
+contextual hint identify that same selection. A mechanism selection dispatches once
+through its Trigger, which may operate several linked objects. While carrying, only
+mechanisms are Up + Action targets. Preserve pickup reach, placement validation,
+one-slot carrying and trigger behavior.
 
 Directions must be held when Action is pressed. Changing direction while holding
 Action never produces another action. Each device needs release/repress independently;
 keyboard repeats do not repeat interactions. Menu/loading/room entry, resume,
 death arrival and layout changes suppress held action/ranged input. Jump keeps its
 existing separate buffer and coyote-time implementation.
+
+Keyboard, gamepad and touch share this behavior in both handedness layouts. The
+direction held with Action is consumed until that direction is released; it cannot
+also start a look, grab/climb a ladder, or trigger another action. Touch reports
+“No action” for Up + Action with no target and Down + Action with an empty hand.
 
 ## Standing look up/down (2026-10-23)
 
@@ -60,7 +54,7 @@ This changes neither hitboxes nor movement and is not crouching or ladder climbi
 UI/layout boundaries discard the old hold and require vertical release before
 inspection can restart. A carried object stays in the unchanged front palm.
 When a reachable pickup or usable mechanism is available, allow a one-second
-hold before moving the camera, giving its pickup/activation chord priority over
+hold before moving the camera, giving its Up + Action pickup/activation chord priority over
 inspection. Choose this delay at the beginning of each hold; other holds keep
 0.3 seconds. A carry-only Put down/Throw reminder does not extend the delay.
 Target eligibility governs this rule even if the held look direction hides the
@@ -82,7 +76,7 @@ inspection was already underway, it returns to the ordinary camera target over 0
 
 The mirrored action D-pad is never also a movement direction. Start/Esc and menu
 bindings are unchanged. Touch labels distinguish sword, pickup, placement, blocked
-placement, mechanism, throw, fireball and empty stock. All contextual teaching uses
+placement, no action, mechanism, throw, fireball and empty stock. All contextual teaching uses
 the entire first Forest room (`forest`, room 0), at every position and height,
 including retries and collection returns. Other rooms/levels omit teaching labels. The full-ammunition pickup message is
 status feedback, available at its pickup in every room and level.
@@ -106,25 +100,26 @@ Gold corner brackets frame the selected object itself. For Up + Action, a visibl
 lever is framed at its trigger zone and named Lever, with Turn on/Turn off matching
 the linked torch. Other mechanisms frame the nearest visible linked object rather
 than the invisible trigger volume; a linked torch is named Torch. Usable torches have a solid
-handle and cup, including when unlit. Down + Action frames the pickup at its actual
-position. There is no floating selection dot above the hero or a trigger zone. Strings are typed `Msg`
+handle and cup, including when unlit. Up + Action frames a selected pickup at its actual
+position. Down + Action has no target outline because it places the carried object.
+There is no floating selection dot above the hero or a trigger zone. Strings are typed `Msg`
 keys translated in EN/UK/PL/DE/BE; the shipped fonts already contain every glyph.
 
 Mechanisms are eligible only inside their trigger volume. Carryables are eligible
 only in contact with the player's body or within a 3 px tolerance on either axis.
-A held Down + Action outside that reach does nothing and shows no pickup marker
-or hint; it never turns into a sword attack.
-Choose the nearest eligible target centre to the body centre; equal distances use
-the smaller Tiled object ID. Carryables and mechanisms are selected separately by
-Down/Up. Enemies never change the selected action. Placement inside solid terrain
-or beyond the current room is blocked and retains the object.
+An Up + Action with no eligible target does nothing and shows no target marker or
+hint; it never turns into a sword attack. Enemies never change the selected action.
+While carrying, the pickup selection is disabled and the nearest eligible mechanism
+remains available. Placement inside solid terrain or beyond the current room is
+blocked and retains the object.
 
 ## Objects, projectiles and recovery
 
 The optional entrance practice objects in `forest.tmx` are stone 116, portable
 torch 117, trigger 118 and its linked light 119. They require no geometry changes
-and do not obstruct the required route. Try S+K, release, K, L, then L again;
-W+K toggles the light. The mirrored keyboard uses Down+X, X, C and Up+X.
+and do not obstruct the required route. Try W+K, release, K, L, then L again;
+W+K also toggles the light when the mechanism is the selected target. S+K puts down
+the object. The mirrored keyboard uses Up+X to interact and Down+X to put it down.
 The torch, stone and fireball load authored transparent PNG sprites; source
 masters and exact built-in ImageGen prompts are in
 [the artwork record](../art/objects/generation-prompts.md). No holder/object body is
@@ -153,17 +148,17 @@ The persistent save still contains only a level index.
 ## Carrying acceptance (#97)
 
 All four criteria in [#97](https://github.com/jlogicgames/edgard_in_kimeria/issues/97)
-are implemented: one visible hand slot with sword use retained; Down + Action
-pickup/place; Ranged throw without a fireball; and documented room ownership/rollback.
+are implemented: one visible hand slot with sword use retained; Up + Action pickup
+and Down + Action placement; Ranged throw without a fireball; and documented room ownership/rollback.
 The mechanics and entrance practice objects shipped in
 [PR #154](https://github.com/jlogicgames/edgard_in_kimeria/pull/154), closing #95;
 secured mutable-object restoration followed in
 [PR #165](https://github.com/jlogicgames/edgard_in_kimeria/pull/165), addressing #158.
 
-Practice in the first `forest` room: touch stone 116, press S+K, release,
+Practice in the first `forest` room: touch stone 116, press W+K, release,
 walk with D/A, release movement, press K to use the sword, wait for the swing to end,
-press S+K to place, release, approach and pick up again, then press L to throw.
-The mirrored layout uses Down+X, arrows, X and C. Stock remains unchanged
+press S+K to place, release, approach and pick up again with W+K, then press L to throw.
+The mirrored layout uses Up+X, arrows, X and C. Stock remains unchanged
 through this sequence; a separate fresh Ranged press with an empty hand fires.
 
 State owners are `Player.carried`, `Carryable.holder` and the authored room's
@@ -173,8 +168,9 @@ restoration clears the old holder. First-visit death restores authored state,
 revisit death restores the latest secured state, and Restart Level rebuilds authored
 objects. Tools never enter the persistent save. See [room lifecycle](ROOMS.md).
 
-Verification on 2026-10-25: `DirectionalActionsTest`, `RoomTest` and `RoomReplayTest`
-pass. Coverage includes sword use while carrying, one-slot selection, pickup/place,
+Verification on 2026-10-25, before the #175 control revision: `DirectionalActionsTest`,
+`RoomTest` and `RoomReplayTest` passed. Coverage included sword use while carrying,
+one-slot selection, pickup/place,
 throw/fireball separation, shipped entrance practice in both keyboard layouts,
 holder cleanup, secured tool restoration and collection-return routes.
 This audit adds no new physical-device or human playtest evidence. Authored
@@ -261,6 +257,9 @@ and exact prompts are retained under `art/objects/`; rejected viewpoints are rem
 
 ## Verification
 
+The following results predate #175 and do not verify the revised cross-type target
+selection or its new direction bindings.
+
 The complete PR was checked in a separate clean checkout: all 198 core tests,
 8 art-guard tests, localization (five catalogs, 83 keys), sprite-art validation,
 desktop/web release builds and dev-source compilation passed.
@@ -324,7 +323,7 @@ Rules and rationale: [D28](DECISIONS.md#d28-vertical-ladders). Implemented 2026-
 | Grounded on an intermediate platform at least one third down the ladder | Up or Down takes hold (climb); hint shows separate `Up: Climb` and `Down: Climb down` lines | Sword as usual | As usual | As usual |
 | On the top surface | Down takes hold (descend); Up does nothing | Sword as usual | As usual | As usual |
 | Attached | Up/Down climb at 70 px/s; Left/Right releases the ladder and moves normally; both ends step off | Does not swing; no pick up/put down | Throws a held object or spends a fireball; keeps the grip | Lets go with a 0.7× hop |
-| Up/Down + Action, anywhere | Not climbing: Action owns the direction | Operates a mechanism in reach (Up) | | |
+| Up/Down + Action, anywhere | Not climbing: Action owns the direction | Up selects a pickup or mechanism; Down places a held object and otherwise does nothing | | |
 
 The direction held with an Action press stays spent until it is released, on the ground
 and on the ladder, so a chord can climb or operate, never both, and releasing Action while

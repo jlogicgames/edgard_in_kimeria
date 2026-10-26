@@ -64,9 +64,7 @@ playtests and one-minute learning checks with unfamiliar players belong to phase
 
 ### 1.1. Shared player tools
 
-- [x] [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95) Implement the accepted control scheme: plain action attacks; down + action
-  picks up/places; up + action operates a mechanism; ranged throws a held object
-  or fires a fireball with an empty hand. Implemented 2026-10-22; this original directional split is under revision in [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175). See [evidence and current behavior](DIRECTIONAL_CONTROLS.md) and [D30](DECISIONS.md#d30-one-direction-for-pickup-and-mechanism-interaction).
+- [x] [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95) Implement directional action, pickup/place and ranged attacks. The original directional split shipped 2026-10-22 and was revised by [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175): Up + Action selects a pickup or mechanism, Down + Action only puts down, and ranged throws a held object or fires a fireball with an empty hand. See [current behavior](DIRECTIONAL_CONTROLS.md) and [D30](DECISIONS.md#d30-one-direction-for-pickup-and-mechanism-interaction).
 - [x] [#97](https://github.com/jlogicgames/edgard_in_kimeria/issues/97) Implement carrying one object in one hand, with the sword still available,
   plus placing and throwing. [D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket)
   fixes one shared carryable slot with its object always visible in the front hand;
