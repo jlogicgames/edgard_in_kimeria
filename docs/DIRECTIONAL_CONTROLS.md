@@ -9,6 +9,13 @@ This document describes the current behavior, including the interaction revision
 implemented for [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
 Superseded artwork and intermediate UI captures have been removed.
 
+## Author-reported device checks (2026-10-27)
+
+Keyboard was checked in both handedness layouts; gamepad was checked only in the
+default layout. Touch has not been checked, and a phone build has not been made.
+Still to check: mirrored gamepad, both touch layouts on a phone, and any other
+unverified criteria in #101. Older device-coverage notes reflect their dates.
+
 ## Interaction controls (#175)
 
 | Command | Target result |

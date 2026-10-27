@@ -85,6 +85,9 @@ playtests and one-minute learning checks with unfamiliar players belong to phase
   The separate development F4 transition crash is tracked in #170.
 - [ ] [#101](https://github.com/jlogicgames/edgard_in_kimeria/issues/101) Check keyboard, gamepad and touch in both handedness layouts. Hints show
   the selected action/target. Check held buttons after pause, dialogue and transitions.
+  Author-reported status (2026-10-27): keyboard checked in both layouts; gamepad
+  checked in the default layout only; touch not checked and no phone build made.
+  Remaining device coverage: mirrored gamepad and both touch layouts on a phone.
 
 **Output:** in a test section, move an object, operate a mechanism, fight while
 carrying and deliberately choose a throw or fireball. Ladders and contextual action
@@ -97,6 +100,13 @@ must not interfere. Preserve existing jumping, combat and recovery behavior.
 - [ ] [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103) Build short rooms demonstrating the rule and several applications.
 - [ ] [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) Combine it with an enemy or trap. Test choices between waiting,
   melee, spending a ranged attack and environmental interaction.
+
+Concrete follow-up tasks: [#186](https://github.com/jlogicgames/edgard_in_kimeria/issues/186)
+introduces a lever and linked support; [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187)
+develops an optional route. [#188](https://github.com/jlogicgames/edgard_in_kimeria/issues/188)
+researches original traps, tests adaptations, then brainstorms new traps; #104 may
+also use an existing enemy. [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
+tracks third-party artwork inventory, schematic replacement and original redraws.
 
 **Output:** a concrete forest puzzle principle creates distinct situations rather
 than repeated activation of the same lever. Existing forest maps/boss provide
@@ -267,6 +277,8 @@ All 50 checkboxes have a separate English GitHub issue: the first reuses #95;
 #97–#145 cover the other 49. A checkbox's link identifies its primary issue;
 additional links identify related larger tasks or dependencies. Issue creation
 does not mean completion.
+The more specific Forest, trap research and asset-provenance tasks #186–#189
+supplement these existing items rather than replacing their acceptance criteria.
 
 - Mark completion from concrete output, not a partial scaffold.
 - Clarify scope/dependencies before starting a block. Give new checkboxes separate
@@ -279,7 +291,5 @@ does not mean completion.
 - Add calendar/effort estimates after measuring the first prototype/level.
   The 20/60-second play hypotheses and 100-minute campaign model are not development estimates.
 
-**Next output:** #95 dispatch and its entrance practice section are implemented;
-rare refills are implemented locally (#98). Finish physical-device/author acceptance
-and ladders, then begin the
-short Forest-mechanic prototype.
+**Next output:** shared actions and ladders are implemented. Finish the remaining
+device checks in #101 and build the short Forest-mechanic prototype.
