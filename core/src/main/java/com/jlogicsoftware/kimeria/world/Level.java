@@ -618,7 +618,7 @@ public class Level implements WorldObject {
 
     private void spawnLevers() {
         for (TiledObject o : map.layer("SpawnPoints")) {
-            if (roomLayout.owner(o) != currentRoom || !"Trigger".equals(o.type)) continue;
+            if (!"Trigger".equals(o.type) || roomLayout.owner(o) != currentRoom) continue;
             Trigger trigger = triggers.stream().filter(t -> t.id == o.id).findFirst().orElseThrow();
             List<Actionable> linked = objects.stream().filter(object -> object instanceof Actionable actionable
                 && trigger.targetId.equals(actionable.getTargetId())).map(Actionable.class::cast).toList();

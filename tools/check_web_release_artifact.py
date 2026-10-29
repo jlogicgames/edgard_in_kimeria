@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import re
 import sys
 from pathlib import Path
 
@@ -70,6 +71,19 @@ def validate_release_artifact(root: Path) -> list[str]:
             errors.append(f"server or development payload must not be uploaded: {relative}")
         if relative.as_posix() == "assets/images/ui/boss/README.md":
             errors.append(f"authoring documentation must not be uploaded as a runtime asset: {relative}")
+
+    index = root / "index.html"
+    if index.is_file() and not re.search(r'<link\s+rel="icon"\s+href="favicon\.ico"', index.read_text(encoding="utf-8")):
+        errors.append("index.html must reference the relative favicon.ico")
+
+    app = root / "app.js"
+    if app.is_file():
+        entries = re.findall(r'"i:b:/([^"\n:]+):\d+:\d+"', app.read_text(encoding="utf-8"))
+        if not entries:
+            errors.append("embedded internal asset manifest is missing")
+        for entry in entries:
+            if f"assets/{entry}" not in relative_paths:
+                errors.append(f"manifest references missing asset: assets/{entry}")
 
     howler = root / "scripts/howler.js"
     if howler.is_file() and "MIT License" not in howler.read_text(encoding="utf-8", errors="replace")[:512]:

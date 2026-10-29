@@ -15,6 +15,8 @@ class WebReleaseArtifactTest(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b"runtime")
+        (self.root / "index.html").write_text('<link rel="icon" href="favicon.ico">', encoding="utf-8")
+        (self.root / "app.js").write_text('"i:b:/tiles/forest.tmx:1:1"', encoding="utf-8")
         (self.root / "scripts/howler.js").write_text("/*! MIT License */\n", encoding="utf-8")
 
     def tearDown(self) -> None:
@@ -54,6 +56,13 @@ class WebReleaseArtifactTest(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("third-party license notice", encoding="utf-8")
         self.assertEqual([], validate_release_artifact(self.root))
+
+    def test_rejects_missing_manifest_asset_and_relative_icon(self) -> None:
+        (self.root / "app.js").write_text('"i:b:/tiles/missing.tiled-project:1:1"', encoding="utf-8")
+        (self.root / "index.html").write_text("<head></head>", encoding="utf-8")
+        errors = validate_release_artifact(self.root)
+        self.assertIn("manifest references missing asset: assets/tiles/missing.tiled-project", errors)
+        self.assertIn("index.html must reference the relative favicon.ico", errors)
 
     def test_rejects_missing_howler_license_notice(self) -> None:
         (self.root / "scripts/howler.js").write_text("// bundled runtime\n", encoding="utf-8")

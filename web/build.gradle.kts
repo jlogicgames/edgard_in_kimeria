@@ -19,6 +19,13 @@ dependencies {
 }
 
 val faviconDir = layout.projectDirectory.dir("src/main/webapp")
+val runtimeAssetsDir = layout.buildDirectory.dir("runtime-assets")
+val prepareRuntimeAssets = tasks.register<Sync>("prepareRuntimeAssets") {
+    from(rootProject.file("assets"))
+    into(runtimeAssetsDir)
+    exclude("**/.DS_Store", "**/*.tiled-session", "**/*.tiled-project", "images/ui/boss/README.md")
+}
+
 val releaseWebappDir = layout.buildDirectory.dir("dist/js/release/webapp")
 
 // TeaVM's dev server defaults to port 8080 and fails outright (with a confusing HTTP 404
@@ -51,7 +58,7 @@ fun firstFreePort(from: Int): Int =
 val devServerPort: Int by lazy { firstFreePort(8080) }
 
 gdxTeaVM {
-    assets(rootProject.file("assets"))
+    assets(runtimeAssetsDir.get().asFile)
 
     webDefaults {
         mainClass = "com.jlogicsoftware.kimeria.web.WebLauncher"
@@ -80,6 +87,10 @@ gdxTeaVM {
         debugInformation = false
         sourceMap = false
     }
+}
+
+tasks.matching { it.name.startsWith("gdx_teavm_web_js") && it.name.endsWith("_compile") }.configureEach {
+    dependsOn(prepareRuntimeAssets)
 }
 
 val releaseCompileTaskName = "gdx_teavm_web_js_release_compile"
@@ -123,6 +134,10 @@ tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach {
             from(faviconDir)
             into(releaseWebappDir)
         }
+        val index = releaseWebappDir.get().asFile.resolve("index.html")
+        val html = index.readText()
+        check(html.contains("</head>")) { "Generated index.html has no head element" }
+        index.writeText(html.replace("</head>", "    <link rel=\"icon\" href=\"favicon.ico\">\n    </head>"))
         val serverMetadata = releaseWebappDir.get().asFile.resolve("WEB-INF")
         if (serverMetadata.exists() && !serverMetadata.deleteRecursively()) {
             throw GradleException("Could not remove server-only Pages metadata: $serverMetadata")
