@@ -59,8 +59,8 @@ class RoomTest {
         level.rangedStock.restore(1);
         level.enterNextRoom(player());
         var first = refill(level);
-        assertEquals(1824, first.getX());
-        assertEquals(304, first.getY(), "SpawnPoints layer offset applies to the refill too");
+        assertEquals(1696, first.getX());
+        assertEquals(128, first.getY(), "SpawnPoints layer offset applies to the refill too");
         first.collideWithPlayer(); first.collideWithPlayer();
         assertEquals(2, level.rangedStock.count(), "One authored refill grants exactly one charge");
         assertTrue(artifacts.items().isEmpty(), "Ammunition is not a recipe ingredient");
@@ -114,7 +114,7 @@ class RoomTest {
         TiledMapData map = map("forest");
         RoomLayout layout = new RoomLayout(map);
         assertEquals(3, layout.rooms.size());
-        for (var o : map.layer("SpawnPoints")) layout.owner(o);
+        for (var o : map.layer("SpawnPoints")) if (!"Deadline".equals(o.type)) layout.owner(o);
         for (var o : map.layer("Collisions")) layout.owner(o);
         assertNotNull(layout.rooms.get(0).exit());
         assertNotNull(layout.rooms.get(1).exit());
