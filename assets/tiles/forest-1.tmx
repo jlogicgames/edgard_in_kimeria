@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="80" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="27">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="80" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="35">
  <tileset firstgid="1" source="Forest.tsx"/>
  <layer id="1" name="Background" width="80" height="23">
   <data encoding="csv">
@@ -37,15 +37,23 @@
     <property name="offPos" type="float" value="10"/>
    </properties>
   </object>
-  <object id="13" name="Torch1" type="Actionable" x="240" y="224" width="16" height="16">
+  <object id="13" name="Torch [13] ← 12" type="Actionable" x="240" y="224" width="16" height="16">
    <properties>
     <property name="Intensity" type="int" value="100"/>
     <property name="type" value="Torch"/>
    </properties>
   </object>
-  <object id="12" name="Torch1" type="Trigger" x="128" y="304" width="16" height="16"/>
-  <object id="15" name="Wall1" type="Trigger" x="272" y="304" width="16" height="16"/>
-  <object id="14" name="Wall1" type="Actionable" x="480" y="224" width="48" height="96">
+  <object id="12" name="Lever [12 → 13]" type="Trigger" x="128" y="304" width="16" height="16">
+   <properties>
+    <property name="target" type="object" value="13"/>
+   </properties>
+  </object>
+  <object id="15" name="Lever [15 → 14]" type="Trigger" x="272" y="304" width="16" height="16">
+   <properties>
+    <property name="target" type="object" value="14"/>
+   </properties>
+  </object>
+  <object id="14" name="Wall [14] ← 15" type="Actionable" x="480" y="224" width="48" height="96">
    <properties>
     <property name="movement" value="vertical"/>
     <property name="time" type="float" value="1.5"/>
@@ -71,6 +79,19 @@
   <object id="24" name="FallingPlatform" type="FallingPlatform" x="192" y="256" width="32" height="16"/>
   <object id="25" name="Fireball" type="FireballRefill" x="312" y="176" width="16" height="16"/>
   <object id="26" name="Deadline" type="Deadline" x="-1728" y="384" width="3872" height="16"/>
+  <object id="33" name="Lever [33 → 34]" type="Trigger" x="544" y="304" width="16" height="16">
+   <properties>
+    <property name="target" type="object" value="34"/>
+   </properties>
+  </object>
+  <object id="34" name="Escalator [34] ← 33" type="Escalator" x="544" y="272" width="32" height="16">
+   <properties>
+    <property name="isVertical" type="bool" value="false"/>
+    <property name="offNeg" type="float" value="2"/>
+    <property name="offPos" type="float" value="1"/>
+    <property name="running" type="bool" value="false"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="3" name="Collisions">
   <object id="3" x="0" y="320" width="1280" height="48"/>
@@ -78,7 +99,6 @@
   <object id="5" x="304" y="304" width="48" height="16"/>
   <object id="6" x="1200" y="304" width="32" height="16"/>
   <object id="8" name="Wall" type="Wall" x="0" y="0" width="16" height="320"/>
-  <object id="9" name="Platform" type="Platform" x="240" y="272" width="32" height="16"/>
   <object id="10" name="Wall" type="Wall" x="1264" y="0" width="16" height="320"/>
  </objectgroup>
 </map>

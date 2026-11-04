@@ -731,6 +731,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public void renderInteractionTarget(Batch batch) {
         Entity selectedTarget = interactionFeedbackTarget();
         renderPassiveInteractionTargets(batch, selectedTarget);
+        if (selectedTarget instanceof Lever lever) {
+            for (Entity linked : level.linkedMechanisms(lever.trigger)) InteractionHighlight.drawPassive(batch, linked);
+        }
         if (selectedTarget != null) InteractionHighlight.draw(batch, selectedTarget);
     }
 

@@ -32,7 +32,7 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
     private boolean active = true;
 
     public Escalator(Assets assets, float x, float y, float w, float h,
-                      boolean isVertical, float offNeg, float offPos, String targetId) {
+                      boolean isVertical, float offNeg, float offPos, String targetId, boolean running) {
         super(x, y, w, h, State.class);
         this.isVertical = isVertical;
         this.offNeg = offNeg;
@@ -59,11 +59,16 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
         // the single-row "on" sheet into two bogus rows.
         putAnimation(State.IDLE, assets.animation(offImage, 1, 0.05f, 32, 8, 0, 0, 1), true);
         putAnimation(State.RUN, assets.animation(onImage, 8, 0.05f, 32, 8, 0, 0, 8), true);
-        setState(State.RUN);
+        setState(running ? State.RUN : State.IDLE);
     }
 
-    /** (1,0)/(−1,0) for horizontal escalators, (0,1)/(0,−1) for vertical ones. */
+    public boolean isRunning() {
+        return current == State.RUN;
+    }
+
+    /** (1,0)/(−1,0) for horizontal escalators, (0,1)/(0,−1) for vertical ones, (0,0) while stopped. */
     public Vector2 currentMoveDirection() {
+        if (!isRunning()) return new Vector2();
         return isVertical ? new Vector2(0, moveDirection) : new Vector2(moveDirection, 0);
     }
 

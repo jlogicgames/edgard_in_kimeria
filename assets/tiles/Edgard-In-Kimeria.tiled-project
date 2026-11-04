@@ -3,12 +3,110 @@
     "commands": [
     ],
     "compatibilityVersion": 1100,
-    "extensionsPath": "extensions",
+    "extensionsPath": "../../tools/tiled-extensions",
     "folders": [
         "."
     ],
     "properties": [
     ],
     "propertyTypes": [
+        {
+            "color": "#ffd400",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+                {
+                    "name": "target",
+                    "type": "object",
+                    "value": 0
+                }
+            ],
+            "name": "Trigger",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#2ec4b6",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+                {
+                    "name": "isVertical",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "offNeg",
+                    "type": "float",
+                    "value": 0
+                },
+                {
+                    "name": "offPos",
+                    "type": "float",
+                    "value": 0
+                },
+                {
+                    "name": "running",
+                    "type": "bool",
+                    "value": true
+                }
+            ],
+            "name": "Escalator",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#e76f51",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "type",
+                    "type": "string",
+                    "value": "Torch"
+                },
+                {
+                    "name": "Intensity",
+                    "type": "int",
+                    "value": 100
+                },
+                {
+                    "name": "movement",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "time",
+                    "type": "float",
+                    "value": 1.5
+                }
+            ],
+            "name": "Actionable",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#9b5de5",
+            "drawFill": true,
+            "id": 4,
+            "members": [
+                {
+                    "name": "dropDistance",
+                    "type": "float",
+                    "value": 0
+                }
+            ],
+            "name": "Ladder",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        }
     ]
 }
