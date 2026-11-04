@@ -118,6 +118,8 @@ public class Level implements WorldObject {
     private final Map<Integer, WorldObject> roomStateOwners = new HashMap<>();
     private boolean revisiting, fightCommitted, brewed, healerMet;
     private final Set<Integer> authoredCoins = new HashSet<>();
+    /** Ids of mechanisms that some Trigger points at through its {@code target} object property. */
+    private final Set<Integer> referencedMechanisms = new HashSet<>();
     private final int entryCoins;
     private final Set<Integer> pendingPickups = new HashSet<>();
     private final Set<Integer> keptPickups = new HashSet<>();
@@ -350,7 +352,12 @@ public class Level implements WorldObject {
                 continue;
             }
             int owner = roomLayout.owner(o);
-            if ("Trigger".equals(o.type)) for (TiledObject target : map.layer("SpawnPoints")) {
+            if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
+                TiledObject target = findMechanism(o);
+                referencedMechanisms.add(target.id);
+                if (roomLayout.owner(target) != owner)
+                    throw new IllegalArgumentException("Trigger crosses room boundary: " + describe(o));
+            } else if ("Trigger".equals(o.type)) for (TiledObject target : map.layer("SpawnPoints")) {
                 if (("Actionable".equals(target.type) || "Escalator".equals(target.type)
                     || "Ladder".equals(target.type))
                     && o.name.equals(target.name) && roomLayout.owner(target) != owner)
@@ -583,13 +590,13 @@ public class Level implements WorldObject {
                     registerRoomStateOwner(o.id, carryable);
                 }
                 case "Trigger" -> {
-                    Trigger trigger = new Trigger(o.id, o.x, o.y, o.width, o.height, o.name);
+                    Trigger trigger = new Trigger(o.id, o.x, o.y, o.width, o.height, triggerKey(o));
                     objects.add(trigger);
                     triggers.add(trigger);
                 }
                 case "Actionable" -> spawnActionable(o);
                 case "Ladder" -> {
-                    Ladder ladder = new Ladder(assets, o.x, o.y, o.width, o.height, o.name,
+                    Ladder ladder = new Ladder(assets, o.x, o.y, o.width, o.height, mechanismKey(o),
                         o.propFloat("dropDistance", 0));
                     ladders.add(ladder);
                     objects.add(ladder);
@@ -600,7 +607,7 @@ public class Level implements WorldObject {
                 }
                 case "Escalator" -> {
                     Escalator escalator = new Escalator(assets, o.x, o.y, o.width, o.height,
-                        o.propBool("isVertical", false), o.propFloat("offNeg", 0), o.propFloat("offPos", 0), o.name);
+                        o.propBool("isVertical", false), o.propFloat("offNeg", 0), o.propFloat("offPos", 0), mechanismKey(o), o.propBool("running", true));
                     escalators.add(escalator);
                     registerRoomStateOwner(o.id, escalator);
                 }
@@ -616,18 +623,71 @@ public class Level implements WorldObject {
         spawnLevers();
     }
 
+    /** "Name [id] at (x, y)" -- enough to find the object in Tiled without guessing. */
+    private static String describe(TiledObject o) {
+        return "'" + o.name + "' [" + o.id + "] at (" + (int) o.x + ", " + (int) o.y + ")";
+    }
+
+    private static boolean isMechanismType(String type) {
+        return "Actionable".equals(type) || "Escalator".equals(type) || "Ladder".equals(type);
+    }
+
+    /** Resolves a Trigger's {@code target} object property to a mechanism in SpawnPoints, or fails with a precise message. */
+    private TiledObject findMechanism(TiledObject trigger) {
+        String raw = trigger.prop("target", "");
+        int targetId;
+        try {
+            targetId = Integer.parseInt(raw.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Trigger " + describe(trigger) + ": target '" + raw + "' is not an object reference");
+        }
+        for (TiledObject candidate : map.layer("SpawnPoints")) {
+            if (candidate.id != targetId) continue;
+            if (!isMechanismType(candidate.type))
+                throw new IllegalArgumentException("Trigger " + describe(trigger) + ": target " + describe(candidate)
+                    + " has type '" + candidate.type + "', expected Actionable, Escalator or Ladder");
+            return candidate;
+        }
+        for (TiledObject candidate : map.layer("Collisions")) {
+            if (candidate.id == targetId)
+                throw new IllegalArgumentException("Trigger " + describe(trigger) + ": target " + describe(candidate)
+                    + " is in the Collisions layer; mechanisms must be in SpawnPoints");
+        }
+        throw new IllegalArgumentException("Trigger " + describe(trigger) + ": target object " + targetId + " does not exist");
+    }
+
+    /** Link key a Trigger uses: the referenced object's id when {@code target} is set, else its legacy name. */
+    private static String triggerKey(TiledObject o) {
+        String target = o.prop("target", "").trim();
+        return target.isEmpty() ? o.name : "#" + target;
+    }
+
+    /** Link key a mechanism answers to: "#id" when some Trigger references it, else its legacy name. */
+    private String mechanismKey(TiledObject o) {
+        return referencedMechanisms.contains(o.id) ? "#" + o.id : o.name;
+    }
+
     private void spawnLevers() {
         for (TiledObject o : map.layer("SpawnPoints")) {
             if (!"Trigger".equals(o.type) || roomLayout.owner(o) != currentRoom) continue;
             Trigger trigger = triggers.stream().filter(t -> t.id == o.id).findFirst().orElseThrow();
-            List<Actionable> linked = objects.stream().filter(object -> object instanceof Actionable actionable
-                && trigger.targetId.equals(actionable.getTargetId())).map(Actionable.class::cast).toList();
-            if (linked.size() != 1) throw new IllegalArgumentException("Lever needs exactly one linked mechanism: " + o.name);
+            List<Actionable> linked = new ArrayList<>();
+            for (WorldObject object : objects)
+                if (object instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId()))
+                    linked.add(actionable);
+            // Escalators only supply the lever's visual state when nothing else shares the link
+            // (a name shared by a wall and a lift keeps the wall as the lever's face).
+            if (linked.isEmpty()) for (Escalator escalator : escalators)
+                if (trigger.targetId.equals(escalator.getTargetId())) linked.add(escalator);
+            if (linked.size() != 1) throw new IllegalArgumentException("Trigger " + describe(o)
+                + " needs exactly one linked mechanism in SpawnPoints (Actionable, Escalator or Ladder), found "
+                + linked.size() + (o.prop("target", "").isEmpty() ? " by name; set its 'target' property" : ""));
             Actionable target = linked.get(0);
             if (target instanceof Torch torch) objects.add(new Lever(assets, trigger, torch));
             else if (target instanceof Ladder ladder) objects.add(new Lever(assets, trigger, ladder::isLowered));
             else if (target instanceof Wall wall) objects.add(new Lever(assets, trigger, wall::isRaised));
-            else throw new IllegalArgumentException("Lever has no visual state for linked mechanism: " + o.name);
+            else if (target instanceof Escalator escalator) objects.add(new Lever(assets, trigger, escalator::isRunning));
+            else throw new IllegalArgumentException("Trigger " + describe(o) + " has no lever visual for its linked mechanism");
         }
     }
 
@@ -641,7 +701,7 @@ public class Level implements WorldObject {
 
     private void spawnActionable(TiledObject o) {
         String type = o.prop("type", "");
-        String targetId = o.name;
+        String targetId = mechanismKey(o);
         if ("Torch".equals(type)) {
             int intensity = (int) o.propFloat("Intensity", 0);
             Torch torch = new Torch(assets, o.x + o.width / 2f, o.y + o.height / 2f, o.width, o.height, intensity, targetId);
@@ -705,6 +765,20 @@ public class Level implements WorldObject {
                 nearest = nearerFeedbackTarget(trigger, nearest, escalator);
         }
         return nearest;
+    }
+
+    /** The visible mechanisms a trigger drives, so the player can see what a lever will affect. */
+    public List<Entity> linkedMechanisms(Trigger trigger) {
+        List<Entity> linked = new ArrayList<>();
+        if (trigger == null) return linked;
+        for (WorldObject object : objects) {
+            if (object instanceof Entity entity && object instanceof Actionable actionable
+                && !object.isRemoved() && trigger.targetId.equals(actionable.getTargetId())) linked.add(entity);
+        }
+        for (Escalator escalator : escalators) {
+            if (!escalator.isRemoved() && trigger.targetId.equals(escalator.getTargetId())) linked.add(escalator);
+        }
+        return linked;
     }
 
     private static Entity nearerFeedbackTarget(Trigger trigger, Entity current, Entity candidate) {

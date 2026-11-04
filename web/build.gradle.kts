@@ -2,6 +2,7 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
+import java.security.MessageDigest
 import org.teavm.gradle.api.OptimizationLevel
 import org.teavm.gradle.tasks.GenerateJavaScriptTask
 
@@ -137,7 +138,13 @@ tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach {
         val index = releaseWebappDir.get().asFile.resolve("index.html")
         val html = index.readText()
         check(html.contains("</head>")) { "Generated index.html has no head element" }
-        index.writeText(html.replace("</head>", "    <link rel=\"icon\" href=\"favicon.ico\">\n    </head>"))
+        val appScript = "src=\"app.js\""
+        check(html.contains(appScript)) { "Generated index.html has no app.js script" }
+        val appHash = MessageDigest.getInstance("SHA-256")
+            .digest(releaseWebappDir.get().file("app.js").asFile.readBytes())
+            .joinToString("") { "%02x".format(it) }
+        index.writeText(html.replace("</head>", "    <link rel=\"icon\" href=\"favicon.ico\">\n    </head>")
+            .replace(appScript, "src=\"app.js?v=$appHash\""))
         val serverMetadata = releaseWebappDir.get().asFile.resolve("WEB-INF")
         if (serverMetadata.exists() && !serverMetadata.deleteRecursively()) {
             throw GradleException("Could not remove server-only Pages metadata: $serverMetadata")

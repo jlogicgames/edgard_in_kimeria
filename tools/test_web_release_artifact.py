@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,8 +16,11 @@ class WebReleaseArtifactTest(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b"runtime")
-        (self.root / "index.html").write_text('<link rel="icon" href="favicon.ico">', encoding="utf-8")
-        (self.root / "app.js").write_text('"i:b:/tiles/forest.tmx:1:1"', encoding="utf-8")
+        app = '"i:b:/tiles/forest.tmx:1:1"'
+        (self.root / "app.js").write_text(app, encoding="utf-8")
+        digest = hashlib.sha256(app.encode()).hexdigest()
+        (self.root / "index.html").write_text(
+            f'<link rel="icon" href="favicon.ico"><script src="app.js?v={digest}"></script>', encoding="utf-8")
         (self.root / "scripts/howler.js").write_text("/*! MIT License */\n", encoding="utf-8")
 
     def tearDown(self) -> None:
@@ -63,6 +67,10 @@ class WebReleaseArtifactTest(unittest.TestCase):
         errors = validate_release_artifact(self.root)
         self.assertIn("manifest references missing asset: assets/tiles/missing.tiled-project", errors)
         self.assertIn("index.html must reference the relative favicon.ico", errors)
+
+    def test_rejects_stale_script_version(self) -> None:
+        (self.root / "app.js").write_text('"i:b:/tiles/forest.tmx:2:1"', encoding="utf-8")
+        self.assertIn("index.html must reference app.js with its SHA-256 version", validate_release_artifact(self.root))
 
     def test_rejects_missing_howler_license_notice(self) -> None:
         (self.root / "scripts/howler.js").write_text("// bundled runtime\n", encoding="utf-8")
