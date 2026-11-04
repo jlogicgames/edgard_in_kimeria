@@ -31,9 +31,11 @@ class WebReleaseArtifactTest(unittest.TestCase):
 
     def test_rejects_missing_runtime_map_or_localization(self) -> None:
         (self.root / "assets/tiles/forest-3.tmx").unlink()
+        (self.root / "assets/tiles/forest-0.tmx").unlink()
         (self.root / "assets/localization/uk.json").unlink()
         errors = validate_release_artifact(self.root)
         self.assertIn("missing required runtime file: assets/tiles/forest-3.tmx", errors)
+        self.assertIn("missing required runtime file: assets/tiles/forest-0.tmx", errors)
         self.assertIn("missing required runtime file: assets/localization/uk.json", errors)
 
     def test_rejects_debug_editor_os_and_server_payloads(self) -> None:

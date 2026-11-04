@@ -22,7 +22,7 @@ richer color, finer detail and more natural illustration. See [art direction](do
 - English, Ukrainian, Polish, German and Belarusian; keyboard, gamepad and touch controls,
   plus a left-handed mode.
 
-The game is currently a two-level test version. The planned full campaign spans
+The game is currently a three-level test version (tutorial, forest, boss). The planned full campaign spans
 Forest, Swamp, Steppe and Fortress; see the [game design](docs/GAME_DESIGN.md) and
 [development roadmap](docs/ROADMAP.md).
 

@@ -126,5 +126,5 @@ monsters and brought light back to the world. This outcome is now agreed; no new
 of L'Kardina's fate or the mechanism of dispelling darkness is added.
 
 After the ending, the game returns to the main menu and removes the run save. A new run
-starts from the opening and `forest-1`. Later mechanics will expand these two levels;
+starts from the opening and the `forest-0` tutorial. Later mechanics will expand these levels;
 additional stages and quests are outside the agreed MVP. See [MVP.md](MVP.md).

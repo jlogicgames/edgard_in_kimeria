@@ -98,8 +98,13 @@ must not interfere. Preserve existing jumping, combat and recovery behavior.
 Intended level order: `forest-0` (tutorial) → `forest-1` → (`forest-2`? — **open**, not decided)
 → `forest-3` (boss level, formerly `forest`); see
 [D32](DECISIONS.md#d32-forest-level-order-and-identity). The rename and decoupling from the
-level name are [#194](https://github.com/jlogicgames/edgard_in_kimeria/issues/194); the tutorial
-hint redesign is #195.
+level name are [#194](https://github.com/jlogicgames/edgard_in_kimeria/issues/194).
+
+**Tutorial level (`forest-0`, [#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195), skeleton done):**
+six long empty rooms without monsters, hints always on, one new element per room, then `forest-1`
+with no hints. Hints are authored in the map ([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)).
+Rooms in order, each a separate ticket: lever (#186), ladder/bridge (#196), wall (#197), moving
+platform (#198), thrown stone (#199), existing traps (#200).
 
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.

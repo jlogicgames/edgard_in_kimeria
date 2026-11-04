@@ -35,7 +35,7 @@ class SavedProgressTest {
         SavedProgress relaunched = new SavedProgress(preferences(), 2);
         assertTrue(relaunched.exists());
         assertEquals(1, relaunched.nextLevelIndex());
-        assertEquals(2, preferences().get().size()); // Setting + level; no coins or artifacts.
+        assertEquals(3, preferences().get().size()); // Setting + level + order key; no coins or artifacts.
         relaunched.clear();
         assertFalse(new SavedProgress(preferences(), 2).exists());
         assertTrue(preferences().getBoolean(Settings.KEY_LEFT_HANDED));
@@ -71,5 +71,55 @@ class SavedProgressTest {
         game.resetRoom();
         assertEquals(1, new SavedProgress(preferences(), 2).nextLevelIndex());
 
+    }
+
+    @Test
+    void savesWithoutAnOrderKeyPredateForestZeroAndShiftToTheSameLevel() {
+        // Original order: 0 = forest-1, 1 = forest-3. Current order: 0 = forest-0, 1 = forest-1, 2 = forest-3.
+        Preferences prefs = preferences();
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1); // "Continue at the boss level"
+        assertEquals(2, new SavedProgress(prefs, 3).nextLevelIndex());
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 0);
+        assertEquals(1, new SavedProgress(prefs, 3).nextLevelIndex(), "Old forest-1 stays forest-1, not the tutorial");
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, -1);
+        assertFalse(new SavedProgress(prefs, 3).exists());
+    }
+
+    @Test
+    void saveStampsTheOrderSoItIsNotShiftedTwice() {
+        Preferences prefs = preferences();
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1);
+        SavedProgress progress = new SavedProgress(prefs, 3);
+        progress.save(2);
+        assertEquals(2, new SavedProgress(preferences(), 3).nextLevelIndex());
+        progress.save(1);
+        assertEquals(1, new SavedProgress(preferences(), 3).nextLevelIndex());
+        progress.clear();
+        assertFalse(preferences().contains(Settings.KEY_LEVEL_ORDER));
+    }
+
+    @Test
+    void corruptedOrNegativeValueWithAnOrderKeyHidesContinue() {
+        Preferences prefs = preferences();
+        prefs.putInteger(Settings.KEY_LEVEL_ORDER, Settings.LEVEL_ORDER);
+        for (int index : new int[]{-1, -7, 3, 99}) {
+            prefs.putInteger(Settings.KEY_NEXT_LEVEL, index);
+            assertFalse(new SavedProgress(prefs, 3).exists(), "index " + index);
+        }
+        prefs.putString(Settings.KEY_NEXT_LEVEL, "broken");
+        assertFalse(new SavedProgress(prefs, 3).exists());
+    }
+
+    @Test
+    void legacyBossSaveContinuesAtForestThreeThroughTheGamesLevelList() throws Exception {
+        Preferences prefs = preferences();
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1); // Written when the list was forest-1, forest-3.
+        var names = KimeriaGame.class.getDeclaredField("LEVEL_NAMES");
+        names.setAccessible(true);
+        @SuppressWarnings("unchecked") var levels = (java.util.List<String>) names.get(null);
+        SavedProgress progress = new SavedProgress(prefs, levels.size());
+        assertEquals("forest-3", levels.get(progress.nextLevelIndex()));
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 0);
+        assertEquals("forest-1", levels.get(new SavedProgress(prefs, levels.size()).nextLevelIndex()));
     }
 }

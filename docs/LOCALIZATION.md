@@ -66,15 +66,16 @@ the render loop.
 | `NEW_GAME_CONFIRMATION` | Starting over replaces the saved run; Cancel preserves it. |
 | `HEALER`, `HEALER_*` | The healer is an old man, the recurring narrator/guide. Preserve the agreed story; do not introduce quests or places. |
 | `INTRO_STORY` | The healer narrates Rufardus, L'Kardina's expulsion/curse and Edgard's departure. No ingredient tutorial here. |
-| `ENDING_STORY` | The implemented two-level test campaign's ending, not a new story branch. |
+| `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. |
 | `CHICKEN`, `KEY`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
 | `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |
 | `ABOUT_BODY*`, `ABOUT_GAMEPAD*` | Preserve exact key/button bindings for normal and left-handed modes. Key names such as J, K, L, Z, X, C identify physical controls. |
+| `HINT_TUTORIAL_WALK` | Map-authored `Hint` zone message in `forest-0` room 0, shown at the zone with the existing hint fade/slide; avoid device-specific key names. |
 | `FIREBALL_STOCK_FULL` | Local full-ammunition status at a world pickup, in every room; existing hint fade/slide. |
 | `ATTACK`, `INTERACT`, `SHOOT`, `PICK_UP`, `PUT_DOWN`, `NO_ACTION`, `THROW`, `FIREBALL`, `NO_AMMO`, `PLACE_BLOCKED`, `DIRECTION_CONFLICT` | Compact directional-action touch labels. Plain Action means sword; Up + Action selects the nearest pickup or mechanism; Down + Action only places a held item and shows No action when empty-handed. Ranged means object throw or consumable fireball. About text and all five catalogs describe the same bindings. |
-| `CLIMB`, `CLIMB_DOWN` | First-room ladder hint verbs, shown after the Up/Down input: take hold and climb up, or step onto a ladder from its top edge. |
+| `CLIMB`, `CLIMB_DOWN` | Ladder hint verbs inside a map `controls` hint zone (D33), shown after the Up/Down input: take hold and climb up, or step onto a ladder from its top edge. |
 | `ABOUT_RULES` | One-hit death, unlimited room retries, provisional pickup rollback and retained secured pickups. |
 | `LONGER_TRAP_WARNINGS` | The assist option extends trap warnings; it does not grant invulnerability. |
 

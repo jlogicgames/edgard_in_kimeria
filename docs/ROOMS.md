@@ -60,6 +60,16 @@ Moving objects retain this ownership. Trigger targets must be in the same room;
 cross-room links are rejected. Atmosphere (sky, rain, fireflies; fog is menu-only)
 is decorative and continues across retries. Rooms may span several screens.
 
+### Hint zones (#195, D33)
+
+An optional object layer `Hints` holds `Hint` rectangles (each inside one room). Properties:
+`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's top-centre) and/or
+`controls` (bool, enables the pickup/lever/ladder instructions of D24). The hero's body centre
+inside the zone shows the hint; nothing is stored, so it repeats on every retry and return. No
+layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six empty 1280 px rooms named
+`forest-0-lever`, `-ladder`, `-wall`, `-platform`, `-stone`, `-traps` (room property `lesson`);
+each holds a floor strip and two side walls only. Lessons add their objects, collisions and zones.
+
 ## Transition and retry
 
 Room exits are forward only. Before the boss, the healer can teleport the hero back to
@@ -568,6 +578,8 @@ Map update (#194, 2026-11-04): the file was `forest.tmx` before this rename. Map
 `fireflies`, `healerBeforeBoss`, `ingredients` and `tutorialRoom` now configure the level
 ([D32](DECISIONS.md#d32-forest-level-order-and-identity)); no geometry changed. Current SHA-256:
 `c973dfe7890fde3dad0afb063b729c59aadf03b12577fc01f9507a813cf5b01d` (earlier hashes in this file name the old `forest.tmx`).
+Hint update (#195, 2026-11-04): `tutorialRoom` was replaced by a `Hints` layer with one `controls` zone over room 0
+([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)); geometry unchanged. Current SHA-256: `1beda5c49f3f27d973a6ff918e50d886f36b840f59890dd25e05f10d4550f4fe`.
 The first-room ladder starts 32 px (two 16 px tiles) above its former position. Trigger 124,
 named `first-ladder`, places a lever beside it on the floor. Each interaction animates the
 ladder between the raised y=208–288 span and its former lowered y=240–320 span at 160 px/s;

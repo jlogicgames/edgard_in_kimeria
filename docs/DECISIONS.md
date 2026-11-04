@@ -220,7 +220,8 @@ only in the menu backdrop.
     continued run starts with 0 coins and no elixir. Do not add coins
     to the save format.
   - The MVP order is `forest-1` (one room), then `forest-3` (three rooms and boss, the last level);
-    see [D32](#d32-forest-level-order-and-identity). The save indices are 0 = `forest-1`, 1 = `forest-3`.
+    see [D32](#d32-forest-level-order-and-identity). Since #195 the order is `forest-0` (tutorial),
+    `forest-1`, `forest-3`; the save indices are 0, 1, 2 and older saves are migrated (D33).
     Completing the **last level** opens the ending scroll with the intro music; after
     it finishes or is skipped, delete only the run save and return to the main menu.
     Continue is then hidden and New Game starts a fresh run. There is no level wrap.
@@ -593,9 +594,13 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   identity, with no separate 320×144 rectangle or fixed travel-distance budget.
   Instructions remain repeatable after death and on collection
   return to this room; subsequent rooms and levels omit these teaching labels.
-- **Current implementation (#194, 2026-11-04):** the teaching room is configured by the
-  `tutorialRoom` map property (room index) instead of the level name; today only `forest-3`
-  sets it (room 0). The tutorial level `forest-0` and the redesigned hint mechanism are #195.
+- **Revised (#195, 2026-11-04, see [D33](#d33-the-forest-0-tutorial-level-and-map-authored-hints)):**
+  the "first room" rule is now a map-authored **hint zone** (`Hint` object with `controls`),
+  not a room index or level name. `tutorialRoom` and `Level.tutorialHintsActive()` are gone.
+  Every behavior below is unchanged inside such a zone and absent outside it. Today the only
+  `controls` zone is `forest-3`, room 0 (whole room); the control lessons are meant to move to
+  `forest-0`'s lesson rooms as those tickets (#186, #196–#200) land, after which that zone is
+  removed from `forest-3` and this entry is closed.
 - **Carrying:** Holding the one stone/torch slot must not hide a usable mechanism's
   instruction. Near a lever, show Up + Action and its current Turn on/Turn off
   action together with any still-active Put down/Throw reminder. Place this combined
@@ -840,14 +845,38 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Decision:** The intended Forest order is `forest-0` (tutorial, no monsters, hints everywhere)
   → `forest-1` → (`forest-2`?) → `forest-3` (the boss level, formerly `forest`). The boss level
   is renamed `forest-3` (`assets/tiles/forest-3.tmx`). **Open question:** whether `forest-2`
-  exists is not decided here. Until `forest-0` is added, `KimeriaGame.LEVEL_NAMES` is
-  `forest-1`, `forest-3`; saves are a zero-based index into that list (0 = `forest-1`,
-  1 = `forest-3`). This reconciles earlier docs (D15 and others), which said the forest
+  exists is not decided here. `forest-0` was added by #195 (D33): `KimeriaGame.LEVEL_NAMES` is
+  `forest-0`, `forest-1`, `forest-3`; saves are a zero-based index into that list (0 = `forest-0`,
+  1 = `forest-1`, 2 = `forest-3`). Before #195 the list was `forest-1`, `forest-3`. This reconciles earlier docs (D15 and others), which said the forest
   was played first: the code order had been `forest-1` then `forest` since #193.
 - **Level configuration, not names:** game logic never tests a level's name. Map-level
-  properties in the TMX configure it: `tutorialRoom` (room index with contextual hints; to be
-  redesigned in #195), `fireflies` (count), `healerBeforeBoss` (true when a healer meets
+  properties in the TMX configure it: `fireflies` (count), `healerBeforeBoss` (true when a healer meets
   the player before the boss room) and `ingredients` (healer recipe artifacts, e.g.
   `CHICKEN,KEY`). The post-boss flow keys on the level having a boss encounter.
 - **Why:** A tutorial level and further Forest levels need the same mechanisms without
   inheriting behavior from the name `forest`.
+
+## D33. The forest-0 tutorial level and map-authored hints
+
+- **Status:** Accepted, 2026-11-04 ([#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195)); revises D24.
+- **Decision:** `forest-0` is the first level: six long (1280 px) rooms, no monsters or hazards,
+  each a plain corridor with a safe entrance and a clear exit; the last room ends with the usual
+  `Checkpoint` level exit. The rooms are reserved, in order, for one lesson each (room property
+  `lesson`): `lever` (#186), `ladder-bridge` (#196), `wall` (#197), `moving-platform` (#198),
+  `thrown-stone` (#199), `existing-traps` (#200). Each lesson ticket fills only its room.
+- **Hints are authored in the map.** An object layer `Hints` holds `Hint` rectangles inside one
+  room. Property `message` names a `Msg` key (shown at the zone: centred on it, at its top edge)
+  and/or `controls=true` turns on the contextual pickup/lever/ladder instructions of D24 while the
+  hero's body is inside. A bad key, an empty zone or a zone crossing a room boundary fails the level
+  load. Zones are stateless, so hints repeat after death, Restart Level and returns, and a level
+  with no `Hints` layer (`forest-1`) shows none. The fireball-stock-full message is status
+  feedback, not tutorial, and is unchanged. Texts live in the five `assets/localization` catalogs.
+- **forest-3 room 0:** keeps its control lessons for now through one `controls` zone covering the
+  room, so playtested behavior is unchanged. Moving them to `forest-0` is the lesson tickets' job.
+- **Saves:** the save stays a bare level index, so inserting `forest-0` at the front would shift
+  it. A new `level-order` preference stamps saves written since #195; a save without it is read as
+  the old order (0 = `forest-1`, 1 = `forest-3`) and shifted by one, so Continue lands on the
+  same level. New Game and the ending remove both keys.
+- **Why:** The tutorial needs hints that belong to rooms and objects, are authored by level
+  designers in Tiled, and can be removed in later levels without code changes.
+- **Not verified:** no human playtest of the tutorial rooms; they are empty placeholders.

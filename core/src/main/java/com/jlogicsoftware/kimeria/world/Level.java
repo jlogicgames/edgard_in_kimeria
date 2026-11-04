@@ -12,6 +12,7 @@ import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
+import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
@@ -94,12 +95,62 @@ public class Level implements WorldObject {
     public final RoomLayout roomLayout;
     private int currentRoom;
     /**
-     * The map's {@code tutorialRoom} property names the room that teaches controls, including retries
-     * and collection returns; levels without it never show hints.
+     * A map-authored hint zone (object type {@code Hint} in the {@code Hints} layer). The hero's body
+     * inside the zone shows {@code message} (a {@link Msg} name) and/or, when {@code controls} is
+     * set, the contextual pickup/lever/ladder instructions. Zones are stateless: they apply again
+     * on every retry and return. A level without zones never shows tutorial hints.
      */
-    public boolean tutorialHintsActive() {
-        return currentRoom == map.propInt("tutorialRoom", -1);
+    public record HintZone(String id, Rectangle bounds, Msg message, boolean controls) { }
+    private final List<HintZone> hintZones = new ArrayList<>();
+    public List<HintZone> hintZones() { return List.copyOf(hintZones); }
+
+    private static boolean insideZone(HintZone zone, Rectangle body) {
+        return zone.bounds.contains(body.x + body.width / 2, body.y + body.height / 2);
     }
+
+    /** True while the hero stands in a zone that teaches the contextual controls. */
+    public boolean controlHintsActive() {
+        Rectangle body = player.hitboxBounds();
+        for (HintZone zone : hintZones) if (zone.controls && insideZone(zone, body)) return true;
+        return false;
+    }
+
+    /** The authored message zone holding the hero, or null. */
+    public HintZone messageHint() {
+        Rectangle body = player.hitboxBounds();
+        for (HintZone zone : hintZones) if (zone.message != null && insideZone(zone, body)) return zone;
+        return null;
+    }
+
+    private void loadHintZones() {
+        Set<String> ids = new HashSet<>();
+        for (TiledObject o : map.layer("Hints")) {
+            if (!"Hint".equals(o.type))
+                throw new IllegalArgumentException("Hints layer holds only Hint objects: " + describe(o));
+            if (o.width <= 0 || o.height <= 0)
+                throw new IllegalArgumentException("Hint needs positive bounds: " + describe(o));
+            roomLayout.owner(o); // A zone belongs to exactly one room.
+            Rectangle zone = new Rectangle(o.x, o.y, o.width, o.height);
+            if (!currentRoomBoundsOf(zone))
+                throw new IllegalArgumentException("Hint crosses a room boundary: " + describe(o));
+            String message = o.prop("message", "");
+            boolean controls = o.propBool("controls", false);
+            if (message.isEmpty() && !controls)
+                throw new IllegalArgumentException("Hint needs a message or controls: " + describe(o));
+            Msg msg = message.isEmpty() ? null : Msg.valueOf(message); // A mistyped key fails loudly.
+            hintZones.add(new HintZone(o.name, zone, msg, controls));
+        }
+    }
+
+    private boolean currentRoomBoundsOf(Rectangle zone) {
+        for (RoomLayout.Room room : roomLayout.rooms) {
+            Rectangle b = room.bounds(); // Inclusive, unlike Rectangle.contains(Rectangle).
+            if (zone.x >= b.x && zone.y >= b.y && zone.x + zone.width <= b.x + b.width
+                && zone.y + zone.height <= b.y + b.height) return true;
+        }
+        return false;
+    }
+
     private final List<WorldObject> ambience = new ArrayList<>();
     private sealed interface ObjectSnapshot permits CarryableState, TorchState, WallState,
         EscalatorState, FallingPlatformState, LadderState { }
@@ -369,6 +420,7 @@ public class Level implements WorldObject {
             }
         }
         if (deadlines.isEmpty()) throw new IllegalArgumentException("Level needs a Deadline SpawnPoint");
+        loadHintZones();
         for (TiledObject o : map.layer("Collisions")) roomLayout.owner(o);
         for (TiledObject o : map.layer("SpawnPoints")) {
             if ("Collectable".equals(o.type) && ItemType.fromMapName(o.name) == ItemType.COIN)

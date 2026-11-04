@@ -639,11 +639,23 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return actionBinding(ranged, gameplayInput.up(), gameplayInput.down());
     }
 
-    /** Contextual teaching remains repeatable throughout the first room, including while carrying. */
+    /**
+     * Tutorial hints come only from the map's hint zones ({@code Hint} objects) and are stateless, so
+     * they repeat after death, restart and collection returns. A zone with {@code controls} teaches the
+     * pickup/lever/ladder controls (also while carrying); a zone with a {@code message} shows that text.
+     */
     public String contextHint() {
         if (fullFireballRefill() != null) return Msg.FIREBALL_STOCK_FULL.t(game.language());
-        if (level == null || !level.tutorialHintsActive() || !canFight() || isAttacking
+        if (level == null || !canFight() || isAttacking
             || (gameplayInput.up() && gameplayInput.down())) return "";
+        String controls = controlHint();
+        if (!controls.isEmpty()) return controls;
+        var zone = level.messageHint();
+        return zone == null ? "" : zone.message().t(game.language());
+    }
+
+    private String controlHint() {
+        if (level == null || !level.controlHintsActive()) return "";
         String interaction = interactionHint();
         if (gameplayInput.actionHeld() && gameplayInput.verticalHeld()) return interaction;
         return interaction.isEmpty() ? ladderHint() : interaction;
@@ -690,6 +702,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
         FireballRefill refill = fullFireballRefill();
         if (refill != null) {
             out.set(refill.centerX(), refill.getY() - HINT_TARGET_OFFSET_Y);
+            return;
+        }
+        var zone = level == null || !controlHint().isEmpty() ? null : level.messageHint();
+        if (zone != null) { // An authored message sits at its zone, like the object it describes.
+            out.set(zone.bounds().x + zone.bounds().width / 2, zone.bounds().y);
             return;
         }
         LadderEntry entry = interactionHint().isEmpty() ? ladderEntry() : null;

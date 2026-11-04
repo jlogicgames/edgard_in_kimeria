@@ -13,11 +13,11 @@ A 2D platformer, ported to Java and [libGDX](https://libgdx.com/) from the proje
 Flutter/Flame version (with reference to its separate Rust/Bevy version for feature parity —
 full menu system, localization, gamepad support, dev hotkeys).
 
-The MVP has two playable levels: **forest-1** (one room), followed by **forest-3** (three
-rooms, healer and boss). The intended Forest order is `forest-0` → `forest-1` → (`forest-2`?) →
-`forest-3` ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
+The MVP has three playable levels: the tutorial **forest-0** (six empty rooms), **forest-1**
+(one room), then **forest-3** (three rooms, healer and boss). The Forest order is
+`forest-0` → `forest-1` → (`forest-2`?) → `forest-3` ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
-removed. Future mechanics will expand these same two levels. See [MVP](MVP.md).
+removed. Future mechanics will expand these same levels. See [MVP](MVP.md).
 The current implementation/review stages are complete for the test version; remaining
 release acceptance checks are deferred until those mechanics are added and collected in
 [Pre-release TODO](PRE_RELEASE_TODO.md).

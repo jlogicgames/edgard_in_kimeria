@@ -563,7 +563,7 @@ class DirectionalActionsTest {
         level.player.position.set(refill.getX() - level.player.hitbox.offsetX,
             refill.getY() - level.player.hitbox.offsetY);
         frames(1);
-        assertFalse(level.tutorialHintsActive());
+        assertFalse(level.controlHintsActive());
         assertEquals("Fireball inventory full", level.player.contextHint());
         Vector2 anchor = new Vector2(); level.player.contextHintPosition(anchor);
         assertEquals(refill.centerX(), anchor.x);
@@ -749,7 +749,7 @@ class DirectionalActionsTest {
                 probe[1] - level.player.hitbox.offsetY - level.player.hitbox.height / 2);
             stone.position.set(probe[0] - 6, probe[1] - 6);
             assertSame(stone, level.player.selectedCarryable());
-            assertTrue(level.tutorialHintsActive(), "The entire first room teaches, including beyond the old rectangle");
+            assertTrue(level.controlHintsActive(), "The entire first room teaches, including beyond the old rectangle");
             assertTrue(level.player.contextHint().contains("Pick up"));
         }
     }
@@ -757,13 +757,13 @@ class DirectionalActionsTest {
     @Test void trainingIsAbsentInLaterRoomsAndAvailableWhenReturningToTheFirstRoom() {
         scene(false);
         level = new Level(assets, game, player(), "forest-3", Rectangle::new);
-        assertTrue(level.tutorialHintsActive());
+        assertTrue(level.controlHintsActive());
         level.enterNextRoom(player());
-        assertFalse(level.tutorialHintsActive());
+        assertFalse(level.controlHintsActive());
         level.returnForCollection(player());
         standByEntranceStone();
         assertNotNull(level.player.selectedCarryable());
-        assertTrue(level.tutorialHintsActive());
+        assertTrue(level.controlHintsActive());
         assertTrue(level.player.contextHint().contains("Pick up"));
     }
 
@@ -805,7 +805,7 @@ class DirectionalActionsTest {
         assertTrue(level.player.contextHint().contains("Turn on - Lever"), "Mechanism teaching remains repeatable after carrying reminders expire");
         assertFalse(level.player.contextHint().contains("Put down"));
         level.enterNextRoom(player());
-        assertFalse(level.tutorialHintsActive());
+        assertFalse(level.controlHintsActive());
         assertEquals("", level.player.contextHint());
     }
 
@@ -1033,4 +1033,77 @@ class DirectionalActionsTest {
         assertTrue(level.currentRoomBounds().contains(level.player.hitboxBounds()));
     }
 
+
+    // ---- forest-0: map-authored hints and the walkable tutorial skeleton (#195) ----
+
+    private Level forestZero() {
+        held.clear();
+        level = new Level(assets, game, player(), "forest-0", Rectangle::new);
+        frames(2);
+        return level;
+    }
+
+    private void standAt(float bodyCenterX) {
+        level.player.position.set(bodyCenterX - level.player.hitbox.offsetX - level.player.hitbox.width / 2,
+            level.player.position.y);
+        frames(2);
+    }
+
+    @Test void authoredMessageHintShowsAtItsZoneAndRepeatsAfterRetryAndReturn() {
+        forestZero();
+        var zone = level.hintZones().get(0);
+        float inside = zone.bounds().x + zone.bounds().width / 2;
+        standAt(inside);
+        assertEquals("Walk right to find the way out", level.player.contextHint());
+        Vector2 anchor = new Vector2(); level.player.contextHintPosition(anchor);
+        assertEquals(zone.bounds().x + zone.bounds().width / 2, anchor.x, .001);
+        assertEquals(zone.bounds().y, anchor.y, .001);
+        // The hero's body centre is tested, so the hint must survive a jump: the zone spans the room.
+        var room = level.currentRoomBounds();
+        assertEquals(room.y, zone.bounds().y, .001); assertEquals(room.height, zone.bounds().height, .001);
+        level.player.position.y -= 120; frames(1);
+        assertEquals("Walk right to find the way out", level.player.contextHint(), "Still shown at jump height");
+        level.player.position.y += 120; frames(30);
+        standAt(zone.bounds().x + zone.bounds().width + 64);
+        assertEquals("", level.player.contextHint(), "Hints belong to their zone, not the whole level");
+        // Retry after death, restart, and a return to the room all rebuild the same authored hint.
+        level.resetCurrentRoom(player()); frames(2);
+        standAt(inside);
+        assertEquals("Walk right to find the way out", level.player.contextHint());
+        level.enterNextRoom(player()); frames(2);
+        assertEquals("", level.player.contextHint());
+        Level restarted = new Level(assets, game, player(), "forest-0", Rectangle::new);
+        level = restarted; frames(2); standAt(inside);
+        assertEquals("Walk right to find the way out", level.player.contextHint());
+    }
+
+    @Test void forestZeroHintDoesNotTeachControlsAndForestThreeStillDoes() {
+        forestZero();
+        standAt(level.hintZones().get(0).bounds().x + 40);
+        assertFalse(level.controlHintsActive(), "forest-0 has no control zones until its lesson tickets add them");
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new); frames(2);
+        assertTrue(level.controlHintsActive(), "forest-3 room 0 keeps its authored control zone");
+        assertEquals(1, level.hintZones().size());
+        level.enterNextRoom(player()); frames(2);
+        assertFalse(level.controlHintsActive());
+        assertNull(level.messageHint());
+    }
+
+    @Test void forestZeroIsWalkableRoomByRoomWithoutEnemiesAndEndsAtItsLevelExit() {
+        forestZero();
+        int rooms = level.roomLayout.rooms.size();
+        assertEquals(6, rooms);
+        for (int room = 0; room < rooms; room++) {
+            assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?> || o instanceof Boss),
+                "forest-0 has no monsters in room " + room);
+            held.clear(); held.add(Input.Keys.D);
+            int budget = 60 * 40;
+            while (budget-- > 0 && !level.atRoomExit() && completions == 0) frames(1);
+            held.clear();
+            if (room < rooms - 1) {
+                assertTrue(level.atRoomExit(), "Room " + room + " exit is reachable by walking right");
+                level.enterNextRoom(player()); frames(2);
+            } else assertEquals(1, completions, "The last room's Checkpoint is the level exit");
+        }
+    }
 }
