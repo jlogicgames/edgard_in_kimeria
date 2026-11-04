@@ -227,7 +227,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         readInput();
         if (!game.isGameStarted()) return;
         boolean wasOnLadder = ladder != null;
-        if (ladder != null && horizontalMovement != 0) releaseLadder();
+        // A queued jump goes first: it lets go with a hop and the held direction then drives it away.
+        if (ladder != null && horizontalMovement != 0 && !jumpBuffer.pending()) releaseLadder();
         updateLadderCooldown(dt);
         tryGrabLadder();
 

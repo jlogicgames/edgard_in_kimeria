@@ -205,33 +205,52 @@ class DirectionalActionsTest {
             else level.triggers.clear();
             assertNotNull(mechanism ? level.player.selectedMechanism() : level.player.selectedCarryable());
             float neutral = lastCameraTarget.y;
+            // Up selects the target and shows its outline, which suppresses looking (D29).
             held.add(up()); frames(54);
-            assertEquals(Player.State.LOOK_UP, level.player.getState());
+            assertEquals(Player.State.IDLE, level.player.getState());
+            assertEquals(neutral, lastCameraTarget.y, .001);
+            frames(130);
+            assertEquals(Player.State.IDLE, level.player.getState());
+            assertEquals(neutral, lastCameraTarget.y, .001);
+            // Down shows no outline, but the reachable target still delays the camera by one second.
+            held.clear(); frames(30);
+            held.add(down()); frames(54);
+            assertEquals(Player.State.LOOK_DOWN, level.player.getState());
             assertEquals(neutral, lastCameraTarget.y, .001);
             frames(12);
-            assertTrue(lastCameraTarget.y < neutral);
+            assertTrue(lastCameraTarget.y > neutral);
             frames(60);
-            assertEquals(neutral - 100, lastCameraTarget.y, .01);
+            assertEquals(neutral + 150, lastCameraTarget.y, .01);
         }
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void actionMovementJumpAndUiBoundariesTakePriorityOverLooking(boolean left) {
         scene(left); frames(10);
+        // A selected target's outline suppresses looking (D29), so check looking with none in reach.
+        var stones = level.objects.stream()
+            .filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance).toList();
+        var levers = new ArrayList<>(level.triggers);
+        level.objects.removeAll(stones); level.triggers.clear(); frames(2);
         held.add(up()); frames(181);
         level.player.resetJumpInput(); frames(181);
         assertEquals(Player.State.IDLE, level.player.getState(), "Held direction cannot leak across a UI boundary");
         held.clear(); frames(1); held.add(up()); frames(2);
         assertEquals(Player.State.LOOK_UP, level.player.getState());
-        held.add(action()); frames(2);
-        assertEquals(1, first.count); assertNotEquals(Player.State.LOOK_UP, level.player.getState());
-        frames(90); assertEquals(1, first.count);
         held.clear(); frames(2); held.add(up());
         held.add(left ? Input.Keys.RIGHT : Input.Keys.D); frames(2);
         assertEquals(Player.State.RUNNING, level.player.getState());
         held.clear(); frames(2); held.add(up());
         held.add(left ? Input.Keys.Z : Input.Keys.J); frames(2);
         assertNotEquals(Player.State.LOOK_UP, level.player.getState());
+        held.clear(); frames(90);
+        // Up + Action on a lever in reach activates it once and never starts a look.
+        level.triggers.addAll(levers);
+        held.add(up()); frames(2);
+        assertNotEquals(Player.State.LOOK_UP, level.player.getState());
+        held.add(action()); frames(2);
+        assertEquals(1, first.count); assertNotEquals(Player.State.LOOK_UP, level.player.getState());
+        frames(90); assertEquals(1, first.count);
     }
 
     private void frames(int count) {
@@ -330,12 +349,16 @@ class DirectionalActionsTest {
         assertEquals(Player.State.ATTACKING, level.player.getState());
         assertEquals(0, first.count); assertNull(level.player.carriedObject());
         frames(50);
+        // The stone and the lever are both in reach; the nearer one, the stone, takes this press.
+        held.add(up()); tap(action()); held.remove(up());
+        assertEquals(20, level.player.carriedObject().id);
+        assertEquals(0, first.count); assertEquals(0, second.count);
+        // Carrying, only mechanisms are Up + Action targets.
         held.add(up()); tap(action()); held.remove(up());
         assertEquals(1, first.count); assertEquals(0, second.count);
-        held.add(up()); held.add(down()); tap(action()); held.clear();
-        assertEquals(1, first.count); assertNull(level.player.carriedObject());
-        pickup();
         assertEquals(20, level.player.carriedObject().id);
+        held.add(up()); held.add(down()); tap(action()); held.clear();
+        assertEquals(1, first.count); assertEquals(20, level.player.carriedObject().id);
         frames(60); // Holding never repeats an interaction.
         assertEquals(20, level.player.carriedObject().id);
         held.clear(); frames(1);
@@ -405,6 +428,11 @@ class DirectionalActionsTest {
         axes[verticalAxis] = 1;
         frames(1); assertEquals(1, level.player.verticalMovement());
         buttons[actionButton] = true; frames(1);
+        assertNull(level.player.carriedObject(), "Down + Action with an empty hand does nothing");
+        buttons[actionButton] = false; axes[verticalAxis] = 0; frames(1);
+        axes[verticalAxis] = -1;
+        frames(1); assertEquals(-1, level.player.verticalMovement());
+        buttons[actionButton] = true; frames(1);
         assertNotNull(level.player.carriedObject()); assertEquals(0, level.player.verticalMovement());
         assertTrue(level.player.actionPrompt().contains(left ? "D-pad" : "X/B"));
         buttons[actionButton] = false; axes[verticalAxis] = 0; frames(1);
@@ -418,6 +446,8 @@ class DirectionalActionsTest {
         buttons[rangedButton] = true; frames(1);
         assertEquals(2, level.player.ammunition());
         buttons[rangedButton] = false; frames(1);
+        // With a stone or torch in reach those are nearer than the lever, so leave only the mechanism.
+        level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
         axes[verticalAxis] = -1; buttons[actionButton] = true; frames(1);
         assertEquals(1, first.count); assertEquals(0, second.count);
     }
@@ -428,6 +458,11 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void gamepadAndTouchLookThroughTheirActiveMovementStick(boolean left) {
         scene(left); frames(10);
+        // A selected target's outline suppresses looking (D29), so look with none in reach.
+        var stones = level.objects.stream()
+            .filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance).toList();
+        var levers = new ArrayList<>(level.triggers);
+        level.objects.removeAll(stones); level.triggers.clear(); frames(2);
         float neutral = lastCameraTarget.y;
         int axis = left ? mapping.axisRightY : mapping.axisLeftY;
         axes[axis] = -1; frames(181);
@@ -437,6 +472,7 @@ class DirectionalActionsTest {
         finger(0, mirrored(80), 315); frames(181);
         assertEquals(Player.State.LOOK_DOWN, level.player.getState());
         assertEquals(neutral + 150, lastCameraTarget.y, .01);
+        level.objects.addAll(stones); level.triggers.addAll(levers);
         var stone = level.objects.stream()
             .filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 20)
             .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
