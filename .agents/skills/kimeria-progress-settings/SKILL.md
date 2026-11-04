@@ -49,9 +49,9 @@ the desktop launcher must read settings before Gdx.app exists.
   [localization](../../../docs/LOCALIZATION.md) and run `validateLocalization`.
 - Saved progress is a zero-based next-level index only. Validate against the
   current level count; missing, malformed or out-of-range data hides Continue
-  rather than clamping to an unrelated level. The MVP order is `forest` then
-  `forest-1`: save index 1 after the boss exit and final guide advance. The final
-  level opens the ending; clear only the run save after that scroll finishes/skips,
+  rather than clamping to an unrelated level. The MVP order is `forest-1` then
+  `forest-3`: save index 1 after completing `forest-1`. The final level (`forest-3`,
+  after the boss exit and final guide advance) opens the ending; clear only the run save after that scroll finishes/skips,
   then return to the menu without Continue. Never wrap/save index zero. See
   [MVP](../../../docs/MVP.md) for interruption and legacy-index behavior.
 - Death, room transitions, collection return and Restart Level do not save.

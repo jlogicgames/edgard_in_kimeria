@@ -84,7 +84,7 @@ state is written to the level-only save.
 
 ## Recipe, payment and encounter boundary
 
-- Require secured Chicken and Key from `forest` and every authored coin identity from that
+- Require secured Chicken and Key from `forest-3` and every authored coin identity from that
   level. The current map has six coins. Pending pickups become secured at healer entry;
   prior-level currency cannot replace a missing forest coin. Empty authored coin sets never
   qualify. Each pickup identity is counted once, including after repeated visits/deaths.
@@ -304,10 +304,9 @@ in the five `assets/localization/*.json` catalogs, addressed by typed `Msg` keys
 no new destination, quest or explanation of the darkness is added.
 
 A fresh final advance emits CONTINUE once. KimeriaGame then performs its existing
-first-level completion: secures pickups, advances to `forest-1`, saves index 1,
-creates a fresh hero and starts normal loading. No save is written at dialogue entry,
-and no dialogue/checkpoint flag is persisted. The second level ends the MVP campaign
-through the ending scroll instead of wrapping to the forest; see [MVP.md](MVP.md).
+level completion: secures pickups, and, as `forest-3` is the last level, opens the ending
+scroll instead of wrapping. No save is written at dialogue entry,
+and no dialogue/checkpoint flag is persisted; see [MVP.md](MVP.md).
 Paused Restart Level still restarts the
 outgoing level; Exit leaves its existing save untouched. Continue after exit follows
 the previous completed-level save. Restart/Exit discard the conversation normally.

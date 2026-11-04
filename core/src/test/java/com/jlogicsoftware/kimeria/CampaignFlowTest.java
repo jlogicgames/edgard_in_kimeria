@@ -103,18 +103,19 @@ class CampaignFlowTest {
         assertEquals(Language.ENGLISH, expected);
     }
 
-    @Test void openingStartsRoomBasedForestAndOnlyFirstCompletionSavesTheSecondLevel() throws Exception {
-        assertEquals(List.of("forest", "forest-1"), get("LEVEL_NAMES"));
+    @Test void openingStartsTheFirstLevelAndOnlyFirstCompletionSavesTheBossLevel() throws Exception {
+        // Intended order is forest-0 -> forest-1 -> (forest-2?) -> forest-3; forest-0 does not exist yet.
+        assertEquals(List.of("forest-1", "forest-3"), get("LEVEL_NAMES"));
         call("newGame"); assertEquals("INTRO", state());
         update(2); update(100); update(1);
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
-        call("loadLevel");
-        Level first = (Level) get("level");
-        assertEquals("forest", first.name); assertTrue(first.hasBossEncounter()); assertTrue(first.hasNextRoom());
-        // The boss/victory/dialogue boundary is exercised by BossCombatTest.
+        // forest-1 needs real textures (sky), so completion is driven without loading it.
         game.loadNextLevel();
         assertEquals("LOADING", state()); assertEquals(1, get("currentLevelIndex"));
         assertEquals(1, new SavedProgress(prefs, 2).nextLevelIndex());
+        call("loadLevel");
+        Level boss = (Level) get("level");
+        assertEquals("forest-3", boss.name); assertTrue(boss.hasBossEncounter()); assertTrue(boss.hasNextRoom());
     }
 
     @Test void endingScrollUsesIntroMusicThenDeletesOnlyProgressAndOffersNewGame() throws Exception {

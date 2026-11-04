@@ -6,7 +6,7 @@ until the planned gameplay mechanics have been added and are tracked only in
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
 
 The initial checks below record the former level order/wrap. The current two-level MVP
-puts the forest boss first and `forest-1` second, followed by an ending and save deletion.
+put the forest boss (now `forest-3`) first and `forest-1` second; the current order is reversed ([D32](DECISIONS.md#d32-forest-level-order-and-identity)), followed by an ending and save deletion.
 BossCombatTest now asserts index 1 after the guide scene. See [MVP.md](MVP.md) for the
 current campaign flow and its separate completion checks.
 

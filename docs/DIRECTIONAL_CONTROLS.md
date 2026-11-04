@@ -84,7 +84,7 @@ inspection was already underway, it returns to the ordinary camera target over 0
 The mirrored action D-pad is never also a movement direction. Start/Esc and menu
 bindings are unchanged. Touch labels distinguish sword, pickup, placement, blocked
 placement, no action, mechanism, throw, fireball and empty stock. All contextual teaching uses
-the entire first Forest room (`forest`, room 0), at every position and height,
+the entire first Forest room (`forest-3`, room 0), at every position and height,
 including retries and collection returns. Other rooms/levels omit teaching labels. The full-ammunition pickup message is
 status feedback, available at its pickup in every room and level.
 The earlier 320×144 rectangle, one-time and 50 px limits are superseded by
@@ -122,7 +122,7 @@ blocked and retains the object.
 
 ## Objects, projectiles and recovery
 
-The optional entrance practice objects in `forest.tmx` are stone 116, portable
+The optional entrance practice objects in `forest-3.tmx` are stone 116, portable
 torch 117, trigger 118 and its linked light 119. They require no geometry changes
 and do not obstruct the required route. Try W+K, release, K, L, then L again;
 W+K also toggles the light when the mechanism is the selected target. S+K puts down
@@ -162,7 +162,7 @@ The mechanics and entrance practice objects shipped in
 secured mutable-object restoration followed in
 [PR #165](https://github.com/jlogicgames/edgard_in_kimeria/pull/165), addressing #158.
 
-Practice in the first `forest` room: touch stone 116, press W+K, release,
+Practice in the first `forest-3` room: touch stone 116, press W+K, release,
 walk with D/A, release movement, press K to use the sword, wait for the swing to end,
 press S+K to place, release, approach and pick up again with W+K, then press L to throw.
 The mirrored layout uses Up+X, arrows, X and C. Stock remains unchanged
@@ -197,7 +197,7 @@ separate illustrated HUD texture and native 16×16 world sprite are reused.
 
 | Map / owner | Authored refill | Position | Purpose |
 | --- | --- | --- | --- |
-| `forest` / `forest-canopy` | 121 | TMX (1824, 320), world (1824, 304) after layer offset | Before the exit to the healer/boss chamber |
+| `forest-3` / `forest-canopy` | 121 | TMX (1824, 320), world (1824, 304) after layer offset | Before the exit to the healer/boss chamber |
 | `forest-1` / sole room | 25 | (312, 176) | Optional jump above horizontal moving platform 17 |
 
 `Level.pendingPickups` / `keptPickups` track the authored map IDs, separately from

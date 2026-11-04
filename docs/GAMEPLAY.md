@@ -13,8 +13,9 @@ A 2D platformer, ported to Java and [libGDX](https://libgdx.com/) from the proje
 Flutter/Flame version (with reference to its separate Rust/Bevy version for feature parity —
 full menu system, localization, gamepad support, dev hotkeys).
 
-The MVP has two playable levels: **forest** (three rooms, healer and boss), followed
-by **forest-1** (one room). After the second level, an ending scroll uses the opening
+The MVP has two playable levels: **forest-1** (one room), followed by **forest-3** (three
+rooms, healer and boss). The intended Forest order is `forest-0` → `forest-1` → (`forest-2`?) →
+`forest-3` ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
 removed. Future mechanics will expand these same two levels. See [MVP](MVP.md).
 The current implementation/review stages are complete for the test version; remaining
@@ -124,7 +125,7 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest` contains three rooms: the original course, a forest course with an ascending
+`forest-3` contains three rooms: the original course, a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -149,7 +150,7 @@ Death resets only the active room; previous rooms' collections remain kept.
 
 ## Optional artifacts
 
-`forest` has two optional artifacts: Chicken and Key, using the existing `Items.png` frames.
+`forest-3` has two optional artifacts: Chicken and Key, using the existing `Items.png` frames.
 Tiled accepts object types `Chicken` and `Key`, or `Collectable` with the
 item name. The author accepted their current positions as final for the MVP on 2026-10-19;
 no relocation or additional artifact challenge paths are planned for this MVP (#72).

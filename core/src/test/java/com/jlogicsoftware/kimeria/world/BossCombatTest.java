@@ -126,7 +126,7 @@ class BossCombatTest {
     private Boss boss;
 
     private void encounter() {
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         level.enterNextRoom(player());
         level.enterNextRoom(player());
         boss = level.objects.stream().filter(Boss.class::isInstance).map(Boss.class::cast).findFirst().orElseThrow();
@@ -196,7 +196,7 @@ class BossCombatTest {
     }
 
     @Test void f6UsesTheRoomFadeAndStopsForHealerBeforeTheBoss() throws Exception {
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         KimeriaGame running = new KimeriaGame(false, true);
         gameField(running, "assets", assets); gameField(running, "level", level);
         gameField(running, "player", level.player); running.setGameStarted(true);
@@ -257,7 +257,7 @@ class BossCombatTest {
 
     @Test void nextLevelAfterBossVictoryGetsAFreshControllablePlayer() throws Exception {
         encounter();
-        artifacts.drinkBossElixir("forest");
+        artifacts.drinkBossElixir("forest-3");
         boss.collidedWithActor(true);
         outsideSwing(); vulnerableAgain(); boss.collidedWithActor(true);
         frames(550);
@@ -336,8 +336,8 @@ class BossCombatTest {
     @SuppressWarnings("unchecked")
     private static int bossLevelIndex() throws Exception {
         var names = KimeriaGame.class.getDeclaredField("LEVEL_NAMES"); names.setAccessible(true);
-        int index = ((java.util.List<String>) names.get(null)).indexOf("forest");
-        assertTrue(index >= 0, "KimeriaGame.LEVEL_NAMES has no \"forest\" level; update bossLevelIndex()");
+        int index = ((java.util.List<String>) names.get(null)).indexOf("forest-3");
+        assertTrue(index >= 0, "KimeriaGame.LEVEL_NAMES has no \"forest-3\" level; update bossLevelIndex()");
         return index;
     }
 
@@ -365,7 +365,7 @@ class BossCombatTest {
         assertFalse(world.victoryExitComplete(), "Damage cannot open the guide scene");
         Player retry = new Player(assets, running, 0, 0);
         world.resetCurrentRoom(retry); gameField(running, "player", retry);
-        running.artifacts().drinkBossElixir("forest");
+        running.artifacts().drinkBossElixir("forest-3");
         Boss retryBoss = world.boss();
         retryBoss.collidedWithActor(true);
         retry.position.set(retryBoss.getX() - 90, 272);
@@ -407,7 +407,7 @@ class BossCombatTest {
     }
 
     @Test void nextRoomShortcutCanReachTheBossAndCannotAdvancePastTheLastRoom() {
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertTrue(level.hasNextRoom());
@@ -447,7 +447,7 @@ class BossCombatTest {
 
     @Test void orangeCounterSequenceRejectsSwordAndFireballWithoutNewFeedbackOrTimerChanges() throws Exception {
         soundsEnabled = true;
-        encounter(); artifacts.drinkBossElixir("forest");
+        encounter(); artifacts.drinkBossElixir("forest-3");
         boss.collidedWithActor(true);
         assertEquals(2, boss.energy());
         level.clearCameraEffects(); outsideSwing();
@@ -485,7 +485,7 @@ class BossCombatTest {
         float x = boss.getX(); outsideSwing(); frames(10);
         assertTrue(boss.getX() < x);
         assertNotEquals(Boss.State.THRONE, boss.getState());
-        artifacts.drinkBossElixir("forest"); boss.collidedWithActor(true);
+        artifacts.drinkBossElixir("forest-3"); boss.collidedWithActor(true);
         assertEquals(2, boss.energy());
         level.player.collidedWithActor(false);
         assertTrue(level.player.isGotHit()); assertEquals(Vector2.Zero, shake());
@@ -493,7 +493,7 @@ class BossCombatTest {
         Boss retry = (Boss) level.objects.stream().filter(Boss.class::isInstance).findFirst().orElseThrow();
         assertEquals(12, retry.energy()); assertEquals(Boss.State.THRONE, retry.getState());
         assertEquals(new Vector2(2192, 304), level.player.position);
-        assertEquals(10f, artifacts.bossWeaponDamageMultiplier("forest"));
+        assertEquals(10f, artifacts.bossWeaponDamageMultiplier("forest-3"));
         level.player.arriveAfterReset(); frames(30);
         assertEquals(Boss.State.THRONE, retry.getState());
         boss = retry;
@@ -511,7 +511,7 @@ class BossCombatTest {
         assertTrue(boss.isDefeated());
         level.resetCurrentRoom(player());
         boss = (Boss) level.objects.stream().filter(Boss.class::isInstance).findFirst().orElseThrow();
-        artifacts.drinkBossElixir("forest");
+        artifacts.drinkBossElixir("forest-3");
         assertEquals(12, boss.energy());
         boss.collidedWithActor(true);
         assertEquals(2, boss.energy()); outsideSwing(); vulnerableAgain(); boss.collidedWithActor(true);
@@ -521,7 +521,7 @@ class BossCombatTest {
     @Test void fireballsAlwaysDealTwoDamageFromEitherSideWithOrWithoutElixir() {
         for (boolean elixir : new boolean[]{false, true}) for (boolean right : new boolean[]{false, true}) {
             encounter();
-            if (elixir) artifacts.drinkBossElixir("forest");
+            if (elixir) artifacts.drinkBossElixir("forest-3");
             fireball(right);
             assertEquals(10, boss.energy(), "elixir=" + elixir + ", right=" + right);
             outsideSwing(); vulnerableAgain();
@@ -802,7 +802,7 @@ class BossCombatTest {
 
     @Test void victoryKeepsFirefliesFireAndHazardsRunningWithoutHarmingTheHero() throws Exception {
         encounter();
-        artifacts.drinkBossElixir("forest");
+        artifacts.drinkBossElixir("forest-3");
         boss.collidedWithActor(true);
         outsideSwing(); vulnerableAgain(); boss.collidedWithActor(true);
         assertTrue(boss.isDefeated());
@@ -840,7 +840,7 @@ class BossCombatTest {
     }
 
     @Test void vulnerableLethalHitAfterCounterRecoveryCompletesOnce() {
-        encounter(); artifacts.drinkBossElixir("forest");
+        encounter(); artifacts.drinkBossElixir("forest-3");
         startNormal(); sword(); outsideSwing(); frames(83);
         assertEquals(Boss.State.COUNTER, boss.getState());
         assertEquals(2, boss.energy());
@@ -869,7 +869,7 @@ class BossCombatTest {
         BloodBurst normal = level.objects.stream().filter(BloodBurst.class::isInstance).map(BloodBurst.class::cast).findFirst().orElseThrow();
         assertEquals(32, normal.dropletCount());
         assertEquals(Vector2.Zero, shake(), "Ordinary hit has no empowered impact shake");
-        artifacts.drinkBossElixir("forest");
+        artifacts.drinkBossElixir("forest-3");
         outsideSwing(); vulnerableAgain();
         boss.collidedWithActor(true); level.update(.01f);
         assertEquals(1, boss.energy());
@@ -882,7 +882,7 @@ class BossCombatTest {
         outsideSwing(); vulnerableAgain();
         boss.collidedWithActor(true); level.update(.01f);
         assertTrue(boss.isDefeated());
-        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest"));
+        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-3"));
         assertTrue(shake().len() > 0, "The killing empowered hit still has its own impact shake");
         frames(20);
         assertEquals(Vector2.Zero, shake());
@@ -923,7 +923,7 @@ class BossCombatTest {
         rebuild.invoke(running);
         assertEquals(23, running.coinsCollected(), "Only this revisit's two provisional coins roll back");
         assertEquals(2, world.objects.stream().filter(Collectable.class::isInstance).count());
-        assertTrue(running.artifacts().hasFullSet("forest"));
+        assertTrue(running.artifacts().hasFullSet("forest-3"));
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); enter.invoke(running);
         var returningMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
@@ -939,19 +939,19 @@ class BossCombatTest {
         assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_PAID.t(language), paidMeeting.completeText(language),
             "Paid acknowledgement stays separate from repeat recognition");
         assertEquals(19, running.coinsCollected());
-        assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest"));
+        assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest-3"));
         choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.FIGHT);
         enter.invoke(running);
         rebuild.invoke(running);
         assertEquals(19, running.coinsCollected(), "Boss death must not refund payment");
-        assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest"));
+        assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest-3"));
         assertFalse(world.healerAhead());
         gameField(running, "pauseMenu", new com.jlogicsoftware.kimeria.ui.Menu(null, null,
             List.of(new com.jlogicsoftware.kimeria.ui.MenuItem(() -> "Resume", () -> {})), null));
         var restart = KimeriaGame.class.getDeclaredMethod("restartLevel"); restart.setAccessible(true);
         restart.invoke(running); load.invoke(running);
         assertEquals(19, running.coinsCollected());
-        assertEquals(1, running.artifacts().bossWeaponDamageMultiplier("forest"));
+        assertEquals(1, running.artifacts().bossWeaponDamageMultiplier("forest-3"));
         assertTrue(running.artifacts().items().isEmpty());
         Level restarted = (Level) levelField.get(running);
         assertEquals(0, restarted.forestCoinsSecured());
@@ -993,7 +993,7 @@ class BossCombatTest {
     }
 
     @Test void batProximityKeepsNormalSpeedAndDeathStillSlowsTime() {
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         var bat = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Bat.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.Bat.class::cast).findFirst().orElseThrow();
         level.player.position.set(bat.getX() - 60, bat.getY() - 26);

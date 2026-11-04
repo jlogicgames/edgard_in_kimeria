@@ -19,8 +19,17 @@ public final class ArtifactInventory {
     private String elixirLevel;
     private final Map<Id, Pickup> spent = new LinkedHashMap<>();
 
-    public static Set<ItemType> requiredForLevel(String level) {
-        return "forest".equals(level) ? Set.of(ItemType.CHICKEN, ItemType.KEY) : Set.of();
+    /** Level configuration (from the map), not run state; survives {@link #clear()}. */
+    private final Map<String, Set<ItemType>> required = new LinkedHashMap<>();
+
+    /** Declares the artifacts a level's healer recipe needs. An empty set means none. */
+    public void requireForLevel(String level, Set<ItemType> types) {
+        if (types.contains(ItemType.COIN)) throw new IllegalArgumentException("Coins are not artifacts");
+        required.put(level, Set.copyOf(types));
+    }
+
+    public Set<ItemType> requiredForLevel(String level) {
+        return required.getOrDefault(level, Set.of());
     }
 
     public void beginLevel() {

@@ -40,6 +40,7 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
 import com.jlogicsoftware.kimeria.tiled.TiledObject;
 
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -92,9 +93,12 @@ public class Level implements WorldObject {
     private SkyBackground sky;
     public final RoomLayout roomLayout;
     private int currentRoom;
-    /** The entire first Forest room teaches controls, including retries and collection returns. */
+    /**
+     * The map's {@code tutorialRoom} property names the room that teaches controls, including retries
+     * and collection returns; levels without it never show hints.
+     */
     public boolean tutorialHintsActive() {
-        return name.equals("forest") && currentRoom == 0;
+        return currentRoom == map.propInt("tutorialRoom", -1);
     }
     private final List<WorldObject> ambience = new ArrayList<>();
     private sealed interface ObjectSnapshot permits CarryableState, TorchState, WallState,
@@ -373,11 +377,16 @@ public class Level implements WorldObject {
         spawnObjects();
         addCollisions();
 
-        if ("forest".equals(levelName)) {
-            for (int i = 0; i < 24; i++) {
-                ambience.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
-            }
+        for (int i = 0, fireflies = map.propInt("fireflies", 0); i < fireflies; i++) {
+            ambience.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
         }
+        // The healer recipe's artifacts are level configuration read from the map, e.g. "CHICKEN,KEY".
+        // A mistyped name throws IllegalArgumentException from ItemType.fromMapName: failing loudly is intended.
+        Set<ItemType> ingredients = EnumSet.noneOf(ItemType.class);
+        for (String token : map.prop("ingredients", "").split(",")) {
+            if (!token.isBlank()) ingredients.add(ItemType.fromMapName(token.trim()));
+        }
+        game.artifacts().requireForLevel(name, ingredients);
         if ("forest-1".equals(levelName)) {
             sky = new SkyBackground(assets);
             for (int i = 0; i < 48; i++) {
@@ -389,7 +398,7 @@ public class Level implements WorldObject {
     }
 
     public boolean healerAhead() {
-        return "forest".equals(name) && !fightCommitted && map.layer("SpawnPoints").stream()
+        return map.propBool("healerBeforeBoss", false) && !fightCommitted && map.layer("SpawnPoints").stream()
             .anyMatch(o -> "Boss".equals(o.type) && roomLayout.owner(o) == currentRoom + 1);
     }
 
@@ -421,8 +430,9 @@ public class Level implements WorldObject {
     public boolean canBrew() {
         return !brewed && healerAhead() && !authoredCoins.isEmpty()
             && forestCoinsSecured() == authoredCoins.size() && game.coinsCollected() - entryCoins >= authoredCoins.size()
-            && game.artifacts().hasIngredient(name, ItemType.CHICKEN)
-            && game.artifacts().hasIngredient(name, ItemType.KEY);
+            && !game.artifacts().requiredForLevel(name).isEmpty()
+            && game.artifacts().requiredForLevel(name).stream()
+                .allMatch(type -> game.artifacts().hasIngredient(name, type));
     }
     public boolean brewElixir() {
         if (!canBrew()) return false;

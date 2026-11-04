@@ -95,6 +95,12 @@ must not interfere. Preserve existing jumping, combat and recovery behavior.
 
 ### 1.2. Forest
 
+Intended level order: `forest-0` (tutorial) → `forest-1` → (`forest-2`? — **open**, not decided)
+→ `forest-3` (boss level, formerly `forest`); see
+[D32](DECISIONS.md#d32-forest-level-order-and-identity). The rename and decoupling from the
+level name are [#194](https://github.com/jlogicgames/edgard_in_kimeria/issues/194); the tutorial
+hint redesign is #195.
+
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.
 - [ ] [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103) Build short rooms demonstrating the rule and several applications.

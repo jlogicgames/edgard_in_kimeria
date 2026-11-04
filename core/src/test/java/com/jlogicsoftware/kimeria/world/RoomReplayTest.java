@@ -121,7 +121,7 @@ class RoomReplayTest {
 
 
     @Test void repeatedCollectionReturnsReachMissedArtifactsWithRealMovementAndCannotFarm() {
-        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         for (int room = 0; room < 2; room++) {
             for (var o : new java.util.ArrayList<>(level.objects)) {
                 if (o instanceof Enemy<?> enemy) enemy.collidedWithActor(true);
@@ -154,12 +154,12 @@ class RoomReplayTest {
         assertTrue(level.brewElixir());
         assertEquals(0, coins);
         assertTrue(artifacts.items().isEmpty());
-        assertTrue(artifacts.hasFullSet("forest"));
+        assertTrue(artifacts.hasFullSet("forest-3"));
 
     }
 
     @Test void realCanopyRouteKeepsCollapsedPlatformAndMainExitOpenUntilFreshLevel() throws Exception {
-        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         secureCombatAndCoins(level);
         level.enterNextRoom(player());
         secureCombatAndCoins(level);
@@ -193,7 +193,7 @@ class RoomReplayTest {
         level.enterNextRoom(player());
         assertTrue(platform.isRemoved(), "Securing the main exit retains the collapsed platform");
 
-        Level freshLevel = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level freshLevel = new Level(assets, game, player(), "forest-3", Rectangle::new);
         secureCombatAndCoins(freshLevel);
         freshLevel.enterNextRoom(player());
         secureCombatAndCoins(freshLevel);
@@ -224,7 +224,7 @@ class RoomReplayTest {
     private Player player() { return new Player(assets, game, 0, 0); }
 
     @Test void gameplayContactCollectsTheChickenAndRoomRetryRestoresIt() {
-        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         Collectable chicken = level.objects.stream().filter(Collectable.class::isInstance)
             .map(Collectable.class::cast).filter(item -> item.type() == ItemType.CHICKEN).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
@@ -241,7 +241,7 @@ class RoomReplayTest {
 
     /** The teaching order of #73: each mechanic first appears alone, and the room-one threats do not overlap. */
     @Test void forestIntroducesStompBombAndFallingPlatformOneAtATime() {
-        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         var mobs = level.objects.stream().filter(o -> o instanceof Enemy<?> e && !e.getClass().getSimpleName().equals("Bat"))
             .map(o -> (Enemy<?>) o).sorted(java.util.Comparator.comparingDouble(e -> e.hitboxBounds().x)).toList();
@@ -263,7 +263,7 @@ class RoomReplayTest {
     }
 
     @Test void touchingABombThroughGameplayStartsAWarningInsteadOfImmediateDeath() {
-        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
         level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
@@ -277,7 +277,7 @@ class RoomReplayTest {
     }
 
     @Test void playerCanEscapeAnActivatedBombAndReturnDuringItsCosmeticEffect() {
-        Level level = new Level(assets, game, player(), "forest", Rectangle::new);
+        Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
         level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
@@ -309,7 +309,7 @@ class RoomReplayTest {
     }
 
     private void measure(String route, boolean canopy, boolean collect, int delayFrames, float[] jumps) {
-        String mapName = route.equals("forest-1") ? "replay-forest-1" : "forest";
+        String mapName = route.equals("forest-1") ? "replay-forest-1" : "forest-3";
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
         Level level = new Level(assets, game, player(), mapName, Rectangle::new, stock);

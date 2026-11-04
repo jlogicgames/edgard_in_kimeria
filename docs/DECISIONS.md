@@ -120,11 +120,11 @@ only in the menu backdrop.
 - **Status:** Accepted
 - **Decision:**
   - Hearts are removed, since there is nothing for them to restore.
-  - Coins are optional healer payment in `forest` (#82/#84); collection is never required.
+  - Coins are optional healer payment in `forest-3` (#82/#84); collection is never required.
     Dialogue, payment and collection returns are described in [HEALER.md](HEALER.md);
     boss combat is described in [BOSS.md](BOSS.md).
   - **Artifacts** are optional: the game can be finished without them. The MVP set
-    for `forest` is **Chicken + Key**; `forest-1` has no artifacts or full-set reward yet.
+    for `forest-3` is **Chicken + Key**; `forest-1` has no artifacts or full-set reward yet.
     The author accepted their existing map positions as final for the MVP on 2026-10-19
     (#72). Keep Chicken and Key in those positions; relocating them or adding harder
     artifact side paths is not required or planned for this MVP. Under [D26](#d26-observe-plan-before-committing),
@@ -219,12 +219,13 @@ only in the menu backdrop.
   - The save holds **only the level**. Coins and the consumed elixir are run-only (D6), so they are not saved and a
     continued run starts with 0 coins and no elixir. Do not add coins
     to the save format.
-  - The MVP order is `forest` (three rooms and boss), then `forest-1` (one room).
+  - The MVP order is `forest-1` (one room), then `forest-3` (three rooms and boss, the last level);
+    see [D32](#d32-forest-level-order-and-identity). The save indices are 0 = `forest-1`, 1 = `forest-3`.
     Completing the **last level** opens the ending scroll with the intro music; after
     it finishes or is skipped, delete only the run save and return to the main menu.
     Continue is then hidden and New Game starts a fresh run. There is no level wrap.
     If the application closes before the ending finishes, the previous level-only save
-    remains available, so Continue restarts the second level.
+    remains available, so Continue restarts the last level.
   - **Continue** (a saved run, from the main menu) is different from **Resume** (unpausing the
     current run, from the pause menu). The names stay distinct.
 - **Why:** Standard for games with progress, and the same shape as Katana Zero's menu. The
@@ -379,16 +380,17 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 ## D15. Two-level MVP with a finite ending
 
 - **Status:** Accepted by the author, 2026-10-19.
-- **Decision:** First play `forest` with three rooms, the pre-boss healer and forest boss.
-  The existing death animation, automatic exit and guide dialogue lead to `forest-1`,
-  the single-room second level. Its checkpoint leads to a black scrolling ending using
+- **Decision:** Play the single-room `forest-1`, then `forest-3` with three rooms, the
+  pre-boss healer and forest boss (order reconciled in [D32](#d32-forest-level-order-and-identity);
+  this entry originally played the forest first). The existing death animation, automatic exit and
+  guide dialogue after the boss lead to a black scrolling ending using
   `IntroScreen` and `audio/intro.wav`, with the same fade and fresh-input skip behavior
   as the opening. Localized text says Edgard defeated every enemy, freed the kingdom of
   monsters and brought light back to the world. After the ending, clear the saved run
   and return to the menu; retain settings. Future mechanics expand these two levels.
 - **Why:** This is the complete playable MVP loop, with a clear beginning and ending.
-- **Persistence:** D8 remains level-only. Save index 1 after the first level's guide
-  dialogue; never write index 0 on final completion. See [MVP.md](MVP.md) for scope
+- **Persistence:** D8 remains level-only. Save index 1 after the first level
+  (`forest-1`); never write index 0 on final completion. See [MVP.md](MVP.md) for scope
   and validation. This supersedes the former final-level wrap behavior.
 
 ## D16. Expanded campaign, wind, ladders and carried objects
@@ -591,6 +593,9 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   identity, with no separate 320×144 rectangle or fixed travel-distance budget.
   Instructions remain repeatable after death and on collection
   return to this room; subsequent rooms and levels omit these teaching labels.
+- **Current implementation (#194, 2026-11-04):** the teaching room is configured by the
+  `tutorialRoom` map property (room index) instead of the level name; today only `forest-3`
+  sets it (room 0). The tutorial level `forest-0` and the redesigned hint mechanism are #195.
 - **Carrying:** Holding the one stone/torch slot must not hide a usable mechanism's
   instruction. Near a lever, show Up + Action and its current Turn on/Turn off
   action together with any still-active Put down/Throw reminder. Place this combined
@@ -828,3 +833,21 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   enemy or hazard creates a new decision while keeping a zero-fireball required route.
 - **Details:** [Forest design](GAME_DESIGN.md#forest-linked-route-reconfiguration),
   [D26](#d26-observe-plan-before-committing), and [roadmap](ROADMAP.md#12-forest).
+
+## D32. Forest level order and identity
+
+- **Status:** Accepted, 2026-11-04 ([#194](https://github.com/jlogicgames/edgard_in_kimeria/issues/194)); `forest-2` is open.
+- **Decision:** The intended Forest order is `forest-0` (tutorial, no monsters, hints everywhere)
+  → `forest-1` → (`forest-2`?) → `forest-3` (the boss level, formerly `forest`). The boss level
+  is renamed `forest-3` (`assets/tiles/forest-3.tmx`). **Open question:** whether `forest-2`
+  exists is not decided here. Until `forest-0` is added, `KimeriaGame.LEVEL_NAMES` is
+  `forest-1`, `forest-3`; saves are a zero-based index into that list (0 = `forest-1`,
+  1 = `forest-3`). This reconciles earlier docs (D15 and others), which said the forest
+  was played first: the code order had been `forest-1` then `forest` since #193.
+- **Level configuration, not names:** game logic never tests a level's name. Map-level
+  properties in the TMX configure it: `tutorialRoom` (room index with contextual hints; to be
+  redesigned in #195), `fireflies` (count), `healerBeforeBoss` (true when a healer meets
+  the player before the boss room) and `ingredients` (healer recipe artifacts, e.g.
+  `CHICKEN,KEY`). The post-boss flow keys on the level having a boss encounter.
+- **Why:** A tutorial level and further Forest levels need the same mechanisms without
+  inheriting behavior from the name `forest`.

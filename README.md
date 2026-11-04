@@ -15,7 +15,7 @@ richer color, finer detail and more natural illustration. See [art direction](do
 
 ## About the game
 
-- Two playable levels: a three-room forest with a boss, followed by a second forest level
+- Two playable levels: a one-room forest level, followed by a three-room forest with a boss
   and an ending.
 - Sword combat, platforming, moving platforms, traps and optional collectibles.
 - Instant room retries with unlimited attempts; progress saves between levels.
