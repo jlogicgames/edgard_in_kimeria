@@ -1,0 +1,85 @@
+package com.jlogicsoftware.kimeria.world;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.headless.HeadlessFiles;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.localization.Language;
+import com.jlogicsoftware.kimeria.localization.Msg;
+import com.jlogicsoftware.kimeria.tiled.TiledMapData;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/** Map-level structure of the forest-0 tutorial skeleton and of the authored hint zones. */
+class TutorialLevelTest {
+    private final Assets assets = new Assets() {
+        @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+    };
+
+    private TiledMapData map(String name) {
+        Gdx.files = new HeadlessFiles();
+        return TiledMapData.load("tiles/" + name + ".tmx", assets);
+    }
+
+    @Test void forestZeroReservesSixLongRoomsForTheLessonsInOrder() {
+        TiledMapData map = map("forest-0");
+        RoomLayout layout = new RoomLayout(map);
+        List<String> lessons = List.of("lever", "ladder-bridge", "wall", "moving-platform", "thrown-stone", "existing-traps");
+        assertEquals(lessons.size(), layout.rooms.size());
+        var markers = map.layer("Rooms").stream().filter(o -> "Room".equals(o.type)).toList();
+        for (int i = 0; i < lessons.size(); i++) {
+            var room = layout.rooms.get(i);
+            assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
+            assertEquals(1280, room.bounds().width, "Rooms are long");
+            assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
+            assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
+            if (i > 0) assertEquals(layout.rooms.get(i - 1).bounds().x + 1280, room.bounds().x);
+        }
+    }
+
+    @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
+        TiledMapData map = map("forest-0");
+        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint");
+        for (var o : map.layer("SpawnPoints")) assertTrue(allowed.contains(o.type), "Unexpected object: " + o.type);
+        RoomLayout layout = new RoomLayout(map);
+        for (var o : map.layer("Collisions")) layout.owner(o);
+        // Each room: exactly one floor strip and the two side walls (lessons add their own geometry).
+        for (int i = 0; i < layout.rooms.size(); i++) {
+            int room = i;
+            long inRoom = map.layer("Collisions").stream().filter(o -> layout.owner(o) == room).count();
+            assertEquals(3, inRoom, "Room " + i + " is an empty corridor");
+            var exit = layout.rooms.get(i).exit();
+            if (exit != null) assertEquals(320, exit.y + exit.height, "Exit stands on the floor line");
+        }
+        assertEquals(1, map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).count());
+        assertEquals(layout.rooms.size() - 1, layout.owner(map.layer("SpawnPoints").stream()
+            .filter(o -> "Checkpoint".equals(o.type)).findFirst().orElseThrow()));
+    }
+
+    @Test void onlyForestZeroAndTheForestThreeControlZoneAuthorHints() {
+        assertTrue(map("forest-1").layer("Hints").isEmpty(), "forest-1 shows no tutorial hints");
+        assertTrue(map("forest-1").properties.get("tutorialRoom") == null);
+        TiledMapData three = map("forest-3");
+        assertNull(three.properties.get("tutorialRoom"), "The hardcoded room property is gone");
+        var zones = three.layer("Hints");
+        assertEquals(1, zones.size());
+        assertTrue(zones.get(0).propBool("controls", false));
+        assertEquals("", zones.get(0).prop("message", ""));
+        assertFalse(map("forest-0").layer("Hints").isEmpty());
+    }
+
+    @Test void everyAuthoredHintKeyIsALocalisedMessageInAllLanguages() {
+        for (String level : List.of("forest-0", "forest-1", "forest-3"))
+            for (var zone : map(level).layer("Hints")) {
+                String key = zone.prop("message", "");
+                if (key.isEmpty()) continue;
+                Msg msg = Msg.valueOf(key); // A mistyped key fails the test as it fails the level load.
+                for (Language language : Language.values())
+                    assertFalse(msg.t(language).isBlank(), level + " " + key + " " + language);
+            }
+    }
+}

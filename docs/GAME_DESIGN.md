@@ -134,6 +134,11 @@ plot must not be presented as an accepted decision.
 
 ## Stages, levels and rooms
 
+The Forest opens with a **tutorial level**, `forest-0`: six long rooms with no monsters, hints
+shown by the map wherever the author places them, and one new element per room (lever,
+ladder/bridge, wall, moving platform, thrown stone, existing traps). `forest-1` and `forest-3`
+show no tutorial hints. See [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints).
+
 **Accepted hierarchy: campaign → stages → levels → rooms.**
 
 | Scale | Purpose |

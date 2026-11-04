@@ -1,6 +1,6 @@
 # Two-level MVP
 
-This document describes the existing two-level test build. The next development
+This document describes the existing three-level test build (tutorial `forest-0`, `forest-1`, boss `forest-3`). The next development
 phase is a separate **mechanics MVP** for all four campaign stages, followed by
 campaign production and first external playtests; see the [roadmap](ROADMAP.md).
 The scope constraints below belong to this accepted test version, not to the
@@ -26,29 +26,28 @@ or full-set reward in this MVP.
 ## Complete game loop
 
 1. New Game plays the existing healer-narrated opening.
-2. Level 1, `forest-1`: the existing single-room course. Completing it saves index 1 and
-   loads level 2 with a fresh controllable hero.
-3. Level 2, `forest-3`: forest entry → canopy → pre-boss healer → forest boss.
+2. Level 0, `forest-0`: the tutorial skeleton (D33); then level 1, `forest-1`, the existing
+   single-room course. Completing a level saves the next index and loads it with a fresh hero.
+3. Final level, `forest-3`: forest entry → canopy → pre-boss healer → forest boss.
    Existing collection returns, optional elixir, room retries and boss rules remain.
 4. Boss death animation → protected automatic exit → post-boss healer guide scene.
    Its final advance, as the last level's completion, opens the ending instead of wrapping.
 
    Intended Forest order, recorded in [D32](DECISIONS.md#d32-forest-level-order-and-identity):
-   `forest-0` (tutorial) → `forest-1` → (`forest-2`?, open) → `forest-3`. `forest-0` does not exist yet.
+   `forest-0` (tutorial) → `forest-1` → (`forest-2`?, open) → `forest-3`.
 5. Ending: black background, the opening's scrolling text/fade and `audio/intro.wav`.
    Text in all five supported languages says Edgard defeated every enemy, freed the kingdom of monsters and
    restored light to the world. A fresh key/controller press or tap can skip with the
    same fade as the opening; held gameplay input cannot dismiss it on entry.
 6. Once the ending fades out, remove only `Settings.KEY_NEXT_LEVEL` and return to the
    menu. Continue disappears; New Game is selected. Language, handedness, display and
-   assist preferences remain. New Game runs the opening again and starts `forest-1`.
+   assist preferences remain. New Game runs the opening again and starts `forest-0`.
 
 ## State and compatibility
 
-The save remains a zero-based level index only: 0 = `forest-1`, 1 = `forest-3`.
-Previously saved numeric indices are read against this MVP order; no legacy map-identity
-migration is possible from an unversioned index alone. No new save/version/checkpoint
-fields are introduced. First-level completion saves 1 once. Final-level completion
+The save remains a zero-based level index: 0 = `forest-0`, 1 = `forest-1`, 2 = `forest-3`.
+Saves from before `forest-0` (no `level-order` key; 0 = `forest-1`, 1 = `forest-3`) are shifted
+by one when read, so Continue lands on the same level (D33). No coins or artifacts are saved. First-level completion saves 1 once. Final-level completion
 writes no index 0: while the ending runs, the previous save remains; finishing/skipping
 it clears that save. Closing the app during the ending therefore lets Continue restart
 the second level. New Game still clears an existing run before its opening.
@@ -66,7 +65,7 @@ expansion. #85 / PR #150 subsequently added Polish, German and Belarusian; see
 five-language desktop/browser observations and remaining review limits. Those
 checks do not replace a final full-campaign playthrough on real devices.
 
-`CampaignFlowTest` covers the level order (`forest-1`, then `forest-3`) and the first-level opening, first-level save,
+`CampaignFlowTest` covers the level order (`forest-0`, `forest-1`, then `forest-3`) and the first-level opening, first-level save,
 ending text in both languages, held-input suppression and fresh skip, intro-music
 fade/play/stop routing, exactly one ending entry, save deletion on completion, retained
 settings, hidden Continue, and New Game returning to the first level. `BossCombatTest` covers

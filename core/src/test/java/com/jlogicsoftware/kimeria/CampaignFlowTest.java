@@ -81,7 +81,7 @@ class CampaignFlowTest {
         prefs = new HeadlessPreferences(new FileHandle(directory.resolve("settings.xml").toFile()));
         prefs.putString(Settings.KEY_LANGUAGE, Language.UKRAINIAN.name());
         prefs.putBoolean(Settings.KEY_LEFT_HANDED, true); prefs.flush();
-        progress = new SavedProgress(prefs, 2); set("savedProgress", progress); call("buildMenus");
+        progress = new SavedProgress(prefs, 3); set("savedProgress", progress); call("buildMenus");
     }
 
     @AfterEach void restore() { Gdx.input = oldInput; Gdx.files = oldFiles; Gdx.app = oldApp; }
@@ -104,15 +104,21 @@ class CampaignFlowTest {
     }
 
     @Test void openingStartsTheFirstLevelAndOnlyFirstCompletionSavesTheBossLevel() throws Exception {
-        // Intended order is forest-0 -> forest-1 -> (forest-2?) -> forest-3; forest-0 does not exist yet.
-        assertEquals(List.of("forest-1", "forest-3"), get("LEVEL_NAMES"));
+        // Order (D32): forest-0 (tutorial) -> forest-1 -> (forest-2?) -> forest-3 (boss).
+        assertEquals(List.of("forest-0", "forest-1", "forest-3"), get("LEVEL_NAMES"));
         call("newGame"); assertEquals("INTRO", state());
         update(2); update(100); update(1);
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
-        // forest-1 needs real textures (sky), so completion is driven without loading it.
+        // forest-0 has no sky, so it loads headless; it is the first level.
+        call("loadLevel");
+        assertEquals("forest-0", ((Level) get("level")).name);
         game.loadNextLevel();
         assertEquals("LOADING", state()); assertEquals(1, get("currentLevelIndex"));
-        assertEquals(1, new SavedProgress(prefs, 2).nextLevelIndex());
+        assertEquals(1, new SavedProgress(prefs, 3).nextLevelIndex());
+        // forest-1 needs real textures (sky), so completion is driven without loading it.
+        game.loadNextLevel();
+        assertEquals("LOADING", state()); assertEquals(2, get("currentLevelIndex"));
+        assertEquals(2, new SavedProgress(prefs, 3).nextLevelIndex());
         call("loadLevel");
         Level boss = (Level) get("level");
         assertEquals("forest-3", boss.name); assertTrue(boss.hasBossEncounter()); assertTrue(boss.hasNextRoom());
@@ -120,13 +126,13 @@ class CampaignFlowTest {
 
     @Test void endingScrollUsesIntroMusicThenDeletesOnlyProgressAndOffersNewGame() throws Exception {
         for (Language language : Language.values()) {
-            set("language", language); progress.save(1); set("currentLevelIndex", 1);
+            set("language", language); progress.save(2); set("currentLevelIndex", 2);
             held.add(Input.Keys.K); held.add(Input.Keys.D);
             game.loadNextLevel();
             IntroScreen ending = (IntroScreen) get("intro");
             assertEquals("ENDING", state()); assertEquals(Msg.ENDING_STORY.t(language), ending.text());
             assertNull(get("level")); assertNull(get("player")); assertFalse(game.isGameStarted());
-            assertEquals(1, new SavedProgress(prefs, 2).nextLevelIndex());
+            assertEquals(2, new SavedProgress(prefs, 3).nextLevelIndex());
             game.loadNextLevel(); assertSame(ending, get("intro"), "Duplicate callbacks cannot restart the ending");
             update(1); assertEquals(IntroScreen.State.FADE_IN, ending.state());
             assertEquals(.5f, musicVolume); assertTrue(musicStarts > 0);
@@ -136,7 +142,7 @@ class CampaignFlowTest {
             assertTrue(progress.exists(), "Save is cleared after the ending fades, not on entry");
             update(.5f);
             assertEquals("MAIN_MENU", state()); assertNull(get("intro")); assertEquals(0, musicVolume);
-            assertTrue(musicStops > 0); assertFalse(new SavedProgress(prefs, 2).exists());
+            assertTrue(musicStops > 0); assertFalse(new SavedProgress(prefs, 3).exists());
             assertEquals(Language.UKRAINIAN.name(), prefs.getString(Settings.KEY_LANGUAGE));
             assertTrue(prefs.getBoolean(Settings.KEY_LEFT_HANDED)); assertEquals(2, prefs.get().size());
             Menu menu = (Menu) get("mainMenu");
@@ -147,7 +153,7 @@ class CampaignFlowTest {
     }
 
     @Test void freshEndingSkipReturnsToMenuInsteadOfStartingAnotherLevel() throws Exception {
-        progress.save(1); set("currentLevelIndex", 1);
+        progress.save(2); set("currentLevelIndex", 2);
         game.loadNextLevel(); update(2);
         held.add(Input.Keys.SPACE); update(.25f);
         assertEquals(IntroScreen.State.FADE_OUT, ((IntroScreen) get("intro")).state());

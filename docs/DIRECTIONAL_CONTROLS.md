@@ -84,7 +84,8 @@ inspection was already underway, it returns to the ordinary camera target over 0
 The mirrored action D-pad is never also a movement direction. Start/Esc and menu
 bindings are unchanged. Touch labels distinguish sword, pickup, placement, blocked
 placement, no action, mechanism, throw, fireball and empty stock. All contextual teaching uses
-the entire first Forest room (`forest-3`, room 0), at every position and height,
+the map's `controls` hint zone (today the entire first `forest-3` room, to move into `forest-0`'s
+lesson rooms; [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)), at every position and height,
 including retries and collection returns. Other rooms/levels omit teaching labels. The full-ammunition pickup message is
 status feedback, available at its pickup in every room and level.
 The earlier 320×144 rectangle, one-time and 50 px limits are superseded by

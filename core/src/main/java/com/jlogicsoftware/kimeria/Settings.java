@@ -17,6 +17,12 @@ public final class Settings {
     public static final String PREFS_NAME = "edgard-in-kimeria";
     /** Zero-based next level; absence means no saved run. */
     public static final String KEY_NEXT_LEVEL = "next-level";
+    /**
+     * Level-order generation of the saved index. Absent = the original two-level order
+     * (forest-1, forest-3), before forest-0 was inserted in front; see {@link SavedProgress}.
+     */
+    public static final String KEY_LEVEL_ORDER = "level-order";
+    public static final int LEVEL_ORDER = 2;
     public static final String KEY_FULLSCREEN = "fullscreen";
     public static final boolean DEFAULT_FULLSCREEN = true;
 
