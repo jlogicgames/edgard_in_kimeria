@@ -62,7 +62,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
     private static final float MENU_TINT_ALPHA = 0.2f;
-    private static final List<String> LEVEL_NAMES = List.of("forest", "forest-1");
+    private static final List<String> LEVEL_NAMES = List.of("forest-1", "forest");
     private static final float MUSIC_FADE_IN = 2f, MUSIC_FADE_OUT = 1f;
 
     private Assets assets;

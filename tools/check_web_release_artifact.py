@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -78,6 +79,10 @@ def validate_release_artifact(root: Path) -> list[str]:
 
     app = root / "app.js"
     if app.is_file():
+        if index.is_file():
+            digest = hashlib.sha256(app.read_bytes()).hexdigest()
+            if f'src="app.js?v={digest}"' not in index.read_text(encoding="utf-8"):
+                errors.append("index.html must reference app.js with its SHA-256 version")
         entries = re.findall(r'"i:b:/([^"\n:]+):\d+:\d+"', app.read_text(encoding="utf-8"))
         if not entries:
             errors.append("embedded internal asset manifest is missing")
