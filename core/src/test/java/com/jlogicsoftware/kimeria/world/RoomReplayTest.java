@@ -103,7 +103,7 @@ class RoomReplayTest {
     }
 
     @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
-        measure("forest-1", false, false, 0, new float[]{125, 260, 540});
+        measure("forest-1", false, false, 0, new float[]{125, 260, 540, 1120});
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
         measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860, 940});

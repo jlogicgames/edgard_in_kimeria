@@ -186,7 +186,7 @@ coins. The `forest-1` course has no collectables, so it needs no separate detour
 
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
-| `forest-1` / unmarked room | 640 px | 5.32 s | None | Within 20 s |
+| `forest-1` / unmarked room | 1280 px | 11.58 s | None | Within 20 s |
 | `forest` / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest` / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -353,7 +353,7 @@ The teaching-layout implementation recorded 131 passing core tests under its the
 reset policy; these are historical results, not D26 policy validation. `RoomReplayTest`
 re-measured every route on this layout
 with real input and hazards on, three identical attempts each: `forest-entry` 16.27 s
-required / 20.00 s all coins, `forest-canopy` 5.00 s / 5.00 s, `forest-1` 5.32 s, and the
+required / 20.00 s all coins, `forest-canopy` 5.00 s / 5.00 s, `forest-1` 11.58 s, and the
 collection returns 14.78 / 14.25 s, unchanged from the table above. The new test
 `forestIntroducesStompBombAndFallingPlatformOneAtATime` fails on the previous layout and
 guards the order (a YellowMob before the bomb), the 150 px gap between the bomb and any
@@ -400,7 +400,7 @@ These timings were rechecked on the teaching layout during the merge review on
 
 | Level / room | Required route | All room coins |
 | --- | ---: | ---: |
-| `forest-1` / unmarked | 5.32 s | No coins |
+| `forest-1` / unmarked | 11.58 s | No coins |
 | `forest` / `forest-entry` | 16.27 s | 20.00 s |
 | `forest` / `forest-canopy` | 5.00 s | 5.00 s |
 
