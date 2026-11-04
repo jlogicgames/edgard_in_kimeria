@@ -11,8 +11,8 @@ ending returns to the menu and clears progress; the campaign no longer wraps. Th
 order is `forest-0` → `forest-1` → (`forest-2`?) → `forest-3` ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). See [MVP.md](MVP.md).
 Historical wrap references in the validation notes below describe earlier builds.
 
-`forest-boss` is the authored third forest room (448 × 368, entrance 2032,272).
-The author-owned Boss object (2304,304) and Boss.png are preserved. Physics settles the
+`forest-boss` is the authored third forest room (448 × 368, entrance 2192,304).
+The author-owned Boss object (2464,304) and Boss.png are preserved. Physics settles the
 boss's feet onto y=320; its render frame is 48 × 32 regardless of the map marker's 32 × 32.
 No authored map geometry or sprite pixels were replaced for this implementation.
 
@@ -118,7 +118,7 @@ completed counter has its own completion shake; the interrupted normal has none.
 
 ## Retry, elixir and completion
 
-Death rebuilds the boss at full energy and throne, respawning the hero at 2032,272 with
+Death rebuilds the boss at full energy and throne, respawning the hero at 2192,304 with
 the existing arrival animation. Consumed elixir is run-only inventory state, outside room
 rollback. The healer consumes Chicken, Key and all unique forest coins after verification,
 then calls `drinkBossElixir("forest-3")`; no automatic artifact activation occurs.

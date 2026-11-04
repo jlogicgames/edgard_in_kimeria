@@ -71,13 +71,13 @@ class SpriteArtGuardTest(unittest.TestCase):
                 return struct.pack('>I', len(value)) + name + value + b'\x00' * 4
             return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', *size, 4, mode, 0, 0, 0))
                     + chunk(b'PLTE', b'\x00' * (3 * colors)) + chunk(b'tRNS', alpha))
-        self.assertFalse(guard.png_contract('torch.png', metadata((8, 16)), (8, 16), 16, True))
-        self.assertTrue(guard.png_contract('torch.png', metadata((32, 32)), (8, 16), 16, True))
-        self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), colors=256), (8, 16), 16, True))
-        self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), alpha=b'\x00\x80'), (8, 16), 16, True))
+        self.assertFalse(guard.png_contract('torch.png', metadata((8, 16)), (8, 16), 16, 'binary'))
+        self.assertTrue(guard.png_contract('torch.png', metadata((32, 32)), (8, 16), 16, 'binary'))
+        self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), colors=256), (8, 16), 16, 'binary'))
+        self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), alpha=b'\x00\x80'), (8, 16), 16, 'binary'))
         self.assertFalse(guard.png_contract('chicken.png', metadata((128, 128), colors=256, alpha=b'\x00\x80'),
-                                            (128, 128), 256, False))
-        self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), mode=6), (8, 16), 16, True))
+                                            (128, 128), 256, 'soft'))
+        self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), mode=6), (8, 16), 16, 'binary'))
 
     def test_rejects_original_holder_and_renamed_or_relocated_art(self):
         for path in ['entity/items/Carryable.java', 'effects/Torch.java', 'ui/NewTorch.java']:

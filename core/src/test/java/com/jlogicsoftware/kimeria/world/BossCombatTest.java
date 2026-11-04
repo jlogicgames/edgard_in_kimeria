@@ -227,8 +227,8 @@ class BossCombatTest {
         for (int frame = 0; frame < 4; frame++) fade.update(.25f, () -> {
             try { enter.invoke(running); } catch (Exception e) { throw new RuntimeException(e); }
         });
-        assertEquals(1952, level.currentRoomBounds().x);
-        assertEquals(new Vector2(2032, 272), level.player.position);
+        assertEquals(2112, level.currentRoomBounds().x);
+        assertEquals(new Vector2(2192, 304), level.player.position);
         assertNotNull(level.boss());
         assertFalse(level.healerAhead());
         hotkeys.invoke(running);
@@ -332,6 +332,15 @@ class BossCombatTest {
         assertTrue(next.player.velocity.y < 0, "Jump input must work after victory");
     }
 
+    /** Campaign index of the boss level; the campaign order is production data, not a test constant. */
+    @SuppressWarnings("unchecked")
+    private static int bossLevelIndex() throws Exception {
+        var names = KimeriaGame.class.getDeclaredField("LEVEL_NAMES"); names.setAccessible(true);
+        int index = ((java.util.List<String>) names.get(null)).indexOf("forest-3");
+        assertTrue(index >= 0, "KimeriaGame.LEVEL_NAMES has no \"forest-3\" level; update bossLevelIndex()");
+        return index;
+    }
+
     private Player getGamePlayer(KimeriaGame running) throws Exception {
         var field = KimeriaGame.class.getDeclaredField("player"); field.setAccessible(true);
         return (Player) field.get(running);
@@ -340,7 +349,7 @@ class BossCombatTest {
     @Test void realBossExitOpensGuideOnlyAfterDeathAndWalk() throws Exception {
         KimeriaGame running = new KimeriaGame();
         gameField(running, "assets", assets); gameField(running, "touchControls", touch);
-        gameField(running, "currentLevelIndex", 0); gameField(running, "playSounds", false);
+        gameField(running, "currentLevelIndex", bossLevelIndex()); gameField(running, "playSounds", false);
         gameField(running, "player", new Player(assets, running, 0, 0));
         var progress = new com.jlogicsoftware.kimeria.SavedProgress(null, 2);
         gameField(running, "savedProgress", progress);
@@ -404,7 +413,7 @@ class BossCombatTest {
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertNotNull(level.boss());
-        assertEquals(new Vector2(2032, 272), level.player.position);
+        assertEquals(new Vector2(2192, 304), level.player.position);
         assertFalse(level.hasNextRoom());
         assertEquals(0, completions, "Room skipping must not write level completion");
     }
@@ -483,7 +492,7 @@ class BossCombatTest {
         level.resetCurrentRoom(player());
         Boss retry = (Boss) level.objects.stream().filter(Boss.class::isInstance).findFirst().orElseThrow();
         assertEquals(12, retry.energy()); assertEquals(Boss.State.THRONE, retry.getState());
-        assertEquals(new Vector2(2032, 272), level.player.position);
+        assertEquals(new Vector2(2192, 304), level.player.position);
         assertEquals(10f, artifacts.bossWeaponDamageMultiplier("forest-3"));
         level.player.arriveAfterReset(); frames(30);
         assertEquals(Boss.State.THRONE, retry.getState());
@@ -884,7 +893,7 @@ class BossCombatTest {
         gameField(running, "playSounds", false);
         gameField(running, "assets", assets);
         gameField(running, "touchControls", touch);
-        gameField(running, "currentLevelIndex", 0);
+        gameField(running, "currentLevelIndex", bossLevelIndex());
         gameField(running, "coinsCollected", 19);
         gameField(running, "player", new Player(assets, running, 0, 0));
         var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true);
