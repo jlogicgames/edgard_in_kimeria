@@ -5,9 +5,10 @@ test version by author decision. Remaining release acceptance checks are deferre
 until the planned gameplay mechanics have been added and are tracked only in
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
 
-Current MVP order: the forest boss ends **level one**. After death, automatic exit and
-the healer guide dialogue, start the single-room `forest-1` as **level two**. Its ending
-returns to the menu and clears progress; the campaign no longer wraps. See [MVP.md](MVP.md).
+Current MVP order: `forest-1` (single room) is **level one**; the forest boss level `forest-3`
+is the **last** level. After the boss's death, automatic exit and the healer guide dialogue, the
+ending returns to the menu and clears progress; the campaign no longer wraps. The intended
+order is `forest-0` → `forest-1` → (`forest-2`?) → `forest-3` ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). See [MVP.md](MVP.md).
 Historical wrap references in the validation notes below describe earlier builds.
 
 `forest-boss` is the authored third forest room (448 × 368, entrance 2032,272).
@@ -120,7 +121,7 @@ completed counter has its own completion shake; the interrupted normal has none.
 Death rebuilds the boss at full energy and throne, respawning the hero at 2032,272 with
 the existing arrival animation. Consumed elixir is run-only inventory state, outside room
 rollback. The healer consumes Chicken, Key and all unique forest coins after verification,
-then calls `drinkBossElixir("forest")`; no automatic artifact activation occurs.
+then calls `drinkBossElixir("forest-3")`; no automatic artifact activation occurs.
 [HEALER.md](HEALER.md) describes the implemented dialogue and collection-return policy.
 The encounter locks on choosing the fight: no return or onward passage until boss defeat,
 and no repeated bargain on retry. The effect applies only to this boss and ends immediately
@@ -252,7 +253,7 @@ The lethal axe boxes follow the newly assigned rows.
 
 **F6** starts the normal fade into the next room, securing pickups just like the room exit.
 It ignores paused gameplay, an active fade, death/arrival, victory and the last room. It
-never completes a level or writes a save. For a fresh run: **F4** reaches forest, then
+never completes a level or writes a save. For a fresh run: **F4** reaches `forest-3`, then
 **F6 twice** opens the healer; choose the fight to enter forest-boss. F5 remains blocked on the boss map.
 
 Regression checks cover actual F6 input dispatch and fade through both rooms, no-op in the

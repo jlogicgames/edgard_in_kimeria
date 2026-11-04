@@ -27,6 +27,28 @@ public class TiledMapData {
     /** [row][col] gid, row 0 = top row of the .tmx file, 0 = empty. */
     public int[][] backgroundGrid;
     public final Map<String, List<TiledObject>> objectGroups = new HashMap<>();
+    /** Map-level custom properties (level configuration such as {@code fireflies}). */
+    public final Map<String, String> properties = new HashMap<>();
+
+    public int propInt(String key, int fallback) {
+        String v = properties.get(key);
+        if (v == null || v.isEmpty()) return fallback;
+        try {
+            return Integer.parseInt(v.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    public boolean propBool(String key, boolean fallback) {
+        String v = properties.get(key);
+        if (v == null || v.isEmpty()) return fallback;
+        return Boolean.parseBoolean(v);
+    }
+
+    public String prop(String key, String fallback) {
+        return properties.getOrDefault(key, fallback);
+    }
 
     private TextureRegion[] tileRegions; // index by (gid - firstgid)
     private int firstGid;
@@ -60,6 +82,13 @@ public class TiledMapData {
             data.tileWidth = intAttr(mapEl, "tilewidth", 16);
             data.tileHeight = intAttr(mapEl, "tileheight", 16);
             data.backgroundGrid = new int[data.heightTiles][data.widthTiles];
+
+            XmlEl mapProps = mapEl.firstChild("properties");
+            if (mapProps != null) {
+                for (XmlEl propEl : mapProps.children("property")) {
+                    data.properties.put(propEl.attr("name", ""), propEl.attr("value", ""));
+                }
+            }
 
             String tsxSource = null;
             for (XmlEl ts : mapEl.children("tileset")) {

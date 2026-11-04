@@ -500,7 +500,7 @@ class DirectionalActionsTest {
         mob.setPlayer(level.player); mob.setLevel(level); level.objects.add(mob);
         tap(ranged()); frames(20);
         assertTrue(mob.isDefeated());
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
         var boss = level.boss();
         var fireball = new com.jlogicsoftware.kimeria.entity.items.Fireball(level, boss.hitboxBounds().x, boss.hitboxBounds().y, true);
@@ -520,7 +520,7 @@ class DirectionalActionsTest {
 
     @Test void fullRefillUsesTheLocalHintOutsideTutorialAndAutomaticallyCollectsWhenSpaceOpens() {
         scene(false);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         level.enterNextRoom(player()); frames(2);
         var refill = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::cast).findFirst().orElseThrow();
@@ -588,7 +588,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void practiceLeverFramesItsOwnSpriteAndSwitchesTheTorchBothWays(boolean left) {
         scene(left);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         var trigger = level.triggers.stream().filter(t -> t.targetId.equals("practice-light")).findFirst().orElseThrow();
         level.player.position.set(trigger.centerX() - level.player.hitbox.offsetX - level.player.hitbox.width / 2,
             trigger.centerY() - level.player.hitbox.offsetY - level.player.hitbox.height / 2);
@@ -669,7 +669,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void trainingRoomRepeatsPickupPlaceAndThrow(boolean left) {
         scene(left);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         // Isolate carrying reminders here; the combined lever lesson/anchor has its own regression below.
         level.triggers.clear();
         standByEntranceStone();
@@ -698,7 +698,7 @@ class DirectionalActionsTest {
 
     @Test void trainingRoomTeachesThroughoutItsWidthAndHeight() {
         scene(false);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         standByEntranceStone();
         var stone = level.player.selectedCarryable();
         assertNotNull(stone);
@@ -720,7 +720,7 @@ class DirectionalActionsTest {
 
     @Test void trainingIsAbsentInLaterRoomsAndAvailableWhenReturningToTheFirstRoom() {
         scene(false);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         assertTrue(level.tutorialHintsActive());
         level.enterNextRoom(player());
         assertFalse(level.tutorialHintsActive());
@@ -736,7 +736,7 @@ class DirectionalActionsTest {
     void carryingStillTeachesTheNearbyLeverAtItsOwnAnchor(boolean left,
             com.jlogicsoftware.kimeria.entity.items.Carryable.Kind kind) {
         scene(left);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         var item = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
             && c.kind == kind).map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
         standByCarryable(item); pickup();
@@ -777,7 +777,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void carryingReminderEndsOnCameraScrollAndRearmsOnEachPickup(boolean left) {
         scene(left);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         level.triggers.clear();
         var stone = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
             && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE)
@@ -967,7 +967,7 @@ class DirectionalActionsTest {
 
     @Test void theFirstForestRoomTeachesTheLadderOnlyThere() {
         scene(false);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         frames(2);
         var ladder = level.ladders.get(0);
         standAt(ladder.centerX(), ladder.bottomY());
@@ -987,7 +987,7 @@ class DirectionalActionsTest {
 
     @Test void theShippedFirstRoomLadderLeadsFromTheFloorToTheChickenLedge() {
         scene(false);
-        level = new Level(assets, game, player(), "forest", Rectangle::new);
+        level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         frames(2);
         var ladder = level.ladders.get(0);
         standAt(ladder.centerX(), ladder.bottomY());

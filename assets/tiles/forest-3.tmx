@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="160" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="126">
+ <properties>
+  <property name="fireflies" type="int" value="24"/>
+  <property name="healerBeforeBoss" type="bool" value="true"/>
+  <property name="ingredients" value="CHICKEN,KEY"/>
+  <property name="tutorialRoom" type="int" value="0"/>
+ </properties>
  <tileset firstgid="1" source="Forest.tsx"/>
  <layer id="1" name="Background" width="160" height="23">
   <data encoding="csv">

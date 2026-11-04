@@ -118,13 +118,13 @@ introduces no new quest, destination or persistent checkpoint. See [HEALER.md](H
 
 ## MVP ending — accepted 2026-10-19
 
-The playable MVP is finite: the forest's three rooms and boss form level one; the existing
-single-room `forest-1` is level two. The forest guide scene bridges these levels. After
-the second level, an ending screen in the opening's scrolling style plays the same music.
+The playable MVP is finite: the existing single-room `forest-1` is level one; the forest's three rooms and boss
+(`forest-3`) form the last level. The forest guide scene follows the boss. After
+it, an ending screen in the opening's scrolling style plays the same music.
 Its localized text establishes that Edgard defeated every enemy, cleared the kingdom of
 monsters and brought light back to the world. This outcome is now agreed; no new account
 of L'Kardina's fate or the mechanism of dispelling darkness is added.
 
 After the ending, the game returns to the main menu and removes the run save. A new run
-starts from the opening and the forest. Later mechanics will expand these two levels;
+starts from the opening and `forest-1`. Later mechanics will expand these two levels;
 additional stages and quests are outside the agreed MVP. See [MVP.md](MVP.md).
