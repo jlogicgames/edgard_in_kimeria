@@ -1073,7 +1073,7 @@ class DirectionalActionsTest {
         level.player.position.y += 120; frames(30);
         standAt(zone.bounds().x + zone.bounds().width + 64);
         assertEquals("This lever lights the torch and puts it out", level.player.contextHint(), "The next zone speaks next");
-        level.enterNextRoom(player()); frames(2);
+        level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
         assertEquals("", level.player.contextHint(), "Hints belong to their room's zones, not the whole level");
         level.resetCurrentRoom(player()); level.reloadAt(new Vector2(inside, 272)); frames(2);
         // Retry after death, restart, and a return to the room all rebuild the same authored hint.
@@ -1089,6 +1089,8 @@ class DirectionalActionsTest {
         forestZero();
         standAt(level.hintZones().get(0).bounds().x + 40);
         assertTrue(level.controlHintsActive(), "The lever room (#186) teaches controls; later rooms' tickets add theirs");
+        level.enterNextRoom(player()); frames(2);
+        assertTrue(level.controlHintsActive(), "The ladder room (#196) teaches its own controls");
         level.enterNextRoom(player()); frames(2);
         assertFalse(level.controlHintsActive(), "Other forest-0 rooms have no control zone yet");
         forestZero();
@@ -1111,7 +1113,10 @@ class DirectionalActionsTest {
             int budget = 60 * 40;
             while (budget-- > 0 && !level.atRoomExit() && completions == 0) frames(1);
             held.clear();
-            if (room < rooms - 1) {
+            if (room == 1) {
+                assertFalse(level.atRoomExit(), "The ladder room's exit is on a ledge: walking right alone does not reach it");
+                level.enterNextRoom(player()); frames(2); // The route itself is covered by LadderLessonTest.
+            } else if (room < rooms - 1) {
                 assertTrue(level.atRoomExit(), "Room " + room + " exit is reachable by walking right");
                 level.enterNextRoom(player()); frames(2);
             } else assertEquals(1, completions, "The last room's Checkpoint is the level exit");

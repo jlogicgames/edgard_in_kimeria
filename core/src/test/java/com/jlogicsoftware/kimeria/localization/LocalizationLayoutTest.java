@@ -55,7 +55,8 @@ class LocalizationLayoutTest {
                 assertTrue(height(hint, Msg.MENU_HINT.t(language), 608) <= 26, prefix + "menu hint");
                 assertTrue(height(hint, Msg.FIREBALL_STOCK_FULL.t(language), 200) <= 40, prefix + "full ammunition hint");
                 // Map-authored tutorial hints are drawn 200 px wide and must stay within two lines.
-                for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT})
+                for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
+                    Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT})
                     assertTrue(height(hint, message.t(language), 200) <= 40, prefix + message);
                 // Spoken healer/player lines are measured against the actual two-thirds regions
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.

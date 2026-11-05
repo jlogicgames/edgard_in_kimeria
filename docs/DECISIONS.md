@@ -859,7 +859,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 ## D33. The forest-0 tutorial level and map-authored hints
 
 - **Status:** Accepted, 2026-11-04 ([#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195)); revises D24.
-- **Decision:** `forest-0` is the first level: six long rooms (1280 px; the lever room was shortened to 768 px by #206), no monsters or hazards,
+- **Decision:** `forest-0` is the first level: six long rooms (1280 px; the lever room was shortened to 768 px by #206 and the ladder room is 768 px, #196), no monsters or hazards,
   each a plain corridor with a safe entrance and a clear exit; the last room ends with the usual
   `Checkpoint` level exit. The rooms are reserved, in order, for one lesson each (room property
   `lesson`): `lever` (#186), `ladder-bridge` (#196), `wall` (#197), `moving-platform` (#198),
@@ -906,3 +906,28 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Why:** a reversible, route-independent first lesson lets a novice experiment safely and read cause and effect
   before ladders, walls and platforms (which reconfigure the route) arrive in later rooms.
 - **Not verified:** no novice playtest (#129–#131); the mastered route (walk, operate, exit) was measured headlessly.
+
+## D35. The tutorial ladder lesson rule
+
+- **Status:** Accepted, 2026-11-05 ([#196](https://github.com/jlogicgames/edgard_in_kimeria/issues/196)); second lesson room of D33, after D34.
+- **Decision:** `forest-0-ladder` (768 px) teaches exactly one new element: a lever that **toggles a retracted ladder**
+  down and up (D28 toggle ladder, Up + Action per D30). The ladder starts raised, hanging y 96–208 with its foot 112 px
+  above the floor (a jump reaches about 58 px, and a ladder is grabbed in the air only when the body overlaps its rungs,
+  so no jump reaches it). The exit stands on a 112 px ledge (top y=208, plain collision, not a wall-jumpable `Wall`) whose
+  edge meets the lowered ladder's top; there is no other way up. The lever is on the floor 200 px left of the ladder
+  and linked by Tiled `target` (`check_tiled_links.py`); the lowered ladder reaches the floor (about 0.7 s at 160 px/s).
+- **Ladder, not bridge:** the engine already animates a lever-linked `Ladder` (D28), snapshots it for room retry, and mirrors
+  its state on the lever sprite. A bridge or drawbridge would need a new mechanism or a re-skinned Escalator. A wall/ledge
+  obstacle rather than a pit keeps the room free of falling hazards: no death trap, so no new death rule to teach.
+- **Interaction:** Up + Action at the lever, then Up at the ladder's rungs; the controls hint zone supplies the live labels.
+  The lever prompt reads "Turn on/off - Lever" (the lever's up state means ladder lowered).
+- **Recovery / D26:** the lever is reachable only from the floor and is never in reach from the ledge or the ladder (the
+  hero cannot pull it while climbing), so the ladder cannot be raised under the hero. Dropping off the ledge or ladder lands
+  on the floor with the lever in reach, so every reachable state can lower (or re-lower) the ladder. Death / room retry restores
+  the authored retracted ladder (the room is unsecured until the exit is taken); Restart Level rebuilds it. The lever toggles;
+  it is never one-shot.
+- **Hints:** one `controls` zone over the room plus three position-only message zones: lever (lowers *and raises* the ladder), ladder
+  (climb it when it is down), exit (ahead, up on the ledge). Each is true in either ladder state.
+- **Length:** 768 px, as short as the lever room (#206); later rooms moved a further 512 px left.
+- **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; the route, jump-reach and hint
+  coverage are measured headlessly (`LadderLessonTest`, mastered route about 7.4 s).
