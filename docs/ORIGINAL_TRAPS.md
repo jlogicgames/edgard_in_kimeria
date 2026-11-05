@@ -358,7 +358,8 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
   traps (thorn root/stake, thorn tuft). **Implemented, see D44** (object types `ThornRoot`,
   `ThornTuft`; placed in no shipped level yet, #235).
 - [#232](https://github.com/jlogicgames/edgard_in_kimeria/issues/232): code B, falling traps
-  (branch, stone).
+  (branch, stone). **Implemented, see D45** (tested headlessly in test-resource maps, not
+  placed in any shipped level, not yet seen in the running game).
 - [#233](https://github.com/jlogicgames/edgard_in_kimeria/issues/233): code C, explosive
   stump/root replacing the bomb.
 - [#234](https://github.com/jlogicgames/edgard_in_kimeria/issues/234): code D, rhythm traps
