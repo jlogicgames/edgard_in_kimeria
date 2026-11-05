@@ -79,6 +79,8 @@
   "HINT_LADDER_EXIT": "Wyjście jest dalej",
   "HINT_WALL_LEVER": "Ta dźwignia podnosi mur i znów go opuszcza",
   "HINT_WALL_PASS": "Przejdź pod murem, gdy jest podniesiony",
+  "HINT_PLATFORM_LEVER": "Ta dźwignia uruchamia platformę i znów ją zatrzymuje",
+  "HINT_PLATFORM_RIDE": "Wskocz na platformę i wjedź nią do wyjścia",
   "FIREBALL": "Ogień",
   "NO_AMMO": "Pusto",
   "PLACE_BLOCKED": "Blokada",

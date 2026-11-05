@@ -79,6 +79,8 @@
   "HINT_LADDER_EXIT": "The exit is just ahead",
   "HINT_WALL_LEVER": "This lever raises the wall and lowers it again",
   "HINT_WALL_PASS": "Walk under the wall once it is raised",
+  "HINT_PLATFORM_LEVER": "This lever starts the platform and stops it again",
+  "HINT_PLATFORM_RIDE": "Jump on the platform and ride it up to the exit",
   "FIREBALL": "Fireball",
   "NO_AMMO": "Empty",
   "PLACE_BLOCKED": "Blocked",

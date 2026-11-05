@@ -134,11 +134,11 @@ plot must not be presented as an accepted decision.
 
 ## Stages, levels and rooms
 
-The Forest opens with a **tutorial level**, `forest-0`: six rooms (the lever, ladder and wall rooms are short, 576, 704 and 640 px) with no monsters, hints
+The Forest opens with a **tutorial level**, `forest-0`: six rooms (the lever, ladder, wall and platform rooms are short, 576, 704, 640 and 640 px) with no monsters, hints
 shown by the map wherever the author places them, and one new element per room (lever,
 ladder/bridge, wall, moving platform, thrown stone, existing traps). `forest-1` and `forest-3`
 show no tutorial hints. Status: the lever room is built (a dark torch the lever lights and
-darkens, see [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule)); the ladder room is built too (a lever lowers a retracted ladder to a ledge holding the exit, see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule)); the wall room is built (a lever raises and lowers a wall that blocks the corridor, see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule)); the other three rooms are still empty. See [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints).
+darkens, see [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule)); the ladder room is built too (a lever lowers a retracted ladder to a ledge holding the exit, see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule)); the wall room is built (a lever raises and lowers a wall that blocks the corridor, see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule)); the platform room is built (a lever starts and stops a moving platform that carries the hero up to the ledge with the exit, see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule)); the other two rooms are still empty. See [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints).
 
 **Accepted hierarchy: campaign → stages → levels → rooms.**
 

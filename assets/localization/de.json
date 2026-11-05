@@ -79,6 +79,8 @@
   "HINT_LADDER_EXIT": "Der Ausgang liegt voraus",
   "HINT_WALL_LEVER": "Dieser Hebel hebt die Mauer und senkt sie wieder",
   "HINT_WALL_PASS": "Geh unter der Mauer durch, wenn sie oben ist",
+  "HINT_PLATFORM_LEVER": "Dieser Hebel startet die Plattform und hält sie wieder an",
+  "HINT_PLATFORM_RIDE": "Spring auf die Plattform und fahr hoch zum Ausgang",
   "FIREBALL": "Feuer",
   "NO_AMMO": "Leer",
   "PLACE_BLOCKED": "Belegt",

@@ -952,3 +952,32 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Length:** 640 px (was 1280): approach 200 px to the lever, 232 px between lever and wall, 48 px wall, exit 48 px beyond. Later rooms and the `Checkpoint` moved 640 px left.
 - **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; route, jump-block, retry and hint coverage are measured
   headlessly (`WallLessonTest`, mastered route about 5.1 s).
+
+## D37. The tutorial moving-platform lesson rule
+
+- **Status:** Accepted, 2026-11-05 ([#198](https://github.com/jlogicgames/edgard_in_kimeria/issues/198)); fourth lesson room of D33, after D34-D36.
+- **Decision:** `forest-0-platform` (640 px) teaches exactly one new element: a lever that **starts and stops a moving platform**. The platform is the
+  existing vertical `Escalator` (32×16 px, 50 px/s, as in `forest-1`), the only way up to a 112 px ledge that holds the exit (not jumpable, clamberable
+  or wall-climbable; `PlatformLessonTest` checks every approach x). It shuttles between its two ends for as long as it runs: bottom y=304 (16 px above the
+  floor, a hop from the floor) and top y=176 (32 px above the ledge top, so the hero can step off for about 1.3 s each pass instead of two frames). The
+  lever is on the floor 216 px before the platform, linked by a Tiled `target` reference (`check_tiled_links.py`), Up + Action per D30.
+- **Rule (what stopping and starting do):** the lever is a plain toggle. The platform starts **stopped at the bottom**. Pulling the lever starts it
+  and it moves up; pulling it again **stops it exactly where it is** (it does not return to an end and does not snap); a further pull continues in the
+  direction it was going and it keeps turning at the ends. The lever sprite mirrors running/stopped. A rider is carried with the platform while it
+  moves and stays standing on it when it stops. The platform is one-way (supports from above only), so it never crushes or blocks a hero on the floor,
+  and it ignores horizontal collision.
+- **Recovery / D26:** there is no pit and no death trap: under the platform and the ledge is plain floor, so every fall (off the platform, off the
+  ledge, 112 px, no damage) lands on the floor on the entrance side of the lever or on the platform. The lever stays on the floor, 216 px from the platform, so it can
+  never be pulled from the platform or the ledge; a hero on the platform when it stops (only possible by a toggle from elsewhere, tested through the
+  mechanism) hops off to the floor, walks to the lever and starts it again. Therefore the exit is reachable from every state: stopped at any height, running, repeated
+  toggling at any rhythm, after riding down again, after walking off the ledge. The room has no secured state before the exit; death or room retry
+  restores the authored stopped platform at the bottom (the room snapshot owns it) and puts the hero at the entrance; Restart Level rebuilds it.
+  Passed rooms freeze, so the platform is never needed again after the exit. No monsters, no hazards, no one-shot.
+- **Hints:** one `controls` zone over the room plus two position-only message zones that butt together: lever ("starts the platform and stops it again",
+  starts 232 px before the lever) and ride ("Jump on the platform and ride it up to the exit", starts 184 px before the platform and covers the ledge).
+  Each is true whether the platform runs or stands. A continuous walk reads the lever message about 1.0 s fully visible before the lever is in reach and
+  the ride message about 1.1 s before the body reaches the platform (`HintLeadTest`).
+- **Length:** 640 px (was 1280): 232 px to the lever, 216 px lever to platform, 32 px platform, 128 px ledge with the exit 80 px from its edge. Later
+  rooms and the `Checkpoint` moved 640 px left.
+- **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; route, ledge-block, stop-at-any-height, retry and hint
+  coverage are measured headlessly (`PlatformLessonTest`, mastered route about 9.6 s including the wait for the shuttling platform to come back down to the bottom; the platform cycles in about 5 s).
