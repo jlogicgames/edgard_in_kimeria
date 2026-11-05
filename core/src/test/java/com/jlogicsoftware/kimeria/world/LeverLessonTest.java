@@ -21,6 +21,9 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
+import com.jlogicsoftware.kimeria.ui.HintGeometry;
+import com.jlogicsoftware.kimeria.ui.HintLayout;
+import com.jlogicsoftware.kimeria.ui.HintTransition;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -199,16 +202,15 @@ class LeverLessonTest {
                     torch(level).toggleFire(lit);
                     level.player.position.set(x, 272);
                     for (int i = 0; i < 3; i++) frame(level);
-                    String hint = level.player.contextHint();
-                    String where = "x=" + x + " lit=" + lit + ": " + hint;
+                    String hint = level.player.contextHint(), zone = level.player.zoneHint();
+                    String where = "x=" + x + " lit=" + lit + ": " + hint + " / " + zone;
+                    // #211: the zone message is never replaced by the live lever label; both show together.
+                    assertEquals(level.messageHint().message().t(Language.ENGLISH), zone, where);
+                    messages.add(zone);
                     if (level.player.canInteract()) {
                         assertTrue(hint.contains(Msg.LEVER.t(Language.ENGLISH)), where);
                         assertTrue(hint.contains((lit ? Msg.TURN_OFF : Msg.TURN_ON).t(Language.ENGLISH)), where);
-                    } else {
-                        // Message zones know only position, so each text must be true in both torch states.
-                        assertEquals(level.messageHint().message().t(Language.ENGLISH), hint, where);
-                        messages.add(hint);
-                    }
+                    } else assertEquals("", hint, where);
                 }
             }
             level.resetCurrentRoom(new Player(assets, game, 0, 0));
@@ -218,11 +220,101 @@ class LeverLessonTest {
         for (String text : messages) assertFalse(text.toLowerCase().contains("dark"), "State-dependent wording: " + text);
     }
 
+    /**
+     * #211: the HUD's two channels, driven here exactly as the HUD drives them. The lever label appears at
+     * once and the zone message is never hidden, replaced or restarted while it shows.
+     */
+    @Test void theZoneMessageStaysFullyVisibleWhileTheLeverLabelShowsAndTheLeverLabelIsImmediate() {
+        Level level = freshLevel();
+        HintTransition zone = new HintTransition(), context = new HintTransition();
+        Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
+        String message = Msg.HINT_LEVER_TORCH.t(Language.ENGLISH);
+        HintGeometry geometry = new HintGeometry();
+        float zoneFullSince = -1, firstZoneTop = -1, t = 0;
+        int guard = 0, interacting = 0;
+        while (interacting < 90) {
+            if (interacting == 30 && !torch(level).isBurning()) operate(level); // toggling must not disturb the message
+            else { held.clear(); if (!level.player.canInteract()) held.add(Input.Keys.D); frame(level); }
+            t += STEP;
+            String z = level.player.zoneHint(), c = level.player.contextHint();
+            if (!z.isEmpty()) level.player.zoneHintPosition(zoneAnchor);
+            if (!c.isEmpty()) level.player.contextHintPosition(contextAnchor);
+            zone.update(z, zoneAnchor, STEP, true);
+            context.update(c, contextAnchor, STEP);
+            if (zoneFullSince < 0 && zone.text().equals(message) && zone.alpha() >= .95f) zoneFullSince = t;
+            if (level.player.canInteract()) {
+                interacting++;
+                assertTrue(zoneFullSince >= 0, "the message is readable before the lever is in reach");
+                if (interacting == 1) assertTrue(context.alpha() > 0 && context.text().contains(Msg.LEVER.t(Language.ENGLISH)),
+                    "the lever label is visible on the very frame the lever comes into reach: " + context.alpha());
+                // Placement as the HUD derives it: from presence, not opacity, so the zone message never moves
+                // and the label's reservation is the same through the Turn on -> Turn off crossfade.
+                boolean zonePresent = !z.isEmpty() || !zone.text().isEmpty();
+                assertTrue(zonePresent, "message present at frame " + interacting);
+                if (!context.text().isEmpty()) {
+                    for (float cameraY : new float[]{0, 8}) {
+                        float zoneTop = geometry.zoneTop(zoneAnchor, zone.text(), cameraY);
+                        if (cameraY == 0) { if (firstZoneTop < 0) firstZoneTop = zoneTop; assertEquals(firstZoneTop, zoneTop, .001, "message moved"); }
+                        assertTrue(geometry.gap(contextAnchor, context.text(), zoneAnchor, zone.text(), cameraY) >= HintLayout.GAP - .001,
+                            "message and lever label overlap at frame " + interacting + " cameraY=" + cameraY);
+                    }
+                }
+                assertEquals(message, zone.text(), "message replaced at frame " + interacting);
+                assertTrue(zone.alpha() >= .95f, "message dimmed to " + zone.alpha() + " at frame " + interacting);
+                assertEquals(z, message);
+                // Turn on -> Turn off swaps the label text, which crossfades through 0 (unchanged contextual behaviour).
+                if (interacting >= 2 && interacting < 30) assertTrue(context.alpha() > 0, "no flicker before the toggle");
+            }
+            assertTrue(++guard < 60 * 40, "stuck at " + level.player.position);
+        }
+        assertTrue(context.alpha() >= .95f, "lever label settled to full opacity");
+    }
+
+    /** The standing hero keeps the lever label clear of the message and of their own head, wherever they stand. */
+    @Test void theLeverLabelClearsTheMessageAndTheHeroAtEveryStandingPosition() {
+        Level level = freshLevel();
+        HintGeometry geometry = new HintGeometry();
+        Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
+        int both = 0;
+        for (float x = 24; x < 544; x += 4) for (float y : new float[]{272, 272 - 58}) { // floor, top of a jump
+            level.player.position.set(x, y);
+            for (int i = 0; i < 3; i++) frame(level);
+            String zone = level.player.zoneHint(), context = level.player.contextHint();
+            if (zone.isEmpty() || context.isEmpty()) continue;
+            both++;
+            level.player.zoneHintPosition(zoneAnchor); level.player.contextHintPosition(contextAnchor);
+            for (float cameraY : new float[]{0, 8})
+                assertTrue(geometry.gap(contextAnchor, context, zoneAnchor, zone, cameraY) >= HintLayout.GAP - .001,
+                    "x=" + x + " y=" + y + " cameraY=" + cameraY);
+        }
+        assertTrue(both > 5, "label and message do share positions in this room: " + both);
+    }
+
+    @Test void leavingTheLeversReachEndsOnlyTheLeverLabel() {
+        Level level = freshLevel();
+        walkToLever(level);
+        assertFalse(level.player.contextHint().isEmpty());
+        assertFalse(level.player.zoneHint().isEmpty());
+        walkToExit(level);
+        assertEquals("", level.player.contextHint(), "Out of reach the lever label ends; the zone message continues");
+        assertFalse(level.player.zoneHint().isEmpty());
+    }
+
+    @Test void bothChannelsEndWhenTheHeroCanNoLongerAct() {
+        Level level = freshLevel();
+        walkToLever(level);
+        assertFalse(level.player.contextHint().isEmpty());
+        assertFalse(level.player.zoneHint().isEmpty());
+        level.player.beginVictoryWalk(); // death, checkpoint and victory share canFight() == false
+        assertEquals("", level.player.contextHint());
+        assertEquals("", level.player.zoneHint());
+    }
+
     @Test void theLeverHintNamesTheActionAndFlipsWithTheState() {
         Level level = freshLevel();
         walkToLever(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_ON.t(Language.ENGLISH)), level.player.contextHint());
-        assertFalse(level.player.contextHintIsTutorialMessage(), "Inside the controls zone the lever label is immediate");
+        assertFalse(level.player.zoneHint().isEmpty(), "The lever label never hides the zone message (#211)");
         assertTrue(level.player.contextHint().contains("W + K") || level.player.contextHint().contains("Up"), level.player.contextHint());
         operate(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_OFF.t(Language.ENGLISH)), level.player.contextHint());

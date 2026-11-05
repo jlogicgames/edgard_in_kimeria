@@ -112,9 +112,9 @@ class HintLeadTest {
             held.clear(); held.add(Input.Keys.D);
             frame(level);
             t += STEP;
-            String text = level.player.contextHint();
-            if (!text.isEmpty()) level.player.contextHintPosition(anchor);
-            hint.update(text, anchor, HintTransition.clampFrame(STEP), level.player.contextHintIsTutorialMessage());
+            String text = level.player.zoneHint();
+            if (!text.isEmpty()) level.player.zoneHintPosition(anchor);
+            hint.update(text, anchor, HintTransition.clampFrame(STEP), true);
             boolean full = hint.text().equals(message) && hint.alpha() >= .95f;
             if (full && firstFull < 0) firstFull = t;
             if (reachedAt < 0) {

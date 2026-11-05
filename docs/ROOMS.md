@@ -63,9 +63,9 @@ is decorative and continues across retries. Rooms may span several screens.
 ### Hint zones (#195, D33)
 
 An optional object layer `Hints` holds `Hint` rectangles (each inside one room). Properties:
-`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 45% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
+`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 30% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
 `controls` (bool, enables the pickup/lever/ladder instructions of D24). The hero's body centre
-inside the zone shows the hint; nothing is stored, so it repeats on every retry and return. No
+inside the zone shows the hint; the `message` and the live `controls` label are separate channels drawn together, neither hiding the other (D33, #211); nothing is stored, so it repeats on every retry and return. No
 layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 576 px and ladder room 704 px since #209, the others still empty 1280 px) named
 `forest-0-lever`, `-ladder`, `-wall`, `-platform`, `-stone`, `-traps` (room property `lesson`);
 each starts as a floor strip and two side walls (the lever and ladder rooms now have their lessons, see the recipe below). Lessons add their objects, collisions and zones.
@@ -94,14 +94,14 @@ The lever room is the sample. Later lessons (#196–#200) copy it:
    state** (lever off, on, never touched). Do not write "the torch is dark" or "works both ways" on a position-only
    zone; say what the object does ("This lever lights the torch and puts it out") and where the exit is. Messages are
    Msg keys named `HINT_<LESSON>_*`, in all five catalogs, without key names (devices differ), at most two lines at
-   200 px. The HUD draws a message hint about 45% down the zone and shows it after a 0.35 s dwell with a fade-in and
+   200 px. The HUD draws a message hint about 30% down the zone and shows it after a 0.35 s dwell with a fade-in and
    overshoot slide (D33), so keep zones wide enough (about 200 px or more) for the dwell to matter; add them to the layout assertion in `LocalizationLayoutTest`.
 4. **Rule.** Decide and document, as D34 does: toggle or one-shot, what a retry restores, and why the exit is
    reachable in every state (D26). Prefer reversible, route-independent first lessons.
 5. **Tests** (copy `LeverLessonTest`): headless `Level("forest-0")` driven by keyboard input — walk to the object,
    operate it, assert the linked effect; assert the exit (`level.atRoomExit()`) is reached from every state
-   (off, on, after `resetCurrentRoom`, new `Level` for Restart Level); assert the exact hint text at every standing x with the object in each state and after
-   retry; update `TutorialLevelTest` if new object types appear; measure the mastered route.
+   (off, on, after `resetCurrentRoom`, new `Level` for Restart Level); assert the exact zone message (`zoneHint()`) at every standing x with the object in each state and after
+   retry, and that the live label (`contextHint()`) shows beside it, never instead of it (#211); update `TutorialLevelTest` if new object types appear; measure the mastered route.
 6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 4.3 s after #209, ladder room about 6.9 s) labelled an
    *author check, not a novice playtest* (novice playtests are #129–#131), plus findings and what was not verified.
 7. **Checklist:** `./gradlew :core:test --rerun-tasks`, `validateLocalization`, `validateNamedParameters`,

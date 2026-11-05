@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.ui.HintLayout;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
@@ -79,6 +80,54 @@ class LocalizationLayoutTest {
                     Menu menu = new Menu(null, null, List.of(new MenuItem(label, () -> {})), null);
                     assertTrue(new GlyphLayout(button, label).width <= overlay.buttonsWidth(menu) - 48, prefix + label);
                     assertTrue(overlay.buttonsWidth(menu) <= 592, prefix + label);
+                }
+            }
+        } finally { Gdx.files = previous; }
+    }
+
+    /**
+     * #211: the zone message (anchored 30% down the 368 px room, two lines at most, 200 px) and the widest
+     * contextual stack of every language, for keyboard, gamepad (both handedness) and touch wording, on screen
+     * together. Hero standing (head at world y 272) or at a jump apex (58 px higher), label anchor 12 px below
+     * the head, camera 0 and 8 px down. The placed label must clear the message by the gap as rectangles.
+     */
+    @Test void zoneMessageAndTheWidestContextualLabelNeverOverlapInAnyLanguageOrDevice() {
+        var previous = Gdx.files;
+        Gdx.files = new HeadlessFiles();
+        GdxNativesLoader.load();
+        try {
+            BitmapFont hint = new MetricsFont(13);
+            float cap = hint.getCapHeight(), zoneWorldY = 368 * .3f;
+            for (Language language : Language.values()) {
+                String up = Msg.UP.t(language), down = Msg.DOWN.t(language);
+                for (String[] device : new String[][]{
+                    {"W", "S", "K", "L"}, {"Up", "Down", "X", "C"}, // keyboard, default / left-handed
+                    {Msg.LEFT_STICK.t(language) + " " + up, Msg.LEFT_STICK.t(language) + " " + down, "X/B", "Y"},
+                    {Msg.RIGHT_STICK.t(language) + " " + up, Msg.RIGHT_STICK.t(language) + " " + down, Msg.DPAD_ACTION.t(language), Msg.DPAD_UP.t(language)},
+                    {Msg.STICK.t(language) + " " + up, Msg.STICK.t(language) + " " + down, Msg.ACTION.t(language), Msg.SHOOT.t(language)}}) {
+                    String lever = device[0] + " + " + device[2] + ": " + Msg.TURN_OFF.t(language) + " - " + Msg.LEVER.t(language);
+                    String pickup = device[0] + " + " + device[2] + ": " + Msg.PICK_UP.t(language) + " - " + Msg.STONE.t(language);
+                    String place = device[1] + " + " + device[2] + ": " + Msg.PUT_DOWN.t(language) + " - " + Msg.PLACE_BLOCKED.t(language);
+                    String ranged = device[3] + ": " + Msg.THROW.t(language);
+                    String ladder = device[0] + ": " + Msg.CLIMB.t(language) + "\n" + device[1] + ": " + Msg.CLIMB_DOWN.t(language);
+                    for (String context : new String[]{lever, pickup, ladder, Msg.FIREBALL_STOCK_FULL.t(language),
+                        lever + "\n" + place + "\n" + ranged}) {
+                        for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
+                            Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT}) {
+                            float contextHeight = height(hint, context, 200), zoneHeight = height(hint, message.t(language), 200);
+                            for (float cameraY : new float[]{0, 8}) for (float contextWorldY : new float[]{284, 284 - 58}) {
+                                String where = language.code() + " " + message + " / " + context.replace('\n', '|')
+                                    + " cameraY=" + cameraY + " anchor=" + contextWorldY;
+                                float zoneAnchor = 360 - (zoneWorldY - cameraY), contextAnchor = 360 - (contextWorldY - cameraY);
+                                float zoneTop = HintLayout.top(zoneAnchor, zoneHeight, cap, 360);
+                                float contextTop = HintLayout.contextTop(contextAnchor, contextHeight, true, zoneAnchor, zoneHeight, cap, 360);
+                                // Rectangles (both 200 px wide, centred): the message's bottom is above the label's top.
+                                assertTrue(zoneTop - zoneHeight - contextTop >= HintLayout.GAP - .001, where);
+                                assertTrue(zoneTop <= 360 - HintLayout.TOP_MARGIN, where);
+                                assertTrue(contextTop - contextHeight >= 0, "label on screen: " + where);
+                            }
+                        }
+                    }
                 }
             }
         } finally { Gdx.files = previous; }

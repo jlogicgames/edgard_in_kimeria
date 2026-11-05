@@ -14,10 +14,13 @@ import com.badlogic.gdx.math.Vector2;
  * not replaced by another tutorial message before it has been up {@link #MIN_SHOW} seconds, so walking
  * back and forth over a zone boundary neither flickers nor makes the player search for the text.
  * A short gap in the request ({@link #REQUEST_GRACE}) does not restart the appear delay.
- * A tutorial message that replaces another label skips the appear delay (a quick crossfade). Contextual
- * interaction labels ("Pick up") stay immediate and replace a lingering message at once, but never one
- * that is still fading in: that finishes first (at most {@link #ATTENTION_FADE_IN} seconds), so a message
- * is never erased before it was readable.
+ * A tutorial message that replaces another label skips the appear delay (a quick crossfade).
+ * <p>
+ * Since #211 the HUD runs one instance per channel: the zone message (always requested as attention) and
+ * the contextual label (never attention, immediate). They are drawn together, so a contextual label never
+ * replaces, delays or resets a message, and a message never holds back a contextual label. An instance is
+ * therefore not meant to be fed both kinds; if it is, the new, non-attention label simply replaces the
+ * old one as soon as it has faded out.
  */
 public final class HintTransition {
     /** Seconds a tutorial message must stay requested before it appears. */
@@ -74,7 +77,6 @@ public final class HintTransition {
             if (text.equals(requested)) absent = 0;
             else if (requested.isEmpty()) { absent += dt; held = absent < LINGER; }
             else if (requestedAttention) held = shown < MIN_SHOW;
-            else held = progress < 1; // An immediate label waits for the message to finish fading in.
             if (held) requested = text; // Keep the label (and its anchor) up for now.
         }
         boolean leaving = !text.equals(requested);
@@ -111,6 +113,8 @@ public final class HintTransition {
      */
     public float offsetY() { return offsetY; }
     public void position(Vector2 out) { out.set(anchor); }
+    /** The label's current world anchor (do not modify). */
+    public Vector2 anchor() { return anchor; }
     public void clear() {
         text = pending = ""; waited = gap = shown = absent = 0; attention = false;
         alpha = startAlpha = 0; offsetY = startOffset = SLIDE;
