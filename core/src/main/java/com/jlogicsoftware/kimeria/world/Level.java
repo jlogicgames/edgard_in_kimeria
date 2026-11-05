@@ -648,11 +648,13 @@ public class Level implements WorldObject {
                 case "Stone", "CarryableTorch" -> {
                     Carryable carryable = new Carryable(this, o.id,
                         "Stone".equals(o.type) ? Carryable.Kind.STONE : Carryable.Kind.TORCH, o.x, o.y);
+                    carryable.setRespawns(o.propBool("respawn", false));
                     objects.add(carryable);
                     registerRoomStateOwner(o.id, carryable);
                 }
                 case "Trigger" -> {
                     Trigger trigger = new Trigger(o.id, o.x, o.y, o.width, o.height, triggerKey(o));
+                    trigger.throwActivated = o.propBool("throwActivated", false);
                     objects.add(trigger);
                     triggers.add(trigger);
                 }
@@ -866,6 +868,21 @@ public class Level implements WorldObject {
             (candidate.getX() < current.getX() || (candidate.getX() == current.getX() && candidate.getY() < current.getY()))))
             return candidate;
         return current;
+    }
+
+    /**
+     * A thrown carryable touching a {@code throwActivated} trigger operates it once per throw (D39).
+     * Returns true when it did, which ends the throw's lever check.
+     */
+    public boolean throwHitsLever(Carryable thrown) {
+        Rectangle bounds = thrown.bounds();
+        for (Trigger trigger : triggers) {
+            if (!trigger.throwActivated || trigger.isRemoved()) continue;
+            if (!bounds.overlaps(new Rectangle(trigger.getX(), trigger.getY(), trigger.getWidth(), trigger.getHeight()))) continue;
+            activateTrigger(trigger);
+            return true;
+        }
+        return false;
     }
 
     public void activateTrigger(Trigger trigger) {
