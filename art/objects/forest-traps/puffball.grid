@@ -1,0 +1,76 @@
+# Spore puffball mushroom, native 16x16 frames (left halves, mirrored): idle, two swells, burst.
+size 16 16
+color k 0b0814
+color b efe6c4
+color B a89c78
+color p a6e04a
+color P 5fa02a
+color u e6f26a
+frame idle mirror
+........
+........
+........
+........
+........
+.....kkk
+...kkbbb
+..kbbbpb
+..kbbbbb
+..kbpbbB
+..kkBBBB
+.....kbB
+.....kbB
+.....kbB
+....kbbB
+...kkkkk
+frame swell1 mirror
+........
+........
+........
+........
+....kkkk
+..kkbbbb
+.kbbbppb
+.kbbbbbb
+.kbppbbb
+.kbbbbbB
+.kkBBBBB
+.....kbB
+.....kbB
+.....kbB
+....kbbB
+...kkkkk
+frame swell2 mirror
+........
+........
+........
+...kkkkk
+.kkbbuuu
+kbbuuupu
+kbbuuuuu
+kbuupuuu
+kbbuuuuu
+kbbuuuuB
+kkBBBBBB
+.....kbB
+.....kbB
+.....kbB
+....kbbB
+...kkkkk
+frame burst mirror
+........
+........
+........
+........
+........
+........
+........
+...kkkk.
+..kbbbbb
+.kBpbbpB
+kkBBkBBB
+.kkkkkbB
+....kbbB
+....kbbB
+....kbbB
+...kkkkk

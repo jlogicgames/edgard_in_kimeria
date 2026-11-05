@@ -351,7 +351,9 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
 - [#230](https://github.com/jlogicgames/edgard_in_kimeria/issues/230): art (forest trap
   sprites, bomb replacement), in the remake's style per ART_DIRECTION.md without the 1990s
   palette, resolution or flat-colour limits; only the original's silhouettes and readability
-  ideas are kept (author, 2026-11-05).
+  ideas are kept (author, 2026-11-05). **State (2026-11-05):** first-pass sprite sets for every
+  forest trap are drawn and exported (see "Forest trap sprites (#230)" in ART_DIRECTION.md); no
+  code uses them yet and several are rough placeholders for a human artist to redo.
 - [#231](https://github.com/jlogicgames/edgard_in_kimeria/issues/231): code A, proximity
   traps (thorn root/stake, thorn tuft).
 - [#232](https://github.com/jlogicgames/edgard_in_kimeria/issues/232): code B, falling traps

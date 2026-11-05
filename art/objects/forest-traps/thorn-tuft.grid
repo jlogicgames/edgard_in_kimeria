@@ -1,0 +1,59 @@
+# Bristling thorn tuft, native 16x16 frames (left halves, mirrored): calm, bristling, spiked.
+# Crimson-magenta stems with bone tips: deliberately unlike the green/olive bushes.
+size 16 16
+color k 0b0814
+color m c2307a
+color M 6e1650
+color b efe6c4
+color y ffd23a
+frame calm mirror
+........
+........
+........
+........
+........
+........
+........
+........
+......k.
+.....kmk
+....kmMm
+...kmMmM
+..kmMmMm
+.kmMmMMm
+.kMmMMMM
+kkkkkkkk
+frame bristle mirror
+........
+........
+........
+........
+...b....
+...kb..b
+..kmk.kb
+..kMkkmk
+.bkmMkMk
+.kmMmMmM
+.kMmMmMm
+kmMmMMMm
+kmMmMMMM
+kMmMMMMM
+kMMMMMMM
+kkkkkkkk
+frame spiked mirror
+.......b
+b......k
+kb..b..k
+kmb.kb.m
+.kk.kkbk
+.kMkkmkk
+bkmkMmMk
+kMmMkMmM
+.kMmMMmM
+.kmMMmMm
+bkMmMMMm
+kmMmMMMM
+kmMMmMMM
+kMmMMMMM
+kMMMMMMM
+kkkkkkkk

@@ -17,6 +17,19 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.LADDER, 2, 1);
         matches(SpriteSheets.PLAYER_LOOK, 2, 1);
         matches(SpriteSheets.PLAYER, 5, 10);
+        // Forest trap sheets (#230): frame counts follow tools/sprite_layouts.py FOREST_TRAP_SHEETS.
+        matches(SpriteSheets.TRAP_STUMP, 5, 1);
+        matches(SpriteSheets.TRAP_ROOT, 5, 1);
+        matches(SpriteSheets.TRAP_BLAST, 4, 1);
+        matches(SpriteSheets.TRAP_THORN_ROOT, 5, 1);
+        matches(SpriteSheets.TRAP_THORN_TUFT, 3, 1);
+        matches(SpriteSheets.TRAP_BRANCH, 4, 1);
+        matches(SpriteSheets.TRAP_STONE, 2, 1);
+        matches(SpriteSheets.TRAP_SHADOW, 3, 1);
+        matches(SpriteSheets.TRAP_PUFFBALL, 4, 1);
+        matches(SpriteSheets.TRAP_SPORES, 3, 1);
+        matches(SpriteSheets.TRAP_VINE, 3, 1);
+        matches(SpriteSheets.TRAP_LOG, 3, 1);
     }
 
     private void matches(SpriteSheets.Sheet sheet, int columns, int rows) throws Exception {
