@@ -105,20 +105,22 @@ six short lesson rooms without monsters, hints always on, one new element per ro
 with no hints. Hints are authored in the map ([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)).
 Rooms in order, each a separate ticket: lever (#186), ladder/bridge (#196), wall (#197), moving
 platform (#198), thrown stone (#199), existing traps (#200).
-**Lever room (#186) is built** (`forest-0-lever`, room shortened to 576 px by #206/#209, mastered route about 4.3 s, author check only; novice
+**Lever room (#186) is built** (`forest-0-lever`, room shortened to 576 px by #206/#209, mastered route about 4.3 s, headless author check, then the author's desktop and web play-through of 2026-11-05; novice
 playtests are #129–#131) and is the sample the other lessons copy: see the
 [tutorial lesson room recipe](ROOMS.md#tutorial-lesson-room-recipe-186) and [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule).
 **Ladder room (#196) is built** (`forest-0-ladder`, 704 px, a lever lowers a retracted ladder to the ledge that holds the exit; mastered route about 6.9 s,
-author check only, not seen in the running game): see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule).
+headless author check, then the author's desktop and web play-through of 2026-11-05; not a novice playtest): see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule).
 **Wall room (#197) is built** (`forest-0-wall`, 640 px, a floor lever raises and lowers a wall that blocks the corridor; mastered route about 5.1 s,
-author check only, not seen in the running game): see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule).
+headless author check, then the author's desktop and web play-through of 2026-11-05; not a novice playtest): see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule).
 **Platform room (#198) is built** (`forest-0-platform`, 640 px, a floor lever starts and stops a vertical moving platform that is the only way up to the ledge holding the exit; mastered route about 9.6 s,
-author check only, not seen in the running game): see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule).
+headless author check, then the author's desktop and web play-through of 2026-11-05; not a novice playtest): see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule).
 **Stone room (#199) is built** (`forest-0-stone`, 528 px, the hero picks up a stone and throws it across a chasm to flip a lever on the far side; the lever starts the moving platform that carries the hero over; mastered route about 4.8 s,
-author check only, not seen in the running game): see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule).
+headless author check, then the author's desktop and web play-through of 2026-11-05; not a novice playtest): see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule).
 **Traps room (#200) is built** (`forest-0-traps`, 720 px, the last room: a pit bridged by one falling platform, then a contact bomb, each with its D7 warning; mistakes cost one cheap room retry; mastered route about 6.1 s,
-author check only, not seen in the running game): see [D40](DECISIONS.md#d40-the-tutorial-traps-lesson-rule). **The forest-0 lesson sequence (lever, ladder, wall, platform, stone, traps) is complete.**
-**Healer tales (#220)** open and close the tutorial in fairy-tale language (start of a new game, end before forest-1): see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial). Wording awaits author review; not seen in the running game.
+headless author check, then the author's desktop and web play-through of 2026-11-05; not a novice playtest): see [D40](DECISIONS.md#d40-the-tutorial-traps-lesson-rule). **The forest-0 lesson sequence (lever, ladder, wall, platform, stone, traps) is complete.**
+**Healer tales (#220)** open and close the tutorial in fairy-tale language (start of a new game, end before forest-1): see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial). Both tales (start and farewell) were played by the author on 2026-11-05 with no remarks; the de, pl, uk and be translations are not native-reviewed.
+
+**Author acceptance of the forest-0 tutorial (2026-11-05):** Adam Konter (project author) played the whole tutorial on desktop (keyboard only) and also checked the web build. All six rooms, both healer dialogues (start tale and farewell) and the transition into forest-1 were checked, with no remarks (OK). Not checked: gamepad, touch controls, native-speaker quality of the de/pl/uk/be translations. No novice playtest (#129–#131) has been done. Mastered route times above are headless author checks and are unchanged. Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
 
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.
