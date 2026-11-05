@@ -97,11 +97,21 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final GamepadInput gamepad = new GamepadInput();
 
     /** Everything needed to begin a run; Continue fills this from saved progress. */
-    private record StartData(int levelIndex, int coins) {
+    private record StartData(int levelIndex, int coins, boolean newRun) {
         static StartData newGame() {
-            return new StartData(0, 0);
+            return new StartData(0, 0, true);
         }
     }
+
+    /** The tutorial level whose start and end carry the healer's tales (D41). */
+    private static final String TUTORIAL_LEVEL = "forest-0";
+    /**
+     * One-shot tutorial dialogues (D41). Run state only, never saved: a save exists only after a
+     * level is completed, so Continue never re-enters forest-0 and nothing needs persisting.
+     * The start tale is pending only for a New Game run; each is consumed the moment it opens, so
+     * death, Restart Level and retries never repeat it.
+     */
+    private boolean tutorialIntroPending, tutorialOutroShown;
 
     private SavedProgress savedProgress;
     private UiState uiState;
@@ -328,6 +338,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void restartLevel() {
         artifacts.restartLevel();
         rangedStock.restartLevel();
+        // A farewell cut off by Restart Level is replayed when the tutorial is finished again.
+        if (TUTORIAL_LEVEL.equals(LEVEL_NAMES.get(currentLevelIndex))) tutorialOutroShown = false;
         coinsCollected = levelStartCoins;
         pauseMenu.selected = 0; // so the next pause does not open on Restart Level
         player = new Player(assets, this, 0, 0);
@@ -342,6 +354,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     /** Drops the level and player so nothing stays alive behind the menus. */
     private void releaseGame() {
         healer = null;
+        tutorialIntroPending = tutorialOutroShown = false;
         pausedHealer = false;
         artifacts.clear();
         rangedStock.reset();
@@ -362,7 +375,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void continueGame() {
-        if (savedProgress.exists()) startGame(new StartData(savedProgress.nextLevelIndex(), 0));
+        if (savedProgress.exists()) startGame(new StartData(savedProgress.nextLevelIndex(), 0, false));
     }
 
     private void requestNewGame() {
@@ -409,6 +422,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         artifacts.clear();
         rangedStock.reset();
         currentLevelIndex = Math.floorMod(data.levelIndex(), LEVEL_NAMES.size());
+        tutorialIntroPending = data.newRun() && TUTORIAL_LEVEL.equals(LEVEL_NAMES.get(currentLevelIndex));
+        tutorialOutroShown = false;
         coinsCollected = data.coins();
         player = new Player(assets, this, 0, 0);
         startLoadingLevel();
@@ -436,6 +451,23 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         roomStartCoins = coinsCollected;
         Rectangle visible = new Rectangle();
         level = new Level(assets, this, player, LEVEL_NAMES.get(currentLevelIndex), () -> visibleWorldRect(visible), rangedStock);
+    }
+
+    /** Hands the freshly built level to the player, after the one-time tutorial tale when it is due. */
+    private void beginLevelPlay() {
+        gameStarted = true;
+        uiState = UiState.PLAYING;
+        if (tutorialIntroPending && TUTORIAL_LEVEL.equals(level.name)) {
+            tutorialIntroPending = false;
+            openScriptedHealer(HealerDialogue.tutorialStart());
+        }
+    }
+
+    private void openScriptedHealer(HealerDialogue dialogue) {
+        healer = dialogue;
+        dialogueInput.reset(Gdx.input);
+        gameStarted = false;
+        uiState = UiState.HEALER;
     }
 
     /** Rebuilds only the active room, at a frame boundary without reloading the map. */
@@ -490,7 +522,20 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 uiState = UiState.PLAYING;
             }
             case BREW -> { if (level.brewElixir()) { roomStartCoins = coinsCollected; openHealer(true, false); } }
-            case CONTINUE -> { if (healer != null && healer.postVictory()) completeLevel(); }
+            case CONTINUE -> {
+                if (healer == null) return;
+                switch (healer.kind()) {
+                    case VICTORY, TUTORIAL_END -> completeLevel();
+                    case TUTORIAL_START -> {
+                        healer = null;
+                        player.resetJumpInput();
+                        gamepad.suppressJumpUntilRelease();
+                        gameStarted = true;
+                        uiState = UiState.PLAYING;
+                    }
+                    case PRE_BOSS -> { }
+                }
+            }
             case FIGHT -> {
                 level.commitBossEncounter();
                 healer = null;
@@ -532,8 +577,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             levelLoadDelay -= dt;
             if (levelLoadDelay <= 0) {
                 loadLevel();
-                gameStarted = true;
-                uiState = UiState.PLAYING;
+                beginLevelPlay();
             }
         }
 
@@ -1070,12 +1114,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     @Override
     public void loadNextLevel() {
         if (uiState == UiState.ENDING) return;
-        if (healer != null && healer.postVictory()) return;
+        if (healer != null && healer.scripted()) return;
         if (level != null && level.hasBossEncounter() && level.victoryExitComplete()) {
-            healer = HealerDialogue.afterVictory();
-            dialogueInput.reset(Gdx.input);
-            gameStarted = false;
-            uiState = UiState.HEALER;
+            openScriptedHealer(HealerDialogue.afterVictory());
+            return;
+        }
+        if (level != null && TUTORIAL_LEVEL.equals(level.name) && !tutorialOutroShown) {
+            tutorialOutroShown = true;
+            openScriptedHealer(HealerDialogue.tutorialEnd());
             return;
         }
         completeLevel();

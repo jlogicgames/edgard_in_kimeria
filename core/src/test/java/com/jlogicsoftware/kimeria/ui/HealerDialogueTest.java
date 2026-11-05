@@ -49,6 +49,45 @@ class HealerDialogueTest {
         }
     }
 
+    @Test void tutorialTalesAreScriptedWithoutChoicesChecklistOrRepeatedCompletion() {
+        Object[][] scripts = {
+            {HealerDialogue.Kind.TUTORIAL_START, java.util.List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME,
+                Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT, Msg.HEALER_TALE_WITCH)},
+            {HealerDialogue.Kind.TUTORIAL_END, java.util.List.of(Msg.HEALER_TALE_PRAISE, Msg.EDGARD_TALE_READY,
+                Msg.HEALER_TALE_HEROES, Msg.HEALER_TALE_BLESSING)}};
+        for (Language language : Language.values()) {
+            for (Object[] script : scripts) {
+                HealerDialogue dialogue = script[0] == HealerDialogue.Kind.TUTORIAL_START
+                    ? HealerDialogue.tutorialStart() : HealerDialogue.tutorialEnd();
+                @SuppressWarnings("unchecked") java.util.List<Msg> lines = (java.util.List<Msg>) script[1];
+                assertEquals(script[0], dialogue.kind());
+                assertTrue(dialogue.scripted()); assertFalse(dialogue.postVictory()); assertFalse(dialogue.showsChecklist());
+                for (int i = 0; i < lines.size(); i++) {
+                    Msg line = lines.get(i);
+                    assertEquals(line.t(language), dialogue.completeText(language));
+                    assertEquals(line.name().startsWith("EDGARD_"), dialogue.edgardSpeaking());
+                    assertNull(dialogue.advance(language), "first press reveals");
+                    assertEquals(line.t(language), dialogue.text(language));
+                    assertEquals(i == lines.size() - 1 ? HealerDialogue.Choice.CONTINUE : null, dialogue.advance(language));
+                    assertFalse(dialogue.choosing()); assertTrue(dialogue.choices().isEmpty());
+                }
+                assertNull(dialogue.advance(language), "completion fires once");
+            }
+        }
+    }
+
+    @Test void tutorialTalesStayInFairyTaleRegisterWithoutNamingControlsOrMechanics() {
+        java.util.List<String> forbidden = java.util.List.of("lever", "button", "press", "jump", "key", "stick",
+            "hebel", "taste", "drück", "spring", "knopf", "dźwign", "przycisk", "naciśn", "skocz", "klawisz", "drążek",
+            "важіл", "кнопк", "натисн", "стрибк", "клавіш", "рычаг", "націсн", "скачк", "клавіш");
+        for (Language language : Language.values()) for (HealerDialogue d : new HealerDialogue[]{
+            HealerDialogue.tutorialStart(), HealerDialogue.tutorialEnd()}) {
+            String text = "";
+            for (int i = 0; i < 12; i++) { text += d.completeText(language) + " "; if (d.advance(language) == null) d.advance(language); }
+            for (String word : forbidden) assertFalse(text.toLowerCase().contains(word.toLowerCase()), language + " names a control: " + word);
+        }
+    }
+
     @Test void firstPressRevealsAndNextAdvancesInBothLanguagesWithoutChoosing() {
         for (Language language : Language.values()) {
             HealerDialogue dialogue = new HealerDialogue(false, false, false, false, false);

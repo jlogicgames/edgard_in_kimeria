@@ -118,6 +118,7 @@ author check only, not seen in the running game): see [D37](DECISIONS.md#d37-the
 author check only, not seen in the running game): see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule).
 **Traps room (#200) is built** (`forest-0-traps`, 720 px, the last room: a pit bridged by one falling platform, then a contact bomb, each with its D7 warning; mistakes cost one cheap room retry; mastered route about 6.1 s,
 author check only, not seen in the running game): see [D40](DECISIONS.md#d40-the-tutorial-traps-lesson-rule). **The forest-0 lesson sequence (lever, ladder, wall, platform, stone, traps) is complete.**
+**Healer tales (#220)** open and close the tutorial in fairy-tale language (start of a new game, end before forest-1): see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial). Wording awaits author review; not seen in the running game.
 
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.

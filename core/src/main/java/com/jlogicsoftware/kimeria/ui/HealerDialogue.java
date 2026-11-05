@@ -13,15 +13,41 @@ public final class HealerDialogue {
     private float characters;
     private boolean choosing, finished;
     private final boolean postVictory;
+    /** Scripted scenes (no checklist, no choices) finish with {@link Choice#CONTINUE}. */
+    private final Kind kind;
 
-    private HealerDialogue() {
+    /** Which conversation this is; the three scripted ones are never offered choices. */
+    public enum Kind { PRE_BOSS, VICTORY, TUTORIAL_START, TUTORIAL_END }
+
+    private HealerDialogue(Kind kind, List<Msg> lines) {
         eligible = paid = false;
-        postVictory = true;
-        lines = List.of(Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE);
+        this.kind = kind;
+        postVictory = kind == Kind.VICTORY;
+        this.lines = lines;
     }
 
-    public static HealerDialogue afterVictory() { return new HealerDialogue(); }
+    public static HealerDialogue afterVictory() {
+        return new HealerDialogue(Kind.VICTORY, List.of(Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE));
+    }
+
+    /** The fairy-tale preview of the forest-0 lessons (D41). */
+    public static HealerDialogue tutorialStart() {
+        return new HealerDialogue(Kind.TUTORIAL_START, List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME,
+            Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT, Msg.HEALER_TALE_WITCH));
+    }
+
+    /** The praise and parting blessing at the end of forest-0 (D41). */
+    public static HealerDialogue tutorialEnd() {
+        return new HealerDialogue(Kind.TUTORIAL_END, List.of(Msg.HEALER_TALE_PRAISE, Msg.EDGARD_TALE_READY,
+            Msg.HEALER_TALE_HEROES, Msg.HEALER_TALE_BLESSING));
+    }
+
     public boolean postVictory() { return postVictory; }
+    public Kind kind() { return kind; }
+    /** True for every conversation that is a fixed script ending in CONTINUE. */
+    public boolean scripted() { return kind != Kind.PRE_BOSS; }
+    /** The recipe checklist belongs to the pre-boss meeting only. */
+    public boolean showsChecklist() { return !scripted(); }
 
     public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid) {
         this(chicken, key, allCoins, eligible, paid, false);
@@ -29,6 +55,7 @@ public final class HealerDialogue {
 
     public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid, boolean returning) {
         postVictory = false;
+        kind = Kind.PRE_BOSS;
         this.eligible = eligible;
         this.paid = paid;
         Msg greeting = returning ? Msg.HEALER_RETURN_GREETING : Msg.HEALER_GREETING;
@@ -47,13 +74,13 @@ public final class HealerDialogue {
     }
     public boolean fullyRevealed(Language language) { return characters >= completeText(language).length(); }
     public String completeText(Language language) { return lines.get(line).t(language); }
-    public boolean edgardSpeaking() { return lines.get(line) == Msg.EDGARD_REPLY || lines.get(line) == Msg.EDGARD_DARKNESS; }
+    public boolean edgardSpeaking() { return lines.get(line).name().startsWith("EDGARD_"); }
     public boolean choosing() { return choosing; }
     public boolean paid() { return paid; }
     public int selected() { return selected; }
     public void select(int index) { if (index >= 0 && index < choices().size()) selected = index; }
     public List<Choice> choices() {
-        if (postVictory) return List.of();
+        if (scripted()) return List.of();
         if (paid) return List.of(Choice.FIGHT);
         return eligible ? List.of() : List.of(Choice.RETURN, Choice.FIGHT);
     }
@@ -73,7 +100,7 @@ public final class HealerDialogue {
         int length = completeText(language).length();
         if (characters < length) { characters = length; return null; }
         if (line + 1 < lines.size()) { line++; characters = 0; }
-        else if (postVictory) { finished = true; return Choice.CONTINUE; }
+        else if (scripted()) { finished = true; return Choice.CONTINUE; }
         else if (eligible && !paid) return Choice.BREW;
         else choosing = true;
         return null;

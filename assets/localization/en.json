@@ -102,5 +102,14 @@
   "MECHANISM": "Mechanism",
   "LEVER": "Lever",
   "TURN_ON": "Turn on",
-  "TURN_OFF": "Turn off"
+  "TURN_OFF": "Turn off",
+  "HEALER_TALE_ROAD": "Edgard, the road ahead is short, yet it is a tale all the same. Hear it before you walk it.",
+  "EDGARD_TALE_NO_TIME": "A tale? The kingdom waits, and I have no time for stories.",
+  "HEALER_TALE_FAIRIES": "In this wood a sleeping fairy wakes the torch with a touch, a ladder is let down for kind hands, and a stubborn wall rises when the right spell is spoken.",
+  "HEALER_TALE_LIFT": "A golden boat of the air carries the bold over the dark gap. A far-off fairy can be woken by a stone sent like a wish. Do not be afraid to ask.",
+  "HEALER_TALE_WITCH": "Beware the gifts of the wicked witch: a bridge that crumbles and a berry that bursts. Answer her riddles with quick feet, and the wood will let you pass.",
+  "HEALER_TALE_PRAISE": "Well done, Edgard. The enchanted wood has told you all its tales, and you have solved every one of its riddles.",
+  "EDGARD_TALE_READY": "Then I am ready for the road?",
+  "HEALER_TALE_HEROES": "Ready as the heroes of old tales, who were afraid and went on all the same. A true warrior needs no more than that.",
+  "HEALER_TALE_BLESSING": "Take my blessing: walk lightly, look keenly, and look twice at any path that seems too kind, for witches smile the sweetest. May the fairies light your road."
 }
