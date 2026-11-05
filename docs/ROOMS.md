@@ -66,18 +66,18 @@ An optional object layer `Hints` holds `Hint` rectangles (each inside one room).
 `message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 45% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
 `controls` (bool, enables the pickup/lever/ladder instructions of D24). The hero's body centre
 inside the zone shows the hint; the `message` and the live `controls` label are separate channels drawn together, neither hiding the other (D33, #211); nothing is stored, so it repeats on every retry and return. No
-layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 576 px and ladder room 704 px since #209, wall room 640 px since #197, platform room 640 px since #198, stone room 528 px since #199, the last still empty 1280 px) named
+layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 576 px and ladder room 704 px since #209, wall room 640 px since #197, platform room 640 px since #198, stone room 528 px since #199, traps room 720 px since #200) named
 `forest-0-lever`, `-ladder`, `-wall`, `-platform`, `-stone`, `-traps` (room property `lesson`);
-each starts as a floor strip and two side walls (the lever, ladder, wall, platform and stone rooms now have their lessons, see the recipe below). Lessons add their objects, collisions and zones.
+each starts as a floor strip and two side walls (all six rooms now have their lessons, see the recipe below). Lessons add their objects, collisions and zones.
 
 <a id="tutorial-lesson-room-recipe-186"></a>
 
 ### Tutorial lesson room recipe (#186)
 
-The lever room is the sample. Later lessons (#196–#200; the ladder, wall, platform and stone rooms are built) copy it:
+The lever room is the sample. Later lessons (#196–#200; all five are built) copy it:
 
-1. **Room.** Fill the existing `forest-0-<lesson>` room (the lever room is 576 px, the ladder room 704 px, the wall and platform rooms 640 px and the stone room 528 px, about 500–720 px suits one object; every extra empty stretch is walking time with nothing to learn; floor strip y=320, side walls, RoomStart,
-   RoomExit; no enemies or hazards). Add only that lesson's objects/collisions. One new element per room.
+1. **Room.** Fill the existing `forest-0-<lesson>` room (the lever room is 576 px, the ladder room 704 px, the wall and platform rooms 640 px, the stone room 528 px and the traps room 720 px, about 500–720 px suits one object; every extra empty stretch is walking time with nothing to learn; floor strip y=320, side walls, RoomStart,
+   RoomExit; no enemies, and hazards only in the traps lesson (D40), where the last room ends at the level's `Checkpoint` instead of a RoomExit). Add only that lesson's objects/collisions. One new element per room.
    **Ceiling:** do not author one. `Level` closes every room from above with an invisible 64 px slab whose underside is the
    room's top edge (y=0), so the clamberable side walls cannot be wall-jumped over the top ([D38](DECISIONS.md#d38-every-room-has-an-invisible-ceiling), #215).
    Keep the side walls and any ledge walls inside the room (`RoomCeilingTest` checks every room of forest-0, forest-1 and forest-3).
@@ -105,7 +105,7 @@ The lever room is the sample. Later lessons (#196–#200; the ladder, wall, plat
    operate it, assert the linked effect; assert the exit (`level.atRoomExit()`) is reached from every state
    (off, on, after `resetCurrentRoom`, new `Level` for Restart Level); assert the exact zone message (`zoneHint()`) at every standing x with the object in each state and after
    retry, and that the live label (`contextHint()`) shows beside it, never instead of it (#211); update `TutorialLevelTest` if new object types appear; measure the mastered route.
-6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 4.3 s after #209, ladder room about 6.9 s, wall room about 5.1 s, platform room about 9.6 s, stone room about 4.8 s) labelled an
+6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 4.3 s after #209, ladder room about 6.9 s, wall room about 5.1 s, platform room about 9.6 s, stone room about 4.8 s, traps room about 6.1 s) labelled an
    *author check, not a novice playtest* (novice playtests are #129–#131), plus findings and what was not verified.
 7. **Checklist:** `./gradlew :core:test --rerun-tasks`, `validateLocalization`, `validateNamedParameters`,
    `validateSpriteArt`, `python3 tools/test_*.py`, `check_tiled_links.py`, then look at the room in the game
@@ -623,7 +623,7 @@ Hint update (#195, 2026-11-04): `tutorialRoom` was replaced by a `Hints` layer w
 ([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)); geometry unchanged. Current SHA-256: `1beda5c49f3f27d973a6ff918e50d886f36b840f59890dd25e05f10d4550f4fe`.
 `forest-0.tmx` update (#206, 2026-11-05; superseded SHA below): the lever room shrank from 1280 to 768 px (tile layer 480 to 448 columns; lever x=344,
 torch x=424, exit x=704, walk/torch/exit zones 16–272/272–528/528–752, controls zone 16–752); the five later rooms and the
-`Checkpoint` moved 512 px left, geometry otherwise unchanged. Current `forest-0.tmx` SHA-256: `ded8651e937d049144bbea34393ef3c4032a3a9a88512aa0c78c12e7196c3262`.
+`Checkpoint` moved 512 px left, geometry otherwise unchanged. `forest-0.tmx` SHA-256 before #196 (superseded): `ded8651e937d049144bbea34393ef3c4032a3a9a88512aa0c78c12e7196c3262`.
 `forest-0.tmx` update (#196, 2026-11-05): the ladder room is built and shortened to 768 px (x 768–1536; tile layer 448 to 416 columns). Lever (id 46)
 at x=920 on the floor; retracted `Ladder` (id 45, `dropDistance` 112, 16×112) at x=1120, hanging y 96–208 and lowering to y 208–320; a solid
 ledge (collision id 47, x 1136–1520, top y=208, tiled with the ground-edge tiles) with the exit at x=1440, y=160 on top. Zones: lever 784–1040,
@@ -635,7 +635,9 @@ ladder 1040–1200, exit 1200–1520, controls 784–1520. The four later rooms 
 `forest-0.tmx` update (#198, 2026-11-05): the platform room is built and shortened from 1280 to 640 px (x 1920–2560; tile layer 360 to 320 columns). RoomStart x=1968, lever (id 58) x=2168 on the floor, vertical `Escalator` (id 57, 32×16, `isVertical`, `offNeg` 4, `offPos` 0, `running` false) at x=2384, y=304 (bottom; the top end is y=176), ledge collision (id 62) x=2416–2544, top y=208, tiled with the ground-edge tiles, exit x=2496, y=160 on the ledge. Zones: lever message (`HINT_PLATFORM_LEVER`) 1936–2200 (starts 232 px before the lever), ride message (`HINT_PLATFORM_RIDE`) 2200–2544 (starts 184 px before the platform), controls 1936–2544. The three later rooms and the `Checkpoint` moved 640 px left (Checkpoint x=5056, `Deadline` shortened to match); ids and links unchanged, new ids 57–62.
 `forest-0.tmx` SHA-256 before #199 (superseded): `313d8df1bae13e7498ab84fced2e687181ab432288b6207b50275b3a0abeb611`. Mastered route (headless author check, `PlatformLessonTest`, not a novice playtest): platform room about 9.6 s; not verified by eye in the running game.
 `forest-0.tmx` update (#199, 2026-11-05): the stone room is built and shortened from 1280 to 528 px (x 2560–3088; tile layer 320 to 273 columns). RoomStart x=2624; `Stone` (id 63, 12×12, bool `respawn`) at x=2848, y=308; near floor x 2560–2912 (collision id 28), a 96 px **chasm** x 2912–3008 with no floor (the level-wide `Deadline` below), far floor x 3008–3088 (id 69). Horizontal `Escalator` (id 64, 32×16, `isVertical` false, `offNeg` 0, `offPos` 2, `running` false) parked at x=2912, y=320, flush with both lips, ending at the far lip when it runs; lever `Trigger` (id 65, 16×48 at x=3008, y=272, `target` 64, bool `throwActivated`) at the far lip; an **overhang** (plain collision id 70, x 2864–3024, y 0–272, tiled with the ground-fill tile) that caps jumps to about 26 px of rise over the chasm and the 48 px before it, so no jump crosses the 64 px left beside the parked platform; exit x=3032. Zones: throw message (`HINT_STONE_THROW`) 2576–2872 (starts 272 px before the stone), platform message (`HINT_STONE_EXIT`) 2872–3008 (near edge to the far lip), far-side message (`HINT_STONE_ACROSS`) 3008–3072, controls 2576–3072. The last room and the `Checkpoint` moved 752 px left (Checkpoint x=4304, `Deadline` shortened to match); ids and links unchanged, new ids 63–71.
-Current `forest-0.tmx` SHA-256: `51c0ef939136dbb7d79a96ad9409fc0cbe44ee7d1bffbdcd81a36f802fdadd70`. Mastered route (headless author check, `StoneLessonTest`, not a novice playtest): stone room about 4.8 s; not verified by eye in the running game.
+`forest-0.tmx` SHA-256 before #200 (superseded): `51c0ef939136dbb7d79a96ad9409fc0cbe44ee7d1bffbdcd81a36f802fdadd70`. Mastered route (headless author check, `StoneLessonTest`, not a novice playtest): stone room about 4.8 s; not verified by eye in the running game.
+`forest-0.tmx` update (#200, 2026-11-05): the traps room is built and shortened from 1280 to 720 px (x 3088–3808; tile layer 273 to 238 columns). RoomStart x=3120; floor x 3088–3328 (id 34), a 144 px **pit** x 3328–3472 with no floor (the level-wide `Deadline` below), far floor x 3472–3808 (id 74); `FallingPlatform` (id 72, 32×16) at x=3392, y=320 flush with the floor; `Bomb` (id 73, 16×16) at x=3648, y=304; `Checkpoint` (id 3, the level end) moved to x=3760, right wall (id 36) x=3792. Zones: platform message (`HINT_TRAP_PLATFORM`, id 75) 3104–3440, bomb message (`HINT_TRAP_BOMB`, id 76) 3440–3792; no controls zone. `nextobjectid` 77; no later room, so nothing else moved. Rule: [D40](DECISIONS.md#d40-the-tutorial-traps-lesson-rule).
+Current `forest-0.tmx` SHA-256: `0faee8732d8695c557fab6f1f846b4619cd7366d75ca35f2233de79ccc7037af`. Mastered route (headless author check, `TrapsLessonTest`, not a novice playtest): traps room about 6.1 s; not verified by eye in the running game.
 The first-room ladder starts 32 px (two 16 px tiles) above its former position. Trigger 124,
 named `first-ladder`, places a lever beside it on the floor. Each interaction animates the
 ladder between the raised y=208–288 span and its former lowered y=240–320 span at 160 px/s;

@@ -101,7 +101,7 @@ Intended level order: `forest-0` (tutorial) → `forest-1` → (`forest-2`? — 
 level name are [#194](https://github.com/jlogicgames/edgard_in_kimeria/issues/194).
 
 **Tutorial level (`forest-0`, [#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195), skeleton done):**
-six long empty rooms without monsters, hints always on, one new element per room, then `forest-1`
+six short lesson rooms without monsters, hints always on, one new element per room, then `forest-1`
 with no hints. Hints are authored in the map ([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)).
 Rooms in order, each a separate ticket: lever (#186), ladder/bridge (#196), wall (#197), moving
 platform (#198), thrown stone (#199), existing traps (#200).
@@ -116,6 +116,8 @@ author check only, not seen in the running game): see [D36](DECISIONS.md#d36-the
 author check only, not seen in the running game): see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule).
 **Stone room (#199) is built** (`forest-0-stone`, 528 px, the hero picks up a stone and throws it across a chasm to flip a lever on the far side; the lever starts the moving platform that carries the hero over; mastered route about 4.8 s,
 author check only, not seen in the running game): see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule).
+**Traps room (#200) is built** (`forest-0-traps`, 720 px, the last room: a pit bridged by one falling platform, then a contact bomb, each with its D7 warning; mistakes cost one cheap room retry; mastered route about 6.1 s,
+author check only, not seen in the running game): see [D40](DECISIONS.md#d40-the-tutorial-traps-lesson-rule). **The forest-0 lesson sequence (lever, ladder, wall, platform, stone, traps) is complete.**
 
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.

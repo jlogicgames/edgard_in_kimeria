@@ -1098,7 +1098,7 @@ class DirectionalActionsTest {
         standAt(zone.bounds().x + zone.bounds().width + 64);
         assertEquals("This lever lights the torch and puts it out", level.player.zoneHint(), "The next zone speaks next");
         level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
-        assertEquals("", level.player.zoneHint(), "Hints belong to their room's zones, not the whole level");
+        assertEquals("The platform falls soon after you land. Falling into the pit just retries", level.player.zoneHint(), "Hints belong to their room's zones, not the whole level: the traps room speaks its own");
         level.resetCurrentRoom(player()); level.reloadAt(new Vector2(inside, 272)); frames(2);
         // Retry after death, restart, and a return to the room all rebuild the same authored hint.
         level.resetCurrentRoom(player()); frames(2);
@@ -1122,7 +1122,7 @@ class DirectionalActionsTest {
         level.enterNextRoom(player()); frames(2);
         assertTrue(level.controlHintsActive(), "The stone room (#199) teaches its own controls");
         level.enterNextRoom(player()); frames(2);
-        assertFalse(level.controlHintsActive(), "Other forest-0 rooms have no control zone yet");
+        assertFalse(level.controlHintsActive(), "The traps room (#200) has no lever, so no control zone");
         forestZero();
         level = new Level(assets, game, player(), "forest-3", Rectangle::new); frames(2);
         assertTrue(level.controlHintsActive(), "forest-3 room 0 keeps its authored control zone");
@@ -1155,10 +1155,24 @@ class DirectionalActionsTest {
             } else if (room == 4) {
                 assertFalse(level.atRoomExit(), "The stone room's exit is across a chasm: walking right alone does not reach it");
                 level.enterNextRoom(player()); frames(2); // The route itself is covered by StoneLessonTest.
+            } else if (room == 5) {
+                // Walking right alone drops into the pit; the route itself (jumps, bomb) is covered by TrapsLessonTest.
+                assertFalse(level.atRoomExit(), "The last room has no exit, only the level's Checkpoint");
+                level.resetCurrentRoom(player()); frames(2);
+                int jumpBudget = 60 * 40;
+                while (jumpBudget-- > 0 && completions == 0) {
+                    var body = level.player.hitboxBounds();
+                    float r = body.x + body.width;
+                    held.clear(); held.add(Input.Keys.D);
+                    if (level.player.isOnGround() && ((r >= 3326 && r < 3336) || (r >= 3422 && r < 3442))) { held.add(jump()); pressed.add(jump()); }
+                    frames(1);
+                }
+                held.clear();
+                assertEquals(1, completions, "The last room's Checkpoint is the level exit");
             } else if (room < rooms - 1) {
                 assertTrue(level.atRoomExit(), "Room " + room + " exit is reachable by walking right");
                 level.enterNextRoom(player()); frames(2);
-            } else assertEquals(1, completions, "The last room's Checkpoint is the level exit");
+            }
         }
     }
 }

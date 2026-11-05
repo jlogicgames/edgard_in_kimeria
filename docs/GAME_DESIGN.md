@@ -134,11 +134,11 @@ plot must not be presented as an accepted decision.
 
 ## Stages, levels and rooms
 
-The Forest opens with a **tutorial level**, `forest-0`: six rooms (the lever, ladder, wall, platform and stone rooms are short, 576, 704, 640, 640 and 528 px) with no monsters, hints
+The Forest opens with a **tutorial level**, `forest-0`: six rooms (all short: 576, 704, 640, 640, 528 and 720 px) with no monsters, hints
 shown by the map wherever the author places them, and one new element per room (lever,
 ladder/bridge, wall, moving platform, thrown stone, existing traps). `forest-1` and `forest-3`
 show no tutorial hints. Status: the lever room is built (a dark torch the lever lights and
-darkens, see [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule)); the ladder room is built too (a lever lowers a retracted ladder to a ledge holding the exit, see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule)); the wall room is built (a lever raises and lowers a wall that blocks the corridor, see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule)); the platform room is built (a lever starts and stops a moving platform that carries the hero up to the ledge with the exit, see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule)); the stone room is built (the hero picks up a stone and throws it across a chasm to operate a lever on the far side, which starts the moving platform over the chasm, see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule)); the last room is still empty. See [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints).
+darkens, see [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule)); the ladder room is built too (a lever lowers a retracted ladder to a ledge holding the exit, see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule)); the wall room is built (a lever raises and lowers a wall that blocks the corridor, see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule)); the platform room is built (a lever starts and stops a moving platform that carries the hero up to the ledge with the exit, see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule)); the stone room is built (the hero picks up a stone and throws it across a chasm to operate a lever on the far side, which starts the moving platform over the chasm, see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule)); the traps room is built (a falling platform bridges a pit, then a contact bomb, each warning before it hurts; a mistake is one room retry, see [D40](DECISIONS.md#d40-the-tutorial-traps-lesson-rule)), so the tutorial sequence is complete. See [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints).
 
 **Accepted hierarchy: campaign → stages → levels → rooms.**
 
