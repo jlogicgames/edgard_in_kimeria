@@ -476,6 +476,18 @@ Bat/Mushroom still pass through both rooms three times without farming (14.78/5.
 first return, 14.25/5.00 s later). Earlier author acceptance does not establish
 readability of the changed teaching layout; its targeted check remains deferred.
 
+## Proximity traps (#231)
+
+Authoring recipe for the thorn root and the thorn tuft ([D44](DECISIONS.md#d44-proximity-traps-thorn-root-and-bristling-thorn-tuft)). Not in any shipped room yet (#235); `core/src/test/resources/tiles/thorn-test.tmx` is the worked example.
+
+- **Objects:** type `ThornRoot` (footprint 16×24) or `ThornTuft` (16×16) in `SpawnPoints`. `x`/`y`/size is the footprint; **y + height is the floor**. Optional float properties: `zone` (px each side, default 80), `zoneLeft`, `zoneRight` (override a side; 0 = one-sided). There is no warning-time property: the warning is always the shared D7 value (0.8 s / 1.2 s assist).
+- **Placement:** the jump envelope (footprint plus `max(zone, 64)` px each side, 96 px up) lies inside the room, has floor under all of it, and is free of every solid thing (blocks, one-way platforms, falling platforms, walls, ladders and escalators with their travel); zone not over the room entrance; each used zone side at least 64 px; zone values plain non-negative decimals. A map that breaks these does not load (error names the object) and `python3 tools/check_tiled_links.py` flags the same except the entrance.
+- **Open floor only:** never in a one-tile corridor, under an overhang or in front of a wall the hero must jump: the hero has to be able to jump over an armed trap. Leave landing floor behind it: a root jump covers about 60 px.
+- **Zone sizes:** the default 80 px makes a walker (100 px/s) cross the zone in ~0.97 s, longer than the 0.8 s warning, so walking straight in is hit and the warning is what teaches the jump. A shorter zone (say 32) lets a quick walker run through before it rises; use it deliberately. Do not place two traps whose zones overlap if the second should be a surprise: the first one's rise is the lesson.
+- **Jump window:** body right edge 7 to 63 px before the root, 2 to 61 before the tuft; mastered jump-over about 30 px before.
+- **Hint zones (for #235):** start the message zone at the trap's zone edge or earlier (about 208 px before the trap gives a continuous walker ~1 s of reading), say what the trap does ("it rises when you come close; jump over it"), keep it true in every state (dormant, warning, up), no key names, at most two lines. Hint text is not added by #231.
+- **Reset:** Retry, Restart Level and re-entering the room all rebuild it hidden/calm. A trap that is up stays up for the rest of the attempt.
+
 ## Merge review — 2026-10-20
 
 The room markers, teaching-layout object IDs/positions and current map hashes were

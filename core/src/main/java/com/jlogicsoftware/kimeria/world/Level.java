@@ -39,6 +39,7 @@ import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
 import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
+import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.objects.StaticPlatform;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
@@ -411,6 +412,7 @@ public class Level implements WorldObject {
             }
             int owner = roomLayout.owner(o);
             if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map); // D45: every room, at load.
+            if ("ThornRoot".equals(o.type) || "ThornTuft".equals(o.type)) validateThorn(o, owner);
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -683,6 +685,8 @@ public class Level implements WorldObject {
                     registerRoomStateOwner(o.id, platform);
                 }
                 case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
+                case "ThornRoot", "ThornTuft" -> objects.add(ThornTrap.fromMap(assets, game.trapWarnings(), o,
+                    () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false)));
                 default -> {
                 }
             }
@@ -706,6 +710,15 @@ public class Level implements WorldObject {
             ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(),
                 game.trapWarnings(), hero, grounded, kill)
             : new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
+    }
+
+    /** Proximity traps (D44) fail at load when they could not be jumped, float, or start triggered. */
+    private void validateThorn(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Rectangle entranceBody = new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
+            player.hitbox.width, player.hitbox.height);
+        String problem = ThornTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), entranceBody);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
     /** "Name [id] at (x, y)" -- enough to find the object in Tiled without guessing. */
