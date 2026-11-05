@@ -1,0 +1,32 @@
+# Falling-stone ground shadow, native 24x8 frames (left halves, mirrored): growing warning.
+# A dark/mid-dark checker (binary-alpha stand-in for a translucent shadow); readable on night and trunk tones.
+size 24 8
+color k 0b0814
+color d 34314a
+frame small mirror
+............
+............
+.........dkd
+........dkdk
+........kdkd
+.........kdk
+............
+............
+frame medium mirror
+............
+........dkdk
+.....dkdkdkd
+....dkdkdkdk
+....kdkdkdkd
+.....kdkdkdk
+........kdkd
+............
+frame large mirror
+......kdkdkd
+...kdkdkdkdk
+.dkdkdkdkdkd
+dkdkdkdkdkdk
+kdkdkdkdkdkd
+.kdkdkdkdkdk
+...dkdkdkdkd
+......dkdkdk

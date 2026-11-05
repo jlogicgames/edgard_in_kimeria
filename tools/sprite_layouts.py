@@ -26,3 +26,22 @@ WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, 
 # World objects retain transparent surroundings; alpha remains binary after export.
 OPAQUE_WORLD_IMAGES = set()
 PLAYER_LOOK_SIZE = (PLAYER_FRAME_SIZE * PLAYER_LOOK_FRAME_COUNT, PLAYER_FRAME_SIZE)
+# Forest trap sheets (#230): name -> (frame size, ordered frame names); horizontal strips, binary alpha.
+FOREST_TRAP_SHEETS = {
+    'stump': ((16, 16), ('idle', 'windup1', 'windup2', 'windup3', 'spent')),
+    'root': ((16, 24), ('idle', 'windup1', 'windup2', 'windup3', 'spent')),
+    'blast': ((32, 32), ('blast1', 'blast2', 'blast3', 'blast4')),
+    'thorn-root': ((16, 24), ('hidden', 'peek1', 'peek2', 'rising', 'up')),
+    'thorn-tuft': ((16, 16), ('calm', 'bristle', 'spiked')),
+    'branch': ((32, 16), ('resting', 'rustle', 'sag', 'falling')),
+    'stone': ((16, 16), ('stone', 'cracked')),
+    'shadow': ((24, 8), ('small', 'medium', 'large')),
+    'puffball': ((16, 16), ('idle', 'swell1', 'swell2', 'burst')),
+    'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
+    'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
+    'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
+}
+FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TRAP_SHEETS.items()}
+# Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.
+WORLD_IMAGES.update({f'trap-{name}': (size[0] * len(frames), size[1])
+                     for name, (size, frames) in FOREST_TRAP_SHEETS.items()})

@@ -1,0 +1,142 @@
+# Explosion blast, native 32x32 frames (left halves, mirrored): fireball growth, ring + smoke, fade.
+size 32 32
+color k 0b0814
+color r b3201a
+color o f07a1a
+color y ffd23a
+color h fff4b0
+color g 5b5870
+color G 9a97ad
+color W 4a2e1c
+frame blast1 mirror
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+...........kkkkk
+.........kkooooo
+.......kkooyyyyy
+......kooyyyhhhh
+......koyyhhhhhh
+.....kooyhhhhhhh
+.....koyyhhhhhhh
+.....kooyhhhhhhh
+......koyyhhhhhh
+......kooyyyhhhh
+.......kkooyyyyy
+.........kkooooo
+...........kkkkk
+................
+................
+................
+................
+................
+................
+................
+................
+................
+frame blast2 mirror
+................
+................
+................
+................
+................
+............krro
+..........krrooy
+........krrooyyh
+.......krrooyyhh
+......krrooyyhhh
+......krrooyyhhh
+.....krrooyyhhhh
+.....krrooyyhhhh
+.....krrooyyhhhh
+....krrooyyhhhhh
+....krrooyyhhhhh
+....krrooyyhhhhh
+....krrooyyhhhhh
+....krrooyyhhhhh
+.....krrooyyhhhh
+.....krrooyyhhhh
+.....krrooyyhhhh
+......krrooyyhhh
+......krrooyyhhh
+.......krrooyyhh
+........krrooyyh
+..........krrooy
+............krro
+................
+................
+................
+................
+frame blast3 mirror
+................
+................
+.............krr
+...........krroo
+.........krrooyy
+.......krrooyygg
+......krrooyyggG
+.....krrooyyggGg
+.....krrooyyggGg
+....krrooyyggGgg
+...krrooyyggGggg
+...krrooyyggGggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+..krrooyyggGgggg
+...krrooyyggGggg
+...krrooyyggGggg
+....krrooyyggGgg
+.....krrooyyggGg
+.....krrooyyggGg
+......krrooyyggG
+.......krrooyygg
+.........krrooyy
+...........krroo
+.............krr
+................
+frame blast4 mirror
+................
+................
+................
+.......o........
+................
+...........g....
+.........kGGgk..
+........kGGgggk.
+.......kGGgggggk
+.......kGGgggggk
+......kGGggggggg
+.....kGGgggggggg
+....kGGggggggggg
+....kGGggggggggg
+...kGGgggggggggg
+...kGGgggggggggg
+...kGGgggggggggg
+...kGGgggggggggg
+...kGGgggggggggg
+....kGGggggggggg
+....kGGggggggggg
+.....kGGgggggggg
+......kGGggggggg
+.......kGGgggggg
+........kGGggggg
+.........kkGGggg
+...........kkGGg
+.......y.....kkG
+................
+.....o..........
+................
+................

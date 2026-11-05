@@ -104,3 +104,5 @@ if __name__ == '__main__':
     for name in ('coin', 'chicken', 'key', 'fireball'):
         source = ROOT / 'art/hud' / f'{name}-master.png'
         export(source, ROOT / 'assets/images/HUD' / f'{name}.png', HUD_ICON_SIZE, False)
+    from forest_trap_sprites import export_all as export_forest_traps
+    export_forest_traps()
