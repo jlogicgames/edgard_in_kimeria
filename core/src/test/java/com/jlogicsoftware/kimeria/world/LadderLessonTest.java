@@ -359,6 +359,14 @@ class LadderLessonTest {
                         assertTrue(geometry.gap(contextAnchor, context, zoneAnchor, zone, cameraY) >= HintLayout.GAP - .001,
                             "x=" + x + " y=" + standY + " lowered=" + lowered + " cameraY=" + cameraY + " " + context.replace('\n', '|')
                                 + " / " + zone + " gap=" + geometry.gap(contextAnchor, context, zoneAnchor, zone, cameraY));
+                    // The label never crosses a hero standing on the floor. Only a hero airborne or climbing right
+                    // under the message has too little room for the 24 px gap, and then the lowered label may touch
+                    // the top of the hitbox by a few px (D33: the one case not avoided).
+                    Rectangle hero = level.player.hitboxBounds();
+                    for (float cameraY : new float[]{0, 8}) {
+                        float over = geometry.heroOverlap(contextAnchor, context, zoneAnchor, zone, cameraY, hero.x, hero.x + hero.width, hero.y, hero.y + hero.height);
+                        assertTrue(over <= (standY == 272 ? 0 : 8), "label crosses the hero by " + over + " at x=" + x + " y=" + standY + " " + context.replace('\n', '|'));
+                    }
                 }
         }
         assertTrue(both > 20, "label and message do share positions in this room: " + both);

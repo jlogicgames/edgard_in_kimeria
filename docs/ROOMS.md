@@ -63,7 +63,7 @@ is decorative and continues across retries. Rooms may span several screens.
 ### Hint zones (#195, D33)
 
 An optional object layer `Hints` holds `Hint` rectangles (each inside one room). Properties:
-`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 30% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
+`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 45% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
 `controls` (bool, enables the pickup/lever/ladder instructions of D24). The hero's body centre
 inside the zone shows the hint; the `message` and the live `controls` label are separate channels drawn together, neither hiding the other (D33, #211); nothing is stored, so it repeats on every retry and return. No
 layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 576 px and ladder room 704 px since #209, wall room 640 px since #197, platform room 640 px since #198, stone room 528 px since #199, the last still empty 1280 px) named
@@ -97,7 +97,7 @@ The lever room is the sample. Later lessons (#196–#200; the ladder, wall, plat
    state** (lever off, on, never touched). Do not write "the torch is dark" or "works both ways" on a position-only
    zone; say what the object does ("This lever lights the torch and puts it out") and where the exit is. Messages are
    Msg keys named `HINT_<LESSON>_*`, in all five catalogs, without key names (devices differ), at most two lines at
-   200 px. The HUD draws a message hint about 30% down the zone and shows it after a 0.35 s dwell with a fade-in and
+   200 px. The HUD draws a message hint about 45% down the zone and shows it after a 0.35 s dwell with a fade-in and
    overshoot slide (D33), so keep zones wide enough (about 200 px or more) for the dwell to matter; add them to the layout assertion in `LocalizationLayoutTest`.
 4. **Rule.** Decide and document, as D34 does: toggle or one-shot, what a retry restores, and why the exit is
    reachable in every state (D26). Prefer reversible, route-independent first lessons.

@@ -1049,6 +1049,31 @@ class DirectionalActionsTest {
         frames(2);
     }
 
+    /**
+     * The zone message sits 45% down its zone (#206, restored after #211 had raised it to 30%): near the middle
+     * of the screen, never at the top. Pinned for every authored message zone of forest-0, so it cannot drift again.
+     */
+    @Test void everyForestZeroMessageAnchorIsFortyFivePercentDownItsZone() {
+        forestZero();
+        Vector2 anchor = new Vector2();
+        int checked = 0;
+        for (var zone : level.hintZones()) {
+            if (zone.message() == null) continue;
+            level.player.position.set(zone.bounds().x + zone.bounds().width / 2 - level.player.hitbox.offsetX - level.player.hitbox.width / 2,
+                zone.bounds().y + zone.bounds().height - 80);
+            frames(2);
+            if (level.player.zoneHint().isEmpty()) continue;
+            level.player.zoneHintPosition(anchor);
+            float down = (anchor.y - zone.bounds().y) / zone.bounds().height;
+            assertEquals(.45f, down, .001, "45% down the zone at x=" + zone.bounds().x);
+            // A one-screen room (640x360, camera on the room) shows the anchor at least ~40% down the screen.
+            if (zone.bounds().height <= 360.5f)
+                assertTrue(anchor.y - zone.bounds().y >= .40f * zone.bounds().height, "message at/below 40% from the top");
+            checked++;
+        }
+        assertTrue(checked >= 3, "forest-0 authors several message zones: " + checked);
+    }
+
     @Test void authoredMessageHintShowsAtItsZoneAndRepeatsAfterRetryAndReturn() {
         forestZero();
         var zone = level.hintZones().get(0);
@@ -1060,7 +1085,7 @@ class DirectionalActionsTest {
         assertEquals(zone.bounds().x + zone.bounds().width / 2, anchor.x, .001);
         // #206: drawn mid-screen (not at the top edge), and clear of the standing hero's head (y 272) even
         // for a two-line, 40 px label.
-        assertEquals(zone.bounds().y + zone.bounds().height * .3f, anchor.y, .001);
+        assertEquals(zone.bounds().y + zone.bounds().height * .45f, anchor.y, .001);
         // The two-line label (40 px) grows upward from the anchor, so its top edge is anchor.y - 40 and its
         // bottom edge anchor.y must clear the hero's head at y 272.
         assertTrue(anchor.y - 40 > 60 && anchor.y < 272, "mid-screen, above the hero: " + anchor.y);

@@ -49,7 +49,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final int FRAME_SIZE = SpriteSheets.PLAYER.width();
     private static final float PICKUP_REACH = 3, PLACEMENT_GAP = 2;
     private static final float FIREBALL_SPAWN_OFFSET_Y = 3;
-    private static final float HINT_PLAYER_OFFSET_Y = 12, HINT_TARGET_OFFSET_Y = 24, HINT_ZONE_HEIGHT_FRACTION = .3f;
+    private static final float HINT_PLAYER_OFFSET_Y = 12, HINT_TARGET_OFFSET_Y = 24, HINT_ZONE_HEIGHT_FRACTION = .45f;
     private static final float CAMERA_TARGET_TOLERANCE = .001f;
     private static final float MAX_PHYSICS_FRAME_SECONDS = .05f;
     private record Clip(State state, int frames, int row, boolean loop) { }
