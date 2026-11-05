@@ -1,0 +1,145 @@
+package com.jlogicsoftware.kimeria.world;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Files;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.backends.headless.HeadlessFiles;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.GdxNativesLoader;
+import com.jlogicsoftware.kimeria.ArtifactInventory;
+import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.ui.HintTransition;
+import com.jlogicsoftware.kimeria.entity.player.Player;
+import com.jlogicsoftware.kimeria.input.GamepadInput;
+import com.jlogicsoftware.kimeria.localization.Language;
+import com.jlogicsoftware.kimeria.localization.Msg;
+import com.jlogicsoftware.kimeria.ui.TouchControls;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Proxy;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Continuous-walk simulation of the tutorial hint timing (#209): the real {@link HintTransition} is driven
+ * exactly as the HUD drives it, while the hero holds Right. A lesson message must be fully readable for a
+ * while before the hero can reach its object, and must still be on screen shortly after he passes it.
+ */
+class HintLeadTest {
+    private static final float STEP = 1f / 60f;
+
+    private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
+    private TouchControls touch;
+    private final GamepadInput pad = new GamepadInput();
+    private final TrapWarnings warnings = new TrapWarnings();
+    private final ArtifactInventory artifacts = new ArtifactInventory();
+    private final Assets assets = new Assets() {
+        @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+        @Override public BitmapFont font(int size) { return null; }
+    };
+    private final GameContext game = (GameContext) Proxy.newProxyInstance(
+        GameContext.class.getClassLoader(), new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
+            case "logicalResolution" -> new Vector2(640, 360);
+            case "trapWarnings" -> warnings;
+            case "gamepad" -> pad;
+            case "touch" -> touch;
+            case "language" -> Language.ENGLISH;
+            case "isGameStarted" -> true;
+            case "artifacts" -> artifacts;
+            default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
+        });
+
+    private Application previousApp;
+    private Graphics previousGraphics;
+    private Input previousInput;
+    private Files previousFiles;
+
+    @BeforeEach void setUp() {
+        previousApp = Gdx.app; previousGraphics = Gdx.graphics; previousInput = Gdx.input; previousFiles = Gdx.files;
+        GdxNativesLoader.load();
+        Gdx.files = new HeadlessFiles();
+        Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class<?>[]{Input.class}, (proxy, method, args) -> switch (method.getName()) {
+            case "isKeyPressed" -> held.contains((int) args[0]);
+            case "isKeyJustPressed" -> pressed.contains((int) args[0]);
+            default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
+        });
+        Gdx.graphics = (Graphics) Proxy.newProxyInstance(Graphics.class.getClassLoader(), new Class<?>[]{Graphics.class},
+            (proxy, method, args) -> method.getName().equals("getDeltaTime") ? STEP : null);
+        Gdx.app = (Application) Proxy.newProxyInstance(Application.class.getClassLoader(), new Class<?>[]{Application.class},
+            (proxy, method, args) -> method.getName().equals("getType") ? Application.ApplicationType.HeadlessDesktop : null);
+        touch = new TouchControls(assets, game, null, 640, 360);
+    }
+
+    @AfterEach void restoreGlobals() {
+        Gdx.app = previousApp; Gdx.graphics = previousGraphics; Gdx.input = previousInput; Gdx.files = previousFiles;
+    }
+
+    private Level freshLevel() {
+        return new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
+    }
+
+    private void frame(Level level) {
+        level.update(STEP);
+        pressed.clear();
+    }
+
+    private Level room(int index) {
+        Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
+        if (index == 1) level.enterNextRoom(new Player(assets, game, 0, 0));
+        return level;
+    }
+
+    /** Seconds the message was fully visible before the hero first reached an object, and after. */
+    private record Lead(float fullBefore, float longestGapAfter, float firstFull, float reachedAt) { }
+
+    private Lead walk(Level level, String message, float secondsAfterReach) {
+        var hint = new HintTransition();
+        var anchor = new Vector2();
+        float t = 0, reachedAt = -1, firstFull = -1, lastFullBeforeReach = -1, gap = 0, longestGap = 0;
+        int guard = 0;
+        while (reachedAt < 0 || t < reachedAt + secondsAfterReach) {
+            held.clear(); held.add(Input.Keys.D);
+            frame(level);
+            t += STEP;
+            String text = level.player.contextHint();
+            if (!text.isEmpty()) level.player.contextHintPosition(anchor);
+            hint.update(text, anchor, HintTransition.clampFrame(STEP), level.player.contextHintIsTutorialMessage());
+            boolean full = hint.text().equals(message) && hint.alpha() >= .95f;
+            if (full && firstFull < 0) firstFull = t;
+            if (reachedAt < 0) {
+                if (full) lastFullBeforeReach = t;
+                if (level.player.canInteract()) reachedAt = t;
+            } else if (hint.alpha() > .5f) gap = 0;
+            else { gap += STEP; longestGap = Math.max(longestGap, gap); }
+            assertTrue(++guard < 60 * 40, "never reached at " + level.player.position);
+        }
+        held.clear();
+        float before = firstFull < 0 || reachedAt < firstFull ? 0 : reachedAt - firstFull;
+        System.out.printf(java.util.Locale.ROOT, "hint lead '%s': full %.2f s before reach (first full %.2f s, reach %.2f s), longest blank stretch %.2f s in the following %.1f s%n",
+            message, before, firstFull, reachedAt, longestGap, secondsAfterReach);
+        return new Lead(before, longestGap, firstFull, reachedAt);
+    }
+
+    @Test void leverRoomMessageIsReadableBeforeAContinuousWalkReachesTheLever() {
+        Lead lead = walk(room(0), Msg.HINT_LEVER_TORCH.t(Language.ENGLISH), 1.5f);
+        assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
+    }
+
+    @Test void ladderRoomMessageIsReadableBeforeAContinuousWalkReachesTheLever() {
+        Lead lead = walk(room(1), Msg.HINT_LADDER_LEVER.t(Language.ENGLISH), 1.5f);
+        assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
+    }
+}

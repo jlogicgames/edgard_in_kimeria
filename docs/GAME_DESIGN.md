@@ -134,7 +134,7 @@ plot must not be presented as an accepted decision.
 
 ## Stages, levels and rooms
 
-The Forest opens with a **tutorial level**, `forest-0`: six long rooms (the lever and ladder rooms are short, 768 px) with no monsters, hints
+The Forest opens with a **tutorial level**, `forest-0`: six long rooms (the lever and ladder rooms are short, 576 and 704 px) with no monsters, hints
 shown by the map wherever the author places them, and one new element per room (lever,
 ladder/bridge, wall, moving platform, thrown stone, existing traps). `forest-1` and `forest-3`
 show no tutorial hints. Status: the lever room is built (a dark torch the lever lights and

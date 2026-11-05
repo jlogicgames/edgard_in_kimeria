@@ -91,7 +91,7 @@ class LadderLessonTest {
         pressed.clear();
     }
 
-    private static final float LEDGE_TOP = 208, LADDER_X = 1128;
+    private static final float LEDGE_TOP = 208, LADDER_X = 1032;
 
     /** A level whose hero stands in the ladder room (index 1) at its safe entrance. */
     private Level freshRoom() {
@@ -132,7 +132,7 @@ class LadderLessonTest {
     /** Walks Right until the body is over the ladder's rungs; returns elapsed frames. */
     private int walkToLadder(Level level) {
         int frames = 0;
-        while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < 1121) {
+        while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < 1025) {
             held.clear(); held.add(Input.Keys.D);
             frame(level);
             assertTrue(++frames < 60 * 20, "ladder unreachable from " + level.player.position);
@@ -209,7 +209,7 @@ class LadderLessonTest {
     }
 
     @Test void withTheLadderRetractedNoJumpingReachesTheLedge() {
-        for (float x = 800; x <= 1130; x += 6) {
+        for (float x = 608; x <= 1034; x += 6) {
             Level level = freshRoom();
             level.player.position.set(x - 24, 272);
             float minFeet = 1000;
@@ -243,7 +243,7 @@ class LadderLessonTest {
             held.clear(); held.add(Input.Keys.A);
             frame(level);
             assertFalse(level.player.isGotHit(), "died at " + level.player.position);
-            assertTrue(level.player.position.x > 800, "stuck at " + level.player.position);
+            assertTrue(level.player.position.x > 608, "stuck at " + level.player.position);
         }
         held.clear();
         assertTrue(ladder(level).isLowered(), "Walking off the ledge changes nothing");
@@ -286,7 +286,7 @@ class LadderLessonTest {
             Level level = freshRoom();
             walkToLever(level); operate(level);
             walkToLadder(level); climb(level);
-            while (level.player.position.x + 24 > 1142) { held.clear(); held.add(Input.Keys.A); frame(level); }
+            while (level.player.position.x + 24 > 1046) { held.clear(); held.add(Input.Keys.A); frame(level); }
             held.clear(); settle(level, 5);
             assertTrue(level.player.isOnGround() && feet(level) <= LEDGE_TOP + 1, "On the ledge edge, delay " + delay);
             for (int i = 0; i < 90; i++) {
@@ -319,7 +319,7 @@ class LadderLessonTest {
     /** Standing on the lowered ladder's top rung, left of the ledge. */
     private boolean onLadderTop(Level level) {
         Rectangle b = level.player.hitboxBounds();
-        return level.player.isOnGround() && feet(level) <= LEDGE_TOP + 1 && b.x + b.width / 2 < 1136;
+        return level.player.isOnGround() && feet(level) <= LEDGE_TOP + 1 && b.x + b.width / 2 < 1040;
     }
 
     /** Walks Left until the lever is in reach. */
@@ -337,7 +337,7 @@ class LadderLessonTest {
         Level level = freshRoom();
         Ladder ladder = ladder(level);
         for (float standY : new float[]{272, 160, 100}) // floor, ledge, climbing height
-            for (float x = 792; x <= 1496; x += 4) {
+            for (float x = 600; x <= 1240; x += 4) {
                 level.player.position.set(x - 24, standY);
                 settle(level, 1);
                 if (level.player.canInteract()) {
@@ -353,11 +353,11 @@ class LadderLessonTest {
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean lowered : new boolean[]{false, true}) {
-                for (float x = 800; x < 1512; x += 8) {
+                for (float x = 608; x < 1256; x += 8) {
                     if (ladder(level).isLowered() != lowered) ladder(level).performAction();
                     settle(level, 60);
-                    if (x > 1128 && x < 1144) continue; // inside the ledge block: not a standing position
-                    boolean onLedge = x >= 1144;
+                    if (x > 1032 && x < 1048) continue; // inside the ledge block: not a standing position
+                    boolean onLedge = x >= 1048;
                     level.player.position.set(x - 24, onLedge ? 160 : 272);
                     for (int i = 0; i < 3; i++) frame(level);
                     String hint = level.player.contextHint();

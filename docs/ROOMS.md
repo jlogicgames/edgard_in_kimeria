@@ -63,10 +63,10 @@ is decorative and continues across retries. Rooms may span several screens.
 ### Hint zones (#195, D33)
 
 An optional object layer `Hints` holds `Hint` rectangles (each inside one room). Properties:
-`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 45% down it, after a 0.8 s dwell) and/or
+`message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 45% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
 `controls` (bool, enables the pickup/lever/ladder instructions of D24). The hero's body centre
 inside the zone shows the hint; nothing is stored, so it repeats on every retry and return. No
-layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 768 px since #206, ladder room 768 px since #196, the others still empty 1280 px) named
+layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 576 px and ladder room 704 px since #209, the others still empty 1280 px) named
 `forest-0-lever`, `-ladder`, `-wall`, `-platform`, `-stone`, `-traps` (room property `lesson`);
 each starts as a floor strip and two side walls (the lever and ladder rooms now have their lessons, see the recipe below). Lessons add their objects, collisions and zones.
 
@@ -76,7 +76,7 @@ each starts as a floor strip and two side walls (the lever and ladder rooms now 
 
 The lever room is the sample. Later lessons (#196–#200) copy it:
 
-1. **Room.** Fill the existing `forest-0-<lesson>` room (the lever room is 768 px, about 640–800 px suits one object; floor strip y=320, side walls, RoomStart,
+1. **Room.** Fill the existing `forest-0-<lesson>` room (the lever room is 576 px and the ladder room 704 px, about 560–720 px suits one object; every extra empty stretch is walking time with nothing to learn; floor strip y=320, side walls, RoomStart,
    RoomExit; no enemies or hazards). Add only that lesson's objects/collisions. One new element per room.
 2. **Object + link.** Put the mechanism in `SpawnPoints` as type `Actionable` with property `type` = `Torch` or
    `Wall` (`check_tiled_links.py` rejects anything else; a Torch starts dark with `Intensity` = 0, lit with a
@@ -87,14 +87,14 @@ The lever room is the sample. Later lessons (#196–#200) copy it:
    advanced. Stand mechanisms on the floor like the lever (torch y = 304 for a 16 px object over the y=320 floor)
    unless the lesson needs height. Run `python3 tools/check_tiled_links.py`.
 3. **Hint zones** (layer `Hints`, full room height 0–368, inside the room). Horizontally, a room's usable range is
-   between its side walls (x 16–752 for the 768 px lever room; add the room's x offset for later rooms).
+   between its side walls (x 16–560 for the 576 px lever room; add the room's x offset for later rooms).
    One `controls` zone over that whole range gives the live "Up + Action: Turn on - Lever" label near the lever; and
-   `message` zones tile the range so every standing position belongs to a hint zone (the text appears after the 0.8 s dwell, not instantly). **Message zones are position-only:
+   `message` zones tile the range so every standing position belongs to a hint zone (the text appears after the 0.35 s dwell, not instantly; the first message of a room needs the dwell plus a 0.45 s fade-in, so about 0.8 s). **Place each lesson zone so a continuous walk gives its message about 1 s fully visible before the object is in reach** (`HintLeadTest`; at 100 px/s that is roughly 180 px between the zone start, or the room start for the first message, and the object's reach, so lengthen the approach rather than the rest of the room), because the text needs the dwell and fade-in to be readable, and the HUD keeps it up for 2.5 s after the hero leaves and at least 0.7 s before another message replaces it (D33); a zone that starts at the object is read only after the hero has passed it. **Message zones are position-only:
    they know nothing about object state or whether the player already acted, so every lesson text must be true in every
    state** (lever off, on, never touched). Do not write "the torch is dark" or "works both ways" on a position-only
    zone; say what the object does ("This lever lights the torch and puts it out") and where the exit is. Messages are
    Msg keys named `HINT_<LESSON>_*`, in all five catalogs, without key names (devices differ), at most two lines at
-   200 px. The HUD draws a message hint about 45% down the zone and shows it after a 0.8 s dwell with a fade-in and
+   200 px. The HUD draws a message hint about 45% down the zone and shows it after a 0.35 s dwell with a fade-in and
    overshoot slide (D33), so keep zones wide enough (about 200 px or more) for the dwell to matter; add them to the layout assertion in `LocalizationLayoutTest`.
 4. **Rule.** Decide and document, as D34 does: toggle or one-shot, what a retry restores, and why the exit is
    reachable in every state (D26). Prefer reversible, route-independent first lessons.
@@ -102,7 +102,7 @@ The lever room is the sample. Later lessons (#196–#200) copy it:
    operate it, assert the linked effect; assert the exit (`level.atRoomExit()`) is reached from every state
    (off, on, after `resetCurrentRoom`, new `Level` for Restart Level); assert the exact hint text at every standing x with the object in each state and after
    retry; update `TutorialLevelTest` if new object types appear; measure the mastered route.
-6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 6 s after #206, ladder room about 7.4 s) labelled an
+6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 4.3 s after #209, ladder room about 6.9 s) labelled an
    *author check, not a novice playtest* (novice playtests are #129–#131), plus findings and what was not verified.
 7. **Checklist:** `./gradlew :core:test --rerun-tasks`, `validateLocalization`, `validateNamedParameters`,
    `validateSpriteArt`, `python3 tools/test_*.py`, `check_tiled_links.py`, then look at the room in the game
@@ -625,8 +625,8 @@ torch x=424, exit x=704, walk/torch/exit zones 16–272/272–528/528–752, con
 at x=920 on the floor; retracted `Ladder` (id 45, `dropDistance` 112, 16×112) at x=1120, hanging y 96–208 and lowering to y 208–320; a solid
 ledge (collision id 47, x 1136–1520, top y=208, tiled with the ground-edge tiles) with the exit at x=1440, y=160 on top. Zones: lever 784–1040,
 ladder 1040–1200, exit 1200–1520, controls 784–1520. The four later rooms and the `Checkpoint` moved another 512 px left (Checkpoint x=6592).
-Current `forest-0.tmx` SHA-256: `6a55ae99e22d094fabd4259684856b47e83a39fff47171938ff06c4fe8b65e8c`. Mastered route (walk, pull lever, climb, exit): about 7.4 s, headless author check
-(`LadderLessonTest`), not a novice playtest; not verified by eye in the running game.
+`forest-0.tmx` update (#209, 2026-11-05): both lesson rooms resized. Lever room 768 → 576 px, ladder room 768 → 704 px (tile layer 416 to 400 columns). Lever room: lever x=376, torch x=456, exit x=512, zones walk 16–160, lever/torch 160–440 (starts 216 px before the lever), exit 440–560, controls 16–560. Ladder room (x 576–1280): RoomStart x=624, lever x=824, ladder x=1024, ledge collision id 47 x 1040–1264 (shrank from 384 to 224 px; exit x=1184), zones lever 592–896, climb 896–1040 (starts 128 px before the ladder), exit 1040–1264, controls 592–1264. The room was lengthened by 96 px before the lever so a continuous walk from RoomStart gives the lever message about 1 s fully visible before the lever is in reach (`HintLeadTest`). The four later rooms and the `Checkpoint` moved 256 px left (Checkpoint x=6336, `Deadline` shortened to match); ids and links unchanged.
+Current `forest-0.tmx` SHA-256: `eddb6531cd16290f6fd08c3ec9a08a4791bd3e4fb04d494c5b9915b4cc65aeae`. Mastered routes (headless author checks, `LeverLessonTest`/`LadderLessonTest`, not novice playtests): lever room about 4.3 s, ladder room about 6.9 s; not verified by eye in the running game.
 The first-room ladder starts 32 px (two 16 px tiles) above its former position. Trigger 124,
 named `first-ladder`, places a lever beside it on the floor. Each interaction animates the
 ladder between the raised y=208–288 span and its former lowered y=240–320 span at 160 px/s;
