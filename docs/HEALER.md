@@ -60,7 +60,7 @@ Resume returns to the same line/choice with held inputs suppressed. Pausing free
 The pause glitch processes the frozen dialogue (portraits, current text and choices); the
 pause menu is drawn crisply above it. The underlying gameplay room is never shown.
 
-The checklist names Chicken, Key and current-forest unique coins, with `[+]`/`[-]` markers
+The checklist names Bat, Mushroom and current-forest unique coins, with `[+]`/`[-]` markers
 and a collected/total count. Refusal text distinguishes missing ingredients, insufficient
 payment and both. If the recipe is incomplete, offer return or an unempowered fight;
 return is the initial selection. On the first meeting, both recipe branches start with the
@@ -74,8 +74,8 @@ test version (2026-10-20); replacement artwork review is recorded separately in
 [portrait validation](PORTRAITS.md#author-review).
 
 The first unpaid pre-boss meeting uses the introduction above. After Edgard returns from a
-collection trip, the healer greets him as a returning visitor and restates the existing Chicken,
-Key and all-current-forest-coins recipe before checking what he brought. The following refusal,
+collection trip, the healer greets him as a returning visitor and restates the existing Bat,
+Mushroom and all-current-forest-coins recipe before checking what he brought. The following refusal,
 ready line and choices use the currently secured inventory. Later returns repeat this recognition
 and check. Recognition belongs to the live `Level`: it survives collection return and room death,
 but a full level restart or a newly loaded level begins with the first-meeting introduction again.
@@ -84,11 +84,11 @@ state is written to the level-only save.
 
 ## Recipe, payment and encounter boundary
 
-- Require secured Chicken and Key from `forest-3` and every authored coin identity from that
+- Require secured Bat and Mushroom from `forest-3` and every authored coin identity from that
   level. The current map has six coins. Pending pickups become secured at healer entry;
   prior-level currency cannot replace a missing forest coin. Empty authored coin sets never
   qualify. Each pickup identity is counted once, including after repeated visits/deaths.
-- Consume Chicken, Key and exactly this forest's coin total once; keep prior-level currency.
+- Consume Bat, Mushroom and exactly this forest's coin total once; keep prior-level currency.
   Remove the two inventory icons, immediately drink the elixir and acknowledge payment.
   Spent artifact identities and the unique coin completion record remain separate from
   remaining inventory/currency. No duplicate brewing or new persistent save fields exist.
@@ -130,7 +130,7 @@ Rooms are then traversed forward again. No free backward-room navigation is adde
 | Pickup ripples, old explosions, platform warning particles | Discarded; never replayed from a previous visit | Discarded |
 
 Falling platforms use the same one-snapshot-per-room rule as other mutable owners. A
-collapsed platform 115 can make optional Key 95 unreachable until Restart Level; this is
+collapsed platform 115 can make optional Mushroom 95 unreachable until Restart Level; this is
 an accepted consequence of preserving the level as played. The mandatory canopy exit and
 boss route must stay passable even when that optional route support is spent. Death restores
 the latest secured platform state; first visits begin from authored state. A warning-phase
@@ -144,11 +144,11 @@ A held carryable is released onto clear static collision support near its owning
 authored entrance before securing. This removes the old hero reference while keeping the
 tool available in that room after a transition.
 
-The shipped forest has falling platform 115 at x=1568, y=256 and Key 95 at x=1728, y=208.
-The real-input replay intentionally misses Key 95, collapses 115, returns from the healer,
-and confirms the mandatory canopy exit remains reachable while the Key stays uncollected.
+The shipped forest has falling platform 115 at x=1568, y=256 and Mushroom 95 at x=1728, y=208.
+The real-input replay intentionally misses Mushroom 95, collapses 115, returns from the healer,
+and confirms the mandatory canopy exit remains reachable while the Mushroom stays uncollected.
 A fresh Level restores the authored platform and the existing full-artifact route can then
-collect the Key. Synthetic fixtures separately cover linked walls, escalators, falling
+collect the Mushroom. Synthetic fixtures separately cover linked walls, escalators, falling
 platform phases and shared target names; the `forest-1` wall trigger remains operable. No
 map geometry or author art is changed for this feature.
 
@@ -163,7 +163,7 @@ The platform-rearm assertions in this dated room-state test record predate the a
 D26 contract and are superseded for current design by D26/#158. Other results below remain
 historical evidence only for the behavior and test version described at that date.
 
-120 core tests pass. New regressions cover missing Chicken/Key/coins, combined refusal,
+120 core tests pass. New regressions cover missing Bat/Mushroom/coins, combined refusal,
 prior-level currency, empty authored coin sets, payment exactly once, separate completion
 and inventory, encounter lock, effect expiry on defeat, retained effect on boss retry,
 48/32 droplets and hit shake, fresh/held input, reveal/advance, safe choice navigation,
@@ -172,12 +172,12 @@ touch target separation and both languages.
 Room-state tests cover repeated trips, live enemy retention, secured defeats during the
 death animation, provisional pickups after a revisit death, warning/exploded bombs,
 restored vanished platforms and linked wall/moving-platform switches. The burned-platform
-fixture misses Chicken, destroys its approach platform, returns and checks that the
-platform, Chicken and operable switch chain are restored on three collection trips while
+fixture misses Bat, destroys its approach platform, returns and checks that the
+platform, Bat and operable switch chain are restored on three collection trips while
 secured coins stay absent. It is a state/geometry regression, not a human traversal test.
 
 A separate real-physics replay on the shipped forest starts after enemies were defeated,
-a bomb detonated and coins secured but Chicken/Key missed. Ordinary A/D/J/K input then
+a bomb detonated and coins secured but Bat/Mushroom missed. Ordinary A/D/J/K input then
 traverses both rooms and collects the artifacts, using the retained enemy/trap state and
 rebuilt geometry. It repeats three trips without invulnerability, additional coin pickups
 or duplicated artifacts, then pays the complete recipe. Initial revisit times are 14.78 s
@@ -196,7 +196,7 @@ Only local checks were used, per the author's choice; no source was sent to Snyk
 ### Earlier validation, superseded platform policy
 
 The first set of #158 checks used a platform-rearm rule that was later replaced by the
-accepted “optional key may be missed until Reset Level” policy. Its 212-core-test, named
+accepted “optional Mushroom may be missed until Reset Level” policy. Its 212-core-test, named
 parameter, sprite-art, localization, desktop/web build results and browser handoff smoke
 are historical evidence for that earlier revision, not validation of the final platform
 snapshot behavior. The browser smoke did verify held-tool handoff with debug room skips and
@@ -208,10 +208,10 @@ results above predate #158 and remain historical as well.
 The focused `RoomTest`, `RoomReplayTest` and `ArtifactInventoryTest` run passed **42 tests**.
 It covers latest secured falling-platform warning and mid-fall snapshots, inactive-room
 freeze, fresh transient warning-light reconstruction, removed-owner pruning and death
-rollback. The real-input forest replay intentionally misses Key 95, collapses platform 115,
-returns from the healer, and reaches the mandatory canopy exit while confirming the Key
-remains uncollected. It does not try to collect the inaccessible optional Key. A fresh
-Level restores the authored platform and the existing artifact route collects the Key.
+rollback. The real-input forest replay intentionally misses Mushroom 95, collapses platform 115,
+returns from the healer, and reaches the mandatory canopy exit while confirming the Mushroom
+remains uncollected. It does not try to collect the inaccessible optional Mushroom. A fresh
+Level restores the authored platform and the existing artifact route collects the Mushroom.
 The full suite passed **213 core tests**, with zero failures or skips. The named-parameter,
 sprite-art, five-language localization, `:core:check`, desktop JAR and TeaVM release-build
 checks also passed. These are automated route/build checks, not a desktop/web human
@@ -332,3 +332,9 @@ retry, Restart Level or repeated Checkpoint callbacks. Nothing is saved: a save 
 after a level is completed, so Continue never lands in forest-0 and legacy saves skip it.
 Wording is a proposal for author review; see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial)
 for texts, rules and what is not verified.
+
+## Ingredient rename (D43, #229)
+
+The optional ingredients are Bat and Mushroom (formerly Chicken and Key); the rules above are
+unchanged. Level property: `ingredients=BAT,MUSHROOM`. Legacy saves load as before because the
+inventory is run-only.

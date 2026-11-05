@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 from sprite_layouts import (WORLD_FRAMES, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE,
     WORLD_PALETTE_BITS, HUD_PALETTE_BITS, ALPHA_THRESHOLD, OPAQUE_ALPHA,
     LEVER_FRAME_SIZE, LEVER_FRAME_COUNT, LADDER_FRAME_SIZE, LADDER_FRAME_COUNT,
-    WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE)
+    WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE,
+    ITEM_STRIP_SIZE, ITEM_STRIPS, HUD_ICONS)
 
 
 def export(source, target, size, pixel_art):
@@ -59,6 +60,19 @@ def export_ladders():
     print(target.relative_to(ROOT))
 
 
+def export_item_strips():
+    # Ingredient masters are native 32x16 sheets (two registered 16x16 frames, one shared palette).
+    for name in ITEM_STRIPS:
+        source = Image.open(ROOT / 'art/objects' / f'{name}-pixel.png').convert('RGBA')
+        if source.size != ITEM_STRIP_SIZE:
+            raise ValueError(f'{name} master must be a native {ITEM_STRIP_SIZE} sheet')
+        source.putalpha(source.getchannel('A').point(lambda alpha: OPAQUE_ALPHA if alpha >= ALPHA_THRESHOLD else 0))
+        strip = source.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+        target = ROOT / 'assets/images/objects' / f'{name}.png'
+        strip.save(target, bits=WORLD_PALETTE_BITS)
+        print(target.relative_to(ROOT))
+
+
 def export_brick_wall():
     # Trim transparent source margins, preserve its silhouette, and anchor the base to the floor edge.
     source = Image.open(ROOT / 'art/objects/wall-brick-master.png').convert('RGBA')
@@ -99,9 +113,10 @@ if __name__ == '__main__':
             ROOT / 'assets/images/objects' / f'{name}.png', size, True)
     export_levers()
     export_ladders()
+    export_item_strips()
     export_brick_wall()
     export_platform()
-    for name in ('coin', 'chicken', 'key', 'fireball'):
+    for name in HUD_ICONS:
         source = ROOT / 'art/hud' / f'{name}-master.png'
         export(source, ROOT / 'assets/images/HUD' / f'{name}.png', HUD_ICON_SIZE, False)
     from forest_trap_sprites import export_all as export_forest_traps

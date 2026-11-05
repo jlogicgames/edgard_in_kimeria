@@ -157,7 +157,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Tilemap rendering from the unmodified `.tmx`/`.tsx`, with viewport culling
 - [x] Bat, Yellow mob, Red mob — patrol/chase/attack, without proximity slow motion
 - [x] Sword attack killing enemies
-- [x] Collectables (coin, chicken, key + pickup ripple), artifact HUD and room rollback;
+- [x] Collectables (coin, bat, mushroom + pickup ripple), artifact HUD and room rollback;
       Bomb (explosion, kills player)
 - [x] Falling platform — warning torch, delay, drop; carries the player down without
       losing contact

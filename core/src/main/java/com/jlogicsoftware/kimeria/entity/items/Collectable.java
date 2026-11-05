@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 /** Animated coins and artifacts, sharing pickup sound and ripple. */
 public class Collectable extends Entity {
     private static final float STEP_TIME = 0.3f;
+    private static final int FRAME_COUNT = 2;
+    private static final int FRAME_SIZE = 16;
 
     private final ItemType type;
     private final GameContext game;
@@ -35,7 +37,7 @@ public class Collectable extends Entity {
         this.type = ItemType.fromMapName(name);
         this.game = game;
         this.spawner = spawner;
-        animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, type.spriteX, type.spriteY);
+        animation = assets.animation(type.sheet, FRAME_COUNT, STEP_TIME, FRAME_SIZE, FRAME_SIZE, type.spriteX, type.spriteY);
         animation.setPlayMode(Animation.PlayMode.LOOP);
     }
 

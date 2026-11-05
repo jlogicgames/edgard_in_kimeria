@@ -347,7 +347,7 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
 - [#225](https://github.com/jlogicgames/edgard_in_kimeria/issues/225): decompose the original
   screens into visual elements (decor such as the owl and veined bush ties in here).
 - [#229](https://github.com/jlogicgames/edgard_in_kimeria/issues/229): Bat and Mushroom
-  replace Chicken and Key.
+  replace Chicken and Key. **Done, see D43.**
 - [#230](https://github.com/jlogicgames/edgard_in_kimeria/issues/230): art (forest trap
   sprites, bomb replacement), in the remake's style per ART_DIRECTION.md without the 1990s
   palette, resolution or flat-colour limits; only the original's silhouettes and readability

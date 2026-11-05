@@ -75,7 +75,7 @@ class SpriteArtGuardTest(unittest.TestCase):
         self.assertTrue(guard.png_contract('torch.png', metadata((32, 32)), (8, 16), 16, 'binary'))
         self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), colors=256), (8, 16), 16, 'binary'))
         self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), alpha=b'\x00\x80'), (8, 16), 16, 'binary'))
-        self.assertFalse(guard.png_contract('chicken.png', metadata((128, 128), colors=256, alpha=b'\x00\x80'),
+        self.assertFalse(guard.png_contract('bat.png', metadata((128, 128), colors=256, alpha=b'\x00\x80'),
                                             (128, 128), 256, 'soft'))
         self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), mode=6), (8, 16), 16, 'binary'))
 

@@ -150,9 +150,9 @@ Death resets only the active room; previous rooms' collections remain kept.
 
 ## Optional artifacts
 
-`forest-3` has two optional artifacts: Chicken and Key, using the existing `Items.png` frames.
-Tiled accepts object types `Chicken` and `Key`, or `Collectable` with the
-item name. The author accepted their current positions as final for the MVP on 2026-10-19;
+`forest-3` has two optional artifacts: Bat and Mushroom (D43, replacing Chicken and Key), each a
+two-frame 16×16 strip (`assets/images/objects/bat.png`, `mushroom.png`).
+Tiled uses object type `Collectable` with the name `Bat` or `Mushroom` (the object type `Bat` is the enemy). The author accepted their current positions as final for the MVP on 2026-10-19;
 no relocation or additional artifact challenge paths are planned for this MVP (#72).
 World items animate like
 coins; collected icons appear in one row beside the coin counter, without adding coins.
@@ -166,7 +166,7 @@ No artifact data is written to preferences or saves.
 Artifacts alone give no boss bonus. The optional healer elixir (#84) grants **10x physical
 sword damage against the forest boss**; a magical fireball always removes 2 energy, with
 or without the elixir. The boss starts with 12 energy and six landed fireballs defeat it.
-The healer requires Chicken, Key and **all six unique coins authored in this forest**;
+The healer requires Bat, Mushroom and **all six unique coins authored in this forest**;
 prior-level coins do not count and are not spent. Payment consumes the two artifacts and
 forest coins; collection completion remains recorded separately. The elixir is drunk at once.
 It applies only to this boss, including retries until victory, and ends on boss defeat.

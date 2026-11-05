@@ -2,7 +2,7 @@
 <map width="40" height="23" tilewidth="16" tileheight="16">
  <properties>
   <property name="healerBeforeBoss" type="bool" value="true"/>
-  <property name="ingredients" value="CHICKEN,KEY"/>
+  <property name="ingredients" value="BAT,MUSHROOM"/>
  </properties>
  <objectgroup name="Rooms">
   <object name="entry" type="Room" x="0" y="0" width="320" height="368"/>
@@ -13,8 +13,8 @@
  </objectgroup>
  <objectgroup name="SpawnPoints">
   <object id="1" type="Player" x="32" y="272" width="48" height="48"/>
-  <object id="2" type="Chicken" x="80" y="304" width="16" height="16"/>
-  <object id="3" type="Key" x="112" y="304" width="16" height="16"/>
+  <object id="2" name="Bat" type="Collectable" x="80" y="304" width="16" height="16"/>
+  <object id="3" name="Mushroom" type="Collectable" x="112" y="304" width="16" height="16"/>
   <object id="4" type="Boss" x="560" y="288" width="48" height="32"/>
   <object id="7" name="Deadline" type="Deadline" x="-1000" y="368" width="2640" height="16"/>
  </objectgroup>
