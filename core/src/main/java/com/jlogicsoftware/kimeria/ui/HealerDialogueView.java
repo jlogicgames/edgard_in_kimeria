@@ -23,6 +23,7 @@ public final class HealerDialogueView {
     private static final float TEXT_INNER_WIDTH = FRAME_WIDTH - TEXT_HORIZONTAL_INSET * 2f;
     private static final float TEXT_INNER_Y = FRAME_Y + TEXT_VERTICAL_INSET;
     private static final float TEXT_INNER_HEIGHT = FRAME_HEIGHT - TEXT_VERTICAL_INSET * 2f;
+    private static final float CHECKLIST_X = 320f, CHECKLIST_Y = 48f, CHECKLIST_WIDTH = 360f;
     private final TextureRegion edgard, healer;
 
     record DialogueRegion(float x, float width) {}
@@ -60,7 +61,7 @@ public final class HealerDialogueView {
                 + mark(level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal())
                 + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(level.forestCoinsSecured()),
                     "total", Integer.toString(level.forestCoinTotal()));
-        if (!dialogue.postVictory()) overlay.body(batch, checklist, 320, 48, 360);
+        if (dialogue.showsChecklist()) overlay.body(batch, checklist, CHECKLIST_X, CHECKLIST_Y, CHECKLIST_WIDTH);
         frame(batch, FRAME_X, FRAME_Y, FRAME_WIDTH, FRAME_HEIGHT, false);
         Color speakerColor = dialogue.edgardSpeaking() ? Color.WHITE : HEALER_GREEN;
         int alignment = dialogue.edgardSpeaking() ? Align.left : Align.right;

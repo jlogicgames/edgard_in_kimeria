@@ -102,5 +102,14 @@
   "MECHANISM": "Mechanizm",
   "LEVER": "Dźwignia",
   "TURN_ON": "Włącz",
-  "TURN_OFF": "Wyłącz"
+  "TURN_OFF": "Wyłącz",
+  "HEALER_TALE_ROAD": "Edgardzie, droga przed tobą jest krótka, a jednak to baśń. Wysłuchaj jej, zanim ruszysz w drogę.",
+  "EDGARD_TALE_NO_TIME": "Baśń? Królestwo czeka, a ja nie mam czasu na opowieści.",
+  "HEALER_TALE_FAIRIES": "W tym lesie śpiąca wróżka budzi pochodnię dotykiem, drabina spuszcza się dla życzliwych rąk, a uparty mur rośnie, gdy zabrzmi właściwe zaklęcie.",
+  "HEALER_TALE_LIFT": "Złota łódź powietrzna przenosi śmiałych nad ciemną otchłanią. Dalekiej wróżce można posłać kamień jak życzenie. Nie bój się prosić.",
+  "HEALER_TALE_WITCH": "Strzeż się darów złej czarownicy: mostu, który się kruszy, i jagody, która pęka. Odpowiadaj na jej zagadki szybkimi stopami, a las cię przepuści.",
+  "HEALER_TALE_PRAISE": "Dobrze się spisałeś, Edgardzie. Zaczarowany las opowiedział ci wszystkie swoje baśnie, a ty rozwiązałeś każdą jego zagadkę.",
+  "EDGARD_TALE_READY": "Więc jestem gotów na drogę?",
+  "HEALER_TALE_HEROES": "Gotów jak bohaterowie dawnych baśni, którzy się bali i mimo to szli dalej. Prawdziwy wojownik nie potrzebuje więcej.",
+  "HEALER_TALE_BLESSING": "Przyjmij moje błogosławieństwo: stąpaj lekko, patrz bystro i spójrz dwa razy na każdą ścieżkę, która wydaje się zbyt łaskawa, bo czarownice uśmiechają się najsłodziej. Niech wróżki oświetlają ci drogę."
 }

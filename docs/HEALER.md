@@ -316,3 +316,19 @@ dialogue-only pause background and held-input suppression. The new hero has no
 victory-walk lock. See [post-boss validation](POST_BOSS_VALIDATION.md) for automated,
 desktop and browser evidence. Deferred device and release checks are tracked in
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).
+
+## Tutorial tales (#220, D41)
+
+The same dialogue system opens twice around `forest-0`, in fairy-tale language and with no
+named controls: a five-line **start tale** on a New Game run's first entry into the level,
+and a four-line **farewell** when the last room's `Checkpoint` is reached (praise, "you are
+ready" and a parting blessing), after which forest-1 loads as before. They are scripted
+(`HealerDialogue.Kind.TUTORIAL_START` / `TUTORIAL_END`): no checklist, no choices, one
+`CONTINUE`. Reveal/advance, portraits, speaker regions, `Next >` and Esc pause are the
+ones described above; the game is in the HEALER state, so no level timer advances.
+
+Each opens at most once per run (consumed on opening) and is never repeated by death,
+retry, Restart Level or repeated Checkpoint callbacks. Nothing is saved: a save only exists
+after a level is completed, so Continue never lands in forest-0 and legacy saves skip it.
+Wording is a proposal for author review; see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial)
+for texts, rules and what is not verified.
