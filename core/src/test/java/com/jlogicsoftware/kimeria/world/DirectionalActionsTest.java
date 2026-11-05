@@ -565,6 +565,7 @@ class DirectionalActionsTest {
         frames(1);
         assertFalse(level.controlHintsActive());
         assertEquals("Fireball inventory full", level.player.contextHint());
+        assertFalse(level.player.contextHintIsTutorialMessage(), "Status feedback stays immediate");
         Vector2 anchor = new Vector2(); level.player.contextHintPosition(anchor);
         assertEquals(refill.centerX(), anchor.x);
         assertTrue(anchor.y < refill.getY());
@@ -1057,7 +1058,13 @@ class DirectionalActionsTest {
         assertEquals("Walk right to find the way out", level.player.contextHint());
         Vector2 anchor = new Vector2(); level.player.contextHintPosition(anchor);
         assertEquals(zone.bounds().x + zone.bounds().width / 2, anchor.x, .001);
-        assertEquals(zone.bounds().y, anchor.y, .001);
+        // #206: drawn mid-screen (not at the top edge), and clear of the standing hero's head (y 272) even
+        // for a two-line, 40 px label.
+        assertEquals(zone.bounds().y + zone.bounds().height * .45f, anchor.y, .001);
+        // The two-line label (40 px) grows upward from the anchor, so its top edge is anchor.y - 40 and its
+        // bottom edge anchor.y must clear the hero's head at y 272.
+        assertTrue(anchor.y - 40 > 60 && anchor.y < 272, "mid-screen, above the hero: " + anchor.y);
+        assertTrue(level.player.contextHintIsTutorialMessage(), "Tutorial messages are the delayed, animated kind");
         // The hero's body centre is tested, so the hint must survive a jump: the zone spans the room.
         var room = level.currentRoomBounds();
         assertEquals(room.y, zone.bounds().y, .001); assertEquals(room.height, zone.bounds().height, .001);

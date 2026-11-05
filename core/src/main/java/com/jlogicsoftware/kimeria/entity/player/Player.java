@@ -49,7 +49,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final int FRAME_SIZE = SpriteSheets.PLAYER.width();
     private static final float PICKUP_REACH = 3, PLACEMENT_GAP = 2;
     private static final float FIREBALL_SPAWN_OFFSET_Y = 3;
-    private static final float HINT_PLAYER_OFFSET_Y = 12, HINT_TARGET_OFFSET_Y = 24;
+    private static final float HINT_PLAYER_OFFSET_Y = 12, HINT_TARGET_OFFSET_Y = 24, HINT_ZONE_HEIGHT_FRACTION = .45f;
     private static final float CAMERA_TARGET_TOLERANCE = .001f;
     private static final float MAX_PHYSICS_FRAME_SECONDS = .05f;
     private record Clip(State state, int frames, int row, boolean loop) { }
@@ -654,6 +654,15 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return zone == null ? "" : zone.message().t(game.language());
     }
 
+    /**
+     * Whether the current hint is a map-authored tutorial message, which the HUD holds back briefly and
+     * animates in to draw the eye; pickups, mechanisms, ladders and the controls zone stay immediate.
+     */
+    public boolean contextHintIsTutorialMessage() {
+        if (fullFireballRefill() != null || level == null || contextHint().isEmpty()) return false;
+        return controlHint().isEmpty() && level.messageHint() != null;
+    }
+
     private String controlHint() {
         if (level == null || !level.controlHintsActive()) return "";
         String interaction = interactionHint();
@@ -705,8 +714,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
             return;
         }
         var zone = level == null || !controlHint().isEmpty() ? null : level.messageHint();
-        if (zone != null) { // An authored message sits at its zone, like the object it describes.
-            out.set(zone.bounds().x + zone.bounds().width / 2, zone.bounds().y);
+        if (zone != null) { // An authored message sits mid-screen in its zone, above the hero's head.
+            out.set(zone.bounds().x + zone.bounds().width / 2, zone.bounds().y + zone.bounds().height * HINT_ZONE_HEIGHT_FRACTION);
             return;
         }
         LadderEntry entry = interactionHint().isEmpty() ? ladderEntry() : null;

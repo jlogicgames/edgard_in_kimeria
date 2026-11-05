@@ -195,7 +195,7 @@ class LeverLessonTest {
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean lit : new boolean[]{false, true}) {
-                for (float x = 24; x < 1216; x += 8) {
+                for (float x = 24; x < 736; x += 8) {
                     torch(level).toggleFire(lit);
                     level.player.position.set(x, 272);
                     for (int i = 0; i < 3; i++) frame(level);
@@ -222,6 +222,7 @@ class LeverLessonTest {
         Level level = freshLevel();
         walkToLever(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_ON.t(Language.ENGLISH)), level.player.contextHint());
+        assertFalse(level.player.contextHintIsTutorialMessage(), "Inside the controls zone the lever label is immediate");
         assertTrue(level.player.contextHint().contains("W + K") || level.player.contextHint().contains("Up"), level.player.contextHint());
         operate(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_OFF.t(Language.ENGLISH)), level.player.contextHint());

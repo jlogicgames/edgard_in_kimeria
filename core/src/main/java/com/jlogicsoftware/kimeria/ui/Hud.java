@@ -117,7 +117,7 @@ public class Hud {
         if (hintOwner != player) { hintTransition.clear(); hintOwner = player; }
         String text = player.contextHint();
         if (!text.isEmpty()) player.contextHintPosition(hintPosition);
-        hintTransition.update(text, hintPosition, dt);
+        hintTransition.update(text, hintPosition, HintTransition.clampFrame(dt), player.contextHintIsTutorialMessage());
         if (hintTransition.alpha() == 0) return;
         text = hintTransition.text();
         hintTransition.position(hintPosition);
