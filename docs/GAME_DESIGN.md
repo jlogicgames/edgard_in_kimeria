@@ -189,6 +189,13 @@ unavailable until Restart Level. Remote or throw activation, one-shot versus rev
 supports, and the recovery rules for each new linked object remain open until a prototype
 defines them.
 
+**Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
+simple, lethal, organic hazards on the ground and overhead, grouped by trigger family
+(proximity, position, touch, rhythm, crumble), taken in spirit from the original
+([evidence](ORIGINAL_TRAPS.md)). Every explosive trap on a required path offers a choice
+between detonating it from afar and a riskier bypass; the required route never needs
+ammunition (D26). The tablet gate is not decided there; see #136 and #139.
+
 **Author's working structure:** five levels per stage, five rooms per level.
 Validate this planning model with authored levels. Distribution of new elements,
 boss roster and boss placement remain open.
@@ -555,6 +562,22 @@ not require mid-level saves or saving only at stage boundaries.
 resources budgeted across several levels. Whether progress can be reconstructed
 from the reached level or needs a format extension is a separate decision.
 This design does not claim inventory persistence is implemented.
+
+## Later mechanism and enemy ideas (author requests, 2026-11-05)
+
+Requests, not accepted rules.
+
+- **Floor pressure plate** ([#237](https://github.com/jlogicgames/edgard_in_kimeria/issues/237)):
+  a plate that activates a door like a lever (Prince of Persia style), for the castle-fortress
+  stage. Open design points: when the plate is released, does the door stay open or close
+  again; the D26 recovery rules (a required door must not become unreachable); and linking by
+  Tiled `target` like the lever.
+- **Enemy readability** ([#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240)):
+  an enemy winds up before an attack, with a pause that lets the player run away, and
+  notices the player as in Broforce. This follows the warning rule of D7 and relates to
+  [#138](https://github.com/jlogicgames/edgard_in_kimeria/issues/138) (bosses) and
+  [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) (forest mechanic with an
+  enemy or hazard).
 
 ## Rooms, dangers and skill development
 
