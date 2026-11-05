@@ -15,6 +15,7 @@ different scopes; a design decision is not evidence that a feature is implemente
 | [Design decisions](DECISIONS.md) | Accepted campaign decisions and rationale, including D26's observe-plan-commit rule, death, retries, input, hitboxes and saves. Accepted entries may describe planned behavior; consult implementation documents for status. |
 | [Story and recurring characters](STORY.md) | Established world facts, the healer's role, implemented appearances and unresolved narrative details. |
 | [Original DOS references](ORIGINAL_DOS.md) | Historical story, screenshot transcriptions and character references. Source material for the remake; historical mechanics and region order are not automatically remake requirements. |
+| [Original DOS traps](ORIGINAL_TRAPS.md) | #188 evidence phase: the original game's traps, collectibles and HUD from the author's screenshots and notes, open questions, and unselected adaptation candidates. Historical evidence, not remake requirements. |
 | [Directional actions](DIRECTIONAL_CONTROLS.md) | #95/#175 controls, close pickup reach, contextual reminders, carrying/fireball refills and capacity HUD, recovery and dependencies. |
 | [Rooms in Tiled](ROOMS.md) | Map authoring, room transitions, retry/rollback rules, replay budgets and measured routes. |
 | [Rollback verification](ROLLBACK_VALIDATION.md) | #100 test and Chrome results; separate F4 defect #170. |
@@ -52,7 +53,7 @@ different scopes; a design decision is not evidence that a feature is implemente
 | Where is the approved directional control scheme tracked? | [GitHub #95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95) | [D18](DECISIONS.md#d18-directional-controls-steppe-double-jump-and-replay-target); implemented dispatch; [test evidence and dependencies](DIRECTIONAL_CONTROLS.md) |
 | How do hits, stomps and traps stay fair? | [Hitbox conventions](DECISIONS.md#d10-hitbox-and-collision-conventions) | [Trap rules](DECISIONS.md#d7-traps-are-deterministic-puzzle-elements), [assist](DECISIONS.md#d11-assist-mode-a-deliberate-exception-to-d1) |
 | How does the current boss work? | [Forest boss](BOSS.md) | [Balance values](BOSS.md#balance-values), [retry and completion](BOSS.md#retry-elixir-and-completion) |
-| What is established about the story and portraits? | [Story](STORY.md) | [DOS story and portrait references](ORIGINAL_DOS.md), [editable portrait assets](PORTRAITS.md), [art direction](ART_DIRECTION.md) |
+| What is established about the story and portraits? | [Story](STORY.md) | [DOS story and portrait references](ORIGINAL_DOS.md), [original traps](ORIGINAL_TRAPS.md), [editable portrait assets](PORTRAITS.md), [art direction](ART_DIRECTION.md) |
 | How do I build, run or edit maps? | [Build and run](DEVELOPMENT.md#building-and-running) | [Live editing](DEVELOPMENT.md#live-editing-gradlew-rundev), [map authoring](ROOMS.md#authoring) |
 | What still needs release validation? | [Pre-release TODO](PRE_RELEASE_TODO.md) | [Skill evidence](SKILL_VALIDATION.md), [post-boss evidence](POST_BOSS_VALIDATION.md) |
 | How is design maintained during development? | [Design maintenance](GAME_DESIGN.md#design-maintenance) | [D17](DECISIONS.md#d17-maintain-the-game-design-throughout-development) |

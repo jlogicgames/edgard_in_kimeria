@@ -147,6 +147,30 @@ frame, in addition to viewing the master. Record author review for each artwork 
 separately from renderer checks. Earlier approval of the coarse portrait version does
 not automatically approve its remaster or every future image.
 
+## Parallax (author request, 2026-11-05, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+
+A request and idea, not an implemented rule.
+
+- **Layers:** a near, blurred **foreground** layer, the **main** layer where the hero acts, and
+  one or more **background** layers behind it.
+- **Readability rule (proposed):** the foreground layer must **never hide** traps, hints or the
+  hero; it frames the scene at the edges or is faint enough to see through.
+- **Performance:** web and mobile are targets, so the number of layers, blur cost and overdraw
+  need a measured budget before the layers are fixed.
+- **Per-stage art:** each stage has its own set of layers.
+
+## Environment effects (author checklist, 2026-11-05, [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239))
+
+A checklist of ideas, not implemented rules:
+
+- vines sway and shake when a stone falls and the ground shakes;
+- a bush shakes when the player walks past;
+- a dust puff under the player on a jump;
+- the screen shakes, and dust may fall from the ceiling, when a lever lowers a wall.
+
+**Accessibility note:** screen shake must be **optional or reducible** (an Assist-style
+setting, D11), and no effect may hide a trap warning.
+
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 
 The author explicitly requires sprites for world artwork, including prototypes.

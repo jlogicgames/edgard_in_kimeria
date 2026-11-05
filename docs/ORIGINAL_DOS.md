@@ -9,6 +9,11 @@ and the credits screen: `Copyright 1994 (С) Company MOTO`. The initially suppli
 The video could not be fetched during this edit; the transcriptions below come from
 the attached screenshots, not an asserted review of the video.
 
+Original traps, collectibles and the HUD, documented from the author's later screenshots
+and notes, are in [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md) (#188). Those traps are from the 1994
+original; the remake is a retro-styled new work for the 2020s and carries over only the
+successful finds, adapted to D7 telegraphs and D26 recovery (author, 2026-11-05).
+
 ## What belongs in the remake now
 
 - README: identify the DOS remake/remaster, give a short world premise and link the

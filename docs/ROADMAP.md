@@ -133,7 +133,21 @@ headless author check, then the author's desktop and web play-through of 2026-11
 Concrete follow-up tasks: [#186](https://github.com/jlogicgames/edgard_in_kimeria/issues/186)
 introduces a lever and linked support; [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187)
 develops an optional route. [#188](https://github.com/jlogicgames/edgard_in_kimeria/issues/188)
-researches original traps, tests adaptations, then brainstorms new traps; #104 may
+researches original traps, tests adaptations, then brainstorms new traps. Its research
+phase is documented in [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md) (15 screenshots, the author's
+notes, open questions, unselected candidates); the author answered the original behaviour on 2026-11-05
+(only the successful finds are adapted for modern fairness, D7 and D26). **The brainstorm
+phase is done by [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)**
+(forest trap set, explosive-trap choice rule, tutorial plan). Implementation is tracked by
+#230 art, #231 proximity traps, #232 falling traps, #233 explosive stump/root, #234 rhythm
+traps and #235 tutorial integration. **Backlog added 2026-11-05** (author requests, not
+accepted rules): [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236) parallax
+layers, [#237](https://github.com/jlogicgames/edgard_in_kimeria/issues/237) castle floor
+pressure plate, [#238](https://github.com/jlogicgames/edgard_in_kimeria/issues/238) arrow trap
+for world 2 and later, [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239)
+environment effects, [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240) enemy
+wind-up; see ART_DIRECTION.md, GAME_DESIGN.md and D42. Also #224 (impaled-death sprite), #225 (decompose the
+screens) and #229 (Bat and Mushroom). Playtests remain open. #104 may
 also use an existing enemy. [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
 tracks third-party artwork inventory, schematic replacement and original redraws.
 
