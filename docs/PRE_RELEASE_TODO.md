@@ -45,6 +45,9 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   navigation must not confirm a choice. Check live layout changes and persistence.
 - [ ] Complete normal end-to-end runs in the release web build, including mobile browsers
   on real devices. Earlier development-browser and seeded runs retain their limited scope.
+  Evidence so far: one author iPhone browser play-through of the forest-0 tutorial on 2026-11-05
+  (playable; problems in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)). It is not
+  a full run and not a release-build pass; re-check portrait/landscape fit, fullscreen and screen wake after #226.
 
 ## Rooms, pickups and traps
 

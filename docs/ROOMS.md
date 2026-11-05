@@ -642,6 +642,8 @@ Current `forest-0.tmx` SHA-256: `0faee8732d8695c557fab6f1f846b4619cd7366d75ca35f
 #### Author acceptance of forest-0 (2026-11-05)
 
 Adam Konter (project author) played the whole forest-0 tutorial on desktop (keyboard only) and also checked the web build, against `forest-0.tmx` SHA-256 `0faee8732d8695c557fab6f1f846b4619cd7366d75ca35f2233de79ccc7037af`. All six rooms (lever, ladder, wall, platform, stone, traps), both healer dialogues (start tale and farewell) and the transition into forest-1 were checked, with no remarks (OK). **Not checked:** gamepad, touch controls, native-speaker quality of the de/pl/uk/be translations. No novice playtest (#129–#131) has been done. Mastered route times above stay headless author checks.
+
+**Mobile browser (same day, same author):** the web build was also played on an iPhone in the browser, and all the tutorial screens were completed with the on-screen touch controls, so touch controls are now partly checked on one device (one phone, one browser; gamepad still unchecked). Gameplay worked; four presentation problems are filed as [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226) (portrait control placement, no fullscreen, landscape shows only half the game, screen auto-lock).
 The first-room ladder starts 32 px (two 16 px tiles) above its former position. Trigger 124,
 named `first-ladder`, places a lever beside it on the floor. Each interaction animates the
 ladder between the raised y=208–288 span and its former lowered y=240–320 span at 160 px/s;
