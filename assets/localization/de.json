@@ -72,6 +72,8 @@
   "THROW": "Werfen",
   "FIREBALL_STOCK_FULL": "Feuerballvorrat voll",
   "HINT_TUTORIAL_WALK": "Geh nach rechts, um den Ausgang zu finden",
+  "HINT_LEVER_TORCH": "Dieser Hebel zündet die Fackel an und löscht sie",
+  "HINT_LEVER_EXIT": "Der Ausgang liegt voraus. Der Hebel geht immer",
   "FIREBALL": "Feuer",
   "NO_AMMO": "Leer",
   "PLACE_BLOCKED": "Belegt",

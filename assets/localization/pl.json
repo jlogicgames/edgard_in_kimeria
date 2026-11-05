@@ -72,6 +72,8 @@
   "THROW": "Rzuć",
   "FIREBALL_STOCK_FULL": "Zapas kul ognia jest pełny",
   "HINT_TUTORIAL_WALK": "Idź w prawo, aby znaleźć wyjście",
+  "HINT_LEVER_TORCH": "Ta dźwignia zapala i gasi pochodnię",
+  "HINT_LEVER_EXIT": "Wyjście jest dalej. Dźwignia działa zawsze",
   "FIREBALL": "Ogień",
   "NO_AMMO": "Pusto",
   "PLACE_BLOCKED": "Blokada",
