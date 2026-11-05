@@ -28,6 +28,7 @@ import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
+import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
@@ -160,7 +161,7 @@ public class Level implements WorldObject {
 
     private final List<WorldObject> ambience = new ArrayList<>();
     private sealed interface ObjectSnapshot permits CarryableState, TorchState, WallState,
-        EscalatorState, FallingPlatformState, LadderState { }
+        EscalatorState, FallingPlatformState, LadderState, ExplosiveState { }
     private record CarryableState(Carryable.Snapshot value) implements ObjectSnapshot { }
     private record TorchState(float x, float y, int intensity, boolean burning,
                               boolean removed) implements ObjectSnapshot { }
@@ -168,6 +169,7 @@ public class Level implements WorldObject {
     private record EscalatorState(Escalator.Snapshot value) implements ObjectSnapshot { }
     private record FallingPlatformState(FallingPlatform.Snapshot value) implements ObjectSnapshot { }
     private record LadderState(Ladder.Snapshot value) implements ObjectSnapshot { }
+    private record ExplosiveState(ExplosiveTrap.Snapshot value) implements ObjectSnapshot { }
 
     /** One bounded secured entry per room, including immutable snapshots of mutable world owners. */
     private record Visit(Map<Integer, Enemy<?>> enemies, Set<Integer> defeated,
@@ -416,6 +418,7 @@ public class Level implements WorldObject {
             int owner = roomLayout.owner(o);
             if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map); // D45: every room, at load.
             if ("ThornRoot".equals(o.type) || "ThornTuft".equals(o.type)) validateThorn(o, owner);
+            if (ExplosiveTrap.isExplosive(o.type)) validateExplosive(o, owner); // D47: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -539,6 +542,7 @@ public class Level implements WorldObject {
         if (owner instanceof Escalator escalator) return new EscalatorState(escalator.snapshot());
         if (owner instanceof FallingPlatform platform) return new FallingPlatformState(platform.snapshot());
         if (owner instanceof Ladder ladder) return new LadderState(ladder.snapshot());
+        if (owner instanceof ExplosiveTrap trap) return new ExplosiveState(trap.snapshot());
         return null;
     }
 
@@ -562,6 +566,8 @@ public class Level implements WorldObject {
                 platform.restore(state.value());
             } else if (owner instanceof Ladder ladder && snapshot instanceof LadderState state) {
                 ladder.restore(state.value());
+            } else if (owner instanceof ExplosiveTrap trap && snapshot instanceof ExplosiveState state) {
+                trap.restore(state.value());
             }
         });
         roomStateOwners.forEach((id, owner) -> {
@@ -691,6 +697,13 @@ public class Level implements WorldObject {
                 case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
                 case "ThornRoot", "ThornTuft" -> objects.add(ThornTrap.fromMap(assets, game.trapWarnings(), o,
                     () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false)));
+                case "ExplosiveStump", "ExplosiveRoot" -> {
+                    ExplosiveTrap trap = ExplosiveTrap.fromMap(assets, game.trapWarnings(), o,
+                        () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false),
+                        () -> { if (game.playSounds()) game.playSound("bounce"); });
+                    objects.add(trap);
+                    registerRoomStateOwner(o.id, trap);
+                }
                 case "Puffball" -> {
                     Puffball puffball = Puffball.fromMap(assets, o, game.trapWarnings(), describe(o));
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
@@ -752,6 +765,23 @@ public class Level implements WorldObject {
         Rectangle entranceBody = new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
             player.hitbox.width, player.hitbox.height);
         String problem = ThornTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), entranceBody);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /**
+     * Explosive traps (D47) fail at load when they have no bypass (open floor and headroom around them) or when their
+     * blast square leaves the room or covers the entrance, the room exit or a checkpoint.
+     */
+    private void validateExplosive(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Map<String, Rectangle> standing = new java.util.LinkedHashMap<>();
+        standing.put("entrance", new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
+            player.hitbox.width, player.hitbox.height));
+        if (room.exit() != null) standing.put("exit", room.exit());
+        for (TiledObject other : map.layer("SpawnPoints"))
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
+                standing.put("checkpoint [" + other.id + "]", new Rectangle(other.x, other.y, other.width, other.height));
+        String problem = ExplosiveTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), standing);
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 

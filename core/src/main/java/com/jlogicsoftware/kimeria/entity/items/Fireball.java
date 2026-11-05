@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.physics.ProjectileStep;
@@ -38,6 +39,12 @@ public final class Fireball extends Entity {
                 && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds)) {
                 if (enemy instanceof Boss boss) boss.hitByFireball();
                 else enemy.collidedWithActor(true);
+                removeFromParent();
+                break;
+            }
+            // D47: a fireball that reaches an intact explosive trap lights it from afar and is spent doing so.
+            if (!removed) for (var object : level.objects) if (object instanceof ExplosiveTrap trap
+                && trap.triggerBox().overlaps(bounds) && trap.igniteFromAfar()) {
                 removeFromParent();
                 break;
             }

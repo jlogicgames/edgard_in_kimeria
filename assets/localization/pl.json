@@ -85,7 +85,7 @@
   "HINT_STONE_EXIT": "Trafij kamieniem w dźwignię i przejedź platformą na drugą stronę",
   "HINT_STONE_ACROSS": "Wyjście jest tuż przed tobą",
   "HINT_TRAP_PLATFORM": "Platforma spada niedługo po lądowaniu. Upadek w dół to tylko ponowna próba",
-  "HINT_TRAP_BOMB": "Dotknięta bomba miga, a potem wybucha. Przeskocz ją lub uciekaj",
+  "HINT_TRAP_STUMP": "Dotknięty pniak dymi, a potem wybucha. Przeskocz go lub uciekaj",
   "FIREBALL": "Ogień",
   "NO_AMMO": "Pusto",
   "PLACE_BLOCKED": "Blokada",

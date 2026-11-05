@@ -60,7 +60,7 @@ class LocalizationLayoutTest {
                     Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT,
                     Msg.HINT_WALL_LEVER, Msg.HINT_WALL_PASS, Msg.HINT_PLATFORM_LEVER, Msg.HINT_PLATFORM_RIDE,
                     Msg.HINT_STONE_THROW, Msg.HINT_STONE_EXIT, Msg.HINT_STONE_ACROSS,
-                    Msg.HINT_TRAP_PLATFORM, Msg.HINT_TRAP_BOMB})
+                    Msg.HINT_TRAP_PLATFORM, Msg.HINT_TRAP_STUMP})
                     assertTrue(height(hint, message.t(language), 200) <= 40, prefix + message);
                 // Spoken healer/player lines are measured against the actual two-thirds regions
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
@@ -119,7 +119,7 @@ class LocalizationLayoutTest {
                             Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT,
                             Msg.HINT_WALL_LEVER, Msg.HINT_WALL_PASS, Msg.HINT_PLATFORM_LEVER, Msg.HINT_PLATFORM_RIDE,
                             Msg.HINT_STONE_THROW, Msg.HINT_STONE_EXIT, Msg.HINT_STONE_ACROSS,
-                            Msg.HINT_TRAP_PLATFORM, Msg.HINT_TRAP_BOMB}) {
+                            Msg.HINT_TRAP_PLATFORM, Msg.HINT_TRAP_STUMP}) {
                             float contextHeight = height(hint, context, 200), zoneHeight = height(hint, message.t(language), 200);
                             for (float cameraY : new float[]{0, 8}) for (float contextWorldY : new float[]{284, 284 - 58}) {
                                 String where = language.code() + " " + message + " / " + context.replace('\n', '|')

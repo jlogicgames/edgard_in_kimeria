@@ -92,7 +92,7 @@
    </properties>
   </object>
   <object id="72" name="FallingPlatform" type="FallingPlatform" x="3392" y="320" width="32" height="16"/>
-  <object id="73" name="Bomb" type="Bomb" x="3648" y="304" width="16" height="16"/>
+  <object id="73" name="Exploding Stump" type="ExplosiveStump" x="3648" y="304" width="16" height="16"/>
   <object id="65" name="Lever [65 → 64]" type="Trigger" x="3008" y="272" width="16" height="48">
    <properties>
     <property name="target" type="object" value="64"/>
@@ -271,9 +271,9 @@
     <property name="message" value="HINT_TRAP_PLATFORM"/>
    </properties>
   </object>
-  <object id="76" name="forest-0-traps-bomb" type="Hint" x="3440" y="0" width="352" height="368">
+  <object id="76" name="forest-0-traps-stump" type="Hint" x="3440" y="0" width="352" height="368">
    <properties>
-    <property name="message" value="HINT_TRAP_BOMB"/>
+    <property name="message" value="HINT_TRAP_STUMP"/>
    </properties>
   </object>
   <object id="68" name="forest-0-stone-controls" type="Hint" x="2576" y="0" width="496" height="368">

@@ -10,6 +10,7 @@ import com.jlogicsoftware.kimeria.physics.ProjectileStep;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.world.Level;
@@ -131,6 +132,14 @@ public final class Carryable extends Entity {
                 if (thrown && level.player.canFight()) for (var object : level.objects) {
                     if (object instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
                         if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
+                        velocity.x = 0; thrown = false;
+                        break;
+                    }
+                }
+                // D47: a thrown stone that reaches an intact explosive trap lights it from afar, then drops like after any hit
+                // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.
+                if (thrown && kind == Kind.STONE && level.player.canFight()) for (var object : level.objects) {
+                    if (object instanceof ExplosiveTrap trap && trap.triggerBox().overlaps(bounds()) && trap.igniteFromAfar()) {
                         velocity.x = 0; thrown = false;
                         break;
                     }

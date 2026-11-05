@@ -18,6 +18,9 @@ MECHANISMS = ('Actionable', 'Escalator', 'Ladder')
 ACTIONABLE_KINDS = ('Torch', 'Wall')
 # Proximity traps (D44): mirror ThornTrap.problem for what a map can say; the game also checks the hero entrance.
 THORNS = ('ThornRoot', 'ThornTuft')
+# Explosive traps (D47): mirror ExplosiveTrap.problem (bypass = the thorn jump envelope, blast square clear of standing places).
+EXPLOSIVES = ('ExplosiveStump', 'ExplosiveRoot')
+BLAST_SIZE = 64.0
 # Rhythmic forest traps (D46). Mirrors Puffball.validate / ThornVine.validate / FallingPlatform.Skin in Java.
 PUFFBALL_SWELL_ASSISTED = 0.8 * 1.5  # TrapWarnings.DEFAULT_WARNING_SECONDS with the longer-warnings assist
 PUFFBALL_MIN_CALM = 0.8
@@ -228,6 +231,12 @@ def thorn_problems(o, collisions, spawn=(), room=None):
         return ['needs a zone (zone, zoneLeft, zoneRight): not negative, at least one side used']
     if (0 < left < MIN_ZONE) or (0 < right < MIN_ZONE):
         return [f'needs each used zone side to be at least {int(MIN_ZONE)} px (zone, zoneLeft, zoneRight; 0 leaves a side unused)']
+    return open_floor_problems(o, left, right, collisions, spawn, room)
+
+
+def open_floor_problems(o, left, right, collisions, spawn, room):
+    """Mirror of ThornTrap.openFloorProblem: the shared jump envelope (floor, headroom, inside the room)."""
+    x, y, w, h = box(o)
     floor = y + h
     env_left, env_right = x - max(left, MIN_ZONE), x + w + max(right, MIN_ZONE)
     if room and (env_left < room[0] or env_right > room[0] + room[2] or floor - HEADROOM < room[1]
@@ -251,6 +260,24 @@ def thorn_problems(o, collisions, spawn=(), room=None):
         if overlaps(thing, air):
             return [f'needs {int(HEADROOM)} px of free height over it and {int(MIN_ZONE)} px either side '
                     '(jumpable, not a one-tile corridor)']
+    return []
+
+
+def explosive_problems(o, collisions, spawn, room, standing):
+    """Mirror of ExplosiveTrap.problem. `standing` is a list of (name, (x, y, w, h)) places the hero must be able to stand."""
+    x, y, w, h = box(o)
+    if not (w > 0 and h > 0):
+        return ['needs positive bounds']
+    open_floor = open_floor_problems(o, 0.0, 0.0, collisions, spawn, room)
+    if open_floor:
+        return open_floor
+    blast = [x + w / 2 - BLAST_SIZE / 2, y + h / 2 - BLAST_SIZE / 2, BLAST_SIZE, BLAST_SIZE]
+    if room and (blast[0] < room[0] or blast[1] < room[1] or blast[0] + blast[2] > room[0] + room[2]
+                 or blast[1] + blast[3] > room[1] + room[3]):
+        return ['has its blast square leaving the room']
+    for name, area in standing:
+        if overlaps(blast, area):
+            return [f'has its blast square over the room {name}']
     return []
 
 
@@ -285,6 +312,12 @@ def check_map(path):
             errors.append(f"{describe(o)}: {kind(o)} is in the Collisions layer; traps must be in SpawnPoints")
     for o in (o for o in spawn if kind(o) in THORNS):
         errors.extend(f"{kind(o)} {describe(o)} {e}" for e in thorn_problems(o, collisions, spawn, thorn_room(root, o)))
+    for o in collisions:
+        if kind(o) in EXPLOSIVES:
+            errors.append(f"{describe(o)}: {kind(o)} is in the Collisions layer; traps must be in SpawnPoints")
+    for o in (o for o in spawn if kind(o) in EXPLOSIVES):
+        errors.extend(f"{kind(o)} {describe(o)} {e}"
+                      for e in explosive_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o)))
     for trigger in (o for o in spawn if kind(o) == 'Trigger'):
         target = prop(trigger, 'target').strip()
         if target:
