@@ -21,6 +21,8 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
+import com.jlogicsoftware.kimeria.ui.HintGeometry;
+import com.jlogicsoftware.kimeria.ui.HintLayout;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -333,6 +335,35 @@ class LadderLessonTest {
         held.clear();
     }
 
+    /**
+     * #211: floor, jump apex, ledge and climbing heights, ladder raised and lowered: wherever both channels
+     * show, the message and the live label are at least the gap apart (camera 0 and 8 px down).
+     */
+    @Test void messageAndLiveLabelsNeverOverlapOnTheFloorInTheAirOnTheLedgeOrOnTheLadder() {
+        Level level = freshRoom();
+        HintGeometry geometry = new HintGeometry();
+        Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
+        int both = 0;
+        for (boolean lowered : new boolean[]{false, true}) {
+            if (ladder(level).isLowered() != lowered) ladder(level).performAction();
+            settle(level, 60);
+            for (float standY : new float[]{272, 272 - 58, 160, 160 - 58, 130})
+                for (float x = 600; x <= 1240; x += 4) {
+                    level.player.position.set(x - 24, standY);
+                    settle(level, 2);
+                    String zone = level.player.zoneHint(), context = level.player.contextHint();
+                    if (zone.isEmpty() || context.isEmpty()) continue;
+                    both++;
+                    level.player.zoneHintPosition(zoneAnchor); level.player.contextHintPosition(contextAnchor);
+                    for (float cameraY : new float[]{0, 8})
+                        assertTrue(geometry.gap(contextAnchor, context, zoneAnchor, zone, cameraY) >= HintLayout.GAP - .001,
+                            "x=" + x + " y=" + standY + " lowered=" + lowered + " cameraY=" + cameraY + " " + context.replace('\n', '|')
+                                + " / " + zone + " gap=" + geometry.gap(contextAnchor, context, zoneAnchor, zone, cameraY));
+                }
+        }
+        assertTrue(both > 20, "label and message do share positions in this room: " + both);
+    }
+
     @Test void theLeverIsOnlyEverWithinReachOnTheFloorAwayFromTheLadder() {
         Level level = freshRoom();
         Ladder ladder = ladder(level);
@@ -360,18 +391,18 @@ class LadderLessonTest {
                     boolean onLedge = x >= 1048;
                     level.player.position.set(x - 24, onLedge ? 160 : 272);
                     for (int i = 0; i < 3; i++) frame(level);
-                    String hint = level.player.contextHint();
-                    String where = "x=" + x + " lowered=" + lowered + ": " + hint;
+                    String hint = level.player.contextHint(), zone = level.player.zoneHint();
+                    String where = "x=" + x + " lowered=" + lowered + ": " + hint + " / " + zone;
+                    // #211: the zone message is never replaced by the live lever/ladder label; both show together.
+                    // Message zones know only position, so each text must be true in both ladder states.
+                    assertEquals(level.messageHint().message().t(Language.ENGLISH), zone, where);
+                    messages.add(zone);
                     if (level.player.canInteract()) {
                         assertTrue(hint.contains(Msg.LEVER.t(Language.ENGLISH)), where);
                         assertTrue(hint.contains((lowered ? Msg.TURN_OFF : Msg.TURN_ON).t(Language.ENGLISH)), where);
-                    } else if (level.messageHint() == null || !hint.equals(level.messageHint().message().t(Language.ENGLISH))) {
+                    } else if (!hint.isEmpty()) {
                         assertTrue(hint.endsWith(": " + Msg.CLIMB.t(Language.ENGLISH)) && lowered && !onLedge,
                             "Only a lowered ladder invites climbing: " + where);
-                    } else {
-                        // Message zones know only position, so each text must be true in both ladder states.
-                        assertEquals(level.messageHint().message().t(Language.ENGLISH), hint, where);
-                        messages.add(hint);
                     }
                 }
             }
@@ -386,7 +417,7 @@ class LadderLessonTest {
         Level level = freshRoom();
         walkToLever(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_ON.t(Language.ENGLISH)), level.player.contextHint());
-        assertFalse(level.player.contextHintIsTutorialMessage(), "Inside the controls zone the lever label is immediate");
+        assertFalse(level.player.zoneHint().isEmpty(), "The lever label never hides the zone message (#211)");
         operate(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_OFF.t(Language.ENGLISH)), level.player.contextHint());
     }

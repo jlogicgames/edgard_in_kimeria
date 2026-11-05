@@ -219,19 +219,40 @@ class HintTransitionTest {
         assertEquals(1, hint.alpha());
     }
 
-    @Test void immediateLabelDoesNotEraseAMessageThatIsStillFadingIn() {
+    @Test void anImmediateLabelInItsOwnChannelNeverTouchesAMessageThatIsStillFadingIn() {
         var anchor = new Vector2();
-        var hint = new HintTransition();
-        hint.update("Lever", anchor, HintTransition.ATTENTION_DELAY, true);
-        for (int i = 0; i < 10; i++) hint.update("Lever", anchor, .02f, true); // 0.2 s into the 0.45 s fade-in
-        float fading = hint.alpha();
+        var message = new HintTransition(); // the HUD's zone channel
+        var label = new HintTransition();   // the HUD's contextual channel
+        message.update("Lever", anchor, HintTransition.ATTENTION_DELAY, true);
+        for (int i = 0; i < 10; i++) message.update("Lever", anchor, .02f, true); // 0.2 s into the 0.45 s fade-in
+        float fading = message.alpha();
         assertTrue(fading > 0 && fading < 1);
         for (int i = 0; i < 10; i++) {
-            hint.update("Turn on", anchor, .02f, false);
-            assertEquals("Lever", hint.text()); assertTrue(hint.alpha() >= fading, "Keeps fading in");
+            label.update("Turn on", anchor, .02f);
+            message.update("Lever", anchor, .02f, true);
+            assertEquals("Lever", message.text()); assertTrue(message.alpha() >= fading, "Keeps fading in");
+            fading = message.alpha();
+            assertEquals("Turn on", label.text(), "The label is immediate: it is there from its first frame");
+            assertTrue(label.alpha() > 0);
         }
-        for (int i = 0; i < 30; i++) hint.update("Turn on", anchor, .02f, false);
-        assertEquals("Turn on", hint.text(), "Once fully shown it yields to the immediate label");
+        for (int i = 0; i < 30; i++) { label.update("Turn on", anchor, .02f); message.update("Lever", anchor, .02f, true); }
+        assertEquals(1, message.alpha(), .0001f); assertEquals(1, label.alpha(), .0001f);
+        assertEquals("Lever", message.text());
+    }
+
+    @Test void aLingeringMessageIsNotResetOrShortenedWhileALabelComesAndGoesInItsOwnChannel() {
+        var anchor = new Vector2();
+        var message = showing("Lever", anchor);
+        var label = new HintTransition();
+        float t = 0;
+        for (int i = 0; i < 20; i++) { message.update("", anchor, .02f, false); t += .02f; } // lingering, request over
+        for (int i = 0; i < 60; i++) { // a label shows and swaps text through zero: no effect on the message
+            label.update(i < 30 ? "Turn on" : "Turn off", anchor, .02f); message.update("", anchor, .02f, false); t += .02f;
+            assertEquals("Lever", message.text()); assertEquals(1, message.alpha(), .0001f);
+        }
+        assertTrue(t < HintTransition.LINGER);
+        for (int i = 0; i < 100; i++) message.update("", anchor, .02f, false);
+        assertEquals("", message.text(), "It still ends on its own linger schedule");
     }
 
     @Test void aMessageReturnsWithoutDelayAfterAnImmediateLabelEnds() {
