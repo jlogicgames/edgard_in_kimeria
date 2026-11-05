@@ -498,8 +498,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void openHealer(boolean paid, boolean returning) {
-        healer = new HealerDialogue(artifacts.hasIngredient(level.name, ItemType.CHICKEN),
-            artifacts.hasIngredient(level.name, ItemType.KEY),
+        healer = new HealerDialogue(artifacts.hasIngredient(level.name, ItemType.BAT),
+            artifacts.hasIngredient(level.name, ItemType.MUSHROOM),
             level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal(),
             level.canBrew(), paid, returning);
         dialogueInput.reset(Gdx.input);

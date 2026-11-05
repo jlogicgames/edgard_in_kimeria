@@ -35,7 +35,20 @@ class CollectableTest {
             item.update(0.3f); item.render(batch);
             assertEquals(List.of(frames.get(0), frames.get(1), frames.get(0)), rendered);
         }
-        assertEquals(ItemType.CHICKEN, ItemType.fromMapName("Chicken"));
+        assertEquals(ItemType.BAT, ItemType.fromMapName("Bat"));
+    }
+
+    @Test void healerIngredientsAreBatAndMushroomOnTheirOwnTwoFrameSheets() {
+        assertEquals(java.util.List.of(ItemType.COIN, ItemType.BAT, ItemType.MUSHROOM), java.util.List.of(ItemType.values()));
+        assertEquals(ItemType.MUSHROOM, ItemType.fromMapName("Mushroom"));
+        assertEquals("images/objects/bat.png", ItemType.BAT.sheet);
+        assertEquals("images/objects/mushroom.png", ItemType.MUSHROOM.sheet);
+        assertEquals("bat", ItemType.BAT.iconName());
+        assertEquals("mushroom", ItemType.MUSHROOM.iconName());
+        for (String retired : new String[]{"Chicken", "Key"}) {
+            assertThrows(IllegalArgumentException.class, () -> ItemType.fromMapName(retired),
+                retired + " is no longer a collectable");
+        }
     }
 
     @Test void pickupRunsItsEffectsOnlyOnceAndArtifactsDoNotAddCoins() {

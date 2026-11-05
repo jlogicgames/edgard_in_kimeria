@@ -56,8 +56,8 @@ public final class HealerDialogueView {
         overlay.body(batch, Msg.EDGARD.t(lang), 72, 108, 100, Color.WHITE);
         overlay.body(batch, Msg.HEALER.t(lang), 568, 108, 100, HEALER_GREEN);
         String checklist = dialogue.paid() ? Msg.PAID.t(lang)
-            : mark(inventory.hasIngredient(level.name, ItemType.CHICKEN)) + Msg.CHICKEN.t(lang) + "\n"
-                + mark(inventory.hasIngredient(level.name, ItemType.KEY)) + Msg.KEY.t(lang) + "\n"
+            : mark(inventory.hasIngredient(level.name, ItemType.BAT)) + Msg.BAT.t(lang) + "\n"
+                + mark(inventory.hasIngredient(level.name, ItemType.MUSHROOM)) + Msg.MUSHROOM.t(lang) + "\n"
                 + mark(level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal())
                 + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(level.forestCoinsSecured()),
                     "total", Integer.toString(level.forestCoinTotal()));

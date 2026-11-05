@@ -50,11 +50,11 @@ public final class HealerDialogue {
     /** The recipe checklist belongs to the pre-boss meeting only. */
     public boolean showsChecklist() { return !scripted(); }
 
-    public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid) {
-        this(chicken, key, allCoins, eligible, paid, false);
+    public HealerDialogue(boolean bat, boolean mushroom, boolean allCoins, boolean eligible, boolean paid) {
+        this(bat, mushroom, allCoins, eligible, paid, false);
     }
 
-    public HealerDialogue(boolean chicken, boolean key, boolean allCoins, boolean eligible, boolean paid, boolean returning) {
+    public HealerDialogue(boolean bat, boolean mushroom, boolean allCoins, boolean eligible, boolean paid, boolean returning) {
         postVictory = false;
         kind = Kind.PRE_BOSS;
         this.eligible = eligible;
@@ -64,7 +64,7 @@ public final class HealerDialogue {
         if (paid) lines = List.of(Msg.HEALER_PAID, Msg.HEALER_LOCK);
         else if (eligible) lines = List.of(greeting, response, Msg.HEALER_READY);
         else lines = List.of(greeting, response,
-            !chicken || !key ? (allCoins ? Msg.HEALER_INGREDIENTS : Msg.HEALER_BOTH) : !allCoins ? Msg.HEALER_PAYMENT : Msg.HEALER_READY,
+            !bat || !mushroom ? (allCoins ? Msg.HEALER_INGREDIENTS : Msg.HEALER_BOTH) : !allCoins ? Msg.HEALER_PAYMENT : Msg.HEALER_READY,
             Msg.HEALER_OFFER);
     }
 

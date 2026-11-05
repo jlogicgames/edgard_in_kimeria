@@ -15,6 +15,11 @@ LADDER_FRAME_SIZE = 16
 LADDER_FRAME_COUNT = 2
 WALL_FRAME_SIZE = (48, 96)
 PLATFORM_SIZE = (32, 16)
+ITEM_FRAME_SIZE = 16
+ITEM_FRAME_COUNT = 2
+ITEM_STRIP_SIZE = (ITEM_FRAME_SIZE * ITEM_FRAME_COUNT, ITEM_FRAME_SIZE)
+ITEM_STRIPS = ('bat', 'mushroom')  # healer ingredients: two registered 16x16 frames each
+HUD_ICONS = ('coin', 'bat', 'mushroom', 'fireball')
 PLAYER_FRAME_SIZE = 48
 PLAYER_IDLE_ROW = 9
 PLAYER_LOOK_FRAME_COUNT = 2
@@ -22,7 +27,8 @@ PLAYER_HEAD_BOUNDS = (24, 23, 31, 31)
 WORLD_FRAMES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
 WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE),
                 'ladder': (LADDER_FRAME_SIZE * LADDER_FRAME_COUNT, LADDER_FRAME_SIZE),
-                'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE}
+                'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
+                **{name: ITEM_STRIP_SIZE for name in ITEM_STRIPS}}
 # World objects retain transparent surroundings; alpha remains binary after export.
 OPAQUE_WORLD_IMAGES = set()
 PLAYER_LOOK_SIZE = (PLAYER_FRAME_SIZE * PLAYER_LOOK_FRAME_COUNT, PLAYER_FRAME_SIZE)

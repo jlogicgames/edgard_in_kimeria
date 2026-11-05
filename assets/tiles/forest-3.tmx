@@ -3,7 +3,7 @@
  <properties>
   <property name="fireflies" type="int" value="24"/>
   <property name="healerBeforeBoss" type="bool" value="true"/>
-  <property name="ingredients" value="CHICKEN,KEY"/>
+  <property name="ingredients" value="BAT,MUSHROOM"/>
  </properties>
  <tileset firstgid="1" source="Forest.tsx"/>
  <layer id="1" name="Background" width="160" height="23">
@@ -112,8 +112,8 @@
     <property name="Intensity" type="int" value="300"/>
    </properties>
   </object>
-  <object id="94" name="Chicken" type="Chicken" x="448" y="240" width="16" height="16"/>
-  <object id="95" name="Key" type="Key" x="1728" y="208" width="16" height="16"/>
+  <object id="94" name="Bat" type="Collectable" x="448" y="240" width="16" height="16"/>
+  <object id="95" name="Mushroom" type="Collectable" x="1728" y="208" width="16" height="16"/>
   <object id="108" name="Torch" type="Torch" x="2176" y="256" width="16" height="16">
    <properties>
     <property name="Intensity" type="int" value="300"/>

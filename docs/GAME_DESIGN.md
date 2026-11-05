@@ -478,7 +478,7 @@ The original's seven remedy components helped lift the curse. In the remake's
 accepted direction, the tablet takes that mandatory role and ingredients offer
 help along the way. Seven does not become a mandatory future recipe size.
 
-The existing forest recipe is Chicken + Key + all six unique level coins. Its
+The existing forest recipe is Bat + Mushroom + all six unique level coins. Its
 elixir multiplies physical sword damage by ten, reducing required swings from twelve to
 two. Magical fireballs always remove two boss energy, so six landed fireballs defeat a
 full-energy boss with or without the elixir. This does not increase starting ammunition.

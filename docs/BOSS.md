@@ -120,7 +120,7 @@ completed counter has its own completion shake; the interrupted normal has none.
 
 Death rebuilds the boss at full energy and throne, respawning the hero at 2192,304 with
 the existing arrival animation. Consumed elixir is run-only inventory state, outside room
-rollback. The healer consumes Chicken, Key and all unique forest coins after verification,
+rollback. The healer consumes Bat, Mushroom and all unique forest coins after verification,
 then calls `drinkBossElixir("forest-3")`; no automatic artifact activation occurs.
 [HEALER.md](HEALER.md) describes the implemented dialogue and collection-return policy.
 The encounter locks on choosing the fight: no return or onward passage until boss defeat,

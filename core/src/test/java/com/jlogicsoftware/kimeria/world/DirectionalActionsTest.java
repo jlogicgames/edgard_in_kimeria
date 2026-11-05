@@ -1021,7 +1021,7 @@ class DirectionalActionsTest {
         assertEquals("", level.player.contextHint(), "Rooms outside the first teaching room do not repeat the lesson");
     }
 
-    @Test void theShippedFirstRoomLadderLeadsFromTheFloorToTheChickenLedge() {
+    @Test void theShippedFirstRoomLadderLeadsFromTheFloorToTheBatLedge() {
         scene(false);
         level = new Level(assets, game, player(), "forest-3", Rectangle::new);
         frames(2);

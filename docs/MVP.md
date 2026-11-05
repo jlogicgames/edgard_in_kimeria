@@ -14,11 +14,11 @@ until the planned gameplay mechanics have been added and are tracked only in
 Accepted by the author on 2026-10-19. Future mechanics will expand these two existing
 levels. This MVP does not add another map, another boss, a new quest or destination.
 
-The current Chicken and Key placements in `forest-3` are accepted as final for this MVP
+The current Bat and Mushroom placements in `forest-3` are accepted as final for this MVP
 (author decision, 2026-10-19, #72). Keep their existing positions; no relocation or
 additional artifact challenge paths are planned. Both artifacts and the healer elixir
 remain optional. Under the campaign-wide [D26 authoring rule](DECISIONS.md#d26-observe-plan-before-committing),
-a one-shot support may make the optional Key route unavailable until Restart Level, but
+a one-shot support may make the optional Mushroom route unavailable until Restart Level, but
 the canopy exit remains reachable without it. Runtime retention is tracked in #158;
 acceptance for each campaign map is verified separately. `forest-1` has no artifact set
 or full-set reward in this MVP.

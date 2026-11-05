@@ -40,7 +40,7 @@ to expel her provokes the curse of eternal night. The sun stops shining. A wande
 warrior, Edgard, hears of the disaster and sets out to save the kingdom, meeting the old
 healer on his way. These facts now form the opening in all five supported languages.
 
-The opening introduces the world and Edgard's journey. **Do not include Chicken, Key,
+The opening introduces the world and Edgard's journey. **Do not include Bat, Mushroom,
 coins, an elixir recipe, collection instructions or a boss-shopping checklist.** Explain
 those mechanics in the healer encounter. The historical seven-component remedy is
 reference material for a later healer story, not a new mechanic to implement now.
@@ -64,7 +64,7 @@ future implementation is tracked separately from this narrative decision.
    departure. Collection and elixir instructions belong to the healer's later encounter.
 2. **Before the forest boss — [#84](https://github.com/jlogicgames/edgard_in_kimeria/issues/84).**
    The healer meets Edgard in a dedicated NES-style dialogue scene and offers the optional
-   elixir bargain. Chicken, Key and all coins authored in the current forest level are
+   elixir bargain. Bat, Mushroom and all coins authored in the current forest level are
     ingredients/payment; the elixir is immediately drunk and gives 10x physical sword damage
     against this boss. Magical fireballs always remove two energy; the elixir does not
     strengthen them. Edgard may proceed without it. Collection-return and payment details remain

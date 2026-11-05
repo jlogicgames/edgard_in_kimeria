@@ -432,7 +432,7 @@ public class Level implements WorldObject {
         for (int i = 0, fireflies = map.propInt("fireflies", 0); i < fireflies; i++) {
             ambience.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
         }
-        // The healer recipe's artifacts are level configuration read from the map, e.g. "CHICKEN,KEY".
+        // The healer recipe's artifacts are level configuration read from the map, e.g. "BAT,MUSHROOM".
         // A mistyped name throws IllegalArgumentException from ItemType.fromMapName: failing loudly is intended.
         Set<ItemType> ingredients = EnumSet.noneOf(ItemType.class);
         for (String token : map.prop("ingredients", "").split(",")) {
@@ -595,8 +595,6 @@ public class Level implements WorldObject {
                     player.facingRight = true;
                 }
                 case "Collectable" -> spawnCollectable(o, ItemType.fromMapName(o.name));
-                case "Chicken" -> spawnCollectable(o, ItemType.CHICKEN);
-                case "Key" -> spawnCollectable(o, ItemType.KEY);
                 case "FireballRefill" -> {
                     if (!keptPickups.contains(o.id)) objects.add(new com.jlogicsoftware.kimeria.entity.items.FireballRefill(this, game, o.id, o.x, o.y));
                 }
