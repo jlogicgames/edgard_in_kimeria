@@ -78,6 +78,9 @@ The lever room is the sample. Later lessons (#196–#200; the ladder, wall and p
 
 1. **Room.** Fill the existing `forest-0-<lesson>` room (the lever room is 576 px, the ladder room 704 px and the wall and platform rooms 640 px, about 560–720 px suits one object; every extra empty stretch is walking time with nothing to learn; floor strip y=320, side walls, RoomStart,
    RoomExit; no enemies or hazards). Add only that lesson's objects/collisions. One new element per room.
+   **Ceiling:** do not author one. `Level` closes every room from above with an invisible 64 px slab whose underside is the
+   room's top edge (y=0), so the clamberable side walls cannot be wall-jumped over the top ([D38](DECISIONS.md#d38-every-room-has-an-invisible-ceiling), #215).
+   Keep the side walls and any ledge walls inside the room (`RoomCeilingTest` checks every room of forest-0, forest-1 and forest-3).
 2. **Object + link.** Put the mechanism in `SpawnPoints` as type `Actionable` with property `type` = `Torch` or
    `Wall` (`check_tiled_links.py` rejects anything else; a moving platform is instead a SpawnPoints `Escalator` with `isVertical`, `offNeg`/`offPos` in 32 px units and `running`=false, linked the same way; a Torch starts dark with `Intensity` = 0, lit with a
    positive value). Add a `Trigger` with property `target` (type *object*) = the mechanism's id. Names are written by
