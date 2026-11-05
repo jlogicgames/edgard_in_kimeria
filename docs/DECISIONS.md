@@ -885,7 +885,8 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   same level. New Game and the ending remove both keys.
 - **Why:** The tutorial needs hints that belong to rooms and objects, are authored by level
   designers in Tiled, and can be removed in later levels without code changes.
-- **Not verified:** no human playtest of the tutorial rooms; they are empty placeholders. The #206 animation and hint height, and the #211 two-channel layout, are checked headlessly only (anchors and font metrics), not by eye in the running game.
+- **Author acceptance (2026-11-05):** the author played the whole tutorial on desktop (keyboard only) and checked the web build; all six rooms, both healer dialogues and the transition into forest-1 were checked with no remarks. Not checked: gamepad, touch controls, native-speaker quality of de/pl/uk/be. No novice playtest (#129–#131). Details: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
+- **Earlier note (superseded by the acceptance above for the desktop and web play):** at #195 the rooms were empty placeholders without a human playtest; the #206 animation and hint height and the #211 two-channel layout were checked headlessly only (anchors and font metrics).
 
 ## D34. The tutorial lever lesson rule
 
@@ -929,7 +930,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Hints:** one `controls` zone over the room plus three position-only message zones: lever (lowers *and raises* the ladder), ladder
   (climb it when it is down), exit (ahead, up on the ledge). Each is true in either ladder state.
 - **Length (#196, #209):** 704 px (was 768): the exit ledge shrank from 384 to 224 px and the approach before the lever grew by 96 px so the lever message is readable before the lever is in reach; ladder and ledge-top geometry (jump margins) are unchanged, RoomStart moved to x=624, lever x=824. Later rooms moved a further 64 px left (256 px with the lever room's 192 px, #209); the climb message zone starts 128 px before the ladder.
-- **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; the route, jump-reach and hint
+- **Not verified:** no novice playtest (#129–#131); not seen in the running game when written, later covered by the author's desktop and web play-through of 2026-11-05 (see D33); the route, jump-reach and hint
   coverage are measured headlessly (`LadderLessonTest`, mastered route about 6.9 s).
 
 ## D36. The tutorial wall lesson rule
@@ -950,7 +951,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   true in either wall state. A continuous walk from RoomStart reads the lever message about 1 s before the lever is in reach and the pass message
   about 1 s before the body meets the wall (`HintLeadTest`).
 - **Length:** 640 px (was 1280): approach 200 px to the lever, 232 px between lever and wall, 48 px wall, exit 48 px beyond. Later rooms and the `Checkpoint` moved 640 px left.
-- **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; route, jump-block, retry and hint coverage are measured
+- **Not verified:** no novice playtest (#129–#131); not seen in the running game when written, later covered by the author's desktop and web play-through of 2026-11-05 (see D33); route, jump-block, retry and hint coverage are measured
   headlessly (`WallLessonTest`, mastered route about 5.1 s).
 
 ## D37. The tutorial moving-platform lesson rule
@@ -979,7 +980,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   the ride message about 1.1 s before the body reaches the platform (`HintLeadTest`).
 - **Length:** 640 px (was 1280): 232 px to the lever, 216 px lever to platform, 32 px platform, 128 px ledge with the exit 80 px from its edge. Later
   rooms and the `Checkpoint` moved 640 px left.
-- **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; route, ledge-block, stop-at-any-height, retry and hint
+- **Not verified:** no novice playtest (#129–#131); not seen in the running game when written, later covered by the author's desktop and web play-through of 2026-11-05 (see D33); route, ledge-block, stop-at-any-height, retry and hint
   coverage are measured headlessly (`PlatformLessonTest`, mastered route about 9.6 s including the wait for the shuttling platform to come back down to the bottom; the platform cycles in about 5 s).
 
 ## D38. Every room has an invisible ceiling
@@ -997,7 +998,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   platform, ledge or hint zone, and a vertical moving platform stays below it. 64 px is far more than one frame of jump travel, so nothing tunnels through.
 - **Consequences:** a head bump on the room top stops upward motion like any block. A carried stone thrown straight up used to leave the room (and was then removed above it, `Carryable`); it now stops
   at the slab and falls back (`blocksObject` already refused placement outside the room). Nothing may be authored above a room's top edge.
-- **Not verified:** no visual check in the running game; the ceiling is invisible, behavior is measured headlessly (`RoomCeilingTest`).
+- **Not verified:** the ceiling is invisible; behavior is measured headlessly (`RoomCeilingTest`); the rooms it affects were played by the author on 2026-11-05 (see D33), with no remarks.
 
 ## D39. The tutorial thrown-stone lesson rule
 
@@ -1025,7 +1026,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Hints:** one `controls` zone over the room plus three position-only message zones that butt together, each true wherever it shows: take the stone to the edge and throw it at the lever (starts 272 px before the stone, ends just past it), hit the lever with the stone, then ride the platform across (from there to the far lip: stone, edge, platform), and the exit is just ahead (far lip to the end, so a hero who crossed is no longer told to throw).
   The live label supplies "Up + Action: Pick up - Stone" beside the stone and the put-down/throw reminder while it is in hand (D30), drawn together with the message (#211). A continuous walk reads the first message about 1.2 s fully visible before the stone is in reach (`HintLeadTest`); the second starts 40 px before the edge of the chasm, which a walker never needs because the first message stays up while the hero carries the stone there.
 - **Length:** 528 px (was 1280): entrance, the stone 224 px from it (lead for its hint), the near lip 64 px beyond the stone, the 96 px chasm, 80 px of far floor with the exit. The last room and the `Checkpoint` moved 752 px left. Mastered route about 4.8 s.
-- **Not verified:** no novice playtest (#129-#131) and no visual check in the running game (overhang and chasm tile art, the lever sprite at the far lip, the stone's flight and its return are not seen by eye); route, throw window, jump limits, miss, retry and hint coverage are measured headlessly (`StoneLessonTest`).
+- **Not verified:** no novice playtest (#129-#131); the visuals (overhang and chasm tile art, the lever sprite at the far lip, the stone's flight and its return) were seen only in the author's desktop and web play-through of 2026-11-05, with no remarks; route, throw window, jump limits, miss, retry and hint coverage are measured headlessly (`StoneLessonTest`).
 
 ## D40. The tutorial traps lesson rule
 
@@ -1044,7 +1045,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Hints:** two position-only message zones that butt together, each true wherever it shows: the platform falls soon after landing and a fall into the pit just retries (x 3104-3440, starts at the room edge, about 1.05 s fully visible before a continuous walk reaches the pit lip), and a touched bomb flashes then explodes, so jump over it or run clear (x 3440-3792, starts 208 px before the bomb, about 1.4 s fully visible before the touch and
   kept up while the hero runs clear). No `controls` zone (no lever). `HINT_TRAP_PLATFORM` ("The platform falls soon after you land. Falling into the pit just retries"), `HINT_TRAP_BOMB` in all five catalogs, no key names, at most two lines (`LocalizationLayoutTest`, `HintLeadTest`).
 - **Length:** 720 px (was 1280): entrance 32 px past the left wall, 208 px of run-up (its hint needs the lead), the pit, 176 px of floor to the bomb, 160 px beyond it to the `Checkpoint` and the wall. Mastered route about 6.1 s (author check, `TrapsLessonTest`).
-- **Not verified:** no novice playtest (#129-#131) and no visual check in the running game (pit tile edges, the platform's light, the bomb's flash and blast art); route, jump span, warning timing, damage, retry and hint coverage are measured headlessly.
+- **Not verified:** no novice playtest (#129-#131); the visuals (pit tile edges, the platform's light, the bomb's flash and blast art) were seen only in the author's desktop and web play-through of 2026-11-05, with no remarks; route, jump span, warning timing, damage, retry and hint coverage are measured headlessly.
 
 ## D41. The healer's tales around the forest-0 tutorial
 
@@ -1060,4 +1061,4 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   End: (Healer) "Well done, Edgard. The enchanted wood has told you all its tales, and you have solved every one of its riddles." (Edgard) "Then I am ready for the road?" (Healer) "Ready as the heroes of old tales, who were afraid and went on all the same. A true warrior needs no more than that." (Healer) "Take my blessing: walk lightly, look keenly, and look twice at any path that seems too kind, for witches smile the sweetest. May the fairies light your road."
   The healer never names a control or mechanic (lever, jump, button); `HealerDialogueTest` scans all five languages. Every line is measured by the existing baked-font speaker-region test (all `HEALER_`/`EDGARD_` keys).
 - **Unchanged:** forest-1 and forest-3 (the boss pre/post scenes, `afterVictory`, level order, saves, ending); the lesson rooms and `RoomCeilingTest`.
-- **Not verified:** the look and feel in the running game (timing of the fade into and out of the tale, portrait/line pacing), and the native-speaker quality of the de, pl, uk and be translations (machine-quality drafts in the same register as the existing healer text).
+- **Author play (2026-11-05):** the start tale and farewell were played on desktop (keyboard) and the web build with no remarks (see D33). **Not verified:** gamepad and touch, and the native-speaker quality of the de, pl, uk and be translations (machine-quality drafts in the same register as the existing healer text).
