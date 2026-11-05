@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="80" height="23" tilewidth="16" tileheight="16">
+ <objectgroup name="Rooms">
+  <object name="puff" type="Room" x="0" y="0" width="480" height="368"/>
+  <object name="puff" type="RoomStart" x="32" y="272"><point/></object>
+  <object name="puff" type="RoomExit" x="432" y="272" width="32" height="48"/>
+  <object name="vine" type="Room" x="480" y="0" width="480" height="368"/>
+  <object name="vine" type="RoomStart" x="512" y="272"><point/></object>
+  <object name="vine" type="RoomExit" x="912" y="272" width="32" height="48"/>
+  <object name="log" type="Room" x="960" y="0" width="320" height="368"/>
+  <object name="log" type="RoomStart" x="992" y="272"><point/></object>
+ </objectgroup>
+ <objectgroup name="SpawnPoints">
+  <object id="1" type="Player" x="32" y="272" width="48" height="48"/>
+  <object id="2" type="Puffball" name="puffball" x="300" y="304" width="16" height="16"/>
+  <object id="3" type="ThornVine" name="vine" x="730" y="256" width="24" height="40"/>
+  <object id="4" type="FallingPlatform" name="log" x="1100" y="320" width="32" height="16">
+   <properties><property name="skin" value="log"/></properties>
+  </object>
+  <object id="5" type="FallingPlatform" name="plank" x="1180" y="320" width="32" height="16"/>
+  <object id="9" name="Deadline" type="Deadline" x="-1000" y="368" width="3000" height="16"/>
+ </objectgroup>
+ <objectgroup name="Collisions">
+  <object id="7" x="0" y="320" width="480" height="48"/>
+  <object id="8" x="480" y="320" width="480" height="48"/>
+  <object id="10" x="960" y="320" width="140" height="48"/>
+  <object id="11" x="1240" y="320" width="40" height="48"/>
+ </objectgroup>
+</map>

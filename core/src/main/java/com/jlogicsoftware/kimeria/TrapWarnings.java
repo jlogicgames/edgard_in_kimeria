@@ -29,4 +29,9 @@ public final class TrapWarnings {
     public float duration(float baseSeconds) {
         return baseSeconds * (longer ? ASSIST_MULTIPLIER : 1f);
     }
+
+    /** The longest the assist can make a warning, for authoring checks that must hold with it on. */
+    public static float longestDuration(float baseSeconds) {
+        return baseSeconds * ASSIST_MULTIPLIER;
+    }
 }

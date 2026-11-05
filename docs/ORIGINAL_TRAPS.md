@@ -361,7 +361,8 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
 - [#233](https://github.com/jlogicgames/edgard_in_kimeria/issues/233): code C, explosive
   stump/root replacing the bomb.
 - [#234](https://github.com/jlogicgames/edgard_in_kimeria/issues/234): code D, rhythm traps
-  (puffball, vine).
+  (puffball, vine) and the rotten-log skin. **Implemented, see D46** (types `Puffball`,
+  `ThornVine`, property `skin=log`; not placed in any shipped level, #235 does that).
 - [#235](https://github.com/jlogicgames/edgard_in_kimeria/issues/235): tutorial integration.
 - Backlog added 2026-11-05 (author requests and ideas, not implemented rules):
   - [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236): parallax layers
