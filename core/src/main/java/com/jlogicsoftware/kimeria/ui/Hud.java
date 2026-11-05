@@ -57,8 +57,8 @@ public class Hud {
         this.logicalHeight = logicalHeight;
         this.coinIcon = assets.region("images/HUD/coin.png", com.badlogic.gdx.graphics.Texture.TextureFilter.Linear);
         this.fireballIcon = assets.region("images/HUD/fireball.png", com.badlogic.gdx.graphics.Texture.TextureFilter.Linear);
-        for (ItemType type : new ItemType[]{ItemType.CHICKEN, ItemType.KEY}) {
-            artifactIcons.put(type, assets.region("images/HUD/" + type.name().toLowerCase(java.util.Locale.ROOT) + ".png",
+        for (ItemType type : new ItemType[]{ItemType.BAT, ItemType.MUSHROOM}) {
+            artifactIcons.put(type, assets.region("images/HUD/" + type.iconName() + ".png",
                 com.badlogic.gdx.graphics.Texture.TextureFilter.Linear));
         }
         this.font = assets.font(COUNT_FONT_SIZE);

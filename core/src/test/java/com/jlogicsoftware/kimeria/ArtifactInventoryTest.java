@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ArtifactInventoryTest {
     private static ArtifactInventory inventory() {
         ArtifactInventory inventory = new ArtifactInventory();
-        inventory.requireForLevel("forest-3", java.util.Set.of(ItemType.CHICKEN, ItemType.KEY));
+        inventory.requireForLevel("forest-3", java.util.Set.of(ItemType.BAT, ItemType.MUSHROOM));
         return inventory;
     }
 
@@ -16,10 +16,10 @@ class ArtifactInventoryTest {
         ArtifactInventory inventory = inventory();
         inventory.beginLevel();
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-3"));
-        inventory.collect("forest-3", 94, ItemType.CHICKEN);
+        inventory.collect("forest-3", 94, ItemType.BAT);
         inventory.keepRoom();
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-3"));
-        inventory.collect("forest-3", 95, ItemType.KEY);
+        inventory.collect("forest-3", 95, ItemType.MUSHROOM);
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-3"));
         inventory.keepRoom();
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-3"));
@@ -28,12 +28,12 @@ class ArtifactInventoryTest {
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-1"), "An empty set does not grant a reward");
     }
 
-    @Test void aKeyAloneAndArtifactsFromDifferentLevelsDoNotCompleteTheSet() {
+    @Test void aMushroomAloneAndArtifactsFromDifferentLevelsDoNotCompleteTheSet() {
         ArtifactInventory inventory = inventory();
-        inventory.collect("forest-3", 95, ItemType.KEY);
+        inventory.collect("forest-3", 95, ItemType.MUSHROOM);
         inventory.keepRoom();
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-3"));
-        inventory.collect("other", 94, ItemType.CHICKEN);
+        inventory.collect("other", 94, ItemType.BAT);
         inventory.keepRoom();
         assertEquals(1f, inventory.bossWeaponDamageMultiplier("forest-3"));
     }
@@ -56,11 +56,11 @@ class ArtifactInventoryTest {
 
     @Test void identityUsesBothLevelAndMapObjectIdAndReturnedItemsAreImmutable() {
         ArtifactInventory inventory = inventory();
-        inventory.collect("forest-3", 94, ItemType.CHICKEN);
-        inventory.collect("forest-3", 94, ItemType.CHICKEN);
+        inventory.collect("forest-3", 94, ItemType.BAT);
+        inventory.collect("forest-3", 94, ItemType.BAT);
         inventory.keepRoom();
-        inventory.collect("forest-3", 94, ItemType.CHICKEN);
-        inventory.collect("other", 94, ItemType.CHICKEN);
+        inventory.collect("forest-3", 94, ItemType.BAT);
+        inventory.collect("other", 94, ItemType.BAT);
         assertEquals(2, inventory.items().size());
         assertThrows(UnsupportedOperationException.class, () -> inventory.items().clear());
         assertThrows(IllegalArgumentException.class, () -> inventory.collect("forest-3", 37, ItemType.COIN));
@@ -68,12 +68,12 @@ class ArtifactInventoryTest {
 
     @Test void restartLevelRestoresItsEntryStateAndNewRunClearsEverything() {
         ArtifactInventory inventory = inventory();
-        inventory.collect("earlier", 1, ItemType.KEY);
+        inventory.collect("earlier", 1, ItemType.MUSHROOM);
         inventory.keepRoom();
         inventory.beginLevel();
-        inventory.collect("forest-3", 94, ItemType.CHICKEN);
+        inventory.collect("forest-3", 94, ItemType.BAT);
         inventory.keepRoom();
-        inventory.collect("forest-3", 95, ItemType.KEY);
+        inventory.collect("forest-3", 95, ItemType.MUSHROOM);
         inventory.restartLevel();
         assertEquals(1, inventory.items().size());
         assertEquals("earlier", inventory.items().get(0).level());

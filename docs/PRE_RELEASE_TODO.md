@@ -55,10 +55,10 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
 
 - [ ] Artifact pickup/rollback/retention and optional completion:
 
-  In `forest-3`, collect Chicken in room one: it disappears and its icon appears after the
+  In `forest-3`, collect Bat in room one: it disappears and its icon appears after the
   coin count without increasing that count. Die before leaving: the icon disappears and
-  Chicken returns. Collect it again and leave the room: a later death must keep Chicken.
-  Repeat for Key in room two, then enter the boss chamber to secure both. Restart Level
+  Bat returns. Collect it again and leave the room: a later death must keep Bat.
+  Repeat for Mushroom in room two, then enter the boss chamber to secure both. Restart Level
   must restore the inventory from level entry, and exiting to the main menu must clear it.
   Finishing without either artifact must remain possible.
 
@@ -105,13 +105,13 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
   the final mechanics. Observe unfamiliar players and record first-learning time
   to first successful exit against the roughly 60 s hypothesis for ordinary rooms,
   including observation and retries; record deaths and presentation separately.
-  Treat this as playtest evidence, not a player deadline. Preserve the accepted MVP Chicken/Key placements unless a new
+  Treat this as playtest evidence, not a player deadline. Preserve the accepted MVP Bat/Mushroom placements unless a new
   author decision changes them.
 
 - [ ] Check the revised teaching layout (`9d5e630`, #73/#75) with Assist off and on:
   the 64 px runway after the bomb must let the player escape without meeting the mob;
   the shortened bat patrol over the second quicksand must remain readable; assess
-  the optional canopy collapse on the way to the Key. Ask the player to explain
+  the optional canopy collapse on the way to the Mushroom. Ask the player to explain
   failures involving stomp, sword, bomb and falling platform without prompting.
   Earlier acceptance of the previous layout and automated route success do not
   establish readability of these changed placements.

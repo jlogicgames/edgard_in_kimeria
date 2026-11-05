@@ -169,8 +169,8 @@ and verify that Restart Level restores the authored opportunity. Do not weaken t
 20-second mastered-route or 60-second first-learning hypotheses to disguise an inaccessible
 mandatory route; those budgets remain separate from this contract.
 
-The forest Key case is optional: spent platform 115 may close its route until Restart Level,
-but the canopy exit remains reachable without the Key. Runtime retention is tracked in #158;
+The forest Mushroom case is optional: spent platform 115 may close its route until Restart Level,
+but the canopy exit remains reachable without the Mushroom. Runtime retention is tracked in #158;
 acceptance for each campaign map is verified separately. The authoring rule applies to
 future rooms and all required tablet fragments.
 
@@ -259,7 +259,7 @@ The canopy collection route follows the ascending platforms before dropping
 back to the ground coin and Checkpoint. The exact press thresholds and route
 control are executable in `RoomReplayTest`; they are a reference successful
 route, not a claim that beginners will finish at these speeds. The fresh collection
-measurements assert coins, not a complete Chicken/Key collection route. Artifact
+measurements assert coins, not a complete Bat/Mushroom collection route. Artifact
 return checks below are separate and start from secured, seeded state.
 
 Reproduce all five measurements with:
@@ -287,8 +287,8 @@ Measured map SHA-256 values:
 
 ### Artifact checks (#72)
 
-The author accepted the existing Chicken and Key positions as final for the MVP on
-2026-10-19: Chicken is object 94 at (448, 240), Key is object 95 at (1728, 208) in
+The author accepted the existing Bat and Mushroom positions as final for the MVP on
+2026-10-19: Bat is object 94 at (448, 240), Mushroom is object 95 at (1728, 208) in
 `forest-3.tmx`. Keep these placements; no relocation or additional artifact challenge
 paths are planned for this MVP. Collection remains optional for completion.
 
@@ -358,9 +358,9 @@ layer offset that this text already includes in the visible position).
 | ---: | --- | --- |
 | 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
 | 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
-| 240–320 | Quicksand, vertical Bat (272); optional one-way steps to the coins/Chicken | Hazard + Bat; not a taught mechanic |
+| 240–320 | Quicksand, vertical Bat enemy (272); optional one-way steps to the coins/Bat pickup | Hazard + Bat enemy; not a taught mechanic |
 | 512–608 | Horizontal Bat (patrol now ends at about 608) and a second quicksand | Same, repeated |
-| 416–480 | **Ladder** (id 123, initially x 416, 208–288; lever lowers it to 240–320) beside the one-way ledge (id 122) under the Chicken | **Ladder and lever**: Up beside it takes hold; the nearby lever raises and lowers it; hints only in this room |
+| 416–480 | **Ladder** (id 123, initially x 416, 208–288; lever lowers it to 240–320) beside the one-way ledge (id 122) under the Bat | **Ladder and lever**: Up beside it takes hold; the nearby lever raises and lowers it; hints only in this room |
 | 656 | **Bomb** (id 54), moved from 128 | **Bomb, alone**: flat ground, 0.8 s warning (1.2 s with Assist), 64 px blast |
 | 832 | YellowMob (id 16), aggro zone 752–896 | Stomp repeated, first light combination: leave the blast, then meet the mob |
 | 912, 992 | Two tall walls | Wall jump |
@@ -379,12 +379,12 @@ the blast square (about 624–688) and a running escape of about 64 px overlap n
 | 1440–1488 | One-tile step; RedMob (id 68), zone 1408–1488 | Sword again, now beside terrain |
 | 1488 | Optional one-way platform | Start of the optional climb |
 | 1568 | **FallingPlatform** (id 115, was a fixed platform) holding coin 87 | **Falling platform, alone**: 1 s warning (1.5 s with Assist). Ground is 80 px below; isolated from bombs and nearby walking enemies at spawn; a bad landing can spend the optional ascent |
-| 1648–1728 | One-way platform and the Key | Optional reward |
-| 1760 | Vertical Bat near the Key | Optional hazard |
+| 1648–1728 | One-way platform and the Mushroom | Optional reward |
+| 1760 | Vertical Bat enemy near the Mushroom | Optional hazard |
 | 1872 | RoomExit | |
 
 The collapse is one-way and remains secured after room exit or healer return. A player
-who lets it fall before reaching the upper route may lose the optional Key/coin ascent
+who lets it fall before reaching the upper route may lose the optional Mushroom/coin ascent
 until Restart Level. The required route never needs the platform. This map fact makes
 the one-shot cue and optional-route consequence an explicit manual fairness check under
 D26; older teaching-layout route results below do not establish that acceptance.
@@ -431,7 +431,7 @@ the test version.
 ## Current replay measurements after removing bat slow motion
 
 These 2026-10-20 timings predate #158's secured falling-platform retention. They remain
-movement/replay references, not evidence that Key 95 remains reachable after platform 115
+movement/replay references, not evidence that Mushroom 95 remains reachable after platform 115
 has been secured collapsed. Final-policy route evidence is in [HEALER.md](HEALER.md#room-state-retention-validation-2026-10-24-158).
 
 The historical 2026-10-14 table above includes the superseded proximity slow motion.
@@ -459,7 +459,7 @@ At normal speed, the entry required route uses a fresh jump before the second wa
 coin route pauses beside the upper coin for a ground jump into it from below the one-way
 platform, after securing the ground coin. These actions and their elapsed time are included
 in `RoomReplayTest`; no hazards or pickups are excluded. Collection returns for missed
-Chicken/Key still pass through both rooms three times without farming (14.78/5.13 s on the
+Bat/Mushroom still pass through both rooms three times without farming (14.78/5.13 s on the
 first return, 14.25/5.00 s later). Earlier author acceptance does not establish
 readability of the changed teaching layout; its targeted check remains deferred.
 
@@ -597,7 +597,7 @@ acceptance remains in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).
 `forest-3.tmx` SHA-256 `bdd719de7af0ccc56302322777072f48e3316cd3ccffc1aaa621876d61cc32c3`. Added to `forest-entry`:
 one-way ledge collision 122 (416, 240, 64×16) with matching Background tiles, and `Ladder`
 object 123 (`first-ladder`, SpawnPoints x 416, y 256 before the -16 layer offset, so the
-climbable span is world y 240–320, five 16 px frames). The Chicken (id 94) already hovers at
+climbable span is world y 240–320, five 16 px frames). The Bat (id 94) already hovers at
 the ledge's surface, so the ladder is an alternative to the stair-and-jump route, not a new
 requirement. No enemy, coin or artifact was added, moved or removed; the required route and
 the existing replay gates are untouched (all three replay routes still pass).
@@ -608,7 +608,7 @@ The room owning its centre owns it, like every other object. It carried no state
 Put support at both ends: the hero ignores terrain while attached and steps off wherever the ends are.
 
 Safe test route: from the entrance walk to x≈424, hold Up to the ledge (about 1.2 s), step
-to the Chicken, then come back with Down from the ledge's left end or by jumping off. The
+to the Bat, then come back with Down from the ledge's left end or by jumping off. The
 nearest threat is the horizontal Bat (id 43), whose patrol begins about 64 px right of the
 ladder foot; it is not a taught mechanic here. This is a scripted check, not a human playtest.
 

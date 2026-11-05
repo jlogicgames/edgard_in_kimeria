@@ -67,7 +67,7 @@ the render loop.
 | `HEALER`, `HEALER_*` | The healer is an old man, the recurring narrator/guide. Preserve the agreed story; do not introduce quests or places. |
 | `INTRO_STORY` | The healer narrates Rufardus, L'Kardina's expulsion/curse and Edgard's departure. No ingredient tutorial here. |
 | `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. |
-| `CHICKEN`, `KEY`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. |
+| `BAT`, `MUSHROOM`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
 | `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |

@@ -909,7 +909,7 @@ class BossCombatTest {
             .filter(c -> c.type() == ItemType.COIN).findFirst().orElseThrow();
         securedCoin.collideWithPlayer();
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
-            .filter(c -> c.type() == ItemType.CHICKEN).forEach(Collectable::collideWithPlayer);
+            .filter(c -> c.type() == ItemType.BAT).forEach(Collectable::collideWithPlayer);
         enter.invoke(running);
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); // Healer secures the canopy before opening.

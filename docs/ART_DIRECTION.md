@@ -23,7 +23,7 @@ are that approved baseline; see [artwork review](PORTRAITS.md#author-review).
 ## World sprites and HUD icons — author clarification, 2026-10-22
 
 The author rejected detailed 256-color item art in gameplay. The original Items.png
-has 6 colors for the first coin frame, 9 for the cooked chicken and 4 for the key,
+has 6 colors for the first coin frame, 9 for the cooked chicken and 4 for the key (the retired Chicken and Key items, replaced by Bat and Mushroom in D43),
 including transparency; its frames are 16×16 with small occupied silhouettes.
 Player.png uses 48×48 frames with a much smaller occupied figure (12–17 colors in
 the inspected running/idle frames). Frame canvas, occupied pixels and a complete
@@ -36,9 +36,13 @@ multi-frame sheet are different measurements.
   remain original; do not replace them with detailed UI assets. Static platforms use
   `assets/images/objects/platform.png`, repeated across wider collision spans; the
   selected source is `art/objects/platform-pixel.png`.
+  The healer ingredients (D43) are original redraws, never copies of the DOS art: Bat and
+  Mushroom, each a native 32×16 strip of two 16×16 frames (`art/objects/{bat,mushroom}-pixel.png`
+  → `assets/images/objects/`), at most 16 palette entries with alpha, black-navy contour,
+  binary transparency. The coin alone stays in `Items.png`.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
-  roasted drumstick on its plate, silver key, gold coin and fireball. These appear
+  bat, mushroom (D43), gold coin and fireball. These appear
   in the small existing HUD slots, not as 128-pixel gameplay objects.
 - **Fireball capacity HUD (#98, 2026-10-25):** reuse the illustrated icon in three
   fixed 32×32 slots, 4 px apart, no number; spent slots use 25% RGB brightness.

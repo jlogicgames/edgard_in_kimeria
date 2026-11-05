@@ -220,35 +220,35 @@ class RoomTest {
 
     @Test void artifactPickupIsProvisionalAndDeathRestoresItWithoutChangingCoins() {
         Level level = forest();
-        Collectable chicken = artifact(level, ItemType.CHICKEN);
-        chicken.collideWithPlayer();
-        chicken.collideWithPlayer();
+        Collectable bat = artifact(level, ItemType.BAT);
+        bat.collideWithPlayer();
+        bat.collideWithPlayer();
         assertEquals(1, artifacts.items().size());
-        assertEquals(ItemType.CHICKEN, artifacts.items().get(0).type());
+        assertEquals(ItemType.BAT, artifacts.items().get(0).type());
         assertEquals(0, coins.get());
-        assertTrue(chicken.isRemoved());
+        assertTrue(bat.isRemoved());
         assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"));
         level.resetCurrentRoom(player());
         assertTrue(artifacts.items().isEmpty());
-        assertFalse(artifact(level, ItemType.CHICKEN).isCollected());
+        assertFalse(artifact(level, ItemType.BAT).isCollected());
     }
 
     @Test void roomExitsKeepArtifactsWithoutAutomaticCombatBonus() {
         Level level = forest();
-        artifact(level, ItemType.CHICKEN).collideWithPlayer();
+        artifact(level, ItemType.BAT).collideWithPlayer();
         level.enterNextRoom(player());
-        artifact(level, ItemType.KEY).collideWithPlayer();
+        artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         assertEquals(2, artifacts.items().size());
-        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"), "Key is still provisional");
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"), "Mushroom is still provisional");
         level.resetCurrentRoom(player());
         assertEquals(1, artifacts.items().size());
-        assertEquals(ItemType.CHICKEN, artifacts.items().get(0).type());
-        artifact(level, ItemType.KEY).collideWithPlayer();
+        assertEquals(ItemType.BAT, artifacts.items().get(0).type());
+        artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         level.enterNextRoom(player());
         assertTrue(artifacts.hasFullSet("forest-3"));
         assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"));
         level.resetCurrentRoom(player());
-        assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.KEY));
+        assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.MUSHROOM));
         assertEquals(2, artifacts.items().size());
     }
 
@@ -476,16 +476,22 @@ class RoomTest {
             "The full carryable footprint needs stable collision support");
     }
 
+    @Test void forestThreeRegistersBatAndMushroomAsItsOptionalIngredients() {
+        Level level = forest();
+        assertEquals(java.util.Set.of(ItemType.BAT, ItemType.MUSHROOM), artifacts.requiredForLevel("forest-3"));
+        assertNotNull(artifact(level, ItemType.BAT)); // The Mushroom lives in a later room; the route replays collect it.
+    }
+
     @Test void canBrewFollowsTheLevelsIngredientsRegistry() {
         coins.set(25);
         Level level = forest();
-        collect(level, ItemType.COIN, ItemType.CHICKEN);
+        collect(level, ItemType.COIN, ItemType.BAT);
         level.enterNextRoom(player());
         collect(level, ItemType.COIN);
         level.prepareHealer();
-        assertFalse(level.canBrew(), "forest-3 requires Chicken and Key");
-        artifacts.requireForLevel("forest-3", java.util.Set.of(ItemType.CHICKEN));
-        assertTrue(level.canBrew(), "A level whose ingredients are only Chicken is gated by that");
+        assertFalse(level.canBrew(), "forest-3 requires Bat and Mushroom");
+        artifacts.requireForLevel("forest-3", java.util.Set.of(ItemType.BAT));
+        assertTrue(level.canBrew(), "A level whose ingredients are only Bat is gated by that");
         artifacts.requireForLevel("forest-3", java.util.Set.of());
         assertFalse(level.canBrew(), "No required ingredients never qualifies");
     }
@@ -493,9 +499,9 @@ class RoomTest {
     @Test void healerNeedsEveryUniqueForestCoinAndPaysOnceWithoutSpendingEarlierCoins() {
         coins.set(19); // Currency from another level.
         Level level = forest();
-        collect(level, ItemType.COIN, ItemType.CHICKEN);
+        collect(level, ItemType.COIN, ItemType.BAT);
         level.enterNextRoom(player());
-        collect(level, ItemType.COIN, ItemType.KEY);
+        collect(level, ItemType.COIN, ItemType.MUSHROOM);
         assertEquals(6, level.forestCoinTotal());
         assertFalse(level.canBrew(), "Current-room pickups must first be secured");
         level.prepareHealer();
@@ -525,7 +531,7 @@ class RoomTest {
     }
 
     @Test void priorCurrencyCannotReplaceMissingForestCoinsOrIngredients() {
-        for (ItemType missing : new ItemType[]{ItemType.CHICKEN, ItemType.KEY, ItemType.COIN}) {
+        for (ItemType missing : new ItemType[]{ItemType.BAT, ItemType.MUSHROOM, ItemType.COIN}) {
             artifacts.clear(); coins.set(999);
             Level level = forest();
             ItemType[] wanted = java.util.Arrays.stream(ItemType.values())
@@ -551,9 +557,9 @@ class RoomTest {
         float survivorX = surviving.getX();
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         bomb.collideWithPlayer(); bomb.update(.81f);
-        collect(level, ItemType.COIN); // Deliberately miss Chicken.
+        collect(level, ItemType.COIN); // Deliberately miss Bat.
         level.enterNextRoom(player());
-        collect(level, ItemType.COIN); // Deliberately miss Key.
+        collect(level, ItemType.COIN); // Deliberately miss Mushroom.
         level.prepareHealer();
         assertFalse(level.canBrew());
         assertEquals(6, level.forestCoinsSecured());
@@ -571,13 +577,13 @@ class RoomTest {
             }
             assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
             assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.COIN));
-            collect(level, ItemType.CHICKEN);
+            collect(level, ItemType.BAT);
             assertEquals(1, artifacts.items().size());
-            level.resetCurrentRoom(player()); // The new Chicken is provisional; old coins and kills are secured.
+            level.resetCurrentRoom(player()); // The new Bat is provisional; old coins and kills are secured.
             assertTrue(artifacts.items().isEmpty());
             assertEquals(4, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance).count());
             assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
-            assertNotNull(artifact(level, ItemType.CHICKEN));
+            assertNotNull(artifact(level, ItemType.BAT));
             level.enterNextRoom(player());
             level.prepareHealer();
             assertEquals(6, level.forestCoinsSecured());
@@ -587,9 +593,9 @@ class RoomTest {
                 "Secured snapshots remain bounded to the two visited rooms across repeated returns");
         }
         level.returnForCollection(player());
-        collect(level, ItemType.CHICKEN);
+        collect(level, ItemType.BAT);
         level.enterNextRoom(player());
-        collect(level, ItemType.KEY);
+        collect(level, ItemType.MUSHROOM);
         level.prepareHealer();
         assertTrue(level.canBrew());
     }
@@ -631,9 +637,9 @@ class RoomTest {
         assertTrue(retry.isRemoved());
     }
 
-    @Test void burnedChickenApproachAndSwitchChainsAreRestoredOnEveryCollectionTrip() throws Exception {
+    @Test void burnedBatApproachAndSwitchChainsAreRestoredOnEveryCollectionTrip() throws Exception {
         Level level = forest();
-        // Exercise a linked chain beside the shipped Chicken route, without exempting any state.
+        // Exercise a linked chain beside the shipped Bat route, without exempting any state.
         var platform = new com.jlogicsoftware.kimeria.tiled.TiledObject();
         platform.id = 2000; platform.type = "FallingPlatform";
         platform.x = 416; platform.y = 256; platform.width = 32; platform.height = 16;
@@ -655,7 +661,7 @@ class RoomTest {
         level.resetCurrentRoom(player());
         var initialFalling = level.fallingPlatforms.get(0);
         assertEquals(256, initialFalling.getY());
-        assertNotNull(artifact(level, ItemType.CHICKEN));
+        assertNotNull(artifact(level, ItemType.BAT));
         var initialDoor = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Wall.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow();
         var initialLift = level.escalators.get(0);
@@ -801,7 +807,7 @@ class RoomTest {
         try {
             coins.set(999);
             Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
-            collect(level, ItemType.CHICKEN, ItemType.KEY);
+            collect(level, ItemType.BAT, ItemType.MUSHROOM);
             level.prepareHealer();
             assertTrue(artifacts.hasFullSet("forest-3"));
             assertEquals(0, level.forestCoinTotal());

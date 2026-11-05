@@ -27,6 +27,20 @@ class SavedProgressTest {
     }
 
     @Test
+    void savesFromTheChickenAndKeyEraStillLoadBecauseIngredientsAreRunOnly() {
+        // Ingredients were never persisted (#229): a pre-Bat/Mushroom save holds only the next level,
+        // so it needs no mapping. Even stray ingredient-like keys are ignored, not interpreted.
+        Preferences prefs = preferences();
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1);
+        prefs.putBoolean("chicken", true);
+        prefs.putBoolean("key", true);
+        prefs.flush();
+        SavedProgress progress = new SavedProgress(preferences(), 3);
+        assertTrue(progress.exists());
+        assertEquals(2, progress.nextLevelIndex()); // The existing forest-0 index shift, nothing ingredient-related.
+    }
+
+    @Test
     void progressSurvivesRelaunchAndNewGameClearsOnlyTheSave() {
         Preferences prefs = preferences();
         prefs.putBoolean(Settings.KEY_LEFT_HANDED, true);

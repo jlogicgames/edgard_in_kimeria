@@ -73,7 +73,7 @@ do not confuse the existing two-level test MVP with the upcoming mechanics MVP.
 - Use the full game design for the expanded campaign's agreed direction. Use the
   gameplay reference, MVP and encounter documents to establish what the test build
   currently does. In particular, required tablet fragments and optional ingredients
-  belong to the future campaign; the current Chicken/Key recipe remains documented
+  belong to the future campaign; the current Bat/Mushroom recipe remains documented
   as current behavior.
 - Read the decision log and the relevant topic document together before changing an
   existing rule. A new campaign direction does not silently change an implementation

@@ -138,11 +138,11 @@ class RoomReplayTest {
             held.clear(); pressed.clear(); timeScale = 1;
             float entry = replay(level, "forest-entry", false, 0, new float[]{95, 225, 345, 535, 860, 940}, true);
             assertTrue(entry <= COLLECTION_LIMIT);
-            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.CHICKEN));
+            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT));
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             float canopy = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555, 1640}, true);
             assertTrue(canopy <= COLLECTION_LIMIT);
-            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.KEY));
+            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.MUSHROOM));
             level.prepareHealer();
             assertEquals(6, coins);
             assertEquals(6, level.forestCoinsSecured());
@@ -166,10 +166,10 @@ class RoomReplayTest {
 
         float firstPass = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555});
         assertTrue(firstPass <= COLLECTION_LIMIT);
-        assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.KEY),
-            "The first route intentionally misses the Key");
+        assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
+            "The first route intentionally misses the Mushroom");
         var firstPlatform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 115);
-        assertTrue(firstPlatform.isFalling(), "Real movement and jumps must touch platform 115 before the Key route");
+        assertTrue(firstPlatform.isFalling(), "Real movement and jumps must touch platform 115 before the Mushroom route");
         for (int frame = 0; frame < 300 && !firstPlatform.isRemoved(); frame++) {
             held.clear(); pressed.clear();
             level.update(REAL_STEP);
@@ -188,8 +188,8 @@ class RoomReplayTest {
 
         float secondPass = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555});
         assertTrue(secondPass <= COLLECTION_LIMIT);
-        assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.KEY),
-            "The optional Key may be missed when its one-shot route support remains collapsed");
+        assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
+            "The optional Mushroom may be missed when its one-shot route support remains collapsed");
         level.enterNextRoom(player());
         assertTrue(platform.isRemoved(), "Securing the main exit retains the collapsed platform");
 
@@ -200,11 +200,11 @@ class RoomReplayTest {
         var authoredPlatform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(freshLevel, 115);
         assertFalse(authoredPlatform.isRemoved());
         assertFalse(authoredPlatform.isFalling(), "A fresh Level restores the authored one-shot support");
-        float freshKeyRoute = replay(freshLevel, "forest-canopy", false, 0,
+        float freshMushroomRoute = replay(freshLevel, "forest-canopy", false, 0,
             new float[]{1400, 1460, 1555, 1640}, true);
-        assertTrue(freshKeyRoute <= COLLECTION_LIMIT);
-        assertTrue(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.KEY),
-            "The fresh-level full artifact route can still collect the optional Key");
+        assertTrue(freshMushroomRoute <= COLLECTION_LIMIT);
+        assertTrue(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
+            "The fresh-level full artifact route can still collect the optional Mushroom");
     }
 
     private void secureCombatAndCoins(Level level) {
@@ -223,20 +223,20 @@ class RoomReplayTest {
 
     private Player player() { return new Player(assets, game, 0, 0); }
 
-    @Test void gameplayContactCollectsTheChickenAndRoomRetryRestoresIt() {
+    @Test void gameplayContactCollectsTheBatAndRoomRetryRestoresIt() {
         Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
-        Collectable chicken = level.objects.stream().filter(Collectable.class::isInstance)
-            .map(Collectable.class::cast).filter(item -> item.type() == ItemType.CHICKEN).findFirst().orElseThrow();
+        Collectable bat = level.objects.stream().filter(Collectable.class::isInstance)
+            .map(Collectable.class::cast).filter(item -> item.type() == ItemType.BAT).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
-        level.player.position.add(chicken.centerX() - hitbox.x, chicken.centerY() - hitbox.y);
+        level.player.position.add(bat.centerX() - hitbox.x, bat.centerY() - hitbox.y);
         level.player.update(0f);
-        assertTrue(chicken.isCollected());
+        assertTrue(bat.isCollected());
         assertEquals(1, artifacts.items().size());
         assertEquals(0, coins);
         level.resetCurrentRoom(player());
         assertTrue(artifacts.items().isEmpty());
         assertTrue(level.objects.stream().anyMatch(o -> o instanceof Collectable c
-            && c.type() == ItemType.CHICKEN && !c.isCollected()));
+            && c.type() == ItemType.BAT && !c.isCollected()));
     }
 
     /** The teaching order of #73: each mechanic first appears alone, and the room-one threats do not overlap. */
@@ -380,8 +380,8 @@ class RoomReplayTest {
                         }
                     }
                 } else if (artifactsRoute) {
-                    ItemType target = route.equals("forest-entry") ? ItemType.CHICKEN : ItemType.KEY;
-                    float stop = target == ItemType.CHICKEN ? 430 : 1710;
+                    ItemType target = route.equals("forest-entry") ? ItemType.BAT : ItemType.MUSHROOM;
+                    float stop = target == ItemType.BAT ? 430 : 1710;
                     boolean hasTarget = artifacts.items().stream().anyMatch(p -> p.type() == target);
                     if (!hasTarget && player.position.x >= stop && player.position.x < stop + 20) {
                         held.remove(Input.Keys.D);
