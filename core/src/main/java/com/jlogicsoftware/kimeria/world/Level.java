@@ -37,6 +37,9 @@ import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
+import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
+import com.jlogicsoftware.kimeria.entity.objects.Puffball;
+import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
 import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
@@ -680,18 +683,49 @@ public class Level implements WorldObject {
                     registerRoomStateOwner(o.id, escalator);
                 }
                 case "FallingPlatform" -> {
-                    FallingPlatform platform = new FallingPlatform(assets, o.x, o.y, o.width, o.height, this::queueSpawn, game.trapWarnings());
+                    FallingPlatform platform = new FallingPlatform(assets, o.x, o.y, o.width, o.height, this::queueSpawn, game.trapWarnings(),
+                        FallingPlatform.Skin.fromMap(o.prop("skin", "")));
                     fallingPlatforms.add(platform);
                     registerRoomStateOwner(o.id, platform);
                 }
                 case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
                 case "ThornRoot", "ThornTuft" -> objects.add(ThornTrap.fromMap(assets, game.trapWarnings(), o,
                     () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false)));
+                case "Puffball" -> {
+                    Puffball puffball = Puffball.fromMap(assets, o, game.trapWarnings(), describe(o));
+                    requireSafeSetting(o, puffball, puffball.cloudBounds());
+                    objects.add(puffball);
+                }
+                case "ThornVine" -> {
+                    ThornVine vine = ThornVine.fromMap(assets, o, describe(o));
+                    float reach = vine.length() + ThornVine.LETHAL_HALF_WIDTH;
+                    requireSafeSetting(o, vine, new Rectangle(vine.anchorX() - reach, vine.anchorY(), 2 * reach, reach));
+                    objects.add(vine);
+                }
                 default -> {
                 }
             }
         }
         spawnLevers();
+    }
+
+    /**
+     * A rhythmic trap's danger area must lie inside its room and must never cover a place the hero has to stand:
+     * the entrance (every retry restarts at the authored phase), the room exit or a checkpoint.
+     */
+    private void requireSafeSetting(TiledObject o, LethalHazard hazard, Rectangle area) {
+        if (!currentRoomBoundsOf(area))
+            throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area leaves the room");
+        RoomLayout.Room room = roomLayout.rooms.get(currentRoom);
+        var box = player.hitbox;
+        if (hazard.everLethalIn(new Rectangle(room.entrance().x + box.offsetX, room.entrance().y + box.offsetY, box.width, box.height)))
+            throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers the room entrance");
+        if (room.exit() != null && hazard.everLethalIn(room.exit()))
+            throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers the room exit");
+        for (TiledObject other : map.layer("SpawnPoints"))
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == currentRoom
+                && hazard.everLethalIn(new Rectangle(other.x, other.y, other.width, other.height)))
+                throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers a checkpoint");
     }
 
     /**
@@ -974,10 +1008,22 @@ public class Level implements WorldObject {
         }
         updateWorld(dt);
         player.update(dt);
+        killOnLethalHazards();
         for (WorldObject o : objects) if (o instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
 
         finishUpdate();
+    }
+
+    /** Rhythmic traps (D46) kill by the hero's body box, exactly like the bomb blast: Player.die holds the only guards. */
+    private void killOnLethalHazards() {
+        Rectangle body = player.hitboxBounds();
+        for (WorldObject o : objects) {
+            if (o instanceof LethalHazard hazard && hazard.lethalTo(body)) {
+                player.collidedWithActor(false);
+                return;
+            }
+        }
     }
 
     /** The world keeps moving during victory; only the hero uses a protected scripted walk. */

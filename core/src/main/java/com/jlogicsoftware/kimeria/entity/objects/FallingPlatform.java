@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
@@ -15,6 +16,19 @@ import java.util.function.Consumer;
 /** A one-shot platform that lights up, then collapses after a shared warning delay once the player lands on it. */
 public class FallingPlatform extends Actor<FallingPlatform.State> implements Collidable {
     public enum State {IDLE, FALLING}
+
+    /** Look only; behaviour is identical. LOG is the rotten forest log (D46), chosen by the map property {@code skin=log}. */
+    public enum Skin {
+        PLATFORM, LOG;
+
+        public static Skin fromMap(String value) {
+            return switch (value) {
+                case "" -> PLATFORM;
+                case "log" -> LOG;
+                default -> throw new IllegalArgumentException("Unknown FallingPlatform skin '" + value + "' (expected log)");
+            };
+        }
+    }
 
     /** Native sprite height (source art is 32x10 per frame) -- see Escalator's VISUAL_HEIGHT for why. */
     private static final float VISUAL_HEIGHT = 10f;
@@ -29,11 +43,26 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
     private static final float FALL_DURATION = 1.5f;
     private static final int WARNING_TORCH_INTENSITY = 5;
 
+    private static final int LOG_FRAME_COUNT = 3, LOG_CRACK_FIRST = 1, LOG_CRACK_SECOND = 2;
+    private final Skin skin;
+    private final TextureRegion[] logFrames = new TextureRegion[LOG_FRAME_COUNT];
+
     public FallingPlatform(Assets assets, float x, float y, float w, float h, Consumer<WorldObject> spawner,
                            TrapWarnings warnings) {
+        this(assets, x, y, w, h, spawner, warnings, Skin.PLATFORM);
+    }
+
+    public FallingPlatform(Assets assets, float x, float y, float w, float h, Consumer<WorldObject> spawner,
+                           TrapWarnings warnings, Skin skin) {
         super(x, y, w, h, State.class);
         this.spawner = spawner;
         this.warnings = warnings;
+        this.skin = skin;
+        if (skin == Skin.LOG) {
+            for (int i = 0; i < logFrames.length; i++) logFrames[i] = SpriteSheets.TRAP_LOG.frame(assets, i, 0);
+            setState(State.IDLE);
+            return;
+        }
         String image = "images/objects/FallingOn.png";
         // The source art is 128x10 (four 32x10 frames), not the 32x16 the
         // original Dart code assumed -- use the real sheet size to avoid
@@ -73,8 +102,23 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
         }
     }
 
+    public Skin skin() {
+        return skin;
+    }
+
+    /** Intact until landed on; the first half of the warning shows the first crack, the rest and the fall the second. */
+    private int logFrame() {
+        if (!falling) return 0;
+        float total = warnings.duration(TrapWarnings.FALLING_PLATFORM_SECONDS);
+        return fallDelay > total / 2f ? LOG_CRACK_FIRST : LOG_CRACK_SECOND;
+    }
+
     @Override
     public void render(Batch batch) {
+        if (skin == Skin.LOG) {
+            batch.draw(logFrames[logFrame()], position.x, position.y, size.x, size.y);
+            return;
+        }
         Animation<TextureRegion> anim = animations.get(current);
         if (anim == null) return;
         TextureRegion frame = anim.getKeyFrame(stateTime);

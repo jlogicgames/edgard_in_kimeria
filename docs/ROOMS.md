@@ -353,6 +353,43 @@ were checked at runtime; `ShadersTest` also guards against the 1x1 inset.
 
 The pre-release transition checklist is maintained in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#rooms-pickups-and-traps).
 
+## Rhythmic traps (#234, D46)
+
+Objects go in the `SpawnPoints` layer of the room that owns them, like every trap. The tests
+use `core/src/test/resources/tiles/rhythm-test.tmx` as the worked example.
+
+| Type | Size | Properties (default) | Notes |
+| --- | --- | --- | --- |
+| `Puffball` | 16×16, base on the floor | `period` 4.0 s, `phase` 0 s, `cloud` 1.0 s | cap swells 0.8 s (1.2 s with the assist), then a 1.0 s lethal cloud, then calm |
+| `ThornVine` | 24×40, top edge is the anchor | `period` 4.5 s (min 3.5), `phase` 0 s, `amplitude` 50° (35-60) | lethal lower half only; the stem is harmless |
+| `FallingPlatform` | 32×16 | `skin=log` | the rotten log; behaviour unchanged |
+
+**Period and phase.** Time starts at the room's entrance and again on every retry, so the
+authored `phase` is also what the hero meets on every attempt: the first cloud or swing a
+newcomer reaches is always the same one. Use `phase` to keep neighbouring traps out of step,
+never to hide a trap behind a rhythm that is only passable by luck.
+
+**Safe-window minimum.** `Puffball`: `period >= cloud + 1.2 + 0.8` (the longest assisted swell
+plus 0.8 s of calm); the load fails otherwise. The hero crosses the 38 px column in about 0.38 s.
+Never put two puffballs closer than a crossing apart on one line unless their phases leave a
+common safe window; test any chain with the walker harness in `RhythmTrapsTest`. `ThornVine`:
+floor 64 px below the object's top edge; the vine must hang clear of the room's walls and
+ceiling (swept area is `length + 4` px each way from the anchor, the load fails if it leaves the room).
+With that recipe the safe window is about 1.2 s per swing and the crossing needs about 0.8 s, so a
+careful hero waits at the edge, watches the swing lift the tip, and runs under.
+
+**Never over a place the hero must stand.** The load (and `check_tiled_links.py`) rejects a trap whose danger area, over its whole rhythm, touches the room entrance body, the room exit or a checkpoint of the room.
+
+**Retry and fairness (D26).** A death resets the room, including the rhythm. Both traps can be
+passed with ordinary controls, no ammunition and no precise jump; neither needs a bypass. The
+swell and the swing are the warning (D7); the assist lengthens the swell only, never the swing.
+Keep a rhythmic trap within one screen of its approach so the hero can watch it before committing.
+
+**Hint zone advice for #235.** Put a `Hint` zone before the trap (a full crossing length back)
+whose text names the tell, not the answer: the cap swells before it bursts, wait for the cloud
+to clear; the vine is only dangerous low, pass while it is swung to the side. Add no text before
+the hero can see the trap move. No hint text exists yet; #235 adds it.
+
 ## Teaching order and walkthrough (#73/#75)
 
 Rule for the two levels: teach each of stomp, sword, falling platforms and bombs where
