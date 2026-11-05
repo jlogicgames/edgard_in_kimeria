@@ -25,7 +25,7 @@ class TutorialLevelTest {
         return TiledMapData.load("tiles/" + name + ".tmx", assets);
     }
 
-    @Test void forestZeroReservesSixLongRoomsForTheLessonsInOrder() {
+    @Test void forestZeroReservesSixRoomsForTheLessonsInOrder() {
         TiledMapData map = map("forest-0");
         RoomLayout layout = new RoomLayout(map);
         List<String> lessons = List.of("lever", "ladder-bridge", "wall", "moving-platform", "thrown-stone", "existing-traps");
@@ -34,8 +34,8 @@ class TutorialLevelTest {
         for (int i = 0; i < lessons.size(); i++) {
             var room = layout.rooms.get(i);
             assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
-            // The lever room is 576 px and the ladder room 704 px (#209), as long as one lesson needs; the others are still long.
-            assertEquals(i == 0 ? 576 : i == 1 ? 704 : 1280, room.bounds().width, i <= 1 ? "A short lesson room" : "Rooms are long");
+            // The lever room is 576 px, the ladder room 704 px (#209) and the wall room 640 px (#197), as long as one lesson needs; the others are still long.
+            assertEquals(i == 0 ? 576 : i == 1 ? 704 : i == 2 ? 640 : 1280, room.bounds().width, i <= 2 ? "A short lesson room" : "Rooms are long");
             assertEquals(0, room.bounds().width % 16, "Room edges stay on the tile grid");
             assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
             assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
@@ -48,7 +48,7 @@ class TutorialLevelTest {
         RoomLayout layout = new RoomLayout(map);
         var last = layout.rooms.get(layout.rooms.size() - 1).bounds();
         assertEquals(map.widthTiles * 16, last.x + last.width, "The tile layer ends where the last room ends");
-        assertEquals(400, map.widthTiles);
+        assertEquals(360, map.widthTiles);
         for (var o : map.layer("Hints")) assertTrue(o.x + o.width <= map.widthTiles * 16, o.name);
         for (var o : map.layer("Collisions")) assertTrue(o.x + o.width <= map.widthTiles * 16, "collision at " + o.x);
     }
@@ -62,6 +62,10 @@ class TutorialLevelTest {
         java.util.function.Function<String, Float> object = prefix -> spawn.stream().filter(o -> o.name.startsWith(prefix)).findFirst().orElseThrow().x;
         assertTrue(object.apply("Lever [41") - start.apply("forest-0-lever-torch") >= 100, "lever message leads the lever");
         assertTrue(object.apply("Ladder") - start.apply("forest-0-ladder-climb") >= 100, "climb message leads the ladder");
+        assertTrue(object.apply("Lever [53") - start.apply("forest-0-wall-lever") >= 200, "wall-lever message leads the lever");
+        assertTrue(object.apply("Wall [52") - start.apply("forest-0-wall-pass") >= 150, "pass message leads the wall");
+        assertEquals(start.apply("forest-0-wall-lever") + hints.stream().filter(o -> "forest-0-wall-lever".equals(o.name)).findFirst().orElseThrow().width,
+            start.apply("forest-0-wall-pass"), "The wall room's message zones butt against each other");
         // Message zones of one room butt against each other without a gap, so a lingering text is always replaced by a true one.
         float end = 0;
         for (String name : List.of("forest-0-walk", "forest-0-lever-torch", "forest-0-lever-exit")) {
@@ -75,11 +79,12 @@ class TutorialLevelTest {
         TiledMapData map = map("forest-0");
         Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint");
         Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder");
+        // The wall lesson (#197) adds one Trigger and its Wall Actionable in room 2.
         RoomLayout layout = new RoomLayout(map);
         for (var o : map.layer("SpawnPoints")) {
             // The lever lesson (#186) adds one Trigger and its Torch Actionable in room 0; the ladder lesson (#196)
             // one Trigger and its Ladder in room 1.
-            boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 1;
+            boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 2;
             assertTrue(allowed.contains(o.type) || lesson, "Unexpected object: " + o.type);
             assertFalse(Set.of("RedMob", "Bomb", "FallingPlatform", "Boss").contains(o.type), "forest-0 has no enemies or hazards");
         }
@@ -94,7 +99,16 @@ class TutorialLevelTest {
         assertEquals(1, room1.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         assertEquals(1, room1.stream().filter(o -> "Ladder".equals(o.type)).count(), "exactly one ladder");
         assertEquals(2, room1.size(), "the ladder room holds only its lever and ladder");
-        assertTrue(map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) > 1)
+        var room2 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 2).toList();
+        assertEquals(2, room2.size(), "the wall room holds only its lever and wall");
+        assertEquals(1, room2.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
+        var walls = room2.stream().filter(o -> "Actionable".equals(o.type)).toList();
+        assertEquals(1, walls.size(), "exactly one linked object");
+        assertEquals("Wall", walls.get(0).prop("type", ""));
+        assertEquals("vertical", walls.get(0).prop("movement", ""), "The wall is raised and lowered, never removed");
+        assertEquals(320, walls.get(0).y + walls.get(0).height, "The wall starts lowered, standing on the floor");
+        assertTrue(walls.get(0).height >= 96, "and is taller than a jump");
+        assertTrue(map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) > 2)
             .noneMatch(o -> lessonTypes.contains(o.type)), "Other rooms are still empty");
         for (var o : map.layer("Collisions")) layout.owner(o);
         // Each room: exactly one floor strip and the two side walls (lessons add their own geometry).
