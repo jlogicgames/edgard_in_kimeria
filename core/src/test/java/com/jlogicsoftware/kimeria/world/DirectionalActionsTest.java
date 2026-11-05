@@ -1072,7 +1072,7 @@ class DirectionalActionsTest {
         level.player.position.y += 120; frames(30);
         standAt(zone.bounds().x + zone.bounds().width + 64);
         assertEquals("This lever lights the torch and puts it out", level.player.zoneHint(), "The next zone speaks next");
-        level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
         assertEquals("", level.player.zoneHint(), "Hints belong to their room's zones, not the whole level");
         level.resetCurrentRoom(player()); level.reloadAt(new Vector2(inside, 272)); frames(2);
         // Retry after death, restart, and a return to the room all rebuild the same authored hint.
@@ -1090,6 +1090,8 @@ class DirectionalActionsTest {
         assertTrue(level.controlHintsActive(), "The lever room (#186) teaches controls; later rooms' tickets add theirs");
         level.enterNextRoom(player()); frames(2);
         assertTrue(level.controlHintsActive(), "The ladder room (#196) teaches its own controls");
+        level.enterNextRoom(player()); frames(2);
+        assertTrue(level.controlHintsActive(), "The wall room (#197) teaches its own controls");
         level.enterNextRoom(player()); frames(2);
         assertFalse(level.controlHintsActive(), "Other forest-0 rooms have no control zone yet");
         forestZero();
@@ -1115,6 +1117,9 @@ class DirectionalActionsTest {
             if (room == 1) {
                 assertFalse(level.atRoomExit(), "The ladder room's exit is on a ledge: walking right alone does not reach it");
                 level.enterNextRoom(player()); frames(2); // The route itself is covered by LadderLessonTest.
+            } else if (room == 2) {
+                assertFalse(level.atRoomExit(), "The wall room's exit is behind a lowered wall: walking right alone does not reach it");
+                level.enterNextRoom(player()); frames(2); // The route itself is covered by WallLessonTest.
             } else if (room < rooms - 1) {
                 assertTrue(level.atRoomExit(), "Room " + room + " exit is reachable by walking right");
                 level.enterNextRoom(player()); frames(2);

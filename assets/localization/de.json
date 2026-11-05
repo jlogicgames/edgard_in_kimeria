@@ -77,6 +77,8 @@
   "HINT_LADDER_LEVER": "Dieser Hebel senkt die Leiter und hebt sie wieder",
   "HINT_LADDER_CLIMB": "Klettere die Leiter hoch, wenn sie unten ist",
   "HINT_LADDER_EXIT": "Der Ausgang liegt voraus",
+  "HINT_WALL_LEVER": "Dieser Hebel hebt die Mauer und senkt sie wieder",
+  "HINT_WALL_PASS": "Geh unter der Mauer durch, wenn sie oben ist",
   "FIREBALL": "Feuer",
   "NO_AMMO": "Leer",
   "PLACE_BLOCKED": "Belegt",

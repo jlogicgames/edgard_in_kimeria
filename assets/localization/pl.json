@@ -77,6 +77,8 @@
   "HINT_LADDER_LEVER": "Ta dźwignia opuszcza drabinę i znów ją podnosi",
   "HINT_LADDER_CLIMB": "Wejdź po drabinie, gdy jest opuszczona",
   "HINT_LADDER_EXIT": "Wyjście jest dalej",
+  "HINT_WALL_LEVER": "Ta dźwignia podnosi mur i znów go opuszcza",
+  "HINT_WALL_PASS": "Przejdź pod murem, gdy jest podniesiony",
   "FIREBALL": "Ogień",
   "NO_AMMO": "Pusto",
   "PLACE_BLOCKED": "Blokada",

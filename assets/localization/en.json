@@ -77,6 +77,8 @@
   "HINT_LADDER_LEVER": "This lever lowers the ladder and raises it again",
   "HINT_LADDER_CLIMB": "Climb the ladder when it is down",
   "HINT_LADDER_EXIT": "The exit is just ahead",
+  "HINT_WALL_LEVER": "This lever raises the wall and lowers it again",
+  "HINT_WALL_PASS": "Walk under the wall once it is raised",
   "FIREBALL": "Fireball",
   "NO_AMMO": "Empty",
   "PLACE_BLOCKED": "Blocked",

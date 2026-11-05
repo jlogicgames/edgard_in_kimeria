@@ -96,7 +96,7 @@ class HintLeadTest {
 
     private Level room(int index) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
-        if (index == 1) level.enterNextRoom(new Player(assets, game, 0, 0));
+        for (int i = 0; i < index; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
         return level;
     }
 
@@ -104,6 +104,10 @@ class HintLeadTest {
     private record Lead(float fullBefore, float longestGapAfter, float firstFull, float reachedAt) { }
 
     private Lead walk(Level level, String message, float secondsAfterReach) {
+        return walk(level, message, secondsAfterReach, () -> level.player.canInteract());
+    }
+
+    private Lead walk(Level level, String message, float secondsAfterReach, java.util.function.BooleanSupplier reached) {
         var hint = new HintTransition();
         var anchor = new Vector2();
         float t = 0, reachedAt = -1, firstFull = -1, lastFullBeforeReach = -1, gap = 0, longestGap = 0;
@@ -119,7 +123,7 @@ class HintLeadTest {
             if (full && firstFull < 0) firstFull = t;
             if (reachedAt < 0) {
                 if (full) lastFullBeforeReach = t;
-                if (level.player.canInteract()) reachedAt = t;
+                if (reached.getAsBoolean()) reachedAt = t;
             } else if (hint.alpha() > .5f) gap = 0;
             else { gap += STEP; longestGap = Math.max(longestGap, gap); }
             assertTrue(++guard < 60 * 40, "never reached at " + level.player.position);
@@ -141,5 +145,24 @@ class HintLeadTest {
         Lead lead = walk(room(1), Msg.HINT_LADDER_LEVER.t(Language.ENGLISH), 1.5f);
         assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
+    }
+
+    @Test void wallRoomLeverMessageIsReadableBeforeAContinuousWalkReachesTheLever() {
+        Lead lead = walk(room(2), Msg.HINT_WALL_LEVER.t(Language.ENGLISH), 1.5f);
+        assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
+    }
+
+    /** Walking on without stopping (wall already raised): the pass message is up before the body meets the wall. */
+    @Test void wallRoomPassMessageIsReadableBeforeAContinuousWalkReachesTheWall() {
+        Level level = room(2);
+        level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Wall.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow().performAction();
+        Lead lead = walk(level, Msg.HINT_WALL_PASS.t(Language.ENGLISH), 1.0f, () -> {
+            Rectangle b = level.player.hitboxBounds();
+            return b.x + b.width >= 1760 - 2;
+        });
+        assertTrue(lead.fullBefore >= .9f, "Wall message fully visible for at least 1 s before the body reaches the wall: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero passes under the wall: " + lead.longestGapAfter);
     }
 }

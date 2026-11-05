@@ -931,3 +931,24 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Length (#196, #209):** 704 px (was 768): the exit ledge shrank from 384 to 224 px and the approach before the lever grew by 96 px so the lever message is readable before the lever is in reach; ladder and ledge-top geometry (jump margins) are unchanged, RoomStart moved to x=624, lever x=824. Later rooms moved a further 64 px left (256 px with the lever room's 192 px, #209); the climb message zone starts 128 px before the ladder.
 - **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; the route, jump-reach and hint
   coverage are measured headlessly (`LadderLessonTest`, mastered route about 6.9 s).
+
+## D36. The tutorial wall lesson rule
+
+- **Status:** Accepted, 2026-11-05 ([#197](https://github.com/jlogicgames/edgard_in_kimeria/issues/197)); third lesson room of D33, after D34 and D35.
+- **Decision:** `forest-0-wall` (640 px) teaches exactly one new element: a lever that **raises and lowers a wall** blocking the corridor. The
+  wall is the existing vertical `Wall` Actionable (48×96 px, `movement`=vertical, 1.5 s, as in `forest-1`), starting lowered on the floor, taller
+  than a jump (about 58 px) and not wall-climbable, so nothing but the lever gets the hero past it. Raised, it leaves a 96 px gap under it. The lever
+  is on the floor 232 px before the wall, linked by a Tiled `target` reference (`check_tiled_links.py`), Up + Action per D30.
+- **Interaction / reuse:** all existing: `Wall`, `Lever`, the lever sprite mirrors the raised state, room snapshot restores it. No new asset or code.
+- **Recovery / D26:** the lever only comes into reach well clear of the wall (more than 120 px on the entrance side), never beside or under the wall,
+  so the wall cannot be lowered onto the hero and the hero cannot be shut on the far side without the lever (the exit is on that side; the entrance
+  side with the lever stays reachable by walking left). Toggling is free: the lever works any number of times, lowering the wall from the entrance
+  side never blocks the exit because it can be raised again. Death / room retry restores the authored lowered wall (the room is unsecured until the exit
+  is taken, so retry from under the wall restarts on the entrance side); Restart Level rebuilds it. No monsters, no hazards, no one-shot.
+- **Hints:** one `controls` zone over the room plus two position-only message zones that butt together: lever (raises *and lowers* the wall,
+  starts 232 px before the lever) and pass ("Walk under the wall once it is raised", starts 176 px before the wall, covers the exit side). Each is
+  true in either wall state. A continuous walk from RoomStart reads the lever message about 1 s before the lever is in reach and the pass message
+  about 1 s before the body meets the wall (`HintLeadTest`).
+- **Length:** 640 px (was 1280): approach 200 px to the lever, 232 px between lever and wall, 48 px wall, exit 48 px beyond. Later rooms and the `Checkpoint` moved 640 px left.
+- **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; route, jump-block, retry and hint coverage are measured
+  headlessly (`WallLessonTest`, mastered route about 5.1 s).
