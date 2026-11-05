@@ -34,11 +34,23 @@ class TutorialLevelTest {
         for (int i = 0; i < lessons.size(); i++) {
             var room = layout.rooms.get(i);
             assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
-            assertEquals(1280, room.bounds().width, "Rooms are long");
+            // Room 0 (lever) was shortened to 768 px in #206 after playtest; the others are still long.
+            assertEquals(i == 0 ? 768 : 1280, room.bounds().width, i == 0 ? "The lever room fits one torch" : "Rooms are long");
+            assertEquals(0, room.bounds().width % 16, "Room edges stay on the tile grid");
             assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
             assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
-            if (i > 0) assertEquals(layout.rooms.get(i - 1).bounds().x + 1280, room.bounds().x);
+            if (i > 0) assertEquals(layout.rooms.get(i - 1).bounds().x + layout.rooms.get(i - 1).bounds().width, room.bounds().x);
         }
+    }
+
+    @Test void forestZeroMapWidthMatchesTheRoomsAndEverythingStaysInsideIt() {
+        TiledMapData map = map("forest-0");
+        RoomLayout layout = new RoomLayout(map);
+        var last = layout.rooms.get(layout.rooms.size() - 1).bounds();
+        assertEquals(map.widthTiles * 16, last.x + last.width, "The tile layer ends where the last room ends");
+        assertEquals(448, map.widthTiles);
+        for (var o : map.layer("Hints")) assertTrue(o.x + o.width <= map.widthTiles * 16, o.name);
+        for (var o : map.layer("Collisions")) assertTrue(o.x + o.width <= map.widthTiles * 16, "collision at " + o.x);
     }
 
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {

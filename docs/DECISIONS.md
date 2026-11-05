@@ -859,18 +859,24 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 ## D33. The forest-0 tutorial level and map-authored hints
 
 - **Status:** Accepted, 2026-11-04 ([#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195)); revises D24.
-- **Decision:** `forest-0` is the first level: six long (1280 px) rooms, no monsters or hazards,
+- **Decision:** `forest-0` is the first level: six long rooms (1280 px; the lever room was shortened to 768 px by #206), no monsters or hazards,
   each a plain corridor with a safe entrance and a clear exit; the last room ends with the usual
   `Checkpoint` level exit. The rooms are reserved, in order, for one lesson each (room property
   `lesson`): `lever` (#186), `ladder-bridge` (#196), `wall` (#197), `moving-platform` (#198),
   `thrown-stone` (#199), `existing-traps` (#200). Each lesson ticket fills only its room.
 - **Hints are authored in the map.** An object layer `Hints` holds `Hint` rectangles inside one
-  room. Property `message` names a `Msg` key (shown at the zone: centred on it, at its top edge)
+  room. Property `message` names a `Msg` key (shown at the zone: centred on it, 45% down it; see Hint presentation)
   and/or `controls=true` turns on the contextual pickup/lever/ladder instructions of D24 while the
   hero's body is inside. A bad key, an empty zone or a zone crossing a room boundary fails the level
   load. Zones are stateless, so hints repeat after death, Restart Level and returns, and a level
   with no `Hints` layer (`forest-1`) shows none. The fireball-stock-full message is status
   feedback, not tutorial, and is unchanged. Texts live in the five `assets/localization` catalogs.
+- **Hint presentation (#206):** a message hint is drawn about 45% down its zone (mid-screen, above the
+  standing hero's head), not at the room's top edge. It is held back until the hero has stayed in the zone for
+  0.8 s, then fades in over 0.45 s while sliding up from 22 px below with a small overshoot, so it draws the eye
+  instead of sitting on screen from the first frame. Controls-zone labels (pickup, lever, ladder) and the
+  fireball-stock message stay immediate. Leaving before the delay shows nothing and restarts the wait; a different message replacing the current one waits and animates again. The HUD feeds the timer frame times clamped to 0.05 s, so a load hitch cannot skip the delay.
+  Timing lives in `HintTransition` and is unit-tested headlessly. Alternatives such as torches above the hint were rejected.
 - **forest-3 room 0:** keeps its control lessons for now through one `controls` zone covering the
   room, so playtested behavior is unchanged. Moving them to `forest-0` is the lesson tickets' job.
 - **Saves:** the save stays a bare level index, so inserting `forest-0` at the front would shift
@@ -879,7 +885,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   same level. New Game and the ending remove both keys.
 - **Why:** The tutorial needs hints that belong to rooms and objects, are authored by level
   designers in Tiled, and can be removed in later levels without code changes.
-- **Not verified:** no human playtest of the tutorial rooms; they are empty placeholders.
+- **Not verified:** no human playtest of the tutorial rooms; they are empty placeholders. The #206 animation and hint height are checked headlessly only, not by eye.
 
 ## D34. The tutorial lever lesson rule
 
@@ -892,6 +898,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Recovery:** the room is not secured until its exit is taken, so death/room retry returns the torch to its
   authored dark state; Restart Level rebuilds it dark. (A later visit to a secured room would keep the lit state,
   per D26.) No lever is one-shot in the tutorial.
+- **Length (#206):** after the first playtest the room is 768 px (was 1280): lever at x=344, torch at x=424, exit at x=704. Later rooms moved 512 px left.
 - **Hints:** one `controls` zone over the whole room (live lever instruction near the lever) plus three
   position-only message zones that tile it: walk (before the lever), "this lever lights the torch and puts it
   out" (around lever and torch), "the exit is ahead; the lever works any time" (after). Message zones cannot see
