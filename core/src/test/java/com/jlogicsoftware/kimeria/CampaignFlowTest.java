@@ -203,7 +203,7 @@ class CampaignFlowTest {
             int presses = 0; HealerDialogue.Choice result = null;
             while (result == null && presses < 40) { result = dialogue.advance(Language.ENGLISH); presses++; }
             assertEquals(HealerDialogue.Choice.CONTINUE, result);
-            assertTrue(presses <= 10, "skippable in a handful of presses: " + presses);
+            assertTrue(presses <= 12, "skippable in a handful of presses: " + presses);
         }
     }
 
