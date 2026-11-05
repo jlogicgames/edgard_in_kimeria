@@ -44,8 +44,21 @@ class TutorialLevelTest {
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
         TiledMapData map = map("forest-0");
         Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint");
-        for (var o : map.layer("SpawnPoints")) assertTrue(allowed.contains(o.type), "Unexpected object: " + o.type);
         RoomLayout layout = new RoomLayout(map);
+        for (var o : map.layer("SpawnPoints")) {
+            // The lever lesson (#186) adds exactly one Trigger and its Torch Actionable, in room 0 only.
+            boolean lesson = ("Trigger".equals(o.type) || "Actionable".equals(o.type)) && layout.owner(o) == 0;
+            assertTrue(allowed.contains(o.type) || lesson, "Unexpected object: " + o.type);
+            assertFalse(Set.of("RedMob", "Bomb", "FallingPlatform", "Boss").contains(o.type), "forest-0 has no enemies or hazards");
+        }
+        var room0 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 0).toList();
+        assertEquals(1, room0.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
+        var actionables = room0.stream().filter(o -> "Actionable".equals(o.type)).toList();
+        assertEquals(1, actionables.size(), "exactly one linked object");
+        assertEquals("Torch", actionables.get(0).prop("type", ""));
+        assertEquals(0, actionables.get(0).propFloat("Intensity", -1), "The torch starts dark");
+        assertTrue(map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) != 0)
+            .noneMatch(o -> "Trigger".equals(o.type) || "Actionable".equals(o.type)), "Other rooms are still empty");
         for (var o : map.layer("Collisions")) layout.owner(o);
         // Each room: exactly one floor strip and the two side walls (lessons add their own geometry).
         for (int i = 0; i < layout.rooms.size(); i++) {

@@ -880,3 +880,22 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Why:** The tutorial needs hints that belong to rooms and objects, are authored by level
   designers in Tiled, and can be removed in later levels without code changes.
 - **Not verified:** no human playtest of the tutorial rooms; they are empty placeholders.
+
+## D34. The tutorial lever lesson rule
+
+- **Status:** Accepted, 2026-11-04 ([#186](https://github.com/jlogicgames/edgard_in_kimeria/issues/186)); first lesson room of D33.
+- **Decision:** The `forest-0-lever` room teaches exactly one new element: a lever that **toggles** a
+  linked torch (dark at start, `Intensity` 0) on and off, any number of times, with Up + Action (D30).
+  The effect is a light and flame beside the lever, visible from it and from the approach. It is
+  **decorative and never gates the route**: the exit is reachable with the lever off, on, after death and after
+  Restart Level (D26 holds trivially). Operating it is encouraged by hints, not forced.
+- **Recovery:** the room is not secured until its exit is taken, so death/room retry returns the torch to its
+  authored dark state; Restart Level rebuilds it dark. (A later visit to a secured room would keep the lit state,
+  per D26.) No lever is one-shot in the tutorial.
+- **Hints:** one `controls` zone over the whole room (live lever instruction near the lever) plus three
+  position-only message zones that tile it: walk (before the lever), "this lever lights the torch and puts it
+  out" (around lever and torch), "the exit is ahead; the lever works any time" (after). Message zones cannot see
+  object state, so each text is true with the torch lit, dark, or the lever never touched.
+- **Why:** a reversible, route-independent first lesson lets a novice experiment safely and read cause and effect
+  before ladders, walls and platforms (which reconfigure the route) arrive in later rooms.
+- **Not verified:** no novice playtest (#129–#131); the mastered route (walk, operate, exit) was measured headlessly.

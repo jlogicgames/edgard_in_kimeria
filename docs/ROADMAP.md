@@ -105,6 +105,9 @@ six long empty rooms without monsters, hints always on, one new element per room
 with no hints. Hints are authored in the map ([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)).
 Rooms in order, each a separate ticket: lever (#186), ladder/bridge (#196), wall (#197), moving
 platform (#198), thrown stone (#199), existing traps (#200).
+**Lever room (#186) is built** (`forest-0-lever`, mastered route about 11 s, author check only; novice
+playtests are #129–#131) and is the sample the other lessons copy: see the
+[tutorial lesson room recipe](ROOMS.md#tutorial-lesson-room-recipe-186) and [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule).
 
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.

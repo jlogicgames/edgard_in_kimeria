@@ -1065,22 +1065,26 @@ class DirectionalActionsTest {
         assertEquals("Walk right to find the way out", level.player.contextHint(), "Still shown at jump height");
         level.player.position.y += 120; frames(30);
         standAt(zone.bounds().x + zone.bounds().width + 64);
-        assertEquals("", level.player.contextHint(), "Hints belong to their zone, not the whole level");
+        assertEquals("This lever lights the torch and puts it out", level.player.contextHint(), "The next zone speaks next");
+        level.enterNextRoom(player()); frames(2);
+        assertEquals("", level.player.contextHint(), "Hints belong to their room's zones, not the whole level");
+        level.resetCurrentRoom(player()); level.reloadAt(new Vector2(inside, 272)); frames(2);
         // Retry after death, restart, and a return to the room all rebuild the same authored hint.
         level.resetCurrentRoom(player()); frames(2);
         standAt(inside);
         assertEquals("Walk right to find the way out", level.player.contextHint());
-        level.enterNextRoom(player()); frames(2);
-        assertEquals("", level.player.contextHint());
         Level restarted = new Level(assets, game, player(), "forest-0", Rectangle::new);
         level = restarted; frames(2); standAt(inside);
         assertEquals("Walk right to find the way out", level.player.contextHint());
     }
 
-    @Test void forestZeroHintDoesNotTeachControlsAndForestThreeStillDoes() {
+    @Test void onlyTheForestZeroLeverRoomAndForestThreeTeachControls() {
         forestZero();
         standAt(level.hintZones().get(0).bounds().x + 40);
-        assertFalse(level.controlHintsActive(), "forest-0 has no control zones until its lesson tickets add them");
+        assertTrue(level.controlHintsActive(), "The lever room (#186) teaches controls; later rooms' tickets add theirs");
+        level.enterNextRoom(player()); frames(2);
+        assertFalse(level.controlHintsActive(), "Other forest-0 rooms have no control zone yet");
+        forestZero();
         level = new Level(assets, game, player(), "forest-3", Rectangle::new); frames(2);
         assertTrue(level.controlHintsActive(), "forest-3 room 0 keeps its authored control zone");
         assertEquals(1, level.hintZones().size());

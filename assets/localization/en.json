@@ -72,6 +72,8 @@
   "THROW": "Throw",
   "FIREBALL_STOCK_FULL": "Fireball inventory full",
   "HINT_TUTORIAL_WALK": "Walk right to find the way out",
+  "HINT_LEVER_TORCH": "This lever lights the torch and puts it out",
+  "HINT_LEVER_EXIT": "The exit is ahead. The lever works any time",
   "FIREBALL": "Fireball",
   "NO_AMMO": "Empty",
   "PLACE_BLOCKED": "Blocked",
