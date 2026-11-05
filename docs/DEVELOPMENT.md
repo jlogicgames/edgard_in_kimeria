@@ -213,6 +213,9 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - **Touch controls have no pause button yet.** The on-screen stick and three action buttons
   (`ui.TouchControls`) only show on devices that report a touch screen, so a touch-only player
   can't open the pause menu.
+- **Mobile browsers are playable but rough** (author iPhone play-through, 2026-11-05): in portrait the touch controls
+  overlap the game; there is no fullscreen; in landscape the browser chrome leaves about half of the game visible; the
+  screen auto-locks after some minutes. Tracked in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226).
 - **Fullscreen is desktop-only.** There is no mobile module in this repo yet, and the web build
   stays in its canvas, so neither shows the Display option; a future mobile backend is
   fullscreen by nature.

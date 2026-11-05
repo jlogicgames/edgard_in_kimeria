@@ -122,6 +122,8 @@ headless author check, then the author's desktop and web play-through of 2026-11
 
 **Author acceptance of the forest-0 tutorial (2026-11-05):** Adam Konter (project author) played the whole tutorial on desktop (keyboard only) and also checked the web build. All six rooms, both healer dialogues (start tale and farewell) and the transition into forest-1 were checked, with no remarks (OK). Not checked: gamepad, touch controls, native-speaker quality of the de/pl/uk/be translations. No novice playtest (#129–#131) has been done. Mastered route times above are headless author checks and are unchanged. Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
 
+**Author mobile-browser play-through (2026-11-05):** the author also played the web build on an iPhone (browser; no mobile build exists yet) and completed all the tutorial screens by touch. The game is playable. Four problems were found and are tracked in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226): in portrait the touch controls are drawn over the game although there is plenty of free space above and below; no fullscreen on mobile; in landscape the browser chrome stays and only about half of the game is visible; the screen turns off after some minutes. Not a novice playtest (#129–#131), and not the release-device pass (#144). Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
+
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.
 - [ ] [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103) Build short rooms demonstrating the rule and several applications.
