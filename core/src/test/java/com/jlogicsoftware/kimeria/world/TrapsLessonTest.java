@@ -15,7 +15,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
-import com.jlogicsoftware.kimeria.entity.items.Bomb;
+import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * The forest-0 traps lesson room (#200): ordinary keyboard controls drive the hero through the real map.
  * A pit is bridged by one falling platform (it lights up when landed on and falls after the shared warning), then a
- * contact bomb sits on the floor before the level's end. Times are author (mastered) measurements, not novice
+ * an exploding stump (D47, which replaced the glass-bottle bomb) sits on the floor before the level's end. Times are author (mastered) measurements, not novice
  * playtests. Recipe: docs/ROOMS.md, rule: D40.
  */
 class TrapsLessonTest {
@@ -95,7 +95,7 @@ class TrapsLessonTest {
     }
 
     private static final float ROOM_X = 3088, LIP = 3328, PIT_END = 3472, PLAT_X = 3392, PLAT_END = 3424, ROOM_RIGHT = 3808;
-    private static final float BOMB_X = 3648, BLAST_LEFT = 3624, BLAST_RIGHT = 3688, CHECKPOINT_X = 3760;
+    private static final float STUMP_X = 3648, BLAST_LEFT = 3624, BLAST_RIGHT = 3688, CHECKPOINT_X = 3760;
     private static final float WARNING = TrapWarnings.FALLING_PLATFORM_SECONDS, FUSE = TrapWarnings.DEFAULT_WARNING_SECONDS;
 
     /** A level whose hero stands in the traps room (index 5) at its safe entrance. */
@@ -107,11 +107,12 @@ class TrapsLessonTest {
 
     private FallingPlatform platform(Level level) { return level.fallingPlatforms.get(0); }
 
-    private Bomb bomb(Level level) {
-        return level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+    private ExplosiveTrap stump(Level level) {
+        return level.objects.stream().filter(ExplosiveTrap.class::isInstance).map(ExplosiveTrap.class::cast).findFirst().orElseThrow();
     }
 
-    private boolean bombGone(Level level) { return level.objects.stream().noneMatch(Bomb.class::isInstance); }
+    /** The stump (D47) has gone off: it is in its blast or spent (the charred remains stay as scenery). */
+    private boolean stumpGone(Level level) { return stump(level).phase() == ExplosiveTrap.Phase.BLAST || stump(level).isSpent(); }
     private void settle(Level level, int frames) { for (int i = 0; i < frames; i++) frame(level); }
     private float bodyLeft(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x; }
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
@@ -145,10 +146,10 @@ class TrapsLessonTest {
         return frames;
     }
 
-    private int walkTo(Level level, java.util.function.BooleanSupplier arrived, boolean jumpBomb) {
+    private int walkTo(Level level, java.util.function.BooleanSupplier arrived, boolean jumpStump) {
         int frames = 0;
         while (!arrived.getAsBoolean()) {
-            boolean jump = jumpBomb && level.player.isOnGround() && bodyRight(level) >= BOMB_X - 22 && bodyRight(level) < BOMB_X - 14;
+            boolean jump = jumpStump && level.player.isOnGround() && bodyRight(level) >= STUMP_X - 22 && bodyRight(level) < STUMP_X - 14;
             step(level, true, jump);
             assertTrue(alive(level), "died at " + level.player.position + " after " + frames);
             assertTrue(++frames < 60 * 30, "never arrived, hero at " + level.player.position);
@@ -157,25 +158,25 @@ class TrapsLessonTest {
         return frames;
     }
 
-    /** The whole taught route, walking through the bomb after its fuse is lit, from a standing start. */
-    private int solve(Level level, boolean jumpTheBomb) {
+    /** The whole taught route, walking through the stump after its fuse is lit, from a standing start. */
+    private int solve(Level level, boolean jumpTheStump) {
         int frames = crossPit(level);
-        frames += walkTo(level, () -> atEnd(level), jumpTheBomb);
+        frames += walkTo(level, () -> atEnd(level), jumpTheStump);
         return frames;
     }
 
-    @Test void theRoomOffersOneFallingPlatformOverAPitAndOneBombAndNothingElse() {
+    @Test void theRoomOffersOneFallingPlatformOverAPitAndOneStumpAndNothingElse() {
         Level level = freshRoom();
         assertEquals("forest-0-traps", level.currentRoomName());
         assertEquals(1, level.fallingPlatforms.size(), "exactly one falling platform");
-        assertEquals(1, level.objects.stream().filter(Bomb.class::isInstance).count(), "exactly one bomb");
+        assertEquals(1, level.objects.stream().filter(ExplosiveTrap.class::isInstance).count(), "exactly one exploding stump");
         assertTrue(level.triggers.isEmpty() && level.escalators.isEmpty() && level.ladders.isEmpty(), "no lever or other mechanism");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>), "no monsters");
         assertFalse(platform(level).isFalling());
         assertEquals(PLAT_X, platform(level).getX(), .01f);
         assertEquals(320, platform(level).getY(), .01f, "flush with the floor");
-        assertEquals(BOMB_X, bomb(level).getX(), .01f);
-        assertTrue(bomb(level).getX() - level.player.getX() >= 400, "The bomb lies well past the pit");
+        assertEquals(STUMP_X, stump(level).getX(), .01f);
+        assertTrue(stump(level).getX() - level.player.getX() >= 400, "The stump lies well past the pit");
         // The pit has no floor at all between the two lips.
         Rectangle pit = new Rectangle(LIP + 1, 320, PIT_END - LIP - 2, 48);
         for (var block : level.collisionBlocks) if (!block.isEscalator())
@@ -184,23 +185,23 @@ class TrapsLessonTest {
         assertEquals(ROOM_X + 720, ROOM_RIGHT);
     }
 
-    @Test void theMasteredRouteWalksThroughTheLitBombAndReachesTheEndWithoutAHit() {
+    @Test void theMasteredRouteWalksThroughTheLitStumpAndReachesTheEndWithoutAHit() {
         Level level = freshRoom();
         int frames = solve(level, false);
-        assertTrue(bombGone(level), "the bomb was set off and went off behind the hero");
+        assertTrue(stumpGone(level), "the stump was set off and went off behind the hero");
         assertTrue(atEnd(level));
         float seconds = frames * STEP;
-        System.out.printf(java.util.Locale.ROOT, "traps room mastered route (walk through the bomb): %.2f s, ends at x=%.0f%n", seconds, level.player.position.x);
+        System.out.printf(java.util.Locale.ROOT, "traps room mastered route (walk through the stump): %.2f s, ends at x=%.0f%n", seconds, level.player.position.x);
         assertTrue(seconds < 12f, "A short room: " + seconds);
         assertTrue(level.fallingPlatforms.isEmpty() || platform(level).isFalling(), "the platform was used");
     }
 
-    @Test void jumpingOverTheBombAlsoPassesAndNeverLightsIt() {
+    @Test void jumpingOverTheStumpAlsoPassesAndNeverLightsIt() {
         Level level = freshRoom();
         int frames = solve(level, true);
         assertTrue(atEnd(level));
-        System.out.printf(java.util.Locale.ROOT, "traps room route (jump the bomb): %.2f s%n", frames * STEP);
-        assertFalse(bombGone(level), "the bomb stayed where it was, unlit, after a clean jump");
+        System.out.printf(java.util.Locale.ROOT, "traps room route (jump the stump): %.2f s%n", frames * STEP);
+        assertFalse(stumpGone(level), "the stump stayed where it was, unlit, after a clean jump");
     }
 
     @Test void thePlatformLightsUpOnLandingWarnsForTheSharedDelayAndOnlyThenFalls() {
@@ -248,7 +249,7 @@ class TrapsLessonTest {
         assertEquals(1, level.fallingPlatforms.size(), "the retry rebuilt the platform");
         assertFalse(platform(level).isFalling());
         assertEquals(PLAT_X, platform(level).getX(), .01f); assertEquals(320, platform(level).getY(), .01f);
-        assertFalse(bombGone(level));
+        assertFalse(stumpGone(level));
         assertTrue(alive(level));
         solve(level, false); // and the retried room is passable
     }
@@ -291,42 +292,42 @@ class TrapsLessonTest {
         assertFalse(fresh.fallingPlatforms.get(0).isFalling());
     }
 
-    @Test void theBombWarnsForTheSharedFuseThenBlastsASixtyFourPixelSquareOnce() {
+    @Test void theStumpWarnsForTheSharedFuseThenBlastsASixtyFourPixelSquareOnce() {
         Level level = freshRoom();
-        place(level, BOMB_X + 6);
+        place(level, STUMP_X + 6);
         // Standing in the blast: the fuse lasts FUSE seconds, then the hero is hit.
         int frames = 0;
         while (alive(level) && frames < 60 * 3) { step(level, false, false); frames++; }
-        assertFalse(alive(level), "a hero who stands on the bomb is hit");
+        assertFalse(alive(level), "a hero who stands on the stump is hit");
         assertTrue(frames * STEP >= FUSE - .1f && frames * STEP <= FUSE + .2f, "fuse is the shared warning: " + frames * STEP);
-        assertTrue(bombGone(level));
+        assertTrue(stumpGone(level));
         retry(level);
-        assertFalse(bombGone(level), "the retry restores the unlit bomb");
+        assertFalse(stumpGone(level), "the retry restores the unlit stump");
         assertTrue(alive(level));
     }
 
-    @Test void retreatingFromTheLitBombOrStandingBackAvoidsTheBlast() {
+    @Test void retreatingFromTheLitStumpOrStandingBackAvoidsTheBlast() {
         for (boolean forward : new boolean[]{false, true}) {
             Level level = freshRoom();
-            place(level, BOMB_X + 6);
+            place(level, STUMP_X + 6);
             for (int i = 0; i < 60 * 3 && alive(level); i++) {
                 held.clear(); if (i < 40) held.add(forward ? Input.Keys.D : Input.Keys.A); frame(level);
             }
             assertTrue(alive(level), "forward=" + forward + " cleared the blast square, at " + level.player.position);
-            assertTrue(bombGone(level));
+            assertTrue(stumpGone(level));
             held.clear();
         }
     }
 
-    @Test void afterTheBombWentOffTheEndIsStillReachableAndTheRoomIsNeverASoftLock() {
+    @Test void afterTheStumpWentOffTheEndIsStillReachableAndTheRoomIsNeverASoftLock() {
         Level level = freshRoom();
-        place(level, BOMB_X + 40);
+        place(level, STUMP_X + 40);
         held.clear();
         settle(level, 10);
-        place(level, BOMB_X + 4);
+        place(level, STUMP_X + 4);
         for (int i = 0; i < 60 * 2; i++) step(level, true, false);
         assertTrue(alive(level));
-        assertTrue(bombGone(level));
+        assertTrue(stumpGone(level));
         walkTo(level, () -> atEnd(level), false);
         assertTrue(atEnd(level), "end reachable after the explosion");
     }
@@ -341,8 +342,8 @@ class TrapsLessonTest {
 
     @Test void theBlastAndTheCheckpointMatchTheRealMapObjects() {
         Level level = freshRoom();
-        Bomb bomb = bomb(level);
-        Rectangle blast = new Rectangle(bomb.centerX() - 32, bomb.centerY() - 32, 64, 64);
+        ExplosiveTrap stump = stump(level);
+        Rectangle blast = stump.blastBox();
         var checkpoint = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.Entity.class::cast).findFirst().orElseThrow();
         Rectangle cp = new Rectangle(checkpoint.getX(), checkpoint.getY(), checkpoint.size.x, checkpoint.size.y);
@@ -366,10 +367,10 @@ class TrapsLessonTest {
         return frames;
     }
 
-    private int bombFramesToBlast(Level level) {
-        place(level, BOMB_X + 6);
+    private int stumpFramesToBlast(Level level) {
+        place(level, STUMP_X + 6);
         int frames = 0;
-        while (!bombGone(level) && frames++ < 60 * 5) frame(level);
+        while (!stumpGone(level) && frames++ < 60 * 5) frame(level);
         return frames;
     }
 
@@ -381,15 +382,15 @@ class TrapsLessonTest {
 
     @Test void warningsAreExactlyD7sSharedValuesNormallyAndWithTheLongerAssist() throws Exception {
         assertEquals(1f, TrapWarnings.FALLING_PLATFORM_SECONDS, 0f, "D7: falling platform 1 s");
-        assertEquals(.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f, "D7: bomb 0.8 s");
+        assertEquals(.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f, "D7: stump 0.8 s");
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);
             float scale = longer ? 1.5f : 1f;
             int platform = platformFramesToFall(freshRoom());
-            int bomb = bombFramesToBlast(freshRoom());
-            System.out.printf(java.util.Locale.ROOT, "longer=%s: platform moves after %.2f s, bomb blasts after %.2f s%n", longer, platform * STEP, bomb * STEP);
+            int stump = stumpFramesToBlast(freshRoom());
+            System.out.printf(java.util.Locale.ROOT, "longer=%s: platform moves after %.2f s, stump blasts after %.2f s%n", longer, platform * STEP, stump * STEP);
             assertEquals(1f * scale * 60, platform, 3, "platform warning, longer=" + longer);
-            assertEquals(.8f * scale * 60, bomb, 3, "bomb fuse, longer=" + longer);
+            assertEquals(.8f * scale * 60, stump, 3, "stump fuse, longer=" + longer);
         }
         setLonger(false);
     }

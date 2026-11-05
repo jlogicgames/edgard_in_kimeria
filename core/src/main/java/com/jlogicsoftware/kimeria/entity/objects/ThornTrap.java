@@ -214,6 +214,21 @@ public class ThornTrap extends Entity {
         if (left < 0 || right < 0 || left + right <= 0) return "needs a zone (zone, zoneLeft, zoneRight): not negative, at least one side used";
         if ((left > 0 && left < MIN_ZONE) || (right > 0 && right < MIN_ZONE))
             return "needs each used zone side to be at least " + (int) MIN_ZONE + " px (zone, zoneLeft, zoneRight; 0 leaves a side unused)";
+        String open = openFloorProblem(o, left, right, collisions, spawn, room);
+        if (open != null) return open;
+        if (entranceBody != null && entranceBody.overlaps(zoneOf(o.x, o.y, o.width, o.height, left, right)))
+            return "has its trigger zone over the room entrance (the hero would start triggered)";
+        return null;
+    }
+
+    /**
+     * The shared jump-envelope rule (D44, reused by the explosive traps of D47): the footprint widened by
+     * {@code max(side, MIN_ZONE)} on each side must lie in the room, stand on floor over its whole width and keep
+     * {@link #HEADROOM} of free air (collision blocks, falling platforms, walls with their travel, ladders,
+     * escalators with their travel); nothing solid may stand in the footprint's own column.
+     */
+    static String openFloorProblem(TiledObject o, float left, float right, List<TiledObject> collisions,
+                                   List<TiledObject> spawn, Rectangle room) {
         float floor = o.y + o.height;
         Rectangle footprint = new Rectangle(o.x, o.y, o.width, o.height);
         Rectangle envelope = new Rectangle(o.x - Math.max(left, MIN_ZONE), floor - HEADROOM,
@@ -243,8 +258,6 @@ public class ThornTrap extends Entity {
             String clash = swept == null ? null : clash(footprint, air, swept);
             if (clash != null) return clash;
         }
-        if (entranceBody != null && entranceBody.overlaps(zoneOf(o.x, o.y, o.width, o.height, left, right)))
-            return "has its trigger zone over the room entrance (the hero would start triggered)";
         return null;
     }
 

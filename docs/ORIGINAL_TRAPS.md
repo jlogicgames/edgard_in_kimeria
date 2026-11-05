@@ -299,7 +299,7 @@ knowledge of modern retro-styled platformers; I did not look anything up.
 | Hidden trap vs D7 | **Every killing trap shows a telegraph** before it can kill, with a warning time from the shared source. Hidden-trigger traps stay deterministic but get a visible cue. | D7 and D5 (instant death only when understandable). Modern "trap" rooms in this genre are readable on second look; unmarked traps are accepted only as learn-by-dying, which D26 rules out. |
 | Falling branch | **Author-confirmed 2026-11-05:** position trigger + **visible tell + short delay**, then the branch falls with a real flight time. While it falls the player can **jump or run away**; both answers work. | The author's wording; it meets D7 and keeps the original's jump answer. |
 | Rising stake | **Author-confirmed 2026-11-05:** it is **animated**: when the player gets close the stake's tip **pokes out and wobbles a little** (the readable warning), then it rises and **stays up until the retry**. Placement (assumed): on open floor so it can be jumped, never in a required one-tile corridor. | Matches the falling platform's "spent until the retry" (D7/D40). |
-| Root and stump explosions | **Author-confirmed 2026-11-05: the existing bomb behaviour is OK**: touch lights a fuse (shared 0.8 s warning, 1.2 s with assist) then one 64 x 64 blast. Root and stump explosion animations are drawn later (follow-up). | The existing bomb is the tested, fair version of the original's touch-explosion. |
+| Root and stump explosions | **Implemented in D47 (#233).** **Author-confirmed 2026-11-05: the existing bomb behaviour is OK**: touch lights a fuse (shared 0.8 s warning, 1.2 s with assist) then one 64 x 64 blast. The root and stump sprites (cracks, smoke, glow, blast, charred remains) exist and are used by the new traps. | The existing bomb is the tested, fair version of the original's touch-explosion. |
 | Camouflaged root | **Author rejected keeping it as is (2026-11-05).** The root's colour clearly differs from the grass and bush on the screenshots, so it was not truly hidden. D42 replaces it with the bristling thorn tuft. | Evidence from the stills (S6, S7) and the author's decision. |
 | Owl (S13) and veined bush | **Decor, no hazard. Author-confirmed 2026-11-05.** | The bush also appears on S14, which has no traps. Much other decor will need drawing later (follow-up). |
 | Bat and mushroom | **Author decision 2026-11-05:** they stay **optional ingredients** and **replace the current Chicken and Key** in the remake, as in the original. Each may be guarded by one trap. | Ticket [#229](https://github.com/jlogicgames/edgard_in_kimeria/issues/229). D16 already makes ingredients optional. |
@@ -361,7 +361,10 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
   (branch, stone). **Implemented, see D45** (tested headlessly in test-resource maps, not
   placed in any shipped level, not yet seen in the running game).
 - [#233](https://github.com/jlogicgames/edgard_in_kimeria/issues/233): code C, explosive
-  stump/root replacing the bomb.
+  stump/root replacing the bomb. **Implemented, see D47** (types `ExplosiveStump`,
+  `ExplosiveRoot`; touch or a fireball / thrown stone from afar lights them; every one needs a
+  floor bypass at load; the `forest-0-traps` bomb is replaced by a stump; the old `Bomb` type
+  stays and `forest-3` still has one).
 - [#234](https://github.com/jlogicgames/edgard_in_kimeria/issues/234): code D, rhythm traps
   (puffball, vine) and the rotten-log skin. **Implemented, see D46** (types `Puffball`,
   `ThornVine`, property `skin=log`; not placed in any shipped level, #235 does that).

@@ -221,5 +221,64 @@ class FallingTrapLinksTest(unittest.TestCase):
             self.assertTrue(links.check_map(path), f'{path.name} must fail like the Java loader does')
 
 
+class ExplosiveTrapLinksTest(unittest.TestCase):
+    """D47: mirror of ExplosiveTrap.problem (bypass = open floor and headroom; blast square clear of standing places)."""
+    FLOOR = '<object id="9" x="0" y="320" width="640" height="48"/>'
+    STUMP = '<object id="3" type="ExplosiveStump" x="288" y="304" width="16" height="16"/>'
+    ROOT = '<object id="3" type="ExplosiveRoot" x="288" y="296" width="16" height="24"/>'
+    ROOM = ('<objectgroup name="Rooms"><object name="one" type="Room" x="0" y="0" width="640" height="368"/>'
+            '<object name="one" type="RoomStart" x="32" y="272"><point/></object>'
+            '<object name="one" type="RoomExit" x="600" y="272" width="32" height="48"/></objectgroup>')
+
+    def explosive(self, trap=STUMP, spawn='', collisions=FLOOR, rooms=ROOM):
+        return check(tmx(trap + spawn, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_a_stump_and_a_root_on_open_floor_pass(self):
+        self.assertEqual([], self.explosive())
+        self.assertEqual([], self.explosive(self.ROOT))
+        self.assertEqual([], self.explosive(rooms=''))
+
+    def test_no_bypass_without_floor_or_run_up(self):
+        self.assertIn('open floor', self.explosive(collisions='')[0])
+        pit = '<object id="9" x="0" y="320" width="330" height="48"/><object id="8" x="400" y="320" width="240" height="48"/>'
+        self.assertIn('open floor', self.explosive(collisions=pit)[0])
+        ledge = self.STUMP.replace('y="304"', 'y="288"')
+        self.assertIn('open floor', self.explosive(ledge)[0])
+
+    def test_no_bypass_under_a_low_ceiling_in_a_corridor_or_behind_a_pillar(self):
+        ceiling = '<object id="8" x="200" y="240" width="200" height="16"/>'
+        self.assertIn('free height', self.explosive(collisions=self.FLOOR + ceiling)[0])
+        pillar = '<object id="8" x="340" y="240" width="16" height="80"/>'
+        self.assertIn('free height', self.explosive(collisions=self.FLOOR + pillar)[0])
+        far = '<object id="8" x="372" y="240" width="16" height="80"/>'  # beyond the 64 px landing: not in the way
+        self.assertEqual([], self.explosive(collisions=self.FLOOR + far))
+        high = '<object id="8" x="200" y="200" width="200" height="16"/>'  # 104 px of headroom
+        self.assertEqual([], self.explosive(collisions=self.FLOOR + high))
+        wall = ('<object id="6" type="Actionable" x="352" y="240" width="16" height="48"><properties>'
+                '<property name="type" value="Wall"/></properties></object>')
+        self.assertIn('free height', self.explosive(spawn=wall)[0])
+        falling = '<object id="6" type="FallingPlatform" x="288" y="300" width="32" height="16"/>'
+        self.assertIn('own column', self.explosive(spawn=falling)[0])
+
+    def test_the_blast_square_may_not_cover_the_entrance_the_exit_or_a_checkpoint(self):
+        self.assertIn('entrance', self.explosive(self.STUMP.replace('x="288"', 'x="64"'))[0])
+        self.assertIn('exit', self.explosive(rooms=self.ROOM.replace('x="600" y="272"', 'x="320" y="272"'))[0])
+        checkpoint = '<object id="7" type="Checkpoint" x="330" y="272" width="16" height="32"/>'
+        self.assertEqual([], self.explosive(spawn=checkpoint.replace('x="330"', 'x="336"')))
+        self.assertIn('checkpoint', self.explosive(spawn=checkpoint.replace('x="330"', 'x="320"'))[0])
+
+    def test_the_blast_square_must_stay_inside_the_room_and_size_is_required(self):
+        low_room = self.ROOM.replace('height="368"', 'height="330"')
+        self.assertIn('blast square leaving the room', self.explosive(rooms=low_room)[0])
+        self.assertIn('positive bounds', self.explosive(self.STUMP.replace('width="16"', 'width="0"'))[0])
+        self.assertTrue(any('Collisions layer' in e for e in check(tmx(collisions=self.FLOOR + self.STUMP))))
+
+    def test_every_java_explosive_fixture_agrees_with_the_checker(self):
+        self.assertEqual([], links.check_map(TILES / 'explosive-test.tmx'))
+        self.assertEqual([], links.check_map(TILES / 'explosive-shield.tmx'))
+        for name in ('corridor', 'pit', 'pillar', 'entrance'):
+            self.assertTrue(links.check_map(TILES / f'explosive-{name}.tmx'), f'explosive-{name}.tmx must fail like the Java loader does')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -73,9 +73,9 @@ class TutorialLevelTest {
             start.apply("forest-0-stone-across"), "and the last one starts at the far lip, where the platform text stops being true");
         assertEquals(object.apply("Lever [65"), start.apply("forest-0-stone-across"), "at the lever");
         assertTrue(object.apply("FallingPlatform") - start.apply("forest-0-traps-platform") >= 200, "platform-trap message leads the pit");
-        assertTrue(object.apply("Bomb") - start.apply("forest-0-traps-bomb") >= 190, "bomb message leads the bomb");
+        assertTrue(object.apply("Exploding Stump") - start.apply("forest-0-traps-stump") >= 190, "stump message leads the stump");
         assertEquals(start.apply("forest-0-traps-platform") + hints.stream().filter(o -> "forest-0-traps-platform".equals(o.name)).findFirst().orElseThrow().width,
-            start.apply("forest-0-traps-bomb"), "The traps room's message zones butt against each other");
+            start.apply("forest-0-traps-stump"), "The traps room's message zones butt against each other");
         assertEquals(start.apply("forest-0-platform-lever") + hints.stream().filter(o -> "forest-0-platform-lever".equals(o.name)).findFirst().orElseThrow().width,
             start.apply("forest-0-platform-ride"), "The platform room's message zones butt against each other");
         assertEquals(start.apply("forest-0-wall-lever") + hints.stream().filter(o -> "forest-0-wall-lever".equals(o.name)).findFirst().orElseThrow().width,
@@ -100,8 +100,8 @@ class TutorialLevelTest {
             // The lever lesson (#186) adds one Trigger and its Torch Actionable in room 0; the ladder lesson (#196)
             // one Trigger and its Ladder in room 1.
             boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 4;
-            // The traps lesson (#200) adds exactly one falling platform and one bomb to the last room, no monster anywhere.
-            boolean trap = Set.of("Bomb", "FallingPlatform").contains(o.type) && layout.owner(o) == 5;
+            // The traps lesson (#200) adds exactly one falling platform and one exploding stump (D47, replacing the bomb) to the last room, no monster anywhere.
+            boolean trap = Set.of("ExplosiveStump", "FallingPlatform").contains(o.type) && layout.owner(o) == 5;
             assertTrue(allowed.contains(o.type) || lesson || trap, "Unexpected object: " + o.type);
             assertFalse(Set.of("RedMob", "Boss").contains(o.type), "forest-0 has no monsters");
         }
@@ -151,9 +151,9 @@ class TutorialLevelTest {
         assertEquals(stoneLevers.get(0).x, lipFar, "the lever stands at the far lip, where the platform ends");
         assertEquals(96, stoneLevers.get(0).x - lipNear, "a 96 px chasm");
         var room5 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 5).toList();
-        assertEquals(3, room5.size(), "the traps room holds only its falling platform, bomb and the level-end checkpoint");
+        assertEquals(3, room5.size(), "the traps room holds only its falling platform, exploding stump and the level-end checkpoint");
         assertEquals(1, room5.stream().filter(o -> "FallingPlatform".equals(o.type)).count(), "exactly one falling platform");
-        assertEquals(1, room5.stream().filter(o -> "Bomb".equals(o.type)).count(), "exactly one bomb");
+        assertEquals(1, room5.stream().filter(o -> "ExplosiveStump".equals(o.type)).count(), "exactly one exploding stump");
         assertTrue(room5.stream().noneMatch(o -> lessonTypes.contains(o.type)), "no lever, no mechanism in the traps room");
         for (var o : map.layer("Collisions")) layout.owner(o);
         // Each room: exactly one floor strip and the two side walls (lessons add their own geometry).

@@ -219,7 +219,7 @@ class HintLeadTest {
     /** The bomb message is up before the same walk, after crossing the platform, touches the bomb (#200). */
     @Test void trapsRoomBombMessageIsReadableBeforeAContinuousWalkReachesTheBomb() {
         Level level = room(5);
-        Lead lead = walk(level, Msg.HINT_TRAP_BOMB.t(Language.ENGLISH), 1.5f, () -> {
+        Lead lead = walk(level, Msg.HINT_TRAP_STUMP.t(Language.ENGLISH), 1.5f, () -> {
             Rectangle b = level.player.hitboxBounds();
             return b.x + b.width >= 3648 + 3;
         }, trapsDriver(level));
