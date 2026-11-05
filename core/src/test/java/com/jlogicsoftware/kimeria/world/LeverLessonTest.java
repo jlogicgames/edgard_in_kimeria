@@ -195,7 +195,7 @@ class LeverLessonTest {
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean lit : new boolean[]{false, true}) {
-                for (float x = 24; x < 736; x += 8) {
+                for (float x = 24; x < 544; x += 8) {
                     torch(level).toggleFire(lit);
                     level.player.position.set(x, 272);
                     for (int i = 0; i < 3; i++) frame(level);

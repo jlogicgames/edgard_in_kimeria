@@ -122,15 +122,15 @@ class HintTransitionTest {
     @Test void leavingTheZoneBeforeTheDelayShowsNothingAndRestartsTheWait() {
         var hint = new HintTransition();
         var anchor = new Vector2();
-        hint.update("Walk", anchor, .6f, true);
-        hint.update("", anchor, .1f, false);
-        hint.update("Walk", anchor, .6f, true);
-        assertEquals("", hint.text(), "The earlier 0.6 s must not count towards the new visit");
         hint.update("Walk", anchor, .3f, true);
+        hint.update("", anchor, HintTransition.REQUEST_GRACE + .05f, false);
+        hint.update("Walk", anchor, .3f, true);
+        assertEquals("", hint.text(), "The earlier 0.3 s must not count towards the new visit");
+        hint.update("Walk", anchor, .1f, true);
         assertEquals("Walk", hint.text());
     }
 
-    @Test void immediateLabelsIgnoreTheDelayAndAttentionLabelsExitNormally() {
+    @Test void immediateLabelsIgnoreTheDelayAndReplaceAShownMessage() {
         var hint = new HintTransition();
         var anchor = new Vector2();
         hint.update("Pick up", anchor, .01f, false);
@@ -139,27 +139,139 @@ class HintTransitionTest {
         hint.update("Walk", anchor, 1f, true);
         hint.update("Walk", anchor, 1f, true);
         assertEquals(1, hint.alpha());
-        hint.update("", anchor, .3f, false);
-        assertEquals(0, hint.alpha());
-        assertEquals("", hint.text());
+        hint.update("Pick up", anchor, .3f, false);
+        assertEquals("Pick up", hint.text(), "An immediate label swaps in as soon as the old one has faded");
+        hint.update("Pick up", anchor, .3f, false);
+        assertEquals("Pick up", hint.text());
+        assertEquals(1, hint.alpha());
     }
 
-    @Test void swappingBetweenTwoAttentionLabelsWaitsAndPulsesAgain() {
+    private static HintTransition showing(String text, Vector2 anchor) {
+        var hint = new HintTransition();
+        hint.update(text, anchor, HintTransition.ATTENTION_DELAY, true);
+        for (int i = 0; i < 100; i++) hint.update(text, anchor, .02f, true); // 2 s: well past MIN_SHOW
+        assertEquals(1, hint.alpha());
+        return hint;
+    }
+
+    @Test void appearDelayIsShortAndAShortGapDoesNotRestartIt() {
+        assertTrue(HintTransition.ATTENTION_DELAY <= .4f && HintTransition.ATTENTION_DELAY >= .3f);
+        var hint = new HintTransition();
+        var anchor = new Vector2();
+        hint.update("Walk", anchor, .2f, true);
+        hint.update("", anchor, .1f, false); // boundary jitter inside the grace period
+        hint.update("Walk", anchor, .2f, true);
+        assertEquals("Walk", hint.text(), "0.2 + 0.2 s of request, the 0.1 s gap is forgiven");
+    }
+
+    @Test void attentionLabelLingersAfterTheRequestEndsThenFadesOut() {
+        var anchor = new Vector2(80, 160);
+        var hint = showing("Lever", anchor);
+        float t = 0;
+        while (t < HintTransition.LINGER - .1f) {
+            hint.update("", new Vector2(900, 0), .02f, false); t += .02f;
+            assertEquals("Lever", hint.text()); assertEquals(1, hint.alpha(), "Fully readable while lingering at t=" + t);
+        }
+        var where = new Vector2(); hint.position(where);
+        assertEquals(anchor, where, "A lingering label stays where it was shown");
+        for (int i = 0; i < 40; i++) hint.update("", anchor, .02f, false);
+        assertEquals("", hint.text());
+        assertEquals(0, hint.alpha());
+    }
+
+    @Test void returningToTheZoneCancelsTheLingerWithoutFlicker() {
+        var anchor = new Vector2();
+        var hint = showing("Lever", anchor);
+        for (int i = 0; i < 100; i++) { // Walk back and forth over the boundary for 4 s.
+            hint.update(i % 20 < 10 ? "" : "Lever", anchor, .02f, i % 20 >= 10);
+            assertEquals("Lever", hint.text()); assertEquals(1, hint.alpha(), "Never dips at frame " + i);
+        }
+        for (int i = 0; i < 100; i++) hint.update("Lever", anchor, .02f, true);
+        for (int i = 0; i < 20; i++) hint.update("", anchor, .02f, false); // the linger starts from zero again
+        assertEquals("Lever", hint.text());
+        assertEquals(1, hint.alpha());
+    }
+
+    @Test void anotherTutorialMessageWaitsForTheMinimumShowTimeThenCrossfadesWithoutTheDelay() {
+        var anchor = new Vector2();
+        var hint = new HintTransition();
+        hint.update("A", anchor, HintTransition.ATTENTION_DELAY, true);
+        for (int i = 0; i < 25; i++) hint.update("A", anchor, .02f, true); // 0.5 s up
+        hint.update("B", anchor, .1f, true);
+        assertEquals("A", hint.text(), "Held: not yet up for MIN_SHOW");
+        assertTrue(hint.alpha() > .9f, "A is not faded while held: " + hint.alpha());
+        for (int i = 0; i < 20; i++) hint.update("B", anchor, .02f, true); // past MIN_SHOW, A leaves
+        assertEquals("B", hint.text(), "B follows A as soon as A has faded: no fresh appear delay");
+        assertTrue(hint.alpha() < .6f);
+        for (int i = 0; i < 40; i++) hint.update("B", anchor, .02f, true);
+        assertEquals(1, hint.alpha());
+    }
+
+    @Test void immediateLabelReplacesAFullyShownLingeringMessage() {
+        var anchor = new Vector2();
+        var hint = showing("Lever", anchor);
+        hint.update("", anchor, .5f, false); // lingering
+        hint.update("Turn on", anchor, .02f, false);
+        assertTrue(hint.alpha() < 1, "The message starts leaving at once");
+        hint.update("Turn on", anchor, .3f, false);
+        hint.update("Turn on", anchor, .3f, false);
+        assertEquals("Turn on", hint.text());
+        assertEquals(1, hint.alpha());
+    }
+
+    @Test void immediateLabelDoesNotEraseAMessageThatIsStillFadingIn() {
+        var anchor = new Vector2();
+        var hint = new HintTransition();
+        hint.update("Lever", anchor, HintTransition.ATTENTION_DELAY, true);
+        for (int i = 0; i < 10; i++) hint.update("Lever", anchor, .02f, true); // 0.2 s into the 0.45 s fade-in
+        float fading = hint.alpha();
+        assertTrue(fading > 0 && fading < 1);
+        for (int i = 0; i < 10; i++) {
+            hint.update("Turn on", anchor, .02f, false);
+            assertEquals("Lever", hint.text()); assertTrue(hint.alpha() >= fading, "Keeps fading in");
+        }
+        for (int i = 0; i < 30; i++) hint.update("Turn on", anchor, .02f, false);
+        assertEquals("Turn on", hint.text(), "Once fully shown it yields to the immediate label");
+    }
+
+    @Test void aMessageReturnsWithoutDelayAfterAnImmediateLabelEnds() {
+        var anchor = new Vector2();
+        var hint = new HintTransition();
+        hint.update("Turn on", anchor, .3f, false);
+        hint.update("Turn on", anchor, .3f, false);
+        hint.update("Lever", anchor, .3f, true);
+        assertEquals("Lever", hint.text(), "Already seen labels crossfade; only a first message waits");
+    }
+
+    @Test void swappingBetweenTwoAttentionLabelsFadesOutThenPulsesAgain() {
         var hint = new HintTransition();
         var anchor = new Vector2();
         hint.update("A", anchor, HintTransition.ATTENTION_DELAY, true);
         for (int i = 0; i < 40; i++) hint.update("A", anchor, .02f, true);
         assertEquals(1, hint.alpha());
         for (int i = 0; i < 20; i++) hint.update("B", anchor, .02f, true);
-        assertEquals("", hint.text(), "A fades out, then B waits out the delay");
-        hint.update("B", anchor, HintTransition.ATTENTION_DELAY, true);
-        assertEquals("B", hint.text());
-        assertEquals(0, hint.alpha());
-        hint.update("B", anchor, .18f, true);
-        assertTrue(hint.alpha() > 0 && hint.alpha() < 1, "Slow attention fade, not the plain 0.18 s one");
+        assertEquals("B", hint.text(), "A fades out, then B enters at once");
+        assertTrue(hint.alpha() < 1, "Slow attention fade, not the plain 0.18 s one");
         float lowest = 0;
-        for (int i = 0; i < 40; i++) { hint.update("B", anchor, .02f, true); lowest = Math.min(lowest, hint.offsetY()); }
+        for (int i = 0; i < 60; i++) { hint.update("B", anchor, .02f, true); lowest = Math.min(lowest, hint.offsetY()); }
+        assertEquals(1, hint.alpha());
         assertTrue(lowest <= -4, "B pulses too: " + lowest);
+    }
+
+    @Test void attentionLabelExitsToNothingOnceItsRequestEnds() {
+        var hint = showing("Lever", new Vector2());
+        for (int i = 0; i < 200; i++) hint.update("", new Vector2(), .02f, false);
+        assertEquals("", hint.text());
+        assertEquals(0, hint.alpha());
+    }
+
+    @Test void clearEndsALingeringLabelAtOnce() {
+        var hint = showing("Lever", new Vector2());
+        hint.update("", new Vector2(), .1f, false);
+        hint.clear(); // the HUD does this when the hero dies or reaches a checkpoint
+        hint.update("", new Vector2(), .02f, false);
+        assertEquals("", hint.text());
+        assertEquals(0, hint.alpha());
     }
 
     @Test void frameTimeIsClampedSoAHitchCannotSkipTheDelay() {

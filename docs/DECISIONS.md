@@ -859,7 +859,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 ## D33. The forest-0 tutorial level and map-authored hints
 
 - **Status:** Accepted, 2026-11-04 ([#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195)); revises D24.
-- **Decision:** `forest-0` is the first level: six long rooms (1280 px; the lever room was shortened to 768 px by #206 and the ladder room is 768 px, #196), no monsters or hazards,
+- **Decision:** `forest-0` is the first level: six long rooms (1280 px; the lever room is 576 px and the ladder room 704 px, shortened by #206/#209), no monsters or hazards,
   each a plain corridor with a safe entrance and a clear exit; the last room ends with the usual
   `Checkpoint` level exit. The rooms are reserved, in order, for one lesson each (room property
   `lesson`): `lever` (#186), `ladder-bridge` (#196), `wall` (#197), `moving-platform` (#198),
@@ -873,9 +873,9 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   feedback, not tutorial, and is unchanged. Texts live in the five `assets/localization` catalogs.
 - **Hint presentation (#206):** a message hint is drawn about 45% down its zone (mid-screen, above the
   standing hero's head), not at the room's top edge. It is held back until the hero has stayed in the zone for
-  0.8 s, then fades in over 0.45 s while sliding up from 22 px below with a small overshoot, so it draws the eye
+  0.35 s (#209; was 0.8 s, which made it appear after the player had walked past the object), then fades in over 0.45 s while sliding up from 22 px below with a small overshoot, so it draws the eye
   instead of sitting on screen from the first frame. Controls-zone labels (pickup, lever, ladder) and the
-  fireball-stock message stay immediate. Leaving before the delay shows nothing and restarts the wait; a different message replacing the current one waits and animates again. The HUD feeds the timer frame times clamped to 0.05 s, so a load hitch cannot skip the delay.
+  fireball-stock message stay immediate. Leaving before the delay shows nothing and restarts the wait (a gap under 0.25 s is forgiven, so boundary jitter does not restart it). **Linger and hysteresis (#209):** a shown message stays 2.5 s after the hero leaves its zone, is cancelled back to full opacity if the hero returns, and is not replaced by another tutorial message before it has been up 0.7 s; a message replacing a shown label crossfades in without a new appear delay (only a first message waits it out). Immediate labels (pickup, lever, ladder, fireball-full) replace a lingering message at once, but never one that is still fading in (it finishes its 0.45 s fade first, so a message is never erased unread). Death, checkpoint and victory clear a lingering label (the HUD clears it when the hero cannot fight). **Zones start well before the object** they explain, and the approach is long enough that a continuous walk sees the message fully visible for about 1 s before the object is in reach (`HintLeadTest`). The HUD feeds the timer frame times clamped to 0.05 s, so a load hitch cannot skip the delay.
   Timing lives in `HintTransition` and is unit-tested headlessly. Alternatives such as torches above the hint were rejected.
 - **forest-3 room 0:** keeps its control lessons for now through one `controls` zone covering the
   room, so playtested behavior is unchanged. Moving them to `forest-0` is the lesson tickets' job.
@@ -898,7 +898,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Recovery:** the room is not secured until its exit is taken, so death/room retry returns the torch to its
   authored dark state; Restart Level rebuilds it dark. (A later visit to a secured room would keep the lit state,
   per D26.) No lever is one-shot in the tutorial.
-- **Length (#206):** after the first playtest the room is 768 px (was 1280): lever at x=344, torch at x=424, exit at x=704. Later rooms moved 512 px left.
+- **Length (#206, #209):** after playtests the room is 576 px (was 768 after #206, 1280 before): lever at x=376, torch at x=456, exit at x=512; the lever message zone starts 216 px before the lever. Later rooms moved 192 px left (#209).
 - **Hints:** one `controls` zone over the whole room (live lever instruction near the lever) plus three
   position-only message zones that tile it: walk (before the lever), "this lever lights the torch and puts it
   out" (around lever and torch), "the exit is ahead; the lever works any time" (after). Message zones cannot see
@@ -910,7 +910,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 ## D35. The tutorial ladder lesson rule
 
 - **Status:** Accepted, 2026-11-05 ([#196](https://github.com/jlogicgames/edgard_in_kimeria/issues/196)); second lesson room of D33, after D34.
-- **Decision:** `forest-0-ladder` (768 px) teaches exactly one new element: a lever that **toggles a retracted ladder**
+- **Decision:** `forest-0-ladder` (704 px) teaches exactly one new element: a lever that **toggles a retracted ladder**
   down and up (D28 toggle ladder, Up + Action per D30). The ladder starts raised, hanging y 96–208 with its foot 112 px
   above the floor (a jump reaches about 58 px, and a ladder is grabbed in the air only when the body overlaps its rungs,
   so no jump reaches it). The exit stands on a 112 px ledge (top y=208, plain collision, not a wall-jumpable `Wall`) whose
@@ -928,6 +928,6 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   it is never one-shot.
 - **Hints:** one `controls` zone over the room plus three position-only message zones: lever (lowers *and raises* the ladder), ladder
   (climb it when it is down), exit (ahead, up on the ledge). Each is true in either ladder state.
-- **Length:** 768 px, as short as the lever room (#206); later rooms moved a further 512 px left.
+- **Length (#196, #209):** 704 px (was 768): the exit ledge shrank from 384 to 224 px and the approach before the lever grew by 96 px so the lever message is readable before the lever is in reach; ladder and ledge-top geometry (jump margins) are unchanged, RoomStart moved to x=624, lever x=824. Later rooms moved a further 64 px left (256 px with the lever room's 192 px, #209); the climb message zone starts 128 px before the ladder.
 - **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; the route, jump-reach and hint
-  coverage are measured headlessly (`LadderLessonTest`, mastered route about 7.4 s).
+  coverage are measured headlessly (`LadderLessonTest`, mastered route about 6.9 s).

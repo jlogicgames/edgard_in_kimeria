@@ -115,6 +115,7 @@ public class Hud {
     /** First-room contextual lessons, smoothly faded at their own world position. */
     public void renderInteractionHint(SpriteBatch batch, Player player, OrthographicCamera camera, float dt) {
         if (hintOwner != player) { hintTransition.clear(); hintOwner = player; }
+        if (!player.canFight()) hintTransition.clear(); // Death, checkpoint and victory end a lingering tutorial message.
         String text = player.contextHint();
         if (!text.isEmpty()) player.contextHintPosition(hintPosition);
         hintTransition.update(text, hintPosition, HintTransition.clampFrame(dt), player.contextHintIsTutorialMessage());

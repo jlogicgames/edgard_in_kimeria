@@ -34,8 +34,8 @@ class TutorialLevelTest {
         for (int i = 0; i < lessons.size(); i++) {
             var room = layout.rooms.get(i);
             assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
-            // The lever (#206) and ladder (#196) rooms are 768 px, as long as one lesson needs; the others are still long.
-            assertEquals(i <= 1 ? 768 : 1280, room.bounds().width, i <= 1 ? "A short lesson room" : "Rooms are long");
+            // The lever room is 576 px and the ladder room 704 px (#209), as long as one lesson needs; the others are still long.
+            assertEquals(i == 0 ? 576 : i == 1 ? 704 : 1280, room.bounds().width, i <= 1 ? "A short lesson room" : "Rooms are long");
             assertEquals(0, room.bounds().width % 16, "Room edges stay on the tile grid");
             assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
             assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
@@ -48,9 +48,27 @@ class TutorialLevelTest {
         RoomLayout layout = new RoomLayout(map);
         var last = layout.rooms.get(layout.rooms.size() - 1).bounds();
         assertEquals(map.widthTiles * 16, last.x + last.width, "The tile layer ends where the last room ends");
-        assertEquals(416, map.widthTiles);
+        assertEquals(400, map.widthTiles);
         for (var o : map.layer("Hints")) assertTrue(o.x + o.width <= map.widthTiles * 16, o.name);
         for (var o : map.layer("Collisions")) assertTrue(o.x + o.width <= map.widthTiles * 16, "collision at " + o.x);
+    }
+
+    /** Hints must be readable BEFORE the hero reaches the object they explain (#209). */
+    @Test void forestZeroLessonHintsStartWellBeforeTheirObject() {
+        TiledMapData map = map("forest-0");
+        var hints = map.layer("Hints");
+        var spawn = map.layer("SpawnPoints");
+        java.util.function.Function<String, Float> start = name -> hints.stream().filter(o -> name.equals(o.name)).findFirst().orElseThrow().x;
+        java.util.function.Function<String, Float> object = prefix -> spawn.stream().filter(o -> o.name.startsWith(prefix)).findFirst().orElseThrow().x;
+        assertTrue(object.apply("Lever [41") - start.apply("forest-0-lever-torch") >= 100, "lever message leads the lever");
+        assertTrue(object.apply("Ladder") - start.apply("forest-0-ladder-climb") >= 100, "climb message leads the ladder");
+        // Message zones of one room butt against each other without a gap, so a lingering text is always replaced by a true one.
+        float end = 0;
+        for (String name : List.of("forest-0-walk", "forest-0-lever-torch", "forest-0-lever-exit")) {
+            var z = hints.stream().filter(o -> name.equals(o.name)).findFirst().orElseThrow();
+            if (end > 0) assertEquals(end, z.x, name);
+            end = z.x + z.width;
+        }
     }
 
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
