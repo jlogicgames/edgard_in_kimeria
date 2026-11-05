@@ -84,6 +84,8 @@
   "HINT_STONE_THROW": "Take the stone to the edge of the chasm and throw it at the lever",
   "HINT_STONE_EXIT": "Hit the lever with the stone, then ride the platform across",
   "HINT_STONE_ACROSS": "The exit is just ahead",
+  "HINT_TRAP_PLATFORM": "The platform falls soon after you land. Falling into the pit just retries",
+  "HINT_TRAP_BOMB": "A touched bomb flashes, then explodes. Jump over it or run clear",
   "FIREBALL": "Fireball",
   "NO_AMMO": "Empty",
   "PLACE_BLOCKED": "Blocked",

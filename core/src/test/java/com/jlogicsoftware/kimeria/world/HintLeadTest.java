@@ -108,12 +108,16 @@ class HintLeadTest {
     }
 
     private Lead walk(Level level, String message, float secondsAfterReach, java.util.function.BooleanSupplier reached) {
+        return walk(level, message, secondsAfterReach, reached, () -> { held.clear(); held.add(Input.Keys.D); });
+    }
+
+    private Lead walk(Level level, String message, float secondsAfterReach, java.util.function.BooleanSupplier reached, Runnable drive) {
         var hint = new HintTransition();
         var anchor = new Vector2();
         float t = 0, reachedAt = -1, firstFull = -1, lastFullBeforeReach = -1, gap = 0, longestGap = 0;
         int guard = 0;
         while (reachedAt < 0 || t < reachedAt + secondsAfterReach) {
-            held.clear(); held.add(Input.Keys.D);
+            drive.run();
             frame(level);
             t += STEP;
             String text = level.player.zoneHint();
@@ -189,5 +193,37 @@ class HintLeadTest {
         });
         assertTrue(lead.fullBefore >= .9f, "Platform message fully visible for at least 1 s before the body reaches the platform: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero jumps on: " + lead.longestGapAfter);
+    }
+
+    /** The traps room walk of the lesson: Right held, a jump at the pit lip and another at the platform's far end (#200). */
+    private Runnable trapsDriver(Level level) {
+        return () -> {
+            Rectangle b = level.player.hitboxBounds();
+            float r = b.x + b.width;
+            boolean jump = level.player.isOnGround() && ((r >= 3326 && r < 3336) || (r >= 3422 && r < 3442));
+            held.clear(); held.add(Input.Keys.D);
+            if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+        };
+    }
+
+    /** The falling-platform message is up before a continuous walk reaches the lip of the pit (#200). */
+    @Test void trapsRoomPlatformMessageIsReadableBeforeAContinuousWalkReachesThePit() {
+        Level level = room(5);
+        Lead lead = walk(level, Msg.HINT_TRAP_PLATFORM.t(Language.ENGLISH), 0.5f, () -> {
+            Rectangle b = level.player.hitboxBounds();
+            return b.x + b.width >= 3328;
+        }, trapsDriver(level));
+        assertTrue(lead.fullBefore >= .9f, "Platform message fully visible for at least 1 s before the pit: " + lead.fullBefore);
+    }
+
+    /** The bomb message is up before the same walk, after crossing the platform, touches the bomb (#200). */
+    @Test void trapsRoomBombMessageIsReadableBeforeAContinuousWalkReachesTheBomb() {
+        Level level = room(5);
+        Lead lead = walk(level, Msg.HINT_TRAP_BOMB.t(Language.ENGLISH), 1.5f, () -> {
+            Rectangle b = level.player.hitboxBounds();
+            return b.x + b.width >= 3648 + 3;
+        }, trapsDriver(level));
+        assertTrue(lead.fullBefore >= .9f, "Bomb message fully visible for at least 1 s before the bomb is touched: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero runs clear: " + lead.longestGapAfter);
     }
 }

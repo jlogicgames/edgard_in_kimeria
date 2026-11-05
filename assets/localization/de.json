@@ -84,6 +84,8 @@
   "HINT_STONE_THROW": "Bring den Stein an den Rand der Schlucht und wirf ihn auf den Hebel",
   "HINT_STONE_EXIT": "Triff den Hebel mit dem Stein und fahr mit der Plattform hinüber",
   "HINT_STONE_ACROSS": "Der Ausgang liegt gleich voraus",
+  "HINT_TRAP_PLATFORM": "Die Plattform fällt kurz nach der Landung. Ein Sturz in die Grube ist nur ein neuer Versuch",
+  "HINT_TRAP_BOMB": "Eine berührte Bombe blinkt und explodiert. Spring drüber oder lauf weg",
   "FIREBALL": "Feuer",
   "NO_AMMO": "Leer",
   "PLACE_BLOCKED": "Belegt",

@@ -34,8 +34,8 @@ class TutorialLevelTest {
         for (int i = 0; i < lessons.size(); i++) {
             var room = layout.rooms.get(i);
             assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
-            // The lever room is 576 px, the ladder room 704 px (#209), the wall and platform rooms 640 px (#197, #198) and the stone room 528 px (#199), as long as one lesson needs; the last is still long.
-            assertEquals(i == 0 ? 576 : i == 1 ? 704 : i <= 3 ? 640 : i == 4 ? 528 : 1280, room.bounds().width, i <= 4 ? "A short lesson room" : "Rooms are long");
+            // The lever room is 576 px, the ladder room 704 px (#209), the wall and platform rooms 640 px (#197, #198) the stone room 528 px (#199) and the traps room 720 px (#200), as long as one lesson needs.
+            assertEquals(i == 0 ? 576 : i == 1 ? 704 : i <= 3 ? 640 : i == 4 ? 528 : 720, room.bounds().width, "A short lesson room");
             assertEquals(0, room.bounds().width % 16, "Room edges stay on the tile grid");
             assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
             assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
@@ -48,7 +48,7 @@ class TutorialLevelTest {
         RoomLayout layout = new RoomLayout(map);
         var last = layout.rooms.get(layout.rooms.size() - 1).bounds();
         assertEquals(map.widthTiles * 16, last.x + last.width, "The tile layer ends where the last room ends");
-        assertEquals(273, map.widthTiles);
+        assertEquals(238, map.widthTiles);
         for (var o : map.layer("Hints")) assertTrue(o.x + o.width <= map.widthTiles * 16, o.name);
         for (var o : map.layer("Collisions")) assertTrue(o.x + o.width <= map.widthTiles * 16, "collision at " + o.x);
     }
@@ -72,6 +72,10 @@ class TutorialLevelTest {
         assertEquals(start.apply("forest-0-stone-exit") + hints.stream().filter(o -> "forest-0-stone-exit".equals(o.name)).findFirst().orElseThrow().width,
             start.apply("forest-0-stone-across"), "and the last one starts at the far lip, where the platform text stops being true");
         assertEquals(object.apply("Lever [65"), start.apply("forest-0-stone-across"), "at the lever");
+        assertTrue(object.apply("FallingPlatform") - start.apply("forest-0-traps-platform") >= 200, "platform-trap message leads the pit");
+        assertTrue(object.apply("Bomb") - start.apply("forest-0-traps-bomb") >= 190, "bomb message leads the bomb");
+        assertEquals(start.apply("forest-0-traps-platform") + hints.stream().filter(o -> "forest-0-traps-platform".equals(o.name)).findFirst().orElseThrow().width,
+            start.apply("forest-0-traps-bomb"), "The traps room's message zones butt against each other");
         assertEquals(start.apply("forest-0-platform-lever") + hints.stream().filter(o -> "forest-0-platform-lever".equals(o.name)).findFirst().orElseThrow().width,
             start.apply("forest-0-platform-ride"), "The platform room's message zones butt against each other");
         assertEquals(start.apply("forest-0-wall-lever") + hints.stream().filter(o -> "forest-0-wall-lever".equals(o.name)).findFirst().orElseThrow().width,
@@ -96,8 +100,10 @@ class TutorialLevelTest {
             // The lever lesson (#186) adds one Trigger and its Torch Actionable in room 0; the ladder lesson (#196)
             // one Trigger and its Ladder in room 1.
             boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 4;
-            assertTrue(allowed.contains(o.type) || lesson, "Unexpected object: " + o.type);
-            assertFalse(Set.of("RedMob", "Bomb", "FallingPlatform", "Boss").contains(o.type), "forest-0 has no enemies or hazards");
+            // The traps lesson (#200) adds exactly one falling platform and one bomb to the last room, no monster anywhere.
+            boolean trap = Set.of("Bomb", "FallingPlatform").contains(o.type) && layout.owner(o) == 5;
+            assertTrue(allowed.contains(o.type) || lesson || trap, "Unexpected object: " + o.type);
+            assertFalse(Set.of("RedMob", "Boss").contains(o.type), "forest-0 has no monsters");
         }
         var room0 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 0).toList();
         assertEquals(1, room0.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
@@ -144,14 +150,17 @@ class TutorialLevelTest {
         float lipNear = stonePlatforms.get(0).x, lipFar = lipNear + stonePlatforms.get(0).propFloat("offPos", 0) * 32 + stonePlatforms.get(0).width;
         assertEquals(stoneLevers.get(0).x, lipFar, "the lever stands at the far lip, where the platform ends");
         assertEquals(96, stoneLevers.get(0).x - lipNear, "a 96 px chasm");
-        assertTrue(map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) > 4)
-            .noneMatch(o -> lessonTypes.contains(o.type)), "Other rooms are still empty");
+        var room5 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 5).toList();
+        assertEquals(3, room5.size(), "the traps room holds only its falling platform, bomb and the level-end checkpoint");
+        assertEquals(1, room5.stream().filter(o -> "FallingPlatform".equals(o.type)).count(), "exactly one falling platform");
+        assertEquals(1, room5.stream().filter(o -> "Bomb".equals(o.type)).count(), "exactly one bomb");
+        assertTrue(room5.stream().noneMatch(o -> lessonTypes.contains(o.type)), "no lever, no mechanism in the traps room");
         for (var o : map.layer("Collisions")) layout.owner(o);
         // Each room: exactly one floor strip and the two side walls (lessons add their own geometry).
         for (int i = 0; i < layout.rooms.size(); i++) {
             int room = i;
             long inRoom = map.layer("Collisions").stream().filter(o -> layout.owner(o) == room).count();
-            assertEquals(i == 1 || i == 3 ? 4 : i == 4 ? 5 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : i == 4 ? " is two floors around a chasm plus the overhang" : " is an empty corridor"));
+            assertEquals(i == 1 || i == 3 ? 4 : i == 4 ? 5 : i == 5 ? 4 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : i == 4 ? " is two floors around a chasm plus the overhang" : i == 5 ? " is two floors around a pit" : " is an empty corridor"));
             var exit = layout.rooms.get(i).exit();
             if (exit != null) assertEquals(i == 1 || i == 3 ? 208 : 320, exit.y + exit.height, i == 1 || i == 3 ? "Exit stands on the room's ledge" : "Exit stands on the floor line");
         }
