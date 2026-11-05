@@ -47,4 +47,20 @@ public final class HintGeometry {
         float zoneBottom = zoneTop(zoneAnchor, zone, cameraY) - height(zone);
         return zoneBottom - contextTop(contextAnchor, context, true, zoneAnchor, zone, cameraY);
     }
+
+    /**
+     * Vertical overlap in px (positive: crossing) between the contextual label as the HUD places it, with a zone
+     * message present, and the hero's hitbox ({@code heroTop}/{@code heroBottom} in world y, Y-down), horizontally
+     * only when the label's text overlaps the hero's {@code heroLeft..heroRight} in world x.
+     */
+    public float heroOverlap(Vector2 contextAnchor, String context, Vector2 zoneAnchor, String zone, float cameraY,
+                             float heroLeft, float heroRight, float heroTop, float heroBottom) {
+        GlyphLayout layout = new GlyphLayout(font, context, Color.WHITE, WIDTH, Align.center, true);
+        float half = layout.width / 2;
+        if (contextAnchor.x + half <= heroLeft || contextAnchor.x - half >= heroRight) return Float.NEGATIVE_INFINITY;
+        float labelTop = contextTop(contextAnchor, context, true, zoneAnchor, zone, cameraY);
+        float labelBottom = labelTop - layout.height;
+        float heroScreenTop = SCREEN_H - (heroTop - cameraY), heroScreenBottom = SCREEN_H - (heroBottom - cameraY);
+        return Math.min(labelTop, heroScreenTop) - Math.max(labelBottom, heroScreenBottom);
+    }
 }
