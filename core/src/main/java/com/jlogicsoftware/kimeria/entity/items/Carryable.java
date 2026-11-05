@@ -35,12 +35,19 @@ public final class Carryable extends Entity {
     private final SpriteSheets.Sheet artwork;
     private Player holder;
     private boolean thrown;
+    /** True from a throw until the object comes to rest: a throw-activated Trigger (a lever) touched meanwhile fires once (D39). */
+    private boolean leverFlight;
+    private final float homeX, homeY;
+    /** Tiled bool {@code respawn}: the object returns to where it was authored when it falls out of the room or hits a lever (D39). */
+    private boolean respawns;
 
     public Carryable(Level level, int id, Kind kind, float x, float y) {
         super(x, y, BODY_SIZE, BODY_SIZE);
         this.level = level;
         this.id = id;
         this.kind = kind;
+        homeX = x;
+        homeY = y;
         artwork = kind == Kind.STONE ? SpriteSheets.STONE : SpriteSheets.TORCH;
         sprite = level.objectSprite(artwork);
         flame = kind == Kind.TORCH ? new Torch(x, y, FLAME_BOUNDS_WIDTH, FLAME_BOUNDS_HEIGHT, FLAME_INTENSITY, "") : null;
@@ -54,7 +61,17 @@ public final class Carryable extends Entity {
         holder = null;
         position.set(x, y);
         thrown = throwObject;
+        leverFlight = throwObject;
         velocity.set(throwObject ? (right ? THROW_SPEED : -THROW_SPEED) : 0, throwObject ? -THROW_UPWARD_SPEED : 0);
+    }
+
+    public void setRespawns(boolean respawns) { this.respawns = respawns; }
+
+    private void returnHome() {
+        position.set(homeX, homeY);
+        velocity.setZero();
+        thrown = false;
+        leverFlight = false;
     }
 
     public boolean isHeld() { return holder != null; }
@@ -71,6 +88,7 @@ public final class Carryable extends Entity {
         position.set(snapshot.x(), snapshot.y());
         velocity.set(snapshot.velocityX(), snapshot.velocityY());
         thrown = snapshot.thrown();
+        leverFlight = false;
         removed = snapshot.removed();
         if (flame != null) positionFlame();
     }
@@ -90,6 +108,7 @@ public final class Carryable extends Entity {
             float step = ProjectileStep.frameSeconds(dt) / steps;
             for (int i = 0; i < steps; i++) {
                 float oldY = position.y;
+                boolean landed = false;
                 position.x += velocity.x * step;
                 if (level.blocksObject(bounds(), false)) { position.x -= velocity.x * step; velocity.x = 0; thrown = false; }
                 velocity.y = Math.min(MAX_FALL_SPEED, velocity.y + GRAVITY * step);
@@ -100,9 +119,15 @@ public final class Carryable extends Entity {
                     if (!bounds().overlaps(b)) continue;
                     if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > b.y + PLATFORM_TOLERANCE)) continue;
                     position.y = velocity.y >= 0 ? b.y - size.y : b.y + b.height;
-                    velocity.setZero(); thrown = false;
+                    velocity.setZero(); thrown = false; landed = true;
                     break;
                 }
+                // Checked before a landing ends the flight, so a stone dropping onto the lever still counts.
+                if (leverFlight && level.throwHitsLever(this)) {
+                    leverFlight = false;
+                    if (respawns) { returnHome(); break; }
+                }
+                if (landed) leverFlight = false;
                 if (thrown && level.player.canFight()) for (var object : level.objects) {
                     if (object instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
                         if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
@@ -111,7 +136,11 @@ public final class Carryable extends Entity {
                     }
                 }
             }
-            if (getY() > level.currentRoomBounds().y + level.currentRoomBounds().height) removeFromParent();
+            // A throw that starts inside a wall the hero presses against is lifted onto that wall's top, outside the room.
+            if (respawns && getY() + size.y <= level.currentRoomBounds().y) returnHome();
+            if (getY() > level.currentRoomBounds().y + level.currentRoomBounds().height) {
+                if (respawns) returnHome(); else removeFromParent();
+            }
         }
         if (flame != null) { positionFlame(); flame.update(dt); }
     }

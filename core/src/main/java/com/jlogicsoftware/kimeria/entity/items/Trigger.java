@@ -6,6 +6,8 @@ import com.jlogicsoftware.kimeria.entity.Entity;
 public class Trigger extends Entity {
     public final String targetId;
     public final int id;
+    /** Tiled property {@code throwActivated}: a thrown carryable that touches this trigger operates it (D39). */
+    public boolean throwActivated;
 
     public Trigger(float x, float y, float w, float h, String targetId) {
         this(0, x, y, w, h, targetId);

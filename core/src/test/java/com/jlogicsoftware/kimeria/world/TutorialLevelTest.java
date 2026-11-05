@@ -34,8 +34,8 @@ class TutorialLevelTest {
         for (int i = 0; i < lessons.size(); i++) {
             var room = layout.rooms.get(i);
             assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
-            // The lever room is 576 px, the ladder room 704 px (#209), the wall room 640 px (#197) and the platform room 640 px (#198), as long as one lesson needs; the others are still long.
-            assertEquals(i == 0 ? 576 : i == 1 ? 704 : i <= 3 ? 640 : 1280, room.bounds().width, i <= 3 ? "A short lesson room" : "Rooms are long");
+            // The lever room is 576 px, the ladder room 704 px (#209), the wall and platform rooms 640 px (#197, #198) and the stone room 528 px (#199), as long as one lesson needs; the last is still long.
+            assertEquals(i == 0 ? 576 : i == 1 ? 704 : i <= 3 ? 640 : i == 4 ? 528 : 1280, room.bounds().width, i <= 4 ? "A short lesson room" : "Rooms are long");
             assertEquals(0, room.bounds().width % 16, "Room edges stay on the tile grid");
             assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
             assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
@@ -48,7 +48,7 @@ class TutorialLevelTest {
         RoomLayout layout = new RoomLayout(map);
         var last = layout.rooms.get(layout.rooms.size() - 1).bounds();
         assertEquals(map.widthTiles * 16, last.x + last.width, "The tile layer ends where the last room ends");
-        assertEquals(320, map.widthTiles);
+        assertEquals(273, map.widthTiles);
         for (var o : map.layer("Hints")) assertTrue(o.x + o.width <= map.widthTiles * 16, o.name);
         for (var o : map.layer("Collisions")) assertTrue(o.x + o.width <= map.widthTiles * 16, "collision at " + o.x);
     }
@@ -66,6 +66,12 @@ class TutorialLevelTest {
         assertTrue(object.apply("Wall [52") - start.apply("forest-0-wall-pass") >= 150, "pass message leads the wall");
         assertTrue(object.apply("Lever [58") - start.apply("forest-0-platform-lever") >= 200, "platform-lever message leads the lever");
         assertTrue(object.apply("Escalator [57") - start.apply("forest-0-platform-ride") >= 150, "ride message leads the platform");
+        assertTrue(object.apply("Stone") - start.apply("forest-0-stone-throw") >= 200, "stone message leads the stone");
+        assertEquals(start.apply("forest-0-stone-throw") + hints.stream().filter(o -> "forest-0-stone-throw".equals(o.name)).findFirst().orElseThrow().width,
+            start.apply("forest-0-stone-exit"), "The stone room's message zones butt against each other");
+        assertEquals(start.apply("forest-0-stone-exit") + hints.stream().filter(o -> "forest-0-stone-exit".equals(o.name)).findFirst().orElseThrow().width,
+            start.apply("forest-0-stone-across"), "and the last one starts at the far lip, where the platform text stops being true");
+        assertEquals(object.apply("Lever [65"), start.apply("forest-0-stone-across"), "at the lever");
         assertEquals(start.apply("forest-0-platform-lever") + hints.stream().filter(o -> "forest-0-platform-lever".equals(o.name)).findFirst().orElseThrow().width,
             start.apply("forest-0-platform-ride"), "The platform room's message zones butt against each other");
         assertEquals(start.apply("forest-0-wall-lever") + hints.stream().filter(o -> "forest-0-wall-lever".equals(o.name)).findFirst().orElseThrow().width,
@@ -82,13 +88,14 @@ class TutorialLevelTest {
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
         TiledMapData map = map("forest-0");
         Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint");
-        Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder", "Escalator");
-        // The wall lesson (#197) adds one Trigger and its Wall Actionable in room 2; the platform lesson (#198) one Trigger and its Escalator in room 3.
+        Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder", "Escalator", "Stone");
+        // The wall lesson (#197) adds one Trigger and its Wall Actionable in room 2; the platform lesson (#198) one Trigger and its Escalator in room 3;
+        // the stone lesson (#199) a Stone, a throw-activated Trigger and a horizontal Escalator over a chasm in room 4.
         RoomLayout layout = new RoomLayout(map);
         for (var o : map.layer("SpawnPoints")) {
             // The lever lesson (#186) adds one Trigger and its Torch Actionable in room 0; the ladder lesson (#196)
             // one Trigger and its Ladder in room 1.
-            boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 3;
+            boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 4;
             assertTrue(allowed.contains(o.type) || lesson, "Unexpected object: " + o.type);
             assertFalse(Set.of("RedMob", "Bomb", "FallingPlatform", "Boss").contains(o.type), "forest-0 has no enemies or hazards");
         }
@@ -122,14 +129,29 @@ class TutorialLevelTest {
         assertEquals(304, platforms.get(0).y, "and waits at the bottom, 16 px above the floor");
         assertEquals(208 - 32, platforms.get(0).y - platforms.get(0).propFloat("offNeg", 0) * 32, "and rises 32 px above the ledge top so the hero can step off");
         assertTrue(platforms.get(0).propFloat("offNeg", 0) * 32 > 58, "further than a jump");
-        assertTrue(map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) > 3)
+        var room4 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 4).toList();
+        assertEquals(3, room4.size(), "the stone room holds only its stone, lever and platform");
+        assertEquals(1, room4.stream().filter(o -> "Stone".equals(o.type)).count(), "exactly one stone");
+        assertTrue(room4.stream().filter(o -> "Stone".equals(o.type)).findFirst().orElseThrow().propBool("respawn", false), "a lost stone comes home");
+        var stoneLevers = room4.stream().filter(o -> "Trigger".equals(o.type)).toList();
+        assertEquals(1, stoneLevers.size(), "exactly one lever");
+        assertTrue(stoneLevers.get(0).propBool("throwActivated", false), "operated by a thrown stone");
+        var stonePlatforms = room4.stream().filter(o -> "Escalator".equals(o.type)).toList();
+        assertEquals(1, stonePlatforms.size(), "exactly one linked moving platform, the one already taught");
+        assertFalse(stonePlatforms.get(0).propBool("isVertical", true), "it crosses the chasm sideways");
+        assertFalse(stonePlatforms.get(0).propBool("running", true), "and starts stopped");
+        assertEquals(320, stonePlatforms.get(0).y, "flush with both lips");
+        float lipNear = stonePlatforms.get(0).x, lipFar = lipNear + stonePlatforms.get(0).propFloat("offPos", 0) * 32 + stonePlatforms.get(0).width;
+        assertEquals(stoneLevers.get(0).x, lipFar, "the lever stands at the far lip, where the platform ends");
+        assertEquals(96, stoneLevers.get(0).x - lipNear, "a 96 px chasm");
+        assertTrue(map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) > 4)
             .noneMatch(o -> lessonTypes.contains(o.type)), "Other rooms are still empty");
         for (var o : map.layer("Collisions")) layout.owner(o);
         // Each room: exactly one floor strip and the two side walls (lessons add their own geometry).
         for (int i = 0; i < layout.rooms.size(); i++) {
             int room = i;
             long inRoom = map.layer("Collisions").stream().filter(o -> layout.owner(o) == room).count();
-            assertEquals(i == 1 || i == 3 ? 4 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : " is an empty corridor"));
+            assertEquals(i == 1 || i == 3 ? 4 : i == 4 ? 5 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : i == 4 ? " is two floors around a chasm plus the overhang" : " is an empty corridor"));
             var exit = layout.rooms.get(i).exit();
             if (exit != null) assertEquals(i == 1 || i == 3 ? 208 : 320, exit.y + exit.height, i == 1 || i == 3 ? "Exit stands on the room's ledge" : "Exit stands on the floor line");
         }

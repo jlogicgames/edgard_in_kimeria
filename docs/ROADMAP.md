@@ -114,6 +114,8 @@ author check only, not seen in the running game): see [D35](DECISIONS.md#d35-the
 author check only, not seen in the running game): see [D36](DECISIONS.md#d36-the-tutorial-wall-lesson-rule).
 **Platform room (#198) is built** (`forest-0-platform`, 640 px, a floor lever starts and stops a vertical moving platform that is the only way up to the ledge holding the exit; mastered route about 9.6 s,
 author check only, not seen in the running game): see [D37](DECISIONS.md#d37-the-tutorial-moving-platform-lesson-rule).
+**Stone room (#199) is built** (`forest-0-stone`, 528 px, the hero picks up a stone and throws it across a chasm to flip a lever on the far side; the lever starts the moving platform that carries the hero over; mastered route about 4.8 s,
+author check only, not seen in the running game): see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule).
 
 - [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.

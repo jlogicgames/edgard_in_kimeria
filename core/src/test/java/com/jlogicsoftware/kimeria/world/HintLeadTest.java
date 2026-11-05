@@ -166,6 +166,14 @@ class HintLeadTest {
         assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero passes under the wall: " + lead.longestGapAfter);
     }
 
+    /** The stone message is readable before a continuous walk from the entrance reaches the stone (#199). */
+    @Test void stoneRoomMessageIsReadableBeforeAContinuousWalkReachesTheStone() {
+        Level level = room(4);
+        Lead lead = walk(level, Msg.HINT_STONE_THROW.t(Language.ENGLISH), 1.5f, () -> level.player.selectedCarryable() != null);
+        assertTrue(lead.fullBefore >= .9f, "Stone message fully visible for at least 1 s before the stone is in reach: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero picks it up: " + lead.longestGapAfter);
+    }
+
     @Test void platformRoomLeverMessageIsReadableBeforeAContinuousWalkReachesTheLever() {
         Lead lead = walk(room(3), Msg.HINT_PLATFORM_LEVER.t(Language.ENGLISH), 1.5f);
         assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
