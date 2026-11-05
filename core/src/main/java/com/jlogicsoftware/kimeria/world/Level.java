@@ -35,7 +35,10 @@ import com.jlogicsoftware.kimeria.entity.items.Trigger;
 import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
+import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
+import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
+import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
 import com.jlogicsoftware.kimeria.entity.objects.StaticPlatform;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
@@ -407,6 +410,7 @@ public class Level implements WorldObject {
                 continue;
             }
             int owner = roomLayout.owner(o);
+            if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map); // D45: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -678,11 +682,30 @@ public class Level implements WorldObject {
                     fallingPlatforms.add(platform);
                     registerRoomStateOwner(o.id, platform);
                 }
+                case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
                 default -> {
                 }
             }
         }
         spawnLevers();
+    }
+
+    /**
+     * FallingBranch / FallingStone (D45, #232). Properties: {@code zoneX, zoneY, zoneWidth, zoneHeight} (the
+     * trigger zone, absolute world px, required, inside this room); stone only: {@code skin} (default forest).
+     * The object's own rectangle is the hanging position and the lethal footprint; it falls to the first solid
+     * (Collisions layer, not QuickSand) below it. Traps are rebuilt with every room activation, so retry,
+     * Restart Level and room re-entry all re-arm them.
+     */
+    private void spawnFallingTrap(TiledObject o) {
+        FallingTrapLayout.Spec spec = FallingTrapLayout.validate(o, roomLayout, currentRoom, map);
+        java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBounds();
+        java.util.function.BooleanSupplier grounded = () -> player.isOnGround();
+        Runnable kill = () -> player.collidedWithActor(false);
+        objects.add(spec.stone()
+            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(),
+                game.trapWarnings(), hero, grounded, kill)
+            : new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
     }
 
     /** "Name [id] at (x, y)" -- enough to find the object in Tiled without guessing. */

@@ -161,6 +161,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       Bomb (explosion, kills player)
 - [x] Falling platform — warning torch, delay, drop; carries the player down without
       losing contact
+- [x] Falling branch and falling stone (#232, D45) — zone-triggered, shared D7 warning, lethal while falling; not yet in a shipped level
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs with two authored +1 refills, capacity three, full-stock hints and a three-icon HUD; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
 - [x] Trigger → actionable wall removal and torch toggle via Up + Action

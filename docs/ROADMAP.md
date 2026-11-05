@@ -139,7 +139,7 @@ notes, open questions, unselected candidates); the author answered the original 
 (only the successful finds are adapted for modern fairness, D7 and D26). **The brainstorm
 phase is done by [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)**
 (forest trap set, explosive-trap choice rule, tutorial plan). Implementation is tracked by
-#230 art, #231 proximity traps, #232 falling traps, #233 explosive stump/root, #234 rhythm
+#230 art, #231 proximity traps, #232 falling traps (implemented, D45), #233 explosive stump/root, #234 rhythm
 traps and #235 tutorial integration. **Backlog added 2026-11-05** (author requests, not
 accepted rules): [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236) parallax
 layers, [#237](https://github.com/jlogicgames/edgard_in_kimeria/issues/237) castle floor
