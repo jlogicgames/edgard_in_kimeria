@@ -165,4 +165,21 @@ class HintLeadTest {
         assertTrue(lead.fullBefore >= .9f, "Wall message fully visible for at least 1 s before the body reaches the wall: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero passes under the wall: " + lead.longestGapAfter);
     }
+
+    @Test void platformRoomLeverMessageIsReadableBeforeAContinuousWalkReachesTheLever() {
+        Lead lead = walk(room(3), Msg.HINT_PLATFORM_LEVER.t(Language.ENGLISH), 1.5f);
+        assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
+    }
+
+    /** Walking on without stopping: the ride message is up before the body reaches the platform's near edge. */
+    @Test void platformRoomRideMessageIsReadableBeforeAContinuousWalkReachesThePlatform() {
+        Level level = room(3);
+        Lead lead = walk(level, Msg.HINT_PLATFORM_RIDE.t(Language.ENGLISH), 1.0f, () -> {
+            Rectangle b = level.player.hitboxBounds();
+            return b.x + b.width >= 2384 - 2;
+        });
+        assertTrue(lead.fullBefore >= .9f, "Platform message fully visible for at least 1 s before the body reaches the platform: " + lead.fullBefore);
+        assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero jumps on: " + lead.longestGapAfter);
+    }
 }
