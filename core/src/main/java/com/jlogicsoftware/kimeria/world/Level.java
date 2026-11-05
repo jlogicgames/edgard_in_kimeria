@@ -795,6 +795,21 @@ public class Level implements WorldObject {
             };
             collisionBlocks.add(block);
         }
+        collisionBlocks.add(ceiling(currentRoomBounds()));
+    }
+
+    /** How thick the invisible ceiling is: far more than one frame of jump travel, so nothing tunnels through. */
+    static final float CEILING_THICKNESS = 64f;
+
+    /**
+     * Every room is closed from above (D38, #215). The side walls are clamberable, so without a ceiling
+     * the hero could wall-jump up one and over the top of the room, out of the level. The slab sits
+     * entirely above the room (its underside is the room's top edge), so it cuts no jump, ladder,
+     * platform or hint zone inside the room. Added here rather than authored in each map so that
+     * every present and future room, in every level, has it.
+     */
+    static CollisionBlock ceiling(Rectangle room) {
+        return CollisionBlock.plain(room.x, room.y - CEILING_THICKNESS, room.width, CEILING_THICKNESS);
     }
 
     /** Solid placement/flight check. One-way platforms only block placement, never horizontal flight. */

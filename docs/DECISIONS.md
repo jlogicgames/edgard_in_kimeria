@@ -981,3 +981,20 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   rooms and the `Checkpoint` moved 640 px left.
 - **Not verified:** no novice playtest (#129–#131) and no visual check in the running game; route, ledge-block, stop-at-any-height, retry and hint
   coverage are measured headlessly (`PlatformLessonTest`, mastered route about 9.6 s including the wait for the shuttling platform to come back down to the bottom; the platform cycles in about 5 s).
+
+## D38. Every room has an invisible ceiling
+
+- **Status:** Accepted, 2026-11-05 ([#215](https://github.com/jlogicgames/edgard_in_kimeria/issues/215)); found in a forest-0 playtest after #198.
+- **Problem:** the side walls of a room are `Wall`-typed collision blocks, which can be clambered and wall-jumped (hold toward the wall, Jump). They end at the
+  map top (y=0) and nothing closed the room above, so repeated wall jumps took the hero over the top (hitbox y below 0, about 3 s after starting) and out of
+  the room and level. Reproduced headlessly in `forest-0` (all four finished rooms, either wall), `forest-1` and the `forest-3` entry/canopy rooms
+  (`RoomCeilingTest`; every forest-0 room, skeletons included, is tested); the same happened from the ladder and platform exit ledges, which give a 112 px head start.
+- **Decision:** `Level.addCollisions` adds, for every room it builds, one invisible plain collision slab directly above the room (x = room x, width = room
+  width, 64 px thick, underside at the room's top edge), the ceiling. Chosen over making the walls slippery (no grab) because wall climbing and wall jumping
+  is a shipped mechanic the later levels (forest-3 canopy) are built on and the issue is the room being open, not the mechanic; a ceiling fixes the
+  exploit at its cause for every present and future lesson room and level (the stone and traps rooms copy the recipe and get it for free) without
+  editing any map, so no map SHA, `check_tiled_links` or web-release-gate hash changes. The slab lies wholly outside the room, so it cuts no jump, ladder,
+  platform, ledge or hint zone, and a vertical moving platform stays below it. 64 px is far more than one frame of jump travel, so nothing tunnels through.
+- **Consequences:** a head bump on the room top stops upward motion like any block. A carried stone thrown straight up used to leave the room (and was then removed above it, `Carryable`); it now stops
+  at the slab and falls back (`blocksObject` already refused placement outside the room). Nothing may be authored above a room's top edge.
+- **Not verified:** no visual check in the running game; the ceiling is invisible, behavior is measured headlessly (`RoomCeilingTest`).
