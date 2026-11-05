@@ -35,10 +35,14 @@ import com.jlogicsoftware.kimeria.entity.items.Trigger;
 import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
+import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
+import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
+import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
+import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.objects.StaticPlatform;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
@@ -410,6 +414,8 @@ public class Level implements WorldObject {
                 continue;
             }
             int owner = roomLayout.owner(o);
+            if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map); // D45: every room, at load.
+            if ("ThornRoot".equals(o.type) || "ThornTuft".equals(o.type)) validateThorn(o, owner);
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -682,6 +688,9 @@ public class Level implements WorldObject {
                     fallingPlatforms.add(platform);
                     registerRoomStateOwner(o.id, platform);
                 }
+                case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
+                case "ThornRoot", "ThornTuft" -> objects.add(ThornTrap.fromMap(assets, game.trapWarnings(), o,
+                    () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false)));
                 case "Puffball" -> {
                     Puffball puffball = Puffball.fromMap(assets, o, game.trapWarnings(), describe(o));
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
@@ -717,6 +726,33 @@ public class Level implements WorldObject {
             if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == currentRoom
                 && hazard.everLethalIn(new Rectangle(other.x, other.y, other.width, other.height)))
                 throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers a checkpoint");
+    }
+
+    /**
+     * FallingBranch / FallingStone (D45, #232). Properties: {@code zoneX, zoneY, zoneWidth, zoneHeight} (the
+     * trigger zone, absolute world px, required, inside this room); stone only: {@code skin} (default forest).
+     * The object's own rectangle is the hanging position and the lethal footprint; it falls to the first solid
+     * (Collisions layer, not QuickSand) below it. Traps are rebuilt with every room activation, so retry,
+     * Restart Level and room re-entry all re-arm them.
+     */
+    private void spawnFallingTrap(TiledObject o) {
+        FallingTrapLayout.Spec spec = FallingTrapLayout.validate(o, roomLayout, currentRoom, map);
+        java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBounds();
+        java.util.function.BooleanSupplier grounded = () -> player.isOnGround();
+        Runnable kill = () -> player.collidedWithActor(false);
+        objects.add(spec.stone()
+            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(),
+                game.trapWarnings(), hero, grounded, kill)
+            : new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
+    }
+
+    /** Proximity traps (D44) fail at load when they could not be jumped, float, or start triggered. */
+    private void validateThorn(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Rectangle entranceBody = new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
+            player.hitbox.width, player.hitbox.height);
+        String problem = ThornTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), entranceBody);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
     /** "Name [id] at (x, y)" -- enough to find the object in Tiled without guessing. */

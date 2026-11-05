@@ -111,6 +111,19 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    `validateSpriteArt`, `python3 tools/test_*.py`, `check_tiled_links.py`, then look at the room in the game
    (`runDev`), and update ROADMAP, GAME_DESIGN (Forest status), DECISIONS and this section.
 
+## Falling traps (#232, D45)
+
+Authoring recipe for `FallingBranch` and `FallingStone` (rule: [D45](DECISIONS.md#d45-falling-traps-the-position-triggered-branch-and-stone)); not placed in a shipped room yet (#235).
+
+- **Objects (SpawnPoints):** the object rectangle is the hanging position and the lethal footprint (branch 32x16, stone 16x16). Properties `zoneX`, `zoneY`, `zoneWidth`, `zoneHeight` (absolute world px, inside the same room), stone only `skin` (default `forest`). `tools/check_tiled_links.py` checks them.
+- **Trigger zone vs lethal column:** the lethal column is the object's x-range from the object down to the floor. **Load checks (Java and `check_tiled_links.py`):** the zone must overlap the column's x-range and the 22 px above the floor, must not arm the trap at the room entrance while the hero stands in the column, and a stone must start at the room top or under a solid block; no lever-raised `Wall`, `Escalator` or `FallingPlatform` may stand in the fall. Start the zone **up to 16 px before the column** and let it cover the first part of it ("under the foliage"): a hero who keeps walking is clear of the column about 0.2 s before the branch starts to fall (the tested fixture: zone x 144-192, column x 160-192, hero 11 px wide at 100 px/s; with the assist 0.6 s). A zone that starts further before the column makes the pass tighter (at 32 px the margin is only about 0.05 s) because the hero has farther to run after the trigger. The zone's top may start at the object's height and must reach the floor, because the hero's body box (22 px tall on the floor) has to overlap it.
+- **Minimum margin:** keep `warning - time to clear the column` at 0.15 s or more at the base value (tested: `theBranchHasMarginForANaturalWalkNotJustAnOptimalOne`). Flight time is on top of that, at least 0.3 s (the loader refuses a drop under about 41 px). Do not place a trap where the only way out of the column is blocked (a wall, a pit) within 0.8 s.
+- **Branch placement:** hang the bottom of the branch at least 24 px above the floor, but for readability 48 px or more (a standing hero is 22 px tall); there must be foliage or a trunk in the tiles above it so the branch reads as part of the tree. A resting branch does not block or hurt.
+- **Stone placement:** the stone starts **inside** the room, at its top edge or lower (the D38 slab above the room is solid and a stone there would not load: "outside rooms"). Show a hollow, ledge or foliage in the tiles above its column so the fall has a source. The shadow appears on the first solid below the stone's x-range, so keep that floor flat under the whole column. A drop from the room top of about 300 px takes about 0.8 s; shorter drops are harsher, so lengthen the zone lead rather than the warning.
+- **Required routes (D26):** a route may pass a falling trap by walking on or by a running jump at any point of the zone; do not make a required passage that needs standing in the column. At the branch a jump in place also works if it is timed so the hero is airborne above the landed branch at impact (Jump pressed 3 to 48 frames, 0.05-0.8 s, before the impact); never rely on that window for a required route, only on walking on. The trap is single-shot: retry, Restart Level and room re-entry re-arm it.
+- **Hint zone advice for #235:** a message zone that starts at least 200 px before the trap's own zone (so about 1 s of the text is visible before the trigger, see `HintLeadTest`) and says what to do, not where: for the branch "the branch falls soon after you walk under it - run on", for the stone "a shadow on the ground shows where a stone will fall". No hint text is added by #232.
+- **Pause and retry:** timers tick only in `Level.update`; death rebuilds the room, so the trap is armed again with the hero at the entrance.
+
 ## Transition and retry
 
 Room exits are forward only. Before the boss, the healer can teleport the hero back to
@@ -499,6 +512,18 @@ in `RoomReplayTest`; no hazards or pickups are excluded. Collection returns for 
 Bat/Mushroom still pass through both rooms three times without farming (14.78/5.13 s on the
 first return, 14.25/5.00 s later). Earlier author acceptance does not establish
 readability of the changed teaching layout; its targeted check remains deferred.
+
+## Proximity traps (#231)
+
+Authoring recipe for the thorn root and the thorn tuft ([D44](DECISIONS.md#d44-proximity-traps-thorn-root-and-bristling-thorn-tuft)). Not in any shipped room yet (#235); `core/src/test/resources/tiles/thorn-test.tmx` is the worked example.
+
+- **Objects:** type `ThornRoot` (footprint 16×24) or `ThornTuft` (16×16) in `SpawnPoints`. `x`/`y`/size is the footprint; **y + height is the floor**. Optional float properties: `zone` (px each side, default 80), `zoneLeft`, `zoneRight` (override a side; 0 = one-sided). There is no warning-time property: the warning is always the shared D7 value (0.8 s / 1.2 s assist).
+- **Placement:** the jump envelope (footprint plus `max(zone, 64)` px each side, 96 px up) lies inside the room, has floor under all of it, and is free of every solid thing (blocks, one-way platforms, falling platforms, walls, ladders and escalators with their travel); zone not over the room entrance; each used zone side at least 64 px; zone values plain non-negative decimals. A map that breaks these does not load (error names the object) and `python3 tools/check_tiled_links.py` flags the same except the entrance.
+- **Open floor only:** never in a one-tile corridor, under an overhang or in front of a wall the hero must jump: the hero has to be able to jump over an armed trap. Leave landing floor behind it: a root jump covers about 60 px.
+- **Zone sizes:** the default 80 px makes a walker (100 px/s) cross the zone in ~0.97 s, longer than the 0.8 s warning, so walking straight in is hit and the warning is what teaches the jump. A shorter zone (say 32) lets a quick walker run through before it rises; use it deliberately. Do not place two traps whose zones overlap if the second should be a surprise: the first one's rise is the lesson.
+- **Jump window:** body right edge 7 to 63 px before the root, 2 to 61 before the tuft; mastered jump-over about 30 px before.
+- **Hint zones (for #235):** start the message zone at the trap's zone edge or earlier (about 208 px before the trap gives a continuous walker ~1 s of reading), say what the trap does ("it rises when you come close; jump over it"), keep it true in every state (dormant, warning, up), no key names, at most two lines. Hint text is not added by #231.
+- **Reset:** Retry, Restart Level and re-entering the room all rebuild it hidden/calm. A trap that is up stays up for the rest of the attempt.
 
 ## Merge review — 2026-10-20
 
