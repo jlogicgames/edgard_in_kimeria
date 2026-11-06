@@ -222,7 +222,7 @@ class ExplosiveTrapsTest {
         assertEquals(java.util.List.of(1, 2, 3), seen, "windup1 (cracks), windup2 (smoke), windup3 (glow)");
         java.util.List<Integer> blast = new java.util.ArrayList<>();
         while (t.phase() == ExplosiveTrap.Phase.BLAST) { if (blast.isEmpty() || blast.get(blast.size() - 1) != t.blastFrameIndex()) blast.add(t.blastFrameIndex()); frame(level); }
-        assertEquals(java.util.List.of(0, 1, 2, 3), blast, "the four blast frames");
+        assertEquals(java.util.List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), blast, "all twelve blast frames, in order");
         assertEquals(ExplosiveTrap.Phase.SPENT, t.phase());
         assertEquals(4, t.frameIndex(), "spent frame");
         assertEquals(-1, t.blastFrameIndex());
