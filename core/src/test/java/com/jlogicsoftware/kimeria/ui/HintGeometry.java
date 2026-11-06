@@ -9,42 +9,44 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 
 /**
- * Test-side hint placement with the real shipped 13 px font metrics (no GPU), using the same
+ * Test-side hint placement with the real shipped font metrics (zone message {@link Hud#ZONE_FONT_SIZE} px, contextual label {@link Hud#CONTEXT_FONT_SIZE} px, #249) (no GPU), using the same
  * {@link HintLayout} arithmetic as the HUD. World y is Y-down; the 640x360 view shows world y
  * {@code cameraY .. cameraY+360}, so screen y (Y-up) is {@code 360 - (worldY - cameraY)}.
  * Needs {@code Gdx.files} to be a {@link HeadlessFiles}.
  */
 public final class HintGeometry {
     public static final float SCREEN_H = 360;
-    private static final float WIDTH = 200;
 
     private static class MetricsFont extends BitmapFont {
-        MetricsFont() {
-            super(new BitmapFontData(new HeadlessFiles().internal("fonts/generated/QuestSquare-13.fnt"), false), new TextureRegion(), true);
+        MetricsFont(int size) {
+            super(new BitmapFontData(new HeadlessFiles().internal("fonts/generated/QuestSquare-" + size + ".fnt"), false), new TextureRegion(), true);
         }
         @Override protected void load(BitmapFontData data) { /* Metrics require no texture UVs. */ }
     }
 
-    private final BitmapFont font = new MetricsFont();
+    private final BitmapFont zoneFont = new MetricsFont(Hud.ZONE_FONT_SIZE), contextFont = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
 
-    public float height(String text) { return new GlyphLayout(font, text, Color.WHITE, WIDTH, Align.center, true).height; }
+    public float zoneHeight(String text) { return new GlyphLayout(zoneFont, text, Color.WHITE, Hud.ZONE_WIDTH, Align.center, true).height; }
+
+    public float contextHeight(String text) { return new GlyphLayout(contextFont, text, Color.WHITE, Hud.CONTEXT_WIDTH, Align.center, true).height; }
 
     public float screenY(Vector2 worldAnchor, float cameraY) { return SCREEN_H - (worldAnchor.y - cameraY); }
 
     /** Top edge of the zone message at its anchor. */
     public float zoneTop(Vector2 zoneAnchor, String zone, float cameraY) {
-        return HintLayout.top(screenY(zoneAnchor, cameraY), height(zone), font.getCapHeight(), SCREEN_H);
+        return HintLayout.top(screenY(zoneAnchor, cameraY), zoneHeight(zone), zoneFont.getCapHeight(), SCREEN_H);
     }
 
     /** Top edge of the contextual label as the HUD places it, with a zone message present or not. */
     public float contextTop(Vector2 contextAnchor, String context, boolean zonePresent, Vector2 zoneAnchor, String zone, float cameraY) {
-        return HintLayout.contextTop(screenY(contextAnchor, cameraY), height(context), zonePresent,
-            zonePresent ? screenY(zoneAnchor, cameraY) : 0, zonePresent ? height(zone) : 0, font.getCapHeight(), SCREEN_H);
+        return HintLayout.contextTop(screenY(contextAnchor, cameraY), contextHeight(context), zonePresent,
+            zonePresent ? screenY(zoneAnchor, cameraY) : 0, zonePresent ? zoneHeight(zone) : 0,
+            contextFont.getCapHeight(), zoneFont.getCapHeight(), SCREEN_H);
     }
 
     /** Clear space between the zone message's bottom and the contextual label's top (negative: they overlap). */
     public float gap(Vector2 contextAnchor, String context, Vector2 zoneAnchor, String zone, float cameraY) {
-        float zoneBottom = zoneTop(zoneAnchor, zone, cameraY) - height(zone);
+        float zoneBottom = zoneTop(zoneAnchor, zone, cameraY) - zoneHeight(zone);
         return zoneBottom - contextTop(contextAnchor, context, true, zoneAnchor, zone, cameraY);
     }
 
@@ -55,7 +57,7 @@ public final class HintGeometry {
      */
     public float heroOverlap(Vector2 contextAnchor, String context, Vector2 zoneAnchor, String zone, float cameraY,
                              float heroLeft, float heroRight, float heroTop, float heroBottom) {
-        GlyphLayout layout = new GlyphLayout(font, context, Color.WHITE, WIDTH, Align.center, true);
+        GlyphLayout layout = new GlyphLayout(contextFont, context, Color.WHITE, Hud.CONTEXT_WIDTH, Align.center, true);
         float half = layout.width / 2;
         if (contextAnchor.x + half <= heroLeft || contextAnchor.x - half >= heroRight) return Float.NEGATIVE_INFINITY;
         float labelTop = contextTop(contextAnchor, context, true, zoneAnchor, zone, cameraY);

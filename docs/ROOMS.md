@@ -97,7 +97,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    state** (lever off, on, never touched). Do not write "the torch is dark" or "works both ways" on a position-only
    zone; say what the object does ("This lever lights the torch and puts it out") and where the exit is. Messages are
    Msg keys named `HINT_<LESSON>_*`, in all five catalogs, without key names (devices differ), at most two lines at
-   200 px. The HUD draws a message hint about 45% down the zone and shows it after a 0.35 s dwell with a fade-in and
+   200 px. The HUD draws a message hint about 45% down the zone (39 px font, 608 px wide, D49) and shows it after a 0.35 s dwell with a fade-in and
    overshoot slide (D33), so keep zones wide enough (about 200 px or more) for the dwell to matter; add them to the layout assertion in `LocalizationLayoutTest`.
 4. **Rule.** Decide and document, as D34 does: toggle or one-shot, what a retry restores, and why the exit is
    reachable in every state (D26). Prefer reversible, route-independent first lessons.

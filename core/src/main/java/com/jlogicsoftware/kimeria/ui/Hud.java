@@ -30,7 +30,13 @@ public class Hud {
     private static final float FPS_STOCK_GAP = 12, ICON_TEXT_GAP = 8, INVENTORY_GAP = 8, INVENTORY_SECTION_GAP = 16;
     private static final String FPS_WIDTH_SAMPLE = "999 FPS";
     private static final int COUNT_FONT_SIZE = 20, HINT_FONT_SIZE = 13;
-    private static final float HINT_WIDTH = 200;
+    /**
+     * #249: the zone message is drawn 3x the old 13 px (39 px, 608 px wide = the menu width) and the label above the
+     * hero 1.5x (19.5 px, baked as the existing 20 px size, 300 px wide = 1.5x the old 200). Public so the layout
+     * tests measure exactly what is drawn.
+     */
+    public static final int ZONE_FONT_SIZE = 39, CONTEXT_FONT_SIZE = 20;
+    public static final float ZONE_WIDTH = 608, CONTEXT_WIDTH = 300;
     private static final float TEXT_SHADOW_OFFSET = 1;
     private static final float ICON_X = 10, ICON_Y = 10, ICON_SIZE = 32;
     private static final float FIREBALL_GAP = 4, EMPTY_FIREBALL_BRIGHTNESS = 0.25f;
@@ -40,7 +46,7 @@ public class Hud {
     private final TextureRegion coinIcon;
     private final TextureRegion fireballIcon;
     private final Map<ItemType, TextureRegion> artifactIcons = new EnumMap<>(ItemType.class);
-    private final BitmapFont font, hintFont;
+    private final BitmapFont font, hintFont, zoneFont, contextFont;
     private final Matrix4 textProjection;
     private final float logicalWidth, logicalHeight;
     private final Vector2 hintPosition = new Vector2();
@@ -63,6 +69,8 @@ public class Hud {
         }
         this.font = assets.font(COUNT_FONT_SIZE);
         this.hintFont = assets.font(HINT_FONT_SIZE);
+        this.zoneFont = assets.font(ZONE_FONT_SIZE);
+        this.contextFont = assets.font(CONTEXT_FONT_SIZE);
 
         OrthographicCamera textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, logicalWidth, logicalHeight);
@@ -140,40 +148,40 @@ public class Hud {
         float zoneHeight = 0, zoneAnchorY = 0;
         if (zonePresent) {
             boolean held = !zoneTransition.text().isEmpty();
-            zoneHeight = new GlyphLayout(hintFont, held ? zoneTransition.text() : zone, hintColor, HINT_WIDTH, Align.center, true).height;
-            zoneAnchorY = place(held ? zoneTransition.anchor() : zonePosition, zoneHeight, camera, zonePlace);
+            zoneHeight = new GlyphLayout(zoneFont, held ? zoneTransition.text() : zone, hintColor, ZONE_WIDTH, Align.center, true).height;
+            zoneAnchorY = place(held ? zoneTransition.anchor() : zonePosition, zoneHeight, zoneFont, ZONE_WIDTH, camera, zonePlace);
         }
         if (contextShown) {
-            float height = new GlyphLayout(hintFont, hintTransition.text(), hintColor, HINT_WIDTH, Align.center, true).height;
-            float anchorY = place(hintTransition.anchor(), height, camera, contextPlace);
+            float height = new GlyphLayout(contextFont, hintTransition.text(), hintColor, CONTEXT_WIDTH, Align.center, true).height;
+            float anchorY = place(hintTransition.anchor(), height, contextFont, CONTEXT_WIDTH, camera, contextPlace);
             contextPlace.y = HintLayout.contextTop(anchorY, height, zonePresent, zoneAnchorY, zoneHeight,
-                hintFont.getCapHeight(), logicalHeight);
+                contextFont.getCapHeight(), zoneFont.getCapHeight(), logicalHeight);
         }
 
         Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
-        if (zoneShown) draw(batch, zoneTransition, zonePlace);
-        if (contextShown) draw(batch, hintTransition, contextPlace);
+        if (zoneShown) draw(batch, zoneTransition, zonePlace, zoneFont, ZONE_WIDTH);
+        if (contextShown) draw(batch, hintTransition, contextPlace, contextFont, CONTEXT_WIDTH);
         batch.setProjectionMatrix(previous);
     }
 
     /** Sets the label's left x and top edge at its world anchor; returns the anchor's screen y. */
-    private float place(Vector2 anchor, float height, OrthographicCamera camera, Vector2 out) {
+    private float place(Vector2 anchor, float height, BitmapFont font, float width, OrthographicCamera camera, Vector2 out) {
         hintScreen.set(anchor.x, anchor.y, 0);
         camera.project(hintScreen, 0, 0, logicalWidth, logicalHeight);
-        out.set(Math.max(HintLayout.SIDE_MARGIN, Math.min(logicalWidth - HINT_WIDTH - HintLayout.SIDE_MARGIN, hintScreen.x - HINT_WIDTH / 2)),
-            HintLayout.top(hintScreen.y, height, hintFont.getCapHeight(), logicalHeight));
+        out.set(Math.max(HintLayout.SIDE_MARGIN, Math.min(logicalWidth - width - HintLayout.SIDE_MARGIN, hintScreen.x - width / 2)),
+            HintLayout.top(hintScreen.y, height, font.getCapHeight(), logicalHeight));
         return hintScreen.y;
     }
 
-    private void draw(SpriteBatch batch, HintTransition transition, Vector2 place) {
+    private void draw(SpriteBatch batch, HintTransition transition, Vector2 place, BitmapFont font, float width) {
         hintColor.a = hintShadow.a = transition.alpha();
         float y = place.y - transition.offsetY(); // Text projection is Y-up, slide offset is Y-down.
         // Glyph colours are fixed when a layout is built, so build them after the alpha is set.
-        GlyphLayout shadow = new GlyphLayout(hintFont, transition.text(), hintShadow, HINT_WIDTH, Align.center, true);
-        GlyphLayout text = new GlyphLayout(hintFont, transition.text(), hintColor, HINT_WIDTH, Align.center, true);
-        hintFont.draw(batch, shadow, place.x + TEXT_SHADOW_OFFSET, y - TEXT_SHADOW_OFFSET);
-        hintFont.setColor(Color.WHITE);
-        hintFont.draw(batch, text, place.x, y);
+        GlyphLayout shadow = new GlyphLayout(font, transition.text(), hintShadow, width, Align.center, true);
+        GlyphLayout text = new GlyphLayout(font, transition.text(), hintColor, width, Align.center, true);
+        font.draw(batch, shadow, place.x + TEXT_SHADOW_OFFSET, y - TEXT_SHADOW_OFFSET);
+        font.setColor(Color.WHITE);
+        font.draw(batch, text, place.x, y);
     }
 }

@@ -37,7 +37,13 @@ public final class HintLayout {
      */
     public static float contextTop(float contextAnchorY, float contextHeight, boolean zonePresent,
                                    float zoneAnchorY, float zoneHeight, float capHeight, float screenHeight) {
-        float zoneBottom = top(zoneAnchorY, zoneHeight, capHeight, screenHeight) - zoneHeight;
+        return contextTop(contextAnchorY, contextHeight, zonePresent, zoneAnchorY, zoneHeight, capHeight, capHeight, screenHeight);
+    }
+
+    /** As above, with each label's own cap height: the two channels use different font sizes (#249). */
+    public static float contextTop(float contextAnchorY, float contextHeight, boolean zonePresent,
+                                   float zoneAnchorY, float zoneHeight, float capHeight, float zoneCapHeight, float screenHeight) {
+        float zoneBottom = top(zoneAnchorY, zoneHeight, zoneCapHeight, screenHeight) - zoneHeight;
         return contextTop(top(contextAnchorY, contextHeight, capHeight, screenHeight), contextHeight, zonePresent, zoneBottom);
     }
 
