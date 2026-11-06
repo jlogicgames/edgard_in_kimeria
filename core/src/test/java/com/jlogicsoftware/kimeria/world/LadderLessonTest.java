@@ -394,7 +394,7 @@ class LadderLessonTest {
                     Rectangle hero = level.player.hitboxBounds();
                     for (float cameraY : new float[]{0, 8}) {
                         float over = geometry.heroOverlap(contextAnchor, context, zoneAnchor, zone, cameraY, hero.x, hero.x + hero.width, hero.y, hero.y + hero.height);
-                        assertTrue(over <= (standY == 272 ? 0 : 12), "label crosses the hero by " + over + " at x=" + x + " y=" + standY + " " + context.replace('\n', '|'));
+                        assertTrue(over <= (standY == 272 ? 0 : 8), "label crosses the hero by " + over + " at x=" + x + " y=" + standY + " " + context.replace('\n', '|'));
                     }
                 }
         }

@@ -31,12 +31,11 @@ public class Hud {
     private static final String FPS_WIDTH_SAMPLE = "999 FPS";
     private static final int COUNT_FONT_SIZE = 20, HINT_FONT_SIZE = 13;
     /**
-     * #249: the zone message is drawn 3x the old 13 px (39 px, 608 px wide = the menu width) and the label above the
-     * hero 1.5x (19.5 px, baked as the existing 20 px size, 300 px wide = 1.5x the old 200). Public so the layout
-     * tests measure exactly what is drawn.
+     * #254 (D50): the zone message is 20 px, 400 px wide; the label above the hero 13 px, 200 px wide (D49 had 39/608
+     * and 20/300). Public so the layout tests measure exactly what is drawn.
      */
-    public static final int ZONE_FONT_SIZE = 39, CONTEXT_FONT_SIZE = 20;
-    public static final float ZONE_WIDTH = 608, CONTEXT_WIDTH = 300;
+    public static final int ZONE_FONT_SIZE = 20, CONTEXT_FONT_SIZE = 13;
+    public static final float ZONE_WIDTH = 400, CONTEXT_WIDTH = 200;
     private static final float TEXT_SHADOW_OFFSET = 1;
     private static final float ICON_X = 10, ICON_Y = 10, ICON_SIZE = 32;
     private static final float FIREBALL_GAP = 4, EMPTY_FIREBALL_BRIGHTNESS = 0.25f;
