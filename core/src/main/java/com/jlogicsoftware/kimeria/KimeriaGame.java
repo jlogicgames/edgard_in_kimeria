@@ -568,7 +568,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         float dt = Gdx.graphics.getDeltaTime();
         gamepad.update(leftHanded);
         UiState stateAtFrameStart = uiState;
-        touchControls.update(stateAtFrameStart == UiState.PLAYING);
+        touchControls.update(stateAtFrameStart == UiState.PLAYING, stateAtFrameStart == UiState.PLAYING || stateAtFrameStart == UiState.HEALER);
         if (stateAtFrameStart != UiState.PLAYING && gamepad.confirm()) {
             gamepad.suppressJumpUntilRelease();
         }
@@ -606,7 +606,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
         if (levelVisible && level != null && gameStarted && stateAtFrameStart != UiState.HEALER) {
             if (roomFade.active()) {
-                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed()) togglePause();
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed() || touchControls.pausePressed()) togglePause();
                 else roomFade.update(dt, this::enterNextRoom);
             } else {
                 level.update(dt * timeScale);
@@ -679,6 +679,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         renderOverlay(uiState == stateAtFrameStart);
         if (!fpsText.isEmpty()) overlay.topRight(batch, fpsText, LOGICAL_W - Hud.FPS_RIGHT_MARGIN, Hud.FPS_TOP_MARGIN);
         overlay.flushText(batch);
+        // The healer panel is opaque, so its pause button is drawn on top of it (the world HUD draws its own).
+        if (uiState == UiState.HEALER) touchControls.renderPauseButton(batch);
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
         if (storyScreenActive()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
         batch.end();
@@ -696,7 +698,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void updateHealer(float dt) {
         boolean fresh = dialogueInput.skipPressed(Gdx.input);
-        if (dialogueInput.keyPressed(Input.Keys.ESCAPE)) {
+        if (dialogueInput.keyPressed(Input.Keys.ESCAPE) || touchControls.pausePressed()) {
             pausedHealer = true;
             uiState = UiState.PAUSED;
             return;

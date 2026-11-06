@@ -36,6 +36,9 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
 - [ ] Play on a real touchscreen with simultaneous movement/jump/attack touches, in both
   handedness layouts. Check mirrored drawing and hit areas, separate dialogue choices,
   reveal/advance and pause/Resume. Mouse clicks do not establish multitouch behavior.
+  Include the top-centre pause button ([#259](https://github.com/jlogicgames/edgard_in_kimeria/issues/259), D52):
+  it must open the pause menu in play and in healer dialogue, in portrait and landscape, be easy
+  to hit with a thumb, and Resume / Restart Level / Options / Main menu must all work by touch.
 - [ ] Play with a physical gamepad in both layouts, including the unchecked left-handed
   layout: right-stick movement and D-pad actions, disjoint bindings, unchanged menus/Start.
   Author reported on 2026-11-06 a desktop keyboard and gamepad check in both layouts (build,

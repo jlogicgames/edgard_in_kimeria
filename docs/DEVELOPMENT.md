@@ -211,9 +211,6 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   while paused, on the frozen gameplay or healer-dialogue screen (`screen_effects.frag`, drawn from an offscreen
   `FrameBuffer` that is only rendered while paused or while a ripple is live, so normal play
   is unchanged). The HUD and pause menu draw afterwards, unaffected.
-- **Touch controls have no pause button yet.** The on-screen stick and three action buttons
-  (`ui.TouchControls`) only show on devices that report a touch screen, so a touch-only player
-  can't open the pause menu.
 - **Mobile browsers are playable but rough** (author iPhone play-through, 2026-11-05): in portrait the touch controls
   overlap the game; there is no fullscreen; in landscape the browser chrome leaves about half of the game visible; the
   screen auto-locks after some minutes. Tracked in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226).
@@ -253,7 +250,7 @@ Package layout:
 - `localization.*` — typed `Msg` keys, five UTF-8 catalogs, English fallback and strict
   validation; see [localization](LOCALIZATION.md)
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
-- `ui.TouchControls` — two-axis on-screen stick and Jump / Ranged / directional Action buttons
+- `ui.TouchControls` — two-axis on-screen stick, Jump / Ranged / directional Action buttons and a top-centre pause button (D52)
 - `KimeriaGame` — the whole game and its menu states in one place
 - `lwjgl3/src/dev` — `runDev`'s launcher, compiler, watcher and reloader (`DevHost`); a source
   set of its own that no release build includes, see "Live editing" above
