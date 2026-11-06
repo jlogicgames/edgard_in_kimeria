@@ -88,6 +88,10 @@ playtests and one-minute learning checks with unfamiliar players belong to phase
   Author-reported status (2026-10-27): keyboard checked in both layouts; gamepad
   checked in the default layout only; touch not checked and no phone build made.
   Remaining device coverage: mirrored gamepad and both touch layouts on a phone.
+  Author-reported update (2026-11-06): the desktop version was checked with keyboard
+  and gamepad in both the right-handed (default) and left-handed layouts. The author did
+  not say which build or rooms. Still open: touch in both layouts, and the other
+  unverified criteria (held buttons after pause, dialogue and transitions).
 
 **Output:** in a test section, move an object, operate a mechanism, fight while
 carrying and deliberately choose a throw or fireball. Ladders and contextual action
@@ -121,7 +125,7 @@ headless author check, then the author's desktop and web play-through of 2026-11
 **Explosive traps (#233) are implemented** (exploding stump and root replace the glass-bottle bomb: touch or a fireball / thrown stone from afar lights them, shared D7 warning, one 64x64 blast, a mandatory floor bypass checked at load; the only shipped placement is the stump in the traps room; automated tests only): see [D47](DECISIONS.md#d47-explosive-traps-replace-the-bomb-exploding-stump-and-exploding-root).
 **Healer tales (#220)** open and close the tutorial in fairy-tale language (start of a new game, end before forest-1): see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial). Both tales (start and farewell) were played by the author on 2026-11-05 with no remarks; the de, pl, uk and be translations are not native-reviewed.
 
-**Author acceptance of the forest-0 tutorial (2026-11-05):** Adam Konter (project author) played the whole tutorial on desktop (keyboard only) and also checked the web build. All six rooms, both healer dialogues (start tale and farewell) and the transition into forest-1 were checked, with no remarks (OK). Not checked: gamepad, touch controls, native-speaker quality of the de/pl/uk/be translations. No novice playtest (#129–#131) has been done. Mastered route times above are headless author checks and are unchanged. Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
+**Author acceptance of the forest-0 tutorial (2026-11-05):** Adam Konter (project author) played the whole tutorial on desktop (keyboard only) and also checked the web build. All six rooms, both healer dialogues (start tale and farewell) and the transition into forest-1 were checked, with no remarks (OK). Not checked in that session: gamepad, touch controls, native-speaker quality of the de/pl/uk/be translations (the author reported a desktop keyboard and gamepad check in both layouts on 2026-11-06, without naming a build or rooms; see [#101](https://github.com/jlogicgames/edgard_in_kimeria/issues/101) above). Still not done: touch in both layouts, native-speaker translation check, novice playtests (#129–#131). Mastered route times above are headless author checks and are unchanged. Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
 
 **Author mobile-browser play-through (2026-11-05):** the author also played the web build on an iPhone (browser; no mobile build exists yet) and completed all the tutorial screens by touch. The game is playable. Four problems were found and are tracked in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226): in portrait the touch controls are drawn over the game although there is plenty of free space above and below; no fullscreen on mobile; in landscape the browser chrome stays and only about half of the game is visible; the screen turns off after some minutes. Not a novice playtest (#129–#131), and not the release-device pass (#144). Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
 

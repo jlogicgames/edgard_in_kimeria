@@ -885,7 +885,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   same level. New Game and the ending remove both keys.
 - **Why:** The tutorial needs hints that belong to rooms and objects, are authored by level
   designers in Tiled, and can be removed in later levels without code changes.
-- **Author acceptance (2026-11-05):** the author played the whole tutorial on desktop (keyboard only) and checked the web build; all six rooms, both healer dialogues and the transition into forest-1 were checked with no remarks. Not checked: gamepad, touch controls, native-speaker quality of de/pl/uk/be. No novice playtest (#129–#131). Details: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
+- **Author acceptance (2026-11-05):** the author played the whole tutorial on desktop (keyboard only) and checked the web build; all six rooms, both healer dialogues and the transition into forest-1 were checked with no remarks. Not checked in that session: gamepad, touch controls, native-speaker quality of de/pl/uk/be. No novice playtest (#129–#131). On 2026-11-06 the author reported a desktop keyboard and gamepad check in both layouts (build and rooms not stated); touch, translations and novice playtests remain open. Details: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
 - **Earlier note (superseded by the acceptance above for the desktop and web play):** at #195 the rooms were empty placeholders without a human playtest; the #206 animation and hint height and the #211 two-channel layout were checked headlessly only (anchors and font metrics).
 
 ## D34. The tutorial lever lesson rule
@@ -1061,7 +1061,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   End: (Healer) "Well done, Edgard. The enchanted wood has told you all its tales, and you have solved every one of its riddles." (Edgard) "Then I am ready for the road?" (Healer) "Ready as the heroes of old tales, who were afraid and went on all the same. A true warrior needs no more than that." (Healer) "Take my blessing: walk lightly, look keenly, and look twice at any path that seems too kind, for witches smile the sweetest. May the fairies light your road."
   The healer never names a control or mechanic (lever, jump, button); `HealerDialogueTest` scans all five languages. Every line is measured by the existing baked-font speaker-region test (all `HEALER_`/`EDGARD_` keys).
 - **Unchanged:** forest-1 and forest-3 (the boss pre/post scenes, `afterVictory`, level order, saves, ending); the lesson rooms and `RoomCeilingTest`.
-- **Author play (2026-11-05):** the start tale and farewell were played on desktop (keyboard) and the web build with no remarks (see D33). **Not verified:** gamepad and touch, and the native-speaker quality of the de, pl, uk and be translations (machine-quality drafts in the same register as the existing healer text).
+- **Author play (2026-11-05):** the start tale and farewell were played on desktop (keyboard) and the web build with no remarks (see D33). **Not verified in that session:** gamepad and touch (the author later reported a desktop gamepad check in both layouts on 2026-11-06, without naming what was played; touch stays unverified), and the native-speaker quality of the de, pl, uk and be translations (machine-quality drafts in the same register as the existing healer text).
 
 ## D42. Forest trap set, explosive-trap choice and tutorial plan
 

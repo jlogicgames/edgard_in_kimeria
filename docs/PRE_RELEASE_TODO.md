@@ -38,6 +38,8 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   reveal/advance and pause/Resume. Mouse clicks do not establish multitouch behavior.
 - [ ] Play with a physical gamepad in both layouts, including the unchecked left-handed
   layout: right-stick movement and D-pad actions, disjoint bindings, unchanged menus/Start.
+  Author reported on 2026-11-06 a desktop keyboard and gamepad check in both layouts (build,
+  rooms and these specifics not itemized), so this stays open until the specifics are confirmed.
 - [ ] Recheck both keyboard layouts after the new mechanics, including Shoot when its
   mechanic is implemented. Confirm About matches the selected layout in all five supported languages.
 - [ ] Hold movement/action/confirm through web start, menu, opening, dialogue entry,

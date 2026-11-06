@@ -16,6 +16,10 @@ default layout. Touch has not been checked, and a phone build has not been made.
 Still to check: mirrored gamepad, both touch layouts on a phone, and any other
 unverified criteria in #101. Older device-coverage notes reflect their dates.
 
+Update (2026-11-06, author-reported): the desktop version was checked with keyboard and
+gamepad in both the right-handed and left-handed layouts (build and rooms not stated).
+This covers the mirrored gamepad item. Touch in both layouts is still unchecked.
+
 ## Interaction controls (#175)
 
 | Command | Target result |
