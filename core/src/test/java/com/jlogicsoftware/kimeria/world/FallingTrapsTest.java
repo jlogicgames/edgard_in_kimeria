@@ -443,12 +443,15 @@ class FallingTrapsTest {
         assertTrue(stone(l).bodyBounds().y >= room.y, "the stone starts inside the room, flush with its top");
     }
 
-    @Test void shippedLevelsDoNotUseTheTrapsYet() {
-        for (String map : new String[]{"forest-0", "forest-1", "forest-3"}) {
+    @Test void onlyForestZeroUsesTheFallingTrapsOneBranchInTheWallRoomAndOneStoneInThePlatformRoom() {
+        for (String map : new String[]{"forest-1", "forest-3"}) {
             String text = Gdx.files.internal("tiles/" + map + ".tmx").readString();
             assertFalse(text.contains("FallingBranch") || text.contains("FallingStone"), map);
             assertTrue(load(map).objects.stream().noneMatch(FallingTrap.class::isInstance), map);
         }
+        String text = Gdx.files.internal("tiles/forest-0.tmx").readString();
+        assertEquals(1, text.split("type=\"FallingBranch\"", -1).length - 1, "D48: one branch");
+        assertEquals(1, text.split("type=\"FallingStone\"", -1).length - 1, "D48: one stone");
     }
 
     // ---- Jump rule for the branch (D45): lethal at impact for anyone overlapping the landed box; in the fall only

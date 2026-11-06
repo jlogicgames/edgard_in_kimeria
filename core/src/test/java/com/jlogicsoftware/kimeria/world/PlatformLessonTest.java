@@ -94,7 +94,12 @@ class PlatformLessonTest {
         pressed.clear();
     }
 
-    private static final float ROOM_X = 1920, PLATFORM_X = 2384, PLATFORM_RIGHT = 2416, BOTTOM = 304, TOP = 176, LEDGE_TOP = 208, LEDGE_X = 2416, ROOM_END = 2560;
+    private static final float ROOM_X = 2256, PLATFORM_X = 2880, PLATFORM_RIGHT = 2912, BOTTOM = 304, TOP = 176, LEDGE_TOP = 208, LEDGE_X = 2912, ROOM_END = 3056;
+    /** The falling stone (D48): column x 2544-2560, trigger zone x 2512-2560. */
+    private static final float STONE_COLUMN_X = 2544, STONE_ZONE_X = 2512;
+
+    /** Geometry sweeps teleport the hero into the stone's column and let him stand there; the trap has its own tests. */
+    private void withoutTheStone(Level level) { level.objects.removeIf(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance); }
 
     /** A level whose hero stands in the platform room (index 3) at its safe entrance. */
     private Level freshRoom() {
@@ -223,6 +228,7 @@ class PlatformLessonTest {
     @Test void withThePlatformStoppedAtTheBottomNeitherWalkingNorJumpingGetsUpTheLedge() {
         for (float x = ROOM_X + 24; x <= LEDGE_X - 8; x += 8) {
             Level level = freshRoom();
+        withoutTheStone(level);
             level.player.position.set(x - 24, 272);
             for (int i = 0; i < 60 * 3; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
@@ -302,6 +308,7 @@ class PlatformLessonTest {
 
     @Test void walkingOffTheLedgeOrTheTopOfThePlatformIsHarmlessAndLeavesTheRouteOpen() {
         Level level = freshRoom();
+        withoutTheStone(level);
         solve(level);
         // From the exit side, walk left off the ledge: a 112 px drop onto the floor or the platform, not a hurt.
         level.player.position.set(LEDGE_X + 8, LEDGE_TOP - 48);
@@ -376,6 +383,7 @@ class PlatformLessonTest {
      */
     @Test void messageAndLiveLabelsNeverOverlapOnTheFloorOrInTheAir() {
         Level level = freshRoom();
+        withoutTheStone(level);
         HintGeometry geometry = new HintGeometry();
         Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
         int both = 0;
@@ -400,6 +408,7 @@ class PlatformLessonTest {
 
     @Test void lessonHintsCoverEveryStandingPositionInBothPlatformStatesAndSurviveRetry() {
         Level level = freshRoom();
+        withoutTheStone(level);
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean running : new boolean[]{false, true}) {
@@ -421,8 +430,9 @@ class PlatformLessonTest {
                 }
             }
             level.resetCurrentRoom(new Player(assets, game, 0, 0));
+            withoutTheStone(level);
         }
-        assertEquals(Set.of(Msg.HINT_PLATFORM_LEVER.t(Language.ENGLISH), Msg.HINT_PLATFORM_RIDE.t(Language.ENGLISH)), messages);
+        assertEquals(Set.of(Msg.HINT_PLATFORM_LEVER.t(Language.ENGLISH), Msg.HINT_PLATFORM_STONE.t(Language.ENGLISH), Msg.HINT_PLATFORM_RIDE.t(Language.ENGLISH)), messages);
     }
 
     @Test void theLeverHintNamesTheActionAndFlipsWithTheState() {
@@ -440,5 +450,108 @@ class PlatformLessonTest {
         float seconds = frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-0-platform mastered route (walk, pull lever, board the platform, ride up, walk to the exit): %.2f s%n", seconds);
         assertTrue(seconds < 30, "Author check, not a novice playtest (#129-#131): " + seconds);
+    }
+
+    // ---- D48: the falling stone between the lever and the platform ----
+
+    private com.jlogicsoftware.kimeria.entity.objects.FallingStone stone(Level level) {
+        return level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::cast).findFirst().orElseThrow();
+    }
+
+    private void step(Level level, boolean right, boolean jump) {
+        held.clear();
+        if (right) held.add(Input.Keys.D);
+        if (jump) jump(level);
+        frame(level);
+    }
+
+    private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 272); settle(level, 2); }
+
+    private Level otherRoom(int index) {
+        Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
+        for (int i = 0; i < index; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
+        return level;
+    }
+
+    @Test void theStoneHangsAtTheRoomTopBeforeTheLeverClearOfItAndOfThePlatformAndBoardingSpot() {
+        Level level = freshRoom();
+        var stone = stone(level);
+        assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingTrap.class::isInstance).count());
+        assertEquals(level.currentRoomBounds().y, stone.bodyBounds().y, .01f, "starts at the room top");
+        assertEquals(STONE_COLUMN_X, stone.bodyBounds().x, .01f);
+        assertEquals(320, stone.landingBottom(), .01f, "lands on the flat floor");
+        assertTrue(2728 - (stone.bodyBounds().x + 16) >= 128, "well clear of the lever (x 2728), and before it");
+        assertTrue(PLATFORM_X - (stone.bodyBounds().x + 16) >= 96, "and of the platform's boarding spot");
+        assertFalse(stone.shadowVisible(), "no shadow before the trigger");
+        assertTrue(otherRoom(2).objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance), "no leak into the wall room");
+        assertTrue(otherRoom(4).objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance), "nor into the stone room");
+    }
+
+    @Test void theShadowShowsWhereTheStoneWillFallBeforeItDropsAndWalkingOnIsSafe() {
+        Level level = freshRoom();
+        var stone = stone(level);
+        placeBodyRight(level, STONE_ZONE_X + 2);
+        assertEquals(com.jlogicsoftware.kimeria.entity.objects.FallingTrap.State.WARNING, stone.state());
+        assertTrue(stone.shadowVisible(), "the telegraph is visible during the warning");
+        float shadowAtStart = stone.shadowScale();
+        for (int i = 0; i < 30; i++) step(level, true, false);
+        assertTrue(stone.shadowScale() >= shadowAtStart, "and grows");
+        for (int i = 0; i < 60 * 2; i++) { step(level, true, false); assertFalse(level.player.isGotHit(), "walking on died at " + level.player.position); }
+        assertTrue(stone.isSpent(), "the stone has landed behind the hero");
+        assertFalse(stone.shadowVisible());
+    }
+
+    @Test void walkingOnAndRunningJumpsFromEveryOffsetPassTheStoneAndTheLessonContinues() {
+        for (float from = STONE_ZONE_X - 60; from <= STONE_COLUMN_X + 16; from += 4) for (boolean jump : new boolean[]{false, true}) {
+            Level level = freshRoom();
+            placeBodyRight(level, from);
+            if (jump) step(level, true, true);
+            for (int i = 0; i < 60 * 3 && bodyLeft(level) < STONE_COLUMN_X + 16 + 30; i++) {
+                step(level, true, false);
+                assertFalse(level.player.isGotHit(), "from " + from + " jump=" + jump + " died at " + level.player.position);
+            }
+            settle(level, 80);
+            assertFalse(level.player.isGotHit(), "from " + from + " jump=" + jump);
+        }
+        // The whole taught route still works from a standing start with the stone present.
+        Level level = freshRoom();
+        solve(level);
+        assertTrue(level.atRoomExit());
+        assertFalse(level.player.isGotHit());
+    }
+
+    @Test void waitingUnderTheStoneCostsOneRetryAndTheRetryRestoresTheStoneAndThePlatform() {
+        Level level = freshRoom();
+        placeBodyRight(level, STONE_COLUMN_X + 14);
+        int frames = 0;
+        while (!level.player.isGotHit() && frames++ < 60 * 4) step(level, false, false);
+        assertTrue(level.player.isGotHit(), "a hero who lingers under the shadow is hit");
+        level.resetCurrentRoom(new Player(assets, game, 0, 0));
+        assertEquals(com.jlogicsoftware.kimeria.entity.objects.FallingTrap.State.ARMED, stone(level).state(), "retry re-arms the stone");
+        assertFalse(platform(level).isRunning(), "and stops the platform again");
+        float seconds = solve(level) * STEP;
+        assertTrue(level.atRoomExit());
+        System.out.printf(java.util.Locale.ROOT, "forest-0-platform retry after the stone: %.2f s from the entrance to the exit%n", seconds);
+        assertTrue(seconds < 20, "one cheap retry: " + seconds);
+    }
+
+    @Test void aHeroWhoStepsBackAfterTheTriggerOrStartsThePlatformFirstIsNeverStranded() {
+        for (boolean lever : new boolean[]{false, true}) {
+            Level level = freshRoom();
+            if (lever) { walkToLever(level); operate(level); }
+            placeBodyRight(level, STONE_ZONE_X + 6);
+            for (int i = 0; i < 60 * 2; i++) {
+                held.clear(); held.add(Input.Keys.A); frame(level);
+                assertFalse(level.player.isGotHit(), "at " + level.player.position);
+                if (bodyLeft(level) < STONE_ZONE_X - 50) break;
+            }
+            held.clear();
+            settle(level, 80);
+            assertTrue(stone(level).isSpent());
+            solve(level);
+            assertTrue(level.atRoomExit(), "lever=" + lever);
+        }
     }
 }

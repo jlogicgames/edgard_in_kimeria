@@ -1164,7 +1164,7 @@ class DirectionalActionsTest {
                     var body = level.player.hitboxBounds();
                     float r = body.x + body.width;
                     held.clear(); held.add(Input.Keys.D);
-                    if (level.player.isOnGround() && ((r >= 3326 && r < 3336) || (r >= 3422 && r < 3442))) { held.add(jump()); pressed.add(jump()); }
+                    if (level.player.isOnGround() && ((r >= 4030 && r < 4040) || (r >= 4126 && r < 4146))) { held.add(jump()); pressed.add(jump()); }
                     frames(1);
                 }
                 held.clear();

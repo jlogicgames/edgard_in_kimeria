@@ -94,8 +94,8 @@ class TrapsLessonTest {
         pressed.clear();
     }
 
-    private static final float ROOM_X = 3088, LIP = 3328, PIT_END = 3472, PLAT_X = 3392, PLAT_END = 3424, ROOM_RIGHT = 3808;
-    private static final float STUMP_X = 3648, BLAST_LEFT = 3624, BLAST_RIGHT = 3688, CHECKPOINT_X = 3760;
+    private static final float ROOM_X = 3792, LIP = 4032, PIT_END = 4176, PLAT_X = 4096, PLAT_END = 4128, ROOM_RIGHT = 4512;
+    private static final float STUMP_X = 4352, BLAST_LEFT = 4328, BLAST_RIGHT = 4392, CHECKPOINT_X = 4464;
     private static final float WARNING = TrapWarnings.FALLING_PLATFORM_SECONDS, FUSE = TrapWarnings.DEFAULT_WARNING_SECONDS;
 
     /** A level whose hero stands in the traps room (index 5) at its safe entrance. */

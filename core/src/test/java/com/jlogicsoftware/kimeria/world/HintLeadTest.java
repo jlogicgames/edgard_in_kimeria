@@ -145,8 +145,19 @@ class HintLeadTest {
         assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
     }
 
+    /** The ladder room walk: Right held, a jump about 30 px before the thorn root (D48). */
+    private Runnable ladderDriver(Level level) {
+        return () -> {
+            Rectangle b = level.player.hitboxBounds();
+            float r = b.x + b.width;
+            held.clear(); held.add(Input.Keys.D);
+            if (level.player.isOnGround() && r >= 896 - 32 && r < 896 - 8) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+        };
+    }
+
     @Test void ladderRoomMessageIsReadableBeforeAContinuousWalkReachesTheLever() {
-        Lead lead = walk(room(1), Msg.HINT_LADDER_LEVER.t(Language.ENGLISH), 1.5f);
+        Level level = room(1);
+        Lead lead = walk(level, Msg.HINT_LADDER_LEVER.t(Language.ENGLISH), 1.5f, () -> level.player.canInteract(), ladderDriver(level));
         assertTrue(lead.fullBefore >= .9f, "Lever message fully visible for at least 1 s before the lever is in reach: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and some instruction stays on screen while the hero operates and leaves the lever: " + lead.longestGapAfter);
     }
@@ -164,7 +175,7 @@ class HintLeadTest {
             .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow().performAction();
         Lead lead = walk(level, Msg.HINT_WALL_PASS.t(Language.ENGLISH), 1.0f, () -> {
             Rectangle b = level.player.hitboxBounds();
-            return b.x + b.width >= 1760 - 2;
+            return b.x + b.width >= 2096 - 2;
         });
         assertTrue(lead.fullBefore >= .9f, "Wall message fully visible for at least 1 s before the body reaches the wall: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero passes under the wall: " + lead.longestGapAfter);
@@ -189,7 +200,7 @@ class HintLeadTest {
         Level level = room(3);
         Lead lead = walk(level, Msg.HINT_PLATFORM_RIDE.t(Language.ENGLISH), 1.0f, () -> {
             Rectangle b = level.player.hitboxBounds();
-            return b.x + b.width >= 2384 - 2;
+            return b.x + b.width >= 2880 - 2;
         });
         assertTrue(lead.fullBefore >= .9f, "Platform message fully visible for at least 1 s before the body reaches the platform: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero jumps on: " + lead.longestGapAfter);
@@ -200,7 +211,7 @@ class HintLeadTest {
         return () -> {
             Rectangle b = level.player.hitboxBounds();
             float r = b.x + b.width;
-            boolean jump = level.player.isOnGround() && ((r >= 3326 && r < 3336) || (r >= 3422 && r < 3442));
+            boolean jump = level.player.isOnGround() && ((r >= 4030 && r < 4040) || (r >= 4126 && r < 4146));
             held.clear(); held.add(Input.Keys.D);
             if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
         };
@@ -211,7 +222,7 @@ class HintLeadTest {
         Level level = room(5);
         Lead lead = walk(level, Msg.HINT_TRAP_PLATFORM.t(Language.ENGLISH), 0.5f, () -> {
             Rectangle b = level.player.hitboxBounds();
-            return b.x + b.width >= 3328;
+            return b.x + b.width >= 4032;
         }, trapsDriver(level));
         assertTrue(lead.fullBefore >= .9f, "Platform message fully visible for at least 1 s before the pit: " + lead.fullBefore);
     }
@@ -221,9 +232,68 @@ class HintLeadTest {
         Level level = room(5);
         Lead lead = walk(level, Msg.HINT_TRAP_STUMP.t(Language.ENGLISH), 1.5f, () -> {
             Rectangle b = level.player.hitboxBounds();
-            return b.x + b.width >= 3648 + 3;
+            return b.x + b.width >= 4352 + 3;
         }, trapsDriver(level));
         assertTrue(lead.fullBefore >= .9f, "Bomb message fully visible for at least 1 s before the bomb is touched: " + lead.fullBefore);
         assertTrue(lead.longestGapAfter <= .7f, "and it stays up while the hero runs clear: " + lead.longestGapAfter);
+    }
+
+    // ---- D48: one new trap in each of the ladder, wall, platform and stone rooms. The hint of each trap is up (fully
+    // visible for about a second) before a continuous walk from the entrance reaches the trap's trigger. ----
+
+    private <T> T first(Level level, Class<T> type) {
+        return level.objects.stream().filter(type::isInstance).map(type::cast).findFirst().orElseThrow();
+    }
+
+    @Test void ladderRoomThornRootMessageIsReadableBeforeAContinuousWalkReachesTheRootsZone() {
+        Level level = room(1);
+        var root = first(level, com.jlogicsoftware.kimeria.entity.objects.ThornTrap.class);
+        Lead lead = walk(level, Msg.HINT_LADDER_ROOT.t(Language.ENGLISH), 0.3f, () -> level.player.hitboxBounds().overlaps(root.triggerZone()));
+        assertTrue(lead.fullBefore >= .9f, "Root message fully visible for at least 0.9 s before the zone: " + lead.fullBefore);
+    }
+
+    @Test void wallRoomFallingBranchMessageIsReadableBeforeAContinuousWalkReachesTheBranchZone() {
+        Level level = room(2);
+        var branch = first(level, com.jlogicsoftware.kimeria.entity.objects.FallingBranch.class);
+        Lead lead = walk(level, Msg.HINT_WALL_BRANCH.t(Language.ENGLISH), 0.3f, () -> level.player.hitboxBounds().overlaps(branch.zone()));
+        assertTrue(lead.fullBefore >= .9f, "Branch message fully visible for at least 0.9 s before the zone: " + lead.fullBefore);
+    }
+
+    @Test void platformRoomFallingStoneMessageIsReadableBeforeAContinuousWalkReachesTheStoneZone() {
+        Level level = room(3);
+        var stone = first(level, com.jlogicsoftware.kimeria.entity.objects.FallingStone.class);
+        Lead lead = walk(level, Msg.HINT_PLATFORM_STONE.t(Language.ENGLISH), 0.3f, () -> level.player.hitboxBounds().overlaps(stone.zone()));
+        assertTrue(lead.fullBefore >= .9f, "Stone message fully visible for at least 0.9 s before the zone: " + lead.fullBefore);
+    }
+
+    @Test void stoneRoomStumpMessageIsReadableBeforeAContinuousWalkTouchesTheStump() {
+        Level level = room(4);
+        var stump = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::cast).findFirst().orElseThrow();
+        Lead lead = walk(level, Msg.HINT_STONE_STUMP.t(Language.ENGLISH), 0.3f, () -> level.player.hitboxBounds().overlaps(stump.triggerBox()));
+        assertTrue(lead.fullBefore >= .9f, "Stump message fully visible for at least 0.9 s before the stump is touched: " + lead.fullBefore);
+    }
+
+    /** The lever messages keep their lead now that the trap hint follows them closely (they end just before the lever is in reach). */
+    @Test void leverMessagesOfTheTrapRoomsKeepTheirLeadWithTheTrapZonesNextToThem() {
+        for (var entry : new Object[][]{{1, Msg.HINT_LADDER_LEVER}, {2, Msg.HINT_WALL_LEVER}, {3, Msg.HINT_PLATFORM_LEVER}}) {
+            Level level = room((Integer) entry[0]);
+            Lead lead = walk(level, ((Msg) entry[1]).t(Language.ENGLISH), 0.5f, () -> level.player.canInteract(), (Integer) entry[0] == 1 ? ladderDriver(level) : () -> { held.clear(); held.add(Input.Keys.D); });
+            assertTrue(lead.fullBefore >= .9f, entry[1] + ": " + lead.fullBefore);
+        }
+    }
+
+    /** #235 review: the trap's own text is still the one on the zone while the hero crosses the trap's whole column, so the next text never swaps in mid-crossing. */
+    @Test void eachTrapHintStaysTheZoneTextAcrossTheTrapsWholeColumn() {
+        Object[][] cases = {{1, Msg.HINT_LADDER_ROOT, 832f, 912f}, {2, Msg.HINT_WALL_BRANCH, 1728f, 1776f},
+            {3, Msg.HINT_PLATFORM_STONE, 2512f, 2560f}, {4, Msg.HINT_STONE_STUMP, 3488f, 3504f}};
+        for (Object[] c : cases) {
+            Level level = room((Integer) c[0]);
+            for (float x = (Float) c[2]; x <= (Float) c[3]; x += 4) {
+                level.player.position.set(x - 24, 272);
+                frame(level);
+                assertEquals(((Msg) c[1]).t(Language.ENGLISH), level.player.zoneHint(), "room " + c[0] + " centre x=" + x);
+            }
+        }
     }
 }

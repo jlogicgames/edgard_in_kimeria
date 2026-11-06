@@ -17,6 +17,7 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
+import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
@@ -93,7 +94,16 @@ class WallLessonTest {
         pressed.clear();
     }
 
-    private static final float WALL_X = 1760, WALL_RIGHT = 1808, ROOM_X = 1280;
+    private static final float WALL_X = 2096, WALL_RIGHT = 2144, ROOM_X = 1472;
+    /** The falling branch (D48): column x 1744-1776, trigger zone x 1728-1776. */
+    private static final float BRANCH_X = 1744, BRANCH_RIGHT = 1776, BRANCH_ZONE_X = 1728;
+
+    private FallingBranch branch(Level level) {
+        return level.objects.stream().filter(FallingBranch.class::isInstance).map(FallingBranch.class::cast).findFirst().orElseThrow();
+    }
+
+    /** Geometry sweeps teleport the hero into the branch's column and let him stand there; the trap has its own tests. */
+    private void withoutTheBranch(Level level) { level.objects.removeIf(FallingBranch.class::isInstance); }
 
     /** A level whose hero stands in the wall room (index 2) at its safe entrance. */
     private Level freshRoom() {
@@ -201,6 +211,7 @@ class WallLessonTest {
     @Test void withTheWallLoweredNeitherWalkingNorJumpingGetsPast() {
         for (float x = ROOM_X + 32; x <= WALL_X - 20; x += 12) {
             Level level = freshRoom();
+            withoutTheBranch(level);
             level.player.position.set(x - 24, 272);
             for (int i = 0; i < 60 * 4; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
@@ -221,10 +232,11 @@ class WallLessonTest {
 
     @Test void theWallNeverCrushesBecauseTheLeverIsOutOfReachBesideTheWallAndPastIt() {
         Level level = freshRoom();
+        withoutTheBranch(level);
         for (boolean raised : new boolean[]{false, true}) {
             if (wall(level).isRaised() != raised) wall(level).performAction();
             settle(level, 120);
-            for (float x = ROOM_X + 40; x <= ROOM_X + 600; x += 4) {
+            for (float x = ROOM_X + 40; x <= ROOM_X + 744; x += 4) {
                 level.player.position.set(x - 24, 272);
                 settle(level, 1);
                 if (level.player.canInteract())
@@ -297,6 +309,7 @@ class WallLessonTest {
      */
     @Test void messageAndLiveLabelsNeverOverlapOnTheFloorOrInTheAir() {
         Level level = freshRoom();
+        withoutTheBranch(level);
         HintGeometry geometry = new HintGeometry();
         Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
         int both = 0;
@@ -304,7 +317,7 @@ class WallLessonTest {
             if (wall(level).isRaised() != raised) wall(level).performAction();
             settle(level, 120);
             for (float standY : new float[]{272, 272 - 58})
-                for (float x = ROOM_X + 24; x <= ROOM_X + 610; x += 4) {
+                for (float x = ROOM_X + 24; x <= ROOM_X + 754; x += 4) {
                     if (!raised && x > WALL_X && x < WALL_RIGHT + 24) continue;
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
@@ -323,10 +336,11 @@ class WallLessonTest {
 
     @Test void lessonHintsCoverEveryStandingPositionInBothWallStatesAndSurviveRetry() {
         Level level = freshRoom();
+        withoutTheBranch(level);
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean raised : new boolean[]{false, true}) {
-                for (float x = ROOM_X + 24; x < ROOM_X + 624; x += 8) {
+                for (float x = ROOM_X + 24; x < ROOM_X + 768; x += 8) {
                     if (wall(level).isRaised() != raised) wall(level).performAction();
                     settle(level, 120);
                     if (!raised && x > WALL_X - 24 && x < WALL_RIGHT + 24) continue; // inside the lowered wall
@@ -345,8 +359,9 @@ class WallLessonTest {
                 }
             }
             level.resetCurrentRoom(new Player(assets, game, 0, 0));
+            withoutTheBranch(level);
         }
-        assertEquals(Set.of(Msg.HINT_WALL_LEVER.t(Language.ENGLISH), Msg.HINT_WALL_PASS.t(Language.ENGLISH)), messages);
+        assertEquals(Set.of(Msg.HINT_WALL_LEVER.t(Language.ENGLISH), Msg.HINT_WALL_BRANCH.t(Language.ENGLISH), Msg.HINT_WALL_PASS.t(Language.ENGLISH)), messages);
     }
 
     @Test void theLeverHintNamesTheActionAndFlipsWithTheState() {
@@ -364,5 +379,127 @@ class WallLessonTest {
         float seconds = frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-0-wall mastered route (walk, pull lever, walk under the wall, exit): %.2f s%n", seconds);
         assertTrue(seconds < 30, "Author check, not a novice playtest (#129-#131): " + seconds);
+    }
+
+    // ---- D48: the falling branch between the lever and the wall ----
+
+    private void step(Level level, boolean right, boolean jump) {
+        held.clear();
+        if (right) held.add(Input.Keys.D);
+        if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+        frame(level);
+    }
+
+    private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 272); settle(level, 2); }
+
+    private Level otherRoom(int index) {
+        Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
+        for (int i = 0; i < index; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
+        return level;
+    }
+
+    @Test void theBranchHangsBeforeTheLeverClearOfItAndOfTheWallAndIsTheOnlyFallingTrapHere() {
+        Level level = freshRoom();
+        FallingBranch branch = branch(level);
+        assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingTrap.class::isInstance).count());
+        assertEquals(FallingBranch.State.ARMED, branch.state());
+        assertEquals(BRANCH_X, branch.bodyBounds().x, .01f);
+        assertTrue(lever(level).getX() - (branch.bodyBounds().x + branch.bodyBounds().width) >= 128, "well clear of the lever (the branch cannot drop onto it) and before it");
+        assertTrue(WALL_X - branch.bodyBounds().x - branch.bodyBounds().width >= 96, "and well clear of the wall");
+        assertTrue(320 - (branch.bodyBounds().y + branch.bodyBounds().height) >= 48, "hangs at least 48 px above the floor, readable");
+        assertEquals(320, branch.landingBottom(), .01f, "it falls to the floor");
+        assertEquals(BRANCH_ZONE_X, branch.zone().x, .01f);
+        assertTrue(otherRoom(1).objects.stream().noneMatch(FallingBranch.class::isInstance), "no leak into the ladder room");
+        assertTrue(otherRoom(3).objects.stream().noneMatch(FallingBranch.class::isInstance), "nor into the platform room");
+    }
+
+    @Test void theBranchRustlesThenSagsForTheSharedWarningBeforeItFalls() {
+        Level level = freshRoom();
+        FallingBranch branch = branch(level);
+        placeBodyRight(level, BRANCH_ZONE_X - 30);
+        settle(level, 30);
+        assertEquals(FallingBranch.State.ARMED, branch.state());
+        assertEquals(0, branch.frame(), "resting");
+        placeBodyRight(level, BRANCH_ZONE_X + 2);
+        assertEquals(FallingBranch.State.WARNING, branch.state());
+        java.util.Set<Integer> frames = new java.util.HashSet<>();
+        while (branch.state() == FallingBranch.State.WARNING) { settle(level, 1); frames.add(branch.frame()); }
+        assertTrue(frames.contains(1) && frames.contains(2), "rustle and sag are shown: " + frames);
+        assertEquals(FallingBranch.State.FALLING, branch.state());
+    }
+
+    @Test void walkingOnPastTheBranchIsSafeFromEveryStartAndAJumpFromAnyPointOfTheZoneWorksToo() {
+        // Walking: the hero enters the zone at any speed-of-play offset and keeps going.
+        for (float from = BRANCH_ZONE_X - 60; from <= BRANCH_ZONE_X + 40; from += 4) {
+            Level level = freshRoom();
+            placeBodyRight(level, from);
+            for (int i = 0; i < 60 * 3 && bodyLeft(level) < BRANCH_RIGHT + 30; i++) {
+                step(level, true, false);
+                assertFalse(level.player.isGotHit(), "walking on from " + from + " died at " + level.player.position);
+            }
+            settle(level, 80);
+            assertFalse(level.player.isGotHit(), "from " + from);
+            assertTrue(branch(level).isSpent(), "the branch fell behind the hero");
+        }
+        // Running jumps from the whole length of the zone and the column.
+        for (float from = BRANCH_ZONE_X - 40; from <= BRANCH_RIGHT; from += 4) {
+            Level level = freshRoom();
+            placeBodyRight(level, from);
+            step(level, true, true);
+            for (int i = 0; i < 60 * 2 && bodyLeft(level) < BRANCH_RIGHT + 30; i++) {
+                step(level, true, false);
+                assertFalse(level.player.isGotHit(), "jumping on from " + from + " died at " + level.player.position);
+            }
+            settle(level, 80);
+            assertFalse(level.player.isGotHit(), "jumping from " + from);
+        }
+    }
+
+    @Test void standingStillUnderTheBranchCostsOneRetryAndTheRetryRestoresTheBranchAndTheWall() {
+        Level level = freshRoom();
+        placeBodyRight(level, BRANCH_X + 20);
+        int frames = 0;
+        while (!level.player.isGotHit() && frames++ < 60 * 4) step(level, false, false);
+        assertTrue(level.player.isGotHit(), "a hero who waits under the branch is hit");
+        level.resetCurrentRoom(new Player(assets, game, 0, 0));
+        assertEquals(FallingBranch.State.ARMED, branch(level).state(), "retry re-arms the branch");
+        assertFalse(wall(level).isRaised(), "and lowers the wall");
+        assertFalse(lever(level).isUp());
+        float seconds = solve(level) * STEP;
+        assertTrue(level.atRoomExit());
+        assertFalse(level.player.isGotHit());
+        System.out.printf(java.util.Locale.ROOT, "forest-0-wall retry after the branch: %.2f s from the entrance to the exit%n", seconds);
+        assertTrue(seconds < 15, "one cheap retry: " + seconds);
+    }
+
+    @Test void aHeroWhoStepsBackOutOfTheColumnAfterTheTriggerIsNotHurtAndTheRouteStaysOpen() {
+        Level level = freshRoom();
+        placeBodyRight(level, BRANCH_ZONE_X + 6);
+        settle(level, 2);
+        for (int i = 0; i < 60 * 2; i++) {
+            held.clear(); held.add(Input.Keys.A); frame(level);
+            assertFalse(level.player.isGotHit(), "at " + level.player.position);
+            if (bodyLeft(level) < BRANCH_ZONE_X - 40) break;
+        }
+        held.clear();
+        settle(level, 80);
+        assertTrue(branch(level).isSpent());
+        // The landed branch is scenery: the lever and the exit are still reached, wall raised.
+        solve(level);
+        assertTrue(level.atRoomExit());
+        assertFalse(level.player.isGotHit());
+    }
+
+    @Test void theBranchIsIndependentOfTheWallLeverStateAndSoftLockFree() {
+        for (boolean raisedFirst : new boolean[]{false, true}) {
+            Level level = freshRoom();
+            walkToLever(level);
+            if (raisedFirst) operate(level);
+            settle(level, 120);
+            solve(level);
+            assertTrue(level.atRoomExit(), "raisedFirst=" + raisedFirst);
+            assertTrue(branch(level).isSpent() || branch(level).state() != FallingBranch.State.FALLING);
+        }
     }
 }

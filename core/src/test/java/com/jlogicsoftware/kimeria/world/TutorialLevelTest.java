@@ -7,6 +7,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
+import com.jlogicsoftware.kimeria.tiled.TiledObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -34,8 +35,8 @@ class TutorialLevelTest {
         for (int i = 0; i < lessons.size(); i++) {
             var room = layout.rooms.get(i);
             assertEquals(lessons.get(i), markers.get(i).prop("lesson", ""));
-            // The lever room is 576 px, the ladder room 704 px (#209), the wall and platform rooms 640 px (#197, #198) the stone room 528 px (#199) and the traps room 720 px (#200), as long as one lesson needs.
-            assertEquals(i == 0 ? 576 : i == 1 ? 704 : i <= 3 ? 640 : i == 4 ? 528 : 720, room.bounds().width, "A short lesson room");
+            // The lever room is 576 px; since D48 each of the next four rooms also holds one trap and its hint lead: ladder 896 px, wall 784, platform 800, stone 736; the traps room stays 720 px (#200).
+            assertEquals(i == 0 ? 576 : i == 1 ? 896 : i == 2 ? 784 : i == 3 ? 800 : i == 4 ? 736 : 720, room.bounds().width, "A short lesson room");
             assertEquals(0, room.bounds().width % 16, "Room edges stay on the tile grid");
             assertTrue(room.bounds().contains(room.entrance().x, room.entrance().y));
             assertEquals(i < lessons.size() - 1, room.exit() != null, "Every room but the last has an exit");
@@ -48,7 +49,7 @@ class TutorialLevelTest {
         RoomLayout layout = new RoomLayout(map);
         var last = layout.rooms.get(layout.rooms.size() - 1).bounds();
         assertEquals(map.widthTiles * 16, last.x + last.width, "The tile layer ends where the last room ends");
-        assertEquals(238, map.widthTiles);
+        assertEquals(282, map.widthTiles);
         for (var o : map.layer("Hints")) assertTrue(o.x + o.width <= map.widthTiles * 16, o.name);
         for (var o : map.layer("Collisions")) assertTrue(o.x + o.width <= map.widthTiles * 16, "collision at " + o.x);
     }
@@ -62,24 +63,41 @@ class TutorialLevelTest {
         java.util.function.Function<String, Float> object = prefix -> spawn.stream().filter(o -> o.name.startsWith(prefix)).findFirst().orElseThrow().x;
         assertTrue(object.apply("Lever [41") - start.apply("forest-0-lever-torch") >= 100, "lever message leads the lever");
         assertTrue(object.apply("Ladder") - start.apply("forest-0-ladder-climb") >= 100, "climb message leads the ladder");
-        assertTrue(object.apply("Lever [53") - start.apply("forest-0-wall-lever") >= 200, "wall-lever message leads the lever");
+        assertTrue(object.apply("Lever [53") - start.apply("forest-0-wall-lever") >= 160, "wall-lever message leads the lever (160 px = 0.9 s of full text, HintLeadTest; D48 puts the branch before the lever)");
         assertTrue(object.apply("Wall [52") - start.apply("forest-0-wall-pass") >= 150, "pass message leads the wall");
-        assertTrue(object.apply("Lever [58") - start.apply("forest-0-platform-lever") >= 200, "platform-lever message leads the lever");
+        assertTrue(object.apply("Lever [58") - start.apply("forest-0-platform-lever") >= 160, "platform-lever message leads the lever (160 px = 0.9 s of full text, HintLeadTest; D48 puts the stone before the lever)");
         assertTrue(object.apply("Escalator [57") - start.apply("forest-0-platform-ride") >= 150, "ride message leads the platform");
         assertTrue(object.apply("Stone") - start.apply("forest-0-stone-throw") >= 200, "stone message leads the stone");
-        assertEquals(start.apply("forest-0-stone-throw") + hints.stream().filter(o -> "forest-0-stone-throw".equals(o.name)).findFirst().orElseThrow().width,
-            start.apply("forest-0-stone-exit"), "The stone room's message zones butt against each other");
-        assertEquals(start.apply("forest-0-stone-exit") + hints.stream().filter(o -> "forest-0-stone-exit".equals(o.name)).findFirst().orElseThrow().width,
-            start.apply("forest-0-stone-across"), "and the last one starts at the far lip, where the platform text stops being true");
+        java.util.function.BiConsumer<String, String> butt = (first, second) ->
+            assertEquals(start.apply(first) + hints.stream().filter(o -> first.equals(o.name)).findFirst().orElseThrow().width,
+                start.apply(second), first + " and " + second + " butt against each other");
+        butt.accept("forest-0-stone-throw", "forest-0-stone-stump");
+        butt.accept("forest-0-stone-stump", "forest-0-stone-exit");
+        butt.accept("forest-0-ladder-root", "forest-0-ladder-lever");
+        butt.accept("forest-0-ladder-lever", "forest-0-ladder-climb");
+        butt.accept("forest-0-ladder-climb", "forest-0-ladder-exit");
+        butt.accept("forest-0-wall-branch", "forest-0-wall-lever");
+        butt.accept("forest-0-wall-lever", "forest-0-wall-pass");
+        butt.accept("forest-0-platform-stone", "forest-0-platform-lever");
+        butt.accept("forest-0-platform-lever", "forest-0-platform-ride");
+        // D48 trap hints: the message zone starts at least 160 px (about 0.9 s of full text for a walker, HintLeadTest) before the trap's trigger.
+        java.util.function.Function<String, TiledObject> trap = type -> spawn.stream().filter(o -> type.equals(o.type)).findFirst().orElseThrow();
+        // D48: each trap comes first in its room; its hint covers the whole crossing and the next text starts beyond the trap's column.
+        java.util.function.Function<String, Float> endOf = name -> start.apply(name) + hints.stream().filter(o -> name.equals(o.name)).findFirst().orElseThrow().width;
+        assertTrue(trap.apply("ThornRoot").x - 64 - start.apply("forest-0-ladder-root") >= 160, "root message leads the root's zone");
+        assertTrue(endOf.apply("forest-0-ladder-root") >= trap.apply("ThornRoot").x + 16, "root message lasts past the root");
+        assertTrue(endOf.apply("forest-0-wall-branch") >= trap.apply("FallingBranch").x + 32, "branch message lasts past the branch column");
+        assertTrue(endOf.apply("forest-0-platform-stone") >= trap.apply("FallingStone").x + 16, "stone message lasts past the stone column");
+        assertTrue(endOf.apply("forest-0-stone-stump") >= object.apply("Stone Room Stump") + 16, "stump message lasts past the stump");
+        assertTrue(trap.apply("FallingBranch").propFloat("zoneX", 0) - start.apply("forest-0-wall-branch") >= 160, "branch message leads the branch's zone");
+        assertTrue(trap.apply("FallingStone").propFloat("zoneX", 0) - start.apply("forest-0-platform-stone") >= 160, "stone-fall message leads the stone's zone");
+        assertTrue(object.apply("Stone Room Stump") - start.apply("forest-0-stone-stump") >= 160, "stump message leads the stone-room stump");
+        butt.accept("forest-0-stone-exit", "forest-0-stone-across"); // the last one starts at the far lip, where the platform text stops being true
         assertEquals(object.apply("Lever [65"), start.apply("forest-0-stone-across"), "at the lever");
         assertTrue(object.apply("FallingPlatform") - start.apply("forest-0-traps-platform") >= 200, "platform-trap message leads the pit");
         assertTrue(object.apply("Exploding Stump") - start.apply("forest-0-traps-stump") >= 190, "stump message leads the stump");
         assertEquals(start.apply("forest-0-traps-platform") + hints.stream().filter(o -> "forest-0-traps-platform".equals(o.name)).findFirst().orElseThrow().width,
             start.apply("forest-0-traps-stump"), "The traps room's message zones butt against each other");
-        assertEquals(start.apply("forest-0-platform-lever") + hints.stream().filter(o -> "forest-0-platform-lever".equals(o.name)).findFirst().orElseThrow().width,
-            start.apply("forest-0-platform-ride"), "The platform room's message zones butt against each other");
-        assertEquals(start.apply("forest-0-wall-lever") + hints.stream().filter(o -> "forest-0-wall-lever".equals(o.name)).findFirst().orElseThrow().width,
-            start.apply("forest-0-wall-pass"), "The wall room's message zones butt against each other");
         // Message zones of one room butt against each other without a gap, so a lingering text is always replaced by a true one.
         float end = 0;
         for (String name : List.of("forest-0-walk", "forest-0-lever-torch", "forest-0-lever-exit")) {
@@ -92,6 +110,8 @@ class TutorialLevelTest {
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
         TiledMapData map = map("forest-0");
         Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint");
+        // D48: one trap in each of rooms 1-4: thorn root, falling branch, falling stone, exploding stump.
+        java.util.Map<Integer, String> newTraps = java.util.Map.of(1, "ThornRoot", 2, "FallingBranch", 3, "FallingStone", 4, "ExplosiveStump");
         Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder", "Escalator", "Stone");
         // The wall lesson (#197) adds one Trigger and its Wall Actionable in room 2; the platform lesson (#198) one Trigger and its Escalator in room 3;
         // the stone lesson (#199) a Stone, a throw-activated Trigger and a horizontal Escalator over a chasm in room 4.
@@ -101,7 +121,8 @@ class TutorialLevelTest {
             // one Trigger and its Ladder in room 1.
             boolean lesson = lessonTypes.contains(o.type) && layout.owner(o) <= 4;
             // The traps lesson (#200) adds exactly one falling platform and one exploding stump (D47, replacing the bomb) to the last room, no monster anywhere.
-            boolean trap = Set.of("ExplosiveStump", "FallingPlatform").contains(o.type) && layout.owner(o) == 5;
+            boolean trap = (Set.of("ExplosiveStump", "FallingPlatform").contains(o.type) && layout.owner(o) == 5)
+                || (newTraps.containsValue(o.type) && o.type.equals(newTraps.get(layout.owner(o))));
             assertTrue(allowed.contains(o.type) || lesson || trap, "Unexpected object: " + o.type);
             assertFalse(Set.of("RedMob", "Boss").contains(o.type), "forest-0 has no monsters");
         }
@@ -115,9 +136,11 @@ class TutorialLevelTest {
         var room1 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 1).toList();
         assertEquals(1, room1.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         assertEquals(1, room1.stream().filter(o -> "Ladder".equals(o.type)).count(), "exactly one ladder");
-        assertEquals(2, room1.size(), "the ladder room holds only its lever and ladder");
+        assertEquals(3, room1.size(), "the ladder room holds only its lever, ladder and thorn root");
+        assertEquals(1, room1.stream().filter(o -> "ThornRoot".equals(o.type)).count(), "exactly one thorn root");
         var room2 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 2).toList();
-        assertEquals(2, room2.size(), "the wall room holds only its lever and wall");
+        assertEquals(3, room2.size(), "the wall room holds only its lever, wall and falling branch");
+        assertEquals(1, room2.stream().filter(o -> "FallingBranch".equals(o.type)).count(), "exactly one falling branch");
         assertEquals(1, room2.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         var walls = room2.stream().filter(o -> "Actionable".equals(o.type)).toList();
         assertEquals(1, walls.size(), "exactly one linked object");
@@ -126,7 +149,8 @@ class TutorialLevelTest {
         assertEquals(320, walls.get(0).y + walls.get(0).height, "The wall starts lowered, standing on the floor");
         assertTrue(walls.get(0).height >= 96, "and is taller than a jump");
         var room3 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 3).toList();
-        assertEquals(2, room3.size(), "the platform room holds only its lever and platform");
+        assertEquals(3, room3.size(), "the platform room holds only its lever, platform and falling stone");
+        assertEquals(1, room3.stream().filter(o -> "FallingStone".equals(o.type)).count(), "exactly one falling stone");
         assertEquals(1, room3.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         var platforms = room3.stream().filter(o -> "Escalator".equals(o.type)).toList();
         assertEquals(1, platforms.size(), "exactly one linked moving platform");
@@ -136,7 +160,8 @@ class TutorialLevelTest {
         assertEquals(208 - 32, platforms.get(0).y - platforms.get(0).propFloat("offNeg", 0) * 32, "and rises 32 px above the ledge top so the hero can step off");
         assertTrue(platforms.get(0).propFloat("offNeg", 0) * 32 > 58, "further than a jump");
         var room4 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 4).toList();
-        assertEquals(3, room4.size(), "the stone room holds only its stone, lever and platform");
+        assertEquals(4, room4.size(), "the stone room holds only its stone, lever, platform and exploding stump");
+        assertEquals(1, room4.stream().filter(o -> "ExplosiveStump".equals(o.type)).count(), "exactly one exploding stump");
         assertEquals(1, room4.stream().filter(o -> "Stone".equals(o.type)).count(), "exactly one stone");
         assertTrue(room4.stream().filter(o -> "Stone".equals(o.type)).findFirst().orElseThrow().propBool("respawn", false), "a lost stone comes home");
         var stoneLevers = room4.stream().filter(o -> "Trigger".equals(o.type)).toList();
