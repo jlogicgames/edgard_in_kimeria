@@ -30,6 +30,15 @@ If a threshold or tolerance must change, say so in the report and in `docs/DECIS
 with the measured value and why the new number is right (D48: 200 to 160 px, D49/D50: label
 tolerance). Never raise a tolerance just to make a test pass.
 
+## Gaps written into docs must be tracked
+
+Any "not yet", "known gap", "TODO", "to be measured" or "needs upstream fix" line added to a
+design, architecture or process document (`docs/*.md`) needs an open GitHub issue **in the same
+change**, and the doc line links it (`#NNN`). The issue's checklist must include "update
+<that document>" so the note is removed or revised when the work lands. A gap that exists only
+as prose gets lost (audit of `docs/DEVELOPMENT.md`, 2026-11-06, found five untracked ones).
+When closing such an issue, remove the doc note in the same PR.
+
 ## Git in this repo
 
 - Never commit or push without the user's approval in that moment; never commit on `main`.
