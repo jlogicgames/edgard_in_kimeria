@@ -58,7 +58,7 @@ public class ExplosiveTrap extends Entity {
     /** How long the twelve blast frames play (cosmetic: the blast hurts only at the instant of detonation). */
     public static final float BLAST_SECONDS = 0.4f;
     private static final float TRIGGER_FRAME = 16f, TRIGGER_INSET_X = 3f, TRIGGER_INSET_TOP = 2f, TRIGGER_WIDTH = 10f, TRIGGER_HEIGHT = 13f;
-    /** Author-tuned: how far below the sprite's bottom the blast frame is drawn (looks only). */
+    /** Author-tuned: how far UP (world Y is down) the blast frame is lifted; 48 = 64 px frame minus a 16 px stump (looks only). */
     private static final float BLAST_DRAW_OFFSET_Y = 48f;
     private static final int FRAME_IDLE = 0, FRAME_WINDUP_FIRST = 1, WINDUP_FRAMES = 3, FRAME_SPENT = 4, BLAST_FRAMES = 12, SHEET_FRAMES = 5;
 
@@ -185,8 +185,9 @@ public class ExplosiveTrap extends Entity {
         int b = blastFrameIndex();
         if (b >= 0) {
             Rectangle box = blastBox();
-            // 32x32 art drawn at twice its size. Every frame's lowest opaque row is the frame's bottom row, so with
-            // no offset the blast stands on the sprite's bottom (#255); the author then tuned BLAST_DRAW_OFFSET_Y.
+            // 32x32 art drawn at twice its size (64 px). World Y grows DOWNWARD (camera.setToOrtho(true)), so a frame
+            // drawn at spriteBottom hangs 64 px below the sprite's top: 48 px under a 16 px stump. Subtracting
+            // BLAST_DRAW_OFFSET_Y lifts it so its bottom row sits on the stump's bottom (author-tuned, #255).
             // Looks only: the hit square (blastBox) stays centred on the object.
             batch.draw(blast[b], box.x, spriteBottom - BLAST_DRAW_OFFSET_Y, box.width, box.height);
         }
