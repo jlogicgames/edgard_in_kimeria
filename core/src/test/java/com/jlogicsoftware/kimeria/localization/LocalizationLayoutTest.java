@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
+import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
@@ -33,12 +34,18 @@ class LocalizationLayoutTest {
         return new GlyphLayout(font, text, Color.WHITE, width, Align.center, true).height;
     }
 
+    /** Wrapped line count (not a pixel threshold: the two-line limit must not depend on the font size). */
+    private static int lines(BitmapFont font, String text, float width) {
+        return new GlyphLayout(font, text, Color.WHITE, width, Align.center, true).runs.size;
+    }
+
     @Test void localizedTextFitsActualMenusDialogueHelpAndTouchBounds() {
         var previous = Gdx.files;
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont body = new MetricsFont(15), button = new MetricsFont(20), hint = new MetricsFont(13), title = new MetricsFont(30);
+            BitmapFont body = new MetricsFont(15), button = new MetricsFont(20), hint = new MetricsFont(13), title = new MetricsFont(30),
+                zone = new MetricsFont(Hud.ZONE_FONT_SIZE), context = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
             Overlay overlay = new Overlay(new Assets() {
                 @Override public BitmapFont font(int size) { return new MetricsFont(size); }
             }, 640, 360);
@@ -54,15 +61,15 @@ class LocalizationLayoutTest {
                 assertTrue(height(body, Msg.HEALER.t(language), 100) <= 20, prefix + "speaker name");
                 assertTrue(new GlyphLayout(body, language.nativeName()).width <= 260, prefix + "language name");
                 assertTrue(height(hint, Msg.MENU_HINT.t(language), 608) <= 26, prefix + "menu hint");
-                assertTrue(height(hint, Msg.FIREBALL_STOCK_FULL.t(language), 200) <= 40, prefix + "full ammunition hint");
-                // Map-authored tutorial hints are drawn 200 px wide and must stay within two lines.
+                assertTrue(lines(context, Msg.FIREBALL_STOCK_FULL.t(language), Hud.CONTEXT_WIDTH) <= 2, prefix + "full ammunition hint");
+                // Map-authored tutorial hints (#249: 39 px, 608 px wide) must stay within two lines.
                 for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
                     Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT,
                     Msg.HINT_WALL_LEVER, Msg.HINT_WALL_PASS, Msg.HINT_PLATFORM_LEVER, Msg.HINT_PLATFORM_RIDE,
                     Msg.HINT_STONE_THROW, Msg.HINT_STONE_EXIT, Msg.HINT_STONE_ACROSS,
                     Msg.HINT_TRAP_PLATFORM, Msg.HINT_TRAP_STUMP,
                     Msg.HINT_LADDER_ROOT, Msg.HINT_WALL_BRANCH, Msg.HINT_PLATFORM_STONE, Msg.HINT_STONE_STUMP})
-                    assertTrue(height(hint, message.t(language), 200) <= 40, prefix + message);
+                    assertTrue(lines(zone, message.t(language), Hud.ZONE_WIDTH) <= 2, prefix + message);
                 // Spoken healer/player lines are measured against the actual two-thirds regions
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
@@ -90,7 +97,7 @@ class LocalizationLayoutTest {
     }
 
     /**
-     * #211: the zone message (anchored 30% down the 368 px room, two lines at most, 200 px) and the widest
+     * #211: the zone message (anchored 30% down the 368 px room, two lines at most, #249: 39 px font, 608 px wide) and the widest
      * contextual stack of every language, for keyboard, gamepad (both handedness) and touch wording, on screen
      * together. Hero standing (head at world y 272) or at a jump apex (58 px higher), label anchor 12 px below
      * the head, camera 0 and 8 px down. The placed label must clear the message by the gap as rectangles.
@@ -100,8 +107,8 @@ class LocalizationLayoutTest {
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont hint = new MetricsFont(13);
-            float cap = hint.getCapHeight(), zoneWorldY = 368 * .3f;
+            BitmapFont zone = new MetricsFont(Hud.ZONE_FONT_SIZE), contextFont = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
+            float cap = contextFont.getCapHeight(), zoneCap = zone.getCapHeight(), zoneWorldY = 368 * .3f;
             for (Language language : Language.values()) {
                 String up = Msg.UP.t(language), down = Msg.DOWN.t(language);
                 for (String[] device : new String[][]{
@@ -122,14 +129,14 @@ class LocalizationLayoutTest {
                             Msg.HINT_STONE_THROW, Msg.HINT_STONE_EXIT, Msg.HINT_STONE_ACROSS,
                             Msg.HINT_TRAP_PLATFORM, Msg.HINT_TRAP_STUMP,
                     Msg.HINT_LADDER_ROOT, Msg.HINT_WALL_BRANCH, Msg.HINT_PLATFORM_STONE, Msg.HINT_STONE_STUMP}) {
-                            float contextHeight = height(hint, context, 200), zoneHeight = height(hint, message.t(language), 200);
+                            float contextHeight = height(contextFont, context, Hud.CONTEXT_WIDTH), zoneHeight = height(zone, message.t(language), Hud.ZONE_WIDTH);
                             for (float cameraY : new float[]{0, 8}) for (float contextWorldY : new float[]{284, 284 - 58}) {
                                 String where = language.code() + " " + message + " / " + context.replace('\n', '|')
                                     + " cameraY=" + cameraY + " anchor=" + contextWorldY;
                                 float zoneAnchor = 360 - (zoneWorldY - cameraY), contextAnchor = 360 - (contextWorldY - cameraY);
-                                float zoneTop = HintLayout.top(zoneAnchor, zoneHeight, cap, 360);
-                                float contextTop = HintLayout.contextTop(contextAnchor, contextHeight, true, zoneAnchor, zoneHeight, cap, 360);
-                                // Rectangles (both 200 px wide, centred): the message's bottom is above the label's top.
+                                float zoneTop = HintLayout.top(zoneAnchor, zoneHeight, zoneCap, 360);
+                                float contextTop = HintLayout.contextTop(contextAnchor, contextHeight, true, zoneAnchor, zoneHeight, cap, zoneCap, 360);
+                                // Rectangles (zone 608 px, label 300 px wide): the message's bottom is above the label's top.
                                 assertTrue(zoneTop - zoneHeight - contextTop >= HintLayout.GAP - .001, where);
                                 assertTrue(zoneTop <= 360 - HintLayout.TOP_MARGIN, where);
                                 assertTrue(contextTop - contextHeight >= 0, "label on screen: " + where);
