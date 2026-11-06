@@ -406,7 +406,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private boolean pausePressed() {
-        return Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || game.gamepad().pausePressed();
+        return Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || game.gamepad().pausePressed()
+            || (game.touch() != null && game.touch().pausePressed());
     }
 
     private void readInput() {

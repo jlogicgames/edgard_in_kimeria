@@ -25,6 +25,12 @@ import com.jlogicsoftware.kimeria.localization.Msg;
  * buttons left -- for both drawing and hit areas. Drawn and hit-tested in fixed logical
  * (640x360) space. Does nothing on devices without a touch screen.
  *
+ * <p>A small pause button sits at the top centre, in the gap between the coin/artifact HUD on the
+ * left, the fireball stock on the right and the boss bar below it (#259). It is the touch
+ * equivalent of Esc / gamepad Start. The centre of the screen is its own mirror image, so
+ * left-handed mode keeps it in place and it never collides with the mirrored stick and buttons.
+ * Unlike the stick and buttons it also works during healer dialogue ({@link #update(boolean, boolean)}).
+ *
  * <p>A finger only drives a control if it <em>started</em> on it while the game was being
  * played, so the tap that dismisses a menu can't leak into the first frame of play. Call
  * {@link #update(boolean)} once per frame before reading anything.
@@ -37,16 +43,20 @@ public class TouchControls {
     private static final float KNOB_SIZE = 32;
     private static final float STICK_DEADZONE = 0.3f;
 
+    private static final int BUTTON_ART_SIZE = 64;
     private static final float BUTTON_RADIUS = 32;
     private static final float JUMP_X = 590, JUMP_Y = 290;
     private static final float ACTION_X = 520, ACTION_Y = 318;
     private static final float SHOOT_X = 536, SHOOT_Y = 244;
 
-    private enum Control { NONE, STICK, JUMP, SHOOT, ACTION }
+    /** Pause button: drawn radius 13 (touching the top edge of the boss label), hit radius 26 = a 52 px target. */
+    public static final float PAUSE_X = 320, PAUSE_Y = 19, PAUSE_RADIUS = 13, PAUSE_HIT_RADIUS = 26;
+
+    private enum Control { NONE, STICK, JUMP, SHOOT, ACTION, PAUSE }
 
     private final GameContext game;
     private final Viewport viewport;
-    private final TextureRegion disc, jumpIcon, knob;
+    private final TextureRegion disc, jumpIcon, knob, pauseIcon;
     private final BitmapFont font;
     private final Matrix4 textProjection;
     private final float logicalWidth, logicalHeight;
@@ -59,7 +69,7 @@ public class TouchControls {
 
     private float horizontal, vertical;
     private boolean jumpHeld, shootHeld, actionHeld;
-    private boolean prevShoot, prevAction;
+    private boolean prevShoot, prevAction, prevPause, pauseHeld, pauseEdge;
     private boolean shootEdge, actionEdge;
     private float knobDx, knobDy;
 
@@ -76,6 +86,7 @@ public class TouchControls {
         this.logicalHeight = logicalHeight;
         this.disc = assets.region("images/HUD/Joystick.png", 0, 0, 64, 64);
         this.jumpIcon = assets.region("images/HUD/JumpButton.png", 0, 0, 64, 64);
+        this.pauseIcon = assets.region("images/HUD/PauseButton.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.knob = assets.region("images/HUD/Knob.png", 0, 0, 32, 32);
         this.font = assets.font(13);
 
@@ -93,11 +104,19 @@ public class TouchControls {
 
     /** @param active true while the game is being played; touches are ignored (and unclaimed) otherwise. */
     public void update(boolean active) {
+        update(active, active);
+    }
+
+    /**
+     * @param active   true while the game is being played; stick and action touches are ignored otherwise
+     * @param pausable true while the pause button may be pressed (playing, or healer dialogue)
+     */
+    public void update(boolean active, boolean pausable) {
         if (previousLayout != game.leftHanded()) {
             java.util.Arrays.fill(claimed, Control.NONE);
             previousLayout = game.leftHanded();
         }
-        boolean stick = false, jump = false, shoot = false, action = false;
+        boolean stick = false, jump = false, shoot = false, action = false, pause = false;
         float dx = 0, dy = 0;
         float stickX = x(STICK_X);
 
@@ -112,9 +131,14 @@ public class TouchControls {
                 viewport.unproject(touch);
                 if (!seen[p]) {
                     seen[p] = true;
-                    claimed[p] = active ? hitTest(touch.x, touch.y) : Control.NONE;
+                    Control hit = hitTest(touch.x, touch.y);
+                    claimed[p] = active || (pausable && hit == Control.PAUSE) ? hit : Control.NONE;
                 }
-                if (!active) { claimed[p] = Control.NONE; continue; }
+                if (!pausable && claimed[p] == Control.PAUSE) claimed[p] = Control.NONE;
+                if (!active) {
+                    if (claimed[p] == Control.PAUSE) pause = true; else claimed[p] = Control.NONE;
+                    continue;
+                }
                 switch (claimed[p]) {
                     case STICK -> {
                         stick = true;
@@ -124,6 +148,7 @@ public class TouchControls {
                     case JUMP -> jump = true;
                     case SHOOT -> shoot = true;
                     case ACTION -> action = true;
+                    case PAUSE -> pause = true;
                     default -> { }
                 }
             }
@@ -139,6 +164,9 @@ public class TouchControls {
         actionHeld = action;
         shootEdge = shoot && !prevShoot;
         actionEdge = action && !prevAction;
+        pauseHeld = pause;
+        pauseEdge = pause && !prevPause;
+        prevPause = pause;
         prevShoot = shoot;
         prevAction = action;
     }
@@ -149,6 +177,7 @@ public class TouchControls {
     }
 
     private Control hitTest(float x, float y) {
+        if (inCircle(x, y, x(PAUSE_X), PAUSE_Y, PAUSE_HIT_RADIUS)) return Control.PAUSE;
         if (inCircle(x, y, x(JUMP_X), JUMP_Y, BUTTON_RADIUS * 1.2f)) return Control.JUMP;
         if (inCircle(x, y, x(ACTION_X), ACTION_Y, BUTTON_RADIUS * 1.2f)) return Control.ACTION;
         if (inCircle(x, y, x(SHOOT_X), SHOOT_Y, BUTTON_RADIUS * 1.2f)) return Control.SHOOT;
@@ -186,6 +215,19 @@ public class TouchControls {
         return actionEdge;
     }
 
+    /** Edge-triggered: true for the one frame a finger goes down on the pause button. */
+    public boolean pausePressed() {
+        return pauseEdge;
+    }
+
+    /** Draws only the pause button, for screens that show no stick (healer dialogue). */
+    public void renderPauseButton(SpriteBatch batch) {
+        if (!available) return;
+        float cx = x(PAUSE_X);
+        drawButton(batch, pauseIcon, cx, PAUSE_Y, PAUSE_RADIUS, pauseHeld);
+        batch.setColor(Color.WHITE);
+    }
+
     public void render(SpriteBatch batch) {
         if (!available) return;
 
@@ -199,6 +241,7 @@ public class TouchControls {
         drawButton(batch, jumpIcon, jumpX, JUMP_Y, BUTTON_RADIUS, jumpHeld);
         drawButton(batch, disc, actionX, ACTION_Y, BUTTON_RADIUS, actionHeld);
         drawButton(batch, disc, shootX, SHOOT_Y, BUTTON_RADIUS * 0.85f, shootHeld);
+        renderPauseButton(batch);
         batch.setColor(Color.WHITE);
 
         var lang = game.language();
