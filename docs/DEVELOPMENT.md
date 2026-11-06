@@ -301,7 +301,7 @@ parts that shape the code:
 ## Assets
 
 Images, audio and the original Tiled maps come from the Flame project's `assets/`.
-`forest-3` has since been extended to three rooms in the same tileset.
+`forest-2` has since been extended to three rooms in the same tileset.
 Fonts (`NanoPlus.ttf`, `QuestSquare.ttf`) and `main_menu.mp3`/`button_click.wav` are pulled
 from the Rust version, which has them and the Flame baseline doesn't. `button_click.wav`
 needed re-encoding from `WAVE_FORMAT_EXTENSIBLE` to plain PCM — libGDX's WAV decoder

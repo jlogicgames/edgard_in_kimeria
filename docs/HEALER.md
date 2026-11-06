@@ -84,7 +84,7 @@ state is written to the level-only save.
 
 ## Recipe, payment and encounter boundary
 
-- Require secured Bat and Mushroom from `forest-3` and every authored coin identity from that
+- Require secured Bat and Mushroom from `forest-2` and every authored coin identity from that
   level. The current map has six coins. Pending pickups become secured at healer entry;
   prior-level currency cannot replace a missing forest coin. Empty authored coin sets never
   qualify. Each pickup identity is counted once, including after repeated visits/deaths.
@@ -304,7 +304,7 @@ in the five `assets/localization/*.json` catalogs, addressed by typed `Msg` keys
 no new destination, quest or explanation of the darkness is added.
 
 A fresh final advance emits CONTINUE once. KimeriaGame then performs its existing
-level completion: secures pickups, and, as `forest-3` is the last level, opens the ending
+level completion: secures pickups, and, as `forest-2` is the last level, opens the ending
 scroll instead of wrapping. No save is written at dialogue entry,
 and no dialogue/checkpoint flag is persisted; see [MVP.md](MVP.md).
 Paused Restart Level still restarts the

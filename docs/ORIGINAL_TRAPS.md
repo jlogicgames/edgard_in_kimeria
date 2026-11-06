@@ -364,7 +364,7 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
   stump/root replacing the bomb. **Implemented, see D47** (types `ExplosiveStump`,
   `ExplosiveRoot`; touch or a fireball / thrown stone from afar lights them; every one needs a
   floor bypass at load; the `forest-0-traps` bomb is replaced by a stump; the old `Bomb` type
-  stays and `forest-3` still has one).
+  stays and `forest-2` still has one).
 - [#234](https://github.com/jlogicgames/edgard_in_kimeria/issues/234): code D, rhythm traps
   (puffball, vine) and the rotten-log skin. **Implemented, see D46** (types `Puffball`,
   `ThornVine`, property `skin=log`; not placed in any shipped level, #235 does that).

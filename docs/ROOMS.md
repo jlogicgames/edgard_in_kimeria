@@ -10,14 +10,14 @@ the earlier test-version acceptance. Its automated route checks pass, but the ne
 spacing still needs the targeted human readability check recorded below. Earlier
 author acceptance must not be read as evidence for a later map layout.
 
-The MVP first level is `forest-1`; the second and last is the boss level `forest-3`
-(intended Forest order: `forest-0` → `forest-1` → (`forest-2`?) → `forest-3`, [D32](DECISIONS.md#d32-forest-level-order-and-identity)). A level is one TMX map
-containing an ordered chain of rooms. `forest-3` has three
+The MVP first level is `forest-1`; the second and last is the boss level `forest-2`
+(intended Forest order: `forest-0` → `forest-1` → `forest-2`, [D32](DECISIONS.md#d32-forest-level-order-and-identity)). A level is one TMX map
+containing an ordered chain of rooms. `forest-2` has three
 rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` is the unmarked, single-room first level; its checkpoint leads to `forest-3`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` is the unmarked, single-room first level; its checkpoint leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -80,7 +80,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    RoomExit; no enemies, and hazards only in the traps lesson (D40), where the last room ends at the level's `Checkpoint` instead of a RoomExit). Add only that lesson's objects/collisions. One new element per room, except the four middle rooms of `forest-0`, which also hold one forest trap each after the lever (author decision D42, [D48](DECISIONS.md#d48-traps-in-the-tutorial-rooms-one-new-trap-per-lesson-room)): put the trap first (entrance, trap, lever, object): its hint covers the whole crossing, the next text starts beyond the trap's column, each text has at least about 160 px from its zone start to what it warns about (~0.9 s of full text, `HintLeadTest`), and the lesson's object stays within 316 px of the lever's reach (the lesson tests assert one screen), which only the trap-first order allows.
    **Ceiling:** do not author one. `Level` closes every room from above with an invisible 64 px slab whose underside is the
    room's top edge (y=0), so the clamberable side walls cannot be wall-jumped over the top ([D38](DECISIONS.md#d38-every-room-has-an-invisible-ceiling), #215).
-   Keep the side walls and any ledge walls inside the room (`RoomCeilingTest` checks every room of forest-0, forest-1 and forest-3).
+   Keep the side walls and any ledge walls inside the room (`RoomCeilingTest` checks every room of forest-0, forest-1 and forest-2).
 2. **Object + link.** Put the mechanism in `SpawnPoints` as type `Actionable` with property `type` = `Torch` or
    `Wall` (`check_tiled_links.py` rejects anything else; a moving platform is instead a SpawnPoints `Escalator` with `isVertical`, `offNeg`/`offPos` in 32 px units and `running`=false, linked the same way; a Torch starts dark with `Intensity` = 0, lit with a
    positive value; a Trigger that a *thrown* carryable should operate, not the hero's Up + Action, gets the bool property `throwActivated` = true, see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule), and must stand where the hero cannot overlap it; a Stone with the bool `respawn` = true returns to where it was authored when it falls out of the room or hits such a lever). Add a `Trigger` with property `target` (type *object*) = the mechanism's id. Names are written by
@@ -133,7 +133,7 @@ Authoring recipe for `ExplosiveStump` (16x16) and `ExplosiveRoot` (16x24), which
 - **Choice rule (author, D42/D47):** on a required path an explosive offers *pay with ammunition from a distance (fireball, or a thrown stone for free)* or *the riskier bypass (jump over it)*; the required route never needs ammunition (D26). The validator guarantees the bypass; the author guarantees the player can see both answers. If you also want a higher ledge route, add it as an extra: the validator does not trace routes, so it never replaces the floor bypass.
 - **Fairness numbers to keep:** the blast square reaches 32 px either side of the centre, so a hero 33 px or more from the centre (body edge) is safe; the warning leaves time to step out of it (a hero who walks on through a lit stump is clear when it goes off: tested in the forest-0 room). A hit from afar gives the full warning, so a hero standing within 32 px of the centre must still step away.
 - **Hint advice for #235:** a position-only zone that starts at least 200 px before the trap and says the rule of the trap (not its state), e.g. "A touched stump smokes, then explodes. Jump over it or run clear" (`HINT_TRAP_STUMP`). Where the lesson teaches the choice (the stone room in the tutorial plan), add a second sentence that a thrown stone or a fireball sets it off from afar, in all five languages, at most two lines at 200 px. Do not say "the stump is dark/lit"; zones know nothing about the trap's state.
-- **Tests to copy:** `ExplosiveTrapsTest` (headless, fixtures `explosive-test.tmx`, `explosive-shield.tmx` and the `explosive-bad-*` maps: `corridor`, `pit`, `pillar`, `entrance`) and `TrapsLessonTest` for a real room. The old `Bomb` type still exists and still loads (`forest-3.tmx` has one) but is not used for new rooms.
+- **Tests to copy:** `ExplosiveTrapsTest` (headless, fixtures `explosive-test.tmx`, `explosive-shield.tmx` and the `explosive-bad-*` maps: `corridor`, `pit`, `pillar`, `entrance`) and `TrapsLessonTest` for a real room. The old `Bomb` type still exists and still loads (`forest-3.tmx` (now `forest-2.tmx`) has one) but is not used for new rooms.
 
 ## Transition and retry
 
@@ -262,8 +262,8 @@ coins. The `forest-1` course has no collectables, so it needs no separate detour
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
 | `forest-1` / unmarked room | 1280 px | 11.58 s | None | Within 20 s |
-| `forest-3` / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
-| `forest-3` / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
+| `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
+| `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
 The revised canopy is 608 px shorter than its previous 1280 px layout (47.5%).
 Its required route has no bomb or quicksand; the ascending platforms and their
@@ -304,7 +304,7 @@ and record new timings as part of that change.
 
 Measured map SHA-256 values:
 
-- `forest-3.tmx`: `bf227d733af41d97f575b1d16bcebb6cf408590b26f19510942ffc19f2b88f96`
+- `forest-3.tmx` (now `forest-2.tmx`): `bf227d733af41d97f575b1d16bcebb6cf408590b26f19510942ffc19f2b88f96`
 - `forest-1.tmx`: `1ae0a0ce7b92582010462d55b7688385974e831ae34de904a5f542249a02206e`
 
 ## Completed test-version review and historical evidence
@@ -313,7 +313,7 @@ Measured map SHA-256 values:
 
 The author accepted the existing Bat and Mushroom positions as final for the MVP on
 2026-10-19: Bat is object 94 at (448, 240), Mushroom is object 95 at (1728, 208) in
-`forest-3.tmx`. Keep these placements; no relocation or additional artifact challenge
+`forest-3.tmx` (now `forest-2.tmx`). Keep these placements; no relocation or additional artifact challenge
 paths are planned for this MVP. Collection remains optional for completion.
 
 The pre-release artifact checklist is maintained in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#rooms-pickups-and-traps).
@@ -351,7 +351,7 @@ An early/middle/late visual comparison confirmed the original plume rising from
 the lower part of the quad. The noise loops and draw size are unchanged. This is
 an isolated shader check, not a full gameplay playtest.
 
-Actual desktop capture follow-up on 2026-10-14: running `forest-3` at a 0.001 s
+Actual desktop capture follow-up on 2026-10-14: running `forest-3` (now `forest-2`) at a 0.001 s
 world step reproduced the below-ground explosion at approximately 0.05 s into
 the effect. The shader-only check missed libGDX's `TextureRegion` adjustment of
 a 1x1 texture to UV 0.25..0.75. That moved the 0.85 ground origin outside the
@@ -405,15 +405,15 @@ the hero can see the trap move. No hint text exists yet; #235 adds it.
 
 Rule for the two levels: teach each of stomp, sword, falling platforms and bombs where
 it is the only new thing on screen, on forgiving ground and without a required timing
-test, then combine. `forest-3` (level one) teaches; `forest-1` (level two, the finale)
+test, then combine. `forest-3` (now `forest-2`) (level one) teaches; `forest-1` (level two, the finale)
 combines. Optional routes stay separate from required progression; nothing here is
 tuned around coins, and no coin or artifact was added, moved or removed.
 
-Current teaching-layout identity (`9d5e630`): `git hash-object` of `forest-3.tmx` is `619bf64b559a`, of `forest-1.tmx`
+Current teaching-layout identity (`9d5e630`): `git hash-object` of `forest-3.tmx` (now `forest-2.tmx`) is `619bf64b559a`, of `forest-1.tmx`
 `44fbc6aa95c3`. Positions are map pixels (16 px per tile; SpawnPoints carry a -16 px
 layer offset that this text already includes in the visible position).
 
-### `forest-3` / `forest-entry` (required route, left to right)
+### `forest-3` (now `forest-2`) / `forest-entry` (required route, left to right)
 
 | x | What appears | Role |
 | ---: | --- | --- |
@@ -432,7 +432,7 @@ and bomb were the first two things met and overlapped. The bomb is now about 470
 beyond the first mob and the bat patrol and the second mob's zone were pulled back so that
 the blast square (about 624–688) and a running escape of about 64 px overlap neither.
 
-### `forest-3` / `forest-canopy`
+### `forest-3` (now `forest-2`) / `forest-canopy`
 
 | x | What appears | Role |
 | ---: | --- | --- |
@@ -507,14 +507,14 @@ learning as specified above. The recorded runs do not measure first learning.
 These timings were rechecked on the teaching layout during the merge review on
 2026-10-20. Current map SHA-256 identities (distinct from the historical values above):
 
-- `forest-3.tmx`: `83adfbbf997718092e33c8b4ac952483f4edad244d1864f26afb4f735de4436d`
+- `forest-3.tmx` (now `forest-2.tmx`): `83adfbbf997718092e33c8b4ac952483f4edad244d1864f26afb4f735de4436d`
 - `forest-1.tmx`: `1ae0a0ce7b92582010462d55b7688385974e831ae34de904a5f542249a02206e`
 
 | Level / room | Required route | All room coins |
 | --- | ---: | ---: |
 | `forest-1` / unmarked | 11.58 s | No coins |
-| `forest-3` / `forest-entry` | 16.27 s | 20.00 s |
-| `forest-3` / `forest-canopy` | 5.00 s | 5.00 s |
+| `forest-3` (now `forest-2`) / `forest-entry` | 16.27 s | 20.00 s |
+| `forest-3` (now `forest-2`) / `forest-canopy` | 5.00 s | 5.00 s |
 
 At normal speed, the entry required route uses a fresh jump before the second wall. The
 coin route pauses beside the upper coin for a ground jump into it from below the one-way
@@ -564,7 +564,7 @@ stick to the viewport edge. Mechanism lessons remain repeatable after it expires
 Retry/collection return
 keeps this rule; no persistent lesson-completion flags are introduced.
 
-2026-10-22, `forest-3.tmx` SHA-256 `9d74c49bf53afefbaa6c86d020dffc0d4288a37386f911dbfb7e0261decd5b06`:
+2026-10-22, `forest-3.tmx` (now `forest-2.tmx`) SHA-256 `9d74c49bf53afefbaa6c86d020dffc0d4288a37386f911dbfb7e0261decd5b06`:
 added optional entrance objects 116 (stone), 117 (portable torch), 118 (trigger)
 and 119 (linked light). Collision geometry, enemies and collection identities are
 unchanged. See [the control contract and dependencies](DIRECTIONAL_CONTROLS.md).
@@ -593,7 +593,7 @@ acceptance. The optional practice objects are not required route steps.
 
 ### Close interaction revision (2026-10-22)
 
-Current `forest-3.tmx` SHA-256:
+Current `forest-3.tmx` (now `forest-2.tmx`) SHA-256:
 `d883340f605dc849290d33395841a9de26f19070b9064d99eb9296d2dd405742`.
 Objects 116/117 retain their IDs and positions. Trigger 118 is local to the practice
 light (x=108, width=16); light 119 is at hand height (authored y=306, before -16 layer
@@ -626,7 +626,7 @@ changes the active room, collision, hero position or visible carryable attachmen
 
 Local map identities (pending commit/review):
 
-- `forest-3.tmx` SHA-256: `3809d6b20bbb0672a8ca332ef036ac74b0a510790afad7968adb1ebdbe23f912`.
+- `forest-3.tmx` (now `forest-2.tmx`) SHA-256: `3809d6b20bbb0672a8ca332ef036ac74b0a510790afad7968adb1ebdbe23f912`.
 - `forest-1.tmx` SHA-256: `0f937265c9dda74b5027b6016e85ec8fa622a5b8a9d1b5fae667bb59e6814e3f`.
 
 Only one optional `FireballRefill` object is added per map; collision geometry,
@@ -667,7 +667,7 @@ acceptance remains in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).
 
 ## Ladder practice revision (#99, historical)
 
-`forest-3.tmx` SHA-256 `bdd719de7af0ccc56302322777072f48e3316cd3ccffc1aaa621876d61cc32c3`. Added to `forest-entry`:
+`forest-3.tmx` (now `forest-2.tmx`) SHA-256 `bdd719de7af0ccc56302322777072f48e3316cd3ccffc1aaa621876d61cc32c3`. Added to `forest-entry`:
 one-way ledge collision 122 (416, 240, 64×16) with matching Background tiles, and `Ladder`
 object 123 (`first-ladder`, SpawnPoints x 416, y 256 before the -16 layer offset, so the
 climbable span is world y 240–320, five 16 px frames). The Bat (id 94) already hovers at
@@ -687,7 +687,7 @@ ladder foot; it is not a taught mechanic here. This is a scripted check, not a h
 
 ## Toggle ladder update (2026-10-26)
 
-Current `forest-3.tmx` SHA-256: `df609760fe2f15f8d34995117c579c99ab19052fee0819b4295a1b3af6827a2a`.
+Current `forest-3.tmx` (now `forest-2.tmx`) SHA-256: `df609760fe2f15f8d34995117c579c99ab19052fee0819b4295a1b3af6827a2a`.
 Map update (#194, 2026-11-04): the file was `forest.tmx` before this rename. Map-level properties
 `fireflies`, `healerBeforeBoss`, `ingredients` and `tutorialRoom` now configure the level
 ([D32](DECISIONS.md#d32-forest-level-order-and-identity)); no geometry changed. Current SHA-256:

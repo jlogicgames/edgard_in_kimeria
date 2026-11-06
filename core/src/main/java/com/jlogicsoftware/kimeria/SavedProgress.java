@@ -23,7 +23,7 @@ public final class SavedProgress {
         if (preferences == null || !preferences.contains(Settings.KEY_NEXT_LEVEL)) return;
         try {
             int saved = preferences.getInteger(Settings.KEY_NEXT_LEVEL);
-            // A save without a level-order key predates forest-0 (index 0 = forest-1, 1 = forest-3):
+            // A save without a level-order key predates forest-0 (index 0 = forest-1, 1 = forest-2, then named forest-3):
             // every such index moves by the one level inserted in front.
             if (saved >= 0 && !preferences.contains(Settings.KEY_LEVEL_ORDER)) saved += LEGACY_INDEX_SHIFT;
             if (saved >= 0 && saved < levelCount) nextLevel = saved;

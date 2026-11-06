@@ -444,7 +444,7 @@ class FallingTrapsTest {
     }
 
     @Test void onlyForestZeroUsesTheFallingTrapsOneBranchInTheWallRoomAndOneStoneInThePlatformRoom() {
-        for (String map : new String[]{"forest-1", "forest-3"}) {
+        for (String map : new String[]{"forest-1", "forest-2"}) {
             String text = Gdx.files.internal("tiles/" + map + ".tmx").readString();
             assertFalse(text.contains("FallingBranch") || text.contains("FallingStone"), map);
             assertTrue(load(map).objects.stream().noneMatch(FallingTrap.class::isInstance), map);

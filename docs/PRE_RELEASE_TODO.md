@@ -57,7 +57,7 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
 
 - [ ] Artifact pickup/rollback/retention and optional completion:
 
-  In `forest-3`, collect Bat in room one: it disappears and its icon appears after the
+  In `forest-2`, collect Bat in room one: it disappears and its icon appears after the
   coin count without increasing that count. Die before leaving: the icon disappears and
   Bat returns. Collect it again and leave the room: a later death must keep Bat.
   Repeat for Mushroom in room two, then enter the boss chamber to secure both. Restart Level
@@ -66,7 +66,7 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
 
 - [ ] Bomb timing, readability, lethal area and cleanup:
 
-  With Assist off, touch a bomb in `forest-3`: contact must be safe, the sprite must
+  With Assist off, touch a bomb in `forest-2`: contact must be safe, the sprite must
   alternate warm tint and normal art for 0.8 s, then explode once. Repeat with
   Assist on (1.2 s). Check readability against the forest background at normal
   scale; the bomb must stay visible throughout. Repeated contact must not restart
@@ -80,7 +80,7 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
 
 - [ ] Room transitions and retries:
 
-  Start New Game and reach `forest-3` (the first level) through the opening, with
+  Start New Game and reach `forest-2` (the first level) through the opening, with
   invulnerability off. Walk through the original room to its far-right
   exit and verify fade out, a black midpoint, and fade in at the second entrance,
   with an idle hero and no camera travel. Walk the ascending platforms in room two
