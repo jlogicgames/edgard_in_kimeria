@@ -29,7 +29,7 @@ import java.util.function.Supplier;
  *       runs to the end: leaving the trigger box does not cancel it.
  *   <li><b>Blast</b>: one {@value #BLAST_SIZE} px square centred on the object, checked once at the instant of
  *       detonation; the hero inside it is killed ({@code kill}, i.e. {@code player.collidedWithActor(false)}
- *       as the old bomb did). The four blast frames then play for {@link #BLAST_SECONDS} without hurting.
+ *       as the old bomb did). The twelve blast frames then play for {@link #BLAST_SECONDS} without hurting.
  *   <li><b>Spent</b>: charred, harmless, non-solid scenery that stays where it is until the room is rebuilt
  *       by a retry or Restart Level; leaving the room alive and coming back keeps it spent (room-state retention, as the bomb).
  * </ul>
@@ -55,10 +55,10 @@ public class ExplosiveTrap extends Entity {
 
     /** The existing bomb blast: a 64x64 square centred on the object. */
     public static final float BLAST_SIZE = 64f;
-    /** How long the four blast frames play (cosmetic: the blast hurts only at the instant of detonation). */
+    /** How long the twelve blast frames play (cosmetic: the blast hurts only at the instant of detonation). */
     public static final float BLAST_SECONDS = 0.4f;
     private static final float TRIGGER_FRAME = 16f, TRIGGER_INSET_X = 3f, TRIGGER_INSET_TOP = 2f, TRIGGER_WIDTH = 10f, TRIGGER_HEIGHT = 13f;
-    private static final int FRAME_IDLE = 0, FRAME_WINDUP_FIRST = 1, WINDUP_FRAMES = 3, FRAME_SPENT = 4, BLAST_FRAMES = 4, SHEET_FRAMES = 5;
+    private static final int FRAME_IDLE = 0, FRAME_WINDUP_FIRST = 1, WINDUP_FRAMES = 3, FRAME_SPENT = 4, BLAST_FRAMES = 12, SHEET_FRAMES = 5;
 
     private final Kind kind;
     private final TrapWarnings warnings;
@@ -170,7 +170,7 @@ public class ExplosiveTrap extends Entity {
         };
     }
 
-    /** Blast frame (0..3) while the blast plays, else -1. */
+    /** Blast frame (0..11) while the blast plays, else -1. */
     public int blastFrameIndex() {
         return phase == Phase.BLAST ? Math.min(BLAST_FRAMES - 1, (int) (phaseTime / BLAST_SECONDS * BLAST_FRAMES)) : -1;
     }

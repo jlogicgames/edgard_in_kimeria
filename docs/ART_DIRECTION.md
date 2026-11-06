@@ -233,7 +233,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | --- | --- | --- | --- |
 | `trap-stump` | 16×16 | idle, windup1, windup2, windup3, spent | exploding stump: cracks, smoke, glow; charred remains |
 | `trap-root` | 16×24 | idle, windup1, windup2, windup3, spent | exploding root, same wind-up language |
-| `trap-blast` | 32×32 | blast1..blast4 | fireball, ring with smoke core, fading smoke; the gameplay blast is 64×64 px, so draw at 2× (nearest) or keep the sprite as the visual core |
+| `trap-blast` | 32×32 | blast1..blast12 | 12 steps (#250): pale ball, orange ball with sparks, burst of puffs with a ground ring, fire mushroom under a dark-brown smoke cap, brown smoke saucer, ring, fade; the gameplay blast is 64×64 px, so draw at 2× (nearest) or keep the sprite as the visual core |
 | `trap-thorn-root` | 16×24 | hidden, peek1, peek2, rising, up | bone-coloured stake; peek1/peek2 is the wobble |
 | `trap-thorn-tuft` | 16×16 | calm, bristle, spiked | crimson-magenta stems with bone tips, deliberately not green like the bushes |
 | `trap-branch` | 32×16 | resting, rustle, sag, falling | rustle = leaves shake, sag = drooping with a split at the trunk |
@@ -279,7 +279,7 @@ integrate and playtest: stump and thorn root (the stump's third wind-up frame is
 cracks and heavy smoke on an intact stump, so the blast frames carry the explosion; the root's
 wind-up follows the same rule), thorn tuft, stone, puffball. Acceptable but rough, to be
 redrawn by a human artist: root (reads as a spike), branch (contrast was raised with a lighter
-wood and leaf palette, still thin on dark ground), blast (symmetric blobs; **the blast is 32×32
+wood and leaf palette, still thin on dark ground), blast (redrawn in #250 after the author disliked the first one: 12 frames, fire mushroom and brown smoke saucer in the spirit of an author-supplied reference, nothing copied; **the blast is 32×32
 and needs 2× nearest scaling to cover the 64×64 gameplay blast area**), spore clouds (cloud3 is
 now an irregular puff), shadow (a k/d checker standing in for translucency, readable on night,
 canopy and trunk backgrounds but unproven on the real floor), vine (thin stem, small thorns,
