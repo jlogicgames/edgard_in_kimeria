@@ -269,7 +269,7 @@ checks grid, layout and shipped PNG agree.
   grids. `tools/forest_trap_sprites.py` only parses and converts them (no ImageDraw, no
   `putpixel`), so the scanner passes, but a reviewer may argue this is still hand-painted art
   by code-adjacent means. The scanner was not loosened.
-- The blast is drawn at 32×32 native, not the 64×64 gameplay blast area.
+- The blast is drawn at 32×32 native, not the 64×64 gameplay blast area. Every blast frame's lowest opaque row is the frame's last row, and `ExplosiveTrap.render` stands the 2× frame on the trap sprite's bottom (#255), so the blast sits on the stump's base and floor line instead of starting underground (the hit square stays centred on the object; `docs/references/forest-traps/blast-on-floor-preview.png` shows stump and floor).
 - Vine swing frames: `swing-left` is hand-laid, `swing-right` is a mirror copy; the left/right
   stem offsets were laid out systematically rather than drawn freehand.
 

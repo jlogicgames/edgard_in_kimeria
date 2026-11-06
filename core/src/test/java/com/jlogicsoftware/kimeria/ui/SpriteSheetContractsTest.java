@@ -32,6 +32,23 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_LOG, 3, 1);
     }
 
+    /** #255: the blast is drawn standing on the stump's base, so each frame's lowest opaque row is its last row. */
+    @Test void everyBlastFrameRestsOnItsBottomRow() throws Exception {
+        var sheet = SpriteSheets.TRAP_BLAST;
+        java.awt.image.BufferedImage png;
+        try (var input = getClass().getClassLoader().getResourceAsStream(sheet.path())) {
+            assertNotNull(input, sheet.path());
+            png = javax.imageio.ImageIO.read(input);
+        }
+        for (int frame = 0; frame < 12; frame++) {
+            boolean bottomRowHasArt = false;
+            for (int x = 0; x < sheet.width(); x++) {
+                bottomRowHasArt |= (png.getRGB(frame * sheet.width() + x, sheet.height() - 1) >>> 24) != 0;
+            }
+            assertTrue(bottomRowHasArt, "blast frame " + frame + " floats above the stump's base");
+        }
+    }
+
     private void matches(SpriteSheets.Sheet sheet, int columns, int rows) throws Exception {
         try (var input = getClass().getClassLoader().getResourceAsStream(sheet.path())) {
             assertNotNull(input, sheet.path());

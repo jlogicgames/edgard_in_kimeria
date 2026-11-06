@@ -178,11 +178,15 @@ public class ExplosiveTrap extends Entity {
     @Override
     public void render(Batch batch) {
         float w = kind.sheet.width(), h = kind.sheet.height();
-        batch.draw(frames[frameIndex()], position.x + (size.x - w) / 2f, position.y + size.y - h, w, h);
+        float spriteBottom = position.y + size.y - h;
+        batch.draw(frames[frameIndex()], position.x + (size.x - w) / 2f, spriteBottom, w, h);
         int b = blastFrameIndex();
         if (b >= 0) {
             Rectangle box = blastBox();
-            batch.draw(blast[b], box.x, box.y, box.width, box.height); // 32x32 art drawn at twice its size
+            // 32x32 art drawn at twice its size. Every frame's lowest opaque row is the frame's bottom row, so
+            // standing the frame on the sprite's bottom puts the blast on the floor, not below it (#255). Looks
+            // only: the hit square (blastBox) stays centred on the object.
+            batch.draw(blast[b], box.x, spriteBottom, box.width, box.height);
         }
     }
 
