@@ -5,7 +5,7 @@ import java.util.function.Function;
 
 /** Single charset contract for the font baker and shipped-font validation. */
 public final class FontCharacters {
-    public static final int[] SIZES = {13, 15, 20, 30, 39};
+    public static final int[] SIZES = {13, 15, 20, 30};
     // Retain the complete alphabets even when a current translation does not use every letter.
     private static final String ALPHABETS = "ąćęłńóśźżĄĆĘŁŃÓŚŹŻäöüÄÖÜß"
         + "АБВГДЕЁЖЗІЙКЛМНОПРСТУЎФХЦЧШЫЬЭЮЯабвгдеёжзійклмнопрстуўфхцчшыьэюя";
