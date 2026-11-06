@@ -14,8 +14,8 @@ Flutter/Flame version (with reference to its separate Rust/Bevy version for feat
 full menu system, localization, gamepad support, dev hotkeys).
 
 The MVP has three playable levels: the tutorial **forest-0** (six empty rooms), **forest-1**
-(one room), then **forest-3** (three rooms, healer and boss). The Forest order is
-`forest-0` → `forest-1` → (`forest-2`?) → `forest-3` ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
+(one room), then **forest-2** (three rooms, healer and boss). The Forest order is
+`forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
 removed. Future mechanics will expand these same levels. See [MVP](MVP.md).
 The current implementation/review stages are complete for the test version; remaining
@@ -125,7 +125,7 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest-3` contains three rooms: the original course, a forest course with an ascending
+`forest-2` contains three rooms: the original course, a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -150,7 +150,7 @@ Death resets only the active room; previous rooms' collections remain kept.
 
 ## Optional artifacts
 
-`forest-3` has two optional artifacts: Bat and Mushroom (D43, replacing Chicken and Key), each a
+`forest-2` has two optional artifacts: Bat and Mushroom (D43, replacing Chicken and Key), each a
 two-frame 16×16 strip (`assets/images/objects/bat.png`, `mushroom.png`).
 Tiled uses object type `Collectable` with the name `Bat` or `Mushroom` (the object type `Bat` is the enemy). The author accepted their current positions as final for the MVP on 2026-10-19;
 no relocation or additional artifact challenge paths are planned for this MVP (#72).

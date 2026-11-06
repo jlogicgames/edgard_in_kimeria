@@ -245,7 +245,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-log` | 32×16 | intact, crumble1, crumble2 | rotten log bridge, same footprint as `platform.png` |
 
 **Bomb replacement:** the stump and root sets replace the glass-bottle bomb. The old bomb
-(`images/Items.png`, 16×16) stays in place and is untouched; #233 (D47) swapped the code: `ExplosiveStump`/`ExplosiveRoot` use these sheets (the blast frames are drawn at 2x), the bottle is still used by the old `Bomb` type (`forest-3`).
+(`images/Items.png`, 16×16) stays in place and is untouched; #233 (D47) swapped the code: `ExplosiveStump`/`ExplosiveRoot` use these sheets (the blast frames are drawn at 2x), the bottle is still used by the old `Bomb` type (`forest-2`).
 
 **Palette (shared families, each sheet uses at most 15 colours + transparency):** near-black
 contour `0b0814`; wood `4a2e1c / 8a5a30 / c08a4c`; ember `b3201a / f07a1a / ffd23a / fff4b0`;

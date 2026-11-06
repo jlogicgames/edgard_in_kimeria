@@ -35,7 +35,7 @@ REQUIRED_RUNTIME_FILES = (
     "assets/localization/uk.json",
     "assets/localization/be.json",
     "assets/tiles/forest-0.tmx",
-    "assets/tiles/forest-3.tmx",
+    "assets/tiles/forest-2.tmx",
     "assets/tiles/forest-1.tmx",
     "assets/tiles/Forest.tsx",
 )

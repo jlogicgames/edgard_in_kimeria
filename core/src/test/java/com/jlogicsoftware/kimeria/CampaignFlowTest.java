@@ -191,8 +191,8 @@ class CampaignFlowTest {
         assertNull(get("level"));
         game.loadNextLevel();
         assertEquals("LOADING", state()); assertEquals(2, get("currentLevelIndex")); assertNull(get("healer"));
-        call("loadLevel"); // forest-3, the boss level: its own scenes are unchanged
-        assertEquals("forest-3", ((Level) get("level")).name);
+        call("loadLevel"); // forest-2, the boss level: its own scenes are unchanged
+        assertEquals("forest-2", ((Level) get("level")).name);
         game.loadNextLevel();
         assertNotEquals("HEALER", state());
         assertNull(get("healer"));
@@ -208,8 +208,8 @@ class CampaignFlowTest {
     }
 
     @Test void openingStartsTheFirstLevelAndOnlyFirstCompletionSavesTheBossLevel() throws Exception {
-        // Order (D32): forest-0 (tutorial) -> forest-1 -> (forest-2?) -> forest-3 (boss).
-        assertEquals(List.of("forest-0", "forest-1", "forest-3"), get("LEVEL_NAMES"));
+        // Order (D32): forest-0 (tutorial) -> forest-1 -> forest-2 (boss; named forest-3 until #262).
+        assertEquals(List.of("forest-0", "forest-1", "forest-2"), get("LEVEL_NAMES"));
         call("newGame"); assertEquals("INTRO", state());
         update(2); update(100); update(1);
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
@@ -227,7 +227,7 @@ class CampaignFlowTest {
         assertEquals(2, new SavedProgress(prefs, 3).nextLevelIndex());
         call("loadLevel");
         Level boss = (Level) get("level");
-        assertEquals("forest-3", boss.name); assertTrue(boss.hasBossEncounter()); assertTrue(boss.hasNextRoom());
+        assertEquals("forest-2", boss.name); assertTrue(boss.hasBossEncounter()); assertTrue(boss.hasNextRoom());
     }
 
     @Test void endingScrollUsesIntroMusicThenDeletesOnlyProgressAndOffersNewGame() throws Exception {

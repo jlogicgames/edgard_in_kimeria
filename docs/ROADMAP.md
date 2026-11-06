@@ -99,9 +99,10 @@ must not interfere. Preserve existing jumping, combat and recovery behavior.
 
 ### 1.2. Forest
 
-Intended level order: `forest-0` (tutorial) → `forest-1` → (`forest-2`? — **open**, not decided)
-→ `forest-3` (boss level, formerly `forest`); see
-[D32](DECISIONS.md#d32-forest-level-order-and-identity). The rename and decoupling from the
+Level order: `forest-0` (tutorial) → `forest-1` → `forest-2` (boss level, formerly `forest`, then
+`forest-3` until [#262](https://github.com/jlogicgames/edgard_in_kimeria/issues/262); the former open question
+"`forest-2`?" is closed, no extra level is planned); see
+[D32](DECISIONS.md#d32-forest-level-order-and-identity), [D51](DECISIONS.md#d51-forest-3-renamed-forest-2-the-bomb-stays-a-separate-trap). The rename and decoupling from the
 level name are [#194](https://github.com/jlogicgames/edgard_in_kimeria/issues/194).
 
 **Tutorial level (`forest-0`, [#195](https://github.com/jlogicgames/edgard_in_kimeria/issues/195), skeleton done):**

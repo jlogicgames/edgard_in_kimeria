@@ -16,7 +16,7 @@ class WebReleaseArtifactTest(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b"runtime")
-        app = '"i:b:/tiles/forest-3.tmx:1:1"'
+        app = '"i:b:/tiles/forest-2.tmx:1:1"'
         (self.root / "app.js").write_text(app, encoding="utf-8")
         digest = hashlib.sha256(app.encode()).hexdigest()
         (self.root / "index.html").write_text(
@@ -30,11 +30,11 @@ class WebReleaseArtifactTest(unittest.TestCase):
         self.assertEqual([], validate_release_artifact(self.root))
 
     def test_rejects_missing_runtime_map_or_localization(self) -> None:
-        (self.root / "assets/tiles/forest-3.tmx").unlink()
+        (self.root / "assets/tiles/forest-2.tmx").unlink()
         (self.root / "assets/tiles/forest-0.tmx").unlink()
         (self.root / "assets/localization/uk.json").unlink()
         errors = validate_release_artifact(self.root)
-        self.assertIn("missing required runtime file: assets/tiles/forest-3.tmx", errors)
+        self.assertIn("missing required runtime file: assets/tiles/forest-2.tmx", errors)
         self.assertIn("missing required runtime file: assets/tiles/forest-0.tmx", errors)
         self.assertIn("missing required runtime file: assets/localization/uk.json", errors)
 
@@ -71,7 +71,7 @@ class WebReleaseArtifactTest(unittest.TestCase):
         self.assertIn("index.html must reference the relative favicon.ico", errors)
 
     def test_rejects_stale_script_version(self) -> None:
-        (self.root / "app.js").write_text('"i:b:/tiles/forest-3.tmx:2:1"', encoding="utf-8")
+        (self.root / "app.js").write_text('"i:b:/tiles/forest-2.tmx:2:1"', encoding="utf-8")
         self.assertIn("index.html must reference app.js with its SHA-256 version", validate_release_artifact(self.root))
 
     def test_rejects_missing_howler_license_notice(self) -> None:

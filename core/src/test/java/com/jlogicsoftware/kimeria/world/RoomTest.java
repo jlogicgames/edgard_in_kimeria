@@ -47,7 +47,7 @@ class RoomTest {
         return TiledMapData.load("tiles/" + name + ".tmx", assets);
     }
     private Player player() { return new Player(assets, game, 0, 0); }
-    private Level forest() { map("forest-3"); return new Level(assets, game, player(), "forest-3", Rectangle::new); }
+    private Level forest() { map("forest-2"); return new Level(assets, game, player(), "forest-2", Rectangle::new); }
 
     private com.jlogicsoftware.kimeria.entity.items.FireballRefill refill(Level level) {
         return level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance)
@@ -83,7 +83,7 @@ class RoomTest {
         assertEquals(2, level.rangedStock.count(), "Boss death restores its entry stock");
         var stock = level.rangedStock;
         stock.restartLevel();
-        Level restarted = new Level(assets, game, player(), "forest-3", Rectangle::new, stock);
+        Level restarted = new Level(assets, game, player(), "forest-2", Rectangle::new, stock);
         restarted.enterNextRoom(player());
         assertFalse(refill(restarted).isRemoved(), "Restart rebuilds the authored opportunity");
         assertEquals(3, stock.count(), "Restart restores level-entry stock, not collected charges");
@@ -111,7 +111,7 @@ class RoomTest {
         assertNull(layout.rooms.get(0).exit());
     }
     @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
-        TiledMapData map = map("forest-3");
+        TiledMapData map = map("forest-2");
         RoomLayout layout = new RoomLayout(map);
         assertEquals(3, layout.rooms.size());
         for (var o : map.layer("SpawnPoints")) if (!"Deadline".equals(o.type)) layout.owner(o);
@@ -125,12 +125,12 @@ class RoomTest {
         assertEquals(2, layout.owner(boss));
     }
     @Test void malformedRoomsFailInsteadOfSilentlyBecomingWholeLevel() {
-        TiledMapData map = map("forest-3");
+        TiledMapData map = map("forest-2");
         var markers = map.objectGroups.get("Rooms");
         markers.removeIf(o -> "RoomStart".equals(o.type));
         TiledMapData missingStart = map;
         assertThrows(IllegalArgumentException.class, () -> new RoomLayout(missingStart));
-        map = map("forest-3");
+        map = map("forest-2");
         map.layer("Rooms").stream().filter(o -> "Room".equals(o.type)).skip(1).findFirst().orElseThrow().x = 0;
         TiledMapData overlapping = map;
         assertThrows(IllegalArgumentException.class, () -> new RoomLayout(overlapping));
@@ -227,7 +227,7 @@ class RoomTest {
         assertEquals(ItemType.BAT, artifacts.items().get(0).type());
         assertEquals(0, coins.get());
         assertTrue(bat.isRemoved());
-        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"));
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-2"));
         level.resetCurrentRoom(player());
         assertTrue(artifacts.items().isEmpty());
         assertFalse(artifact(level, ItemType.BAT).isCollected());
@@ -239,14 +239,14 @@ class RoomTest {
         level.enterNextRoom(player());
         artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         assertEquals(2, artifacts.items().size());
-        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"), "Mushroom is still provisional");
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-2"), "Mushroom is still provisional");
         level.resetCurrentRoom(player());
         assertEquals(1, artifacts.items().size());
         assertEquals(ItemType.BAT, artifacts.items().get(0).type());
         artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         level.enterNextRoom(player());
-        assertTrue(artifacts.hasFullSet("forest-3"));
-        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"));
+        assertTrue(artifacts.hasFullSet("forest-2"));
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-2"));
         level.resetCurrentRoom(player());
         assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.MUSHROOM));
         assertEquals(2, artifacts.items().size());
@@ -258,11 +258,11 @@ class RoomTest {
         level.player.debugTriggerCheckpoint();
         assertEquals(Player.State.IDLE, level.player.getState(), "Debug checkpoint cannot bypass boss");
         assertTrue(artifacts.items().isEmpty());
-        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-3"));
+        assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-2"));
     }
 
     @Test void retryRebuildsDestroyedWallsAndMovingTrapsWithoutStaleCollisionReferences() {
-        map("forest-3");
+        map("forest-2");
         Level level = new Level(assets, game, player(), "room-test", Rectangle::new);
         var wall = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Wall.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow();
@@ -478,7 +478,7 @@ class RoomTest {
 
     @Test void forestThreeRegistersBatAndMushroomAsItsOptionalIngredients() {
         Level level = forest();
-        assertEquals(java.util.Set.of(ItemType.BAT, ItemType.MUSHROOM), artifacts.requiredForLevel("forest-3"));
+        assertEquals(java.util.Set.of(ItemType.BAT, ItemType.MUSHROOM), artifacts.requiredForLevel("forest-2"));
         assertNotNull(artifact(level, ItemType.BAT)); // The Mushroom lives in a later room; the route replays collect it.
     }
 
@@ -489,10 +489,10 @@ class RoomTest {
         level.enterNextRoom(player());
         collect(level, ItemType.COIN);
         level.prepareHealer();
-        assertFalse(level.canBrew(), "forest-3 requires Bat and Mushroom");
-        artifacts.requireForLevel("forest-3", java.util.Set.of(ItemType.BAT));
+        assertFalse(level.canBrew(), "forest-2 requires Bat and Mushroom");
+        artifacts.requireForLevel("forest-2", java.util.Set.of(ItemType.BAT));
         assertTrue(level.canBrew(), "A level whose ingredients are only Bat is gated by that");
-        artifacts.requireForLevel("forest-3", java.util.Set.of());
+        artifacts.requireForLevel("forest-2", java.util.Set.of());
         assertFalse(level.canBrew(), "No required ingredients never qualifies");
     }
 
@@ -515,8 +515,8 @@ class RoomTest {
         assertTrue(level.brewElixir());
         assertEquals(19, coins.get());
         assertTrue(artifacts.items().isEmpty());
-        assertTrue(artifacts.hasFullSet("forest-3"), "Payment must not erase the collection result");
-        assertEquals(10, artifacts.bossWeaponDamageMultiplier("forest-3"));
+        assertTrue(artifacts.hasFullSet("forest-2"), "Payment must not erase the collection result");
+        assertEquals(10, artifacts.bossWeaponDamageMultiplier("forest-2"));
         assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-1"));
         assertFalse(level.brewElixir());
         assertEquals(19, coins.get());
@@ -524,10 +524,10 @@ class RoomTest {
         assertThrows(IllegalStateException.class, () -> level.returnForCollection(player()));
         level.enterNextRoom(player());
         level.resetCurrentRoom(player());
-        assertEquals(10, artifacts.bossWeaponDamageMultiplier("forest-3"));
+        assertEquals(10, artifacts.bossWeaponDamageMultiplier("forest-2"));
         assertFalse(level.healerAhead());
         level.bossDefeated();
-        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-3"));
+        assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-2"));
     }
 
     @Test void priorCurrencyCannotReplaceMissingForestCoinsOrIngredients() {
@@ -542,7 +542,7 @@ class RoomTest {
             level.prepareHealer();
             assertFalse(level.canBrew(), "Missing " + missing);
             assertFalse(level.brewElixir());
-            assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-3"));
+            assertEquals(1, artifacts.bossWeaponDamageMultiplier("forest-2"));
         }
     }
 
@@ -800,16 +800,16 @@ class RoomTest {
         HeadlessFiles files = new HeadlessFiles();
         Gdx.files = (com.badlogic.gdx.Files) Proxy.newProxyInstance(com.badlogic.gdx.Files.class.getClassLoader(),
             new Class<?>[]{com.badlogic.gdx.Files.class}, (proxy, method, args) -> {
-                if (method.getName().equals("internal") && args[0].equals("tiles/forest-3.tmx"))
+                if (method.getName().equals("internal") && args[0].equals("tiles/forest-2.tmx"))
                     return files.internal("tiles/healer-empty.tmx");
                 return method.invoke(files, args);
             });
         try {
             coins.set(999);
-            Level level = new Level(assets, game, player(), "forest-3", Rectangle::new);
+            Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
             collect(level, ItemType.BAT, ItemType.MUSHROOM);
             level.prepareHealer();
-            assertTrue(artifacts.hasFullSet("forest-3"));
+            assertTrue(artifacts.hasFullSet("forest-2"));
             assertEquals(0, level.forestCoinTotal());
             assertFalse(level.canBrew());
             assertFalse(level.brewElixir());

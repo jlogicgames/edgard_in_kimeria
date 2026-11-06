@@ -479,10 +479,10 @@ class RhythmTrapsTest {
 
     /** Rhythmic trap types and the log skin each shipped level may use; #235 extends forest-0 when it places traps. */
     private static final java.util.Map<String, Set<String>> SHIPPED_ALLOWANCE = java.util.Map.of(
-        "forest-0", Set.of(), "forest-1", Set.of(), "forest-3", Set.of());
+        "forest-0", Set.of(), "forest-1", Set.of(), "forest-2", Set.of());
 
     @Test void shippedLevelsUseOnlyAllowedRhythmTrapsAndEveryTrapTheyUseLoadsValidated() {
-        for (String name : new String[]{"forest-0", "forest-1", "forest-3"}) {
+        for (String name : new String[]{"forest-0", "forest-1", "forest-2"}) {
             String text = Gdx.files.internal("tiles/" + name + ".tmx").readString();
             Set<String> used = new HashSet<>();
             if (text.contains("\"Puffball\"")) used.add("Puffball");

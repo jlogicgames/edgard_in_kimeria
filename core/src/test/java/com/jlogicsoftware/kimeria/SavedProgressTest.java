@@ -89,7 +89,7 @@ class SavedProgressTest {
 
     @Test
     void savesWithoutAnOrderKeyPredateForestZeroAndShiftToTheSameLevel() {
-        // Original order: 0 = forest-1, 1 = forest-3. Current order: 0 = forest-0, 1 = forest-1, 2 = forest-3.
+        // Original order: 0 = forest-1, 1 = forest-2 (then named forest-3). Current order: 0 = forest-0, 1 = forest-1, 2 = forest-2.
         Preferences prefs = preferences();
         prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1); // "Continue at the boss level"
         assertEquals(2, new SavedProgress(prefs, 3).nextLevelIndex());
@@ -127,12 +127,12 @@ class SavedProgressTest {
     @Test
     void legacyBossSaveContinuesAtForestThreeThroughTheGamesLevelList() throws Exception {
         Preferences prefs = preferences();
-        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1); // Written when the list was forest-1, forest-3.
+        prefs.putInteger(Settings.KEY_NEXT_LEVEL, 1); // Written when the list was forest-1, forest-3 (now forest-2).
         var names = KimeriaGame.class.getDeclaredField("LEVEL_NAMES");
         names.setAccessible(true);
         @SuppressWarnings("unchecked") var levels = (java.util.List<String>) names.get(null);
         SavedProgress progress = new SavedProgress(prefs, levels.size());
-        assertEquals("forest-3", levels.get(progress.nextLevelIndex()));
+        assertEquals("forest-2", levels.get(progress.nextLevelIndex()));
         prefs.putInteger(Settings.KEY_NEXT_LEVEL, 0);
         assertEquals("forest-1", levels.get(new SavedProgress(prefs, levels.size()).nextLevelIndex()));
     }

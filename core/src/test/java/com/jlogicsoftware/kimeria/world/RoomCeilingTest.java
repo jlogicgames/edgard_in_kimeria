@@ -164,11 +164,11 @@ class RoomCeilingTest {
     @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
     @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 1); }
     /** The boss room (index 2) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
-    @Test void forest3KeepsTheHeroInside() { assertCannotLeave("forest-3", 2); }
+    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 2); }
 
     @Test void everyRoomIsClosedFromAboveByASlabEndingAtItsTopEdge() {
-        for (String map : new String[]{"forest-0", "forest-1", "forest-3"}) {
-            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-3") ? 3 : 1;
+        for (String map : new String[]{"forest-0", "forest-1", "forest-2"}) {
+            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-2") ? 3 : 1;
             for (int index = 0; index < rooms; index++) {
                 Level level = roomOf(map, index);
                 Rectangle room = level.currentRoomBounds();

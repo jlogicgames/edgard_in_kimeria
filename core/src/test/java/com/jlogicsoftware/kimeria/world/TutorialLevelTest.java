@@ -197,7 +197,7 @@ class TutorialLevelTest {
     @Test void onlyForestZeroAndTheForestThreeControlZoneAuthorHints() {
         assertTrue(map("forest-1").layer("Hints").isEmpty(), "forest-1 shows no tutorial hints");
         assertTrue(map("forest-1").properties.get("tutorialRoom") == null);
-        TiledMapData three = map("forest-3");
+        TiledMapData three = map("forest-2");
         assertNull(three.properties.get("tutorialRoom"), "The hardcoded room property is gone");
         var zones = three.layer("Hints");
         assertEquals(1, zones.size());
@@ -207,7 +207,7 @@ class TutorialLevelTest {
     }
 
     @Test void everyAuthoredHintKeyIsALocalisedMessageInAllLanguages() {
-        for (String level : List.of("forest-0", "forest-1", "forest-3"))
+        for (String level : List.of("forest-0", "forest-1", "forest-2"))
             for (var zone : map(level).layer("Hints")) {
                 String key = zone.prop("message", "");
                 if (key.isEmpty()) continue;
