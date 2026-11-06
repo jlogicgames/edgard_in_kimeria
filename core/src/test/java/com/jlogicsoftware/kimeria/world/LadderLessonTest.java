@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
+import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
@@ -93,7 +94,26 @@ class LadderLessonTest {
         pressed.clear();
     }
 
-    private static final float LEDGE_TOP = 208, LADDER_X = 1032;
+    private static final float LEDGE_TOP = 208, LADDER_X = 1216, LEDGE_X = 1232;
+    /** The thorn root (D48, first thing in the room, before the lever at 1080): footprint x 896-912, zone 64 px each side. */
+    private static final float ROOT_X = 896, ROOT_RIGHT = 912, ROOT_ZONE_LEFT = 832;
+
+    private ThornTrap root(Level level) {
+        return level.objects.stream().filter(ThornTrap.class::isInstance).map(ThornTrap.class::cast).findFirst().orElseThrow();
+    }
+
+    /** Geometry sweeps teleport the hero onto the thorn's own column; the trap has its own tests below. */
+    private void withoutTheThorns(Level level) { level.objects.removeIf(ThornTrap.class::isInstance); }
+
+    private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
+    private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
+
+    /** Mastered jump: Jump pressed about 30 px before the root, going right (body right edge) or left (body left edge). */
+    private boolean jumpsTheRoot(Level level, boolean right) {
+        if (!level.player.isOnGround()) return false;
+        return right ? bodyRight(level) >= ROOT_X - 32 && bodyRight(level) < ROOT_X - 8
+            : bodyLeft(level) <= ROOT_RIGHT + 32 && bodyLeft(level) > ROOT_RIGHT + 8;
+    }
 
     /** A level whose hero stands in the ladder room (index 1) at its safe entrance. */
     private Level freshRoom() {
@@ -116,7 +136,9 @@ class LadderLessonTest {
         int frames = 0;
         while (!level.player.canInteract()) {
             held.clear(); held.add(Input.Keys.D);
+            if (jumpsTheRoot(level, true)) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
             frame(level);
+            assertFalse(level.player.isGotHit(), "died at " + level.player.position);
             assertTrue(++frames < 60 * 20, "lever never came into reach at " + level.player.position);
         }
         held.clear();
@@ -134,9 +156,11 @@ class LadderLessonTest {
     /** Walks Right until the body is over the ladder's rungs; returns elapsed frames. */
     private int walkToLadder(Level level) {
         int frames = 0;
-        while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < 1025) {
+        while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < LADDER_X + 1) {
             held.clear(); held.add(Input.Keys.D);
+            if (jumpsTheRoot(level, true)) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
             frame(level);
+            assertFalse(level.player.isGotHit(), "died at " + level.player.position);
             assertTrue(++frames < 60 * 20, "ladder unreachable from " + level.player.position);
         }
         held.clear();
@@ -211,8 +235,9 @@ class LadderLessonTest {
     }
 
     @Test void withTheLadderRetractedNoJumpingReachesTheLedge() {
-        for (float x = 608; x <= 1034; x += 6) {
+        for (float x = 608; x <= LADDER_X + 10; x += 6) {
             Level level = freshRoom();
+            withoutTheThorns(level);
             level.player.position.set(x - 24, 272);
             float minFeet = 1000;
             for (int i = 0; i < 60 * 4; i++) {
@@ -288,7 +313,7 @@ class LadderLessonTest {
             Level level = freshRoom();
             walkToLever(level); operate(level);
             walkToLadder(level); climb(level);
-            while (level.player.position.x + 24 > 1046) { held.clear(); held.add(Input.Keys.A); frame(level); }
+            while (level.player.position.x + 24 > LEDGE_X + 6) { held.clear(); held.add(Input.Keys.A); frame(level); }
             held.clear(); settle(level, 5);
             assertTrue(level.player.isOnGround() && feet(level) <= LEDGE_TOP + 1, "On the ledge edge, delay " + delay);
             for (int i = 0; i < 90; i++) {
@@ -321,7 +346,7 @@ class LadderLessonTest {
     /** Standing on the lowered ladder's top rung, left of the ledge. */
     private boolean onLadderTop(Level level) {
         Rectangle b = level.player.hitboxBounds();
-        return level.player.isOnGround() && feet(level) <= LEDGE_TOP + 1 && b.x + b.width / 2 < 1040;
+        return level.player.isOnGround() && feet(level) <= LEDGE_TOP + 1 && b.x + b.width / 2 < LEDGE_X;
     }
 
     /** Walks Left until the lever is in reach. */
@@ -329,7 +354,9 @@ class LadderLessonTest {
         int frames = 0;
         while (!level.player.canInteract()) {
             held.clear(); held.add(Input.Keys.A);
+            if (jumpsTheRoot(level, false)) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
             frame(level);
+            assertFalse(level.player.isGotHit(), "died at " + level.player.position);
             assertTrue(++frames < 60 * 20, "lever never came into reach at " + level.player.position);
         }
         held.clear();
@@ -341,6 +368,7 @@ class LadderLessonTest {
      */
     @Test void messageAndLiveLabelsNeverOverlapOnTheFloorInTheAirOnTheLedgeOrOnTheLadder() {
         Level level = freshRoom();
+        withoutTheThorns(level);
         HintGeometry geometry = new HintGeometry();
         Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
         int both = 0;
@@ -348,7 +376,7 @@ class LadderLessonTest {
             if (ladder(level).isLowered() != lowered) ladder(level).performAction();
             settle(level, 60);
             for (float standY : new float[]{272, 272 - 58, 160, 160 - 58, 130})
-                for (float x = 600; x <= 1240; x += 4) {
+                for (float x = 600; x <= 1432; x += 4) {
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
                     String zone = level.player.zoneHint(), context = level.player.contextHint();
@@ -374,9 +402,10 @@ class LadderLessonTest {
 
     @Test void theLeverIsOnlyEverWithinReachOnTheFloorAwayFromTheLadder() {
         Level level = freshRoom();
+        withoutTheThorns(level);
         Ladder ladder = ladder(level);
         for (float standY : new float[]{272, 160, 100}) // floor, ledge, climbing height
-            for (float x = 600; x <= 1240; x += 4) {
+            for (float x = 600; x <= 1432; x += 4) {
                 level.player.position.set(x - 24, standY);
                 settle(level, 1);
                 if (level.player.canInteract()) {
@@ -389,14 +418,15 @@ class LadderLessonTest {
 
     @Test void lessonHintsCoverEveryStandingPositionInBothLadderStatesAndSurviveRetry() {
         Level level = freshRoom();
+        withoutTheThorns(level);
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean lowered : new boolean[]{false, true}) {
-                for (float x = 608; x < 1256; x += 8) {
+                for (float x = 608; x < 1448; x += 8) {
                     if (ladder(level).isLowered() != lowered) ladder(level).performAction();
                     settle(level, 60);
-                    if (x > 1032 && x < 1048) continue; // inside the ledge block: not a standing position
-                    boolean onLedge = x >= 1048;
+                    if (x > LADDER_X && x < LEDGE_X + 8) continue; // inside the ledge block: not a standing position
+                    boolean onLedge = x >= LEDGE_X + 8;
                     level.player.position.set(x - 24, onLedge ? 160 : 272);
                     for (int i = 0; i < 3; i++) frame(level);
                     String hint = level.player.contextHint(), zone = level.player.zoneHint();
@@ -415,9 +445,10 @@ class LadderLessonTest {
                 }
             }
             level.resetCurrentRoom(new Player(assets, game, 0, 0));
+            withoutTheThorns(level);
         }
-        assertEquals(Set.of(Msg.HINT_LADDER_LEVER.t(Language.ENGLISH), Msg.HINT_LADDER_CLIMB.t(Language.ENGLISH),
-            Msg.HINT_LADDER_EXIT.t(Language.ENGLISH)), messages);
+        assertEquals(Set.of(Msg.HINT_LADDER_LEVER.t(Language.ENGLISH), Msg.HINT_LADDER_ROOT.t(Language.ENGLISH),
+            Msg.HINT_LADDER_CLIMB.t(Language.ENGLISH), Msg.HINT_LADDER_EXIT.t(Language.ENGLISH)), messages);
         for (String text : messages) assertFalse(text.toLowerCase().contains("is down") && text.toLowerCase().contains("is up"), text);
     }
 
@@ -436,5 +467,146 @@ class LadderLessonTest {
         float seconds = frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-0-ladder mastered route (walk, pull lever, climb, exit): %.2f s%n", seconds);
         assertTrue(seconds < 30, "Author check, not a novice playtest (#129-#131): " + seconds);
+    }
+
+    // ---- D48: the thorn root, the first thing in the room (before the lever) ----
+
+    private Level room(int index) {
+        Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
+        for (int i = 0; i < index; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
+        return level;
+    }
+
+    /** One frame of ordinary play. */
+    private void step(Level level, boolean right, boolean jump) {
+        held.clear();
+        if (right) held.add(Input.Keys.D);
+        if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+        frame(level);
+    }
+
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 272); settle(level, 2); }
+
+    /** The hero stands with the body's right edge at {@code takeOff}, presses Right + Jump at once and runs on; returns true when alive well past the root. */
+    private boolean jumpFrom(float takeOff, boolean waitForTheThornsFirst) {
+        Level level = freshRoom();
+        placeBodyRight(level, takeOff);
+        if (waitForTheThornsFirst) for (int i = 0; i < 60 * 2 && root(level).phase() != ThornTrap.Phase.ARMED; i++) step(level, false, false);
+        step(level, true, true);
+        for (int i = 0; i < 60 * 3; i++) {
+            step(level, true, false);
+            if (level.player.isGotHit()) return false;
+            if (bodyLeft(level) > ROOT_RIGHT + 4 && level.player.isOnGround()) return true;
+        }
+        return false;
+    }
+
+    @Test void theThornRootStandsOnOpenFloorBeforeTheLeverAndTheLadderAndNowhereElseInTheTutorialUpToHere() {
+        Level level = freshRoom();
+        ThornTrap root = root(level);
+        assertEquals(1, level.objects.stream().filter(ThornTrap.class::isInstance).count(), "exactly one thorn trap");
+        assertEquals(ThornTrap.Kind.ROOT, root.kind());
+        assertEquals(ROOT_X, root.getX(), .01f);
+        assertEquals(320, root.getY() + root.getHeight(), .01f, "standing on the floor");
+        assertTrue(root.getX() - (level.player.position.x + 48) >= 150, "well after the entrance: the hero can see it");
+        assertTrue(lever(level).getX() - (root.getX() + root.getWidth() + 64) >= 64, "the lever is clear of the root's zone");
+        assertTrue(ladder(level).getX() - (root.getX() + root.getWidth()) >= 64, "64 px of floor beyond the root, jumpable");
+        assertTrue(root.isDormant(), "quiet until the hero comes near");
+        assertTrue(room(0).objects.stream().noneMatch(ThornTrap.class::isInstance), "the lever room stays pure");
+        assertTrue(room(2).objects.stream().noneMatch(ThornTrap.class::isInstance), "no leak into the next room");
+        assertEquals(ROOT_ZONE_LEFT, root.triggerZone().x, .01f);
+    }
+
+    @Test void theRootTelegraphsBeforeItRisesAndRisesOnlyAfterTheSharedWarning() {
+        Level level = freshRoom();
+        ThornTrap root = root(level);
+        placeBodyRight(level, ROOT_ZONE_LEFT - 40);
+        settle(level, 60);
+        assertTrue(root.isDormant(), "far from the root nothing happens");
+        assertEquals(0, root.frameIndex());
+        placeBodyRight(level, ROOT_ZONE_LEFT + 2);
+        assertEquals(ThornTrap.Phase.WARNING, root.phase(), "entering the zone starts the warning");
+        assertEquals(TrapWarnings.DEFAULT_WARNING_SECONDS, root.warningTotal(), 1e-4f);
+        assertTrue(root.frameIndex() == 1 || root.frameIndex() == 2, "the tip wobbles: " + root.frameIndex());
+        assertFalse(root.isLethal(), "harmless while it warns");
+        settle(level, (int) (TrapWarnings.DEFAULT_WARNING_SECONDS * 60) + 12);
+        assertTrue(root.isLethal() && root.phase() == ThornTrap.Phase.ARMED);
+        assertEquals(4, root.frameIndex());
+    }
+
+    @Test void aRunningJumpFromAnyPointOfTheWindowClearsTheRootAndAHeroWhoWaitsForItToRiseCanJumpToo() {
+        int first = -1, last = -1;
+        for (float takeOff = ROOT_X - 70; takeOff <= ROOT_X - 2; takeOff += 2) {
+            boolean ok = jumpFrom(takeOff, false);
+            if (ok) { if (first < 0) first = (int) takeOff; last = (int) takeOff; }
+        }
+        System.out.println("forest-0-ladder root jump window (body right edge at take-off, root at " + ROOT_X + "): " + first + " .. " + last
+            + " (" + (ROOT_X - last) + " .. " + (ROOT_X - first) + " px before the root)");
+        assertTrue(first >= 0 && first <= ROOT_X - 56 && last >= ROOT_X - 12, "a generous window: " + first + " .. " + last);
+        for (float takeOff = first; takeOff <= last; takeOff += 2) assertTrue(jumpFrom(takeOff, false), "inside the window at " + takeOff);
+        for (float stand : new float[]{ROOT_X - 56, ROOT_X - 40, ROOT_X - 24, ROOT_X - 12})
+            assertTrue(jumpFrom(stand, true), "waiting for the thorns to be up, then jumping from " + stand);
+    }
+
+    @Test void walkingStraightIntoTheRootCostsOneVeryCheapRetryAndTheRetryRestoresTheTrap() {
+        Level level = freshRoom();
+        int frames = 0;
+        while (!level.player.isGotHit()) {
+            step(level, true, false);
+            assertTrue(++frames < 60 * 10, "never hit at " + level.player.position);
+        }
+        System.out.printf(java.util.Locale.ROOT, "forest-0-ladder: walking straight into the root hits after %.2f s%n", frames * STEP);
+        assertTrue(root(level).isLethal(), "the thorns were up when they hit");
+        assertTrue(bodyRight(level) > ROOT_X, "hit on the root, not elsewhere: " + level.player.position);
+        assertTrue(frames * STEP < 4f, "the mistake is made within the first seconds: " + frames * STEP);
+        level.resetCurrentRoom(new Player(assets, game, 0, 0));
+        assertTrue(root(level).isDormant(), "retry restores the hidden root");
+        assertFalse(ladder(level).isLowered());
+        assertTrue(level.player.position.x < 700, "the hero starts at the entrance");
+        float seconds = solve(level) * STEP;
+        System.out.printf(java.util.Locale.ROOT, "forest-0-ladder retry after the thorn root: %.2f s from the entrance to the exit%n", seconds);
+        assertTrue(level.atRoomExit());
+        assertTrue(seconds < 15, "one cheap retry: " + seconds);
+    }
+
+    @Test void theRootNeverStrandsTheHeroAfterTheTrapIsUp() {
+        Level level = freshRoom();
+        placeBodyRight(level, ROOT_X - 24);
+        for (int i = 0; i < 60 * 2; i++) step(level, false, false);
+        assertTrue(root(level).isLethal());
+        assertTrue(level.player.canFight() && !level.player.isGotHit());
+        solve(level); // jumps the raised thorns, pulls the lever, climbs, exits
+        assertTrue(level.atRoomExit());
+        assertFalse(level.player.isGotHit());
+    }
+
+    /**
+     * The hero who has passed the root, climbed the ladder and wants to go back for the lever: holding Left through the
+     * whole drop off the ledge (item from the #235 review) or Left + Jump after landing never meets the armed root,
+     * which now stands more than 200 px from the ladder.
+     */
+    @Test void holdingLeftThroughTheWholeDropFromTheLadderTopOrLeftAndJumpAfterwardsNeverReachesTheRoot() {
+        for (boolean jumpAfterLanding : new boolean[]{false, true}) {
+            Level level = freshRoom();
+            solveUpToTheLedge(level);
+            assertTrue(root(level).isLethal(), "the root has been up since the way in");
+            int frames = 0;
+            boolean landed = false;
+            while (frames++ < 60 * 8) {
+                held.clear(); held.add(Input.Keys.A);
+                if (landed && jumpAfterLanding && level.player.isOnGround()) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+                frame(level);
+                assertFalse(level.player.isGotHit(), "hit at " + level.player.position + " after " + frames + " frames");
+                if (level.player.isOnGround() && feet(level) > 300) landed = true;
+                if (landed && bodyLeft(level) < LADDER_X - 90) break;
+            }
+            assertTrue(landed && bodyLeft(level) < LADDER_X - 90, "walked on to the left");
+            assertTrue(bodyLeft(level) > ROOT_RIGHT + 40, "and was nowhere near the root yet: " + bodyLeft(level));
+        }
+    }
+
+    private void solveUpToTheLedge(Level level) {
+        walkToLever(level); operate(level);
+        walkToLadder(level); climb(level);
     }
 }

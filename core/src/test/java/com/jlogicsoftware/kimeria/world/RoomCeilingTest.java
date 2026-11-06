@@ -191,4 +191,16 @@ class RoomCeilingTest {
     @Test void thePlatformRoomLedgeDoesNotLetTheHeroOverTheTop() {
         highestPointReached(roomOf("forest-0", 3), false, 60 * 20, 112);
     }
+
+    /** D48: the platform room's falling stone starts flush with the room top, inside the room and under the D38 slab. */
+    @Test void theFallingStoneOfThePlatformRoomStartsInsideTheRoomUnderTheSlab() {
+        Level level = roomOf("forest-0", 3);
+        Rectangle room = level.currentRoomBounds();
+        var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::cast).findFirst().orElseThrow();
+        assertEquals(room.y, stone.bodyBounds().y, 0.01f, "flush with the room top");
+        assertTrue(level.collisionBlocks.stream().anyMatch(b -> b.getY() + b.getHeight() == room.y
+            && b.getX() <= stone.bodyBounds().x && b.getX() + b.getWidth() >= stone.bodyBounds().x + stone.bodyBounds().width), "the slab lies over it");
+        assertTrue(stone.bodyBounds().x >= room.x && stone.bodyBounds().x + stone.bodyBounds().width <= room.x + room.width);
+    }
 }

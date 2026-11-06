@@ -96,17 +96,29 @@ class StoneLessonTest {
         pressed.clear();
     }
 
-    private static final float ROOM_X = 2560, LIP = 2912, FAR = 3008, PLATFORM_END = 2976, ROOM_RIGHT = 3088;
-    private static final float STONE_X = 2848, STONE_Y = 308;
+    private static final float ROOM_X = 3056, LIP = 3616, FAR = 3712, PLATFORM_END = 3680, ROOM_RIGHT = 3792;
+    /** The exploding stump (D48): x 3488-3504 on the near floor; its blast square is x 3464-3528. */
+    private static final float STUMP_X = 3488, THROW_ZONE_END = 3322, STUMP_ZONE_END = 3576;
+    private static final float STONE_X = 3328, STONE_Y = 308;
     /** The route throws with the body's right edge here, standing on the parked platform. */
-    private static final float THROW_FROM = 2940;
+    private static final float THROW_FROM = 3644;
 
     /** A level whose hero stands in the stone room (index 4) at its safe entrance. */
     private Level freshRoom() {
+        Level level = freshRoomWithStump();
+        withoutTheStump(level);
+        return level;
+    }
+
+    /** The room as shipped, the exploding stump (D48) included. */
+    private Level freshRoomWithStump() {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
         for (int i = 0; i < 4; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
         return level;
     }
+
+    /** The stone/lever lesson tests below walk, teleport and throw all over the near floor; the stump has its own tests. */
+    private void withoutTheStump(Level level) { level.objects.removeIf(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance); }
 
     private Escalator platform(Level level) { return level.escalators.get(0); }
 
@@ -284,7 +296,7 @@ class StoneLessonTest {
 
     @Test void theLeverIsOutOfWalkingReachAndNeitherJumpingNorTheParkedOrStoppedPlatformCrossesTheChasm() {
         for (float stop : new float[]{LIP, LIP + 16, LIP + 32, LIP + 48, LIP + 64, PLATFORM_END}) {
-            for (float x = ROOM_X + 300; x <= (stop == LIP ? LIP + 32 - 4 : LIP + 4); x += 6) {
+            for (float x = ROOM_X + 508; x <= (stop == LIP ? LIP + 32 - 4 : LIP + 4); x += 6) {
                 Level level = freshRoom();
                 parkPlatformAt(level, stop, false);
                 level.player.position.set(x - 18, 272);
@@ -405,7 +417,7 @@ class StoneLessonTest {
 
     @Test void aMissLosesNothingBecauseTheStoneComesHomeOrLiesOnTheEntranceSide() {
         // Too short (it drops into the chasm), too long, away from the lever, in the air: always a stone to pick up again.
-        for (float from : new float[]{2700, 2800, 2870, LIP - 40, LIP - 25, THROW_FROM + 40, PLATFORM_END + 25}) {
+        for (float from : new float[]{3196, 3296, 3366, LIP - 40, LIP - 25, THROW_FROM + 40, PLATFORM_END + 25}) {
             Level level = freshRoom();
             giveStoneAt(level, from);
             throwNow(level); rest(level);
@@ -425,7 +437,7 @@ class StoneLessonTest {
                 assertTrue(lever(level).isUp(), "Second try after a miss from " + from);
             }
         }
-        for (float from : new float[]{2700, 2840, LIP - 30, THROW_FROM}) {   // away from the lever (to the left)
+        for (float from : new float[]{3196, 3336, LIP - 30, THROW_FROM}) {   // away from the lever (to the left)
             Level level = freshRoom();
             giveStoneAt(level, from);
             held.clear(); held.add(Input.Keys.A); frame(level); held.clear();
@@ -434,7 +446,7 @@ class StoneLessonTest {
             assertRetrievable(level, "throw left from " + from);
         }
         // Jump throws, both ways, at every phase of the jump.
-        for (boolean left : new boolean[]{true, false}) for (int phase = 0; phase <= 40; phase += 4) for (float from : new float[]{2800, LIP - 20, THROW_FROM}) {
+        for (boolean left : new boolean[]{true, false}) for (int phase = 0; phase <= 40; phase += 4) for (float from : new float[]{3296, LIP - 20, THROW_FROM}) {
             Level level = freshRoom();
             giveStoneAt(level, from);
             held.clear(); held.add(left ? Input.Keys.A : Input.Keys.D); frame(level);
@@ -451,7 +463,7 @@ class StoneLessonTest {
     @Test void aStoneNeverEndsUpOnTheFarSideOrAnywhereTheHeroCannotTakeItFrom() {
         int throwsDone = 0;
         for (boolean left : new boolean[]{true, false}) for (boolean running : new boolean[]{false, true})
-            for (float from = ROOM_X + 300; from <= PLATFORM_END + 28; from += 3) {
+            for (float from = ROOM_X + 508; from <= PLATFORM_END + 28; from += 3) {
                 Level level = freshRoom();
                 giveStoneAt(level, from);
                 if (running) { parkPlatformAt(level, LIP, true); }
@@ -596,10 +608,10 @@ class StoneLessonTest {
         Level level = freshRoom();
         Set<String> messages = new HashSet<>();
         String throwText = Msg.HINT_STONE_THROW.t(Language.ENGLISH), exitText = Msg.HINT_STONE_EXIT.t(Language.ENGLISH),
-            acrossText = Msg.HINT_STONE_ACROSS.t(Language.ENGLISH);
+            acrossText = Msg.HINT_STONE_ACROSS.t(Language.ENGLISH), stumpText = Msg.HINT_STONE_STUMP.t(Language.ENGLISH);
         for (int pass = 0; pass < 2; pass++) {
             for (boolean carrying : new boolean[]{false, true}) {
-                for (float x = ROOM_X + 40; x < ROOM_X + 520; x += 8) {
+                for (float x = ROOM_X + 40; x < ROOM_X + 728; x += 8) {
                     if (x > LIP + 36 && x < FAR - 4) continue;     // over the chasm
                     parkPlatformAt(level, LIP, false);
                     place(level, x);
@@ -617,7 +629,7 @@ class StoneLessonTest {
                     String where = "x=" + x + " carrying=" + carrying + ": " + hint.replace('\n', '|') + " / " + zone;
                     Rectangle body = level.player.hitboxBounds();
                     float centre = body.x + body.width / 2;
-                    assertEquals(centre <= 2872 ? throwText : centre <= FAR ? exitText : acrossText, zone, where);
+                    assertEquals(centre <= THROW_ZONE_END ? throwText : centre <= STUMP_ZONE_END ? stumpText : centre <= FAR ? exitText : acrossText, zone, where);
                     assertEquals(level.messageHint().message().t(Language.ENGLISH), zone, where);
                     messages.add(zone);
                     assertFalse(zone.contains("Up") || zone.contains("Action") || zone.contains("Ranged"), "no key names in the text");
@@ -625,7 +637,7 @@ class StoneLessonTest {
             }
             level.resetCurrentRoom(new Player(assets, game, 0, 0));
         }
-        assertEquals(Set.of(throwText, exitText, acrossText), messages);
+        assertEquals(Set.of(throwText, stumpText, exitText, acrossText), messages);
     }
 
     @Test void everyThrowSpotIsInsideTheZoneThatStillTellsToThrow() {
@@ -658,7 +670,7 @@ class StoneLessonTest {
         Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
         int both = 0;
         for (float standY : new float[]{272, 272 - 26}) for (boolean carrying : new boolean[]{false, true})
-            for (float x = ROOM_X + 40; x <= ROOM_X + 520; x += 4) {
+            for (float x = ROOM_X + 40; x <= ROOM_X + 728; x += 4) {
                 if (x > LIP + 36 && x < FAR - 4) continue;
                 parkPlatformAt(level, LIP, false);
                 if (carrying && level.player.carriedObject() == null) {
@@ -686,5 +698,222 @@ class StoneLessonTest {
         float seconds = frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-0-stone mastered route (walk, pick up the stone, step on the platform, throw, ride across, exit): %.2f s%n", seconds);
         assertTrue(seconds < 30, "Author check, not a novice playtest (#129-#131): " + seconds);
+    }
+
+    // ---- D48: the exploding stump on the near floor, between the stone and the chasm ----
+
+    private com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap stump(Level level) {
+        return level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::cast).findFirst().orElseThrow();
+    }
+
+    private static final com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.Phase IDLE = com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.Phase.IDLE;
+
+    private boolean lit(Level level) { return stump(level).phase() != IDLE; }
+
+    private void waitUntil(Level level, java.util.function.BooleanSupplier done, int maxFrames, String what) {
+        int n = 0;
+        while (!done.getAsBoolean()) { held.clear(); frame(level); assertTrue(++n < maxFrames, "never: " + what); }
+    }
+
+    private void step(Level level, boolean right, boolean jump) {
+        held.clear();
+        if (right) held.add(Input.Keys.D);
+        if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+        frame(level);
+    }
+
+    /** Pick the stone up where it lies and walk with it to the given body-right edge (on the near floor). */
+    private void carryStoneTo(Level level, float bodyRight) {
+        walkToStone(level); upAction(level);
+        assertSame(stone(level), level.player.carriedObject());
+        walkRightTo(level, () -> bodyRight(level) >= bodyRight);
+    }
+
+    @Test void theStumpStandsOnTheNearFloorBetweenTheStoneAndTheChasmWithItsBlastClearOfEverythingThatMatters() {
+        Level level = freshRoomWithStump();
+        var stump = stump(level);
+        assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance).count());
+        assertEquals(STUMP_X, stump.getX(), .01f);
+        assertEquals(320, stump.getY() + stump.getHeight(), .01f, "on the floor");
+        assertTrue(STONE_X + 12 < stump.getX() - 100, "the stone lies well before the stump, so the stone can be thrown at it");
+        assertTrue(LIP - (stump.getX() + 16) >= 100, "and the chasm lies well beyond it");
+        var blast = stump.blastBox();
+        assertFalse(blast.overlaps(level.player.hitboxBounds()), "the blast never reaches the entrance");
+        assertFalse(blast.overlaps(stone(level).bounds()), "nor the stone's home");
+        assertFalse(blast.overlaps(new Rectangle(LIP - 4, 272, 40, 48)), "nor the lip or the throwing spot");
+        assertFalse(blast.overlaps(level.roomLayout.rooms.get(4).exit()), "nor the exit");
+        assertEquals(IDLE, stump.phase());
+        // A bypass exists by construction (open floor 64 px either side, 96 px of headroom): the loader refuses otherwise.
+        assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance).count());
+    }
+
+    @Test void aThrownStoneSetsTheStumpOffFromAfarFromAForgivingWindowWhoseSafeEndIsOutsideTheBlast() {
+        float first = Float.NaN, last = Float.NaN;
+        for (float nominal = STONE_X + 20; nominal <= STUMP_X - 4; nominal += 2) {
+            Level level = freshRoomWithStump();
+            giveStoneAt(level, nominal);
+            float at = bodyRight(level);
+            throwNow(level);
+            for (int i = 0; i < 60 && !lit(level); i++) frame(level);
+            if (lit(level)) {
+                if (Float.isNaN(first)) first = at;
+                last = at;
+                assertTrue(stone(level).available(), "the stone is not consumed: it lies there to be picked up again");
+            }
+        }
+        System.out.println("forest-0-stone stump throw window (body right edge, stump at " + STUMP_X + "): " + first + " .. " + last
+            + " (" + (STUMP_X - last) + " .. " + (STUMP_X - first) + " px before the stump)");
+        assertFalse(Float.isNaN(first), "some throw lights the stump");
+        assertTrue(last - first >= 20, "a forgiving window of at least 20 px: " + first + " .. " + last);
+        assertTrue(first < STUMP_X - 36, "a hit from outside the blast square (36+ px away) exists: " + first);
+    }
+
+    @Test void afterAHitFromAfarTheHeroWaitsForTheBlastFetchesTheStoneAndFinishesTheLesson() {
+        Level level = freshRoomWithStump();
+        // Throw from the middle of the safe part of the window.
+        float from = STUMP_X - 70;
+        giveStoneAt(level, from);
+        throwNow(level);
+        waitUntil(level, () -> lit(level), 120, "stump lit");
+        assertTrue(stone(level).available());
+        assertTrue(level.player.hitboxBounds().x + 11 < stump(level).blastBox().x, "the thrower stands outside the blast");
+        int start = 0;
+        waitUntil(level, () -> stump(level).isSpent(), 60 * 3, "stump spent");
+        assertFalse(level.player.isGotHit(), "the thrower was safe");
+        // The stone lies near the stump on the near floor: retrievable and not leaking to the far side.
+        Carryable stone = stone(level);
+        assertTrue(stone.getX() + 12 < LIP && stone.getY() + 12 == 320, "lies on the near floor: " + stone.getX() + "," + stone.getY());
+        fetchStone(level);
+        assertSame(stone, level.player.carriedObject());
+        int frames = goAndThrow(level);
+        frames += waitForPlatform(level, true);
+        assertTrue(lever(level).isUp(), "the same stone still works the lever");
+        rideAcross(level); walkToExit(level);
+        assertTrue(level.atRoomExit());
+        assertFalse(level.player.isGotHit());
+    }
+
+    @Test void walkingOnThroughTheLitStumpAndJumpingOverItBothFinishTheLessonWithoutAHit() {
+        for (boolean jump : new boolean[]{false, true}) {
+            Level level = freshRoomWithStump();
+            walkToStone(level); upAction(level);
+            int frames = 0;
+            while (bodyLeft(level) < STUMP_X + 16 + 40) {
+                boolean j = jump && level.player.isOnGround() && bodyRight(level) >= STUMP_X - 36 && bodyRight(level) < STUMP_X - 20;
+                step(level, true, j);
+                assertTrue(alive(level), "jump=" + jump + " died at " + level.player.position);
+                assertTrue(++frames < 60 * 20);
+            }
+            assertEquals(jump, stump(level).phase() == IDLE, "a jump leaves it untouched, a walk lights it");
+            frames += goAndThrow(level);
+            frames += waitForPlatform(level, true);
+            frames += rideAcross(level);
+            frames += walkToExit(level);
+            assertTrue(level.atRoomExit() && alive(level));
+        }
+    }
+
+    @Test void withNoAmmunitionAtAllTheHeroJumpsTheStumpFromAnyPointOfTheTakeOffWindowAndNeverLightsIt() {
+        int ok = 0, tried = 0;
+        for (float takeOff = STUMP_X - 70; takeOff <= STUMP_X - 4; takeOff += 2) {
+            Level level = freshRoomWithStump();
+            place(level, takeOff);
+            step(level, true, true);
+            tried++;
+            boolean landed = false;
+            for (int i = 0; i < 60 * 3 && !landed; i++) {
+                step(level, true, false);
+                if (!alive(level)) break;
+                landed = bodyLeft(level) > STUMP_X + 16 + 4 && level.player.isOnGround();
+            }
+            if (landed && stump(level).phase() == IDLE) ok++;
+        }
+        System.out.println("forest-0-stone zero-ammo stump jump: " + ok + " of " + tried + " take-offs 4 .. 70 px before the stump clear it without lighting it");
+        assertTrue(ok >= 20, "a wide jump window with no ammunition: " + ok + " of " + tried);
+    }
+
+    @Test void aHeroWhoStandsOnTheStumpIsHitAndTheRetryRestoresTheStumpTheStoneAndThePlatform() {
+        Level level = freshRoomWithStump();
+        place(level, STUMP_X + 10);
+        int frames = 0;
+        while (!level.player.isGotHit() && frames++ < 60 * 3) frame(level);
+        assertTrue(level.player.isGotHit(), "staying on a lit stump costs one retry");
+        level.resetCurrentRoom(new Player(assets, game, 0, 0));
+        assertEquals(IDLE, stump(level).phase(), "retry makes the stump whole");
+        assertTrue(atHome(level), "and the stone lies at home");
+        assertFalse(platform(level).isRunning());
+        float seconds = solve(level) * STEP;
+        assertTrue(level.atRoomExit());
+        System.out.printf(java.util.Locale.ROOT, "forest-0-stone retry after the stump: %.2f s from the entrance to the exit%n", seconds);
+    }
+
+    @Test void theWholeLessonStillWorksWithTheStumpInEveryOrderOfStoneAndStumpAndAfterRetryAndRestart() {
+        for (int variant = 0; variant < 3; variant++) {
+            Level level = freshRoomWithStump();
+            if (variant == 1) { // light it first from afar with the stone, then do the lesson
+                giveStoneAt(level, STUMP_X - 70); throwNow(level);
+                waitUntil(level, () -> stump(level).isSpent(), 60 * 3, "spent");
+                fetchStone(level);
+            } else if (variant == 2) { // mid-lesson retry
+                walkToStone(level); upAction(level); walkRightTo(level, () -> bodyRight(level) >= STUMP_X - 10);
+                level.resetCurrentRoom(new Player(assets, game, 0, 0));
+                assertEquals(IDLE, stump(level).phase());
+            }
+            if (level.player.carriedObject() == null) { walkToStone(level); upAction(level); }
+            walkRightTo(level, () -> bodyRight(level) >= THROW_FROM);
+            throwNow(level);
+            waitForPlatform(level, true);
+            rideAcross(level); walkToExit(level);
+            assertTrue(level.atRoomExit() && alive(level), "variant " + variant);
+        }
+    }
+
+    @Test void theStumpHintComesAfterTheThrowHintAndNeverContradictsTheLeverLesson() {
+        Level level = freshRoomWithStump();
+        walkToStone(level);
+        assertEquals(Msg.HINT_STONE_THROW.t(Language.ENGLISH), level.player.zoneHint(), "the lever lesson is told first, at the stone");
+        upAction(level);
+        assertEquals(Msg.HINT_STONE_THROW.t(Language.ENGLISH), level.player.zoneHint(), "and still while the stone is picked up");
+        walkRightTo(level, () -> bodyRight(level) >= STUMP_X - 100);
+        String text = level.player.zoneHint();
+        assertEquals(Msg.HINT_STONE_STUMP.t(Language.ENGLISH), text);
+        assertFalse(text.toLowerCase().contains("lever"), "the stump text does not talk about the lever: " + text);
+        assertTrue(text.toLowerCase().contains("stone") && text.toLowerCase().contains("jump"), "it names both answers: " + text);
+    }
+
+    @Test void noOtherRoomOfTheTutorialBeforeTheTrapsRoomHoldsAnExplosiveTrap() {
+        for (int room : new int[]{0, 1, 2, 3}) {
+            Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
+            for (int i = 0; i < room; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
+            assertTrue(level.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance), "room " + room);
+        }
+    }
+
+    @Test void masteredRoutesWithTheStumpAreMeasured() {
+        // Walk through the lit stump, jump over it, and set it off from afar with the stone then wait for the blast.
+        float[] seconds = new float[3];
+        for (int variant = 0; variant < 3; variant++) {
+            Level level = freshRoomWithStump();
+            int frames = walkToStone(level) + upAction(level);
+            if (variant == 2) {
+                frames += walkRightTo(level, () -> bodyRight(level) >= STUMP_X - 70);
+                frames += throwNow(level);
+                int waited = 0;
+                while (!stump(level).isSpent()) { held.clear(); frame(level); waited++; }
+                frames += waited;
+                frames += walkToStone(level) + upAction(level);
+            } else {
+                while (bodyLeft(level) < STUMP_X + 16 + 40) {
+                    boolean j = variant == 1 && level.player.isOnGround() && bodyRight(level) >= STUMP_X - 36 && bodyRight(level) < STUMP_X - 20;
+                    step(level, true, j); frames++;
+                }
+            }
+            frames += goAndThrow(level) + waitForPlatform(level, true) + rideAcross(level) + walkToExit(level);
+            assertTrue(level.atRoomExit() && alive(level));
+            seconds[variant] = frames * STEP;
+        }
+        System.out.printf(java.util.Locale.ROOT, "forest-0-stone mastered routes with the stump: walk through %.2f s, jump over %.2f s, set off from afar and wait %.2f s%n", seconds[0], seconds[1], seconds[2]);
+        for (float t : seconds) assertTrue(t < 30, "Author check, not a novice playtest: " + t);
     }
 }

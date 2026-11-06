@@ -141,7 +141,7 @@ notes, open questions, unselected candidates); the author answered the original 
 phase is done by [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)**
 (forest trap set, explosive-trap choice rule, tutorial plan). Implementation is tracked by
 #230 art, #231 proximity traps, #232 falling traps (implemented, D45), #233 explosive stump/root, #234 rhythm
-traps and #235 tutorial integration. **Backlog added 2026-11-05** (author requests, not
+traps and #235 tutorial integration (implemented 2026-11-06, [D48](DECISIONS.md#d48-traps-in-the-tutorial-rooms-one-new-trap-per-lesson-room): thorn root in the ladder room, falling branch in the wall room, falling stone in the platform room, exploding stump in the stone room; automated tests only, not yet played by the author). **Backlog added 2026-11-05** (author requests, not
 accepted rules): [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236) parallax
 layers, [#237](https://github.com/jlogicgames/edgard_in_kimeria/issues/237) castle floor
 pressure plate, [#238](https://github.com/jlogicgames/edgard_in_kimeria/issues/238) arrow trap

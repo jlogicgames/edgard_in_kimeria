@@ -333,7 +333,7 @@ Nothing is implemented or playtested yet. Summary (D42 is the owner of the rules
 - **Tutorial plan:** one new trap per `forest-0` room (ladder: thorn root; wall: falling
   branch; platform: falling stone; stone: exploding stump; traps: stump replaces the bomb;
   lever room stays pure). This deliberately relaxes the one-new-element-per-room rule; D35-D40
-  are updated when #235 lands.
+  are updated by #235 (done, [D48](DECISIONS.md#d48-traps-in-the-tutorial-rooms-one-new-trap-per-lesson-room)).
 - **Art:** the explosion is currently a shader, so sprites are needed (stump/root wind-up with
   cracks, smoke and glow, then the blast); the glass-bottle bomb is redrawn or replaced.
 
@@ -356,7 +356,7 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
   code uses them yet and several are rough placeholders for a human artist to redo.
 - [#231](https://github.com/jlogicgames/edgard_in_kimeria/issues/231): code A, proximity
   traps (thorn root/stake, thorn tuft). **Implemented, see D44** (object types `ThornRoot`,
-  `ThornTuft`; placed in no shipped level yet, #235).
+  `ThornTuft`; the root is placed in the ladder room by #235/D48, the tuft nowhere).
 - [#232](https://github.com/jlogicgames/edgard_in_kimeria/issues/232): code B, falling traps
   (branch, stone). **Implemented, see D45** (tested headlessly in test-resource maps, not
   placed in any shipped level, not yet seen in the running game).
@@ -368,7 +368,7 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
 - [#234](https://github.com/jlogicgames/edgard_in_kimeria/issues/234): code D, rhythm traps
   (puffball, vine) and the rotten-log skin. **Implemented, see D46** (types `Puffball`,
   `ThornVine`, property `skin=log`; not placed in any shipped level, #235 does that).
-- [#235](https://github.com/jlogicgames/edgard_in_kimeria/issues/235): tutorial integration.
+- [#235](https://github.com/jlogicgames/edgard_in_kimeria/issues/235): tutorial integration. **Implemented, see D48**: thorn root (ladder room), falling branch (wall), falling stone (platform), exploding stump (stone room, next to the stump of the traps room); the rhythm traps stay unplaced.
 - Backlog added 2026-11-05 (author requests and ideas, not implemented rules):
   - [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236): parallax layers
     (see ART_DIRECTION.md).
