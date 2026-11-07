@@ -14,7 +14,7 @@ import re
 import struct
 import sys
 from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, PLAYER_LOOK_SIZE, HUD_ICON_SIZE,
-    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS)
+    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -135,6 +135,9 @@ def image_contracts(root):
         'opaque' if name in OPAQUE_WORLD_IMAGES else 'binary') for name, size in WORLD_IMAGES.items()]
     contracts += [(f'assets/images/HUD/{name}.png', HUD_ICON_SIZE, HUD_PALETTE_SIZE, 'soft')
                   for name in HUD_ICONS]
+    # Touch controls are small indexed pixel art with binary alpha, on the world-art palette limit.
+    contracts += [(f'assets/images/HUD/touch/{name}.png', size, WORLD_PALETTE_SIZE, 'binary')
+                  for name, size in TOUCH_CONTROL_SIZES.items()]
     # Character poses reuse the legacy hero's 16 opaque colors plus alpha; PNG pads to 32.
     contracts.append(('assets/images/hero/Look.png', PLAYER_LOOK_SIZE, 32, 'binary'))
     for relative, size, colors, alpha_mode in contracts:

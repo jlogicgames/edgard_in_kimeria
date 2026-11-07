@@ -18,9 +18,11 @@ import java.lang.reflect.Proxy;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * D54 (#226 follow-up): in landscape the stick and buttons go into the empty bars beside the 640x360 picture, in both
- * handedness modes, and the picture itself is never a control. Positions are window pixels (top-down), as a finger
- * reports them; "units" are picture units (one picture pixel row = 1 / (height / 360) window pixels).
+ * D54 / D56 (#226 follow-up): on a touch window that is not portrait the stick and buttons always go into the bars beside
+ * the 640x360 picture (which shrinks to leave at least 104 units per bar), in both handedness modes, and the picture itself
+ * is never a control. Positions are window pixels (top-down), as a finger reports them; "units" are controls-space units
+ * (window pixels divided by the picture's pixels per unit; X from the window's left edge, Y from its top, the picture at
+ * offset {@code sideBar()}, {@code sideTop()}).
  */
 class SideBarTouchLayoutTest {
     private final Vector2 finger = new Vector2();
@@ -40,9 +42,9 @@ class SideBarTouchLayoutTest {
             case "leftHanded" -> leftHanded;
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
-    /** The height-fitted picture, centred: pixels to 640x360 units. */
+    /** The shrunken, centred picture: pixels to 640x360 units. */
     private final Viewport picture = new Viewport() {
-        @Override public Vector2 unproject(Vector2 v) { return v.set((v.x - (width - 640 * ppu) / 2f) / ppu, v.y / ppu); }
+        @Override public Vector2 unproject(Vector2 v) { return v.set((v.x - (width - 640 * ppu) / 2f) / ppu, (v.y - (height - 360 * ppu) / 2f) / ppu); }
     };
 
     @BeforeEach void setUp() {
@@ -60,7 +62,10 @@ class SideBarTouchLayoutTest {
 
     @AfterEach void restore() { Gdx.input = previousInput; Gdx.app = previousApp; }
 
-    private void window(int w, int h) { width = w; height = h; ppu = h / 360f; layout.update(w, h, true); }
+    private void window(int w, int h) { width = w; height = h; layout.update(w, h, true); ppu = layout.pictureScale(); }
+
+    /** Controls-space Y of a picture-relative Y. */
+    private float cy(float pictureY) { return layout.sideTop() + pictureY; }
 
     private TouchControls controls() {
         TouchControls controls = new TouchControls(assets, game, picture, 640, 360, true);
@@ -77,32 +82,34 @@ class SideBarTouchLayoutTest {
             || c.shootPressed() || c.actionPressed();
     }
 
-    @Test void theSideBarLayoutIsChosenOnlyForATouchWindowWiderThanSixteenByNineWithRoomForABar() {
-        window(844, 390); // iPhone 14 landscape, no browser toolbars: picture 693 px, bars 75 px
-        assertTrue(layout.sideBars()); assertFalse(layout.portrait());
-        assertEquals(69.5f, layout.sideBar(), 0.1f);
-        assertEquals(640 + 2 * layout.sideBar(), layout.sideSpaceWidth(), 0.01f);
-        window(844, 330); // 19.5:9 with browser toolbars eating height: bars 128 px
-        assertTrue(layout.sideBars());
-        assertEquals(140f, layout.sideBar(), 1f);
-        window(844, 300);
-        assertTrue(layout.sideBars());
-        window(852, 393); window(932, 430); window(2400, 1080);
-        assertTrue(layout.sideBars());
-
-        window(640, 360); assertFalse(layout.sideBars(), "exactly 16:9: no bars");
-        window(1280, 720); assertFalse(layout.sideBars());
-        window(800, 450); assertFalse(layout.sideBars());
-        window(1024, 768); assertFalse(layout.sideBars(), "4:3 tablet window");
-        window(1366, 1024); assertFalse(layout.sideBars());
-        window(680, 360); assertFalse(layout.sideBars(), "bar of 20 units is below the minimum");
-        window(700, 360); assertTrue(layout.sideBars(), "bar of 30 units");
+    @Test void everyLandscapeTouchWindowGetsBarsOfAtLeast104UnitsAndAPictureOfAtLeast75PercentOfTheFullFit() {
+        // {width, height, expected pixels per unit}: measured values, see D56.
+        float[][] windows = {{844, 390, 0.9953f}, {844, 330, 0.9167f}, {844, 300, 0.8333f}, {852, 393, 1.0047f}, {932, 430, 1.0991f},
+            {640, 360, 0.7547f}, {1280, 720, 1.5094f}, {800, 450, 0.9434f}, {1024, 768, 1.2075f}, {1366, 1024, 1.6108f},
+            {680, 360, 0.8019f}, {2400, 1080, 2.8302f}, {500, 480, 0.5896f}};
+        for (float[] w : windows) {
+            window((int) w[0], (int) w[1]);
+            String at = (int) w[0] + "x" + (int) w[1];
+            assertTrue(layout.sideBars(), at); assertFalse(layout.portrait(), at);
+            assertEquals(w[2], layout.pictureScale(), 1e-3f, at + " pixels per picture unit");
+            assertTrue(layout.sideBar() >= TouchLayout.REQUIRED_BAR - 1e-3f, at + " bar " + layout.sideBar());
+            assertEquals(640 + 2 * layout.sideBar(), layout.sideSpaceWidth(), 0.01f, at);
+            assertEquals(360 + 2 * layout.sideTop(), layout.sideSpaceHeight(), 0.01f, at);
+            assertTrue(layout.sideSpaceWidth() * layout.pictureScale() <= w[0] + 0.5f && layout.sideSpaceHeight() * layout.pictureScale() <= w[1] + 0.5f, at + " fits");
+            float fullFit = Math.min(w[0] / 640f, w[1] / 360f);
+            assertTrue(layout.pictureScale() >= 0.755f * fullFit - 1e-3f, at + " picture " + layout.pictureScale() / fullFit + " of the full fit");
+        }
+        window(844, 390);
+        assertEquals(0.919f, layout.pictureScale() / (390 / 360f), 1e-3f, "iPhone landscape without toolbars: picture 91.9% of the full fit (637 px wide, was 693)");
+        window(844, 330);
+        assertEquals(140.4f, layout.sideBar(), 0.1f, "with toolbars the window already leaves more than 104: unchanged from D54");
         window(390, 844); assertFalse(layout.sideBars()); assertTrue(layout.portrait(), "portrait keeps the D53 strip");
         layout.update(844, 390, false);
         assertFalse(layout.sideBars(), "no touch screen: plain fit");
+        assertEquals(0f, layout.pictureScale(), "no touch screen: the picture is not capped");
     }
 
-    @Test void theControlsSpaceStartsAtTheWindowEdgeAndTheCentreIsThePicture() {
+    @Test void theControlsSpaceStartsAtTheWindowCornerAndThePictureIsCentredInIt() {
         window(844, 390);
         Vector2 v = new Vector2(0, 0);
         layout.controlsViewport().unproject(v);
@@ -110,46 +117,47 @@ class SideBarTouchLayoutTest {
         v.set(844, 390);
         layout.controlsViewport().unproject(v);
         assertEquals(layout.sideSpaceWidth(), v.x, 1e-2f);
-        assertEquals(360f, v.y, 1e-2f);
-        // The picture's left edge in controls space is exactly the bar width.
-        v.set((844 - 640 * ppu) / 2f, 0);
+        assertEquals(layout.sideSpaceHeight(), v.y, 1e-2f);
+        // The picture's top-left corner in controls space is exactly (bar, top).
+        v.set((844 - 640 * ppu) / 2f, (390 - 360 * ppu) / 2f);
         layout.controlsViewport().unproject(v);
         assertEquals(layout.sideBar(), v.x, 1e-2f);
+        assertEquals(layout.sideTop(), v.y, 1e-2f);
+        assertEquals(layout.sideBar(), (layout.sideSpaceWidth() - 640) / 2f, 1e-3f, "bars are symmetric");
     }
 
-    @Test void inABarThatIsWideEnoughEveryControlIsCompletelyOutsideThePictureInBothHandedModes() {
-        window(844, 330);
-        float bar = layout.sideBar(), space = layout.sideSpaceWidth();
-        assertTrue(bar >= 2 * (44 + 8), "stick (radius 44) fits with its margin");
-        for (boolean left : new boolean[]{false, true}) {
-            float stick = mx(TouchControls.sideStickX(bar), left);
-            float buttons = mx(space - TouchControls.sideButtonInset(bar), left);
-            float lo = left ? space - bar : 0, hi = left ? space : bar; // the stick's bar
-            assertTrue(stick - 44 >= lo && stick + 44 <= hi, "stick drawn inside its bar, left-handed " + left);
-            assertTrue(stick - TouchControls.SIDE_STICK_GRAB >= lo - 8 && stick + TouchControls.SIDE_STICK_GRAB <= hi + 8,
-                "stick grab at most a margin beyond its bar, left-handed " + left);
-            float blo = left ? 0 : space - bar, bhi = left ? bar : space; // the buttons' bar
-            assertTrue(buttons - 38.4f >= blo && buttons + 38.4f <= bhi, "button hit circle inside its bar, left-handed " + left);
-            assertTrue(left ? stick > space / 2 && buttons < space / 2 : stick < space / 2 && buttons > space / 2, "sides, left-handed " + left);
+    @Test void everyControlIsCompletelyInsideItsBarOnEveryWindowInBothHandedModes() {
+        int[][] windows = {{844, 390}, {844, 330}, {640, 360}, {1280, 720}, {1024, 768}, {2400, 1080}, {500, 480}};
+        for (int[] w : windows) {
+            window(w[0], w[1]);
+            float bar = layout.sideBar(), space = layout.sideSpaceWidth();
+            for (boolean left : new boolean[]{false, true}) {
+                String at = w[0] + "x" + w[1] + " left-handed " + left;
+                float stick = mx(TouchControls.sideStickX(bar), left);
+                float buttons = mx(space - TouchControls.sideButtonInset(bar), left);
+                float lo = left ? space - bar : 0, hi = left ? space : bar; // the stick's bar
+                assertTrue(stick - 44 >= lo + 8 - 1e-3f && stick + 44 <= hi - 8 + 1e-3f, "stick drawn inside its bar with its margin, " + at);
+                float blo = left ? 0 : space - bar, bhi = left ? bar : space; // the buttons' bar
+                assertTrue(buttons - 38.4f >= blo && buttons + 38.4f <= bhi, "button hit circle inside its bar, " + at);
+                assertTrue(left ? stick > space / 2 && buttons < space / 2 : stick < space / 2 && buttons > space / 2, "sides, " + at);
+            }
         }
     }
 
-    @Test void inANarrowBarTheControlsSitAsFarOutAsFitsAndStayInsideTheWindow() {
-        window(844, 390);
-        float bar = layout.sideBar(), space = layout.sideSpaceWidth();
-        assertEquals(52f, TouchControls.sideStickX(bar), 1e-3f, "stick: 44 radius + 8 margin from the left edge");
-        assertEquals(46.4f, TouchControls.sideButtonInset(bar), 1e-3f, "buttons: 38.4 hit radius + 8 margin from the right edge");
-        assertTrue(TouchControls.sideStickX(bar) + 44 - bar < 40, "stick overlaps the picture by less than 40 units");
-        assertTrue(TouchControls.sideButtonInset(bar) + 32 - bar < 10, "buttons overlap the picture by less than 10 units");
+    @Test void atTheMinimumBarTheControlsAreCentredAndTheColumnFitsTheHeight() {
+        window(640, 360);
+        float bar = layout.sideBar();
+        assertEquals(104f, bar, 1e-2f);
+        assertEquals(52f, TouchControls.sideStickX(bar), 1e-3f, "stick: centred in the bar, 44 radius + 8 margin each side");
+        assertEquals(52f, TouchControls.sideButtonInset(bar), 1e-3f, "buttons: centred in the bar, 38.4 hit radius + 13.6 spare");
         float[] ys = {TouchControls.SIDE_JUMP_Y, TouchControls.SIDE_SHOOT_Y, TouchControls.SIDE_ACTION_Y};
         for (float y : ys) assertTrue(y - 38.4f >= 0 && y + 38.4f <= 360, "button column inside the height at y " + y);
-        assertTrue(TouchControls.SIDE_STICK_Y + TouchControls.SIDE_STICK_GRAB <= 360 + 1e-3f);
+        assertTrue(TouchControls.SIDE_STICK_Y + 52 <= 360 + 1e-3f);
         assertTrue(ys[0] - ys[1] >= 76.8f && ys[1] - ys[2] >= 76.8f, "hit circles do not overlap");
-        assertTrue(space - TouchControls.sideButtonInset(bar) + 38.4f <= space);
     }
 
     @Test void theStickAndTheButtonsWorkFromTheBarsInBothHandedModesAndOnEveryWindow() {
-        int[][] windows = {{844, 390}, {844, 330}, {932, 430}, {700, 360}};
+        int[][] windows = {{844, 390}, {844, 330}, {932, 430}, {640, 360}, {1280, 720}, {1024, 768}};
         for (int[] w : windows) {
             window(w[0], w[1]);
             float bar = layout.sideBar(), space = layout.sideSpaceWidth();
@@ -160,32 +168,32 @@ class SideBarTouchLayoutTest {
 
                 TouchControls stick = controls();
                 stick.update(true);
-                touchUnits(sx + 40, TouchControls.SIDE_STICK_Y);
+                touchUnits(sx + 40, cy(TouchControls.SIDE_STICK_Y));
                 stick.update(true);
                 assertEquals(1f, stick.horizontal(), at + " stick right");
                 down = false; stick.update(true);
-                touchUnits(sx - 40, TouchControls.SIDE_STICK_Y);
+                touchUnits(sx - 40, cy(TouchControls.SIDE_STICK_Y));
                 stick.update(true);
                 assertEquals(-1f, stick.horizontal(), at + " stick left");
                 down = false; stick.update(true);
 
                 TouchControls jump = controls();
                 jump.update(true);
-                touchUnits(bx, TouchControls.SIDE_JUMP_Y);
+                touchUnits(bx, cy(TouchControls.SIDE_JUMP_Y));
                 jump.update(true);
                 assertTrue(jump.jumpHeld(), at + " jump");
                 down = false; jump.update(true);
 
                 TouchControls shoot = controls();
                 shoot.update(true);
-                touchUnits(bx, TouchControls.SIDE_SHOOT_Y);
+                touchUnits(bx, cy(TouchControls.SIDE_SHOOT_Y));
                 shoot.update(true);
                 assertTrue(shoot.shootPressed(), at + " ranged");
                 down = false; shoot.update(true);
 
                 TouchControls action = controls();
                 action.update(true);
-                touchUnits(bx, TouchControls.SIDE_ACTION_Y);
+                touchUnits(bx, cy(TouchControls.SIDE_ACTION_Y));
                 action.update(true);
                 assertTrue(action.actionPressed(), at + " action");
                 down = false; action.update(true);
@@ -193,27 +201,25 @@ class SideBarTouchLayoutTest {
         }
     }
 
-    @Test void aTouchAnywhereOnThePictureNeverDrivesTheControlsWhenTheBarsAreWideEnough() {
-        window(844, 330);
-        float bar = layout.sideBar();
-        for (boolean left : new boolean[]{false, true}) {
-            leftHanded = left;
-            for (float px = 0; px <= 640; px += 16) {
-                for (float py = 0; py <= 360; py += 12) {
-                    TouchControls controls = controls();
-                    controls.update(true);
-                    touchUnits(bar + px, py);
-                    controls.update(true);
-                    boolean grabbed = anyControl(controls);
-                    assertFalse(grabbed && px > 0 && px < 640 && !nearEdge(px), "picture spot " + px + "," + py + " left-handed " + left);
-                    down = false; controls.update(true);
+    @Test void aTouchAnywhereOnThePictureNeverDrivesTheControlsOnAnyWindow() {
+        for (int[] w : new int[][]{{844, 390}, {844, 330}, {640, 360}, {1280, 720}, {1024, 768}}) {
+            window(w[0], w[1]);
+            float bar = layout.sideBar();
+            for (boolean left : new boolean[]{false, true}) {
+                leftHanded = left;
+                for (float px = 1; px < 640; px += 8) {
+                    for (float py = 1; py < 360; py += 8) {
+                        TouchControls controls = controls();
+                        controls.update(true);
+                        touchUnits(bar + px, cy(py));
+                        controls.update(true);
+                        assertFalse(anyControl(controls), "picture spot " + px + "," + py + " on " + w[0] + "x" + w[1] + " left-handed " + left);
+                        down = false; controls.update(true);
+                    }
                 }
             }
         }
     }
-
-    /** The stick grab is allowed to reach one margin (8 units) into the picture; nothing deeper. */
-    private boolean nearEdge(float pictureX) { return pictureX <= 8 || pictureX >= 640 - 8; }
 
     @Test void theOldOverPictureSpotsDoNotDriveAnythingOnAnIPhoneWindow() {
         window(844, 390);
@@ -223,7 +229,7 @@ class SideBarTouchLayoutTest {
             for (float[] c : landscapeSpots) {
                 TouchControls controls = controls();
                 controls.update(true);
-                touchUnits(layout.sideBar() + (left ? 640 - c[0] : c[0]), c[1]);
+                touchUnits(layout.sideBar() + (left ? 640 - c[0] : c[0]), cy(c[1]));
                 controls.update(true);
                 assertFalse(anyControl(controls), "picture spot " + c[0] + "," + c[1] + " left-handed " + left);
                 down = false; controls.update(true);
@@ -232,20 +238,20 @@ class SideBarTouchLayoutTest {
     }
 
     @Test void thePauseButtonStillWorksAtTopCentreOfThePictureAndABarTouchDoesNotPause() {
-        for (int[] w : new int[][]{{844, 390}, {844, 330}}) {
+        for (int[] w : new int[][]{{844, 390}, {844, 330}, {640, 360}, {1280, 720}}) {
             window(w[0], w[1]);
             for (boolean left : new boolean[]{false, true}) {
                 leftHanded = left;
                 TouchControls controls = controls();
                 controls.update(true);
-                touchUnits(layout.sideBar() + TouchControls.PAUSE_X, TouchControls.PAUSE_Y);
+                touchUnits(layout.sideBar() + TouchControls.PAUSE_X, cy(TouchControls.PAUSE_Y));
                 controls.update(true);
                 assertTrue(controls.pausePressed(), w[0] + "x" + w[1] + " left-handed " + left);
                 down = false; controls.update(true);
 
                 TouchControls bars = controls();
                 bars.update(true);
-                touchUnits(layout.sideBar() / 2f, TouchControls.PAUSE_Y);
+                touchUnits(layout.sideBar() / 2f, cy(TouchControls.PAUSE_Y));
                 bars.update(true);
                 assertFalse(bars.pausePressed());
                 down = false; bars.update(true);
@@ -258,10 +264,29 @@ class SideBarTouchLayoutTest {
         leftHanded = false;
         TouchControls controls = controls();
         controls.update(true);
-        touchUnits(layout.sideBar() + 300, 270);
+        touchUnits(layout.sideBar() + 300, cy(270));
         controls.update(true);
-        touchUnits(layout.sideBar() / 2f, TouchControls.SIDE_STICK_Y);
+        touchUnits(layout.sideBar() / 2f, cy(TouchControls.SIDE_STICK_Y));
         controls.update(true);
         assertFalse(anyControl(controls));
+    }
+
+    @Test void thePauseTargetStaysAtLeast48PixelsAcrossWhenThePictureShrinks() {
+        window(640, 360); // 0.755 px per unit: the 26-unit hit circle would be only 39 px across
+        for (boolean left : new boolean[]{false, true}) {
+            leftHanded = left;
+            TouchControls inside = controls();
+            inside.update(true);
+            touchUnits(layout.sideBar() + TouchControls.PAUSE_X + 30, cy(TouchControls.PAUSE_Y));
+            inside.update(true);
+            assertTrue(inside.pausePressed(), "30 units = 22.6 px from the centre");
+            down = false; inside.update(true);
+            TouchControls outside = controls();
+            outside.update(true);
+            touchUnits(layout.sideBar() + TouchControls.PAUSE_X + 40, cy(TouchControls.PAUSE_Y));
+            outside.update(true);
+            assertFalse(outside.pausePressed(), "40 units = 30 px is outside");
+            down = false; outside.update(true);
+        }
     }
 }

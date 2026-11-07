@@ -20,6 +20,9 @@ ITEM_FRAME_COUNT = 2
 ITEM_STRIP_SIZE = (ITEM_FRAME_SIZE * ITEM_FRAME_COUNT, ITEM_FRAME_SIZE)
 ITEM_STRIPS = ('bat', 'mushroom')  # healer ingredients: two registered 16x16 frames each
 HUD_ICONS = ('coin', 'bat', 'mushroom', 'fireball')
+# Light high-contrast touch controls (#226, D55): hand-drawn grids in art/hud/touch -> assets/images/HUD/touch.
+TOUCH_CONTROL_SIZES = {'disc': (64, 64), 'disc-down': (64, 64), 'base': (64, 64), 'knob': (32, 32), 'knob-down': (32, 32),
+                       'jump': (64, 64), 'jump-down': (64, 64), 'pause': (64, 64), 'pause-down': (64, 64)}
 PLAYER_FRAME_SIZE = 48
 PLAYER_IDLE_ROW = 9
 PLAYER_LOOK_FRAME_COUNT = 2

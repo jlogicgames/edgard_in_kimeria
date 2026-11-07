@@ -1,0 +1,43 @@
+# Touch control art (#226, D55): knob-down, native 32x32. Hand-authored pixel grid, left half; mirrored.
+size 32 32
+color k 14122b
+color W ffffff
+color L fdf3d0
+color l d2bf84
+color a ffc83a
+color A c98a10
+color s 3f4670
+color S 7480b8
+frame knob-down mirror
+..............kk
+..........kkkkkk
+........kkkWWWWW
+.......kkWWaaaaa
+.....kkWWaaaaaaa
+....kkWWaaaaaaaa
+....kWaaaaaaaaaa
+...kWWaaaaaaaaaa
+..kkWaaaaaaaaaaa
+..kWaaaaaaaaaaaa
+.kkWaaaaaaaaaaaa
+.kWaaaaaaaaaaaaa
+.kWaaaaaaaaaaaaa
+.kWaaaaaaaaaaaaa
+kkWaaaaaaaaaaaaa
+kkWaaaaaaaaaaaaa
+kkWaaaaaaaaaaaaa
+kkWaaaaaaaaaaaaa
+.kWaaaaaaaaaaaaa
+.kWaaaaaaaaaaaaa
+.kWaaaaaaaaaaaaa
+.kkWaaaaaaaaaaaa
+..kWAaaaaaaaaaaa
+..kkWAaaaaaaaaaa
+...kWWAaaaaaaaaa
+....kWAAAaaaaaaa
+....kkWWAAAAAAAA
+.....kkWWAAAAAAA
+.......kkWWAAAAA
+........kkkWWWWW
+..........kkkkkk
+..............kk
