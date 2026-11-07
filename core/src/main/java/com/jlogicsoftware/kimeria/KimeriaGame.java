@@ -583,6 +583,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void applyLayout(int width, int height) {
         // Portrait phones: picture pinned to the top, the strip below it belongs to the touch controls (#226).
+        touchLayout.setPixelRatio(pageFullscreen != null ? pageFullscreen.pixelRatio() : 1f);
         touchLayout.update(width, height, touchControls != null && touchControls.isAvailable());
         for (Viewport v : new Viewport[]{viewport, uiViewport}) {
             ((PlayfieldViewport) v).setTopAligned(touchLayout.portrait());

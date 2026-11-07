@@ -17,6 +17,9 @@ public class WebLauncher {
         // the desktop launcher's resizable window.
         config.width = 0;
         config.height = 0;
+        // Back the canvas with physical pixels (D57): width x devicePixelRatio, CSS size unchanged. Without this an
+        // iPhone (ratio 3) draws a 390 px wide canvas that the browser then stretches 3x, smearing pixel art and text.
+        config.usePhysicalPixels = true;
         prepareMobilePage();
         new WebApplication(new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen()), config);
     }
@@ -29,7 +32,12 @@ public class WebLauncher {
         @Override public boolean available() { return fullscreenAvailable(); }
         @Override public boolean active() { return fullscreenActive(); }
         @Override public void toggle() { toggleFullscreen(); }
+        @Override public float pixelRatio() { return (float) Math.max(1, devicePixelRatio()); }
     }
+
+    /** The same ratio the backend sizes the canvas with ({@code devicePixelRatio || 1}). */
+    @JSBody(script = "return window.devicePixelRatio || 1;")
+    private static native double devicePixelRatio();
 
     @JSBody(script = "var d = document, e = d.documentElement;"
         + "return !!((d.fullscreenEnabled && e.requestFullscreen) || (d.webkitFullscreenEnabled && e.webkitRequestFullscreen));")

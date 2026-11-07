@@ -43,6 +43,7 @@ public final class TouchLayout {
     private boolean portrait, sideBars;
     private float sideBar, sideTop, pictureScale;
     private int screenWidth, screenHeight, gameScreenHeight;
+    private float pixelRatio = 1f;
 
     public TouchLayout(float gameWidth, float gameHeight) {
         this.gameWidth = gameWidth;
@@ -70,6 +71,12 @@ public final class TouchLayout {
             controls.layoutSide(width, height, ppu, height / ppu);
         }
     }
+
+    /** Backbuffer pixels per CSS pixel (D57): window sizes given to {@link #update} are in backbuffer pixels. Default 1. */
+    public void setPixelRatio(float pixelRatio) { this.pixelRatio = Math.max(1f, pixelRatio); }
+
+    /** Backbuffer pixels per CSS pixel; a "24 px" finger target is {@code 24 * pixelRatio()} backbuffer pixels. */
+    public float pixelRatio() { return pixelRatio; }
 
     /** True when the stick and buttons go into the left and right bars beside the picture (landscape). */
     public boolean sideBars() { return sideBars; }
