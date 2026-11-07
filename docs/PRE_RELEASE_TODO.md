@@ -44,6 +44,7 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
 - [ ] Landscape touch layout (D56, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)) on a real iPhone and Android phone and a tablet: the picture is
   centred and slightly smaller (about 8% on an iPhone without toolbars, 25% on a 16:9 window), bars on both sides,
   stick and buttons completely inside them and comfortable, nothing over the picture, pause button easy to hit, both handedness modes.
+- [ ] Sharpness on a real iPhone and Android phone (D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): menu, dialogue and hint text and the sprites are crisp in portrait and landscape (compare `docs/references/mobile-sharpness-*-before-after.png`); the frame rate stays smooth with the canvas at about 3 M physical pixels, and in a Safari tab after the toolbars appear or hide (canvas follows the resize).
 - [ ] Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)) on a real iPhone and Android phone: stick, Fireball,
   Sword/Action, Jump and pause button are easy to see on the dark strip / side bars and over the picture
   (16:9, 4:3), labels (13 px, dark on cream; long German / Belarusian ones wrap to two lines) readable, pressed state (amber) obvious, in daylight and in a dark room.

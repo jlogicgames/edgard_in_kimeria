@@ -12,4 +12,11 @@ public interface DisplayControl {
 
     /** Enters or leaves fullscreen; must run from a user gesture (the menu click). */
     void toggle();
+
+    /**
+     * Backbuffer pixels per CSS pixel. The web build draws into a canvas of physical pixels (D57), so on a phone
+     * every game pixel count is 2 to 3 times the CSS size; sizes that must stay finger-sized (the pause button's
+     * hit circle) are given in CSS pixels and scaled by this. 1 where the backbuffer is the window.
+     */
+    default float pixelRatio() { return 1f; }
 }

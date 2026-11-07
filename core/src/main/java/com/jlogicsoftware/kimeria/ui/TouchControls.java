@@ -80,7 +80,7 @@ public class TouchControls {
     public static final float PAUSE_X = 320, PAUSE_Y = 19, PAUSE_RADIUS = 13, PAUSE_HIT_RADIUS = 26;
     /** In portrait the picture is drawn at about 0.6 px per unit, so 40 units is still a 24 px radius target. */
     public static final float PAUSE_HIT_RADIUS_PORTRAIT = 40;
-    /** In the side-bar layout the picture can be drawn well below 1 px per unit (D56); the hit circle keeps at least this radius in pixels. */
+    /** In the side-bar layout the picture can be drawn well below 1 px per unit (D56); the hit circle keeps at least this radius in CSS pixels (backbuffer pixels on the web are {@code TouchLayout.pixelRatio()} per CSS pixel, D57). */
     public static final float PAUSE_MIN_HIT_PIXELS = 24;
     /** Portrait strip layout (controls space units): cluster centre offset from the strip middle, and each control's place. */
     static final float PORTRAIT_STICK_X = 80, PORTRAIT_JUMP_X = 310, PORTRAIT_ACTION_X = 240, PORTRAIT_SHOOT_X = 256;
@@ -296,7 +296,7 @@ public class TouchControls {
 
     private float pauseHitRadius() {
         if (portrait()) return PAUSE_HIT_RADIUS_PORTRAIT;
-        return sideBars() ? Math.max(PAUSE_HIT_RADIUS, PAUSE_MIN_HIT_PIXELS / layout.pictureScale()) : PAUSE_HIT_RADIUS;
+        return sideBars() ? Math.max(PAUSE_HIT_RADIUS, PAUSE_MIN_HIT_PIXELS * layout.pixelRatio() / layout.pictureScale()) : PAUSE_HIT_RADIUS;
     }
 
     private static boolean inCircle(float x, float y, float cx, float cy, float r) {

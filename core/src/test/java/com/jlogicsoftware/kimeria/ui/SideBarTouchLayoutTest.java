@@ -289,4 +289,38 @@ class SideBarTouchLayoutTest {
             down = false; outside.update(true);
         }
     }
+
+    /** D57: the web canvas is in physical pixels, so a window is ratio x CSS size; the finger-sized rules must not shrink. */
+    @Test void thePauseTargetIsMeasuredInCssPixelsOnAPhysicalPixelCanvas() {
+        // 640x360 CSS at ratio 1 and the same window backed with 3x pixels must hit the same CSS area.
+        for (boolean left : new boolean[]{false, true}) {
+            leftHanded = left;
+            layout.setPixelRatio(3f);
+            window(1920, 1080); // 2.264 px per unit; 24 CSS px = 72 px = 31.8 units, as 24 / 0.755 at ratio 1
+            TouchControls inside = controls();
+            inside.update(true);
+            touchUnits(layout.sideBar() + TouchControls.PAUSE_X + 30, cy(TouchControls.PAUSE_Y));
+            inside.update(true);
+            assertTrue(inside.pausePressed(), "30 units inside at ratio 3");
+            down = false; inside.update(true);
+            TouchControls outside = controls();
+            outside.update(true);
+            touchUnits(layout.sideBar() + TouchControls.PAUSE_X + 40, cy(TouchControls.PAUSE_Y));
+            outside.update(true);
+            assertFalse(outside.pausePressed(), "40 units outside at ratio 3");
+            down = false; outside.update(true);
+            layout.setPixelRatio(1f);
+        }
+    }
+
+    @Test void thePixelRatioNeverChangesTheLayoutInPictureUnitsAndIsAtLeastOne() {
+        window(844, 390);
+        float bar = layout.sideBar();
+        layout.setPixelRatio(3f);
+        window(844 * 3, 390 * 3);
+        assertEquals(bar, layout.sideBar(), 1e-3f, "the same CSS window gives the same bars in units");
+        assertEquals(3f, layout.pixelRatio());
+        layout.setPixelRatio(0.2f);
+        assertEquals(1f, layout.pixelRatio(), "a ratio below 1 is clamped");
+    }
 }
