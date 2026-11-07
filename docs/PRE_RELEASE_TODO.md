@@ -43,7 +43,8 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   (Safari tab and the Add to Home Screen app) and a real Android phone: portrait shows the picture on
   top with the stick and buttons in the strip below and nothing over the playfield, in both handedness
   modes; the rotate hint reads in all five languages; landscape shows the whole picture (smaller in a
-  Safari tab because of the toolbars, full height from the home-screen app); no scroll, bounce or
+  Safari tab because of the toolbars, full height from the home-screen app) with the stick in the left bar and
+  the buttons in the right bar, nothing or only a thin edge over the picture, in both handedness modes (D54); no scroll, bounce or
   pinch-zoom; the Display (fullscreen) option appears on Android Chrome and not on iPhone; the screen
   stays on through a 10+ minute session (write down the auto-lock timeout without it); the home-screen
   icon, name and status bar look right.

@@ -82,7 +82,7 @@ class PortraitTouchLayoutTest {
         assertTrue(layout.spaceHeight() >= TouchLayout.MIN_SPACE_HEIGHT);
         TouchLayout other = new TouchLayout(640, 360);
         other.update(844, 390, true);
-        assertFalse(other.portrait(), "landscape phone: controls stay over the picture");
+        assertFalse(other.portrait(), "landscape phone: no strip (side bars instead, D54)");
         other.update(PHONE_W, PHONE_H, false);
         assertFalse(other.portrait(), "no touch screen: plain fit");
         other.update(1024, 768, true);
@@ -192,8 +192,10 @@ class PortraitTouchLayoutTest {
         assertTrue(TouchControls.PAUSE_HIT_RADIUS_PORTRAIT * PICTURE_SCALE * 2 >= 44, "at least 44 px across on a 390 px phone");
     }
 
+    /** D54: a phone window wider than 16:9 now gets side bars, so "controls over the picture" is checked on a 4:3 tablet window. */
     @Test void theLandscapeLayoutIsUnchangedWithoutAPortraitLayout() {
-        layout.update(844, 390, true);
+        layout.update(1024, 768, true);
+        assertFalse(layout.portrait() || layout.sideBars());
         TouchControls controls = new TouchControls(assets, game, new Viewport() {
             @Override public Vector2 unproject(Vector2 v) { return v; }
         }, 640, 360, true);

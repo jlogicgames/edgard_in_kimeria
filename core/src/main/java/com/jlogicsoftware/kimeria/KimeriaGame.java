@@ -678,14 +678,15 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         } else {
             clear = SKY_CLEAR;
         }
-        if (touchLayout.portrait()) {
-            // Dark strip for the controls, the scene colour only behind the picture.
+        boolean framed = touchLayout.portrait() || touchLayout.sideBars();
+        if (framed) {
+            // Dark strip or side bars for the controls, the scene colour only behind the picture.
             clearScreen(STRIP_CLEAR);
             Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
             HdpiUtils.glScissor(uiViewport.getScreenX(), uiViewport.getScreenY(), uiViewport.getScreenWidth(), uiViewport.getScreenHeight());
         }
         clearScreen(clear);
-        if (touchLayout.portrait()) Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+        if (framed) Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
         boolean glitched = uiState == UiState.PAUSED && (pausedHealer || level != null);
         RippleEffect ripple = levelVisible && level != null ? level.activeRipple() : null;
