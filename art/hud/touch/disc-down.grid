@@ -1,0 +1,75 @@
+# Touch control art (#226, D55): disc-down, native 64x64. Hand-authored pixel grid, left half; mirrored.
+size 64 64
+color k 14122b
+color W ffffff
+color L fdf3d0
+color l d2bf84
+color a ffc83a
+color A c98a10
+color s 3f4670
+color S 7480b8
+frame disc-down mirror
+............................kkkk
+.......................kkkkkkkkk
+....................kkkkkkkkkWWW
+..................kkkkkkWWWWWWWW
+................kkkkkWWWWWWWWkkk
+...............kkkkWWWWWkkkkkaaa
+.............kkkkWWWWkkkaaaaaaaa
+............kkkWWWWkkaaaaaaaaaaa
+...........kkkWWWkkaaaaaaaaaaaaa
+..........kkkWWWkkaaaaaaaaaaaaaa
+.........kkkWWWkaaaaaaaaaaaaaaaa
+........kkkWWkkaaaaaaaaaaaaaaaaa
+.......kkkWWkkaaaaaaaaaaaaaaaaaa
+......kkkWWkkaaaaaaaaaaaaaaaaaaa
+......kkWWWkaaaaaaaaaaaaaaaaaaaa
+.....kkWWWkaaaaaaaaaaaaaaaaaaaaa
+....kkkWWkaaaaaaaaaaaaaaaaaaaaaa
+....kkWWkkaaaaaaaaaaaaaaaaaaaaaa
+...kkkWWkaaaaaaaaaaaaaaaaaaaaaaa
+...kkWWkaaaaaaaaaaaaaaaaaaaaaaaa
+..kkkWWkaaaaaaaaaaaaaaaaaaaaaaaa
+..kkWWkaaaaaaaaaaaaaaaaaaaaaaaaa
+..kkWWkaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkkWWkaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaaa
+kkkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkWWkaaaaaaaaaaaaaaaaaaaaaaaaaa
+.kkkWWkaaaaaaaaaaaaaaaaaaaaaaaaa
+..kkWWkaaaaaaaaaaaaaaaaaaaaaaaaa
+..kkWWkaaaaaaaaaaaaaaaaaaaaaaaaa
+..kkkWWkaaaaaaaaaaaaaaaaaaaaaaaa
+...kkWWkAaaaaaaaaaaaaaaaaaaaaaaa
+...kkkWWkaaaaaaaaaaaaaaaaaaaaaaa
+....kkWWkkaaaaaaaaaaaaaaaaaaaaaa
+....kkkWWkAaaaaaaaaaaaaaaaaaaaaa
+.....kkWWWkAaaaaaaaaaaaaaaaaaaaa
+......kkWWWkAAaaaaaaaaaaaaaaaaaa
+......kkkWWkkAAaaaaaaaaaaaaaaaaa
+.......kkkWWkkAAAaaaaaaaaaaaaaaa
+........kkkWWkkAAAAaaaaaaaaaaaaa
+.........kkkWWWkAAAAAaaaaaaaaaaa
+..........kkkWWWkkAAAAAAAAaaaaaa
+...........kkkWWWkkAAAAAAAAAAAAA
+............kkkWWWWkkAAAAAAAAAAA
+.............kkkkWWWWkkkAAAAAAAA
+...............kkkkWWWWWkkkkkAAA
+................kkkkkWWWWWWWWkkk
+..................kkkkkkWWWWWWWW
+....................kkkkkkkkkWWW
+.......................kkkkkkkkk
+............................kkkk

@@ -41,6 +41,12 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   to hit with a thumb, and Resume / Restart Level / Options / Main menu must all work by touch.
   The author reported on 2026-11-07 that the button works on a real device; the cases listed
   here were not itemised, so keep this open until they are.
+- [ ] Landscape touch layout (D56, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)) on a real iPhone and Android phone and a tablet: the picture is
+  centred and slightly smaller (about 8% on an iPhone without toolbars, 25% on a 16:9 window), bars on both sides,
+  stick and buttons completely inside them and comfortable, nothing over the picture, pause button easy to hit, both handedness modes.
+- [ ] Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)) on a real iPhone and Android phone: stick, Fireball,
+  Sword/Action, Jump and pause button are easy to see on the dark strip / side bars and over the picture
+  (16:9, 4:3), labels (13 px, dark on cream; long German / Belarusian ones wrap to two lines) readable, pressed state (amber) obvious, in daylight and in a dark room.
 - [ ] Mobile browser layout, fullscreen and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53) on a real iPhone
   (Safari tab and the Add to Home Screen app) and a real Android phone: portrait shows the picture on
   top with the stick and buttons in the strip below and nothing over the playfield, in both handedness

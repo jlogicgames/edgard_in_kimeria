@@ -586,6 +586,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         touchLayout.update(width, height, touchControls != null && touchControls.isAvailable());
         for (Viewport v : new Viewport[]{viewport, uiViewport}) {
             ((PlayfieldViewport) v).setTopAligned(touchLayout.portrait());
+            ((PlayfieldViewport) v).setMaxScale(touchLayout.pictureScale());
             v.update(width, height, false);
         }
     }

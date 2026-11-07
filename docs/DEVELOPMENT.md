@@ -214,7 +214,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - **Mobile browsers** (author iPhone play-through, 2026-11-05; fixes in D53, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), not yet confirmed on a device):
   in portrait the picture is pinned to the top and the stick and buttons sit in the strip below it
   (`ui.TouchLayout`), with a rotate hint; in landscape on a window wider than 16:9 the stick is in the left bar
-  and the buttons in the right bar beside the picture (D54); the page uses the visible viewport (`100dvh`), no scroll or
+  and the buttons in the right bar beside the picture (D54); on every touch landscape window the picture shrinks to leave bars of at least 104 units so nothing covers it (D56); the page uses the visible viewport (`100dvh`), no scroll or
   zoom; the screen wake lock is requested while the page is visible. **What iOS cannot do:** iPhone
   Safari has no page Fullscreen API and a web page cannot hide its toolbars, so there is no fullscreen
   button on iPhone and a Safari tab always loses some height to the toolbars. The way around it is
@@ -257,7 +257,7 @@ Package layout:
 - `localization.*` — typed `Msg` keys, five UTF-8 catalogs, English fallback and strict
   validation; see [localization](LOCALIZATION.md)
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
-- `ui.TouchControls` — two-axis on-screen stick, Jump / Ranged / directional Action buttons and a top-centre pause button (D52); in portrait they move into the strip under the picture, in a wide landscape window into the side bars (`ui.TouchLayout`, `ui.PlayfieldViewport`, D53, D54)
+- `ui.TouchControls` — two-axis on-screen stick, Jump / Ranged / directional Action buttons and a top-centre pause button (D52); in portrait they move into the strip under the picture, in any touch landscape window into the side bars (`ui.TouchLayout`, `ui.PlayfieldViewport`, D53, D54); their art is the light high-contrast set in `assets/images/HUD/touch/`, authored as grids in `art/hud/touch/` and exported with `tools/touch_control_sprites.py` (D55)
 - `KimeriaGame` — the whole game and its menu states in one place
 - `lwjgl3/src/dev` — `runDev`'s launcher, compiler, watcher and reloader (`DevHost`); a source
   set of its own that no release build includes, see "Live editing" above
@@ -333,7 +333,7 @@ backend instead of its `sun.misc.Unsafe` one. Two cases remain, both outside our
 `./gradlew validateSpriteArt` runs the source-art policy and new world/HUD PNG contract checks.
 The latter inspect PNG metadata with the Python standard library: world native
 dimensions, indexed palette up to 16 entries and binary alpha; HUD 128×128 indexed
-exports up to 256 entries. Legacy multi-frame sheets remain separate authored assets. Core `check`, the
+exports up to 256 entries; the touch-control PNGs in `assets/images/HUD/touch/` (D55) are 64x64 / 32x32 indexed, up to 16 entries, binary alpha. Legacy multi-frame sheets remain separate authored assets. Core `check`, the
 actual desktop JAR/native-packaging dependency and TeaVM release-build task depend
 on it, including when called directly instead of using the root aliases. Python 3
 is required for this developer check; no Python is shipped with the game. Asset

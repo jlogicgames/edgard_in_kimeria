@@ -14,6 +14,7 @@ import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
+import com.jlogicsoftware.kimeria.ui.TouchControls;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -74,9 +75,14 @@ class LocalizationLayoutTest {
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                     assertTrue(new GlyphLayout(body, message.t(language)).width <= 512, prefix + message);
-                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED, Msg.DIRECTION_CONFLICT}) {
-                    float width = message == Msg.SHOOT ? 52.4f : 62f;
-                    assertTrue(new GlyphLayout(hint, message.t(language)).width <= width, prefix + message);
+                // D55: the light button art leaves ~5 px of rim, so labels wrap at the cream width (50 / 40.4 px) and may
+                // take two lines; every word must still fit that width on its own.
+                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED, Msg.DIRECTION_CONFLICT, Msg.NO_ACTION}) {
+                    float width = message == Msg.SHOOT || message == Msg.THROW || message == Msg.FIREBALL || message == Msg.NO_AMMO
+                        ? TouchControls.RANGED_LABEL_WIDTH : TouchControls.ACTION_LABEL_WIDTH;
+                    for (String word : message.t(language).split(" "))
+                        assertTrue(new GlyphLayout(hint, word).width <= width, prefix + message + " word " + word);
+                    assertTrue(lines(hint, message.t(language), width) <= 2, prefix + message);
                     assertTrue(height(hint, message.t(language), width) <= 32, prefix + message);
                 }
                 for (boolean left : new boolean[]{false, true}) {

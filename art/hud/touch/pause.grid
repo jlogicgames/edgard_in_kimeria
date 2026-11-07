@@ -1,0 +1,75 @@
+# Touch control art (#226, D55): pause, native 64x64. Hand-authored pixel grid, left half; mirrored.
+size 64 64
+color k 14122b
+color W ffffff
+color L fdf3d0
+color l d2bf84
+color a ffc83a
+color A c98a10
+color s 3f4670
+color S 7480b8
+frame pause mirror
+............................kkkk
+.......................kkkkkkkkk
+....................kkkkkkkkkWWW
+..................kkkkkkWWWWWWWW
+................kkkkkWWWWWWWWkkk
+...............kkkkWWWWWkkkkkLLL
+.............kkkkWWWWkkkLLLLLLLL
+............kkkWWWWkkLLLLLLLLLLL
+...........kkkWWWkkLLLLLLLLLLLLL
+..........kkkWWWkkLLLLLLLLLLLLLL
+.........kkkWWWkLLLLLLLLLLLLLLLL
+........kkkWWkkLLLLLLLLLLLLLLLLL
+.......kkkWWkkLLLLLLLLLLLLLLLLLL
+......kkkWWkkLLLLLLLLLLLLLLLLLLL
+......kkWWWkLLLLLLLLLLLLLLLLLLLL
+.....kkWWWkLLLLLLLLLLLLLLLLLLLLL
+....kkkWWkLLLLLLLLLLLLLLLLLLLLLL
+....kkWWkkLLLLLLLLLLLLLLLLLLLLLL
+...kkkWWkLLLLLLLLLLLLLLLLLLLLLLL
+...kkWWkLLLLLLLLLLLkkkkkkkkkLLLL
+..kkkWWkLLLLLLLLLLLkkkkkkkkkLLLL
+..kkWWkLLLLLLLLLLLLkkkkkkkkkLLLL
+..kkWWkLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkkWWkLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkWWkLLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkWWkLLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkWWkLLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkWWkLLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkWWkLLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkWWkLLLLLLLLLLLLLLkkkkkkkkkLLLL
+kkkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkWWkLLLLLLLLLLLLLkkkkkkkkkLLLL
+.kkkWWkLLLLLLLLLLLLkkkkkkkkkLLLL
+..kkWWkLLLLLLLLLLLLkkkkkkkkkLLLL
+..kkWWkLLLLLLLLLLLLkkkkkkkkkLLLL
+..kkkWWkLLLLLLLLLLLkkkkkkkkkLLLL
+...kkWWklLLLLLLLLLLkkkkkkkkkLLLL
+...kkkWWkLLLLLLLLLLLLLLLLLLLLLLL
+....kkWWkkLLLLLLLLLLLLLLLLLLLLLL
+....kkkWWklLLLLLLLLLLLLLLLLLLLLL
+.....kkWWWklLLLLLLLLLLLLLLLLLLLL
+......kkWWWkllLLLLLLLLLLLLLLLLLL
+......kkkWWkkllLLLLLLLLLLLLLLLLL
+.......kkkWWkklllLLLLLLLLLLLLLLL
+........kkkWWkkllllLLLLLLLLLLLLL
+.........kkkWWWklllllLLLLLLLLLLL
+..........kkkWWWkkllllllllLLLLLL
+...........kkkWWWkklllllllllllll
+............kkkWWWWkklllllllllll
+.............kkkkWWWWkkkllllllll
+...............kkkkWWWWWkkkkklll
+................kkkkkWWWWWWWWkkk
+..................kkkkkkWWWWWWWW
+....................kkkkkkkkkWWW
+.......................kkkkkkkkk
+............................kkkk

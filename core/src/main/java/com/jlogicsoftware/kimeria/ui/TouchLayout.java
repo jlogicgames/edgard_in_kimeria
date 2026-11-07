@@ -16,12 +16,15 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  * (D52) stays in the game view; this class only owns the strip.
  *
  *
- * <p><b>Landscape side bars</b> (#226 follow-up, D54): a touch window wider than 16:9 leaves a bar left and right of the
- * height-fitted picture. When each bar is at least {@link #MIN_SIDE_BAR} units wide (in picture units: window pixels
- * divided by the picture's px-per-unit), the stick and the buttons are placed in those bars instead of over the
- * picture; the controls space is then the whole window in the picture's own scale ({@link #sideSpaceWidth()} x
- * {@link #gameHeight} units, the picture at X offset {@link #sideBar()}). A window that is not wider than that (16:9, 4:3
- * tablet) keeps the old layout, the controls over the picture.
+ * <p><b>Landscape side bars</b> (D54, reworked in D56): on a touch window that is not portrait the stick and the buttons
+ * <em>always</em> sit in a bar left and right of the picture and never over it. Each bar is at least
+ * {@link #REQUIRED_BAR} picture units wide (the stick needs 2 x (44 + 8) = 104, the button column 2 x (38.4 + 8) = 93), so
+ * the picture is fitted to {@code min(height / 360, width / (640 + 2 x 104))} pixels per unit and centred; where the
+ * window is wider than that the bars simply take the rest. The controls space is the whole window in the picture's own
+ * scale ({@link #sideSpaceWidth()} x {@link #sideSpaceHeight()} units, the picture at offset {@link #sideBar()},
+ * {@link #sideTop()}). Worst case (any window not wider than 640 + 208 : 360) the picture is 640 / 848 = 75.5% of the
+ * full fit, which is why no smaller-picture fallback is needed; {@link #pictureScale()} is the scale the game view must
+ * be capped to ({@link PlayfieldViewport#setMaxScale}).
  *
  * <p>Pure arithmetic, no GL: {@link #update} takes pixel sizes, {@link ControlsViewport#unproject} is plain
  * math, so it can be tested without a window. Screen Y here is top-down (input) except where a method says GL.
@@ -32,13 +35,13 @@ public final class TouchLayout {
     /** The strip must be at least this tall (units) to fit the stick cluster and the rotate hint; else landscape layout. */
     public static final float MIN_SPACE_HEIGHT = 190f;
 
-    /** A side bar narrower than this (picture units) is not worth a layout of its own; the controls stay over the picture. */
-    public static final float MIN_SIDE_BAR = 24f;
+    /** Every side bar is at least this wide in picture units: the stick needs 2 x (radius 44 + margin 8); the button column needs less (93). */
+    public static final float REQUIRED_BAR = 104f;
 
     private final float gameWidth, gameHeight;
     private final ControlsViewport controls = new ControlsViewport();
     private boolean portrait, sideBars;
-    private float sideBar;
+    private float sideBar, sideTop, pictureScale;
     private int screenWidth, screenHeight, gameScreenHeight;
 
     public TouchLayout(float gameWidth, float gameHeight) {
@@ -55,15 +58,16 @@ public final class TouchLayout {
         portrait = touch && gameScreenHeight <= height && free * SPACE_WIDTH / Math.max(1, width) >= MIN_SPACE_HEIGHT;
         sideBars = false;
         sideBar = 0;
+        sideTop = 0;
+        pictureScale = 0;
         if (portrait) { controls.layout(width, free); controls.top(gameScreenHeight); return; }
-        if (touch && height > 0) {
-            float ppu = height / gameHeight;
-            float bar = (width / ppu - gameWidth) / 2f;
-            if (bar >= MIN_SIDE_BAR) {
-                sideBars = true;
-                sideBar = bar;
-                controls.layoutSide(width, height, ppu, gameHeight);
-            }
+        if (touch && width > 0 && height > 0) {
+            float ppu = Math.min(height / gameHeight, width / (gameWidth + 2 * REQUIRED_BAR));
+            sideBars = true;
+            pictureScale = ppu;
+            sideBar = (width / ppu - gameWidth) / 2f;
+            sideTop = (height / ppu - gameHeight) / 2f;
+            controls.layoutSide(width, height, ppu, height / ppu);
         }
     }
 
@@ -72,6 +76,15 @@ public final class TouchLayout {
 
     /** Width of one side bar in picture units (side bars only). */
     public float sideBar() { return sideBar; }
+
+    /** Pixels per picture unit the game view is drawn at in the side-bar layout (0 when not in it). */
+    public float pictureScale() { return pictureScale; }
+
+    /** Height of the whole window in picture units (side bars only). */
+    public float sideSpaceHeight() { return controls.getWorldHeight(); }
+
+    /** Space above the picture in picture units: the picture is centred vertically (side bars only). */
+    public float sideTop() { return sideTop; }
 
     /** Width of the whole window in picture units, the controls space width (side bars only). */
     public float sideSpaceWidth() { return controls.getWorldWidth(); }
