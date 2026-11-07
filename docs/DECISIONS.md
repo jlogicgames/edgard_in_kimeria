@@ -1214,13 +1214,13 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 ## D52. Touch pause button at the top centre
 
-- **Status:** Implemented by [#259](https://github.com/jlogicgames/edgard_in_kimeria/issues/259), 2026-11-06, after the author found no way to open the menu on a phone. Automated tests only (`TouchPauseButtonTest`); not tried on a real device.
+- **Status:** Implemented by [#259](https://github.com/jlogicgames/edgard_in_kimeria/issues/259), 2026-11-06, after the author found no way to open the menu on a phone. Automated tests (`TouchPauseButtonTest`). Author checked on a real touch device on 2026-11-07: the button works (the author's one-line report; device, browser and which screens were not recorded).
 - **What:** `TouchControls` draws a round pause button (`assets/images/HUD/PauseButton.png`, the joystick disc with two white bars; drawn like the other buttons, at 55% opacity, 90% pressed) at logical (320, 19), drawn radius 13, **hit radius 26 (52 px across)**. A finger that *starts* on it is the touch twin of Esc / gamepad Start: `Player` (play, death, victory), the room-fade branch and `updateHealer` all read `TouchControls.pausePressed()`, an edge-triggered flag. Healer dialogue also shows the button (`update(active, pausable)`; the stick and buttons stay play-only).
 - **Why there:** the top centre is the one free spot in play. Left: coin and artifact HUD (ends near x 200). Right: fireball stock (starts at x about 526, further left only while the debug FPS counter shows). Below: boss label from y 32. Stick (left bottom) and action buttons (right bottom) are far away, hints stay inside y 52..320, and in healer dialogue the portraits (y 32..120) and choices (y 252+) are clear.
 - **Left-handed (D9):** the centre is its own mirror image, so the button does not move; it is placed through the same mirror helper as the other controls, and a test checks both modes and that no other control's centre pauses.
 - **Pause menu by touch:** unchanged; its buttons already respond to `justTouched` and the touch position.
 - **Portrait:** the game is a fixed 640x360 `FitViewport`, so portrait is a letterboxed small view and the button shrinks with it (about 52 px logical, smaller than a thumb on a narrow phone). Portrait got its own layout in D53 (#226): the picture stays at the top and the button keeps its place in it, with a larger hit circle.
-- **Not verified:** the button's look and feel in the running game, a real touch device (thumb reach, accidental taps while moving), and the web build at runtime.
+- **Not verified in detail:** beyond the author's "works" report, the healer-dialogue case, both handedness layouts, portrait, thumb reach and accidental taps while moving were not recorded as checked.
 
 ## D53. Mobile browser: portrait strip, rotate hint, fullscreen, wake lock, home-screen app
 

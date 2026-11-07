@@ -39,6 +39,8 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   Include the top-centre pause button ([#259](https://github.com/jlogicgames/edgard_in_kimeria/issues/259), D52):
   it must open the pause menu in play and in healer dialogue, in portrait and landscape, be easy
   to hit with a thumb, and Resume / Restart Level / Options / Main menu must all work by touch.
+  The author reported on 2026-11-07 that the button works on a real device; the cases listed
+  here were not itemised, so keep this open until they are.
 - [ ] Mobile browser layout, fullscreen and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53) on a real iPhone
   (Safari tab and the Add to Home Screen app) and a real Android phone: portrait shows the picture on
   top with the stick and buttons in the strip below and nothing over the playfield, in both handedness
