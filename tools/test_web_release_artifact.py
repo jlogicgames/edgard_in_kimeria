@@ -8,6 +8,15 @@ from pathlib import Path
 from check_web_release_artifact import REQUIRED_RUNTIME_FILES, validate_release_artifact
 
 
+MOBILE_HEAD = (
+    '<meta name="viewport" content="width=device-width, user-scalable=no">'
+    '<meta name="apple-mobile-web-app-capable" content="yes">'
+    '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
+    '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">'
+    '<style>body { height: 100dvh; }</style>'
+)
+
+
 class WebReleaseArtifactTest(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
@@ -20,7 +29,7 @@ class WebReleaseArtifactTest(unittest.TestCase):
         (self.root / "app.js").write_text(app, encoding="utf-8")
         digest = hashlib.sha256(app.encode()).hexdigest()
         (self.root / "index.html").write_text(
-            f'<link rel="icon" href="favicon.ico"><script src="app.js?v={digest}"></script>', encoding="utf-8")
+            MOBILE_HEAD + f'<link rel="icon" href="favicon.ico"><script src="app.js?v={digest}"></script>', encoding="utf-8")
         (self.root / "scripts/howler.js").write_text("/*! MIT License */\n", encoding="utf-8")
 
     def tearDown(self) -> None:
@@ -62,6 +71,13 @@ class WebReleaseArtifactTest(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("third-party license notice", encoding="utf-8")
         self.assertEqual([], validate_release_artifact(self.root))
+
+    def test_rejects_index_without_mobile_metadata(self) -> None:
+        (self.root / "index.html").write_text(
+            '<link rel="icon" href="favicon.ico"><script src="app.js"></script>', encoding="utf-8")
+        errors = validate_release_artifact(self.root)
+        for needle in ("apple-mobile-web-app-capable", 'rel="manifest"', "apple-touch-icon", "user-scalable=no", "100dvh"):
+            self.assertTrue(any(needle in error for error in errors), needle)
 
     def test_rejects_missing_manifest_asset_and_relative_icon(self) -> None:
         (self.root / "app.js").write_text('"i:b:/tiles/missing.tiled-project:1:1"', encoding="utf-8")

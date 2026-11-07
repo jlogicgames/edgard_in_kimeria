@@ -30,6 +30,7 @@
   "INTERACT": "Use",
   "SHOOT": "Ranged",
   "LEFT_HANDED_LABEL": "Left-handed",
+  "ROTATE_HINT": "Rotate the phone for a bigger picture",
   "ASSIST": "Assist",
   "LONGER_TRAP_WARNINGS": "Longer trap warnings",
   "ON": "On",

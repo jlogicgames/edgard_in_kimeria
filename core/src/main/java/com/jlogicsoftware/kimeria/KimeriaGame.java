@@ -12,12 +12,12 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.effects.Shaders;
@@ -34,7 +34,9 @@ import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Localization;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.Hud;
+import com.jlogicsoftware.kimeria.ui.PlayfieldViewport;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.ui.TouchLayout;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
@@ -60,6 +62,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
+    private static final int RGB_BLUE = 2;
+    private static final float[] BLACK_CLEAR = {0f, 0f, 0f};
+    private static final float[] BACKDROP_CLEAR = {0.16f, 0.16f, 0.19f};
+    private static final float[] SKY_CLEAR = {0.53f, 0.8f, 0.92f};
+    /** Portrait phones: the strip under the picture that holds the touch controls (#226). */
+    private static final float[] STRIP_CLEAR = {0.06f, 0.06f, 0.08f};
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
     private static final float MENU_TINT_ALPHA = 0.2f;
     private static final List<String> LEVEL_NAMES = List.of("forest-0", "forest-1", "forest-2");
@@ -79,19 +87,25 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private Player player;
     private Level level;
     private final boolean platformTouch;
+    private final DisplayControl pageFullscreen;
     private final boolean debugMode;
 
     public KimeriaGame() { this(false); }
 
     public KimeriaGame(boolean platformTouch) { this(platformTouch, false); }
 
-    public KimeriaGame(boolean platformTouch, boolean debugMode) {
+    public KimeriaGame(boolean platformTouch, boolean debugMode) { this(platformTouch, debugMode, null); }
+
+    /** @param pageFullscreen the browser's page fullscreen where it exists (Android Chrome, not iPhone Safari); null elsewhere */
+    public KimeriaGame(boolean platformTouch, boolean debugMode, DisplayControl pageFullscreen) {
+        this.pageFullscreen = pageFullscreen;
         this.platformTouch = platformTouch;
         this.debugMode = debugMode;
     }
 
     private Hud hud;
     private TouchControls touchControls;
+    private final TouchLayout touchLayout = new TouchLayout(LOGICAL_W, LOGICAL_H);
     private Overlay overlay;
     private MenuBackdrop menuBackdrop;
     private final GamepadInput gamepad = new GamepadInput();
@@ -174,15 +188,16 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         shapeRenderer = new ShapeRenderer();
         camera = new OrthographicCamera();
         camera.setToOrtho(true, LOGICAL_W, LOGICAL_H);
-        viewport = new FitViewport(LOGICAL_W, LOGICAL_H, camera);
+        viewport = new PlayfieldViewport(LOGICAL_W, LOGICAL_H, camera);
 
         screenCamera = new OrthographicCamera();
         screenCamera.setToOrtho(true, LOGICAL_W, LOGICAL_H);
         screenCamera.update();
-        uiViewport = new FitViewport(LOGICAL_W, LOGICAL_H, screenCamera);
+        uiViewport = new PlayfieldViewport(LOGICAL_W, LOGICAL_H, screenCamera);
 
         hud = new Hud(assets, this, LOGICAL_W, LOGICAL_H);
         touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H, platformTouch);
+        touchControls.setLayout(touchLayout);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
         healerView = new HealerDialogueView(assets);
         menuBackdrop = new MenuBackdrop();
@@ -205,6 +220,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
         // one-button screen whose click/keypress unlocks it; other platforms go straight to the menu.
         uiState = isWeb() ? UiState.WEB_START : UiState.MAIN_MENU;
+        // resize() may have run before the touch controls existed, so lay out once more now that they do.
+        applyLayout(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         // No player or level yet: they are built by startGame() once the player picks what to play.
     }
 
@@ -254,6 +271,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 () -> Msg.DISPLAY_LABEL.t(language) + ": "
                     + (Gdx.graphics.isFullscreen() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
                 this::toggleFullscreen));
+        }
+        if (pageFullscreen != null && pageFullscreen.available()) {
+            // Runs inside the click that selects the item: browsers only allow fullscreen from a user gesture.
+            optionItems.add(new MenuItem(
+                () -> Msg.DISPLAY_LABEL.t(language) + ": "
+                    + (pageFullscreen.active() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
+                pageFullscreen::toggle));
         }
         optionItems.add(new MenuItem(
             () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
@@ -554,8 +578,16 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, false);
-        uiViewport.update(width, height, false);
+        applyLayout(width, height);
+    }
+
+    private void applyLayout(int width, int height) {
+        // Portrait phones: picture pinned to the top, the strip below it belongs to the touch controls (#226).
+        touchLayout.update(width, height, touchControls != null && touchControls.isAvailable());
+        for (Viewport v : new Viewport[]{viewport, uiViewport}) {
+            ((PlayfieldViewport) v).setTopAligned(touchLayout.portrait());
+            v.update(width, height, false);
+        }
     }
 
     @Override
@@ -638,14 +670,22 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         camera.update();
 
         // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
+        float[] clear;
         if (storyScreenActive() || uiState == UiState.HEALER || pausedHealer) {
-            Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+            clear = BLACK_CLEAR;
         } else if (menuBackdropActive) {
-            Gdx.gl.glClearColor(0.16f, 0.16f, 0.19f, 1f);
+            clear = BACKDROP_CLEAR;
         } else {
-            Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
+            clear = SKY_CLEAR;
         }
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        if (touchLayout.portrait()) {
+            // Dark strip for the controls, the scene colour only behind the picture.
+            clearScreen(STRIP_CLEAR);
+            Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+            HdpiUtils.glScissor(uiViewport.getScreenX(), uiViewport.getScreenY(), uiViewport.getScreenWidth(), uiViewport.getScreenHeight());
+        }
+        clearScreen(clear);
+        if (touchLayout.portrait()) Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
         boolean glitched = uiState == UiState.PAUSED && (pausedHealer || level != null);
         RippleEffect ripple = levelVisible && level != null ? level.activeRipple() : null;
@@ -674,6 +714,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (menuBackdropActive) {
             menuBackdrop.render(batch);
         }
+        // Portrait phones: the strip under the picture always carries the rotate hint (the controls come with play).
+        if (touchLayout.portrait() && !(levelVisible && uiState == UiState.PLAYING)) touchControls.renderStrip(batch, false);
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
@@ -721,6 +763,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             up ? -1 : down ? 1 : 0, confirm,
             dialogueInput.touchPressed() ? healerView.choiceAt(mouse, healer.choices().size()) : -1);
         if (choice != null) chooseHealer(choice);
+    }
+
+    private static void clearScreen(float[] rgb) {
+        Gdx.gl.glClearColor(rgb[0], rgb[1], rgb[RGB_BLUE], 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
     }
 
     private void renderWorld() {

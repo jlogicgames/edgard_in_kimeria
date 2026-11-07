@@ -211,12 +211,18 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   while paused, on the frozen gameplay or healer-dialogue screen (`screen_effects.frag`, drawn from an offscreen
   `FrameBuffer` that is only rendered while paused or while a ripple is live, so normal play
   is unchanged). The HUD and pause menu draw afterwards, unaffected.
-- **Mobile browsers are playable but rough** (author iPhone play-through, 2026-11-05): in portrait the touch controls
-  overlap the game; there is no fullscreen; in landscape the browser chrome leaves about half of the game visible; the
-  screen auto-locks after some minutes. Tracked in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226).
-- **Fullscreen is desktop-only.** There is no mobile module in this repo yet, and the web build
-  stays in its canvas, so neither shows the Display option; a future mobile backend is
-  fullscreen by nature.
+- **Mobile browsers** (author iPhone play-through, 2026-11-05; fixes in D53, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), not yet confirmed on a device):
+  in portrait the picture is pinned to the top and the stick and buttons sit in the strip below it
+  (`ui.TouchLayout`), with a rotate hint; the page uses the visible viewport (`100dvh`), no scroll or
+  zoom; the screen wake lock is requested while the page is visible. **What iOS cannot do:** iPhone
+  Safari has no page Fullscreen API and a web page cannot hide its toolbars, so there is no fullscreen
+  button on iPhone and a Safari tab always loses some height to the toolbars. The way around it is
+  Add to Home Screen (Share, then Add to Home Screen): the release page carries the standalone
+  metadata and a manifest, and launched from the icon it runs without Safari's toolbars. Android
+  Chrome and desktop browsers do have the Fullscreen API and get a "Display" item in Options. The wake
+  lock needs iOS 16.4 or newer; before that the screen still auto-locks.
+- **Fullscreen:** desktop windows via Options (LWJGL), browsers that have the Fullscreen API via
+  `DisplayControl` (web launcher). Native mobile is a separate decision ([#266](https://github.com/jlogicgames/edgard_in_kimeria/issues/266)).
 - **Menus are hand-drawn immediate-mode UI**, not Scene2D, to avoid pulling in a full
   Scene2D skin for a handful of simple screens.
 
@@ -250,7 +256,7 @@ Package layout:
 - `localization.*` — typed `Msg` keys, five UTF-8 catalogs, English fallback and strict
   validation; see [localization](LOCALIZATION.md)
 - `input.GamepadInput` — generic Xbox-style controller mapping via `gdx-controllers`
-- `ui.TouchControls` — two-axis on-screen stick, Jump / Ranged / directional Action buttons and a top-centre pause button (D52)
+- `ui.TouchControls` — two-axis on-screen stick, Jump / Ranged / directional Action buttons and a top-centre pause button (D52); in portrait they move into the strip under the picture (`ui.TouchLayout`, `ui.PlayfieldViewport`, D53)
 - `KimeriaGame` — the whole game and its menu states in one place
 - `lwjgl3/src/dev` — `runDev`'s launcher, compiler, watcher and reloader (`DevHost`); a source
   set of its own that no release build includes, see "Live editing" above

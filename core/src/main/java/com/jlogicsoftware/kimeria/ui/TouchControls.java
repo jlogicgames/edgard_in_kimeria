@@ -31,6 +31,12 @@ import com.jlogicsoftware.kimeria.localization.Msg;
  * left-handed mode keeps it in place and it never collides with the mirrored stick and buttons.
  * Unlike the stick and buttons it also works during healer dialogue ({@link #update(boolean, boolean)}).
  *
+ * <p><b>Portrait</b> ({@link TouchLayout}, #226): with a {@link TouchLayout} set and the window tall enough, the
+ * stick and the three buttons move out of the picture into the strip below it, laid out in that strip's own
+ * 360-unit-wide space (still mirrored in left-handed mode); a one-line "rotate the phone" hint is drawn above them.
+ * The pause button stays in the game view at logical (320, 19), but its hit circle grows so it stays a thumb-sized
+ * target at the small portrait scale.
+ *
  * <p>A finger only drives a control if it <em>started</em> on it while the game was being
  * played, so the tap that dismisses a menu can't leak into the first frame of play. Call
  * {@link #update(boolean)} once per frame before reading anything.
@@ -43,6 +49,9 @@ public class TouchControls {
     private static final float KNOB_SIZE = 32;
     private static final float STICK_DEADZONE = 0.3f;
 
+    private static final float BUTTON_HIT_SCALE = 1.2f, SHOOT_BUTTON_SCALE = 0.85f;
+    private static final float IDLE_ALPHA = 0.55f, KNOB_ALPHA = 0.85f, HINT_SIDE_MARGIN = 24f;
+
     private static final int BUTTON_ART_SIZE = 64;
     private static final float BUTTON_RADIUS = 32;
     private static final float JUMP_X = 590, JUMP_Y = 290;
@@ -51,6 +60,12 @@ public class TouchControls {
 
     /** Pause button: drawn radius 13 (touching the top edge of the boss label), hit radius 26 = a 52 px target. */
     public static final float PAUSE_X = 320, PAUSE_Y = 19, PAUSE_RADIUS = 13, PAUSE_HIT_RADIUS = 26;
+    /** In portrait the picture is drawn at about 0.6 px per unit, so 40 units is still a 24 px radius target. */
+    public static final float PAUSE_HIT_RADIUS_PORTRAIT = 40;
+    /** Portrait strip layout (controls space units): cluster centre offset from the strip middle, and each control's place. */
+    static final float PORTRAIT_STICK_X = 80, PORTRAIT_JUMP_X = 310, PORTRAIT_ACTION_X = 240, PORTRAIT_SHOOT_X = 256;
+    static final float PORTRAIT_JUMP_DY = 10, PORTRAIT_ACTION_DY = 38, PORTRAIT_SHOOT_DY = -36, PORTRAIT_CLUSTER_DY = 8;
+    static final float PORTRAIT_HINT_Y = 14;
 
     private enum Control { NONE, STICK, JUMP, SHOOT, ACTION, PAUSE }
 
@@ -62,6 +77,12 @@ public class TouchControls {
     private final float logicalWidth, logicalHeight;
     private final boolean available;
     private boolean previousLayout;
+    private TouchLayout layout;
+    private float stickX, stickY, jumpX, jumpY, actionX, actionY, shootX, shootY, spaceWidth, spaceHeight;
+    private final Matrix4 portraitTextProjection = new Matrix4();
+    private final OrthographicCamera portraitTextCamera = new OrthographicCamera();
+    private float portraitTextHeight = -1;
+    private final Vector2 controlsTouch = new Vector2();
 
     private final Control[] claimed = new Control[MAX_POINTERS];
     private final boolean[] seen = new boolean[MAX_POINTERS];
@@ -102,6 +123,35 @@ public class TouchControls {
         java.util.Arrays.fill(claimed, Control.NONE);
     }
 
+    /** Supplies the portrait layout; null (the default) keeps the stick and buttons over the picture. */
+    public void setLayout(TouchLayout layout) { this.layout = layout; }
+
+    private boolean portrait() { return layout != null && layout.portrait(); }
+
+    /** Fills the control positions for the current layout and handedness, in the space they are drawn and hit-tested in. */
+    private void place() {
+        if (portrait()) {
+            spaceWidth = TouchLayout.SPACE_WIDTH;
+            spaceHeight = layout.spaceHeight();
+            float cy = spaceHeight / 2f + PORTRAIT_CLUSTER_DY;
+            stickX = mirror(PORTRAIT_STICK_X); stickY = cy;
+            jumpX = mirror(PORTRAIT_JUMP_X); jumpY = cy + PORTRAIT_JUMP_DY;
+            actionX = mirror(PORTRAIT_ACTION_X); actionY = cy + PORTRAIT_ACTION_DY;
+            shootX = mirror(PORTRAIT_SHOOT_X); shootY = cy + PORTRAIT_SHOOT_DY;
+        } else {
+            spaceWidth = logicalWidth;
+            spaceHeight = logicalHeight;
+            stickX = x(STICK_X); stickY = STICK_Y;
+            jumpX = x(JUMP_X); jumpY = JUMP_Y;
+            actionX = x(ACTION_X); actionY = ACTION_Y;
+            shootX = x(SHOOT_X); shootY = SHOOT_Y;
+        }
+    }
+
+    private float mirror(float rightHandedX) {
+        return game.leftHanded() ? spaceWidth - rightHandedX : rightHandedX;
+    }
+
     /** @param active true while the game is being played; touches are ignored (and unclaimed) otherwise. */
     public void update(boolean active) {
         update(active, active);
@@ -118,7 +168,7 @@ public class TouchControls {
         }
         boolean stick = false, jump = false, shoot = false, action = false, pause = false;
         float dx = 0, dy = 0;
-        float stickX = x(STICK_X);
+        place();
 
         if (available) {
             for (int p = 0; p < MAX_POINTERS; p++) {
@@ -129,9 +179,12 @@ public class TouchControls {
                 }
                 touch.set(Gdx.input.getX(p), Gdx.input.getY(p));
                 viewport.unproject(touch);
+                // Portrait: the stick and buttons live in the strip below the picture, in their own space.
+                controlsTouch.set(Gdx.input.getX(p), Gdx.input.getY(p));
+                if (portrait()) layout.controlsViewport().unproject(controlsTouch); else controlsTouch.set(touch);
                 if (!seen[p]) {
                     seen[p] = true;
-                    Control hit = hitTest(touch.x, touch.y);
+                    Control hit = hitTest(touch.x, touch.y, controlsTouch.x, controlsTouch.y);
                     claimed[p] = active || (pausable && hit == Control.PAUSE) ? hit : Control.NONE;
                 }
                 if (!pausable && claimed[p] == Control.PAUSE) claimed[p] = Control.NONE;
@@ -142,8 +195,8 @@ public class TouchControls {
                 switch (claimed[p]) {
                     case STICK -> {
                         stick = true;
-                        dx = Math.max(-STICK_RADIUS, Math.min(STICK_RADIUS, touch.x - stickX));
-                        dy = Math.max(-STICK_RADIUS, Math.min(STICK_RADIUS, touch.y - STICK_Y));
+                        dx = Math.max(-STICK_RADIUS, Math.min(STICK_RADIUS, controlsTouch.x - stickX));
+                        dy = Math.max(-STICK_RADIUS, Math.min(STICK_RADIUS, controlsTouch.y - stickY));
                     }
                     case JUMP -> jump = true;
                     case SHOOT -> shoot = true;
@@ -176,12 +229,13 @@ public class TouchControls {
         return game.leftHanded() ? logicalWidth - rightHandedX : rightHandedX;
     }
 
-    private Control hitTest(float x, float y) {
-        if (inCircle(x, y, x(PAUSE_X), PAUSE_Y, PAUSE_HIT_RADIUS)) return Control.PAUSE;
-        if (inCircle(x, y, x(JUMP_X), JUMP_Y, BUTTON_RADIUS * 1.2f)) return Control.JUMP;
-        if (inCircle(x, y, x(ACTION_X), ACTION_Y, BUTTON_RADIUS * 1.2f)) return Control.ACTION;
-        if (inCircle(x, y, x(SHOOT_X), SHOOT_Y, BUTTON_RADIUS * 1.2f)) return Control.SHOOT;
-        if (inCircle(x, y, x(STICK_X), STICK_Y, STICK_GRAB)) return Control.STICK;
+    /** (x, y) is in the game view's logical space (the pause button); (cx, cy) in the space of the stick and buttons. */
+    private Control hitTest(float x, float y, float cx, float cy) {
+        if (inCircle(x, y, x(PAUSE_X), PAUSE_Y, portrait() ? PAUSE_HIT_RADIUS_PORTRAIT : PAUSE_HIT_RADIUS)) return Control.PAUSE;
+        if (inCircle(cx, cy, jumpX, jumpY, BUTTON_RADIUS * BUTTON_HIT_SCALE)) return Control.JUMP;
+        if (inCircle(cx, cy, actionX, actionY, BUTTON_RADIUS * BUTTON_HIT_SCALE)) return Control.ACTION;
+        if (inCircle(cx, cy, shootX, shootY, BUTTON_RADIUS * BUTTON_HIT_SCALE)) return Control.SHOOT;
+        if (inCircle(cx, cy, stickX, stickY, STICK_GRAB)) return Control.STICK;
         return Control.NONE;
     }
 
@@ -230,19 +284,15 @@ public class TouchControls {
 
     public void render(SpriteBatch batch) {
         if (!available) return;
+        place();
+        if (portrait()) {
+            renderPauseButton(batch);
+            renderStrip(batch, true);
+            return;
+        }
 
-        float stickX = x(STICK_X), jumpX = x(JUMP_X), actionX = x(ACTION_X), shootX = x(SHOOT_X);
-
-        batch.setColor(1f, 1f, 1f, 0.55f);
-        batch.draw(disc, stickX - STICK_RADIUS, STICK_Y - STICK_RADIUS, STICK_RADIUS * 2, STICK_RADIUS * 2);
-        batch.setColor(1f, 1f, 1f, 0.85f);
-        batch.draw(knob, stickX + knobDx - KNOB_SIZE / 2, STICK_Y + knobDy - KNOB_SIZE / 2, KNOB_SIZE, KNOB_SIZE);
-
-        drawButton(batch, jumpIcon, jumpX, JUMP_Y, BUTTON_RADIUS, jumpHeld);
-        drawButton(batch, disc, actionX, ACTION_Y, BUTTON_RADIUS, actionHeld);
-        drawButton(batch, disc, shootX, SHOOT_Y, BUTTON_RADIUS * 0.85f, shootHeld);
+        drawCluster(batch);
         renderPauseButton(batch);
-        batch.setColor(Color.WHITE);
 
         var lang = game.language();
         String action = game.actionLabel().t(lang);
@@ -250,9 +300,55 @@ public class TouchControls {
         // would already hold the text projection when it is "restored" below.
         Matrix4 previous = batch.getProjectionMatrix().cpy();
         batch.setProjectionMatrix(textProjection);
-        label(batch, action, actionX, ACTION_Y, BUTTON_RADIUS * 2f - BUTTON_LABEL_PADDING);
-        label(batch, game.rangedLabel().t(lang), shootX, SHOOT_Y, BUTTON_RADIUS * SHOOT_LABEL_WIDTH_SCALE - BUTTON_LABEL_PADDING);
+        label(batch, action, actionX, actionY, BUTTON_RADIUS * 2f - BUTTON_LABEL_PADDING, logicalHeight);
+        label(batch, game.rangedLabel().t(lang), shootX, shootY, BUTTON_RADIUS * SHOOT_LABEL_WIDTH_SCALE - BUTTON_LABEL_PADDING, logicalHeight);
         batch.setProjectionMatrix(previous);
+    }
+
+    /**
+     * Portrait only: draws the "rotate the phone" hint (in every screen, so a menu-bound player sees it too) and, when
+     * {@code controls} is true, the stick and buttons, into the strip below the picture. Must be called between
+     * {@code batch.begin()} and {@code end()}; leaves the batch and GL viewport as the game view had them.
+     */
+    public void renderStrip(SpriteBatch batch, boolean controls) {
+        if (!available || !portrait()) return;
+        place();
+        batch.end();
+        layout.controlsViewport().apply();
+        batch.setProjectionMatrix(layout.controlsViewport().getCamera().combined);
+        batch.begin();
+        if (controls) {
+            drawCluster(batch);
+        }
+        if (portraitTextHeight != spaceHeight) {
+            portraitTextHeight = spaceHeight;
+            portraitTextCamera.setToOrtho(false, spaceWidth, spaceHeight);
+            portraitTextCamera.update();
+            portraitTextProjection.set(portraitTextCamera.combined);
+        }
+        batch.setProjectionMatrix(portraitTextProjection);
+        var lang = game.language();
+        label(batch, Msg.ROTATE_HINT.t(lang), spaceWidth / 2f, PORTRAIT_HINT_Y, spaceWidth - HINT_SIDE_MARGIN * 2f, spaceHeight);
+        if (controls) {
+            label(batch, game.actionLabel().t(lang), actionX, actionY, BUTTON_RADIUS * 2f - BUTTON_LABEL_PADDING, spaceHeight);
+            label(batch, game.rangedLabel().t(lang), shootX, shootY, BUTTON_RADIUS * SHOOT_LABEL_WIDTH_SCALE - BUTTON_LABEL_PADDING, spaceHeight);
+        }
+        batch.end();
+        viewport.apply();
+        batch.setProjectionMatrix(viewport.getCamera().combined);
+        batch.begin();
+    }
+
+    /** The stick and the three buttons, at the positions {@link #place()} chose. */
+    private void drawCluster(SpriteBatch batch) {
+        batch.setColor(1f, 1f, 1f, IDLE_ALPHA);
+        batch.draw(disc, stickX - STICK_RADIUS, stickY - STICK_RADIUS, STICK_RADIUS * 2, STICK_RADIUS * 2);
+        batch.setColor(1f, 1f, 1f, KNOB_ALPHA);
+        batch.draw(knob, stickX + knobDx - KNOB_SIZE / 2, stickY + knobDy - KNOB_SIZE / 2, KNOB_SIZE, KNOB_SIZE);
+        drawButton(batch, jumpIcon, jumpX, jumpY, BUTTON_RADIUS, jumpHeld);
+        drawButton(batch, disc, actionX, actionY, BUTTON_RADIUS, actionHeld);
+        drawButton(batch, disc, shootX, shootY, BUTTON_RADIUS * SHOOT_BUTTON_SCALE, shootHeld);
+        batch.setColor(Color.WHITE);
     }
 
     private void drawButton(SpriteBatch batch, TextureRegion region, float cx, float cy, float r, boolean down) {
@@ -262,9 +358,9 @@ public class TouchControls {
     }
 
     /** Centered label; {@code yFromTop} is converted to the Y-up text projection, as in {@link Hud}. */
-    private void label(SpriteBatch batch, String text, float cx, float yFromTop, float width) {
-        GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width, Align.center, true);
+    private void label(SpriteBatch batch, String text, float cx, float yFromTop, float width, float height) {
+        GlyphLayout glyphs = new GlyphLayout(font, text, Color.WHITE, width, Align.center, true);
         font.setColor(Color.WHITE);
-        font.draw(batch, layout, cx - width / 2f, logicalHeight - yFromTop + layout.height / 2f);
+        font.draw(batch, glyphs, cx - width / 2f, height - yFromTop + glyphs.height / 2f);
     }
 }
