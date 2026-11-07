@@ -211,15 +211,16 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   while paused, on the frozen gameplay or healer-dialogue screen (`screen_effects.frag`, drawn from an offscreen
   `FrameBuffer` that is only rendered while paused or while a ripple is live, so normal play
   is unchanged). The HUD and pause menu draw afterwards, unaffected.
-- **Mobile browsers** (author iPhone play-through, 2026-11-05; fixes in D53, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), not yet confirmed on a device):
+- **Mobile browsers** (author iPhone play-through, 2026-11-05; fixes in D53 to D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), closed 2026-11-07; the author confirmed portrait and landscape layout, sharpness, the light touch controls, the wake lock and the pause button on a real iPhone in Safari. Not yet checked on a device: Android Chrome, tablets and the frame rate on a mid-range phone, tracked in [#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)):
   in portrait the picture is pinned to the top and the stick and buttons sit in the strip below it
   (`ui.TouchLayout`), with a rotate hint; in landscape on a window wider than 16:9 the stick is in the left bar
   and the buttons in the right bar beside the picture (D54); on every touch landscape window the picture shrinks to leave bars of at least 104 units so nothing covers it (D56); the canvas is backed with physical pixels (`usePhysicalPixels`, width x `devicePixelRatio`, D57) so pixel art and text stay crisp on 2x/3x phones; the page uses the visible viewport (`100dvh`), no scroll or
   zoom; the screen wake lock is requested while the page is visible. **What iOS cannot do:** iPhone
   Safari has no page Fullscreen API and a web page cannot hide its toolbars, so there is no fullscreen
-  button on iPhone and a Safari tab always loses some height to the toolbars. The way around it is
-  Add to Home Screen (Share, then Add to Home Screen): the release page carries the standalone
-  metadata and a manifest, and launched from the icon it runs without Safari's toolbars. Android
+  button on iPhone and a Safari tab always loses some height to the toolbars. Fullscreen and the
+  Add to Home Screen app were dropped as not needed (author decision, 2026-11-07); the code stays
+  (`DisplayControl`, the release page's standalone metadata and manifest, the Options "Display" item
+  where the Fullscreen API exists) but is not required or verified on a device. Android
   Chrome and desktop browsers do have the Fullscreen API and get a "Display" item in Options. The wake
   lock needs iOS 16.4 or newer; before that the screen still auto-locks.
 - **Fullscreen:** desktop windows via Options (LWJGL), browsers that have the Fullscreen API via

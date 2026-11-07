@@ -39,24 +39,22 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   Include the top-centre pause button ([#259](https://github.com/jlogicgames/edgard_in_kimeria/issues/259), D52):
   it must open the pause menu in play and in healer dialogue, in portrait and landscape, be easy
   to hit with a thumb, and Resume / Restart Level / Options / Main menu must all work by touch.
-  The author reported on 2026-11-07 that the button works on a real device; the cases listed
-  here were not itemised, so keep this open until they are.
-- [ ] Landscape touch layout (D56, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)) on a real iPhone and Android phone and a tablet: the picture is
+  The author reported on 2026-11-07 that the button works on a real iPhone; the cases listed
+  here were not itemised, so keep this open until they are (tracked in [#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)).
+- [ ] Landscape touch layout (D56, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **iPhone Safari OK (author, 2026-11-07).** Still to check on a real Android phone
+  and a tablet ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): the picture is
   centred and slightly smaller (about 8% on an iPhone without toolbars, 25% on a 16:9 window), bars on both sides,
   stick and buttons completely inside them and comfortable, nothing over the picture, pause button easy to hit, both handedness modes.
-- [ ] Sharpness on a real iPhone and Android phone (D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): menu, dialogue and hint text and the sprites are crisp in portrait and landscape (compare `docs/references/mobile-sharpness-*-before-after.png`); the frame rate stays smooth with the canvas at about 3 M physical pixels, and in a Safari tab after the toolbars appear or hide (canvas follows the resize).
-- [ ] Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)) on a real iPhone and Android phone: stick, Fireball,
+- [ ] Sharpness (D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **iPhone Safari OK (author, 2026-11-07): text and pixel art are sharp.** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): the same in portrait and landscape (compare `docs/references/mobile-sharpness-*-before-after.png`); and the frame rate on a mid-range phone with the canvas at about 3 M physical pixels (not measured on any device; see also [#265](https://github.com/jlogicgames/edgard_in_kimeria/issues/265)).
+- [ ] Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **light controls accepted on a real iPhone (author, 2026-11-07).** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): stick, Fireball,
   Sword/Action, Jump and pause button are easy to see on the dark strip / side bars and over the picture
   (16:9, 4:3), labels (13 px, dark on cream; long German / Belarusian ones wrap to two lines) readable, pressed state (amber) obvious, in daylight and in a dark room.
-- [ ] Mobile browser layout, fullscreen and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53) on a real iPhone
-  (Safari tab and the Add to Home Screen app) and a real Android phone: portrait shows the picture on
-  top with the stick and buttons in the strip below and nothing over the playfield, in both handedness
-  modes; the rotate hint reads in all five languages; landscape shows the whole picture (smaller in a
-  Safari tab because of the toolbars, full height from the home-screen app) with the stick in the left bar and
-  the buttons in the right bar, nothing or only a thin edge over the picture, in both handedness modes (D54); no scroll, bounce or
-  pinch-zoom; the Display (fullscreen) option appears on Android Chrome and not on iPhone; the screen
-  stays on through a 10+ minute session (write down the auto-lock timeout without it); the home-screen
-  icon, name and status bar look right.
+- [ ] Mobile browser layout and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53): **real iPhone, Safari tab: portrait and landscape layouts OK and the screen stays on during play (author, 2026-11-07).**
+  Fullscreen and the Add to Home Screen app are **not needed (author decision, 2026-11-07)**, so their checks (home-screen
+  icon, name, status bar, full-height landscape, the Display option on Android Chrome) are dropped; the code stays. Still to check
+  on a real Android phone and tablets ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): portrait picture on top with the stick and buttons in the strip below,
+  landscape bars, both handedness modes (D54), the rotate hint in all five languages, no scroll, bounce or
+  pinch-zoom, and the wake lock (write down the auto-lock timeout without it).
 - [ ] Play with a physical gamepad in both layouts, including the unchecked left-handed
   layout: right-stick movement and D-pad actions, disjoint bindings, unchanged menus/Start.
   Author reported on 2026-11-06 a desktop keyboard and gamepad check in both layouts (build,
@@ -69,8 +67,8 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
 - [ ] Complete normal end-to-end runs in the release web build, including mobile browsers
   on real devices. Earlier development-browser and seeded runs retain their limited scope.
   Evidence so far: one author iPhone browser play-through of the forest-0 tutorial on 2026-11-05
-  (playable; problems in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)). It is not
-  a full run and not a release-build pass; re-check portrait/landscape fit, fullscreen and screen wake after #226.
+  (playable; the problems it found were fixed under [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226) and checked on an iPhone on 2026-11-07, see the mobile items above). It is not
+  a full run and not a release-build pass.
 
 ## Rooms, pickups and traps
 
