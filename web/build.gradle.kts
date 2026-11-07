@@ -143,7 +143,22 @@ tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach {
         val appHash = MessageDigest.getInstance("SHA-256")
             .digest(releaseWebappDir.get().file("app.js").asFile.readBytes())
             .joinToString("") { "%02x".format(it) }
-        index.writeText(html.replace("</head>", "    <link rel=\"icon\" href=\"favicon.ico\">\n    </head>")
+        // Mobile browser metadata (#226): iOS reads it from the static document when a home-screen shortcut is made.
+        // The template's `height: 100vh` is the large viewport on iOS (under the toolbars): use the visible one.
+        check(html.contains("height: 100vh")) { "Generated index.html no longer has the 100vh body rule this build patches" }
+        val mobileHead = """
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Edgard in Kimeria">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" href="favicon.ico">
+    """.trimEnd() + "\n    "
+        index.writeText(html.replace("</head>", mobileHead + "</head>")
+            .replace("height: 100vh;", "height: 100vh;\n                height: 100dvh;")
             .replace(appScript, "src=\"app.js?v=$appHash\""))
         val serverMetadata = releaseWebappDir.get().asFile.resolve("WEB-INF")
         if (serverMetadata.exists() && !serverMetadata.deleteRecursively()) {

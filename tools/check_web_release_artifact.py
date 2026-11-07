@@ -15,6 +15,9 @@ REQUIRED_RUNTIME_FILES = (
     "index.html",
     "app.js",
     "favicon.ico",
+    "manifest.webmanifest",
+    "apple-touch-icon.png",
+    "icon-512.png",
     "scripts/gdx.wasm.js",
     "scripts/howler.js",
     "assets/audio/main_menu.mp3",
@@ -75,6 +78,19 @@ def validate_release_artifact(root: Path) -> list[str]:
             errors.append(f"authoring documentation must not be uploaded as a runtime asset: {relative}")
 
     index = root / "index.html"
+    if index.is_file():
+        html = index.read_text(encoding="utf-8")
+        # #226: the metadata iOS reads from the static page for Add to Home Screen, and the visible-viewport height.
+        for needle, why in (
+            ('name="apple-mobile-web-app-capable" content="yes"', "standalone home-screen mode"),
+            ('name="apple-mobile-web-app-status-bar-style"', "status bar style"),
+            ('rel="manifest" href="manifest.webmanifest"', "web app manifest"),
+            ('rel="apple-touch-icon" href="apple-touch-icon.png"', "home-screen icon"),
+            ("user-scalable=no", "no pinch-zoom"),
+            ("height: 100dvh", "visible-viewport height (100vh hides half the game under iOS toolbars)"),
+        ):
+            if needle not in html:
+                errors.append(f"index.html must declare {why}: {needle}")
     if index.is_file() and not re.search(r'<link\s+rel="icon"\s+href="favicon\.ico"', index.read_text(encoding="utf-8")):
         errors.append("index.html must reference the relative favicon.ico")
 
