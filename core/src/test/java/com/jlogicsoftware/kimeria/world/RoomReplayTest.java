@@ -103,7 +103,8 @@ class RoomReplayTest {
     }
 
     @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
-        measure("forest-1", false, false, 0, new float[]{125, 260, 540, 1120});
+        // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
+        measure("forest-1", false, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
         measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860, 940});

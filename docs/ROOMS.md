@@ -450,7 +450,7 @@ until Restart Level. The required route never needs the platform. This map fact 
 the one-shot cue and optional-route consequence an explicit manual fairness check under
 D26; older teaching-layout route results below do not establish that acceptance.
 
-### `forest-1` (level two, unchanged)
+### `forest-1` (level two; traps added by #260/D58, see "forest-1 trap placement plan")
 
 Falling platforms (x 96–224, y 272), the RedMob patrol (192–512) that covers them, the
 escalators and the trigger-opened wall at 480–528 are the first time those pieces
@@ -747,3 +747,68 @@ and Down both grab the rungs and the first-room hint shows separate lines for bo
 The upper span and bottom accept
 Up; the top surface accepts Down. This behavior change has not been included in route timing or
 automated/physical play checks yet. See [D28](DECISIONS.md#d28-vertical-ladders).
+
+## forest-1 trap placement plan (#260, D58)
+
+Approved by the author on 2026-11-09 and implemented ([D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)). Issue:
+[#260](https://github.com/jlogicgames/edgard_in_kimeria/issues/260) (stays open for the author's check in the running game; its checklist updates this section). Coordinates are
+the map's: **world Y grows downward**, the floor top is y = 320, `y` of an object is its top edge
+(`y = 320 - height` for a trap standing on the floor), a larger y is lower on screen.
+Map hashes: before the change `forest-1.tmx` SHA-256 `4363b8d4cb3e80ef6990338aa8de03ab5166422e8b890463ef37ec88be5fe400`
+(`git hash-object` `fb591412b9de`); after `e4503a4c845355ddadc5d74b9d9b8b9176d1f611e5c502b632f3648bec035013`
+(`0b199000a3fe`) before the final PR; recompute with `shasum -a 256 assets/tiles/forest-1.tmx` if the map changes again.
+Preview with the placed objects and zones: [forest-1-trap-placement.png](references/forest-1-trap-placement.png) (a schematic drawn from the map and tileset, not a game screenshot).
+
+### What the level is
+
+One unmarked room (no `Rooms` layer, so every retry restarts at the `Player` spawn x 32), 80 x 23 tiles
+(1280 x 368 px), no hints (`TutorialLevelTest`). The first part is unchanged: lever 128, four `FallingPlatform`
+(x 96-224), the first `RedMob` (patrol 192-512), escalators, lever 272 and the `Wall` at x 480-528, lever 544. The stretch **x 580-1200 was empty floor**
+and now holds, one thing at a time:
+
+```
+x/16   0         1         2         3         4         5         6         7
+       01234567890123456789012345678901234567890123456789012345678901234567890123456789
+y224   #..............t..............WWW..............................................#
+y240   #..................EE.RRR.....WWW..............................................#
+y272   #.....pppppp..................WWW.EE........................................C..#
+y304   #.@.....l.BBB....l.BBB........WWW.l........^..........M....*...............BB..#
+y320   ================================================================    LL   =======
+x px   0   160   320   480   640   800   960  1120      (1 char = 16 px)
+```
+
+`@` spawn, `l` lever, `W` wall, `p` falling platforms, `E` escalators, `R` the first RedMob, `C` checkpoint,
+**`^` thorn tuft (col 43), `M` new RedMob (col 54), `*` puffball (col 59), `LL` rotten log in the pit (cols 68-69, pit cols 64-72)**. (Positions in the table are authoritative; the strip is approximate.)
+
+| Section | What | Object | x (px) | y (px) | Size | Properties | Reach (the area it owns) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| T1 | Bristling thorn tuft (proximity, D44) | `ThornTuft` (id 35) | 696 | 304 | 16 x 16 | `zone` 80 | trigger and jump envelope x 616-792 |
+| E | Second RedMob (walking enemy) | `RedMob` (id 38) | 864 | 288 | 48 x 32 | `offNeg` 2, `offPos` 2 | hero centre x 832-896 wakes it; body and whip never outside x 816-912 |
+| T2 | Spore puffball (rhythm, D46) | `Puffball` (id 36) | 944 | 304 | 16 x 16 | `period` 4, `cloud` 1, `phase` 0 | cloud column about x 940-964, swell 0.8 s (1.2 s assisted) |
+| T3 | Rotten-log bridge (crumble, D46) | `FallingPlatform` `skin=log` (id 37) | 1088 | 320 | 32 x 16 | `skin` log | pit x 1024-1168 (144 px, no floor, the level `Deadline` below), log flush with the floor, 64 px past the lip and 48 px before the far floor |
+
+Floor: the `Collisions` rectangle id 3 is x 0-1024, the new id 39 is x 1168-1280, the floor tile rows (y 320-368) have no tiles in columns 64-72 and edge tiles in columns 63 and 73. `nextobjectid` is 40. Nothing is added to `Hints`.
+
+### The enemy (author change to the plan)
+
+The author asked for an enemy in the trap stretch instead of keeping the RedMob alone. Only the **RedMob** is both implemented and already met in forest-1 (the first RedMob at x 192-512), so the new one is a second **RedMob** (YellowMob and Bat are not in forest-0 or forest-1). Telegraph (D7): the raised arm of the whip, 0.4 s of wind-up before a 0.2 s strike; enemy wind-ups are not scaled by the longer-warnings assist (that setting is `TrapWarnings`, traps only). Beaten by a sword hit or a stomp; **no ammunition** (D26); the route is blocked by it at floor level, so it is faced, not bypassed. It wakes only when the hero's centre is in its small range (x 832-896), so a hero waiting for the puffball is never chased. It sits **between** the tuft zone (ends x 792, 24 px clear of the mob's worst reach at x 816) and the puffball cloud (starts x 940, 28 px clear of reach at x 912), so the player faces one thing at a time; `Forest1TrapsTest` asserts those clearances and that the mob stays inside its reach. Expected cost: about 1 s (a sword hit or a stomp on the walk); a death at it replays about 8 s.
+
+### Per trap
+
+**T1, thorn tuft at x 696.** First open floor after the wall and lever puzzle, 88 px past the last escalator's travel (x 608). Teaches the learned root's rule (thorns come up when you are close, jump) with a new silhouette. Telegraph: the tuft is a clearly different colour from bushes; entering its zone makes it bristle for 0.8 s (1.2 s assisted), then it is lethal until the retry. The default 80 px zone means a walker who keeps going is hit; a jump (body edge 2-61 px before the tuft) clears it. Cost about 0 s. D26: a jump, no ammunition; the loader requires the jump envelope.
+
+**T2, puffball at x 944.** A trap that does not react to the hero: watch the cap, cross in the calm (cycle: calm 2.2 s, swell 0.8 s, cloud 1.0 s; crossing needs about 0.4 s). `phase` 0: the clock starts at the entrance and on every retry, so every attempt meets the same pattern; a mastered walker arrives in the calm (no wait, measured), a hero 2-3 s late meets the swell. Cost 0-2.2 s of waiting. No bypass rule (not explosive).
+
+**T3, rotten log over a pit at x 1088.** Last because a fall is the most expensive death. Teaches what the player saw at x 96-224 in this level (the platform lights, then falls) in the forest skin: cross, do not stand. The pit (144 px) is wider than any jump (a full jump flies about 88 px), so the log is the only way; a dawdle of up to about 1.45 s after landing still crosses. A hero who steps back during the warning finds the log gone: the pit is the `Deadline`, so that is a retry (D40, D26), never a soft-lock, and nothing is re-armed. The `Checkpoint` (x 1216) is 48 px past the pit and clear of every hazard.
+
+### Required route and measured times
+
+After the unchanged lever-272 wall: jump the tuft, sword or stomp the mob, cross the cloud in the calm, jump to the log, jump to the far floor, step to the checkpoint. **No ammunition** (the refill at x 312 is not on it). Measured with a scripted hero, real keyboard input, zero ammunition (`Forest1TrapsTest`, `RoomReplayTest`; an author check, not a novice playtest): **12.27 s** (11.58 s before), 0.00 s waiting for the puffball, **14.98 s with the longer-warnings assist**; the budget is 20 s. A death at the log replays about 12.7 s (the whole level is one room; the author accepted this and the level is not split).
+
+### Tests
+
+New `Forest1TrapsTest` (headless, the shipped map under an alias that drops only the decorative sky): census and positions, the clearances between every trap and the mob's reach, the 48 px checkpoint rule, the zero-ammunition mastered route under 20 s with a sword kill, three identical attempts after retries, a death at the log and its retry, a walker killed by the tuft and a jumper not, the tuft's 0.8 s / 1.2 s warning, the swell before the cloud and the cloud killing a hero timed into it, the mob beaten by sword and by stomp (swept takeoffs), the mob staying inside its reach, the log's fall and the pit as a retry (also with the assist), and the whole route with the assist. Changed existing tests (stated in D58): `RoomReplayTest` takeoff list for forest-1, `RhythmTrapsTest` allowance for forest-1. Left out on purpose and recorded in D58: exploding root, swinging vine, falling branch and stone, stump and root (no room or art support).
+
+### Author's answers recorded
+
+Three traps, not four; retry cost accepted, no split; the thorn tuft first; the log last; no exploding root and no fireball choice; an enemy in the stretch (second RedMob). Open for the running game (tracked by #260): the new sprites and pit edge tiles on this map, and how the 12-13 s retry loop feels.
