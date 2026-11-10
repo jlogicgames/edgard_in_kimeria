@@ -320,7 +320,7 @@ desktop and browser evidence. Deferred device and release checks are tracked in
 ## Tutorial tales (#220, D41)
 
 The same dialogue system opens twice around `forest-0`, in fairy-tale language and with no
-named controls: a six-line **start tale** (the last line is Edgard's: he understood and is in a hurry) on a New Game run's first entry into the level,
+named controls: a seven-line **start tale** (the sixth line, `HEALER_TALE_THREAD`, is the silver-thread explanation of Edgard's returns, #228; the last line is Edgard's: he understood and is in a hurry) on a New Game run's first entry into the level,
 and a four-line **farewell** when the last room's `Checkpoint` is reached (praise, "you are
 ready" and a parting blessing), after which forest-1 loads as before. They are scripted
 (`HealerDialogue.Kind.TUTORIAL_START` / `TUTORIAL_END`): no checklist, no choices, one

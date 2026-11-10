@@ -53,7 +53,7 @@ class HealerDialogueTest {
         Object[][] scripts = {
             {HealerDialogue.Kind.TUTORIAL_START, java.util.List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME,
                 Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT, Msg.HEALER_TALE_WITCH,
-                Msg.EDGARD_TALE_UNDERSTOOD)},
+                Msg.HEALER_TALE_THREAD, Msg.EDGARD_TALE_UNDERSTOOD)},
             {HealerDialogue.Kind.TUTORIAL_END, java.util.List.of(Msg.HEALER_TALE_PRAISE, Msg.EDGARD_TALE_READY,
                 Msg.HEALER_TALE_HEROES, Msg.HEALER_TALE_BLESSING)}};
         for (Language language : Language.values()) {
@@ -81,11 +81,16 @@ class HealerDialogueTest {
         java.util.List<String> forbidden = java.util.List.of("lever", "button", "press", "jump", "key", "stick",
             "hebel", "taste", "drück", "spring", "knopf", "dźwign", "przycisk", "naciśn", "skocz", "klawisz", "drążek",
             "важіл", "кнопк", "натисн", "стрибк", "клавіш", "рычаг", "націсн", "скачк", "клавіш");
+        // #228: the thread explains the returns in images; no game terms in any language.
+        java.util.List<String> gameTerms = java.util.List.of("live", "lives", "respawn", "retry", "checkpoint", "restart",
+            "leben", "wiederbele", "neustart", "kontrollpunkt", "speicherpunkt", "życi", "odrodz", "ponown", "punkt kontrol", "restart",
+            "життя", "життів", "відродж", "повтор", "контрольн", "рестарт", "жыцц", "адраджэн", "паўтор", "кантрольн", "рэстарт");
         for (Language language : Language.values()) for (HealerDialogue d : new HealerDialogue[]{
             HealerDialogue.tutorialStart(), HealerDialogue.tutorialEnd()}) {
             String text = "";
             for (int i = 0; i < 12; i++) { text += d.completeText(language) + " "; if (d.advance(language) == null) d.advance(language); }
             for (String word : forbidden) assertFalse(text.toLowerCase().contains(word.toLowerCase()), language + " names a control: " + word);
+            for (String word : gameTerms) assertFalse(text.toLowerCase().contains(word.toLowerCase()), language + " names a game term: " + word);
         }
     }
 
