@@ -14,6 +14,7 @@ public final class SpriteSheets {
     // Forest trap sprites (#230): authored and validated, not drawn by any code yet. Frame order: tools/sprite_layouts.py FOREST_TRAP_SHEETS.
     public static final Sheet TRAP_STUMP = new Sheet("images/objects/trap-stump.png", 16, 16);
     public static final Sheet TRAP_ROOT = new Sheet("images/objects/trap-root.png", 16, 24);
+    public static final Sheet TRAP_BOMB = new Sheet("images/objects/trap-bomb.png", 16, 16);
     public static final Sheet TRAP_BLAST = new Sheet("images/objects/trap-blast.png", 32, 32);
     public static final Sheet TRAP_THORN_ROOT = new Sheet("images/objects/trap-thorn-root.png", 16, 24);
     public static final Sheet TRAP_THORN_TUFT = new Sheet("images/objects/trap-thorn-tuft.png", 16, 16);
