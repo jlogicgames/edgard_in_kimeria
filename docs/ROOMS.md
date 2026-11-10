@@ -812,3 +812,79 @@ New `Forest1TrapsTest` (headless, the shipped map under an alias that drops only
 ### Author's answers recorded
 
 Three traps, not four; retry cost accepted, no split; the thorn tuft first; the log last; no exploding root and no fireball choice; an enemy in the stretch (second RedMob). Open for the running game (tracked by #260): the new sprites and pit edge tiles on this map, and how the 12-13 s retry loop feels.
+
+## forest-2 trap placement plan (#261, D59)
+
+**Status: approved by the author and implemented** ([D59](DECISIONS.md#d59-forest-2-traps-in-the-approach-to-the-boss-a-thorn-vine-an-exploding-root-and-a-falling-stone)). The issue [#261](https://github.com/jlogicgames/edgard_in_kimeria/issues/261) stays open for the author's check in the running game. Issue:
+[#261](https://github.com/jlogicgames/edgard_in_kimeria/issues/261) (its checklist carries "update this section"). Coordinates are the map's:
+**world Y grows downward**, the floor top is y = 320, an object's `y` is its top edge (a trap standing on the floor has `y = 320 - height`), a larger y is lower on screen. `SpawnPoints` carries a -16 px layer offset: the values below are visible positions, so the Tiled `y` of a `SpawnPoints` object is the value here **plus 16** (the Bomb is Tiled y 320, visible y 304, footprint 304-320).
+Map hash: before the change `forest-2.tmx` SHA-256 `85fa8a48b89767c1b42f34b9f001304359794444460944269b636189785da915`; after `cead205d17bc511d5622e69ca34477c8f657cf6240fb20685041cf5a560acb92` (`git hash-object` `f6c44a6f58cd`); recompute with `shasum -a 256 assets/tiles/forest-2.tmx` if the map changes again.
+Preview (schematic drawn from the map, not a game screenshot): [forest-2-trap-placement.png](references/forest-2-trap-placement.png).
+
+### What the level offered before the change
+
+Three rooms, left to right: `forest-entry` (x 0-1280), `forest-canopy` (x 1280-1952), `forest-boss` (x 2112-2560, entrance 2192,304; the 160 px between canopy and boss is void, the healer scene runs there). Mastered required routes: entry **16.27 s**, canopy **5.00 s** (budget about 20 s, D3).
+
+**`forest-entry` has no free floor.** Between the hazards that already stand there, the only gaps are 64 px (x 688-752, between the Bomb's blast and the YellowMob's reach), 16 px (896-912) and 48 px (1008-1056). A thorn tuft or explosive needs a 128-176 px jump envelope; a falling trap or vine needs a clear column; a puffball needs a crossing. The room already teaches stomp, ladder and lever, quicksand, the Bomb, wall jump and sword, and its route is 16.27 s, so a death late in it replays 16 s. **Plan: the entry room is not touched.**
+
+**`forest-canopy` has one slot of about 128 px** (x 1616-1744, under the optional ledge at 1648) between the RedMob (reach 1392-1536), the optional falling platform (column 1568-1600), the vertical Bat (x 1752-1784) and the 48 px exit clearance (from 1824). That fits one puffball and nothing else (a tuft needs 176 px). It is the fallback (option A below).
+
+### As built (option B): the canopy is 448 px longer, three traps in the new stretch
+
+Insert **448 px (28 tiles)** of floor at the cut x = 1808 (64 px after the Bat's reach, 64 px before today's exit). Everything at x >= 1808 moves right by 448 (the old exit 1872 becomes 2320, the end wall 1936 becomes 2384, the whole boss room 2112-2560 becomes 2560-3008, the `Deadline` grows by 448, the map becomes 188 tiles wide). `forest-canopy` becomes x 1280-2400 (1120 px). The boss room is **only translated**: no geometry, object, tile or rule in it changes. Precedent: D48 lengthened forest-0 rooms the same way.
+
+```
+x      1760  1808                1908        2072        2232       2320
+        Bat    |<---- new 448 px ---->|          |           |          |
+floor  =========================================================================
+                 T1 vine (1908)      T2 root (2064)   T3 stone (2224)   Exit
+```
+
+| # | Trap | Object, position (visible px) | Size | Properties | What it owns | Why there, what it tests |
+| --- | --- | --- | --- | --- | --- | --- |
+| T1 | Swinging thorn vine (rhythm, D46, first placement in any level) | `ThornVine` x **1896** (anchor at the centre, x 1908), y 256 (top edge = anchor; floor 64 below) | 24 x 40 | `period` 4.5, `amplitude` 50, `phase` 0 | swept area x 1864-1952, danger only while within about 32 deg of vertical | Timing by watching, not reaction; first thing after the Bat so it is met alone, 124 px from the Bat's reach |
+| T2 | Exploding root (touch, D47, first placement) | `ExplosiveRoot` x 2064, y 296 | 16 x 24 | none | jump envelope x 2000-2144 (floor, 96 px clear above), blast square x 2040-2104 | The choice trap: jump over it (no ammunition), walk through the lit root (the blast comes after 0.8 s; a walker is 80 px past), or pay a fireball / thrown stone from afar |
+| T3 | Falling stone (position, D45) | `FallingStone` x 2224, y 0 (flush with the room top, 320 px drop, 0.84 s flight), `skin` forest | 16 x 16 | `zoneX` 2208, `zoneY` 288, `zoneWidth` 32, `zoneHeight` 32 | lethal column x 2224-2240, shadow on the floor | Last: a trap that watches where you stand; the shadow is the telegraph; the answer is to keep walking |
+
+Gaps (px): Bat reach end 1784 -> vine swept 1864: **80**; vine swept end 1952 -> root envelope 2000: **48**; root envelope end 2144 -> stone zone 2208: **64**; stone zone end 2240 -> `RoomExit` 2320: **80** (rule: 48 px from entrance, exit, checkpoint; there is no checkpoint in this room). No trap shares an envelope or a telegraph with an enemy or the Bomb: the Bomb is in another room, 1100+ px back. The three traps use three different telegraph kinds (motion, smoke, ground shadow) one after another.
+
+### How each telegraph reads without a hint (D7)
+
+forest-2 has no hint zones besides the full-room controls zone, and the plan adds none (the traps were taught in forest-0/1). **T1:** the vine moves; its rhythm is the warning, the player watches two swings and goes when it is lifted to the side. **T2:** the root is lit only by touch or a hit from afar; its wind-up (cracks, smoke, glow, 0.8 s, 1.2 s with the assist) leaves time to walk on or step away, and the explosive rule (D47) already lets a naive walker survive (forest-0's stump is passed by walking on in `TrapsLessonTest`). **T3:** the shadow grows for 0.8 s (1.2 s assisted) before the 0.84 s fall; a walker is out of the column long before.
+
+### Measured costs (scripted hero, real keyboard input, zero ammunition; an author check, not a novice playtest)
+
+| Room | Mastered route | Retry cost | Notes |
+| --- | --- | --- | --- |
+| `forest-entry` | 16.27 s, unchanged (all coins 20.00 s) | 16 s, unchanged | |
+| `forest-canopy` | **9.48 s** (was 5.00 s), identical jumping the root or walking through it, identical with the longer-warnings assist; collection route 9.48 s (was 5.00 s) | a death at the stone replays about 9 s | under the 20 s budget; 0 s waiting at the vine with `phase` 0 |
+| collection returns through the canopy | 9.62 s first return, 9.48 s later returns (was 5.13 / 5.00 s) | | still inside the 30 s collection limit |
+| `forest-boss` | unchanged (only moved +448 px) | unchanged | a death in the boss fight resets the boss room only, so the new traps are never replayed in the fight |
+
+The mastered route reaches the vine at 4.87 s after room entry and passes it; a hero held at the entrance first still passes when 0 to 0.8 s later, a blind walker 0.9 to 1.3 s later is killed (0.1 s steps). With a blind walker (no jump, no wait) started at every 0.1 s offset, 30 of 45 pass and 15 are killed, so a safe window exists in every period and a careful hero waits at the edge and watches the swing.
+
+### Required route and D26
+
+Walk the canopy as before; pass the vine in a lifted-vine window; **jump the root** (or walk through it); walk on under the stone's shadow; exit. **No ammunition** on the required route. The explosive bypass is the floor jump the loader validates (open floor 64 px each side, 96 px clear, blast inside the room and 80 px clear of the exit). Measured for the root (every pixel, with and without the assist): a running jump whose takeoff has the body's right edge **5 to 57 px before the root** leaves it unlit; an earlier takeoff lands on it and a later one touches it, and neither kills a hero who keeps moving; walking through the lit root is survived (the blast goes off behind the hero) with and without the assist. The fireball refill (id 121, x 1696 on the optional climb) comes before the stretch, so a hero who took the optional climb may pay a fireball for the root; the required route depends on none. The root stays spent if the hero leaves alive and returns (room-state retention); the vine and the stone rebuild on every entry and retry. Nothing can soft-lock: the root is non-solid scenery once spent, the stone is harmless once landed, the vine never blocks (`Forest2TrapsTest` also walks through a spent root).
+
+### Collection returns, boss route and post-boss validation
+
+The healer's collection returns re-enter the canopy and pass the new stretch (times above). The boss rules and `POST_BOSS_VALIDATION.md` are unaffected: the boss room is translated by +448 and nothing inside it changes; the victory walk and the guide scene run in the boss room; the F4/F6 debug paths and the "no checkpoint or F5 on a boss map" rule are independent of x. `BOSS.md` carries the moved coordinates (entrance 2640,304; Boss object 2912,304).
+
+### Deviations from the plan as approved
+
+1. The vine's object is at **x 1896** (its anchor, the centre, is at 1908): the plan's swept-area numbers (x 1864-1952, 80 px after the Bat's reach, 48 px before the root's envelope) assume the anchor at 1908; the object x 1908 would have put the swept area at 1876-1964 and the gap to the root at 36 px.
+2. `tools/check_tiled_links.py` ignored an object group's `offsetx` / `offsety`, which the game's loader applies (forest-2's `SpawnPoints` has `offsety` -16), so it judged the root and the stone 16 px too low. The tool now folds the offset into the objects (`apply_layer_offsets`, tested in `tools/test_check_tiled_links.py`); no other map has a group offset, so no other result changes.
+3. The preview picture is a schematic of the pre-change map plus the planned objects, not a game screenshot; the table above is authoritative.
+
+### Tests and records changed
+
+New `Forest2TrapsTest` (headless, the shipped map): census and positions, every gap to enemies, exit and entrance at least 48 px and none shared, the boss room translated by exactly 448, the zero-ammunition route (jumping and walking through the root, three identical attempts after retries, under 20 s, with the assist), the vine kills a standing hero and a blind walker at the wrong time and the mastered route has slack, the root's jump window, walk-through and hit from afar with the full 0.8 s warning, the stone's warning (49 / 73 updates) and its column. Changed existing tests, coordinates and counts only, no tolerance relaxed: `BossCombatTest` (2112 -> 2560, 2192,304 -> 2640,304), `RhythmTrapsTest` (allowance: `ThornVine` in forest-2), `ExplosiveTrapsTest` (census: one root in forest-2), `FallingTrapsTest` (forest-2 has one stone, no branch). `RoomReplayTest` needed no change (its canopy takeoff list works unchanged; times above).
+
+### Option not taken
+
+Option A (no geometry change, one puffball in the 128 px slot at x 1616-1744) was rejected: it adds almost nothing to the hardest level.
+
+### Author's answers recorded
+
+Lengthen the canopy by 448 px; three traps; both new families (vine and root); no enemy on the new stretch; no Bomb companion; no hints; no extra stone pickup. Open for the running game (tracked by #261): the look of the vine, root and stone in this map, the earth blocks that hold the vine and the stone, and how the 9.5 s retry loop feels.

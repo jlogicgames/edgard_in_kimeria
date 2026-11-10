@@ -29,6 +29,15 @@ ESCALATOR = '<object id="2" name="Lift" type="Escalator" x="1" y="2"/>'
 
 
 class TiledLinksTest(unittest.TestCase):
+    def test_a_layer_offset_is_folded_into_its_objects_like_the_game_loader_does(self):
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring('<map><objectgroup name="SpawnPoints" offsetx="4" offsety="-16"><object id="1" x="10" y="312"/></objectgroup>'
+                             '<objectgroup name="Collisions"><object id="2" x="0" y="320"/></objectgroup></map>')
+        links.apply_layer_offsets(root)
+        spawn, floor = root.findall('objectgroup')
+        self.assertEqual((14.0, 296.0), (float(spawn[0].get('x')), float(spawn[0].get('y'))))
+        self.assertEqual((0.0, 320.0), (float(floor[0].get('x')), float(floor[0].get('y'))), "a group without offset is untouched")
+
     def test_reference_to_a_spawnpoint_mechanism_is_valid(self):
         self.assertEqual([], check(tmx(lever(2) + ESCALATOR)))
 

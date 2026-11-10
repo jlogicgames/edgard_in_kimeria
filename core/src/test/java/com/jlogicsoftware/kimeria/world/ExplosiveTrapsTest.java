@@ -566,14 +566,14 @@ class ExplosiveTrapsTest {
     }
 
     @Test void onlyTheTrapsRoomAndTheStoneRoomOfForestZeroUseAnExplosiveTrapAndTheOldBombStaysWhereItWas() throws Exception {
-        // Census of the shipped maps (D47): nothing else changed unexpectedly. forest-2 keeps its one old Bomb.
+        // Census of the shipped maps (D47): nothing else changed unexpectedly. forest-2 keeps its one old Bomb and gains one exploding root (#261, D59).
         java.nio.file.Path tiles = java.nio.file.Path.of("..", "assets", "tiles");
-        java.util.Map<String, Integer> expectedStumps = java.util.Map.of("forest-0", 2), expectedBombs = java.util.Map.of("forest-2", 1);
+        java.util.Map<String, Integer> expectedStumps = java.util.Map.of("forest-0", 2), expectedBombs = java.util.Map.of("forest-2", 1), expectedRoots = java.util.Map.of("forest-2", 1);
         try (var maps = java.nio.file.Files.list(tiles)) {
             for (java.nio.file.Path map : maps.filter(m -> m.toString().endsWith(".tmx")).toList()) {
                 String name = map.getFileName().toString().replace(".tmx", ""), text = java.nio.file.Files.readString(map);
                 assertEquals(expectedStumps.getOrDefault(name, 0), text.split("type=\"ExplosiveStump\"", -1).length - 1, name + " stumps");
-                assertEquals(0, text.split("type=\"ExplosiveRoot\"", -1).length - 1, name + " roots");
+                assertEquals(expectedRoots.getOrDefault(name, 0), text.split("type=\"ExplosiveRoot\"", -1).length - 1, name + " roots");
                 assertEquals(expectedBombs.getOrDefault(name, 0), text.split("type=\"Bomb\"", -1).length - 1, name + " bombs");
             }
         }
