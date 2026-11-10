@@ -477,9 +477,9 @@ class RhythmTrapsTest {
         assertEquals(TrapWarnings.FALLING_PLATFORM_SECONDS, firstMove * STEP, 3 * STEP, "falls after the shared 1 s warning");
     }
 
-    /** Rhythmic trap types and the log skin each shipped level may use; #260 (D58) allows the one puffball and the rotten log in forest-1. */
+    /** Rhythmic trap types and the log skin each shipped level may use; #260 (D58) allows the one puffball and the rotten log in forest-1; #261 (D59) the one thorn vine in forest-2. */
     private static final java.util.Map<String, Set<String>> SHIPPED_ALLOWANCE = java.util.Map.of(
-        "forest-0", Set.of(), "forest-1", Set.of("Puffball", "skin"), "forest-2", Set.of());
+        "forest-0", Set.of(), "forest-1", Set.of("Puffball", "skin"), "forest-2", Set.of("ThornVine"));
 
     @Test void shippedLevelsUseOnlyAllowedRhythmTrapsAndEveryTrapTheyUseLoadsValidated() {
         for (String name : new String[]{"forest-0", "forest-1", "forest-2"}) {

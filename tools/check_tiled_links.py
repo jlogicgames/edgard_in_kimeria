@@ -294,8 +294,19 @@ def thorn_room(root, o):
     return None
 
 
+def apply_layer_offsets(root):
+    """Fold each object group's offsetx/offsety into its objects, as the game's loader does (forest-2's SpawnPoints is offset by -16)."""
+    for group in root.findall('objectgroup'):
+        dx, dy = float(group.get('offsetx', 0)), float(group.get('offsety', 0))
+        if not (dx or dy):
+            continue
+        for o in group.findall('object'):
+            o.set('x', repr(float(o.get('x', 0)) + dx)); o.set('y', repr(float(o.get('y', 0)) + dy))
+
+
 def check_map(path):
     root = ET.parse(path).getroot()
+    apply_layer_offsets(root)
     groups = layers(root)
     spawn, collisions = groups.get('SpawnPoints', []), groups.get('Collisions', [])
     by_id = {o.get('id'): o for o in spawn}

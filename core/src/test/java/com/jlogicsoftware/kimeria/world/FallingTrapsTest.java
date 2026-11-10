@@ -443,12 +443,14 @@ class FallingTrapsTest {
         assertTrue(stone(l).bodyBounds().y >= room.y, "the stone starts inside the room, flush with its top");
     }
 
-    @Test void onlyForestZeroUsesTheFallingTrapsOneBranchInTheWallRoomAndOneStoneInThePlatformRoom() {
-        for (String map : new String[]{"forest-1", "forest-2"}) {
-            String text = Gdx.files.internal("tiles/" + map + ".tmx").readString();
-            assertFalse(text.contains("FallingBranch") || text.contains("FallingStone"), map);
-            assertTrue(load(map).objects.stream().noneMatch(FallingTrap.class::isInstance), map);
-        }
+    @Test void onlyForestZeroAndTheForestTwoApproachUseTheFallingTraps() {
+        String one = Gdx.files.internal("tiles/forest-1.tmx").readString();
+        assertFalse(one.contains("FallingBranch") || one.contains("FallingStone"), "forest-1");
+        assertTrue(load("forest-1").objects.stream().noneMatch(FallingTrap.class::isInstance), "forest-1");
+        // #261 (D59): forest-2 has no branch and exactly one stone, at the end of forest-canopy.
+        String two = Gdx.files.internal("tiles/forest-2.tmx").readString();
+        assertFalse(two.contains("FallingBranch"), "forest-2 has no branch");
+        assertEquals(1, two.split("type=\"FallingStone\"", -1).length - 1, "forest-2: one stone");
         String text = Gdx.files.internal("tiles/forest-0.tmx").readString();
         assertEquals(1, text.split("type=\"FallingBranch\"", -1).length - 1, "D48: one branch");
         assertEquals(1, text.split("type=\"FallingStone\"", -1).length - 1, "D48: one stone");
