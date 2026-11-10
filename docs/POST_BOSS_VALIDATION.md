@@ -66,7 +66,7 @@ and scripted keyboard input do not establish those device results. Afterwards th
 played end to end from New Game through the ending on keyboard and on a physical gamepad
 and confirmed the post-boss scene works (reported 2026-10-20). The author also checked the
 left-handed layout on keyboard (reported 2026-10-20). Touchscreen/multitouch, handedness on
-real touch devices and gamepad, and mobile browsers are deferred to
+real touch devices and mobile browsers are **Cancelled (D61)**; handedness on gamepad is deferred to
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#devices-and-controls); this validation stage is closed.
 
 ## Project dialogue skill

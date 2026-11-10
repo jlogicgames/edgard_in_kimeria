@@ -4,6 +4,15 @@ Single source of truth for Claude Code, Codex, Qwen and any other agent working 
 (`CLAUDE.md` only imports this file). Short; details live in `docs/`. It lists the mistakes that
 have already cost a review round.
 
+## Language: everything is written in English
+
+All project documentation is English only: `README.md`, `AGENTS.md`, everything under `docs/`,
+code comments, commit messages, and GitHub issues and pull requests (titles, descriptions,
+comments). Do not write or leave Russian (or any other language) there, whatever language the
+conversation with the user is in. Player-facing game strings are the exception: they live in
+the localization bundles and follow the supported languages. When you find a non-English issue
+or document, translate it.
+
 ## Coordinates: world Y grows DOWNWARD
 
 The world camera is `camera.setToOrtho(true, ...)` (`KimeriaGame`), so (0,0) is the top-left,

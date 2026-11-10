@@ -97,7 +97,7 @@ Desktop checks and BossCombatTest cover the normal boss exit/guide boundary.
 Temporary harness classes/preferences and the local server were removed; retained
 captures are outside the repository. After this validation the author completed a full
 human playthrough on keyboard and on a physical gamepad, and checked the left-handed layout
-on keyboard (reported 2026-10-20). Touchscreens, the left-handed layout on touch and gamepad,
+on keyboard (reported 2026-10-20). Touchscreens and the left-handed layout on touch (**Cancelled, D61**), the left-handed layout on gamepad,
 subjective audio quality and final author readability review are deferred to
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md); they do not keep the current MVP stage open.
 Headless music spies establish routing/envelopes; desktop `isPlaying` confirms the real

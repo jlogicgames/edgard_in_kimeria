@@ -211,7 +211,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   while paused, on the frozen gameplay or healer-dialogue screen (`screen_effects.frag`, drawn from an offscreen
   `FrameBuffer` that is only rendered while paused or while a ripple is live, so normal play
   is unchanged). The HUD and pause menu draw afterwards, unaffected.
-- **Mobile browsers** (author iPhone play-through, 2026-11-05; fixes in D53 to D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), closed 2026-11-07; the author confirmed portrait and landscape layout, sharpness, the light touch controls, the wake lock and the pause button on a real iPhone in Safari. Not yet checked on a device: Android Chrome, tablets and the frame rate on a mid-range phone, tracked in [#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)):
+- **Mobile browsers** (**Implemented and frozen; the mobile version is cancelled (D61), maintenance only.** Author iPhone play-through, 2026-11-05; fixes in D53 to D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), closed 2026-11-07; the author confirmed portrait and landscape layout, sharpness, the light touch controls, the wake lock and the pause button on a real iPhone in Safari. Android Chrome, tablet and mid-range-phone frame rate checks: **Cancelled (D61): will not be implemented** (was tracked in [#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)):
   in portrait the picture is pinned to the top and the stick and buttons sit in the strip below it
   (`ui.TouchLayout`), with a rotate hint; in landscape on a window wider than 16:9 the stick is in the left bar
   and the buttons in the right bar beside the picture (D54); on every touch landscape window the picture shrinks to leave bars of at least 104 units so nothing covers it (D56); the canvas is backed with physical pixels (`usePhysicalPixels`, width x `devicePixelRatio`, D57) so pixel art and text stay crisp on 2x/3x phones; the page uses the visible viewport (`100dvh`), no scroll or
@@ -224,7 +224,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   Chrome and desktop browsers do have the Fullscreen API and get a "Display" item in Options. The wake
   lock needs iOS 16.4 or newer; before that the screen still auto-locks.
 - **Fullscreen:** desktop windows via Options (LWJGL), browsers that have the Fullscreen API via
-  `DisplayControl` (web launcher). Native mobile is a separate decision ([#266](https://github.com/jlogicgames/edgard_in_kimeria/issues/266)).
+  `DisplayControl` (web launcher). There is no native mobile app, so no native mobile fullscreen ([D61](DECISIONS.md#d61-no-native-mobile-version-release-is-desktop-and-web), [#266](https://github.com/jlogicgames/edgard_in_kimeria/issues/266)).
 - **Menus are hand-drawn immediate-mode UI**, not Scene2D, to avoid pulling in a full
   Scene2D skin for a handful of simple screens.
 
@@ -296,8 +296,9 @@ parts that shape the code:
   `Settings` loads one snapshot, exposes typed option keys and flushes each changed setting
   through one write path. A failed settings read uses defaults; failed settings writes keep
   the choice for the current session and report the storage error. The desktop launcher uses
-  the same helper with `Lwjgl3Preferences` before libGDX starts. Mobile will use its platform
-  backend through `Gdx.app.getPreferences`; there is no mobile module to run or verify yet.
+  the same helper with `Lwjgl3Preferences` before libGDX starts. There is no native mobile
+  module and none is planned (D61, [#266](https://github.com/jlogicgames/edgard_in_kimeria/issues/266)): phones and tablets use the web backend (browser
+  local storage) through the mobile browser.
 - **Death does not touch the save.** It resets the current room in memory (see D3), with a fast path
   that bypasses the loading screen, and the save only changes on level completion.
 - **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;
