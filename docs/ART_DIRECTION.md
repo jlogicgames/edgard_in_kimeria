@@ -159,7 +159,7 @@ A request and idea, not an implemented rule.
   one or more **background** layers behind it.
 - **Readability rule (proposed):** the foreground layer must **never hide** traps, hints or the
   hero; it frames the scene at the edges or is faint enough to see through.
-- **Performance:** web and mobile are targets, so the number of layers, blur cost and overdraw
+- **Performance:** desktop and web (including mobile browsers) are targets, so the number of layers, blur cost and overdraw
   need a measured budget before the layers are fixed.
 - **Per-stage art:** each stage has its own set of layers.
 

@@ -264,7 +264,7 @@ physical gamepad, including the pre-boss healer and the post-boss guide scene, a
 accepted that version for the test build. At that time the elixir was described as a sword
 bonus; the later correction in #155 clarifies that it does not strengthen magical fireballs.
 The left-handed layout was also checked on keyboard. Touch devices, and
-the left-handed layout on touch and gamepad, are deferred to the pre-release list.
+the left-handed layout on touch (**Cancelled, D61**), and on gamepad, are deferred to the pre-release list.
 The post-victory scene is implemented by #86 as described below.
 
 ## Author feedback, 2026-10-18

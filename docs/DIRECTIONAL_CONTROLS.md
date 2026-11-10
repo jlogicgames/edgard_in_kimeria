@@ -12,13 +12,13 @@ Superseded artwork and intermediate UI captures have been removed.
 ## Author-reported device checks (2026-10-27)
 
 Keyboard was checked in both handedness layouts; gamepad was checked only in the
-default layout. Touch has not been checked, and a phone build has not been made.
-Still to check: mirrored gamepad, both touch layouts on a phone, and any other
+default layout. Touch has not been checked (there is no native phone build and none is planned, D61).
+Still to check: mirrored gamepad, both touch layouts on a phone (**Cancelled, D61**), and any other
 unverified criteria in #101. Older device-coverage notes reflect their dates.
 
 Update (2026-11-06, author-reported): the desktop version was checked with keyboard and
 gamepad in both the right-handed and left-handed layouts (build and rooms not stated).
-This covers the mirrored gamepad item. Touch in both layouts is still unchecked.
+This covers the mirrored gamepad item. Touch in both layouts is unchecked and its check is **Cancelled (D61)**.
 
 ## Interaction controls (#175)
 
@@ -348,7 +348,7 @@ top and step onto the ledge, descend and step off, no regrab at the top, chord o
 and on the ladder with no climb after release, sword/pick up unavailable and ranged working
 while attached, jump-off with direction, gamepad stick, touch stick with an Action touch,
 and the first-room hint present only in the first Forest room. Not checked: a physical
-controller, a physical multitouch phone, and novice comprehension.
+controller, a physical multitouch phone (**Cancelled, D61**), and novice comprehension.
 
 **Accepted follow-up (2026-10-26):** The ladder top now has a one-way support that follows
 the moving sprite, so reaching its top leaves Edgard standing there. A grounded midpoint

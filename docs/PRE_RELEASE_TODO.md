@@ -33,7 +33,8 @@ do not wait for every campaign room or every item in this checklist to be finish
 Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.md),
 [skill audit limits](SKILL_VALIDATION.md#limits-and-cleanup), [healer](HEALER.md).
 
-- [ ] Play on a real touchscreen with simultaneous movement/jump/attack touches, in both
+- [-] **Cancelled (D61): will not be implemented.** (original text kept below)
+  Play on a real touchscreen with simultaneous movement/jump/attack touches, in both
   handedness layouts. Check mirrored drawing and hit areas, separate dialogue choices,
   reveal/advance and pause/Resume. Mouse clicks do not establish multitouch behavior.
   Include the top-centre pause button ([#259](https://github.com/jlogicgames/edgard_in_kimeria/issues/259), D52):
@@ -41,15 +42,19 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   to hit with a thumb, and Resume / Restart Level / Options / Main menu must all work by touch.
   The author reported on 2026-11-07 that the button works on a real iPhone; the cases listed
   here were not itemised, so keep this open until they are (tracked in [#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)).
-- [ ] Landscape touch layout (D56, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **iPhone Safari OK (author, 2026-11-07).** Still to check on a real Android phone
+- [-] **Cancelled (D61): will not be implemented.** (original text kept below)
+  Landscape touch layout (D56, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **iPhone Safari OK (author, 2026-11-07).** Still to check on a real Android phone
   and a tablet ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): the picture is
   centred and slightly smaller (about 8% on an iPhone without toolbars, 25% on a 16:9 window), bars on both sides,
   stick and buttons completely inside them and comfortable, nothing over the picture, pause button easy to hit, both handedness modes.
-- [ ] Sharpness (D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **iPhone Safari OK (author, 2026-11-07): text and pixel art are sharp.** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): the same in portrait and landscape (compare `docs/references/mobile-sharpness-*-before-after.png`); and the frame rate on a mid-range phone with the canvas at about 3 M physical pixels (not measured on any device; see also [#265](https://github.com/jlogicgames/edgard_in_kimeria/issues/265)).
-- [ ] Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **light controls accepted on a real iPhone (author, 2026-11-07).** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): stick, Fireball,
+- [-] **Cancelled (D61): will not be implemented.** (original text kept below)
+  Sharpness (D57, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **iPhone Safari OK (author, 2026-11-07): text and pixel art are sharp.** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): the same in portrait and landscape (compare `docs/references/mobile-sharpness-*-before-after.png`); and the frame rate on a mid-range phone with the canvas at about 3 M physical pixels (not measured on any device; see also [#265](https://github.com/jlogicgames/edgard_in_kimeria/issues/265)).
+- [-] **Cancelled (D61): will not be implemented.** (original text kept below)
+  Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **light controls accepted on a real iPhone (author, 2026-11-07).** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): stick, Fireball,
   Sword/Action, Jump and pause button are easy to see on the dark strip / side bars and over the picture
   (16:9, 4:3), labels (13 px, dark on cream; long German / Belarusian ones wrap to two lines) readable, pressed state (amber) obvious, in daylight and in a dark room.
-- [ ] Mobile browser layout and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53): **real iPhone, Safari tab: portrait and landscape layouts OK and the screen stays on during play (author, 2026-11-07).**
+- [-] **Cancelled (D61): will not be implemented.** (original text kept below)
+  Mobile browser layout and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53): **real iPhone, Safari tab: portrait and landscape layouts OK and the screen stays on during play (author, 2026-11-07).**
   Fullscreen and the Add to Home Screen app are **not needed (author decision, 2026-11-07)**, so their checks (home-screen
   icon, name, status bar, full-height landscape, the Display option on Android Chrome) are dropped; the code stays. Still to check
   on a real Android phone and tablets ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): portrait picture on top with the stick and buttons in the strip below,
@@ -65,7 +70,7 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
   choices, Resume, level loading and ending. Only the intended fresh press may act;
   navigation must not confirm a choice. Check live layout changes and persistence.
 - [ ] Complete normal end-to-end runs in the release web build, including mobile browsers
-  on real devices. Earlier development-browser and seeded runs retain their limited scope.
+  on real devices (the mobile-browser and real-device part is **Cancelled (D61): will not be implemented**). Earlier development-browser and seeded runs retain their limited scope.
   Evidence so far: one author iPhone browser play-through of the forest-0 tutorial on 2026-11-05
   (playable; the problems it found were fixed under [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226) and checked on an iPhone on 2026-11-07, see the mobile items above). It is not
   a full run and not a release-build pass.
@@ -187,7 +192,7 @@ Sources: [healer](HEALER.md), [post-boss guide](POST_BOSS_VALIDATION.md), [story
   Review portrait readability on the target devices and the healer's voice as the recurring guide.
 - [ ] Have native speakers review Polish, German and Belarusian wording, control terminology,
   names and the healer's voice. Technical catalog/font checks do not approve prose quality.
-- [ ] Use a physical controller and touch device, in both handedness modes. Hold inputs into
+- [ ] Use a physical controller and touch device, in both handedness modes (the touch-device part is **Cancelled (D61)**). Hold inputs into
   entry, reveal, choices and Resume; navigate without confirming; pause during typing.
 - [ ] Miss pickups, return repeatedly, collect more, die before/after a room exit and compare
   the checklist, HUD, enemies and traps. Include burned-platform approaches when authored.
@@ -220,7 +225,7 @@ Sources: [skill audit limits](SKILL_VALIDATION.md#limits-and-cleanup), [MVP](MVP
 - [ ] Listen to menu/opening/ending music, dialogue transitions, boss hit/restoration and
   elixir feedback. Review subjective quality, volume, sound-off behavior and fades.
 - [ ] Check release-browser audio after the required user gesture, including mobile:
-  startup/unlock, music transitions, mute/volume and restart/reload. Desktop `isPlaying`
+  startup/unlock, music transitions, mute/volume and restart/reload (the mobile part is **Cancelled (D61)**). Desktop `isPlaying`
   and headless spies do not establish browser autoplay behavior.
 
 ## Campaign, saves and completion
@@ -251,13 +256,13 @@ Sources: [MVP](MVP.md), [post-boss validation](POST_BOSS_VALIDATION.md).
 
 ## Directional controls (#95)
 
-- [ ] Check a physical gamepad and physical multitouch device in both layouts: sword
+- [ ] Check a physical gamepad and physical multitouch device (the multitouch part is **Cancelled (D61)**) in both layouts: sword
   while carrying, pickup/place, mechanism choice, throw/fireball and zero stock.
 - [ ] Check entrance practice hints/target marker at gameplay scale and after resize/
   letterboxing, in all five languages. Automated font layout and simulated devices
   are recorded in [directional controls](DIRECTIONAL_CONTROLS.md), not physical checks.
 - [ ] Check ladder entry, climbing, jump-off and Up/Down + Action ownership with a
-  physical gamepad and a physical multitouch device in both layouts. Simulated-device
+  physical gamepad and a physical multitouch device (the multitouch part is **Cancelled (D61)**) in both layouts. Simulated-device
   tests are in [directional controls](DIRECTIONAL_CONTROLS.md#ladders-99); they are not physical checks.
 
 

@@ -78,7 +78,7 @@ No injected gameplay hooks, map edits or temporary game-source changes were used
 
 ## Limits and cleanup
 
-Physical gamepad and multitouch behavior, native desktop/fullscreen/high-DPI
+Physical gamepad behavior (multitouch is **Cancelled, D61**), native desktop/fullscreen/high-DPI
 rendering, the release web build, explosion appearance in-world, and a complete
 human boss fight were not exercised in this pass. The remaining release coverage is deferred to
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md); this audit stage is complete. Skills still

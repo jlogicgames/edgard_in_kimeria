@@ -188,7 +188,7 @@ automatic artifact bonus.
 Human validation: the author played the boss encounter through on keyboard and on a
 physical gamepad, and accepted that version for the test build (reported 2026-10-20).
 That review predates #155, which clarifies the elixir's scope for magical fireballs.
-Touch play and
+Touch play (**Cancelled, D61**) and
 release regression/teaching/timing checks are deferred to
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#boss-combat-teaching-and-replay-time).
 The automated and limited browser checks above retain their recorded scope.
@@ -320,7 +320,7 @@ sword hit emits 48 droplets and its own brief impact shake, including the lethal
 checked in both languages. At the time of this change the post-boss #86 scene was not
 included; it has since been added (see [HEALER.md](HEALER.md) and [MVP.md](MVP.md)). The
 author has since reviewed the encounter in play on keyboard and a physical controller
-(2026-10-20); touch comfort is deferred to [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#devices-and-controls).
+(2026-10-20); touch comfort is **Cancelled (D61)**, formerly deferred to [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md#devices-and-controls).
 
 ## Removed legacy ambience/mechanic
 
