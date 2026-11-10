@@ -232,6 +232,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | Sheet | Frame size | Frames (in order) | Notes |
 | --- | --- | --- | --- |
 | `trap-stump` | 16×16 | idle, windup1, windup2, windup3, spent | exploding stump: cracks, smoke, glow; charred remains |
+| `trap-bomb` | 16×16 | idle1, idle2 | round iron bomb with a bone fuse and a smouldering tip (dull red / orange, no flame: the lit state is the D7 warm tint flash drawn over it); the blast is the `BombExplosionEffect` shader, not a sprite |
 | `trap-root` | 16×24 | idle, windup1, windup2, windup3, spent | exploding root, same wind-up language |
 | `trap-blast` | 32×32 | blast1..blast12 | 12 steps (#250): pale ball, orange ball with sparks, burst of puffs with a ground ring, fire mushroom under a dark-brown smoke cap, brown smoke saucer, ring, fade; the gameplay blast is 64×64 px, so draw at 2× (nearest) or keep the sprite as the visual core |
 | `trap-thorn-root` | 16×24 | hidden, peek1, peek2, rising, up | bone-coloured stake; peek1/peek2 is the wobble |
@@ -244,8 +245,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-vine` | 24×40 | hang, swing-left, swing-right | anchored top centre; pendulum by swing frames or rotation |
 | `trap-log` | 32×16 | intact, crumble1, crumble2 | rotten log bridge, same footprint as `platform.png` |
 
-**Bomb replacement:** the stump and root sets replace the glass-bottle bomb. The old bomb
-(`images/Items.png`, 16×16) stays in place and is untouched; #233 (D47) swapped the code: `ExplosiveStump`/`ExplosiveRoot` use these sheets (the blast frames are drawn at 2x), the bottle is still used by the old `Bomb` type (`forest-2`).
+**Bomb:** the stump and root sets replace the glass-bottle bomb in the tutorial (#233, D47: `ExplosiveStump`/`ExplosiveRoot` use these sheets, the blast frames are drawn at 2x). The `Bomb` trap type stays separate (D51) and has its own redrawn sprite, `trap-bomb` (#263, D60); the glass bottles in `images/Items.png` are no longer drawn (the file stays, the coin is in it).
 
 **Palette (shared families, each sheet uses at most 15 colours + transparency):** near-black
 contour `0b0814`; wood `4a2e1c / 8a5a30 / c08a4c`; ember `b3201a / f07a1a / ffd23a / fff4b0`;

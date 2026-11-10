@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.BombExplosionEffect;
 import com.jlogicsoftware.kimeria.entity.Entity;
@@ -35,7 +36,7 @@ public class Bomb extends Entity {
         this.game = game;
         this.spawner = spawner;
         this.onExplosion = onExplosion;
-        animation = assets.animation("images/Items.png", 2, STEP_TIME, 16, 16, 32, 0);
+        animation = new Animation<>(STEP_TIME, SpriteSheets.TRAP_BOMB.frame(assets, 0, 0), SpriteSheets.TRAP_BOMB.frame(assets, 1, 0));
         animation.setPlayMode(Animation.PlayMode.LOOP);
     }
 
