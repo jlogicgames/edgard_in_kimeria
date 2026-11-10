@@ -34,7 +34,7 @@ public final class HealerDialogue {
     public static HealerDialogue tutorialStart() {
         return new HealerDialogue(Kind.TUTORIAL_START, List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME,
             Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT, Msg.HEALER_TALE_WITCH,
-            Msg.EDGARD_TALE_UNDERSTOOD));
+            Msg.HEALER_TALE_THREAD, Msg.EDGARD_TALE_UNDERSTOOD));
     }
 
     /** The praise and parting blessing at the end of forest-0 (D41). */

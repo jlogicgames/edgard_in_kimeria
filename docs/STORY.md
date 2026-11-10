@@ -85,7 +85,8 @@ future implementation is tracked separately from this narrative decision.
 - Place the agreed post-boss scene at a successful progression boundary. Do not repeat it
   on boss-room death/retry or add dialogue delays to the existing fast retry loop.
 - New scenes must respect the existing level-only save contract. Being a guide does not
-  imply a new checkpoint, resurrection, healing or persistence mechanic.
+  imply a new checkpoint, resurrection, healing or persistence mechanic. The silver-thread
+  explanation of Edgard's returns (below) is narrative only and does not change this.
 
 ### Not yet decided
 
@@ -128,3 +129,30 @@ of L'Kardina's fate or the mechanism of dispelling darkness is added.
 After the ending, the game returns to the main menu and removes the run save. A new run
 starts from the opening and the `forest-0` tutorial. Later mechanics will expand these levels;
 additional stages and quests are outside the agreed MVP. See [MVP.md](MVP.md).
+
+
+## Why Edgard returns after every fall — accepted 2026-11-10 ([#228](https://github.com/jlogicgames/edgard_in_kimeria/issues/228))
+
+**Accepted by the author, 2026-11-10.** Edgard can rise again after every fall because the
+healer helps him. In the tale it is a silver thread: the healer tied it about Edgard's wrist
+and holds the other end. When the night swallows Edgard, the healer draws the thread and Edgard
+rises again at the edge of the path. The returning is certain ("you will rise"), and the healer
+may name the fall ("when the night swallows you"). This is narrative only: it adds no
+checkpoint, resurrection, healing or persistence mechanic and changes no rule in
+[HEALER.md](HEALER.md#state-policy). The healer's name, origin and powers beyond this image stay
+undecided.
+
+Approved texts (EN source; the five catalogs hold the translations):
+
+- **Forest-0 start tale, one new healer line** after the witch line, key `HEALER_TALE_THREAD`:
+  "Edgard, I tied a silver thread about your wrist, and I hold the other end. When the
+  night swallows you, I draw the thread, and you will rise again at the path's edge."
+- **Opening narration**, one sentence in the paragraph where he meets the healer (`INTRO_STORY`):
+  "I gave him my counsel. I tied a silver thread about his wrist and kept the other end in my
+  hand, and he ventured onward."
+
+Not used by the author's decision: the farewell (no line there), a line on the first death, and
+any answer from Edgard. The start tale runs once per New Game run and is never repeated by death,
+room retry or Restart Level; the opening plays once per New Game. Wording rules, tests and
+measured sizes: [D41 note](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial) and
+[localization validation](LOCALIZATION_VALIDATION.md).
