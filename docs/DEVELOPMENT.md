@@ -468,7 +468,7 @@ Design (for the migration, not final API):
 | # | Change | Cost |
 | --- | --- | --- |
 | 0 | **Pin the current look and install the guard.** (a) A test with a fixed seed records the live particle count and each particle's position, size and alpha at chosen frames of a `Torch` and of a 32- and 48-drop `BloodBurst`, as constants (read through reflection, like `BloodBurstTest`); it lands against the old code, so the later steps are compared with it. (b) The allocation guard of section 13: the `AllocationProbe` test helper with ceilings set to today's measured numbers, and `tools/check_allocations.py` on changed lines, wired into Gradle and `.codex/hooks.json`. (c) The rule text of section 11, in the form the author approves. | medium |
-| 1 | **Cache the regions:** `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; remove the `new Color` in `BloodBurst.render`. Removes 40 B per call everywhere, including the forest-1 rain (about 1.9 KB/frame) and every torch draw. Check that no caller mutates the shared region (`whiteQuad()` is flipped on purpose) and that `dispose()` resets it, also under `runDev` hot reload. | small |
+| 1 | **Cache the regions:** `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; remove the `new Color` in `BloodBurst.render`. Removes 40 B per call everywhere, including the forest-1 rain (about 1.9 KB/frame) and every torch draw. Check that no caller mutates the shared region (`whiteQuad()` is flipped on purpose) and that `dispose()` resets it, also under `runDev` hot reload. **Done (#285 step 1):** measured on 2026-11-11, forest-1 4,491.8 to 4,525.5 -> 2,530.2 to 2,564.4 B/frame, `BloodBurst` 97.6 -> 32.8 B/frame (the constructor alone), one `Torch` 190.9 to 195.1 -> 149.4 to 151.3 B/frame (HotSpot had already hidden most of the 40 B per `SoftDot.region()` call). | small |
 | 2 | **`ParticleSystem` and `Torch`:** the new class with its unit tests, then `Torch` on it with the same formulas and the same random-call order. Fix the "pooled" paragraph in "Deviations" in the same PR. | medium |
 | 3 | **Blood:** `BloodBurst` on the shared system with the floor splash kept; `BloodBurstTest` is rewritten for the new state (it reads the private `drops` and `Drop` fields by reflection, so it cannot stay as it is). `Boss`, `docs/BOSS.md` ("Blood uses code particles") follow. | medium |
 | 4 | **Per-frame `Rectangle` and `Vector2`:** reuse fields for `KimeriaGame` line 670 and `Level.cameraShakeOffset`. #239 step 1 plans the same change; whichever lands first does it and the other drops it. | small |
@@ -585,8 +585,8 @@ measured and which were read from the code.
 | --- | --- | --- | --- | --- |
 | `KimeriaGame.render` (line 670), `Level.cameraShakeOffset` | `Rectangle`, `Vector2` | 56 B/frame | measured (section 1) | step 4 |
 | `Torch.spawnCore/Embers/Smoke/Sparkles`, called from `update` | `Particle`, 3 `Vector2`, `Color` | 118 to 120 B/frame/torch | measured | step 2 |
-| `SoftDot.region`, `glowRegion`, `Shaders.whiteQuad` (called by `Torch.render`, `RainDrop.render`) | `TextureRegion` | 40 B per call; about 1.9 KB/frame in forest-1 | measured | step 1 |
-| `BloodBurst.render` (line 69) | `Color` copy of the batch colour | 39 B/frame while visible | measured | step 1 |
+| `SoftDot.region`, `glowRegion`, `Shaders.whiteQuad` (called by `Torch.render`, `RainDrop.render`) | `TextureRegion` | 40 B per call; about 1.9 KB/frame in forest-1 | measured | step 1, done: one cached region each |
+| `BloodBurst.render` (line 69) | `Color` copy of the batch colour | 39 B/frame while visible | measured | step 1, done: float components |
 | `Boss.render` (236), `BossHud.render` (49, 80) | `Color` copy of the batch colour | about 40 B per draw | read from the code | step 4 |
 | `Hud.render` (86, 102), `renderInteractionHint` (150, 154), `draw` (180, 181) | `GlyphLayout` | per frame while the FPS text, hint or zone message is shown | read from the code | question 4 |
 | `Carryable.update` (119), `Fireball.update` (36), `Actor.boundsOf`, `Carryable.bounds`, `Level.blocksObject` | `Rectangle` | per object per frame | JFR ranking (a ranking, not a measure) and the code | question 4 |
@@ -656,7 +656,7 @@ the `docs/DEVELOPMENT.md` gaps rule applies to every line of this document that 
 > - [ ] Step 0: golden test of the current torch and blood; `AllocationProbe` and `AllocationBudgetTest` with ceilings at today's numbers;
 >   `tools/check_allocations.py`, `validateAllocations`, `.codex/hooks.json`, `tools/test_check_allocations.py`; the approved rule text in
 >   `AGENTS.md` and `docs/DEVELOPMENT.md`; vendored skills committed (`.agents/skills/`, `SOURCE.md`)
-> - [ ] Step 1: cached `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; no `new Color` in `BloodBurst.render`; ceilings lowered
+> - [x] Step 1: cached `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; no `new Color` in `BloodBurst.render`; ceilings lowered
 > - [ ] Step 2: `ParticleSystem` and `Torch` on it; golden test unchanged; `buildWeb` and a browser load; torch ceiling at a few tens of bytes
 > - [ ] Step 3: blood on the shared system with the floor splash; `BloodBurstTest` rewritten; `Boss`, `docs/BOSS.md`
 > - [ ] Step 4: reuse the per-frame `Rectangle`/`Vector2` (`KimeriaGame` line 670, `Level.cameraShakeOffset`) and the `Color` copies in `Boss`/`BossHud`

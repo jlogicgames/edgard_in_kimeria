@@ -15,6 +15,8 @@ import java.util.Map;
 public final class Shaders {
     private static final Map<String, ShaderProgram> cache = new HashMap<>();
     private static Texture whitePixel;
+    // One shared region: callers only draw with it and never mutate it; dropped together with its texture.
+    private static TextureRegion whiteQuad;
 
     private Shaders() {
     }
@@ -39,6 +41,9 @@ public final class Shaders {
      * Flutter shaders (which assume Y-down) would come out upside down.
      */
     public static TextureRegion whiteQuad() {
+        if (whiteQuad != null) {
+            return whiteQuad;
+        }
         if (whitePixel == null) {
             Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
             pm.setColor(Color.WHITE);
@@ -55,10 +60,12 @@ public final class Shaders {
         region.setU2(1f);
         region.setV(1f);
         region.setV2(0f);
+        whiteQuad = region;
         return region;
     }
 
     public static void dispose() {
+        whiteQuad = null;
         cache.values().forEach(ShaderProgram::dispose);
         cache.clear();
         if (whitePixel != null) {
