@@ -1,5 +1,5 @@
 {
-  "description": "Require authored sprites and named tuning/geometry parameters in changed production code.",
+  "description": "Require authored sprites, named tuning/geometry parameters and no per-frame allocation in changed production code.",
   "hooks": {
     "PostToolUse": [
       {
@@ -15,6 +15,12 @@
             "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_named_parameters.py\" --hook",
             "timeout": 10,
             "statusMessage": "Checking named gameplay and artwork parameters"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_allocations.py\" --hook",
+            "timeout": 10,
+            "statusMessage": "Checking per-frame allocation"
           }
         ],
         "matcher": "Bash|apply_patch|Edit|Write|exec_command|functions\\.exec"
@@ -34,6 +40,12 @@
             "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_named_parameters.py\" --hook",
             "timeout": 10,
             "statusMessage": "Checking named gameplay and artwork parameters"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_allocations.py\" --hook",
+            "timeout": 10,
+            "statusMessage": "Checking per-frame allocation"
           }
         ]
       }

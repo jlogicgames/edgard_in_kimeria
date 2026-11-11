@@ -33,6 +33,16 @@ The world camera is `camera.setToOrtho(true, ...)` (`KimeriaGame`), so (0,0) is 
   measures the rect (`y + h` against the floor line), not by reasoning from memory: PR 257
   assumed Y-up and left the stump blast 48 px under the stump.
 
+## No allocation in `update` and `render`
+
+Per-frame code (`update*`, `render*`, `draw*` and everything they call) must not allocate: no `new`, no varargs call, no
+`for-each` over a `List` or `Set` (it creates an iterator), no boxing, no `String.format` or string concatenation, no
+capturing lambda. Reuse fields and fixed-size arrays; use libGDX `Array`, `FloatArray`, `IntArray` with index loops; pool
+through libGDX `DefaultPool` or `PoolManager` (`Pools` and `ReflectionPool` are deprecated in 1.14.2). Cache regions, textures and
+text layouts. Constructors, level load and error paths may allocate. A claim of "allocation free" needs a `ThreadMXBean`
+number from the budget test (`AllocationBudgetTest`), not a reading of the code. An exception goes in the allowlist of
+`tools/check_allocations.py` with a reason that says what it carries.
+
 ## Tests are not to be weakened silently
 
 If a threshold or tolerance must change, say so in the report and in `docs/DECISIONS.md`,
