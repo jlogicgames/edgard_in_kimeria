@@ -269,6 +269,13 @@ the accumulator would sometimes step physics twice in one rendered frame and zer
 the next — invisible in an FPS counter but visible as jittery movement. `Player` instead
 steps physics once per rendered frame with that frame's own (clamped) delta.
 
+### Per-frame allocation
+
+Per-frame code (`update*`, `render*`, `draw*` and what they call) must not allocate; the rule is in `AGENTS.md`. It is guarded twice:
+[`AllocationBudgetTest`](../core/src/test/java/com/jlogicsoftware/kimeria/AllocationBudgetTest.java) measures bytes per frame
+(`ThreadMXBean`) against ceilings, and [`tools/check_allocations.py`](../tools/check_allocations.py) (`validateAllocations`,
+`-PallocationBase=origin/main` for a full PR audit) rejects allocation on changed lines of per-frame methods.
+
 ### Game state, progress and saves
 
 Gameplay rules and their rationale are in [docs/DECISIONS.md](DECISIONS.md). The
@@ -399,8 +406,10 @@ The same probe on single objects:
 The torches are not the whole of a room's frame. A sampled allocation profile (JFR
 `ObjectAllocationSample`, mixed rooms, a ranking and not a measure) shows the largest allocators outside
 the particle code: the `Rectangle` returned by `Actor.boundsOf`, `Carryable.bounds` and `Carryable.update`,
-`Level.blocksObject`, `ArrayList` iterators in `Level.update`/`render`, and the varargs arrays of
-`KeyBindings.anyPressed`/`downHeld`. In forest-2 room 2, five torches at about 160 B each are roughly 0.8 KB of 2.9 to 3.5 KB.
+`Level.blocksObject` and `ArrayList` iterators in `Level.update`/`render`. (The first JFR ranking also named the varargs arrays of
+`KeyBindings.anyPressed`/`downHeld`; step 0 re-checked that against `main` and the source has none: `anyPressed` takes an `int[]` and
+`downHeld()` takes no arguments. The samples most likely came from the headless harness's proxied `Gdx.input`, whose every call
+boxes its arguments.) In forest-2 room 2, five torches at about 160 B each are roughly 0.8 KB of 2.9 to 3.5 KB.
 So the particle work removes the torches, the rain and the blood, and a second allocation pass over entity
 and level code would be needed for the rest (question 4). The 8.6 KB `update` of forest-2 room 0 was not
 attributed to a cause.
@@ -585,7 +594,7 @@ measured and which were read from the code.
 | `Player.renderPassiveInteractionTargets` (772) | `HashSet` | per call | read from the code | question 4 |
 | `GamepadInput.update` (66) | `boolean[]` | when the pad's button count is read; may be conditional | read from the code | question 4 |
 | `HealerDialogueView.render` (78) | `IllegalStateException` | only on an impossible `switch` branch | read from the code | allowlist, reason "error path" |
-| `KeyBindings.anyPressed` | none in the current source (an `int[]` parameter, no varargs) | 0 | read from the code | the JFR remark in section 1 about varargs arrays should be re-checked against `main` in step 0 |
+| `KeyBindings.anyPressed` | none in the current source (an `int[]` parameter, no varargs) | 0 | read from the code | re-checked against `main` in step 0: confirmed, no varargs (section 1 corrected) |
 
 Rows marked "question 4" are out of this plan's migration steps; they stay in the table so the guard's allowlist and the follow-up plan start
 from one list.

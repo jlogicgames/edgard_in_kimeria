@@ -45,6 +45,7 @@ tasks.register("buildWeb") {
     dependsOn(":web:gdx_teavm_web_js_release_build")
     dependsOn(":web:verifyWebReleaseArtifact")
     dependsOn("validateSpriteArt")
+    dependsOn("validateAllocations")
 }
 
 tasks.register("validateLocalization") {
@@ -59,6 +60,7 @@ tasks.register("buildDesktop") {
     description = "Builds a runnable desktop fat jar at lwjgl3/build/libs/, same as ./gradlew :lwjgl3:jar."
     dependsOn(":lwjgl3:jar")
     dependsOn("validateSpriteArt")
+    dependsOn("validateAllocations")
 }
 
 val validateSpriteArt = tasks.register<Exec>("validateSpriteArt") {
@@ -81,6 +83,17 @@ val validateNamedParameters = tasks.register<Exec>("validateNamedParameters") {
 project(":core").tasks.named("check") { dependsOn(validateNamedParameters) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateNamedParameters) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateNamedParameters) }
+
+val validateAllocations = tasks.register<Exec>("validateAllocations") {
+    group = "verification"
+    description = "Rejects allocation in per-frame methods (update*, render*, draw*) on changed production lines."
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "tools/check_allocations.py", "--base", providers.gradleProperty("allocationBase").getOrElse("HEAD"))
+}
+project(":core").tasks.named("check") { dependsOn(validateAllocations) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateAllocations) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateAllocations) }
 
 // Native installer/app-image (bundles its own JRE -- nothing else to
 // install to play): .exe/.msi on Windows, .app/.dmg on macOS,
