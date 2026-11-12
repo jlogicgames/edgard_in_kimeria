@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Per-frame allocation budget (#285, docs/DEVELOPMENT.md "Particle system plan", section 13). Each scenario runs
+ * Per-frame allocation budget (#285, docs/DEVELOPMENT.md "Particles and the allocation guard"). Each scenario runs
  * {@value AllocationProbe#WARMUP_FRAMES} warm-up and {@value AllocationProbe#MEASURED_FRAMES} measured frames of
  * {@code update(1/60)} plus {@code render} through a {@link NoopBatch} and compares the bytes the thread allocated
  * per frame with a ceiling.

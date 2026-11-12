@@ -24,7 +24,7 @@ neighbour sampling. Original prompt set:
   on top/left, dark burgundy bottom/right bevel and charcoal outline. Flat restrained SNES
   style. No text, additional icons, full health bar, scenery or cast shadow.”
 
-Sword hits use blood particles in `effects/BloodBurst.java`; there is no impact-star image.
+Sword hits use blood particles in `effects/KimeriaBloodSystem.java`; there is no impact-star image.
 
 The short original synthesized sounds are `audio/boss_hit.wav` (75 ms) and
 `audio/boss_restore.wav` (250 ms), mono PCM 16-bit / 22050 Hz. They can also be replaced

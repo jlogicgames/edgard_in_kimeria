@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.RandomXS128;
 
 /**
- * Allocation-free particle system on fixed struct-of-arrays storage (#285, docs/DEVELOPMENT.md "Particle system plan").
+ * Allocation-free particle system on fixed struct-of-arrays storage (#285, docs/DEVELOPMENT.md "Particles and the allocation guard").
  * Capacity is fixed at construction; {@link #spawn} writes into the next free slot and, when the pool is full, drops the
  * oldest particle, so nothing allocates after the constructor. Only arrays and float maths are used, so the TeaVM web
  * build needs nothing special.

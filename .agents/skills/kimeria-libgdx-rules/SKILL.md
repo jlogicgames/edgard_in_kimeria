@@ -30,10 +30,10 @@ docs, it does not repeat them. libGDX is 1.14.2; targets are desktop and web (Te
   for shared pools; `Pool.Poolable` for `reset()`. `Pools` and `ReflectionPool` are deprecated in 1.14.2.
   Pair every `obtain` with a `free`; a pool over its `max` discards without `reset`.
 - Constructors, level load and `create` may allocate; call-site examples and the audit are in
-  [DEVELOPMENT.md](../../../docs/DEVELOPMENT.md) "Particle system plan".
+  [DEVELOPMENT.md](../../../docs/DEVELOPMENT.md) "Particles and the allocation guard".
 - Measure with `ThreadMXBean.getThreadAllocatedBytes` after warm-up (HotSpot only; it does not speak
   for TeaVM). Never claim "allocation free" without a number.
-- Particles and VFX: the project's own `KimeriaParticleSystem` and `KimeriaBloodSystem` (not libGDX's `ParticleSystem`)
+- Particles and VFX: the project's own `KimeriaParticleSystem`, `KimeriaBloodSystem` and `EnvironmentFx` (not libGDX's `ParticleSystem`)
   are described in the [kimeria-particles](../kimeria-particles/SKILL.md) skill.
 
 ## Rendering and art

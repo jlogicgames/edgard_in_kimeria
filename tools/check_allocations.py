@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject per-frame allocation on changed lines of hot methods (docs/DEVELOPMENT.md, "Particle system plan", section 13).
+"""Reject per-frame allocation on changed lines of hot methods (docs/DEVELOPMENT.md, "Particles and the allocation guard").
 
 Hot methods are those named update*, render*, draw* and the ones listed in HOT_METHODS (helpers the scanner cannot
 discover by name). The check runs on CHANGED lines against --base (default HEAD; origin/main includes committed PR
