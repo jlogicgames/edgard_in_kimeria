@@ -1,6 +1,5 @@
 package com.jlogicsoftware.kimeria.effects;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.MathUtils;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
@@ -10,6 +9,8 @@ public final class BloodBurst implements WorldObject {
     public static final int DROPLETS = 32;
     public static final float DURATION = .9f;
     private static final float GRAVITY = 420f;
+    /** A drop fades out over this many seconds before its life ends. */
+    private static final float FADE_OUT_SECONDS = .2f;
 
     private static final class Drop {
         float x, y, vx, vy, size, trailLength, life, red, green;
@@ -66,11 +67,12 @@ public final class BloodBurst implements WorldObject {
 
     @Override public void render(Batch batch) {
         if (isRemoved()) return;
-        Color before = new Color(batch.getColor());
+        // Float components, not a Color copy: exact restore and no per-frame allocation.
+        float beforeR = batch.getColor().r, beforeG = batch.getColor().g, beforeB = batch.getColor().b, beforeAlpha = batch.getColor().a;
         var dot = Shaders.whiteQuad();
         for (Drop p : drops) {
             if (age >= p.life) continue;
-            float alpha = Math.min(1, (p.life - age) / .2f) * before.a;
+            float alpha = Math.min(1, (p.life - age) / FADE_OUT_SECONDS) * beforeAlpha;
             batch.setColor(p.red, p.green, .12f, alpha);
             if (p.landed) {
                 float spread = p.size * (empowered ? 6f : 3f);
@@ -84,6 +86,6 @@ public final class BloodBurst implements WorldObject {
                 batch.draw(dot, p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
             }
         }
-        batch.setColor(before);
+        batch.setColor(beforeR, beforeG, beforeB, beforeAlpha);
     }
 }

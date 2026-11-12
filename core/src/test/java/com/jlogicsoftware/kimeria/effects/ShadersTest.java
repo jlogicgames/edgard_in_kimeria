@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ShadersTest {
     @Test void proceduralQuadUsesFullYDownCoordinatesDespiteLibgdxOnePixelInset() {
@@ -37,6 +37,9 @@ class ShadersTest {
             TextureRegion another = Shaders.whiteQuad();
             assertEquals(quad.getU(), another.getU());
             assertEquals(quad.getV2(), another.getV2());
+            assertSame(quad, another, "whiteQuad() must return one cached instance");
+            Shaders.dispose();
+            assertNotSame(quad, Shaders.whiteQuad(), "dispose() must drop the cached region with its texture");
         } finally {
             Shaders.dispose();
             Gdx.app = previousApp;

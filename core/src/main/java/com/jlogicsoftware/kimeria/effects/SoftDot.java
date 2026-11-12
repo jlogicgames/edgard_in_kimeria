@@ -14,6 +14,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public final class SoftDot {
     private static Texture texture;
     private static Texture glowTexture;
+    // One shared region per texture: callers only draw with it and never mutate it, and it must not be reallocated per frame.
+    private static TextureRegion region;
+    private static TextureRegion glowRegion;
 
     private SoftDot() {
     }
@@ -22,7 +25,10 @@ public final class SoftDot {
         if (texture == null) {
             texture = build(1f);
         }
-        return new TextureRegion(texture);
+        if (region == null) {
+            region = new TextureRegion(texture);
+        }
+        return region;
     }
 
     /** Same dot with a boosted core (it saturates to full alpha), so small radii still read as a bright light. */
@@ -30,7 +36,10 @@ public final class SoftDot {
         if (glowTexture == null) {
             glowTexture = build(2f);
         }
-        return new TextureRegion(glowTexture);
+        if (glowRegion == null) {
+            glowRegion = new TextureRegion(glowTexture);
+        }
+        return glowRegion;
     }
 
     private static Texture build(float coreBoost) {
@@ -54,6 +63,8 @@ public final class SoftDot {
     }
 
     public static void dispose() {
+        region = null;
+        glowRegion = null;
         if (texture != null) {
             texture.dispose();
             texture = null;
