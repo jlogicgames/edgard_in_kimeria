@@ -177,7 +177,9 @@ setting, D11), and no effect may hide a trap warning.
 
 ### Environment effects plan (#239)
 
-Plan for author approval (revised after the author's review); nothing below is built. Author
+Plan approved by the author (revised after the review). **Status, 2026-11-12:** steps 1 to 3 of section 7 are built (the shake manager and
+its option, jump dust, ceiling grit); steps 4 and 5 (decor and vines) are still the plan, and the sections that describe them (2 to 5, 6) are
+unchanged plan text unless marked "built" or "as built". Author
 constraints: anything that is a *thing* (a vine, a bush, a flower) is a pre-drawn sprite or
 sprite-sheet animation through the art pipeline (nearest filter, at most 16 palette entries, binary
 alpha). Dust and grit are **particles**, the same category as the torch's flame, sparks, embers and
@@ -186,15 +188,15 @@ artwork of an object. Movement-only effects (an offset or rotation of an existin
 offset) draw nothing new. Every effect is cosmetic: no collision, hitbox, damage, timing or route
 depends on it.
 
-#### 1. The particle code on `main` (read from the code after #285 steps 0 to 4)
+#### 1. The particle code on `main` (read from the code after #285 steps 0 to 5)
 
 - `effects.KimeriaParticleSystem` is the shared system: fixed struct-of-arrays storage allocated in the constructor
   (`spawn` writes the next free slot; a full pool drops the oldest), one seeded `RandomXS128` per system
   (`random()`), `update(dt)` (straight-line lerp from start to end over the particle's life, dead ones
   removed, spawn order kept), `clear()`, and `render(batch, region)` (normal-blend particles first, then
-  additive ones, white and normal blending restored). Two kinds: `KIND_GLOW` (additive, shrinks to 0.6,
-  alpha `(1-t)^2`) and `KIND_SMOKE` (normal blend, grows to 2×, alpha `1-t`), both scaled by a fixed
-  `PEAK_ALPHA` of 0.7.
+  additive ones, white and normal blending restored). Three kinds: `KIND_GLOW` (additive, shrinks to 0.6,
+  alpha `(1-t)^2`), `KIND_SMOKE` (normal blend, grows to 2×, alpha `1-t`) and `KIND_GRIT` (normal blend, constant size,
+  alpha `1-t`), all scaled by a fixed `PEAK_ALPHA` of 0.7.
 - `Torch` owns one `KimeriaParticleSystem` of **96 slots** (`PARTICLE_CAPACITY`) for its flame core, embers,
   sparkles and smoke, drawn with `SoftDot.region()`. Its sprite body is `SpriteSheets.TORCH`; its glow is
   one more additive `SoftDot` quad, not a translucent sprite.
@@ -205,12 +207,13 @@ depends on it.
   returns one reused `Vector2` field (and the doc comment says it must not be kept or mutated).
 - Guards: `AllocationBudgetTest` (runtime ceilings in bytes per frame, scenarios include one torch, one blood
   spray, a camera-shake query and the forest rooms) and `tools/check_allocations.py` (a changed-line scan of
-  `update*`, `render*`, `draw*` and listed helpers). Both are described in `docs/DEVELOPMENT.md`, "Particle system plan".
+  `update*`, `render*`, `draw*` and listed helpers). Both are described in `docs/DEVELOPMENT.md`, "Particles and the allocation guard".
 - Life cycle, verified in the code and still true: pause works because `Level.update` is not called; a room
   rebuild clears `objects` and `blood` and calls `clearCameraEffects()`; `Torch.toggleFire(false)` and
   `restoreState` clear the torch's particles.
-- The dust and grit of #239 are two more `KimeriaParticleSystem` instances on this base. They are **step 5 of
-  [#285](https://github.com/jlogicgames/edgard_in_kimeria/issues/285)**, not new particle code.
+- The dust and grit of #239 are two more `KimeriaParticleSystem` instances on this base (**built in step 5 of
+  [#285](https://github.com/jlogicgames/edgard_in_kimeria/issues/285)**): `effects.EnvironmentFx` owns them (dust 24 slots,
+  grit 32 slots) with the `ScreenShake` manager; `Level.fx()` exposes it. Section 3 records the design and how it was built.
 
 #### 2. The four items
 
@@ -218,8 +221,8 @@ depends on it.
 | --- | --- | --- | --- | --- | --- |
 | **Vines sway; shake with a falling stone** | `ThornVine` (D46) already swings as a lethal pendulum (`angle()` feeds `lethalAt`, forest-2 only). No scenery vine exists. `FallingStone` has `landed()` (a protected no-op in `FallingTrap`). | New Tiled type `HangingVine` (non-lethal scenery, `Level.spawn` switch next to `ThornVine`). `FallingStone` gets `onImpact(Runnable)` set by `Level.spawnFallingTrap`, which calls `fx.groundShake(x, strength)`; each `HangingVine` within reach adds a decaying sway. The lethal `ThornVine` is **not** shaken (its drawn pose must equal its hitbox). | Movement only: rotation about the top centre, as `ThornVine.render` does. | `decor-vine` 8×40, 1 frame, vine `8a8a2a / 4a4a18`, leaves `3b2a5c / 7a5ab0`, contour `0b0814`. Not `trap-vine` (its thorn ball is trap art). | 1 draw per vine, no allocation. |
 | **Bush (decor) reacts when the player walks past** | No decor object exists. Bushes are part of the `Background` tile layer (`Level.renderBackground`), which stays as it is. | New Tiled type `Decor` (section 4): an animated sprite placed by hand, plays a brush-past animation when the hero walks past. | Sprite animation. | The decor sheets in section 4. | 1 draw per decor object, no pool needed. |
-| **Dust under the player on a jump** | `Player.playerJump(dt)` is the single jump entry (ground jump, ladder hop and wall jump branches). | After the ordinary ground branch only: `fx.dustPuff(feetX, feetY)` with `feetY = position.y + hitbox.offsetY + hitbox.height`. Y grows downward, so particles start at `feetY` and rise (negative vy). | **Particles**, `Torch` model. | **None.** | Section 3. |
-| **Lever lowers a wall: screen shake, optional ceiling dust** | `Level.activateTrigger` calls `performAction()` on each linked `Actionable`; `Wall` moves over `moveDurationSeconds` (private, no getter). `Level.shakeRemaining` and `cameraShakeOffset` already exist (boss feedback). | In `activateTrigger`, if an activated `Actionable` is a `Wall` with `movesVertically()`, call `fx.shake(...)` for the wall's move duration (add a `Wall` getter) and `fx.ceilingGrit(wallCenterX, roomTop)`. | Shake is a camera offset. Grit is **particles**. | **None.** | Section 3. |
+| **Dust under the player on a jump** (**built**, step 2) | `Player.playerJump(dt)` is the single jump entry (ground jump, ladder hop and wall jump branches). | After the ordinary ground branch only: `fx.dustPuff(feetX, feetY)` with `feetY = position.y + hitbox.offsetY + hitbox.height`. Y grows downward, so particles start at `feetY` and rise (negative vy). | **Particles**, `Torch` model. | **None.** | Section 3. |
+| **Lever lowers a wall: screen shake, optional ceiling dust** (**built**, steps 1 and 3) | `Level.activateTrigger` calls `performAction()` on each linked `Actionable`; `Wall` moves over `moveDurationSeconds` (private, no getter). `Level.shakeRemaining` and `cameraShakeOffset` already exist (boss feedback). | In `activateTrigger`, if an activated `Actionable` is a `Wall` with `movesVertically()`, call `fx.shake(...)` for the wall's move duration (add a `Wall` getter) and `fx.ceilingGrit(wallCenterX, roomTop)`. | Shake is a camera offset. Grit is **particles**. | **None.** | Section 3. |
 
 #### 3. Dust puff and ceiling grit as particles
 
@@ -237,12 +240,12 @@ depends on it.
   gravity) and the fade (linear `1 - t`); normal blending. **Differs** from my earlier text in one way: alpha
   starts at the fixed `PEAK_ALPHA` of 0.7, not at 1, and a particle cannot override it, so the puff is a little
   translucent from the first frame. Drawn with the cached `SoftDot.region()`. No new kind is needed.
-- **Ceiling grit does not fit either kind.** `KIND_GLOW` is additive and shrinks; `KIND_SMOKE` grows and is drawn
-  soft. Grit needs hard white-quad squares, normal blending, constant size, falling, linear alpha. This needs
-  a **third kind `KIND_GRIT`** added to `KimeriaParticleSystem`: normal blend (it joins the `KIND_SMOKE` pass in
-  `render`), `drawSize` = base size (no scaling), `alpha` = `(1 - t) * PEAK_ALPHA`. It is a small change to the shared
-  class (three branches in `drawSize`, `alpha` and `draw`), made **in the grit step** with its own unit
-  test (constant size, linear alpha, drawn in the normal pass) and the existing golden/allocation tests kept
+- **Ceiling grit did not fit either kind (built as `KIND_GRIT`).** `KIND_GLOW` is additive and shrinks; `KIND_SMOKE` grows and is drawn
+  soft. Grit needs hard white-quad squares, normal blending, constant size, falling, linear alpha. This needed
+  a **third kind `KIND_GRIT`**, added to `KimeriaParticleSystem`: normal blend (it joins the `KIND_SMOKE` pass in
+  `render`), `drawSize` = base size (no scaling), `alpha` = `(1 - t) * PEAK_ALPHA`. It was a small change to the shared
+  class (three branches in `drawSize`, `alpha` and `draw`), made in the grit step with its own unit
+  test (constant size, linear alpha, drawn in the normal pass) and the golden/allocation tests kept
   green. The grit system is drawn with `Shaders.whiteQuad()` as the region: 24 particles from the wall's
   width ±24 px at the room's top edge, falling 70 to 110 px/s for up to 64 px (end Y = start Y + speed * life),
   life 0.5 to 0.9 s, size 1 to 2 px, colours `5b5870` and `9a97ad`. The shared 0.7 peak alpha also applies to grit; the
@@ -253,11 +256,6 @@ depends on it.
   so the fall is `min(speed * life, 64)`, which keeps the 64 px bound. Measured peaks: 24 live grit (capacity 32), 12 live
   dust for a jump every quarter second (capacity 24). Dust and grit ignore the Screen shake option, as section 5 says; the
   grit burst and both sounds start with the lever shake in `Level.perform`, so a pause cannot replay them.
-- **Grit step checklist.** Add `KIND_GRIT` (constant, `drawSize`, `alpha`, normal-blend pass); add its
-  cases to `KimeriaParticleSystemTest` (values at t = 0, 0.5, 1) and keep the existing assertions and
-  `ParticleGoldenTest` untouched; add the grit emitter, a capacity test for it and the `AllocationBudgetTest`
-  scenario; **update `.agents/skills/kimeria-particles/SKILL.md`** (its "Adding a new kind" section says
-  `KIND_GRIT` does not exist yet, and the kinds table gains the new row); run `./gradlew buildWeb`.
 - **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
   (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
 - **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render
@@ -388,7 +386,7 @@ depends on it.
   that browsers play it after the start gesture; the existing `docs/PRE_RELEASE_TODO.md` already asks for a
   release-browser audio check.
 
-#### 6. Tests step 2 will add
+#### 6. Tests (steps 1 to 3 are built: `ScreenShakeTest`, `EnvironmentFxTest`, the `AllocationBudgetTest` scenarios; the rest belong to steps 4 and 5)
 
 - `ScreenShakeTest`: offset is zero with the option off; amplitude decays to zero at `seconds`; a
   stronger shake replaces a weaker one; deterministic across two runs; room clamp honoured.

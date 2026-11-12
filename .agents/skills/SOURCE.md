@@ -61,7 +61,7 @@ parameters, `Array.removeValue/contains/indexOf` identity parameter, no `Array.r
 - LWJGL3, Android and iOS `pause()`/`resume()` behaviour (backend sources are not in the Gradle cache for
   this build), and everything about the TeaVM backend's lifecycle.
 - That `AsyncExecutor`, `Timer`, `Json`, `I18NBundle` and the libGDX Tiled loader work under TeaVM (the project
-  does not use them; the particle effect and pool were measured, see `docs/DEVELOPMENT.md`).
+  does not use them; the `ParticleEffect` and pool spike of 2026-11-10 is recorded in `docs/DEVELOPMENT.md`, "Why a custom system and not `ParticleEffect`", and its scratch copy was not committed).
 - Statements about Scene2D, Box2D, `AssetManager` internals, 3D particles and the external particle editors:
   read for injection and consistency, not tested.
 

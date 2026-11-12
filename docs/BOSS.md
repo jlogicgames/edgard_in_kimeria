@@ -219,7 +219,8 @@ so death slow motion does not stretch it, and visual state never affects combat 
 Blood uses code particles with gravity, streaks and brief floor splashes (up to 0.9 s),
 including on the lethal hit; contact and stomping emit none. Since #285 step 3 the drops live in
 `effects.KimeriaBloodSystem`, one fixed-array, allocation-free system owned by the `Level` (`level.blood(...)`
-from `Boss`; no object is created per hit), with the same formulas and random-call order as before.
+from `Boss`; no object is created per hit, 0.0 B/frame measured by `AllocationBudgetTest`), with the same
+formulas and random-call order as the earlier per-hit object (pinned by `ParticleGoldenTest`).
 The star texture has been removed.
 The frame and filled/empty slots are independent PNGs in
 [`assets/images/ui/boss`](../assets/images/ui/boss/README.md). Dimensions and gaps are grouped
@@ -288,10 +289,11 @@ terrain is respected when the boss crowds the hero against a wall. Falling onto 
 still bounces, and jumping into the underside is blocked. Active axe strikes remain lethal.
 
 The impact-star image and its render/timer code were deleted. Each landed sword hit now
-sprays 32 blood droplets (48 empowered; a `BloodBurst` object per hit until #285 step 3, now `Level.blood`), directed away from the attacker, with
+sprays 32 blood droplets (48 empowered) through `Level.blood` into `effects.KimeriaBloodSystem`, directed away from the attacker, with
 gravity, red streaks and brief floor splashes. It lasts up to 0.9 s, survives lethal hits
-and is cleared with the room on a retry. It uses the existing white
-quad like other procedural effects, so no new image or particle texture is required.
+and is cleared with the room on a retry. The system draws with the cached white
+quad like other procedural effects, so no new image or particle texture is required. Its capacity is 96 drops
+(`Level.BLOOD_CAPACITY`); the measured peak is one empowered spray, 48 (`KimeriaBloodSystemCapacityTest`).
 
 At the time, all **104 core tests** passed, and desktop/web builds succeeded. Regression
 checks covered blocking held movement from both sides without damage, safe stomp and close

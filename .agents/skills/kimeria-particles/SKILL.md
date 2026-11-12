@@ -7,7 +7,7 @@ description: Use for any task that adds or changes particles or VFX in Edgard in
 
 Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md) (coordinates, no allocation) and
 [AGENTS.md](../../../AGENTS.md). Design, measurements and the audit are in
-[DEVELOPMENT.md](../../../docs/DEVELOPMENT.md) "Particle system plan" (issue #285); this file does not repeat them.
+[DEVELOPMENT.md](../../../docs/DEVELOPMENT.md) "Particles and the allocation guard" (issue #285); this file does not repeat them.
 
 ## Names: these are not libGDX's
 
@@ -15,7 +15,7 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
   project's classes. They have no relation to `com.badlogic.gdx.graphics.g3d.particles.ParticleSystem` (3D) or to
   `ParticleEffect` / `ParticleEmitter` (2D), which the vendored `libgdx-particles` skill documents. The `Kimeria`
   prefix (renamed 2026-11-12) exists so an agent does not mix the two.
-- Why not `ParticleEffect` (plan option B, section 3): fixed struct-of-arrays storage gives zero allocation,
+- Why not `ParticleEffect` (DEVELOPMENT.md, "Why a custom system and not `ParticleEffect`"): fixed struct-of-arrays storage gives zero allocation,
   exposes state to headless tests and needs no `.p` files or `flipY`; `ParticleEffect` stays in reserve for large
   authored effects.
 
@@ -39,7 +39,7 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
 ## Recipe for a new emitter
 
 1. **One system per owner**, allocated in the owner's constructor (`Torch` owns one of 96; `Level` owns the blood
-   system). Never create a system, array or particle per event.
+   system of 96 drops and `EnvironmentFx` the dust of 24 and the grit of 32). Never create a system, array or particle per event.
 2. **Capacity from a measured peak plus headroom.** Add a capacity test that records the maximum live count over many
    seeds and frame rates (`TorchParticleCapacityTest`, `KimeriaBloodSystemCapacityTest`). A full pool drops the oldest
    particle silently, so an undersized capacity is invisible without that test.
@@ -57,7 +57,7 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
 ## Adding a new kind
 
 `KIND_GRIT` (the ceiling grit of #239, owned by `effects.EnvironmentFx` with the dust) is the newest kind and the
-model for the next: it added a constant, a branch in `drawSize`, the blend choice in `draw`, cases in
+model for the next (`EnvironmentFxTest` holds its capacity tests): it added a constant, a branch in `drawSize`, the blend choice in `draw`, cases in
 `KimeriaParticleSystemTest` and an `AllocationBudgetTest` scenario. To add any kind to `KimeriaParticleSystem`:
 
 - Add a `KIND_*` constant, then extend `drawSize(i)`, `alpha(i)` and the blend choice in `draw` (a kind that needs

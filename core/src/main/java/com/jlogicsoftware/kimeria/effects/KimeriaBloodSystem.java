@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.RandomXS128;
 
 /**
  * Allocation-free blood: crimson droplets, fast streaks and short-lived floor splashes (#285, docs/DEVELOPMENT.md
- * "Particle system plan", step 3). Owned by the {@code Level}; a sword or fireball hit calls {@link #spray}, so no
+ * "Particles and the allocation guard"). Owned by the {@code Level}; a sword or fireball hit calls {@link #spray}, so no
  * object is created per hit. It follows the rules of {@link KimeriaParticleSystem} (struct-of-arrays, capacity fixed at
  * construction, a full pool drops the oldest drop, one seeded {@link RandomXS128}, floats only, live drops dense and in
  * spawn order) but keeps its own arrays: a drop is ballistic (velocity, gravity, a floor to land on), not a straight
