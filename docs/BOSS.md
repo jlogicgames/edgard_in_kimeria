@@ -218,7 +218,7 @@ so death slow motion does not stretch it, and visual state never affects combat 
 
 Blood uses code particles with gravity, streaks and brief floor splashes (up to 0.9 s),
 including on the lethal hit; contact and stomping emit none. Since #285 step 3 the drops live in
-`effects.BloodSystem`, one fixed-array, allocation-free system owned by the `Level` (`level.blood(...)`
+`effects.KimeriaBloodSystem`, one fixed-array, allocation-free system owned by the `Level` (`level.blood(...)`
 from `Boss`; no object is created per hit), with the same formulas and random-call order as before.
 The star texture has been removed.
 The frame and filled/empty slots are independent PNGs in

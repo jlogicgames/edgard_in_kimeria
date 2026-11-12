@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Behaviour of the blood system that replaced the per-hit {@code BloodBurst} (#285 step 3); the look is pinned by ParticleGoldenTest. */
-class BloodSystemTest {
+class KimeriaBloodSystemTest {
     private static final float STEP = 1f / 60f;
     private static final int CAPACITY = 96;
     private static final long SEED = 7264;
@@ -13,7 +13,7 @@ class BloodSystemTest {
 
     @Test void sprayFliesInTheHitDirectionFallsAndExpires() {
         for (boolean empowered : new boolean[]{false, true}) for (float direction : new float[]{-1, 1}) {
-            BloodSystem blood = new BloodSystem(CAPACITY, SEED);
+            KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, SEED);
             blood.spray(X, Y, direction, FLOOR, empowered);
             assertEquals(empowered ? 48 : 32, blood.count());
             float initialX = blood.x(1), initialY = blood.y(1);
@@ -36,7 +36,7 @@ class BloodSystemTest {
     }
 
     @Test void empoweredSprayHasFortyEightThickerDropsAndLongerTrails() {
-        BloodSystem normal = new BloodSystem(CAPACITY, SEED), strong = new BloodSystem(CAPACITY, SEED);
+        KimeriaBloodSystem normal = new KimeriaBloodSystem(CAPACITY, SEED), strong = new KimeriaBloodSystem(CAPACITY, SEED);
         normal.spray(X, Y, 1, FLOOR, false);
         strong.spray(X, Y, 1, FLOOR, true);
         assertEquals(32, normal.count());
@@ -52,7 +52,7 @@ class BloodSystemTest {
     }
 
     @Test void dropsLandOnTheFloorAndStayThereAsASplashUntilTheyFade() {
-        BloodSystem blood = new BloodSystem(CAPACITY, SEED);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, SEED);
         blood.spray(X, Y, 1, FLOOR, false);
         for (int i = 0; i < 30; i++) blood.update(STEP);
         int landed = 0;
@@ -73,7 +73,7 @@ class BloodSystemTest {
     }
 
     @Test void dropsFadeOutOverTheirLastMoments() {
-        BloodSystem blood = new BloodSystem(CAPACITY, SEED);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, SEED);
         blood.spray(X, Y, 1, FLOOR, false);
         for (int d = 0; d < blood.count(); d++) assertEquals(1f, blood.fade(d), 0f);
         for (int i = 0; i < 40; i++) blood.update(STEP);
@@ -85,7 +85,7 @@ class BloodSystemTest {
     }
 
     @Test void neverExceedsCapacityAndAFullPoolDropsTheOldest() {
-        BloodSystem blood = new BloodSystem(40, SEED);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(40, SEED);
         blood.spray(0, Y, 1, FLOOR, false);   // 32 drops, origin x 0
         blood.spray(500, Y, 1, FLOOR, false); // 32 more: the 24 oldest make way
         assertEquals(40, blood.count());
@@ -94,7 +94,7 @@ class BloodSystemTest {
     }
 
     @Test void sprayAgesIndependentlyAndClearEmpties() {
-        BloodSystem blood = new BloodSystem(CAPACITY, SEED);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, SEED);
         blood.spray(X, Y, 1, FLOOR, false);
         for (int i = 0; i < 30; i++) blood.update(STEP);
         float firstAge = blood.age(0);
@@ -112,7 +112,7 @@ class BloodSystemTest {
     }
 
     private static float[] state(long seed) {
-        BloodSystem blood = new BloodSystem(CAPACITY, seed);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, seed);
         blood.spray(X, Y, 1, FLOOR, true);
         for (int i = 0; i < 20; i++) blood.update(STEP);
         float[] values = new float[blood.count() * 2];

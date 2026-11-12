@@ -40,7 +40,7 @@ ALLOWED = {
     ('effects/ShockwaveEffect.java', 'render', 'quad'): 'time-varying shockwave shader',
     ('effects/FogEffect.java', 'render', 'quad'): 'moving menu atmosphere shader',
     ('effects/RainDrop.java', 'render', 'quad'): 'simulated rain streak, no persistent object',
-    ('effects/BloodSystem.java', 'render', 'quad'): 'simulated impact particles',
+    ('effects/KimeriaBloodSystem.java', 'render', 'quad'): 'simulated impact particles',
     ('ui/Overlay.java', 'panel', 'quad'): 'UI panel/fade geometry',
     ('ui/Overlay.java', 'buttons', 'quad'): 'menu focus/button geometry',
     ('ui/HealerDialogueView.java', 'frame', 'quad'): 'dialogue frame/focus geometry',

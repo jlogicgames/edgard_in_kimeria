@@ -10,8 +10,8 @@
 
 Vendored: `SKILL.md` of `libgdx-particles`, `libgdx-collections-json`, `libgdx-2d-rendering`,
 `libgdx-application-lifecycle`, `libgdx-camera-viewport` and `libgdx-tiled`. Nothing else of the upstream
-repository is kept (no tests, scripts, summaries or other skills). The project-owned skill
-`kimeria-libgdx-rules` is not from upstream.
+repository is kept (no tests, scripts, summaries or other skills). The project-owned skills
+`kimeria-libgdx-rules` and `kimeria-particles` are not from upstream.
 
 Each copied skill was read in full on 2026-11-11 for instructions aimed at the agent beyond libGDX
 reference, commands, URLs and hidden text. Found: none. The only URLs are `libgdx.com` and `github.com/libgdx`
@@ -22,7 +22,8 @@ documentation links. Frontmatter is `name` and `description` only.
 Every skill gained a `> **Project note (local edit).**` block under its title (libGDX 1.14.2, desktop plus
 TeaVM, Y-down world, what the project does and does not use). Beyond that:
 
-- `libgdx-particles`: `free()` over the pool `max` discards without resetting (checked in 1.14.2 `Pool.free`);
+- `libgdx-particles`: a second project note (2026-11-12) says that the `ParticleSystem` below is libGDX's 3D class and that the
+  project's `KimeriaParticleSystem` and `KimeriaBloodSystem` are unrelated, pointing to `kimeria-particles`; `free()` over the pool `max` discards without resetting (checked in 1.14.2 `Pool.free`);
   editor links marked as not run here; the 3D section marked as unused and not exercised on TeaVM.
 - `libgdx-collections-json`: `DefaultPool` sentence extended (other constructor, no reflection so no TeaVM
   setup, `fill`, discard over `max`, no double-free check); the "GWT Compatibility" section replaced by a

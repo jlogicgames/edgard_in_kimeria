@@ -202,7 +202,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   mid-ripple takes over from the first. The wave phase travels with time, as in Rust; Flame
   freezes it.
 - **`Torch`'s particle system is an allocation-free reimplementation** on the shared
-  `effects.ParticleSystem` (fixed struct-of-arrays, 96 slots per torch, a full pool drops the
+  `effects.KimeriaParticleSystem` (fixed struct-of-arrays, 96 slots per torch, a full pool drops the
   oldest particle, one seeded `RandomXS128` per system; 0.1 B/frame measured), not a port of
   dozens of independent per-particle timers driving Skia canvas draws with blur mask
   filters (`SpriteBatch` has no blur-mask equivalent). Visual language (flickering core
@@ -372,6 +372,8 @@ self-written particle code (`Torch`, `BloodBurst`, `SoftDot`, `Shaders.whiteQuad
 allocation-free system before the dust and ceiling grit of [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239)
 are built on it. Every number below was measured on 2026-11-10 unless it says "read from the code".
 
+On 2026-11-12 the classes were renamed `ParticleSystem` to `KimeriaParticleSystem` and `BloodSystem` to `KimeriaBloodSystem` so they cannot be confused with libGDX's 3D `ParticleSystem` (no behaviour change; golden numbers and ceilings unchanged), and the project skill `.agents/skills/kimeria-particles/SKILL.md` documents them. Its note on a third kind, `KIND_GRIT`, is tracked by [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239).
+
 ### 1. Why: what the current code allocates (measured)
 
 Method: a throw-away JUnit probe (deleted afterwards) built real `Level`s headlessly (the
@@ -452,7 +454,7 @@ Reasons, in order of weight:
 
 Design (for the migration, not final API):
 
-- `effects.ParticleSystem`: capacity fixed at construction, struct-of-arrays (`float[] x, y, fromX, fromY,
+- `effects.KimeriaParticleSystem`: capacity fixed at construction, struct-of-arrays (`float[] x, y, fromX, fromY,
   toX, toY, life, maxLife, size, r, g, b`, `byte[] kind`), free slots recycled (a full pool overwrites the
   oldest slot, never allocates), `spawn(...)`, `update(dt)`, `clear()`, `render(batch, region)` in one
   additive and one normal pass, colours set with `batch.setColor(r, g, b, a)` floats and restored once.
@@ -461,7 +463,7 @@ Design (for the migration, not final API):
   an `int` xorshift instead and should adopt this type (question 3).
 - `SoftDot.region()`, `glowRegion()` and `Shaders.whiteQuad()` return one cached `TextureRegion`;
   `dispose()` drops it with the texture.
-- Each `Torch` owns a small `ParticleSystem` allocated in its constructor. Blood moves to a
+- Each `Torch` owns a small `KimeriaParticleSystem` allocated in its constructor. Blood moves to a
   `Level`-owned system, so `Boss` calls `level.blood(...)` and no `BloodBurst` object is queued per hit.
   Capacities come from a measured peak (a test records the maximum live count over a long run) plus headroom.
 
@@ -471,10 +473,10 @@ Design (for the migration, not final API):
 | --- | --- | --- |
 | 0 | **Pin the current look and install the guard.** (a) A test with a fixed seed records the live particle count and each particle's position, size and alpha at chosen frames of a `Torch` and of a 32- and 48-drop `BloodBurst`, as constants (read through reflection, like `BloodBurstTest`); it lands against the old code, so the later steps are compared with it. (b) The allocation guard of section 13: the `AllocationProbe` test helper with ceilings set to today's measured numbers, and `tools/check_allocations.py` on changed lines, wired into Gradle and `.codex/hooks.json`. (c) The rule text of section 11, in the form the author approves. | medium |
 | 1 | **Cache the regions:** `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; remove the `new Color` in `BloodBurst.render`. Removes 40 B per call everywhere, including the forest-1 rain (about 1.9 KB/frame) and every torch draw. Check that no caller mutates the shared region (`whiteQuad()` is flipped on purpose) and that `dispose()` resets it, also under `runDev` hot reload. **Done (#285 step 1):** measured on 2026-11-11, forest-1 4,491.8 to 4,525.5 -> 2,530.2 to 2,564.4 B/frame, `BloodBurst` 97.6 -> 32.8 B/frame (the constructor alone), one `Torch` 190.9 to 195.1 -> 149.4 to 151.3 B/frame (HotSpot had already hidden most of the 40 B per `SoftDot.region()` call). | small |
-| 2 | **`ParticleSystem` and `Torch`:** the new class with its unit tests, then `Torch` on it with the same formulas and the same random-call order. Fix the "pooled" paragraph in "Deviations" in the same PR. **Done (#285 step 2):** `ParticleSystem` with `ParticleSystemTest` and `TorchParticleCapacityTest` (peak 59 live particles over 40 seeds x 3 frame rates x 20,000 frames; capacity 96); `ParticleGoldenTest` passes with the golden numbers unchanged (the torch is built with the seed directly instead of replacing `MathUtils.random`; positions use `Vector2.lerp`'s form `from*(1-t) + to*t` to match to the float). Draw order: smoke (normal blend) is drawn first, then the additive flame, then the glow, so smoke still sits behind the flame. Measured 2026-11-12: one `Torch` 149.4 to 151.3 -> 0.1 B/frame, forest-1 2,530 to 2,564 -> 2,441.8, forest-2 room 0 9,370 to 9,430 -> 8,920 to 9,000, room 1 2,550 to 2,605 -> 2,184.0, room 2 2,651 to 2,657 -> 1,992.0 B/frame. | medium |
-| 3 | **Blood:** `BloodBurst` on the shared system with the floor splash kept; `BloodBurstTest` is rewritten for the new state (it reads the private `drops` and `Drop` fields by reflection, so it cannot stay as it is). `Boss`, `docs/BOSS.md` ("Blood uses code particles") follow. **Done (#285 step 3):** `effects.BloodSystem`, a blood-specific fixed-array class beside `ParticleSystem` (it follows the same rules but keeps its own arrays: a drop is ballistic with its own colour and a floor to land on, not a lerp between two points), owned by `Level`; `Boss` calls `level.blood(...)`, `BloodBurst` is deleted. `ParticleGoldenTest` passes with the golden numbers unchanged (only the way state is read changed). `BloodBurstTest` became `BloodSystemTest`; `BloodSystemCapacityTest` measured a peak of 48 live drops (capacity 96; the boss cannot be hit again for 1.35 s and a drop lives at most 0.9 s). Measured 2026-11-12: a blood spray 32.8 -> 0.0 B/frame (a 48-drop empowered spray 0.0; the old one was about 49 B/frame over a 60-frame cycle, from its 2,928 B constructor), forest-2 room 2 with a spray every 60 frames 1,991.9 to 1,992.6 B/frame, the other scenes unchanged. Draw order: blood is drawn after all `objects` and before `ambience`, where the queued burst used to sit in the object list. | medium |
+| 2 | **`KimeriaParticleSystem` and `Torch`:** the new class with its unit tests, then `Torch` on it with the same formulas and the same random-call order. Fix the "pooled" paragraph in "Deviations" in the same PR. **Done (#285 step 2):** `KimeriaParticleSystem` with `KimeriaParticleSystemTest` and `TorchParticleCapacityTest` (peak 59 live particles over 40 seeds x 3 frame rates x 20,000 frames; capacity 96); `ParticleGoldenTest` passes with the golden numbers unchanged (the torch is built with the seed directly instead of replacing `MathUtils.random`; positions use `Vector2.lerp`'s form `from*(1-t) + to*t` to match to the float). Draw order: smoke (normal blend) is drawn first, then the additive flame, then the glow, so smoke still sits behind the flame. Measured 2026-11-12: one `Torch` 149.4 to 151.3 -> 0.1 B/frame, forest-1 2,530 to 2,564 -> 2,441.8, forest-2 room 0 9,370 to 9,430 -> 8,920 to 9,000, room 1 2,550 to 2,605 -> 2,184.0, room 2 2,651 to 2,657 -> 1,992.0 B/frame. | medium |
+| 3 | **Blood:** `BloodBurst` on the shared system with the floor splash kept; `BloodBurstTest` is rewritten for the new state (it reads the private `drops` and `Drop` fields by reflection, so it cannot stay as it is). `Boss`, `docs/BOSS.md` ("Blood uses code particles") follow. **Done (#285 step 3):** `effects.KimeriaBloodSystem`, a blood-specific fixed-array class beside `KimeriaParticleSystem` (it follows the same rules but keeps its own arrays: a drop is ballistic with its own colour and a floor to land on, not a lerp between two points), owned by `Level`; `Boss` calls `level.blood(...)`, `BloodBurst` is deleted. `ParticleGoldenTest` passes with the golden numbers unchanged (only the way state is read changed). `BloodBurstTest` became `KimeriaBloodSystemTest`; `KimeriaBloodSystemCapacityTest` measured a peak of 48 live drops (capacity 96; the boss cannot be hit again for 1.35 s and a drop lives at most 0.9 s). Measured 2026-11-12: a blood spray 32.8 -> 0.0 B/frame (a 48-drop empowered spray 0.0; the old one was about 49 B/frame over a 60-frame cycle, from its 2,928 B constructor), forest-2 room 2 with a spray every 60 frames 1,991.9 to 1,992.6 B/frame, the other scenes unchanged. Draw order: blood is drawn after all `objects` and before `ambience`, where the queued burst used to sit in the object list. | medium |
 | 4 | **Per-frame `Rectangle` and `Vector2`:** reuse fields for `KimeriaGame` line 670 and `Level.cameraShakeOffset`. #239 step 1 plans the same change; whichever lands first does it and the other drops it. **Done (#285 step 4):** `KimeriaGame` reuses a `reusableShakeView` rectangle and reads `shake.x`/`shake.y` at once; `Level.cameraShakeOffset` returns a field that the next call overwrites (Javadoc says so; the callers, `KimeriaGame` and the tests, read it straight away and keep nothing). `Boss.render` and `BossHud.render` save and restore the batch and font colour as four floats instead of a `Color` copy; `BatchColourRestoreTest` pins that the colour comes back exactly. The `Boss.render` copy was the same 40 B as the others on paper; `new Color` is 32 B on HotSpot. Measured 2026-11-12: camera shake query 24.0 -> 0.0 B/frame (the `KimeriaGame` rectangle, 32 B, is in no scenario, it is read from the code), `BossHud.render` 160.0 -> 96.0 B/frame (-40 %; the rest is the `Matrix4` copy of the projection, step-4 scope excludes it), forest-2 room 2 1,992.0 -> 1,960.0 B/frame (-1.6 %, the `Boss` copy), the other room scenes unchanged. #239 step 1's "same change" is therefore already done. | small |
-| 5 | **Docs and #239:** the "Deviations" text, the `docs/BOSS.md` blood note and the #239 plan point at `ParticleSystem`; this section is rewritten as a description of what exists, and sections 10 to 14 are folded into `docs/DEVELOPMENT.md`'s permanent text (skills, rule, guard). | small |
+| 5 | **Docs and #239:** the "Deviations" text, the `docs/BOSS.md` blood note and the #239 plan point at `KimeriaParticleSystem`; this section is rewritten as a description of what exists, and sections 10 to 14 are folded into `docs/DEVELOPMENT.md`'s permanent text (skills, rule, guard). | small |
 
 Each step is its own pull request, and all six are the checklist of the single issue in section 14. Step 1 alone removes the rain's 1.9 KB/frame in forest-1 and 40 B from every torch draw.
 
@@ -490,7 +492,7 @@ Each step is its own pull request, and all six are the checklist of the single i
 
 ### 6. Tests to add
 
-- `ParticleSystem`: never exceeds capacity; a full pool recycles the oldest slot; `clear()` empties it;
+- `KimeriaParticleSystem`: never exceeds capacity; a full pool recycles the oldest slot; `clear()` empties it;
   the same seed gives the same state and another seed a different one; every particle is dead by its
   `maxLife`.
 - The step 0 golden test, ported to the new API in steps 2 and 3.
@@ -525,7 +527,7 @@ Each step is its own pull request, and all six are the checklist of the single i
 
 ### 9. How #239 uses it
 
-Its step 2 (jump dust) and step 3 (ceiling grit) become two `ParticleSystem` instances owned by
+Its step 2 (jump dust) and step 3 (ceiling grit) become two `KimeriaParticleSystem` instances owned by
 `EnvironmentFx`: dust with normal blending and the `SoftDot` region, grit with the white quad, capacities 24
 and 32 as that plan states, spawned by `fx.dustPuff(...)` and `fx.ceilingGrit(...)`. They need no particle
 class of their own, no new art and no atlas ([#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284)
@@ -549,7 +551,7 @@ What was done, on 2026-11-11:
   desktop/web, so each carries a project note, GWT statements are marked "GWT, not TeaVM", and a `TmxMapLoader.Parameters`
   line that does not exist in 1.14.2 was removed. The game does not use libGDX's Tiled loader at all (section "Architecture").
 - **Pools:** in the 1.14.2 sources `Pools` and `ReflectionPool` are `@Deprecated`, `DefaultPool` (supplier constructors) and `PoolManager`
-  exist. Any pooled object in this plan therefore uses `DefaultPool` or `PoolManager`; `ParticleSystem` itself needs no pool (fixed arrays,
+  exist. Any pooled object in this plan therefore uses `DefaultPool` or `PoolManager`; `KimeriaParticleSystem` itself needs no pool (fixed arrays,
   section 3). `ParticleEffectPool` (option A) is its own, non-deprecated pool class and `PooledEffect.free()` is its API.
 - One project skill, `.agents/skills/kimeria-libgdx-rules/SKILL.md`, holds what upstream cannot know and points to the docs instead
   of repeating them: Y-down world and Y-up text, no allocation in `update`/`render`, libGDX pools and collections,
@@ -586,9 +588,9 @@ measured and which were read from the code.
 | Where | Allocates | Cost | How found | Disposition |
 | --- | --- | --- | --- | --- |
 | `KimeriaGame.render` (line 670), `Level.cameraShakeOffset` | `Rectangle`, `Vector2` | 56 B/frame | measured (section 1) | step 4, done: reused fields, query 0.0 B/frame |
-| `Torch.spawnCore/Embers/Smoke/Sparkles`, called from `update` | `Particle`, 3 `Vector2`, `Color` | 118 to 120 B/frame/torch | measured | step 2, done: `ParticleSystem`, 0.1 B/frame |
+| `Torch.spawnCore/Embers/Smoke/Sparkles`, called from `update` | `Particle`, 3 `Vector2`, `Color` | 118 to 120 B/frame/torch | measured | step 2, done: `KimeriaParticleSystem`, 0.1 B/frame |
 | `SoftDot.region`, `glowRegion`, `Shaders.whiteQuad` (called by `Torch.render`, `RainDrop.render`) | `TextureRegion` | 40 B per call; about 1.9 KB/frame in forest-1 | measured | step 1, done: one cached region each |
-| `BloodBurst.render` (line 69) | `Color` copy of the batch colour | 39 B/frame while visible | measured | step 1, done: float components; step 3, done: `BloodBurst` replaced by `BloodSystem`, 0.0 B/frame |
+| `BloodBurst.render` (line 69) | `Color` copy of the batch colour | 39 B/frame while visible | measured | step 1, done: float components; step 3, done: `BloodBurst` replaced by `KimeriaBloodSystem`, 0.0 B/frame |
 | `Boss.render` (236), `BossHud.render` (49, 80) | `Color` copy of the batch colour | about 40 B per draw | read from the code | step 4, done: float components; `BossHud` 160.0 -> 96.0 B/frame, forest-2 room 2 1,992.0 -> 1,960.0 |
 | `Hud.render` (86, 102), `renderInteractionHint` (150, 154), `draw` (180, 181) | `GlyphLayout` | per frame while the FPS text, hint or zone message is shown | read from the code | question 4 |
 | `Carryable.update` (119), `Fireball.update` (36), `Actor.boundsOf`, `Carryable.bounds`, `Level.blocksObject` | `Rectangle` | per object per frame | JFR ranking (a ranking, not a measure) and the code | question 4 |
@@ -609,7 +611,7 @@ Two checks that fail for different reasons; neither replaces the other.
 **`AllocationBudgetTest` (runtime).** A test helper `AllocationProbe` in `core/src/test` runs a frame loop through a no-op `Batch`, reads
 `com.sun.management.ThreadMXBean.getThreadAllocatedBytes` for the current thread over 1200 frames after 300 warm-up frames (the method of
 section 1), and returns bytes per frame. Tests assert a ceiling per scenario, written as a named constant with the measured value in a comment:
-one `Torch`, one blood spray (`BloodSystem`, formerly `BloodBurst`), one `ParticleSystem` at capacity, and the forest-1 and forest-2 room scenes of section 1. Step 0 sets the
+one `Torch`, one blood spray (`KimeriaBloodSystem`, formerly `BloodBurst`), one `KimeriaParticleSystem` at capacity, and the forest-1 and forest-2 room scenes of section 1. Step 0 sets the
 ceilings to today's measured numbers plus headroom for the few-percent variation (so the test passes on the old code and protects against a
 regression); each of steps 1 to 4 lowers the ceilings it earned, and the particle objects end at a few tens of bytes per frame. A ceiling that
 is raised is reported and recorded in `docs/DECISIONS.md` with the measured value and why (the tolerance rule in `AGENTS.md`).
@@ -650,7 +652,7 @@ code; the budget test is what proves a path clean.
 The steps are the table of section 4 (steps 0 to 5), in that order. Proposed text for the one issue (created after the author approves the plan;
 the `docs/DEVELOPMENT.md` gaps rule applies to every line of this document that names remaining work):
 
-> **Title:** Allocation-free particles: shared `ParticleSystem`, allocation guard, libGDX skills
+> **Title:** Allocation-free particles: shared `KimeriaParticleSystem`, allocation guard, libGDX skills
 >
 > **Body:** Implements the "Particle system plan" in `docs/DEVELOPMENT.md` (option B, section 3). Each step is one pull request that
 > references this issue. Background: measured per-frame allocation of torches, rain and blood; the vendored skills and rule are described in
@@ -660,12 +662,12 @@ the `docs/DEVELOPMENT.md` gaps rule applies to every line of this document that 
 >   `tools/check_allocations.py`, `validateAllocations`, `.codex/hooks.json`, `tools/test_check_allocations.py`; the approved rule text in
 >   `AGENTS.md` and `docs/DEVELOPMENT.md`; vendored skills committed (`.agents/skills/`, `SOURCE.md`)
 > - [x] Step 1: cached `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; no `new Color` in `BloodBurst.render`; ceilings lowered
-> - [x] Step 2: `ParticleSystem` and `Torch` on it; golden test unchanged; `buildWeb` and a browser load (menu and level 0 only; a lit torch was not seen in the browser); torch ceiling at a few tens of bytes
-> - [x] Step 3: blood on the shared system with the floor splash (`BloodSystem`, `Level.blood`); `BloodBurstTest` rewritten as `BloodSystemTest`; `Boss`, `docs/BOSS.md`; blood ceilings 8 B/frame (measured 0.0)
+> - [x] Step 2: `KimeriaParticleSystem` and `Torch` on it; golden test unchanged; `buildWeb` and a browser load (menu and level 0 only; a lit torch was not seen in the browser); torch ceiling at a few tens of bytes
+> - [x] Step 3: blood on the shared system with the floor splash (`KimeriaBloodSystem`, `Level.blood`); `BloodBurstTest` rewritten as `KimeriaBloodSystemTest`; `Boss`, `docs/BOSS.md`; blood ceilings 8 B/frame (measured 0.0)
 > - [x] Step 4: reuse the per-frame `Rectangle`/`Vector2` (`KimeriaGame` line 670, `Level.cameraShakeOffset`) and the `Color` copies in `Boss`/`BossHud`
-> - [ ] Step 5: #239 dust and grit as `ParticleSystem` instances
+> - [ ] Step 5: #239 dust and grit as `KimeriaParticleSystem` instances
 > - [ ] Update `docs/DEVELOPMENT.md`: replace the "Particle system plan" section by a description of what exists (skills, rule, guard,
->   `ParticleSystem`), fix the "Deviations" paragraph that calls the torch system pooled, remove any note this issue made obsolete
+>   `KimeriaParticleSystem`), fix the "Deviations" paragraph that calls the torch system pooled, remove any note this issue made obsolete
 > - [ ] Update `docs/BOSS.md` ("Blood uses code particles") and the #239 plan
 > - [ ] Re-check `.agents/skills/SOURCE.md` and the `kimeria-libgdx-rules` skill against the final code
 

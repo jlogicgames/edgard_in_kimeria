@@ -16,7 +16,7 @@ import com.jlogicsoftware.kimeria.entity.items.Actionable;
  * Port of Dart's {@code Torch}. The original spawns dozens of independent
  * {@code Future.delayed} particle schedulers driving Skia canvas draws with
  * blur mask filters; here that's replaced with a small allocation-free
- * {@link ParticleSystem} (fixed arrays, one per torch, nothing allocated after the
+ * {@link KimeriaParticleSystem} (fixed arrays, one per torch, nothing allocated after the
  * constructor) that keeps the same visual language -- a flickering core flame, rising
  * embers, drifting smoke, and green magic sparkles -- and the same
  * {@code toggleFire}/{@code performAction} behaviour used by triggers and falling platforms.
@@ -54,7 +54,7 @@ public class Torch extends Entity implements Actionable {
     private static final float HALF = 0.5f, TWICE = 2f;
     private static int seedCounter;
 
-    private final ParticleSystem particles;
+    private final KimeriaParticleSystem particles;
     private int intensity;
     private final String targetId;
     private static final float SPRITE_OFFSET_Y = -3;
@@ -75,7 +75,7 @@ public class Torch extends Entity implements Actionable {
     /** Fixed seed for the particle generator, so tests can reproduce a run. */
     Torch(Assets assets, float centerX, float centerY, float w, float h, int intensity, String targetId, long seed) {
         super(centerX - w / 2f, centerY - h / 2f, w, h);
-        particles = new ParticleSystem(PARTICLE_CAPACITY, seed);
+        particles = new KimeriaParticleSystem(PARTICLE_CAPACITY, seed);
         sprite = assets == null ? null : SpriteSheets.TORCH.frame(assets);
         this.intensity = intensity;
         this.targetId = targetId == null ? "" : targetId;
@@ -157,7 +157,7 @@ public class Torch extends Entity implements Actionable {
     private void spawnCore(RandomXS128 random) {
         float life = CORE_LIFE_MIN + random.nextFloat() * CORE_LIFE_SPAN;
         float fromX = centerX() + rnd(random, CORE_SPREAD_X), fromY = centerY() + rnd(random, CORE_SPREAD_Y);
-        particles.spawn(ParticleSystem.KIND_GLOW, fromX, fromY, fromX, fromY - CORE_RISE, life, CORE_SIZE, FLAME_R, FLAME_G, FLAME_B);
+        particles.spawn(KimeriaParticleSystem.KIND_GLOW, fromX, fromY, fromX, fromY - CORE_RISE, life, CORE_SIZE, FLAME_R, FLAME_G, FLAME_B);
     }
 
     private void spawnEmbers(RandomXS128 random) {
@@ -166,7 +166,7 @@ public class Torch extends Entity implements Actionable {
             float life = EMBER_LIFE_MIN + random.nextFloat() * EMBER_LIFE_SPAN;
             float fromX = centerX() + rnd(random, EMBER_SPREAD_X), fromY = centerY() + rnd(random, EMBER_SPREAD_Y);
             float toX = fromX + rnd(random, EMBER_DRIFT), toY = fromY - EMBER_RISE - random.nextFloat() * EMBER_RISE_SPAN;
-            particles.spawn(ParticleSystem.KIND_GLOW, fromX, fromY, toX, toY, life, EMBER_SIZE, EMBER_R, EMBER_G, EMBER_B);
+            particles.spawn(KimeriaParticleSystem.KIND_GLOW, fromX, fromY, toX, toY, life, EMBER_SIZE, EMBER_R, EMBER_G, EMBER_B);
         }
     }
 
@@ -180,7 +180,7 @@ public class Torch extends Entity implements Actionable {
             float life = SPARKLE_LIFE_MIN + random.nextFloat() * SPARKLE_LIFE_SPAN;
             float fromX = centerX() + rnd(random, SPARKLE_SPREAD_X), fromY = centerY() + rnd(random, SPARKLE_SPREAD_Y);
             float toX = fromX + rnd(random, SPARKLE_DRIFT), toY = fromY - SPARKLE_RISE - random.nextFloat() * SPARKLE_RISE_SPAN;
-            particles.spawn(ParticleSystem.KIND_GLOW, fromX, fromY, toX, toY, life, SPARKLE_SIZE, SPARKLE_R, SPARKLE_G, SPARKLE_B);
+            particles.spawn(KimeriaParticleSystem.KIND_GLOW, fromX, fromY, toX, toY, life, SPARKLE_SIZE, SPARKLE_R, SPARKLE_G, SPARKLE_B);
         }
     }
 
@@ -188,7 +188,7 @@ public class Torch extends Entity implements Actionable {
         float life = SMOKE_LIFE_MIN + random.nextFloat() * SMOKE_LIFE_SPAN;
         float fromX = centerX() + rnd(random, SMOKE_SPREAD_X), fromY = centerY() - SMOKE_START_LIFT;
         float toX = fromX + rnd(random, SMOKE_DRIFT), toY = fromY - SMOKE_RISE - random.nextFloat() * SMOKE_RISE_SPAN;
-        particles.spawn(ParticleSystem.KIND_SMOKE, fromX, fromY, toX, toY, life, SMOKE_SIZE, SMOKE_GRAY, SMOKE_GRAY, SMOKE_GRAY);
+        particles.spawn(KimeriaParticleSystem.KIND_SMOKE, fromX, fromY, toX, toY, life, SMOKE_SIZE, SMOKE_GRAY, SMOKE_GRAY, SMOKE_GRAY);
     }
 
     private static float rnd(RandomXS128 random, float range) {
@@ -196,7 +196,7 @@ public class Torch extends Entity implements Actionable {
     }
 
     /** The torch's particles, for tests. */
-    ParticleSystem particles() { return particles; }
+    KimeriaParticleSystem particles() { return particles; }
 
     @Override
     public void render(Batch batch) {

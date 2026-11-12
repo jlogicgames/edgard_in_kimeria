@@ -8,15 +8,15 @@ import com.badlogic.gdx.math.RandomXS128;
 /**
  * Allocation-free blood: crimson droplets, fast streaks and short-lived floor splashes (#285, docs/DEVELOPMENT.md
  * "Particle system plan", step 3). Owned by the {@code Level}; a sword or fireball hit calls {@link #spray}, so no
- * object is created per hit. It follows the rules of {@link ParticleSystem} (struct-of-arrays, capacity fixed at
+ * object is created per hit. It follows the rules of {@link KimeriaParticleSystem} (struct-of-arrays, capacity fixed at
  * construction, a full pool drops the oldest drop, one seeded {@link RandomXS128}, floats only, live drops dense and in
  * spawn order) but keeps its own arrays: a drop is ballistic (velocity, gravity, a floor to land on), not a straight
- * lerp between two points, and carries its own red and green, so it does not fit {@code ParticleSystem}'s model.
+ * lerp between two points, and carries its own red and green, so it does not fit {@code KimeriaParticleSystem}'s model.
  *
  * <p>World Y grows downward: a drop launched upward has a negative {@code vy}, gravity adds to {@code vy}, and the
  * floor is at {@code floorY}, the largest Y a drop may reach.
  */
-public final class BloodSystem {
+public final class KimeriaBloodSystem {
     public static final int DROPLETS = 32, EMPOWERED_DROPLETS = 48;
     /** Longest drop life in seconds; the shortest is {@link #LIFE_MIN}. */
     public static final float DURATION = .9f;
@@ -53,7 +53,7 @@ public final class BloodSystem {
     private final boolean[] landed, empowered;
     private int count;
 
-    public BloodSystem(int capacity, long seed) {
+    public KimeriaBloodSystem(int capacity, long seed) {
         if (capacity < 1) throw new IllegalArgumentException("capacity must be at least 1");
         this.capacity = capacity;
         this.random = new RandomXS128(seed);
