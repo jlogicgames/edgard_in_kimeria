@@ -302,6 +302,23 @@ depends on it.
 - **Cost.** One `batch.draw` per decor object, the frame `TextureRegion`s held in the object, nothing
   allocated in `render`, no pool needed. The sheet adds to the web download only by its size (one strip
   of 128×24 px).
+- **Status: built (step 4).** `entity/objects/Decor.java`; `Level.decor` (a list apart from `objects`, cleared
+  with the room, updated in `updateWorld`, drawn right after `renderBackground`); the sheet is exported from
+  the hand-authored `art/objects/decor/bush.grid` by `tools/forest_trap_sprites.py decor:bush` (layout
+  `DECOR_SHEETS` in `tools/sprite_layouts.py`, contract in `validateSpriteArt`). `kind` is checked at load and
+  by `tools/check_tiled_links.py`, which also requires the bush's bottom edge (`y + height`) to equal the top of
+  a solid block. The grid is an original drawing in the leaf/olive palette above (one extra mid purple
+  `5a4488` between the two leaf tones); the author reviews it before merge. In a map the rectangle is 32×24,
+  so `y = floor - 24` (forest-2's SpawnPoints layer is offset by -16, so its file `y` is `floor - 24 + 16`).
+- **Placement (all levels, by hand, standing on the ground floor away from traps, pickups, checkpoints and exits):**
+
+| Map | Bushes | World x (left edge) |
+| --- | --- | --- |
+| `forest-0` | 12 (two per room) | 200, 300, 700, 1140, 1560, 1860, 2340, 2620, 3140, 3420, 3860, 4230 |
+| `forest-1` | 3 | 240, 600, 780 |
+| `forest-2` | 7 | 400, 700, 1040, 1380, 1580, 1800, 2700 |
+
+  `DecorTest` pins these counts and measures every bush against the floor line.
 
 #### 5. Shared design
 
@@ -424,7 +441,7 @@ depends on it.
 | 1 | `EnvironmentFx` shell, `ScreenShake` (the boss shake migrates, same numbers and method names), the `SCREEN_SHAKE` option with its web default and strings, lever shake | medium | #239, independent of #285 |
 | 2 | Jump dust: the dust `KimeriaParticleSystem`, the `Player.playerJump` hook and the dust sound | small (no art; the sound already exists). **Done (#285 step 5).** | #285 step 5 |
 | 3 | Ceiling grit: `KIND_GRIT` in `KimeriaParticleSystem`, the grit system, the lever hook, the rumble and grit sounds, the `kimeria-particles` skill update | small (no art; the sounds already exist). **Done (#285 step 5).** | #285 step 5 |
-| 4 | The one-kind `Decor` object and `decor-bush` only, with placement in all levels | medium (art plus map editing) | #239 |
+| 4 | The one-kind `Decor` object and `decor-bush` only, with placement in all levels | medium (art plus map editing). **Done (#239 step 4).** | #239 |
 | 5 | Stone-linked `HangingVine` and `decor-vine`, placement in all levels | medium | #239 |
 
 **Who lands what.** #285 step 5 is the dust and grit particle work (plan steps 2 and 3), built on the

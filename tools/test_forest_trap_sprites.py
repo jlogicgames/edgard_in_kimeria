@@ -3,7 +3,7 @@ import unittest
 from PIL import Image
 
 import forest_trap_sprites as traps
-from sprite_layouts import FOREST_TRAP_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
 
@@ -19,6 +19,19 @@ class ForestTrapSpritesTest(unittest.TestCase):
                 shipped = Image.open(traps.ROOT / f'assets/images/objects/trap-{name}.png')
                 self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(),
                     'shipped export differs from the grid; run tools/export_object_sprites.py')
+
+    def test_the_decor_bush_matches_its_layout_and_shipped_export(self):
+        size, frames = DECOR_SHEETS['bush']
+        master, colors = traps.sheet_image('decor:bush')
+        self.assertEqual((size[0] * len(frames), size[1]), master.size)
+        self.assertEqual(WORLD_IMAGES['decor-bush'], master.size)
+        self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+        shipped = Image.open(traps.ROOT / 'assets/images/objects/decor-bush.png')
+        self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), 'run tools/forest_trap_sprites.py decor:bush')
+        for index in range(len(frames)):
+            cell = master.crop((index * size[0], 0, (index + 1) * size[0], size[1]))
+            self.assertEqual(size[1], cell.getchannel('A').getbbox()[BBOX_BOTTOM], 'the bush must rest on its bottom row')
+            self.assertTrue(set(cell.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
 
     def test_every_frame_has_artwork_and_binary_alpha(self):
         for name, (size, frames) in FOREST_TRAP_SHEETS.items():

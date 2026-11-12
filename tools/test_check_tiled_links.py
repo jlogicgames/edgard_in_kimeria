@@ -289,5 +289,30 @@ class ExplosiveTrapLinksTest(unittest.TestCase):
             self.assertTrue(links.check_map(TILES / f'explosive-{name}.tmx'), f'explosive-{name}.tmx must fail like the Java loader does')
 
 
+FLOOR = '<object id="9" x="0" y="320" width="400" height="48"/>'
+
+
+def decor(kind_='bush', box='x="64" y="296" width="32" height="24"'):
+    return f'<object id="7" name="Bush" type="Decor" {box}><properties><property name="kind" value="{kind_}"/></properties></object>'
+
+
+class DecorLinksTest(unittest.TestCase):
+    def test_a_bush_standing_on_the_floor_passes(self):
+        self.assertEqual([], check(tmx(decor(), FLOOR)))
+
+    def test_unknown_kind_missing_kind_and_bad_size_fail(self):
+        self.assertIn("unknown kind 'tree'", check(tmx(decor('tree'), FLOOR))[0])
+        self.assertIn("unknown kind ''", check(tmx(decor(''), FLOOR))[0])
+        self.assertIn('positive size', check(tmx(decor(box='x="64" y="320" width="0" height="0"'), FLOOR))[0])
+
+    def test_a_floating_or_sunken_bush_is_named(self):
+        self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="64" y="290" width="32" height="24"'), FLOOR))[0])
+        self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="64" y="300" width="32" height="24"'), FLOOR))[0])
+        self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="500" y="296" width="32" height="24"'), FLOOR))[0])
+
+    def test_the_kinds_are_read_from_the_java_table(self):
+        self.assertEqual(('bush',), links.decor_kinds())
+
+
 if __name__ == '__main__':
     unittest.main()

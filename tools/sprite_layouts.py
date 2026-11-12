@@ -55,3 +55,8 @@ FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TR
 # Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.
 WORLD_IMAGES.update({f'trap-{name}': (size[0] * len(frames), size[1])
                      for name, (size, frames) in FOREST_TRAP_SHEETS.items()})
+# Decor sheets (#239 step 4): name -> (frame size, ordered frame names); runtime export `decor-<name>.png`, one horizontal strip.
+DECOR_SHEETS = {
+    'bush': ((32, 24), ('idle', 'brush1', 'brush2', 'settle')),
+}
+WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})

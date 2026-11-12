@@ -12,10 +12,12 @@ characters of each row: a symmetry aid for round shapes, like an editor's mirror
 """
 from pathlib import Path
 from PIL import Image
-from sprite_layouts import FOREST_TRAP_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
 
 ROOT = Path(__file__).resolve().parents[1]
 GRID_DIR = ROOT / 'art/objects/forest-traps'
+DECOR_GRID_DIR = ROOT / 'art/objects/decor'
+DECOR_PREFIX = 'decor:'  # a sheet name for a decor strip: 'decor:bush' -> decor-bush.png from art/objects/decor/bush.grid
 PREVIEW_DIR = ROOT / 'docs/references/forest-traps'
 RGBA_CHANNELS = 4
 PREVIEW_SCALE = 6
@@ -65,11 +67,19 @@ def parse(path):
     return size, colors, frames
 
 
+def layout(name):
+    """(grid path, runtime stem, expected (size, frames)) for a trap name or a `decor:<name>` name."""
+    if name.startswith(DECOR_PREFIX):
+        short = name[len(DECOR_PREFIX):]
+        return DECOR_GRID_DIR / f'{short}.grid', f'decor-{short}', DECOR_SHEETS[short]
+    return GRID_DIR / f'{name}.grid', f'trap-{name}', FOREST_TRAP_SHEETS[name]
+
+
 def sheet_image(name):
-    size, colors, frames = parse(GRID_DIR / f'{name}.grid')
-    expected_size, expected_frames = FOREST_TRAP_SHEETS[name]
+    grid, _, (expected_size, expected_frames) = layout(name)
+    size, colors, frames = parse(grid)
     if size != expected_size or [f for f, _ in frames] != list(expected_frames):
-        raise ValueError(f'{name}: grid size/frames differ from sprite_layouts.FOREST_TRAP_SHEETS')
+        raise ValueError(f'{name}: grid size/frames differ from sprite_layouts')
     if len(colors) > WORLD_PALETTE_SIZE - 1:
         raise ValueError(f'{name}: more than {WORLD_PALETTE_SIZE - 1} opaque colours')
     data = bytearray()
@@ -84,12 +94,13 @@ def sheet_image(name):
 
 def export_sheet(name):
     master, _ = sheet_image(name)
-    master_path = ROOT / 'art/objects' / f'trap-{name}-pixel.png'
+    _, stem, _ = layout(name)
+    master_path = ROOT / 'art/objects' / f'{stem}-pixel.png'
     master.save(master_path)
     indexed = master.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
     if indexed.convert("RGBA").tobytes() != master.tobytes():
         raise ValueError(f'{name}: quantizing changed pixels; reduce the palette to fit 16 entries')
-    target = ROOT / 'assets/images/objects' / f'trap-{name}.png'
+    target = ROOT / 'assets/images/objects' / f'{stem}.png'
     indexed.save(target, bits=WORLD_PALETTE_BITS)
     print(target.relative_to(ROOT))
     return master
@@ -109,11 +120,11 @@ def preview(name, master, scale=PREVIEW_SCALE):
     sheet.paste(BACKGROUNDS[0], (0, bottom, sheet.width, sheet.height))
     sheet.paste(master, (pad, bottom + pad), master)
     PREVIEW_DIR.mkdir(parents=True, exist_ok=True)
-    sheet.save(PREVIEW_DIR / f'{name}-preview.png')
+    sheet.save(PREVIEW_DIR / f'{layout(name)[1].replace("trap-", "", 1)}-preview.png')
 
 
 def export_all(names=None):
-    for name in names or FOREST_TRAP_SHEETS:
+    for name in names or [*FOREST_TRAP_SHEETS, *(DECOR_PREFIX + n for n in DECOR_SHEETS)]:
         preview(name, export_sheet(name))
 
 

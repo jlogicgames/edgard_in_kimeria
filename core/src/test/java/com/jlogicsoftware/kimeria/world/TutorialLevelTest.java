@@ -107,9 +107,12 @@ class TutorialLevelTest {
         }
     }
 
+    /** Not gameplay objects: the Deadline and Decor scenery (#239 step 4: no collision, no hazard, no enemy), left out of the per-room object counts. */
+    private static final Set<String> COSMETIC = Set.of("Deadline", "Decor");
+
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
         TiledMapData map = map("forest-0");
-        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint");
+        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint", "Decor");
         // D48: one trap in each of rooms 1-4: thorn root, falling branch, falling stone, exploding stump.
         java.util.Map<Integer, String> newTraps = java.util.Map.of(1, "ThornRoot", 2, "FallingBranch", 3, "FallingStone", 4, "ExplosiveStump");
         Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder", "Escalator", "Stone");
@@ -126,19 +129,19 @@ class TutorialLevelTest {
             assertTrue(allowed.contains(o.type) || lesson || trap, "Unexpected object: " + o.type);
             assertFalse(Set.of("RedMob", "Boss").contains(o.type), "forest-0 has no monsters");
         }
-        var room0 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 0).toList();
+        var room0 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 0).toList();
         assertEquals(1, room0.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         var actionables = room0.stream().filter(o -> "Actionable".equals(o.type)).toList();
         assertEquals(1, actionables.size(), "exactly one linked object");
         assertEquals("Torch", actionables.get(0).prop("type", ""));
         assertEquals(0, actionables.get(0).propFloat("Intensity", -1), "The torch starts dark");
         assertTrue(room0.stream().noneMatch(o -> "Ladder".equals(o.type)), "Room 0 has no ladder");
-        var room1 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 1).toList();
+        var room1 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 1).toList();
         assertEquals(1, room1.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         assertEquals(1, room1.stream().filter(o -> "Ladder".equals(o.type)).count(), "exactly one ladder");
         assertEquals(3, room1.size(), "the ladder room holds only its lever, ladder and thorn root");
         assertEquals(1, room1.stream().filter(o -> "ThornRoot".equals(o.type)).count(), "exactly one thorn root");
-        var room2 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 2).toList();
+        var room2 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 2).toList();
         assertEquals(3, room2.size(), "the wall room holds only its lever, wall and falling branch");
         assertEquals(1, room2.stream().filter(o -> "FallingBranch".equals(o.type)).count(), "exactly one falling branch");
         assertEquals(1, room2.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
@@ -148,7 +151,7 @@ class TutorialLevelTest {
         assertEquals("vertical", walls.get(0).prop("movement", ""), "The wall is raised and lowered, never removed");
         assertEquals(320, walls.get(0).y + walls.get(0).height, "The wall starts lowered, standing on the floor");
         assertTrue(walls.get(0).height >= 96, "and is taller than a jump");
-        var room3 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 3).toList();
+        var room3 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 3).toList();
         assertEquals(3, room3.size(), "the platform room holds only its lever, platform and falling stone");
         assertEquals(1, room3.stream().filter(o -> "FallingStone".equals(o.type)).count(), "exactly one falling stone");
         assertEquals(1, room3.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
@@ -159,7 +162,7 @@ class TutorialLevelTest {
         assertEquals(304, platforms.get(0).y, "and waits at the bottom, 16 px above the floor");
         assertEquals(208 - 32, platforms.get(0).y - platforms.get(0).propFloat("offNeg", 0) * 32, "and rises 32 px above the ledge top so the hero can step off");
         assertTrue(platforms.get(0).propFloat("offNeg", 0) * 32 > 58, "further than a jump");
-        var room4 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 4).toList();
+        var room4 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 4).toList();
         assertEquals(4, room4.size(), "the stone room holds only its stone, lever, platform and exploding stump");
         assertEquals(1, room4.stream().filter(o -> "ExplosiveStump".equals(o.type)).count(), "exactly one exploding stump");
         assertEquals(1, room4.stream().filter(o -> "Stone".equals(o.type)).count(), "exactly one stone");
@@ -175,7 +178,7 @@ class TutorialLevelTest {
         float lipNear = stonePlatforms.get(0).x, lipFar = lipNear + stonePlatforms.get(0).propFloat("offPos", 0) * 32 + stonePlatforms.get(0).width;
         assertEquals(stoneLevers.get(0).x, lipFar, "the lever stands at the far lip, where the platform ends");
         assertEquals(96, stoneLevers.get(0).x - lipNear, "a 96 px chasm");
-        var room5 = map.layer("SpawnPoints").stream().filter(o -> !"Deadline".equals(o.type) && layout.owner(o) == 5).toList();
+        var room5 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 5).toList();
         assertEquals(3, room5.size(), "the traps room holds only its falling platform, exploding stump and the level-end checkpoint");
         assertEquals(1, room5.stream().filter(o -> "FallingPlatform".equals(o.type)).count(), "exactly one falling platform");
         assertEquals(1, room5.stream().filter(o -> "ExplosiveStump".equals(o.type)).count(), "exactly one exploding stump");

@@ -45,6 +45,7 @@ import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
+import com.jlogicsoftware.kimeria.entity.objects.Decor;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
 import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
@@ -90,6 +91,9 @@ public class Level implements WorldObject {
     private final List<StaticPlatform> staticPlatforms = new ArrayList<>();
     /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain. */
     public final List<WorldObject> objects = new ArrayList<>();
+    /** Cosmetic scenery (#239): drawn right after the background, behind platforms, objects and the hero; no collision. */
+    public final List<Decor> decor = new ArrayList<>();
+    private final Rectangle heroBodyScratch = new Rectangle();
     /**
      * Objects spawned mid-frame (a coin's pickup ripple, a bomb's explosion,
      * ...) land here instead of straight into {@link #objects}: they're
@@ -372,7 +376,7 @@ public class Level implements WorldObject {
         else rangedStock.restore(roomStartAmmo);
         revisiting = revisit;
         game.artifacts().resetRoom();
-        objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
+        objects.clear(); decor.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear(); blood.clear();
         boss = null;
@@ -728,6 +732,7 @@ public class Level implements WorldObject {
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
                     objects.add(puffball);
                 }
+                case "Decor" -> decor.add(Decor.fromMap(assets, o, describe(o)));
                 case "ThornVine" -> {
                     ThornVine vine = ThornVine.fromMap(assets, o, describe(o));
                     float reach = vine.length() + ThornVine.LETHAL_HALF_WIDTH;
@@ -1096,7 +1101,19 @@ public class Level implements WorldObject {
         blood.update(dt);
         for (Escalator e : escalators) e.update(dt);
         for (FallingPlatform p : fallingPlatforms) p.update(dt);
+        updateDecor(dt);
         for (WorldObject o : objects) o.update(dt);
+    }
+
+    /** The hero brushing past scenery (#239): reads the hero's box and heading, changes nothing in gameplay. */
+    private void updateDecor(float dt) {
+        boolean hero = !player.isRemoved();
+        if (hero) player.hitboxBoundsInto(heroBodyScratch);
+        for (int i = 0; i < decor.size(); i++) {
+            Decor d = decor.get(i);
+            if (hero) d.notice(heroBodyScratch, player.velocity.x);
+            d.update(dt);
+        }
     }
 
     private void finishUpdate() {
@@ -1137,6 +1154,7 @@ public class Level implements WorldObject {
     public void render(Batch batch, Rectangle visibleWorldRect) {
         if (sky != null) sky.render(batch, visibleWorldRect);
         renderBackground(batch, visibleWorldRect);
+        for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
         for (StaticPlatform platform : staticPlatforms) platform.render(batch);
         for (Escalator e : escalators) e.render(batch);
         for (FallingPlatform p : fallingPlatforms) p.render(batch);
