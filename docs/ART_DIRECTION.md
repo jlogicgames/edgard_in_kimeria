@@ -175,6 +175,283 @@ A checklist of ideas, not implemented rules:
 **Accessibility note:** screen shake must be **optional or reducible** (an Assist-style
 setting, D11), and no effect may hide a trap warning.
 
+### Environment effects plan (#239)
+
+Plan for author approval (revised after the author's review); nothing below is built. Author
+constraints: anything that is a *thing* (a vine, a bush, a flower) is a pre-drawn sprite or
+sprite-sheet animation through the art pipeline (nearest filter, at most 16 palette entries, binary
+alpha). Dust and grit are **particles**, the same category as the torch's flame, sparks, embers and
+smoke (the "time-varying particle VFX" category in the procedural-art section below): they carry no
+artwork of an object. Movement-only effects (an offset or rotation of an existing region, a camera
+offset) draw nothing new. Every effect is cosmetic: no collision, hitbox, damage, timing or route
+depends on it.
+
+#### 1. The particle code on `main` (read from the code after #285 steps 0 to 4)
+
+- `effects.KimeriaParticleSystem` is the shared system: fixed struct-of-arrays storage allocated in the constructor
+  (`spawn` writes the next free slot; a full pool drops the oldest), one seeded `RandomXS128` per system
+  (`random()`), `update(dt)` (straight-line lerp from start to end over the particle's life, dead ones
+  removed, spawn order kept), `clear()`, and `render(batch, region)` (normal-blend particles first, then
+  additive ones, white and normal blending restored). Two kinds: `KIND_GLOW` (additive, shrinks to 0.6,
+  alpha `(1-t)^2`) and `KIND_SMOKE` (normal blend, grows to 2×, alpha `1-t`), both scaled by a fixed
+  `PEAK_ALPHA` of 0.7.
+- `Torch` owns one `KimeriaParticleSystem` of **96 slots** (`PARTICLE_CAPACITY`) for its flame core, embers,
+  sparkles and smoke, drawn with `SoftDot.region()`. Its sprite body is `SpriteSheets.TORCH`; its glow is
+  one more additive `SoftDot` quad, not a translucent sprite.
+- `effects.KimeriaBloodSystem` is owned by `Level` (`Level.blood(...)` sprays, `bloodParticles()` for tests), with its own
+  arrays because a drop is ballistic (velocity, gravity, a floor), not a lerp. It is updated and rendered by
+  `Level` and cleared with `blood.clear()` on the room rebuild.
+- `SoftDot.region()`, `SoftDot.glowRegion()` and `Shaders.whiteQuad()` return cached regions. `Level.cameraShakeOffset`
+  returns one reused `Vector2` field (and the doc comment says it must not be kept or mutated).
+- Guards: `AllocationBudgetTest` (runtime ceilings in bytes per frame, scenarios include one torch, one blood
+  spray, a camera-shake query and the forest rooms) and `tools/check_allocations.py` (a changed-line scan of
+  `update*`, `render*`, `draw*` and listed helpers). Both are described in `docs/DEVELOPMENT.md`, "Particle system plan".
+- Life cycle, verified in the code and still true: pause works because `Level.update` is not called; a room
+  rebuild clears `objects` and `blood` and calls `clearCameraEffects()`; `Torch.toggleFire(false)` and
+  `restoreState` clear the torch's particles.
+- The dust and grit of #239 are two more `KimeriaParticleSystem` instances on this base. They are **step 5 of
+  [#285](https://github.com/jlogicgames/edgard_in_kimeria/issues/285)**, not new particle code.
+
+#### 2. The four items
+
+| Item | Today in the code | Hook | Effect kind | New art | Web cost |
+| --- | --- | --- | --- | --- | --- |
+| **Vines sway; shake with a falling stone** | `ThornVine` (D46) already swings as a lethal pendulum (`angle()` feeds `lethalAt`, forest-2 only). No scenery vine exists. `FallingStone` has `landed()` (a protected no-op in `FallingTrap`). | New Tiled type `HangingVine` (non-lethal scenery, `Level.spawn` switch next to `ThornVine`). `FallingStone` gets `onImpact(Runnable)` set by `Level.spawnFallingTrap`, which calls `fx.groundShake(x, strength)`; each `HangingVine` within reach adds a decaying sway. The lethal `ThornVine` is **not** shaken (its drawn pose must equal its hitbox). | Movement only: rotation about the top centre, as `ThornVine.render` does. | `decor-vine` 8×40, 1 frame, vine `8a8a2a / 4a4a18`, leaves `3b2a5c / 7a5ab0`, contour `0b0814`. Not `trap-vine` (its thorn ball is trap art). | 1 draw per vine, no allocation. |
+| **Bush (decor) reacts when the player walks past** | No decor object exists. Bushes are part of the `Background` tile layer (`Level.renderBackground`), which stays as it is. | New Tiled type `Decor` (section 4): an animated sprite placed by hand, plays a brush-past animation when the hero walks past. | Sprite animation. | The decor sheets in section 4. | 1 draw per decor object, no pool needed. |
+| **Dust under the player on a jump** | `Player.playerJump(dt)` is the single jump entry (ground jump, ladder hop and wall jump branches). | After the ordinary ground branch only: `fx.dustPuff(feetX, feetY)` with `feetY = position.y + hitbox.offsetY + hitbox.height`. Y grows downward, so particles start at `feetY` and rise (negative vy). | **Particles**, `Torch` model. | **None.** | Section 3. |
+| **Lever lowers a wall: screen shake, optional ceiling dust** | `Level.activateTrigger` calls `performAction()` on each linked `Actionable`; `Wall` moves over `moveDurationSeconds` (private, no getter). `Level.shakeRemaining` and `cameraShakeOffset` already exist (boss feedback). | In `activateTrigger`, if an activated `Actionable` is a `Wall` with `movesVertically()`, call `fx.shake(...)` for the wall's move duration (add a `Wall` getter) and `fx.ceilingGrit(wallCenterX, roomTop)`. | Shake is a camera offset. Grit is **particles**. | **None.** | Section 3. |
+
+#### 3. Dust puff and ceiling grit as particles
+
+- **Pools.** `EnvironmentFx` owns two `KimeriaParticleSystem` instances created once with the `Level`:
+  **dust 24** slots (a jump emits 6, so 4 overlapping jumps fit; a full pool drops the oldest) and
+  **grit 32** (a lever emits 24 over about 0.6 s). Each has its **own `RandomXS128`** (the system's
+  `random()`), seeded from the level's seed pattern, so a seed reproduces a run and the two streams do not
+  disturb each other or the torches.
+- **Dust puff fits `KIND_SMOKE`.** 6 `spawn` calls from the feet: start X ±8 px around the hero centre,
+  start Y `feetY`, end Y `feetY - (10 to 22 px/s * life)`, end X start X `± 25 px/s * life` away from the
+  centre, life 0.25 to 0.4 s, base size 3 px, colours from `5b5870`, `9a97ad`, `d8d6e8`
+  (0.357/0.345/0.439, 0.604/0.592/0.678, 0.847/0.839/0.910). Checked against the real curves in
+  `KimeriaParticleSystem.drawSize`/`alpha`: **matches** the size (base 3 px grows linearly to 6 px at the end of life,
+  `1 + SMOKE_GROWTH * t` with `SMOKE_GROWTH = 1`), the straight-line motion (a constant-speed rise, no
+  gravity) and the fade (linear `1 - t`); normal blending. **Differs** from my earlier text in one way: alpha
+  starts at the fixed `PEAK_ALPHA` of 0.7, not at 1, and a particle cannot override it, so the puff is a little
+  translucent from the first frame. Drawn with the cached `SoftDot.region()`. No new kind is needed.
+- **Ceiling grit does not fit either kind.** `KIND_GLOW` is additive and shrinks; `KIND_SMOKE` grows and is drawn
+  soft. Grit needs hard white-quad squares, normal blending, constant size, falling, linear alpha. This needs
+  a **third kind `KIND_GRIT`** added to `KimeriaParticleSystem`: normal blend (it joins the `KIND_SMOKE` pass in
+  `render`), `drawSize` = base size (no scaling), `alpha` = `(1 - t) * PEAK_ALPHA`. It is a small change to the shared
+  class (three branches in `drawSize`, `alpha` and `draw`), made **in the grit step** with its own unit
+  test (constant size, linear alpha, drawn in the normal pass) and the existing golden/allocation tests kept
+  green. The grit system is drawn with `Shaders.whiteQuad()` as the region: 24 particles from the wall's
+  width ±24 px at the room's top edge, falling 70 to 110 px/s for up to 64 px (end Y = start Y + speed * life),
+  life 0.5 to 0.9 s, size 1 to 2 px, colours `5b5870` and `9a97ad`. The shared 0.7 peak alpha also applies to grit; the
+  plan accepts it.
+- **Grit step checklist.** Add `KIND_GRIT` (constant, `drawSize`, `alpha`, normal-blend pass); add its
+  cases to `KimeriaParticleSystemTest` (values at t = 0, 0.5, 1) and keep the existing assertions and
+  `ParticleGoldenTest` untouched; add the grit emitter, a capacity test for it and the `AllocationBudgetTest`
+  scenario; **update `.agents/skills/kimeria-particles/SKILL.md`** (its "Adding a new kind" section says
+  `KIND_GRIT` does not exist yet, and the kinds table gains the new row); run `./gradlew buildWeb`.
+- **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
+  (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
+- **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render
+  allocation-free through `KimeriaParticleSystem.render`, and `clear()` runs from `clearCameraEffects()`/the room
+  rebuild (death, retry, Restart Level, room change).
+- **Web cost.** Worst case 24 + 32 = 56 quad draws for about 1 s after a lever, at most 24 for 0.4 s after a
+  jump, nothing while idle (`render` returns at once when the count is 0). Torches already draw more every
+  frame. Both textures are already bound by torches, fireflies and rain; a frame that mixes these draws
+  with sprites may flush the batch a few extra times. Measuring that belongs to the atlas work,
+  [#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284); #239 adds no atlas.
+
+#### 4. Active decor objects (`decor-bush` only)
+
+- **Object.** Tiled type `Decor` in `SpawnPoints`, a rectangle placed by hand, with a string property
+  `kind` (`bush`) and an optional boolean `mirror`. One `Decor` class draws one animated
+  sprite: frame 0 at rest; when the hero's body box overlaps the rectangle widened by 6 px **and** the
+  hero moves horizontally, it plays the brush-past frames once at 10 fps and returns to frame 0. It
+  restarts only when finished, so it cannot flicker. The brush direction comes from the hero's heading by
+  drawing the sheet mirrored (negative width), so no second set of frames is needed. Timing depends only
+  on hero position and `dt`, never on a random value.
+- **One kind in #239: `decor-bush`.** One horizontal strip `assets/images/objects/decor-bush.png`, source
+  `art/objects/decor/bush.grid`, at most 16 palette entries with alpha:
+
+| Sheet | Frame size | Frames | Palette notes |
+| --- | --- | --- | --- |
+| `decor-bush` | 32×24 | idle, brush1, brush2, settle | leaves `3b2a5c / 7a5ab0`, vine olive `8a8a2a / 4a4a18` highlights, contour `0b0814`. Distinct from the magenta thorn tuft. |
+
+  `kind` accepts `bush` only; the class is written so that a new kind is one sheet and one table entry.
+- **Later kinds.** The other kinds (shrub 16×16, flowers 16×16, fern 24×24 and a mushroom) are **not built
+  in #239**. They belong to the redo of all default sprites and tiles, issue
+  [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) ("Replace third-party artwork with
+  original assets"). Their palette notes carry over: shrub in the same leaf and olive family with a smaller
+  silhouette; flowers with bone `efe6c4` petals and ember `ffd23a` centres on leaf-green stems, away from
+  magenta (tuft) and lime (spores); fern in the leaf family with drooping fronds. A decor mushroom needs a
+  look that cannot be read as the healer's Mushroom pickup (D43) or the puffball trap.
+- **Draw order and independence.** `Level.render` draws decor right after `renderBackground` and
+  before platforms, objects and the hero, so decor is always behind the hero and behind every trap, hint
+  and pickup, and can never hide one. The class reads only its own rectangle and the hero box; it never
+  reads the tile layer. The unchanged `Background` layer, and a later split of the backgrounds into
+  parallax layers (#236), do not affect it: decor sits in the main layer between the background layers
+  and the hero. A foreground parallax layer is owned by that task.
+- **Collision and gameplay.** None: no collision block, no hitbox, not an `Actionable`, not saved or
+  restored (the room rebuild recreates it at frame 0).
+- **Cost.** One `batch.draw` per decor object, the frame `TextureRegion`s held in the object, nothing
+  allocated in `render`, no pool needed. The sheet adds to the web download only by its size (one strip
+  of 128×24 px).
+
+#### 5. Shared design
+
+- **One manager for events, per-object code for motion.** An `effects.EnvironmentFx` owned by `Level`
+  (`level.fx()`): the screen-shake state, the two particle pools, and a broadcast of ground-shake
+  events. `HangingVine` and `Decor` keep their own animation state, because it belongs to the object.
+- **Camera shake model.** `ScreenShake.start(amplitudePx, seconds)` keeps the stronger of the running
+  and the new shake. The offset is `amplitude * remaining/total * sin(...)`. The **existing boss shake
+  migrates into `ScreenShake`**: `Level.shakeRemaining`, `shakeAfterBossAttack`, `shakeAfterEmpoweredHit`,
+  `clearCameraEffects` and `cameraShakeOffset` keep their **public method names and signatures** and delegate to the manager,
+  with **identical numbers** (1.25 px peak, 0.18 s, frequencies 110 and 137, the same room clamp), so
+  `BossCombatTest` and `RoomTest` pass unchanged. `cameraShakeOffset` keeps returning **one reused
+  instance** (the field added by #285 step 4). With the `SCREEN_SHAKE` option off the boss shake is
+  also zero. The lever shake is the new case: about 1.5 px for the wall's move time (1 s default). The
+  offset is deterministic and is added only to `camera.position` in `KimeriaGame`, as today; the clamp to the room
+  bounds stays. Physics, hitboxes, trap timers and the Y-up text projection never read it. `KimeriaGame`
+  will restore the unshaken camera position before drawing the HUD (the hint anchor is placed through
+  `camera.project`), so the hint label does not move with the shake (D33/D49/D50 geometry stays pinned).
+- **Reduced-motion option.** `Settings.SCREEN_SHAKE` (key `screen-shake`, boolean) under Options → Assist
+  (D11, `assistMenu`), item "Screen shake: On/Off". **Default:** on for desktop; on the web build it follows
+  the browser's reduced-motion preference (`prefers-reduced-motion: reduce` gives off, anything else on).
+  **A saved choice always wins:** the default is read only while the key is absent, so a player who ever
+  toggles the item keeps that choice whatever the browser says. When off, the manager returns a zero offset
+  for **every** shake, including the existing boss feedback, and vines ignore shake events. New
+  `Msg.SCREEN_SHAKE` in `Msg.java` and the five bundles `en`, `uk`, `be`, `de`, `pl`. The menu is the existing
+  `Menu`, so keyboard, gamepad and touch reach it exactly as they reach "Longer trap warnings". Dust, grit and
+  decor stay on: they are small and local and move no screen area.
+- **Reading the browser preference (researched, section 5a).** See section 5a.
+- **Purely cosmetic.** Effect state advances only in `Level.update(dt)` and is cleared with
+  `clearCameraEffects()` on death, retry and room change. Nothing in gameplay reads effect state back.
+- **Allocation rules.** New code must pass `tools/check_allocations.py` and the `AllocationBudgetTest`
+  scenarios in section 6. (The old per-frame `Rectangle`/`Vector2` of `KimeriaGame` and
+  `Level.cameraShakeOffset` were removed by #285 step 4; nothing here depends on that work.)
+
+#### 5a. Reduced-motion default on the web (researched)
+
+- **Can the web build read it? Yes, by the mechanism the project already uses.** `web/.../WebLauncher.java`
+  already declares `@JSBody(script = "...") private static native` methods for browser facts it needs
+  (`navigator.maxTouchPoints`, `devicePixelRatio`, the Fullscreen API, wake lock), compiled by TeaVM 0.15.0 with
+  gdx-teavm 1.6.2 into the shipped release. The same form reads the preference:
+  `@JSBody(script = "return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);") private static native boolean prefersReducedMotion();`.
+- **Evidence.** (1) The existing `@JSBody` methods above. (2) I searched the `teavm-jso-apis-0.15.0` sources in
+  the Gradle cache: `org.teavm.jso.browser` has `Window`, `Navigator`, `Screen`, `Location`, `History`,
+  `Storage`, `Performance` and timers but **no** `matchMedia`/`MediaQueryList` binding, so there is no
+  typed API to call and `@JSBody` is the route. (3) I did not open the gdx-teavm `backend-web` sources for a
+  media-query helper; the plan does not rely on one.
+- **How it reaches the game.** `WebLauncher` passes the boolean into `KimeriaGame` as a constructor argument next to
+  `hasTouchScreen` (desktop passes `false`). `Settings` gains a way to read an option with a platform default
+  while the key is absent, so `SCREEN_SHAKE` resolves as: saved value, else `!prefersReducedMotion`.
+- **Not verified.** No browser was run: that `matchMedia` returns the OS setting in the supported browsers
+  (including iOS Safari and Firefox) and that the compiled release keeps the call are unchecked; the step 1 pull request
+  tests the default with a stubbed platform value and checks the real value once in a browser with the OS
+  setting on and off.
+
+#### 5b. Sound
+
+- **Events that get a sound** (the author said yes): the **dust puff** on a ground jump, the **lever rumble**
+  when a lever lowers a wall (for the wall's move time), and the **falling grit** after the lever.
+- **How sounds work here (read from the code).** `KimeriaGame.playSound(name)` does nothing when sounds are
+  off, else plays `assets/audio/<name>.wav` through `Assets.sound(path)`, which creates each `Sound` on first use and
+  caches it, at the global `soundVolume`. The suffix `.wav` is fixed in `playSound`. Callers guard with
+  `if (game.playSounds())` and use snake_case names (`jump`, `bounce`, `hit`, `collect`, `disappear`,
+  `boss_hit`, `boss_restore`, `button_click`). Music (`main_menu.mp3`, `intro.wav`) is separate. There is
+  no `docs/AUDIO*.md`, and `AGENTS.md` has no sound rule; the audio facts live in `docs/DEVELOPMENT.md`
+  ("Assets": libGDX's WAV decoder needs plain PCM, so `button_click.wav` was re-encoded; `intro.wav` is an original
+  synthesized placeholder) and the web release check lists the audio files it expects.
+- **Existing sounds do not cover these events.** `jump` already plays on every jump, so a dust sound is a
+  separate, quieter sound layered on it. The lever has no sound today: `Trigger`/`Lever` call no `playSound`.
+  `bounce` is used for impacts (enemy, boss, bomb, falling platform) and would be the wrong rumble.
+- **The audio files exist already (2026-11-12, PR 293).** `dust_puff.wav` (0.1 s, a quiet scuff), `wall_rumble.wav`
+  (1.0 s, low, matching the wall's move time) and `grit_fall.wav` (0.5 s, dry patter) are synthesized by
+  `tools/audio/generate_sounds.py`, accepted by the author on listening, and shipped in `assets/audio/` but played
+  by nothing yet: steps 2 and 3 wire them in. The same change replaced the legacy `jump.wav` by an original synthesized
+  jump, so the dust sound layers on the new jump. The approach, recipes and the way to make more sounds are in
+  [SOUND_DIRECTION.md](SOUND_DIRECTION.md); the steps add no audio files. What each step still owes: the
+  `game.playSounds()` guard and the sound-off behaviour (nothing plays when `playSounds()` is false). The origin of
+  the other, older sounds (Flame and Rust versions) is #189's concern, not this plan's.
+- **Hooks.** Dust: in `EnvironmentFx.dustPuff`'s caller in `Player.playerJump`, beside the existing `jump` call. Rumble
+  and grit: in the `Level.activateTrigger` wall branch. All three sit behind `game.playSounds()` and play
+  only when the effect starts, so pause (no `update`) cannot replay them.
+- **Not verified.** Web playback latency of a sound that is created on its first use (`Assets.sound` is lazy), and
+  that browsers play it after the start gesture; the existing `docs/PRE_RELEASE_TODO.md` already asks for a
+  release-browser audio check.
+
+#### 6. Tests step 2 will add
+
+- `ScreenShakeTest`: offset is zero with the option off; amplitude decays to zero at `seconds`; a
+  stronger shake replaces a weaker one; deterministic across two runs; room clamp honoured.
+- `EnvironmentFxTest`: a ground jump emits exactly one puff (6 particles); a ladder hop and a wall
+  jump emit none; a full pool drops the oldest slot and `count()` never exceeds the capacity; the same
+  seed and event sequence give identical particle positions; no `update` (pause) leaves positions
+  unchanged; `clear()` (death, room rebuild) leaves no live particle; particles die by their lifetime.
+- `KimeriaParticleSystemTest` addition (grit step): `KIND_GRIT` keeps its base size for the whole life, fades
+  linearly to 0 and is drawn in the normal-blend pass; `KIND_GLOW` and `KIND_SMOKE` results are unchanged.
+- **Allocation proof, not only array lengths.** New `AllocationBudgetTest` scenarios through the real
+  `Level`: (a) a jump puff over its whole life, (b) a lever that lowers a wall: shake plus the grit burst over its
+  whole life. Ceilings are a few tens of bytes per frame or less, like the torch and blood ceilings after #285,
+  stated in the PR with the measured value. The new code also passes `tools/check_allocations.py`.
+- `WallLessonTest` additions: a lever that lowers the wall starts one shake, one grit burst and one rumble request; a
+  non-moving wall (`setActive(false)`) starts none. A jump requests one dust sound; with `playSounds()` false none is requested.
+- `FallingTrapsTest` addition: the stone's impact notifies exactly once; a branch does not.
+- `Decor` and vine tests: a hero walking past starts the brush animation once and it restarts only when
+  finished; a standing hero or one outside the widened box starts nothing; a decor object has no
+  collision block; vine sway never changes `ThornVine.lethalAt`/`everLethalIn`; an unknown `kind` fails
+  the load (like the falling stone `skin`), and `tools/check_tiled_links.py` mirrors that check.
+- `SettingsTest`: default on for desktop; with the platform value `reduced` the default is off; a saved value always wins in both cases; round trip; `LocalizationLayoutTest` and the catalog validation
+  (new key present in all five bundles, label fits the 440 px Assist menu).
+- Sprite contracts: `SpriteSheetContractsTest`, `tools/sprite_layouts.py` and `validateSpriteArt` gain
+  the `decor-*` and `decor-vine` sheets; the exporter and its tests gain a table for them.
+- Regression guard, no new test needed: `BossCombatTest` and `RoomTest` call
+  `shakeAfterBossAttack`/`clearCameraEffects`/`cameraShakeOffset`, so keeping those method names
+  (delegating to the manager) leaves them untouched. The mastered-route tests (`Forest1TrapsTest`,
+  `Forest2TrapsTest`, `RhythmTrapsTest`, `TutorialLevelTest`) must pass unchanged, which is the proof
+  that no effect touches physics.
+
+#### 7. Order, cost and decisions
+
+| Step | Content | Rough cost | Lands in |
+| --- | --- | --- | --- |
+| 1 | `EnvironmentFx` shell, `ScreenShake` (the boss shake migrates, same numbers and method names), the `SCREEN_SHAKE` option with its web default and strings, lever shake | medium | #239, independent of #285 |
+| 2 | Jump dust: the dust `KimeriaParticleSystem`, the `Player.playerJump` hook and the dust sound | small (no art; the sound already exists) | #285 step 5 |
+| 3 | Ceiling grit: `KIND_GRIT` in `KimeriaParticleSystem`, the grit system, the lever hook, the rumble and grit sounds, the `kimeria-particles` skill update | small (no art; the sounds already exist) | #285 step 5 |
+| 4 | The one-kind `Decor` object and `decor-bush` only, with placement in all levels | medium (art plus map editing) | #239 |
+| 5 | Stone-linked `HangingVine` and `decor-vine`, placement in all levels | medium | #239 |
+
+**Who lands what.** #285 step 5 is the dust and grit particle work (plan steps 2 and 3), built on the
+`KimeriaParticleSystem` that #285 steps 2 to 4 already put on `main`; it adds `KIND_GRIT`. #239 owns the rest.
+#239 step 1 (`ScreenShake`, the option and the strings) does not use particles, so it is independent of #285
+and can land first or in parallel; steps 2 and 3 need only `EnvironmentFx` to exist (a minimal holder created in
+whichever of step 1 or #285 step 5 lands first).
+
+Each step is its own pull request; its sprites are reviewed by the author before the code that draws them.
+
+#### Decisions (2026-11-12)
+
+The author approved the plan with these answers:
+
+- **Order.** Step 1 first (`EnvironmentFx` shell, `ScreenShake`, the `SCREEN_SHAKE` option and strings, the
+  boss-shake migration, the lever shake); then the rest in the table's order.
+- **Placement.** Decor objects and vines go in **all levels** (forest-0, forest-1, forest-2 and later levels),
+  placed by hand in Tiled.
+- **Motion.** Reaction only: the hero walking past, a shake, a falling stone and similar events. There is **no idle
+  sway** in #239. A slow idle sway for forest trees is deferred to the parallax work,
+  [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), which splits the backgrounds into layers
+  (trees are background art).
+- **Decor kinds.** One kind for now, `decor-bush`. The other kinds (shrub, flowers, fern, mushroom) go to
+  [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) (section 4, "Later kinds").
+- **`SCREEN_SHAKE` default.** Desktop on. Web: follows `prefers-reduced-motion: reduce` (off), else on. A saved
+  choice always wins (sections 5 and 5a).
+- **Sound.** Yes for the dust, the lever rumble and the falling grit (section 5b). The files were generated and
+  accepted (PR 293); steps 2 and 3 only wire them in.
+- **Particles.** Dust and grit are particles on `KimeriaParticleSystem` (not sprite strips); the atlas is out
+  of scope ([#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284)).
+
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 
 The author explicitly requires sprites for world artwork, including prototypes.
