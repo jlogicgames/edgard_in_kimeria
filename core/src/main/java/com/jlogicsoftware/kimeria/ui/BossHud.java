@@ -46,7 +46,8 @@ public final class BossHud {
 
     public void render(Batch batch, Boss boss, boolean empowered) {
         if (boss == null) return;
-        Color before = new Color(batch.getColor());
+        Color tint = batch.getColor();
+        float beforeR = tint.r, beforeG = tint.g, beforeB = tint.b, beforeA = tint.a;
         float x = (logicalWidth - FRAME_WIDTH) / 2f;
         var feedback = boss.feedback();
         float energy = feedback.displayedEnergy(boss.energy());
@@ -77,13 +78,14 @@ public final class BossHud {
         if (empowered) batch.draw(elixir, x + FRAME_WIDTH - 48, LABEL_TOP - 2, ELIXIR_SIZE, ELIXIR_SIZE);
 
         Matrix4 previous = batch.getProjectionMatrix().cpy();
-        Color previousFont = new Color(font.getColor());
+        Color fontTint = font.getColor();
+        float fontR = fontTint.r, fontG = fontTint.g, fontB = fontTint.b, fontA = fontTint.a;
         batch.setProjectionMatrix(textProjection);
         font.setColor(Color.WHITE);
         font.draw(batch, Msg.BOSS.t(game.language()), x, logicalHeight - LABEL_TOP);
         if (empowered) font.draw(batch, "x10", x + FRAME_WIDTH - 28, logicalHeight - LABEL_TOP);
-        font.setColor(previousFont);
+        font.setColor(fontR, fontG, fontB, fontA);
         batch.setProjectionMatrix(previous);
-        batch.setColor(before);
+        batch.setColor(beforeR, beforeG, beforeB, beforeA);
     }
 }

@@ -40,8 +40,10 @@ public final class HeadlessLevelHarness {
     private final ArtifactInventory artifacts = new ArtifactInventory();
     private final Assets assets = new Assets() {
         @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
-        @Override public BitmapFont font(int size) { return null; }
+        @Override public BitmapFont font(int size) { return font; }
     };
+    /** Returned by {@code Assets.font}; null unless a test sets it before building the object that asks for a font. */
+    public BitmapFont font;
     private final GameContext game = (GameContext) Proxy.newProxyInstance(
         GameContext.class.getClassLoader(), new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
             case "logicalResolution" -> new Vector2(640, 360);
@@ -103,6 +105,9 @@ public final class HeadlessLevelHarness {
         Gdx.app = previousApp; Gdx.graphics = previousGraphics; Gdx.input = previousInput; Gdx.files = previousFiles;
         Gdx.gl = previousGl; Gdx.gl20 = previousGl20;
     }
+
+    public Assets assets() { return assets; }
+    public GameContext game() { return game; }
 
     public Level roomOf(String name, int index) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, Rectangle::new);
