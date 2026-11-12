@@ -309,7 +309,8 @@ Temporary assets and balance may still require refinement.
   the trap itself is [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), its static scenery
   look-alikes [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299), see
   [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md)). Trap warning times are tuned by playtest in
-  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (D7 note).
+  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (D7 note; the plan is
+  [PLAYTEST_WARNING_TIMES.md](PLAYTEST_WARNING_TIMES.md)).
 - [ ] [#143](https://github.com/jlogicgames/edgard_in_kimeria/issues/143) Complete final campaign text and review all five supported languages
   (EN/UK/PL/DE/BE), including native-speaker review of the new translations and final
   device/layout checks. The catalog/font infrastructure from

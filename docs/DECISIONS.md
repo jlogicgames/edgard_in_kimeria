@@ -205,7 +205,8 @@ only in the menu backdrop.
   rewording "warns before killing" and D26 for those traps; the assist (D11) multiplies the base by 1.5, so it
   needs an absolute minimum window; and because every trap takes its time from one shared place and tests pin the
   literals, a global change moves all existing traps and routes. Tuned by playtest, tracked by
-  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300); until then the current values stand.
+  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (playtest plan:
+  [PLAYTEST_WARNING_TIMES.md](PLAYTEST_WARNING_TIMES.md)); until then the current values stand.
 
 ## D8. Main menu has Continue and New Game
 
