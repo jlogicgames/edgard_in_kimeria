@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
@@ -337,7 +338,7 @@ class Forest2TrapsTest {
         assertTrue(root(l).igniteFromAfar());
         int frames = 0;
         while (root(l).phase() == ExplosiveTrap.Phase.WINDUP && frames < 200) { frame(l); frames++; }
-        assertEquals(0.8f, frames * STEP, 2 * STEP, "the shared 0.8 s warning");
+        assertEquals(TrapWarnings.DEFAULT_WARNING_SECONDS, frames * STEP, 2 * STEP, "the shared warning");
         assertFalse(dead(l), "the hero stood 100 px away, outside the 64 px blast square");
         for (int i = 0; i < 60; i++) frame(l);
         assertTrue(root(l).isSpent());
@@ -360,7 +361,7 @@ class Forest2TrapsTest {
             int frames = 0;
             while (!dead(k) && frames < 60 * 4) { held.clear(); frame(k); frames++; }
             assertTrue(dead(k), "standing under the shadow dies, longer=" + longer);
-            assertEquals((longer ? 1.2f : 0.8f) + FallingTrap.flightSeconds(320), frames * STEP, 0.15f);
+            assertEquals(ExpectedWarnings.standard(longer) + FallingTrap.flightSeconds(320), frames * STEP, 0.15f);
         }
     }
 
@@ -374,7 +375,7 @@ class Forest2TrapsTest {
             held.clear();
             int warn = 0;
             while (stone(l).state() == FallingTrap.State.WARNING && warn < 200) { frame(l); warn++; }
-            assertEquals(longer ? 73 : 49, warn, 2, "updates of warning");
+            assertEquals(ExpectedWarnings.standard(longer) / STEP, warn, 2, "updates of warning");
         }
     }
 }

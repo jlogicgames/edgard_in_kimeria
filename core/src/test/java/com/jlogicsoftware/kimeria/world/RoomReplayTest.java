@@ -270,10 +270,10 @@ class RoomReplayTest {
         level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
         level.player.update(0f); // Use the real gameplay overlap path to activate it.
         assertFalse(level.player.isGotHit());
-        bomb.update(0.5f);
+        bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 0.6f);
         level.player.update(0f); // A continued overlap must not restart the warning.
         assertFalse(level.player.isGotHit());
-        bomb.update(0.31f);
+        bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 0.41f);
         assertTrue(level.player.isGotHit());
     }
 
@@ -285,7 +285,7 @@ class RoomReplayTest {
         Vector2 contactPosition = new Vector2(level.player.position);
         level.player.update(0f);
         level.player.position.x += 80f;
-        bomb.update(0.81f);
+        bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 1.01f);
         assertTrue(bomb.isRemoved());
         assertFalse(level.player.isGotHit());
         level.player.position.set(contactPosition);

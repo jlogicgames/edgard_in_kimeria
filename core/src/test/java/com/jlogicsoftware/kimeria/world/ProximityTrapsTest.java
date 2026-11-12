@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
@@ -33,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Proximity traps (D44, #231): the thorn root and the bristling thorn tuft, driven headlessly through real Level
  * updates in test-resource maps (thorn-*.tmx), with ordinary keyboard controls for the hero. Times are the shared D7
- * warning (0.8 s, 1.2 s with the longer-warnings assist). Recipe: docs/ROOMS.md.
+ * warning (see TrapWarnings, longer with the assist). Recipe: docs/ROOMS.md.
  */
 class ProximityTrapsTest {
     private static final float STEP = 1f / 60f;
@@ -161,7 +162,6 @@ class ProximityTrapsTest {
         assertEquals(new Rectangle(293, 298, 6, 22), root(level).lethalBounds());
         arm(level, tuft(level), TUFT_X - 10);
         assertEquals(new Rectangle(482, 308, 12, 12), tuft(level).lethalBounds());
-        assertEquals(.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f);
         assertEquals(.12f, ThornTrap.RISE_SECONDS, 0f);
     }
 
@@ -204,11 +204,11 @@ class ProximityTrapsTest {
             setLonger(longer);
             Level level = fresh();
             int rootFrames = warningFrames(level, root(level), ROOT_X - 70);
-            assertEquals(longer ? 1.2f : .8f, root(level).warningTotal(), 1e-6f, "literal shared value, longer=" + longer);
-            assertEquals((longer ? 1.2f : .8f) * 60, rootFrames, 2, "root warning frames, longer=" + longer);
+            assertEquals(ExpectedWarnings.standard(longer), root(level).warningTotal(), 1e-6f, "shared value, longer=" + longer);
+            assertEquals(ExpectedWarnings.standard(longer) * 60, rootFrames, 2, "root warning frames, longer=" + longer);
             Level other = fresh();
             int tuftFrames = warningFrames(other, tuft(other), TUFT_X - 70);
-            assertEquals((longer ? 1.2f : .8f) * 60, tuftFrames, 2, "tuft warning frames, longer=" + longer);
+            assertEquals(ExpectedWarnings.standard(longer) * 60, tuftFrames, 2, "tuft warning frames, longer=" + longer);
             System.out.printf(java.util.Locale.ROOT, "longer=%s: root warns %.2f s, tuft warns %.2f s%n", longer, rootFrames * STEP, tuftFrames * STEP);
         }
         setLonger(false);
@@ -222,7 +222,7 @@ class ProximityTrapsTest {
         for (int i = 0; i < 20; i++) { frame(paused); frame(straight); }
         float before = paused.objects.stream().filter(ThornTrap.class::isInstance).map(ThornTrap.class::cast)
             .filter(t -> t.kind() == ThornTrap.Kind.ROOT).findFirst().orElseThrow().warningRemaining();
-        assertEquals(.8f - 20 * STEP, before, 1e-4f);
+        assertEquals(WARNING - 20 * STEP, before, 1e-4f);
         // Ten seconds of pause: Level.update is simply not called, so there is nothing to run here.
         assertEquals(before, root(paused).warningRemaining(), 0f, "nothing advanced while paused");
         assertEquals(ThornTrap.Phase.WARNING, root(paused).phase());
@@ -275,7 +275,7 @@ class ProximityTrapsTest {
         while (alive(level) && frames < 60 * 3) { frame(level); frames++; }
         assertFalse(alive(level), "the hero in the column is killed once it rises");
         float seconds = frames * STEP;
-        assertTrue(seconds >= .8f && seconds <= .8f + 2 * STEP + .001f, "dies when the warning ends, not before: " + seconds);
+        assertTrue(seconds >= WARNING && seconds <= WARNING + 2 * STEP + .001f, "dies when the warning ends, not before: " + seconds);
         assertEquals(ThornTrap.Phase.RISING, root(level).phase());
     }
 
@@ -336,10 +336,10 @@ class ProximityTrapsTest {
         assertEquals(1, t.frameIndex(), "bristle frame");
         assertFalse(t.isLethal(), "bristling does not hurt");
         place(level, 80f); // leave the zone mid-warning
-        settle(level, 30);
+        settle(level, (int) (WARNING / STEP * 0.4f));
         assertEquals(ThornTrap.Phase.WARNING, t.phase());
         assertEquals(1, t.frameIndex());
-        settle(level, 60);
+        settle(level, (int) Math.ceil(WARNING / STEP));
         assertEquals(ThornTrap.Phase.ARMED, t.phase(), "leaving does not re-calm it: deterministic");
         assertEquals(2, t.frameIndex(), "spiked frame");
         settle(level, 60 * 5);

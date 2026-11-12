@@ -23,6 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BombTest {
+    private static final float WARNING = TrapWarnings.DEFAULT_WARNING_SECONDS;
     @TempDir Path directory;
     private final TrapWarnings warnings = new TrapWarnings();
     private final List<WorldObject> effects = new ArrayList<>();
@@ -48,12 +49,12 @@ class BombTest {
         bomb.update(10f); // Idle bombs never detonate by themselves.
         assertTrue(blasts.isEmpty());
         bomb.collideWithPlayer();
-        bomb.update(0.5f);
+        bomb.update(WARNING * 0.6f);
         bomb.collideWithPlayer();
         assertTrue(effects.isEmpty());
         assertTrue(blasts.isEmpty());
         assertFalse(bomb.isRemoved());
-        bomb.update(0.31f);
+        bomb.update(WARNING * 0.41f);
         assertTrue(bomb.isRemoved());
         assertEquals(1, blasts.size());
         assertEquals(1, effects.size());
@@ -68,14 +69,14 @@ class BombTest {
         Bomb bomb = bomb();
         bomb.collideWithPlayer();
         toggleAssist(); // Changing the setting cannot shorten an already active warning.
-        bomb.update(0.81f);
+        bomb.update(WARNING * 1.01f);
         assertTrue(blasts.isEmpty());
-        bomb.update(0.4f); // No repeated contact: the bomb still detonates after 1.2 s.
+        bomb.update(WARNING * 0.5f); // No repeated contact: the bomb still detonates after the assisted warning.
         assertEquals(1, blasts.size());
         Bomb normal = bomb();
         normal.collideWithPlayer();
         toggleAssist(); // Nor lengthen an already active normal warning.
-        normal.update(0.81f);
+        normal.update(WARNING * 1.01f);
         assertEquals(2, blasts.size());
     }
 
@@ -83,7 +84,7 @@ class BombTest {
         Bomb bomb = bomb();
         assertEquals(new Rectangle(103, 102, 10, 13), bomb.hitboxBounds());
         bomb.collideWithPlayer();
-        bomb.update(0.81f);
+        bomb.update(WARNING * 1.01f);
         Rectangle blast = blasts.get(0);
         assertEquals(new Rectangle(76, 76, 64, 64), blast);
         assertTrue(blast.overlaps(new Rectangle(77, 77, 1, 1)), "Square corners are lethal too");

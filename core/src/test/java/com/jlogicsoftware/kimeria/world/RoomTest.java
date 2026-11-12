@@ -159,9 +159,9 @@ class RoomTest {
         Rectangle playerBounds = level.player.hitboxBounds();
         level.player.position.add(bomb.centerX() - playerBounds.x, bomb.centerY() - playerBounds.y);
         bomb.collideWithPlayer();
-        bomb.update(0.5f);
+        bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 0.6f);
         assertFalse(level.player.isGotHit());
-        bomb.update(0.31f);
+        bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 0.41f);
         assertTrue(level.player.isGotHit());
         level.resetCurrentRoom(player()); // Effect is still queued, not yet in objects.
         level.update(0f);
@@ -170,9 +170,9 @@ class RoomTest {
         restored.update(10f);
         assertFalse(restored.isRemoved());
         restored.collideWithPlayer();
-        restored.update(0.5f);
+        restored.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 0.6f);
         assertFalse(restored.isRemoved());
-        restored.update(0.31f);
+        restored.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 0.41f);
         assertTrue(restored.isRemoved());
         assertFalse(level.player.isGotHit(), "The respawned player is outside the blast");
         level.update(0f);
@@ -556,7 +556,7 @@ class RoomTest {
         surviving.position.x += 8;
         float survivorX = surviving.getX();
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
-        bomb.collideWithPlayer(); bomb.update(.81f);
+        bomb.collideWithPlayer(); bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 1.01f);
         collect(level, ItemType.COIN); // Deliberately miss Bat.
         level.enterNextRoom(player());
         collect(level, ItemType.COIN); // Deliberately miss Mushroom.
@@ -625,15 +625,15 @@ class RoomTest {
     @Test void warnedTrapResumesItsSavedCountdownOnReturnAndRestoresItAfterRoomDeath() {
         Level level = forest();
         Bomb trap = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
-        trap.collideWithPlayer(); trap.update(.3f);
+        trap.collideWithPlayer(); trap.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .4f);
         level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
         Bomb revisited = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         assertEquals(trap.snapshot(), revisited.snapshot());
-        revisited.update(.2f);
+        revisited.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .2f);
         level.resetCurrentRoom(player());
         Bomb retry = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         assertEquals(trap.snapshot(), retry.snapshot());
-        retry.update(.51f);
+        retry.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .61f);
         assertTrue(retry.isRemoved());
     }
 

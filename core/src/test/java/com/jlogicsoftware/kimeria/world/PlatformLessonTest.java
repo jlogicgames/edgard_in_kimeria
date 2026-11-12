@@ -548,7 +548,7 @@ class PlatformLessonTest {
                 if (bodyLeft(level) < STONE_ZONE_X - 50) break;
             }
             held.clear();
-            settle(level, 80);
+            for (int i = 0; i < 60 * 6 && !stone(level).isSpent(); i++) frame(level); // warning, then the flight
             assertTrue(stone(level).isSpent());
             solve(level);
             assertTrue(level.atRoomExit(), "lever=" + lever);

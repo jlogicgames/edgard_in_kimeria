@@ -22,6 +22,19 @@ class TrapWarningsTest {
         return new HeadlessPreferences(new FileHandle(directory.resolve("settings.xml").toFile()));
     }
 
+    /**
+     * The one place the literal warning values are pinned. They are placeholders to be tuned after playtests, so
+     * changing them is a deliberate decision recorded in docs/DECISIONS.md (D7, #300): edit this test with the constant.
+     * Every other test derives its expectation from {@link TrapWarnings} or testsupport.ExpectedWarnings.
+     */
+    @Test
+    void theSharedWarningValuesArePinnedHere() {
+        assertEquals(0.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f);
+        assertEquals(1f, TrapWarnings.FALLING_PLATFORM_SECONDS, 0f);
+        assertEquals(1.5f, TrapWarnings.longestDuration(1f), 0f, "assist multiplier");
+        assertEquals(1.2f, TrapWarnings.longestDuration(TrapWarnings.DEFAULT_WARNING_SECONDS), 1e-6f);
+    }
+
     @Test
     void absentSettingKeepsTheStandardWarning() {
         TrapWarnings warnings = new TrapWarnings();

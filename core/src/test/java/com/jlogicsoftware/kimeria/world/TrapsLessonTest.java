@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -381,16 +382,13 @@ class TrapsLessonTest {
     }
 
     @Test void warningsAreExactlyD7sSharedValuesNormallyAndWithTheLongerAssist() throws Exception {
-        assertEquals(1f, TrapWarnings.FALLING_PLATFORM_SECONDS, 0f, "D7: falling platform 1 s");
-        assertEquals(.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f, "D7: stump 0.8 s");
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);
-            float scale = longer ? 1.5f : 1f;
             int platform = platformFramesToFall(freshRoom());
             int stump = stumpFramesToBlast(freshRoom());
             System.out.printf(java.util.Locale.ROOT, "longer=%s: platform moves after %.2f s, stump blasts after %.2f s%n", longer, platform * STEP, stump * STEP);
-            assertEquals(1f * scale * 60, platform, 3, "platform warning, longer=" + longer);
-            assertEquals(.8f * scale * 60, stump, 3, "stump fuse, longer=" + longer);
+            assertEquals(ExpectedWarnings.platform(longer) * 60, platform, 3, "platform warning, longer=" + longer);
+            assertEquals(ExpectedWarnings.standard(longer) * 60, stump, 3, "stump fuse, longer=" + longer);
         }
         setLonger(false);
     }
