@@ -21,11 +21,15 @@ public class WebLauncher {
         // iPhone (ratio 3) draws a 390 px wide canvas that the browser then stretches 3x, smearing pixel art and text.
         config.usePhysicalPixels = true;
         prepareMobilePage();
-        new WebApplication(new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen()), config);
+        new WebApplication(new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen(), prefersReducedMotion()), config);
     }
 
     @JSBody(script = "return navigator.maxTouchPoints > 0 || 'ontouchstart' in window;")
     private static native boolean hasTouchScreen();
+
+    /** The visitor asked their system or browser for less motion; only the default of the Screen shake option follows it. */
+    @JSBody(script = "return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);")
+    private static native boolean prefersReducedMotion();
 
     /** The browser's Fullscreen API on the whole page; absent on iPhone Safari, where {@link #available()} is false. */
     private static final class PageFullscreen implements DisplayControl {

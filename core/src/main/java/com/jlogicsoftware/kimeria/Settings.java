@@ -34,6 +34,13 @@ public final class Settings {
     public static final String KEY_LONGER_TRAP_WARNINGS = "longer-trap-warnings";
     public static final boolean DEFAULT_LONGER_TRAP_WARNINGS = false;
 
+    /**
+     * Screen shake (Assist, #239). Desktop default: on. The web build passes the browser's reduced-motion preference
+     * as a platform default (see {@link #get(Option, Object)}), so a visitor who asked for less motion starts with it off.
+     */
+    public static final String KEY_SCREEN_SHAKE = "screen-shake";
+    public static final boolean DEFAULT_SCREEN_SHAKE = true;
+
     /** Size of the window when the player opts out of fullscreen. */
     public static final int WINDOWED_WIDTH = 1280, WINDOWED_HEIGHT = 720;
 
@@ -47,6 +54,7 @@ public final class Settings {
     public static final Option<Boolean> LEFT_HANDED = bool(KEY_LEFT_HANDED, DEFAULT_LEFT_HANDED);
     public static final Option<Boolean> LONGER_TRAP_WARNINGS =
         bool(KEY_LONGER_TRAP_WARNINGS, DEFAULT_LONGER_TRAP_WARNINGS);
+    public static final Option<Boolean> SCREEN_SHAKE = bool(KEY_SCREEN_SHAKE, DEFAULT_SCREEN_SHAKE);
 
     /** A typed key and its default/decoder; new options need no load/save wiring. */
     public static final class Option<T> {
@@ -99,6 +107,20 @@ public final class Settings {
             return option.decode.apply(value);
         } catch (RuntimeException invalidValue) {
             return option.fallback;
+        }
+    }
+
+    /**
+     * Like {@link #get(Option)}, but while the key is absent (or unreadable) the platform's own default applies
+     * instead of the option's. A saved value always wins, so a player's choice survives whatever the platform says.
+     */
+    public <T> T get(Option<T> option, T platformDefault) {
+        Object value = values.get(option.key);
+        if (value == null) return platformDefault;
+        try {
+            return option.decode.apply(value);
+        } catch (RuntimeException invalidValue) {
+            return platformDefault;
         }
     }
 

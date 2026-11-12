@@ -81,6 +81,9 @@ New Polish, German and Belarusian wording should receive native-speaker review.
 The #228 silver-thread strings (`HEALER_TALE_THREAD` and the added sentence in `INTRO_STORY`) are
 machine-quality drafts in all four non-English catalogs and belong to that review (UK and BE
 included). Metrics: the new line wraps to 3 lines / 37 px in all five languages (limit 72 px).
+The #239 `SCREEN_SHAKE` label (Options -> Assist, "Screen shake") is likewise a machine-quality draft in
+uk, be, de and pl and belongs to that review; "<label>: Off" fits the 440 px Assist menu in all five
+languages (`LocalizationLayoutTest`).
 The checks above do not claim literary approval or testing on physical touch
 devices/gamepads, Safari/Firefox or Windows/Linux graphics backends. Existing
 release/device checks remain in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).

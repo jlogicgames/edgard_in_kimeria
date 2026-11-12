@@ -47,6 +47,11 @@ public class Wall extends CollisionBlock implements Actionable {
         return verticalMovement ? targetRaised : !isActive();
     }
 
+    /** Seconds the wall takes to travel its full height ({@link #DEFAULT_MOVE_DURATION_SECONDS} unless authored). */
+    public float moveDurationSeconds() {
+        return moveDurationSeconds;
+    }
+
     public boolean movesVertically() {
         return verticalMovement;
     }

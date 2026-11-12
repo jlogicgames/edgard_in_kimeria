@@ -24,6 +24,9 @@ public interface GameContext {
     /** Shared warning timing for every timed trap. */
     TrapWarnings trapWarnings();
 
+    /** True when the Screen shake option is off: every camera shake is then zero. Inverted so a default of false keeps the shake. */
+    boolean screenShakeDisabled();
+
     /** True while a mechanism can be selected by Up + Action. */
     boolean interactAvailable();
 

@@ -63,6 +63,8 @@ class AllocationBudgetTest {
 
     /** Measured 0.0 B/frame in 3 runs (before step 4: 24.0, the returned {@code Vector2}; the 32 B {@code Rectangle} of {@code KimeriaGame.render} is not in this scenario, which already reuses its view). */
     static final double CAMERA_SHAKE_CEILING = 8;
+    /** Measured 4.5 B/frame in 3 runs: the shake, its offset and {@code fx.update} are 0.0 (like CAMERA_SHAKE_CEILING); the 4.5 is the {@code HashSet} that {@code Level.activateTrigger} makes once per lever pull (about 270 B every 60 frames), an event, not per-frame code. */
+    static final double LEVER_SHAKE_CEILING = 16;
     /** Measured 96.0 B/frame in 3 runs (before step 4: 160.0, two {@code Color} copies). The 96 B left is {@code batch.getProjectionMatrix().cpy()} in {@code BossHud.render}, outside step 4 (plan, section 12). */
     static final double BOSS_HUD_CEILING = 104;
 
@@ -148,6 +150,23 @@ class AllocationBudgetTest {
             sum[0] += shake.x + shake.y;
         });
         assertWithinBudget("camera shake query", CAMERA_SHAKE_CEILING, bytes);
+    }
+
+    /** A lever lowering the forest-0 wall through {@code Level.activateTrigger} every 60 frames (the shake lasts 1 s, so it is running nearly all the time), with {@code fx.update} and the offset read each frame. The room's own update and render are not in this scenario (they are the harness cost measured above). */
+    @Test void leverShakeThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 2);
+        Rectangle view = new Rectangle();
+        Rectangle room = level.currentRoomBounds();
+        float[] sum = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % 60 == 0) level.activateTrigger(level.triggers.get(0));
+            level.fx().update(STEP);
+            view.set(room.x, room.y, 640, 360);
+            Vector2 shake = level.cameraShakeOffset(view);
+            sum[0] += shake.x + shake.y;
+        });
+        assertTrue(sum[0] != 0, "the shake must actually run in this scenario");
+        assertWithinBudget("lever shake", LEVER_SHAKE_CEILING, bytes);
     }
 
     /** {@code BossHud.render} with an empowered boss; the font's {@code draw} is a no-op so only the HUD's own allocation is counted (a real {@code font.draw} allocates a {@code GlyphLayout}, out of scope here). */
