@@ -247,6 +247,12 @@ depends on it.
   width ±24 px at the room's top edge, falling 70 to 110 px/s for up to 64 px (end Y = start Y + speed * life),
   life 0.5 to 0.9 s, size 1 to 2 px, colours `5b5870` and `9a97ad`. The shared 0.7 peak alpha also applies to grit; the
   plan accepts it.
+- **As built (#285 step 5).** The grit burst is emitted evenly over 0.6 s by `EnvironmentFx.update` (first particle at
+  once; a new lever pull replaces a running burst); its X spread is the wall's width plus 24 px on each side. The doc's
+  "falling up to 64 px" and "end Y = start Y + speed * life" disagree at the top of the ranges (110 px/s * 0.9 s = 99 px),
+  so the fall is `min(speed * life, 64)`, which keeps the 64 px bound. Measured peaks: 24 live grit (capacity 32), 12 live
+  dust for a jump every quarter second (capacity 24). Dust and grit ignore the Screen shake option, as section 5 says; the
+  grit burst and both sounds start with the lever shake in `Level.perform`, so a pause cannot replay them.
 - **Grit step checklist.** Add `KIND_GRIT` (constant, `drawSize`, `alpha`, normal-blend pass); add its
   cases to `KimeriaParticleSystemTest` (values at t = 0, 0.5, 1) and keep the existing assertions and
   `ParticleGoldenTest` untouched; add the grit emitter, a capacity test for it and the `AllocationBudgetTest`
@@ -418,8 +424,8 @@ depends on it.
 | Step | Content | Rough cost | Lands in |
 | --- | --- | --- | --- |
 | 1 | `EnvironmentFx` shell, `ScreenShake` (the boss shake migrates, same numbers and method names), the `SCREEN_SHAKE` option with its web default and strings, lever shake | medium | #239, independent of #285 |
-| 2 | Jump dust: the dust `KimeriaParticleSystem`, the `Player.playerJump` hook and the dust sound | small (no art; the sound already exists) | #285 step 5 |
-| 3 | Ceiling grit: `KIND_GRIT` in `KimeriaParticleSystem`, the grit system, the lever hook, the rumble and grit sounds, the `kimeria-particles` skill update | small (no art; the sounds already exist) | #285 step 5 |
+| 2 | Jump dust: the dust `KimeriaParticleSystem`, the `Player.playerJump` hook and the dust sound | small (no art; the sound already exists). **Done (#285 step 5).** | #285 step 5 |
+| 3 | Ceiling grit: `KIND_GRIT` in `KimeriaParticleSystem`, the grit system, the lever hook, the rumble and grit sounds, the `kimeria-particles` skill update | small (no art; the sounds already exist). **Done (#285 step 5).** | #285 step 5 |
 | 4 | The one-kind `Decor` object and `decor-bush` only, with placement in all levels | medium (art plus map editing) | #239 |
 | 5 | Stone-linked `HangingVine` and `decor-vine`, placement in all levels | medium | #239 |
 

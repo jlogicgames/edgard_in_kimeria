@@ -23,17 +23,18 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
 
 | Need | Class | Notes |
 | --- | --- | --- |
-| A point flying in a straight line from start to end (flame, ember, spark, smoke, dust) | `KimeriaParticleSystem` | `spawn(kind, startX, startY, endX, endY, life, size, r, g, b)`; position is `lerp(from, to, t)`, `t = 1 - life/maxLife` |
+| A point flying in a straight line from start to end (flame, ember, spark, smoke, dust, falling grit) | `KimeriaParticleSystem` | `spawn(kind, startX, startY, endX, endY, life, size, r, g, b)`; position is `lerp(from, to, t)`, `t = 1 - life/maxLife` |
 | Ballistic drops with gravity that land on a floor and splash | `KimeriaBloodSystem` | `spray(originX, originY, direction, floorY, empowered)`; its own arrays, colour and gravity, so it does not fit the lerp model |
 
-`KimeriaParticleSystem` kinds (both multiply alpha by a peak of 0.7):
+`KimeriaParticleSystem` kinds (all multiply alpha by a peak of 0.7):
 
 | Kind | Blend | Size at `t` | Alpha at `t` |
 | --- | --- | --- | --- |
 | `KIND_GLOW` | additive | `size * (1 - 0.4 t)` (shrinks) | `0.7 * (1 - t)^2` |
 | `KIND_SMOKE` | normal | `size * (1 + 1.0 t)` (grows) | `0.7 * (1 - t)` |
+| `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` |
 
-`render` draws the normal-blend pass (smoke) first, then the additive pass, then restores white and normal blending.
+`render` draws the normal-blend pass (smoke and grit) first, then the additive pass, then restores white and normal blending.
 
 ## Recipe for a new emitter
 
@@ -55,8 +56,9 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
 
 ## Adding a new kind
 
-A third kind `KIND_GRIT` is planned for the ceiling grit of #239 and does not exist yet; update this skill when it
-lands. To add any kind to `KimeriaParticleSystem`:
+`KIND_GRIT` (the ceiling grit of #239, owned by `effects.EnvironmentFx` with the dust) is the newest kind and the
+model for the next: it added a constant, a branch in `drawSize`, the blend choice in `draw`, cases in
+`KimeriaParticleSystemTest` and an `AllocationBudgetTest` scenario. To add any kind to `KimeriaParticleSystem`:
 
 - Add a `KIND_*` constant, then extend `drawSize(i)`, `alpha(i)` and the blend choice in `draw` (a kind that needs
   a third blend state needs a third pass; keep one blend switch per pass and none for an empty pass).

@@ -43,6 +43,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class WallLessonTest {
     private static final float STEP = 1f / 60f;
 
+    private final java.util.List<String> sounds = new java.util.ArrayList<>();
+    private boolean soundsOn = true;
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TouchControls touch;
     private final GamepadInput pad = new GamepadInput();
@@ -60,6 +62,8 @@ class WallLessonTest {
             case "touch" -> touch;
             case "language" -> Language.ENGLISH;
             case "isGameStarted" -> true;
+            case "playSounds" -> soundsOn;
+            case "playSound" -> sounds.add((String) args[0]);
             case "artifacts" -> artifacts;
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
@@ -529,5 +533,70 @@ class WallLessonTest {
         wall(level).setActive(false);
         operate(level);
         assertFalse(level.fx().shake().running());
+    }
+
+    @Test void aLeverThatLowersTheWallStartsOneGritBurstAndOneRumbleAndOneGritSound() {
+        Level level = freshRoom();
+        walkToLever(level);
+        sounds.clear();
+        assertEquals(0, level.fx().grit().count());
+        operate(level);
+        assertTrue(level.fx().grit().count() > 0, "the burst started");
+        assertEquals(1, sounds.stream().filter("wall_rumble"::equals).count());
+        assertEquals(1, sounds.stream().filter("grit_fall"::equals).count());
+        float top = level.currentRoomBounds().y;
+        for (int i = 0; i < level.fx().grit().count(); i++) assertTrue(level.fx().grit().y(i) >= top);
+        // The burst is a single one of 24: after it is over nothing is left and nothing more is requested.
+        settle(level, 120);
+        assertEquals(0, level.fx().grit().count());
+        assertEquals(1, sounds.stream().filter("wall_rumble"::equals).count());
+    }
+
+    @Test void withSoundOffTheLeverRequestsNoSoundButStillDropsGrit() {
+        soundsOn = false;
+        Level level = freshRoom();
+        walkToLever(level);
+        operate(level);
+        assertTrue(sounds.isEmpty(), sounds.toString());
+        assertTrue(level.fx().grit().count() > 0);
+    }
+
+    @Test void aWallThatCannotMoveStartsNoGritAndNoSound() {
+        Level level = freshRoom();
+        walkToLever(level);
+        wall(level).setActive(false);
+        sounds.clear();
+        operate(level);
+        assertEquals(0, level.fx().grit().count());
+        assertTrue(sounds.stream().noneMatch(n -> n.equals("wall_rumble") || n.equals("grit_fall")), sounds.toString());
+    }
+
+    @Test void aGroundJumpEmitsOnePuffAndRequestsOneDustSound() {
+        Level level = freshRoom();
+        settle(level, 30);
+        assertTrue(level.player.isOnGround());
+        sounds.clear();
+        Rectangle body = level.player.hitboxBounds();
+        float feetY = body.y + body.height, centreX = body.x + body.width / 2f;
+        held.clear(); held.add(Input.Keys.J); pressed.add(Input.Keys.J);
+        frame(level);
+        held.clear();
+        assertEquals(1, sounds.stream().filter("dust_puff"::equals).count());
+        assertEquals(1, sounds.stream().filter("jump"::equals).count());
+        assertEquals(com.jlogicsoftware.kimeria.effects.EnvironmentFx.DUST_PER_PUFF, level.fx().dust().count());
+        for (int i = 0; i < level.fx().dust().count(); i++) {
+            assertEquals(feetY, level.fx().dust().y(i), 3f, "puffs start at the feet line, not the sprite top");
+            assertTrue(Math.abs(level.fx().dust().x(i) - centreX) <= 9f);
+        }
+    }
+
+    @Test void withSoundOffAJumpRequestsNoDustSound() {
+        soundsOn = false;
+        Level level = freshRoom();
+        settle(level, 30);
+        held.clear(); held.add(Input.Keys.J); pressed.add(Input.Keys.J);
+        frame(level);
+        assertTrue(sounds.isEmpty(), sounds.toString());
+        assertEquals(com.jlogicsoftware.kimeria.effects.EnvironmentFx.DUST_PER_PUFF, level.fx().dust().count());
     }
 }

@@ -13,7 +13,8 @@ import com.badlogic.gdx.math.RandomXS128;
  *
  * <p>Every particle flies in a straight line from its start to its end over its life ({@code lerp}), with a size and
  * alpha curve picked by its kind: {@link #KIND_GLOW} fades with the square of its remaining life, shrinks and is drawn
- * additively; {@link #KIND_SMOKE} fades linearly, grows and is drawn with normal blending. World Y grows downward, so a
+ * additively; {@link #KIND_SMOKE} fades linearly, grows and is drawn with normal blending; {@link #KIND_GRIT} fades
+ * linearly, keeps its size and is drawn with normal blending. World Y grows downward, so a
  * particle that rises has an end Y smaller than its start Y.
  *
  * <p>Live particles are kept dense and in spawn order (index 0 is the oldest). Each system owns one
@@ -24,6 +25,8 @@ public final class KimeriaParticleSystem {
     public static final byte KIND_GLOW = 0;
     /** Normal blending, growing, alpha 1 - t: smoke. */
     public static final byte KIND_SMOKE = 1;
+    /** Normal blending, constant size, alpha 1 - t: falling grit drawn as hard squares (#239). */
+    public static final byte KIND_GRIT = 2;
 
     private static final float PEAK_ALPHA = 0.7f;
     private static final float GLOW_SHRINK = 0.4f;
@@ -110,15 +113,16 @@ public final class KimeriaParticleSystem {
     public float maxLife(int i) { return maxLife[i]; }
     public float drawSize(int i) {
         float t = FULL - life[i] / maxLife[i];
+        if (kind[i] == KIND_GRIT) return size[i];
         return size[i] * (kind[i] == KIND_SMOKE ? (FULL + SMOKE_GROWTH * t) : (FULL - GLOW_SHRINK * t));
     }
     public float alpha(int i) {
         float t = FULL - life[i] / maxLife[i];
-        return (kind[i] == KIND_SMOKE ? (FULL - t) : (FULL - t) * (FULL - t)) * PEAK_ALPHA;
+        return (kind[i] == KIND_GLOW ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
 
     /**
-     * Draws the normal-blended particles (smoke, behind), then the additive ones, and restores white and normal blending.
+     * Draws the normal-blended particles (smoke and grit, behind), then the additive ones, and restores white and normal blending.
      * One blend switch per pass, and none for a pass with nothing to draw.
      */
     public void render(Batch batch, TextureRegion region) {
@@ -132,7 +136,7 @@ public final class KimeriaParticleSystem {
     private void draw(Batch batch, TextureRegion region, boolean normalPass) {
         boolean switched = false;
         for (int i = 0; i < count; i++) {
-            if ((kind[i] == KIND_SMOKE) != normalPass) continue;
+            if ((kind[i] != KIND_GLOW) != normalPass) continue;
             if (!switched) {
                 batch.setBlendFunction(GL20.GL_SRC_ALPHA, normalPass ? GL20.GL_ONE_MINUS_SRC_ALPHA : GL20.GL_ONE);
                 switched = true;

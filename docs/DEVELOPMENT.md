@@ -341,8 +341,8 @@ prints duration, peak, RMS and spectral figures and can render waveform previews
   breathy, throaty effort "ha!" grunt. The author chose it on audition (earlier "hup" and nasal "hm" versions were
   rejected) and wants the crude, 90s-speech-synthesizer character kept. The sound approach, recipes and the
   procedure for new sounds are recorded in [SOUND_DIRECTION.md](SOUND_DIRECTION.md).
-- `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are the sounds of the environment effects in #239. They
-  are shipped but not played by any code yet; #239 steps 2 and 3 wire them in (and should drop this note).
+- `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are the sounds of the environment effects in #239: `Player.playerJump` plays the first on a ground jump, and
+  `Level.activateTrigger` plays the other two when a lever moves a wall (all behind `game.playSounds()`).
 - The other legacy effects (`hit`, `collect`, `bounce`, `disappear`, `boss_*`, `button_click`) and
   `main_menu.mp3` still come from the Flame/Rust versions; their provenance is part of #189.
 
@@ -394,7 +394,7 @@ self-written particle code (`Torch`, `BloodBurst`, `SoftDot`, `Shaders.whiteQuad
 allocation-free system before the dust and ceiling grit of [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239)
 are built on it. Every number below was measured on 2026-11-10 unless it says "read from the code".
 
-On 2026-11-12 the classes were renamed `ParticleSystem` to `KimeriaParticleSystem` and `BloodSystem` to `KimeriaBloodSystem` so they cannot be confused with libGDX's 3D `ParticleSystem` (no behaviour change; golden numbers and ceilings unchanged), and the project skill `.agents/skills/kimeria-particles/SKILL.md` documents them. Its note on a third kind, `KIND_GRIT`, is tracked by [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239).
+On 2026-11-12 the classes were renamed `ParticleSystem` to `KimeriaParticleSystem` and `BloodSystem` to `KimeriaBloodSystem` so they cannot be confused with libGDX's 3D `ParticleSystem` (no behaviour change; golden numbers and ceilings unchanged), and the project skill `.agents/skills/kimeria-particles/SKILL.md` documents them. The third kind, `KIND_GRIT` (constant size, linear alpha, normal blend), landed with #285 step 5 together with the dust and grit systems of #239 in `EnvironmentFx`.
 
 ### 1. Why: what the current code allocates (measured)
 
@@ -687,7 +687,7 @@ the `docs/DEVELOPMENT.md` gaps rule applies to every line of this document that 
 > - [x] Step 2: `KimeriaParticleSystem` and `Torch` on it; golden test unchanged; `buildWeb` and a browser load (menu and level 0 only; a lit torch was not seen in the browser); torch ceiling at a few tens of bytes
 > - [x] Step 3: blood on the shared system with the floor splash (`KimeriaBloodSystem`, `Level.blood`); `BloodBurstTest` rewritten as `KimeriaBloodSystemTest`; `Boss`, `docs/BOSS.md`; blood ceilings 8 B/frame (measured 0.0)
 > - [x] Step 4: reuse the per-frame `Rectangle`/`Vector2` (`KimeriaGame` line 670, `Level.cameraShakeOffset`) and the `Color` copies in `Boss`/`BossHud`
-> - [ ] Step 5: #239 dust and grit as `KimeriaParticleSystem` instances
+> - [x] Step 5: #239 dust and grit as `KimeriaParticleSystem` instances (`EnvironmentFx.dustPuff`/`ceilingGrit`, `KIND_GRIT`; measured 2026-11-12: jump dust 0.0 B/frame, lever grit 4.6 B/frame of which the `HashSet` in `Level.activateTrigger` is the lever pull itself)
 > - [ ] Update `docs/DEVELOPMENT.md`: replace the "Particle system plan" section by a description of what exists (skills, rule, guard,
 >   `KimeriaParticleSystem`), fix the "Deviations" paragraph that calls the torch system pooled, remove any note this issue made obsolete
 > - [ ] Update `docs/BOSS.md` ("Blood uses code particles") and the #239 plan

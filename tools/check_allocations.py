@@ -27,6 +27,9 @@ HOT_METHODS = {
     ('effects/Torch.java', 'spawnEmbers'): 'called from update every 0.15 to 0.35 s',
     ('effects/Torch.java', 'spawnSparkles'): 'called from update every 0.08 to 0.26 s',
     ('effects/Torch.java', 'spawnSmoke'): 'called from update every 0.3 to 0.8 s',
+    ('effects/EnvironmentFx.java', 'emitGrit'): 'called from update while a grit burst is emitting',
+    ('effects/EnvironmentFx.java', 'dustPuff'): 'called from Player.playerJump, which runs inside the player update',
+    ('effects/EnvironmentFx.java', 'ceilingGrit'): 'called from Level.activateTrigger inside the player update',
 }
 # (file, method, kind) -> what the excluded code carries and why fixing it would lose that.
 # Existing hot-path allocations are NOT listed: the check only looks at changed lines, so touching one means fixing it.

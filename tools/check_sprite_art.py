@@ -35,6 +35,8 @@ ALLOWED = {
     ('effects/Shaders.java', 'whiteQuad', 'raster'): 'one white GPU shader/UI texel',
     ('effects/SoftDot.java', 'build', 'raster'): 'shared radial particle kernel, no object silhouette',
     ('effects/Torch.java', 'render', 'particle'): 'live simulated flame/smoke particles around a separate torch sprite',
+    ('effects/EnvironmentFx.java', 'render', 'particle'): 'simulated jump dust puff (#239, approved particle category): lives 0.4 s, depicts no object',
+    ('effects/EnvironmentFx.java', 'render', 'quad'): 'simulated falling ceiling grit (#239, approved particle category): 1 to 2 px specks, depict no object',
     ('effects/Firefly.java', 'render', 'particle'): 'time-varying ambient firefly light',
     ('effects/BombExplosionEffect.java', 'render', 'quad'): 'time-varying explosion shader',
     ('effects/ShockwaveEffect.java', 'render', 'quad'): 'time-varying shockwave shader',
