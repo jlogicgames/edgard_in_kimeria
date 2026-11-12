@@ -2,11 +2,9 @@ package com.jlogicsoftware.kimeria.effects;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.RandomXS128;
-import com.badlogic.gdx.math.Vector2;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,37 +27,30 @@ class ParticleGoldenTest {
     static final int TORCH_INTENSITY = 200;
     static final float BLOOD_X = 100, BLOOD_Y = 90, BLOOD_FLOOR = 110;
 
-    /** Each snapshot is {liveCount, x0, y0, size0, alpha0, x1, ...} in spawn order. */
-    static float[][] torchSnapshots() throws Exception {
-        var previous = MathUtils.random;
-        var random = new RandomXS128(SEED);
-        MathUtils.random = random;
-        try {
-            Torch torch = new Torch(TORCH_X, TORCH_Y, TORCH_SIZE, TORCH_SIZE, TORCH_INTENSITY, "");
-            Field field = Torch.class.getDeclaredField("particles"); field.setAccessible(true);
-            float[][] result = new float[TORCH_FRAMES.length][];
-            int next = 0;
-            for (int frame = 1; frame <= TORCH_FRAMES[TORCH_FRAMES.length - 1]; frame++) {
-                torch.update(STEP);
-                if (frame == TORCH_FRAMES[next]) result[next++] = torchSnapshot((List<?>) field.get(torch));
-            }
-            return result;
-        } finally { MathUtils.random = previous; }
+    /**
+     * Each snapshot is {liveCount, x0, y0, size0, alpha0, x1, ...} in spawn order. The torch's generator is seeded with
+     * {@link #SEED} directly: {@code new RandomXS128(SEED)} is the sequence {@code MathUtils.random} gave the old code.
+     */
+    static float[][] torchSnapshots() {
+        Torch torch = new Torch(null, TORCH_X, TORCH_Y, TORCH_SIZE, TORCH_SIZE, TORCH_INTENSITY, "", SEED);
+        float[][] result = new float[TORCH_FRAMES.length][];
+        int next = 0;
+        for (int frame = 1; frame <= TORCH_FRAMES[TORCH_FRAMES.length - 1]; frame++) {
+            torch.update(STEP);
+            if (frame == TORCH_FRAMES[next]) result[next++] = torchSnapshot(torch.particles());
+        }
+        return result;
     }
 
-    private static float[] torchSnapshot(List<?> particles) throws Exception {
-        float[] values = new float[1 + particles.size() * 4];
-        values[0] = particles.size();
+    private static float[] torchSnapshot(ParticleSystem particles) {
+        float[] values = new float[1 + particles.count() * 4];
+        values[0] = particles.count();
         int at = 1;
-        for (Object p : particles) {
-            Vector2 pos = (Vector2) field(p, "pos");
-            float life = (float) field(p, "life"), maxLife = (float) field(p, "maxLife"), base = (float) field(p, "size");
-            boolean smoke = String.valueOf(field(p, "kind")).equals("SMOKE");
-            float t = 1f - life / maxLife;
-            values[at++] = pos.x;
-            values[at++] = pos.y;
-            values[at++] = base * (smoke ? (1f + t) : (1f - 0.4f * t));
-            values[at++] = (smoke ? (1f - t) : (1f - t) * (1f - t)) * 0.7f;
+        for (int i = 0; i < particles.count(); i++) {
+            values[at++] = particles.x(i);
+            values[at++] = particles.y(i);
+            values[at++] = particles.drawSize(i);
+            values[at++] = particles.alpha(i);
         }
         return values;
     }

@@ -201,7 +201,9 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
   only rendered while a ripple or the pause glitch is live), and collecting a second coin
   mid-ripple takes over from the first. The wave phase travels with time, as in Rust; Flame
   freezes it.
-- **`Torch`'s particle system is a pooled-particle reimplementation**, not a port of
+- **`Torch`'s particle system is an allocation-free reimplementation** on the shared
+  `effects.ParticleSystem` (fixed struct-of-arrays, 96 slots per torch, a full pool drops the
+  oldest particle, one seeded `RandomXS128` per system; 0.1 B/frame measured), not a port of
   dozens of independent per-particle timers driving Skia canvas draws with blur mask
   filters (`SpriteBatch` has no blur-mask equivalent). Visual language (flickering core
   flame, rising embers, drifting smoke, green magic sparkles) is kept, tuned down from an
@@ -414,8 +416,8 @@ So the particle work removes the torches, the rain and the blood, and a second a
 and level code would be needed for the rest (question 4). The 8.6 KB `update` of forest-2 room 0 was not
 attributed to a cause.
 
-`docs/DEVELOPMENT.md` ("Deviations") calls the torch system "pooled". It is not: every spawn is a
-`new Particle()`.
+`docs/DEVELOPMENT.md` ("Deviations") called the torch system "pooled". It was not: every spawn was a
+`new Particle()`. Fixed in step 2 (below).
 
 ### 2. The two options, run
 
@@ -469,7 +471,7 @@ Design (for the migration, not final API):
 | --- | --- | --- |
 | 0 | **Pin the current look and install the guard.** (a) A test with a fixed seed records the live particle count and each particle's position, size and alpha at chosen frames of a `Torch` and of a 32- and 48-drop `BloodBurst`, as constants (read through reflection, like `BloodBurstTest`); it lands against the old code, so the later steps are compared with it. (b) The allocation guard of section 13: the `AllocationProbe` test helper with ceilings set to today's measured numbers, and `tools/check_allocations.py` on changed lines, wired into Gradle and `.codex/hooks.json`. (c) The rule text of section 11, in the form the author approves. | medium |
 | 1 | **Cache the regions:** `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; remove the `new Color` in `BloodBurst.render`. Removes 40 B per call everywhere, including the forest-1 rain (about 1.9 KB/frame) and every torch draw. Check that no caller mutates the shared region (`whiteQuad()` is flipped on purpose) and that `dispose()` resets it, also under `runDev` hot reload. **Done (#285 step 1):** measured on 2026-11-11, forest-1 4,491.8 to 4,525.5 -> 2,530.2 to 2,564.4 B/frame, `BloodBurst` 97.6 -> 32.8 B/frame (the constructor alone), one `Torch` 190.9 to 195.1 -> 149.4 to 151.3 B/frame (HotSpot had already hidden most of the 40 B per `SoftDot.region()` call). | small |
-| 2 | **`ParticleSystem` and `Torch`:** the new class with its unit tests, then `Torch` on it with the same formulas and the same random-call order. Fix the "pooled" paragraph in "Deviations" in the same PR. | medium |
+| 2 | **`ParticleSystem` and `Torch`:** the new class with its unit tests, then `Torch` on it with the same formulas and the same random-call order. Fix the "pooled" paragraph in "Deviations" in the same PR. **Done (#285 step 2):** `ParticleSystem` with `ParticleSystemTest` and `TorchParticleCapacityTest` (peak 59 live particles over 40 seeds x 3 frame rates x 20,000 frames; capacity 96); `ParticleGoldenTest` passes with the golden numbers unchanged (the torch is built with the seed directly instead of replacing `MathUtils.random`; positions use `Vector2.lerp`'s form `from*(1-t) + to*t` to match to the float). Draw order: smoke (normal blend) is drawn first, then the additive flame, then the glow, so smoke still sits behind the flame. Measured 2026-11-12: one `Torch` 149.4 to 151.3 -> 0.1 B/frame, forest-1 2,530 to 2,564 -> 2,441.8, forest-2 room 0 9,370 to 9,430 -> 8,920 to 9,000, room 1 2,550 to 2,605 -> 2,184.0, room 2 2,651 to 2,657 -> 1,992.0 B/frame. | medium |
 | 3 | **Blood:** `BloodBurst` on the shared system with the floor splash kept; `BloodBurstTest` is rewritten for the new state (it reads the private `drops` and `Drop` fields by reflection, so it cannot stay as it is). `Boss`, `docs/BOSS.md` ("Blood uses code particles") follow. | medium |
 | 4 | **Per-frame `Rectangle` and `Vector2`:** reuse fields for `KimeriaGame` line 670 and `Level.cameraShakeOffset`. #239 step 1 plans the same change; whichever lands first does it and the other drops it. | small |
 | 5 | **Docs and #239:** the "Deviations" text, the `docs/BOSS.md` blood note and the #239 plan point at `ParticleSystem`; this section is rewritten as a description of what exists, and sections 10 to 14 are folded into `docs/DEVELOPMENT.md`'s permanent text (skills, rule, guard). | small |
@@ -584,7 +586,7 @@ measured and which were read from the code.
 | Where | Allocates | Cost | How found | Disposition |
 | --- | --- | --- | --- | --- |
 | `KimeriaGame.render` (line 670), `Level.cameraShakeOffset` | `Rectangle`, `Vector2` | 56 B/frame | measured (section 1) | step 4 |
-| `Torch.spawnCore/Embers/Smoke/Sparkles`, called from `update` | `Particle`, 3 `Vector2`, `Color` | 118 to 120 B/frame/torch | measured | step 2 |
+| `Torch.spawnCore/Embers/Smoke/Sparkles`, called from `update` | `Particle`, 3 `Vector2`, `Color` | 118 to 120 B/frame/torch | measured | step 2, done: `ParticleSystem`, 0.1 B/frame |
 | `SoftDot.region`, `glowRegion`, `Shaders.whiteQuad` (called by `Torch.render`, `RainDrop.render`) | `TextureRegion` | 40 B per call; about 1.9 KB/frame in forest-1 | measured | step 1, done: one cached region each |
 | `BloodBurst.render` (line 69) | `Color` copy of the batch colour | 39 B/frame while visible | measured | step 1, done: float components |
 | `Boss.render` (236), `BossHud.render` (49, 80) | `Color` copy of the batch colour | about 40 B per draw | read from the code | step 4 |
@@ -657,7 +659,7 @@ the `docs/DEVELOPMENT.md` gaps rule applies to every line of this document that 
 >   `tools/check_allocations.py`, `validateAllocations`, `.codex/hooks.json`, `tools/test_check_allocations.py`; the approved rule text in
 >   `AGENTS.md` and `docs/DEVELOPMENT.md`; vendored skills committed (`.agents/skills/`, `SOURCE.md`)
 > - [x] Step 1: cached `SoftDot.region()`, `glowRegion()`, `Shaders.whiteQuad()`; no `new Color` in `BloodBurst.render`; ceilings lowered
-> - [ ] Step 2: `ParticleSystem` and `Torch` on it; golden test unchanged; `buildWeb` and a browser load; torch ceiling at a few tens of bytes
+> - [x] Step 2: `ParticleSystem` and `Torch` on it; golden test unchanged; `buildWeb` and a browser load (menu and level 0 only; a lit torch was not seen in the browser); torch ceiling at a few tens of bytes
 > - [ ] Step 3: blood on the shared system with the floor splash; `BloodBurstTest` rewritten; `Boss`, `docs/BOSS.md`
 > - [ ] Step 4: reuse the per-frame `Rectangle`/`Vector2` (`KimeriaGame` line 670, `Level.cameraShakeOffset`) and the `Color` copies in `Boss`/`BossHud`
 > - [ ] Step 5: #239 dust and grit as `ParticleSystem` instances

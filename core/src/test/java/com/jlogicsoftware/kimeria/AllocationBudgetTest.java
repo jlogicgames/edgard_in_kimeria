@@ -38,19 +38,19 @@ class AllocationBudgetTest {
     private static final float BLOOD_X = 100, BLOOD_Y = 90, BLOOD_FLOOR = 110;
 
     // Measured 2026-11-11 on HotSpot (GraalVM CE 25), update + render, 3 runs each. Each ceiling is the highest run plus about 8 %.
-    // Step 1 of the plan (cached regions, no Color copy in BloodBurst.render) lowered every ceiling; step 0 values are in the comments.
-    /** Measured 149.4 to 151.3 B/frame (step 0: 190.9 to 195.1): about 120 B update, the rest the torch's own render-side garbage. */
-    static final double TORCH_CEILING = 165;
+    // Step 1 (cached regions) and step 2 (Torch on ParticleSystem) lowered the ceilings; earlier values are in the comments. The remaining room cost is the harness and level/entity code (plan, section 12).
+    /** Measured 0.1 B/frame in 3 runs (step 1: 149.4 to 151.3; step 0: 190.9 to 195.1): step 2 put the torch on the allocation-free ParticleSystem. */
+    static final double TORCH_CEILING = 8;
     /** Measured 32.8 B/frame averaged over a 60-frame cycle (step 0: 97.6): exactly the 1,968 B constructor per cycle; render allocates 0. */
     static final double BLOOD_BURST_CEILING = 36;
-    /** Measured 2,530.2 to 2,564.4 B/frame (step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. */
-    static final double FOREST_1_CEILING = 2800;
-    /** Measured 9,370.7 to 9,430.5 B/frame (step 0: 10,243.0 to 10,317.4); two torches; the cause of the large {@code update} share is not attributed (plan, section 8). */
-    static final double FOREST_2_ROOM_0_CEILING = 10200;
-    /** Measured 2,549.6 to 2,605.0 B/frame (step 0: 3,374.5 to 3,451.0); three torches. */
-    static final double FOREST_2_ROOM_1_CEILING = 2850;
-    /** Measured 2,651.3 to 2,656.8 B/frame (step 0: 3,583.2 to 3,587.8); five torches, the boss room. */
-    static final double FOREST_2_ROOM_2_CEILING = 2900;
+    /** Measured 2,441.8 to 2,441.9 B/frame (step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. */
+    static final double FOREST_1_CEILING = 2640;
+    /** Measured 8,920.6 to 9,000.0 B/frame (step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches; the cause of the large {@code update} share is not attributed (plan, section 8). */
+    static final double FOREST_2_ROOM_0_CEILING = 9720;
+    /** Measured 2,184.0 B/frame in 3 runs (step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. */
+    static final double FOREST_2_ROOM_1_CEILING = 2360;
+    /** Measured 1,992.0 to 1,992.1 B/frame (step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. */
+    static final double FOREST_2_ROOM_2_CEILING = 2150;
 
     /** Escapes the deliberate allocation of {@link #theProbeCanReadAllocatedBytes()} so escape analysis keeps it. */
     private static volatile byte[] sink;

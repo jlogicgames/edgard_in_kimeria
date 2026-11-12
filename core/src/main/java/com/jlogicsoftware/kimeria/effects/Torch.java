@@ -5,37 +5,56 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.RandomXS128;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Port of Dart's {@code Torch}. The original spawns dozens of independent
  * {@code Future.delayed} particle schedulers driving Skia canvas draws with
- * blur mask filters; here that's replaced with a small pooled-particle
- * system (a standard technique on a synchronous update loop) that keeps the
- * same visual language -- a flickering core flame, rising embers, drifting
- * smoke, and green magic sparkles -- and the same {@code toggleFire}/
- * {@code performAction} behaviour used by triggers and falling platforms.
+ * blur mask filters; here that's replaced with a small allocation-free
+ * {@link ParticleSystem} (fixed arrays, one per torch, nothing allocated after the
+ * constructor) that keeps the same visual language -- a flickering core flame, rising
+ * embers, drifting smoke, and green magic sparkles -- and the same
+ * {@code toggleFire}/{@code performAction} behaviour used by triggers and falling platforms.
  */
 public class Torch extends Entity implements Actionable {
-    private enum Kind {CORE, EMBER, SMOKE, SPARKLE}
+    /** Measured peak live count (TorchParticleCapacityTest) plus headroom; a full pool only thins the flame. */
+    static final int PARTICLE_CAPACITY = 96;
+    // Particle tuning, unchanged from the pre-migration torch (pinned by ParticleGoldenTest).
+    private static final float CORE_RISE = 12f, EMBER_RISE = 40f, SPARKLE_RISE = 30f, SMOKE_RISE = 50f;
+    private static final float CORE_SIZE = 8f, EMBER_SIZE = 2.5f, SPARKLE_SIZE = 1.6f, SMOKE_SIZE = 20f;
+    private static final float SMOKE_GRAY = 0.4f;
+    private static final float FLICKER_MIN = 0.12f, FLICKER_SPAN = 0.22f;
+    private static final float CORE_EVERY_MIN = 0.04f, CORE_EVERY_SPAN = 0.12f;
+    private static final float EMBER_EVERY_MIN = 0.15f, EMBER_EVERY_SPAN = 0.2f;
+    private static final float SPARKLE_EVERY_MIN = 0.08f, SPARKLE_EVERY_SPAN = 0.18f;
+    private static final float SMOKE_EVERY_MIN = 0.3f, SMOKE_EVERY_SPAN = 0.5f;
+    private static final float CORE_LIFE_MIN = 0.14f, CORE_LIFE_SPAN = 0.18f;
+    private static final float EMBER_LIFE_MIN = 0.35f, EMBER_LIFE_SPAN = 0.45f;
+    private static final float SPARKLE_LIFE_MIN = 0.4f, SPARKLE_LIFE_SPAN = 0.8f;
+    private static final float SMOKE_LIFE_MIN = 2f, SMOKE_LIFE_SPAN = 2f;
+    private static final float CORE_SPREAD_X = 4f, CORE_SPREAD_Y = 3f;
+    private static final float EMBER_SPREAD_X = 8f, EMBER_SPREAD_Y = 6f, EMBER_DRIFT = 28f, EMBER_RISE_SPAN = 30f;
+    private static final float SPARKLE_SPREAD_X = 10f, SPARKLE_SPREAD_Y = 8f, SPARKLE_DRIFT = 18f, SPARKLE_RISE_SPAN = 60f;
+    private static final float SMOKE_SPREAD_X = 6f, SMOKE_DRIFT = 8f, SMOKE_RISE_SPAN = 40f, SMOKE_START_LIFT = 2f;
+    private static final int EMBER_BURST_EXTRA = 3, SPARKLE_BURST_EXTRA = 3, SPARKLE_BURST_MIN = 2, SPARKLE_BURST_MAX = 6;
+    private static final float SPARKLE_BURST_PER_INTENSITY = 0.02f;
+    private static final float FLAME_R = 1f, FLAME_G = 0.85f, FLAME_B = 0.2f;
+    private static final float EMBER_R = 0.6f, EMBER_G = 1f, EMBER_B = 0.4f;
+    private static final float SPARKLE_R = 0.35f, SPARKLE_G = 0.85f, SPARKLE_B = 0.3f;
+    private static final float GLOW_FLICKER_MIN = 0.85f, GLOW_FLICKER_SPAN = 0.3f;
+    private static final float GLOW_SCALE = 1.4f, GLOW_ALPHA_SCALE = 0.6f;
+    private static final float GLOW_R = 1f, GLOW_G = 0.9f, GLOW_B = 0.4f;
+    /** Odd 64-bit constant that spreads consecutive torch counters over the seed space. */
+    private static final long SEED_MIX = 0x9E3779B97F4A7C15L;
+    private static final float HALF = 0.5f, TWICE = 2f;
+    private static int seedCounter;
 
-    private static final class Particle {
-        Kind kind;
-        Vector2 pos = new Vector2();
-        Vector2 from = new Vector2();
-        Vector2 to = new Vector2();
-        float life, maxLife, size;
-        Color color = new Color();
-    }
-
-    private final List<Particle> particles = new ArrayList<>();
+    private final ParticleSystem particles;
     private int intensity;
     private final String targetId;
     private static final float SPRITE_OFFSET_Y = -3;
@@ -50,7 +69,13 @@ public class Torch extends Entity implements Actionable {
     }
 
     public Torch(Assets assets, float centerX, float centerY, float w, float h, int intensity, String targetId) {
+        this(assets, centerX, centerY, w, h, intensity, targetId, TimeUtils.nanoTime() ^ (SEED_MIX * ++seedCounter));
+    }
+
+    /** Fixed seed for the particle generator, so tests can reproduce a run. */
+    Torch(Assets assets, float centerX, float centerY, float w, float h, int intensity, String targetId, long seed) {
         super(centerX - w / 2f, centerY - h / 2f, w, h);
+        particles = new ParticleSystem(PARTICLE_CAPACITY, seed);
         sprite = assets == null ? null : SpriteSheets.TORCH.frame(assets);
         this.intensity = intensity;
         this.targetId = targetId == null ? "" : targetId;
@@ -99,128 +124,96 @@ public class Torch extends Entity implements Actionable {
     public void update(float dt) {
         if (!burning) return;
 
+        RandomXS128 random = particles.random();
         flickerTimer -= dt;
         if (flickerTimer <= 0) {
-            flickerTimer = 0.12f + MathUtils.random(0.22f);
+            flickerTimer = FLICKER_MIN + random.nextFloat() * FLICKER_SPAN;
         }
 
         coreTimer -= dt;
         if (coreTimer <= 0) {
-            spawnCore();
-            coreTimer = 0.04f + MathUtils.random(0.12f);
+            spawnCore(random);
+            coreTimer = CORE_EVERY_MIN + random.nextFloat() * CORE_EVERY_SPAN;
         }
         emberTimer -= dt;
         if (emberTimer <= 0) {
-            spawnEmbers();
-            emberTimer = 0.15f + MathUtils.random(0.2f);
+            spawnEmbers(random);
+            emberTimer = EMBER_EVERY_MIN + random.nextFloat() * EMBER_EVERY_SPAN;
         }
         sparkleTimer -= dt;
         if (sparkleTimer <= 0) {
-            spawnSparkles();
-            sparkleTimer = 0.08f + MathUtils.random(0.18f);
+            spawnSparkles(random);
+            sparkleTimer = SPARKLE_EVERY_MIN + random.nextFloat() * SPARKLE_EVERY_SPAN;
         }
         smokeTimer -= dt;
         if (smokeTimer <= 0) {
-            spawnSmoke();
-            smokeTimer = 0.3f + MathUtils.random(0.5f);
+            spawnSmoke(random);
+            smokeTimer = SMOKE_EVERY_MIN + random.nextFloat() * SMOKE_EVERY_SPAN;
         }
-
-        for (int i = particles.size() - 1; i >= 0; i--) {
-            Particle p = particles.get(i);
-            p.life -= dt;
-            if (p.life <= 0) {
-                particles.remove(i);
-                continue;
-            }
-            float t = 1f - p.life / p.maxLife;
-            p.pos.set(p.from).lerp(p.to, t);
-        }
+        particles.update(dt);
     }
 
-    private void spawnCore() {
-        Particle p = new Particle();
-        p.kind = Kind.CORE;
-        p.maxLife = p.life = 0.14f + MathUtils.random(0.18f);
-        p.from.set(centerX() + rnd(4), centerY() + rnd(3));
-        p.to.set(p.from.x, p.from.y - 12f);
-        p.size = 8f;
-        p.color.set(1f, 0.85f, 0.2f, 1f);
-        particles.add(p);
+    // The random calls below stay in the order the original code made them (life, start x, start y, end x, end rise).
+    private void spawnCore(RandomXS128 random) {
+        float life = CORE_LIFE_MIN + random.nextFloat() * CORE_LIFE_SPAN;
+        float fromX = centerX() + rnd(random, CORE_SPREAD_X), fromY = centerY() + rnd(random, CORE_SPREAD_Y);
+        particles.spawn(ParticleSystem.KIND_GLOW, fromX, fromY, fromX, fromY - CORE_RISE, life, CORE_SIZE, FLAME_R, FLAME_G, FLAME_B);
     }
 
-    private void spawnEmbers() {
-        int burst = 1 + MathUtils.random(2);
+    private void spawnEmbers(RandomXS128 random) {
+        int burst = 1 + random.nextInt(EMBER_BURST_EXTRA);
         for (int i = 0; i < burst; i++) {
-            Particle p = new Particle();
-            p.kind = Kind.EMBER;
-            p.maxLife = p.life = 0.35f + MathUtils.random(0.45f);
-            p.from.set(centerX() + rnd(8), centerY() + rnd(6));
-            p.to.set(p.from.x + rnd(28), p.from.y - 40f - MathUtils.random(30f));
-            p.size = 2.5f;
-            p.color.set(0.6f, 1f, 0.4f, 1f);
-            particles.add(p);
+            float life = EMBER_LIFE_MIN + random.nextFloat() * EMBER_LIFE_SPAN;
+            float fromX = centerX() + rnd(random, EMBER_SPREAD_X), fromY = centerY() + rnd(random, EMBER_SPREAD_Y);
+            float toX = fromX + rnd(random, EMBER_DRIFT), toY = fromY - EMBER_RISE - random.nextFloat() * EMBER_RISE_SPAN;
+            particles.spawn(ParticleSystem.KIND_GLOW, fromX, fromY, toX, toY, life, EMBER_SIZE, EMBER_R, EMBER_G, EMBER_B);
         }
     }
 
-    private void spawnSparkles() {
+    private void spawnSparkles(RandomXS128 random) {
         // Was up to 40 particles per burst (every ~0.1-0.3s): stacking that
         // many additive-blended dots this close together saturates straight
         // to white/cyan instead of reading as distinct green sparks.
-        int burst = MathUtils.clamp(Math.round(intensity * 0.02f) + MathUtils.random(2), 2, 6);
+        int burst = MathUtils.clamp(Math.round(intensity * SPARKLE_BURST_PER_INTENSITY) + random.nextInt(SPARKLE_BURST_EXTRA),
+            SPARKLE_BURST_MIN, SPARKLE_BURST_MAX);
         for (int i = 0; i < burst; i++) {
-            Particle p = new Particle();
-            p.kind = Kind.SPARKLE;
-            p.maxLife = p.life = 0.4f + MathUtils.random(0.8f);
-            p.from.set(centerX() + rnd(10), centerY() + rnd(8));
-            p.to.set(p.from.x + rnd(18), p.from.y - 30f - MathUtils.random(60f));
-            p.size = 1.6f;
-            p.color.set(0.35f, 0.85f, 0.3f, 1f);
-            particles.add(p);
+            float life = SPARKLE_LIFE_MIN + random.nextFloat() * SPARKLE_LIFE_SPAN;
+            float fromX = centerX() + rnd(random, SPARKLE_SPREAD_X), fromY = centerY() + rnd(random, SPARKLE_SPREAD_Y);
+            float toX = fromX + rnd(random, SPARKLE_DRIFT), toY = fromY - SPARKLE_RISE - random.nextFloat() * SPARKLE_RISE_SPAN;
+            particles.spawn(ParticleSystem.KIND_GLOW, fromX, fromY, toX, toY, life, SPARKLE_SIZE, SPARKLE_R, SPARKLE_G, SPARKLE_B);
         }
     }
 
-    private void spawnSmoke() {
-        Particle p = new Particle();
-        p.kind = Kind.SMOKE;
-        p.maxLife = p.life = 2f + MathUtils.random(2f);
-        p.from.set(centerX() + rnd(6), centerY() - 2f);
-        p.to.set(p.from.x + rnd(8), p.from.y - 50f - MathUtils.random(40f));
-        p.size = 20f;
-        p.color.set(0.4f, 0.4f, 0.4f, 1f);
-        particles.add(p);
+    private void spawnSmoke(RandomXS128 random) {
+        float life = SMOKE_LIFE_MIN + random.nextFloat() * SMOKE_LIFE_SPAN;
+        float fromX = centerX() + rnd(random, SMOKE_SPREAD_X), fromY = centerY() - SMOKE_START_LIFT;
+        float toX = fromX + rnd(random, SMOKE_DRIFT), toY = fromY - SMOKE_RISE - random.nextFloat() * SMOKE_RISE_SPAN;
+        particles.spawn(ParticleSystem.KIND_SMOKE, fromX, fromY, toX, toY, life, SMOKE_SIZE, SMOKE_GRAY, SMOKE_GRAY, SMOKE_GRAY);
     }
 
-    private static float rnd(float range) {
-        return (MathUtils.random() - 0.5f) * range * 2f;
+    private static float rnd(RandomXS128 random, float range) {
+        return (random.nextFloat() - HALF) * range * TWICE;
     }
+
+    /** The torch's particles, for tests. */
+    ParticleSystem particles() { return particles; }
 
     @Override
     public void render(Batch batch) {
         if (sprite != null) batch.draw(sprite, centerX() - SpriteSheets.TORCH.width() / 2f, centerY() + SPRITE_OFFSET_Y,
             SpriteSheets.TORCH.width(), SpriteSheets.TORCH.height());
         TextureRegion dot = SoftDot.region();
+        // Smoke (normal blending) is drawn first inside the system so it stays behind the additive flame.
+        particles.render(batch, dot);
         if (burning) {
-            float flicker = 0.85f + MathUtils.random(0.3f);
-            float radius = lightRadius * flicker * 1.4f;
+            float flicker = GLOW_FLICKER_MIN + particles.random().nextFloat() * GLOW_FLICKER_SPAN;
+            float radius = lightRadius * flicker * GLOW_SCALE;
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-            batch.setColor(1f, 0.9f, 0.4f, lightAlpha * 0.6f);
+            batch.setColor(GLOW_R, GLOW_G, GLOW_B, lightAlpha * GLOW_ALPHA_SCALE);
             batch.draw(dot, centerX() - radius / 2f, centerY() - radius / 2f, radius, radius);
+            batch.setColor(Color.WHITE);
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         }
-
-        for (Particle p : particles) {
-            float t = 1f - p.life / p.maxLife;
-            // Additive particles fade in the second half of their life too
-            // (not just linearly from full alpha), so a fresh burst doesn't
-            // all sit near maximum brightness at once and wash out to white.
-            float alpha = (p.kind == Kind.SMOKE ? (1f - t) : (1f - t) * (1f - t)) * 0.7f;
-            float size = p.size * (p.kind == Kind.SMOKE ? (1f + t) : (1f - 0.4f * t));
-            boolean additive = p.kind != Kind.SMOKE;
-            batch.setBlendFunction(GL20.GL_SRC_ALPHA, additive ? GL20.GL_ONE : GL20.GL_ONE_MINUS_SRC_ALPHA);
-            batch.setColor(p.color.r, p.color.g, p.color.b, alpha);
-            batch.draw(dot, p.pos.x - size / 2f, p.pos.y - size / 2f, size, size);
-        }
-        batch.setColor(Color.WHITE);
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 
 }
