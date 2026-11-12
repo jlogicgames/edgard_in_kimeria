@@ -39,7 +39,7 @@ class ParticleGoldenTest {
         return result;
     }
 
-    private static float[] torchSnapshot(ParticleSystem particles) {
+    private static float[] torchSnapshot(KimeriaParticleSystem particles) {
         float[] values = new float[1 + particles.count() * 4];
         values[0] = particles.count();
         int at = 1;
@@ -53,12 +53,12 @@ class ParticleGoldenTest {
     }
 
     /**
-     * Same layout as {@link #torchSnapshots()}, for the live drops of one burst of the {@link BloodSystem}; the size is the
+     * Same layout as {@link #torchSnapshots()}, for the live drops of one burst of the {@link KimeriaBloodSystem}; the size is the
      * drop's base size and the alpha its fade, as {@code render} uses them. {@code new RandomXS128(SEED)} is the sequence
      * {@code MathUtils.random} gave the old {@code BloodBurst}, which this system replaced in step 3.
      */
     static float[][] bloodSnapshots(boolean empowered) {
-        BloodSystem blood = new BloodSystem(BLOOD_CAPACITY, SEED);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(BLOOD_CAPACITY, SEED);
         blood.spray(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, empowered);
         float[][] result = new float[BLOOD_FRAMES.length][];
         int next = 0;
@@ -69,7 +69,7 @@ class ParticleGoldenTest {
         return result;
     }
 
-    private static float[] bloodSnapshot(BloodSystem blood) {
+    private static float[] bloodSnapshot(KimeriaBloodSystem blood) {
         float[] values = new float[1 + blood.count() * 4];
         values[0] = blood.count();
         int at = 1;

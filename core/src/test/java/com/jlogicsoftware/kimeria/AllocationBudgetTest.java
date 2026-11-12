@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.jlogicsoftware.kimeria.effects.BloodSystem;
+import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.effects.Torch;
@@ -43,10 +43,10 @@ class AllocationBudgetTest {
     private static final long BLOOD_SEED = 7264;
 
     // Measured 2026-11-11 on HotSpot (GraalVM CE 25), update + render, 3 runs each. Each ceiling is the highest run plus about 8 %.
-    // Step 1 (cached regions) and step 2 (Torch on ParticleSystem) lowered the ceilings; earlier values are in the comments. The remaining room cost is the harness and level/entity code (plan, section 12).
-    /** Measured 0.1 B/frame in 3 runs (step 1: 149.4 to 151.3; step 0: 190.9 to 195.1): step 2 put the torch on the allocation-free ParticleSystem. */
+    // Step 1 (cached regions) and step 2 (Torch on KimeriaParticleSystem) lowered the ceilings; earlier values are in the comments. The remaining room cost is the harness and level/entity code (plan, section 12).
+    /** Measured 0.1 B/frame in 3 runs (step 1: 149.4 to 151.3; step 0: 190.9 to 195.1): step 2 put the torch on the allocation-free KimeriaParticleSystem. */
     static final double TORCH_CEILING = 8;
-    /** Measured 0.0 B/frame in 3 runs, a 32-drop spray every 60 frames with spawn, update and render (step 1: 32.8, step 0: 97.6 for the old {@code BloodBurst}); step 3 put blood on the allocation-free BloodSystem. */
+    /** Measured 0.0 B/frame in 3 runs, a 32-drop spray every 60 frames with spawn, update and render (step 1: 32.8, step 0: 97.6 for the old {@code BloodBurst}); step 3 put blood on the allocation-free KimeriaBloodSystem. */
     static final double BLOOD_SPRAY_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs, a 48-drop empowered spray every 60 frames (old {@code BloodBurst}: 2,928 B constructor, about 49 B/frame over the cycle, read from the plan's section 1). */
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
@@ -99,7 +99,7 @@ class AllocationBudgetTest {
     }
 
     private double blood(boolean empowered) {
-        BloodSystem blood = new BloodSystem(Level.BLOOD_CAPACITY, BLOOD_SEED);
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(Level.BLOOD_CAPACITY, BLOOD_SEED);
         // A burst lives .9 s (54 frames): a new spray every 60 frames, so the spawn is part of the average.
         return AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) blood.spray(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, empowered);

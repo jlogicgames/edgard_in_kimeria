@@ -19,7 +19,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * <p>Live particles are kept dense and in spawn order (index 0 is the oldest). Each system owns one
  * {@link RandomXS128}, the algorithm behind {@code MathUtils.random}, seeded in the constructor so a seed reproduces a run.
  */
-public final class ParticleSystem {
+public final class KimeriaParticleSystem {
     /** Additive, shrinking, alpha (1 - t)^2: flames, embers and sparks. */
     public static final byte KIND_GLOW = 0;
     /** Normal blending, growing, alpha 1 - t: smoke. */
@@ -36,7 +36,7 @@ public final class ParticleSystem {
     private final byte[] kind;
     private int count;
 
-    public ParticleSystem(int capacity, long seed) {
+    public KimeriaParticleSystem(int capacity, long seed) {
         if (capacity < 1) throw new IllegalArgumentException("capacity must be at least 1");
         this.capacity = capacity;
         this.random = new RandomXS128(seed);

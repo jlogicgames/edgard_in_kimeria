@@ -33,6 +33,8 @@ docs, it does not repeat them. libGDX is 1.14.2; targets are desktop and web (Te
   [DEVELOPMENT.md](../../../docs/DEVELOPMENT.md) "Particle system plan".
 - Measure with `ThreadMXBean.getThreadAllocatedBytes` after warm-up (HotSpot only; it does not speak
   for TeaVM). Never claim "allocation free" without a number.
+- Particles and VFX: the project's own `KimeriaParticleSystem` and `KimeriaBloodSystem` (not libGDX's `ParticleSystem`)
+  are described in the [kimeria-particles](../kimeria-particles/SKILL.md) skill.
 
 ## Rendering and art
 

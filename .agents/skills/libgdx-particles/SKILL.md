@@ -7,6 +7,8 @@ description: Use when writing libGDX Java/Kotlin code involving 2D or 3D particl
 
 Quick reference for libGDX particle systems. Covers 2D `ParticleEffect`/`ParticleEmitter`/`ParticleEffectPool`, AssetManager loading, blend function management, and the 3D particle system (`g3d.particles`).
 
+> **Project note (local edit, name collision).** The `ParticleSystem` documented below is libGDX's 3D class. The project's own classes `effects.KimeriaParticleSystem` and `effects.KimeriaBloodSystem` are unrelated to it and to `ParticleEffect`; for any particle work in this repo read the `kimeria-particles` skill first.
+
 > **Project note (local edit).** This game targets libGDX 1.14.2 on desktop and on the web through TeaVM (gdx-teavm 1.6.2), not GWT. It does not use `ParticleEffect` today; the plan in `docs/DEVELOPMENT.md` ("Particle system plan") builds a custom fixed-array system and keeps `ParticleEffect` in reserve. Measured there: `ParticleEffect.load` plus a pooled `ParticleEffectPool` build and run in the TeaVM release build. Not exercised on TeaVM: texture-atlas loading, mixed additive/normal emitters in one effect, the 3D system. The world camera is Y-down, so an authored emitter angle or gravity needs `effect.flipY()` (measured: without it, angle 90 moves toward larger Y, i.e. down the screen).
 
 ## 2D ParticleEffect

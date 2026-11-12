@@ -10,7 +10,7 @@ import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
-import com.jlogicsoftware.kimeria.effects.BloodSystem;
+import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
@@ -99,12 +99,12 @@ public class Level implements WorldObject {
     private final List<WorldObject> pendingSpawns = new ArrayList<>();
     /**
      * Capacity of {@link #blood}: the boss cannot be hit again for HURT + WARNING (1.35 s), longer than a drop lives (.9 s),
-     * so at most one burst of 48 drops is alive; twice that is the headroom (BloodSystemCapacityTest measures the peak).
+     * so at most one burst of 48 drops is alive; twice that is the headroom (KimeriaBloodSystemCapacityTest measures the peak).
      */
     public static final int BLOOD_CAPACITY = 96;
     private static final long BLOOD_SEED_MIX = 0x9E3779B97F4A7C15L;
     /** All blood of the level: no object is queued per hit. Cleared with the room. */
-    private final BloodSystem blood = new BloodSystem(BLOOD_CAPACITY, TimeUtils.nanoTime() ^ BLOOD_SEED_MIX);
+    private final KimeriaBloodSystem blood = new KimeriaBloodSystem(BLOOD_CAPACITY, TimeUtils.nanoTime() ^ BLOOD_SEED_MIX);
 
     private final Assets assets;
     private final GameContext game;
@@ -408,13 +408,13 @@ public class Level implements WorldObject {
         pendingSpawns.add(obj);
     }
 
-    /** Sprays blood from a landed hit (see {@link BloodSystem#spray}); it joins the very next update, like a queued object. */
+    /** Sprays blood from a landed hit (see {@link KimeriaBloodSystem#spray}); it joins the very next update, like a queued object. */
     public void blood(float x, float y, float direction, float floorY, boolean empowered) {
         blood.spray(x, y, direction, floorY, empowered);
     }
 
     /** The level's blood, for tests. */
-    public BloodSystem bloodParticles() { return blood; }
+    public KimeriaBloodSystem bloodParticles() { return blood; }
 
     public Level(Assets assets, GameContext game, Player player, String levelName,
                  Supplier<Rectangle> visibleWorldRect) {
