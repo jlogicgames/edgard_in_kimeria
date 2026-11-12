@@ -14,7 +14,6 @@ import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.KimeriaGame;
 import com.jlogicsoftware.kimeria.entity.Actor;
-import com.jlogicsoftware.kimeria.effects.BloodBurst;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import java.util.IdentityHashMap;
 import java.util.Map;
