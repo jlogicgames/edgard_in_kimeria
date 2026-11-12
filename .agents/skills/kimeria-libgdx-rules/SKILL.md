@@ -56,6 +56,10 @@ docs, it does not repeat them. libGDX is 1.14.2; targets are desktop and web (Te
   and a browser load of the changed scene before it is called done. Desktop-only runs do not show TeaVM
   failures.
 
+## Sounds
+
+- Sounds: see `docs/SOUND_DIRECTION.md`; sounds are generated (`tools/audio/generate_sounds.py`), never sampled.
+
 ## Tests and text
 
 - Never weaken a threshold or tolerance silently: say so in the report and record it in
