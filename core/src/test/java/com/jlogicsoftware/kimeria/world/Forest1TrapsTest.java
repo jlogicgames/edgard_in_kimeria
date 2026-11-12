@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
@@ -325,7 +326,7 @@ class Forest1TrapsTest {
             place(l, tuft(l).triggerZone().x + 8);
             int frames = 0;
             while (!tuft(l).isLethal() && frames < 200) { frame(l); frames++; }
-            float expected = assist ? 1.2f : 0.8f;
+            float expected = ExpectedWarnings.standard(assist);
             assertEquals(expected, frames * STEP, 4 * STEP, "bristle warning, assist " + assist);
         }
     }
@@ -403,7 +404,7 @@ class Forest1TrapsTest {
             if (q.currentPhase() == Puffball.Phase.CLOUD) break;
         }
         assertTrue(sawSwell);
-        assertEquals(0.8f, swell * STEP, 3 * STEP, "swell before the cloud");
+        assertEquals(TrapWarnings.DEFAULT_WARNING_SECONDS, swell * STEP, 3 * STEP, "swell before the cloud");
     }
 
     @Test void theLogHoldsForTheSharedWarningThenFallsAndALingererFallsIntoThePitWhichIsARetry() {

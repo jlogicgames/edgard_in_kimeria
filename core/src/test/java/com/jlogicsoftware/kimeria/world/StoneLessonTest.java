@@ -636,6 +636,7 @@ class StoneLessonTest {
                 }
             }
             level.resetCurrentRoom(new Player(assets, game, 0, 0));
+            withoutTheStump(level); // the retry restores the stump; this sweep covers hints, not its fuse (tested apart)
         }
         assertEquals(Set.of(throwText, stumpText, exitText, acrossText), messages);
     }

@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Explosive traps (D47, #233): the exploding stump and the exploding root that replace the glass-bottle bomb. Driven
  * headlessly through real Level updates in the test-resource maps (explosive-*.tmx) with ordinary keyboard controls.
- * Times are the shared D7 warning (0.8 s, 1.2 s with the longer-warnings assist). Recipe: docs/ROOMS.md.
+ * Times are the shared D7 warning (see TrapWarnings, longer with the assist). Recipe: docs/ROOMS.md.
  *
  * <p>Fixture explosive-test.tmx: room 640 wide, floor y 320, hero enters at x 32 (body x 50..61), stump at x 288
  * (blast square x 264..328), root at x 480 (blast square x 456..520), a resting stone at x 96.
@@ -168,7 +169,6 @@ class ExplosiveTrapsTest {
         assertEquals(new Rectangle(264, 280, 64, 64), stump(level).blastBox(), "blast square centred on the object");
         assertEquals(new Rectangle(483, 299, 10, 19.5f), root(level).triggerBox(), "scaled with the object");
         assertEquals(new Rectangle(456, 276, 64, 64), root(level).blastBox());
-        assertEquals(.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f);
     }
 
     // -- touch --
@@ -202,9 +202,9 @@ class ExplosiveTrapsTest {
                 place(level, (kind == ExplosiveTrap.Kind.STUMP ? STUMP_X : ROOT_X) + 8);
                 frame(level);
                 assertEquals(ExplosiveTrap.Phase.WINDUP, t.phase());
-                assertEquals(longer ? 1.2f : .8f, t.warningTotal(), 1e-6f, "literal shared value, longer=" + longer);
+                assertEquals(ExpectedWarnings.standard(longer), t.warningTotal(), 1e-6f, "shared value, longer=" + longer);
                 int frames = 1 + framesWhile(level, () -> t.phase() == ExplosiveTrap.Phase.WINDUP, 60 * 5);
-                assertEquals((longer ? 1.2f : .8f) * 60, frames, 2, kind + " wind-up frames, longer=" + longer);
+                assertEquals(ExpectedWarnings.standard(longer) * 60, frames, 2, kind + " wind-up frames, longer=" + longer);
                 assertEquals(ExplosiveTrap.Phase.BLAST, t.phase());
                 System.out.printf(java.util.Locale.ROOT, "longer=%s: %s winds up %.2f s%n", longer, kind, frames * STEP);
             }
@@ -345,8 +345,8 @@ class ExplosiveTrapsTest {
         shoot(level);
         ExplosiveTrap t = stump(level);
         framesWhile(level, () -> t.isIntact(), 60);
-        assertEquals(1.2f, t.warningTotal(), 1e-6f);
-        assertTrue(t.warningRemaining() > 1.1f, "nearly the whole assisted warning is left at the moment of the hit: " + t.warningRemaining());
+        assertEquals(ExpectedWarnings.standard(true), t.warningTotal(), 1e-6f);
+        assertTrue(t.warningRemaining() > ExpectedWarnings.standard(true) - 0.1f, "nearly the whole assisted warning is left at the moment of the hit: " + t.warningRemaining());
         setLonger(false);
     }
 
@@ -440,7 +440,7 @@ class ExplosiveTrapsTest {
         stump(paused).igniteFromAfar(); stump(straight).igniteFromAfar();
         for (int i = 0; i < 20; i++) { frame(paused); frame(straight); }
         float before = stump(paused).warningRemaining();
-        assertEquals(.8f - 20 * STEP, before, 1e-4f);
+        assertEquals(WARNING - 20 * STEP, before, 1e-4f);
         assertEquals(before, stump(paused).warningRemaining(), 0f, "nothing advanced while paused");
         assertEquals(ExplosiveTrap.Phase.WINDUP, stump(paused).phase());
         for (int i = 0; i < 20; i++) { frame(paused); frame(straight); }

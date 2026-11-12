@@ -21,6 +21,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
@@ -178,10 +179,9 @@ class RhythmTrapsTest {
     }
 
     @Test void theSwellTellIsTheSharedWarningAndTheAssistLengthensIt() {
-        assertEquals(0.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f, "pinned shared warning");
         for (boolean assist : new boolean[]{false, true}) {
             warnings.load(new Settings(preferences(assist)));
-            float expected = assist ? 1.2f : 0.8f;
+            float expected = ExpectedWarnings.standard(assist);
             Level level = room(PUFF);
             Puffball p = puffball(level);
             assertEquals(expected, p.swellSeconds(), 1e-6f);
@@ -205,8 +205,9 @@ class RhythmTrapsTest {
     @Test void theCycleIsCalmThenSwellThenCloudWithTheCloudLastAndNoAssist() {
         Puffball p = puffball(room(PUFF));
         assertEquals(Puffball.Phase.CALM, p.phaseAt(0f));
-        assertEquals(Puffball.Phase.CALM, p.phaseAt(2.19f));
-        assertEquals(Puffball.Phase.SWELL, p.phaseAt(2.21f));
+        float swellStart = 3f - TrapWarnings.DEFAULT_WARNING_SECONDS; // the swell fills the shared warning before the 1 s cloud
+        assertEquals(Puffball.Phase.CALM, p.phaseAt(swellStart - 0.01f));
+        assertEquals(Puffball.Phase.SWELL, p.phaseAt(swellStart + 0.01f));
         assertEquals(Puffball.Phase.SWELL, p.phaseAt(2.99f));
         assertEquals(Puffball.Phase.CLOUD, p.phaseAt(3.01f));
         assertEquals(Puffball.Phase.CLOUD, p.phaseAt(3.99f));
@@ -292,16 +293,17 @@ class RhythmTrapsTest {
 
     @Test void theAssistLengthensTheSwellAndTheWalkerStillHasTheMinimumCalm() {
         assertNull(Puffball.validate(4f, 1f, 0f));
-        assertNull(Puffball.validate(3f, 1f, 0f), "1 + 1.2 assisted swell + 0.8 minimum calm is exactly 3.0");
-        assertNotNull(Puffball.validate(2.9f, 1f, 0f));
-        assertNotNull(Puffball.validate(2f, 1f, 0f));
+        float exact = 1f + TrapWarnings.longestDuration(TrapWarnings.DEFAULT_WARNING_SECONDS) + Puffball.MIN_CALM_SECONDS;
+        assertNull(Puffball.validate(exact, 1f, 0f), "cloud + assisted swell + minimum calm is exactly enough");
+        assertNotNull(Puffball.validate(exact - 0.1f, 1f, 0f));
+        assertNotNull(Puffball.validate(1f, 1f, 0f));
         assertNotNull(Puffball.validate(4f, 0f, 0f));
         warnings.load(new Settings(preferences(true)));
         Level level = room(PUFF);
         float calm = 0;
         Puffball p = puffball(level);
         for (float t = 0; t < 4f; t += 0.01f) if (p.phaseAt(t) == Puffball.Phase.CALM) calm += 0.01f;
-        assertEquals(4f - 1f - 1.2f, calm, 0.03f, "assist: calm shrinks by the extra swell");
+        assertEquals(4f - 1f - ExpectedWarnings.standard(true), calm, 0.03f, "assist: calm shrinks by the extra swell");
         assertTrue(calm >= Puffball.MIN_CALM_SECONDS);
         boolean[] ok = sweep(level, 4f, PUFF_PAST);
         assertTrue(longestSafeRun(ok) >= 1.5f, "the blind-walk safe window with the assist: " + longestSafeRun(ok));

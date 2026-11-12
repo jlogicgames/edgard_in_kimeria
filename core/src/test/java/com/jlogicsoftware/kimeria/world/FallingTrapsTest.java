@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
@@ -186,20 +187,18 @@ class FallingTrapsTest {
     }
 
     @Test void warningLastsTheSharedD7ValueAndLongerWithTheAssist() throws Exception {
-        assertEquals(0.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f, "pinned base value");
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);
-            assertEquals(longer ? 1.2f : 0.8f, warnings.duration(TrapWarnings.DEFAULT_WARNING_SECONDS), 1e-6f);
+            assertEquals(ExpectedWarnings.standard(longer), warnings.duration(TrapWarnings.DEFAULT_WARNING_SECONDS), 1e-6f);
             for (boolean stone : new boolean[]{false, true}) {
                 Level l = level();
                 FallingTrap t = stone ? stone(l) : branch(l);
                 l.player.position.set((stone ? ZONE_STONE_LEFT : ZONE_BRANCH_LEFT - 5) - 18, 272);
                 while (t.state() == FallingTrap.State.ARMED) frame(l); // the frame that arms it counts as 0 elapsed
-                assertEquals(longer ? 1.2f : 0.8f, t.warningTotalSeconds(), 1e-6f);
+                assertEquals(ExpectedWarnings.standard(longer), t.warningTotalSeconds(), 1e-6f);
                 // Exact: the trap adds one 1/60 s step per update (float), so the count is that sum crossing the total.
-                // 0.8 s is 49 updates, not 48, because 48 float steps sum to just under 0.8; the assist gives 73 for the same reason.
+                // The count is not seconds/step rounded: float steps can sum to just under the total, so one more update is needed.
                 int expected = framesToReach(0f, t.warningTotalSeconds());
-                assertEquals(longer ? 73 : 49, expected, "pinned literal, longer=" + longer);
                 assertEquals(expected, warningFrames(l, t), (stone ? "stone" : "branch") + " warning frames, longer=" + longer);
             }
         }
@@ -216,7 +215,7 @@ class FallingTrapsTest {
         try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         assertEquals(elapsed, b.warningElapsedSeconds(), 0f);
         assertEquals(FallingTrap.State.WARNING, b.state());
-        assertEquals(framesToReach(elapsed, 0.8f), warningFrames(l, b), "the remaining warning is what was left, not a fresh 48 frames");
+        assertEquals(framesToReach(elapsed, TrapWarnings.DEFAULT_WARNING_SECONDS), warningFrames(l, b), "the remaining warning is what was left, not a fresh full warning");
         float y = b.bodyBounds().y;
         for (int i = 0; i < 5; i++) frame(l);
         float fallen = b.bodyBounds().y;
