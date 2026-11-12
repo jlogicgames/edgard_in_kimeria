@@ -304,6 +304,10 @@ Temporary assets and balance may still require refinement.
   [art direction](ART_DIRECTION.md) and [current artwork review](PORTRAITS.md).
   Recheck their readability in the final campaign/device presentation.
   Select decorative reserve ideas by their benefit to finished situations.
+  Includes the polish of the false honey fungus's spore cloud: sprite first, then particles and shaders
+  ([#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296), after the MVP;
+  the trap itself is [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295),
+  see [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md)).
 - [ ] [#143](https://github.com/jlogicgames/edgard_in_kimeria/issues/143) Complete final campaign text and review all five supported languages
   (EN/UK/PL/DE/BE), including native-speaker review of the new translations and final
   device/layout checks. The catalog/font infrastructure from

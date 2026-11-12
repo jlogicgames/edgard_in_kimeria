@@ -389,9 +389,38 @@ Not part of the forest set and not implemented; also recorded in D42.
 - **Arrow shot from the side (#238):** for world 2 and later (castle and other worlds, not
   the forest). The projectile can change per world and the player dodges it. It needs the D7
   telegraph before it fires.
+- **Honey fungus and false honey fungus (#295):** two look-alike spore mushrooms, one harmless (particle burst) and one poisonous (sprite cloud, particles and shaders later, #296); see the subsection below.
 - **Floor pressure plate (#237):** activates a door like a lever (Prince of Persia style), for
   the castle-fortress stage. Open design points: whether the door stays open or closes when the
   plate is released, the D26 recovery rules, and linking by `target`.
+
+### Honey fungus and false honey fungus (author idea, 2026-11-12)
+
+An idea, not decided and not implemented; tracked by
+[#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), with the later polish in
+[#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296).
+
+**Basis.** The honey fungus is harmless to people; the false honey fungus is poisonous, and they look
+alike. The game gets two map objects with nearly identical sprites that differ slightly, so the player has to
+read the difference:
+
+| | Honey fungus (harmless) | False honey fungus (poisonous) |
+| --- | --- | --- |
+| Bursts into spores | yes | yes |
+| What the burst is | only a pretty effect: **particles**, like the torch's flame and sparks (`KimeriaParticleSystem`, the `kimeria-particles` skill) | a spore cloud drawn as a **sprite animation**, which then diminishes |
+| Harm | none | poisonous (the rule is open, see below) |
+
+**First version and later polish (author, 2026-11-12).** The first version uses sprites for the poisonous
+cloud, as the existing spore puffball does (`trap-spores`, D46). After the MVP, during polishing, the sprite is
+replaced by particles and shaders so that it looks "super beautiful"; this is a mandatory task, tracked by
+[#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296) (part of the polish of
+[#142](https://github.com/jlogicgames/edgard_in_kimeria/issues/142)).
+
+**Open points, not guessed** (the checklist is in #295): what "diminishes" means (the cloud fades, the harm
+shrinks over time, or both); what makes a mushroom burst (proximity, a timer like the puffball, stepping on
+it, an attack); the poison's effect (it must obey D7, the telegraph rule, and the recovery rules); how the two
+sprites differ while staying unlike the healer's Mushroom pickup (D43) and the existing `trap-puffball`;
+whether these are two new Tiled objects or an extension of the `Puffball` object (D46); where they appear.
 
 ## Tablet in the original vs the remake
 
