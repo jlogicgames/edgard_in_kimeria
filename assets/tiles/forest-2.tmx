@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="188" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="130">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="188" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="137">
  <properties>
   <property name="fireflies" type="int" value="24"/>
   <property name="healerBeforeBoss" type="bool" value="true"/>
@@ -174,6 +174,41 @@
    </properties>
   </object>
   <object id="125" name="Deadline" type="Deadline" x="-608" y="384" width="4320" height="16"/>
+  <object id="130" name="Bush" type="Decor" x="400" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="131" name="Bush" type="Decor" x="700" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="132" name="Bush" type="Decor" x="1040" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="133" name="Bush" type="Decor" x="1380" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="134" name="Bush" type="Decor" x="1580" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="135" name="Bush" type="Decor" x="1800" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="136" name="Bush" type="Decor" x="2700" y="312" width="32" height="24">
+   <properties>
+    <property name="kind" value="bush"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="3" name="Collisions">
   <object id="4" name="Wall" type="Wall" x="0" y="0" width="16" height="320"/>

@@ -347,6 +347,7 @@ def check_map(path):
             errors.append(f"Trigger {describe(trigger)}: no 'target' set and {len(solid)} mechanisms share its name "
                           "(set the 'target' property, or give it exactly one same-named mechanism)")
     errors += check_falling_traps(root, groups)
+    errors += check_decor(spawn, collisions)
     return [f"{path.name}: {e}" for e in errors]
 
 
@@ -362,6 +363,31 @@ def falling_stone_skins():
     text = FALLING_JAVA.read_text(encoding='utf-8')
     block = re.search(r'SKINS\s*=\s*java\.util\.Map\.of\((.*?)\);', text, re.S)
     return tuple(re.findall(r'"([^"]+)"\s*,\s*new Skin\(', block.group(1))) if block else ()
+
+
+DECOR_JAVA = FALLING_JAVA.with_name('Decor.java')
+
+
+def decor_kinds():
+    """The kind names are the string keys of Decor.KINDS: one source of truth, read from the Java class."""
+    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
+    return tuple(re.findall(r'"([^"]+)"\s*,\s*SpriteSheets\.', block.group(1))) if block else ()
+
+
+def check_decor(spawn, collisions):
+    """Decor (#239): a known kind, a positive size, and the bottom edge on the top of a solid block (world Y grows downward)."""
+    kinds, errors = decor_kinds(), []
+    for o in (o for o in spawn if kind(o) == 'Decor'):
+        label = f"Decor {describe(o)}"
+        if (prop(o, 'kind') or '').lower() not in kinds:
+            errors.append(f"{label}: unknown kind '{prop(o, 'kind')}', known: {', '.join(kinds)}"); continue
+        body = _rect(o)
+        if not (body[2] > 0 and body[3] > 0):
+            errors.append(f"{label}: needs a positive size"); continue
+        bottom = body[1] + body[3]
+        if not any(kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') == bottom for c in collisions):
+            errors.append(f"{label}: its bottom edge ({bottom:g}) is not on the top of a solid block")
+    return errors
 
 
 def _num(o, key):

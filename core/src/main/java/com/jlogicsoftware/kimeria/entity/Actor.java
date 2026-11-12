@@ -90,10 +90,20 @@ public abstract class Actor<S extends Enum<S>> extends Entity {
 
     /** Any box authored for the unflipped sprite, placed in world space and mirrored about {@link #pivotX()} when facing left. */
     public Rectangle boundsOf(Hitbox box) {
+        return boundsInto(box, new Rectangle());
+    }
+
+    /** {@link #boundsOf} written into {@code out} (returned), for per-frame callers that must not allocate. */
+    public Rectangle boundsInto(Hitbox box, Rectangle out) {
         float w = box.radius > 0 ? box.radius * 2 : box.width;
         float h = box.radius > 0 ? box.radius * 2 : box.height;
         float offsetX = facingRight ? box.offsetX : 2 * pivotX() - box.offsetX - w;
-        return new Rectangle(position.x + offsetX, position.y + box.offsetY, w, h);
+        return out.set(position.x + offsetX, position.y + box.offsetY, w, h);
+    }
+
+    /** The body hitbox in world space written into {@code out} (returned), without allocating. */
+    public Rectangle hitboxBoundsInto(Rectangle out) {
+        return boundsInto(hitbox, out);
     }
 
     public void collidedWithActor(boolean gotHit) {

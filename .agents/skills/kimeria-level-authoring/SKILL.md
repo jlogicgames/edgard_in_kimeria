@@ -40,6 +40,9 @@ properties there rather than assuming libGDX's standard tiled loader behavior.
   left/top inclusive and right/bottom exclusive bounds. Keep collision shapes,
   patrol routes and linked interactive objects within their owner room. Moving
   entities retain ownership. Cross-room trigger links are rejected.
+- `Decor` (SpawnPoints, 32x24, property `kind` = `bush`, optional `mirror`) is cosmetic scenery: place it with
+  `y = floor - 24` (add 16 in a layer offset by -16, as forest-2's SpawnPoints is); `tools/check_tiled_links.py`
+  rejects an unknown kind or a bush not standing on a block.
 - Keep existing object IDs stable when moving pickups: secured collection uses
   identity. Allocate unique IDs for additions and maintain TMX ID counters.
 - Seal boundaries so players reach the intended exit instead of entering an

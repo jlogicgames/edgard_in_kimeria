@@ -76,6 +76,8 @@ class AllocationBudgetTest {
     /** Escapes the deliberate allocation of {@link #theProbeCanReadAllocatedBytes()} so escape analysis keeps it. */
     private static volatile byte[] sink;
 
+    /** Measured 0.0 B/frame in 3 runs (#239 step 4): one {@code batch.draw} per bush, frame regions held in the object. */
+    static final double DECOR_BRUSH_CEILING = 8;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
 
@@ -200,6 +202,22 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "grit must actually fall in this scenario");
         assertWithinBudget("lever grit", LEVER_GRIT_CEILING, bytes);
+    }
+
+    /** A bush brushed by a walking hero every {@link #BURST_CYCLE_FRAMES} frames (its animation lasts 0.3 s): {@code notice}, {@code update} and {@code render} through the batch. */
+    @Test void decorBrushThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 0);
+        com.jlogicsoftware.kimeria.entity.objects.Decor bush = level.decor.get(0);
+        Rectangle hero = new Rectangle(bush.getX(), bush.getY(), 11, 22);
+        boolean[] played = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) bush.notice(hero, 100);
+            bush.update(STEP);
+            bush.render(batch);
+            played[0] |= bush.playing();
+        });
+        assertTrue(played[0], "the brush must actually play in this scenario");
+        assertWithinBudget("decor brush", DECOR_BRUSH_CEILING, bytes);
     }
 
     /** {@code BossHud.render} with an empowered boss; the font's {@code draw} is a no-op so only the HUD's own allocation is counted (a real {@code font.draw} allocates a {@code GlyphLayout}, out of scope here). */
