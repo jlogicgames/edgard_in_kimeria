@@ -324,6 +324,25 @@ rejects the former. The GLSL shaders under `assets/shaders/*.frag` are ported fr
 Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in Flutter's
 `runtime_effect.glsl` macros) to plain desktop GLSL consumed via libGDX's `ShaderProgram`.
 
+### Original synthesized sound effects
+
+`jump.wav`, `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are project-original: synthesized by
+`tools/audio/generate_sounds.py` (stdlib only, fixed random seeds, byte-identical on every run; 44.1 kHz,
+16-bit mono PCM). Licence: project-original, the same as `intro.wav`. Regenerate with
+`python3 tools/audio/generate_sounds.py`; every parameter is a named constant at the top of the script.
+`tools/test_generate_sounds.py` checks determinism, format, duration bounds, peak (at most -1 dBFS), no DC
+offset, and that the shipped files equal the script's output. `python3 tools/audio/analyze_sounds.py [--png DIR] FILE...`
+prints duration, peak, RMS and spectral figures and can render waveform previews.
+
+- The legacy `jump.wav` (inherited from the Flame/Rust versions) was replaced on 2026-11-12 by a synthesized
+  breathy, throaty effort "ha!" grunt. The author chose it on audition (earlier "hup" and nasal "hm" versions were
+  rejected) and wants the crude, 90s-speech-synthesizer character kept. The sound approach, recipes and the
+  procedure for new sounds are recorded in [SOUND_DIRECTION.md](SOUND_DIRECTION.md).
+- `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are the sounds of the environment effects in #239. They
+  are shipped but not played by any code yet; #239 steps 2 and 3 wire them in (and should drop this note).
+- The other legacy effects (`hit`, `collect`, `bounce`, `disappear`, `boss_*`, `button_click`) and
+  `main_menu.mp3` still come from the Flame/Rust versions; their provenance is part of #189.
+
 ### Known JVM / Gradle startup warnings
 
 `./gradlew run` and the packaged build start with no JVM `WARNING:` lines on JDK 25+:
