@@ -389,38 +389,74 @@ Not part of the forest set and not implemented; also recorded in D42.
 - **Arrow shot from the side (#238):** for world 2 and later (castle and other worlds, not
   the forest). The projectile can change per world and the player dodges it. It needs the D7
   telegraph before it fires.
-- **Honey fungus and false honey fungus (#295):** two look-alike spore mushrooms, one harmless (particle burst) and one poisonous (sprite cloud, particles and shaders later, #296); see the subsection below.
+- **Honey fungus and false honey fungus (#295):** two look-alike spore mushrooms, one harmless (particle burst) and one that kills by its spore cloud (sprite first, particles and shaders later, #296); decided 2026-11-12, see the subsection below.
 - **Floor pressure plate (#237):** activates a door like a lever (Prince of Persia style), for
   the castle-fortress stage. Open design points: whether the door stays open or closes when the
   plate is released, the D26 recovery rules, and linking by `target`.
 
 ### Honey fungus and false honey fungus (author idea, 2026-11-12)
 
-An idea, not decided and not implemented; tracked by
+Decided by the author on 2026-11-12, not implemented yet; tracked by
 [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), with the later polish in
 [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296).
 
-**Basis.** The honey fungus is harmless to people; the false honey fungus is poisonous, and they look
-alike. The game gets two map objects with nearly identical sprites that differ slightly, so the player has to
-read the difference:
+**Basis.** The honey fungus (Russian *opyonok*) is harmless to people; the false honey fungus is poisonous, and
+they look alike. The game gets two map objects with nearly identical sprites that differ slightly, so the
+player has to read the difference:
 
 | | Honey fungus (harmless) | False honey fungus (poisonous) |
 | --- | --- | --- |
 | Bursts into spores | yes | yes |
-| What the burst is | only a pretty effect: **particles**, like the torch's flame and sparks (`KimeriaParticleSystem`, the `kimeria-particles` skill) | a spore cloud drawn as a **sprite animation**, which then diminishes |
-| Harm | none | poisonous (the rule is open, see below) |
+| What the burst is | only a pretty effect: **particles**, like the torch's flame and sparks (`KimeriaParticleSystem`, the `kimeria-particles` skill) | a spore cloud drawn as a **sprite animation**, which **kills** |
+| Harm | none | instant death, by hitbox |
+
+**Rules (author answers, 2026-11-12).**
+
+- **Death.** The poisonous cloud is instant death, as for every lethal trap ([D3](DECISIONS.md#d3-death-resets-the-current-room-and-respawn-is-instant)):
+  one overlap test of the cloud's rectangle with the hero's body box, as the bomb blast and the spore puffball
+  (D46) do. The harmless burst has no hitbox.
+- **Trigger.** The hero's approach, as for the other proximity traps: the hero entering the mushroom's zone
+  starts it (the family of the thorn tuft, D42).
+- **Telegraph (D7).** Applies to both: after the trigger the cap swells for the shared warning
+  (`TrapWarnings`; today 0.8 s, 1.2 s with the longer-warnings assist, **a placeholder that was never playtested**:
+  the author wants shorter warnings in the spirit of Celeste and Katana Zero, to be tuned by playtest, see the note
+  in D7 and [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300)) and then bursts. Both mushrooms swell
+  the same way, so the puzzle is whether the burst kills. Only the warning scales with the assist, never movement
+  or cooldowns.
+- **Idle animation (author, 2026-11-12).** The active mushrooms play a subtle idle animation (a small sway or
+  pulse), so the player can tell from a distance that a mushroom is alive and may react. It is deterministic (the
+  level clock, no randomness) and independent of the hero.
+- **Look.** Real fungi, **not** a fly agaric (no red cap with white spots) and not like the healer's purple spotted
+  Mushroom pickup (D43) or the existing `trap-puffball`. Both are a tuft of several small caps on thin stems.
+  The **honey fungus**: honey-brown to tan caps, pale stems with a visible ring. The **false honey fungus**: the
+  same tuft shape, but sulphur-yellow to orange caps with a greenish tinge, darker olive gills and no ring.
+  Spore colours differ too: warm golden for the harmless burst, the lime of `trap-spores` for the lethal cloud. They
+  must be distinguishable only on a close look.
+- **Objects.** Two new Tiled object types, `HoneyFungus` and `FalseHoneyFungus`, sharing one base class
+  (proximity, swell, burst), not an extension of `Puffball` (D46), which is a rhythmic timer trap with no
+  proximity and no harmless variant. The lethal cloud may reuse the `TRAP_SPORES` sheet and the puffball's
+  cloud hitbox code.
+- **Static look-alikes (author, 2026-11-12; [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299)).**
+  Scenery mushrooms that never react and can never kill, so that the player stops and reads the room (D26) before
+  running. They differ from the active ones in shape or colour on purpose (a new shape makes the first meeting
+  nervous), by one consistent rule that can be learned, for example bracket fungi on tree trunks and in the
+  background, never a ground tuft on the route; they do not move, while the active ones have the idle animation.
+  The ring-or-no-ring difference between the honey fungus and the false honey fungus holds in shape, not only in
+  colour, for these too. Never placed on an active mushroom's zone or swell, and never where they hide a trap
+  warning, hint or pickup. One or two per level, only after the player has seen both bursts. They are pictures
+  (background art or a static `Decor` kind of the #239 plan), not objects with logic.
+- **Placement (a game-design choice, the author left it open).** Teach by contrast, safe first: the harmless honey
+  fungus appears first, in plain view and off the route's critical path, so the player sees the pretty burst and
+  learns the shape; the false honey fungus comes after that, in a room where the route passes its zone, with
+  the swell telegraph as the only warning. Which world and rooms is decided when the objects are built (#295),
+  with a scripted route and the hint-zone advice of [ROOMS.md](ROOMS.md); the forest-1 and forest-2 trap
+  placements already fixed in D58 and D59 stay untouched.
 
 **First version and later polish (author, 2026-11-12).** The first version uses sprites for the poisonous
 cloud, as the existing spore puffball does (`trap-spores`, D46). After the MVP, during polishing, the sprite is
 replaced by particles and shaders so that it looks "super beautiful"; this is a mandatory task, tracked by
 [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296) (part of the polish of
 [#142](https://github.com/jlogicgames/edgard_in_kimeria/issues/142)).
-
-**Open points, not guessed** (the checklist is in #295): what "diminishes" means (the cloud fades, the harm
-shrinks over time, or both); what makes a mushroom burst (proximity, a timer like the puffball, stepping on
-it, an attack); the poison's effect (it must obey D7, the telegraph rule, and the recovery rules); how the two
-sprites differ while staying unlike the healer's Mushroom pickup (D43) and the existing `trap-puffball`;
-whether these are two new Tiled objects or an extension of the `Puffball` object (D46); where they appear.
 
 ## Tablet in the original vs the remake
 

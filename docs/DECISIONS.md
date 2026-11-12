@@ -196,6 +196,16 @@ only in the menu backdrop.
   falling platforms share warning timing but have distinct collection-return retention rules
   and activation/damage logic (see [HEALER.md](HEALER.md)).
 - **Tracked in:** #47, #71
+- **Note (author, 2026-11-12): the warning durations are placeholders.** The numbers above (0.8 s default, 1.2 s with
+  the assist, 1 s and 1.5 s for the falling platform) are values from the first implementation that were recorded by
+  accident; they have **not been playtested** and are not a design decision. The author's direction is shorter
+  warnings in the spirit of Celeste and Katana Zero (candidates from 0 to about 0.125 s). Before a number changes:
+  a person's visual reaction time is usually 0.2 to 0.3 s, so such a warning cannot be reacted to and fairness
+  must come from a learnable trigger zone, an understandable death (D5) and instant retries (D3), which means
+  rewording "warns before killing" and D26 for those traps; the assist (D11) multiplies the base by 1.5, so it
+  needs an absolute minimum window; and because every trap takes its time from one shared place and tests pin the
+  literals, a global change moves all existing traps and routes. Tuned by playtest, tracked by
+  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300); until then the current values stand.
 
 ## D8. Main menu has Continue and New Game
 
