@@ -105,6 +105,7 @@ public class Level implements WorldObject {
      */
     public static final int BLOOD_CAPACITY = 96;
     private static final long BLOOD_SEED_MIX = 0x9E3779B97F4A7C15L;
+    private static final long FX_SEED_MIX = 0xC2B2AE3D27D4EB4FL;
     /** All blood of the level: no object is queued per hit. Cleared with the room. */
     private final KimeriaBloodSystem blood = new KimeriaBloodSystem(BLOOD_CAPACITY, TimeUtils.nanoTime() ^ BLOOD_SEED_MIX);
 
@@ -209,9 +210,10 @@ public class Level implements WorldObject {
         if (boss != null) boss.updatePresentation(realDt);
     }
     private boolean victory, completionSent;
+    private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall";
     private final EnvironmentFx fx;
 
-    /** The environment effects of this level (screen shake today). */
+    /** The environment effects of this level (screen shake, jump dust, ceiling grit). */
     public EnvironmentFx fx() { return fx; }
 
     /** True only after the death presentation and the completed automatic exit. */
@@ -417,7 +419,7 @@ public class Level implements WorldObject {
         roomStartAmmo = rangedStock.count();
         this.assets = assets;
         this.game = game;
-        fx = new EnvironmentFx(() -> !game.screenShakeDisabled());
+        fx = new EnvironmentFx(() -> !game.screenShakeDisabled(), TimeUtils.nanoTime() ^ FX_SEED_MIX);
         this.player = player;
         this.name = levelName;
         this.entryCoins = game.coinsCollected();
@@ -1021,11 +1023,17 @@ public class Level implements WorldObject {
         }
     }
 
-    /** A vertically moving wall that really starts to travel shakes the screen for its move time (#239). */
+    /**
+     * A vertically moving wall that really starts to travel shakes the screen for its move time, drops ceiling grit and
+     * plays the rumble and the falling grit (#239). The shake obeys the Screen shake option; grit and sounds do not.
+     */
     private void perform(Actionable actionable) {
         actionable.performAction();
-        if (actionable instanceof Wall wall && wall.movesVertically() && wall.isActive())
+        if (actionable instanceof Wall wall && wall.movesVertically() && wall.isActive()) {
             fx.shake().start(ScreenShake.LEVER_AMPLITUDE_PX, wall.moveDurationSeconds());
+            fx.ceilingGrit(wall.getX() + wall.getWidth() / 2f, wall.getWidth(), currentRoomBounds().y);
+            if (game.playSounds()) { game.playSound(WALL_RUMBLE_SOUND); game.playSound(GRIT_FALL_SOUND); }
+        }
     }
 
     /**
@@ -1134,6 +1142,7 @@ public class Level implements WorldObject {
         for (FallingPlatform p : fallingPlatforms) p.render(batch);
         for (WorldObject o : objects) o.render(batch);
         blood.render(batch);
+        fx.render(batch);
         for (WorldObject o : ambience) o.render(batch);
         if (!player.isRemoved()) player.render(batch);
         player.renderInteractionTarget(batch);

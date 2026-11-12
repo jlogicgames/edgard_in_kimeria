@@ -842,6 +842,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
             wallJumping = true;
             wallJumpTimer = 0.1f;
         } else {
+            // Ordinary ground jump only: a puff at the feet (feetY is the floor line, larger Y is lower) and its scuff.
+            if (level != null) level.fx().dustPuff(position.x + hitbox.offsetX + hitbox.width / 2f, position.y + hitbox.offsetY + hitbox.height);
+            if (game.playSounds()) game.playSound("dust_puff");
             velocity.y = -jumpForce();
             if (inQuickSand) velocity.y *= 0.1f;
         }

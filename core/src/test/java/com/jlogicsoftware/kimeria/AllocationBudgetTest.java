@@ -65,6 +65,11 @@ class AllocationBudgetTest {
     static final double CAMERA_SHAKE_CEILING = 8;
     /** Measured 4.5 B/frame in 3 runs: the shake, its offset and {@code fx.update} are 0.0 (like CAMERA_SHAKE_CEILING); the 4.5 is the {@code HashSet} that {@code Level.activateTrigger} makes once per lever pull (about 270 B every 60 frames), an event, not per-frame code. */
     static final double LEVER_SHAKE_CEILING = 16;
+    /** Measured 0.0 B/frame in 3 runs: a 6-particle jump puff every 60 frames through {@code Level.fx()} (spawn, update, render). */
+    static final double JUMP_DUST_CEILING = 8;
+    /** Measured 4.6 B/frame in 3 runs: the grit burst (24 particles over 0.6 s), its update and render are 0.0; the 4.6 is the {@code HashSet} that {@code Level.activateTrigger} makes once per lever pull (an event), as in LEVER_SHAKE_CEILING. */
+    static final double LEVER_GRIT_CEILING = 16;
+
     /** Measured 96.0 B/frame in 3 runs (before step 4: 160.0, two {@code Color} copies). The 96 B left is {@code batch.getProjectionMatrix().cpy()} in {@code BossHud.render}, outside step 4 (plan, section 12). */
     static final double BOSS_HUD_CEILING = 104;
 
@@ -167,6 +172,34 @@ class AllocationBudgetTest {
         });
         assertTrue(sum[0] != 0, "the shake must actually run in this scenario");
         assertWithinBudget("lever shake", LEVER_SHAKE_CEILING, bytes);
+    }
+
+    /** A jump puff every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fx()} (a puff lives at most 0.4 s), with {@code fx.update} and {@code fx.render} each frame. */
+    @Test void jumpDustThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 2);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.fx().dustPuff(100, 200);
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().dust().count());
+        });
+        assertTrue(peak[0] > 0, "dust must actually rise in this scenario");
+        assertWithinBudget("jump dust", JUMP_DUST_CEILING, bytes);
+    }
+
+    /** A lever pull every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.activateTrigger}: the shake plus the grit burst over its whole life, drawn each frame. */
+    @Test void leverGritThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 2);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.activateTrigger(level.triggers.get(0));
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().grit().count());
+        });
+        assertTrue(peak[0] > 0, "grit must actually fall in this scenario");
+        assertWithinBudget("lever grit", LEVER_GRIT_CEILING, bytes);
     }
 
     /** {@code BossHud.render} with an empowered boss; the font's {@code draw} is a no-op so only the HUD's own allocation is counted (a real {@code font.draw} allocates a {@code GlyphLayout}, out of scope here). */

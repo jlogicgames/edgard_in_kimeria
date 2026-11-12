@@ -80,4 +80,57 @@ class KimeriaParticleSystemTest {
         System.out.printf("ALLOCATION KimeriaParticleSystem at capacity: %.1f B/frame (ceiling %.1f)%n", bytes, SYSTEM_CEILING);
         assertTrue(bytes <= SYSTEM_CEILING, "KimeriaParticleSystem allocates " + bytes + " B/frame");
     }
+
+    /** Records the blend destination factor each time a pass switches it, and how many quads were drawn. */
+    private static final class Recording {
+        final java.util.ArrayList<Integer> blends = new java.util.ArrayList<>();
+        int draws;
+        final com.badlogic.gdx.graphics.g2d.Batch batch = (com.badlogic.gdx.graphics.g2d.Batch) java.lang.reflect.Proxy.newProxyInstance(
+            Recording.class.getClassLoader(), new Class<?>[]{com.badlogic.gdx.graphics.g2d.Batch.class}, (proxy, method, args) -> {
+                if (method.getName().equals("setBlendFunction")) blends.add((Integer) args[1]);
+                if (method.getName().equals("draw")) draws++;
+                return null;
+            });
+    }
+
+    @Test void gritKeepsItsSizeAndFadesLinearlyAtT0T05T1() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_GRIT, 0, 0, 0, 10, 1f, 2f, 1f, 1f, 1f);
+        assertEquals(2f, s.drawSize(0), 1e-6f);
+        assertEquals(0.7f, s.alpha(0), 1e-6f);
+        s.update(0.5f);
+        assertEquals(2f, s.drawSize(0), 1e-6f, "no scaling at t = 0.5");
+        assertEquals(0.35f, s.alpha(0), 1e-5f);
+        assertEquals(5f, s.y(0), 1e-4f, "falls: larger Y is lower");
+        s.update(0.499f);
+        assertEquals(2f, s.drawSize(0), 1e-6f);
+        assertEquals(0.0007f, s.alpha(0), 1e-4f, "alpha reaches 0 as life ends");
+    }
+
+    @Test void glowAndSmokeCurvesAreUnchangedByTheThirdKind() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_GLOW, 0, 0, 0, 0, 1f, 2f, 1f, 1f, 1f);
+        s.spawn(KimeriaParticleSystem.KIND_SMOKE, 0, 0, 0, 0, 1f, 2f, 1f, 1f, 1f);
+        s.update(0.5f);
+        assertEquals(2f * 0.8f, s.drawSize(0), 1e-6f);
+        assertEquals(0.7f * 0.25f, s.alpha(0), 1e-6f);
+        assertEquals(2f * 1.5f, s.drawSize(1), 1e-6f);
+        assertEquals(0.7f * 0.5f, s.alpha(1), 1e-6f);
+    }
+
+    @Test void gritIsDrawnInTheNormalBlendPassWithSmokeAndBeforeGlow() {
+        Recording only = new Recording();
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_GRIT, 0, 0, 0, 1, 1f, 1f, 1f, 1f, 1f);
+        s.render(only.batch, null);
+        assertEquals(1, only.draws);
+        assertEquals(java.util.List.of(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA),
+            only.blends, "one normal switch for the pass, then the restore; no additive switch");
+        Recording mixed = new Recording();
+        s.spawn(KimeriaParticleSystem.KIND_GLOW, 0, 0, 0, 1, 1f, 1f, 1f, 1f, 1f);
+        s.render(mixed.batch, null);
+        assertEquals(2, mixed.draws);
+        assertEquals(java.util.List.of(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE,
+            com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA), mixed.blends);
+    }
 }
