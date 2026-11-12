@@ -33,6 +33,8 @@ import java.util.Set;
  */
 public final class HeadlessLevelHarness {
     public static final float STEP = 1f / 60f;
+    /** What the proxy {@code GameContext} answers to {@code screenShakeDisabled()}: set it before building a Level. */
+    public boolean screenShakeDisabled;
     public final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TouchControls touch;
     private final GamepadInput pad = new GamepadInput();
@@ -52,6 +54,7 @@ public final class HeadlessLevelHarness {
             case "touch" -> touch;
             case "language" -> Language.ENGLISH;
             case "isGameStarted" -> true;
+            case "screenShakeDisabled" -> screenShakeDisabled;
             case "artifacts" -> artifacts;
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });

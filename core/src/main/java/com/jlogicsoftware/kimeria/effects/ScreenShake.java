@@ -38,6 +38,9 @@ public final class ScreenShake {
 
     public void clear() { remaining = 0; }
 
+    /** True while the Screen shake option is on; shake-driven scenery (hanging vines) stays still when it is off. */
+    public boolean enabled() { return enabled.getAsBoolean(); }
+
     public boolean running() { return remaining > 0; }
 
     /** The running shake's amplitude now, 0 when none runs. */

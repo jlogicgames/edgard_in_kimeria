@@ -46,6 +46,7 @@ import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
 import com.jlogicsoftware.kimeria.entity.objects.Decor;
+import com.jlogicsoftware.kimeria.entity.objects.HangingVine;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
 import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
@@ -93,6 +94,8 @@ public class Level implements WorldObject {
     public final List<WorldObject> objects = new ArrayList<>();
     /** Cosmetic scenery (#239): drawn right after the background, behind platforms, objects and the hero; no collision. */
     public final List<Decor> decor = new ArrayList<>();
+    /** Scenery vines (#239 step 5): drawn with {@link #decor}, swaying when a falling stone lands within reach. */
+    public final List<HangingVine> vines = new ArrayList<>();
     private final Rectangle heroBodyScratch = new Rectangle();
     /**
      * Objects spawned mid-frame (a coin's pickup ripple, a bomb's explosion,
@@ -376,7 +379,7 @@ public class Level implements WorldObject {
         else rangedStock.restore(roomStartAmmo);
         revisiting = revisit;
         game.artifacts().resetRoom();
-        objects.clear(); decor.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
+        objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear(); blood.clear();
         boss = null;
@@ -733,6 +736,7 @@ public class Level implements WorldObject {
                     objects.add(puffball);
                 }
                 case "Decor" -> decor.add(Decor.fromMap(assets, o, describe(o)));
+                case "HangingVine" -> vines.add(HangingVine.fromMap(assets, o, describe(o)));
                 case "ThornVine" -> {
                     ThornVine vine = ThornVine.fromMap(assets, o, describe(o));
                     float reach = vine.length() + ThornVine.LETHAL_HALF_WIDTH;
@@ -777,10 +781,20 @@ public class Level implements WorldObject {
         java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBounds();
         java.util.function.BooleanSupplier grounded = () -> player.isOnGround();
         Runnable kill = () -> player.collidedWithActor(false);
-        objects.add(spec.stone()
-            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(),
-                game.trapWarnings(), hero, grounded, kill)
-            : new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
+        FallingStone stone = spec.stone()
+            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill)
+            : null;
+        if (stone != null) {
+            float x = spec.body().x + spec.body().width / 2f;
+            stone.onImpact(() -> groundShake(x, HangingVine.STONE_STRENGTH));
+            objects.add(stone);
+        } else objects.add(new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
+    }
+
+    /** A falling stone landed at {@code x}: every scenery vine within reach sways, unless the Screen shake option is off. */
+    private void groundShake(float x, float strength) {
+        if (!fx.shake().enabled()) return;
+        for (int i = 0; i < vines.size(); i++) vines.get(i).shake(x, strength);
     }
 
     /** Proximity traps (D44) fail at load when they could not be jumped, float, or start triggered. */
@@ -1102,6 +1116,7 @@ public class Level implements WorldObject {
         for (Escalator e : escalators) e.update(dt);
         for (FallingPlatform p : fallingPlatforms) p.update(dt);
         updateDecor(dt);
+        for (int i = 0; i < vines.size(); i++) vines.get(i).update(dt);
         for (WorldObject o : objects) o.update(dt);
     }
 
@@ -1155,6 +1170,7 @@ public class Level implements WorldObject {
         if (sky != null) sky.render(batch, visibleWorldRect);
         renderBackground(batch, visibleWorldRect);
         for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
+        for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
         for (StaticPlatform platform : staticPlatforms) platform.render(batch);
         for (Escalator e : escalators) e.render(batch);
         for (FallingPlatform p : fallingPlatforms) p.render(batch);

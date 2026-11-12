@@ -58,5 +58,6 @@ WORLD_IMAGES.update({f'trap-{name}': (size[0] * len(frames), size[1])
 # Decor sheets (#239 step 4): name -> (frame size, ordered frame names); runtime export `decor-<name>.png`, one horizontal strip.
 DECOR_SHEETS = {
     'bush': ((32, 24), ('idle', 'brush1', 'brush2', 'settle')),
+    'vine': ((8, 40), ('hang',)),  # #239 step 5: the stone-linked HangingVine
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})

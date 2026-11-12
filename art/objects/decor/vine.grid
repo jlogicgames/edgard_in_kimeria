@@ -1,0 +1,49 @@
+# Hanging scenery vine, native 8x40, one frame: a thin olive stem with a few leaves, anchored at the top.
+# Cosmetic: the runtime rotates it about the top centre when a falling stone lands (HangingVine). Not trap-vine (no thorn ball).
+size 8 40
+color k 0b0814
+color n 8a8a2a
+color N 4a4a18
+color l 7a5ab0
+color d 3b2a5c
+frame hang
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+klknNk..
+kdknNk..
+.kknNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNklk
+..knNkdk
+..knNkk.
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+klknNk..
+kdknNk..
+.kknNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+..knNk..
+...knk..
+....k...

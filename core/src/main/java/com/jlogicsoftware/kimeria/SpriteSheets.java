@@ -27,6 +27,8 @@ public final class SpriteSheets {
     public static final Sheet TRAP_LOG = new Sheet("images/objects/trap-log.png", 32, 16);
     // Decor (#239 step 4): frame order idle, brush1, brush2, settle; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_BUSH = new Sheet("images/objects/decor-bush.png", 32, 24);
+    // Hanging scenery vine (#239 step 5): one frame; tools/sprite_layouts.py DECOR_SHEETS.
+    public static final Sheet DECOR_VINE = new Sheet("images/objects/decor-vine.png", 8, 40);
     public static final Sheet PLAYER = new Sheet("images/hero/Player.png", 48, 48);
     public static final Sheet PLAYER_LOOK = new Sheet("images/hero/Look.png", PLAYER.width(), PLAYER.height());
 

@@ -163,6 +163,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       losing contact
 - [x] Falling branch and falling stone (#232, D45) — zone-triggered, shared D7 warning, lethal while falling; not yet in a shipped level
 - [x] Decor bush (#239 step 4) — cosmetic `Decor` object (`kind` = `bush`), brushes when the hero walks past; no collision; see [ART_DIRECTION.md](ART_DIRECTION.md) section 4
+- [x] Hanging vine (#239 step 5) — cosmetic `HangingVine` object (no properties), sways when a falling stone lands within 160 px (off with the Screen shake option); needs a falling stone in its room (`tools/check_tiled_links.py`); see [ART_DIRECTION.md](ART_DIRECTION.md) section 4
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs with two authored +1 refills, capacity three, full-stock hints and a three-icon HUD; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
 - [x] Trigger → actionable wall removal and torch toggle via Up + Action
