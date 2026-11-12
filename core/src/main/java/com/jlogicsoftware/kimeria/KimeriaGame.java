@@ -90,6 +90,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final boolean platformTouch;
     private final DisplayControl pageFullscreen;
     private final boolean debugMode;
+    private final boolean prefersReducedMotion;
+    private boolean screenShake = Settings.DEFAULT_SCREEN_SHAKE;
 
     public KimeriaGame() { this(false); }
 
@@ -99,6 +101,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** @param pageFullscreen the browser's page fullscreen where it exists (Android Chrome, not iPhone Safari); null elsewhere */
     public KimeriaGame(boolean platformTouch, boolean debugMode, DisplayControl pageFullscreen) {
+        this(platformTouch, debugMode, pageFullscreen, false);
+    }
+
+    /** @param prefersReducedMotion the browser's {@code prefers-reduced-motion: reduce} on the web; false elsewhere. It only sets the Screen shake default while the player has not chosen. */
+    public KimeriaGame(boolean platformTouch, boolean debugMode, DisplayControl pageFullscreen, boolean prefersReducedMotion) {
+        this.prefersReducedMotion = prefersReducedMotion;
         this.pageFullscreen = pageFullscreen;
         this.platformTouch = platformTouch;
         this.debugMode = debugMode;
@@ -216,6 +224,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         language = settings.get(Settings.LANGUAGE);
         leftHanded = settings.get(Settings.LEFT_HANDED);
         trapWarnings.load(settings);
+        screenShake = settings.get(Settings.SCREEN_SHAKE, !prefersReducedMotion);
         savedProgress = new SavedProgress(settings.preferences(), LEVEL_NAMES.size());
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
@@ -292,6 +301,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 () -> Msg.LONGER_TRAP_WARNINGS.t(language) + ": "
                     + (trapWarnings.longer() ? Msg.ON : Msg.OFF).t(language),
                 () -> trapWarnings.toggle(settings)),
+            new MenuItem(
+                () -> Msg.SCREEN_SHAKE.t(language) + ": " + (screenShake ? Msg.ON : Msg.OFF).t(language),
+                () -> { screenShake = !screenShake; settings.set(Settings.SCREEN_SHAKE, screenShake); }),
             new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
         ), () -> uiState = UiState.OPTIONS, 440f);
 
@@ -336,6 +348,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     @Override
     public boolean leftHanded() {
         return leftHanded;
+    }
+
+    @Override
+    public boolean screenShakeDisabled() {
+        return !screenShake;
     }
 
     @Override
@@ -709,6 +726,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             renderWorld();
         }
 
+        // The hint anchor is placed through camera.project: give it the unshaken camera so the label does not wobble.
+        if (shakeX != 0 || shakeY != 0) {
+            camera.position.set(cameraTarget.x + LOGICAL_W / 2f, cameraTarget.y + LOGICAL_H / 2f, 0);
+            camera.update();
+        }
         // HUD + overlays draw in fixed logical screen space (not affected by world camera).
         batch.setProjectionMatrix(screenCamera.combined);
         batch.begin();

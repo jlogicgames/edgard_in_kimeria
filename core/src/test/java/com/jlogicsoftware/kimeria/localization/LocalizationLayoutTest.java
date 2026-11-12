@@ -92,6 +92,7 @@ class LocalizationLayoutTest {
                     assertTrue(44 + height(body, help, 580) + 20 + 88 + 40 <= 332, prefix + "controller help left=" + left);
                 }
                 for (String label : List.of(Msg.LONGER_TRAP_WARNINGS.t(language) + ": " + Msg.OFF.t(language),
+                    Msg.SCREEN_SHAKE.t(language) + ": " + Msg.OFF.t(language),
                     Msg.LEFT_HANDED_LABEL.t(language) + ": " + Msg.ON.t(language),
                     Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), Msg.RESTART_LEVEL.t(language))) {
                     Menu menu = new Menu(null, null, List.of(new MenuItem(label, () -> {})), null);

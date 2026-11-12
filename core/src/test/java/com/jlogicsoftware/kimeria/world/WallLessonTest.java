@@ -502,4 +502,32 @@ class WallLessonTest {
             assertTrue(branch(level).isSpent() || branch(level).state() != FallingBranch.State.FALLING);
         }
     }
+
+    @Test void aLeverThatMovesTheWallStartsOneShakeForItsMoveTime() {
+        Level level = freshRoom();
+        assertFalse(level.fx().shake().running());
+        walkToLever(level);
+        operate(level);
+        assertTrue(wall(level).isRaised());
+        assertTrue(level.fx().shake().running());
+        // Started with the lever amplitude; at most the three operating frames have decayed it.
+        float amplitude = level.fx().shake().currentAmplitude();
+        assertTrue(amplitude > com.jlogicsoftware.kimeria.effects.ScreenShake.LEVER_AMPLITUDE_PX * .95f
+            && amplitude <= com.jlogicsoftware.kimeria.effects.ScreenShake.LEVER_AMPLITUDE_PX, "amplitude " + amplitude);
+        // It lasts the wall's own move time (authored 1.5 s in forest-0; 1 s when the map says nothing) and then stops.
+        float seconds = wall(level).moveDurationSeconds();
+        assertTrue(seconds >= Wall.DEFAULT_MOVE_DURATION_SECONDS);
+        settle(level, Math.round(seconds * 60) - 10);
+        assertTrue(level.fx().shake().running(), "still running shortly before the move time is over");
+        settle(level, 20);
+        assertFalse(level.fx().shake().running());
+    }
+
+    @Test void aWallThatCannotMoveStartsNoShake() {
+        Level level = freshRoom();
+        walkToLever(level);
+        wall(level).setActive(false);
+        operate(level);
+        assertFalse(level.fx().shake().running());
+    }
 }

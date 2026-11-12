@@ -137,4 +137,39 @@ class SettingsTest {
             assertEquals(Boolean.parseBoolean(value.toString()), settings.get(Settings.FULLSCREEN));
         }
     }
+
+    @Test
+    void screenShakeIsOnByDefaultOnDesktop() {
+        Settings settings = new Settings(preferences());
+        assertTrue(settings.get(Settings.SCREEN_SHAKE));
+        assertTrue(settings.get(Settings.SCREEN_SHAKE, !false)); // the desktop passes prefersReducedMotion = false
+        assertEquals("screen-shake", Settings.KEY_SCREEN_SHAKE);
+    }
+
+    @Test
+    void aReducedMotionPlatformTurnsTheDefaultOffButASavedChoiceAlwaysWins() {
+        boolean reducedMotion = true;
+        Settings fresh = new Settings(preferences());
+        assertFalse(fresh.get(Settings.SCREEN_SHAKE, !reducedMotion));
+        assertTrue(preferences().get().isEmpty(), "reading the platform default must not save it");
+        fresh.set(Settings.SCREEN_SHAKE, true); // the player turned it on despite the browser preference
+        assertTrue(Settings.load(this::preferences).get(Settings.SCREEN_SHAKE, !reducedMotion));
+        fresh.set(Settings.SCREEN_SHAKE, false); // and off on a platform that has no preference
+        assertFalse(Settings.load(this::preferences).get(Settings.SCREEN_SHAKE, !false));
+        // An unreadable saved value falls back to the platform default, not to a guess.
+        Preferences broken = preferences();
+        broken.putString(Settings.KEY_SCREEN_SHAKE, "maybe");
+        assertFalse(new Settings(broken).get(Settings.SCREEN_SHAKE, !reducedMotion));
+        assertTrue(new Settings(broken).get(Settings.SCREEN_SHAKE, !false));
+    }
+
+    @Test
+    void screenShakeRoundTripsAsABoolean() {
+        Settings settings = new Settings(preferences());
+        settings.set(Settings.SCREEN_SHAKE, false);
+        assertFalse(preferences().getBoolean(Settings.KEY_SCREEN_SHAKE, true));
+        assertFalse(Settings.load(this::preferences).get(Settings.SCREEN_SHAKE));
+        settings.set(Settings.SCREEN_SHAKE, true);
+        assertTrue(Settings.load(this::preferences).get(Settings.SCREEN_SHAKE));
+    }
 }

@@ -10,7 +10,9 @@ import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
+import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
+import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
@@ -207,9 +209,10 @@ public class Level implements WorldObject {
         if (boss != null) boss.updatePresentation(realDt);
     }
     private boolean victory, completionSent;
-    private float shakeRemaining;
-    /** Result of {@link #cameraShakeOffset}, reused every frame. */
-    private final Vector2 shakeOffset = new Vector2();
+    private final EnvironmentFx fx;
+
+    /** The environment effects of this level (screen shake today). */
+    public EnvironmentFx fx() { return fx; }
 
     /** True only after the death presentation and the completed automatic exit. */
     public boolean victoryExitComplete() { return victory && completionSent; }
@@ -235,9 +238,9 @@ public class Level implements WorldObject {
         game.setNormalTime();
     }
 
-    public void shakeAfterBossAttack() { if (!victory) shakeRemaining = .18f; }
-    public void shakeAfterEmpoweredHit() { shakeRemaining = .18f; }
-    public void clearCameraEffects() { shakeRemaining = 0; }
+    public void shakeAfterBossAttack() { if (!victory) fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
+    public void shakeAfterEmpoweredHit() { fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
+    public void clearCameraEffects() { fx.clear(); }
 
     /**
      * Visual displacement only; narrow rooms keep their existing centred framing.
@@ -246,20 +249,7 @@ public class Level implements WorldObject {
      * {@code y} at once and do not store it (copy it with {@code new Vector2(offset)} outside per-frame code if
      * it must be kept). It is not safe to mutate.
      */
-    public Vector2 cameraShakeOffset(Rectangle view) {
-        Rectangle room = currentRoomBounds();
-        float age = .18f - shakeRemaining;
-        float amplitude = 1.25f * Math.max(0, shakeRemaining / .18f);
-        float dx = (float) Math.sin(age * 110) * amplitude;
-        float dy = (float) Math.sin(age * 137) * amplitude;
-        if (room.width <= view.width) dx = 0;
-        else dx = Math.max(room.x, Math.min(room.x + room.width - view.width, view.x + dx))
-            - Math.max(room.x, Math.min(room.x + room.width - view.width, view.x));
-        if (room.height <= view.height) dy = 0;
-        else dy = Math.max(room.y, Math.min(room.y + room.height - view.height, view.y + dy))
-            - Math.max(room.y, Math.min(room.y + room.height - view.height, view.y));
-        return shakeOffset.set(dx, dy);
-    }
+    public Vector2 cameraShakeOffset(Rectangle view) { return fx.shake().offset(currentRoomBounds(), view); }
 
     public Rectangle currentRoomBounds() { return roomLayout.rooms.get(currentRoom).bounds(); }
     public String currentRoomName() { return roomLayout.rooms.get(currentRoom).id(); }
@@ -427,6 +417,7 @@ public class Level implements WorldObject {
         roomStartAmmo = rangedStock.count();
         this.assets = assets;
         this.game = game;
+        fx = new EnvironmentFx(() -> !game.screenShakeDisabled());
         this.player = player;
         this.name = levelName;
         this.entryCoins = game.coinsCollected();
@@ -1014,13 +1005,13 @@ public class Level implements WorldObject {
         for (WorldObject obj : objects) {
             if (obj instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
                 && activated.add(actionable)) {
-                actionable.performAction();
+                perform(actionable);
             }
         }
         for (CollisionBlock block : collisionBlocks) {
             if (block instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
                 && activated.add(actionable)) {
-                actionable.performAction();
+                perform(actionable);
             }
         }
         for (Escalator escalator : escalators) {
@@ -1028,6 +1019,13 @@ public class Level implements WorldObject {
                 escalator.performAction();
             }
         }
+    }
+
+    /** A vertically moving wall that really starts to travel shakes the screen for its move time (#239). */
+    private void perform(Actionable actionable) {
+        actionable.performAction();
+        if (actionable instanceof Wall wall && wall.movesVertically() && wall.isActive())
+            fx.shake().start(ScreenShake.LEVER_AMPLITUDE_PX, wall.moveDurationSeconds());
     }
 
     /**
@@ -1043,7 +1041,7 @@ public class Level implements WorldObject {
 
     @Override
     public void update(float dt) {
-        shakeRemaining = Math.max(0, shakeRemaining - dt);
+        fx.update(dt);
         if (victory) {
             if (player.victoryPausePressed()) { game.togglePause(); return; }
             dt = Math.min(dt, .05f);
