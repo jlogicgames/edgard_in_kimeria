@@ -1,6 +1,9 @@
 package com.jlogicsoftware.kimeria;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.effects.BloodSystem;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
@@ -8,6 +11,7 @@ import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
+import com.jlogicsoftware.kimeria.ui.BossHud;
 import com.jlogicsoftware.kimeria.world.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,10 +56,15 @@ class AllocationBudgetTest {
     static final double FOREST_2_ROOM_0_CEILING = 9720;
     /** Measured 2,184.0 B/frame in 3 runs (step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. */
     static final double FOREST_2_ROOM_1_CEILING = 2360;
-    /** Measured 1,992.0 to 1,992.1 B/frame (step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. */
-    static final double FOREST_2_ROOM_2_CEILING = 2150;
-    /** Measured 1,991.9 to 1,992.6 B/frame in 3 runs: the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene. */
-    static final double FOREST_2_ROOM_2_BLOOD_CEILING = 2150;
+    /** Measured 1,960.0 to 1,960.6 B/frame in 3 runs (step 4: the {@code Boss.render} {@code Color} copy, -32, from a paired old/new run of the same test class; a later run of the final code, after scenarios were added, read 1,512 to 1,712 on the same scene, so JIT state moves this scene by more than the 32 B and the ceiling stays at the first measurement plus 8 %; step 3: 1,992.0 to 1,992.1; step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. */
+    static final double FOREST_2_ROOM_2_CEILING = 2120;
+    /** Measured 1,991.9 to 1,992.6 B/frame in 3 runs: the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene (step 4: 1,960.0 in 3 runs). */
+    static final double FOREST_2_ROOM_2_BLOOD_CEILING = 2120;
+
+    /** Measured 0.0 B/frame in 3 runs (before step 4: 24.0, the returned {@code Vector2}; the 32 B {@code Rectangle} of {@code KimeriaGame.render} is not in this scenario, which already reuses its view). */
+    static final double CAMERA_SHAKE_CEILING = 8;
+    /** Measured 96.0 B/frame in 3 runs (before step 4: 160.0, two {@code Color} copies). The 96 B left is {@code batch.getProjectionMatrix().cpy()} in {@code BossHud.render}, outside step 4 (plan, section 12). */
+    static final double BOSS_HUD_CEILING = 104;
 
     /** Escapes the deliberate allocation of {@link #theProbeCanReadAllocatedBytes()} so escape analysis keeps it. */
     private static volatile byte[] sink;
@@ -125,4 +134,32 @@ class AllocationBudgetTest {
     @Test void forest2Room0() { assertWithinBudget("forest-2 room 0", FOREST_2_ROOM_0_CEILING, room("forest-2", 0)); }
     @Test void forest2Room1() { assertWithinBudget("forest-2 room 1", FOREST_2_ROOM_1_CEILING, room("forest-2", 1)); }
     @Test void forest2Room2() { assertWithinBudget("forest-2 room 2", FOREST_2_ROOM_2_CEILING, room("forest-2", 2)); }
+
+    /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
+    @Test void cameraShakeQuery() {
+        Level level = harness.roomOf("forest-2", 2);
+        Rectangle view = new Rectangle();
+        Rectangle room = level.currentRoomBounds();
+        float[] sum = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % 10 == 0) level.shakeAfterBossAttack();
+            view.set(room.x, room.y, 640, 360);
+            Vector2 shake = level.cameraShakeOffset(view);
+            sum[0] += shake.x + shake.y;
+        });
+        assertWithinBudget("camera shake query", CAMERA_SHAKE_CEILING, bytes);
+    }
+
+    /** {@code BossHud.render} with an empowered boss; the font's {@code draw} is a no-op so only the HUD's own allocation is counted (a real {@code font.draw} allocates a {@code GlyphLayout}, out of scope here). */
+    @Test void bossHud() {
+        BitmapFont font = new BitmapFont() {
+            @Override public com.badlogic.gdx.graphics.g2d.GlyphLayout draw(com.badlogic.gdx.graphics.g2d.Batch b, CharSequence s, float x, float y) { return null; }
+        };
+        harness.font = font;
+        BossHud hud = new BossHud(harness.assets(), harness.game(), new Matrix4(), 640, 360);
+        Level level = harness.roomOf("forest-2", 2);
+        double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
+        font.dispose();
+        assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
+    }
 }

@@ -18,6 +18,8 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     private static final int FIREBALL_DAMAGE = 2;
     public static final float SPEED = 65f, WAKE_DISTANCE = 160f;
     public static final float ATTACK_SPEED = 1.5f * 1.5f;
+    /** Blue channel of the orange tint drawn over the counter sequence (red stays 1, green pulses). */
+    private static final float COUNTER_TINT_BLUE = .15f;
     public static final float NORMAL_FRAME = .35f / ATTACK_SPEED, NORMAL_DURATION = NORMAL_FRAME * 4;
     public static final float HURT_DURATION = .2f, WARNING_DURATION = 1.15f;
     public static final float COUNTER_DURATION = .3f / ATTACK_SPEED, RECOVERY_DURATION = .3f, DEATH_DURATION = .8f;
@@ -232,14 +234,15 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
 
     @Override public void render(Batch batch) {
         if (isRemoved()) return;
-        Color before = new Color(batch.getColor());
+        Color tint = batch.getColor();
+        float beforeR = tint.r, beforeG = tint.g, beforeB = tint.b, beforeA = tint.a;
         if (isCounterSequence()) {
             float pulse = current == State.HURT || current == State.WARNING
                 ? (((int) (elapsed / .12f) % 2 == 0) ? .35f : .75f) : .65f;
-            batch.setColor(1f, pulse, .15f, before.a);
+            batch.setColor(1f, pulse, COUNTER_TINT_BLUE, beforeA);
         }
         super.render(batch);
-        batch.setColor(before);
+        batch.setColor(beforeR, beforeG, beforeB, beforeA);
     }
 
     @Override public Hitbox hitbox() { return hitbox; }

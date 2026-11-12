@@ -80,6 +80,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private Viewport viewport;
     private final Vector2 cameraTarget = new Vector2();
     private final Rectangle reusableVisibleRect = new Rectangle();
+    private final Rectangle reusableShakeView = new Rectangle();
 
     private OrthographicCamera screenCamera;
     private Viewport uiViewport;
@@ -667,8 +668,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         menuBackdropActive = !levelVisible && !storyScreenActive() && uiState != UiState.HEALER
             && !(uiState == UiState.PAUSED && pausedHealer);
 
-        Vector2 shake = level != null ? level.cameraShakeOffset(visibleWorldRect(new Rectangle())) : new Vector2();
-        camera.position.set(cameraTarget.x + LOGICAL_W / 2f + shake.x, cameraTarget.y + LOGICAL_H / 2f + shake.y, 0);
+        float shakeX = 0, shakeY = 0;
+        if (level != null) {
+            Vector2 shake = level.cameraShakeOffset(visibleWorldRect(reusableShakeView)); // read at once, never kept
+            shakeX = shake.x;
+            shakeY = shake.y;
+        }
+        camera.position.set(cameraTarget.x + LOGICAL_W / 2f + shakeX, cameraTarget.y + LOGICAL_H / 2f + shakeY, 0);
         camera.update();
 
         // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.

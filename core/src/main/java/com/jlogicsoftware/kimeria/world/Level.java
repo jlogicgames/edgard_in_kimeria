@@ -208,6 +208,8 @@ public class Level implements WorldObject {
     }
     private boolean victory, completionSent;
     private float shakeRemaining;
+    /** Result of {@link #cameraShakeOffset}, reused every frame. */
+    private final Vector2 shakeOffset = new Vector2();
 
     /** True only after the death presentation and the completed automatic exit. */
     public boolean victoryExitComplete() { return victory && completionSent; }
@@ -237,7 +239,13 @@ public class Level implements WorldObject {
     public void shakeAfterEmpoweredHit() { shakeRemaining = .18f; }
     public void clearCameraEffects() { shakeRemaining = 0; }
 
-    /** Visual displacement only; narrow rooms keep their existing centred framing. */
+    /**
+     * Visual displacement only; narrow rooms keep their existing centred framing.
+     *
+     * <p>The returned vector is a field of this level and is overwritten by the next call: read {@code x} and
+     * {@code y} at once and do not store it (copy it with {@code new Vector2(offset)} outside per-frame code if
+     * it must be kept). It is not safe to mutate.
+     */
     public Vector2 cameraShakeOffset(Rectangle view) {
         Rectangle room = currentRoomBounds();
         float age = .18f - shakeRemaining;
@@ -250,7 +258,7 @@ public class Level implements WorldObject {
         if (room.height <= view.height) dy = 0;
         else dy = Math.max(room.y, Math.min(room.y + room.height - view.height, view.y + dy))
             - Math.max(room.y, Math.min(room.y + room.height - view.height, view.y));
-        return new Vector2(dx, dy);
+        return shakeOffset.set(dx, dy);
     }
 
     public Rectangle currentRoomBounds() { return roomLayout.rooms.get(currentRoom).bounds(); }
