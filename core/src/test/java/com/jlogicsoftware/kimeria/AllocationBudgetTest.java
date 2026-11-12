@@ -1,7 +1,7 @@
 package com.jlogicsoftware.kimeria;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.jlogicsoftware.kimeria.effects.BloodBurst;
+import com.jlogicsoftware.kimeria.effects.BloodSystem;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.effects.Torch;
@@ -36,13 +36,16 @@ class AllocationBudgetTest {
     private static final float TORCH_X = 100, TORCH_Y = 100, TORCH_SIZE = 16;
     private static final int TORCH_INTENSITY = 200;
     private static final float BLOOD_X = 100, BLOOD_Y = 90, BLOOD_FLOOR = 110;
+    private static final long BLOOD_SEED = 7264;
 
     // Measured 2026-11-11 on HotSpot (GraalVM CE 25), update + render, 3 runs each. Each ceiling is the highest run plus about 8 %.
     // Step 1 (cached regions) and step 2 (Torch on ParticleSystem) lowered the ceilings; earlier values are in the comments. The remaining room cost is the harness and level/entity code (plan, section 12).
     /** Measured 0.1 B/frame in 3 runs (step 1: 149.4 to 151.3; step 0: 190.9 to 195.1): step 2 put the torch on the allocation-free ParticleSystem. */
     static final double TORCH_CEILING = 8;
-    /** Measured 32.8 B/frame averaged over a 60-frame cycle (step 0: 97.6): exactly the 1,968 B constructor per cycle; render allocates 0. */
-    static final double BLOOD_BURST_CEILING = 36;
+    /** Measured 0.0 B/frame in 3 runs, a 32-drop spray every 60 frames with spawn, update and render (step 1: 32.8, step 0: 97.6 for the old {@code BloodBurst}); step 3 put blood on the allocation-free BloodSystem. */
+    static final double BLOOD_SPRAY_CEILING = 8;
+    /** Measured 0.0 B/frame in 3 runs, a 48-drop empowered spray every 60 frames (old {@code BloodBurst}: 2,928 B constructor, about 49 B/frame over the cycle, read from the plan's section 1). */
+    static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
     /** Measured 2,441.8 to 2,441.9 B/frame (step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. */
     static final double FOREST_1_CEILING = 2640;
     /** Measured 8,920.6 to 9,000.0 B/frame (step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches; the cause of the large {@code update} share is not attributed (plan, section 8). */
@@ -51,6 +54,8 @@ class AllocationBudgetTest {
     static final double FOREST_2_ROOM_1_CEILING = 2360;
     /** Measured 1,992.0 to 1,992.1 B/frame (step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. */
     static final double FOREST_2_ROOM_2_CEILING = 2150;
+    /** Measured 1,991.9 to 1,992.6 B/frame in 3 runs: the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene. */
+    static final double FOREST_2_ROOM_2_BLOOD_CEILING = 2150;
 
     /** Escapes the deliberate allocation of {@link #theProbeCanReadAllocatedBytes()} so escape analysis keeps it. */
     private static volatile byte[] sink;
@@ -84,21 +89,36 @@ class AllocationBudgetTest {
         assertWithinBudget("one Torch", TORCH_CEILING, bytes);
     }
 
-    @Test void oneBloodBurstOverItsWholeLife() {
-        BloodBurst[] burst = new BloodBurst[1];
-        // A burst lives .9 s (54 frames): a new one every 60 frames, so the constructor is part of the average.
-        double bytes = AllocationProbe.bytesPerFrame(i -> {
-            if (i % BURST_CYCLE_FRAMES == 0) burst[0] = new BloodBurst(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
-            burst[0].update(STEP);
-            burst[0].render(batch);
+    private double blood(boolean empowered) {
+        BloodSystem blood = new BloodSystem(Level.BLOOD_CAPACITY, BLOOD_SEED);
+        // A burst lives .9 s (54 frames): a new spray every 60 frames, so the spawn is part of the average.
+        return AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) blood.spray(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, empowered);
+            blood.update(STEP);
+            blood.render(batch);
         });
-        assertWithinBudget("one BloodBurst", BLOOD_BURST_CEILING, bytes);
+    }
+
+    @Test void oneBloodSprayOverItsWholeLife() { assertWithinBudget("one blood spray", BLOOD_SPRAY_CEILING, blood(false)); }
+    @Test void oneEmpoweredBloodSprayOverItsWholeLife() {
+        assertWithinBudget("one empowered blood spray", BLOOD_EMPOWERED_SPRAY_CEILING, blood(true));
     }
 
     private double room(String map, int index) {
         Level level = harness.roomOf(map, index);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         return AllocationProbe.bytesPerFrame(i -> { level.update(STEP); level.render(batch, view); });
+    }
+
+    /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
+    @Test void forest2Room2WithBlood() {
+        Level level = harness.roomOf("forest-2", 2);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.blood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, true);
+            level.update(STEP); level.render(batch, view);
+        });
+        assertWithinBudget("forest-2 room 2 with blood", FOREST_2_ROOM_2_BLOOD_CEILING, bytes);
     }
 
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }

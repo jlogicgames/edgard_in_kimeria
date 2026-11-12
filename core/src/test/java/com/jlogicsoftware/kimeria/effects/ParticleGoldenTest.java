@@ -1,10 +1,6 @@
 package com.jlogicsoftware.kimeria.effects;
 
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.RandomXS128;
 import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,6 +22,7 @@ class ParticleGoldenTest {
     static final float TORCH_X = 100, TORCH_Y = 100, TORCH_SIZE = 16;
     static final int TORCH_INTENSITY = 200;
     static final float BLOOD_X = 100, BLOOD_Y = 90, BLOOD_FLOOR = 110;
+    static final int BLOOD_CAPACITY = 96;
 
     /**
      * Each snapshot is {liveCount, x0, y0, size0, alpha0, x1, ...} in spawn order. The torch's generator is seeded with
@@ -55,45 +52,34 @@ class ParticleGoldenTest {
         return values;
     }
 
-    /** Same layout as {@link #torchSnapshots()}, for the live drops of a {@code BloodBurst}. */
-    static float[][] bloodSnapshots(boolean empowered) throws Exception {
-        var previous = MathUtils.random;
-        var random = new RandomXS128(SEED);
-        MathUtils.random = random;
-        try {
-            BloodBurst burst = new BloodBurst(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, empowered);
-            Field drops = BloodBurst.class.getDeclaredField("drops"); drops.setAccessible(true);
-            float[][] result = new float[BLOOD_FRAMES.length][];
-            int next = 0;
-            for (int frame = 1; frame <= BLOOD_FRAMES[BLOOD_FRAMES.length - 1]; frame++) {
-                burst.update(STEP);
-                if (frame == BLOOD_FRAMES[next]) result[next++] = bloodSnapshot(burst, (Object[]) drops.get(burst));
-            }
-            return result;
-        } finally { MathUtils.random = previous; }
+    /**
+     * Same layout as {@link #torchSnapshots()}, for the live drops of one burst of the {@link BloodSystem}; the size is the
+     * drop's base size and the alpha its fade, as {@code render} uses them. {@code new RandomXS128(SEED)} is the sequence
+     * {@code MathUtils.random} gave the old {@code BloodBurst}, which this system replaced in step 3.
+     */
+    static float[][] bloodSnapshots(boolean empowered) {
+        BloodSystem blood = new BloodSystem(BLOOD_CAPACITY, SEED);
+        blood.spray(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, empowered);
+        float[][] result = new float[BLOOD_FRAMES.length][];
+        int next = 0;
+        for (int frame = 1; frame <= BLOOD_FRAMES[BLOOD_FRAMES.length - 1]; frame++) {
+            blood.update(STEP);
+            if (frame == BLOOD_FRAMES[next]) result[next++] = bloodSnapshot(blood);
+        }
+        return result;
     }
 
-    private static float[] bloodSnapshot(BloodBurst burst, Object[] drops) throws Exception {
-        float age = (float) field(burst, "age");
-        int live = 0;
-        for (Object d : drops) if (age < (float) field(d, "life")) live++;
-        float[] values = new float[1 + live * 4];
-        values[0] = live;
+    private static float[] bloodSnapshot(BloodSystem blood) {
+        float[] values = new float[1 + blood.count() * 4];
+        values[0] = blood.count();
         int at = 1;
-        for (Object d : drops) {
-            float life = (float) field(d, "life");
-            if (age >= life) continue;
-            values[at++] = (float) field(d, "x");
-            values[at++] = (float) field(d, "y");
-            values[at++] = (float) field(d, "size");
-            values[at++] = Math.min(1, (life - age) / .2f);
+        for (int i = 0; i < blood.count(); i++) {
+            values[at++] = blood.x(i);
+            values[at++] = blood.y(i);
+            values[at++] = blood.size(i);
+            values[at++] = blood.fade(i);
         }
         return values;
-    }
-
-    private static Object field(Object owner, String name) throws Exception {
-        Field f = owner.getClass().getDeclaredField(name); f.setAccessible(true);
-        return f.get(owner);
     }
 
     private static void assertSnapshots(float[][] expected, float[][] actual, String what) {
@@ -104,13 +90,13 @@ class ParticleGoldenTest {
         }
     }
 
-    @Test void torchLooksExactlyAsItDid() throws Exception {
+    @Test void torchLooksExactlyAsItDid() {
         assertSnapshots(ParticleGoldenData.TORCH, torchSnapshots(), "torch");
     }
-    @Test void bloodBurstOf32DropsLooksExactlyAsItDid() throws Exception {
+    @Test void bloodBurstOf32DropsLooksExactlyAsItDid() {
         assertSnapshots(ParticleGoldenData.BLOOD_32, bloodSnapshots(false), "blood 32");
     }
-    @Test void empoweredBloodBurstOf48DropsLooksExactlyAsItDid() throws Exception {
+    @Test void empoweredBloodBurstOf48DropsLooksExactlyAsItDid() {
         assertSnapshots(ParticleGoldenData.BLOOD_48, bloodSnapshots(true), "blood 48");
     }
 }

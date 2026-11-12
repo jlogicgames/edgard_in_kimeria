@@ -14,7 +14,6 @@ import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.KimeriaGame;
 import com.jlogicsoftware.kimeria.entity.Actor;
-import com.jlogicsoftware.kimeria.effects.BloodBurst;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -424,7 +423,7 @@ class BossCombatTest {
         assertFalse(playedSounds.contains("boss_restore"), "Entering a fresh room is not a retry");
         startNormal(); sword();
         assertEquals(1, playedSounds.stream().filter("boss_hit"::equals).count());
-        assertEquals(1, level.objects.stream().filter(BloodBurst.class::isInstance).count());
+        assertEquals(32, level.bloodParticles().count(), "one ordinary hit sprays one 32-drop burst");
         assertEquals(1f, boss.feedback().lostSegmentAlpha(11));
         outsideSwing(); frames(30);
         assertEquals(1, playedSounds.stream().filter("boss_hit"::equals).count());
@@ -456,18 +455,15 @@ class BossCombatTest {
             for (int frame = 0; frame < 180 && boss.getState() != protectedState; frame++) frames(1);
             assertEquals(protectedState, boss.getState());
             var elapsed = Boss.class.getDeclaredField("elapsed"); elapsed.setAccessible(true);
-            var pendingField = Level.class.getDeclaredField("pendingSpawns"); pendingField.setAccessible(true);
             float timer = elapsed.getFloat(boss);
-            int blood = (int) level.objects.stream().filter(BloodBurst.class::isInstance).count();
-            int pendingBlood = (int) ((List<?>) pendingField.get(level)).stream().filter(BloodBurst.class::isInstance).count();
+            int blood = level.bloodParticles().count();
             int hitSounds = (int) playedSounds.stream().filter("boss_hit"::equals).count();
             float lostSegment = boss.feedback().lostSegmentAlpha(2);
             boss.collidedWithActor(true);
             fireball(true);
             assertEquals(2, boss.energy(), protectedState.toString());
             assertEquals(timer, elapsed.getFloat(boss), 0f, "A rejected hit cannot reset the timer");
-            assertEquals(blood, level.objects.stream().filter(BloodBurst.class::isInstance).count());
-            assertEquals(pendingBlood, ((List<?>) pendingField.get(level)).stream().filter(BloodBurst.class::isInstance).count());
+            assertEquals(blood, level.bloodParticles().count());
             assertEquals(hitSounds, playedSounds.stream().filter("boss_hit"::equals).count());
             assertEquals(lostSegment, boss.feedback().lostSegmentAlpha(2));
             assertEquals(Vector2.Zero, shake(), "Rejected empowered hits have no impact shake");
@@ -774,7 +770,7 @@ class BossCombatTest {
             level.player.velocity.setZero();
             level.player.setOnGround(true);
             held.add(fromLeft ? Input.Keys.D : Input.Keys.A);
-            long bursts = level.objects.stream().filter(BloodBurst.class::isInstance).count();
+            int drops = level.bloodParticles().count();
             for (int frame = 0; frame < 20; frame++) {
                 frames(1);
                 assertFalse(level.player.isGotHit());
@@ -783,7 +779,8 @@ class BossCombatTest {
                 else assertTrue(level.player.hitboxBounds().x > body.x);
             }
             held.clear();
-            assertEquals(bursts, level.objects.stream().filter(BloodBurst.class::isInstance).count(),
+            // Drops only ever expire between sprays; a new spray would add at least 32.
+            assertTrue(level.bloodParticles().count() <= drops,
                 "Solid contact must not emit blood");
         }
     }
@@ -862,19 +859,24 @@ class BossCombatTest {
         assertFalse(level.player.isGotHit()); assertTrue(level.player.getX() > 2496);
         frames(100); assertEquals(1, completions);
     }
+    private int empoweredDrops() {
+        int empowered = 0;
+        for (int i = 0; i < level.bloodParticles().count(); i++) if (level.bloodParticles().empowered(i)) empowered++;
+        return empowered;
+    }
+
     @Test void elixirThickensBloodAndShakesOnlyOnLandedEmpoweredSwordHits() {
         encounter();
         boss.collidedWithActor(true);
         frames(0); level.update(0);
-        BloodBurst normal = level.objects.stream().filter(BloodBurst.class::isInstance).map(BloodBurst.class::cast).findFirst().orElseThrow();
-        assertEquals(32, normal.dropletCount());
+        assertEquals(32, level.bloodParticles().count());
+        assertEquals(0, empoweredDrops(), "an ordinary hit sprays no empowered drops");
         assertEquals(Vector2.Zero, shake(), "Ordinary hit has no empowered impact shake");
         artifacts.drinkBossElixir("forest-2");
         outsideSwing(); vulnerableAgain();
         boss.collidedWithActor(true); level.update(.01f);
         assertEquals(1, boss.energy());
-        assertTrue(level.objects.stream().filter(BloodBurst.class::isInstance).map(BloodBurst.class::cast)
-            .anyMatch(b -> b.dropletCount() == 48));
+        assertEquals(48, empoweredDrops(), "the elixir hit sprays one 48-drop empowered burst");
         assertTrue(shake().len() > 0);
         level.clearCameraEffects();
         boss.collidedWithActor(false);

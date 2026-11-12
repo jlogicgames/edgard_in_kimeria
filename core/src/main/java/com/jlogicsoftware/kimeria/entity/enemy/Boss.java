@@ -6,7 +6,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.effects.BossFeedback;
-import com.jlogicsoftware.kimeria.effects.BloodBurst;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.physics.CollideBody;
@@ -159,8 +158,8 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         feedback.damaged(before, energy);
         Rectangle body = hitboxBounds();
         float direction = player.hitboxBounds().x + player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
-        level.queueSpawn(new BloodBurst(direction > 0 ? body.x : body.x + body.width,
-            body.y + body.height * BLOOD_IMPACT_Y_FRACTION, direction, body.y + body.height, empowered));
+        level.blood(direction > 0 ? body.x : body.x + body.width,
+            body.y + body.height * BLOOD_IMPACT_Y_FRACTION, direction, body.y + body.height, empowered);
         if (game.playSounds()) game.playSound("boss_hit");
         if (energy == 0) {
             completedStrike = false;

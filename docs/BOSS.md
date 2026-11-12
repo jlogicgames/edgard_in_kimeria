@@ -217,7 +217,10 @@ A fresh level/room entry does not play the retry cue. Feedback uses real gamepla
 so death slow motion does not stretch it, and visual state never affects combat health.
 
 Blood uses code particles with gravity, streaks and brief floor splashes (up to 0.9 s),
-including on the lethal hit; contact and stomping emit none. The star texture has been removed.
+including on the lethal hit; contact and stomping emit none. Since #285 step 3 the drops live in
+`effects.BloodSystem`, one fixed-array, allocation-free system owned by the `Level` (`level.blood(...)`
+from `Boss`; no object is created per hit), with the same formulas and random-call order as before.
+The star texture has been removed.
 The frame and filled/empty slots are independent PNGs in
 [`assets/images/ui/boss`](../assets/images/ui/boss/README.md). Dimensions and gaps are grouped
 in `BossHud`; equivalent-sized art replacements require no code change. The short impact
@@ -285,9 +288,9 @@ terrain is respected when the boss crowds the hero against a wall. Falling onto 
 still bounces, and jumping into the underside is blocked. Active axe strikes remain lethal.
 
 The impact-star image and its render/timer code were deleted. Each landed sword hit now
-queues one independent 32-droplet blood spray, directed away from the attacker, with
+sprays 32 blood droplets (48 empowered; a `BloodBurst` object per hit until #285 step 3, now `Level.blood`), directed away from the attacker, with
 gravity, red streaks and brief floor splashes. It lasts up to 0.9 s, survives lethal hits
-and is cleared by the normal world cleanup or room retry. It uses the existing white
+and is cleared with the room on a retry. It uses the existing white
 quad like other procedural effects, so no new image or particle texture is required.
 
 At the time, all **104 core tests** passed, and desktop/web builds succeeded. Regression

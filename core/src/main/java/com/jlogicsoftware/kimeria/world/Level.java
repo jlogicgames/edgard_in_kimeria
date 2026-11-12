@@ -4,11 +4,13 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
+import com.jlogicsoftware.kimeria.effects.BloodSystem;
 import com.jlogicsoftware.kimeria.effects.Firefly;
 import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
@@ -95,6 +97,14 @@ public class Level implements WorldObject {
      * into {@code objects} once per frame, after that iteration is over.
      */
     private final List<WorldObject> pendingSpawns = new ArrayList<>();
+    /**
+     * Capacity of {@link #blood}: the boss cannot be hit again for HURT + WARNING (1.35 s), longer than a drop lives (.9 s),
+     * so at most one burst of 48 drops is alive; twice that is the headroom (BloodSystemCapacityTest measures the peak).
+     */
+    public static final int BLOOD_CAPACITY = 96;
+    private static final long BLOOD_SEED_MIX = 0x9E3779B97F4A7C15L;
+    /** All blood of the level: no object is queued per hit. Cleared with the room. */
+    private final BloodSystem blood = new BloodSystem(BLOOD_CAPACITY, TimeUtils.nanoTime() ^ BLOOD_SEED_MIX);
 
     private final Assets assets;
     private final GameContext game;
@@ -364,7 +374,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
         victory = completionSent = false;
@@ -389,6 +399,14 @@ public class Level implements WorldObject {
     public void queueSpawn(WorldObject obj) {
         pendingSpawns.add(obj);
     }
+
+    /** Sprays blood from a landed hit (see {@link BloodSystem#spray}); it joins the very next update, like a queued object. */
+    public void blood(float x, float y, float direction, float floorY, boolean empowered) {
+        blood.spray(x, y, direction, floorY, empowered);
+    }
+
+    /** The level's blood, for tests. */
+    public BloodSystem bloodParticles() { return blood; }
 
     public Level(Assets assets, GameContext game, Player player, String levelName,
                  Supplier<Rectangle> visibleWorldRect) {
@@ -1060,6 +1078,8 @@ public class Level implements WorldObject {
     private void updateWorld(float dt) {
         if (sky != null) sky.update(dt);
         for (WorldObject o : ambience) o.update(dt);
+        // Before the objects: a hit this frame sprays after this point, so its drops first move next frame, as queued objects did.
+        blood.update(dt);
         for (Escalator e : escalators) e.update(dt);
         for (FallingPlatform p : fallingPlatforms) p.update(dt);
         for (WorldObject o : objects) o.update(dt);
@@ -1107,6 +1127,7 @@ public class Level implements WorldObject {
         for (Escalator e : escalators) e.render(batch);
         for (FallingPlatform p : fallingPlatforms) p.render(batch);
         for (WorldObject o : objects) o.render(batch);
+        blood.render(batch);
         for (WorldObject o : ambience) o.render(batch);
         if (!player.isRemoved()) player.render(batch);
         player.renderInteractionTarget(batch);
