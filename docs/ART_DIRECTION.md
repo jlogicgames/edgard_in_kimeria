@@ -573,13 +573,17 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-spores` | 24×24 | cloud1, cloud2, cloud3 | lime spore cloud |
 | `trap-vine` | 24×40 | hang, swing-left, swing-right | anchored top centre; pendulum by swing frames or rotation |
 | `trap-log` | 32×16 | intact, crumble1, crumble2 | rotten log bridge, same footprint as `platform.png` |
+| `trap-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | harmless honey fungus: three honey-brown caps, bone stems **with rings** (#295, D63; art only, not drawn by code yet, awaiting the author's review) |
+| `trap-false-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | poisonous look-alike: same tuft and size, sulphur-yellow to orange caps with a green tinge, olive gills, greenish stems, **no ring**, a bump on the big cap (#295, D63; its lethal cloud is `trap-spores`, unchanged) |
 
 **Bomb:** the stump and root sets replace the glass-bottle bomb in the tutorial (#233, D47: `ExplosiveStump`/`ExplosiveRoot` use these sheets, the blast frames are drawn at 2x). The `Bomb` trap type stays separate (D51) and has its own redrawn sprite, `trap-bomb` (#263, D60); the glass bottles in `images/Items.png` are no longer drawn (the file stays, the coin is in it).
+
+**Honey fungus pair (#295, D63), phase 1 done, awaiting the author's review of the sprites.** Sources `art/objects/forest-traps/honey-fungus.grid` and `false-honey-fungus.grid`, previews `docs/references/forest-traps/honey-fungus-preview.png` and `false-honey-fungus-preview.png` (the strip at 6x on the night, canopy and trunk backgrounds, and at 1x). Both are 24×16 with six frames: three idle frames that only pulse in brightness (same silhouette, the runtime loops them on the level clock, no randomness), two swell frames for the D7 telegraph, and a deflated `spent` frame. They are near twins on purpose: the same tuft and footprint; the honey fungus has rings on its stems and honey-brown caps, the false one has no rings, sulphur-yellow to orange caps with an olive tinge, olive gills and a small bump on the big cap. Not a fly agaric, not the purple healer Mushroom (D43), not the pale round `trap-puffball`. The lethal cloud is the existing lime `trap-spores` sheet, unchanged; the harmless burst is golden particles, so it needs no sprite. **Phase 2 (pending, [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295)):** the `HoneyFungus` and `FalseHoneyFungus` objects, tests and placement; the sprite cloud is replaced by particles and shaders in the polish ([#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296)); static scenery look-alikes are [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299); the swell duration comes from `TrapWarnings` and is tuned by [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300).
 
 **Palette (shared families, each sheet uses at most 15 colours + transparency):** near-black
 contour `0b0814`; wood `4a2e1c / 8a5a30 / c08a4c`; ember `b3201a / f07a1a / ffd23a / fff4b0`;
 smoke and stone `2a2638 / 34314a / 5b5870 / 9a97ad / d8d6e8`; bone `efe6c4 / a89c78`; thorn tuft
-`c2307a / 6e1650`; spores `a6e04a / 5fa02a / e6f26a`; vine `8a8a2a / 4a4a18`; leaves `3b2a5c / 7a5ab0`.
+`c2307a / 6e1650`; spores `a6e04a / 5fa02a / e6f26a`; honey fungus caps `e2b25a / c08a4c / 8a5a30`, false honey fungus caps `dcdc50 / d2a62c / 8f8a26`, its greenish stems `d4dc9c / 98a468`; vine `8a8a2a / 4a4a18`; leaves `3b2a5c / 7a5ab0`.
 Warm ember, bone and magenta were chosen to separate the traps from the dark night, purple
 canopy and cyan trunks of the forest backdrop.
 

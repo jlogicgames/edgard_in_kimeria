@@ -6,6 +6,8 @@ import forest_trap_sprites as traps
 from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
+HONEY_FUNGUS_FRAMES = 6
+MAX_SILHOUETTE_DIFFERENCE_PX = 12
 VINE_SIZE = (8, 40)
 VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceiling
 
@@ -68,6 +70,22 @@ class ForestTrapSpritesTest(unittest.TestCase):
             with self.subTest(frame=frame):
                 cell = master.crop((index * size[0], 0, (index + 1) * size[0], size[1]))
                 self.assertEqual(size[1], cell.getchannel('A').getbbox()[BBOX_BOTTOM], 'blast sinks or floats above its base')
+
+    def test_the_two_honey_fungi_are_twins_in_size_and_silhouette_but_not_in_colour(self):
+        # #295: the pair must differ only slightly; each frame stands on the floor line and keeps to a 24x16 cell.
+        size, _ = FOREST_TRAP_SHEETS['honey-fungus']
+        self.assertEqual(size, FOREST_TRAP_SHEETS['false-honey-fungus'][0])
+        honey, _ = traps.sheet_image('honey-fungus')
+        false, _ = traps.sheet_image('false-honey-fungus')
+        differing = sum(a != b for a, b in zip(honey.getdata(), false.getdata()))
+        self.assertGreater(differing, 0)
+        for index in range(HONEY_FUNGUS_FRAMES):
+            cell = (index * size[0], 0, (index + 1) * size[0], size[1])
+            alpha_honey, alpha_false = honey.crop(cell).getchannel('A'), false.crop(cell).getchannel('A')
+            self.assertEqual(size[1], alpha_honey.getbbox()[BBOX_BOTTOM], 'honey fungus floats above the floor')
+            self.assertEqual(size[1], alpha_false.getbbox()[BBOX_BOTTOM], 'false honey fungus floats above the floor')
+            changed = sum(a != b for a, b in zip(alpha_honey.getdata(), alpha_false.getdata()))
+            self.assertLessEqual(changed, MAX_SILHOUETTE_DIFFERENCE_PX, f'frame {index}: the silhouettes differ by more than a few pixels')
 
 
 if __name__ == '__main__':
