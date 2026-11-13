@@ -1,7 +1,9 @@
 package com.jlogicsoftware.kimeria.entity.objects;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
@@ -14,13 +16,13 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * The shared rules of the honey fungus pair (D63, #295): a tuft of mushrooms on the floor that plays a quiet idle until
+ * The shared rules of the honey fungus pair (D63, #295): a tuft of mushrooms on the floor that glows gently (brightness only) until
  * the hero's body enters its trigger zone, swells for the shared warning ({@link TrapWarnings#DEFAULT_WARNING_SECONDS},
  * longer with the assist; never a literal), bursts once, and is spent for good. Leaving the zone does not cancel the
  * swell, and nothing re-arms it (D26): the room has to be rebuilt (retry, Restart Level, room re-entry).
  * <p>
  * The two subclasses differ only in the burst: {@link HoneyFungus} releases harmless golden particles,
- * {@link FalseHoneyFungus} releases a lethal sprite cloud. Their idle animation is the same, from the object's own clock,
+ * {@link FalseHoneyFungus} releases a lethal sprite cloud. Their idle glow is the same, from the object's own clock,
  * with no randomness and no dependence on the hero, so a live mushroom can be told from a static one.
  * <p>
  * Every timer ticks in {@link #update} only, which {@code Level.update} calls, so pause freezes it. The hero is seen
@@ -35,9 +37,12 @@ public abstract class FungusTrap extends Entity {
     /** Frames of the sheet: idle1..idle3, swell1, swell2, spent (tools/sprite_layouts.py FOREST_TRAP_SHEETS). */
     public static final int FRAME_COUNT = 6;
     public static final int FRAME_IDLE_COUNT = 3, FRAME_SWELL_FIRST = 3, FRAME_SWELL_SECOND = 4, FRAME_SPENT = 5;
-    /** Seconds per idle step; the idle plays idle1, idle2, idle3, idle2 and repeats (a brightness pulse, same silhouette). */
-    public static final float IDLE_STEP_SECONDS = 0.45f;
-    private static final int IDLE_CYCLE_STEPS = 4, IDLE_TURN_AT = 3;
+    /** The one frame drawn while idle; idle2 and idle3 are currently unused (the idle is a smooth glow, not a frame swap). */
+    public static final int FRAME_IDLE = 0;
+    /** Seconds per full glow breath of the idle (dim, bright, dim); slow so it reads as a living glow, not a blink. */
+    public static final float GLOW_PERIOD_SECONDS = 2.5f;
+    /** The dimmest brightness factor of the idle glow (1 is the sprite as drawn); brightness only, never hue. */
+    public static final float GLOW_MIN = 0.8f;
     /** Zone reach in px beyond each side of the footprint when the map does not say; also the smallest side of the lethal one. */
     public static final float DEFAULT_ZONE = 64f;
     /** Smallest used zone side of the harmless one (it needs no reaction time, only to be seen). */
@@ -89,16 +94,22 @@ public abstract class FungusTrap extends Entity {
     /** The area that starts the swell: the footprint widened by the zone, from {@value #ZONE_ABOVE} px above it to its floor. */
     public Rectangle triggerZone() { return ThornTrap.zoneOf(position.x, position.y, size.x, size.y, zoneLeft, zoneRight); }
 
-    /** The idle frame at {@code time} seconds: 0, 1, 2, 1, 0 ... Deterministic in {@code time} alone. */
-    public static int idleFrame(float time) {
-        int step = (int) (time / IDLE_STEP_SECONDS) % IDLE_CYCLE_STEPS;
-        return step < IDLE_TURN_AT ? step : IDLE_CYCLE_STEPS - step;
+    /**
+     * The idle brightness factor at {@code time} seconds: a sine between {@link #GLOW_MIN} (at 0) and 1, one breath per
+     * {@link #GLOW_PERIOD_SECONDS}. Smooth and deterministic in {@code time} alone.
+     */
+    public static float glow(float time) {
+        float wave = (1f - MathUtils.cos(MathUtils.PI2 * time / GLOW_PERIOD_SECONDS)) / 2f;
+        return GLOW_MIN + (1f - GLOW_MIN) * wave;
     }
+
+    /** The brightness factor drawn now: the glow while idle, full brightness in the swell, burst and spent. */
+    public float brightness() { return state == State.IDLE ? glow(clock) : 1f; }
 
     /** The sheet frame drawn now. */
     public int frameIndex() {
         return switch (state) {
-            case IDLE -> idleFrame(clock);
+            case IDLE -> FRAME_IDLE;
             case SWELL -> stateTime < warningTotal / 2f ? FRAME_SWELL_FIRST : FRAME_SWELL_SECOND;
             case BURST, SPENT -> FRAME_SPENT;
         };
@@ -142,7 +153,11 @@ public abstract class FungusTrap extends Entity {
     @Override
     public void render(Batch batch) {
         float w = sheet.width(), h = sheet.height();
+        Color tint = batch.getColor();
+        float r = tint.r, g = tint.g, b = tint.b, a = tint.a, glow = brightness();
+        batch.setColor(r * glow, g * glow, b * glow, a);
         batch.draw(frames[frameIndex()], position.x + (size.x - w) / 2f, position.y + size.y - h, w, h);
+        batch.setColor(r, g, b, a);
         renderBurst(batch);
     }
 

@@ -427,7 +427,10 @@ player has to read the difference:
   or cooldowns.
 - **Idle animation (author, 2026-11-12).** The active mushrooms play a subtle idle animation (a small sway or
   pulse), so the player can tell from a distance that a mushroom is alive and may react. It is deterministic (the
-  level clock, no randomness) and independent of the hero.
+  level clock, no randomness) and independent of the hero. **Revised 2026-11-13:** the author played the frame-swap
+  idle and found the constant blinking strange and unclear, so the idle is now a smooth brightness glow (a sine on
+  one fixed frame, period 2.5 s, 0.8 to 1.0 brightness, identical for both, brightness only so it is colour-blind
+  safe); it stops when the swell starts, and the swell remains the only telegraph (D63).
 - **Look.** Real fungi, **not** a fly agaric (no red cap with white spots) and not like the healer's purple spotted
   Mushroom pickup (D43) or the existing `trap-puffball`. Both are a tuft of several small caps on thin stems.
   The **honey fungus**: honey-brown to tan caps, pale stems with a visible ring. The **false honey fungus**: the

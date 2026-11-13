@@ -87,7 +87,7 @@ class AllocationBudgetTest {
     static final double HONEY_FUNGUS_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
-    private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200;
+    private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
     private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64;
     private static final float HERO_WIDTH = 11, HERO_HEIGHT = 22;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
@@ -281,6 +281,18 @@ class AllocationBudgetTest {
         assertTrue(peak[0] >= HoneyFungus.SPORES_PER_BURST, "the spores must actually burst in this scenario: " + peak[0]);
         assertTrue(fungi[0].isSpent() && fungi[FUNGUS_CYCLES - 1].state() != FungusTrap.State.IDLE, "the cycle must run to the end");
         assertWithinBudget("honey fungus bursts", HONEY_FUNGUS_CEILING, bytes);
+    }
+
+    /** Two fungi that never get triggered: only the idle glow (tint set, draw, tint restored) runs every frame. */
+    @Test void idleFungusGlow() {
+        Rectangle far = new Rectangle(FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        HoneyFungus honey = new HoneyFungus(harness.assets(), harness.game().trapWarnings(), 0, FUNGUS_FLOOR - FUNGUS_HEIGHT,
+            FUNGUS_WIDTH, FUNGUS_HEIGHT, FUNGUS_ZONE, FUNGUS_ZONE, () -> far);
+        FalseHoneyFungus fake = new FalseHoneyFungus(harness.assets(), harness.game().trapWarnings(), FUNGUS_SPACING, FUNGUS_FLOOR - FUNGUS_HEIGHT,
+            FUNGUS_WIDTH, FUNGUS_HEIGHT, FUNGUS_ZONE, FUNGUS_ZONE, () -> far);
+        double bytes = AllocationProbe.bytesPerFrame(i -> { honey.update(STEP); fake.update(STEP); honey.render(batch); fake.render(batch); });
+        assertEquals(FungusTrap.State.IDLE, honey.state());
+        assertWithinBudget("idle fungus glow", HONEY_FUNGUS_CEILING, bytes);
     }
 
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
