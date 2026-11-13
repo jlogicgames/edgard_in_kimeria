@@ -579,6 +579,25 @@ Requests, not accepted rules.
   [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) (forest mechanic with an
   enemy or hazard).
 
+## Forest monster ideas (author requests, 2026-11-13)
+
+Requests, not accepted rules. Numbers (speeds, ranges, cooldowns) are chosen when a monster is
+built and then recorded in `DECISIONS.md`. Every monster follows the warning rule of
+[D7](DECISIONS.md#d7-traps-are-deterministic-puzzle-elements) and the readability request
+[#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240): a visible reaction before
+the attack, so the player can run away or act first.
+
+All ground monsters patrol back and forth along their own path, and switch to the reaction
+below when the hero enters their awareness area (the hearing range).
+
+| Monster | Size and movement | Behavior |
+| --- | --- | --- |
+| Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. |
+| Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. |
+| Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. |
+| Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
+| Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
+
 ## Rooms, dangers and skill development
 
 A room should provide a short meaningful section for observation and execution.
