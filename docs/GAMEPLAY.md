@@ -150,8 +150,8 @@ Death resets only the active room; previous rooms' collections remain kept.
 
 ## Honey fungus and false honey fungus
 
-Two look-alike mushrooms (D63, #295): a tuft of three small caps on the floor, 24x16 px. Both play the same small
-idle pulse. When Edgard's body enters a mushroom's zone (its width plus 64 px each side, from 32 px above it to the floor),
+Two look-alike mushrooms (D63, #295): a tuft of three small caps on the floor, 24x16 px. Both glow the same
+gentle way while idle: one fixed frame whose brightness (not hue) breathes smoothly every 2.5 s. When Edgard's body enters a mushroom's zone (its width plus 64 px each side, from 32 px above it to the floor),
 it swells for the shared trap warning (0.8 s, 1.2 s with the longer-warnings assist; the value comes from `TrapWarnings`)
 and bursts once; afterwards it stays deflated for the rest of the room. Leaving the zone does not stop the swell.
 The **honey fungus** (honey-brown caps, **rings** on the stems) is harmless: its burst is a puff of golden spores.

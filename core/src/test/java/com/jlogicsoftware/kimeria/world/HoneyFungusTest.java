@@ -28,7 +28,7 @@ class HoneyFungusTest {
     private static final float HONEY_X = 288, FALSE_X = 480, ZONE = 64, CLOUD_LEFT = FALSE_X, CLOUD_RIGHT = FALSE_X + CLOUD, CLOUD_TOP = FLOOR - CLOUD;
     /** The hero's body box as the game defines it: offset 18 in a 48 px frame, 11 wide, 22 tall, so the body's bottom is the frame's. */
     private static final float BODY_RIGHT_OFFSET = 29, BODY_W = 11, BODY_H = 22, STAND_Y = 272;
-    private static final float HALF_PIXEL = .5f, TINY = .1f;
+    private static final float HALF_PIXEL = .5f, TINY = .1f, GLOW_EPS = 1e-4f, MAX_GLOW_STEP = 0.01f;
     private static final int SETTLE_FRAMES = 3, SECONDS_FRAMES = 60, LONG_WAIT_FRAMES = 60 * 6;
     /** forest-0 (room 0 and room 2) and forest-2 (forest-canopy, room 1) as built: footprint x, zone sides. */
     private static final float LEVER_X = 150, LEVER_ZONE = 40, WALL_X = 1804, WALL_ZONE_LEFT = 24, WALL_ZONE_RIGHT = 48, CANOPY_X = 1672;
@@ -144,7 +144,7 @@ class HoneyFungusTest {
     @Test void theSwellShowsTheTwoSwellFramesInOrderAndTheIdleFramesOnlyBeforeIt() {
         Level level = fresh();
         FalseHoneyFungus f = fake(level);
-        assertTrue(f.frameIndex() < FungusTrap.FRAME_IDLE_COUNT);
+        assertEquals(FungusTrap.FRAME_IDLE, f.frameIndex());
         place(level, FALSE_X - ZONE + 2);
         frame(level);
         assertEquals(FungusTrap.FRAME_SWELL_FIRST, f.frameIndex());
@@ -263,21 +263,39 @@ class HoneyFungusTest {
 
     // -- idle, pause, retry --
 
-    @Test void theIdleIsADeterministicPingPongOfTheIdleFramesOnTheClockAlone() {
-        float step = FungusTrap.IDLE_STEP_SECONDS;
-        int[] expected = {0, 1, 2, 1, 0, 1, 2, 1};
-        for (int i = 0; i < expected.length; i++) assertEquals(expected[i], FungusTrap.idleFrame((i + HALF_PIXEL) * step), "step " + i);
+    @Test void theIdleIsASmoothDeterministicGlowOnTheClockAlone() {
+        float period = FungusTrap.GLOW_PERIOD_SECONDS;
+        assertEquals(FungusTrap.GLOW_MIN, FungusTrap.glow(0f), GLOW_EPS, "dimmest at the start");
+        assertEquals(1f, FungusTrap.glow(period / 2f), GLOW_EPS, "brightest half a period in");
+        assertEquals(FungusTrap.glow(0.3f), FungusTrap.glow(0.3f + period), GLOW_EPS, "periodic");
         Level a = fresh(), b = fresh();
         place(a, 100); place(b, 400); // the hero's place changes nothing outside the zone
-        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        float low = 2f, high = 0f, previous = honey(a).brightness();
         for (int i = 0; i < SECONDS_FRAMES * 10; i++) {
             frame(a); frame(b);
-            seen.add(honey(a).frameIndex());
-            assertTrue(honey(a).frameIndex() < FungusTrap.FRAME_IDLE_COUNT);
-            assertEquals(honey(a).frameIndex(), honey(b).frameIndex());
-            assertEquals(honey(a).frameIndex(), fake(a).frameIndex(), "the pair idle identically: only the swell tells them apart");
+            float v = honey(a).brightness();
+            assertEquals(FungusTrap.FRAME_IDLE, honey(a).frameIndex(), "one fixed frame: no blinking");
+            assertEquals(v, honey(b).brightness(), 0f);
+            assertEquals(v, fake(a).brightness(), 0f, "the pair glow identically: only the swell tells them apart");
+            assertTrue(Math.abs(v - previous) <= MAX_GLOW_STEP, "smooth: step " + Math.abs(v - previous) + " at frame " + i);
+            assertTrue(v >= FungusTrap.GLOW_MIN - GLOW_EPS && v <= 1f + GLOW_EPS);
+            low = Math.min(low, v); high = Math.max(high, v); previous = v;
         }
-        assertEquals(java.util.Set.of(0, 1, 2), seen, "the idle really moves");
+        assertTrue(low < FungusTrap.GLOW_MIN + GLOW_EPS * 10 && high > 1f - GLOW_EPS * 10, "the glow really breathes: " + low + " .. " + high);
+    }
+
+    @Test void theGlowStopsOnceTheSwellStartsAndRetryRestartsItOnTheSameClock() {
+        Level level = fresh();
+        place(level, FALSE_X - ZONE + 2);
+        frame(level);
+        assertEquals(1f, fake(level).brightness(), 0f, "full brightness in the swell");
+        settle(level, LONG_WAIT_FRAMES);
+        assertEquals(1f, fake(level).brightness(), 0f, "and when spent");
+        Level again = fresh();
+        Level other = fresh();
+        for (int i = 0; i < SECONDS_FRAMES; i++) { frame(again); frame(other); }
+        assertEquals(honey(other).brightness(), honey(again).brightness(), 0f, "same clock time, same glow");
+        assertEquals(FungusTrap.glow(honey(again).clock()), honey(again).brightness(), GLOW_EPS);
     }
 
     @Test void pausingFreezesTheSwellAndTheClockAndResumingContinuesFromTheSameState() {
