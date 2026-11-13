@@ -38,7 +38,7 @@ public class Assets implements Disposable {
      * sources and {@code assets/audio}).
      */
     public static final String[] SOUND_EFFECTS = {"jump", "bounce", "collect", "hit", "disappear", "boss_hit", "boss_restore",
-        "button_click", "dust_puff", "wall_rumble", "grit_fall", "keepalive"};
+        "button_click", "dust_puff", "wall_rumble", "grit_fall", "explosion", "keepalive"};
 
     /**
      * Creates every sound effect now. A sound made on its first play is decoded then (a hitch on desktop), and on the web it

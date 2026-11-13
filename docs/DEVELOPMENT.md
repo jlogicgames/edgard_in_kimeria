@@ -332,7 +332,7 @@ Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in
 
 ### Original synthesized sound effects
 
-Every sound effect is project-original (`jump`, `hit`, `bounce`, `collect`, `disappear`, `boss_hit`, `boss_restore`, `button_click`, `dust_puff`, `wall_rumble`, `grit_fall`, and the non-effect `keepalive`): synthesized by
+Every sound effect is project-original (`jump`, `hit`, `bounce`, `collect`, `disappear`, `boss_hit`, `boss_restore`, `button_click`, `dust_puff`, `wall_rumble`, `grit_fall`, `explosion`, and the non-effect `keepalive`): synthesized by
 `tools/audio/generate_sounds.py` (stdlib only, fixed random seeds, byte-identical on every run; 44.1 kHz,
 16-bit mono PCM). Licence: project-original, the same as `intro.wav`. Regenerate with
 `python3 tools/audio/generate_sounds.py`; every parameter is a named constant at the top of the script.
@@ -373,7 +373,8 @@ prints duration, peak, RMS and spectral figures and can render waveform previews
   loop, `grit_fall` whispered patter). Files were replaced in place, so names and call sites are unchanged. Inventory,
   recipes and levels are in [SOUND_DIRECTION.md](SOUND_DIRECTION.md); `tools/test_generate_sounds.py` pins the levels (voice
   set within 3 dB of the jump's RMS, ambient sounds quieter) and checks that every effect is audible and plain PCM.
-  Still shared: the bomb and explosive-trap explosions use `bounce` (#324). Only `main_menu.mp3` remains from the Flame/Rust
+  The bomb and explosive-trap explosions have their own `explosion` (#324, awaiting the author's audition; `Bomb.explode`
+  and the `ExplosiveTrap` callback in `Level`). Only `main_menu.mp3` remains from the Flame/Rust
   versions (#189).
 
 ### Known JVM / Gradle startup warnings

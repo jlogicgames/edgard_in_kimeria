@@ -756,7 +756,7 @@ public class Level implements WorldObject {
                 case "ExplosiveStump", "ExplosiveRoot" -> {
                     ExplosiveTrap trap = ExplosiveTrap.fromMap(assets, game.trapWarnings(), o,
                         () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false),
-                        () -> { if (game.playSounds()) game.playSound("bounce"); });
+                        () -> { if (game.playSounds()) game.playSound("explosion"); });
                     objects.add(trap);
                     registerRoomStateOwner(o.id, trap);
                 }
