@@ -388,6 +388,7 @@ def check_map(path):
                           "(set the 'target' property, or give it exactly one same-named mechanism)")
     errors += check_falling_traps(root, groups)
     errors += check_decor(spawn, collisions)
+    errors += check_still_decor(spawn, groups.get('Hints', []))
     errors += check_hanging_vines(root, spawn, collisions)
     return [f"{path.name}: {e}" for e in errors]
 
@@ -412,7 +413,13 @@ DECOR_JAVA = FALLING_JAVA.with_name('Decor.java')
 def decor_kinds():
     """The kind names are the string keys of Decor.KINDS: one source of truth, read from the Java class."""
     block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
-    return tuple(re.findall(r'"([^"]+)"\s*,\s*SpriteSheets\.', block.group(1))) if block else ()
+    return tuple(re.findall(r'"([^"]+)"\s*,\s*new Kind\(', block.group(1))) if block else ()
+
+
+def decor_still_kinds():
+    """The kinds with the `still` flag in Decor.KINDS (#299): never animated, so they must not pose as an active mushroom."""
+    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
+    return tuple(re.findall(r'"([^"]+)"\s*,\s*new Kind\([^)]*,\s*true\)', block.group(1))) if block else ()
 
 
 def check_decor(spawn, collisions):
@@ -428,6 +435,52 @@ def check_decor(spawn, collisions):
         bottom = body[1] + body[3]
         if not any(kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') == bottom for c in collisions):
             errors.append(f"{label}: its bottom edge ({bottom:g}) is not on the top of a solid block")
+    return errors
+
+
+FUNGI = ('HoneyFungus', 'FalseHoneyFungus')
+FUNGUS_ZONE_ABOVE = 32.0  # FungusTrap.ZONE_ABOVE: the trigger zone starts this far above the footprint (world Y grows downward)
+FUNGUS_DEFAULT_ZONE = 64.0  # FungusTrap.DEFAULT_ZONE
+STILL_MAX_PER_MAP = 2  # #299: one or two static look-alikes per level, or the player learns to ignore every mushroom
+SCENERY = ('Decor', 'HangingVine', 'Deadline', 'Player')  # spawn objects that are not traps, pickups or mechanisms
+
+
+def _overlaps(a, b):
+    return a[0] < b[0] + b[2] and b[0] < a[0] + a[2] and a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+
+
+def _number(o, key, default):
+    try:
+        return float(prop(o, key)) if prop(o, key) != '' else default
+    except ValueError:
+        return default
+
+
+def fungus_zone(o):
+    """The trigger zone of an active mushroom, as FungusTrap.triggerZone: the footprint widened by zone (or zoneLeft/zoneRight)."""
+    zone = _number(o, 'zone', FUNGUS_DEFAULT_ZONE)
+    left, right = _number(o, 'zoneLeft', zone), _number(o, 'zoneRight', zone)
+    x, y, w, h = _rect(o)
+    return (x - left, y - FUNGUS_ZONE_ABOVE, w + left + right, h + FUNGUS_ZONE_ABOVE)
+
+
+def check_still_decor(spawn, hints):
+    """Static look-alike mushrooms (#299): at most STILL_MAX_PER_MAP per map; never over an active mushroom's zone (which holds
+    its swell), a hint zone, or any trap, pickup or mechanism, so scenery can never hide a warning, a hint or a pickup."""
+    still = decor_still_kinds()
+    mine = [o for o in spawn if kind(o) == 'Decor' and (prop(o, 'kind') or '').lower() in still]
+    errors = []
+    if len(mine) > STILL_MAX_PER_MAP:
+        errors.append(f"{len(mine)} static look-alike decor objects, at most {STILL_MAX_PER_MAP} per map")
+    others = [o for o in spawn if kind(o) not in SCENERY and kind(o) not in FUNGI]
+    for o in mine:
+        box, label = _rect(o), f"Decor {describe(o)}"
+        for f in (f for f in spawn if kind(f) in FUNGI and _overlaps(box, fungus_zone(f))):
+            errors.append(f"{label}: static look-alike lies on the zone of the active {kind(f)} {describe(f)}")
+        for h in (h for h in hints if _overlaps(box, _rect(h))):
+            errors.append(f"{label}: static look-alike lies in the hint zone {describe(h)}")
+        for t in (t for t in others if _overlaps(box, _rect(t))):
+            errors.append(f"{label}: static look-alike hides {kind(t)} {describe(t)}")
     return errors
 
 

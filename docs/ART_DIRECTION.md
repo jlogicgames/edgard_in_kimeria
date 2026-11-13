@@ -291,14 +291,14 @@ depends on it.
 | --- | --- | --- | --- |
 | `decor-bush` | 32×24 | idle, brush1, brush2, settle | leaves `3b2a5c / 7a5ab0`, vine olive `8a8a2a / 4a4a18` highlights, contour `0b0814`. Distinct from the magenta thorn tuft. |
 
-  `kind` accepts `bush` only; the class is written so that a new kind is one sheet and one table entry.
+  `kind` accepts `bush` here; the class is written so that a new kind is one sheet and one table entry (`lookalike` was added by #299, below).
 - **Later kinds.** The other kinds (shrub 16×16, flowers 16×16, fern 24×24 and a mushroom) are **not built
   in #239**. They belong to the redo of all default sprites and tiles, issue
   [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) ("Replace third-party artwork with
   original assets"). Their palette notes carry over: shrub in the same leaf and olive family with a smaller
   silhouette; flowers with bone `efe6c4` petals and ember `ffd23a` centres on leaf-green stems, away from
   magenta (tuft) and lime (spores); fern in the leaf family with drooping fronds. A decor mushroom needs a
-  look that cannot be read as the healer's Mushroom pickup (D43) or the puffball trap.
+  look that cannot be read as the healer's Mushroom pickup (D43) or the puffball trap (built as the static pale look-alike tuft, #299, below).
 - **Draw order and independence.** `Level.render` draws decor right after `renderBackground` and
   before platforms, objects and the hero, so decor is always behind the hero and behind every trap, hint
   and pickup, and can never hide one. The class reads only its own rectangle and the hero box; it never
@@ -359,6 +359,36 @@ depends on it.
   Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line.
 - **Cost.** One rotated `batch.draw` per vine; the sheet is 8×40 px. `AllocationBudgetTest.hangingVinesSwayingThroughTheRealLevel` measures the allocation.
 - The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
+
+##### Static look-alike mushroom (#299), as built
+
+Author-approved design, revised 2026-11-13. The whole point is doubt: the player has learned that a mushroom bursts when approached
+(the honey fungus pair, D63), so a mushroom that does nothing must look **enough like one of them to make the player stop and think**
+("is this a trap?"), yet differ in a way that can be learned. Rules:
+
+- **Why the first design was dropped.** The first version was a bracket (shelf) fungus on a dead trunk, grey-brown. The author judged
+  it looked nothing like the dangerous mushrooms, so it would scare nobody and teach nothing. A look-alike must share the active
+  pair's silhouette family; it is the colour and the ring that differ. The "never a ground tuft on the route" rule and the
+  trunk idea were dropped with it.
+- **Shape.** The same family as the active pair: a tuft of three small caps on stems, 24×16 px, standing on the floor, possibly near
+  the route. The stems have a **visible ring**, like the harmless honey fungus and **unlike** the ringless lethal false honey fungus,
+  so the learnable shape cue stays consistent (a ring means harmless).
+- **Colour.** Cool and pale: grey-lilac caps (`cfc8de`, `9d93b6`, `6b6188`) with bone speckles (`f2eef8`), bone stems (`e8e4da`,
+  `a7a3b0`), dark gills `3f3757`, contour `0b0814`. **No golden glow, no honey brown, no lime** (those mark the active mushrooms).
+- **No animation at all.** One frame; no idle glow, no reaction to the hero. Motion is the cue that an active mushroom is alive.
+- **Implementation.** A static `still` kind of `Decor` (`kind` = `lookalike`): a picture, no object logic. `Decor.notice` and `update`
+  do nothing for it. Sheet `assets/images/objects/decor-lookalike.png`, 24×16, one frame `static`, source
+  `art/objects/decor/lookalike.grid`, preview `docs/references/forest-traps/decor-lookalike-preview.png`, layout
+  `DECOR_SHEETS['lookalike']`, eight palette entries plus transparency (original drawing, nearest filter, at most 16). The rectangle is
+  24×16 with `y = floor - 16` (add 16 in forest-2's offset layer), the same footprint as the active pair.
+- **Placement.** One or two per level (the check allows at most two), only after the player has met an active mushroom, **never** on an
+  active mushroom's trigger zone (which holds its swell), on a hint zone, or over a trap, pickup or mechanism. Built: `forest-2`, world
+  x 1980 (file `y` 320), after the lethal mushroom at x 1672 (zone to x 1760); none in `forest-0` or `forest-1` yet.
+- **Checks.** `tools/check_tiled_links.py` `check_still_decor` rejects a static look-alike on an active mushroom's zone, a hint zone or a
+  trap/pickup rectangle, and more than two per map (`StillDecorLinksTest` in `tools/test_check_tiled_links.py`). `DecorTest` pins the
+  stillness, the floor line, the placement after the active mushrooms and the count per map; `tools/test_forest_trap_sprites.py` and
+  `SpriteSheetContractsTest` pin the sheet; `validateSpriteArt` guards the art.
+- Not verified: how the look-alike reads at game scale in the running game; the author reviews the sprite before merge.
 
 #### 5. Shared design
 

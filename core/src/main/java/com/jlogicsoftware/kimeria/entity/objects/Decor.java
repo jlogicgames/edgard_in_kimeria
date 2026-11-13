@@ -15,6 +15,8 @@ import java.util.Locale;
  * through it. No collision, not saved, never read by gameplay; {@code Level} draws it behind everything but the
  * background. Tiled type {@code Decor}, properties {@code kind} (see {@link #KINDS}) and optional boolean {@code mirror}.
  * <p>
+ * A {@code still} kind (#299) has one frame, ignores {@link #notice} and {@link #update}, and so never moves.
+ * <p>
  * Frame 0 is the rest pose; frames 1.. play at {@link #FPS} and the object returns to frame 0. It restarts only when
  * finished, so it cannot flicker. Timing depends only on hero position and {@code dt}.
  * <p>
@@ -32,13 +34,30 @@ public final class Decor extends Entity {
     public static final float BODY_INSET_LEFT = 3f, BODY_INSET_RIGHT = 2f, BODY_INSET_TOP = 6f;
     /** Horizontal hero speed (px/s) below which the hero counts as standing. */
     public static final float MIN_SPEED = 1f;
-    /** One entry per kind: a new kind is one sheet and one table entry. The names are read by tools/check_tiled_links.py. */
-    private static final java.util.Map<String, SpriteSheets.Sheet> KINDS = java.util.Map.of(
-        "bush", SpriteSheets.DECOR_BUSH);
+    /**
+     * One kind: its sheet, its frame count and whether it is {@code still}. A still kind (#299, the pale look-alike mushroom)
+     * has one frame and never reacts to the hero, so motion stays the cue that an active mushroom is alive.
+     */
+    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean still) { }
+
+    /**
+     * One entry per kind: a new kind is one sheet and one table entry. The names and the {@code still} flags are read by
+     * tools/check_tiled_links.py, which keeps still kinds away from active mushrooms, hint zones and pickups.
+     */
+    private static final java.util.Map<String, Kind> KINDS = java.util.Map.of(
+        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, false),
+        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, true));
 
     public static java.util.Set<String> kindNames() { return KINDS.keySet(); }
 
+    /** Whether a kind never animates and never reacts ({@code lookalike}); an unknown kind is not still. */
+    public static boolean isStillKind(String kind) {
+        Kind k = KINDS.get(kind.toLowerCase(Locale.ROOT));
+        return k != null && k.still();
+    }
+
     private final SpriteSheets.Sheet sheet;
+    private final boolean still;
     private final TextureRegion[] frames;
     private final boolean mirror;
     private boolean playing, leanLeft;
@@ -46,9 +65,11 @@ public final class Decor extends Entity {
 
     public Decor(Assets assets, String kind, float x, float y, float w, float h, boolean mirror) {
         super(x, y, w, h);
-        sheet = KINDS.get(kind.toLowerCase(Locale.ROOT));
-        if (sheet == null) throw new IllegalArgumentException("Unknown decor kind '" + kind + "', known: " + KINDS.keySet());
-        frames = new TextureRegion[FRAMES];
+        Kind k = KINDS.get(kind.toLowerCase(Locale.ROOT));
+        if (k == null) throw new IllegalArgumentException("Unknown decor kind '" + kind + "', known: " + KINDS.keySet());
+        sheet = k.sheet();
+        still = k.still();
+        frames = new TextureRegion[k.frames()];
         for (int i = 0; i < frames.length; i++) frames[i] = sheet.frame(assets, i, 0);
         this.mirror = mirror;
     }
@@ -69,7 +90,7 @@ public final class Decor extends Entity {
      * edges do not count. Does nothing while playing.
      */
     public void notice(Rectangle heroBody, float heroVelocityX) {
-        if (playing || Math.abs(heroVelocityX) < MIN_SPEED) return;
+        if (still || playing || Math.abs(heroVelocityX) < MIN_SPEED) return;
         if (heroBody.x >= position.x + size.x - BODY_INSET_RIGHT || heroBody.x + heroBody.width <= position.x + BODY_INSET_LEFT
             || heroBody.y >= position.y + size.y || heroBody.y + heroBody.height <= position.y + BODY_INSET_TOP) return;
         playing = true;
@@ -78,13 +99,15 @@ public final class Decor extends Entity {
     }
 
     public boolean playing() { return playing; }
+    /** True for a kind that never animates (#299). */
+    public boolean isStill() { return still; }
     /** The frame drawn now: 0 at rest, then 1..frames-1 while playing. */
     public int frameIndex() { return playing ? Math.min(1 + (int) (elapsed * FPS), frames.length - 1) : 0; }
     public int frameCount() { return frames.length; }
 
     @Override
     public void update(float dt) {
-        if (!playing) return;
+        if (still || !playing) return;
         elapsed += dt;
         if (elapsed * FPS >= frames.length - 1) { playing = false; elapsed = 0f; }
     }

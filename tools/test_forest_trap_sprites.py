@@ -9,6 +9,8 @@ BBOX_BOTTOM = 3  # (left, top, right, bottom)
 HONEY_FUNGUS_FRAMES = 6
 MAX_SILHOUETTE_DIFFERENCE_PX = 12
 VINE_SIZE = (8, 40)
+LOOKALIKE_SIZE = (24, 16)  # decor-lookalike: the same 24x16 tuft footprint as the active pair
+DULL_SPREAD = 0x30  # largest channel spread (max - min) of a look-alike colour: pale grey-lilac or bone, never saturated
 VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceiling
 
 
@@ -51,6 +53,22 @@ class ForestTrapSpritesTest(unittest.TestCase):
         self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
         top = master.crop((0, 0, size[0], 1))
         self.assertTrue(all(top.getchannel('A').getpixel((x, 0)) == OPAQUE_ALPHA for x in VINE_STEM_COLUMNS), 'the stem touches the ceiling')
+
+    def test_the_static_lookalike_is_one_pale_frame_resting_on_the_floor(self):
+        size, frames = DECOR_SHEETS['lookalike']
+        self.assertEqual((LOOKALIKE_SIZE, ('static',)), (size, frames), 'one frame: a static look-alike has no animation at all (#299)')
+        master, colors = traps.sheet_image('decor:lookalike')
+        self.assertEqual(WORLD_IMAGES['decor-lookalike'], master.size)
+        self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+        shipped = Image.open(traps.ROOT / 'assets/images/objects/decor-lookalike.png')
+        self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), 'run tools/forest_trap_sprites.py decor:lookalike')
+        alpha = master.getchannel('A')
+        self.assertEqual(size[1], alpha.getbbox()[BBOX_BOTTOM], 'the tuft rests on its bottom row (world Y grows downward)')
+        self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
+        for red, green, blue, a in set(master.getdata()):
+            if a == OPAQUE_ALPHA:
+                self.assertLessEqual(max(red, green, blue) - min(red, green, blue), DULL_SPREAD,
+                                     'pale and dull only: no golden glow, no honey brown, no lime (those mark the active mushrooms)')
 
     def test_every_frame_has_artwork_and_binary_alpha(self):
         for name, (size, frames) in FOREST_TRAP_SHEETS.items():

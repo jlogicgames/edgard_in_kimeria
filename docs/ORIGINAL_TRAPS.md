@@ -441,15 +441,17 @@ player has to read the difference:
   (proximity, swell, burst), not an extension of `Puffball` (D46), which is a rhythmic timer trap with no
   proximity and no harmless variant. The lethal cloud is drawn by `SporeCloud` (below) and shares the puffball's
   lethal-hitbox entry, not its sprite.
-- **Static look-alikes (author, 2026-11-12; [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299)).**
-  Scenery mushrooms that never react and can never kill, so that the player stops and reads the room (D26) before
-  running. They differ from the active ones in shape or colour on purpose (a new shape makes the first meeting
-  nervous), by one consistent rule that can be learned, for example bracket fungi on tree trunks and in the
-  background, never a ground tuft on the route; they do not move, while the active ones have the idle animation.
-  The ring-or-no-ring difference between the honey fungus and the false honey fungus holds in shape, not only in
-  colour, for these too. Never placed on an active mushroom's zone or swell, and never where they hide a trap
-  warning, hint or pickup. One or two per level, only after the player has seen both bursts. They are pictures
-  (background art or a static `Decor` kind of the #239 plan), not objects with logic.
+- **Static look-alikes (built, [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299); author design revised 2026-11-13).**
+  Scenery mushrooms that never react and can never kill, so that the player stops and reads the room (D26) before running and
+  asks "is this a trap?". They are a **cap-and-stem tuft of the same family** as the active pair, 24×16 on the floor, but **cool pale
+  grey-lilac with bone speckles, no golden glow**, and with a **ring on the stem** (like the harmless honey fungus, the opposite of the
+  ringless lethal one); they **do not animate at all**, while the active ones glow and move. They are a static kind of the `Decor` object
+  of #239 (`kind` = `lookalike`, no object logic, no hitbox, never saved). The first design, a grey-brown bracket fungus on a trunk, was
+  dropped: it looked nothing like the dangerous mushrooms, so it created no doubt. Never placed on an active mushroom's zone or swell,
+  over a hint zone, or over a trap, pickup or mechanism; at most two per level, only after the player has seen an active mushroom. Built:
+  one in `forest-2` at world x 1980, after the lethal mushroom (x 1672, zone to 1760) and clear of it; `forest-0` and `forest-1` have none
+  yet. `tools/check_tiled_links.py` (`check_still_decor`) enforces the placement rules for every map and `DecorTest` pins the placement
+  and the stillness. Sprite, palette and size: `docs/ART_DIRECTION.md`, "Static look-alike mushroom".
 - **Placement (a game-design choice, the author left it open).** Teach by contrast, safe first: the harmless honey
   fungus appears first, in plain view and off the route's critical path, so the player sees the pretty burst and
   learns the shape; the false honey fungus comes after that, in a room where the route passes its zone, with
