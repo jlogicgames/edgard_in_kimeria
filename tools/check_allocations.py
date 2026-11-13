@@ -30,6 +30,8 @@ HOT_METHODS = {
     ('effects/EnvironmentFx.java', 'emitGrit'): 'called from update while a grit burst is emitting',
     ('effects/EnvironmentFx.java', 'dustPuff'): 'called from Player.playerJump, which runs inside the player update',
     ('effects/EnvironmentFx.java', 'ceilingGrit'): 'called from Level.activateTrigger inside the player update',
+    ('effects/SporeCloud.java', 'burst'): 'called from FungusTrap.update when the swell ends (writes the cloud into the fixed pool)',
+    ('effects/SporeCloud.java', 'spawn'): 'called from SporeCloud.burst, inside FungusTrap.update',
     ('entity/objects/HoneyFungus.java', 'burst'): 'called from FungusTrap.update when the swell ends (writes the spores into the fixed pool)',
 }
 # (file, method, kind) -> what the excluded code carries and why fixing it would lose that.

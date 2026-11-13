@@ -9,11 +9,15 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /** Loads/caches the GLSL effect shaders (ported from the original .frag files, see assets/shaders). */
 public final class Shaders {
     private static final Map<String, ShaderProgram> cache = new HashMap<>();
+    // Shaders that failed to compile once; tryLoad does not retry them every frame.
+    private static final Set<String> failed = new HashSet<>();
     private static Texture whitePixel;
     // One shared region: callers only draw with it and never mutate it; dropped together with its texture.
     private static TextureRegion whiteQuad;
@@ -32,6 +36,21 @@ public final class Shaders {
             }
             return program;
         });
+    }
+
+    /**
+     * Like {@link #load} for a purely decorative effect: null when the shader cannot be built (no GL context, a driver that
+     * rejects it), remembered so it is tried once. The caller then draws without it.
+     */
+    public static ShaderProgram tryLoad(String fragmentFile) {
+        if (failed.contains(fragmentFile)) return null;
+        try {
+            return load(fragmentFile);
+        } catch (RuntimeException e) {
+            failed.add(fragmentFile);
+            if (Gdx.app != null) Gdx.app.error("Shaders", "decorative shader " + fragmentFile + " unavailable: " + e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -68,6 +87,7 @@ public final class Shaders {
         whiteQuad = null;
         cache.values().forEach(ShaderProgram::dispose);
         cache.clear();
+        failed.clear();
         if (whitePixel != null) {
             whitePixel.dispose();
             whitePixel = null;

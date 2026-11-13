@@ -110,6 +110,9 @@ public final class KimeriaParticleSystem {
     public float y(int i) { return y[i]; }
     public byte kind(int i) { return kind[i]; }
     public float life(int i) { return life[i]; }
+    public float red(int i) { return r[i]; }
+    public float green(int i) { return g[i]; }
+    public float blue(int i) { return b[i]; }
     public float maxLife(int i) { return maxLife[i]; }
     public float drawSize(int i) {
         float t = FULL - life[i] / maxLife[i];

@@ -42,7 +42,7 @@ public abstract class FungusTrap extends Entity {
     /** Seconds per full glow breath of the idle (dim, bright, dim); slow so it reads as a living glow, not a blink. */
     public static final float GLOW_PERIOD_SECONDS = 2.5f;
     /** The dimmest brightness factor of the idle glow (1 is the sprite as drawn); brightness only, never hue. */
-    public static final float GLOW_MIN = 0.8f;
+    public static final float GLOW_MIN = 0.55f;
     /** Zone reach in px beyond each side of the footprint when the map does not say; also the smallest side of the lethal one. */
     public static final float DEFAULT_ZONE = 64f;
     /** Smallest used zone side of the harmless one (it needs no reaction time, only to be seen). */

@@ -85,7 +85,7 @@ class AllocationBudgetTest {
     static final double HANGING_VINE_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi idling, swelling and bursting 16 golden spores on a {@code KimeriaParticleSystem}, update and render through the batch. */
     static final double HONEY_FUNGUS_CEILING = 8;
-    /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. */
+    /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. #296: the same scenario now draws the {@code SporeCloud} (30 particles each); the measurement is in the report. The shader layer is off by default ({@code SporeCloud.SHADER_LAYER}); the number is the particles alone. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
     private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
     private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64;
