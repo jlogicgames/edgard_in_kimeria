@@ -6,6 +6,9 @@ import com.jlogicsoftware.kimeria.entity.Collidable;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
 import com.jlogicsoftware.kimeria.entity.objects.Decor;
+import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
+import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
+import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.tiled.TiledObject;
 import org.junit.jupiter.api.AfterEach;
@@ -45,7 +48,7 @@ class DecorTest {
     }
 
     @Test void theBushKindLoadsAndAnUnknownOrMissingKindFailsTheLoad() {
-        assertEquals(java.util.Set.of("bush"), Decor.kindNames());
+        assertEquals(java.util.Set.of("bush", "lookalike"), Decor.kindNames());
         assertEquals(Decor.FRAMES, Decor.fromMap(harness.assets(), object("Bush"), "x").frameCount());
         var unknown = assertThrows(IllegalArgumentException.class, () -> Decor.fromMap(harness.assets(), object("tree"), "'Bush' [7]"));
         assertTrue(unknown.getMessage().contains("Decor 'Bush' [7]") && unknown.getMessage().contains("tree"), unknown.getMessage());
@@ -146,6 +149,7 @@ class DecorTest {
             for (int room = 0; ; room++) {
                 Level level = harness.roomOf(map, room);
                 for (Decor d : level.decor) {
+                    if (d.isStill()) continue; // the static look-alikes have their own placement test below (#299)
                     found++;
                     Rectangle rect = new Rectangle(d.getX(), d.getY(), d.getWidth(), d.getHeight());
                     String label = map + " bush at " + rect;
@@ -179,5 +183,73 @@ class DecorTest {
         assertEquals(count, level.decor.size(), "cleared and respawned, not accumulated");
         assertFalse(level.decor.get(0).playing());
         assertEquals(0, level.decor.get(0).frameIndex());
+    }
+
+    // ---- Static look-alike mushrooms (#299): the "lookalike" kind, a pale cap-and-stem tuft that never reacts ----
+
+    /** Static look-alikes authored per shipped map: one, in forest-2 only (docs/ORIGINAL_TRAPS.md, "Static look-alikes"). */
+    private static final Map<String, Integer> LOOKALIKES = Map.of("forest-0", 0, "forest-1", 0, "forest-2", 1);
+    private static final int MAX_STILL_PER_LEVEL = 2;
+    private static final float LOOKALIKE_WIDTH = 24f, LOOKALIKE_HEIGHT = 16f;
+
+    private Decor lookalike() { return new Decor(harness.assets(), "lookalike", 100, 304, LOOKALIKE_WIDTH, LOOKALIKE_HEIGHT, false); }
+
+    @Test void theLookAlikeIsOneStillFrameThatNeverMoves() {
+        Decor d = lookalike();
+        assertTrue(d.isStill());
+        assertFalse(bush().isStill());
+        assertEquals(1, d.frameCount());
+        assertEquals(0, d.frameIndex());
+        // The hero walks right through it, any number of times: no state change at all, and updates change nothing either.
+        for (int i = 0; i < 120; i++) {
+            d.notice(new Rectangle(104, 282, 11, 48), 100);
+            d.notice(new Rectangle(104, 282, 11, 48), -100);
+            d.update(STEP);
+            assertFalse(d.playing(), "motion is the cue that an active mushroom is alive; the static one has none");
+            assertEquals(0, d.frameIndex());
+        }
+        assertTrue(Decor.isStillKind("lookalike") && Decor.isStillKind("Lookalike"));
+        assertFalse(Decor.isStillKind("bush") || Decor.isStillKind("tree"));
+    }
+
+    @Test void theShippedStaticLookAlikesComeAfterBothActiveMushroomsAndSitOnNoZoneOrFloorGap() {
+        LOOKALIKES.forEach((map, expected) -> {
+            int found = 0;
+            for (int room = 0; ; room++) {
+                Level level = harness.roomOf(map, room);
+                for (Decor d : level.decor) {
+                    if (!d.isStill()) continue;
+                    found++;
+                    Rectangle rect = new Rectangle(d.getX(), d.getY(), d.getWidth(), d.getHeight());
+                    String label = map + " look-alike mushroom at " + rect;
+                    assertEquals(LOOKALIKE_HEIGHT, d.getHeight(), label);
+                    boolean onFloor = false;
+                    for (CollisionBlock block : level.collisionBlocks) {
+                        Rectangle b = new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight());
+                        if (!block.isQuickSand() && rect.x < b.x + b.width && b.x < rect.x + rect.width && b.y == rect.y + rect.height) onFloor = true;
+                    }
+                    assertTrue(onFloor, label + ": the tuft stands on the floor line (world Y grows downward)");
+                    float lastActiveRight = 0f;
+                    for (var o : level.objects) {
+                        if (!(o instanceof FungusTrap f)) continue;
+                        assertFalse(rect.overlaps(f.triggerZone()), label + " lies on the zone of " + f.getClass().getSimpleName() + " at " + f.triggerZone());
+                        assertFalse(rect.overlaps(new Rectangle(f.getX(), f.getY(), f.getWidth(), f.getHeight())), label + " covers an active mushroom");
+                        lastActiveRight = Math.max(lastActiveRight, f.triggerZone().x + f.triggerZone().width);
+                    }
+                    // Only after the player has met an active mushroom in this map: forest-2 has the lethal one at x 1672.
+                    assertTrue(map.equals("forest-2") && level.objects.stream().anyMatch(o -> o instanceof FalseHoneyFungus),
+                        label + ": the first look-alike is in forest-2, in the room that holds the lethal mushroom");
+                    assertTrue(d.getX() >= lastActiveRight, label + " lies after the active mushroom's zone, not before it");
+                }
+                if (!level.hasNextRoom()) break;
+            }
+            assertEquals(expected, found, map + ": static look-alikes authored");
+            assertTrue(found <= MAX_STILL_PER_LEVEL, map + ": one or two per level");
+        });
+    }
+
+    @Test void aStaticLookAlikeIsNeverAnActiveMushroomObject() {
+        assertFalse(FungusTrap.class.isAssignableFrom(Decor.class) || HoneyFungus.class.isAssignableFrom(Decor.class),
+            "the static look-alike is a picture, not an object with logic");
     }
 }

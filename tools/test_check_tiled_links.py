@@ -367,7 +367,8 @@ class DecorLinksTest(unittest.TestCase):
         self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="500" y="296" width="32" height="24"'), FLOOR))[0])
 
     def test_the_kinds_are_read_from_the_java_table(self):
-        self.assertEqual(('bush',), links.decor_kinds())
+        self.assertEqual({'bush', 'lookalike'}, set(links.decor_kinds()))
+        self.assertEqual(('lookalike',), links.decor_still_kinds())
 
 
 CEILING = '<object id="8" x="0" y="0" width="400" height="16"/>'
@@ -411,3 +412,60 @@ class HangingVineLinksTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class StillDecorLinksTest(unittest.TestCase):
+    """#299: a static look-alike mushroom never lies on an active mushroom's zone, a hint zone, a trap or a pickup."""
+    FLOOR = '<object id="9" x="0" y="320" width="1200" height="48"/>'
+    LOOKALIKE_BOX = 'x="400" y="304" width="24" height="16"'  # 24x16 standing on the floor at y 320
+
+    def lookalike(self, box=LOOKALIKE_BOX, id_=7):
+        return decor('lookalike', box).replace('id="7"', f'id="{id_}"')
+
+    def fungus(self, x, kind_='FalseHoneyFungus', extra=''):
+        return (f'<object id="20" name="F" type="{kind_}" x="{x}" y="304" width="24" height="16">'
+                f'<properties>{extra}</properties></object>')
+
+    def run_map(self, spawn, hints=''):
+        return check('<?xml version="1.0"?><map><objectgroup name="SpawnPoints">' + spawn + '</objectgroup>'
+                     '<objectgroup name="Collisions">' + self.FLOOR + '</objectgroup>'
+                     '<objectgroup name="Hints">' + hints + '</objectgroup></map>')
+
+    def test_a_lookalike_away_from_everything_passes(self):
+        self.assertEqual([], self.run_map(self.lookalike() + self.fungus(100)))
+
+    def test_a_lookalike_on_an_active_mushrooms_zone_is_named(self):
+        # Zone of a mushroom at x 330: 266..420 (default 64 each side) overlaps the look-alike at 400..424.
+        errors = self.run_map(self.lookalike() + self.fungus(330))
+        self.assertTrue(any('zone of the active FalseHoneyFungus' in e for e in errors), errors)
+        errors = self.run_map(self.lookalike() + self.fungus(330, 'HoneyFungus'))
+        self.assertTrue(any('zone of the active HoneyFungus' in e for e in errors), errors)
+
+    def test_the_mushrooms_own_zone_sides_are_honoured(self):
+        near = self.fungus(330, 'HoneyFungus', extra='<property name="zone" type="float" value="24"/>')  # zone 306..378: clear of 400
+        self.assertEqual([], self.run_map(self.lookalike() + near))
+        wide = self.fungus(100, extra='<property name="zoneRight" type="float" value="400"/>')  # 100..524 reaches 400
+        self.assertTrue(any('zone of the active' in e for e in self.run_map(self.lookalike() + wide)))
+
+    def test_a_lookalike_in_a_hint_zone_is_named(self):
+        hint = '<object id="30" name="walk" type="Hint" x="380" y="0" width="100" height="368"/>'
+        self.assertTrue(any('hint zone' in e for e in self.run_map(self.lookalike(), hint)))
+        far = '<object id="30" name="walk" type="Hint" x="500" y="0" width="100" height="368"/>'
+        self.assertEqual([], self.run_map(self.lookalike(), far))
+
+    def test_a_lookalike_over_a_trap_or_pickup_is_named(self):
+        coin = '<object id="31" name="Coin" type="Collectable" x="410" y="290" width="16" height="16"/>'
+        self.assertTrue(any('hides Collectable' in e for e in self.run_map(self.lookalike() + coin)))
+
+    def test_more_than_two_lookalikes_are_named(self):
+        three = ''.join(self.lookalike(f'x="{400 + 100 * i}" y="304" width="24" height="16"', 50 + i) for i in range(3))
+        self.assertTrue(any('at most 2 per map' in e for e in self.run_map(three)))
+        two = ''.join(self.lookalike(f'x="{400 + 100 * i}" y="304" width="24" height="16"', 50 + i) for i in range(2))
+        self.assertEqual([], self.run_map(two))
+
+    def test_a_bush_is_not_held_to_the_look_alike_rules(self):
+        self.assertEqual([], self.run_map(decor(box='x="330" y="296" width="32" height="24"') + self.fungus(330)))
+
+    def test_the_shipped_maps_keep_their_look_alikes_in_order(self):
+        for name in ('forest-0', 'forest-1', 'forest-2'):
+            self.assertEqual([], links.check_map(links.MAPS / f'{name}.tmx'))

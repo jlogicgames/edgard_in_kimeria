@@ -32,6 +32,8 @@ public final class SpriteSheets {
     public static final Sheet DECOR_BUSH = new Sheet("images/objects/decor-bush.png", 32, 24);
     // Hanging scenery vine (#239 step 5): one frame; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_VINE = new Sheet("images/objects/decor-vine.png", 8, 40);
+    // Static look-alike mushroom scenery (#299): one frame, never animated; tools/sprite_layouts.py DECOR_SHEETS.
+    public static final Sheet DECOR_LOOKALIKE = new Sheet("images/objects/decor-lookalike.png", 24, 16);
     public static final Sheet PLAYER = new Sheet("images/hero/Player.png", 48, 48);
     public static final Sheet PLAYER_LOOK = new Sheet("images/hero/Look.png", PLAYER.width(), PLAYER.height());
 

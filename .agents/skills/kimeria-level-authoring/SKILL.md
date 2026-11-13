@@ -42,7 +42,8 @@ properties there rather than assuming libGDX's standard tiled loader behavior.
   entities retain ownership. Cross-room trigger links are rejected.
 - `Decor` (SpawnPoints, 32x24, property `kind` = `bush`, optional `mirror`) is cosmetic scenery: place it with
   `y = floor - 24` (add 16 in a layer offset by -16, as forest-2's SpawnPoints is); `tools/check_tiled_links.py`
-  rejects an unknown kind or a bush not standing on a block.
+  rejects an unknown kind or a bush not standing on a block. `kind` = `lookalike` (24x16, `y = floor - 16`) is the static pale look-alike
+  tuft of the honey fungus pair (#299): at most two per map, after an active mushroom, never on an active mushroom's zone, a hint zone or a trap/pickup.
 - `HangingVine` (SpawnPoints, 8x40, no properties) is cosmetic scenery that sways when a falling stone lands within 160 px:
   place it with `y` = the room's top (add 16 in forest-2's offset SpawnPoints layer) and a `FallingStone` in the same room
   within reach; `tools/check_tiled_links.py` rejects a vine that hangs from nothing or that no stone can move. A map without a stone gets no vine.
