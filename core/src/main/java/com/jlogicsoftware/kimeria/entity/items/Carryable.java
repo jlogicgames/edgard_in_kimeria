@@ -34,6 +34,7 @@ public final class Carryable extends Entity {
     private final Torch flame;
     private final TextureRegion sprite;
     private final SpriteSheets.Sheet artwork;
+    private final Rectangle boundsScratch = new Rectangle(), blockBox = new Rectangle(), trapBox = new Rectangle();
     private Player holder;
     private boolean thrown;
     /** True from a throw until the object comes to rest: a throw-activated Trigger (a lever) touched meanwhile fires once (D39). */
@@ -54,7 +55,8 @@ public final class Carryable extends Entity {
         flame = kind == Kind.TORCH ? new Torch(x, y, FLAME_BOUNDS_WIDTH, FLAME_BOUNDS_HEIGHT, FLAME_INTENSITY, "") : null;
     }
 
-    public Rectangle bounds() { return new Rectangle(getX(), getY(), size.x, size.y); }
+    /** The body box, written into a field that the next call overwrites: copy it to keep it (it never allocates). */
+    public Rectangle bounds() { return boundsScratch.set(getX(), getY(), size.x, size.y); }
     public Msg label() { return kind == Kind.STONE ? Msg.STONE : Msg.TORCH; }
     public boolean available() { return holder == null && !thrown && !removed; }
     public void pickUp(Player player) { holder = player; velocity.setZero(); followHolder(); }
@@ -114,12 +116,12 @@ public final class Carryable extends Entity {
                 if (level.blocksObject(bounds(), false)) { position.x -= velocity.x * step; velocity.x = 0; thrown = false; }
                 velocity.y = Math.min(MAX_FALL_SPEED, velocity.y + GRAVITY * step);
                 position.y += velocity.y * step;
-                for (var block : level.collisionBlocks) {
+                for (int b = 0; b < level.collisionBlocks.size(); b++) {
+                    var block = level.collisionBlocks.get(b);
                     if (!block.isActive() || block.isQuickSand()) continue;
-                    Rectangle b = new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight());
-                    if (!bounds().overlaps(b)) continue;
-                    if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > b.y + PLATFORM_TOLERANCE)) continue;
-                    position.y = velocity.y >= 0 ? b.y - size.y : b.y + b.height;
+                    if (!bounds().overlaps(blockBox.set(block.getX(), block.getY(), block.getWidth(), block.getHeight()))) continue;
+                    if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > blockBox.y + PLATFORM_TOLERANCE)) continue;
+                    position.y = velocity.y >= 0 ? blockBox.y - size.y : blockBox.y + blockBox.height;
                     velocity.setZero(); thrown = false; landed = true;
                     break;
                 }
@@ -129,8 +131,8 @@ public final class Carryable extends Entity {
                     if (respawns) { returnHome(); break; }
                 }
                 if (landed) leverFlight = false;
-                if (thrown && level.player.canFight()) for (var object : level.objects) {
-                    if (object instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
+                if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                    if (level.objects.get(o) instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
                         if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
                         velocity.x = 0; thrown = false;
                         break;
@@ -138,8 +140,8 @@ public final class Carryable extends Entity {
                 }
                 // D47: a thrown stone that reaches an intact explosive trap lights it from afar, then drops like after any hit
                 // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.
-                if (thrown && kind == Kind.STONE && level.player.canFight()) for (var object : level.objects) {
-                    if (object instanceof ExplosiveTrap trap && trap.triggerBox().overlaps(bounds()) && trap.igniteFromAfar()) {
+                if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                    if (level.objects.get(o) instanceof ExplosiveTrap trap && trap.triggerBoxInto(trapBox).overlaps(bounds()) && trap.igniteFromAfar()) {
                         velocity.x = 0; thrown = false;
                         break;
                     }

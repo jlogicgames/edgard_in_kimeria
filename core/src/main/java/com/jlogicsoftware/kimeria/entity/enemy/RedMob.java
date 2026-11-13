@@ -88,12 +88,17 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
 
     /** The mob winds up as soon as the whip, where it will land, reaches the player. */
     private boolean playerInAttackRange() {
-        return attackBounds().overlaps(player.hitboxBounds());
+        return attackTouchesPlayer();
     }
 
     @Override
     public Rectangle attackBounds() {
         return boundsOf(attackHitbox);
+    }
+
+    @Override
+    protected Rectangle attackBoundsInto(Rectangle out) {
+        return boundsInto(attackHitbox, out);
     }
 
     @Override
@@ -116,7 +121,7 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     }
 
     private void checkAttackCollision() {
-        if (isAttackActive() && attackBounds().overlaps(player.hitboxBounds())) {
+        if (isAttackActive() && attackTouchesPlayer()) {
             player.collidedWithActor(false);
         }
     }

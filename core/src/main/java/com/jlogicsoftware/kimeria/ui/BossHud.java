@@ -22,6 +22,8 @@ public final class BossHud {
     private final BitmapFont font;
     private final GameContext game;
     private final Matrix4 textProjection;
+    /** The batch's projection while the label uses {@link #textProjection}; a field so no frame copies a matrix. */
+    private final Matrix4 previousProjection = new Matrix4();
     private final float logicalWidth, logicalHeight;
 
     public BossHud(Assets assets, GameContext game, Matrix4 textProjection, float width, float height) {
@@ -77,7 +79,7 @@ public final class BossHud {
         }
         if (empowered) batch.draw(elixir, x + FRAME_WIDTH - 48, LABEL_TOP - 2, ELIXIR_SIZE, ELIXIR_SIZE);
 
-        Matrix4 previous = batch.getProjectionMatrix().cpy();
+        previousProjection.set(batch.getProjectionMatrix());
         Color fontTint = font.getColor();
         float fontR = fontTint.r, fontG = fontTint.g, fontB = fontTint.b, fontA = fontTint.a;
         batch.setProjectionMatrix(textProjection);
@@ -85,7 +87,7 @@ public final class BossHud {
         font.draw(batch, Msg.BOSS.t(game.language()), x, logicalHeight - LABEL_TOP);
         if (empowered) font.draw(batch, "x10", x + FRAME_WIDTH - 28, logicalHeight - LABEL_TOP);
         font.setColor(fontR, fontG, fontB, fontA);
-        batch.setProjectionMatrix(previous);
+        batch.setProjectionMatrix(previousProjection);
         batch.setColor(beforeR, beforeG, beforeB, beforeA);
     }
 }

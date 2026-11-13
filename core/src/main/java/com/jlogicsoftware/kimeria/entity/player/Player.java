@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.entity.player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
@@ -113,6 +114,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private final Vector2 carryHintCameraAnchor = new Vector2();
     private boolean carryHintVisible;
     private final Set<Boss> bossesHit = new HashSet<>();
+    /** Reused by the per-frame passive highlight and pickup-reach code (see {@link #pickupReachBounds}): never allocated per frame. */
+    private static final int OUTLINE_CAPACITY = 8;
+    private final Array<Entity> outlinedScratch = new Array<>(false, OUTLINE_CAPACITY);
+    private final Rectangle reachScratch = new Rectangle();
     private boolean victoryWalk;
     private boolean isAttacking = false;
     private boolean attackHitboxAdded = false;
@@ -306,7 +311,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Which vertical directions can take hold at the player's current ladder entry point. */
     private LadderEntry ladderEntry() {
         if (level == null || ladder != null) return null;
-        Rectangle body = hitboxBounds();
+        Rectangle body = hitboxBoundsInto(bodyScratch);
         float feet = body.y + body.height, bodyCenter = body.x + body.width / 2f;
         for (Ladder candidate : level.ladders) {
             if (bodyCenter < candidate.getX() || bodyCenter > candidate.getX() + candidate.getWidth()) continue;
@@ -512,7 +517,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public float verticalMovement() { return gameplayInput.verticalMovement(); }
 
     private float targetDistance(com.jlogicsoftware.kimeria.entity.Entity target) {
-        Rectangle b = hitboxBounds();
+        Rectangle b = hitboxBoundsInto(bodyScratch);
         float dx = target.centerX() - (b.x + b.width / 2), dy = target.centerY() - (b.y + b.height / 2);
         return dx * dx + dy * dy;
     }
@@ -537,7 +542,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private Rectangle pickupReachBounds() {
-        Rectangle reach = new Rectangle(hitboxBounds());
+        Rectangle reach = hitboxBoundsInto(reachScratch);
         // A small hand/contact tolerance, not a remote interaction radius.
         reach.x -= PICKUP_REACH; reach.y -= PICKUP_REACH;
         reach.width += PICKUP_REACH * 2; reach.height += PICKUP_REACH * 2;
@@ -778,22 +783,32 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (selectedTarget != null) InteractionHighlight.draw(batch, selectedTarget);
     }
 
+    /** True the first time {@code target} is added (identity, like the HashSet it replaces). */
+    private static boolean outline(Array<Entity> outlined, Entity target) {
+        if (outlined.contains(target, true)) return false;
+        outlined.add(target);
+        return true;
+    }
+
     private void renderPassiveInteractionTargets(Batch batch, Entity selectedTarget) {
         if (level == null || !canFight()) return;
-        Set<Entity> outlined = new HashSet<>();
+        Array<Entity> outlined = outlinedScratch;
+        outlined.clear();
         if (selectedTarget != null) outlined.add(selectedTarget);
 
         if (carryablesEligible()) {
             Rectangle reach = pickupReachBounds();
-            for (var object : level.objects) if (object instanceof Carryable target
-                && target.available() && reach.overlaps(target.bounds()) && outlined.add(target))
+            for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Carryable target
+                && target.available() && reach.overlaps(target.bounds()) && outline(outlined, target))
                 InteractionHighlight.drawPassive(batch, target);
         }
-        for (Trigger trigger : level.triggers) {
+        for (int i = 0; i < level.triggers.size(); i++) {
+            Trigger trigger = level.triggers.get(i);
             if (!mechanismEligible(trigger)) continue;
             Entity target = level.mechanismFeedbackTarget(trigger);
-            if (target != null && outlined.add(target)) InteractionHighlight.drawPassive(batch, target);
+            if (target != null && outline(outlined, target)) InteractionHighlight.drawPassive(batch, target);
         }
+        outlined.clear();
     }
 
     private void updatePlayerState() {
@@ -961,7 +976,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             attackElapsed = 0f;
             bossesHit.clear();
         }
-        attackHitbox.set(boundsOf(SWORD_HITBOX));
+        boundsInto(SWORD_HITBOX, attackHitbox);
 
         attackElapsed += dt;
         var anim = animations.get(State.ATTACKING);
@@ -996,7 +1011,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private void checkGameplayOverlaps() {
         if (isReachedCheckpoint) return;
 
-        if (level.touchesDeadline(hitboxBounds())) {
+        if (level.touchesDeadline(hitboxBoundsInto(bodyScratch))) {
             die(false);
             return;
         }
@@ -1006,11 +1021,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 refill.collideWithPlayer();
             } else if (obj instanceof Collectable c && overlapsEntity(c)) {
                 c.collideWithPlayer();
-            } else if (obj instanceof Enemy<?> enemy && (!isAttacking || enemy instanceof Boss) && enemy.hitboxOverlaps(hitboxBounds())) {
+            } else if (obj instanceof Enemy<?> enemy && (!isAttacking || enemy instanceof Boss) && enemy.hitboxOverlaps(hitboxBoundsInto(bodyScratch))) {
                 enemy.collidedWithActor(false);
             } else if (obj instanceof Checkpoint cp && overlapsEntity(cp)) {
                 reachedCheckpoint();
-            } else if (obj instanceof Bomb bomb && hitboxBounds().overlaps(bomb.hitboxBounds())) {
+            } else if (obj instanceof Bomb bomb && hitboxBoundsInto(bodyScratch).overlaps(bomb.hitboxBounds())) {
                 bomb.collideWithPlayer();
             }
         }

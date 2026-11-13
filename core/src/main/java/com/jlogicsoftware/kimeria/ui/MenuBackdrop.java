@@ -34,14 +34,14 @@ public class MenuBackdrop {
 
     public void update(float dt) {
         fog.update(dt);
-        for (Firefly f : fireflies) f.update(dt);
+        for (int i = 0; i < fireflies.size(); i++) fireflies.get(i).update(dt);
     }
 
     public void render(Batch batch) {
         // The fog goes down first so the fireflies glow above it, added onto the dark backdrop.
         fog.render(batch);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-        for (Firefly f : fireflies) f.render(batch);
+        for (int i = 0; i < fireflies.size(); i++) fireflies.get(i).render(batch);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 }

@@ -42,6 +42,7 @@ public final class HeadlessLevelHarness {
     private final ArtifactInventory artifacts = new ArtifactInventory();
     private final Assets assets = new Assets() {
         @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+        @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
         @Override public BitmapFont font(int size) { return font; }
     };
     /** Returned by {@code Assets.font}; null unless a test sets it before building the object that asks for a font. */

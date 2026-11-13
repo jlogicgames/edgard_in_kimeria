@@ -15,6 +15,8 @@ public final class ArtifactInventory {
 
     private final Map<Id, Pickup> kept = new LinkedHashMap<>();
     private final Map<Id, Pickup> pending = new LinkedHashMap<>();
+    /** The immutable list {@link #items()} returns, rebuilt only after a change: the HUD asks for it every frame. */
+    private List<Pickup> itemsCache;
     private final Map<Id, Pickup> levelStart = new LinkedHashMap<>();
     private String elixirLevel;
     private final Map<Id, Pickup> spent = new LinkedHashMap<>();
@@ -34,6 +36,7 @@ public final class ArtifactInventory {
 
     public void beginLevel() {
         elixirLevel = null;
+        itemsCache = null;
         pending.clear();
         levelStart.clear();
         levelStart.putAll(kept);
@@ -43,6 +46,7 @@ public final class ArtifactInventory {
     public void collect(String level, int objectId, ItemType type) {
         if (type == ItemType.COIN) throw new IllegalArgumentException("Coins are not artifacts");
         Id id = new Id(level, objectId);
+        itemsCache = null;
         if (!contains(level, objectId)) pending.putIfAbsent(id, new Pickup(level, objectId, type));
     }
 
@@ -52,14 +56,16 @@ public final class ArtifactInventory {
     }
 
     public void keepRoom() {
+        itemsCache = null;
         kept.putAll(pending);
         pending.clear();
     }
 
-    public void resetRoom() { pending.clear(); }
+    public void resetRoom() { itemsCache = null; pending.clear(); }
 
     public void restartLevel() {
         elixirLevel = null;
+        itemsCache = null;
         spent.clear();
         pending.clear();
         kept.clear();
@@ -68,6 +74,7 @@ public final class ArtifactInventory {
 
     public void clear() {
         elixirLevel = null;
+        itemsCache = null;
         spent.clear();
         kept.clear();
         pending.clear();
@@ -76,9 +83,12 @@ public final class ArtifactInventory {
 
     /** Collection order, including provisional items; callers cannot mutate the inventory. */
     public List<Pickup> items() {
-        List<Pickup> result = new ArrayList<>(kept.values());
-        result.addAll(pending.values());
-        return List.copyOf(result);
+        if (itemsCache == null) {
+            List<Pickup> result = new ArrayList<>(kept.values());
+            result.addAll(pending.values());
+            itemsCache = List.copyOf(result);
+        }
+        return itemsCache;
     }
 
     public boolean hasFullSet(String level) {
@@ -92,6 +102,7 @@ public final class ArtifactInventory {
         if (!hasFullSet(level) || spent.values().stream().anyMatch(p -> p.level().equals(level))) return false;
         var ids = kept.entrySet().stream().filter(e -> e.getValue().level().equals(level)
             && requiredForLevel(level).contains(e.getValue().type())).map(Map.Entry::getKey).toList();
+        itemsCache = null;
         for (Id id : ids) spent.put(id, kept.remove(id));
         drinkBossElixir(level);
         return true;

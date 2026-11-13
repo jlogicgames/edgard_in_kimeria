@@ -21,6 +21,7 @@ public final class Fireball extends Entity {
     private final Level level;
     private final float speed;
     private final TextureRegion sprite;
+    private final Rectangle boundsScratch = new Rectangle(), trapBox = new Rectangle();
     private float life = LIFETIME_SECONDS;
     public Fireball(Level level, float x, float y, boolean right) {
         super(x, y, BODY_SIZE, BODY_SIZE);
@@ -33,9 +34,9 @@ public final class Fireball extends Entity {
         int steps = ProjectileStep.count(dt);
         for (int i = 0; i < steps && !removed; i++) {
             position.x += speed * ProjectileStep.frameSeconds(dt) / steps;
-            Rectangle bounds = new Rectangle(getX(), getY(), size.x, size.y);
+            Rectangle bounds = boundsScratch.set(getX(), getY(), size.x, size.y);
             if (level.blocksObject(bounds, false)) { removeFromParent(); break; }
-            for (var object : level.objects) if (object instanceof Enemy<?> enemy
+            for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof Enemy<?> enemy
                 && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds)) {
                 if (enemy instanceof Boss boss) boss.hitByFireball();
                 else enemy.collidedWithActor(true);
@@ -43,8 +44,8 @@ public final class Fireball extends Entity {
                 break;
             }
             // D47: a fireball that reaches an intact explosive trap lights it from afar and is spent doing so.
-            if (!removed) for (var object : level.objects) if (object instanceof ExplosiveTrap trap
-                && trap.triggerBox().overlaps(bounds) && trap.igniteFromAfar()) {
+            if (!removed) for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof ExplosiveTrap trap
+                && trap.triggerBoxInto(trapBox).overlaps(bounds) && trap.igniteFromAfar()) {
                 removeFromParent();
                 break;
             }
