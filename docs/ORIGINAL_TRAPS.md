@@ -394,11 +394,11 @@ Not part of the forest set and not implemented; also recorded in D42.
   the castle-fortress stage. Open design points: whether the door stays open or closes when the
   plate is released, the D26 recovery rules, and linking by `target`.
 
-### Honey fungus and false honey fungus (author idea, 2026-11-12)
+### Honey fungus and false honey fungus (built, 2026-11-13)
 
-Decided by the author on 2026-11-12; **status: phase 1 done** (decision record [D63](DECISIONS.md#d63-honey-fungus-and-false-honey-fungus-a-pair-of-look-alike-proximity-mushrooms-295-phase-1-decision-and-art)
-and the sprites `trap-honey-fungus` and `trap-false-honey-fungus`, awaiting the author's review of the art), **phase 2 pending** (objects,
-tests, placement; no code draws them yet); tracked by
+Decided by the author on 2026-11-12; **status: built** (phase 1: decision record [D63](DECISIONS.md#d63-honey-fungus-and-false-honey-fungus-a-pair-of-look-alike-proximity-mushrooms-295-phase-1-decision-and-art)
+and the sprites `trap-honey-fungus` and `trap-false-honey-fungus`, awaiting the author's review of the art; phase 2: the objects `HoneyFungus` and
+`FalseHoneyFungus` on the base class `FungusTrap`, the tests and the placement, all built and described in D63 "As built"); tracked by
 [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), with the later polish in
 [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296).
 
@@ -453,7 +453,7 @@ player has to read the difference:
   the swell telegraph as the only warning. Which world and rooms is decided when the objects are built (#295),
   with a scripted route and the hint-zone advice of [ROOMS.md](ROOMS.md); the forest-1 and forest-2 trap
   placements already fixed in D58 and D59 stay untouched.
-  A placement **proposal** (harmless first in `forest-0-lever` and `forest-0-wall`, the false one in `forest-2` `forest-entry`) is in D63, for the author to confirm.
+  **As built:** harmless ones in `forest-0-lever` (x 150) and `forest-0-wall` (x 1804), the false one in `forest-2` `forest-canopy` (x 1672; `forest-entry` has no usable floor). Coordinates and reasons are in D63.
 
 **First version and later polish (author, 2026-11-12).** The first version uses sprites for the poisonous
 cloud, as the existing spore puffball does (`trap-spores`, D46). After the MVP, during polishing, the sprite is

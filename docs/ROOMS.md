@@ -827,6 +827,8 @@ Three rooms, left to right: `forest-entry` (x 0-1280), `forest-canopy` (x 1280-1
 
 **`forest-entry` has no free floor.** Between the hazards that already stand there, the only gaps are 64 px (x 688-752, between the Bomb's blast and the YellowMob's reach), 16 px (896-912) and 48 px (1008-1056). A thorn tuft or explosive needs a 128-176 px jump envelope; a falling trap or vine needs a clear column; a puffball needs a crossing. The room already teaches stomp, ladder and lever, quicksand, the Bomb, wall jump and sword, and its route is 16.27 s, so a death late in it replays 16 s. **Plan: the entry room is not touched.**
 
+**Later (D63, #295 phase 2): the 128 px canopy slot below holds the `FalseHoneyFungus` at x 1672** (cloud x 1672-1696, zone x 1608-1760), and the harmless `HoneyFungus` stands in `forest-0-lever` (x 150) and `forest-0-wall` (x 1804); see D63 "As built". The mastered floor routes through the canopy take off at hero x 1600 to clear the cloud.
+
 **`forest-canopy` has one slot of about 128 px** (x 1616-1744, under the optional ledge at 1648) between the RedMob (reach 1392-1536), the optional falling platform (column 1568-1600), the vertical Bat (x 1752-1784) and the 48 px exit clearance (from 1824). That fits one puffball and nothing else (a tuft needs 176 px). It is the fallback (option A below).
 
 ### As built (option B): the canopy is 448 px longer, three traps in the new stretch

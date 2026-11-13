@@ -44,6 +44,9 @@ import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
+import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
+import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
+import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
 import com.jlogicsoftware.kimeria.entity.objects.Decor;
 import com.jlogicsoftware.kimeria.entity.objects.HangingVine;
@@ -97,6 +100,8 @@ public class Level implements WorldObject {
     /** Scenery vines (#239 step 5): drawn with {@link #decor}, swaying when a falling stone lands within reach. */
     public final List<HangingVine> vines = new ArrayList<>();
     private final Rectangle heroBodyScratch = new Rectangle();
+    /** The hero's body for the honey fungi's zone test (D63): one box refilled on every ask, so no frame allocates. */
+    private final Rectangle fungusHeroScratch = new Rectangle();
     /**
      * Objects spawned mid-frame (a coin's pickup ripple, a bomb's explosion,
      * ...) land here instead of straight into {@link #objects}: they're
@@ -445,6 +450,7 @@ public class Level implements WorldObject {
             if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map); // D45: every room, at load.
             if ("ThornRoot".equals(o.type) || "ThornTuft".equals(o.type)) validateThorn(o, owner);
             if (ExplosiveTrap.isExplosive(o.type)) validateExplosive(o, owner); // D47: every room, at load.
+            if ("HoneyFungus".equals(o.type) || "FalseHoneyFungus".equals(o.type)) validateFungus(o, owner); // D63: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -735,6 +741,12 @@ public class Level implements WorldObject {
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
                     objects.add(puffball);
                 }
+                case "HoneyFungus" -> objects.add(HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero));
+                case "FalseHoneyFungus" -> {
+                    FalseHoneyFungus fungus = FalseHoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
+                    requireSafeSetting(o, fungus, fungus.cloudBounds());
+                    objects.add(fungus);
+                }
                 case "Decor" -> decor.add(Decor.fromMap(assets, o, describe(o)));
                 case "HangingVine" -> vines.add(HangingVine.fromMap(assets, o, describe(o)));
                 case "ThornVine" -> {
@@ -803,6 +815,25 @@ public class Level implements WorldObject {
         Rectangle entranceBody = new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
             player.hitbox.width, player.hitbox.height);
         String problem = ThornTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), entranceBody);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /** The hero's body box for the honey fungi, or null while the hero cannot be hurt (the thorn traps' rule). */
+    private Rectangle fungusHero() {
+        return player.canLeaveRoom() ? player.hitboxBoundsInto(fungusHeroScratch) : null;
+    }
+
+    /** Honey fungi (D63) fail at load without open floor and a bypass, or with the zone over the entrance, or a lethal cloud near a standing place. */
+    private void validateFungus(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Map<String, Rectangle> standing = new java.util.LinkedHashMap<>();
+        standing.put("entrance", new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
+            player.hitbox.width, player.hitbox.height));
+        if (room.exit() != null) standing.put("exit", room.exit());
+        for (TiledObject other : map.layer("SpawnPoints"))
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
+                standing.put("checkpoint [" + other.id + "]", new Rectangle(other.x, other.y, other.width, other.height));
+        String problem = FungusTrap.problem(o, "FalseHoneyFungus".equals(o.type), map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), standing);
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
