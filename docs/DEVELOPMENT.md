@@ -524,23 +524,3 @@ GC pauses or memory in the browser build (all allocation figures are from a desk
   [`kimeria-particles`](../.agents/skills/kimeria-particles/SKILL.md) (which class to use, the recipe to own and render an emitter, how to
   add a kind, the tests and guards). The `Kimeria` prefix on the two classes (renamed 2026-11-12, no behaviour change) exists so that
   nobody mixes them with libGDX's 3D `ParticleSystem`.
-
-### Allocation outside the particle code
-
-The audit of 2026-11-10 (a syntactic scan of `core/src/main/java` plus the measured profile; the call graph was not followed, and
-iterators, varargs and boxing are not seen by a scan) and later measurements list these sites, which are outside #285 and allocate per
-frame as of 2026-11-12 (tracked by [#303](https://github.com/jlogicgames/edgard_in_kimeria/issues/303), whose checklist includes updating this section):
-
-| Where | Allocates | How found |
-| --- | --- | --- |
-| `BossHud.render` (`getProjectionMatrix().cpy()`) | `Matrix4`, 96 B per frame while the boss bar is shown | measured (`bossHud` scenario) |
-| `Hud.render`, `renderInteractionHint`, `draw` | `GlyphLayout`, per frame while the FPS text, hint or zone message is shown | read from the code |
-| `Carryable.update`, `Fireball.update`, `Actor.boundsOf`, `Carryable.bounds`, `Level.blocksObject` | `Rectangle`, per object per frame | sampled JFR ranking (a ranking, not a measure) and the code |
-| for-each loops over lists in `Level.update`/`render` (10 of the 35 hits of `--all` are in `Level.java`), `MenuBackdrop`, `KimeriaGame` | `Iterator` | `check_allocations.py --all` |
-| `HealerDialogueView.render`, `Hud.render` | string concatenation, `String.valueOf` | `check_allocations.py --all` |
-| `Player.renderPassiveInteractionTargets` | `HashSet`, per call | read from the code |
-| `GamepadInput.update` | `boolean[]` when the pad's button count is read | read from the code |
-| `Level.activateTrigger` | `HashSet`, once per lever pull | measured (lever scenarios) |
-
-Line numbers are omitted on purpose; `python3 tools/check_allocations.py --all` prints the current list (35 syntactic hits in per-frame
-methods on 2026-11-12, two allowlisted lines). It cannot see varargs or boxing, and it does not follow calls.

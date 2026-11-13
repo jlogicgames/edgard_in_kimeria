@@ -35,13 +35,18 @@ public final class InteractionHighlight {
         batch.setColor(Color.WHITE);
     }
 
+    /** Each outline side is drawn at its two ends. */
+    private static final int CORNER_PAIR = 2;
+
     private static void corners(Batch batch, float x, float y, float w, float h, float thickness, float arm) {
         var pixel = Shaders.whiteQuad();
-        for (float cx : new float[]{x, x + w - arm}) {
+        for (int k = 0; k < CORNER_PAIR; k++) {
+            float cx = k == 0 ? x : x + w - arm;
             batch.draw(pixel, cx, y, arm, thickness);
             batch.draw(pixel, cx, y + h - thickness, arm, thickness);
         }
-        for (float cy : new float[]{y, y + h - arm}) {
+        for (int k = 0; k < CORNER_PAIR; k++) {
+            float cy = k == 0 ? y : y + h - arm;
             batch.draw(pixel, x, cy, thickness, arm);
             batch.draw(pixel, x + w - thickness, cy, thickness, arm);
         }

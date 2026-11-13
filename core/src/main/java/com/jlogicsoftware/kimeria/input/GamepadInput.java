@@ -33,6 +33,8 @@ public class GamepadInput {
 
     private Controller buttonController;
     private boolean[] heldButtons = new boolean[0];
+    /** How many entries of {@link #heldButtons} the current controller uses; the array only grows, so a reconnect of the same pad allocates nothing. */
+    private int heldCount;
     private boolean anyButtonEdge;
 
     private float horizontal;
@@ -56,6 +58,13 @@ public class GamepadInput {
         return c != null && index != ControllerMapping.UNDEFINED && c.getButton(index);
     }
 
+    /** Runs only when the controller changes (connect, disconnect, swap), never per frame. */
+    private void resetHeldButtons(int count) {
+        if (heldButtons.length < count) heldButtons = new boolean[count];
+        else java.util.Arrays.fill(heldButtons, false);
+        heldCount = count;
+    }
+
     /** @param leftHanded selects the mirrored gameplay layout; menu input is unaffected. */
     public void update(boolean leftHanded) {
         Controller c = controller();
@@ -63,10 +72,10 @@ public class GamepadInput {
         anyButtonEdge = false;
         if (c != buttonController) {
             buttonController = c;
-            heldButtons = new boolean[c == null ? 0 : c.getMaxButtonIndex() + 1];
+            resetHeldButtons(c == null ? 0 : c.getMaxButtonIndex() + 1);
         }
         if (c != null) {
-            for (int i = c.getMinButtonIndex(); i < heldButtons.length; i++) {
+            for (int i = c.getMinButtonIndex(); i < heldCount; i++) {
                 boolean down = c.getButton(i);
                 anyButtonEdge |= down && !heldButtons[i];
                 heldButtons[i] = down;

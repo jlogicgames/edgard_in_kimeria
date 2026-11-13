@@ -26,6 +26,7 @@ import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.input.IntroInput;
+import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
@@ -144,6 +145,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private UiState uiState;
     private int currentLevelIndex = 0;
     private int coinsCollected = 0;
+    /** Menu callbacks held in fields: a method reference or capturing lambda built in {@code renderOverlay} would allocate every frame. */
+    private final Runnable hoverSound = this::playHoverSound, clickSound = () -> playSound("button_click");
+    private static final Runnable NO_ACTION = () -> { };
+    private final FpsLabel fpsLabel = new FpsLabel();
+    private static final float WEB_START_BUTTONS_Y = 170f;
     private final ArtifactInventory artifacts = new ArtifactInventory();
     private final RangedStock rangedStock = new RangedStock();
     /** Coin count when the level began; Restart Level goes back to it. */
@@ -749,7 +755,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         batch.setProjectionMatrix(screenCamera.combined);
         batch.begin();
         String fpsText = debugMode && !roomFade.active() && !storyScreenActive()
-            && uiState != UiState.HEALER && !pausedHealer ? Gdx.graphics.getFramesPerSecond() + " FPS" : "";
+            && uiState != UiState.HEALER && !pausedHealer ? fpsLabel.text(Gdx.graphics.getFramesPerSecond()) : "";
         if (levelVisible) {
             hud.render(batch, level != null ? level.boss() : null,
                 level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f, player, fpsText);
@@ -1032,15 +1038,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             if (navDown) menu.moveSelection(1);
             playHoverSound();
         }
-        Runnable onHover = this::playHoverSound;
-        Runnable onActivate = () -> playSound("button_click");
+        Runnable onHover = hoverSound, onActivate = clickSound;
 
         float cx = LOGICAL_W / 2f;
         // Every menu screen shares this full-screen tint over the fog/firefly backdrop -- no solid card.
         overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
         if (webStart) {
             overlay.title(batch, Msg.TITLE.t(language), cx, 90);
-            overlay.buttons(batch, menu, cx, 170f, mouse, clicked, confirm, back, () -> {}, onActivate);
+            overlay.buttons(batch, menu, cx, WEB_START_BUTTONS_Y, mouse, clicked, confirm, back, NO_ACTION, onActivate);
             return; // no menu hint: it mentions gamepad/Esc controls that do nothing here
         }
         if (uiState == UiState.MAIN_MENU) {

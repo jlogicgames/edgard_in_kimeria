@@ -92,7 +92,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         if (!player.canFight()) { if (player.isGotHit()) abandonAttack(); return; }
         switch (current) {
             case THRONE -> {
-                Rectangle me = hitboxBounds(), p = player.hitboxBounds();
+                Rectangle me = hitboxBoundsInto(bodyScratch), p = player.hitboxBoundsInto(otherScratch);
                 if (Math.abs(p.x + p.width / 2 - me.x - me.width / 2) <= WAKE_DISTANCE
                     && p.y + p.height > me.y && p.y < me.y + me.height) {
                     awakened = true;
@@ -101,7 +101,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
             }
             case WALK, IDLE -> {
                 facingRight = directionToPlayer(facingRight ? 1 : -1) > 0;
-                if (attackBounds().overlaps(player.hitboxBounds())) change(State.NORMAL);
+                if (attackTouchesPlayer()) change(State.NORMAL);
                 else {
                     setState(State.WALK);
                     velocity.x = (facingRight ? 1 : -1) * SPEED;
@@ -178,7 +178,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
 
     /** Living body contact blocks movement but never deals damage. Axe strikes remain lethal. */
     private void resolveSolidContact() {
-        Rectangle body = hitboxBounds(), hero = player.hitboxBounds();
+        Rectangle body = hitboxBoundsInto(bodyScratch), hero = player.hitboxBoundsInto(otherScratch);
         if (!body.overlaps(hero)) return;
         if (isStomp(player.velocity.y, player.previousFeetY(), body.y)) {
             player.position.y = body.y - player.hitbox.offsetY - player.hitbox.height;
@@ -197,7 +197,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
             player.velocity.x = fromLeft ? -1 : 1;
             player.checkHorizontalCollisions(level);
             player.velocity.x = fromLeft ? Math.min(0, incoming) : Math.max(0, incoming);
-            hero = player.hitboxBounds();
+            hero = player.hitboxBoundsInto(otherScratch);
             if (body.overlaps(hero)) {
                 position.x = (fromLeft ? hero.x + hero.width : hero.x - body.width) - hitbox.offsetX;
                 velocity.x = 0;
@@ -208,7 +208,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     public void resolveCombat() {
         if (!game.isGameStarted()) return;
         if (isDefeated() || abandoned || !player.canFight()) { completedStrike = false; return; }
-        if (isAttackActive() && attackBounds().overlaps(player.hitboxBounds())) player.collidedWithActor(false);
+        if (isAttackActive() && attackTouchesPlayer()) player.collidedWithActor(false);
         if (!player.canFight()) { abandonAttack(); return; }
         if (completedStrike) {
             completedStrike = false;
@@ -225,6 +225,9 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
 
     @Override public Rectangle attackBounds() {
         return boundsOf(isCounterSequence() ? COUNTER_BOX : NORMAL_BOX);
+    }
+    @Override protected Rectangle attackBoundsInto(Rectangle out) {
+        return boundsInto(isCounterSequence() ? COUNTER_BOX : NORMAL_BOX, out);
     }
     @Override public boolean isAttackActive() {
         return !abandoned && !isDefeated() && ((current == State.NORMAL && elapsed >= NORMAL_FRAME * 2

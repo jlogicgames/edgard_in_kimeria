@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
@@ -21,6 +22,7 @@ import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.physics.CollisionUtils;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
@@ -99,7 +101,11 @@ public class Level implements WorldObject {
     public final List<Decor> decor = new ArrayList<>();
     /** Scenery vines (#239 step 5): drawn with {@link #decor}, swaying when a falling stone lands within reach. */
     public final List<HangingVine> vines = new ArrayList<>();
-    private final Rectangle heroBodyScratch = new Rectangle();
+    private final Rectangle heroBodyScratch = new Rectangle(), hintBodyScratch = new Rectangle(), lethalBodyScratch = new Rectangle(),
+        exitBodyScratch = new Rectangle(), trapHeroScratch = new Rectangle();
+    /** The targets one lever pull has already performed, so a target listed twice acts once (reused, never allocated per pull). */
+    private static final int ACTIVATED_CAPACITY = 8;
+    private final Array<Actionable> activatedScratch = new Array<>(false, ACTIVATED_CAPACITY);
     /** The hero's body for the honey fungi's zone test (D63): one box refilled on every ask, so no frame allocates. */
     private final Rectangle fungusHeroScratch = new Rectangle();
     /**
@@ -143,15 +149,18 @@ public class Level implements WorldObject {
 
     /** True while the hero stands in a zone that teaches the contextual controls. */
     public boolean controlHintsActive() {
-        Rectangle body = player.hitboxBounds();
-        for (HintZone zone : hintZones) if (zone.controls && insideZone(zone, body)) return true;
+        Rectangle body = player.hitboxBoundsInto(hintBodyScratch);
+        for (int i = 0; i < hintZones.size(); i++) if (hintZones.get(i).controls && insideZone(hintZones.get(i), body)) return true;
         return false;
     }
 
     /** The authored message zone holding the hero, or null. */
     public HintZone messageHint() {
-        Rectangle body = player.hitboxBounds();
-        for (HintZone zone : hintZones) if (zone.message != null && insideZone(zone, body)) return zone;
+        Rectangle body = player.hitboxBoundsInto(hintBodyScratch);
+        for (int i = 0; i < hintZones.size(); i++) {
+            HintZone zone = hintZones.get(i);
+            if (zone.message != null && insideZone(zone, body)) return zone;
+        }
         return null;
     }
 
@@ -350,7 +359,7 @@ public class Level implements WorldObject {
     }
     public boolean atRoomExit() {
         Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
-        return !victory && exit != null && player.canLeaveRoom() && exit.overlaps(player.hitboxBounds());
+        return !victory && exit != null && player.canLeaveRoom() && exit.overlaps(player.hitboxBoundsInto(exitBodyScratch));
     }
     public void recordPickup(int id) { pendingPickups.add(id); }
     public void keepPickups() {
@@ -692,7 +701,7 @@ public class Level implements WorldObject {
                 }
                 case "Bomb" -> {
                     Bomb bomb = new Bomb(assets, game, this::queueSpawn, blast -> {
-                        if (blast.overlaps(player.hitboxBounds())) player.collidedWithActor(false);
+                        if (blast.overlaps(player.hitboxBoundsInto(trapHeroScratch))) player.collidedWithActor(false);
                     }, o.x, o.y, o.width, o.height);
                     Visit saved = visits.get(currentRoom);
                     if (saved != null && saved.traps().containsKey(o.id)) bomb.restore(saved.traps().get(o.id));
@@ -743,10 +752,10 @@ public class Level implements WorldObject {
                 }
                 case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
                 case "ThornRoot", "ThornTuft" -> objects.add(ThornTrap.fromMap(assets, game.trapWarnings(), o,
-                    () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false)));
+                    () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false)));
                 case "ExplosiveStump", "ExplosiveRoot" -> {
                     ExplosiveTrap trap = ExplosiveTrap.fromMap(assets, game.trapWarnings(), o,
-                        () -> player.canLeaveRoom() ? player.hitboxBounds() : null, () -> player.collidedWithActor(false),
+                        () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false),
                         () -> { if (game.playSounds()) game.playSound("bounce"); });
                     objects.add(trap);
                     registerRoomStateOwner(o.id, trap);
@@ -805,7 +814,7 @@ public class Level implements WorldObject {
      */
     private void spawnFallingTrap(TiledObject o) {
         FallingTrapLayout.Spec spec = FallingTrapLayout.validate(o, roomLayout, currentRoom, map);
-        java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBounds();
+        java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBoundsInto(trapHeroScratch);
         java.util.function.BooleanSupplier grounded = () -> player.isOnGround();
         Runnable kill = () -> player.collidedWithActor(false);
         FallingStone stone = spec.stone()
@@ -996,32 +1005,40 @@ public class Level implements WorldObject {
         return CollisionBlock.plain(room.x, room.y - CEILING_THICKNESS, room.width, CEILING_THICKNESS);
     }
 
+    /** {@code Rectangle.overlaps} against an object's box, without building the rectangle. */
+    private static boolean overlapsBox(Rectangle bounds, Entity box) {
+        return CollisionUtils.aabb(bounds.x, bounds.y, bounds.width, bounds.height, box.getX(), box.getY(), box.getWidth(), box.getHeight());
+    }
+
     /** Solid placement/flight check. One-way platforms only block placement, never horizontal flight. */
     public boolean blocksObject(Rectangle bounds, boolean placement) {
         if (!currentRoomBounds().contains(bounds)) return true;
-        for (CollisionBlock block : collisionBlocks) {
+        for (int i = 0; i < collisionBlocks.size(); i++) {
+            CollisionBlock block = collisionBlocks.get(i);
             if (!block.isActive() || block.isQuickSand() || (!placement && block.isPlatform())) continue;
-            if (bounds.overlaps(new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight()))) return true;
+            if (overlapsBox(bounds, block)) return true;
         }
-        for (var platform : escalators) if (bounds.overlaps(new Rectangle(platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight()))) return true;
-        for (var platform : fallingPlatforms) if (bounds.overlaps(new Rectangle(platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight()))) return true;
+        for (int i = 0; i < escalators.size(); i++) if (overlapsBox(bounds, escalators.get(i))) return true;
+        for (int i = 0; i < fallingPlatforms.size(); i++) if (overlapsBox(bounds, fallingPlatforms.get(i))) return true;
         return false;
     }
 
     /** Feedback belongs to a visible linked object, never to the invisible trigger rectangle. */
     public Entity mechanismFeedbackTarget(Trigger trigger) {
         if (trigger == null) return null;
-        for (WorldObject object : objects) {
-            if (object instanceof Lever lever && !lever.isRemoved() && lever.trigger == trigger) return lever;
+        for (int i = 0; i < objects.size(); i++) {
+            if (objects.get(i) instanceof Lever lever && !lever.isRemoved() && lever.trigger == trigger) return lever;
         }
         Entity nearest = null;
-        for (WorldObject object : objects) {
+        for (int i = 0; i < objects.size(); i++) {
+            WorldObject object = objects.get(i);
             if (object instanceof Entity entity && object instanceof Actionable actionable
                 && !object.isRemoved() && trigger.targetId.equals(actionable.getTargetId())) {
                 nearest = nearerFeedbackTarget(trigger, nearest, entity);
             }
         }
-        for (Escalator escalator : escalators) {
+        for (int i = 0; i < escalators.size(); i++) {
+            Escalator escalator = escalators.get(i);
             if (!escalator.isRemoved() && trigger.targetId.equals(escalator.getTargetId()))
                 nearest = nearerFeedbackTarget(trigger, nearest, escalator);
         }
@@ -1058,34 +1075,45 @@ public class Level implements WorldObject {
      */
     public boolean throwHitsLever(Carryable thrown) {
         Rectangle bounds = thrown.bounds();
-        for (Trigger trigger : triggers) {
+        for (int i = 0; i < triggers.size(); i++) {
+            Trigger trigger = triggers.get(i);
             if (!trigger.throwActivated || trigger.isRemoved()) continue;
-            if (!bounds.overlaps(new Rectangle(trigger.getX(), trigger.getY(), trigger.getWidth(), trigger.getHeight()))) continue;
+            if (!overlapsBox(bounds, trigger)) continue;
             activateTrigger(trigger);
             return true;
         }
         return false;
     }
 
+    /** True the first time {@code actionable} is seen in this pull (identity, like the HashSet it replaces). */
+    private static boolean markActivated(Array<Actionable> activated, Actionable actionable) {
+        if (activated.contains(actionable, true)) return false;
+        activated.add(actionable);
+        return true;
+    }
+
     public void activateTrigger(Trigger trigger) {
-        Set<Actionable> activated = new HashSet<>();
-        for (WorldObject obj : objects) {
-            if (obj instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
-                && activated.add(actionable)) {
+        Array<Actionable> activated = activatedScratch;
+        activated.clear();
+        for (int i = 0; i < objects.size(); i++) {
+            if (objects.get(i) instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
+                && markActivated(activated, actionable)) {
                 perform(actionable);
             }
         }
-        for (CollisionBlock block : collisionBlocks) {
-            if (block instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
-                && activated.add(actionable)) {
+        for (int i = 0; i < collisionBlocks.size(); i++) {
+            if (collisionBlocks.get(i) instanceof Actionable actionable && trigger.targetId.equals(actionable.getTargetId())
+                && markActivated(activated, actionable)) {
                 perform(actionable);
             }
         }
-        for (Escalator escalator : escalators) {
-            if (trigger.targetId.equals(escalator.getTargetId()) && activated.add(escalator)) {
+        for (int i = 0; i < escalators.size(); i++) {
+            Escalator escalator = escalators.get(i);
+            if (trigger.targetId.equals(escalator.getTargetId()) && markActivated(activated, escalator)) {
                 escalator.performAction();
             }
         }
+        activated.clear();
     }
 
     /**
@@ -1143,7 +1171,7 @@ public class Level implements WorldObject {
         updateWorld(dt);
         player.update(dt);
         killOnLethalHazards();
-        for (WorldObject o : objects) if (o instanceof Carryable c) c.followHolder();
+        for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
 
         finishUpdate();
@@ -1151,9 +1179,9 @@ public class Level implements WorldObject {
 
     /** Rhythmic traps (D46) kill by the hero's body box, exactly like the bomb blast: Player.die holds the only guards. */
     private void killOnLethalHazards() {
-        Rectangle body = player.hitboxBounds();
-        for (WorldObject o : objects) {
-            if (o instanceof LethalHazard hazard && hazard.lethalTo(body)) {
+        Rectangle body = player.hitboxBoundsInto(lethalBodyScratch);
+        for (int i = 0; i < objects.size(); i++) {
+            if (objects.get(i) instanceof LethalHazard hazard && hazard.lethalTo(body)) {
                 player.collidedWithActor(false);
                 return;
             }
@@ -1163,14 +1191,14 @@ public class Level implements WorldObject {
     /** The world keeps moving during victory; only the hero uses a protected scripted walk. */
     private void updateWorld(float dt) {
         if (sky != null) sky.update(dt);
-        for (WorldObject o : ambience) o.update(dt);
+        for (int i = 0; i < ambience.size(); i++) ambience.get(i).update(dt);
         // Before the objects: a hit this frame sprays after this point, so its drops first move next frame, as queued objects did.
         blood.update(dt);
-        for (Escalator e : escalators) e.update(dt);
-        for (FallingPlatform p : fallingPlatforms) p.update(dt);
+        for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
+        for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
         updateDecor(dt);
         for (int i = 0; i < vines.size(); i++) vines.get(i).update(dt);
-        for (WorldObject o : objects) o.update(dt);
+        for (int i = 0; i < objects.size(); i++) objects.get(i).update(dt);
     }
 
     /** The hero brushing past scenery (#239): reads the hero's box and heading, changes nothing in gameplay. */
@@ -1224,13 +1252,13 @@ public class Level implements WorldObject {
         renderBackground(batch, visibleWorldRect);
         for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
-        for (StaticPlatform platform : staticPlatforms) platform.render(batch);
-        for (Escalator e : escalators) e.render(batch);
-        for (FallingPlatform p : fallingPlatforms) p.render(batch);
-        for (WorldObject o : objects) o.render(batch);
+        for (int i = 0; i < staticPlatforms.size(); i++) staticPlatforms.get(i).render(batch);
+        for (int i = 0; i < escalators.size(); i++) escalators.get(i).render(batch);
+        for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).render(batch);
+        for (int i = 0; i < objects.size(); i++) objects.get(i).render(batch);
         blood.render(batch);
         fx.render(batch);
-        for (WorldObject o : ambience) o.render(batch);
+        for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
         if (!player.isRemoved()) player.render(batch);
         player.renderInteractionTarget(batch);
     }

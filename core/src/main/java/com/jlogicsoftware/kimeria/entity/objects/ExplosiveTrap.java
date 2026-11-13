@@ -65,6 +65,7 @@ public class ExplosiveTrap extends Entity {
     private final Kind kind;
     private final TrapWarnings warnings;
     private final Supplier<Rectangle> heroBody;
+    private final Rectangle triggerScratch = new Rectangle();
     private final Runnable kill, onBlast;
     private final TextureRegion[] frames = new TextureRegion[SHEET_FRAMES], blast = new TextureRegion[BLAST_FRAMES];
     private Phase phase = Phase.IDLE;
@@ -103,9 +104,12 @@ public class ExplosiveTrap extends Entity {
      * and 2 px down from the top, scaled with the object), excluding the empty corners of the art. Touching it, or hitting
      * it from afar, ignites the trap.
      */
-    public Rectangle triggerBox() {
+    public Rectangle triggerBox() { return triggerBoxInto(new Rectangle()); }
+
+    /** {@link #triggerBox()} written into {@code out} (returned), for per-frame callers that must not allocate. */
+    public Rectangle triggerBoxInto(Rectangle out) {
         float sx = size.x / TRIGGER_FRAME, sy = size.y / TRIGGER_FRAME;
-        return new Rectangle(position.x + TRIGGER_INSET_X * sx, position.y + TRIGGER_INSET_TOP * sy,
+        return out.set(position.x + TRIGGER_INSET_X * sx, position.y + TRIGGER_INSET_TOP * sy,
             TRIGGER_WIDTH * sx, TRIGGER_HEIGHT * sy);
     }
 
@@ -148,7 +152,7 @@ public class ExplosiveTrap extends Entity {
     public void update(float dt) {
         if (isRemoved()) return;
         Rectangle hero = heroBody.get();
-        if (phase == Phase.IDLE && hero != null && hero.overlaps(triggerBox())) ignite();
+        if (phase == Phase.IDLE && hero != null && hero.overlaps(triggerBoxInto(triggerScratch))) ignite();
         if (phase == Phase.WINDUP) {
             phaseTime += dt;
             if (phaseTime >= warningTotal) {

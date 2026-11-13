@@ -78,6 +78,10 @@ public abstract class Actor<S extends Enum<S>> extends Entity {
         return hitbox.offsetX;
     }
 
+    private final Rectangle overlapScratch = new Rectangle();
+    /** Per-frame scratch for subclasses: this actor's body and another actor's body (see {@link #hitboxBoundsInto}). Valid only inside one method. */
+    protected final Rectangle bodyScratch = new Rectangle(), otherScratch = new Rectangle(), attackScratch = new Rectangle();
+
     /** The hitbox in world space as a new rectangle (circles become their bounding square). */
     public Rectangle hitboxBounds() {
         return boundsOf(hitbox);
@@ -85,10 +89,10 @@ public abstract class Actor<S extends Enum<S>> extends Entity {
 
     /** True when this actor's body hitbox (round if it is a circle) overlaps {@code rect}. */
     public boolean hitboxOverlaps(Rectangle rect) {
-        return CollisionUtils.overlaps(hitbox, hitboxBounds(), rect);
+        return CollisionUtils.overlaps(hitbox, hitboxBoundsInto(overlapScratch), rect);
     }
 
-    /** Any box authored for the unflipped sprite, placed in world space and mirrored about {@link #pivotX()} when facing left. */
+    /** Any box authored for the unflipped sprite, placed in world space and mirrored about {@link #pivotX()} when facing left. Allocates: per-frame code uses {@link #boundsInto}. */
     public Rectangle boundsOf(Hitbox box) {
         return boundsInto(box, new Rectangle());
     }

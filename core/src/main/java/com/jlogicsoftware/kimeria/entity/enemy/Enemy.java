@@ -100,7 +100,7 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
 
     private boolean hurtsPlayer() {
         Hitbox shape = hurtbox != null ? hurtbox : hitbox;
-        return CollisionUtils.overlaps(shape, hurtBounds(), player.hitboxBounds());
+        return CollisionUtils.overlaps(shape, boundsInto(shape, bodyScratch), player.hitboxBoundsInto(otherScratch));
     }
 
     /**
@@ -142,7 +142,7 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
 
     /** True when the player is moving down and was entirely above this enemy's hitbox on the previous frame. */
     private boolean stompedByPlayer() {
-        return isStomp(player.velocity.y, player.previousFeetY(), hitboxBounds().y);
+        return isStomp(player.velocity.y, player.previousFeetY(), hitboxBoundsInto(bodyScratch).y);
     }
 
     /** Y grows downwards: a stomp needs the player to be falling and to have started the frame above the enemy's top edge. */
@@ -155,16 +155,16 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
      * {@code current}, so an enemy standing right on the player doesn't flip every frame.
      */
     protected float directionToPlayer(float current) {
-        Rectangle me = hitboxBounds();
-        Rectangle target = player.hitboxBounds();
+        Rectangle me = hitboxBoundsInto(bodyScratch);
+        Rectangle target = player.hitboxBoundsInto(otherScratch);
         float dx = (target.x + target.width / 2f) - (me.x + me.width / 2f);
         return Math.abs(dx) < 2f ? current : Math.signum(dx);
     }
 
     /** True when the player's body is inside this enemy's patrol range and on its level, judged by hitboxes. */
     protected boolean playerInRange() {
-        Rectangle me = hitboxBounds();
-        Rectangle target = player.hitboxBounds();
+        Rectangle me = hitboxBoundsInto(bodyScratch);
+        Rectangle target = player.hitboxBoundsInto(otherScratch);
         float centre = target.x + target.width / 2f;
         return centre >= rangeNeg && centre <= rangePos
             && target.y + target.height > me.y && target.y < me.y + me.height;
@@ -172,6 +172,17 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
 
     /** The area that currently hurts the player on top of the body hitbox, or null if this enemy has no melee attack. */
     public Rectangle attackBounds() {
+        return null;
+    }
+
+    /** True when the attack area overlaps the player's body; per-frame code, so it builds no rectangle. */
+    protected boolean attackTouchesPlayer() {
+        Rectangle attack = attackBoundsInto(attackScratch);
+        return attack != null && attack.overlaps(player.hitboxBoundsInto(otherScratch));
+    }
+
+    /** {@link #attackBounds()} written into {@code out} (returned), or null without a melee attack. */
+    protected Rectangle attackBoundsInto(Rectangle out) {
         return null;
     }
 

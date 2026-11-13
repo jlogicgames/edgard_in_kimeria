@@ -13,8 +13,22 @@ import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
+import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
+import com.jlogicsoftware.kimeria.entity.items.Carryable;
+import com.jlogicsoftware.kimeria.entity.items.Fireball;
+import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
+import com.jlogicsoftware.kimeria.entity.player.Player;
+import com.jlogicsoftware.kimeria.input.GamepadInput;
+import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.ui.BossHud;
+import com.jlogicsoftware.kimeria.ui.FpsLabel;
+import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
+import com.jlogicsoftware.kimeria.ui.Hud;
+import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.controllers.Controller;
+import com.badlogic.gdx.controllers.ControllerMapping;
 import com.jlogicsoftware.kimeria.world.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,28 +67,28 @@ class AllocationBudgetTest {
     static final double BLOOD_SPRAY_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs, a 48-drop empowered spray every 60 frames (old {@code BloodBurst}: 2,928 B constructor, about 49 B/frame over the cycle, read from the plan's section 1). */
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
-    /** Measured 2,441.8 to 2,441.9 B/frame (step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. */
-    static final double FOREST_1_CEILING = 2640;
-    /** Measured 8,920.6 to 9,000.0 B/frame (step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches; the cause of the large {@code update} share is not attributed (plan, section 8). */
-    static final double FOREST_2_ROOM_0_CEILING = 9720;
-    /** Measured 2,184.0 B/frame in 3 runs (step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. */
-    static final double FOREST_2_ROOM_1_CEILING = 2360;
-    /** Measured 1,960.0 to 1,960.6 B/frame in 3 runs (step 4: the {@code Boss.render} {@code Color} copy, -32, from a paired old/new run of the same test class; a later run of the final code, after scenarios were added, read 1,512 to 1,712 on the same scene, so JIT state moves this scene by more than the 32 B and the ceiling stays at the first measurement plus 8 %; step 3: 1,992.0 to 1,992.1; step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. */
-    static final double FOREST_2_ROOM_2_CEILING = 2120;
-    /** Measured 1,991.9 to 1,992.6 B/frame in 3 runs: the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene (step 4: 1,960.0 in 3 runs). */
-    static final double FOREST_2_ROOM_2_BLOOD_CEILING = 2120;
+    /** Measured 1,322.0 to 1,322.2 B/frame in 3 runs (#303: the index loops, the scratch rectangles and the HashSet removal; before: 2,441.8 to 2,441.9; step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. Ceiling = highest run + about 10 %. */
+    static final double FOREST_1_CEILING = 1450;
+    /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
+    static final double FOREST_2_ROOM_0_CEILING = 1560;
+    /** Measured 816.0 B/frame in 3 isolated runs and 1,128.0 in the full suite (#303; the ceiling follows the full-suite run; before: 2,184.0; step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. Ceiling = highest run + about 10 %. */
+    static final double FOREST_2_ROOM_1_CEILING = 1250;
+    /** Measured 816.0 B/frame in 3 isolated runs and 1,128.0 in the full suite (#303; the ceiling follows the full-suite run; before: 1,960.0 to 1,960.6; step 3: 1,992.0; step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. An earlier run of this scene moved by more than 200 B with JIT state (1,512 to 1,712 against 1,960), so the ceiling keeps about 10 % over the full-suite measurement. */
+    static final double FOREST_2_ROOM_2_CEILING = 1250;
+    /** Measured 704.0 to 912.0 B/frame in 3 isolated runs and 824.0 to 902.1 in the full suite (#303; before: 1,991.9 to 1,992.6): the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene. */
+    static final double FOREST_2_ROOM_2_BLOOD_CEILING = 1250;
 
     /** Measured 0.0 B/frame in 3 runs (before step 4: 24.0, the returned {@code Vector2}; the 32 B {@code Rectangle} of {@code KimeriaGame.render} is not in this scenario, which already reuses its view). */
     static final double CAMERA_SHAKE_CEILING = 8;
-    /** Measured 4.5 B/frame in 3 runs: the shake, its offset and {@code fx.update} are 0.0 (like CAMERA_SHAKE_CEILING); the 4.5 is the {@code HashSet} that {@code Level.activateTrigger} makes once per lever pull (about 270 B every 60 frames), an event, not per-frame code. */
-    static final double LEVER_SHAKE_CEILING = 16;
+    /** Measured 0.0 B/frame in 3 runs (#303: {@code Level.activateTrigger} reuses an {@code Array}; before: 4.5, the {@code HashSet} it made once per lever pull, about 270 B every 60 frames). The shake, its offset and {@code fx.update} are 0.0 (like CAMERA_SHAKE_CEILING). */
+    static final double LEVER_SHAKE_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs: a 6-particle jump puff every 60 frames through {@code Level.fx()} (spawn, update, render). */
     static final double JUMP_DUST_CEILING = 8;
-    /** Measured 4.6 B/frame in 3 runs: the grit burst (24 particles over 0.6 s), its update and render are 0.0; the 4.6 is the {@code HashSet} that {@code Level.activateTrigger} makes once per lever pull (an event), as in LEVER_SHAKE_CEILING. */
-    static final double LEVER_GRIT_CEILING = 16;
+    /** Measured 0.1 B/frame in 3 runs (#303; before: 4.6, the {@code HashSet} of {@code Level.activateTrigger}, as in LEVER_SHAKE_CEILING): the grit burst (24 particles over 0.6 s), its update and render. */
+    static final double LEVER_GRIT_CEILING = 8;
 
-    /** Measured 96.0 B/frame in 3 runs (before step 4: 160.0, two {@code Color} copies). The 96 B left is {@code batch.getProjectionMatrix().cpy()} in {@code BossHud.render}, outside step 4 (plan, section 12). */
-    static final double BOSS_HUD_CEILING = 104;
+    /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
+    static final double BOSS_HUD_CEILING = 8;
 
     /** Escapes the deliberate allocation of {@link #theProbeCanReadAllocatedBytes()} so escape analysis keeps it. */
     private static volatile byte[] sink;
@@ -335,5 +349,149 @@ class AllocationBudgetTest {
         });
         assertTrue(lethal[0], "the cloud must actually be lethal to the standing hero in this scenario");
         assertWithinBudget("false honey fungus clouds", FALSE_HONEY_FUNGUS_CEILING, bytes);
+    }
+
+    // #303: the per-frame sites outside the particle code. Measured in 3 runs each: every scenario is 0.0 to 1.6 B/frame (the FPS label 1.6, the hint 0.9, the outlines 0.1 to 0.7), so the ceiling is the same 8 B as the particle scenarios.
+    static final double STONE_FIREBALL_CEILING = 8, PASSIVE_OUTLINE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
+        CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
+    private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
+    private static final int STONE_ROOM = 4, THROW_CYCLES = 30;
+    private static final float REACH_SCAN = 40, REACH_SCAN_STEP = 2;
+    private static final String HINT_TEXT = "Up + Action: turn the lever on", ZONE_TEXT = "Light the torch with the lever to open the way forward";
+    private static final float HINT_X = 200, HINT_Y = 220, ZONE_X = 320, ZONE_Y = 120;
+    private static final int FPS_SHOWN = 60, FPS_CHANGE_FRAMES = 30;
+    private static final float LEVER_ROOM_FIRST_X = 24, LEVER_ROOM_LAST_X = 544, LEVER_ROOM_STEP_X = 8, LEVER_ROOM_FLOOR_Y = 272;
+    private static final int GAMEPAD_BUTTONS = 20, GAMEPAD_SWAP_FRAMES = 60;
+
+    /** A stone thrown every {@link #BURST_CYCLE_FRAMES} frames and a fireball shot at the same moment, in the stone room with its stump: {@code Carryable.update}, {@code Fireball.update}, {@code Level.blocksObject}, {@code Carryable.bounds}, {@code triggerBoxInto}. */
+    @Test void thrownStoneAndFireballInTheStoneRoom() {
+        Level level = harness.roomOf("forest-0", STONE_ROOM);
+        Carryable stone = level.objects.stream().filter(Carryable.class::isInstance).map(Carryable.class::cast).findFirst().orElseThrow();
+        assertTrue(level.objects.stream().anyMatch(ExplosiveTrap.class::isInstance), "the stump must be in this scenario");
+        Fireball[] shots = new Fireball[THROW_CYCLES];
+        for (int k = 0; k < shots.length; k++) shots[k] = new Fireball(level, THROW_X, THROW_Y, true);
+        Carryable.Snapshot thrown = new Carryable.Snapshot(THROW_X, THROW_Y, THROW_VX, THROW_VY, true, false);
+        int[] flights = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            Fireball shot = shots[Math.min(i / BURST_CYCLE_FRAMES, shots.length - 1)];
+            if (i % BURST_CYCLE_FRAMES == 0) { stone.restore(thrown); flights[0]++; }
+            stone.update(STEP);
+            shot.update(STEP);
+        });
+        assertTrue(flights[0] > 1, "stones must actually fly in this scenario");
+        assertWithinBudget("thrown stone and fireball", STONE_FIREBALL_CEILING, bytes);
+    }
+
+    /** The hero beside the stone and a lever: the passive corner outlines of {@code Player.renderInteractionTarget}, each frame. */
+    @Test void passiveInteractionOutlines() {
+        Level level = harness.roomOf("forest-0", STONE_ROOM);
+        Carryable stone = level.objects.stream().filter(Carryable.class::isInstance).map(Carryable.class::cast).findFirst().orElseThrow();
+        for (float dy = -REACH_SCAN; dy <= REACH_SCAN && level.player.selectedCarryable() == null; dy += REACH_SCAN_STEP)
+            level.player.position.set(stone.getX() - HERO_WIDTH, stone.getY() + dy);
+        assertNotNull(level.player.selectedCarryable(), "the stone must be in reach in this scenario");
+        double bytes = AllocationProbe.bytesPerFrame(i -> level.player.renderInteractionTarget(batch));
+        assertWithinBudget("passive interaction outlines", PASSIVE_OUTLINE_CEILING, bytes);
+    }
+
+    private Hud hudWithMetricsFont() {
+        harness.font = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
+        return new Hud(harness.assets(), harness.game(), 640, 360);
+    }
+
+    /** The coin count, the FPS counter and the fireball stock of {@code Hud.render} with the boss bar, each frame. */
+    @Test void hudCoinCountAndFps() {
+        Hud hud = hudWithMetricsFont();
+        Level level = harness.roomOf("forest-2", 2);
+        double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true, level.player, "60 FPS"));
+        assertWithinBudget("Hud.render", HUD_CEILING, bytes);
+    }
+
+    /** A hero whose two hint channels are fixed texts, so the scenario measures the HUD's own layout and drawing, not the hero's hint derivation. */
+    private static final class FixedHintPlayer extends Player {
+        FixedHintPlayer(HeadlessLevelHarness harness) { super(harness.assets(), harness.game(), 0, 0); }
+        @Override public String contextHint() { return HINT_TEXT; }
+        @Override public String zoneHint() { return ZONE_TEXT; }
+        @Override public void contextHintPosition(Vector2 out) { out.set(HINT_X, HINT_Y); }
+        @Override public void zoneHintPosition(Vector2 out) { out.set(ZONE_X, ZONE_Y); }
+    }
+
+    /** The zone message and the contextual label together, each frame: layout, placement, shadow and text draw (the hint texts are fixed, see {@link FixedHintPlayer}). */
+    @Test void hudHintAndZoneMessage() {
+        Hud hud = hudWithMetricsFont();
+        Player player = new FixedHintPlayer(harness);
+        OrthographicCamera camera = new OrthographicCamera();
+        camera.setToOrtho(true, 640, 360);
+        camera.update();
+        double bytes = AllocationProbe.bytesPerFrame(i -> hud.renderInteractionHint(batch, player, camera, STEP));
+        assertWithinBudget("Hud.renderInteractionHint", HUD_HINT_CEILING, bytes);
+    }
+
+    /**
+     * The healer's checklist text asked for every frame with unchanged inputs (the frame cost). The rebuild after a change is an event,
+     * measured at about 4.3 KB (35.7 B/frame when the input flips every 120 frames), once per pickup, coin or language change.
+     */
+    @Test void healerChecklistText() {
+        HealerDialogueView view = new HealerDialogueView(harness.assets());
+        int[] length = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> length[0] += view.checklistText(Language.ENGLISH, false,
+            true, true, false, 1, 3).length());
+        assertTrue(length[0] > 0, "the checklist must have text");
+        assertWithinBudget("HealerDialogueView checklist", CHECKLIST_CEILING, bytes);
+    }
+
+    /** The debug FPS text asked for every frame while the rate changes every {@value #FPS_CHANGE_FRAMES} frames. */
+    @Test void fpsLabelText() {
+        FpsLabel label = new FpsLabel();
+        int[] length = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> length[0] += label.text(FPS_SHOWN + i / FPS_CHANGE_FRAMES % 3).length());
+        assertTrue(length[0] > 0);
+        assertWithinBudget("FpsLabel", FPS_LABEL_CEILING, bytes);
+    }
+
+    /** A pad that is connected and disconnected every {@value #GAMEPAD_SWAP_FRAMES} frames, polled each frame (the button array is sized on each swap). */
+    @Test void gamepadPollingAcrossReconnects() {
+        ControllerMapping mapping = new ControllerMapping(0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15) { };
+        Controller pad = new FakePad(mapping);
+        boolean[] connected = new boolean[1];
+        GamepadInput input = new GamepadInput() {
+            @Override protected Controller controller() { return connected[0] ? pad : null; }
+        };
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            connected[0] = i / GAMEPAD_SWAP_FRAMES % 2 == 0;
+            input.update(false);
+        });
+        assertWithinBudget("GamepadInput.update", GAMEPAD_CEILING, bytes);
+    }
+
+    /** A pad as a plain class (a {@link Proxy} would allocate argument arrays on every call and drown the measurement). */
+    private static final class FakePad implements Controller {
+        private final ControllerMapping mapping;
+        FakePad(ControllerMapping mapping) { this.mapping = mapping; }
+        @Override public boolean getButton(int buttonCode) { return false; }
+        @Override public float getAxis(int axisCode) { return 0; }
+        @Override public String getName() { return "fake"; }
+        @Override public String getUniqueId() { return "fake"; }
+        @Override public int getMinButtonIndex() { return 0; }
+        @Override public int getMaxButtonIndex() { return GAMEPAD_BUTTONS - 1; }
+        @Override public int getAxisCount() { return 4; }
+        @Override public boolean isConnected() { return true; }
+        @Override public boolean canVibrate() { return false; }
+        @Override public boolean isVibrating() { return false; }
+        @Override public void startVibration(int duration, float strength) { }
+        @Override public void cancelVibration() { }
+        @Override public boolean supportsPlayerIndex() { return false; }
+        @Override public int getPlayerIndex() { return 0; }
+        @Override public void setPlayerIndex(int index) { }
+        @Override public ControllerMapping getMapping() { return mapping; }
+        @Override public com.badlogic.gdx.controllers.ControllerPowerLevel getPowerLevel() { return null; }
+        @Override public void addListener(com.badlogic.gdx.controllers.ControllerListener listener) { }
+        @Override public void removeListener(com.badlogic.gdx.controllers.ControllerListener listener) { }
+    }
+
+    /** The menu fireflies: the loops of {@code MenuBackdrop.update} (its fog needs a GPU shader, so only the update is measured). */
+    @Test void menuBackdropUpdate() {
+        MenuBackdrop backdrop = new MenuBackdrop();
+        double bytes = AllocationProbe.bytesPerFrame(i -> backdrop.update(STEP));
+        assertWithinBudget("MenuBackdrop.update", MENU_BACKDROP_CEILING, bytes);
     }
 }

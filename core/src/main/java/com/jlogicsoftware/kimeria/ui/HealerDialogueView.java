@@ -55,12 +55,10 @@ public final class HealerDialogueView {
         portrait(batch, healer, 536, 40);
         overlay.body(batch, Msg.EDGARD.t(lang), 72, 108, 100, Color.WHITE);
         overlay.body(batch, Msg.HEALER.t(lang), 568, 108, 100, HEALER_GREEN);
-        String checklist = dialogue.paid() ? Msg.PAID.t(lang)
-            : mark(inventory.hasIngredient(level.name, ItemType.BAT)) + Msg.BAT.t(lang) + "\n"
-                + mark(inventory.hasIngredient(level.name, ItemType.MUSHROOM)) + Msg.MUSHROOM.t(lang) + "\n"
-                + mark(level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal())
-                + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(level.forestCoinsSecured()),
-                    "total", Integer.toString(level.forestCoinTotal()));
+        String checklist = checklistText(lang, dialogue.paid(), inventory.hasIngredient(level.name, ItemType.BAT),
+            inventory.hasIngredient(level.name, ItemType.MUSHROOM),
+            level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal(),
+            level.forestCoinsSecured(), level.forestCoinTotal());
         if (dialogue.showsChecklist()) overlay.body(batch, checklist, CHECKLIST_X, CHECKLIST_Y, CHECKLIST_WIDTH);
         frame(batch, FRAME_X, FRAME_Y, FRAME_WIDTH, FRAME_HEIGHT, false);
         Color speakerColor = dialogue.edgardSpeaking() ? Color.WHITE : HEALER_GREEN;
@@ -83,6 +81,25 @@ public final class HealerDialogueView {
             String prompt = Msg.HEALER_HINT.t(lang);
             overlay.dialogue(batch, prompt, prompt.length(), 42, 258, 556, speakerColor, Align.right);
         }
+    }
+    private Language checklistLanguage;
+    private boolean checklistPaid, checklistBat, checklistMushroom, checklistCoinsDone;
+    private int checklistSecured = -1, checklistTotal = -1;
+    private String checklist = "";
+
+    /**
+     * The three-line ingredient checklist (or the paid message). The text is rebuilt only when one of its inputs changes
+     * (a pickup, a coin, the language), so the per-frame call concatenates nothing.
+     */
+    public String checklistText(Language lang, boolean paid, boolean bat, boolean mushroom, boolean coinsDone, int secured, int total) {
+        if (lang == checklistLanguage && paid == checklistPaid && bat == checklistBat && mushroom == checklistMushroom
+            && coinsDone == checklistCoinsDone && secured == checklistSecured && total == checklistTotal) return checklist;
+        checklistLanguage = lang; checklistPaid = paid; checklistBat = bat; checklistMushroom = mushroom;
+        checklistCoinsDone = coinsDone; checklistSecured = secured; checklistTotal = total;
+        checklist = paid ? Msg.PAID.t(lang)
+            : mark(bat) + Msg.BAT.t(lang) + "\n" + mark(mushroom) + Msg.MUSHROOM.t(lang) + "\n" + mark(coinsDone)
+                + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(secured), "total", Integer.toString(total));
+        return checklist;
     }
     private static String mark(boolean present) { return present ? "[+] " : "[-] "; }
     private static void frame(SpriteBatch batch, float x, float y, float w, float h, boolean selected) {
