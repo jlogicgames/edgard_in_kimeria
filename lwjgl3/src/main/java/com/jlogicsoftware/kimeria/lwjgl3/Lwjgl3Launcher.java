@@ -22,6 +22,10 @@ public class Lwjgl3Launcher {
             config.setWindowedMode(Settings.WINDOWED_WIDTH, Settings.WINDOWED_HEIGHT);
         }
         config.setResizable(true);
-        new Lwjgl3Application(new KimeriaGame(false, Boolean.getBoolean("kimeria.debug")), config);
+        KimeriaGame game = new KimeriaGame(false, Boolean.getBoolean("kimeria.debug"));
+        // The Lwjgl3 audio config (sources, buffer size/count) is left at its defaults: buffer size and count only apply to
+        // AudioDevice streaming, not to Sound, whose latency is the output device's wake-up time (#316).
+        game.setAudioKeepAlive(!Boolean.getBoolean("kimeria.nokeepalive"));
+        new Lwjgl3Application(game, config);
     }
 }

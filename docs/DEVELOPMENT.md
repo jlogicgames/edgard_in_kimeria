@@ -332,7 +332,7 @@ Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in
 
 ### Original synthesized sound effects
 
-`jump.wav`, `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are project-original: synthesized by
+`jump.wav`, `dust_puff.wav`, `wall_rumble.wav`, `grit_fall.wav` and `keepalive.wav` are project-original: synthesized by
 `tools/audio/generate_sounds.py` (stdlib only, fixed random seeds, byte-identical on every run; 44.1 kHz,
 16-bit mono PCM). Licence: project-original, the same as `intro.wav`. Regenerate with
 `python3 tools/audio/generate_sounds.py`; every parameter is a named constant at the top of the script.
@@ -355,6 +355,18 @@ prints duration, peak, RMS and spectral figures and can render waveform previews
   turns `Howler.autoSuspend` off and resumes a not-running context inside every key, pointer and touch event. The root cause
   was read from the Howler 2.2.4 source and the backend, not reproduced in a browser: the author has to listen in the web
   build (first jump after load, and after more than 30 s of idle).
+- **Sound starts late after silence (macOS desktop, #316, open).** Reported: after about a second without any sound the
+  next one is audible only from ~0.5 s on (its start is lost); while sounds follow one another all are heard. The
+  symptoms match an output pipeline that idles after a silent second and needs ~0.5 s to wake (Bluetooth, some macOS
+  outputs). Mitigation, desktop only: `KimeriaGame.updateAudioKeepAlive` loops `keepalive.wav` (-65 dBFS RMS noise, see
+  [SOUND_DIRECTION.md](SOUND_DIRECTION.md)) through the same `loops` map while `playSounds` is on; it stops when sounds are
+  switched off and on `dispose`, and is restarted if its handle is gone. `Lwjgl3Launcher` enables it
+  (`KimeriaGame.setAudioKeepAlive`); `-Dkimeria.nokeepalive=true` turns it off for an A/B comparison; the web build does not
+  use it (it has its own hardening above). With `-Dkimeria.debug=true` the console logs once per sound the time `play()`
+  took and the keep-alive state. The Lwjgl3 audio config (`setAudioConfig`: 16 sources, buffer size 512, count 9) is left
+  alone: buffer size and count are used only by `AudioDevice` (raw PCM streaming), not by `Sound`, so shrinking them cannot
+  change this latency. **Not verified on hardware:** the cause is a hypothesis and nobody has listened on a Mac; the author
+  must test with the affected output device (#316 stays open until then; remove this note when it is closed).
 - The other legacy effects (`hit`, `collect`, `bounce`, `disappear`, `boss_*`, `button_click`) and
   `main_menu.mp3` still come from the Flame/Rust versions; their provenance is part of #189.
 

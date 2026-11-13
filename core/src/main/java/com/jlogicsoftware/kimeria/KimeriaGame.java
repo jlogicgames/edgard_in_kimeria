@@ -46,8 +46,10 @@ import com.jlogicsoftware.kimeria.world.RoomFade;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The whole game in one place, playing the role Dart split across
@@ -158,6 +160,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private float panDuration = 0f, panElapsed = 0f;
     private boolean cameraPanning = false;
     private boolean playSounds = true;
+    /** Name of the near-silent loop that keeps the audio output awake (#316); see {@link #updateAudioKeepAlive}. */
+    static final String KEEPALIVE_SOUND = "keepalive";
+    private static final String KEEPALIVE_PATH = "audio/keepalive.wav";
+    /** Volume of the keep-alive loop. The file itself is at -65 dBFS RMS; this is not scaled by the player's volume. */
+    static final float KEEPALIVE_VOLUME = 1f;
+    /** Desktop-only switch (set by the LWJGL3 launcher): a sleeping output device swallows the start of a sound. */
+    private boolean audioKeepAlive = false;
+    private final Set<String> firstPlayLogged = new HashSet<>();
     private float soundVolume = 1f;
     private boolean debugDraw = false;
     private boolean invulnerable = false;
@@ -615,6 +625,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     @Override
     public void render() {
+        updateAudioKeepAlive();
         // Cleared before applying: the mode switch may re-enter render() on desktop.
         if (pendingFullscreenToggle) {
             pendingFullscreenToggle = false;
@@ -1072,6 +1083,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     @Override
     public void dispose() {
+        stopSound(KEEPALIVE_SOUND);
         assets.dispose();
         batch.dispose();
         shapeRenderer.dispose();
@@ -1158,8 +1170,37 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     public void playSound(String name, float volumeScale) {
         if (!playSounds) return;
         Sound sound = assets.sound("audio/" + name + ".wav");
+        if (debugMode && firstPlayLogged.add(name)) {
+            long start = System.nanoTime();
+            long id = sound.play(soundVolume * volumeScale);
+            Gdx.app.log("Audio", "first play of " + name + ": play() returned id " + id + " after "
+                + (System.nanoTime() - start) / NANOS_PER_MILLI + " ms, keep-alive "
+                + (audioKeepAlive ? (loops.containsKey(KEEPALIVE_SOUND) ? "running" : "stopped") : "disabled"));
+            return;
+        }
         sound.play(soundVolume * volumeScale);
     }
+
+    private static final float NANOS_PER_MILLI = 1_000_000f;
+
+    /**
+     * Desktop only: keeps a near-silent, non-silent loop running while sounds are on, so an output device that idles after a
+     * second of silence (Bluetooth, some macOS outputs) is already awake when a real sound starts (#316). Called every frame:
+     * a map lookup, no allocation. It starts when sounds are on, stops when they are off, and starts again when the handle is
+     * gone; pause and room changes do not touch it.
+     */
+    private void updateAudioKeepAlive() {
+        if (!audioKeepAlive) return;
+        boolean running = loops.containsKey(KEEPALIVE_SOUND);
+        if (playSounds && !running) {
+            loops.put(KEEPALIVE_SOUND, assets.sound(KEEPALIVE_PATH).loop(KEEPALIVE_VOLUME));
+        } else if (!playSounds && running) {
+            stopSound(KEEPALIVE_SOUND);
+        }
+    }
+
+    /** Enables the audio keep-alive (desktop launcher only, before the game starts). */
+    public void setAudioKeepAlive(boolean enabled) { audioKeepAlive = enabled; }
 
     /** Looping handles by sound name; a sound is looped with {@code Sound.loop} and stopped by its id (desktop and web Howler). */
     private final Map<String, Long> loops = new HashMap<>();
