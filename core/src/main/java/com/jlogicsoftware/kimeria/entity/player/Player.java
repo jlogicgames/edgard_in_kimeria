@@ -63,6 +63,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
+    /**
+     * Downward speed (px/s, gravity adds 9.8 per step) at which touching the floor counts as a landing that kicks up dust:
+     * 140 is about 14 frames of falling, a 16 px drop. Walking off a ledge keeps the coyote flag until the speed passes 147,
+     * so a few pixels never puff, and a wall slide (speed times 0.1) never does either.
+     */
+    public static final float LANDING_MIN_FALL_SPEED = 140f;
+    /** The landing scuff plays at this fraction of the sound volume. */
+    private static final float LANDING_SOUND_VOLUME = .6f;
     /** Real seconds the death slow motion lasts, and how slow the world runs during it. */
     private static final float DEATH_SLOWMO_SECONDS = 0.7f;
     private static final float DEATH_TIME_SCALE = 0.2f;
@@ -268,7 +276,10 @@ public class Player extends Actor<Player.State> implements CollideBody {
             updatePlayerMovement(stepDt);
             checkHorizontalCollisions(level);
             applyGravity(stepDt);
+            boolean airborne = !onGround;
+            float fallSpeed = velocity.y;
             checkVerticalCollisions(level, stepDt);
+            if (airborne && onGround && fallSpeed >= LANDING_MIN_FALL_SPEED && !inQuickSand) landingPuff();
         }
         // Landing or grabbing a wall can make a buffered press usable in this very frame.
         tryJump(0f);
@@ -825,6 +836,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
             wallJumpTimer -= dt;
             if (wallJumpTimer <= 0) wallJumping = false;
         }
+    }
+
+    /** A puff at the feet (the floor line, larger Y is lower) and a quieter scuff than the jump's. */
+    private void landingPuff() {
+        if (level != null) level.fx().landingPuff(position.x + hitbox.offsetX + hitbox.width / 2f, position.y + hitbox.offsetY + hitbox.height);
+        if (game.playSounds()) game.playSound("dust_puff", LANDING_SOUND_VOLUME);
     }
 
     private void playerJump(float dt) {

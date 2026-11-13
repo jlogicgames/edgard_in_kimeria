@@ -42,9 +42,12 @@ Quiet background sounds sit well below (see each recipe).
 
 - `dust_puff.wav` (seed 2201): 0.10 s of noise band-passed around 1.4 kHz (bandwidth 1.8 kHz), 4 ms attack,
   exponential decay tau 25 ms, peak -14 dBFS. A soft scuff that plays together with the jump.
-- `wall_rumble.wav` (seed 3301): 1.0 s. Noise low-passed at 180 Hz plus a 55 Hz sub sine with slow frequency
-  modulation (3 Hz, +-8 Hz), 7 Hz amplitude wobble of 25 %, 250 ms raised-cosine attack and 300 ms release so
-  it fades at both ends. Peak -9 dBFS.
+- `wall_rumble.wav` (seed 3301): a **seamless 1.0 s loop**, played with `Sound.loop` for the whole move time of the
+  wall and stopped with `Sound.stop(id)` (2026-11-13, D64; the one-shot with a fade at both ends was heard once while
+  the wall kept moving). Noise low-passed at 180 Hz (filtered circularly) plus a 55 Hz sub sine with slow frequency
+  modulation (3 Hz, +-8 Hz), 7 Hz amplitude wobble of 25 %; every component has a whole number of cycles per loop,
+  so there is no fade and no click at the wrap. The start and the stop are therefore abrupt; if that is audible, add
+  a volume ramp. Peak -9 dBFS. Not re-auditioned by the author yet.
 - `grit_fall.wav` (seed 4401): 0.5 s, 28 ticks of 6 ms band-passed noise (about 3.2 kHz, varied +-25 %) at
   random levels, tick times drawn from an exponential (tau 180 ms) so the density decays. Peak -12 dBFS.
 
@@ -62,6 +65,8 @@ Quiet background sounds sit well below (see each recipe).
    writes a waveform-envelope PNG. These numbers check format, level, clicks and rough spectral shape. They
    cannot judge how the sound sounds.
 5. Keep the file plain PCM 16-bit mono 44.1 kHz.
+5b. Add the name to `Assets.SOUND_EFFECTS`: every effect is created at start-up, because a sound created on its first play
+   was lost on the web (see `docs/DEVELOPMENT.md`); `SoundPreloadTest` fails when a played name is missing.
 6. Play it through `KimeriaGame.playSound("<name>")` (loads `assets/audio/<name>.wav`) behind the `playSounds()`
    check, like the existing callers. Add the name to `tools/check_web_release_artifact.py` only if its list
    of required files starts to cover audio effects (today it lists only `main_menu.mp3`).
@@ -79,7 +84,8 @@ Design history (author's verdicts):
 - Jump, first version, a "hup": it sounded like a spoken "PA!" (plosive); rejected.
 - Jump, closed-mouth nasal "hm": too dull; rejected.
 - Jump, throaty "ha!" with a breath onset: the breathy variant was chosen on 2026-11-12.
-- `dust_puff`, `wall_rumble` and `grit_fall` were accepted at first listen.
+- `dust_puff`, `wall_rumble` and `grit_fall` were accepted at first listen. The rumble was then changed from a
+  one-shot to a loop (2026-11-13) and needs a new listen. `dust_puff` also plays on landing at 0.6 volume.
 
 ## Don't
 

@@ -8,13 +8,15 @@ import java.util.function.BooleanSupplier;
 
 /**
  * The environment effects of one {@code Level} (#239, #285 step 5): the screen shake, a dust puff under the hero on a
- * ground jump and the grit that falls from the ceiling when a lever moves a wall. Dust and grit are two
+ * ground jump and a smaller one when it lands and the grit that falls from the ceiling when a lever moves a wall. Dust and grit are two
  * {@link KimeriaParticleSystem}s with their own seeded random streams. Everything here is cosmetic: no collision,
  * timing or route reads it. Particles advance only in {@link #update}, so pause freezes them. World Y grows downward.
  */
 public final class EnvironmentFx {
     public static final int DUST_CAPACITY = 24, GRIT_CAPACITY = 32;
     public static final int DUST_PER_PUFF = 6, GRIT_PER_BURST = 24;
+    /** A landing kicks up fewer puffs than a jump: a smaller puff of the same dust. */
+    public static final int DUST_PER_LANDING = 4;
     /** Seconds over which one grit burst is emitted. */
     public static final float GRIT_EMIT_SECONDS = .6f;
     private static final long GRIT_SEED_MIX = 0x9E3779B97F4A7C15L;
@@ -53,9 +55,14 @@ public final class EnvironmentFx {
     private static float range(RandomXS128 random, float min, float max) { return min + random.nextFloat() * (max - min); }
 
     /** Six smoke puffs rising from the hero's feet ({@code feetY} is the floor line, larger Y is lower). */
-    public void dustPuff(float feetX, float feetY) {
+    public void dustPuff(float feetX, float feetY) { puff(feetX, feetY, DUST_PER_PUFF); }
+
+    /** {@value #DUST_PER_LANDING} puffs of the same dust where the hero lands (same floor-line rule as {@link #dustPuff}). */
+    public void landingPuff(float feetX, float feetY) { puff(feetX, feetY, DUST_PER_LANDING); }
+
+    private void puff(float feetX, float feetY, int count) {
         RandomXS128 random = dust.random();
-        for (int n = 0; n < DUST_PER_PUFF; n++) {
+        for (int n = 0; n < count; n++) {
             float startX = feetX + range(random, -DUST_START_SPREAD_PX, DUST_START_SPREAD_PX);
             float life = range(random, DUST_LIFE_MIN, DUST_LIFE_MAX);
             float away = startX < feetX ? -1 : 1;

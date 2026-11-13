@@ -25,8 +25,11 @@ public final class Decor extends Entity {
     /** Frames per strip: idle, brush1, brush2, settle (tools/sprite_layouts.py DECOR_SHEETS). */
     public static final int FRAMES = 4;
     public static final float FPS = 10f;
-    /** The brush is noticed within this many pixels of the rectangle on each side. */
-    public static final float REACH = 6f;
+    /**
+     * The visible body of the bush inside its 32x24 frame (opaque pixels of every frame: x 3..30, y 6..24, measured on
+     * {@code decor-bush.png}). The brush starts only when the hero's body box overlaps this body, not the whole rectangle.
+     */
+    public static final float BODY_INSET_LEFT = 3f, BODY_INSET_RIGHT = 2f, BODY_INSET_TOP = 6f;
     /** Horizontal hero speed (px/s) below which the hero counts as standing. */
     public static final float MIN_SPEED = 1f;
     /** One entry per kind: a new kind is one sheet and one table entry. The names are read by tools/check_tiled_links.py. */
@@ -60,13 +63,15 @@ public final class Decor extends Entity {
     }
 
     /**
-     * Starts the brush when the hero's body box overlaps the rectangle widened by {@link #REACH} and the hero moves
-     * horizontally ({@code heroVelocityX}, px/s); the sprite leans the way the hero is heading. Does nothing while playing.
+     * Starts the brush when the hero's body box overlaps the bush's visible body (the rectangle inset by
+     * {@link #BODY_INSET_LEFT}, {@link #BODY_INSET_RIGHT} and {@link #BODY_INSET_TOP}; the bottom is the floor) and the
+     * hero moves horizontally ({@code heroVelocityX}, px/s); the sprite leans the way the hero is heading. Touching
+     * edges do not count. Does nothing while playing.
      */
     public void notice(Rectangle heroBody, float heroVelocityX) {
         if (playing || Math.abs(heroVelocityX) < MIN_SPEED) return;
-        if (heroBody.x >= position.x + size.x + REACH || heroBody.x + heroBody.width <= position.x - REACH
-            || heroBody.y >= position.y + size.y + REACH || heroBody.y + heroBody.height <= position.y - REACH) return;
+        if (heroBody.x >= position.x + size.x - BODY_INSET_RIGHT || heroBody.x + heroBody.width <= position.x + BODY_INSET_LEFT
+            || heroBody.y >= position.y + size.y || heroBody.y + heroBody.height <= position.y + BODY_INSET_TOP) return;
         playing = true;
         elapsed = 0f;
         leanLeft = heroVelocityX < 0;

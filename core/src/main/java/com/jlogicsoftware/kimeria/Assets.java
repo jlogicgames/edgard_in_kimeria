@@ -32,6 +32,23 @@ public class Assets implements Disposable {
         });
     }
 
+    /**
+     * Every sound effect the game plays through {@code KimeriaGame.playSound} / {@code loopSound}, by file name without the
+     * folder and extension. {@link #preloadSounds} creates them all at start-up (a test checks the list against the
+     * sources and {@code assets/audio}).
+     */
+    public static final String[] SOUND_EFFECTS = {"jump", "bounce", "collect", "hit", "disappear", "boss_hit", "boss_restore",
+        "button_click", "dust_puff", "wall_rumble", "grit_fall"};
+
+    /**
+     * Creates every sound effect now. A sound made on its first play is decoded then (a hitch on desktop), and on the web it
+     * is a new Howler instance that creates the audio context in the middle of the game, after the key press that would
+     * have unlocked it: the first jump was silent and the second was heard.
+     */
+    public void preloadSounds() {
+        for (String name : SOUND_EFFECTS) sound("audio/" + name + ".wav");
+    }
+
     public Sound sound(String path) {
         return sounds.computeIfAbsent(path, p -> Gdx.audio.newSound(Gdx.files.internal(p)));
     }

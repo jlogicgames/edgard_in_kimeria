@@ -202,6 +202,20 @@ class AllocationBudgetTest {
         assertWithinBudget("jump dust", JUMP_DUST_CEILING, bytes);
     }
 
+    /** A landing puff every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fx()}, updated and drawn each frame. */
+    @Test void landingDustThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 2);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.fx().landingPuff(100, 200);
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().dust().count());
+        });
+        assertTrue(peak[0] > 0, "dust must actually rise in this scenario");
+        assertWithinBudget("landing dust", JUMP_DUST_CEILING, bytes);
+    }
+
     /** A lever pull every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.activateTrigger}: the shake plus the grit burst over its whole life, drawn each frame. */
     @Test void leverGritThroughTheRealLevel() {
         Level level = harness.roomOf("forest-0", 2);

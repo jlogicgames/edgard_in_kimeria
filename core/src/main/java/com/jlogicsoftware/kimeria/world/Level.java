@@ -222,6 +222,9 @@ public class Level implements WorldObject {
         if (boss != null) boss.updatePresentation(realDt);
     }
     private boolean victory, completionSent;
+    /** Seconds the looping wall rumble still has to run (0 when it is not playing). */
+    private float rumbleSeconds;
+    private boolean rumbling;
     private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall";
     private final EnvironmentFx fx;
 
@@ -254,7 +257,14 @@ public class Level implements WorldObject {
 
     public void shakeAfterBossAttack() { if (!victory) fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
     public void shakeAfterEmpoweredHit() { fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
-    public void clearCameraEffects() { fx.clear(); }
+    public void clearCameraEffects() { fx.clear(); stopRumble(); }
+
+    private void stopRumble() {
+        if (!rumbling) return;
+        rumbling = false;
+        rumbleSeconds = 0;
+        game.stopSound(WALL_RUMBLE_SOUND);
+    }
 
     /**
      * Visual displacement only; narrow rooms keep their existing centred framing.
@@ -1082,7 +1092,13 @@ public class Level implements WorldObject {
         if (actionable instanceof Wall wall && wall.movesVertically() && wall.isActive()) {
             fx.shake().start(ScreenShake.LEVER_AMPLITUDE_PX, wall.moveDurationSeconds());
             fx.ceilingGrit(wall.getX() + wall.getWidth() / 2f, wall.getWidth(), currentRoomBounds().y);
-            if (game.playSounds()) { game.playSound(WALL_RUMBLE_SOUND); game.playSound(GRIT_FALL_SOUND); }
+            if (game.playSounds()) {
+                // The rumble loops for exactly the wall's move time (stopped in update, or by clearCameraEffects).
+                game.loopSound(WALL_RUMBLE_SOUND);
+                rumbling = true;
+                rumbleSeconds = wall.moveDurationSeconds();
+                game.playSound(GRIT_FALL_SOUND);
+            }
         }
     }
 
@@ -1100,6 +1116,7 @@ public class Level implements WorldObject {
     @Override
     public void update(float dt) {
         fx.update(dt);
+        if (rumbling && (rumbleSeconds -= dt) <= 0) stopRumble();
         if (victory) {
             if (player.victoryPausePressed()) { game.togglePause(); return; }
             dt = Math.min(dt, .05f);

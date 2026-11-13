@@ -52,6 +52,15 @@ public interface GameContext {
     /** name is one of: jump, bounce, collect, hit, disappear, boss_hit, boss_restore */
     void playSound(String name);
 
+    /** Plays {@code name} at {@code volumeScale} (0..1) of the player's sound volume; the default ignores the scale. */
+    default void playSound(String name, float volumeScale) { playSound(name); }
+
+    /** Starts {@code name} looping until {@link #stopSound}; a loop of the same name already running is restarted. */
+    void loopSound(String name);
+
+    /** Stops the loop started by {@link #loopSound} for {@code name}; does nothing when none runs. */
+    void stopSound(String name);
+
     boolean isGameStarted();
 
     void setGameStarted(boolean started);

@@ -45,7 +45,9 @@ import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.world.RoomFade;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The whole game in one place, playing the role Dart split across
@@ -193,6 +195,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     public void create() {
         Localization.current();
         assets = new Assets();
+        assets.preloadSounds();
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         camera = new OrthographicCamera();
@@ -1149,10 +1152,29 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
-    public void playSound(String name) {
+    public void playSound(String name) { playSound(name, 1f); }
+
+    @Override
+    public void playSound(String name, float volumeScale) {
         if (!playSounds) return;
         Sound sound = assets.sound("audio/" + name + ".wav");
-        sound.play(soundVolume);
+        sound.play(soundVolume * volumeScale);
+    }
+
+    /** Looping handles by sound name; a sound is looped with {@code Sound.loop} and stopped by its id (desktop and web Howler). */
+    private final Map<String, Long> loops = new HashMap<>();
+
+    @Override
+    public void loopSound(String name) {
+        stopSound(name);
+        if (!playSounds) return;
+        loops.put(name, assets.sound("audio/" + name + ".wav").loop(soundVolume));
+    }
+
+    @Override
+    public void stopSound(String name) {
+        Long id = loops.remove(name);
+        if (id != null) assets.sound("audio/" + name + ".wav").stop(id);
     }
 
     /** Quiet hover/focus blip, distinct from {@code button_click}'s louder press sound -- see Rust's ui.rs. */

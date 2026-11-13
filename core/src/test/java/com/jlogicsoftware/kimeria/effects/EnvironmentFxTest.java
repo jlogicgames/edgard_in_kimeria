@@ -36,6 +36,20 @@ class EnvironmentFxTest {
         for (int i = 0; i < d.count(); i++) assertTrue(d.y(i) < FEET_Y, "rises: smaller Y is higher");
     }
 
+    @Test void aLandingPuffIsASmallerPuffOfTheSameDustAtTheFeet() {
+        EnvironmentFx fx = fx(1);
+        fx.landingPuff(FEET_X, FEET_Y);
+        KimeriaParticleSystem d = fx.dust();
+        assertEquals(EnvironmentFx.DUST_PER_LANDING, d.count());
+        assertTrue(EnvironmentFx.DUST_PER_LANDING <= EnvironmentFx.DUST_PER_PUFF);
+        for (int i = 0; i < d.count(); i++) {
+            assertEquals(KimeriaParticleSystem.KIND_SMOKE, d.kind(i));
+            assertEquals(FEET_Y, d.y(i), 0f);
+        }
+        fx.update(.1f);
+        for (int i = 0; i < d.count(); i++) assertTrue(d.y(i) < FEET_Y, "rises: smaller Y is higher");
+    }
+
     @Test void aFullPoolDropsTheOldestAndNeverExceedsCapacity() {
         EnvironmentFx fx = fx(1);
         for (int i = 0; i < 20; i++) { fx.dustPuff(FEET_X + i, FEET_Y); assertTrue(fx.dust().count() <= EnvironmentFx.DUST_CAPACITY); }

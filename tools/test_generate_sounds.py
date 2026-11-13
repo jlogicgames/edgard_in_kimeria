@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent / "audio"))
 import generate_sounds as gs  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+# Played with Sound.loop (the wall rumble lasts as long as the wall moves): periodic, no edge fade.
+LOOPED = {"wall_rumble.wav"}
 # name -> (min seconds, max seconds)
 BOUNDS = {"jump.wav": (0.12, 0.20), "dust_puff.wav": (0.08, 0.14), "wall_rumble.wav": (0.9, 1.1),
           "grit_fall.wav": (0.4, 0.6)}
@@ -39,7 +41,13 @@ class GenerateSoundsTest(unittest.TestCase):
                 self.assertTrue(lo <= len(s) / rate <= hi, name)
                 self.assertLessEqual(max(map(abs, s)) / 32768.0, 10 ** (gs.PEAK_LIMIT_DB / 20) + 1e-4, name)
                 self.assertLess(abs(sum(s) / len(s)) / 32768.0, 0.001, name)
-                self.assertEqual((s[0], s[-1]), (0, 0), name)
+                if name in LOOPED:
+                    # A seamless loop has no edge fade: the wrap from the last sample to the first must be as smooth
+                    # as any step inside the file (the one-shots instead start and end at exactly 0).
+                    step = max(abs(s[i + 1] - s[i]) for i in range(len(s) - 1))
+                    self.assertLessEqual(abs(s[0] - s[-1]), step, name)
+                else:
+                    self.assertEqual((s[0], s[-1]), (0, 0), name)
 
     def test_shipped_files_match_generator(self) -> None:
         """assets/audio must be what the script produces, so regenerating is a no-op."""
