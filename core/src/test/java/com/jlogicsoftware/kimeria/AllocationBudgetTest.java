@@ -151,6 +151,17 @@ class AllocationBudgetTest {
         assertWithinBudget("forest-2 room 2 with blood", FOREST_2_ROOM_2_BLOOD_CEILING, bytes);
     }
 
+    /** A sword kill sprays a light burst through {@code Level.mobBlood} every {@link #BURST_CYCLE_FRAMES} frames in the boss room (the level path of #319). */
+    @Test void forest2Room2WithMobKillBlood() {
+        Level level = harness.roomOf("forest-2", 2);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.mobBlood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
+            level.update(STEP); level.render(batch, view);
+        });
+        assertWithinBudget("forest-2 room 2 with mob kill blood", FOREST_2_ROOM_2_BLOOD_CEILING, bytes);
+    }
+
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
     @Test void forest2Room0() { assertWithinBudget("forest-2 room 0", FOREST_2_ROOM_0_CEILING, room("forest-2", 0)); }
     @Test void forest2Room1() { assertWithinBudget("forest-2 room 1", FOREST_2_ROOM_1_CEILING, room("forest-2", 1)); }

@@ -221,6 +221,10 @@ including on the lethal hit; contact and stomping emit none. Since #285 step 3 t
 `effects.KimeriaBloodSystem`, one fixed-array, allocation-free system owned by the `Level` (`level.blood(...)`
 from `Boss`; no object is created per hit, 0.0 B/frame measured by `AllocationBudgetTest`), with the same
 formulas and random-call order as the earlier per-hit object (pinned by `ParticleGoldenTest`).
+A monster killed by the player's sword gets a light version of the same spray (#319, D65): 12 drops
+(`KimeriaBloodSystem.LIGHT_DROPLETS`) through `Level.mobBlood` via `Enemy.hitBySword`, same crimson, slower and
+smaller drops with shorter streaks, from the near edge of the body away from the hero. Fireballs, thrown stones and stomps
+spray nothing.
 The star texture has been removed.
 The frame and filled/empty slots are independent PNGs in
 [`assets/images/ui/boss`](../assets/images/ui/boss/README.md). Dimensions and gaps are grouped
@@ -293,7 +297,7 @@ sprays 32 blood droplets (48 empowered) through `Level.blood` into `effects.Kime
 gravity, red streaks and brief floor splashes. It lasts up to 0.9 s, survives lethal hits
 and is cleared with the room on a retry. The system draws with the cached white
 quad like other procedural effects, so no new image or particle texture is required. Its capacity is 96 drops
-(`Level.BLOOD_CAPACITY`); the measured peak is one empowered spray, 48 (`KimeriaBloodSystemCapacityTest`).
+(`Level.BLOOD_CAPACITY`); the measured peak is one empowered spray, 48 (`KimeriaBloodSystemCapacityTest`); with sword-kill sprays (12 each, one kill per 0.7 s swing) beside it the measured peak is 72 and the capacity stays 96 (D65).
 
 At the time, all **104 core tests** passed, and desktop/web builds succeeded. Regression
 checks covered blocking held movement from both sides without damage, safe stomp and close

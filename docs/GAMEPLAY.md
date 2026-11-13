@@ -186,6 +186,10 @@ It applies only to this boss, including retries until victory, and ends on boss 
 Empowered sword hits produce 48 thicker blood droplets with longer trails and a mild screen shake.
 Restart Level, transition, New Game, Continue and leaving the run clear the effect.
 
+Every monster dies from one hit. A monster killed by the sword also sprays a light burst of 12 crimson blood
+droplets away from the hero (#319); one killed by a fireball, a thrown stone or a stomp dies without any spray.
+There is no violence or blood option in Settings.
+
 Before committing to the fight, return to the forest entrance as often as needed. Secured
 pickups, enemy state, traps and mutable traversal-object state are retained on collection
 return. A spent falling platform or changed mechanism may leave an optional pickup route

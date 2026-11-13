@@ -427,6 +427,11 @@ public class Level implements WorldObject {
         blood.spray(x, y, direction, floorY, empowered);
     }
 
+    /** Sprays the light blood of a monster killed by the sword (#319); fireballs and other killers never call this. */
+    public void mobBlood(float x, float y, float direction, float floorY) {
+        blood.sprayLight(x, y, direction, floorY);
+    }
+
     /** The level's blood, for tests. */
     public KimeriaBloodSystem bloodParticles() { return blood; }
 
