@@ -429,7 +429,7 @@ player has to read the difference:
   pulse), so the player can tell from a distance that a mushroom is alive and may react. It is deterministic (the
   level clock, no randomness) and independent of the hero. **Revised 2026-11-13:** the author played the frame-swap
   idle and found the constant blinking strange and unclear, so the idle is now a smooth brightness glow (a sine on
-  one fixed frame, period 2.5 s, 0.8 to 1.0 brightness, identical for both, brightness only so it is colour-blind
+  one fixed frame, period 2.5 s, 0.55 to 1.0 brightness (was 0.8; the author could not see a 20 % dip), identical for both, brightness only so it is colour-blind
   safe); it stops when the swell starts, and the swell remains the only telegraph (D63).
 - **Look.** Real fungi, **not** a fly agaric (no red cap with white spots) and not like the healer's purple spotted
   Mushroom pickup (D43) or the existing `trap-puffball`. Both are a tuft of several small caps on thin stems.
@@ -463,6 +463,8 @@ cloud, as the existing spore puffball does (`trap-spores`, D46). After the MVP, 
 replaced by particles and shaders so that it looks "super beautiful"; this is a mandatory task, tracked by
 [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296) (part of the polish of
 [#142](https://github.com/jlogicgames/edgard_in_kimeria/issues/142)).
+
+**#296 first prototype (built):** `FalseHoneyFungus` now draws the cloud as `SporeCloud` (34 lime haze puffs and 12 glow specks, all inside the 24x24 lethal rectangle; look in [ART_DIRECTION.md](ART_DIRECTION.md)), behind `FalseHoneyFungus.PARTICLE_CLOUD`; an optional swirling shader haze (`SporeCloud.SHADER_LAYER`) is off by default. Hitbox, 1.0 s life, telegraph and timing are unchanged. Remaining, tracked in [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296): the author's review in the running game and a browser, then removing the sprite path and the `trap-spores` use here.
 
 ## Tablet in the original vs the remake
 

@@ -34,6 +34,8 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
 | `KIND_SMOKE` | normal | `size * (1 + 1.0 t)` (grows) | `0.7 * (1 - t)` |
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` |
 
+The false honey fungus's `effects.SporeCloud` (#296) is a composition of these kinds (SMOKE haze, GLOW specks) plus a shader layer; it adds no kind.
+
 `render` draws the normal-blend pass (smoke and grit) first, then the additive pass, then restores white and normal blending.
 
 ## Recipe for a new emitter
