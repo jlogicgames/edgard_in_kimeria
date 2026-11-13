@@ -26,7 +26,7 @@ neighbour sampling. Original prompt set:
 
 Sword hits use blood particles in `effects/KimeriaBloodSystem.java`; there is no impact-star image.
 
-The short original synthesized sounds are `audio/boss_hit.wav` (75 ms) and
-`audio/boss_restore.wav` (250 ms), mono PCM 16-bit / 22050 Hz. They can also be replaced
+The short original synthesized sounds are `audio/boss_hit.wav` (0.24 s) and
+`audio/boss_restore.wav` (0.40 s), mono PCM 16-bit / 44100 Hz (recipes: `docs/SOUND_DIRECTION.md`). They can also be replaced
 independently. They respect the game's sound setting and volume. The restoration sound
 is deliberately quiet and has no speech.

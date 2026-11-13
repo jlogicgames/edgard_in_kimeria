@@ -453,8 +453,8 @@ Author-approved design, revised 2026-11-13. The whole point is doubt: the player
   `if (game.playSounds())` and use snake_case names (`jump`, `bounce`, `hit`, `collect`, `disappear`,
   `boss_hit`, `boss_restore`, `button_click`). Music (`main_menu.mp3`, `intro.wav`) is separate. There is
   no `docs/AUDIO*.md`, and `AGENTS.md` has no sound rule; the audio facts live in `docs/DEVELOPMENT.md`
-  ("Assets": libGDX's WAV decoder needs plain PCM, so `button_click.wav` was re-encoded; `intro.wav` is an original
-  synthesized placeholder) and the web release check lists the audio files it expects.
+  ("Assets": libGDX's WAV decoder needs plain PCM; every effect and `intro.wav` are original synthesized sounds, see
+  `docs/SOUND_DIRECTION.md`) and the web release check lists the audio files it expects.
 - **Existing sounds do not cover these events.** `jump` already plays on every jump, so a dust sound is a
   separate, quieter sound layered on it. The lever has no sound today: `Trigger`/`Lever` call no `playSound`.
   `bounce` is used for impacts (enemy, boss, bomb, falling platform) and would be the wrong rumble.
