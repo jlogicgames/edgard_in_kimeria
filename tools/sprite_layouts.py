@@ -50,6 +50,9 @@ FOREST_TRAP_SHEETS = {
     'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
+    # #295 phase 1: the two look-alike mushrooms; idle1..idle3 is the brightness-pulse idle, swell1/swell2 the D7 telegraph.
+    'honey-fungus': ((24, 16), ('idle1', 'idle2', 'idle3', 'swell1', 'swell2', 'spent')),
+    'false-honey-fungus': ((24, 16), ('idle1', 'idle2', 'idle3', 'swell1', 'swell2', 'spent')),
 }
 FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TRAP_SHEETS.items()}
 # Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.

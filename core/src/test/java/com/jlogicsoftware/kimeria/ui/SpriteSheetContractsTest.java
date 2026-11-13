@@ -30,6 +30,8 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);
         matches(SpriteSheets.TRAP_LOG, 3, 1);
+        matches(SpriteSheets.TRAP_HONEY_FUNGUS, 6, 1); // #295 phase 1: idle1..3, swell1, swell2, spent
+        matches(SpriteSheets.TRAP_FALSE_HONEY_FUNGUS, 6, 1);
         // Decor (#239 step 4): idle, brush1, brush2, settle (tools/sprite_layouts.py DECOR_SHEETS).
         matches(SpriteSheets.DECOR_BUSH, 4, 1);
         matches(SpriteSheets.DECOR_VINE, 1, 1); // #239 step 5: hang

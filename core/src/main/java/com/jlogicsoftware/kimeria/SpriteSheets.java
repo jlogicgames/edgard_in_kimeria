@@ -25,6 +25,9 @@ public final class SpriteSheets {
     public static final Sheet TRAP_SPORES = new Sheet("images/objects/trap-spores.png", 24, 24);
     public static final Sheet TRAP_VINE = new Sheet("images/objects/trap-vine.png", 24, 40);
     public static final Sheet TRAP_LOG = new Sheet("images/objects/trap-log.png", 32, 16);
+    // #295 phase 1 (art only, no code draws them yet): idle1..idle3, swell1, swell2, spent; tools/sprite_layouts.py FOREST_TRAP_SHEETS.
+    public static final Sheet TRAP_HONEY_FUNGUS = new Sheet("images/objects/trap-honey-fungus.png", 24, 16);
+    public static final Sheet TRAP_FALSE_HONEY_FUNGUS = new Sheet("images/objects/trap-false-honey-fungus.png", 24, 16);
     // Decor (#239 step 4): frame order idle, brush1, brush2, settle; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_BUSH = new Sheet("images/objects/decor-bush.png", 32, 24);
     // Hanging scenery vine (#239 step 5): one frame; tools/sprite_layouts.py DECOR_SHEETS.

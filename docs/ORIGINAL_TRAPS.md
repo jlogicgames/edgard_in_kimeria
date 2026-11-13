@@ -396,7 +396,9 @@ Not part of the forest set and not implemented; also recorded in D42.
 
 ### Honey fungus and false honey fungus (author idea, 2026-11-12)
 
-Decided by the author on 2026-11-12, not implemented yet; tracked by
+Decided by the author on 2026-11-12; **status: phase 1 done** (decision record [D63](DECISIONS.md#d63-honey-fungus-and-false-honey-fungus-a-pair-of-look-alike-proximity-mushrooms-295-phase-1-decision-and-art)
+and the sprites `trap-honey-fungus` and `trap-false-honey-fungus`, awaiting the author's review of the art), **phase 2 pending** (objects,
+tests, placement; no code draws them yet); tracked by
 [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), with the later polish in
 [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296).
 
@@ -451,6 +453,7 @@ player has to read the difference:
   the swell telegraph as the only warning. Which world and rooms is decided when the objects are built (#295),
   with a scripted route and the hint-zone advice of [ROOMS.md](ROOMS.md); the forest-1 and forest-2 trap
   placements already fixed in D58 and D59 stay untouched.
+  A placement **proposal** (harmless first in `forest-0-lever` and `forest-0-wall`, the false one in `forest-2` `forest-entry`) is in D63, for the author to confirm.
 
 **First version and later polish (author, 2026-11-12).** The first version uses sprites for the poisonous
 cloud, as the existing spore puffball does (`trap-spores`, D46). After the MVP, during polishing, the sprite is
