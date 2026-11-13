@@ -21,8 +21,26 @@ public class WebLauncher {
         // iPhone (ratio 3) draws a 390 px wide canvas that the browser then stretches 3x, smearing pixel art and text.
         config.usePhysicalPixels = true;
         prepareMobilePage();
+        keepAudioAwake();
         new WebApplication(new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen(), prefersReducedMotion()), config);
     }
+
+    /**
+     * Howler suspends its audio context after 30 s without a playing sound and resumes it from the next play, which the
+     * game makes from its render loop, not from an input event: browsers (Safari first) may refuse that, so the first
+     * sound after a pause was lost. Switch the idle suspend off and resume a not-running context inside every key,
+     * pointer and touch event, where the browser always allows it.
+     */
+    @JSBody(script = "try {"
+        + "if (!window.Howler) return;"
+        + "Howler.autoSuspend = false;"
+        + "var wake = function () {"
+        + "  var c = Howler.ctx;"
+        + "  if (c && c.state !== 'running' && c.resume) { var r = c.resume(); if (r && r.catch) r.catch(function () {}); }"
+        + "};"
+        + "['keydown', 'pointerdown', 'touchstart', 'click'].forEach(function (n) { document.addEventListener(n, wake, true); });"
+        + "} catch (e) {}")
+    private static native void keepAudioAwake();
 
     @JSBody(script = "return navigator.maxTouchPoints > 0 || 'ontouchstart' in window;")
     private static native boolean hasTouchScreen();

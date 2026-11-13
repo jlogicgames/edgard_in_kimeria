@@ -169,7 +169,7 @@ A checklist of ideas, not implemented rules:
 
 - vines sway and shake when a stone falls and the ground shakes;
 - a bush shakes when the player walks past;
-- a dust puff under the player on a jump;
+- a dust puff under the player on a jump, and a smaller one when it lands;
 - the screen shakes, and dust may fall from the ceiling, when a lever lowers a wall.
 
 **Accessibility note:** screen shake must be **optional or reducible** (an Assist-style
@@ -231,6 +231,12 @@ depends on it.
   **grit 32** (a lever emits 24 over about 0.6 s). Each has its **own `RandomXS128`** (the system's
   `random()`), seeded from the level's seed pattern, so a seed reproduces a run and the two streams do not
   disturb each other or the torches.
+- **Landing puff (feel fix, D64).** `EnvironmentFx.landingPuff(feetX, feetY)` is the same dust (same colours, life, drift)
+  with 4 puffs instead of 6. `Player.update` fires it when the hero goes from airborne to grounded in the vertical
+  collision pass with a downward speed of at least `Player.LANDING_MIN_FALL_SPEED` = 140 px/s (gravity adds 9.8 per step,
+  so about 14 frames of falling, a 16 px drop); not in quicksand. Walking off a ledge keeps the coyote flag until the
+  speed passes 147, a wall slide divides the speed by 10, a ladder step-off bypasses the pass, so none of them puffs.
+  The `dust_puff` sound plays with it at 0.6 of the sound volume (`GameContext.playSound(name, volumeScale)`).
 - **Dust puff fits `KIND_SMOKE`.** 6 `spawn` calls from the feet: start X ±8 px around the hero centre,
   start Y `feetY`, end Y `feetY - (10 to 22 px/s * life)`, end X start X `± 25 px/s * life` away from the
   centre, life 0.25 to 0.4 s, base size 3 px, colours from `5b5870`, `9a97ad`, `d8d6e8`
@@ -271,7 +277,9 @@ depends on it.
 
 - **Object.** Tiled type `Decor` in `SpawnPoints`, a rectangle placed by hand, with a string property
   `kind` (`bush`) and an optional boolean `mirror`. One `Decor` class draws one animated
-  sprite: frame 0 at rest; when the hero's body box overlaps the rectangle widened by 6 px **and** the
+  sprite: frame 0 at rest; when the hero's body box overlaps the bush's **visible body** (the rectangle
+  inset by 3 px left, 2 px right and 6 px top, the opaque pixels of `decor-bush.png`; no widened zone, so
+  it never moves before the hero touches it; the feel fix of 2026-11-13, D64) **and** the
   hero moves horizontally, it plays the brush-past frames once at 10 fps and returns to frame 0. It
   restarts only when finished, so it cannot flicker. The brush direction comes from the hero's heading by
   drawing the sheet mirrored (negative width), so no second set of frames is needed. Timing depends only
@@ -318,7 +326,8 @@ depends on it.
 | `forest-1` | 3 | 240, 600, 780 |
 | `forest-2` | 7 | 400, 700, 1040, 1380, 1580, 1800, 2700 |
 
-  `DecorTest` pins these counts and measures every bush against the floor line.
+  `DecorTest` pins these counts and measures every bush against the floor line. The brush trigger is the visible
+  body (`Decor.BODY_INSET_LEFT/RIGHT/TOP`), pinned by `DecorTest`.
 
 ##### Hanging vine (#239 step 5), as built
 
@@ -427,6 +436,12 @@ depends on it.
   [SOUND_DIRECTION.md](SOUND_DIRECTION.md); the steps add no audio files. What each step still owes: the
   `game.playSounds()` guard and the sound-off behaviour (nothing plays when `playSounds()` is false). The origin of
   the other, older sounds (Flame and Rust versions) is #189's concern, not this plan's.
+- **The rumble loops (feel fix, D64).** `wall_rumble.wav` is a seamless one-second loop (no fade at the edges, every component
+  periodic). `Level.activateTrigger` starts it with `GameContext.loopSound` and `Level.update` stops it with `stopSound`
+  after `wall.moveDurationSeconds()` of game time; `clearCameraEffects` (pause, death, retry, room change, level change)
+  stops it at once, so a paused or dead game is silent and a second lever restarts the loop. `Sound.loop(volume)` and
+  `Sound.stop(id)` exist in the desktop backend and in the web (Howler) backend `HowlSound`; the loop id is kept in
+  `KimeriaGame` per sound name.
 - **Hooks.** Dust: in `EnvironmentFx.dustPuff`'s caller in `Player.playerJump`, beside the existing `jump` call. Rumble
   and grit: in the `Level.activateTrigger` wall branch. All three sit behind `game.playSounds()` and play
   only when the effect starts, so pause (no `update`) cannot replay them.

@@ -43,7 +43,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class WallLessonTest {
     private static final float STEP = 1f / 60f;
 
-    private final java.util.List<String> sounds = new java.util.ArrayList<>();
+    private final java.util.List<String> sounds = new java.util.ArrayList<>(), loops = new java.util.ArrayList<>();
+    private final java.util.List<Float> volumes = new java.util.ArrayList<>();
     private boolean soundsOn = true;
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TouchControls touch;
@@ -63,7 +64,9 @@ class WallLessonTest {
             case "language" -> Language.ENGLISH;
             case "isGameStarted" -> true;
             case "playSounds" -> soundsOn;
-            case "playSound" -> sounds.add((String) args[0]);
+            case "playSound" -> { if (args.length > 1) volumes.add((Float) args[1]); yield sounds.add((String) args[0]); }
+            case "loopSound" -> loops.add("loop:" + args[0]);
+            case "stopSound" -> loops.add("stop:" + args[0]);
             case "artifacts" -> artifacts;
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
@@ -538,18 +541,18 @@ class WallLessonTest {
     @Test void aLeverThatLowersTheWallStartsOneGritBurstAndOneRumbleAndOneGritSound() {
         Level level = freshRoom();
         walkToLever(level);
-        sounds.clear();
+        sounds.clear(); loops.clear();
         assertEquals(0, level.fx().grit().count());
         operate(level);
         assertTrue(level.fx().grit().count() > 0, "the burst started");
-        assertEquals(1, sounds.stream().filter("wall_rumble"::equals).count());
+        assertEquals(1, loops.stream().filter("loop:wall_rumble"::equals).count());
         assertEquals(1, sounds.stream().filter("grit_fall"::equals).count());
         float top = level.currentRoomBounds().y;
         for (int i = 0; i < level.fx().grit().count(); i++) assertTrue(level.fx().grit().y(i) >= top);
         // The burst is a single one of 24: after it is over nothing is left and nothing more is requested.
         settle(level, 120);
         assertEquals(0, level.fx().grit().count());
-        assertEquals(1, sounds.stream().filter("wall_rumble"::equals).count());
+        assertEquals(1, loops.stream().filter("loop:wall_rumble"::equals).count());
     }
 
     @Test void withSoundOffTheLeverRequestsNoSoundButStillDropsGrit() {
@@ -557,7 +560,7 @@ class WallLessonTest {
         Level level = freshRoom();
         walkToLever(level);
         operate(level);
-        assertTrue(sounds.isEmpty(), sounds.toString());
+        assertTrue(sounds.isEmpty() && loops.isEmpty(), sounds + " " + loops);
         assertTrue(level.fx().grit().count() > 0);
     }
 
@@ -565,10 +568,10 @@ class WallLessonTest {
         Level level = freshRoom();
         walkToLever(level);
         wall(level).setActive(false);
-        sounds.clear();
+        sounds.clear(); loops.clear();
         operate(level);
         assertEquals(0, level.fx().grit().count());
-        assertTrue(sounds.stream().noneMatch(n -> n.equals("wall_rumble") || n.equals("grit_fall")), sounds.toString());
+        assertTrue(sounds.stream().noneMatch("grit_fall"::equals) && loops.isEmpty(), sounds + " " + loops);
     }
 
     @Test void aGroundJumpEmitsOnePuffAndRequestsOneDustSound() {
@@ -598,5 +601,107 @@ class WallLessonTest {
         frame(level);
         assertTrue(sounds.isEmpty(), sounds.toString());
         assertEquals(com.jlogicsoftware.kimeria.effects.EnvironmentFx.DUST_PER_PUFF, level.fx().dust().count());
+    }
+
+    // ---- landing dust (feel fix)
+
+    @Test void aRealLandingEmitsAQuieterSmallerPuffAtTheFeet() {
+        Level level = freshRoom();
+        settle(level, 30);
+        held.clear(); held.add(Input.Keys.J); pressed.add(Input.Keys.J);
+        frame(level);
+        held.clear();
+        sounds.clear(); volumes.clear(); level.fx().clear();
+        int landed = -1;
+        for (int i = 0; i < 200 && landed < 0; i++) {
+            frame(level);
+            if (sounds.contains("dust_puff")) landed = i;
+        }
+        assertTrue(landed >= 0, "a landing sound and puff must follow the jump");
+        assertEquals(1, sounds.stream().filter("dust_puff"::equals).count(), "one scuff for one landing");
+        assertEquals(1, volumes.size());
+        assertTrue(volumes.get(0) > 0 && volumes.get(0) < 1, "quieter than the jump's scuff: " + volumes);
+        assertEquals(com.jlogicsoftware.kimeria.effects.EnvironmentFx.DUST_PER_LANDING, level.fx().dust().count());
+        Rectangle body = level.player.hitboxBounds();
+        for (int i = 0; i < level.fx().dust().count(); i++) {
+            assertEquals(body.y + body.height, level.fx().dust().y(i), 3f, "landing puffs start at the floor line");
+            assertTrue(Math.abs(level.fx().dust().x(i) - (body.x + body.width / 2f)) <= 9f);
+        }
+    }
+
+    @Test void standingOrWalkingOnTheGroundMakesNoLandingPuff() {
+        Level level = freshRoom();
+        settle(level, 60);
+        level.fx().clear(); sounds.clear();
+        held.add(Input.Keys.D);
+        settle(level, 60);
+        held.clear();
+        settle(level, 60);
+        assertEquals(0, level.fx().dust().count());
+        assertFalse(sounds.contains("dust_puff"), sounds.toString());
+    }
+
+    @Test void aShortStepDownBelowTheMinimumFallSpeedMakesNoPuff() {
+        Level level = freshRoom();
+        settle(level, 30);
+        level.fx().clear(); sounds.clear();
+        // Lift the hero 8 px: it falls about 8 px, far slower than LANDING_MIN_FALL_SPEED when it touches the floor.
+        level.player.position.y -= 8;
+        level.player.setOnGround(false);
+        settle(level, 20);
+        assertTrue(level.player.isOnGround());
+        assertEquals(0, level.fx().dust().count());
+        assertFalse(sounds.contains("dust_puff"), sounds.toString());
+    }
+
+    @Test void landingWithSoundOffStillPuffsButIsSilent() {
+        Level level = freshRoom();
+        settle(level, 30);
+        soundsOn = false; sounds.clear();
+        held.clear(); held.add(Input.Keys.J); pressed.add(Input.Keys.J);
+        frame(level);
+        held.clear();
+        for (int i = 0; i < 200 && !level.player.isOnGround(); i++) frame(level);
+        assertTrue(sounds.isEmpty(), sounds.toString());
+    }
+
+    // ---- the wall rumble lasts as long as the wall moves
+
+    @Test void theRumbleLoopsForTheWallsMoveTimeThenStopsOnce() {
+        Level level = freshRoom();
+        walkToLever(level);
+        loops.clear();
+        operate(level);
+        assertEquals(java.util.List.of("loop:wall_rumble"), loops);
+        float seconds = wall(level).moveDurationSeconds();
+        int frames = Math.round(seconds / STEP);
+        settle(level, frames - 8);
+        assertEquals(java.util.List.of("loop:wall_rumble"), loops, "still rumbling while the wall moves");
+        settle(level, 20);
+        assertEquals(java.util.List.of("loop:wall_rumble", "stop:wall_rumble"), loops, "stopped once, when the wall stopped");
+        settle(level, 120);
+        assertEquals(2, loops.size());
+    }
+
+    @Test void clearingTheCameraEffectsForPauseDeathOrRoomChangeStopsTheRumbleOnce() {
+        Level level = freshRoom();
+        walkToLever(level);
+        loops.clear();
+        operate(level);
+        level.clearCameraEffects();
+        assertEquals(java.util.List.of("loop:wall_rumble", "stop:wall_rumble"), loops);
+        level.clearCameraEffects();
+        settle(level, 120);
+        assertEquals(2, loops.size(), "no second stop, and the paused rumble is not resumed");
+    }
+
+    @Test void withSoundOffNoRumbleLoopStarts() {
+        soundsOn = false;
+        Level level = freshRoom();
+        walkToLever(level);
+        loops.clear();
+        operate(level);
+        level.clearCameraEffects();
+        assertTrue(loops.isEmpty(), loops.toString());
     }
 }

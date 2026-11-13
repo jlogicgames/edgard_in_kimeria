@@ -344,8 +344,17 @@ prints duration, peak, RMS and spectral figures and can render waveform previews
   breathy, throaty effort "ha!" grunt. The author chose it on audition (earlier "hup" and nasal "hm" versions were
   rejected) and wants the crude, 90s-speech-synthesizer character kept. The sound approach, recipes and the
   procedure for new sounds are recorded in [SOUND_DIRECTION.md](SOUND_DIRECTION.md).
-- `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are the sounds of the environment effects in #239: `Player.playerJump` plays the first on a ground jump, and
-  `Level.activateTrigger` plays the other two when a lever moves a wall (all behind `game.playSounds()`).
+- `dust_puff.wav`, `wall_rumble.wav` and `grit_fall.wav` are the sounds of the environment effects in #239: `Player.playerJump` plays the first on a ground jump (and the landing at 0.6 volume), and
+  `Level.activateTrigger` plays the other two when a lever moves a wall (the rumble is a seamless loop, stopped when the wall stops) (all behind `game.playSounds()`).
+- **First sound lost (2026-11-13, web build; desktop is not affected as far as the code shows).** The sounds were created on
+  their first play. On the web that makes a new Howler instance in the middle of the game, which also creates the audio
+  context after the key press that would have unlocked it, so the first jump was silent and the second was heard. Howler also
+  suspends its context after 30 s without sound and resumes it from the next play, which comes from the render loop and not
+  from an input event; a browser may refuse that, so the first sound after a pause was lost again. Fix: `Assets.preloadSounds()`
+  creates every effect at start-up (`Assets.SOUND_EFFECTS`, checked by `SoundPreloadTest`), and `WebLauncher.keepAudioAwake()`
+  turns `Howler.autoSuspend` off and resumes a not-running context inside every key, pointer and touch event. The root cause
+  was read from the Howler 2.2.4 source and the backend, not reproduced in a browser: the author has to listen in the web
+  build (first jump after load, and after more than 30 s of idle).
 - The other legacy effects (`hit`, `collect`, `bounce`, `disappear`, `boss_*`, `button_click`) and
   `main_menu.mp3` still come from the Flame/Rust versions; their provenance is part of #189.
 

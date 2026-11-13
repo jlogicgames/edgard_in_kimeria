@@ -64,10 +64,8 @@ RUMBLE_SUB_HZ = 55.0         # sub sine, centre
 RUMBLE_SUB_FM_HZ = 3.0       # slow frequency modulation of the sub
 RUMBLE_SUB_FM_DEPTH_HZ = 8.0 # +-8 Hz, keeps it inside 40..70 Hz
 RUMBLE_SUB_GAIN = 0.8        # relative to the noise body
-RUMBLE_WOBBLE_HZ = 7.0       # amplitude wobble
+RUMBLE_WOBBLE_HZ = 7.0       # amplitude wobble (whole cycles per loop)
 RUMBLE_WOBBLE_DEPTH = 0.25   # fraction of the level
-RUMBLE_ATTACK = 0.25         # s, slow attack
-RUMBLE_RELEASE = 0.30        # s, smooth release (raised-cosine)
 
 # ---------------------------------------------------------------- falling grit
 GRIT_SEED = 4401
@@ -212,24 +210,27 @@ def dust_puff() -> list[float]:
 
 
 def wall_rumble() -> list[float]:
+    """A seamless one-second loop (the game loops it for the wall's whole move time): every component is periodic in
+    the file length, the noise body is filtered circularly, and no edge fade or envelope is applied."""
     rng = random.Random(RUMBLE_SEED)
     n = n_samples(RUMBLE_DURATION)
-    body = lowpass(noise(rng, n), RUMBLE_LOWPASS_HZ)
+    # Circular low-pass: run the filter over three copies of the noise and keep the middle one.
+    raw = noise(rng, n)
+    body = lowpass(raw * 3, RUMBLE_LOWPASS_HZ)[n:2 * n]
     bp = max(abs(v) for v in body) or 1.0
     body = [v / bp for v in body]
-    phase = 0.0
+    # Sub phase 55 t + depth/(2 pi f_fm) (1 - cos(2 pi f_fm t)) is 0 at t = 0 and a whole number of cycles at 1 s.
+    fm_phase = RUMBLE_SUB_FM_DEPTH_HZ / (2.0 * math.pi * RUMBLE_SUB_FM_HZ)
     out = []
-    na, nr = n_samples(RUMBLE_ATTACK), n_samples(RUMBLE_RELEASE)
     for i in range(n):
-        s = i / SAMPLE_RATE
-        f = RUMBLE_SUB_HZ + RUMBLE_SUB_FM_DEPTH_HZ * math.sin(2.0 * math.pi * RUMBLE_SUB_FM_HZ * s)
-        phase += f / SAMPLE_RATE
+        s = i / n * RUMBLE_DURATION
+        phase = RUMBLE_SUB_HZ * s + fm_phase * (1.0 - math.cos(2.0 * math.pi * RUMBLE_SUB_FM_HZ * s))
         sub = math.sin(2.0 * math.pi * phase)
-        wob = 1.0 - RUMBLE_WOBBLE_DEPTH * 0.5 * (1.0 - math.sin(2.0 * math.pi * RUMBLE_WOBBLE_HZ * s))
-        a = 0.5 - 0.5 * math.cos(math.pi * min(i / na, 1.0))            # raised-cosine attack
-        r = 0.5 - 0.5 * math.cos(math.pi * min((n - 1 - i) / nr, 1.0))  # raised-cosine release
-        out.append((body[i] + RUMBLE_SUB_GAIN * sub) * wob * a * r)
-    return finish(out, RUMBLE_PEAK_DB)
+        wob = 1.0 - RUMBLE_WOBBLE_DEPTH * 0.5 * (1.0 - math.cos(2.0 * math.pi * RUMBLE_WOBBLE_HZ * s))
+        out.append((body[i] + RUMBLE_SUB_GAIN * sub) * wob)
+    mean = sum(out) / n
+    k = 10.0 ** (RUMBLE_PEAK_DB / 20.0) / max(abs(v - mean) for v in out)
+    return [(v - mean) * k for v in out]
 
 
 def grit_fall() -> list[float]:

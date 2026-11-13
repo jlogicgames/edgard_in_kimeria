@@ -77,20 +77,46 @@ class DecorTest {
         assertTrue(d.playing());
     }
 
-    @Test void aStandingHeroOrOneOutsideTheWidenedBoxStartsNothing() {
+    @Test void aStandingHeroOrOneBesideTheVisibleBodyStartsNothing() {
+        // The bush rectangle is x 100..132, y 296..320; its drawn body is x 103..130, y 302..320 (Decor.BODY_INSET_*).
         Decor d = bush();
         d.notice(hero(110), 0);
         assertFalse(d.playing(), "standing inside the bush");
-        d.notice(hero(100 + 32 + Decor.REACH + 1), 100);
-        assertFalse(d.playing(), "right of the widened box");
-        d.notice(hero(100 - 11 - Decor.REACH - 1), 100);
-        assertFalse(d.playing(), "left of the widened box");
-        d.notice(new Rectangle(110, 296 + 24 + Decor.REACH + 1, 11, 22), 100);
-        assertFalse(d.playing(), "below the widened box");
-        d.notice(new Rectangle(110, 296 - 22 - Decor.REACH - 1, 11, 22), 100);
-        assertFalse(d.playing(), "above the widened box");
-        d.notice(hero(100 + 32 + Decor.REACH - 1), 100);
-        assertTrue(d.playing(), "inside the 6 px margin");
+        d.notice(hero(100 + 32 - Decor.BODY_INSET_RIGHT), 100);
+        assertFalse(d.playing(), "touching the right edge of the body, still beside it");
+        d.notice(hero(100 + 32), 100);
+        assertFalse(d.playing(), "in the empty right margin of the frame");
+        d.notice(hero(100 + Decor.BODY_INSET_LEFT - 11), 100);
+        assertFalse(d.playing(), "touching the left edge of the body");
+        d.notice(hero(100 - 11 - 6), 100);
+        assertFalse(d.playing(), "6 px to the left, where the old widened zone started the shake");
+        d.notice(new Rectangle(110, 296 + 24, 11, 22), 100);
+        assertFalse(d.playing(), "below the floor line");
+        d.notice(new Rectangle(110, 296 + Decor.BODY_INSET_TOP - 22, 11, 22), 100);
+        assertFalse(d.playing(), "above the top of the body");
+    }
+
+    @Test void aHeroOverlappingTheVisibleBodyStartsTheBrushHeadingDecidesTheLean() {
+        Decor d = bush();
+        d.notice(hero(100 + 32 - Decor.BODY_INSET_RIGHT - 1), 100);
+        assertTrue(d.playing(), "one pixel into the body from the right");
+        d = bush();
+        d.notice(hero(100 + Decor.BODY_INSET_LEFT - 11 + 1), -100);
+        assertTrue(d.playing(), "one pixel into the body from the left");
+        d = bush();
+        d.notice(new Rectangle(110, 296 + Decor.BODY_INSET_TOP - 22 + 1, 11, 22), 100);
+        assertTrue(d.playing(), "the hero's feet one pixel into the body from above");
+    }
+
+    @Test void pauseFreezesTheBrush() {
+        Decor d = bush();
+        d.notice(hero(110), 100);
+        d.update(STEP);
+        int frame = d.frameIndex();
+        // A paused game never calls update, so nothing may advance on its own.
+        for (int i = 0; i < 100; i++) d.notice(hero(110), 100);
+        assertEquals(frame, d.frameIndex());
+        assertTrue(d.playing());
     }
 
     @Test void aHeroWalkingPastABushInTheRealLevelStartsItsBrush() {
