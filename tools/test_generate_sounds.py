@@ -13,10 +13,10 @@ import generate_sounds as gs  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 # Played with Sound.loop (the wall rumble lasts as long as the wall moves): periodic, no edge fade.
-LOOPED = {"wall_rumble.wav"}
+LOOPED = {"wall_rumble.wav", "keepalive.wav"}
 # name -> (min seconds, max seconds)
 BOUNDS = {"jump.wav": (0.12, 0.20), "dust_puff.wav": (0.08, 0.14), "wall_rumble.wav": (0.9, 1.1),
-          "grit_fall.wav": (0.4, 0.6)}
+          "grit_fall.wav": (0.4, 0.6), "keepalive.wav": (0.9, 1.1)}
 
 
 def read(path: Path):
@@ -55,6 +55,19 @@ class GenerateSoundsTest(unittest.TestCase):
             gs.generate(Path(a))
             for name in gs.GAME_SOUNDS:
                 self.assertEqual((Path(a) / name).read_bytes(), (ROOT / "assets/audio" / name).read_bytes(), name)
+
+    def test_keepalive_is_quiet_but_not_silent(self) -> None:
+        """Below audibility, above digital silence, and a loop that wraps without a jump (#316)."""
+        x = read(ROOT / "assets/audio/keepalive.wav")[3]
+        f = [v / 32768.0 for v in x]
+        rms_db = 20 * math.log10(math.sqrt(sum(v * v for v in f) / len(f)))
+        self.assertAlmostEqual(rms_db, gs.KEEPALIVE_RMS_DB, delta=1.0)
+        self.assertLess(rms_db, -60.0)
+        self.assertLess(20 * math.log10(max(abs(v) for v in f)), -50.0)
+        self.assertGreater(sum(1 for v in x if v != 0) / len(x), 0.95)   # not digital silence
+        self.assertGreaterEqual(max(abs(v) for v in x), 8)               # well above the 16-bit quantisation floor
+        step = max(abs(x[i + 1] - x[i]) for i in range(len(x) - 1))
+        self.assertLessEqual(abs(x[0] - x[-1]), step)
 
     def test_jump_is_an_open_vowel_ha(self) -> None:
         """Smooth attack (no plosive click), RMS near the other effects, formant energy at the open vowel, dark."""

@@ -7,7 +7,7 @@ Writes plain PCM 16-bit mono WAV files (the only format libGDX's WAV decoder rea
     python3 tools/audio/generate_sounds.py            # write into assets/audio
     python3 tools/audio/generate_sounds.py --out DIR  # write into DIR instead (used by the unit test)
 
-Outputs: jump.wav (breathy throaty "ha!"), dust_puff.wav, wall_rumble.wav, grit_fall.wav. The crude, buzzy
+Outputs: jump.wav (breathy throaty "ha!"), dust_puff.wav, wall_rumble.wav, grit_fall.wav, keepalive.wav (near-silent loop). The crude, buzzy
 character is deliberate (see docs/SOUND_DIRECTION.md).
 """
 from __future__ import annotations
@@ -28,6 +28,15 @@ PEAK_LIMIT_DB = -1.0         # hard ceiling asserted by the test (nothing may ex
 DUST_PEAK_DB = -14.0         # plays together with the jump, must stay under it
 RUMBLE_PEAK_DB = -9.0        # long low sound, sits under the music
 GRIT_PEAK_DB = -12.0         # dry patter, quiet
+
+# ---------------------------------------------------------------- keep-alive (output pipeline wake-up, #316)
+KEEPALIVE_SEED = 5501
+KEEPALIVE_DURATION = 1.0     # s; a seamless loop, played for the whole time the game runs
+KEEPALIVE_RMS_DB = -65.0     # RMS level: far below audibility on speakers or headphones at normal volume (the room noise of
+                             # a quiet room is about -50 dBFS-equivalent), yet about 18 LSB of 16-bit RMS, so it is never
+                             # digital silence and never truncates to zeros; devices that idle on digital silence stay awake
+KEEPALIVE_LOWPASS_HZ = 4000.0  # circular low-pass: a soft hiss instead of a bright one, even less audible at this level
+
 
 # ---------------------------------------------------------------- jump: throaty effort "ha!"
 # 'h' + 'a': a short glottal aspiration (band-passed noise with a smooth ramp, so it is breath and not a click)
@@ -233,6 +242,20 @@ def wall_rumble() -> list[float]:
     return [(v - mean) * k for v in out]
 
 
+def keepalive() -> list[float]:
+    """Very quiet, non-silent noise loop. Circular low-pass (three copies, keep the middle one) so the wrap is as smooth
+    as any other step; no fade, no envelope. Normalised to an RMS of KEEPALIVE_RMS_DB."""
+    rng = random.Random(KEEPALIVE_SEED)
+    n = n_samples(KEEPALIVE_DURATION)
+    raw = noise(rng, n)
+    body = lowpass(raw * 3, KEEPALIVE_LOWPASS_HZ)[n:2 * n]
+    mean = sum(body) / n
+    body = [v - mean for v in body]
+    rms = math.sqrt(sum(v * v for v in body) / n) or 1.0
+    k = 10.0 ** (KEEPALIVE_RMS_DB / 20.0) / rms
+    return [v * k for v in body]
+
+
 def grit_fall() -> list[float]:
     rng = random.Random(GRIT_SEED)
     n = n_samples(GRIT_DURATION)
@@ -251,7 +274,7 @@ def grit_fall() -> list[float]:
 
 
 GAME_SOUNDS = {"jump.wav": jump, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
-               "grit_fall.wav": grit_fall}
+               "grit_fall.wav": grit_fall, "keepalive.wav": keepalive}
 def generate(out_dir: Path) -> list[Path]:
     written = []
     for name, fn in GAME_SOUNDS.items():

@@ -51,6 +51,17 @@ Quiet background sounds sit well below (see each recipe).
 - `grit_fall.wav` (seed 4401): 0.5 s, 28 ticks of 6 ms band-passed noise (about 3.2 kHz, varied +-25 %) at
   random levels, tick times drawn from an exponential (tau 180 ms) so the density decays. Peak -12 dBFS.
 
+### `keepalive.wav`: not a sound effect (seed 5501, #316)
+
+A seamless 1.0 s loop of noise (circular low-pass at 4 kHz) at **-65 dBFS RMS** (peak about -52 dBFS, about 18 LSB RMS of
+16-bit). `KimeriaGame.updateAudioKeepAlive` loops it on desktop for as long as sounds are on, so an output device that
+goes idle after about a second of digital silence (Bluetooth headphones, some macOS outputs) does not need ~0.5 s to wake
+and swallow the start of the next real sound. Why this level: digital silence (zeros) is what devices treat as idle, so it
+must be real signal; -65 dBFS is below the hiss floor of ordinary speakers and headphones at normal volume, but still
+well above the 16-bit quantisation step. If it is audible on the author's device, lower `KEEPALIVE_RMS_DB`; if the
+device still sleeps, raise it. **Not verified on hardware:** nobody has listened on macOS with the affected output (#316,
+open). It is never played by gameplay code and does not count as a sound effect in tests.
+
 ## Making a new sound
 
 1. In `tools/audio/generate_sounds.py` add a function with all parameters as named constants (with a comment)
