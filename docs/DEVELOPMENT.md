@@ -323,16 +323,16 @@ parts that shape the code:
 
 Images, audio and the original Tiled maps come from the Flame project's `assets/`.
 `forest-2` has since been extended to three rooms in the same tileset.
-Fonts (`NanoPlus.ttf`, `QuestSquare.ttf`) and `main_menu.mp3`/`button_click.wav` are pulled
-from the Rust version, which has them and the Flame baseline doesn't. `button_click.wav`
-needed re-encoding from `WAVE_FORMAT_EXTENSIBLE` to plain PCM — libGDX's WAV decoder
-rejects the former. The GLSL shaders under `assets/shaders/*.frag` are ported from the
+Fonts (`NanoPlus.ttf`, `QuestSquare.ttf`) and `main_menu.mp3` are pulled
+from the Rust version, which has them and the Flame baseline doesn't (libGDX's WAV decoder
+rejects `WAVE_FORMAT_EXTENSIBLE`; every sound effect is now generated as plain PCM, see
+"Original synthesized sound effects"). The GLSL shaders under `assets/shaders/*.frag` are ported from the
 Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in Flutter's
 `runtime_effect.glsl` macros) to plain desktop GLSL consumed via libGDX's `ShaderProgram`.
 
 ### Original synthesized sound effects
 
-`jump.wav`, `dust_puff.wav`, `wall_rumble.wav`, `grit_fall.wav` and `keepalive.wav` are project-original: synthesized by
+Every sound effect is project-original (`jump`, `hit`, `bounce`, `collect`, `disappear`, `boss_hit`, `boss_restore`, `button_click`, `dust_puff`, `wall_rumble`, `grit_fall`, and the non-effect `keepalive`): synthesized by
 `tools/audio/generate_sounds.py` (stdlib only, fixed random seeds, byte-identical on every run; 44.1 kHz,
 16-bit mono PCM). Licence: project-original, the same as `intro.wav`. Regenerate with
 `python3 tools/audio/generate_sounds.py`; every parameter is a named constant at the top of the script.
@@ -340,7 +340,7 @@ Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in
 offset, and that the shipped files equal the script's output. `python3 tools/audio/analyze_sounds.py [--png DIR] FILE...`
 prints duration, peak, RMS and spectral figures and can render waveform previews.
 
-- The legacy `jump.wav` (inherited from the Flame/Rust versions) was replaced on 2026-11-12 by a synthesized
+- The jump (inherited from the Flame/Rust versions) was replaced on 2026-11-12 by a synthesized
   breathy, throaty effort "ha!" grunt. The author chose it on audition (earlier "hup" and nasal "hm" versions were
   rejected) and wants the crude, 90s-speech-synthesizer character kept. The sound approach, recipes and the
   procedure for new sounds are recorded in [SOUND_DIRECTION.md](SOUND_DIRECTION.md).
@@ -367,8 +367,14 @@ prints duration, peak, RMS and spectral figures and can render waveform previews
   alone: buffer size and count are used only by `AudioDevice` (raw PCM streaming), not by `Sound`, so shrinking them cannot
   change this latency. **Not verified on hardware:** the cause is a hypothesis and nobody has listened on a Mac; the author
   must test with the affected output device (#316 stays open until then; remove this note when it is closed).
-- The other legacy effects (`hit`, `collect`, `bounce`, `disappear`, `boss_*`, `button_click`) and
-  `main_menu.mp3` still come from the Flame/Rust versions; their provenance is part of #189.
+- **All sound effects are voice-synth in the jump's style (#313, done 2026-11-13).** The author decided that every effect is
+  redone in the jump's voice-synth style and accepted each of three audition batches (the hero: `hit`, `bounce`, `collect`,
+  `disappear`, `dust_puff`; boss and menu: `boss_hit`, `boss_restore`, `button_click`; environment: `wall_rumble` growling
+  loop, `grit_fall` whispered patter). Files were replaced in place, so names and call sites are unchanged. Inventory,
+  recipes and levels are in [SOUND_DIRECTION.md](SOUND_DIRECTION.md); `tools/test_generate_sounds.py` pins the levels (voice
+  set within 3 dB of the jump's RMS, ambient sounds quieter) and checks that every effect is audible and plain PCM.
+  Still shared: the bomb and explosive-trap explosions use `bounce` (#324). Only `main_menu.mp3` remains from the Flame/Rust
+  versions (#189).
 
 ### Known JVM / Gradle startup warnings
 
