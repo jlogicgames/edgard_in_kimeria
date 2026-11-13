@@ -78,6 +78,8 @@ class AllocationBudgetTest {
 
     /** Measured 0.0 B/frame in 3 runs (#239 step 4): one {@code batch.draw} per bush, frame regions held in the object. */
     static final double DECOR_BRUSH_CEILING = 8;
+    /** Measured 0.0 B/frame in 3 runs (#239 step 5): one rotated {@code batch.draw} per vine, the frame region held in the object. */
+    static final double HANGING_VINE_CEILING = 8;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
 
@@ -218,6 +220,21 @@ class AllocationBudgetTest {
         });
         assertTrue(played[0], "the brush must actually play in this scenario");
         assertWithinBudget("decor brush", DECOR_BRUSH_CEILING, bytes);
+    }
+
+    /** The three vines of forest-0's stone room shaken by a stone every {@link #BURST_CYCLE_FRAMES} frames (a swing lasts 1.6 s, so one is always running): {@code shake}, {@code update} and {@code render} through the batch. */
+    @Test void hangingVinesSwayingThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 3);
+        var vines = level.vines;
+        assertEquals(3, vines.size());
+        boolean[] swayed = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) for (int v = 0; v < vines.size(); v++) vines.get(v).shake(2552, 1f);
+            for (int v = 0; v < vines.size(); v++) { vines.get(v).update(STEP); vines.get(v).render(batch); }
+            swayed[0] |= vines.get(0).swaying();
+        });
+        assertTrue(swayed[0], "the vines must actually sway in this scenario");
+        assertWithinBudget("hanging vines", HANGING_VINE_CEILING, bytes);
     }
 
     /** {@code BossHud.render} with an empowered boss; the font's {@code draw} is a no-op so only the HUD's own allocation is counted (a real {@code font.draw} allocates a {@code GlyphLayout}, out of scope here). */

@@ -6,6 +6,8 @@ import forest_trap_sprites as traps
 from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
+VINE_SIZE = (8, 40)
+VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceiling
 
 
 class ForestTrapSpritesTest(unittest.TestCase):
@@ -32,6 +34,21 @@ class ForestTrapSpritesTest(unittest.TestCase):
             cell = master.crop((index * size[0], 0, (index + 1) * size[0], size[1]))
             self.assertEqual(size[1], cell.getchannel('A').getbbox()[BBOX_BOTTOM], 'the bush must rest on its bottom row')
             self.assertTrue(set(cell.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
+
+    def test_the_decor_vine_matches_its_layout_hangs_from_the_top_and_keeps_to_the_palette(self):
+        size, frames = DECOR_SHEETS['vine']
+        self.assertEqual((VINE_SIZE, ('hang',)), (size, frames))
+        master, colors = traps.sheet_image('decor:vine')
+        self.assertEqual(WORLD_IMAGES['decor-vine'], master.size)
+        self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+        shipped = Image.open(traps.ROOT / 'assets/images/objects/decor-vine.png')
+        self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), 'run tools/forest_trap_sprites.py decor:vine')
+        alpha = master.getchannel('A')
+        self.assertEqual(0, alpha.getbbox()[1], 'the vine is anchored at its top row (world Y grows downward)')
+        self.assertEqual(size[1], alpha.getbbox()[BBOX_BOTTOM], 'and hangs the full 40 px')
+        self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
+        top = master.crop((0, 0, size[0], 1))
+        self.assertTrue(all(top.getchannel('A').getpixel((x, 0)) == OPAQUE_ALPHA for x in VINE_STEM_COLUMNS), 'the stem touches the ceiling')
 
     def test_every_frame_has_artwork_and_binary_alpha(self):
         for name, (size, frames) in FOREST_TRAP_SHEETS.items():

@@ -108,11 +108,11 @@ class TutorialLevelTest {
     }
 
     /** Not gameplay objects: the Deadline and Decor scenery (#239 step 4: no collision, no hazard, no enemy), left out of the per-room object counts. */
-    private static final Set<String> COSMETIC = Set.of("Deadline", "Decor");
+    private static final Set<String> COSMETIC = Set.of("Deadline", "Decor", "HangingVine");
 
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
         TiledMapData map = map("forest-0");
-        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint", "Decor");
+        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint", "Decor", "HangingVine");
         // D48: one trap in each of rooms 1-4: thorn root, falling branch, falling stone, exploding stump.
         java.util.Map<Integer, String> newTraps = java.util.Map.of(1, "ThornRoot", 2, "FallingBranch", 3, "FallingStone", 4, "ExplosiveStump");
         Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder", "Escalator", "Stone");

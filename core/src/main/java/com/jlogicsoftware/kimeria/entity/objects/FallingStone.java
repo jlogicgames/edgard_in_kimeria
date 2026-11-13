@@ -43,6 +43,7 @@ public class FallingStone extends FallingTrap {
 
     private final Assets assets;
     private final Skin skin;
+    private Runnable onImpact = () -> { };
 
     public FallingStone(Assets assets, Skin skin, Rectangle body, Rectangle zone, float landingBottom,
                         TrapWarnings warnings, Supplier<Rectangle> hero, BooleanSupplier heroGrounded, Runnable kill) {
@@ -50,6 +51,12 @@ public class FallingStone extends FallingTrap {
         this.assets = assets;
         this.skin = skin;
     }
+
+    /** Called once when the stone lands (#239 step 5: the hanging vines sway). Cosmetic: nothing in the trap reads it. */
+    public void onImpact(Runnable listener) { onImpact = listener; }
+
+    @Override
+    protected void landed() { onImpact.run(); }
 
     /** True while the ground shadow is drawn: through the warning and the fall, until the stone lands. */
     public boolean shadowVisible() { return state() == State.WARNING || state() == State.FALLING; }

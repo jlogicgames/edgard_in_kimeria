@@ -348,6 +348,7 @@ def check_map(path):
                           "(set the 'target' property, or give it exactly one same-named mechanism)")
     errors += check_falling_traps(root, groups)
     errors += check_decor(spawn, collisions)
+    errors += check_hanging_vines(root, spawn, collisions)
     return [f"{path.name}: {e}" for e in errors]
 
 
@@ -387,6 +388,37 @@ def check_decor(spawn, collisions):
         bottom = body[1] + body[3]
         if not any(kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') == bottom for c in collisions):
             errors.append(f"{label}: its bottom edge ({bottom:g}) is not on the top of a solid block")
+    return errors
+
+
+VINE_JAVA = FALLING_JAVA.with_name('HangingVine.java')
+
+
+def vine_reach():
+    """HangingVine.REACH, read from the Java class so the check and the game cannot drift apart."""
+    m = re.search(r'REACH\s*=\s*([0-9.]+)f', VINE_JAVA.read_text(encoding='utf-8'))
+    return float(m.group(1)) if m else 0.0
+
+
+def check_hanging_vines(root, spawn, collisions):
+    """HangingVine (#239 step 5): a positive size, the top edge on the room's ceiling line or under a solid block (world Y
+    grows downward, so the top edge is `y`), and a FallingStone in the same room within reach: a vine nothing can move is dead art."""
+    errors, reach = [], vine_reach()
+    stones = [o for o in spawn if kind(o) == 'FallingStone']
+    for o in (o for o in spawn if kind(o) == 'HangingVine'):
+        label = f"HangingVine {describe(o)}"
+        body = _rect(o)
+        if not (body[2] > 0 and body[3] > 0):
+            errors.append(f"{label}: needs a positive size"); continue
+        room = thorn_room(root, o)
+        hangs = (room is not None and body[1] == room[1]) or any(
+            kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') + _num(c, 'height') == body[1] for c in collisions)
+        if not hangs:
+            errors.append(f"{label}: its top edge ({body[1]:g}) is neither the room's top nor the bottom of a solid block"); continue
+        anchor = body[0] + body[2] / 2
+        near = [s for s in stones if thorn_room(root, s) == room and abs(_num(s, 'x') + _num(s, 'width') / 2 - anchor) < reach]
+        if not near:
+            errors.append(f"{label}: no FallingStone in its room within {reach:g} px of its anchor, so nothing can move it")
     return errors
 
 

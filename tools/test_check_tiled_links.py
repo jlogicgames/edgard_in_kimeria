@@ -314,5 +314,44 @@ class DecorLinksTest(unittest.TestCase):
         self.assertEqual(('bush',), links.decor_kinds())
 
 
+CEILING = '<object id="8" x="0" y="0" width="400" height="16"/>'
+STONE = '<object id="5" name="Stone" type="FallingStone" x="120" y="16" width="16" height="16"/>'
+
+
+def vine(box='x="100" y="16" width="8" height="40"'):
+    return f'<object id="6" name="Vine" type="HangingVine" {box}/>'
+
+
+def vine_errors(text):
+    return [e for e in check(text) if 'HangingVine' in e]
+
+
+class HangingVineLinksTest(unittest.TestCase):
+    def test_a_vine_hanging_from_a_ceiling_block_near_a_stone_passes(self):
+        self.assertEqual([], vine_errors(tmx(vine() + STONE, CEILING + FLOOR)))
+
+    def test_a_vine_that_does_not_hang_from_anything_is_named(self):
+        self.assertIn("neither the room's top nor the bottom of a solid block",
+                      vine_errors(tmx(vine('x="100" y="20" width="8" height="40"') + STONE, CEILING + FLOOR))[0])
+        self.assertIn('neither', vine_errors(tmx(vine('x="100" y="10" width="8" height="40"') + STONE, CEILING + FLOOR))[0])
+
+    def test_a_bad_size_fails(self):
+        self.assertIn('positive size', vine_errors(tmx(vine('x="100" y="16" width="0" height="0"') + STONE, CEILING))[0])
+
+    def test_a_vine_with_no_stone_in_reach_is_dead_art(self):
+        self.assertIn('no FallingStone', vine_errors(tmx(vine(), CEILING + FLOOR))[0])
+        far = '<object id="5" name="Stone" type="FallingStone" x="300" y="16" width="16" height="16"/>'
+        self.assertIn('no FallingStone', vine_errors(tmx(vine() + far, CEILING + FLOOR))[0])
+
+    def test_the_reach_is_read_from_the_java_class(self):
+        self.assertEqual(160.0, links.vine_reach())
+
+    def test_the_shipped_vines_pass_in_every_map(self):
+        shipped = sorted((links.ROOT / 'assets' / 'tiles').glob('forest-*.tmx'))
+        self.assertEqual(3, len(shipped))
+        for path in shipped:
+            self.assertEqual([], [e for e in links.check_map(path) if 'HangingVine' in e], path.name)
+
+
 if __name__ == '__main__':
     unittest.main()

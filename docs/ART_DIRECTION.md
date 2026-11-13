@@ -177,9 +177,9 @@ setting, D11), and no effect may hide a trap warning.
 
 ### Environment effects plan (#239)
 
-Plan approved by the author (revised after the review). **Status, 2026-11-12:** steps 1 to 3 of section 7 are built (the shake manager and
-its option, jump dust, ceiling grit); steps 4 and 5 (decor and vines) are still the plan, and the sections that describe them (2 to 5, 6) are
-unchanged plan text unless marked "built" or "as built". Author
+Plan approved by the author (revised after the review). **Status, 2026-11-12:** steps 1 to 5 of section 7 are built (the shake manager and
+its option, jump dust, ceiling grit, the `Decor` bush, the stone-linked `HangingVine`); the sections that describe them (2 to 5, 6) are
+plan text unless marked "built" or "as built". Author
 constraints: anything that is a *thing* (a vine, a bush, a flower) is a pre-drawn sprite or
 sprite-sheet animation through the art pipeline (nearest filter, at most 16 palette entries, binary
 alpha). Dust and grit are **particles**, the same category as the torch's flame, sparks, embers and
@@ -320,6 +320,37 @@ depends on it.
 
   `DecorTest` pins these counts and measures every bush against the floor line.
 
+##### Hanging vine (#239 step 5), as built
+
+- **Object.** Tiled type `HangingVine` in `SpawnPoints`, an 8×40 rectangle, no properties, drawn with the `decor-vine` frame
+  (`assets/images/objects/decor-vine.png`, source `art/objects/decor/vine.grid`, preview
+  `docs/references/forest-traps/decor-vine-preview.png`, layout `DECOR_SHEETS['vine']`). `entity/objects/HangingVine.java`, kept in
+  `Level.vines` (cleared with the room, updated in `updateWorld`, drawn right after the decor, so behind platforms, objects and the hero).
+  No collision, not an `Actionable`, not saved; the room rebuild recreates it at rest. World Y grows downward: `y` is the **top**
+  (anchor) edge and must be the room's ceiling line (or the bottom of a solid block); the vine hangs to `y + 40`.
+- **The stone link.** `FallingStone.onImpact(Runnable)` is called once from `landed()`; `Level.spawnFallingTrap` sets it to
+  `Level.groundShake(x, strength)`, which calls `HangingVine.shake(x, strength)` on every vine of the room. The vine sways only if
+  its anchor is within `HangingVine.REACH` = 160 px of the stone's centre; there is no explicit id property, the link is
+  geometric and `tools/check_tiled_links.py` requires a `FallingStone` of the same room within that reach (read from the Java
+  constant) so a vine that nothing can move fails the check. The branch (`FallingBranch`) does not shake vines. The doc's `fx.groundShake` is
+  `Level.groundShake`: with one listener a broadcast manager would be an empty indirection.
+- **Motion.** `angle = direction * A * exp(-t / 0.5 s) * sin(2 pi * 1.6 Hz * t)`, `A` = 14 degrees times the strength times
+  `(1 - distance / REACH)`, started away from the stone, ending after 1.6 s; a stronger running swing is never cut by a weaker
+  one. Deterministic, advances only in `update` (pause freezes it), rotation about the top centre as `ThornVine.render` does. No idle
+  sway. `ThornVine` is not shaken.
+- **Screen shake option.** With `SCREEN_SHAKE` off (`ScreenShake.enabled()`) the vines ignore the impact and stay still.
+- **Placement (by hand, in rooms that have a falling stone: a vine nothing can move would be dead art):**
+
+| Map | Vines | World x (left edge), y = room top (file y 16 in forest-2's SpawnPoints layer, offset -16) |
+| --- | --- | --- |
+| `forest-0` | 3 (stone room, stone at x 2544) | 2476, 2616, 2680 |
+| `forest-1` | 0 (no falling stone in this map) | none |
+| `forest-2` | 3 (canopy room, stone at x 2224) | 2146, 2286, 2346 |
+
+  Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line.
+- **Cost.** One rotated `batch.draw` per vine; the sheet is 8×40 px. `AllocationBudgetTest.hangingVinesSwayingThroughTheRealLevel` measures the allocation.
+- The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
+
 #### 5. Shared design
 
 - **One manager for events, per-object code for motion.** An `effects.EnvironmentFx` owned by `Level`
@@ -442,7 +473,7 @@ depends on it.
 | 2 | Jump dust: the dust `KimeriaParticleSystem`, the `Player.playerJump` hook and the dust sound | small (no art; the sound already exists). **Done (#285 step 5).** | #285 step 5 |
 | 3 | Ceiling grit: `KIND_GRIT` in `KimeriaParticleSystem`, the grit system, the lever hook, the rumble and grit sounds, the `kimeria-particles` skill update | small (no art; the sounds already exist). **Done (#285 step 5).** | #285 step 5 |
 | 4 | The one-kind `Decor` object and `decor-bush` only, with placement in all levels | medium (art plus map editing). **Done (#239 step 4).** | #239 |
-| 5 | Stone-linked `HangingVine` and `decor-vine`, placement in all levels | medium | #239 |
+| 5 | Stone-linked `HangingVine` and `decor-vine`, placement in all levels with a falling stone | medium. **Done (#239 step 5).** | #239 |
 
 **Who lands what.** #285 step 5 is the dust and grit particle work (plan steps 2 and 3), built on the
 `KimeriaParticleSystem` that #285 steps 2 to 4 already put on `main`; it adds `KIND_GRIT`. #239 owns the rest.
