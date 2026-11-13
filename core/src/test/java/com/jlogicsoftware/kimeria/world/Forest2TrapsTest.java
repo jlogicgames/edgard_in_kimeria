@@ -46,6 +46,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest2TrapsTest {
     private static final float STEP = 1f / 60f;
     // Authored geometry (docs/ROOMS.md, "forest-2 trap placement plan").
+    /** The false honey fungus (D63) stands at x 1672: the mastered hero takes off here (body right edge 22 px short of its cloud) and clears it. */
+    static final float FUNGUS_JUMP_X = 1621;
     static final float VINE_X = 1896, ROOT_X = 2064, STONE_X = 2224, EXIT_X = 2320, ENTRANCE_X = 1344, BAT_X = 1760;
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
@@ -150,12 +152,13 @@ class Forest2TrapsTest {
     private Run run(Level l, Plan plan, int maxFrames, float stopRight) {
         Player p = l.player;
         int lastJump = -2;
-        boolean jumpedStep = p.position.x > 1500, actionWasDown = false, wasMechanism = false;
+        boolean jumpedStep = p.position.x > 1500, jumpedFungus = p.position.x > FUNGUS_JUMP_X, actionWasDown = false, wasMechanism = false;
         for (int f = 0; f < maxFrames; f++) {
             held.clear(); pressed.clear();
             float r = bodyRight(l);
             boolean doJump = false, right = r < stopRight && f >= plan.delayFrames;
             if (!jumpedStep && p.position.x >= 1400 && p.isOnGround()) { doJump = true; jumpedStep = true; }
+            if (!jumpedFungus && p.position.x >= FUNGUS_JUMP_X && p.isOnGround()) { doJump = true; jumpedFungus = true; }
             if (plan.jumpRoot && r >= plan.rootJumpRight && r < plan.rootJumpRight + 6 && p.isOnGround() && f - lastJump > 1) doJump = true;
             if (right) held.add(Input.Keys.D);
             if (doJump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); lastJump = f; }

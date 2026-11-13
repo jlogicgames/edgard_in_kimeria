@@ -21,6 +21,9 @@ THORNS = ('ThornRoot', 'ThornTuft')
 # Explosive traps (D47): mirror ExplosiveTrap.problem (bypass = the thorn jump envelope, blast square clear of standing places).
 EXPLOSIVES = ('ExplosiveStump', 'ExplosiveRoot')
 BLAST_SIZE = 64.0
+# Honey fungus pair (D63, #295): mirror FungusTrap.problem (thorn jump envelope, zone off the entrance, lethal cloud kept clear).
+FUNGI = ('HoneyFungus', 'FalseHoneyFungus')
+FUNGUS_ZONE_ABOVE, FUNGUS_MIN_HARMLESS_ZONE, FUNGUS_CLEARANCE, FUNGUS_CLOUD = 32.0, 24.0, 48.0, 24.0
 # Rhythmic forest traps (D46). Mirrors Puffball.validate / ThornVine.validate / FallingPlatform.Skin in Java.
 PUFFBALL_SWELL_ASSISTED = 0.8 * 1.5  # TrapWarnings.DEFAULT_WARNING_SECONDS with the longer-warnings assist
 PUFFBALL_MIN_CALM = 0.8
@@ -281,6 +284,37 @@ def explosive_problems(o, collisions, spawn, room, standing):
     return []
 
 
+def fungus_problems(o, collisions, spawn, room, standing):
+    """Mirror of FungusTrap.problem. `standing` is a list of (name, (x, y, w, h)) places the hero must be able to stand."""
+    x, y, w, h = box(o)
+    if not (w > 0 and h > 0):
+        return ['needs positive bounds']
+    lethal = kind(o) == 'FalseHoneyFungus'
+    try:
+        zone = number(o, 'zone', MIN_ZONE)
+        left, right = number(o, 'zoneLeft', zone), number(o, 'zoneRight', zone)
+    except ValueError as e:
+        return [str(e)]
+    if left < 0 or right < 0 or left + right <= 0:
+        return ['needs a zone (zone, zoneLeft, zoneRight): not negative, at least one side used']
+    smallest = MIN_ZONE if lethal else FUNGUS_MIN_HARMLESS_ZONE
+    if (0 < left < smallest) or (0 < right < smallest):
+        return [f'needs each used zone side to be at least {int(smallest)} px (zone, zoneLeft, zoneRight; 0 leaves a side unused)']
+    open_floor = open_floor_problems(o, left, right, collisions, spawn, room)
+    if open_floor:
+        return open_floor
+    zone_box = [x - left, y - FUNGUS_ZONE_ABOVE, w + left + right, h + FUNGUS_ZONE_ABOVE]
+    if any(name == 'entrance' and overlaps(zone_box, area) for name, area in standing):
+        return ['has its trigger zone over the room entrance (the hero would start triggered)']
+    if lethal:
+        cloud = [x + w / 2 - FUNGUS_CLOUD / 2, y + h - FUNGUS_CLOUD, FUNGUS_CLOUD, FUNGUS_CLOUD]
+        wide = [cloud[0] - FUNGUS_CLEARANCE, cloud[1] - FUNGUS_CLEARANCE, cloud[2] + 2 * FUNGUS_CLEARANCE, cloud[3] + 2 * FUNGUS_CLEARANCE]
+        for name, area in standing:
+            if overlaps(wide, area):
+                return [f'has its spore cloud within {int(FUNGUS_CLEARANCE)} px of the room {name}']
+    return []
+
+
 def thorn_room(root, o):
     """The (x, y, w, h) of the room holding the object's centre, or the whole map, or None when the map has no size."""
     cx, cy = float(o.get('x', 0)) + float(o.get('width', 0)) / 2, float(o.get('y', 0)) + float(o.get('height', 0)) / 2
@@ -329,6 +363,12 @@ def check_map(path):
     for o in (o for o in spawn if kind(o) in EXPLOSIVES):
         errors.extend(f"{kind(o)} {describe(o)} {e}"
                       for e in explosive_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o)))
+    for o in collisions:
+        if kind(o) in FUNGI:
+            errors.append(f"{describe(o)}: {kind(o)} is in the Collisions layer; traps must be in SpawnPoints")
+    for o in (o for o in spawn if kind(o) in FUNGI):
+        errors.extend(f"{kind(o)} {describe(o)} {e}"
+                      for e in fungus_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o)))
     for trigger in (o for o in spawn if kind(o) == 'Trigger'):
         target = prop(trigger, 'target').strip()
         if target:

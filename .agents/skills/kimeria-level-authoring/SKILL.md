@@ -46,6 +46,13 @@ properties there rather than assuming libGDX's standard tiled loader behavior.
 - `HangingVine` (SpawnPoints, 8x40, no properties) is cosmetic scenery that sways when a falling stone lands within 160 px:
   place it with `y` = the room's top (add 16 in forest-2's offset SpawnPoints layer) and a `FallingStone` in the same room
   within reach; `tools/check_tiled_links.py` rejects a vine that hangs from nothing or that no stone can move. A map without a stone gets no vine.
+- `HoneyFungus` (harmless) and `FalseHoneyFungus` (lethal spore cloud) (SpawnPoints, 24x16, `y = floor - 16`, add 16 in forest-2's offset
+  layer; optional `zone` / `zoneLeft` / `zoneRight` in px, default 64, at least 64 for the lethal one and 24 for the harmless one, 0 leaves a
+  side unused) swell for the shared `TrapWarnings` duration when the hero enters the zone, then burst once and are spent (D63). Both need the
+  thorn jump envelope (64 px of floor either side, 96 px of free height), a zone off the entrance, and the lethal one a cloud
+  (24x24, bottom on the floor line, centred) 48 px clear of the entrance, exit, checkpoints and other lethal areas; the load and
+  `tools/check_tiled_links.py` enforce the first three, `HoneyFungusTest` the distance to mobs. A route that walks the floor past the lethal one must jump
+  the cloud or wait: extend the mastered-route tests, never loosen them.
 - Keep existing object IDs stable when moving pickups: secured collection uses
   identity. Allocate unique IDs for additions and maintain TMX ID counters.
 - Seal boundaries so players reach the intended exit instead of entering an

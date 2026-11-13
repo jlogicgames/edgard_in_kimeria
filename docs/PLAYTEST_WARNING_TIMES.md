@@ -68,6 +68,7 @@ constant each class passes to `TrapWarnings.duration`.
 | Bomb (`Bomb`, D51/D60) | `DEFAULT_WARNING_SECONDS` | `forest-2` room `forest-entry`, x 656 | separate type, same warning |
 | Falling platform (`FallingPlatform`, also the rotten log) | `FALLING_PLATFORM_SECONDS` (1 s) | `forest-0` room `forest-0-traps`, x 4096; `forest-1` rotten log x 1088 (and four platforms at x 96 to 192); `forest-2` `forest-canopy`, x 1568 | the only family with its own constant |
 | Rhythmic: spore puffball (`Puffball`) | the swell *is* `DEFAULT_WARNING_SECONDS`; the cycle (`period`) is authored | `forest-1`, x 944 | `Puffball.validate` sizes the calm against the *longest assisted* swell |
+| Proximity, burst (`FungusTrap`): honey fungus (harmless) and false honey fungus (lethal cloud) | `DEFAULT_WARNING_SECONDS` (the swell) | `forest-0` rooms `forest-0-lever` (x 150) and `forest-0-wall` (x 1804), harmless; `forest-2` `forest-canopy`, x 1672, lethal | D63; the lethal one's cloud is 1 s, not scaled |
 | Rhythmic: swinging thorn vine | none; a pendulum, never scaled | `forest-2` `forest-canopy`, x 1896 | a control: no timed warning to change |
 
 (`Bomb` at x 656 in `forest-2.tmx` is in `forest-entry`; `forest-2` also holds the boss room.)

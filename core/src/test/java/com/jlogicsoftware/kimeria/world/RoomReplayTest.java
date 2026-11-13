@@ -35,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Executable route measurements for #70; the protocol and routes live in docs/ROOMS.md. */
 class RoomReplayTest {
     private static final float REAL_STEP = 1f / 60f;
+    /** Hero x (frame position) of the take-off over the false honey fungus (D63, cloud x 1672..1696) for a route that walks the floor: body right edge 43 px short of the cloud. A route that flies over it on the falling platform (first pass) needs none. */
+    private static final float FUNGUS_JUMP = 1600;
     private static final float REQUIRED_LIMIT = 20f;
     private static final float COLLECTION_LIMIT = 30f;
 
@@ -110,7 +112,7 @@ class RoomReplayTest {
         measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860, 940});
     }
     @Test void forestCanopyRequiredRouteFitsTwentySeconds() {
-        measure("forest-canopy", true, false, 0, new float[]{1400});
+        measure("forest-canopy", true, false, 0, new float[]{1400, FUNGUS_JUMP});
     }
     @Test void forestEntryAllCollectablesFitThirtySeconds() {
         measure("forest-entry", false, true, 40, new float[]{95, 140, 300, 535, 860, 940});
@@ -141,7 +143,9 @@ class RoomReplayTest {
             assertTrue(entry <= COLLECTION_LIMIT);
             assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT));
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
-            float canopy = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555, 1640}, true);
+            // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
+            float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
+            float canopy = replay(level, "forest-canopy", false, 0, jumps, true);
             assertTrue(canopy <= COLLECTION_LIMIT);
             assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.MUSHROOM));
             level.prepareHealer();
@@ -187,7 +191,7 @@ class RoomReplayTest {
         assertTrue(platform.isRemoved(), "Collection return preserves the secured collapsed platform state");
         assertTrue(level.fallingPlatforms.isEmpty(), "Removed platform must be pruned from live collision/update lists");
 
-        float secondPass = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555});
+        float secondPass = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, FUNGUS_JUMP});
         assertTrue(secondPass <= COLLECTION_LIMIT);
         assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
             "The optional Mushroom may be missed when its one-shot route support remains collapsed");
@@ -207,6 +211,7 @@ class RoomReplayTest {
         assertTrue(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
             "The fresh-level full artifact route can still collect the optional Mushroom");
     }
+
 
     private void secureCombatAndCoins(Level level) {
         for (var object : new java.util.ArrayList<>(level.objects)) {

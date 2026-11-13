@@ -289,6 +289,62 @@ class ExplosiveTrapLinksTest(unittest.TestCase):
             self.assertTrue(links.check_map(TILES / f'explosive-{name}.tmx'), f'explosive-{name}.tmx must fail like the Java loader does')
 
 
+class HoneyFungusLinksTest(unittest.TestCase):
+    """D63: mirror of FungusTrap.problem (thorn jump envelope, zone off the entrance, the lethal cloud kept 48 px clear)."""
+    FLOOR = '<object id="9" x="0" y="320" width="640" height="48"/>'
+    ROOM = ('<objectgroup name="Rooms"><object name="one" type="Room" x="0" y="0" width="640" height="368"/>'
+            '<object name="one" type="RoomStart" x="32" y="272"><point/></object>'
+            '<object name="one" type="RoomExit" x="600" y="272" width="32" height="48"/></objectgroup>')
+
+    @staticmethod
+    def fungus(kind_='FalseHoneyFungus', x=288, props=''):
+        body = f'<properties>{props}</properties>' if props else ''
+        return f'<object id="3" type="{kind_}" x="{x}" y="304" width="24" height="16">{body}</object>'
+
+    def run_map(self, trap, spawn='', collisions=FLOOR, rooms=ROOM):
+        return check(tmx(trap + spawn, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_both_types_on_open_floor_pass(self):
+        self.assertEqual([], self.run_map(self.fungus()))
+        self.assertEqual([], self.run_map(self.fungus('HoneyFungus')))
+        self.assertEqual([], self.run_map(self.fungus(), rooms=''))
+
+    def test_no_bypass_without_floor_run_up_or_headroom(self):
+        self.assertIn('open floor', self.run_map(self.fungus(), collisions='')[0])
+        pit = '<object id="9" x="0" y="320" width="300" height="48"/><object id="8" x="400" y="320" width="240" height="48"/>'
+        self.assertIn('open floor', self.run_map(self.fungus(), collisions=pit)[0])
+        ceiling = '<object id="8" x="200" y="240" width="200" height="16"/>'
+        self.assertIn('free height', self.run_map(self.fungus(), collisions=self.FLOOR + ceiling)[0])
+        self.assertIn('free height', self.run_map(self.fungus('HoneyFungus'), collisions=self.FLOOR + ceiling)[0])
+
+    def test_the_lethal_one_needs_zone_sides_of_64_and_the_harmless_one_only_24(self):
+        small = '<property name="zone" value="40"/>'
+        self.assertIn('at least 64', self.run_map(self.fungus(props=small))[0])
+        self.assertEqual([], self.run_map(self.fungus('HoneyFungus', props=small)))
+        tiny = '<property name="zone" value="16"/>'
+        self.assertIn('at least 24', self.run_map(self.fungus('HoneyFungus', props=tiny))[0])
+        self.assertIn('plain number', self.run_map(self.fungus(props='<property name="zone" value="NaN"/>'))[0])
+        self.assertIn('needs a zone', self.run_map(self.fungus(props='<property name="zone" value="-5"/>'))[0])
+
+    def test_the_zone_may_not_cover_the_entrance_and_the_cloud_keeps_48_px_from_standing_places(self):
+        self.assertIn('entrance', self.run_map(self.fungus(x=100))[0])
+        # Harmless with a short zone: 24 px of zone clears the entrance body (x 50..61) at x 100, the lethal one never would.
+        self.assertEqual([], self.run_map(self.fungus('HoneyFungus', x=100, props='<property name="zone" value="30"/>')))
+        self.assertIn('exit', self.run_map(self.fungus(x=540, props='<property name="zoneRight" value="0"/><property name="zoneLeft" value="64"/>'))[0])
+        checkpoint = '<object id="7" type="Checkpoint" x="350" y="272" width="16" height="32"/>'
+        self.assertIn('checkpoint', self.run_map(self.fungus(), spawn=checkpoint)[0])
+        self.assertEqual([], self.run_map(self.fungus(), spawn=checkpoint.replace('x="350"', 'x="372"')))
+
+    def test_the_envelope_stays_inside_the_room_and_size_is_required(self):
+        self.assertIn('inside its room', self.run_map(self.fungus(x=10))[0])
+        self.assertIn('positive bounds', self.run_map(self.fungus().replace('width="24"', 'width="0"'))[0])
+        self.assertTrue(any('Collisions layer' in e for e in check(tmx(collisions=self.FLOOR + self.fungus()))))
+
+    def test_the_shipped_maps_pass_with_the_fungi_placed(self):
+        for name in ('forest-0', 'forest-2'):
+            self.assertEqual([], links.check_map(links.MAPS / f'{name}.tmx'))
+
+
 FLOOR = '<object id="9" x="0" y="320" width="400" height="48"/>'
 
 

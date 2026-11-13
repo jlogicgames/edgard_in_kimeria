@@ -30,6 +30,7 @@ HOT_METHODS = {
     ('effects/EnvironmentFx.java', 'emitGrit'): 'called from update while a grit burst is emitting',
     ('effects/EnvironmentFx.java', 'dustPuff'): 'called from Player.playerJump, which runs inside the player update',
     ('effects/EnvironmentFx.java', 'ceilingGrit'): 'called from Level.activateTrigger inside the player update',
+    ('entity/objects/HoneyFungus.java', 'burst'): 'called from FungusTrap.update when the swell ends (writes the spores into the fixed pool)',
 }
 # (file, method, kind) -> what the excluded code carries and why fixing it would lose that.
 # Existing hot-path allocations are NOT listed: the check only looks at changed lines, so touching one means fixing it.

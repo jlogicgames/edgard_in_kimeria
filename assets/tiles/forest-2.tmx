@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="188" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="140">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="188" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="141">
  <properties>
   <property name="fireflies" type="int" value="24"/>
   <property name="healerBeforeBoss" type="bool" value="true"/>
@@ -177,6 +177,7 @@
   <object id="138" name="Vine" type="HangingVine" x="2286" y="16" width="8" height="40"/>
   <object id="139" name="Vine" type="HangingVine" x="2346" y="16" width="8" height="40"/>
   <object id="125" name="Deadline" type="Deadline" x="-608" y="384" width="4320" height="16"/>
+  <object id="140" name="False Honey Fungus" type="FalseHoneyFungus" x="1672" y="320" width="24" height="16"/>
   <object id="130" name="Bush" type="Decor" x="400" y="312" width="32" height="24">
    <properties>
     <property name="kind" value="bush"/>

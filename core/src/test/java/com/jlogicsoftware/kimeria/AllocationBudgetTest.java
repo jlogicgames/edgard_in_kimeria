@@ -8,6 +8,9 @@ import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.effects.Torch;
+import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
+import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
+import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
@@ -80,6 +83,13 @@ class AllocationBudgetTest {
     static final double DECOR_BRUSH_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#239 step 5): one rotated {@code batch.draw} per vine, the frame region held in the object. */
     static final double HANGING_VINE_CEILING = 8;
+    /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi idling, swelling and bursting 16 golden spores on a {@code KimeriaParticleSystem}, update and render through the batch. */
+    static final double HONEY_FUNGUS_CEILING = 8;
+    /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. */
+    static final double FALSE_HONEY_FUNGUS_CEILING = 8;
+    private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200;
+    private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64;
+    private static final float HERO_WIDTH = 11, HERO_HEIGHT = 22;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
 
@@ -248,5 +258,45 @@ class AllocationBudgetTest {
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
         font.dispose();
         assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
+    }
+
+    /**
+     * Ten honey fungi, each entered by the hero in turn every {@value #FUNGUS_CYCLE_FRAMES} frames (one swell of 48 frames, a burst of
+     * 16 golden spores that live up to 1 s, then spent): idle, trigger, swell, burst, particle update and the particle render through the
+     * batch. Every object is built before the measurement: a fungus fires once, so the scene needs one per cycle.
+     */
+    @Test void honeyFungusBurstsInTurn() {
+        HoneyFungus[] fungi = new HoneyFungus[FUNGUS_CYCLES];
+        Rectangle hero = new Rectangle(0, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        for (int k = 0; k < fungi.length; k++)
+            fungi[k] = new HoneyFungus(harness.assets(), harness.game().trapWarnings(), k * FUNGUS_SPACING, FUNGUS_FLOOR - FUNGUS_HEIGHT,
+                FUNGUS_WIDTH, FUNGUS_HEIGHT, FUNGUS_ZONE, FUNGUS_ZONE, () -> hero);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = Math.min(i / FUNGUS_CYCLE_FRAMES, fungi.length - 1);
+            hero.x = i % FUNGUS_CYCLE_FRAMES < FUNGUS_ENTER_FRAME ? -FUNGUS_SPACING / 2f : k * FUNGUS_SPACING;
+            for (HoneyFungus f : fungi) { f.update(STEP); f.render(batch); }
+            peak[0] = Math.max(peak[0], fungi[k].spores().count());
+        });
+        assertTrue(peak[0] >= HoneyFungus.SPORES_PER_BURST, "the spores must actually burst in this scenario: " + peak[0]);
+        assertTrue(fungi[0].isSpent() && fungi[FUNGUS_CYCLES - 1].state() != FungusTrap.State.IDLE, "the cycle must run to the end");
+        assertWithinBudget("honey fungus bursts", HONEY_FUNGUS_CEILING, bytes);
+    }
+
+    /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
+    @Test void falseHoneyFungusCloudsInTurn() {
+        FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
+        Rectangle hero = new Rectangle(0, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        for (int k = 0; k < fungi.length; k++)
+            fungi[k] = new FalseHoneyFungus(harness.assets(), harness.game().trapWarnings(), k * FUNGUS_SPACING, FUNGUS_FLOOR - FUNGUS_HEIGHT,
+                FUNGUS_WIDTH, FUNGUS_HEIGHT, FUNGUS_ZONE, FUNGUS_ZONE, () -> hero);
+        boolean[] lethal = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = Math.min(i / FUNGUS_CYCLE_FRAMES, fungi.length - 1);
+            hero.x = i % FUNGUS_CYCLE_FRAMES < FUNGUS_ENTER_FRAME ? -FUNGUS_SPACING / 2f : k * FUNGUS_SPACING;
+            for (FalseHoneyFungus f : fungi) { f.update(STEP); f.render(batch); lethal[0] |= f.lethalTo(hero); }
+        });
+        assertTrue(lethal[0], "the cloud must actually be lethal to the standing hero in this scenario");
+        assertWithinBudget("false honey fungus clouds", FALSE_HONEY_FUNGUS_CEILING, bytes);
     }
 }

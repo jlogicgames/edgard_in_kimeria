@@ -107,12 +107,17 @@ class TutorialLevelTest {
         }
     }
 
-    /** Not gameplay objects: the Deadline and Decor scenery (#239 step 4: no collision, no hazard, no enemy), left out of the per-room object counts. */
-    private static final Set<String> COSMETIC = Set.of("Deadline", "Decor", "HangingVine");
+    /**
+     * Not gameplay objects, left out of the per-room object counts: the Deadline, the Decor scenery and vines (#239: no collision, no
+     * hazard, no enemy) and the harmless HoneyFungus (D63: a trigger zone and a golden particle burst, no hitbox, nothing reads it;
+     * it is counted separately below). The lethal FalseHoneyFungus is a hazard and is not listed.
+     */
+    private static final Set<String> COSMETIC = Set.of("Deadline", "Decor", "HangingVine", "HoneyFungus");
 
     @Test void forestZeroHasNoEnemiesHazardsOrLooseObstacles() {
         TiledMapData map = map("forest-0");
-        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint", "Decor", "HangingVine");
+        // D63 (#295): the harmless honey fungus is scenery that bursts into golden spores; the lethal FalseHoneyFungus must not appear here.
+        Set<String> allowed = Set.of("Player", "Deadline", "Checkpoint", "Decor", "HangingVine", "HoneyFungus");
         // D48: one trap in each of rooms 1-4: thorn root, falling branch, falling stone, exploding stump.
         java.util.Map<Integer, String> newTraps = java.util.Map.of(1, "ThornRoot", 2, "FallingBranch", 3, "FallingStone", 4, "ExplosiveStump");
         Set<String> lessonTypes = Set.of("Trigger", "Actionable", "Ladder", "Escalator", "Stone");
@@ -129,6 +134,8 @@ class TutorialLevelTest {
             assertTrue(allowed.contains(o.type) || lesson || trap, "Unexpected object: " + o.type);
             assertFalse(Set.of("RedMob", "Boss").contains(o.type), "forest-0 has no monsters");
         }
+        var fungi = map.layer("SpawnPoints").stream().filter(o -> "HoneyFungus".equals(o.type)).map(layout::owner).toList();
+        assertEquals(java.util.List.of(0, 2), fungi, "one harmless honey fungus in the lever room and one in the wall room, none elsewhere (D63)");
         var room0 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 0).toList();
         assertEquals(1, room0.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
         var actionables = room0.stream().filter(o -> "Actionable".equals(o.type)).toList();
