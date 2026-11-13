@@ -49,7 +49,7 @@ public interface GameContext {
 
     float soundVolume();
 
-    /** name is one of: jump, bounce, collect, hit, disappear, boss_hit, boss_restore */
+    /** name is one of: jump, bounce, collect, hit, disappear, boss_hit, boss_restore, explosion */
     void playSound(String name);
 
     /** Plays {@code name} at {@code volumeScale} (0..1) of the player's sound volume; the default ignores the scale. */

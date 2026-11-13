@@ -8,7 +8,7 @@ Writes plain PCM 16-bit mono WAV files (the only format libGDX's WAV decoder rea
     python3 tools/audio/generate_sounds.py --out DIR  # write into DIR instead (used by the unit test)
 
 Outputs: jump.wav (breathy throaty "ha!"), the hero's voice set (hit.wav, bounce.wav, collect.wav, disappear.wav,
-dust_puff.wav; issue #313 batch 1), the boss and menu voices (boss_hit.wav, boss_restore.wav, button_click.wav; batch 2), the environment (wall_rumble.wav loop, grit_fall.wav; batch 3), keepalive.wav (near-silent loop). The crude, buzzy
+dust_puff.wav; issue #313 batch 1), the boss and menu voices (boss_hit.wav, boss_restore.wav, button_click.wav; batch 2), the environment (wall_rumble.wav loop, grit_fall.wav; batch 3), explosion.wav (#324), keepalive.wav (near-silent loop). The crude, buzzy
 character is deliberate (see docs/SOUND_DIRECTION.md).
 """
 from __future__ import annotations
@@ -120,6 +120,45 @@ COLLECT_RMS_DB = -19.0
 # Checkpoint (was disappear.wav): a long rising glide /u/ to /a/ with a little vibrato, "oo-aah".
 DISAPPEAR_VOICE = Voice(1701, 0.55, (170.0, 330.0), FORMANTS_U, FORMANTS_A, -18.0, asp_len=0.04, asp_level=0.6,
                         attack=0.080, tau=0.350, release=0.120, jitter=0.02, vibrato=(6.0, 0.03))
+
+
+# ---------------------------------------------------------------- explosion (#324): a low, rough "BOOM / fwoomph"
+# A very low, fried voice (a falling grunt in the /o/-/u/ range, the same render_voice recipe) under a dark noise burst
+# that dies fast, plus a short sub tail. It plays only for a bomb and an explosive stump/root, so it is rare and may be
+# a little fuller (longer, RMS 1.5 dB above the hero's hit) than the frequent effects; the peak cap is the usual one.
+EXPLOSION_VOICE = Voice(3501, 0.45, (85.0, 38.0), FORMANTS_UH, FORMANTS_U, -15.0, asp_len=0.030, asp_level=0.6,
+                        attack=0.012, tau=0.160, release=0.060, jitter=0.08, rough=1.0, rough_start=0.15, lowpass=600.0)
+EXPLOSION_SEED = 3502
+EXPLOSION_RMS_DB = -15.0     # fuller than the voice set (-16.5 .. -19.4) on purpose: rare, and an explosion
+EXPLOSION_BURST_ATTACK = 0.010   # s, the burst swells in (no click)
+EXPLOSION_BURST_TAU = 0.060      # s, decay of the noise burst
+EXPLOSION_BURST_LOWPASS_HZ = 500.0   # dark, a whoomph and not a hiss
+EXPLOSION_BURST_GAIN = 0.9   # burst peak relative to the voiced body peak
+EXPLOSION_SUB_HZ = (60.0, 34.0)  # sub tail, falling
+EXPLOSION_SUB_TAU = 0.140    # s
+EXPLOSION_SUB_GAIN = 0.7     # relative to the voiced body peak
+EXPLOSION_SUB_DELAY = 0.020  # s, the sub starts just after the burst
+
+
+def explosion() -> list[float]:
+    body = render_voice(EXPLOSION_VOICE)
+    n = len(body)
+    peak = max(abs(a) for a in body) or 1.0
+    rng = random.Random(EXPLOSION_SEED)
+    burst = lowpass(lowpass(noise(rng, n), EXPLOSION_BURST_LOWPASS_HZ), EXPLOSION_BURST_LOWPASS_HZ)
+    env = envelope(n, EXPLOSION_BURST_ATTACK, EXPLOSION_BURST_TAU)
+    burst = [b * e for b, e in zip(burst, env)]
+    bp = max(abs(b) for b in burst) or 1.0
+    nd = n_samples(EXPLOSION_SUB_DELAY)
+    sub_env = envelope(n - nd, 0.010, EXPLOSION_SUB_TAU)
+    sub, phase = [0.0] * n, 0.0
+    for i in range(n - nd):
+        phase += lerp(EXPLOSION_SUB_HZ[0], EXPLOSION_SUB_HZ[1], i / (n - nd)) / SAMPLE_RATE
+        sub[nd + i] = math.sin(2.0 * math.pi * phase) * sub_env[i]
+    mix = [a + EXPLOSION_BURST_GAIN * peak * b / bp + EXPLOSION_SUB_GAIN * peak * c for a, b, c in zip(body, burst, sub)]
+    mp = max(abs(a) for a in mix) or 1.0
+    mix = [math.tanh(HA_DRIVE * a / mp) for a in mix]
+    return finish_rms(mix, EXPLOSION_RMS_DB)
 
 
 # ---------------------------------------------------------------- wall rumble: a very low growling voice (batch 3 of #313)
@@ -468,7 +507,7 @@ def grit_fall() -> list[float]:
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
-               "grit_fall.wav": grit_fall, "keepalive.wav": keepalive}
+               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "keepalive.wav": keepalive}
 
 
 def generate(out_dir: Path) -> list[Path]:

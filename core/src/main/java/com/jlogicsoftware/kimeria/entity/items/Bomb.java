@@ -70,7 +70,7 @@ public class Bomb extends Entity {
 
     private void explode() {
         state = State.EXPLODED;
-        if (game.playSounds()) game.playSound("bounce");
+        if (game.playSounds()) game.playSound("explosion");
         Rectangle body = hitboxBounds();
         spawner.accept(new BombExplosionEffect(centerX(), body.y + body.height, BLAST_SIZE, 0.7f));
         removeFromParent();

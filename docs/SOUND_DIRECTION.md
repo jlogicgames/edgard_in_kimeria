@@ -33,7 +33,7 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13.
 |---|---|---|---|---|---|
 | `jump.wav` | synth, voice | 0.15 s | -8.0 / -17.0 | ground jump (`Player.playerJump`) | done |
 | `hit.wav` | inherited | 0.08 s | -10.8 / -15.7 | the hero dies (`Player.die`, every cause including a fall into a pit) | 1 |
-| `bounce.wav` | inherited | 0.27 s | -10.3 / -13.5 | **five uses:** stomp or sword kill of an enemy (`Enemy`), stomp on a boss and a boss's hurt reaction (`Boss`), a bomb exploding (`Bomb`), an explosive stump/root exploding (`Level`) | 1 |
+| `bounce.wav` | synth, voice ("heh!") | 0.20 s | -11.9 / -17.5 | **three uses:** stomp or sword kill of an enemy (`Enemy`), stomp on a boss and a boss's hurt reaction (`Boss`) | 1 |
 | `collect.wav` | inherited | 0.35 s | 0.0 / -13.5 | every pickup (`Collectable`: coins, items; `FireballRefill`) | 1 |
 | `disappear.wav` | inherited | 0.57 s | -5.0 / -14.3 | reaching a checkpoint (`Player.reachedCheckpoint`) | 1 |
 | `dust_puff.wav` | synth, noise | 0.10 s | -14.0 / -31.9 | jump scuff, and the landing at 0.6 volume (`Player`) | 1 |
@@ -42,6 +42,7 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13.
 | `button_click.wav` | inherited | 0.55 s | -0.5 / -29.5 | menu click, and the hover sound at 0.35 volume (`KimeriaGame`) | 2 |
 | `wall_rumble.wav` | synth, noise + sub, loop (batch 3: growling voice, -9.2 / -20.0) | 1.0 s | -9.0 / -17.8 | looped while a lever moves a wall (`Level.activateTrigger`) | 3 |
 | `grit_fall.wav` | synth, noise ticks (batch 3: whispered patter, -12.0 / -30.1) | 0.50 s | -12.0 / -36.7 | grit falls when a lever moves a wall (`Level`) | 3 |
+| `explosion.wav` | synth, voice + noise burst + sub (#324) | 0.45 s | -7.2 / -15.0 | a bomb exploding (`Bomb.explode`), an explosive stump/root exploding (`Level`, the `ExplosiveTrap` callback) | accepted 2026-11-13 |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -50,9 +51,9 @@ Findings that shape the plan:
 - The inherited levels were all over the place (RMS from -13.5 to -30.9 dBFS; `collect` peaks at 0 dBFS, `button_click` at
   -0.5): the redo sets every effect by RMS against the jump (about -17 dBFS for prominent ones) with a peak cap.
 - There is **no separate sword or land sound**: a sword kill uses `bounce`, a landing uses `dust_puff` at 0.6 volume.
-  `bounce` is shared by five unrelated events (stomp, boss hurt, two explosions). A vocal "heh!" suits the stomp and the boss
-  hurt but is a poor explosion. **The bomb and the explosive stump/root explosions still use `bounce`**; whether they get
-  their own sound is open in #324 (a new sound and a call-site change).
+  `bounce` is shared by three events (stomp or sword kill, boss stomp, boss hurt). A vocal "heh!" suits those but is a poor
+  explosion, so **the bomb and the explosive stump/root explosions have their own `explosion.wav`** (#324, the author decided
+  yes; the file is accepted by the author 2026-11-13).
 
 ### Batching plan
 
@@ -106,6 +107,17 @@ Quiet background sounds sit well below (see each recipe).
   grains are scattered, and giving each a pitch would sound like a musical rattle, not falling grit. It shares the voice
   noise path (breath band, soft onset, dark). RMS -30.1 dBFS, peak -12.0 dBFS (the peak cap limits it: sparse grains have a
   high crest factor); before: 3.2 kHz clicks, RMS -36.7.
+
+### Explosion (#324, seed 3501 and 3502, accepted 2026-11-13)
+
+A low, rough, short "BOOM / fwoomph" in the same family: `render_voice` with a very low fried voice (85 -> 38 Hz, gruff /uh/
+closing to /u/, fry from 15 %, jitter 8 %, 600 Hz low-pass), plus a dark noise burst (two passes of a 500 Hz low-pass, 10 ms
+swell, 60 ms decay) and a falling sine sub tail (60 -> 34 Hz, 140 ms decay, starting 20 ms later), summed, tanh drive 3.0,
+then RMS-matched. 0.45 s, RMS -15.0 dBFS, peak -7.2 dBFS (centroid 165 Hz, 68 % of the energy under 400 Hz). **It is
+deliberately 2 dB fuller than the jump (-17.0)**: it plays only for a bomb or an explosive trap, so it is rare and may be
+big. `tools/test_generate_sounds.py` therefore keeps it out of the voice set's 3 dB spread (`EXPLOSION_RMS_DB`) and
+requires it to stay within that spread of the jump. It is also covered by the every-effect-audible test. If it is too
+loud, too dull or too long, change `EXPLOSION_RMS_DB`, `EXPLOSION_VOICE` or the burst and sub constants.
 
 ### Batch 1: the hero's voice set (#313, seeds 1401-1701)
 
