@@ -439,8 +439,8 @@ player has to read the difference:
   must be distinguishable only on a close look.
 - **Objects.** Two new Tiled object types, `HoneyFungus` and `FalseHoneyFungus`, sharing one base class
   (proximity, swell, burst), not an extension of `Puffball` (D46), which is a rhythmic timer trap with no
-  proximity and no harmless variant. The lethal cloud may reuse the `TRAP_SPORES` sheet and the puffball's
-  cloud hitbox code.
+  proximity and no harmless variant. The lethal cloud is drawn by `SporeCloud` (below) and shares the puffball's
+  lethal-hitbox entry, not its sprite.
 - **Static look-alikes (author, 2026-11-12; [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299)).**
   Scenery mushrooms that never react and can never kill, so that the player stops and reads the room (D26) before
   running. They differ from the active ones in shape or colour on purpose (a new shape makes the first meeting
@@ -458,13 +458,12 @@ player has to read the difference:
   placements already fixed in D58 and D59 stay untouched.
   **As built:** harmless ones in `forest-0-lever` (x 150) and `forest-0-wall` (x 1804), the false one in `forest-2` `forest-canopy` (x 1672; `forest-entry` has no usable floor). Coordinates and reasons are in D63.
 
-**First version and later polish (author, 2026-11-12).** The first version uses sprites for the poisonous
-cloud, as the existing spore puffball does (`trap-spores`, D46). After the MVP, during polishing, the sprite is
-replaced by particles and shaders so that it looks "super beautiful"; this is a mandatory task, tracked by
+**First version and later polish (author, 2026-11-12).** The first version used the `trap-spores` sprite for the poisonous
+cloud, as the existing spore puffball does (D46). During polishing the sprite was replaced by particles and shaders so that it looks "super beautiful"; this mandatory task was tracked by
 [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296) (part of the polish of
 [#142](https://github.com/jlogicgames/edgard_in_kimeria/issues/142)).
 
-**#296 first prototype (built):** `FalseHoneyFungus` now draws the cloud as `SporeCloud` (34 lime haze puffs and 12 glow specks, all inside the 24x24 lethal rectangle; look in [ART_DIRECTION.md](ART_DIRECTION.md)), behind `FalseHoneyFungus.PARTICLE_CLOUD`; an optional swirling shader haze (`SporeCloud.SHADER_LAYER`) is off by default. Hitbox, 1.0 s life, telegraph and timing are unchanged. Remaining, tracked in [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296): the author's review in the running game and a browser, then removing the sprite path and the `trap-spores` use here.
+**#296 spore cloud (built, approved by the author):** `FalseHoneyFungus` draws the cloud as `SporeCloud` only (34 lime haze puffs and 12 glow specks, all inside the 24x24 lethal rectangle, over the swirling shader haze `spore_cloud.frag`; look in [ART_DIRECTION.md](ART_DIRECTION.md)). If a context cannot compile the shader, `Shaders.tryLoad` returns null and the particles alone are drawn. The sprite path is removed; the `trap-spores` sheet stays because the spore puffball (D46) still draws it. Hitbox (`FalseHoneyFungus.CLOUD_SIZE`, 24x24, independent of any sprite), 1.0 s life, telegraph and timing are unchanged. Tracked by [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296), closed with this change.
 
 ## Tablet in the original vs the remake
 

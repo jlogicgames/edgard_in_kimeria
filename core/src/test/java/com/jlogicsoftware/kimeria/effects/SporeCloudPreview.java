@@ -68,7 +68,7 @@ class SporeCloudPreview {
                 float[] c = wy >= FLOOR ? GROUND.clone() : SKY.clone();
                 if (wy >= FLOOR - 16 + 4 && wy < FLOOR && Math.abs(wx - (lethal.x + lethal.width / 2)) < 9) c = MUSHROOM.clone();
                 px[j * size + i] = c;
-                if (SporeCloud.SHADER_LAYER && wx >= lethal.x && wx < lethal.x + lethal.width && wy >= lethal.y && wy < lethal.y + lethal.height)
+                if (wx >= lethal.x && wx < lethal.x + lethal.width && wy >= lethal.y && wy < lethal.y + lethal.height)
                     haze(c, (wx - lethal.x) / lethal.width, (wy - lethal.y) / lethal.height, f.stateTime(), swell, strength,
                         (f.getY() + 4 - lethal.y) / lethal.height);
             }

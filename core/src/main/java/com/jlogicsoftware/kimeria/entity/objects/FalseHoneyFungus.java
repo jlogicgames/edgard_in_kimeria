@@ -1,7 +1,6 @@
 package com.jlogicsoftware.kimeria.entity.objects;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
@@ -13,27 +12,21 @@ import java.util.function.Supplier;
 
 /**
  * The false honey fungus (D63, #295, D3): the look-alike whose burst is a lethal spore cloud. Tiled type
- * {@code FalseHoneyFungus}. For {@link #CLOUD_SECONDS} after the swell the {@code trap-spores} sprite (24x24, the lime cloud
- * of the puffball) covers {@link #cloudBounds()}, and the hero's body box overlapping that rectangle is instant death, the same
+ * {@code FalseHoneyFungus}. For {@link #CLOUD_SECONDS} after the swell a {@link SporeCloud} (lime particles plus an optional soft
+ * shader, #296) is drawn inside {@link #cloudBounds()}, and the hero's body box overlapping that rectangle is instant death, the same
  * entry as the bomb blast and the puffball ({@code Level.killOnLethalHazards}). Only while the cloud is live and only inside its
- * rectangle: the hitbox is exactly the drawn size. With {@link #PARTICLE_CLOUD} (the default, #296) the cloud is a {@link SporeCloud}
- * (lime particles plus a soft shader, all inside that rectangle) instead of the sprite; the hitbox and timing are the same. It fires once and is spent afterwards (D26): no ammunition, no re-arming.
+ * rectangle: nothing is drawn outside the hitbox (D5). It fires once and is spent afterwards (D26): no ammunition, no re-arming.
  * <p>
  * World Y grows downward: the cloud is centred on the mushroom and sits on its floor line, so its bottom edge is
  * {@code position.y + size.y} and its top is {@link #CLOUD_SIZE} px above that.
  */
 public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
     public static final float CLOUD_SECONDS = 1f;
-    /** Spore cloud sprite size ({@code SpriteSheets.TRAP_SPORES}); the lethal rectangle is the same size. */
+    /** Side of the lethal square (D63, D5): 24 px, defined here and independent of any sprite; the {@link SporeCloud} is drawn inside it. */
     public static final float CLOUD_SIZE = 24f;
-    /** The cloud is drawn as particles and a shader (#296); false draws the old {@code trap-spores} sprite, kept until the author has reviewed the new look. */
-    public static final boolean PARTICLE_CLOUD = true;
     private static final float TUFT_FROM_TOP_PX = 4f;
     private static final long SEED_MIX = 0x9E3779B97F4A7C15L;
-    private static final float CLOUD_FRAME_SECONDS = 0.25f;
-    private static final int CLOUD_FRAMES = 3;
 
-    private final TextureRegion[] cloud = new TextureRegion[CLOUD_FRAMES];
     private final Rectangle cloudBounds;
     private final SporeCloud particleCloud;
 
@@ -41,7 +34,6 @@ public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
                             float zoneLeft, float zoneRight, Supplier<Rectangle> heroBody) {
         super(assets, SpriteSheets.TRAP_FALSE_HONEY_FUNGUS, warnings, x, y, w, h, zoneLeft, zoneRight, heroBody);
         cloudBounds = cloudOf(x, y, w, h);
-        for (int i = 0; i < cloud.length; i++) cloud[i] = SpriteSheets.TRAP_SPORES.frame(assets, i, 0);
         particleCloud = new SporeCloud(cloudBounds.x, cloudBounds.y, CLOUD_SIZE, y + TUFT_FROM_TOP_PX, CLOUD_SECONDS,
             (Float.floatToIntBits(x) * SEED_MIX) ^ Float.floatToIntBits(y));
     }
@@ -68,7 +60,7 @@ public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
     protected float burstSeconds() { return CLOUD_SECONDS; }
 
     @Override
-    protected void burst() { if (PARTICLE_CLOUD) particleCloud.burst(); }
+    protected void burst() { particleCloud.burst(); }
 
     @Override
     protected void updateBurst(float dt) {
@@ -89,11 +81,6 @@ public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
     @Override
     protected void renderBurst(Batch batch) {
         if (!cloudLive()) return;
-        if (PARTICLE_CLOUD) {
-            particleCloud.render(batch, burstElapsed());
-            return;
-        }
-        int frame = (int) (burstElapsed() / CLOUD_FRAME_SECONDS) % cloud.length;
-        batch.draw(cloud[frame], cloudBounds.x, cloudBounds.y, cloudBounds.width, cloudBounds.height);
+        particleCloud.render(batch, burstElapsed());
     }
 }

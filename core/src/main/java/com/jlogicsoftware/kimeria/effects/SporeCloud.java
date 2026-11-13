@@ -8,9 +8,9 @@ import com.badlogic.gdx.math.RandomXS128;
 
 /**
  * The lethal spore cloud of the false honey fungus as particles plus a soft shader (#296, D63): a lime haze that swells out of the cap
- * tuft, drifts up and thins over {@code lifeSeconds}, and is gone when the hitbox is. Particles are the complete look, with an optional shader layer under them; both inside the lethal rectangle:
+ * tuft, drifts up and thins over {@code lifeSeconds}, and is gone when the hitbox is. The shader layer sits under the particles, which alone are a complete look if it cannot be built; both inside the lethal rectangle:
  * <ol>
- * <li>optional ({@link #SHADER_LAYER}, off): a swirling glow ({@code spore_cloud.frag}) on a quad that is exactly the rectangle and fades to nothing at its border;</li>
+ * <li>a swirling glow ({@code spore_cloud.frag}, skipped when the context cannot compile it) on a quad that is exactly the rectangle and fades to nothing at its border;</li>
  * <li>{@link #HAZE_COUNT} soft {@link KimeriaParticleSystem#KIND_SMOKE} puffs (normal blending, growing) and {@link #SPECK_COUNT}
  * {@link KimeriaParticleSystem#KIND_GLOW} specks (additive, shrinking) on a fixed pool.</li>
  * </ol>
@@ -24,11 +24,6 @@ import com.badlogic.gdx.math.RandomXS128;
  */
 public final class SporeCloud {
     public static final int HAZE_COUNT = 34, SPECK_COUNT = 12, PARTICLE_CAPACITY = HAZE_COUNT + SPECK_COUNT + 2;
-    /**
-     * The optional shader layer (#296): a swirling glow under the particles. Off by default: the particles alone are the complete look.
-     * It adds one continuous, swirling body of light between the puffs; it has not been checked in a browser, so it stays off until it is.
-     */
-    public static final boolean SHADER_LAYER = true;
     /** Debug runs (-Dkimeria.debug=true) log once, on the first burst, whether the shader layer loaded (never per frame). */
     private static final boolean DEBUG_LOG = Boolean.getBoolean("kimeria.debug");
     private static boolean logged;
@@ -82,11 +77,10 @@ public final class SporeCloud {
         }
     }
 
-    /** Once per run, debug only: says whether the optional shader layer is on and, if so, whether it compiled or fell back. */
+    /** Once per run, debug only: says whether the shader layer compiled or fell back. */
     private static void logShaderState() {
         logged = true;
-        String state = !SHADER_LAYER ? "off (SHADER_LAYER=false), particles only"
-            : Shaders.tryLoad(SHADER) != null ? "loaded, drawn under the particles" : "FAILED to build, falling back to particles only (see the Shaders error above)";
+        String state = Shaders.tryLoad(SHADER) != null ? "loaded, drawn under the particles" : "FAILED to build, falling back to particles only (see the Shaders error above)";
         if (Gdx.app != null) Gdx.app.log("SporeCloud", "first burst: shader layer " + state);
     }
 
@@ -133,7 +127,7 @@ public final class SporeCloud {
     /** Draws the shader haze then the particles; {@code elapsed} is the seconds since the burst. Restores the batch's shader, colour and blending. */
     public void render(Batch batch, float elapsed) {
         float progress = elapsed / lifeSeconds;
-        ShaderProgram shader = SHADER_LAYER ? Shaders.tryLoad(SHADER) : null;
+        ShaderProgram shader = Shaders.tryLoad(SHADER);
         if (shader != null) {
             ShaderProgram previous = batch.getShader();
             batch.setShader(shader);
