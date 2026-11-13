@@ -9,6 +9,7 @@ import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.physics.CollisionUtils;
 import com.jlogicsoftware.kimeria.physics.GravityBody;
+import com.jlogicsoftware.kimeria.world.Level;
 
 /** Port of Dart's {@code Enemy} base class. */
 public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements GravityBody {
@@ -17,6 +18,8 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
     private static final float BOUNCE_HEIGHT = 260f;
     /** How far (px) the player's feet may sit below the enemy's top on the previous frame and still count as above it. */
     private static final float STOMP_TOLERANCE = 2f;
+    /** Height of the body, from the top, where a sword hit lands: the same fraction as the boss's. */
+    private static final float BLOOD_IMPACT_Y_FRACTION = .45f;
 
     protected final Assets assets;
     protected final GameContext game;
@@ -118,6 +121,24 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
             player.collidedWithActor(false);
         }
     }
+
+    /**
+     * The player's sword reaches this enemy (#319). It defeats it like {@code collidedWithActor(true)} and, only when that
+     * hit is the kill, sprays one light burst of blood away from the hero. Already defeated enemies spray nothing, and
+     * fireballs, thrown stones and room resets keep calling {@code collidedWithActor} directly, so they never bleed.
+     */
+    public void hitBySword(Level level) {
+        if (isDefeated()) return;
+        collidedWithActor(true);
+        if (!pendingRemoval) return;
+        Rectangle body = hitboxBounds();
+        float direction = level.player.hitboxBounds().x + level.player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
+        level.mobBlood(direction > 0 ? body.x : body.x + body.width, body.y + body.height * BLOOD_IMPACT_Y_FRACTION,
+            direction, bloodFloorY(body));
+    }
+
+    /** Where this enemy's drops land: the bottom of its body, the floor line of something standing on the ground. */
+    protected float bloodFloorY(Rectangle body) { return body.y + body.height; }
 
     /** True when the player is moving down and was entirely above this enemy's hitbox on the previous frame. */
     private boolean stompedByPlayer() {

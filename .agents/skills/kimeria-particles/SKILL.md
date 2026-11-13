@@ -24,7 +24,7 @@ Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md
 | Need | Class | Notes |
 | --- | --- | --- |
 | A point flying in a straight line from start to end (flame, ember, spark, smoke, dust, falling grit) | `KimeriaParticleSystem` | `spawn(kind, startX, startY, endX, endY, life, size, r, g, b)`; position is `lerp(from, to, t)`, `t = 1 - life/maxLife` |
-| Ballistic drops with gravity that land on a floor and splash | `KimeriaBloodSystem` | `spray(originX, originY, direction, floorY, empowered)`; its own arrays, colour and gravity, so it does not fit the lerp model |
+| Ballistic drops with gravity that land on a floor and splash | `KimeriaBloodSystem` | `spray(originX, originY, direction, floorY, empowered)` (boss, 32/48 drops) and `sprayLight(...)` (12 drops, a monster killed by the sword, via `Level.mobBlood`); its own arrays, colour and gravity, so it does not fit the lerp model |
 
 `KimeriaParticleSystem` kinds (all multiply alpha by a peak of 0.7):
 

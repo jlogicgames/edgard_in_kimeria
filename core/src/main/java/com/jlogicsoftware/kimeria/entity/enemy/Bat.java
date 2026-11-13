@@ -1,5 +1,6 @@
 package com.jlogicsoftware.kimeria.entity.enemy;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
@@ -10,6 +11,8 @@ public class Bat extends Enemy<Bat.State> {
 
     private static final float BAT_SPEED = 0.03f;
     private static final float MOVE_SPEED = 50f;
+    /** Drops of a killed bat fall this far (px) below it, further than they travel in their life. */
+    private static final float BLOOD_FALL = 256f;
 
     public final boolean isVertical;
 
@@ -57,6 +60,10 @@ public class Bat extends Enemy<Bat.State> {
         else if (position.x <= rangeNeg) moveDirection = 1;
         position.x += moveDirection * MOVE_SPEED * dt;
     }
+
+    /** A bat hangs in the air: its drops fall past the body and fade out before they could land. */
+    @Override
+    protected float bloodFloorY(Rectangle body) { return body.y + body.height + BLOOD_FALL; }
 
     @Override
     protected void setDefeated() {

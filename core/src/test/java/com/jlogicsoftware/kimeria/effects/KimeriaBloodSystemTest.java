@@ -119,4 +119,26 @@ class KimeriaBloodSystemTest {
         for (int d = 0; d < blood.count(); d++) { values[2 * d] = blood.x(d); values[2 * d + 1] = blood.y(d); }
         return values;
     }
+
+    @Test void lightSprayIsTwelveSmallerSlowerDropsInTheSameDirectionRule() {
+        for (float direction : new float[]{-1, 1}) {
+            KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, SEED), boss = new KimeriaBloodSystem(CAPACITY, SEED);
+            blood.sprayLight(X, Y, direction, FLOOR);
+            boss.spray(X, Y, direction, FLOOR, false);
+            assertEquals(KimeriaBloodSystem.LIGHT_DROPLETS, blood.count());
+            assertTrue(blood.count() < boss.count());
+            for (int i = 0; i < blood.count(); i++) {
+                assertFalse(blood.empowered(i));
+                assertTrue(blood.trailLength(i) <= 4.5f * .6f + .0001f, "shorter streaks than the boss's");
+                assertTrue(Math.abs(blood.vx(i)) <= 190f * .75f + .0001f);
+                if (i % 5 != 0) assertEquals(direction, Math.signum(blood.vx(i)), "away from the attacker");
+            }
+        }
+    }
+
+    @Test void bossSprayIsUnchangedByTheLightVariant() {
+        KimeriaBloodSystem blood = new KimeriaBloodSystem(CAPACITY, SEED);
+        blood.spray(X, Y, 1, FLOOR, false);
+        assertEquals(32, blood.count());
+    }
 }

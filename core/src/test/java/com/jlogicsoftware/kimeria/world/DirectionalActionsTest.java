@@ -543,6 +543,74 @@ class DirectionalActionsTest {
         assertTrue(fireball.isRemoved()); assertEquals(10, boss.energy());
     }
 
+    private com.jlogicsoftware.kimeria.entity.enemy.YellowMob blood_mob(float x) {
+        var mob = new com.jlogicsoftware.kimeria.entity.enemy.YellowMob(assets, game, x, 288, 48, 32, 0, 0);
+        mob.setPlayer(level.player); mob.setLevel(level); level.objects.add(mob);
+        return mob;
+    }
+    /** Hero beside the mob (side -1: hero on its left, facing right; +1: hero on its right, facing left), ready to swing. */
+    private void swordBeside(com.jlogicsoftware.kimeria.entity.enemy.YellowMob mob, int side) {
+        Rectangle body = mob.hitboxBounds();
+        level.player.position.set(side < 0 ? body.x - 40 : body.x + body.width - 8, 272);
+        level.player.facingRight = side < 0;
+        level.player.setOnGround(true);
+    }
+    private void swing() { pressed.add(action()); held.add(action()); frames(1); held.remove(action()); }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(ints = {-1, 1})
+    void aSwordKillSpraysOneLightBurstAwayFromTheHeroAndOnlyOnce(int side) {
+        scene(false); level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
+        var mob = blood_mob(100); frames(2);
+        swordBeside(mob, side);
+        var blood = level.bloodParticles();
+        assertEquals(0, blood.count());
+        swing();
+        assertTrue(mob.isDefeated(), "the sword hit is the kill");
+        assertEquals(com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem.LIGHT_DROPLETS, blood.count());
+        for (int i = 0; i < blood.count(); i++) assertFalse(blood.empowered(i), "a mob never gets the boss's empowered burst");
+        Rectangle body = mob.hitboxBounds();
+        // Drops 1.. fly away from the hero (every fifth, starting with 0, sprays back); world Y: the floor is the body's bottom edge.
+        assertEquals(-side, Math.signum(blood.vx(1)), "away from the hero");
+        frames(20);
+        assertTrue(blood.count() > 0);
+        for (int i = 0; i < blood.count(); i++) assertTrue(blood.y(i) <= body.y + body.height, "drops never fall below the mob's feet");
+        frames(12); // the rest of the swing keeps overlapping the corpse
+        assertTrue(blood.count() <= com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem.LIGHT_DROPLETS, "one burst per kill");
+    }
+
+    @Test void aFireballKillSpraysNothing() {
+        scene(false); level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
+        var mob = blood_mob(100);
+        tap(ranged()); frames(20);
+        assertTrue(mob.isDefeated());
+        assertEquals(0, level.bloodParticles().count());
+    }
+
+    @Test void aSwordMissAnAlreadyDefeatedMobAndARetryResetSprayNothing() {
+        scene(false); level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
+        var mob = blood_mob(100); frames(2);
+        level.player.position.set(400, 272); swing(); frames(20);
+        assertFalse(mob.isDefeated()); assertEquals(0, level.bloodParticles().count(), "a swing that touches nothing");
+        swordBeside(mob, -1); frames(1); swing();
+        int burst = level.bloodParticles().count();
+        assertEquals(com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem.LIGHT_DROPLETS, burst);
+        mob.hitBySword(level); mob.hitBySword(level);
+        assertEquals(burst, level.bloodParticles().count(), "a defeated mob bleeds no more");
+        level.resetCurrentRoom(player()); frames(1);
+        assertEquals(0, level.bloodParticles().count(), "a retry clears the blood");
+    }
+
+    @Test void bloodOnlyMovesWhenTheLevelIsUpdatedSoAPauseFreezesIt() {
+        scene(false); level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
+        var mob = blood_mob(100); frames(2); swordBeside(mob, -1); swing();
+        var blood = level.bloodParticles();
+        float x = blood.x(1), y = blood.y(1), age = blood.age(1);
+        // A paused game does not call Level.update, the only thing that ages and moves the drops.
+        assertEquals(x, blood.x(1)); assertEquals(y, blood.y(1)); assertEquals(age, blood.age(1));
+        frames(3);
+        assertNotEquals(x, blood.x(1));
+    }
+
     @Test void rangedStockCrossesLevelsAndRestartRestoresLevelEntryRatherThanRefilling() {
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.spend(); stock.beginLevel(); stock.spend();

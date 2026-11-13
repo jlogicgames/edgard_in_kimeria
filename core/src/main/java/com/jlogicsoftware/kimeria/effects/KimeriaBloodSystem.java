@@ -18,6 +18,10 @@ import com.badlogic.gdx.math.RandomXS128;
  */
 public final class KimeriaBloodSystem {
     public static final int DROPLETS = 32, EMPOWERED_DROPLETS = 48;
+    /** A monster killed by the sword (#319): a light version of the boss spray, fewer and slower drops with shorter streaks. */
+    public static final int LIGHT_DROPLETS = 12;
+    private static final int LIGHT_LARGE_DROPS = 3;
+    private static final float LIGHT_SPEED_SCALE = .75f, LIGHT_SIZE_SCALE = .8f, LIGHT_TRAIL_SCALE = .6f;
     /** Longest drop life in seconds; the shortest is {@link #LIFE_MIN}. */
     public static final float DURATION = .9f;
     static final float LIFE_MIN = .6f;
@@ -76,18 +80,30 @@ public final class KimeriaBloodSystem {
      * The random-call order per drop is the one of the old {@code BloodBurst} constructor.
      */
     public void spray(float originX, float originY, float direction, float floor, boolean empoweredHit) {
-        int drops = empoweredHit ? EMPOWERED_DROPLETS : DROPLETS;
+        emit(empoweredHit ? EMPOWERED_DROPLETS : DROPLETS, DROPLETS, LARGE_DROPS, NORMAL, NORMAL, NORMAL,
+            originX, originY, direction, floor, empoweredHit);
+    }
+
+    /** Sprays the light monster-kill burst: {@link #LIGHT_DROPLETS} drops, same colour and direction rule as {@link #spray}. */
+    public void sprayLight(float originX, float originY, float direction, float floor) {
+        emit(LIGHT_DROPLETS, LIGHT_DROPLETS, LIGHT_LARGE_DROPS, LIGHT_SPEED_SCALE, LIGHT_SIZE_SCALE, LIGHT_TRAIL_SCALE,
+            originX, originY, direction, floor, false);
+    }
+
+    private void emit(int drops, int burst, int largeDrops, float speedScale, float sizeScale, float trailScale,
+                      float originX, float originY, float direction, float floor, boolean empoweredHit) {
         for (int i = 0; i < drops; i++) {
             if (count == capacity) removeOldest();
             int d = count++;
             x[d] = originX + between(-SPAWN_SPREAD_X, SPAWN_SPREAD_X);
             y[d] = originY + between(-SPAWN_SPREAD_Y, SPAWN_SPREAD_Y);
             // A strong fan away from the sword, with a few drops spraying back toward it.
-            vx[d] = direction * between(SPEED_X_MIN, SPEED_X_MAX) * (i % BACK_SPRAY_EVERY == 0 ? BACK_SPRAY_FACTOR : NORMAL);
-            vy[d] = between(LAUNCH_UP_MIN, LAUNCH_UP_MAX);
-            size[d] = i % DROPLETS < LARGE_DROPS ? between(LARGE_SIZE_MIN, LARGE_SIZE_MAX) : between(SMALL_SIZE_MIN, SMALL_SIZE_MAX);
-            size[d] *= empoweredHit ? EMPOWERED_SIZE_SCALE : NORMAL;
-            trailLength[d] = Math.min(TRAIL_MAX, TRAIL_BASE + Math.abs(vx[d]) * TRAIL_PER_SPEED) * (empoweredHit ? EMPOWERED_TRAIL_SCALE : NORMAL);
+            vx[d] = direction * between(SPEED_X_MIN, SPEED_X_MAX) * speedScale * (i % BACK_SPRAY_EVERY == 0 ? BACK_SPRAY_FACTOR : NORMAL);
+            vy[d] = between(LAUNCH_UP_MIN, LAUNCH_UP_MAX) * speedScale;
+            size[d] = i % burst < largeDrops ? between(LARGE_SIZE_MIN, LARGE_SIZE_MAX) : between(SMALL_SIZE_MIN, SMALL_SIZE_MAX);
+            size[d] *= (empoweredHit ? EMPOWERED_SIZE_SCALE : NORMAL) * sizeScale;
+            trailLength[d] = Math.min(TRAIL_MAX, TRAIL_BASE + Math.abs(vx[d]) * TRAIL_PER_SPEED)
+                * (empoweredHit ? EMPOWERED_TRAIL_SCALE : NORMAL) * trailScale;
             life[d] = between(LIFE_MIN, DURATION);
             red[d] = between(RED_MIN, RED_MAX) * (empoweredHit ? EMPOWERED_RED_SCALE : NORMAL);
             green[d] = between(GREEN_MIN, GREEN_MAX);

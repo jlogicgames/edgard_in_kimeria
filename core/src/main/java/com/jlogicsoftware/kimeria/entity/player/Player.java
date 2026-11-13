@@ -975,7 +975,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         for (var obj : level.objects) {
             if (obj instanceof Enemy<?> enemy) {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
-                    if (!(enemy instanceof Boss boss) || bossesHit.add(boss)) enemy.collidedWithActor(true);
+                    if (enemy instanceof Boss boss) { if (bossesHit.add(boss)) boss.collidedWithActor(true); }
+                    else enemy.hitBySword(level);
                     break;
                 }
             }
