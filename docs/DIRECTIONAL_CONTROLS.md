@@ -231,7 +231,7 @@ The merge does not by itself establish deployment or manual acceptance.
   climb and activate. Only simulated-device tests are claimed; no physical ladder playtest.
 - [#97](https://github.com/jlogicgames/edgard_in_kimeria/issues/97) meets its carrying
   criteria; [evidence above](#carrying-acceptance-97). Authored environmental puzzles
-  remain #102–#104 (Forest) and #112–#115 (Fortress).
+  remain #103–#104 (Forest) and #112–#115 (Fortress).
 - [#98](https://github.com/jlogicgames/edgard_in_kimeria/issues/98) now has two rare
   single-charge refills and identity/stock rollback; [rules and audit](#fireball-refills-98).
   Campaign shop supply/prices remain future economy work; no shop is advertised.

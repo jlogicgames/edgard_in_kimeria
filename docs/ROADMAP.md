@@ -71,7 +71,7 @@ playtests and one-minute learning checks with unfamiliar players belong to phase
   no separate pocket or simultaneous stone and torch. Implemented in PR #154;
   secured object rollback completed in PR #165. All four ticket criteria verified
   2026-10-25; [evidence and practice route](DIRECTIONAL_CONTROLS.md#carrying-acceptance-97).
-  Authored Forest puzzles remain #102–#104; torch/light puzzles remain #112–#115.
+  Authored Forest puzzles remain #103–#104; torch/light puzzles remain #112–#115.
 - [x] [#98](https://github.com/jlogicgames/edgard_in_kimeria/issues/98) Implement consumable ranged attacks and rare refills. Separate throwing
   from fireball expenditure; a single press must not perform both. Capacity three,
   two +1 contact pickups, full-stock hints and three-icon HUD merged in PR #168
@@ -130,8 +130,9 @@ headless author check, then the author's desktop and web play-through of 2026-11
 
 **Author mobile-browser play-through (2026-11-05):** the author also played the web build on an iPhone (browser; no mobile build exists yet, and none will be made: D61) and completed all the tutorial screens by touch. The game is playable. Four problems were found and are tracked in [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226): in portrait the touch controls are drawn over the game although there is plenty of free space above and below; no fullscreen on mobile; in landscape the browser chrome stays and only about half of the game is visible; the screen turns off after some minutes. The fixes (D53 to D57) were checked by the author on a real iPhone in Safari on 2026-11-07 and #226 is closed; fullscreen / Add to Home Screen was dropped as not needed. Android, tablets and the frame rate on a mid-range phone are tracked in [#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277). Not a novice playtest (#129–#131), and not the release-device pass (#144). Record: [ROOMS.md](ROOMS.md#author-acceptance-of-forest-0-2026-11-05).
 
-- [ ] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
+- [x] [#102](https://github.com/jlogicgames/edgard_in_kimeria/issues/102) Select Forest's leading mechanic from levers/linked objects, lowered
   ladders and carrying/throwing to affect obstacles.
+  Completed 2026-11-14: direction accepted in [D31](DECISIONS.md#d31-forest-uses-linked-route-reconfiguration) and GAME_DESIGN.md; prototype validation continues in #103, #104 and #187.
 - [ ] [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103) Build short rooms demonstrating the rule and several applications.
 - [ ] [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) Combine it with an enemy or trap. Test choices between waiting,
   melee, spending a ranged attack and environmental interaction.

@@ -158,7 +158,7 @@ the new mechanic creates new situations for using them.
 
 | Stage | Material for further design | Status |
 | --- | --- | --- |
-| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction; short prototype and exact interaction rules remain to test. |
+| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction; short prototype and exact interaction rules remain to test (#103, #187). |
 | Swamp | Quicksand, unreliable footing, bridges, moving and falling platforms. | Ideas from the notes; distinguish its problems from forest switches. |
 | Steppe | Wind as a spatial property: gusts, shelter, effects on movement and objects. | Wind accepted; directions, strength, cycles and interactions need design. |
 | Fortress | Carrying, placing and throwing a torch; light affects visibility and creatures. | Preferred prototype direction; complete rules not approved. |
@@ -308,7 +308,7 @@ are concrete forms of the attacks.
 | Melee | Remove an enemy from the right position at the right moment. | Sword implemented; current limits in D4/D10. |
 | Ranged attack | A consumable advantage against distant danger. | Consumable fireball, capacity three and two rare single-charge pickups implemented for the test campaign (#98); campaign economy remains future work. |
 | Interaction | Operate a lever or another mechanism. | Up + Action chooses the nearest eligible carryable or mechanism; the smaller Tiled object ID breaks equal-distance ties. While carrying, Up + Action operates a mechanism. See [D30](DECISIONS.md#d30-one-direction-for-pickup-and-mechanism-interaction) and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175). |
-| Pick up and place | Move a stone or torch to change the room situation. | Up + Action picks up a nearby item; Down + Action only puts down a held item. Ranged throws it; one visible slot is shared (#95/#97/#175). Authored Forest puzzles remain #102–#104, Fortress light puzzles #112–#115. |
+| Pick up and place | Move a stone or torch to change the room situation. | Up + Action picks up a nearby item; Down + Action only puts down a held item. Ranged throws it; one visible slot is shared (#95/#97/#175). Authored Forest puzzles remain #103–#104, Fortress light puzzles #112–#115. |
 | Throw an object | Affect something distant or place an object ahead. | Implemented on Ranged; does not spend fireballs (#95). |
 | Vertical ladder | Change elevation, choose a route and movement timing. | Implemented in the test build (#99, [D28](DECISIONS.md#d28-vertical-ladders)); first Forest room. |
 | Double jump | An extra airborne jump used in authored routes and wind tasks. | Accepted from Steppe; unlock and exact rules open. |
