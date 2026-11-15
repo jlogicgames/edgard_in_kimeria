@@ -144,7 +144,7 @@ acknowledges the victory and establishes his ongoing guidance before the next le
 At the first room's exit, the scene fades out and in (0.25 seconds each way).
 The hero and camera relocate under full black, without a hero transition animation.
 Death resets only the active room; previous rooms' collections remain kept.
-`forest-1` has two rooms (the trap course, then the route room, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-187-2026-11-15)): its first room ends at an exit like the others and the level checkpoint is in the second. See
+`forest-1` has two rooms (the trap course, then the route room, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): its first room ends at an exit like the others and the level checkpoint is in the second. See
 [Rooms in Tiled](ROOMS.md) for authoring, retry rules, and validation history; deferred checks live in
 [Pre-release TODO](PRE_RELEASE_TODO.md).
 

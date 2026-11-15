@@ -8,6 +8,7 @@ import com.jlogicsoftware.kimeria.entity.items.FireballRefill;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
+import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -26,13 +27,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * the optional ledge that holds a fireball refill. Ordinary keyboard input drives the hero through the real shipped
  * map. Times are author (mastered) measurements of a scripted hero, not novice playtests. Recipe: docs/ROOMS.md.
  *
- * <p>Y grows downward: the floor top is y 320, the refill ledge 112 px high has its top at y 208 and the lift runs between
+ * <p>Y grows downward: the floor top is y 320, the slab 112 px high has its top at y 208, the one-shot step y 168, the refill pad y 128 and the lift runs between
  * y 304 (bottom) and y 176 (top); the exit ledge's top is y 160, 16 px above the lift's top. Everything below is a map coordinate (room 2 starts at x 1280).
  */
 class Forest1RouteTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float ROOM_X = 1280, ROOM_END = 2048, START_X = 1344, FLOOR = 320;
-    private static final float LEVER_X = 1440, LADDER_X = 1584, SLAB_X = 1600, SLAB_END = 1680, SLAB_TOP = 208, REFILL_X = 1632;
+    private static final float LEVER_X = 1440, LADDER_X = 1536, SLAB_X = 1552, SLAB_END = 1632, SLAB_TOP = 208;
+    /** The one-shot step (a falling platform, y 168) and the refill pad above it (x 1696-1744, top y 128, refill at x 1712). */
+    private static final float STEP_X = 1648, STEP_END = 1680, STEP_TOP = 168, PAD_X = 1696, PAD_END = 1744, PAD_TOP = 128, REFILL_X = 1712;
     private static final float LIFT_X = 1872, LIFT_RIGHT = 1904, BOTTOM = 304, TOP = 176, LEDGE_X = 1904, LEDGE_TOP = 160, CHECKPOINT_X = 1984;
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
@@ -133,17 +136,26 @@ class Forest1RouteTest {
         return frames;
     }
 
-    /** Walks right along the slab until the refill is collected, then keeps going until the hero has dropped to the floor. */
+    /**
+     * From the slab: walk right, hop onto the one-shot step at the slab's end and from its end onto the pad, take the refill, walk off the
+     * pad's right end and drop to the floor. Returns the frames used.
+     */
     private int takeTheRefillAndDrop(Level level) {
         int frames = 0;
         while (!(refillGone(level) && feet(level) > FLOOR - 2)) {
             held.clear(); held.add(Input.Keys.D);
+            boolean ground = level.player.isOnGround();
+            if (ground && Math.abs(feet(level) - SLAB_TOP) < 2 && bodyRight(level) >= SLAB_END - 1) jump();
+            if (ground && Math.abs(feet(level) - STEP_TOP) < 2 && bodyRight(level) >= STEP_END - 1) jump();
             frame(level); alive(level);
             assertTrue(++frames < 60 * 20, "refill route stuck at " + level.player.position);
         }
         held.clear(); frame(level);
         return frames;
     }
+
+    private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
+    private FallingPlatform step(Level level) { return level.fallingPlatforms.get(0); }
 
     /** The optional detour from a standing start: lever, ladder, refill, back to the lever, lever again; the hero ends by the lever with the lift running. */
     private int detour(Level level) {
@@ -162,7 +174,7 @@ class Forest1RouteTest {
     /** From wherever the hero stands (floor, slab or ladder foot) to the checkpoint, flipping the lever back if the lift is stopped. */
     private int recover(Level level) {
         int frames = 0;
-        if (level.player.onLadder() || feet(level) <= SLAB_TOP + 2 && centerX(level) < SLAB_END + 40) {
+        if (level.player.onLadder() || feet(level) < FLOOR - 2) {
             // On the ledge (or its ladder): walk right off the end of the slab.
             while (feet(level) < FLOOR - 2 || level.player.onLadder()) {
                 held.clear(); held.add(level.player.onLadder() ? Input.Keys.S : Input.Keys.D);
@@ -188,7 +200,7 @@ class Forest1RouteTest {
         assertEquals(1, level.ladders.size());
         assertEquals(1, level.escalators.size());
         assertEquals(1, level.objects.stream().filter(FireballRefill.class::isInstance).count());
-        assertTrue(level.fallingPlatforms.isEmpty());
+        assertEquals(1, level.fallingPlatforms.size(), "exactly one one-shot object: the step to the refill pad");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?>), "no monsters: the combination is #104");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard), "no hazards in the route room");
@@ -202,10 +214,14 @@ class Forest1RouteTest {
         assertFalse(lever(level).isUp());
         assertEquals(LADDER_X, ladder(level).getX(), 0.01f);
         assertEquals(96, ladder(level).topY(), 0.01f);
+        assertFalse(step(level).isFalling());
+        assertEquals(STEP_X, step(level).getX(), 0.01f);
+        assertEquals(STEP_TOP, step(level).getY(), 0.01f);
+        assertEquals(FallingPlatform.Skin.PLATFORM, step(level).skin(), "the same look as the four falling platforms of room 1");
         assertEquals(208, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor");
         FireballRefill refill = level.objects.stream().filter(FireballRefill.class::isInstance).map(FireballRefill.class::cast).findFirst().orElseThrow();
         assertEquals(REFILL_X, refill.getX(), 0.01f);
-        assertEquals(SLAB_TOP, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the ledge slab");
+        assertEquals(PAD_TOP, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the pad");
         assertEquals(START_X, level.player.position.x, 0.01f);
     }
 
@@ -248,7 +264,7 @@ class Forest1RouteTest {
                     settle(level, 2);
                     if (level.player.canInteract()) {
                         assertTrue(feet(level) > FLOOR - 4, "the lever is only in reach standing on the floor: x=" + x + " y=" + y);
-                        assertTrue(Math.abs(centerX(level) - LEVER_X) < 40 && Math.abs(centerX(level) - LADDER_X) > 100, "x=" + x);
+                        assertTrue(Math.abs(centerX(level) - LEVER_X) < 40 && Math.abs(centerX(level) - LADDER_X) > 48, "x=" + x);
                     }
                 }
             }
@@ -267,7 +283,7 @@ class Forest1RouteTest {
                 frame(level);
                 if (level.player.getState() == Player.State.DISAPPEARING) break;
                 assertFalse(refillGone(level), "refill collected without the lever from x=" + x);
-                assertFalse(centerX(level) > SLAB_X && centerX(level) < SLAB_END && feet(level) <= SLAB_TOP + 4,
+                assertFalse(centerX(level) > SLAB_X && centerX(level) < PAD_END && feet(level) <= SLAB_TOP + 4,
                     "hero got onto the refill ledge unaided from x=" + x + " at " + level.player.position);
             }
         }
@@ -284,7 +300,7 @@ class Forest1RouteTest {
                     held.clear(); held.add(Input.Keys.A);
                     if (i % 20 == 0) jump();
                     frame(level);
-                    assertFalse(centerX(level) > SLAB_X - 16 && centerX(level) < SLAB_END + 16 && feet(level) <= SLAB_TOP + 4,
+                    assertFalse(centerX(level) > SLAB_X - 16 && centerX(level) < PAD_END + 16 && feet(level) <= SLAB_TOP + 4,
                         "the hero crossed to the refill ledge from " + fromX + "," + topY);
                     assertFalse(refillGone(level));
                 }
@@ -356,7 +372,7 @@ class Forest1RouteTest {
         System.out.printf(Locale.ROOT, "forest-1 route room with the refill: detour (lever, ladder, refill, back, lever) %.2f s, whole room %.2f s%n", detour, total);
         assertTrue(won(level));
         assertEquals(1, stock.count(), "the charge is kept to the checkpoint");
-        assertTrue(total <= 2 * BUDGET, "the collection route is a separate measurement and stays modest: " + total);
+        assertTrue(total <= BUDGET, "even with the refill detour the whole room fits the mastered-route budget: " + total);
     }
 
     @Test void theRefillCanOnlyBeHadWithTheLeverAndALowerLadderWhileTheLiftStandsStill() {
@@ -516,10 +532,150 @@ class Forest1RouteTest {
         assertEquals(272, level.player.position.y, 0.01f);
         assertFalse(level.player.canInteract());
         assertTrue(LEVER_X - (START_X + 48) >= 40);
-        assertTrue(LADDER_X - LEVER_X >= 120, "the lever is well clear of the ladder");
-        assertTrue(LIFT_X - SLAB_END >= 160, "the refill ledge and the lift are far apart");
+        assertTrue(LADDER_X - LEVER_X >= 90, "the lever is well clear of the ladder");
+        assertTrue(LIFT_X - PAD_END >= 120, "the refill pad and the lift are far apart");
         assertTrue(ROOM_END - 16 - CHECKPOINT_X >= 48, "the checkpoint is clear of the right wall");
         settle(level, 120);
         alive(level);
+    }
+
+    // ---- the one-shot step (D66): spending it loses the refill until Restart Level, never the exit ----
+
+    private void reachTheSlab(Level level) { walkToLever(level); operate(level); walkToLadder(level); climb(level); }
+
+    /** On the slab, walks right and hops onto the step so that it starts to fall, then lets everything settle until it is gone (the hero ends wherever he lands). */
+    private void spendTheStep(Level level) {
+        FallingPlatform step = step(level);
+        for (int i = 0; i < 60 * 10 && !step.isFalling(); i++) {
+            held.clear(); held.add(Input.Keys.D);
+            if (level.player.isOnGround() && Math.abs(feet(level) - SLAB_TOP) < 2 && bodyRight(level) >= SLAB_END - 1) jump();
+            frame(level); alive(level);
+        }
+        assertTrue(step.isFalling(), "the hero stood on the step");
+        held.clear();
+        for (int i = 0; i < 60 * 6 && !step.isRemoved(); i++) { frame(level); alive(level); }
+        assertTrue(step.isRemoved(), "the step is gone after its warning and fall");
+        settle(level, 90);
+    }
+
+    /** From the slab, with every kind of key spam, the hero never gets up to the pad while the step is gone. */
+    private void assertPadClosed(Level level) {
+        for (float x = SLAB_X; x <= SLAB_END + 8; x += 4) {
+            for (boolean jumping : new boolean[]{false, true}) {
+                level.player.position.set(x - 24, SLAB_TOP - 48);
+                settle(level, 3);
+                for (int i = 0; i < 90; i++) {
+                    held.clear(); held.add(Input.Keys.D);
+                    if (jumping && i % 12 == 0) jump();
+                    frame(level); alive(level);
+                    assertFalse(feet(level) <= PAD_TOP + 4 && centerX(level) > PAD_X, "reached the pad without the step from x=" + x + " at " + level.player.position);
+                }
+            }
+        }
+        assertFalse(refillGone(level), "the refill is still there, out of reach");
+    }
+
+    @Test void theStepFallsOnceAfterTheSharedWarningAndStaysGone() {
+        Level level = room();
+        reachTheSlab(level);
+        FallingPlatform step = step(level);
+        assertFalse(step.isFalling());
+        spendTheStep(level);
+        assertTrue(step.isRemoved());
+        assertTrue(level.fallingPlatforms.isEmpty() || level.fallingPlatforms.stream().allMatch(FallingPlatform::isRemoved));
+        settle(level, 60 * 5);
+        assertTrue(step.isRemoved(), "a one-shot: nothing brings it back");
+    }
+
+    @Test void withTheStepIntactTheSlabReachesThePadAndWithItGoneNothingDoes() {
+        // Intact: the detour route is exercised by the optional-route test. Gone: every takeoff from the slab falls short.
+        Level level = room();
+        reachTheSlab(level);
+        spendTheStep(level);
+        level.player.position.set(SLAB_X, SLAB_TOP - 48);
+        settle(level, 10);
+        assertPadClosed(level);
+        // ... and the step is not walkable from the ladder foot or the floor either (the pad is 192 px up).
+        for (float x = ROOM_X + 24; x < LIFT_X - 8; x += 8) {
+            level.player.position.set(x - 24, 272);
+            for (int i = 0; i < 60; i++) {
+                held.clear(); held.add(Input.Keys.D);
+                if (i % 20 == 0) jump();
+                frame(level);
+                assertTrue(feet(level) > PAD_TOP + 60 || level.player.onLadder(), "reached the pad level from the floor at x=" + x);
+            }
+        }
+    }
+
+    @Test void theRefillLostStateStillReachesTheCheckpointAndRestartLevelBringsTheRefillBack() {
+        Level level = room();
+        reachTheSlab(level);
+        spendTheStep(level);
+        assertFalse(refillGone(level));
+        assertEquals(0, stock.count());
+        recover(level);
+        assertTrue(won(level), "with the step spent and the refill lost the exit is still reached without Restart Level");
+        assertEquals(0, stock.count());
+        // Restart Level rebuilds the level from the map: the step is intact and the refill is there to be taken.
+        Level again = room();
+        assertFalse(step(again).isFalling() || step(again).isRemoved());
+        assertFalse(refillGone(again));
+        detour(again);
+        assertEquals(1, stock.count(), "the authored opportunity is back");
+    }
+
+    @Test void deathAndRetryBeforeSecuringRestoreTheStepAndTheRefill() {
+        Level level = room();
+        reachTheSlab(level);
+        spendTheStep(level);
+        level.resetCurrentRoom(player());
+        assertFalse(step(level).isFalling() || step(level).isRemoved(), "an unsecured one-shot is authored again after a death");
+        assertFalse(refillGone(level));
+        assertFalse(ladder(level).isLowered());
+        detour(level);
+        assertEquals(1, stock.count());
+    }
+
+    @Test void aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks() throws Exception {
+        // Room 2 is the last room today, so nothing secures it; this is the state boundary D26 asks for if a room is appended after it (#104)
+        // or the room is secured by a healer return: the one-shot stays spent, the unclaimed refill stays out of reach.
+        Level level = room();
+        reachTheSlab(level);
+        spendTheStep(level);
+        var secure = Level.class.getDeclaredMethod("secureVisit");
+        secure.setAccessible(true);
+        secure.invoke(level);
+        level.resetCurrentRoom(player());
+        assertTrue(level.fallingPlatforms.isEmpty(), "the secured room keeps the step spent");
+        assertFalse(refillGone(level));
+        level.player.position.set(SLAB_X, SLAB_TOP - 48);
+        settle(level, 10);
+        // the ladder was secured lowered too (D26: switched mechanisms stay as left); the hero is back at the entrance and the lift route works
+        level.resetCurrentRoom(player());
+        recover(level);
+        assertTrue(won(level));
+    }
+
+    @Test void everyLeverStateLiftStopAndStepStateStillReachesTheCheckpoint() {
+        // States: step intact / step spent, lever pulled once at several moments (lift stopped anywhere), hero on the floor or on the slab.
+        int states = 0;
+        for (boolean spent : new boolean[]{false, true}) {
+            for (int step = 0; step <= 13; step++) {
+                for (boolean onSlab : new boolean[]{false, true}) {
+                    Level level = room();
+                    walkToLever(level);
+                    settle(level, Math.round(step * 0.4f * 60));
+                    operate(level);
+                    settle(level, 60);
+                    if (onSlab || spent) { walkToLadder(level); climb(level); }
+                    if (spent) spendTheStep(level);
+                    recover(level);
+                    assertTrue(won(level), "step " + step + " spent=" + spent + " onSlab=" + onSlab);
+                    assertEquals(0, stock.count());
+                    states++;
+                }
+            }
+        }
+        assertEquals(56, states);
     }
 }

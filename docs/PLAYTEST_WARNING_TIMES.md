@@ -60,13 +60,13 @@ constant each class passes to `TrapWarnings.duration`.
 | Family (class) | Warning source | Where it is | Notes |
 | --- | --- | --- | --- |
 | Proximity (`ThornTrap`): thorn root | `DEFAULT_WARNING_SECONDS` | `forest-0` room `forest-0-ladder`, x 896 | the room also teaches the ladder |
-| Proximity: thorn tuft | `DEFAULT_WARNING_SECONDS` | `forest-1` (single room), x 696 | first trap of the level, D58 |
+| Proximity: thorn tuft | `DEFAULT_WARNING_SECONDS` | `forest-1` room 1 (`forest-1-traps`), x 696 | first trap of the level, D58 |
 | Falling, position-triggered (`FallingTrap`): branch | `DEFAULT_WARNING_SECONDS` | `forest-0` room `forest-0-wall`, x 1744 | |
 | Falling, position-triggered: stone | `DEFAULT_WARNING_SECONDS` | `forest-0` room `forest-0-platform`, x 2544; `forest-2` room `forest-canopy`, x 2224 | |
 | Explosive (`ExplosiveTrap`): stump | `DEFAULT_WARNING_SECONDS` | `forest-0` rooms `forest-0-stone` (x 3488) and `forest-0-traps` (x 4352) | touch or fireball or thrown stone (D47) |
 | Explosive: root | `DEFAULT_WARNING_SECONDS` | `forest-2` room `forest-canopy`, x 2064 | |
 | Bomb (`Bomb`, D51/D60) | `DEFAULT_WARNING_SECONDS` | `forest-2` room `forest-entry`, x 656 | separate type, same warning |
-| Falling platform (`FallingPlatform`, also the rotten log) | `FALLING_PLATFORM_SECONDS` (1 s) | `forest-0` room `forest-0-traps`, x 4096; `forest-1` rotten log x 1088 (and four platforms at x 96 to 192); `forest-2` `forest-canopy`, x 1568 | the only family with its own constant |
+| Falling platform (`FallingPlatform`, also the rotten log) | `FALLING_PLATFORM_SECONDS` (1 s) | `forest-0` room `forest-0-traps`, x 4096; `forest-1` rotten log x 1088 (and four platforms at x 96 to 192, and since #187 one more platform, the one-shot step to the refill pad, at x 1648 in the route room); `forest-2` `forest-canopy`, x 1568 | the only family with its own constant |
 | Rhythmic: spore puffball (`Puffball`) | the swell *is* `DEFAULT_WARNING_SECONDS`; the cycle (`period`) is authored | `forest-1`, x 944 | `Puffball.validate` sizes the calm against the *longest assisted* swell |
 | Proximity, burst (`FungusTrap`): honey fungus (harmless) and false honey fungus (lethal cloud) | `DEFAULT_WARNING_SECONDS` (the swell) | `forest-0` rooms `forest-0-lever` (x 150) and `forest-0-wall` (x 1804), harmless; `forest-2` `forest-canopy`, x 1672, lethal | D63; the lethal one's cloud is 1 s, not scaled |
 | Rhythmic: swinging thorn vine | none; a pendulum, never scaled | `forest-2` `forest-canopy`, x 1896 | a control: no timed warning to change |

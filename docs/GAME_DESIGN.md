@@ -158,7 +158,7 @@ the new mechanic creates new situations for using them.
 
 | Stage | Material for further design | Status |
 | --- | --- | --- |
-| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction. The lever introduction is built in `forest-0` (#186); the optional-route variation is built as a second room of `forest-1` (#187, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-187-2026-11-15): one lever lowers a ladder to a refill ledge and stops the lift that is the mandatory way; automated tests only, not yet played by the author); the combination with an enemy or hazard remains (#104). |
+| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction. The lever introduction is built in `forest-0` (#186); the optional-route variation is built as a second room of `forest-1` (#187, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15): one lever lowers a ladder and stops the lift that is the mandatory way, and a one-shot falling step guards a fireball refill; automated tests only, not yet played by the author); the combination with an enemy or hazard remains (#104). |
 | Swamp | Quicksand, unreliable footing, bridges, moving and falling platforms. | Ideas from the notes; distinguish its problems from forest switches. |
 | Steppe | Wind as a spatial property: gusts, shelter, effects on movement and objects. | Wind accepted; directions, strength, cycles and interactions need design. |
 | Fortress | Carrying, placing and throwing a torch; light affects visibility and creatures. | Preferred prototype direction; complete rules not approved. |
@@ -187,19 +187,22 @@ Under D26, every mandatory exit, boss and required fragment must remain reachabl
 each secured state produced by supported actions; an optional reward may become
 unavailable until Restart Level. Remote or throw activation, one-shot versus reversible
 supports, and the recovery rules for each new linked object remain open until a prototype
-defines them.
+defines them. (One-shot versus reversible is resolved: see the route variation below.)
 
-**Route variation, built (#187, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-187-2026-11-15), 2026-11-15; automated tests only, the author has not played it):**
+**Route variation, built (#187, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15), 2026-11-15; automated tests only, the author has not played it):**
 `forest-1` gained a second room after its trap course. One lever drives two supports in
 opposite states: a ladder (raised at the start) and a vertical lift (running at the start). The
 lift is the mandatory way to the checkpoint and needs no lever; pulling the lever lowers the
-ladder to a ledge holding a single-charge fireball refill (D27) and stops the lift where it is,
-so the optional detour has a visible cost until the lever is pulled again. Both supports are
-reversible toggles, so there is no one-shot case and the refill is never lost for good; D26 is
-met by sweeping every lever state and lift stop (ROOMS.md). It answers "one-shot versus reversible":
-this prototype is reversible. Remote or throw activation is not used here. The mastered route is
-about 8 s, with the refill about 16 s. The room has no hint, monster or hazard (the combination is
-#104).
+ladder to a slab and stops the lift where it is, so the optional detour has a visible cost until
+the lever is pulled again. The single-charge fireball refill (D27) lies on a pad above the slab that
+only a **one-shot step** (an existing falling platform, seen collapsing in room 1) can reach: spend
+the step without taking the refill and the reward is lost until Restart Level, while the lift route
+to the checkpoint stays open from every state (D26, swept in ROOMS.md). **This answers "one-shot
+versus reversible":** levers stay reversible, the one-shot is a support that guards an optional
+reward. Remote or throw activation is not used here. The mastered route is about 8 s, the refill
+detour brings the whole room to about 18 s. The refill is worth nothing at a full stock of three; the
+intended plan (not built) is that the #104 room that follows offers a fireball as one optional
+choice. The room has no hint, monster or hazard.
 
 **Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
 simple, lethal, organic hazards on the ground and overhead, grouped by trigger family
