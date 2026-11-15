@@ -203,7 +203,8 @@ separate illustrated HUD texture and native 16×16 world sprite are reused.
 | Map / owner | Authored refill | Position | Purpose |
 | --- | --- | --- | --- |
 | `forest-2` / `forest-canopy` | 121 | TMX (1824, 320), world (1824, 304) after layer offset | Before the exit to the healer/boss chamber |
-| `forest-1` / sole room | 25 | (312, 176) | Optional jump above horizontal moving platform 17 |
+| `forest-1` / `forest-1-traps` (room 1; the level's only room before #187) | 25 | (312, 176) | Optional jump above horizontal moving platform 17 |
+| `forest-1` / `forest-1-route` (room 2) | 51 | (1632, 192) | Optional ledge reached by lowering a ladder with the lever, which also stops the lift that is the mandatory way ([D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-187-2026-11-15)) |
 
 `Level.pendingPickups` / `keptPickups` track the authored map IDs, separately from
 recipe artifacts. Full-stock contact records nothing. Death restores room-entry stock

@@ -69,6 +69,8 @@ class AllocationBudgetTest {
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
     /** Measured 1,322.0 to 1,322.2 B/frame in 3 runs (#303: the index loops, the scratch rectangles and the HashSet removal; before: 2,441.8 to 2,441.9; step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_CEILING = 1450;
+    /** Measured 1,025.8 to 1,026.1 B/frame in 3 isolated runs and 1,026.1 in the full suite (#187, D66, 2026-11-15): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    static final double FOREST_1_ROUTE_CEILING = 1130;
     /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
     static final double FOREST_2_ROOM_0_CEILING = 1560;
     /** Measured 816.0 B/frame in 3 isolated runs and 1,128.0 in the full suite (#303; the ceiling follows the full-suite run; before: 2,184.0; step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. Ceiling = highest run + about 10 %. */
@@ -177,6 +179,7 @@ class AllocationBudgetTest {
     }
 
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
     @Test void forest2Room0() { assertWithinBudget("forest-2 room 0", FOREST_2_ROOM_0_CEILING, room("forest-2", 0)); }
     @Test void forest2Room1() { assertWithinBudget("forest-2 room 1", FOREST_2_ROOM_1_CEILING, room("forest-2", 1)); }
     @Test void forest2Room2() { assertWithinBudget("forest-2 room 2", FOREST_2_ROOM_2_CEILING, room("forest-2", 2)); }

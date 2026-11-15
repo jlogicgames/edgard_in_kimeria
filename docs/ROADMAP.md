@@ -158,6 +158,8 @@ screens) and #229 (Bat and Mushroom). Playtests remain open. #104 may
 also use an existing enemy. [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
 tracks third-party artwork inventory, schematic replacement and original redraws.
 
+**Route variation (#187) is built** ([D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-187-2026-11-15), 2026-11-15): `forest-1` is now two rooms, the unchanged #260 trap course and an appended 768 px `forest-1-route` room (the level checkpoint moved to its end; the #104 combination room is to follow it). One lever lowers a ladder to a ledge with a fireball refill and stops the lift that is the mandatory way, so the optional detour has a visible cost; both supports are reversible and no one-shot exists. Mastered required route 8.22 s (zero charges), refill detour 8.32 s, whole room with the refill 15.80 s; all D26 states (lever any number of times, lift stopped at 53 moments, hero on the floor or the ledge) reach the checkpoint without Restart Level. **Automated tests only** (`Forest1RouteTest`): the author has not played the room, the ledge tiles have not been seen in the running game and there is no novice playtest (#129-#131); #187 stays open for the author's play-through.
+
 **Output:** a concrete forest puzzle principle creates distinct situations rather
 than repeated activation of the same lever. Existing forest maps/boss provide
 material for testing and development without requiring immediate total rebuilding.
