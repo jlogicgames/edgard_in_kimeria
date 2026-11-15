@@ -959,6 +959,24 @@ Mastered melee 6.83 s, fireball 6.15 s, roof 7.67 s: all well inside the 20 s bu
 
 `Forest1CombatTest` (headless, real shipped map, 22 tests): census and coordinates, the entrance, the post, the tunnel (no hop, no stomp), the cloud over the sword's places and its phase lengths, the start-phase sweeps of melee and shot, the straight run from the entry, the roof unreachable without the lever, the mastered melee, the mistimed melee and retry, the roof route at ten phases, a full stock, the outcome table, the clearances, the empty-stock routes, the D26 sweep, the secured and death states, Restart Level, the room chain, the lever's reach. Changed existing tests (stated in [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)): `RoomTest` (three rooms, the route room's exit, the checkpoint in room 3), `RoomCeilingTest` (three forest-1 rooms), `Forest1RouteTest` (ends at the room exit; the checkpoint-x and ledge assertions became an exit-rectangle test and one threshold was reworded, with the reasons in D67), `AllocationBudgetTest` (two new scenes). No threshold was relaxed.
 
+### Agent check in the running web build (Chrome, 2026-11-15)
+
+This was a Claude agent's check, not the author's play-through and not a novice playtest (#129-#131). It used the release web build (`buildWeb`, served locally) of this branch in desktop Chrome, with ordinary keyboard input (A/D, J jump, K sword, L fireball) and no invulnerability. To skip the room-1 trap course, the *served copy* of `forest-1.tmx` had room 1's `RoomStart` moved next to its exit. The shipped map was not changed.
+
+**Seen and working:**
+- Rooms 2 and 3 render with their existing tiles: the raised ladder, the slab, the striped one-shot step, the refill pad, the lift, the exit ledge, the tunnel block, the roof and its refill.
+- In room 2, the sword swings and a fireball shoots the bat down (stock 3 to 2). The lift carries the hero.
+- In room 3, a fireball from the entrance kills the guard. The hero crosses the puffball after its cloud and walks through the tunnel to the checkpoint, and the game then loads `forest-2`.
+- The console showed no new errors.
+
+**Not done in that check:**
+- the jump from the lift onto the exit ledge (the agent's input latency, about 0.5-1 s, could not hit the top of the lift, so it entered room 3 another way);
+- the lever, ladder, one-shot step and room-2 refill;
+- timed melee under the cloud;
+- the roof route.
+
+The macOS desktop build was built and launched, but not played: screen-control access to it was declined. Both rooms remain open for the author's play-through (#187, #104).
+
 ## forest-2 trap placement plan (#261, D59)
 
 **Status: approved by the author and implemented** ([D59](DECISIONS.md#d59-forest-2-traps-in-the-approach-to-the-boss-a-thorn-vine-an-exploding-root-and-a-falling-stone)). The issue [#261](https://github.com/jlogicgames/edgard_in_kimeria/issues/261) stays open for the author's check in the running game. Issue:
