@@ -25,30 +25,35 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The forest-1 guard room (#104, D67): a RedMob holds the floor under a high route. One lever lowers a ladder to a slab that runs over the guard, with
- * a one-tile-pair hole right above it. The floor is the required route and never needs the lever or a charge. Ordinary keyboard input drives a scripted
- * hero through the real shipped map; the times are author (mastered) measurements, not novice playtests. Recipe and finding: docs/ROOMS.md and D67.
+ * The forest-1 guard room (#104, D67): the floor is the guard-free required route; a lever lowers a ladder to a slab above it, a RedMob stands on the
+ * slab right at the ladder's top and a fireball refill lies on the slab's far part. The sword is unavailable on a ladder, so the climb is the contested
+ * point. Ordinary keyboard input drives a scripted hero through the real shipped map; the times are author (mastered) measurements, not novice
+ * playtests. Recipe and finding: docs/ROOMS.md and D67.
  *
- * <p>Y grows downward: the floor top is y 320, the slab has its top at y 208 (112 px up) and the guard stands with its feet on y 320. Everything below is
- * a map coordinate (room 3 starts at x 2112).
+ * <p>Y grows downward: the floor top is y 320, the slab top y 208 (112 px up), the guard stands on the slab with its feet on y 208 (its art's y is 176).
+ * Everything below is a map coordinate (room 3 starts at x 2112).
  */
 class Forest1CombatTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float ROOM_X = 2112, ROOM_END = 2880, START_X = 2176, FLOOR = 320, DECK = 208;
-    private static final float LEVER_X = 2224, LADDER_X = 2288, CHECKPOINT_X = 2800;
-    /** The slab runs 2304-2496, the hole above the guard 2496-2528, the far part 2528-2704. */
-    private static final float SLAB_LEFT = 2304, HOLE_LEFT = 2496, HOLE_RIGHT = 2528, SLAB_END = 2704;
-    /** The guard's post (the art's x; its body is x + 6 .. x + 26) and its range, which is the hero's centre between these two x. */
-    private static final float MOB_X = 2496, ZONE_LEFT = 2384, ZONE_RIGHT = 2624;
-    /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
+    private static final float LEVER_X = 2224, LADDER_X = 2288, LADDER_CENTRE = 2296, CHECKPOINT_X = 2800, REFILL_X = 2640, SLAB_END = 2704;
+    /** The guard's post (the art's x; its body is x + 6 .. x + 26, y 180-208) and its range: the hero's centre between these two x, on its row. */
+    private static final float GUARD_X = 2300, ZONE_LEFT = 2268, ZONE_RIGHT = 2364;
+    /** The hero's centre is 23.5 px right of position.x (hitbox offset 18, width 11). The guard's row is wakened by a hero whose feet are above y 230. */
+    private static final float ROW_FEET = 230, SHOT_FEET = 214;
+    /** The hero walks 100 px/s, the guard 80 px/s; the climb is 70 px/s. */
     private static final float BUDGET = 20f;
+    /** Pinned measurements (D67): scripted hero, 60 frames per second. A route may differ from these by at most this much (about 6 frames). */
+    private static final float PIN_MARGIN = 0.1f;
+    private static final float FLOOR_ROUTE_S = 5.95f, CLIMB_ROUTE_S = 8.33f, SHOT_ROUTE_S = 7.62f;
+    /** Pinned sweeps: the number of swing delays (0-14 frames after stepping off) that kill, and of shot heights that stop the guard. */
+    private static final int SWING_DELAYS_TRIED = 15, SWING_DELAYS_KILLING = 6, SHOT_HEIGHTS_KILLING = 5, SHOT_DELAYS_KILLING = 4;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     private final Set<Integer> held = h.held, pressed = h.pressed;
     private RangedStock stock;
     private RedMob theMob;
     private boolean actionWasDown;
-    private int retreatFrames;
 
     @BeforeEach void setUp() { h.setUp(); }
     @AfterEach void restoreGlobals() { h.restoreGlobals(); }
@@ -72,16 +77,15 @@ class Forest1CombatTest {
     private Lever lever(Level level) { return level.objects.stream().filter(Lever.class::isInstance).map(Lever.class::cast).findFirst().orElseThrow(); }
     /** The room's guard; after a retry the level builds a new one, so this looks it up (a slain guard leaves the list, then the old one is returned). */
     private RedMob mob(Level level) { return level.objects.stream().filter(RedMob.class::isInstance).map(RedMob.class::cast).findFirst().orElse(theMob); }
+    private FireballRefill refill(Level level) { return level.objects.stream().filter(FireballRefill.class::isInstance).map(FireballRefill.class::cast).findFirst().orElse(null); }
+    private boolean refillGone(Level level) { return level.objects.stream().noneMatch(o -> o instanceof FireballRefill && !o.isRemoved()); }
     private float feet(Level level) { Rectangle b = level.player.hitboxBounds(); return b.y + b.height; }
     private float centerX(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width / 2; }
-    private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private boolean won(Level level) { return level.player.getState() == Player.State.DISAPPEARING; }
     private void alive(Level level) { assertFalse(level.player.isGotHit(), "died at " + level.player.position + " guard x " + theMob.getX() + " " + theMob.getState()); }
-    private void jump() { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
-    /** Puts the hero's hitbox centre at {@code cx} (the hitbox sits 18 px right of {@code position.x} and is 11 px wide) with his top at {@code y}, at rest. */
-    private void putHero(Level level, float cx, float y) { level.player.position.set(cx - 23.5f, y); level.player.velocity.setZero(); }
     private boolean onFloor(Level level) { return feet(level) > FLOOR - 2 && !level.player.onLadder(); }
-    private boolean onSlab(Level level) { return level.player.isOnGround() && Math.abs(feet(level) - DECK) < 2; }
+    private void putHero(Level level, float cx, float y) { level.player.position.set(cx - 23.5f, y); level.player.velocity.setZero(); }
+    private boolean guardUntouched() { return theMob.getState() == RedMob.State.IDLE && theMob.getX() == GUARD_X; }
 
     /** A live enemy on the hero's row, ahead of him and closer than {@code within} px (body to body). */
     private boolean enemyAhead(Level level, float within) {
@@ -91,10 +95,7 @@ class Forest1CombatTest {
             && en.y < me.y + me.height && en.y + en.height > me.y;
     }
 
-    /**
-     * What a hero does when the guard is within sword reach on either side: turn to face it (a key held toward it) and swing once per press. Returns
-     * whether he is fighting this frame; the caller keeps {@code actionWasDown} for the fresh-press rule.
-     */
+    /** What a hero does when the guard is within sword reach on either side: turn to face it and swing once per press. */
     private boolean defend(Level level) {
         Rectangle me = level.player.hitboxBounds(), en = theMob.hitboxBounds();
         if (theMob.isDefeated() || !level.player.isOnGround() || en.y >= me.y + me.height || en.y + en.height <= me.y) return false;
@@ -125,7 +126,7 @@ class Forest1CombatTest {
         return frames;
     }
 
-    /** The floor route with ordinary keys, the sword only: walk right, swing when the guard is within the sword's reach. Ends at the checkpoint. */
+    /** Walks right with ordinary keys until the checkpoint; from the slab this walks the slab, takes the refill on the way and drops off the end. */
     private int floorRoute(Level level) {
         int frames = 0;
         actionWasDown = false;
@@ -141,56 +142,9 @@ class Forest1CombatTest {
         return frames;
     }
 
-    /**
-     * The timing route: do not swing first. Stand still when the guard wakes, let it raise the whip, step back out of the whip's reach so that it
-     * strikes the air, then walk in and strike once its attack is over.
-     */
-    private int timingRoute(Level level) {
-        int frames = 0;
-        boolean sawWindUp = false;
-        retreatFrames = 0;
-        actionWasDown = false;
-        while (!won(level)) {
-            held.clear();
-            RedMob mob = mob(level);
-            boolean windingUp = !mob.isDefeated() && mob.getState() == RedMob.State.ATTACK;
-            boolean awake = !mob.isDefeated() && mob.getState() != RedMob.State.IDLE;
-            if (windingUp) { sawWindUp = true; held.add(Input.Keys.A); retreatFrames++; }   // the whip is up: back off
-            else if (sawWindUp || !awake) held.add(Input.Keys.D);                              // asleep, or its attack is spent: go on
-            // awake and not yet attacking: stand still and let it come
-            boolean melee = sawWindUp && !windingUp && enemyAhead(level, 16);
-            if (melee && !actionWasDown) pressed.add(Input.Keys.K);
-            actionWasDown = melee;
-            frame(level); alive(level);
-            assertTrue(++frames < 60 * 30, "timing route stuck at " + level.player.position);
-        }
-        held.clear();
-        return frames;
-    }
-
-    /** Shoots once the hero's centre passes {@code fromX} (he keeps walking: the fireball flies on the hero's row), then goes on to the checkpoint. */
-    private int fireballRoute(Level level, float fromX) {
-        int frames = 0;
-        boolean shot = false;
-        actionWasDown = false;
-        while (!won(level)) {
-            held.clear(); held.add(Input.Keys.D);
-            if (!shot && centerX(level) >= fromX) { pressed.add(Input.Keys.L); shot = true; }
-            boolean melee = enemyAhead(level, 16);
-            if (melee && !actionWasDown) pressed.add(Input.Keys.K);
-            actionWasDown = melee;
-            frame(level); alive(level);
-            assertTrue(++frames < 60 * 30, "fireball route stuck at " + level.player.position);
-        }
-        held.clear();
-        assertTrue(shot);
-        return frames;
-    }
-
-    /** Walks right until the body is over the ladder's rungs. */
     private int walkToLadder(Level level) {
         int frames = 0;
-        while (centerX(level) < LADDER_X + 2) {
+        while (centerX(level) < LADDER_CENTRE + 2) {
             held.clear(); held.add(Input.Keys.D);
             frame(level); alive(level);
             assertTrue(++frames < 60 * 20, "ladder unreachable from " + level.player.position);
@@ -199,47 +153,69 @@ class Forest1CombatTest {
         return frames;
     }
 
-    /** Holds Up until the hero stands on the slab. */
-    private int climb(Level level) {
+    /** Takes hold of the ladder and holds Up until the hero's feet are at or above {@code feetTarget} (still on the ladder, or stepped off at its top). */
+    private int climbTo(Level level, float feetTarget) {
         int frames = 0;
-        boolean grabbed = false;
-        while (!(grabbed && !level.player.onLadder() && feet(level) <= DECK + 1)) {
+        while (feet(level) > feetTarget) {
             held.clear(); held.add(Input.Keys.W);
-            frame(level);
-            grabbed |= level.player.onLadder();
-            assertTrue(++frames < 60 * 20, "climb stuck at " + level.player.position + " ladderY=" + ladder(level).getY());
-        }
-        held.clear(); frame(level);
-        return frames + 1;
-    }
-
-    /** From the foot of the ladder, with the lever pulled: up, then right along the slab, hopping the hole (a 32 px gap, one jump), and off the far end. */
-    private int walkTheSlab(Level level) {
-        int frames = 0;
-        while (!onFloor(level) && !won(level)) {
-            held.clear(); held.add(Input.Keys.D);
-            if (onSlab(level) && bodyRight(level) >= HOLE_LEFT - 6 && bodyRight(level) < HOLE_RIGHT - 8 && centerX(level) < HOLE_LEFT) jump();
             frame(level); alive(level);
-            assertTrue(++frames < 60 * 30, "slab walk stuck at " + level.player.position);
+            assertTrue(++frames < 60 * 20, "climb stuck at " + level.player.position);
         }
         held.clear();
         return frames;
     }
 
-    /** The overhead route from a standing start: lever, ladder, slab, the hole, the drop, the walk to the checkpoint. The guard is never touched. */
-    private int overheadRoute(Level level) {
+    /** From the entrance: the lever, the ladder foot, up to {@code feetTarget}. */
+    private int toTheLadder(Level level, float feetTarget) {
         int frames = walkToLever(level);
         frames += operate(level);
         assertTrue(ladder(level).isLowered());
         frames += walkToLadder(level);
-        frames += climb(level);
-        frames += walkTheSlab(level);
+        return frames + climbTo(level, feetTarget);
+    }
+
+    /** Holds Up until the hero steps off the ladder's top, then waits {@code delay} frames and swings once. Returns the frames used; the hero may die. */
+    private int climbOnAndSwing(Level level, int delay) {
+        int frames = 0;
+        while (level.player.onLadder() || feet(level) > DECK + 1) {
+            held.clear(); held.add(Input.Keys.W);
+            frame(level);
+            frames++;
+            if (level.player.isGotHit()) return frames;
+            assertTrue(frames < 60 * 20, "climb stuck at " + level.player.position);
+        }
+        held.clear();
+        for (int i = 0; i < delay; i++) { frame(level); frames++; if (level.player.isGotHit()) return frames; }
+        pressed.add(Input.Keys.K);
+        for (int i = 0; i < 30; i++) { frame(level); frames++; if (level.player.isGotHit() || theMob.isDefeated()) break; }
+        return frames;
+    }
+
+    /** The climb route: lever, ladder, climb on, swing at once, then the slab, the refill, the drop, the checkpoint. */
+    private int climbRoute(Level level) {
+        int frames = toTheLadder(level, DECK);
+        frames += climbOnAndSwing(level, 0);
+        alive(level);
+        assertTrue(theMob.isDefeated(), "the swing on arrival killed the guard");
+        return frames + floorRoute(level);
+    }
+
+    /**
+     * The shot route: climb on until the feet are at {@value #SHOT_FEET} (the fireball leaves the hero 19 px above his feet, so a lower shot hits the slab's
+     * edge), shoot from the ladder with no sword at all, keep climbing, then as the climb route. The guard must be dead before the hero steps off.
+     */
+    private int shotRoute(Level level) {
+        int frames = toTheLadder(level, SHOT_FEET);
+        pressed.add(Input.Keys.L);
+        for (int i = 0; i < 12 && !theMob.isDefeated(); i++) { held.clear(); held.add(Input.Keys.W); frame(level); frames++; alive(level); }
+        assertTrue(theMob.isDefeated(), "the fireball killed the guard");
+        assertTrue(level.player.onLadder() || feet(level) <= DECK + 1);
         return frames + floorRoute(level);
     }
 
     // ---- census and geometry ----
 
-    @Test void theRoomHoldsOneLeverOneRaisedLadderOneSlabWithAHoleOneRedMobAndTheCheckpointAndNothingElse() {
+    @Test void theRoomHoldsOneLeverOneRaisedLadderOneSlabOneGuardOneRefillAndTheCheckpointAndNothingElse() {
         Level level = room(0);
         assertEquals("forest-1-guard", level.currentRoomName());
         assertEquals(new Rectangle(ROOM_X, 0, 768, 368), level.currentRoomBounds());
@@ -247,28 +223,33 @@ class Forest1CombatTest {
         assertEquals(1, level.triggers.size());
         assertEquals(1, level.objects.stream().filter(Lever.class::isInstance).count());
         assertEquals(1, level.ladders.size());
-        assertEquals(0, level.escalators.size(), "no lift and no ferry: the lift is room 2's");
-        assertEquals(0, level.fallingPlatforms.size(), "no one-shot support in this room: the lever is a reversible toggle");
+        assertEquals(0, level.escalators.size());
+        assertEquals(0, level.fallingPlatforms.size(), "no one-shot support: the lever is a reversible toggle");
         assertEquals(1, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster, the RedMob");
-        assertEquals(1, level.objects.stream().filter(RedMob.class::isInstance).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof LethalHazard), "no hazards in the guard room");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
         assertEquals(1, level.objects.stream().filter(Checkpoint.class::isInstance).count());
-        assertTrue(level.objects.stream().noneMatch(o -> o instanceof FireballRefill), "no refill in this room: the fireball is the one the hero carries in");
+        assertEquals(1, level.objects.stream().filter(FireballRefill.class::isInstance).count(), "one refill, and no coin (coins feed the healer recipe)");
+        assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Collectable));
         assertFalse(ladder(level).isLowered());
         assertFalse(lever(level).isUp());
         assertEquals(LADDER_X, ladder(level).getX(), 0.01f);
         assertEquals(96, ladder(level).topY(), 0.01f);
-        assertEquals(208, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor");
-        assertEquals(MOB_X, theMob.getX(), 0.01f);
-        assertEquals(FLOOR, theMob.getY() + theMob.getHeight(), 0.01f, "the guard stands on the floor");
-        Rectangle body = theMob.hitboxBounds();
-        assertTrue(body.x >= HOLE_LEFT && body.x + body.width <= HOLE_RIGHT, "the hole is right above the guard: " + body);
+        assertEquals(DECK, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor");
+        assertEquals(GUARD_X, theMob.getX(), 0.01f);
+        assertEquals(DECK, theMob.getY() + theMob.getHeight(), 0.01f, "the guard stands on the slab, not on the floor");
+        FireballRefill refill = refill(level);
+        assertEquals(REFILL_X, refill.getX(), 0.01f);
+        assertEquals(DECK, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the slab's far part");
+        assertTrue(refill.getX() - (GUARD_X + 48) >= 200, "far from the guard, and above any floor threat (the floor has none)");
         var checkpoint = level.objects.stream().filter(Checkpoint.class::isInstance).map(Checkpoint.class::cast).findFirst().orElseThrow();
         assertEquals(CHECKPOINT_X, checkpoint.getX(), 0.01f);
         assertEquals(FLOOR, checkpoint.getY() + checkpoint.getHeight(), 0.01f, "it stands on the floor");
         assertEquals(START_X, level.player.position.x, 0.01f);
         assertEquals("", level.player.zoneHint(), "no hints");
+        // The slab is one piece: no hole (D67: the hole served a floor guard; nothing below the slab is left to drop onto).
+        long slabs = level.collisionBlocks.stream().filter(b -> b.getY() == DECK && b.getHeight() == 16).count();
+        assertEquals(1, slabs);
     }
 
     @Test void theEntranceIsSafeAndFarFromTheGuardAndTheCheckpointIsClearOfTheRightWallAndTheDrop() {
@@ -278,287 +259,280 @@ class Forest1CombatTest {
         settle(level, 60 * 3);
         alive(level);
         assertEquals(START_X, level.player.position.x, 0.5f, "standing still at the entrance: nothing moves the hero");
-        assertEquals(MOB_X, theMob.getX(), 0.01f, "the guard never leaves its post for a hero outside its range");
-        assertTrue(ZONE_LEFT - (START_X + 48) >= 150, "the guard's range starts far from the entrance's 48 px square");
+        assertTrue(guardUntouched());
+        assertTrue(ZONE_LEFT - (START_X + 48) >= 40, "the guard's range starts well clear of the entrance's 48 px square");
         assertTrue(ROOM_END - 16 - (CHECKPOINT_X + 16) >= 48, "the checkpoint is clear of the right wall");
         assertTrue(CHECKPOINT_X - SLAB_END >= 48, "and clear of where a hero drops off the slab's end");
     }
 
-    @Test void theGuardHoldsItsPostAndNeverPatrols() {
+    @Test void theGuardHoldsItsPostForAFloorHeroWalkingRunningAndJumpingAllTheWayAndTheFloorRouteNeverTouchesIt() {
         Level level = room(0);
-        // A RedMob has no patrol: it stands until the hero's body is inside its range and on its row.
-        putHero(level, 2300, 272);
-        for (int i = 0; i < 60 * 10; i++) { frame(level); alive(level); }
-        assertEquals(MOB_X, theMob.getX(), 0.01f);
-        assertEquals(RedMob.State.IDLE, theMob.getState());
-        assertEquals(FLOOR, theMob.getY() + theMob.getHeight(), 0.01f);
-    }
-
-    @Test void aHeroOnTheSlabNeverWakesTheGuardHoweverCloseHeWalksAboveIt() {
-        Level level = room(0);
-        walkToLever(level); operate(level); walkToLadder(level); climb(level);
-        for (int i = 0; i < 60 * 30 && !onFloor(level); i++) {
+        int frames = 0;
+        while (!won(level)) {
             held.clear(); held.add(Input.Keys.D);
-            if (onSlab(level) && bodyRight(level) >= HOLE_LEFT - 6 && centerX(level) < HOLE_LEFT) jump();
+            if (frames % 20 == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }   // a hero who jumps along the whole floor
             frame(level); alive(level);
-            if (feet(level) < FLOOR - 2) {
-                assertEquals(MOB_X, theMob.getX(), 0.01f, "at " + level.player.position);
-                assertEquals(RedMob.State.IDLE, theMob.getState(), "at " + level.player.position);
-            }
+            assertTrue(guardUntouched(), "frame " + frames + " at " + level.player.position);
+            assertTrue(++frames < 60 * 30);
         }
-        assertTrue(onFloor(level), "the walk ends on the floor beyond the slab: " + level.player.position);
-        // Standing on the slab for 3 s right above the guard: the same.
-        held.clear();
-        Level above = room(0);
-        putHero(above, HOLE_RIGHT + 14, DECK - 48 - 1);   // the slab's far side of the hole, above the guard's right half
-        for (int i = 0; i < 180; i++) { frame(above); assertEquals(RedMob.State.IDLE, theMob.getState()); }
-        assertTrue(onSlab(above), "the hero stands on the slab above the guard: " + above.player.position + " feet " + feet(above));
-        assertEquals(MOB_X, theMob.getX(), 0.01f);
+        // Standing still for 10 s at the foot of the ladder (the nearest floor point) and under the slab: still asleep.
+        Level still = room(0);
+        putHero(still, LADDER_CENTRE, 272);
+        for (int i = 0; i < 600; i++) { frame(still); assertTrue(guardUntouched()); }
     }
 
-    @Test void theGuardsReachStaysClearOfTheLeverTheLadderTheEndOfTheSlabAndTheEntrance() {
-        // Lever reach: every hero x on the floor from which the lever can be pulled.
+    @Test void theGuardWakesOnlyWhenTheClimbersBodyReachesItsRowAndWaitingBelowItCostsNothing() {
+        Level level = room(0);
+        toTheLadder(level, ROW_FEET + 6);                      // feet at 236: just below the row
+        assertTrue(level.player.onLadder());
+        for (int i = 0; i < 60 * 5; i++) { held.clear(); frame(level); alive(level); assertTrue(guardUntouched(), "waiting on the ladder at " + level.player.position); }
+        float wokeAt = -1;
+        for (int i = 0; i < 60 && wokeAt < 0; i++) {
+            held.clear(); held.add(Input.Keys.W);
+            float before = feet(level);
+            frame(level);
+            if (theMob.getState() != RedMob.State.IDLE) wokeAt = before;
+        }
+        System.out.println("forest-1 guard room: the guard wakes when the climber's feet reach y " + wokeAt);
+        assertTrue(wokeAt > 0 && wokeAt <= ROW_FEET && wokeAt >= ROW_FEET - 12, "it wakes as the body reaches its row: " + wokeAt);
+    }
+
+    // ---- clearances, for a standing, a jumping and a climbing hero ----
+
+    private static float gap(Rectangle a, Rectangle b) {
+        float dx = Math.max(0, Math.max(a.x - (b.x + b.width), b.x - (a.x + a.width)));
+        float dy = Math.max(0, Math.max(a.y - (b.y + b.height), b.y - (a.y + a.height)));
+        return (float) Math.hypot(dx, dy);
+    }
+
+    @Test void theGuardsReachStaysFortyEightPxClearOfTheLeversReachForAStandingAJumpingAndAClimbingHero() {
+        // Where the lever can be pulled: hero hitboxes standing on the floor and at every height of a jump over the lever (canInteract is true there).
         Level probe = room(0);
-        float reachLeft = Float.MAX_VALUE, reachRight = -Float.MAX_VALUE;
+        Rectangle reach = null;
         for (float x = ROOM_X + 24; x < ROOM_END - 24; x += 2) {
-            putHero(probe, x, 272);
-            settle(probe, 2);
-            if (probe.player.canInteract()) { reachLeft = Math.min(reachLeft, centerX(probe)); reachRight = Math.max(reachRight, centerX(probe)); }
-        }
-        assertTrue(reachLeft < Float.MAX_VALUE, "the lever has a reach");
-        // The guard's farthest excursion: hold the hero still at each edge of its range and watch the guard come (until it hits him).
-        float minDanger = Float.MAX_VALUE, maxDanger = -Float.MAX_VALUE;
-        for (float edge : new float[]{ZONE_LEFT + 1, ZONE_RIGHT - 1}) {
-            Level level = room(0);
-            putHero(level, edge, 272);
-            for (int i = 0; i < 60 * 6 && !level.player.isGotHit(); i++) {
-                frame(level);
-                Rectangle body = theMob.hitboxBounds(), whip = theMob.attackBounds();
-                minDanger = Math.min(minDanger, Math.min(body.x, whip.x));
-                maxDanger = Math.max(maxDanger, Math.max(body.x + body.width, whip.x + whip.width));
+            for (float y = 272 - 60; y <= 272; y += 4) {
+                putHero(probe, x, y);
+                settle(probe, 2);
+                if (probe.player.canInteract()) {
+                    Rectangle b = new Rectangle(probe.player.hitboxBounds());
+                    reach = reach == null ? b : reach.merge(b);
+                }
             }
         }
-        System.out.printf(Locale.ROOT, "forest-1 guard room: lever reach x %.1f-%.1f, the guard's danger spans x %.1f-%.1f%n", reachLeft, reachRight, minDanger, maxDanger);
-        assertTrue(minDanger - reachRight >= 48, "the lever's reach ends " + reachRight + ", the guard's nearest danger is " + minDanger);
-        assertTrue(minDanger - (LADDER_X + 16 + 12) >= 48, "a hero on the ladder (x 2288-2304, body 12 px either side) is 48+ px from the guard's nearest danger " + minDanger);
-        assertTrue(SLAB_END - maxDanger >= 48, "the slab's end is clear of the guard's farthest danger " + maxDanger);
-        assertTrue(ZONE_LEFT - (START_X + 48) >= 150);
-        assertEquals(MOB_X - 7 * 16, ZONE_LEFT, 0.01f, "the range starts 7 tiles left of the guard's x");
-        assertEquals(MOB_X + 8 * 16, ZONE_RIGHT, 0.01f, "and ends 8 tiles right of it");
+        assertNotNull(reach);
+        // Where the guard and its whip can be: a climber who never swings (dies), one who swings at once, one standing on the ladder's top, one who
+        // retreats; hold each until the hero is hit or 3 s have passed.
+        Rectangle danger = null;
+        for (int mode = 0; mode < 4; mode++) {
+            Level level = room(0);
+            toTheLadder(level, ROW_FEET + 6);
+            for (int i = 0; i < 60 * 3 && !level.player.isGotHit(); i++) {
+                held.clear();
+                if (mode == 0 || mode == 1 || (mode == 2 && feet(level) > DECK + 1)) held.add(Input.Keys.W);
+                if (mode == 3) held.add(i < 20 ? Input.Keys.W : Input.Keys.S);
+                if (mode == 1 && !level.player.onLadder() && feet(level) <= DECK + 1 && !theMob.isDefeated()) pressed.add(Input.Keys.K);
+                frame(level);
+                for (Rectangle r : new Rectangle[]{theMob.hitboxBounds(), theMob.attackBounds()}) {
+                    Rectangle c = new Rectangle(r);
+                    danger = danger == null ? c : danger.merge(c);
+                }
+            }
+        }
+        float clear = gap(reach, danger);
+        System.out.printf(Locale.ROOT, "forest-1 guard room: lever reach (standing and jumping) x %.1f-%.1f y %.1f-%.1f, the guard's danger x %.1f-%.1f y %.1f-%.1f, gap %.1f px%n",
+            reach.x, reach.x + reach.width, reach.y, reach.y + reach.height, danger.x, danger.x + danger.width, danger.y, danger.y + danger.height, clear);
+        assertTrue(clear >= 48, "the guard's reach is " + clear + " px from the lever's reach");
+        assertTrue(danger.x >= ZONE_LEFT - 16, "the guard never leaves the ladder's top by more than its range: " + danger.x);
+        assertTrue(danger.y + danger.height <= DECK, "and never comes down off the slab: " + (danger.y + danger.height));
     }
 
-    // ---- the four choices, each with zero charges unless it is the fireball ----
+    // ---- the choices ----
 
-    @Test void theSwordRouteNeedsNoChargeAndKillsTheGuardWithoutAHit() {
+    @Test void theFloorRouteIsGuardFreeNeedsNoChargeAndNothingElse() {
         Level level = room(0);
         int frames = floorRoute(level);
         float seconds = frames * STEP;
-        System.out.printf(Locale.ROOT, "forest-1 guard room, sword route: %.2f s%n", seconds);
+        System.out.printf(Locale.ROOT, "forest-1 guard room, floor route: %.2f s%n", seconds);
         assertTrue(won(level));
-        assertTrue(theMob.isDefeated());
         assertEquals(0, stock.count());
-        assertTrue(level.objects.stream().noneMatch(Fireball.class::isInstance));
-        assertFalse(ladder(level).isLowered(), "the sword route touches nothing else");
-        assertTrue(seconds <= 12f, "mastered sword route " + seconds + " s, well inside the 20 s budget");
+        assertTrue(guardUntouched());
+        assertFalse(theMob.isDefeated());
+        assertFalse(ladder(level).isLowered());
+        assertFalse(refillGone(level), "the refill is optional: the floor leaves it where it is");
+        assertEquals(FLOOR_ROUTE_S, seconds, PIN_MARGIN);
     }
 
-    @Test void theTimingRouteLetsTheWhipMissAndStillKillsTheGuardWithoutAHit() {
+    @Test void aClimbThatSwingsAtOnceKillsTheGuardTakesTheRefillAndNeedsNoCharge() {
         Level level = room(0);
-        int frames = timingRoute(level);
+        int frames = climbRoute(level);
         float seconds = frames * STEP;
-        System.out.printf(Locale.ROOT, "forest-1 guard room, timing route (back off the raised whip, then punish): %.2f s, backed off for %d frames%n", seconds, retreatFrames);
+        System.out.printf(Locale.ROOT, "forest-1 guard room, climb and swing: %.2f s%n", seconds);
         assertTrue(won(level));
         assertTrue(theMob.isDefeated());
-        assertEquals(0, stock.count());
-        assertTrue(retreatFrames >= 12, "the hero really waited out the wind-up: " + retreatFrames);
-        assertTrue(seconds <= 14f, "timing route " + seconds + " s");
+        assertEquals(1, stock.count(), "the refill paid one charge");
+        assertTrue(refillGone(level));
+        assertTrue(level.objects.stream().noneMatch(Fireball.class::isInstance));
+        assertEquals(CLIMB_ROUTE_S, seconds, PIN_MARGIN);
     }
 
-    @Test void aStompOnTheFloorTakesTheGuardFromSeveralTakeoffDistancesAndNeedsNoCharge() {
-        int ok = 0, tried = 0;
-        for (int gap = 8; gap <= 90; gap += 2) {
-            Level level = room(0);
-            putHero(level, ZONE_LEFT - 60, 272);
-            settle(level, 3);
-            tried++;
-            for (int i = 0; i < 60 * 4 && !theMob.isDefeated() && !level.player.isGotHit(); i++) {
-                held.clear(); held.add(Input.Keys.D);
-                float g = theMob.hitboxBounds().x - bodyRight(level);
-                if (level.player.isOnGround() && g <= gap && g > gap - 4) jump();
-                frame(level);
-            }
-            if (theMob.isDefeated() && !level.player.isGotHit()) ok++;
-        }
-        System.out.println("forest-1 guard room: a hop onto the guard works from " + ok + " of " + tried + " takeoff gaps");
-        assertTrue(ok >= 3, "a stomp takes the guard from several takeoff distances: " + ok);
-    }
-
-    @Test void theSwordIsNoRiskAnySingleSwingKillsAndAHopOverTheGuardUsuallyPassesOrStomps() {
-        // The finding behind D67 (the honest assessment of #104): what the guard is worth. One swing per attempt, started when the gap (body to body)
-        // first drops to g. The swing keeps its hitbox for the whole animation and the guard walks into it, so there is no window to miss.
+    @Test void aSwingThatComesTooLateAfterSteppingOffIsWhippedAndTheWindowIsSmall() {
         StringBuilder window = new StringBuilder();
-        int kills = 0, whipped = 0, tried = 0;
-        for (int g = 0; g <= 64; g += 2) {
+        int kills = 0;
+        for (int delay = 0; delay < SWING_DELAYS_TRIED; delay++) {
             Level level = room(0);
-            putHero(level, ZONE_LEFT - 60, 272);
-            settle(level, 3);
-            boolean swung = false;
-            for (int i = 0; i < 60 * 5 && !theMob.isDefeated() && !level.player.isGotHit(); i++) {
-                held.clear(); held.add(Input.Keys.D);
-                float gap = theMob.hitboxBounds().x - bodyRight(level);
-                if (!swung && gap <= g && level.player.isOnGround()) { pressed.add(Input.Keys.K); swung = true; }
-                frame(level);
-            }
-            tried++;
+            toTheLadder(level, DECK);
+            climbOnAndSwing(level, delay);
             boolean killed = theMob.isDefeated() && !level.player.isGotHit();
-            if (killed) kills++; else if (level.player.isGotHit()) whipped++;
+            if (killed) kills++;
             window.append(killed ? 'K' : level.player.isGotHit() ? 'x' : '.');
         }
-        System.out.println("forest-1 guard room, one swing started at gap 0,2,..64 (K kill, x whipped): " + window);
-        int passed = 0, stomped = 0, hit = 0, hopTries = 0;
-        for (int gap = 8; gap <= 90; gap += 2) {
-            Level level = room(0);
-            putHero(level, ZONE_LEFT - 60, 272);
-            settle(level, 3);
-            hopTries++;
-            for (int i = 0; i < 60 * 6 && !theMob.isDefeated() && !level.player.isGotHit() && centerX(level) < ZONE_RIGHT + 40; i++) {
-                held.clear(); held.add(Input.Keys.D);
-                float g = theMob.hitboxBounds().x - bodyRight(level);
-                if (level.player.isOnGround() && g <= gap && g > gap - 4) jump();
-                frame(level);
-            }
-            if (level.player.isGotHit()) hit++; else if (theMob.isDefeated()) stomped++; else passed++;
-        }
-        System.out.println("forest-1 guard room, one hop from 42 takeoff gaps: passed over " + passed + ", stomped " + stomped + ", whipped " + hit);
-        assertTrue(kills >= tried - 2, "one swing started at any gap of 0-64 px kills (measured 33 of 33): " + kills + " of " + tried + ", whipped " + whipped);
-        assertTrue(passed >= 10, "a hop over the guard passes it from many takeoff gaps (measured 22 of 42): " + passed + " of " + hopTries);
-        assertTrue(stomped >= 3, "and a stomp kills it from several (measured 17 of 42): " + stomped);
+        System.out.println("forest-1 guard room, a swing d frames after stepping off the ladder, d = 0.." + (SWING_DELAYS_TRIED - 1) + " (K kill, x whipped): " + window);
+        assertEquals(SWING_DELAYS_KILLING, kills, "the swing must come within the wind-up (0.4 s) left after the climb: " + window);
+        assertEquals('K', window.charAt(0));
+        assertEquals('x', window.charAt(SWING_DELAYS_TRIED - 1));
     }
 
-    @Test void theFireballRouteSpendsOneChargeFromBeyondTheRangeAndIsTheFastest() {
-        Level level = room(1);
-        int frames = fireballRoute(level, ZONE_LEFT - 60);
-        float seconds = frames * STEP;
-        System.out.printf(Locale.ROOT, "forest-1 guard room, fireball route: %.2f s%n", seconds);
-        assertTrue(won(level));
-        assertEquals(0, stock.count(), "one charge spent");
-        assertTrue(theMob.isDefeated());
-        Level sword = room(0);
-        float swordSeconds = floorRoute(sword) * STEP;
-        assertTrue(seconds < swordSeconds - 0.2f, "the shot saves the stop-and-swing: " + seconds + " against " + swordSeconds);
-        assertTrue(seconds <= 12f);
-    }
-
-    @Test void theOverheadRouteSkipsTheFightAndLeavesTheGuardAliveAtItsPost() {
+    @Test void aClimberWhoNeverSwingsIsWhippedAndRetryRestoresTheAuthoredRoom() {
         Level level = room(0);
-        int frames = 0;
-        frames += walkToLever(level);
-        frames += operate(level);
-        frames += walkToLadder(level);
-        frames += climb(level);
-        float onSlab = frames * STEP;
-        frames += walkTheSlab(level);
-        assertEquals(MOB_X, theMob.getX(), 0.01f);
-        assertEquals(RedMob.State.IDLE, theMob.getState(), "the guard never woke on the way over");
-        frames += floorRoute(level);
-        float seconds = frames * STEP;
-        System.out.printf(Locale.ROOT, "forest-1 guard room, overhead route: %.2f s (on the slab at %.2f s)%n", seconds, onSlab);
+        toTheLadder(level, DECK);
+        for (int i = 0; i < 60 * 3 && !level.player.isGotHit(); i++) { held.clear(); frame(level); }
+        assertTrue(level.player.isGotHit(), "standing at the ladder's top beside the guard without swinging is deadly");
+        level.resetCurrentRoom(player());
+        theMob = mob(level);
+        assertFalse(theMob.isDefeated());
+        assertEquals(GUARD_X, theMob.getX(), 0.01f, "back at its post");
+        assertFalse(ladder(level).isLowered());
+        assertFalse(lever(level).isUp());
+        assertFalse(refillGone(level));
+        assertEquals(START_X, level.player.position.x, 0.01f);
+        floorRoute(level);
         assertTrue(won(level));
-        assertFalse(theMob.isDefeated(), "the guard is alive: the hero never fought it");
-        assertEquals(0, stock.count());
-        assertTrue(ladder(level).isLowered(), "the ladder stays down");
-        assertTrue(seconds <= 12f, "overhead route " + seconds + " s, inside the 20 s budget");
     }
 
-    /** Steps into the hole from the slab and keeps the key down for {@code extra} more frames in the air, then lets go; the hero falls straight on. */
-    private void dropThroughTheHole(Level level, int extra) {
-        walkToLever(level); operate(level); walkToLadder(level); climb(level);
-        for (int i = 0; i < 60 * 15 && level.player.isOnGround(); i++) { held.clear(); held.add(Input.Keys.D); frame(level); alive(level); }
-        for (int i = 0; i < extra; i++) { held.clear(); held.add(Input.Keys.D); frame(level); }
-        held.clear();
-        assertFalse(level.player.isOnGround());
-    }
-
-    @Test void theHoleAboveTheGuardCanBeHoppedOrDroppedThroughAndTheDropIsAStompFromSeveralReleasePoints() {
-        // Hopping it: swept over the takeoff point (a 32 px gap, one jump of about 88 px). Dropping through it: the hero walks to the edge, steps into
-        // the hole and lets go of the key after 0-14 more frames in the air, falling straight down; where he lands decides whether it is a stomp.
-        int hopped = 0, hopTries = 0, stomped = 0, dropTries = 0;
-        for (float takeoff = HOLE_LEFT - 40; takeoff <= HOLE_LEFT + 4; takeoff += 4) {
-            Level level = room(0);
-            walkToLever(level); operate(level); walkToLadder(level); climb(level);
-            hopTries++;
-            for (int i = 0; i < 60 * 15 && !onFloor(level) && !level.player.isGotHit(); i++) {
-                held.clear(); held.add(Input.Keys.D);
-                if (onSlab(level) && bodyRight(level) >= takeoff && centerX(level) < HOLE_LEFT) jump();
-                frame(level);
+    @Test void aFireballShotFromTheLadderKillsTheGuardBeforeItStrikesAndTheRefillReturnsTheCharge() {
+        Level level = room(1);
+        int frames = shotRoute(level);
+        float seconds = frames * STEP;
+        System.out.printf(Locale.ROOT, "forest-1 guard room, shot from the ladder: %.2f s%n", seconds);
+        assertTrue(won(level));
+        assertEquals(1, stock.count(), "one charge spent, one won back from the slab");
+        assertTrue(refillGone(level));
+        assertEquals(SHOT_ROUTE_S, seconds, PIN_MARGIN);
+        // The window, swept: a shot fired when the climber's feet pass each height from 238 to 188.
+        StringBuilder window = new StringBuilder();
+        int stops = 0;
+        for (int at = 238; at >= 188; at -= 2) {
+            Level l = room(1);
+            toTheLadder(l, 262);                              // climbing on from just below the row; the shot is fired when the feet pass `at`
+            boolean fired = false;
+            for (int i = 0; i < 90 && !theMob.isDefeated() && !l.player.isGotHit(); i++) {
+                held.clear();
+                if (l.player.onLadder() || feet(l) > DECK + 1) held.add(Input.Keys.W);
+                if (!fired && feet(l) <= at) { pressed.add(Input.Keys.L); fired = true; }
+                frame(l);
             }
-            if (!level.player.isGotHit() && centerX(level) > SLAB_END - 20) hopped++;
+            boolean ok = theMob.isDefeated() && !l.player.isGotHit();
+            if (ok) stops++;
+            window.append(ok ? 'K' : l.player.isGotHit() ? 'x' : '.');
         }
-        for (int extra = 0; extra <= 14; extra++) {
-            Level level = room(0);
-            dropThroughTheHole(level, extra);
-            dropTries++;
-            for (int i = 0; i < 60 * 3 && !theMob.isDefeated() && !level.player.isGotHit() && !onFloor(level); i++) { held.clear(); frame(level); }
-            frame(level);
-            if (theMob.isDefeated() && !level.player.isGotHit()) { stomped++; assertEquals(RedMob.State.HIT, theMob.getState()); assertEquals(0, stock.count()); }
+        System.out.println("forest-1 guard room, a shot with the climber's feet at 238, 236, .. 188 (K guard dead, x hero whipped): " + window);
+        assertEquals(SHOT_HEIGHTS_KILLING, stops, "the shot must leave 19 px above the feet clear of the slab's edge and land before the strike: " + window);
+        // ... and fired d frames after stepping off the ladder (the guard is beside him).
+        StringBuilder after = new StringBuilder();
+        int late = 0;
+        for (int d = 0; d < SWING_DELAYS_TRIED; d++) {
+            Level l = room(1);
+            toTheLadder(l, DECK);
+            for (int i = 0; i < 60 && (l.player.onLadder() || feet(l) > DECK + 1); i++) { held.clear(); held.add(Input.Keys.W); frame(l); }
+            held.clear();
+            for (int i = 0; i < d; i++) frame(l);
+            pressed.add(Input.Keys.L);
+            for (int i = 0; i < 40 && !theMob.isDefeated() && !l.player.isGotHit(); i++) frame(l);
+            boolean ok = theMob.isDefeated() && !l.player.isGotHit();
+            if (ok) late++;
+            after.append(ok ? 'K' : 'x');
         }
-        System.out.println("forest-1 guard room, the hole: hopped from " + hopped + " of " + hopTries + " takeoff points; a drop stomps the guard from "
-            + stomped + " of " + dropTries + " release points");
-        assertTrue(hopped >= 6, "the hop clears the hole from many takeoff points: " + hopped + " of " + hopTries);
-        assertTrue(stomped >= 3, "the drop is a stomp from several release points: " + stomped + " of " + dropTries);
+        System.out.println("forest-1 guard room, a shot d frames after stepping off, d = 0.." + (SWING_DELAYS_TRIED - 1) + ": " + after);
+        assertEquals(SHOT_DELAYS_KILLING, late, after.toString());
     }
 
-    @Test void eachChoiceHasADifferentOutcomeAndEveryMasteredRouteFitsTheBudget() {
-        record Outcome(String name, float seconds, int charges, boolean guardDead, boolean ladderDown) {}
-        List<Outcome> all = new ArrayList<>();
-        Level sword = room(1);
-        int f = floorRoute(sword);
-        all.add(new Outcome("sword", f * STEP, stock.count(), theMob.isDefeated(), ladder(sword).isLowered()));
-        Level timing = room(1);
-        f = timingRoute(timing);
-        all.add(new Outcome("timing", f * STEP, stock.count(), theMob.isDefeated(), ladder(timing).isLowered()));
-        Level shot = room(1);
-        f = fireballRoute(shot, ZONE_LEFT - 60);
-        all.add(new Outcome("fireball", f * STEP, stock.count(), theMob.isDefeated(), ladder(shot).isLowered()));
-        Level over = room(1);
-        f = overheadRoute(over);
-        all.add(new Outcome("overhead", f * STEP, stock.count(), theMob.isDefeated(), ladder(over).isLowered()));
-        for (Outcome o : all) {
-            System.out.printf(Locale.ROOT, "forest-1 guard room outcome: %-9s %5.2f s  charges left %d  guard dead %-5s ladder down %-5s%n", o.name, o.seconds, o.charges, o.guardDead, o.ladderDown);
-            assertTrue(o.seconds <= BUDGET, o.name + " fits the 20 s mastered budget: " + o.seconds);
+    @Test void aFullStockMakesTheRefillWorthlessAndASpentChargeIsWonBack() {
+        Level full = room(3);
+        int frames = climbRoute(full);
+        assertTrue(won(full));
+        assertEquals(3, stock.count(), "a full stock gains nothing");
+        assertFalse(refillGone(full), "and the pickup stays where it is (D27)");
+        Level spent = room(3);
+        shotRoute(spent);
+        assertTrue(won(spent));
+        assertEquals(3, stock.count(), "stock 3: shoot (2), take the refill (3): the guard cleared for free");
+        assertTrue(refillGone(spent));
+        assertTrue(frames > 0);
+    }
+
+    @Test void backingDownTheLadderWhileTheWhipIsRaisedLetsTheStrikeHitAirAndCostsNothingElse() {
+        Level level = room(0);
+        toTheLadder(level, ROW_FEET - 2);
+        int windUpFrames = 0;
+        for (int i = 0; i < 60 * 3; i++) {
+            held.clear();
+            boolean windingUp = theMob.getState() == RedMob.State.ATTACK;
+            if (windingUp || i > 10) { held.add(Input.Keys.S); windUpFrames++; }   // the whip is up: down the ladder
+            else held.add(Input.Keys.W);
+            frame(level); alive(level);
+            if (onFloor(level)) break;
         }
-        // Different choices leave different worlds behind.
-        assertEquals(1, all.get(0).charges); assertEquals(1, all.get(1).charges); assertEquals(0, all.get(2).charges); assertEquals(1, all.get(3).charges);
-        assertTrue(all.get(0).guardDead && all.get(1).guardDead && all.get(2).guardDead && !all.get(3).guardDead);
-        assertTrue(!all.get(0).ladderDown && !all.get(1).ladderDown && !all.get(2).ladderDown && all.get(3).ladderDown);
-        assertTrue(all.get(2).seconds < all.get(0).seconds, "the shot is the fastest kill");
-        assertTrue(all.get(3).seconds > all.get(0).seconds, "the overhead route costs more time than the sword");
-        assertTrue(all.get(1).seconds > all.get(0).seconds, "the timing route costs more time than the sword");
+        assertTrue(windUpFrames > 0);
+        settle(level, 60);
+        alive(level);
+        assertFalse(theMob.isDefeated());
+        assertTrue(theMob.getX() <= GUARD_X + 0.01f && theMob.getX() >= GUARD_X - 16, "it stays at the ladder's top: " + theMob.getX());
+    }
+
+    @Test void eachChoiceLeavesADifferentWorldAndEveryMasteredRouteFitsTheBudget() {
+        record Outcome(String name, float seconds, int charges, boolean guardDead, boolean refillTaken, boolean ladderDown) {}
+        List<Outcome> all = new ArrayList<>();
+        Level floor = room(1);
+        int f = floorRoute(floor);
+        all.add(new Outcome("floor", f * STEP, stock.count(), theMob.isDefeated(), refillGone(floor), ladder(floor).isLowered()));
+        Level climb = room(1);
+        f = climbRoute(climb);
+        all.add(new Outcome("climb", f * STEP, stock.count(), theMob.isDefeated(), refillGone(climb), ladder(climb).isLowered()));
+        Level shot = room(1);
+        f = shotRoute(shot);
+        all.add(new Outcome("shot", f * STEP, stock.count(), theMob.isDefeated(), refillGone(shot), ladder(shot).isLowered()));
+        for (Outcome o : all) {
+            System.out.printf(Locale.ROOT, "forest-1 guard room outcome (stock 1): %-6s %5.2f s  charges %d  guard dead %-5s refill taken %-5s ladder down %-5s%n",
+                o.name, o.seconds, o.charges, o.guardDead, o.refillTaken, o.ladderDown);
+            assertTrue(o.seconds <= 12f, o.name + " is well inside the 20 s budget: " + o.seconds);
+        }
+        assertEquals(1, all.get(0).charges); assertEquals(2, all.get(1).charges); assertEquals(1, all.get(2).charges);
+        assertTrue(!all.get(0).guardDead && all.get(1).guardDead && all.get(2).guardDead);
+        assertTrue(!all.get(0).refillTaken && all.get(1).refillTaken && all.get(2).refillTaken);
+        assertTrue(!all.get(0).ladderDown && all.get(1).ladderDown && all.get(2).ladderDown);
+        assertTrue(all.get(0).seconds < all.get(2).seconds && all.get(2).seconds < all.get(1).seconds, "floor < shot < climb (the shot skips the swing's pause)");
+        assertTrue(all.get(0).seconds <= BUDGET && all.get(1).seconds <= BUDGET);
     }
 
     // ---- the zero-fireball guarantee and D26 ----
 
     @Test void everyRouteThatNeedsNoChargeWorksWithAnEmptyStock() {
         Level a = room(0); floorRoute(a); assertTrue(won(a));
-        Level b = room(0); timingRoute(b); assertTrue(won(b));
-        Level c = room(0); overheadRoute(c); assertTrue(won(c));
-        assertEquals(0, stock.count());
+        Level b = room(0); climbRoute(b); assertTrue(won(b));
+        assertEquals(1, stock.count(), "only the refill changed the stock");
     }
 
-    /** Lures the guard out of its post: the hero stands on the floor at {@code edge} until it has come {@code px} px, then walks out of its range. */
-    private void lure(Level level, float edge, float px) {
-        putHero(level, edge, 272);
-        float start = theMob.getX();
-        for (int i = 0; i < 60 * 6 && Math.abs(theMob.getX() - start) < px; i++) { held.clear(); frame(level); alive(level); }
-        boolean right = edge > MOB_X;
-        for (int i = 0; i < 60 * 3 && (right ? centerX(level) < ZONE_RIGHT + 20 : centerX(level) > ZONE_LEFT - 20); i++) {
-            held.clear(); held.add(right ? Input.Keys.D : Input.Keys.A);
-            frame(level); alive(level);
-        }
-        held.clear(); settle(level, 10);
+    /** Lures the guard to the ladder's top: the hero climbs into its row, then backs down at once. */
+    private void lure(Level level) {
+        if (!ladder(level).isLowered()) { walkToLever(level); operate(level); }
+        walkToLadder(level);
+        climbTo(level, ROW_FEET - 6);
+        for (int i = 0; i < 60 && !onFloor(level); i++) { held.clear(); held.add(Input.Keys.S); frame(level); alive(level); }
+        held.clear(); settle(level, 90);
+        alive(level);
     }
 
-    /** From wherever the hero stands (the slab, the ladder, the floor) to the checkpoint with the sword, no lever, no charge. */
+    /** From wherever the hero stands (the ladder, the slab, the floor) to the checkpoint with the sword, no lever, no charge. */
     private int recover(Level level) {
         int frames = 0;
         if (level.player.onLadder() || feet(level) < FLOOR - 2) {
@@ -577,130 +551,111 @@ class Forest1CombatTest {
         return frames + floorRoute(level);
     }
 
-    @Test void everyLeverAndGuardStateStillReachesTheCheckpointWithZeroChargesAndWithoutRestartLevel() {
-        String[] guardStates = {"at its post", "lured left", "lured right", "dead"};
-        String[] places = {"entrance", "ladder foot", "left slab", "above the hole's far side"};
+    @Test void everyLeverGuardRefillAndHeroStateStillReachesTheCheckpointWithZeroChargesAndWithoutRestartLevel() {
+        String[] guardStates = {"at its post", "lured to the ladder's top", "dead"};
+        String[] places = {"entrance", "ladder foot", "ladder top", "slab outside the range", "slab by the refill"};
         int runs = 0;
         for (int lever = 0; lever <= 2; lever++) {                    // pulls: 0 = raised, 1 = lowered, 2 = raised again
             for (int g = 0; g < guardStates.length; g++) {
-                for (int where = 0; where < places.length; where++) {
-                    if (where >= 2 && lever != 1) continue;           // the slab can only be reached, and so be stood on, with the ladder down
-                    String ctx = "lever pulls " + lever + ", guard " + guardStates[g] + ", hero at the " + places[where];
-                    Level level = room(0);
-                    if (lever > 0) { walkToLever(level); for (int p = 0; p < lever; p++) { operate(level); settle(level, 90); } }
-                    if (g == 1) lure(level, ZONE_LEFT + 1, 40);
-                    if (g == 2) lure(level, ZONE_RIGHT - 1, 40);
-                    if (g == 3) theMob.collidedWithActor(true);       // any kill goes through here: sword, fireball, stone or a stomp
-                    float[] at = {START_X + 23.5f, LADDER_X + 8, 2400, HOLE_RIGHT + 20};
-                    putHero(level, at[where], where >= 2 ? DECK - 48 - 1 : 272);
-                    settle(level, 20);
-                    try { recover(level); } catch (AssertionError e) { throw new AssertionError(ctx + ": " + e.getMessage(), e); }
-                    assertTrue(won(level), ctx);
-                    assertEquals(0, stock.count());
-                    runs++;
+                for (boolean taken : new boolean[]{false, true}) {
+                    for (int where = 0; where < places.length; where++) {
+                        if (where >= 2 && lever != 1) continue;       // the slab can only be reached, and so be stood on, with the ladder down
+                        if (g == 1 && (lever != 1 || where == 2)) continue;   // luring the guard needs the ladder down; the ladder top is reached by the climb, never beside a lured guard
+                        String ctx = "lever pulls " + lever + ", guard " + guardStates[g] + ", refill taken " + taken + ", hero at the " + places[where];
+                        Level level = room(0);
+                        if (lever > 0) { walkToLever(level); for (int p = 0; p < lever; p++) { operate(level); settle(level, 90); } }
+                        if (g == 1) lure(level);
+                        if (g == 2) theMob.collidedWithActor(true);   // any kill goes through here: sword, fireball, stone or a stomp
+                        int initial = stock.count();
+                        if (taken) refill(level).collideWithPlayer();
+                        float[][] at = {{START_X + 23.5f, 272}, {LADDER_CENTRE, 272}, {LADDER_CENTRE, DECK - 48 - 1}, {2450, DECK - 48 - 1}, {2600, DECK - 48 - 1}};
+                        putHero(level, at[where][0], at[where][1]);
+                        settle(level, 20);
+                        try { recover(level); } catch (AssertionError e) { throw new AssertionError(ctx + ": " + e.getMessage(), e); }
+                        assertTrue(won(level), ctx);
+                        assertTrue(stock.count() >= initial, ctx);
+                        assertTrue(level.objects.stream().noneMatch(Fireball.class::isInstance), ctx + ": no charge needed");
+                        runs++;
+                    }
                 }
             }
         }
         System.out.println("forest-1 guard room D26 sweep: " + runs + " runs, 0 failures, no Restart Level");
-        assertEquals(4 * 2 + 4 * 4 + 4 * 2, runs);
+        assertEquals(8 + 28 + 8, runs);
     }
 
-    @Test void aHeroWhoStepsIntoTheHoleFallsNextToTheGuardAndTheSwordStillFinishes() {
-        for (int extra = 0; extra <= 14; extra += 2) {
-            Level level = room(0);
-            dropThroughTheHole(level, extra);
-            recover(level);
-            assertTrue(won(level), "drop with " + extra + " frames of key in the air");
-            assertEquals(0, stock.count());
-        }
-    }
-
-    @Test void deathAndRetryRestoreTheAuthoredRoomAndBringTheGuardBackAndTheTimeIsTheSame() {
+    @Test void deathAndRetryRestoreTheAuthoredRoomWhateverTheClimbDidAndAGuardThatMovedIsBackAtItsPost() {
         Level level = room(1);
-        float first = 0;
-        for (int attempt = 0; attempt < 3; attempt++) {
-            if (attempt > 0) { level.resetCurrentRoom(player()); theMob = mob(level); }
-            assertEquals(1, stock.count(), "a retry rolls the unsecured charge back");
-            assertFalse(theMob.isDefeated(), "the guard is back alive on a first visit");
-            assertEquals(MOB_X, theMob.getX(), 0.01f);
-            assertFalse(ladder(level).isLowered());
-            held.clear(); pressed.clear();
-            float seconds = fireballRoute(level, ZONE_LEFT - 60) * STEP;
-            if (attempt == 0) first = seconds; else assertEquals(first, seconds, STEP, "a retry reproduces the route time");
-            assertEquals(0, stock.count());
-        }
-        // Death by the whip rolls the world back too, and a lured or killed guard comes back to its post.
-        Level hurt = room(0);
-        putHero(hurt, ZONE_LEFT + 4, 272);
-        for (int i = 0; i < 60 * 5 && !hurt.player.isGotHit(); i++) { held.clear(); frame(hurt); }
-        assertTrue(hurt.player.isGotHit(), "a hero who stands in front of the guard and does nothing is whipped");
-        assertNotEquals(MOB_X, theMob.getX(), "the guard had left its post to do it");
-        hurt.resetCurrentRoom(player());
-        theMob = mob(hurt);
-        assertEquals(START_X, hurt.player.position.x, 0.01f);
-        assertFalse(theMob.isDefeated());
-        assertEquals(MOB_X, theMob.getX(), 0.01f, "back at its post");
-        floorRoute(hurt);
-        assertTrue(won(hurt));
-    }
-
-    @Test void deathAfterTheLeverPullRestoresTheRaisedLadderAndTheLeverPicture() {
-        Level level = room(0);
-        walkToLever(level); operate(level); settle(level, 90);
-        assertTrue(ladder(level).isLowered());
-        assertTrue(lever(level).isUp());
+        toTheLadder(level, DECK);
+        climbOnAndSwing(level, 0);
+        for (int i = 0; i < 60 * 20 && !refillGone(level); i++) { held.clear(); held.add(Input.Keys.D); frame(level); alive(level); }
+        held.clear();
+        assertTrue(refillGone(level));
+        assertEquals(2, stock.count());       // guard dead, refill taken, not yet secured (the checkpoint secures it)
         level.resetCurrentRoom(player());
-        assertFalse(ladder(level).isLowered(), "an unsecured lever pull is undone by a death");
+        theMob = mob(level);
+        assertEquals(1, stock.count(), "a retry rolls the unsecured charge back");
+        assertFalse(theMob.isDefeated(), "the guard is back alive on a first visit");
+        assertEquals(GUARD_X, theMob.getX(), 0.01f);
+        assertFalse(refillGone(level), "and the refill is back");
+        assertFalse(ladder(level).isLowered());
         assertFalse(lever(level).isUp());
-        overheadRoute(level);
-        assertTrue(won(level));
+        assertEquals(START_X, level.player.position.x, 0.01f);
+        settle(level, 90);
+        // a retry reproduces the time
+        float first = climbRoute(level) * STEP;
+        level.resetCurrentRoom(player());
+        theMob = mob(level);
+        settle(level, 90);
+        float second = climbRoute(level) * STEP;
+        assertEquals(first, second, STEP, "a retry reproduces the route time");
+        // a guard lured off its post comes back to it
+        Level lured = room(0);
+        lure(lured);
+        lured.resetCurrentRoom(player());
+        theMob = mob(lured);
+        assertEquals(GUARD_X, theMob.getX(), 0.01f);
+        assertTrue(guardUntouched());
     }
 
-    @Test void aSecuredKillAndASecuredLoweredLadderStayAsTheyWereAndTheExitStillWorks() {
-        // The guard room is last, so nothing secures it: secureVisit() is what a forward exit or a healer return calls, then resetCurrentRoom applies
-        // the snapshot as a revisit does. State to secure: ladder down, guard killed (here with the sword, back from the slab's far end).
+    @Test void aSecuredKillASecuredRefillAndASecuredLoweredLadderStayAsTheyWereAndTheExitStillWorks() {
+        // The guard room is last, so nothing secures it: a forward exit or a healer return calls keepPickups() and secureVisit(); then resetCurrentRoom
+        // applies the snapshot as a revisit does. State to secure: ladder down, guard dead, refill taken (stock 1).
         Level level = room(0);
-        walkToLever(level); operate(level); walkToLadder(level); climb(level); walkTheSlab(level);
-        assertTrue(onFloor(level));
-        actionWasDown = false;
-        for (int i = 0; i < 60 * 10 && !theMob.isDefeated(); i++) {
-            held.clear(); held.add(Input.Keys.A);
-            actionWasDown = defend(level);
-            frame(level); alive(level);
-        }
-        assertTrue(theMob.isDefeated());
+        climbRoute(level);
+        level.keepPickups();
         level.secureVisit();
         level.resetCurrentRoom(player());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof RedMob m && !m.isDefeated()), "a secured kill stays a kill");
+        assertTrue(refillGone(level), "a secured refill does not come back");
         assertTrue(ladder(level).isLowered(), "the ladder stays as left (D26)");
         assertTrue(lever(level).isUp());
         settle(level, 10);
-        int frames = 0;
-        while (!won(level)) {
-            held.clear(); held.add(Input.Keys.D);
-            frame(level); alive(level);
-            assertTrue(++frames < 60 * 30);
-        }
-        assertEquals(0, stock.count());
-        // ... and a secured live guard is back at its post, the ladder as left, and the floor route still works.
+        floorRoute(level);
+        assertTrue(won(level));
+        // ... and a secured live guard is back at its post, the ladder as left, the refill still there, and the floor route works.
         Level live = room(0);
         walkToLever(live); operate(live); settle(live, 90);
+        live.keepPickups();
         live.secureVisit();
         live.resetCurrentRoom(player());
         theMob = mob(live);
         assertFalse(theMob.isDefeated());
         assertTrue(ladder(live).isLowered());
+        assertFalse(refillGone(live));
         floorRoute(live);
         assertTrue(won(live));
     }
 
-    @Test void restartLevelRebuildsTheGuardAndTheLadderFromTheMap() {
+    @Test void restartLevelRebuildsTheGuardTheRefillAndTheLadderFromTheMap() {
         Level level = room(0);
-        overheadRoute(level);
+        climbRoute(level);
         Level again = room(0);
         assertFalse(ladder(again).isLowered());
         assertFalse(theMob.isDefeated());
-        assertEquals(MOB_X, theMob.getX(), 0.01f);
+        assertEquals(GUARD_X, theMob.getX(), 0.01f);
+        assertFalse(refillGone(again));
+        assertEquals(0, stock.count());
         floorRoute(again);
         assertTrue(won(again));
     }
@@ -726,10 +681,10 @@ class Forest1CombatTest {
             Level level = room(0);
             if (lowered) { walkToLever(level); operate(level); settle(level, 60); }
             for (float x = ROOM_X + 24; x < ROOM_END - 24; x += 4) {
-                for (float y : new float[]{272, DECK - 48, 96 - 48}) {
+                for (float y : new float[]{DECK - 48, 96 - 48}) {
                     putHero(level, x, y);
                     settle(level, 2);
-                    if (level.player.canInteract()) assertTrue(feet(level) > FLOOR - 4, "x=" + x + " y=" + y);
+                    if (level.player.canInteract()) fail("the lever is in reach from the ladder or the slab: x=" + x + " y=" + y);
                 }
             }
         }

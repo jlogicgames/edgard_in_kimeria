@@ -102,7 +102,7 @@ class RoomTest {
         }
     }
 
-    /** No shipped map is unmarked since #187 (D66) gave forest-1 two rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
+    /** No shipped map is unmarked since #187 (D66, #104) gave forest-1 three rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
     @Test void aMapWithoutRoomMarkersIsOneRoomAtItsPlayerSpawn() {
         TiledMapData map = map("forest-1");
         map.objectGroups.get("Rooms").clear();

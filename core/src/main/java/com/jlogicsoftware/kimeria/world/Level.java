@@ -1228,8 +1228,8 @@ public class Level implements WorldObject {
     /**
      * Draws only the tiles overlapping {@code visibleWorldRect} (with a
      * 1-tile margin), instead of every tile in the map regardless of the
-     * camera. For forest-1 (132x23 = 3036 tiles) that's the difference
-     * between ~3036 draw calls a frame and the ~40x23 actually on screen.
+     * camera. For forest-1 (180x23 = 4140 tiles) that's the difference
+     * between ~4140 draw calls a frame and the ~40x23 actually on screen.
      */
     public void renderBackground(Batch batch, Rectangle visibleWorldRect) {
         int colStart = Math.max(0, (int) Math.floor(visibleWorldRect.x / map.tileWidth) - 1);
