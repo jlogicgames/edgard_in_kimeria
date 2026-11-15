@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has three rooms since #104 and two since #187 ([D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-under-a-lever-lowered-slab-with-a-hole-above-it-104-2026-11-15), see "forest-1 guard room" below); the checkpoint in the guard room leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has three rooms since #104 and two since #187 ([D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-at-the-top-of-a-lever-lowered-ladder-a-refill-beyond-it-104-2026-11-15), see "forest-1 guard room" below); the checkpoint in the guard room leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -263,7 +263,7 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 | --- | ---: | ---: | ---: | --- |
 | `forest-1` / unmarked room (now room 1, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09) | 1280 px | 11.58 s (historical) | None | Within 20 s |
 | `forest-1` / `forest-1-route` (room 2, #187, D66, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
-| `forest-1` / `forest-1-guard` (room 3, #104, D67, 2026-11-15) | 768 px | 6.63 s sword, 9.53 s timing, 5.95 s fireball (one charge), 7.58 s over the slab | None | Within 20 s |
+| `forest-1` / `forest-1-guard` (room 3, #104, D67, 2026-11-15) | 768 px | 5.95 s floor; slab 8.33 s (swing) or 7.62 s (shot) | None (one optional fireball refill on the slab) | Within 20 s |
 | `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -516,7 +516,7 @@ These timings were rechecked on the teaching layout during the merge review on
 | --- | ---: | ---: |
 | `forest-1` / unmarked (now room 1; 12.27 s since D58) | 11.58 s (historical) | No coins |
 | `forest-1` / `forest-1-route` (room 2, #187) | 11.02 s | No coins (refill detour: whole room 18.32 s) |
-| `forest-1` / `forest-1-guard` (room 3, #104) | 6.63 s (sword; slab route 7.58 s) | No coins |
+| `forest-1` / `forest-1-guard` (room 3, #104) | 5.95 s (floor; slab 8.33 s with the refill) | No coins |
 | `forest-3` (now `forest-2`) / `forest-entry` | 16.27 s | 20.00 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 5.00 s | 5.00 s |
 
@@ -869,7 +869,7 @@ The whole room is readable from the entrance side: the lever, the raised ladder,
 
 ### The refill, the bat and a full stock
 
-A run starts with three charges and room 1 needs none, so the refill alone would be wasted. The bat (author's request, 2026-11-15) gives the room its own use for a charge: shoot the bat, then the refill returns it. The fireball buys safety, not time. The #104 room that follows (a RedMob, [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-under-a-lever-lowered-slab-with-a-hole-above-it-104-2026-11-15)) offers a fireball as another optional choice: built, a held charge shoots its guard from beyond its range; that room has no refill of its own.
+A run starts with three charges and room 1 needs none, so the refill alone would be wasted. The bat (author's request, 2026-11-15) gives the room its own use for a charge: shoot the bat, then the refill returns it. The fireball buys safety, not time. The #104 room that follows (a RedMob, [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-at-the-top-of-a-lever-lowered-ladder-a-refill-beyond-it-104-2026-11-15)) offers a fireball as another optional choice: built, a held charge shoots the guard from the ladder, and that room has a refill of its own on its slab that returns the charge.
 
 ### Measured (scripted hero, real input, zero charges; author check, not a novice playtest)
 
@@ -889,15 +889,17 @@ First-learning time (the 60 s hypothesis) was not measured: that needs a person 
 
 ## forest-1 guard room (#104, D67)
 
-Built by [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) on top of the route room (#187, PR #334): the third and last room of `forest-1`, appended after `forest-1-route` by the author's decision of 2026-11-15; the level `Checkpoint` moved to its end. Rule, finding and rationale: [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-under-a-lever-lowered-slab-with-a-hole-above-it-104-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and its slab tiles have not been seen in the running game (tracked by #104, which stays open for that).
+Built by [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) on top of the route room (#187, PR #334): the third and last room of `forest-1`, appended after `forest-1-route` by the author's decision of 2026-11-15; the level `Checkpoint` moved to its end. Rule, finding and rationale: [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-at-the-top-of-a-lever-lowered-ladder-a-refill-beyond-it-104-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and its slab tiles have not been seen in the running game (tracked by #104, which stays open for that). The first version of this room (a guard on the floor under a slab with a hole) was revised after review: see "Finding".
 
-Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen). `forest-1.tmx` is now 180 x 23 tiles (2880 x 368 px), `nextobjectid` 76. SHA-256 before (PR #334) `4070e78bd247525efa8e6c6f68cbded20a71d3e024539ca24a59427f54607519`, after `aacd8fad3312c26a9701487cba5c4338abf6d52f9e0b5ac366bee4827104a57a` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`).
+Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen). `forest-1.tmx` is now 180 x 23 tiles (2880 x 368 px), `nextobjectid` 77. SHA-256 before (PR #334) `4070e78bd247525efa8e6c6f68cbded20a71d3e024539ca24a59427f54607519`, after `3e9b5ec365e92e67dd0b4aa1633a752934562c94c1edeac328cc5a495d763b97` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`).
 
 ```
 local x/16  012345678901234567890123456789012345678901234567   (room 3 only; x = 2112 + 16 * column)
 y96-208     ...........A....................................   the raised ladder hangs y 96-208
-y208        ............ssssssssssss..sssssssssss...........   slab 2304-2496, hole 2496-2528, far part 2528-2704
-y288        ........................G..................C....   the guard (body x 2502-2522) and the checkpoint (x 2800)
+y192        .................................R..............   the refill on the slab (x 2640)
+y208        ............sssssssssssssssssssssssss...........   the slab, x 2304-2704, one piece
+y176-208    ............G...................................   the guard on the slab at the ladder's top (art x 2300, body 2306-2326)
+y288        ...........................................C....   the checkpoint on the floor (x 2800)
 y304        ....@..l........................................   entrance 2176, lever 2224
 y320        ================================================   floor; end walls at x 2112 and 2864
 ```
@@ -906,47 +908,48 @@ y320        ================================================   floor; end walls 
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Room 2 exit | `RoomExit` (id 75), room `forest-1-route` | 2048 | 112 | 48 x 32 | none | the route room's checkpoint became this exit (D66 times unchanged) |
 | Room 3, `forest-1-guard` | `Room` (id 60), `RoomStart` (id 61) | 2112 | 0 | 768 x 368; start 2176, 272 | none | last room; safe entrance, floor under it, nothing in reach; the start point is the top-left of the hero's 48 x 48 square |
-| Lever | `Trigger` `Bridge` (id 63) | 2224 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor; reach x 2220-2244 |
-| Ladder | `Ladder` `Bridge` (id 64) | 2288 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320 |
-| Slab, left part | collision (id 73) | 2304 | 208 | 192 x 16 | plain collision, floating | up from the ladder, 112 px above the floor and the guard |
-| Hole | none (the gap between the two slab parts) | 2496 | 208 | 32 px | | right above the guard's body (x 2502-2522): hop it to skip, step in to stomp |
-| Slab, far part | collision (id 74) | 2528 | 208 | 176 x 16 | plain collision, floating | ends at x 2704, 85 px beyond the guard's farthest danger |
-| Guard | `RedMob` (id 69) | 2496 | 288 | 48 x 32 | `offNeg` 7, `offPos` 8 | holds its post; range = the hero's centre between x 2384 and 2624, on its row; chases at 80 px/s |
+| Lever | `Trigger` `Bridge` (id 63) | 2224 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor; reach x 2214.5-2249.5 |
+| Ladder | `Ladder` `Bridge` (id 64) | 2288 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; its top is the contested point |
+| Slab | collision (id 73) | 2304 | 208 | 400 x 16 | plain collision, floating, one piece | up from the ladder, 112 px above the floor; ends at x 2704 |
+| Guard | `RedMob` (id 69) | 2300 | 176 | 48 x 32 | `offNeg` 2, `offPos` 4 | stands on the slab at the ladder's top; reacts to a hero whose centre is in x 2268-2364 and whose body overlaps its row (y 180-208); chases at 80 px/s |
+| Refill | `FireballRefill` (id 76) | 2640 | 192 | 16 x 16 | none | one charge (D27) on the far part of the slab, 340 px from the guard; not a coin |
 | Checkpoint | `Checkpoint` (id 7, moved) | 2800 | 288 | 16 x 32 | none | on the floor, 96 px past the slab's end, 48 px from the right wall; ends the level |
-| Floor, walls | collisions 72, 70, 71 | 2112 | 320 | 768 x 48; walls 16 x 320 at x 2112 and 2864 | | closed room; the invisible ceiling (D38) is added by the loader |
+| Floor, walls | collisions 72, 70, 71 | 2112 | 320 | 768 x 48; walls 16 x 320 at x 2112 and 2864 | | closed room; the invisible ceiling (D38) is added by the loader (`RoomCeilingTest` covers this room) |
 
-Tiles: the floor and the two end columns copy room 2's (ids 22-24, 42-44, 62-64, wall columns 79/99/105/119/139); the slab uses the platform block ids 26-28 that `forest-1` already uses at x 160 and 304 (left part: 12 tiles, columns 144-155; far part: 11 tiles, columns 158-168). No new art, no hint, one monster, no hazard, no falling platform, no refill. Rooms 1 and 2 are unchanged except for the route room's exit.
+Tiles: the floor and the two end columns copy room 2's (ids 22-24, 42-44, 62-64, wall columns 79/99/105/119/139); the slab uses the platform block ids 26-28 that `forest-1` already uses (25 tiles, columns 144-168). No new art, no hint, one monster, no hazard, no falling platform. Rooms 1 and 2 are unchanged except for the route room's exit.
 
 ### How it plays
 
-The room is readable from the entrance: the guard stands under a gap in a high slab, the ladder hangs above the lever's side. **Required route (no lever, no charge):** walk right; when the guard is in reach swing the sword (one swing kills it); walk to the checkpoint, 6.63 s. **Timing:** stand still when it wakes, step back while the whip is raised (0.4 s) so that the strike (0.2 s) hits air, then swing, 9.53 s. **Ranged (optional):** one fireball shot while walking, from 60 px before the guard's range, 5.95 s, one charge. **Environment:** pull the lever (the ladder comes down in about 0.7 s), climb to the slab, walk right, hop the hole, walk off the slab's end, 7.58 s; the guard never wakes. Stepping into the hole instead is a stomp that kills it without a swing. A lever pull is optional and reversible; nothing in the room is one-shot.
+The floor is the required route and has nothing on it: walk to the checkpoint, 5.95 s, zero charges. The lever at the entrance lowers a ladder (about 0.7 s) to a slab above; at its top a RedMob stands, and at its far end a fireball refill lies. **Climbing in:** the guard sleeps until the climber's body reaches its row (feet at y 229), then raises its whip for 0.4 s and strikes for 0.2 s. The sword needs the ground, so it cannot be used on the ladder; the hero has about 5 frames after stepping off to swing. **Skip:** stay on the floor (the refill is lost to this hero, nothing else). **Climb and swing:** step off the top and swing at once, 8.33 s with the refill (+1 charge). **Shoot:** fire one fireball from the ladder with the feet at y 216-208 (a shot from lower hits the slab's edge), 7.62 s, the refill returns the charge. **Back down:** while the whip is up, going down the ladder makes the strike hit air. Nothing in the room is one-shot; the lever is a reversible toggle. A hero at a **full stock** (three) gains nothing from the refill (D27).
 
 ### Finding and revisions (answers #104's "does the combination add a new decision?")
 
-Partly, and not as a risk: the lever adds a skip and a kill-from-above that room 1's RedMob does not offer, but the guard itself is no danger to a hero who swings. Measured: one sword swing started at any gap from 0 to 64 px kills it (33 of 33); a hop over it passes it from 22 of 42 takeoff gaps, stomps it from 17 and is whipped from 3. So the sword is the cheapest answer and the other three trade a little time, a charge or nothing for a different leftover world (guard alive, ladder down, charge spent). Revisions made on the way: a continuous slab (no hole) added nothing; a bridge of collapsing planks over the guard was built to give the slab route a skill cost and dropped because it removed that route's one value, safety; the hole is the only element that makes the slab route a choice in itself. Open for the author: whether a one-swing enemy can carry a risk decision, or the room needs a second element.
+**The first layout did not.** It had the guard on the floor under a slab with a 32 px hole above it. Measured: one sword swing started at any gap from 0 to 64 px killed the guard (33 of 33), a hop over it passed from 22 of 42 takeoff gaps (stomp 17, whipped 3). The sword out-reaches the whip (17 px against 6 px) and its swing keeps its hitbox for the whole animation, so a RedMob on the floor cannot threaten a hero who can swing, whatever the floor geometry; the sword is only unusable on a ladder, in the air and while clambering. A bridge of collapsing planks over the guard was tried to give the slab route a skill cost and dropped (it removed that route's one value, safety).
+
+**The revision (this room)** puts the guard where the sword is unavailable, at the ladder's top, and pays the risk: a refill on the slab. Measured, scripted hero:
+
+| Choice | Result | Charges | Guard | Slab, refill |
+| --- | ---: | ---: | --- | --- |
+| Skip (floor) | **5.95 s** | 0 | asleep | untouched |
+| Climb, swing on arrival | **8.33 s** | stock 0 -> 1 | dead | taken |
+| Shot from the ladder | **7.62 s** | stock 1 -> 1 (one spent, one won back) | dead | taken |
+
+The window: a swing d frames after stepping off kills for d = 0-5 (6 of 15; 0.1 s) and the hero is whipped from d = 6; a shot kills from feet y 216-208 (5 of 26 heights) or d = 0-3 after stepping off (4 of 15), about twice the swing's window, and skips its pause. **Verdict:** it now adds a real risk (a 0.1 s reflex, or a charge for twice the margin) and a reward that pays it back (the refill), and the lever is a commitment because the safe route is the floor. **What it still does not add:** at a full stock, the usual arrival (a run starts with three and rooms 1 and 2 need none), the refill pays nothing and the floor dominates; and there is no timing answer other than the reflex (the guard sleeps until the body reaches its row and then always strikes 0.4 s later; waiting below the row changes nothing). The hole in the slab was removed: it served a floor guard, and with the guard on the slab a hole would only let it fall to the floor into states the sweeps do not cover. Whether this is enough is the author's play-through to judge.
 
 ### Recovery and D26 (swept by `Forest1CombatTest`)
 
-- The floor route needs no support, no lever and no charge; the lever is a reversible toggle and is in reach only on the floor (swept over every x and three heights in both ladder states), so the ladder is never taken from under a hero.
-- 32 runs, 0 failures, no Restart Level: lever pulled 0, 1 or 2 times, guard at its post / lured to the left end of its range / lured to the right end / dead, hero at the entrance, at the ladder's foot, on the left slab or beyond the hole (the slab positions only with the ladder down), zero charges.
-- Stepping into the hole with the key held for 0 to 14 more frames in the air (8 drops run) always ends beside or on the guard and the sword finishes the room.
-- Clearances (asserted): the guard's danger spans x 2389-2619; the lever's reach ends at x 2244 (145 px), a hero on the ladder is 73 px away, the far end of the slab 85 px, the entrance's 48 px square 160 px from the range, the checkpoint 48 px from the right wall.
-- State boundary: death and room retry on a first visit restore the authored room (guard alive at its post, ladder raised, lever down, the unsecured charge rolled back, hero at x 2176; the fireball route takes the same time on three attempts). A secured room (a forward exit, a healer return; `Level.secureVisit()` in the test) keeps a dead guard dead and the ladder as left, and the floor still finishes. Restart Level rebuilds the room from the map. A guard that left its post (it chased a hero to the end of its range) is back at its post after a death.
+- The floor route needs no support, no lever and no charge; the lever is a reversible toggle and is in reach only on the floor (swept over every x and two heights in both ladder states), so the ladder is never taken from under a hero.
+- 44 runs, 0 failures, no Restart Level: lever pulled 0, 1 or 2 times, guard at its post / lured to the ladder's top / dead, refill taken or not, hero at the entrance, the ladder's foot, its top, on the slab outside the guard's range or by the refill (the slab positions only with the ladder down), zero charges.
+- Clearances (asserted, measured over a standing, a jumping and a climbing hero): the lever's reach (x 2214.5-2249.5, y 282.5-320) is **90 px** from the guard's danger (x 2300-2326, y 180-208); the guard never leaves the ladder's top by more than its range and never comes down off the slab; a floor hero walking, running, jumping all the way or standing 10 s at the ladder's foot never wakes it.
+- State boundary: death and room retry on a first visit restore the authored room (guard alive at its post even if a climber lured it, ladder raised, lever down, refill back, the unsecured charge rolled back, hero at x 2176; the same route takes the same time twice). A secured room (a forward exit, a healer return; `keepPickups()` and `Level.secureVisit()` in the test) keeps a dead guard dead, a taken refill gone and the ladder as left, and the floor still finishes. Restart Level rebuilds the room from the map.
 
 ### Measured (scripted hero, real input; author check, not a novice playtest)
 
-| Choice | Result | Charges | Guard | Ladder |
-| --- | ---: | ---: | --- | --- |
-| Melee (sword) | **6.63 s** | 0 | dead | raised |
-| Timing (back off the raised whip, 49 frames, then swing) | **9.53 s** | 0 | dead | raised |
-| Ranged (one fireball while walking) | **5.95 s** | 1 | dead | raised |
-| Environment (lever, ladder, slab at 2.58 s, hop the hole) | **7.58 s** | 0 | alive, asleep | down |
-
-All four are inside the 20 s budget (D19). First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#129-#131). Allocation: 1,153.7 to 1,154.3 B/frame, guard asleep or chasing (`AllocationBudgetTest.forest1GuardRoom`, ceiling 1,270).
+Floor 5.95 s, climb and swing 8.33 s, shot from the ladder 7.62 s: all well inside the 20 s budget (D19), each pinned by the tests within 0.1 s. First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#129-#131). Allocation: 1,153.9 to 1,154.3 B/frame, guard asleep or awake (`AllocationBudgetTest.forest1GuardRoom`, ceiling 1,270).
 
 ### Tests
 
-`Forest1CombatTest` (headless, real shipped map, 22 tests): census and coordinates, the entrance, the post (no patrol), no wake from the slab, the clearances, each choice, the swing and hop sweeps, the hole sweeps, the outcome table, the empty-stock routes, the D26 sweep, the drop into the hole, death and retry, the secured and Restart Level states, the room chain, the lever's reach. Changed existing tests (stated in [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-under-a-lever-lowered-slab-with-a-hole-above-it-104-2026-11-15)): `RoomTest` (three rooms, the route room's exit, the checkpoint in room 3), `RoomCeilingTest` (three forest-1 rooms), `Forest1RouteTest` (ends at the room exit), `AllocationBudgetTest` (two new scenes). No threshold was relaxed.
+`Forest1CombatTest` (headless, real shipped map, 20 tests): census and coordinates, the entrance, the post, the wake height, the clearances for a standing, a jumping and a climbing hero, the floor route, the climb, the swing and shot windows, a full stock, backing down, the outcome table, the empty-stock routes, the D26 sweep, death and retry, the secured and Restart Level states, the room chain, the lever's reach. Changed existing tests (stated in [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-at-the-top-of-a-lever-lowered-ladder-a-refill-beyond-it-104-2026-11-15)): `RoomTest` (three rooms, the route room's exit, the checkpoint in room 3), `RoomCeilingTest` (three forest-1 rooms), `Forest1RouteTest` (ends at the room exit; one threshold reworded, with the reason in D67), `AllocationBudgetTest` (two new scenes). No threshold was relaxed.
 
 ## forest-2 trap placement plan (#261, D59)
 

@@ -116,7 +116,7 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
   required exit/boss route, and its consequence must be readable before commitment. Verify
   Restart Level restores authored state. Repeat a death, meet the healer, choose to enter the third room, defeat the boss, and watch the
   automatic victory walk. Also pause
-  mid-fade, Resume, Restart Level, and play all three `forest-1` rooms (the trap course, since #187 the route room: check the lever, the ladder, the lift and the refill without any hint, and since #104 the guard room: check the lever, the ladder, the hole in the slab and the RedMob under it, again without any hint).
+  mid-fade, Resume, Restart Level, and play all three `forest-1` rooms (the trap course, since #187 the route room: check the lever, the ladder, the lift and the refill without any hint, and since #104 the guard room: check the lever, the ladder, the RedMob at its top and the refill on the slab, again without any hint).
 
 - [ ] Perform a fresh all-artifact/all-coin route and repeated collection returns with
   missed pickups, surviving/defeated enemies, warning/exploded traps and restored linked
