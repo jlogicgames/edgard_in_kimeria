@@ -73,7 +73,7 @@ constant each class passes to `TrapWarnings.duration`.
 
 (`Bomb` at x 656 in `forest-2.tmx` is in `forest-entry`; `forest-2` also holds the boss room.)
 
-Enemy wind-ups (`RedMob` 0.4 s) are not scaled by the assist and are out of scope.
+Enemy wind-ups (`RedMob` 0.4 s) are not scaled by the assist and are out of scope (the `forest-1` guard room, #104, holds one RedMob and no trap of this family, so it adds no warning to the tables here).
 
 ### 2.2 Smallest set that covers every timed family
 
