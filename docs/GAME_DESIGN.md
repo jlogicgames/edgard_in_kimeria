@@ -199,7 +199,7 @@ only a **one-shot step** (an existing falling platform, seen collapsing in room 
 the step without taking the refill and the reward is lost until Restart Level, while the lift route
 to the checkpoint stays open from every state (D26, swept in ROOMS.md). **This answers "one-shot
 versus reversible":** levers stay reversible, the one-shot is a support that guards an optional
-reward. Remote or throw activation is not used here. The mastered route is about 8 s, the refill
+reward. Remote or throw activation is not used here. The mastered route is about 11 s, the refill
 detour brings the whole room to about 18 s. A **Bat** (author's request) patrols the floor stretch before the lift: the
 sword, a hop or a fireball from afar deals with it, so zero fireballs are enough, but a hero who
 shoots it can take the refill back; that gives the refill a use even at a full stock. The #104 room that

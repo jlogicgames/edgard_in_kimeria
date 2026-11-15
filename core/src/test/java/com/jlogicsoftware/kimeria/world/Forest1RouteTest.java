@@ -29,19 +29,21 @@ import static org.junit.jupiter.api.Assertions.*;
  * map. Times are author (mastered) measurements of a scripted hero, not novice playtests. Recipe: docs/ROOMS.md.
  *
  * <p>Y grows downward: the floor top is y 320, the slab 112 px high has its top at y 208, the one-shot step y 168, the refill pad y 128 and the lift runs between
- * y 304 (bottom) and y 176 (top); the exit ledge's top is y 160, 16 px above the lift's top. Everything below is a map coordinate (room 2 starts at x 1280).
+ * y 304 (bottom) and y 176 (top); the exit ledge's top is y 144, 32 px above the lift's top. Everything below is a map coordinate (room 2 starts at x 1280).
  */
 class Forest1RouteTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float ROOM_X = 1280, ROOM_END = 2048, START_X = 1344, FLOOR = 320;
+    private static final float ROOM_X = 1280, ROOM_END = 2112, START_X = 1344, FLOOR = 320;
     private static final float LEVER_X = 1440, LADDER_X = 1536, SLAB_X = 1552, SLAB_END = 1632, SLAB_TOP = 208;
     /** The one-shot step (a falling platform, y 168) and the refill pad above it (x 1696-1744, top y 128, refill at x 1712). */
     private static final float STEP_X = 1648, STEP_END = 1680, STEP_TOP = 168, PAD_X = 1696, PAD_END = 1744, PAD_TOP = 128, REFILL_X = 1712;
-    private static final float LIFT_X = 1872, LIFT_RIGHT = 1904, BOTTOM = 304, TOP = 176, LEDGE_X = 1904, LEDGE_TOP = 160, CHECKPOINT_X = 1984;
+    private static final float LIFT_X = 1936, LIFT_RIGHT = 1968, BOTTOM = 304, TOP = 176, LEDGE_X = 1968, LEDGE_TOP = 144, CHECKPOINT_X = 2048;
+    /** The bat's beat (x of the body; the part that hurts is x + 3 .. x + 13): 1856 to 1904. */
+    private static final float BAT_X = 1856, BAT_END = 1904;
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
-    /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 16 px above its top, a hop is about 58 px). */
-    private static final float RIDE_JUMP_Y = 200;
+    /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
+    private static final float RIDE_JUMP_Y = 195;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     private final Set<Integer> held = h.held, pressed = h.pressed;
@@ -224,7 +226,7 @@ class Forest1RouteTest {
     @Test void theRoomOffersOneLeverOneRaisedLadderOneRunningLiftAndOneRefillAndNothingElse() {
         Level level = room();
         assertEquals("forest-1-route", level.currentRoomName());
-        assertEquals(new Rectangle(ROOM_X, 0, 768, 368), level.currentRoomBounds());
+        assertEquals(new Rectangle(ROOM_X, 0, 832, 368), level.currentRoomBounds());
         assertEquals(1, level.triggers.size());
         assertEquals(1, level.objects.stream().filter(Lever.class::isInstance).count());
         assertEquals(1, level.ladders.size());
@@ -375,7 +377,7 @@ class Forest1RouteTest {
         assertTrue(level.objects.stream().noneMatch(Fireball.class::isInstance));
         assertTrue(lift(level).isRunning() && !ladder(level).isLowered(), "the lever was never touched");
         assertTrue(bat(level).isDefeated(), "the scripted hero beat the bat with the sword, no fireball");
-        assertTrue(seconds <= BUDGET, "required route " + seconds + " s");
+        assertTrue(seconds <= 12f, "required route " + seconds + " s: the measured value plus the lift's schedule, well inside the 20 s budget");
     }
 
     @Test void theRequiredRouteTakesTheSameTimeOnThreeAttemptsAfterRetriesAndTheRefillIsLeftBehind() {
@@ -670,21 +672,26 @@ class Forest1RouteTest {
         assertEquals(1, stock.count());
     }
 
-    @Test void aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks() throws Exception {
-        // Room 2 is the last room today, so nothing secures it; this is the state boundary D26 asks for if a room is appended after it (#104)
-        // or the room is secured by a healer return: the one-shot stays spent, the unclaimed refill stays out of reach.
+    @Test void aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks() {
+        // Room 2 is the last room today, so nothing secures it. This secures it with the same method a forward exit uses (secureVisit) and then
+        // takes the reset path (resetCurrentRoom): the snapshot is applied there exactly as on a revisit; only the stock bookkeeping of
+        // activateRoom(revisit = true) is not exercised, since that needs a next room.
         Level level = room();
         reachTheSlab(level);
         spendTheStep(level);
-        var secure = Level.class.getDeclaredMethod("secureVisit");
-        secure.setAccessible(true);
-        secure.invoke(level);
+        float liftStopped = lift(level).getY();
+        level.secureVisit();
         level.resetCurrentRoom(player());
         assertTrue(level.fallingPlatforms.isEmpty(), "the secured room keeps the step spent");
-        assertFalse(refillGone(level));
+        assertFalse(refillGone(level), "the refill is still there, out of reach");
+        assertTrue(ladder(level).isLowered(), "the ladder stays as left (D26)");
+        assertFalse(lift(level).isRunning(), "the lift stays stopped where it was");
+        assertEquals(liftStopped, lift(level).getY(), 1f);
+        assertFalse(bat(level).isDefeated(), "the bat was never touched");
         level.player.position.set(SLAB_X, SLAB_TOP - 48);
         settle(level, 10);
-        // the ladder was secured lowered too (D26: switched mechanisms stay as left); the hero is back at the entrance and the lift route works
+        withoutTheBat(level);
+        assertPadClosed(level);
         level.resetCurrentRoom(player());
         recover(level);
         assertTrue(won(level));
@@ -719,17 +726,17 @@ class Forest1RouteTest {
         Level level = room();
         Bat bat = bat(level);
         assertFalse(bat.isVertical);
-        assertEquals(1760, bat.getX(), 0.01f);
+        assertEquals(BAT_X, bat.getX(), 0.01f);
         assertEquals(296, bat.getY(), 0.01f, "it hangs at the hero's own height, over the floor");
         float min = Float.MAX_VALUE, max = -Float.MAX_VALUE;
         for (int i = 0; i < 60 * 30; i++) { frame(level); min = Math.min(min, bat.getX()); max = Math.max(max, bat.getX()); }
-        assertEquals(1760, min, 1.2f); assertEquals(1840, max, 1.2f);
+        assertEquals(BAT_X, min, 1.2f); assertEquals(BAT_END, max, 1.2f);
         // Clearances (body 0..16, the part that hurts is x + 3 .. x + 13): the lever's reach, the ladder, the slab, the step, the pad's drop and the lift boarding.
         float hurtLeft = min + 3, hurtRight = max + 13;
         assertTrue(hurtLeft - (LEVER_X + 16 + 40) >= 200, "the lever's reach (about 40 px each side) is far from the bat: " + (hurtLeft - LEVER_X));
         assertTrue(hurtLeft - (LADDER_X + 16) >= 100, "the ladder foot is clear");
         assertTrue(hurtLeft - STEP_END >= 80, "the step and slab are clear");
-        assertTrue(hurtLeft - PAD_END >= 16, "the pad's right edge, where a hero may drop, is not covered: " + (hurtLeft - PAD_END));
+        assertTrue(hurtLeft - PAD_END >= 90, "a hero who drops off the pad's right edge drifts about 90 px (swept below): " + (hurtLeft - PAD_END));
         assertTrue(hurtLeft - (PAD_X) >= 60, "a drop off the pad's left side lands clear of the bat");
         assertTrue((LIFT_X + 4 - 9) - hurtRight >= 12, "the lift is boarded 12 px past the bat's reach: " + ((LIFT_X + 4 - 9) - hurtRight));
         assertTrue(Math.abs(bat.getY() - FLOOR) < 30);
@@ -765,7 +772,7 @@ class Forest1RouteTest {
             }
             if (ok) cleared++;
         }
-        assertTrue(cleared >= 5, "hopping the bat works from several takeoff gaps: " + cleared);
+        assertTrue(cleared >= 30, "hopping the bat works from several takeoff gaps: " + cleared);
         System.out.println("forest-1 route room: hopping the bat clears from " + cleared + " of 42 takeoff gaps");
     }
 
@@ -816,7 +823,7 @@ class Forest1RouteTest {
         assertTrue(bat(level).isDefeated());
         level.resetCurrentRoom(player());
         assertFalse(bat(level).isDefeated(), "an unsecured kill is undone by a death, like every enemy on a first visit");
-        assertEquals(1760, bat(level).getX(), 0.01f);
+        assertEquals(BAT_X, bat(level).getX(), 0.01f);
         // Secured (a room appended after this one, #104, or a healer return): the defeated bat stays defeated.
         Level secured = room();
         mandatory(secured);
@@ -840,5 +847,60 @@ class Forest1RouteTest {
             assertTrue(won(level), "delay " + delay);
             assertEquals(0, stock.count());
         }
+    }
+
+    @Test void droppingOffEitherPadEdgeWhateverTheBatsPhaseNeverLandsInItsBeat() {
+        // A hero who has taken the refill walks off the pad holding Right (or walks or jumps off holding Left) and drifts about 90 px before he lands; the bat's beat starts 99 px past the pad's right edge. A running jump to the right is excluded on purpose: it is a deliberate act.
+        int drops = 0;
+        float farthest = 0;
+        for (int phase = 0; phase < 160; phase += 3) {
+            for (boolean right : new boolean[]{true, false}) {
+                for (boolean jumping : new boolean[]{false, true}) {
+                    if (jumping && right) continue; // a deliberate running jump off the pad towards the lift is an act, not a drift: it can land in the beat
+                    Level level = room();
+                    settle(level, phase);
+                    float edgeX = right ? PAD_END : PAD_X;
+                    level.player.position.set(edgeX - (right ? 14 : 6) - 20, PAD_TOP - 48);
+                    for (int i = 0; i < 150 && feet(level) < FLOOR - 1 || i < 3; i++) {
+                        held.clear(); held.add(right ? Input.Keys.D : Input.Keys.A);
+                        if (jumping && i == 2) jump();
+                        frame(level);
+                        assertFalse(level.player.isGotHit(), "hit by the bat dropping " + (right ? "right" : "left") + (jumping ? " with a jump" : "") + " at phase " + phase + " at " + level.player.position);
+                    }
+                    assertTrue(feet(level) > FLOOR - 2, "landed");
+                    farthest = Math.max(farthest, centerX(level));
+                    drops++;
+                }
+            }
+        }
+        assertEquals(3 * 54, drops);
+        assertTrue(farthest < BAT_X + 3, "the farthest landing, centre x " + farthest + ", is left of the bat's reach at " + (BAT_X + 3));
+        System.out.println("forest-1 route room: farthest landing of a drop off the pad: x " + farthest + " (bat reach starts at " + (BAT_X + 3) + ")");
+    }
+
+    @Test void withTheBatAliveAndTheLiftStoppedAtAnyHeightNeitherAStompNorAJumpGetsTheHeroUpTheExitLedge() {
+        // The bat as a springboard: stomping it (or being bounced by it) must not add the missing height. Sweeps lift stops, bat phases and takeoff points.
+        float highest = Float.MAX_VALUE;
+        for (int step = 0; step <= 52; step += 4) {
+            Level level = room();
+            walkToLever(level);
+            settle(level, Math.round(step * 0.1f * 60));
+            operate(level);
+            settle(level, 60);
+            for (float x = BAT_X - 40; x <= LEDGE_X - 8; x += 12) {
+                if (bat(level).isDefeated()) break;
+                level.player.position.set(x - 24, 272);
+                for (int i = 0; i < 60 * 2; i++) {
+                    held.clear(); held.add(Input.Keys.D);
+                    if (i % 25 == 0) jump();
+                    if (i % 25 == 10 && enemyAhead(level, 18)) pressed.add(Input.Keys.K);
+                    frame(level);
+                    assertFalse(won(level), "exit reached without the lever, lift y=" + lift(level).getY());
+                    if (centerX(level) >= LEDGE_X) highest = Math.min(highest, feet(level));
+                    assertFalse(centerX(level) >= LEDGE_X && feet(level) <= LEDGE_TOP + 4, "up on the exit ledge unaided with the bat alive, lift y=" + lift(level).getY() + " x=" + x);
+                }
+            }
+        }
+        System.out.println("forest-1 route room: lowest feet over the exit ledge's side with the bat alive: y " + highest + " (ledge top " + LEDGE_TOP + ")");
     }
 }

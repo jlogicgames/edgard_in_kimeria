@@ -74,9 +74,9 @@ class RoomCeilingTest {
     @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
     @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 2); }
 
-    /** The route room's exit ledge (top y 160, against the right wall) is a 160 px head start up that wall. */
+    /** The route room's exit ledge (top y 144, against the right wall) is a 176 px head start up that wall. */
     @Test void theRouteRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 1), false, 60 * 20, 160);
+        highestPointReached(roomOf("forest-1", 1), false, 60 * 20, 176);
     }
     /** The boss room (index 2) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
     @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 2); }
