@@ -71,8 +71,8 @@ class AllocationBudgetTest {
     static final double FOREST_1_CEILING = 1450;
     /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D66, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
-    /** Measured 1,153.9 to 1,154.3 B/frame in 3 isolated runs and in the full class, RedMob asleep and awake alike (#104, D67, 2026-11-15; waking, the wind-up and the strike add nothing measurable): the forest-1 guard room (a lever, a raised ladder, the slab, the guard, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
-    static final double FOREST_1_GUARD_CEILING = 1270;
+    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D67, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    static final double FOREST_1_GUARD_CEILING = 1280;
     /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
     static final double RIDER_PATH_CEILING = 8;
     /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
@@ -184,38 +184,40 @@ class AllocationBudgetTest {
 
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
     @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
-    /** The guard room (#104, D67) with the RedMob asleep at the ladder's top: a lever, a raised ladder, the slab, the refill. */
+    /** The guard room (#104, D67): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
     @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 2)); }
 
     /**
-     * The guard room with the RedMob awake: every {@value #GUARD_CYCLE_FRAMES} frames the hero is put on the ladder's top, in the guard's row, for one
-     * frame (the guard wakes and begins its attack) and then back at the entrance, so the wake-up, the wind-up, the strike and the recovery (0.8 s) run
-     * over and over against nobody: the hero is never hurt and nothing dies.
+     * The guard room with the RedMob awake: every {@value #GUARD_CYCLE_FRAMES} frames, in the calm half of the puffball's cycle, the hero is put for one
+     * frame within the guard's whip and then back at the entrance, so the guard's attack (wind-up, strike, recovery: 48 frames) runs over and over
+     * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
      */
     @Test void forest1GuardRoomWithTheGuardAwake() {
         Level level = harness.roomOf("forest-1", 2);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
+        boolean[] attacked = new boolean[1];
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             int phase = i % GUARD_CYCLE_FRAMES;
-            if (phase == 0) {          // in the guard's row: it wakes and begins to raise its whip
-                level.player.position.set(LADDER_TOP_CENTRE_X - HERO_CENTRE_OFFSET_X, LADDER_TOP_HERO_Y);
+            if (phase == CALM_FRAME) {          // the whip's reach: the guard begins its attack
+                level.player.position.set(HERO_AT_WHIP_X - HERO_CENTRE_OFFSET_X, ENTRANCE_Y);
                 level.player.velocity.setZero();
-                guard.position.set(GUARD_POST_X, GUARD_POST_Y);
-            } else if (phase == 1) {   // gone: the whip rises, strikes and recovers on its own over the next 48 frames, hitting air
+            } else if (phase == CALM_FRAME + 1) {   // gone: the attack finishes on its own, hitting air
                 level.player.position.set(ENTRANCE_X, ENTRANCE_Y);
                 level.player.velocity.setZero();
             }
             level.update(STEP); level.render(batch, view);
             if (level.player.isGotHit()) throw new AssertionError("the hero was hit at frame " + i);
+            attacked[0] |= guard.getState() == com.jlogicsoftware.kimeria.entity.enemy.RedMob.State.ATTACK;
         });
+        assertTrue(attacked[0], "the scene must have the guard attack");
         assertWithinBudget("forest-1 guard room, guard awake", FOREST_1_GUARD_CEILING, bytes);
     }
-    /** Longer than the RedMob's 48-frame attack (0.4 s wind-up, 0.2 s strike, 0.2 s recovery), so one finishes before the next begins. */
-    private static final int GUARD_CYCLE_FRAMES = 60;
-    /** forest-1-guard: the hero's hitbox centre sits 23.5 px right of {@code position.x}; the ladder's centre is x 2296 and its top y 208 (the hero's top is 48 px above his feet); the guard's post is x 2300, y 176. */
-    private static final float HERO_CENTRE_OFFSET_X = 23.5f, LADDER_TOP_CENTRE_X = 2296, LADDER_TOP_HERO_Y = 208 - 48, GUARD_POST_X = 2300, GUARD_POST_Y = 176, ENTRANCE_X = 2176, ENTRANCE_Y = 272;
+    /** The puffball cycles every 4 s (240 frames) from phase 2.2 s: swell 0-48, cloud 48-108, calm 108-240; the attack takes 48 frames, so it ends before the next swell. */
+    private static final int GUARD_CYCLE_FRAMES = 240, CALM_FRAME = 120;
+    /** forest-1-guard: the hero's hitbox centre sits 23.5 px right of {@code position.x}; the guard's whip reaches x 2394-2400 on the floor, so a hero centred at x 2390 is in it; the entrance is (2176, 272). */
+    private static final float HERO_CENTRE_OFFSET_X = 23.5f, HERO_AT_WHIP_X = 2390, ENTRANCE_X = 2176, ENTRANCE_Y = 272;
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
