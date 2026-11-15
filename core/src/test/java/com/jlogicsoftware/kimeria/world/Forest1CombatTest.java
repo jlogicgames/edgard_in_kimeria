@@ -362,6 +362,34 @@ class Forest1CombatTest {
         assertEquals(tried, patientOk, "a hero who waits for the calm always succeeds");
     }
 
+    /** A real player's first walk: from the room's entry (no teleport, so the cloud is at its authored phase), idle {@code delay} frames, then hold Right and swing from 16 px. */
+    private Attempt straightRun(int delay) {
+        Level level = room(0);
+        settle(level, delay);
+        int frames = floorRoute(level, false);
+        return new Attempt(!dead(level), theMob.isDefeated(), frames + delay);
+    }
+
+    @Test void aStraightRunFromTheRoomsEntryAlwaysMeetsTheSamePhaseSoItIsADeterministicFirstDeathAndWaitingASecondOrSoSucceeds() {
+        StringBuilder row = new StringBuilder();
+        int firstOk = -1, lastDead = -1;
+        for (int delay = 0; delay <= 90; delay += 3) {
+            Attempt a = straightRun(delay);
+            boolean ok = a.alive && a.guardDead;
+            row.append(ok ? 'K' : 'x');
+            if (ok && firstOk < 0) firstOk = delay;
+            if (!ok) lastDead = delay;
+        }
+        Attempt none = straightRun(0), same = straightRun(0);
+        System.out.println("forest-1 guard room, a straight run from the room's entry after a delay of 0, 3, .. 90 frames (K kill, x dead): " + row
+            + "; the delay-0 run dies at frame " + none.frames + " and takes the same course twice");
+        assertFalse(none.alive, "holding Right from the entry and swinging from 16 px walks into the cloud: the first death");
+        assertEquals(none.alive, same.alive, "the retry replays the identical phase");
+        assertEquals(FIRST_WORKING_DELAY, firstOk, "the first delay that works: " + row);
+        assertEquals(6, lastDead, "every delay up to 6 frames (0.1 s) dies, every one from 9 frames (0.15 s) on works: " + row);
+    }
+    private static final int FIRST_WORKING_DELAY = 9;
+
     @Test void theMasteredMeleeNeedsNoChargeAndKillsTheGuardWithoutAHit() {
         Level level = room(0);
         int frames = meleeRoute(level);
@@ -512,6 +540,41 @@ class Forest1CombatTest {
         assertTrue(toClimb >= 48, "and " + toClimb + " px from a climber");
         Rectangle cloud = puff(c).cloudBounds();
         assertTrue(cloud.x >= ROOF_LEFT && cloud.x + cloud.width <= ROOF_RIGHT, "the cloud lies wholly under the roof");
+    }
+
+    @Test void theRoofIsUnreachableWithoutTheLeverWhateverIsJumpedWallJumpedOrClamberedAgainstTheTunnelBlockOrTheLadder() {
+        long seed = 12345;
+        float highest = Float.MAX_VALUE;
+        for (int run = 0; run < 40; run++) {
+            Level level = room(0);
+            putHero(level, ROOM_X + 24 + (run * 17) % 200, 272);          // x 2136-2336 on the floor, left of the tunnel and under the raised ladder
+            int key = 0;
+            for (int i = 0; i < 60 * 6 && !dead(level); i++) {
+                if (i % 8 == 0) {
+                    seed = seed * 6364136223846793005L + 1442695040888963407L;
+                    key = (int) ((seed >>> 33) % 8);
+                }
+                held.clear();
+                if ((key & 1) != 0) held.add(Input.Keys.D); else if ((key & 2) != 0) held.add(Input.Keys.A);
+                if ((key & 4) != 0 || i % 8 == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+                if (key == 3 || key == 7) held.add(Input.Keys.W);          // Up against the ladder or a wall
+                frame(level);
+                highest = Math.min(highest, feet(level));
+                assertFalse(level.player.onLadder(), "a raised ladder cannot be taken: " + level.player.position);
+                assertFalse(feet(level) <= DECK + 2 && centerX(level) > ROOF_LEFT && centerX(level) < SLAB_END,
+                    "the hero reached the roof without the lever: " + level.player.position + " run " + run + " frame " + i);
+            }
+        }
+        System.out.println("forest-1 guard room, 40 fuzzed 6 s runs of jumps, wall-jumps and clambers with the ladder raised: the highest the feet ever got was y " + highest);
+        assertTrue(highest > DECK + 2, "the roof level (y 208) is never reached: " + highest);
+        Level base = room(0);
+        putHero(base, ROOF_LEFT - 8, 272);                                  // pressed against the tunnel block's left face, jumping on the spot
+        for (int i = 0; i < 120; i++) {
+            held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.J); pressed.add(Input.Keys.J); held.add(Input.Keys.W);
+            frame(base);
+            assertTrue(feet(base) > TUNNEL_CEILING - 0.5f + 10 || !base.player.onLadder(), "no climbing the block's face");
+        }
+        assertTrue(feet(base) > DECK + 50, "pressed against the block's face the hero is still low: " + feet(base));
     }
 
     // ---- the zero-fireball guarantee and D26 ----
