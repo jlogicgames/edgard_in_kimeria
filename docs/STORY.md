@@ -152,7 +152,15 @@ Approved texts (EN source; the five catalogs hold the translations):
   hand, and he ventured onward."
 
 Not used by the author's decision: the farewell (no line there), a line on the first death, and
-any answer from Edgard. The start tale runs once per New Game run and is never repeated by death,
+any answer from Edgard. **Revised 2026-11-15 after the first external playtest
+([PLAYTEST_1.md](PLAYTEST_1.md), D66):** a healer line on the first death and a visible thread
+pull on every death are now wanted ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341));
+the fireball becomes the healer's second gift, given with the thread
+([#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340)); the fairies of the start
+tale become a visible fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338));
+all story texts are audited against the magic-tale structure first
+([#339](https://github.com/jlogicgames/edgard_in_kimeria/issues/339)). Until those land, the
+texts above are the shipped ones. The start tale runs once per New Game run and is never repeated by death,
 room retry or Restart Level; the opening plays once per New Game. Wording rules, tests and
 measured sizes: [D41 note](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial) and
 [localization validation](LOCALIZATION_VALIDATION.md).

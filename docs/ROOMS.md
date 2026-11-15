@@ -106,7 +106,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    (off, on, after `resetCurrentRoom`, new `Level` for Restart Level); assert the exact zone message (`zoneHint()`) at every standing x with the object in each state and after
    retry, and that the live label (`contextHint()`) shows beside it, never instead of it (#211); update `TutorialLevelTest` if new object types appear; measure the mastered route.
 6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 4.3 s after #209; after D48 ladder room about 8.8 s, wall room about 6.5 s, platform room about 11.9 s, stone room about 6.9 s (8.5 s setting the stump off from afar), traps room about 6.1 s) labelled an
-   *author check, not a novice playtest* (novice playtests are #129–#131), plus findings and what was not verified.
+   *author check, not a novice playtest* (external playtests: [PLAYTEST_1.md](PLAYTEST_1.md), later rounds #135, #140), plus findings and what was not verified.
 7. **Checklist:** `./gradlew :core:test --rerun-tasks`, `validateLocalization`, `validateNamedParameters`,
    `validateSpriteArt`, `python3 tools/test_*.py`, `check_tiled_links.py`, then look at the room in the game
    (`runDev`), and update ROADMAP, GAME_DESIGN (Forest status), DECISIONS and this section.

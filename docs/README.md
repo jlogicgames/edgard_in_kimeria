@@ -10,6 +10,7 @@ different scopes; a design decision is not evidence that a feature is implemente
 | --- | --- |
 | [Full game design](GAME_DESIGN.md) | The remake's intended experience, stage → level → room structure, four-stage campaign, player tools, collection and progression. Distinguishes author decisions from proposals and open questions. Start here when designing the expanded game. |
 | [Development roadmap](ROADMAP.md) | Working sequence: mechanics MVP for the four stages → campaign production and first external playtests → release completion. Defines outputs and exit criteria, with links to existing tasks. |
+| [First external playtest](PLAYTEST_1.md) | Feedback of the first external playtest (2026-11-15), its analysis, the author's decisions and the follow-up issues #335-#352. |
 | [Gameplay reference](GAMEPLAY.md) | How the current test build plays: controls, room flow, artifacts and the forest elixir. Start here when playing or checking existing behavior. |
 | [Two-level MVP](MVP.md) | The accepted existing test-version scope, campaign order, ending and save compatibility. Distinct from the upcoming mechanics MVP in the roadmap and from the full campaign. |
 | [Design decisions](DECISIONS.md) | Accepted campaign decisions and rationale, including D26's observe-plan-commit rule, death, retries, input, hitboxes and saves. Accepted entries may describe planned behavior; consult implementation documents for status. |
