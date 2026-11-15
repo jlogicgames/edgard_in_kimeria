@@ -207,6 +207,10 @@ only in the menu backdrop.
   literals, a global change moves all existing traps and routes. Tuned by playtest, tracked by
   [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (playtest plan:
   [PLAYTEST_WARNING_TIMES.md](PLAYTEST_WARNING_TIMES.md)); until then the current values stand.
+- **Update (author, 2026-11-15, [D66](#d66-first-external-playtest-closed-findings-and-direction-2026-11-15)):**
+  after the first external playtest the author closed #300. No tester reported a warning-time problem, so the
+  current values (0.8 s, 1.2 s with the assist; 1 s and 1.5 s for the falling platform) are the accepted values,
+  not placeholders. No comparison of values was run; a later change needs a new decision.
 
 ## D8. Main menu has Continue and New Game
 
@@ -1367,7 +1371,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Decisions (author, 2026-11-12):**
   - **Death:** the false honey fungus's spore cloud kills by an overlap of its rectangle with the hero's body box, as the bomb blast and the spore puffball (D46, D3). The honey fungus's burst has **no hitbox**.
   - **Trigger:** the hero entering the mushroom's zone, as for the other proximity traps (D44).
-  - **Telegraph (D7):** both swell for the shared warning before they burst; the warning is the only thing the longer-warnings assist scales. It is read from `TrapWarnings` (`DEFAULT_WARNING_SECONDS`, today 0.8 s, 1.2 s with the assist), **never a literal**. The current value is a placeholder that was never playtested; the author wants shorter warnings, tuned by playtest ([#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300)), so a changed value must flow through without touching these objects.
+  - **Telegraph (D7):** both swell for the shared warning before they burst; the warning is the only thing the longer-warnings assist scales. It is read from `TrapWarnings` (`DEFAULT_WARNING_SECONDS`, today 0.8 s, 1.2 s with the assist), **never a literal**. The value was accepted after the first external playtest (D7 update, D66); any later change must flow through without touching these objects.
   - **Idle animation:** both play a subtle deterministic idle (level clock, no randomness, independent of the hero), so a live mushroom can be told from a static one at a distance. Static look-alike scenery is [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299), built as the `lookalike` kind of `Decor`: a pale, ringed, motionless tuft of the same family, after the first design (a bracket fungus on a trunk) was dropped as too unlike the trap to create doubt (docs/ART_DIRECTION.md, "Static look-alike mushroom").
   - **Look:** real fungi (tufts of small caps on thin stems), not a fly agaric, not the healer's Mushroom pickup (D43), not `trap-puffball` (D46). Harmless: honey-brown caps, pale stems **with a ring**. Poisonous: sulphur-yellow to orange caps with a greenish tinge, olive gills, **no ring**. Spores: warm golden particles (harmless) against the lime cloud (lethal; the `trap-spores` palette).
   - **Objects:** two new Tiled types, `HoneyFungus` and `FalseHoneyFungus`, with one shared base class (proximity, swell, burst); not an extension of `Puffball` (a rhythmic timer trap, no proximity, no harmless variant).
@@ -1415,3 +1419,30 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Allocation:** `AllocationBudgetTest.forest2Room2WithMobKillBlood` 1896.0 B/frame inside the boss-room scene against its 2120 ceiling (the scene itself costs about 1960); the blood system adds no allocation (`oneBloodSpray` 0.0 B/frame).
 - **Settings:** there is no violence or blood option; none was added.
 - **Not verified:** the look in the running game.
+
+## D66. First external playtest closed: findings and direction (2026-11-15)
+
+- **Status:** Accepted by the author, 2026-11-15 (questionnaire after the first external playtest). Record and
+  analysis: [PLAYTEST_1.md](PLAYTEST_1.md).
+- **Playtest:** external players, web build, written feedback (22 remarks, F1-F22). Qualitative only: no room
+  times, death counts or per-trap data.
+- **Closed by the author:** #129 (first external observation, done), #130 and #131 (not measured; closed by
+  decision, the D19 hypotheses stay hypotheses), #300 (warning times accepted as they are, see the D7 update)
+  with its tooling issues #306, #307, #308 (not needed).
+- **Direction (each a tracked issue; the detailed rule gets its own D-number when it lands):**
+  - Readability first: minimum text size raised for everyone (#335); static intro pages (#336); instant-text
+    accessibility toggle, off by default (#342).
+  - A contrast rule with three tiers (background, decor, active); decor is muted. Readability wins over
+    deception: static look-alike mushrooms (#299) are muted, the real/false game stays between the active
+    mushrooms of D63 (#344). The exploding stump gets an idle tell (#346); a trap visibility audit and
+    visible-by-default rule (#348); falling-stone impact feedback (#347); the Bat ingredient is drawn as an item,
+    D43's rule unchanged (#345).
+  - The story is shown, not only told: codec-style dialogue screen with two facing portraits in a fairy-tale frame
+    (#337); a visible fairy helper replaces the interaction outline, D29/D30 eligibility unchanged (#338); the
+    fireball is the healer's gift (#340); a silver-thread pull on every death within today's death-to-control time
+    (D3) and a healer line on the first death only, reversing the #228 exclusion in STORY.md (#341); a text audit
+    against the magic-tale structure (Propp) before any rewrite (#339).
+  - A bigger hero with separate left/right frames and distinct ladder up/down; hitbox and physics unchanged (#343).
+  - Level design: every room gives something new (#351); tree branches as a forest mechanic candidate (#349);
+    a Primal Planet reference study (#352); a Kimeria coat of arms on coins, reused later (#350).
+- **Not verified:** none of the direction is implemented.

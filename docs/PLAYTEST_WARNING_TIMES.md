@@ -1,10 +1,11 @@
 # Playtest plan: trap warning times (#300)
 
-**Status: a plan, not a result.** No session described here has been run. Every number marked
-*candidate* or *proposed* is for the author to accept or change before the first session; none is
-a design decision. When the playtest has run, the findings and the decision go into
-[DECISIONS.md](DECISIONS.md) (a new D-number that updates D7 and the D46, D47, D58 and D59
-mentions), as the last items of the #300 work list require.
+**Status: not run; kept as a reference (2026-11-15).** The first external playtest
+([PLAYTEST_1.md](PLAYTEST_1.md)) reported no warning-time problem, and the author closed #300
+with the current values accepted ([D66](DECISIONS.md#d66-first-external-playtest-closed-findings-and-direction-2026-11-15), D7 update). None of the sessions below was run and its
+tooling issues #306, #307 and #308 were closed as not needed. If warning times are revisited,
+this plan is the starting point and needs a new decision and new issues. Every number marked
+*candidate* or *proposed* below is still only a candidate.
 
 Sources: `TrapWarnings` (`core/src/main/java/com/jlogicsoftware/kimeria/TrapWarnings.java`),
 [D3](DECISIONS.md#d3-death-resets-the-current-room-and-respawn-is-instant),
@@ -166,8 +167,8 @@ through `TrapWarnings`, so the override belongs there and nowhere else:
    arm. Prefer desktop for the playtest (the author's own play-through was on desktop, D33).
 5. Show the active value on the F1 debug overlay so the facilitator can confirm the build.
 
-Until this exists no arm other than D can be built. **Gap: needs a debug override for warning
-values and the assist floor (#306).** It also blocks the later work item "update
+Until this exists no arm other than D can be built. A debug override for warning values and the
+assist floor would be needed (it was #306, closed with #300). It also blocks the later work item "update
 `TrapWarnings`"; do the permanent per-family values and floor there, not in the test override.
 
 An override that changes `W` does not change the shipped tests: `TrapWarningsTest` pins 0.8 and
@@ -183,8 +184,8 @@ next room (`KimeriaGame.handleDevHotkeys`). They only go *forward*. Consequences
   tutorial. That is acceptable and even preferable (it is what a real first player does, #129),
   but it costs about 6 to 8 minutes before `forest-1` (estimate from the 60 s first-learning
   hypothesis per room; not measured).
-- To re-run one room for a re-test the facilitator needs a way back. **Gap: no start-at-room
-  option for playtest builds (#307).** Without it, a repeat means replaying from
+- To re-run one room for a re-test the facilitator needs a way back. There is no start-at-room
+  option for playtest builds (it was #307, closed with #300). Without it, a repeat means replaying from
   the start.
 - The debug keys must be off for the participant's build (they are: `KimeriaGame` ignores F1-F6
   unless built in debug mode, DEVELOPMENT.md). Run the playtest build with debug off, and use a
@@ -315,7 +316,7 @@ transcription errors and give exact times:
 - It must not allocate in per-frame code (AGENTS.md); logging on death and on room change is
   not per-frame and may allocate.
 
-**Gap: no playtest telemetry or session log (#308).** The plan does not depend on it.
+There is no playtest telemetry or session log (it was #308, closed with #300). The plan does not depend on it.
 If it is not built, a recording of every session (screen plus voice) is mandatory, so deaths can
 be recounted afterwards.
 
@@ -397,17 +398,12 @@ After the decision, in this order (each is already a line of #300's Work list):
 7. If tiers are wanted, a difficulty setting (new D-number; it changes D11's "assist is a set of
    independent toggles" scope) and the settings UI.
 
-## 6. Open gaps
+## 6. Gaps (closed)
 
-Each gap has an open issue; when it lands, update this document (AGENTS.md: gaps in docs must be tracked).
+The three tooling gaps (warning override #306, session log #308, start-at-room #307) were closed
+with #300 on 2026-11-15 as not needed; nothing in this plan is open work.
 
-| Gap | Issue | Update this document when it lands |
-| --- | --- | --- |
-| Debug/build override for warning values and the assist floor | #306 | section 3.1 |
-| Playtest session log (deaths per trap, retries, room time) | #308 | section 4.3 |
-| Start-at-room (or room select) for playtest builds | #307 | section 3.2 |
-
-The playtest itself, its results and the decision are tracked by
+The playtest itself, its results and the decision were tracked by
 [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300); the unfamiliar-player
 conditions follow [#129](https://github.com/jlogicgames/edgard_in_kimeria/issues/129) and the
 time hypotheses [#130](https://github.com/jlogicgames/edgard_in_kimeria/issues/130).

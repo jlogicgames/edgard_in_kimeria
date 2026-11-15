@@ -110,8 +110,8 @@ six short lesson rooms without monsters, hints always on, one new element per ro
 with no hints. Hints are authored in the map ([D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)).
 Rooms in order, each a separate ticket: lever (#186), ladder/bridge (#196), wall (#197), moving
 platform (#198), thrown stone (#199), existing traps (#200).
-**Lever room (#186) is built** (`forest-0-lever`, room shortened to 576 px by #206/#209, mastered route about 4.3 s, headless author check, then the author's desktop and web play-through of 2026-11-05; novice
-playtests are #129–#131) and is the sample the other lessons copy: see the
+**Lever room (#186) is built** (`forest-0-lever`, room shortened to 576 px by #206/#209, mastered route about 4.3 s, headless author check, then the author's desktop and web play-through of 2026-11-05; the first
+external playtest is [PLAYTEST_1.md](PLAYTEST_1.md)) and is the sample the other lessons copy: see the
 [tutorial lesson room recipe](ROOMS.md#tutorial-lesson-room-recipe-186) and [D34](DECISIONS.md#d34-the-tutorial-lever-lesson-rule).
 **Ladder room (#196) is built** (`forest-0-ladder`, 704 px, a lever lowers a retracted ladder to the ledge that holds the exit; mastered route about 6.9 s,
 headless author check, then the author's desktop and web play-through of 2026-11-05; not a novice playtest): see [D35](DECISIONS.md#d35-the-tutorial-ladder-lesson-rule).
@@ -154,7 +154,7 @@ pressure plate, [#238](https://github.com/jlogicgames/edgard_in_kimeria/issues/2
 for world 2 and later, [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239)
 environment effects, [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240) enemy
 wind-up; see ART_DIRECTION.md, GAME_DESIGN.md and D42. Also #224 (impaled-death sprite), #225 (decompose the
-screens) and #229 (Bat and Mushroom). Playtests remain open. #104 may
+screens) and #229 (Bat and Mushroom). The first external playtest is done ([PLAYTEST_1.md](PLAYTEST_1.md)). #104 may
 also use an existing enemy. [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
 tracks third-party artwork inventory, schematic replacement and original redraws.
 
@@ -243,12 +243,12 @@ next experiment. Four stage names/icons alone do not complete the mechanics MVP.
 - [ ] [#128](https://github.com/jlogicgames/edgard_in_kimeria/issues/128) Build a complete level of roughly five rooms: introduce a rule,
   develop it, combine it with dangers and offer an optional route. Author and replay-test
   changed-world consequences under the [D26 contract](ROOMS.md#puzzle-platformer-authoring-contract-d26).
-- [ ] [#129](https://github.com/jlogicgames/edgard_in_kimeria/issues/129) Run first external playtests after the mechanics MVP, without waiting
+- [x] [#129](https://github.com/jlogicgames/edgard_in_kimeria/issues/129) Run first external playtests after the mechanics MVP, without waiting
   for all 100 hypothetical rooms. Let new players play without explaining solutions.
-- [ ] [#130](https://github.com/jlogicgames/edgard_in_kimeria/issues/130) Measure roughly 20-second mastered traversal and 60-second first learning
+- [x] [#130](https://github.com/jlogicgames/edgard_in_kimeria/issues/130) Measure roughly 20-second mastered traversal and 60-second first learning
   separately. Record deaths, waiting, unclear actions and unexplained failures.
   Do not turn the hypotheses into a timer.
-- [ ] [#131](https://github.com/jlogicgames/edgard_in_kimeria/issues/131) Check teaching without author hints: controls, danger warnings,
+- [x] [#131](https://github.com/jlogicgames/edgard_in_kimeria/issues/131) Check teaching without author hints: controls, danger warnings,
   room objective and the optional route's purpose are understood.
   [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying)
   makes the entire first Forest room the contextual teaching scope. Include a
@@ -257,6 +257,12 @@ next experiment. Four stage names/icons alone do not complete the mechanics MVP.
   following starts after leaving the dead zone; every new pickup in this room
   teaches again. Mechanism teaching stays repeatable independently. Verify both layouts and positions beyond the former
   320×144 area, plus retries/returns and suppression in later rooms.
+
+  **First external playtest done (feedback received 2026-11-15):** web build, external players,
+  22 written remarks. #129-#131 are closed by the author; the feedback is qualitative, so the
+  20/60 s times (#130) and the teaching questions (#131) were not measured and stay hypotheses
+  for later rounds (#135, #140). Record, analysis, decisions and the 18 follow-up issues
+  (#335-#352): [PLAYTEST_1.md](PLAYTEST_1.md), [D66](DECISIONS.md#d66-first-external-playtest-closed-findings-and-direction-2026-11-15).
 - [ ] [#132](https://github.com/jlogicgames/edgard_in_kimeria/issues/132) Revise the level and content scope from results. Related existing tasks:
   [#73](https://github.com/jlogicgames/edgard_in_kimeria/issues/73)
   and [#75](https://github.com/jlogicgames/edgard_in_kimeria/issues/75).
@@ -310,8 +316,10 @@ Temporary assets and balance may still require refinement.
   the trap itself is [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), its static scenery
   look-alikes [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299), see
   [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md)). Trap warning times are tuned by playtest in
-  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (D7 note; the plan is
-  [PLAYTEST_WARNING_TIMES.md](PLAYTEST_WARNING_TIMES.md)).
+  [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (closed 2026-11-15 after the
+  first external playtest: current values accepted, D7 update and D66; the unrun plan stays in
+  [PLAYTEST_WARNING_TIMES.md](PLAYTEST_WARNING_TIMES.md)). Playtest presentation and readability
+  fixes: #335-#352 ([PLAYTEST_1.md](PLAYTEST_1.md)).
 - [ ] [#143](https://github.com/jlogicgames/edgard_in_kimeria/issues/143) Complete final campaign text and review all five supported languages
   (EN/UK/PL/DE/BE), including native-speaker review of the new translations and final
   device/layout checks. The catalog/font infrastructure from
