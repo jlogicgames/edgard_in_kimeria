@@ -71,6 +71,8 @@ class AllocationBudgetTest {
     static final double FOREST_1_CEILING = 1450;
     /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D66, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
+    /** Measured 1,153.7 to 1,154.3 B/frame in 3 isolated runs and in the full class, RedMob asleep and chasing alike (#104, D67, 2026-11-15; the chase adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, a slab, the guard; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    static final double FOREST_1_GUARD_CEILING = 1270;
     /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
     static final double RIDER_PATH_CEILING = 8;
     /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
@@ -182,6 +184,26 @@ class AllocationBudgetTest {
 
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
     @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
+    /** The guard room (#104, D67) with the RedMob asleep at its post: a lever, a raised ladder, the slab, the guard. */
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 2)); }
+
+    /**
+     * The guard room with the RedMob awake: every {@value #GUARD_CHASE_CYCLE_FRAMES} frames the hero is put back at the left edge of its range and the guard
+     * back at its post, so the chase (movement, state change, animation) runs over and over without the whip landing: the hero is never hurt, nothing dies.
+     */
+    @Test void forest1GuardRoomWithTheGuardChasing() {
+        Level level = harness.roomOf("forest-1", 2);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % GUARD_CHASE_CYCLE_FRAMES == 0) { level.player.position.set(2384 + 2 - 23.5f, 272); level.player.velocity.setZero(); guard.position.set(2496, 288); }
+            level.update(STEP); level.render(batch, view);
+            if (level.player.isGotHit()) throw new AssertionError("the hero was hit at frame " + i);
+        });
+        assertWithinBudget("forest-1 guard room, guard chasing", FOREST_1_GUARD_CEILING, bytes);
+    }
+    private static final int GUARD_CHASE_CYCLE_FRAMES = 60;
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
