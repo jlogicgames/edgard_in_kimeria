@@ -200,9 +200,11 @@ the step without taking the refill and the reward is lost until Restart Level, w
 to the checkpoint stays open from every state (D26, swept in ROOMS.md). **This answers "one-shot
 versus reversible":** levers stay reversible, the one-shot is a support that guards an optional
 reward. Remote or throw activation is not used here. The mastered route is about 8 s, the refill
-detour brings the whole room to about 18 s. The refill is worth nothing at a full stock of three; the
-intended plan (not built) is that the #104 room that follows offers a fireball as one optional
-choice. The room has no hint, monster or hazard.
+detour brings the whole room to about 18 s. A **Bat** (author's request) patrols the floor stretch before the lift: the
+sword, a hop or a fireball from afar deals with it, so zero fireballs are enough, but a hero who
+shoots it can take the refill back; that gives the refill a use even at a full stock. The #104 room that
+follows is intended to offer a fireball as another optional choice (plan, not built). The room has
+no hint and no hazard.
 
 **Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
 simple, lethal, organic hazards on the ground and overhead, grouped by trigger family

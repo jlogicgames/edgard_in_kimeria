@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.world;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.RangedStock;
+import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.items.FireballRefill;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
@@ -45,6 +46,9 @@ class Forest1RouteTest {
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     private final Set<Integer> held = h.held, pressed = h.pressed;
     private RangedStock stock;
+    /** True while the scripted rider spends a fireball on the bat when it has one (the optional shortcut); false means sword or hop only. */
+    private boolean shootTheBat;
+    private boolean actionWasDown;
 
     @BeforeEach void setUp() { h.setUp(); }
     @AfterEach void restoreGlobals() { h.restoreGlobals(); }
@@ -57,6 +61,7 @@ class Forest1RouteTest {
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
         level.enterNextRoom(player());
+        theBat = level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElseThrow();
         return level;
     }
 
@@ -72,6 +77,22 @@ class Forest1RouteTest {
     private void alive(Level level) { assertFalse(level.player.isGotHit(), "died at " + level.player.position); }
     private boolean refillGone(Level level) { return level.objects.stream().noneMatch(o -> o instanceof FireballRefill && !o.isRemoved()); }
     private void jump() { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+    private Bat theBat;
+    /** The room's bat, remembered at load because a slain bat leaves the object list. */
+    private Bat bat(Level level) { return level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElse(theBat); }
+    /** Geometry sweeps teleport the hero all over the floor; the bat has its own tests. */
+    private void withoutTheBat(Level level) { level.objects.removeIf(Bat.class::isInstance); }
+    private Level roomWithoutTheBat() { Level level = room(); withoutTheBat(level); return level; }
+
+    /** A live enemy on the hero's row, ahead of him and closer than {@code within} px (body to body). */
+    private boolean enemyAhead(Level level, float within) {
+        Rectangle me = level.player.hitboxBounds();
+        for (var o : level.objects) if (o instanceof Enemy<?> e && !e.isDefeated()) {
+            Rectangle en = e.hitboxBounds();
+            if (level.player.isOnGround() && en.x >= me.x && en.x - (me.x + me.width) < within && en.y < me.y + me.height && en.y + en.height > me.y) return true;
+        }
+        return false;
+    }
 
     /** Up + Action, as the lesson rooms teach: Action is a fresh press while Up is held. */
     private int operate(Level level) {
@@ -94,9 +115,18 @@ class Forest1RouteTest {
 
     /** From the lever (or anywhere on the floor): to the exit ledge by the lift, with ordinary keys; the lever is not touched. */
     private int rideToCheckpoint(Level level) {
-        int frames = 0;
+        int frames = 0, lastShot = -99;
+        actionWasDown = false;
         while (!won(level)) {
             held.clear(); held.add(Input.Keys.D);
+            boolean shooting = shootTheBat && stock.count() > 0 && enemyAhead(level, 160);
+            if (shooting) {
+                held.remove(Input.Keys.D); // stand and shoot; the fireball flies on the hero's row
+                if (frames - lastShot > 45) { pressed.add(Input.Keys.L); lastShot = frames; }
+            }
+            boolean melee = !shooting && enemyAhead(level, 18);
+            if (melee && !actionWasDown) pressed.add(Input.Keys.K);
+            actionWasDown = melee;
             boolean overLift = centerX(level) >= LIFT_X + 4;
             if (!riding(level) && feet(level) > 300 && overLift && lift(level).getY() >= 292) jump();
             if (riding(level) && lift(level).getY() <= RIDE_JUMP_Y && level.player.isOnGround()) jump(); // up onto the ledge, 16 px above the lift's top
@@ -143,7 +173,7 @@ class Forest1RouteTest {
     private int takeTheRefillAndDrop(Level level) {
         int frames = 0;
         while (!(refillGone(level) && feet(level) > FLOOR - 2)) {
-            held.clear(); held.add(Input.Keys.D);
+            held.clear(); held.add(refillGone(level) ? Input.Keys.A : Input.Keys.D); // after the refill the hero leaves the pad on its left side, away from the bat's beat
             boolean ground = level.player.isOnGround();
             if (ground && Math.abs(feet(level) - SLAB_TOP) < 2 && bodyRight(level) >= SLAB_END - 1) jump();
             if (ground && Math.abs(feet(level) - STEP_TOP) < 2 && bodyRight(level) >= STEP_END - 1) jump();
@@ -177,7 +207,7 @@ class Forest1RouteTest {
         if (level.player.onLadder() || feet(level) < FLOOR - 2) {
             // On the ledge (or its ladder): walk right off the end of the slab.
             while (feet(level) < FLOOR - 2 || level.player.onLadder()) {
-                held.clear(); held.add(level.player.onLadder() ? Input.Keys.S : Input.Keys.D);
+                held.clear(); held.add(level.player.onLadder() ? Input.Keys.S : centerX(level) > PAD_X ? Input.Keys.A : Input.Keys.D);
                 frame(level); alive(level);
                 assertTrue(++frames < 60 * 20, "cannot leave the ledge from " + level.player.position);
             }
@@ -202,14 +232,15 @@ class Forest1RouteTest {
         assertEquals(1, level.objects.stream().filter(FireballRefill.class::isInstance).count());
         assertEquals(1, level.fallingPlatforms.size(), "exactly one one-shot object: the step to the refill pad");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
-        assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?>), "no monsters: the combination is #104");
+        assertEquals(1, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster, the bat");
+        assertEquals(1, level.objects.stream().filter(Bat.class::isInstance).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard), "no hazards in the route room");
         assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::isInstance).count());
         // Authored state: the ladder is raised, the lift runs from the bottom, the lever shows "down".
         assertFalse(ladder(level).isLowered());
         assertTrue(lift(level).isRunning());
         assertTrue(lift(level).isVertical);
-        assertEquals(BOTTOM, lift(level).getY(), 0.01f);
+        assertEquals(TOP, lift(level).getY(), 0.01f);
         assertEquals(LIFT_X, lift(level).getX(), 0.01f);
         assertFalse(lever(level).isUp());
         assertEquals(LADDER_X, ladder(level).getX(), 0.01f);
@@ -255,7 +286,7 @@ class Forest1RouteTest {
 
     @Test void theLeverIsOnlyEverInReachOnTheFloorFarFromTheLadderAndTheLift() {
         for (boolean lowered : new boolean[]{false, true}) {
-            Level level = room();
+            Level level = roomWithoutTheBat();
             if (lowered) { walkToLever(level); operate(level); settle(level, 60); }
             assertEquals(lowered, ladder(level).isLowered());
             for (float x = ROOM_X + 24; x < CHECKPOINT_X - 24; x += 4) {
@@ -274,7 +305,7 @@ class Forest1RouteTest {
     // ---- the optional route is closed without the lever ----
 
     @Test void withTheLadderRaisedNeitherWalkingNorJumpingNorTheLiftReachesTheRefillLedge() {
-        Level level = room();
+        Level level = roomWithoutTheBat();
         for (float x = ROOM_X + 24; x <= ROOM_END - 32; x += 8) {
             level.player.position.set(x - 24, 272);
             for (int i = 0; i < 60 * 2; i++) {
@@ -293,7 +324,7 @@ class Forest1RouteTest {
         // From the lift's top the ledge is 192 px away and 32 px lower; from the exit ledge 224 px away at the same height.
         for (float fromX : new float[]{LIFT_X + 4, LIFT_RIGHT + 8, LEDGE_X + 16}) {
             for (float topY : new float[]{TOP, LEDGE_TOP}) {
-                Level level = room();
+                Level level = roomWithoutTheBat();
                 level.player.position.set(fromX - 24, topY - 48);
                 settle(level, 3);
                 for (int i = 0; i < 60 * 3; i++) {
@@ -311,7 +342,7 @@ class Forest1RouteTest {
     @Test void withTheLiftStoppedAtAnyHeightTheExitLedgeIsNotReachableWithoutTheLever() {
         for (int step = 0; step <= 52; step++) {
             float delay = step * 0.1f;
-            Level level = room();
+            Level level = roomWithoutTheBat();
             walkToLever(level);
             settle(level, Math.round(delay * 60));
             operate(level); // stops the lift wherever it is
@@ -338,11 +369,12 @@ class Forest1RouteTest {
         Level level = room();
         int frames = mandatory(level);
         float seconds = frames * STEP;
-        System.out.printf(Locale.ROOT, "forest-1 route room required: %.2f s%n", seconds);
+        System.out.printf(Locale.ROOT, "forest-1 route room required (sword only): %.2f s%n", seconds);
         assertTrue(won(level));
         assertEquals(0, stock.count(), "no charges used or needed");
         assertTrue(level.objects.stream().noneMatch(Fireball.class::isInstance));
         assertTrue(lift(level).isRunning() && !ladder(level).isLowered(), "the lever was never touched");
+        assertTrue(bat(level).isDefeated(), "the scripted hero beat the bat with the sword, no fireball");
         assertTrue(seconds <= BUDGET, "required route " + seconds + " s");
     }
 
@@ -444,7 +476,7 @@ class Forest1RouteTest {
 
     @Test void theHeroNeverCanBeOnTheLiftOrTheLadderWhenTheLeverIsPulled() {
         // The lever's reach never includes any support the lever moves, so neither can be taken from under the hero.
-        Level level = room();
+        Level level = roomWithoutTheBat();
         for (float y = 96; y <= 288; y += 16)
             for (float x = LADDER_X - 8; x <= LADDER_X + 8; x += 8) {
                 level.player.position.set(x - 8, y);
@@ -465,6 +497,7 @@ class Forest1RouteTest {
         Level level = room();
         detour(level);
         assertEquals(1, stock.count());
+        withoutTheBat(level); // this test is about the lift and the room state; the bat has its own retry test
         // Part way through the second ride: the hero is on the lift, the lever up again; then he dies.
         for (int i = 0; i < 60 * 40 && !(riding(level) && lift(level).getY() < 250); i++) {
             held.clear(); held.add(Input.Keys.D);
@@ -479,7 +512,7 @@ class Forest1RouteTest {
         assertFalse(refillGone(level), "and puts the refill back");
         assertFalse(ladder(level).isLowered());
         assertTrue(lift(level).isRunning());
-        assertEquals(BOTTOM, lift(level).getY(), 0.01f);
+        assertEquals(TOP, lift(level).getY(), 0.01f);
         assertFalse(lever(level).isUp());
         assertEquals(START_X, level.player.position.x, 0.01f, "the hero restarts at the room's entrance");
         assertEquals("forest-1-route", level.currentRoomName(), "not in the trap course");
@@ -590,6 +623,7 @@ class Forest1RouteTest {
     @Test void withTheStepIntactTheSlabReachesThePadAndWithItGoneNothingDoes() {
         // Intact: the detour route is exercised by the optional-route test. Gone: every takeoff from the slab falls short.
         Level level = room();
+        withoutTheBat(level);
         reachTheSlab(level);
         spendTheStep(level);
         level.player.position.set(SLAB_X, SLAB_TOP - 48);
@@ -677,5 +711,134 @@ class Forest1RouteTest {
             }
         }
         assertEquals(56, states);
+    }
+
+    // ---- the bat (author's request, 2026-11-15): a flying patroller on the way to the lift ----
+
+    @Test void theBatPatrolsTheFloorLevelStretchBeforeTheLiftAndNothingElse() {
+        Level level = room();
+        Bat bat = bat(level);
+        assertFalse(bat.isVertical);
+        assertEquals(1760, bat.getX(), 0.01f);
+        assertEquals(296, bat.getY(), 0.01f, "it hangs at the hero's own height, over the floor");
+        float min = Float.MAX_VALUE, max = -Float.MAX_VALUE;
+        for (int i = 0; i < 60 * 30; i++) { frame(level); min = Math.min(min, bat.getX()); max = Math.max(max, bat.getX()); }
+        assertEquals(1760, min, 1.2f); assertEquals(1840, max, 1.2f);
+        // Clearances (body 0..16, the part that hurts is x + 3 .. x + 13): the lever's reach, the ladder, the slab, the step, the pad's drop and the lift boarding.
+        float hurtLeft = min + 3, hurtRight = max + 13;
+        assertTrue(hurtLeft - (LEVER_X + 16 + 40) >= 200, "the lever's reach (about 40 px each side) is far from the bat: " + (hurtLeft - LEVER_X));
+        assertTrue(hurtLeft - (LADDER_X + 16) >= 100, "the ladder foot is clear");
+        assertTrue(hurtLeft - STEP_END >= 80, "the step and slab are clear");
+        assertTrue(hurtLeft - PAD_END >= 16, "the pad's right edge, where a hero may drop, is not covered: " + (hurtLeft - PAD_END));
+        assertTrue(hurtLeft - (PAD_X) >= 60, "a drop off the pad's left side lands clear of the bat");
+        assertTrue((LIFT_X + 4 - 9) - hurtRight >= 12, "the lift is boarded 12 px past the bat's reach: " + ((LIFT_X + 4 - 9) - hurtRight));
+        assertTrue(Math.abs(bat.getY() - FLOOR) < 30);
+    }
+
+    @Test void theBatNeverReachesTheLeverOrTheSlabHeroAndNeverChases() {
+        Level level = room();
+        walkToLever(level); // standing at the lever for a long time: the bat never comes
+        for (int i = 0; i < 60 * 30; i++) { frame(level); alive(level); }
+        reachTheSlab(level);
+        for (int i = 0; i < 60 * 15; i++) { frame(level); alive(level); }
+    }
+
+    @Test void theRequiredRouteNeedsNoFireballTheBatFallsToTheSwordAndAHopOverItAlsoWorks() {
+        Level level = room();
+        mandatory(level);
+        assertEquals(0, stock.count());
+        assertTrue(bat(level).isDefeated());
+        // A hero who never attacks hops over it: some takeoff gaps clear it and carry him to the checkpoint alive.
+        int cleared = 0;
+        for (float gap = 8; gap <= 90; gap += 2) {
+            Level hop = room();
+            boolean ok = false, dead = false;
+            for (int i = 0; i < 60 * 25 && !dead; i++) {
+                held.clear(); held.add(Input.Keys.D);
+                if (enemyAhead(hop, gap) && hop.player.isOnGround()) jump();
+                boolean overLift = centerX(hop) >= LIFT_X + 4;
+                if (!riding(hop) && feet(hop) > 300 && overLift && lift(hop).getY() >= 292) jump();
+                if (riding(hop) && lift(hop).getY() <= RIDE_JUMP_Y && hop.player.isOnGround()) jump();
+                frame(hop);
+                dead = hop.player.isGotHit();
+                if (won(hop)) { ok = true; break; }
+            }
+            if (ok) cleared++;
+        }
+        assertTrue(cleared >= 5, "hopping the bat works from several takeoff gaps: " + cleared);
+        System.out.println("forest-1 route room: hopping the bat clears from " + cleared + " of 42 takeoff gaps");
+    }
+
+    @Test void aFireballShotFromAfarKillsTheBatAndTheRouteStillReachesTheCheckpoint() {
+        Level level = room();
+        stock.restore(1);
+        shootTheBat = true;
+        int frames = rideToCheckpoint(level);
+        shootTheBat = false;
+        assertTrue(bat(level).isDefeated(), "the fireball killed the bat");
+        assertEquals(0, stock.count(), "one charge spent");
+        System.out.printf(Locale.ROOT, "forest-1 route room, one fireball on the bat: %.2f s%n", frames * STEP);
+        assertTrue(frames * STEP <= BUDGET);
+    }
+
+    @Test void theRefillPaysForTheFireballTheBatCostsAndAFullStockCanBeSpentHere() {
+        // Stock 2: shoot the bat (1 left), then the refill detour brings it back up by one. The refill is worth a charge once one is spent.
+        Level level = room();
+        stock.restore(2);
+        shootTheBat = true;
+        // Shoot first, from the entrance side of the bat's beat, then do the detour and finish.
+        float x0 = 0;
+        for (int i = 0; i < 60 * 20 && !bat(level).isDefeated(); i++) {
+            held.clear(); held.add(Input.Keys.D);
+            boolean shooting = enemyAhead(level, 160);
+            if (shooting) { held.remove(Input.Keys.D); if (i % 45 == 0) pressed.add(Input.Keys.L); }
+            frame(level); alive(level);
+        }
+        shootTheBat = false;
+        assertTrue(bat(level).isDefeated());
+        assertEquals(1, stock.count());
+        detour(level);
+        assertEquals(2, stock.count(), "the refill returned the spent charge");
+        rideToCheckpoint(level);
+        assertTrue(won(level));
+        // Stock 3 at the start: the refill is wasted unless a charge was spent first, which is exactly why the bat is here.
+        Level full = room();
+        stock.restore(3);
+        full.player.position.set(REFILL_X - 11, PAD_TOP - 48);
+        settle(full, 30);
+        assertEquals(3, stock.count(), "a full stock gains nothing from the refill");
+        assertFalse(refillGone(full), "and the pickup stays where it is (D27)");
+    }
+
+    @Test void deathAndRetryBringTheBatBackAndASecuredKillStaysAKill() throws Exception {
+        Level level = room();
+        mandatory(level);
+        assertTrue(bat(level).isDefeated());
+        level.resetCurrentRoom(player());
+        assertFalse(bat(level).isDefeated(), "an unsecured kill is undone by a death, like every enemy on a first visit");
+        assertEquals(1760, bat(level).getX(), 0.01f);
+        // Secured (a room appended after this one, #104, or a healer return): the defeated bat stays defeated.
+        Level secured = room();
+        mandatory(secured);
+        var secure = Level.class.getDeclaredMethod("secureVisit");
+        secure.setAccessible(true);
+        secure.invoke(secured);
+        secured.resetCurrentRoom(player());
+        assertTrue(secured.objects.stream().noneMatch(o -> o instanceof Bat b && !b.isDefeated()), "no living bat after a secured kill");
+    }
+
+    @Test void everyD26StateStillReachesTheCheckpointWithTheBatAndNoFireball() {
+        // The recover() sweeps above run with the bat alive and zero charges; this adds the states where the hero left the slab late (step spent) at once.
+        for (int delay : new int[]{0, 90, 200, 330}) {
+            Level level = room();
+            walkToLever(level);
+            settle(level, delay);
+            operate(level); settle(level, 40);
+            walkToLadder(level); climb(level);
+            spendTheStep(level);
+            recover(level);
+            assertTrue(won(level), "delay " + delay);
+            assertEquals(0, stock.count());
+        }
     }
 }

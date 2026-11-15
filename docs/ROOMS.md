@@ -262,7 +262,7 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
 | `forest-1` / unmarked room (now room 1, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09) | 1280 px | 11.58 s (historical) | None | Within 20 s |
-| `forest-1` / `forest-1-route` (room 2, #187, D66, 2026-11-15) | 768 px | 8.22 s (17.62 s with the refill detour) | None (one fireball refill) | Within 20 s |
+| `forest-1` / `forest-1-route` (room 2, #187, D66, 2026-11-15) | 768 px | 10.83 s, bat by sword (18.13 s with the refill detour) | None (one fireball refill) | Within 20 s |
 | `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -514,7 +514,7 @@ These timings were rechecked on the teaching layout during the merge review on
 | Level / room | Required route | All room coins |
 | --- | ---: | ---: |
 | `forest-1` / unmarked (now room 1; 12.27 s since D58) | 11.58 s (historical) | No coins |
-| `forest-1` / `forest-1-route` (room 2, #187) | 8.22 s | No coins (refill detour: whole room 17.62 s) |
+| `forest-1` / `forest-1-route` (room 2, #187) | 10.83 s | No coins (refill detour: whole room 18.13 s) |
 | `forest-3` (now `forest-2`) / `forest-entry` | 16.27 s | 20.00 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 5.00 s | 5.00 s |
 
@@ -818,7 +818,7 @@ Three traps, not four; retry cost accepted, no split; the thorn tuft first; the 
 
 Built by [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) from the author's placement decision of 2026-11-15: the room is **appended** to `forest-1`, after the trap course, and the level `Checkpoint` moved to its end; a later combination room ([#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104)) is to follow it (turn this room's Checkpoint into a `RoomExit` and add a `Room`; not built here). The author then decided that a **one-shot element** is needed, after which the reward is lost until Restart Level (2026-11-15); the room was revised in a second commit of the same PR. Rule and rationale: [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and the new tiles have not been seen in the running game (tracked by #187, which stays open for that).
 
-Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen, `y = 320 - height` for something standing on the floor). `forest-1.tmx` is now 128 x 23 tiles (2048 x 368 px), a `Rooms` layer was added, `nextobjectid` is 59. SHA-256 before `e5160f69b69e254e71497609835a8047a993732be202f836f3b6c626e22642c3`, after `6292e6b58c98ec654b8c27d8f54ec04c890d9dc2ed0c71879bae5ed22fcba801` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`).
+Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen, `y = 320 - height` for something standing on the floor). `forest-1.tmx` is now 128 x 23 tiles (2048 x 368 px), a `Rooms` layer was added, `nextobjectid` is 60. SHA-256 before `e5160f69b69e254e71497609835a8047a993732be202f836f3b6c626e22642c3`, after `8c07663d1f96cdf67ef0e9632dbc85a9897b5af93d7715d9606ac4846fcc3541` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`).
 
 ```
 local x/16  012345678901234567890123456789012345678901234567   (room 2 only; x = 1280 + 16 * column)
@@ -827,11 +827,12 @@ y128        #.........................ppp...............C..#
 y160        #......................................EEEEEEEE#
 y168        #......................FF..............EEEEEEEE#
 y208        #...............Asssss.................EEEEEEEE#
+y296        #.............................BBBBBB...EEEEEEEE#
 y304        #...@.....l..........................L.EEEEEEEE#
 y320        ================================================
 ```
 
-`@` start, `l` lever, `A` the raised ladder (it hangs y 96-208), `s` the slab, `F` the one-shot step (a falling platform, y 168), `p` the refill pad (top y 128), `R` the refill, `L` the lift (bottom shown; it runs y 304-176), `E` the exit ledge (top y 160, solid below), `C` the checkpoint on it, `#` the end walls (the strip is approximate and shows only the rows where something sits; the table is authoritative).
+`@` start, `l` lever, `A` the raised ladder (it hangs y 96-208), `s` the slab, `F` the one-shot step (a falling platform, y 168), `p` the refill pad (top y 128), `R` the refill, `B` the bat's beat, `L` the lift (bottom shown; it runs y 176-304), `E` the exit ledge (top y 160, solid below), `C` the checkpoint on it, `#` the end walls (the strip is approximate and shows only the rows where something sits; the table is authoritative).
 
 | What | Object | x (px) | y (px) | Size | Properties | Role |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -843,16 +844,17 @@ y320        ================================================
 | One-shot step | `FallingPlatform` (id 58) | 1648 | 168 | 32 x 16 | none (default look) | 40 px above the slab, 40 px below the pad; falls once, 1 s after it is stood on (1.5 s assisted) |
 | Refill pad | collision (id 57) | 1696 | 128 | 48 x 16 | plain collision, floating | 80 px above the slab: out of reach without the step |
 | Refill | `FireballRefill` (id 51) | 1712 | 112 | 16 x 16 | none | one charge (D27), on the pad |
-| Lift | `Escalator` `Route` (id 50) | 1872 | 304 | 32 x 16 | `isVertical`, `offNeg` 4, `offPos` 0 | starts running at the bottom, 50 px/s between y 304 and y 176; mandatory route |
+| Lift | `Escalator` `Route` (id 50) | 1872 | 176 | 32 x 16 | `isVertical`, `offNeg` 0, `offPos` 4 | starts running at its top (y 176), descending, 50 px/s between y 176 and y 304; mandatory route |
+| Bat | `Bat` (id 59) | 1760 | 296 | 16 x 16 | `isVertical` false, `offNeg` 0, `offPos` 5 | patrols x 1760-1840 at the hero's height; sword, stomp, hop or fireball; never chases |
 | Exit ledge | collision (id 54) | 1904 | 160 | 128 x 160 | plain collision, not a `Wall` | not jumpable or climbable from the floor; 16 px above the lift's top |
 | Checkpoint | `Checkpoint` (id 7, moved) | 1984 | 128 | 16 x 32 | none | stands on the ledge top, 80 px from its edge; ends the level |
 | Floor, walls | collisions 52, 55, 56 | 1280 | 320 | 768 x 48; walls 16 x 320 at x 1280 and 2032 | | closed room; the invisible ceiling (D38) is added by the loader |
 
-Tiles: the floor, the two end columns and the exit ledge copy the forest-0 ledge art (ids 22-24, 42-44, 62-64, wall columns 79/99/139); the slab and the pad use the platform block ids 26-28 that forest-1 already uses at x 160 and 304; the step is the existing falling platform. No new art, no hints, no monster, no hazard.
+Tiles: the floor, the two end columns and the exit ledge copy the forest-0 ledge art (ids 22-24, 42-44, 62-64, wall columns 79/99/139); the slab and the pad use the platform block ids 26-28 that forest-1 already uses at x 160 and 304; the step is the existing falling platform. No new art, no hints, one monster (the bat), no hazard.
 
 ### How it plays
 
-The whole room is readable from the entrance side: the lever, the raised ladder, the slab with the step and, above it, the pad with the refill, the lift in motion and the exit ledge. **Required route (no lever, zero charges):** walk right, step onto the lift as it comes down or up through its lowest 56 px, ride up 1.7 s, hop onto the exit ledge (16 px higher than the lift's top), walk to the checkpoint. **Optional route:** pull the lever (the ladder comes down in about 0.7 s and the lift stops where it is), climb to the slab, hop onto the step (it lights up and will fall), hop on to the pad, take the refill, drop to the floor, walk back to the lever, pull it again (ladder up, lift running), then ride. **The one-shot:** the step falls about 1 s after it is stood on and never returns. A hero who steps on it and back, or who hesitates, has spent it and cannot reach the pad any more: the refill is lost until Restart Level (before the room is secured, until a death retry). The lift route is unaffected.
+The whole room is readable from the entrance side: the lever, the raised ladder, the slab with the step and, above it, the pad with the refill, the lift in motion and the exit ledge. **Required route (no lever, zero charges):** walk right, beat the bat with the sword (or hop over it, or shoot it from afar if you have a charge), step onto the lift as it comes down or up through its lowest 56 px, ride up 1.7 s, hop onto the exit ledge (16 px higher than the lift's top), walk to the checkpoint. **Optional route:** pull the lever (the ladder comes down in about 0.7 s and the lift stops where it is), climb to the slab, hop onto the step (it lights up and will fall), hop on to the pad, take the refill, drop to the floor, walk back to the lever, pull it again (ladder up, lift running), then ride. **The one-shot:** the step falls about 1 s after it is stood on and never returns. A hero who steps on it and back, or who hesitates, has spent it and cannot reach the pad any more: the refill is lost until Restart Level (before the room is secured, until a death retry). The lift route is unaffected. **The bat:** it patrols the floor stretch before the lift (x 1760-1840) and never chases; its beat is clear of the lever, the ladder, the step and the pad's drop, so the one-shot decision is never made under attack. A fireball from afar kills it; the refill then returns the charge, which is why the refill matters here even at a full stock (spend one on the bat first).
 
 ### Recovery and D26 (swept by `Forest1RouteTest`)
 
@@ -862,25 +864,26 @@ The whole room is readable from the entrance side: the lever, the raised ladder,
 - With the step spent, nothing reaches the pad: every takeoff from the slab (every 4 px, standing and jumping) falls short, and the floor is 192 px below it.
 - A stopped lift never opens the exit ledge without the lever: the hero can board it from the floor only while it is within about 56 px of the bottom, and from there the ledge is more than 71 px up. (The first version had the exit ledge top at y 208; the sweep showed a lift stopped at y 248 then made a two-jump route, so the ledge was raised to y 160 before merge.)
 - The pad is 128 px from the lift and from the exit ledge, so neither reaches it.
-- State boundary: death and room retry before securing restore the authored state (step intact, ladder raised, lift running at the bottom, lever down, refill back, the unsecured charge rolled back, hero at x 1344). If the room is secured (a room appended after it, #104, or a healer return) the snapshot keeps the step spent and the ladder as left, the refill stays out of reach and the exit works (`aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks`). Restart Level rebuilds the level from the map: the step is intact and the refill is back (`theRefillLostStateStillReachesTheCheckpointAndRestartLevelBringsTheRefillBack`). Room 1 is secured when the hero leaves it, so a death in room 2 does not replay the trap course.
+- State boundary: death and room retry before securing restore the authored state (step intact, ladder raised, lift running from its top, lever down, refill back, the unsecured charge rolled back, hero at x 1344). If the room is secured (a room appended after it, #104, or a healer return) the snapshot keeps the step spent and the ladder as left, the refill stays out of reach and the exit works (`aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks`). Restart Level rebuilds the level from the map: the step is intact and the refill is back (`theRefillLostStateStillReachesTheCheckpointAndRestartLevelBringsTheRefillBack`). Room 1 is secured when the hero leaves it, so a death in room 2 does not replay the trap course.
 
-### The refill and a full stock
+### The refill, the bat and a full stock
 
-The refill is worth nothing at a full stock of three (a run starts with three, room 1 needs none, and the contact is then wasted; the tests start at 0). The intended plan, not a built fact: the #104 room that follows offers a fireball as one optional choice, which gives the refill its value. Until then the author check should judge the room's readability, not the reward's effect.
+A run starts with three charges and room 1 needs none, so the refill alone would be wasted. The bat (author's request, 2026-11-15) gives the room its own use for a charge: shoot the bat, then the refill returns it. The fireball buys safety, not time. The #104 room that follows (a RedMob) is intended to offer a fireball as another optional choice (plan, not built).
 
 ### Measured (scripted hero, real input, zero charges; author check, not a novice playtest)
 
 | Route | Result | Budget |
 | --- | ---: | --- |
-| Required (walk, ride, hop, walk), three identical attempts after retries | **8.22 s** (boards the lift at 5.5 s, hops off at 7.2 s) | about 20 s (D19) |
-| Optional detour (lever, ladder, step, pad, refill, drop, back, lever) | 10.13 s | separate measurement |
-| Whole room with the refill | **17.62 s** (asserted against the same 20 s) | about 20 s |
+| Required (walk, bat by sword, ride, hop, walk), three identical attempts after retries | **10.83 s** | about 20 s (D19) |
+| One fireball on the bat instead of the sword | 10.83 s (the lift's schedule decides both) | optional |
+| Optional detour (lever, ladder, step, pad, refill, drop, back, lever) | 8.03 s | separate measurement |
+| Whole room with the refill | **18.13 s** (asserted against the same 20 s) | about 20 s |
 
-First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#129-#131). Allocation: 1,025.7 B/frame in the route room, also with the hero riding the lift every frame (ceiling 1,130, `AllocationBudgetTest.forest1RouteRoom` and `forest1RouteRoomRidingTheLift`); the trap course is unchanged. The riding path used to allocate a `Vector2` per frame (`Escalator.currentMoveDirection()`); `Escalator.riderVelocityX()` replaced that use in `Player`.
+First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#129-#131). Allocation: 1,025.6 to 1,026.3 B/frame in the route room (bat alive), also with the hero riding the lift every frame (ceiling 1,130, `AllocationBudgetTest.forest1RouteRoom` and `forest1RouteRoomRidingTheLift`); the trap course is unchanged. The riding path used to allocate a `Vector2` per frame (`Escalator.currentMoveDirection()`); `Escalator.riderVelocityX()` replaced that use in `Player`.
 
 ### Tests
 
-`Forest1RouteTest` (headless, real shipped map, 25 tests): census and positions, the one-lever opposite-states link and the lever's picture, lever reach, the pad closed without the lever (floor sweep, lift sweep), no stopped lift opening the exit ledge, the required route with zero charges and its time, three identical attempts, the optional detour with the step and its charge, the one-shot step (falls once, stays gone, pad closed), the refill-lost state reaching the exit, Restart Level, retry, a secured revisit, the lever sweeps and the step-state sweep, ledge drops, entrance. Changed existing tests (stated in D66): `Forest1TrapsTest` ends at the room exit, `RoomTest` (the unmarked-map test became an in-memory strip plus a two-room check), `RoomCeilingTest` (both rooms and a 160 px ledge head start), `AllocationBudgetTest` (new ceiling and a riding scene). No threshold was relaxed.
+`Forest1RouteTest` (headless, real shipped map, 32 tests): census and positions, the one-lever opposite-states link and the lever's picture, lever reach, the pad closed without the lever (floor sweep, lift sweep), no stopped lift opening the exit ledge, the required route with zero charges and its time, three identical attempts, the optional detour with the step and its charge, the bat (patrol, clearances to the lever and the one-shot decision, sword, hop and fireball answers, the refill's worth at stock 2 and 3, retry and secured kill), the one-shot step (falls once, stays gone, pad closed), the refill-lost state reaching the exit, Restart Level, retry, a secured revisit, the lever sweeps and the step-state sweep, ledge drops, entrance. Changed existing tests (stated in D66): `Forest1TrapsTest` ends at the room exit, `RoomTest` (the unmarked-map test became an in-memory strip plus a two-room check), `RoomCeilingTest` (both rooms and a 160 px ledge head start), `AllocationBudgetTest` (new ceiling and a riding scene). No threshold was relaxed.
 
 ## forest-2 trap placement plan (#261, D59)
 
