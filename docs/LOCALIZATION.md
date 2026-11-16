@@ -17,6 +17,13 @@ The saved preference continues to contain the enum name; old English/Ukrainian
 preferences remain valid. First launch and an invalid preference use English,
 independently of the system locale. Changing language does not rewrite run saves.
 
+## Text style
+
+Wording rules (tale voice for narration and the healer, plain imperative for hints, labels), length
+budgets and the glossary of fixed names per language are in [TEXT_STYLE.md](TEXT_STYLE.md) (D74).
+`python3 tools/check_text_style.py` (`./gradlew validateTextStyle`, part of `:core:check`) enforces them;
+[TEXT_AUDIT.md](TEXT_AUDIT.md) lists where and when every string appears.
+
 ## Edit a translation
 
 1. Edit the appropriate JSON file as UTF-8, with a flat object of string values.
@@ -32,6 +39,7 @@ independently of the system locale. Changing language does not rewrite run saves
    and help with a controller connected. In `runDev`, F7 forces catalogs to reload.
 
 ```sh
+python3 tools/check_text_style.py
 ./gradlew validateLocalization
 ./gradlew :lwjgl3:bakeFonts
 ./gradlew :core:test
@@ -67,7 +75,7 @@ the render loop.
 | `HEALER`, `HEALER_*` | The healer is an old man, the recurring narrator/guide. Preserve the agreed story; do not introduce quests or places. |
 | `INTRO_STORY` | The healer narrates Rufardus, L'Kardina's expulsion/curse and Edgard's departure. No ingredient tutorial here. |
 | `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. |
-| `BAT`, `MUSHROOM`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. |
+| `BAT`, `MUSHROOM`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. `COINS` is read by no code today (TEXT_AUDIT G18, [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374)); the gate's allowlist tracks it. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
 | `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |

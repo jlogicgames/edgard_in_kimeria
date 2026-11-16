@@ -8,6 +8,8 @@ until the planned gameplay mechanics have been added and are tracked only in
 This document records agreed narrative roles for future story, dialogue and level-design
 work. Accepted direction is not a claim that the corresponding scenes are implemented.
 See [DECISIONS.md, D14](DECISIONS.md#d14-the-healer-is-edgards-recurring-guide).
+How story text is written (voices, glossary of names, limits) is in [TEXT_STYLE.md](TEXT_STYLE.md) (D74);
+the story's beats against Propp's functions, and its open gaps, are in [TEXT_AUDIT.md](TEXT_AUDIT.md#2-the-story-against-propps-functions-and-roles).
 
 ## The healer: Edgard's recurring guide
 

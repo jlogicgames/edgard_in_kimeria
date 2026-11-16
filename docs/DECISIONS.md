@@ -1573,3 +1573,29 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   particles to a pool a jump or lever also uses). Peak live grit: a lever burst (24) plus a stone (14) is 38 of 48. No test threshold or tolerance was changed.
 - **Allocation:** new scenario `stoneImpactThroughTheRealLevel` 0.0 B/frame (ceiling 8); existing scenarios unchanged.
 - **Not verified:** the look on the real forest tiles and the sound on a real output: tracked in #368 (in-game visual verification of the playtest changes; also update this document when it is closed).
+
+## D74. Text style system: two voices, glossary and a gate (#339, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (all drafts of [TEXT_AUDIT.md](TEXT_AUDIT.md) section 4). Rules:
+  [TEXT_STYLE.md](TEXT_STYLE.md). No shipped string is changed by this decision; the rewrite follows in its own issues.
+- **Decision:** narration and the healer speak in the tale voice (no control names, no game jargon such as boss,
+  retry, checkpoint, lives, damage, list); hints are plain imperative; labels are one to three words; one form per
+  concept per language from the glossary. English source first, author approval, then all five catalogs.
+- **Limits:** the pixel limits of D50 are unchanged. New: EN zone messages at most 60 characters and two sentences
+  (the five shipped hints over it measure 64 to 77 characters and fit two lines today, so the budget is a margin for
+  translations, not a fix of a measured overflow).
+- **Gate:** `tools/check_text_style.py` (T1 glossary, T2 tale register, T3 hint budget, T4 key names in hints, T5 unused
+  keys, T6 glossary documented), test `tools/test_check_text_style.py` (Gradle `testTextStyleGate`, run before the gate),
+  Gradle `validateTextStyle` in `:core:check`, the desktop jar and the web release build. Data: `tools/text_style.json`.
+  Register word lists are per language; stems match at a word start, listed words only whole. 43 allowlist entries, one
+  per finding (key, language, term), cover today's 43 findings, each naming the open issue (#NNN) that removes it
+  (#371: 32, #373: 5, #369: 5, #374: 1); a stale entry or a non-issue reference fails the gate.
+- **Test change, stated plainly:** `HealerDialogueTest.tutorialTalesStayInFairyTaleRegisterWithoutNamingControlsOrMechanics`
+  now reads its word lists from `tools/text_style.json` (one list for Java and Python, found by walking up to the
+  repository root). Its matching changed on purpose: before, every word was a substring checked in every language
+  ("alive", "monkey", "sticky" would have failed); now each word is checked in its own language at a word start (or as
+  a whole word for short English terms such as key, stick, press, live). The new
+  `sharedRegisterListKeepsEveryWordThisTestUsedToPin` asserts every word the test pinned before is still held by its
+  group and language; the shared list adds inflections, damage, boss and list, and the tutorial tales pass.
+- **Not verified:** native-speaker review of the glossary forms for uk, pl, de and be; whether the 60-character hint
+  budget is the right margin (it is a proposal from the audit, not measured against a rewritten hint).

@@ -1,0 +1,1084 @@
+{
+  "_doc": "Machine-readable part of docs/TEXT_STYLE.md, read by tools/check_text_style.py and HealerDialogueTest. Register groups are per language: 'stems' match at the start of a word (so inflections match, 'alive' does not match 'live'), 'words' match only as a whole word. Matching is case-insensitive. Every allowlist entry names one language and the open issue that removes it; an entry that no longer matches fails the check.",
+  "languages": [
+    "en",
+    "uk",
+    "pl",
+    "de",
+    "be"
+  ],
+  "source": "en",
+  "voices": {
+    "tale": {
+      "keys": [
+        "INTRO_STORY",
+        "ENDING_STORY"
+      ],
+      "prefixes": [
+        "HEALER_",
+        "EDGARD_"
+      ],
+      "exclude": [
+        "HEALER_RETURN",
+        "HEALER_BREW",
+        "HEALER_FIGHT",
+        "HEALER_HINT"
+      ]
+    },
+    "hint": {
+      "prefixes": [
+        "HINT_"
+      ],
+      "maxSourceChars": 60,
+      "maxSentences": 2
+    }
+  },
+  "register": {
+    "controls": {
+      "en": {
+        "stems": [
+          "lever",
+          "button",
+          "jump",
+          "keyboard",
+          "gamepad",
+          "joystick"
+        ],
+        "words": [
+          "press",
+          "presses",
+          "pressed",
+          "pressing",
+          "key",
+          "keys",
+          "stick",
+          "sticks"
+        ]
+      },
+      "uk": {
+        "stems": [
+          "важіл",
+          "важел",
+          "кнопк",
+          "натисн",
+          "стрибк",
+          "стрибок",
+          "стрибн",
+          "клавіш"
+        ],
+        "words": []
+      },
+      "pl": {
+        "stems": [
+          "dźwign",
+          "przycisk",
+          "naciśn",
+          "skocz",
+          "klawisz",
+          "drążek",
+          "drążk"
+        ],
+        "words": []
+      },
+      "de": {
+        "stems": [
+          "hebel",
+          "taste",
+          "drück",
+          "spring",
+          "sprung",
+          "knopf",
+          "knöpf"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [
+          "рычаг",
+          "націсн",
+          "скачк",
+          "скачок",
+          "клавіш"
+        ],
+        "words": []
+      }
+    },
+    "lives": {
+      "en": {
+        "stems": [],
+        "words": [
+          "live",
+          "lives"
+        ]
+      },
+      "uk": {
+        "stems": [
+          "життя",
+          "життів"
+        ],
+        "words": []
+      },
+      "pl": {
+        "stems": [
+          "życi"
+        ],
+        "words": []
+      },
+      "de": {
+        "stems": [
+          "leben"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [
+          "жыцц"
+        ],
+        "words": []
+      }
+    },
+    "respawn": {
+      "en": {
+        "stems": [
+          "respawn"
+        ],
+        "words": []
+      },
+      "uk": {
+        "stems": [
+          "відродж"
+        ],
+        "words": []
+      },
+      "pl": {
+        "stems": [
+          "odrodz"
+        ],
+        "words": []
+      },
+      "de": {
+        "stems": [
+          "wiederbele"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [
+          "адраджэн"
+        ],
+        "words": []
+      }
+    },
+    "retry": {
+      "en": {
+        "stems": [
+          "restart"
+        ],
+        "words": [
+          "retry",
+          "retries",
+          "retried",
+          "retrying"
+        ]
+      },
+      "uk": {
+        "stems": [
+          "повтор",
+          "рестарт"
+        ],
+        "words": []
+      },
+      "pl": {
+        "stems": [
+          "ponown",
+          "restart"
+        ],
+        "words": []
+      },
+      "de": {
+        "stems": [
+          "neustart"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [
+          "паўтор",
+          "рэстарт"
+        ],
+        "words": []
+      }
+    },
+    "checkpoint": {
+      "en": {
+        "stems": [
+          "checkpoint"
+        ],
+        "words": []
+      },
+      "uk": {
+        "stems": [
+          "контрольн"
+        ],
+        "words": []
+      },
+      "pl": {
+        "stems": [
+          "punkt kontrol"
+        ],
+        "words": []
+      },
+      "de": {
+        "stems": [
+          "kontrollpunkt",
+          "speicherpunkt"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [
+          "кантрольн"
+        ],
+        "words": []
+      }
+    },
+    "damage": {
+      "en": {
+        "stems": [
+          "damage"
+        ],
+        "words": []
+      },
+      "uk": {
+        "stems": [],
+        "words": [
+          "шкоди",
+          "шкоду",
+          "шкодою",
+          "шкоді"
+        ]
+      },
+      "pl": {
+        "stems": [
+          "obrażen"
+        ],
+        "words": []
+      },
+      "de": {
+        "stems": [
+          "schaden"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [],
+        "words": [
+          "шкоды",
+          "шкоду",
+          "шкодай",
+          "шкодзе"
+        ]
+      }
+    },
+    "boss": {
+      "en": {
+        "stems": [],
+        "words": [
+          "boss",
+          "bosses"
+        ]
+      },
+      "uk": {
+        "stems": [],
+        "words": [
+          "бос",
+          "боса",
+          "босу",
+          "босом",
+          "босові"
+        ]
+      },
+      "pl": {
+        "stems": [],
+        "words": [
+          "boss",
+          "bossa",
+          "bossem",
+          "bossowi",
+          "bossie"
+        ]
+      },
+      "de": {
+        "stems": [],
+        "words": [
+          "boss",
+          "bosse",
+          "bosses"
+        ]
+      },
+      "be": {
+        "stems": [],
+        "words": [
+          "бос",
+          "боса",
+          "босу",
+          "босам",
+          "босе"
+        ]
+      }
+    },
+    "list": {
+      "en": {
+        "stems": [],
+        "words": [
+          "list",
+          "lists"
+        ]
+      },
+      "uk": {
+        "stems": [],
+        "words": [
+          "список",
+          "списку",
+          "списком"
+        ]
+      },
+      "pl": {
+        "stems": [],
+        "words": [
+          "lista",
+          "listę",
+          "listy",
+          "liście"
+        ]
+      },
+      "de": {
+        "stems": [
+          "liste"
+        ],
+        "words": []
+      },
+      "be": {
+        "stems": [],
+        "words": [
+          "спіс",
+          "спісе",
+          "спісу",
+          "спісам"
+        ]
+      }
+    }
+  },
+  "glossary": [
+    {
+      "concept": "hero",
+      "forms": {
+        "en": "Edgard",
+        "uk": "Едгард",
+        "pl": "Edgard",
+        "de": "Edgard",
+        "be": "Эдгард"
+      },
+      "stems": {
+        "en": [
+          "edgard"
+        ],
+        "uk": [
+          "едгард"
+        ],
+        "pl": [
+          "edgard"
+        ],
+        "de": [
+          "edgard"
+        ],
+        "be": [
+          "эдгард"
+        ]
+      }
+    },
+    {
+      "concept": "kingdom",
+      "forms": {
+        "en": "Kimeria",
+        "uk": "Кімерія",
+        "pl": "Kimeria",
+        "de": "Kimeria",
+        "be": "Кімерыя"
+      },
+      "stems": {
+        "en": [
+          "kimeri"
+        ],
+        "uk": [
+          "кімері"
+        ],
+        "pl": [
+          "kimeri"
+        ],
+        "de": [
+          "kimeri"
+        ],
+        "be": [
+          "кімеры"
+        ]
+      }
+    },
+    {
+      "concept": "villain",
+      "forms": {
+        "en": "L'Kardina",
+        "uk": "Л'Кардіна",
+        "pl": "L'Kardina",
+        "de": "L'Kardina",
+        "be": "Л'Кардына"
+      },
+      "stems": {
+        "en": [
+          "l'kardin"
+        ],
+        "uk": [
+          "л'кардін"
+        ],
+        "pl": [
+          "l'kardin"
+        ],
+        "de": [
+          "l'kardin"
+        ],
+        "be": [
+          "л'кардын"
+        ]
+      },
+      "avoid": {
+        "en": [
+          "l’kardin"
+        ],
+        "uk": [
+          "л’кардін"
+        ],
+        "pl": [
+          "l’kardin"
+        ],
+        "de": [
+          "l’kardin"
+        ],
+        "be": [
+          "л’кардын"
+        ]
+      }
+    },
+    {
+      "concept": "king",
+      "forms": {
+        "en": "Rufardus the Wise",
+        "uk": "Руфардус Мудрий",
+        "pl": "Rufardus Mądry",
+        "de": "Rufardus der Weise",
+        "be": "Руфардус Мудры"
+      },
+      "stems": {
+        "en": [
+          "rufardus"
+        ],
+        "uk": [
+          "руфардус"
+        ],
+        "pl": [
+          "rufardus"
+        ],
+        "de": [
+          "rufardus"
+        ],
+        "be": [
+          "руфардус"
+        ]
+      }
+    },
+    {
+      "concept": "donor",
+      "forms": {
+        "en": "healer",
+        "uk": "знахар",
+        "pl": "znachor",
+        "de": "Heiler",
+        "be": "знахар"
+      },
+      "stems": {
+        "en": [
+          "healer"
+        ],
+        "uk": [
+          "знахар"
+        ],
+        "pl": [
+          "znachor"
+        ],
+        "de": [
+          "heiler"
+        ],
+        "be": [
+          "знахар"
+        ]
+      }
+    },
+    {
+      "concept": "witch",
+      "forms": {
+        "en": "witch",
+        "uk": "відьма",
+        "pl": "wiedźma",
+        "de": "Hexe",
+        "be": "ведзьма"
+      },
+      "stems": {
+        "en": [
+          "witch"
+        ],
+        "uk": [
+          "відьм"
+        ],
+        "pl": [
+          "wiedźm"
+        ],
+        "de": [
+          "hexe"
+        ],
+        "be": [
+          "ведзьм"
+        ]
+      },
+      "avoid": {
+        "pl": [
+          "czarownic"
+        ]
+      }
+    },
+    {
+      "concept": "guardian",
+      "forms": {
+        "en": "forest guardian",
+        "uk": "лісовий вартовий",
+        "pl": "strażnik lasu",
+        "de": "Waldwächter",
+        "be": "лясны вартавы"
+      },
+      "stems": {
+        "en": [
+          "guardian"
+        ],
+        "uk": [
+          "вартов"
+        ],
+        "pl": [
+          "strażnik"
+        ],
+        "de": [
+          "wächter"
+        ],
+        "be": [
+          "вартав"
+        ]
+      }
+    },
+    {
+      "concept": "thread",
+      "forms": {
+        "en": "silver thread",
+        "uk": "срібна нитка",
+        "pl": "srebrna nić",
+        "de": "silberner Faden",
+        "be": "срэбная нітка"
+      },
+      "stems": {
+        "en": [
+          "thread"
+        ],
+        "uk": [
+          "нитк",
+          "нитц"
+        ],
+        "pl": [
+          "nić",
+          "nici"
+        ],
+        "de": [
+          "faden"
+        ],
+        "be": [
+          "нітк",
+          "нітц"
+        ]
+      }
+    },
+    {
+      "concept": "fire",
+      "forms": {
+        "en": "Fireball",
+        "uk": "Вогонь",
+        "pl": "Ogień",
+        "de": "Feuer",
+        "be": "Агонь"
+      },
+      "stems": {
+        "en": [
+          "fire"
+        ],
+        "uk": [
+          "вогон",
+          "вогн"
+        ],
+        "pl": [
+          "ogień",
+          "ognia",
+          "ognist"
+        ],
+        "de": [
+          "feuer"
+        ],
+        "be": [
+          "агон",
+          "агн"
+        ]
+      }
+    },
+    {
+      "concept": "elixir",
+      "forms": {
+        "en": "elixir",
+        "uk": "еліксир",
+        "pl": "eliksir",
+        "de": "Elixier",
+        "be": "эліксір"
+      },
+      "stems": {
+        "en": [
+          "elixir"
+        ],
+        "uk": [
+          "еліксир"
+        ],
+        "pl": [
+          "eliksir"
+        ],
+        "de": [
+          "elixier"
+        ],
+        "be": [
+          "эліксір"
+        ]
+      }
+    },
+    {
+      "concept": "fairy",
+      "forms": {
+        "en": "fairy",
+        "uk": "фея",
+        "pl": "wróżka",
+        "de": "Fee",
+        "be": "фея"
+      },
+      "stems": {
+        "en": [
+          "fairy",
+          "fairies"
+        ],
+        "uk": [
+          "фея",
+          "феї",
+          "фей",
+          "фею"
+        ],
+        "pl": [
+          "wróż"
+        ],
+        "de": [
+          "fee"
+        ],
+        "be": [
+          "фея",
+          "феі",
+          "фей",
+          "фею",
+          "фее"
+        ]
+      }
+    }
+  ],
+  "bindingTokens": [
+    "J",
+    "K",
+    "L",
+    "W",
+    "A",
+    "S",
+    "D",
+    "Z",
+    "X",
+    "C",
+    "Y",
+    "B",
+    "Esc",
+    "Tab",
+    "Enter",
+    "Space",
+    "Shift"
+  ],
+  "usage": {
+    "sources": [
+      "core/src/main/java",
+      "lwjgl3/src/main/java",
+      "web/src/main/java"
+    ],
+    "maps": [
+      "assets/tiles"
+    ],
+    "catalogClass": "core/src/main/java/com/jlogicsoftware/kimeria/localization/Msg.java"
+  },
+  "allowlist": [
+    {
+      "check": "T1",
+      "key": "HEALER_TALE_WITCH",
+      "lang": "pl",
+      "term": "witch",
+      "issue": "#369",
+      "reason": "Co-occurrence side of the same finding: the Polish text names the witch with 'czarownica', not the glossary form."
+    },
+    {
+      "check": "T1",
+      "key": "HEALER_TALE_BLESSING",
+      "lang": "pl",
+      "term": "witch",
+      "issue": "#369",
+      "reason": "Co-occurrence side of the same finding: the Polish text names the witch with 'czarownica', not the glossary form."
+    },
+    {
+      "check": "T1",
+      "key": "HEALER_TALE_WITCH",
+      "lang": "pl",
+      "term": "czarownic",
+      "issue": "#369",
+      "reason": "Shipped Polish wording uses a second word for the witch; carries the approved #220 text until the glossary translation pass."
+    },
+    {
+      "check": "T1",
+      "key": "HEALER_TALE_BLESSING",
+      "lang": "pl",
+      "term": "czarownic",
+      "issue": "#369",
+      "reason": "Same as HEALER_TALE_WITCH: approved #220 text, fixed by the translation pass."
+    },
+    {
+      "check": "T1",
+      "key": "FIREBALL_STOCK_FULL",
+      "lang": "be",
+      "term": "fire",
+      "issue": "#369",
+      "reason": "#340 (landed, closed) kept the fire's labels; the Belarusian label still says 'вогненных шароў', not the glossary 'Агонь'. Reconciled in the native-speaker review."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_INGREDIENTS",
+      "lang": "en",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_BOTH",
+      "lang": "en",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_READY",
+      "lang": "en",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 pre-boss wording; the tale-voice rewrite replaces 'boss' with the guardian."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "en",
+      "term": "damage",
+      "issue": "#371",
+      "reason": "Approved #84 wording states the tenfold damage rule; rewrite keeps the rule in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "en",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "en",
+      "term": "retry",
+      "issue": "#371",
+      "reason": "Approved #84 wording names the retries the elixir survives; rewrite in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_INGREDIENTS",
+      "lang": "uk",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_BOTH",
+      "lang": "uk",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_READY",
+      "lang": "uk",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 pre-boss wording; the tale-voice rewrite replaces 'boss' with the guardian."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "uk",
+      "term": "damage",
+      "issue": "#371",
+      "reason": "Approved #84 wording states the tenfold damage rule; rewrite keeps the rule in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "uk",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "uk",
+      "term": "retry",
+      "issue": "#371",
+      "reason": "Approved #84 wording names the retries the elixir survives; rewrite in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "uk",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_INGREDIENTS",
+      "lang": "pl",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_BOTH",
+      "lang": "pl",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_READY",
+      "lang": "pl",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 pre-boss wording; the tale-voice rewrite replaces 'boss' with the guardian."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "pl",
+      "term": "damage",
+      "issue": "#371",
+      "reason": "Approved #84 wording states the tenfold damage rule; rewrite keeps the rule in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "pl",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "pl",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_INGREDIENTS",
+      "lang": "de",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_BOTH",
+      "lang": "de",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_READY",
+      "lang": "de",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 pre-boss wording; the tale-voice rewrite replaces 'boss' with the guardian."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "de",
+      "term": "damage",
+      "issue": "#371",
+      "reason": "Approved #84 wording states the tenfold damage rule; rewrite keeps the rule in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "de",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "de",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_INGREDIENTS",
+      "lang": "be",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_BOTH",
+      "lang": "be",
+      "term": "list",
+      "issue": "#371",
+      "reason": "Approved #84 wording points at the checklist; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_READY",
+      "lang": "be",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 pre-boss wording; the tale-voice rewrite replaces 'boss' with the guardian."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "be",
+      "term": "damage",
+      "issue": "#371",
+      "reason": "Approved #84 wording states the tenfold damage rule; rewrite keeps the rule in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_PAID",
+      "lang": "be",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "be",
+      "term": "retry",
+      "issue": "#371",
+      "reason": "Approved #84 wording names the retries the elixir survives; rewrite in story words."
+    },
+    {
+      "check": "T2",
+      "key": "HEALER_LOCK",
+      "lang": "be",
+      "term": "boss",
+      "issue": "#371",
+      "reason": "Approved #84 wording; rewrite in tale voice."
+    },
+    {
+      "check": "T3",
+      "key": "HINT_STONE_THROW",
+      "lang": "en",
+      "term": "length",
+      "issue": "#373",
+      "reason": "Measured fit (two lines, D50); over the 60-char source budget until the hint rewrite."
+    },
+    {
+      "check": "T3",
+      "key": "HINT_TRAP_PLATFORM",
+      "lang": "en",
+      "term": "length",
+      "issue": "#373",
+      "reason": "Measured fit (two lines, D50); hint rewrite."
+    },
+    {
+      "check": "T3",
+      "key": "HINT_TRAP_STUMP",
+      "lang": "en",
+      "term": "length",
+      "issue": "#373",
+      "reason": "Measured fit (two lines, D50); hint rewrite."
+    },
+    {
+      "check": "T3",
+      "key": "HINT_PLATFORM_STONE",
+      "lang": "en",
+      "term": "length",
+      "issue": "#373",
+      "reason": "Measured fit (two lines, D50); hint rewrite."
+    },
+    {
+      "check": "T3",
+      "key": "HINT_STONE_STUMP",
+      "lang": "en",
+      "term": "length",
+      "issue": "#373",
+      "reason": "Measured fit (two lines, D50); hint rewrite."
+    },
+    {
+      "check": "T5",
+      "key": "COINS",
+      "lang": "*",
+      "term": "unused",
+      "issue": "#374",
+      "reason": "Catalog key read by no code; removal or use is decided in its own issue."
+    }
+  ]
+}

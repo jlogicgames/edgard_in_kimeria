@@ -95,6 +95,24 @@ project(":core").tasks.named("check") { dependsOn(validateAllocations) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateAllocations) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateAllocations) }
 
+val testTextStyleGate = tasks.register<Exec>("testTextStyleGate") {
+    group = "verification"
+    description = "Runs the unit tests of tools/check_text_style.py, so a broken gate fails the build."
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "-m", "unittest", "discover", "-s", "tools", "-p", "test_check_text_style.py")
+}
+val validateTextStyle = tasks.register<Exec>("validateTextStyle") {
+    group = "verification"
+    description = "Checks player-facing strings against docs/TEXT_STYLE.md (glossary, tale register, hint budget, unused keys)."
+    dependsOn(testTextStyleGate)
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "tools/check_text_style.py")
+}
+project(":core").tasks.named("check") { dependsOn(validateTextStyle) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateTextStyle) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateTextStyle) }
+
 // Native installer/app-image (bundles its own JRE -- nothing else to
 // install to play): .exe/.msi on Windows, .app/.dmg on macOS,
 // .deb/.rpm/app-image on Linux, at lwjgl3/build/jpackage/. jpackage can only
