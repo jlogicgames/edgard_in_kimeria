@@ -15,7 +15,7 @@ full menu system, localization, gamepad support, dev hotkeys).
 
 The MVP has three playable levels: the tutorial **forest-0** (six empty rooms), **forest-1**
 (three rooms: the trap course, a route room with a lever, a ladder and a lift, and a guard room with a RedMob in a tunnel under a spore cloud and a lever-lowered roof route with a refill), then **forest-2** (three rooms, healer and boss). The Forest order is
-`forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
+`forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending screen in the opening's page style ([D77](DECISIONS.md#d77-story-screens-are-static-pages-playtest-f2-336-2026-11-16)) uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
 removed. Future mechanics will expand these same levels. See [MVP](MVP.md).
 The current implementation/review stages are complete for the test version; remaining

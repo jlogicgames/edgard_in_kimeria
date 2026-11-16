@@ -48,6 +48,11 @@ those mechanics in the healer encounter. The historical seven-component remedy i
 reference material for a later healer story, not a new mechanic to implement now.
 The opening retains the healer's narrative voice without turning into a tutorial.
 
+**Presentation (#336, playtest F2, [D77](DECISIONS.md#d77-story-screens-are-static-pages-playtest-f2-336-2026-11-16)):** the opening is shown as static pages, not a scroll. The paragraphs appear one
+after another from the top and stay; the player turns the page with any fresh key, button or tap, and Escape (or the
+pad's Back/Start) leaves it. With the Instant text option (D11) a page appears whole. The text is cut at paragraph
+breaks only, so wording is never changed to fit; today the whole opening is one page in all five languages.
+
 The original also describes a spell tablet broken into four pieces, four regions, and a
 seven-component remedy. Preserve these in [Original DOS references](ORIGINAL_DOS.md).
 For the expanded campaign, the author has now selected Forest → Swamp → Steppe →
@@ -123,7 +128,7 @@ introduces no new quest, destination or persistent checkpoint. See [HEALER.md](H
 
 The playable MVP is finite: the existing three-room `forest-1` (trap course, route room and guard room) is level one; the forest's three rooms and boss
 (`forest-2`) form the last level. The forest guide scene follows the boss. After
-it, an ending screen in the opening's scrolling style plays the same music.
+it, an ending screen in the opening's page style plays the same music.
 Its localized text establishes that Edgard defeated every enemy, cleared the kingdom of
 monsters and brought light back to the world. This outcome is now agreed; no new account
 of L'Kardina's fate or the mechanism of dispelling darkness is added.

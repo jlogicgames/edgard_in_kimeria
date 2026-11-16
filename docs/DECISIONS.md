@@ -1758,3 +1758,29 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) (its checklist carries the D76 background ceiling).
 - **Not verified:** the recoloured decor in the running game, by the author's eye (desktop and web): tracked in
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+
+## D77. Story screens are static pages (playtest F2, #336, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (the plan of 2026-11-15 and this draft).
+- **Decision:** the opening and the ending are cut at paragraph breaks into pages, measured with the body font (D70) at
+  load; a paragraph taller than a page fails the load and is never allowed to overflow, so no wording changes to fit.
+  Paragraphs fade in (0.9 s each, 1.6 s apart) from the top and stay; nothing scrolls and nothing turns by itself.
+- **Controls:** any fresh key, gamepad button or tap shows the rest of the page, then turns it; the last turn fades out.
+  Escape or the pad's Back/Start leaves at once. Input is ignored for 0.6 s after a page starts and after it is whole,
+  so a held button cannot skip pages. With Instant text (D11) a page appears whole and turns at once.
+- **Measured:** the opening and the ending are one page in all five languages (the longest opening, German, ends 258 px
+  from the screen top; the page area ends at 304 px). `AllocationBudgetTest.pagedIntro`: 0.0 B/frame, instant text off
+  and on (ceiling 8), with the touch skip button's `updateSkip` and `renderSkipButton` in the measured loop. The harness's
+  proxied `Gdx.input` allocates 120 B/frame by itself (24 B for each of the 5 polled pointers; measured alone, and the
+  JIT sometimes removes it), so the scenario subtracts that baseline: 0.0 B/frame left in 3 runs.
+- **No new string:** a pulsing triangle marks a page that waits for the button.
+- **Touch skip button (author-approved, 2026-11-16; "good enough for now, polish later"):** on touch devices only, an
+  icon-only button (skip to end, a play triangle and a bar, no string) sits top right of the picture at (606, 22),
+  radius 13, hit radius 26 like the pause button. Paging is single-finger: a tap while another finger is already down turns no page (libGDX reports `justTouched` without a pointer index; `IntroInputTest` pins it); the button polls every pointer on its own, so any finger skips. A tap calls the same `IntroScreen.skip()` as Escape and Back, also
+  during the input lock and on the ending, and that tap never also turns a page (the skip wins in the same frame).
+  Art: `art/hud/touch/skip.grid` and `skip-down.grid` (exported by `tools/touch_control_sprites.py`). The outermost
+  outline is white: the navy outline of the other discs measures 0.20 (OKLab) against the black story screen, under the
+  0.28 active floor of [D76](#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16); the white one
+  measures 0.99. `TouchControlArtTest` pins it; `validateContrast` covers world sprites, not touch art.
+- **Not verified:** the look on desktop and web and the button on a real touch device
+  ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).

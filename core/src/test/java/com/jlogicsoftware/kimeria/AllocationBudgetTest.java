@@ -26,6 +26,10 @@ import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
+import com.jlogicsoftware.kimeria.ui.IntroScreen;
+import com.jlogicsoftware.kimeria.ui.Overlay;
+import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -449,6 +453,9 @@ class AllocationBudgetTest {
     }
 
     // #303: the per-frame sites outside the particle code. Measured in 3 runs each: every scenario is 0.0 to 1.6 B/frame (the FPS label 1.6, the hint 0.9, the outlines 0.1 to 0.7), so the ceiling is the same 8 B as the particle scenarios.
+    /** Measured 0.0 B/frame in 3 runs, instant text off and on (#336): the held turn button, reveal, turn fade, cue and flush of a 50-page-plus story, instant text off and on. */
+    static final double PAGED_INTRO_CEILING = 8;
+    static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     static final double STONE_FIREBALL_CEILING = 8, PASSIVE_OUTLINE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
@@ -552,6 +559,48 @@ class AllocationBudgetTest {
             });
             assertTrue(sum[0] > 0);
             assertWithinBudget("HealerDialogue reveal, instant text " + (instant ? "on" : "off"), CHECKLIST_CEILING, bytes);
+        }
+    }
+
+    /**
+     * The paged intro (#336) frame after frame: {@code IntroScreen.update}, the held page-turn button (every frame, so the
+     * lock, the reveal, the turn fade and the cue all run), {@code render} and {@code Overlay.flushText} through a no-op
+     * batch with the real body font's metrics. The story is the English opening repeated 100 times (50 or more pages), which
+     * keeps pages turning through the whole measured window. Layout, measuring and the text blocks are built at load,
+     * outside the measurement.
+     */
+    @Test void pagedIntro() {
+        harness.font = new MetricsFont(FontSizes.BODY);
+        String opening = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
+            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("INTRO_STORY");
+        String story = String.join("\n\n", java.util.Collections.nCopies(PAGED_INTRO_COPIES, opening));
+        // The harness's proxied Gdx.input allocates an argument array on every call (24 B), and the skip button polls
+        // TOUCH_POINTERS pointers a frame; that is the harness, not the button, so it is measured alone and subtracted.
+        double harnessInput = AllocationProbe.bytesPerFrame(i -> {
+            for (int pointer = 0; pointer < TOUCH_POINTERS; pointer++) com.badlogic.gdx.Gdx.input.isTouched(pointer);
+        });
+        System.out.printf("ALLOCATION harness input polling alone: %.1f B/frame%n", harnessInput);
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360);
+            IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
+            assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
+            // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
+            TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
+            int[] turned = new int[1];
+            double bytes = AllocationProbe.bytesPerFrame(i -> {
+                touch.updateSkip();
+                touch.renderSkipButton(batch);
+                intro.update(STEP);
+                if (intro.turn()) turned[0]++;
+                overlay.beginFrame();
+                intro.render(batch, overlay);
+                overlay.flushText(batch);
+            });
+            assertTrue(turned[0] > 10, "pages must keep turning during the measurement: " + turned[0]);
+            assertTrue(intro.state() != IntroScreen.State.DONE, "the story must still be running at the end");
+            System.out.printf("ALLOCATION paged intro with the skip button, instant text %s: %.1f B/frame in all, %.1f of it the harness's input proxy%n",
+                instant ? "on" : "off", bytes, harnessInput);
+            assertWithinBudget("paged intro, instant text " + (instant ? "on" : "off") + ", without the harness input proxy", PAGED_INTRO_CEILING, Math.max(0, bytes - harnessInput));
         }
     }
 

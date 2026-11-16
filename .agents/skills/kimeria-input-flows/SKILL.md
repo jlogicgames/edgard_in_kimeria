@@ -50,7 +50,7 @@ a consumer. A menu mapping and a gameplay mapping may intentionally differ.
   movement and action with simultaneous pointers, drag/release and state changes.
   The README records the missing gameplay touch pause button; do not claim all
   touch flows are complete or add that feature without it being in scope.
-- A confirmation that opens a screen must not also jump, skip its opening/ending scroll, advance
+- A confirmation that opens a screen must not also jump, skip or turn a page of its opening/ending, advance
   its first line or activate its initial choice. Snapshot held input at entry,
   ignore OS repeats where a fresh press is required, and require release/repress.
 - Dialogue presses first reveal, then advance. Opening choices does not confirm

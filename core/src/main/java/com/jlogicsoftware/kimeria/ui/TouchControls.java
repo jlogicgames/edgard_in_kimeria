@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -78,6 +79,11 @@ public class TouchControls {
 
     /** Pause button: drawn radius 13 (touching the top edge of the boss label), hit radius 26 = a 52 px target. */
     public static final float PAUSE_X = 320, PAUSE_Y = 19, PAUSE_RADIUS = 13, PAUSE_HIT_RADIUS = 26;
+    /**
+     * Story skip button (#336, D77): top right of the picture on the opening and the ending, same size and hit area as the
+     * pause button. Its art has a white outer outline because it sits on the black story screen (D76).
+     */
+    public static final float SKIP_X = 606, SKIP_Y = 22, SKIP_RADIUS = 13;
     /** In portrait the picture is drawn at about 0.6 px per unit, so 40 units is still a 24 px radius target. */
     public static final float PAUSE_HIT_RADIUS_PORTRAIT = 40;
     /** In the side-bar layout the picture can be drawn well below 1 px per unit (D56); the hit circle keeps at least this radius in CSS pixels (backbuffer pixels on the web are {@code TouchLayout.pixelRatio()} per CSS pixel, D57). */
@@ -99,7 +105,7 @@ public class TouchControls {
 
     private final GameContext game;
     private final Viewport viewport;
-    private final TextureRegion disc, discDown, base, jumpIcon, jumpDown, knob, knobDown, pauseIcon, pauseDown;
+    private final TextureRegion disc, discDown, base, jumpIcon, jumpDown, knob, knobDown, pauseIcon, pauseDown, skipIcon, skipDown;
     private final BitmapFont font;
     private final Matrix4 textProjection;
     private final float logicalWidth, logicalHeight;
@@ -121,6 +127,8 @@ public class TouchControls {
     private boolean jumpHeld, shootHeld, actionHeld;
     private boolean prevShoot, prevAction, prevPause, pauseHeld, pauseEdge;
     private boolean shootEdge, actionEdge;
+    private final boolean[] skipSeen = new boolean[MAX_POINTERS], skipClaimed = new boolean[MAX_POINTERS];
+    private boolean skipHeld, skipEdge, prevSkip;
     private float knobDx, knobDy;
 
     public TouchControls(Assets assets, GameContext game, Viewport viewport, float logicalWidth, float logicalHeight) {
@@ -142,6 +150,8 @@ public class TouchControls {
         this.jumpDown = assets.region(ART + "jump-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.pauseIcon = assets.region(ART + "pause.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.pauseDown = assets.region(ART + "pause-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        this.skipIcon = assets.region(ART + "skip.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        this.skipDown = assets.region(ART + "skip-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.knob = assets.region(ART + "knob.png", 0, 0, (int) KNOB_SIZE, (int) KNOB_SIZE);
         this.knobDown = assets.region(ART + "knob-down.png", 0, 0, (int) KNOB_SIZE, (int) KNOB_SIZE);
         this.font = assets.font(FontSizes.TOUCH_LABEL);
@@ -277,6 +287,40 @@ public class TouchControls {
         prevPause = pause;
         prevShoot = shoot;
         prevAction = action;
+    }
+
+    /**
+     * Polls the story skip button; call every frame the story is shown. A finger that goes down on the button is claimed
+     * by it, so the same touch is reported only as {@link #skipPressed()} and the caller can keep it from also turning a
+     * page. Works at any time, including while the story's input lock runs.
+     */
+    public void updateSkip() {
+        boolean held = false, edge = false;
+        place();
+        for (int p = 0; p < MAX_POINTERS; p++) {
+            if (!available || !Gdx.input.isTouched(p)) { skipSeen[p] = false; skipClaimed[p] = false; continue; }
+            if (!skipSeen[p]) {
+                skipSeen[p] = true;
+                touch.set(Gdx.input.getX(p), Gdx.input.getY(p));
+                viewport.unproject(touch);
+                skipClaimed[p] = inCircle(touch.x, touch.y, SKIP_X, SKIP_Y, pauseHitRadius());
+                edge |= skipClaimed[p];
+            }
+            held |= skipClaimed[p];
+        }
+        skipHeld = held;
+        skipEdge = edge && !prevSkip;
+        prevSkip = held;
+    }
+
+    /** Edge-triggered: true for the one frame a finger goes down on the story skip button. */
+    public boolean skipPressed() { return skipEdge; }
+
+    /** Draws the story skip button (touch devices only); before the story's fade panel, so it fades with the page. */
+    public void renderSkipButton(Batch batch) {
+        if (!available) return;
+        drawButton(batch, skipIcon, skipDown, SKIP_X, SKIP_Y, SKIP_RADIUS, skipHeld);
+        batch.setColor(Color.WHITE);
     }
 
     /** Mirrors a right-handed layout X across the screen in left-handed mode. */
@@ -422,7 +466,7 @@ public class TouchControls {
         batch.setColor(Color.WHITE);
     }
 
-    private void drawButton(SpriteBatch batch, TextureRegion idle, TextureRegion pressed, float cx, float cy, float r, boolean down) {
+    private void drawButton(Batch batch, TextureRegion idle, TextureRegion pressed, float cx, float cy, float r, boolean down) {
         batch.setColor(1f, 1f, 1f, down ? 1f : CONTROL_ALPHA);
         float s = down ? r * PRESSED_SCALE : r;
         batch.draw(down ? pressed : idle, cx - s, cy - s, s * 2, s * 2);
