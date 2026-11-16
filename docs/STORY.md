@@ -150,6 +150,16 @@ Approved texts (EN source; the five catalogs hold the translations):
 - **Opening narration**, one sentence in the paragraph where he meets the healer (`INTRO_STORY`):
   "I gave him my counsel. I tied a silver thread about his wrist and kept the other end in my
   hand, and he ventured onward."
+- **#340 (2026-11-16), the healer's second gift: the fireball.** Author-approved (variant A).
+  Start tale, 8 lines, new healer line after the thread, key `HEALER_TALE_FIREGIFT`: "And one
+  more gift, Edgard. Here is a spark of my own fire, and it will leap from your hand at what you
+  fear. Sparks found on the road are this same fire, but it is not endless, so spend it as you
+  would your last bread." Opening narration, the same paragraph, one added sentence after the
+  thread: "I tied a silver thread about his wrist and kept the other end in my hand. I gave him a
+  spark of my own fire, and he ventured onward." In Propp's terms the healer is the donor and the
+  spark is the magical agent; refills on the road are the same fire, and the text says it is
+  not endless (the scarcity rule of GAME_DESIGN.md). The line says "spark" and "fire", never
+  "fireball", so it names no mechanic.
 
 Not used by the author's decision: the farewell (no line there), a line on the first death, and
 any answer from Edgard. **Revised 2026-11-15 after the first external playtest
