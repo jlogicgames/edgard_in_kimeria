@@ -14,7 +14,7 @@ import re
 import struct
 import sys
 from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, PLAYER_LOOK_SIZE, HUD_ICON_SIZE,
-    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES)
+    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -48,7 +48,6 @@ ALLOWED = {
     ('effects/KimeriaBloodSystem.java', 'render', 'quad'): 'simulated impact particles',
     ('ui/Overlay.java', 'panel', 'quad'): 'UI panel/fade geometry',
     ('ui/Overlay.java', 'buttons', 'quad'): 'menu focus/button geometry',
-    ('ui/HealerDialogueView.java', 'frame', 'quad'): 'dialogue frame/focus geometry',
     ('ui/InteractionHighlight.java', 'corners', 'quad'): 'selection annotation around a separately drawn sprite',
 }
 NON_CODE = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
@@ -143,6 +142,9 @@ def image_contracts(root):
     # Touch controls are small indexed pixel art with binary alpha, on the world-art palette limit.
     contracts += [(f'assets/images/HUD/touch/{name}.png', size, WORLD_PALETTE_SIZE, 'binary')
                   for name, size in TOUCH_CONTROL_SIZES.items()]
+    # The dialogue screen frame (#337, D78): native pixel art on the world-art palette limit.
+    contracts += [(f'assets/images/ui/dialogue-{name}.png', size, WORLD_PALETTE_SIZE,
+                   'opaque' if name in OPAQUE_DIALOGUE_IMAGES else 'binary') for name, size in DIALOGUE_IMAGES.items()]
     # Character poses reuse the legacy hero's 16 opaque colors plus alpha; PNG pads to 32.
     contracts.append(('assets/images/hero/Look.png', PLAYER_LOOK_SIZE, 32, 'binary'))
     for relative, size, colors, alpha_mode in contracts:

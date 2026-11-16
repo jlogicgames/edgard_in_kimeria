@@ -7,10 +7,18 @@ import java.util.List;
 /** Dialogue timeline; input edges and rendering are supplied by the host. */
 public final class HealerDialogue {
     public enum Choice { RETURN, BREW, FIGHT, CONTINUE }
+    /** The screen's opening (D78): the frame unfolds and the thread draws in; letters start after it, gameplay waits as before. */
+    public static final float OPEN_SECONDS = 0.3f;
+    private static final float LETTERS_PER_SECOND = 38f;
+    // Constant lists: the view asks for the choices every frame.
+    private static final List<Choice> NO_CHOICES = List.of(), FIGHT_ONLY = List.of(Choice.FIGHT),
+        RETURN_OR_FIGHT = List.of(Choice.RETURN, Choice.FIGHT);
     private final List<Msg> lines;
     private final boolean eligible, paid;
     private int line, selected;
     private float characters;
+    /** Seconds since the dialogue opened (capped at the opening) and since the current line's letters began; paused time does not count. */
+    private float opened, lineTime, time;
     private boolean choosing, finished;
     /** Instant text (#342): every line is whole from its first frame; read live, so the setting applies at once. */
     private boolean instantText;
@@ -70,7 +78,25 @@ public final class HealerDialogue {
             Msg.HEALER_OFFER);
     }
 
-    public void update(float dt) { if (!choosing) characters += Math.max(0, dt) * 38; }
+    public void update(float dt) {
+        float step = Math.max(0, dt);
+        time += step;
+        if (opened < OPEN_SECONDS) {
+            float rest = opened + step - OPEN_SECONDS;
+            opened = Math.min(OPEN_SECONDS, opened + step);
+            step = Math.max(0, rest);
+        }
+        lineTime += step;
+        if (!choosing) characters += step * LETTERS_PER_SECOND;
+    }
+    /** 0 when the screen opens, 1 once the frame, the thread and the box are whole (after {@link #OPEN_SECONDS}). */
+    public float openProgress() { return opened / OPEN_SECONDS; }
+    /** Seconds the current line has been on screen after the opening (drives the thread glint). */
+    public float lineTime() { return lineTime; }
+    /** Seconds the dialogue has run, paused time excluded (drives the speaker's bob). */
+    public float time() { return time; }
+    /** The line on screen now. */
+    public Msg currentLine() { return lines.get(line); }
     public void setInstantText(boolean instant) { instantText = instant; }
     /** How many letters of the line show now; the per-frame renderer asks this instead of {@link #text}, which builds a substring. */
     public int visibleCharacters(Language language) {
@@ -86,13 +112,17 @@ public final class HealerDialogue {
     public int selected() { return selected; }
     public void select(int index) { if (index >= 0 && index < choices().size()) selected = index; }
     public List<Choice> choices() {
-        if (scripted()) return List.of();
-        if (paid) return List.of(Choice.FIGHT);
-        return eligible ? List.of() : List.of(Choice.RETURN, Choice.FIGHT);
+        if (scripted()) return NO_CHOICES;
+        if (paid) return FIGHT_ONLY;
+        return eligible ? NO_CHOICES : RETURN_OR_FIGHT;
     }
     public void move(int direction) { selected = Math.floorMod(selected + direction, choices().size()); }
-    /** Navigation consumes the event; opening choices never also activates one. */
+    /**
+     * Navigation consumes the event; opening choices never also activates one. Nothing is taken while the screen opens
+     * (D78): the view shows no text before {@link #OPEN_SECONDS}, so a press then would act on a line nobody has seen.
+     */
     public Choice interact(Language language, boolean freshAdvance, int navigation, boolean confirm, int clicked) {
+        if (opened < OPEN_SECONDS) return null;
         if (!choosing) {
             return freshAdvance ? advance(language) : null;
         }
@@ -105,7 +135,7 @@ public final class HealerDialogue {
         if (choosing || finished) return null;
         int length = completeText(language).length();
         if (!instantText && characters < length) { characters = length; return null; }
-        if (line + 1 < lines.size()) { line++; characters = 0; }
+        if (line + 1 < lines.size()) { line++; characters = 0; lineTime = 0; }
         else if (scripted()) { finished = true; return Choice.CONTINUE; }
         else if (eligible && !paid) return Choice.BREW;
         else choosing = true;

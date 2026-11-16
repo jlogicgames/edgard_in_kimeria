@@ -292,7 +292,8 @@ class BossCombatTest {
         gameField(running, "uiViewport", new com.badlogic.gdx.utils.viewport.FitViewport(640, 360));
         gameField(running, "healerView", new com.jlogicsoftware.kimeria.ui.HealerDialogueView(assets));
         var update = KimeriaGame.class.getDeclaredMethod("updateHealer", float.class); update.setAccessible(true);
-        update.invoke(running, 0f);
+        // The first frame opens the screen (D78: input is ignored until it is open), with the inputs still held.
+        update.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.OPEN_SECONDS);
         assertEquals("", dialogue.text(com.jlogicsoftware.kimeria.localization.Language.ENGLISH),
             "Held fight and movement inputs cannot reveal the opening line");
         held.clear(); update.invoke(running, 0f);

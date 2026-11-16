@@ -72,3 +72,19 @@ PICKUP_SHEETS = {
     'sparkle': ((5, 5), ('grow', 'star', 'fade')),
 }
 WORLD_IMAGES.update({f'pickup-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in PICKUP_SHEETS.items()})
+# The dialogue screen (#337, D78): hand-drawn grids in art/ui/dialogue -> assets/images/ui/dialogue-<name>.png, one horizontal
+# strip each; name -> (frame size, ordered frame names). The nine-patch insets are in HealerDialogueView.
+DIALOGUE_SHEETS = {
+    'window': ((32, 32), ('lit', 'dim')),
+    'crest': ((17, 7), ('lit', 'dim')),
+    'plate': ((16, 22), ('lit', 'dim')),
+    'box': ((24, 24), ('box',)),
+    'page': ((24, 24), ('page',)),
+    'choice': ((16, 26), ('idle', 'selected')),
+    'notch': ((13, 8), ('notch',)),
+    'thread': ((284, 32), ('thread',)),
+    'glint': ((5, 5), ('glint',)),
+}
+DIALOGUE_IMAGES = {name: (size[0] * len(frames), size[1]) for name, (size, frames) in DIALOGUE_SHEETS.items()}
+# Frames with no transparent pixel (bands with an opaque fill); the rest keep binary alpha.
+OPAQUE_DIALOGUE_IMAGES = {'window', 'plate', 'box', 'page', 'choice'}

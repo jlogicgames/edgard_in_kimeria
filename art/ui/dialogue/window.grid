@@ -1,0 +1,85 @@
+# Dialogue portrait window (#337, D78): carved walnut band 8 px, gilt bead on its inner side, gilt rosettes in the
+# corners; nine-patch, insets 12 px. Frame "lit" is the speaker, "dim" the listener: every colour x0.5, the two bright gilts capped (D78).
+# The opening is a dusk blue (3d4a68), light enough that the portraits' dark contours read against it (D76 by analogy).
+size 32 32
+color a 1d120c
+color b 3a2416
+color c 5a3a22
+color d 7d5534
+color e 6e5226
+color f a8844a
+color g d8c08a
+color h 0e0906
+color i 1d120b
+color j 2d1d11
+color k 3e2a1a
+color l 372913
+color m 44361e
+color n 3e3728
+color V 3d4a68
+frame lit
+acccccaaaaaaaaaaaaaaaaaaaaccccca
+cccfcccddddddddddddddddddcccfccc
+ccegeccddddddddddddddddddccegecc
+cfggcfccccccccccccccccccccfggcfc
+ccececcccccccccccccccccccccececc
+cccfccccccccccccccccccccccccfccc
+acccccaggggggggggggggggggaccccca
+addcccgeeeeeeeeeeeeeeeeeegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeVVVVVVVVVVVVVVVVegcccaaa
+addcccgeeeeeeeeeeeeeeeeeegcccaaa
+acccccaggggggggggggggggggaccccca
+cccfccccccccccccccccccccccccfccc
+ccegeccccccccccccccccccccccegecc
+cfggcfccccccccccccccccccccfggcfc
+ccececcaaaaaaaaaaaaaaaaaaccececc
+cccfcccaaaaaaaaaaaaaaaaaacccfccc
+acccccaaaaaaaaaaaaaaaaaaaaccccca
+frame dim
+hjjjjjhhhhhhhhhhhhhhhhhhhhjjjjjh
+jjjmjjjkkkkkkkkkkkkkkkkkkjjjmjjj
+jjlnljjkkkkkkkkkkkkkkkkkkjjlnljj
+jmnnjmjjjjjjjjjjjjjjjjjjjjmnnjmj
+jjljljjjjjjjjjjjjjjjjjjjjjjljljj
+jjjmjjjjjjjjjjjjjjjjjjjjjjjjmjjj
+hjjjjjhmmmmmmmmmmmmmmmmmmhjjjjjh
+hkkjjjmllllllllllllllllllmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
+hkkjjjmllllllllllllllllllmjjjhhh
+hjjjjjhmmmmmmmmmmmmmmmmmmhjjjjjh
+jjjmjjjjjjjjjjjjjjjjjjjjjjjjmjjj
+jjlnljjjjjjjjjjjjjjjjjjjjjjlnljj
+jmnnjmjjjjjjjjjjjjjjjjjjjjmnnjmj
+jjljljjhhhhhhhhhhhhhhhhhhjjljljj
+jjjmjjjhhhhhhhhhhhhhhhhhhjjjmjjj
+hjjjjjhhhhhhhhhhhhhhhhhhhhjjjjjh

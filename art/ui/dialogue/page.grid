@@ -1,0 +1,36 @@
+# Dialogue page (#337, D78): the screen behind the windows, a quiet walnut border 6 px with rosettes; nine-patch, insets 10 px.
+# Decor tier by analogy: every colour is the dim walnut.
+size 24 24
+color h 0e0906
+color i 1d120b
+color j 2d1d11
+color k 3e2a1a
+color l 372913
+color m 44361e
+color n 3e3728
+color P 160e09
+frame page
+hjjjjjhhhhhhhhhhhhjjjjjh
+jjjmjjjkkkkkkkkkkjjjmjjj
+jjlnljjkkkkkkkkkkjjlnljj
+jmnnjmjjjjjjjjjjjjmnnjmj
+jjljljjlllllllllljjljljj
+jjjmjjjlllllllllljjjmjjj
+hjjjjjhPPPPPPPPPPhjjjjjh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hkkjllPPPPPPPPPPPPlljhhh
+hjjjjjhPPPPPPPPPPhjjjjjh
+jjjmjjjlllllllllljjjmjjj
+jjlnljjlllllllllljjlnljj
+jmnnjmjjjjjjjjjjjjmnnjmj
+jjljljjhhhhhhhhhhjjljljj
+jjjmjjjhhhhhhhhhhjjjmjjj
+hjjjjjhhhhhhhhhhhhjjjjjh

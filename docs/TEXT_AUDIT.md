@@ -293,7 +293,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | --- | --- | --- |
 | Zone message | 20 px font, 400 px, two lines (D50, `LocalizationLayoutTest`) | EN source at most 60 characters and at most two sentences, so translations (de runs about 25 % longer) keep their margin |
 | Label above the hero | 13 px font, 200 px (D50) | Each label word list stays at most three words |
-| Dialogue line | Speaker region, frame height (`HealerDialogueTest`) | EN at most 160 characters per line, one image or one instruction per line |
+| Dialogue line | Text box: 556 px, at most three of four lines, one spare (D78, `HealerDialogueTest`) | EN at most 160 characters per line, one image or one instruction per line |
 | Opening and ending | None | Per page of #336: at most three paragraphs, EN at most 300 characters per page |
 
 ### 4.4 Glossary (draft)
@@ -362,7 +362,7 @@ go in a Python tool with its own test, data in one JSON file.
 | T5 unused keys | Every catalog key is referenced by `Msg` and by code or a map | `COINS` |
 
 **B. `:core:test`**: keep `LocalizationLayoutTest` (pixel limits) and `HealerDialogueTest`
-(speaker regions); move the tutorial-only register check into the shared T2 list or have the Java
+(the text box, D78; speaker regions before #337); move the tutorial-only register check into the shared T2 list or have the Java
 test read `tools/text_style.json` so one word list binds both.
 
 The gate is designed to fail today on G11, G14, G17, G18 and part of G3: it lands together with the

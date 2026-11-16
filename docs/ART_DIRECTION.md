@@ -143,8 +143,8 @@ Maintain the same handling of faces, contours, light and color across the new wo
 ## Production and continuity
 
 Current portraits have a **256 × 256 px** runtime canvas, at most **256 palette entries
-including transparency**, and are displayed within the existing 64 × 64 logical-pixel
-slot. Keep higher-resolution transparent masters under `art/portraits/` so future work
+including transparency**, and are displayed at 158 × 158 logical pixels in the dialogue
+screen's portrait windows ([D78](DECISIONS.md#d78-the-dialogue-is-a-codec-style-storybook-screen-playtest-f3f10-337-2026-11-16); 64 × 64 before #337). Keep higher-resolution transparent masters under `art/portraits/` so future work
 has a detailed style reference rather than an enlarged thumbnail. Runtime exports use
 smooth resizing, palette quantization without dithering, and linear texture filtering.
 Other game textures keep their existing rendering policy. See
@@ -687,6 +687,42 @@ and the D64 brush trigger are unchanged. The lever (the author's 3/4 drawing, `a
 outline in its own near-black `010000` around both frames, painted into the master's cells so the export is exact; colours,
 frame, pivot and bottom line are unchanged. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
 at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+
+## Dialogue screen (D78, playtest F3/F10, #337)
+
+Every healer conversation is one storybook screen: two portrait windows face each other in a carved walnut frame and the
+silver thread (#228) hangs between them. Rule and measurements:
+[D78](DECISIONS.md#d78-the-dialogue-is-a-codec-style-storybook-screen-playtest-f3f10-337-2026-11-16). Accepted design:
+style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
+
+| Element | Art (`art/ui/dialogue/*.grid` → `assets/images/ui/dialogue-*.png`) | Speaker / listener |
+|---|---|---|
+| Portrait window | `window`, 32 px nine-patch (insets 12): walnut band 8 px, gilt bead, corner rosettes; opening dusk blue `3d4a68` | `lit` / `dim` (every colour × 0.5, the two brightest gilts capped) |
+| Crest | `crest`, 17 × 7, a carved gable with a rosette on each window | `lit` / `dim` |
+| Name plate | `plate`, 16 × 22 three-patch: gilt rule, dark walnut, two nail heads | `lit` / `dim` |
+| Text box | `box`, 24 px nine-patch (insets 10): walnut band 6 px, ink inside | one look |
+| Speech notch | `notch`, 13 × 8, on the box's top edge under the speaker's plate | moves to the speaker |
+| Page | `page`, 24 px nine-patch: the whole screen, dim walnut border | one look |
+| Choice | `choice`, 16 × 26 three-patch: ink with a dark gilt rule | `idle` / `selected` (double bright rule) |
+| Silver thread | `thread`, 284 × 32, drawn at (178, 154): knot on Edgard's wrist, 16 px sag, end in the healer's hand | draws in over the opening |
+| Glint | `glint`, 5 × 5 star, runs from the speaker to the listener as a line starts | |
+
+- **Palette:** walnut `1d120c` `3a2416` `5a3a22` `7d5534`; gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
+  `ffd23a` or honey `e2b25a`); ink `0b0d18`; silver `5d6577` `9aa3b6` `d8dee9`; at most 16 colours per sheet.
+- **Portraits:** 158 px in the 160 px opening, linear filtering; the speaker lifts 1 px for half of every 1.2 s, the
+  listener is multiplied by (0.55, 0.58, 0.70). The opening is dusk blue, not navy: on the first navy the portraits' dark
+  contours vanished (dimmed healer outline 0.05).
+- **Tiers (D76 by analogy, `tools/test_dialogue_frame_sprites.py`, layout read from `HealerDialogueView`):** an element's
+  loudness is its loudest colour against the ground it sits on. Active (at least 0.28): everything that names the speaker
+  (bead 0.40 on the opening; window band, crest, plate and notch 0.64 on the page) and the choices (idle 0.29, selected
+  0.65), and the thread's outline (0.43 to 0.44). Decor (at most 0.20): the listener's window band, crest and plate, the page
+  border and the text box border (0.17 to 0.18). The dim sheets are the lit colours × 0.5, except the two brightest gilts,
+  capped at `44361e` and `3e3728`: at plain half brightness their rosette highlights measured 0.32. The dimmed portraits
+  keep an outline of 0.21 and 0.20 against the opening (at least 0.15).
+- **Production:** edit a grid, run `python3 tools/dialogue_frame_sprites.py` (exports and the contact sheet
+  [dialogue-frame-art.png](references/dialogue-frame-art.png)); the tool test fails when an export is stale.
+- **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
+  that would move his staff to the other hand.
 
 ## Forest trap sprites (#230)
 
