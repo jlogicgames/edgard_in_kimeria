@@ -75,7 +75,8 @@ class Forest1RouteTest {
     private float feet(Level level) { Rectangle b = level.player.hitboxBounds(); return b.y + b.height; }
     private float centerX(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width / 2; }
     private boolean riding(Level level) { return level.player.currentEscalator() == lift(level); }
-    private boolean won(Level level) { return level.player.getState() == Player.State.DISAPPEARING; }
+    /** Since #104 the route room ends at a RoomExit (the checkpoint moved to the guard room), at the x the checkpoint used to stand at. */
+    private boolean won(Level level) { return level.atRoomExit(); }
     private void alive(Level level) { assertFalse(level.player.isGotHit(), "died at " + level.player.position); }
     private boolean refillGone(Level level) { return level.objects.stream().noneMatch(o -> o instanceof FireballRefill && !o.isRemoved()); }
     private void jump() { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
@@ -237,7 +238,7 @@ class Forest1RouteTest {
         assertEquals(1, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster, the bat");
         assertEquals(1, level.objects.stream().filter(Bat.class::isInstance).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard), "no hazards in the route room");
-        assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::isInstance).count());
+        assertEquals(0, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::isInstance).count(), "the level checkpoint moved to the guard room (#104)");
         // Authored state: the ladder is raised, the lift runs from the bottom, the lever shows "down".
         assertFalse(ladder(level).isLowered());
         assertTrue(lift(level).isRunning());
@@ -258,13 +259,17 @@ class Forest1RouteTest {
         assertEquals(START_X, level.player.position.x, 0.01f);
     }
 
-    @Test void theMapKeepsNoHintsAndTheCheckpointStandsOnTheExitLedge() {
+    @Test void theMapKeepsNoHintsAndTheRoomExitStandsOnTheExitLedgeAtTheOldCheckpointsX() {
         Level level = room();
-        var checkpoint = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::isInstance)
-            .map(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::cast).findFirst().orElseThrow();
-        assertEquals(CHECKPOINT_X, checkpoint.getX(), 0.01f);
-        assertEquals(LEDGE_TOP, checkpoint.getY() + checkpoint.getHeight(), 0.01f, "it stands on the exit ledge's top, not in the air");
-        assertTrue(checkpoint.getX() - LEDGE_X >= 64, "the checkpoint is well in from the ledge edge");
+        // The RoomExit is the rectangle x 2048-2096, y 112-144 (D67: the old checkpoint's x, now the way into the guard room, #104).
+        level.player.position.set(CHECKPOINT_X - 24 - 12, LEDGE_TOP - 48);
+        settle(level, 10);
+        assertFalse(level.atRoomExit(), "12 px short of the exit rectangle's left edge");
+        assertTrue(feet(level) <= LEDGE_TOP + 1, "standing on the ledge top: " + level.player.position);
+        level.player.position.set(CHECKPOINT_X - 24 + 4, LEDGE_TOP - 48);
+        settle(level, 10);
+        assertTrue(level.atRoomExit(), "inside the exit rectangle on the ledge");
+        assertTrue(CHECKPOINT_X - LEDGE_X >= 64, "the exit is well in from the ledge edge");
         assertEquals("", level.player.zoneHint());
     }
 
@@ -554,7 +559,7 @@ class Forest1RouteTest {
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
-        assertFalse(level.hasNextRoom(), "the route room is the last: the checkpoint ends the level (room 3, #104, is appended after it later)");
+        assertTrue(level.hasNextRoom(), "the guard room (#104) follows the route room; its checkpoint ends the level");
         level.resetCurrentRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
         assertEquals(START_X, level.player.position.x, 0.01f);
@@ -569,7 +574,7 @@ class Forest1RouteTest {
         assertTrue(LEVER_X - (START_X + 48) >= 40);
         assertTrue(LADDER_X - LEVER_X >= 90, "the lever is well clear of the ladder");
         assertTrue(LIFT_X - PAD_END >= 120, "the refill pad and the lift are far apart");
-        assertTrue(ROOM_END - 16 - CHECKPOINT_X >= 48, "the checkpoint is clear of the right wall");
+        assertTrue(ROOM_END - 16 - CHECKPOINT_X >= 16, "the exit rectangle ends at the right wall");
         settle(level, 120);
         alive(level);
     }
@@ -673,9 +678,9 @@ class Forest1RouteTest {
     }
 
     @Test void aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks() {
-        // Room 2 is the last room today, so nothing secures it. This secures it with the same method a forward exit uses (secureVisit) and then
-        // takes the reset path (resetCurrentRoom): the snapshot is applied there exactly as on a revisit; only the stock bookkeeping of
-        // activateRoom(revisit = true) is not exercised, since that needs a next room.
+        // The route room's forward exit (since #104, D68) secures it; this secures it with the same method (secureVisit) and then takes the reset
+        // path (resetCurrentRoom): the snapshot is applied there exactly as on a revisit; only the stock bookkeeping of activateRoom(revisit = true)
+        // is not exercised, since the test stays in this room.
         Level level = room();
         reachTheSlab(level);
         spendTheStep(level);
@@ -824,7 +829,7 @@ class Forest1RouteTest {
         level.resetCurrentRoom(player());
         assertFalse(bat(level).isDefeated(), "an unsecured kill is undone by a death, like every enemy on a first visit");
         assertEquals(BAT_X, bat(level).getX(), 0.01f);
-        // Secured (a room appended after this one, #104, or a healer return): the defeated bat stays defeated.
+        // Secured (the forward exit into the guard room, #104, or a healer return): the defeated bat stays defeated.
         Level secured = room();
         mandatory(secured);
         var secure = Level.class.getDeclaredMethod("secureVisit");
