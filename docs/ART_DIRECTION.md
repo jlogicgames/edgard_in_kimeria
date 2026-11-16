@@ -39,7 +39,8 @@ multi-frame sheet are different measurements.
   The healer ingredients (D43) are original redraws, never copies of the DOS art: Bat and
   Mushroom, each a native 32×16 strip of two 16×16 frames (`art/objects/{bat,mushroom}-pixel.png`
   → `assets/images/objects/`), at most 16 palette entries with alpha, black-navy contour,
-  binary transparency. The coin alone stays in `Items.png`. The Bat is drawn as an item, not a
+  binary transparency. The coin is a native 32×16 strip too (`art/objects/coin-pixel.png` → `assets/images/objects/coin.png`, #350): the
+  original coin's four colours and white rim, with the sun of the Kimeria arms on its face (see "Kingdom arms"). The Bat is drawn as an item, not a
   creature ([#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345), playtest F19: the flapping
   bat read as an enemy): a corked glass jar tied with twine, one dried bat wing inside; frame 2 moves the glint.
   A pickup must never share a silhouette with an enemy.
@@ -52,7 +53,7 @@ multi-frame sheet are different measurements.
   frames every 2.4 s, 3 px right of the item's centre and 2 px above it, started later per tile of x.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
-  Bat wing jar, mushroom (D43), gold coin and fireball. These appear
+  Bat wing jar, mushroom (D43), the gold coin with the Kimeria sun (#350) and fireball. These appear
   in the small existing HUD slots, not as 128-pixel gameplay objects.
 - **Fireball capacity HUD (#98, 2026-10-25):** reuse the illustrated icon in three
   fixed 32×32 slots, 4 px apart, no number; spent slots use 25% RGB brightness.
@@ -750,6 +751,24 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 - **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
   that would move his staff to the other hand.
 
+## Kingdom arms (#350, playtest F12)
+
+The arms of Kimeria, the arms of King Rufardus ([STORY.md, "Kingdom heraldry"](STORY.md#kingdom-heraldry--accepted-2026-11-16-350-playtest-f12)):
+a gold sun in splendour with eight straight rays, on a night-blue shield with a gold border, under a royal crown with
+red jewels. The author chose it on 2026-11-16 from three options. The reference drawing is `art/heraldry/kimeria-arms.png`:
+24×36 native pixel art, 8 colours, binary alpha, ink `0b0814` contour, the gold `ffd23a` of the sun.
+
+One mark, scaled to purpose. The sun always has a round disc and eight rays, so the coin and the arms read as the same
+mark. Small things carry the sun alone, because the shield and crown do not read at 7×7. Banner size and above shows the
+full arms.
+
+| Use | Form | Tier and colour |
+|---|---|---|
+| World coin | the sun alone: a white disc, eight navy rays, on the coin's gold face | active (collectable); outline 0.371 from the white rim; no halo |
+| HUD coin | the sun engraved in the painted 3/4 coin, in place of the original "C" | HUD illustration |
+| Fortress banners and wall shields ([#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116)) | the full arms, or the sun on blue cloth | **decor** (D76): no ink contour, none of the reserved gold, p90 chroma at most 0.10. A dull ochre sun on grey-blue cloth with a darker blue contour. Only a banner the player interacts with may use full colour, and then it is active and measured as such. |
+| World map ([#94](https://github.com/jlogicgames/edgard_in_kimeria/issues/94)) | the full arms mark Kimeria | map art |
+
 ## Forest trap sprites (#230)
 
 First-pass native sprite sets for the D42 forest traps, hand-drawn for this remake (the DOS
@@ -778,7 +797,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | harmless honey fungus: three honey-brown caps, bone stems **with rings** (#295, D63; drawn by `HoneyFungus`, the sprites still await the author's review) |
 | `trap-false-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | poisonous look-alike: same tuft and size, sulphur-yellow to orange caps with a green tinge, olive gills, greenish stems, **no ring**, a bump on the big cap (#295, D63; drawn by `FalseHoneyFungus`; its lethal cloud is `effects.SporeCloud`, particles plus a shader, no sprite) |
 
-**Bomb:** the stump and root sets replace the glass-bottle bomb in the tutorial (#233, D47: `ExplosiveStump`/`ExplosiveRoot` use these sheets, the blast frames are drawn at 2x). The `Bomb` trap type stays separate (D51) and has its own redrawn sprite, `trap-bomb` (#263, D60); the glass bottles in `images/Items.png` are no longer drawn (the file stays, the coin is in it).
+**Bomb:** the stump and root sets replace the glass-bottle bomb in the tutorial (#233, D47: `ExplosiveStump`/`ExplosiveRoot` use these sheets, the blast frames are drawn at 2x). The `Bomb` trap type stays separate (D51) and has its own redrawn sprite, `trap-bomb` (#263, D60); the glass bottles in `images/Items.png` are no longer drawn (the file stays for the boss elixir icon; the coin moved to `objects/coin.png`, #350).
 
 **Honey fungus pair (#295, D63), built (phase 2, 2026-11-13); the sprites await the author's review.** Sources `art/objects/forest-traps/honey-fungus.grid` and `false-honey-fungus.grid`, previews `docs/references/forest-traps/honey-fungus-preview.png` and `false-honey-fungus-preview.png` (the strip at 6x on the night, canopy and trunk backgrounds, and at 1x). Both are 24×16 with six frames: three idle frames (same silhouette; **currently only `idle1` is drawn**: the runtime now modulates its brightness with a smooth sine glow on the level clock instead of swapping frames, because the author found the frame swap blinking; `idle2` and `idle3` are unused, kept in the sheet and not redrawn), two swell frames for the D7 telegraph, and a deflated `spent` frame. They are near twins on purpose: the same tuft and footprint; the honey fungus has rings on its stems and honey-brown caps, the false one has no rings, sulphur-yellow to orange caps with an olive tinge, olive gills and a small bump on the big cap. Not a fly agaric, not the purple healer Mushroom (D43), not the pale round `trap-puffball`. The lethal cloud is drawn by `effects.SporeCloud` (below); the harmless burst is golden particles, so it needs no sprite. **As built:** the `HoneyFungus` and `FalseHoneyFungus` objects draw the strips (`idle1` tinted by a smooth brightness glow on the object's own clock, 2.5 s period, 0.55 to 1.0 (was 0.8; too subtle to see), the same for both; the two swell frames over the shared warning; `spent` after the burst); the harmless burst is 16 golden `KIND_GLOW` particles, the lethal cloud is `SporeCloud` (it first used `trap-spores` at 24x24; replaced, #296). Remaining: static scenery look-alikes are [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299); the swell duration comes from `TrapWarnings` and is tuned by [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300).
 
