@@ -14,6 +14,7 @@ Work from the repository root; links resolve relative to this file.
 - World facts and the healer's role: [story](../../../docs/STORY.md)
 - Where every current string appears: [text audit](../../../docs/TEXT_AUDIT.md)
 - Dialogue mechanics (timeline, input, portraits): the kimeria-dialogue skill
+- How text fits the rest of the style (the tale is shown, not only told): [style system](../../../docs/STYLE_SYSTEM.md)
 
 ## Steps
 

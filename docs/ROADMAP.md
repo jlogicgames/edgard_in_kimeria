@@ -269,12 +269,24 @@ next experiment. Four stage names/icons alone do not complete the mechanics MVP.
   (#335-#352): [PLAYTEST_1.md](PLAYTEST_1.md), [D66](DECISIONS.md#d66-first-external-playtest-closed-findings-and-direction-2026-11-15).
 - [ ] [#339](https://github.com/jlogicgames/edgard_in_kimeria/issues/339) Texts after the magic-tale structure (playtest F5), in order:
   - [x] Audit of every string, its trigger and its Propp function: [TEXT_AUDIT.md](TEXT_AUDIT.md).
-  - [x] Style system (D74): [TEXT_STYLE.md](TEXT_STYLE.md), the AGENTS.md rule, the `game-text` skill and the gate
+  - [x] Text style system (D74): [TEXT_STYLE.md](TEXT_STYLE.md), the AGENTS.md rule, the `kimeria-game-text` skill and the gate
     `tools/check_text_style.py`, landed with today's hits allowlisted, each entry tied to its rewrite issue.
   - [ ] EN rewrite in story order (opening, tutorial tales, zone messages, pre-boss, victory, ending) after #338, #340
     and #341 settle the fairy, fire and thread facts; author approval per scene (#370, #371, #372, #373, #374).
   - [ ] Translations uk/pl/de/be with the glossary; allowlist emptied; LOCALIZATION_VALIDATION.md updated;
     native-speaker review stays a separate, explicit "not verified" item (#369).
+- [x] [#386](https://github.com/jlogicgames/edgard_in_kimeria/issues/386) One style system from the playtest audits
+  ([D75](DECISIONS.md#d75-one-style-system-the-design-language-card-first-rules-land-complete-386-2026-11-16)):
+  [STYLE_SYSTEM.md](STYLE_SYSTEM.md) is the entry point; new gates `TrapTeachingRoomTest`, `check_doc_gaps.py`,
+  `check_skills.py`, a hook dispatcher for Codex and Claude Code, the `kimeria-sound` skill and the skills index.
+  Follow-ups, in this order:
+  - [x] [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344) contrast tiers (D76, gate `validateContrast`),
+    which principle 1 and D71's VISIBLE lean on.
+  - [ ] [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388) audit every hazard against principle 4 (warn
+    before, consequence after); one fix issue per gap it finds.
+  - [ ] [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368) and
+    [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) in-game and native-speaker checks of the playtest
+    changes.
 - [ ] [#132](https://github.com/jlogicgames/edgard_in_kimeria/issues/132) Revise the level and content scope from results. Related existing tasks:
   [#73](https://github.com/jlogicgames/edgard_in_kimeria/issues/73)
   and [#75](https://github.com/jlogicgames/edgard_in_kimeria/issues/75).

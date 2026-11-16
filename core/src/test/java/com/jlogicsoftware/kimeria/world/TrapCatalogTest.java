@@ -26,12 +26,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>It reads the spawn switch of {@code world/Level.java} and the two marked tables of {@code docs/TRAPS.md} as
  * text. What it cannot check: that the art matches the card (a human or a frame test), contrast (#344), read distance.
  */
-class TrapCatalogTest {
+public class TrapCatalogTest {
     static final String LEVEL = "core/src/main/java/com/jlogicsoftware/kimeria/world/Level.java";
     static final String TRAPS = "docs/TRAPS.md";
     static final Set<String> VISIBILITY = Set.of("VISIBLE", "DISGUISED", "HIDDEN");
     static final Set<String> FAMILIES = Set.of("proximity", "position", "touch", "rhythm", "crumble");
-    static final List<String> TRAP_COLUMNS = List.of("Type", "Family", "Visibility", "At-rest cue", "Warning", "Taught in", "Decision");
+    public static final List<String> TRAP_COLUMNS = List.of("Type", "Family", "Visibility", "At-rest cue", "Warning", "Taught in", "Decision");
     static final List<String> NON_TRAP_COLUMNS = List.of("Type", "Category", "Why it is not a trap");
     private static final Pattern PENDING = Pattern.compile("pending #\\d+");
     private static final Pattern CASE = Pattern.compile("case\\s+((?:\"[A-Za-z0-9]+\"\\s*,?\\s*)+)->");
@@ -213,7 +213,7 @@ class TrapCatalogTest {
     }
 
     /** Rows of the table between {@code <!-- name:start -->} and {@code <!-- name:end -->}, keyed by the backticked type. */
-    static Map<String, List<String>> table(String doc, String name) {
+    public static Map<String, List<String>> table(String doc, String name) {
         int start = doc.indexOf("<!-- " + name + ":start -->"), end = doc.indexOf("<!-- " + name + ":end -->");
         if (start < 0 || end < start) throw new IllegalStateException("docs/TRAPS.md: markers for '" + name + "' not found");
         List<String> expected = name.equals("trap-catalogue") ? TRAP_COLUMNS : NON_TRAP_COLUMNS;

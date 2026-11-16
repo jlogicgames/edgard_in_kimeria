@@ -191,14 +191,14 @@ class RoomCardsTest {
 
     // ---- shipped maps ----
 
-    private static Path root() {
+    static Path root() {
         Path p = Paths.get("").toAbsolutePath();
         while (p != null && !Files.isRegularFile(p.resolve("docs/ROOM_CARDS.md"))) p = p.getParent();
         assertNotNull(p, "docs/ROOM_CARDS.md not found above the working directory");
         return p;
     }
 
-    private static List<Room> shippedRooms() {
+    static List<Room> shippedRooms() {
         Assets assets = new Assets() {
             @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
         };

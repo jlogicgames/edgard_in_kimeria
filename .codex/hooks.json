@@ -1,5 +1,5 @@
 {
-  "description": "Require authored sprites, named tuning/geometry parameters and no per-frame allocation in changed production code.",
+  "description": "Require authored sprites, named tuning/geometry parameters and no per-frame allocation in changed production code; run the style-system gates (text, map links, doc gaps, skills, contrast) that apply to changed files (D75).",
   "hooks": {
     "PostToolUse": [
       {
@@ -21,6 +21,12 @@
             "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_allocations.py\" --hook",
             "timeout": 10,
             "statusMessage": "Checking per-frame allocation"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_style_hook.py\" --hook",
+            "timeout": 30,
+            "statusMessage": "Checking the style-system gates"
           }
         ],
         "matcher": "Bash|apply_patch|Edit|Write|exec_command|functions\\.exec"
@@ -46,6 +52,12 @@
             "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_allocations.py\" --hook",
             "timeout": 10,
             "statusMessage": "Checking per-frame allocation"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/tools/check_style_hook.py\" --hook",
+            "timeout": 30,
+            "statusMessage": "Checking the style-system gates"
           }
         ]
       }

@@ -1,3 +1,3 @@
 interface:
-  display_name: "Kimeria: боевые механики"
-  short_description: "Враги, боссы, хитбоксы и порядок ударов"
+  display_name: "Kimeria: combat"
+  short_description: "Enemies, bosses, hitboxes and hit order"

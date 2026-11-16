@@ -59,20 +59,21 @@ There is no per-object filename allowlist or stored list of tolerated violations
 
 ```sh
 python3 tools/check_named_parameters.py
-python3 tools/check_named_parameters.py --base origin/main
-./gradlew validateNamedParameters -PnamedParameterBase=origin/main
+python3 tools/check_named_parameters.py --base HEAD
+./gradlew validateNamedParameters
 python3 tools/test_named_parameters.py
 ```
 
-The default compares with HEAD, covering staged, unstaged and untracked work.
-`--base origin/main` compares with its merge base with HEAD, also covering committed
-PR changes. Use this whole-PR mode for review; a clean tree checked only against HEAD
-is not a historical audit of its committed code. An unborn repository treats all
+The default (`auto`, `tools/git_base.py`) compares with the merge base of HEAD and
+`origin/main` when that ref exists, covering committed branch changes as well as staged,
+unstaged and untracked work, so a clean pull-request checkout (CI) is still checked.
+Without `origin/main` it falls back to HEAD and says so. `--base HEAD` checks uncommitted
+work only, which is what the hooks do (`--hook`). An unborn repository treats all
 source as new. Missing Git metadata or an invalid requested base fails loudly.
 
 Core `check`, desktop JAR/native packaging and the TeaVM release build run the
-changed-code gate. `-PnamedParameterBase=origin/main` selects the whole-PR mode for
-these build gates too. This is a lexical/AST check, not a proof of design quality:
+changed-code gate in the same whole-branch mode; `-PnamedParameterBase=<ref>` picks
+another base. This is a lexical/AST check, not a proof of design quality:
 it cannot decide whether a named constant has the right owner or whether every
 zero/one denotes a tuning value. Review ownership, formulas and cross-language
 asset contracts alongside it; do not claim the checker infers those semantics.

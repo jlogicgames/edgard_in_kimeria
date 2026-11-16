@@ -285,8 +285,9 @@ steps physics once per rendered frame with that frame's own (clamped) delta.
 
 Per-frame code (`update*`, `render*`, `draw*` and what they call) must not allocate; the rule is in `AGENTS.md`. It is guarded twice:
 [`AllocationBudgetTest`](../core/src/test/java/com/jlogicsoftware/kimeria/AllocationBudgetTest.java) measures bytes per frame
-(`ThreadMXBean`) against ceilings, and [`tools/check_allocations.py`](../tools/check_allocations.py) (`validateAllocations`,
-`-PallocationBase=origin/main` for a full PR audit) rejects allocation on changed lines of per-frame methods. What exists and its measured ceilings: "Particles and the allocation guard" below.
+(`ThreadMXBean`) against ceilings, and [`tools/check_allocations.py`](../tools/check_allocations.py) (`validateAllocations`;
+by default the whole branch since the merge-base with `origin/main` plus uncommitted edits, `-PallocationBase=HEAD` for
+uncommitted edits only) rejects allocation on changed lines of per-frame methods. What exists and its measured ceilings: "Particles and the allocation guard" below.
 
 ### Game state, progress and saves
 
@@ -408,8 +409,9 @@ is required for this developer check; no Python is shipped with the game. Asset
 export alone additionally uses Pillow. `python3 tools/test_sprite_art_guard.py`
 exercises rejection and hook exit behavior.
 
-The checked-in `.codex/hooks.json` configures synchronous PostToolUse/Stop checks.
-Review/trust it through Codex `/hooks` before automatic session enforcement; see
+The checked-in `.codex/hooks.json` (Codex) and `.claude/settings.json` (Claude Code) configure synchronous
+PostToolUse/Stop checks, including the style-system dispatcher (below). Review/trust the Codex hooks through `/hooks`
+before automatic session enforcement; see
 [artwork rules and test limits](ART_DIRECTION.md#gameplay-sprites-and-procedural-art-prohibition-2026-10-22).
 
 ## Named gameplay and artwork parameters
@@ -417,8 +419,9 @@ Review/trust it through Codex `/hooks` before automatic session enforcement; see
 Follow [parameter ownership](NAMED_PARAMETERS.md) for map cells, sprite frames,
 collision bodies, projectile timing and UI geometry. `validateNamedParameters`
 runs on core check and release packaging alongside the sprite-art check.
-Use `./gradlew validateNamedParameters -PnamedParameterBase=origin/main` to include
-committed PR changes; the default HEAD comparison checks current edits only.
+By default it judges the whole branch (the merge-base with `origin/main`, plus uncommitted edits; HEAD with a note
+when `origin/main` is absent), so a clean pull-request checkout is checked too; `-PnamedParameterBase=HEAD` checks
+uncommitted edits only.
 The PostToolUse/Stop hooks also run this changed-code gate. Run
 `python3 tools/test_named_parameters.py` to verify rejection and recovery behavior.
 
@@ -442,7 +445,8 @@ enforce it, for different reasons, and neither replaces the other:
   and it says nothing about TeaVM, GC pauses or frame time.
 - **`tools/check_allocations.py`** (static; `./gradlew validateAllocations`, a dependency of `:core:check`, the desktop jar and the web
   release build; the same command runs in `.codex/hooks.json` as a PostToolUse and a Stop hook with `--hook`). It checks **changed
-  lines** against `--base` (`HEAD` by default; `-PallocationBase=origin/main` for a whole PR) inside methods named `update*`, `render*`,
+  lines** against `--base` (`auto` by default: the merge-base with `origin/main` when it exists, else HEAD; `HEAD` with `--hook`;
+  `-PallocationBase=<ref>` for another) inside methods named `update*`, `render*`,
   `draw*` and the helpers listed in its `HOT_METHODS` table (the torch spawners, `EnvironmentFx.emitGrit`, `dustPuff`, `ceilingGrit`).
   It flags `new`, `String.format`/`valueOf`/concatenation, stream and collection-factory calls, for-each over a declared collection, and
   lambdas; it does not follow calls and has no types, so varargs and boxing are invisible to it. Existing code needs no baseline: touching
@@ -521,6 +525,29 @@ per-particle colour that `ParticleEmitter` does not offer, and a fixed-array sys
 GC pauses or memory in the browser build (all allocation figures are from a desktop JVM), frame times and batch flushes
 ([#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284) covers batch flushes with the atlas work).
 
+### Style system gates and hooks
+
+[STYLE_SYSTEM.md](STYLE_SYSTEM.md) (D75) is the entry point: which document, gate and skill own text, traps, rooms,
+sizes, effects, sound and art, and when each gate runs. The tooling it added:
+
+- `tools/check_style_hook.py`: the hook dispatcher; from the changed files it runs the fast gates that apply (text
+  style, map links, doc gaps, skills, and D76's contrast tiers for sprites and maps) and prints the Gradle command of the trap and room tests when their inputs change.
+  `python3 tools/check_style_hook.py` shows what it would run now.
+- `tools/check_doc_gaps.py` (`validateDocGaps`): a gap marker on a changed doc line needs an issue reference
+  (AGENTS.md). It judges the whole branch (changes since the merge-base with `origin/main`, plus the working tree), or
+  only uncommitted changes when `origin/main` is absent, and says so. `-PdocGapBase=<ref>` picks another base.
+- CI: [`.github/workflows/check.yml`](../.github/workflows/check.yml) runs on every pull request to `main`: a full-history
+  checkout (`fetch-depth: 0`, so `origin/main` and the merge-base exist), JDK 17 as in the deploy workflows,
+  `./gradlew :core:check`, then `python -m unittest discover -s tools -p 'test_*.py'` (with Pillow, which
+  `test_forest_trap_sprites.py` needs), because `:core:check` runs only the text-style and style-system tool tests. No
+  deploy and no secrets; the two deploy workflows still build the releases on a push to `main`.
+- `tools/check_skills.py` (`validateSkills`): shared skills, [their index](../.agents/skills/README.md) and the Claude
+  pointers agree; English only.
+- Both run after `testStyleSystemGates` (their unit tests and the dispatcher's) in `:core:check`, not in the release
+  builds: docs and skills ship nothing.
+- `TrapTeachingRoomTest` (`:core:test`) checks TRAPS.md's teaching rooms against ROOM_CARDS.md; TRAPS.md,
+  ROOM_CARDS.md and `tools/text_style.json` are declared inputs of the test task.
+
 ### Player-facing text gate
 
 [TEXT_STYLE.md](TEXT_STYLE.md) (D74) is the rule; `tools/check_text_style.py` enforces the text part of it (glossary across
@@ -528,9 +555,12 @@ languages, tale register, English hint budget, key names in hints, unused keys, 
 `tools/text_style.json`. `./gradlew validateTextStyle` runs it (after `testTextStyleGate`, its unit tests) and is a dependency of `:core:check`, the desktop jar and the web
 release build; `python3 -m unittest discover -s tools -p 'test_check_text_style.py'` runs its test. Pixel limits stay in
 `LocalizationLayoutTest` and `HealerDialogueTest`, which reads the same register word lists. Procedure:
-[`kimeria-game-text`](../.agents/skills/kimeria-game-text/SKILL.md) (Claude entry point: `.claude/skills/game-text/`).
+[`kimeria-game-text`](../.agents/skills/kimeria-game-text/SKILL.md) (Claude pointer: `.claude/skills/kimeria-game-text/`).
 
 ### Vendored skills and the project skills
+
+Every skill, project-owned and vendored, is listed in [.agents/skills/README.md](../.agents/skills/README.md) with what
+it is for; each `kimeria-*` skill has a Claude Code pointer of the same name in `.claude/skills/`.
 
 - Six skills from [kyu-n/gdx-claude-skills](https://github.com/kyu-n/gdx-claude-skills) at commit `0887af2` (MIT) are vendored under
   `.agents/skills/`: `libgdx-particles`, `libgdx-collections-json`, `libgdx-2d-rendering`, `libgdx-application-lifecycle`,

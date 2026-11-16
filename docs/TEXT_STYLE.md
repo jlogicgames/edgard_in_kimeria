@@ -110,7 +110,7 @@ test as `testTextStyleGate`, a dependency of `:core:check`, the desktop jar and 
 | T5 | Every catalog key is read by code or authored in a map |
 | T6 | Every glossary form appears in this document |
 
-Procedure for agents: `.agents/skills/kimeria-game-text/SKILL.md` (Claude entry point `.claude/skills/game-text/SKILL.md`).
+Procedure for agents: `.agents/skills/kimeria-game-text/SKILL.md` (Claude pointer `.claude/skills/kimeria-game-text/SKILL.md`).
 `HealerDialogueTest` reads the same register groups from `tools/text_style.json` for the tutorial tales,
 which have no allowlist. Pixel limits stay in the Java layout tests.
 

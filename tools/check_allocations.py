@@ -16,6 +16,8 @@ import re
 import subprocess
 import sys
 
+import git_base
+
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
 SOURCE_PATHS = ('core/src/main/java',)
@@ -162,6 +164,8 @@ def git(root, *args):
 
 
 def changed_lines(root, base):
+    if base == git_base.AUTO:
+        base = git_base.resolve(root, base, 'Allocation check')
     if base == 'HEAD':
         try:
             git(root, 'rev-parse', '--verify', 'HEAD')
@@ -220,7 +224,8 @@ def all_hits(root):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=Path, default=ROOT)
-    parser.add_argument('--base', default='HEAD', help='Use origin/main to include committed PR changes')
+    parser.add_argument('--base', default=None,
+                        help="'auto' (default; HEAD with --hook): merge-base with origin/main if it exists, else HEAD; or any ref")
     parser.add_argument('--all', action='store_true', help='Print every hit in the tree instead of checking changed lines')
     parser.add_argument('--hook', action='store_true')
     args = parser.parse_args()
@@ -231,7 +236,7 @@ def main():
             lines = all_hits(args.root.resolve())
             print('\n'.join(lines) + f'\n{len(lines)} hit(s) in hot methods.')
             return 0
-        issues = check(args.root.resolve(), args.base)
+        issues = check(args.root.resolve(), git_base.default_base(args.base, args.hook))
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f'Allocation check could not run: {error}', file=sys.stderr)
         return 2
