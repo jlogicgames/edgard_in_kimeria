@@ -46,6 +46,7 @@ public class Overlay {
 
     private final BitmapFont titleFont;
     private final BitmapFont bodyFont;
+    private final BitmapFont dialogueFont;
     private final BitmapFont buttonFont;
     private final BitmapFont hintFont;
     private final Matrix4 textProjection;
@@ -54,10 +55,11 @@ public class Overlay {
     private Vector2 lastMouse;
 
     public Overlay(Assets assets, float logicalWidth, float logicalHeight) {
-        titleFont = assets.font(30);
-        bodyFont = assets.font(15);
-        buttonFont = assets.font(20);
-        hintFont = assets.font(13);
+        titleFont = assets.font(FontSizes.TITLE);
+        bodyFont = assets.font(FontSizes.BODY);
+        dialogueFont = assets.font(FontSizes.DIALOGUE);
+        buttonFont = assets.font(FontSizes.BUTTON);
+        hintFont = assets.font(FontSizes.LABEL);
         this.logicalHeight = logicalHeight;
 
         OrthographicCamera textCamera = new OrthographicCamera();
@@ -106,9 +108,15 @@ public class Overlay {
         textQueue.add(() -> bodyFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
     }
 
+    /** Centered text in the dialogue size (speaker names, checklist), same layout as {@link #body}. */
+    public void speaker(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth, Color color) {
+        GlyphLayout layout = new GlyphLayout(dialogueFont, text, color, wrapWidth, Align.center, true);
+        textQueue.add(() -> dialogueFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
+    }
+
     /** Layout the complete line once so revealing letters cannot recenter text or move wrapped words. */
     public void dialogue(SpriteBatch batch, String text, int visibleCharacters, float x, float yFromTop, float width, Color color, int alignment) {
-        GlyphLayout layout = new GlyphLayout(bodyFont, text, color, width, alignment, true);
+        GlyphLayout layout = new GlyphLayout(dialogueFont, text, color, width, alignment, true);
         int source = 0, shown = 0;
         outer: for (GlyphLayout.GlyphRun run : layout.runs) for (BitmapFont.Glyph glyph : run.glyphs) {
             // Wrapping removes spaces at line boundaries; map rendered glyphs back to source positions.
@@ -119,7 +127,7 @@ public class Overlay {
         }
         int visibleGlyphs = shown;
         textQueue.add(() -> {
-            var cache = bodyFont.getCache();
+            var cache = dialogueFont.getCache();
             cache.setText(layout, x, toTextY(yFromTop));
             cache.draw(batch, 0, visibleGlyphs);
         });
@@ -154,7 +162,7 @@ public class Overlay {
 
     /** Compact dialogue buttons share the menu's centered labels and two edge markers. */
     public void choiceLabel(SpriteBatch batch, String label, float x, float y, float width, float height, boolean selected) {
-        buttonLabel(batch, bodyFont, label, x, y, width, height, selected,
+        buttonLabel(batch, dialogueFont, label, x, y, width, height, selected,
             selected ? SELECTED_TEXT : IDLE_TEXT);
     }
 

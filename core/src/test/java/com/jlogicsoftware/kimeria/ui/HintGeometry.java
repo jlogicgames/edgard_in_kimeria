@@ -9,7 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 
 /**
- * Test-side hint placement with the real shipped font metrics (zone message {@link Hud#ZONE_FONT_SIZE} px, contextual label {@link Hud#CONTEXT_FONT_SIZE} px, #249 and #254) (no GPU), using the same
+ * Test-side hint placement with the real shipped font metrics (zone message {@link FontSizes#ZONE} px, contextual label {@link FontSizes#LABEL} px, #249 and #254) (no GPU), using the same
  * {@link HintLayout} arithmetic as the HUD. World y is Y-down; the 640x360 view shows world y
  * {@code cameraY .. cameraY+360}, so screen y (Y-up) is {@code 360 - (worldY - cameraY)}.
  * Needs {@code Gdx.files} to be a {@link HeadlessFiles}.
@@ -24,7 +24,7 @@ public final class HintGeometry {
         @Override protected void load(BitmapFontData data) { /* Metrics require no texture UVs. */ }
     }
 
-    private final BitmapFont zoneFont = new MetricsFont(Hud.ZONE_FONT_SIZE), contextFont = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
+    private final BitmapFont zoneFont = new MetricsFont(FontSizes.ZONE), contextFont = new MetricsFont(FontSizes.LABEL);
 
     public float zoneHeight(String text) { return new GlyphLayout(zoneFont, text, Color.WHITE, Hud.ZONE_WIDTH, Align.center, true).height; }
 

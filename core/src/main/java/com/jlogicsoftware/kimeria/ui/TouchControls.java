@@ -144,7 +144,7 @@ public class TouchControls {
         this.pauseDown = assets.region(ART + "pause-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.knob = assets.region(ART + "knob.png", 0, 0, (int) KNOB_SIZE, (int) KNOB_SIZE);
         this.knobDown = assets.region(ART + "knob-down.png", 0, 0, (int) KNOB_SIZE, (int) KNOB_SIZE);
-        this.font = assets.font(13);
+        this.font = assets.font(FontSizes.TOUCH_LABEL);
 
         OrthographicCamera textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, logicalWidth, logicalHeight);

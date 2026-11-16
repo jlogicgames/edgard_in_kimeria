@@ -38,10 +38,10 @@ class HintLayoutTest {
     }
 
     @Test void eachLabelUsesItsOwnCapHeightSoTheLargerMessageStillClearsTheLabel() {
-        // #249: message in the 39 px font (cap 29), label in the 20 px font (cap 15).
-        float zoneTop = HintLayout.top(250, 68, 29, 360);
-        float label = HintLayout.contextTop(150, 40, true, 250, 68, 15, 29, 360);
+        // D50/D70: message in the 20 px font (cap 10), label in the 16 px font (cap 7).
+        float zoneTop = HintLayout.top(250, 68, 10, 360);
+        float label = HintLayout.contextTop(150, 40, true, 250, 68, 7, 10, 360);
         assertTrue(zoneTop - 68 - label >= HintLayout.GAP - .001);
-        assertEquals(HintLayout.contextTop(150, 40, true, 250, 68, 15, 360), HintLayout.contextTop(150, 40, true, 250, 68, 15, 15, 360), 0);
+        assertEquals(HintLayout.contextTop(150, 40, true, 250, 68, 7, 360), HintLayout.contextTop(150, 40, true, 250, 68, 7, 7, 360), 0);
     }
 }

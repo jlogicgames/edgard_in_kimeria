@@ -16,7 +16,7 @@
   English defaults and run saves. The actual Options language action updates
   labels immediately and persists each choice. Existing dialogue/campaign tests
   also run their language loops over all five languages.
-- Every shipped 13/15/20/30 font contains the 192 required glyphs, including
+- Every shipped 13/16/18/20/30 font contains the 192 required glyphs, including
   uppercase forms and the reserved Polish/German/Belarusian alphabets. The TTF
   character map, bitmap IDs, referenced PNG pages, glyph bounds and visible ink
   are checked. German uppercase SS conversion has a regression test.
@@ -94,3 +94,13 @@ covered by the existing campaign/dialogue tests.
 The local source/dependency review found no added dependencies, external network
 paths or user-input file paths. A Snyk scan was not run: its scanning tool was
 not available in this session. This is not a claim of a passed external scan.
+
+## D70 font-size check (#335, 2026-11-16)
+
+Sizes are now named in `ui/FontSizes` (label and body 16, dialogue 18, touch label 13, zone/button/coin 20, title 30);
+`FontCharacters.SIZES` is {13, 16, 18, 20, 30} and `FontSizesTest` keeps the two in step.
+`./gradlew :core:test :lwjgl3:validateLocalization` passes: 5 languages, 121 keys, 192 glyphs at every shipped size.
+Measured with the real baked metrics (all five languages): the longest healer/Edgard line takes 4 lines, 62 px of the
+72 px dialogue box; the controller-help About panel is 327 px of 360 (the existing 332 limit is unchanged); the hero label
+stack stays 3 lines (32 to 39 px); the menu hint stays one line; touch labels are unchanged at 13 px because 15/16 px
+overflow the 50 px (40.4 px) button face in uk, de and be by 2 to 3 px. Rendered check of the web release build (English): menu, About, intro, healer dialogue, forest-0 hint and label; other languages, boss HUD, touch buttons, desktop build and the three-choice dialogue are measured, not rendered (#368).
