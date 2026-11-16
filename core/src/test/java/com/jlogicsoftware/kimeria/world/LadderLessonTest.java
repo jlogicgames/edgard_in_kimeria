@@ -23,6 +23,7 @@ import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.HintGeometry;
+import com.jlogicsoftware.kimeria.testsupport.HeroArt;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
 import org.junit.jupiter.api.AfterEach;
@@ -399,6 +400,48 @@ class LadderLessonTest {
                 }
         }
         assertTrue(both > 20, "label and message do share positions in this room: " + both);
+    }
+
+    /**
+     * #343, D79: the same sweep as above against the hero as drawn (the 64 px frame's opaque pixels, whose head is
+     * 9 px above the hitbox) instead of the hitbox. Standing on the floor the label never crosses the drawn hero; the
+     * measured clearances are printed for the decision record.
+     */
+    @Test void theLabelClearsTheDrawnHeroAsWellAsItsHitbox() {
+        Level level = freshRoom();
+        withoutTheThorns(level);
+        HintGeometry geometry = new HintGeometry();
+        HeroArt art = new HeroArt();
+        Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
+        float worstFloor = Float.NEGATIVE_INFINITY, worstAir = Float.NEGATIVE_INFINITY;
+        int measured = 0;
+        for (boolean lowered : new boolean[]{false, true}) {
+            if (ladder(level).isLowered() != lowered) ladder(level).performAction();
+            settle(level, 60);
+            for (float standY : new float[]{272, 272 - 58, 160, 160 - 58, 130})
+                for (float x = 600; x <= 1432; x += 4) {
+                    level.player.position.set(x - 24, standY);
+                    settle(level, 2);
+                    String zone = level.player.zoneHint(), context = level.player.contextHint();
+                    if (context.isEmpty()) continue;
+                    level.player.zoneHintPosition(zoneAnchor); level.player.contextHintPosition(contextAnchor);
+                    Rectangle hero = level.player.hitboxBounds();
+                    float top = art.drawnTop(level.player), bottom = art.drawnBottom(level.player);
+                    for (float cameraY : new float[]{0, 8}) {
+                        float over = zone.isEmpty()
+                            ? geometry.heroOverlapAlone(contextAnchor, context, cameraY, hero.x, hero.x + hero.width, top, bottom)
+                            : geometry.heroOverlap(contextAnchor, context, zoneAnchor, zone, cameraY, hero.x, hero.x + hero.width, top, bottom);
+                        if (over == Float.NEGATIVE_INFINITY) continue;
+                        measured++;
+                        if (standY == 272) worstFloor = Math.max(worstFloor, over); else worstAir = Math.max(worstAir, over);
+                        if (standY == 272) assertTrue(over <= 0, "label crosses the drawn hero on the floor by " + over + " at x=" + x
+                            + " cell " + level.player.getState() + " " + context.replace('\n', '|'));
+                    }
+                }
+        }
+        System.out.printf("LABEL vs drawn hero: floor worst overlap %.1f px (negative = clearance), airborne/climbing worst %.1f px, %d samples%n",
+            worstFloor, worstAir, measured);
+        assertTrue(measured >= 40, "samples: " + measured); // 80 measured (#343): the room has label positions to test
     }
 
     @Test void theLeverIsOnlyEverWithinReachOnTheFloorAwayFromTheLadder() {

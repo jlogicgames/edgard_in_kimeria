@@ -107,7 +107,7 @@ SPRITES = {
     'RedMob': ('active', 'enemy/Mobs.png', (0, 160, 48, 32), 1, 'floor', FULL),
     'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
-    'Player': ('active', 'hero/Player.png', (0, 432, 48, 48), 1, 'floor', FULL),  # idle row 9
+    'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
 }
 # Types that draw no sprite of their own, with what they are (a new type must be added to one of the two tables).
 NO_SPRITE = {
@@ -174,10 +174,17 @@ def chroma_and_ink(sprite, glow=1.0):
     return chroma[max(0, int(CHROMA_PERCENTILE * len(chroma)) - 1)], darkest
 
 
+# More frames measured under the same key: the hero faces either way at every placement (#343, D79).
+EXTRA_FRAMES = {'Player': (('hero/hero-left.png', (0, 0, 64, 64), 4),)}  # idle facing left
+
+
 def frames(key):
-    _, sheet, (x, y, w, h), count, _, _ = SPRITES[key]
-    image = Image.open(ROOT / 'assets/images' / sheet).convert('RGBA')
-    return [image.crop((x + n * w, y, x + n * w + w, y + h)) for n in range(count)]
+    _, sheet, box, count, _, _ = SPRITES[key]
+    result = []
+    for sheet, (x, y, w, h), count in ((sheet, box, count), *EXTRA_FRAMES.get(key, ())):
+        image = Image.open(ROOT / 'assets/images' / sheet).convert('RGBA')
+        result += [image.crop((x + n * w, y, x + n * w + w, y + h)) for n in range(count)]
+    return result
 
 
 def with_halo(background, halo, centre_x, centre_y, alpha):

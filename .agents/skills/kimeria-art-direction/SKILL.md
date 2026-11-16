@@ -19,7 +19,7 @@ Portrait approval does not authorize the same treatment for gameplay sprites.
 ## Three distinct asset contracts
 
 - **World gameplay:** inspect the actual shipped sprite sheets (`assets/images/Items.png`,
-  `assets/images/hero/Player.png` and the relevant map tiles). Preserve native tiny pixel
+  the hero grid `art/hero/hero.grid` (D79) and the relevant map tiles). Preserve native tiny pixel
   art, low resolution, a very limited palette, solid outlines and hard pixel boundaries.
   New small items normally use 8×8, 8×16 or 16×16 canvases (up to 32×32 when the object
   warrants it), at most 16 palette entries INCLUDING transparency, binary alpha,

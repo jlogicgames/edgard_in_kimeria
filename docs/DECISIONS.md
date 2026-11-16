@@ -1842,6 +1842,56 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (font metrics only), the opening's timing on screen, and a touch device
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
 
+## D79. The hero is redrawn bigger, with two facings and ladder up and down (playtest F11, F21, #343, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (the Phase A art spec, as recommended); the core set is built, the
+  second set follows (below).
+- **Frame and box:** the hero is drawn in **64×64** frames; the 48×48 Entity box (`position`, `size`, spawn and room
+  geometry) and the 11×22 hitbox are unchanged, so physics, every route test and the label anchor are untouched.
+  The frame is registered with the feet on its last row (63) and the body axis on x 31.5, and drawn at
+  `(position.x + pivotX() - 31.5, position.y + 48 - 64)` = **(x − 8, y − 16)**. World Y grows down: the frame's top is
+  16 px above the box and its bottom is the hitbox bottom, the floor line (`Player.frameX/frameY`).
+- **Size:** standing and running poses are at most **31 px** tall (the old figure was 24 to 25 px, about ×1.25), because
+  the lowest gap the hero walks under is 32 px (forest-1 x 2296 to 2500; forest-2 x 240 and 1488 under a `Platform`).
+  The head is drawn 9 px above the hitbox top; something passing over the drawn head does not kill (accepted).
+- **Two facings:** `hero-right.png` and `hero-left.png` share one layout and nothing is mirrored at runtime. The sword is
+  always in Edgard's **right hand**: in front of the body facing right, behind it facing left (the near left fist is
+  empty), so it no longer jumps hands when he turns (F11). Left frames start as the mirror of the right ones in the
+  grid (`frame ... flip`) and are then redrawn where the sword is.
+- **Ladder:** `hero-ladder.png`, a back view used by both facings, with separate clips for climbing **up**, climbing
+  **down** (the head turned to look down over the shoulder) and **holding still**, chosen by the ladder direction (the
+  input, since a ladder zeroes the velocity). The old per-frame drop table (`LADDER_FRAME_DROP`) is gone: every ladder
+  frame stands on its last row.
+- **Clips (0.1 s a frame):** idle 4, run 6 (was 4), jump 2 (rise, apex; holds the apex), fall 2, attack **7**, look up
+  and down 1 each, wall clamber 1, hit **2**, appear **4**, disappear **4**; ladder up 4, down 4, hold 1. The counts in
+  bold are gameplay timing and did not change. The attack's blade ends at the unchanged sword box (x 9..46 of the box,
+  17 px ahead of the body).
+- **Carried object:** the grip is the near hand's palm, measured per facing on the new frames (`Player.heldObjectGrip`).
+  Until the carry clips land, facing right that is the sword hand. `DirectionalActionsTest` pins the new palms: the
+  idle grip is unchanged (x 31 facing right, 16 facing left); the facing-left jump palm moved from (26, 17), measured on
+  the old 48 px art, to (16, 22), the raised empty left fist of the new frame.
+- **Art:** original, hand-drawn as a pixel grid (`art/hero/hero.grid`, 15 colours plus transparency, ink contour
+  `0b0814`), exported exactly (no quantizing) by `tools/hero_sprites.py`; `tools/test_hero_sprites.py` checks the
+  export, the palette and the binary alpha. `Player.png`, `Look.png` and `tools/export_player_look.py` are retired.
+- **Measured:**
+  - Contrast (D76): idle in both facings at every spawn point, worst outline **0.349** (floor 0.28); `check_contrast.py`
+    measures both sheets under the `Player` key. The Phase A sweep over every walkable surface gave 0.320 worst for
+    the sample frames.
+  - Label above the hero (D33, D49, D50, unchanged and green): against the **drawn** hero
+    (`LadderLessonTest.theLabelClearsTheDrawnHeroAsWellAsItsHitbox`), the label clears it by at least **16 px** on the
+    floor in every sampled position (asserted: never crossing). Airborne or climbing under the zone message (D33's one
+    accepted case) the label overlaps the drawn head by up to **7 px**, which is reported, not asserted.
+  - `AllocationBudgetTest.heroDrawPathInBothFacingsAndOnTheLadder`: **0.0 B/frame** (ceiling 8), every state in both
+    facings and the three ladder clips, with the grip.
+  - `HeroFrameTest`: every grounded and ladder frame stands on its last row; the drawn feet meet the floor line in
+    every grounded frame of a walk, a turn and an attack each way; idle, run and look are at most 31 px tall; the
+    ladder plays up, hold and down as separate clips with the feet on the rung line.
+- **Second set (not built yet, [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343)):** carry idle and
+  run (sword on the back, the object in the near hand), throw, land; the thread pull for the death is
+  [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341).
+- **Not verified:** the hero in the running game, by the author's eye (desktop and web):
+  [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+
 ## D80. Tree branches: one-way perches and rotten branches (#349, playtest F13, 2026-11-16)
 
 - **Status:** Accepted by the author, 2026-11-16 (the Phase A card and placement: a non-lethal break, a decor trunk, no

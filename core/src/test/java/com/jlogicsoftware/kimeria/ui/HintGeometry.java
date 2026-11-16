@@ -50,6 +50,18 @@ public final class HintGeometry {
         return zoneBottom - contextTop(contextAnchor, context, true, zoneAnchor, zone, cameraY);
     }
 
+    /** {@link #heroOverlap} with no zone message on screen: the label at its own anchor. */
+    public float heroOverlapAlone(Vector2 contextAnchor, String context, float cameraY,
+                                  float heroLeft, float heroRight, float heroTop, float heroBottom) {
+        GlyphLayout layout = new GlyphLayout(contextFont, context, Color.WHITE, Hud.CONTEXT_WIDTH, Align.center, true);
+        float half = layout.width / 2;
+        if (contextAnchor.x + half <= heroLeft || contextAnchor.x - half >= heroRight) return Float.NEGATIVE_INFINITY;
+        float labelTop = contextTop(contextAnchor, context, false, contextAnchor, "", cameraY);
+        float labelBottom = labelTop - layout.height;
+        float heroScreenTop = SCREEN_H - (heroTop - cameraY), heroScreenBottom = SCREEN_H - (heroBottom - cameraY);
+        return Math.min(labelTop, heroScreenTop) - Math.max(labelBottom, heroScreenBottom);
+    }
+
     /**
      * Vertical overlap in px (positive: crossing) between the contextual label as the HUD places it, with a zone
      * message present, and the hero's hitbox ({@code heroTop}/{@code heroBottom} in world y, Y-down), horizontally

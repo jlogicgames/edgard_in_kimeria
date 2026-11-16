@@ -39,8 +39,10 @@ public final class SpriteSheets {
     public static final Sheet DECOR_LOOKALIKE = new Sheet("images/objects/decor-lookalike.png", 24, 16);
     // Tree trunk behind the branches (#349, D80): one frame; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_TRUNK = new Sheet("images/objects/decor-trunk.png", 16, 288);
-    public static final Sheet PLAYER = new Sheet("images/hero/Player.png", 48, 48);
-    public static final Sheet PLAYER_LOOK = new Sheet("images/hero/Look.png", PLAYER.width(), PLAYER.height());
+    // The hero (#343, D79): 64x64 cells, one clip per row; tools/sprite_layouts.py HERO_SHEETS, drawn from art/hero/hero.grid.
+    public static final Sheet HERO_RIGHT = new Sheet("images/hero/hero-right.png", 64, 64);
+    public static final Sheet HERO_LEFT = new Sheet("images/hero/hero-left.png", 64, 64);
+    public static final Sheet HERO_LADDER = new Sheet("images/hero/hero-ladder.png", 64, 64);
 
     private SpriteSheets() { }
 

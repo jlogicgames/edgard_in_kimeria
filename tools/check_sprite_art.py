@@ -13,7 +13,7 @@ import json
 import re
 import struct
 import sys
-from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, PLAYER_LOOK_SIZE, HUD_ICON_SIZE,
+from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,8 +145,8 @@ def image_contracts(root):
     # The dialogue screen frame (#337, D78): native pixel art on the world-art palette limit.
     contracts += [(f'assets/images/ui/dialogue-{name}.png', size, WORLD_PALETTE_SIZE,
                    'opaque' if name in OPAQUE_DIALOGUE_IMAGES else 'binary') for name, size in DIALOGUE_IMAGES.items()]
-    # Character poses reuse the legacy hero's 16 opaque colors plus alpha; PNG pads to 32.
-    contracts.append(('assets/images/hero/Look.png', PLAYER_LOOK_SIZE, 32, 'binary'))
+    # The hero (#343, D79): world pixel art, 16 palette entries including transparency, binary alpha.
+    contracts += [(f'assets/images/hero/hero-{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in HERO_IMAGES.items()]
     for relative, size, colors, alpha_mode in contracts:
         path = root / relative
         if not path.is_file():
