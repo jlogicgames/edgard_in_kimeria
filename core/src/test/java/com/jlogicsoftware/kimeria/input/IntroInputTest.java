@@ -51,6 +51,17 @@ class IntroInputTest {
         justTouched = true;
         assertTrue(intro.skipPressed(input));
     }
+    @Test void aSecondFingerWhileTheFirstIsHeldTurnsNoPage() {
+        IntroInput intro = new IntroInput();
+        intro.reset(input);
+        touched = true; justTouched = true; // first finger down: a tap
+        assertTrue(intro.skipPressed(input));
+        justTouched = false;
+        assertFalse(intro.skipPressed(input));
+        justTouched = true; // a second finger lands while the first is still down: libGDX reports it without a pointer index
+        assertFalse(intro.skipPressed(input), "paging is single-finger; the skip button polls every pointer on its own");
+    }
+
     @Test void aHeldConfirmKeyAdvancesInstantDialogueOneLineNotMany() {
         IntroInput dialogueInput = new IntroInput();
         com.jlogicsoftware.kimeria.localization.Language language = com.jlogicsoftware.kimeria.localization.Language.ENGLISH;

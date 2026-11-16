@@ -28,7 +28,7 @@ terms), **plain** (instruction, imperative or description), **label** (a word or
 
 | Key | Trigger | Seen | Voice | Notes |
 | --- | --- | --- | --- | --- |
-| `INTRO_STORY` | New Game, after the confirmation; `openStory(INTRO_STORY, INTRO)` | Once per New Game; never on Continue | Tale, first person (the healer) | 790 chars (de 877), six paragraphs, scrolls at 24 px/s today; static pages are [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336). |
+| `INTRO_STORY` | New Game, after the confirmation; `openStory(INTRO_STORY, INTRO)` | Once per New Game; never on Continue | Tale, first person (the healer) | 790 chars (de 877), six paragraphs, one static page in every language since [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336). |
 
 Story beats in order: the healer introduces himself; Rufardus the Wise; L'Kardina arrives, banished
 from a neighbouring land; Kimeria tries to drive her out; her fury becomes a curse; the sun stops
@@ -259,7 +259,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
 | G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
 | G18 | `COINS` is in all five catalogs and read by no code. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
-| G19 | The opening is long (790 to 877 chars) for a screen nobody controls today. Paging (#336) helps; a rule of three paragraphs per page or a word budget would keep it readable. | `INTRO_STORY` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
+| G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. | `INTRO_STORY` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G20 | The apostrophe in L'Kardina: STORY.md writes the Ukrainian form with a typographic ’ (Л’Кардина); all catalogs use ASCII '. Fix one form per language in the glossary. | `INTRO_STORY` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369); glossary row "Villain" |
 
 ## 4. Draft style system (not approved)

@@ -37,7 +37,7 @@ or full-set reward in this MVP.
 
    Intended Forest order, recorded in [D32](DECISIONS.md#d32-forest-level-order-and-identity):
    `forest-0` (tutorial) → `forest-1` → `forest-2` (boss).
-5. Ending: black background, the opening's scrolling text/fade and `audio/intro.wav`.
+5. Ending: black background, the opening's static pages and fade (#336) and `audio/intro.wav`.
    Text in all five supported languages says Edgard defeated every enemy, freed the kingdom of monsters and
    restored light to the world. A fresh key/controller press or tap can skip with the
    same fade as the opening; held gameplay input cannot dismiss it on entry.
@@ -56,7 +56,7 @@ the second level. New Game still clears an existing run before its opening.
 
 The ending releases the live level, hero, encounter effects and room fade; it cannot
 resume gameplay or respond to level-skip callbacks by loading another map. Its input,
-scroll and music follow the opening timeline. The ordinary menu track returns afterward.
+pages and music follow the opening. The ordinary menu track returns afterward.
 Music still respects the existing sound option and volume.
 
 ## Validation

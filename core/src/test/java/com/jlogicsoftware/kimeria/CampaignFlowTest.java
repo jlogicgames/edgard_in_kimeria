@@ -38,6 +38,9 @@ class CampaignFlowTest {
     private float musicVolume;
     private int musicStarts, musicStops;
 
+    private boolean touching, justTouched;
+    private float touchX, touchY;
+
     private void set(String name, Object value) throws Exception {
         var field = KimeriaGame.class.getDeclaredField(name); field.setAccessible(true); field.set(game, value);
     }
@@ -51,14 +54,44 @@ class CampaignFlowTest {
         var method = KimeriaGame.class.getDeclaredMethod("updateStory", float.class);
         method.setAccessible(true); method.invoke(game, dt);
     }
+    /** A fresh press of one key: down for one update, then released. */
+    private void press(int key) throws Exception { held.add(key); update(0f); held.remove(key); update(0f); }
+    /** A finger goes down at (x, y) for one update, then lifts. */
+    private void tap(float x, float y) throws Exception {
+        touching = true; justTouched = true; touchX = x; touchY = y;
+        update(0f);
+        touching = false; justTouched = false;
+        update(0f);
+    }
+    /** Turns pages with real presses (each after the input lock) until the story starts fading out; returns the pages turned. */
+    private int turnEveryPage() throws Exception {
+        IntroScreen story = (IntroScreen) get("intro");
+        int pages = 0;
+        while (story.state() == IntroScreen.State.READING && pages < 30) {
+            update(IntroScreen.INPUT_LOCK_SECONDS + .01f);
+            if (story.phase() == IntroScreen.Phase.REVEAL) { press(Input.Keys.K); update(IntroScreen.INPUT_LOCK_SECONDS + .01f); }
+            press(Input.Keys.K); pages++;
+            if (story.state() == IntroScreen.State.READING) update(IntroScreen.PAGE_TURN_SECONDS + .01f);
+        }
+        assertTrue(pages < 30, "the story must end after its last page");
+        return pages;
+    }
+    /** The opening, read to the end: fade in, every page, fade out. */
+    private void finishStory() throws Exception { update(2); turnEveryPage(); update(1); }
     private String state() throws Exception { return get("uiState").toString(); }
 
     @BeforeEach void setup() throws Exception {
         oldInput = Gdx.input; oldFiles = Gdx.files; oldApp = Gdx.app;
         GdxNativesLoader.load(); Gdx.files = new HeadlessFiles();
         Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class[]{Input.class},
-            (p, m, a) -> m.getName().equals("isKeyPressed") ? held.contains((int) a[0])
-                : m.getReturnType() == boolean.class ? false : m.getReturnType() == int.class ? 0 : null);
+            (p, m, a) -> switch (m.getName()) {
+                case "isKeyPressed" -> held.contains((int) a[0]);
+                case "isTouched" -> touching && (a == null || (int) a[0] == 0);
+                case "justTouched" -> justTouched;
+                case "getX" -> (int) touchX;
+                case "getY" -> (int) touchY;
+                default -> m.getReturnType() == boolean.class ? false : m.getReturnType() == int.class ? 0 : null;
+            });
         Gdx.app = (Application) Proxy.newProxyInstance(Application.class.getClassLoader(), new Class[]{Application.class},
             (p, m, a) -> m.getName().equals("getType") ? Application.ApplicationType.HeadlessDesktop : null);
         game = new KimeriaGame();
@@ -67,8 +100,12 @@ class CampaignFlowTest {
             @Override public BitmapFont font(int size) { return null; }
         };
         set("assets", assets);
+        set("touchControls", new com.jlogicsoftware.kimeria.ui.TouchControls(assets, game,
+            new com.badlogic.gdx.utils.viewport.Viewport() { @Override public com.badlogic.gdx.math.Vector2 unproject(com.badlogic.gdx.math.Vector2 v) { return v; } },
+            640, 360, true));
         set("overlay", new Overlay(assets, 640, 360) {
             @Override public float bodyHeight(String text, float width) { return 120; }
+            @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache bodyBlock(String text, float x, float y, float width) { return null; }
         });
         set("introMusic", Proxy.newProxyInstance(Music.class.getClassLoader(), new Class[]{Music.class}, (p, m, a) -> {
             switch (m.getName()) {
@@ -116,7 +153,7 @@ class CampaignFlowTest {
         method.setAccessible(true); method.invoke(game, result);
     }
     private void startNewGameOnTutorial() throws Exception {
-        call("newGame"); update(2); update(100); update(1);
+        call("newGame"); finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
         call("loadLevel"); call("beginLevelPlay");
     }
@@ -137,7 +174,7 @@ class CampaignFlowTest {
         call("loadLevel"); call("beginLevelPlay");
         assertEquals("PLAYING", state()); assertNull(get("healer"));
         // Restart Level pressed while the tale is still open also consumes it.
-        call("newGame"); update(2); update(100); update(1);
+        call("newGame"); finishStory();
         call("loadLevel"); call("beginLevelPlay"); assertEquals("HEALER", state());
         call("restartLevel"); call("loadLevel"); call("beginLevelPlay");
         assertEquals("PLAYING", state()); assertNull(get("healer"));
@@ -212,7 +249,7 @@ class CampaignFlowTest {
         // Order (D32): forest-0 (tutorial) -> forest-1 -> forest-2 (boss; named forest-3 until #262).
         assertEquals(List.of("forest-0", "forest-1", "forest-2"), get("LEVEL_NAMES"));
         call("newGame"); assertEquals("INTRO", state());
-        update(2); update(100); update(1);
+        finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
         // forest-0 has no sky, so it loads headless; it is the first level.
         call("loadLevel");
@@ -243,7 +280,7 @@ class CampaignFlowTest {
             game.loadNextLevel(); assertSame(ending, get("intro"), "Duplicate callbacks cannot restart the ending");
             update(1); assertEquals(IntroScreen.State.FADE_IN, ending.state());
             assertEquals(.5f, musicVolume); assertTrue(musicStarts > 0);
-            update(1); update(100);
+            update(1); turnEveryPage();
             assertEquals(IntroScreen.State.FADE_OUT, ending.state());
             update(.5f); assertEquals(.5f, musicVolume);
             assertTrue(progress.exists(), "Save is cleared after the ending fades, not on entry");
@@ -259,10 +296,68 @@ class CampaignFlowTest {
         }
     }
 
+    @Test void anyFreshPressTurnsThePageButOnlyEscapeLeavesTheStory() throws Exception {
+        call("newGame");
+        IntroScreen story = (IntroScreen) get("intro");
+        update(2); press(Input.Keys.K);
+        assertEquals(IntroScreen.Phase.REVEAL, story.phase(), "the page was just shown: the lock swallows the press");
+        update(IntroScreen.INPUT_LOCK_SECONDS + .01f); press(Input.Keys.K);
+        assertEquals(IntroScreen.Phase.WAIT, story.phase(), "a press while the page appears shows it whole");
+        press(Input.Keys.SPACE);
+        assertEquals(IntroScreen.State.READING, story.state());
+        assertEquals(IntroScreen.Phase.WAIT, story.phase(), "locked again after the page is whole");
+        update(IntroScreen.INPUT_LOCK_SECONDS + .01f); press(Input.Keys.ESCAPE);
+        assertEquals(IntroScreen.State.FADE_OUT, story.state(), "Escape leaves from any page, even on the first");
+    }
+
+    @Test void theSystemBackKeyLeavesTheStoryLikeEscapeInsteadOfTurningAPage() throws Exception {
+        call("newGame");
+        IntroScreen story = (IntroScreen) get("intro");
+        update(2); update(IntroScreen.INPUT_LOCK_SECONDS + .01f); press(Input.Keys.BACK);
+        assertEquals(IntroScreen.State.FADE_OUT, story.state());
+    }
+
+    @Test void aTapOnTheSkipButtonLeavesTheStoryAtOnceAndNeverAlsoTurnsAPage() throws Exception {
+        call("newGame");
+        IntroScreen story = (IntroScreen) get("intro");
+        update(2); update(IntroScreen.INPUT_LOCK_SECONDS + .01f); // unlocked: a tap elsewhere would show the whole page
+        tap(com.jlogicsoftware.kimeria.ui.TouchControls.SKIP_X, com.jlogicsoftware.kimeria.ui.TouchControls.SKIP_Y);
+        assertEquals(IntroScreen.State.FADE_OUT, story.state());
+        assertEquals(IntroScreen.Phase.REVEAL, story.phase(), "the tap on the button was not also a page turn");
+        assertEquals(0, story.pageIndex());
+    }
+
+    @Test void aTapAwayFromTheSkipButtonStillTurnsThePage() throws Exception {
+        call("newGame");
+        IntroScreen story = (IntroScreen) get("intro");
+        update(2); update(IntroScreen.INPUT_LOCK_SECONDS + .01f);
+        tap(320, 200);
+        assertEquals(IntroScreen.State.READING, story.state());
+        assertEquals(IntroScreen.Phase.WAIT, story.phase());
+    }
+
+    @Test void theSkipButtonWorksWhileTheInputIsLockedAndOnTheEnding() throws Exception {
+        call("newGame");
+        IntroScreen opening = (IntroScreen) get("intro");
+        update(2);
+        assertTrue(opening.locked());
+        tap(com.jlogicsoftware.kimeria.ui.TouchControls.SKIP_X, com.jlogicsoftware.kimeria.ui.TouchControls.SKIP_Y);
+        assertEquals(IntroScreen.State.FADE_OUT, opening.state());
+        update(2);
+        progress.save(2); set("currentLevelIndex", 2);
+        game.loadNextLevel();
+        IntroScreen ending = (IntroScreen) get("intro");
+        assertEquals("ENDING", state());
+        update(2);
+        assertTrue(ending.locked());
+        tap(com.jlogicsoftware.kimeria.ui.TouchControls.SKIP_X, com.jlogicsoftware.kimeria.ui.TouchControls.SKIP_Y);
+        assertEquals(IntroScreen.State.FADE_OUT, ending.state());
+    }
+
     @Test void freshEndingSkipReturnsToMenuInsteadOfStartingAnotherLevel() throws Exception {
         progress.save(2); set("currentLevelIndex", 2);
         game.loadNextLevel(); update(2);
-        held.add(Input.Keys.SPACE); update(.25f);
+        held.add(Input.Keys.ESCAPE); update(.25f);
         assertEquals(IntroScreen.State.FADE_OUT, ((IntroScreen) get("intro")).state());
         update(1);
         assertEquals("MAIN_MENU", state()); assertEquals(-1f, get("levelLoadDelay"));
@@ -270,7 +365,7 @@ class CampaignFlowTest {
         held.clear();
         ((Menu) get("mainMenu")).confirmSelected();
         assertEquals("INTRO", state()); assertEquals(Msg.INTRO_STORY.t(Language.ENGLISH), ((IntroScreen) get("intro")).text());
-        update(2); update(100); update(1);
+        finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
         assertFalse(progress.exists());
     }

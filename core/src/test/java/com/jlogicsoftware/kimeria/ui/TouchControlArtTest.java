@@ -52,6 +52,25 @@ class TouchControlArtTest {
         assertTrue(contrast(luminance(centre("disc-down")), label) >= LABEL_CONTRAST, "label on pressed button");
     }
 
+    /**
+     * The story skip button (#336, D77) sits on the black story screen only. Its outermost outline is white (the other
+     * discs' navy outline measures 0.20 in OKLab against black, under the 0.28 active floor of D76), so the silhouette,
+     * the fill and the pressed state all stand out from black.
+     */
+    @Test void theSkipButtonReadsOnTheBlackStoryScreenAndTheIconIsNotThePauseBars() throws Exception {
+        int black = 0x000000;
+        for (String name : new String[] {"skip", "skip-down"}) {
+            BufferedImage png = load(name);
+            assertTrue(contrast(luminance(png.getRGB(png.getWidth() / 2, firstOpaque(png))), luminance(black)) >= BAR_CONTRAST, name + " outline vs black");
+            assertTrue(contrast(luminance(centre(name)), luminance(black)) >= BAR_CONTRAST, name + " fill vs black");
+            assertEquals(255, centre(name) >>> 24, name + " is opaque");
+        }
+        assertNotEquals(centre("skip"), centre("skip-down"));
+        BufferedImage skip = load("skip"), pause = load("pause");
+        assertNotEquals(pause.getRGB(pause.getWidth() / 2, pause.getHeight() / 2), skip.getRGB(skip.getWidth() / 2, skip.getHeight() / 2),
+            "the gap between the pause bars is filled by the play triangle");
+    }
+
     private static int firstOpaque(BufferedImage png) {
         for (int y = 0; y < png.getHeight(); y++) if ((png.getRGB(png.getWidth() / 2, y) >>> 24) != 0) return y;
         throw new AssertionError("empty image");
@@ -60,7 +79,7 @@ class TouchControlArtTest {
     /** A fill pixel: the middle, or beside the arrow / pause bars for the buttons that carry an icon. */
     private static int centre(String name) throws Exception {
         BufferedImage png = load(name);
-        boolean icon = name.startsWith("jump") || name.startsWith("pause");
+        boolean icon = name.startsWith("jump") || name.startsWith("pause") || name.startsWith("skip");
         return png.getRGB(icon ? ICON_SIDE_X : png.getWidth() / 2, png.getHeight() / 2);
     }
 

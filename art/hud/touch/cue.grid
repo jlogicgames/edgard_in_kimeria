@@ -1,0 +1,12 @@
+# Story page cue (#336, D77): a small triangle pointing down, native 8x8, white. Shown on every device when a page waits for the button.
+size 8 8
+color W ffffff
+frame cue
+WWWWWWWW
+WWWWWWWW
+.WWWWWW.
+.WWWWWW.
+..WWWW..
+..WWWW..
+...WW...
+...WW...

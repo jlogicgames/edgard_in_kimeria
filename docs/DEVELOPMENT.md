@@ -181,8 +181,8 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       the boss shake included.
 - [x] Options → Assist → Instant text (D11, #342): a persisted On/Off toggle, off by default. On, every healer
       dialogue line (`HealerDialogue.setInstantText`) is whole on its first frame and the first press advances.
-      `KimeriaGame.instantText()` exposes it to the paged intro ([#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336));
-      the current scrolling `IntroScreen` is timed by scroll position, has no letter reveal, and ignores it.
+      `KimeriaGame.instantText()` is read by the paged intro (#336): with it on, each page of the opening and the
+      ending appears whole and turns at once.
 - [x] Keyboard, mouse and gamepad menu navigation
 - [x] English/Ukrainian/Polish/German/Belarusian localization, switchable from Options and remembered across launches
 - [x] Shared local settings for language, display mode, left-handed controls and trap-warning
@@ -193,9 +193,17 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       1280x720 window; the mode is remembered across launches (`~/.prefs/edgard-in-kimeria`).
       Window size and position are not persisted.
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
-- [x] NES-style story intro on every new game: centered scrolling text in all five supported languages,
-      black fades and a separate placeholder music loop; any fresh key, gamepad button or
-      click/tap skips with a shared picture/music fade (menu holds do not skip it).
+- [x] NES-style story intro on every new game (#336, playtest F2): static pages in all five supported languages,
+      black fades and a separate placeholder music loop. The text is cut into pages of whole paragraphs at load
+      (`IntroPages`, measured with the body font; a paragraph taller than a page fails loudly instead of overflowing).
+      On a page the paragraphs fade in one after another, top to bottom, and stay; nothing scrolls and nothing turns
+      by itself. Any fresh key, gamepad button or click/tap shows the rest of the page, then turns it; the last turn
+      fades out. Escape, the system Back key or the pad's Back/Start leaves the story at once. Input is ignored for
+      `IntroScreen.INPUT_LOCK_SECONDS` after a page starts and after it is whole, so a held button cannot skip pages,
+      and menu holds are ignored on entry. A small pulsing triangle (no words) marks a page that waits for the button.
+      The opening and the ending are each one page in all five languages (the longest opening, German, ends 258 px from
+      the top of a 304 px page area). The layouts are cached per paragraph (`Overlay.bodyBlock`); `AllocationBudgetTest.pagedIntro`
+      measures 0.0 B/frame. Paging by touch is single-finger (a tap while another finger is held turns no page). On touch devices an icon-only skip button (top right, D77) leaves the story and never also turns a page; desktop and web look: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
       `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
       `Msg.INTRO_STORY` when revising the healer-narrated account of Kimeria and L'Kardina.
 - [x] Optional forest healer: dialogue in all five supported languages, recipe checklist, paid elixir and

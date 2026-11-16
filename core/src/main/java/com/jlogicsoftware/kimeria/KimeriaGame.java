@@ -467,17 +467,19 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private boolean storyScreenActive() { return uiState == UiState.INTRO || uiState == UiState.ENDING; }
 
-    /** Opening and ending share the same text scroll, fade, music and fresh-input rules. */
+    /** Opening and ending share the same static pages (#336), fade, music and fresh-input rules. */
     private void openStory(Msg message, UiState state) {
-        String text = message.t(language);
-        intro = new IntroScreen(text,
-            overlay.bodyHeight(text, LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f), LOGICAL_H);
+        intro = IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText());
         introInput.reset(Gdx.input);
         uiState = state;
     }
 
     private void updateStory(float dt) {
-        if (introInput.skipPressed(Gdx.input) || gamepad.anyButtonPressed()) intro.skip();
+        // Escape, the system Back key or the pad's Back/Start leaves the story; any other fresh press turns the page.
+        boolean pressed = introInput.skipPressed(Gdx.input);
+        touchControls.updateSkip(); // a tap on the skip button leaves; it never also turns a page
+        if (touchControls.skipPressed() || introInput.keyPressed(Input.Keys.ESCAPE) || introInput.keyPressed(Input.Keys.BACK) || gamepad.back() || gamepad.pausePressed()) intro.skip();
+        else if (pressed || gamepad.anyButtonPressed()) intro.turn();
         // Let the menu track fade to silence before starting the story's envelope.
         if (musicVolume <= 0f || intro.state() == IntroScreen.State.FADE_OUT) intro.update(dt);
         updateIntroMusic();
@@ -788,6 +790,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         overlay.flushText(batch);
         // The healer panel is opaque, so its pause button is drawn on top of it (the world HUD draws its own).
         if (uiState == UiState.HEALER) touchControls.renderPauseButton(batch);
+        if (storyScreenActive()) touchControls.renderSkipButton(batch);
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
         if (storyScreenActive()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
         batch.end();
@@ -997,8 +1000,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             return;
         }
         if (storyScreenActive()) {
-            overlay.body(batch, intro.text(), LOGICAL_W / 2f, intro.textTop(),
-                LOGICAL_W - IntroScreen.TEXT_MARGIN * 2f);
+            intro.render(batch, overlay);
             return;
         }
         Vector2 mouse = mouseLogical();

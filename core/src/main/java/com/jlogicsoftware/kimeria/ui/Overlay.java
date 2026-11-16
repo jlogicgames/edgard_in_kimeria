@@ -2,13 +2,16 @@ package com.jlogicsoftware.kimeria.ui;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 
@@ -52,6 +55,10 @@ public class Overlay {
     private final Matrix4 textProjection;
     private final float logicalHeight;
     private final List<Runnable> textQueue = new ArrayList<>();
+    private static final int BLOCK_QUEUE_CAPACITY = 8;
+    /** Prebuilt text blocks ({@link #bodyBlock}) drawn after the queued text; queuing one allocates nothing. */
+    private final Array<BitmapFontCache> blockQueue = new Array<>(false, BLOCK_QUEUE_CAPACITY);
+    private final Matrix4 savedProjection = new Matrix4();
     private Vector2 lastMouse;
 
     public Overlay(Assets assets, float logicalWidth, float logicalHeight) {
@@ -76,16 +83,19 @@ public class Overlay {
     /** Call once before any other method each frame the overlay is drawn. */
     public void beginFrame() {
         textQueue.clear();
+        blockQueue.clear();
     }
 
     /** Call once, after every other call this frame, to actually draw the queued text. */
-    public void flushText(SpriteBatch batch) {
-        if (textQueue.isEmpty()) return;
-        Matrix4 previous = batch.getProjectionMatrix().cpy();
+    public void flushText(Batch batch) {
+        if (textQueue.isEmpty() && blockQueue.size == 0) return;
+        savedProjection.set(batch.getProjectionMatrix());
         batch.setProjectionMatrix(textProjection);
-        for (Runnable draw : textQueue) draw.run();
-        batch.setProjectionMatrix(previous);
+        for (int i = 0; i < textQueue.size(); i++) textQueue.get(i).run();
+        for (int i = 0; i < blockQueue.size; i++) blockQueue.get(i).draw(batch);
+        batch.setProjectionMatrix(savedProjection);
         textQueue.clear();
+        blockQueue.clear();
     }
 
     public void panel(SpriteBatch batch, float x, float y, float w, float h, float alpha) {
@@ -106,6 +116,25 @@ public class Overlay {
     public void body(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth, Color color) {
         GlyphLayout layout = new GlyphLayout(bodyFont, text, color, wrapWidth, Align.center, true);
         textQueue.add(() -> bodyFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
+    }
+
+    /**
+     * Lays {@code text} out once (centred, wrapped, body font) into a cache whose vertices stay fixed, so a screen that
+     * shows the same paragraph for many frames (the paged intro) pays for the layout at load, not per frame.
+     * {@code yFromTop} is the top of the first line, as for {@link #body}. Draw it with {@link #queueBlock}.
+     */
+    public BitmapFontCache bodyBlock(String text, float centerX, float yFromTop, float wrapWidth) {
+        GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.center, true);
+        BitmapFontCache block = new BitmapFontCache(bodyFont, bodyFont.usesIntegerPositions());
+        block.setText(layout, centerX - wrapWidth / 2f, toTextY(yFromTop));
+        return block;
+    }
+
+    /** Queues a {@link #bodyBlock} at {@code alpha}; allocation free, nothing is drawn for an alpha of zero. */
+    public void queueBlock(BitmapFontCache block, float alpha) {
+        if (alpha <= 0f) return;
+        block.setAlphas(alpha);
+        blockQueue.add(block);
     }
 
     /** Centered text in the dialogue size (speaker names, checklist), same layout as {@link #body}. */
