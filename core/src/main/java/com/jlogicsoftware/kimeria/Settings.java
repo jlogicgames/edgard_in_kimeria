@@ -41,6 +41,13 @@ public final class Settings {
     public static final String KEY_SCREEN_SHAKE = "screen-shake";
     public static final boolean DEFAULT_SCREEN_SHAKE = true;
 
+    /**
+     * Instant text (Assist, #342, playtest F8): dialogue lines appear whole instead of letter by letter.
+     * Off by default. The paged intro (#336) reads the same option.
+     */
+    public static final String KEY_INSTANT_TEXT = "instant-text";
+    public static final boolean DEFAULT_INSTANT_TEXT = false;
+
     /** Size of the window when the player opts out of fullscreen. */
     public static final int WINDOWED_WIDTH = 1280, WINDOWED_HEIGHT = 720;
 
@@ -55,6 +62,7 @@ public final class Settings {
     public static final Option<Boolean> LONGER_TRAP_WARNINGS =
         bool(KEY_LONGER_TRAP_WARNINGS, DEFAULT_LONGER_TRAP_WARNINGS);
     public static final Option<Boolean> SCREEN_SHAKE = bool(KEY_SCREEN_SHAKE, DEFAULT_SCREEN_SHAKE);
+    public static final Option<Boolean> INSTANT_TEXT = bool(KEY_INSTANT_TEXT, DEFAULT_INSTANT_TEXT);
 
     /** A typed key and its default/decoder; new options need no load/save wiring. */
     public static final class Option<T> {

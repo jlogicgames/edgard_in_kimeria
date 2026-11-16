@@ -99,6 +99,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final boolean debugMode;
     private final boolean prefersReducedMotion;
     private boolean screenShake = Settings.DEFAULT_SCREEN_SHAKE;
+    private boolean instantText = Settings.DEFAULT_INSTANT_TEXT;
 
     public KimeriaGame() { this(false); }
 
@@ -246,6 +247,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         leftHanded = settings.get(Settings.LEFT_HANDED);
         trapWarnings.load(settings);
         screenShake = settings.get(Settings.SCREEN_SHAKE, !prefersReducedMotion);
+        instantText = settings.get(Settings.INSTANT_TEXT);
         savedProgress = new SavedProgress(settings.preferences(), LEVEL_NAMES.size());
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
@@ -325,6 +327,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             new MenuItem(
                 () -> Msg.SCREEN_SHAKE.t(language) + ": " + (screenShake ? Msg.ON : Msg.OFF).t(language),
                 () -> { screenShake = !screenShake; settings.set(Settings.SCREEN_SHAKE, screenShake); }),
+            new MenuItem(
+                () -> Msg.INSTANT_TEXT.t(language) + ": " + (instantText ? Msg.ON : Msg.OFF).t(language),
+                () -> { instantText = !instantText; settings.set(Settings.INSTANT_TEXT, instantText); }),
             new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
         ), () -> uiState = UiState.OPTIONS, 440f);
 
@@ -369,6 +374,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     @Override
     public boolean leftHanded() {
         return leftHanded;
+    }
+
+    /** Instant text (#342): the paged intro (#336) reads this to show a whole page at once. */
+    public boolean instantText() {
+        return instantText;
     }
 
     @Override
@@ -528,6 +538,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void openScriptedHealer(HealerDialogue dialogue) {
         healer = dialogue;
+        healer.setInstantText(instantText); // before the first render, not one frame later
         dialogueInput.reset(Gdx.input);
         gameStarted = false;
         uiState = UiState.HEALER;
@@ -565,6 +576,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             artifacts.hasIngredient(level.name, ItemType.MUSHROOM),
             level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal(),
             level.canBrew(), paid, returning);
+        healer.setInstantText(instantText); // before the first render, not one frame later
         dialogueInput.reset(Gdx.input);
         gameStarted = false;
         uiState = UiState.HEALER;
@@ -798,6 +810,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             uiState = UiState.PAUSED;
             return;
         }
+        healer.setInstantText(instantText);
         healer.update(dt);
         boolean up = dialogueInput.keyPressed(Input.Keys.UP) || dialogueInput.keyPressed(Input.Keys.W)
             || dialogueInput.keyPressed(Input.Keys.A) || dialogueInput.keyPressed(Input.Keys.LEFT)

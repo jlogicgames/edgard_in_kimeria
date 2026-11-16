@@ -51,6 +51,28 @@ class IntroInputTest {
         justTouched = true;
         assertTrue(intro.skipPressed(input));
     }
+    @Test void aHeldConfirmKeyAdvancesInstantDialogueOneLineNotMany() {
+        IntroInput dialogueInput = new IntroInput();
+        com.jlogicsoftware.kimeria.localization.Language language = com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
+        var dialogue = com.jlogicsoftware.kimeria.ui.HealerDialogue.tutorialStart();
+        dialogue.setInstantText(true);
+        dialogueInput.reset(input);
+        down[Input.Keys.ENTER] = true;
+        int advanced = 0;
+        for (int frame = 0; frame < 30; frame++) { // held for 30 frames, the OS repeating the key from frame 10
+            justPressed[Input.Keys.ENTER] = frame == 0 || frame >= 10;
+            if (dialogueInput.skipPressed(input) && dialogueInput.keyPressed(Input.Keys.ENTER)) { dialogue.advance(language); advanced++; }
+        }
+        assertEquals(1, advanced);
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.EDGARD_TALE_NO_TIME.t(language), dialogue.completeText(language));
+        down[Input.Keys.ENTER] = false; justPressed[Input.Keys.ENTER] = false;
+        dialogueInput.skipPressed(input);
+        down[Input.Keys.ENTER] = true; justPressed[Input.Keys.ENTER] = true; // released and pressed again: one more line
+        assertTrue(dialogueInput.skipPressed(input) && dialogueInput.keyPressed(Input.Keys.ENTER));
+        dialogue.advance(language);
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_TALE_FAIRIES.t(language), dialogue.completeText(language));
+    }
+
     @Test void dialogueConfirmationEdgesIgnoreHeldGameplayButtonsAndResumeInput() {
         IntroInput dialogue = new IntroInput();
         for (int key : new int[]{Input.Keys.J, Input.Keys.K, Input.Keys.L, Input.Keys.Z, Input.Keys.X, Input.Keys.C}) {
