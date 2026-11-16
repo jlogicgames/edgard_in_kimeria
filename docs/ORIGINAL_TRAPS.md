@@ -14,6 +14,11 @@ adapted to modern fairness: a visible telegraph before a kill (D7) and recoverab
 retries (D3, D26). Not everything in the original is to be reproduced, and the original's
 rules (for example lives) are history, not requirements.
 
+**Remake's trap design reference:** [TRAPS.md](TRAPS.md) holds the visibility rule
+([D71](DECISIONS.md#d71-traps-are-visible-before-they-fire-2026-11-16): a trap is visible before it fires), the
+trap card template, the visibility audit of every trap and one card per trap. This document stays the evidence of
+the original and the history of the forest set.
+
 ## Sources and how to read this document
 
 - **Screenshots (S1-S15):** 15 DOSBox stills supplied by the author, stored in
@@ -296,7 +301,7 @@ knowledge of modern retro-styled platformers; I did not look anything up.
 | Choice | Proposed default | Rationale |
 | --- | --- | --- |
 | Lives | **No lives.** Death is an instant room retry (D2/D3). The three icons are not carried over. | D2 already decides this. Modern retro platformers (for example Celeste, Super Meat Boy, Shovel Knight's checkpoints) dropped lives for fast retries. |
-| Hidden trap vs D7 | **Every killing trap shows a telegraph** before it can kill, with a warning time from the shared source. Hidden-trigger traps stay deterministic but get a visible cue. | D7 and D5 (instant death only when understandable). Modern "trap" rooms in this genre are readable on second look; unmarked traps are accepted only as learn-by-dying, which D26 rules out. |
+| Hidden trap vs D7 | **Every killing trap shows a telegraph** before it can kill, with a warning time from the shared source. Hidden-trigger traps stay deterministic but get a visible cue. **Now the rule [D71](DECISIONS.md#d71-traps-are-visible-before-they-fire-2026-11-16) (2026-11-16): visible at rest by default; see [TRAPS.md](TRAPS.md).** | D7 and D5 (instant death only when understandable). Modern "trap" rooms in this genre are readable on second look; unmarked traps are accepted only as learn-by-dying, which D26 rules out. |
 | Falling branch | **Author-confirmed 2026-11-05:** position trigger + **visible tell + short delay**, then the branch falls with a real flight time. While it falls the player can **jump or run away**; both answers work. | The author's wording; it meets D7 and keeps the original's jump answer. |
 | Rising stake | **Author-confirmed 2026-11-05:** it is **animated**: when the player gets close the stake's tip **pokes out and wobbles a little** (the readable warning), then it rises and **stays up until the retry**. Placement (assumed): on open floor so it can be jumped, never in a required one-tile corridor. | Matches the falling platform's "spent until the retry" (D7/D40). |
 | Root and stump explosions | **Implemented in D47 (#233).** **Author-confirmed 2026-11-05: the existing bomb behaviour is OK**: touch lights a fuse (shared 0.8 s warning, 1.2 s with assist) then one 64 x 64 blast. The root and stump sprites (cracks, smoke, glow, blast, charred remains) exist and are used by the new traps. | The existing bomb is the tested, fair version of the original's touch-explosion. |

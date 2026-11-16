@@ -526,6 +526,8 @@ GC pauses or memory in the browser build (all allocation figures are from a desk
   was checked against the libGDX 1.14.2 sources and what was not, and the security review.
 - **Pools:** in the 1.14.2 sources `Pools` and `ReflectionPool` are `@Deprecated`; `DefaultPool` (supplier constructors) and
   `PoolManager` exist. Any pooled object therefore uses those. `KimeriaParticleSystem` needs no pool (fixed arrays).
+- Trap design: [`kimeria-trap-design`](../.agents/skills/kimeria-trap-design/SKILL.md), the procedure from a trap
+  idea to a placed, tested trap under D71; the substance is in [TRAPS.md](TRAPS.md) and the gate is `TrapCatalogTest`.
 - Two project-owned skills: [`kimeria-libgdx-rules`](../.agents/skills/kimeria-libgdx-rules/SKILL.md) (Y-down world and Y-up text, no
   allocation, pools, cached regions, `Nearest`, the sprite-versus-VFX rule, TeaVM limits, English only) and
   [`kimeria-particles`](../.agents/skills/kimeria-particles/SKILL.md) (which class to use, the recipe to own and render an emitter, how to
