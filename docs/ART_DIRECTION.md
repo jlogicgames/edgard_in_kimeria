@@ -25,8 +25,8 @@ are that approved baseline; see [artwork review](PORTRAITS.md#author-review).
 The author rejected detailed 256-color item art in gameplay. The original Items.png
 has 6 colors for the first coin frame, 9 for the cooked chicken and 4 for the key (the retired Chicken and Key items, replaced by Bat and Mushroom in D43),
 including transparency; its frames are 16×16 with small occupied silhouettes.
-Player.png uses 48×48 frames with a much smaller occupied figure (12–17 colors in
-the inspected running/idle frames). Frame canvas, occupied pixels and a complete
+The hero (D79) uses 64×64 frames with a figure at most 31 px tall (15 colors plus
+transparency over the whole grid). Frame canvas, occupied pixels and a complete
 multi-frame sheet are different measurements.
 
 - **Gameplay:** preserve tiny native pixel art, low color counts, black contours,
@@ -67,11 +67,8 @@ and quantizes authored art. The source guard/hook also checks dimensions, indexe
 palette and binary world alpha in the new world/HUD PNG exports, without a Pillow
 build dependency. Renderer checks still have to verify filtering and visual fit.
 
-The standing look poses use the first 48×48 idle frame from `Player.png`, changing
-only its head. `images/hero/Look.png` packs up/down on one 96×48 sheet. The body,
-sword, palm and boots remain pixel-identical, with the original character's 16
-opaque colors plus transparency. This is a registered legacy-character frame,
-not a new 48-pixel-wide item. See [selected sources and exact prompts](../art/hero/generation-prompts.md).
+The look poses are frames of the hero sheets (D79): the idle body with the head turned up or down, drawn in
+`art/hero/hero.grid` like every other hero frame.
 
 ## Group artwork by meaning
 
@@ -139,6 +136,35 @@ images before composing a prompt. Text descriptions alone cannot keep the style 
 These are reference-derived constraints. Unseen characters, environments and new poses
 still need design work; do not invent the original artist's undocumented intent.
 Maintain the same handling of faces, contours, light and color across the new work.
+
+## The hero (D79, playtest F11 and F21, [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343))
+
+Edgard in the world is an original pixel drawing, `art/hero/hero.grid`, exported exactly by
+`tools/hero_sprites.py` to three sheets of 64×64 cells, one clip per row (`tools/sprite_layouts.py HERO_SHEETS`):
+`hero-right.png` and `hero-left.png` (idle 4, run 6, jump 2, fall 2, attack 7, look 2, clamber 1, hit 2, appear 4,
+disappear 4) and `hero-ladder.png` (up 4, down 4, hold 1; a back view used by both facings).
+
+- **Identity:** long black hair, a narrow red headband, an angular clean-shaven face, warm ochre skin, bare
+  shoulders; blue breeches, brown boots, a steel blade with a leather grip. No reserved accent hue (gold, ember,
+  violet, lime, magenta). Ink contour `0b0814`, binary alpha, 15 colors plus transparency for all three sheets.
+- **Registration:** feet on row 63, body axis on x 31.5 (the hitbox spans x 26..36, y 42..63). The game draws the
+  frame at (x − 8, y − 16) from the unchanged 48×48 box: world Y grows down, so the frame's bottom row is the
+  floor line. Standing and running poses stay within rows 33..63 (31 px: the lowest gap he walks under is 32 px);
+  nothing in a pose the label shows over rises above row 24.
+- **The sword stays in the right hand.** Facing right it is in front of the body; facing left it is behind him,
+  held in the far hand, and the near left fist is empty. A left frame starts as the mirror of the right one
+  (`frame l.x flip r.x`) and is then redrawn where the sword is; the game never flips the hero at runtime.
+- **Ladder:** climbing up, climbing down (the head turned to look down over the shoulder) and holding still are
+  different clips. Every ladder frame stands on its last row.
+- **Attack:** the blade's reach ends at the sword box (17 px ahead of the body); the drawn swing never promises more
+  reach than the hit has.
+- **Contrast (D76):** active; idle in both facings measures 0.349 worst at the spawn points.
+- **Gates:** `tools/test_hero_sprites.py` (the export is the grid, the palette, every layout frame drawn),
+  `HeroFrameTest` (feet on the last row and on the floor line in play, the 31 px limit, the ladder clips),
+  `check_sprite_art.py` (16-entry indexed PNGs, binary alpha), `check_contrast.py`.
+- **Second set:** carry idle and run (the sword on the back, the object in the near hand), throw, land, and the
+  thread pull of [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341); tracked in
+  [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343).
 
 ## Production and continuity
 
@@ -678,7 +704,7 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 | Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.35 (HIDDEN, cue #359) |
 | Active: collectables | with the pickup halo (#345): Bat wing jar 0.54 (the flapping bat was 0.41), Mushroom 0.53, coin 0.37 (no halo); fireball refill 0.43 |
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.37, stone 0.30 |
-| Active: enemies and hero | hero 0.46, RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
+| Active: enemies and hero | hero 0.35 (D79, both facings; the old 48 px hero was 0.46), RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
 | Decor (after the recolour) | bush 0.12 to 0.18 (was 0.31 to 0.39), look-alike 0.16 (was 0.45), hanging vine 0.06 to 0.16 (was 0.47 to 0.57) |
 | Background (tile layer) | rocks 0.29, signs 0.37, dead trees 0.37, tile bushes 0.36: louder than the ceiling. This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
 

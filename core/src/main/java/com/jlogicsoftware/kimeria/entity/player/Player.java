@@ -2,6 +2,7 @@ package com.jlogicsoftware.kimeria.entity.player;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Vector2;
@@ -26,14 +27,18 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.items.FireballRefill;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
 import com.jlogicsoftware.kimeria.localization.Msg;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.ui.InteractionHighlight;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.physics.CollideBody;
 import com.jlogicsoftware.kimeria.world.Level;
 
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /** Port of Dart's {@code Player}. */
@@ -47,20 +52,32 @@ public class Player extends Actor<Player.State> implements CollideBody {
      */
     private enum RespawnPhase {NONE, DYING, RESETTING, ARRIVING}
 
-    private static final int FRAME_SIZE = SpriteSheets.PLAYER.width();
+    /** The Entity box: position and size, the spawn and room geometry and every hitbox are measured in it (D79). */
+    private static final int BOX_SIZE = 48;
+    /**
+     * The drawn frame (#343, D79): 64x64, feet on its bottom row, body centre on x {@link #FRAME_PIVOT_X}. It is drawn at
+     * {@code (position.x + pivotX() - FRAME_PIVOT_X, position.y + BOX_SIZE - FRAME_SIZE)} = (x - 8, y - 16): world Y grows
+     * down, so the frame's top is 16 px above the box and its bottom is the hitbox bottom, the floor line.
+     */
+    public static final int FRAME_SIZE = SpriteSheets.HERO_RIGHT.width();
+    public static final float FRAME_PIVOT_X = 31.5f;
     private static final float PICKUP_REACH = 3, PLACEMENT_GAP = 2;
     private static final float FIREBALL_SPAWN_OFFSET_Y = 3;
     private static final float HINT_PLAYER_OFFSET_Y = -6, HINT_TARGET_OFFSET_Y = 24, HINT_ZONE_HEIGHT_FRACTION = .45f;
     private static final float CAMERA_TARGET_TOLERANCE = .001f;
     private static final float MAX_PHYSICS_FRAME_SECONDS = .05f;
-    private record Clip(State state, int frames, int row, boolean loop) { }
+    private record Clip(State state, int frames, int row, int column, boolean loop) { }
+    /** Rows of hero-right.png and hero-left.png (tools/sprite_layouts.py HERO_CLIPS); ATTACKING, HIT, APPEARING and DISAPPEARING keep their old frame counts, which are gameplay timing. */
     private static final Clip[] CLIPS = {
-        new Clip(State.IDLE, 4, 9, true), new Clip(State.RUNNING, 4, 0, true),
-        new Clip(State.JUMPING, 1, 8, true), new Clip(State.FALLING, 1, 4, true),
-        new Clip(State.HIT, 2, 4, false), new Clip(State.ATTACKING, 7, 1, false),
-        new Clip(State.APPEARING, 4, 3, false), new Clip(State.DISAPPEARING, 4, 6, true),
-        new Clip(State.CLIMBING, 1, 3, true), new Clip(State.LADDER, 4, 8, true)
+        new Clip(State.IDLE, 4, 0, 0, true), new Clip(State.RUNNING, 6, 1, 0, true),
+        new Clip(State.JUMPING, 2, 2, 0, false), new Clip(State.FALLING, 2, 3, 0, true),
+        new Clip(State.ATTACKING, 7, 4, 0, false), new Clip(State.LOOK_UP, 1, 5, 0, false),
+        new Clip(State.LOOK_DOWN, 1, 5, 1, false), new Clip(State.CLIMBING, 1, 6, 0, true),
+        new Clip(State.HIT, 2, 7, 0, false), new Clip(State.APPEARING, 4, 8, 0, false),
+        new Clip(State.DISAPPEARING, 4, 9, 0, true)
     };
+    /** Rows of hero-ladder.png, a back view used by both facings: climbing up, climbing down, holding still. */
+    private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2, LADDER_CLIMB_FRAMES = 4;
 
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
@@ -136,9 +153,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public String collideWithTriggerId = "";
 
     private final Vector2 startingPosition = new Vector2();
+    /** Facing-left clips, drawn instead of mirroring so the sword stays in the right hand (#343, playtest F11). */
+    private final Map<State, Animation<TextureRegion>> leftAnimations = new EnumMap<>(State.class);
+    private Animation<TextureRegion> ladderUp, ladderDown, ladderHold;
 
     public Player(Assets assets, GameContext game, float x, float y) {
-        super(x, y, FRAME_SIZE, FRAME_SIZE, State.class);
+        super(x, y, BOX_SIZE, BOX_SIZE, State.class);
         this.game = game;
         startingPosition.set(x, y);
         viewHalfWidth = game.logicalResolution().x / 2f;
@@ -149,13 +169,28 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     private void loadAnimations(Assets assets) {
         for (Clip clip : CLIPS) {
-            putAnimation(clip.state(), assets.animation(SpriteSheets.PLAYER.path(), clip.frames(), STEP_TIME,
-                FRAME_SIZE, FRAME_SIZE, 0, FRAME_SIZE * clip.row()), clip.loop());
+            // The facing-right clips are the actor's animations (durations, finished checks); the left ones only draw.
+            putAnimation(clip.state(), clip(assets, SpriteSheets.HERO_RIGHT, clip), clip.loop());
+            Animation<TextureRegion> left = clip(assets, SpriteSheets.HERO_LEFT, clip);
+            left.setPlayMode(clip.loop() ? Animation.PlayMode.LOOP : Animation.PlayMode.NORMAL);
+            leftAnimations.put(clip.state(), left);
         }
-        putAnimation(State.LOOK_UP, new com.badlogic.gdx.graphics.g2d.Animation<>(STEP_TIME,
-            SpriteSheets.PLAYER_LOOK.frame(assets, 0, 0)), false);
-        putAnimation(State.LOOK_DOWN, new com.badlogic.gdx.graphics.g2d.Animation<>(STEP_TIME,
-            SpriteSheets.PLAYER_LOOK.frame(assets, 1, 0)), false);
+        ladderUp = ladderClip(assets, LADDER_UP_ROW, LADDER_CLIMB_FRAMES);
+        ladderDown = ladderClip(assets, LADDER_DOWN_ROW, LADDER_CLIMB_FRAMES);
+        ladderHold = ladderClip(assets, LADDER_HOLD_ROW, 1);
+        putAnimation(State.LADDER, ladderUp, true);
+    }
+
+    private static Animation<TextureRegion> clip(Assets assets, SpriteSheets.Sheet sheet, Clip clip) {
+        return assets.animation(sheet.path(), clip.frames(), STEP_TIME, FRAME_SIZE, FRAME_SIZE,
+            FRAME_SIZE * clip.column(), FRAME_SIZE * clip.row(), clip.frames());
+    }
+
+    private static Animation<TextureRegion> ladderClip(Assets assets, int row, int frames) {
+        Animation<TextureRegion> animation = assets.animation(SpriteSheets.HERO_LADDER.path(), frames, STEP_TIME,
+            FRAME_SIZE, FRAME_SIZE, 0, FRAME_SIZE * row, frames);
+        animation.setPlayMode(Animation.PlayMode.LOOP);
+        return animation;
     }
 
     public void setLevel(Level level) {
@@ -478,39 +513,77 @@ public class Player extends Actor<Player.State> implements CollideBody {
         carried = null;
     }
 
-    // Free/front palm, measured on the original 48x48 Player.png animation frames.
-    private static final int[][] IDLE_GRIP = {{31, 34}, {31, 35}, {31, 34}, {31, 32}};
-    private static final int[][] RUN_GRIP = {{29, 34}, {24, 33}, {32, 34}, {24, 33}};
-    private static final int[] JUMP_GRIP = {21, 17}, FALL_GRIP = {27, 32};
-    private static final int[][] ATTACK_GRIP = {{31, 34}, {22, 28}, {25, 31}, {24, 32}, {29, 32}, {28, 32}, {27, 32}};
+    // The near hand's palm in Entity-box coordinates (frame pixel minus (8, 16)), measured on hero-right.png and
+    // hero-left.png (#343). Facing right the near hand is the sword hand; facing left it is the empty left hand.
+    private static final int[] IDLE_GRIP_RIGHT = {31, 34}, RUN_GRIP_RIGHT = {29, 33}, JUMP_GRIP_RIGHT = {31, 22},
+        FALL_GRIP_RIGHT = {29, 22}, LADDER_GRIP = {28, 20};
+    private static final int[] IDLE_GRIP_LEFT = {16, 34}, RUN_GRIP_LEFT = {32, 33}, JUMP_GRIP_LEFT = {16, 22},
+        FALL_GRIP_LEFT = {17, 22}, ATTACK_GRIP_LEFT = {18, 34};
+    private static final int[][] ATTACK_GRIP_RIGHT = {{31, 22}, {31, 14}, {35, 22}, {33, 27}, {32, 32}, {30, 33}, {31, 34}};
 
-    /** Attachment follows the authored pose and the same body pivot as Actor.render. */
+    /** Attachment follows the authored pose of the facing being drawn. */
     public void heldObjectGrip(Vector2 out) {
         var animation = animations.get(current);
         int frame = animation == null ? 0 : animation.getKeyFrameIndex(stateTime);
         int[] grip = switch (current) {
-            case IDLE -> IDLE_GRIP[frame % IDLE_GRIP.length];
-            case LOOK_UP, LOOK_DOWN -> IDLE_GRIP[0];
-            case RUNNING -> RUN_GRIP[frame % RUN_GRIP.length];
-            case ATTACKING -> ATTACK_GRIP[frame % ATTACK_GRIP.length];
-            case JUMPING, LADDER -> JUMP_GRIP;
-            case FALLING, HIT -> FALL_GRIP;
-            default -> IDLE_GRIP[0];
+            case IDLE, LOOK_UP, LOOK_DOWN -> facingRight ? IDLE_GRIP_RIGHT : IDLE_GRIP_LEFT;
+            case RUNNING -> facingRight ? RUN_GRIP_RIGHT : RUN_GRIP_LEFT;
+            case ATTACKING -> facingRight ? ATTACK_GRIP_RIGHT[frame % ATTACK_GRIP_RIGHT.length]
+                : frame == ATTACK_GRIP_RIGHT.length - 1 ? IDLE_GRIP_LEFT : ATTACK_GRIP_LEFT;
+            case JUMPING -> facingRight ? JUMP_GRIP_RIGHT : JUMP_GRIP_LEFT;
+            case LADDER -> LADDER_GRIP;
+            case FALLING, HIT -> facingRight ? FALL_GRIP_RIGHT : FALL_GRIP_LEFT;
+            default -> facingRight ? IDLE_GRIP_RIGHT : IDLE_GRIP_LEFT;
         };
-        out.set(position.x + (facingRight ? grip[0] : 2 * pivotX() - grip[0]), position.y + grip[1]);
+        out.set(position.x + grip[0], position.y + grip[1]);
     }
 
-    /** Rows of empty pixels under the feet in each climbing frame (measured on Player.png), so the feet reach the body box. */
-    private static final float[] LADDER_FRAME_DROP = {5, 7, 5, 6};
+    /** World X of the drawn frame's left edge: the frame's body axis on the hitbox centre. */
+    public float frameX() { return position.x + pivotX() - FRAME_PIVOT_X; }
+
+    /** World Y of the drawn frame's top edge (Y grows down): the frame's bottom row lands on the box bottom, the floor line. */
+    public float frameY() { return position.y + size.y - FRAME_SIZE; }
+
+    /** The clip drawn this frame: the facing sheet's, or on a ladder the up, down or hold clip of the back view. */
+    private Animation<TextureRegion> drawnAnimation() {
+        if (current == State.LADDER) {
+            float direction = ladderDirection();
+            return direction < 0 ? ladderUp : direction > 0 ? ladderDown : ladderHold;
+        }
+        return facingRight ? animations.get(current) : leftAnimations.get(current);
+    }
+
+    /** The region drawn this frame. */
+    public TextureRegion currentFrame() {
+        Animation<TextureRegion> animation = drawnAnimation();
+        return animation == null ? null : animation.getKeyFrame(stateTime);
+    }
+
+    /** The sheet {@link #currentFrame()} comes from, for tests that measure its pixels. */
+    public SpriteSheets.Sheet currentSheet() {
+        return current == State.LADDER ? SpriteSheets.HERO_LADDER : facingRight ? SpriteSheets.HERO_RIGHT : SpriteSheets.HERO_LEFT;
+    }
+
+    /** The cell (column, row) of {@link #currentFrame()} in {@link #currentSheet()}. */
+    public void currentCell(GridPoint2 out) {
+        Animation<TextureRegion> animation = drawnAnimation();
+        int index = animation == null ? 0 : animation.getKeyFrameIndex(stateTime);
+        if (current == State.LADDER) {
+            out.set(index, animation == ladderUp ? LADDER_UP_ROW : animation == ladderDown ? LADDER_DOWN_ROW : LADDER_HOLD_ROW);
+            return;
+        }
+        Clip clip = clipOf(current);
+        out.set(clip.column() + index, clip.row());
+    }
+
+    private static Clip clipOf(State state) {
+        for (Clip clip : CLIPS) if (clip.state() == state) return clip;
+        throw new IllegalStateException("no clip for " + state);
+    }
 
     @Override public void render(Batch batch) {
-        if (current == State.LADDER) {
-            var animation = animations.get(current);
-            float drop = LADDER_FRAME_DROP[animation.getKeyFrameIndex(stateTime) % LADDER_FRAME_DROP.length];
-            position.y += drop;
-            super.render(batch);
-            position.y -= drop;
-        } else super.render(batch);
+        TextureRegion frame = currentFrame();
+        if (frame != null) batch.draw(frame, frameX(), frameY(), FRAME_SIZE, FRAME_SIZE);
         if (carried != null) carried.renderHeld(batch);
     }
     public int ammunition() { return level.rangedStock.count(); }

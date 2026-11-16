@@ -24,10 +24,6 @@ HUD_ICONS = ('coin', 'bat', 'mushroom', 'fireball')
 TOUCH_CONTROL_SIZES = {'disc': (64, 64), 'disc-down': (64, 64), 'base': (64, 64), 'knob': (32, 32), 'knob-down': (32, 32),
                        'jump': (64, 64), 'jump-down': (64, 64), 'pause': (64, 64), 'pause-down': (64, 64),
                        'skip': (64, 64), 'skip-down': (64, 64), 'cue': (8, 8)}
-PLAYER_FRAME_SIZE = 48
-PLAYER_IDLE_ROW = 9
-PLAYER_LOOK_FRAME_COUNT = 2
-PLAYER_HEAD_BOUNDS = (24, 23, 31, 31)
 WORLD_FRAMES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
 WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE),
                 'ladder': (LADDER_FRAME_SIZE * LADDER_FRAME_COUNT, LADDER_FRAME_SIZE),
@@ -35,7 +31,6 @@ WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, 
                 **{name: ITEM_STRIP_SIZE for name in ITEM_STRIPS}}
 # World objects retain transparent surroundings; alpha remains binary after export.
 OPAQUE_WORLD_IMAGES = set()
-PLAYER_LOOK_SIZE = (PLAYER_FRAME_SIZE * PLAYER_LOOK_FRAME_COUNT, PLAYER_FRAME_SIZE)
 # Forest trap sheets (#230): name -> (frame size, ordered frame names); horizontal strips, binary alpha.
 FOREST_TRAP_SHEETS = {
     'stump': ((16, 16), ('idle1', 'idle2', 'idle3', 'idle4', 'windup1', 'windup2', 'windup3', 'spent')),
@@ -93,3 +88,13 @@ DIALOGUE_SHEETS = {
 DIALOGUE_IMAGES = {name: (size[0] * len(frames), size[1]) for name, (size, frames) in DIALOGUE_SHEETS.items()}
 # Frames with no transparent pixel (bands with an opaque fill); the rest keep binary alpha.
 OPAQUE_DIALOGUE_IMAGES = {'window', 'plate', 'box', 'page', 'choice'}
+# The hero (#343, D79): hand-drawn grids in art/hero/hero.grid -> three sheets of 64x64 cells, one clip per row.
+# Facing sheets share one layout; the sword stays in Edgard's right hand, so the left sheet is drawn, not flipped at runtime.
+HERO_FRAME_SIZE = 64
+HERO_CLIPS = (('idle', 4), ('run', 6), ('jump', 2), ('fall', 2), ('attack', 7), ('look', 2), ('clamber', 1),
+              ('hit', 2), ('appear', 4), ('disappear', 4))
+HERO_LADDER_CLIPS = (('up', 4), ('down', 4), ('hold', 1))  # back view, used by both facings
+HERO_SHEETS = {'right': HERO_CLIPS, 'left': HERO_CLIPS, 'ladder': HERO_LADDER_CLIPS}
+HERO_FRAME_PREFIX = {'right': 'r', 'left': 'l', 'ladder': 'ladder'}  # frame names in the grid: r.idle1, l.run3, ladder.up2
+HERO_IMAGES = {name: (HERO_FRAME_SIZE * max(count for _, count in clips), HERO_FRAME_SIZE * len(clips))
+               for name, clips in HERO_SHEETS.items()}

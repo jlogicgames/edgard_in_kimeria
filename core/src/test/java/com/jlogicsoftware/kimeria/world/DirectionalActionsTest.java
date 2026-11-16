@@ -326,10 +326,10 @@ class DirectionalActionsTest {
         level.player.facingRight = false;
         torch.followHolder();
         assertEquals(16, torch.getX() + 5 - level.player.getX(), .001);
-        tap(Input.Keys.J); // Native jump frame's free palm is raised, far above the waist.
+        tap(Input.Keys.J); // The jump frame's near fist is raised, far above the waist (facing left: the empty left fist, #343 D79).
         assertEquals(Player.State.JUMPING, level.player.getState());
-        assertEquals(26, torch.getX() + 5 - level.player.getX(), .001);
-        assertEquals(17, torch.getY() + 8 - level.player.getY(), .001);
+        assertEquals(16, torch.getX() + 5 - level.player.getX(), .001);
+        assertEquals(22, torch.getY() + 8 - level.player.getY(), .001);
         // It is omitted from the world pass; Player.render owns its foreground pass.
         var batch = (com.badlogic.gdx.graphics.g2d.Batch) Proxy.newProxyInstance(
             com.badlogic.gdx.graphics.g2d.Batch.class.getClassLoader(),
