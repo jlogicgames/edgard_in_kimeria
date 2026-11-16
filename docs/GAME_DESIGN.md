@@ -166,6 +166,9 @@ the new mechanic creates new situations for using them.
 The torch was previously considered for Steppe. Wind is now selected there;
 light remains the proposed Fortress mechanic rather than a mechanic for every stage.
 
+Candidate visual effects per stage (plan, not built, [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396)): Swamp [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399), Steppe [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400), Fortress [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401);
+see [ART_DIRECTION.md](ART_DIRECTION.md#effects-from-pixelfx-plan-2026-11-16-396).
+
 ### Forest: linked route reconfiguration
 
 **Accepted direction (2026-10-26):** Forest's leading mechanic is changing the
@@ -622,6 +625,8 @@ below when the hero enters their awareness area (the hearing range).
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
 | Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
 
+Their warning, attack and death effects (plan, not built) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+
 ## Rooms, dangers and skill development
 
 A room should provide a short meaningful section for observation and execution.
@@ -667,7 +672,7 @@ to implement everything.
 | Light and creatures | A removable wall torch; throwing it to light the path; insects attracted to light; spiders repelled by it; eyes in darkness. |
 | Other items | Protection from one danger type; bottles with different effects; incendiary mixture. Inclusion and readable properties undecided. |
 | Movement and combat | Standing look up/down is implemented in #95; crouching remains open. Visible enemy windups; enemies reacting to the hero's arrival. Vertical ladders are already accepted above. |
-| Atmosphere and feedback | Parallax, fireflies, fog, landing/mechanism dust, moving bushes/vines and restrained camera shake. |
+| Atmosphere and feedback | Parallax, fireflies, fog, landing/mechanism dust, moving bushes/vines and restrained camera shake. Effect candidates from pixelfx: [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396). |
 
 This list does not establish implementation status: old checklist marks refer to
 different project versions. Check current behavior against [GAMEPLAY.md](GAMEPLAY.md)

@@ -159,6 +159,8 @@ wind-up; see ART_DIRECTION.md, GAME_DESIGN.md and D42. Also #224 (impaled-death 
 screens) and #229 (Bat and Mushroom). The first external playtest is done ([PLAYTEST_1.md](PLAYTEST_1.md)). #104 may
 also use an existing enemy. [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
 tracks third-party artwork inventory, schematic replacement and original redraws.
+**Effects plan (2026-11-16):** [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396) adapts effects from pixelfx; Forest objects [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397), Forest monsters [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) and
+shared effects [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402); see [ART_DIRECTION.md](ART_DIRECTION.md#effects-from-pixelfx-plan-2026-11-16-396).
 
 **Route variation (#187) is built** ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15), 2026-11-15): `forest-1` has since become three rooms (#104): first the unchanged #260 trap course and an appended 832 px `forest-1-route` room (the level checkpoint moved to its end; since #104 the checkpoint is in the guard room appended after it). One lever lowers a ladder and stops the lift that is the mandatory way, so the optional detour has a visible cost; a one-shot falling step guards the fireball refill (spend it and the refill is lost until Restart Level, author decision 2026-11-15). A Bat patrols the floor before the lift (sword, hop or fireball; zero charges suffice) and gives the refill a use at a full stock (author's request). Mastered required route 11.02 s (zero charges, sword), refill detour 8.03 s, whole room with the refill 18.32 s; all D26 states (lever any number of times, lift stopped at 53 moments, step intact or spent, hero on the floor or the slab) reach the checkpoint without Restart Level. The #104 guard room ([D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)) offers a fireball as another optional choice (built: a held charge shot from afar, with a refill on its roof). **Automated tests only** (`Forest1RouteTest`): the author has not played the room, the ledge tiles have not been seen in the running game and there is no novice playtest (#129-#131); #187 stays open for the author's play-through.
 
@@ -173,6 +175,7 @@ material for testing and development without requiring immediate total rebuildin
 - [ ] [#106](https://github.com/jlogicgames/edgard_in_kimeria/issues/106) Test a short route-preparation problem and a route-execution problem.
 - [ ] [#107](https://github.com/jlogicgames/edgard_in_kimeria/issues/107) Check retries after falls, disappearing supports and linked-object
   changes: the puzzle must always become solvable again.
+- [ ] [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) Pick Swamp effects (quicksand, water, gas) once #105 chooses the mechanic.
 
 **Output:** Swamp has its own kind of solution. Changing forest art and switch
 appearance alone does not count as a new mechanic.
@@ -187,6 +190,7 @@ appearance alone does not count as a new mechanic.
   second-jump use/reset and compatibility with carrying and ladders.
 - [ ] [#111](https://github.com/jlogicgames/edgard_in_kimeria/issues/111) Teach the second jump alone before combining it with wind. Check
   it is unavailable before the intended point and unnecessary in Forest/Swamp.
+- [ ] [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) Pick Steppe effects: readable wind and gusts, double-jump puff, arrow impacts.
 
 **Output:** wind changes decisions; double jump becomes part of Steppe and later
 Fortress authoring. Wall jump already exists and is not scheduled for redundant
@@ -201,6 +205,7 @@ routes until an explicit change is accepted.
 - [ ] [#115](https://github.com/jlogicgames/edgard_in_kimeria/issues/115) Add one meaningful creature response, such as repelling spiders or
   attracting insects. Choose one for the prototype; both are not required immediately.
 - [ ] [#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116) Combine light with mastered movement, combat or double jump.
+- [ ] [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) Pick Fortress effects: torch flame, light shafts, plate dust, cutters.
 
 **Output:** source placement changes the room situation. Darkness must not turn
 lethal hazards into unpredictable invisible hits.
@@ -371,6 +376,8 @@ additional links identify related larger tasks or dependencies. Issue creation
 does not mean completion.
 The more specific Forest, trap research and asset-provenance tasks #186–#189
 supplement these existing items rather than replacing their acceptance criteria.
+Three later checkboxes (2026-11-16) pick per-stage effects: #399 Swamp, #400 Steppe and
+#401 Fortress, all parts of the pixelfx effects plan #396.
 
 - Mark completion from concrete output, not a partial scaffold.
 - Clarify scope/dependencies before starting a block. Give new checkboxes separate
