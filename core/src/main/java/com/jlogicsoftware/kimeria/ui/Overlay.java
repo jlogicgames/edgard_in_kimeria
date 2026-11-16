@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntArray;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 
@@ -49,22 +50,27 @@ public class Overlay {
 
     private final BitmapFont titleFont;
     private final BitmapFont bodyFont;
-    private final BitmapFont dialogueFont;
     private final BitmapFont buttonFont;
     private final BitmapFont hintFont;
     private final Matrix4 textProjection;
     private final float logicalHeight;
     private final List<Runnable> textQueue = new ArrayList<>();
-    private static final int BLOCK_QUEUE_CAPACITY = 8;
+    /**
+     * Text blocks queued in one frame without the array growing. The dialogue screen queues 8 at most (two names, the line,
+     * the checklist, two choices, two markers); 16 leaves room for #341's line and #338's fairy without an allocation (D78).
+     */
+    private static final int BLOCK_QUEUE_CAPACITY = 16;
     /** Prebuilt text blocks ({@link #bodyBlock}) drawn after the queued text; queuing one allocates nothing. */
     private final Array<BitmapFontCache> blockQueue = new Array<>(false, BLOCK_QUEUE_CAPACITY);
+    /** Per queued block, how many glyphs to draw ({@link #ALL_GLYPHS} for all); a typewriter reveal draws a prefix. */
+    private final IntArray blockGlyphs = new IntArray(false, BLOCK_QUEUE_CAPACITY);
+    private static final int ALL_GLYPHS = -1;
     private final Matrix4 savedProjection = new Matrix4();
     private Vector2 lastMouse;
 
     public Overlay(Assets assets, float logicalWidth, float logicalHeight) {
         titleFont = assets.font(FontSizes.TITLE);
         bodyFont = assets.font(FontSizes.BODY);
-        dialogueFont = assets.font(FontSizes.DIALOGUE);
         buttonFont = assets.font(FontSizes.BUTTON);
         hintFont = assets.font(FontSizes.LABEL);
         this.logicalHeight = logicalHeight;
@@ -80,10 +86,16 @@ public class Overlay {
         return logicalHeight - fromTop;
     }
 
+    /** {@link #toTextY} for views that build their own {@link BitmapFontCache} blocks (the dialogue screen). */
+    public float textY(float fromTop) {
+        return toTextY(fromTop);
+    }
+
     /** Call once before any other method each frame the overlay is drawn. */
     public void beginFrame() {
         textQueue.clear();
         blockQueue.clear();
+        blockGlyphs.clear();
     }
 
     /** Call once, after every other call this frame, to actually draw the queued text. */
@@ -92,10 +104,15 @@ public class Overlay {
         savedProjection.set(batch.getProjectionMatrix());
         batch.setProjectionMatrix(textProjection);
         for (int i = 0; i < textQueue.size(); i++) textQueue.get(i).run();
-        for (int i = 0; i < blockQueue.size; i++) blockQueue.get(i).draw(batch);
+        for (int i = 0; i < blockQueue.size; i++) {
+            int glyphs = blockGlyphs.get(i);
+            if (glyphs == ALL_GLYPHS) blockQueue.get(i).draw(batch);
+            else blockQueue.get(i).draw(batch, 0, glyphs);
+        }
         batch.setProjectionMatrix(savedProjection);
         textQueue.clear();
         blockQueue.clear();
+        blockGlyphs.clear();
     }
 
     public void panel(SpriteBatch batch, float x, float y, float w, float h, float alpha) {
@@ -135,31 +152,17 @@ public class Overlay {
         if (alpha <= 0f) return;
         block.setAlphas(alpha);
         blockQueue.add(block);
+        blockGlyphs.add(ALL_GLYPHS);
     }
 
-    /** Centered text in the dialogue size (speaker names, checklist), same layout as {@link #body}. */
-    public void speaker(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth, Color color) {
-        GlyphLayout layout = new GlyphLayout(dialogueFont, text, color, wrapWidth, Align.center, true);
-        textQueue.add(() -> dialogueFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
-    }
-
-    /** Layout the complete line once so revealing letters cannot recenter text or move wrapped words. */
-    public void dialogue(SpriteBatch batch, String text, int visibleCharacters, float x, float yFromTop, float width, Color color, int alignment) {
-        GlyphLayout layout = new GlyphLayout(dialogueFont, text, color, width, alignment, true);
-        int source = 0, shown = 0;
-        outer: for (GlyphLayout.GlyphRun run : layout.runs) for (BitmapFont.Glyph glyph : run.glyphs) {
-            // Wrapping removes spaces at line boundaries; map rendered glyphs back to source positions.
-            while (source < text.length() && text.charAt(source) != glyph.id) source++;
-            if (source >= Math.min(text.length(), visibleCharacters)) break outer;
-            shown++;
-            source++;
-        }
-        int visibleGlyphs = shown;
-        textQueue.add(() -> {
-            var cache = dialogueFont.getCache();
-            cache.setText(layout, x, toTextY(yFromTop));
-            cache.draw(batch, 0, visibleGlyphs);
-        });
+    /**
+     * Queues the first {@code glyphs} glyphs of a prebuilt block as they are (colours untouched); allocation free. The dialogue
+     * screen builds its blocks when a line, a name or a label changes and reveals a line through the glyph count.
+     */
+    public void queueBlock(BitmapFontCache block, int glyphs) {
+        if (glyphs <= 0) return;
+        blockQueue.add(block);
+        blockGlyphs.add(glyphs);
     }
 
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */
@@ -187,12 +190,6 @@ public class Overlay {
             hintFont.draw(batch, layout, rightX - layout.width, toTextY(yFromTop));
             hintFont.setColor(Color.WHITE);
         });
-    }
-
-    /** Compact dialogue buttons share the menu's centered labels and two edge markers. */
-    public void choiceLabel(SpriteBatch batch, String label, float x, float y, float width, float height, boolean selected) {
-        buttonLabel(batch, dialogueFont, label, x, y, width, height, selected,
-            selected ? SELECTED_TEXT : IDLE_TEXT);
     }
 
     private void buttonLabel(SpriteBatch batch, BitmapFont font, String label, float x, float y,

@@ -1,0 +1,10 @@
+# Thread glint (#337, D78): a 5 px star that runs along the thread from the speaker to the listener as a line starts.
+size 5 5
+color C d8dee9
+color W ffffff
+frame glint
+..C..
+.CWC.
+CWWWC
+.CWC.
+..C..

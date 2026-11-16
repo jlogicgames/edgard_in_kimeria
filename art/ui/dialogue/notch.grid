@@ -1,0 +1,13 @@
+# Speech notch (#337, D78): a gilt pointer on the top edge of the text box, under the speaker's name plate.
+size 13 8
+color g d8c08a
+color I 0b0d18
+frame notch
+......g......
+.....ggg.....
+....ggggg....
+...gggIggg...
+..gggIIIggg..
+.gggIIIIIggg.
+gggIIIIIIIggg
+.IIIIIIIIIII.

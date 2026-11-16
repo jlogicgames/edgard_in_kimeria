@@ -23,6 +23,7 @@ import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
+import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.BossHud;
 import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
@@ -484,6 +485,9 @@ class AllocationBudgetTest {
     // #303: the per-frame sites outside the particle code. Measured in 3 runs each: every scenario is 0.0 to 1.6 B/frame (the FPS label 1.6, the hint 0.9, the outlines 0.1 to 0.7), so the ceiling is the same 8 B as the particle scenarios.
     /** Measured 0.0 B/frame in 3 runs, instant text off and on (#336): the held turn button, reveal, turn fade, cue and flush of a 50-page-plus story, instant text off and on. */
     static final double PAGED_INTRO_CEILING = 8;
+    /** The dialogue screen (D78, #337): measured in the tale (instant text off and on) and the pre-boss cases; see healerDialogueScreen. */
+    static final double DIALOGUE_SCREEN_CEILING = 8;
+    static final int DIALOGUE_SELECT_FRAMES = 60;
     static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, PASSIVE_OUTLINE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
@@ -589,6 +593,64 @@ class AllocationBudgetTest {
             assertTrue(sum[0] > 0);
             assertWithinBudget("HealerDialogue reveal, instant text " + (instant ? "on" : "off"), CHECKLIST_CEILING, bytes);
         }
+    }
+
+    /**
+     * The dialogue screen (D78, #337) frame after frame through a no-op batch with the real 18 px font metrics:
+     * {@code HealerDialogue.update}, {@code HealerDialogueView.render} and {@code Overlay.flushText}. The tale case runs
+     * the longest line (the fire gift) from its first letter to whole, with the glint, the speaker's bob and the
+     * continue prompt, instant text off and on; the pre-boss case shows the checklist and both choices with the selection
+     * moving every {@value #DIALOGUE_SELECT_FRAMES} frames. A new line rebuilds its text block, an event measured apart.
+     */
+    @Test void healerDialogueScreen() {
+        harness.font = new MetricsFont(FontSizes.DIALOGUE);
+        Level level = harness.roomOf("forest-1", 0);
+        ArtifactInventory inventory = new ArtifactInventory();
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360);
+            HealerDialogueView view = new HealerDialogueView(harness.assets());
+            HealerDialogue tale = HealerDialogue.tutorialStart();
+            tale.setInstantText(true);
+            while (tale.currentLine() != Msg.HEALER_TALE_FIREGIFT) tale.advance(Language.ENGLISH);
+            tale.setInstantText(instant);
+            double bytes = AllocationProbe.bytesPerFrame(i -> {
+                tale.update(STEP);
+                overlay.beginFrame();
+                view.render(batch, overlay, tale, Language.ENGLISH, level, inventory);
+                overlay.flushText(batch);
+            });
+            assertTrue(tale.fullyRevealed(Language.ENGLISH) && tale.openProgress() >= 1f, "the line must be whole by the end");
+            System.out.printf("ALLOCATION dialogue screen, tale line, instant text %s: %.1f B/frame%n", instant ? "on" : "off", bytes);
+            assertWithinBudget("dialogue screen, tale line, instant text " + (instant ? "on" : "off"), DIALOGUE_SCREEN_CEILING, bytes);
+        }
+        Overlay overlay = new Overlay(harness.assets(), 640, 360);
+        HealerDialogueView view = new HealerDialogueView(harness.assets());
+        HealerDialogue stop = new HealerDialogue(false, true, false, false, false);
+        stop.setInstantText(true);
+        for (int i = 0; i < 10 && !stop.choosing(); i++) stop.advance(Language.ENGLISH);
+        assertTrue(stop.choosing() && stop.choices().size() == 2, "the stop must offer its two choices");
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % DIALOGUE_SELECT_FRAMES == 0) stop.move(1);
+            stop.update(STEP);
+            overlay.beginFrame();
+            view.render(batch, overlay, stop, Language.ENGLISH, level, inventory);
+            overlay.flushText(batch);
+        });
+        System.out.printf("ALLOCATION dialogue screen, pre-boss checklist and choices: %.1f B/frame%n", bytes);
+        assertWithinBudget("dialogue screen, pre-boss checklist and choices", DIALOGUE_SCREEN_CEILING, bytes);
+        // The event: one line change (a new text block). Printed for the record, not a frame cost.
+        HealerDialogue[] lines = {HealerDialogue.tutorialStart()};
+        lines[0].setInstantText(true);
+        double perChange = AllocationProbe.bytesPerFrame(i -> {
+            if (lines[0].advance(Language.ENGLISH) == HealerDialogue.Choice.CONTINUE) {
+                lines[0] = HealerDialogue.tutorialStart();
+                lines[0].setInstantText(true);
+            }
+            overlay.beginFrame();
+            view.render(batch, overlay, lines[0], Language.ENGLISH, level, inventory);
+            overlay.flushText(batch);
+        });
+        System.out.printf("ALLOCATION dialogue screen, a new line every frame (the event, not gated): %.1f B/frame%n", perChange);
     }
 
     /**

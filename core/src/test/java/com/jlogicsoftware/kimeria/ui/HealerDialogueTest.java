@@ -84,6 +84,7 @@ class HealerDialogueTest {
     @Test void togglingMidLineCompletesOrResumesTheReveal() {
         Language language = Language.ENGLISH;
         HealerDialogue dialogue = HealerDialogue.afterVictory();
+        dialogue.update(HealerDialogue.OPEN_SECONDS); // the screen opens first (D78); letters start after it
         dialogue.update(0.1f);
         int partial = dialogue.visibleCharacters(language);
         assertTrue(partial > 0 && partial < dialogue.completeText(language).length());
@@ -109,6 +110,7 @@ class HealerDialogueTest {
     @Test void victoryReusesRevealRulesWithNoChoicesAndCompletesOnlyOnceInBothLanguages() {
         for (Language language : Language.values()) {
             HealerDialogue dialogue = HealerDialogue.afterVictory();
+            dialogue.update(HealerDialogue.OPEN_SECONDS); // the screen is open (D78); input before that is ignored
             assertTrue(dialogue.postVictory());
             for (Msg line : java.util.List.of(Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE)) {
                 assertEquals(line.t(language), dialogue.completeText(language));
@@ -236,6 +238,8 @@ class HealerDialogueTest {
         for (Language language : Language.values()) {
             HealerDialogue dialogue = new HealerDialogue(false, false, false, false, false);
             assertEquals("", dialogue.text(language));
+            dialogue.update(HealerDialogue.OPEN_SECONDS);
+            assertEquals("", dialogue.text(language), "no letter while the screen opens");
             dialogue.update(.1f);
             assertTrue(dialogue.text(language).length() > 0);
             assertTrue(dialogue.text(language).length() < dialogue.completeText(language).length());
@@ -252,6 +256,7 @@ class HealerDialogueTest {
 
     @Test void navigationCannotConfirmEvenWhenMirroredGamepadActionIsSimultaneous() {
         HealerDialogue dialogue = new HealerDialogue(false, true, true, false, false);
+        dialogue.update(HealerDialogue.OPEN_SECONDS); // the screen is open (D78); input before that is ignored
         toChoices(dialogue, Language.ENGLISH);
         assertNull(dialogue.interact(Language.ENGLISH, true, 1, true, -1));
         assertEquals(HealerDialogue.Choice.FIGHT, dialogue.choices().get(dialogue.selected()));
@@ -262,6 +267,7 @@ class HealerDialogueTest {
     @Test void fullRecipeKeepsIntroductionThenBrewsWithoutReturnOrUnempoweredFightChoice() {
         for (Language language : Language.values()) {
             HealerDialogue dialogue = new HealerDialogue(true, true, true, true, false);
+            dialogue.update(HealerDialogue.OPEN_SECONDS); // the screen is open (D78); input before that is ignored
             for (Msg message : java.util.List.of(Msg.HEALER_GREETING, Msg.EDGARD_REPLY)) {
                 assertEquals(message.t(language), dialogue.completeText(language));
                 assertEquals(message == Msg.EDGARD_REPLY, dialogue.edgardSpeaking());
@@ -285,6 +291,7 @@ class HealerDialogueTest {
 
     @Test void completingLastLineDoesNotActivateAChoiceWithTheSamePressOrTap() {
         HealerDialogue dialogue = new HealerDialogue(true, true, true, true, true);
+        dialogue.update(HealerDialogue.OPEN_SECONDS); // the screen is open (D78); input before that is ignored
         dialogue.advance(Language.ENGLISH); dialogue.advance(Language.ENGLISH); dialogue.advance(Language.ENGLISH);
         assertFalse(dialogue.choosing());
         assertNull(dialogue.interact(Language.ENGLISH, true, 0, true, 0));
@@ -345,39 +352,177 @@ class HealerDialogueTest {
                 return new com.badlogic.gdx.graphics.g2d.TextureRegion();
             }
         });
-        assertEquals(0, view.choiceAt(new Vector2(320, 260), 3));
-        assertEquals(1, view.choiceAt(new Vector2(320, 290), 3));
-        assertEquals(2, view.choiceAt(new Vector2(320, 320), 3));
-        assertEquals(-1, view.choiceAt(new Vector2(320, 320), 2));
-        assertEquals(-1, view.choiceAt(new Vector2(320, 150), 3));
-        assertEquals(-1, view.choiceAt(new Vector2(590, 18), 2));
+        // D78: the choices sit in the middle column, 26 px tall, 28 px apart, from y 84.
+        assertEquals(0, view.choiceAt(new Vector2(320, 90), 2));
+        assertEquals(1, view.choiceAt(new Vector2(320, 120), 2));
+        assertEquals(-1, view.choiceAt(new Vector2(320, 120), 1));
+        assertEquals(-1, view.choiceAt(new Vector2(320, 111), 2), "the 2 px gap between buttons hits nothing");
+        assertEquals(-1, view.choiceAt(new Vector2(320, 260), 2), "the text box is not a button");
+        assertEquals(-1, view.choiceAt(new Vector2(100, 90), 2), "the portrait window is not a button");
+        assertTrue(HealerDialogueView.CHOICE_H >= 26 && HealerDialogueView.MIDDLE_W >= 200, "touch targets stay large");
     }
 
-    @Test void speakerRegionsOverlapByOneThirdAndEveryLocalizedLineFitsTheBakedFontBox() {
-        var edgard = HealerDialogueView.dialogueRegion(true);
-        var healer = HealerDialogueView.dialogueRegion(false);
-        assertEquals(42f, edgard.x(), .001f);
-        assertEquals(42f + 556f / 3f, healer.x(), .001f);
-        assertEquals(556f * 2f / 3f, edgard.width(), .001f);
-        assertEquals(edgard.width(), healer.width(), .001f);
-        assertEquals(42f + 556f * 2f / 3f, edgard.x() + edgard.width(), .001f);
-        assertEquals(598f, healer.x() + healer.width(), .001f);
-        assertEquals(556f / 3f, edgard.x() + edgard.width() - healer.x(), .001f);
-
+    /**
+     * D78: every spoken line, in all five languages, fits the 556 px text box at the 18 px baked font in at most three
+     * lines, so one of the box's four lines stays spare for the first-death line (#341).
+     */
+    @Test void everyLocalizedLineFitsTheTextBoxWithOneLineSpare() {
+        assertEquals(556f, HealerDialogueView.TEXT_W, .001f);
+        assertEquals(4 * 18f, HealerDialogueView.TEXT_H, .001f);
         var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
         var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
-        int spokenLineCount = 0;
+        int spokenLineCount = 0, mostLines = 0;
         for (Language language : Language.values()) {
             for (Msg message : Msg.values()) {
                 if (!isSpokenDialogueLine(message)) continue;
                 spokenLineCount++;
-                boolean edgardSpeaking = message.name().startsWith("EDGARD_");
-                float width = edgardSpeaking ? edgard.width() : healer.width();
-                assertLineFits(font, message.t(language), width, language, message);
+                mostLines = Math.max(mostLines, assertLineFits(font, message.t(language), language, message));
             }
         }
         assertTrue(spokenLineCount > 0, "Typed healer/player dialogue keys must be covered");
+        assertEquals(3, mostLines, "the longest line (de HEALER_TALE_FIREGIFT) wraps to three lines");
         font.dispose();
+    }
+
+    /**
+     * The typewriter's glyph map covers every glyph of every spoken line in all five languages, laid out as the view lays it
+     * out: the whole line reveals at its last letter, none shows before the first. Its starting room is above the longest
+     * real line, so it never grows in play; a glyph that is not in the text fails loudly instead of hiding the rest.
+     */
+    @Test void theGlyphMapCoversEveryLineAndFailsLoudly() {
+        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
+        var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
+        com.badlogic.gdx.utils.IntArray map = new com.badlogic.gdx.utils.IntArray();
+        int longestGlyphs = 0, longestLetters = 0;
+        for (Language language : Language.values()) for (Msg message : Msg.values()) {
+            if (!isSpokenDialogueLine(message)) continue;
+            String text = message.t(language);
+            boolean edgard = message.name().startsWith("EDGARD_");
+            GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, HealerDialogueView.TEXT_W, edgard ? Align.left : Align.right, true);
+            HealerDialogueView.mapGlyphs(layout, text, map);
+            int glyphs = 0;
+            for (int r = 0; r < layout.runs.size; r++) glyphs += layout.runs.get(r).glyphs.size;
+            assertEquals(glyphs, map.size, language + " " + message + ": every glyph is mapped");
+            assertEquals(glyphs, HealerDialogueView.glyphsFor(map, text.length()), language + " " + message + ": the whole line reveals");
+            assertEquals(0, HealerDialogueView.glyphsFor(map, 0));
+            longestGlyphs = Math.max(longestGlyphs, glyphs);
+            longestLetters = Math.max(longestLetters, text.length());
+        }
+        assertEquals(257, longestLetters, "the longest spoken line (de HEALER_TALE_FIREGIFT); update LINE_GLYPHS' note if it changes");
+        assertTrue(HealerDialogueView.LINE_GLYPHS >= longestGlyphs, "the glyph map never grows in play: " + longestGlyphs);
+        GlyphLayout other = new GlyphLayout(font, "abc");
+        assertThrows(IllegalStateException.class, () -> HealerDialogueView.mapGlyphs(other, "xyz", map));
+        font.dispose();
+    }
+
+    /** The speaker follows the script line by line: the lit window, the notch and the text side all name the same speaker. */
+    @Test void theSpeakerFollowsEveryScript() {
+        assertSpeakers(HealerDialogue.tutorialStart(), "HEHHHHHE");
+        assertSpeakers(HealerDialogue.tutorialEnd(), "HEHH");
+        assertSpeakers(HealerDialogue.afterVictory(), "HEH");
+        assertSpeakers(new HealerDialogue(false, false, false, false, false), "HEHH");
+        assertSpeakers(new HealerDialogue(true, true, true, true, false), "HEH");
+        assertSpeakers(new HealerDialogue(true, true, true, true, false, true), "HHH");
+        assertSpeakers(new HealerDialogue(false, false, false, false, true), "HH");
+    }
+
+    private static void assertSpeakers(HealerDialogue dialogue, String expected) {
+        Language language = Language.ENGLISH;
+        dialogue.setInstantText(true);
+        for (int i = 0; i < expected.length(); i++) {
+            boolean edgard = expected.charAt(i) == 'E';
+            assertEquals(edgard, dialogue.edgardSpeaking(), "line " + i + " " + dialogue.currentLine());
+            assertEquals(edgard, dialogue.currentLine().name().startsWith("EDGARD_"), "line " + i + " key");
+            float notch = HealerDialogueView.speakerCentreX(dialogue.edgardSpeaking());
+            float window = edgard ? HealerDialogueView.EDGARD_WINDOW_X : HealerDialogueView.HEALER_WINDOW_X;
+            assertTrue(notch > window && notch < window + HealerDialogueView.WINDOW, "the notch points at the speaker, line " + i);
+            if (i + 1 < expected.length()) dialogue.advance(language);
+        }
+        Msg last = dialogue.currentLine();
+        dialogue.advance(language);
+        assertSame(last, dialogue.currentLine(), "the script has exactly " + expected.length() + " lines");
+    }
+
+    /** D78: the screen opens in at most 0.3 s, letters wait for it, and paused time (no update) does not open it. */
+    @Test void theScreenOpensInAtMostAThirdOfASecondBeforeAnyLetter() {
+        assertTrue(HealerDialogue.OPEN_SECONDS <= .3f);
+        HealerDialogue dialogue = HealerDialogue.tutorialStart();
+        assertEquals(0f, dialogue.openProgress());
+        dialogue.update(HealerDialogue.OPEN_SECONDS / 2f);
+        assertEquals(.5f, dialogue.openProgress(), .001f);
+        assertEquals(0, dialogue.visibleCharacters(Language.ENGLISH));
+        assertEquals(0f, dialogue.lineTime());
+        dialogue.update(HealerDialogue.OPEN_SECONDS); // overshoots the opening by half of it: that half reveals letters
+        assertEquals(1f, dialogue.openProgress(), .001f);
+        assertEquals(HealerDialogue.OPEN_SECONDS / 2f, dialogue.lineTime(), .001f);
+        assertTrue(dialogue.visibleCharacters(Language.ENGLISH) > 0);
+        dialogue.advance(Language.ENGLISH);
+        dialogue.advance(Language.ENGLISH);
+        assertEquals(0f, dialogue.lineTime(), "a new line restarts the glint");
+        assertEquals(1f, dialogue.openProgress(), .001f, "the screen opens once, not per line");
+    }
+
+    /**
+     * D78 review: the view draws no text until the screen is open, so presses and taps during the opening act on nothing:
+     * with instant text off a press does not skip the typewriter; with it on, quick presses do not advance unseen lines, and
+     * a tap on a choice does nothing either. After the opening the same input works as before.
+     */
+    @Test void inputDuringTheOpeningIsIgnored() {
+        for (boolean instant : new boolean[]{false, true}) {
+            Language language = Language.ENGLISH;
+            HealerDialogue tale = HealerDialogue.tutorialStart();
+            tale.setInstantText(instant);
+            tale.update(HealerDialogue.OPEN_SECONDS / 3f);
+            assertNull(tale.interact(language, true, 0, true, -1));
+            assertNull(tale.interact(language, true, 1, true, 0));
+            assertEquals(Msg.HEALER_TALE_ROAD, tale.currentLine(), "instant text " + instant + ": no line skipped unseen");
+            assertEquals(instant ? tale.completeText(language).length() : 0, tale.visibleCharacters(language),
+                "instant text " + instant + ": the typewriter is not skipped");
+            tale.update(HealerDialogue.OPEN_SECONDS);
+            assertTrue(tale.openProgress() >= 1f);
+            tale.interact(language, true, 0, true, -1);
+            if (!instant) {
+                assertTrue(tale.fullyRevealed(language), "after the opening the first press reveals the line");
+                tale.interact(language, true, 0, true, -1);
+            }
+            assertEquals(Msg.EDGARD_TALE_NO_TIME, tale.currentLine(), "after the opening a press advances");
+
+            HealerDialogue stop = new HealerDialogue(false, false, false, false, true);
+            stop.setInstantText(instant);
+            for (int i = 0; i < 10 && !stop.choosing(); i++) stop.advance(language);
+            assertTrue(stop.choosing());
+            assertNull(stop.interact(language, false, 0, true, 0), "no choice is taken before the screen is open");
+            stop.update(HealerDialogue.OPEN_SECONDS);
+            assertEquals(HealerDialogue.Choice.FIGHT, stop.interact(language, false, 0, true, 0));
+        }
+    }
+
+    /** The speaker's bob is 1 px at most and goes up (Y down: a lift is subtracted). */
+    @Test void theSpeakerBobsOnePixel() {
+        int lifted = 0;
+        for (int i = 0; i < 240; i++) {
+            int lift = HealerDialogueView.bobLift(i / 60f);
+            assertTrue(lift == 0 || lift == 1);
+            lifted += lift;
+        }
+        assertTrue(lifted > 60 && lifted < 180, "lifted about half the time: " + lifted);
+        assertTrue(HealerDialogueView.PORTRAIT_INSET - HealerDialogueView.BAND >= 1f, "1 px of air above the portrait for the lift");
+    }
+
+    /** The screen's parts stay on screen and apart (logical px, Y down). */
+    @Test void theScreenPartsDoNotOverlap() {
+        float choicesBottom = HealerDialogueView.CHOICE_Y + 2 * HealerDialogueView.CHOICE_STEP - (HealerDialogueView.CHOICE_STEP - HealerDialogueView.CHOICE_H);
+        assertTrue(choicesBottom < HealerDialogueView.THREAD_Y, "the choices clear the thread art");
+        assertTrue(HealerDialogueView.WINDOW_Y + HealerDialogueView.WINDOW < HealerDialogueView.PLATE_Y, "plates under the windows");
+        assertTrue(HealerDialogueView.THREAD_Y + HealerDialogueView.THREAD_H <= HealerDialogueView.PLATE_Y, "the thread hangs above the plates");
+        assertTrue(HealerDialogueView.PLATE_Y + HealerDialogueView.PLATE_H <= HealerDialogueView.NOTCH_Y, "the notch sits under the plate");
+        assertTrue(HealerDialogueView.TEXT_Y + HealerDialogueView.TEXT_H <= HealerDialogueView.BOX_Y + HealerDialogueView.BOX_H - 2f, "four lines inside the ink");
+        assertTrue(HealerDialogueView.HINT_Y + FontSizes.DIALOGUE <= HealerDialogueView.SCREEN_H - 6f, "the prompt clears the page border");
+        assertTrue(HealerDialogueView.CREST_Y >= 6f, "crests clear the page border");
+        assertEquals(HealerDialogueView.THREAD_Y0, HealerDialogueView.threadY(HealerDialogueView.THREAD_X0), .001f);
+        assertEquals(HealerDialogueView.THREAD_Y1, HealerDialogueView.threadY(HealerDialogueView.THREAD_X1), .001f);
+        assertTrue(HealerDialogueView.THREAD_X0 >= HealerDialogueView.EDGARD_WINDOW_X + HealerDialogueView.WINDOW, "the span starts at Edgard's window");
+        assertTrue(HealerDialogueView.THREAD_X1 <= HealerDialogueView.HEALER_WINDOW_X, "and ends at the healer's");
     }
 
     private static boolean isSpokenDialogueLine(Msg message) {
@@ -386,14 +531,18 @@ class HealerDialogueTest {
         return message.name().startsWith("HEALER_") || message.name().startsWith("EDGARD_");
     }
 
-    private static void assertLineFits(BitmapFont font, String text, float width, Language language, Msg message) {
+    private static int assertLineFits(BitmapFont font, String text, Language language, Msg message) {
         int alignment = message.name().startsWith("EDGARD_") ? Align.left : Align.right;
-        GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width,
-            alignment, true);
+        float width = HealerDialogueView.TEXT_W;
+        GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width, alignment, true);
         assertTrue(layout.width <= width + 1f,
-            () -> language + " " + message + " exceeds speaker width: " + layout.width + " > " + width);
-        assertTrue(layout.height <= HealerDialogueView.dialogueTextHeight(),
-            () -> language + " " + message + " exceeds dialogue height: " + layout.height + " > " + HealerDialogueView.dialogueTextHeight());
+            () -> language + " " + message + " exceeds the text box: " + layout.width + " > " + width);
+        int lines = layout.runs.size == 0 ? 0 : 1;
+        for (int i = 1; i < layout.runs.size; i++) if (layout.runs.get(i).y != layout.runs.get(i - 1).y) lines++;
+        int count = lines;
+        assertTrue(count <= HealerDialogueView.TEXT_LINES - 1,
+            () -> language + " " + message + " takes " + count + " lines; one of the " + HealerDialogueView.TEXT_LINES + " stays spare for #341");
+        return count;
     }
 
     private static final class MetricsTexture extends Texture {

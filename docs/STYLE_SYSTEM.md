@@ -33,8 +33,8 @@ unexplained death is a defect, a landmark per room and a calm beat after danger 
 | Rooms | D72 (D19, D26, D33-D40, D48) | [ROOMS.md](ROOMS.md), [ROOM_CARDS.md](ROOM_CARDS.md) | `RoomCardsTest`, `TrapTeachingRoomTest`, the route and replay tests | [kimeria-room-design](../.agents/skills/kimeria-room-design/SKILL.md), [kimeria-level-authoring](../.agents/skills/kimeria-level-authoring/SKILL.md) |
 | Effects | D73 (D62, D64, D65) | [ART_DIRECTION.md](ART_DIRECTION.md) "Environment effects", [DEVELOPMENT.md](DEVELOPMENT.md#particles-and-the-allocation-guard) | `AllocationBudgetTest`, `check_allocations.py` | [kimeria-particles](../.agents/skills/kimeria-particles/SKILL.md) |
 | Sound | author's aesthetic decision (2026-11-12), #313, D73 | [SOUND_DIRECTION.md](SOUND_DIRECTION.md) | `tools/test_generate_sounds.py`, `SoundPreloadTest` | [kimeria-sound](../.agents/skills/kimeria-sound/SKILL.md) |
-| Art | D21, D43, D55, D60; contrast tiers D76 | [ART_DIRECTION.md](ART_DIRECTION.md) (contrast: ["Contrast tiers"](ART_DIRECTION.md#contrast-tiers-d76-playtest-f15-344)), [PORTRAITS.md](PORTRAITS.md) | `check_sprite_art.py` (`validateSpriteArt`), `check_contrast.py` (`validateContrast`), `check_named_parameters.py` | [kimeria-art-direction](../.agents/skills/kimeria-art-direction/SKILL.md) |
-| Story shown | D66, #340 (the fire is the healer's gift) | [STORY.md](STORY.md), [HEALER.md](HEALER.md), TEXT_STYLE §2 | `HealerDialogueTest` | [kimeria-dialogue](../.agents/skills/kimeria-dialogue/SKILL.md) |
+| Art | D21, D43, D55, D60; contrast tiers D76; dialogue screen D78 | [ART_DIRECTION.md](ART_DIRECTION.md) (contrast: ["Contrast tiers"](ART_DIRECTION.md#contrast-tiers-d76-playtest-f15-344); ["Dialogue screen"](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337)), [PORTRAITS.md](PORTRAITS.md) | `check_sprite_art.py` (`validateSpriteArt`), `check_contrast.py` (`validateContrast`), `test_dialogue_frame_sprites.py` (CI tool tests), `check_named_parameters.py` | [kimeria-art-direction](../.agents/skills/kimeria-art-direction/SKILL.md) |
+| Story shown | D66, #340 (the fire is the healer's gift), D78 (the dialogue screen: the thread between the two portraits) | [STORY.md](STORY.md), [HEALER.md](HEALER.md), TEXT_STYLE §2 | `HealerDialogueTest` | [kimeria-dialogue](../.agents/skills/kimeria-dialogue/SKILL.md) |
 | Agent tooling | D75 | [.agents/skills/README.md](../.agents/skills/README.md), AGENTS.md | `check_skills.py` (`validateSkills`), `check_doc_gaps.py` (`validateDocGaps`) | this page |
 
 Three of them share one shape, and a new system copies it: **a decision, a reference document with a card or table,
@@ -55,6 +55,10 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
   pickup never reads as an enemy (playtest F19); `check_contrast.py` measures collectables over their halo.
 - **Hazard, effects and sound (principle 4).** The warning is the trap's or enemy's telegraph (D7, kimeria-combat for
   wind-ups); the consequence is a particle effect and a generated sound, with shake through `ScreenShake` only.
+- **Dialogue screen, art and text (D78).** The frame keeps the contrast tiers by analogy: what names the speaker or can be
+  chosen is loud, the ornament and the listener quiet, every element measured (`test_dialogue_frame_sprites.py`, layout
+  read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box in three of its four lines in five languages, one spare for the
+  first-death line (`HealerDialogueTest`).
 - **Text in rooms.** Zone messages are authored in the map (`Hint` objects, D33) and written under TEXT_STYLE's plain
   voice; a hint is never a trap's at-rest cue (D71).
 - **Text size and text style.** Pixel limits live in the layout tests (D50, D70); character budgets and voice in

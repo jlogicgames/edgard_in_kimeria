@@ -30,7 +30,7 @@ For new or revised illustrations, follow [art direction](../../../docs/ART_DIREC
 and the kimeria-art-direction skill. The author chose a richer, finer and more natural
 remake/remaster while preserving the original artist's style. Dialogue portraits use
 256×256 PNGs with up to 256 palette entries, full-image regions and explicit linear
-filtering in their existing 64×64 logical slots; HUD inventory icons use separate 128×128 / 256-entry images with linear filtering.
+filtering in the 158×158 logical slots of the dialogue screen (D78); HUD inventory icons use separate 128×128 / 256-entry images with linear filtering.
 World sprites keep native tiny pixel dimensions, at most 16 entries for new small
 items, binary alpha, no smoothing and nearest filtering; never reuse a HUD texture
 in the world. See the category contracts in the art-direction skill.

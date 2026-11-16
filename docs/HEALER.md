@@ -7,20 +7,24 @@ until the planned gameplay mechanics have been added and are tracked only in
 
 The same healer who narrates the opening meets Edgard before `forest-boss`. The meeting
 opens at the black midpoint of the canopy exit fade, before entering the boss room.
-The world, player input and gameplay effects stop. The dedicated black dialogue screen
-shows shared transparent PNG portraits: Edgard left, healer right. See
-[portrait assets and replacement instructions](PORTRAITS.md). The speaker's
-frame is highlighted; all five supported languages use the shared baked pixel font.
-In every pre/post-boss conversation Edgard's name and dialogue are white, with his
-lines aligned left. The healer's name and dialogue are green, with his lines aligned
-right. Inside the dialogue frame, Edgard's spoken text wraps within the left two thirds
-of the padded text area and the healer's within the right two thirds. These regions
-intentionally overlap in the middle third because only the current speaker's line is
-shown. This applies to first and repeat meetings, brewing/payment lines and the
-post-victory guide scene; the recipe checklist, choices and `Next >` prompt keep their
-own full-width layout. Complete-line layout stays fixed while letters reveal. A right-aligned,
-translated `Next >` prompt appears below the dialogue only after the line is fully
-revealed; it hides during typing and when choices are displayed.
+The world, player input and gameplay effects stop. The dialogue screen
+([D78](DECISIONS.md#d78-the-dialogue-is-a-codec-style-storybook-screen-playtest-f3f10-337-2026-11-16),
+#337, playtest F3/F10) is a storybook page: two carved walnut portrait windows face each other, Edgard
+left and the healer right, joined by the silver thread, with a name plate under each. See
+[portrait assets and replacement instructions](PORTRAITS.md) and the
+[frame art](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337). The speaker's window, crest and plate
+are lit and the portrait bobs 1 px; the listener's are dimmed. A glint runs along the thread from the
+speaker to the listener as each line starts. All five supported languages use the shared baked pixel font.
+Edgard's name and dialogue are white, with his lines aligned left; the healer's are green, aligned right.
+Every line is shown in one text box under the windows, 556 px wide and four lines tall; a notch on its top
+edge points at the speaker. Every current line fits in three lines in all five languages, so one line stays
+spare for the first-death line ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)). At
+the pre-boss stop the recipe checklist and the choices sit in the column between the windows. The screen
+opens in 0.3 s (the windows unfold, the box opens, the thread draws in) before the first letter.
+Complete-line layout stays fixed while letters reveal. A right-aligned, translated `Next >` prompt appears
+below the box only after the line is fully revealed; it hides during typing and when choices are displayed.
+This applies to first and repeat meetings, brewing/payment lines, the post-victory guide scene and the
+forest-0 tales.
 
 Localization expanded to EN/UK/PL/DE/BE in #85 / PR #150 on 2026-10-21. Text lives
 in the [UTF-8 catalogs](LOCALIZATION.md); dated EN/UK checks below retain their
@@ -224,6 +228,8 @@ The baked-font regression now derives its spoken-line set from every typed `HEAL
 Each catalog is measured against the view's computed two-thirds speaker region and the height
 available inside the frame. The general localization layout test no longer repeats the older
 full-width measurement.
+**Superseded 2026-11-16 by D78 (#337):** the speaker regions are gone; every line is measured against the one
+556 px text box and must take at most three of its four lines (`HealerDialogueTest`).
 
 A temporary LWJGL preview used the shared `KimeriaGame` renderer, `HealerDialogueView` and
 shipped baked font to capture 55 desktop frames at 1280×720 for the five catalogs. Each set
@@ -324,7 +330,7 @@ named controls: an eight-line **start tale** (the sixth line, `HEALER_TALE_THREA
 and a four-line **farewell** when the last room's `Checkpoint` is reached (praise, "you are
 ready" and a parting blessing), after which forest-1 loads as before. They are scripted
 (`HealerDialogue.Kind.TUTORIAL_START` / `TUTORIAL_END`): no checklist, no choices, one
-`CONTINUE`. Reveal/advance, portraits, speaker regions, `Next >` and Esc pause are the
+`CONTINUE`. Reveal/advance, the dialogue screen (D78), `Next >` and Esc pause are the
 ones described above; the game is in the HEALER state, so no level timer advances.
 
 Each opens at most once per run (consumed on opening) and is never repeated by death,

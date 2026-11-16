@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.ui.FontSizes;
+import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
@@ -112,24 +113,31 @@ class LocalizationLayoutTest {
         } finally { Gdx.files = previous; }
     }
 
-    /** D70: the 18 px ingredient checklist (360 px wide, top 48) stays above the dialogue frame (top 138) in every language and state. */
+    /**
+     * D70, D78: the 18 px ingredient checklist (the middle column between the portrait windows, from y 20) ends above the
+     * first choice, and every choice label with its two markers fits the middle column, in every language and state.
+     */
     @Test void ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize() {
         var previous = Gdx.files;
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
             BitmapFont dialogue = new MetricsFont(FontSizes.DIALOGUE);
-            var view = new com.jlogicsoftware.kimeria.ui.HealerDialogueView(new Assets() {
+            var view = new HealerDialogueView(new Assets() {
                 @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
             });
+            float column = HealerDialogueView.MIDDLE_W;
+            float top = HealerDialogueView.CHECKLIST_Y, choices = HealerDialogueView.CHOICE_Y;
+            float markers = 2 * (HealerDialogueView.MARKER_INSET + new GlyphLayout(dialogue, ">").width + 4);
             for (Language language : Language.values()) for (boolean paid : new boolean[]{false, true}) for (boolean done : new boolean[]{false, true}) {
                 String text = view.checklistText(language, paid, done, !done, done, done ? 3 : 0, 3);
-                GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, 360, Align.center, true);
-                assertTrue(layout.width <= 360 + 1, language.code() + " checklist width");
-                assertTrue(48 + layout.height <= 138 - 8, language.code() + " checklist stays above the frame: " + layout.height);
+                GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, column, Align.center, true);
+                assertTrue(layout.width <= column + 1, language.code() + " checklist width");
+                assertTrue(top + layout.height <= choices - 4, language.code() + " checklist stays above the choices: " + layout.height);
             }
             for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
-                assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= 560 - 48, language.code() + " " + message + " in the 560 px choice button");
+                assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= column - markers,
+                    language.code() + " " + message + " in the " + column + " px choice button");
         } finally { Gdx.files = previous; }
     }
 

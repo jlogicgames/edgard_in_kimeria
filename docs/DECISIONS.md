@@ -1785,3 +1785,59 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   measures 0.99. `TouchControlArtTest` pins it; `validateContrast` covers world sprites, not touch art.
 - **Not verified:** the look on desktop and web and the button on a real touch device
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+
+## D78. The dialogue is a codec-style storybook screen (playtest F3/F10, #337, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (Phase A mock-up, style A "walnut and gilt"; frontal portraits; a 1 px
+  speaker bob; the frame as authored art).
+- **Decision:** every healer conversation (the forest-0 start tale, the farewell, the pre-boss stop, the post-victory
+  guide and later the first-death line, #341) uses one screen: two 176 px portrait windows face each other (Edgard
+  left, the healer right; portraits 158 px, was 64), in a carved walnut frame with a gilt bead, crests and name plates,
+  joined by the silver thread of [#228](https://github.com/jlogicgames/edgard_in_kimeria/issues/228). The speaker's
+  window, crest and plate are lit and the portrait lifts 1 px for half of every 1.2 s; the listener's window, crest and
+  plate are at half brightness (the two brightest gilts capped lower, see Contrast) and the portrait is multiplied by (0.55, 0.58, 0.70). A gilt notch on the text box points at
+  the speaker; Edgard's text stays white and left-aligned, the healer's green and right-aligned. A glint runs along the
+  thread from the speaker to the listener as each line starts (0.8 s).
+- **Text box:** one box, 556 px of text, four lines of the 18 px dialogue font (D70). Every spoken line in all five
+  languages fits in three (the longest, de `HEALER_TALE_FIREGIFT`, 1459 px), so one line stays spare for the
+  first-death line. `HealerDialogueTest` holds both; the old two-thirds speaker regions (D41) are gone.
+- **Pre-boss stop:** the checklist and the choices move to the column between the windows (232 px); the longest choice
+  (uk, 173 px) fits with its markers in every language (`LocalizationLayoutTest`).
+- **Opening:** 0.3 s (`HealerDialogue.OPEN_SECONDS`): the windows unfold (0 to 0.15 s), the box opens (to 0.2 s), the
+  thread draws in from Edgard's wrist (0.1 to 0.3 s); the first letter comes after it. Instant text (D11) shows the line
+  whole once the frame is whole. Paused time does not advance it; gameplay timing is unchanged (the world is stopped
+  during a dialogue, as before). **Input waits for it** (review, 2026-11-16): `HealerDialogue.interact` takes no press,
+  tap or choice before the screen is open, since no text is drawn yet; a press would otherwise skip the typewriter
+  unseen, or with instant text advance lines nobody read. `HealerDialogueTest.inputDuringTheOpeningIsIgnored` covers both
+  settings.
+- **Art:** native pixel art, hand-drawn grids in `art/ui/dialogue/` exported by `tools/dialogue_frame_sprites.py` to
+  `assets/images/ui/dialogue-*.png` (nine-patches, at most 16 colours, `check_sprite_art.py` contracts). The gilt is a muted
+  `d8c08a`/`a8844a`, not the reserved gold `ffd23a` or honey `e2b25a`. The window opening is a dusk blue `3d4a68`: on the
+  first dark navy the portraits' dark contours vanished (healer outline 0.05 dimmed).
+- **Contrast (D76 by analogy):** `check_contrast.py` measures world sprites only, so `tools/test_dialogue_frame_sprites.py`
+  holds every element of the frame to the tiers, on the exported art, with the layout read from `HealerDialogueView`.
+  An element's loudness is its loudest colour against the ground it sits on (OKLab L; a window without its opening,
+  which is measured with the portraits):
+  - active, at least 0.28, what names the speaker or can be chosen: the speaker's bead 0.40 on the opening; the speaker's
+    window band, crest and plate 0.64 on the page (the plate's rule 0.58 on its fill); the notch 0.64; the choices, idle
+    0.29 on the page and 0.30 on the ink, selected 0.65; the thread's outline 0.43 to 0.44 on the screen it crosses;
+  - decor, at most 0.20, the ornament and the listener: the listener's bead 0.07 on the opening; the listener's window
+    band 0.17, crest 0.17 and plate 0.17 on the page (its rule 0.17 on its fill); the page border 0.17; the text box border
+    0.17 on the page and 0.18 on the ink. The first build had the dim sheets at plain half brightness, whose rosette
+    highlights measured 0.32: the two brightest dim gilts are capped at `44361e` and `3e3728` (0.18 at most from the page
+    and the ink; review, 2026-11-16);
+  - the dimmed portraits' outline 0.21 (Edgard) and 0.20 (healer) on the opening (at least 0.15), and visibly darker.
+  Text against its ground (WCAG): lines 19.4 (Edgard) and 11.6 (healer), listener names 7.9 and 5.0, the prompt 8.8.
+- **Allocation:** `AllocationBudgetTest.healerDialogueScreen`, two full runs: the tale line revealing 0.0 to 0.3 B/frame
+  with instant text off or on, the pre-boss checklist and choices 0.0 (ceiling 8). Text is drawn from blocks built when a line, the language
+  or a label changes (a new line every frame measured 16 B/frame, an event); the checklist's inventory and coin facts are
+  read once per dialogue, since the world is paused while it is open. The screen queues at most 8 text blocks a frame
+  (two names, the line, the checklist, two choices, two markers); `Overlay`'s block queue holds 16 before it grows, room
+  for the first-death line (#341) and the fairy (#338). Headroom was chosen over a failing check: libGDX `Array.clear`
+  keeps its storage, so an overflow would cost one growth, not one per frame.
+- **No new string.**
+- **Checked (2026-11-16, agent):** the web release build in headless Chromium at 1280 × 720, English, the forest-0 start
+  tale: the healer's first line, Edgard's answer (the lit side, notch and name colours swap) and the fire gift (three
+  lines, one spare). Those captures predate the dim-gilt cap above (only the listener's rosette highlights changed). **Not verified:** the desktop build, the other languages and the pre-boss stop in a running game
+  (font metrics only), the opening's timing on screen, and a touch device
+  ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).

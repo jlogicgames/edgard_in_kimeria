@@ -42,10 +42,17 @@ reload supports same-size texture changes; restart it after changing dimensions.
 
 ## Rendering and lifecycle
 
-The renderer fits the full canvas proportionally in the existing **64 × 64 logical-pixel
-slot**; the 88 × 88 frames, names and dialogue boxes keep their positions. At a 1280 × 720
-window the portrait occupies 128 × 128 physical pixels, using the finer source rather
-than enlarged 64-pixel blocks. Review both the master and the actual small dialogue frame.
+**Dialogue screen (D78, #337, 2026-11-16).** The renderer fits the full canvas proportionally
+in a **158 × 158 logical-pixel** slot inside each 176 px portrait window (64 × 64 in 88 px
+frames before); Edgard is on the left, the healer on the right, both facing the viewer
+(the healer is never mirrored: his staff stays in his right hand). At a 1280 × 720 window
+a portrait occupies 316 × 316 physical pixels from the 256 px source. The window opening is
+a dusk blue (`3d4a68`) so the portraits' dark contours read against it. The speaker is drawn
+as is and lifts 1 px for half of every 1.2 s; the listener is multiplied by (0.55, 0.58, 0.70)
+and keeps an outline of 0.21 (Edgard) and 0.20 (healer) against the opening, held by
+`tools/test_dialogue_frame_sprites.py`. The frame art, the thread and the layout are in
+[ART_DIRECTION.md](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337). Review a new
+portrait both as a master and in this screen, lit and dimmed.
 
 `HealerDialogueView` requests full-image regions from the shared game `Assets` cache
 with explicit **linear minification/magnification**. This smooths detailed illustrations
@@ -56,7 +63,7 @@ the texture, so use separate image paths when two consumers need different polic
 Normal alpha blending preserves transparent contours. Views do not own/dispose textures;
 `Assets.dispose` releases them with the other cached game assets. Speaker highlighting,
 white left-aligned Edgard text, green right-aligned healer text, reveal timing and
-continuation prompts use the existing dialogue model and layout.
+continuation prompts use the existing dialogue model; the layout is D78's.
 
 ## Provenance and style continuity
 

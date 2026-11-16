@@ -10,15 +10,19 @@ Read [healer behavior](../../../docs/HEALER.md),
 [decisions](../../../docs/DECISIONS.md) before changing a conversation.
 Paths below are relative to the repository root.
 
-Reuse `ui/HealerDialogue.java` and `ui/HealerDialogueView.java`: the same healer
-portrait, speaker highlight, typewriter and black NES-style screen serve both meetings.
+Reuse `ui/HealerDialogue.java` and `ui/HealerDialogueView.java`: one storybook screen (D78,
+[art direction, "Dialogue screen"](../../../docs/ART_DIRECTION.md)) serves every conversation: two portrait
+windows facing each other, the silver thread between them, the speaker lit and bobbing 1 px, the listener
+dimmed, one text box whose fourth line stays spare (`HealerDialogueTest`). Frame art is grids in
+`art/ui/dialogue/` exported by `tools/dialogue_frame_sprites.py`; text is drawn from prebuilt blocks, so a
+frame allocates nothing (`AllocationBudgetTest.healerDialogueScreen`).
 For artwork, follow [art direction](../../../docs/ART_DIRECTION.md) and the
 kimeria-art-direction skill: the remake/remaster preserves the original artist's
 style with richer color, less grain and more natural drawing. Dialogue portraits
 are `assets/images/portraits/edgard.png` and `healer.png` (256×256 transparent PNGs,
 up to 256 palette entries); see [replacement and review](../../../docs/PORTRAITS.md).
 Use full-image `Assets.region(path, TextureFilter.Linear)` through the shared cache,
-preserve aspect ratio inside the 64×64 logical slot and retain its single Y-down flip.
+preserve aspect ratio inside the 158×158 logical slot of each window and retain its single Y-down flip.
 Linear filtering applies to these detailed portraits; other textures retain their policy. Never
 embed portrait pixel matrices or dispose shared textures in the view. Verify pre-boss,
 paid and post-boss images in normal/paused scenes on desktop/web in all five languages;
