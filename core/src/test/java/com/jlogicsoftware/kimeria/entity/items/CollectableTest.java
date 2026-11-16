@@ -103,7 +103,7 @@ class CollectableTest {
         calls.clear();
         Collectable coin = new Collectable(assets, null, ignored -> {}, "Coin", 40, 200, 16, 16);
         coin.render(batch);
-        assertEquals(List.of("Items.png 40.0,200.0 16.0"), calls, "the coin draws no halo and leaves the blend alone: its white rim washes out against one (D76)");
+        assertEquals(List.of("coin.png 40.0,200.0 16.0"), calls, "the coin draws no halo and leaves the blend alone: its white rim washes out against one (D76)");
         assertTrue(Collectable.hasHalo(ItemType.BAT) && Collectable.hasHalo(ItemType.MUSHROOM) && !Collectable.hasHalo(ItemType.COIN));
     }
 
@@ -135,6 +135,7 @@ class CollectableTest {
     @Test void healerIngredientsAreBatAndMushroomOnTheirOwnTwoFrameSheets() {
         assertEquals(java.util.List.of(ItemType.COIN, ItemType.BAT, ItemType.MUSHROOM), java.util.List.of(ItemType.values()));
         assertEquals(ItemType.MUSHROOM, ItemType.fromMapName("Mushroom"));
+        assertEquals("images/objects/coin.png", ItemType.COIN.sheet);
         assertEquals("images/objects/bat.png", ItemType.BAT.sheet);
         assertEquals("images/objects/mushroom.png", ItemType.MUSHROOM.sheet);
         assertEquals("bat", ItemType.BAT.iconName());

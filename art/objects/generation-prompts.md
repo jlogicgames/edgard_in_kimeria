@@ -140,3 +140,15 @@ for an enemy (playtest F19). No image generator: it was drawn per pixel as a tex
 A corked glass jar tied with twine, one dried bat wing inside (finger bones, scalloped edge); frame 2 moves the
 glass glint. 9 colours plus transparency; ink `1b1226` and the violets of the old Bat item kept. Contrast at
 its one placement (forest-2 x448): outline 0.425 (D76 active floor 0.28).
+
+## Coin with the Kimeria sun (#350, 2026-11-16)
+
+`coin-pixel.png` (32×16, two registered 16×16 frames) replaces the original coin of `images/Items.png`
+(playtest F12: a coat of arms on the coins). It carries the sun of the Kimeria arms (STORY.md, "Kingdom heraldry").
+No image generator: it was drawn per pixel as a text grid and converted 1:1, then exported with
+`python3 tools/export_object_sprites.py` to `assets/images/objects/coin.png`. Frame 1 is the face: an 11×11 disc,
+white rim, a dark-gold and navy ring, and the sun on the gold field (a white sun disc with eight navy rays). Frame 2
+is the edge-on turn, the sun foreshortened to a column. The original's four colours are kept (`222034`, `c2b902`,
+`fff300`, `ffffff`) and so is its white rim, which carries the outline: 0.371 at forest-2 x336 in both frames, the same
+as the original (D76 active floor 0.28). The coin still draws no halo (`Collectable.hasHalo`). `Items.png` stays
+for the elixir icon of `BossHud`.

@@ -95,6 +95,18 @@ future implementation is tracked separately from this narrative decision.
   imply a new checkpoint, resurrection, healing or persistence mechanic. The silver-thread
   explanation of Edgard's returns (below) is narrative only and does not change this.
 
+### Kingdom heraldry — accepted 2026-11-16 ([#350](https://github.com/jlogicgames/edgard_in_kimeria/issues/350), playtest F12)
+
+The arms of Kimeria, the arms of King Rufardus the Wise: **a gold sun in splendour, eight rays, on a night-blue
+shield with a gold border, under a royal crown.** Gold on night blue is the kingdom's story in one picture: the sun
+that L'Kardina's curse put out, held against the eternal night.
+
+- **The sun alone** is the kingdom's mark on small things. Every coin of Kimeria carries it (the world coin and the
+  HUD coin), so the coins the healer asks for are the kingdom's own money.
+- **The full arms** (crown, shield and sun) belong to the king and his places: banners and shields in the fortress
+  ([#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116)) and Kimeria on the world map
+  ([#94](https://github.com/jlogicgames/edgard_in_kimeria/issues/94)).
+
 ### Not yet decided
 
 The healer's personal name, origin, motives, relationship to the boss, exact knowledge of
