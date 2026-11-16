@@ -47,7 +47,7 @@ class Forest1TrapsTest {
     private static final float STEP = 1f / 60f;
     // Authored geometry (docs/ROOMS.md, "forest-1 trap placement plan").
     static final float TUFT_X = 696, MOB_X = 864, PUFF_X = 944, LIP = 1024, PIT_END = 1168, LOG_X = 1088, LOG_END = 1120;
-    static final float CHECKPOINT_X = 1216; // x of the room exit (the old checkpoint spot, D66)
+    static final float CHECKPOINT_X = 1216; // x of the room exit (the old checkpoint spot, D67)
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TrapWarnings warnings = new TrapWarnings();
@@ -135,7 +135,7 @@ class Forest1TrapsTest {
     private float bodyRight(Level l) { Rectangle b = l.player.hitboxBounds(); return b.x + b.width; }
     private float bodyLeft(Level l) { return l.player.hitboxBounds().x; }
     private boolean dead(Level l) { return l.touchesDeadline(l.player.hitboxBounds()) || l.player.isGotHit(); }
-    /** Reached the end of the course: the room's exit, where the checkpoint stood before #187 appended the route room (D66). */
+    /** Reached the end of the course: the room's exit, where the checkpoint stood before #187 appended the route room (D67). */
     private boolean won(Level l) { return l.atRoomExit(); }
     private void settle(Level l, int frames) { for (int i = 0; i < frames; i++) frame(l); }
     /** Body right edge at {@code right}, standing on the floor, hero facing right. */

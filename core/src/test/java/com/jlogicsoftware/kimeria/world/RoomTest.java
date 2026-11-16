@@ -102,7 +102,7 @@ class RoomTest {
         }
     }
 
-    /** No shipped map is unmarked since #187 (D66) gave forest-1 two rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
+    /** No shipped map is unmarked since #187 (D67) gave forest-1 two rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
     @Test void aMapWithoutRoomMarkersIsOneRoomAtItsPlayerSpawn() {
         TiledMapData map = map("forest-1");
         map.objectGroups.get("Rooms").clear();
@@ -112,7 +112,7 @@ class RoomTest {
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNull(layout.rooms.get(0).exit());
     }
-    /** forest-1 (D66): the trap course keeps the Player spawn as its entrance and ends at a RoomExit; the route room is last and holds the Checkpoint. */
+    /** forest-1 (D67): the trap course keeps the Player spawn as its entrance and ends at a RoomExit; the route room is last and holds the Checkpoint. */
     @Test void forestOneIsTheTrapCourseThenTheRouteRoomWithTheCheckpoint() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);

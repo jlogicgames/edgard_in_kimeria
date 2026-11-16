@@ -420,9 +420,8 @@ player has to read the difference:
 - **Trigger.** The hero's approach, as for the other proximity traps: the hero entering the mushroom's zone
   starts it (the family of the thorn tuft, D42).
 - **Telegraph (D7).** Applies to both: after the trigger the cap swells for the shared warning
-  (`TrapWarnings`; today 0.8 s, 1.2 s with the longer-warnings assist, **a placeholder that was never playtested**:
-  the author wants shorter warnings in the spirit of Celeste and Katana Zero, to be tuned by playtest, see the note
-  in D7 and [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300)) and then bursts. Both mushrooms swell
+  (`TrapWarnings`; 0.8 s, 1.2 s with the longer-warnings assist; accepted after the first external playtest,
+  see the D7 update and D66) and then bursts. Both mushrooms swell
   the same way, so the puzzle is whether the burst kills. Only the warning scales with the assist, never movement
   or cooldowns.
 - **Idle animation (author, 2026-11-12).** The active mushrooms play a subtle idle animation (a small sway or

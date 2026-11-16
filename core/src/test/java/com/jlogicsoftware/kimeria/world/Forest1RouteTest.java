@@ -23,7 +23,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The forest-1 route room (#187, D66): one lever drives a ladder and a lift in opposite states. The lift is the
+ * The forest-1 route room (#187, D67): one lever drives a ladder and a lift in opposite states. The lift is the
  * mandatory way to the checkpoint ledge and runs from the start; pulling the lever stops it and lowers the ladder to
  * the optional ledge that holds a fireball refill. Ordinary keyboard input drives the hero through the real shipped
  * map. Times are author (mastered) measurements of a scripted hero, not novice playtests. Recipe: docs/ROOMS.md.
@@ -574,7 +574,7 @@ class Forest1RouteTest {
         alive(level);
     }
 
-    // ---- the one-shot step (D66): spending it loses the refill until Restart Level, never the exit ----
+    // ---- the one-shot step (D67): spending it loses the refill until Restart Level, never the exit ----
 
     private void reachTheSlab(Level level) { walkToLever(level); operate(level); walkToLadder(level); climb(level); }
 

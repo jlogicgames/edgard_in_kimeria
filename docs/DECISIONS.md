@@ -207,6 +207,10 @@ only in the menu backdrop.
   literals, a global change moves all existing traps and routes. Tuned by playtest, tracked by
   [#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300) (playtest plan:
   [PLAYTEST_WARNING_TIMES.md](PLAYTEST_WARNING_TIMES.md)); until then the current values stand.
+- **Update (author, 2026-11-15, [D66](#d66-first-external-playtest-closed-findings-and-direction-2026-11-15)):**
+  after the first external playtest the author closed #300. No tester reported a warning-time problem, so the
+  current values (0.8 s, 1.2 s with the assist; 1 s and 1.5 s for the falling platform) are the accepted values,
+  not placeholders. No comparison of values was run; a later change needs a new decision.
 
 ## D8. Main menu has Continue and New Game
 
@@ -837,7 +841,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   proposed distinct mechanic for Fortress. The current toggle ladder is a technical
   atom, not proof of a complete Forest prototype. Remote/throw activation and
   object-specific recovery rules remain open until prototyping resolves them. **One-shot
-  versus reversible (resolved by the author's decision of 2026-11-15, [D66](#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)):**
+  versus reversible (resolved by the author's decision of 2026-11-15, [D67](#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)):**
   linked levers stay reversible toggles; a one-shot support (an existing falling platform)
   guards an optional reward, so spending it loses the reward until Restart Level while the
   mandatory exit stays reachable.
@@ -1312,7 +1316,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 ## D58. forest-1 traps and a second RedMob: three traps and one enemy in the open stretch
 
 - **Status:** Implemented by [#260](https://github.com/jlogicgames/edgard_in_kimeria/issues/260), 2026-11-09, from the placement plan the author approved in ROOMS.md ("forest-1 trap placement plan"). Automated tests only: nobody has played the stretch, and the tuft, puffball and log art has not been seen on this map in the running game (the issue stays open for that check).
-- **Author's choices (2026-11-09):** three traps (not four); the full-route retry cost is accepted and `forest-1` is **not** split into rooms (still true for the trap course; D66 later appended a separate route room after it); the first trap is the **thorn tuft** (not the learned root); the **rotten log goes last**; **no exploding root** and no fireball choice in this level; and, changing the plan's recommendation, **an enemy is added in the trap stretch** so the level alternates things instead of keeping the RedMob alone.
+- **Author's choices (2026-11-09):** three traps (not four); the full-route retry cost is accepted and `forest-1` is **not** split into rooms (still true for the trap course; D67 later appended a separate route room after it); the first trap is the **thorn tuft** (not the learned root); the **rotten log goes last**; **no exploding root** and no fireball choice in this level; and, changing the plan's recommendation, **an enemy is added in the trap stretch** so the level alternates things instead of keeping the RedMob alone.
 - **Decision:** in the 620 px of empty floor between the wall (x 480-528) and the checkpoint (x 1216), one thing at a time, left to right (Y grows downward, floor top y 320): `ThornTuft` at x 696, y 304 (zone 80, trigger x 616-792; id 35); the second `RedMob` at x 864, y 288, `offNeg`/`offPos` 2 tiles (hero centre x 832-896, worst reach of body and whip x 816-912; id 38); `Puffball` at x 944, y 304 (`period` 4, `cloud` 1, `phase` 0; cloud x 940-964 with margin; id 36); a 144 px pit at x 1024-1168 with a `FallingPlatform` `skin=log` at x 1088, y 320 (id 37). The floor collision rectangle (id 3) is split (x 0-1024, new id 39 x 1168-1280), the three floor tile rows lose columns 64-72, with edge tiles at columns 63 and 73. `nextobjectid` 40. No hints (forest-1 has none, D33).
 - **Enemy choice:** a second **RedMob**, the only walking enemy the player already met in forest-1 (YellowMob and Bat are not in forest-0 or forest-1). Its telegraph is the whip's raised arm, 0.4 s of wind-up before the 0.2 s strike (`RedMob`); enemy wind-ups are **not** scaled by the longer-warnings assist (D11 applies to traps, `TrapWarnings`), so the assist changes nothing here. A sword hit or a stomp defeats it, so the required route needs **no ammunition** (D26). It is a ground blocker that chases only while the hero's centre is in its small range, so it never enters the tuft zone (24+ px clear), the cloud (28 px clear) or the log, and is beyond the pit (tested: the mob's worst reach is checked against every trap area).
 - **Telegraphs (D7, no hints):** the tuft bristles for 0.8 s (1.2 s with the assist) when the hero enters its zone, then stays lethal; the puffball cap swells 0.8 s (1.2 s) before a 1.0 s cloud; the log shows the shared falling-platform warning (1.0 s, 1.5 s with the assist), the same behaviour as the four platforms at x 96-224. A tuft or puffball needs no bypass rule (not explosive; the jump envelope and the cloud's calm window are the loader's checks).
@@ -1370,7 +1374,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Decisions (author, 2026-11-12):**
   - **Death:** the false honey fungus's spore cloud kills by an overlap of its rectangle with the hero's body box, as the bomb blast and the spore puffball (D46, D3). The honey fungus's burst has **no hitbox**.
   - **Trigger:** the hero entering the mushroom's zone, as for the other proximity traps (D44).
-  - **Telegraph (D7):** both swell for the shared warning before they burst; the warning is the only thing the longer-warnings assist scales. It is read from `TrapWarnings` (`DEFAULT_WARNING_SECONDS`, today 0.8 s, 1.2 s with the assist), **never a literal**. The current value is a placeholder that was never playtested; the author wants shorter warnings, tuned by playtest ([#300](https://github.com/jlogicgames/edgard_in_kimeria/issues/300)), so a changed value must flow through without touching these objects.
+  - **Telegraph (D7):** both swell for the shared warning before they burst; the warning is the only thing the longer-warnings assist scales. It is read from `TrapWarnings` (`DEFAULT_WARNING_SECONDS`, today 0.8 s, 1.2 s with the assist), **never a literal**. The value was accepted after the first external playtest (D7 update, D66); any later change must flow through without touching these objects.
   - **Idle animation:** both play a subtle deterministic idle (level clock, no randomness, independent of the hero), so a live mushroom can be told from a static one at a distance. Static look-alike scenery is [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299), built as the `lookalike` kind of `Decor`: a pale, ringed, motionless tuft of the same family, after the first design (a bracket fungus on a trunk) was dropped as too unlike the trap to create doubt (docs/ART_DIRECTION.md, "Static look-alike mushroom").
   - **Look:** real fungi (tufts of small caps on thin stems), not a fly agaric, not the healer's Mushroom pickup (D43), not `trap-puffball` (D46). Harmless: honey-brown caps, pale stems **with a ring**. Poisonous: sulphur-yellow to orange caps with a greenish tinge, olive gills, **no ring**. Spores: warm golden particles (harmless) against the lime cloud (lethal; the `trap-spores` palette).
   - **Objects:** two new Tiled types, `HoneyFungus` and `FalseHoneyFungus`, with one shared base class (proximity, swell, burst); not an extension of `Puffball` (a rhythmic timer trap, no proximity, no harmless variant).
@@ -1419,7 +1423,34 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Settings:** there is no violence or blood option; none was added.
 - **Not verified:** the look in the running game.
 
-## D66. forest-1 grows a route room: one lever, two supports in opposite states, and a one-shot step to the refill (#187, 2026-11-15)
+## D66. First external playtest closed: findings and direction (2026-11-15)
+
+- **Status:** Accepted by the author, 2026-11-15 (questionnaire after the first external playtest). Record and
+  analysis: [PLAYTEST_1.md](PLAYTEST_1.md).
+- **Playtest:** external players, web build, written feedback (22 remarks, F1-F22). Qualitative only: no room
+  times, death counts or per-trap data.
+- **Closed by the author:** #129 (first external observation, done), #130 and #131 (not measured; closed by
+  decision, the D19 hypotheses stay hypotheses), #300 (warning times accepted as they are, see the D7 update)
+  with its tooling issues #306, #307, #308 (not needed).
+- **Direction (each a tracked issue; the detailed rule gets its own D-number when it lands):**
+  - Readability first: minimum text size raised for everyone (#335); static intro pages (#336); instant-text
+    accessibility toggle, off by default (#342).
+  - A contrast rule with three tiers (background, decor, active); decor is muted. Readability wins over
+    deception: static look-alike mushrooms (#299) are muted, the real/false game stays between the active
+    mushrooms of D63 (#344). The exploding stump gets an idle tell (#346); a trap visibility audit and
+    visible-by-default rule (#348); falling-stone impact feedback (#347); the Bat ingredient is drawn as an item,
+    D43's rule unchanged (#345).
+  - The story is shown, not only told: codec-style dialogue screen with two facing portraits in a fairy-tale frame
+    (#337); a visible fairy helper replaces the interaction outline, D29/D30 eligibility unchanged (#338); the
+    fireball is the healer's gift (#340); a silver-thread pull on every death within today's death-to-control time
+    (D3) and a healer line on the first death only, reversing the #228 exclusion in STORY.md (#341); a text audit
+    against the magic-tale structure (Propp) before any rewrite (#339).
+  - A bigger hero with separate left/right frames and distinct ladder up/down; hitbox and physics unchanged (#343).
+  - Level design: every room gives something new (#351); tree branches as a forest mechanic candidate (#349);
+    a Primal Planet reference study (#352); a Kimeria coat of arms on coins, reused later (#350).
+- **Not verified:** none of the direction is implemented.
+
+## D67. forest-1 grows a route room: one lever, two supports in opposite states, and a one-shot step to the refill (#187, 2026-11-15)
 
 - **Status:** Implemented by [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)); automated tests only. The author has not played the room and the new ledge tiles have not been seen in the running game, so #187 stays open for that check. Refines D58 (see "Placement") and answers D31's open "one-shot versus reversible" question (see "One-shot").
 - **Placement (author decision, 2026-11-15):** `forest-1` becomes a multi-room level. Room 1, `forest-1-traps` (x 0-1280), is the #260 trap course with every object, id and measured behaviour unchanged: its `RoomStart` is the old `Player` spawn (32, 272) and a `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was, so a retry still restarts at x 32 (the course stays one room; D58's "not split" holds). Room 2, `forest-1-route` (x 1280-2112), is new and last; the `Checkpoint` (id 7) moved to its end. The #104 combination room is meant to be appended after room 2 (turn this room's Checkpoint into a `RoomExit` and add a third `Room`); nothing in room 2 blocks that. `forest-1` still has no hints (D33, `TutorialLevelTest`).
@@ -1436,4 +1467,5 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Tests changed, stated plainly (no tolerance relaxed):** `Forest1TrapsTest` now ends a run at the room exit instead of at the checkpoint touch (same x, same measured 12.27 s); `RoomTest.unmarkedMapKeepsItsOriginalPlayerEntrance` became `aMapWithoutRoomMarkersIsOneRoomAtItsPlayerSpawn` (no shipped map is unmarked any more, so the fallback is exercised by stripping the Rooms layer in memory) plus `forestOneIsTheTrapCourseThenTheRouteRoomWithTheCheckpoint`; `RoomCeilingTest` covers both forest-1 rooms and the 176 px exit-ledge head start; `AllocationBudgetTest` gains the route room's ceiling (measured), the riding scene and the isolated rider-path guard. New: `Forest1RouteTest` (census and links, the bat's patrol and clearances, the sword, hop and fireball answers, the refill's worth at stock 2 and 3, the bat's retry and secured kill, the optional route closed without the lever, the one-shot step and the closed pad, the required route and its time, the optional detour, the D26 sweeps with the step intact and spent, the refill-lost state reaching the exit, Restart Level, retry and a secured revisit, entrance).
 - **Author's answers (2026-11-15):** (1) append rooms to forest-1, the checkpoint moves to the new room; (2) the optional reward is a single-charge fireball refill; (3) no hints, existing art only; (4) "a one-shot element is needed, after which the reward is lost until Restart Level"; (5) "add a Bat to the route room: it harasses the hero and a fireball can shoot it down, so a second fireball becomes useful in this room too" (the bat patrols and blocks rather than chases, see above).
 - **Not verified:** the room and its pad and slab tiles in the running game, whether the step reads as a one-shot without a hint (it relies on the player having seen the room-1 platforms collapse), the feel of the lift wait (the lift is boardable from the floor while it is within 56 px of its bottom, windows of 2.2 s every 5.12 s, the first 1.5-3.7 s after room start; a hero who just misses one waits up to about 2.9 s) and of the bat fight. All of this is the author's play-through that #187 stays open for, plus the novice playtests (#129-#131).
-- **Details:** [ROOMS.md](ROOMS.md#forest-1-route-room-187-d66), [Forest design](GAME_DESIGN.md#forest-linked-route-reconfiguration), [D31](#d31-forest-uses-linked-route-reconfiguration), [D26](#d26-observe-plan-before-committing).
+- **Details:** [ROOMS.md](ROOMS.md#forest-1-route-room-187-d67), [Forest design](GAME_DESIGN.md#forest-linked-route-reconfiguration), [D31](#d31-forest-uses-linked-route-reconfiguration), [D26](#d26-observe-plan-before-committing).
+

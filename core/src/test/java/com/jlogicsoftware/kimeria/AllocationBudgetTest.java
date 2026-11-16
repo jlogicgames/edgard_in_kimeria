@@ -69,7 +69,7 @@ class AllocationBudgetTest {
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
     /** Measured 1,322.0 to 1,322.2 B/frame in 3 runs (#303: the index loops, the scratch rectangles and the HashSet removal; before: 2,441.8 to 2,441.9; step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_CEILING = 1450;
-    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D66, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
     /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
     static final double RIDER_PATH_CEILING = 8;

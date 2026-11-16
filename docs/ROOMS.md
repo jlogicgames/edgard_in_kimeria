@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has two rooms since #187 ([D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)) and the 832 px route room (`forest-1-route`, see "forest-1 route room" below); the checkpoint in the route room leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has two rooms since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)) and the 832 px route room (`forest-1-route`, see "forest-1 route room" below); the checkpoint in the route room leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -106,7 +106,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    (off, on, after `resetCurrentRoom`, new `Level` for Restart Level); assert the exact zone message (`zoneHint()`) at every standing x with the object in each state and after
    retry, and that the live label (`contextHint()`) shows beside it, never instead of it (#211); update `TutorialLevelTest` if new object types appear; measure the mastered route.
 6. **Record.** Mastered time (target about 20 s per room is a hypothesis; lever room is about 4.3 s after #209; after D48 ladder room about 8.8 s, wall room about 6.5 s, platform room about 11.9 s, stone room about 6.9 s (8.5 s setting the stump off from afar), traps room about 6.1 s) labelled an
-   *author check, not a novice playtest* (novice playtests are #129–#131), plus findings and what was not verified.
+   *author check, not a novice playtest* (external playtests: [PLAYTEST_1.md](PLAYTEST_1.md), later rounds #135, #140), plus findings and what was not verified.
 7. **Checklist:** `./gradlew :core:test --rerun-tasks`, `validateLocalization`, `validateNamedParameters`,
    `validateSpriteArt`, `python3 tools/test_*.py`, `check_tiled_links.py`, then look at the room in the game
    (`runDev`), and update ROADMAP, GAME_DESIGN (Forest status), DECISIONS and this section.
@@ -262,7 +262,7 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
 | `forest-1` / unmarked room (now room 1, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09) | 1280 px | 11.58 s (historical) | None | Within 20 s |
-| `forest-1` / `forest-1-route` (room 2, #187, D66, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
+| `forest-1` / `forest-1-route` (room 2, #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
 | `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -763,7 +763,7 @@ Preview with the placed objects and zones: [forest-1-trap-placement.png](referen
 
 ### What the level is
 
-Room 1 of 2 since #187 (D66): `forest-1-traps`, x 0-1280, whose `RoomStart` is the old `Player` spawn x 32 (so every retry restarts there, as when the level was one unmarked room) and whose `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was; the checkpoint moved to the route room appended after it. Before #187 this was the whole level, 80 x 23 tiles (1280 x 368 px). No hints (`TutorialLevelTest`). The first part is unchanged: lever 128, four `FallingPlatform`
+Room 1 of 2 since #187 (D67): `forest-1-traps`, x 0-1280, whose `RoomStart` is the old `Player` spawn x 32 (so every retry restarts there, as when the level was one unmarked room) and whose `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was; the checkpoint moved to the route room appended after it. Before #187 this was the whole level, 80 x 23 tiles (1280 x 368 px). No hints (`TutorialLevelTest`). The first part is unchanged: lever 128, four `FallingPlatform`
 (x 96-224), the first `RedMob` (patrol 192-512), escalators, lever 272 and the `Wall` at x 480-528, lever 544. The stretch **x 580-1200 was empty floor**
 and now holds, one thing at a time:
 
@@ -814,9 +814,9 @@ New `Forest1TrapsTest` (headless, the shipped map under an alias that drops only
 
 Three traps, not four; retry cost accepted, no split; the thorn tuft first; the log last; no exploding root and no fireball choice; an enemy in the stretch (second RedMob). Open for the running game (tracked by #260): the new sprites and pit edge tiles on this map, and how the 12-13 s retry loop feels.
 
-## forest-1 route room (#187, D66)
+## forest-1 route room (#187, D67)
 
-Built by [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) from the author's placement decision of 2026-11-15: the room is **appended** to `forest-1`, after the trap course, and the level `Checkpoint` moved to its end; a later combination room ([#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104)) is to follow it (turn this room's Checkpoint into a `RoomExit` and add a `Room`; not built here). The author then decided that a **one-shot element** is needed, after which the reward is lost until Restart Level (2026-11-15); the room was revised in a second commit of the same PR. Rule and rationale: [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and the new tiles have not been seen in the running game (tracked by #187, which stays open for that).
+Built by [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) from the author's placement decision of 2026-11-15: the room is **appended** to `forest-1`, after the trap course, and the level `Checkpoint` moved to its end; a later combination room ([#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104)) is to follow it (turn this room's Checkpoint into a `RoomExit` and add a `Room`; not built here). The author then decided that a **one-shot element** is needed, after which the reward is lost until Restart Level (2026-11-15); the room was revised in a second commit of the same PR. Rule and rationale: [D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and the new tiles have not been seen in the running game (tracked by #187, which stays open for that).
 
 Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen, `y = 320 - height` for something standing on the floor). `forest-1.tmx` is now 132 x 23 tiles (2112 x 368 px), a `Rooms` layer was added, `nextobjectid` is 60. SHA-256 before `e5160f69b69e254e71497609835a8047a993732be202f836f3b6c626e22642c3`, after `4070e78bd247525efa8e6c6f68cbded20a71d3e024539ca24a59427f54607519` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`).
 
@@ -882,7 +882,7 @@ First-learning time (the 60 s hypothesis) was not measured: that needs a person 
 
 ### Tests
 
-`Forest1RouteTest` (headless, real shipped map, 34 tests): census and positions, the one-lever opposite-states link and the lever's picture, lever reach, the pad closed without the lever (floor sweep, lift sweep), no stopped lift opening the exit ledge, the required route with zero charges and its time, three identical attempts, the optional detour with the step and its charge, the bat (patrol, clearances to the lever and the one-shot decision, sword, hop and fireball answers, the refill's worth at stock 2 and 3, retry and secured kill), the one-shot step (falls once, stays gone, pad closed), the refill-lost state reaching the exit, Restart Level, retry, a secured revisit, the lever sweeps and the step-state sweep, ledge drops, entrance. Changed existing tests (stated in D66): `Forest1TrapsTest` ends at the room exit, `RoomTest` (the unmarked-map test became an in-memory strip plus a two-room check), `RoomCeilingTest` (both rooms and a 160 px ledge head start), `AllocationBudgetTest` (new ceiling and a riding scene). No threshold was relaxed.
+`Forest1RouteTest` (headless, real shipped map, 34 tests): census and positions, the one-lever opposite-states link and the lever's picture, lever reach, the pad closed without the lever (floor sweep, lift sweep), no stopped lift opening the exit ledge, the required route with zero charges and its time, three identical attempts, the optional detour with the step and its charge, the bat (patrol, clearances to the lever and the one-shot decision, sword, hop and fireball answers, the refill's worth at stock 2 and 3, retry and secured kill), the one-shot step (falls once, stays gone, pad closed), the refill-lost state reaching the exit, Restart Level, retry, a secured revisit, the lever sweeps and the step-state sweep, ledge drops, entrance. Changed existing tests (stated in D67): `Forest1TrapsTest` ends at the room exit, `RoomTest` (the unmarked-map test became an in-memory strip plus a two-room check), `RoomCeilingTest` (both rooms and a 160 px ledge head start), `AllocationBudgetTest` (new ceiling and a riding scene). No threshold was relaxed.
 
 ## forest-2 trap placement plan (#261, D59)
 
