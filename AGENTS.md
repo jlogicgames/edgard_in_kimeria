@@ -74,6 +74,14 @@ A trap is visible before it fires (D71). Write its card in `docs/TRAPS.md` befor
 trap needs an always-drawn at-rest cue and a teaching room. `TrapCatalogTest` fails a spawned type with no catalogue
 row. Procedure: the `kimeria-trap-design` skill (`.agents/skills/`).
 
+## Player-facing text
+
+New or changed strings follow `docs/TEXT_STYLE.md`: tale voice for narration and the healer (no
+control names, no game jargon), plain imperative for hints, one label per concept from its glossary.
+Write EN first and get the author's approval before translating; then all five catalogs in the same
+change. `python3 tools/check_text_style.py` (also `./gradlew validateTextStyle`, part of `:core:check`)
+and `./gradlew :core:test` must pass. Never add an allowlist entry for new text: fix the text.
+
 ## Hints
 
 `Hud` draws two separate channels: the map-authored zone message (anchor at 45% down the zone,

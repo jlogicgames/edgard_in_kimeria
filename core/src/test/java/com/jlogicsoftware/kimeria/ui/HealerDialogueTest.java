@@ -77,20 +77,82 @@ class HealerDialogueTest {
         }
     }
 
-    @Test void tutorialTalesStayInFairyTaleRegisterWithoutNamingControlsOrMechanics() {
-        java.util.List<String> forbidden = java.util.List.of("lever", "button", "press", "jump", "key", "stick",
-            "hebel", "taste", "drück", "spring", "knopf", "dźwign", "przycisk", "naciśn", "skocz", "klawisz", "drążek",
-            "важіл", "кнопк", "натисн", "стрибк", "клавіш", "рычаг", "націсн", "скачк", "клавіш");
-        // #228: the thread explains the returns in images; no game terms in any language.
-        java.util.List<String> gameTerms = java.util.List.of("live", "lives", "respawn", "retry", "checkpoint", "restart",
-            "leben", "wiederbele", "neustart", "kontrollpunkt", "speicherpunkt", "życi", "odrodz", "ponown", "punkt kontrol", "restart",
-            "життя", "життів", "відродж", "повтор", "контрольн", "рестарт", "жыцц", "адраджэн", "паўтор", "кантрольн", "рэстарт");
-        for (Language language : Language.values()) for (HealerDialogue d : new HealerDialogue[]{
-            HealerDialogue.tutorialStart(), HealerDialogue.tutorialEnd()}) {
-            String text = "";
-            for (int i = 0; i < 12; i++) { text += d.completeText(language) + " "; if (d.advance(language) == null) d.advance(language); }
-            for (String word : forbidden) assertFalse(text.toLowerCase().contains(word.toLowerCase()), language + " names a control: " + word);
-            for (String word : gameTerms) assertFalse(text.toLowerCase().contains(word.toLowerCase()), language + " names a game term: " + word);
+    /** The repository root, found by walking up from the working directory (Gradle runs in core/, an IDE may not). */
+    private static java.nio.file.Path repositoryRoot() {
+        java.nio.file.Path p = java.nio.file.Path.of("").toAbsolutePath();
+        while (p != null && !java.nio.file.Files.isRegularFile(p.resolve("tools/text_style.json"))) p = p.getParent();
+        assertNotNull(p, "tools/text_style.json not found above " + java.nio.file.Path.of("").toAbsolutePath());
+        return p;
+    }
+
+    private static com.badlogic.gdx.utils.JsonValue register() throws java.io.IOException {
+        String json = java.nio.file.Files.readString(repositoryRoot().resolve("tools/text_style.json"));
+        return new com.badlogic.gdx.utils.JsonReader().parse(json).get("register");
+    }
+
+    /**
+     * The register groups of docs/TEXT_STYLE.md for one language, shared with tools/check_text_style.py (T2):
+     * stems match at the start of a word, words only as whole words, case-insensitive.
+     */
+    private static java.util.Map<String, java.util.List<java.util.regex.Pattern>> registerGroups(Language language) throws java.io.IOException {
+        var groups = new java.util.LinkedHashMap<String, java.util.List<java.util.regex.Pattern>>();
+        int flags = java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE
+            | java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
+        for (com.badlogic.gdx.utils.JsonValue group : register()) {
+            var patterns = new java.util.ArrayList<java.util.regex.Pattern>();
+            com.badlogic.gdx.utils.JsonValue terms = group.get(language.code());
+            if (terms != null) {
+                for (String stem : terms.get("stems").asStringArray())
+                    patterns.add(java.util.regex.Pattern.compile("(?<!\\w)" + java.util.regex.Pattern.quote(stem), flags));
+                for (String word : terms.get("words").asStringArray())
+                    patterns.add(java.util.regex.Pattern.compile("(?<!\\w)" + java.util.regex.Pattern.quote(word) + "(?!\\w)", flags));
+            }
+            groups.put(group.name, patterns);
+        }
+        return groups;
+    }
+
+    /**
+     * Every word this test pinned before the list moved to tools/text_style.json, with the group and language that
+     * must hold it: the data may grow, never drop or move them. (Before D74 each word was checked in every language as
+     * a substring; now each is checked in its own language, at a word start, so "alive" no longer trips "live".)
+     */
+    @Test void sharedRegisterListKeepsEveryWordThisTestUsedToPin() throws java.io.IOException {
+        String[][] floor = {
+            {"controls", "en", "lever", "button", "press", "jump", "key", "stick"},
+            {"controls", "de", "hebel", "taste", "drück", "spring", "knopf"},
+            {"controls", "pl", "dźwign", "przycisk", "naciśn", "skocz", "klawisz", "drążek"},
+            {"controls", "uk", "важіл", "кнопк", "натисн", "стрибк", "клавіш"},
+            {"controls", "be", "рычаг", "націсн", "скачк", "клавіш"},
+            {"lives", "en", "live", "lives"}, {"lives", "de", "leben"}, {"lives", "pl", "życi"},
+            {"lives", "uk", "життя", "життів"}, {"lives", "be", "жыцц"},
+            {"respawn", "en", "respawn"}, {"respawn", "de", "wiederbele"}, {"respawn", "pl", "odrodz"},
+            {"respawn", "uk", "відродж"}, {"respawn", "be", "адраджэн"},
+            {"retry", "en", "retry", "restart"}, {"retry", "de", "neustart"}, {"retry", "pl", "ponown", "restart"},
+            {"retry", "uk", "повтор", "рестарт"}, {"retry", "be", "паўтор", "рэстарт"},
+            {"checkpoint", "en", "checkpoint"}, {"checkpoint", "de", "kontrollpunkt", "speicherpunkt"},
+            {"checkpoint", "pl", "punkt kontrol"}, {"checkpoint", "uk", "контрольн"}, {"checkpoint", "be", "кантрольн"}};
+        com.badlogic.gdx.utils.JsonValue register = register();
+        for (String[] row : floor) {
+            com.badlogic.gdx.utils.JsonValue terms = register.get(row[0]) == null ? null : register.get(row[0]).get(row[1]);
+            assertNotNull(terms, "tools/text_style.json lost the group " + row[0] + "/" + row[1]);
+            var held = new java.util.HashSet<String>(java.util.List.of(terms.get("stems").asStringArray()));
+            held.addAll(java.util.List.of(terms.get("words").asStringArray()));
+            for (int i = 2; i < row.length; i++)
+                assertTrue(held.contains(row[i]), "tools/text_style.json lost " + row[i] + " from " + row[0] + "/" + row[1]);
+        }
+    }
+
+    @Test void tutorialTalesStayInFairyTaleRegisterWithoutNamingControlsOrMechanics() throws java.io.IOException {
+        // #228: the thread explains the returns in images; no control and no game term in any language.
+        for (Language language : Language.values()) {
+            var groups = registerGroups(language);
+            for (HealerDialogue d : new HealerDialogue[]{HealerDialogue.tutorialStart(), HealerDialogue.tutorialEnd()}) {
+                String text = "";
+                for (int i = 0; i < 12; i++) { text += d.completeText(language) + " "; if (d.advance(language) == null) d.advance(language); }
+                for (var group : groups.entrySet()) for (var pattern : group.getValue())
+                    assertFalse(pattern.matcher(text).find(), language + " names " + group.getKey() + ": " + pattern);
+            }
         }
     }
 

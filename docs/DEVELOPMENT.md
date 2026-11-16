@@ -517,6 +517,15 @@ per-particle colour that `ParticleEmitter` does not offer, and a fixed-array sys
 GC pauses or memory in the browser build (all allocation figures are from a desktop JVM), frame times and batch flushes
 ([#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284) covers batch flushes with the atlas work).
 
+### Player-facing text gate
+
+[TEXT_STYLE.md](TEXT_STYLE.md) (D74) is the rule; `tools/check_text_style.py` enforces the text part of it (glossary across
+languages, tale register, English hint budget, key names in hints, unused keys, glossary documented) with data in
+`tools/text_style.json`. `./gradlew validateTextStyle` runs it (after `testTextStyleGate`, its unit tests) and is a dependency of `:core:check`, the desktop jar and the web
+release build; `python3 -m unittest discover -s tools -p 'test_check_text_style.py'` runs its test. Pixel limits stay in
+`LocalizationLayoutTest` and `HealerDialogueTest`, which reads the same register word lists. Procedure:
+[`kimeria-game-text`](../.agents/skills/kimeria-game-text/SKILL.md) (Claude entry point: `.claude/skills/game-text/`).
+
 ### Vendored skills and the project skills
 
 - Six skills from [kyu-n/gdx-claude-skills](https://github.com/kyu-n/gdx-claude-skills) at commit `0887af2` (MIT) are vendored under

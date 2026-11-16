@@ -27,7 +27,8 @@ Keep stable typed keys in `localization/Msg.java` and text in every
 `assets/localization/*.json` catalog (currently EN/UK/PL/DE/BE); follow
 [localization](../../../docs/LOCALIZATION.md) for validation and font generation.
 Do not invent destinations, quests or character history; distinguish proposed wording
-from author-approved story.
+from author-approved story. Wording follows [text style](../../../docs/TEXT_STYLE.md) (tale voice, glossary);
+use the kimeria-game-text skill for any string change.
 Post-victory dialogue has no recipe checklist, payment or fight/return choices.
 
 The pre-boss first/repeat meeting flag belongs to the live `Level`. Read and mark it only
