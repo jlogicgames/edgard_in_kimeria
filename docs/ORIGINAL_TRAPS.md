@@ -178,7 +178,9 @@ for this document, not the original game's names.
 - **Telegraph:** none reported. TO CONFIRM: any delay before the blast.
 - **Correct response:** not stated; jump over it.
 - **Death presentation:** the oval blast of S11, with Edgard inside it; one life lost.
-- **Relation to the remake:** the original source of the bomb idea.
+- **Relation to the remake:** the original source of the bomb idea. The remake's `ExplosiveStump` (and
+  `ExplosiveRoot`) departs from the original here on purpose: it shows an idle tell at rest, an ember crack
+  and a smoke wisp, so it reads as a trap before it is touched (D71, playtest F18, #346).
 
 ### 6. Falling branch
 

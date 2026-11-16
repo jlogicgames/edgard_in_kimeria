@@ -10,7 +10,7 @@ the camera moves any cloud behind anything, plus the map's `Background` tile lay
 - body: mean OKLab distance between each opaque pixel and the background under it.
 - chroma: 90th percentile of the sprite's OKLab chroma.
 
-Rules (the worst placement and sky offset counts; glowing sprites at full and dimmest glow; the bush and the lever in every frame):
+Rules (the worst placement and sky offset counts; glowing sprites at full and dimmest glow; the bush, the lever and the stump and root idle loops in every frame):
 - active (hero, traps, enemies, collectables, mechanisms): outline >= ACTIVE_OUTLINE_MIN;
 - decor (`Decor` kinds, `HangingVine`): outline <= DECOR_OUTLINE_MAX, DECOR_BODY_MIN <= body <= DECOR_BODY_MAX,
   chroma <= DECOR_CHROMA_MAX, and no ink pixel (L < INK_L_MAX).
@@ -61,8 +61,8 @@ SPRITES = {
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'FallingBranch': ('active', 'objects/trap-branch.png', (0, 0, 32, 16), 1, 'top', FULL),
-    'ExplosiveStump': ('active', 'objects/trap-stump.png', (0, 0, 16, 16), 1, 'floor', FULL),
-    'ExplosiveRoot': ('active', 'objects/trap-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
+    'ExplosiveStump': ('active', 'objects/trap-stump.png', (0, 0, 16, 16), 4, 'floor', FULL),  # the idle tell loop (#346)
+    'ExplosiveRoot': ('active', 'objects/trap-root.png', (0, 0, 16, 24), 4, 'floor', FULL),  # the idle tell loop (#346)
     'Bomb': ('active', 'objects/trap-bomb.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'Puffball': ('active', 'objects/trap-puffball.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'ThornVine': ('active', 'objects/trap-vine.png', (0, 0, 24, 40), 1, 'top', FULL),

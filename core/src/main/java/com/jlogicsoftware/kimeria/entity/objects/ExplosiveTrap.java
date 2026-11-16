@@ -19,6 +19,9 @@ import java.util.function.Supplier;
  *
  * <p>Sequence, one way: {@code IDLE} -> {@code WINDUP} -> {@code BLAST} -> {@code SPENT}.
  * <ul>
+ *   <li><b>Idle tell</b> (D71, #346, playtest F18): at rest the trap loops {@value #IDLE_FRAMES} frames, an ember
+ *       pulsing in a crack and a thin smoke wisp, so it reads as a trap before it is touched. Looks only: the loop
+ *       changes no timing and starts at a phase taken from the object's x, so neighbours do not pulse in step.
  *   <li><b>Touch</b>: the hero's body overlapping the trigger box (the bomb's inner 10x13 box) ignites it.
  *   <li><b>Distance</b>: a fireball or a thrown stone that reaches the same rectangle ignites it
  *       ({@link #igniteFromAfar()}). It starts the very same wind-up with the full warning: a hit from afar
@@ -60,7 +63,12 @@ public class ExplosiveTrap extends Entity {
     private static final float TRIGGER_FRAME = 16f, TRIGGER_INSET_X = 3f, TRIGGER_INSET_TOP = 2f, TRIGGER_WIDTH = 10f, TRIGGER_HEIGHT = 13f;
     /** Author-tuned: how far UP (world Y is down) the blast frame is lifted; 48 = 64 px frame minus a 16 px stump (looks only). */
     private static final float BLAST_DRAW_OFFSET_Y = 48f;
-    private static final int FRAME_IDLE = 0, FRAME_WINDUP_FIRST = 1, WINDUP_FRAMES = 3, FRAME_SPENT = 4, BLAST_FRAMES = 12, SHEET_FRAMES = 5;
+    /** The idle tell (#346): four frames, a quarter second each, a one-second loop. */
+    public static final int IDLE_FRAMES = 4;
+    public static final float IDLE_FRAME_SECONDS = 0.25f;
+    private static final float IDLE_LOOP_SECONDS = IDLE_FRAMES * IDLE_FRAME_SECONDS, IDLE_PHASE_PER_PX = 0.0173f;
+    private static final int FRAME_WINDUP_FIRST = IDLE_FRAMES, WINDUP_FRAMES = 3, FRAME_SPENT = FRAME_WINDUP_FIRST + WINDUP_FRAMES,
+        BLAST_FRAMES = 12, SHEET_FRAMES = FRAME_SPENT + 1;
 
     private final Kind kind;
     private final TrapWarnings warnings;
@@ -69,7 +77,7 @@ public class ExplosiveTrap extends Entity {
     private final Runnable kill, onBlast;
     private final TextureRegion[] frames = new TextureRegion[SHEET_FRAMES], blast = new TextureRegion[BLAST_FRAMES];
     private Phase phase = Phase.IDLE;
-    private float phaseTime, warningTotal;
+    private float phaseTime, warningTotal, idleTime;
 
     public ExplosiveTrap(Assets assets, TrapWarnings warnings, Kind kind, float x, float y, float w, float h,
                          Supplier<Rectangle> heroBody, Runnable kill, Runnable onBlast) {
@@ -79,6 +87,7 @@ public class ExplosiveTrap extends Entity {
         this.heroBody = heroBody;
         this.kill = kill;
         this.onBlast = onBlast;
+        this.idleTime = (x * IDLE_PHASE_PER_PX) % IDLE_LOOP_SECONDS;
         for (int i = 0; i < frames.length; i++) frames[i] = kind.sheet.frame(assets, i, 0);
         for (int i = 0; i < blast.length; i++) blast[i] = SpriteSheets.TRAP_BLAST.frame(assets, i, 0);
     }
@@ -152,7 +161,10 @@ public class ExplosiveTrap extends Entity {
     public void update(float dt) {
         if (isRemoved()) return;
         Rectangle hero = heroBody.get();
-        if (phase == Phase.IDLE && hero != null && hero.overlaps(triggerBoxInto(triggerScratch))) ignite();
+        if (phase == Phase.IDLE) {
+            idleTime = (idleTime + dt) % IDLE_LOOP_SECONDS;
+            if (hero != null && hero.overlaps(triggerBoxInto(triggerScratch))) ignite();
+        }
         if (phase == Phase.WINDUP) {
             phaseTime += dt;
             if (phaseTime >= warningTotal) {
@@ -170,7 +182,7 @@ public class ExplosiveTrap extends Entity {
     /** Frame of the object's own sheet for the current phase. */
     public int frameIndex() {
         return switch (phase) {
-            case IDLE -> FRAME_IDLE;
+            case IDLE -> Math.min(IDLE_FRAMES - 1, (int) (idleTime / IDLE_FRAME_SECONDS));
             case WINDUP -> FRAME_WINDUP_FIRST + Math.min(WINDUP_FRAMES - 1, (int) (phaseTime / warningTotal * WINDUP_FRAMES));
             case BLAST, SPENT -> FRAME_SPENT;
         };

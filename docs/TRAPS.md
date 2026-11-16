@@ -91,8 +91,8 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, first trap of the stretch | D44, D58 |
 | `FallingBranch` | position | DISGUISED | pending #361 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
 | `FallingStone` | position | HIDDEN | pending #360 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
-| `ExplosiveStump` | touch | DISGUISED | pending #346 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
-| `ExplosiveRoot` | touch | DISGUISED | pending #346 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's wind-up language) | D47, D59 |
+| `ExplosiveStump` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
+| `ExplosiveRoot` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's idle tell and wind-up language) | D47, D59 |
 | `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-entry` (`forest-2`) | D7, D51, D60 |
 | `Puffball` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, seen swelling from afar | D46, D58 |
 | `ThornVine` | rhythm | VISIBLE | none needed | the motion is the warning | `forest-canopy` (`forest-2`), seen swinging from afar | D46, D59 |
@@ -222,12 +222,12 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Field | Value |
 | --- | --- |
 | Family | touch |
-| Visibility (D71) | DISGUISED |
-| At rest | frame `idle`: an ordinary stump (playtest F18) |
-| At-rest cue | pending [#346](https://github.com/jlogicgames/edgard_in_kimeria/issues/346): an idle tell (cracks, ember glow, smoke wisp) |
-| Reads from | touch only |
+| Visibility (D71) | VISIBLE (was DISGUISED, playtest F18; idle tell #346) |
+| At rest | the idle tell, frames `idle1`..`idle4` looped once per second: a glowing crack across the cut and the bark, a dull-red ember pulsing in it, and a 1 px smoke wisp rising from it. It moves, and no scenery has ember colours (decor is muted, D76) |
+| At-rest cue | none needed |
+| Reads from | ~320 px (it moves and carries an ember accent) |
 | Trigger | the hero body box overlaps the 10×13 trigger box; a fireball or thrown stone hitting it from afar |
-| Telegraph (D7) | cracks, smoke, glow (three wind-up frames) |
+| Telegraph (D7) | cracks, smoke, glow (three wind-up frames): the ember turns orange, then yellow, the wisp becomes puffs |
 | Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s |
 | Lethal part | one 64×64 blast square check at detonation |
 | Counter | jump it (the floor bypass validated at load); light it from afar and wait; walk through during the wind-up |
@@ -235,14 +235,15 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-stone` with `HINT_STONE_STUMP`; again in `forest-0-traps` |
 | Load checks | `ExplosiveTrap.problem` (floor bypass); mirrored in `check_tiled_links.py` |
 | Tests | `ExplosiveTrapsTest`, `StoneLessonTest`, `TrapsLessonTest` |
-| Art and sound | `trap-stump` 16×16, `blast` 32×32 at 2x; `explosion` sound |
+| Art and sound | `trap-stump` 16×16, eight frames (idle1..4, windup1..3, spent); active tier, idle outline 0.33 at worst (D76); `blast` 32×32 at 2x; `explosion` sound, no idle sound |
 | Decision | D47, D48 |
 
 ### Exploding root (`ExplosiveRoot`)
 
-Same rules as the exploding stump, 16×24, sheet `trap-root`, the same idle look and the same pending cue
-([#346](https://github.com/jlogicgames/edgard_in_kimeria/issues/346)). It has no teaching room of its own: it shares
-the stump's wind-up language, taught in `forest-0-stone`. Placed in `forest-2` `forest-canopy`. Decision D47, D59.
+Same rules as the exploding stump, 16×24, sheet `trap-root`, and the same idle tell (#346): VISIBLE, an ember crack
+down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per second; idle outline 0.35 at worst
+(D76). It has no teaching room of its own: it shares the stump's idle tell and wind-up language, taught in
+`forest-0-stone`. Placed in `forest-2` `forest-canopy`. Decision D47, D59.
 
 ### Bomb (`Bomb`)
 

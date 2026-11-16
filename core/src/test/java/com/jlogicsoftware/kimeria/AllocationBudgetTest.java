@@ -117,7 +117,7 @@ class AllocationBudgetTest {
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. #296: the same scenario now draws the {@code SporeCloud} (30 particles each); the measurement is in the report. Headless there is no GL context, so the shader layer is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles alone. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
     private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
-    private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64;
+    private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64, TRAP_TILE = 16, ROOT_HEIGHT = 24;
     private static final float HERO_WIDTH = 11, HERO_HEIGHT = 22;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
@@ -435,6 +435,19 @@ class AllocationBudgetTest {
         assertWithinBudget("idle fungus glow", HONEY_FUNGUS_CEILING, bytes);
     }
 
+    /** An untouched stump and root (#346): the idle tell loop's {@code update} and frame choice, and {@code render}, each frame. */
+    @Test void explosiveIdleTell() {
+        Rectangle far = new Rectangle(FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        Runnable none = () -> { };
+        ExplosiveTrap stump = new ExplosiveTrap(harness.assets(), harness.game().trapWarnings(), ExplosiveTrap.Kind.STUMP,
+            0, FUNGUS_FLOOR - TRAP_TILE, TRAP_TILE, TRAP_TILE, () -> far, none, none);
+        ExplosiveTrap root = new ExplosiveTrap(harness.assets(), harness.game().trapWarnings(), ExplosiveTrap.Kind.ROOT,
+            FUNGUS_SPACING, FUNGUS_FLOOR - ROOT_HEIGHT, TRAP_TILE, ROOT_HEIGHT, () -> far, none, none);
+        double bytes = AllocationProbe.bytesPerFrame(i -> { stump.update(STEP); root.update(STEP); stump.render(batch); root.render(batch); });
+        assertEquals(ExplosiveTrap.Phase.IDLE, stump.phase(), "the hero is far: the tell only");
+        assertWithinBudget("explosive idle tell", EXPLOSIVE_IDLE_TELL_CEILING, bytes);
+    }
+
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
     @Test void falseHoneyFungusCloudsInTurn() {
         FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
@@ -456,7 +469,7 @@ class AllocationBudgetTest {
     /** Measured 0.0 B/frame in 3 runs, instant text off and on (#336): the held turn button, reveal, turn fade, cue and flush of a 50-page-plus story, instant text off and on. */
     static final double PAGED_INTRO_CEILING = 8;
     static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
-    static final double STONE_FIREBALL_CEILING = 8, PASSIVE_OUTLINE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
+    static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, PASSIVE_OUTLINE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
     private static final int STONE_ROOM = 4, THROW_CYCLES = 30;
