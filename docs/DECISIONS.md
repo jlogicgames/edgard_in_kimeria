@@ -1528,3 +1528,35 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests:** D33/D49/D50 pinned geometry (24 px gap, two-line zone messages, label on screen) pass unchanged with the label at 16; no tolerance changes. Only the font-size literals in `LocalizationLayoutTest` and `HealerDialogueTest` change; the touch-label checks now measure the 13 px font explicitly. `HintLayoutTest` cap-height inputs moved from 29/15 to 10/7 (measured from the "H" glyph in the .fnt: the 20 px font gives 10, the 16 px font gives 7); its assertions are unchanged. `ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize` is new in `LocalizationLayoutTest`: the 18 px checklist (width at most 361 px, top 48 plus height at most 130) and the three choice labels in the 560 px button, in all five languages. `FontSizesTest` is new.
 - **Status:** Accepted by the author, 2026-11-16 (sizes; touch labels stay 13).
 - **Verified (web release build, 2026-11-16, English, 4:3 pane):** main menu and menu hint (one line), About (panel fits), intro pages (2 to 3 lines), healer dialogue at 18 px (2 and 3 line replies inside the frame, speaker names under the portraits), and the forest-0 zone message with the 16 px hero label (no overlap). Uk/de/be, the boss HUD, the touch layout, the desktop build and the three-choice dialogue were checked by font metrics only (`LocalizationLayoutTest`, `HealerDialogueTest`), not rendered in the game; the in-game checks are tracked in #368.
+
+## D71. Traps are visible before they fire (2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 ([#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348),
+  playtest F22 in [PLAYTEST_1.md](PLAYTEST_1.md)). The rule, vocabulary, card template, catalogue and cards live in
+  [TRAPS.md](TRAPS.md).
+- **Rule:** every trap is **VISIBLE** at rest by default: drawn before it can fire and reading as active, not as
+  scenery (a silhouette or colour no scenery shares, the "active" tier of
+  [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344), or motion). A trap may be **DISGUISED**
+  (drawn, but looks like scenery) or **HIDDEN** (nothing drawn at rest) only with all three: an always-drawn
+  **at-rest cue**, the same on every instance of the type (a hint text is not a cue); the
+  [D7](#d7-traps-are-deterministic-puzzle-elements) **telegraph** after the trigger, unchanged; and a first meeting in
+  a **teaching room**. A cue not drawn yet is allowed only as `pending #NNN` with an open issue.
+- **Audit (2026-11-16, from sprites and code, not frames of the running game):** VISIBLE: thorn tuft, bomb, spore
+  puffball, thorn vine, both honey fungi, the rotten-log skin. DISGUISED: falling branch, exploding stump and root
+  (cue: #346), plain falling platform (the author counts it as a trap, 2026-11-16). HIDDEN: thorn root (a brown
+  mound), falling stone (nothing until it falls; in `forest-2` its zone starts 16 px before the column and no hint
+  teaches it there). Each pending cue has an issue: root #359, stone #360 (a "loose overhang":
+  cracked lip and grit trickle; the author chose the cue alone, no wider zone, then measure), branch
+  #361, platform #362.
+- **Consistent with earlier decisions:** D42's default ("hidden-trigger traps stay deterministic but get a visible
+  cue") becomes the rule; D63's look-alike mushrooms stay allowed, because both glow as active and the puzzle is which
+  one kills, not whether something is there. Supporting input: the #352 reference study ([GAME_DESIGN.md, "Primal Planet level study"](GAME_DESIGN.md#primal-planet-level-study-playtest-f16-352)).
+- **New visible traps chosen for later work (cards first, nothing built):** trip-line deadfall (#363), creeping
+  bramble (#364), hanging hive (#365). Candidate: an ember fissure (#366). Rejected: a snap burr (too close to the
+  carnivorous plant D42 rejected).
+- **Enforcement:** `TrapCatalogTest` (`:core:test`) reads the spawn switch of `world/Level.java` and the catalogue of
+  TRAPS.md: a spawned type with no row, a stale row, an empty column, an unknown visibility or family word, a missing `###` card heading, a
+  DISGUISED or HIDDEN row without a cue or `pending #NNN`, or one with no teaching room fails. The procedure for agents
+  is the `kimeria-trap-design` skill; AGENTS.md has a "Traps" section.
+- **Not verified:** the at-rest judgements and the ~320 px read distance (camera centred on the hero, from the code)
+  were not checked on frames of the running game; the gate checks what the catalogue declares, not the art. In-game check: #368.

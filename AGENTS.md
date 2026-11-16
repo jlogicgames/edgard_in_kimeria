@@ -68,6 +68,12 @@ When closing such an issue, remove the doc note in the same PR.
   project's compact style (several constants on one line, short methods) and commit only the
   real change.
 
+## Traps
+
+A trap is visible before it fires (D71). Write its card in `docs/TRAPS.md` before the code; a disguised or hidden
+trap needs an always-drawn at-rest cue and a teaching room. `TrapCatalogTest` fails a spawned type with no catalogue
+row. Procedure: the `kimeria-trap-design` skill (`.agents/skills/`).
+
 ## Hints
 
 `Hud` draws two separate channels: the map-authored zone message (anchor at 45% down the zone,
