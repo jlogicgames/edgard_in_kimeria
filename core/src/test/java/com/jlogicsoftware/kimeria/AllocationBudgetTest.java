@@ -22,6 +22,7 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.ui.BossHud;
+import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.Hud;
@@ -472,7 +473,7 @@ class AllocationBudgetTest {
     }
 
     private Hud hudWithMetricsFont() {
-        harness.font = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
+        harness.font = new MetricsFont(FontSizes.LABEL);
         return new Hud(harness.assets(), harness.game(), 640, 360);
     }
 

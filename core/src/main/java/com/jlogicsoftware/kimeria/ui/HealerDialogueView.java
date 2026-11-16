@@ -24,6 +24,7 @@ public final class HealerDialogueView {
     private static final float TEXT_INNER_Y = FRAME_Y + TEXT_VERTICAL_INSET;
     private static final float TEXT_INNER_HEIGHT = FRAME_HEIGHT - TEXT_VERTICAL_INSET * 2f;
     private static final float CHECKLIST_X = 320f, CHECKLIST_Y = 48f, CHECKLIST_WIDTH = 360f;
+    private static final float EDGARD_NAME_X = 72f, HEALER_NAME_X = 568f, NAME_Y = 108f, NAME_WIDTH = 100f;
     private final TextureRegion edgard, healer;
 
     record DialogueRegion(float x, float width) {}
@@ -53,13 +54,13 @@ public final class HealerDialogueView {
         frame(batch, 524, 32, 88, 88, !dialogue.edgardSpeaking());
         portrait(batch, edgard, 40, 40);
         portrait(batch, healer, 536, 40);
-        overlay.body(batch, Msg.EDGARD.t(lang), 72, 108, 100, Color.WHITE);
-        overlay.body(batch, Msg.HEALER.t(lang), 568, 108, 100, HEALER_GREEN);
+        overlay.speaker(batch, Msg.EDGARD.t(lang), EDGARD_NAME_X, NAME_Y, NAME_WIDTH, Color.WHITE);
+        overlay.speaker(batch, Msg.HEALER.t(lang), HEALER_NAME_X, NAME_Y, NAME_WIDTH, HEALER_GREEN);
         String checklist = checklistText(lang, dialogue.paid(), inventory.hasIngredient(level.name, ItemType.BAT),
             inventory.hasIngredient(level.name, ItemType.MUSHROOM),
             level.forestCoinTotal() > 0 && level.forestCoinsSecured() == level.forestCoinTotal(),
             level.forestCoinsSecured(), level.forestCoinTotal());
-        if (dialogue.showsChecklist()) overlay.body(batch, checklist, CHECKLIST_X, CHECKLIST_Y, CHECKLIST_WIDTH);
+        if (dialogue.showsChecklist()) overlay.speaker(batch, checklist, CHECKLIST_X, CHECKLIST_Y, CHECKLIST_WIDTH, Color.WHITE);
         frame(batch, FRAME_X, FRAME_Y, FRAME_WIDTH, FRAME_HEIGHT, false);
         Color speakerColor = dialogue.edgardSpeaking() ? Color.WHITE : HEALER_GREEN;
         int alignment = dialogue.edgardSpeaking() ? Align.left : Align.right;

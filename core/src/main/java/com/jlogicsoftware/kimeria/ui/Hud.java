@@ -29,12 +29,10 @@ public class Hud {
     public static final float FPS_RIGHT_MARGIN = 6, FPS_TOP_MARGIN = 6;
     private static final float FPS_STOCK_GAP = 12, ICON_TEXT_GAP = 8, INVENTORY_GAP = 8, INVENTORY_SECTION_GAP = 16;
     private static final String FPS_WIDTH_SAMPLE = "999 FPS";
-    private static final int COUNT_FONT_SIZE = 20, HINT_FONT_SIZE = 13;
     /**
-     * #254 (D50): the zone message is 20 px, 400 px wide; the label above the hero 13 px, 200 px wide (D49 had 39/608
-     * and 20/300). Public so the layout tests measure exactly what is drawn.
+     * #254 (D50): the zone message is 20 px, 400 px wide; the label above the hero 200 px wide (D49 had 39/608
+     * and 20/300); sizes come from {@link FontSizes} (D70: label 16). Public so the layout tests measure what is drawn.
      */
-    public static final int ZONE_FONT_SIZE = 20, CONTEXT_FONT_SIZE = 13;
     public static final float ZONE_WIDTH = 400, CONTEXT_WIDTH = 200;
     private static final float TEXT_SHADOW_OFFSET = 1;
     private static final float ICON_X = 10, ICON_Y = 10, ICON_SIZE = 32;
@@ -74,10 +72,10 @@ public class Hud {
             artifactIcons.put(type, assets.region("images/HUD/" + type.iconName() + ".png",
                 com.badlogic.gdx.graphics.Texture.TextureFilter.Linear));
         }
-        this.font = assets.font(COUNT_FONT_SIZE);
-        this.hintFont = assets.font(HINT_FONT_SIZE);
-        this.zoneFont = assets.font(ZONE_FONT_SIZE);
-        this.contextFont = assets.font(CONTEXT_FONT_SIZE);
+        this.font = assets.font(FontSizes.COUNT);
+        this.hintFont = assets.font(FontSizes.LABEL);
+        this.zoneFont = assets.font(FontSizes.ZONE);
+        this.contextFont = assets.font(FontSizes.LABEL);
 
         OrthographicCamera textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, logicalWidth, logicalHeight);

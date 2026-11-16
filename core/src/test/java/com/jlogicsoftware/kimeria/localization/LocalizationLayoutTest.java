@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
@@ -45,8 +46,9 @@ class LocalizationLayoutTest {
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont body = new MetricsFont(15), button = new MetricsFont(20), hint = new MetricsFont(13), title = new MetricsFont(30),
-                zone = new MetricsFont(Hud.ZONE_FONT_SIZE), context = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
+            BitmapFont body = new MetricsFont(FontSizes.BODY), dialogue = new MetricsFont(FontSizes.DIALOGUE), button = new MetricsFont(FontSizes.BUTTON),
+                hint = new MetricsFont(FontSizes.LABEL), touch = new MetricsFont(FontSizes.TOUCH_LABEL), title = new MetricsFont(FontSizes.TITLE),
+                zone = new MetricsFont(FontSizes.ZONE), context = new MetricsFont(FontSizes.LABEL);
             Overlay overlay = new Overlay(new Assets() {
                 @Override public BitmapFont font(int size) { return new MetricsFont(size); }
             }, 640, 360);
@@ -59,7 +61,7 @@ class LocalizationLayoutTest {
                     assertTrue(new GlyphLayout(button, message.t(language)).width <= 544, prefix + message);
                 assertTrue(height(body, Msg.NEW_GAME_CONFIRMATION.t(language), 290) <= 80, prefix + "confirmation");
                 assertTrue(height(body, Msg.ABOUT_RULES.t(language), 580) <= 140, prefix + "rules");
-                assertTrue(height(body, Msg.HEALER.t(language), 100) <= 20, prefix + "speaker name");
+                assertTrue(height(dialogue, Msg.HEALER.t(language), 100) <= 20, prefix + "speaker name");
                 assertTrue(new GlyphLayout(body, language.nativeName()).width <= 260, prefix + "language name");
                 assertTrue(height(hint, Msg.MENU_HINT.t(language), 608) <= 26, prefix + "menu hint");
                 assertTrue(lines(context, Msg.FIREBALL_STOCK_FULL.t(language), Hud.CONTEXT_WIDTH) <= 2, prefix + "full ammunition hint");
@@ -74,16 +76,16 @@ class LocalizationLayoutTest {
                 // Spoken healer/player lines are measured against the actual two-thirds regions
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
-                    assertTrue(new GlyphLayout(body, message.t(language)).width <= 512, prefix + message);
+                    assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= 512, prefix + message);
                 // D55: the light button art leaves ~5 px of rim, so labels wrap at the cream width (50 / 40.4 px) and may
                 // take two lines; every word must still fit that width on its own.
                 for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED, Msg.DIRECTION_CONFLICT, Msg.NO_ACTION}) {
                     float width = message == Msg.SHOOT || message == Msg.THROW || message == Msg.FIREBALL || message == Msg.NO_AMMO
                         ? TouchControls.RANGED_LABEL_WIDTH : TouchControls.ACTION_LABEL_WIDTH;
                     for (String word : message.t(language).split(" "))
-                        assertTrue(new GlyphLayout(hint, word).width <= width, prefix + message + " word " + word);
-                    assertTrue(lines(hint, message.t(language), width) <= 2, prefix + message);
-                    assertTrue(height(hint, message.t(language), width) <= 32, prefix + message);
+                        assertTrue(new GlyphLayout(touch, word).width <= width, prefix + message + " word " + word);
+                    assertTrue(lines(touch, message.t(language), width) <= 2, prefix + message);
+                    assertTrue(height(touch, message.t(language), width) <= 32, prefix + message);
                 }
                 for (boolean left : new boolean[]{false, true}) {
                     String help = (left ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language) + "\n\n"
@@ -103,6 +105,27 @@ class LocalizationLayoutTest {
         } finally { Gdx.files = previous; }
     }
 
+    /** D70: the 18 px ingredient checklist (360 px wide, top 48) stays above the dialogue frame (top 138) in every language and state. */
+    @Test void ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize() {
+        var previous = Gdx.files;
+        Gdx.files = new HeadlessFiles();
+        GdxNativesLoader.load();
+        try {
+            BitmapFont dialogue = new MetricsFont(FontSizes.DIALOGUE);
+            var view = new com.jlogicsoftware.kimeria.ui.HealerDialogueView(new Assets() {
+                @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
+            });
+            for (Language language : Language.values()) for (boolean paid : new boolean[]{false, true}) for (boolean done : new boolean[]{false, true}) {
+                String text = view.checklistText(language, paid, done, !done, done, done ? 3 : 0, 3);
+                GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, 360, Align.center, true);
+                assertTrue(layout.width <= 360 + 1, language.code() + " checklist width");
+                assertTrue(48 + layout.height <= 138 - 8, language.code() + " checklist stays above the frame: " + layout.height);
+            }
+            for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
+                assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= 560 - 48, language.code() + " " + message + " in the 560 px choice button");
+        } finally { Gdx.files = previous; }
+    }
+
     /**
      * #211: the zone message (anchored 30% down the 368 px room, two lines at most, #249: 39 px font, 608 px wide) and the widest
      * contextual stack of every language, for keyboard, gamepad (both handedness) and touch wording, on screen
@@ -114,7 +137,7 @@ class LocalizationLayoutTest {
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont zone = new MetricsFont(Hud.ZONE_FONT_SIZE), contextFont = new MetricsFont(Hud.CONTEXT_FONT_SIZE);
+            BitmapFont zone = new MetricsFont(FontSizes.ZONE), contextFont = new MetricsFont(FontSizes.LABEL);
             float cap = contextFont.getCapHeight(), zoneCap = zone.getCapHeight(), zoneWorldY = 368 * .3f;
             for (Language language : Language.values()) {
                 String up = Msg.UP.t(language), down = Msg.DOWN.t(language);

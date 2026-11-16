@@ -226,7 +226,7 @@ class HealerDialogueTest {
         assertEquals(598f, healer.x() + healer.width(), .001f);
         assertEquals(556f / 3f, edgard.x() + edgard.width() - healer.x(), .001f);
 
-        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-15.fnt"), false);
+        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
         var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
         int spokenLineCount = 0;
         for (Language language : Language.values()) {

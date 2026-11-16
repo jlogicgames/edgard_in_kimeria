@@ -11,7 +11,7 @@
       test invalid catalogs and runtime fallback separately.
 - [x] Derive baked charset from catalogs/native names plus UI symbols; retain
       Polish, German and full Belarusian coverage and document uppercase SS policy.
-- [x] Check source glyphs and actual shipped bitmap fonts/pages at 13/15/20/30;
+- [x] Check source glyphs and actual shipped bitmap fonts/pages at 13/15/20/30 (13/16/18/20/30 since D70);
       regenerate all sizes and reject stale/missing glyphs during builds.
 - [x] Audit player-facing strings outside Msg and every rendering font.
 - [x] Check actual font metrics and fix overflow in menus, hints, confirmations,

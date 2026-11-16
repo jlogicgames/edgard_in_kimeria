@@ -35,7 +35,7 @@ public final class BossHud {
         filled = assets.region(ART + "segment-filled.png", 0, 0, SEGMENT_WIDTH, SEGMENT_HEIGHT);
         empty = assets.region(ART + "segment-empty.png", 0, 0, SEGMENT_WIDTH, SEGMENT_HEIGHT);
         elixir = assets.region("images/Items.png", 80, 0, 16, 16);
-        font = assets.font(13);
+        font = assets.font(FontSizes.LABEL);
     }
 
     private static void glow(Batch batch, TextureRegion art, float x, float y, float width, float height) {
