@@ -287,10 +287,13 @@ for the remaining stages.
 
 - [ ] [#133](https://github.com/jlogicgames/edgard_in_kimeria/issues/133) Plan difficulty progression by level and each room's purpose. New
   content includes situations, enemies and mechanic combinations, not just geometry.
+  Every room has a card in [ROOM_CARDS.md](ROOM_CARDS.md) ([D72](DECISIONS.md#d72-every-room-gives-the-player-something-new):
+  each room introduces, develops or combines something); a level plan is a sequence of cards whose novelty
+  ledger passes `RoomCardsTest` before its maps are built.
 - [ ] [#134](https://github.com/jlogicgames/edgard_in_kimeria/issues/134) Develop Forest and Swamp, then Steppe with double-jump acquisition,
   then Fortress accounting for all learned tools.
 - [ ] [#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135) Add levels in small complete batches and repeat external checks,
-  especially for new mechanics. Five levels × five rooms is a scope hypothesis,
+  especially for new mechanics; external checks fill the cards' "First learning" field (D72). Five levels × five rooms is a scope hypothesis,
   not a requirement to fill a grid with repetitive tasks.
 - [ ] [#136](https://github.com/jlogicgames/edgard_in_kimeria/issues/136) Place four mandatory tablet fragments and optional ingredients/coins.
   Define where/how each fragment is obtained and how the next objective is understood.

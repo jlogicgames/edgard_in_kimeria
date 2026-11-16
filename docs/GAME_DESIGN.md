@@ -629,6 +629,18 @@ Within a level, familiar mechanics recur under different conditions to develop
 skill; the next level increases difficulty or adds an element. A stage develops
 its leading mechanic over several levels.
 
+**Every room gives something new ([D72](DECISIONS.md#d72-every-room-gives-the-player-something-new), playtest F20).**
+Each room introduces, develops or combines at least one element the player has not met in that form; a reskin or
+more of the same geometry does not count, and outside the tutorial a room introduces at most two elements, each
+first met alone. Familiar mechanics still recur for mastery, but never as the whole room. Every shipped room has a
+card in [ROOM_CARDS.md](ROOM_CARDS.md) with its role (lesson, variation, combination, challenge, approach, reward,
+rest, boss), purpose, novelty and D19 times, checked against the maps by `RoomCardsTest`; rule and workflow in
+[ROOMS.md](ROOMS.md#every-room-gives-something-new-d72). A level plan for campaign planning (#133) is a sequence of
+cards whose novelty ledger passes before any map is built. The Primal Planet study (#352, "Reference research")
+supports counting a known element on a new surface as a develop and suggests one memorable landmark per room and a
+calm, wordless beat after a dangerous one. The 2026-11-16 audit found the Forest's later levels overloaded rather
+than repetitive (`forest-1-traps` [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375), `forest-entry` [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)).
+
 Solutions can involve avoidance, timing, melee/ranged attacks, mechanisms,
 carrying or throwing. Every room need not support every option.
 
@@ -639,7 +651,8 @@ support for longer warnings.
 
 **Authoring proposals to test:** a safe observation position; light, sound and
 movement as clues to hidden dangers; an introduction → variation → combination →
-final challenge progression. These are techniques, not a mandatory room template.
+final challenge progression. These are techniques, not a mandatory room template
+(the room card of D72 is the mandatory record; the progression is one way to fill its roles).
 
 ## Idea reserve
 

@@ -76,6 +76,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
     private static final float MENU_TINT_ALPHA = 0.2f;
     private static final List<String> LEVEL_NAMES = List.of("forest-0", "forest-1", "forest-2");
+    /** Play order of the shipped levels; read by {@code RoomCardsTest} (D72). */
+    static List<String> levelNames() { return LEVEL_NAMES; }
     private static final float MUSIC_FADE_IN = 2f, MUSIC_FADE_OUT = 1f;
 
     private Assets assets;

@@ -58,6 +58,13 @@ change**, and the doc line links it (`#NNN`). The issue's checklist must include
 as prose gets lost (audit of `docs/DEVELOPMENT.md`, 2026-11-06, found five untracked ones).
 When closing such an issue, remove the doc note in the same PR.
 
+## Rooms: every room gives something new (D72)
+
+Before building or changing a room, write or update its card in `docs/ROOM_CARDS.md` (role, purpose, what it
+introduces, develops or combines, D19 times, retry cost) and keep `RoomCardsTest` green. A new look on a known trap
+(a reskin) is not novelty; outside the tutorial a room introduces at most two elements. A new Tiled object type gets
+a registry row in the same change. Rule and workflow: `docs/ROOMS.md`, "Every room gives something new (D72)".
+
 ## Git in this repo
 
 - Never commit or push without the user's approval in that moment; never commit on `main`.
