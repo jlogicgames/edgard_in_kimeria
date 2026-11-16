@@ -327,7 +327,9 @@ only in the menu backdrop.
     player preferences as the other settings and restored at startup. Other options (game speed,
     wider jump windows, skipping a room, invulnerability) are candidates only, each to be decided on its
     own. **Screen shake** (On/Off, D62) is the second item; it defaults to on, and on the web to
-    the browser's reduced-motion preference.
+    the browser's reduced-motion preference. **Instant text** (On/Off, #342, playtest F8) is the third: off by
+    default (letters still appear one by one), it shows each healer dialogue line whole from its first frame, so
+    the first press advances the line. Key `instant-text`, read live; no platform default.
 - **Why:** Katana Zero has no assist mode, but the audience is wider than hardcore players.
   One hit kills (D2) stays the default; assist lets more players finish without changing it.
 - **Tracked in:** #59

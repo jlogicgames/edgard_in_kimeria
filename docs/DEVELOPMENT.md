@@ -179,6 +179,10 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Options → Assist → Screen shake (D62): a persisted On/Off toggle, on by default; on the web the default
       follows `prefers-reduced-motion: reduce` until the player chooses. Off silences every camera shake,
       the boss shake included.
+- [x] Options → Assist → Instant text (D11, #342): a persisted On/Off toggle, off by default. On, every healer
+      dialogue line (`HealerDialogue.setInstantText`) is whole on its first frame and the first press advances.
+      `KimeriaGame.instantText()` exposes it to the paged intro ([#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336));
+      the current scrolling `IntroScreen` is timed by scroll position, has no letter reveal, and ignores it.
 - [x] Keyboard, mouse and gamepad menu navigation
 - [x] English/Ukrainian/Polish/German/Belarusian localization, switchable from Options and remembered across launches
 - [x] Shared local settings for language, display mode, left-handed controls and trap-warning

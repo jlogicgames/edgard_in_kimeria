@@ -65,7 +65,7 @@ public final class HealerDialogueView {
         Color speakerColor = dialogue.edgardSpeaking() ? Color.WHITE : HEALER_GREEN;
         int alignment = dialogue.edgardSpeaking() ? Align.left : Align.right;
         DialogueRegion region = dialogueRegion(dialogue.edgardSpeaking());
-        overlay.dialogue(batch, dialogue.completeText(lang), dialogue.text(lang).length(),
+        overlay.dialogue(batch, dialogue.completeText(lang), dialogue.visibleCharacters(lang),
             region.x(), TEXT_INNER_Y, region.width(), speakerColor, alignment);
         if (dialogue.choosing()) {
             for (int i = 0; i < dialogue.choices().size(); i++) {

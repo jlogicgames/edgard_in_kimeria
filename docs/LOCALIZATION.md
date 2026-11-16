@@ -96,6 +96,7 @@ the render loop.
 | `CLIMB`, `CLIMB_DOWN` | Ladder hint verbs inside a map `controls` hint zone (D33), shown after the Up/Down input: take hold and climb up, or step onto a ladder from its top edge. |
 | `ABOUT_RULES` | One-hit death, unlimited room retries, provisional pickup rollback and retained secured pickups. |
 | `LONGER_TRAP_WARNINGS` | The assist option extends trap warnings; it does not grant invulnerability. |
+| `INSTANT_TEXT` | The assist option that shows dialogue lines whole instead of letter by letter (#342); shown as `<label>: On/Off` in the 440 px Assist menu, checked in `LocalizationLayoutTest`. Label register (TEXT_STYLE.md): noun phrase, no hint text. The de, pl, uk and be texts are drafts. |
 | `SCREEN_SHAKE` | The assist option for camera shake (boss feedback and the lever-driven wall); shown as `<label>: On/Off` in the 440 px Assist menu (D62), checked in `LocalizationLayoutTest`. The de, pl, uk and be texts are drafts. |
 
 The #95 binding/target prompt keys include `ACTION`, `STONE`, `TORCH`, `MECHANISM`,

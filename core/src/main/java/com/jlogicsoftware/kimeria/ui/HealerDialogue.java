@@ -12,6 +12,8 @@ public final class HealerDialogue {
     private int line, selected;
     private float characters;
     private boolean choosing, finished;
+    /** Instant text (#342): every line is whole from its first frame; read live, so the setting applies at once. */
+    private boolean instantText;
     private final boolean postVictory;
     /** Scripted scenes (no checklist, no choices) finish with {@link Choice#CONTINUE}. */
     private final Kind kind;
@@ -69,11 +71,14 @@ public final class HealerDialogue {
     }
 
     public void update(float dt) { if (!choosing) characters += Math.max(0, dt) * 38; }
-    public String text(Language language) {
-        String text = lines.get(line).t(language);
-        return text.substring(0, Math.min(text.length(), (int) characters));
+    public void setInstantText(boolean instant) { instantText = instant; }
+    /** How many letters of the line show now; the per-frame renderer asks this instead of {@link #text}, which builds a substring. */
+    public int visibleCharacters(Language language) {
+        int length = completeText(language).length();
+        return instantText ? length : Math.min(length, (int) characters);
     }
-    public boolean fullyRevealed(Language language) { return characters >= completeText(language).length(); }
+    public String text(Language language) { return completeText(language).substring(0, visibleCharacters(language)); }
+    public boolean fullyRevealed(Language language) { return instantText || characters >= completeText(language).length(); }
     public String completeText(Language language) { return lines.get(line).t(language); }
     public boolean edgardSpeaking() { return lines.get(line).name().startsWith("EDGARD_"); }
     public boolean choosing() { return choosing; }
@@ -99,7 +104,7 @@ public final class HealerDialogue {
     public Choice advance(Language language) {
         if (choosing || finished) return null;
         int length = completeText(language).length();
-        if (characters < length) { characters = length; return null; }
+        if (!instantText && characters < length) { characters = length; return null; }
         if (line + 1 < lines.size()) { line++; characters = 0; }
         else if (scripted()) { finished = true; return Choice.CONTINUE; }
         else if (eligible && !paid) return Choice.BREW;

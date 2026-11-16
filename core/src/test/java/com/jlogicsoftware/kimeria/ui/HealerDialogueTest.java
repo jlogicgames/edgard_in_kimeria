@@ -30,6 +30,82 @@ class HealerDialogueTest {
         assertTrue(dialogue.choosing());
     }
 
+    @Test void instantTextShowsTheWholeLineOnTheFirstFrameAndTheFirstPressAdvances() {
+        for (Language language : Language.values()) {
+            HealerDialogue dialogue = HealerDialogue.afterVictory();
+            dialogue.setInstantText(true);
+            assertEquals(Msg.HEALER_VICTORY.t(language), dialogue.text(language), "whole line before any update");
+            assertTrue(dialogue.fullyRevealed(language));
+            dialogue.advance(language); // no "skip the reveal" press first
+            assertEquals(Msg.EDGARD_DARKNESS.t(language), dialogue.completeText(language));
+            assertEquals(Msg.EDGARD_DARKNESS.t(language), dialogue.text(language));
+        }
+    }
+
+    @Test void instantTextOnAtOpeningShowsEveryKindOfDialogueWholeBeforeAnyUpdate() {
+        Language language = Language.ENGLISH;
+        for (HealerDialogue dialogue : new HealerDialogue[]{HealerDialogue.tutorialStart(), HealerDialogue.tutorialEnd(),
+            HealerDialogue.afterVictory(), new HealerDialogue(true, true, true, true, false), new HealerDialogue(false, false, false, false, false, true)}) {
+            dialogue.setInstantText(true);
+            assertEquals(dialogue.completeText(language), dialogue.text(language));
+            assertEquals(dialogue.completeText(language).length(), dialogue.visibleCharacters(language));
+            assertTrue(dialogue.fullyRevealed(language), "the press hint may show on the first frame");
+        }
+    }
+
+    @Test void instantTextNPressesAdvanceExactlyNLinesAndTheLastPressFinishesOnce() {
+        Language language = Language.ENGLISH;
+        HealerDialogue dialogue = HealerDialogue.tutorialStart(); // 8 lines
+        dialogue.setInstantText(true);
+        for (int press = 1; press <= 7; press++) {
+            assertNull(dialogue.advance(language));
+            assertEquals(java.util.List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME, Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT,
+                Msg.HEALER_TALE_WITCH, Msg.HEALER_TALE_THREAD, Msg.HEALER_TALE_FIREGIFT, Msg.EDGARD_TALE_UNDERSTOOD).get(press).t(language),
+                dialogue.completeText(language), "after press " + press);
+        }
+        assertEquals(HealerDialogue.Choice.CONTINUE, dialogue.advance(language)); // the 8th press leaves the last line
+        assertNull(dialogue.advance(language), "a press after the end does nothing");
+        assertEquals(Msg.EDGARD_TALE_UNDERSTOOD.t(language), dialogue.completeText(language));
+    }
+
+    @Test void instantTextOffNeedsTwoPressesPerLineAndOnNeedsOne() {
+        Language language = Language.ENGLISH;
+        HealerDialogue slow = HealerDialogue.afterVictory();
+        slow.advance(language);
+        assertEquals(Msg.HEALER_VICTORY.t(language), slow.completeText(language), "first press only completes the line");
+        slow.advance(language);
+        assertEquals(Msg.EDGARD_DARKNESS.t(language), slow.completeText(language));
+        HealerDialogue fast = HealerDialogue.afterVictory();
+        fast.setInstantText(true);
+        fast.advance(language);
+        assertEquals(Msg.EDGARD_DARKNESS.t(language), fast.completeText(language));
+    }
+
+    @Test void togglingMidLineCompletesOrResumesTheReveal() {
+        Language language = Language.ENGLISH;
+        HealerDialogue dialogue = HealerDialogue.afterVictory();
+        dialogue.update(0.1f);
+        int partial = dialogue.visibleCharacters(language);
+        assertTrue(partial > 0 && partial < dialogue.completeText(language).length());
+        dialogue.setInstantText(true); // switching on shows the whole line at once
+        assertEquals(dialogue.completeText(language).length(), dialogue.visibleCharacters(language));
+        dialogue.setInstantText(false); // off again: the reveal position it had is kept, not reset to blank
+        assertEquals(partial, dialogue.visibleCharacters(language));
+        dialogue.advance(language);
+        assertEquals(Msg.HEALER_VICTORY.t(language), dialogue.completeText(language));
+        assertTrue(dialogue.fullyRevealed(language));
+    }
+
+    @Test void instantTextOffKeepsTheLetterByLetterReveal() {
+        HealerDialogue dialogue = HealerDialogue.afterVictory();
+        dialogue.setInstantText(false);
+        assertEquals("", dialogue.text(Language.ENGLISH));
+        assertFalse(dialogue.fullyRevealed(Language.ENGLISH));
+        dialogue.advance(Language.ENGLISH); // first press only completes the line
+        assertEquals(Msg.HEALER_VICTORY.t(Language.ENGLISH), dialogue.completeText(Language.ENGLISH));
+        assertTrue(dialogue.fullyRevealed(Language.ENGLISH));
+    }
+
     @Test void victoryReusesRevealRulesWithNoChoicesAndCompletesOnlyOnceInBothLanguages() {
         for (Language language : Language.values()) {
             HealerDialogue dialogue = HealerDialogue.afterVictory();

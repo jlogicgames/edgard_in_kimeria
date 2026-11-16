@@ -24,6 +24,7 @@ import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.ui.BossHud;
 import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
+import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
@@ -533,6 +534,25 @@ class AllocationBudgetTest {
             true, true, false, 1, 3).length());
         assertTrue(length[0] > 0, "the checklist must have text");
         assertWithinBudget("HealerDialogueView checklist", CHECKLIST_CEILING, bytes);
+    }
+
+    /**
+     * One healer dialogue line revealing frame after frame (update, the visible-letter count the renderer asks for, the
+     * "fully revealed" check), with instant text off and on. {@code text()} builds a substring and is for tests and
+     * events, not for the frame; the view uses {@code visibleCharacters}.
+     */
+    @Test void healerDialogueReveal() {
+        for (boolean instant : new boolean[]{false, true}) {
+            HealerDialogue dialogue = HealerDialogue.tutorialStart();
+            dialogue.setInstantText(instant);
+            int[] sum = new int[1];
+            double bytes = AllocationProbe.bytesPerFrame(i -> {
+                dialogue.update(STEP);
+                sum[0] += dialogue.visibleCharacters(Language.ENGLISH) + (dialogue.fullyRevealed(Language.ENGLISH) ? 1 : 0);
+            });
+            assertTrue(sum[0] > 0);
+            assertWithinBudget("HealerDialogue reveal, instant text " + (instant ? "on" : "off"), CHECKLIST_CEILING, bytes);
+        }
     }
 
     /** The debug FPS text asked for every frame while the rate changes every {@value #FPS_CHANGE_FRAMES} frames. */

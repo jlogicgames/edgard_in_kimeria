@@ -43,7 +43,23 @@ class SettingsTest {
         assertTrue(settings.get(Settings.FULLSCREEN));
         assertFalse(settings.get(Settings.LEFT_HANDED));
         assertFalse(settings.get(Settings.LONGER_TRAP_WARNINGS));
+        assertFalse(settings.get(Settings.INSTANT_TEXT));
         assertTrue(preferences().get().isEmpty());
+    }
+
+    @Test
+    void instantTextIsOffByDefaultAndRoundTripsAsABoolean() {
+        assertEquals("instant-text", Settings.KEY_INSTANT_TEXT);
+        Settings settings = new Settings(preferences());
+        assertFalse(settings.get(Settings.INSTANT_TEXT));
+        settings.set(Settings.INSTANT_TEXT, true);
+        assertTrue(preferences().getBoolean(Settings.KEY_INSTANT_TEXT, false));
+        assertTrue(Settings.load(this::preferences).get(Settings.INSTANT_TEXT));
+        settings.set(Settings.INSTANT_TEXT, false);
+        assertFalse(Settings.load(this::preferences).get(Settings.INSTANT_TEXT));
+        Preferences broken = preferences();
+        broken.putString(Settings.KEY_INSTANT_TEXT, "maybe");
+        assertFalse(new Settings(broken).get(Settings.INSTANT_TEXT));
     }
 
     @Test

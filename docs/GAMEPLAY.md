@@ -190,6 +190,9 @@ Every monster dies from one hit. A monster killed by the sword also sprays a lig
 droplets away from the hero (#319); one killed by a fireball, a thrown stone or a stomp dies without any spray.
 There is no violence or blood option in Settings.
 
+Options -> Assist has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
+letter by letter, and one press moves to the next line.
+
 Before committing to the fight, return to the forest entrance as often as needed. Secured
 pickups, enemy state, traps and mutable traversal-object state are retained on collection
 return. A spent falling platform or changed mechanism may leave an optional pickup route

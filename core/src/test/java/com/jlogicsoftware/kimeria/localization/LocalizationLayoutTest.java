@@ -95,11 +95,18 @@ class LocalizationLayoutTest {
                 }
                 for (String label : List.of(Msg.LONGER_TRAP_WARNINGS.t(language) + ": " + Msg.OFF.t(language),
                     Msg.SCREEN_SHAKE.t(language) + ": " + Msg.OFF.t(language),
+                    Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),
                     Msg.LEFT_HANDED_LABEL.t(language) + ": " + Msg.ON.t(language),
                     Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), Msg.RESTART_LEVEL.t(language))) {
                     Menu menu = new Menu(null, null, List.of(new MenuItem(label, () -> {})), null);
                     assertTrue(new GlyphLayout(button, label).width <= overlay.buttonsWidth(menu) - 48, prefix + label);
                     assertTrue(overlay.buttonsWidth(menu) <= 592, prefix + label);
+                }
+                // The Assist menu is a fixed 440 px column (D62): the longest On/Off label must fit it.
+                for (String label : List.of(Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),
+                    Msg.INSTANT_TEXT.t(language) + ": " + Msg.ON.t(language))) {
+                    float width = new GlyphLayout(button, label).width;
+                    assertTrue(width <= 440 - 48, prefix + label);
                 }
             }
         } finally { Gdx.files = previous; }
