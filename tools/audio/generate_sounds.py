@@ -161,6 +161,49 @@ def explosion() -> list[float]:
     return finish_rms(mix, EXPLOSION_RMS_DB)
 
 
+# ---------------------------------------------------------------- stone impact (#347): a short "thud-crack" and pebbles
+# A low, gruff voiced thump (the same render_voice recipe, a falling /uh/), a very short band-passed noise crack on the
+# hit and a few soft pebble ticks that settle after it. It plays once per falling stone, a little above the hero's hit.
+STONE_IMPACT_VOICE = Voice(3601, 0.20, (105.0, 55.0), FORMANTS_UH, FORMANTS_U, -16.5, asp_len=0.015, asp_level=0.5,
+                           attack=0.006, tau=0.070, release=0.040, jitter=0.05, rough=0.5, rough_start=0.4, lowpass=1500.0)
+STONE_IMPACT_SEED = 3602
+STONE_IMPACT_RMS_DB = -16.5
+STONE_IMPACT_DURATION = 0.30
+STONE_CRACK_BAND = (1400.0, 1800.0)  # Hz centre, bandwidth of the crack
+STONE_CRACK_ATTACK = 0.010   # s, the crack swells in (no click; the shared soft-start test)
+STONE_CRACK_TAU = 0.018      # s, decay of the crack
+STONE_CRACK_GAIN = 0.55      # relative to the voiced thump peak
+STONE_PEBBLES = 5            # soft ticks after the hit
+STONE_PEBBLE_START = 0.05    # s, earliest pebble
+STONE_PEBBLE_SPAN = 0.17     # s, the pebbles fall within this window after the first
+STONE_PEBBLE_LEN = 0.014     # s, one pebble
+STONE_PEBBLE_GAIN = 0.22     # relative to the thump peak, times a random 0.4..1 level
+
+
+def stone_impact() -> list[float]:
+    body = render_voice(STONE_IMPACT_VOICE)
+    n = n_samples(STONE_IMPACT_DURATION)
+    body = body + [0.0] * (n - len(body))
+    peak = max(abs(a) for a in body) or 1.0
+    rng = random.Random(STONE_IMPACT_SEED)
+    crack = bandpass(noise(rng, n), *STONE_CRACK_BAND)
+    cp = max(abs(c) for c in crack) or 1.0
+    env = envelope(n, STONE_CRACK_ATTACK, STONE_CRACK_TAU)
+    mix = [b + STONE_CRACK_GAIN * peak * c * e / cp for b, c, e in zip(body, crack, env)]
+    nt = n_samples(STONE_PEBBLE_LEN)
+    times = sorted(STONE_PEBBLE_START + rng.random() * STONE_PEBBLE_SPAN for _ in range(STONE_PEBBLES))
+    for t in times:
+        start = n_samples(t)
+        level = STONE_PEBBLE_GAIN * peak * rng.uniform(0.4, 1.0)
+        tick = bandpass(noise(rng, nt), 2200.0 * rng.uniform(0.8, 1.2), 1500.0)
+        tp = max(abs(v) for v in tick) or 1.0
+        for j in range(nt):
+            mix[start + j] += level * tick[j] / tp * min(j / (nt * 0.3), 1.0) * math.exp(-4.0 * j / nt)
+    mp = max(abs(a) for a in mix) or 1.0
+    mix = [math.tanh(HA_DRIVE * a / mp) for a in mix]
+    return finish_rms(mix, STONE_IMPACT_RMS_DB)
+
+
 # ---------------------------------------------------------------- wall rumble: a very low growling voice (batch 3 of #313)
 # A seamless 1 s loop of a glottal pulse train at about 50 Hz (vocal fry: single slow pulses, with period and amplitude
 # jitter), through wide, low /o/-ish formants, plus a little breath. Every stage is circular, so there is no seam.
@@ -507,7 +550,7 @@ def grit_fall() -> list[float]:
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
-               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "keepalive.wav": keepalive}
+               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive}
 
 
 def generate(out_dir: Path) -> list[Path]:

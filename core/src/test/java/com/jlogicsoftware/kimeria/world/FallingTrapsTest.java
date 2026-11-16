@@ -46,6 +46,8 @@ class FallingTrapsTest {
     private static final float BRANCH_LEFT = 160, BRANCH_RIGHT = 192, STONE_LEFT = 400, STONE_RIGHT = 416;
     private static final float ZONE_BRANCH_LEFT = 144, ZONE_STONE_LEFT = 352;
 
+    private final java.util.List<String> sounds = new java.util.ArrayList<>();
+    private boolean shakeDisabled;
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TouchControls touch;
     private final GamepadInput pad = new GamepadInput();
@@ -63,6 +65,9 @@ class FallingTrapsTest {
             case "touch" -> touch;
             case "language" -> Language.ENGLISH;
             case "isGameStarted" -> true;
+            case "playSounds" -> true;
+            case "playSound" -> sounds.add((String) args[0]);
+            case "screenShakeDisabled" -> shakeDisabled;
             case "artifacts" -> artifacts;
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
@@ -326,6 +331,65 @@ class FallingTrapsTest {
         while (bodyLeft(l) < BRANCH_RIGHT) { run(l, true, false); clearAt++; }
         float margin = TrapWarnings.DEFAULT_WARNING_SECONDS - clearAt * STEP;
         assertTrue(margin >= 0.15f, "margin before the fall starts: " + margin);
+    }
+
+    /** #347: every stone landing kicks up dust, chips and fading debris, all on or above the floor line (Y grows downward), and a small shake. */
+    @Test void aLandingStoneThrowsDustChipsAndDebrisOnTheFloorLine() {
+        Level l = level();
+        FallingStone s = stone(l);
+        place(l, ZONE_STONE_LEFT - 11 + 1 + 40);
+        assertEquals(0, l.fx().dust().count() + l.fx().grit().count());
+        framesUntil(l, s, FallingTrap.State.SPENT, 600);
+        var dust = l.fx().dust();
+        var grit = l.fx().grit();
+        assertTrue(dust.count() >= com.jlogicsoftware.kimeria.effects.EnvironmentFx.STONE_DUST, "dust: " + dust.count());
+        assertTrue(grit.count() >= com.jlogicsoftware.kimeria.effects.EnvironmentFx.STONE_CHIPS
+            + com.jlogicsoftware.kimeria.effects.EnvironmentFx.STONE_DEBRIS, "chips and debris: " + grit.count());
+        float floor = s.bodyBounds().y + s.bodyBounds().height;
+        assertEquals(320f, floor, 1e-3f);
+        for (int i = 0; i < dust.count(); i++) {
+            // The particle square's bottom edge (y + size/2) is the floor line at the start: nothing is drawn under the floor.
+            assertTrue(dust.y(i) + dust.drawSize(i) / 2f <= floor + 1e-3f, "dust " + i + " sits on the floor line");
+            assertTrue(dust.x(i) >= s.bodyBounds().x - 1 && dust.x(i) <= s.bodyBounds().x + s.bodyBounds().width + 1);
+        }
+        float lowest = 0;
+        for (int i = 0; i < grit.count(); i++) {
+            lowest = Math.max(lowest, grit.y(i) + grit.drawSize(i) / 2f);
+            assertTrue(grit.y(i) + grit.drawSize(i) / 2f <= floor + 1e-3f, "grit " + i + " is not below the floor");
+        }
+        assertEquals(floor, lowest, 1e-3f, "the debris rests exactly on the floor line");
+        assertTrue(l.fx().shake().running(), "a small shake starts on impact");
+        assertEquals(com.jlogicsoftware.kimeria.effects.ScreenShake.STONE_AMPLITUDE_PX, l.fx().shake().currentAmplitude(), 0.1f);
+        // The debris fades: it lies there 2 to 3 s (still there at 1.5 s), the dust is gone long before.
+        for (int i = 0; i < 90; i++) frame(l);
+        assertEquals(0, dust.count());
+        assertTrue(grit.count() > 0, "the debris still lies there after 1.5 s");
+        for (int i = 0; i < 120; i++) frame(l);
+        assertEquals(0, grit.count(), "the debris has faded");
+    }
+
+    @Test void theImpactPlaysStoneImpactOnceAndOnlyAtLanding() {
+        Level l = level();
+        FallingStone s = stone(l);
+        place(l, ZONE_STONE_LEFT - 11 + 1 + 40);
+        sounds.clear();
+        framesUntil(l, s, FallingTrap.State.FALLING, 600);
+        assertFalse(sounds.contains("stone_impact"), "silent before the landing");
+        framesUntil(l, s, FallingTrap.State.SPENT, 600);
+        for (int i = 0; i < 30; i++) frame(l);
+        assertEquals(1, sounds.stream().filter("stone_impact"::equals).count(), sounds.toString());
+        assertTrue(java.util.Arrays.asList(Assets.SOUND_EFFECTS).contains("stone_impact"), "the sound is preloaded");
+    }
+
+    @Test void withScreenShakeOffTheLandingDoesNotMoveTheCameraButDustAndDebrisStillShow() {
+        shakeDisabled = true;
+        Level l = level();
+        place(l, ZONE_STONE_LEFT - 11 + 1 + 40);
+        framesUntil(l, stone(l), FallingTrap.State.SPENT, 600);
+        assertFalse(l.fx().shake().enabled());
+        Rectangle view = new Rectangle(0, 0, 320, 180);
+        assertEquals(0f, l.cameraShakeOffset(view).len(), 0f);
+        assertTrue(l.fx().dust().count() > 0 && l.fx().grit().count() > 0);
     }
 
     @Test void stoneShadowGrowsThroughTheWarningThenTheStoneFallsAndKillsOnlyOnOverlap() {

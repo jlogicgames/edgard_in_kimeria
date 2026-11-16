@@ -18,11 +18,12 @@ LOOPED = {"wall_rumble.wav", "keepalive.wav"}
 BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17, 0.26), "collect.wav": (0.16, 0.26),
           "disappear.wav": (0.45, 0.65), "boss_hit.wav": (0.19, 0.30), "boss_restore.wav": (0.32, 0.48), "button_click.wav": (0.10, 0.16),
           "dust_puff.wav": (0.10, 0.18), "wall_rumble.wav": (0.9, 1.1),
-          "grit_fall.wav": (0.4, 0.6), "explosion.wav": (0.35, 0.55), "keepalive.wav": (0.9, 1.1)}
+          "grit_fall.wav": (0.4, 0.6), "explosion.wav": (0.35, 0.55), "stone_impact.wav": (0.25, 0.35), "keepalive.wav": (0.9, 1.1)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
-                "boss_hit.wav": -16.5, "boss_restore.wav": -19.0, "button_click.wav": -19.4}
+                "boss_hit.wav": -16.5, "boss_restore.wav": -19.0, "button_click.wav": -19.4,
+                "stone_impact.wav": -16.5}
 # #324: deliberately fuller than the voice set (a rare event), so it is outside the set's spread; it must stay within the
 # same spread of the jump instead.
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}

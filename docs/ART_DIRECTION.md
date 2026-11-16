@@ -259,9 +259,17 @@ depends on it.
 - **As built (#285 step 5).** The grit burst is emitted evenly over 0.6 s by `EnvironmentFx.update` (first particle at
   once; a new lever pull replaces a running burst); its X spread is the wall's width plus 24 px on each side. The doc's
   "falling up to 64 px" and "end Y = start Y + speed * life" disagree at the top of the ranges (110 px/s * 0.9 s = 99 px),
-  so the fall is `min(speed * life, 64)`, which keeps the 64 px bound. Measured peaks: 24 live grit (capacity 32), 12 live
-  dust for a jump every quarter second (capacity 24). Dust and grit ignore the Screen shake option, as section 5 says; the
+  so the fall is `min(speed * life, 64)`, which keeps the 64 px bound. Measured peaks: 24 live grit (capacity 32 at the time), 12 live
+  dust for a jump every quarter second (capacity 24 at the time; both pools grew in D73, #347: 48 and 32). Dust and grit ignore the Screen shake option, as section 5 says; the
   grit burst and both sounds start with the lever shake in `Level.perform`, so a pause cannot replay them.
+- **Falling stone impact (#347, accepted by the author 2026-11-16).** Every `FallingStone` landing (all skins) calls
+  `EnvironmentFx.stoneImpact(centerX, floorY, width)` from the `Level` impact callback: 10 dust puffs (`KIND_SMOKE`, 4 px,
+  0.35 to 0.6 s) along the stone's width, 8 stone chips (`KIND_GRIT`, 1.5 to 2.5 px, 0.25 to 0.45 s) that fly out and drop to the
+  floor, and 6 specks of debris that lie on the floor 2 to 3 s and fade (`KIND_GRIT`, linear alpha). The cracked stone frame
+  stays. A 1.5 px, 0.15 s shake through `ScreenShake` (off with the Screen shake option, D62; dust and debris stay). Everything
+  rests on the floor line (`y + h` of the stone; Y grows downward), pinned by `FallingTrapsTest`. Pool sizes grew (D73): dust 24 to
+  32, grit 32 to 48 slots. The warning (the growing ground shadow) was checked in the capture and reads before the fall. Not
+  verified: the look on the real forest tiles (#368; update this note when it is closed).
 - **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
   (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
 - **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render

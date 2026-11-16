@@ -17,6 +17,8 @@ public final class ScreenShake {
     public static final float BOSS_AMPLITUDE_PX = 1.25f, BOSS_SECONDS = .18f;
     /** A lever-driven wall in motion: a little heavier than nothing, lighter than a boss attack would be if it lasted. */
     public static final float LEVER_AMPLITUDE_PX = 1.5f;
+    /** A falling stone landing: a short, small jolt. */
+    public static final float STONE_AMPLITUDE_PX = 1.5f, STONE_SECONDS = .15f;
     private static final float FREQUENCY_X = 110, FREQUENCY_Y = 137;
 
     private final BooleanSupplier enabled;

@@ -13,7 +13,7 @@ import java.util.function.BooleanSupplier;
  * timing or route reads it. Particles advance only in {@link #update}, so pause freezes them. World Y grows downward.
  */
 public final class EnvironmentFx {
-    public static final int DUST_CAPACITY = 24, GRIT_CAPACITY = 32;
+    public static final int DUST_CAPACITY = 32, GRIT_CAPACITY = 48;
     public static final int DUST_PER_PUFF = 6, GRIT_PER_BURST = 24;
     /** A landing kicks up fewer puffs than a jump: a smaller puff of the same dust. */
     public static final int DUST_PER_LANDING = 4;
@@ -25,6 +25,17 @@ public final class EnvironmentFx {
     private static final float DUST_LIFE_MIN = .25f, DUST_LIFE_MAX = .4f;
     private static final float DUST_RISE_MIN = 10, DUST_RISE_MAX = 22, DUST_DRIFT_SPEED = 25;
     private static final float[] DUST_COLORS = {.357f, .345f, .439f, .604f, .592f, .678f, .847f, .839f, .910f};
+
+    /** A falling stone's landing: dust puffs along its width, flying chips and debris that lingers on the floor, then fades. */
+    public static final int STONE_DUST = 10, STONE_CHIPS = 8, STONE_DEBRIS = 6;
+    private static final float STONE_DUST_LIFE_MIN = .35f, STONE_DUST_LIFE_MAX = .6f, STONE_DUST_SIZE_PX = 4;
+    private static final float STONE_DUST_RISE_MIN = 14, STONE_DUST_RISE_MAX = 30, STONE_DUST_DRIFT_SPEED = 40;
+    private static final float STONE_CHIP_LIFE_MIN = .25f, STONE_CHIP_LIFE_MAX = .45f, STONE_CHIP_SPEED = 90;
+    private static final float STONE_CHIP_START_RISE_PX = 10, STONE_CHIP_SIZE_MIN = 1.5f, STONE_CHIP_SIZE_MAX = 2.5f;
+    private static final float STONE_DEBRIS_LIFE_MIN = 2f, STONE_DEBRIS_LIFE_MAX = 3f;
+    private static final float STONE_DEBRIS_SIZE_MIN = 1, STONE_DEBRIS_SIZE_MAX = 2;
+    /** Stone greys of the trap sprite: dark, mid, light. */
+    private static final float[] CHIP_COLORS = {.357f, .345f, .439f, .478f, .467f, .553f, .604f, .592f, .678f};
 
     private static final float GRIT_EXTRA_SPREAD_PX = 24, GRIT_MAX_FALL_PX = 64;
     private static final float GRIT_SPEED_MIN = 70, GRIT_SPEED_MAX = 110;
@@ -71,6 +82,44 @@ public final class EnvironmentFx {
             int c = random.nextInt(DUST_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
             dust.spawn(KimeriaParticleSystem.KIND_SMOKE, startX, feetY, endX, endY, life, DUST_SIZE_PX,
                 DUST_COLORS[c], DUST_COLORS[c + GREEN], DUST_COLORS[c + BLUE]);
+        }
+    }
+
+    /**
+     * A falling stone lands: dust rises along its width, stone chips fly out and drop, and a few specks stay on the floor
+     * and fade. {@code floorY} is the floor line (the stone's bottom edge; larger Y is lower), so nothing is drawn under it.
+     */
+    public void stoneImpact(float centerX, float floorY, float width) {
+        float half = width / 2f;
+        RandomXS128 random = dust.random();
+        for (int n = 0; n < STONE_DUST; n++) {
+            float startX = centerX + range(random, -half, half);
+            float life = range(random, STONE_DUST_LIFE_MIN, STONE_DUST_LIFE_MAX);
+            float away = startX < centerX ? -1 : 1;
+            float endX = startX + away * STONE_DUST_DRIFT_SPEED * life;
+            float endY = floorY - range(random, STONE_DUST_RISE_MIN, STONE_DUST_RISE_MAX) * life;
+            int c = random.nextInt(DUST_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            dust.spawn(KimeriaParticleSystem.KIND_SMOKE, startX, floorY - STONE_DUST_SIZE_PX / 2f, endX, endY, life,
+                STONE_DUST_SIZE_PX, DUST_COLORS[c], DUST_COLORS[c + GREEN], DUST_COLORS[c + BLUE]);
+        }
+        random = grit.random();
+        for (int n = 0; n < STONE_CHIPS; n++) {
+            float startX = centerX + range(random, -half, half);
+            float away = startX < centerX ? -1 : 1;
+            float life = range(random, STONE_CHIP_LIFE_MIN, STONE_CHIP_LIFE_MAX);
+            float size = range(random, STONE_CHIP_SIZE_MIN, STONE_CHIP_SIZE_MAX);
+            int c = random.nextInt(CHIP_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, floorY - STONE_CHIP_START_RISE_PX,
+                startX + away * STONE_CHIP_SPEED * life * random.nextFloat(), floorY - size / 2f, life, size,
+                CHIP_COLORS[c], CHIP_COLORS[c + GREEN], CHIP_COLORS[c + BLUE]);
+        }
+        for (int n = 0; n < STONE_DEBRIS; n++) {
+            float x = centerX + range(random, -half - 6, half + 6);
+            float size = range(random, STONE_DEBRIS_SIZE_MIN, STONE_DEBRIS_SIZE_MAX);
+            int c = random.nextInt(CHIP_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, x, floorY - size / 2f, x, floorY - size / 2f,
+                range(random, STONE_DEBRIS_LIFE_MIN, STONE_DEBRIS_LIFE_MAX), size,
+                CHIP_COLORS[c], CHIP_COLORS[c + GREEN], CHIP_COLORS[c + BLUE]);
         }
     }
 

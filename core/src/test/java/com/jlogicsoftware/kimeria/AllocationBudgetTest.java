@@ -94,6 +94,9 @@ class AllocationBudgetTest {
     /** Measured 0.1 B/frame in 3 runs (#303; before: 4.6, the {@code HashSet} of {@code Level.activateTrigger}, as in LEVER_SHAKE_CEILING): the grit burst (24 particles over 0.6 s), its update and render. */
     static final double LEVER_GRIT_CEILING = 8;
 
+    /** Measured in 3 runs (#347): a 24-particle stone landing every 60 frames, spawn, update and render, like JUMP_DUST_CEILING. */
+    static final double STONE_IMPACT_CEILING = 8;
+
     /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
     static final double BOSS_HUD_CEILING = 8;
 
@@ -332,6 +335,20 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "grit must actually fall in this scenario");
         assertWithinBudget("lever grit", LEVER_GRIT_CEILING, bytes);
+    }
+
+    /** A falling stone landing every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fx()} (#347: dust, chips and debris, plus the shake), updated and drawn each frame. */
+    @Test void stoneImpactThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 2);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) { level.fx().stoneImpact(100, 200, 16); level.fx().shake().start(1.5f, .15f); }
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().grit().count() + level.fx().dust().count());
+        });
+        assertTrue(peak[0] > 0, "the impact must actually throw particles in this scenario");
+        assertWithinBudget("stone impact", STONE_IMPACT_CEILING, bytes);
     }
 
     /** A bush brushed by a walking hero every {@link #BURST_CYCLE_FRAMES} frames (its animation lasts 0.3 s): {@code notice}, {@code update} and {@code render} through the batch. */
