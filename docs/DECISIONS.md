@@ -1561,3 +1561,15 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   is the `kimeria-trap-design` skill; AGENTS.md has a "Traps" section.
 - **Not verified:** the at-rest judgements and the ~320 px read distance (camera centred on the hero, from the code)
   were not checked on frames of the running game; the gate checks what the catalogue declares, not the art. In-game check: #368.
+
+## D73. Falling stone impact feedback (#347, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (frames and sound reviewed). Closes playtest finding F17.
+- **Decision:** every `FallingStone` landing, in every skin, throws dust, flying chips and debris that lies 2 to 3 s and fades
+  (`EnvironmentFx.stoneImpact`, pooled `KimeriaParticleSystem`), plays the new `stone_impact.wav` (voice-synth, seeds 3601/3602,
+  RMS -16.5), and shakes the screen 1.5 px for 0.15 s through `ScreenShake` (off with the Assist Screen shake option, D62).
+  Particles rest on the floor line. Details: ART_DIRECTION.md "Environment effects", SOUND_DIRECTION.md "Stone impact".
+- **Changed numbers:** pool capacities `DUST_CAPACITY` 24 to 32 and `GRIT_CAPACITY` 32 to 48 (a stone adds 10 dust and 14 grit
+  particles to a pool a jump or lever also uses). Peak live grit: a lever burst (24) plus a stone (14) is 38 of 48. No test threshold or tolerance was changed.
+- **Allocation:** new scenario `stoneImpactThroughTheRealLevel` 0.0 B/frame (ceiling 8); existing scenarios unchanged.
+- **Not verified:** the look on the real forest tiles and the sound on a real output: tracked in #368 (in-game visual verification of the playtest changes; also update this document when it is closed).

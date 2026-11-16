@@ -234,7 +234,7 @@ public class Level implements WorldObject {
     /** Seconds the looping wall rumble still has to run (0 when it is not playing). */
     private float rumbleSeconds;
     private boolean rumbling;
-    private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall";
+    private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall", STONE_IMPACT_SOUND = "stone_impact";
     private final EnvironmentFx fx;
 
     /** The environment effects of this level (screen shake, jump dust, ceiling grit). */
@@ -823,7 +823,13 @@ public class Level implements WorldObject {
             : null;
         if (stone != null) {
             float x = spec.body().x + spec.body().width / 2f;
-            stone.onImpact(() -> groundShake(x, HangingVine.STONE_STRENGTH));
+            float floor = spec.landing(), width = spec.body().width;
+            stone.onImpact(() -> {
+                groundShake(x, HangingVine.STONE_STRENGTH);
+                fx.stoneImpact(x, floor, width);
+                fx.shake().start(ScreenShake.STONE_AMPLITUDE_PX, ScreenShake.STONE_SECONDS);
+                if (game.playSounds()) game.playSound(STONE_IMPACT_SOUND);
+            });
             objects.add(stone);
         } else objects.add(new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
     }

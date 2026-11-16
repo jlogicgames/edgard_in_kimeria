@@ -43,6 +43,7 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13.
 | `wall_rumble.wav` | synth, noise + sub, loop (batch 3: growling voice, -9.2 / -20.0) | 1.0 s | -9.0 / -17.8 | looped while a lever moves a wall (`Level.activateTrigger`) | 3 |
 | `grit_fall.wav` | synth, noise ticks (batch 3: whispered patter, -12.0 / -30.1) | 0.50 s | -12.0 / -36.7 | grit falls when a lever moves a wall (`Level`) | 3 |
 | `explosion.wav` | synth, voice + noise burst + sub (#324) | 0.45 s | -7.2 / -15.0 | a bomb exploding (`Bomb.explode`), an explosive stump/root exploding (`Level`, the `ExplosiveTrap` callback) | accepted 2026-11-13 |
+| `stone_impact.wav` | synth, voice + crack + pebbles (#347) | 0.30 s | -6.5 / -16.5 | a falling stone lands (`Level.spawnFallingTrap` impact callback) | accepted 2026-11-16 |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -118,6 +119,14 @@ deliberately 2 dB fuller than the jump (-17.0)**: it plays only for a bomb or an
 big. `tools/test_generate_sounds.py` therefore keeps it out of the voice set's 3 dB spread (`EXPLOSION_RMS_DB`) and
 requires it to stay within that spread of the jump. It is also covered by the every-effect-audible test. If it is too
 loud, too dull or too long, change `EXPLOSION_RMS_DB`, `EXPLOSION_VOICE` or the burst and sub constants.
+
+### Stone impact (#347, seeds 3601 and 3602, accepted 2026-11-16)
+
+A short "thud-crack" for every falling stone landing: `render_voice` with a low gruff falling /uh/ (105 -> 55 Hz, 1.5 kHz
+low-pass, 70 ms decay), a 1.4 kHz band-passed noise crack (10 ms swell, 18 ms decay) on the hit and five soft pebble ticks
+in the 50-220 ms after it, summed, tanh drive 3.0, RMS-matched. 0.30 s, RMS -16.5 dBFS (the hero's hit), peak -6.5 dBFS,
+centroid 385 Hz. It is in the voice set's RMS table, so it stays within 3 dB of the jump. The crack swell was lengthened from
+3 ms to 10 ms because the shared soft-start test (no click in the first 2 ms) failed at 3 ms. Preview: `art/audio/previews/stone_impact.png`.
 
 ### Batch 1: the hero's voice set (#313, seeds 1401-1701)
 
