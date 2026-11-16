@@ -23,6 +23,8 @@ SOURCE_PATHS = ('core/src/main/java',)
 HOT_NAME = re.compile(r'^(?:update|render|draw)')
 # Helpers called from a hot method that the name rule cannot find: (file, method) -> why it is per-frame.
 HOT_METHODS = {
+    ('physics/CollideBody.java', 'overlapsSolidAt'): 'called from checkVerticalCollisions for every falling platform the body touches, every frame',
+    ('physics/CollideBody.java', 'checkVerticalCollisions'): 'called from every actor update',
     ('effects/Torch.java', 'spawnCore'): 'called from update every 0.04 to 0.16 s',
     ('effects/Torch.java', 'spawnEmbers'): 'called from update every 0.15 to 0.35 s',
     ('effects/Torch.java', 'spawnSparkles'): 'called from update every 0.08 to 0.26 s',

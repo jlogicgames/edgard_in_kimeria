@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * A hero riding a collapsing FallingPlatform down onto the solid floor under it (#355, D68). The platform keeps
+ * A hero riding a collapsing FallingPlatform down onto the solid floor under it (#355, D69). The platform keeps
  * falling as scenery, but it must not carry the hero into the floor, and the horizontal pass must not shove him to the
  * block's far edge. The pit cases (forest-1 rotten log, forest-0 traps-room platform) still carry the hero down.
  * Real shipped maps, ordinary keys. Y grows downward: the floor line is the floor block's top.
@@ -144,8 +144,8 @@ class FallingPlatformFloorTest {
     private float feet(Level l) { Rectangle b = l.player.hitboxBounds(); return b.y + b.height; }
 
     /** Drops the hero onto the platform and runs until it has been triggered. */
-    private void mount(Level l, FallingPlatform p) {
-        l.player.position.set(p.getX() + 8, p.getY() - 60);
+    private void mount(Level l, FallingPlatform p, float dx) {
+        l.player.position.set(p.getX() + dx, p.getY() - 60);
         for (int i = 0; i < 90 && !p.isFalling(); i++) frame(l);
         assertTrue(p.isFalling(), "the hero landed on the platform and triggered it");
         assertEquals(p.getY(), feet(l), .01f, "standing on the platform");
@@ -158,17 +158,18 @@ class FallingPlatformFloorTest {
     }
 
     /** Sweeps the key-press frame across the crossing window; the hero must always end on the floor line, near where he was. */
-    private void ride(String name, Supplier<Level> make, float px, float py, int key) {
+    private void ride(String name, Supplier<Level> make, float px, float py, float dx, int key, float expectedFloor) {
         Level probe = make.get();
         FallingPlatform pp = platformAt(probe, px, py);
         float floor = floorLine(probe, pp);
         assertTrue(floor < Float.MAX_VALUE && floor > py, name + ": a solid floor under the platform");
-        mount(probe, pp);
+        mount(probe, pp, dx);
         int crossing = crossingFrame(probe, pp, floor);
         for (int offset = -HOLD_FRAMES - 2; offset <= 6; offset++) {
             Level l = make.get();
             FallingPlatform p = platformAt(l, px, py);
-            mount(l, p);
+            mount(l, p, dx);
+            assertEquals(expectedFloor, floorUnderBody(l, py), .01f, name + ": the authored floor under the hero when he mounts");
             for (int i = 0, run = Math.max(0, crossing + offset); i < run; i++) frame(l);
             float before = l.player.position.x;
             String where = name + " key " + key + " pressed " + offset + " frames from the crossing";
@@ -188,21 +189,38 @@ class FallingPlatformFloorTest {
         }
     }
 
-    @Test void forest1PlatformOverFloorReleasesTheHeroHoldingRight() { ride("forest-1 (128,272)", this::forest1, 128, 272, Input.Keys.D); }
-    @Test void forest1PlatformOverFloorReleasesTheHeroHoldingLeft() { ride("forest-1 (128,272)", this::forest1, 128, 272, Input.Keys.A); }
-    @Test void forest1PlatformOverFloorReleasesTheHeroWithNoInput() { ride("forest-1 (128,272)", this::forest1, 128, 272, 0); }
-    @Test void forest1HighStepOverFloorReleasesTheHero() { ride("forest-1 (192,256)", this::forest1, 192, 256, Input.Keys.D); }
-    @Test void forest2PlatformOverFloorReleasesTheHeroHoldingRight() { ride("forest-2 (1568,240)", this::forest2, 1568, 240, Input.Keys.D); }
-    @Test void forest2PlatformOverFloorReleasesTheHeroHoldingLeft() { ride("forest-2 (1568,240)", this::forest2, 1568, 240, Input.Keys.A); }
+    private static final float FLOOR1 = 320, STEP1 = 304;
+    private static final float[] DX = {-8, 0, 8};
+    private static final float[] ALL_FLOOR = {FLOOR1, FLOOR1, FLOOR1}, ALL_STEP = {STEP1, STEP1, STEP1};
+    // Measured at mount: 96 is clear of the step block; 128 reaches it with the body at +8; 160 is over it; 192 leaves it behind from +0.
+    private static final float[] X128 = {FLOOR1, FLOOR1, STEP1}, X160 = ALL_STEP, X192 = {STEP1, FLOOR1, FLOOR1};
+    private static final int RIGHT = Input.Keys.D, LEFT = Input.Keys.A, NONE = 0;
+
+    /** One run per mount offset (hero 8 px left of, at, and 8 px right of the platform's left edge). */
+    private void rideAll(String name, Supplier<Level> make, float px, float py, float[] floors, int key) {
+        for (int i = 0; i < DX.length; i++) ride(name + " mounted at +" + DX[i], make, px, py, DX[i], key, floors[i]);
+    }
+
+        @Test void forest1_96_Right() { rideAll("forest-1 (96,272)", this::forest1, 96, 272, ALL_FLOOR, RIGHT); }
+    @Test void forest1_96_Left() { rideAll("forest-1 (96,272)", this::forest1, 96, 272, ALL_FLOOR, LEFT); }
+    @Test void forest1_128_Right() { rideAll("forest-1 (128,272)", this::forest1, 128, 272, X128, RIGHT); }
+    @Test void forest1_128_Left() { rideAll("forest-1 (128,272)", this::forest1, 128, 272, X128, LEFT); }
+    @Test void forest1_128_NoInput() { rideAll("forest-1 (128,272)", this::forest1, 128, 272, X128, NONE); }
+    @Test void forest1_160_Right() { rideAll("forest-1 (160,272)", this::forest1, 160, 272, X160, RIGHT); }
+    @Test void forest1_160_Left() { rideAll("forest-1 (160,272)", this::forest1, 160, 272, X160, LEFT); }
+    @Test void forest1_192_Right() { rideAll("forest-1 (192,256)", this::forest1, 192, 256, X192, RIGHT); }
+    @Test void forest1_192_Left() { rideAll("forest-1 (192,256)", this::forest1, 192, 256, X192, LEFT); }
+    @Test void forest2_Right() { rideAll("forest-2 (1568,240)", this::forest2, 1568, 240, ALL_FLOOR, RIGHT); }
+    @Test void forest2_Left() { rideAll("forest-2 (1568,240)", this::forest2, 1568, 240, ALL_FLOOR, LEFT); }
 
     /** Over a pit nothing solid is beneath: the hero is carried with the platform exactly as before, until he leaves the room. */
     private void carriedDown(Level l, FallingPlatform p) {
-        mount(l, p);
+        mount(l, p, 8);
         float start = p.getY();
         int carried = 0;
         for (int i = 0; i < 400 && p.getY() < start + 48; i++) {
             frame(l);
-            if (p.getY() > start + 4) { assertEquals(p.getY(), feet(l), 6f, "feet ride the platform top at " + p.getY()); carried++; } // tolerance: two frames of travel
+            if (p.getY() > start + 4) { assertEquals(p.getY(), feet(l), .5f, "feet ride the platform top at " + p.getY()); carried++; } // tolerance: measured max difference is 0.0
         }
         assertTrue(carried > 12, "carried down with the platform: " + carried + " frames");
     }
