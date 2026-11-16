@@ -102,13 +102,28 @@ class RoomTest {
         }
     }
 
-    @Test void unmarkedMapKeepsItsOriginalPlayerEntrance() {
+    /** No shipped map is unmarked since #187 (D67) gave forest-1 two rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
+    @Test void aMapWithoutRoomMarkersIsOneRoomAtItsPlayerSpawn() {
         TiledMapData map = map("forest-1");
+        map.objectGroups.get("Rooms").clear();
         RoomLayout layout = new RoomLayout(map);
         assertEquals(1, layout.rooms.size());
         var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNull(layout.rooms.get(0).exit());
+    }
+    /** forest-1 (D67): the trap course keeps the Player spawn as its entrance and ends at a RoomExit; the route room is last and holds the Checkpoint. */
+    @Test void forestOneIsTheTrapCourseThenTheRouteRoomWithTheCheckpoint() {
+        TiledMapData map = map("forest-1");
+        RoomLayout layout = new RoomLayout(map);
+        assertEquals(2, layout.rooms.size());
+        var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
+        assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
+        assertNotNull(layout.rooms.get(0).exit());
+        assertNull(layout.rooms.get(1).exit());
+        var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
+        assertEquals(1, checkpoint.size());
+        assertEquals(1, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

@@ -839,8 +839,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             velocity.x = horizontalMovement * MOVE_SPEED;
             if (inQuickSand) velocity.x *= 0.1f;
             if (currentEscalator != null) {
-                Vector2 escVel = currentEscalator.currentMoveDirection().scl(currentEscalator.moveSpeed());
-                velocity.x += escVel.x;
+                velocity.x += currentEscalator.riderVelocityX();
             }
         }
         position.x += velocity.x * dt;

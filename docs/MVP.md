@@ -28,8 +28,8 @@ or full-set reward in this MVP.
 1. New Game plays the existing healer-narrated opening.
    A short healer tale then opens `forest-0` and another closes it before `forest-1`
    (run state only, nothing saved; [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial)).
-2. Level 0, `forest-0`: the tutorial skeleton (D33); then level 1, `forest-1`, the existing
-   single-room course. Completing a level saves the next index and loads it with a fresh hero.
+2. Level 0, `forest-0`: the tutorial skeleton (D33); then level 1, `forest-1`, the trap
+   course followed by the route room (two rooms, #187/D67). Completing a level saves the next index and loads it with a fresh hero.
 3. Final level, `forest-2`: forest entry → canopy → pre-boss healer → forest boss.
    Existing collection returns, optional elixir, room retries and boss rules remain.
 4. Boss death animation → protected automatic exit → post-boss healer guide scene.
