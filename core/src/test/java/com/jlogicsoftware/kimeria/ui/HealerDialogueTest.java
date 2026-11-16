@@ -53,7 +53,7 @@ class HealerDialogueTest {
         Object[][] scripts = {
             {HealerDialogue.Kind.TUTORIAL_START, java.util.List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME,
                 Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT, Msg.HEALER_TALE_WITCH,
-                Msg.HEALER_TALE_THREAD, Msg.EDGARD_TALE_UNDERSTOOD)},
+                Msg.HEALER_TALE_THREAD, Msg.HEALER_TALE_FIREGIFT, Msg.EDGARD_TALE_UNDERSTOOD)},
             {HealerDialogue.Kind.TUTORIAL_END, java.util.List.of(Msg.HEALER_TALE_PRAISE, Msg.EDGARD_TALE_READY,
                 Msg.HEALER_TALE_HEROES, Msg.HEALER_TALE_BLESSING)}};
         for (Language language : Language.values()) {

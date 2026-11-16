@@ -469,6 +469,10 @@ the first boss entrance and another above a moving platform after that boss.
 Full stock retains the pickup and shows a local hint; the HUD uses three icons
 with missing charges darkened. Validate campaign supply and prices on real levels.
 
+**Story origin (#340):** the fireball is a spark of the healer's own fire, given with the
+silver thread; every refill found on the road is the same fire. The start tale says it is not
+endless, which matches the scarcity above ([STORY.md](STORY.md)).
+
 Required routes must remain possible without consumable ranged attacks. The player
 chooses where to spend an advantage; empty ammunition must not block progress.
 A thrown stone or torch need not share this economy; define each object's rules.
