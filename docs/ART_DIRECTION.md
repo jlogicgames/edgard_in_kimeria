@@ -549,6 +549,28 @@ The author approved the plan with these answers:
 - **Particles.** Dust and grit are particles on `KimeriaParticleSystem` (not sprite strips); the atlas is out
   of scope ([#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284)).
 
+## Effects from pixelfx (plan, 2026-11-16, [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396))
+
+A plan agreed with the author, not implemented. [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) is a library of
+244 procedural pixel art effects (MIT; credit Patch and Hugo Duprez in a notice file when the first effect lands).
+
+- **Category.** Only time-varying VFX come from it (blasts, smoke, dust, sparks, splashes, slashes, flashes, shock
+  waves, transitions), the same category as the torch particles in the section below. Anything that depicts a thing
+  (a creature, a torch body, a boulder, a coin, an eyeball) stays an authored sprite; pixelfx is only a motion reference.
+- **Route.** Default: a sprite sheet exported with its `tools/sheets.mjs`, recoloured to our palette and scaled down
+  (its default frames are large, e.g. 300x240 for `small-explosion`), played as an `Animation`. Port a recipe to
+  `KimeriaParticleSystem` only when the effect must react to the game. No allocation per frame, D7 warnings stay
+  visible, shakes follow the reduced-motion option.
+
+| Area | Issue | Main candidates |
+| --- | --- | --- |
+| Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | bomb, stump and root blasts; fireball trail and hits; stone and branch landing; boss strike, counter and death; spores |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle and flying beetle blasts, snail spit, bites, the notice pop of #240, death poof (check against the D65 blood) |
+| Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
+| Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
+| Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
+| All worlds | [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402) | pickup burst, respawn, lost heart, level and room transitions |
+
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 
 The author explicitly requires sprites for world artwork, including prototypes.

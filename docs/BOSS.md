@@ -226,6 +226,7 @@ A monster killed by the player's sword gets a light version of the same spray (#
 smaller drops with shorter streaks, from the near edge of the body away from the hero. Fireballs, thrown stones and stomps
 spray nothing.
 The star texture has been removed.
+Planned extra effects for the boss ground strike, empowered hit, counter and death (not built): [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397).
 The frame and filled/empty slots are independent PNGs in
 [`assets/images/ui/boss`](../assets/images/ui/boss/README.md). Dimensions and gaps are grouped
 in `BossHud`; equivalent-sized art replacements require no code change. The short impact

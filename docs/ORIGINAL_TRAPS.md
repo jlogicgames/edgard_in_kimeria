@@ -388,7 +388,7 @@ Not part of the forest set and not implemented; also recorded in D42.
 - **Falling stone in other worlds:** reusable, with a stone skin and shadow per world (#232).
 - **Arrow shot from the side (#238):** for world 2 and later (castle and other worlds, not
   the forest). The projectile can change per world and the player dodges it. It needs the D7
-  telegraph before it fires.
+  telegraph before it fires. Flight, impact and deflection effects (plan): [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400).
 - **Honey fungus and false honey fungus (#295):** two look-alike spore mushrooms, one harmless (particle burst) and one that kills by its spore cloud (sprite first, particles and shaders later, #296); decided 2026-11-12, see the subsection below.
 - **Floor pressure plate (#237):** activates a door like a lever (Prince of Persia style), for
   the castle-fortress stage. Open design points: whether the door stays open or closes when the
