@@ -158,7 +158,7 @@ the new mechanic creates new situations for using them.
 
 | Stage | Material for further design | Status |
 | --- | --- | --- |
-| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction; short prototype and exact interaction rules remain to test (#103, #187). |
+| Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction. The lever introduction is built in `forest-0` (#186); the optional-route variation is built as a second room of `forest-1` (#187, [D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15): one lever lowers a ladder and stops the lift that is the mandatory way, and a one-shot falling step guards a fireball refill; automated tests only, not yet played by the author); the combination with an enemy is built as a third room (#104, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15): a RedMob in a tunnel under a spore cloud, and a roof route with a refill; automated tests only, not yet played by the author). |
 | Swamp | Quicksand, unreliable footing, bridges, moving and falling platforms. | Ideas from the notes; distinguish its problems from forest switches. |
 | Steppe | Wind as a spatial property: gusts, shelter, effects on movement and objects. | Wind accepted; directions, strength, cycles and interactions need design. |
 | Fortress | Carrying, placing and throwing a torch; light affects visibility and creatures. | Preferred prototype direction; complete rules not approved. |
@@ -187,7 +187,27 @@ Under D26, every mandatory exit, boss and required fragment must remain reachabl
 each secured state produced by supported actions; an optional reward may become
 unavailable until Restart Level. Remote or throw activation, one-shot versus reversible
 supports, and the recovery rules for each new linked object remain open until a prototype
-defines them.
+defines them. (One-shot versus reversible is resolved: see the route variation below.)
+
+**Route variation, built (#187, [D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15), 2026-11-15; automated tests only, the author has not played it):**
+`forest-1` gained a second room after its trap course. One lever drives two supports in
+opposite states: a ladder (raised at the start) and a vertical lift (running at the start). The
+lift is the mandatory way to the checkpoint and needs no lever; pulling the lever lowers the
+ladder to a slab and stops the lift where it is, so the optional detour has a visible cost until
+the lever is pulled again. The single-charge fireball refill (D27) lies on a pad above the slab that
+only a **one-shot step** (an existing falling platform, seen collapsing in room 1) can reach: spend
+the step without taking the refill and the reward is lost until Restart Level, while the lift route
+to the checkpoint stays open from every state (D26, swept in ROOMS.md). **This answers "one-shot
+versus reversible":** levers stay reversible, the one-shot is a support that guards an optional
+reward. Remote or throw activation is not used here. The mastered route is about 11 s, the refill
+detour brings the whole room to about 18 s. A **Bat** (author's request) patrols the floor stretch before the lift: the
+sword, a hop or a fireball from afar deals with it, so zero fireballs are enough, but a hero who
+shoots it can take the refill back; that gives the refill a use even at a full stock. The #104 room that
+follows offers a fireball as another optional choice (built, next paragraph). The room has
+no hint and no hazard.
+
+**Combination, built (#104, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), 2026-11-15; automated tests only, the author has not played it):**
+`forest-1` gained a third room after the route room. A RedMob that never moves stands in a 32 px-high tunnel on the floor, and a spore puffball's cloud covers every place from which the sword reaches it, so **melee is a timed risk** (the author's request: a second threat beside the RedMob so the sword does not dominate). The floor through the tunnel is the support-free route and needs no charge; one lever lowers a ladder to the roof, which is the safe route and carries a fireball refill; both routes reach the checkpoint with zero charges. Choices (scripted hero): **timed melee** (6.83 s mastered; a patient hero waits 1.06 s on average and always succeeds; a player who simply walks in from the entry dies every time, at frame 101, because the cloud is always at the same phase there, and succeeds with a pause of 0.15 s or more; a sweep over artificial start phases kills 30 of 60); **fireball from afar** (6.15 s, one charge, then the patient crossing); **roof** (7.67 s, nothing threatens it, the refill pays one charge). D26 holds from every swept state (216 runs). **Assessment, stated plainly:** the sword no longer dominates as an instant answer, and the roof beats an unaware patient melee (7.67 s against 7.89 s) and pays a charge; but for a hero who knows the cycle at a full stock (the usual arrival) the mastered melee is still best by 0.84 s and the refill pays nothing, so the risk is a learning risk. Whether that is a meaningful decision is the author's call after playing it. The reasoning, the two earlier layouts and the numbers are in D68 and ROOMS.md.
 
 **Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
 simple, lethal, organic hazards on the ground and overhead, grouped by trigger family

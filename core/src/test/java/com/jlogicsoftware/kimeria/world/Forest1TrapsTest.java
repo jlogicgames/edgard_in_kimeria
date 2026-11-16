@@ -47,7 +47,7 @@ class Forest1TrapsTest {
     private static final float STEP = 1f / 60f;
     // Authored geometry (docs/ROOMS.md, "forest-1 trap placement plan").
     static final float TUFT_X = 696, MOB_X = 864, PUFF_X = 944, LIP = 1024, PIT_END = 1168, LOG_X = 1088, LOG_END = 1120;
-    static final float CHECKPOINT_X = 1216;
+    static final float CHECKPOINT_X = 1216; // x of the room exit (the old checkpoint spot, D67)
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TrapWarnings warnings = new TrapWarnings();
@@ -135,7 +135,8 @@ class Forest1TrapsTest {
     private float bodyRight(Level l) { Rectangle b = l.player.hitboxBounds(); return b.x + b.width; }
     private float bodyLeft(Level l) { return l.player.hitboxBounds().x; }
     private boolean dead(Level l) { return l.touchesDeadline(l.player.hitboxBounds()) || l.player.isGotHit(); }
-    private boolean won(Level l) { return l.player.getState() == Player.State.DISAPPEARING; }
+    /** Reached the end of the course: the room's exit, where the checkpoint stood before #187 appended the route room (D67). */
+    private boolean won(Level l) { return l.atRoomExit(); }
     private void settle(Level l, int frames) { for (int i = 0; i < frames; i++) frame(l); }
     /** Body right edge at {@code right}, standing on the floor, hero facing right. */
     private void place(Level l, float right) { l.player.position.set(right - 29, 272); settle(l, 3); }
@@ -232,14 +233,14 @@ class Forest1TrapsTest {
         Rectangle mobWorst = mobReach(l);
         Rectangle cloud = new Rectangle(puff(l).getX() + puff(l).getWidth() / 2f - 12, 288, 24, 32);
         Rectangle pit = new Rectangle(LIP, 300, PIT_END - LIP, 80);
-        Rectangle checkpoint = new Rectangle(CHECKPOINT_X, 272, 16, 32);
+        Rectangle checkpoint = new Rectangle(CHECKPOINT_X, 272, 32, 48); // the RoomExit
         Rectangle[] areas = {zone, mobWorst, cloud, pit};
         for (int i = 0; i < areas.length; i++) for (int j = i + 1; j < areas.length; j++)
             assertFalse(areas[i].overlaps(areas[j]), "areas " + i + " and " + j + " overlap: " + areas[i] + " " + areas[j]);
         assertTrue(mobWorst.x - (zone.x + zone.width) >= 24, "the mob's reach starts 24 px past the tuft zone: " + (mobWorst.x - (zone.x + zone.width)));
         assertTrue(cloud.x - (mobWorst.x + mobWorst.width) >= 24, "24 px between the mob's reach and the cloud");
         assertTrue(pit.x - (cloud.x + cloud.width) >= 48, "a run-up between the cloud and the lip");
-        assertTrue(checkpoint.x - (pit.x + pit.width) >= 48, "D44-D47: the checkpoint is 48 px clear of the pit");
+        assertTrue(checkpoint.x - (pit.x + pit.width) >= 48, "D44-D47: the room exit is 48 px clear of the pit");
         assertTrue(zone.x - 608 >= 8, "the tuft zone starts past the last escalator's travel (x 608)");
         // The entrance is far away from everything (the loader also enforces this).
         assertTrue(zone.x - 80 > 32 + 48);
@@ -256,12 +257,12 @@ class Forest1TrapsTest {
 
     // ---- the mastered route ----
 
-    @Test void theMasteredRouteReachesTheCheckpointWithZeroAmmunitionInUnderTwentySeconds() {
+    @Test void theMasteredRouteReachesTheRoomExitWithZeroAmmunitionInUnderTwentySeconds() {
         Level l = level();
         assertEquals(0, l.rangedStock.count());
         Plan plan = new Plan();
         Run r = run(l, plan, 60 * 30);
-        assertTrue(r.won, "reached the checkpoint: " + r);
+        assertTrue(r.won, "reached the room exit: " + r);
         float seconds = r.frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-1 mastered route (zero ammunition): %.2f s, of which %.2f s waiting for the puffball%n", seconds, plan.waitedFrames * STEP);
         assertTrue(seconds <= 20f, "the 20 s budget: " + seconds);

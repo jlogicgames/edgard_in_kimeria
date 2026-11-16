@@ -119,7 +119,7 @@ introduces no new quest, destination or persistent checkpoint. See [HEALER.md](H
 
 ## MVP ending — accepted 2026-10-19
 
-The playable MVP is finite: the existing single-room `forest-1` is level one; the forest's three rooms and boss
+The playable MVP is finite: the existing three-room `forest-1` (trap course, route room and guard room) is level one; the forest's three rooms and boss
 (`forest-2`) form the last level. The forest guide scene follows the boss. After
 it, an ending screen in the opening's scrolling style plays the same music.
 Its localized text establishes that Edgard defeated every enemy, cleared the kingdom of

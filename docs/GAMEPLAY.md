@@ -14,7 +14,7 @@ Flutter/Flame version (with reference to its separate Rust/Bevy version for feat
 full menu system, localization, gamepad support, dev hotkeys).
 
 The MVP has three playable levels: the tutorial **forest-0** (six empty rooms), **forest-1**
-(one room), then **forest-2** (three rooms, healer and boss). The Forest order is
+(three rooms: the trap course, a route room with a lever, a ladder and a lift, and a guard room with a RedMob in a tunnel under a spore cloud and a lever-lowered roof route with a refill), then **forest-2** (three rooms, healer and boss). The Forest order is
 `forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending scroll uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
 removed. Future mechanics will expand these same levels. See [MVP](MVP.md).
@@ -144,7 +144,7 @@ acknowledges the victory and establishes his ongoing guidance before the next le
 At the first room's exit, the scene fades out and in (0.25 seconds each way).
 The hero and camera relocate under full black, without a hero transition animation.
 Death resets only the active room; previous rooms' collections remain kept.
-`forest-1` has no markers and continues to behave as one room. See
+`forest-1` has three rooms (the trap course, the route room, [D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15), and the guard room, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)): the first two end at an exit like the others and the level checkpoint is in the third. See
 [Rooms in Tiled](ROOMS.md) for authoring, retry rules, and validation history; deferred checks live in
 [Pre-release TODO](PRE_RELEASE_TODO.md).
 

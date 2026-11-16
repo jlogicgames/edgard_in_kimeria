@@ -102,13 +102,30 @@ class RoomTest {
         }
     }
 
-    @Test void unmarkedMapKeepsItsOriginalPlayerEntrance() {
+    /** No shipped map is unmarked since #187 (D67, #104) gave forest-1 three rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
+    @Test void aMapWithoutRoomMarkersIsOneRoomAtItsPlayerSpawn() {
         TiledMapData map = map("forest-1");
+        map.objectGroups.get("Rooms").clear();
         RoomLayout layout = new RoomLayout(map);
         assertEquals(1, layout.rooms.size());
         var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNull(layout.rooms.get(0).exit());
+    }
+    /** forest-1 (D67, #104): the trap course keeps the Player spawn as its entrance; the route room and the guard room follow, and the guard room is last and holds the Checkpoint. */
+    @Test void forestOneIsTheTrapCourseThenTheRouteRoomThenTheGuardRoomWithTheCheckpoint() {
+        TiledMapData map = map("forest-1");
+        RoomLayout layout = new RoomLayout(map);
+        assertEquals(3, layout.rooms.size());
+        var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
+        assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
+        assertNotNull(layout.rooms.get(0).exit());
+        assertNotNull(layout.rooms.get(1).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
+        assertNull(layout.rooms.get(2).exit());
+        assertEquals("forest-1-guard", layout.rooms.get(2).id());
+        var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
+        assertEquals(1, checkpoint.size());
+        assertEquals(2, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

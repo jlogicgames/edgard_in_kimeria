@@ -573,7 +573,8 @@ public class Level implements WorldObject {
         activateRoom(nextPlayer, true);
     }
 
-    private void secureVisit() {
+    /** Package-private for the tests that secure a room the way a forward exit does. */
+    void secureVisit() {
         player.releaseCarriedForRoomSecure();
         Set<Integer> defeated = new HashSet<>();
         Visit previous = visits.get(currentRoom);
@@ -1227,8 +1228,8 @@ public class Level implements WorldObject {
     /**
      * Draws only the tiles overlapping {@code visibleWorldRect} (with a
      * 1-tile margin), instead of every tile in the map regardless of the
-     * camera. For forest-1 (80x23 = 1840 tiles) that's the difference
-     * between ~1840 draw calls a frame and the ~40x23 actually on screen.
+     * camera. For forest-1 (180x23 = 4140 tiles) that's the difference
+     * between ~4140 draw calls a frame and the ~40x23 actually on screen.
      */
     public void renderBackground(Batch batch, Rectangle visibleWorldRect) {
         int colStart = Math.max(0, (int) Math.floor(visibleWorldRect.x / map.tileWidth) - 1);

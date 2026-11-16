@@ -72,6 +72,11 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
         return isVertical ? new Vector2(0, moveDirection) : new Vector2(moveDirection, 0);
     }
 
+    /** Horizontal speed it carries a rider at (px/s): zero while stopped or vertical. Allocation-free, called every frame while riding. */
+    public float riderVelocityX() {
+        return isRunning() && !isVertical ? moveDirection * moveSpeed : 0f;
+    }
+
     public float moveSpeed() {
         return moveSpeed;
     }

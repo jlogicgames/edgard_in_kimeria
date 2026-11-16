@@ -90,8 +90,21 @@ gdxTeaVM {
     }
 }
 
-tasks.matching { it.name.startsWith("gdx_teavm_web_js") && it.name.endsWith("_compile") }.configureEach {
+// Every task that reads the runtime assets from disk: the dev servers and the run tasks
+// (which do not pass through the compile tasks), the compile tasks, and the generate tasks
+// behind the unnamed JS and Wasm GC builds. Matched by pattern so a renamed or added target
+// keeps working; the guard below fails the build if the dev-server pattern stops matching.
+fun readsRuntimeAssets(name: String): Boolean =
+    name.endsWith("DevServer") ||
+        (name.startsWith("gdx_teavm_web_") && (name.endsWith("_run") || name.endsWith("_compile"))) ||
+        name == "generateJavaScript" || name == "generateWasmGC"
+tasks.matching { readsRuntimeAssets(it.name) }.configureEach {
     dependsOn(prepareRuntimeAssets)
+}
+afterEvaluate {
+    check(tasks.names.any { it.endsWith("DevServer") }) {
+        "No TeaVM dev-server task matches the runtime-assets pattern; update readsRuntimeAssets in web/build.gradle.kts"
+    }
 }
 
 val releaseCompileTaskName = "gdx_teavm_web_js_release_compile"

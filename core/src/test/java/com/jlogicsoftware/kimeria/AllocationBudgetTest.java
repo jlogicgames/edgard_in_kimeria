@@ -69,6 +69,12 @@ class AllocationBudgetTest {
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
     /** Measured 1,322.0 to 1,322.2 B/frame in 3 runs (#303: the index loops, the scratch rectangles and the HashSet removal; before: 2,441.8 to 2,441.9; step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_CEILING = 1450;
+    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    static final double FOREST_1_ROUTE_CEILING = 1130;
+    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    static final double FOREST_1_GUARD_CEILING = 1280;
+    /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
+    static final double RIDER_PATH_CEILING = 8;
     /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
     static final double FOREST_2_ROOM_0_CEILING = 1560;
     /** Measured 816.0 B/frame in 3 isolated runs and 1,128.0 in the full suite (#303; the ceiling follows the full-suite run; before: 2,184.0; step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. Ceiling = highest run + about 10 %. */
@@ -177,9 +183,81 @@ class AllocationBudgetTest {
     }
 
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
-    @Test void forest2Room0() { assertWithinBudget("forest-2 room 0", FOREST_2_ROOM_0_CEILING, room("forest-2", 0)); }
-    @Test void forest2Room1() { assertWithinBudget("forest-2 room 1", FOREST_2_ROOM_1_CEILING, room("forest-2", 1)); }
-    @Test void forest2Room2() { assertWithinBudget("forest-2 room 2", FOREST_2_ROOM_2_CEILING, room("forest-2", 2)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
+    /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 2)); }
+
+    /**
+     * The guard room with the RedMob awake: every {@value #GUARD_CYCLE_FRAMES} frames, in the calm half of the puffball's cycle, the hero is put for one
+     * frame within the guard's whip and then back at the entrance, so the guard's attack (wind-up, strike, recovery: 48 frames) runs over and over
+     * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
+     */
+    @Test void forest1GuardRoomWithTheGuardAwake() {
+        Level level = harness.roomOf("forest-1", 2);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
+        boolean[] attacked = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int phase = i % GUARD_CYCLE_FRAMES;
+            if (phase == CALM_FRAME) {          // the whip's reach: the guard begins its attack
+                level.player.position.set(HERO_AT_WHIP_X - HERO_CENTRE_OFFSET_X, ENTRANCE_Y);
+                level.player.velocity.setZero();
+            } else if (phase == CALM_FRAME + 1) {   // gone: the attack finishes on its own, hitting air
+                level.player.position.set(ENTRANCE_X, ENTRANCE_Y);
+                level.player.velocity.setZero();
+            }
+            level.update(STEP); level.render(batch, view);
+            if (level.player.isGotHit()) throw new AssertionError("the hero was hit at frame " + i);
+            attacked[0] |= guard.getState() == com.jlogicsoftware.kimeria.entity.enemy.RedMob.State.ATTACK;
+        });
+        assertTrue(attacked[0], "the scene must have the guard attack");
+        assertWithinBudget("forest-1 guard room, guard awake", FOREST_1_GUARD_CEILING, bytes);
+    }
+    /** The puffball cycles every 4 s (240 frames) from phase 2.2 s: swell 0-48, cloud 48-108, calm 108-240; the attack takes 48 frames, so it ends before the next swell. */
+    private static final int GUARD_CYCLE_FRAMES = 240, CALM_FRAME = 120;
+    /** forest-1-guard: the hero's hitbox centre sits 23.5 px right of {@code position.x}; the guard's whip reaches x 2394-2400 on the floor, so a hero centred at x 2390 is in it; the entrance is (2176, 272). */
+    private static final float HERO_CENTRE_OFFSET_X = 23.5f, HERO_AT_WHIP_X = 2390, ENTRANCE_X = 2176, ENTRANCE_Y = 272;
+
+    /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
+    @Test void forest1RouteRoomRidingTheLift() {
+        Level level = harness.roomOf("forest-1", 1);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        var lift = level.escalators.get(0);
+        level.player.position.set(lift.getX() + 3, lift.getY() - 48);
+        for (int i = 0; i < 5; i++) level.update(STEP);
+        org.junit.jupiter.api.Assertions.assertSame(lift, level.player.currentEscalator(), "the scene must have the hero riding");
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            level.update(STEP); level.render(batch, view);
+            if (level.player.currentEscalator() != lift) throw new AssertionError("fell off the lift at frame " + i);
+        });
+        assertWithinBudget("forest-1 route room riding the lift", FOREST_1_ROUTE_CEILING, bytes);
+    }
+
+    /**
+     * The rider path alone: {@code Player.update} costs about 1,000 B/frame in this harness whatever it stands on (its own scratch and the
+     * stubbed input), which hides a 24-byte {@code Vector2}, so the test measures the <b>difference</b> between a hero riding a running horizontal
+     * escalator and the same hero standing on the floor, with the same calls. The difference must stay within the 8 B of the other isolated
+     * paths. (Before the #187 review fix {@code Player} built a {@code Vector2} per frame while riding; the JIT may remove such a short-lived
+     * object, so this guard is as strong as the JIT allows, and the fix itself is the allocation-free {@code Escalator.riderVelocityX()}.)
+     */
+    @Test void ridingARunningEscalatorCostsNoMoreThanStandingStill() {
+        Level level = harness.roomOf("forest-1", 0);
+        var escalator = level.escalators.stream().filter(e -> !e.isVertical && e.isRunning()).findFirst().orElseThrow();
+        level.player.position.set(escalator.getX() + 3, escalator.getY() - 48);
+        for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
+        org.junit.jupiter.api.Assertions.assertSame(escalator, level.player.currentEscalator(), "the hero rides");
+        double riding = AllocationProbe.bytesPerFrame(i -> {
+            escalator.update(STEP); level.player.update(STEP);
+            if (level.player.currentEscalator() != escalator) throw new AssertionError("left the escalator at frame " + i);
+        });
+        level.player.position.set(700, 272); // plain floor, no escalator
+        for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
+        org.junit.jupiter.api.Assertions.assertNull(level.player.currentEscalator(), "the baseline stands on the floor");
+        double standing = AllocationProbe.bytesPerFrame(i -> { escalator.update(STEP); level.player.update(STEP); });
+        System.out.printf("ALLOCATION rider path: riding %.1f, standing %.1f B/frame%n", riding, standing);
+        assertWithinBudget("rider path on a horizontal escalator (riding minus standing)", RIDER_PATH_CEILING, riding - standing);
+    }
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
     @Test void cameraShakeQuery() {
