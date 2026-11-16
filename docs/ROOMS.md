@@ -209,6 +209,53 @@ Saved progress remains per level (D8). A dev-mode TMX reload keeps the player
 in the room containing its position; if that position was removed from the map,
 it falls back to the first entrance.
 
+<a id="every-room-gives-something-new-d72"></a>
+
+## Every room gives something new (D72)
+
+Rule: [D72](DECISIONS.md#d72-every-room-gives-the-player-something-new), from playtest remark F20
+([PLAYTEST_1.md](PLAYTEST_1.md)). Each room introduces, develops or combines at least one element the player has not
+met **in that form**, counted in play order (`KimeriaGame.LEVEL_NAMES`, then each map's room order):
+
+- **Introduce:** the first sighting of a mechanic, enemy, trap, pickup, interaction or view.
+- **Develop:** a known element under a condition that **changes the answer** (a crumbling support now over a lethal
+  pit; a choice from afar that now costs ammunition). A known element on a new surface or in a new setting counts when
+  it changes what the player does (Primal Planet study, #352, in GAME_DESIGN.md "Reference research").
+- **Combine:** known elements whose solution needs both at once.
+
+A new look with the same trigger and answer (a **reskin**: the thorn tuft after the root, the exploding root or the
+Bomb after the stump, the rotten log after the falling platform) is not novelty, and neither is more of the same
+geometry. Repeating known elements for mastery is welcome, as long as the room has something else too. Outside the
+tutorial a room **introduces at most two elements**, and each is first met where it is the only unknown thing on
+screen before it is combined (the "teach alone, then combine" rule of the teaching walkthrough below, applied in play
+order). Lesson rooms keep their own stricter form (one lesson element, plus at most one trap: D33-D40, D48).
+A calm, wordless beat after a dangerous one (#352) is a good role for a room, but it needs its own novelty, such as a
+new view or reward.
+
+**Workflow.** Write the room's card in [ROOM_CARDS.md](ROOM_CARDS.md) **before** building the map: role, purpose,
+what it introduces, develops or combines (element ids from the card file's registry), the mastered-route and
+first-learning targets of D19, the retry cost and the D26 notes. Then build the map with the recipes in this
+document, measure, and fill the measured times in. The skill `kimeria-room-design` (`.agents/skills/`) is the
+checklist. A new Tiled object type gets a registry row in the same change.
+
+**Gate.** `RoomCardsTest` (`:core:test`; the Gradle test task declares the card file as an input, so a card edit
+alone reruns it) fails when a shipped room has no card or a card names no room, a required field is empty, an element
+id or a Tiled key is not in the registry, the room where an element is first met does not introduce it, a card
+introduces something already met or develops or combines something not met yet, or a non-lesson room introduces more
+than two elements without an `Overload reason` citing an issue. It cannot judge whether a develop changes the answer
+or whether a new element is met alone: review that against the card.
+
+**Audit of the Forest (#351, 2026-11-16).** Verdicts are on the cards. Ten rooms keep (the tutorial's
+`forest-0-wall` is watched: its wall repeats the ladder room's "press, the way opens"; `forest-1-route` and
+`forest-1-guard`, added by #187/D67 and #104/D68, pass with a bat introduction and two combinations); two change,
+both for overload and misplaced repeats rather than for too little novelty. `forest-1-traps`, the unchanged #260
+course, introduces four elements and meets its first enemy in the same stretch (x 256-450) as two other first sightings,
+the running escalators and the fireball refill, not on the falling platforms: measured, the RedMob wakes only once the
+hero is back on the floor past them and then holds body x 352-372, 128 px beyond the last platform; its
+lever-and-torch pair repeats `forest-0-lever` with no role: split the room itself so the RedMob is met alone first, handle that pair (ids 12/13) and revisit D58, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375). `forest-entry` introduces six elements and still holds the D24/#95
+practice objects that `forest-0` now teaches: remove them and split the room in the x 696-752 gap (between the Bomb's blast and the second YellowMob's reach), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376). Both cards carry an
+`Overload reason` until those issues land; the issues remove it.
+
 ## Replay budget (#70)
 
 The current author-approved working hypothesis is **about 20 seconds of mastered
@@ -406,6 +453,12 @@ the hero can see the trap move. No hint text exists yet; #235 adds it.
 
 ## Teaching order and walkthrough (#73/#75)
 
+**Historical order (D72 audit, 2026-11-16).** This walkthrough was written when `forest-2` was played before
+`forest-1`. Since #193/D32 the play order is `forest-0` → `forest-1` → `forest-2`, so `forest-1-traps` now meets the falling
+platforms, then the RedMob beside the first running escalators and fireball refill, and `forest-entry` repeats lessons `forest-0` teaches. The rule "teach
+alone, then combine" stands (it is part of D72); the layouts below are corrected by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) and
+[#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376), which also revise this section.
+
 Rule for the two levels: teach each of stomp, sword, falling platforms and bombs where
 it is the only new thing on screen, on forgiving ground and without a required timing
 test, then combine. `forest-3` (now `forest-2`) (level one) teaches; `forest-1` (level two, the finale)
@@ -458,6 +511,9 @@ D26; older teaching-layout route results below do not establish that acceptance.
 Falling platforms (x 96–224, y 272), the RedMob patrol (192–512) that covers them, the
 escalators and the trigger-opened wall at 480–528 are the first time those pieces
 are combined. The falling platforms are now a second sighting rather than the first.
+(Measured 2026-11-16 for D72: the patrol numbers are the range in which the hero's centre wakes the mob, not where it
+walks. The mob reacts only once the hero is back on the floor past the platforms, then stays at body x 352-372, right
+of the 16 px block at x 304-352, 128 px from the last platform; the platforms and the mob are met one after the other.)
 By the map geometry there are 32 px between the ground and the platforms and the hero's
 hitbox is 22 px, so the course can probably also be walked underneath. This is read from
 the map, not exercised in play; the author did walk over the platforms without trouble.

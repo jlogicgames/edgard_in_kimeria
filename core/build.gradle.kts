@@ -21,4 +21,6 @@ sourceSets {
 
 tasks.test {
     useJUnitPlatform()
+    // RoomCardsTest (D72) reads the room cards: a card edit alone must rerun the tests.
+    inputs.file("../docs/ROOM_CARDS.md").withPathSensitivity(PathSensitivity.RELATIVE)
 }

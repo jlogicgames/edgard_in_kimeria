@@ -1562,6 +1562,48 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Not verified:** the at-rest judgements and the ~320 px read distance (camera centred on the hero, from the code)
   were not checked on frames of the running game; the gate checks what the catalogue declares, not the art. In-game check: #368.
 
+## D72. Every room gives the player something new
+
+- **Status:** Accepted by the author, 2026-11-16 ([#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351)), from
+  playtest remark F20 ([PLAYTEST_1.md](PLAYTEST_1.md), D66). Gate built (`RoomCardsTest`); the two room changes it found are
+  follow-up issues ([#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)).
+- **Decision:** every room (the death-recovery unit) contains at least one novelty in play order: it **introduces** an element
+  the player has never met (mechanic, enemy, trap, pickup, interaction, view or reward), **develops** a known element under a
+  condition that changes the answer, or **combines** known elements whose solution needs both. A room that only repeats is
+  changed, merged into a neighbour or cut. A **reskin** (new look, same trigger, same answer) and more of the same geometry are
+  not novelty. Outside the tutorial a room introduces **at most two** elements, each first met where it is the only unknown
+  thing on screen before it is combined; more needs an `Overload reason` that cites an issue. Repetition for mastery stays
+  allowed beside a novelty.
+- **Relation to earlier rules:** generalises the tutorial's one new element per lesson room (D33-D40) and its D48 form (one
+  lesson element plus at most one trap) to every room: D34-D40 and D48 stay the strict form for lesson rooms, D72 is the
+  floor for all rooms and the ceiling for ordinary ones. It restates the #73/#75 "teach alone, then combine" rule in the
+  current play order (D32). D19 (about 20 s mastered, about 60 s first learning) and D26 are unchanged and recorded per room.
+- **System:** one card per shipped room in [ROOM_CARDS.md](ROOM_CARDS.md) (role, purpose, novelty by element id, D19 times,
+  retry cost, D26), with an element registry that maps Tiled types to elements so reskins share one id; the rule and workflow
+  in [ROOMS.md](ROOMS.md#every-room-gives-something-new-d72); the skill `kimeria-room-design` (`.agents/skills/`, with a
+  Claude pointer in `.claude/skills/design-room/`); a line in `AGENTS.md`; and `RoomCardsTest` in `:core:test`, which
+  derives each element's first sighting from the maps and checks the cards against it (the Gradle test task declares the
+  card file as an input).
+- **Audit (2026-11-16, verdicts on the cards; the forest-1 part redone after #187/D67 and #104/D68 added two rooms):**
+  the six `forest-0` rooms, `forest-1-route`, `forest-1-guard`, `forest-canopy` and `forest-boss` keep
+  (`forest-0-wall` watched: its wall repeats the ladder room's "press, the way opens"); `forest-1-traps` and
+  `forest-entry` change. The Forest's problem is overload and misplaced repeats, not too little novelty:
+  `forest-1-traps`, the unchanged #260 course that D67 kept as one room, introduces four elements and meets its first
+  enemy beside two other first sightings, the running escalators and the fireball refill (x 256-450; not on the falling
+  platforms, which the hero has crossed 128 px earlier, measured on the map), so it is not met alone (splitting it
+  reopens D58's choice); the new route room
+  (one introduction, the bat) and guard room (no introduction, two combinations) pass. `forest-entry` introduces six
+  (the bat is now first met in `forest-1-route`) and keeps the D24/#95 practice stone, light, ladder and carryable
+  torch that `forest-0` now teaches (the author chose to remove the carryable torch too). Both overloaded cards carry
+  an `Overload reason` until the follow-ups land.
+- **Reference input:** the Primal Planet study (#352, GAME_DESIGN.md "Reference research") supports "develop" (a known
+  element on a new surface) and suggests a landmark per room and calm beats after danger; the card has an optional
+  `Landmark` field, not gated.
+- **Why:** players notice a screen that offers nothing new (F20). The tutorial already followed the rule; the later levels
+  had none and showed both failure modes.
+- **Not verified:** whether a "develop" really changes the answer and whether each element is first met alone (the gate
+  cannot judge it; review does); first-learning times (none measured, #135); how the follow-up splits will feel.
+
 ## D73. Falling stone impact feedback (#347, 2026-11-16)
 
 - **Status:** Accepted by the author, 2026-11-16 (frames and sound reviewed). Closes playtest finding F17.
