@@ -1406,6 +1406,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   - **#296 final (2026-11-13).** The lethal cloud is `effects.SporeCloud` only: 34 lime `KIND_SMOKE` puffs and 12 `KIND_GLOW` specks over the swirling shader haze `spore_cloud.frag`, all inside the lethal square (D5: nothing drawn outside what kills). The author played it on macOS desktop and checked the shader in a browser, and approved the look. The switches `FalseHoneyFungus.PARTICLE_CLOUD` and `SporeCloud.SHADER_LAYER` and the sprite drawing path are removed. Fallback: `Shaders.tryLoad` returns null when a context cannot compile the shader and the particles alone are drawn (headless tests take this path); debug runs (`-Dkimeria.debug=true`) log once on the first burst whether the shader loaded. **Gameplay unchanged:** hitbox `FalseHoneyFungus.CLOUD_SIZE` = 24x24 (now defined by that constant, not by a sprite), centred on the mushroom with its bottom on the floor line, 1.0 s life, same telegraph and D5 fairness; no test tolerance changed. **The `trap-spores` sheet stays**: the spore puffball (D46) still draws it; only `FalseHoneyFungus` stopped using it. `AllocationBudgetTest` cloud scenario: ceiling 8 B/frame, unchanged.
 - **Rules kept:** D3 (retry), D7 (telegraph, assist), D26 (no ammunition, no re-arming), D42 and D44 to D47 (placement and zone distances), D43 (the pickup's look stays distinct), D58 and D59 (placements untouched).
 - **Not verified:** the sprites and bursts at game scale in the running game and by the author's eye (the headless tests prove geometry, timing and allocation, not the look); that the pair is told apart "only on a close look" at the real scale; the gap for static look-alikes ([#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299)) and the polish ([#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296)) are separate issues.
+- **Static look-alike recoloured (D76, #344, 2026-11-16).** After playtest F15, readability wins over the deception: the static look-alike (#299) is in the decor tier (muted grey-beige, no ink contour, outline 0.16 against 0.36 and up for the active pair), so it no longer imitates the trap at full contrast. It keeps the tuft shape and the rings. The real-or-false game stays between the two active fungi, whose art and glow are unchanged.
 
 ## D64. Feel fixes for the #239 environment effects: landing dust, bush trigger, looping wall rumble (2026-11-13)
 
@@ -1643,3 +1644,60 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   group and language; the shared list adds inflections, damage, boss and list, and the tutorial tales pass.
 - **Not verified:** native-speaker review of the glossary forms for uk, pl, de and be; whether the 60-character hint
   budget is the right margin (it is a proposal from the audit, not measured against a rewritten hint).
+
+## D76. Three contrast tiers: background, decor, active (#344, playtest F15, 2026-11-16)
+
+- **Status:** Rule accepted by the author, 2026-11-16, with the 0.28 active floor; the recolour of the bush, the static
+  look-alike mushroom and the hanging vine, and the lever outline, approved and built the same day. Playtest F15 in [PLAYTEST_1.md](PLAYTEST_1.md).
+  Section and measured inventory: [ART_DIRECTION.md, "Contrast tiers"](ART_DIRECTION.md#contrast-tiers-d76-playtest-f15-344).
+- **Rule:** every sprite belongs to one tier. It is measured against what the game draws behind it (the screen-fixed
+  sky at several horizontal offsets plus the tile layer) at every placement, in its rest frame (glowing sprites at full
+  and dimmest glow, the bush in every frame); the worst placement counts.
+  - **Active** (the hero, traps and their at-rest cues, enemies, collectables, mechanisms, terrain): outline
+    **at least 0.28**. The near-black ink contour and the accent hues (magenta, lime, ember and gold, honey, sulphur,
+    the pickup violet) belong to this tier only.
+  - **Decor** (scenery sprites in the play plane: the `Decor` kinds and `HangingVine`): outline **at most 0.20**, body
+    **0.08 to 0.20**, p90 chroma **at most 0.10**, no ink pixel (OKLab L under 0.30), no accent hue, no idle animation.
+  - **Background** (sky, tile scenery, later parallax layers): no louder than decor, and static.
+- **Metrics (OKLab):** outline is the mean lightness difference between each silhouette pixel and the background pixel
+  just outside it. Body is the mean colour distance between each opaque pixel and the background under it. Chroma is
+  the 90th percentile of the sprite's chroma.
+- **Why these numbers (measured 2026-11-16 on forest-0, forest-1 and forest-2):**
+  - Active sprites measured 0.25 to 0.48. Only the lever fell under 0.28 (below); no playtester reported any active
+    sprite as hard to see except the stump (F18, reads as scenery by shape and colour, not by contrast: it measures 0.39).
+  - The decor measured 0.31 to 0.57 with the same ink contour as the traps; the bush used the pickups' violet. That was F15.
+  - 0.20 leaves 0.08, about four just-noticeable lightness steps, between the tiers; the body ceiling sits at the
+    quietest tile scenery nobody complained about (rocks, 0.21); the body floor keeps the decor and the bush's
+    brush-past (D64) visible.
+- **Recolour (palette lines of `art/objects/decor/{bush,lookalike,vine}.grid` only; every pixel, frame and size
+  unchanged):**
+  - The bush is muted grey-green instead of violet.
+  - The look-alike is muted grey-beige, keeping its tuft and rings.
+  - The vine is pale dull olive.
+  - All three lost the ink contour for a darker shade of their own hue.
+  - Measured after: bush outline 0.12 to 0.18 in all four frames, look-alike 0.16, vine 0.06 to 0.16 (it was 0.57 in
+    front of a cloud).
+  - The brush-past changes the same pixels as before, with a smaller colour step per pixel (0.10 to 0.12, was 0.26 to 0.32).
+- **Lever raised (author-approved art, 2026-11-16):** every `Trigger` draws the lever, and the one in front of the tile
+  rubble at forest-2 x 128 measured 0.25 (the pulled frame 0.27 to 0.30 everywhere). A 1 px outline in the lever's own
+  near-black `010000` around both frames, painted into `art/objects/lever-pixel.png`, lifts it to 0.47 to 0.58; the 3/4
+  drawing, colours, frame, pivot and bottom line are unchanged. Active sprites now measure 0.28 (YellowMob) to 0.58.
+- **Consistent with:**
+  - [D71](#d71-traps-are-visible-before-they-fire-2026-11-16): "the active tier" is this tier, and at-rest cues are
+    drawn in it.
+  - [D63](#d63-honey-fungus-and-false-honey-fungus-a-pair-of-look-alike-proximity-mushrooms-295-phase-1-decision-and-art):
+    both honey fungi are active (0.36 and up). The static look-alike is decor and no longer imitates them at full
+    contrast, so the real-or-false game stays between the active pair.
+  - [D64](#d64-feel-fixes-for-the-239-environment-effects-landing-dust-bush-trigger-looping-wall-rumble-2026-11-13):
+    the bush trigger and frames are unchanged.
+- **Not sufficient alone:** contrast does not make a trap read as a trap; D71's silhouette and cue rules still apply.
+- **Enforcement:** `tools/check_contrast.py` (test `tools/test_check_contrast.py`, Gradle `testContrastGate`, run
+  before the gate), Gradle `validateContrast` in `:core:check`, the desktop jar and the web release build. It fails an
+  active sprite under the floor (the lever in both frames), a decor sprite over a ceiling or under the body floor, and any object type in
+  SpawnPoints or Collisions that is classified neither as a sprite with its tier nor as drawing nothing of its own.
+  There are no exemptions.
+- **Known gap:** the third-party tile scenery is louder than the background ceiling (rocks 0.29, signs, dead trees
+  and tile bushes 0.36 to 0.37). The gate reports it without gating; replacing the tileset is
+  [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) (its checklist carries the D76 background ceiling).
+- **Not verified:** the recoloured decor in the running game, by the author's eye (desktop and web): tracked in
+  [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).

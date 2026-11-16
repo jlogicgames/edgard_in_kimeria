@@ -1,11 +1,12 @@
-# Hanging scenery vine, native 8x40, one frame: a thin olive stem with a few leaves, anchored at the top.
+# Hanging scenery vine, native 8x40, one frame: a thin pale olive stem with a few leaves, anchored at the top.
 # Cosmetic: the runtime rotates it about the top centre when a falling stone lands (HangingVine). Not trap-vine (no thorn ball).
+# Decor tier (D76, #344): pale dull olive, contour in its own hue, no ink 0b0814, no violet leaves; quiet against sky and clouds.
 size 8 40
-color k 0b0814
-color n 8a8a2a
-color N 4a4a18
-color l 7a5ab0
-color d 3b2a5c
+color k 757a67
+color n 9d9f7b
+color N 8a8c6d
+color l 88a083
+color d 738b73
 frame hang
 ..knNk..
 ..knNk..

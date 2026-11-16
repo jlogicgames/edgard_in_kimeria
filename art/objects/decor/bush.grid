@@ -1,12 +1,13 @@
 # Decor bush, native 32x24 frames: idle, brush1 (leaning with the hero), brush2 (rebound), settle.
 # The runtime mirrors the sheet for the hero's heading, so the lean is drawn once. Bottom row rests on the floor.
+# Decor tier (D76, #344): muted grey-green, contour in its own darker green, no ink 0b0814, no accent hue.
 size 32 24
-color k 0b0814
-color d 3b2a5c
-color m 5a4488
-color l 7a5ab0
-color n 8a8a2a
-color N 4a4a18
+color k 4d6151
+color d 597059
+color m 677d62
+color l 758b6a
+color n 858358
+color N 676547
 frame idle
 ................................
 ................................
