@@ -38,8 +38,8 @@ OPAQUE_WORLD_IMAGES = set()
 PLAYER_LOOK_SIZE = (PLAYER_FRAME_SIZE * PLAYER_LOOK_FRAME_COUNT, PLAYER_FRAME_SIZE)
 # Forest trap sheets (#230): name -> (frame size, ordered frame names); horizontal strips, binary alpha.
 FOREST_TRAP_SHEETS = {
-    'stump': ((16, 16), ('idle', 'windup1', 'windup2', 'windup3', 'spent')),
-    'root': ((16, 24), ('idle', 'windup1', 'windup2', 'windup3', 'spent')),
+    'stump': ((16, 16), ('idle1', 'idle2', 'idle3', 'idle4', 'windup1', 'windup2', 'windup3', 'spent')),
+    'root': ((16, 24), ('idle1', 'idle2', 'idle3', 'idle4', 'windup1', 'windup2', 'windup3', 'spent')),
     'bomb': ((16, 16), ('idle1', 'idle2')),
     'blast': ((32, 32), tuple(f'blast{n}' for n in range(1, 13))),
     'thorn-root': ((16, 24), ('hidden', 'peek1', 'peek2', 'rising', 'up')),

@@ -1,4 +1,4 @@
-# Exploding stump, native 16x16 frames: idle, wind-up (cracks, smoke, glow), charred remains.
+# Exploding stump, native 16x16 frames: idle loop (ember crack, smoke wisp), wind-up (cracks, smoke, glow), charred remains.
 size 16 16
 color k 0b0814
 color W 4a2e1c
@@ -11,21 +11,74 @@ color h fff4b0
 color g 5b5870
 color G 9a97ad
 color d 2a2638
-frame idle
+color e 7a1a14
+color m d8461c
+frame idle1
 ................
 ................
-................
-................
-................
+..........G.....
+.........g......
+.........g......
 ....kkkkkkkk....
 ..kkllllllllkk..
-.kllwwwwwwwwllk.
-.klwwwwkwwwwwlk.
-.kllwwwwwkwwllk.
+.kllwwkwwwwwllk.
+.klwwwwkrwwwwlk.
+.kllwwwwrrkwllk.
 ..kkkkkkkkkkkk..
-..klwWwwWwWWWk..
-..klwWwwWwWWWk..
-.kklwWwwWwWWWkk.
+..klwWwwkwWWWk..
+..klwWwwrwWWWk..
+.kklwWwwkwWWWkk.
+kWWkwWwwWwWWkWWk
+.kkkkkkkkkkkkkk.
+frame idle2
+................
+.........G......
+..........g.....
+..........g.....
+.........g......
+....kkkkkkkk....
+..kkllllllllkk..
+.kllwwkwwwwwllk.
+.klwwwwkmwwwwlk.
+.kllwwwwmmkwllk.
+..kkkkkkkkkkkk..
+..klwWwwkwWWWk..
+..klwWwwmwWWWk..
+.kklwWwwkwWWWkk.
+kWWkwWwwWwWWkWWk
+.kkkkkkkkkkkkkk.
+frame idle3
+..........G.....
+.........g......
+.........g......
+..........g.....
+.........g......
+....kkkkkkkk....
+..kkllllllllkk..
+.kllwwkwwwwwllk.
+.klwwwwkmwwwwlk.
+.kllwwwwmmkwllk.
+..kkkkkkkkkkkk..
+..klwWwwkwWWWk..
+..klwWwwmwWWWk..
+.kklwWwwkwWWWkk.
+kWWkwWwwWwWWkWWk
+.kkkkkkkkkkkkkk.
+frame idle4
+................
+................
+................
+.........G......
+.........g......
+....kkkkkkkk....
+..kkllllllllkk..
+.kllwwkwwwwwllk.
+.klwwwwkrwwwwlk.
+.kllwwwwrrkwllk.
+..kkkkkkkkkkkk..
+..klwWwwkwWWWk..
+..klwWwwrwWWWk..
+.kklwWwwkwWWWkk.
 kWWkwWwwWwWWkWWk
 .kkkkkkkkkkkkkk.
 frame windup1

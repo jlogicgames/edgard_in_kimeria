@@ -114,8 +114,7 @@ Each has an open issue whose checklist includes updating this page.
 
 - Principle 4 is met by the falling stone only; every other hazard is to be audited
   ([#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388)).
-- At-rest cues pending for the disguised and hidden traps: stump and root
-  ([#346](https://github.com/jlogicgames/edgard_in_kimeria/issues/346)), thorn root
+- At-rest cues pending for the disguised and hidden traps: thorn root
   ([#359](https://github.com/jlogicgames/edgard_in_kimeria/issues/359)), falling stone
   ([#360](https://github.com/jlogicgames/edgard_in_kimeria/issues/360)), falling branch
   ([#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361)), plain falling platform

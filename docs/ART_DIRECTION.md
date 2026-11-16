@@ -635,14 +635,14 @@ Reserved accent hues (active only):
 - the violet of the Bat and Mushroom pickups.
 
 In short: **ink and accent colour mean "interact with me"; scenery gets neither.** Contrast is necessary, not
-sufficient. The stump measures 0.39 and still reads as scenery by shape and colour (F18, #346), so D71's silhouette and
-cue rules still apply.
+sufficient. The stump measured 0.39 and still read as scenery by shape and colour (F18), so D71's silhouette and
+cue rules still apply; its fix was an idle tell in the ember accent, not more contrast (#346).
 
 Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py` prints the current table):
 
 | Tier | Sprites |
 |---|---|
-| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.41, thorn vine 0.41, puffball 0.40, stump 0.39, falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.35 (HIDDEN, cue #359) |
+| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.35 (HIDDEN, cue #359) |
 | Active: collectables | fireball refill 0.43, Mushroom 0.43, Bat item 0.41, coin 0.37 |
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.37, stone 0.30 |
 | Active: enemies and hero | hero 0.46, RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
@@ -667,9 +667,9 @@ by `validateSpriteArt`). Frame order is the order in the table.
 
 | Sheet | Frame size | Frames (in order) | Notes |
 | --- | --- | --- | --- |
-| `trap-stump` | 16×16 | idle, windup1, windup2, windup3, spent | exploding stump: cracks, smoke, glow; charred remains |
+| `trap-stump` | 16×16 | idle1..idle4, windup1, windup2, windup3, spent | exploding stump: idle tell (#346: a crack with a dull-red `7a1a14`/`b3201a`/`d8461c` ember pulsing and a 1 px `5b5870`/`9a97ad` wisp rising, 0.25 s a frame), then cracks, smoke, glow; charred remains |
 | `trap-bomb` | 16×16 | idle1, idle2 | round iron bomb with a bone fuse and a smouldering tip (dull red / orange, no flame: the lit state is the D7 warm tint flash drawn over it); the blast is the `BombExplosionEffect` shader, not a sprite |
-| `trap-root` | 16×24 | idle, windup1, windup2, windup3, spent | exploding root, same wind-up language |
+| `trap-root` | 16×24 | idle1..idle4, windup1, windup2, windup3, spent | exploding root, same idle tell (ember crack down the root, wisp from its tip) and wind-up language |
 | `trap-blast` | 32×32 | blast1..blast12 | 12 steps (#250): pale ball, orange ball with sparks, burst of puffs with a ground ring, fire mushroom under a dark-brown smoke cap, brown smoke saucer, ring, fade; the gameplay blast is 64×64 px, so draw at 2× (nearest) or keep the sprite as the visual core |
 | `trap-thorn-root` | 16×24 | hidden, peek1, peek2, rising, up | bone-coloured stake; peek1/peek2 is the wobble |
 | `trap-thorn-tuft` | 16×16 | calm, bristle, spiked | crimson-magenta stems with bone tips, deliberately not green like the bushes |
@@ -690,7 +690,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 **False honey fungus spore cloud, particles and shader (#296, final, approved by the author, 2026-11-13).** Live simulated particles and a shader, not sprite art (they depict no object, so `check_sprite_art.py` has nothing to allow). `effects.SporeCloud` is the only cloud path (the sprite path is removed; the `trap-spores` sheet stays for the spore puffball, D46). Palette is that of `trap-spores`: `5fa02a` dark, `a6e04a` mid, `e6f26a` bright, so the cloud stays lime next to the golden `KIND_GLOW` burst of the harmless fungus. **The shader layer is always on; if a context cannot compile it, `Shaders.tryLoad` returns null and the particles alone are drawn, a complete look of their own.** Layers, back to front: (1) `assets/shaders/spore_cloud.frag`, normal blending, a swirling lime glow (angle grows with distance from the cap tuft and with time, sine-warped density, a bright core) on a quad that is exactly the lethal rectangle; (2) 34 `KIND_SMOKE` puffs (normal blending, grow 1x to 2x, 6 to 8 px, dark-to-mid lime); (3) 12 `KIND_GLOW` specks (additive, shrinking, 2.5 to 3.5 px, `e6f26a`). Timeline over the 1.0 s life: the puffs start around the tuft and grow and drift to points across the rectangle, fading linearly (`KIND_SMOKE`); its haze swells in the first 0.25 s, thins to about 45 % by 0.9 s and is zero as the hitbox ends (`SporeCloud.strength`). Particles are cleared the frame the hitbox ends. **Look:** a lime puff swelling out of the tuft, speckled with bright specks, over one continuous swirling body of light that fills the rectangle edge to edge and keeps the late, thin phase visible. **Fallback look (shader not compiled):** the particles alone, covering roughly the middle 60 % of the rectangle and fading out by about 0.9 s. **Why it stays inside the hitbox (D5):** the particles are kept inside by construction; the shader quad is the lethal rectangle and its alpha is multiplied by a border fade to zero (12 % at the sides and top, 4 % at the floor line), and every particle's start and end are kept half its largest drawn size inside the rectangle, so a straight lerp never leaves it (tested every frame). Shader notes (checked on macOS desktop and in a browser by the author, 2026-11-13): if it shows nothing in a build, run with `-Dkimeria.debug=true`: the first burst logs whether the layer loaded or fell back; GLSL ES 1.0, `precision mediump float`, no loops, no texture reads, no hash noise (mediump), only small-argument `sin`/`cos`/`smoothstep`/`mix`; loaded with `Shaders.tryLoad`, so a build that cannot compile it draws the particles alone (the fallback above). Preview without playing: `docs/references/forest-traps/false-honey-fungus-cloud-preview.png` (seven times from 0.05 to 0.98 s, 10x, red frame = lethal rectangle), made by the test-side `SporeCloudPreview` (CPU port of the shader, so an approximation of the GPU image): `SPORE_PREVIEW_OUT=docs/references/forest-traps/false-honey-fungus-cloud-preview.png ./gradlew :core:test --tests '*SporeCloudPreview'`.
 
 **Palette (shared families, each sheet uses at most 15 colours + transparency):** near-black
-contour `0b0814`; wood `4a2e1c / 8a5a30 / c08a4c`; ember `b3201a / f07a1a / ffd23a / fff4b0`;
+contour `0b0814`; wood `4a2e1c / 8a5a30 / c08a4c`; ember `7a1a14 / b3201a / d8461c / f07a1a / ffd23a / fff4b0` (the two dim reds are the stump and root idle tell, #346: red at rest, orange and yellow only in the wind-up);
 smoke and stone `2a2638 / 34314a / 5b5870 / 9a97ad / d8d6e8`; bone `efe6c4 / a89c78`; thorn tuft
 `c2307a / 6e1650`; spores `a6e04a / 5fa02a / e6f26a`; honey fungus caps `e2b25a / c08a4c / 8a5a30`, false honey fungus caps `dcdc50 / d2a62c / 8f8a26`, its greenish stems `d4dc9c / 98a468`; vine `8a8a2a / 4a4a18`; leaves `3b2a5c / 7a5ab0`.
 Warm ember, bone and magenta were chosen to separate the traps from the dark night, purple

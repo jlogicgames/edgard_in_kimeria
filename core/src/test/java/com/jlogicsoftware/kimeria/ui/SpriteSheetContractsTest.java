@@ -18,8 +18,8 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.PLAYER_LOOK, 2, 1);
         matches(SpriteSheets.PLAYER, 5, 10);
         // Forest trap sheets (#230): frame counts follow tools/sprite_layouts.py FOREST_TRAP_SHEETS.
-        matches(SpriteSheets.TRAP_STUMP, 5, 1);
-        matches(SpriteSheets.TRAP_ROOT, 5, 1);
+        matches(SpriteSheets.TRAP_STUMP, 8, 1);
+        matches(SpriteSheets.TRAP_ROOT, 8, 1);
         matches(SpriteSheets.TRAP_BLAST, 12, 1);
         matches(SpriteSheets.TRAP_THORN_ROOT, 5, 1);
         matches(SpriteSheets.TRAP_THORN_TUFT, 3, 1);

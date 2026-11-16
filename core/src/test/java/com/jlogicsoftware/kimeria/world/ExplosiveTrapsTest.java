@@ -160,7 +160,7 @@ class ExplosiveTrapsTest {
         for (ExplosiveTrap t : new ExplosiveTrap[]{stump(level), root(level)}) {
             assertEquals(ExplosiveTrap.Phase.IDLE, t.phase());
             assertTrue(t.isIntact());
-            assertEquals(0, t.frameIndex(), "idle frame");
+            assertTrue(t.frameIndex() < ExplosiveTrap.IDLE_FRAMES, "an idle-loop frame: " + t.frameIndex());
             assertEquals(64f, t.blastBox().width, 0f);
             assertEquals(64f, t.blastBox().height, 0f);
         }
@@ -169,6 +169,29 @@ class ExplosiveTrapsTest {
         assertEquals(new Rectangle(264, 280, 64, 64), stump(level).blastBox(), "blast square centred on the object");
         assertEquals(new Rectangle(483, 299, 10, 19.5f), root(level).triggerBox(), "scaled with the object");
         assertEquals(new Rectangle(456, 276, 64, 64), root(level).blastBox());
+    }
+
+    @Test void atRestBothObjectsLoopTheFourIdleTellFramesOncePerSecondWithoutIgniting() {
+        Level level = fresh();
+        place(level, 250);
+        for (ExplosiveTrap t : new ExplosiveTrap[]{stump(level), root(level)}) assertEquals(ExplosiveTrap.Phase.IDLE, t.phase());
+        java.util.Map<ExplosiveTrap.Kind, java.util.List<Integer>> seen = new java.util.EnumMap<>(ExplosiveTrap.Kind.class);
+        int loopFrames = Math.round(ExplosiveTrap.IDLE_FRAMES * ExplosiveTrap.IDLE_FRAME_SECONDS * 60);
+        assertEquals(60, loopFrames, "a one-second loop");
+        for (int i = 0; i < loopFrames * 2; i++) {
+            for (ExplosiveTrap t : new ExplosiveTrap[]{stump(level), root(level)}) {
+                java.util.List<Integer> s = seen.computeIfAbsent(t.kind(), k -> new java.util.ArrayList<>());
+                if (s.isEmpty() || s.get(s.size() - 1) != t.frameIndex()) s.add(t.frameIndex());
+            }
+            frame(level);
+        }
+        for (ExplosiveTrap t : new ExplosiveTrap[]{stump(level), root(level)}) {
+            java.util.List<Integer> s = seen.get(t.kind());
+            assertEquals(ExplosiveTrap.Phase.IDLE, t.phase(), "the idle tell is looks only");
+            assertEquals(java.util.Set.of(0, 1, 2, 3), new java.util.HashSet<>(s), t.kind() + " shows every idle frame");
+            for (int i = 1; i < s.size(); i++) assertEquals((s.get(i - 1) + 1) % ExplosiveTrap.IDLE_FRAMES, (int) s.get(i), "in order: " + s);
+            assertTrue(s.size() >= 8 && s.size() <= 9, "two loops in two seconds: " + s);
+        }
     }
 
     // -- touch --
@@ -219,12 +242,12 @@ class ExplosiveTrapsTest {
         assertTrue(t.igniteFromAfar());
         java.util.List<Integer> seen = new java.util.ArrayList<>();
         while (t.phase() == ExplosiveTrap.Phase.WINDUP) { if (seen.isEmpty() || seen.get(seen.size() - 1) != t.frameIndex()) seen.add(t.frameIndex()); frame(level); }
-        assertEquals(java.util.List.of(1, 2, 3), seen, "windup1 (cracks), windup2 (smoke), windup3 (glow)");
+        assertEquals(java.util.List.of(4, 5, 6), seen, "windup1 (cracks), windup2 (smoke), windup3 (glow), after the four idle frames");
         java.util.List<Integer> blast = new java.util.ArrayList<>();
         while (t.phase() == ExplosiveTrap.Phase.BLAST) { if (blast.isEmpty() || blast.get(blast.size() - 1) != t.blastFrameIndex()) blast.add(t.blastFrameIndex()); frame(level); }
         assertEquals(java.util.List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), blast, "all twelve blast frames, in order");
         assertEquals(ExplosiveTrap.Phase.SPENT, t.phase());
-        assertEquals(4, t.frameIndex(), "spent frame");
+        assertEquals(7, t.frameIndex(), "spent frame");
         assertEquals(-1, t.blastFrameIndex());
     }
 
@@ -456,7 +479,7 @@ class ExplosiveTrapsTest {
         retry(level);
         assertEquals(ExplosiveTrap.Phase.IDLE, stump(level).phase(), "retry rebuilds the room: whole again");
         assertTrue(alive(level));
-        assertEquals(0, stump(level).frameIndex());
+        assertTrue(stump(level).frameIndex() < ExplosiveTrap.IDLE_FRAMES, "back on the idle loop");
         stump(level).igniteFromAfar();
         settle(level, 60 * 2);
         assertTrue(stump(level).isSpent());
