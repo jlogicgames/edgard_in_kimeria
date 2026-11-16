@@ -90,7 +90,14 @@ gdxTeaVM {
     }
 }
 
-tasks.matching { it.name.startsWith("gdx_teavm_web_js") && it.name.endsWith("_compile") }.configureEach {
+// Compiles and the dev servers that serve the game both need the runtime assets on disk.
+// The dev-server run tasks do not go through the compile tasks, so they are listed too.
+val runtimeAssetConsumers = setOf(
+    "javaScriptDevServer", "wasmGCDevServer", "gdx_teavm_web_js_run", "gdx_teavm_web_js_release_run",
+)
+tasks.matching {
+    (it.name.startsWith("gdx_teavm_web_js") && it.name.endsWith("_compile")) || it.name in runtimeAssetConsumers
+}.configureEach {
     dependsOn(prepareRuntimeAssets)
 }
 
