@@ -131,3 +131,12 @@ Initial generation prompt:
 Refinement prompt:
 
 > Use case: precise-object-edit. Asset type: native pixel-art world platform sprite. Image 1 is the selected platform artwork to revise. Image 2 is the author's reference for the intended sprite proportions and design. Preserve the warm tan soil top, jagged dark rocky underside, deep brown earth base, dark outline and crisp pixel-art identity. Revise the silhouette so the complete platform fills a 32:16 canvas: it must be a thick slab, about twice as tall as the thin ledge in Image 1, occupying nearly the full 32-pixel width and 16-pixel height. Match Image 2's proportions: roughly 7 rows of tan top/soil, a 2–3 row jagged near-black underside band, and 5–6 rows of deep brown earth, with only a minimal dark outline. Keep the top level and readable as a standing surface. Treat the grid as exactly 32 columns by 16 rows, with every source pixel a crisp equal square. Use at most 12 flat opaque colors plus real transparent pixels outside the silhouette. Remove the excessive empty margin above and below the object. Constraints: hand-authored-looking tiny game pixel art, no smooth lighting, no gradients, no texture noise, no dithering, no antialiasing, no semitransparent edges, no glow, no editor crosshair, no seams, no text, no other objects.
+
+## Bat wing jar (#345, 2026-11-16)
+
+`bat-pixel.png` (32×16, two registered 16×16 frames) replaces the flapping purple bat of D43, which players took
+for an enemy (playtest F19). No image generator: it was drawn per pixel as a text grid (the format of
+`tools/forest_trap_sprites.py`) and converted 1:1, then exported with `python3 tools/export_object_sprites.py`.
+A corked glass jar tied with twine, one dried bat wing inside (finger bones, scalloped edge); frame 2 moves the
+glass glint. 9 colours plus transparency; ink `1b1226` and the violets of the old Bat item kept. Contrast at
+its one placement (forest-2 x448): outline 0.425 (D76 active floor 0.28).

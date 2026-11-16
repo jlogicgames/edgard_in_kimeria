@@ -29,8 +29,9 @@ Portrait approval does not authorize the same treatment for gameplay sprites.
   frame rather than imposing a global 16-color limit on an entire legacy sheet.
 - **HUD inventory icons:** separate 128×128 exports, at most 256 palette entries including
   transparency, clean detailed illustration, no dithering, linear filtering in the small
-  HUD slot. Use the world sprite as the identity reference: the bat stays a bat and the
-  purple mushroom a mushroom (healer ingredients, D43). The tiny world sprite
+  HUD slot. Use the world sprite as the identity reference: the Bat ingredient stays a dried
+  bat wing in a corked jar (an item, never a creature: #345) and the purple mushroom a mushroom
+  (healer ingredients, D43). The tiny world sprite
   remains unchanged; its detailed HUD counterpart is a different asset/path.
 - **Dialogue portraits / illustrations:** preserve the accepted richer remake/remaster
   style and character identity described below. Portrait runtime exports stay 256×256,

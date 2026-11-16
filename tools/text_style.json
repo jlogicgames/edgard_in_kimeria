@@ -670,6 +670,34 @@
       }
     },
     {
+      "concept": "bat wing",
+      "forms": {
+        "en": "Bat wing",
+        "uk": "крило кажана",
+        "pl": "skrzydło nietoperza",
+        "de": "Fledermausflügel",
+        "be": "крыло кажана"
+      },
+      "stems": {
+        "en": [
+          "bat wing"
+        ],
+        "uk": [
+          "крило кажана"
+        ],
+        "pl": [
+          "skrzydło nietoperza",
+          "skrzydła nietoperza"
+        ],
+        "de": [
+          "fledermausflügel"
+        ],
+        "be": [
+          "крыло кажана"
+        ]
+      }
+    },
+    {
       "concept": "fairy",
       "forms": {
         "en": "fairy",

@@ -66,3 +66,9 @@ DECOR_SHEETS = {
     'lookalike': ((24, 16), ('static',)),  # #299: the static look-alike, one frame, never animated
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})
+# The shared pickup cue (#345): drawn by every Collectable; runtime export `pickup-<name>.png`, one horizontal strip.
+PICKUP_SHEETS = {
+    'glow': ((24, 24), ('halo',)),  # additive halo behind the item, alpha pulsing with the bob
+    'sparkle': ((5, 5), ('grow', 'star', 'fade')),
+}
+WORLD_IMAGES.update({f'pickup-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in PICKUP_SHEETS.items()})

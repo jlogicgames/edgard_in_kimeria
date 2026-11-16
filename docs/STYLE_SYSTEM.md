@@ -50,6 +50,9 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
 - **Trap and art.** VISIBLE means the "active" contrast tier (D76: outline at least 0.28 against the sky and the
   map background, checked by `check_contrast.py` for every placed sprite) or motion; the at-rest frame is designed
   with the trap card.
+- **Pickup and art.** Every collectable wears the one pickup cue (a 2 px bob, an additive halo except on the coin, a sparkle;
+  [#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345)) and nothing that can hurt wears it, so a
+  pickup never reads as an enemy (playtest F19); `check_contrast.py` measures collectables over their halo.
 - **Hazard, effects and sound (principle 4).** The warning is the trap's or enemy's telegraph (D7, kimeria-combat for
   wind-ups); the consequence is a particle effect and a generated sound, with shake through `ScreenShake` only.
 - **Text in rooms.** Zone messages are authored in the map (`Hint` objects, D33) and written under TEXT_STYLE's plain

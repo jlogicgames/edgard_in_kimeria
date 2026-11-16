@@ -16,6 +16,8 @@ import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
+import com.jlogicsoftware.kimeria.entity.items.Collectable;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -110,6 +112,8 @@ class AllocationBudgetTest {
 
     /** Measured 0.0 B/frame in 3 runs (#239 step 4): one {@code batch.draw} per bush, frame regions held in the object. */
     static final double DECOR_BRUSH_CEILING = 8;
+    /** Measured 0.0 B/frame in 3 runs (#345): a coin, a Bat wing and a Mushroom with the whole pickup cue (frame animation, the 2 px bob, the additive halo with its blend switches, the sparkle), update and render through the batch. */
+    static final double COLLECTABLE_CUE_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#239 step 5): one rotated {@code batch.draw} per vine, the frame region held in the object. */
     static final double HANGING_VINE_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi idling, swelling and bursting 16 golden spores on a {@code KimeriaParticleSystem}, update and render through the batch. */
@@ -385,6 +389,18 @@ class AllocationBudgetTest {
         });
         assertTrue(swayed[0], "the vines must actually sway in this scenario");
         assertWithinBudget("hanging vines", HANGING_VINE_CEILING, bytes);
+    }
+
+    /** The shared pickup cue (#345): every collectable type, update and render, over many whole bobs and sparkles. */
+    @Test void collectablesWithThePickupCue() {
+        ItemType[] types = ItemType.values();
+        Collectable[] items = new Collectable[types.length];
+        for (int n = 0; n < types.length; n++)
+            items[n] = new Collectable(harness.assets(), harness.game(), ignored -> {}, types[n].name(), n * TRAP_TILE * 2, FUNGUS_FLOOR, TRAP_TILE, TRAP_TILE);
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            for (int n = 0; n < items.length; n++) { items[n].update(STEP); items[n].render(batch); }
+        });
+        assertWithinBudget("collectables with the pickup cue", COLLECTABLE_CUE_CEILING, bytes);
     }
 
     /** {@code BossHud.render} with an empowered boss; the font's {@code draw} is a no-op so only the HUD's own allocation is counted (a real {@code font.draw} allocates a {@code GlyphLayout}, out of scope here). */

@@ -75,7 +75,7 @@ the render loop.
 | `HEALER`, `HEALER_*` | The healer is an old man, the recurring narrator/guide. Preserve the agreed story; do not introduce quests or places. |
 | `INTRO_STORY` | The healer narrates Rufardus, L'Kardina's expulsion/curse and Edgard's departure. No ingredient tutorial here. |
 | `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. |
-| `BAT`, `MUSHROOM`, `COINS` | Ingredient/item labels and coins from the current forest. Earlier-level coins do not satisfy this payment. `COINS` is read by no code today (TEXT_AUDIT G18, [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374)); the gate's allowlist tracks it. |
+| `BAT`, `MUSHROOM`, `COINS` | Ingredient/item labels and coins from the current forest. `BAT` reads "Bat wing" (the jar item, not the enemy; #345). Earlier-level coins do not satisfy this payment. `COINS` is read by no code today (TEXT_AUDIT G18, [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374)); the gate's allowlist tracks it. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
 | `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |
