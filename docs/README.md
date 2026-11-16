@@ -21,6 +21,11 @@ different scopes; a design decision is not evidence that a feature is implemente
 | [Rooms in Tiled](ROOMS.md) | Map authoring, room transitions, retry/rollback rules, replay budgets and measured routes. |
 | [Rollback verification](ROLLBACK_VALIDATION.md) | #100 test and Chrome results; separate F4 defect #170. |
 | [Forest boss](BOSS.md) | The implemented forest encounter: attacks, balance, hit feedback, retry and completion rules. Its values do not automatically apply to future bosses. |
+| [Style system](STYLE_SYSTEM.md) | Entry point to keeping the game in one style (D75): the six design principles, which document, gate and skill own text, traps, rooms, sizes, effects, sound and art, the card-first order of work, and the gates and hooks. |
+| [Trap design system](TRAPS.md) | D71: the visibility rule, the card template, the catalogue the gate reads and every trap's card. |
+| [Room cards](ROOM_CARDS.md) | D72: one card per shipped room in play order, the element registry, the novelty audit. |
+| [Text style](TEXT_STYLE.md) | D74: voices, limits, glossary and the gate for player-facing strings; the findings behind it are in the [text audit](TEXT_AUDIT.md). |
+| [Sound direction](SOUND_DIRECTION.md) | How the crude voice-synth sound effects are generated, auditioned and wired. |
 | [Art direction](ART_DIRECTION.md) | Accepted remake/remaster direction: preserve the original artist's style while improving color, detail and naturalness; references for future artwork. |
 | [Dialogue portraits](PORTRAITS.md) | Editable PNG locations, replacement instructions, desktop/web validation and separate author artwork approval for #90. |
 | [Forest healer](HEALER.md) | The implemented encounter: dialogue, recipe/payment, collection returns and the detailed state retention/reset table. |
@@ -57,6 +62,7 @@ different scopes; a design decision is not evidence that a feature is implemente
 | What is established about the story and portraits? | [Story](STORY.md) | [DOS story and portrait references](ORIGINAL_DOS.md), [original traps](ORIGINAL_TRAPS.md), [editable portrait assets](PORTRAITS.md), [art direction](ART_DIRECTION.md) |
 | How do I build, run or edit maps? | [Build and run](DEVELOPMENT.md#building-and-running) | [Live editing](DEVELOPMENT.md#live-editing-gradlew-rundev), [map authoring](ROOMS.md#authoring) |
 | What still needs release validation? | [Pre-release TODO](PRE_RELEASE_TODO.md) | [Skill evidence](SKILL_VALIDATION.md), [post-boss evidence](POST_BOSS_VALIDATION.md) |
+| How do I keep new work in the game's style? | [Style system](STYLE_SYSTEM.md) | [Skills index](../.agents/skills/README.md), [AGENTS.md](../AGENTS.md) |
 | How is design maintained during development? | [Design maintenance](GAME_DESIGN.md#design-maintenance) | [D17](DECISIONS.md#d17-maintain-the-game-design-throughout-development) |
 | What sources support the reference-game comparisons? | [Research references](GAME_DESIGN.md#research-references) | Distinguishes manuals, developer descriptions and player/guide evidence |
 

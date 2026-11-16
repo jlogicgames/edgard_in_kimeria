@@ -14,6 +14,12 @@ Read the campaign's [observe-plan-commit design](../../../docs/GAME_DESIGN.md#ob
 and [D26](../../../docs/DECISIONS.md#d26-observe-plan-before-committing) first. Then read
 [room authoring and replay protocol](../../../docs/ROOMS.md), including its D26 contract
 and latest measurement section: older measurements may describe removed mechanics.
+
+The map is the build step of a room, not its design. Before placing objects, follow the order of
+[the style system](../../../docs/STYLE_SYSTEM.md#4-card-first-the-common-workflow): the room's card with
+[kimeria-room-design](../kimeria-room-design/SKILL.md) (D72), a trap's card with
+[kimeria-trap-design](../kimeria-trap-design/SKILL.md) (D71), and any hint text with
+[kimeria-game-text](../kimeria-game-text/SKILL.md) (D74).
 Read D3, D5, D7 and D10 in [design decisions](../../../docs/DECISIONS.md).
 For a boss chamber read [boss](../../../docs/BOSS.md); for collection-route
 changes read [healer](../../../docs/HEALER.md).

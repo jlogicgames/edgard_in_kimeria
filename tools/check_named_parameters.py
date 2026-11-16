@@ -8,6 +8,8 @@ import re
 import subprocess
 import sys
 
+import git_base
+
 ROOT = Path(__file__).resolve().parents[1]
 NON_CODE = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 NUMBER = re.compile(r'(?<![\w.])(?:0[xX][\da-fA-F_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.[\d_]+)(?:[eE][+-]?\d+)?)[fFdDlL]?(?![\w.])')
@@ -73,6 +75,8 @@ def git(root, *args):
 
 
 def changed_lines(root, base):
+    if base == git_base.AUTO:
+        base = git_base.resolve(root, base, 'Named-parameter check')
     if base == 'HEAD':
         try:
             git(root, 'rev-parse', '--verify', 'HEAD')
@@ -118,13 +122,14 @@ def check(root, base='HEAD'):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=Path, default=ROOT)
-    parser.add_argument('--base', default='HEAD', help='Use origin/main to include committed PR changes')
+    parser.add_argument('--base', default=None,
+                        help="'auto' (default; HEAD with --hook): merge-base with origin/main if it exists, else HEAD; or any ref")
     parser.add_argument('--hook', action='store_true')
     args = parser.parse_args()
     try:
         if args.hook:
             json.load(sys.stdin)
-        issues = check(args.root.resolve(), args.base)
+        issues = check(args.root.resolve(), git_base.default_base(args.base, args.hook))
     except (OSError, ValueError, SyntaxError, subprocess.CalledProcessError) as error:
         print(f'Named-parameter check could not run: {error}', file=sys.stderr)
         return 2

@@ -15,6 +15,7 @@ Work from the repository root. The substance is in the docs; this skill is the o
   and after the target room (novelty is counted in play order: `KimeriaGame.LEVEL_NAMES`, then each map's room order).
 - [D72](../../../docs/DECISIONS.md#d72-every-room-gives-the-player-something-new), D19 (20 s mastered, 60 s first
   learning), D26 (observe, plan, commit; no soft-lock); for a lesson room also D33-D40 and D48.
+- [STYLE_SYSTEM.md](../../../docs/STYLE_SYSTEM.md): the order of work when a room also brings a trap, art, sound or text.
 - If the room places a trap: [TRAPS.md](../../../docs/TRAPS.md) (D71, the trap's own card and visibility; a disguised
   or hidden trap needs a teaching room, which is the room whose card introduces it). If the room adds hint text:
   [TEXT_STYLE.md](../../../docs/TEXT_STYLE.md).

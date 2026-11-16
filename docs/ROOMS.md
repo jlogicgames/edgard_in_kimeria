@@ -64,7 +64,8 @@ is decorative and continues across retries. Rooms may span several screens.
 
 An optional object layer `Hints` holds `Hint` rectangles (each inside one room). Properties:
 `message` (a `Msg` key such as `HINT_TUTORIAL_WALK`, shown at the zone's horizontal centre, 45% down it, after a short 0.35 s dwell; it then lingers 2.5 s after the hero leaves, see D33) and/or
-`controls` (bool, enables the pickup/lever/ladder instructions of D24). The hero's body centre
+`controls` (bool, enables the pickup/lever/ladder instructions of D24). The message text follows the plain voice and the
+limits of [TEXT_STYLE.md](TEXT_STYLE.md) (D74); a hint is never a trap's at-rest cue (D71). The hero's body centre
 inside the zone shows the hint; the `message` and the live `controls` label are separate channels drawn together, neither hiding the other (D33, #211); nothing is stored, so it repeats on every retry and return. No
 layer means no hints. `forest-0` (`assets/tiles/forest-0.tmx`) has six rooms (lever room 576 px; since #235/D48 the ladder room 896 px, wall room 784 px, platform room 800 px and stone room 736 px, each with one trap; traps room 720 px since #200) named
 `forest-0-lever`, `-ladder`, `-wall`, `-platform`, `-stone`, `-traps` (room property `lesson`);

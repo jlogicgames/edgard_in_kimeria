@@ -16,6 +16,8 @@ Project-owned, a thin procedure: the rules live in [docs/TRAPS.md](../../../docs
   set and the **rejected** ideas), the family's decision (D44 proximity, D45 position, D46 rhythm, D47 touch, D63
   look-alikes) and D71.
 - [ORIGINAL_TRAPS.md](../../../docs/ORIGINAL_TRAPS.md) for what the 1994 game had: adapt ideas, never copy another game.
+- [STYLE_SYSTEM.md](../../../docs/STYLE_SYSTEM.md): where traps meet rooms, text, art and sound, and D75's "a hazard
+  warns before it acts and shows a consequence after".
 
 ## 2. Write the card first
 
@@ -25,8 +27,9 @@ Stop and get the author's approval of the card and of its D-number before any co
 
 ## 3. Art
 
-[kimeria-art-direction](../kimeria-art-direction/SKILL.md): the at-rest frame in the "active" contrast tier (#344),
-a silhouette no scenery shares; `tools/check_sprite_art.py`. Effects: [kimeria-particles](../kimeria-particles/SKILL.md).
+[kimeria-art-direction](../kimeria-art-direction/SKILL.md): the at-rest frame in the "active" contrast tier (D76,
+`tools/check_contrast.py`), a silhouette no scenery shares; `tools/check_sprite_art.py`. The consequence after the trap acts (D75): an
+effect with [kimeria-particles](../kimeria-particles/SKILL.md) and a sound with [kimeria-sound](../kimeria-sound/SKILL.md).
 
 ## 4. Code
 
@@ -38,7 +41,9 @@ mirrored in `tools/check_tiled_links.py`; reset by the room rebuild.
 ## 5. Register
 
 Add the `case` to the spawn switch of `world/Level.java`, the row to the catalogue in TRAPS.md and the card.
-`TrapCatalogTest` fails until all three agree.
+`TrapCatalogTest` fails until all three agree. `Taught in` starts with the teaching room in backticks;
+`TrapTeachingRoomTest` checks it against that room's card in ROOM_CARDS.md (a DISGUISED or HIDDEN trap's room must
+introduce its element).
 
 ## 6. Place
 

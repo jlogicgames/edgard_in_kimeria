@@ -1,0 +1,37 @@
+name: Check
+
+# Runs the gates of docs/STYLE_SYSTEM.md on every pull request to main: the core tests and every validate* task of
+# :core:check, then the Python tools' own tests (only the text-style and style-system ones run inside :core:check).
+# No deploy, no secrets.
+
+on:
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # validateDocGaps judges the branch since its merge-base with origin/main, so it needs the full history.
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pillow: validateContrast (in :core:check) and the sprite tool tests read PNGs with it.
+      - run: python -m pip install "Pillow==12.3.0"
+      - run: ./gradlew :core:check
+      - run: python -m unittest discover -s tools -p 'test_*.py'

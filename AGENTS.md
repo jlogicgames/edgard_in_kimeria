@@ -56,7 +56,17 @@ design, architecture or process document (`docs/*.md`) needs an open GitHub issu
 change**, and the doc line links it (`#NNN`). The issue's checklist must include "update
 <that document>" so the note is removed or revised when the work lands. A gap that exists only
 as prose gets lost (audit of `docs/DEVELOPMENT.md`, 2026-11-06, found five untracked ones).
-When closing such an issue, remove the doc note in the same PR.
+When closing such an issue, remove the doc note in the same PR. `tools/check_doc_gaps.py` (`validateDocGaps`, and the
+hooks) checks changed doc lines for these markers and "pending"; it cannot tell whether the issue is open.
+
+## Style system (D75)
+
+The game is kept in one style through `docs/STYLE_SYSTEM.md`: six principles, which document and gate own each
+system (text, traps, rooms, sizes, effects, sound, art), and the order of work. Design on the card first (trap, room or
+text), get the author's approval, then build; a change that spans systems follows the order there. A new design rule
+lands complete (D-number, reference doc, gate, skill with its Claude pointer, a paragraph here, a row there). Skills:
+`.agents/skills/README.md`; each `kimeria-*` skill has a Claude pointer of the same name in `.claude/skills/`, and
+`tools/check_skills.py` keeps them in step. The sections below are the rules that already cost a review round.
 
 ## Rooms: every room gives something new (D72)
 
@@ -64,6 +74,7 @@ Before building or changing a room, write or update its card in `docs/ROOM_CARDS
 introduces, develops or combines, D19 times, retry cost) and keep `RoomCardsTest` green. A new look on a known trap
 (a reskin) is not novelty; outside the tutorial a room introduces at most two elements. A new Tiled object type gets
 a registry row in the same change. Rule and workflow: `docs/ROOMS.md`, "Every room gives something new (D72)".
+A trap's teaching room in `docs/TRAPS.md` must match the room cards (`TrapTeachingRoomTest`).
 
 ## Git in this repo
 

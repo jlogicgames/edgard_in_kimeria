@@ -21,6 +21,9 @@ sourceSets {
 
 tasks.test {
     useJUnitPlatform()
-    // RoomCardsTest (D72) reads the room cards: a card edit alone must rerun the tests.
+    // Tests that read a document or a data file outside the source sets (D75): an edit to that file alone must rerun
+    // them. RoomCardsTest (D72) and TrapCatalogTest (D71) read both docs; HealerDialogueTest reads the text-style data.
     inputs.file("../docs/ROOM_CARDS.md").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file("../docs/TRAPS.md").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file("../tools/text_style.json").withPathSensitivity(PathSensitivity.RELATIVE)
 }

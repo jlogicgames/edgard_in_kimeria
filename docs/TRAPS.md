@@ -65,7 +65,7 @@ D-number) first.
 | Lethal part | the rectangle and when it is lethal |
 | Counter | every answer that passes without ammunition (D26), then the optional paid answers |
 | Reset | what a retry, Restart Level and a room re-entry restore |
-| Taught in | the room where the type is first met, and how it teaches |
+| Taught in | the room where the type is first met, in backticks first, then how it teaches (`TrapTeachingRoomTest` checks it against the room cards) |
 | Load checks | the validator in `Level` and its mirror in `tools/check_tiled_links.py` |
 | Tests | test classes |
 | Art and sound | sheet and frames, contrast tier (D76: active, with the measured outline; an at-rest cue is drawn in the active tier), sound |
@@ -78,6 +78,9 @@ The gate `TrapCatalogTest` (`:core:test`) reads the two tables below and the spa
 It fails when a type spawned by `Level` is in neither table, when a row names a type `Level` does not spawn, when a
 trap row has an empty column, an unknown visibility or family word or no `###` card heading, and when a DISGUISED or
 HIDDEN row has neither a cue nor `pending #NNN`, or no teaching room. Keep one row per Tiled object type and the column order as it is.
+`TrapTeachingRoomTest` (D75) reads the `Taught in` column against [ROOM_CARDS.md](ROOM_CARDS.md): it starts with the
+teaching room in backticks, a shipped room with a card that shows the trap (or a reskin of it); no earlier room in play
+order shows the type; and for a DISGUISED or HIDDEN trap that room's card introduces the trap's element.
 
 ### Traps
 
@@ -85,21 +88,21 @@ HIDDEN row has neither a cue nor `pending #NNN`, or no teaching room. Keep one r
 | Type | Family | Visibility | At-rest cue | Warning | Taught in | Decision |
 | --- | --- | --- | --- | --- | --- | --- |
 | `ThornRoot` | proximity | HIDDEN | pending #359 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
-| `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1`, first trap of the stretch | D44, D58 |
+| `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, first trap of the stretch | D44, D58 |
 | `FallingBranch` | position | DISGUISED | pending #361 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
 | `FallingStone` | position | HIDDEN | pending #360 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
 | `ExplosiveStump` | touch | DISGUISED | pending #346 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
 | `ExplosiveRoot` | touch | DISGUISED | pending #346 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's wind-up language) | D47, D59 |
-| `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-2` `forest-entry` | D7, D51, D60 |
-| `Puffball` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1`, seen swelling from afar | D46, D58 |
-| `ThornVine` | rhythm | VISIBLE | none needed | the motion is the warning | `forest-2` `forest-canopy`, seen swinging from afar | D46, D59 |
+| `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-entry` (`forest-2`) | D7, D51, D60 |
+| `Puffball` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, seen swelling from afar | D46, D58 |
+| `ThornVine` | rhythm | VISIBLE | none needed | the motion is the warning | `forest-canopy` (`forest-2`), seen swinging from afar | D46, D59 |
 | `HoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-lever`, harmless demonstration | D63 |
-| `FalseHoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0` harmless pair first, then `forest-2` `forest-canopy` | D63 |
+| `FalseHoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-canopy` (`forest-2`), after the harmless `HoneyFungus` of `forest-0-lever` | D63 |
 | `FallingPlatform` | crumble | DISGUISED | pending #362 | `FALLING_PLATFORM_SECONDS` 1.0 / 1.5 s | `forest-0-traps` | D7, D40, D46, D69 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46) is the same type and row: its rotten look is the cue for
-the log skin; the plain skin is the one pending.
+the log skin; the plain skin is the one pending (#362).
 
 ### Spawn types that are not traps
 
@@ -166,7 +169,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Lethal part | `spiked`, 12×12 px centred, until the room is rebuilt |
 | Counter | jump it (take-offs 2-61 px before it); trigger it and wait, then jump |
 | Reset | room rebuild |
-| Taught in | `forest-1`, the first trap of the open stretch, on open floor |
+| Taught in | `forest-1-traps`, the first trap of the open stretch, on open floor |
 | Load checks | as the thorn root |
 | Tests | `ProximityTrapsTest`, `Forest1TrapsTest` |
 | Art and sound | `trap-thorn-tuft` 16×16: calm, bristle, spiked |
@@ -256,7 +259,7 @@ the stump's wind-up language, taught in `forest-0-stone`. Placed in `forest-2` `
 | Lethal part | one 64×64 square check at detonation |
 | Counter | clear the square during the fuse |
 | Reset | saved trap state on a healer revisit (D7), otherwise room rebuild |
-| Taught in | `forest-2` `forest-entry` (the explosive language is taught by the stump) |
+| Taught in | `forest-entry` (`forest-2`; the explosive language is taught by the stump) |
 | Load checks | none of its own |
 | Tests | `BombTest` |
 | Art and sound | bomb sprite (D60), shader blast `BombExplosionEffect` |
@@ -277,7 +280,7 @@ the stump's wind-up language, taught in `forest-0-stone`. Placed in `forest-2` `
 | Lethal part | the 24×24 cloud for `cloud` s (default 1 s) |
 | Counter | cross in the calm window |
 | Reset | the clock restarts at the authored phase on room rebuild |
-| Taught in | `forest-1`, seen swelling from afar |
+| Taught in | `forest-1-traps`, seen swelling from afar |
 | Load checks | `Level.requireSafeSetting` (entrance, exit, checkpoint) |
 | Tests | `RhythmTrapsTest`, `Forest1TrapsTest` |
 | Art and sound | `trap-puffball`, `trap-spores` |
@@ -298,7 +301,7 @@ the stump's wind-up language, taught in `forest-0-stone`. Placed in `forest-2` `
 | Lethal part | the vine's lower half, 8 px wide |
 | Counter | time the pass |
 | Reset | clock restart on room rebuild |
-| Taught in | `forest-2` `forest-canopy`, seen swinging from afar |
+| Taught in | `forest-canopy` (`forest-2`), seen swinging from afar |
 | Load checks | `Level.requireSafeSetting`, period 3.5 s or more, amplitude 35-60° |
 | Tests | `RhythmTrapsTest`, `Forest2TrapsTest` |
 | Art and sound | `trap-vine` frame `hang`, rotated |
@@ -319,7 +322,7 @@ the stump's wind-up language, taught in `forest-0-stone`. Placed in `forest-2` `
 | Lethal part | false one only: the 24×24 spore cloud for 1.0 s; the harmless one has no hitbox |
 | Counter | trigger it and step back, or pass the cloud |
 | Reset | room rebuild |
-| Taught in | the harmless one in `forest-0-lever` and `forest-0-wall`, then the false one in `forest-2` `forest-canopy` |
+| Taught in | the false one in `forest-canopy` (`forest-2`), after the harmless one in `forest-0-lever` and `forest-0-wall` |
 | Load checks | `Level.validateFungus`, `Level.requireSafeSetting` (false one) |
 | Tests | `HoneyFungusTest` |
 | Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud` |

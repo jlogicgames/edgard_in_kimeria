@@ -98,4 +98,4 @@ Use existing `SpriteSheets` frame dimensions, entity body sizes and HUD layout
 constants rather than repeating widths/offset sums in consumers. FPS rendering
 and reservation share HUD's margins; map tile sizes still come from TMX. Follow
 [parameter ownership](../../../docs/NAMED_PARAMETERS.md). Run `validateNamedParameters`
-with `-PnamedParameterBase=origin/main` for a full PR audit, not just current edits.
+before review: by default it judges every line the branch changed since `origin/main`, not just current edits.

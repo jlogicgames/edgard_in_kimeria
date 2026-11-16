@@ -78,7 +78,7 @@ val validateNamedParameters = tasks.register<Exec>("validateNamedParameters") {
     description = "Rejects unnamed tuning and geometry literals in changed production code."
     workingDir = rootDir
     commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
-        "tools/check_named_parameters.py", "--base", providers.gradleProperty("namedParameterBase").getOrElse("HEAD"))
+        "tools/check_named_parameters.py", "--base", providers.gradleProperty("namedParameterBase").getOrElse("auto"))
 }
 project(":core").tasks.named("check") { dependsOn(validateNamedParameters) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateNamedParameters) }
@@ -89,7 +89,7 @@ val validateAllocations = tasks.register<Exec>("validateAllocations") {
     description = "Rejects allocation in per-frame methods (update*, render*, draw*) on changed production lines."
     workingDir = rootDir
     commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
-        "tools/check_allocations.py", "--base", providers.gradleProperty("allocationBase").getOrElse("HEAD"))
+        "tools/check_allocations.py", "--base", providers.gradleProperty("allocationBase").getOrElse("auto"))
 }
 project(":core").tasks.named("check") { dependsOn(validateAllocations) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateAllocations) }
@@ -130,6 +130,34 @@ val validateContrast = tasks.register<Exec>("validateContrast") {
 project(":core").tasks.named("check") { dependsOn(validateContrast) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateContrast) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateContrast) }
+
+// Style-system gates for docs and skills (D75, docs/STYLE_SYSTEM.md). They judge documentation and agent skills, which
+// ship nothing in the game, so they run in :core:check and not in the release builds.
+val testStyleSystemGates = tasks.register<Exec>("testStyleSystemGates") {
+    group = "verification"
+    description = "Runs the unit tests of the doc-gap gate, the skills gate, the style hook dispatcher and the shared diff base."
+    workingDir = rootDir.resolve("tools")
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "-m", "unittest", "test_check_doc_gaps", "test_check_skills", "test_check_style_hook", "test_git_base")
+}
+val validateDocGaps = tasks.register<Exec>("validateDocGaps") {
+    group = "verification"
+    description = "A gap written into docs/*.md on the branch's changed lines must link an issue (AGENTS.md)."
+    dependsOn(testStyleSystemGates)
+    workingDir = rootDir
+    // "auto": the merge-base with origin/main when that ref exists (the whole branch plus the working tree), else HEAD.
+    // A CI job needs `actions/checkout` with `fetch-depth: 0` so that origin/main and the merge-base exist.
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "tools/check_doc_gaps.py", "--base", providers.gradleProperty("docGapBase").getOrElse("auto"))
+}
+val validateSkills = tasks.register<Exec>("validateSkills") {
+    group = "verification"
+    description = "Shared skills, their index and the Claude pointers agree (.agents/skills/README.md)."
+    dependsOn(testStyleSystemGates)
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "tools/check_skills.py")
+}
+project(":core").tasks.named("check") { dependsOn(validateDocGaps, validateSkills) }
 
 // Native installer/app-image (bundles its own JRE -- nothing else to
 // install to play): .exe/.msi on Windows, .app/.dmg on macOS,

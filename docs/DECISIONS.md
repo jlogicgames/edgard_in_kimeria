@@ -1369,7 +1369,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **`GameContext.screenShakeDisabled()`:** inverted on purpose. The test proxies of `GameContext` answer `false` to every boolean, so an "enabled" question would have turned the boss shake off in `BossCombatTest` and `RoomTest`, which must pass unchanged.
 - **Test changes, stated plainly (no tolerance relaxed, no existing test edited except by additions):** new `ScreenShakeTest` (includes a bit-identical comparison with a verbatim copy of the old `Level.cameraShakeOffset` over several room shapes and 14 frames), `WallLessonTest` (a moving wall starts one shake for its move time, a non-moving one none), `SettingsTest` (default, reduced-motion default, saved value wins, round trip), the new label in `LocalizationLayoutTest`, and `AllocationBudgetTest.leverShakeThroughTheRealLevel`.
 - **Measured:** `camera shake query` still 0.0 B/frame; lever shake through the real `Level` 4.5 B/frame in 3 runs (ceiling 16; the 4.5 is the `HashSet` that `activateTrigger` makes once per lever pull, the shake, its update and its offset are 0.0). `Forest1TrapsTest`, `Forest2TrapsTest`, `RhythmTrapsTest`, `TutorialLevelTest`, `BossCombatTest`, `RoomTest` pass unchanged (physics untouched).
-- **Not verified:** how the 1.5 px lever shake looks and feels in the running game (desktop and web); the label wording in de, pl, uk and be (machine-quality drafts, native review pending, [LOCALIZATION_VALIDATION.md](LOCALIZATION_VALIDATION.md)); `prefers-reduced-motion` in iOS Safari and Firefox (see the browser check in the pull request).
+- **Not verified:** how the 1.5 px lever shake looks and feels in the running game (desktop and web); the label wording in de, pl, uk and be (machine-quality drafts, native review pending, [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369), [LOCALIZATION_VALIDATION.md](LOCALIZATION_VALIDATION.md)); `prefers-reduced-motion` in iOS Safari and Firefox (see the browser check in the pull request).
 
 
 ## D63. Honey fungus and false honey fungus: a pair of look-alike proximity mushrooms (#295, phase 1: decision and art)
@@ -1584,7 +1584,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **System:** one card per shipped room in [ROOM_CARDS.md](ROOM_CARDS.md) (role, purpose, novelty by element id, D19 times,
   retry cost, D26), with an element registry that maps Tiled types to elements so reskins share one id; the rule and workflow
   in [ROOMS.md](ROOMS.md#every-room-gives-something-new-d72); the skill `kimeria-room-design` (`.agents/skills/`, with a
-  Claude pointer in `.claude/skills/design-room/`); a line in `AGENTS.md`; and `RoomCardsTest` in `:core:test`, which
+  Claude pointer in `.claude/skills/design-room/`, renamed `kimeria-room-design` by D75); a line in `AGENTS.md`; and `RoomCardsTest` in `:core:test`, which
   derives each element's first sighting from the maps and checks the cards against it (the Gradle test task declares the
   card file as an input).
 - **Audit (2026-11-16, verdicts on the cards; the forest-1 part redone after #187/D67 and #104/D68 added two rooms):**
@@ -1644,6 +1644,63 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   group and language; the shared list adds inflections, damage, boss and list, and the tutorial tales pass.
 - **Not verified:** native-speaker review of the glossary forms for uk, pl, de and be; whether the 60-character hint
   budget is the right margin (it is a proposal from the audit, not measured against a rewritten hint).
+
+## D75. One style system: the design language, card first, rules land complete (#386, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 ([#386](https://github.com/jlogicgames/edgard_in_kimeria/issues/386), the
+  synthesis of the first-playtest audits #335, #339, #340, #347, #348, #351 and #352). Entry point:
+  [STYLE_SYSTEM.md](STYLE_SYSTEM.md).
+- **Decision:** the game is built in one design language of six principles, each owned by its existing decision:
+  (1) readable before lethal (D70, D71, the contrast tiers of D76, [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344));
+  (2) fair and deterministic with cheap retries (D2, D3, D7, D26); (3) every room gives something new, taught alone then
+  combined (D72, D33-D40, D48); (4) **a hazard warns before it acts and shows a consequence after**: the D7 telegraph
+  before, a visible and audible result after (screen shake only through `ScreenShake` and its Assist option, D62), and
+  no effect hides a warning (the D73 pattern, generalised; audit [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388));
+  (5) the tale is shown, not only told, in two voices (D74); (6) crude original craft: native pixel art from authored
+  sprites, voice-synth sounds generated, never sampled (D21, ART_DIRECTION.md, SOUND_DIRECTION.md).
+- **Card first:** a trap, a room or a string is designed on its card (TRAPS.md, ROOM_CARDS.md, the TEXT_STYLE workflow)
+  and approved by the author before it is built; a change that spans systems follows the order in STYLE_SYSTEM.md.
+- **A rule lands complete:** a new design rule arrives in one change with its D-number, a reference document, a gate
+  (or a stated reason that review checks it instead), a shared skill with its Claude pointer when it has a procedure,
+  an AGENTS.md paragraph and a row in STYLE_SYSTEM.md.
+- **Enforcement (new in this change):**
+  - `TrapTeachingRoomTest` (`:core:test`): a trap's `Taught in` (TRAPS.md) starts with its teaching room, a shipped room
+    with a card that shows the trap; no earlier room shows the type; a DISGUISED or HIDDEN trap's room introduces its
+    element on its card (D71, D72). Five catalogue rows named a map or put the room second and were rewritten; no
+    rule or tolerance of `TrapCatalogTest` or `RoomCardsTest` changed (two helpers became visible to the new test).
+  - `docs/TRAPS.md` and `tools/text_style.json` are declared `:core:test` inputs, like ROOM_CARDS.md: before, an edit to
+    either alone left the tests up to date and `TrapCatalogTest` or `HealerDialogueTest` did not run.
+  - `tools/check_doc_gaps.py` (`validateDocGaps`, `:core:check`): on lines of `docs/**/*.md` changed on the branch
+    (since the merge-base with `origin/main`, plus the working tree), a block with a gap marker (TODO, not yet, known
+    gap, to be measured, needs upstream fix, pending) names an issue (`#362` or `.../issues/362`; an anchor such as
+    `#2-foo` or the `#NNN` placeholder is not one). Not judged: headings, fenced code and inline code (quoted syntax),
+    and "not yet" followed by a verb of the player's progress ("not yet met": play order, not project state). Run over the last 40 commits it found two real untracked gaps
+    (TRAPS.md "the plain skin is the one pending", now #362; D62 "native review pending", now #369), both linked here.
+  - `tools/check_skills.py` (`validateSkills`, `:core:check`): shared skills, the index `.agents/skills/README.md` and the
+    Claude pointers agree; English only. Every `kimeria-*` skill has a Claude pointer of the same name (`design-room`
+    and `game-text` were renamed); seven Russian `openai.yaml` files were translated.
+  - `.github/workflows/check.yml` (author's choice, 2026-11-16): every pull request to `main` runs `:core:check` on a
+    full-history checkout, then the Python tool tests; before it, no workflow ran `:core:check` or the new gates.
+  - The changed-line gates `validateAllocations`, `validateNamedParameters` and `validateDocGaps` default to the base
+    `auto` (`tools/git_base.py`): the merge-base with `origin/main` when it exists, else HEAD with a note. Before, the
+    first two compared with HEAD, so on a clean checkout (CI) they checked nothing; shown in a scratch clone, where a
+    committed `new` in `KimeriaParticleSystem.render` and four literal draw coordinates passed with the old base and fail
+    with the new one. The hooks (`--hook`) keep HEAD; `validateSpriteArt` reads the whole tree and needed no base.
+  - `tools/check_style_hook.py`, run by the PostToolUse and Stop hooks of Codex and Claude Code: the fast gates that
+    apply to the files an edit touched (after the edit) or to every changed file (at Stop), including D76's
+    `check_contrast.py` for sprites and maps (about 2.5 s), and the Gradle command of the trap and room tests when
+    their inputs change.
+- **Stray skill folders:** the Codex desktop app's Claude import ("Migrate skills from ... to ...", on when
+  `external-agent-import-sync-enabled` is set in `~/.codex/config.toml`) copied `.claude/skills/design-room` and
+  `game-text` to `.agents/skills/` as Codex pointers in every worktree. With the pointers named like their shared skills
+  there is no missing folder to create; a folder it does create is unlisted and fails `check_skills.py`.
+- **New skill:** `kimeria-sound`, the order of work of SOUND_DIRECTION.md.
+- **Why:** the audits each left a working system written in parallel; without one entry point and one workflow the
+  next feature picks one system and misses the others.
+- **Not verified:** principle 4 against every hazard but the falling stone (#388); whether the Codex import overwrites
+  an existing `.agents/skills` folder of the same name (its code was read only as strings; `check_skills.py` fails if a
+  shared skill turns into a pointer); Codex reading the `hookSpecificOutput` reminder (Claude Code's format). All three
+  are checked in [#389](https://github.com/jlogicgames/edgard_in_kimeria/issues/389).
 
 ## D76. Three contrast tiers: background, decor, active (#344, playtest F15, 2026-11-16)
 
