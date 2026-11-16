@@ -136,8 +136,12 @@ public interface CollideBody extends GravityBody {
         for (FallingPlatform platform : level.fallingPlatforms) {
             if (CollisionUtils.checkCollision(this, (Collidable) platform)) {
                 if (velocity().y > 0) {
+                    float snapY = platform.getY() - hitbox().height - hitbox().offsetY;
+                    // A collapsing platform that has sunk below a solid floor keeps falling as scenery, but it
+                    // must not carry the body into that floor (#355, D69): the solid pass above already stood it there.
+                    if (overlapsSolidAt(level, snapY)) continue;
                     velocity().y = 0;
-                    position().y = platform.getY() - hitbox().height - hitbox().offsetY;
+                    position().y = snapY;
                     setOnGround(true);
                     if (!platform.isFalling()) {
                         platform.collideWithActor();
@@ -148,5 +152,18 @@ public interface CollideBody extends GravityBody {
                 }
             }
         }
+    }
+
+    /** True when the body, moved to {@code y}, would overlap a solid block (not a one-way platform or quicksand). No allocation: an index loop and no boxing, checked by `tools/check_allocations.py` (HOT_METHODS), not by a budget scene. */
+    default boolean overlapsSolidAt(Level level, float y) {
+        float original = position().y;
+        position().y = y;
+        boolean overlaps = false;
+        for (int i = 0; i < level.collisionBlocks.size() && !overlaps; i++) {
+            CollisionBlock block = level.collisionBlocks.get(i);
+            overlaps = block.isActive() && !block.isPlatform() && !block.isQuickSand() && CollisionUtils.checkCollision(this, block);
+        }
+        position().y = original;
+        return overlaps;
     }
 }
