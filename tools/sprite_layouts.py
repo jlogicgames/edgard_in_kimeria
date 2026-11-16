@@ -51,6 +51,10 @@ FOREST_TRAP_SHEETS = {
     'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
+    # #349 (D80): the branch skins. perch = the sound branch (a one-way Platform), rotten-perch = the rotten branch
+    # (a FallingPlatform, frames as the log's); each with its copy for the left side of a trunk.
+    'perch': ((32, 16), ('perch', 'perch-left')),
+    'rotten-perch': ((32, 16), ('intact', 'crumble1', 'crumble2', 'intact-left', 'crumble1-left', 'crumble2-left')),
     # #295 phase 1: the two look-alike mushrooms; idle1..idle3 is the brightness-pulse idle, swell1/swell2 the D7 telegraph.
     'honey-fungus': ((24, 16), ('idle1', 'idle2', 'idle3', 'swell1', 'swell2', 'spent')),
     'false-honey-fungus': ((24, 16), ('idle1', 'idle2', 'idle3', 'swell1', 'swell2', 'spent')),
@@ -64,6 +68,7 @@ DECOR_SHEETS = {
     'bush': ((32, 24), ('idle', 'brush1', 'brush2', 'settle')),
     'vine': ((8, 40), ('hang',)),  # #239 step 5: the stone-linked HangingVine
     'lookalike': ((24, 16), ('static',)),  # #299: the static look-alike, one frame, never animated
+    'trunk': ((16, 288), ('trunk',)),  # #349 (D80): the tree trunk behind the branches, one frame
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})
 # The shared pickup cue (#345): drawn by every Collectable; runtime export `pickup-<name>.png`, one horizontal strip.

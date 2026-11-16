@@ -367,7 +367,7 @@ class DecorLinksTest(unittest.TestCase):
         self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="500" y="296" width="32" height="24"'), FLOOR))[0])
 
     def test_the_kinds_are_read_from_the_java_table(self):
-        self.assertEqual({'bush', 'lookalike'}, set(links.decor_kinds()))
+        self.assertEqual({'bush', 'lookalike', 'trunk'}, set(links.decor_kinds()))  # trunk: #349 (D80)
         self.assertEqual(('lookalike',), links.decor_still_kinds())
 
 
@@ -408,6 +408,35 @@ class HangingVineLinksTest(unittest.TestCase):
         self.assertEqual(3, len(shipped))
         for path in shipped:
             self.assertEqual([], [e for e in links.check_map(path) if 'HangingVine' in e], path.name)
+
+
+class BranchPlacementTest(unittest.TestCase):
+    """#349 (D80): the rotten branch's D69 side margin and fall depth, the same boundary FallingPlatform.branchProblem pins in TreeClimbTest."""
+
+    @staticmethod
+    def obj(kind, x, y, w=32, h=16, skin='branch'):
+        import xml.etree.ElementTree as ET
+        props = f'<properties><property name="skin" value="{skin}"/></properties>' if skin else ''
+        return ET.fromstring(f'<object id="9" type="{kind}" x="{x}" y="{y}" width="{w}" height="{h}">{props}</object>')
+
+    def problems(self, platform_x, platform_y):
+        branch = self.obj('FallingPlatform', 300, 80)
+        floor = self.obj('', 0, 320, 640, 48, skin=None)
+        collisions = [floor, self.obj('Platform', platform_x, platform_y)]
+        return links.branch_problems(branch, collisions, [0, 0, 640, 368], (0, 272), [(0, 288, 16, 32)])
+
+    def test_sixteen_pixels_beside_passes_and_fifteen_fails_on_either_side(self):
+        margin = links.platform_constant('BRANCH_SIDE_MARGIN')
+        self.assertEqual(16.0, margin)
+        self.assertEqual([], self.problems(300 + 32 + 16, 128))
+        self.assertIn('D69', self.problems(300 + 32 + 15, 128)[0])
+        self.assertEqual([], self.problems(300 - 16 - 32, 128))
+        self.assertIn('D69', self.problems(300 - 15 - 32, 128)[0])
+
+    def test_within_the_two_hundred_pixel_fall_fails_and_below_it_or_level_passes(self):
+        self.assertIn('D69', self.problems(300, 80 + 200)[0])
+        self.assertEqual([], self.problems(300, 80 + 201))
+        self.assertEqual([], self.problems(300, 80))
 
 
 if __name__ == '__main__':

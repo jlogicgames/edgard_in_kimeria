@@ -74,6 +74,7 @@ SPRITES = {
     'Decor:bush': ('decor', 'objects/decor-bush.png', (0, 0, 32, 24), 4, 'floor', FULL),  # brush frames are seen too (D64)
     'Decor:lookalike': ('decor', 'objects/decor-lookalike.png', (0, 0, 24, 16), 1, 'floor', FULL),
     'HangingVine': ('decor', 'objects/decor-vine.png', (0, 0, 8, 40), 1, 'top', FULL),
+    'Decor:trunk': ('decor', 'objects/decor-trunk.png', (0, 0, 16, 288), 1, 'floor', FULL),  # #349: behind the branches
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'FallingBranch': ('active', 'objects/trap-branch.png', (0, 0, 32, 16), 1, 'top', FULL),
@@ -87,6 +88,11 @@ SPRITES = {
     'FallingPlatform': ('active', 'objects/FallingOn.png', (0, 0, 32, 10), 1, 'top', FULL),
     'FallingPlatform:log': ('active', 'objects/trap-log.png', (0, 0, 32, 16), 1, 'top', FULL),
     'Platform': ('active', 'objects/platform.png', (0, 0, 32, 16), 1, 'top', FULL),
+    # #349 (D80): the branch skins; `-left` is the copy drawn on the left of a trunk (`mirror`), a later frame of the strip.
+    'Platform:branch': ('active', 'objects/trap-perch.png', (0, 0, 32, 16), 1, 'top', FULL),
+    'Platform:branch-left': ('active', 'objects/trap-perch.png', (32, 0, 32, 16), 1, 'top', FULL),
+    'FallingPlatform:branch': ('active', 'objects/trap-rotten-perch.png', (0, 0, 32, 16), 1, 'top', FULL),
+    'FallingPlatform:branch-left': ('active', 'objects/trap-rotten-perch.png', (96, 0, 32, 16), 1, 'top', FULL),
     'Escalator': ('active', 'objects/GreyOff.png', (0, 0, 32, 8), 1, 'top', FULL),
     'Ladder': ('active', 'objects/ladder.png', (0, 0, 16, 16), 1, 'top', FULL),
     'Trigger': ('active', 'objects/lever.png', (0, 0, 16, 16), 2, 'floor', FULL),  # every Trigger draws a Lever: up, and down once pulled
@@ -215,7 +221,10 @@ def backgrounds(layer, sky):
 
 def key_of(group, obj, props):
     kind = obj.get('type')
+    side = '-left' if props.get('mirror') == 'true' else ''
     if group == 'Collisions':
+        if kind == 'Platform' and props.get('skin') == 'branch':
+            return 'Platform:branch' + side, kind
         return kind if kind == 'Platform' else None, kind
     if kind == 'Decor':
         return 'Decor:' + props.get('kind', 'bush'), kind
@@ -223,6 +232,8 @@ def key_of(group, obj, props):
         return 'Collectable:' + (props.get('item') or obj.get('name') or 'Coin').title(), kind
     if kind == 'FallingPlatform' and props.get('skin') == 'log':
         return 'FallingPlatform:log', kind
+    if kind == 'FallingPlatform' and props.get('skin') == 'branch':
+        return 'FallingPlatform:branch' + side, kind
     if kind == 'Actionable' and props.get('type') == 'Wall' and props.get('movement') == 'vertical':
         return 'Actionable:Wall', kind
     return (kind if kind in SPRITES else None), kind

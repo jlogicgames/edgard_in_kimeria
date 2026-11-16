@@ -25,6 +25,9 @@ public final class SpriteSheets {
     public static final Sheet TRAP_SPORES = new Sheet("images/objects/trap-spores.png", 24, 24);
     public static final Sheet TRAP_VINE = new Sheet("images/objects/trap-vine.png", 24, 40);
     public static final Sheet TRAP_LOG = new Sheet("images/objects/trap-log.png", 32, 16);
+    // Tree branches (#349, D80): perch, perch-left (the sound branch); intact, crumble1, crumble2 and their -left copies (the rotten branch).
+    public static final Sheet TRAP_PERCH = new Sheet("images/objects/trap-perch.png", 32, 16);
+    public static final Sheet TRAP_ROTTEN_PERCH = new Sheet("images/objects/trap-rotten-perch.png", 32, 16);
     // #295 phase 1 (art only, no code draws them yet): idle1..idle3, swell1, swell2, spent; tools/sprite_layouts.py FOREST_TRAP_SHEETS.
     public static final Sheet TRAP_HONEY_FUNGUS = new Sheet("images/objects/trap-honey-fungus.png", 24, 16);
     public static final Sheet TRAP_FALSE_HONEY_FUNGUS = new Sheet("images/objects/trap-false-honey-fungus.png", 24, 16);
@@ -34,6 +37,8 @@ public final class SpriteSheets {
     public static final Sheet DECOR_VINE = new Sheet("images/objects/decor-vine.png", 8, 40);
     // Static look-alike mushroom scenery (#299): one frame, never animated; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_LOOKALIKE = new Sheet("images/objects/decor-lookalike.png", 24, 16);
+    // Tree trunk behind the branches (#349, D80): one frame; tools/sprite_layouts.py DECOR_SHEETS.
+    public static final Sheet DECOR_TRUNK = new Sheet("images/objects/decor-trunk.png", 16, 288);
     public static final Sheet PLAYER = new Sheet("images/hero/Player.png", 48, 48);
     public static final Sheet PLAYER_LOOK = new Sheet("images/hero/Look.png", PLAYER.width(), PLAYER.height());
 

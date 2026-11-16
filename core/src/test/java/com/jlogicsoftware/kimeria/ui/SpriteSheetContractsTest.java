@@ -30,12 +30,15 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);
         matches(SpriteSheets.TRAP_LOG, 3, 1);
+        matches(SpriteSheets.TRAP_PERCH, 2, 1); // #349: perch, perch-left
+        matches(SpriteSheets.TRAP_ROTTEN_PERCH, 6, 1); // #349: intact, crumble1, crumble2 and their -left copies
         matches(SpriteSheets.TRAP_HONEY_FUNGUS, 6, 1); // #295 phase 1: idle1..3, swell1, swell2, spent
         matches(SpriteSheets.TRAP_FALSE_HONEY_FUNGUS, 6, 1);
         // Decor (#239 step 4): idle, brush1, brush2, settle (tools/sprite_layouts.py DECOR_SHEETS).
         matches(SpriteSheets.DECOR_BUSH, 4, 1);
         matches(SpriteSheets.DECOR_VINE, 1, 1); // #239 step 5: hang
         matches(SpriteSheets.DECOR_LOOKALIKE, 1, 1); // #299: static
+        matches(SpriteSheets.DECOR_TRUNK, 1, 1); // #349: the tree trunk
     }
 
     /** #255: the blast is drawn standing on the stump's base, so each frame's lowest opaque row is its last row. */

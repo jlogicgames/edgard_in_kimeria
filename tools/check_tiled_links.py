@@ -28,7 +28,8 @@ FUNGUS_ZONE_ABOVE, FUNGUS_MIN_HARMLESS_ZONE, FUNGUS_CLEARANCE, FUNGUS_CLOUD = 32
 PUFFBALL_SWELL_ASSISTED = 0.8 * 1.5  # TrapWarnings.DEFAULT_WARNING_SECONDS with the longer-warnings assist
 PUFFBALL_MIN_CALM = 0.8
 VINE_MIN_PERIOD, VINE_AMPLITUDE = 3.5, (35.0, 60.0)
-SKINS = ('', 'log')
+SKINS = ('', 'log', 'branch')
+PLATFORM_SKINS = ('', 'branch')  # StaticPlatform.Skin (#349, D80)
 VINE_HALF_WIDTH = 4.0
 PUFFBALL_CLOUD, PUFFBALL_INSET = 24.0, 2.0
 HERO_BOX = (11.0, 22.0, 18.0, 26.0)  # Player hitbox offset and size
@@ -155,7 +156,7 @@ def check_rhythm_traps(root, spawn):
                 errors.extend(f"ThornVine {describe(o)}: its danger area covers the room {name}"
                               for name, area in standing_places(root, spawn, o) if vine_ever_lethal(o, amplitude, area))
         elif kind(o) == 'FallingPlatform' and prop(o, 'skin') not in SKINS:
-            errors.append(f"FallingPlatform {describe(o)}: unknown skin '{prop(o, 'skin')}' (expected log)")
+            errors.append(f"FallingPlatform {describe(o)}: unknown skin '{prop(o, 'skin')}' (expected log or branch)")
     return errors
 
 
@@ -390,6 +391,7 @@ def check_map(path):
     errors += check_decor(spawn, collisions)
     errors += check_still_decor(spawn, groups.get('Hints', []))
     errors += check_hanging_vines(root, spawn, collisions)
+    errors += check_branches(root, spawn, collisions)
     return [f"{path.name}: {e}" for e in errors]
 
 
@@ -613,6 +615,77 @@ def check_falling_traps(root, groups):
                         for c in same_room)
             if body[1] != room[1] and not under:
                 errors.append(f"{label}: a stone must start at the room top or directly under a solid block, or it pops into view in mid-air")
+    return errors
+
+
+# Tree branches (#349, D80): mirrors FallingPlatform.branchProblem for maps; the numbers are read from the Java class.
+PLATFORM_JAVA = FALLING_JAVA.with_name('FallingPlatform.java')
+HERO_FRAME = 48.0  # the 48x48 hero frame a RoomStart places
+
+
+def platform_constant(name):
+    found = re.search(rf'\b{name}\s*=\s*([0-9.]+)f', PLATFORM_JAVA.read_text(encoding='utf-8'))
+    return float(found.group(1))
+
+
+def _inside_room(room, c):
+    cx, cy = _num(c, 'x') + _num(c, 'width') / 2, _num(c, 'y') + _num(c, 'height') / 2
+    return room[0] <= cx < room[0] + room[2] and room[1] <= cy < room[1] + room[3]
+
+
+def branch_problems(o, collisions, room, entrance, goals):
+    """Why a rotten branch may not stand where it is: D69 (no one-way platform under its fall) and D26 (not the only way up).
+
+    Mirrors FallingPlatform.branchProblem; change both together. The D26 part is a coarse reachability over top edges: every
+    plain block is a step and no ceiling, wall or block stops a jump, so it can pass a room the hero cannot climb. It only
+    catches a rotten branch that is the sole support in reach; a route test must prove the climb (D80).
+    """
+    fall, rise, gap, margin = (platform_constant(n) for n in
+                               ('FALL_DISTANCE', 'BRANCH_JUMP_RISE', 'BRANCH_JUMP_GAP', 'BRANCH_SIDE_MARGIN'))
+    x, y, w, _ = _rect(o)
+    for c in collisions:
+        if kind(c) != 'Platform' or not _inside_room(room, c):
+            continue
+        cx, cy, cw, _ = _rect(c)
+        if 0 < cy - y <= fall and cx < x + w + margin and cx + cw > x - margin:
+            return [f"falls past the one-way platform {describe(c)} (D69: no rotten branch above a sound one)"]
+    supports = [(_num(c, 'x'), _num(c, 'x') + _num(c, 'width'), _num(c, 'y')) for c in collisions
+                if kind(c) in ('', 'Platform') and _inside_room(room, c)]
+    feet, left = entrance[1] + HERO_FRAME, entrance[0] + HERO_BODY[0]
+    right = left + HERO_BODY[2]
+    reached = {i for i, s in enumerate(supports) if abs(s[2] - feet) <= 1 and s[0] < right and s[1] > left}
+    if not reached:
+        return ["has no support under the room entrance to start the D26 check from"]
+    todo = list(reached)
+    while todo:
+        a = supports[todo.pop()]
+        for j, b in enumerate(supports):
+            if j not in reached and b[2] >= a[2] - rise and max(0.0, b[0] - a[1], a[0] - b[1]) <= gap:
+                reached.add(j); todo.append(j)
+    for gx, gy, gw, gh in goals:
+        if any(gy <= supports[i][2] <= gy + gh + 1 and supports[i][0] < gx + gw and supports[i][1] > gx for i in reached):
+            return []
+    return ["is the only way up: the room's goal cannot be reached with every rotten branch fallen (D26)"]
+
+
+def check_branches(root, spawn, collisions):
+    errors = []
+    for c in collisions:
+        if kind(c) == 'Platform' and prop(c, 'skin') not in PLATFORM_SKINS:
+            errors.append(f"Platform {describe(c)}: unknown skin '{prop(c, 'skin')}' (expected branch)")
+        elif kind(c) == 'Platform' and prop(c, 'skin') == 'branch' and _num(c, 'width') != 32:
+            errors.append(f"Platform {describe(c)}: a branch is one 32x16 segment")
+    for o in spawn + collisions:
+        if prop(o, 'mirror') == 'true' and kind(o) in ('Platform', 'FallingPlatform') and prop(o, 'skin') != 'branch':
+            errors.append(f"{kind(o)} {describe(o)}: mirror applies to the branch skin only")
+    for o in (o for o in spawn if kind(o) == 'FallingPlatform' and prop(o, 'skin') == 'branch'):
+        room = thorn_room(root, o)
+        places = standing_places(root, spawn, o)
+        entrance = next(((b[0] - HERO_BOX[0], b[1] - HERO_BOX[1]) for name, b in places if name == 'entrance'), None)
+        goals = [b for name, b in places if name in ('exit', 'checkpoint')]
+        if room is None or entrance is None:
+            errors.append(f"FallingPlatform {describe(o)}: a rotten branch needs a room with an entrance"); continue
+        errors.extend(f"FallingPlatform {describe(o)} {e}" for e in branch_problems(o, collisions, room, entrance, goals))
     return errors
 
 

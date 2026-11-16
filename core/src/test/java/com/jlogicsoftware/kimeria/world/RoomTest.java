@@ -112,20 +112,25 @@ class RoomTest {
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNull(layout.rooms.get(0).exit());
     }
-    /** forest-1 (D67, #104): the trap course keeps the Player spawn as its entrance; the route room and the guard room follow, and the guard room is last and holds the Checkpoint. */
-    @Test void forestOneIsTheTrapCourseThenTheRouteRoomThenTheGuardRoomWithTheCheckpoint() {
+    /**
+     * forest-1 (D67, #104, #349): the trap course keeps the Player spawn as its entrance; the route room, the guard room and the tree room follow, and the
+     * tree room is last and holds the Checkpoint at its top.
+     */
+    @Test void forestOneIsTheTrapCourseThenTheRouteRoomThenTheGuardRoomThenTheTreeRoomWithTheCheckpoint() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(3, layout.rooms.size());
+        assertEquals(4, layout.rooms.size());
         var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNotNull(layout.rooms.get(0).exit());
         assertNotNull(layout.rooms.get(1).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
-        assertNull(layout.rooms.get(2).exit());
+        assertNotNull(layout.rooms.get(2).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
         assertEquals("forest-1-guard", layout.rooms.get(2).id());
+        assertNull(layout.rooms.get(3).exit());
+        assertEquals("forest-1-tree", layout.rooms.get(3).id());
         var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertEquals(1, checkpoint.size());
-        assertEquals(2, layout.owner(checkpoint.get(0)));
+        assertEquals(3, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

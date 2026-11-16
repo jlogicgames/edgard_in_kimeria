@@ -84,7 +84,8 @@ class Forest1CombatTest {
     private boolean refillGone(Level level) { return level.objects.stream().noneMatch(o -> o instanceof FireballRefill && !o.isRemoved()); }
     private float feet(Level level) { Rectangle b = level.player.hitboxBounds(); return b.y + b.height; }
     private float centerX(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width / 2; }
-    private boolean won(Level level) { return level.player.getState() == Player.State.DISAPPEARING; }
+    /** Since #349 the guard room ends at a RoomExit (the checkpoint moved to the tree room's top), at the x the checkpoint stood at. */
+    private boolean won(Level level) { return level.atRoomExit(); }
     private boolean dead(Level level) { return level.player.isGotHit(); }
     private void alive(Level level) { assertFalse(dead(level), "died at " + level.player.position + " guard " + theMob.getState() + " cloud " + puff(level).currentPhase()); }
     private boolean onFloor(Level level) { return feet(level) > FLOOR - 2 && !level.player.onLadder(); }
@@ -125,7 +126,7 @@ class Forest1CombatTest {
     /**
      * The floor route with ordinary keys. A patient hero stops short of the cloud (his centre at or left of {@value #WAIT_CENTRE}) until the calm is
      * long enough ({@code need}), then walks in; with the guard alive he swings once from within 16 px of it; he never stops inside the cloud's width
-     * except to swing. An impatient hero does not wait. Ends at the checkpoint or at his death (the caller checks).
+     * except to swing. An impatient hero does not wait. Ends at the room exit or at his death (the caller checks).
      */
     private int floorRoute(Level level, boolean patient) {
         int frames = 0;
@@ -140,7 +141,7 @@ class Forest1CombatTest {
             if (melee && !actionWasDown) pressed.add(Input.Keys.K);
             actionWasDown = melee;
             frame(level);
-            assertTrue(++frames < 60 * 40, "the checkpoint was not reached from " + level.player.position);
+            assertTrue(++frames < 60 * 40, "the room exit was not reached from " + level.player.position);
         }
         held.clear();
         return frames;
@@ -191,7 +192,7 @@ class Forest1CombatTest {
         return frames;
     }
 
-    /** The roof route: lever, ladder, roof, refill, drop, checkpoint; never touches the floor under the roof. */
+    /** The roof route: lever, ladder, roof, refill, drop, room exit; never touches the floor under the roof. */
     private int roofRoute(Level level) {
         int frames = walkToLever(level);
         frames += operate(level);
@@ -210,11 +211,11 @@ class Forest1CombatTest {
 
     // ---- census and geometry ----
 
-    @Test void theRoomHoldsOneLeverOneRaisedLadderOneTunnelWithAGuardAndAPuffballOneRefillAndTheCheckpointAndNothingElse() {
+    @Test void theRoomHoldsOneLeverOneRaisedLadderOneTunnelWithAGuardAndAPuffballOneRefillAndTheRoomExitAndNothingElse() {
         Level level = room(0);
         assertEquals("forest-1-guard", level.currentRoomName());
         assertEquals(new Rectangle(ROOM_X, 0, 768, 368), level.currentRoomBounds());
-        assertFalse(level.hasNextRoom(), "the guard room is the last: its checkpoint ends the level");
+        assertTrue(level.hasNextRoom(), "the tree room follows (#349): the guard room's checkpoint became its RoomExit");
         assertEquals(1, level.triggers.size());
         assertEquals(1, level.objects.stream().filter(Lever.class::isInstance).count());
         assertEquals(1, level.ladders.size());
@@ -224,7 +225,7 @@ class Forest1CombatTest {
         assertEquals(1, level.objects.stream().filter(Puffball.class::isInstance).count(), "one trap, the spore puffball: no thorns, no second monster");
         assertEquals(1, level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
-        assertEquals(1, level.objects.stream().filter(Checkpoint.class::isInstance).count());
+        assertEquals(0, level.objects.stream().filter(Checkpoint.class::isInstance).count(), "the checkpoint is at the tree room's top (#349)");
         assertEquals(1, level.objects.stream().filter(FireballRefill.class::isInstance).count(), "one refill, and no coin (coins feed the healer recipe)");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Collectable));
         assertFalse(ladder(level).isLowered());
@@ -248,14 +249,14 @@ class Forest1CombatTest {
         FireballRefill refill = refill(level);
         assertEquals(REFILL_X, refill.getX(), 0.01f);
         assertEquals(DECK, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the slab beyond the tunnel's roof");
-        var checkpoint = level.objects.stream().filter(Checkpoint.class::isInstance).map(Checkpoint.class::cast).findFirst().orElseThrow();
-        assertEquals(CHECKPOINT_X, checkpoint.getX(), 0.01f);
-        assertEquals(FLOOR, checkpoint.getY() + checkpoint.getHeight(), 0.01f, "it stands on the floor");
+        Rectangle exit = new RoomLayout(com.jlogicsoftware.kimeria.tiled.TiledMapData.load("tiles/forest-1.tmx", h.assets())).rooms.get(2).exit();
+        assertEquals(CHECKPOINT_X, exit.x, 0.01f, "the exit stands where the checkpoint stood, so the route times keep their meaning");
+        assertEquals(FLOOR, exit.y + exit.height, 0.01f, "it stands on the floor");
         assertEquals(START_X, level.player.position.x, 0.01f);
         assertEquals("", level.player.zoneHint(), "no hints");
     }
 
-    @Test void theEntranceIsSafeAndFarFromTheTrapsAndTheCheckpointIsClearOfTheRightWallAndTheDrop() {
+    @Test void theEntranceIsSafeAndFarFromTheTrapsAndTheExitIsClearOfTheRightWallAndTheDrop() {
         Level level = room(0);
         assertEquals(272, level.player.position.y, 0.01f);
         assertFalse(level.player.canInteract());
@@ -264,7 +265,7 @@ class Forest1CombatTest {
         assertEquals(START_X, level.player.position.x, 0.5f, "standing still at the entrance: nothing moves the hero");
         assertTrue(guardUntouched());
         assertTrue(CLOUD_LEFT - (START_X + 48) >= 140, "the cloud is far from the entrance's 48 px square");
-        assertTrue(ROOM_END - 16 - (CHECKPOINT_X + 16) >= 48, "the checkpoint is clear of the right wall");
+        assertTrue(ROOM_END - 16 - (CHECKPOINT_X + 16) >= 48, "the exit is clear of the right wall");
         assertTrue(CHECKPOINT_X - SLAB_END >= 48, "and clear of where a hero drops off the slab's end");
     }
 
@@ -585,7 +586,7 @@ class Forest1CombatTest {
         assertEquals(1, stock.count(), "only the refill changed the stock");
     }
 
-    /** From wherever the hero stands (the ladder, the roof, the floor) to the checkpoint, patient, no lever, no charge. */
+    /** From wherever the hero stands (the ladder, the roof, the floor) to the room exit, patient, no lever, no charge. */
     private int recover(Level level) {
         int frames = 0;
         if (level.player.onLadder() || feet(level) < FLOOR - 2) {
@@ -639,7 +640,7 @@ class Forest1CombatTest {
     }
 
     @Test void aSecuredKillASecuredRefillAndASecuredLoweredLadderStayAsTheyWereAndTheExitStillWorks() {
-        // The guard room is last, so nothing secures it: a forward exit or a healer return calls keepPickups() and secureVisit(); then resetCurrentRoom
+        // Securing is the game's job, not the room's: a forward exit or a healer return calls keepPickups() and secureVisit(); then resetCurrentRoom
         // applies the snapshot as a revisit does.
         Level level = room(0);
         walkToLever(level); operate(level);
@@ -654,7 +655,7 @@ class Forest1CombatTest {
         meleeRoute(level);                                  // the floor still finishes, timed melee and all
         assertTrue(won(level));
         Level killed = room(0);
-        meleeRoute(killed);                                 // guard killed, then the checkpoint secured the room
+        meleeRoute(killed);                                 // guard killed, then the room exit secured the room
         killed.secureVisit();
         killed.resetCurrentRoom(player());
         assertTrue(killed.objects.stream().noneMatch(o -> o instanceof RedMob m && !m.isDefeated()), "a secured kill stays a kill");
@@ -707,7 +708,7 @@ class Forest1CombatTest {
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertEquals("forest-1-guard", level.currentRoomName());
-        assertFalse(level.hasNextRoom());
+        assertTrue(level.hasNextRoom(), "the tree room follows (#349)");
         level.resetCurrentRoom(player());
         assertEquals("forest-1-guard", level.currentRoomName());
         assertEquals(START_X, level.player.position.x, 0.01f);

@@ -60,7 +60,7 @@ what the player does about them.
 | running-platform | `Escalator:running` | times a jump onto a platform that never stops |
 | carry-throw | `Stone` | picks up a stone and throws it (at a lever, at a trap) |
 | carry-torch | `CarryableTorch` | carries a torch and lights things with it |
-| crumble-support | `FallingPlatform`, `FallingPlatform:log` | crosses before the support gives way |
+| crumble-support | `FallingPlatform`, `FallingPlatform:log`, `FallingPlatform:branch` | crosses before the support gives way |
 | proximity-thorn | `ThornRoot`, `ThornTuft` | jumps thorns that rise when the hero comes near |
 | falling-branch | `FallingBranch` | keeps walking under a branch that falls behind him |
 | falling-stone | `FallingStone` | reads the shadow and does not stand under it |
@@ -78,8 +78,9 @@ what the player does about them.
 | coin | `Collectable:Coin` | collects coins, often off the required route |
 | ingredient | `Collectable:Bat`, `Collectable:Mushroom` | collects a healer ingredient |
 | wall-jump | (skill) | wall-jumps a wall the route cannot pass otherwise |
+| branch-climb | (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) |
 
-Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `HangingVine`, `Torch`
+Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `HangingVine`, `Torch`
 (decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (clamberable room walls), `Collisions:Platform`
 (one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints`.
 
@@ -203,7 +204,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 3 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 1 of 4 (1280 px, two screens) |
 | Role | combination |
 | Purpose | First enemies and machinery that runs by itself, mixed with the tutorial's levers and traps. |
 | Introduces | redmob, running-platform, fireball-refill, puffball |
@@ -223,7 +224,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 3 (832 px) |
+| Level | forest-1, play order 2, room 2 of 4 (832 px) |
 | Role | variation |
 | Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
 | Introduces | bat-enemy |
@@ -243,7 +244,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 3 (768 px) |
+| Level | forest-1, play order 2, room 3 of 4 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
 | Introduces | - |
@@ -258,6 +259,24 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | Hints | none |
 | Status | D72 audit 2026-11-16: keep |
 | Decisions | D68 |
+
+### forest-1-tree
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 4 of 4 (640 px, one screen) |
+| Role | variation |
+| Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
+| Introduces | branch-climb |
+| Develops | crumble-support: on a climb a broken branch costs height, not life, and the escape is upward (the next branch), not across, and the rotten column falls behind the climber, so a stop rides him down to the floor |
+| Combines | - |
+| Mastered route | 4.95 s by the rotten column, 6.23 s by the sound tree (`TreeClimbTest`); target about 20 s |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | no death by design: the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line (`TreeClimbTest`) |
+| D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`) |
+| Hints | none |
+| Landmark | the two trees, with the level's end on the sound tree's crown |
+| Decisions | D80 |
 
 ## forest-2 (play order 3)
 
