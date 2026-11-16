@@ -12,6 +12,7 @@ import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
+import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
@@ -82,6 +83,23 @@ class AllocationBudgetTest {
     static final double FOREST_1_ROUTE_CEILING = 1130;
     /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_GUARD_CEILING = 1280;
+    /**
+     * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
+     * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
+     * trunks, five rotten and six sound branches; the level-wide sky and rain are drawn here too), update + render. The value moves with JIT state
+     * together with the other room scenes (the 897.8 runs had the route room at 897.9 and the guard room at 906.2). The cost is the harness and
+     * level code, as the other room scenarios; the ceiling is the highest full-suite run plus about 10 %, the whole-room convention of
+     * FOREST_1_ROUTE_CEILING (1130) and FOREST_1_GUARD_CEILING (1280). A first ceiling of 880, set from the first 3 runs, failed the next 2.
+     */
+    static final double FOREST_1_TREE_CEILING = 990;
+    /**
+     * Measured 611.3 to 923.3 B/frame in the same 5 full-suite runs (#349, D80, 2026-11-16; before the CollideBody index loops 1,050.8 to 1,050.9
+     * isolated): the tree room with the hero riding a rotten branch down every 4 s. A control run before the loops change, with the same teleport
+     * onto a sound branch and nothing falling, measured 1,025.8 against 1,050.9, so the warning, the crumble frames, the fall with the hero and
+     * the D69 floor guard add about 25 B/frame: the shared warning light ({@code Torch}) spawned at each trigger, as the log's is. The rest is
+     * the harness and level code, as the other room scenarios. Ceiling = highest full-suite run + about 10 %.
+     */
+    static final double FOREST_1_TREE_RIDE_CEILING = 1020;
     /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
     static final double RIDER_PATH_CEILING = 8;
     /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
@@ -200,6 +218,38 @@ class AllocationBudgetTest {
     @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
     @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 2)); }
+
+    /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 3)); }
+
+    /**
+     * The tree room with the hero riding a rotten branch down (D69 path: the snap to a sinking platform, the solid-floor guard, then the floor):
+     * every {@value #RIDE_CYCLE_FRAMES} frames the top branch is restored intact and the hero is stood on it, so its warning, its crumble frames,
+     * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
+     */
+    @Test void forest1TreeRoomRidingARottenBranchDown() {
+        Level level = harness.roomOf("forest-1", 3);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
+        FallingPlatform.Snapshot intact = top.snapshot();
+        boolean[] rode = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % RIDE_CYCLE_FRAMES == 0) {
+                if (!level.fallingPlatforms.contains(top)) level.fallingPlatforms.add(top);
+                top.restore(intact);
+                level.player.position.set(top.getX() + top.getWidth() / 2 - HERO_CENTRE_OFFSET_X, top.getY() - HERO_FRAME_SIZE);
+                level.player.velocity.setZero();
+            }
+            level.update(STEP); level.render(batch, view);
+            if (level.player.isGotHit()) throw new AssertionError("the hero was hit at frame " + i);
+            rode[0] |= top.isFalling() && top.getY() > intact.y() + RIDE_CHECK_DROP;
+        });
+        assertTrue(rode[0], "the scene must have the branch fall");
+        assertWithinBudget("forest-1 tree room, riding a rotten branch down", FOREST_1_TREE_RIDE_CEILING, bytes);
+    }
+    /** A rotten branch warns 1 s, then falls 200 px in 1.5 s; 4 s also lets the hero land on the floor and stand. */
+    private static final int RIDE_CYCLE_FRAMES = 240;
+    private static final float HERO_FRAME_SIZE = 48, RIDE_CHECK_DROP = 32;
 
     /**
      * The guard room with the RedMob awake: every {@value #GUARD_CYCLE_FRAMES} frames, in the calm half of the puffball's cycle, the hero is put for one

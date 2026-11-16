@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has three rooms since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below); the checkpoint in the guard room leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has four rooms since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -947,7 +947,7 @@ First-learning time (the 60 s hypothesis) was not measured: that needs a person 
 
 ## forest-1 guard room (#104, D68)
 
-Built by [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) on top of the route room (#187, PR #334): the third and last room of `forest-1`, appended after `forest-1-route` by the author's decision of 2026-11-15; the level `Checkpoint` moved to its end. Rule, finding and rationale: [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and its tunnel and roof tiles have not been seen in the running game (tracked by #104, which stays open for that). The room was revised twice after review (see "Finding"); the final layout follows the author's request to add a second threat next to the RedMob.
+Built by [#104](https://github.com/jlogicgames/edgard_in_kimeria/issues/104) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)) on top of the route room (#187, PR #334): the third room of `forest-1`, appended after `forest-1-route` by the author's decision of 2026-11-15; the level `Checkpoint` moved to its end, and since #349 (D80) it stands on the tree room's crown and this room ends at a `RoomExit` at the same x (the times below are unchanged). Rule, finding and rationale: [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and its tunnel and roof tiles have not been seen in the running game (tracked by #104, which stays open for that). The room was revised twice after review (see "Finding"); the final layout follows the author's request to add a second threat next to the RedMob.
 
 Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen). `forest-1.tmx` is now 180 x 23 tiles (2880 x 368 px), `nextobjectid` 79. SHA-256 before (PR #334) `4070e78bd247525efa8e6c6f68cbded20a71d3e024539ca24a59427f54607519`, after `cefc011bd9448e234dbcb6db40151016d3d3aff03bdde435255859f728ee6c46` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`).
 
@@ -958,7 +958,7 @@ y192        .................................R..............   the refill on the
 y208        ............sssssssssssssssssssssssss...........   the slab, x 2304-2704; above the tunnel it is the roof
 y224-288    ............################....................   the roof block, x 2304-2560
 y288-320    ................P.G.............................   the tunnel (32 px high): puffball P (x 2375), guard G (body 2400-2420)
-y288        ...........................................C....   the checkpoint on the floor (x 2800)
+y272-320    ...........................................X....   the room exit on the floor (x 2800; the checkpoint until #349)
 y304        ....@..l........................................   entrance 2176, lever 2224
 y320        ================================================   floor; end walls at x 2112 and 2864
 ```
@@ -966,7 +966,7 @@ y320        ================================================   floor; end walls 
 | What | Object | x (px) | y (px) | Size | Properties | Role |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Room 2 exit | `RoomExit` (id 75), room `forest-1-route` | 2048 | 112 | 48 x 32 | none | the route room's checkpoint became this exit (D67 times unchanged) |
-| Room 3, `forest-1-guard` | `Room` (id 60), `RoomStart` (id 61) | 2112 | 0 | 768 x 368; start 2176, 272 | none | last room; safe entrance, floor under it, nothing in reach; the start point is the top-left of the hero's 48 x 48 square |
+| Room 3, `forest-1-guard` | `Room` (id 60), `RoomStart` (id 61) | 2112 | 0 | 768 x 368; start 2176, 272 | none | third room; safe entrance, floor under it, nothing in reach; the start point is the top-left of the hero's 48 x 48 square |
 | Lever | `Trigger` `Bridge` (id 63) | 2224 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor; reach x 2214.5-2249.5 |
 | Ladder | `Ladder` `Bridge` (id 64) | 2288 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; leads to the roof |
 | Slab (roof) | collision (id 73) | 2304 | 208 | 400 x 16 | plain collision, one piece | the roof route: up from the ladder, 112 px above the floor, over the tunnel, ends at x 2704 |
@@ -974,7 +974,7 @@ y320        ================================================   floor; end walls 
 | Puffball | `Puffball` (id 77) | 2375 | 304 | 16 x 16 | `period` 4, `cloud` 1, `phase` 2.2 | the second threat: swell 0.8 s then a 1 s cloud every 4 s (calm 2.2 s); cloud x 2373-2393, y 298-318, over every place from which the sword reaches the guard |
 | Guard | `RedMob` (id 69) | 2394 | 288 | 48 x 32 | `offNeg` 0, `offPos` 0 | in the tunnel on the floor; never moves; faces left; strikes only within 6 px of its body (x 2400-2420); the sword reaches it from a gap of up to 17 px |
 | Refill | `FireballRefill` (id 76) | 2640 | 192 | 16 x 16 | none | one charge (D27) on the roof's far part; not a coin |
-| Checkpoint | `Checkpoint` (id 7, moved) | 2800 | 288 | 16 x 32 | none | on the floor, 96 px past the slab's end, 48 px from the right wall; ends the level |
+| Room 3 exit | `RoomExit` (id 82), room `forest-1-guard` | 2800 | 272 | 16 x 48 | none | on the floor, 96 px past the slab's end, 48 px from the right wall; where the level `Checkpoint` (id 7) stood until #349 moved it to the tree room (same x: same times) |
 | Floor, walls | collisions 72, 70, 71 | 2112 | 320 | 768 x 48; walls 16 x 320 at x 2112 and 2864 | | closed room; the invisible ceiling (D38) is added by the loader (`RoomCeilingTest` covers this room) |
 
 Tiles: the floor and the two end columns copy room 2's (ids 22-24, 42-44, 62-64, wall columns 79/99/105/119/139); the slab uses the platform block ids 26-28 that `forest-1` already uses (25 tiles, columns 144-168); the roof block uses the ledge ids 42/43/44 of room 2's exit ledge (rows 14-17, columns 144-159). No new art, no hint, one monster, one trap, no falling platform. Rooms 1 and 2 are unchanged except for the route room's exit.
@@ -1024,7 +1024,7 @@ This was a Claude agent's check, not the author's play-through and not a novice 
 **Seen and working:**
 - Rooms 2 and 3 render with their existing tiles: the raised ladder, the slab, the striped one-shot step, the refill pad, the lift, the exit ledge, the tunnel block, the roof and its refill.
 - In room 2, the sword swings and a fireball shoots the bat down (stock 3 to 2). The lift carries the hero.
-- In room 3, a fireball from the entrance kills the guard. The hero crosses the puffball after its cloud and walks through the tunnel to the checkpoint, and the game then loads `forest-2`.
+- In room 3, a fireball from the entrance kills the guard. The hero crosses the puffball after its cloud and walks through the tunnel to the checkpoint, and the game then loads `forest-2` (the build of that check; since #349 this point is the room exit to the tree room).
 - The console showed no new errors.
 
 **Not done in that check:**
@@ -1034,6 +1034,49 @@ This was a Claude agent's check, not the author's play-through and not a novice 
 - the roof route.
 
 The macOS desktop build was built and launched, but not played: screen-control access to it was declined. Both rooms remain open for the author's play-through (#187, #104).
+
+## forest-1 tree room (#349, D80)
+
+Built by [#349](https://github.com/jlogicgames/edgard_in_kimeria/issues/349) (playtest F13): the fourth and last room of `forest-1`, appended after `forest-1-guard` by the author's decision of 2026-11-16, with the level `Checkpoint` moved to the sound tree's crown. Rule and numbers: [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16); card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-tree); the rotten branch's trap card: [TRAPS.md](TRAPS.md#falling-platform-rotten-log-and-rotten-branch-fallingplatform). **Author check, not a novice playtest:** the numbers are from a scripted hero with real keyboard input; the room has not been seen in the running game ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+
+Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen). `forest-1.tmx` is now 220 x 23 tiles (3520 x 368 px), `nextobjectid` 98. SHA-256 before `cefc011bd9448e234dbcb6db40151016d3d3aff03bdde435255859f728ee6c46`, after `e4b4196d28eb1444345702d744ea24243404e4c08773bc6e1ff281395c64ee4e`.
+
+```
+local x/16  0123456789012345678901234567890123456789   (room 4 only; x = 2880 + 16 * column)
+y0-32       ...........................C............   the checkpoint on the crown (x 3240)
+y32         ..................|.......<s|...........   crown: sound branch, left of trunk T2 (x 3232)
+y80         ..................|r........|s..........   rotten (x 3184) | sound right (x 3280)
+y128        ..................|r......<s|...........   rotten          | sound left (x 3232)
+y176        ..................|r........|s..........
+y224        ..................|r......<s|...........
+y272        ..@...............|r........|s..........   entrance 2912; trunk T1 x 3168, trunk T2 x 3264
+y320        ========================================   floor; end walls at x 2880 and 3504
+```
+
+| What | Object | x (px) | y (px) | Size | Properties | Role |
+| --- | --- | ---: | ---: | --- | --- | --- |
+| Room 4, `forest-1-tree` | `Room` (id 83), `RoomStart` (id 84) | 2880 | 0 | 640 x 368; start 2912, 272 | none | last room; safe entrance on the floor, both trees in view from it |
+| Rotten branches | `FallingPlatform` (ids 85-89) | 3184 | 272, 224, 176, 128, 80 | 32 x 16 each | `skin` branch | the fast line, right of trunk T1; each gives way 1.0 s after it is landed on and falls 200 px |
+| Sound branches | `Platform` collisions (ids 90-94) | 3280 / 3232 | 272, 224, 176, 128, 80 | 32 x 16 each | `skin` branch; `mirror` on the left ones (x 3232) | the sure line: right of trunk T2 first (the far side), then left, in turn |
+| Crown | `Platform` collision (id 97) | 3232 | 32 | 32 x 16 | `skin` branch, `mirror` | where both lines meet: 48 px above the rotten column's top (16 px to its right) and the zig-zag's top (16 px to its left) |
+| Checkpoint | `Checkpoint` (id 7, moved) | 3240 | 0 | 16 x 32 | none | on the crown; ends the level |
+| Trunks | `Decor` (ids 95, 96) | 3168, 3264 | 32 | 16 x 288 | `kind` trunk | scenery behind the branches (decor tier, no collision) |
+| Floor, walls | collisions 79, 80, 81 | 2880 | 320 | 640 x 48; walls 16 x 320 at x 2880 and 3504 | | closed room; the invisible ceiling is added by the loader (`RoomCeilingTest`) |
+| Deadline | `Deadline` (id 26) | -1728 | 384 | 5376 x 16 | | widened to cover the new room |
+
+Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint, no enemy, no lethal trap, no coin.
+
+### How it plays
+
+From the entrance both trees are in view. The near tree's branches are grey and cracked; the far tree's are brown and leafy. **Fast line:** walk to the near tree, jump up through its lowest branch and keep jumping straight up; each branch splits as it is landed on and drops away a second later, behind the climber; from the top, one more jump up and right lands on the crown: 4.95 s. **Sure line:** walk on to the far tree, climb its zig-zag (the first branch is on the far side), then the crown: 6.23 s. **A stop on a rotten branch** rides the hero down with it to the floor, alive (D69 stands him on the floor line); he then takes the sure line: 7.72 s (lowest branch) to 11.05 s (top branch) in total. The lowest rotten branch is the first one met, alone, and its fall is 48 px.
+
+### Recovery and D26 (swept by `TreeClimbTest`)
+
+A fallen branch stays fallen until death or a healer revisit; the hero cannot die here, so within a visit it stays fallen. The sure line uses no rotten branch and reaches the crown with any of the 32 subsets of the column gone. Walking off a sinking rotten branch to either side, at seven moments of its warning and fall, always ends alive on the floor or a sound branch, never inside a solid. The load refuses a rotten branch that is the only way up or that hangs above a one-way platform (`FallingPlatform.branchProblem`, `tools/check_tiled_links.py`).
+
+### Tests
+
+`TreeClimbTest` (headless, real shipped map): census and coordinates, the room chain and retry, the placement under D69, the fast and sure lines and their order, the five stop-and-ride routes, the D26 sweep, the sideways exits, the telegraph and the one-way trigger, the load checks. Allocation: two scenes in `AllocationBudgetTest` (D80). Changed existing tests are listed in D80.
 
 ## forest-2 trap placement plan (#261, D59)
 

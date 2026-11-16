@@ -95,6 +95,8 @@ public class Level implements WorldObject {
     /** Map-authored lethal volumes that bound play space across room ownership. */
     private final List<Rectangle> deadlines = new ArrayList<>();
     private final List<StaticPlatform> staticPlatforms = new ArrayList<>();
+    /** The static one-way platforms of the current room as drawn (their colliders are in {@link #collisionBlocks}). */
+    public List<StaticPlatform> staticPlatforms() { return java.util.Collections.unmodifiableList(staticPlatforms); }
     /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain. */
     public final List<WorldObject> objects = new ArrayList<>();
     /** Cosmetic scenery (#239): drawn right after the background, behind platforms, objects and the hero; no collision. */
@@ -475,6 +477,7 @@ public class Level implements WorldObject {
             if ("ThornRoot".equals(o.type) || "ThornTuft".equals(o.type)) validateThorn(o, owner);
             if (ExplosiveTrap.isExplosive(o.type)) validateExplosive(o, owner); // D47: every room, at load.
             if ("HoneyFungus".equals(o.type) || "FalseHoneyFungus".equals(o.type)) validateFungus(o, owner); // D63: every room, at load.
+            if ("FallingPlatform".equals(o.type) && "branch".equals(o.prop("skin", ""))) validateBranch(o, owner); // D80: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -747,7 +750,7 @@ public class Level implements WorldObject {
                 }
                 case "FallingPlatform" -> {
                     FallingPlatform platform = new FallingPlatform(assets, o.x, o.y, o.width, o.height, this::queueSpawn, game.trapWarnings(),
-                        FallingPlatform.Skin.fromMap(o.prop("skin", "")));
+                        FallingPlatform.Skin.fromMap(o.prop("skin", "")), o.propBool("mirror", false));
                     fallingPlatforms.add(platform);
                     registerRoomStateOwner(o.id, platform);
                 }
@@ -885,6 +888,19 @@ public class Level implements WorldObject {
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
+    /** Rotten tree branches (D80) fail at load above a sound branch (D69) or when they are the only way up (D26). */
+    private void validateBranch(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        List<Rectangle> goals = new ArrayList<>();
+        if (room.exit() != null) goals.add(room.exit());
+        for (TiledObject other : map.layer("SpawnPoints"))
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
+                goals.add(new Rectangle(other.x, other.y, other.width, other.height));
+        String problem = FallingPlatform.branchProblem(o, map.layer("Collisions"), room.bounds(), room.entrance().x,
+            room.entrance().y, goals);
+        if (problem != null) throw new IllegalArgumentException("FallingPlatform " + describe(o) + " " + problem);
+    }
+
     /** "Name [id] at (x, y)" -- enough to find the object in Tiled without guessing. */
     private static String describe(TiledObject o) {
         return "'" + o.name + "' [" + o.id + "] at (" + (int) o.x + ", " + (int) o.y + ")";
@@ -986,7 +1002,8 @@ public class Level implements WorldObject {
             if (roomLayout.owner(o) != currentRoom) continue;
             CollisionBlock block = switch (o.type) {
                 case "Platform" -> {
-                    staticPlatforms.add(new StaticPlatform(assets, o.x, o.y, o.width, o.height));
+                    staticPlatforms.add(new StaticPlatform(assets, o.x, o.y, o.width, o.height,
+                        StaticPlatform.Skin.fromMap(o.prop("skin", "")), o.propBool("mirror", false)));
                     yield CollisionBlock.platform(o.x, o.y, o.width, o.height);
                 }
                 case "QuickSand" -> CollisionBlock.quickSand(o.x, o.y, o.width, o.height);

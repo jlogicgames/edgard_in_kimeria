@@ -212,6 +212,16 @@ no hint and no hazard.
 **Combination, built (#104, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), 2026-11-15; automated tests only, the author has not played it):**
 `forest-1` gained a third room after the route room. A RedMob that never moves stands in a 32 px-high tunnel on the floor, and a spore puffball's cloud covers every place from which the sword reaches it, so **melee is a timed risk** (the author's request: a second threat beside the RedMob so the sword does not dominate). The floor through the tunnel is the support-free route and needs no charge; one lever lowers a ladder to the roof, which is the safe route and carries a fireball refill; both routes reach the checkpoint with zero charges. Choices (scripted hero): **timed melee** (6.83 s mastered; a patient hero waits 1.06 s on average and always succeeds; a player who simply walks in from the entry dies every time, at frame 101, because the cloud is always at the same phase there, and succeeds with a pause of 0.15 s or more; a sweep over artificial start phases kills 30 of 60); **fireball from afar** (6.15 s, one charge, then the patient crossing); **roof** (7.67 s, nothing threatens it, the refill pays one charge). D26 holds from every swept state (216 runs). **Assessment, stated plainly:** the sword no longer dominates as an instant answer, and the roof beats an unaware patient melee (7.67 s against 7.89 s) and pays a charge; but for a hero who knows the cycle at a full stock (the usual arrival) the mastered melee is still best by 0.84 s and the refill pays nothing, so the risk is a learning risk. Whether that is a meaningful decision is the author's call after playing it. The reasoning, the two earlier layouts and the numbers are in D68 and ROOMS.md.
 
+**Tree branches, built (#349, playtest F13, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), 2026-11-16; automated tests only, the author has not played it):**
+`forest-1` gained a fourth and last room, `forest-1-tree`. A tree is climbed by jumping up through its one-way branches;
+a **rotten branch** (dead grey wood, a split, a dry leaf: visible at rest) is the crumble support again, now on a climb. It
+gives way after the shared warning and falls behind a climber who keeps going, but it never kills: a hero who stops on one
+rides it down to the floor and climbs again. So the cost of hesitating is height, and the escape is upward. Two trees
+stand side by side: the near one is a column of rotten branches (4.95 s to the top), the far one a zig-zag of sound
+branches (6.23 s); both meet at the crown, which holds the level's checkpoint. A rotten branch is never the only way up
+(D26) and never hangs above a sound one (D69); the load refuses either. The room has no enemy and no lethal trap: a calm
+beat after the guard room, and its landmark is the pair of trees.
+
 **Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
 simple, lethal, organic hazards on the ground and overhead, grouped by trigger family
 (proximity, position, touch, rhythm, crumble), taken in spirit from the original

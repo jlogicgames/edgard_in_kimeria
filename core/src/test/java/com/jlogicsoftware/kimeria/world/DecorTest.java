@@ -48,7 +48,7 @@ class DecorTest {
     }
 
     @Test void theBushKindLoadsAndAnUnknownOrMissingKindFailsTheLoad() {
-        assertEquals(java.util.Set.of("bush", "lookalike"), Decor.kindNames());
+        assertEquals(java.util.Set.of("bush", "lookalike", "trunk"), Decor.kindNames());
         assertEquals(Decor.FRAMES, Decor.fromMap(harness.assets(), object("Bush"), "x").frameCount());
         var unknown = assertThrows(IllegalArgumentException.class, () -> Decor.fromMap(harness.assets(), object("tree"), "'Bush' [7]"));
         assertTrue(unknown.getMessage().contains("Decor 'Bush' [7]") && unknown.getMessage().contains("tree"), unknown.getMessage());
@@ -149,7 +149,7 @@ class DecorTest {
             for (int room = 0; ; room++) {
                 Level level = harness.roomOf(map, room);
                 for (Decor d : level.decor) {
-                    if (d.isStill()) continue; // the static look-alikes have their own placement test below (#299)
+                    if (!d.brushes()) continue; // the static look-alikes (#299, test below) and the tree trunks (#349, TreeClimbTest) are not bushes
                     found++;
                     Rectangle rect = new Rectangle(d.getX(), d.getY(), d.getWidth(), d.getHeight());
                     String label = map + " bush at " + rect;
@@ -198,6 +198,8 @@ class DecorTest {
         Decor d = lookalike();
         assertTrue(d.isStill());
         assertFalse(bush().isStill());
+        assertFalse(d.brushes(), "a still kind never brushes");
+        assertTrue(bush().brushes());
         assertEquals(1, d.frameCount());
         assertEquals(0, d.frameIndex());
         // The hero walks right through it, any number of times: no state change at all, and updates change nothing either.

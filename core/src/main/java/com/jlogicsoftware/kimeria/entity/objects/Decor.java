@@ -35,18 +35,22 @@ public final class Decor extends Entity {
     /** Horizontal hero speed (px/s) below which the hero counts as standing. */
     public static final float MIN_SPEED = 1f;
     /**
-     * One kind: its sheet, its frame count and whether it is {@code still}. A still kind (#299, the pale look-alike mushroom)
-     * has one frame and never reacts to the hero, so motion stays the cue that an active mushroom is alive.
+     * One kind: its sheet, its frame count, whether it {@code brushes} (plays its brush-past frames when the hero walks
+     * through it, D64) and whether it is {@code still}. A still kind (#299, the pale look-alike mushroom) has one frame and
+     * never reacts to the hero, so motion stays the cue that an active mushroom is alive. A kind that neither brushes nor is
+     * still (the trunk, #349) is plain scenery: one frame, no reaction, and none of the look-alike's placement rules.
      */
-    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean still) { }
+    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean brushes, boolean still) { }
 
     /**
      * One entry per kind: a new kind is one sheet and one table entry. The names and the {@code still} flags are read by
      * tools/check_tiled_links.py, which keeps still kinds away from active mushrooms, hint zones and pickups.
      */
     private static final java.util.Map<String, Kind> KINDS = java.util.Map.of(
-        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, false),
-        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, true));
+        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, true, false),
+        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, false, true),
+        // #349 (D80): the trunk behind tree branches. No brush, and not `still`, which means a look-alike mushroom.
+        "trunk", new Kind(SpriteSheets.DECOR_TRUNK, 1, false, false));
 
     public static java.util.Set<String> kindNames() { return KINDS.keySet(); }
 
@@ -56,8 +60,9 @@ public final class Decor extends Entity {
         return k != null && k.still();
     }
 
+    private final String kind;
     private final SpriteSheets.Sheet sheet;
-    private final boolean still;
+    private final boolean still, brushes;
     private final TextureRegion[] frames;
     private final boolean mirror;
     private boolean playing, leanLeft;
@@ -67,8 +72,10 @@ public final class Decor extends Entity {
         super(x, y, w, h);
         Kind k = KINDS.get(kind.toLowerCase(Locale.ROOT));
         if (k == null) throw new IllegalArgumentException("Unknown decor kind '" + kind + "', known: " + KINDS.keySet());
+        this.kind = kind.toLowerCase(Locale.ROOT);
         sheet = k.sheet();
         still = k.still();
+        brushes = k.brushes();
         frames = new TextureRegion[k.frames()];
         for (int i = 0; i < frames.length; i++) frames[i] = sheet.frame(assets, i, 0);
         this.mirror = mirror;
@@ -90,7 +97,7 @@ public final class Decor extends Entity {
      * edges do not count. Does nothing while playing.
      */
     public void notice(Rectangle heroBody, float heroVelocityX) {
-        if (still || playing || Math.abs(heroVelocityX) < MIN_SPEED) return;
+        if (!brushes || playing || Math.abs(heroVelocityX) < MIN_SPEED) return;
         if (heroBody.x >= position.x + size.x - BODY_INSET_RIGHT || heroBody.x + heroBody.width <= position.x + BODY_INSET_LEFT
             || heroBody.y >= position.y + size.y || heroBody.y + heroBody.height <= position.y + BODY_INSET_TOP) return;
         playing = true;
@@ -99,15 +106,19 @@ public final class Decor extends Entity {
     }
 
     public boolean playing() { return playing; }
+    /** The map's {@code kind}, lower case ({@code bush}, {@code lookalike}, {@code trunk}). */
+    public String kind() { return kind; }
     /** True for a kind that never animates (#299). */
     public boolean isStill() { return still; }
+    /** True for a kind that plays its brush-past frames when the hero walks through it (the bush, D64). */
+    public boolean brushes() { return brushes; }
     /** The frame drawn now: 0 at rest, then 1..frames-1 while playing. */
     public int frameIndex() { return playing ? Math.min(1 + (int) (elapsed * FPS), frames.length - 1) : 0; }
     public int frameCount() { return frames.length; }
 
     @Override
     public void update(float dt) {
-        if (still || !playing) return;
+        if (!brushes || !playing) return;
         elapsed += dt;
         if (elapsed * FPS >= frames.length - 1) { playing = false; elapsed = 0f; }
     }

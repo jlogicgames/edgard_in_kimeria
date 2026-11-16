@@ -1841,3 +1841,77 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   lines, one spare). Those captures predate the dim-gilt cap above (only the listener's rosette highlights changed). **Not verified:** the desktop build, the other languages and the pre-boss stop in a running game
   (font metrics only), the opening's timing on screen, and a touch device
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+
+## D80. Tree branches: one-way perches and rotten branches (#349, playtest F13, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (the Phase A card and placement: a non-lethal break, a decor trunk, no
+  coin, the room at the end of `forest-1`). Built; playtest F13 in [PLAYTEST_1.md](PLAYTEST_1.md).
+- **Decision:** a tree is climbed by jumping up through one-way branches: a sound branch is a `Collisions` `Platform`
+  with `skin=branch` (one 32x16 segment; `mirror` draws it on the left of its trunk). A rotten branch is the `branch` skin
+  of `FallingPlatform`: VISIBLE at rest (D71: dead grey wood, a split with a pale splinter mid-top, one dry leaf), with the
+  log's frames (crumble1, crumble2) and the shared `TrapWarnings.FALLING_PLATFORM_SECONDS` warning. Behaviour is the
+  existing platform's: nothing new in the physics. The trunk is a `Decor` kind (`trunk`, one frame, decor tier); each kind now says explicitly whether it `brushes` (the bush) beside `still` (the look-alike), and the trunk does neither.
+- **Elements (D72):** the rotten branch is a reskin of `crumble-support`; the new element is the climb, `branch-climb`
+  (a skill). Its room develops crumble-support: on a climb a break costs height, not life, and the escape is upward.
+- **Placement, checked at load** (`FallingPlatform.branchProblem`, mirrored in `tools/check_tiled_links.py`):
+  - **D26:** a fallen branch stays fallen until death or a healer revisit, and a fall on a climb does not kill, so a rotten
+    branch is never the only way up: the room's exit or checkpoint must be reachable from its entrance over plain blocks
+    and one-way platforms alone (each step at most 48 px up and 32 px across; ladders, lifts and other falling platforms
+    are not counted).
+  - **D69:** no one-way platform lies under a rotten branch within its 200 px fall (its span widened by 16 px each side),
+    so a sinking branch never carries the hero onto a sound one. D69's floor guard then stands him on the floor line. The
+    boundary is pinned on both sides: 16 px beside passes, 15 px fails, 200 px down fails, 201 px passes
+    (`TreeClimbTest`, `test_check_tiled_links.py`). The shipped room sits exactly on it (the crown and the zig-zag start
+    16 px right of the rotten column).
+  - **What the D26 check does not model:** it is a coarse reachability over top edges, not a movement simulation. Every
+    plain block counts as a step (a wall's top or a ceiling slab too), and nothing blocks a jump: no ceiling, wall or block
+    in the way, no head room, no run-up. It can therefore pass a room the hero cannot climb; it only catches a rotten
+    branch that is the sole support in reach. A room's D26 claim rests on its route test (`TreeClimbTest` climbs the sure
+    line with real input with every combination of rotten branches gone), not on this check.
+  - **Two copies of the rules:** the check exists in Java (`FallingPlatform.branchProblem`, at load) and in Python
+    (`branch_problems` in `tools/check_tiled_links.py`, for maps), as every placement rule here does. The Python side
+    reads the numbers from the Java class, but the logic is written twice, so the two must change together; both have
+    the same boundary tests.
+- **Reads apart from `FallingBranch`:** underfoot versus overhead, dead grey versus tan with violet buds, a mid-top split
+  versus the joint crack planned by #361. From the plain falling platform (a striped slab) and the log (brown, intact
+  until landed on): by material; the crumble frames are shared on purpose, because it is the same element.
+- **Room:** `forest-1-tree` (forest-1's fourth and last room; the guard room's checkpoint became its `RoomExit` at the
+  same x, so D68's times are unchanged). Two trees: a column of five rotten branches next to the entrance (the fast line)
+  and a zig-zag of five sound branches that starts on the far side (the sure line), meeting at a crown branch (y 32) that
+  holds the level `Checkpoint`. No enemy, no lethal trap, no coin, no hint.
+- **Measured** (`TreeClimbTest`, scripted hero, real keyboard input; an author check, not a novice playtest): fast line
+  4.95 s, sure line 6.23 s, so the rotten column saves 1.28 s. A first layout, with the zig-zag starting on the near side,
+  saved only 0.27 s, so the zig-zag was moved to start on the far side, as the Phase A card said. Stopping on a rotten
+  branch and riding it down: 7.72 s (lowest branch) to 11.05 s (top branch) in total, so the worst fall costs 6.10 s.
+  The hero never dies; the sure line reaches the crown with any of the 32 subsets of rotten branches gone. A rotten
+  branch falls one frame after the shared 1.0 s warning; rising through it from below starts nothing.
+- **Allocation (5 full-suite runs of `:core:test` and `:core:check`, with the `CollideBody` index loops below):**
+  `AllocationBudgetTest.forest1TreeRoom` 537.8 to 897.8 B/frame (ceiling 990) and
+  `forest1TreeRoomRidingARottenBranchDown` 611.3 to 923.3 (ceiling 1,020); each ceiling is the highest full-suite run
+  plus about 10 %, the whole-room convention of the route and guard rooms; the cost is the harness and level code, as the
+  other room scenarios. The value moves with JIT state together with the other room scenes (the 897.8 runs had the
+  route room at 897.9 and the guard room at 906.2); a first ceiling of 880, set from the first 3 runs, failed the next 2. Before the index loops they measured 713.9 (881.7 in the full suite) and 1,050.9. A control run
+  then, with the hero stood on a sound branch and nothing falling, measured 1,025.8, so the warning, the fall and the
+  floor guard add about 25 B/frame: the shared warning light spawned at each trigger, as the log's is. No new per-frame
+  code: the skin is chosen in the constructor.
+- **`CollideBody` index loops:** the hero's and the mobs' collision passes iterated `level.collisionBlocks`, `escalators`
+  and `fallingPlatforms` with for-each, which AGENTS.md forbids in per-frame code (the iterators D69 noted that
+  `check_allocations.py` does not see). They are index loops now (behaviour unchanged, same order and `break`s).
+  `checkHorizontalCollisions` takes a `List<CollisionBlock>` instead of an `Iterable`, so it can index; every caller
+  already passed a list (`level.collisionBlocks`, and `List.of(...)` in `OneWayPlatformTest`). The change stays on its
+  own merit: it removes those iterators, and the whole-room scenes allocate less (forest-1 room 1 1,322 to 938 B/frame,
+  the tree room 881.7 to at most 801.8 in the full suite). No ceiling was lowered or raised for it.
+- **Known intermittent failure, not fixed here:** `AllocationBudgetTest.ridingARunningEscalatorCostsNoMoreThanStandingStill`
+  fails now and then (riding minus standing above its 8 B/frame ceiling) on this branch, with or without the index loops,
+  and on main too (CI of PR #404, the #386 review). It is tracked in
+  [#391](https://github.com/jlogicgames/edgard_in_kimeria/issues/391); #349 does not claim to fix it.
+- **Changed existing tests (no threshold relaxed):** `RoomTest` (four forest-1 rooms, the guard room's exit, the
+  checkpoint in room 4), `RoomCeilingTest` (four forest-1 rooms), `RoomCardsTest` (13 cards), `Forest1CombatTest` (the
+  guard room ends at its `RoomExit`, at the checkpoint's x: the same three route times), `DecorTest` (the `trunk` kind;
+  the bush count skips kinds that do not brush), `SpriteSheetContractsTest` (three new sheets), `test_check_tiled_links.py`
+  (the decor kind set includes `trunk`; it pins that set and was missed in the first run, since `:core:check` does not run
+  the tools' tests).
+- **Not verified:** the look and the read distance in the running game, desktop and web
+  ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)); first learning
+  ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)). The jump height the layout relies on (about 58 px,
+  48 px steps) is measured only at the 60 Hz step of the tests: gravity is added per physics step.

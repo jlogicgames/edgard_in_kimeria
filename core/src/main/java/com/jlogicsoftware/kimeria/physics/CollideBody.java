@@ -7,6 +7,8 @@ import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.world.Level;
 
+import java.util.List;
+
 /**
  * Port of Dart's {@code CollideMixin}: horizontal/vertical AABB sweeps
  * against a level's collision blocks, escalators and falling platforms.
@@ -36,8 +38,10 @@ public interface CollideBody extends GravityBody {
         checkHorizontalCollisions(level.collisionBlocks);
     }
 
-    default void checkHorizontalCollisions(Iterable<CollisionBlock> blocks) {
-        for (CollisionBlock block : blocks) {
+    /** Index loops, no iterator (AGENTS.md: no for-each over a List in per-frame code; #349, D80). */
+    default void checkHorizontalCollisions(List<CollisionBlock> blocks) {
+        for (int b = 0; b < blocks.size(); b++) {
+            CollisionBlock block = blocks.get(b);
             if (!block.isActive()) continue;
             if (block.isQuickSand()) {
                 setInQuickSand(CollisionUtils.checkCollision(this, block));
@@ -85,7 +89,8 @@ public interface CollideBody extends GravityBody {
     default void checkVerticalCollisions(Level level, float dt) {
         setCurrentEscalator(null);
 
-        for (CollisionBlock block : level.collisionBlocks) {
+        for (int b = 0; b < level.collisionBlocks.size(); b++) {
+            CollisionBlock block = level.collisionBlocks.get(b);
             if (!block.isActive()) continue;
             if (block.isPlatform()) {
                 if (CollisionUtils.checkCollision(this, block)) {
@@ -120,7 +125,8 @@ public interface CollideBody extends GravityBody {
             }
         }
 
-        for (Escalator escalator : level.escalators) {
+        for (int e = 0; e < level.escalators.size(); e++) {
+            Escalator escalator = level.escalators.get(e);
             if (!escalator.isActive()) continue;
             if (CollisionUtils.checkCollision(this, escalator)) {
                 if (velocity().y > 0) {
@@ -133,7 +139,8 @@ public interface CollideBody extends GravityBody {
             }
         }
 
-        for (FallingPlatform platform : level.fallingPlatforms) {
+        for (int f = 0; f < level.fallingPlatforms.size(); f++) {
+            FallingPlatform platform = level.fallingPlatforms.get(f);
             if (CollisionUtils.checkCollision(this, (Collidable) platform)) {
                 if (velocity().y > 0) {
                     float snapY = platform.getY() - hitbox().height - hitbox().offsetY;
