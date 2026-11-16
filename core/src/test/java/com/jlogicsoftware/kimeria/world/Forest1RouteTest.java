@@ -23,7 +23,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The forest-1 route room (#187, D66): one lever drives a ladder and a lift in opposite states. The lift is the
+ * The forest-1 route room (#187, D67): one lever drives a ladder and a lift in opposite states. The lift is the
  * mandatory way to the checkpoint ledge and runs from the start; pulling the lever stops it and lowers the ladder to
  * the optional ledge that holds a fireball refill. Ordinary keyboard input drives the hero through the real shipped
  * map. Times are author (mastered) measurements of a scripted hero, not novice playtests. Recipe: docs/ROOMS.md.
@@ -261,7 +261,7 @@ class Forest1RouteTest {
 
     @Test void theMapKeepsNoHintsAndTheRoomExitStandsOnTheExitLedgeAtTheOldCheckpointsX() {
         Level level = room();
-        // The RoomExit is the rectangle x 2048-2096, y 112-144 (D66: the old checkpoint's x, now the way into the guard room, #104).
+        // The RoomExit is the rectangle x 2048-2096, y 112-144 (D67: the old checkpoint's x, now the way into the guard room, #104).
         level.player.position.set(CHECKPOINT_X - 24 - 12, LEDGE_TOP - 48);
         settle(level, 10);
         assertFalse(level.atRoomExit(), "12 px short of the exit rectangle's left edge");
@@ -579,7 +579,7 @@ class Forest1RouteTest {
         alive(level);
     }
 
-    // ---- the one-shot step (D66): spending it loses the refill until Restart Level, never the exit ----
+    // ---- the one-shot step (D67): spending it loses the refill until Restart Level, never the exit ----
 
     private void reachTheSlab(Level level) { walkToLever(level); operate(level); walkToLadder(level); climb(level); }
 
@@ -678,7 +678,7 @@ class Forest1RouteTest {
     }
 
     @Test void aSecuredSpentStepStaysSpentOnARevisitAndTheExitStillWorks() {
-        // The route room's forward exit (since #104, D67) secures it; this secures it with the same method (secureVisit) and then takes the reset
+        // The route room's forward exit (since #104, D68) secures it; this secures it with the same method (secureVisit) and then takes the reset
         // path (resetCurrentRoom): the snapshot is applied there exactly as on a revisit; only the stock bookkeeping of activateRoom(revisit = true)
         // is not exercised, since the test stays in this room.
         Level level = room();

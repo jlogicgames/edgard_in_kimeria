@@ -5,7 +5,7 @@ test version by author decision. Remaining release acceptance checks are deferre
 until the planned gameplay mechanics have been added and are tracked only in
 [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md). Deferral does not mean those checks passed.
 
-Current MVP order: `forest-1` (three rooms: the trap course, the route room, D66, and the guard room, D67) is **level one**; the forest boss level `forest-2`
+Current MVP order: `forest-1` (three rooms: the trap course, the route room, D67, and the guard room, D68) is **level one**; the forest boss level `forest-2`
 is the **last** level. After the boss's death, automatic exit and the healer guide dialogue, the
 ending returns to the menu and clears progress; the campaign no longer wraps. The intended
 order is `forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). See [MVP.md](MVP.md).

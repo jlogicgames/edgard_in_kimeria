@@ -23,10 +23,10 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The forest-1 guard room (#104, D67): a RedMob stands in a low tunnel on the floor and a spore puffball's cloud covers exactly the places from which the
+ * The forest-1 guard room (#104, D68): a RedMob stands in a low tunnel on the floor and a spore puffball's cloud covers exactly the places from which the
  * sword reaches it, so melee is a timed risk. The tunnel's roof is the optional route: a lever lowers a ladder to it, a fireball refill lies on it. The
  * floor (timed melee) is the required route and needs no charge. Ordinary keyboard input drives a scripted hero through the real shipped map; the times
- * are author (mastered) measurements, not novice playtests. Recipe and finding: docs/ROOMS.md and D67.
+ * are author (mastered) measurements, not novice playtests. Recipe and finding: docs/ROOMS.md and D68.
  *
  * <p>Y grows downward: the floor top is y 320, the tunnel's ceiling y 288 (32 px up), the roof top y 208 (112 px up). Everything below is a map
  * coordinate (room 3 starts at x 2112).
@@ -45,7 +45,7 @@ class Forest1CombatTest {
     /** How much calm a patient hero wants left when he steps in: to walk in and swing (melee) or only to cross the cloud's width (a shot guard). */
     private static final float NEED_MELEE = 1.0f, NEED_CROSS = 0.5f;
     private static final float BUDGET = 20f;
-    /** Pinned measurements (D67): scripted hero, 60 frames per second. A route may differ from these by at most this much (6 frames). */
+    /** Pinned measurements (D68): scripted hero, 60 frames per second. A route may differ from these by at most this much (6 frames). */
     private static final float PIN_MARGIN = 0.1f;
     private static final float MELEE_S = 6.83f, SHOT_S = 6.15f, ROOF_S = 7.67f;
     private static final int IMPATIENT_OK = 30;

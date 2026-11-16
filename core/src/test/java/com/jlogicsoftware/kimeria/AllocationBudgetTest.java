@@ -69,9 +69,9 @@ class AllocationBudgetTest {
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
     /** Measured 1,322.0 to 1,322.2 B/frame in 3 runs (#303: the index loops, the scratch rectangles and the HashSet removal; before: 2,441.8 to 2,441.9; step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_CEILING = 1450;
-    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D66, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
-    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D67, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_GUARD_CEILING = 1280;
     /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
     static final double RIDER_PATH_CEILING = 8;
@@ -184,7 +184,7 @@ class AllocationBudgetTest {
 
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
     @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
-    /** The guard room (#104, D67): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
+    /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
     @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 2)); }
 
     /**

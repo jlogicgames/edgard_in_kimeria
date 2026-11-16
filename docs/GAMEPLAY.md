@@ -144,7 +144,7 @@ acknowledges the victory and establishes his ongoing guidance before the next le
 At the first room's exit, the scene fades out and in (0.25 seconds each way).
 The hero and camera relocate under full black, without a hero transition animation.
 Death resets only the active room; previous rooms' collections remain kept.
-`forest-1` has three rooms (the trap course, the route room, [D66](DECISIONS.md#d66-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15), and the guard room, [D67](DECISIONS.md#d67-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)): the first two end at an exit like the others and the level checkpoint is in the third. See
+`forest-1` has three rooms (the trap course, the route room, [D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15), and the guard room, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)): the first two end at an exit like the others and the level checkpoint is in the third. See
 [Rooms in Tiled](ROOMS.md) for authoring, retry rules, and validation history; deferred checks live in
 [Pre-release TODO](PRE_RELEASE_TODO.md).
 
