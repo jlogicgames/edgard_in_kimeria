@@ -3,7 +3,7 @@ import unittest
 from PIL import Image
 
 import forest_trap_sprites as traps
-from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
 HONEY_FUNGUS_FRAMES = 6
@@ -25,6 +25,17 @@ class ForestTrapSpritesTest(unittest.TestCase):
                 shipped = Image.open(traps.ROOT / f'assets/images/objects/trap-{name}.png')
                 self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(),
                     'shipped export differs from the grid; run tools/export_object_sprites.py')
+
+    def test_the_pickup_cue_sheets_match_their_layout_and_shipped_exports(self):
+        # #345: the glow and sparkle every Collectable draws; the glow is a halo (no ink), the sparkle a light glint.
+        for name, (size, frames) in PICKUP_SHEETS.items():
+            master, colors = traps.sheet_image(f'pickup:{name}')
+            self.assertEqual(WORLD_IMAGES[f'pickup-{name}'], master.size)
+            self.assertEqual((size[0] * len(frames), size[1]), master.size)
+            self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+            shipped = Image.open(traps.ROOT / f'assets/images/objects/pickup-{name}.png')
+            self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), f'run tools/forest_trap_sprites.py pickup:{name}')
+            self.assertTrue(set(master.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
 
     def test_the_decor_bush_matches_its_layout_and_shipped_export(self):
         size, frames = DECOR_SHEETS['bush']

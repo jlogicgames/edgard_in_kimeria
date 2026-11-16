@@ -6,10 +6,14 @@ never world sprites. Runtime files: `assets/images/HUD/{coin,bat,mushroom,fireba
 texture filtering in matching 32 px item and ammunition slots.
 
 Identity references: the coin is a nearest-enlarged crop from original `assets/images/Items.png`
-(0,0,16,16). The Bat and Mushroom icons (D43, replacing the chicken and key) are not generated:
-`bat-master.png` and `mushroom-master.png` are the hand-authored 16×16 world frames
-(`art/objects/*-pixel.png`, frame 1) scaled 2× with Scale2x edge smoothing and then
-bicubic to 128×128; no image-generation prompt exists for them. The retired chicken and key
+(0,0,16,16). The Bat and Mushroom icons (D43, replacing the chicken and key) are not generated.
+The Bat icon is the Bat wing jar (#345, 2026-11-16, accepted): `bat-master.grid` is a hand-drawn 128×128 pixel
+grid (19 colours; the grid format of `tools/forest_trap_sprites.py`). Its jar, wing vertices and shading bands were
+placed by hand and laid into the grid by a one-off scratch script; pores, glints and twine shine were set per pixel.
+`bat-master.png` is the grid converted 1:1; the exporter crops it to its opaque bounds and fits it to 128×128 like
+every icon here. `mushroom-master.png` is the hand-authored 16×16 world frame
+(`art/objects/mushroom-pixel.png`, frame 1) scaled 2× with Scale2x edge smoothing and then
+bicubic to 128×128; no image-generation prompt exists for either. The retired chicken and key
 icons were removed with their masters.
 The original world sheet remains unchanged. Export via `python3 tools/export_object_sprites.py`.
 The detailed fireball source is `fireball-master.png` in this directory; its

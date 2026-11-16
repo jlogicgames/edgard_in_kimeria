@@ -39,10 +39,20 @@ multi-frame sheet are different measurements.
   The healer ingredients (D43) are original redraws, never copies of the DOS art: Bat and
   Mushroom, each a native 32×16 strip of two 16×16 frames (`art/objects/{bat,mushroom}-pixel.png`
   → `assets/images/objects/`), at most 16 palette entries with alpha, black-navy contour,
-  binary transparency. The coin alone stays in `Items.png`.
+  binary transparency. The coin alone stays in `Items.png`. The Bat is drawn as an item, not a
+  creature ([#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345), playtest F19: the flapping
+  bat read as an enemy): a corked glass jar tied with twine, one dried bat wing inside; frame 2 moves the glint.
+  A pickup must never share a silhouette with an enemy.
+- **Pickup cue (#345):** every `Collectable`, and nothing else, bobs 2 px up and back every 1.2 s in whole pixels
+  (only the drawing moves, the pickup box stays), glows and sparkles, so the cue says "pick me up". The glow is
+  `art/objects/pickup/glow.grid`, a 24×24 warm-white halo drawn additively behind the item, alpha 0.5 at rest
+  to 0.9 at the top of the bob, never gold or ember (those are reserved). **The coin has no halo:** its white rim
+  washes out against added light (outline 0.123 against the D76 floor of 0.28 at forest-2 x 336), and the rim
+  already does a halo's job; it keeps the bob and the sparkle (`Collectable.hasHalo`, `check_contrast.NO_HALO`). The sparkle is `pickup/sparkle.grid`, a 5×5 glint of three 0.1 s
+  frames every 2.4 s, 3 px right of the item's centre and 2 px above it, started later per tile of x.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
-  bat, mushroom (D43), gold coin and fireball. These appear
+  Bat wing jar, mushroom (D43), gold coin and fireball. These appear
   in the small existing HUD slots, not as 128-pixel gameplay objects.
 - **Fireball capacity HUD (#98, 2026-10-25):** reuse the illustrated icon in three
   fixed 32×32 slots, 4 px apart, no number; spent slots use 25% RGB brightness.
@@ -625,7 +635,8 @@ sprite belongs to one of three tiers. It is measured against what the game draws
 - **Chroma** is the 90th percentile of the sprite's chroma.
 
 The sky is screen-fixed, so the gate tries several sky offsets: any cloud can pass behind any sprite. Glowing sprites are
-measured at their dimmest glow, and the bush in every frame.
+measured at their dimmest glow, and the bush in every frame. Collectables are measured over their pickup halo (#345), at rest
+with the dimmest halo and at the top of the bob with the brightest (the coin, which has none, at both positions).
 
 Reserved accent hues (active only):
 - magenta (thorn tuft);
@@ -643,7 +654,7 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 | Tier | Sprites |
 |---|---|
 | Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.35 (HIDDEN, cue #359) |
-| Active: collectables | fireball refill 0.43, Mushroom 0.43, Bat item 0.41, coin 0.37 |
+| Active: collectables | with the pickup halo (#345): Bat wing jar 0.54 (the flapping bat was 0.41), Mushroom 0.53, coin 0.37 (no halo); fireball refill 0.43 |
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.37, stone 0.30 |
 | Active: enemies and hero | hero 0.46, RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
 | Decor (after the recolour) | bush 0.12 to 0.18 (was 0.31 to 0.39), look-alike 0.16 (was 0.45), hanging vine 0.06 to 0.16 (was 0.47 to 0.57) |

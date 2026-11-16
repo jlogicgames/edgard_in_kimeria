@@ -10,7 +10,9 @@ the camera moves any cloud behind anything, plus the map's `Background` tile lay
 - body: mean OKLab distance between each opaque pixel and the background under it.
 - chroma: 90th percentile of the sprite's OKLab chroma.
 
-Rules (the worst placement and sky offset counts; glowing sprites at full and dimmest glow; the bush, the lever and the stump and root idle loops in every frame):
+Rules (the worst placement and sky offset counts; glowing sprites at full and dimmest glow; the bush, the lever and the stump and root idle loops in every frame;
+collectables with their pickup halo (#345), at rest with the dimmest halo and at the top of the bob with the brightest; the coin has no
+halo, NO_HALO):
 - active (hero, traps, enemies, collectables, mechanisms): outline >= ACTIVE_OUTLINE_MIN;
 - decor (`Decor` kinds, `HangingVine`): outline <= DECOR_OUTLINE_MAX, DECOR_BODY_MIN <= body <= DECOR_BODY_MAX,
   chroma <= DECOR_CHROMA_MAX, and no ink pixel (L < INK_L_MAX).
@@ -23,7 +25,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
 MAPS = ('forest-0', 'forest-1', 'forest-2')
@@ -48,7 +50,21 @@ def java_float(path, name):
     return float(re.search(rf'\b{name}\s*=\s*([0-9.]+)f', text).group(1))
 
 
+def java_int(path, name):
+    text = (ROOT / path).read_text(encoding='utf-8')
+    return int(re.search(rf'\b{name}\s*=\s*([0-9]+)\s*;', text).group(1))
+
+
 GLOW_MIN = java_float('core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/FungusTrap.java', 'GLOW_MIN')
+# The pickup cue every Collectable draws (#345): an additive halo behind it, alpha pulsing with a 2 px bob.
+COLLECTABLE_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/items/Collectable.java'
+HALO_SHEET = 'objects/pickup-glow.png'
+HALO_STATES = ((0, java_float(COLLECTABLE_JAVA, 'HALO_ALPHA_MIN')),  # (lift in px, halo alpha): at rest, dimmest
+               (java_int(COLLECTABLE_JAVA, 'BOB_HEIGHT'), java_float(COLLECTABLE_JAVA, 'HALO_ALPHA_MAX')))  # bob top, brightest
+HALO_MARGIN = 8  # px of background around the halo kept when compositing it
+# Collectables drawn without the halo (Collectable.hasHalo): the coin's white rim washes out against added light
+# (outline 0.123 against the 0.28 floor at forest-2 x 336). They are still measured at rest and at the bob top.
+NO_HALO = {'Collectable:Coin'}
 FULL = (1.0,)
 GLOWS = (1.0, GLOW_MIN)
 
@@ -156,6 +172,14 @@ def frames(key):
     _, sheet, (x, y, w, h), count, _, _ = SPRITES[key]
     image = Image.open(ROOT / 'assets/images' / sheet).convert('RGBA')
     return [image.crop((x + n * w, y, x + n * w + w, y + h)) for n in range(count)]
+
+
+def with_halo(background, halo, centre_x, centre_y, alpha):
+    """`background` with `halo` added on top (GL_SRC_ALPHA, GL_ONE) at `alpha`, centred on (centre_x, centre_y)."""
+    layer = Image.new('RGB', background.size)
+    scaled = Image.eval(halo.convert('RGB'), lambda channel: int(channel * alpha))
+    layer.paste(scaled, (centre_x - halo.width // 2, centre_y - halo.height // 2), halo.getchannel('A'))
+    return Image.merge('RGBA', (*ImageChops.add(background.convert('RGB'), layer).split(), background.getchannel('A')))
 
 
 def tile_layer(root):
@@ -284,6 +308,7 @@ def run():
     layers = {name: tile_layer(ET.parse(ROOT / f'assets/tiles/{name}.tmx').getroot())[0] for name in MAPS}
     images = {name: backgrounds(layer, sky) for name, layer in layers.items()}
     results = {}
+    halo = Image.open(ROOT / 'assets/images' / HALO_SHEET).convert('RGBA')
     for name, key, x, y, w, h in placements(errors):
         anchor, glows = SPRITES[key][4], SPRITES[key][5]
         for frame in frames(key):
@@ -291,8 +316,20 @@ def run():
             top = int(y) if anchor == 'top' else int(y + h - frame.height)
             for glow in glows:
                 for background in images[name]:
-                    outline, body = measure(frame, background, left, top, glow)
-                    results.setdefault(key, []).append((name, x, outline, body))
+                    if not key.startswith('Collectable:'):
+                        outline, body = measure(frame, background, left, top, glow)
+                        results.setdefault(key, []).append((name, x, outline, body))
+                        continue
+                    for lift, alpha in HALO_STATES:  # what the game draws: the halo behind the bobbing item
+                        reach = halo.width // 2 + HALO_MARGIN
+                        cx, cy = int(x + w / 2), int(y + h / 2) - lift
+                        box = (max(0, cx - reach), max(0, cy - reach),
+                               min(background.width, cx + reach), min(background.height, cy + reach))  # never past the map
+                        local = background.crop(box)
+                        if key not in NO_HALO:
+                            local = with_halo(local, halo, cx - box[0], cy - box[1], alpha)
+                        outline, body = measure(frame, local, left - box[0], top - lift - box[1], glow)
+                        results.setdefault(key, []).append((name, x, outline, body))
     for key in SPRITES:
         if key in results:
             errors.extend(check_sprite(key, results[key]))

@@ -9,6 +9,22 @@ import check_contrast as gate
 SKY_BLUE = (74, 146, 184, 255)  # the plain sky of sky.png
 INK = (0x0b, 0x08, 0x14, 255)
 MUTED = (0x67, 0x7d, 0x62, 255)  # the recoloured bush body
+# Halo fixtures (#345): a 4 px test halo with a lit 2 px centre, drawn at the centre of the 40 px background.
+HALO_TEST_SIZE = 4
+HALO_LIT_BOX = (1, 1, 3, 3)
+HALO_GREY = (100, 100, 100, 255)
+HALO_CENTRE = 20
+HALO_TEST_ALPHA = 0.5
+HALO_ADDED = 50  # 100 * 0.5 added to each channel
+LIT_PIXEL = (19, 19)
+UNLIT_PIXEL = (18, 18)
+SKY_LIT = tuple(min(255, c + HALO_ADDED) for c in SKY_BLUE[:3]) + SKY_BLUE[3:]
+OUTLINE = 2  # index of the outline in a gate.run() result row
+WHITE_RIM = (250, 250, 250, 255)
+WARM_HALO = (110, 100, 72, 255)
+BIG_HALO_SIZE = 16
+RIM_AT = 16
+BRIGHTEST = 0.9
 
 
 def square(colour, size=6, contour=None):
@@ -42,6 +58,29 @@ class MetricTest(unittest.TestCase):
 
     def test_the_glow_floor_is_read_from_the_java_constant(self):
         self.assertEqual(gate.GLOW_MIN, 0.55)
+
+    def test_the_pickup_halo_states_are_read_from_the_java_constants(self):
+        # #345: at rest with the dimmest halo, at the top of the 2 px bob with the brightest
+        self.assertEqual(gate.HALO_STATES, ((0, HALO_TEST_ALPHA), (gate.java_int(gate.COLLECTABLE_JAVA, 'BOB_HEIGHT'), BRIGHTEST)))
+
+    def test_only_the_coin_goes_without_the_halo_as_in_the_java(self):
+        self.assertEqual(gate.NO_HALO, {'Collectable:Coin'})
+        self.assertIn('return type != ItemType.COIN;', (gate.ROOT / gate.COLLECTABLE_JAVA).read_text(encoding='utf-8'))
+
+    def test_the_halo_is_added_light_only_where_it_is_drawn(self):
+        halo = Image.new('RGBA', (HALO_TEST_SIZE, HALO_TEST_SIZE))
+        halo.paste(HALO_GREY, HALO_LIT_BOX)
+        lit = gate.with_halo(background(), halo, HALO_CENTRE, HALO_CENTRE, HALO_TEST_ALPHA)
+        self.assertEqual(lit.getpixel(LIT_PIXEL), SKY_LIT)
+        self.assertEqual(lit.getpixel(UNLIT_PIXEL), SKY_BLUE, 'the transparent part of the halo adds nothing')
+
+    def test_a_halo_behind_a_light_rim_lowers_its_outline(self):
+        # why the shipped halo's centre is empty: added light right outside a white rim eats the edge contrast
+        rim = square(WHITE_RIM)
+        halo = Image.new('RGBA', (BIG_HALO_SIZE, BIG_HALO_SIZE), WARM_HALO)
+        plain, _ = gate.measure(rim, background(), RIM_AT, RIM_AT)
+        lit, _ = gate.measure(rim, gate.with_halo(background(), halo, HALO_CENTRE, HALO_CENTRE, BRIGHTEST), RIM_AT, RIM_AT)
+        self.assertLess(lit, plain)
 
 
 class RuleTest(unittest.TestCase):
@@ -107,6 +146,12 @@ class ShippedArtTest(unittest.TestCase):
         self.assertEqual(decor, [])
         for key in ('Decor:bush', 'Decor:lookalike', 'HangingVine'):
             self.assertIn(key, results)
+
+    def test_shipped_collectables_stay_active_over_their_halo(self):
+        results, errors, _ = gate.run()
+        self.assertEqual([e for e in errors if 'Collectable' in e], [])
+        for key in ('Collectable:Coin', 'Collectable:Bat', 'Collectable:Mushroom'):
+            self.assertGreaterEqual(min(r[OUTLINE] for r in results[key]), gate.ACTIVE_OUTLINE_MIN)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,22 @@
+# Shared pickup sparkle (#345): a 5x5 warm-white glint, three frames (grow, star, fade), once every 2.4 s per collectable.
+size 5 5
+color y fff4aa
+color w ffffff
+frame grow
+.....
+.....
+..y..
+.....
+.....
+frame star
+.....
+..y..
+.ywy.
+..y..
+.....
+frame fade
+..y..
+..y..
+yywyy
+..y..
+..y..
