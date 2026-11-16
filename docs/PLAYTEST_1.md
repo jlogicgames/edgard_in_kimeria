@@ -88,7 +88,7 @@ author's answer of 2026-11-15.
 | F22 | Make more visible traps, like the vine. | Several traps are hidden until triggered. | Visibility audit, a visible-by-default rule, new visible trap proposals. | [#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348) |
 | F13 | Add jumping along tree branches; some branches can fall. | No branch platforms; `FallingPlatform` and `FallingBranch` exist. | A forest mechanic candidate: prototype one room, then decide placement. | [#349](https://github.com/jlogicgames/edgard_in_kimeria/issues/349) |
 | F20 | Every new screen (room) must give something new. | The lesson rooms follow one new element each (D34-D40, D48); later rooms have no such rule. | A level-design rule plus an audit of forest-0 to forest-2. | [#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351) |
-| F16 | Look at the levels of Primal Planet. | Not in the reference research yet. | A reference study written into GAME_DESIGN.md (ideas only, no copying). | [#352](https://github.com/jlogicgames/edgard_in_kimeria/issues/352) |
+| F16 | Look at the levels of Primal Planet. | Studied from three public reviews and the store page only (nobody played it): `docs/GAME_DESIGN.md`, "Primal Planet level study". Adopt/not-adopt lists link #351, #348, #344. | Study written; findings feed the room-novelty, trap-visibility and contrast audits. The sources do not cover hazard visibility or contrast ([#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348), [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344)). | [#352](https://github.com/jlogicgames/edgard_in_kimeria/issues/352) |
 
 ## Patterns
 

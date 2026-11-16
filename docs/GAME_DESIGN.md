@@ -727,3 +727,69 @@ establish average room durations.
 - [TetherGeist developer interview](https://somanygames.co.uk/articles/tethergeist-developer-interview/):
   frequent checkpoints and instant retries avoid long replays; harder rooms/secrets
   are optional. No average room duration or one-minute learning figure is given.
+
+### Primal Planet level study (playtest F16, [#352](https://github.com/jlogicgames/edgard_in_kimeria/issues/352))
+
+Checked 2026-11-15. Ideas only: no level, art, name or text of the game is copied. **Method
+limit:** nobody on this project played Primal Planet or watched footage for this study. It
+rests on three reviews and the store page, each read through a page-summary tool, not
+frame by frame. The game is a 2025 solo-developed pixel-art **metroidvania** with survival
+and crafting (one open, interconnected map), not a screen-by-screen platformer like Edgard,
+so room-structure findings transfer only as principles. The sources say little about traps
+and nothing about measured contrast; those rows say so instead of guessing. Review scores
+are deliberately not cited (no primary page was read).
+
+Sources, used as the tags below: **Gameluster**
+([review](https://gameluster.com/primal-planet-review-a-snappy-dinovania/)), **Into Indie**
+([review](https://intoindiegames.com/reviews/primal-planet-review/)), **Tech-Gaming**
+([review](https://www.tech-gaming.com/primal-planet/)), **Steam**
+([store page](https://store.steampowered.com/app/2350270), developer description).
+
+| Aspect | What the sources report | Takeaway |
+| --- | --- | --- |
+| Structure | One map of biomes: forest, plains, mountains, ocean depths (Steam). A mobile village hub for healing, upgrades and skills; an ocean side with secrets and breath-hold challenges (Gameluster). Hidden alcoves, alternate routes, and revisits with new abilities; this review says players rarely get completely lost (Tech-Gaming). **The reviews disagree on orientation:** with no objectives or quest log, players loop back through the same caves, thorns and cliffs, and the local maps are cluttered and lack useful markers (Into Indie). | Variety and wayfinding are the contested points; sameness and lost players are the named failure ([#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351)). |
+| New elements | Opens with a T. rex chase and gives most of the moveset quickly; double jump and air dash come from skill points; aliens appear fairly early; the water section has its own enemies and items, and there is a boss (Gameluster). Weapons and upgrades arrive slowly (Tech-Gaming). The spear can be set on fire to burn overgrown fields and open new areas, and puzzles build on that (Tech-Gaming). Survival items are introduced with little explanation (Into Indie). Too many skills, some redundant (Gameluster). | One tool that changes how the world can be crossed, introduced slowly, gives rooms something new without new assets; unexplained items are a fault ([#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351)). |
+| Creature readability | Enemies move fast and sometimes turn without warning, but encounters are short and the speed is not overwhelming (Gameluster). Early enemy attacks are telegraphed; later enemies hit much harder, often without warning, the difficulty spikes instead of rising gradually, and the reviewer is sometimes destroyed in a room without understanding why (Into Indie). Boss fights need pattern recognition (Tech-Gaming). Enemy sprites read as menacing (Gameluster). | Telegraph first, then raise damage; an unexplained death is the complaint ([#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348)). |
+| Traps | Not described by any of the three reviews. Steam lists bait, traps and stealth as player tools. Tech-Gaming says exploration feels risky, with enough unexpected dangers to keep players cautious. | Hazard readability: not established. Surprise danger is praised only in general terms. |
+| Colour and contrast | Backgrounds change palette across four times of day, and the ocean is singled out as pretty (Gameluster). Praised colour and detail: jungle treetops, bioluminescent caves, drifting fireflies, shimmering deep water; the review does not say whether hazards separate from the background (Into Indie). Sunsets and shadowy caverns stand out (Tech-Gaming). Complaints are about maps and items: cluttered local maps and hard-to-tell items on a small screen (Into Indie). | Atmosphere is praised; clutter is the complaint, in maps and item lists. Hazard-versus-background contrast: not established ([#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344)). |
+| Environmental storytelling | No dialogue; the pixel art carries the story, and a village mural shows a map (Gameluster). Story through movement, music and small moments such as resting by a fire (Into Indie). A hostile, alive jungle and a soundtrack mixing prehistoric instruments with synth (Tech-Gaming). | A single wordless visual beat can carry story and direction at once. |
+| Rest vs danger | An intense opening, then a slower loop that the reviewer finds mismatched; checkpoints do not heal; full healing and skills are at the village; enemies and resources respawn quickly so grinding is easy (Gameluster). Rough pacing and a jagged difficulty curve (Into Indie). The customary rhythm of exploration, upgrades and intermittent backtracking, a familiar pattern rather than praise (Tech-Gaming). | Our own principle, not a source finding: a calm beat works as contrast only if the danger after it matches what the calm promised. |
+
+#### Adopt (as principles, in Edgard's own terms)
+
+1. **Give each room one identity and one landmark a player could name afterwards**, so
+   rooms do not blur together. This answers the same-caves complaint (Into Indie); it is our
+   principle, not something the game is shown to do. [#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351).
+2. **A tool or element that changes how the terrain can be crossed** (the way fire opens
+   overgrown paths, Tech-Gaming) counts as "something new" for a room, introduced once and
+   then reused in later rooms. [#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351).
+3. **Telegraph before damage:** a hazard or creature shows its tell on the first encounter,
+   and severity rises only once the tell is learned. A death the player cannot explain is a
+   defect (Into Indie). [#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348).
+4. **Keep encounters short and the rhythm legible** (Gameluster); this matches Edgard's
+   instant room retry. [#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348).
+5. **An atmospheric background is acceptable only with a clear active layer on top.** The
+   reviews praise atmosphere and criticise clutter in maps and item lists; the scene-level
+   hazard contrast is not reported, so this is our rule supported only indirectly. Fits the
+   three-tier background / decor / active rule. [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344).
+6. **Our own principle, not a source finding: a calm beat after a danger beat, told with a
+   wordless visual** (the sources show a fire and a mural as wordless visuals, Gameluster and
+   Into Indie) rather than text. [#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351).
+
+#### Do not adopt, and why
+
+1. **Open interconnected map, backtracking, survival and crafting loops, grinding:** a
+   different genre. Edgard is a room-by-room campaign with instant retry; backtracking and
+   resource loops would break the room-novelty rule, which assumes each room is new
+   (Gameluster, Tech-Gaming). [#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351).
+2. **Intense opening then slower loop, and hard hits without warning:** reviewers name the
+   pacing mismatch (Gameluster) and the unannounced hits (Into Indie) as faults. Edgard
+   keeps a steady curve and readable hazards. [#348](https://github.com/jlogicgames/edgard_in_kimeria/issues/348).
+3. **Cluttered maps, no markers and unexplained items** (Into Indie): the recorded weakness;
+   we must not reproduce it. [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344)
+   and [#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351).
+4. **Time-of-day palette shifts as a contrast tool:** they vary the background, which the
+   fixed three-tier rule must keep stable, and the sources give no evidence they help
+   readability (Gameluster). [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344).
+5. **Any concrete hazard, enemy, skill or story element** (flaming spear, T. rex chase,
+   alien plot): the value here is the principle, not the content.
