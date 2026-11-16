@@ -13,7 +13,7 @@ hero has triggered anything, on the first frame of the room.
 
 | Word | Meaning |
 | --- | --- |
-| **VISIBLE** | The dangerous object is drawn at rest and reads as active, not as scenery: a silhouette or colour no scenery object shares (the "active" contrast tier of [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344)), or it moves. |
+| **VISIBLE** | The dangerous object is drawn at rest and reads as active, not as scenery: a silhouette or colour no scenery object shares (the "active" contrast tier of [D76](DECISIONS.md#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16): outline at least 0.28, checked by `tools/check_contrast.py`), or it moves. |
 | **DISGUISED** | Drawn at rest, but it looks like scenery or a safe prop; the danger shows only after the trigger. |
 | **HIDDEN** | Nothing, or almost nothing, is drawn at rest. |
 
@@ -68,7 +68,7 @@ D-number) first.
 | Taught in | the room where the type is first met, and how it teaches |
 | Load checks | the validator in `Level` and its mirror in `tools/check_tiled_links.py` |
 | Tests | test classes |
-| Art and sound | sheet and frames, contrast tier, sound |
+| Art and sound | sheet and frames, contrast tier (D76: active, with the measured outline; an at-rest cue is drawn in the active tier), sound |
 | Decision | D-number(s) |
 ```
 

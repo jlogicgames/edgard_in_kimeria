@@ -1,15 +1,17 @@
 # Static look-alike mushroom (#299), native 24x16, one frame: the same cap-and-stem tuft family as the honey fungus pair (D63), so a
-# first meeting makes the player wary, but cool pale grey-lilac caps with bone speckles, a visible ring on every stem (like the harmless
+# first meeting makes the player wary, but muted caps with paler speckles, a visible ring on every stem (like the harmless
 # honey fungus, the opposite of the ringless lethal false honey fungus), no golden glow, no honey brown, no lime. It never animates.
+# Decor tier (D76, #344, 2026-11-16): recoloured to muted grey-beige with a contour in its own hue, no ink 0b0814, so it reads as
+# scenery; the tuft shape and the rings stay. The real-or-false game stays between the two active fungi (D63).
 size 24 16
-color k 0b0814
-color h cfc8de
-color a 9d93b6
-color s 6b6188
-color g 3f3757
-color b e8e4da
-color B a7a3b0
-color p f2eef8
+color k 6d6154
+color h aa9c8a
+color a 998b7a
+color s 897b6a
+color g 796c60
+color b a7a194
+color B 958e82
+color p b4ada0
 frame static
 ........................
 ........................

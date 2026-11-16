@@ -297,7 +297,7 @@ depends on it.
 
 | Sheet | Frame size | Frames | Palette notes |
 | --- | --- | --- | --- |
-| `decor-bush` | 32×24 | idle, brush1, brush2, settle | leaves `3b2a5c / 7a5ab0`, vine olive `8a8a2a / 4a4a18` highlights, contour `0b0814`. Distinct from the magenta thorn tuft. |
+| `decor-bush` | 32×24 | idle, brush1, brush2, settle | Decor tier (D76, 2026-11-16): muted grey-green leaves `597059 / 677d62 / 758b6a`, dull olive highlights `858358 / 676547`, contour `4d6151` (its own darker green, no ink). Was violet `3b2a5c / 7a5ab0` with ink `0b0814`, which read like the pickups (F15). |
 
   `kind` accepts `bush` here; the class is written so that a new kind is one sheet and one table entry (`lookalike` was added by #299, below).
 - **Later kinds.** The other kinds (shrub 16×16, flowers 16×16, fern 24×24 and a mushroom) are **not built
@@ -323,8 +323,8 @@ depends on it.
   the hand-authored `art/objects/decor/bush.grid` by `tools/forest_trap_sprites.py decor:bush` (layout
   `DECOR_SHEETS` in `tools/sprite_layouts.py`, contract in `validateSpriteArt`). `kind` is checked at load and
   by `tools/check_tiled_links.py`, which also requires the bush's bottom edge (`y + height`) to equal the top of
-  a solid block. The grid is an original drawing in the leaf/olive palette above (one extra mid purple
-  `5a4488` between the two leaf tones); the author reviews it before merge. In a map the rectangle is 32×24,
+  a solid block. The grid is an original drawing in the palette above (three leaf tones); the 2026-11-16 recolour
+  changed only its palette lines (D76). In a map the rectangle is 32×24,
   so `y = floor - 24` (forest-2's SpawnPoints layer is offset by -16, so its file `y` is `floor - 24 + 16`).
 - **Placement (all levels, by hand, standing on the ground floor away from traps, pickups, checkpoints and exits):**
 
@@ -367,6 +367,9 @@ depends on it.
   Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line.
 - **Cost.** One rotated `batch.draw` per vine; the sheet is 8×40 px. `AllocationBudgetTest.hangingVinesSwayingThroughTheRealLevel` measures the allocation.
 - The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
+- **Colour (decor tier, D76, recoloured 2026-11-16).** Pale dull olive stem `9d9f7b / 8a8c6d`, grey-green leaves `88a083 / 738b73`,
+  contour `757a67` (no ink), light enough to stay quiet in front of the clouds of the screen-fixed sky (outline at most 0.16; it was
+  0.57 in front of a cloud with the ink contour and violet leaves).
 
 ##### Static look-alike mushroom (#299), as built
 
@@ -381,8 +384,11 @@ Author-approved design, revised 2026-11-13. The whole point is doubt: the player
 - **Shape.** The same family as the active pair: a tuft of three small caps on stems, 24×16 px, standing on the floor, possibly near
   the route. The stems have a **visible ring**, like the harmless honey fungus and **unlike** the ringless lethal false honey fungus,
   so the learnable shape cue stays consistent (a ring means harmless).
-- **Colour.** Cool and pale: grey-lilac caps (`cfc8de`, `9d93b6`, `6b6188`) with bone speckles (`f2eef8`), bone stems (`e8e4da`,
-  `a7a3b0`), dark gills `3f3757`, contour `0b0814`. **No golden glow, no honey brown, no lime** (those mark the active mushrooms).
+- **Colour (decor tier, D76, recoloured 2026-11-16 after playtest F15).** Muted grey-beige: caps `aa9c8a`, `998b7a`, `897b6a`
+  with paler speckles `b4ada0`, stems `a7a194`, `958e82`, gills `796c60`, contour `6d6154` (its own hue, no ink). It reads as scenery
+  (outline 0.16; the active pair 0.36 and up); the tuft and rings stay, so the shape still recalls the family. Before: pale grey-lilac
+  `cfc8de / 9d93b6 / 6b6188` with bone `f2eef8`, ink contour `0b0814` (outline 0.45, as loud as a trap). **No golden glow, no honey
+  brown, no lime** (those mark the active mushrooms).
 - **No animation at all.** One frame; no idle glow, no reaction to the hero. Motion is the cue that an active mushroom is alive.
 - **Implementation.** A static `still` kind of `Decor` (`kind` = `lookalike`): a picture, no object logic. `Decor.notice` and `update`
   do nothing for it. Sheet `assets/images/objects/decor-lookalike.png`, 24×16, one frame `static`, source
@@ -600,6 +606,54 @@ that specific tool in an isolated environment with its dependency available:
 uv run --with pyyaml python /Users/amerezhanyi/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/kimeria-art-direction
 uv run --with pyyaml python /Users/amerezhanyi/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/kimeria-rendering
 ```
+
+## Contrast tiers (D76, playtest F15, #344)
+
+What the player can interact with must be the loudest thing on screen, and scenery must not compete with it. Every
+sprite belongs to one of three tiers. It is measured against what the game draws behind it at every placement:
+`tools/check_contrast.py`, part of `:core:check`. Metrics and reasons are in
+[D76](DECISIONS.md#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16).
+
+| Tier | Belongs | Check (OKLab, worst placement) | Drawing language |
+|---|---|---|---|
+| Active | hero, traps and their at-rest cues (D71), enemies, collectables, mechanisms, terrain | outline at least 0.28 | ink contour `0b0814` (or the sheet's own near-black); the accent hues are reserved here |
+| Decor | `Decor` kinds, `HangingVine`, later shrubs, flowers, ferns (#189) | outline at most 0.20, body 0.08 to 0.20, p90 chroma at most 0.10, no ink pixel | contour in its own darker hue, no ink, no accent hue, no idle animation (it may react to the hero or the world) |
+| Background | sky, tile scenery, later parallax layers (#236) | no louder than decor | desaturated, static |
+
+- **Outline** is the mean lightness difference between each silhouette pixel and the background pixel just outside it.
+- **Body** is the mean colour distance between each opaque pixel and the background under it.
+- **Chroma** is the 90th percentile of the sprite's chroma.
+
+The sky is screen-fixed, so the gate tries several sky offsets: any cloud can pass behind any sprite. Glowing sprites are
+measured at their dimmest glow, and the bush in every frame.
+
+Reserved accent hues (active only):
+- magenta (thorn tuft);
+- lime (spores);
+- ember and gold (`ffd23a`, fire, coin);
+- the honey (`e2b25a`) and sulphur (`dcdc50`) of the fungi;
+- the violet of the Bat and Mushroom pickups.
+
+In short: **ink and accent colour mean "interact with me"; scenery gets neither.** Contrast is necessary, not
+sufficient. The stump measures 0.39 and still reads as scenery by shape and colour (F18, #346), so D71's silhouette and
+cue rules still apply.
+
+Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py` prints the current table):
+
+| Tier | Sprites |
+|---|---|
+| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.41, thorn vine 0.41, puffball 0.40, stump 0.39, falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.35 (HIDDEN, cue #359) |
+| Active: collectables | fireball refill 0.43, Mushroom 0.43, Bat item 0.41, coin 0.37 |
+| Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.37, stone 0.30 |
+| Active: enemies and hero | hero 0.46, RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
+| Decor (after the recolour) | bush 0.12 to 0.18 (was 0.31 to 0.39), look-alike 0.16 (was 0.45), hanging vine 0.06 to 0.16 (was 0.47 to 0.57) |
+| Background (tile layer) | rocks 0.29, signs 0.37, dead trees 0.37, tile bushes 0.36: louder than the ceiling. This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
+
+The decor recolour changed only the palette lines of `art/objects/decor/{bush,lookalike,vine}.grid`; the drawings, frames
+and the D64 brush trigger are unchanged. The lever (the author's 3/4 drawing, `art/objects/lever-pixel.png`) gained a 1 px
+outline in its own near-black `010000` around both frames, painted into the master's cells so the export is exact; colours,
+frame, pivot and bottom line are unchanged. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
+at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
 ## Forest trap sprites (#230)
 

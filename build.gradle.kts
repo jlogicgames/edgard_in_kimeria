@@ -113,6 +113,24 @@ project(":core").tasks.named("check") { dependsOn(validateTextStyle) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateTextStyle) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateTextStyle) }
 
+val testContrastGate = tasks.register<Exec>("testContrastGate") {
+    group = "verification"
+    description = "Runs the unit tests of tools/check_contrast.py, so a broken gate fails the build."
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "-m", "unittest", "discover", "-s", "tools", "-p", "test_check_contrast.py")
+}
+val validateContrast = tasks.register<Exec>("validateContrast") {
+    group = "verification"
+    description = "Checks every placed sprite against the D76 contrast tiers (active loud, decor quiet)."
+    dependsOn(testContrastGate)
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "tools/check_contrast.py")
+}
+project(":core").tasks.named("check") { dependsOn(validateContrast) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateContrast) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateContrast) }
+
 // Native installer/app-image (bundles its own JRE -- nothing else to
 // install to play): .exe/.msi on Windows, .app/.dmg on macOS,
 // .deb/.rpm/app-image on Linux, at lwjgl3/build/jpackage/. jpackage can only
