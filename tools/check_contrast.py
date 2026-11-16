@@ -90,7 +90,7 @@ SPRITES = {
     'Escalator': ('active', 'objects/GreyOff.png', (0, 0, 32, 8), 1, 'top', FULL),
     'Ladder': ('active', 'objects/ladder.png', (0, 0, 16, 16), 1, 'top', FULL),
     'Trigger': ('active', 'objects/lever.png', (0, 0, 16, 16), 2, 'floor', FULL),  # every Trigger draws a Lever: up, and down once pulled
-    'Collectable:Coin': ('active', 'Items.png', (0, 0, 16, 16), 1, 'floor', FULL),
+    'Collectable:Coin': ('active', 'objects/coin.png', (0, 0, 16, 16), 2, 'floor', FULL),  # the face and the edge-on turn (#350)
     'Collectable:Bat': ('active', 'objects/bat.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'Collectable:Mushroom': ('active', 'objects/mushroom.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'CarryableTorch': ('active', 'objects/torch.png', (0, 0, 8, 16), 1, 'floor', FULL),

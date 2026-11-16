@@ -18,7 +18,7 @@ PLATFORM_SIZE = (32, 16)
 ITEM_FRAME_SIZE = 16
 ITEM_FRAME_COUNT = 2
 ITEM_STRIP_SIZE = (ITEM_FRAME_SIZE * ITEM_FRAME_COUNT, ITEM_FRAME_SIZE)
-ITEM_STRIPS = ('bat', 'mushroom')  # healer ingredients: two registered 16x16 frames each
+ITEM_STRIPS = ('coin', 'bat', 'mushroom')  # the coin (#350) and the healer ingredients: two registered 16x16 frames each
 HUD_ICONS = ('coin', 'bat', 'mushroom', 'fireball')
 # Light high-contrast touch controls (#226, D55): hand-drawn grids in art/hud/touch -> assets/images/HUD/touch.
 TOUCH_CONTROL_SIZES = {'disc': (64, 64), 'disc-down': (64, 64), 'base': (64, 64), 'knob': (32, 32), 'knob-down': (32, 32),

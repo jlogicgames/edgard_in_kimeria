@@ -3,12 +3,12 @@ package com.jlogicsoftware.kimeria.entity.items;
 import java.util.Locale;
 
 /**
- * Collectables. The coin keeps its original two frames in Items.png; the healer ingredients
- * (Bat, Mushroom, #229) are their own two-frame 32x16 strips, shared by world items and
- * (as 128px redraws in images/HUD) the inventory icons.
+ * Collectables. Each is a two-frame 32x16 strip in images/objects: the coin, which carries the sun of
+ * the Kimeria arms (#350), and the healer ingredients (Bat, Mushroom, #229), whose frames are also
+ * redrawn at 128px in images/HUD as the inventory icons.
  */
 public enum ItemType {
-    COIN("images/Items.png", 0, 0), BAT("images/objects/bat.png", 0, 0), MUSHROOM("images/objects/mushroom.png", 0, 0);
+    COIN("images/objects/coin.png", 0, 0), BAT("images/objects/bat.png", 0, 0), MUSHROOM("images/objects/mushroom.png", 0, 0);
 
     public final String sheet;
     public final int spriteX, spriteY;

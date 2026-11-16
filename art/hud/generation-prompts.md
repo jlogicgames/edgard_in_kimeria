@@ -24,7 +24,15 @@ selected-source prompt is recorded below. It is used only for the HUD.
 Reference role: the corresponding original item crop establishes identity.
 Selected source: `exec-7becbdf6-9b76-4d06-b132-7fcc70969d47.png`; stored as `coin-master.png`.
 
-Exact prompt:
+**Repainted with the Kimeria sun (#350, 2026-11-16, approved by the author).** No image generator was available, so the
+painted master below was edited, not regenerated. The hooked "C" engraving was filled with the face's own gold
+(diffused in from the surrounding face, then the face's own brush texture from a clean patch to the right of the C).
+The sun of the Kimeria arms (STORY.md, "Kingdom heraldry") was then engraved in the centre: a raised pale-gold disc in
+an engraved ring, and eight tapering rays. The rays are foreshortened to the face's 3/4 ellipse (x scale 0.84). The
+engraving reuses the C's own dark recess texture, inner shadow and bright bevel. The same disc and eight rays are on the
+world coin (`art/objects/coin-pixel.png`). The exact prompt below produced the original painting.
+
+Exact prompt of the original painting:
 
 > Create a detailed HUD inventory icon for Edgard in Kimeria, a beautiful hand-painted remaster of the gold coin in reference image. Reference establishes identity: a thick gold coin seen nearly front on with slightly angled right rim, inner dark hooked C-shaped engraving, white-yellow highlights. Preserve its simple silhouette. Rich controlled golden shades, strong dark contour, smooth clean illustration, readable at 32 pixels; source intended for 128x128/256-color HUD export. Centered single isolated coin filling most of square canvas, true transparent background, no shadow outside, no text or labels, no extra items. This is UI art, NOT low resolution gameplay pixel art.
 
