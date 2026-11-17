@@ -3,7 +3,7 @@
 **Status: audit written 2026-11-15; style system accepted by the author 2026-11-16 (D74, [TEXT_STYLE.md](TEXT_STYLE.md))
 ([#339](https://github.com/jlogicgames/edgard_in_kimeria/issues/339), playtest F5,
 [PLAYTEST_1.md](PLAYTEST_1.md), [D66](DECISIONS.md#d66-first-external-playtest-closed-findings-and-direction-2026-11-15)).**
-Nothing here changes a shipped string; the rewrite follows in the issues of [section 6](#6-follow-up-issues). Sections 1 to 3 are findings;
+Nothing here changes a shipped string; the tutorial tales were rewritten by [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) (2026-11-17, section 1.3 shows the new wording); the rest of the rewrite follows in the issues of [section 6](#6-follow-up-issues). Sections 1 to 3 are findings;
 section 4 is the draft as the author accepted it, kept as the record. The binding rules are in
 [TEXT_STYLE.md](TEXT_STYLE.md); where the two differ, TEXT_STYLE.md wins.
 
@@ -59,18 +59,19 @@ names `HEALER` / `EDGARD`. Never repeated by death, retry or Restart Level (D41)
 
 | Order | Key | Speaker | Trigger | Content |
 | --- | --- | --- | --- | --- |
-| Start 1 | `HEALER_TALE_ROAD` | Healer | First entry into `forest-0` of a New Game run (`tutorialStart()`) | The road is a tale; hear it first. |
+| Start 1 | `HEALER_TALE_ROAD` | Healer | First entry into `forest-0` of a New Game run (`tutorialStart()`) | Opening formula "Listen, Edgard" (#370); the road is a tale, hear it first. |
 | Start 2 | `EDGARD_TALE_NO_TIME` | Edgard | | Impatient: no time for stories. |
-| Start 3 | `HEALER_TALE_FAIRIES` | Healer | | Three images: a sleeping fairy wakes the torch (lever room), a ladder let down for kind hands (ladder room), a wall rises at the right spell (wall room). |
-| Start 4 | `HEALER_TALE_LIFT` | Healer | | A golden boat of the air (platform room); a far-off fairy woken by a stone "sent like a wish" (stone room); "Do not be afraid to ask." |
-| Start 5 | `HEALER_TALE_WITCH` | Healer | | The witch's gifts: a bridge that crumbles (falling platform), a berry that bursts (written for the bomb, now an exploding stump). |
+| Start 3 | `HEALER_TALE_FAIRIES` | Healer | | Since #370: the wood is full of old handles (the levers); one wakes a sleeping torch (lever room), one lets down a ladder (ladder room), one moves a stubborn wall (wall room). |
+| Start 4 | `HEALER_TALE_LIFT` | Healer | | Since #370: another handle sets a boat of the air sailing up to the high ledge (platform room); what the hand cannot reach, a stone "sent like a wish" can wake (stone room). "Do not be afraid to ask" is gone. |
+| Start 5 | `HEALER_TALE_WITCH` | Healer | | Since #370: the witch's gifts in three groups covering all five traps: thorns that rise (thorn root), branches, stones and bridges that fall (falling branch, falling stone, falling platform), stumps that burst (stump). |
 | Start 6 | `HEALER_TALE_THREAD` | Healer | | The silver thread (#228): when the night swallows you, I draw the thread. |
 | Start 6a | `HEALER_TALE_FIREGIFT` | Healer | | Added by #340 after this audit: the spark of the healer's own fire, refills are the same fire (F function for the fireball). |
+| Start 6b | `HEALER_TALE_FAIRY` | Healer | | Added by #338 after this audit: the fairy, the healer's last gift (D82). |
 | Start 7 | `EDGARD_TALE_UNDERSTOOD` | Edgard | | "I understand, old man." |
 | End 1 | `HEALER_TALE_PRAISE` | Healer | `forest-0` exit checkpoint, first time in the run (`tutorialEnd()`) | The wood told its tales; you solved its riddles. |
-| End 2 | `EDGARD_TALE_READY` | Edgard | | Am I ready? |
+| End 2 | `EDGARD_TALE_READY` | Edgard | | Since #370: "Forgive my haste, healer", then am I ready? (closes G16). |
 | End 3 | `HEALER_TALE_HEROES` | Healer | | Heroes of old were afraid and went on. |
-| End 4 | `HEALER_TALE_BLESSING` | Healer | | Blessing; beware paths too kind, "witches smile the sweetest"; "May the fairies light your road." |
+| End 4 | `HEALER_TALE_BLESSING` | Healer | | Blessing; trust no path too kind, "the witch smiles sweetest"; "May your fairy light your road" (#338); closing formula "Go on" (#370). |
 
 ### 1.4 The healer before the boss (`forest-2`, each meeting)
 
@@ -199,7 +200,7 @@ functions acted out by seven roles. The table maps what the game says today. "Wh
 | α | Initial situation | Kimeria under Rufardus the Wise | `INTRO_STORY` ¶2 |
 | 1 β | Absentation | Absent as such; the sun "ceases", which is told as the lack (8a) | `INTRO_STORY` ¶3 |
 | 2-3 γ δ | Interdiction, violation | Absent. A candidate: Kimeria's attempt to drive out the witch is the violation that brings the curse | `INTRO_STORY` ¶2 |
-| 4-7 ε ζ η θ | Reconnaissance, delivery, trickery, complicity | Absent; "witches smile the sweetest" hints at trickery, never acted | `HEALER_TALE_BLESSING` |
+| 4-7 ε ζ η θ | Reconnaissance, delivery, trickery, complicity | Absent; "the witch smiles sweetest" hints at trickery, never acted | `HEALER_TALE_BLESSING` |
 | 8 A / a | Villainy / lack | L'Kardina's curse: the sun is gone, eternal night | `INTRO_STORY` ¶2-3 |
 | 9 B | Mediation, the call | "Word of Kimeria's misfortune reached... Edgard": no dispatcher, a rumour | `INTRO_STORY` ¶4 |
 | 10 C | Beginning counteraction | "He set out... to overthrow the witch" | `INTRO_STORY` ¶4 |
@@ -248,18 +249,18 @@ item may stay in this document as an untracked gap once committed: each needs it
 | G2 | The fireball has no origin (no F function). The healer's "won't affect magical items" points at an unnamed magic. | `FIREBALL`, `HEALER_GREETING`, `HEALER_PAID` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340), done: `HEALER_TALE_FIREGIFT` and one `INTRO_STORY` sentence (merged after this audit) |
 | G3 | One action, four names: EN "Fireball" and "Ranged" (`SHOOT`), pad "ranged" in About, "throw/fireball" in About; uk/pl/de/be call it "Fire" (Вогонь, Ogień, Feuer, Агонь) but be `FIREBALL_STOCK_FULL` says "fireballs" (вогненных шароў). | `FIREBALL`, `SHOOT`, `ABOUT_*`, `FIREBALL_STOCK_FULL` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340) kept the labels; reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
 | G4 | The thread is only words; death shows nothing. | `HEALER_TALE_THREAD`, `INTRO_STORY` | [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341) |
-| G5 | `HEALER_TALE_WITCH`'s "berry that bursts" was written for the bomb; D40 replaced the bomb with an exploding stump. The image no longer matches the room. | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) (tutorial tales rewrite) |
-| G6 | `forest-0` teaches five traps (thorn root, falling branch, falling stone, falling platform, stump); the witch line names two. | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
-| G7 | "Do not be afraid to ask": ask whom? No asking exists in the game. | `HEALER_TALE_LIFT` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370); may resolve with the fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338)) |
+| G5 | `HEALER_TALE_WITCH`'s "berry that bursts" was written for the bomb; D40 replaced the bomb with an exploding stump. The image no longer matches the room. **Resolved (#370):** "stumps that burst". | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) (tutorial tales rewrite) |
+| G6 | `forest-0` teaches five traps (thorn root, falling branch, falling stone, falling platform, stump); the witch line names two. **Resolved (#370):** the line names all five in three groups (rise, fall, burst). | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
+| G7 | "Do not be afraid to ask": ask whom? No asking exists in the game. **Resolved (#370):** the sentence is removed. | `HEALER_TALE_LIFT` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370); may resolve with the fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338)) |
 | G8 | The villain is named once and never again; the ending does not mention her; the light returns with no cause (K without H against the villain). STORY.md keeps L'Kardina's fate out of the MVP by decision, so this is a wording problem: the ending overclaims ("every enemy", "free of monsters") after one guardian. | `ENDING_STORY`, `HEALER_TALE_WITCH` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) (ending in the healer's voice, within STORY.md's MVP decision) |
 | G9 | The opening is the healer's voice; the ending is an anonymous narrator. The frame opens and does not close. | `INTRO_STORY`, `ENDING_STORY` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G10 | `HEALER_GUIDE` promises "we will meet again"; in the three-level build the ending follows at once. | `HEALER_GUIDE`, `ENDING_STORY` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) (or accept as a campaign hook) |
 | G11 | Game jargon in the healer's mouth: "boss" (`HEALER_READY`, `HEALER_PAID`, `HEALER_LOCK` in uk/pl/de/be), "retries" (`HEALER_LOCK`), "damage" (`HEALER_PAID`), "the list" (`HEALER_INGREDIENTS`, `HEALER_BOTH`). The tutorial tales are already guarded against this by `HealerDialogueTest`; the pre-boss lines are not. | listed | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) (rewrite); the gate tracks it |
 | G12 | `HEALER_PAID` is spoken by the healer but narrates the player's action in second person ("You drink the elixir"): a system message in the healer's frame. | `HEALER_PAID` | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) |
 | G13 | Two names for the boss: "forest guardian" (tale) and "boss" (`BOSS` HUD, `HEALER_FIGHT` button, healer lines). The HUD label is fine as a label; the healer should say "guardian". | `BOSS`, `HEALER_*` | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371); glossary row "Boss in the tale" |
-| G14 | Polish names the witch "wiedźma" in the opening and "czarownica" in the tales. | pl `INTRO_STORY`, `HEALER_TALE_WITCH`, `HEALER_TALE_BLESSING` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) (translation pass) |
+| G14 | Polish names the witch "wiedźma" in the opening and "czarownica" in the tales. **Resolved (#370):** the rewritten Polish tales say "wiedźma"; their allowlist entries are removed. | pl `INTRO_STORY`, `HEALER_TALE_WITCH`, `HEALER_TALE_BLESSING` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) (translation pass) |
 | G15 | "Sleeping lands", "sleeping kingdom": sleep is never explained (the curse is night, not sleep). Either a deliberate image (the land sleeps under the night) or drift. | `INTRO_STORY` | Author's call, settled with the frame in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
-| G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
+| G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. **Resolved (#370, the author's choice):** `EDGARD_TALE_READY` opens with "Forgive my haste, healer." | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
 | G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
 | G18 | `COINS` is in all five catalogs and read by no code. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
 | G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. | `INTRO_STORY` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
@@ -400,10 +401,10 @@ rewrite (or with an explicit, argued allowlist entry per remaining hit, removed 
 | Issue | Title | Covers |
 | --- | --- | --- |
 | [#339](https://github.com/jlogicgames/edgard_in_kimeria/issues/339) | Text style system and gate (D74): TEXT_STYLE.md, glossary, AGENTS.md rule, skill, `tools/check_text_style.py` | 4.1 to 4.8 (done in this change) |
-| [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) | EN rewrite of the tutorial tales (witch's gifts, "ask", formulae) after #338/#340 | G5, G6, G7, G16 |
+| [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) | EN rewrite of the tutorial tales (witch's gifts, "ask", formulae) after #338/#340 | G5, G6, G7, G16, G14 (done) |
 | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) | EN rewrite of the pre-boss and victory lines in tale voice | G11, G12, G13 |
 | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) | Ending in the healer's voice within the MVP decision of STORY.md | G8, G9, G10, G15, G19 |
 | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) | Zone message rewrite: one "exit ahead" form, trap lines within 60 EN chars | G17 |
 | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) | Remove or use the unused `COINS` key | G18 |
-| [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) | Native-speaker review of uk/pl/de/be, glossary forms (including the fire's name from #340 and Polish "czarownica") | G3, G14, G20 |
+| [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) | Native-speaker review of uk/pl/de/be, glossary forms (including the fire's name from #340; Polish "czarownica" was fixed by #370) | G3, G14, G20 |
 | [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368) | In-game visual checks | Look of rewritten texts in the running game |

@@ -90,6 +90,8 @@ sentence only lengthens the scrolling opening text.
 The #338 fairy strings (`HEALER_TALE_FAIRY`, and the fairy words changed in `HEALER_TALE_FAIRIES`,
 `HEALER_TALE_LIFT` and `HEALER_TALE_BLESSING`) are machine-quality drafts in uk, pl, de and be and join the same
 review ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)). `HealerDialogueTest` fits every line in the D78 text box in all five languages.
+The #370 tutorial-tale rewrite (`HEALER_TALE_ROAD`, `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT`, `HEALER_TALE_WITCH`,
+`EDGARD_TALE_READY`, `HEALER_TALE_BLESSING`) is likewise a machine-quality draft in uk, pl, de and be and joins that review.
 The #239 `SCREEN_SHAKE` label (Options -> Assist, "Screen shake") is likewise a machine-quality draft in
 uk, be, de and pl and belongs to that review; "<label>: Off" fits the 440 px Assist menu in all five
 languages (`LocalizationLayoutTest`).
