@@ -280,7 +280,7 @@ Measured (`RoomReplayTest`, real input, hazards on, three identical attempts): `
 6.12 / 6.12 s, walls 7.32 s, canopy 9.62 / 9.48 / 9.48 s. The worst retry in the Forest drops from about 16 s to
 about 9 s. Map SHA-256 `1ffc1c82388567ef133f3ebc5e3b3f2344a8728cec8c2310c052bc5486575369`. The carry, lever and
 ladder hint tests that used the removed objects run on `core/src/test/resources/tiles/practice-test.tmx`,
-a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Not checked in the running game (camera at the seam, tile look).
+a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Not checked in the running game (camera at the seam, tile look): [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428).
 
 ## Replay budget (#70)
 
