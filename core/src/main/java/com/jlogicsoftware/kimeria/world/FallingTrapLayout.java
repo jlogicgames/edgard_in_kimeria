@@ -14,8 +14,21 @@ import com.jlogicsoftware.kimeria.tiled.TiledObject;
  * tools/check_tiled_links.py mirrors these rules for maps.
  */
 final class FallingTrapLayout {
-    /** A validated trap: where it hangs, its trigger zone, the y its bottom lands on. */
-    record Spec(Rectangle body, Rectangle zone, float landing, boolean stone, FallingStone.Skin skin) { }
+    /** A validated trap: where it hangs, its trigger zone, the y its bottom lands on; a stone also the top of its lip (#360). */
+    record Spec(Rectangle body, Rectangle zone, float landing, boolean stone, FallingStone.Skin skin, float lipTop) { }
+
+    /** Optional stone property (#360): the world y of the lip's top edge (absolute px, Y grows downward). */
+    static final String LIP_TOP = "lipTop";
+    /** Every property a falling trap reads; any other key (a misspelling such as {@code liptop}) fails the load. */
+    static final java.util.Set<String> PROPERTIES = java.util.Set.of("zoneX", "zoneY", "zoneWidth", "zoneHeight", "skin", LIP_TOP);
+
+    /**
+     * The camera's top edge while the hero stands on the floor of {@code room}: {@code Player.cameraTarget} clamps it to the room's
+     * bottom, so a room taller than the view hides its top rows (#360). A room no taller than the view is centred.
+     */
+    static float floorCameraTop(Rectangle room, float viewHeight) {
+        return room.height <= viewHeight ? room.y + (room.height - viewHeight) / 2f : room.y + room.height - viewHeight;
+    }
 
     private FallingTrapLayout() { }
 
@@ -42,10 +55,38 @@ final class FallingTrapLayout {
         return v;
     }
 
+    /** A collision block (not a one-way platform or quicksand) of the room ends at {@code top} over the stone's column. */
+    private static boolean underCollision(float top, Rectangle body, RoomLayout layout, int roomIndex, TiledMapData map) {
+        for (TiledObject c : map.layer("Collisions")) {
+            if (layout.owner(c) != roomIndex || "QuickSand".equals(c.type) || "Platform".equals(c.type)) continue;
+            if (c.y + c.height == top && xOverlap(c.x, c.width, body.x, body.width)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * {@code top} is the bottom face of a drawn background tile row over the stone's column: every tile cell the column covers in
+     * the row above is drawn and every cell in the row below is empty (the lip hangs in open air). Forest-2's block over its stone
+     * is scenery tiles with no collision, so the collision rule alone could not find it.
+     */
+    private static boolean underTiles(float top, Rectangle body, TiledMapData map) {
+        int th = map.tileHeight, tw = map.tileWidth;
+        if (map.backgroundGrid == null || th <= 0 || tw <= 0 || top % th != 0) return false;
+        int below = (int) (top / th), above = below - 1;
+        int first = (int) (body.x / tw), last = (int) ((body.x + body.width - 1) / tw);
+        if (above < 0 || below >= map.heightTiles || first < 0 || last >= map.widthTiles) return false;
+        for (int c = first; c <= last; c++)
+            if (map.backgroundGrid[above][c] == 0 || map.backgroundGrid[below][c] != 0) return false;
+        return true;
+    }
+
     private static boolean xOverlap(float ax, float aw, float bx, float bw) { return ax < bx + bw && ax + aw > bx; }
 
-    static Spec validate(TiledObject o, RoomLayout layout, int roomIndex, TiledMapData map) {
+    /** @param viewHeight the camera's height in world px (the stone's lip must be on screen while the hero stands on the floor) */
+    static Spec validate(TiledObject o, RoomLayout layout, int roomIndex, TiledMapData map, float viewHeight) {
         boolean stone = "FallingStone".equals(o.type);
+        for (String key : o.properties.keySet())
+            if (!PROPERTIES.contains(key)) throw bad(o, "unknown property '" + key + "' (a falling trap reads " + new java.util.TreeSet<>(PROPERTIES) + ")");
         RoomLayout.Room roomData = layout.rooms.get(roomIndex);
         Rectangle room = roomData.bounds();
         if (!(o.width > 0) || !(o.height > 0)) throw bad(o, "needs a positive size");
@@ -101,6 +142,23 @@ final class FallingTrapLayout {
             if (!atTop && !underSolid)
                 throw bad(o, "a stone must start at the room top or directly under a solid block, or it pops into view in mid-air");
         }
-        return new Spec(body, zone, landing, stone, skin);
+        float lipTop = Float.NaN;
+        if (!stone && o.properties.containsKey(LIP_TOP)) throw bad(o, LIP_TOP + " applies to a FallingStone only");
+        if (stone) {
+            float visible = floorCameraTop(room, viewHeight);
+            if (!o.properties.containsKey(LIP_TOP)) lipTop = Math.max(body.y, visible);
+            else {
+                lipTop = number(o, LIP_TOP);
+                if (lipTop < visible)
+                    throw bad(o, LIP_TOP + " " + lipTop + " is above the camera's top edge (y " + visible + ") while the hero stands on the floor: the cue would be off screen");
+                if (lipTop < body.y) throw bad(o, LIP_TOP + " " + lipTop + " is above the stone's start (y " + body.y + ")");
+                if (lipTop + skin.lip().height() > landing) throw bad(o, LIP_TOP + " " + lipTop + " puts the lip below the floor it lands on (y " + landing + ")");
+                // D45's rule for the stone's own start, for its lip: on the default line, or hanging from something solid.
+                if (lipTop != Math.max(body.y, visible) && !underCollision(lipTop, body, layout, roomIndex, map) && !underTiles(lipTop, body, map))
+                    throw bad(o, LIP_TOP + " " + lipTop + " floats in the column: put it on the default line (y " + Math.max(body.y, visible)
+                        + ") or directly under a solid block or a drawn tile row over the stone");
+            }
+        }
+        return new Spec(body, zone, landing, stone, skin, lipTop);
     }
 }

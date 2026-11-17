@@ -587,6 +587,9 @@ class FallingTrapsTest {
         assertTrue(loadError("falling-bad-zoneapart-test").contains("lethal column"), "zone not under the trap");
         assertTrue(loadError("falling-bad-entrance-test").contains("entrance"), "armed at the room start with the hero in the column");
         assertTrue(loadError("falling-bad-midair-test").contains("mid-air"), "stone below the room top");
+        assertTrue(loadError("falling-bad-lip-test").contains("off screen"), "#360: a lipTop above the camera's top edge with the hero on the floor");
+        assertTrue(loadError("falling-bad-lipfloat-test").contains("floats"), "#360: a lipTop in an open column, under nothing");
+        assertTrue(loadError("falling-bad-liptypo-test").contains("unknown property 'liptop'"), "#360: a misspelled key is refused, not ignored");
         assertTrue(loadError("falling-bad-wall-test").contains("Actionable"), "lever-raised wall in the fall");
     }
 
@@ -627,5 +630,98 @@ class FallingTrapsTest {
             }
             assertTrue(dead(l), "a stone does not spare a jumper, jump " + before + " frames before impact");
         }
+    }
+
+    // ---- #360: the loose overhang (the at-rest cue) -------------------------------------------------------------------
+
+    private static final float STONE_CENTRE = (STONE_LEFT + STONE_RIGHT) / 2f, FAR_LEFT = 40;
+
+    /** Every speck the stone's trickle spawns over {@code frames} frames, as (x, y) of its first sampled position. */
+    private java.util.List<float[]> specks(Level l, int frames) {
+        java.util.List<float[]> seen = new java.util.ArrayList<>();
+        var grit = stone(l).grit();
+        for (int i = 0; i < frames; i++) {
+            frame(l);
+            // A speck spawned during this frame's update has aged one step at most (specks are TRICKLE_SPACING = 6 steps apart).
+            for (int k = 0; k < grit.count(); k++)
+                if (grit.maxLife(k) - grit.life(k) < STEP * 1.5f) seen.add(new float[]{grit.x(k), grit.y(k), grit.red(k)});
+        }
+        return seen;
+    }
+
+    @Test void atRestTheLipIsLooseAndGritTricklesFromItsTwoCracksEveryPeriod() {
+        Level l = level();
+        place(l, FAR_LEFT);
+        FallingStone s = stone(l);
+        assertEquals(FallingStone.LIP_LOOSE, s.lipFrame());
+        int periods = 4;
+        var seen = specks(l, Math.round(periods * FallingStone.TRICKLE_PERIOD / STEP));
+        assertEquals(FallingTrap.State.ARMED, s.state(), "the hero stayed far");
+        assertEquals(periods * FallingStone.TRICKLE_SPECKS, seen.size(), "four specks per 1.5 s");
+        int left = 0, right = 0, dark = 0;
+        for (float[] p : seen) {
+            float dx = p[0] - STONE_CENTRE;
+            assertTrue(Math.abs(Math.abs(dx) - FallingStone.CRACK_OFFSET_PX) <= FallingStone.CRACK_JITTER_PX + 0.01f, "from a crack: " + dx);
+            if (dx < 0) left++; else right++;
+            if (p[2] < 0.5f) dark++;
+            // World Y grows downward: a speck starts just below the lip's top and only falls.
+            float start = s.lipBounds().y + FallingStone.GRIT_START_PX;
+            assertTrue(p[1] >= start && p[1] < start + 2, "starts in the lip: " + p[1]);
+        }
+        assertEquals(left, right, "the cracks alternate");
+        assertEquals(seen.size() / 2, dark, "dark and light specks alternate");
+        assertTrue(s.grit().count() <= FallingStone.GRIT_CAPACITY);
+    }
+
+    @Test void theTrickleNeverOverflowsItsPoolAndEverySpeckFallsAboutFortyEightPixels() {
+        Level l = level();
+        place(l, FAR_LEFT);
+        var grit = stone(l).grit();
+        float start = stone(l).lipBounds().y + FallingStone.GRIT_START_PX;
+        int peak = 0;
+        float lowest = 0;
+        for (int i = 0; i < Math.round(20 * FallingStone.TRICKLE_PERIOD / STEP); i++) {
+            frame(l);
+            peak = Math.max(peak, grit.count());
+            for (int k = 0; k < grit.count(); k++) lowest = Math.max(lowest, grit.y(k));
+        }
+        assertEquals(FallingStone.TRICKLE_SPECKS, peak, "a trickle lives 0.8 s of a 1.5 s period: one trickle at a time");
+        assertTrue(peak < FallingStone.GRIT_CAPACITY, "headroom: the oldest speck is never dropped");
+        assertTrue(lowest <= start + FallingStone.TRICKLE_FALL_PX + FallingStone.FALL_JITTER_PX, "fall " + lowest);
+        assertTrue(lowest >= start + FallingStone.TRICKLE_FALL_PX - FallingStone.FALL_JITTER_PX - 2, "fall " + lowest);
+    }
+
+    @Test void theTrickleIsDeterministic() {
+        Level a = level(), b = level();
+        place(a, FAR_LEFT);
+        place(b, FAR_LEFT);
+        var sa = specks(a, 300);
+        var sb = specks(b, 300);
+        assertEquals(sa.size(), sb.size());
+        for (int i = 0; i < sa.size(); i++) assertArrayEquals(sa.get(i), sb.get(i), 0f, "speck " + i);
+    }
+
+    @Test void theTriggerStopsTheTrickleAndTheLipBreaksWhenTheStoneFalls() {
+        Level l = level();
+        place(l, FAR_LEFT);
+        FallingStone s = stone(l);
+        settle(l, Math.round(0.2f / STEP));
+        assertTrue(s.grit().count() > 0, "a trickle is falling");
+        place(l, ZONE_STONE_LEFT);
+        assertEquals(FallingTrap.State.WARNING, s.state());
+        assertEquals(FallingStone.LIP_LOOSE, s.lipFrame(), "the warning is unchanged: the shadow grows under the loose lip");
+        int maxAfter = s.grit().count();
+        for (int i = 0; i < Math.round(FallingStone.TRICKLE_LIFE / STEP) + 1; i++) {
+            frame(l);
+            assertTrue(s.grit().count() <= maxAfter, "no new speck after the trigger");
+            maxAfter = s.grit().count();
+        }
+        assertEquals(0, s.grit().count(), "the last specks have died");
+        framesUntil(l, s, FallingTrap.State.FALLING, 600);
+        assertEquals(FallingStone.LIP_BROKEN, s.lipFrame(), "the socket is empty once the stone falls");
+        framesUntil(l, s, FallingTrap.State.SPENT, 600);
+        assertEquals(FallingStone.LIP_BROKEN, s.lipFrame());
+        settle(l, Math.round(3 * FallingStone.TRICKLE_PERIOD / STEP));
+        assertEquals(0, s.grit().count(), "a spent stone trickles no more");
     }
 }

@@ -39,6 +39,7 @@ ALLOWED = {
     ('effects/EnvironmentFx.java', 'render', 'quad'): 'simulated falling ceiling grit (#239, approved particle category): 1 to 2 px specks, depict no object',
     ('effects/SporeCloud.java', 'render', 'quad'): 'the shader haze of the false honey fungus spore cloud (#296, D63): a live procedural swirl clipped to the lethal rectangle, lives 1 s, depicts no object; the mushroom is the authored trap-false-honey-fungus sprite',
     ('effects/SporeCloud.java', 'render', 'particle'): 'simulated lime spore haze (#296, approved particle category, D63): lives up to 1.05 s inside the lethal rectangle, depicts no object',
+    ('entity/objects/FallingStone.java', 'render', 'quad'): 'simulated grit trickle from the loose overhang (#360, approved particle category like the ceiling grit): 1 to 2 px specks that live 0.8 s, depict no object; the lip and the stone are the authored trap-stone-lip and trap-stone sprites',
     ('entity/objects/HoneyFungus.java', 'renderBurst', 'particle'): 'simulated golden spore burst (#295, approved particle category, D63): lives up to 1 s, depicts no object; the mushroom itself is the authored trap-honey-fungus sprite',
     ('effects/Firefly.java', 'render', 'particle'): 'time-varying ambient firefly light',
     ('effects/BombExplosionEffect.java', 'render', 'quad'): 'time-varying explosion shader',

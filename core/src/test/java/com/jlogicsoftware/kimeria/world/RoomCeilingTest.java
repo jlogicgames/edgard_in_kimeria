@@ -118,4 +118,31 @@ class RoomCeilingTest {
             && b.getX() <= stone.bodyBounds().x && b.getX() + b.getWidth() >= stone.bodyBounds().x + stone.bodyBounds().width), "the slab lies over it");
         assertTrue(stone.bodyBounds().x >= room.x && stone.bodyBounds().x + stone.bodyBounds().width <= room.x + room.width);
     }
+
+    /**
+     * #360 (D71): the stone's lip must be on screen while the hero stands on the floor. Rooms are 8 px taller than the view and the
+     * camera then shows the bottom of the room: forest-0 draws the lip on that line (y 8), forest-2 hangs it under the dirt block over
+     * the stone with {@code lipTop} 48. Checked against the hero's own camera target, standing on the floor, in both rooms with a stone.
+     */
+    @Test void theStoneLipIsInsideTheCameraViewWhileTheHeroStandsOnTheFloor() {
+        String[][] rooms = {{"forest-0", "3", "8"}, {"forest-2", "2", "48"}};
+        for (String[] r : rooms) {
+            Level level = roomOf(r[0], Integer.parseInt(r[1]));
+            var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
+                .map(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::cast).findFirst().orElseThrow();
+            Player p = level.player;
+            p.position.x = stone.getX() - 200;  // on the floor before the stone's zone, the stone in view
+            for (int i = 0; i < 60; i++) frame(level);
+            assertTrue(p.isOnGround(), r[0] + ": the hero stands on the floor");
+            var camera = p.roomCameraTarget();
+            Rectangle view = new Rectangle(camera.x, camera.y, harness.game().logicalResolution().x, harness.game().logicalResolution().y);
+            Rectangle lip = stone.lipBounds();
+            String where = r[0] + " lip " + lip + " view " + view;
+            assertEquals(Float.parseFloat(r[2]), lip.y, 0.01f, where + ": the lip's top");
+            assertEquals(0, stone.bodyBounds().y, 0.01f, where + ": the stone still starts at the room top (timing unchanged)");
+            assertTrue(lip.y >= view.y && lip.y + lip.height <= view.y + view.height, where + ": vertically on screen");
+            assertTrue(lip.x >= view.x && lip.x + lip.width <= view.x + view.width, where + ": horizontally on screen");
+            assertEquals(com.jlogicsoftware.kimeria.entity.objects.FallingStone.LIP_LOOSE, stone.lipFrame(), where);
+        }
+    }
 }
