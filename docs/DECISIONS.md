@@ -2852,3 +2852,36 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   imperative and uses the fixed forms is a review rule (TEXT_STYLE §1; a script cannot tell an imperative reliably).
 - **Not verified:** native-speaker review of the translations ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369))
   and the look in the running game ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+
+## D98. Gravity and the jump launch are integrated per second, so the jump is as high at every frame rate (2026-11-17)
+
+- **Status:** Bug fix from the author's web playtest, 2026-11-17: on GitHub Pages in Chrome the hero jumped lower than
+  on the macOS desktop build, and the lever ledge of `forest-1-lever` (32 px above the running lift's highest point) could
+  not be reached from the lift.
+- **Cause (measured):** `GravityBody.applyGravity` added `gravityAcceleration()` (9.8 px/s) to the velocity once per
+  *frame*, not per second, and `Player.playerJump` added a launch-frame lift of `velocity.y * dt`. The desktop build is
+  capped at 60 fps (`Lwjgl3Launcher`), but a browser runs `requestAnimationFrame` at the display's refresh rate (120 Hz
+  on a ProMotion Mac, 144 Hz on many monitors) with uneven frame times, so gravity per second scaled with the frame rate.
+  Feet rise of a standing jump in `JumpFrameRateTest`, before the fix: 30 Hz 119.34 px, 60 Hz 59.67 px, 120 Hz 29.83 px,
+  144 Hz 24.86 px, an uneven 120 Hz browser pattern 37.51 px, an uneven 60 Hz pattern 65.99 px. At 120 Hz the 32 px
+  ledge is out of reach. Enemies (`RedMob`, `YellowMob`, `Boss`) fell faster at high frame rates for the same reason.
+- **Decision:** keep one variable physics step per rendered frame (the `Player.update` comment explains why a fixed
+  accumulator was dropped) and make that step independent of its length:
+  - `GravityBody.REFERENCE_STEP` = 1/60 s, the frame time the movement was tuned at. Gravity is
+    `gravityAcceleration() / REFERENCE_STEP` = 588 px/s².
+  - The position step is exact for constant acceleration and reproduces the old 60 Hz semi-implicit Euler arc: that arc
+    is the continuous one with the velocity raised by `g * REFERENCE_STEP / 2`, so each step moves
+    `v1 * dt + g * dt * (REFERENCE_STEP - dt) / 2`, where the second term is zero at 60 Hz. A step that reaches the velocity
+    clamp (terminal fall speed) moves at the clamped velocity, as before.
+  - The launch frame's own lift is one reference step at launch speed (4.33 px for a ground jump), whatever the frame time.
+    A jump taken in the second `tryJump(0f)` call of a frame (a buffered press on landing) keeps no launch lift, as before.
+- **Measured after:** the standing jump rises 59.67 px at all six patterns (spread 0.00 px), the same 59.67 px as before
+  the fix at 60 Hz. The lift-to-ledge hop of `forest-1-lever`, taken at the top of the lift's run, lands on the ledge at
+  every pattern. All room tests, `RoomReplayTest` times and `AllocationBudgetTest` pass unchanged (60 Hz steps).
+- **Left as it is, with the reason:** two per-frame rules remain and do not change what the player can reach. The wall
+  clamber damps the fall with `velocity.y *= 0.1` per frame, which holds the hero within about 1 to 2 px/s at any rate.
+  The one-way platform catch-up margin (`CollisionUtils`, "at rest" below 20 px/s) sees 9.8 px/s after one 60 Hz step and
+  19.6 px/s after a 30 Hz step; only frames longer than 34 ms (below 29 fps) exceed it, and then a rider on a descending
+  platform may re-snap once.
+- **Gate:** `JumpFrameRateTest` pins the apex to 59.67 px at 60 Hz and its spread across 30, 60, 120, 144 Hz and two
+  uneven browser patterns to 0.1 px, and rides the reported lift to the ledge at each.

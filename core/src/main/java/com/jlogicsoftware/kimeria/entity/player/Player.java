@@ -1124,7 +1124,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
             velocity.y = -jumpForce();
             if (inQuickSand) velocity.y *= 0.1f;
         }
-        position.y += velocity.y * dt;
+        // The launch frame's own lift, as designed at 60 Hz: one reference step at launch speed, whatever the frame time (D98).
+        if (dt > 0) position.y += velocity.y * REFERENCE_STEP;
         onGround = false;
     }
 
