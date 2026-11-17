@@ -143,7 +143,8 @@ Maintain the same handling of faces, contours, light and color across the new wo
 Edgard in the world is an original pixel drawing, `art/hero/hero.grid`, exported exactly by
 `tools/hero_sprites.py` to three sheets of 64×64 cells, one clip per row (`tools/sprite_layouts.py HERO_SHEETS`):
 `hero-right.png` and `hero-left.png` (idle 4, run 6, jump 2, fall 2, attack 7, look 2, clamber 1, hit 2, appear 4,
-disappear 4) and `hero-ladder.png` (up 4, down 4, hold 1; a back view used by both facings).
+disappear 4; then carry idle 4, carry run 6, throw 3, land 1, pull 3) and `hero-ladder.png` (up 4, down 4, hold 1; a
+back view used by both facings).
 
 - **Identity:** long black hair, a narrow red headband, an angular clean-shaven face, warm ochre skin, bare
   shoulders; blue breeches, brown boots, a steel blade with a leather grip. No reserved accent hue (gold, ember,
@@ -163,9 +164,12 @@ disappear 4) and `hero-ladder.png` (up 4, down 4, hold 1; a back view used by bo
 - **Gates:** `tools/test_hero_sprites.py` (the export is the grid, the palette, every layout frame drawn),
   `HeroFrameTest` (feet on the last row and on the floor line in play, the 31 px limit, the ladder clips),
   `check_sprite_art.py` (16-entry indexed PNGs, binary alpha), `check_contrast.py`.
-- **Second set:** carry idle and run (the sword on the back, the object in the near hand), throw, land, and the
-  thread pull of [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341); tracked in
-  [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343).
+- **Carry and throw:** the sword is sheathed on his back (the hilt over the far shoulder, the scabbard tip below it)
+  and the object rides in the near fist (D23), so their left-facing frames are true mirrors. **Land** is a squat with
+  the sword lowered in the right hand.
+- **Thread pull ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)):** tug, lift and land. The thread
+  is tied to the **left** wrist in both facings: the far hand facing right, the near one facing left (drawn over the
+  hair). The wrist pixel of each frame is recorded in `Player` and checked by `HeroFrameTest` to be the drawn forearm.
 
 ## Production and continuity
 

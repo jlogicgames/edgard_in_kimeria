@@ -320,12 +320,13 @@ class DirectionalActionsTest {
             && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE);
         pickup(); frames(1);
         var torch = level.player.carriedObject();
-        assertEquals(31, torch.getX() + 5 - level.player.getX(), .001);
+        // Carrying draws the carry clips (#343 part 2, D79): the near fist, measured on the carry idle frame.
+        assertEquals(32, torch.getX() + 5 - level.player.getX(), .001);
         assertTrue(torch.getY() + 8 - level.player.getY() >= 32);
         assertTrue(torch.getY() + 8 - level.player.getY() <= 35);
         level.player.facingRight = false;
         torch.followHolder();
-        assertEquals(16, torch.getX() + 5 - level.player.getX(), .001);
+        assertEquals(15, torch.getX() + 5 - level.player.getX(), .001);
         tap(Input.Keys.J); // The jump frame's near fist is raised, far above the waist (facing left: the empty left fist, #343 D79).
         assertEquals(Player.State.JUMPING, level.player.getState());
         assertEquals(16, torch.getX() + 5 - level.player.getX(), .001);

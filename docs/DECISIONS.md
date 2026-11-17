@@ -1867,9 +1867,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   bold are gameplay timing and did not change. The attack's blade ends at the unchanged sword box (x 9..46 of the box,
   17 px ahead of the body).
 - **Carried object:** the grip is the near hand's palm, measured per facing on the new frames (`Player.heldObjectGrip`).
-  Until the carry clips land, facing right that is the sword hand. `DirectionalActionsTest` pins the new palms: the
-  idle grip is unchanged (x 31 facing right, 16 facing left); the facing-left jump palm moved from (26, 17), measured on
-  the old 48 px art, to (16, 22), the raised empty left fist of the new frame.
+  Standing and running, the carry clips' near fist holds it (second set below); jumping, falling and attacking keep the
+  core frames' palm. `DirectionalActionsTest` pins the palms: carrying, x 32 facing right and 15 facing left (the carry
+  fist; the core idle palm was 31 and 16); the facing-left jump palm moved from (26, 17), measured on the old 48 px art,
+  to (16, 22), the raised empty left fist of the new frame.
 - **Art:** original, hand-drawn as a pixel grid (`art/hero/hero.grid`, 15 colours plus transparency, ink contour
   `0b0814`), exported exactly (no quantizing) by `tools/hero_sprites.py`; `tools/test_hero_sprites.py` checks the
   export, the palette and the binary alpha. `Player.png`, `Look.png` and `tools/export_player_look.py` are retired.
@@ -1886,9 +1887,34 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - `HeroFrameTest`: every grounded and ladder frame stands on its last row; the drawn feet meet the floor line in
     every grounded frame of a walk, a turn and an attack each way; idle, run and look are at most 31 px tall; the
     ladder plays up, hold and down as separate clips with the feet on the rung line.
-- **Second set (not built yet, [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343)):** carry idle and
-  run (sword on the back, the object in the near hand), throw, land; the thread pull for the death is
-  [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341).
+- **Second set (#343 part 2, approved by the author 2026-11-16):** 34 more frames, rows 10 to 14 of both facing sheets
+  (now 448×960):
+  - **Carry idle 4 and carry run 6:** the sword sheathed on his back, the object in the near fist.
+  - **Throw 3:** wind-up, release, follow-through.
+  - **Land 1:** a squat, the sword lowered.
+  - **The thread pull of [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341), 3:** tug, lift and land.
+
+  `Player` draws them over its states without changing the state machine or any timing:
+  - Carrying draws the carry clips in place of idle, look and run.
+  - A throw plays its clip for 0.3 s.
+  - A landing that kicks up dust (and is not carrying) plays the squat for 0.1 s, counted from the first frame it
+    shows.
+  - The pull is drawn in place of everything else while `showPull(PULL_TUG | PULL_LIFT | PULL_LAND)` holds a frame
+    (`NO_PULL` stops). `pullWrist(frame, out)` gives the world position (Y down) of the centre of the left wrist's
+    pixel, where the thread is tied. The thread is on the left wrist in both facings: the far hand facing right, the
+    near one facing left.
+
+  Measured:
+  - **Wrist pixels (frame):** tug and lift (17, 44) facing right and (46, 44) facing left; land (23, 52) and (24, 52).
+    `HeroFrameTest` checks each one is the drawn forearm's skin.
+  - **Contrast (D76, sweep over every walkable surface):** worst 0.324 (`l.throw1`) against 0.340 for the core idle;
+    the gate measures carry idle in both facings.
+  - **`HeroFrameTest`:** the carry clips while holding, with the feet on the floor line; the throw for 17 or 18 frames
+    at 60 Hz; the squat for 5 or 6; the pull frames and the wrists in both facings.
+  - **`AllocationBudgetTest.heroDrawPathInBothFacingsAndOnTheLadder`:** with the pull frames, 0.0 and 0.6 B/frame in
+    two runs (ceiling 8).
+  - **Known limit:** jumping while carrying still draws the core jump frame, so facing right the object rides in the
+    raised sword hand for the jump.
 - **Not verified:** the hero in the running game, by the author's eye (desktop and web):
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 

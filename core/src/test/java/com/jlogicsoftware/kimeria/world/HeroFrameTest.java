@@ -3,6 +3,8 @@ package com.jlogicsoftware.kimeria.world;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -22,10 +24,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * sheet, and a ladder plays a separate up, down and hold clip. Every check here reads the shipped PNGs.
  */
 class HeroFrameTest {
-    /** Rows of hero-right/left.png: idle, run, jump, fall, attack, look, clamber, hit, appear, disappear; columns per row. */
-    private static final int[] FACING_FRAMES = {4, 6, 2, 2, 7, 2, 1, 2, 4, 4};
+    /** Rows of hero-right/left.png: idle, run, jump, fall, attack, look, clamber, hit, appear, disappear, then the second set: carry idle, carry run, throw, land, pull. */
+    private static final int[] FACING_FRAMES = {4, 6, 2, 2, 7, 2, 1, 2, 4, 4, 4, 6, 3, 1, 3};
     private static final int JUMP_ROW = 2, FALL_ROW = 3, CLAMBER_ROW = 6;
-    private static final int[] LABEL_POSE_ROWS = {0, 1, 5};      // idle, run, look: the label can show over these
+    private static final int CARRY_IDLE_ROW = 10, CARRY_RUN_ROW = 11, THROW_ROW = 12, LAND_ROW = 13, PULL_ROW = 14;
+    private static final int[] LABEL_POSE_ROWS = {0, 1, 5, CARRY_IDLE_ROW, CARRY_RUN_ROW}; // the label can show over these
     private static final int[] LADDER_FRAMES = {4, 4, 1};        // up, down, hold
     private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2;
     private static final int LAST_ROW = 63;
@@ -33,6 +36,8 @@ class HeroFrameTest {
     private static final int STANDING_TOP_ROW = 33;
     /** D79: nothing a label shows over rises above frame row 24 (position.y + 8), 22 px under the label's bottom. */
     private static final int LABEL_POSE_TOP_ROW = 24;
+    private static final int STONE_ID = 9001, SKIN = 0xc27a45;
+    private static final float STONE_DROP = 12, DROP = 80;
     private static final float FLOOR = 320, LADDER_X = 1216, LADDER_CENTRE = LADDER_X + 8, STEP_X = 2;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
@@ -51,7 +56,8 @@ class HeroFrameTest {
                 for (int column = 0; column < FACING_FRAMES[row]; column++) {
                     String where = sheet.path() + " row " + row + " column " + column;
                     assertTrue(HeroArt.top(sheet, column, row) >= 0, where + " is empty");
-                    if (row != JUMP_ROW && row != FALL_ROW && row != CLAMBER_ROW)
+                    boolean airborne = row == JUMP_ROW || row == FALL_ROW || row == CLAMBER_ROW || (row == PULL_ROW && column == Player.PULL_LIFT);
+                    if (!airborne)
                         assertEquals(LAST_ROW, HeroArt.bottom(sheet, column, row), where + ": the feet must be on the frame's last row");
                 }
         for (SpriteSheets.Sheet sheet : new SpriteSheets.Sheet[]{SpriteSheets.HERO_RIGHT, SpriteSheets.HERO_LEFT})
@@ -115,6 +121,83 @@ class HeroFrameTest {
             + ": the drawn feet must touch the floor line");
         return 1;
     }
+
+    private Carryable stoneAtTheHerosFeet(Level level) {
+        Player hero = level.player;
+        Carryable stone = new Carryable(level, STONE_ID, Carryable.Kind.STONE, hero.hitboxBounds().x, FLOOR - STONE_DROP);
+        level.objects.add(stone);
+        for (int i = 0; i < 5; i++) frame(level);
+        held.clear(); held.add(Input.Keys.W); frame(level);
+        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level);
+        assertSame(stone, hero.carriedObject(), "picked up");
+        return stone;
+    }
+
+    /** #343 part 2: carrying draws the carry clips (sword on the back) standing and running, feet on the floor; a throw plays its clip, then idle again. */
+    @Test void carryingDrawsTheCarryClipsAndAThrowPlaysItsClip() {
+        Level level = harness.roomOf("forest-0", 1);
+        level.objects.removeIf(ThornTrap.class::isInstance);
+        Player hero = level.player;
+        for (int i = 0; i < 30; i++) frame(level);
+        stoneAtTheHerosFeet(level);
+        int carryIdle = 0, carryRun = 0;
+        for (int i = 0; i < 20; i++) { frame(level); checkFeet(hero); carryIdle += row(hero) == CARRY_IDLE_ROW ? 1 : 0; }
+        for (int key : new int[]{Input.Keys.D, Input.Keys.A})
+            for (int i = 0; i < 30; i++) { held.clear(); held.add(key); frame(level); checkFeet(hero); carryRun += row(hero) == CARRY_RUN_ROW ? 1 : 0; }
+        held.clear();
+        assertEquals(20, carryIdle, "carry idle while standing");
+        assertTrue(carryRun > 50, "carry run while running: " + carryRun);
+        for (int i = 0; i < 10; i++) frame(level);
+        held.add(Input.Keys.L); pressed.add(Input.Keys.L); frame(level); held.clear();
+        assertNull(hero.carriedObject(), "thrown");
+        int throwing = 0;
+        for (int i = 0; i < 30; i++) { if (row(hero) == THROW_ROW) throwing++; frame(level); checkFeet(hero); }
+        assertTrue(throwing >= 17 && throwing <= 18, "the throw lasts 0.3 s: " + throwing + " frames");
+        assertEquals(0, row(hero), "back to idle with the sword in hand");
+    }
+
+    /** A dusty landing plays the squat for 0.1 s, the drawn feet on the floor line. */
+    @Test void aDustyLandingPlaysTheSquat() {
+        Level level = harness.roomOf("forest-0", 1);
+        level.objects.removeIf(ThornTrap.class::isInstance);
+        Player hero = level.player;
+        for (int i = 0; i < 30; i++) frame(level);
+        hero.position.y -= DROP;
+        int squat = 0;
+        for (int i = 0; i < 90; i++) {
+            frame(level);
+            if (row(hero) == LAND_ROW) { squat++; checkFeet(hero); }
+        }
+        assertTrue(squat >= 5 && squat <= 6, "the squat lasts 0.1 s: " + squat + " frames");
+    }
+
+    /** #341: every pull frame in both facings draws from the pull row, tug and land stand on the floor line, and the wrist is a drawn arm pixel. */
+    @Test void pullFramesAndTheirWristPixels() {
+        Level level = harness.roomOf("forest-0", 1);
+        Player hero = level.player;
+        for (int i = 0; i < 30; i++) frame(level);
+        Vector2 wrist = new Vector2();
+        for (boolean right : new boolean[]{true, false})
+            for (int pull = 0; pull < Player.PULL_FRAMES; pull++) {
+                hero.facingRight = right;
+                hero.showPull(pull);
+                hero.currentCell(cell);
+                assertEquals(PULL_ROW, cell.y);
+                assertEquals(pull, cell.x);
+                if (pull != Player.PULL_LIFT) assertEquals(FLOOR, art.drawnBottom(hero), 1e-3, "pull " + pull + " stands on the floor line");
+                hero.pullWrist(pull, wrist);
+                int px = (int) (wrist.x - hero.frameX()), py = (int) (wrist.y - hero.frameY());
+                int argb = HeroArt.sheet(hero.currentSheet()).getRGB(cell.x * Player.FRAME_SIZE + px, cell.y * Player.FRAME_SIZE + py);
+                assertEquals(0xff, argb >>> 24, "pull " + pull + (right ? " right" : " left") + ": the wrist " + px + "," + py + " is not drawn");
+                assertEquals(SKIN, argb & 0xffffff, "the wrist is the forearm's skin");
+            }
+        hero.showPull(Player.NO_PULL);
+        hero.currentCell(cell);
+        assertNotEquals(PULL_ROW, cell.y);
+    }
+
+    private int row(Player hero) { hero.currentCell(cell); return cell.y; }
 
     /** Up, holding still and down use three clips of the back view; the drawn feet stay on the hitbox bottom on the rungs. */
     @Test void aLadderPlaysUpHoldAndDownAsSeparateClips() {
