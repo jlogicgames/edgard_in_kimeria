@@ -226,8 +226,8 @@ class AllocationBudgetTest {
     }
 
     /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
-    @Test void forest2Room2WithBlood() {
-        Level level = harness.roomOf("forest-2", 2);
+    @Test void forest2Room3WithBlood() {
+        Level level = harness.roomOf("forest-2", 3);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.blood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, true);
@@ -237,8 +237,8 @@ class AllocationBudgetTest {
     }
 
     /** A sword kill sprays a light burst through {@code Level.mobBlood} every {@link #BURST_CYCLE_FRAMES} frames in the boss room (the level path of #319). */
-    @Test void forest2Room2WithMobKillBlood() {
-        Level level = harness.roomOf("forest-2", 2);
+    @Test void forest2Room3WithMobKillBlood() {
+        Level level = harness.roomOf("forest-2", 3);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.mobBlood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
@@ -434,7 +434,7 @@ class AllocationBudgetTest {
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
     @Test void cameraShakeQuery() {
-        Level level = harness.roomOf("forest-2", 2);
+        Level level = harness.roomOf("forest-2", 3);
         Rectangle view = new Rectangle();
         Rectangle room = level.currentRoomBounds();
         float[] sum = new float[1];
@@ -570,7 +570,7 @@ class AllocationBudgetTest {
         };
         harness.font = font;
         BossHud hud = new BossHud(harness.assets(), harness.game(), new Matrix4(), 640, 360);
-        Level level = harness.roomOf("forest-2", 2);
+        Level level = harness.roomOf("forest-2", 3);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
         font.dispose();
         assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
@@ -774,7 +774,7 @@ class AllocationBudgetTest {
     /** The coin count, the FPS counter and the fireball stock of {@code Hud.render} with the boss bar, each frame. */
     @Test void hudCoinCountAndFps() {
         Hud hud = hudWithMetricsFont();
-        Level level = harness.roomOf("forest-2", 2);
+        Level level = harness.roomOf("forest-2", 3);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true, level.player, "60 FPS"));
         assertWithinBudget("Hud.render", HUD_CEILING, bytes);
     }

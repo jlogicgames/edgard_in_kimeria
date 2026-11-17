@@ -130,7 +130,11 @@ blocked and retains the object.
 
 ## Objects, projectiles and recovery
 
-The optional entrance practice objects in `forest-2.tmx` are stone 116, portable
+**Removed 2026-11-17 ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376), D72):** the shipped `forest-2.tmx` no longer has these practice objects;
+`forest-0` teaches pickup, throw and the lever. Their tests run on the fixture
+`core/src/test/resources/tiles/practice-test.tmx` (a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room). Historical text follows.
+
+The optional entrance practice objects in `forest-2.tmx` were stone 116, portable
 torch 117, trigger 118 and its linked light 119. They require no geometry changes
 and do not obstruct the required route. Try W+K, release, K, L, then L again;
 W+K also toggles the light when the mechanism is the selected target. S+K puts down
@@ -170,7 +174,7 @@ The mechanics and entrance practice objects shipped in
 secured mutable-object restoration followed in
 [PR #165](https://github.com/jlogicgames/edgard_in_kimeria/pull/165), addressing #158.
 
-Practice in the first `forest-2` room: touch stone 116, press W+K, release,
+Practice in the first `forest-2` room (historical: removed by #376; `forest-0-stone` is the place now): touch stone 116, press W+K, release,
 walk with D/A, release movement, press K to use the sword, wait for the swing to end,
 press S+K to place, release, approach and pick up again with W+K, then press L to throw.
 The mirrored layout uses Up+X, arrows, X and C. Stock remains unchanged

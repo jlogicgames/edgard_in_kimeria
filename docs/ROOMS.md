@@ -254,15 +254,33 @@ both for overload and misplaced repeats rather than for too little novelty. `for
 course, introduces four elements and meets its first enemy in the same stretch (x 256-450) as two other first sightings,
 the running escalators and the fireball refill, not on the falling platforms: measured, the RedMob wakes only once the
 hero is back on the floor past them and then holds body x 352-372, 128 px beyond the last platform; its
-lever-and-torch pair repeats `forest-0-lever` with no role: split the room itself so the RedMob is met alone first, handle that pair (ids 12/13) and revisit D58, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375). `forest-entry` introduces six elements and still holds the D24/#95
-practice objects that `forest-0` now teaches: remove them and split the room in the x 696-752 gap (between the Bomb's blast and the second YellowMob's reach), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376). Since #375
-only `forest-entry` carries an `Overload reason`; #376 removes it.
+lever-and-torch pair repeats `forest-0-lever` with no role: split the room itself so the RedMob is met alone first, handle that pair (ids 12/13) and revisit D58, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375). `forest-entry` introduced six elements and held the D24/#95
+practice objects that `forest-0` now teaches; [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) removed them and split the room (see "forest-entry split (#376)" below).
+`forest-entry` still introduces four elements and carries an `Overload reason`, tracked by [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417).
 
 **Done for forest-1 (#375, D85, 2026-11-17).** The first RedMob (id 11) and the refill (id 25) moved out of
 `forest-1-traps` into a new first room, `forest-1-mob` (x 3520-4320, after the tree room on the map, first in the
 `Rooms` list), where the mob is met alone and the refill comes into view only after it (`Forest1MobTest`). The
 lever-and-torch pair (ids 12, 13) was removed. `forest-1-traps` now introduces two elements, the running escalators and
 the puffball, met one screen apart, and its `Overload reason` is gone; the trap course x 616-1280 is unchanged.
+
+## forest-entry split (#376, D72)
+
+Objects 116-119 (practice stone, carryable torch, practice lever and its torch) and 123/124 (ladder and its lever) are
+removed from `forest-2`, and `forest-entry` is split at **x 736**: `forest-entry` x 0-736 (exit x 704-720, wall x
+720-736, its D24 `controls` hint zone, Hint 126, removed) and the new `forest-walls` x 736-1280 (wall x 736-752, entrance x
+752, 272). The 56 px of floor between the Bomb's blast (x 632-696) and the second YellowMob's patrol could not hold an
+exit, two walls and a safe entrance, so that YellowMob's left patrol is shortened (`offNeg` 5 to 1, left end x 816).
+The floor block x 608-1280 is cut at x 736; trunk tiles mark the new seam as at the other room seams; bush 131 moves
+from x 700 to x 768 (it sank into the new wall). The Bat ledge (x 416-480) is still reached from the platform stair;
+the collection-return replay collects the Bat without the ladder. Cards: [ROOM_CARDS.md](ROOM_CARDS.md).
+
+Measured (`RoomReplayTest`, real input, hazards on, three identical attempts): `forest-entry` **6.80 s** required,
+**10.40 s** all coins; `forest-walls` **8.80 s**; `forest-canopy` unchanged 9.48 s; collection returns entry 6.72 /
+6.12 / 6.12 s, walls 7.32 s, canopy 9.62 / 9.48 / 9.48 s. The worst retry in the Forest drops from about 16 s to
+about 9 s. Map SHA-256 `1ffc1c82388567ef133f3ebc5e3b3f2344a8728cec8c2310c052bc5486575369`. The carry, lever and
+ladder hint tests that used the removed objects run on `core/src/test/resources/tiles/practice-test.tmx`,
+a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Not checked in the running game (camera at the seam, tile look): [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428).
 
 ## Replay budget (#70)
 
@@ -464,9 +482,10 @@ the hero can see the trap move. No hint text exists yet; #235 adds it.
 
 **Historical order (D72 audit, 2026-11-16).** This walkthrough was written when `forest-2` was played before
 `forest-1`. Since #193/D32 the play order is `forest-0` → `forest-1` → `forest-2`, so `forest-1-traps` now meets the falling
-platforms, then the RedMob beside the first running escalators and fireball refill, and `forest-entry` repeats lessons `forest-0` teaches. The rule "teach
-alone, then combine" stands (it is part of D72); the layouts below are corrected by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) and
-[#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376), which also revise this section.
+platforms, then the RedMob beside the first running escalators and fireball refill. The rule "teach
+alone, then combine" stands (it is part of D72); the `forest-1` layout below is corrected by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375).
+The `forest-entry` tables below describe the map after [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) (2026-11-17): the practice objects are gone and
+the room is split at x 736 into `forest-entry` and `forest-walls`.
 
 Rule for the two levels: teach each of stomp, sword, falling platforms and bombs where
 it is the only new thing on screen, on forgiving ground and without a required timing
@@ -484,15 +503,22 @@ layer offset that this text already includes in the visible position).
 | ---: | --- | --- |
 | 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
 | 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
-| 240–320 | Quicksand, vertical Bat enemy (272); optional one-way steps to the coins/Bat pickup | Hazard + Bat enemy; not a taught mechanic |
-| 512–608 | Horizontal Bat (patrol now ends at about 608) and a second quicksand | Same, repeated |
-| 416–480 | **Ladder** (id 123, initially x 416, 208–288; lever lowers it to 240–320) beside the one-way ledge (id 122) under the Bat | **Ladder and lever**: Up beside it takes hold; the nearby lever raises and lowers it; hints only in this room |
-| 656 | **Bomb** (id 54), moved from 128 | **Bomb, alone**: flat ground, 0.8 s warning (1.2 s with Assist), 64 px blast |
-| 832 | YellowMob (id 16), aggro zone 752–896 | Stomp repeated, first light combination: leave the blast, then meet the mob |
-| 912, 992 | Two tall walls | Wall jump |
-| 1136 | RedMob (id 60), zone 1056–1216, just before the exit | **Sword, alone**: wind-up is visible; K or stomp |
+| 240–320 | Quicksand, vertical Bat enemy (272); optional one-way steps to the coins and the Bat ingredient | Hazard + Bat enemy |
+| 416–480 | One-way ledge (id 122) with the Bat ingredient, reached from the stair (the ladder, id 123/124, is removed by #376) | Optional reward |
+| 512–608 | Horizontal Bat (patrol ends at about 608) and a second quicksand | Same, repeated |
+| 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the sand, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
+| 704–736 | RoomExit (x 704-720), room wall (x 720-736) | End of the room |
 
-The bomb used to sit 4 tiles from the start inside the first YellowMob's patrol, so stomp
+### `forest-2` / `forest-walls` (x 736-1280, since #376)
+
+| x | What appears | Role |
+| ---: | --- | --- |
+| 752 | Start, beside the room wall (x 736-752) | Safe entrance |
+| 832 | YellowMob (id 16), patrol x 816-944 (`offNeg` 1 since #376) | Stomp repeated, at the foot of the climb |
+| 912, 992 | Two tall walls | Wall jump |
+| 1136 | RedMob (id 60), zone 1056–1216, just before the exit | Sword or stomp; first met in `forest-1` |
+
+(Historical, #73.) The bomb used to sit 4 tiles from the start inside the first YellowMob's patrol, so stomp
 and bomb were the first two things met and overlapped. The bomb is now about 470 px
 beyond the first mob and the bat patrol and the second mob's zone were pulled back so that
 the blast square (about 624–688) and a running escape of about 64 px overlap neither.
@@ -624,6 +650,11 @@ perform a new visual/human playtest; it does not close the deferred release chec
 
 ## Directional-controls practice revision (#95)
 
+**Removed from the shipped map (2026-11-17, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)).** Objects 116-119 described below are no longer in
+`forest-2`: `forest-0` now teaches pickup, throw and the lever, so they were repeats (D72). The behaviour this section
+documents is unchanged and is still tested, on `core/src/test/resources/tiles/practice-test.tmx`,
+a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Its `controls` zone (Hint 126) is removed too, so `forest-2` has no hint zone. The text below is the historical record.
+
 Current teaching scope (2026-10-23, [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying)):
 the entire `forest-entry` room teaches contextual item/mechanism actions. There is
 no 320×144 subregion or fixed travel-distance limit. New practice
@@ -738,6 +769,10 @@ complete run, or a desktop-renderer check. Manual pickup-hint/second-level reada
 acceptance remains in [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).
 
 ## Ladder practice revision (#99, historical)
+
+**Removed from the shipped map (2026-11-17, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)).** Ladder 123 and its lever 124 are gone from
+`forest-2` (`forest-0-ladder` teaches the ladder). Ledge 122 stays and is reached from the platform stair, so the Bat
+ingredient is still collected (`RoomReplayTest`, collection return). Ladder hint tests run on `practice-test.tmx`.
 
 `forest-3.tmx` (now `forest-2.tmx`) SHA-256 `bdd719de7af0ccc56302322777072f48e3316cd3ccffc1aaa621876d61cc32c3`. Added to `forest-entry`:
 one-way ledge collision 122 (416, 240, 64×16) with matching Background tiles, and `Ladder`
@@ -1101,6 +1136,8 @@ Preview (schematic drawn from the map, not a game screenshot): [forest-2-trap-pl
 Three rooms, left to right: `forest-entry` (x 0-1280), `forest-canopy` (x 1280-1952), `forest-boss` (x 2112-2560, entrance 2192,304; the 160 px between canopy and boss is void, the healer scene runs there). Mastered required routes: entry **16.27 s**, canopy **5.00 s** (budget about 20 s, D3).
 
 **`forest-entry` has no free floor.** Between the hazards that already stand there, the only gaps are 64 px (x 688-752, between the Bomb's blast and the YellowMob's reach), 16 px (896-912) and 48 px (1008-1056). A thorn tuft or explosive needs a 128-176 px jump envelope; a falling trap or vine needs a clear column; a puffball needs a crossing. The room already teaches stomp, ladder and lever, quicksand, the Bomb, wall jump and sword, and its route is 16.27 s, so a death late in it replays 16 s. **Plan: the entry room is not touched.**
+
+**Later (#376, 2026-11-17):** the 64 px gap at x 688-752 is now the seam between `forest-entry` (x 0-736) and `forest-walls` (x 736-1280); the second YellowMob's left patrol end moved from x 752 to x 816. Neither room has gained free floor for a trap.
 
 **Later (D63, #295 phase 2): the 128 px canopy slot below holds the `FalseHoneyFungus` at x 1672** (cloud x 1672-1696, zone x 1608-1760), and the harmless `HoneyFungus` stands in `forest-0-lever` (x 150) and `forest-0-wall` (x 1804); see D63 "As built". The mastered floor routes through the canopy take off at hero x 1600 to clear the cloud.
 

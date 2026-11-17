@@ -39,6 +39,9 @@ RoomReplayTest measured each normal route on three matching attempts:
 | forest-entry | 16.27 s | 20.00 s |
 | forest-canopy | 5.00 s | 5.00 s |
 
+Since [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) (2026-11-17) `forest-entry` is split: `forest-entry` 6.80 s required / 10.40 s all coins and
+`forest-walls` 8.80 s (`RoomReplayTest`); the rows above are the historical measurement of this validation run.
+
 Collection returns measured entry/canopy at 14.78/5.13 s, 14.25/5.00 s and
 14.25/5.00 s. These are headless route measurements, not human playtest results.
 BossCombatTest includes escape checks at 30/60/120 steps per second; these do

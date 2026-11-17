@@ -139,8 +139,8 @@ voice with no key names, as LOCALIZATION.md requires.
 ### 1.7 The label above the hero (continuous, inside `controls` zones)
 
 Composed at runtime by `Player.contextHint()` / `actionPrompt()` as `<binding>: <action> - <target>`,
-13 px font, 200 px wide, up to three lines. Active in every `forest-0` room and in `forest-2`'s
-`forest-entry` room (`controls = true` zones).
+13 px font, 200 px wide, up to three lines. Active in every `forest-0` room (`controls = true` zones); `forest-2`'s
+`forest-entry` zone was removed with its practice objects (#376, 2026-11-17).
 
 | Keys | Role |
 | --- | --- |

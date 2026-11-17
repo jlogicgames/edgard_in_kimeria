@@ -106,6 +106,15 @@ class DirectionalActionsTest {
     private Input previousInput;
     private Files previousFiles;
 
+    /**
+     * Test resource {@code tiles/practice-test.tmx}: the D24 practice stone, carryable torch, practice lever and torch
+     * and the ladder that forest-2's first room held before #376 (same ids and positions), inside a whole-room control
+     * zone, then a hall and a boss room so a collection return works. The shipped map dropped them (D72: forest-0 now
+     * teaches all of them); the carry, lever and ladder hint behaviour they exercise is general, so these tests keep it
+     * on the fixture.
+     */
+    private static final String PRACTICE_MAP = "practice-test";
+
     @BeforeEach void setUp() {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics;
         previousInput = Gdx.input; previousFiles = Gdx.files;
@@ -642,7 +651,8 @@ class DirectionalActionsTest {
         tap(ranged()); frames(20);
         assertTrue(mob.isDefeated());
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
+        for (int room = 0; room < 3; room++) level.enterNextRoom(player());
+        frames(2);
         var boss = level.boss();
         var fireball = new com.jlogicsoftware.kimeria.entity.items.Fireball(level, boss.hitboxBounds().x, boss.hitboxBounds().y, true);
         level.objects.add(fireball); fireball.update(REAL_STEP);
@@ -730,7 +740,7 @@ class DirectionalActionsTest {
     @Test void fullRefillUsesTheLocalHintOutsideTutorialAndAutomaticallyCollectsWhenSpaceOpens() {
         scene(false);
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        level.enterNextRoom(player()); frames(2);
+        level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
         var refill = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::cast).findFirst().orElseThrow();
         level.player.position.set(refill.getX() - level.player.hitbox.offsetX,
@@ -797,7 +807,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void practiceLeverFramesItsOwnSpriteAndSwitchesTheTorchBothWays(boolean left) {
         scene(left);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         var trigger = level.triggers.stream().filter(t -> t.targetId.equals("practice-light")).findFirst().orElseThrow();
         level.player.position.set(trigger.centerX() - level.player.hitbox.offsetX - level.player.hitbox.width / 2,
             trigger.centerY() - level.player.hitbox.offsetY - level.player.hitbox.height / 2);
@@ -883,7 +893,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void trainingRoomRepeatsPickupPlaceAndThrow(boolean left) {
         scene(left);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         // Isolate carrying reminders here; the combined lever lesson/anchor has its own regression below.
         level.triggers.clear();
         standByEntranceStone();
@@ -912,7 +922,7 @@ class DirectionalActionsTest {
 
     @Test void trainingRoomTeachesThroughoutItsWidthAndHeight() {
         scene(false);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         standByEntranceStone();
         var stone = level.player.selectedCarryable();
         assertNotNull(stone);
@@ -934,7 +944,7 @@ class DirectionalActionsTest {
 
     @Test void trainingIsAbsentInLaterRoomsAndAvailableWhenReturningToTheFirstRoom() {
         scene(false);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         assertTrue(level.controlHintsActive());
         level.enterNextRoom(player());
         assertFalse(level.controlHintsActive());
@@ -950,7 +960,7 @@ class DirectionalActionsTest {
     void carryingStillTeachesTheNearbyLeverAtItsOwnAnchor(boolean left,
             com.jlogicsoftware.kimeria.entity.items.Carryable.Kind kind) {
         scene(left);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         var item = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
             && c.kind == kind).map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
         standByCarryable(item); pickup();
@@ -991,7 +1001,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void carryingReminderEndsOnCameraScrollAndRearmsOnEachPickup(boolean left) {
         scene(left);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         level.triggers.clear();
         var stone = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
             && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE)
@@ -1181,7 +1191,7 @@ class DirectionalActionsTest {
 
     @Test void theFirstForestRoomTeachesTheLadderOnlyThere() {
         scene(false);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
         frames(2);
         var ladder = level.ladders.get(0);
         standAt(ladder.centerX(), ladder.bottomY());
@@ -1198,19 +1208,6 @@ class DirectionalActionsTest {
         standAt(LADDER_X - 6, FLOOR_Y);
         assertEquals("", level.player.contextHint(), "Rooms outside the first teaching room do not repeat the lesson");
     }
-
-    @Test void theShippedFirstRoomLadderLeadsFromTheFloorToTheBatLedge() {
-        scene(false);
-        level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        frames(2);
-        var ladder = level.ladders.get(0);
-        standAt(ladder.centerX(), ladder.bottomY());
-        held.add(up()); frames(150);
-        assertFalse(level.player.onLadder());
-        assertEquals(ladder.topY(), feet(), .05);
-        assertTrue(level.currentRoomBounds().contains(level.player.hitboxBounds()));
-    }
-
 
     // ---- forest-0: map-authored hints and the walkable tutorial skeleton (#195) ----
 
@@ -1287,7 +1284,7 @@ class DirectionalActionsTest {
         assertEquals("Walk right to find the way out", level.player.zoneHint());
     }
 
-    @Test void onlyTheForestZeroLeverRoomAndForestThreeTeachControls() {
+    @Test void onlyTheForestZeroLessonRoomsTeachControls() {
         forestZero();
         standAt(level.hintZones().get(0).bounds().x + 40);
         assertTrue(level.controlHintsActive(), "The lever room (#186) teaches controls; later rooms' tickets add theirs");
@@ -1303,8 +1300,8 @@ class DirectionalActionsTest {
         assertFalse(level.controlHintsActive(), "The traps room (#200) has no lever, so no control zone");
         forestZero();
         level = new Level(assets, game, player(), "forest-2", Rectangle::new); frames(2);
-        assertTrue(level.controlHintsActive(), "forest-2 room 0 keeps its authored control zone");
-        assertEquals(1, level.hintZones().size());
+        assertFalse(level.controlHintsActive(), "forest-2 has no control zone since #376: forest-0 teaches the controls");
+        assertTrue(level.hintZones().isEmpty());
         level.enterNextRoom(player()); frames(2);
         assertFalse(level.controlHintsActive());
         assertNull(level.messageHint());

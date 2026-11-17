@@ -112,7 +112,7 @@ class Forest2TrapsTest {
     /** The shipped forest-2 with the hero in forest-canopy at its entrance and no ammunition. */
     private Level level() {
         Level l = new Level(assets, game, player(), "forest-2", Rectangle::new, emptyStock());
-        l.enterNextRoom(player());
+        l.enterNextRoom(player()); l.enterNextRoom(player());
         settle(l, 2);
         return l;
     }
@@ -221,7 +221,7 @@ class Forest2TrapsTest {
 
     @Test void theBossRoomWasOnlyTranslatedBy448() {
         Level l = new Level(assets, game, player(), "forest-2", Rectangle::new, emptyStock());
-        l.enterNextRoom(player()); l.enterNextRoom(player());
+        for (int room = 0; room < 3; room++) l.enterNextRoom(player());
         assertEquals(2560, l.currentRoomBounds().x, .01f);
         assertEquals(448, l.currentRoomBounds().width, .01f);
         assertEquals(2640, l.player.position.x, .01f);

@@ -106,36 +106,42 @@ class RoomReplayTest {
 
     @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
         // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
-        measure("forest-1", false, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
+        measure("forest-1", 1, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
     }
     /** #375: the first RedMob alone, then the refill; the sword takes the mob, no jump is needed. */
     @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
-        measure("forest-1-mob", false, false, 0, new float[]{});
+        measure("forest-1-mob", 0, false, 0, new float[]{});
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
-        measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860, 940});
+        measure("forest-entry", 0, false, 0, ENTRY_JUMPS);
+    }
+    /** #376: the wall room split off forest-entry at x 736; 860 and 940 jump onto the two tall walls. */
+    @Test void forestWallsRequiredRouteFitsTwentySeconds() {
+        measure("forest-walls", 1, false, 0, WALLS_JUMPS);
     }
     @Test void forestCanopyRequiredRouteFitsTwentySeconds() {
-        measure("forest-canopy", true, false, 0, new float[]{1400, FUNGUS_JUMP});
+        measure("forest-canopy", 2, false, 0, new float[]{1400, FUNGUS_JUMP});
     }
     @Test void forestEntryAllCollectablesFitThirtySeconds() {
-        measure("forest-entry", false, true, 40, new float[]{95, 140, 300, 535, 860, 940});
+        measure("forest-entry", 0, true, 40, new float[]{95, 140, 300, 535});
     }
     @Test void forestCanopyAllCollectablesFitThirtySeconds() {
-        measure("forest-canopy", true, true, 0, new float[]{1400, 1460, 1555});
+        measure("forest-canopy", 2, true, 0, new float[]{1400, 1460, 1555});
     }
+
+    private static final float[] ENTRY_JUMPS = {95, 225, 345, 535}, WALLS_JUMPS = {860, 940};
 
 
 
     @Test void repeatedCollectionReturnsReachMissedArtifactsWithRealMovementAndCannotFarm() {
         Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        for (int room = 0; room < 2; room++) {
+        for (int room = 0; room < 3; room++) {
             for (var o : new java.util.ArrayList<>(level.objects)) {
                 if (o instanceof Enemy<?> enemy) enemy.collidedWithActor(true);
                 if (o instanceof Collectable c && c.type() == ItemType.COIN) c.collideWithPlayer();
                 if (o instanceof Bomb bomb) { bomb.collideWithPlayer(); bomb.update(.81f); }
             }
-            if (room == 0) level.enterNextRoom(player());
+            if (room < 2) level.enterNextRoom(player());
         }
         level.prepareHealer();
         assertEquals(6, coins);
@@ -143,9 +149,12 @@ class RoomReplayTest {
         for (int trip = 0; trip < 3; trip++) {
             level.returnForCollection(player());
             held.clear(); pressed.clear(); timeScale = 1;
-            float entry = replay(level, "forest-entry", false, 0, new float[]{95, 225, 345, 535, 860, 940}, true);
+            float entry = replay(level, "forest-entry", false, 0, ENTRY_JUMPS, true);
             assertTrue(entry <= COLLECTION_LIMIT);
             assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT));
+            level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
+            float walls = replay(level, "forest-walls", false, 0, WALLS_JUMPS, true);
+            assertTrue(walls <= COLLECTION_LIMIT);
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
             float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
@@ -158,7 +167,8 @@ class RoomReplayTest {
             assertEquals(2, artifacts.items().size());
             assertTrue(level.canBrew());
             assertFalse(level.objects.stream().anyMatch(o -> o instanceof Enemy<?> || o instanceof Collectable));
-            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, canopy %.2f s%n", trip + 1, entry, canopy);
+            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, walls %.2f s, canopy %.2f s%n",
+                trip + 1, entry, walls, canopy);
         }
         assertTrue(level.brewElixir());
         assertEquals(0, coins);
@@ -169,6 +179,8 @@ class RoomReplayTest {
 
     @Test void realCanopyRouteKeepsCollapsedPlatformAndMainExitOpenUntilFreshLevel() throws Exception {
         Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        secureCombatAndCoins(level);
+        level.enterNextRoom(player());
         secureCombatAndCoins(level);
         level.enterNextRoom(player());
         secureCombatAndCoins(level);
@@ -187,8 +199,11 @@ class RoomReplayTest {
         level.prepareHealer();
         level.returnForCollection(player());
 
-        float entry = replay(level, "forest-entry", false, 0, new float[]{95, 225, 345, 535, 860, 940});
+        float entry = replay(level, "forest-entry", false, 0, ENTRY_JUMPS);
         assertTrue(entry <= REQUIRED_LIMIT);
+        level.enterNextRoom(player());
+        float walls = replay(level, "forest-walls", false, 0, WALLS_JUMPS);
+        assertTrue(walls <= REQUIRED_LIMIT);
         level.enterNextRoom(player());
         var platform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 115);
         assertNotSame(firstPlatform, platform);
@@ -203,6 +218,8 @@ class RoomReplayTest {
         assertTrue(platform.isRemoved(), "Securing the main exit retains the collapsed platform");
 
         Level freshLevel = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        secureCombatAndCoins(freshLevel);
+        freshLevel.enterNextRoom(player());
         secureCombatAndCoins(freshLevel);
         freshLevel.enterNextRoom(player());
         secureCombatAndCoins(freshLevel);
@@ -264,6 +281,9 @@ class RoomReplayTest {
         }
         assertTrue(level.fallingPlatforms.isEmpty(), "falling platforms are not introduced in the entry room");
         level.enterNextRoom(player());
+        assertTrue(level.fallingPlatforms.isEmpty(), "nor in the wall room");
+        assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "the bomb stays in the entry room (#376)");
+        level.enterNextRoom(player());
         assertEquals(1, level.fallingPlatforms.size(), "one optional falling platform in the canopy");
         assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "no bomb shares the canopy room");
         float platformX = level.fallingPlatforms.get(0).getX();
@@ -318,13 +338,13 @@ class RoomReplayTest {
         }
     }
 
-    private void measure(String route, boolean canopy, boolean collect, int delayFrames, float[] jumps) {
+    private void measure(String route, int roomIndex, boolean collect, int delayFrames, float[] jumps) {
         String mapName = route.startsWith("forest-1") ? "replay-forest-1" : "forest-2";
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
         Level level = new Level(assets, game, player(), mapName, Rectangle::new, stock);
-        // forest-1's trap course is room 2 since #375 put the first RedMob in a room of its own before it.
-        if (canopy || route.equals("forest-1")) level.enterNextRoom(player());
+        // forest-1's trap course is room 1 (0-based) since #375 put the first RedMob in a room of its own before it.
+        for (int room = 0; room < roomIndex; room++) level.enterNextRoom(player());
         float firstTime = 0;
         for (int attempt = 0; attempt < 3; attempt++) {
             coins = 0; timeScale = 1; held.clear(); pressed.clear();
