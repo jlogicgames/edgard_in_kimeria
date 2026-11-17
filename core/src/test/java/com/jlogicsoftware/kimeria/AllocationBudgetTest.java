@@ -21,6 +21,7 @@ import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
+import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
@@ -169,6 +170,11 @@ class AllocationBudgetTest {
     private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
     private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64, TRAP_TILE = 16, ROOT_HEIGHT = 24;
     private static final float HERO_WIDTH = 11, HERO_HEIGHT = 22;
+    /** #361: the hero walks under a new branch every 90 frames (a 0.8 s warning, then about 0.3 s of fall); 17 cover warm-up and measure. */
+    private static final int BRANCH_CYCLES = 17, BRANCH_CYCLE_FRAMES = 90;
+    private static final float BRANCH_Y = 240, BRANCH_WIDTH = 32, BRANCH_HEIGHT = 16;
+    /** Measured 0.0 to 0.1 B/frame in 7 of 8 runs and 6.0 in one (#361; 736.6 before the branch cached its four frames and the fall reused its two contact boxes). */
+    static final double FALLING_BRANCH_CEILING = 8;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
 
@@ -641,6 +647,37 @@ class AllocationBudgetTest {
             assertTrue(seen[phase.ordinal()], "the measured window must hold a root in " + phase);
         assertEquals(ThornTrap.Phase.ARMED, roots[roots.length - 1].phase(), "the last root must rise in the window");
         assertWithinBudget("thorn roots rise in turn", THORN_ROOT_CEILING, bytes);
+    }
+
+    /** The falling branch (#361): one at rest with its cracked-joint cue (the hero far), and a row of branches that the hero
+     * walks under in turn, one every {@value #BRANCH_CYCLE_FRAMES} frames: rustle, sag, fall and land, {@code update} and
+     * {@code render} each frame. The branches are built before the probe; the hero box is moved, never rebuilt. */
+    @Test void fallingBranchAtRestAndThroughItsWarning() {
+        Rectangle far = new Rectangle(FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        Rectangle hero = new Rectangle(-FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        Runnable none = () -> { };
+        FallingBranch resting = branch(-FUNGUS_SPACING, far, none);
+        FallingBranch[] branches = new FallingBranch[BRANCH_CYCLES];
+        for (int k = 0; k < branches.length; k++) branches[k] = branch(k * FUNGUS_SPACING, hero, none);
+        boolean[] warned = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = Math.min(i / BRANCH_CYCLE_FRAMES, branches.length - 1);
+            hero.x = k * FUNGUS_SPACING + BRANCH_WIDTH / 2;
+            resting.update(STEP); resting.render(batch);
+            for (int b = 0; b < branches.length; b++) {
+                branches[b].update(STEP); branches[b].render(batch);
+                warned[0] |= branches[b].frame() == FallingBranch.SAG;
+            }
+        });
+        assertEquals(FallingBranch.State.ARMED, resting.state(), "the far branch must stay at rest");
+        assertTrue(warned[0] && branches[branches.length - 1].state() != FallingBranch.State.ARMED, "the warning must actually run");
+        assertWithinBudget("falling branch", FALLING_BRANCH_CEILING, bytes);
+    }
+
+    private FallingBranch branch(float x, Rectangle hero, Runnable kill) {
+        return new FallingBranch(harness.assets(), new Rectangle(x, BRANCH_Y, BRANCH_WIDTH, BRANCH_HEIGHT),
+            new Rectangle(x, BRANCH_Y, BRANCH_WIDTH, FUNGUS_FLOOR - BRANCH_Y), FUNGUS_FLOOR, harness.game().trapWarnings(),
+            () -> hero, () -> true, kill);
     }
 
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */

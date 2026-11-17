@@ -836,7 +836,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-blast` | 32×32 | blast1..blast12 | 12 steps (#250): pale ball, orange ball with sparks, burst of puffs with a ground ring, fire mushroom under a dark-brown smoke cap, brown smoke saucer, ring, fade; the gameplay blast is 64×64 px, so draw at 2× (nearest) or keep the sprite as the visual core |
 | `trap-thorn-root` | 16×24 | hidden, peek1, peek2, rising, up | bone-coloured stake; peek1/peek2 is the wobble |
 | `trap-thorn-tuft` | 16×16 | calm, bristle, spiked | crimson-magenta stems with bone tips, deliberately not green like the bushes |
-| `trap-branch` | 32×16 | resting, rustle, sag, falling | rustle = leaves shake, sag = drooping with a split at the trunk |
+| `trap-branch` | 32×16 | resting, rustle, sag, falling | resting and rustle carry the at-rest cue (#361): a pale raw-wood band round the joint, cut by an ink zig-zag, and a chip under it; rustle = leaves shake, sag = drooping with a split at the trunk |
 | `trap-stone` | 16×16 | stone, cracked | boulder and impact frame |
 | `trap-shadow` | 24×8 | small, medium, large | near-black ground shadow (growing warning); the renderer may tint or scale |
 | `trap-puffball` | 16×16 | idle, swell1, swell2, burst | spore puffball mushroom |
