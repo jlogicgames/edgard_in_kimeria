@@ -204,7 +204,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final IntroInput dialogueInput = new IntroInput();
     private boolean pausedHealer;
     private IntroScreen intro;
-    /** The Kimeria arms whose sun lights up on the ending page (#416, D95); cut once at load. */
+    /** The Kimeria arms whose sun lights up on the ending page (#416, D95) and that mark the selected menu button (#415); cut once at load. */
     private KimeriaArms arms;
     private final IntroInput introInput = new IntroInput();
     private Music introMusic;
@@ -243,9 +243,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         hud = new Hud(assets, this, LOGICAL_W, LOGICAL_H);
         touchControls = new TouchControls(assets, this, uiViewport, LOGICAL_W, LOGICAL_H, platformTouch);
         touchControls.setLayout(touchLayout);
-        overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
-        healerView = new HealerDialogueView(assets);
         arms = new KimeriaArms(assets);
+        overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H, arms);
+        healerView = new HealerDialogueView(assets);
         menuBackdrop = new MenuBackdrop();
 
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/main_menu.mp3"));

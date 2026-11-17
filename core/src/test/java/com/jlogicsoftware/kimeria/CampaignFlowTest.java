@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
+import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.ui.Menu;
@@ -103,7 +104,7 @@ class CampaignFlowTest {
         set("touchControls", new com.jlogicsoftware.kimeria.ui.TouchControls(assets, game,
             new com.badlogic.gdx.utils.viewport.Viewport() { @Override public com.badlogic.gdx.math.Vector2 unproject(com.badlogic.gdx.math.Vector2 v) { return v; } },
             640, 360, true));
-        set("overlay", new Overlay(assets, 640, 360) {
+        set("overlay", new Overlay(assets, 640, 360, null) {
             @Override public float bodyHeight(String text, float width) { return 120; }
             @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache bodyBlock(String text, float x, float y, float width) { return null; }
         });
@@ -368,5 +369,52 @@ class CampaignFlowTest {
         finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
         assertFalse(progress.exists());
+    }
+
+    /**
+     * #415: the arms that mark the selected button sit outside it, inside the 640x360 screen and inside the button's own row,
+     * for every menu {@code Overlay.buttons} draws, in every language and every On/Off state, measured with the shipped fonts.
+     */
+    @Test void selectionArmsStayOnScreenBesideEveryButtonOfEveryMenu() throws Exception {
+        BitmapFont button = new MetricsFont(com.jlogicsoftware.kimeria.ui.FontSizes.BUTTON);
+        Overlay overlay = new Overlay(new Assets() {
+            @Override public BitmapFont font(int size) { return new MetricsFont(size); }
+        }, 640, 360, null);
+        set("settings", new Settings(prefs));
+        TrapWarnings warnings = (TrapWarnings) get("trapWarnings");
+        int menus = 0;
+        for (boolean on : new boolean[]{false, true}) {
+            set("leftHanded", on); set("screenShake", on); set("instantText", on);
+            if (warnings.longer() != on) warnings.toggle((Settings) get("settings"));
+            for (Language language : Language.values()) {
+                set("language", language);
+                for (String name : List.of("webStartMenu", "mainMenu", "confirmNewGameMenu", "aboutMenu", "optionsMenu",
+                    "assistMenu", "pauseMenu")) {
+                    Menu menu = (Menu) get(name);
+                    String where = language.code() + " " + name + " on=" + on;
+                    float width = overlay.buttonsWidth(menu), x = 320f - width / 2f;
+                    assertTrue(width <= Overlay.MAX_BUTTONS_W, where);
+                    for (int i = 0; i < menu.items.size(); i++) {
+                        String label = menu.items.get(i).label.get();
+                        assertTrue(new com.badlogic.gdx.graphics.g2d.GlyphLayout(button, label).width <= width - 48, where + " " + label);
+                    }
+                    float left = Overlay.selectionArmsLeftX(x), right = Overlay.selectionArmsRightX(x, width);
+                    assertTrue(left >= Overlay.SCREEN_MARGIN, where + " left arms at " + left);
+                    assertTrue(right + Overlay.SELECTION_ARMS_W <= 640 - Overlay.SCREEN_MARGIN, where + " right arms end " + right);
+                    // Outside the gold frame by the gap: they can never cover a label.
+                    assertEquals(x - Overlay.SELECTED_FRAME - Overlay.SELECTION_ARMS_GAP, left + Overlay.SELECTION_ARMS_W, 1e-3f, where);
+                    assertEquals(x + width + Overlay.SELECTED_FRAME + Overlay.SELECTION_ARMS_GAP, right, 1e-3f, where);
+                    menus++;
+                }
+            }
+        }
+        assertEquals(2 * Language.values().length * 7, menus);
+        // Within the selected row: never into the 8 px gap or the next button, whichever row is selected.
+        float top = Overlay.selectionArmsTop(100f);
+        assertTrue(top >= 100f && top + Overlay.SELECTION_ARMS_H <= 100f + Overlay.BUTTON_H, "arms rows " + top);
+        // Even a label wider than the screen keeps the arms on screen (the cap, not the text, bounds the width).
+        Menu wide = new Menu(null, null, List.of(new com.jlogicsoftware.kimeria.ui.MenuItem("W".repeat(200), () -> {})), null);
+        assertEquals(Overlay.MAX_BUTTONS_W, overlay.buttonsWidth(wide));
+        assertEquals(Overlay.SCREEN_MARGIN, Overlay.selectionArmsLeftX(320f - Overlay.MAX_BUTTONS_W / 2f), 1e-3f);
     }
 }
