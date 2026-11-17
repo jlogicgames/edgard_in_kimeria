@@ -102,11 +102,16 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
     /**
-     * Downward speed (px/s, gravity adds 9.8 per step) at which touching the floor counts as a landing that kicks up dust:
-     * 140 is about 14 frames of falling, a 16 px drop. Walking off a ledge keeps the coyote flag until the speed passes 147,
+     * Downward speed (px/s, gravity adds 588 px/s², 9.8 per 60 Hz step) at which touching the floor counts as a landing that kicks up dust:
+     * 140 is about 0.24 s of falling, a 16 px drop. Walking off a ledge keeps the coyote flag until the speed passes 147,
      * so a few pixels never puff, and a wall slide (speed times 0.1) never does either.
      */
     public static final float LANDING_MIN_FALL_SPEED = 140f;
+    /**
+     * Coyote time: after walking off a ledge the hero may still jump until he has fallen this long (the fall speed
+     * passes 147 px/s). It is the 15 frames of the 60 Hz build at every frame rate; at 120 Hz it was half (D98).
+     */
+    static final float COYOTE_SECONDS = .25f;
     /** The landing scuff plays at this fraction of the sound volume. */
     private static final float LANDING_SOUND_VOLUME = .6f;
     /** How slow the world runs from the killing frame until the death fade reaches black. */
@@ -1077,7 +1082,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private void updatePlayerMovement(float dt) {
         tryJump(dt);
 
-        if (velocity.y > gravityAcceleration() * 15) onGround = false; // coyote time
+        if (velocity.y > gravityPerSecond() * COYOTE_SECONDS) onGround = false; // coyote time
 
         if (!wallJumping) {
             velocity.x = horizontalMovement * MOVE_SPEED;
@@ -1124,7 +1129,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
             velocity.y = -jumpForce();
             if (inQuickSand) velocity.y *= 0.1f;
         }
-        position.y += velocity.y * dt;
+        // The launch frame's own lift, as designed at 60 Hz: one reference step at launch speed, whatever the frame time (D98).
+        if (dt > 0) position.y += velocity.y * REFERENCE_STEP;
         onGround = false;
     }
 
