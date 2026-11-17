@@ -1353,6 +1353,10 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Measured (scripted hero, real input, zero ammunition; `Forest2TrapsTest`, `RoomReplayTest`):** `forest-canopy` mastered route **9.48 s** (was 5.00 s), the same jumping the root or walking through it and with the longer-warnings assist; collection route 9.48 s (was 5.00 s); collection returns through the canopy 9.62 s then 9.48 s (was 5.13 / 5.00 s); `forest-entry` 16.27 s and 20.00 s unchanged. The vine is reached at 4.87 s and passed with 0.8 s of slack; a blind walker started at every 0.1 s offset is killed in 15 of 45 cases. The root is passed unlit by a takeoff with the body's right edge 5 to 57 px before it (measured every pixel); walking through the lit root survives. The stone warns for 49 / 73 updates (0.8 / 1.2 s).
 - **Test changes, stated plainly (no tolerance relaxed):** new `Forest2TrapsTest`; `BossCombatTest` coordinates 2112 -> 2560 and 2192,304 -> 2640,304; `RhythmTrapsTest` allowance (`ThornVine` in forest-2); `ExplosiveTrapsTest` census (one root in forest-2); `FallingTrapsTest` census (one stone, no branch in forest-2); `RoomReplayTest` unchanged. `tools/check_tiled_links.py` now applies an object group's `offsetx` / `offsety` like the game's loader (it ignored forest-2's -16 `SpawnPoints` offset); test added.
 - **Deviation from the approved plan:** the vine object is at x 1896, not 1908 (1908 is its anchor), so the plan's swept-area gaps hold.
+- **Agent check in the web build (Chrome, 2026-11-17, by the orchestrator, this branch before the merge of D86):** in `forest-1-route`, standing at
+  the lever with Up held, the lever and the ladder glowed and the fairy flew to the right screen edge and twinkled there, toward the off-screen
+  lift; at the pull the ladder dropped with the strong glow and the corner glints while she stayed at the edge; about 2 s later she was back with
+  Edgard; no console errors. This is an agent's look, not the author's play-through.
 - **Not verified:** the look in the running game, novice playtests, the feel of the 9.5 s retry loop, the vine's `phase` as a teaching choice (0 was kept because the mastered route passes with slack).
 
 ## D60. The Bomb gets its own redrawn sprite; the explosion shader is untouched
@@ -2387,7 +2391,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   a hero at the lever (x 1440) has the view x 1280 to 1920 (the room's left clamp), and the lift (x 1936 to 1968) lies **16 px
   beyond the right edge**: off screen (`FairyOffscreenTest.fromTheLeverTheLiftIsOffScreenAndTheLadderIsInView...`). The camera's
   dead zone moves the focus by under 50 px, which cannot bring it in. The Chrome check of 2026-11-17 that saw the lever, the ladder and
-  the lift glow was made in the lever lesson room of PR #431 (#418: the lift 80 px from the lever, the whole room one view), not in the
+  the lift glow was made in the lever lesson room `forest-1-lever` ([D86](#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17); #418: the lift 80 px from the lever, the whole room one view), not in the
   route room, so it does not contradict this: the in-view glow works, and in the route room, standing at the lever, the lift is off
   screen, which is the case this decision fixes. (In the author's original playtest screenshot of the route room the hero stood
   mid-room, where the lift was in view.) The design covers both cases (in view: the mark; out of view: the edge twinkle).
@@ -2396,17 +2400,22 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (`Player.InteractionTarget`, read at once by each caller). The new scene showed 24.6 B/frame before the fix.
 - **Allocation:** `AllocationBudgetTest.fairyGuidePointingOffScreenWithAPostPullGlow` (the hero at the route lever with Up held,
   the lift off screen, marks renewed every 60 frames; the fairy's update and both render passes): 0.6 to 2.0 B/frame in 3 isolated
-  runs, ceiling `FAIRY_GUIDE_CEILING` 8 B (the shared isolated-scene ceiling of the D82 and #303 fairy scenes, not D85's room rule of highest run plus 10 %, which
+  runs before the merge of D86 and 0.6, 0.6, 0.6 in 3 isolated runs after it (the route room is room 3 now), ceiling `FAIRY_GUIDE_CEILING` 8 B (the shared isolated-scene ceiling of the D82 and #303 fairy scenes, not D85's room rule of highest run plus 10 %, which
   applies to whole rooms; for this scene that rule would give 2.2, and the shared 8 B absorbs the JIT noise of one object per few hundred frames). The existing
   `fairyGuideWithPassiveGlows` measures 0.1 to 0.7. `HeadlessLevelHarness.roomOf` now passes one shared empty view instead of
   `Rectangle::new` (a supplier that makes a rect per call would itself allocate under the fairy). The new helpers are in
   `tools/check_allocations.py` `HOT_METHODS`.
-- **Tests (new, `FairyOffscreenTest`, 18):** the edge point for right, left, above, below, both corners, direction kept and inside the
+- **Room changes.** `Level.activateRoom` (next room, retry, collection return and the dev `reloadAt`) calls the new `FairyGuide.reset()`: the marks,
+  the selection and the off-screen cue go and she comes back to his shoulder without a flight. Found in review: without it she flew toward the old
+  room's lift for 1.5 s after a pull and a room change.
+- **Tests (new, `FairyOffscreenTest`, 21):** the edge point for right, left, above, below, both corners, direction kept and inside the
   inset, and an inside point unchanged (Y down); on the real route room: the lift off and the ladder in view from the lever, the
   selected cue (twinkle at the right edge), the post-pull cue and its 1.5 s end with the return to his shoulder, the 0.8 glow and
-  its fade, Up held through the pull, every mechanism in view (unchanged D82 behaviour plus the mark), no view, an empty marked set,
-  nearest and sticky choice among two, above and below, and the selection unchanged. No existing test changed and no threshold
-  moved; `./gradlew test` 981 tests, 0 failures.
+  its fade, Up held through the pull, every mechanism in view (unchanged D82 behaviour plus the mark), no view, a real pull of a trigger that drives nothing,
+  nearest and sticky choice among two, above and below, the selection and position identical with and without the cue, a room change and a room
+  reset dropping the marks, and a thrown stone hitting a lever (`throwHitsLever`) marking its mechanisms. No existing test changed and no threshold
+  moved; `./gradlew test` 1,013 tests, 1 skipped (as before), 0 failures.
 - **Not verified:** the look and timing in the running game on desktop, web and touch (the glints around her, the 1.5 s, the 16 px
-  margin against the HUD hearts and the touch buttons). Tracked by #419 (play-through) and, for
+  top edge point, where she can sit under the HUD row (the coin and artifact icons top left, the fireball stock top right, y 10 to 42), which is
+  drawn over her: cosmetic; the touch controls sit in the portrait strip or side bars and never overlap the picture). Tracked by #419 (play-through) and, for
   the shared visual checks, [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
