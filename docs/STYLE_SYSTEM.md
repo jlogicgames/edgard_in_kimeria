@@ -15,7 +15,7 @@ Six principles. Every one is owned by decisions that already exist; D75 binds th
 | 1 | **Readable before lethal.** The player can read what matters: text at a size people read, dangers that look dangerous, decor that stays quiet. | [D70](DECISIONS.md#d70-minimum-text-size-raised-for-everyone-playtest-f1-335), [D71](DECISIONS.md#d71-traps-are-visible-before-they-fire-2026-11-16), [D76](DECISIONS.md#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16) contrast tiers | `ui.FontSizes`; traps VISIBLE by default; active versus decor contrast |
 | 2 | **Fair and deterministic, cheap to retry.** One hit kills, attempts are unlimited, every death replays one short room, no route needs ammunition or a soft-lock escape. | [D2](DECISIONS.md#d2-one-hit-kills-attempts-are-unlimited), [D3](DECISIONS.md#d3-death-resets-the-current-room-and-respawn-is-instant), [D7](DECISIONS.md#d7-traps-are-deterministic-puzzle-elements), [D19](DECISIONS.md#d19-test-a-20-second-replay-and-60-second-first-learning), [D26](DECISIONS.md#d26-observe-plan-before-committing) | shared warning times (`TrapWarnings`), D26 sweeps in the room tests |
 | 3 | **Every room gives something new**, taught alone, then combined. | [D72](DECISIONS.md#d72-every-room-gives-the-player-something-new), D33-D40, D48 | room cards, at most two introductions outside lessons |
-| 4 | **A hazard warns before it acts and shows a consequence after**: the D7 telegraph before, a visible and audible result after (screen shake only through `ScreenShake` and its Assist option, D62), and no effect hides a warning. | D7, [D73](DECISIONS.md#d73-falling-stone-impact-feedback-347-2026-11-16) (the model), D75 | the falling stone's dust, chips, sound and shake; the other hazards are audited in [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388) |
+| 4 | **A hazard warns before it acts and shows a consequence after**: the D7 telegraph before, a visible and audible result after (screen shake only through `ScreenShake` and its Assist option, D62), and no effect hides a warning. | D7, [D73](DECISIONS.md#d73-falling-stone-impact-feedback-347-2026-11-16) (the model), D75, [D93](DECISIONS.md#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17) (hit or miss) | the falling stone's dust, chips, sound and shake (the model); complete for the stone, deadfall, bramble, hive, stump, root and bomb; the thorn vine's motion is its own warning (D46); the rest are in "Known gaps" (D93: [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443) to [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448), enemies [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240)) |
 | 5 | **The tale is shown, not only told**, in two voices: the tale voice for narration and the healer, plain words for hints and labels. | [D74](DECISIONS.md#d74-text-style-system-two-voices-glossary-and-a-gate-339-2026-11-16), D66 (#337, #338, #340, #341) | glossary, register lists, "show what the tale names" |
 | 6 | **Crude, original craft.** Native pixel art from authored sprites, detailed art only for portraits and HUD icons; crude lo-fi voice-synth sounds, generated, never sampled. Nothing procedural stands in for an object. | [D21](DECISIONS.md#d21-remake-and-remaster-preserving-the-original-artists-style), [ART_DIRECTION.md](ART_DIRECTION.md), [SOUND_DIRECTION.md](SOUND_DIRECTION.md) | `check_sprite_art.py`, `tools/audio/generate_sounds.py` |
 
@@ -29,10 +29,10 @@ unexplained death is a defect, a landmark per room and a calm beat after danger 
 | --- | --- | --- | --- | --- |
 | Text size | D70 (D33, D49, D50 for hint geometry) | `ui.FontSizes`, [TEXT_STYLE.md](TEXT_STYLE.md) §3 | `FontSizesTest`, `LocalizationLayoutTest`, `HealerDialogueTest`, `HintLayoutTest` | [kimeria-rendering](../.agents/skills/kimeria-rendering/SKILL.md) |
 | Player-facing text | D74 | [TEXT_STYLE.md](TEXT_STYLE.md), [TEXT_AUDIT.md](TEXT_AUDIT.md), [LOCALIZATION.md](LOCALIZATION.md), [STORY.md](STORY.md) | `check_text_style.py` (`validateTextStyle`); `HealerDialogueTest` | [kimeria-game-text](../.agents/skills/kimeria-game-text/SKILL.md), [kimeria-dialogue](../.agents/skills/kimeria-dialogue/SKILL.md) |
-| Traps | D71 (D7, D42, D44-D47, D63) | [TRAPS.md](TRAPS.md); history in [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md) | `TrapCatalogTest`, `TrapTeachingRoomTest`; `Level` validators and `check_tiled_links.py` | [kimeria-trap-design](../.agents/skills/kimeria-trap-design/SKILL.md) |
+| Traps | D71 (D7, D42, D44-D47, D63) | [TRAPS.md](TRAPS.md); history in [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md) | `TrapCatalogTest` (with each card's D93 consequence), `TrapTeachingRoomTest`; `Level` validators and `check_tiled_links.py` | [kimeria-trap-design](../.agents/skills/kimeria-trap-design/SKILL.md) |
 | Rooms | D72 (D19, D26, D33-D40, D48) | [ROOMS.md](ROOMS.md), [ROOM_CARDS.md](ROOM_CARDS.md) | `RoomCardsTest`, `TrapTeachingRoomTest`, the route and replay tests | [kimeria-room-design](../.agents/skills/kimeria-room-design/SKILL.md), [kimeria-level-authoring](../.agents/skills/kimeria-level-authoring/SKILL.md) |
-| Effects | D73 (D62, D64, D65) | [ART_DIRECTION.md](ART_DIRECTION.md) "Environment effects", [DEVELOPMENT.md](DEVELOPMENT.md#particles-and-the-allocation-guard) | `AllocationBudgetTest`, `check_allocations.py` | [kimeria-particles](../.agents/skills/kimeria-particles/SKILL.md) |
-| Sound | author's aesthetic decision (2026-11-12), #313, D73 | [SOUND_DIRECTION.md](SOUND_DIRECTION.md) | `tools/test_generate_sounds.py`, `SoundPreloadTest` | [kimeria-sound](../.agents/skills/kimeria-sound/SKILL.md) |
+| Effects | D73, D93 (D62, D64, D65) | [ART_DIRECTION.md](ART_DIRECTION.md) "Environment effects", [DEVELOPMENT.md](DEVELOPMENT.md#particles-and-the-allocation-guard) | `AllocationBudgetTest`, `check_allocations.py` | [kimeria-particles](../.agents/skills/kimeria-particles/SKILL.md) |
+| Sound | author's aesthetic decision (2026-11-12), #313, D73, D93 | [SOUND_DIRECTION.md](SOUND_DIRECTION.md) | `tools/test_generate_sounds.py`, `SoundPreloadTest`; `TrapCatalogTest` (a trap card's D93 consequence names a sound that exists) | [kimeria-sound](../.agents/skills/kimeria-sound/SKILL.md) |
 | Art | D21, D43, D55, D60; contrast tiers D76; dialogue screen D78; fairy D82 (swept by `check_contrast.py`) | [ART_DIRECTION.md](ART_DIRECTION.md) (contrast: ["Contrast tiers"](ART_DIRECTION.md#contrast-tiers-d76-playtest-f15-344); ["Dialogue screen"](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337)), [PORTRAITS.md](PORTRAITS.md) | `check_sprite_art.py` (`validateSpriteArt`), `check_contrast.py` (`validateContrast`), `test_dialogue_frame_sprites.py` (CI tool tests), `check_named_parameters.py` | [kimeria-art-direction](../.agents/skills/kimeria-art-direction/SKILL.md) |
 | Story shown | D66, #340 (the fire is the healer's gift), D78 (the dialogue screen: the thread between the two portraits), [D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16) (the fairy helper shows the interaction target) | [STORY.md](STORY.md), [HEALER.md](HEALER.md), TEXT_STYLE §2 | `HealerDialogueTest` | [kimeria-dialogue](../.agents/skills/kimeria-dialogue/SKILL.md) |
 | Agent tooling | D75 | [.agents/skills/README.md](../.agents/skills/README.md), AGENTS.md | `check_skills.py` (`validateSkills`), `check_doc_gaps.py` (`validateDocGaps`) | this page |
@@ -54,7 +54,11 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
   [#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345)) and nothing that can hurt wears it, so a
   pickup never reads as an enemy (playtest F19); `check_contrast.py` measures collectables over their halo.
 - **Hazard, effects and sound (principle 4).** The warning is the trap's or enemy's telegraph (D7, kimeria-combat for
-  wind-ups); the consequence is a particle effect and a generated sound, with shake through `ScreenShake` only.
+  wind-ups), its length from `TrapWarnings`; a warning sound is welcome, not required. The consequence is what the
+  hazard's own act shows and sounds when it fires, falls, bursts or strikes, hit or miss: a visible result (frames or
+  particles) and a generated sound, with shake through `ScreenShake` only and only for heavy impacts. The shared death
+  beat (`hit`, slow motion, the thread, D81) is the hero's consequence, not the hazard's. A clocked hazard is heard only
+  while it is in the camera view (D89, D90).
 - **Dialogue screen, art and text (D78).** The frame keeps the contrast tiers by analogy: what names the speaker or can be
   chosen is loud, the ornament and the listener quiet, every element measured (`test_dialogue_frame_sprites.py`, layout
   read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box in three of its four lines in five languages, one spare
@@ -119,10 +123,17 @@ The full list with links: [.agents/skills/README.md](../.agents/skills/README.md
 
 Each has an open issue whose checklist includes updating this page.
 
-- Principle 4 is met by the falling stone only; every other hazard is to be audited
-  ([#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388)).
-- The playtest changes are not yet checked in the running game: sizes, trap read distance, impact feedback
-  ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+- Principle 4 (D93): these hazards act without a sound or particles of their own:
+  - the falling branch lands without the stone's impact feedback ([#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443));
+  - the falling platform, rotten log and rotten branch give way in silence ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444));
+  - the puffball and the honey fungi burst in silence ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445));
+  - the thorn root and the thorn tuft spring in silence ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446));
+  - the RedMob's whip and the boss's sweeps strike in silence ([#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447));
+  - whether the bomb and the exploding stump and root shake the screen is not decided yet ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448)).
+- Enemy warnings: the YellowMob and the bat have no notice or wind-up beat, and the RedMob's and the boss's wind-ups
+  ignore the assist ([#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240)).
+- The playtest changes are not yet checked in the running game: sizes, trap read distance, impact feedback, and that no
+  effect hides a neighbouring warning ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
 - The uk, pl, de and be glossary forms are not yet reviewed by native speakers
   ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)).
 - The Codex side of the hooks and of the Claude skill import is not yet checked in Codex itself ([#389](https://github.com/jlogicgames/edgard_in_kimeria/issues/389)).

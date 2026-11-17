@@ -287,8 +287,8 @@ next experiment. Four stage names/icons alone do not complete the mechanics MVP.
   Follow-ups, in this order:
   - [x] [#344](https://github.com/jlogicgames/edgard_in_kimeria/issues/344) contrast tiers (D76, gate `validateContrast`),
     which principle 1 and D71's VISIBLE lean on.
-  - [ ] [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388) audit every hazard against principle 4 (warn
-    before, consequence after); one fix issue per gap it finds.
+  - [x] [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388) audit every hazard against principle 4 (warn
+    before, consequence after): D93; one fix issue per gap, #443 to #448, enemies in #240.
   - [ ] [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368) and
     [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) in-game and native-speaker checks of the playtest
     changes.
