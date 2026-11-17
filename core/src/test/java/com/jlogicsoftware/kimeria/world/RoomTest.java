@@ -266,6 +266,7 @@ class RoomTest {
 
     @Test void artifactPickupIsProvisionalAndDeathRestoresItWithoutChangingCoins() {
         Level level = forest();
+        level.enterNextRoom(player()); // #417: the Bat lies on the second wall, in forest-walls
         Collectable bat = artifact(level, ItemType.BAT);
         bat.collideWithPlayer();
         bat.collideWithPlayer();
@@ -281,8 +282,9 @@ class RoomTest {
 
     @Test void roomExitsKeepArtifactsWithoutAutomaticCombatBonus() {
         Level level = forest();
+        level.enterNextRoom(player()); // #417: the Bat is in forest-walls
         artifact(level, ItemType.BAT).collideWithPlayer();
-        level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player());
         artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         assertEquals(2, artifacts.items().size());
         assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-2"), "Mushroom is still provisional");
@@ -525,6 +527,7 @@ class RoomTest {
 
     @Test void forestThreeRegistersBatAndMushroomAsItsOptionalIngredients() {
         Level level = forest();
+        level.enterNextRoom(player()); // #417: the Bat is in forest-walls
         assertEquals(java.util.Set.of(ItemType.BAT, ItemType.MUSHROOM), artifacts.requiredForLevel("forest-2"));
         assertNotNull(artifact(level, ItemType.BAT)); // The Mushroom lives in a later room; the route replays collect it.
     }
@@ -532,8 +535,10 @@ class RoomTest {
     @Test void canBrewFollowsTheLevelsIngredientsRegistry() {
         coins.set(25);
         Level level = forest();
-        collect(level, ItemType.COIN, ItemType.BAT);
-        level.enterNextRoom(player()); level.enterNextRoom(player());
+        collect(level, ItemType.COIN);
+        level.enterNextRoom(player());
+        collect(level, ItemType.BAT); // #417: forest-walls
+        level.enterNextRoom(player());
         collect(level, ItemType.COIN);
         level.prepareHealer();
         assertFalse(level.canBrew(), "forest-2 requires Bat and Mushroom");
@@ -546,8 +551,10 @@ class RoomTest {
     @Test void healerNeedsEveryUniqueForestCoinAndPaysOnceWithoutSpendingEarlierCoins() {
         coins.set(19); // Currency from another level.
         Level level = forest();
-        collect(level, ItemType.COIN, ItemType.BAT);
-        level.enterNextRoom(player()); level.enterNextRoom(player());
+        collect(level, ItemType.COIN);
+        level.enterNextRoom(player());
+        collect(level, ItemType.BAT); // #417: forest-walls
+        level.enterNextRoom(player());
         collect(level, ItemType.COIN, ItemType.MUSHROOM);
         assertEquals(6, level.forestCoinTotal());
         assertFalse(level.canBrew(), "Current-room pickups must first be secured");
@@ -584,7 +591,9 @@ class RoomTest {
             ItemType[] wanted = java.util.Arrays.stream(ItemType.values())
                 .filter(t -> t != missing).toArray(ItemType[]::new);
             collect(level, wanted);
-            level.enterNextRoom(player()); level.enterNextRoom(player());
+            level.enterNextRoom(player());
+            collect(level, wanted); // #417: the Bat is in forest-walls
+            level.enterNextRoom(player());
             collect(level, wanted);
             level.prepareHealer();
             assertFalse(level.canBrew(), "Missing " + missing);
@@ -605,7 +614,7 @@ class RoomTest {
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         bomb.collideWithPlayer(); bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 1.01f);
         collect(level, ItemType.COIN); // Deliberately miss Bat.
-        level.enterNextRoom(player()); // forest-walls: no pickups (#376).
+        level.enterNextRoom(player()); // forest-walls: the Bat on the second wall, missed on purpose (#417).
         level.enterNextRoom(player());
         collect(level, ItemType.COIN); // Deliberately miss Mushroom.
         level.prepareHealer();
@@ -622,14 +631,16 @@ class RoomTest {
             }
             assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
             assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.COIN));
-            collect(level, ItemType.BAT);
-            assertEquals(1, artifacts.items().size());
-            level.resetCurrentRoom(player()); // The new Bat is provisional; old coins and kills are secured.
-            assertTrue(artifacts.items().isEmpty());
+            level.resetCurrentRoom(player()); // Old coins and kills are secured; nothing here is provisional.
             assertEquals(2, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance).count());
             assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
+            level.enterNextRoom(player()); // forest-walls holds the Bat (#417)
+            collect(level, ItemType.BAT);
+            assertEquals(1, artifacts.items().size());
+            level.resetCurrentRoom(player()); // The new Bat is provisional.
+            assertTrue(artifacts.items().isEmpty());
             assertNotNull(artifact(level, ItemType.BAT));
-            level.enterNextRoom(player()); level.enterNextRoom(player());
+            level.enterNextRoom(player());
             level.prepareHealer();
             assertEquals(6, level.forestCoinsSecured());
             var visitsField = Level.class.getDeclaredField("visits");
@@ -638,8 +649,9 @@ class RoomTest {
                 "Secured snapshots remain bounded to the three visited rooms across repeated returns");
         }
         level.returnForCollection(player());
+        level.enterNextRoom(player());
         collect(level, ItemType.BAT);
-        level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player());
         collect(level, ItemType.MUSHROOM);
         level.prepareHealer();
         assertTrue(level.canBrew());
@@ -720,7 +732,7 @@ class RoomTest {
         level.resetCurrentRoom(player());
         var initialFalling = level.fallingPlatforms.get(0);
         assertEquals(256, initialFalling.getY());
-        assertNotNull(artifact(level, ItemType.BAT));
+        assertTrue(level.objects.stream().noneMatch(o -> o instanceof Collectable c && c.type() == ItemType.BAT), "#417: the Bat left the entry room");
         var initialDoor = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Wall.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.Wall.class::cast).findFirst().orElseThrow();
         var initialLift = level.escalators.get(0);

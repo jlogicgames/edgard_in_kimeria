@@ -918,10 +918,10 @@ class BossCombatTest {
         Collectable securedCoin = world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
             .filter(c -> c.type() == ItemType.COIN).findFirst().orElseThrow();
         securedCoin.collideWithPlayer();
+        enter.invoke(running); // forest-walls holds the Bat ingredient (#417).
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
             .filter(c -> c.type() == ItemType.BAT).forEach(Collectable::collideWithPlayer);
         enter.invoke(running);
-        enter.invoke(running); // forest-walls holds no pickups.
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); // Healer secures the canopy before opening.
         var firstMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
@@ -966,7 +966,7 @@ class BossCombatTest {
         assertTrue(running.artifacts().items().isEmpty());
         Level restarted = (Level) levelField.get(running);
         assertEquals(0, restarted.forestCoinsSecured());
-        assertEquals(4, restarted.objects.stream().filter(Collectable.class::isInstance).count());
+        assertEquals(3, restarted.objects.stream().filter(Collectable.class::isInstance).count(), "the entry room's three coins; the Bat is in forest-walls (#417)");
     }
 
     @Test void escapePausesTheDialogueWithoutAdvancingTextAndResumeKeepsItsState() throws Exception {

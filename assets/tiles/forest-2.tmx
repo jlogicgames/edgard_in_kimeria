@@ -112,7 +112,7 @@
     <property name="Intensity" type="int" value="300"/>
    </properties>
   </object>
-  <object id="94" name="Bat" type="Collectable" x="448" y="240" width="16" height="16"/>
+  <object id="94" name="Bat" type="Collectable" x="992" y="224" width="16" height="16"/>
   <object id="95" name="Mushroom" type="Collectable" x="1728" y="208" width="16" height="16"/>
   <object id="108" name="Torch" type="Torch" x="2624" y="256" width="16" height="16">
    <properties>

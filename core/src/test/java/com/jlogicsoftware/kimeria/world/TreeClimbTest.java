@@ -180,8 +180,13 @@ class TreeClimbTest {
         var checkpoint = level.objects.stream().filter(Checkpoint.class::isInstance).map(Checkpoint.class::cast).findFirst().orElseThrow();
         assertEquals(CHECKPOINT_X, checkpoint.getX(), 0.01f);
         assertEquals(CROWN, checkpoint.getY() + checkpoint.getHeight(), 0.01f, "it stands on the crown");
-        assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?> || o instanceof LethalHazard || o instanceof Collectable),
-            "no enemy, no lethal trap, no coin: the climb is the only new thing (D72) and a calm beat after the guard room");
+        assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?> || o instanceof LethalHazard),
+            "no enemy, no lethal trap: a calm beat after the guard room");
+        var coins = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).toList();
+        assertEquals(1, coins.size(), "#417 (D96): one first coin, nothing else to collect");
+        assertEquals(com.jlogicsoftware.kimeria.entity.items.ItemType.COIN, coins.get(0).type());
+        assertEquals(FLOOR, coins.get(0).getY() + coins.get(0).getHeight(), 0.01f, "on the floor line");
+        assertTrue(coins.get(0).getX() < 3168 - 16, "off the climb: left of the first trunk");
         assertEquals("", level.player.zoneHint(), "no hints");
     }
 
