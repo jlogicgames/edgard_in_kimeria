@@ -113,8 +113,13 @@ public final class HeadlessLevelHarness {
     public Assets assets() { return assets; }
     public GameContext game() { return game; }
 
-    public Level roomOf(String name, int index) {
-        Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, Rectangle::new);
+    public Level roomOf(String name, int index) { return roomOf(name, index, () -> emptyView); }
+    /** The view the plain {@code roomOf} gives the level: empty, one shared instance (a supplier that made a rect per call would itself allocate per frame under the fairy guide, D87). */
+    private final Rectangle emptyView = new Rectangle();
+
+    /** As {@link #roomOf(String, int)} with the camera's visible world rect the level (and the fairy guide, D87) reads. */
+    public Level roomOf(String name, int index, java.util.function.Supplier<Rectangle> view) {
+        Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, view);
         for (int i = 0; i < index; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
         return level;
     }

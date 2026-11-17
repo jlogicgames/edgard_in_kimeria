@@ -205,7 +205,7 @@ The healer's fairy is an original pixel drawing in three sheets, from grids in `
   - fly ×2, 0.06 s each;
   - point ×3, 0.1 s each, a thin wand held out, its star lighting, the last frame held;
   - the three point frames flipped (grid `flip`, never at runtime);
-  - appear ×2, 0.2 s each: the one-time twinkle after the start tale.
+  - appear ×2, 0.2 s each: the one-time twinkle after the start tale, looped for the twinkle at the screen edge toward an off-screen linked mechanism (D87).
   - Idle and fly are symmetric (grid `mirror`), so they need no facing.
 - **`fairy-glow.png`, 24×24:** three stepped aqua rings (`123432`, `286a66`, `3c9c92`), drawn additively as a
   nine-slice with 8 px corners. It is the target glow (selected 1.0, passive 0.3) and, at 20×20 with alpha 0.6 to 0.9,

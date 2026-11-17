@@ -194,6 +194,9 @@ A lever that drives more than one mechanism must be taught first, in a safe room
 states, both in view at the pull, a wrong pull free ([D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17),
 [D84](DECISIONS.md#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17)). Built with automated tests only; the author's
 play-through is tracked by [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418).
+When such a lever is selected or pulled, the fairy guide marks every mechanism it drives: those in view keep a clear glow for 1.5 s after the pull,
+and one outside the camera view sends her to the screen edge in its direction, where she twinkles, then she returns to Edgard
+([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419)).
 
 The Mechanics MVP should test an introduction to one visible link, a route choice with
 a legible optional consequence, and a combination with a familiar enemy or hazard.

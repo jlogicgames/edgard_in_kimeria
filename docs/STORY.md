@@ -145,7 +145,7 @@ donor gives. She has no name (names stay undecided, above).
 
 - **Shown, not only told:** she arrives at Edgard's shoulder with a twinkle when the forest-0 start tale ends, and
   stays with him in every level. When he reaches for a thing his hand can wake or take, her light falls on it at
-  once, and she flies to it and points. She fights nothing and carries nothing.
+  once, and she flies to it and points; when what a lever wakes lies beyond the edge of his sight, she flies to that edge and twinkles toward it ([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17)). She fights nothing and carries nothing.
 - **Approved texts (EN source, 2026-11-16, variant V1 of the Phase A proposal):**
   - New healer line `HEALER_TALE_FAIRY`, after `HEALER_TALE_FIREGIFT` (start tale, 9 lines): "And my last gift,
     Edgard: a fairy, one of the little lights the night could not put out. When you reach for a thing, she flies to it

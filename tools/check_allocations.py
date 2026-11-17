@@ -37,6 +37,12 @@ HOT_METHODS = {
     ('effects/SporeCloud.java', 'burst'): 'called from FungusTrap.update when the swell ends (writes the cloud into the fixed pool)',
     ('effects/SporeCloud.java', 'spawn'): 'called from SporeCloud.burst, inside FungusTrap.update',
     ('entity/objects/HoneyFungus.java', 'burst'): 'called from FungusTrap.update when the swell ends (writes the spores into the fixed pool)',
+    ('ui/FairyGuide.java', 'offscreenTarget'): 'called from FairyGuide.update every frame (D87: picks the off-screen mechanism)',
+    ('ui/FairyGuide.java', 'nearestOffscreen'): 'called from FairyGuide.offscreenTarget every frame',
+    ('ui/FairyGuide.java', 'edgePoint'): 'called from FairyGuide.update every frame an off-screen mechanism is marked',
+    ('ui/FairyGuide.java', 'changedStrength'): 'called from FairyGuide.renderBehind and renderFront for every marked mechanism',
+    ('entity/player/Player.java', 'collectLinkedTargets'): 'called from FairyGuide.update every frame (D87)',
+    ('entity/player/Player.java', 'selectedInteraction'): 'called every frame a target is selected, by the fairy guide and the hint text (D87: now a reused instance)',
 }
 # (file, method, kind) -> what the excluded code carries and why fixing it would lose that.
 # Existing hot-path allocations are NOT listed: the check only looks at changed lines, so touching one means fixing it.
