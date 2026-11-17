@@ -2371,10 +2371,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     larger y and gets a point on the bottom edge. She flies there at the existing target rate (14 /s) and, within 8 px of the point
     (`TWINKLE_RANGE`: the point moves while a lift runs, and her smoothing lags it by a few px), plays the existing twinkle (the two
     "appear" frames looping) with the four glints around her frame. No new art.
-  - **Which one.** The nearest to the view centre (ties: smaller x, then y) of the selected lever's mechanisms and the marked ones that
+  - **Which one (D87 as built, one target).** The nearest to the view centre (ties: smaller x, then y) of the selected lever's mechanisms and the marked ones that
     are off screen; the one she already serves keeps the job while it stays off screen (no flip-flop between near-equal distances).
-    Cycling through several was not built: the only lever in the game with two mechanisms (`Route`) has one off screen, and a cycle
-    adds a second moving thing to read. If a later room needs two off-screen mechanisms read at once, cycling is the next step.
+    **Superseded by the update (#434) below:** with several off screen she now cycles through them; with exactly one the rule is the
+    one above, unchanged.
   - **While and after.** She goes to the edge while a lever is selected (Up held at it) and for 1.5 s after a pull, whether or not it
     is still selected. When no mechanism is off screen she behaves exactly as in D82 (points beside the selected target, idles at
     his shoulder). When the cue ends she flies back at the follow rate. The selection itself (`selected()`, the label, eligibility, D29,
@@ -2419,3 +2419,43 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   top edge point, where she can sit under the HUD row (the coin and artifact icons top left, the fireball stock top right, y 10 to 42), which is
   drawn over her: cosmetic; the touch controls sit in the portrait strip or side bars and never overlap the picture). Tracked by #419 (play-through) and, for
   the shared visual checks, [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+
+- **Update (#434, 2026-11-17): several off-screen mechanisms are shown in turn.**
+  - **Author's decision (2026-11-17, #434):** when several linked mechanisms are off screen, the fairy shows each of them, cycling,
+    not only the nearest. She stays at the edge for as long as Up is held at the lever (as built) and for the post-pull window.
+    Everything below is the agent's design, for the author to confirm or change.
+  - **Order.** The cycle starts at the nearest off-screen mechanism to the view centre (the D87 rule, so one target and the first of
+    several are chosen as before), then goes **clockwise round the view centre**: the next target is the one with the smallest
+    `atan2(dy, dx)` (Y down, so an increasing angle is clockwise on screen) greater than the last one's, ties by smaller x then y; after
+    the last it wraps to the smallest. Why not by distance: a distance order jumps between the near and far edge points of the
+    screen and back (zig-zag); every edge point lies on the view's border on the ray toward its mechanism, so angle order is the order
+    of the points along the border and each flight is to the neighbouring point, except the one wrap. The key is kept after a target
+    leaves, so the cycle goes on after its place.
+  - **Dwell.** 0.8 s of twinkle (`DWELL_SECONDS` = two loops of the 0.4 s appear/twinkle clip), counted from her arrival within 8 px
+    of the point (flight time is not part of it), then she flies to the next at the usual rate 14 (about 0.2 to 0.4 s). A hop ends
+    after 2 s at the latest (`HOP_MAX_SECONDS`) so a point she cannot reach (a fast-moving lift) never holds the cycle. 0.8 s is
+    long enough to read as "here" and short enough that three targets fit in a few seconds; it is not tested on a player.
+  - **No flicker.** The set is read again only at a hop. A target that comes into view (or is removed) ends its dwell at once and gets
+    the in-view mark instead; one that leaves the view joins at the next hop, not in the middle of a dwell. With one off-screen
+    target nothing hops: it keeps the job while it stays off screen and its dwell timer just restarts, so her position, mode and
+    twinkle clip are those of D87 (pinned step by step, `aSingleOffScreenTargetFliesTheD87PathAndNeverLeavesItsTwinkle`).
+    With none, nothing changed.
+  - **The post-pull window with several (agent's proposal, for the author).** 1.5 s cannot show three targets (about 1 s each).
+    The in-view marks keep 1.5 s (the glow is about the change itself), but the fairy's cue now has its own window,
+    `max(1.5 s, n x (0.8 s dwell + 0.4 s flight))` with n the number of marked mechanisms off screen at the first frame after the
+    pull (`FairyGuide.sizeCue`; two: 2.4 s, three: 3.6 s). For one it is 1.5 s as before. While Up is held at the lever she cycles
+    without a limit. Open for the author: whether 2.4 and 3.6 s of fairy after a pull are acceptable, or the cue should stay at 1.5 s.
+  - **Room change** (`reset()`) drops the cycle, its key and the cue copy, so the next cue starts at the nearest.
+  - **Tests.** `FairyOffscreenTest` +8 (now 29): three targets (nearest first, clockwise, wrap, 0.8 s of twinkle at each, the last one
+    inside its window), the flight between two edge points (goal = `edgePoint`, FLY then TWINKLE), the held-lever cycle (ladder, lift,
+    ladder, ... over 12 s), a target coming into view mid-dwell, a target leaving the view joining only at a hop, the window for three
+    and for one, the single target step for step, a room change. The scenarios are built in the tests (the shipped maps have no room
+    with two off-screen mechanisms for one lever; the route room's lift and ladder, plus its fireball refill as a third marked
+    entity). The old "nearest and sticky" test still passes: it holds within the first dwell. No threshold moved.
+  - **Allocation.** `AllocationBudgetTest.fairyGuideCyclingBetweenTwoOffScreenTargets` (the route lever held, view far left, ladder and
+    lift both off screen, at least 10 hops in the 1,200 measured frames; update and both render passes): 0.0, 0.0, 0.0 B/frame in
+    3 isolated runs, ceiling `FAIRY_GUIDE_CEILING` 8 B (the shared isolated fairy-scene ceiling, as D87 argues). The ordering is a
+    scan per hop over the two fixed arrays, with no sort and no new object. New helpers are in `tools/check_allocations.py` `HOT_METHODS`.
+  - **Not verified:** the look and the 0.8 s / 0.4 s feel in the running game (desktop, web, touch), and that a player reads the
+    sequence as "each of these". No shipped room has two off-screen mechanisms for one lever, so only a test map shows it. Tracked by
+    [#434](https://github.com/jlogicgames/edgard_in_kimeria/issues/434) (Chrome check, author play-through).

@@ -349,4 +349,173 @@ class FairyOffscreenTest {
         assertTrue(level.fairy().changedTargets().size > 0, "the stone's hit marks what the lever drives");
         assertEquals(FairyGuide.CHANGED_SECONDS, level.fairy().changedSecondsLeft(), 1e-6);
     }
+
+    // ---- D88 (#434): several off-screen mechanisms are shown in turn ----
+
+    /** The fireball refill of the route room: a static third entity for a marked set (the lift and the ladder are the other two). */
+    private Entity refill(Level level) {
+        return level.objects.stream().filter(o -> o.getClass().getSimpleName().equals("FireballRefill")).map(Entity.class::cast).findFirst().orElseThrow();
+    }
+
+    /** A view below and right of the three: all off screen, edge points on the top edge, left to right ladder, refill, lift. */
+    private void farView() { followCamera = false; view.set(1700, 600, 640, 360); }
+
+    private void markThree(Level level) {
+        var changed = level.fairy().beginChanged();
+        changed.add(lift(level)); changed.add(ladder(level)); changed.add(refill(level));
+    }
+
+    /** The fairy's off-screen targets in the order she served them, with the frames she twinkled at each. */
+    private static final class Trace {
+        final Entity[] targets = new Entity[64]; final int[] twinkle = new int[64]; int n;
+    }
+
+    private Trace trace(Level level, int frames) {
+        Trace t = new Trace();
+        Entity last = null;
+        for (int i = 0; i < frames; i++) {
+            frame(level);
+            var fairy = level.fairy();
+            Entity target = fairy.offscreenTarget();
+            if (target != null && target != last) t.targets[t.n++] = target;
+            if (target != null && fairy.mode() == FairyGuide.Mode.TWINKLE) t.twinkle[t.n - 1]++;
+            last = target;
+        }
+        return t;
+    }
+
+    private void waitForTwinkleAt(Level level, Entity target) {
+        int guard = 0;
+        while (level.fairy().offscreenTarget() != target || level.fairy().mode() != FairyGuide.Mode.TWINKLE) { frame(level); assertTrue(guard++ < 400, "never twinkled at " + target); }
+    }
+
+    @Test void threeOffScreenTargetsAreShownNearestFirstThenClockwiseWithTheWrapAndADwellEach() {
+        Level level = route();
+        farView();
+        markThree(level);
+        Trace t = trace(level, 215); // 3.58 s: inside the 3 x (0.8 + 0.4) = 3.6 s cue
+        assertTrue(t.n >= 3, "all three shown, got " + t.n);
+        assertSame(lift(level), t.targets[0], "the nearest to the view centre first");
+        assertSame(ladder(level), t.targets[1], "then the wrap to the smallest angle");
+        assertSame(refill(level), t.targets[2], "then clockwise: the next angle");
+        int dwellFrames = Math.round(FairyGuide.DWELL_SECONDS * 60);
+        for (int i = 0; i < 2; i++) assertEquals(dwellFrames, t.twinkle[i], 2, "dwell at target " + i + " is 0.8 s of twinkle");
+        assertTrue(t.twinkle[2] >= dwellFrames - 2, "the last one also gets its full dwell inside the window: " + t.twinkle[2]);
+    }
+
+    @Test void betweenTwoEdgePointsSheFliesAndThenTwinklesAtTheNextOne() {
+        Level level = route();
+        farView();
+        markThree(level);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, lift(level));
+        float firstX = fairy.x();
+        int guard = 0;
+        while (fairy.offscreenTarget() == lift(level)) { frame(level); assertTrue(guard++ < 400); }
+        assertSame(ladder(level), fairy.offscreenTarget());
+        Vector2 goal = FairyGuide.edgePoint(view, EDGE, ladder(level).centerX(), ladder(level).centerY(), new Vector2());
+        assertEquals(goal.x, fairy.goalX(), 1e-3f); assertEquals(goal.y, fairy.goalY(), 1e-3f);
+        assertEquals(FairyGuide.Mode.FLY, fairy.mode(), "the hop is a flight, not a jump");
+        assertTrue(Math.abs(firstX - fairy.x()) < Math.abs(firstX - goal.x) / 2, "she has barely left the old edge point on the frame of the hop");
+        int flying = 0;
+        while (fairy.mode() != FairyGuide.Mode.TWINKLE) { frame(level); flying++; assertTrue(flying < 100); }
+        assertTrue(flying > 3 && flying < 60, "a short flight: " + flying + " frames");
+        assertEquals(goal.x, fairy.x(), FairyGuide.TWINKLE_RANGE);
+    }
+
+    @Test void whileTheLeverIsHeldTheCycleWrapsAroundForever() {
+        Level level = route();
+        walkToLever(level);
+        followCamera = false;
+        view.set(0, 0, VIEW_W, VIEW_H); // the ladder and the lift both right of this view
+        held.add(Input.Keys.W);
+        Trace t = trace(level, 60 * 12);
+        assertTrue(t.n >= 8, "twelve seconds of Up is many hops: " + t.n);
+        for (int i = 0; i < t.n; i++) assertSame(i % 2 == 0 ? ladder(level) : lift(level), t.targets[i], "ladder, lift, ladder... at hop " + i);
+        assertInstanceOf(Lever.class, level.fairy().selected());
+    }
+
+    @Test void aTargetThatComesIntoViewMidDwellEndsItAtOnceAndTheCycleGoesOn() {
+        Level level = route();
+        farView();
+        markThree(level);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, ladder(level));
+        frame(level); // some way into the ladder's dwell
+        view.set(ladder(level).getX() - 40, ladder(level).getY() - 100, 100, 360); // the ladder is in view now; the refill and the lift are not
+        frame(level); frame(level);
+        assertNotSame(ladder(level), fairy.offscreenTarget(), "the one in view dropped out of the cycle");
+        assertNotNull(fairy.offscreenTarget());
+        for (int i = 0; i < 100; i++) { frame(level); assertNotSame(ladder(level), fairy.offscreenTarget(), "never again while in view"); }
+    }
+
+    @Test void aTargetThatLeavesTheViewJoinsAtTheNextHopNotMidDwell() {
+        Level level = route();
+        followCamera = false;
+        view.set(1650, 50, 200, 100); // the refill (x 1712, y 112) and the lift are in view; only the ladder is off screen
+        markThree(level);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, ladder(level));
+        view.set(1650, 500, 200, 100); // now the refill and the lift are off screen too
+        for (int i = 0; i < 20; i++) { frame(level); assertSame(ladder(level), fairy.offscreenTarget(), "no switch in the middle of the dwell"); }
+        Trace t = trace(level, 120);
+        boolean sawRefill = false, sawLift = false;
+        for (int i = 0; i < t.n; i++) { sawRefill |= t.targets[i] == refill(level); sawLift |= t.targets[i] == lift(level); }
+        assertTrue(sawRefill && sawLift, "both joined the cycle after the dwell");
+    }
+
+    @Test void thePostPullWindowGrowsWithTheNumberOffScreenButNeverBelowOneAndAHalfSeconds() {
+        Level level = route();
+        farView();
+        markThree(level);
+        var fairy = level.fairy();
+        settle(level, 205); // 3.42 s
+        assertNotNull(fairy.offscreenTarget(), "three targets: the cue is still on at 3.4 s");
+        assertEquals(0, fairy.changedTargets().size, "while the in-view marks of D87 still end at 1.5 s");
+        settle(level, 30);
+        assertNull(fairy.offscreenTarget(), "and over by 3.9 s");
+        Level one = route(); // one off screen: the D87 window
+        followCamera = false;
+        view.set(1650, 50, 200, 100);
+        one.fairy().beginChanged().add(ladder(one));
+        settle(one, 85);
+        assertNotNull(one.fairy().offscreenTarget(), "one target: 1.4 s still on");
+        settle(one, 10);
+        assertNull(one.fairy().offscreenTarget(), "and over by 1.6 s, as in D87");
+    }
+
+    @Test void aSingleOffScreenTargetFliesTheD87PathAndNeverLeavesItsTwinkle() {
+        Level level = route();
+        walkToLever(level);
+        followCamera = false; // the view stays where the lever put it, so the edge point is a constant
+        held.add(Input.Keys.W);
+        var fairy = level.fairy();
+        frame(level);
+        assertTrue(fairy.offscreenTarget() == lift(level), "the lift is the one off-screen mechanism");
+        float px = fairy.x(), py = fairy.y();
+        float k = 1 - (float) Math.exp(-14f * STEP);
+        for (int i = 0; i < 60 * 8; i++) {
+            frame(level);
+            assertSame(lift(level), fairy.offscreenTarget(), "the same one for as long as Up is held (no cycle with one)");
+            if (i < 20) { // the D87 smoothing toward the (slowly moving) edge point, step for step
+                px += (fairy.goalX() - px) * k; py += (fairy.goalY() - py) * k;
+                assertEquals(px, fairy.x(), 0f, "bit-for-bit the D87 flight at frame " + i); assertEquals(py, fairy.y(), 0f);
+            }
+        }
+        assertEquals(FairyGuide.Mode.TWINKLE, fairy.mode());
+        assertTrue(fairy.distanceToGoal() <= FairyGuide.TWINKLE_RANGE);
+    }
+
+    @Test void aRoomChangeEndsTheCycleAndTheNextOneStartsAtTheNearestAgain() {
+        Level level = route();
+        farView();
+        markThree(level);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, ladder(level));
+        level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0));
+        frame(level);
+        assertNull(fairy.offscreenTarget());
+        assertNotEquals(FairyGuide.Mode.TWINKLE, fairy.mode());
+        assertEquals(0, fairy.changedTargets().size);
+    }
 }
