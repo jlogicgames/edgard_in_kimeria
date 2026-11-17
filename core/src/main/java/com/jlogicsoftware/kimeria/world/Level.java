@@ -48,6 +48,7 @@ import com.jlogicsoftware.kimeria.entity.objects.Bramble;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
+import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
@@ -112,6 +113,10 @@ public class Level implements WorldObject {
     private final Array<Actionable> activatedScratch = new Array<>(false, ACTIVATED_CAPACITY);
     /** A hive's frame and band column, tested against the camera view for its sounds (D90, `hiveInView`); reused, never allocated per frame. */
     private final Rectangle hiveViewScratch = new Rectangle();
+    /** A fissure's frame and column, tested against the camera view for its sounds (D91); reused, never allocated per frame. */
+    private final Rectangle fissureViewScratch = new Rectangle();
+    /** Each ember fissure as checked at load, by object id: a spawn builds from it instead of parsing and checking again (D91). */
+    private final Map<Integer, EmberFissure> checkedFissures = new HashMap<>();
     /** The deadfalls' sounds and bark chips (D88, D75): one listener for every deadfall, built once. */
     private final DeadfallTrap.Listener deadfallListener = new DeadfallTrap.Listener() {
         @Override public void tripped(DeadfallTrap trap) { if (game.playSounds()) game.playSound(DEADFALL_CREAK_SOUND); }
@@ -262,6 +267,8 @@ public class Level implements WorldObject {
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
     /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
     private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
+    /** The ember fissure's sounds (#366): the warning rumble and the jet's roar. */
+    static final String FISSURE_RUMBLE_SOUND = "fissure_rumble", EMBER_JET_SOUND = "ember_jet";
     private final EnvironmentFx fx;
     private final FairyGuide fairy;
 
@@ -514,6 +521,7 @@ public class Level implements WorldObject {
             if ("Deadfall".equals(o.type)) validateDeadfall(o, owner); // D88: every room, at load.
             if ("Bramble".equals(o.type)) validateBramble(o, owner); // D89: every room, at load.
             if ("HangingHive".equals(o.type)) hiveFor(o, owner); // D90: every room, at load.
+            if ("EmberFissure".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -831,6 +839,7 @@ public class Level implements WorldObject {
                     objects.add(bramble);
                 }
                 case "HangingHive" -> spawnHive(o);
+                case "EmberFissure" -> spawnFissure(o);
                 case "HoneyFungus" -> objects.add(HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero));
                 case "FalseHoneyFungus" -> {
                     FalseHoneyFungus fungus = FalseHoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
@@ -965,6 +974,53 @@ public class Level implements WorldObject {
         Rectangle view = visibleWorldRect.get();
         return view != null && view.width > 0 && view.height > 0
             && hive.extentInto(hiveViewScratch).overlaps(view);
+    }
+
+    /**
+     * The ember fissure (#366, D91), built and checked for the room {@code owner}: it stands on a solid floor, a solid block
+     * above may cut its column (one-way platforms do not), no moving or switchable solid stands in the column, and the column
+     * stays inside the room and never covers the entrance, the exit or a checkpoint (D46's rule). Called for every room at
+     * load; the result is kept in {@code checkedFissures}, so a spawn does not check again.
+     */
+    private EmberFissure fissureFor(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        List<TiledObject> collisions = new ArrayList<>();
+        List<Rectangle> floors = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions")) {
+            if (c.x + c.width <= room.x || c.x >= room.x + room.width) continue;
+            collisions.add(c);
+            if (!"QuickSand".equals(c.type) && !"Platform".equals(c.type)) floors.add(new Rectangle(c.x, c.y, c.width, c.height));
+        }
+        EmberFissure fissure = EmberFissure.fromMap(assets, o, game.trapWarnings(), collisions, describe(o));
+        String problem = EmberFissure.floorProblem(o, floors);
+        if (problem == null) problem = EmberFissure.movingSolidProblem(o, map.layer("SpawnPoints"), fissure.columnHeight());
+        if (problem != null) throw new IllegalArgumentException("EmberFissure " + describe(o) + ": " + problem);
+        Rectangle column = fissure.columnInto(new Rectangle());
+        if (column.x < room.x || column.x + column.width > room.x + room.width || column.y < room.y || column.y + column.height > room.y + room.height)
+            throw new IllegalArgumentException("EmberFissure " + describe(o) + ": its danger area leaves the room");
+        requireSafeSetting(o, fissure, column, owner);
+        return fissure;
+    }
+
+    private void spawnFissure(TiledObject o) {
+        EmberFissure checked = checkedFissures.get(o.id);
+        if (checked == null) { checked = fissureFor(o, currentRoom); checkedFissures.put(o.id, checked); } // added to the map after load (tests)
+        EmberFissure fissure = new EmberFissure(assets, o.x, o.y, game.trapWarnings(), checked.period(), checked.phase(),
+            checked.jetSeconds(), checked.columnHeight());
+        fissure.onWarning(() -> fissureSound(fissure, FISSURE_RUMBLE_SOUND));
+        fissure.onJet(() -> fissureSound(fissure, EMBER_JET_SOUND));
+        objects.add(fissure);
+    }
+
+    /** A fissure's sound is heard only while its frame or column is inside the camera view: a clocked trap off screen is silent. */
+    private void fissureSound(EmberFissure fissure, String sound) {
+        if (game.playSounds() && fissureInView(fissure)) game.playSound(sound);
+    }
+
+    /** True while the fissure's frame or the column its jet can cover overlaps the camera's visible world rect (D91). */
+    boolean fissureInView(EmberFissure fissure) {
+        Rectangle view = visibleWorldRect.get();
+        return view != null && view.width > 0 && view.height > 0 && fissure.extentInto(fissureViewScratch).overlaps(view);
     }
 
     /** A falling stone landed at {@code x}: every scenery vine within reach sways, unless the Screen shake option is off. */

@@ -668,3 +668,52 @@ class HangingHiveLinksTest(unittest.TestCase):
         self.assertIn('covers the room exit', self.run_map(self.hive(x=600))[0])
         lift = '<object id="11" type="Escalator" x="290" y="280" width="32" height="16"/>'
         self.assertIn('moving or switchable Escalator [11]', self.run_map(self.hive(), spawn=lift)[0])
+
+
+class EmberFissureLinksTest(unittest.TestCase):
+    """#366 (D91): mirror of EmberFissure.fromMap / validate / ceilingAbove / floorProblem / movingSolidProblem and Level.fissureFor."""
+    FLOOR = HangingHiveLinksTest.FLOOR
+    ROOM = HoneyFungusLinksTest.ROOM
+
+    @staticmethod
+    def fissure(x=288, y=316, props='', w=16, h=12):
+        body = f'<properties>{props}</properties>' if props else ''
+        return f'<object id="3" type="EmberFissure" x="{x}" y="{y}" width="{w}" height="{h}">{body}</object>'
+
+    def run_map(self, trap, spawn='', collisions=FLOOR, rooms=ROOM):
+        return check(tmx(trap + spawn, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_a_fissure_on_open_floor_passes(self):
+        self.assertEqual([], self.run_map(self.fissure()))
+
+    def test_properties_size_and_rhythm(self):
+        self.assertIn("unknown property 'perod'", self.run_map(self.fissure(props='<property name="perod" value="4"/>'))[0])
+        self.assertIn('not a number', self.run_map(self.fissure(props='<property name="period" value="3,5"/>'))[0])
+        self.assertIn('must be 16x12', self.run_map(self.fissure(w=24))[0])
+        self.assertEqual([], self.run_map(self.fissure(props='<property name="period" value="3.0"/>')))  # 1.0 + 1.2 + 0.8
+        self.assertIn('shorter than jet', self.run_map(self.fissure(props='<property name="period" value="2.9"/>'))[0])
+        self.assertIn('jet 0.5', self.run_map(self.fissure(props='<property name="jet" value="0.5"/>'))[0])
+        self.assertIn('multiple of 16', self.run_map(self.fissure(props='<property name="height" value="100"/>'))[0])
+
+    def test_floor_ceiling_and_platforms(self):
+        self.assertIn('needs a solid floor', self.run_map(self.fissure(y=300))[0])
+        half = '<object id="9" x="0" y="320" width="296" height="48"/>'
+        self.assertIn('needs a solid floor', self.run_map(self.fissure(), collisions=half)[0])
+        split = '<object id="9" x="0" y="320" width="296" height="48"/><object id="10" x="296" y="320.3" width="344" height="48"/>'
+        self.assertEqual([], self.run_map(self.fissure(), collisions=split))
+        branch = self.FLOOR + '<object id="11" type="Platform" x="280" y="272" width="32" height="16"/>'
+        self.assertEqual([], self.run_map(self.fissure(), collisions=branch))  # embers pass through a one-way branch
+        low = self.FLOOR + '<object id="12" x="280" y="260" width="32" height="40"/>'
+        self.assertIn('cuts its jet to 20.0 px', self.run_map(self.fissure(), collisions=low)[0])
+        high = self.FLOOR + '<object id="12" x="280" y="200" width="32" height="40"/>'
+        self.assertEqual([], self.run_map(self.fissure(), collisions=high))  # cut to 80 px, still a column
+
+    def test_never_over_a_standing_place_and_no_moving_solid_in_the_jet(self):
+        self.assertIn('covers the room entrance', self.run_map(self.fissure(x=40))[0])
+        self.assertIn('covers the room exit', self.run_map(self.fissure(x=604))[0])
+        lift = '<object id="11" type="Escalator" x="280" y="250" width="32" height="16"/>'
+        self.assertIn('moving or switchable Escalator [11]', self.run_map(self.fissure(), spawn=lift)[0])
+
+    def test_the_java_fixture_passes_the_mirror(self):
+        fixture = Path(__file__).resolve().parents[1] / 'core/src/test/resources/tiles/fissure-test.tmx'
+        self.assertEqual([], check(fixture.read_text(encoding='utf-8')))

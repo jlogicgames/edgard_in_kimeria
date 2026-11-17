@@ -12,9 +12,10 @@ author acceptance must not be read as evidence for a later map layout.
 
 The Forest levels are the tutorial `forest-0`, then `forest-1`, then the boss level `forest-2`
 (intended Forest order: `forest-0` → `forest-1` → `forest-2`, [D32](DECISIONS.md#d32-forest-level-order-and-identity)). A level is one TMX map
-containing an ordered chain of rooms. `forest-2` has three
-rooms: the original 1280 px course, a 672 px forest course with an ascending
-optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
+containing an ordered chain of rooms. `forest-2` has five
+rooms in play order: `forest-entry` (736 px), `forest-walls` (544 px, split off it by #376), `forest-fissure` (640 px, the
+ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-canopy`
+(1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
 `forest-1` has nine rooms since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
@@ -454,6 +455,7 @@ use `core/src/test/resources/tiles/rhythm-test.tmx` as the worked example.
 | `ThornVine` | 24×40, top edge is the anchor | `period` 4.5 s (min 3.5), `phase` 0 s, `amplitude` 50° (35-60) | lethal lower half only; the stem is harmless |
 | `FallingPlatform` | 32×16 | `skin=log` | the rotten log; behaviour unchanged |
 | `HangingHive` | 24×32, top edge is the bough | `period` 4.0 s, `phase` 0 s, `curtain` 1.0 s | shakes 0.8 s (1.2 s assisted), then stingers fall from the mouth (top + 26) at 240 px/s for `curtain` s to the first solid under it; an 8 px band (D90) |
+| `EmberFissure` | 16×12, top edge 4 px above the floor line | `period` 3.5 s, `phase` 0 s, `jet` 1.0 s (0.6-1.5), `height` 96 px (48-128, multiple of 16) | glows 0.8 s (1.2 s assisted), then an 8 px fire column rises from the floor line in 0.1 s, holds, sinks in 0.2 s; through one-way platforms, cut by a solid block (D91) |
 
 **Period and phase.** Time starts at the room's entrance and again on every retry, so the
 authored `phase` is also what the hero meets on every attempt: the first cloud or swing a
@@ -470,6 +472,8 @@ With that recipe the safe window is about 1.2 s per swing and the crossing needs
 careful hero waits at the edge, watches the swing lift the tip, and runs under.
 
 `HangingHive`: `period >= curtain + depth / 240 + 1.2 + 0.8`, where depth is the band from the mouth to the solid (at least 32 px); the load fails otherwise. Over open floor the pass takes about 0.2 s; over a ladder the climb must fit between the last stinger leaving the foot and the next head reaching the top (2.94 s for a 112 px ladder, a 198 px band and a 4.5 s period; measure any new layout with the climber in `HangingHiveTest`). From the floor a stone reaches the body only by a jump-throw; a fireball only from a standing place level with it.
+
+`EmberFissure`: `period >= jet + 1.2 + 0.8`; the load fails otherwise, and also without a solid floor (not a one-way platform) under all 16 px at the floor line, or when a solid block above cuts the column below 32 px. Over open floor the pass takes about 0.2 s and the way is open for `period - jet` (2.5 s at the defaults). A one-way branch over the fissure is pierced by the jet: a hero who waits beside the 8 px column and crosses right after a jet climbs over it with time to spare (`EmberFissureTest`, the branch step: 3.75 to 6.73 s after any start delay); measure any new layout with that climber.
 
 **Never over a place the hero must stand.** The load (and `check_tiled_links.py`) rejects a trap whose danger area, over its whole rhythm, touches the room entrance body, the room exit or a checkpoint of the room.
 
@@ -987,6 +991,27 @@ played between the guard room and the tree room. Room card: [ROOM_CARDS.md](ROOM
   jump-fire (10 of 13 timings).
 - D26: no lever, support or one-shot state; both hives come back every period, so waiting outside a band always gives
   another window.
+
+## forest-2 fissure room (#366, D91)
+
+`forest-fissure`, x 3008-3648 (640 px, one camera view), floor top y 320, walls at x 3008-3024 and 3632-3648 (the right
+one above the ledge only). It is appended at the map's end (forest-2 grew from 188 to 228 tiles; the `Deadline` already
+reached x 3712) and listed after `forest-walls` in `Rooms`, so it is played between the wall room and the canopy.
+Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure); trap card: [TRAPS.md](TRAPS.md#ember-fissure-emberfissure).
+
+- RoomStart (3040, 272); RoomExit (3584, 176, 32 x 48) on the ledge. A solid ledge x 3424-3648, top y 224 (tiles rows
+  14-19, the ground-edge tiles), against the right wall.
+- `EmberFissure` A x 3232 (map y 332: the SpawnPoints layer is drawn 16 px up, so its top is y 316 and its floor line 320)
+  on open floor, defaults (period 3.5 s, jet 1.0 s, height 96, phase 0).
+- One-way `Collisions:Platform` 32 x 16 at x 3328 and 3360, y 272 (the branch); `EmberFissure` B x 3360, phase 1.75, under
+  it: its column x 3364-3372 rises from 320 to the ledge top 224, through the branch.
+- **Recipe:** the step is the fixture's (`fissure-test.tmx`, room 1): wait on the floor short of the branch (body front
+  x 3300) until a jet ends, jump on to the branch, through the column, and on to the ledge; the climb takes 3.75 to 6.73 s in
+  the fixture. B is half a period out of step with A, so a hero who crosses A right after its jet meets B mid-calm.
+- Measured (`ForestFissureTest`, `RoomReplayTest`): mastered route 8.08 s from the entrance, 5.18 to 8.63 s over start offsets
+  of 0 to 3.5 s with and without the assist; a careless walker dies at A at 23 of 71 offsets, at most 3.5 s after entering.
+  Contrast at the placed fissures over `2c3f66`: fissure 0.377, jet tile 0.349, tip 0.398.
+- D26: no lever, support, ammunition or one-shot state; the clock restarts with the room.
 
 ## forest-1 lever room (#418, D86)
 

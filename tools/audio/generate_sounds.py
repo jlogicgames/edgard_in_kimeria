@@ -707,13 +707,63 @@ def hive_fall() -> list[float]:
     return finish_rms(mix, HIVE_FALL_RMS_DB)
 
 
+
+# ---------------------------------------------------------------- ember fissure (#366, D91)
+# Warning (fissure_rumble): a low, bubbling throat "hrrrm-bl-bl" swelling under the D7 glow; 0.6 s so it ends before the
+# base 0.8 s jet, fixed length. Rough and darker than hive_buzz and bramble_rustle so the warnings never mask each other;
+# the slow vibrato is the bubbling. Quiet end of the voice set.
+FISSURE_RUMBLE_VOICE = Voice(6601, 0.60, (85.0, 110.0), FORMANTS_UH, FORMANTS_U, -19.4, asp_len=0.040, asp_level=0.3,
+                             attack=0.150, tau=0.600, release=0.100, jitter=0.08, rough=1.0, rough_start=0.0,
+                             vibrato=(11.0, 0.10), lowpass=1400.0)
+# Consequence (ember_jet): a breathy roaring "FFSHHHH" at the jet's start: noise through a band-pass whose centre climbs
+# with the flame, a fast swell and a decay over the hold, with dry crackle ticks on top; not a voice (fire, like the
+# stinger patter), so it sits with the environment sounds, louder than them because it is the trap's act.
+EMBER_JET_SEED = 6602
+EMBER_JET_DURATION = 0.8
+EMBER_JET_SWEEP = (700.0, 1800.0)    # Hz, band-pass centre from start to end
+EMBER_JET_BANDWIDTH = 1400.0
+EMBER_JET_ATTACK = 0.025             # s, the roar swells in (no click)
+EMBER_JET_TAU = 0.35                 # s, decay over the hold
+EMBER_JET_DRIVE = 1.6                # soft saturation of the roar
+EMBER_CRACKLES = 14
+EMBER_CRACKLE_LEN = 0.006            # s, one crackle
+EMBER_CRACKLE_BAND = (4200.0, 2000.0)
+EMBER_CRACKLE_GAIN = (0.15, 0.4)     # relative to the roar's peak
+EMBER_JET_LOWPASS_HZ = 6000.0
+EMBER_JET_RMS_DB = -23.0               # peak-limited by the -9 dBFS cap: the decaying roar has a high crest
+EMBER_JET_PEAK_DB = -9.0             # the environment cap (test_ambient_levels)
+
+
+def fissure_rumble() -> list[float]:
+    return finish_rms(render_voice(FISSURE_RUMBLE_VOICE), FISSURE_RUMBLE_VOICE.rms_db)
+
+
+def ember_jet() -> list[float]:
+    rng = random.Random(EMBER_JET_SEED)
+    n = n_samples(EMBER_JET_DURATION)
+    lo, hi = EMBER_JET_SWEEP
+    roar = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, EMBER_JET_BANDWIDTH)
+    peak = max(abs(v) for v in roar) or 1.0
+    env = envelope(n, EMBER_JET_ATTACK, EMBER_JET_TAU)
+    out = [math.tanh(EMBER_JET_DRIVE * v / peak) * e for v, e in zip(roar, env)]
+    nc = n_samples(EMBER_CRACKLE_LEN)
+    for _ in range(EMBER_CRACKLES):
+        start = rng.randrange(0, n - nc)
+        tick = bandpass(noise(rng, nc), EMBER_CRACKLE_BAND[0] * rng.uniform(0.8, 1.2), EMBER_CRACKLE_BAND[1])
+        tp = max(abs(v) for v in tick) or 1.0
+        level = rng.uniform(*EMBER_CRACKLE_GAIN)
+        for j in range(nc):
+            out[start + j] += level * tick[j] / tp * math.sin(math.pi * j / nc)
+    return finish_rms(lowpass(out, EMBER_JET_LOWPASS_HZ), EMBER_JET_RMS_DB, EMBER_JET_PEAK_DB)
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
                "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
                "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
                "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
-               "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall}
+               "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall,
+               "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet}
 
 
 def generate(out_dir: Path) -> list[Path]:

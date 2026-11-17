@@ -17,6 +17,7 @@ import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
+import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
@@ -115,6 +116,8 @@ class AllocationBudgetTest {
     static final double FOREST_1_BRAMBLE_CEILING = 620;
     /** The forest-1 hive room (#365, D90): measured 536.7 B/frame in 3 isolated runs (2026-11-17), the same as the deadfall and bramble rooms: the two hives add nothing measurable over the rest of the room. Ceiling = the highest run + about 10 %. */
     static final double FOREST_1_HIVE_CEILING = 590;
+    /** The forest-2 fissure room (#366, D91): measured 536.8 B/frame in 3 isolated runs and 328.0 to 472.0 in 3 full-suite runs (2026-11-17), the hive room 536.6 to 536.7 in the same isolated runs: the two fissures add nothing measurable over the rest of the room, so it takes the hive room's ceiling (highest run + about 10 %). */
+    static final double FOREST_2_FISSURE_CEILING = 590;
     /**
      * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
      * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
@@ -250,7 +253,7 @@ class AllocationBudgetTest {
 
     /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
     @Test void forest2Room3WithBlood() {
-        Level level = harness.roomOf("forest-2", 3);
+        Level level = harness.roomOf("forest-2", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.blood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, true);
@@ -261,7 +264,7 @@ class AllocationBudgetTest {
 
     /** A sword kill sprays a light burst through {@code Level.mobBlood} every {@link #BURST_CYCLE_FRAMES} frames in the boss room (the level path of #319). */
     @Test void forest2Room3WithMobKillBlood() {
-        Level level = harness.roomOf("forest-2", 3);
+        Level level = harness.roomOf("forest-2", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.mobBlood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
@@ -286,6 +289,8 @@ class AllocationBudgetTest {
     /** The bramble room (#364): the bramble cycling (its arm grows and retracts during the measurement), the static ladder. */
     @Test void forest1BrambleRoom() { assertWithinBudget("forest-1 bramble room", FOREST_1_BRAMBLE_CEILING, room("forest-1", 4)); }
     @Test void forest1HiveRoom() { assertWithinBudget("forest-1 hive room", FOREST_1_HIVE_CEILING, room("forest-1", 7)); }
+    /** The fissure room (#366, D91): two ember fissures out of step, cycling through warnings, jets and sparks, one under a branch. */
+    @Test void forest2FissureRoom() { assertWithinBudget("forest-2 fissure room", FOREST_2_FISSURE_CEILING, room("forest-2", 2)); }
 
     /**
      * Deadfalls tripped in turn (#363): one stays tied (the hero far), and the hero's box steps onto the vine of the next one
@@ -539,7 +544,7 @@ class AllocationBudgetTest {
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
     @Test void cameraShakeQuery() {
-        Level level = harness.roomOf("forest-2", 3);
+        Level level = harness.roomOf("forest-2", 4);
         Rectangle view = new Rectangle();
         Rectangle room = level.currentRoomBounds();
         float[] sum = new float[1];
@@ -675,7 +680,7 @@ class AllocationBudgetTest {
         };
         harness.font = font;
         BossHud hud = new BossHud(harness.assets(), harness.game(), new Matrix4(), 640, 360);
-        Level level = harness.roomOf("forest-2", 3);
+        Level level = harness.roomOf("forest-2", 4);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
         font.dispose();
         assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
@@ -854,6 +859,48 @@ class AllocationBudgetTest {
         assertWithinBudget("hanging hives", HANGING_HIVE_CEILING, bytes);
     }
 
+    /**
+     * Ember fissures (#366, D91): four fissures half a second apart cycle through the rest pulse, the warning with rising
+     * sparks, the jet drawn a row at a time with its {@code lethalTo} against a hero standing over one crack every frame, the
+     * falling sparks and the spent frame; update and render through the batch.
+     */
+    @Test void emberFissuresCycle() {
+        EmberFissure[] fissures = new EmberFissure[FISSURE_COUNT];
+        for (int k = 0; k < fissures.length; k++)
+            fissures[k] = new EmberFissure(harness.assets(), k * FUNGUS_SPACING, FUNGUS_FLOOR - EmberFissure.FLOOR_OFFSET, harness.game().trapWarnings(),
+                EmberFissure.DEFAULT_PERIOD_SECONDS, k * FISSURE_PHASE_STEP, EmberFissure.DEFAULT_JET_SECONDS, EmberFissure.DEFAULT_HEIGHT);
+        Rectangle hero = new Rectangle(fissures[0].centerX() - HERO_WIDTH / 2f, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        boolean[] lethal = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            for (EmberFissure f : fissures) { f.update(STEP); f.render(batch); lethal[0] |= f.lethalTo(hero); }
+        });
+        assertTrue(lethal[0], "the jet must actually reach the hero over the crack in this scenario");
+        assertWithinBudget("ember fissures", EMBER_FISSURE_CEILING, bytes);
+    }
+
+    /**
+     * Where {@link #emberFissuresCycle}'s bytes come from: the same four fissures against an empty frame (the probe, the lambda
+     * and the harness, nothing of the trap), measured in alternating windows so a JIT change lands in one pair only. The median
+     * difference is the trap's own cost per frame; with the empty frame alone also printed, the cycle's figure splits into the
+     * probe's share and the trap's.
+     */
+    @Test void emberFissuresCostNothingOverAnEmptyFrame() {
+        EmberFissure[] fissures = new EmberFissure[FISSURE_COUNT];
+        for (int k = 0; k < fissures.length; k++)
+            fissures[k] = new EmberFissure(harness.assets(), k * FUNGUS_SPACING, FUNGUS_FLOOR - EmberFissure.FLOOR_OFFSET, harness.game().trapWarnings(),
+                EmberFissure.DEFAULT_PERIOD_SECONDS, k * FISSURE_PHASE_STEP, EmberFissure.DEFAULT_JET_SECONDS, EmberFissure.DEFAULT_HEIGHT);
+        Rectangle hero = new Rectangle(fissures[0].centerX() - HERO_WIDTH / 2f, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        boolean[] lethal = new boolean[1];
+        double empty = AllocationProbe.bytesPerFrame(i -> lethal[0] |= hero.width < 0);
+        double difference = AllocationProbe.medianPairedDifference(FISSURE_PAIRS, FISSURE_WINDOW_FRAMES, () -> { },
+            i -> { for (EmberFissure f : fissures) { f.update(STEP); f.render(batch); lethal[0] |= f.lethalTo(hero); } },
+            () -> { }, i -> lethal[0] |= hero.width < 0);
+        System.out.printf("ALLOCATION ember fissures: empty frame %.1f B/frame; median fissures minus empty %.1f B/frame over %d pairs%n",
+            empty, difference, FISSURE_PAIRS);
+        assertTrue(lethal[0], "the jet must actually reach the hero over the crack in this scenario");
+        assertWithinBudget("ember fissures (minus an empty frame)", EMBER_FISSURE_CEILING, difference);
+    }
+
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
     @Test void falseHoneyFungusCloudsInTurn() {
         FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
@@ -889,6 +936,18 @@ class AllocationBudgetTest {
     private static final float DEADFALL_SPACING = 400;
     /** Hanging hives (#365, hangingHivesCycleAndOneIsKnockedDown): measured 0.1 to 0.9 B/frame in 3 isolated runs and 0.0 to 0.1 in 2 full-suite runs (2026-11-17); the same 8 B ceiling as the other isolated paths. */
     static final double HANGING_HIVE_CEILING = 8;
+    /**
+     * Ember fissures (#366, D91), 2026-11-17: emberFissuresCycle measured 1.1 B/frame in 2 isolated runs of it alone (a fresh JVM: about
+     * 1.3 KB once over the 1200 measured frames, the first-use and JIT cost of the scene), 0.3 in 3 runs after the paired test had
+     * warmed the same code, and 0.0 in the full check. The trap's own share is emberFissuresCostNothingOverAnEmptyFrame: the median of
+     * 15 paired windows, fissures minus an empty frame, 0.0 B/frame in 3 isolated runs, the empty frame alone 0.0. The same 8 B
+     * ceiling as the other isolated trap paths, for both tests.
+     */
+    static final double EMBER_FISSURE_CEILING = 8;
+    private static final int FISSURE_COUNT = 4;
+    /** Paired windows for emberFissuresCostNothingOverAnEmptyFrame: 15 pairs of 350 frames (one full 3.5 s cycle at 60 fps each, so every window holds a jet). */
+    private static final int FISSURE_PAIRS = 15, FISSURE_WINDOW_FRAMES = 350;
+    private static final float FISSURE_PHASE_STEP = 0.5f;
     /** Four hives a quarter period apart, 64 px up from the floor; the knock-down lands in the measured window (after the 300 warm-up frames). */
     private static final int HIVE_COUNT = 4, HIVE_KNOCK_FRAME = 900;
     private static final float HIVE_TOP = 232, HIVE_PHASE_STEP = 1f;
@@ -1045,7 +1104,7 @@ class AllocationBudgetTest {
     /** The coin count, the FPS counter and the fireball stock of {@code Hud.render} with the boss bar, each frame. */
     @Test void hudCoinCountAndFps() {
         Hud hud = hudWithMetricsFont();
-        Level level = harness.roomOf("forest-2", 3);
+        Level level = harness.roomOf("forest-2", 4);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true, level.player, "60 FPS"));
         assertWithinBudget("Hud.render", HUD_CEILING, bytes);
     }

@@ -29,6 +29,9 @@ public final class SpriteSheets {
     // The hanging hive (#365, D90): rest, shake1, shake2, release, bare, falling, fallen; its stinger curtain tile (fall1, fall2).
     public static final Sheet TRAP_HIVE = new Sheet("images/objects/trap-hive.png", 24, 32);
     public static final Sheet TRAP_STINGERS = new Sheet("images/objects/trap-stingers.png", 8, 16);
+    // The ember fissure (#366, D91): rest1, rest2, warn1, warn2, vent, spent; its jet column tile (jet1, jet2) and tip (top1, top2).
+    public static final Sheet TRAP_FISSURE = new Sheet("images/objects/trap-fissure.png", 16, 12);
+    public static final Sheet TRAP_EMBER_JET = new Sheet("images/objects/trap-ember-jet.png", 8, 16);
     public static final Sheet TRAP_VINE = new Sheet("images/objects/trap-vine.png", 24, 40);
     public static final Sheet TRAP_LOG = new Sheet("images/objects/trap-log.png", 32, 16);
     // The plain falling platform (#362): fan1..fan4, the slab with its hairline crack (D71 cue) in every frame.

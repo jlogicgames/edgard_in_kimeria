@@ -69,6 +69,7 @@ what the player does about them.
 | thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm |
 | bramble | `Bramble` | waits out a thorn arm that grows across a lane on a clock and passes in its open window (D89) |
 | hanging-hive | `HangingHive` | passes under, or climbs through, a falling curtain of stingers in its calm; may knock the hive down |
+| ember-fissure | `EmberFissure` | waits beside a floor crack for its jet of fire to sink and passes in the calm (D91) |
 | honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst |
 | false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud |
 | deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past |
@@ -459,7 +460,7 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 1 of 4 (x 0-736, 736 px, 1.15 screens) |
+| Level | forest-2, play order 3, room 1 of 5 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
 | Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, keep moving over quicksand, pass the Bats, jump the Bomb, and see the coins. |
 | Introduces | yellowmob, quicksand |
@@ -489,7 +490,7 @@ own floor.
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 2 of 4 (x 736-1280, 544 px, 0.85 screen) |
+| Level | forest-2, play order 3, room 2 of 5 (x 736-1280, 544 px, 0.85 screen) |
 | Role | challenge |
 | Purpose | Climb two tall walls by wall jumps, starting where a YellowMob walks, take the Bat ingredient lying on the second wall's top, then pass a RedMob to the exit. |
 | Introduces | wall-jump, ingredient |
@@ -506,11 +507,46 @@ own floor.
 | Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat ingredient from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) |
 | Decisions | D72, D96 |
 
+### forest-fissure
+
+| Field | Value |
+| --- | --- |
+| Level | forest-2, play order 3, room 3 of 5 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | A floor crack jets fire on a clock: watch the first one alone on open floor and pass between jets, then climb through the branch the second one pierces, starting right after a jet. |
+| Introduces | ember-fissure |
+| Develops | - |
+| Combines | - |
+| Mastered route | 8.08 s from the entrance (`RoomReplayTest`, three identical attempts, and every collection return); 5.18 to 8.63 s over start offsets of 0 to 3.5 s (0.05 s steps), with and without the longer-warnings assist, for a hero who waits short of each column until a jet ends (`ForestFissureTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | the room, 8.6 s at most: a careless walker dies at the floor fissure at 23 of 71 start offsets, at most 3.5 s after entering (`ForestFissureTest`); a death at the branch replays the mastered route, 8.6 s at worst |
+| D26 | no lever, support, ammunition or one-shot state: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room |
+| Hints | none (forest-2 has none, D33) |
+| Landmark | the column of fire through the branch, seen across the screen from the entrance |
+| Status | new, [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) (card, art, sound and placement approved by the author 2026-11-17). D84 check: one screen, so both fissures are in view and jetting from the entrance; the first is met alone on open floor; the danger is lethal exactly where drawn; the waiting places (either side of each column, the floor under the branch) are obvious; the sounds play only while a fissure is in view. Built and tested with a scripted hero; not yet played by the author ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
+| Decisions | D91, D72 |
+
+Sketch (Y grows downward, floor top y 320, ledge top y 224; walls x 3008-3024 and 3632-3648):
+
+```
+x    3008 3040        3232-48           3328    3360-76 3392  3424                       3584-3616 3648
+     |wall|start        A              [ branch 3328-3392 ]   [ ledge 3424-3648, y 224 ]  E    |wall|
+     |    | @           |||                      |||B         |                               |
+=====+===================================================================================+========  floor y 320
+```
+
+- `EmberFissure` A (id 151) x 3232, y 332 in the map (the SpawnPoints layer is drawn 16 px up: top y 316, 4 px above the
+  floor line), period 3.5 s, jet 1.0 s, height 96, phase 0.
+- One-way `Collisions:Platform` branch (ids 155, 156) x 3328-3392, y 272; `EmberFissure` B (id 152) x 3360, y 332, phase
+  1.75 (half a period out of step with A): its column passes through the branch (embers pass one-way platforms).
+- Ledge (id 157) x 3424-3648, y 224-320, tiled with the ground-edge tiles; `RoomStart` (id 149) (3040, 272); `RoomExit`
+  (id 150) x 3584-3616, y 176-224, on the ledge.
+
 ### forest-canopy
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 3 of 4 |
+| Level | forest-2, play order 3, room 4 of 5 |
 | Role | approach |
 | Purpose | The forest's trap families one at a time before the boss. |
 | Introduces | thorn-vine, false-honey-fungus |
@@ -530,7 +566,7 @@ own floor.
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 4 of 4 |
+| Level | forest-2, play order 3, room 5 of 5 |
 | Role | boss |
 | Purpose | The Forest boss. |
 | Introduces | boss |
