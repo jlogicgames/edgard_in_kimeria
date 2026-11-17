@@ -1,42 +1,22 @@
 # Selected object sprite sources
 
 Created with built-in image generation and real transparent output. Only the
-selected source artwork is retained; rejected detailed world art and earlier
-lever viewpoints are omitted. Exact selected-source prompts follow below.
+selected source artwork is retained; rejected detailed world art is omitted. Exact selected-source prompts follow below.
 World sources use original `assets/images/Items.png` for native pixel style,
 not portrait masters. Export with `python3 tools/export_object_sprites.py`.
 Torch is 8×16, stone 8×8 and fireball 16×16, with at most 16 palette entries,
 binary alpha and nearest filtering. Separate detailed HUD sources live under
 [`art/hud/`](../hud/generation-prompts.md).
 
-## Practice-light three-quarter revision (2026-10-23)
+## Floor lever (#413, 2026-11-17)
 
-The author changed the lever from en face to **3/4** for clearer depth and handle
-motion. Other interactive objects keep their prior default until separately revised.
-Mode: built-in image generation, real transparent output. The selected sources are stored together in `lever-pixel.png` (2508×1254):
-left = up/on, right = down/off. Each registered source frame is 1254×1254.
-Runtime `assets/images/objects/lever.png` is one 32×16 sheet with the same order,
-16×16 frames, a shared palette of at most 16 entries including binary alpha,
-nearest filtering and no dithering. The exporter resizes the full registered
-frames and quantizes them together; no geometry is painted by code. The base
-and pivot stay fixed across both states.
-
-### Three-quarter up
-
-Selected source: `exec-f6dcbadc-a575-4f11-aa81-69d55775887b.png`.
-References: former frontal up master for object identity, original `Items.png` for
-native pixel style. Exact prompt:
-
-> Use case: precise-object-edit. Redraw this medieval lever as ONE native gameplay pixel-art sprite in a CLEAR THREE-QUARTER VIEW (3/4), UP / ON state. Reference 1 is the existing front-view lever, identity only: retain ochre wooden mounting plate, gray iron mechanism, brown shaft, red grip and dark outline. Reference 2 Items.png is the original DOS game's tiny flat-color pixel style. Change the viewpoint: show a broad oblique front face plus a narrow darker RIGHT SIDE face and a tiny TOP face of the mounting plate, clearly giving depth. The front panel remains most of the visible width: do not show the thin profile, and do not use a symmetrical frontal elevation. Make a simple compact 16x16 pixel design displayed enlarged as equal crisp square cells. Mounting plate occupies roughly grid columns3..12 and rows6..13, oblique with visible right thickness. Fixed iron pivot near grid(8,8). Short brown shaft rises from the pivot toward grid(6,2), ending in a chunky RED grip. This is unmistakably UP / ON. Fill about 80% of the canvas height and 65% of the width, leaving only a one-cell transparent border. Exactly one complete lever, isolated on genuine transparent background, square canvas. At most 12 opaque flat colors plus transparency: near-black contour, dark/medium gray iron, ochre/brown wood and red grip. Hard edges, no antialiasing, no gradients, no dithering, no glow, no cast shadow, no floor or wall/background, no text, no UI, no hand, no second pose. The matching DOWN pose will preserve exactly the same plate/pivot/canvas and move only the handle.
-
-### Three-quarter down
-
-Selected source: `exec-0921c9c5-273b-4b25-9640-f69e0fd44e52.png`.
-Edit target: the three-quarter up source; stationary panel, pivot, angle and canvas
-remain invariant. Exact prompt:
-
-> Use case: precise-object-edit. Create the matching DOWN / OFF frame of this THREE-QUARTER (3/4) medieval pixel-art lever. Keep the exact square transparent canvas and the same oblique wooden mounting plate, its darker right side, metal front panel, rivets and pivot at exactly their original coordinates. Do NOT rotate the entire object, shift the base, change scale or redraw the stationary panel. Change ONLY the movable brown shaft and red grip: remove the upright handle and grip above the pivot, restoring transparency or stationary wood/metal behind them, then rotate the handle DOWN toward the LOWER LEFT / foreground. The fixed pivot is near 49% of canvas width, 65% of canvas height. The lowered red grip should be near 32% width, 84% height, clearly BELOW the pivot, fully inside the canvas; the shaft is visibly foreshortened by the existing three-quarter viewpoint. Keep the same chunky red grip identity and block size. Preserve the dark outlined iron pivot cap in front of the shaft junction. The OFF state must look distinctly lowered, never a diagonal-up pose. Keep all stationary plate edges, perspective, palette and lighting exactly aligned with the ON frame. Native tiny pixel-art gameplay asset, not an illustrated HUD icon: at most 12 opaque flat colors plus real transparency, crisp square blocks, no smoothing, no gradients, no dithering, no glow, no shadows, no background, no text, no hand, no extra objects.
-
+The lever is hand-drawn, not generated: `lever.grid` (the grid format of the forest traps, one character per pixel)
+holds two 16×16 frames, `on` (frame 0, the handle leaning right) and `off` (frame 1, leaning left), in the
+`SpriteSheets.LEVER` order. A 3/4 wooden block stands on the ground (light top face with the slot, brown front with two
+rivets, dark right side); an iron handle comes out of the slot and ends in the red knob. The base and the pivot are
+identical in both frames, and the base's bottom row is the frame's last row, so it rests on the floor line.
+`export_levers()` writes `assets/images/objects/lever.png` (32×16) exactly: one palette entry per grid colour, binary
+alpha, nothing quantized. It replaced the generated wall-mounted 3/4 lever of 2026-10-23.
 
 ## Native gameplay pixel revision
 

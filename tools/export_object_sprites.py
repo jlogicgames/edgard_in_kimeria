@@ -8,7 +8,9 @@ from sprite_layouts import (WORLD_FRAMES, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE,
     WORLD_PALETTE_BITS, HUD_PALETTE_BITS, ALPHA_THRESHOLD, OPAQUE_ALPHA,
     LEVER_FRAME_SIZE, LEVER_FRAME_COUNT, LADDER_FRAME_SIZE, LADDER_FRAME_COUNT,
     WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE,
-    ITEM_STRIP_SIZE, ITEM_STRIPS, HUD_ICONS)
+    ITEM_STRIP_SIZE, ITEM_STRIPS, HUD_ICONS, RGB_CHANNELS)
+import forest_trap_sprites as grids
+from dialogue_frame_sprites import indexed
 
 
 def export(source, target, size, pixel_art):
@@ -31,19 +33,21 @@ def export(source, target, size, pixel_art):
 
 
 def export_levers():
-    # Preserve the shared source canvas/pivot. Independent alpha crops would move the base.
-    source = Image.open(ROOT / 'art/objects/lever-pixel.png').convert('RGBA')
-    if source.width != source.height * LEVER_FRAME_COUNT:
-        raise ValueError('Lever sheet must contain two square registered frames: up, down')
-    frames = [source.crop((i * source.height, 0, (i + 1) * source.height, source.height))
-              for i in range(LEVER_FRAME_COUNT)]
-    strip = Image.new('RGBA', (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE))
-    for index, frame in enumerate(frames):
-        frame.putalpha(frame.getchannel('A').point(lambda alpha: OPAQUE_ALPHA if alpha >= ALPHA_THRESHOLD else 0))
-        strip.paste(frame.resize((LEVER_FRAME_SIZE, LEVER_FRAME_SIZE), Image.Resampling.NEAREST), (index * LEVER_FRAME_SIZE, 0))
-    strip = strip.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+    # The floor lever (#413) is hand-drawn in art/objects/lever.grid: frames on (frame 0, handle right) and off (frame 1,
+    # handle left), sharing one base and pivot. The export is exact: one palette entry per grid colour, nothing merged.
+    size, colors, frames = grids.parse(ROOT / 'art/objects/lever.grid')
+    if size != (LEVER_FRAME_SIZE, LEVER_FRAME_SIZE) or tuple(name for name, _ in frames) != ('on', 'off'):
+        raise ValueError('lever.grid must hold two registered square frames: on, off')
+    # Frames side by side, row by row: the strip is the grid's characters looked up in its colour table.
+    clear = bytes(RGB_CHANNELS + 1)  # one transparent RGBA pixel
+    data = b''.join(bytes(colors[char] + (OPAQUE_ALPHA,)) if colors[char] else clear
+                    for y in range(LEVER_FRAME_SIZE) for _, rows in frames for char in rows[y])
+    strip = Image.frombytes('RGBA', (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE), data)
     target = ROOT / 'assets/images/objects/lever.png'
-    strip.save(target, bits=WORLD_PALETTE_BITS)
+    indexed(strip, False).save(target, bits=WORLD_PALETTE_BITS, transparency=0)
+    with Image.open(target) as written:
+        if written.convert('RGBA').tobytes() != strip.tobytes():
+            raise ValueError('lever: the export changed pixels')
     print(target.relative_to(ROOT))
 
 

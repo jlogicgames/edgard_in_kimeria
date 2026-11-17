@@ -13,7 +13,7 @@ import java.util.function.BooleanSupplier;
 public final class Lever extends Entity {
     public final Trigger trigger;
     private final BooleanSupplier active;
-    private final TextureRegion up, down;
+    private final TextureRegion on, off;
 
     public Lever(Assets assets, Trigger trigger, Torch torch) {
         this(assets, trigger, torch::isBurning);
@@ -25,12 +25,13 @@ public final class Lever extends Entity {
             SpriteSheets.LEVER.width(), SpriteSheets.LEVER.height());
         this.trigger = trigger;
         this.active = active;
-        // Registered states share one sheet: left = up/on, right = down/off.
-        up = SpriteSheets.LEVER.frame(assets, 0, 0);
-        down = SpriteSheets.LEVER.frame(assets, 1, 0);
+        // One sheet, a floor lever (#413): frame 0 = on (handle right), frame 1 = off (handle left).
+        on = SpriteSheets.LEVER.frame(assets, 0, 0);
+        off = SpriteSheets.LEVER.frame(assets, 1, 0);
     }
 
+    /** True when the lever is on (handle right); the name predates the floor lever (#413), when on meant handle up. */
     public boolean isUp() { return active.getAsBoolean(); }
     @Override public void update(float dt) { }
-    @Override public void render(Batch batch) { batch.draw(isUp() ? up : down, getX(), getY(), getWidth(), getHeight()); }
+    @Override public void render(Batch batch) { batch.draw(isUp() ? on : off, getX(), getY(), getWidth(), getHeight()); }
 }

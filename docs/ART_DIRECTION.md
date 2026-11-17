@@ -75,9 +75,9 @@ The look poses are frames of the hero sheets (D79): the idle body with the head 
 
 Store related states or animation frames of the same object in one registered
 sprite sheet. The lever uses `assets/images/objects/lever.png`, 32×16, with two
-16×16 frames: up/on at x=0 and down/off at x=16. Its selected source sheet is
-`art/objects/lever-pixel.png`, with the same left-to-right order. Keep a shared
-palette, mounting plate and pivot; use texture regions instead of separate textures.
+16×16 frames: on (handle right) at x=0 and off (handle left) at x=16. Its drawing is the grid
+`art/objects/lever.grid` (frames `on`, `off`, the same order). Keep a shared
+palette, base and pivot; use texture regions instead of separate textures.
 Unrelated single-frame world objects keep their own assets. HUD illustrations use
 separate textures and filtering from world sprites; their selected detailed masters,
 including the fireball, live under `art/hud/`.
@@ -106,11 +106,13 @@ replaced on 2026-10-23 with foreground rendering of the existing 8×8 sprite. Ke
 attach to the measured palm rather than placing the object behind the body. A HUD
 representation, if added, follows the separate detailed-icon contract above.
 
-The latest author revision (2026-10-23) selects a **three-quarter (3/4) lever**,
-superseding the lever's earlier en-face requirement. Show its broad working face
-and visible side/top thickness so the raised/lowered handle is easy to read.
-Keep the base, pivot and viewing angle aligned across poses; do not return to a
-thin profile. Other interactive items retain the frontal default unless revised
+The lever is a **floor lever in three-quarter (3/4) view** (#413, 2026-11-17; the
+3/4 view is the author's choice of 2026-10-23, the floor stance replaced the earlier
+wall-mounted plate). A wooden block stands on the ground with its top face, front face
+and right side visible; an iron handle comes out of a slot in its top and ends in the
+red knob. The handle leans right for on and left for off. The base's bottom row rests
+on the floor line, and the base, pivot and viewing angle are identical across poses;
+do not return to a thin profile or to a wall mount. Other interactive items retain the frontal default unless revised
 separately. The hero's side-view animation does not dictate every object's angle.
 This keeps the native world pixel-art contract and separate character/HUD styles.
 
@@ -770,9 +772,10 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 | Background (tile layer) | rocks 0.29, signs 0.37, dead trees 0.37, tile bushes 0.36: louder than the ceiling. This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
 
 The decor recolour changed only the palette lines of `art/objects/decor/{bush,lookalike,vine}.grid`; the drawings, frames
-and the D64 brush trigger are unchanged. The lever (the author's 3/4 drawing, `art/objects/lever-pixel.png`) gained a 1 px
+and the D64 brush trigger are unchanged. The lever (then the author's wall-mounted 3/4 drawing, `art/objects/lever-pixel.png`) gained a 1 px
 outline in its own near-black `010000` around both frames, painted into the master's cells so the export is exact; colours,
-frame, pivot and bottom line are unchanged. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
+frame, pivot and bottom line were unchanged. The floor lever that replaced it (#413, `art/objects/lever.grid`) keeps the
+near-black contour and measures 0.51 in both frames. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
 at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
 ## Dialogue screen (D78, playtest F3/F10, #337)
