@@ -56,22 +56,21 @@ public final class SilverThread {
 
     /**
      * The slack thread after the pull: a drape from the wrist down to the floor (it falls slowly near the hand and
-     * meets the floor at its lowest point, never below it), then a short coil lying on the floor line. {@code shown}
-     * (1..0) dissolves it from the far end toward the wrist.
+     * meets the floor at its lowest point, never below it), then a short coil lying on the floor line. It falls on the
+     * wrist's side, {@code side} -1 (left, a smaller X) or +1, so it never crosses the body. {@code shown} (1..0)
+     * dissolves it from the far end toward the wrist.
      */
-    public void drawSlack(Batch batch, float wristX, float wristY, float floorY, float shown) {
+    public void drawSlack(Batch batch, float wristX, float wristY, float floorY, float side, float shown) {
         if (shown <= 0) return;
-        float restY = floorY - STRAND_H;
-        int steps = steps(wristX, wristY, wristX + SLACK_ARC_REACH, restY, 0);
+        float restY = floorY - STRAND_H, arcEnd = wristX + SLACK_ARC_REACH * side, coilEnd = wristX + SLACK_COIL_REACH * side;
+        int steps = steps(wristX, wristY, arcEnd, restY, 0);
         int last = Math.round(steps * Math.min(1f, shown / SLACK_ARC_SHARE));
         for (int i = 0; i <= last; i++) {
             float u = (float) i / steps;
-            batch.draw(strand, pixel(x(wristX, wristX + SLACK_ARC_REACH, u)), pixel(wristY + (restY - wristY) * u * u),
-                STRAND_W, STRAND_H);
+            batch.draw(strand, pixel(x(wristX, arcEnd, u)), pixel(wristY + (restY - wristY) * u * u), STRAND_W, STRAND_H);
         }
         if (shown > SLACK_ARC_SHARE) {
-            draw(batch, wristX + SLACK_ARC_REACH, restY, wristX + SLACK_COIL_REACH, restY, 0,
-                (shown - SLACK_ARC_SHARE) / (1f - SLACK_ARC_SHARE), -1, floorY);
+            draw(batch, arcEnd, restY, coilEnd, restY, 0, (shown - SLACK_ARC_SHARE) / (1f - SLACK_ARC_SHARE), -1, floorY);
         }
     }
 

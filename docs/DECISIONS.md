@@ -2008,9 +2008,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     (`RoomFade`, its 0.25 s halves) starts as the thread goes taut and reaches black at 0.70 s, where the slow motion
     used to end; the room is rebuilt there and the camera snaps to the start (no pan). Edgard lands at the start with
     the thread slack under the 0.25 s fade-in (the landing pose for 0.20 s, then idle; the slack thread dissolves
-    from its far end over the fade-in) and takes input on the first frame after it.
+    from its far end while the landing pose is drawn) and takes input on the first frame after it.
   - **A fall into a pit** (nothing to see, D3) keeps its instant rebuild and 0.35 s camera pan; the 0.40 s appear clip is
-    replaced by the landing pose (0.25 s) and idle (0.15 s), with the slack thread dissolving over the 0.40 s.
+    replaced by the landing pose (0.25 s) and idle (0.15 s), with the slack thread dissolving over the landing pose.
   - **Death to control** (first frame the hero moves with Right held, real `KimeriaGame` frame code, 60 Hz,
     `KimeriaGameDeathTimingTest`): before, a hit took **67 frames, 1.117 s** (0.70 s slow motion, then the 0.40 s
     appear clip under a 0.35 s pan; the same on forest-0, -1 and -2, 1.111 s at 144 Hz, 1.133 s at 30 Hz) and a pit
@@ -2035,7 +2035,14 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     higher of the two floor lines (the hero's and the start's); where the chord itself is lower (a death below the start),
     the thread follows the chord. Without it, a death 48 px below the start hung the thread up to 27 px under the
     start's floor line (`SilverThreadTest.aDeathBelowTheStartNeverSagsUnderTheStartsFloor`, which fails with the clamp
-    off). The slack thread after the pull is a drape that meets the floor at its lowest point and a coil lying on it.
+    off). The slack thread after the pull is a drape that meets the floor at its lowest point and a coil lying on it,
+    on the tied wrist's side of the body (the side is taken from the wrist's position against the body's centre; it is
+    behind him, since he always lands facing right), and it is drawn only with the landing frame (0.20 s after a pull,
+    0.25 s after a pit), dissolving over it. The
+    web build showed both earlier versions wrong (2026-11-17): a drape always to the right crossed his legs, and a
+    slack thread that outlived the landing frame hung in the air where the hand no longer was. `SilverThreadTest` checks
+    the side, the dissolve and the lifetime on both paths (`arriveUnderThread`, `arriveAfterReset`); either old
+    behaviour fails it.
   - **Facing and poses:** the pull frames of [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343)'s
     second set (D79), drawn through `Player.showPull`: the tug from 0.10 s, the lift from 0.45 s, the land after a
     respawn (0.20 s under the fade-in, 0.25 s after a pit), `NO_PULL` after. The thread is tied to the **left** wrist in

@@ -125,8 +125,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final float PULL_DISTANCE = 10f, PULL_RISE = 2f;
     /** A death this close to the start (px, wrist to anchor) sends the thread straight up, to the healer's end. */
     private static final float THREAD_NEAR = 32f, THREAD_UP = 400f;
-    /** After a pull: the landing pose under the fade-in, then idle; the slack thread dissolves over the fade-in. */
-    private static final float LANDING_POSE_SECONDS = .20f, LANDING_SLACK_SECONDS = RoomFade.HALF_SECONDS;
+    /** After a pull: the landing pose under the fade-in, then idle; the slack thread dissolves with the landing pose. */
+    private static final float LANDING_POSE_SECONDS = .20f;
     /** After a pit: the landing pose, then idle; the arrival takes as long as the appear clip it replaced (4 x 0.1 s). */
     private static final float PIT_LANDING_POSE_SECONDS = .25f, PIT_ARRIVAL_SECONDS = .40f;
     /** The pluck as the thread goes taut plays at this fraction of the sound volume. */
@@ -718,11 +718,13 @@ public class Player extends Actor<Player.State> implements CollideBody {
         TextureRegion frame = currentFrame();
         if (frame != null) batch.draw(frame, frameX(), frameY(), FRAME_SIZE, FRAME_SIZE);
         if (carried != null) carried.renderHeld(batch);
-        if (respawnPhase == RespawnPhase.LANDING || respawnPhase == RespawnPhase.ARRIVING) {
-            // The slack thread hangs from the landing frame's left wrist (facing right after a respawn) and dissolves.
-            float slackSeconds = respawnPhase == RespawnPhase.LANDING ? LANDING_SLACK_SECONDS : PIT_ARRIVAL_SECONDS;
+        if (drawsLandingPose()) {
+            // The slack thread hangs from the landing frame's left wrist, on that wrist's side of the body (behind him,
+            // facing right), and dissolves while the landing frame is drawn; it never outlives the hand that holds it.
+            float poseSeconds = respawnPhase == RespawnPhase.LANDING ? LANDING_POSE_SECONDS : PIT_LANDING_POSE_SECONDS;
             pullWrist(PULL_LAND, wristScratch);
-            thread.drawSlack(batch, wristScratch.x, wristScratch.y, position.y + size.y, 1f - arrivalTimer / slackSeconds);
+            float side = wristScratch.x < centerX() ? -1f : 1f;
+            thread.drawSlack(batch, wristScratch.x, wristScratch.y, position.y + size.y, side, 1f - arrivalTimer / poseSeconds);
         }
     }
 

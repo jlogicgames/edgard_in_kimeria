@@ -24,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SilverThreadTest {
     private static final float MIRROR_START_X = 400;
+    /** Inside the landing frame (0.20 s after a pull, 0.25 s after a pit), past the pull's, and past the pit's. */
+    private static final float MID_LANDING_SECONDS = .10f, PAST_LANDING_POSE_SECONDS = .21f, MID_PIT_SECONDS = .12f,
+        PIT_POSE_END_SECONDS = .27f;
     private static final float START_X = 32, FLOOR_TOP = 272, FLOOR_LINE = FLOOR_TOP + 48, LOWER_FLOOR = 48;
     private static final int STRAND_W = 1, STRAND_H = 2, FRAME = 64;
     /** The landing frame's left wrist facing right, (23, 52) in frame pixels, in box coordinates (minus (8, 16)). */
@@ -118,9 +121,44 @@ class SilverThreadTest {
         for (float[] s : strands) bottom = Math.max(bottom, s[1] + s[3]);
         assertEquals(FLOOR_LINE, bottom, .001f, "the coil rests on the floor line (y + 2 = the floor, Y down)");
         assertEquals(FLOOR_LINE, frames.get(0)[1] + FRAME, .001f, "and the landing frame stands on it");
-        hero.advanceLanding(1f);
+        // The tied wrist is behind him (facing right, the left hand): the slack falls on that side, never across his legs.
+        assertSlackOnTheWristSide(hero);
+        int whole = strands.size();
+        hero.advanceLanding(MID_LANDING_SECONDS);
         render(hero);
-        assertTrue(strands.isEmpty(), "dissolved by the end of the fade-in");
+        assertEquals(Player.PULL_LAND, hero.pullFrame(), "still the landing frame");
+        assertTrue(!strands.isEmpty() && strands.size() < whole, "dissolving from the far end: " + strands.size() + " of " + whole);
+        hero.advanceLanding(PAST_LANDING_POSE_SECONDS - MID_LANDING_SECONDS);
+        render(hero);
+        assertEquals(Player.NO_PULL, hero.pullFrame());
+        assertTrue(strands.isEmpty(), "no slack thread once the landing frame is gone (it would hang in the air)");
+    }
+
+    /** The pit path (D81): the same slack, on the wrist's side, dissolving over the 0.25 s landing frame, gone with it. */
+    @Test void afterAPitTheSlackThreadLivesOnlyAsLongAsTheLandingFrame() {
+        Player hero = hero(START_X);
+        hero.arriveAfterReset();
+        render(hero);
+        assertEquals(Player.PULL_LAND, hero.pullFrame());
+        assertFalse(strands.isEmpty(), "the slack thread shows with the landing frame");
+        assertSlackOnTheWristSide(hero);
+        int whole = strands.size();
+        for (int i = 0; i < Math.round(MID_PIT_SECONDS * 60); i++) hero.update(HeadlessLevelHarness.STEP);
+        render(hero);
+        assertEquals(Player.PULL_LAND, hero.pullFrame(), "still the landing frame at 0.12 s");
+        assertTrue(!strands.isEmpty() && strands.size() < whole, "dissolving over the landing frame: " + strands.size() + " of " + whole);
+        for (int i = Math.round(MID_PIT_SECONDS * 60); i < Math.round(PIT_POSE_END_SECONDS * 60); i++) hero.update(HeadlessLevelHarness.STEP);
+        render(hero);
+        assertEquals(Player.NO_PULL, hero.pullFrame(), "the landing frame ends at 0.25 s");
+        assertEquals(Player.RespawnPhase.ARRIVING, hero.respawnPhase(), "while the 0.40 s arrival still runs");
+        assertTrue(strands.isEmpty(), "and the slack thread goes with the landing frame, not with the arrival");
+    }
+
+    /** Every strand of the slack lies on the tied wrist's side: from the wrist outward, away from the body's centre. */
+    private void assertSlackOnTheWristSide(Player hero) {
+        float wristX = strands.get(0)[0];
+        float side = wristX < hero.centerX() ? -1f : 1f;
+        for (float[] st : strands) assertTrue((st[0] - wristX) * side >= 0, "the slack runs away from the body, x " + st[0]);
     }
 
     /**
