@@ -872,7 +872,7 @@ class AllocationBudgetTest {
     }
 
     /**
-     * D88 (#434): the route lever selected (Up held) with a view that puts both its mechanisms, the ladder and the lift, off screen, so the
+     * D87 update (#434): the route lever selected (Up held) with a view that puts both its mechanisms, the ladder and the lift, off screen, so the
      * fairy cycles between two edge points (dwell 0.8 s, flight, wrap) for the whole window; update and both render passes. The test counts
      * the hops inside the measured window. Ceiling: the shared isolated fairy-scene ceiling ({@link #FAIRY_GUIDE_CEILING}), as D87.
      */
@@ -893,6 +893,30 @@ class AllocationBudgetTest {
         harness.held.clear();
         assertTrue(hops[0] >= 10, "she must hop between the two targets inside the measured window: " + hops[0]);
         assertWithinBudget("fairy guide cycling between two off-screen targets", FAIRY_GUIDE_CEILING, bytes);
+    }
+
+    /**
+     * D87 update (#434): the post-pull cue with the ladder and the lift both off screen and nothing selected (Up not held), the pull renewed
+     * every 150 frames: {@code sizeCue} (the copy into {@code cue}, the count) and the scans of the {@code cue} array run inside the window,
+     * and she hops between the two points. Same ceiling as {@link #fairyGuideCyclingBetweenTwoOffScreenTargets}.
+     */
+    @Test void fairyGuidePostPullCueCyclingBetweenTwoOffScreenTargets() {
+        Rectangle view = new Rectangle();
+        Level level = harness.roomOf("forest-1", 3, () -> view);
+        level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
+        view.set(0, 0, 640, 360);
+        for (int i = 0; i < SELECT_FRAMES; i++) level.update(STEP);
+        var fairy = level.fairy();
+        var trigger = level.triggers.get(0);
+        com.jlogicsoftware.kimeria.entity.Entity[] last = {null};
+        int[] hops = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % 150 == 0) level.linkedMechanismsInto(trigger, fairy.beginChanged());
+            fairy.update(1f / 60f, level.player); fairy.renderBehind(batch); fairy.renderFront(batch);
+            if (fairy.offscreenTarget() != last[0]) { last[0] = fairy.offscreenTarget(); hops[0]++; }
+        });
+        assertTrue(hops[0] >= 20, "hops between the targets and the ends of the cue inside the window: " + hops[0]);
+        assertWithinBudget("fairy guide post-pull cue cycling between two off-screen targets", FAIRY_GUIDE_CEILING, bytes);
     }
 
     /** A selected lever marks the mechanisms it drives every frame (D82): filled into a reused array, no list per call. */

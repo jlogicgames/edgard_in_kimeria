@@ -350,7 +350,7 @@ class FairyOffscreenTest {
         assertEquals(FairyGuide.CHANGED_SECONDS, level.fairy().changedSecondsLeft(), 1e-6);
     }
 
-    // ---- D88 (#434): several off-screen mechanisms are shown in turn ----
+    // ---- D87 update (#434): several off-screen mechanisms are shown in turn ----
 
     /** The fireball refill of the route room: a static third entity for a marked set (the lift and the ladder are the other two). */
     private Entity refill(Level level) {
@@ -494,9 +494,12 @@ class FairyOffscreenTest {
         assertTrue(fairy.offscreenTarget() == lift(level), "the lift is the one off-screen mechanism");
         float px = fairy.x(), py = fairy.y();
         float k = 1 - (float) Math.exp(-14f * STEP);
+        boolean arrived = false;
         for (int i = 0; i < 60 * 8; i++) {
             frame(level);
             assertSame(lift(level), fairy.offscreenTarget(), "the same one for as long as Up is held (no cycle with one)");
+            arrived |= fairy.mode() == FairyGuide.Mode.TWINKLE;
+            if (arrived) assertEquals(FairyGuide.Mode.TWINKLE, fairy.mode(), "once arrived she twinkles on every frame (frame " + i + ")");
             if (i < 20) { // the D87 smoothing toward the (slowly moving) edge point, step for step
                 px += (fairy.goalX() - px) * k; py += (fairy.goalY() - py) * k;
                 assertEquals(px, fairy.x(), 0f, "bit-for-bit the D87 flight at frame " + i); assertEquals(py, fairy.y(), 0f);
@@ -517,5 +520,90 @@ class FairyOffscreenTest {
         assertNull(fairy.offscreenTarget());
         assertNotEquals(FairyGuide.Mode.TWINKLE, fairy.mode());
         assertEquals(0, fairy.changedTargets().size);
+    }
+
+    /** Puts the lever's trigger (a static entity; the ladder and the lift put themselves back each update) and the refill at the given top-left corners. */
+    private Entity trigger(Level level) { return level.triggers.get(0); }
+
+    private void markStatic(Level level) {
+        var changed = level.fairy().beginChanged();
+        changed.add(lift(level)); changed.add(trigger(level)); changed.add(refill(level));
+    }
+
+    private void place(Level level, float triggerX, float triggerY, float refillX, float refillY) {
+        trigger(level).position.set(triggerX, triggerY); refill(level).position.set(refillX, refillY);
+    }
+
+    @Test void aSetThatCrossesThePlusMinusPiSeamIsVisitedClockwiseThroughIt() {
+        Level level = route();
+        followCamera = false;
+        view.set(980, 520, 640, 360); // centre (1300, 700); the lift stays at its place, centre (1952, 184): above right, -0.67
+        place(level, 492, 724, 1292, 1492); // ladder left and a little below (+3.04), refill below (+1.57)
+        markStatic(level);
+        Trace t = trace(level, 215);
+        assertTrue(t.n >= 3, "three shown: " + t.n);
+        assertSame(refill(level), t.targets[0], "the nearest (below) first, +1.57");
+        assertSame(trigger(level), t.targets[1], "then +3.04, just short of the seam");
+        assertSame(lift(level), t.targets[2], "then through +-pi to -0.67");
+    }
+
+    @Test void targetsOnOneRayAreVisitedByIncreasingX() {
+        Level level = route();
+        followCamera = false;
+        view.set(0, 4, 640, 360); // centre (320, 184): all three on the horizontal ray to the right, the lift (centre y 184) at x 1952
+        place(level, 1492, 176, 992, 176);
+        markStatic(level);
+        Trace t = trace(level, 215);
+        assertTrue(t.n >= 3, "three shown: " + t.n);
+        assertSame(refill(level), t.targets[0]); assertSame(trigger(level), t.targets[1]); assertSame(lift(level), t.targets[2]);
+    }
+
+    @Test void releasingUpMidCycleEndsTheCueAndTheNextHoldStartsAtTheNearest() {
+        Level level = route();
+        walkToLever(level);
+        followCamera = false;
+        view.set(0, 0, VIEW_W, VIEW_H); // ladder (nearer) and lift off screen
+        held.add(Input.Keys.W);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, ladder(level));
+        int guard = 0;
+        while (fairy.offscreenTarget() == ladder(level)) { frame(level); assertTrue(guard++ < 200); }
+        assertSame(lift(level), fairy.offscreenTarget(), "the cycle moved on to the lift");
+        held.clear();
+        settle(level, 20);
+        assertNull(fairy.offscreenTarget(), "Up released: the cue is over");
+        held.add(Input.Keys.W);
+        frame(level);
+        assertSame(ladder(level), fairy.offscreenTarget(), "a new cycle starts at the nearest, not after the lift");
+    }
+
+    @Test void aNewPullMidCycleThatKeepsTheTargetCarriesOnAndOneThatDropsItStartsAtTheNearest() {
+        Level level = route();
+        farView();
+        markThree(level);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, ladder(level));
+        markThree(level); // the same lever pulled again: the cue is renewed, the current target is still in it
+        frame(level);
+        assertSame(ladder(level), fairy.offscreenTarget(), "still in the set: no hop in the middle of its dwell");
+        waitForTwinkleAt(level, refill(level)); // the cycle went on, and the window restarted with the pull
+        var only = fairy.beginChanged();
+        only.add(lift(level)); // another lever: a set without the current target
+        frame(level);
+        assertSame(lift(level), fairy.offscreenTarget());
+    }
+
+    @Test void aLiftSwingingPastAStaticTargetsAngleDuringItsDwellDoesNotMakeTheNextHopSkipIt() {
+        Level level = route();
+        followCamera = false;
+        view.set(0, 0, 640, 360); // centre (320, 180)
+        place(level, 1536, 144, 1692, 162); // ladder a=-0.023 (nearest), refill a=-0.007, the lift (a=+0.002) where it is
+        markStatic(level);
+        var fairy = level.fairy();
+        waitForTwinkleAt(level, refill(level));
+        for (int i = 0; i <= 40; i++) { refill(level).position.y = 162 + 90 * i / 40f; frame(level); assertSame(refill(level), fairy.offscreenTarget()); } // its angle goes to +0.058, past the lift's
+        int guard = 0;
+        while (fairy.offscreenTarget() == refill(level)) { refill(level).position.y = 252; frame(level); assertTrue(guard++ < 200); }
+        assertSame(lift(level), fairy.offscreenTarget(), "the lift (a = +0.002) is next; the wrap to the ladder would skip it");
     }
 }

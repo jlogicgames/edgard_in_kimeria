@@ -2375,7 +2375,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     are off screen; the one she already serves keeps the job while it stays off screen (no flip-flop between near-equal distances).
     **Superseded by the update (#434) below:** with several off screen she now cycles through them; with exactly one the rule is the
     one above, unchanged.
-  - **While and after.** She goes to the edge while a lever is selected (Up held at it) and for 1.5 s after a pull, whether or not it
+  - **While and after.** She goes to the edge while a lever is selected (Up held at it) and for 1.5 s (see the update below) after a pull, whether or not it
     is still selected. When no mechanism is off screen she behaves exactly as in D82 (points beside the selected target, idles at
     his shoulder). When the cue ends she flies back at the follow rate. The selection itself (`selected()`, the label, eligibility, D29,
     D30) is untouched: only her position and the glows change.
@@ -2429,8 +2429,11 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     `atan2(dy, dx)` (Y down, so an increasing angle is clockwise on screen) greater than the last one's, ties by smaller x then y; after
     the last it wraps to the smallest. Why not by distance: a distance order jumps between the near and far edge points of the
     screen and back (zig-zag); every edge point lies on the view's border on the ray toward its mechanism, so angle order is the order
-    of the points along the border and each flight is to the neighbouring point, except the one wrap. The key is kept after a target
-    leaves, so the cycle goes on after its place.
+    of the points along the border and each flight is to the neighbouring point, except the one wrap. The key is the target's place when it was
+    chosen (frozen, so a lift swinging past another target's angle during its dwell does not make the next hop skip that target), its angle
+    taken round the view centre at the hop (so a moving camera does not make it stale); it is kept after a target leaves the view, so the
+    cycle goes on after its place. When the current target is no longer in the selected lever's or the cue's set (another lever, Up released,
+    the cue ended) the key is dropped and a new cycle starts at the nearest.
   - **Dwell.** 0.8 s of twinkle (`DWELL_SECONDS` = two loops of the 0.4 s appear/twinkle clip), counted from her arrival within 8 px
     of the point (flight time is not part of it), then she flies to the next at the usual rate 14 (about 0.2 to 0.4 s). A hop ends
     after 2 s at the latest (`HOP_MAX_SECONDS`) so a point she cannot reach (a fast-moving lift) never holds the cycle. 0.8 s is
@@ -2446,15 +2449,15 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     pull (`FairyGuide.sizeCue`; two: 2.4 s, three: 3.6 s). For one it is 1.5 s as before. While Up is held at the lever she cycles
     without a limit. Open for the author: whether 2.4 and 3.6 s of fairy after a pull are acceptable, or the cue should stay at 1.5 s.
   - **Room change** (`reset()`) drops the cycle, its key and the cue copy, so the next cue starts at the nearest.
-  - **Tests.** `FairyOffscreenTest` +8 (now 29): three targets (nearest first, clockwise, wrap, 0.8 s of twinkle at each, the last one
+  - **Tests.** `FairyOffscreenTest` +13 (now 34): three targets (nearest first, clockwise, wrap, 0.8 s of twinkle at each, the last one
     inside its window), the flight between two edge points (goal = `edgePoint`, FLY then TWINKLE), the held-lever cycle (ladder, lift,
     ladder, ... over 12 s), a target coming into view mid-dwell, a target leaving the view joining only at a hop, the window for three
-    and for one, the single target step for step, a room change. The scenarios are built in the tests (the shipped maps have no room
+    and for one, the single target step for step (twinkling on every frame once arrived), a room change, a set across the +-pi seam, targets on one ray (ties by x), Up released mid-cycle (the next hold starts at the nearest), a new pull mid-cycle (current target kept and dropped), and a moving target passing a static one's angle. The scenarios are built in the tests (the shipped maps have no room
     with two off-screen mechanisms for one lever; the route room's lift and ladder, plus its fireball refill as a third marked
     entity). The old "nearest and sticky" test still passes: it holds within the first dwell. No threshold moved.
   - **Allocation.** `AllocationBudgetTest.fairyGuideCyclingBetweenTwoOffScreenTargets` (the route lever held, view far left, ladder and
     lift both off screen, at least 10 hops in the 1,200 measured frames; update and both render passes): 0.0, 0.0, 0.0 B/frame in
-    3 isolated runs, ceiling `FAIRY_GUIDE_CEILING` 8 B (the shared isolated fairy-scene ceiling, as D87 argues). The ordering is a
+    3 isolated runs; `fairyGuidePostPullCueCyclingBetweenTwoOffScreenTargets` (nothing selected, the pull renewed every 150 frames, so `sizeCue` and the `cue` scan run) 0.6, 0.0, 0.0; ceiling `FAIRY_GUIDE_CEILING` 8 B (the shared isolated fairy-scene ceiling, as D87 argues). The ordering is a
     scan per hop over the two fixed arrays, with no sort and no new object. New helpers are in `tools/check_allocations.py` `HOT_METHODS`.
   - **Not verified:** the look and the 0.8 s / 0.4 s feel in the running game (desktop, web, touch), and that a player reads the
     sequence as "each of these". No shipped room has two off-screen mechanisms for one lever, so only a test map shows it. Tracked by

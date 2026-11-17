@@ -43,7 +43,7 @@ public final class FairyGuide {
     public static final float CHANGED_SECONDS = 1.5f, CHANGED_ALPHA = .8f, CHANGED_FADE_SECONDS = .4f, EDGE_MARGIN = 16f,
         TWINKLE_RANGE = 8f; // she twinkles within this of the edge point, which keeps moving while the lift runs
     /**
-     * D88 (#434): several linked mechanisms off screen are shown in turn. She dwells {@code DWELL_SECONDS} at each edge point (two
+     * D87 update (#434): several linked mechanisms off screen are shown in turn. She dwells {@code DWELL_SECONDS} at each edge point (two
      * loops of the twinkle), then flies to the next in clockwise order around the view centre; one hop never lasts longer than
      * {@code HOP_MAX_SECONDS} (a target she cannot reach must not hold the cycle). The post-pull cue gets {@code HOP_FLIGHT_SECONDS}
      * of flight for each target besides the dwell, and never less than {@link #CHANGED_SECONDS}.
@@ -72,18 +72,24 @@ public final class FairyGuide {
     private final Array<Entity> passive = new Array<>(false, PASSIVE_CAPACITY);
     /** The mechanisms of the lever just pulled (filled by {@code Level.activateTrigger}) and those of the selected lever. */
     private final Array<Entity> changed = new Array<>(false, PASSIVE_CAPACITY), linked = new Array<>(false, PASSIVE_CAPACITY);
-    /** The post-pull copy of {@link #changed} the off-screen cue works from; it can outlive the in-view marks when several are off screen (D88). */
+    /** The post-pull copy of {@link #changed} the off-screen cue works from; it can outlive the in-view marks when several are off screen (D87 update (#434)). */
     private final Array<Entity> cue = new Array<>(false, PASSIVE_CAPACITY);
     private final Vector2 edge = new Vector2();
     private Supplier<Rectangle> viewSource;
     private float changedLeft, cueLeft;
     private boolean cueSizing;
-    /** The off-screen mechanism she is flying to the edge for, or null; how long she has twinkled at it and how long the hop has lasted (D88). */
+    /** The off-screen mechanism she is flying to the edge for, or null; how long she has twinkled at it and how long the hop has lasted (D87 update (#434)). */
     private Entity offscreen;
     private float dwell, hopTime;
-    /** The cycle key of the last target (angle round the view centre, x, y), kept so the next hop starts after it even once it left the cycle. */
+    /**
+     * Where the last target was (its centre, x, y) when it was chosen, frozen then and kept so the next hop starts after its place even once it left
+     * the cycle or a lift moved on. Its angle is taken round the view centre at the hop, so a moving camera does not make the key stale.
+     */
     private boolean hasKey;
-    private float keyA, keyX, keyY;
+    private float keyPX, keyPY, keyX, keyY, keyA;
+    /** Scratch of the next-target scans (no allocation per hop). */
+    private float bestD, afterA, afterX, afterY, firstA, firstX, firstY;
+    private Entity after, first;
     private Entity selected;
     /** The target she is pointing at, so a new target restarts the point clip even where she already hovers. */
     private Entity pointedAt;
@@ -112,7 +118,7 @@ public final class FairyGuide {
         changed.clear();
         changedLeft = CHANGED_SECONDS;
         cueLeft = CHANGED_SECONDS;
-        cueSizing = true; // the first update copies the set into the cue and sizes the window (D88)
+        cueSizing = true; // the first update copies the set into the cue and sizes the window (D87 update (#434))
         return changed;
     }
 
@@ -199,7 +205,7 @@ public final class FairyGuide {
     }
 
     /**
-     * The first update after a pull (D88): copies the marked set into the cue and, when several of them are off screen, gives the
+     * The first update after a pull (D87 update (#434)): copies the marked set into the cue and, when several of them are off screen, gives the
      * cue time for a dwell and a flight at each, so every one is shown at least once; never less than {@link #CHANGED_SECONDS}.
      * One off-screen mechanism needs {@code DWELL + FLIGHT} = 1.2 s, under the 1.5 s, so a single one behaves as in D87.
      */
@@ -214,7 +220,7 @@ public final class FairyGuide {
     }
 
     /**
-     * The mechanism to send her to (D88). With none, or none off screen, null. The first is the nearest to the view centre (ties:
+     * The mechanism to send her to (D87 update (#434)). With none, or none off screen, null. The first is the nearest to the view centre (ties:
      * smaller x, then y) of the selected lever's mechanisms and the post-pull cue's that do not overlap {@code view}. She keeps it for
      * {@link #DWELL_SECONDS} of twinkle (or {@link #HOP_MAX_SECONDS}); then, if another is off screen, the next in clockwise order
      * round the view centre (Y down, so increasing {@code atan2}), the first again after the last. One that comes into view, is
@@ -224,11 +230,11 @@ public final class FairyGuide {
     private Entity offscreenTarget(Rectangle view) {
         if (view == null || view.width <= 0 || view.height <= 0) { hasKey = false; return null; }
         Entity cur = offscreen;
-        boolean valid = cur != null && !cur.isRemoved() && !overlapsView(cur, view) && (linked.contains(cur, true) || cue.contains(cur, true));
+        boolean listed = cur != null && (linked.contains(cur, true) || cue.contains(cur, true));
+        boolean valid = listed && !cur.isRemoved() && !overlapsView(cur, view);
         if (valid) {
-            setKey(cur, view);
-            if (dwell < DWELL_SECONDS && hopTime < HOP_MAX_SECONDS) return cur;
-        } else if (cur == null) hasKey = false;
+            if (dwell < DWELL_SECONDS && hopTime < HOP_MAX_SECONDS) return cur; // the key stays as frozen on arrival, even if a lift moves her target's angle
+        } else if (!listed) hasKey = false; // another lever or the end of the cue: a new cycle, from the nearest
         Entity next = hasKey ? nextAfterKey(view) : nearestOffscreen(view);
         if (next == null) { hasKey = false; return null; }
         dwell = 0; hopTime = 0; // a lone target gets a new dwell and does not move
@@ -237,7 +243,7 @@ public final class FairyGuide {
     }
 
     private void setKey(Entity e, Rectangle view) {
-        keyA = angle(e, view); keyX = e.getX(); keyY = e.getY();
+        keyPX = e.centerX(); keyPY = e.centerY(); keyX = e.getX(); keyY = e.getY();
         hasKey = true;
     }
 
@@ -249,12 +255,10 @@ public final class FairyGuide {
         return a1 < a2 || a1 == a2 && (x1 < x2 || x1 == x2 && y1 < y2);
     }
 
-    private float afterA, afterX, afterY, firstA, firstX, firstY;
-    private Entity after, first;
-
     /** The off-screen candidate with the smallest key greater than the last one's, or the smallest of all (the wrap); null with none. */
     private Entity nextAfterKey(Rectangle view) {
         after = null; first = null;
+        keyA = MathUtils.atan2(keyPY - (view.y + view.height / 2f), keyPX - (view.x + view.width / 2f));
         scanKeys(linked, view);
         scanKeys(cue, view);
         return after != null ? after : first;
@@ -269,8 +273,6 @@ public final class FairyGuide {
             if (keyLess(keyA, keyX, keyY, a, x, y) && (after == null || keyLess(a, x, y, afterA, afterX, afterY))) { after = e; afterA = a; afterX = x; afterY = y; }
         }
     }
-
-    private float bestD;
 
     /** The nearest off-screen candidate to the view centre (the start of a cycle); null when all are in view. */
     private Entity nearestOffscreen(Rectangle view) {
