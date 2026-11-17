@@ -771,6 +771,35 @@ class AllocationBudgetTest {
         assertWithinBudget("fairy guide with passive glows", FAIRY_GUIDE_CEILING, bytes);
     }
 
+    /** Measured 0.6 to 2.0 B/frame in 3 isolated runs (D87, 2026-11-17), under the same 8 B ceiling as the other isolated fairy scenes ({@link #FAIRY_GUIDE_CEILING}). The scene found 24.6 B/frame before the fix: {@code Player.selectedInteraction} made a record each frame any target was selected. */
+    private static final float ROUTE_LEVER_X = 1440, ROUTE_FLOOR_Y = 272;
+    private static final int PULL_CUE_FRAMES = 60, SELECT_FRAMES = 30;
+
+    /**
+     * D87 (#419): the hero at the forest-1 route room's lever with Up held, the lift outside the 640x360 view, so the fairy flies to the
+     * screen edge and twinkles there; the pulled lever's marks are renewed every {@link #PULL_CUE_FRAMES} frames, so the clear glow, its
+     * fade and the glints on the in-view ladder run inside the window. Update and both render passes of the fairy only.
+     */
+    @Test void fairyGuidePointingOffScreenWithAPostPullGlow() {
+        Rectangle view = new Rectangle();
+        Level level = harness.roomOf("forest-1", 2, () -> view);
+        var t = level.player.roomCameraTarget();
+        level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
+        harness.held.add(com.badlogic.gdx.Input.Keys.W);
+        for (int i = 0; i < SELECT_FRAMES; i++) { t = level.player.roomCameraTarget(); view.set(t.x, t.y, 640, 360); level.update(STEP); }
+        var fairy = level.fairy();
+        var trigger = level.triggers.get(0);
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % PULL_CUE_FRAMES == 0) level.linkedMechanismsInto(trigger, fairy.beginChanged());
+            fairy.update(1f / 60f, level.player); fairy.renderBehind(batch); fairy.renderFront(batch);
+        });
+        harness.held.clear();
+        assertNotNull(fairy.offscreenTarget(), "the lift must be off screen in this scenario");
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.TWINKLE, fairy.mode(), "she must be twinkling at the edge");
+        assertTrue(fairy.changedTargets().size > 0 || fairy.changedSecondsLeft() == 0, "the post-pull marks run in this scenario");
+        assertWithinBudget("fairy guide pointing off screen with a post-pull glow", FAIRY_GUIDE_CEILING, bytes);
+    }
+
     /** A selected lever marks the mechanisms it drives every frame (D82): filled into a reused array, no list per call. */
     @Test void linkedMechanismsOfASelectedLever() {
         Level level = harness.roomOf("forest-0", 0);

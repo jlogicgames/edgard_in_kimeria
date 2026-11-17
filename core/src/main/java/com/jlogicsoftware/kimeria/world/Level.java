@@ -464,6 +464,7 @@ public class Level implements WorldObject {
         this.game = game;
         fx = new EnvironmentFx(() -> !game.screenShakeDisabled(), TimeUtils.nanoTime() ^ FX_SEED_MIX);
         fairy = new FairyGuide(assets);
+        fairy.setView(visibleWorldRect);
         this.player = player;
         this.name = levelName;
         this.entryCoins = game.coinsCollected();
@@ -1149,6 +1150,7 @@ public class Level implements WorldObject {
             }
         }
         activated.clear();
+        linkedMechanismsInto(trigger, fairy.beginChanged()); // D87: the fairy keeps a cue on what this pull changed
     }
 
     /**

@@ -142,7 +142,18 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** The first grounded intermediate platform is slightly above half-height in the authored room. */
     private static final float LADDER_BIDIRECTIONAL_ENTRY_FRACTION = 1f / 3f;
     private record LadderEntry(Ladder ladder, boolean canClimbUp, boolean canClimbDown) { }
-    private record InteractionTarget(Carryable carryable, Trigger mechanism) { }
+    /**
+     * The one target Up + Action would affect. One reused instance ({@link #interaction}), because {@code selectedInteraction()} runs
+     * every frame a target is selected (the fairy guide, D87): callers read it at once, none keeps it past the next call.
+     */
+    private static final class InteractionTarget {
+        private Carryable carryable;
+        private Trigger mechanism;
+        InteractionTarget set(Carryable carryable, Trigger mechanism) { this.carryable = carryable; this.mechanism = mechanism; return this; }
+        Carryable carryable() { return carryable; }
+        Trigger mechanism() { return mechanism; }
+    }
+    private final InteractionTarget interaction = new InteractionTarget();
 
     private final GameContext game;
     private Level level;
@@ -802,14 +813,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (level == null || !canFight()) return null;
         Trigger mechanism = selectedMechanism();
         Carryable carryable = selectedCarryable();
-        if (mechanism == null) return carryable == null ? null : new InteractionTarget(carryable, null);
-        if (carryable == null) return new InteractionTarget(null, mechanism);
+        if (mechanism == null) return carryable == null ? null : interaction.set(carryable, null);
+        if (carryable == null) return interaction.set(null, mechanism);
         float mechanismDistance = targetDistance(mechanism);
         float carryableDistance = targetDistance(carryable);
         if (carryableDistance < mechanismDistance
             || (carryableDistance == mechanismDistance && carryable.id < mechanism.id))
-            return new InteractionTarget(carryable, null);
-        return new InteractionTarget(null, mechanism);
+            return interaction.set(carryable, null);
+        return interaction.set(null, mechanism);
     }
 
     private Entity interactionFeedbackTarget(InteractionTarget target) {
@@ -1031,6 +1042,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
         }
         if (selected instanceof Lever lever) level.linkedMechanismsInto(lever.trigger, out);
         out.removeValue(selected, true);
+    }
+
+    /** Fills {@code out} (cleared first) with the mechanisms of {@code selected} when it is a lever, else leaves it empty (D87: the fairy's off-screen cue). */
+    public void collectLinkedTargets(Array<Entity> out, Entity selected) {
+        out.clear();
+        if (level != null && canFight() && selected instanceof Lever lever) level.linkedMechanismsInto(lever.trigger, out);
     }
 
     /** Adds {@code target} once (identity), never the selected one. */
