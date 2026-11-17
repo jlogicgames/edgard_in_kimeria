@@ -256,7 +256,7 @@ the running escalators and the fireball refill, not on the falling platforms: me
 hero is back on the floor past them and then holds body x 352-372, 128 px beyond the last platform; its
 lever-and-torch pair repeats `forest-0-lever` with no role: split the room itself so the RedMob is met alone first, handle that pair (ids 12/13) and revisit D58, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375). `forest-entry` introduced six elements and held the D24/#95
 practice objects that `forest-0` now teaches; [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) removed them and split the room (see "forest-entry split (#376)" below).
-`forest-entry` still introduces four elements and carries an `Overload reason`, tracked by [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417).
+`forest-entry` introduced four elements; [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) ([D96](DECISIONS.md#d96-the-first-coin-is-met-in-the-tree-room-and-the-bat-ingredient-in-the-wall-room-417-2026-11-17)) took the Bat ingredient to `forest-walls` and put the level's first coin in `forest-1-tree`, so it introduces two.
 
 **Done for forest-1 (#375, D85, 2026-11-17).** The first RedMob (id 11) and the refill (id 25) moved out of
 `forest-1-traps` into a new first room, `forest-1-mob` (x 3520-4320, after the tree room on the map, first in the
@@ -272,13 +272,13 @@ removed from `forest-2`, and `forest-entry` is split at **x 736**: `forest-entry
 752, 272). The 56 px of floor between the Bomb's blast (x 632-696) and the second YellowMob's patrol could not hold an
 exit, two walls and a safe entrance, so that YellowMob's left patrol is shortened (`offNeg` 5 to 1, left end x 816).
 The floor block x 608-1280 is cut at x 736; trunk tiles mark the new seam as at the other room seams; bush 131 moves
-from x 700 to x 768 (it sank into the new wall). The Bat ledge (x 416-480) is still reached from the platform stair;
-the collection-return replay collects the Bat without the ladder. Cards: [ROOM_CARDS.md](ROOM_CARDS.md).
+from x 700 to x 768 (it sank into the new wall). The Bat ledge (x 416-480) is still reached from the platform stair (it no longer holds the Bat since #417);
+the collection-return replay collects the Bat in `forest-walls`. Cards: [ROOM_CARDS.md](ROOM_CARDS.md).
 
 Measured (`RoomReplayTest`, real input, hazards on, three identical attempts): `forest-entry` **6.80 s** required,
-**10.40 s** all coins; `forest-walls` **8.80 s**; `forest-canopy` unchanged 9.48 s; collection returns entry 6.72 /
-6.12 / 6.12 s, walls 7.32 s, canopy 9.62 / 9.48 / 9.48 s. The worst retry in the Forest drops from about 16 s to
-about 9 s. Map SHA-256 `1ffc1c82388567ef133f3ebc5e3b3f2344a8728cec8c2310c052bc5486575369`. The carry, lever and
+**10.40 s** all coins; `forest-walls` **8.80 s**; `forest-canopy` unchanged 9.48 s; collection returns entry 6.12 /
+6.12 / 6.12 s (it was 6.72 / 6.12 / 6.12 s while the Bat stood on the entry ledge; the Bat left in #417), walls 7.32 s on every trip (the Bat is now taken there, on the way), canopy 9.62 / 9.48 / 9.48 s. The worst retry in the Forest drops from about 16 s to
+about 9 s. `forest-2.tmx` SHA-256 after #417 (Bat moved, nothing else): `52391071515f322a082b41a9cc72610736d28e0407a790b4b0136f06047c59ea`. The carry, lever and
 ladder hint tests that used the removed objects run on `core/src/test/resources/tiles/practice-test.tmx`,
 a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Not checked in the running game (camera at the seam, tile look): [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428).
 
@@ -507,8 +507,8 @@ layer offset that this text already includes in the visible position).
 | ---: | --- | --- |
 | 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
 | 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
-| 240–320 | Quicksand, vertical Bat enemy (272); optional one-way steps to the coins and the Bat ingredient | Hazard + Bat enemy |
-| 416–480 | One-way ledge (id 122) with the Bat ingredient, reached from the stair (the ladder, id 123/124, is removed by #376) | Optional reward |
+| 240–320 | Quicksand, vertical Bat enemy (272); optional one-way steps to the coins | Hazard + Bat enemy |
+| 416–480 | One-way ledge (id 122), reached from the stair; empty since #417 moved the Bat ingredient to `forest-walls` (the ladder, id 123/124, is removed by #376) | Scenery |
 | 512–608 | Horizontal Bat (patrol ends at about 608) and a second quicksand | Same, repeated |
 | 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the sand, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
 | 704–736 | RoomExit (x 704-720), room wall (x 720-736) | End of the room |
@@ -1232,9 +1232,10 @@ y320        ========================================   floor; end walls at x 288
 | Checkpoint | `Checkpoint` (id 7, moved) | 3240 | 0 | 16 x 32 | none | on the crown; ends the level |
 | Trunks | `Decor` (ids 95, 96) | 3168, 3264 | 32 | 16 x 288 | `kind` trunk | scenery behind the branches (decor tier, no collision) |
 | Floor, walls | collisions 79, 80, 81 | 2880 | 320 | 640 x 48; walls 16 x 320 at x 2880 and 3504 | | closed room; the invisible ceiling is added by the loader (`RoomCeilingTest`) |
+| Coin | `Collectable` Coin (id 145) | 3040 | 304 | 16 x 16 | none | the first coin of the game, a sighting only: forest-1 has no healer |
 | Deadline | `Deadline` (id 26) | -1728 | 384 | 5376 x 16 | | widened to cover the new room |
 
-Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint, no enemy, no lethal trap, no coin.
+Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint, no enemy, no lethal trap. One coin (id 145, x 3040, y 304) on the floor, 128 px from the entrance and off the climb: the level's first coin ([D96](DECISIONS.md#d96-the-first-coin-is-met-in-the-tree-room-and-the-bat-ingredient-in-the-wall-room-417-2026-11-17), #417).
 
 ### How it plays
 

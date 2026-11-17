@@ -2639,3 +2639,26 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   hazard just did, and a miss teaches as much as a hit. Only the stone and the three traps of wave 5 did that.
 - **Not verified:** the new and missing sounds on a real output and the look in the running game
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+
+## D96. The first coin is met in the tree room and the Bat ingredient in the wall room (#417, 2026-11-17)
+
+- **Why.** After the D72 split of `forest-entry` (#376) it still introduced four elements (yellowmob, quicksand, coin,
+  ingredient). No `forest-2` room could take the coin (the canopy is at the cap, the wall room had one free slot), and
+  `forest-0` and `forest-1` held no pickup at all.
+- **Decision (author, 2026-11-17).** The Bat ingredient (`forest-2` id 94) moves from the entry ledge (448, 240) to the top
+  of the second wall in `forest-walls` (map y 224; the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is wall id 45's top, y 224, pinned by `RoomReplayTest.theBatRestsOnTopOfTheSecondWall`). A first draft used map y 208, which drew the Bat 16 px above the wall; the review caught it. One new
+  coin (`forest-1` id 145) stands on the floor of `forest-1-tree` at (3040, 304), off the climb. Entry keeps its three
+  coins, now a repeat.
+- **Result.** Introductions: `forest-entry` yellowmob, quicksand (2); `forest-walls` wall-jump, ingredient (2);
+  `forest-1-tree` branch-climb, coin (2). The entry `Overload reason` is removed; `RoomCardsTest` is green.
+- **Healer and saves are unchanged.** Coins are counted per level (`Level.authoredCoins`) and the healer pays from the coins
+  collected since the level began (`entryCoins`), so the forest-1 coin is a sighting that feeds no recipe; the healer text
+  already says coins from earlier lands do not count. The Bat keeps its id and level name, so the ingredient bookkeeping
+  is the same; only the room that owns it changed (a room retry in the entry room no longer restores it).
+- **Measured** (`RoomReplayTest`, `TreeClimbTest`): `forest-entry` 6.80 s required, 10.40 s all coins (unchanged: the
+  route never detoured for the Bat); `forest-walls` 8.80 s required; collection return entry 6.12 s (was 6.12-6.72 s with
+  the Bat), walls 7.32 s (7.3167 s, re-measured after the Bat moved, all three trips; the Bat is taken on the way); the tree room's two climbs are unchanged. No
+  threshold was changed.
+- **Tests changed.** `TreeClimbTest` no longer forbids a coin: it asserts exactly one, on the floor line and left of the
+  first trunk (still no enemy and no lethal trap); `RoomReplayTest` expects the Bat after the walls replay and not after the
+  entry replay, and the room-retry test enters the wall room first.

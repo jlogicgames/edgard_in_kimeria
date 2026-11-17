@@ -440,16 +440,18 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | Level | forest-1, play order 2, room 9 of 9 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
-| Introduces | branch-climb |
+| Introduces | branch-climb, coin |
 | Develops | crumble-support: on a climb a broken branch costs height, not life, and the escape is upward (the next branch), not across, and the rotten column falls behind the climber, so a stop rides him down to the floor |
 | Combines | - |
 | Mastered route | 4.95 s by the rotten column, 6.23 s by the sound tree (`TreeClimbTest`); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | no death by design: the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line (`TreeClimbTest`) |
 | D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`) |
+| Optional | one coin on the floor at x 3040 (id 145), 128 px from the entrance and left of the first trunk, off the climb: the level's first coin, a pure first sighting (forest-1 has no healer, so it feeds no recipe; the healer counts only the forest's own coins) |
 | Hints | none |
 | Landmark | the two trees, with the level's end on the sound tree's crown |
-| Decisions | D80 |
+| Status | [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) (D96): the first coin was added here, so `forest-entry` meets coins as a repeat |
+| Decisions | D80, D96 |
 
 ## forest-2 (play order 3)
 
@@ -459,21 +461,20 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | --- | --- |
 | Level | forest-2, play order 3, room 1 of 4 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
-| Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, keep moving over quicksand, pass the Bats, jump the Bomb, and see the first coins and the Bat ingredient. |
-| Introduces | yellowmob, quicksand, coin, ingredient |
+| Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, keep moving over quicksand, pass the Bats, jump the Bomb, and see the coins. |
+| Introduces | yellowmob, quicksand |
 | Develops | touch-explosive: the Bomb (a reskin of the stump) stands 48 px past the second quicksand pool, so the hero comes off sinking ground straight into its jump, and backing away from its wind-up means backing onto the sand |
 | Combines | - |
-| Repeats | bat-enemy |
-| Mastered route | 6.80 s required, 10.40 s all coins and 6.12-6.72 s on a collection return with the Bat (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
+| Repeats | bat-enemy, coin |
+| Mastered route | 6.80 s required, 10.40 s all coins and 6.12 s on a collection return (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
 | First learning | not measured (#135) |
 | Retry cost | the whole room, about 7 s, for a death at the Bomb at its end (was about 16 s for the undivided room) |
-| Optional | three coins (x 32, 336, 368) and the Bat ingredient on the ledge at x 416-480, reached from the platform stair (the ladder that also led there is removed) |
+| Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
 | D26 | no one-shot support; the Bomb is the only one-shot object and the exit stays reachable after it blows |
 | Hints | none (the D24 controls zone is removed by #376: forest-0 teaches the controls) |
 | Landmark | the stair of three platforms over the first quicksand pool |
-| Overload reason | Four introductions: the split moves the wall jump out, but the coin and the ingredient have no earlier room that can take them (forest-0 is lessons, forest-1 is being re-cut by #375, forest-canopy is at the cap). Moving the first coin or the ingredient elsewhere is tracked by [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417). |
 | Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736 |
-| Decisions | D72 |
+| Decisions | D72, D96 |
 
 Split detail ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)). The free floor between the
 Bomb's blast (x 632-696) and the second YellowMob (x 832, left patrol end x 752, hitbox from x 758) is 56 px, too
@@ -490,19 +491,20 @@ own floor.
 | --- | --- |
 | Level | forest-2, play order 3, room 2 of 4 (x 736-1280, 544 px, 0.85 screen) |
 | Role | challenge |
-| Purpose | Climb two tall walls by wall jumps, starting where a YellowMob walks, then pass a RedMob to the exit. |
-| Introduces | wall-jump |
+| Purpose | Climb two tall walls by wall jumps, starting where a YellowMob walks, take the Bat ingredient lying on the second wall's top, then pass a RedMob to the exit. |
+| Introduces | wall-jump, ingredient |
 | Develops | - |
 | Combines | yellowmob + wall-jump: the YellowMob patrols up to the foot of the first wall, so the climb starts only after it is stomped or timed past |
 | Repeats | yellowmob, redmob |
-| Mastered route | 8.80 s required, 7.32 s on a collection return with its mobs already beaten (`RoomReplayTest`, three identical attempts); target about 20 s |
+| Mastered route | 8.80 s required, 7.32 s on a collection return with its mobs already beaten, Bat included: the Bat lies on the walking route, so it costs no time (`RoomReplayTest`, three identical attempts); target about 20 s |
 | First learning | not measured (#135) |
 | Retry cost | the whole room, about 9 s, for a death at the RedMob by the exit |
+| Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), so a hero who walks on after the climb passes through it; moved here from `forest-entry` by #417 |
 | D26 | no one-shot object; both walls are climbable from every state |
 | Hints | none |
 | Landmark | the two tall walls (x 912 and x 992) |
-| Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) |
-| Decisions | D72 |
+| Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat ingredient from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) |
+| Decisions | D72, D96 |
 
 ### forest-canopy
 

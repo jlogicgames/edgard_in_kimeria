@@ -151,10 +151,12 @@ class RoomReplayTest {
             held.clear(); pressed.clear(); timeScale = 1;
             float entry = replay(level, "forest-entry", false, 0, ENTRY_JUMPS, true);
             assertTrue(entry <= COLLECTION_LIMIT);
-            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT));
+            assertTrue(level.objects.stream().noneMatch(o -> o instanceof Collectable c && c.type() == ItemType.BAT),
+                "#417: the Bat ingredient is no longer in the entry room (the inventory may hold it from an earlier trip)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             float walls = replay(level, "forest-walls", false, 0, WALLS_JUMPS, true);
             assertTrue(walls <= COLLECTION_LIMIT);
+            assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT), "#417: the Bat is on the second wall's top");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
             float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
@@ -250,8 +252,20 @@ class RoomReplayTest {
 
     private Player player() { return new Player(assets, game, 0, 0); }
 
+    /** #417 (D96): the Bat rests on the top of the second wall (Y grows down: its bottom edge is the wall's top edge). */
+    @Test void theBatRestsOnTopOfTheSecondWall() {
+        Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level.enterNextRoom(player());
+        Collectable bat = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
+            .filter(item -> item.type() == ItemType.BAT).findFirst().orElseThrow();
+        var wall = level.map.layer("Collisions").stream().filter(o -> o.id == 45).findFirst().orElseThrow();
+        assertEquals(wall.y, bat.getY() + bat.getHeight(), 0.01f, "the Bat's bottom edge is the wall's top edge");
+        assertTrue(bat.getX() >= wall.x && bat.getX() + bat.getWidth() <= wall.x + wall.width, "within the wall's width");
+    }
+
     @Test void gameplayContactCollectsTheBatAndRoomRetryRestoresIt() {
         Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        level.enterNextRoom(player());  // #417: the Bat is in forest-walls, the second room
         Collectable bat = level.objects.stream().filter(Collectable.class::isInstance)
             .map(Collectable.class::cast).filter(item -> item.type() == ItemType.BAT).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
@@ -410,9 +424,9 @@ class RoomReplayTest {
                             held.add(Input.Keys.J); lastJumpFrame = frame;
                         }
                     }
-                } else if (artifactsRoute) {
-                    ItemType target = route.equals("forest-entry") ? ItemType.BAT : ItemType.MUSHROOM;
-                    float stop = target == ItemType.BAT ? 430 : 1710;
+                } else if (artifactsRoute && route.equals("forest-canopy")) {
+                    ItemType target = ItemType.MUSHROOM;
+                    float stop = 1710;
                     boolean hasTarget = artifacts.items().stream().anyMatch(p -> p.type() == target);
                     if (!hasTarget && player.position.x >= stop && player.position.x < stop + 20) {
                         held.remove(Input.Keys.D);
