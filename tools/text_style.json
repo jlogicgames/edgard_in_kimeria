@@ -766,38 +766,6 @@
   "allowlist": [
     {
       "check": "T1",
-      "key": "HEALER_TALE_WITCH",
-      "lang": "pl",
-      "term": "witch",
-      "issue": "#369",
-      "reason": "Co-occurrence side of the same finding: the Polish text names the witch with 'czarownica', not the glossary form."
-    },
-    {
-      "check": "T1",
-      "key": "HEALER_TALE_BLESSING",
-      "lang": "pl",
-      "term": "witch",
-      "issue": "#369",
-      "reason": "Co-occurrence side of the same finding: the Polish text names the witch with 'czarownica', not the glossary form."
-    },
-    {
-      "check": "T1",
-      "key": "HEALER_TALE_WITCH",
-      "lang": "pl",
-      "term": "czarownic",
-      "issue": "#369",
-      "reason": "Shipped Polish wording uses a second word for the witch; carries the approved #220 text until the glossary translation pass."
-    },
-    {
-      "check": "T1",
-      "key": "HEALER_TALE_BLESSING",
-      "lang": "pl",
-      "term": "czarownic",
-      "issue": "#369",
-      "reason": "Same as HEALER_TALE_WITCH: approved #220 text, fixed by the translation pass."
-    },
-    {
-      "check": "T1",
       "key": "FIREBALL_STOCK_FULL",
       "lang": "be",
       "term": "fire",

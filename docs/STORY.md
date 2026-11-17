@@ -155,8 +155,31 @@ donor gives. She has no name (names stay undecided, above).
   - `HEALER_TALE_LIFT`: "A far-off fairy can be woken by a stone sent like a wish" became "What your hand cannot
     reach, a stone sent like a wish can wake."
   - `HEALER_TALE_BLESSING`: "May the fairies light your road" became "May your fairy light your road."
-  - The other images in those lines (ladder, wall, golden boat, "Do not be afraid to ask") are the tutorial-tale
-    rewrite's ([#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370)).
+  - The other images in those lines (ladder, wall, golden boat, "Do not be afraid to ask") were rewritten by
+    [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) ("The tutorial tales in tale voice", below).
+
+
+## The tutorial tales in tale voice — accepted 2026-11-17 ([#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370))
+
+**Accepted by the author, 2026-11-17 (variant V1 of the Phase A proposal).** The forest-0 tales follow the tale voice
+of [TEXT_STYLE.md](TEXT_STYLE.md) (D74) and say only what the rooms do (text audit G5, G6, G7, G16). Every mechanism
+in forest-0 is a lever, and "lever" is a control word in tale voice, so the tale calls them old handles. The healer
+opens with "Listen, Edgard" and closes the end tale with "Go on"; the witch's three kinds of gifts (what rises, what
+falls, what bursts) stand before the healer's three gifts (thread, spark, fairy). Approved texts (EN source):
+
+- `HEALER_TALE_ROAD`: "Listen, Edgard. The road ahead is short, yet it is a tale all the same, so hear it before you walk it."
+- `HEALER_TALE_FAIRIES`: "This wood is full of old handles. One wakes a sleeping torch, one lets down a ladder, and one moves a
+  stubborn wall out of your way." (lever, ladder and wall rooms)
+- `HEALER_TALE_LIFT`: "Another sets a boat of the air sailing up to the high ledge. What your hand cannot reach, a stone sent
+  like a wish can wake." (platform and stone rooms; "Do not be afraid to ask" is gone, nobody can be asked)
+- `HEALER_TALE_WITCH`: "Beware the wicked witch's gifts: thorns that rise, branches, stones and bridges that fall, and stumps
+  that burst. Answer her riddles with quick feet." (all five forest-0 traps; the berry written for the bomb is now the stump)
+- `EDGARD_TALE_READY`: "Forgive my haste, healer. Am I ready for the road, then?" (Edgard takes back his haste, so the
+  donor's test is passed in words too)
+- `HEALER_TALE_BLESSING`: "Take my blessing: walk lightly, look keenly, and trust no path that seems too kind, for the witch
+  smiles sweetest. May your fairy light your road. Go on."
+- Unchanged: `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_UNDERSTOOD`, `HEALER_TALE_PRAISE`, `HEALER_TALE_HEROES`, and the lines
+  settled earlier (`HEALER_TALE_THREAD`, `HEALER_TALE_FIREGIFT`, `HEALER_TALE_FAIRY`).
 
 
 ## MVP ending — accepted 2026-10-19
