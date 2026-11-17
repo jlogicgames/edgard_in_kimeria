@@ -400,6 +400,48 @@ FALLING_ZONE = ('zoneX', 'zoneY', 'zoneWidth', 'zoneHeight')
 FALLING_JAVA = ROOT / 'core' / 'src' / 'main' / 'java' / 'com' / 'jlogicsoftware' / 'kimeria' / 'entity' / 'objects' / 'FallingStone.java'
 HERO_BODY = (18, 26, 11, 22)  # Player hitbox: offset x, offset y, width, height
 GRAVITY, MIN_FLIGHT = 900.0, 0.3  # FallingTrap.GRAVITY / MIN_FLIGHT_SECONDS
+LIP_TOP = 'lipTop'  # FallingTrapLayout.LIP_TOP (#360): the world y of the stone lip's top edge
+FALLING_PROPERTIES = (*FALLING_ZONE, 'skin', LIP_TOP)  # FallingTrapLayout.PROPERTIES: any other key fails (a misspelling)
+GAME_JAVA = ROOT / 'core' / 'src' / 'main' / 'java' / 'com' / 'jlogicsoftware' / 'kimeria' / 'KimeriaGame.java'
+
+
+def view_height():
+    """KimeriaGame.LOGICAL_H, read from the Java class: the camera height the stone's lip must fit under."""
+    return float(re.search(r'LOGICAL_H\s*=\s*([0-9.]+)f', GAME_JAVA.read_text(encoding='utf-8')).group(1))
+
+
+def stone_lip_height():
+    """The height of the stone-lip frame, from sprite_layouts (the source of FallingStone's lip sheet)."""
+    from sprite_layouts import FOREST_TRAP_SHEETS
+    return float(FOREST_TRAP_SHEETS['stone-lip'][0][1])
+
+
+def background_grid(root):
+    """The gids of the map's tile layer as rows (FallingTrapLayout reads TiledMapData.backgroundGrid), or None without one."""
+    data = root.find('layer/data')
+    if data is None or not (data.text or '').strip():
+        return None
+    width = int(root.get('width', 0))
+    cells = [int(v) for v in data.text.replace('\n', '').split(',') if v.strip()]
+    return [cells[i:i + width] for i in range(0, len(cells), width)]
+
+
+def under_tiles(top, body, root):
+    """FallingTrapLayout.underTiles: `top` is the bottom face of a drawn tile row over the column, open air below it."""
+    grid = background_grid(root)
+    tw, th = int(root.get('tilewidth', 16)), int(root.get('tileheight', 16))
+    if grid is None or top % th != 0:
+        return False
+    below, first, last = int(top // th), int(body[0] // tw), int((body[0] + body[2] - 1) // tw)
+    above = below - 1
+    if above < 0 or below >= len(grid) or first < 0 or last >= len(grid[0]):
+        return False
+    return all(grid[above][c] != 0 and grid[below][c] == 0 for c in range(first, last + 1))
+
+
+def floor_camera_top(room, view):
+    """FallingTrapLayout.floorCameraTop: the camera's top edge while the hero stands on the floor of the room."""
+    return room[1] + (room[3] - view) / 2 if room[3] <= view else room[1] + room[3] - view
 
 
 def falling_stone_skins():
@@ -565,6 +607,10 @@ def check_falling_traps(root, groups):
     for o in traps:
         label = f"{kind(o)} {describe(o)}"
         stone = kind(o) == 'FallingStone'
+        unknown = sorted(p.get('name') for p in o.findall('properties/property') if p.get('name') not in FALLING_PROPERTIES)
+        if unknown:
+            errors.append(f"{label}: unknown propert{'y' if len(unknown) == 1 else 'ies'} {', '.join(unknown)} "
+                          f"(a falling trap reads {', '.join(sorted(FALLING_PROPERTIES))})"); continue
         body = _rect(o)
         if not (body[2] > 0 and body[3] > 0):
             errors.append(f"{label}: needs a positive size"); continue
@@ -615,6 +661,27 @@ def check_falling_traps(root, groups):
                         for c in same_room)
             if body[1] != room[1] and not under:
                 errors.append(f"{label}: a stone must start at the room top or directly under a solid block, or it pops into view in mid-air")
+        raw_lip = prop(o, LIP_TOP).strip()
+        if raw_lip and not stone:
+            errors.append(f"{label}: {LIP_TOP} applies to a FallingStone only")
+        elif raw_lip:
+            try:
+                lip = float(raw_lip)
+            except ValueError:
+                errors.append(f"{label}: property {LIP_TOP} '{raw_lip}' is not a number"); continue
+            visible = floor_camera_top(room, view_height())
+            if not math.isfinite(lip):
+                errors.append(f"{label}: property {LIP_TOP} '{raw_lip}' is not a finite number")
+            elif lip < visible:
+                errors.append(f"{label}: {LIP_TOP} {lip:g} is above the camera's top edge (y {visible:g}) while the hero stands on the floor: the cue would be off screen")
+            elif lip < body[1]:
+                errors.append(f"{label}: {LIP_TOP} {lip:g} is above the stone's start (y {body[1]:g})")
+            elif lip + stone_lip_height() > landing:
+                errors.append(f"{label}: {LIP_TOP} {lip:g} puts the lip below the floor it lands on (y {landing:g})")
+            elif lip != max(body[1], visible) and not under_tiles(lip, body, root) and not any(
+                    _num(c, 'y') + _num(c, 'height') == lip and _x_overlap(_rect(c), body) and kind(c) != 'Platform' for c in same_room):
+                errors.append(f"{label}: {LIP_TOP} {lip:g} floats in the column: put it on the default line (y {max(body[1], visible):g}) "
+                              f"or directly under a solid block or a drawn tile row over the stone")
     return errors
 
 

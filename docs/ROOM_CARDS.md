@@ -204,7 +204,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 5 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 1 of 6 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
@@ -238,7 +238,7 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 5 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 2 of 6 (1280 px, two screens) |
 | Role | combination |
 | Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
 | Introduces | running-platform, puffball |
@@ -267,16 +267,36 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
   passes about x 624, after the escalators.
 - The trap course after the wall (tuft, RedMob 38, puffball, log, room exit) keeps every object, id and coordinate.
 
+### forest-1-lever
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 3 of 6 (640 px, one screen) |
+| Role | lesson |
+| Purpose | One lever drives two mechanisms in opposite states: pulling it lowers the ladder and stops the lift, pulling again raises the ladder and restarts the lift; both are in view when it is pulled, and a wrong pull costs nothing. |
+| Introduces | - |
+| Develops | lever: one lever now drives two mechanisms at once, a ladder and a lift, so the player must read both effects, not one |
+| Combines | ladder + running-platform: the lift is the only way up to the lever's ledge and the lowered ladder is the only way on to the exit ledge, so the way forward needs both, one after the other, and the same lever is what changes both |
+| Repeats | lever, ladder, running-platform |
+| Mastered route | 8.43 s (`Forest1LeverLessonTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)); the author play-through is tracked by [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) |
+| Retry cost | none: the room has no enemy, trap or pit; a wrong pull costs the pull that undoes it (about 0.1 s) |
+| D26 | the lever is a reversible toggle; the floor runs under the lever ledge, so from the floor the hero either rides the running lift to the lever or, with the ladder down, climbs it to the exit; 312 lever-timing, pull-count and drop runs and every floor start in both lever states reach the exit without Restart Level (`Forest1LeverLessonTest`) |
+| Hints | none: forest-1 shows none (D33) |
+| Landmark | the lift beside the lever, the ladder hanging above the gap, the ledge it will reach |
+| Status | New (#418, D86, after the D84 playtest). D84 check: (1) taught before gating: the combination is met here, with nothing at stake, before the route room gates progress with it; (2) the effects land on screen: the room is one screen wide (640 px = the camera's view), the lift is 80 px and the ladder 192 px from the lever; (3) a stuck player always sees something untried: the lever, the running lift or the hanging ladder; (4) the challenge is only boarding a moving lift. The room is built, tested with a scripted hero and not yet played by the author or a novice (#418). |
+| Decisions | D84, D86, D67 |
+
 ### forest-1-route
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 5 (832 px) |
+| Level | forest-1, play order 2, room 4 of 6 (832 px) |
 | Role | variation |
 | Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
 | Introduces | bat-enemy |
 | Develops | crumble-support: a one-shot step whose loss closes the optional refill until Restart Level; fireball-refill: the bat gives a reason to spend a charge, so the refill is worth something |
-| Combines | ladder + running-platform: one lever lowers the ladder and stops the lift, so the two routes exclude each other |
+| Combines | ladder + running-platform: one lever lowers the ladder and stops the lift, so the two routes exclude each other (first taught by forest-1-lever, D86, so here it is a choice) |
 | Repeats | lever |
 | Mastered route | 11.02 s required, 18.32 s with the optional refill (`Forest1RouteTest`); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
@@ -284,14 +304,14 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 | Optional | the fireball refill on the pad over the one-shot step |
 | D26 | every state reached by supported actions reaches the exit without Restart Level (D67) |
 | Hints | none |
-| Status | D72 audit 2026-11-16: keep |
-| Decisions | D67 |
+| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. |
+| Decisions | D67, D86 |
 
 ### forest-1-guard
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 5 (768 px) |
+| Level | forest-1, play order 2, room 5 of 6 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
 | Introduces | - |
@@ -311,7 +331,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 5 (640 px, one screen) |
+| Level | forest-1, play order 2, room 6 of 6 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb |

@@ -152,6 +152,7 @@
   <object id="128" name="Exploding Root" type="ExplosiveRoot" x="2064" y="312" width="16" height="24"/>
   <object id="129" name="Falling Stone" type="FallingStone" x="2224" y="16" width="16" height="16">
    <properties>
+    <property name="lipTop" type="float" value="48"/>
     <property name="zoneHeight" type="float" value="32"/>
     <property name="zoneWidth" type="float" value="32"/>
     <property name="zoneX" type="float" value="2208"/>

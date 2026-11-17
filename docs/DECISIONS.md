@@ -1474,6 +1474,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 - **Status:** Implemented by [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)); automated tests only. The author has not played the room and the new ledge tiles have not been seen in the running game, so #187 stays open for that check. Refines D58 (see "Placement") and answers D31's open "one-shot versus reversible" question (see "One-shot").
 - **Placement (author decision, 2026-11-15):** `forest-1` becomes a multi-room level. Room 1, `forest-1-traps` (x 0-1280), is the #260 trap course with every object, id and measured behaviour unchanged: its `RoomStart` is the old `Player` spawn (32, 272) and a `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was, so a retry still restarts at x 32 (the course stays one room; D58's "not split" holds). Room 2, `forest-1-route` (x 1280-2112), is new; the `Checkpoint` (id 7) moved to its end. **Update (#104, D68):** the combination room was appended after room 2 as planned: this room's checkpoint became a `RoomExit` (2048, 112, 48 x 32, the old checkpoint's x, so the times below are unchanged) and the level `Checkpoint` moved to the end of room 3. `forest-1` still has no hints (D33, `TutorialLevelTest`). **Update (#375, D85):** a new first room, `forest-1-mob`, now comes before the trap course, which became room 2; its `RoomStart` is no longer the level spawn.
+- **Update (#418, D86, 2026-11-17):** a teaching room, `forest-1-lever`, now precedes this one in play order (the level's room 4): the two-mechanism lever is taught there first. No coordinate of this room changed.
 - **Update (D84, playtest 2026-11-17):** the two-mechanism legibility claimed below failed in play: the author got stuck, because only the ladder visibly reacted to the pull. [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) and [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419) track the fix; see [D84](#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17).
 - **Rule (D31, the "optional route" check):** one lever drives two supports **in opposite states**. A `Ladder` starts raised (its foot 112 px above the floor, out of every jump) and a vertical lift (`Escalator`) starts running, from its top (y 176) on its way down. One pull lowers the ladder **and stops the lift where it is**; the next pull raises the ladder and starts the lift again. The lift is the **mandatory** way to the checkpoint ledge and needs no lever; the ladder is the **optional** way up to a slab. So the lever is a real choice, readable before it is made: the entrance shows the lever, a raised ladder over a slab with a refill pad above it, and a lift in motion beside the exit; pulling it shows at once that the ladder comes down and the lift freezes, so the way on is closed until the lever is pulled again.
 - **One-shot (author decision, 2026-11-15: "a one-shot element is needed, after which the reward is lost until Restart Level"):** the single-charge fireball refill (D27) lies on a pad 80 px above the slab, out of reach of a jump (the first hop can be made only from a platform in between). That platform is an existing `FallingPlatform` (the same look and the same shared warning as the four platforms of room 1, D46), the **step**, 40 px above the slab and 40 px below the pad. Standing on it starts a 1 s warning (1.5 s with the longer-warnings assist), then it falls and is gone for good. Whoever hops onto it and on to the pad in time takes the refill; whoever steps on it and back, hesitates or falls off has **spent the one-shot** and the pad is out of reach: the refill is lost until Restart Level (or, before the room is secured, until a death retry). The exit stays reachable through the lift in every such state. **Legibility without a hint:** the step is in plain sight from the slab (and from the entrance), it looks and behaves like the platforms the player has already seen collapse in room 1, and the reward it guards is in sight above it; the consequence (the platform lights, then drops) is the one the level has already shown twice. **Why a falling platform and not a jamming lever:** it is an existing, snapshot-aware one-shot object (the room snapshot keeps its position, timers and removed state, so D26's state boundary needs no new code), whereas a one-shot lever would need a new owner class, a save snapshot and a visual. Answer to D31: the lever toggles stay **reversible**; the one-shot belongs to a **support the optional reward depends on**; no new code.
@@ -2199,9 +2200,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** the one-sentence principle and the two applications (#418, #419) are the author's, 2026-11-17. The four
   rules and the checks below are the agent's reading of that sentence, for the author to confirm or edit. The
-  applications are open issues
-  ([#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418),
-  [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419)) and are not built.
+  applications are the issues
+  [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) (built, [D86](#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17):
+  automated tests only, the author has not played the room, so the issue stays open for that) and
+  [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419) (open, not built).
 - **Decision:** the author's words (translated from Russian): "Don't torment the player with guesswork; a puzzle must not
   make the player look stupid." Agent's reading, for room and mechanism design, as four rules:
   1. **Teach before gating.** Every new mechanic, and every new combination of known ones (for example one control that
@@ -2242,10 +2244,11 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   impassable and the author got stuck, although the lift was the way on.
 - **Applications (first two):**
   - [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418): a teaching room for a lever that drives two
-    mechanisms, placed in forest-1 between `forest-1-traps` and `forest-1-route` (rule 1).
+    mechanisms, placed in forest-1 between `forest-1-traps` and `forest-1-route` (rule 1). Built as `forest-1-lever`
+    ([D86](#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17)).
   - [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419): the fairy guide (D82) flies to the screen edge and
-    twinkles toward a linked mechanism that is off screen (rule 2). Built by [D87](#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17); the issue stays open for the author's play-through.
-  - Both issues stay open until built. When one lands, its PR updates this list and the document it changes.
+    twinkles toward a linked mechanism that is off screen (rule 2). Built by [D87](#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17).
+  - #418 is built (its issue stays open for the author's play-through); #419 is built (its issue stays open for the author's play-through). When one lands, its PR updates this list and the document it changes.
 - **Details:** playtest of 2026-11-17 (the forest-1 route room); [GAME_DESIGN.md](GAME_DESIGN.md#intent-and-player-experience),
   [GAME_DESIGN.md](GAME_DESIGN.md#forest-linked-route-reconfiguration).
 
@@ -2283,6 +2286,51 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the gate. No threshold or tolerance was relaxed.
 - **Not verified:** the new room in the running game (camera, wall tiles, the refill's place by eye), tracked by
   [#422](https://github.com/jlogicgames/edgard_in_kimeria/issues/422); novice playtests (#135).
+
+## D86. forest-1 gets a lever lesson room: one lever, a ladder and a lift in opposite states (#418, 2026-11-17)
+
+- **Status:** Built by [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) as the first application of [D84](#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17).
+  Automated tests only: the author has not played the room and it has not been seen in the running game, so #418 stays
+  open for the Chrome agent check, a code review in a clean session and the author's play-through. The split below says which details
+  are the author's decision and which are the agent's, for the author to confirm or change.
+- **Author's decision (2026-11-17):** add a short teaching room in `forest-1` between `forest-1-traps` and `forest-1-route`:
+  one lever, two mechanisms next to it, both in view at the same time as the lever, a mistake that costs nothing; it
+  follows D84 (no guesswork) and D72 (room card first); no hint text (forest-1 shows none, D33); existing objects and art only.
+- **Agent's design (details to confirm), as built (docs/ROOMS.md, "forest-1 lever room"; card in ROOM_CARDS.md):**
+  - **The room:** `forest-1-lever`, 640 px wide (one camera view: the whole room is on screen wherever the hero stands), the level's room 3 (after the first-RedMob room and the trap course).
+    A running vertical lift beside a floating slab that holds the lever; a ladder hanging in the air to the right over a
+    112 px ledge that holds the exit. One `Trigger` linked by name (`Lesson`) to the `Ladder` and the `Escalator`, as the route
+    room's `Route`: the same combination, the same authored state (ladder raised, lift running), the same pull (ladder down,
+    lift stopped; pull again, ladder up, lift running).
+  - **Why this teaches the link:** the way on needs both mechanisms in turn (the lift is the only way to the lever, the ladder
+    the only way to the exit) and the lever changes both, so the player pulls it with the lift 80 px away (it just carried the
+    hero there and now stops) and the ladder 192 px away (it comes down), both inside one view. The other designs weighed:
+    a lever on the floor with the lift required running and the ladder required lowered (the pull stops the lift anywhere, so the
+    way back depends on when the hero pulled, a timing puzzle in a teaching room); a lift whose stop matters (the same);
+    a lever on a ledge with a thick block under it (a soft-lock, found by the sweep, see below).
+  - **D84 check (the four rules):** (1) teach before gating: the combination is met here, with nothing at stake, before the
+    route room gates progress with it; (2) the effect of the pull is on screen at once (one-screen room, both mechanisms at most 192 px away);
+    (3) a stuck player always sees something untried: the lever, the running lift or the hanging ladder (the room has no state without one);
+    (4) the difficulty is execution only: boarding a moving lift (the route room's own skill).
+  - **A wrong pull costs nothing:** no enemy, hazard, pit, pickup or one-shot object; the lever is a reversible toggle; the floor is unbroken.
+  - **D26:** from every reachable state the exit stays reachable with zero charges and no Restart Level. The first geometry
+    (a slab solid down to the floor) had a soft-lock that the sweep found: a hero who pulled and dropped left of the slab, with the lift stopped out of
+    reach, had no way back to the lever. The floating slab (the floor runs under it) removes it: with the ladder down it reaches the floor, with the ladder raised
+    the lift runs and is boarded from the floor. 312 lever-timing, pull-count and drop runs and every floor position in both states reach the exit.
+  - **D72 (card first):** the room introduces nothing; it develops `lever` (one lever now drives two mechanisms) and combines
+    `ladder + running-platform`, all met before it; role `lesson`. The route room's card now says the combination was first taught here.
+  - **Measured:** the required route 8.43 s (scripted hero, real input), inside the 20 s target.
+- **Placement (no shift, follows #425's precedent):** the room is authored after the end of the map, x 4320-4960 (the map grows from 270 to 310 tiles, the `Deadline` from 6176 to 6816 px, `nextobjectid` 115), and listed in the `Rooms` list between `forest-1-traps` and `forest-1-route`; the list, not x, sets the play order (mob, traps, lever, route, guard, tree), as D85 (#375) did for `forest-1-mob`. So no existing object, collision, tile or test coordinate moves, and no float-resolution side effect on the measured times. Transitions rely only on what the mob-to-traps transition already relies on: the target room's `RoomStart`, the camera clamped to the room's bounds and the room's end walls (`Forest1LeverLessonTest` pins the hero's start and the camera for traps to lever and lever to route). An earlier version of this branch inserted the room at x 1280 and shifted everything after it 640 px; it was dropped for this. Checked by script against origin/main: the first 270 tile columns and every old object are identical (only the `Deadline` width changed); the new objects use ids 104-114 (D85 took 98-103).
+- **Test changes (no tolerance or threshold relaxed):**
+  - `Forest1RouteTest`, `Forest1CombatTest`, `TreeClimbTest`: one more room entered and the room-chain assertions name the lever room; no coordinate changed.
+  - **No existing room's measured time moved** (route 11.02 s and 18.32 s, mob 7.43 s, guard 6.83 s, 6.15 s and 7.67 s, tree 4.95 s and 6.23 s, trap course 12.27 s); the route test's swing policy is unchanged.
+  - `RoomCeilingTest`: the generic wall sweep skips the lever room's right wall (a hero put on the floor there starts inside the 112 px exit ledge); the dedicated test sweeps it from the ledge's top. Forest-1 has six rooms.
+  - `RoomTest`, `RoomCardsTest` (16 rooms): the new room in the chain and the cards. `AllocationBudgetTest`: room indices and three lever room scenes (at rest, riding the lift, pulling the lever). Measured in 10 isolated runs (after main's #375, with the mob room first): 513.8 to 564.5 B/frame over the three scenes (pulling the lever the highest, 564.3 to 564.5; an earlier run of the rest scene measured 345.8: JIT state, D83). The ceiling `FOREST_1_LEVER_CEILING` follows D85's rule (highest measured + about 10 %): **620** (564.5 + 10 %), not the route room's 1,130 as in the first version of this branch.
+- **Agent check in the running web build (Chrome, 2026-11-17, observed by the orchestrator):** the room renders as one view; the hero rode the lift up, hopped onto the slab, pulled the lever (Up + Action), dropped, climbed the lowered ladder and walked to the exit, and the route room loaded (observed on the first version of the branch, which inserted the room at x 1280 instead of appending it; the room's layout and mechanics are identical); no console errors. **Chrome check of the appended version (2026-11-17, orchestrator):** the room chain `forest-1-mob` to `forest-1-traps` to `forest-1-lever` to `forest-1-route` ran in the web build; each transition put the hero at the next room's RoomStart with the camera inside the room; no console errors. The full lever-room route was played on the first version only; on the appended version the lift boarding was not repeated (tool latency). Observation that matters: while the hero holds Up at the lever, the fairy glows the lever, the ladder **and** the lift (the in-view glow works). At the pull the glow disappears at once; the ladder visibly drops, while the lift just stops with no cue, so the lift's change at the moment of the pull is shown only by its stopping. [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419) covers this: its checklist item "Keep a cue on in-view linked mechanisms briefly after the pull".
+- **Open (for the author, tracked by #418):** (0) the author's play-through must answer **"did the player notice that the lift stopped?"**; if not, the stopped lift needs a use that does not create a timing puzzle (open for the author, no design proposed here). (a) the lift's stop is visible and reversible but not needed: nothing in the room makes the player wait for it to stop. A design where the stop
+  is required was rejected as a timing puzzle in a teaching room; say if the author wants the lift's stop to matter. (b) The route room is not changed: after the pull a player there still has to notice the lift
+  stopped; this room only teaches that the lever does both. Whether that is enough is for the play-through. (c) No sound or visual cue was added beyond the existing lever picture (D82's fairy marks the selected target only; [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419) extends it).
+- **Details:** [ROOMS.md](ROOMS.md#forest-1-lever-room-418-d86), [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-lever), `Forest1LeverLessonTest`.
 
 ## D87. The fairy points at a linked mechanism that is off screen, and the pulled lever's mechanisms stay marked (#419, 2026-11-17)
 

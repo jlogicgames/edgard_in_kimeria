@@ -480,7 +480,7 @@ public class Level implements WorldObject {
                 continue;
             }
             int owner = roomLayout.owner(o);
-            if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map); // D45: every room, at load.
+            if (FallingTrapLayout.isFallingTrap(o.type)) FallingTrapLayout.validate(o, roomLayout, owner, map, game.logicalResolution().y); // D45: every room, at load.
             if ("ThornRoot".equals(o.type) || "ThornTuft".equals(o.type)) validateThorn(o, owner);
             if (ExplosiveTrap.isExplosive(o.type)) validateExplosive(o, owner); // D47: every room, at load.
             if ("HoneyFungus".equals(o.type) || "FalseHoneyFungus".equals(o.type)) validateFungus(o, owner); // D63: every room, at load.
@@ -819,18 +819,18 @@ public class Level implements WorldObject {
 
     /**
      * FallingBranch / FallingStone (D45, #232). Properties: {@code zoneX, zoneY, zoneWidth, zoneHeight} (the
-     * trigger zone, absolute world px, required, inside this room); stone only: {@code skin} (default forest).
+     * trigger zone, absolute world px, required, inside this room); stone only: {@code skin} (default forest) and {@code lipTop} (#360, optional).
      * The object's own rectangle is the hanging position and the lethal footprint; it falls to the first solid
      * (Collisions layer, not QuickSand) below it. Traps are rebuilt with every room activation, so retry,
      * Restart Level and room re-entry all re-arm them.
      */
     private void spawnFallingTrap(TiledObject o) {
-        FallingTrapLayout.Spec spec = FallingTrapLayout.validate(o, roomLayout, currentRoom, map);
+        FallingTrapLayout.Spec spec = FallingTrapLayout.validate(o, roomLayout, currentRoom, map, game.logicalResolution().y);
         java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBoundsInto(trapHeroScratch);
         java.util.function.BooleanSupplier grounded = () -> player.isOnGround();
         Runnable kill = () -> player.collidedWithActor(false);
         FallingStone stone = spec.stone()
-            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill)
+            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(), spec.lipTop(), game.trapWarnings(), hero, grounded, kill)
             : null;
         if (stone != null) {
             float x = spec.body().x + spec.body().width / 2f;

@@ -87,7 +87,9 @@ ROW_BODY = 3
 GLOWS = (1.0, GLOW_MIN)
 
 # key -> (tier, sheet, frame (x, y, w, h), frame count to check, anchor, glow levels). Anchor 'floor': the frame's
-# bottom on the object's bottom edge; 'top': the frame's top on the object's top edge (world Y grows downward).
+# bottom on the object's bottom edge; 'top': the frame's top on the object's top edge (world Y grows downward); 'view': as
+# 'top', but at the object's `lipTop` property if set, else no higher than the camera's top edge while the hero stands on the floor
+# (FallingStone's lip, #360: FallingTrapLayout.floorCameraTop).
 SPRITES = {
     'Decor:bush': ('decor', 'objects/decor-bush.png', (0, 0, 32, 24), 4, 'floor', FULL),  # brush frames are seen too (D64)
     'Decor:lookalike': ('decor', 'objects/decor-lookalike.png', (0, 0, 24, 16), 1, 'floor', FULL),
@@ -96,6 +98,7 @@ SPRITES = {
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'FallingBranch': ('active', 'objects/trap-branch.png', (0, 0, 32, 16), 1, 'top', FULL),
+    'FallingStone': ('active', 'objects/trap-stone-lip.png', (0, 0, 24, 8), 1, 'view', FULL),  # the loose overhang at rest (#360)
     'ExplosiveStump': ('active', 'objects/trap-stump.png', (0, 0, 16, 16), 4, 'floor', FULL),  # the idle tell loop (#346)
     'ExplosiveRoot': ('active', 'objects/trap-root.png', (0, 0, 16, 24), 4, 'floor', FULL),  # the idle tell loop (#346)
     'Bomb': ('active', 'objects/trap-bomb.png', (0, 0, 16, 16), 1, 'floor', FULL),
@@ -131,7 +134,6 @@ SPRITES = {
 NO_SPRITE = {
     'Torch': 'a particle light (effects.Torch), no sprite',
     'Actionable': 'a lever target: a Torch is a particle light, a horizontal Wall draws nothing (a vertical one is Actionable:Wall)',
-    'FallingStone': 'HIDDEN at rest: nothing is drawn until it falls (D71, cue #360)',
     'Checkpoint': 'an invisible zone',
     'Deadline': 'an invisible kill zone under the room',
     'QuickSand': 'collision only; drawn by the tile layer',
@@ -291,6 +293,29 @@ def placements(errors, roots=None):
                        float(obj.get('width', TILE)), float(obj.get('height', TILE)))
 
 
+def floor_camera_top(root, x, y):
+    """Level.floorCameraTop for the room holding (x, y): a room taller than the view shows its bottom, hiding its top rows."""
+    for group in root.findall('objectgroup'):
+        for obj in group.findall('object'):
+            if obj.get('type') != 'Room':
+                continue
+            rx, ry, rw, rh = (float(obj.get(k)) for k in ('x', 'y', 'width', 'height'))
+            if rx <= x < rx + rw and ry <= y < ry + rh:
+                return ry + (rh - VIEW_HEIGHT) / 2 if rh <= VIEW_HEIGHT else ry + rh - VIEW_HEIGHT
+    raise ValueError(f'no Room holds ({x}, {y})')
+
+
+def lip_top(root, x, y):
+    """Where FallingTrapLayout puts a stone's lip: its `lipTop` property (absolute world px), else its top lowered on screen."""
+    for group in root.findall('objectgroup'):
+        for obj in group.findall('object'):
+            if obj.get('type') == 'FallingStone' and float(obj.get('x')) == x:
+                for prop in obj.findall('properties/property'):
+                    if prop.get('name') == 'lipTop':
+                        return float(prop.get('value'))
+    return max(y, floor_camera_top(root, x, y))
+
+
 def check_sprite(key, results):
     """Errors for one sprite key from its measured (map, x, outline, body) results."""
     tier = SPRITES[key][0]
@@ -430,11 +455,12 @@ def run():
     images = {name: backgrounds(layer, sky) for name, layer in layers.items()}
     results = {}
     halo = Image.open(ROOT / 'assets/images' / HALO_SHEET).convert('RGBA')
-    for name, key, x, y, w, h in placements(errors):
+    roots = map_roots()
+    for name, key, x, y, w, h in placements(errors, roots):
         anchor, glows = SPRITES[key][4], SPRITES[key][5]
         for frame in frames(key):
             left = int(x + w / 2 - frame.width / 2)
-            top = int(y) if anchor == 'top' else int(y + h - frame.height)
+            top = int(y) if anchor == 'top' else int(lip_top(roots[name], x, y)) if anchor == 'view' else int(y + h - frame.height)
             for glow in glows:
                 for background in images[name]:
                     if not key.startswith('Collectable:'):

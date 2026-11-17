@@ -191,6 +191,14 @@ def falling(kind, zone='zoneX=144 zoneY=224 zoneWidth=48 zoneHeight=96', extra='
     return f'<object id="5" name="t" type="{kind}" {box}><properties>{props}{extra}</properties></object>'
 
 
+def with_tiles(tmx_text, row, column, width=40, height=23):
+    """The map with a tile layer whose only drawn cell is (row, column) (#360: a lip hangs under a drawn tile row)."""
+    cells = ['0'] * (width * height)
+    cells[row * width + column] = '1'
+    layer = f'<layer name="Background" width="{width}" height="{height}"><data encoding="csv">{",".join(cells)}</data></layer>'
+    return tmx_text.replace('<objectgroup name="SpawnPoints">', layer + '<objectgroup name="SpawnPoints">', 1)
+
+
 STONE_BOX = 'x="400" y="0" width="16" height="16"'
 STONE_ZONE = 'zoneX=352 zoneY=16 zoneWidth=64 zoneHeight=304'
 
@@ -218,6 +226,31 @@ class FallingTrapLinksTest(unittest.TestCase):
         self.assertIn('never trigger', ' '.join(check(fmap(falling('FallingBranch', 'zoneX=144 zoneY=224 zoneWidth=48 zoneHeight=66')))))
         self.assertIn('lethal column', ' '.join(check(fmap(falling('FallingBranch', 'zoneX=96 zoneY=224 zoneWidth=48 zoneHeight=96')))))
         self.assertIn('mid-air', check(fmap(falling('FallingStone', STONE_ZONE, box='x="400" y="32" width="16" height="16"')))[0])
+
+    def test_the_stone_lip_must_be_on_screen_and_above_the_floor(self):
+        # The fixture level is 368 px tall and the view 360: with the hero on the floor the camera's top edge is y 8 (#360).
+        lip = lambda v: f'<property name="lipTop" value="{v}"/>'
+        self.assertEqual([], check(fmap(falling('FallingStone', STONE_ZONE, lip(8), STONE_BOX))))
+        self.assertEqual([], check(with_tiles(fmap(falling('FallingStone', STONE_ZONE, lip(48), STONE_BOX)), row=2, column=25)))
+        self.assertIn('off screen', check(fmap(falling('FallingStone', STONE_ZONE, lip(4), STONE_BOX)))[0])
+        self.assertIn('below the floor', check(fmap(falling('FallingStone', STONE_ZONE, lip(316), STONE_BOX)))[0])
+
+    def test_the_stone_lip_hangs_from_the_default_line_or_something_drawn(self):
+        lip = lambda v: f'<property name="lipTop" value="{v}"/>'
+        self.assertIn('floats', check(fmap(falling('FallingStone', STONE_ZONE, lip(200), STONE_BOX)))[0])
+        self.assertIn('floats', check(fmap(falling('FallingStone', STONE_ZONE, lip(48), STONE_BOX)))[0], 'no tile over the column')
+        self.assertIn('floats', check(with_tiles(fmap(falling('FallingStone', STONE_ZONE, lip(32), STONE_BOX)), row=2, column=25))[0],
+                      'inside the drawn row, not under it')
+        self.assertIn('floats', check(with_tiles(fmap(falling('FallingStone', STONE_ZONE, lip(48), STONE_BOX)), row=2, column=30))[0],
+                      'a tile row beside the column')
+
+    def test_a_misspelled_falling_trap_property_is_refused(self):
+        lip = lambda v: f'<property name="lipTop" value="{v}"/>'
+        errors = check(fmap(falling('FallingStone', STONE_ZONE, '<property name="liptop" value="48"/>', STONE_BOX)))
+        self.assertIn("unknown property liptop", errors[0])
+        self.assertIn('unknown property', check(fmap(falling('FallingBranch', extra='<property name="zonex" value="1"/>')))[0])
+        self.assertIn('not a number', check(fmap(falling('FallingStone', STONE_ZONE, lip('high'), STONE_BOX)))[0])
+        self.assertIn('FallingStone only', check(fmap(falling('FallingBranch', extra=lip(240))))[0])
 
     def test_skin_names_are_read_from_the_java_class(self):
         self.assertEqual(('forest',), links.falling_stone_skins())

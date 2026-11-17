@@ -90,7 +90,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `ThornRoot` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
 | `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, first trap of the stretch | D44, D58 |
 | `FallingBranch` | position | DISGUISED | cracked joint (#361) | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
-| `FallingStone` | position | HIDDEN | pending #360 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
+| `FallingStone` | position | HIDDEN | loose overhang: a cracked rock lip with the stone's crown wedged in it, grit trickling every 1.5 s | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
 | `ExplosiveStump` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
 | `ExplosiveRoot` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's idle tell and wind-up language) | D47, D59 |
 | `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-entry` (`forest-2`) | D7, D51, D60 |
@@ -202,9 +202,9 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | --- | --- |
 | Family | position |
 | Visibility (D71) | HIDDEN |
-| At rest | nothing: the stone is not drawn until it falls |
-| At-rest cue | pending [#360](https://github.com/jlogicgames/edgard_in_kimeria/issues/360): a cracked rock lip at the start point with a deterministic grit trickle ("loose overhang") |
-| Reads from | its zone: 32 px before the column in `forest-0-platform`, 16 px in `forest-2` |
+| At rest | the loose overhang (#360): frame `loose` of `trap-stone-lip`, a cracked rock lip with the stone's crown wedged in it, drawn over the stone's column at the map's `lipTop` (absolute world y of its top edge) or, without it, at the start point lowered to the camera's top edge while the hero stands on the floor; `forest-0-platform` y 8 (no property), `forest-2` y 48 (`lipTop`, under the dirt block over the stone); the stone itself is drawn only once it falls, from its unchanged start |
+| At-rest cue | the lip, always drawn, plus a grit trickle while armed: every 1.5 s four specks 0.1 s apart fall about 48 px from one of the lip's two side cracks (alternating), dark and light so one of each reads on sky and on dirt; seeded from the stone's start position, so a run repeats. The trickle stops at the trigger: the warning is the shadow alone. After the fall the lip shows `broken`, the empty socket |
+| Reads from | the lip and its trickle, on screen while the hero stands on the floor (rooms are 8 px taller than the view, so their top 8 px are off screen; the loader refuses a `lipTop` above that line, and `RoomCeilingTest` checks the lip is in view in both rooms), from about 300 px before the zone; the trigger zone starts 32 px before the column in `forest-0-platform`, 16 px in `forest-2` |
 | Trigger | the hero body box overlaps the authored zone |
 | Telegraph (D7) | a ground shadow grows small, medium, large |
 | Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s |
@@ -212,9 +212,10 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Counter | walk on; do not stand under it |
 | Reset | room rebuild; the cracked stone stays until then |
 | Taught in | `forest-0-platform` with `HINT_PLATFORM_STONE`; `forest-2` has no hint, so the cue matters most there |
-| Load checks | `FallingTrapLayout.validate` (start at the room top or under a solid); mirrored in `check_tiled_links.py` |
-| Tests | `FallingTrapsTest`, `PlatformLessonTest`, `Forest2TrapsTest` |
-| Art and sound | `trap-stone`, `trap-shadow` (skin `forest`); impact effects are #347 |
+| forest-2 zone (measured for #360) | zone x 2208-2240, y 288-320; a hero walking right triggers it 16 px before the column (0.16 s at 100 px/s), one walking left already under it; trigger to impact 0.8 + 0.84 = 1.64 s (1.2 + 0.84 = 2.04 s with the assist), so a hero who keeps walking is 164 px on at impact. Widening is unnecessary: the zone decides only when the stone falls, and the cue is read from the lip long before it |
+| Load checks | `FallingTrapLayout.validate` (start at the room top or under a solid; only the properties `zoneX`, `zoneY`, `zoneWidth`, `zoneHeight`, `skin`, `lipTop`, so a misspelled key fails; `lipTop` on a stone only, on screen with the hero on the floor, not above the start, the lip above the landing floor, and on the default line or directly under a solid block or a drawn tile row over the column, D45's rule for the start); mirrored in `check_tiled_links.py` |
+| Tests | `FallingTrapsTest` (with the cue: lip frames, trickle period, cracks, determinism, pool, the `lipTop` load check), `RoomCeilingTest` (the lip in the camera view), `PlatformLessonTest`, `Forest2TrapsTest`, `AllocationBudgetTest.fallingStoneLooseOverhang` |
+| Art and sound | `trap-stone`, `trap-shadow`, `trap-stone-lip` 24×8 (`loose`, `broken`; skin `forest`); active tier, lip outline at worst (`loose` / `broken`): 0.387 / 0.403 in `forest-0-platform` at y 8, 0.323 / 0.336 in `forest-2` at y 48 (D76; at y 8 over the dirt block forest-2 measured 0.251, under the floor, hence `lipTop`); grit is `KIND_GRIT` of the stone's own `KimeriaParticleSystem`; impact effects are #347 |
 | Decision | D45, D48, D59 |
 
 ### Exploding stump (`ExplosiveStump`)

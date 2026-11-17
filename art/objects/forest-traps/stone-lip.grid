@@ -1,0 +1,27 @@
+# Falling-stone at-rest cue (#360): the loose overhang, native 24x8 frames, drawn with its top on the stone's top,
+# centred on the stone. loose: a cracked rock lip with the stone's crown wedged in it (at rest and through the warning);
+# broken: the lip with the empty socket (from the fall on). Same rock palette as stone.grid.
+size 24 8
+color k 0b0814
+color d 34314a
+color g 5b5870
+color G 9a97ad
+color h d8d6e8
+frame loose
+kddgdddgdddkddddgdddgddk
+kdgGgdgddkkkkkkdgdgGgdgk
+.kdgdgdkkGGGGGgkkdgdgdk.
+..kddkkGGhhGGgggdkkddk..
+...kk.kGhhGGgggggdk.kk..
+......kGGGGGgggggdk.....
+......kGGGgggggddddk....
+.......kkgggggdddkk.....
+frame broken
+kddgdddgdddkddddgdddgddk
+kdgGgdgdk......kgdgGgdgk
+.kdgdgdk........kdgdgdk.
+..kddkk..........kkddk..
+...kk..............kk...
+........................
+........................
+........................

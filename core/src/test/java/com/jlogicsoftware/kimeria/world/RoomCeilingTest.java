@@ -66,24 +66,33 @@ class RoomCeilingTest {
     private void assertCannotLeave(String map, int rooms) {
         for (int room = 0; room < rooms; room++) {
             for (boolean left : new boolean[]{true, false}) {
+                // The lever lesson room (#418) differs from the route room: its exit ledge is 192 x 112 px of solid block against the right wall, so this sweep, which puts the hero on the floor
+                // there, places him inside it and collision resolution ejects him through the floor. Real play cannot reach that state; the dedicated ledge test below covers the real wall.
+                // That wall is swept from the ledge's top by theLeverLessonRoomLedgeDoesNotLetTheHeroOverTheTop.
+                if (map.equals("forest-1") && room == 2 && !left) continue;
                 highestPointReached(roomOf(map, room), left, 60 * 20);
             }
         }
     }
 
     @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
-    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 4); }
+    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 6); }
 
     /** The route room's exit ledge (top y 144, against the right wall) is a 176 px head start up that wall. */
     @Test void theRouteRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 1), false, 60 * 20, 176);
+        highestPointReached(roomOf("forest-1", 3), false, 60 * 20, 176);
+    }
+
+    /** The lever lesson room's exit ledge (top y 208, against the right wall, #418) is a 112 px head start up that wall. */
+    @Test void theLeverLessonRoomLedgeDoesNotLetTheHeroOverTheTop() {
+        highestPointReached(roomOf("forest-1", 2), false, 60 * 20, 112);
     }
     /** The boss room (index 2) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
     @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 2); }
 
     @Test void everyRoomIsClosedFromAboveByASlabEndingAtItsTopEdge() {
         for (String map : new String[]{"forest-0", "forest-1", "forest-2"}) {
-            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 4 : map.equals("forest-2") ? 3 : 2;
+            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 6 : map.equals("forest-2") ? 3 : 2;
             for (int index = 0; index < rooms; index++) {
                 Level level = roomOf(map, index);
                 Rectangle room = level.currentRoomBounds();
@@ -117,5 +126,32 @@ class RoomCeilingTest {
         assertTrue(level.collisionBlocks.stream().anyMatch(b -> b.getY() + b.getHeight() == room.y
             && b.getX() <= stone.bodyBounds().x && b.getX() + b.getWidth() >= stone.bodyBounds().x + stone.bodyBounds().width), "the slab lies over it");
         assertTrue(stone.bodyBounds().x >= room.x && stone.bodyBounds().x + stone.bodyBounds().width <= room.x + room.width);
+    }
+
+    /**
+     * #360 (D71): the stone's lip must be on screen while the hero stands on the floor. Rooms are 8 px taller than the view and the
+     * camera then shows the bottom of the room: forest-0 draws the lip on that line (y 8), forest-2 hangs it under the dirt block over
+     * the stone with {@code lipTop} 48. Checked against the hero's own camera target, standing on the floor, in both rooms with a stone.
+     */
+    @Test void theStoneLipIsInsideTheCameraViewWhileTheHeroStandsOnTheFloor() {
+        String[][] rooms = {{"forest-0", "3", "8"}, {"forest-2", "2", "48"}};
+        for (String[] r : rooms) {
+            Level level = roomOf(r[0], Integer.parseInt(r[1]));
+            var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
+                .map(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::cast).findFirst().orElseThrow();
+            Player p = level.player;
+            p.position.x = stone.getX() - 200;  // on the floor before the stone's zone, the stone in view
+            for (int i = 0; i < 60; i++) frame(level);
+            assertTrue(p.isOnGround(), r[0] + ": the hero stands on the floor");
+            var camera = p.roomCameraTarget();
+            Rectangle view = new Rectangle(camera.x, camera.y, harness.game().logicalResolution().x, harness.game().logicalResolution().y);
+            Rectangle lip = stone.lipBounds();
+            String where = r[0] + " lip " + lip + " view " + view;
+            assertEquals(Float.parseFloat(r[2]), lip.y, 0.01f, where + ": the lip's top");
+            assertEquals(0, stone.bodyBounds().y, 0.01f, where + ": the stone still starts at the room top (timing unchanged)");
+            assertTrue(lip.y >= view.y && lip.y + lip.height <= view.y + view.height, where + ": vertically on screen");
+            assertTrue(lip.x >= view.x && lip.x + lip.width <= view.x + view.width, where + ": horizontally on screen");
+            assertEquals(com.jlogicsoftware.kimeria.entity.objects.FallingStone.LIP_LOOSE, stone.lipFrame(), where);
+        }
     }
 }
