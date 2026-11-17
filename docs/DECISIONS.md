@@ -2169,6 +2169,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - `HealerDialogueTest` and `CampaignFlowTest` expect 9 start-tale lines: still at most two presses a line, now 18
     presses; the speakers are `HEHHHHHHE`.
   - `test_sprite_art_guard.py`: see "Removed" above.
+- **Update ([D87](#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), #419):** a linked mechanism outside the camera view sends her to the screen edge in its direction to twinkle, and the pulled lever's mechanisms keep a clear glow for 1.5 s after the pull.
 - **Not verified:** the look, the read distance and the timing in the running game, desktop, web and touch
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)); the native-speaker quality of the uk, pl, de and be lines ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)).
 
@@ -2243,7 +2244,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418): a teaching room for a lever that drives two
     mechanisms, placed in forest-1 between `forest-1-traps` and `forest-1-route` (rule 1).
   - [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419): the fairy guide (D82) flies to the screen edge and
-    twinkles toward a linked mechanism that is off screen (rule 2).
+    twinkles toward a linked mechanism that is off screen (rule 2). Built by [D87](#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17); the issue stays open for the author's play-through.
   - Both issues stay open until built. When one lands, its PR updates this list and the document it changes.
 - **Details:** playtest of 2026-11-17 (the forest-1 route room); [GAME_DESIGN.md](GAME_DESIGN.md#intent-and-player-experience),
   [GAME_DESIGN.md](GAME_DESIGN.md#forest-linked-route-reconfiguration).
@@ -2282,3 +2283,80 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the gate. No threshold or tolerance was relaxed.
 - **Not verified:** the new room in the running game (camera, wall tiles, the refill's place by eye), tracked by
   [#422](https://github.com/jlogicgames/edgard_in_kimeria/issues/422); novice playtests (#135).
+
+## D87. The fairy points at a linked mechanism that is off screen, and the pulled lever's mechanisms stay marked (#419, 2026-11-17)
+
+- **Status:** built by [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419); the three author decisions below are
+  from 2026-11-17, the numbers and the selection rule are the agent's design, for the author to confirm or change. Automated
+  tests only: nobody has seen it in the running game. #419 stays open for the author's play-through.
+  Applies [D84](#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17) rule 2 and extends
+  [D82](#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16).
+  No new HUD element ([D7](#d7-traps-are-deterministic-puzzle-elements): still no text hints).
+- **Author's decisions (2026-11-17):**
+  1. When a lever is selected or has just been pulled and a linked mechanism is outside the camera view, the fairy flies to
+     the screen edge in that mechanism's direction and twinkles there (while the lever is selected, and for a short time
+     after the pull), then returns to Edgard. No arrows, no text.
+  2. The in-view linked mechanisms keep a cue for a short time after the pull, so the change on each of them is marked when it
+     happens (the Chrome check showed the glow vanishing at the pull: the ladder dropped, the lift just stopped).
+  3. Investigate why the lift's glow was not noticed; record the finding.
+- **Design (agent's):**
+  - **The marked set.** `Level.activateTrigger` ends by filling `FairyGuide.beginChanged()` with
+    `linkedMechanismsInto(trigger)`: the mechanisms the pull drives, for **1.5 s** (`CHANGED_SECONDS`). Any trigger counts,
+    so a lever thrown at with a stone marks them too. The set is cleared when the hero cannot act (death, checkpoint).
+    1.5 s is the time to see two things: she needs about 0.4 s to fly to an edge (rate 14 /s) and about 0.4 s back, which
+    leaves about 1 s of twinkle on the edge, and a lift stopping or a ladder dropping takes under 1 s to read. The
+    longer-warnings assist (`TrapWarnings`, x1.5) is a trap-warning aid, not a cue timer, so it is not wired in: the cue is not a
+    hazard warning and the player cannot lose by missing it.
+  - **In-view marks.** A marked mechanism gets the glow at **0.8** (`CHANGED_ALPHA`; passive stays 0.3, the selected target 1.0)
+    for 1.1 s, fading to 0 over the last 0.4 s (`CHANGED_FADE_SECONDS`), with the four glints on its corners. A mechanism that is
+    both passive and marked is drawn once, at the stronger value. `FairyGuide.glowAlpha` reports the same number.
+  - **Off-screen test.** A mechanism is off screen when its box does not overlap the camera's visible world rect (the supplier
+    `KimeriaGame.visibleWorldRect` that `Level` already received for the rain, now also given to the fairy). With no view or an
+    empty one (a headless test that passes none) nothing is off screen, so every existing scene behaves as before D87.
+  - **Edge point.** `FairyGuide.edgePoint`: the point where the ray from the view centre to the mechanism's centre leaves the view
+    inset by **16 px** (`EDGE_MARGIN`; her 16 px frame then sits 8 px inside the edge, clear of the picture border), so the direction on
+    screen is the mechanism's true direction, diagonals included. World Y grows downward: a mechanism below the view has the
+    larger y and gets a point on the bottom edge. She flies there at the existing target rate (14 /s) and, within 8 px of the point
+    (`TWINKLE_RANGE`: the point moves while a lift runs, and her smoothing lags it by a few px), plays the existing twinkle (the two
+    "appear" frames looping) with the four glints around her frame. No new art.
+  - **Which one.** The nearest to the view centre (ties: smaller x, then y) of the selected lever's mechanisms and the marked ones that
+    are off screen; the one she already serves keeps the job while it stays off screen (no flip-flop between near-equal distances).
+    Cycling through several was not built: the only lever in the game with two mechanisms (`Route`) has one off screen, and a cycle
+    adds a second moving thing to read. If a later room needs two off-screen mechanisms read at once, cycling is the next step.
+  - **While and after.** She goes to the edge while a lever is selected (Up held at it) and for 1.5 s after a pull, whether or not it
+    is still selected. When no mechanism is off screen she behaves exactly as in D82 (points beside the selected target, idles at
+    his shoulder). When the cue ends she flies back at the follow rate. The selection itself (`selected()`, the label, eligibility, D29,
+    D30) is untouched: only her position and the glows change.
+- **Finding 1, the in-view lift glow (decision 3).** The glow code is correct: while the lever is selected, the passive glow at 0.3 is
+  drawn behind the in-view mechanisms (`FairyOffscreenTest`, and the Chrome check). Measured with `check_contrast.py`'s functions over
+  the six lifts in the shipped maps against the sky and background tiles (the sprite's outline contrast, OKLab, worst of the sky
+  offsets): the bare lift 0.365; with the 0.3 glow 0.493; with 0.8, 0.655; with 1.0, 0.666 (the active gate is 0.28). The halo itself
+  over the plain background: mean lightness change 0.076 at 0.3, 0.192 at 0.8 and 0.228 at 1.0. So 0.3 is legible by the metric
+  and `PASSIVE_ALPHA` is **not changed**; what the author missed was not contrast but attention: a stopping lift gives nothing to
+  look at (it looks like a lift that was never moving), and the post-pull mark at 0.8 with glints is the answer.
+  Not measured by eye.
+- **Finding 2, the lift is off screen from the lever.** In the real route room, with the real camera rule (`Player.roomCameraTarget`),
+  a hero at the lever (x 1440) has the view x 1280 to 1920 (the room's left clamp), and the lift (x 1936 to 1968) lies **16 px
+  beyond the right edge**: off screen (`FairyOffscreenTest.fromTheLeverTheLiftIsOffScreenAndTheLadderIsInView...`). The camera's
+  dead zone moves the focus by under 50 px, which cannot bring it in. The Chrome check of 2026-11-17 saw the lift glow while the lever
+  was selected; that cannot be reproduced headless and may have been a different hero position or window. The author's play-through
+  will show which; the design covers both cases (in view: the mark; out of view: the edge twinkle).
+- **Found while measuring:** `Player.selectedInteraction` made a record every frame any target was selected (24 B/frame; the
+  D82 fairy scene never selected one, it only had passive targets). It is now one reused instance
+  (`Player.InteractionTarget`, read at once by each caller). The new scene showed 24.6 B/frame before the fix.
+- **Allocation:** `AllocationBudgetTest.fairyGuidePointingOffScreenWithAPostPullGlow` (the hero at the route lever with Up held,
+  the lift off screen, marks renewed every 60 frames; the fairy's update and both render passes): 0.6 to 2.0 B/frame in 3 isolated
+  runs, ceiling `FAIRY_GUIDE_CEILING` 8 B (the isolated-scene ceiling of the D82 and #303 scenes; measured maximum plus 10 % would be
+  2.2, and one JIT-dependent object per few hundred frames is the noise this ceiling is meant to absorb). The existing
+  `fairyGuideWithPassiveGlows` measures 0.1 to 0.7. `HeadlessLevelHarness.roomOf` now passes one shared empty view instead of
+  `Rectangle::new` (a supplier that makes a rect per call would itself allocate under the fairy). The new helpers are in
+  `tools/check_allocations.py` `HOT_METHODS`.
+- **Tests (new, `FairyOffscreenTest`, 18):** the edge point for right, left, above, below, both corners, direction kept and inside the
+  inset, and an inside point unchanged (Y down); on the real route room: the lift off and the ladder in view from the lever, the
+  selected cue (twinkle at the right edge), the post-pull cue and its 1.5 s end with the return to his shoulder, the 0.8 glow and
+  its fade, Up held through the pull, every mechanism in view (unchanged D82 behaviour plus the mark), no view, an empty marked set,
+  nearest and sticky choice among two, above and below, and the selection unchanged. No existing test changed and no threshold
+  moved; `./gradlew test` 981 tests, 0 failures.
+- **Not verified:** the look and timing in the running game on desktop, web and touch (the glints around her, the 1.5 s, the 16 px
+  margin against the HUD hearts and the touch buttons); the Chrome discrepancy in Finding 2. Tracked by #419 (play-through) and, for
+  the shared visual checks, [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).

@@ -111,7 +111,8 @@ ammunition icons remain available throughout gameplay; there is no opaque banner
 The fairy guide marks the selected object itself ([D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16), replacing the gold corner
 brackets): an aqua glow behind it and four fairy-dust glints at its corners from the frame it is selected, while the
 fairy flies beside it and points. In-reach targets that are not selected, and the mechanisms a selected lever drives,
-get the same glow dimmed. For Up + Action, a visible
+get the same glow dimmed. After a pull the pulled lever's mechanisms glow clearly for 1.5 s, and one outside the view sends the
+fairy to the screen edge to twinkle ([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17)). For Up + Action, a visible
 lever is marked at its trigger zone and named Lever, with Turn on/Turn off matching
 the linked torch. Other mechanisms mark the nearest visible linked object rather
 than the invisible trigger volume; a linked torch is named Torch. Usable torches have a solid
