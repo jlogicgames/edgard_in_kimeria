@@ -2618,6 +2618,30 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   2026-11-17). The night sky with its moon and clouds is still to be drawn in
   [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451); the contrast gate is re-run over that real background
   then, and any sprite it fails is fixed then.
+- **Moon rim (rule; tool in place, switched on by the night change of
+  [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430)).** On the night background the near-black ink contour
+  of D71/D76 no longer separates a sprite from the sky (below about OKLab L 0.40; over `2c3f66` 31 active sprites fall
+  under 0.28). An active sprite whose outline does not reach the active floor on its level's background carries the moon
+  rim:
+  - its outermost contour pixels darker than OKLab L 0.50 that face **up, left or right** (a transparent 4-neighbour on
+    that side, or the frame's edge) are `c4cfe8`; contour pixels facing **down** keep their ink, so the underside still
+    reads on the ground. No pixel is added or moved: the silhouette and the hitbox are unchanged;
+  - it is applied by the exporter, never painted pixel by pixel: `tools/moon_rim.py` (`rim(image, cell)`), switched on
+    per sheet by `RIM_SHEETS` in `tools/forest_trap_sprites.py` and `tools/hero_sprites.py`, and by its CLI for sheets
+    with no grid source (`python3 tools/moon_rim.py SHEET.png --cell W H`). It is idempotent, so a rim softened by hand
+    in the grid (where it reads like a sticker) survives a re-export; the gate keeps the softening honest;
+  - it is used only where the gate needs it: on every sprite it lowers the Bat pickup to 0.266 against its own halo;
+  - it costs one palette entry. The hero grid has all 15 opaque colours in use, so turning the hero's rim on needs a
+    colour freed or merged in `art/hero/hero.grid` first (`hero_sprites.indexed` fails loudly otherwise);
+  - companions, same change: decor keeps its own-hue contour and is tinted toward the level's background until its body
+    is at most 0.20; a glowing sprite's dimmest brightness keeps its rim over the floor (the honey fungi:
+    `GLOW_MIN` 0.80);
+  - the inherited sheets (`enemy/Bat.png`, `enemy/Mobs.png`, `enemy/yellow_mob.png`, `objects/GreyOff.png`) and the
+    author's `enemy/Boss.png` get the rim through the CLI as an interim; the redraws of
+    [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) follow this rule instead.
+  - Tests: `tools/test_moon_rim.py` (lit sides rimmed, underside kept, light edges and the silhouette untouched, frames
+    in a strip independent, idempotent, mirror-symmetric, the CLI, the thorn tuft on a plain `2c3f66` patch 0.226 to
+    0.411 against the 0.28 floor, every exporter flag off, a flagged sheet rimmed with one more colour, the hero's full palette refused).
 - **Why.** The forest-1 rain (`RainDrop`, one `WorldObject` per drop, a mutable static wind) and sky (`SkyBackground`,
   `sky.png`) were Dart-port leftovers chosen by level name in `Level`. The gate measured every sprite of all three maps
   over `sky.png`, but forest-0 and forest-2 never drew it: they showed the clear colour `87ceeb`. Over `87ceeb` the gate
