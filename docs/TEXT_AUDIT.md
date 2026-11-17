@@ -228,7 +228,7 @@ in the ending's wording, not in the plot.
 | --- | --- | --- |
 | Villain | L'Kardina | Named once (`INTRO_STORY`), then only "the wicked witch" (`HEALER_TALE_WITCH`) and "witches" (`HEALER_TALE_BLESSING`). Never seen, never faced, absent from the ending. |
 | Donor | The healer | Strong: narrates, tests, gives the thread, blessing, elixir. Unnamed by design (STORY.md). |
-| Magical helper | Fairies (told), the silver thread (told) | Fairies are never seen ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338)); the thread is never shown ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)). |
+| Magical helper | The fairy (told and shown, D82), the silver thread (told and shown, D81) | The fairy is seen since [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338); the thread is shown on every death since [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341). |
 | Princess / sought-for person | The sun, the light | An object, not a person; acceptable in the tradition (the stolen sun is a known tale type). |
 | Dispatcher | None; a rumour sends the hero. Rufardus is a candidate | Vacant. |
 | Hero | Edgard, a seeker hero ("wandering warrior") | Clear. |
@@ -244,7 +244,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 
 | # | Finding | Keys | Owner |
 | --- | --- | --- | --- |
-| G1 | Fairies are named three times (torch, far-off fairy, blessing) and never seen. | `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT`, `HEALER_TALE_BLESSING` | [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) |
+| G1 | Fairies are named three times (torch, far-off fairy, blessing) and never seen. **Resolved (#338, D82):** the fairy is the healer's third gift (`HEALER_TALE_FAIRY`), visible in play; the torch and stone images no longer name a fairy, and the blessing names "your fairy". | `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT`, `HEALER_TALE_BLESSING` | [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) |
 | G2 | The fireball has no origin (no F function). The healer's "won't affect magical items" points at an unnamed magic. | `FIREBALL`, `HEALER_GREETING`, `HEALER_PAID` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340), done: `HEALER_TALE_FIREGIFT` and one `INTRO_STORY` sentence (merged after this audit) |
 | G3 | One action, four names: EN "Fireball" and "Ranged" (`SHOOT`), pad "ranged" in About, "throw/fireball" in About; uk/pl/de/be call it "Fire" (Вогонь, Ogień, Feuer, Агонь) but be `FIREBALL_STOCK_FULL` says "fireballs" (вогненных шароў). | `FIREBALL`, `SHOOT`, `ABOUT_*`, `FIREBALL_STOCK_FULL` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340) kept the labels; reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
 | G4 | The thread is only words; death shows nothing. | `HEALER_TALE_THREAD`, `INTRO_STORY` | [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341) |
@@ -318,7 +318,7 @@ the author's confirmation, not new translations.
 | Silver thread | silver thread | срібна нитка | srebrna nić | silberner Faden | срэбная нітка | |
 | Ranged magic | to be chosen with #340 ("Fire" vs "Fireball") | Вогонь | Ogień | Feuer | Агонь | three names in EN (G3) |
 | Elixir | elixir | еліксир | eliksir | Elixier | эліксір | |
-| Fairy | fairy (form fixed with #338) | фея | wróżka | Fee | фея | |
+| Fairy | fairy (form fixed with #338, D82) | фея | wróżka | Fee | фея | |
 | Ingredients | Bat, Mushroom | per catalog | per catalog | per catalog | per catalog | |
 | Coins | forest coins | per catalog | per catalog | per catalog | per catalog | |
 

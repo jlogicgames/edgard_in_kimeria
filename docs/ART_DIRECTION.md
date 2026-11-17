@@ -192,6 +192,30 @@ Every death with a visible cause shows the silver thread of #228 pulling Edgard 
 - **Not verified:** the beat in the running game, by the author's eye (desktop and web):
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
+## The fairy helper (D82, playtest F4, F14, [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338))
+
+The healer's fairy is an original pixel drawing in three sheets, from grids in `art/objects/fairy/`
+(`tools/forest_trap_sprites.py fairy:body fairy:glow fairy:glint`; layouts in `tools/sprite_layouts.py FAIRY_SHEETS`).
+
+- **Identity:** a tiny maid, not a winged ball of light. She has copper hair, a teal dress with a pale edge, a
+  lantern skirt glowing pale aqua-white (the firefly), and pale blue dragonfly wings with blue veins. Ink contour
+  `0b0814` (the hero's), 10 colours, binary alpha.
+- **`fairy-body.png`, 16×16 frames:**
+  - idle ×4, 0.12 s each, the wings beating;
+  - fly ×2, 0.06 s each;
+  - point ×3, 0.1 s each, a thin wand held out, its star lighting, the last frame held;
+  - the three point frames flipped (grid `flip`, never at runtime);
+  - appear ×2, 0.2 s each: the one-time twinkle after the start tale.
+  - Idle and fly are symmetric (grid `mirror`), so they need no facing.
+- **`fairy-glow.png`, 24×24:** three stepped aqua rings (`123432`, `286a66`, `3c9c92`), drawn additively as a
+  nine-slice with 8 px corners. It is the target glow (selected 1.0, passive 0.3) and, at 20×20 with alpha 0.6 to 0.9,
+  her own light. Aqua is used by nothing else: the pickup halo is warm white (#345).
+- **`fairy-glint.png`, 5×5 ×2:** an aqua-white star with an ink edge, big and small, at the selected target's corners.
+  It is not the pickup sparkle (warm yellow, one per item, every 2.4 s).
+- **Contrast (D76):** active. `check_contrast.py` sweeps every map, since she has no placement: her frames over her
+  light at its dimmest, 0.314 to 0.440; the glints over the selected glow, 0.336 and 0.380. Without her light she
+  would fail (0.187); `test_check_contrast.py` pins that.
+
 ## Production and continuity
 
 Current portraits have a **256 × 256 px** runtime canvas, at most **256 palette entries

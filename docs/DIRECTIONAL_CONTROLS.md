@@ -72,8 +72,8 @@ Target eligibility governs this rule even if the held look direction hides the
 other direction's teaching label, or a later room omits teaching text.
 All devices use their active movement directions; mirrored gamepad action D-pad
 buttons never double as look directions.
-When an eligible mechanism or carryable is selected and its interaction outline is
-visible, that selection suppresses standing look and vertical camera inspection. If
+When an eligible mechanism or carryable is selected and its interaction mark (the fairy
+guide's glow, [D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16)) is visible, that selection suppresses standing look and vertical camera inspection. If
 inspection was already underway, it returns to the ordinary camera target over 0.2 s
 ([D29](DECISIONS.md#d29-interaction-outline-takes-priority-over-standing-look)).
 
@@ -106,14 +106,17 @@ All labels ease in over 0.18 s while rising 12 logical UI pixels from below to t
 normal local position; they ease out over 0.25 s while continuing 12 pixels upward.
 The outgoing text keeps its world anchor until invisible, then replacement content
 starts below its own anchor. Interrupted entry/re-entry preserves the current slide
-position and opacity, avoiding jumps. Touch button labels, target brackets and the
+position and opacity, avoiding jumps. Touch button labels, target marks and the
 ammunition icons remain available throughout gameplay; there is no opaque banner.
-Gold corner brackets frame the selected object itself. For Up + Action, a visible
-lever is framed at its trigger zone and named Lever, with Turn on/Turn off matching
-the linked torch. Other mechanisms frame the nearest visible linked object rather
+The fairy guide marks the selected object itself ([D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16), replacing the gold corner
+brackets): an aqua glow behind it and four fairy-dust glints at its corners from the frame it is selected, while the
+fairy flies beside it and points. In-reach targets that are not selected, and the mechanisms a selected lever drives,
+get the same glow dimmed. For Up + Action, a visible
+lever is marked at its trigger zone and named Lever, with Turn on/Turn off matching
+the linked torch. Other mechanisms mark the nearest visible linked object rather
 than the invisible trigger volume; a linked torch is named Torch. Usable torches have a solid
-handle and cup, including when unlit. Up + Action frames a selected pickup at its actual
-position. Down + Action has no target outline because it places the carried object.
+handle and cup, including when unlit. Up + Action marks a selected pickup at its actual
+position. Down + Action has no target mark because it places the carried object.
 There is no floating selection dot above the hero or a trigger zone. Strings are typed `Msg`
 keys translated in EN/UK/PL/DE/BE; the shipped fonts already contain every glyph.
 
@@ -253,8 +256,8 @@ The lever's up/down state reads Torch.isBurning directly, so it cannot drift fro
 the actual light state. Up = on; down = off. The prompt/button explicitly says
 Turn on/Turn off and names the Lever in all five languages.
 
-Selection brackets frame the lever sprite at the revised zone, using the same
-InteractionHighlight as stones. Other generic triggers keep their linked-object
+The selection glow marks the lever sprite at the revised zone, through the same
+fairy guide as stones (D82, #338; it replaced the earlier corner brackets). Other generic triggers keep their linked-object
 feedback. Lever declarations must link exactly one torch; malformed map links fail
 clearly. New pixel masters/prompts and registered exports are in
 [object sources](../art/objects/generation-prompts.md#practice-light-three-quarter-revision-2026-10-23).

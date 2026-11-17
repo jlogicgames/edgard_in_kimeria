@@ -30,7 +30,6 @@ import com.jlogicsoftware.kimeria.localization.Msg;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.jlogicsoftware.kimeria.ui.InteractionHighlight;
 import com.jlogicsoftware.kimeria.effects.SilverThread;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Entity;
@@ -170,9 +169,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private final Vector2 carryHintCameraAnchor = new Vector2();
     private boolean carryHintVisible;
     private final Set<Boss> bossesHit = new HashSet<>();
-    /** Reused by the per-frame passive highlight and pickup-reach code (see {@link #pickupReachBounds}): never allocated per frame. */
-    private static final int OUTLINE_CAPACITY = 8;
-    private final Array<Entity> outlinedScratch = new Array<>(false, OUTLINE_CAPACITY);
+    /** Reused by the per-frame pickup-reach code (see {@link #pickupReachBounds}): never allocated per frame. */
     private final Rectangle reachScratch = new Rectangle();
     private boolean victoryWalk;
     private boolean isAttacking = false;
@@ -382,6 +379,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // Give pickup/activation chords extra time before inspection moves their target.
         // Use real eligibility: pressing Up can hide the pickup label without changing reach.
         boolean interactionAvailable = inspecting && (selectedCarryable() != null || selectedMechanism() != null);
+        // Before the move: the fairy guide asks again after it (Level.finishUpdate, D82), so her mark follows the new position.
         boolean interactionHighlighted = interactionFeedbackTarget() != null;
         int lookDirection = inspecting && !verticalSpentOnAction && !interactionHighlighted
             ? gameplayInput.lookDirection() : 0;
@@ -1012,41 +1010,30 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return interactionFeedbackTarget(selectedInteraction());
     }
 
-    public void renderInteractionTarget(Batch batch) {
-        Entity selectedTarget = interactionFeedbackTarget();
-        renderPassiveInteractionTargets(batch, selectedTarget);
-        if (selectedTarget instanceof Lever lever) {
-            for (Entity linked : level.linkedMechanisms(lever.trigger)) InteractionHighlight.drawPassive(batch, linked);
-        }
-        if (selectedTarget != null) InteractionHighlight.draw(batch, selectedTarget);
-    }
-
-    /** True the first time {@code target} is added (identity, like the HashSet it replaces). */
-    private static boolean outline(Array<Entity> outlined, Entity target) {
-        if (outlined.contains(target, true)) return false;
-        outlined.add(target);
-        return true;
-    }
-
-    private void renderPassiveInteractionTargets(Batch batch, Entity selectedTarget) {
+    /**
+     * The passive targets of D82 (were the grey corner brackets): every target that is in reach and eligible but not
+     * {@code selected}, and, while a lever is selected, the mechanisms it drives. {@code out} is cleared first; each
+     * entity appears once and never the selected one. The fairy guide draws them; eligibility is unchanged.
+     */
+    public void collectPassiveTargets(Array<Entity> out, Entity selected) {
+        out.clear();
         if (level == null || !canFight()) return;
-        Array<Entity> outlined = outlinedScratch;
-        outlined.clear();
-        if (selectedTarget != null) outlined.add(selectedTarget);
-
         if (carryablesEligible()) {
             Rectangle reach = pickupReachBounds();
             for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Carryable target
-                && target.available() && reach.overlaps(target.bounds()) && outline(outlined, target))
-                InteractionHighlight.drawPassive(batch, target);
+                && target.available() && reach.overlaps(target.bounds())) addPassive(out, target, selected);
         }
         for (int i = 0; i < level.triggers.size(); i++) {
             Trigger trigger = level.triggers.get(i);
-            if (!mechanismEligible(trigger)) continue;
-            Entity target = level.mechanismFeedbackTarget(trigger);
-            if (target != null && outline(outlined, target)) InteractionHighlight.drawPassive(batch, target);
+            if (mechanismEligible(trigger)) addPassive(out, level.mechanismFeedbackTarget(trigger), selected);
         }
-        outlined.clear();
+        if (selected instanceof Lever lever) level.linkedMechanismsInto(lever.trigger, out);
+        out.removeValue(selected, true);
+    }
+
+    /** Adds {@code target} once (identity), never the selected one. */
+    private static void addPassive(Array<Entity> out, Entity target, Entity selected) {
+        if (target != null && target != selected && !out.contains(target, true)) out.add(target);
     }
 
     private void updatePlayerState() {

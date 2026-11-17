@@ -1,0 +1,20 @@
+# The fairy-dust glint (#338, D82): a 5x5 aqua-white star drawn ON TOP at the four corners of the
+# selected target, from the frame it is selected, so the selection reads even when the hero stands over the target
+# or the wall behind is bright. Two frames, the diagonal pairs alternating every 0.25 s. Ink k keeps it readable on pale
+# backgrounds. Not the pickup sparkle (warm yellow, one per item, every 2.4 s).
+size 5 5
+color k 0b0814
+color g 7fe0cc
+color c f2fff4
+frame big
+..k..
+.kck.
+kcgck
+.kck.
+..k..
+frame small
+.....
+..k..
+.kck.
+..k..
+.....

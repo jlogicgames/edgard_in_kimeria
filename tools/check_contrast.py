@@ -52,7 +52,7 @@ def java_float(path, name):
 
 def java_int(path, name):
     text = (ROOT / path).read_text(encoding='utf-8')
-    return int(re.search(rf'\b{name}\s*=\s*([0-9]+)\s*;', text).group(1))
+    return int(re.search(rf'\b{name}\s*=\s*([0-9]+)\s*[;,]', text).group(1))  # one of several declared on a line too
 
 
 GLOW_MIN = java_float('core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/FungusTrap.java', 'GLOW_MIN')
@@ -66,6 +66,24 @@ HALO_MARGIN = 8  # px of background around the halo kept when compositing it
 # (outline 0.123 against the 0.28 floor at forest-2 x 336). They are still measured at rest and at the bob top.
 NO_HALO = {'Collectable:Coin'}
 FULL = (1.0,)
+# The fairy helper (#338, D82) has no map placement: she flies with the hero. Every body frame is measured over her own
+# light at its dimmest, and the glints over the selected glow of a 16 px target, at a fixed sweep of every map.
+FAIRY_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/ui/FairyGuide.java'
+FAIRY_FRAME = java_int(FAIRY_JAVA, 'FRAME')
+FAIRY_BODY_FRAMES = java_int(FAIRY_JAVA, 'BODY_FRAMES')
+FAIRY_LIGHT_SIZE = java_int(FAIRY_JAVA, 'LIGHT_SIZE')
+FAIRY_LIGHT_ALPHA = java_float(FAIRY_JAVA, 'LIGHT_ALPHA_MIN')
+FAIRY_GLOW_SIZE, FAIRY_GLOW_BORDER = java_int(FAIRY_JAVA, 'GLOW_SIZE'), java_int(FAIRY_JAVA, 'GLOW_BORDER')
+FAIRY_GLOW_PAD, FAIRY_GLINT_GROW = java_float(FAIRY_JAVA, 'GLOW_PAD'), java_float(FAIRY_JAVA, 'GLINT_GROW')
+FAIRY_GLINT_SIZE = java_int(FAIRY_JAVA, 'GLINT_SIZE')
+FAIRY_SWEEP = (64, 40, 328, 48)  # x step, y from, y to, y step: one in every 4 x 3 tiles of every map, at sky offsets 0 and 4
+FAIRY_SKY_OFFSETS = (0, SKY_OFFSETS // 2)
+FAIRY_TARGET = 16  # the glints are measured on a lever-sized target's corners
+RGB = 3  # colour channels of a pixel, without alpha
+CHANNEL_MAX = 255
+ALPHA = 3  # index of the alpha channel in an RGBA pixel
+ROW_OUTLINE = 2  # (map, x, outline, body): the indices of a result row
+ROW_BODY = 3
 GLOWS = (1.0, GLOW_MIN)
 
 # key -> (tier, sheet, frame (x, y, w, h), frame count to check, anchor, glow levels). Anchor 'floor': the frame's
@@ -297,6 +315,90 @@ def check_sprite(key, results):
     return errors
 
 
+def nine_slice(glow, w, h, border):
+    """The glow sheet drawn as FairyGuide.nineSlice does: corners fixed, edges and middle stretched (nearest)."""
+    out = Image.new('RGBA', (w, h))
+    s = glow.width
+    spans = lambda size: ((0, border, 0, border), (border, s - border, border, size - border), (s - border, s, size - border, size))
+    for sx0, sx1, dx0, dx1 in spans(w):
+        for sy0, sy1, dy0, dy1 in spans(h):
+            if dx1 > dx0 and dy1 > dy0:
+                out.paste(glow.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.NEAREST), (dx0, dy0))
+    return out
+
+
+def edge_pairs(sprite, light, lx, ly, alpha):
+    """(sprite L, dx, dy, added RGB) for every outline pair of `sprite`; the light's top-left sits at (lx, ly) in sprite space."""
+    pairs = []
+    for j in range(sprite.height):
+        for i in range(sprite.width):
+            if not is_opaque(sprite, i, j):
+                continue
+            lightness = oklab(sprite.getpixel((i, j)))[0]
+            for u, v in NEIGHBOURS:
+                if is_opaque(sprite, i + u, j + v):
+                    continue
+                gx, gy = i + u - lx, j + v - ly
+                added = (0, 0, 0)
+                if light and 0 <= gx < light.width and 0 <= gy < light.height and light.getpixel((gx, gy))[ALPHA]:
+                    added = tuple(int(c * alpha) for c in light.getpixel((gx, gy))[:RGB])
+                pairs.append((lightness, i + u, j + v, added))
+    return pairs
+
+
+def swept_outline(pairs, background, step_x, y_from, y_to, step_y, size):
+    """Worst mean outline of the pairs over a grid of positions in `background`: (outline, x, y)."""
+    pixels, worst = background.load(), (1.0, 0, 0)
+    for x in range(0, background.width - size, step_x):
+        for y in range(y_from, min(y_to, background.height - size), step_y):
+            total = 0.0
+            for lightness, dx, dy, added in pairs:
+                lit = tuple(min(CHANNEL_MAX, c + a) for c, a in zip(pixels[x + dx, y + dy][:RGB], added))
+                total += abs(lightness - oklab(lit)[0])
+            outline = total / len(pairs)
+            if outline < worst[0]:
+                worst = (outline, x, y)
+    return worst
+
+
+def fairy_cases():
+    """(name, sprite, light, light x, light y, alpha) for every fairy body frame and both glints."""
+    body = Image.open(ROOT / 'assets/images/objects/fairy-body.png').convert('RGBA')
+    glow = Image.open(ROOT / 'assets/images/objects/fairy-glow.png').convert('RGBA')
+    glint = Image.open(ROOT / 'assets/images/objects/fairy-glint.png').convert('RGBA')
+    light = nine_slice(glow, FAIRY_LIGHT_SIZE, FAIRY_LIGHT_SIZE, FAIRY_GLOW_BORDER)
+    offset = (FAIRY_FRAME - FAIRY_LIGHT_SIZE) // 2
+    cases = [(f'Fairy frame {n}', body.crop((n * FAIRY_FRAME, 0, (n + 1) * FAIRY_FRAME, FAIRY_FRAME)), light, offset, offset,
+              FAIRY_LIGHT_ALPHA) for n in range(FAIRY_BODY_FRAMES)]
+    pad = int(FAIRY_GLOW_PAD)
+    target_glow = nine_slice(glow, FAIRY_TARGET + 2 * pad, FAIRY_TARGET + 2 * pad, FAIRY_GLOW_BORDER)
+    # The top-left glint: centred on the target's corner grown by GLINT_GROW; the glow box starts GLOW_PAD out.
+    gx = gy = round(-FAIRY_GLINT_GROW - FAIRY_GLINT_SIZE / 2) + pad
+    for n, name in enumerate(('big', 'small')):
+        sprite = glint.crop((n * FAIRY_GLINT_SIZE, 0, (n + 1) * FAIRY_GLINT_SIZE, FAIRY_GLINT_SIZE))
+        cases.append((f'Fairy glint {name}', sprite, target_glow, -gx, -gy, 1.0))
+    return cases
+
+
+def check_fairy(images):
+    """Errors for the fairy and her glints (active tier), and the worst outline of each case for the report."""
+    errors, report = [], {}
+    step_x, y_from, y_to, step_y = FAIRY_SWEEP
+    for name, sprite, light, lx, ly, alpha in fairy_cases():
+        pairs = edge_pairs(sprite, light, lx, ly, alpha)
+        worst = (1.0, None, 0, 0)
+        for map_name, backgrounds_of_map in images.items():
+            for offset in FAIRY_SKY_OFFSETS:
+                outline, x, y = swept_outline(pairs, backgrounds_of_map[offset], step_x, y_from, y_to, step_y, sprite.width)
+                if outline < worst[0]:
+                    worst = (outline, map_name, x, y)
+        outline, place, x, y = worst
+        report[name] = outline
+        if outline < ACTIVE_OUTLINE_MIN:
+            errors.append(f'{name} (active): outline {outline:.3f} < {ACTIVE_OUTLINE_MIN} at {place} x {x} y {y}')
+    return errors, report
+
+
 def tile_report(sky):
     """Report only (#189): mean outline and body of the tile scenery against the sky."""
     sums = {name: [[], []] for name in TILE_SCENERY}
@@ -352,6 +454,10 @@ def run():
     for key in SPRITES:
         if key in results:
             errors.extend(check_sprite(key, results[key]))
+    fairy_errors, fairy = check_fairy(images)
+    errors.extend(fairy_errors)
+    for name, outline in fairy.items():
+        results[name] = [('sweep', 0, outline, 0.0)]
     return results, errors, tile_report(sky)
 
 
@@ -359,8 +465,9 @@ def main():
     results, errors, tiles = run()
     print(f'{"sprite":24} {"tier":7} {"outline min":>11} {"outline max":>11} {"body max":>8}')
     for key, rows in results.items():
-        print(f'{key:24} {SPRITES[key][0]:7} {min(r[2] for r in rows):11.3f} {max(r[2] for r in rows):11.3f} '
-              f'{max(r[3] for r in rows):8.3f}')
+        tier = SPRITES[key][0] if key in SPRITES else 'active'  # the fairy rows (#338) are active
+        print(f'{key:24} {tier:7} {min(r[ROW_OUTLINE] for r in rows):11.3f} {max(r[ROW_OUTLINE] for r in rows):11.3f} '
+              f'{max(r[ROW_BODY] for r in rows):8.3f}')
     print('tile scenery, report only (#189, background tier ceiling = decor ceiling):')
     for category, (outline, body) in tiles.items():
         print(f'  {category:16} outline {outline:.3f} body {body:.3f}')

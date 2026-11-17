@@ -55,15 +55,15 @@ class HealerDialogueTest {
 
     @Test void instantTextNPressesAdvanceExactlyNLinesAndTheLastPressFinishesOnce() {
         Language language = Language.ENGLISH;
-        HealerDialogue dialogue = HealerDialogue.tutorialStart(); // 8 lines
+        HealerDialogue dialogue = HealerDialogue.tutorialStart(); // 9 lines (#338 added the fairy gift)
         dialogue.setInstantText(true);
-        for (int press = 1; press <= 7; press++) {
+        for (int press = 1; press <= 8; press++) {
             assertNull(dialogue.advance(language));
             assertEquals(java.util.List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME, Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT,
-                Msg.HEALER_TALE_WITCH, Msg.HEALER_TALE_THREAD, Msg.HEALER_TALE_FIREGIFT, Msg.EDGARD_TALE_UNDERSTOOD).get(press).t(language),
+                Msg.HEALER_TALE_WITCH, Msg.HEALER_TALE_THREAD, Msg.HEALER_TALE_FIREGIFT, Msg.HEALER_TALE_FAIRY, Msg.EDGARD_TALE_UNDERSTOOD).get(press).t(language),
                 dialogue.completeText(language), "after press " + press);
         }
-        assertEquals(HealerDialogue.Choice.CONTINUE, dialogue.advance(language)); // the 8th press leaves the last line
+        assertEquals(HealerDialogue.Choice.CONTINUE, dialogue.advance(language)); // the 9th press leaves the last line
         assertNull(dialogue.advance(language), "a press after the end does nothing");
         assertEquals(Msg.EDGARD_TALE_UNDERSTOOD.t(language), dialogue.completeText(language));
     }
@@ -131,7 +131,7 @@ class HealerDialogueTest {
         Object[][] scripts = {
             {HealerDialogue.Kind.TUTORIAL_START, java.util.List.of(Msg.HEALER_TALE_ROAD, Msg.EDGARD_TALE_NO_TIME,
                 Msg.HEALER_TALE_FAIRIES, Msg.HEALER_TALE_LIFT, Msg.HEALER_TALE_WITCH,
-                Msg.HEALER_TALE_THREAD, Msg.HEALER_TALE_FIREGIFT, Msg.EDGARD_TALE_UNDERSTOOD)},
+                Msg.HEALER_TALE_THREAD, Msg.HEALER_TALE_FIREGIFT, Msg.HEALER_TALE_FAIRY, Msg.EDGARD_TALE_UNDERSTOOD)},
             {HealerDialogue.Kind.TUTORIAL_END, java.util.List.of(Msg.HEALER_TALE_PRAISE, Msg.EDGARD_TALE_READY,
                 Msg.HEALER_TALE_HEROES, Msg.HEALER_TALE_BLESSING)}};
         for (Language language : Language.values()) {
@@ -432,7 +432,7 @@ class HealerDialogueTest {
 
     /** The speaker follows the script line by line: the lit window, the notch and the text side all name the same speaker. */
     @Test void theSpeakerFollowsEveryScript() {
-        assertSpeakers(HealerDialogue.tutorialStart(), "HEHHHHHE");
+        assertSpeakers(HealerDialogue.tutorialStart(), "HEHHHHHHE"); // #338: the fairy gift is the healer's
         assertSpeakers(HealerDialogue.tutorialEnd(), "HEHH");
         assertSpeakers(HealerDialogue.afterVictory(), "HEH");
         assertSpeakers(new HealerDialogue(false, false, false, false, false), "HEHH");

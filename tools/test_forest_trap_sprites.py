@@ -3,7 +3,7 @@ import unittest
 from PIL import Image
 
 import forest_trap_sprites as traps
-from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
 HONEY_FUNGUS_FRAMES = 6
@@ -36,6 +36,26 @@ class ForestTrapSpritesTest(unittest.TestCase):
             shipped = Image.open(traps.ROOT / f'assets/images/objects/pickup-{name}.png')
             self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), f'run tools/forest_trap_sprites.py pickup:{name}')
             self.assertTrue(set(master.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
+
+    def test_the_fairy_sheets_match_their_layout_and_shipped_exports(self):
+        # #338 (D82): the fairy, her glow (target glow and her own light) and the dust glints.
+        for name, (size, frames) in FAIRY_SHEETS.items():
+            with self.subTest(sheet=name):
+                master, colors = traps.sheet_image(f'fairy:{name}')
+                self.assertEqual(WORLD_IMAGES[f'fairy-{name}'], master.size)
+                self.assertEqual((size[0] * len(frames), size[1]), master.size)
+                self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+                shipped = Image.open(traps.ROOT / f'assets/images/objects/fairy-{name}.png')
+                self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), f'run tools/forest_trap_sprites.py fairy:{name}')
+                self.assertTrue(set(master.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
+
+    def test_the_fairy_point_frames_are_the_flipped_left_copies(self):
+        master, _ = traps.sheet_image('fairy:body')
+        (width, height), names = FAIRY_SHEETS['body']
+        frame = lambda name: master.crop((names.index(name) * width, 0, names.index(name) * width + width, height))
+        for name in ('point1', 'point2', 'point3'):
+            right, left = frame(name), frame(f'{name}-left')
+            self.assertEqual(right.transpose(Image.Transpose.FLIP_LEFT_RIGHT).tobytes(), left.tobytes())
 
     def test_the_decor_bush_matches_its_layout_and_shipped_export(self):
         size, frames = DECOR_SHEETS['bush']

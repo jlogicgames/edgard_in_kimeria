@@ -21,8 +21,8 @@ not to replace every numeric character with a constant.
   owns the shared frame/substep limits for thrown objects and fireballs. Gravity,
   launch speed, lifespan and attachment offsets remain with their relevant entity.
 - **UI layout:** HUD margins, label constraints, fonts, gaps and shadow offsets
-  belong to HUD. The FPS renderer uses HUD's shared FPS margins. Selection-frame
-  colors and dimensions belong to `InteractionHighlight`, independently of tiles.
+  belong to HUD. The FPS renderer uses HUD's shared FPS margins. Selection-mark
+  sizes, strengths and timings belong to `FairyGuide` (D82), independently of tiles.
 
 Do not introduce an unrelated global `TILE_SIZE` or a bag of `EIGHT`/`SIXTEEN`
 constants. Equal values are not necessarily the same parameter: a frame width,

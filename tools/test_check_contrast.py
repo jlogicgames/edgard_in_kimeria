@@ -25,6 +25,22 @@ WARM_HALO = (110, 100, 72, 255)
 BIG_HALO_SIZE = 16
 RIM_AT = 16
 BRIGHTEST = 0.9
+# The fairy (#338, D82): FairyGuide's LIGHT_SIZE, LIGHT_ALPHA_MIN and BODY_FRAMES; an ink edge on a dark ground is
+# nearly invisible until her light lifts it.
+FAIRY_LIGHT_SIZE = 20
+FAIRY_LIGHT_ALPHA = 0.6
+FAIRY_BODY_FRAMES = 14
+FAIRY_GLINTS = 2  # big and small, each a row of the fairy report
+INK_ON_DARK_MAX = 0.1
+LIGHT_LIFT_MIN = 0.2
+DOT_SPRITE = 3  # a 3 px sprite with one ink pixel in the middle
+DOT = (1, 1)
+DOT_SIZE = (1, 1)
+LIGHT_PATCH = 5  # a light larger than the sprite, offset one pixel up and left
+LIGHT_AQUA = (60, 120, 110, 255)
+DARK_GROUND = 8
+DARK = (20, 20, 30, 255)
+SWEEP = (1, 0, 5, 1)  # x step, y from, y to, y step over the dark ground
 
 
 def square(colour, size=6, contour=None):
@@ -152,6 +168,33 @@ class ShippedArtTest(unittest.TestCase):
         self.assertEqual([e for e in errors if 'Collectable' in e], [])
         for key in ('Collectable:Coin', 'Collectable:Bat', 'Collectable:Mushroom'):
             self.assertGreaterEqual(min(r[OUTLINE] for r in results[key]), gate.ACTIVE_OUTLINE_MIN)
+
+
+class FairyTest(unittest.TestCase):
+    """#338 (D82): the fairy has no placement; her frames and glints are swept over every map."""
+    def test_the_fairy_constants_are_read_from_the_java(self):
+        self.assertEqual(gate.FAIRY_LIGHT_SIZE, FAIRY_LIGHT_SIZE)
+        self.assertEqual(gate.FAIRY_LIGHT_ALPHA, FAIRY_LIGHT_ALPHA)
+        self.assertEqual(gate.FAIRY_BODY_FRAMES, FAIRY_BODY_FRAMES)
+
+    def test_added_light_lifts_an_ink_edge_on_a_dark_ground(self):
+        sprite = Image.new('RGBA', (DOT_SPRITE, DOT_SPRITE)); sprite.paste(Image.new('RGBA', DOT_SIZE, INK), DOT)
+        light = Image.new('RGBA', (LIGHT_PATCH, LIGHT_PATCH), LIGHT_AQUA)
+        dark = Image.new('RGBA', (DARK_GROUND, DARK_GROUND), DARK)
+        bare = gate.swept_outline(gate.edge_pairs(sprite, None, 0, 0, 0), dark, *SWEEP, DOT_SPRITE)[0]
+        lit = gate.swept_outline(gate.edge_pairs(sprite, light, -1, -1, 1.0), dark, *SWEEP, DOT_SPRITE)[0]
+        self.assertLess(bare, INK_ON_DARK_MAX)
+        self.assertGreater(lit, bare + LIGHT_LIFT_MIN)
+
+    def test_the_fairy_without_her_light_would_fail_and_with_it_passes(self):
+        images = {name: gate.backgrounds(gate.tile_layer(ET.parse(gate.ROOT / f'assets/tiles/{name}.tmx').getroot())[0],
+                                         gate.sky_strip()) for name in gate.MAPS}
+        errors, report = gate.check_fairy(images)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(report), gate.FAIRY_BODY_FRAMES + FAIRY_GLINTS)
+        with mock.patch.object(gate, 'FAIRY_LIGHT_ALPHA', 0.0):
+            errors, _ = gate.check_fairy(images)
+        self.assertTrue(any('Fairy frame' in e for e in errors), 'her ink contour needs her light on dark tiles')
 
 
 if __name__ == '__main__':

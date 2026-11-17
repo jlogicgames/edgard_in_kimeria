@@ -64,7 +64,7 @@ in the English source is named in each translation (T1).
 | Ranged magic | Fireball | Вогонь | Ogień | Feuer | Агонь | a second EN name ("Ranged", "fireballs"). #340 kept these labels and named the fire the healer's gift (`HEALER_TALE_FIREGIFT`); the remaining mismatches (EN "Fireball" against "Fire", be "вогненных шароў") are reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
 | Elixir | elixir | еліксир | eliksir | Elixier | эліксір | |
 | Healer ingredient (the bat) | Bat wing | крило кажана | skrzydło nietoperza | Fledermausflügel | крыло кажана | bare "Bat" for the ingredient: it is the name of the enemy (playtest F19, [#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345)) |
-| Fairy | fairy | фея | wróżka | Fee | фея | form confirmed by [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) |
+| Fairy | fairy | фея | wróżka | Fee | фея | confirmed by [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) (D82): one fairy, the healer's gift |
 
 The other ingredient and coin labels (`MUSHROOM`, `FOREST_COINS_COUNT`) keep their catalog forms; a later
 change to them updates this table. The key `BAT` keeps its name; only its text became "Bat wing" (#345).

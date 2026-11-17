@@ -252,6 +252,111 @@ class DirectionalActionsTest {
         frames(90); assertEquals(1, first.count);
     }
 
+    /** D82: the fairy shows exactly the target the old outline framed, every frame. */
+    private void assertFairyShows() {
+        assertSame(level.player.interactionFeedbackTarget(), level.fairy().selected(), "the fairy shows the interaction target");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void theFairyGlowIsInstantAndShowsTheOneSelectedTarget(boolean left) {
+        scene(left); level.triggers.clear(); frames(30);
+        var fairy = level.fairy();
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.IDLE, fairy.mode());
+        assertNull(fairy.selected());
+        assertEquals(2, fairy.passiveTargets().size, "both carryables in reach are marked passive while nothing is selected");
+        held.add(up()); frames(1);
+        var target = level.player.interactionFeedbackTarget();
+        assertNotNull(target); assertFairyShows();
+        // The selection reads on its first frame: full glow while she is still on her way (D82).
+        assertEquals(1, fairy.glowAlpha(target));
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.FLY, fairy.mode());
+        assertTrue(fairy.distanceToGoal() > 2, "she has not arrived on the selection frame");
+        assertFalse(fairy.passiveTargets().contains(target, true));
+        assertEquals(1, fairy.passiveTargets().size, "the other carryable stays passive; only one target is selected");
+        assertEquals(.3f, fairy.glowAlpha(fairy.passiveTargets().get(0)), 1e-6);
+        frames(29); // 0.5 s
+        assertFairyShows();
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.POINT, fairy.mode());
+        // Beside the target, never over it, and under the label anchored above it (world Y grows down).
+        float fairyTop = fairy.y() - 8, fairyBottom = fairy.y() + 8, fairyLeft = fairy.x() - 8, fairyRight = fairy.x() + 8;
+        assertTrue(fairyRight <= target.getX() || fairyLeft >= target.getX() + target.getWidth(), "she does not cover the target");
+        assertTrue(fairyBottom <= target.getY() + 1, "she points from beside its upper corner");
+        Vector2 anchor = new Vector2(); level.player.contextHintPosition(anchor);
+        assertTrue(fairyTop > anchor.y, "she stays under the label's anchor");
+        // She is on the side away from the hero.
+        assertEquals(level.player.centerX() < target.centerX(), fairy.x() > target.centerX());
+        held.clear(); frames(1);
+        assertNull(fairy.selected()); assertEquals(.3f, fairy.glowAlpha(target), 1e-6);
+        frames(60);
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.IDLE, fairy.mode(), "back at his shoulder");
+        assertEquals(level.player.facingRight, fairy.x() < level.player.centerX(), "behind him, away from where he faces");
+    }
+
+    @Test void theFairyMarksTheTargetOnTheFrameTheHeroWalksIntoReach() {
+        // Pins D82's call order: she is updated after the hero moves, so on the step he comes into reach with Up held
+        // she already shows what the label and his next Up + Action see (Player.update read the selection before moving).
+        scene(false); level.triggers.clear(); frames(30);
+        var stone = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
+            && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE).findFirst().orElseThrow();
+        level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable && o != stone);
+        level.player.position.x = ((com.jlogicsoftware.kimeria.entity.Entity) stone).getX() + 80; frames(2);
+        assertNull(level.player.interactionFeedbackTarget());
+        held.add(up()); held.add(Input.Keys.A);
+        boolean reached = false;
+        for (int i = 0; i < 120 && !reached; i++) {
+            frames(1);
+            assertFairyShows();
+            reached = level.fairy().selected() == stone;
+        }
+        assertTrue(reached, "the hero walked into reach with Up held");
+    }
+
+    @Test void theFairyKeepsFollowingTheHeroOnEveryUpdate() {
+        // A frozen fairy (an update path that skips her) would stay where the hero left her.
+        scene(false); level.triggers.clear();
+        level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable); frames(30);
+        var fairy = level.fairy();
+        float before = fairy.x();
+        level.player.position.x += 200; frames(60);
+        assertEquals(before + 200, fairy.x(), 3, "she followed him 200 px");
+        assertTrue(fairy.distanceToGoal() < 3, "and settled at his shoulder");
+    }
+
+    @Test void theFairyRestartsHerPointWhenTheTargetChangesWhereSheAlreadyHovers() {
+        // Two targets on the same box: the hover point does not move, so only the target tells her to point again.
+        CountingSwitch a = new CountingSwitch("a"), b = new CountingSwitch("b");
+        a.position.set(200, 300); a.size.set(16, 16); b.position.set(200, 300); b.size.set(16, 16);
+        com.jlogicsoftware.kimeria.entity.Entity[] target = {a};
+        Player hero = new Player(assets, game, 0, 0) {
+            @Override public com.jlogicsoftware.kimeria.entity.Entity interactionFeedbackTarget() { return target[0]; }
+            @Override public void collectPassiveTargets(com.badlogic.gdx.utils.Array<com.jlogicsoftware.kimeria.entity.Entity> out,
+                com.jlogicsoftware.kimeria.entity.Entity selected) { out.clear(); }
+        };
+        hero.position.set(150, 300);
+        var fairy = new com.jlogicsoftware.kimeria.ui.FairyGuide(assets);
+        for (int i = 0; i < 120; i++) fairy.update(REAL_STEP, hero);
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.POINT, fairy.mode());
+        int held = fairy.frame(); // the last of the three point frames, held
+        target[0] = b; fairy.update(REAL_STEP, hero);
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.POINT, fairy.mode());
+        assertEquals(held - 2, fairy.frame(), "a new target restarts the point clip at its first frame");
+    }
+
+    @Test void theFairyHidesWhenTheHeroCannotActAndArrivesWithATwinkle() {
+        scene(false); frames(30);
+        var fairy = level.fairy();
+        fairy.arrive(); frames(1);
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.APPEAR, fairy.mode());
+        assertEquals(fairy.goalX(), fairy.x(), 1e-4);
+        frames(24); // the two 0.2 s twinkle frames
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.IDLE, fairy.mode());
+        held.add(up()); frames(1); assertNotNull(fairy.selected());
+        level.player.collidedWithActor(true); frames(10);
+        assertFalse(level.player.canFight());
+        assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.HIDDEN, fairy.mode());
+        assertNull(fairy.selected()); assertEquals(0, fairy.passiveTargets().size);
+    }
+
     private void frames(int count) {
         for (int i = 0; i < count; i++) {
             pad.update(leftHanded);
@@ -699,6 +804,7 @@ class DirectionalActionsTest {
         frames(2);
         held.add(up()); frames(1);
         var mechanism = level.player.interactionFeedbackTarget();
+        assertFairyShows();
         var lever = assertInstanceOf(com.jlogicsoftware.kimeria.entity.items.Lever.class, mechanism);
         assertSame(trigger, lever.trigger);
         assertEquals(trigger.centerX(), lever.centerX(), .001);
@@ -708,6 +814,8 @@ class DirectionalActionsTest {
             && t.getTargetId().equals("practice-light"))
             .map(com.jlogicsoftware.kimeria.effects.Torch.class::cast).findFirst().orElseThrow();
         assertFalse(torch.isBurning()); assertFalse(lever.isUp());
+        assertEquals(1, level.fairy().glowAlpha(lever), "the selected lever glows at full strength (D82)");
+        assertTrue(level.fairy().passiveTargets().contains(torch, true), "the torch the lever drives is marked passive");
         assertTrue(level.player.actionPrompt().contains("Turn on"));
         assertTrue(level.player.actionPrompt().endsWith("Lever"));
         List<Object> drawn = new ArrayList<>();
@@ -739,12 +847,13 @@ class DirectionalActionsTest {
         standByCarryable(portableTorch);
         held.add(up()); frames(1);
         var pickup = level.player.interactionFeedbackTarget();
+        assertFairyShows();
         assertSame(level.player.selectedCarryable(), pickup);
         assertEquals(com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.TORCH,
             ((com.jlogicsoftware.kimeria.entity.items.Carryable) pickup).kind);
         assertNotSame(level.player, pickup);
-        held.remove(up()); held.add(down()); frames(1); assertNull(level.player.interactionFeedbackTarget());
-        held.clear(); frames(1); assertNull(level.player.interactionFeedbackTarget());
+        held.remove(up()); held.add(down()); frames(1); assertNull(level.player.interactionFeedbackTarget()); assertFairyShows();
+        held.clear(); frames(1); assertNull(level.player.interactionFeedbackTarget()); assertFairyShows();
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
@@ -760,6 +869,7 @@ class DirectionalActionsTest {
         assertNull(level.player.selectedCarryable());
         assertEquals("", level.player.contextHint());
         assertNull(level.player.interactionFeedbackTarget());
+        assertFairyShows();
         tap(action()); assertNull(level.player.carriedObject());
         assertNotEquals(Player.State.ATTACKING, level.player.getState());
         held.clear();

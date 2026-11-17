@@ -240,7 +240,7 @@ class CampaignFlowTest {
             int presses = 0; HealerDialogue.Choice result = null;
             while (result == null && presses < 40) { result = dialogue.advance(Language.ENGLISH); presses++; }
             assertEquals(HealerDialogue.Choice.CONTINUE, result);
-            int lines = dialogue.kind() == HealerDialogue.Kind.TUTORIAL_START ? 8 : 4; // #228 thread line (6 to 7), #340 fire-gift line (7 to 8): at most 16 presses
+            int lines = dialogue.kind() == HealerDialogue.Kind.TUTORIAL_START ? 9 : 4; // #228 thread line (6 to 7), #340 fire-gift line (7 to 8), #338 fairy line (8 to 9): at most 18 presses
             assertTrue(presses <= 2 * lines, "skippable in at most two presses per line: " + presses);
         }
     }
