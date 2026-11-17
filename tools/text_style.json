@@ -1027,46 +1027,6 @@
       "term": "boss",
       "issue": "#371",
       "reason": "Approved #84 wording; rewrite in tale voice."
-    },
-    {
-      "check": "T3",
-      "key": "HINT_STONE_THROW",
-      "lang": "en",
-      "term": "length",
-      "issue": "#373",
-      "reason": "Measured fit (two lines, D50); over the 60-char source budget until the hint rewrite."
-    },
-    {
-      "check": "T3",
-      "key": "HINT_TRAP_PLATFORM",
-      "lang": "en",
-      "term": "length",
-      "issue": "#373",
-      "reason": "Measured fit (two lines, D50); hint rewrite."
-    },
-    {
-      "check": "T3",
-      "key": "HINT_TRAP_STUMP",
-      "lang": "en",
-      "term": "length",
-      "issue": "#373",
-      "reason": "Measured fit (two lines, D50); hint rewrite."
-    },
-    {
-      "check": "T3",
-      "key": "HINT_PLATFORM_STONE",
-      "lang": "en",
-      "term": "length",
-      "issue": "#373",
-      "reason": "Measured fit (two lines, D50); hint rewrite."
-    },
-    {
-      "check": "T3",
-      "key": "HINT_STONE_STUMP",
-      "lang": "en",
-      "term": "length",
-      "issue": "#373",
-      "reason": "Measured fit (two lines, D50); hint rewrite."
     }
   ]
 }

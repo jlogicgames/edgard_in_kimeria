@@ -15,8 +15,22 @@ Related: [STORY.md](STORY.md) (world facts and the healer's role), [LOCALIZATION
 | Voice | Keys | Rules |
 | --- | --- | --- |
 | **Tale** | `INTRO_STORY`, `ENDING_STORY`, every spoken `HEALER_*` / `EDGARD_*` line (not the buttons `HEALER_RETURN`, `HEALER_BREW`, `HEALER_FIGHT`, `HEALER_HINT`) | Story words only: no control, key, button or mechanic name and no game jargon (boss, retry, checkpoint, lives, damage, list, level, HUD). Past tense for narration, present for speech. The healer addresses Edgard by name at the start of a scene. Numbers only where the tale itself counts ("ten times", "three gifts"). The healer speaks as himself; he never narrates the player's action as a system message ("You drink the elixir"). |
-| **Plain** | `HINT_*` zone messages, `MENU_HINT`, `ABOUT_*`, `ROTATE_HINT`, `NEW_GAME_CONFIRMATION` | Imperative or a short statement of what happens. One idea per string, at most two short sentences. No tale imagery and no character names. Zone messages name no key or button: the label above the hero supplies the live binding. |
+| **Plain** | `HINT_*` zone messages, `MENU_HINT`, `ABOUT_*`, `ROTATE_HINT`, `NEW_GAME_CONFIRMATION` | Imperative or a short statement of what happens. One idea per string, at most two short sentences. No tale imagery and no character names. Zone messages name no key or button: the label above the hero supplies the live binding. Zone messages follow one formula (section 1.1, [D97](DECISIONS.md#d97-zone-messages-follow-one-formula-the-cue-then-what-to-do-373-2026-11-17)). |
 | **Label** | Menu items, buttons, the label above the hero, HUD words | One to three words. Verb first for actions ("Pick up", "Put down"), a noun for targets ("Lever", "Torch"). One concept has one label everywhere (glossary below). |
+
+### 1.1 The zone-message formula ([D97](DECISIONS.md#d97-zone-messages-follow-one-formula-the-cue-then-what-to-do-373-2026-11-17))
+
+Every zone message ends with one imperative that says what to do. It may start with one short statement of what
+the player sees and what follows. At most two sentences and 60 EN characters. Fixed forms:
+
+| Kind | Form | Example |
+| --- | --- | --- |
+| Lever | "Use the lever to `<do X>` or `<undo it>`" ("Use" is the action label) | Use the lever to raise the wall or lower it |
+| Trap | "`<the cue>` `<what follows>`. `<how to get past>`", the cue named as [TRAPS.md](TRAPS.md) draws it | A shadow shows where a stone will fall. Step out of it |
+| Exit | "Head for the exit ahead", one wording everywhere | Head for the exit ahead |
+
+Present tense; no retry, lives or key words; no tale images; one verb per trap (the stump "explodes"). The length is
+checked by T3; the shape is a review rule.
 
 ## 2. Tale craft
 
@@ -42,7 +56,7 @@ Related: [STORY.md](STORY.md) (world facts and the healer's role), [LOCALIZATION
 | Channel | Limit | Enforced by |
 | --- | --- | --- |
 | Zone message (`HINT_*`) | 20 px font, 400 px wide, at most two lines in every language (D50, sizes in `ui.FontSizes`, D70) | `LocalizationLayoutTest` |
-| Zone message source | EN at most 60 characters and at most two sentences, leaving room for translations (German runs about 25 % longer) | `tools/check_text_style.py` (T3) |
+| Zone message source | EN at most 60 characters and at most two sentences, leaving room for translations (German runs about 25 % longer); the formula of section 1.1 (D97) | `tools/check_text_style.py` (T3); the formula in review |
 | Label above the hero | 16 px font (D70), 200 px wide (D50); each label at most three words | `LocalizationLayoutTest`; review |
 | Dialogue line | 18 px font (D70); fits the speaker region and frame height; EN at most 160 characters, one image or one instruction per line | `HealerDialogueTest`; review |
 | Opening and ending | Per page (paged screens, [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336)): at most three paragraphs, EN at most 300 characters | Review |
@@ -110,7 +124,7 @@ test as `testTextStyleGate`, a dependency of `:core:check`, the desktop jar and 
 | --- | --- |
 | T1 | A glossary concept named in the English source is named in every translation; avoided forms never appear |
 | T2 | Tale-voice keys contain no term of the register groups (controls, lives, respawn, retry, checkpoint, damage, boss, list); the word lists are per language; stems match at the start of a word (inflections match, "alive" does not trip "live"), listed words only as whole words |
-| T3 | English `HINT_*` within 60 characters and two sentences |
+| T3 | English `HINT_*` within 60 characters and two sentences (the length part of D97's formula) |
 | T4 | No zone message names a key (a binding token followed by `+`, `:` or `/`) |
 | T5 | Every catalog key is read by code or authored in a map |
 | T6 | Every glossary form appears in this document |

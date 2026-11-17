@@ -105,4 +105,6 @@ and `./gradlew :core:test` must pass. Never add an allowlist entry for new text:
 
 `Hud` draws two separate channels: the map-authored zone message (anchor at 45% down the zone,
 `HINT_ZONE_HEIGHT_FRACTION`) and the label above the hero. Their sizes and the 24 px gap are
-pinned by tests (D33, D49, D50). Check `docs/DECISIONS.md` before touching either.
+pinned by tests (D33, D49, D50). Check `docs/DECISIONS.md` before touching either. Zone message text follows
+one formula (D97, `docs/TEXT_STYLE.md` §1.1): an optional cue sentence, then one imperative, at most 60 EN
+characters; levers read "Use the lever to ...", exits "Head for the exit ahead".

@@ -21,7 +21,8 @@ Work from the repository root; links resolve relative to this file.
 1. **Locate.** Find where the string appears (map `Hint` object, `HealerDialogue`, `Player` label, menu,
    intro/ending) and pick its voice from `docs/TEXT_STYLE.md` section 1.
 2. **Name the key** by `docs/TEXT_STYLE.md` section 5; add the enum value to `Msg` for a new key.
-3. **Write English only.** Check voice, limits (section 3) and glossary (section 4). Show the text to
+3. **Write English only.** Check voice, limits (section 3) and glossary (section 4); a zone message follows the
+   formula of section 1.1 (D97). Show the text to
    the author and stop until they approve it. Do not translate unapproved text.
 4. **Translate** into uk, pl, de and be with the glossary forms, in the same change. Add or update the
    key's row in `docs/LOCALIZATION.md` ("Message context").

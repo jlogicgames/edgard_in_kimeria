@@ -28,7 +28,7 @@ unexplained death is a defect, a landmark per room and a calm beat after danger 
 | System | Rule | Reference | Gate | Skill |
 | --- | --- | --- | --- | --- |
 | Text size | D70 (D33, D49, D50 for hint geometry) | `ui.FontSizes`, [TEXT_STYLE.md](TEXT_STYLE.md) §3 | `FontSizesTest`, `LocalizationLayoutTest`, `HealerDialogueTest`, `HintLayoutTest` | [kimeria-rendering](../.agents/skills/kimeria-rendering/SKILL.md) |
-| Player-facing text | D74 | [TEXT_STYLE.md](TEXT_STYLE.md), [TEXT_AUDIT.md](TEXT_AUDIT.md), [LOCALIZATION.md](LOCALIZATION.md), [STORY.md](STORY.md) | `check_text_style.py` (`validateTextStyle`); `HealerDialogueTest` | [kimeria-game-text](../.agents/skills/kimeria-game-text/SKILL.md), [kimeria-dialogue](../.agents/skills/kimeria-dialogue/SKILL.md) |
+| Player-facing text | D74, D97 (zone-message formula) | [TEXT_STYLE.md](TEXT_STYLE.md), [TEXT_AUDIT.md](TEXT_AUDIT.md), [LOCALIZATION.md](LOCALIZATION.md), [STORY.md](STORY.md) | `check_text_style.py` (`validateTextStyle`); `HealerDialogueTest` | [kimeria-game-text](../.agents/skills/kimeria-game-text/SKILL.md), [kimeria-dialogue](../.agents/skills/kimeria-dialogue/SKILL.md) |
 | Traps | D71 (D7, D42, D44-D47, D63) | [TRAPS.md](TRAPS.md); history in [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md) | `TrapCatalogTest` (with each card's D93 consequence), `TrapTeachingRoomTest`; `Level` validators and `check_tiled_links.py` | [kimeria-trap-design](../.agents/skills/kimeria-trap-design/SKILL.md) |
 | Rooms | D72 (D19, D26, D33-D40, D48) | [ROOMS.md](ROOMS.md), [ROOM_CARDS.md](ROOM_CARDS.md) | `RoomCardsTest`, `TrapTeachingRoomTest`, the route and replay tests | [kimeria-room-design](../.agents/skills/kimeria-room-design/SKILL.md), [kimeria-level-authoring](../.agents/skills/kimeria-level-authoring/SKILL.md) |
 | Effects | D73, D93 (D62, D64, D65) | [ART_DIRECTION.md](ART_DIRECTION.md) "Environment effects", [DEVELOPMENT.md](DEVELOPMENT.md#particles-and-the-allocation-guard) | `AllocationBudgetTest`, `check_allocations.py` | [kimeria-particles](../.agents/skills/kimeria-particles/SKILL.md) |
@@ -64,7 +64,7 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
   read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box in three of its four lines in five languages, one spare
   (the first-death line, D81, takes two; `HealerDialogueTest`).
 - **Text in rooms.** Zone messages are authored in the map (`Hint` objects, D33) and written under TEXT_STYLE's plain
-  voice; a hint is never a trap's at-rest cue (D71).
+  voice in one formula, the cue then what to do (D97, TEXT_STYLE §1.1); a hint is never a trap's at-rest cue (D71).
 - **Text size and text style.** Pixel limits live in the layout tests (D50, D70); character budgets and voice in
   `check_text_style.py` (D74).
 
