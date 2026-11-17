@@ -2545,3 +2545,63 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   assist), 9.42 to 12.80 s over every start offset, a blind climb from a fresh start caught at 6.70 s; the room scene in
   `AllocationBudgetTest` 536.1 to 536.3 B/frame (the deadfall room 536.0 in the same runs). Contrast (`check_contrast.py`, all six frames at the root end): rest 0.419, worst frame 0.414 (`cane1`, `cane2`).
 - **Not decided or not verified:** the look in motion, the sounds, and a first play by the author ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)).
+
+## D90. The hanging hive: a rhythm trap whose stingers fall as a band (#365, 2026-11-17)
+
+- **Status:** card, art, sound plan and placement approved by the author on 2026-11-17 (through the orchestrating session);
+  built by [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) with its teaching room `forest-1-hive`
+  (appended to `forest-1.tmx` after #363 and #364, played after `forest-1-guard`). Automated tests only: nobody has seen it in
+  the running game or heard its sounds; the author's audition and first play-through are [#440](https://github.com/jlogicgames/edgard_in_kimeria/issues/440).
+- **What it is.** A VISIBLE ([D71](#d71-traps-are-visible-before-they-fire-2026-11-16)) rhythm trap (family of
+  [D46](#d46-rhythmic-traps-spore-puffball-swinging-thorn-vine-and-the-rotten-log-skin)): a paper wasp hive hanging from a
+  bough (Tiled type `HangingHive`, a 24×32 object whose top edge is the bough's top), specks drifting at its mouth. Card:
+  [TRAPS.md, "Hanging hive"](TRAPS.md#hanging-hive-hanginghive).
+- **Rhythm.** The puffball's clock: `(elapsed + phase) mod period`, calm, then the shared warning
+  (`TrapWarnings.DEFAULT_WARNING_SECONDS`, 0.8 s, 1.2 s with the assist, taken from the calm), then the release for the last
+  `curtain` seconds of the period (default period 4.0 s, curtain 1.0 s). The release begins at the same point of every
+  cycle, so the assist never shortens the pass window, only the calm before the shake.
+- **The lethal part is a falling band, not a column switched on.** Stingers leave the mouth (object top + 26) for `curtain`
+  seconds and fall at 240 px/s to the first solid under it (any Collisions block but quicksand; a ladder is not solid), so the
+  band runs from `mouth + 240 max(0, s - curtain)` to `mouth + 240 s`, cut at the solid, 8 px wide (the drawn stinger tile).
+  Every height is lethal for exactly `curtain` seconds, later the lower it is. Chosen over an instant column because the
+  stingers are seen to fall (the consequence of the shake, D75), and because a climber or a walker can read where the danger
+  is now. A release that would have begun before the room started counts from the room's start, so nothing is in the air when
+  the hero arrives. The hive's body never hurts.
+- **Counter.** Free: pass in the calm. Optional, never required ([D26](#d26-observe-plan-before-committing)): knock the hive
+  down by hitting its 20×19 body box (x + 2, y + 7, above the mouth) with a thrown stone (free, D39: the stone stops and drops)
+  or a fireball (one charge, spent). A standing throw rises only about 10 px, so from the floor it is a **jump-throw**
+  (measured: the stone leaves the hand at y 226 to 270 depending on the moment of the jump, and a hive whose body is at y 239
+  to 258 is hit from 27 of 45 tested distances, body right edge 192 to 296). The knocked hive falls (gravity 900 px/s²,
+  harmless), lies split on the solid, the bough is left bare and the specks scatter; no stinger leaves after the hit, those
+  already falling finish their fall (they are visible).
+- **Load checks** (`HangingHive.fromMap` and `Level.hiveFor`, at load, for every room; mirrored in `tools/check_tiled_links.py`): only `period`, `phase`,
+  `curtain` (finite numbers; any other key fails); the 24×32 size; a solid under the mouth in its room at least 32 px down;
+  `period >= curtain + depth / 240 + 1.2 + 0.8` (0.8 s of calm at the lowest point with the longest warning); no
+  `Actionable`, `Escalator` or `FallingPlatform` in the band; the band never over the entrance body, the exit or a checkpoint
+  (D46's rule).
+- **Measured** (`HangingHiveTest`, `hive-test.tmx`): the band's first lethal frame at depth d is `3 + d / 240` s into a 4 s cycle
+  and lasts 1.0 s (two depths, within two frames); a walker who waits outside the band while it is in the air or about to be
+  passes at every 0.05 s offset, with and without the assist; one who ignores it dies at some offsets. On a 112 px ladder under a
+  hive with a 198 px band and a 4.5 s period, the window from the last stinger leaving the foot to the next head reaching a
+  hero standing on the ledge is 2.94 s; a climber who starts right after a curtain (cycle time under 1.2 s) passes at every
+  offset with and without the assist, and one who starts as the release begins is killed. Speck pool peak below its 24.
+- **Art and sound.** `trap-hive` 24×32 × 7 and `trap-stingers` 8×16 × 2, authored grids; the stingers are a sprite because they
+  are the lethal object, the specks are particles (`KIND_GRIT`). Outline where they are drawn in `forest-1-hive`: hive frames
+  0.450 at worst, falling 0.438, fallen 0.343 (drawn on the floor line, over the floor tiles), stingers 0.346 (active tier, D76). A first stinger draft with a darker bone tip measured 0.208
+  on the mid-blue sky; ink tips are what make them read. Sounds `hive_buzz` (warning), `stinger_rain` (release), `hive_fall`
+  (knock-down), generated ([SOUND_DIRECTION.md](SOUND_DIRECTION.md#hanging-hive-365-seeds-6501-6504-d90); seeds 6501-6504, since 3701 is the deadfall creak).
+- **The room** (`forest-1-hive`, card in [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-hive), `Forest1HiveTest`): the floor hive
+  first, alone over open floor with the stone by the entrance, then a hive over the static ladder up to the exit ledge
+  (period 4.5 s, phase 2). Mastered route 7.12 s from a fresh start, 6.85 to 12.22 s over start offsets of 0 to 9 s with and
+  without the assist; a hero who never waits dies in all 45 tested offsets, 3.1 to 7.5 s in (12 at the floor hive, 33 at the
+  ladder). In the room the stone's jump-throw knocks the floor hive down from 28 of 28 throw points, a fireball near the top of
+  a jump from 10 of 13 timings; the ladder hive is out of reach of both, so its answer is timing alone.
+- **Review patterns of #363 and #364, applied:** every hive of every room is built and checked when the level loads
+  (`Level.hiveFor`), not only when its room spawns; the hive's sounds play only while its frame or band is in the camera
+  view (`Level.hiveInView`), so an off-screen hive never buzzes; sizes and the floor search use a 0.5 px tolerance;
+  `check_tiled_links.py` reads the hive's numbers from `HangingHive.java` (`java_constant`); `check_contrast.py` gates every
+  frame where the game draws it (`hive_parts`: the hive's frames, the falling and fallen hive, the stinger tile down the band).
+- **Allocation:** `AllocationBudgetTest.hangingHivesCycleAndOneIsKnockedDown` 0.1 to 0.9 B/frame in 3 isolated runs and 0.0 to 0.1 in 2 full-suite runs, ceiling 8 B
+  (the shared isolated-scene ceiling); the room scene `forest1HiveRoom` 536.7 B/frame in 3 isolated runs and 536.0 in the full
+  check, ceiling 590 (highest run + about 10 %), the same as the deadfall and bramble rooms. The band is drawn a row at a time from 32 cached one-row regions, so both of its ends clip
+  exactly without a region per frame.

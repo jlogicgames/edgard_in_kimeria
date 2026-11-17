@@ -49,6 +49,7 @@ import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.entity.objects.Bramble;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
+import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
@@ -111,6 +112,8 @@ public class Level implements WorldObject {
     /** The targets one lever pull has already performed, so a target listed twice acts once (reused, never allocated per pull). */
     private static final int ACTIVATED_CAPACITY = 8;
     private final Array<Actionable> activatedScratch = new Array<>(false, ACTIVATED_CAPACITY);
+    /** A hive's frame and band column, tested against the camera view for its sounds (D90, `hiveInView`); reused, never allocated per frame. */
+    private final Rectangle hiveViewScratch = new Rectangle();
     /** The deadfalls' sounds and bark chips (D88, D75): one listener for every deadfall, built once. */
     private final DeadfallTrap.Listener deadfallListener = new DeadfallTrap.Listener() {
         @Override public void tripped(DeadfallTrap trap) { if (game.playSounds()) game.playSound(DEADFALL_CREAK_SOUND); }
@@ -253,6 +256,8 @@ public class Level implements WorldObject {
     private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
     /** The bramble's warning rustle and its grow lash (#364, D89). */
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
+    /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
+    private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
     private final EnvironmentFx fx;
     private final FairyGuide fairy;
 
@@ -504,6 +509,7 @@ public class Level implements WorldObject {
             if ("FallingPlatform".equals(o.type) && "branch".equals(o.prop("skin", ""))) validateBranch(o, owner); // D80: every room, at load.
             if ("Deadfall".equals(o.type)) validateDeadfall(o, owner); // D88: every room, at load.
             if ("Bramble".equals(o.type)) validateBramble(o, owner); // D89: every room, at load.
+            if ("HangingHive".equals(o.type)) hiveFor(o, owner); // D90: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -804,6 +810,7 @@ public class Level implements WorldObject {
                     bramble.onCues(() -> brambleSound(bramble, BRAMBLE_RUSTLE_SOUND), () -> brambleSound(bramble, BRAMBLE_LASH_SOUND));
                     objects.add(bramble);
                 }
+                case "HangingHive" -> spawnHive(o);
                 case "HoneyFungus" -> objects.add(HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero));
                 case "FalseHoneyFungus" -> {
                     FalseHoneyFungus fungus = FalseHoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
@@ -900,6 +907,44 @@ public class Level implements WorldObject {
             });
             objects.add(stone);
         } else objects.add(new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
+    }
+
+    /**
+     * The hanging hive (#365, D90), built and checked for the room {@code owner}: its stingers stop on the first solid under
+     * its mouth in that room; a moving or switchable solid in the band fails, the band stays inside the room and never covers
+     * the entrance, the exit or a checkpoint (D46's rule). Called for every room at load and again when the room spawns.
+     */
+    private HangingHive hiveFor(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        float floor = HangingHive.floorBelow(o, map.layer("Collisions"), room);
+        HangingHive hive = HangingHive.fromMap(assets, o, game.trapWarnings(), floor, describe(o));
+        String moving = HangingHive.movingSolidProblem(o, map.layer("SpawnPoints"), floor);
+        if (moving != null) throw new IllegalArgumentException("HangingHive " + describe(o) + ": " + moving);
+        Rectangle column = hive.columnInto(new Rectangle());
+        if (column.x < room.x || column.x + column.width > room.x + room.width || column.y < room.y || column.y + column.height > room.y + room.height)
+            throw new IllegalArgumentException("HangingHive " + describe(o) + ": its danger area leaves the room");
+        requireSafeSetting(o, hive, column, owner);
+        return hive;
+    }
+
+    private void spawnHive(TiledObject o) {
+        HangingHive hive = hiveFor(o, currentRoom);
+        hive.onWarning(() -> hiveSound(hive, HIVE_BUZZ_SOUND));
+        hive.onRelease(() -> hiveSound(hive, STINGER_RAIN_SOUND));
+        hive.onKnockDown(() -> hiveSound(hive, HIVE_FALL_SOUND));
+        objects.add(hive);
+    }
+
+    /** A hive's sound is heard only while the hive or its band is inside the camera view: a clocked trap off screen must not buzz. */
+    private void hiveSound(HangingHive hive, String sound) {
+        if (game.playSounds() && hiveInView(hive)) game.playSound(sound);
+    }
+
+    /** True while the hive's frame or the column its band can cover overlaps the camera's visible world rect (D90). */
+    boolean hiveInView(HangingHive hive) {
+        Rectangle view = visibleWorldRect.get();
+        return view != null && view.width > 0 && view.height > 0
+            && hive.extentInto(hiveViewScratch).overlaps(view);
     }
 
     /** A falling stone landed at {@code x}: every scenery vine within reach sways, unless the Screen shake option is off. */

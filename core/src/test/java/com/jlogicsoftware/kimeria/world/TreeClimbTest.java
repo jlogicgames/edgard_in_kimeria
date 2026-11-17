@@ -58,7 +58,7 @@ class TreeClimbTest {
 
     private Level room() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
-        for (int i = 0; i < 7; i++) level.enterNextRoom(player()); // mob, deadfall, traps, lever, bramble, route, guard, tree (#375, #418, #363, #364)
+        for (int i = 0; i < 8; i++) level.enterNextRoom(player()); // mob, deadfall, traps, lever, bramble, route, guard, hive, tree (#375, #418, #363, #364, #365)
         return level;
     }
 
@@ -185,7 +185,7 @@ class TreeClimbTest {
         assertEquals("", level.player.zoneHint(), "no hints");
     }
 
-    @Test void theTreeRoomIsEnteredFromTheGuardRoomExitAndARetryRestoresEveryRottenBranch() {
+    @Test void theTreeRoomIsEnteredFromTheHiveRoomExitAndARetryRestoresEveryRottenBranch() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
         level.enterNextRoom(player()); // -> forest-1-traps
@@ -195,6 +195,8 @@ class TreeClimbTest {
         level.enterNextRoom(player()); // traps, lever, bramble, route, guard (#418, #364)
         assertEquals("forest-1-guard", level.currentRoomName());
         assertTrue(level.hasNextRoom());
+        level.enterNextRoom(player()); // -> forest-1-hive (#365)
+        assertEquals("forest-1-hive", level.currentRoomName());
         level.enterNextRoom(player());
         assertEquals("forest-1-tree", level.currentRoomName());
         climb(level, fastLine(), TOPS[2]);

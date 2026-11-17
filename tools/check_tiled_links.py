@@ -145,7 +145,7 @@ def check_bramble(root, spawn, o):
     if None in (period, phase, hold):
         return errors
     _, _, w, h = box(o)
-    needed = BRAMBLE_WARNING_ASSISTED + BRAMBLE_GROW + hold + BRAMBLE_RETRACT + BRAMBLE_MIN_REST
+    needed = TRAP_WARNING_ASSISTED + BRAMBLE_GROW + hold + BRAMBLE_RETRACT + BRAMBLE_MIN_REST
     if h != BRAMBLE_HEIGHT:
         return [f"Bramble {describe(o)}: height must be {BRAMBLE_HEIGHT}"]
     if not BRAMBLE_REACH[0] <= w <= BRAMBLE_REACH[1]:
@@ -196,6 +196,9 @@ def standing_places(root, spawn, o):
 def check_rhythm_traps(root, spawn):
     errors = []
     for o in spawn:
+        if kind(o) == 'HangingHive':
+            errors.extend(f"HangingHive {describe(o)}: {e}" for e in hive_problems(root, spawn, o))
+            continue
         if kind(o) == 'Puffball':
             period, cloud = rhythm_number(o, 'period', 4.0, errors), rhythm_number(o, 'cloud', 1.0, errors)
             phase = rhythm_number(o, 'phase', 0.0, errors)
@@ -221,6 +224,65 @@ def check_rhythm_traps(root, spawn):
         elif kind(o) == 'FallingPlatform' and prop(o, 'skin') not in SKINS:
             errors.append(f"FallingPlatform {describe(o)}: unknown skin '{prop(o, 'skin')}' (expected log or branch)")
     return errors
+
+
+def hive_problems(root, spawn, o):
+    """The hive's load checks (HangingHive.fromMap, Level.spawnHive): properties, size, the solid under the band, the period."""
+    errors = []
+    unknown = sorted(k for k in props_of(o) if k not in HIVE_PROPERTIES)
+    if unknown:
+        return [f"unknown property '{unknown[0]}' (a hive reads {sorted(HIVE_PROPERTIES)})"]
+    period, curtain = rhythm_number(o, 'period', HIVE_DEFAULT_PERIOD, errors), rhythm_number(o, 'curtain', HIVE_DEFAULT_CURTAIN, errors)
+    phase = rhythm_number(o, 'phase', 0.0, errors)
+    if errors:
+        return [e.split(': ', 1)[1] for e in errors]
+    x, y, w, h = box(o)
+    if abs(w - HIVE_SIZE[0]) > HIVE_TOLERANCE or abs(h - HIVE_SIZE[1]) > HIVE_TOLERANCE:
+        return [f"must be {int(HIVE_SIZE[0])}x{int(HIVE_SIZE[1])} (the sprite's frame)"]
+    room = thorn_room(root, o)
+    mouth, left = y + HIVE_MOUTH, x + (w - HIVE_BAND) / 2
+    floor = None
+    for c in layers(root).get('Collisions', []):
+        cx, cy, cw, ch = box(c)
+        if kind(c) == 'QuickSand' or cy < mouth - HIVE_TOLERANCE or cx >= left + HIVE_BAND or cx + cw <= left:
+            continue
+        if room is not None and (cx + cw <= room[0] or cx >= room[0] + room[2] or cy >= room[1] + room[3]):
+            continue
+        floor = cy if floor is None else min(floor, cy)
+    if floor is None:
+        return ["has no solid under its mouth in its room"]
+    depth = floor - mouth
+    if curtain <= 0:
+        return ["curtain must be positive"]
+    if depth < HIVE_MIN_DEPTH:
+        return [f"its band is {depth} px deep, the minimum is {HIVE_MIN_DEPTH}"]
+    if period < curtain + depth / HIVE_FALL_SPEED + TRAP_WARNING_ASSISTED + HIVE_MIN_CALM:
+        return [f"period {period} is shorter than curtain {curtain} + fall {depth / HIVE_FALL_SPEED} + assisted warning "
+                f"{TRAP_WARNING_ASSISTED} + minimum calm {HIVE_MIN_CALM}"]
+    for m in spawn:
+        mx, my, mw, mh = box(m)
+        if kind(m) in HIVE_MOVING and mx < left + HIVE_BAND and mx + mw > left and my < floor and my + mh > mouth:
+            return [f"a moving or switchable {kind(m)} [{m.get('id')}] stands in its stinger band"]
+    column = (left, mouth, HIVE_BAND, depth)
+    if room is not None and not (room[0] <= left and left + HIVE_BAND <= room[0] + room[2] and room[1] <= mouth
+                                 and floor <= room[1] + room[3]):
+        return ["its danger area leaves the room"]
+    return [f"its danger area covers the room {name}" for name, area in hive_standing(root, spawn, o) if overlaps(column, area)]
+
+
+def hive_standing(root, spawn, o):
+    """standing_places with the hero body box as Level uses it (offset 18, 26; 11 x 22)."""
+    out = []
+    for name, area in standing_places(root, spawn, o):
+        if name == 'entrance':
+            ex, ey = area[0] - HERO_BOX[0], area[1] - HERO_BOX[1]
+            area = (ex + HERO_BODY[0], ey + HERO_BODY[1], HERO_BODY[2], HERO_BODY[3])
+        out.append((name, area))
+    return out
+
+
+def props_of(o):
+    return [p.get('name') for p in o.iter('property')]
 
 
 def describe(o):
@@ -409,8 +471,20 @@ BRAMBLE_HOLD = (java_constant(BRAMBLE_JAVA, 'MIN_HOLD_SECONDS'), java_constant(B
 BRAMBLE_GROW = java_constant(BRAMBLE_JAVA, 'GROW_SECONDS')
 BRAMBLE_RETRACT = java_constant(BRAMBLE_JAVA, 'RETRACT_SECONDS')
 BRAMBLE_MIN_REST = java_constant(BRAMBLE_JAVA, 'MIN_REST_SECONDS')
-BRAMBLE_WARNING_ASSISTED = (java_constant(TRAP_WARNINGS_JAVA, 'DEFAULT_WARNING_SECONDS')
-                            * java_constant(TRAP_WARNINGS_JAVA, 'ASSIST_MULTIPLIER'))  # TrapWarnings.longestDuration
+TRAP_WARNING_ASSISTED = (java_constant(TRAP_WARNINGS_JAVA, 'DEFAULT_WARNING_SECONDS')
+                         * java_constant(TRAP_WARNINGS_JAVA, 'ASSIST_MULTIPLIER'))  # TrapWarnings.longestDuration
+# Hanging hive (#365, D90): mirror of HangingHive.fromMap / floorBelow / movingSolidProblem / validate and Level.hiveFor,
+# its numbers read from HangingHive.java.
+HIVE_JAVA = OBJECTS_JAVA / 'HangingHive.java'
+HIVE_SIZE = (java_constant(HIVE_JAVA, 'WIDTH'), java_constant(HIVE_JAVA, 'HEIGHT'))
+HIVE_MOUTH, HIVE_BAND = java_constant(HIVE_JAVA, 'MOUTH_OFFSET'), java_constant(HIVE_JAVA, 'BAND_WIDTH')
+HIVE_MIN_DEPTH, HIVE_FALL_SPEED = java_constant(HIVE_JAVA, 'MIN_DEPTH'), java_constant(HIVE_JAVA, 'FALL_SPEED')
+HIVE_DEFAULT_PERIOD = java_constant(HIVE_JAVA, 'DEFAULT_PERIOD_SECONDS')
+HIVE_DEFAULT_CURTAIN = java_constant(HIVE_JAVA, 'DEFAULT_CURTAIN_SECONDS')
+HIVE_MIN_CALM, HIVE_TOLERANCE = java_constant(HIVE_JAVA, 'MIN_CALM_SECONDS'), java_constant(HIVE_JAVA, 'SIZE_TOLERANCE')
+HIVE_PROPERTIES = tuple(re.findall(r'"(\w+)"', re.search(r'PROPERTIES = Set\.of\(([^)]*)\)',
+                                                          HIVE_JAVA.read_text(encoding='utf-8')).group(1)))  # HangingHive.PROPERTIES
+HIVE_MOVING = ('Actionable', 'Escalator', 'FallingPlatform')  # HangingHive.movingSolidProblem
 BRAMBLE_HEIGHT = java_constant(BRAMBLE_JAVA, 'HEIGHT')
 BRAMBLE_REACH = (java_constant(BRAMBLE_JAVA, 'MIN_REACH'), java_constant(BRAMBLE_JAVA, 'MAX_REACH'))
 BRAMBLE_BAND_TOP = java_constant(BRAMBLE_JAVA, 'BAND_TOP')

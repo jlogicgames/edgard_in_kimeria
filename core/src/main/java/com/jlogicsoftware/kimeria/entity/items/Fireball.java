@@ -7,6 +7,7 @@ import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
+import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.physics.ProjectileStep;
@@ -46,6 +47,12 @@ public final class Fireball extends Entity {
             // D47: a fireball that reaches an intact explosive trap lights it from afar and is spent doing so.
             if (!removed) for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof ExplosiveTrap trap
                 && trap.triggerBoxInto(trapBox).overlaps(bounds) && trap.igniteFromAfar()) {
+                removeFromParent();
+                break;
+            }
+            // #365 (D90): a fireball that reaches a hanging hive knocks it down and is spent doing so.
+            if (!removed) for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof HangingHive hive
+                && hive.bodyInto(trapBox).overlaps(bounds) && hive.knockDown()) {
                 removeFromParent();
                 break;
             }

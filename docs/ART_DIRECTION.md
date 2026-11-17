@@ -751,7 +751,7 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 
 | Tier | Sprites |
 |---|---|
-| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.38 (tip and barbs at rest, #359; was 0.35), falling stone lip 0.32 (loose-overhang cue, #360; 0.39 in forest-0) |
+| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.38 (tip and barbs at rest, #359; was 0.35), falling stone lip 0.32 (loose-overhang cue, #360; 0.39 in forest-0), hanging hive 0.45 at worst over its frames (falling 0.44, fallen 0.34 on the floor line) and its stingers 0.35, in `forest-1-hive` (#365) |
 | Active: collectables | with the pickup halo (#345): Bat wing jar 0.54 (the flapping bat was 0.41), Mushroom 0.53, coin 0.37 (no halo); fireball refill 0.43 |
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.37, stone 0.30 |
 | Active: enemies and hero | hero 0.35 (D79, both facings; the old 48 px hero was 0.46), RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
@@ -850,6 +850,8 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-vine` | 24×40 | hang, swing-left, swing-right | anchored top centre; pendulum by swing frames or rotation |
 | `trap-log` | 32×16 | intact, crumble1, crumble2 | rotten log bridge, same footprint as `platform.png` |
 | `trap-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | harmless honey fungus: three honey-brown caps, bone stems **with rings** (#295, D63; drawn by `HoneyFungus`, the sprites still await the author's review) |
+| `trap-hive` | 24×32 | rest, shake1, shake2, release, bare, falling, fallen | hanging hive (#365, D90): a paper wasp hive on a bough drawn into the top 5 rows, the bough the frame's top edge; `shake2` and `release` show stinger tips; `bare`, `falling` and `fallen` are the knock-down; specks are `KIND_GRIT` particles |
+| `trap-stingers` | 8×16 | fall1, fall2 | the hive's lethal band, drawn a row at a time from the mouth to the solid, the pattern moving down with the stream: bone `efe6c4` shafts with ink `0b0814` tips (the tips are what read on the mid-blue sky: 0.346, against 0.208 with a darker bone tip) |
 | `trap-false-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | poisonous look-alike: same tuft and size, sulphur-yellow to orange caps with a green tinge, olive gills, greenish stems, **no ring**, a bump on the big cap (#295, D63; drawn by `FalseHoneyFungus`; its lethal cloud is `effects.SporeCloud`, particles plus a shader, no sprite) |
 
 **Bomb:** the stump and root sets replace the glass-bottle bomb in the tutorial (#233, D47: `ExplosiveStump`/`ExplosiveRoot` use these sheets, the blast frames are drawn at 2x). The `Bomb` trap type stays separate (D51) and has its own redrawn sprite, `trap-bomb` (#263, D60); the glass bottles in `images/Items.png` are no longer drawn (the file stays for the boss elixir icon; the coin moved to `objects/coin.png`, #350).

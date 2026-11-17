@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
+import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
@@ -109,6 +110,8 @@ class AllocationBudgetTest {
     static final double FOREST_1_DEADFALL_CEILING = 620;
     /** The forest-1 bramble room (#364, D89): measured 536.1 to 536.3 B/frame in 3 isolated runs (2026-11-17), the deadfall room 536.0 in the same runs, so the bramble adds nothing measurable; the level-wide sky and rain dominate, so it takes the other forest-1 one-screen rooms' ceiling. */
     static final double FOREST_1_BRAMBLE_CEILING = 620;
+    /** The forest-1 hive room (#365, D90): measured 536.7 B/frame in 3 isolated runs (2026-11-17), the same as the deadfall and bramble rooms: the two hives add nothing measurable over the level-wide sky and rain. Ceiling = the highest run + about 10 %. */
+    static final double FOREST_1_HIVE_CEILING = 590;
     /**
      * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
      * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
@@ -272,13 +275,14 @@ class AllocationBudgetTest {
     @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 6)); }
 
     /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
-    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 7)); }
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 8)); } // the tree room is room 8 since the hive room (#365)
     /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder; the level-wide sky and rain are drawn here too. */
     @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 3)); }
     /** The deadfall room at rest (#363): the tied log, the bough, the vine, the trunk; the level-wide sky and rain are drawn here too. */
     @Test void forest1DeadfallRoom() { assertWithinBudget("forest-1 deadfall room", FOREST_1_DEADFALL_CEILING, room("forest-1", 1)); }
     /** The bramble room (#364): the bramble cycling (its arm grows and retracts during the measurement), the static ladder; the level-wide sky and rain are drawn here too. */
     @Test void forest1BrambleRoom() { assertWithinBudget("forest-1 bramble room", FOREST_1_BRAMBLE_CEILING, room("forest-1", 4)); }
+    @Test void forest1HiveRoom() { assertWithinBudget("forest-1 hive room", FOREST_1_HIVE_CEILING, room("forest-1", 7)); }
 
     /**
      * Deadfalls tripped in turn (#363): one stays tied (the hero far), and the hero's box steps onto the vine of the next one
@@ -323,7 +327,7 @@ class AllocationBudgetTest {
      * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
      */
     @Test void forest1TreeRoomRidingARottenBranchDown() {
-        Level level = harness.roomOf("forest-1", 7);
+        Level level = harness.roomOf("forest-1", 8); // the tree room (#365 put the hive room before it)
         Rectangle view = new Rectangle(level.currentRoomBounds());
         FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
         FallingPlatform.Snapshot intact = top.snapshot();
@@ -826,6 +830,27 @@ class AllocationBudgetTest {
         assertWithinBudget("falling stone loose overhang", FALLING_STONE_CUE_CEILING, bytes);
     }
 
+    /**
+     * Hanging hives (#365, D90) through calm (drifting specks), warning (shake, gathering specks), release (the stinger band drawn
+     * a row at a time, its {@code lethalTo} against a hero under it every frame) and one knock-down inside the measured window
+     * (the scatter burst, the fall, the in-flight band finishing); update and render through the batch.
+     */
+    @Test void hangingHivesCycleAndOneIsKnockedDown() {
+        HangingHive[] hives = new HangingHive[HIVE_COUNT];
+        for (int k = 0; k < hives.length; k++)
+            hives[k] = new HangingHive(harness.assets(), k * FUNGUS_SPACING, HIVE_TOP, harness.game().trapWarnings(), HangingHive.DEFAULT_PERIOD_SECONDS,
+                k * HIVE_PHASE_STEP, HangingHive.DEFAULT_CURTAIN_SECONDS, FUNGUS_FLOOR);
+        Rectangle hero = new Rectangle(hives[0].centerX() - HERO_WIDTH / 2f, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        boolean[] lethal = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i == HIVE_KNOCK_FRAME) hives[1].knockDown();
+            for (int k = 0; k < hives.length; k++) { hives[k].update(STEP); hives[k].render(batch); lethal[0] |= hives[k].lethalTo(hero); }
+        });
+        assertTrue(lethal[0], "the band must actually reach the hero under it in this scenario");
+        assertTrue(hives[1].isKnocked(), "the knock-down must happen inside the scenario");
+        assertWithinBudget("hanging hives", HANGING_HIVE_CEILING, bytes);
+    }
+
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
     @Test void falseHoneyFungusCloudsInTurn() {
         FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
@@ -857,6 +882,11 @@ class AllocationBudgetTest {
     /** A trip every 100 frames: 0.8 s of warning and 0.5 s of swing are 78 frames, then the catch. 16 cycles cover warm-up and measure. */
     private static final int DEADFALL_CYCLES = 16, DEADFALL_CYCLE_FRAMES = 100;
     private static final float DEADFALL_SPACING = 400;
+    /** Hanging hives (#365, hangingHivesCycleAndOneIsKnockedDown): measured 0.1 to 0.9 B/frame in 3 isolated runs and 0.0 to 0.1 in 2 full-suite runs (2026-11-17); the same 8 B ceiling as the other isolated paths. */
+    static final double HANGING_HIVE_CEILING = 8;
+    /** Four hives a quarter period apart, 64 px up from the floor; the knock-down lands in the measured window (after the 300 warm-up frames). */
+    private static final int HIVE_COUNT = 4, HIVE_KNOCK_FRAME = 900;
+    private static final float HIVE_TOP = 232, HIVE_PHASE_STEP = 1f;
     /** The hero's left edge this far right of a thorn root's left edge: inside its zone, clear of the 6 px column (5 to 11). */
     private static final float THORN_BESIDE = 12;
     /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17): ten plain falling platforms at rest, the fan animation with the cracked slab, update and render; the same 8 B ceiling as the other isolated paths. */

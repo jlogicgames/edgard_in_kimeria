@@ -101,6 +101,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `FallingPlatform` | crumble | DISGUISED | a hairline crack through the slab (#362) | `FALLING_PLATFORM_SECONDS` 1.0 / 1.5 s | `forest-0-traps` | D7, D40, D46, D69, D80 |
 | `Deadfall` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-deadfall`, met alone on open floor | D88 |
 | `Bramble` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s inside the period | `forest-1-bramble`, seen cycling from the floor before the climb | D46, D89 |
+| `HangingHive` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-hive`, seen raining from the entrance over open floor, then over the ladder | D90 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46) or `skin=branch` (the rotten tree branch, D80) is the same type
@@ -404,14 +405,33 @@ Approved by the author on 2026-11-17 ([#364](https://github.com/jlogicgames/edga
 | Art and sound | `trap-bramble` 16×24 × 6 (`rest`, `rustle1`, `rustle2`, `cane1`, `cane2`, `tip`; grid `art/objects/forest-traps/bramble.grid`): the clump is drawn at the root; the arm is alternating `cane1`/`cane2` segments behind the `tip` at the current extent, so it grows and retracts by whole pixels; drawn mirrored for `root=right`. Palette: ink `0b0814`, cane `c2307a`/`6e1650`, root `4a2e1c`, bone `efe6c4`/`a89c78` (the tuft's magenta and bone, no new accent). Active tier (D76). Sounds `bramble_rustle` at the warning and `bramble_lash` at the grow, heard only while the bramble is in the camera view (SOUND_DIRECTION; not heard yet, [#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
 | Decision | D46 (rhythm rules), D89 |
 
+### Hanging hive (`HangingHive`)
+
+| Field | Value |
+| --- | --- |
+| Family | rhythm |
+| Visibility (D71) | VISIBLE |
+| At rest | frame `rest` of `trap-hive` (24×32): a paper wasp hive in pale and dark bands with an ink contour and a dark mouth, hanging by a short stalk from a bough drawn into the top 5 rows; specks drift at its mouth: every 0.4 s one 1 px speck (ink `0b0814` and bone `efe6c4` in turn, so one of each reads on sky and on dirt) flies from the mouth to a point 4-8 px below or beside it over 0.8 s, `KIND_GRIT` of the hive's own `KimeriaParticleSystem` (24), seeded from the object's position. No scenery hangs from a bough, has an ink contour or moves: it reads as active |
+| At-rest cue | none needed |
+| Reads from | ~320 px |
+| Trigger | the level clock, `(elapsed + phase) mod period`: calm, warning, then release for the last `curtain` s of the period (as `Puffball`); no dependence on the hero |
+| Telegraph (D7) | `shake1` and `shake2` in turn every 0.1 s (the body sways 1 px under a still bough; `shake2` shows stinger tips in the mouth); specks gather: every 0.05 s one flies from a 10 px ring into the mouth over 0.3 s |
+| Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s, taken from the calm; the release starts at the same point of every cycle, assist or not |
+| Lethal part | a falling band 8 px wide (the drawn width of `trap-stingers`) centred on the hive, from the mouth (object top + 26) to the first solid under it (any Collisions block but quicksand; a ladder is not solid). Stingers leave for `curtain` s (1.0) and fall at 240 px/s: the band runs from `mouth + 240 max(0, s - curtain)` to `mouth + 240 s`, cut at the solid (`s`: seconds since the release began). Every height is lethal for exactly `curtain` s, d px below the mouth from d / 240 s after the release. A release that would have begun before the room started counts from its start. The hive never hurts |
+| Counter | free: pass in the calm (on open floor the 8 px band plus the 11 px body is about 0.2 s of walking); on a ladder under it, start the climb right after a curtain has passed the foot (a 112 px ladder under a 198 px band with a 4.5 s period: a 2.94 s window). Optional, never required (D26): knock it down by hitting its 20×19 body box (x + 2, y + 7) with a thrown stone (free, D39; from the floor it is a jump-throw, a standing throw rises only about 10 px) or a fireball (one charge, spent). It falls harmlessly and lies split on the solid, the bough is left `bare`, the specks scatter, no stinger leaves after the hit; those already falling finish their fall |
+| Reset | retry, Restart Level and room re-entry rebuild it hanging at the authored phase (as the puffball; no saved room state) |
+| Taught in | `forest-1-hive` (after `forest-1-guard`): first over open floor, seen raining from the entrance, then over the ladder to the exit ledge; the stone by the entrance offers the knock-down |
+| Load checks | `HangingHive.fromMap` and `Level.hiveFor`, at load, for every room: only `period` (default 4.0), `phase` (0), `curtain` (1.0), finite; 24×32; a solid under the mouth in its room at least 32 px down; `period >= curtain + depth / 240 + 1.2 + 0.8`; no `Actionable`, `Escalator` or `FallingPlatform` in the band; `Level.requireSafeSetting` (not over the entrance, exit or a checkpoint). Mirrored in `check_tiled_links.py` (`hive_problems`) |
+| Tests | `HangingHiveTest` (`hive-test.tmx`), `Forest1HiveTest` (the room), `AllocationBudgetTest.hangingHivesCycleAndOneIsKnockedDown`, `test_check_tiled_links.HangingHiveLinksTest` |
+| Art and sound | `trap-hive` 24×32 × 7 (rest, shake1, shake2, release, bare, falling, fallen; grid `art/objects/forest-traps/hive.grid`) and `trap-stingers` 8×16 × 2 (fall1, fall2, drawn a row at a time down the band so the darts move with it; `stingers.grid`), authored sprites; the specks are particles. Palette: ink `0b0814`, bough `4a2e1c`/`8a5a30`, paper `d0c294`/`9a8660`/`5a4a34`, bone `efe6c4`/`a89c78`; no accent hue. Active tier, every frame gated where it is drawn in `forest-1-hive` (D76): hive frames 0.450 at worst, falling 0.438, fallen 0.343 (drawn on the floor line, over the floor tiles), stingers 0.346. Sounds `hive_buzz` (warning), `stinger_rain` (release), `hive_fall` (knock-down), heard only while the hive or its band is in the camera view |
+| Decision | D90 |
+
 ## Proposed traps (D71, not built)
 
-Chosen by the author on 2026-11-16 for later work; each has its own issue and needs an approved card before code. The
-third, the trip-line deadfall (#363), is built: its card is above.
-
-| Trap | At rest (VISIBLE) | Telegraph and lethal part | Counter | Room purpose | Issue |
-| --- | --- | --- | --- | --- | --- |
-| Hanging hive | a hive on a branch with a few drifting specks at its mouth (deterministic) | rhythm: the hive shakes and specks gather for the shared warning, then a 1 s curtain of stingers falls straight down | time the pass; optionally knock the hive down with a stone or fireball (never required, D26) | combine with a vertical route (drop, ladder) | [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) |
+Chosen by the author on 2026-11-16, each with its own issue and an approved card before code. All three are built and
+their cards are above: the trip-line deadfall ([#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363)), the
+creeping bramble ([#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364)) and the hanging hive
+([#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365)).
 
 **Candidate (author, 2026-11-16):** an **ember fissure**, a glowing ground crack that jets embers upward on a rhythm
 (a vertical danger on the floor; it would echo the fire gift of #340), tracked by

@@ -1,0 +1,39 @@
+# Stinger curtain (#365, D90), native 8x16 tile, two frames, tiled down the hive's band: bone shafts with ink tips (the tips are what read on the mid-blue sky). The drawn width is the lethal width.
+size 8 16
+color k 0b0814
+color b efe6c4
+color B a89c78
+frame fall1
+.b...b..
+.b...b..
+.b..bk..
+.k..b..b
+....b..b
+..b.k..b
+..b....k
+..b.b...
+bk.b...b
+b..b...b
+b..b..bk
+k..k..b.
+..b...b.
+..b...k.
+..b.b...
+..k.b...
+frame fall2
+bk.b...b
+b..b...b
+b..b..bk
+k..k..b.
+..b...b.
+..b...k.
+..b.b...
+..k.b...
+.b...b..
+.b...b..
+.b..bk..
+.k..b..b
+....b..b
+..b.k..b
+..b....k
+..b.b...
