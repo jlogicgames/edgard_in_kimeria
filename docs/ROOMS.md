@@ -718,10 +718,10 @@ This is automated route evidence, not author/novice teaching acceptance.
 
 Forest trigger 118 (`practice-light`) retains its authored 16×16 interaction zone
 at (128,320), before SpawnPoints' -16 Y offset. Its `appearance=Lever` property
-requests a visible 16×16 up/down control at the zone's bottom centre and must link
+requests a visible 16×16 floor lever at the zone's bottom centre and must link
 exactly one `Actionable` Torch by name. Selection highlights this lever, while the
 linked Torch (119) remains at its independently authored wall position. The state
-comes from the torch: up/on, down/off. No new object IDs or collision geometry are
+comes from the torch: handle right/on, handle left/off. No new object IDs or collision geometry are
 introduced. A first visit or fresh Level uses authored state; a room retry or collection
 return restores the secured torch state, from which the lever is rebuilt.
 

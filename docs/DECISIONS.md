@@ -956,7 +956,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   its state on the lever sprite. A bridge or drawbridge would need a new mechanism or a re-skinned Escalator. A wall/ledge
   obstacle rather than a pit keeps the room free of falling hazards: no death trap, so no new death rule to teach.
 - **Interaction:** Up + Action at the lever, then Up at the ladder's rungs; the controls hint zone supplies the live labels.
-  The lever prompt reads "Turn on/off - Lever" (the lever's up state means ladder lowered).
+  The lever prompt reads "Turn on/off - Lever" (the lever's on state, handle right since #413, means ladder lowered).
 - **Recovery / D26:** the lever is reachable only from the floor and is never in reach from the ledge or the ladder (the
   hero cannot pull it while climbing), so the ladder cannot be raised under the hero. Dropping off the ledge or ladder lands
   on the floor with the lever in reach, so every reachable state can lower (or re-lower) the ladder. Death / room retry restores
@@ -1761,7 +1761,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - The brush-past changes the same pixels as before, with a smaller colour step per pixel (0.10 to 0.12, was 0.26 to 0.32).
 - **Lever raised (author-approved art, 2026-11-16):** every `Trigger` draws the lever, and the one in front of the tile
   rubble at forest-2 x 128 measured 0.25 (the pulled frame 0.27 to 0.30 everywhere). A 1 px outline in the lever's own
-  near-black `010000` around both frames, painted into `art/objects/lever-pixel.png`, lifts it to 0.47 to 0.58; the 3/4
+  near-black `010000` around both frames, painted into `art/objects/lever-pixel.png` (removed in #413), lifts it to 0.47 to 0.58; the 3/4
   drawing, colours, frame, pivot and bottom line are unchanged. Active sprites now measure 0.28 (YellowMob) to 0.58.
 - **Consistent with:**
   - [D71](#d71-traps-are-visible-before-they-fire-2026-11-16): "the active tier" is this tier, and at-rest cues are

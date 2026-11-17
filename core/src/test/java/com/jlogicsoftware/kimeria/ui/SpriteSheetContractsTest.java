@@ -1,6 +1,12 @@
 package com.jlogicsoftware.kimeria.ui;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.headless.HeadlessFiles;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.SpriteSheets;
+import com.jlogicsoftware.kimeria.tiled.TiledMapData;
+import com.jlogicsoftware.kimeria.tiled.TiledObject;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -89,6 +95,100 @@ class SpriteSheetContractsTest {
             assertTrue(bottomRowHasArt, "blast frame " + frame + " floats above the stump's base");
         }
     }
+
+    /**
+     * #413: the floor lever stands on the ground. In both frames the base fills the bottom row (the row right above the
+     * floor line, world Y down: Lever draws the frame's bottom on the trigger's bottom); the two frames differ only in the
+     * handle, which leans right for on (frame 0) and left for off (frame 1). Every lever in the shipped maps then has a
+     * collision top at its trigger's bottom under the whole base.
+     */
+    @Test void theFloorLeverStandsOnTheFloorLineInBothFramesAndEveryMap() throws Exception {
+        var sheet = SpriteSheets.LEVER;
+        java.awt.image.BufferedImage png;
+        try (var input = getClass().getClassLoader().getResourceAsStream(sheet.path())) {
+            assertNotNull(input, sheet.path());
+            png = javax.imageio.ImageIO.read(input);
+        }
+        int w = sheet.width();
+        int[] base = checkFloorLeverSheet(png, w, sheet.height());
+        int baseLeft = base[0], baseRight = base[1];
+
+        Gdx.files = new HeadlessFiles();
+        Assets assets = new Assets() {
+            @Override public TextureRegion region(String path, float x, float y, float width, float height) { return new TextureRegion(); }
+        };
+        int levers = 0;
+        for (String name : new String[] {"forest-0", "forest-1", "forest-2"}) {
+            TiledMapData map = TiledMapData.load("tiles/" + name + ".tmx", assets);
+            for (TiledObject trigger : map.layer("SpawnPoints")) {
+                if (!"Trigger".equals(trigger.type)) continue;
+                levers++;
+                float floor = trigger.y + trigger.height, frameLeft = trigger.x + trigger.width / 2 - w / 2f;
+                float left = frameLeft + baseLeft, right = frameLeft + baseRight + 1;
+                boolean supported = map.layer("Collisions").stream()
+                    .anyMatch(s -> s.y == floor && s.x <= left && right <= s.x + s.width);
+                assertTrue(supported, name + ": the lever at x " + trigger.x + " has no floor at y " + floor + " under x " + left + ".." + right);
+            }
+        }
+        assertTrue(levers > 0, "the shipped maps hold no lever");
+    }
+
+    /**
+     * The sprite half of the #413 contract, for any floor-lever drawing: returns the base's {left, right} columns.
+     * The base is found from the drawing: its bottom row spans the base, and it goes up while a row is at least half that
+     * wide in both frames (the handle above it is narrow). Every base row must be identical in the two frames (one base,
+     * one pivot), the base must fill its bottom row, and the handle (the pixels where the frames differ, all above the
+     * base) must lean further right in frame 0 (on) than in frame 1 (off).
+     */
+    static int[] checkFloorLeverSheet(java.awt.image.BufferedImage png, int w, int h) {
+        int bottom = h - 1, baseLeft = -1, baseRight = -1;
+        for (int x = 0; x < w; x++)
+            if (opaque(png, x, bottom)) { if (baseLeft < 0) baseLeft = x; baseRight = x; }
+        assertTrue(baseLeft >= 0, "the lever has no base on its bottom row");
+        for (int x = baseLeft; x <= baseRight; x++)
+            for (int frame = 0; frame < 2; frame++)
+                assertTrue(opaque(png, frame * w + x, bottom), "frame " + frame + ": a gap under the base at " + x);
+        int baseWidth = baseRight - baseLeft + 1, baseTop = bottom;
+        while (baseTop > 0 && 2 * span(png, 0, baseTop - 1, w) >= baseWidth && 2 * span(png, w, baseTop - 1, w) >= baseWidth) baseTop--;
+        assertTrue(baseTop < bottom, "the base is a single row: no top face or front to compare");
+        for (int y = baseTop; y <= bottom; y++)
+            for (int x = 0; x < w; x++)
+                assertEquals(png.getRGB(x, y), png.getRGB(w + x, y), "the base differs between the frames at " + x + "," + y);
+        float onSum = 0, offSum = 0; int onCount = 0, offCount = 0;
+        for (int y = 0; y < baseTop; y++)
+            for (int x = 0; x < w; x++) {
+                if (png.getRGB(x, y) == png.getRGB(w + x, y)) continue;
+                if (opaque(png, x, y)) { onSum += x; onCount++; }
+                if (opaque(png, w + x, y)) { offSum += x; offCount++; }
+            }
+        assertTrue(onCount > 0 && offCount > 0, "the on and off frames do not differ above the base");
+        assertTrue(onSum / onCount > offSum / offCount, "on (frame 0) leans right of off (frame 1)");
+        return new int[] {baseLeft, baseRight};
+    }
+
+    /** A base pixel changed in the off frame only (one row above the bottom) must fail the floor-lever check. */
+    @Test void aBaseThatDiffersBetweenTheFramesFailsTheFloorLeverCheck() throws Exception {
+        var sheet = SpriteSheets.LEVER;
+        java.awt.image.BufferedImage png;
+        try (var input = getClass().getClassLoader().getResourceAsStream(sheet.path())) {
+            png = javax.imageio.ImageIO.read(input);
+        }
+        var copy = new java.awt.image.BufferedImage(png.getWidth(), png.getHeight(), java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        copy.getGraphics().drawImage(png, 0, 0, null);
+        int w = sheet.width(), y = sheet.height() - 2, x = checkFloorLeverSheet(copy, w, sheet.height())[0] + 1;
+        copy.setRGB(w + x, y, copy.getRGB(w + x, y) ^ 0x00ffffff);
+        assertThrows(org.opentest4j.AssertionFailedError.class, () -> checkFloorLeverSheet(copy, w, sheet.height()));
+    }
+
+    /** The opaque width (leftmost to rightmost opaque pixel) of one row of the frame starting at column {@code left}. */
+    private static int span(java.awt.image.BufferedImage png, int left, int y, int w) {
+        int first = -1, last = -1;
+        for (int x = 0; x < w; x++)
+            if (opaque(png, left + x, y)) { if (first < 0) first = x; last = x; }
+        return first < 0 ? 0 : last - first + 1;
+    }
+
+    private static boolean opaque(java.awt.image.BufferedImage png, int x, int y) { return (png.getRGB(x, y) >>> 24) != 0; }
 
     private void matches(SpriteSheets.Sheet sheet, int columns, int rows) throws Exception {
         try (var input = getClass().getClassLoader().getResourceAsStream(sheet.path())) {

@@ -49,10 +49,12 @@ pixels and the in-game result, not just the high-resolution source.
 The author specified on 2026-10-23 that actionable world objects are seen on the
 hero's left-hand side, with their working face readable to the viewer. The latest
 lever revision explicitly selects **three-quarter (3/4) view**, superseding its
-previous en-face/front-only requirement. Show the lever's broad working face plus
-clear side/top thickness so its handle and up/down states read at native size;
-do not return to a thin profile or force bilateral frontal symmetry. Preserve the
-same mounting plate, pivot, angle and canvas registration across both poses.
+previous en-face/front-only requirement. Since #413 it is a floor lever: a block
+standing on the ground (top, front and right side visible) with an iron handle
+leaning right for on and left for off, drawn in `art/objects/lever.grid`; do not
+return to a thin profile, a wall mount or bilateral frontal symmetry. Preserve the
+same base, pivot, angle and canvas registration across both poses, with the base's
+bottom row on the floor line.
 Other interactive objects retain the existing front-facing default unless their
 own design is revised; do not silently redraw every item because the lever changed.
 Check the selected viewpoint in prompts, tiny runtime exports and actual gameplay.

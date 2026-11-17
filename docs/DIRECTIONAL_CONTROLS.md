@@ -258,24 +258,25 @@ After its linked Torch is spawned, Level creates a native 16×16 Lever sprite at
 trigger's bottom centre. This is a visible control, not a second actionable target:
 Up + Action still dispatches once through the selected Trigger to the linked torch.
 The lever's up/down state reads Torch.isBurning directly, so it cannot drift from
-the actual light state. Up = on; down = off. The prompt/button explicitly says
+the actual light state. Handle right = on; handle left = off (#413). The prompt/button explicitly says
 Turn on/Turn off and names the Lever in all five languages.
 
 The selection glow marks the lever sprite at the revised zone, through the same
 fairy guide as stones (D82, #338; it replaced the earlier corner brackets). Other generic triggers keep their linked-object
 feedback. Lever declarations must link exactly one torch; malformed map links fail
-clearly. New pixel masters/prompts and registered exports are in
-[object sources](../art/objects/generation-prompts.md#practice-light-three-quarter-revision-2026-10-23).
-The latest author revision selects a 3/4 lever, superseding its earlier en-face
-version. Both poses show the broad oblique working face and side/top thickness;
-the same base and pivot stay registered while the handle raises/lowers. The art
-skill records this lever-specific revision; other items keep their prior default.
+clearly. The drawing and its exact export are described in
+[object sources](../art/objects/generation-prompts.md#floor-lever-413-2026-11-17).
+The lever is a 3/4 floor lever (#413; the 3/4 view superseded an earlier en-face
+version, the floor stance the wall-mounted plate). A wooden block stands on the
+ground and the handle leans right for on, left for off; the same base and pivot stay
+registered in both poses. The art skill records this lever-specific revision; other
+items keep their prior default.
 
 Both 16×16 poses are stored in one registered 32×16 sheet,
-`assets/images/objects/lever.png`: left = up/on, right = down/off.
+`assets/images/objects/lever.png`: frame 0 = on (handle right), frame 1 = off (handle left).
 The runtime regions share the texture, palette, base and pivot; nearest filtering
-and binary alpha preserve the selected native pixels. The matching source sheet
-and exact prompts are retained under `art/objects/`; rejected viewpoints are removed.
+and binary alpha preserve the native pixels. The drawing is `art/objects/lever.grid`,
+exported exactly by `tools/export_object_sprites.py`.
 
 ## Verification
 
@@ -300,9 +301,10 @@ Keep only representative captures of the selected presentation:
   it remains spent until Restart Level. An optional pickup may be missed, while the
   mandatory exit route remains open. Manual acceptance should verify that this
   consequence is telegraphed fairly; this state change adds no new control or UI.
-- Three-quarter lever [down/off](references/controls-lever-three-quarter-off.png)
-  and [up/on](references/controls-lever-three-quarter-on.png), with local instructions
-  and selection brackets. F2 invulnerability was used for presentation inspection.
+- Floor lever (#413, web release build, forest-0 lever room)
+  [off](references/controls-lever-floor-off.png), handle left, label "Turn on", and
+  [on](references/controls-lever-floor-on.png), handle right, torch lit, label "Turn off";
+  the fairy's selection glow marks it.
 - Current [three-slot fireball HUD](references/hud-fireball-capacity-debug.png)
   (#98, 2026-10-25): two bright charges and one dark slot, no ammunition number,
   separate debug FPS column. It supersedes the former icon-plus-number captures.
