@@ -96,6 +96,13 @@ class AllocationBudgetTest {
     /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_GUARD_CEILING = 1280;
     /**
+     * Measured 513.8 to 564.5 B/frame in 10 isolated runs of the class (#418, D86, 2026-11-17): at rest 513.8 to 561.9, riding the lift 561.6 to 562.3, pulling the lever 564.3 to 564.5
+     * (one earlier run of the rest scene: 345.8; JIT state, D83; the mob, route and tree scenes moved together with it): the forest-1 lever lesson room (a running lift, a lever, a raised ladder; no enemy or hazard; the level-wide sky and rain
+     * are drawn here too), update + render. Ceiling = the highest run (564.5, pulling the lever) + about 10 %, the rule D85 (#375) set for the other forest-1 rooms; the riding scene
+     * measures the same as the route room's here (561.8), as it should: the cost is the harness and level code (D83).
+     */
+    static final double FOREST_1_LEVER_CEILING = 620;
+    /**
      * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
      * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
      * trunks, five rotten and six sound branches; the level-wide sky and rain are drawn here too), update + render. The value moves with JIT state
@@ -250,12 +257,14 @@ class AllocationBudgetTest {
     /** The first-RedMob room (#375): the mob asleep, the refill, the level-wide sky and rain. */
     @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 1)); }
-    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 2)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 3)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
-    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 3)); }
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 4)); }
 
     /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
-    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 4)); }
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 5)); }
+    /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder; the level-wide sky and rain are drawn here too. */
+    @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 2)); }
 
     /**
      * The tree room with the hero riding a rotten branch down (D69 path: the snap to a sinking platform, the solid-floor guard, then the floor):
@@ -263,7 +272,7 @@ class AllocationBudgetTest {
      * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
      */
     @Test void forest1TreeRoomRidingARottenBranchDown() {
-        Level level = harness.roomOf("forest-1", 4);
+        Level level = harness.roomOf("forest-1", 5);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
         FallingPlatform.Snapshot intact = top.snapshot();
@@ -292,7 +301,7 @@ class AllocationBudgetTest {
      * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
      */
     @Test void forest1GuardRoomWithTheGuardAwake() {
-        Level level = harness.roomOf("forest-1", 3);
+        Level level = harness.roomOf("forest-1", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
@@ -320,7 +329,7 @@ class AllocationBudgetTest {
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 2);
+        Level level = harness.roomOf("forest-1", 3);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -332,6 +341,44 @@ class AllocationBudgetTest {
         });
         assertWithinBudget("forest-1 route room riding the lift", FOREST_1_ROUTE_CEILING, bytes);
     }
+
+    /** The lever room with the hero standing on the lift the whole time (the rider path of {@code Player} runs every frame), as the route room's riding scene. */
+    @Test void forest1LeverRoomRidingTheLift() {
+        Level level = harness.roomOf("forest-1", 2);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        var lift = level.escalators.get(0);
+        level.player.position.set(lift.getX() + 3, lift.getY() - 48);
+        for (int i = 0; i < 5; i++) level.update(STEP);
+        org.junit.jupiter.api.Assertions.assertSame(lift, level.player.currentEscalator(), "the scene must have the hero riding");
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            level.update(STEP); level.render(batch, view);
+            if (level.player.currentEscalator() != lift) throw new AssertionError("fell off the lift at frame " + i);
+        });
+        assertWithinBudget("forest-1 lever room riding the lift", FOREST_1_LEVER_CEILING, bytes);
+    }
+
+    /** The lever room with the hero on the slab pulling the lever (Up + Action) every {@value #PULL_CYCLE_FRAMES} frames: the ladder moves, the lift starts and stops, the lever animates. */
+    @Test void forest1LeverRoomPullingTheLever() {
+        Level level = harness.roomOf("forest-1", 2);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        level.player.position.set(4528 + 8 - HERO_CENTRE_OFFSET_X, 208 - HERO_FRAME_SIZE); // the lever's centre (x 4528 + 8), standing on the slab
+        for (int i = 0; i < 5; i++) level.update(STEP);
+        org.junit.jupiter.api.Assertions.assertTrue(level.player.canInteract(), "the scene must have the lever in reach");
+        boolean[] changed = new boolean[1];
+        boolean lowered = level.ladders.get(0).isLowered();
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int phase = i % PULL_CYCLE_FRAMES;
+            harness.held.clear(); harness.pressed.clear();
+            if (phase == 0 || phase == 1) harness.held.add(com.badlogic.gdx.Input.Keys.W);
+            if (phase == 1) { harness.held.add(com.badlogic.gdx.Input.Keys.K); harness.pressed.add(com.badlogic.gdx.Input.Keys.K); }
+            level.update(STEP); level.render(batch, view);
+            if (level.ladders.get(0).isLowered() != lowered) changed[0] = true;
+        });
+        harness.held.clear(); harness.pressed.clear();
+        assertTrue(changed[0], "the scene must have the lever pulled");
+        assertWithinBudget("forest-1 lever room, pulling the lever", FOREST_1_LEVER_CEILING, bytes);
+    }
+    private static final int PULL_CYCLE_FRAMES = 60;
 
     /**
      * The rider path alone: {@code Player.update} costs about 560 B/frame in this harness whatever it stands on (D83: the stubbed input and graphics
