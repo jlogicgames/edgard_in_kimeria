@@ -114,6 +114,7 @@ class Forest1TrapsTest {
 
     private Level level() {
         Level l = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, emptyStock());
+        l.enterNextRoom(player()); // the trap course is room 2 since #375 put the first RedMob in a room of its own before it
         rememberMob(l);
         theLog = l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).findFirst().orElseThrow();
         return l;
@@ -219,7 +220,7 @@ class Forest1TrapsTest {
         assertEquals(4, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count(), "the four platforms are unchanged");
         assertEquals(LOG_X, log(l).getX(), .01f);
         assertEquals(320, log(l).getY(), .01f, "flush with the floor");
-        assertEquals(2, l.objects.stream().filter(RedMob.class::isInstance).count(), "the first RedMob and the new one");
+        assertEquals(1, l.objects.stream().filter(RedMob.class::isInstance).count(), "only the trap-stretch RedMob: the first one is in forest-1-mob (#375)");
         assertEquals(0, l.objects.stream().filter(o -> o.getClass().getSimpleName().matches("FallingBranch|FallingStone|ExplosiveTrap|ThornVine")).count());
         // The pit has no floor between the lips.
         Rectangle pit = new Rectangle(LIP + 1, 320, PIT_END - LIP - 2, 48);

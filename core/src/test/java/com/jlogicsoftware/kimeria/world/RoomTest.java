@@ -102,7 +102,7 @@ class RoomTest {
         }
     }
 
-    /** No shipped map is unmarked since #187 (D67, #104) gave forest-1 three rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
+    /** No shipped map is unmarked since #187 (D67, #104) gave forest-1 several rooms, so the fallback is exercised with the Rooms layer stripped in memory. */
     @Test void aMapWithoutRoomMarkersIsOneRoomAtItsPlayerSpawn() {
         TiledMapData map = map("forest-1");
         map.objectGroups.get("Rooms").clear();
@@ -113,24 +113,28 @@ class RoomTest {
         assertNull(layout.rooms.get(0).exit());
     }
     /**
-     * forest-1 (D67, #104, #349): the trap course keeps the Player spawn as its entrance; the route room, the guard room and the tree room follow, and the
-     * tree room is last and holds the Checkpoint at its top.
+     * forest-1 (D67, #104, #349, #375): the first-RedMob room comes first in play order (it lies after the tree room on the map; the Rooms list,
+     * not x, sets the order) and holds the Player spawn as its entrance; the trap course, the route room, the guard room and the tree room follow,
+     * and the tree room is last and holds the Checkpoint at its top.
      */
-    @Test void forestOneIsTheTrapCourseThenTheRouteRoomThenTheGuardRoomThenTheTreeRoomWithTheCheckpoint() {
+    @Test void forestOneIsTheMobRoomThenTheTrapCourseThenTheRouteRoomThenTheGuardRoomThenTheTreeRoomWithTheCheckpoint() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(4, layout.rooms.size());
+        assertEquals(5, layout.rooms.size());
+        assertEquals("forest-1-mob", layout.rooms.get(0).id());
+        assertEquals("forest-1-traps", layout.rooms.get(1).id());
         var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
         assertNotNull(layout.rooms.get(0).exit());
-        assertNotNull(layout.rooms.get(1).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
-        assertNotNull(layout.rooms.get(2).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
-        assertEquals("forest-1-guard", layout.rooms.get(2).id());
-        assertNull(layout.rooms.get(3).exit());
-        assertEquals("forest-1-tree", layout.rooms.get(3).id());
+        assertNotNull(layout.rooms.get(1).exit());
+        assertNotNull(layout.rooms.get(2).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
+        assertNotNull(layout.rooms.get(3).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
+        assertEquals("forest-1-guard", layout.rooms.get(3).id());
+        assertNull(layout.rooms.get(4).exit());
+        assertEquals("forest-1-tree", layout.rooms.get(4).id());
         var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertEquals(1, checkpoint.size());
-        assertEquals(3, layout.owner(checkpoint.get(0)));
+        assertEquals(4, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

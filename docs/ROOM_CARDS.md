@@ -200,31 +200,78 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 ## forest-1 (play order 2)
 
+### forest-1-mob
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 1 of 5 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
+| Introduces | redmob, fireball-refill |
+| Develops | - |
+| Combines | - |
+| Mastered route | 7.43 s, zero charges, the sword takes the mob (`RoomReplayTest`); 6.97 s to the refill with two charges; target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | under 3 s: the mob is the only hazard, its range starts about 150 px from the entrance |
+| D26 | no support, no one-shot state; the sword or a stomp needs no ammunition |
+| Hints | none (forest-1 has none, D33) |
+| Status | new, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (cards approved by the author 2026-11-17); `Forest1MobTest` checks the mob and the refill are met one at a time. Role `variation`, not `lesson`: lesson rooms follow the tutorial rules D33-D40 and D48 (hint zones, one lesson element plus at most one trap), and this room has two elements, neither a trap, and no hints (forest-1 has none, D33); it is held to the two-introduction cap instead, which it meets |
+| Decisions | D85 (revises D58), D72 |
+
+Sketch (Y grows downward, floor top y 320; walls x 3520-3536 and 4304-4320):
+
+```
+x    3520 3552      3728   3776  3824            4208   4256    4320
+     |wall|start    [ hero-centre range ]           R     exit  |wall|
+     |    |  @       .......  M  .......            o      [ ]  |    |
+=====+==========================================================+=====  floor y 320
+```
+
+- RoomStart (3552, 272). RedMob, the old id 11 moved here, at x 3776, y 288, `offNeg`/`offPos` 3 tiles (wakes for a
+  hero centre in x 3728-3824). It is the only object on screen from the entrance.
+- FireballRefill, the old id 25 moved here (identity kept), at x 4208, y 288 (one tile over the floor), picked up by walking.
+  With the camera clamped to the room, it is off screen while the hero stands in the mob's range (screen right edge
+  4160 until the hero's centre passes about 3840), so the mob and the refill are each met alone, in that order.
+- RoomExit (4256, 272, 32 x 48).
+
 ### forest-1-traps
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 4 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 2 of 5 (1280 px, two screens) |
 | Role | combination |
-| Purpose | First enemies and machinery that runs by itself, mixed with the tutorial's levers and traps. |
-| Introduces | redmob, running-platform, fireball-refill, puffball |
+| Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
+| Introduces | running-platform, puffball |
 | Develops | crumble-support: the log crumbles over a lethal pit, not a recoverable drop; proximity-thorn: the tuft's wider 80 px zone |
 | Combines | - |
-| Repeats | lever, lever-wall, lever-platform |
-| Mastered route | 12.27 s to the room exit (`Forest1TrapsTest`, `RoomReplayTest`); target about 20 s |
+| Repeats | redmob, lever, lever-wall, lever-platform |
+| Mastered route | 12.27 s to the room exit (`Forest1TrapsTest`, `RoomReplayTest`), unchanged by #375; 14.98 s with the longer-warnings assist; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | about 12.7 s for a death at the log (D58) |
+| Retry cost | 12.73 s for a death at the log (D58; `Forest1TrapsTest`, unchanged by #375) |
 | D26 | the pit is the level `Deadline`, a retry; nothing is re-armed (D58) |
 | Hints | none |
-| Overload reason | Four introductions, and the first enemy is not met alone. Measured on the shipped map (2026-11-16): the platforms (x 96-224) come first and are behind the hero when the RedMob is met: it reacts only once the hero is back on the floor (its range needs the hero's centre in x 192-512 and a vertical overlap, so a hero standing on a platform, body y 250-272, never wakes it), then steps from body x 358 to 352 and stays at x 352-372, right of the 16 px block at x 304-352, 128 px from the last platform; it is met instead in the stretch x 256-450 where two other first sightings stand, the running escalators (x 256-432, y 240; x 432, y 224-288) and the fireball refill (x 312, y 176), so it is still not the only unknown thing on screen; the lever-and-torch pair repeats forest-0-lever with no role. D67 kept this course one room when it appended the route and guard rooms. Splitting this room, meeting the RedMob alone first and removing the torch lever are tracked by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375). |
-| Status | D72 audit 2026-11-16 (redone after #187/#104): change (split this room itself so the RedMob is met alone first, handle the lever-and-torch pair, ids 12/13, and revisit D58), [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) |
-| Decisions | D58, D67, D72 |
+| Status | D72 audit 2026-11-16: change; done by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (D85): the first RedMob (id 11) and the refill (id 25) moved to `forest-1-mob`, the lever-and-torch pair (ids 12, 13) was removed, the trap course x 616-1280 is untouched. |
+| Decisions | D58, D67, D72, D85 |
+
+What changed (x 0-1280, unchanged geometry):
+
+```
+x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   696  864  944  1024-1168  1216
+   start platforms  L12  T13   L15   esc 17   R25  M11   esc19  wall 14  L33   tuft M38 puff  pit+log    exit
+                    ---  ---               ---  ---
+                    removed (12, 13); moved to forest-1-mob (11, 25)
+```
+
+- Escalators (x 256-464) are then met alone: from there the screen ends before x 784, so the tuft (known, x 696) is the
+  only other thing in view and the puffball (x 944) is not. The puffball enters the screen only when the hero's centre
+  passes about x 624, after the escalators.
+- The trap course after the wall (tuft, RedMob 38, puffball, log, room exit) keeps every object, id and coordinate.
 
 ### forest-1-route
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 4 (832 px) |
+| Level | forest-1, play order 2, room 3 of 5 (832 px) |
 | Role | variation |
 | Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
 | Introduces | bat-enemy |
@@ -244,7 +291,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 4 (768 px) |
+| Level | forest-1, play order 2, room 4 of 5 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
 | Introduces | - |
@@ -264,7 +311,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 4 (640 px, one screen) |
+| Level | forest-1, play order 2, room 5 of 5 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb |

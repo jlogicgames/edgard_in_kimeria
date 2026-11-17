@@ -62,6 +62,7 @@ class Forest1RouteTest {
         stock = new RangedStock();
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
+        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-traps
         level.enterNextRoom(player());
         theBat = level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElseThrow();
         return level;
@@ -555,6 +556,8 @@ class Forest1RouteTest {
         stock = new RangedStock();
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
+        assertEquals("forest-1-mob", level.currentRoomName());
+        level.enterNextRoom(player());
         assertEquals("forest-1-traps", level.currentRoomName());
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());

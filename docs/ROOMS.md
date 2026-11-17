@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has four rooms since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has five rooms since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -255,8 +255,14 @@ course, introduces four elements and meets its first enemy in the same stretch (
 the running escalators and the fireball refill, not on the falling platforms: measured, the RedMob wakes only once the
 hero is back on the floor past them and then holds body x 352-372, 128 px beyond the last platform; its
 lever-and-torch pair repeats `forest-0-lever` with no role: split the room itself so the RedMob is met alone first, handle that pair (ids 12/13) and revisit D58, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375). `forest-entry` introduces six elements and still holds the D24/#95
-practice objects that `forest-0` now teaches: remove them and split the room in the x 696-752 gap (between the Bomb's blast and the second YellowMob's reach), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376). Both cards carry an
-`Overload reason` until those issues land; the issues remove it.
+practice objects that `forest-0` now teaches: remove them and split the room in the x 696-752 gap (between the Bomb's blast and the second YellowMob's reach), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376). Since #375
+only `forest-entry` carries an `Overload reason`; #376 removes it.
+
+**Done for forest-1 (#375, D85, 2026-11-17).** The first RedMob (id 11) and the refill (id 25) moved out of
+`forest-1-traps` into a new first room, `forest-1-mob` (x 3520-4320, after the tree room on the map, first in the
+`Rooms` list), where the mob is met alone and the refill comes into view only after it (`Forest1MobTest`). The
+lever-and-torch pair (ids 12, 13) was removed. `forest-1-traps` now introduces two elements, the running escalators and
+the puffball, met one screen apart, and its `Overload reason` is gone; the trap course x 616-1280 is unchanged.
 
 ## Replay budget (#70)
 
@@ -311,9 +317,10 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
-| `forest-1` / unmarked room (now room 1, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09) | 1280 px | 11.58 s (historical) | None | Within 20 s |
-| `forest-1` / `forest-1-route` (room 2, #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
-| `forest-1` / `forest-1-guard` (room 3, #104, D68, 2026-11-15) | 768 px | 6.83 s timed melee (the floor); fireball 6.15 s; roof 7.67 s | None (one optional fireball refill on the roof) | Within 20 s |
+| `forest-1` / `forest-1-mob` (room 1 since #375, D85, 2026-11-17) | 800 px | 7.43 s, mob by sword (6.97 s to the refill with two charges) | None (one fireball refill) | Within 20 s |
+| `forest-1` / unmarked room (now room 2, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09, and again after #375) | 1280 px | 11.58 s (historical) | None | Within 20 s |
+| `forest-1` / `forest-1-route` (room 3 since #375; #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
+| `forest-1` / `forest-1-guard` (room 4 since #375; #104, D68, 2026-11-15) | 768 px | 6.83 s timed melee (the floor); fireball 6.15 s; roof 7.67 s | None (one optional fireball refill on the roof) | Within 20 s |
 | `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -510,6 +517,8 @@ D26; older teaching-layout route results below do not establish that acceptance.
 
 ### `forest-1` (level two; traps added by #260/D58, see "forest-1 trap placement plan")
 
+Since #375 the first RedMob is met alone in `forest-1-mob`, the level's first room ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17)); the
+paragraph below describes the trap course before that change, when RedMob id 11 stood among its escalators.
 Falling platforms (x 96–224, y 272), the RedMob patrol (192–512) that covers them, the
 escalators and the trigger-opened wall at 480–528 are the first time those pieces
 are combined. The falling platforms are now a second sighting rather than the first.
@@ -573,9 +582,9 @@ These timings were rechecked on the teaching layout during the merge review on
 
 | Level / room | Required route | All room coins |
 | --- | ---: | ---: |
-| `forest-1` / unmarked (now room 1; 12.27 s since D58) | 11.58 s (historical) | No coins |
-| `forest-1` / `forest-1-route` (room 2, #187) | 11.02 s | No coins (refill detour: whole room 18.32 s) |
-| `forest-1` / `forest-1-guard` (room 3, #104) | 6.83 s (timed melee; roof 7.67 s with the refill) | No coins |
+| `forest-1` / unmarked (now room 2, `forest-1-traps`; 12.27 s since D58) | 11.58 s (historical) | No coins |
+| `forest-1` / `forest-1-route` (room 3, #187) | 11.02 s | No coins (refill detour: whole room 18.32 s) |
+| `forest-1` / `forest-1-guard` (room 4, #104) | 6.83 s (timed melee; roof 7.67 s with the refill) | No coins |
 | `forest-3` (now `forest-2`) / `forest-entry` | 16.27 s | 20.00 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 5.00 s | 5.00 s |
 
@@ -824,8 +833,8 @@ Preview with the placed objects and zones: [forest-1-trap-placement.png](referen
 
 ### What the level is
 
-Room 1 of 2 since #187 (D67): `forest-1-traps`, x 0-1280, whose `RoomStart` is the old `Player` spawn x 32 (so every retry restarts there, as when the level was one unmarked room) and whose `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was; the checkpoint moved to the route room appended after it. Before #187 this was the whole level, 80 x 23 tiles (1280 x 368 px). No hints (`TutorialLevelTest`). The first part is unchanged: lever 128, four `FallingPlatform`
-(x 96-224), the first `RedMob` (patrol 192-512), escalators, lever 272 and the `Wall` at x 480-528, lever 544. The stretch **x 580-1200 was empty floor**
+Room 2 of 5 since #375 (D85; room 1 of 2 since #187, D67): `forest-1-traps`, x 0-1280, which lost its first RedMob, its refill and its lever-and-torch pair to the new first room `forest-1-mob` in #375 (the coordinates below are otherwise current), whose `RoomStart` is the old `Player` spawn x 32 (so every retry restarts there, as when the level was one unmarked room) and whose `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was; the checkpoint moved to the route room appended after it. Before #187 this was the whole level, 80 x 23 tiles (1280 x 368 px). No hints (`TutorialLevelTest`). The first part is unchanged apart from what #375 moved or removed: four `FallingPlatform`
+(x 96-224), escalators, lever 272 and the `Wall` at x 480-528, lever 544. The stretch **x 580-1200 was empty floor**
 and now holds, one thing at a time:
 
 ```
@@ -896,8 +905,8 @@ y320        ====================================================
 
 | What | Object | x (px) | y (px) | Size | Properties | Role |
 | --- | --- | ---: | ---: | --- | --- | --- |
-| Room 1, `forest-1-traps` | `Room`, `RoomStart` (32, 272), `RoomExit` | 0 | 0 | 1280 x 368; exit 1216, 272, 32 x 48 | none | the trap course; the exit replaces its checkpoint |
-| Room 2, `forest-1-route` | `Room` (id 46), `RoomStart` (id 47) | 1280 | 0 | 832 x 368; start 1344, 272 | none | second room; safe entrance, floor under it, nothing in reach; ends at the `RoomExit` below |
+| Room 2 (room 1 before #375), `forest-1-traps` | `Room`, `RoomStart` (32, 272), `RoomExit` | 0 | 0 | 1280 x 368; exit 1216, 272, 32 x 48 | none | the trap course; the exit replaces its checkpoint |
+| Room 3 (room 2 before #375), `forest-1-route` | `Room` (id 46), `RoomStart` (id 47) | 1280 | 0 | 832 x 368; start 1344, 272 | none | third room since #375; safe entrance, floor under it, nothing in reach; ends at the `RoomExit` below |
 | Lever | `Trigger` `Route` (id 48) | 1440 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor |
 | Ladder | `Ladder` `Route` (id 49) | 1536 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; optional route |
 | Slab | collision (id 53) | 1552 | 208 | 80 x 16 | plain collision, floating | landing and waiting place; the floor passes under it, so the lever stays in walking reach |
