@@ -171,6 +171,27 @@ back view used by both facings).
   is tied to the **left** wrist in both facings: the far hand facing right, the near one facing left (drawn over the
   hair). The wrist pixel of each frame is recorded in `Player` and checked by `HeroFrameTest` to be the drawn forearm.
 
+## Silver thread on death (D81, #341)
+
+Every death with a visible cause shows the silver thread of #228 pulling Edgard back to the room start
+([D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)).
+
+- **Art:** `art/objects/silver-thread.grid` -> `assets/images/objects/silver-thread.png` (6 x 5, exported exactly by
+  `tools/silver_thread_sprites.py`): the 1 x 2 strand, silver `d8dee9` over ink `0b0d18`, and the D78 glint star. The
+  game stamps the strand one pixel step at a time along a chord with a parabolic sag between the wrist and the start
+  (`effects.SilverThread`); only that curve is computed, the colours are authored (D81's argued exception to principle 6:
+  a line between two moving points, not an object sprite).
+- **Tier (D76):** active. Worst outline 0.340 over every RoomStart of the three maps, taut and slack, level and sloped,
+  every sky offset (`tools/test_silver_thread_sprites.py`); the D78 dialogue silvers measured 0.104 there.
+- **Hero poses:** the three pull frames of #343 (row 14 of both facing sheets): tug, lift, land. The thread is tied to
+  the **left** wrist in both facings, and the frames are drawn yanked backward by it, so the pull faces **away** from the
+  start (a start on the left, a smaller X, means facing right). Wrists, frame pixels: tug and lift (17, 44) facing right
+  and (46, 44) facing left, land (23, 52) and (24, 52); `Player.pullWrist` gives the pixel centre in world coordinates
+  and the thread starts there (`SilverThreadTest` checks it lands on an opaque pixel of the drawn frame, both facings).
+  Tug from 0.10 s, lift from 0.45 s, land under the fade-in (0.20 s) or after a pit (0.25 s).
+- **Not verified:** the beat in the running game, by the author's eye (desktop and web):
+  [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+
 ## Production and continuity
 
 Current portraits have a **256 × 256 px** runtime canvas, at most **256 palette entries

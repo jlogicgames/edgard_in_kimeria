@@ -25,6 +25,9 @@ TOUCH_CONTROL_SIZES = {'disc': (64, 64), 'disc-down': (64, 64), 'base': (64, 64)
                        'jump': (64, 64), 'jump-down': (64, 64), 'pause': (64, 64), 'pause-down': (64, 64),
                        'skip': (64, 64), 'skip-down': (64, 64), 'cue': (8, 8)}
 WORLD_FRAMES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
+# The silver thread on death (#341, D81): art/objects/silver-thread.grid -> assets/images/objects/silver-thread.png,
+# the 1x2 strand at (0, 0) and the 5x5 glint at (1, 0); exported exactly by tools/silver_thread_sprites.py.
+SILVER_THREAD_SIZE = (6, 5)
 WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE),
                 'ladder': (LADDER_FRAME_SIZE * LADDER_FRAME_COUNT, LADDER_FRAME_SIZE),
                 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,

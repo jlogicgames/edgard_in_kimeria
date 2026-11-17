@@ -141,6 +141,17 @@ class AllocationBudgetTest {
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
     /** Measured 0.0 B/frame (#343, D79): the hero's draw path, every state in both facings, the three ladder clips and #341's three pull frames with the wrist, with the held-object grip, through the batch. */
     static final double HERO_DRAW_CEILING = 8;
+    /**
+     * Measured in 3 runs (#341, D81): the silver thread beat through the real Player, every stage drawn each cycle
+     * (drawing out, tightening with the glint, the pull, the landing with the slack thread under the fade-in, the pit
+     * arrival dissolving it) with #343's pull frames drawn through showPull, 0.6 to 0.7 B/frame (2026-11-17; the hero's
+     * own draw path measures 0.6 in heroDrawPathInBothFacingsAndOnTheLadder; 0.0 before #343's frame selection); one
+     * dying hero updated every frame, 0.0 to 0.1 B/frame once the 40.0 B/frame of the harness's Proxy stubs (a boxed
+     * frame time, the pause key's argument array) are taken off.
+     */
+    static final double SILVER_THREAD_CEILING = 8;
+    private static final float THREAD_DEATH_X = 300, THREAD_START_X = 32, THREAD_FLOOR_TOP = 272;
+    private static final int THREAD_STAGES = 12, THREAD_STAGE_FRAMES = 4;
     private static final Player.State[] HERO_STATES = Player.State.values();
     private static final int HERO_STATE_FRAMES = 12, HERO_FACING_FRAMES = 5, HERO_PULL_FRAMES = 7;
     private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
@@ -344,6 +355,56 @@ class AllocationBudgetTest {
             sum[0] += grip.x + hero.frameX() + hero.frameY();
         });
         assertWithinBudget("hero draw path", HERO_DRAW_CEILING, bytes);
+    }
+
+    /** A hero at the room start of forest-1's first room, then moved to where he dies; {@code spawned} fixes the anchor there. */
+    private Player threadHero(Level level, float x) {
+        Player hero = new Player(harness.assets(), harness.game(), THREAD_START_X, THREAD_FLOOR_TOP);
+        hero.setLevel(level);
+        hero.spawned();
+        hero.position.x = x;
+        return hero;
+    }
+
+    @Test void silverThreadBeat() {
+        Level level = harness.roomOf("forest-1", 0);
+        // Built before the probe (allocation allowed): dying heroes at every stage of the beat, landing and arriving ones.
+        Player[] stages = new Player[THREAD_STAGES];
+        for (int k = 0; k < THREAD_STAGES; k++) {
+            Player hero = threadHero(level, THREAD_DEATH_X);
+            int age = k * THREAD_STAGE_FRAMES;
+            if (k < THREAD_STAGES / 2) {
+                hero.collidedWithActor(true);
+                for (int f = 0; f < age * 2; f++) hero.update(STEP); // 0 .. 0.73 s: draw-out, tighten, pull
+            } else if (k < THREAD_STAGES * 3 / 4) {
+                hero.arriveUnderThread();
+                hero.advanceLanding(age * STEP);
+            } else {
+                hero.arriveAfterReset();
+                for (int f = 0; f < age; f++) hero.update(STEP);
+            }
+            stages[k] = hero;
+        }
+        Player dying = threadHero(level, THREAD_DEATH_X);
+        dying.collidedWithActor(true);
+        float[] sum = new float[1];
+        double draw = AllocationProbe.bytesPerFrame(i -> {
+            dying.render(batch);
+            Player stage = stages[i % THREAD_STAGES];
+            stage.render(batch);
+            sum[0] += stage.frameX() + dying.frameY();
+        });
+        assertWithinBudget("silver thread beat, draw", SILVER_THREAD_CEILING, draw);
+        // The dying update reads the real frame time and the pause key through the harness's java.lang.reflect.Proxy
+        // stubs, which box the returned float and allocate the call's argument array; the real backends do neither.
+        // Those two calls alone are measured and taken off, so the number is the update's own code.
+        double proxies = AllocationProbe.bytesPerFrame(i -> {
+            sum[0] += com.badlogic.gdx.Gdx.graphics.getDeltaTime();
+            if (com.badlogic.gdx.Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.ESCAPE)) sum[0]++;
+        });
+        double update = AllocationProbe.bytesPerFrame(i -> dying.update(STEP));
+        System.out.printf("ALLOCATION dying hero update: %.1f B/frame, of which the test proxies %.1f%n", update, proxies);
+        assertWithinBudget("silver thread beat, dying update less the test proxies", SILVER_THREAD_CEILING, update - proxies);
     }
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */

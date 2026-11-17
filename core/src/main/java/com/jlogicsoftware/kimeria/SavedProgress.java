@@ -58,8 +58,32 @@ public final class SavedProgress {
         if (preferences != null) {
             preferences.remove(Settings.KEY_NEXT_LEVEL);
             preferences.remove(Settings.KEY_LEVEL_ORDER);
+            preferences.remove(Settings.KEY_FIRST_DEATH_TOLD);
             preferences.flush();
         }
         nextLevel = -1;
+    }
+
+    /**
+     * Whether this run's healer has said the first-death line (#341, D81). Absent or malformed counts as told: a save
+     * written before the line existed belongs to a player who has already died, and a "first death" would be false.
+     */
+    public boolean firstDeathTold() {
+        if (preferences == null || !preferences.contains(Settings.KEY_FIRST_DEATH_TOLD)) return true;
+        try {
+            return preferences.getBoolean(Settings.KEY_FIRST_DEATH_TOLD, true);
+        } catch (ClassCastException ignored) {
+            return true;
+        }
+    }
+
+    /**
+     * Written at once (false when a New Game starts, true when the line opens), not with the level save: a death can
+     * come after Continue and before the next level is completed, and Continue must not repeat the line.
+     */
+    public void setFirstDeathTold(boolean told) {
+        if (preferences == null) return;
+        preferences.putBoolean(Settings.KEY_FIRST_DEATH_TOLD, told);
+        preferences.flush();
     }
 }

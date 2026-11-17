@@ -180,10 +180,20 @@ Approved texts (EN source; the five catalogs hold the translations):
   not endless (the scarcity rule of GAME_DESIGN.md). The line says "spark" and "fire", never
   "fireball", so it names no mechanic.
 
-Not used by the author's decision: the farewell (no line there), a line on the first death, and
-any answer from Edgard. **Revised 2026-11-15 after the first external playtest
-([PLAYTEST_1.md](PLAYTEST_1.md), D66):** a healer line on the first death and a visible thread
-pull on every death are now wanted ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341));
+Not used by the author's decision: the farewell (no line there) and any answer from Edgard.
+**Revised 2026-11-15 after the first external playtest ([PLAYTEST_1.md](PLAYTEST_1.md), D66):** a healer
+line on the first death and a visible thread pull on every death are now wanted, and built
+([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341), [D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)):
+- **Every death with a visible cause** shows the thread drawing out from Edgard's wrist to the room start,
+  tightening and pulling him back under a fade; he lands at the start with the thread slack. A fall into a
+  pit shows only the landing with the slack thread.
+- **First death of a New Game run, one healer line**, key `HEALER_FIRST_DEATH`, author-approved:
+  "Edgard, the night swallowed you, so I drew the silver thread, and you rise again at the path's edge. Go on."
+  It keeps the start tale's promise in the healer's own words; it is shown once per run, saved when it opens,
+  so Continue never repeats it, and never on a later death, Restart Level or a collection return.
+- The thread stays narrative: the one saved "told" flag is not a checkpoint, healing or persistence mechanic.
+
+Also revised after the playtest:
 the fireball becomes the healer's second gift, given with the thread
 ([#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340)); the fairies of the start
 tale become a visible fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338));

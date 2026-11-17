@@ -18,7 +18,7 @@ speaker to the listener as each line starts. All five supported languages use th
 Edgard's name and dialogue are white, with his lines aligned left; the healer's are green, aligned right.
 Every line is shown in one text box under the windows, 556 px wide and four lines tall; a notch on its top
 edge points at the speaker. Every current line fits in three lines in all five languages, so one line stays
-spare for the first-death line ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)). At
+spare; the first-death line ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)) takes two. At
 the pre-boss stop the recipe checklist and the choices sit in the column between the windows. The screen
 opens in 0.3 s (the windows unfold, the box opens, the thread draws in) before the first letter.
 Complete-line layout stays fixed while letters reveal. A right-aligned, translated `Next >` prompt appears
@@ -338,6 +338,18 @@ retry, Restart Level or repeated Checkpoint callbacks. Nothing is saved: a save 
 after a level is completed, so Continue never lands in forest-0 and legacy saves skip it.
 Wording is a proposal for author review; see [D41](DECISIONS.md#d41-the-healers-tales-around-the-forest-0-tutorial)
 for texts, rules and what is not verified.
+
+## First-death line (#341, D81)
+
+The same screen opens once per New Game run after Edgard's first death, with one healer line,
+`HEALER_FIRST_DEATH` ("Edgard, the night swallowed you, so I drew the silver thread, and you rise again at
+the path's edge. Go on."). It is scripted like the tales (`HealerDialogue.Kind.FIRST_DEATH`: no checklist,
+no choices, one `CONTINUE`) and opens at the black of the death fade, after the room is rebuilt (after a
+pit, on the rebuild frame); `Next >` returns to play and the fade-in continues. It is consumed on opening.
+Unlike the tales it is saved at once (`Settings.KEY_FIRST_DEATH_TOLD`), because a death can come after
+Continue: New Game writes it false, the line writes it true, a save without the key counts as told. Never on
+a later death, Restart Level or a collection return, which is not a death. Rule and measurements:
+[D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16).
 
 ## Ingredient rename (D43, #229)
 

@@ -143,6 +143,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      * death, Restart Level and retries never repeat it.
      */
     private boolean tutorialIntroPending, tutorialOutroShown;
+    /**
+     * The healer's first-death line (#341, D81): once per New Game run. Unlike the tales it is saved the moment it
+     * opens ({@link SavedProgress#setFirstDeathTold}), because a death can come after Continue; New Game clears it and
+     * a save without the key counts as told. Never on a later death, Restart Level or a collection return.
+     */
+    private boolean firstDeathTold = true;
 
     private SavedProgress savedProgress;
     private UiState uiState;
@@ -159,11 +165,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private int levelStartCoins = 0;
     private int roomStartCoins = 0;
     private final RoomFade roomFade = new RoomFade();
+    /** The death fade under the silver thread's pull (#341, D81): the room is rebuilt at its black midpoint. */
+    private final RoomFade deathFade = new RoomFade();
+    private final Runnable rebuildUnderBlack = () -> rebuildRoom(true);
     private boolean gameStarted = false;
     private boolean pendingFullscreenToggle = false;
 
     private float timeScale = 1f;
-    /** Set by a death; the room is rebuilt at the start of the next frame (see {@link #rebuildRoom()}). */
+    /** Set by a fall into a pit; the room is rebuilt at the start of the next frame (see {@link #rebuildRoom}). */
     private boolean roomResetPending = false;
     private final Vector2 panFrom = new Vector2(), panTo = new Vector2();
     private float panDuration = 0f, panElapsed = 0f;
@@ -432,6 +441,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         artifacts.clear();
         rangedStock.reset();
         roomFade.cancel();
+        deathFade.cancel();
         gameStarted = false;
         levelLoadDelay = -1f;
         level = null;
@@ -499,6 +509,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         currentLevelIndex = Math.floorMod(data.levelIndex(), LEVEL_NAMES.size());
         tutorialIntroPending = data.newRun() && TUTORIAL_LEVEL.equals(LEVEL_NAMES.get(currentLevelIndex));
         tutorialOutroShown = false;
+        if (data.newRun() && savedProgress != null) savedProgress.setFirstDeathTold(false);
+        firstDeathTold = savedProgress != null ? savedProgress.firstDeathTold() : !data.newRun();
         coinsCollected = data.coins();
         player = new Player(assets, this, 0, 0);
         startLoadingLevel();
@@ -514,6 +526,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         timeScale = 1f;
         roomResetPending = false;
         roomFade.cancel();
+        deathFade.cancel();
         cameraPanning = false;
         levelLoadDelay = 1f; // mirrors the original's Future.delayed(1s) before (re)loading a level
         uiState = UiState.LOADING;
@@ -546,14 +559,29 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         uiState = UiState.HEALER;
     }
 
-    /** Rebuilds only the active room, at a frame boundary without reloading the map. */
-    private void rebuildRoom() {
+    /**
+     * Rebuilds only the active room without reloading the map: at a frame boundary after a pit, or at the black of
+     * the death fade after the thread's pull, where the camera snaps to the start instead of panning (#341, D81).
+     * The first death of a run then opens the healer's line.
+     */
+    private void rebuildRoom(boolean underBlack) {
         roomResetPending = false;
         coinsCollected = roomStartCoins;
         timeScale = 1f;
         player = new Player(assets, this, 0, 0);
         level.resetCurrentRoom(player);
-        player.arriveAfterReset();
+        if (underBlack) {
+            player.arriveUnderThread();
+            cameraTarget.set(player.roomCameraTarget());
+            cameraPanning = false;
+        } else {
+            player.arriveAfterReset();
+        }
+        if (!firstDeathTold) {
+            firstDeathTold = true; // consumed on opening, like the tales
+            if (savedProgress != null) savedProgress.setFirstDeathTold(true);
+            openScriptedHealer(HealerDialogue.firstDeath());
+        }
     }
 
     private void enterNextRoom() {
@@ -603,7 +631,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 if (healer == null) return;
                 switch (healer.kind()) {
                     case VICTORY, TUTORIAL_END -> completeLevel();
-                    case TUTORIAL_START -> {
+                    case TUTORIAL_START, FIRST_DEATH -> {
                         healer = null;
                         player.resetJumpInput();
                         gamepad.suppressJumpUntilRelease();
@@ -685,27 +713,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // what lets the browser start the music. Loading is the start of a run, so fade it out.
         boolean musicWanted = menuBackdropActive && uiState != UiState.WEB_START && uiState != UiState.LOADING;
 
-        // Age existing effects before combat/reset creates new ones: a slow frame must not
-        // consume a newly landed hit's entire flash before it has been rendered once.
-        if (levelVisible && level != null && gameStarted && !roomFade.active()
-            && stateAtFrameStart != UiState.HEALER) level.updatePresentation(dt);
-        if (roomResetPending && uiState == UiState.PLAYING) {
-            rebuildRoom();
-        }
-        if (levelVisible && level != null && gameStarted && stateAtFrameStart != UiState.HEALER) {
-            if (roomFade.active()) {
-                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed() || touchControls.pausePressed()) togglePause();
-                else roomFade.update(dt, this::enterNextRoom);
-            } else {
-                level.update(dt * timeScale);
-                if (gameStarted) advanceCameraPan(dt);
-                if (gameStarted && !roomResetPending && level.atRoomExit()) {
-                    player.resetJumpInput();
-                    level.clearCameraEffects();
-                    roomFade.start();
-                }
-            }
-        }
+        updatePlay(dt, stateAtFrameStart, levelVisible);
 
         // A victory exit can open dialogue inside Level.update on this frame.
         levelVisible = uiState == UiState.PLAYING || (uiState == UiState.PAUSED && !pausedHealer);
@@ -775,7 +783,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible) {
             hud.render(batch, level != null ? level.boss() : null,
                 level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f, player, fpsText);
-            if (uiState == UiState.PLAYING && !roomFade.active() && player != null) hud.renderInteractionHint(batch, player, camera, dt);
+            if (uiState == UiState.PLAYING && !roomFade.active() && !deathFade.active() && player != null) hud.renderInteractionHint(batch, player, camera, dt);
             if (uiState == UiState.PLAYING) touchControls.render(batch);
         }
         if (menuBackdropActive) {
@@ -784,6 +792,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Portrait phones: the strip under the picture always carries the rotate hint (the controls come with play).
         if (touchLayout.portrait() && !(levelVisible && uiState == UiState.PLAYING)) touchControls.renderStrip(batch, false);
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
+        if (levelVisible && deathFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, deathFade.alpha());
         overlay.beginFrame();
         renderOverlay(uiState == stateAtFrameStart);
         if (!fpsText.isEmpty()) overlay.topRight(batch, fpsText, LOGICAL_W - Hud.FPS_RIGHT_MARGIN, Hud.FPS_TOP_MARGIN);
@@ -794,6 +803,46 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Overlay text is queued in a Y-up pass; the fade must cover it after that pass.
         if (storyScreenActive()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, intro.alpha());
         batch.end();
+    }
+
+    /**
+     * One frame of gameplay, as render() runs it before drawing: effects age, a pending pit reset rebuilds the room,
+     * then the death fade, the room fade or the level advances. Separate so the death-to-control test drives this very
+     * code (KimeriaGameDeathTimingTest, #341).
+     */
+    private void updatePlay(float dt, UiState stateAtFrameStart, boolean levelVisible) {
+        // Age existing effects before combat/reset creates new ones: a slow frame must not
+        // consume a newly landed hit's entire flash before it has been rendered once.
+        if (levelVisible && level != null && gameStarted && !roomFade.active() && !deathFade.dark()
+            && stateAtFrameStart != UiState.HEALER) level.updatePresentation(dt);
+        if (roomResetPending && uiState == UiState.PLAYING) {
+            rebuildRoom(false);
+        }
+        if (levelVisible && level != null && gameStarted && stateAtFrameStart != UiState.HEALER) {
+            if (deathFade.dark()) {
+                // After black the rebuilt room waits, as in a room transition, while the hero lands.
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed() || touchControls.pausePressed()) togglePause();
+                else {
+                    player.advanceLanding(dt);
+                    deathFade.update(dt, rebuildUnderBlack);
+                }
+            } else if (deathFade.active()) {
+                // Before black the world keeps its slow motion, so the cause of death and the thread stay live.
+                level.update(dt * timeScale);
+                if (gameStarted) deathFade.update(dt, rebuildUnderBlack);
+            } else if (roomFade.active()) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed() || touchControls.pausePressed()) togglePause();
+                else roomFade.update(dt, this::enterNextRoom);
+            } else {
+                level.update(dt * timeScale);
+                if (gameStarted) advanceCameraPan(dt);
+                if (gameStarted && !roomResetPending && level.atRoomExit()) {
+                    player.resetJumpInput();
+                    level.clearCameraEffects();
+                    roomFade.start();
+                }
+            }
+        }
     }
 
     /** Render only: the paused background must not poll input or advance its text. */
@@ -1309,6 +1358,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     @Override
     public void resetRoom() {
         roomResetPending = true;
+    }
+
+    @Override
+    public void beginDeathFade() {
+        deathFade.start();
     }
 
     // Not named pause(): that is ApplicationListener.pause(), which libGDX calls when the window

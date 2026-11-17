@@ -83,6 +83,12 @@ public interface GameContext {
      */
     void resetRoom();
 
+    /**
+     * Starts the death fade under the silver thread's pull (#341, D81): the world keeps its slow motion until black,
+     * the room is rebuilt at black and the hero lands under the fade-in. A context without that fade resets at once.
+     */
+    default void beginDeathFade() { resetRoom(); }
+
     void togglePause();
 
     void setNormalTime();

@@ -385,6 +385,21 @@ class HealerDialogueTest {
     }
 
     /**
+     * D81 (#341): the healer's first-death line takes exactly two of the text box's four lines in every language, at the
+     * 18 px baked font in the 556 px box, right-aligned as the healer's lines are. Measured 2026-11-16: two in all five.
+     */
+    @Test void theFirstDeathLineTakesTwoOfTheFourLinesInEveryLanguage() {
+        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
+        var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
+        assertEquals(4, HealerDialogueView.TEXT_LINES);
+        for (Language language : Language.values()) {
+            assertEquals(2, assertLineFits(font, Msg.HEALER_FIRST_DEATH.t(language), language, Msg.HEALER_FIRST_DEATH),
+                language + " HEALER_FIRST_DEATH");
+        }
+        font.dispose();
+    }
+
+    /**
      * The typewriter's glyph map covers every glyph of every spoken line in all five languages, laid out as the view lays it
      * out: the whole line reveals at its last letter, none shows before the first. Its starting room is above the longest
      * real line, so it never grows in play; a glyph that is not in the text fails loudly instead of hiding the rest.

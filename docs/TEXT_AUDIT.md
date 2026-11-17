@@ -159,9 +159,12 @@ Composed at runtime by `Player.contextHint()` / `actionPrompt()` as `<binding>: 
 
 ### 1.9 Death (every death)
 
-**No text.** Death is 0.7 s of slow motion and a room reset (D3). The thread exists only in
-`INTRO_STORY` and `HEALER_TALE_THREAD`. A first-death healer line and a visible thread pull are
-[#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341).
+**No text** on a death, except the first of a New Game run. Every death with a visible cause shows the silver thread
+pulling Edgard back (D81, [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)).
+
+| Key | Trigger | Voice |
+| --- | --- | --- |
+| `HEALER_FIRST_DEATH` | The first death of a New Game run, once, saved when it opens (D81); dialogue screen, one line | Healer, tale |
 
 ### 1.10 Ending (once per finished run)
 

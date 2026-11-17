@@ -23,6 +23,11 @@ public final class Settings {
      */
     public static final String KEY_LEVEL_ORDER = "level-order";
     public static final int LEVEL_ORDER = 2;
+    /**
+     * Whether the healer's first-death line (#341, D81) was shown in the current run: false is written when a New Game
+     * starts and true when the line opens. Absent (a save from before the line existed) counts as told.
+     */
+    public static final String KEY_FIRST_DEATH_TOLD = "first-death-told";
     public static final String KEY_FULLSCREEN = "fullscreen";
     public static final boolean DEFAULT_FULLSCREEN = true;
 

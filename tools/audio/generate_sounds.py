@@ -248,6 +248,11 @@ BOSS_RESTORE_VOICE = Voice(2501, 0.40, (120.0, 230.0), FORMANTS_O, FORMANTS_A, -
 # pleasant when quiet and short enough that quick hovering does not stack into a smear.
 CLICK_VOICE = Voice(2601, 0.11, (250.0, 280.0), FORMANTS_I, FORMANTS_E, -19.4, asp_len=0.020, asp_level=0.5,
                     attack=0.010, tau=0.040, release=0.015, jitter=0.02, lowpass=3000.0)
+# The silver thread goes taut on death (#341, D81): a plucked "tinn", a high, almost breathless /i/ with a hard-ish
+# attack, a slight downward bend like a string settling, and a short ring with a little vibrato. A consequence sound
+# (after the hit's "ah-uh"), so it stays at the quiet end of the voice set.
+THREAD_VOICE = Voice(2701, 0.22, (560.0, 520.0), FORMANTS_I, FORMANTS_I, -19.0, asp_len=0.006, asp_level=0.2,
+                     attack=0.004, tau=0.090, release=0.030, jitter=0.01, vibrato=(9.0, 0.015), lowpass=4200.0)
 
 
 def n_samples(seconds: float) -> int:
@@ -461,6 +466,10 @@ def button_click() -> list[float]:
     return finish_rms(render_voice(CLICK_VOICE), CLICK_VOICE.rms_db)
 
 
+def thread() -> list[float]:
+    return finish_rms(render_voice(THREAD_VOICE), THREAD_VOICE.rms_db)
+
+
 def dust_puff() -> list[float]:
     """Muffled "pfff": low-passed noise with a soft attack and a little vowel colour."""
     rng = random.Random(DUST_SEED)
@@ -550,7 +559,8 @@ def grit_fall() -> list[float]:
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
-               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive}
+               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
+               "thread.wav": thread}
 
 
 def generate(out_dir: Path) -> list[Path]:

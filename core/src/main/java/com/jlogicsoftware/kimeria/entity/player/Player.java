@@ -31,10 +31,12 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.ui.InteractionHighlight;
+import com.jlogicsoftware.kimeria.effects.SilverThread;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.physics.CollideBody;
 import com.jlogicsoftware.kimeria.world.Level;
+import com.jlogicsoftware.kimeria.world.RoomFade;
 
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -46,11 +48,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public enum State {IDLE, LOOK_UP, LOOK_DOWN, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING, LADDER}
 
     /**
-     * Death and respawn, Katana Zero style. DYING: the world slows to a crawl so the player sees
-     * what killed them. RESETTING: the game rebuilds the room on its next frame and replaces this
-     * player. ARRIVING (on the new player): the camera pans back while the sprite appears.
+     * Death and respawn, Katana Zero style, with the silver thread (#341, D81). DYING: the world slows to a crawl so
+     * the player sees what killed them, while the thread draws out from the wrist to the room start, tightens and
+     * pulls under the death fade; the game rebuilds the room at black and replaces this player. RESETTING (a fall
+     * into a pit, nothing to see): the game rebuilds the room on its next frame. On the new player, LANDING (after
+     * a thread pull): he lands at the start under the fade-in with the thread slack, and takes input on the first
+     * frame after the fade; ARRIVING (after a pit): the camera pans back while he lands, as long as the old appear clip.
      */
-    private enum RespawnPhase {NONE, DYING, RESETTING, ARRIVING}
+    public enum RespawnPhase {NONE, DYING, RESETTING, ARRIVING, LANDING}
 
     /** The Entity box: position and size, the spawn and room geometry and every hitbox are measured in it (D79). */
     private static final int BOX_SIZE = 48;
@@ -105,9 +110,27 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public static final float LANDING_MIN_FALL_SPEED = 140f;
     /** The landing scuff plays at this fraction of the sound volume. */
     private static final float LANDING_SOUND_VOLUME = .6f;
-    /** Real seconds the death slow motion lasts, and how slow the world runs during it. */
-    private static final float DEATH_SLOWMO_SECONDS = 0.7f;
+    /** How slow the world runs from the killing frame until the death fade reaches black. */
     private static final float DEATH_TIME_SCALE = 0.2f;
+    /**
+     * The silver thread (#341, D81), in real seconds from the killing frame: it draws out from the wrist toward the
+     * room start, then tightens while a glint runs from the start to the wrist; when it is taut the pull starts and
+     * the game's death fade (RoomFade, 0.25 s to black) covers it. Black falls at 0.70 s, the end of the old slow
+     * motion; control returns after the 0.25 s fade-in, at 58 frames at 60 Hz (was 67: KimeriaGameDeathTimingTest).
+     */
+    public static final float THREAD_DRAW_START = .10f, THREAD_DRAW_END = .30f, THREAD_TAUT = .45f;
+    /** The slack thread's sag while it draws out, px below the chord's middle (world Y down). */
+    public static final float THREAD_SAG = 16f;
+    /** How far the pull draws the hero toward the start (render offset only; the box stays) and lifts him, px. */
+    private static final float PULL_DISTANCE = 10f, PULL_RISE = 2f;
+    /** A death this close to the start (px, wrist to anchor) sends the thread straight up, to the healer's end. */
+    private static final float THREAD_NEAR = 32f, THREAD_UP = 400f;
+    /** After a pull: the landing pose under the fade-in, then idle; the slack thread dissolves over the fade-in. */
+    private static final float LANDING_POSE_SECONDS = .20f, LANDING_SLACK_SECONDS = RoomFade.HALF_SECONDS;
+    /** After a pit: the landing pose, then idle; the arrival takes as long as the appear clip it replaced (4 x 0.1 s). */
+    private static final float PIT_LANDING_POSE_SECONDS = .25f, PIT_ARRIVAL_SECONDS = .40f;
+    /** The pluck as the thread goes taut plays at this fraction of the sound volume. */
+    private static final float THREAD_SOUND_VOLUME = .7f;
     /** Longest real frame the death timer will count, so a stalled window cannot skip the slow motion. */
     private static final float MAX_REAL_STEP = 0.05f;
     private static final float UP_FOLLOW = 200f;
@@ -166,6 +189,15 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private RespawnPhase respawnPhase = RespawnPhase.NONE;
     private float checkpointTimer = 0f;
     private float deathTimer = 0f;
+    /**
+     * The thread beat: the room-start anchor; the facing of the pull (away from the start: the pull frames are drawn
+     * yanked backward by the left wrist, #343); the pull's direction along X (+1 toward a start on the right, -1 left,
+     * 0 straight up); whether the fade was asked; the landing clock; a reused wrist point.
+     */
+    private final Vector2 threadAnchor = new Vector2(), wristScratch = new Vector2();
+    private boolean threadFacesRight, deathFadeRequested;
+    private float pullDirection, arrivalTimer;
+    private final SilverThread thread;
     public String collideWithTriggerId = "";
 
     private final Vector2 startingPosition = new Vector2();
@@ -191,6 +223,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         viewHalfWidth = game.logicalResolution().x / 2f;
         hitbox = Hitbox.rect(18, 26, 11, 22);
         loadAnimations(assets);
+        thread = new SilverThread(assets);
         setState(State.IDLE);
     }
 
@@ -296,13 +329,17 @@ public class Player extends Actor<Player.State> implements CollideBody {
     @Override
     public void update(float dt) {
         if (!game.isGameStarted()) return;
+        if (respawnPhase == RespawnPhase.LANDING) { // the fade is over: play
+            respawnPhase = RespawnPhase.NONE;
+            showPull(NO_PULL);
+        }
         if (respawnPhase != RespawnPhase.NONE) {
             resetJumpInput();
             // Death owns its time scale and camera; normal movement stays suspended.
             // Dying and arriving take no other input, but pausing must stay possible.
             if (game.isGameStarted() && pausePressed()) game.togglePause();
             tickAnimation(dt);
-            handleRespawnPhase();
+            handleRespawnPhase(dt);
             return;
         }
         if (isReachedCheckpoint) {
@@ -674,9 +711,42 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     @Override public void render(Batch batch) {
+        if (respawnPhase == RespawnPhase.DYING && pullFrame != NO_PULL) {
+            renderPull(batch);
+            return;
+        }
         TextureRegion frame = currentFrame();
         if (frame != null) batch.draw(frame, frameX(), frameY(), FRAME_SIZE, FRAME_SIZE);
         if (carried != null) carried.renderHeld(batch);
+        if (respawnPhase == RespawnPhase.LANDING || respawnPhase == RespawnPhase.ARRIVING) {
+            // The slack thread hangs from the landing frame's left wrist (facing right after a respawn) and dissolves.
+            float slackSeconds = respawnPhase == RespawnPhase.LANDING ? LANDING_SLACK_SECONDS : PIT_ARRIVAL_SECONDS;
+            pullWrist(PULL_LAND, wristScratch);
+            thread.drawSlack(batch, wristScratch.x, wristScratch.y, position.y + size.y, 1f - arrivalTimer / slackSeconds);
+        }
+    }
+
+    /** Where the hero is in the death and respawn sequence (D81). */
+    public RespawnPhase respawnPhase() { return respawnPhase; }
+
+    /** True while the landing pull frame is drawn: after a pull (under the fade-in) or after a pit, for its first seconds. */
+    public boolean drawsLandingPose() { return pullFrame == PULL_LAND; }
+
+    /** The thread beat on the dying hero: the tug or lift frame (facing away from the start), the pull offset, the thread. */
+    private void renderPull(Batch batch) {
+        float pull = Math.max(0f, Math.min(1f, (deathTimer - THREAD_TAUT) / RoomFade.HALF_SECONDS));
+        float dx = PULL_DISTANCE * pullDirection * pull, dy = -PULL_RISE * pull; // toward the start; up is -Y
+        TextureRegion frame = currentFrame(); // the pull frame showPull holds
+        if (frame != null) batch.draw(frame, frameX() + dx, frameY() + dy, FRAME_SIZE, FRAME_SIZE);
+        pullWrist(pullFrame, wristScratch);
+        float drawn = Math.min(1f, (deathTimer - THREAD_DRAW_START) / (THREAD_DRAW_END - THREAD_DRAW_START));
+        float length = 1f - (1f - drawn) * (1f - drawn); // ease out: the tip slows as it reaches the start
+        float tighten = Math.max(0f, Math.min(1f, (deathTimer - THREAD_DRAW_END) / (THREAD_TAUT - THREAD_DRAW_END)));
+        float sag = THREAD_SAG * (1f - tighten * tighten); // ease in: it snaps taut at the end
+        float glint = tighten > 0 && tighten < 1 ? 1f - tighten : -1f; // from the start (1) to the wrist (0)
+        // The sag stops at the higher of the two floor lines (the hero's and the start's; Y down, so the smaller Y).
+        float floorY = Math.min(position.y + size.y, startingPosition.y + size.y);
+        thread.draw(batch, wristScratch.x + dx, wristScratch.y + dy, threadAnchor.x, threadAnchor.y, sag, length, glint, floorY);
     }
     public int ammunition() { return level.rangedStock.count(); }
     public float verticalMovement() { return gameplayInput.verticalMovement(); }
@@ -1079,6 +1149,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (showCause) {
             respawnPhase = RespawnPhase.DYING;
             deathTimer = 0f;
+            deathFadeRequested = false;
+            aimThread();
             game.setTimeScale(DEATH_TIME_SCALE);
         } else {
             requestRoomReset();
@@ -1090,29 +1162,85 @@ public class Player extends Actor<Player.State> implements CollideBody {
         game.resetRoom();
     }
 
-    private void handleRespawnPhase() {
+    /**
+     * The thread's far end: the left wrist of the landing frame at the room start (facing right, as every respawn
+     * faces), where he will land; or straight up out of the view when he dies at the start. The pull frames are drawn
+     * yanked backward by the left wrist, so the pull faces away from the start: a start on the left (smaller X) means
+     * facing right. World Y grows down: "up" is a smaller Y.
+     */
+    private void aimThread() {
+        int[] land = PULL_WRIST_RIGHT[PULL_LAND];
+        float toFrameX = pivotX() - FRAME_PIVOT_X, toFrameY = size.y - FRAME_SIZE; // box -> frame, as frameX/frameY
+        threadAnchor.set(startingPosition.x + toFrameX + land[0] + PIXEL_CENTRE, startingPosition.y + toFrameY + land[1] + PIXEL_CENTRE);
+        boolean startOnRight = threadAnchor.x >= centerX();
+        threadFacesRight = !startOnRight;
+        pullDirection = startOnRight ? 1f : -1f;
+        int[] tug = (threadFacesRight ? PULL_WRIST_RIGHT : PULL_WRIST_LEFT)[PULL_TUG];
+        float wristX = position.x + toFrameX + tug[0] + PIXEL_CENTRE, wristY = position.y + toFrameY + tug[1] + PIXEL_CENTRE;
+        if (Math.abs(threadAnchor.x - wristX) + Math.abs(threadAnchor.y - wristY) < THREAD_NEAR) {
+            threadFacesRight = facingRight;
+            pullDirection = 0f;
+            tug = (threadFacesRight ? PULL_WRIST_RIGHT : PULL_WRIST_LEFT)[PULL_TUG];
+            threadAnchor.set(position.x + toFrameX + tug[0] + PIXEL_CENTRE, position.y + toFrameY + tug[1] + PIXEL_CENTRE - THREAD_UP);
+        }
+    }
+
+    private void handleRespawnPhase(float dt) {
         if (respawnPhase == RespawnPhase.DYING) {
-            // Real time: the world is slowed, but the slow motion is a fixed length of it.
+            // Real time: the world is slowed, but the thread beat is a fixed length of it.
             if (game.isGameStarted()) deathTimer += Math.min(Gdx.graphics.getDeltaTime(), MAX_REAL_STEP);
-            if (deathTimer >= DEATH_SLOWMO_SECONDS) requestRoomReset();
-        } else if (respawnPhase == RespawnPhase.ARRIVING) {
-            if (isCurrentAnimationFinished()) {
-                setState(State.IDLE);
-                respawnPhase = RespawnPhase.NONE;
+            if (deathTimer >= THREAD_DRAW_START && pullFrame == NO_PULL) {
+                // The thread appears: the hero turns away from the start, held by the left wrist.
+                facingRight = threadFacesRight;
+                showPull(PULL_TUG);
             }
+            if (deathTimer >= THREAD_TAUT && pullFrame == PULL_TUG) showPull(PULL_LIFT);
+            if (deathTimer >= THREAD_TAUT && !deathFadeRequested) {
+                // Taut: the pull starts and the death fade covers it; the game rebuilds the room at black.
+                deathFadeRequested = true;
+                if (game.playSounds()) game.playSound("thread", THREAD_SOUND_VOLUME);
+                game.beginDeathFade();
+            }
+        } else if (respawnPhase == RespawnPhase.ARRIVING) {
+            arrivalTimer += dt;
+            if (arrivalTimer >= PIT_LANDING_POSE_SECONDS) showPull(NO_PULL);
+            if (arrivalTimer >= PIT_ARRIVAL_SECONDS) respawnPhase = RespawnPhase.NONE;
         }
     }
 
     /**
-     * Called on the player built for a fresh room attempt, right after the level placed it: shows
-     * the appear animation while the camera pans back (started by {@link #spawned()}), and takes
-     * input again on the first frame after it. Movement can stay held; jumping needs a new press.
+     * Called on the player built for a fresh room attempt after a fall into a pit, right after the level placed it:
+     * he lands with the thread slack while the camera pans back (started by {@link #spawned()}), and takes input
+     * again on the first frame after it. Movement can stay held; jumping needs a new press.
      */
     public void arriveAfterReset() {
         resetJumpInput();
         facingRight = true;
+        arrivalTimer = 0f;
         respawnPhase = RespawnPhase.ARRIVING;
-        setState(State.APPEARING);
+        setState(State.IDLE);
+        showPull(PULL_LAND);
+    }
+
+    /**
+     * Called on the player built at the black of the death fade (#341, D81): he lands at the start with the thread
+     * slack while the fade-in runs, frozen like the rest of the room; {@link #advanceLanding} is the fade's clock.
+     * The first update after the fade takes input.
+     */
+    public void arriveUnderThread() {
+        resetJumpInput();
+        facingRight = true;
+        arrivalTimer = 0f;
+        respawnPhase = RespawnPhase.LANDING;
+        setState(State.IDLE);
+        showPull(PULL_LAND);
+    }
+
+    /** The fade-in's real time, for the landing pose and the slack thread while the room waits. */
+    public void advanceLanding(float dt) {
+        if (respawnPhase != RespawnPhase.LANDING) return;
+        arrivalTimer += dt;
+        if (arrivalTimer >= LANDING_POSE_SECONDS) showPull(NO_PULL);
     }
 
     /** F5 dev hotkey: reach a checkpoint without walking to one. */

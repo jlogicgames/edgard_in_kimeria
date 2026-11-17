@@ -62,7 +62,8 @@ Preserve these distinctions unless the request changes them:
 - The boss elixir survives boss retries, ends on defeat, and clears at the other
   boundaries documented in HEALER.md. It is not part of room rollback or a save.
 - Only level completion changes saved progress. Room exit, death and healer
-  return do not add mid-level save fields.
+  return do not add mid-level save fields. The one exception is narrative: the
+  first death of a run saves that the healer's line was told (D81).
 
 For fades, verify pause/resume and interruption by restart/exit; hero and camera
 relocate under black and no old queued effect leaks into the new attempt.
