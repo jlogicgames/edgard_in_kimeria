@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Measures the shipped PNGs and the label colour with WCAG relative luminance, so a darker redraw fails here.
  */
 class TouchControlArtTest {
-    private static final int DARK_BAR = 0x10101c, BACKGROUND = 0x4a92b8, GROUND = 0x7a4e2c; // BACKGROUND: the forest maps' (D92)
+    private static final int DARK_BAR = 0x10101c, BACKGROUND = 0x2c3f66, GROUND = 0x7a4e2c; // BACKGROUND: the forest maps' night (D92)
     private static final double BAR_CONTRAST = 7.0, LABEL_CONTRAST = 7.0, PRESSED_DIFFERENCE = 1.4, EDGE_CONTRAST = 3.0;
     private static final int RING_OFFSET = 2, ICON_SIDE_X = 12;
 

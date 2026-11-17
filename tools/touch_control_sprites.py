@@ -21,7 +21,7 @@ ROOT = grids.ROOT
 GRID_DIR = ROOT / 'art/hud/touch'
 TARGET_DIR = ROOT / 'assets/images/HUD/touch'
 PREVIEW = ROOT / 'docs/references/touch-controls-art.png'
-BACKGROUNDS = ((0x10, 0x10, 0x1c), (0x4a, 0x92, 0xb8), (0x7a, 0x4e, 0x2c))  # dark bar, level background (D92), ground
+BACKGROUNDS = ((0x10, 0x10, 0x1c), (0x2c, 0x3f, 0x66), (0x7a, 0x4e, 0x2c))  # dark bar, level background (D92 night), ground
 SCALE = 3
 PAD = 6
 

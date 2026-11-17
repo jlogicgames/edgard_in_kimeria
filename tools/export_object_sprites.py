@@ -2,6 +2,7 @@
 """Prepare authored raster art: native pixel sprites and separate detailed HUD icons."""
 from pathlib import Path
 from PIL import Image, ImageOps
+import moon_rim
 
 ROOT = Path(__file__).resolve().parents[1]
 from sprite_layouts import (WORLD_FRAMES, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE,
@@ -111,6 +112,28 @@ def export_platform():
     print(target.relative_to(ROOT))
 
 
+# Object sheets exported with the moon rim (D92, tools/moon_rim.py): target stem -> frame cell. Applied to the exported
+# sheet, so re-running this script reproduces the rimmed PNG; the rim is idempotent.
+RIM_OBJECTS = {'ladder': (LADDER_FRAME_SIZE, LADDER_FRAME_SIZE), 'stone': WORLD_FRAMES['stone'],
+               'fireball': WORLD_FRAMES['fireball'], 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE}
+
+
+def rim_objects():
+    for name, cell in RIM_OBJECTS.items():
+        target = ROOT / 'assets/images/objects' / f'{name}.png'
+        sheet = Image.open(target).convert('RGBA')
+        if len({p[:RGB_CHANNELS] for p in sheet.get_flattened_data() if p[RGB_CHANNELS]}) >= WORLD_PALETTE_SIZE - 1:
+            # The rim is one more colour; a full generated palette (the brick wall's 15) first gives up its closest pair.
+            sheet = sheet.quantize(colors=WORLD_PALETTE_SIZE - 1, method=Image.Quantize.FASTOCTREE,
+                                   dither=Image.Dither.NONE).convert('RGBA')
+        rimmed = moon_rim.rim(sheet, cell)
+        packed = rimmed.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+        if packed.convert('RGBA').tobytes() != rimmed.tobytes():
+            raise ValueError(f'{name}: the rimmed sheet does not fit {WORLD_PALETTE_SIZE} palette entries')
+        packed.save(target, bits=WORLD_PALETTE_BITS)
+        print(target.relative_to(ROOT), 'moon rim')
+
+
 if __name__ == '__main__':
     for name, size in WORLD_FRAMES.items():
         export(ROOT / 'art/objects' / f'{name}-pixel.png',
@@ -120,6 +143,7 @@ if __name__ == '__main__':
     export_item_strips()
     export_brick_wall()
     export_platform()
+    rim_objects()
     for name in HUD_ICONS:
         source = ROOT / 'art/hud' / f'{name}-master.png'
         export(source, ROOT / 'assets/images/HUD' / f'{name}.png', HUD_ICON_SIZE, False)

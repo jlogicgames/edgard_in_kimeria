@@ -3,6 +3,8 @@
 # against the stripes, with a 1 px gap in the top and bottom edge where it breaks through.
 size 32 10
 color k 211f30
+# c: the crack, the same ink as k; its own char so the moon rim (D92) never repaints it (forest_trap_sprites.RIM_KEEP).
+color c 211f30
 color s 48475b
 color y f7ec8a
 color g 858d99
@@ -12,9 +14,9 @@ color m afbbc3
 color w d8e1e4
 frame fan1
 .kkkkkkkkkkkkkkkkkkkkk.kkkkkkkk.
-ksyyygggyyygggyyygggyykgggyyygsk
-kssYYYsssYYYsssYYYsssYkYsssYYYsk
-ksssYYYsssYYYsssYYYsssYkYsssYYYk
+ksyyygggyyygggyyygggyycgggyyygsk
+kssYYYsssYYYsssYYYsssYcYsssYYYsk
+ksssYYYsssYYYsssYYYsssYcYsssYYYk
 .kkkkkkkkkkkkkkkkkkkkkk.kkkkkkk.
 ..............khhk..............
 .....kkkkkkkkkkggkkkkkkkkkk.....
@@ -23,9 +25,9 @@ ksssYYYsssYYYsssYYYsssYkYsssYYYk
 .....kkkkkkkk......kkkkkkkk.....
 frame fan2
 .kkkkkkkkkkkkkkkkkkkkk.kkkkkkkk.
-ksyyygggyyygggyyygggyykgggyyygsk
-kssYYYsssYYYsssYYYsssYkYsssYYYsk
-ksssYYYsssYYYsssYYYsssYkYsssYYYk
+ksyyygggyyygggyyygggyycgggyyygsk
+kssYYYsssYYYsssYYYsssYcYsssYYYsk
+ksssYYYsssYYYsssYYYsssYcYsssYYYk
 .kkkkkkkkkkkkkkkkkkkkkk.kkkkkkk.
 ..............khhk..............
 .........kkkkkkkgkkkkkk.........
@@ -34,9 +36,9 @@ ksssYYYsssYYYsssYYYsssYkYsssYYYk
 .........kkkkkkk.kkkkkk.........
 frame fan3
 .kkkkkkkkkkkkkkkkkkkkk.kkkkkkkk.
-ksyyygggyyygggyyygggyykgggyyygsk
-kssYYYsssYYYsssYYYsssYkYsssYYYsk
-ksssYYYsssYYYsssYYYsssYkYsssYYYk
+ksyyygggyyygggyyygggyycgggyyygsk
+kssYYYsssYYYsssYYYsssYcYsssYYYsk
+ksssYYYsssYYYsssYYYsssYcYsssYYYk
 .kkkkkkkkkkkkkkkkkkkkkk.kkkkkkk.
 ..............khhk..............
 .............kkkkkk.............
@@ -45,9 +47,9 @@ ksssYYYsssYYYsssYYYsssYkYsssYYYk
 .............kkkkkk.............
 frame fan4
 .kkkkkkkkkkkkkkkkkkkkk.kkkkkkkk.
-ksyyygggyyygggyyygggyykgggyyygsk
-kssYYYsssYYYsssYYYsssYkYsssYYYsk
-ksssYYYsssYYYsssYYYsssYkYsssYYYk
+ksyyygggyyygggyyygggyycgggyyygsk
+kssYYYsssYYYsssYYYsssYcYsssYYYsk
+ksssYYYsssYYYsssYYYsssYcYsssYYYk
 .kkkkkkkkkkkkkkkkkkkkkk.kkkkkkk.
 ..............khhk..............
 .........kkkkkkgkkkkkkk.........

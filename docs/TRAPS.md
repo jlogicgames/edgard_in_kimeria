@@ -320,7 +320,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | --- | --- |
 | Family | proximity |
 | Visibility (D71) | VISIBLE (both glow; which one kills is the D63 look-alike puzzle) |
-| At rest | `idle1` with a smooth brightness glow, 2.5 s period, 0.55 to 1.0 |
+| At rest | `idle1` with a smooth brightness glow, 2.5 s period, 0.80 to 1.0 (0.55 until D92: the moon rim must stay readable at the dimmest glow on the night) |
 | At-rest cue | none needed |
 | Reads from | ~320 px |
 | Trigger | the hero body box enters the zone (default 64 px per side, 32 px above) |

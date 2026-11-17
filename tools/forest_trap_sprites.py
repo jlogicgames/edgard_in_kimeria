@@ -13,7 +13,7 @@ characters of each row: a symmetry aid for round shapes, like an editor's mirror
 from pathlib import Path
 from PIL import Image
 import moon_rim
-from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA, RGB_CHANNELS
 
 ROOT = Path(__file__).resolve().parents[1]
 GRID_DIR = ROOT / 'art/objects/forest-traps'
@@ -34,8 +34,13 @@ MIRROR_ARGS = 2  # frame <name> mirror
 FLIP_ARGS = 3  # frame <name> flip <other>
 HALF = 2
 FIRST_LINE = 1
-# Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name; empty until #430's night change turns them on.
-RIM_SHEETS = frozenset()
+# Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name: the active sheets whose ink contour falls
+# under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
+RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
+                        'hive', 'honey-fungus', 'log', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
+                        'thorn-root', 'thorn-tuft'})
+# Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack).
+RIM_KEEP = {'falling-platform': 'c'}
 BACKGROUNDS = ((0x0c, 0x0a, 0x1e), (0x3a, 0x12, 0x4e), (0x16, 0x3c, 0x44))  # night, canopy, trunk
 
 
@@ -104,8 +109,25 @@ def sheet_image(name):
                 data += bytes(colour + (OPAQUE_ALPHA,)) if colour else bytes(RGBA_CHANNELS)
     image = Image.frombytes('RGBA', (width, size[1]), bytes(data))
     if name in RIM_SHEETS:  # D92: the lit contour recoloured, one more palette entry (export_sheet checks the 16)
-        return moon_rim.rim(image, size), len(colors)
+        chars = RIM_KEEP.get(name, '')
+        keep = {(index * size[0] + x, y) for index, (_, rows) in enumerate(frames) for y, row in enumerate(rows)
+                for x, char in enumerate(row) if char in chars}
+        return moon_rim.rim(image, size, keep=keep), len(colors)
     return image, len(colors) - 1
+
+
+def exact_indexed(name, master):
+    """`master` indexed with its own colours (index 0 transparent), for a palette the octree quantizer cannot keep exact."""
+    opaque = sorted({p[:RGB_CHANNELS] for p in master.get_flattened_data() if p[RGB_CHANNELS]})
+    if len(opaque) > WORLD_PALETTE_SIZE - 1:
+        raise ValueError(f'{name}: {len(opaque)} opaque colours; reduce the palette to fit {WORLD_PALETTE_SIZE} entries')
+    index = {c + (OPAQUE_ALPHA,): i + 1 for i, c in enumerate(opaque)}
+    image = Image.frombytes('P', master.size, bytes(index.get(p, 0) for p in master.get_flattened_data()))
+    image.putpalette([0, 0, 0] + [v for c in opaque for v in c])
+    image.info['transparency'] = 0
+    if image.convert('RGBA').tobytes() != master.tobytes():
+        raise ValueError(f'{name}: exact indexing changed pixels')
+    return image
 
 
 def export_sheet(name):
@@ -115,9 +137,9 @@ def export_sheet(name):
     master.save(master_path)
     indexed = master.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
     if indexed.convert("RGBA").tobytes() != master.tobytes():
-        raise ValueError(f'{name}: quantizing changed pixels; reduce the palette to fit 16 entries')
+        indexed = exact_indexed(name, master)  # the octree merges close colours (the D92 night decor palettes)
     target = ROOT / 'assets/images/objects' / f'{stem}.png'
-    indexed.save(target, bits=WORLD_PALETTE_BITS)
+    indexed.save(target, bits=WORLD_PALETTE_BITS, **({'transparency': 0} if 'transparency' in indexed.info else {}))
     print(target.relative_to(ROOT))
     return master
 
