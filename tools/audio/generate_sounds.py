@@ -254,6 +254,17 @@ CLICK_VOICE = Voice(2601, 0.11, (250.0, 280.0), FORMANTS_I, FORMANTS_E, -19.4, a
 THREAD_VOICE = Voice(2701, 0.22, (560.0, 520.0), FORMANTS_I, FORMANTS_I, -19.0, asp_len=0.006, asp_level=0.2,
                      attack=0.004, tau=0.090, release=0.030, jitter=0.01, vibrato=(9.0, 0.015), lowpass=4200.0)
 
+# ---------------------------------------------------------------- trip-line deadfall (#363, D88)
+# The warning, at the trip: a strained rope-and-wood creak, a very low voice in constant vocal fry (a creak is fry) that
+# rises slowly from /e/ to a strained /a/. 0.6 s, so it ends before the base 0.8 s warning releases the log and never
+# masks the swing; it is not stretched by the longer-warnings assist.
+DEADFALL_CREAK_VOICE = Voice(3701, 0.60, (72.0, 112.0), FORMANTS_E, FORMANTS_AA, -18.5, asp_len=0.020, asp_level=0.3,
+                             attack=0.050, tau=0.60, release=0.090, jitter=0.12, rough=1.0, rough_start=0.0, lowpass=2200.0)
+# The consequence, when the ropes hit the snag: a short, dull wooden "dok", a closed /o/ falling to /u/, dark and quick.
+DEADFALL_KNOCK_VOICE = Voice(3801, 0.18, (150.0, 95.0), FORMANTS_O, FORMANTS_U, -17.0, asp_len=0.008, asp_level=0.3,
+                             attack=0.004, tau=0.050, release=0.030, jitter=0.04, rough=0.3, rough_start=0.3, lowpass=1400.0)
+
+
 
 def n_samples(seconds: float) -> int:
     return int(round(seconds * SAMPLE_RATE))
@@ -524,6 +535,14 @@ def wall_rumble() -> list[float]:
     return [v * g for v in out]
 
 
+def deadfall_creak() -> list[float]:
+    return finish_rms(render_voice(DEADFALL_CREAK_VOICE), DEADFALL_CREAK_VOICE.rms_db)
+
+
+def deadfall_knock() -> list[float]:
+    return finish_rms(render_voice(DEADFALL_KNOCK_VOICE), DEADFALL_KNOCK_VOICE.rms_db)
+
+
 def keepalive() -> list[float]:
     """Very quiet, non-silent noise loop. Circular low-pass (three copies, keep the middle one) so the wrap is as smooth
     as any other step; no fade, no envelope. Normalised to an RMS of KEEPALIVE_RMS_DB."""
@@ -560,7 +579,7 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
                "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
-               "thread.wav": thread}
+               "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock}
 
 
 def generate(out_dir: Path) -> list[Path]:

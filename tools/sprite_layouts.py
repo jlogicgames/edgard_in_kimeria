@@ -59,6 +59,12 @@ FOREST_TRAP_SHEETS = {
     # #295 phase 1: the two look-alike mushrooms; idle1..idle3 is the brightness-pulse idle, swell1/swell2 the D7 telegraph.
     'honey-fungus': ((24, 16), ('idle1', 'idle2', 'idle3', 'swell1', 'swell2', 'spent')),
     'false-honey-fungus': ((24, 16), ('idle1', 'idle2', 'idle3', 'swell1', 'swell2', 'spent')),
+    # #363 (D88): the trip-line deadfall. The log (tied, strain and slip carry the lashing; swing; caught), the bough with
+    # its knots and snag, the trip vine on the floor, and the rope strip the game stretches from knot to log.
+    'deadfall': ((32, 16), ('tied', 'strain', 'slip', 'swing', 'caught')),
+    'deadfall-bough': ((112, 24), ('bough',)),
+    'deadfall-vine': ((24, 8), ('taut', 'tugged', 'cut')),
+    'deadfall-rope': ((1, 8), ('rope',)),
 }
 FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TRAP_SHEETS.items()}
 # Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.

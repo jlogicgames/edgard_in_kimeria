@@ -14,7 +14,7 @@ Flutter/Flame version (with reference to its separate Rust/Bevy version for feat
 full menu system, localization, gamepad support, dev hotkeys).
 
 The MVP has three playable levels: the tutorial **forest-0** (six empty rooms), **forest-1**
-(six rooms: the first RedMob alone, the trap course, a lever lesson room where one lever works a lift and a ladder, a route room with a lever, a ladder and a lift, a guard room with a RedMob in a tunnel under a spore cloud and a lever-lowered roof route with a refill, and a tree to climb), then **forest-2** (four rooms, healer and boss). The Forest order is
+(seven rooms: the first RedMob alone, a trip-line deadfall alone, the trap course, a lever lesson room where one lever works a lift and a ladder, a route room with a lever, a ladder and a lift, a guard room with a RedMob in a tunnel under a spore cloud and a lever-lowered roof route with a refill, and a tree to climb), then **forest-2** (four rooms, healer and boss). The Forest order is
 `forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending screen in the opening's page style ([D77](DECISIONS.md#d77-story-screens-are-static-pages-playtest-f2-336-2026-11-16)) uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
 removed. Future mechanics will expand these same levels. See [MVP](MVP.md).

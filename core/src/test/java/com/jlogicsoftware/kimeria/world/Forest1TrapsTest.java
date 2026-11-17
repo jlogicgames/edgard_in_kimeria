@@ -114,7 +114,8 @@ class Forest1TrapsTest {
 
     private Level level() {
         Level l = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, emptyStock());
-        l.enterNextRoom(player()); // the trap course is room 2 since #375 put the first RedMob in a room of its own before it
+        l.enterNextRoom(player()); // the trap course is room 3 since #375 put the first RedMob in a room of its own before it
+        l.enterNextRoom(player()); // and #363 the deadfall room after that
         rememberMob(l);
         theLog = l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).findFirst().orElseThrow();
         return l;

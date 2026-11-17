@@ -37,6 +37,13 @@ public final class EnvironmentFx {
     /** Stone greys of the trap sprite: dark, mid, light. */
     private static final float[] CHIP_COLORS = {.357f, .345f, .439f, .478f, .467f, .553f, .604f, .592f, .678f};
 
+    /** The deadfall's ropes hit the snag (#363, D75): bark chips knocked off it fall a short way and fade. */
+    public static final int BARK_CHIPS = 6;
+    private static final float BARK_SPREAD_PX = 5, BARK_FALL_MIN = 20, BARK_FALL_MAX = 40, BARK_DRIFT_PX = 10;
+    private static final float BARK_LIFE_MIN = .35f, BARK_LIFE_MAX = .6f, BARK_SIZE_MIN = 1, BARK_SIZE_MAX = 2;
+    /** Bark browns of the deadfall's bough: dark, mid, light (`4a2e1c`, `8a5a30`, `c08a4c`). */
+    private static final float[] BARK_COLORS = {.290f, .180f, .110f, .541f, .353f, .188f, .753f, .541f, .298f};
+
     private static final float GRIT_EXTRA_SPREAD_PX = 24, GRIT_MAX_FALL_PX = 64;
     private static final float GRIT_SPEED_MIN = 70, GRIT_SPEED_MAX = 110;
     private static final float GRIT_LIFE_MIN = .5f, GRIT_LIFE_MAX = .9f;
@@ -120,6 +127,20 @@ public final class EnvironmentFx {
             grit.spawn(KimeriaParticleSystem.KIND_GRIT, x, floorY - size / 2f, x, floorY - size / 2f,
                 range(random, STONE_DEBRIS_LIFE_MIN, STONE_DEBRIS_LIFE_MAX), size,
                 CHIP_COLORS[c], CHIP_COLORS[c + GREEN], CHIP_COLORS[c + BLUE]);
+        }
+    }
+
+    /** {@value #BARK_CHIPS} bark chips from the snag at ({@code x}, {@code y}), falling (larger Y is lower) and drifting out. */
+    public void barkChips(float x, float y) {
+        RandomXS128 random = grit.random();
+        for (int n = 0; n < BARK_CHIPS; n++) {
+            float startX = x + range(random, -BARK_SPREAD_PX, BARK_SPREAD_PX);
+            float away = startX < x ? -1 : 1;
+            float life = range(random, BARK_LIFE_MIN, BARK_LIFE_MAX);
+            int c = random.nextInt(BARK_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, y, startX + away * BARK_DRIFT_PX * random.nextFloat(),
+                y + range(random, BARK_FALL_MIN, BARK_FALL_MAX), life, range(random, BARK_SIZE_MIN, BARK_SIZE_MAX),
+                BARK_COLORS[c], BARK_COLORS[c + GREEN], BARK_COLORS[c + BLUE]);
         }
     }
 

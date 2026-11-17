@@ -1,0 +1,14 @@
+# Deadfall rope (#363, D88), native 1x8, one frame: a twisted bone cord, stretched and rotated by the game from the
+# bough's knot to the log's eye (the silver thread's way of drawing a line from a sprite).
+size 1 8
+color b efe6c4
+color s b8ad9c
+frame rope
+b
+s
+s
+b
+s
+s
+b
+s

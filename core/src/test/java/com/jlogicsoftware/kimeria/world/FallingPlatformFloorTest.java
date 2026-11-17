@@ -100,9 +100,10 @@ class FallingPlatformFloorTest {
 
     private void frame(Level level) { level.update(STEP); pressed.clear(); }
 
-    /** The trap course, room 2 since #375 put the first RedMob in a room of its own before it. */
+    /** The trap course, room 3 since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after that. */
     private Level forest1() {
         Level l = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, emptyStock());
+        l.enterNextRoom(player());
         l.enterNextRoom(player());
         return l;
     }

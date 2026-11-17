@@ -62,7 +62,8 @@ class Forest1RouteTest {
         stock = new RangedStock();
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
-        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-traps
+        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
+        level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player()); // -> forest-1-lever (#418)
         level.enterNextRoom(player());
         theBat = level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElseThrow();
@@ -558,6 +559,8 @@ class Forest1RouteTest {
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
         assertEquals("forest-1-mob", level.currentRoomName());
+        level.enterNextRoom(player());
+        assertEquals("forest-1-deadfall", level.currentRoomName(), "the deadfall room (#363) comes between the mob room and the trap course");
         level.enterNextRoom(player());
         assertEquals("forest-1-traps", level.currentRoomName());
         assertTrue(level.hasNextRoom());

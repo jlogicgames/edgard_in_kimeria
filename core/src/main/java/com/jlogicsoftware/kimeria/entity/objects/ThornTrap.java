@@ -280,7 +280,7 @@ public class ThornTrap extends Entity {
     }
 
     /** Everything a mechanism can occupy while it moves, or null for objects that are not solid. */
-    private static Rectangle sweptBounds(TiledObject c) {
+    static Rectangle sweptBounds(TiledObject c) {
         float x = c.x, y = c.y, w = c.width, h = c.height;
         switch (c.type) {
             case "FallingPlatform":

@@ -35,6 +35,7 @@ import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
+import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
@@ -109,6 +110,14 @@ public class Level implements WorldObject {
     /** The targets one lever pull has already performed, so a target listed twice acts once (reused, never allocated per pull). */
     private static final int ACTIVATED_CAPACITY = 8;
     private final Array<Actionable> activatedScratch = new Array<>(false, ACTIVATED_CAPACITY);
+    /** The deadfalls' sounds and bark chips (D88, D75): one listener for every deadfall, built once. */
+    private final DeadfallTrap.Listener deadfallListener = new DeadfallTrap.Listener() {
+        @Override public void tripped(DeadfallTrap trap) { if (game.playSounds()) game.playSound(DEADFALL_CREAK_SOUND); }
+        @Override public void caught(DeadfallTrap trap) {
+            fx.barkChips(trap.snagX(), trap.snagY());
+            if (game.playSounds()) game.playSound(DEADFALL_KNOCK_SOUND);
+        }
+    };
     /** The hero's body for the honey fungi's zone test (D63): one box refilled on every ask, so no frame allocates. */
     private final Rectangle fungusHeroScratch = new Rectangle();
     /**
@@ -238,6 +247,7 @@ public class Level implements WorldObject {
     private float rumbleSeconds;
     private boolean rumbling;
     private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall", STONE_IMPACT_SOUND = "stone_impact";
+    private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
     private final EnvironmentFx fx;
     private final FairyGuide fairy;
 
@@ -486,6 +496,7 @@ public class Level implements WorldObject {
             if (ExplosiveTrap.isExplosive(o.type)) validateExplosive(o, owner); // D47: every room, at load.
             if ("HoneyFungus".equals(o.type) || "FalseHoneyFungus".equals(o.type)) validateFungus(o, owner); // D63: every room, at load.
             if ("FallingPlatform".equals(o.type) && "branch".equals(o.prop("skin", ""))) validateBranch(o, owner); // D80: every room, at load.
+            if ("Deadfall".equals(o.type)) validateDeadfall(o, owner); // D88: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -773,6 +784,9 @@ public class Level implements WorldObject {
                     objects.add(trap);
                     registerRoomStateOwner(o.id, trap);
                 }
+                case "Deadfall" -> objects.add(DeadfallTrap.fromMap(assets, game.trapWarnings(), o,
+                    () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false),
+                    deadfallListener));
                 case "Puffball" -> {
                     Puffball puffball = Puffball.fromMap(assets, o, game.trapWarnings(), describe(o));
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
@@ -894,6 +908,23 @@ public class Level implements WorldObject {
             if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
                 standing.put("checkpoint [" + other.id + "]", new Rectangle(other.x, other.y, other.width, other.height));
         String problem = ExplosiveTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), standing);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /**
+     * The trip-line deadfall (D88) fails at load without its floor run and free swing, with its vine under the entrance, or
+     * with its log passing a standing place at body height.
+     */
+    private void validateDeadfall(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Map<String, Rectangle> standing = new java.util.LinkedHashMap<>();
+        standing.put("entrance", new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
+            player.hitbox.width, player.hitbox.height));
+        if (room.exit() != null) standing.put("exit", room.exit());
+        for (TiledObject other : map.layer("SpawnPoints"))
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
+                standing.put("checkpoint [" + other.id + "]", new Rectangle(other.x, other.y, other.width, other.height));
+        String problem = DeadfallTrap.problem(o, map.layer("Collisions"), map.layer("SpawnPoints"), room.bounds(), standing);
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
