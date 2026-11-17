@@ -44,9 +44,9 @@ and environmental interaction. Observation and planning matter alongside timing
 and precision.
 
 **Principle (D84, 2026-11-17):** the player is never tormented by guesswork, and a puzzle never makes them look stupid.
-Every new rule or combination is shown safely before it gates progress, the effect of every action is visible when it
-happens (or the game points at it), and a stuck player can see what to try next. Difficulty comes from execution and
-planning, not from hidden rules. Details: [D84](DECISIONS.md#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17).
+The working reading, to be confirmed by the author: a new rule or combination is shown safely before it gates
+progress, the effect of an action is visible when it happens (or the game points at it), and difficulty comes from
+execution and planning, not from hidden rules. Details: [D84](DECISIONS.md#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17).
 
 A puzzle may concern a route, a jump's timing, a way to remove an enemy, or an
 object interaction. Item puzzles belong here, but each room need not reduce to
@@ -189,7 +189,8 @@ are not separate required Forest mechanics. In particular, portable light remain
 distinct proposed leading mechanic for Fortress. The existing toggle ladder is a useful
 technical atom for this direction, not yet evidence that the mechanic has enough variety.
 
-A lever that drives more than one mechanism must be taught first, in a safe room, before it gates a route
+A lever that drives more than one mechanism must be taught first, in a safe room, before it gates a route.
+`forest-1-route` breaks this today, and #418 adds the teaching room
 ([#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418), [D84](DECISIONS.md#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17)).
 
 The Mechanics MVP should test an introduction to one visible link, a route choice with
