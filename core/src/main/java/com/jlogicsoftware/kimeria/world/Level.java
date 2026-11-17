@@ -533,7 +533,8 @@ public class Level implements WorldObject {
 
     /** True when the player's body has entered a map-authored out-of-play volume. */
     public boolean touchesDeadline(Rectangle playerBounds) {
-        return deadlines.stream().anyMatch(playerBounds::overlaps);
+        for (int i = 0, n = deadlines.size(); i < n; i++) if (playerBounds.overlaps(deadlines.get(i))) return true;
+        return false;
     }
 
     /** Records one genuine pre-boss dialogue entry and reports whether it is a return visit. */

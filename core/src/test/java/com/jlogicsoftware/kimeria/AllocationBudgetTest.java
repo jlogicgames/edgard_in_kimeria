@@ -102,6 +102,7 @@ class AllocationBudgetTest {
     static final double FOREST_1_TREE_RIDE_CEILING = 1020;
     /** The rider path alone (see {@link #ridingARunningEscalatorCostsNoMoreThanStandingStill}); the same 8 B ceiling as the other isolated paths. */
     static final double RIDER_PATH_CEILING = 8;
+    private static final int RIDER_PATH_PAIRS = 15, RIDER_PATH_WINDOW_FRAMES = 300;
     /** Measured 992.1 to 1,068.3 B/frame in 3 isolated runs and 1,416.0 in the full suite (#303; the ceiling follows the full-suite run, whose JIT state differs; before: 8,920.6 to 9,000.0; step 1: 9,370.7 to 9,430.5; step 0: 10,243.0 to 10,317.4); two torches. The large drop is the for-each iterators over {@code Level.objects} and the per-object {@code Rectangle}s, not attributed object by object. Ceiling = highest run + about 10 %. */
     static final double FOREST_2_ROOM_0_CEILING = 1560;
     /** Measured 816.0 B/frame in 3 isolated runs and 1,128.0 in the full suite (#303; the ceiling follows the full-suite run; before: 2,184.0; step 1: 2,549.6 to 2,605.0; step 0: 3,374.5 to 3,451.0); three torches. Ceiling = highest run + about 10 %. */
@@ -314,28 +315,33 @@ class AllocationBudgetTest {
     }
 
     /**
-     * The rider path alone: {@code Player.update} costs about 1,000 B/frame in this harness whatever it stands on (its own scratch and the
-     * stubbed input), which hides a 24-byte {@code Vector2}, so the test measures the <b>difference</b> between a hero riding a running horizontal
+     * The rider path alone: {@code Player.update} costs about 560 B/frame in this harness whatever it stands on (D83: the stubbed input and graphics
+     * proxies), which hides a 24-byte {@code Vector2}, so the test measures the <b>difference</b> between a hero riding a running horizontal
      * escalator and the same hero standing on the floor, with the same calls. The difference must stay within the 8 B of the other isolated
-     * paths. (Before the #187 review fix {@code Player} built a {@code Vector2} per frame while riding; the JIT may remove such a short-lived
+     * paths. The test takes the median of 15 paired 300-frame windows (riding then standing, then the reverse) after 2 warm-up rounds, because a
+     * single window pair can straddle a JIT change that removes some of that 560 B (#391, D83). (Before the #187 review fix {@code Player} built a {@code Vector2} per frame while riding; the JIT may remove such a short-lived
      * object, so this guard is as strong as the JIT allows, and the fix itself is the allocation-free {@code Escalator.riderVelocityX()}.)
      */
     @Test void ridingARunningEscalatorCostsNoMoreThanStandingStill() {
         Level level = harness.roomOf("forest-1", 0);
         var escalator = level.escalators.stream().filter(e -> !e.isVertical && e.isRunning()).findFirst().orElseThrow();
-        level.player.position.set(escalator.getX() + 3, escalator.getY() - 48);
-        for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
-        org.junit.jupiter.api.Assertions.assertSame(escalator, level.player.currentEscalator(), "the hero rides");
-        double riding = AllocationProbe.bytesPerFrame(i -> {
-            escalator.update(STEP); level.player.update(STEP);
-            if (level.player.currentEscalator() != escalator) throw new AssertionError("left the escalator at frame " + i);
-        });
-        level.player.position.set(700, 272); // plain floor, no escalator
-        for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
-        org.junit.jupiter.api.Assertions.assertNull(level.player.currentEscalator(), "the baseline stands on the floor");
-        double standing = AllocationProbe.bytesPerFrame(i -> { escalator.update(STEP); level.player.update(STEP); });
-        System.out.printf("ALLOCATION rider path: riding %.1f, standing %.1f B/frame%n", riding, standing);
-        assertWithinBudget("rider path on a horizontal escalator (riding minus standing)", RIDER_PATH_CEILING, riding - standing);
+        Runnable ride = () -> {
+            level.player.position.set(escalator.getX() + 3, escalator.getY() - 48);
+            for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
+            org.junit.jupiter.api.Assertions.assertSame(escalator, level.player.currentEscalator(), "the hero rides");
+        };
+        Runnable stand = () -> {
+            level.player.position.set(700, 272); // plain floor, no escalator
+            for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
+            org.junit.jupiter.api.Assertions.assertNull(level.player.currentEscalator(), "the baseline stands on the floor");
+        };
+        double difference = AllocationProbe.medianPairedDifference(RIDER_PATH_PAIRS, RIDER_PATH_WINDOW_FRAMES, ride,
+            i -> {
+                escalator.update(STEP); level.player.update(STEP);
+                if (level.player.currentEscalator() != escalator) throw new AssertionError("left the escalator at frame " + i);
+            }, stand, i -> { escalator.update(STEP); level.player.update(STEP); });
+        System.out.printf("ALLOCATION rider path: median riding minus standing %.1f B/frame over %d pairs%n", difference, RIDER_PATH_PAIRS);
+        assertWithinBudget("rider path on a horizontal escalator (riding minus standing)", RIDER_PATH_CEILING, difference);
     }
 
     /** #343: the hero picks a facing sheet (no mirrored draw) and, on a ladder, the up, down or hold clip; nothing of it may allocate. */
