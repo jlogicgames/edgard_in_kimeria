@@ -1,0 +1,75 @@
+# Ember jet (#366), native 8x16: jet1, jet2 (the column tile, drawn up the column, alternating every 0.05 s so
+# the flame climbs), top1, top2 (the 8x8 tip in the upper half of the frame, the lower half empty).
+size 8 16
+color m d8461c
+color o f07a1a
+color y ffd23a
+color h fff4b0
+frame jet1
+..oyyo..
+.oyhhyo.
+.oyhhyo.
+oyhhhyo.
+oyhhhhyo
+.oyhhhyo
+.oyhhyo.
+..oyhyo.
+.oyyhyo.
+.oyhhyo.
+oyhhhyo.
+oyhhhhyo
+oyhmhhyo
+.oyhhyo.
+.oyhhyyo
+..oyhyo.
+frame jet2
+.oyyhyo.
+.oyhhyo.
+oyhhhyo.
+oyhhhhyo
+oyhmhhyo
+.oyhhyo.
+.oyhhyyo
+..oyhyo.
+..oyyo..
+.oyhhyo.
+.oyhhyo.
+oyhhhyo.
+oyhhhhyo
+.oyhhhyo
+.oyhhyo.
+..oyhyo.
+frame top1
+...y....
+........
+...o.y..
+...oy...
+..oyyo..
+..oyho..
+.oyhhyo.
+.oyhhyo.
+........
+........
+........
+........
+........
+........
+........
+........
+frame top2
+.....y..
+..o.....
+....yo..
+...yo...
+..oyyo..
+..oyho..
+.oyhhyo.
+.oyhhyo.
+........
+........
+........
+........
+........
+........
+........
+........

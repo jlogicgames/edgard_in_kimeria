@@ -30,12 +30,12 @@ class HoneyFungusTest {
     private static final float BODY_RIGHT_OFFSET = 29, BODY_W = 11, BODY_H = 22, STAND_Y = 272;
     private static final float HALF_PIXEL = .5f, TINY = .1f, GLOW_EPS = 1e-4f, MAX_GLOW_STEP = 0.01f;
     private static final int SETTLE_FRAMES = 3, SECONDS_FRAMES = 60, LONG_WAIT_FRAMES = 60 * 6;
-    /** forest-0 (room 0 and room 2) and forest-2 (forest-canopy, room 2) as built: footprint x, zone sides. */
+    /** forest-0 (room 0 and room 2) and forest-2 (forest-canopy, room 3 since #366) as built: footprint x, zone sides. */
     private static final float LEVER_X = 150, LEVER_ZONE = 40, WALL_X = 1804, WALL_ZONE_LEFT = 24, WALL_ZONE_RIGHT = 48, CANOPY_X = 1672;
     /** The nearest other hazards in forest-canopy, from the map: the RedMob at 1472 patrols to 1472 + 16 + 48; the bat at 1760 hurts from 1752; the vine at 1896. */
     private static final float BRANCH_ZONE_RIGHT = 1776, CANOPY_MOB_PATROL_RIGHT = 1536, CANOPY_BAT_LEFT = 1752, CANOPY_VINE_X = 1896;
     private static final float CANOPY_START_RIGHT = 1625, CANOPY_PASSED_LEFT = 1705, NO_JUMP_GAP = -1000;
-    private static final int CANOPY_ROOM = 2;
+    private static final int CANOPY_ROOM = 3; // after entry, walls and fissure (#366)
     private static final float CANOPY_ENTRANCE_X = 1344;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
@@ -387,7 +387,8 @@ class HoneyFungusTest {
         assertEquals(0, count(room("forest-1", 0), FungusTrap.class));
         assertEquals(0, count(room("forest-2", 0), FungusTrap.class), "forest-entry has no free floor (docs/ROOMS.md)");
         assertEquals(0, count(room("forest-2", 1), FungusTrap.class), "forest-walls neither");
-        assertEquals(0, count(room("forest-2", 3), FungusTrap.class));
+        assertEquals(0, count(room("forest-2", 2), FungusTrap.class), "forest-fissure neither (#366)");
+        assertEquals(0, count(room("forest-2", 4), FungusTrap.class));
         assertEquals(1, count(room("forest-2", CANOPY_ROOM), FungusTrap.class));
     }
 

@@ -39,7 +39,8 @@ public class Assets implements Disposable {
      */
     public static final String[] SOUND_EFFECTS = {"jump", "bounce", "collect", "hit", "disappear", "boss_hit", "boss_restore",
         "button_click", "dust_puff", "wall_rumble", "grit_fall", "explosion", "stone_impact", "keepalive", "thread",
-        "deadfall_creak", "deadfall_knock", "bramble_rustle", "bramble_lash", "hive_buzz", "stinger_rain", "hive_fall"};
+        "deadfall_creak", "deadfall_knock", "bramble_rustle", "bramble_lash", "hive_buzz", "stinger_rain", "hive_fall",
+        "fissure_rumble", "ember_jet"};
 
     /**
      * Creates every sound effect now. A sound made on its first play is decoded then (a hitch on desktop), and on the web it

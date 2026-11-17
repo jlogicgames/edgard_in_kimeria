@@ -2607,6 +2607,52 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   check, ceiling 590 (highest run + about 10 %), the same as the deadfall and bramble rooms. The band is drawn a row at a time from 32 cached one-row regions, so both of its ends clip
   exactly without a region per frame.
 
+## D91. The ember fissure: a clocked fire jet from a floor crack, taught in forest-2 (#366, 2026-11-17)
+
+- **Status:** card, art, sound plan and placement approved by the author on 2026-11-17 (through the orchestrating session);
+  built by [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) with its teaching room `forest-fissure` in
+  `forest-2.tmx`, added after the night colour of D92 reached every forest map (#461).
+- **What it is.** A VISIBLE ([D71](#d71-traps-are-visible-before-they-fire-2026-11-16)) rhythm trap (family of
+  [D46](#d46-rhythmic-traps-spore-puffball-swinging-thorn-vine-and-the-rotten-log-skin)): a crust of ash on the floor line
+  with a glowing slit (Tiled type `EmberFissure`, a 16×12 object whose top is 4 px above the floor line). Card:
+  [TRAPS.md, "Ember fissure"](TRAPS.md#ember-fissure-emberfissure). A vertical danger rising from the floor, the one
+  direction no earlier trap covers; its ember palette is the stump's, and it echoes the healer's gift of fire (#340).
+- **Rhythm.** The hive's clock: `(elapsed + phase) mod period`, calm, then the shared warning
+  (`TrapWarnings.DEFAULT_WARNING_SECONDS`, 0.8 s, 1.2 s with the assist, taken from the calm), then the jet for the last
+  `jet` seconds (default period 3.5 s, jet 1.0 s: rise 0.1 s, hold, sink 0.2 s). The jet starts at the same point of every
+  cycle, so the assist shortens the calm and never the open window. **Timing rule:** `period >= jet + 1.2 + 0.8`, the
+  assisted warning plus at least 0.8 s of calm (the bramble's minimum, D89). A cycle whose warning would have begun before
+  the room started stays calm: every jet is announced in full.
+- **Lethal part.** A column 8 px wide (the drawn width of the jet) from the floor line up to the jet's top, default 96 px,
+  so it cannot be jumped (the jump reaches about 58 px). Embers pass through one-way platforms; a solid block above cuts
+  the column. Lethal exactly where drawn. No ammunition answer, by design: the counter is reading the rhythm (D26 holds:
+  nothing is spent).
+- **Consequence (D93).** Every jet, hit or miss: the column itself, `ember_jet`, seven sparks falling from the upper column
+  as it sinks, and the sooted `spent` frame for 0.4 s. Warning sound `fissure_rumble`. Both heard only while the fissure or
+  its column is in the camera view (D89, D90).
+- **Art.** Original native pixel art, `trap-fissure` 16×12 × 6 and `trap-ember-jet` 8×16 × 4. Drawn for the night of D92:
+  the outline is led by the pale ash rim against the sky and the ink crack against the floor, not by ink against the sky,
+  which no longer separates over `2c3f66`. The contrast gate at the two placed fissures over `2c3f66`: fissure 0.377, jet
+  tile 0.349, tip 0.398 at worst (floor 0.28), so neither sheet takes the moon rim (`RIM_SHEETS`). Over the day blues the
+  jet measured 0.091 (the dry run before #461), which is why the room waited for the night.
+- **Placement (D72).** A new room `forest-fissure` in forest-2 (x 3008-3648, appended at the map's end, which grows from
+  188 to 228 tiles; listed after `forest-walls`, so it is played before `forest-canopy`; forest-1 already holds nine rooms,
+  forest-2 had three before the boss): one screen, a fissure on open floor met alone, then a second, half a period out of
+  step, under a one-way branch on the step to the exit ledge. Card: [ROOM_CARDS.md, `forest-fissure`](ROOM_CARDS.md#forest-fissure).
+  Every forest-2 room after it moved one index on (canopy 3, boss 4); the tests that walk the level were updated to match,
+  none of their thresholds changed.
+- **Measured.** `EmberFissureTest`: a walker who goes when a jet ends passes at every 0.05 s offset, with and without the
+  assist; a blind walker dies at 23 of 71 offsets; the branch climb passes at every offset (3.75 to 6.73 s after the
+  start delay). In the shipped room (`ForestFissureTest`, `RoomReplayTest`): the mastered route 8.08 s from the entrance
+  (three identical attempts and every collection return), 5.18 to 8.63 s over start offsets of 0 to 3.5 s (0.05 s steps)
+  with and without the assist; a careless walker dies at the floor fissure at 23 of 71 offsets, at most 3.5 s after
+  entering. Allocation: `AllocationBudgetTest.emberFissuresCycle` 1.1 B/frame when it runs alone in a fresh JVM (about
+  1.3 KB once over the 1200 measured frames: first use and JIT), 0.3 after the same code is warm, 0.0 in the full check; the
+  trap's own cost is `emberFissuresCostNothingOverAnEmptyFrame`, the median of 15 paired windows of the four fissures minus an
+  empty frame, 0.0 B/frame in 3 isolated runs (the empty frame alone 0.0). Ceiling 8 B for both, unchanged; the room
+  scene `forest2FissureRoom` 536.8 B/frame in 3 isolated runs and 328.0 to 472.0 in 3 full-suite runs, ceiling 590 (the hive room's).
+- **Not verified:** the sounds on a real output (the author's audition) and the room played in the running game: [#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463).
+
 ## D92. The world is drawn over a flat per-level background; the forest rain and sky are gone (#430, 2026-11-17)
 
 - **Status.** Built in three changes of [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430), approved by the

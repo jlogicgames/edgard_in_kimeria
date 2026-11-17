@@ -199,6 +199,9 @@ def check_rhythm_traps(root, spawn):
         if kind(o) == 'HangingHive':
             errors.extend(f"HangingHive {describe(o)}: {e}" for e in hive_problems(root, spawn, o))
             continue
+        if kind(o) == 'EmberFissure':
+            errors.extend(f"EmberFissure {describe(o)}: {e}" for e in fissure_problems(root, spawn, o))
+            continue
         if kind(o) == 'Puffball':
             period, cloud = rhythm_number(o, 'period', 4.0, errors), rhythm_number(o, 'cloud', 1.0, errors)
             phase = rhythm_number(o, 'phase', 0.0, errors)
@@ -266,6 +269,64 @@ def hive_problems(root, spawn, o):
     column = (left, mouth, HIVE_BAND, depth)
     if room is not None and not (room[0] <= left and left + HIVE_BAND <= room[0] + room[2] and room[1] <= mouth
                                  and floor <= room[1] + room[3]):
+        return ["its danger area leaves the room"]
+    return [f"its danger area covers the room {name}" for name, area in hive_standing(root, spawn, o) if overlaps(column, area)]
+
+
+def fissure_problems(root, spawn, o):
+    """The fissure's load checks (EmberFissure.fromMap / validate / ceilingAbove / floorProblem / movingSolidProblem,
+    Level.fissureFor): properties, size, the rhythm rule, the column under a ceiling, the floor, moving solids, the room."""
+    errors = []
+    unknown = sorted(k for k in props_of(o) if k not in FISSURE_PROPERTIES)
+    if unknown:
+        return [f"unknown property '{unknown[0]}' (a fissure reads {sorted(FISSURE_PROPERTIES)})"]
+    period, jet = rhythm_number(o, 'period', FISSURE_DEFAULT_PERIOD, errors), rhythm_number(o, 'jet', FISSURE_DEFAULT_JET, errors)
+    phase, height = rhythm_number(o, 'phase', 0.0, errors), rhythm_number(o, 'height', FISSURE_DEFAULT_HEIGHT, errors)
+    if errors:
+        return [e.split(': ', 1)[1] for e in errors]
+    x, y, w, h = box(o)
+    if abs(w - FISSURE_SIZE[0]) > FISSURE_TOLERANCE or abs(h - FISSURE_SIZE[1]) > FISSURE_TOLERANCE:
+        return [f"must be {int(FISSURE_SIZE[0])}x{int(FISSURE_SIZE[1])} (the sprite's frame)"]
+    if not FISSURE_JET_RANGE[0] <= jet <= FISSURE_JET_RANGE[1]:
+        return [f"jet {jet} is outside {FISSURE_JET_RANGE[0]}-{FISSURE_JET_RANGE[1]} s"]
+    if not FISSURE_HEIGHT_RANGE[0] <= height <= FISSURE_HEIGHT_RANGE[1] or height % FISSURE_HEIGHT_STEP:
+        return [f"height {height} must be a multiple of {int(FISSURE_HEIGHT_STEP)} from {int(FISSURE_HEIGHT_RANGE[0])} "
+                f"to {int(FISSURE_HEIGHT_RANGE[1])}"]
+    if period < jet + TRAP_WARNING_ASSISTED + FISSURE_MIN_CALM:
+        return [f"period {period} is shorter than jet {jet} + assisted warning {TRAP_WARNING_ASSISTED} + minimum calm {FISSURE_MIN_CALM}"]
+    room = thorn_room(root, o)
+    floor, left = y + FISSURE_FLOOR_OFFSET, x + (FISSURE_SIZE[0] - FISSURE_JET_WIDTH) / 2
+    collisions = [c for c in layers(root).get('Collisions', [])
+                  if room is None or not (box(c)[0] + box(c)[2] <= room[0] or box(c)[0] >= room[0] + room[2])]
+    ceiling = None
+    for c in collisions:
+        cx, cy, cw, ch = box(c)
+        if kind(c) in ('Platform', 'QuickSand') or cx >= left + FISSURE_JET_WIDTH or cx + cw <= left:
+            continue
+        bottom = cy + ch
+        if bottom > floor - FISSURE_TOLERANCE or bottom <= floor - height:
+            continue
+        ceiling = bottom if ceiling is None else max(ceiling, bottom)
+    column_height = height if ceiling is None else min(height, floor - ceiling)
+    if column_height < FISSURE_MIN_COLUMN:
+        return [f"a solid block cuts its jet to {column_height} px, the minimum is {FISSURE_MIN_COLUMN}"]
+    solids = [box(c) for c in collisions if kind(c) not in ('Platform', 'QuickSand')]
+    covered, progress = x, True
+    while covered < x + FISSURE_SIZE[0] - FISSURE_TOLERANCE and progress:
+        progress = False
+        for sx, sy, sw, sh in solids:
+            if abs(sy - floor) <= FISSURE_TOLERANCE and sx <= covered + FISSURE_TOLERANCE and sx + sw > covered + FISSURE_TOLERANCE:
+                covered, progress = sx + sw, True
+    if covered < x + FISSURE_SIZE[0] - FISSURE_TOLERANCE:
+        return [f"needs a solid floor whose top is its floor line (object top + {int(FISSURE_FLOOR_OFFSET)}) under all of its "
+                f"{int(FISSURE_SIZE[0])} px"]
+    for m in spawn:
+        mx, my, mw, mh = box(m)
+        if kind(m) in HIVE_MOVING and mx < left + FISSURE_JET_WIDTH and mx + mw > left and my < floor and my + mh > floor - column_height:
+            return [f"a moving or switchable {kind(m)} [{m.get('id')}] stands in its jet"]
+    column = (left, floor - column_height, FISSURE_JET_WIDTH, column_height)
+    if room is not None and not (room[0] <= left and left + FISSURE_JET_WIDTH <= room[0] + room[2]
+                                 and room[1] <= column[1] and floor <= room[1] + room[3]):
         return ["its danger area leaves the room"]
     return [f"its danger area covers the room {name}" for name, area in hive_standing(root, spawn, o) if overlaps(column, area)]
 
@@ -485,6 +546,19 @@ HIVE_MIN_CALM, HIVE_TOLERANCE = java_constant(HIVE_JAVA, 'MIN_CALM_SECONDS'), ja
 HIVE_PROPERTIES = tuple(re.findall(r'"(\w+)"', re.search(r'PROPERTIES = Set\.of\(([^)]*)\)',
                                                           HIVE_JAVA.read_text(encoding='utf-8')).group(1)))  # HangingHive.PROPERTIES
 HIVE_MOVING = ('Actionable', 'Escalator', 'FallingPlatform')  # HangingHive.movingSolidProblem
+# Ember fissure (#366, D91): mirror of EmberFissure.fromMap / validate / ceilingAbove / floorProblem / movingSolidProblem
+# and Level.fissureFor, its numbers read from EmberFissure.java.
+FISSURE_JAVA = OBJECTS_JAVA / 'EmberFissure.java'
+FISSURE_SIZE = (java_constant(FISSURE_JAVA, 'WIDTH'), java_constant(FISSURE_JAVA, 'HEIGHT'))
+FISSURE_FLOOR_OFFSET, FISSURE_JET_WIDTH = java_constant(FISSURE_JAVA, 'FLOOR_OFFSET'), java_constant(FISSURE_JAVA, 'JET_WIDTH')
+FISSURE_DEFAULT_PERIOD = java_constant(FISSURE_JAVA, 'DEFAULT_PERIOD_SECONDS')
+FISSURE_DEFAULT_JET, FISSURE_DEFAULT_HEIGHT = java_constant(FISSURE_JAVA, 'DEFAULT_JET_SECONDS'), java_constant(FISSURE_JAVA, 'DEFAULT_HEIGHT')
+FISSURE_JET_RANGE = (java_constant(FISSURE_JAVA, 'MIN_JET_SECONDS'), java_constant(FISSURE_JAVA, 'MAX_JET_SECONDS'))
+FISSURE_HEIGHT_RANGE = (java_constant(FISSURE_JAVA, 'MIN_HEIGHT'), java_constant(FISSURE_JAVA, 'MAX_HEIGHT'))
+FISSURE_HEIGHT_STEP, FISSURE_MIN_COLUMN = java_constant(FISSURE_JAVA, 'HEIGHT_STEP'), java_constant(FISSURE_JAVA, 'MIN_COLUMN')
+FISSURE_MIN_CALM, FISSURE_TOLERANCE = java_constant(FISSURE_JAVA, 'MIN_CALM_SECONDS'), java_constant(FISSURE_JAVA, 'SIZE_TOLERANCE')
+FISSURE_PROPERTIES = tuple(re.findall(r'"(\w+)"', re.search(r'PROPERTIES = Set\.of\(([^)]*)\)',
+                                                             FISSURE_JAVA.read_text(encoding='utf-8')).group(1)))  # EmberFissure.PROPERTIES
 BRAMBLE_HEIGHT = java_constant(BRAMBLE_JAVA, 'HEIGHT')
 BRAMBLE_REACH = (java_constant(BRAMBLE_JAVA, 'MIN_REACH'), java_constant(BRAMBLE_JAVA, 'MAX_REACH'))
 BRAMBLE_BAND_TOP = java_constant(BRAMBLE_JAVA, 'BAND_TOP')

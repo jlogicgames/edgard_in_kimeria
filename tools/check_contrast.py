@@ -114,6 +114,11 @@ SPRITES = {
     # shake2, release and bare at the object; falling halfway down its drop; fallen on the solid; the stinger tile down the band.
     'HangingHive': ('active', 'objects/trap-hive.png', (0, 0, 24, 32), 5, 'top', FULL),
     'HangingHive:falling': ('active', 'objects/trap-hive.png', (120, 0, 24, 32), 1, 'top', FULL),
+    # #366 (D91): every frame the fissure can show at the object (rest1, rest2, warn1, warn2, vent, spent), and its jet as
+    # EmberFissure.render draws it at full height (fissure_parts): the tip (top1, top2: the upper 8 rows) and the tile below.
+    'EmberFissure': ('active', 'objects/trap-fissure.png', (0, 0, 16, 12), 6, 'top', FULL),
+    'EmberFissure:jet': ('active', 'objects/trap-ember-jet.png', (0, 0, 8, 16), 2, 'top', FULL),
+    'EmberFissure:tip': ('active', 'objects/trap-ember-jet.png', (16, 0, 8, 8), 2, 'top', FULL),
     'HangingHive:fallen': ('active', 'objects/trap-hive.png', (144, 0, 24, 32), 1, 'top', FULL),
     'HangingHive:stingers': ('active', 'objects/trap-stingers.png', (0, 0, 8, 16), 2, 'top', FULL),
     'HoneyFungus': ('active', 'objects/trap-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
@@ -290,6 +295,38 @@ def hive_parts(root, x, y):
     return parts
 
 
+FISSURE_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/EmberFissure.java'
+
+
+def fissure_parts(root, obj, x, y):
+    """(key, left, top, width, height) of what EmberFissure.render draws for a fissure at (x, y): its frames at the object,
+    and the full jet (the tip on top, every whole 16 px tile up from the floor line), cut by a solid above as
+    EmberFissure.ceilingAbove cuts it (a one-way Platform and quicksand do not)."""
+    n = lambda name: java_number(FISSURE_JAVA, name)
+    props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
+    width, jet_width, floor = n('WIDTH'), n('JET_WIDTH'), y + n('FLOOR_OFFSET')
+    height, left = float(props.get('height') or n('DEFAULT_HEIGHT')), x + (width - jet_width) / 2
+    for group in root.findall('objectgroup'):
+        if group.get('name') != 'Collisions':
+            continue
+        for c in group.findall('object'):
+            cx, cy, cw, ch = (float(c.get(k, 0)) for k in ('x', 'y', 'width', 'height'))
+            if c.get('type') in ('Platform', 'QuickSand') or cx >= left + jet_width or cx + cw <= left:
+                continue
+            if floor - height < cy + ch <= floor - n('SIZE_TOLERANCE'):
+                height = floor - (cy + ch)
+    parts = [('EmberFissure', x, y, width, n('HEIGHT'))]
+    _, _, (_, _, _, tile), *_ = SPRITES['EmberFissure:jet']
+    _, _, (_, _, _, tip), *_ = SPRITES['EmberFissure:tip']
+    top = floor - height
+    parts.append(('EmberFissure:tip', left, top, jet_width, tip))
+    row = floor - tile  # the tile rows are anchored on the floor line (render: floorMod(y - floor, 16)); a partial top row is left out
+    while row >= top + tip:
+        parts.append(('EmberFissure:jet', left, row, jet_width, tile))
+        row -= tile
+    return parts
+
+
 def with_halo(background, halo, centre_x, centre_y, alpha):
     """`background` with `halo` added on top (GL_SRC_ALPHA, GL_ONE) at `alpha`, centred on (centre_x, centre_y)."""
     layer = Image.new('RGB', background.size)
@@ -373,6 +410,9 @@ def placements(errors, roots=None):
             offset_y = float(group.get('offsety', '0'))
             for obj in group.findall('object'):
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'EmberFissure':
+                    yield from ((name, *part) for part in fissure_parts(root, obj, float(obj.get('x')), float(obj.get('y')) + offset_y))
+                    continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'HangingHive':
                     yield from ((name, *part) for part in hive_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y))
                     continue

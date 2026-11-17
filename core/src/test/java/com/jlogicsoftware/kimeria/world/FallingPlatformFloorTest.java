@@ -104,7 +104,7 @@ class FallingPlatformFloorTest {
 
     private Level forest2() {
         Level l = new Level(assets, game, player(), "forest-2", Rectangle::new, emptyStock());
-        l.enterNextRoom(player()); l.enterNextRoom(player());
+        l.enterNextRoom(player()); l.enterNextRoom(player()); l.enterNextRoom(player()); // the canopy, after the fissure room (#366)
         for (int i = 0; i < 2; i++) frame(l);
         return l;
     }

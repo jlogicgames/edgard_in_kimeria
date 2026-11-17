@@ -119,7 +119,7 @@ class BossCombatTest {
 
     private void encounter() {
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        for (int room = 0; room < 3; room++) level.enterNextRoom(player());
+        for (int room = 0; room < 4; room++) level.enterNextRoom(player());
         boss = level.objects.stream().filter(Boss.class::isInstance).map(Boss.class::cast).findFirst().orElseThrow();
         frames(20);
         assertEquals(Boss.State.THRONE, boss.getState());
@@ -199,7 +199,7 @@ class BossCombatTest {
         gameState(running, "PAUSED"); hotkeys.invoke(running);
         assertFalse(fade.active(), "Pause must ignore the shortcut");
         gameState(running, "PLAYING");
-        for (int room = 1; room <= 3; room++) {
+        for (int room = 1; room <= 4; room++) {
             hotkeys.invoke(running); assertTrue(fade.active());
             hotkeys.invoke(running); // The same/held event must not restart an active transition.
             for (int frame = 0; frame < 4; frame++) fade.update(.25f, () -> {
@@ -348,7 +348,7 @@ class BossCombatTest {
         var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true); load.invoke(running);
         var field = KimeriaGame.class.getDeclaredField("level"); field.setAccessible(true);
         Level world = (Level) field.get(running);
-        for (int room = 0; room < 3; room++) world.enterNextRoom(new Player(assets, running, 0, 0));
+        for (int room = 0; room < 4; room++) world.enterNextRoom(new Player(assets, running, 0, 0));
         gameField(running, "player", world.player);
         running.setGameStarted(true); gameState(running, "PLAYING");
         assertFalse(world.victoryExitComplete());
@@ -403,6 +403,8 @@ class BossCombatTest {
         level.enterNextRoom(player());
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
+        assertTrue(level.hasNextRoom());
+        level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertNotNull(level.boss());
@@ -914,6 +916,7 @@ class BossCombatTest {
         enter.invoke(running); // forest-walls holds the Bat ingredient (#417).
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
             .filter(c -> c.type() == ItemType.BAT).forEach(Collectable::collideWithPlayer);
+        enter.invoke(running); // forest-fissure (#366) holds no collectable
         enter.invoke(running);
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); // Healer secures the canopy before opening.
@@ -929,7 +932,7 @@ class BossCombatTest {
         assertEquals(2, world.objects.stream().filter(Collectable.class::isInstance).count());
         assertTrue(running.artifacts().hasFullSet("forest-2"));
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
-        enter.invoke(running); enter.invoke(running); enter.invoke(running);
+        enter.invoke(running); enter.invoke(running); enter.invoke(running); enter.invoke(running);
         var returningMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
         var language = com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
         assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_RETURN_GREETING.t(language), returningMeeting.completeText(language));

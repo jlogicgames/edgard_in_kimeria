@@ -104,6 +104,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `Deadfall` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-deadfall`, met alone on open floor | D88 |
 | `Bramble` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s inside the period | `forest-1-bramble`, seen cycling from the floor before the climb | D46, D89 |
 | `HangingHive` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-hive`, seen raining from the entrance over open floor, then over the ladder | D90 |
+| `EmberFissure` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-fissure`, seen jetting from the entrance over open floor, then under a branch it pierces | D91 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46) or `skin=branch` (the rotten tree branch, D80) is the same type
@@ -428,16 +429,38 @@ Approved by the author on 2026-11-17 ([#364](https://github.com/jlogicgames/edga
 | Art and sound | `trap-hive` 24×32 × 7 (rest, shake1, shake2, release, bare, falling, fallen; grid `art/objects/forest-traps/hive.grid`) and `trap-stingers` 8×16 × 2 (fall1, fall2, drawn a row at a time down the band so the darts move with it; `stingers.grid`), authored sprites; the specks are particles. Palette: ink `0b0814`, bough `4a2e1c`/`8a5a30`, paper `d0c294`/`9a8660`/`5a4a34`, bone `efe6c4`/`a89c78`; no accent hue. Active tier, every frame gated where it is drawn in `forest-1-hive` (D76): hive frames 0.450 at worst, falling 0.438, fallen 0.343 (drawn on the floor line, over the floor tiles), stingers 0.346. Sounds `hive_buzz` (warning), `stinger_rain` (release), `hive_fall` (knock-down), heard only while the hive or its band is in the camera view. Consequence (D93): `stinger_rain`, `hive_fall` |
 | Decision | D90 |
 
+### Ember fissure (`EmberFissure`)
+
+Approved by the author on 2026-11-17 ([#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366),
+[D91](DECISIONS.md#d91-the-ember-fissure-a-clocked-fire-jet-from-a-floor-crack-taught-in-forest-2-366-2026-11-17)).
+
+| Field | Value |
+| --- | --- |
+| Family | rhythm |
+| Visibility (D71) | VISIBLE |
+| At rest | frames `rest1`/`rest2` of `trap-fissure` (16×12, top = floor line − 4: four rows of crust stand on the floor, eight cut into it): a low crust of ash with a pale sky-facing rim (`d8d6e8`) split by a slit glowing dull red, pulsing red ↔ red-orange every 0.5 s. It moves, sits on the floor line where no scenery is drawn, and carries the ember accent no scenery has (D76) |
+| At-rest cue | none needed |
+| Reads from | ~320 px: the pulse and the pale crust over the floor line; the jet itself is seen across the screen |
+| Trigger | the level clock, `(elapsed + phase) mod period`: calm, warning, then the jet for the last `jet` s of the period (as the hive); no dependence on the hero |
+| Telegraph (D7) | `warn1` for the first half of the warning (the slit orange), `warn2` for the second (the crust lips lift 1 px, the slit turns yellow, their inner edges lit); sparks rise: every 0.08 s one 1 px spark (`ffd23a`, `f07a1a`, `fff4b0` in turn) climbs 8-24 px from the slit over 0.4 s, `KIND_GLOW` of the fissure's own `KimeriaParticleSystem` (24), seeded from its position; the rumble sound |
+| Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s, taken from the calm; the jet starts at the same point of every cycle, assist or not |
+| Rhythm | one cycle: **calm**, **warning** (0.8 / 1.2 s), **jet** (`jet`, default 1.0 s: the top rises in 0.1 s, holds, sinks back in the last 0.2 s). Defaults: `period` 3.5 s, `phase` 0, `height` 96 px: calm 1.7 s (1.3 s with the assist), the way open (calm + warning) 2.5 s with or without the assist. Load rule: `period >= jet + 1.2 + 0.8` (the assisted warning and at least 0.8 s of calm), so 3.0 s at the default jet. A cycle whose warning would have begun before the room started stays calm, so every jet is announced in full |
+| Lethal part | world Y grows downward. A column 8 px wide centred on the fissure (object x + 4 to x + 12), from the floor line up to the jet's top: `floor − height × f`, f rising 0 → 1 in 0.1 s, 1 through the hold, 1 → 0 in the last 0.2 s. It is lethal exactly where it is drawn. Embers pass through a one-way `Platform` (a branch); a solid block above cuts the column at its bottom edge. The crust itself never hurts |
+| Counter | free: walk past in the calm or the warning (the 8 px column and the 11 px body are 0.19 s of walking); wait beside the column; on a branch it pierces, stand clear of its 8 px or cross between jets. Not jumpable at the default height (96 px, the jump about 58 px plus the 22 px body). No ammunition answer: a fireball or a stone passes through and does nothing |
+| Reset | retry, Restart Level and room re-entry rebuild it at the authored phase (no saved room state); pause freezes it (the clock advances only in `update`) |
+| Taught in | `forest-fissure` (`forest-2`, after `forest-walls`): seen jetting from the entrance over open floor, then under a one-way branch on the step to the exit ledge, which it pierces; `ForestFissureTest` |
+| Load checks | `EmberFissure.fromMap` and `Level.fissureFor`, at load, for every room: only `period` (3.5), `phase` (0), `jet` (1.0, 0.6-1.5), `height` (96, a multiple of 16 from 48 to 128), finite; 16×12; the rhythm rule above; a solid floor (not a one-way platform or quicksand) whose top is the floor line under all 16 px (split blocks merged, 0.5 px tolerance); a solid block above may cut the column to no less than 32 px (`ceilingAbove`); no `Actionable`, `Escalator` or `FallingPlatform` in the column; `Level.requireSafeSetting` (the column inside the room, never over the entrance, the exit or a checkpoint). Mirrored in `check_tiled_links.py` (`fissure_problems`) |
+| Tests | `EmberFissureTest` (`fissure-test.tmx`: open floor, then the branch step): the warning equals the shared warning (0.8 and 1.2 s); every phase boundary; the column's rise, hold and sink as a rectangle against the floor line; lethal only inside the 8 px column, never the crust; no unannounced jet at the room start; the sounds once per cycle and only in the camera view; the falling sparks and the spent frame after every jet; a walker who goes when a jet ends passes at every 0.05 s offset with and without the assist (a blind walker dies at 23 of 71 offsets); a climber who goes when a jet ends crosses the branch to the ledge at every offset with and without the assist (3.75 to 6.73 s after the start delay); waiting on the branch beside the column is safe; retry and Restart Level; pause; determinism and the spark pool; the load rules. `AllocationBudgetTest.emberFissuresCycle` 1.1 B/frame (ceiling 8). `test_check_tiled_links.EmberFissureLinksTest` |
+| Art and sound | `trap-fissure` 16×12 × 6 (`rest1`, `rest2`, `warn1`, `warn2`, `vent`, `spent`; grid `art/objects/forest-traps/fissure.grid`) and `trap-ember-jet` 8×16 × 4 (`jet1`, `jet2`: the column tile, drawn a row at a time up from the floor line and swapped every 0.05 s so the flame climbs; `top1`, `top2`: the 8 px tip; `ember-jet.grid`), authored sprites; the sparks are particles. Palette: ink `0b0814`, ash `d8d6e8`/`9a97ad`/`5b5870`, ember `7a1a14`/`b3201a`/`d8461c`/`f07a1a`/`ffd23a`/`fff4b0` (the stump's family: dull red at rest, orange and yellow only in the warning and the jet); no new hue. Active tier over the night `2c3f66` (D92), measured by `check_contrast.py` at the two fissures of `forest-fissure`: fissure 0.377 at worst, jet tile 0.349, tip 0.398 (floor 0.28), with no moon rim: the pale ash rim and the flame already read on the night. Sounds `fissure_rumble` (warning) and `ember_jet` (the jet), heard only while the fissure or its column is in the camera view (SOUND_DIRECTION). Every jet, hit or miss, also leaves seven sparks falling from the upper column as it sinks and the sooted `spent` frame for 0.4 s. Consequence (D93): `ember_jet`. The sounds are not yet auditioned and the room not yet played by the author ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
+| Decision | D46 (rhythm rules), D91 |
+
 ## Proposed traps (D71, not built)
 
-Chosen by the author on 2026-11-16, each with its own issue and an approved card before code. All three are built and
+Chosen by the author on 2026-11-16, each with its own issue and an approved card before code. All four are built and
 their cards are above: the trip-line deadfall ([#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363)), the
-creeping bramble ([#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364)) and the hanging hive
-([#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365)).
-
-**Candidate (author, 2026-11-16):** an **ember fissure**, a glowing ground crack that jets embers upward on a rhythm
-(a vertical danger on the floor; it would echo the fire gift of #340), tracked by
-[#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366); not chosen for building yet.
+creeping bramble ([#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364)), the hanging hive
+([#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365)) and the ember fissure
+([#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366), chosen on 2026-11-17).
 
 **Rejected (author, 2026-11-16):** a **snap burr**, a huge open seed husk that snaps shut, because D42 rejected a
 carnivorous plant and this is too close to one.

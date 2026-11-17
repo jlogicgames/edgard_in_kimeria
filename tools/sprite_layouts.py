@@ -70,6 +70,10 @@ FOREST_TRAP_SHEETS = {
     # #365 (D90): the hanging hive (bough drawn in) and its stinger curtain, a tile repeated down the lethal band.
     'hive': ((24, 32), ('rest', 'shake1', 'shake2', 'release', 'bare', 'falling', 'fallen')),
     'stingers': ((8, 16), ('fall1', 'fall2')),
+    # #366 (D91): the ember fissure (a crust on the floor line with a glowing slit) and its jet, a tile repeated up the column
+    # under a tip (top1/top2 use the upper 8 rows).
+    'fissure': ((16, 12), ('rest1', 'rest2', 'warn1', 'warn2', 'vent', 'spent')),
+    'ember-jet': ((8, 16), ('jet1', 'jet2', 'top1', 'top2')),
 }
 FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TRAP_SHEETS.items()}
 # Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.

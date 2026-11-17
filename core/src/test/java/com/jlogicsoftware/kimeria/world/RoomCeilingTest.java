@@ -73,6 +73,9 @@ class RoomCeilingTest {
                 // The hive room (#365) has the same kind of exit ledge (240 x 112 px of solid block against its right wall): its
                 // wall is swept from the ledge's top by theHiveRoomLedgeDoesNotLetTheHeroOverTheTop.
                 if (map.equals("forest-1") && room == 7 && !left) continue;
+                // The fissure room (#366) too: its exit ledge is 224 x 96 px of solid block against its right wall, swept from
+                // the ledge's top by theFissureRoomLedgeDoesNotLetTheHeroOverTheTop.
+                if (map.equals("forest-2") && room == 2 && !left) continue;
                 highestPointReached(roomOf(map, room), left, 60 * 20);
             }
         }
@@ -95,12 +98,17 @@ class RoomCeilingTest {
         highestPointReached(roomOf("forest-1", 7), false, 60 * 20, 112);
     }
 
-    /** The boss room (index 2) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
-    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 2); }
+    /** Entry, walls, fissure and canopy; the boss room (index 4) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
+    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 4); }
+
+    /** The fissure room's exit ledge (top y 224, against the right wall, #366) is a 96 px head start up that wall. */
+    @Test void theFissureRoomLedgeDoesNotLetTheHeroOverTheTop() {
+        highestPointReached(roomOf("forest-2", 2), false, 60 * 20, 96);
+    }
 
     @Test void everyRoomIsClosedFromAboveByASlabEndingAtItsTopEdge() {
         for (String map : new String[]{"forest-0", "forest-1", "forest-2"}) {
-            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 9 : map.equals("forest-2") ? 3 : 2;
+            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 9 : map.equals("forest-2") ? 4 : 2;
             for (int index = 0; index < rooms; index++) {
                 Level level = roomOf(map, index);
                 Rectangle room = level.currentRoomBounds();
@@ -142,7 +150,7 @@ class RoomCeilingTest {
      * the stone with {@code lipTop} 48. Checked against the hero's own camera target, standing on the floor, in both rooms with a stone.
      */
     @Test void theStoneLipIsInsideTheCameraViewWhileTheHeroStandsOnTheFloor() {
-        String[][] rooms = {{"forest-0", "3", "8"}, {"forest-2", "2", "48"}};
+        String[][] rooms = {{"forest-0", "3", "8"}, {"forest-2", "3", "48"}};
         for (String[] r : rooms) {
             Level level = roomOf(r[0], Integer.parseInt(r[1]));
             var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
