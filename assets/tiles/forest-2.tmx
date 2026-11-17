@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="188" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="148">
  <properties>
-  <property name="background" type="color" value="#ff4a92b8"/>
+  <property name="background" type="color" value="#ff2c3f66"/>
   <property name="fireflies" type="int" value="24"/>
   <property name="healerBeforeBoss" type="bool" value="true"/>
   <property name="ingredients" value="BAT,MUSHROOM"/>

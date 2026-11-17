@@ -1220,7 +1220,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   - *Stump:* touch lights it (walking on through it is safe, as in the traps room); a thrown stone lights it from 2 to 100 px before it (hits from beyond the 36 px blast reach exist), costs no ammunition and is **not consumed** (D47): it drops where it hit, the hero waits out the 0.8 s fuse and picks it up again, still the stone that works the lever (so no second stone is needed; a stone that falls into the chasm still comes home, D39). The bypass is the D47 floor bypass: a jump from 4 to 70 px before the stump clears it without lighting it, with no ammunition at all (30 of 34 sampled take-offs). The blast does not reach the entrance, the stone's home, the lip, the throwing spot or the exit.
 - **Retry:** every trap is rebuilt by a retry, Restart Level and room entry. A retry on the first visit makes the stump whole again.
 - **Tests:** `LadderLessonTest`, `WallLessonTest`, `PlatformLessonTest`, `StoneLessonTest` (new per-trap tests: placement, telegraph, scripted walkers and jumpers at every offset, one cheap retry and what it restores, soft-lock, zero ammunition, the held-Left drop from the ladder top, no leak into other rooms), `HintLeadTest` (trap leads, lever leads, trap text across the column), `TutorialLevelTest` (census, room widths, zone butting, leads, text past the column), `RoomCeilingTest` (the stone starts under the slab), `LocalizationLayoutTest`, `FallingTrapsTest`/`ExplosiveTrapsTest` (shipped-level guards updated: `forest-0` has exactly one branch, one stone and two stumps, `forest-1` and `forest-3` (now `forest-2`) none). The old geometry sweeps (hint coverage, label overlap, lesson geometry) run with the room's trap removed so teleported standing heroes are not killed; the trap cases are separate tests, and the route tests (taught route, retry, restart, soft locks) run with the trap in place and jump or walk past it.
-- **Foliage over the branch (#421, 2026-11-17):** the branch no longer hangs in open sky. A `Decor:trunk` (id 102, x 1736) stands on the floor behind the branch's knob, and a new decor kind `crown` (id 103, x 1696, 96×40, `art/objects/decor/crown.grid`) hangs from the room top over the trunk's cap, as in the original screen (S7: trunk, canopy, branch at mid height). The branch, its zone, its timing and its tests are unchanged; the cracked joint (#361) lies right of the trunk, against the sky. The crown is a hanging kind (`hangs` in `Decor.KINDS`): `check_tiled_links.py` holds its top edge to the room's top or a solid's underside, the HangingVine rule, instead of standing it on a solid. Decor tier over forest-0's map `background` `4a92b8` (D92) and its tile layer, measured after #455: crown outline 0.087, body 0.119 (ceiling 0.20, body 0.08 to 0.20); the new trunk placement outline 0.121, body 0.119; the branch stays at 0.463 (resting) and 0.429 (rustle), and the joint's own edges at 0.416 with or without the tree behind it.
+- **Foliage over the branch (#421, 2026-11-17):** the branch no longer hangs in open sky. A `Decor:trunk` (id 102, x 1736) stands on the floor behind the branch's knob, and a new decor kind `crown` (id 103, x 1696, 96×40, `art/objects/decor/crown.grid`) hangs from the room top over the trunk's cap, as in the original screen (S7: trunk, canopy, branch at mid height). The branch, its zone, its timing and its tests are unchanged; the cracked joint (#361) lies right of the trunk, against the sky. The crown is a hanging kind (`hangs` in `Decor.KINDS`): `check_tiled_links.py` holds its top edge to the room's top or a solid's underside, the HangingVine rule, instead of standing it on a solid. Decor tier over forest-0's map `background` `4a92b8` (D92) and its tile layer, measured after #455: crown outline 0.087, body 0.119 (ceiling 0.20, body 0.08 to 0.20); the new trunk placement outline 0.121, body 0.119 (by day; over the night `2c3f66` with the D92 night palettes: crown 0.111 / 0.180, trunk 0.095 / 0.160); the branch stays at 0.463 (resting) and 0.429 (rustle), and the joint's own edges at 0.416 with or without the tree behind it.
 - **Not decided or not verified:** how the rooms look and feel in the running game (the stone starts flush with the room top), the novice reading of the hints, the translations (de, pl, uk, be are drafts like the other hints), the gamepad and touch feel of the jumps over the root and the stump, and whether the four longer rooms (+144 to +208 px) still feel short to the author, who asked for short rooms: the trap, its envelope and two hint leads are the cost.
 
 ## D49. Hint font sizes: zone message 3x, label above the hero 1.5x
@@ -2609,18 +2609,17 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D92. The world is drawn over a flat per-level background; the forest rain and sky are gone (#430, 2026-11-17)
 
-- **Status.** Part 1 of three ([#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430)): the removal, the map
-  property and the gate switch. Approved by the author on 2026-11-17 for the later parts: the night colour `2c3f66`, the
-  moon rim, the decor night palettes and the honey fungus breath (`FungusTrap.GLOW_MIN` 0.55 to 0.80, a change to D63)
-  land together in one change of [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430), because the gate
-  cannot pass on night with day sprites, nor on day with rimmed ones. Clouds and a moon:
-  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451). Swamp weather: part 2 of #430.
+- **Status.** Built in three changes of [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430), approved by the
+  author on 2026-11-17: (1) the removal, the map property and the gate switch (PR 455); (2) the moon rim tool, every flag
+  off (PR 456); (3) **the night**: every forest map's `background` is `2c3f66`, with the moon rim, the decor night
+  palettes and the honey fungus breath (`FungusTrap.GLOW_MIN` 0.55 to 0.80, a change to D63) in the same change, because
+  the gate cannot pass on night with day sprites, nor on day with rimmed ones. Clouds and a moon:
+  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451). Swamp weather: part 2 of #430, parked.
 - **Backgrounds still to be drawn.** Open levels show a night sky (the castle shows night through its windows; author,
   2026-11-17). The night sky with its moon and clouds is still to be drawn in
   [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451); the contrast gate is re-run over that real background
   then, and any sprite it fails is fixed then.
-- **Moon rim (rule; tool in place, switched on by the night change of
-  [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430)).** On the night background the near-black ink contour
+- **Moon rim (rule).** On the night background the near-black ink contour
   of D71/D76 no longer separates a sprite from the sky (below about OKLab L 0.40; over `2c3f66` 31 active sprites fall
   under 0.28). An active sprite whose outline does not reach the active floor on its level's background carries the moon
   rim:
@@ -2632,17 +2631,36 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     with no grid source (`python3 tools/moon_rim.py SHEET.png --cell W H`). It is idempotent, so a rim softened by hand
     in the grid (where it reads like a sticker) survives a re-export; the gate keeps the softening honest;
   - it is used only where the gate needs it: on every sprite it lowers the Bat pickup to 0.266 against its own halo;
-  - it costs one palette entry. The hero grid has all 15 opaque colours in use, so turning the hero's rim on needs a
-    colour freed or merged in `art/hero/hero.grid` first (`hero_sprites.indexed` fails loudly otherwise);
+  - it costs one palette entry. The hero grid had all 15 opaque colours in use; the author chose to merge the hair
+    highlight `h` `4a3a4e` (100 px over every frame) into the hair `H` `241a26` (2026-11-17, option B of two; the other
+    merged the belt brown into the boots, 867 px). `hero_sprites.indexed` refuses a 16th colour. The brick wall's
+    generated master also had 15; `export_object_sprites.rim_objects` quantizes it to 14 first (its closest pair merges);
+  - a trap's at-rest cue drawn in ink on a lit edge is never repainted: grid chars in `forest_trap_sprites.RIM_KEEP`
+    (the falling platform's crack, #362, its own char `c` in the same ink; `SpriteSheetContractsTest` checks it);
   - companions, same change: decor keeps its own-hue contour and is tinted toward the level's background until its body
     is at most 0.20; a glowing sprite's dimmest brightness keeps its rim over the floor (the honey fungi:
     `GLOW_MIN` 0.80);
-  - the inherited sheets (`enemy/Bat.png`, `enemy/Mobs.png`, `enemy/yellow_mob.png`, `objects/GreyOff.png`) and the
-    author's `enemy/Boss.png` get the rim through the CLI as an interim; the redraws of
-    [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) follow this rule instead.
+  - the inherited sheets get the rim through the CLI as an interim, every frame (cell in brackets): `enemy/Bat.png`
+    (16×16, `--pad`: its last row is 8 px), `enemy/Mobs.png`, `enemy/yellow_mob.png` (48×32), `objects/GreyOff.png`
+    and `objects/GreyOn.png` (32×8), and the author's `enemy/Boss.png` (48×32). They have no source to re-export from, so
+    the rim is in the shipped PNG; the redraws of [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
+    follow this rule instead;
+  - where it is on: the hero (all three sheets); the traps `bomb`, `bramble`, `branch`, `deadfall`, `deadfall-bough`,
+    `falling-platform`, `false-honey-fungus` (so the honey pair stays alike), `hive`, `honey-fungus`, `log`, `perch`,
+    `puffball`, `root`, `rotten-perch`, `stone-lip`, `stump`, `thorn-root`, `thorn-tuft`
+    (`forest_trap_sprites.RIM_SHEETS`); the objects `ladder`, `stone`, `fireball`, `wall-brick`, `platform`
+    (`export_object_sprites.RIM_OBJECTS`); the inherited sheets above. Off where the gate passes without it (the lever,
+    the pickups and coin, the torch, the stingers, the deadfall vine, the fairy);
   - Tests: `tools/test_moon_rim.py` (lit sides rimmed, underside kept, light edges and the silhouette untouched, frames
     in a strip independent, idempotent, mirror-symmetric, the CLI, the thorn tuft on a plain `2c3f66` patch 0.226 to
-    0.411 against the 0.28 floor, every exporter flag off, a flagged sheet rimmed with one more colour, the hero's full palette refused).
+    0.411 against the 0.28 floor, a flagged sheet rimmed with one more colour, the hero's palette with the rim slot and a
+    16th colour refused, kept pixels, the falling platform's crack kept in ink, the CLI's `--pad`).
+- **Measured over `2c3f66` (`check_contrast.py`, 2026-11-17): 0 errors** (37 before the change, the crown of #421
+  included). Active worst: the Mushroom pickup 0.290, the Bat pickup and the false honey fungus 0.299, the hero 0.311
+  (forest-2 x 64, against the light rubble wall), the floor lever of #413 0.306 (no rim needed); the Bat enemy 0.057 to 0.473, the RedMob 0.123 to
+  0.467, the thorn tuft 0.189 to 0.383. Decor (outline / body max): bush 0.106 / 0.151, look-alike 0.106 / 0.157,
+  trunk 0.095 / 0.160, hanging vine 0.130 / 0.173, crown 0.111 / 0.180. The tile scenery report falls to 0.116 to 0.130,
+  under the decor ceiling. `TouchControlArtTest` passes against `2c3f66`.
 - **Why.** The forest-1 rain (`RainDrop`, one `WorldObject` per drop, a mutable static wind) and sky (`SkyBackground`,
   `sky.png`) were Dart-port leftovers chosen by level name in `Level`. The gate measured every sprite of all three maps
   over `sky.png`, but forest-0 and forest-2 never drew it: they showed the clear colour `87ceeb`. Over `87ceeb` the gate
@@ -2652,7 +2670,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   alpha `ff`, or `#RRGGBB`). `Level` reads it once at load (`Level.parseBackground`; a malformed or translucent value fails
   the load) and `KimeriaGame` clears to it at both clear sites (the direct pass and the post-processed scene buffer, which
   had its own copy of the old literal). Before a level loads, and on a map without the property (test maps), the default is
-  `Level.DEFAULT_BACKGROUND` `4a92b8`, `sky.png`'s own blue without its clouds. The three forest maps set `4a92b8`
+  `Level.DEFAULT_BACKGROUND` `4a92b8`, `sky.png`'s own blue without its clouds. In PR 455 the three forest maps set `4a92b8`
   explicitly. forest-1 loses its clouds and rain; forest-0 and forest-2 move from the pale `87ceeb` to the same blue.
 - **Gate.** `tools/check_contrast.py` composites every sprite over its map's `background` colour plus the tile layer, one
   sample per placement (no sky offsets), and fails a shipped map without the property (`map_background`;

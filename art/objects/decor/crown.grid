@@ -1,15 +1,16 @@
 # Leaf crown (#421): the decor kind `crown`, native 96x40, one frame, hung from the room top (its top edge on the
 # room's top edge). It tops a `Decor:trunk` standing under its middle (trunk object x = crown x + 40): the middle lobe
 # hangs to the last row and hides the trunk's rounded cap. Leaf clusters with lighter tops and darker undersides.
-# Decor tier (D76): the bush's muted grey-green family, one step lighter than the bush (over the map background 4a92b8,
-# D92: outline 0.087 against the bush palette's 0.157, ceiling 0.20); contour 607660 in its own darker green, no ink 0b0814,
+# Decor tier (D76): the bush's muted grey-green family, one step lighter than the bush (by day over 4a92b8: outline 0.087
+# against the bush palette's 0.157); night palette (D92): every colour mixed 35 % toward 2c3f66 (contour 607660 -> 4e6362),
+# outline 0.111, body 0.180 over the night, ceiling 0.20; contour in its own darker green, no ink 0b0814,
 # no violet (violet is the FallingBranch's bud accent). Not solid, never moves.
 size 96 40
-color k 607660
-color d 6e8466
-color m 7b9170
-color l 889e79
-color n 948f62
+color k 4e6362
+color d 576c66
+color m 5f746c
+color l 687d72
+color n 707363
 frame crown
 ..kmmmlmmmdmmmmlmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdlmmmmdmmmlnlmk..
 ..kmmlnlmmddmmlndmmlnllmmmddmmmlllmmddmmmmlnlmmddmmlnllmmmddmmmlllmmddmmmmlnlmmdnlmmmddmmlnllk..

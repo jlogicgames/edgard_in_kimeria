@@ -9,6 +9,7 @@ import check_contrast as gate
 FOREST_BLUE = (74, 146, 184, 255)  # the forest maps' background (D92), #4a92b8
 NIGHT_HEX = '#2c3f66'  # the night colour approved for #430's last part
 NIGHT = (0x2c, 0x3f, 0x66)
+NIGHT_GLOW_MIN = 0.80  # FungusTrap.GLOW_MIN since D92 (#430); 0.55 before
 AT = 10  # where the test squares are drawn on the 40 px background
 LAYER = 4  # a 4 px test tile layer with one ink pixel
 INK_AT = (1, 1)
@@ -79,7 +80,7 @@ class MetricTest(unittest.TestCase):
         self.assertGreater(gate.measure(light, dark, 10, 10, 1.0)[0], gate.measure(light, dark, 10, 10, gate.GLOW_MIN)[0])
 
     def test_the_glow_floor_is_read_from_the_java_constant(self):
-        self.assertEqual(gate.GLOW_MIN, 0.55)
+        self.assertEqual(gate.GLOW_MIN, NIGHT_GLOW_MIN)
 
     def test_the_pickup_halo_states_are_read_from_the_java_constants(self):
         # #345: at rest with the dimmest halo, at the top of the 2 px bob with the brightest

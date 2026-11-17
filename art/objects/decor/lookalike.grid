@@ -3,15 +3,16 @@
 # honey fungus, the opposite of the ringless lethal false honey fungus), no golden glow, no honey brown, no lime. It never animates.
 # Decor tier (D76, #344, 2026-11-16): recoloured to muted grey-beige with a contour in its own hue, no ink 0b0814, so it reads as
 # scenery; the tuft shape and the rings stay. The real-or-false game stays between the two active fungi (D63).
+# Night palette (D92, #430): every colour mixed 35 % toward the night background 2c3f66; the day values are in docs/ART_DIRECTION.md.
 size 24 16
-color k 6d6154
-color h aa9c8a
-color a 998b7a
-color s 897b6a
-color g 796c60
-color b a7a194
-color B 958e82
-color p b4ada0
+color k 56555a
+color h 7e7b7d
+color a 737073
+color s 686669
+color g 5e5c62
+color b 7c7f84
+color B 707278
+color p 84868c
 frame static
 ........................
 ........................

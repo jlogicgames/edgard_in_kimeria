@@ -28,7 +28,10 @@ MIDDLE = 2
 BAND = 2  # half-width of the band across a frame border
 NIGHT = (0x2c, 0x3f, 0x66, 255)  # D92's approved night colour
 NIGHT_SIZE = 64
+EXTRA = (0x12, 0x34, 0x56)  # a 16th opaque colour, for the refusal test
 AT = 24  # where a trap frame is measured on the night patch
+CRACKED = 'falling-platform'  # #362: its crack is a D71 cue on the top edge
+CRACK_INK = (0x21, 0x1f, 0x30, 255)
 TRIED_SHEET = 'thorn-tuft'  # an active trap whose ink contour fails on the night (0.189, w6-430 rim notes)
 
 
@@ -80,6 +83,21 @@ class RimTest(unittest.TestCase):
         flipped = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         self.assertEqual(moon_rim.rim(flipped).tobytes(), moon_rim.rim(image).transpose(Image.Transpose.FLIP_LEFT_RIGHT).tobytes())
 
+    def test_kept_pixels_are_never_repainted(self):
+        out = moon_rim.rim(ink_square(), keep={(MIDDLE, TOP)})
+        self.assertEqual(out.getpixel((MIDDLE, TOP)), INK)
+        self.assertEqual(out.getpixel((MIDDLE + 1, TOP)), RIM)
+
+    def test_the_falling_platform_keeps_its_crack_in_ink(self):
+        sheet, _ = traps.sheet_image(CRACKED)
+        _, _, rows = traps.parse(traps.layout(CRACKED)[0])
+        frame_w = cell_of(CRACKED)[0]
+        for index, (_, frame) in enumerate(rows):
+            for y, row in enumerate(frame):
+                for x, char in enumerate(row):
+                    if char == traps.RIM_KEEP[CRACKED]:
+                        self.assertEqual(sheet.getpixel((index * frame_w + x, y)), CRACK_INK, (index, x, y))
+
     def test_a_sheet_must_be_whole_cells(self):
         with self.assertRaises(ValueError):
             moon_rim.rim(ink_square(), (SIZE - 1, SIZE))
@@ -92,9 +110,19 @@ class RimTest(unittest.TestCase):
             self.assertEqual(Image.open(target).convert('RGBA').tobytes(), moon_rim.rim(ink_square(cells=PAIR), (SIZE, SIZE)).tobytes())
             self.assertEqual(Image.open(source).convert('RGBA').tobytes(), ink_square(cells=PAIR).tobytes(), 'source untouched')
 
+    def test_the_cli_pads_a_sheet_with_a_partial_last_row(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'in.png'
+            ink_square(cells=PAIR).crop((0, 0, SIZE * PAIR, SIZE - 1)).save(source)  # the last row of cells is cut short
+            self.assertEqual(moon_rim.main([str(source), '--cell', str(SIZE), str(SIZE), '--pad']), 0)
+            out = Image.open(source).convert('RGBA')
+            self.assertEqual(out.size, (SIZE * PAIR, SIZE - 1), 'the sheet keeps its size')
+            self.assertEqual(out.getpixel((MIDDLE, TOP)), RIM)
+
     def test_the_rim_lifts_a_failing_trap_over_the_floor_on_the_night(self):
         frame_size = cell_of(TRIED_SHEET)
-        sheet, _ = traps.sheet_image(TRIED_SHEET)
+        with mock.patch.object(traps, 'RIM_SHEETS', frozenset()):
+            sheet, _ = traps.sheet_image(TRIED_SHEET)
         frame = sheet.crop((0, 0) + frame_size)
         night = Image.new('RGBA', (NIGHT_SIZE, NIGHT_SIZE), NIGHT)
         before = gate.measure(frame, night, AT, AT)[0]
@@ -104,30 +132,34 @@ class RimTest(unittest.TestCase):
 
 
 class ExporterFlagTest(unittest.TestCase):
-    def test_every_flag_is_off_until_the_night_change(self):
-        self.assertEqual(traps.RIM_SHEETS, frozenset())
-        self.assertEqual(hero.RIM_SHEETS, frozenset())
+    def test_the_night_change_rims_every_hero_sheet_and_only_known_trap_sheets(self):
+        self.assertEqual(hero.RIM_SHEETS, frozenset(hero.HERO_SHEETS))
+        self.assertTrue(traps.RIM_SHEETS <= set(traps.FOREST_TRAP_SHEETS), traps.RIM_SHEETS - set(traps.FOREST_TRAP_SHEETS))
+        self.assertIn(TRIED_SHEET, traps.RIM_SHEETS)
 
     def test_a_flagged_trap_sheet_is_rimmed_with_one_more_colour(self):
-        plain, colours = traps.sheet_image(TRIED_SHEET)
+        with mock.patch.object(traps, 'RIM_SHEETS', frozenset()):
+            plain, colours = traps.sheet_image(TRIED_SHEET)
         with mock.patch.object(traps, 'RIM_SHEETS', frozenset({TRIED_SHEET})):
             rimmed, rimmed_colours = traps.sheet_image(TRIED_SHEET)
         self.assertEqual(rimmed.tobytes(), moon_rim.rim(plain, cell_of(TRIED_SHEET)).tobytes())
         self.assertEqual(rimmed_colours, colours + 1)
 
     def test_a_flagged_hero_sheet_is_rimmed_frame_by_frame(self):
-        plain = hero.sheet_images()
+        with mock.patch.object(hero, 'RIM_SHEETS', frozenset()):
+            plain = hero.sheet_images()
         sheet = next(iter(plain))
         with mock.patch.object(hero, 'RIM_SHEETS', frozenset({sheet})):
             rimmed = hero.sheet_images()
         cell = (hero.N, hero.N)
         self.assertEqual(rimmed[sheet].tobytes(), moon_rim.rim(plain[sheet], cell).tobytes())
 
-    def test_the_hero_palette_has_no_slot_for_the_rim_yet_and_says_so(self):
+    def test_the_hero_palette_has_the_rim_slot_and_a_full_one_is_refused(self):
         colours, _ = hero.parse()
         master = next(iter(hero.sheet_images().values()))
+        hero.indexed(master, {**colours, 'moon rim': moon_rim.RIM})  # the hair highlight was merged to make room
         with self.assertRaises(ValueError):
-            hero.indexed(master, {**colours, 'moon rim': moon_rim.RIM})
+            hero.indexed(master, {**colours, 'moon rim': moon_rim.RIM, 'one too many': EXTRA})
 
 
 if __name__ == '__main__':

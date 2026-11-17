@@ -26,8 +26,9 @@ COLOR_ARGS = 2   # color <char> <RRGGBB>
 NAME_ARGS = 1    # frame <name>
 SOURCE_ARGS = 3  # frame <name> from|flip <other>
 AT_ARGS = 2      # at <x> <y>
-# Sheets exported with the moon rim (D92, tools/moon_rim.py); empty until #430's night change turns them on.
-RIM_SHEETS = frozenset()
+# Sheets exported with the moon rim (D92, tools/moon_rim.py): all three, every frame (the hair highlight `h` was merged
+# into `H` to free the palette slot, author's option B, 2026-11-17).
+RIM_SHEETS = frozenset(HERO_SHEETS)
 
 
 class Block:

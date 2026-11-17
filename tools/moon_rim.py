@@ -16,7 +16,8 @@ of authored art, like the exporters' palette packing, not procedural drawing.
 
 Library use: `rim(image, cell)` returns a new RGBA image. The exporters call it for the sheets named in their `RIM_SHEETS`
 (`forest_trap_sprites.RIM_SHEETS`, `hero_sprites.RIM_SHEETS`). CLI, for sheets with no grid source (the inherited enemy
-and lift sheets): `python3 tools/moon_rim.py SHEET.png --cell W H [--out OUT.png]` writes an RGBA PNG.
+and lift sheets): `python3 tools/moon_rim.py SHEET.png --cell W H [--pad] [--out OUT.png]` writes an RGBA PNG; `--pad`
+treats a partial last row or column of cells as transparent padding.
 """
 import argparse
 import sys
@@ -34,8 +35,11 @@ CELL_ARGS = 2  # --cell W H
 LIT_SIDES = ((0, -1), (-1, 0), (1, 0))  # up, left, right in Y-down image space; down keeps its ink
 
 
-def rim(image, cell=None, colour=RIM):
-    """A copy of `image` with the moon rim; `cell` (w, h) is the frame size of a strip or grid sheet, default the image."""
+def rim(image, cell=None, colour=RIM, keep=frozenset()):
+    """A copy of `image` with the moon rim; `cell` (w, h) is the frame size of a strip or grid sheet, default the image.
+
+    `keep` holds (x, y) pixels never repainted: a trap's at-rest cue drawn in ink on a lit edge (the falling platform's crack).
+    """
     source = image.convert('RGBA')
     width, height = source.size
     cell_w, cell_h = cell or source.size
@@ -50,7 +54,7 @@ def rim(image, cell=None, colour=RIM):
     for y in range(height):
         for x in range(width):
             at = (y * width + x) * CHANNELS
-            if data[at + ALPHA] < ALPHA_MIN or oklab(data[at:at + ALPHA])[0] >= SOURCE_L:
+            if data[at + ALPHA] < ALPHA_MIN or (x, y) in keep or oklab(data[at:at + ALPHA])[0] >= SOURCE_L:
                 continue
             left, top = x - x % cell_w, y - y % cell_h
             for dx, dy in LIT_SIDES:
@@ -66,8 +70,16 @@ def main(argv=None):
     parser.add_argument('sheet', type=Path)
     parser.add_argument('--cell', type=int, nargs=CELL_ARGS, metavar=('W', 'H'), help='frame size; default the whole image')
     parser.add_argument('--out', type=Path, help='output PNG; default overwrite the sheet')
+    parser.add_argument('--pad', action='store_true', help='pad a sheet whose last row or column is a partial cell (Bat.png)')
     args = parser.parse_args(argv)
-    result = rim(Image.open(args.sheet), tuple(args.cell) if args.cell else None)
+    sheet = Image.open(args.sheet).convert('RGBA')
+    cell = tuple(args.cell) if args.cell else None
+    if args.pad and cell:
+        padded = Image.new('RGBA', (-(-sheet.width // cell[0]) * cell[0], -(-sheet.height // cell[1]) * cell[1]))
+        padded.paste(sheet, (0, 0))
+        result = rim(padded, cell).crop((0, 0) + sheet.size)
+    else:
+        result = rim(sheet, cell)
     result.save(args.out or args.sheet)
     print(args.out or args.sheet)
     return 0

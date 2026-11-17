@@ -10,7 +10,10 @@ Read [art direction](../../../docs/ART_DIRECTION.md) and the relevant
 How art fits the rest of the game's style (readable before lethal, a hazard warns and answers):
 [the style system](../../../docs/STYLE_SYSTEM.md). A trap's at-rest frame is VISIBLE by default (D71,
 [TRAPS.md](../../../docs/TRAPS.md)): a silhouette or colour no scenery shares, in the "active" contrast tier
-(D76 and the "Contrast tiers" section of ART_DIRECTION.md; gate `python3 tools/check_contrast.py`, `validateContrast`);
+(D76 and the "Contrast tiers" section of ART_DIRECTION.md; gate `python3 tools/check_contrast.py`, `validateContrast`).
+Open levels are at night (`2c3f66`, D92): measure over it, and where an ink contour falls under the floor give the sheet
+the moon rim through its exporter flag (`tools/moon_rim.py`), never by hand; keep a trap's ink cue out of it (`RIM_KEEP`);
+decor takes a night palette instead (35 % toward the background);
 use [kimeria-trap-design](../kimeria-trap-design/SKILL.md) for anything that can kill.
 The author clarified the scope on 2026-10-22 after seeing detailed icons used in
 world gameplay. Choose the asset's destination BEFORE choosing a style or reference.
