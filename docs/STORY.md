@@ -198,6 +198,13 @@ Above the text the Kimeria arms show the same outcome without words: the sun on 
 appears and lights up with the paragraph that brings the light back (#416, D95, see "Kingdom heraldry"). With the
 Instant text option the arms are lit at once.
 
+**Told by the healer (2026-11-17, [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372)).** The healer who
+opens the game also closes it, so the frame closes: "Hear how my tale ends." He tells that from the forest Edgard walked a
+long road with the healer as his guide (which keeps the guide scene's "we will meet again"), defeated every enemy and left
+no monster in Kimeria; then the sun shone again and the sleeping kingdom woke to the light (the sleep of the opening is
+the curse's image, ended by the light). The accepted outcome above is unchanged. The light has its own paragraph in every
+language, before the closing line, for the arms on the ending page (#416).
+
 After the ending, the game returns to the main menu and removes the run save. A new run
 starts from the opening and the `forest-0` tutorial. Later mechanics will expand these levels;
 additional stages and quests are outside the agreed MVP. See [MVP.md](MVP.md).

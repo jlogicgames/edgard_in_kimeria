@@ -37,8 +37,8 @@ class IntroPagesTest {
     }
 
     /**
-     * The ending as #372 will ship it (the healer tells it): the author-approved EN, and a German written long on purpose
-     * (337 chars, the longest language) until #372 brings the real translations. The page must hold both under the arms.
+     * The ending as #372 ships it (the healer tells it): the author-approved EN, pinned equal to the catalog, and a German
+     * written long on purpose (337 chars, longer than the shipped 321) as a margin case. The page must hold both under the arms.
      */
     private static final String HEALER_ENDING_EN = "Hear how my tale ends. From that forest Edgard walked a long road, and I guided him as I"
         + " had promised. He defeated every enemy, and not one monster was left in Kimeria.\n\nThen the sun shone again, and the"
@@ -154,7 +154,9 @@ class IntroPagesTest {
         int paragraphs = story("ENDING_STORY", Language.ENGLISH).split("\n\n").length;
         for (Language language : Language.values())
             assertEndingStructure("ENDING_STORY " + language.code(), story("ENDING_STORY", language), language.code(), paragraphs);
-        assertTrue(story("ENDING_STORY", Language.ENGLISH).split("\n\n")[paragraphs - 2].startsWith("Light has returned"));
+        assertEquals(3, paragraphs, "the healer's ending (#372): the road, the light, the closing line");
+        assertTrue(story("ENDING_STORY", Language.ENGLISH).split("\n\n")[paragraphs - 2].startsWith("Then the sun shone again"));
+        assertEquals(HEALER_ENDING_EN, story("ENDING_STORY", Language.ENGLISH), "the #372 stand-in is the shipped English");
     }
 
     @Test void theHealersEndingOf372KeepsTheSameStructure() {
