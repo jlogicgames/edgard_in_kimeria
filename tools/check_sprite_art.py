@@ -48,7 +48,6 @@ ALLOWED = {
     ('effects/KimeriaBloodSystem.java', 'render', 'quad'): 'simulated impact particles',
     ('ui/Overlay.java', 'panel', 'quad'): 'UI panel/fade geometry',
     ('ui/Overlay.java', 'buttons', 'quad'): 'menu focus/button geometry',
-    ('ui/InteractionHighlight.java', 'corners', 'quad'): 'selection annotation around a separately drawn sprite',
 }
 NON_CODE = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 METHOD = re.compile(r'\b(?:public|private|protected)\s+(?:(?:static|final|synchronized|abstract)\s+)*(?:[\w<>?\[\],.]+\s+)?(\w+)\s*\([^;{}]*\)\s*(?:throws\s+[\w.,\s]+)?\{')

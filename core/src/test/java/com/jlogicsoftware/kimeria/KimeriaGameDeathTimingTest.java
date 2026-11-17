@@ -7,9 +7,11 @@ import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
+import com.jlogicsoftware.kimeria.ui.FairyGuide;
 import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.Overlay;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.world.RoomFade;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -247,5 +249,39 @@ class KimeriaGameDeathTimingTest {
         assertTrue(progress.firstDeathTold());
         start(false);
         assertNull(dieAndRebuild(true));
+    }
+
+    /** The fairy's modes over {@code seconds} of play: whether she played her arrival twinkle, and the last mode. */
+    private boolean fairyTwinkles(float seconds) throws Exception {
+        FairyGuide fairy = ((Level) get("level")).fairy();
+        boolean twinkled = false;
+        for (int f = 0; f < Math.round(seconds / step); f++) { frame(); twinkled |= fairy.mode() == FairyGuide.Mode.APPEAR; }
+        assertEquals(FairyGuide.Mode.IDLE, fairy.mode(), "she is back at his shoulder, so the check saw her present");
+        return twinkled;
+    }
+
+    /** D82: the fairy arrives once, with the start tale. A New Game on forest-0 opens the tale; closing it starts her twinkle. */
+    @Test void closingTheStartTaleStartsTheFairysArrival() throws Exception {
+        build(HZ);
+        Class<?> data = Class.forName(KimeriaGame.class.getName() + "$StartData");
+        Constructor<?> make = data.getDeclaredConstructor(int.class, int.class, boolean.class); make.setAccessible(true);
+        Method startGame = KimeriaGame.class.getDeclaredMethod("startGame", data); startGame.setAccessible(true);
+        startGame.invoke(game, make.newInstance(KimeriaGame.levelNames().indexOf("forest-0"), 0, true));
+        call("loadLevel"); call("beginLevelPlay");
+        assertEquals(HealerDialogue.Kind.TUTORIAL_START, healer().kind());
+        answerHealer();
+        assertTrue(fairyTwinkles(SETTLE_SECONDS), "closing the start tale plays her arrival twinkle");
+    }
+
+    /** D82 with D81: the first-death line shares the start tale's CONTINUE path, but closing it does not replay her arrival. */
+    @Test void closingTheFirstDeathLineDoesNotReplayTheFairysArrival() throws Exception {
+        build(HZ); start(true);
+        Player dying = player();
+        die(true);
+        for (int f = 0; f < MAX_SECONDS / step && healer() == null; f++) frame();
+        assertNotSame(dying, player(), "the room was rebuilt");
+        assertEquals(HealerDialogue.Kind.FIRST_DEATH, healer().kind());
+        answerHealer();
+        assertFalse(fairyTwinkles(SETTLE_SECONDS), "no twinkle after the first-death line, through the landing and after");
     }
 }

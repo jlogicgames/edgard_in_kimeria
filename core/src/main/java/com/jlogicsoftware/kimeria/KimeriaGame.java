@@ -632,6 +632,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 switch (healer.kind()) {
                     case VICTORY, TUTORIAL_END -> completeLevel();
                     case TUTORIAL_START, FIRST_DEATH -> {
+                        // The healer's gift arrives at his shoulder with a twinkle once, as the start tale closes (D82);
+                        // closing the first-death line leaves her as she is.
+                        if (healer.kind() == HealerDialogue.Kind.TUTORIAL_START) level.fairy().arrive();
                         healer = null;
                         player.resetJumpInput();
                         gamepad.suppressJumpUntilRelease();

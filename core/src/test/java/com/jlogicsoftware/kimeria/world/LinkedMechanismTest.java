@@ -54,8 +54,11 @@ class LinkedMechanismTest {
         level.activateTrigger(level.triggers.stream().filter(t -> t.id == 13).findFirst().orElseThrow());
         assertTrue(second.isRunning());
         assertFalse(first.isRunning(), "A lever only drives the mechanism its target property references");
-        assertEquals(1, level.linkedMechanisms(trigger).size());
-        assertSame(first, level.linkedMechanisms(trigger).get(0));
+        var linked = new com.badlogic.gdx.utils.Array<com.jlogicsoftware.kimeria.entity.Entity>();
+        level.linkedMechanismsInto(trigger, linked);
+        level.linkedMechanismsInto(trigger, linked);
+        assertEquals(1, linked.size, "each mechanism once, however often it is asked");
+        assertSame(first, linked.get(0));
         assertEquals(2, level.objects.stream().filter(Lever.class::isInstance).count());
     }
 

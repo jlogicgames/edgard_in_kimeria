@@ -103,8 +103,11 @@ class SpriteArtGuardTest(unittest.TestCase):
 
     def test_legitimate_gpu_storage_and_selection_ui_are_distinct(self):
         self.assertFalse(guard.violations('effects/Shaders.java', 'public static TextureRegion whiteQuad() { return new Pixmap(1, 1); }'))
-        self.assertFalse(guard.violations('ui/InteractionHighlight.java', 'private static void corners() { Shaders.whiteQuad(); }'))
-        self.assertTrue(guard.violations('ui/InteractionHighlight.java', 'private static void objectArtwork() { Shaders.whiteQuad(); }'))
+        # The corner brackets (InteractionHighlight) were replaced by the fairy's authored sprites (D82); the menu
+        # panel is the remaining UI-geometry permission and keeps the same distinction.
+        self.assertFalse(guard.violations('ui/Overlay.java', 'private void panel() { Shaders.whiteQuad(); }'))
+        self.assertTrue(guard.violations('ui/Overlay.java', 'private void objectArtwork() { Shaders.whiteQuad(); }'))
+        self.assertTrue(guard.violations('ui/InteractionHighlight.java', 'private static void corners() { Shaders.whiteQuad(); }'))
 
     def test_offline_export_may_resize_art_but_not_paint_it(self):
         self.assertFalse(guard.python_art_violations('tools/export.py', "from PIL import Image\nim=Image.open('master.png')\nim.resize((32,32)).save('torch.png')"))

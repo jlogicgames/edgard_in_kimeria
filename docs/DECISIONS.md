@@ -811,6 +811,8 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Details:** [Standing look](#d25-standing-look-with-delayed-vertical-inspection),
   [directional controls](DIRECTIONAL_CONTROLS.md#standing-look-updown-2026-10-23), and
   [gameplay controls](GAMEPLAY.md#controls).
+- **Note, D82 (#338):** the outline is now the fairy guide's glow, glints and fairy. Look suppression still keys on
+  the same selection (`Player.interactionFeedbackTarget()`), so this rule is unchanged.
 
 ## D30. One direction for pickup and mechanism interaction
 
@@ -832,6 +834,8 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   explicit put-down command.
 - **Details:** [Interaction contract](DIRECTIONAL_CONTROLS.md#interaction-controls-175),
   [gameplay controls](GAMEPLAY.md#controls), and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+- **Note, D82 (#338):** "the outline" in this decision is now the fairy guide (glow, glints, fairy); it identifies
+  the same nearest target with the same tie-break.
 
 ## D31. Forest uses linked route reconfiguration
 
@@ -2090,3 +2094,75 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Not verified:** the beat, the thread's look and the pluck in the running game, by the author's eye and ear (desktop
   and web): [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368). Native-speaker review of the uk, pl, de
   and be line: [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369).
+
+## D82. The fairy helper shows the interaction target instead of the corner brackets (playtest F4, F14, #338, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (Phase A proposal: glow and glints, the text as the third gift, the
+  one-time appear twinkle, her look, this number; D81 is left to #341). Built.
+- **Story:** the healer gives Edgard a fairy of the wood, one of the little lights the night could not put out, as his
+  third gift after the silver thread and the spark of fire ([STORY.md](STORY.md#the-fairy-helper--accepted-2026-11-16-338)).
+  She is narrative and feedback only: no attack, no pickup, no collision, no save field.
+- **First appearance:** when the forest-0 start tale closes, she arrives at Edgard's shoulder in a one-time 0.4 s
+  twinkle (`FairyGuide.arrive`, called by `KimeriaGame` on the tale's CONTINUE). After that, and in every other level,
+  on Continue, after death and on Restart Level, she is simply there. The first-death line (D81) closes through the
+  same CONTINUE case; the call is guarded to the start tale, so closing that line does not replay the twinkle
+  (`KimeriaGameDeathTimingTest.closingTheFirstDeathLineDoesNotReplayTheFairysArrival`, which fails without the guard,
+  and `closingTheStartTaleStartsTheFairysArrival`).
+- **Idle:** frame centre beside his face, 14 px behind him (on the side away from where he faces), 16 px under his box
+  top, with a 1.5 px bob over 1.6 s. World Y grows down, so that is level with his face, never above his head where
+  the label is anchored. She follows with exponential smoothing (rate 10 /s).
+- **Selected target** (`Player.interactionFeedbackTarget()` is non-null: Up held, Down not, a target eligible):
+  - **On the frame of selection,** before she moves, an aqua glow is drawn additively behind the target at full
+    strength (the target box grown by 6 px, a nine-slice of `fairy-glow.png`). Four fairy-dust glints are drawn on top
+    at its corners (grown by 2 px), the diagonal pairs alternating every 0.25 s. They show even when the hero stands
+    over the target. Both disappear on the frame the selection ends.
+  - **She flies** (rate 14 /s, about 0.3 s over 60 px) to a point beside the target on the side away from the hero,
+    with the wand tip 2 px off its upper far corner, and points (three frames, the last held). She does not cover the
+    target, and she stays under the context label anchored above it.
+- **Passive targets** (in reach and eligible but not selected, and the mechanisms a selected lever drives; were the
+  grey brackets): the same glow at 0.3, with no glints and no fairy (`Player.collectPassiveTargets`).
+- **D29 and D30 kept:**
+  - The eligibility, the nearest-target rule with its ID tie-break, the single target, the label anchor and the look
+    suppression are untouched, since she only reads the hero's selection.
+  - Down + Action still marks nothing.
+  - `DirectionalActionsTest` asserts, at every interaction-target check, that the fairy shows the same target.
+- **Hidden** while the hero cannot act (death, respawn, checkpoint, victory walk): she fades out in 0.1 s, and the
+  glows go. She comes back at his shoulder without a flight. During a dialogue she is frozen with the level.
+- **Draw order:** the glows after the vines and before the platforms and objects (light behind, the objects stay
+  crisp); the glints, her light and her frame after the hero.
+- **Art** (original, authored grids `art/objects/fairy/{body,glow,glint}.grid`, exported by
+  `tools/forest_trap_sprites.py fairy:<name>`):
+  - `fairy-body.png`: 14 frames of 16×16 (idle 4, fly 2, point 3, the same three flipped, appear 2), 10 colours.
+  - `fairy-glow.png`: 24×24, three aqua rings, used as a nine-slice.
+  - `fairy-glint.png`: 2 frames of 5×5.
+  - Details: [ART_DIRECTION.md](ART_DIRECTION.md#the-fairy-helper-d82-playtest-f4-f14-338).
+- **Contrast (D76), all active tier:**
+  - Without light, her ink contour fell to 0.187 on dark tiles. So she is drawn over a 20×20 copy of the glow at
+    alpha 0.6 to 0.9 (her own light, the firefly glow); a 16×16 light at 0.6 still failed (0.227).
+  - Measured by `check_contrast.py` over a sweep of every map (x every 64 px, y 40 to 328 every 48 px, two sky
+    offsets), since she has no placement: frames 0.314 to 0.440, glints over the selected glow 0.336 (big) and
+    0.380 (small).
+  - The glow only adds light behind a target and raised every measured target's outline (stone 0.293 to 0.686,
+    lever 0.579 to 0.881).
+  - The gate now takes about 5.6 s (was about 2.5 s).
+- **Allocation:** `AllocationBudgetTest.fairyGuideWithPassiveGlows` (was `passiveInteractionOutlines`, the
+  passive-outline scene; its ceiling constant is now `FAIRY_GUIDE_CEILING`, still 8 B/frame) measures the fairy guide
+  (update and both render passes): 0.1. `Level.linkedMechanisms` returned a new list per call, every frame a lever was
+  selected. It is now `linkedMechanismsInto(trigger, Array)`: `linkedMechanismsOfASelectedLever` measures 0.0 under
+  the same ceiling.
+- **Removed:** `InteractionHighlight` and its `check_sprite_art.py` permission (`corners`, white quad).
+  `test_sprite_art_guard.py` now checks the same "UI geometry versus object art" distinction on the menu panel's
+  permission, and that the old permission is gone. No threshold changed.
+- **Text:** the fairy words of `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT` and `HEALER_TALE_BLESSING` changed, and
+  `HEALER_TALE_FAIRY` was added after the fire gift (the start tale has 9 lines; see STORY.md). The rest of those
+  lines is [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370)'s.
+- **Changed existing tests (no threshold relaxed):**
+  - `DirectionalActionsTest` gains the fairy assertions and five fairy tests (the instant glow, hiding and the
+    twinkle, the call order, following the hero, and the point clip restarting when the target changes where she
+    already hovers).
+  - `LinkedMechanismTest` uses `linkedMechanismsInto` and checks each mechanism appears once.
+  - `HealerDialogueTest` and `CampaignFlowTest` expect 9 start-tale lines: still at most two presses a line, now 18
+    presses; the speakers are `HEHHHHHHE`.
+  - `test_sprite_art_guard.py`: see "Removed" above.
+- **Not verified:** the look, the read distance and the timing in the running game, desktop, web and touch
+  ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)); the native-speaker quality of the uk, pl, de and be lines ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)).

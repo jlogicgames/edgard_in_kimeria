@@ -87,6 +87,9 @@ machine-quality drafts in uk, be, de and pl and join that review, tracked in
 region, limit 72 px): 4 lines in all five languages, widest line EN 363, UK 365, PL 367, DE 365, BE 356 px
 (about 66 px high by font metrics; `HealerDialogueTest` asserts the 72 px limit). The added `INTRO_STORY`
 sentence only lengthens the scrolling opening text.
+The #338 fairy strings (`HEALER_TALE_FAIRY`, and the fairy words changed in `HEALER_TALE_FAIRIES`,
+`HEALER_TALE_LIFT` and `HEALER_TALE_BLESSING`) are machine-quality drafts in uk, pl, de and be and join the same
+review ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)). `HealerDialogueTest` fits every line in the D78 text box in all five languages.
 The #239 `SCREEN_SHAKE` label (Options -> Assist, "Screen shake") is likewise a machine-quality draft in
 uk, be, de and pl and belongs to that review; "<label>: Off" fits the 440 px Assist menu in all five
 languages (`LocalizationLayoutTest`).

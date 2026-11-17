@@ -136,6 +136,29 @@ normal next-level loading. It reuses the pre-boss portrait/dialogue presentation
 introduces no new quest, destination or persistent checkpoint. See [HEALER.md](HEALER.md).
 
 
+## The fairy helper — accepted 2026-11-16 ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338), playtest F4, F14)
+
+**Accepted by the author, 2026-11-16 ([D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16)).** The healer's third gift, after the silver
+thread and the spark of his fire, is a fairy of the wood: one of the little lights the night could not put out, a tiny
+maid with dragonfly wings whose skirt glows like a firefly's lantern. In Propp's terms she is the magical helper the
+donor gives. She has no name (names stay undecided, above).
+
+- **Shown, not only told:** she arrives at Edgard's shoulder with a twinkle when the forest-0 start tale ends, and
+  stays with him in every level. When he reaches for a thing his hand can wake or take, her light falls on it at
+  once, and she flies to it and points. She fights nothing and carries nothing.
+- **Approved texts (EN source, 2026-11-16, variant V1 of the Phase A proposal):**
+  - New healer line `HEALER_TALE_FAIRY`, after `HEALER_TALE_FIREGIFT` (start tale, 9 lines): "And my last gift,
+    Edgard: a fairy, one of the little lights the night could not put out. When you reach for a thing, she flies to it
+    and lights it."
+  - `HEALER_TALE_FAIRIES`: "a sleeping fairy wakes the torch with a touch" became "a sleeping torch wakes at a touch"
+    (the fairy is not given yet at that line).
+  - `HEALER_TALE_LIFT`: "A far-off fairy can be woken by a stone sent like a wish" became "What your hand cannot
+    reach, a stone sent like a wish can wake."
+  - `HEALER_TALE_BLESSING`: "May the fairies light your road" became "May your fairy light your road."
+  - The other images in those lines (ladder, wall, golden boat, "Do not be afraid to ask") are the tutorial-tale
+    rewrite's ([#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370)).
+
+
 ## MVP ending — accepted 2026-10-19
 
 The playable MVP is finite: the existing three-room `forest-1` (trap course, route room and guard room) is level one; the forest's three rooms and boss
@@ -196,7 +219,7 @@ line on the first death and a visible thread pull on every death are now wanted,
 Also revised after the playtest:
 the fireball becomes the healer's second gift, given with the thread
 ([#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340)); the fairies of the start
-tale become a visible fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338));
+tale become a visible fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338), done: "The fairy helper" above);
 all story texts are audited against the magic-tale structure first
 ([#339](https://github.com/jlogicgames/edgard_in_kimeria/issues/339)). Until those land, the
 texts above are the shipped ones. The start tale runs once per New Game run and is never repeated by death,

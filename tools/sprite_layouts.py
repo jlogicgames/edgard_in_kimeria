@@ -75,6 +75,14 @@ PICKUP_SHEETS = {
     'sparkle': ((5, 5), ('grow', 'star', 'fade')),
 }
 WORLD_IMAGES.update({f'pickup-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in PICKUP_SHEETS.items()})
+# The fairy helper (#338, D82): runtime export `fairy-<name>.png`, one horizontal strip; the order is FairyGuide's.
+FAIRY_SHEETS = {
+    'body': ((16, 16), ('idle1', 'idle2', 'idle3', 'idle4', 'fly1', 'fly2', 'point1', 'point2', 'point3',
+                        'point1-left', 'point2-left', 'point3-left', 'appear1', 'appear2')),
+    'glow': ((24, 24), ('glow',)),  # additive light, drawn as a nine-slice: the target glow and the fairy's own light
+    'glint': ((5, 5), ('big', 'small')),  # fairy dust at the selected target's corners
+}
+WORLD_IMAGES.update({f'fairy-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in FAIRY_SHEETS.items()})
 # The dialogue screen (#337, D78): hand-drawn grids in art/ui/dialogue -> assets/images/ui/dialogue-<name>.png, one horizontal
 # strip each; name -> (frame size, ordered frame names). The nine-patch insets are in HealerDialogueView.
 DIALOGUE_SHEETS = {

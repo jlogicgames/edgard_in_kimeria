@@ -623,7 +623,7 @@ class AllocationBudgetTest {
     static final double DIALOGUE_SCREEN_CEILING = 8;
     static final int DIALOGUE_SELECT_FRAMES = 60;
     static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
-    static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, PASSIVE_OUTLINE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
+    static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
     private static final int STONE_ROOM = 4, THROW_CYCLES = 30;
@@ -653,15 +653,32 @@ class AllocationBudgetTest {
         assertWithinBudget("thrown stone and fireball", STONE_FIREBALL_CEILING, bytes);
     }
 
-    /** The hero beside the stone and a lever: the passive corner outlines of {@code Player.renderInteractionTarget}, each frame. */
-    @Test void passiveInteractionOutlines() {
+    /**
+     * The hero beside the stone and a lever: the fairy guide (D82, was the passive corner outlines of
+     * {@code Player.renderInteractionTarget}) updated and drawn each frame: passive glows, her light and her frame.
+     */
+    @Test void fairyGuideWithPassiveGlows() {
         Level level = harness.roomOf("forest-0", STONE_ROOM);
         Carryable stone = level.objects.stream().filter(Carryable.class::isInstance).map(Carryable.class::cast).findFirst().orElseThrow();
         for (float dy = -REACH_SCAN; dy <= REACH_SCAN && level.player.selectedCarryable() == null; dy += REACH_SCAN_STEP)
             level.player.position.set(stone.getX() - HERO_WIDTH, stone.getY() + dy);
         assertNotNull(level.player.selectedCarryable(), "the stone must be in reach in this scenario");
-        double bytes = AllocationProbe.bytesPerFrame(i -> level.player.renderInteractionTarget(batch));
-        assertWithinBudget("passive interaction outlines", PASSIVE_OUTLINE_CEILING, bytes);
+        var fairy = level.fairy();
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            fairy.update(1f / 60f, level.player); fairy.renderBehind(batch); fairy.renderFront(batch);
+        });
+        assertTrue(fairy.passiveTargets().size > 0, "the stone must be marked passive in this scenario");
+        assertWithinBudget("fairy guide with passive glows", FAIRY_GUIDE_CEILING, bytes);
+    }
+
+    /** A selected lever marks the mechanisms it drives every frame (D82): filled into a reused array, no list per call. */
+    @Test void linkedMechanismsOfASelectedLever() {
+        Level level = harness.roomOf("forest-0", 0);
+        var trigger = level.triggers.get(0);
+        var linked = new com.badlogic.gdx.utils.Array<com.jlogicsoftware.kimeria.entity.Entity>(false, 8);
+        double bytes = AllocationProbe.bytesPerFrame(i -> { linked.clear(); level.linkedMechanismsInto(trigger, linked); });
+        assertTrue(linked.size > 0, "forest-0's first lever drives its torch");
+        assertWithinBudget("linked mechanisms of a selected lever", FAIRY_GUIDE_CEILING, bytes);
     }
 
     private Hud hudWithMetricsFont() {

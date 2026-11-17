@@ -12,7 +12,7 @@ characters of each row: a symmetry aid for round shapes, like an editor's mirror
 """
 from pathlib import Path
 from PIL import Image
-from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
 
 ROOT = Path(__file__).resolve().parents[1]
 GRID_DIR = ROOT / 'art/objects/forest-traps'
@@ -20,6 +20,8 @@ DECOR_GRID_DIR = ROOT / 'art/objects/decor'
 DECOR_PREFIX = 'decor:'  # a sheet name for a decor strip: 'decor:bush' -> decor-bush.png from art/objects/decor/bush.grid
 PICKUP_GRID_DIR = ROOT / 'art/objects/pickup'
 PICKUP_PREFIX = 'pickup:'  # the shared pickup cue (#345): 'pickup:glow' -> pickup-glow.png from art/objects/pickup/glow.grid
+FAIRY_GRID_DIR = ROOT / 'art/objects/fairy'
+FAIRY_PREFIX = 'fairy:'  # the fairy helper (#338): 'fairy:body' -> fairy-body.png from art/objects/fairy/body.grid
 PREVIEW_DIR = ROOT / 'docs/references/forest-traps'
 RGBA_CHANNELS = 4
 PREVIEW_SCALE = 6
@@ -70,7 +72,10 @@ def parse(path):
 
 
 def layout(name):
-    """(grid path, runtime stem, expected (size, frames)) for a trap name or a `decor:<name>` / `pickup:<name>` name."""
+    """(grid path, runtime stem, expected (size, frames)) for a trap name or a `decor:` / `pickup:` / `fairy:` name."""
+    if name.startswith(FAIRY_PREFIX):
+        short = name[len(FAIRY_PREFIX):]
+        return FAIRY_GRID_DIR / f'{short}.grid', f'fairy-{short}', FAIRY_SHEETS[short]
     if name.startswith(PICKUP_PREFIX):
         short = name[len(PICKUP_PREFIX):]
         return PICKUP_GRID_DIR / f'{short}.grid', f'pickup-{short}', PICKUP_SHEETS[short]
@@ -129,7 +134,8 @@ def preview(name, master, scale=PREVIEW_SCALE):
 
 
 def export_all(names=None):
-    for name in names or [*FOREST_TRAP_SHEETS, *(DECOR_PREFIX + n for n in DECOR_SHEETS), *(PICKUP_PREFIX + n for n in PICKUP_SHEETS)]:
+    for name in names or [*FOREST_TRAP_SHEETS, *(DECOR_PREFIX + n for n in DECOR_SHEETS), *(PICKUP_PREFIX + n for n in PICKUP_SHEETS),
+                          *(FAIRY_PREFIX + n for n in FAIRY_SHEETS)]:
         preview(name, export_sheet(name))
 
 

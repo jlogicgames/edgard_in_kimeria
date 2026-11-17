@@ -22,6 +22,7 @@ import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.ui.FairyGuide;
 import com.jlogicsoftware.kimeria.physics.CollisionUtils;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
@@ -238,9 +239,13 @@ public class Level implements WorldObject {
     private boolean rumbling;
     private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall", STONE_IMPACT_SOUND = "stone_impact";
     private final EnvironmentFx fx;
+    private final FairyGuide fairy;
 
     /** The environment effects of this level (screen shake, jump dust, ceiling grit). */
     public EnvironmentFx fx() { return fx; }
+
+    /** The fairy helper (D82): shows the interaction target the hero's Up + Action will affect. */
+    public FairyGuide fairy() { return fairy; }
 
     /** True only after the death presentation and the completed automatic exit. */
     public boolean victoryExitComplete() { return victory && completionSent; }
@@ -458,6 +463,7 @@ public class Level implements WorldObject {
         this.assets = assets;
         this.game = game;
         fx = new EnvironmentFx(() -> !game.screenShakeDisabled(), TimeUtils.nanoTime() ^ FX_SEED_MIX);
+        fairy = new FairyGuide(assets);
         this.player = player;
         this.name = levelName;
         this.entryCoins = game.coinsCollected();
@@ -1069,18 +1075,22 @@ public class Level implements WorldObject {
         return nearest;
     }
 
-    /** The visible mechanisms a trigger drives, so the player can see what a lever will affect. */
-    public List<Entity> linkedMechanisms(Trigger trigger) {
-        List<Entity> linked = new ArrayList<>();
-        if (trigger == null) return linked;
-        for (WorldObject object : objects) {
-            if (object instanceof Entity entity && object instanceof Actionable actionable
-                && !object.isRemoved() && trigger.targetId.equals(actionable.getTargetId())) linked.add(entity);
+    /**
+     * Adds the visible mechanisms {@code trigger} drives to {@code out}, each once (identity), so the player can see what a
+     * lever will affect (D82: the fairy guide's passive glow). Index loops, no allocation: it runs every frame a lever is selected.
+     */
+    public void linkedMechanismsInto(Trigger trigger, Array<Entity> out) {
+        if (trigger == null) return;
+        for (int i = 0; i < objects.size(); i++) {
+            WorldObject object = objects.get(i);
+            if (object instanceof Entity entity && object instanceof Actionable actionable && !object.isRemoved()
+                && trigger.targetId.equals(actionable.getTargetId()) && !out.contains(entity, true)) out.add(entity);
         }
-        for (Escalator escalator : escalators) {
-            if (!escalator.isRemoved() && trigger.targetId.equals(escalator.getTargetId())) linked.add(escalator);
+        for (int i = 0; i < escalators.size(); i++) {
+            Escalator escalator = escalators.get(i);
+            if (!escalator.isRemoved() && trigger.targetId.equals(escalator.getTargetId()) && !out.contains(escalator, true))
+                out.add(escalator);
         }
-        return linked;
     }
 
     private static Entity nearerFeedbackTarget(Trigger trigger, Entity current, Entity candidate) {
@@ -1178,7 +1188,7 @@ public class Level implements WorldObject {
             if (player.victoryPausePressed()) { game.togglePause(); return; }
             dt = Math.min(dt, .05f);
             updateWorld(dt);
-            finishUpdate();
+            finishUpdate(dt);
             if (boss.deathFinished() && !completionSent) {
                 player.advanceVictoryWalk(dt);
                 // A room narrower than the screen is centred: walk beyond the VIEW edge too.
@@ -1198,7 +1208,7 @@ public class Level implements WorldObject {
         for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
 
-        finishUpdate();
+        finishUpdate(dt);
     }
 
     /** Rhythmic traps (D46) kill by the hero's body box, exactly like the bomb blast: Player.die holds the only guards. */
@@ -1236,7 +1246,12 @@ public class Level implements WorldObject {
         }
     }
 
-    private void finishUpdate() {
+    /**
+     * Ends every path that advances the world. The fairy guide is updated here, once, after the hero has moved, so she
+     * moves exactly when the world does and her selection is the one the label and the hero's next action see (D82).
+     * The one early return, the victory pause, opens the pause menu before the world steps: she holds with it on purpose.
+     */
+    private void finishUpdate(float dt) {
         escalators.removeIf(WorldObject::isRemoved);
         fallingPlatforms.removeIf(WorldObject::isRemoved);
         collisionBlocks.removeIf(CollisionBlock::isRemoved);
@@ -1246,6 +1261,7 @@ public class Level implements WorldObject {
             objects.addAll(pendingSpawns);
             pendingSpawns.clear();
         }
+        fairy.update(dt, player);
     }
 
     /**
@@ -1276,6 +1292,7 @@ public class Level implements WorldObject {
         renderBackground(batch, visibleWorldRect);
         for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
+        fairy.renderBehind(batch); // the target glows: light behind the objects, the objects stay crisp (D82)
         for (int i = 0; i < staticPlatforms.size(); i++) staticPlatforms.get(i).render(batch);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).render(batch);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).render(batch);
@@ -1284,7 +1301,7 @@ public class Level implements WorldObject {
         fx.render(batch);
         for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
         if (!player.isRemoved()) player.render(batch);
-        player.renderInteractionTarget(batch);
+        fairy.renderFront(batch);
     }
 
     /** F1 debug gizmos: collision blocks in green, Deadlines in orange, actor hitboxes in red. */
