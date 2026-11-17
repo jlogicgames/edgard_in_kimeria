@@ -631,6 +631,80 @@ def bramble_lash() -> list[float]:
     env = envelope(n, BRAMBLE_LASH_ATTACK, BRAMBLE_LASH_TAU)
     return finish_rms([math.tanh(BRAMBLE_LASH_DRIVE * v / peak) * e for v, e in zip(swept, env)],
                       BRAMBLE_LASH_RMS_DB, BRAMBLE_LASH_PEAK_DB)
+# ---------------------------------------------------------------- hanging hive (#365, D90)
+# Warning (hive_buzz): a nasal, fluttering "nnzzz" rising a little over the D7 shake; plays once at the start of each warning,
+# at the quiet end of the voice set (-19.4, like the menu click) so it does not mask another warning. The flutter is a fast vibrato, the buzz the roughness.
+HIVE_BUZZ_VOICE = Voice(6501, 0.70, (150.0, 190.0), FORMANTS_I, FORMANTS_E, -19.4, asp_len=0.030, asp_level=0.4,
+                        attack=0.060, tau=0.500, release=0.080, jitter=0.05, rough=0.8, rough_start=0.0,
+                        vibrato=(24.0, 0.06), lowpass=3000.0)
+# Consequence (stinger_rain): a dry, even "tsk-tsk-tsk" patter for the 1 s curtain; grains like grit_fall's, but evenly
+# spread, brighter and a little louder.
+STINGER_SEED = 6502
+STINGER_DURATION = 1.0
+STINGER_TICKS = 70
+STINGER_TICK_LEN = 0.014     # s, one dart
+STINGER_TICK_ATTACK = 0.004  # s, darts swell in (no click)
+STINGER_TICK_BAND = (3200.0, 1800.0)   # centre, bandwidth (varied per tick by +-20 %)
+STINGER_LEVEL_RANGE = (0.4, 1.0)
+STINGER_SPREAD = 0.4         # each tick lands within this fraction of its even slot
+STINGER_LOWPASS_HZ = 5000.0
+STINGER_RMS_DB = -28.0         # under the voice set, above grit_fall; its sparse darts make it peak-limited near -27.5
+STINGER_PEAK_DB = -10.0
+# Consequence (hive_fall): a papery crunch over a small dull thud, then a few scattered buzz grains (the swarm leaving).
+HIVE_FALL_VOICE = Voice(6503, 0.30, (130.0, 80.0), FORMANTS_UH, FORMANTS_U, -19.0, asp_len=0.015, asp_level=0.5,
+                        attack=0.010, tau=0.080, release=0.040, jitter=0.05, rough=0.6, rough_start=0.2, lowpass=2600.0)
+HIVE_FALL_SEED = 6504
+HIVE_FALL_DURATION = 0.42
+HIVE_CRUNCH_BAND = (2400.0, 2600.0)  # Hz centre, bandwidth: dry paper
+HIVE_CRUNCH_ATTACK = 0.008
+HIVE_CRUNCH_TAU = 0.045
+HIVE_CRUNCH_GAIN = 0.7       # relative to the thud's peak
+HIVE_SCATTER_GRAINS = 6
+HIVE_SCATTER_START = 0.12    # s
+HIVE_SCATTER_SPAN = 0.24     # s
+HIVE_SCATTER_LEN = 0.03      # s, one buzz grain
+HIVE_SCATTER_HZ = (180.0, 260.0)  # grain pitch range (a sawtooth buzz)
+HIVE_SCATTER_GAIN = 0.18     # relative to the thud's peak
+HIVE_FALL_RMS_DB = -19.0
+
+
+def hive_buzz() -> list[float]:
+    return finish_rms(render_voice(HIVE_BUZZ_VOICE), HIVE_BUZZ_VOICE.rms_db)
+
+
+def stinger_rain() -> list[float]:
+    rng = random.Random(STINGER_SEED)
+    n = n_samples(STINGER_DURATION)
+    out = [0.0] * n
+    nt, na = n_samples(STINGER_TICK_LEN), n_samples(STINGER_TICK_ATTACK)
+    slot = (STINGER_DURATION - 2 * STINGER_TICK_LEN) / STINGER_TICKS
+    for k in range(STINGER_TICKS):
+        start = n_samples(STINGER_TICK_LEN + slot * (k + rng.uniform(0.0, STINGER_SPREAD)))
+        level = rng.uniform(*STINGER_LEVEL_RANGE)
+        tick = bandpass(noise(rng, nt), STINGER_TICK_BAND[0] * rng.uniform(0.8, 1.2), STINGER_TICK_BAND[1])
+        for j in range(nt):
+            out[start + j] += tick[j] * level * min(j / na, 1.0) * math.exp(-4.0 * j / nt)
+    return finish_rms(lowpass(out, STINGER_LOWPASS_HZ), STINGER_RMS_DB, STINGER_PEAK_DB)
+
+
+def hive_fall() -> list[float]:
+    body = render_voice(HIVE_FALL_VOICE)
+    n = n_samples(HIVE_FALL_DURATION)
+    body = body[:n] + [0.0] * max(0, n - len(body))
+    peak = max(abs(v) for v in body) or 1.0
+    rng = random.Random(HIVE_FALL_SEED)
+    crunch = bandpass(noise(rng, n), *HIVE_CRUNCH_BAND)
+    cp = max(abs(v) for v in crunch) or 1.0
+    env = envelope(n, HIVE_CRUNCH_ATTACK, HIVE_CRUNCH_TAU)
+    mix = [b + HIVE_CRUNCH_GAIN * peak * c * e / cp for b, c, e in zip(body, crunch, env)]
+    ng = n_samples(HIVE_SCATTER_LEN)
+    for _ in range(HIVE_SCATTER_GRAINS):
+        start = n_samples(HIVE_SCATTER_START + rng.random() * HIVE_SCATTER_SPAN)
+        hz, level = rng.uniform(*HIVE_SCATTER_HZ), HIVE_SCATTER_GAIN * peak * rng.uniform(0.5, 1.0)
+        for j in range(min(ng, n - start)):
+            saw = 2.0 * ((j * hz / SAMPLE_RATE) % 1.0) - 1.0
+            mix[start + j] += level * saw * math.sin(math.pi * j / ng)
+    return finish_rms(mix, HIVE_FALL_RMS_DB)
 
 
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
@@ -638,7 +712,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
                "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
                "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
-               "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash}
+               "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
+               "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall}
 
 
 def generate(out_dir: Path) -> list[Path]:

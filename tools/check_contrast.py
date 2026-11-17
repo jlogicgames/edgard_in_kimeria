@@ -106,6 +106,12 @@ SPRITES = {
     'Bomb': ('active', 'objects/trap-bomb.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'Puffball': ('active', 'objects/trap-puffball.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'ThornVine': ('active', 'objects/trap-vine.png', (0, 0, 24, 40), 1, 'top', FULL),
+    # #365 (D90): every frame the hive can show, each placed by hive_parts where HangingHive.render draws it: rest, shake1,
+    # shake2, release and bare at the object; falling halfway down its drop; fallen on the solid; the stinger tile down the band.
+    'HangingHive': ('active', 'objects/trap-hive.png', (0, 0, 24, 32), 5, 'top', FULL),
+    'HangingHive:falling': ('active', 'objects/trap-hive.png', (120, 0, 24, 32), 1, 'top', FULL),
+    'HangingHive:fallen': ('active', 'objects/trap-hive.png', (144, 0, 24, 32), 1, 'top', FULL),
+    'HangingHive:stingers': ('active', 'objects/trap-stingers.png', (0, 0, 8, 16), 2, 'top', FULL),
     'HoneyFungus': ('active', 'objects/trap-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
     'FalseHoneyFungus': ('active', 'objects/trap-false-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
     'FallingPlatform': ('active', 'objects/trap-falling-platform.png', (0, 0, 32, 10), 4, 'top', FULL),  # #362: every fan frame
@@ -248,6 +254,38 @@ def deadfall_parts(x, y, swing_right):
             ('Deadfall:vine' + suffix, vine_left, floor - n('VINE_SPRITE_DROP'), vine_w, vine_h)]
 
 
+HIVE_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/HangingHive.java'
+
+
+def hive_parts(root, x, y):
+    """(key, left, top, width, height) of what HangingHive.render draws for a hive at (x, y): the hive's frames at the object,
+    the knocked hive halfway down and lying on the solid, and the stinger tile at every 16 px of the band (mirror of floorBelow)."""
+    n = lambda name: java_number(HIVE_JAVA, name)
+    width, height, band, mouth = n('WIDTH'), n('HEIGHT'), n('BAND_WIDTH'), y + n('MOUTH_OFFSET')
+    left = x + (width - band) / 2
+    floor = None
+    for group in root.findall('objectgroup'):
+        if group.get('name') != 'Collisions':
+            continue
+        for c in group.findall('object'):
+            cx, cy, cw = float(c.get('x')), float(c.get('y')), float(c.get('width', 0))
+            if c.get('type') == 'QuickSand' or cy < mouth - n('SIZE_TOLERANCE') or cx >= left + band or cx + cw <= left:
+                continue
+            floor = cy if floor is None else min(floor, cy)
+    parts = [('HangingHive', x, y, width, height)]
+    if floor is None:
+        return parts  # the game refuses such a map; check_tiled_links says why
+    drop = floor - (y + n('FALLING_BOTTOM'))
+    parts += [('HangingHive:falling', x, y + drop / 2, width, height),
+              ('HangingHive:fallen', x, floor - n('FALLEN_BOTTOM'), width, height)]
+    _, _, (_, _, _, tile), *_ = SPRITES['HangingHive:stingers']
+    top = mouth
+    while top + tile <= floor:
+        parts.append(('HangingHive:stingers', left, top, band, tile))
+        top += tile
+    return parts
+
+
 def with_halo(background, halo, centre_x, centre_y, alpha):
     """`background` with `halo` added on top (GL_SRC_ALPHA, GL_ONE) at `alpha`, centred on (centre_x, centre_y)."""
     layer = Image.new('RGB', background.size)
@@ -322,6 +360,9 @@ def placements(errors, roots=None):
             offset_y = float(group.get('offsety', '0'))
             for obj in group.findall('object'):
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'HangingHive':
+                    yield from ((name, *part) for part in hive_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y))
+                    continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Deadfall':
                     for key, left, top, w, h in deadfall_parts(float(obj.get('x')), float(obj.get('y')) + offset_y,
                                                                props.get('swing') == 'right'):

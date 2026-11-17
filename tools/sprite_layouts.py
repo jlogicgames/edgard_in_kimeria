@@ -67,6 +67,9 @@ FOREST_TRAP_SHEETS = {
     'deadfall-bough': ((112, 24), ('bough',)),
     'deadfall-vine': ((24, 8), ('taut', 'tugged', 'cut')),
     'deadfall-rope': ((1, 8), ('rope',)),
+    # #365 (D90): the hanging hive (bough drawn in) and its stinger curtain, a tile repeated down the lethal band.
+    'hive': ((24, 32), ('rest', 'shake1', 'shake2', 'release', 'bare', 'falling', 'fallen')),
+    'stingers': ((8, 16), ('fall1', 'fall2')),
 }
 FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TRAP_SHEETS.items()}
 # Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.

@@ -622,3 +622,40 @@ class StillDecorLinksTest(unittest.TestCase):
     def test_the_shipped_maps_keep_their_look_alikes_in_order(self):
         for name in ('forest-0', 'forest-1', 'forest-2'):
             self.assertEqual([], links.check_map(links.MAPS / f'{name}.tmx'))
+
+
+class HangingHiveLinksTest(unittest.TestCase):
+    """#365 (D90): mirror of HangingHive.fromMap / floorBelow / movingSolidProblem / validate and Level.spawnHive."""
+    FLOOR = '<object id="9" x="0" y="320" width="640" height="48"/>'
+    ROOM = HoneyFungusLinksTest.ROOM
+
+    @staticmethod
+    def hive(x=288, y=200, props='', w=24, h=32):
+        body = f'<properties>{props}</properties>' if props else ''
+        return f'<object id="3" type="HangingHive" x="{x}" y="{y}" width="{w}" height="{h}">{body}</object>'
+
+    def run_map(self, trap, spawn='', collisions=FLOOR, rooms=ROOM):
+        return check(tmx(trap + spawn, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_a_hive_over_open_floor_passes(self):
+        self.assertEqual([], self.run_map(self.hive()))
+
+    def test_properties_size_and_floor(self):
+        self.assertIn("unknown property 'perod'", self.run_map(self.hive(props='<property name="perod" value="4"/>'))[0])
+        self.assertIn('not a number', self.run_map(self.hive(props='<property name="period" value="4,5"/>'))[0])
+        self.assertIn('must be 24x32', self.run_map(self.hive(w=16))[0])
+        self.assertIn('no solid under its mouth', self.run_map(self.hive(), collisions='')[0])
+        self.assertIn('minimum is 32', self.run_map(self.hive(y=280))[0])
+
+    def test_period_leaves_calm_at_the_floor(self):
+        # band 94 px: 1.0 + 0.392 + 1.2 + 0.8 = 3.39 s at least
+        self.assertEqual([], self.run_map(self.hive(props='<property name="period" value="3.4"/>')))
+        self.assertIn('shorter than curtain', self.run_map(self.hive(props='<property name="period" value="3.3"/>'))[0])
+
+    def test_band_stops_on_the_first_solid_and_never_covers_a_standing_place(self):
+        ledge = self.FLOOR + '<object id="10" x="280" y="260" width="40" height="16"/>'
+        self.assertEqual([], self.run_map(self.hive(), collisions=ledge))  # band ends on the ledge, 34 px deep
+        self.assertIn('covers the room entrance', self.run_map(self.hive(x=40))[0])
+        self.assertIn('covers the room exit', self.run_map(self.hive(x=600))[0])
+        lift = '<object id="11" type="Escalator" x="290" y="280" width="32" height="16"/>'
+        self.assertIn('moving or switchable Escalator [11]', self.run_map(self.hive(), spawn=lift)[0])

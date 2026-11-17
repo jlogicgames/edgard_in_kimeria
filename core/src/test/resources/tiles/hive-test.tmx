@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="120" height="23" tilewidth="16" tileheight="16">
+ <objectgroup name="Rooms">
+  <object name="floor" type="Room" x="0" y="0" width="640" height="368"/>
+  <object name="floor" type="RoomStart" x="32" y="272"><point/></object>
+  <object name="floor" type="RoomExit" x="592" y="272" width="32" height="48"/>
+  <object name="ladder" type="Room" x="640" y="0" width="640" height="368"/>
+  <object name="ladder" type="RoomStart" x="672" y="272"><point/></object>
+  <object name="ladder" type="RoomExit" x="1232" y="160" width="32" height="48"/>
+  <object name="ledge" type="Room" x="1280" y="0" width="640" height="368"/>
+  <object name="ledge" type="RoomStart" x="1312" y="160"><point/></object>
+ </objectgroup>
+ <objectgroup name="SpawnPoints">
+  <object id="1" type="Player" x="32" y="272" width="48" height="48"/>
+  <object id="2" type="HangingHive" name="floor-hive" x="300" y="232" width="24" height="32"/>
+  <object id="3" name="Stone" type="Stone" x="96" y="308" width="12" height="12"/>
+  <object id="4" type="Ladder" name="ladder" x="1016" y="208" width="16" height="112"/>
+  <object id="5" type="HangingHive" name="ladder-hive" x="1012" y="96" width="24" height="32">
+   <properties><property name="period" value="4.5"/></properties>
+  </object>
+  <object id="6" type="HangingHive" name="ledge-hive" x="1600" y="168" width="24" height="32">
+   <properties><property name="period" value="4.5"/><property name="phase" value="1"/></properties>
+  </object>
+  <object id="9" name="Deadline" type="Deadline" x="-1000" y="368" width="4000" height="16"/>
+ </objectgroup>
+ <objectgroup name="Collisions">
+  <object id="10" x="0" y="320" width="640" height="48"/>
+  <object id="11" x="640" y="320" width="640" height="48"/>
+  <object id="12" x="1032" y="208" width="248" height="112"/>
+  <object id="13" x="1280" y="208" width="256" height="160"/>
+  <object id="14" x="1536" y="320" width="384" height="48"/>
+  <object id="15" type="Wall" x="0" y="0" width="16" height="320"/>
+  <object id="16" type="Wall" x="1904" y="0" width="16" height="320"/>
+ </objectgroup>
+</map>

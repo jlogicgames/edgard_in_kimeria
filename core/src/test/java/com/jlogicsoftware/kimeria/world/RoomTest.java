@@ -123,10 +123,10 @@ class RoomTest {
      * not x, sets the order) and holds the Player spawn as its entrance; the deadfall room (D88), the trap course, the lever lesson room (D86), the route room,
      * the guard room and the tree room follow, and the tree room is last and holds the Checkpoint at its top.
      */
-    @Test void forestOneIsTheMobRoomThenTheDeadfallThenTheTrapCourseThenTheLeverLessonThenTheBrambleThenTheRouteRoomThenTheGuardRoomThenTheTreeRoomWithTheCheckpoint() {
+    @Test void forestOneIsTheMobRoomThenTheDeadfallThenTheTrapCourseThenTheLeverLessonThenTheBrambleThenTheRouteRoomThenTheGuardRoomThenTheHiveThenTheTreeRoomWithTheCheckpoint() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(8, layout.rooms.size());
+        assertEquals(9, layout.rooms.size());
         assertEquals("forest-1-mob", layout.rooms.get(0).id());
         assertEquals("forest-1-deadfall", layout.rooms.get(1).id());
         assertEquals("forest-1-traps", layout.rooms.get(2).id());
@@ -143,11 +143,13 @@ class RoomTest {
         assertNotNull(layout.rooms.get(5).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
         assertNotNull(layout.rooms.get(6).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
         assertEquals("forest-1-guard", layout.rooms.get(6).id());
-        assertNull(layout.rooms.get(7).exit());
-        assertEquals("forest-1-tree", layout.rooms.get(7).id());
+        assertEquals("forest-1-hive", layout.rooms.get(7).id());
+        assertNotNull(layout.rooms.get(7).exit(), "the hive room (#365, D90) leads to the tree room");
+        assertNull(layout.rooms.get(8).exit());
+        assertEquals("forest-1-tree", layout.rooms.get(8).id());
         var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertEquals(1, checkpoint.size());
-        assertEquals(7, layout.owner(checkpoint.get(0)));
+        assertEquals(8, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasFourCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

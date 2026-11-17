@@ -11,6 +11,7 @@ import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
+import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.world.Level;
@@ -142,6 +143,13 @@ public final class Carryable extends Entity {
                 // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.
                 if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
                     if (level.objects.get(o) instanceof ExplosiveTrap trap && trap.triggerBoxInto(trapBox).overlaps(bounds()) && trap.igniteFromAfar()) {
+                        velocity.x = 0; thrown = false;
+                        break;
+                    }
+                }
+                // #365 (D90): a thrown stone that reaches a hanging hive knocks it down, then drops (not consumed), as above.
+                if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                    if (level.objects.get(o) instanceof HangingHive hive && hive.bodyInto(trapBox).overlaps(bounds()) && hive.knockDown()) {
                         velocity.x = 0; thrown = false;
                         break;
                     }

@@ -68,6 +68,7 @@ what the player does about them.
 | puffball | `Puffball` | crosses a rhythmic spore cloud in its calm |
 | thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm |
 | bramble | `Bramble` | waits out a thorn arm that grows across a lane on a clock and passes in its open window (D89) |
+| hanging-hive | `HangingHive` | passes under, or climbs through, a falling curtain of stingers in its calm; may knock the hive down |
 | honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst |
 | false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud |
 | deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past |
@@ -206,7 +207,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 8 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 1 of 9 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
@@ -240,7 +241,7 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 8 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 2 of 9 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by. |
 | Introduces | deadfall |
@@ -272,7 +273,7 @@ x    4960 4992        5176-5192        5228  5296  5364      5536    5600
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 8 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 3 of 9 (1280 px, two screens) |
 | Role | combination |
 | Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
 | Introduces | running-platform, puffball |
@@ -305,7 +306,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 8 (640 px, one screen) |
+| Level | forest-1, play order 2, room 4 of 9 (640 px, one screen) |
 | Role | lesson |
 | Purpose | One lever drives two mechanisms in opposite states: pulling it lowers the ladder and stops the lift, pulling again raises the ladder and restarts the lift; both are in view when it is pulled, and a wrong pull costs nothing. |
 | Introduces | - |
@@ -325,7 +326,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 8 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 5 of 9 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A thorn arm grows over a ladder top on a clock: watch it from the floor, wait on the ladder, climb out when it pulls back. |
 | Introduces | bramble |
@@ -359,7 +360,7 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 6 of 8 (832 px) |
+| Level | forest-1, play order 2, room 6 of 9 (832 px) |
 | Role | variation |
 | Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
 | Introduces | bat-enemy |
@@ -379,7 +380,7 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 7 of 8 (768 px) |
+| Level | forest-1, play order 2, room 7 of 9 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
 | Introduces | - |
@@ -395,11 +396,48 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 | Status | D72 audit 2026-11-16: keep |
 | Decisions | D68 |
 
+### forest-1-hive
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 8 of 9 (640 px, one screen, x 6240-6880: appended at the map's end, listed after `forest-1-guard` in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | A hive drops a curtain of stingers on a clock: pass under the first in its calm on open ground, then climb a ladder the second hive's curtain runs down, starting right after a curtain. |
+| Introduces | hanging-hive |
+| Develops | - |
+| Combines | hanging-hive + ladder: the second hive's band covers the whole ladder to the exit ledge, so the climb must start right after a curtain and fit its window |
+| Repeats | ladder, carry-throw |
+| Mastered route | 7.12 s from a fresh start; 6.85 to 12.22 s over start offsets of 0 to 9 s (0.1 s steps), with and without the longer-warnings assist, for a hero who waits outside each band while it is in the air or about to be and starts the climb right after a curtain (`Forest1HiveTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | 7.5 s at most: a hero who walks and climbs without waiting dies in every one of 45 start offsets, 12 times under the floor hive and 33 times under the ladder hive, 3.1 to 7.5 s after the entrance, and replays the room from its entrance (`Forest1HiveTest`) |
+| Optional | knock the floor hive down: with the stone by the entrance by a jump-throw (28 of 28 tested throw points, body right edge x 6330 to 6438), or with a fireball near the top of a jump (10 of 13 tested jump timings, one charge); after that the floor pass is free. The ladder hive hangs out of reach of both |
+| D26 | no lever, support or one-shot state on the route: both hives are passed by timing alone, from every start offset (`Forest1HiveTest`); a knock-down only removes a danger, and a retry rebuilds both hives |
+| Hints | none (forest-1 has none, D33) |
+| Landmark | the ladder with the hive hanging over it, its curtain running down the rungs |
+| Status | new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; not yet played by the author or a novice ([#440](https://github.com/jlogicgames/edgard_in_kimeria/issues/440)) |
+| Decisions | D90, D72 |
+
+Sketch (Y grows downward, floor top y 320, ledge top y 208; walls x 6240-6256 and 6864-6880):
+
+```
+x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624            6832  6864 6880
+     |wall|start  s          T   [hive A]           T   [hive B]   [ ledge 6624-6864, y 208 ]E |wall|
+     |    | @     o          T     ||| band 6448-56 T     |||L     |                          |    |
+=====+============================================================+===========================+====  floor y 320
+```
+
+- `HangingHive` (id 135) x 6440, y 232 (mouth y 258, band x 6448-6456, 62 px to the floor), period 4 s, phase 0; its bough
+  meets a `Decor:trunk` (id 139) at x 6424. Its body (y 239-257) is reached by a jump-throw or a jump-fire.
+- `HangingHive` (id 136) x 6604, y 96 (mouth y 122, band x 6612-6620, 198 px down the ladder to the floor), period 4.5 s,
+  phase 2 (out of step with the first); its bough meets a `Decor:trunk` (id 140) at x 6588.
+- Static `Ladder` (id 137) x 6608-6624, y 208-320, no lever, against the ledge (id 144, x 6624-6864, y 208-320).
+- `Stone` (id 138) x 6336, y 308. `RoomStart` (id 133) (6272, 272); `RoomExit` (id 134) x 6832-6864, y 160-208, on the ledge.
+
 ### forest-1-tree
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 8 of 8 (640 px, one screen) |
+| Level | forest-1, play order 2, room 9 of 9 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb |

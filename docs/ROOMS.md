@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has eight rooms since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has nine rooms since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -452,6 +452,7 @@ use `core/src/test/resources/tiles/rhythm-test.tmx` as the worked example.
 | `Puffball` | 16×16, base on the floor | `period` 4.0 s, `phase` 0 s, `cloud` 1.0 s | cap swells 0.8 s (1.2 s with the assist), then a 1.0 s lethal cloud, then calm |
 | `ThornVine` | 24×40, top edge is the anchor | `period` 4.5 s (min 3.5), `phase` 0 s, `amplitude` 50° (35-60) | lethal lower half only; the stem is harmless |
 | `FallingPlatform` | 32×16 | `skin=log` | the rotten log; behaviour unchanged |
+| `HangingHive` | 24×32, top edge is the bough | `period` 4.0 s, `phase` 0 s, `curtain` 1.0 s | shakes 0.8 s (1.2 s assisted), then stingers fall from the mouth (top + 26) at 240 px/s for `curtain` s to the first solid under it; an 8 px band (D90) |
 
 **Period and phase.** Time starts at the room's entrance and again on every retry, so the
 authored `phase` is also what the hero meets on every attempt: the first cloud or swing a
@@ -466,6 +467,8 @@ floor 64 px below the object's top edge; the vine must hang clear of the room's 
 ceiling (swept area is `length + 4` px each way from the anchor, the load fails if it leaves the room).
 With that recipe the safe window is about 1.2 s per swing and the crossing needs about 0.8 s, so a
 careful hero waits at the edge, watches the swing lift the tip, and runs under.
+
+`HangingHive`: `period >= curtain + depth / 240 + 1.2 + 0.8`, where depth is the band from the mouth to the solid (at least 32 px); the load fails otherwise. Over open floor the pass takes about 0.2 s; over a ladder the climb must fit between the last stinger leaving the foot and the next head reaching the top (2.94 s for a 112 px ladder, a 198 px band and a 4.5 s period; measure any new layout with the climber in `HangingHiveTest`). From the floor a stone reaches the body only by a jump-throw; a fireball only from a standing place level with it.
 
 **Never over a place the hero must stand.** The load (and `check_tiled_links.py`) rejects a trap whose danger area, over its whole rhythm, touches the room entrance body, the room exit or a checkpoint of the room.
 
@@ -961,6 +964,28 @@ card: [TRAPS.md](TRAPS.md#creeping-bramble-bramble).
   after a fixed wait survives 37 of 80 offsets, the longest safe run 1.85 s (`BrambleTest`).
 - D26: no lever, support or one-shot state; the arm comes back every 4 s, so waiting on the ladder always gives another
   window.
+
+## forest-1 hive room (#365, D90)
+
+`forest-1-hive`, x 6240-6880 (640 px, one camera view), floor top y 320, walls at x 6240-6256 and 6864-6880. It is
+appended at the map's end (forest-1 grew from 390 to 430 tiles) and listed after `forest-1-guard` in `Rooms`, so it is
+played between the guard room and the tree room. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-hive); trap card:
+[TRAPS.md](TRAPS.md#hanging-hive-hanginghive).
+
+- RoomStart (6272, 272); RoomExit (6832, 160, 32 x 48) on the ledge. A solid ledge x 6624-6864, top y 208 (tiles rows
+  13-19), against the right wall.
+- `HangingHive` x 6440, y 232 over open floor (band x 6448-6456, y 258-320), a `Decor:trunk` at x 6424 for its bough; a
+  `Stone` at x 6336, y 308 by the entrance.
+- A static `Ladder` x 6608-6624, y 208-320 against the ledge; `HangingHive` x 6604, y 96 over it (band x 6612-6620, y 122-320,
+  down the whole ladder), period 4.5 s, phase 2, a `Decor:trunk` at x 6588. **Recipe:** a hive over a ladder needs a period
+  that leaves the climb room: here the window from the last stinger leaving the foot to the next head reaching the ledge is
+  2.94 s for a climb of about 1.6 s (`HangingHiveTest`); measure any other ladder with the climber there.
+- Measured (`Forest1HiveTest`): mastered route 7.12 s from a fresh start, 6.85 to 12.22 s over start offsets of 0 to 9 s with
+  and without the assist; a hero who never waits dies in all 45 tested offsets, 3.1 to 7.5 s after the entrance (12 at the
+  floor hive, 33 at the ladder). The stone knocks the floor hive down by a jump-throw (28 of 28 throw points), a fireball by a
+  jump-fire (10 of 13 timings).
+- D26: no lever, support or one-shot state; both hives come back every period, so waiting outside a band always gives
+  another window.
 
 ## forest-1 lever room (#418, D86)
 
