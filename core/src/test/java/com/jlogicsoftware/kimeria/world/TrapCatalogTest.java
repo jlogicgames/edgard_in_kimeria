@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Gate of the trap design system (D71, #348, docs/TRAPS.md): every object type that {@code Level} spawns is either a
  * trap with a catalogue row or a listed non-trap type, and every trap row satisfies the visibility rule. A new trap
- * type added to the spawn switch without a card and a row fails here.
+ * type added to the spawn switch without a card and a row fails here. Every trap card also states the consequence of the
+ * trap's act once (D93, {@link #consequenceProblems}).
  *
  * <p>It reads the spawn switch of {@code world/Level.java} and the two marked tables of {@code docs/TRAPS.md} as
  * text. What it cannot check: that the art matches the card (a human or a frame test), contrast (#344), read distance.
@@ -36,6 +38,13 @@ public class TrapCatalogTest {
     private static final Pattern PENDING = Pattern.compile("pending #\\d+");
     private static final Pattern CASE = Pattern.compile("case\\s+((?:\"[A-Za-z0-9]+\"\\s*,?\\s*)+)->");
     private static final Pattern QUOTED = Pattern.compile("\"([A-Za-z0-9]+)\"");
+    /** D93: the one consequence statement of a card, and its three allowed forms. */
+    static final String CONSEQUENCE = "Consequence (D93):";
+    private static final Pattern CONSEQUENCE_LINE = Pattern.compile(Pattern.quote(CONSEQUENCE) + "\\s*([^|\\n]*)");
+    private static final Pattern NONE_YET = Pattern.compile("^none yet \\(\\[?#\\d+");
+    private static final Pattern INTENTIONALLY_NONE = Pattern.compile("^intentionally none \\(D\\d+");
+    private static final Pattern SOUNDS = Pattern.compile("^`[a-z0-9_]+`(?:,\\s*`[a-z0-9_]+`)*");
+    private static final Pattern SOUND = Pattern.compile("`([a-z0-9_]+)`");
 
     // ---- the real files ------------------------------------------------------------------------------------------
 
@@ -43,6 +52,15 @@ public class TrapCatalogTest {
     void everySpawnedTypeHasATrapCardOrANonTrapReasonAndEveryTrapFollowsD71() throws IOException {
         List<String> problems = problems(read(LEVEL), read(TRAPS));
         assertTrue(problems.isEmpty(), "docs/TRAPS.md and Level disagree (D71):\n  " + String.join("\n  ", problems));
+    }
+
+    @Test
+    void everyTrapCardStatesTheConsequenceOfItsAct() throws IOException {
+        Path root = repositoryRoot();
+        Set<String> listed = Set.of(com.jlogicsoftware.kimeria.Assets.SOUND_EFFECTS);
+        Predicate<String> sound = name -> listed.contains(name) && Files.exists(root.resolve("assets/audio/" + name + ".wav"));
+        List<String> problems = consequenceProblems(read(TRAPS), sound);
+        assertTrue(problems.isEmpty(), "docs/TRAPS.md cards and D93 disagree:\n  " + String.join("\n  ", problems));
     }
 
     @Test
@@ -151,6 +169,34 @@ public class TrapCatalogTest {
         assertThrows(IllegalStateException.class, () -> problems("class Level {}", doc(ROOT_OK + TUFT_OK, PLAYER)));
     }
 
+    private static final String ROW_ROOT = "| `ThornRoot` | proximity | VISIBLE | none needed | 0.8 s | room | D44 |\n";
+    private static final Predicate<String> FIXTURE_SOUNDS = Set.of("thorn_spring", "stone_impact")::contains;
+
+    private static String consequenceDoc(String rootCard) {
+        return doc(ROW_ROOT, PLAYER, "## Cards\n\n### Thorn root (`ThornRoot`)\n\n" + rootCard + "\n\n### Other (`Other`)\n\n"
+            + "| Art and sound | x. Consequence (D93): `stone_impact` |\n\n## Maintenance\n");
+    }
+
+    @Test
+    void aConsequenceIsASoundAnIssueOrADecision() {
+        for (String ok : List.of("`thorn_spring`", "`thorn_spring`, `stone_impact`, then dust", "none yet (#446)",
+            "none yet ([#446](https://github.com/x/y/issues/446))", "intentionally none (D46: the motion)"))
+            assertEquals(List.of(), consequenceProblems(consequenceDoc("| Art and sound | sheet. Consequence (D93): " + ok + " |"), FIXTURE_SOUNDS), ok);
+    }
+
+    @Test
+    void aCardWithoutAValidConsequenceFails() {
+        assertTrue(consequenceProblems(consequenceDoc("| Art and sound | sheet, no sound |"), FIXTURE_SOUNDS).stream()
+            .anyMatch(p -> p.contains("ThornRoot") && p.contains("no 'Consequence (D93):'")), "missing statement");
+        // The other card's statement must not count for this one.
+        for (String bad : List.of("`thorn_snap`", "none", "none yet", "none yet (soon)", "intentionally none", "intentionally none (because)",
+            "a rasp", ""))
+            assertTrue(consequenceProblems(consequenceDoc("| Art and sound | sheet. Consequence (D93): " + bad + " |"), FIXTURE_SOUNDS).stream()
+                .anyMatch(p -> p.contains("ThornRoot")), "'" + bad + "' must be refused");
+        String twice = "| Art and sound | Consequence (D93): `thorn_spring` |\n\nConsequence (D93): none yet (#1)";
+        assertTrue(consequenceProblems(consequenceDoc(twice), FIXTURE_SOUNDS).stream().anyMatch(p -> p.contains("more than one")));
+    }
+
     // ---- the gate ----------------------------------------------------------------------------------------------------
 
     static List<String> problems(String levelSource, String trapsDoc) {
@@ -182,6 +228,44 @@ public class TrapCatalogTest {
             }
         }
         return out;
+    }
+
+    /**
+     * D93: the card of every catalogue trap holds exactly one {@value #CONSEQUENCE} statement: sound names in backticks
+     * (each one accepted by {@code sound}: a file in {@code assets/audio} listed in {@code Assets.SOUND_EFFECTS}),
+     * {@code none yet (#NNN)} or {@code intentionally none (Dxx)}. A card shared by two types serves both.
+     */
+    static List<String> consequenceProblems(String trapsDoc, Predicate<String> sound) {
+        List<String> out = new ArrayList<>();
+        for (String type : table(trapsDoc, "trap-catalogue").keySet()) {
+            String card = cardText(trapsDoc, type);
+            if (card == null) continue; // the catalogue gate reports the missing heading
+            Matcher m = CONSEQUENCE_LINE.matcher(card);
+            if (!m.find()) { out.add(type + ": card has no '" + CONSEQUENCE + "' statement (D93)"); continue; }
+            String value = m.group(1).trim();
+            if (m.find()) out.add(type + ": card has more than one '" + CONSEQUENCE + "' statement");
+            if (value.startsWith("none yet")) {
+                if (!NONE_YET.matcher(value).find()) out.add(type + ": 'none yet' must link its issue: none yet (#NNN), got '" + value + "'");
+            } else if (value.startsWith("intentionally none")) {
+                if (!INTENTIONALLY_NONE.matcher(value).find()) out.add(type + ": 'intentionally none' must name its decision: intentionally none (Dxx), got '" + value + "'");
+            } else {
+                Matcher list = SOUNDS.matcher(value);
+                if (!list.find()) { out.add(type + ": consequence must be sounds in backticks, none yet (#NNN) or intentionally none (Dxx), got '" + value + "'"); continue; }
+                Matcher each = SOUND.matcher(list.group());
+                while (each.find())
+                    if (!sound.test(each.group(1))) out.add(type + ": consequence sound '" + each.group(1) + "' is not in assets/audio and Assets.SOUND_EFFECTS");
+            }
+        }
+        return out;
+    }
+
+    /** The card's text: from its heading to the next level-2 or level-3 heading, or null without a heading. */
+    static String cardText(String doc, String type) {
+        Matcher h = Pattern.compile("^### [^\\n]*\\([^)\\n]*`" + Pattern.quote(type) + "`[^)\\n]*\\)\\s*$", Pattern.MULTILINE).matcher(doc);
+        if (!h.find()) return null;
+        Matcher next = Pattern.compile("^#{2,3} ", Pattern.MULTILINE).matcher(doc);
+        int end = next.find(h.end()) ? next.start() : doc.length();
+        return doc.substring(h.end(), end);
     }
 
     /** A level-3 heading line whose final parenthesised list names the type in backticks: {@code ### Name (`A`, `B`)}. */
@@ -246,9 +330,13 @@ public class TrapCatalogTest {
 
     /** Repository root: the working directory or the nearest parent holding {@code docs/TRAPS.md}. */
     static String read(String relative) throws IOException {
+        return Files.readString(repositoryRoot().resolve(relative), StandardCharsets.UTF_8);
+    }
+
+    static Path repositoryRoot() throws IOException {
         Path dir = Paths.get("").toAbsolutePath();
         while (dir != null && !Files.exists(dir.resolve(TRAPS))) dir = dir.getParent();
         if (dir == null) throw new IOException("repository root with " + TRAPS + " not found above " + Paths.get("").toAbsolutePath());
-        return Files.readString(dir.resolve(relative), StandardCharsets.UTF_8);
+        return dir;
     }
 }

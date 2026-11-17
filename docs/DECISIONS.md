@@ -1676,7 +1676,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (2) fair and deterministic with cheap retries (D2, D3, D7, D26); (3) every room gives something new, taught alone then
   combined (D72, D33-D40, D48); (4) **a hazard warns before it acts and shows a consequence after**: the D7 telegraph
   before, a visible and audible result after (screen shake only through `ScreenShake` and its Assist option, D62), and
-  no effect hides a warning (the D73 pattern, generalised; audit [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388));
+  no effect hides a warning (the D73 pattern, generalised; measured and refined by [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17));
   (5) the tale is shown, not only told, in two voices (D74); (6) crude original craft: native pixel art from authored
   sprites, voice-synth sounds generated, never sampled (D21, ART_DIRECTION.md, SOUND_DIRECTION.md).
 - **Card first:** a trap, a room or a string is designed on its card (TRAPS.md, ROOM_CARDS.md, the TEXT_STYLE workflow)
@@ -1718,7 +1718,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **New skill:** `kimeria-sound`, the order of work of SOUND_DIRECTION.md.
 - **Why:** the audits each left a working system written in parallel; without one entry point and one workflow the
   next feature picks one system and misses the others.
-- **Not verified:** principle 4 against every hazard but the falling stone (#388); whether the Codex import overwrites
+- **Not verified:** principle 4's gaps, found by the audit of [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17), are [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443) to [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448) and, for enemies, [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240); whether the Codex import overwrites
   an existing `.agents/skills` folder of the same name (its code was read only as strings; `check_skills.py` fails if a
   shared skill turns into a pointer); Codex reading the `hookSpecificOutput` reminder (Claude Code's format). All three
   are checked in [#389](https://github.com/jlogicgames/edgard_in_kimeria/issues/389).
@@ -2603,3 +2603,39 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (the shared isolated-scene ceiling); the room scene `forest1HiveRoom` 536.7 B/frame in 3 isolated runs and 536.0 in the full
   check, ceiling 590 (highest run + about 10 %), the same as the deadfall and bramble rooms. The band is drawn a row at a time from 32 cached one-row regions, so both of its ends clip
   exactly without a region per frame.
+
+## D93. Principle 4 measured: a hazard's own act is seen and heard, hit or miss (#388, 2026-11-17)
+
+- **Status:** Accepted by the author, 2026-11-17 (through the orchestrating session), from the audit of [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388). Refines
+  principle 4 of [D75](#d75-one-style-system-the-design-language-card-first-rules-land-complete-386-2026-11-16); the
+  falling stone ([D73](#d73-falling-stone-impact-feedback-347-2026-11-16)) stays the model.
+- **Decision:**
+  - **Before:** a visible [D7](#d7-traps-are-deterministic-puzzle-elements) telegraph whose length comes from
+    `TrapWarnings` (the assist ×1.5); a continuous motion is its own warning
+    ([D46](#d46-rhythmic-traps-spore-puffball-swinging-thorn-vine-and-the-rotten-log-skin), the thorn vine). A warning
+    sound is welcome but not required.
+  - **After:** when a hazard acts (fires, falls, bursts, strikes) it shows a visible result (frames or particles) and
+    plays a generated sound **whether or not it hits**. The shared death beat (`hit`, ×0.2 slow motion, the thread,
+    [D81](#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16))
+    is the hero's consequence and does not count as the hazard's.
+  - Screen shake stays optional, through `ScreenShake` only (and its Assist option,
+    [D62](#d62-screen-shake-a-manager-an-assist-option-and-the-lever-wall-shake-239-step-1)), for heavy impacts.
+  - A clocked hazard is heard only while it is in the camera view (D89, D90).
+  - Look-alikes share their sound: a sound never tells which of a D63 pair kills.
+- **Audit (measured from the code, not in the running game):** complete for the falling stone, the deadfall, the bramble,
+  the hive, the exploding stump and root and the bomb; none needed for the thorn vine (D46) and for a pit's warning (static
+  geometry, D3). Gaps, one issue each: the falling branch's landing [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443); the falling platform and its log and
+  branch skins [#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444); the puffball and the honey fungi [#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445); the thorn root and tuft [#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446); the RedMob's and
+  the boss's strikes [#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447); whether blasts shake [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448). Enemy warnings (notice beats, wind-ups under the assist) are
+  [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240). The table: STYLE_SYSTEM.md, "Known gaps"; the trap cards' "Art and sound" rows in TRAPS.md.
+- **Gate:** `TrapCatalogTest.everyTrapCardStatesTheConsequenceOfItsAct` (`:core:test`): the card of every catalogue trap
+  holds exactly one `Consequence (D93):` statement, and it is one of three forms: sound names in backticks, each a file in
+  `assets/audio` listed in `Assets.SOUND_EFFECTS`; `none yet (#NNN)`; or `intentionally none (Dxx)`. Its rules are shown to
+  fire by `aConsequenceIsASoundAnIssueOrADecision` and `aCardWithoutAValidConsequenceFails`. Whether the code plays that
+  sound at the act is each trap's own test (`DeadfallTrapTest`, `BrambleTest`, `HangingHiveTest`, `FallingTrapsTest`);
+  enemies and the boss have no cards, so their strikes ([#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447))
+  are checked in review and in their combat tests.
+- **Why:** the death beat already tells the player that they died; what a survivor needs is to see and hear what the
+  hazard just did, and a miss teaches as much as a hit. Only the stone and the three traps of wave 5 did that.
+- **Not verified:** the new and missing sounds on a real output and the look in the running game
+  ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).

@@ -90,7 +90,8 @@ A trap's teaching room in `docs/TRAPS.md` must match the room cards (`TrapTeachi
 
 A trap is visible before it fires (D71). Write its card in `docs/TRAPS.md` before the code; a disguised or hidden
 trap needs an always-drawn at-rest cue and a teaching room. `TrapCatalogTest` fails a spawned type with no catalogue
-row. Procedure: the `kimeria-trap-design` skill (`.agents/skills/`).
+row. When it acts it is seen and heard, hit or miss; the hero's death beat does not count (D93). Procedure: the
+`kimeria-trap-design` skill (`.agents/skills/`).
 
 ## Player-facing text
 

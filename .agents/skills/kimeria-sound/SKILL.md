@@ -13,8 +13,8 @@ restate it here. Work from the repository root; links resolve relative to this f
 - [SOUND_DIRECTION.md](../../../docs/SOUND_DIRECTION.md): the aesthetic (crude, buzzy, 90s formant voice-synth; roughness is
   the goal), the recipe, "Making a new sound", the audition process and the "Don't" list.
 - [STYLE_SYSTEM.md](../../../docs/STYLE_SYSTEM.md): a sound is the audible half of D75's "a hazard warns before it acts and
-  shows a consequence after"; the falling stone (D73) is the model, the audit is
-  [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388). The visible half is
+  shows a consequence after"; the falling stone (D73) is the model, D93 says the act is
+  heard hit or miss and look-alikes share a sound. The visible half is
   [kimeria-particles](../kimeria-particles/SKILL.md).
 
 ## Steps

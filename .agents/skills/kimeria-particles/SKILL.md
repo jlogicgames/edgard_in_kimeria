@@ -8,7 +8,7 @@ description: Use for any task that adds or changes particles or VFX in Edgard in
 Project-owned. Read with [kimeria-libgdx-rules](../kimeria-libgdx-rules/SKILL.md) (coordinates, no allocation) and
 [AGENTS.md](../../../AGENTS.md). An impact effect is the visible half of D75's "a hazard warns before it acts and
 shows a consequence after" ([style system](../../../docs/STYLE_SYSTEM.md); the falling stone, D73, is the model;
-audit [#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388)); its sound is
+D93: seen and heard when the hazard acts, hit or miss); its sound is
 [kimeria-sound](../kimeria-sound/SKILL.md). Design, measurements and the audit are in
 [DEVELOPMENT.md](../../../docs/DEVELOPMENT.md) "Particles and the allocation guard" (issue #285); this file does not repeat them.
 

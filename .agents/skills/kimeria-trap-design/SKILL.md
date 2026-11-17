@@ -41,7 +41,8 @@ mirrored in `tools/check_tiled_links.py`; reset by the room rebuild.
 ## 5. Register
 
 Add the `case` to the spawn switch of `world/Level.java`, the row to the catalogue in TRAPS.md and the card.
-`TrapCatalogTest` fails until all three agree. `Taught in` starts with the teaching room in backticks;
+`TrapCatalogTest` fails until all three agree, and until the card's "Art and sound" row has its one
+`Consequence (D93):` statement (the sound of the act in backticks, `none yet (#NNN)` or `intentionally none (Dxx)`). `Taught in` starts with the teaching room in backticks;
 `TrapTeachingRoomTest` checks it against that room's card in ROOM_CARDS.md (a DISGUISED or HIDDEN trap's room must
 introduce its element).
 

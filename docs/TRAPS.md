@@ -68,7 +68,7 @@ D-number) first.
 | Taught in | the room where the type is first met, in backticks first, then how it teaches (`TrapTeachingRoomTest` checks it against the room cards) |
 | Load checks | the validator in `Level` and its mirror in `tools/check_tiled_links.py` |
 | Tests | test classes |
-| Art and sound | sheet and frames, contrast tier (D76: active, with the measured outline; an at-rest cue is drawn in the active tier), sound |
+| Art and sound | sheet and frames, contrast tier (D76: active, with the measured outline; an at-rest cue is drawn in the active tier), sound; then `Consequence (D93):` the sound of its act, heard hit or miss, in backticks (a file in `assets/audio` listed in `Assets.SOUND_EFFECTS`), or `none yet (#NNN)`, or `intentionally none (Dxx)` |
 | Decision | D-number(s) |
 ```
 
@@ -77,7 +77,9 @@ D-number) first.
 The gate `TrapCatalogTest` (`:core:test`) reads the two tables below and the spawn switch of `world/Level.java`.
 It fails when a type spawned by `Level` is in neither table, when a row names a type `Level` does not spawn, when a
 trap row has an empty column, an unknown visibility or family word or no `###` card heading, and when a DISGUISED or
-HIDDEN row has neither a cue nor `pending #NNN`, or no teaching room. Keep one row per Tiled object type and the column order as it is.
+HIDDEN row has neither a cue nor `pending #NNN`, or no teaching room. It also reads every trap's card (D93): the card holds
+exactly one `Consequence (D93):` statement, sound names in backticks that exist in `assets/audio` and
+`Assets.SOUND_EFFECTS`, `none yet (#NNN)` or `intentionally none (Dxx)`. Keep one row per Tiled object type and the column order as it is.
 `TrapTeachingRoomTest` (D75) reads the `Taught in` column against [ROOM_CARDS.md](ROOM_CARDS.md): it starts with the
 teaching room in backticks, a shipped room with a card that shows the trap (or a reskin of it); no earlier room in play
 order shows the type; and for a DISGUISED or HIDDEN trap that room's card introduces the trap's element.
@@ -154,7 +156,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-ladder` with `HINT_LADDER_ROOT` |
 | Load checks | `ThornTrap.openFloorProblem` (jump envelope, floor, headroom); mirrored in `check_tiled_links.py` |
 | Tests | `ProximityTrapsTest`, `LadderLessonTest` |
-| Art and sound | `trap-thorn-root` 16×24: hidden (tip and barbs, #359), peek1, peek2, rising, up |
+| Art and sound | `trap-thorn-root` 16×24: hidden (tip and barbs, #359), peek1, peek2, rising, up; no sound and no particles when it springs. Consequence (D93): none yet ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446)) |
 | Decision | D44, D48 |
 
 ### Bristling thorn tuft (`ThornTuft`)
@@ -175,7 +177,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-1-traps`, the first trap of the open stretch, on open floor |
 | Load checks | as the thorn root |
 | Tests | `ProximityTrapsTest`, `Forest1TrapsTest` |
-| Art and sound | `trap-thorn-tuft` 16×16: calm, bristle, spiked |
+| Art and sound | `trap-thorn-tuft` 16×16: calm, bristle, spiked; no sound when it bristles into `spiked`. Consequence (D93): none yet ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446)) |
 | Decision | D44, D58 |
 
 ### Falling branch (`FallingBranch`)
@@ -196,7 +198,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-wall` with `HINT_WALL_BRANCH` |
 | Load checks | `FallingTrapLayout.validate`; mirrored in `check_tiled_links.py` |
 | Tests | `FallingTrapsTest`, `WallLessonTest` |
-| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier, outline 0.463 at rest in `forest-0-wall` (D76; 0.483 before the cue), rustle 0.429 |
+| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier, outline 0.463 at rest in `forest-0-wall` (D76; 0.483 before the cue), rustle 0.429. No impact feedback when it lands (no dust, sound or shake, unlike the stone's D73). Consequence (D93): none yet ([#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443)) |
 | Decision | D45, D48 |
 
 ### Falling stone (`FallingStone`)
@@ -218,7 +220,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | forest-2 zone (measured for #360) | zone x 2208-2240, y 288-320; a hero walking right triggers it 16 px before the column (0.16 s at 100 px/s), one walking left already under it; trigger to impact 0.8 + 0.84 = 1.64 s (1.2 + 0.84 = 2.04 s with the assist), so a hero who keeps walking is 164 px on at impact. Widening is unnecessary: the zone decides only when the stone falls, and the cue is read from the lip long before it |
 | Load checks | `FallingTrapLayout.validate` (start at the room top or under a solid; only the properties `zoneX`, `zoneY`, `zoneWidth`, `zoneHeight`, `skin`, `lipTop`, so a misspelled key fails; `lipTop` on a stone only, on screen with the hero on the floor, not above the start, the lip above the landing floor, and on the default line or directly under a solid block or a drawn tile row over the column, D45's rule for the start); mirrored in `check_tiled_links.py` |
 | Tests | `FallingTrapsTest` (with the cue: lip frames, trickle period, cracks, determinism, pool, the `lipTop` load check), `RoomCeilingTest` (the lip in the camera view), `PlatformLessonTest`, `Forest2TrapsTest`, `AllocationBudgetTest.fallingStoneLooseOverhang` |
-| Art and sound | `trap-stone`, `trap-shadow`, `trap-stone-lip` 24×8 (`loose`, `broken`; skin `forest`); active tier, lip outline at worst (`loose` / `broken`): 0.387 / 0.403 in `forest-0-platform` at y 8, 0.323 / 0.336 in `forest-2` at y 48 (D76; at y 8 over the dirt block forest-2 measured 0.251, under the floor, hence `lipTop`); grit is `KIND_GRIT` of the stone's own `KimeriaParticleSystem`; impact effects are #347 |
+| Art and sound | `trap-stone`, `trap-shadow`, `trap-stone-lip` 24×8 (`loose`, `broken`; skin `forest`); active tier, lip outline at worst (`loose` / `broken`): 0.387 / 0.403 in `forest-0-platform` at y 8, 0.323 / 0.336 in `forest-2` at y 48 (D76; at y 8 over the dirt block forest-2 measured 0.251, under the floor, hence `lipTop`); grit is `KIND_GRIT` of the stone's own `KimeriaParticleSystem`; impact effects are #347. Consequence (D93): `stone_impact` |
 | Decision | D45, D48, D59 |
 
 ### Exploding stump (`ExplosiveStump`)
@@ -239,7 +241,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-stone` with `HINT_STONE_STUMP`; again in `forest-0-traps` |
 | Load checks | `ExplosiveTrap.problem` (floor bypass); mirrored in `check_tiled_links.py` |
 | Tests | `ExplosiveTrapsTest`, `StoneLessonTest`, `TrapsLessonTest` |
-| Art and sound | `trap-stump` 16×16, eight frames (idle1..4, windup1..3, spent); active tier, idle outline 0.33 at worst (D76); `blast` 32×32 at 2x; `explosion` sound, no idle sound |
+| Art and sound | `trap-stump` 16×16, eight frames (idle1..4, windup1..3, spent); active tier, idle outline 0.33 at worst (D76); `blast` 32×32 at 2x; `explosion` sound, no idle sound; no screen shake at the blast, a decision not taken yet ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448)). Consequence (D93): `explosion` |
 | Decision | D47, D48 |
 
 ### Exploding root (`ExplosiveRoot`)
@@ -247,7 +249,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 Same rules as the exploding stump, 16×24, sheet `trap-root`, and the same idle tell (#346): VISIBLE, an ember crack
 down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per second; idle outline 0.35 at worst
 (D76). It has no teaching room of its own: it shares the stump's idle tell and wind-up language, taught in
-`forest-0-stone`. Placed in `forest-2` `forest-canopy`. Decision D47, D59.
+`forest-0-stone`. Placed in `forest-2` `forest-canopy`. Consequence (D93): `explosion`, as the stump. Decision D47, D59.
 
 ### Bomb (`Bomb`)
 
@@ -267,7 +269,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-entry` (`forest-2`; the explosive language is taught by the stump) |
 | Load checks | none of its own |
 | Tests | `BombTest` |
-| Art and sound | bomb sprite (D60), shader blast `BombExplosionEffect` |
+| Art and sound | bomb sprite (D60), shader blast `BombExplosionEffect`, `explosion` sound; no screen shake at the blast, a decision not taken yet ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448)). Consequence (D93): `explosion` |
 | Decision | D7, D51, D60 |
 
 ### Spore puffball (`Puffball`)
@@ -288,7 +290,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-1-traps`, seen swelling from afar |
 | Load checks | `Level.requireSafeSetting` (entrance, exit, checkpoint) |
 | Tests | `RhythmTrapsTest`, `Forest1TrapsTest` |
-| Art and sound | `trap-puffball`, `trap-spores` |
+| Art and sound | `trap-puffball`, `trap-spores`; the burst has no sound. Consequence (D93): none yet ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445)) |
 | Decision | D46, D58 |
 
 ### Swinging thorn vine (`ThornVine`)
@@ -309,7 +311,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-canopy` (`forest-2`), seen swinging from afar |
 | Load checks | `Level.requireSafeSetting`, period 3.5 s or more, amplitude 35-60° |
 | Tests | `RhythmTrapsTest`, `Forest2TrapsTest` |
-| Art and sound | `trap-vine` frame `hang`, rotated |
+| Art and sound | `trap-vine` frame `hang`, rotated. Consequence (D93): intentionally none (D46: it never acts, it swings; the motion is the warning) |
 | Decision | D46, D59 |
 
 ### Honey fungus and false honey fungus (`HoneyFungus`, `FalseHoneyFungus`)
@@ -330,7 +332,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | the false one in `forest-canopy` (`forest-2`), after the harmless one in `forest-0-lever` and `forest-0-wall` |
 | Load checks | `Level.validateFungus`, `Level.requireSafeSetting` (false one) |
 | Tests | `HoneyFungusTest` |
-| Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud` |
+| Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud`; neither burst has a sound; both must get the same one, so the sound does not tell which kills (D63). Consequence (D93): none yet ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445)) |
 | Decision | D63 |
 
 ### Falling platform, rotten log and rotten branch (`FallingPlatform`)
@@ -351,7 +353,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-0-traps` (D40); the branch skin is first met in `forest-1-tree`, on the lowest branch of its rotten column, whose fall lands on the floor 48 px down |
 | Load checks | `FallingPlatform.Skin.fromMap` (unknown skin fails); branch: `FallingPlatform.branchProblem` (no one-way platform under its fall, D69; the room's goal reachable with every rotten branch gone, D26), mirrored in `check_tiled_links.py` |
 | Tests | `TrapsLessonTest`, `RhythmTrapsTest` (log), `Forest1TrapsTest`, `FallingPlatformFloorTest` (D69), `TreeClimbTest` (branch) |
-| Art and sound | plain: `trap-falling-platform` 32×10 × 4 (fan1..fan4, grid `art/objects/forest-traps/falling-platform.grid`, the old `FallingOn.png` plus the crack), active tier, outline 0.379 at its worst placement and frame (D76; unchanged by the crack); `trap-log`; `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.427 at its worst placement (D76; the sound branch `trap-perch` 0.458, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet buds) and crack (mid-top, not #361's joint). No sound of its own, like the other skins |
+| Art and sound | plain: `trap-falling-platform` 32×10 × 4 (fan1..fan4, grid `art/objects/forest-traps/falling-platform.grid`, the old `FallingOn.png` plus the crack), active tier, outline 0.379 at its worst placement and frame (D76; unchanged by the crack); `trap-log`; `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.427 at its worst placement (D76; the sound branch `trap-perch` 0.458, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet buds) and crack (mid-top, not #361's joint). No sound of its own and no particles when it gives way, in any skin. Consequence (D93): none yet ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444)) |
 | Decision | D7, D40, D46, D69, D80 |
 
 ### Trip-line deadfall (`Deadfall`)
@@ -376,7 +378,7 @@ means a smaller Y.
 | Taught in | `forest-1-deadfall`, met alone on open floor, the only object in the room |
 | Load checks | `DeadfallTrap.problem` (in `Level` for every room at load): the object is the bough's own 112×24 rectangle and `swing` is empty, `left` or `right`; solid floor (not quicksand) at F from P.x-184 (64 px before the vine, room to stop or to take off) to P.x+56; nothing solid (blocks, falling platforms, walls with their travel, ladders, escalators with their travel) from the bough down to the floor within P.x±68 (the swing), nor within 96 px over the floor from P.x-184 to P.x-68 (the jump over the vine); all of it inside the room; the entrance not on the vine; no entrance, exit or checkpoint where the log passes at body height (P.x±62, F-27 to F). Mirrored in `check_tiled_links.py` |
 | Tests | `DeadfallTrapTest` (the room; the trip at the vine's first pixel; no jump at the catch (at most 2.13 px a frame); the warning equals the shared one with both assist values, strain then slip; the body-height window and band; harmless before the release and after the catch; the jump window; a walker who keeps going is hit with both warnings; stopping and walking back live; a hero who cannot be hurt is not seen; `swing=right`; reset on retry and Restart Level; pause; the load check), `test_check_tiled_links.DeadfallLinksTest`, `test_check_contrast` (the three parts); `AllocationBudgetTest.deadfallTripAndSwing` (0.0 B/frame) and `forest1DeadfallRoom` |
-| Art and sound | sheets `trap-deadfall` (log, 32×16: `tied`, `strain`, `slip`, `swing`, `caught`), `trap-deadfall-bough` (112×24: the bough, its two rope knots and the snag; its thick end meets a `Decor:trunk`), `trap-deadfall-vine` (24×8: `taut`, `tugged`, `cut`), the rope a stretched 1×8 strip; grids under `art/objects/forest-traps/`; palette of the sound branch (`perch`) plus end grain `e8c890`/`9c6a34` and the bone `efe6c4`/`b8ad9c` of cord and vine, no accent hue. Active tier: the contrast gate measures the three parts drawn at rest where the game draws them (`tools/check_contrast.py`, `deadfall_parts`), worst over 8 sky offsets in `forest-1-deadfall`: bough 0.464, tied log 0.410, taut vine 0.323 (floor 0.28); from the approved mock-up, also vine 0.343 tugged / 0.369 cut, swinging log 0.389, caught log 0.423. Sounds: `deadfall_creak` at the trip (warning, 0.6 s, ends before the base 0.8 s release), `deadfall_knock` when the ropes hit the snag (consequence), with six bark chips (`KIND_GRIT`, `EnvironmentFx.barkChips`) falling from it |
+| Art and sound | sheets `trap-deadfall` (log, 32×16: `tied`, `strain`, `slip`, `swing`, `caught`), `trap-deadfall-bough` (112×24: the bough, its two rope knots and the snag; its thick end meets a `Decor:trunk`), `trap-deadfall-vine` (24×8: `taut`, `tugged`, `cut`), the rope a stretched 1×8 strip; grids under `art/objects/forest-traps/`; palette of the sound branch (`perch`) plus end grain `e8c890`/`9c6a34` and the bone `efe6c4`/`b8ad9c` of cord and vine, no accent hue. Active tier: the contrast gate measures the three parts drawn at rest where the game draws them (`tools/check_contrast.py`, `deadfall_parts`), worst over 8 sky offsets in `forest-1-deadfall`: bough 0.464, tied log 0.410, taut vine 0.323 (floor 0.28); from the approved mock-up, also vine 0.343 tugged / 0.369 cut, swinging log 0.389, caught log 0.423. Sounds: `deadfall_creak` at the trip (warning, 0.6 s, ends before the base 0.8 s release), `deadfall_knock` when the ropes hit the snag (consequence), with six bark chips (`KIND_GRIT`, `EnvironmentFx.barkChips`) falling from it. Consequence (D93): `deadfall_knock` |
 | Decision | D88 |
 
 ### Creeping bramble (`Bramble`)
@@ -402,7 +404,7 @@ Approved by the author on 2026-11-17 ([#364](https://github.com/jlogicgames/edga
 | Taught in | `forest-1-bramble` (after `forest-1-lever`): seen cycling from the floor, out of reach, before the hero climbs the ladder it guards. Recipe: the guarded ladder stands at least one tile off the root face, since the clump's 12 px are always lethal (D89) |
 | Load checks | `Bramble.fromMap`: the properties `root` (`left` or `right`, required), `period`, `phase`, `hold` read strictly (finite numbers, no unknown key), height 24, width 48-96, the rhythm rule above; `Level.validateBramble`, for every bramble of every room at level load: `Bramble.placementProblem`, the root edge against a solid face (not a one-way platform) over the band's whole height, and a floor or shelf top under the tip end and 16 px beyond it (split collisions and 0.5 px offsets merged with `FLOOR_TOLERANCE`, as the deadfall); `Level.requireSafeSetting` (inside the room; the lethal part at full reach never covers the entrance, the `RoomExit` or a `Checkpoint`). Mirrored in `check_tiled_links.py` (`check_bramble`) |
 | Tests | `BrambleTest` (fixtures `bramble-test.tmx` and three broken ones): the warning equals the shared warning in play (0.8 and 1.2 s); every phase boundary at both assist values; the cues once per cycle; the tip's extent; the lethal band as a rectangle against the floor line (top `floor - 18`, bottom `floor - 2`, from the root face); a standing hero hit only where the thorns are; reset on retry and Restart Level; pause; the static ladder; the waiting and blind ladder exits; the load failures; split faces and floors and sub-pixel offsets within the tolerance. `AllocationBudgetTest.brambleCycles` 0.0 to 0.7 B/frame (ceiling 8). `tools/test_check_tiled_links.py` (the mirror agrees with the fixtures). `Forest1BrambleTest` (the room: census, in view from the entrance, its cues heard from the entrance (camera-view gate), mastered route 10.73 s, every start offset 9.42 to 12.80 s, retry) |
-| Art and sound | `trap-bramble` 16×24 × 6 (`rest`, `rustle1`, `rustle2`, `cane1`, `cane2`, `tip`; grid `art/objects/forest-traps/bramble.grid`): the clump is drawn at the root; the arm is alternating `cane1`/`cane2` segments behind the `tip` at the current extent, so it grows and retracts by whole pixels; drawn mirrored for `root=right`. Palette: ink `0b0814`, cane `c2307a`/`6e1650`, root `4a2e1c`, bone `efe6c4`/`a89c78` (the tuft's magenta and bone, no new accent). Active tier (D76). Sounds `bramble_rustle` at the warning and `bramble_lash` at the grow, heard only while the bramble is in the camera view (SOUND_DIRECTION; auditioned by the author 2026-11-17, approved) |
+| Art and sound | `trap-bramble` 16×24 × 6 (`rest`, `rustle1`, `rustle2`, `cane1`, `cane2`, `tip`; grid `art/objects/forest-traps/bramble.grid`): the clump is drawn at the root; the arm is alternating `cane1`/`cane2` segments behind the `tip` at the current extent, so it grows and retracts by whole pixels; drawn mirrored for `root=right`. Palette: ink `0b0814`, cane `c2307a`/`6e1650`, root `4a2e1c`, bone `efe6c4`/`a89c78` (the tuft's magenta and bone, no new accent). Active tier (D76). Sounds `bramble_rustle` at the warning and `bramble_lash` at the grow, heard only while the bramble is in the camera view (SOUND_DIRECTION; auditioned by the author 2026-11-17, approved). Consequence (D93): `bramble_lash` |
 | Decision | D46 (rhythm rules), D89 |
 
 ### Hanging hive (`HangingHive`)
@@ -423,7 +425,7 @@ Approved by the author on 2026-11-17 ([#364](https://github.com/jlogicgames/edga
 | Taught in | `forest-1-hive` (after `forest-1-guard`): first over open floor, seen raining from the entrance, then over the ladder to the exit ledge; the stone by the entrance offers the knock-down |
 | Load checks | `HangingHive.fromMap` and `Level.hiveFor`, at load, for every room: only `period` (default 4.0), `phase` (0), `curtain` (1.0), finite; 24×32; a solid under the mouth in its room at least 32 px down; `period >= curtain + depth / 240 + 1.2 + 0.8`; no `Actionable`, `Escalator` or `FallingPlatform` in the band; `Level.requireSafeSetting` (not over the entrance, exit or a checkpoint). Mirrored in `check_tiled_links.py` (`hive_problems`) |
 | Tests | `HangingHiveTest` (`hive-test.tmx`), `Forest1HiveTest` (the room), `AllocationBudgetTest.hangingHivesCycleAndOneIsKnockedDown`, `test_check_tiled_links.HangingHiveLinksTest` |
-| Art and sound | `trap-hive` 24×32 × 7 (rest, shake1, shake2, release, bare, falling, fallen; grid `art/objects/forest-traps/hive.grid`) and `trap-stingers` 8×16 × 2 (fall1, fall2, drawn a row at a time down the band so the darts move with it; `stingers.grid`), authored sprites; the specks are particles. Palette: ink `0b0814`, bough `4a2e1c`/`8a5a30`, paper `d0c294`/`9a8660`/`5a4a34`, bone `efe6c4`/`a89c78`; no accent hue. Active tier, every frame gated where it is drawn in `forest-1-hive` (D76): hive frames 0.450 at worst, falling 0.438, fallen 0.343 (drawn on the floor line, over the floor tiles), stingers 0.346. Sounds `hive_buzz` (warning), `stinger_rain` (release), `hive_fall` (knock-down), heard only while the hive or its band is in the camera view |
+| Art and sound | `trap-hive` 24×32 × 7 (rest, shake1, shake2, release, bare, falling, fallen; grid `art/objects/forest-traps/hive.grid`) and `trap-stingers` 8×16 × 2 (fall1, fall2, drawn a row at a time down the band so the darts move with it; `stingers.grid`), authored sprites; the specks are particles. Palette: ink `0b0814`, bough `4a2e1c`/`8a5a30`, paper `d0c294`/`9a8660`/`5a4a34`, bone `efe6c4`/`a89c78`; no accent hue. Active tier, every frame gated where it is drawn in `forest-1-hive` (D76): hive frames 0.450 at worst, falling 0.438, fallen 0.343 (drawn on the floor line, over the floor tiles), stingers 0.346. Sounds `hive_buzz` (warning), `stinger_rain` (release), `hive_fall` (knock-down), heard only while the hive or its band is in the camera view. Consequence (D93): `stinger_rain`, `hive_fall` |
 | Decision | D90 |
 
 ## Proposed traps (D71, not built)
