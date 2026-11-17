@@ -434,7 +434,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (level == null || ladder != null) return null;
         Rectangle body = hitboxBoundsInto(bodyScratch);
         float feet = body.y + body.height, bodyCenter = body.x + body.width / 2f;
-        for (Ladder candidate : level.ladders) {
+        for (int i = 0, n = level.ladders.size(); i < n; i++) {
+            Ladder candidate = level.ladders.get(i);
             if (bodyCenter < candidate.getX() || bodyCenter > candidate.getX() + candidate.getWidth()) continue;
             float top = candidate.topY(), bottom = candidate.bottomY();
             if (onGround && Math.abs(feet - top) <= LADDER_TOP_REACH)
@@ -760,7 +761,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public Trigger selectedMechanism() {
         if (level == null || !canFight()) return null;
         Trigger best = null;
-        for (Trigger target : level.triggers) {
+        for (int i = 0, n = level.triggers.size(); i < n; i++) {
+            Trigger target = level.triggers.get(i);
             if (!mechanismEligible(target)) continue;
             if (best == null || targetDistance(target) < targetDistance(best)
                 || (targetDistance(target) == targetDistance(best) && target.id < best.id)) best = target;
@@ -788,7 +790,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (!carryablesEligible()) return null;
         Rectangle reach = pickupReachBounds();
         Carryable best = null;
-        for (var object : level.objects) if (object instanceof Carryable target && target.available() && reach.overlaps(target.bounds())) {
+        for (int i = 0, n = level.objects.size(); i < n; i++) if (level.objects.get(i) instanceof Carryable target && target.available() && reach.overlaps(target.bounds())) {
             if (best == null || targetDistance(target) < targetDistance(best)
                 || (targetDistance(target) == targetDistance(best) && target.id < best.id)) best = target;
         }
@@ -1270,7 +1272,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
             return;
         }
 
-        for (var obj : level.objects) {
+        for (int i = 0, n = level.objects.size(); i < n; i++) {
+            var obj = level.objects.get(i);
             if (obj instanceof Enemy<?> enemy) {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
                     if (enemy instanceof Boss boss) { if (bossesHit.add(boss)) boss.collidedWithActor(true); }
@@ -1299,7 +1302,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
             return;
         }
 
-        for (var obj : level.objects) {
+        for (int i = 0, n = level.objects.size(); i < n; i++) {
+            var obj = level.objects.get(i);
             if (obj instanceof FireballRefill refill && overlapsEntity(refill)) {
                 refill.collideWithPlayer();
             } else if (obj instanceof Collectable c && overlapsEntity(c)) {
@@ -1318,9 +1322,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     private FireballRefill fullFireballRefill() {
         if (level == null || !canFight()) return null;
-        return level.objects.stream().filter(o -> o instanceof FireballRefill refill
-                && !refill.isRemoved() && refill.inventoryFull() && overlapsEntity(refill))
-            .map(FireballRefill.class::cast).min(java.util.Comparator.comparingDouble(this::targetDistance)).orElse(null);
+        FireballRefill best = null;
+        for (int i = 0, n = level.objects.size(); i < n; i++) {
+            if (level.objects.get(i) instanceof FireballRefill refill && !refill.isRemoved() && refill.inventoryFull() && overlapsEntity(refill)
+                && (best == null || targetDistance(refill) < targetDistance(best))) best = refill;
+        }
+        return best;
     }
 
     private boolean overlapsEntity(com.jlogicsoftware.kimeria.entity.Entity other) {

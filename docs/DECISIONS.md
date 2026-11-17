@@ -1984,10 +1984,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   already passed a list (`level.collisionBlocks`, and `List.of(...)` in `OneWayPlatformTest`). The change stays on its
   own merit: it removes those iterators, and the whole-room scenes allocate less (forest-1 room 1 1,322 to 938 B/frame,
   the tree room 881.7 to at most 801.8 in the full suite). No ceiling was lowered or raised for it.
-- **Known intermittent failure, not fixed here:** `AllocationBudgetTest.ridingARunningEscalatorCostsNoMoreThanStandingStill`
-  fails now and then (riding minus standing above its 8 B/frame ceiling) on this branch, with or without the index loops,
-  and on main too (CI of PR #404, the #386 review). It is tracked in
-  [#391](https://github.com/jlogicgames/edgard_in_kimeria/issues/391); #349 does not claim to fix it.
+- **Known intermittent failure:** `ridingARunningEscalatorCostsNoMoreThanStandingStill`, fixed by D83 (#391).
 - **Changed existing tests (no threshold relaxed):** `RoomTest` (four forest-1 rooms, the guard room's exit, the
   checkpoint in room 4), `RoomCeilingTest` (four forest-1 rooms), `RoomCardsTest` (13 cards), `Forest1CombatTest` (the
   guard room ends at its `RoomExit`, at the checkpoint's x: the same three route times), `DecorTest` (the `trunk` kind;
@@ -2166,3 +2163,25 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - `test_sprite_art_guard.py`: see "Removed" above.
 - **Not verified:** the look, the read distance and the timing in the running game, desktop, web and touch
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)); the native-speaker quality of the uk, pl, de and be lines ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)).
+
+## D83. The rider-path allocation test is measured as a median of paired windows; the per-frame for-each and stream are gone (#391, 2026-11-17)
+
+- **Problem:** `AllocationBudgetTest.ridingARunningEscalatorCostsNoMoreThanStandingStill` compared two single windows of
+  about 870 B/frame each against an 8 B ceiling on the difference, and failed at random: on main (4ac6ed1) 2 of 40
+  isolated runs, 18 of 40 with the machine loaded (differences up to 311 B/frame).
+- **Cause (two parts):** (1) `Player.update` really allocated: for-each iterators in `selectedMechanism`, `ladderEntry`,
+  `checkGameplayOverlaps` and the carry and refill searches, and a stream in `Level.touchesDeadline`. HotSpot's C2 removes
+  about 310 B of that at an arbitrary moment (also with escape analysis off), the interpreter and C1 do not, and TeaVM has
+  no C2; so the riding window and the standing window could sit in different JIT states. (2) The rest, 536 B/frame, is the
+  headless harness's `Gdx.input` and `Gdx.graphics` proxy stubs.
+- **Code change:** index loops in `Player` (`selectedMechanism`, `ladderEntry`, `checkGameplayOverlaps`,
+  `selectedCarryable`, `fullFireballRefill`) and `Level.touchesDeadline`. Measured at C1 (stable): `Player.update` standing
+  872 to 536 B/frame, forest-1 route room 897.8 to 561.9, tree room 897.7 to 561.8. No ceiling was changed.
+- **Measurement change:** `AllocationProbe.medianPairedDifference` warms both states up twice, then takes 15 pairs of
+  300-frame windows alternately (riding then standing, standing then riding) and the test asserts the **median** of the
+  differences. A JIT change lands in one pair; a real difference shows in every pair. The ceiling stays **8 B**
+  (`RIDER_PATH_CEILING`).
+- **Verified:** 0 of 40 failures isolated and 0 of 40 with 20 busy processes (before 2 and 18); a deliberate 24 B
+  allocation in the rider branch gives a median of 24.0 and fails 10 of 10, isolated and loaded. The ordinary median
+  difference (no injection) was 0.0 B/frame in all 80 runs (min 0.0, max 0.0, printed to 0.1 B), so the margin under the
+  8 B ceiling is the whole 8 B.
