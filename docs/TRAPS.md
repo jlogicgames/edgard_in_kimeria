@@ -98,11 +98,11 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `ThornVine` | rhythm | VISIBLE | none needed | the motion is the warning | `forest-canopy` (`forest-2`), seen swinging from afar | D46, D59 |
 | `HoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-lever`, harmless demonstration | D63 |
 | `FalseHoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-canopy` (`forest-2`), after the harmless `HoneyFungus` of `forest-0-lever` | D63 |
-| `FallingPlatform` | crumble | DISGUISED | pending #362 | `FALLING_PLATFORM_SECONDS` 1.0 / 1.5 s | `forest-0-traps` | D7, D40, D46, D69, D80 |
+| `FallingPlatform` | crumble | DISGUISED | a hairline crack through the slab (#362) | `FALLING_PLATFORM_SECONDS` 1.0 / 1.5 s | `forest-0-traps` | D7, D40, D46, D69, D80 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46) or `skin=branch` (the rotten tree branch, D80) is the same type
-and row: their rotten look is the cue for those skins; the plain skin is the one pending (#362).
+and row: their rotten look is the cue for those skins; the plain skin's cue is the hairline crack of #362.
 
 ### Spawn types that are not traps
 
@@ -335,9 +335,9 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | --- | --- |
 | Family | crumble |
 | Visibility (D71) | DISGUISED (plain skin); the `log` and `branch` skins are VISIBLE: their rot is the cue, drawn on every instance |
-| At rest | plain skin: an ordinary platform; log: a rotten log; branch: a grey, dead branch on a trunk, a split with a pale splinter in the middle of its top and one dry leaf under its tip, no green (unlike the sound branch, a one-way `Platform` with `skin=branch`: brown bark, a pale top line, green leaves) |
-| At-rest cue | plain: pending [#362](https://github.com/jlogicgames/edgard_in_kimeria/issues/362), a hairline crack on the intact frame; log and branch: their rotten look |
-| Reads from | landing on it (plain); ~320 px for the log and the branch, if their rot reads (not verified, #368) |
+| At rest | plain skin: a platform with a hairline crack through its slab; log: a rotten log; branch: a grey, dead branch on a trunk, a split with a pale splinter in the middle of its top and one dry leaf under its tip, no green (unlike the sound branch, a one-way `Platform` with `skin=branch`: brown bark, a pale top line, green leaves) |
+| At-rest cue | plain: a hairline crack ([#362](https://github.com/jlogicgames/edgard_in_kimeria/issues/362)), a 1 px ink line through the striped slab at x 22-23, slanting against the stripes, with a 1 px gap in the slab's top and bottom edge where it breaks through, drawn in every fan frame and in every state; log and branch: their rotten look (no extra crack: the branch's mid-top split is already its cue) |
+| Reads from | ~320 px for the plain skin, if its 1 px crack reads at that range, and for the log and the branch, if their rot reads (not verified, #368) |
 | Trigger | the hero lands on it (feet onto its top while falling); rising through it from below triggers nothing (one-way) |
 | Telegraph (D7) | the platform shakes; the log and the branch show crumble1 (the split opens), then crumble2 (it snaps), each for half the warning |
 | Warning | `TrapWarnings.FALLING_PLATFORM_SECONDS`: 1.0 s / 1.5 s |
@@ -347,7 +347,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-0-traps` (D40); the branch skin is first met in `forest-1-tree`, on the lowest branch of its rotten column, whose fall lands on the floor 48 px down |
 | Load checks | `FallingPlatform.Skin.fromMap` (unknown skin fails); branch: `FallingPlatform.branchProblem` (no one-way platform under its fall, D69; the room's goal reachable with every rotten branch gone, D26), mirrored in `check_tiled_links.py` |
 | Tests | `TrapsLessonTest`, `RhythmTrapsTest` (log), `Forest1TrapsTest`, `FallingPlatformFloorTest` (D69), `TreeClimbTest` (branch) |
-| Art and sound | platform sprite; `trap-log`; `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.427 at its worst placement (D76; the sound branch `trap-perch` 0.458, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet buds) and crack (mid-top, not #361's joint). No sound of its own, like the other skins |
+| Art and sound | plain: `trap-falling-platform` 32×10 × 4 (fan1..fan4, grid `art/objects/forest-traps/falling-platform.grid`, the old `FallingOn.png` plus the crack), active tier, outline 0.379 at its worst placement and frame (D76; unchanged by the crack); `trap-log`; `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.427 at its worst placement (D76; the sound branch `trap-perch` 0.458, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet buds) and crack (mid-top, not #361's joint). No sound of its own, like the other skins |
 | Decision | D7, D40, D46, D69, D80 |
 
 ## Proposed traps (D71, not built)

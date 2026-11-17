@@ -680,6 +680,19 @@ class AllocationBudgetTest {
             () -> hero, () -> true, kill);
     }
 
+    /** Ten plain falling platforms at rest (#362): the fan animation with the cracked slab (the D71 cue), {@code update} and {@code render}, each frame. */
+    @Test void fallingPlatformCrackAtRest() {
+        FallingPlatform[] platforms = new FallingPlatform[FUNGUS_CYCLES];
+        for (int i = 0; i < platforms.length; i++)
+            platforms[i] = new FallingPlatform(harness.assets(), i * FUNGUS_SPACING, FUNGUS_FLOOR, 2 * TRAP_TILE, TRAP_TILE, o -> { },
+                harness.game().trapWarnings());
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            for (int n = 0; n < platforms.length; n++) { platforms[n].update(STEP); platforms[n].render(batch); }
+        });
+        assertFalse(platforms[0].isFalling(), "nobody landed: the cue only");
+        assertWithinBudget("falling platform crack at rest", FALLING_PLATFORM_REST_CEILING, bytes);
+    }
+
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
     @Test void falseHoneyFungusCloudsInTurn() {
         FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
@@ -708,6 +721,8 @@ class AllocationBudgetTest {
     static final double THORN_ROOT_CEILING = 8;
     /** The hero's left edge this far right of a thorn root's left edge: inside its zone, clear of the 6 px column (5 to 11). */
     private static final float THORN_BESIDE = 12;
+    /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17): ten plain falling platforms at rest, the fan animation with the cracked slab, update and render; the same 8 B ceiling as the other isolated paths. */
+    static final double FALLING_PLATFORM_REST_CEILING = 8;
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;

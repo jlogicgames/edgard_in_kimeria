@@ -49,6 +49,8 @@ FOREST_TRAP_SHEETS = {
     'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
+    # #362: the plain falling platform, its fan spinning in every state; the slab carries the hairline crack (D71 cue).
+    'falling-platform': ((32, 10), ('fan1', 'fan2', 'fan3', 'fan4')),
     # #349 (D80): the branch skins. perch = the sound branch (a one-way Platform), rotten-perch = the rotten branch
     # (a FallingPlatform, frames as the log's); each with its copy for the left side of a trunk.
     'perch': ((32, 16), ('perch', 'perch-left')),
