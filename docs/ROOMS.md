@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has five rooms since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has six rooms since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -337,8 +337,9 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 | --- | ---: | ---: | ---: | --- |
 | `forest-1` / `forest-1-mob` (room 1 since #375, D85, 2026-11-17) | 800 px | 7.43 s, mob by sword (6.97 s to the refill with two charges) | None (one fireball refill) | Within 20 s |
 | `forest-1` / unmarked room (now room 2, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09, and again after #375) | 1280 px | 11.58 s (historical) | None | Within 20 s |
-| `forest-1` / `forest-1-route` (room 3 since #375; #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
-| `forest-1` / `forest-1-guard` (room 4 since #375; #104, D68, 2026-11-15) | 768 px | 6.83 s timed melee (the floor); fireball 6.15 s; roof 7.67 s | None (one optional fireball refill on the roof) | Within 20 s |
+| `forest-1` / `forest-1-lever` (room 3 since #418, D86, 2026-11-17) | 640 px | 8.43 s (ride, pull, drop, climb) | None | Within 20 s |
+| `forest-1` / `forest-1-route` (room 4 since #418; #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
+| `forest-1` / `forest-1-guard` (room 5 since #418; #104, D68, 2026-11-15) | 768 px | 6.83 s timed melee (the floor); fireball 6.15 s; roof 7.67 s | None (one optional fireball refill on the roof) | Within 20 s |
 | `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -609,8 +610,9 @@ These timings were rechecked on the teaching layout during the merge review on
 | Level / room | Required route | All room coins |
 | --- | ---: | ---: |
 | `forest-1` / unmarked (now room 2, `forest-1-traps`; 12.27 s since D58) | 11.58 s (historical) | No coins |
-| `forest-1` / `forest-1-route` (room 3, #187) | 11.02 s | No coins (refill detour: whole room 18.32 s) |
-| `forest-1` / `forest-1-guard` (room 4, #104) | 6.83 s (timed melee; roof 7.67 s with the refill) | No coins |
+| `forest-1` / `forest-1-lever` (room 3, #418) | 8.43 s | No coins |
+| `forest-1` / `forest-1-route` (room 4 since #418, #187) | 11.02 s | No coins (refill detour: whole room 18.32 s) |
+| `forest-1` / `forest-1-guard` (room 5 since #418, #104) | 6.83 s (timed melee; roof 7.67 s with the refill) | No coins |
 | `forest-3` (now `forest-2`) / `forest-entry` | 16.27 s | 20.00 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 5.00 s | 5.00 s |
 
@@ -918,6 +920,63 @@ New `Forest1TrapsTest` (headless, the shipped map under an alias that drops only
 ### Author's answers recorded
 
 Three traps, not four; retry cost accepted, no split; the thorn tuft first; the log last; no exploding root and no fireball choice; an enemy in the stretch (second RedMob). Open for the running game (tracked by #260): the new sprites and pit edge tiles on this map, and how the 12-13 s retry loop feels.
+
+## forest-1 lever room (#418, D86)
+
+Built by [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) after the D84 playtest of 2026-11-17: the author pulled the `Route` lever of the route room, saw only the ladder react, did not notice the lift stop and thought the room impassable. By the author's decision of the same day, a short teaching room stands between `forest-1-traps` (room 2 since #375) and `forest-1-route`: one lever, two mechanisms next to it, both in view at the moment of the pull, and a mistake that costs nothing. The card is written first ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-lever)); the rule and the split between the author's decisions and the agent's are in [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17). **Author check, not a novice playtest:** the numbers below are from a scripted hero with real keyboard input; the author has not played the room and it has not been seen in the running game ([#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) stays open for that).
+
+Coordinates are the map's: **world Y grows downward** (floor top y = 320, `y` is an object's top edge, a smaller y is higher on screen). **Placement:** the room is authored after the end of the map, at x 4320-4960 (the map grew from 270 to 310 tiles, `nextobjectid` 115, the level `Deadline` from 6176 to 6816 px), and is listed in the `Rooms` list between `forest-1-traps` and `forest-1-route`, which sets the play order (mob, traps, lever, route, guard, tree), exactly as #375 did for `forest-1-mob`: no existing object, collision or tile moved. SHA-256 before `c5acdc5a30bac873735246ccda12cdd5edbcf5ea1dc96a238d9cd0f7058ec9b8` (origin/main after #429), after `4b9ced293cad0e9c61bd770bbf4edddbce94ac166f57d23bff3f4ff42d9a3f64` (recompute with `shasum -a 256 assets/tiles/forest-1.tmx`; the hash moves with later edits). Checked by script: every object and tile column of the old map is unchanged (the first 270 columns are identical, every old object is identical except the `Deadline`'s width) and only the 11 new objects (ids 104-114), the 40 appended columns and the three `Rooms` entries are new.
+
+```
+local x/16  0123456789012345678901234567890123456789   (room 3 only; x = 4320 + 16 * column)
+y96-208     ..........................L.............   the raised ladder hangs here (x 4736): its foot is level with the ledges' tops
+y192        .............v..........................   the lever v on the slab (x 4528)
+y208        ........sssssss............EEEEEEEEEEEE.   slab s (x 4448-4560); exit ledge E (x 4752-4944); the lowered ladder's top is level with E
+y176-208    ..................................ccc...   the room exit c on E (x 4864-4912)
+y240-304    ......ll................................   the lift l runs here (x 4416-4448, y 240-304)
+y304        ..@.....................................   entrance 4352
+y320        ========================================   floor under the whole room; end walls at x 4320 and 4944
+```
+
+| What | Object | x (px) | y (px) | Size | Properties | Role |
+| --- | --- | ---: | ---: | --- | --- | --- |
+| Trap course exit | `RoomExit` (id 45), room `forest-1-traps` | 1216 | 272 | 32 x 48 | none | unchanged: it now leads into this room |
+| Room 3, `forest-1-lever` | `Room` (id 112), `RoomStart` (id 113) | 4320 | 0 | 640 x 368; start 4352, 272 | none | one screen wide (the camera shows 640 x 360), so the whole room is in view wherever the hero stands; safe entrance, floor under it, nothing in reach |
+| Lift | `Escalator` `Lesson` (id 106) | 4416 | 240 | 32 x 16 | `isVertical`, `offNeg` 0, `offPos` 2 | starts running at its top (y 240), descending, 50 px/s between y 240 and y 304 (2.56 s a cycle); the only way up to the slab; boardable from the floor while it is at y 248.2 or lower |
+| Slab | collision (id 110) | 4448 | 208 | 112 x 16 | plain collision, floating | the lever's ledge, 112 px above the floor (a hop is about 58 px, a boarding reach 71.8 px): out of reach from the floor; 32 px above the lift's top (a hop); the floor passes under it |
+| Lever | `Trigger` `Lesson` (id 104) | 4528 | 192 | 16 x 16 | none (legacy name link) | on the slab; pulled with Up + Action, only standing on the slab (swept); 80 px from the lift, 192 px from the ladder (nearest edges) |
+| Ladder | `Ladder` `Lesson` (id 105) | 4736 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor and 176 px from the slab's end; lowered y 208-320, its top rung level with the exit ledge; the only way on |
+| Exit ledge | collision (id 111) | 4752 | 208 | 192 x 112 | plain collision, not a `Wall` | 112 px high, against the ladder's right side and the right wall: reachable only by the ladder |
+| Room exit | `RoomExit` (id 114), room `forest-1-lever` | 4864 | 176 | 48 x 32 | none | on the ledge top, 112 px from the ladder, 32 px before the right wall; leads to the route room |
+| Floor, walls | collisions 107, 108, 109 | 4320 | 320 | 640 x 48; walls 16 x 320 at x 4320 and 4944 | | closed room; the invisible ceiling (D38) is added by the loader |
+
+The lever, ladder and lift share the name `Lesson` (the legacy name link of `Level.spawnLevers` and `tools/check_tiled_links.py`, as the route room's `Route`): the ladder is the lever's face. The authored state is the route room's: ladder raised, lift running. No code was needed. Tiles: the floor, the two end columns and the exit ledge copy the route room's art (ids 22-24, 42-44, 62-64, wall columns), the slab uses the platform block ids 26-28 that the other forest-1 slabs use. No new art, no hint, no monster, no hazard, no pickup, no one-shot object.
+
+### How it plays
+
+The whole room is on screen from the entrance: a lift moving beside a ledge with a lever on it, a ladder hanging in mid-air to the right over a ledge that carries the exit, nothing else. **Route:** walk to the lift, hop on when it comes down within reach, ride it up and hop onto the slab, walk to the lever, pull it: the ladder comes down at once on the right (about 0.7 s) and the lift beside the hero stops. Walk off the slab, walk under it to the ladder, climb, walk to the exit. **Why it teaches the link:** the way on needs both mechanisms in turn, and one lever changes both: the lift is the only way to the lever, the ladder is the only way to the exit. The pull happens with the lift 80 px away (it just carried the hero there and now stops) and the ladder 192 px away (it comes down), both inside the same view. **A wrong pull:** pulling again raises the ladder and restarts the lift; nothing is lost and there is nothing to be hurt by.
+
+### Recovery and D26 (swept by `Forest1LeverLessonTest`)
+
+- The lever is a reversible toggle, in reach only standing on the slab; never from the floor, the lift, the ladder or the exit ledge (swept over every x and four heights in both lever states), so no support is taken from under the hero.
+- The slab is floating, so the floor runs from the entrance to the exit ledge's face. From the floor the hero is never shut in: with the ladder raised the lift is running and is boarded from any floor x (the lift stays within the boarding reach, so no stopped state exists with the ladder raised), with the ladder lowered the ladder reaches the floor. The first version had a slab solid down to the floor: the sweep found a hero who dropped left of it after a pull, with the lift stopped out of reach and the lever on the slab, with no way back (a soft-lock). The floating slab removes it.
+- Every state reached by supported actions (the hero waits 0 to 2.5 s on the slab in 26 steps so that the pull stops the lift at different heights, then pulls 1 to 4 times, then stays, drops to the right or drops to the left): 312 runs, and every floor position in both lever states, reach the exit with ordinary keys and no Restart Level.
+- The raised ladder and the exit ledge are out of reach from the slab, with every kind of key spam (a leaping hero gets at best 68 px short of the ladder) and from the floor.
+- State boundary: death and room retry restore the authored state (ladder raised, lift running from its top, lever down, hero at x 4352, the room's RoomStart). The room is secured when the hero leaves it, like the others.
+
+### Measured (scripted hero, real input; author check, not a novice playtest)
+
+| Route | Result | Budget |
+| --- | ---: | --- |
+| Required (walk, ride, hop, pull, drop, walk, climb, walk), three identical attempts after retries | **8.43 s** | about 20 s (D19) |
+
+**Agent check in the running web build (Chrome, 2026-11-17):** the room renders as one view; the hero rode the lift up, hopped onto the slab, pulled the lever (Up + Action), dropped, climbed the lowered ladder and walked to the exit, and the route room loaded (observed on the first version of the branch, which inserted the room at x 1280 instead of appending it; the room's layout and mechanics are identical); no console errors. **Chrome check of the appended version (2026-11-17, orchestrator):** the room chain `forest-1-mob` to `forest-1-traps` to `forest-1-lever` to `forest-1-route` ran in the web build; each transition put the hero at the next room's RoomStart with the camera inside the room; no console errors. The full lever-room route (lift, slab, pull, ladder, exit) was played on the first version only; on the appended version the lift boarding was not repeated (tool latency). While the hero holds Up at the lever the fairy glows the lever, the ladder and the lift; at the pull the glow disappears at once, the ladder visibly drops and the lift just stops with no cue, so its change is shown only by its stopping ([#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419), checklist item "Keep a cue on in-view linked mechanisms briefly after the pull"). **Not verified, tracked by [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418):** the author's play-through must answer whether the player noticed that the lift stopped; if not, the stopped lift needs a use that does not create a timing puzzle (open for the author).
+
+First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#135). Allocation (`AllocationBudgetTest.forest1LeverRoom`, `...RidingTheLift`, `...PullingTheLever`): 513.8 to 564.5 B/frame in 10 isolated runs (an earlier run of the rest scene measured 345.8; JIT state), ceiling 620 (highest measured 564.5 + about 10 %, D85's rule); the route room's riding scene measures the same here.
+
+### Tests
+
+`Forest1LeverLessonTest` (headless, real shipped map, 19 tests): the census and the authored state, the opposite-states link (five pulls) and the lever's picture, the camera view (the lever, the whole lift range and the whole ladder range inside one view; the camera's horizontal target never moves), the lever's reach, no hop or jump from the floor or from the slab reaching the ladder or the exit ledge, the required route and its time, three identical attempts, the pull-twice recovery, the D26 sweeps, a wrong pull costing nothing, retry, the room chain, the transitions (traps to lever, lever to route: start, room and camera), the entrance and the exit rectangle. Changed existing tests (stated in D86): `Forest1RouteTest`, `Forest1CombatTest` and `TreeClimbTest` enter one more room and name it in their room-chain assertions (no coordinate changed), `RoomTest`, `RoomCeilingTest`, `RoomCardsTest` and `AllocationBudgetTest` count and index the new room. No threshold or tolerance was relaxed.
 
 ## forest-1 route room (#187, D67)
 

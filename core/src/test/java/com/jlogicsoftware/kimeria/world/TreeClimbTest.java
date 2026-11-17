@@ -58,7 +58,7 @@ class TreeClimbTest {
 
     private Level room() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
-        for (int i = 0; i < 4; i++) level.enterNextRoom(player()); // mob, traps, route, guard, tree (#375)
+        for (int i = 0; i < 5; i++) level.enterNextRoom(player()); // mob, traps, lever, route, guard, tree (#375, #418)
         return level;
     }
 
@@ -190,6 +190,7 @@ class TreeClimbTest {
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-traps
         level.enterNextRoom(player());
         level.enterNextRoom(player());
+        level.enterNextRoom(player()); // traps, lever, route, guard (#418)
         assertEquals("forest-1-guard", level.currentRoomName());
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
