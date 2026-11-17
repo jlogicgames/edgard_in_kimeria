@@ -2,7 +2,10 @@ package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.entity.Actor;
+import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
+import com.jlogicsoftware.kimeria.physics.CollideBody;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +27,12 @@ class JumpFrameRateTest {
     private static final float A_X = ROOM_X + 128, A_END = ROOM_X + 240, LEDGE_TOP = 208;
     /** The apex of a standing jump at 60 Hz, measured before and after D98: feet rise this many px. */
     private static final float DESIGNED_APEX = 59.67f;
+    /** The air time of that jump at 60 Hz, from the press to the landing frame (54 frames). */
+    private static final float DESIGNED_AIR_SECONDS = 0.9f;
+    /** The forest-2 entry room's first quicksand pit. */
+    private static final float QUICKSAND_X = 240, QUICKSAND_TOP = 320;
+    /** Allowed error of the measured sink speed, px/s (frame-time rounding over one second). */
+    private static final float SINK_TOLERANCE = 0.2f;
     /** Allowed spread of the apex across frame rates (measured 0.00 px after D98; 94 px before it, 30 Hz against 144 Hz). */
     private static final float APEX_TOLERANCE = 0.1f;
 
@@ -66,21 +75,27 @@ class JumpFrameRateTest {
     }
 
     /** Feet rise of one standing jump from the room's floor (larger Y is lower, so the rise is start minus the smallest feet Y). */
-    private float standingApex(Rate rate) {
+    private float standingApex(Rate rate) { return standingJump(rate).apex(); }
+
+    /** One standing jump: how high the feet rise and how long the hero is in the air, from the press to the landing frame. */
+    private record Jump(float apex, float airSeconds) {}
+
+    private Jump standingJump(Rate rate) {
         Level level = leverRoom();
         frame = 0;
         for (int i = 0; i < 240 && !(level.player.isOnGround() && Math.abs(feet(level) - FLOOR) < 0.5f); i++) step(level, rate);
         for (int i = 0; i < 30; i++) step(level, rate);
         assertTrue(level.player.isOnGround(), "not standing at " + level.player.position);
-        float start = feet(level), top = start;
+        float start = feet(level), top = start, air = 0;
         held.add(Input.Keys.J); pressed.add(Input.Keys.J);
         for (int i = 0; i < 600; i++) {
+            air += rate.dt(frame);
             step(level, rate);
             held.clear();
             top = Math.min(top, feet(level));
             if (i > 2 && level.player.isOnGround()) break;
         }
-        return start - top;
+        return new Jump(start - top, air);
     }
 
     @Test void theStandingJumpRisesAsHighAtEveryFrameRate() {
@@ -97,6 +112,55 @@ class JumpFrameRateTest {
 
     @Test void theDesignedSixtyHertzJumpHeightIsUnchanged() {
         assertEquals(DESIGNED_APEX, standingApex(RATES[1]), 0.05f);
+    }
+
+    /**
+     * The jump also lasts as long at every frame rate. Landing is seen on a frame boundary, so each air time is late by up to
+     * one of its own frames: the two may differ by one frame of the coarser rate (the longest frame of the pattern, or 1/60 s).
+     */
+    @Test void theStandingJumpLastsAsLongAtEveryFrameRate() {
+        float designed = standingJump(RATES[1]).airSeconds();
+        assertEquals(DESIGNED_AIR_SECONDS, designed, 1f / 120, "60 Hz air time");
+        for (Rate rate : RATES) {
+            float longest = HeadlessLevelHarness.STEP;
+            for (float d : rate.deltas()) longest = Math.max(longest, d);
+            float air = standingJump(rate).airSeconds();
+            assertEquals(designed, air, longest, rate.name() + ": air time " + air + " s against " + designed + " s at 60 Hz");
+        }
+    }
+
+    /**
+     * A body resting in quicksand sinks at {@link CollideBody#QUICKSAND_SINK_SPEED} at every frame rate. Measured on the
+     * hero and on the forest-2 entry room's YellowMob, both put on its first quicksand pit (x 240-320, top y 320); every
+     * enemy (RedMob, YellowMob, Boss) and the hero share the same quicksand branch of {@code CollideBody}.
+     */
+    @Test void quicksandSinksAsFastAtEveryFrameRate() {
+        StringBuilder report = new StringBuilder();
+        boolean ok = true;
+        for (Rate rate : RATES) {
+            Level level = new Level(h.assets(), h.game(), new Player(h.assets(), h.game(), 0, 0), "forest-2", Rectangle::new);
+            YellowMob mob = null;
+            for (Object o : level.objects) if (o instanceof YellowMob y) mob = y;
+            assertNotNull(mob, "forest-2 entry room has a YellowMob");
+            frame = 0;
+            placeOnQuicksand(level.player, QUICKSAND_X + 20);
+            placeOnQuicksand(mob, QUICKSAND_X + 60);
+            for (int i = 0; i < 20; i++) { level.update(rate.dt(frame++)); pressed.clear(); }
+            float heroY = level.player.position.y, mobY = mob.position.y, seconds = 0;
+            while (seconds < 1f) { seconds += rate.dt(frame); level.update(rate.dt(frame++)); pressed.clear(); }
+            float hero = (level.player.position.y - heroY) / seconds, enemy = (mob.position.y - mobY) / seconds;
+            report.append(String.format(Locale.ROOT, "%s: hero %.2f px/s, YellowMob %.2f px/s%n", rate.name(), hero, enemy));
+            ok &= Math.abs(hero - CollideBody.QUICKSAND_SINK_SPEED) <= SINK_TOLERANCE
+                && Math.abs(enemy - CollideBody.QUICKSAND_SINK_SPEED) <= SINK_TOLERANCE;
+        }
+        assertTrue(ok, "quicksand sink speed differs by frame rate:\n" + report);
+    }
+
+    /** Puts the body's feet 1 px into the quicksand pit's top with its centre at {@code centerX}, at rest. */
+    private static void placeOnQuicksand(Actor<?> body, float centerX) {
+        Rectangle b = body.hitboxBounds();
+        body.position.add(centerX - (b.x + b.width / 2), QUICKSAND_TOP + 1 - (b.y + b.height));
+        ((CollideBody) body).velocity().setZero();
     }
 
     /**

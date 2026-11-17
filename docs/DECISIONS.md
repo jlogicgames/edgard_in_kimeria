@@ -2864,7 +2864,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   on a ProMotion Mac, 144 Hz on many monitors) with uneven frame times, so gravity per second scaled with the frame rate.
   Feet rise of a standing jump in `JumpFrameRateTest`, before the fix: 30 Hz 119.34 px, 60 Hz 59.67 px, 120 Hz 29.83 px,
   144 Hz 24.86 px, an uneven 120 Hz browser pattern 37.51 px, an uneven 60 Hz pattern 65.99 px. At 120 Hz the 32 px
-  ledge is out of reach. Enemies (`RedMob`, `YellowMob`, `Boss`) fell faster at high frame rates for the same reason.
+  ledge is out of reach. Every body with `GravityBody` (the hero, `RedMob`, `YellowMob`, `Boss`) fell faster at high frame
+  rates for the same reason; one standing on a floor is snapped to it every frame, so it does not drift (all forest RedMobs,
+  YellowMobs and the Boss measured 0.00 px/s at 30 to 144 Hz).
 - **Decision:** keep one variable physics step per rendered frame (the `Player.update` comment explains why a fixed
   accumulator was dropped) and make that step independent of its length:
   - `GravityBody.REFERENCE_STEP` = 1/60 s, the frame time the movement was tuned at. Gravity is
@@ -2875,8 +2877,18 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     clamp (terminal fall speed) moves at the clamped velocity, as before.
   - The launch frame's own lift is one reference step at launch speed (4.33 px for a ground jump), whatever the frame time.
     A jump taken in the second `tryJump(0f)` call of a frame (a buffered press on landing) keeps no launch lift, as before.
+  - Quicksand (`CollideBody.QUICKSAND_SINK_SPEED`, 9.8 px/s): the quicksand branch stops a body without snapping it, so a
+    body at rest sinks by one resting gravity step per frame. That was 9.8 px/s at every rate when gravity was per frame;
+    the per-second step alone gives `g * (dt + 1/60) / 2` per second: 14.70 px/s at 30 Hz, 7.35 at 120, 6.94 at 144, 8.84
+    and 10.75 on the uneven patterns. A resting step in quicksand now moves exactly `QUICKSAND_SINK_SPEED * dt` (the
+    correction is zero at 60 Hz). It is the same branch for the hero and every enemy.
+  - Coyote time (`Player.COYOTE_SECONDS`, 0.25 s): after walking off a ledge the hero may jump until his fall speed passes
+    147 px/s. That was 15 frames, so 0.25 s on desktop and 0.125 s on a 120 Hz browser; it is now 0.25 s at every rate,
+    still the 15th frame at 60 Hz.
 - **Measured after:** the standing jump rises 59.67 px at all six patterns (spread 0.00 px), the same 59.67 px as before
-  the fix at 60 Hz. The lift-to-ledge hop of `forest-1-lever`, taken at the top of the lift's run, lands on the ledge at
+  the fix at 60 Hz. The jump lasts 0.900 s at 30 and 60 Hz, 0.892 s at 120 Hz, 0.889 s at 144 Hz and 0.896 and 0.895 s on the
+  uneven patterns: the same within one frame, because landing is seen on a frame boundary. Quicksand sinks 9.80 px/s at all six
+  patterns, for the hero and for a YellowMob. The lift-to-ledge hop of `forest-1-lever`, taken at the top of the lift's run, lands on the ledge at
   every pattern. All room tests, `RoomReplayTest` times and `AllocationBudgetTest` pass unchanged (60 Hz steps).
 - **Left as it is, with the reason:** two per-frame rules remain and do not change what the player can reach. The wall
   clamber damps the fall with `velocity.y *= 0.1` per frame, which holds the hero within about 1 to 2 px/s at any rate.
@@ -2884,4 +2896,6 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   19.6 px/s after a 30 Hz step; only frames longer than 34 ms (below 29 fps) exceed it, and then a rider on a descending
   platform may re-snap once.
 - **Gate:** `JumpFrameRateTest` pins the apex to 59.67 px at 60 Hz and its spread across 30, 60, 120, 144 Hz and two
-  uneven browser patterns to 0.1 px, and rides the reported lift to the ledge at each.
+  uneven browser patterns to 0.1 px, the air time to 0.9 s at 60 Hz and to it within one frame of the coarser rate at
+  every pattern, the quicksand sink speed to 9.8 ± 0.2 px/s for the hero and an enemy, and rides the reported lift to the
+  ledge at each pattern.

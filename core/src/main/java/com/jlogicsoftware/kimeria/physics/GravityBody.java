@@ -41,10 +41,25 @@ public interface GravityBody {
      */
     default void applyGravity(float dt) {
         Vector2 v = velocity();
-        float g = gravityAcceleration() / REFERENCE_STEP;
+        float g = gravityPerSecond();
         float free = v.y + g * dt;
         v.y = MathUtils.clamp(free, -jumpForce(), terminalVelocity());
         position().y += v.y == free ? free * dt + g * dt * (REFERENCE_STEP - dt) / 2f : v.y * dt;
+    }
+
+    /** Gravity in px/s²: {@link #gravityAcceleration()} per {@link #REFERENCE_STEP}. */
+    default float gravityPerSecond() {
+        return gravityAcceleration() / REFERENCE_STEP;
+    }
+
+    /** True when this frame's {@link #applyGravity} started from rest: the velocity is exactly one step of gravity. */
+    default boolean fellFromRest(float dt) {
+        return velocity().y == gravityPerSecond() * dt;
+    }
+
+    /** How far {@link #applyGravity} moves a body that starts the step at rest: {@code gravityAcceleration()} px per second at 60 Hz. */
+    default float restingFallStep(float dt) {
+        return gravityPerSecond() * dt * (dt + REFERENCE_STEP) / 2f;
     }
 
     default void resetVerticalVelocity() {

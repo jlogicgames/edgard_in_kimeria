@@ -14,6 +14,9 @@ import java.util.List;
  * against a level's collision blocks, escalators and falling platforms.
  */
 public interface CollideBody extends GravityBody {
+    /** How fast a body resting in quicksand sinks, px/s: the 9.8 px per second the 60 Hz build always had (D98). */
+    static final float QUICKSAND_SINK_SPEED = 9.8f;
+
     Hitbox hitbox();
 
     float facingAwareOffsetX();
@@ -104,6 +107,9 @@ public interface CollideBody extends GravityBody {
             } else if (block.isQuickSand()) {
                 if (CollisionUtils.checkCollision(this, block)) {
                     if (velocity().y > 0) {
+                        // Quicksand holds the body without a snap: it sinks at QUICKSAND_SINK_SPEED at any frame rate (D98).
+                        // The correction is zero at 60 Hz, where the resting gravity step already moves exactly that far.
+                        if (fellFromRest(dt)) position().y += QUICKSAND_SINK_SPEED * dt - restingFallStep(dt);
                         velocity().y = 0;
                         setOnGround(true);
                         break;
