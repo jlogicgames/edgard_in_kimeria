@@ -204,15 +204,12 @@ class TutorialLevelTest {
             .filter(o -> "Checkpoint".equals(o.type)).findFirst().orElseThrow()));
     }
 
-    @Test void onlyForestZeroAndTheForestThreeControlZoneAuthorHints() {
+    @Test void onlyForestZeroAuthorsHints() {
         assertTrue(map("forest-1").layer("Hints").isEmpty(), "forest-1 shows no tutorial hints");
         assertTrue(map("forest-1").properties.get("tutorialRoom") == null);
-        TiledMapData three = map("forest-2");
-        assertNull(three.properties.get("tutorialRoom"), "The hardcoded room property is gone");
-        var zones = three.layer("Hints");
-        assertEquals(1, zones.size());
-        assertTrue(zones.get(0).propBool("controls", false));
-        assertEquals("", zones.get(0).prop("message", ""));
+        TiledMapData two = map("forest-2");
+        assertNull(two.properties.get("tutorialRoom"), "The hardcoded room property is gone");
+        assertTrue(two.layer("Hints").isEmpty(), "#376 removed forest-entry's control zone: forest-0 teaches the controls");
         assertFalse(map("forest-0").layer("Hints").isEmpty());
     }
 

@@ -48,6 +48,12 @@ class RoomTest {
     }
     private Player player() { return new Player(assets, game, 0, 0); }
     private Level forest() { map("forest-2"); return new Level(assets, game, player(), "forest-2", Rectangle::new); }
+    /**
+     * Test resource {@code tiles/practice-test.tmx}: forest-2's D24 practice stone, carryable torch and lever-lit torch
+     * (ids 116, 117, 119, same positions) in a first room, then a hall and a boss room so the healer return works. The
+     * shipped map dropped them in #376.
+     */
+    private Level practice() { map("practice-test"); return new Level(assets, game, player(), "practice-test", Rectangle::new); }
 
     private com.jlogicsoftware.kimeria.entity.items.FireballRefill refill(Level level) {
         return level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance)
@@ -57,7 +63,7 @@ class RoomTest {
     @Test void fireballRefillsRollbackOnDeathAndStayConsumedOnSecuredCollectionReturns() {
         Level level = forest();
         level.rangedStock.restore(1);
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         var first = refill(level);
         assertEquals(1696, first.getX());
         assertEquals(128, first.getY(), "SpawnPoints layer offset applies to the refill too");
@@ -73,7 +79,7 @@ class RoomTest {
         assertTrue(level.keptPickups().contains(121));
         for (int visit = 0; visit < 3; visit++) {
             level.returnForCollection(player());
-            level.enterNextRoom(player());
+            level.enterNextRoom(player()); level.enterNextRoom(player());
             assertTrue(level.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance));
             assertEquals(2, level.rangedStock.count(), "Secured refill cannot be farmed");
         }
@@ -84,7 +90,7 @@ class RoomTest {
         var stock = level.rangedStock;
         stock.restartLevel();
         Level restarted = new Level(assets, game, player(), "forest-2", Rectangle::new, stock);
-        restarted.enterNextRoom(player());
+        restarted.enterNextRoom(player()); restarted.enterNextRoom(player());
         assertFalse(refill(restarted).isRemoved(), "Restart rebuilds the authored opportunity");
         assertEquals(3, stock.count(), "Restart restores level-entry stock, not collected charges");
     }
@@ -136,19 +142,22 @@ class RoomTest {
         assertEquals(1, checkpoint.size());
         assertEquals(4, layout.owner(checkpoint.get(0)));
     }
-    @Test void forestHasThreeCompleteRoomsAndAnAuthoredBoss() {
+    @Test void forestHasFourCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(3, layout.rooms.size());
+        assertEquals(4, layout.rooms.size());
         for (var o : map.layer("SpawnPoints")) if (!"Deadline".equals(o.type)) layout.owner(o);
         for (var o : map.layer("Collisions")) layout.owner(o);
         assertNotNull(layout.rooms.get(0).exit());
         assertNotNull(layout.rooms.get(1).exit());
-        assertNull(layout.rooms.get(2).exit());
+        assertNotNull(layout.rooms.get(2).exit());
+        assertNull(layout.rooms.get(3).exit());
+        assertEquals(java.util.List.of("forest-entry", "forest-walls", "forest-canopy", "forest-boss"),
+            layout.rooms.stream().map(RoomLayout.Room::id).toList(), "#376 split forest-entry at x 736");
         var checkpoints = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertTrue(checkpoints.isEmpty());
         var boss = map.layer("SpawnPoints").stream().filter(o -> "Boss".equals(o.type)).findFirst().orElseThrow();
-        assertEquals(2, layout.owner(boss));
+        assertEquals(3, layout.owner(boss));
     }
     @Test void malformedRoomsFailInsteadOfSilentlyBecomingWholeLevel() {
         TiledMapData map = map("forest-2");
@@ -218,6 +227,8 @@ class RoomTest {
         assertTrue(coin.isCollected());
         assertTrue(enemy.isRemoved());
         assertFalse(level.objects.contains(enemy));
+        assertEquals(new Vector2(752, 272), level.player.position, "forest-walls entrance (#376)");
+        level.enterNextRoom(player());
         assertEquals(new Vector2(1344, 272), level.player.position);
         var secondCoin = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).findFirst().orElseThrow();
         secondCoin.collideWithPlayer();
@@ -262,7 +273,7 @@ class RoomTest {
     @Test void roomExitsKeepArtifactsWithoutAutomaticCombatBonus() {
         Level level = forest();
         artifact(level, ItemType.BAT).collideWithPlayer();
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         assertEquals(2, artifacts.items().size());
         assertEquals(1f, artifacts.bossWeaponDamageMultiplier("forest-2"), "Mushroom is still provisional");
@@ -280,7 +291,8 @@ class RoomTest {
 
     @Test void bossRoomCanBeEnteredWithoutAnyArtifacts() {
         Level level = forest();
-        level.enterNextRoom(player());
+        for (int room = 0; room < 3; room++) level.enterNextRoom(player());
+        assertNotNull(level.boss());
         level.player.debugTriggerCheckpoint();
         assertEquals(Player.State.IDLE, level.player.getState(), "Debug checkpoint cannot bypass boss");
         assertTrue(artifacts.items().isEmpty());
@@ -351,7 +363,7 @@ class RoomTest {
     }
 
     @Test void carryableHandoffUsesSupportedRoomPlacementAndClearsBothHolderReferences() throws Exception {
-        Level level = forest();
+        Level level = practice();
         var tool = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast)
             .filter(carryable -> carryable.id == 116).findFirst().orElseThrow();
@@ -415,7 +427,7 @@ class RoomTest {
     }
 
     @Test void thrownCarryableKeepsItsLatestVelocityAndFreezesWhileItsRoomIsInactive() throws Exception {
-        Level level = forest();
+        Level level = practice();
         var tools = java.util.List.of(
             (com.jlogicsoftware.kimeria.entity.items.Carryable) roomOwner(level, 116),
             (com.jlogicsoftware.kimeria.entity.items.Carryable) roomOwner(level, 117));
@@ -438,7 +450,7 @@ class RoomTest {
     }
 
     @Test void fixedTorchAndItsLeverRestoreTheOwnedFireStateAndCanToggleAgain() throws Exception {
-        Level level = forest();
+        Level level = practice();
         var dimTarget = new com.jlogicsoftware.kimeria.tiled.TiledObject();
         dimTarget.id = 2011; dimTarget.type = "Actionable"; dimTarget.name = "shared-light";
         dimTarget.x = 160; dimTarget.y = 240; dimTarget.width = 12; dimTarget.height = 12;
@@ -488,7 +500,7 @@ class RoomTest {
         assertFalse(restoredTorch.isBurning());
         assertEquals(0, restoredTorch.intensity());
 
-        Level fresh = forest();
+        Level fresh = practice();
         assertFalse(((Torch) roomOwner(fresh, 119)).isBurning(), "A fresh Level starts from authored torch state");
     }
 
@@ -512,7 +524,7 @@ class RoomTest {
         coins.set(25);
         Level level = forest();
         collect(level, ItemType.COIN, ItemType.BAT);
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         collect(level, ItemType.COIN);
         level.prepareHealer();
         assertFalse(level.canBrew(), "forest-2 requires Bat and Mushroom");
@@ -526,7 +538,7 @@ class RoomTest {
         coins.set(19); // Currency from another level.
         Level level = forest();
         collect(level, ItemType.COIN, ItemType.BAT);
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         collect(level, ItemType.COIN, ItemType.MUSHROOM);
         assertEquals(6, level.forestCoinTotal());
         assertFalse(level.canBrew(), "Current-room pickups must first be secured");
@@ -563,7 +575,7 @@ class RoomTest {
             ItemType[] wanted = java.util.Arrays.stream(ItemType.values())
                 .filter(t -> t != missing).toArray(ItemType[]::new);
             collect(level, wanted);
-            level.enterNextRoom(player());
+            level.enterNextRoom(player()); level.enterNextRoom(player());
             collect(level, wanted);
             level.prepareHealer();
             assertFalse(level.canBrew(), "Missing " + missing);
@@ -584,6 +596,7 @@ class RoomTest {
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         bomb.collideWithPlayer(); bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 1.01f);
         collect(level, ItemType.COIN); // Deliberately miss Bat.
+        level.enterNextRoom(player()); // forest-walls: no pickups (#376).
         level.enterNextRoom(player());
         collect(level, ItemType.COIN); // Deliberately miss Mushroom.
         level.prepareHealer();
@@ -593,9 +606,6 @@ class RoomTest {
             level.returnForCollection(player());
             assertEquals(new Vector2(64, 272), level.player.position);
             assertEquals(6, coins.get());
-            assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance)
-                .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).filter(c -> c.id == 116).count(),
-                "Each activated room has one live instance per authored carryable ID");
             assertFalse(level.objects.contains(killed));
             if (trip == 0) {
                 assertTrue(level.objects.contains(surviving));
@@ -607,28 +617,42 @@ class RoomTest {
             assertEquals(1, artifacts.items().size());
             level.resetCurrentRoom(player()); // The new Bat is provisional; old coins and kills are secured.
             assertTrue(artifacts.items().isEmpty());
-            assertEquals(4, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance).count());
+            assertEquals(2, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance).count());
             assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
             assertNotNull(artifact(level, ItemType.BAT));
-            level.enterNextRoom(player());
+            level.enterNextRoom(player()); level.enterNextRoom(player());
             level.prepareHealer();
             assertEquals(6, level.forestCoinsSecured());
             var visitsField = Level.class.getDeclaredField("visits");
             visitsField.setAccessible(true);
-            assertEquals(2, ((java.util.Map<?, ?>) visitsField.get(level)).size(),
-                "Secured snapshots remain bounded to the two visited rooms across repeated returns");
+            assertEquals(3, ((java.util.Map<?, ?>) visitsField.get(level)).size(),
+                "Secured snapshots remain bounded to the three visited rooms across repeated returns");
         }
         level.returnForCollection(player());
         collect(level, ItemType.BAT);
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         collect(level, ItemType.MUSHROOM);
         level.prepareHealer();
         assertTrue(level.canBrew());
     }
 
+    @Test void collectionReturnsKeepOneLiveInstancePerAuthoredCarryableId() {
+        Level level = practice();
+        for (int trip = 0; trip < 3; trip++) {
+            level.enterNextRoom(player());
+            level.prepareHealer();
+            level.returnForCollection(player());
+            assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance)
+                .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).filter(c -> c.id == 116).count(),
+                "Each activated room has one live instance per authored carryable ID");
+        }
+    }
+
     @Test void healerRecognitionBelongsToLiveLevelAcrossReturnAndRoomDeath() {
         Level level = forest();
         assertThrows(IllegalStateException.class, level::beginPreBossHealerMeeting);
+        level.enterNextRoom(player());
+        assertThrows(IllegalStateException.class, level::beginPreBossHealerMeeting, "forest-walls is not before the healer");
         level.enterNextRoom(player());
         assertTrue(level.healerAhead());
         level.prepareHealer(); // Preparation alone does not consume the first meeting.
@@ -638,12 +662,12 @@ class RoomTest {
         level.prepareHealer();
         assertTrue(level.beginPreBossHealerMeeting(), "A room death keeps recognition for the live level");
         level.returnForCollection(player());
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         level.prepareHealer();
         assertTrue(level.beginPreBossHealerMeeting(), "Collection return keeps recognition");
 
         Level restarted = forest();
-        restarted.enterNextRoom(player());
+        restarted.enterNextRoom(player()); restarted.enterNextRoom(player());
         restarted.prepareHealer();
         assertFalse(restarted.beginPreBossHealerMeeting(), "A fresh Level starts a new encounter");
     }
@@ -652,7 +676,7 @@ class RoomTest {
         Level level = forest();
         Bomb trap = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         trap.collideWithPlayer(); trap.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .4f);
-        level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
         Bomb revisited = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         assertEquals(trap.snapshot(), revisited.snapshot());
         revisited.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .2f);
@@ -705,7 +729,7 @@ class RoomTest {
         initialFalling.collideWithActor(); initialFalling.update(2); initialFalling.update(2);
         assertTrue(initialFalling.isRemoved());
         collect(level, ItemType.COIN);
-        level.enterNextRoom(player()); collect(level, ItemType.COIN);
+        level.enterNextRoom(player()); level.enterNextRoom(player()); collect(level, ItemType.COIN);
         level.prepareHealer(); level.returnForCollection(player());
         assertTrue(roomOwner(level, 2002).isRemoved());
         assertFalse(level.collisionBlocks.contains(roomOwner(level, 2002)), "The removed wall must not block collision");
@@ -727,7 +751,7 @@ class RoomTest {
             restoredLift.update(.2f);
             savedLiftX = restoredLift.getX();
             expectedLiftSnapshot = restoredLift.snapshot();
-            level.enterNextRoom(player());
+            level.enterNextRoom(player()); level.enterNextRoom(player());
             collect(level, ItemType.COIN);
             level.prepareHealer();
             level.returnForCollection(player());
@@ -755,7 +779,7 @@ class RoomTest {
         first.collideWithActor(); first.update(8f); first.update(2f);
         assertTrue(first.isRemoved());
 
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         level.prepareHealer();
         level.returnForCollection(player());
         var afterReturn = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 2010);
@@ -783,7 +807,7 @@ class RoomTest {
         first.collideWithActor();
         first.update(.2f);
         var securedWarning = first.snapshot();
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         for (int frame = 0; frame < 90; frame++) level.update(1f / 60f);
         assertEquals(securedWarning, first.snapshot(), "Inactive room objects do not advance");
 
@@ -801,7 +825,7 @@ class RoomTest {
         warningResume.update(.4f);
         var midFall = warningResume.snapshot();
         assertTrue(midFall.fallSeconds() > 0f);
-        level.enterNextRoom(player()); // Secures the mid-fall state.
+        level.enterNextRoom(player()); level.enterNextRoom(player()); // Secures the mid-fall state.
         level.returnForCollection(player());
         var midFallResume = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 2011);
         assertEquals(midFall, midFallResume.snapshot(), "Mid-fall progress resumes without old torch state");
@@ -814,7 +838,7 @@ class RoomTest {
 
         for (int frame = 0; frame < 180 && !afterDeath.isRemoved(); frame++) afterDeath.update(1f / 60f);
         assertTrue(afterDeath.isRemoved());
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player());
         level.returnForCollection(player());
         var removedResume = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 2011);
         assertTrue(removedResume.isRemoved());
@@ -848,7 +872,7 @@ class RoomTest {
         var ambience = Level.class.getDeclaredField("ambience"); ambience.setAccessible(true);
         assertFalse(((java.util.List<?>) ambience.get(level)).stream()
             .anyMatch(com.jlogicsoftware.kimeria.effects.FogEffect.class::isInstance));
-        level.enterNextRoom(player()); level.enterNextRoom(player());
+        for (int room = 0; room < 3; room++) level.enterNextRoom(player());
         assertFalse(((java.util.List<?>) ambience.get(level)).stream()
             .anyMatch(com.jlogicsoftware.kimeria.effects.FogEffect.class::isInstance));
         var fog = com.jlogicsoftware.kimeria.ui.MenuBackdrop.class.getDeclaredField("fog"); fog.setAccessible(true);

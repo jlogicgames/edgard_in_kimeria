@@ -331,28 +331,58 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 1 of 3 |
-| Role | combination |
-| Purpose | New enemies and ground: stomp, quicksand and wall jumps between flyers, with the first coins and ingredient. |
-| Introduces | yellowmob, quicksand, wall-jump, coin, ingredient, carry-torch |
-| Develops | touch-explosive: the Bomb on flat ground between enemies (a reskin of the stump, so the enemies around it are what is new) |
+| Level | forest-2, play order 3, room 1 of 4 (x 0-736, 736 px, 1.15 screens) |
+| Role | variation |
+| Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, keep moving over quicksand, pass the Bats, jump the Bomb, and see the first coins and the Bat ingredient. |
+| Introduces | yellowmob, quicksand, coin, ingredient |
+| Develops | touch-explosive: the Bomb (a reskin of the stump) stands 48 px past the second quicksand pool, so the hero comes off sinking ground straight into its jump, and backing away from its wind-up means backing onto the sand |
 | Combines | - |
-| Repeats | redmob, bat-enemy, carry-throw, lever, ladder |
-| Mastered route | 16.27 s required, 20.00 s all coins (`RoomReplayTest`); target about 20 s, coins about 30 s |
+| Repeats | bat-enemy |
+| Mastered route | 6.80 s required, 10.40 s all coins and 6.12-6.72 s on a collection return with the Bat (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
 | First learning | not measured (#135) |
-| Retry cost | up to about 16 s, the longest in the Forest |
-| Optional | coins, the Bat ingredient, the practice stone, torch, light and ladder near the entrance |
-| D26 | no one-shot support on the required route |
-| Hints | live controls label only |
-| Overload reason | Six introductions, and the practice objects of D24/#95 repeat forest-0 lessons. The D72 audit (2026-11-16) proposes removing the repeats and splitting the room in the 64 px gap between the Bomb's blast (ends about x 696) and the second YellowMob's reach (from x 752); x 640, the first estimate, lies inside the blast; tracked by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376). |
-| Status | D72 audit 2026-11-16: change (remove the practice stone, light, ladder and the carryable torch; split the room in the x 696-752 gap), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) |
-| Decisions | D24, D72 |
+| Retry cost | the whole room, about 7 s, for a death at the Bomb at its end (was about 16 s for the undivided room) |
+| Optional | three coins (x 32, 336, 368) and the Bat ingredient on the ledge at x 416-480, reached from the platform stair (the ladder that also led there is removed) |
+| D26 | no one-shot support; the Bomb is the only one-shot object and the exit stays reachable after it blows |
+| Hints | none (the D24 controls zone is removed by #376: forest-0 teaches the controls) |
+| Landmark | the stair of three platforms over the first quicksand pool |
+| Overload reason | Four introductions: the split moves the wall jump out, but the coin and the ingredient have no earlier room that can take them (forest-0 is lessons, forest-1 is being re-cut by #375, forest-canopy is at the cap). Moving the first coin or the ingredient elsewhere is tracked by [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417). |
+| Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736 |
+| Decisions | D72 |
+
+Split detail ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)). The free floor between the
+Bomb's blast (x 632-696) and the second YellowMob (x 832, left patrol end x 752, hitbox from x 758) is 56 px, too
+narrow for this room's exit and right wall plus the next room's left wall and a 48 px safe entrance. The split is at
+**x 736**: `forest-entry` ends with its exit at x 704-720 (8 px clear of the blast) and a wall at x 720-736;
+`forest-walls` starts with a wall at x 736-752 and its entrance at x 752. To keep that entrance safe, the second
+YellowMob's left patrol is shortened from `offNeg` 5 to 1 (left end x 816, hitbox from x 822, 41 px from the hero's
+body); its right end and the climb are unchanged. The floor block x 608-1280 is cut at x 736 so each room owns its
+own floor.
+
+### forest-walls
+
+| Field | Value |
+| --- | --- |
+| Level | forest-2, play order 3, room 2 of 4 (x 736-1280, 544 px, 0.85 screen) |
+| Role | challenge |
+| Purpose | Climb two tall walls by wall jumps, starting where a YellowMob walks, then pass a RedMob to the exit. |
+| Introduces | wall-jump |
+| Develops | - |
+| Combines | yellowmob + wall-jump: the YellowMob patrols up to the foot of the first wall, so the climb starts only after it is stomped or timed past |
+| Repeats | yellowmob, redmob |
+| Mastered route | 8.80 s required, 7.32 s on a collection return with its mobs already beaten (`RoomReplayTest`, three identical attempts); target about 20 s |
+| First learning | not measured (#135) |
+| Retry cost | the whole room, about 9 s, for a death at the RedMob by the exit |
+| D26 | no one-shot object; both walls are climbable from every state |
+| Hints | none |
+| Landmark | the two tall walls (x 912 and x 992) |
+| Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376) |
+| Decisions | D72 |
 
 ### forest-canopy
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 2 of 3 |
+| Level | forest-2, play order 3, room 3 of 4 |
 | Role | approach |
 | Purpose | The forest's trap families one at a time before the boss. |
 | Introduces | thorn-vine, false-honey-fungus |
@@ -372,7 +402,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 3 of 3 |
+| Level | forest-2, play order 3, room 4 of 4 |
 | Role | boss |
 | Purpose | The Forest boss. |
 | Introduces | boss |
