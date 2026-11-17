@@ -24,6 +24,11 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pillow: the contrast gate and the sprite checks that the build runs read PNGs with it (as in check.yml).
+      - run: python -m pip install "Pillow==12.3.0"
       - run: ./gradlew clean buildWeb
       - uses: actions/upload-pages-artifact@v3
         with:
