@@ -2338,16 +2338,18 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Finding 2, the lift is off screen from the lever.** In the real route room, with the real camera rule (`Player.roomCameraTarget`),
   a hero at the lever (x 1440) has the view x 1280 to 1920 (the room's left clamp), and the lift (x 1936 to 1968) lies **16 px
   beyond the right edge**: off screen (`FairyOffscreenTest.fromTheLeverTheLiftIsOffScreenAndTheLadderIsInView...`). The camera's
-  dead zone moves the focus by under 50 px, which cannot bring it in. The Chrome check of 2026-11-17 saw the lift glow while the lever
-  was selected; that cannot be reproduced headless and may have been a different hero position or window. The author's play-through
-  will show which; the design covers both cases (in view: the mark; out of view: the edge twinkle).
+  dead zone moves the focus by under 50 px, which cannot bring it in. The Chrome check of 2026-11-17 that saw the lever, the ladder and
+  the lift glow was made in the lever lesson room of PR #431 (#418: the lift 80 px from the lever, the whole room one view), not in the
+  route room, so it does not contradict this: the in-view glow works, and in the route room, standing at the lever, the lift is off
+  screen, which is the case this decision fixes. (In the author's original playtest screenshot of the route room the hero stood
+  mid-room, where the lift was in view.) The design covers both cases (in view: the mark; out of view: the edge twinkle).
 - **Found while measuring:** `Player.selectedInteraction` made a record every frame any target was selected (24 B/frame; the
   D82 fairy scene never selected one, it only had passive targets). It is now one reused instance
   (`Player.InteractionTarget`, read at once by each caller). The new scene showed 24.6 B/frame before the fix.
 - **Allocation:** `AllocationBudgetTest.fairyGuidePointingOffScreenWithAPostPullGlow` (the hero at the route lever with Up held,
   the lift off screen, marks renewed every 60 frames; the fairy's update and both render passes): 0.6 to 2.0 B/frame in 3 isolated
-  runs, ceiling `FAIRY_GUIDE_CEILING` 8 B (the isolated-scene ceiling of the D82 and #303 scenes; measured maximum plus 10 % would be
-  2.2, and one JIT-dependent object per few hundred frames is the noise this ceiling is meant to absorb). The existing
+  runs, ceiling `FAIRY_GUIDE_CEILING` 8 B (the shared isolated-scene ceiling of the D82 and #303 fairy scenes, not D85's room rule of highest run plus 10 %, which
+  applies to whole rooms; for this scene that rule would give 2.2, and the shared 8 B absorbs the JIT noise of one object per few hundred frames). The existing
   `fairyGuideWithPassiveGlows` measures 0.1 to 0.7. `HeadlessLevelHarness.roomOf` now passes one shared empty view instead of
   `Rectangle::new` (a supplier that makes a rect per call would itself allocate under the fairy). The new helpers are in
   `tools/check_allocations.py` `HOT_METHODS`.
@@ -2358,5 +2360,5 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   nearest and sticky choice among two, above and below, and the selection unchanged. No existing test changed and no threshold
   moved; `./gradlew test` 981 tests, 0 failures.
 - **Not verified:** the look and timing in the running game on desktop, web and touch (the glints around her, the 1.5 s, the 16 px
-  margin against the HUD hearts and the touch buttons); the Chrome discrepancy in Finding 2. Tracked by #419 (play-through) and, for
+  margin against the HUD hearts and the touch buttons). Tracked by #419 (play-through) and, for
   the shared visual checks, [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
