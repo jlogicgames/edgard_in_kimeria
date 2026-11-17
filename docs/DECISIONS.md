@@ -2185,3 +2185,56 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   allocation in the rider branch gives a median of 24.0 and fails 10 of 10, isolated and loaded. The ordinary median
   difference (no injection) was 0.0 B/frame in all 80 runs (min 0.0, max 0.0, printed to 0.1 B), so the margin under the
   8 B ceiling is the whole 8 B.
+
+## D84. A puzzle never makes the player guess or look stupid (playtest, #418, #419, 2026-11-17)
+
+- **Status:** Accepted by the author, 2026-11-17. The principle is in force now; its first two applications are open
+  issues ([#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418),
+  [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419)) and are not built.
+- **Decision:** the author's words (translated from Russian): "Don't torment the player with guesswork; a puzzle must not
+  make the player look stupid." In room and mechanism design this means four rules:
+  1. **Teach before gating.** Every new mechanic, and every new combination of known ones (for example one control that
+     drives several mechanisms), is shown first in a safe place, where failing costs nothing, before it stands between the
+     player and progress.
+  2. **Cause and effect are visible.** The effect of every player action is visible at the moment it happens. If the
+     effect lands off screen, the game points at it (the fairy of D82 is the existing tool).
+  3. **A stuck player can see what to try next.** From any reachable state the player can see something they have not
+     tried yet: a lever not pulled, a mechanism that reacted, a path that changed. A room that looks impassable while a
+     solution exists is a defect of the room, not of the player.
+  4. **Difficulty is execution and planning.** Challenge comes from timing, precision, route choice and resource use
+     (D26), never from a hidden rule or an unreadable state.
+- **Why:** a puzzle that is solved by trying everything is not a puzzle, and a player who finds the answer by luck learns
+  nothing. Worse, a failure the player cannot explain reads as the player's own stupidity. The game must be able to say
+  "you saw it and chose" after every failure.
+- **Relation to earlier rules:** it extends, and does not replace:
+  - [D7](#d7-traps-are-deterministic-puzzle-elements): a trap is deterministic and warns before it kills, so its
+    telegraph is the trap form of rule 2.
+  - [D26](#d26-observe-and-plan-before-committing): observe, plan, then commit; D84 asks that what the player observes
+    is enough to plan with.
+  - [D31](#d31-forest-uses-linked-route-reconfiguration): a lever's effect is a visible link; D84 requires the link to be
+    seen when it fires, whatever the number of links.
+  - [D72](#d72-every-room-gives-the-player-something-new): each new element is first met alone, then combined; D84 makes
+    the same demand of a new combination of known elements, which D72 counts as a combination but does not require to be
+    shown on its own.
+  - [D82](#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16):
+    the fairy points at the selected target; D84 extends that to a linked mechanism that is off screen.
+- **How to apply (checks for a room, a mechanism or a review):**
+  - List every control that drives more than one mechanism, and every combination of mechanics the room asks for. For each,
+    name the earlier safe place where the player met it, or add one.
+  - For each player action, name the frame where its effect is seen and whether it is on screen. If not, say how the game
+    points at it.
+  - From each stuck state the room can reach, name what the player can try next and where they see it.
+  - If the only way to find the answer is to try everything, the room fails this decision, whatever its measured time.
+  - A room card records the check; see the kimeria-room-design skill.
+- **Case that broke the principle:** the `forest-1-route` room ([D67](#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)),
+  playtest 2026-11-17. The `Route` lever is the only lever in the game that drives two mechanisms (it lowers the ladder and
+  stops the lift). Nothing taught that earlier, and after the pull only the ladder visibly reacted, so the room looked
+  impassable and the author got stuck, although the lift was the way on.
+- **Applications (first two):**
+  - [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418): a teaching room for a lever that drives two
+    mechanisms, placed in forest-1 between `forest-1-traps` and `forest-1-route` (rule 1).
+  - [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419): the fairy guide (D82) flies to the screen edge and
+    twinkles toward a linked mechanism that is off screen (rule 2).
+  - Both issues stay open until built. When one lands, its PR updates this list and the document it changes.
+- **Details:** playtest of 2026-11-17 (the forest-1 route room); [GAME_DESIGN.md](GAME_DESIGN.md#intent-and-player-experience),
+  [GAME_DESIGN.md](GAME_DESIGN.md#forest-linked-route-reconfiguration).

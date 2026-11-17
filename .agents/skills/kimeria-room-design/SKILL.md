@@ -31,7 +31,9 @@ Work from the repository root. The substance is in the docs; this skill is the o
    temporary state.
 4. **Cost:** mastered-route target about 20 s, first learning about 60 s (hypotheses, D19), and the retry cost of the
    most expensive death. A long retry is a reason to split, not to pad or trim the timing targets.
-5. **Optional:** a landmark the player will remember the room by, and a calm beat after a dangerous one (#352).
+5. **No guesswork (D84):** is every new rule or combination shown safely before it gates progress, and is every
+   effect visible, or pointed at when it is off screen? Could a stuck player see what to try next?
+6. **Optional:** a landmark the player will remember the room by, and a calm beat after a dangerous one (#352).
 
 ## Then build and record
 
