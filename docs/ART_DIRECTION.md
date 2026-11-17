@@ -413,6 +413,13 @@ depends on it.
   a solid block. The grid is an original drawing in the palette above (three leaf tones); the 2026-11-16 recolour
   changed only its palette lines (D76). In a map the rectangle is 32×24,
   so `y = floor - 24` (forest-2's SpawnPoints layer is offset by -16, so its file `y` is `floor - 24 + 16`).
+- **Crown (#421).** The decor kind `crown`, `decor-crown` 96×40, one frame, from the hand-authored `art/objects/decor/crown.grid`:
+  a leaf crown hung from the room top over a `Decor:trunk` (trunk x = crown x + 40; the middle lobe hides the trunk's cap).
+  The bush's grey-green family one step lighter (contour `607660`, leaves `6e8466 / 7b9170 / 889e79`, olive tips `948f62`);
+  no ink, no violet. Measured over forest-0's `background` `4a92b8` (D92): outline 0.087, body 0.119. The bush's own palette
+  on the same grid measures outline 0.157, inside the 0.20 decor ceiling by 0.043; the lighter greens keep the crown, the
+  largest decor sprite and hung in open sky, about halfway under it. A hanging kind (`hangs` in `Decor.KINDS`): its top edge is on the
+  room's top or a solid's underside, not its bottom edge on a solid. First placed in forest-0-wall over the falling branch.
 - **Placement (all levels, by hand, standing on the ground floor away from traps, pickups, checkpoints and exits):**
 
 | Map | Bushes | World x (left edge) |

@@ -491,8 +491,17 @@ class DecorLinksTest(unittest.TestCase):
         self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="500" y="296" width="32" height="24"'), FLOOR))[0])
 
     def test_the_kinds_are_read_from_the_java_table(self):
-        self.assertEqual({'bush', 'lookalike', 'trunk'}, set(links.decor_kinds()))  # trunk: #349 (D80)
+        self.assertEqual({'bush', 'lookalike', 'trunk', 'crown'}, set(links.decor_kinds()))  # trunk: #349 (D80), crown: #421
         self.assertEqual(('lookalike',), links.decor_still_kinds())
+        self.assertEqual(('crown',), links.decor_hanging_kinds())
+
+    def test_a_crown_hangs_from_the_room_top_or_a_solid_underside_not_from_the_floor(self):
+        crown = lambda y: decor('crown', f'x="64" y="{y}" width="96" height="40"')
+        room = '<objectgroup name="Rooms"><object name="one" type="Room" x="0" y="0" width="400" height="368"/></objectgroup>'
+        self.assertEqual([], check(tmx(crown(0), FLOOR).replace('<objectgroup name="Spawn', room + '<objectgroup name="Spawn', 1)))
+        self.assertEqual([], check(tmx(crown(16), CEILING + FLOOR)))  # under a solid block
+        self.assertIn("neither the room's top nor the bottom of a solid block", check(tmx(crown(20), CEILING + FLOOR))[0])
+        self.assertIn("neither the room's top", check(tmx(crown(280), FLOOR))[0])  # standing on the floor is not hanging
 
 
 CEILING = '<object id="8" x="0" y="0" width="400" height="16"/>'

@@ -83,7 +83,7 @@ what the player does about them.
 | wall-jump | (skill) | wall-jumps a wall the route cannot pass otherwise |
 | branch-climb | (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) |
 
-Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `HangingVine`, `Torch`
+Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:crown`, `HangingVine`, `Torch`
 (decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (clamberable room walls), `Collisions:Platform`
 (one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints`.
 

@@ -186,7 +186,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | --- | --- |
 | Family | position |
 | Visibility (D71) | DISGUISED |
-| At rest | a tan branch with violet buds hanging overhead, its joint cracked; no foliage tiles above it (a D48 gap, [#421](https://github.com/jlogicgames/edgard_in_kimeria/issues/421)) |
+| At rest | a tan branch with violet buds hanging overhead, its joint cracked; it grows from a `Decor:trunk` under a `Decor:crown` of leaves (#421, D48), scenery in the decor tier, so the pale cracked joint stays the only bright, warm mark |
 | At-rest cue | a cracked joint at the bough, drawn on every instance in the resting and rustle frames ([#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361)): a pale raw-wood band (`fff4b0`) round the joint, 2 px right of the knob and through the whole depth of the bough, cut by an ink zig-zag, with one loose chip of light wood 3 px under it. It reads apart from the rotten branch (D80) by place (overhead, not underfoot), colour (tan, not dead grey) and crack (a pale band across the joint, not a 1 px split mid-top) |
 | Reads from | its zone (`forest-0-wall`: x 1728-1776, the column itself) |
 | Trigger | the hero body box overlaps the authored zone (`zoneX`, `zoneY`, `zoneWidth`, `zoneHeight`) |
