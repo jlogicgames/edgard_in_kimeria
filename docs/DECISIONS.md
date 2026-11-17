@@ -2710,3 +2710,28 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests changed.** `TreeClimbTest` no longer forbids a coin: it asserts exactly one, on the floor line and left of the
   first trunk (still no enemy and no lethal trap); `RoomReplayTest` expects the Bat after the walls replay and not after the
   entry replay, and the room-retry test enters the wall room first.
+
+## D97. Zone messages follow one formula: the cue, then what to do (#373, 2026-11-17)
+
+- **Status:** Accepted by the author, 2026-11-17 (through the orchestrating session), from the phase A draft of
+  [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (text audit G17). Refines the plain voice of
+  [D74](#d74-text-style-system-two-voices-glossary-and-a-gate-339-2026-11-16) for `HINT_*` zone messages.
+- **Before:** the 19 zone messages of `forest-0` used several shapes ("This lever ... and ... again", three wordings of
+  "the exit is ahead", trap lines of up to three sentences and 77 EN characters, one that said a fall "just retries").
+- **Decision:** every zone message ends with one imperative that says what to do. It may start with one short statement
+  of what the player sees and what follows. At most two sentences and 60 EN characters (T3). Fixed forms:
+  - Lever: "Use the lever to `<do X>` or `<undo it>`" ("Use" is the action label `INTERACT`).
+  - Trap: "`<the cue>` `<what follows>`. `<how to get past>`", naming the cue as TRAPS.md draws it (cracked branch,
+    shadow, cracked platform, smoking stump).
+  - Exit: "Head for the exit ahead", one wording everywhere (`HINT_LEVER_EXIT` keeps its own first sentence, D34).
+  - Present tense; no retry, lives or key words (T4); no tale images; one verb per trap (the stump "explodes").
+- **Applied:** 14 of 19 messages rewritten in all five languages; 5 already fit and stay (`HINT_TUTORIAL_WALK`,
+  `HINT_LADDER_CLIMB`, `HINT_WALL_PASS`, `HINT_PLATFORM_RIDE`, `HINT_STONE_EXIT`). Keys and maps are unchanged.
+- **Measured:** longest EN 59 characters. With the 20 px zone font in 400 px (`LocalizationLayoutTest`), every message is
+  one line in en and pl; `HINT_TRAP_PLATFORM` and `HINT_TRAP_STUMP` take two lines in uk, de and be, and `HINT_STONE_STUMP` two in de;
+  all others one.
+  The five T3 allowlist entries of #373 are removed.
+- **Gate:** T3 of `tools/check_text_style.py` checks the length and the sentence count. Whether a message ends with an
+  imperative and uses the fixed forms is a review rule (TEXT_STYLE §1; a script cannot tell an imperative reliably).
+- **Not verified:** native-speaker review of the translations ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369))
+  and the look in the running game ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).

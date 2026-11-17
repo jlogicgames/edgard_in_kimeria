@@ -134,7 +134,8 @@ and `forest-2` has only a controls zone.
 
 Observations: three "exit ahead" lines (`HINT_LEVER_EXIT`, `HINT_LADDER_EXIT`, `HINT_STONE_ACROSS`)
 say the same thing in three ways; trap lines are the longest and run to two sentences; all are plain
-voice with no key names, as LOCALIZATION.md requires.
+voice with no key names, as LOCALIZATION.md requires. The table records the texts of 2026-11-15; #373 rewrote 14 of
+them in one formula ([D97](DECISIONS.md#d97-zone-messages-follow-one-formula-the-cue-then-what-to-do-373-2026-11-17)), and the catalogs hold the current wording.
 
 ### 1.7 The label above the hero (continuous, inside `controls` zones)
 
@@ -261,7 +262,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | G14 | Polish names the witch "wiedźma" in the opening and "czarownica" in the tales. **Resolved (#370):** the rewritten Polish tales say "wiedźma"; their allowlist entries are removed. | pl `INTRO_STORY`, `HEALER_TALE_WITCH`, `HEALER_TALE_BLESSING` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) (translation pass) |
 | G15 | "Sleeping lands", "sleeping kingdom": sleep is never explained (the curse is night, not sleep). Either a deliberate image (the land sleeps under the night) or drift. | `INTRO_STORY` | Author's call, settled with the frame in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. **Resolved (#370, the author's choice):** `EDGARD_TALE_READY` opens with "Forgive my haste, healer." | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
-| G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
+| G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. **Resolved (#373, D97):** one formula (the cue, then what to do), one exit wording, every message at most 59 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
 | G18 | `COINS` is in all five catalogs and read by no code. **Resolved (#374):** the key is deleted from `Msg` and all five catalogs, with its allowlist entry. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
 | G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. | `INTRO_STORY` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G20 | The apostrophe in L'Kardina: STORY.md writes the Ukrainian form with a typographic ’ (Л’Кардина); all catalogs use ASCII '. Fix one form per language in the glossary. | `INTRO_STORY` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369); glossary row "Villain" |
@@ -361,7 +362,7 @@ go in a Python tool with its own test, data in one JSON file.
 | --- | --- | --- |
 | T1 glossary consistency | If the EN string contains a concept's EN stem, each translation contains that concept's stem in its language | pl `HEALER_TALE_WITCH`, pl `HEALER_TALE_BLESSING` (czarownica); be `FIREBALL_STOCK_FULL` (вогненных шароў vs Агонь) |
 | T2 tale register | Tale-voice keys (`INTRO_STORY`, `ENDING_STORY`, spoken `HEALER_*`, `EDGARD_*`) contain no control or jargon word (word-boundary stems in five languages, extending the list in `HealerDialogueTest`) | `HEALER_READY` (boss), `HEALER_PAID` (boss, damage), `HEALER_LOCK` (retries, boss), `HEALER_INGREDIENTS` and `HEALER_BOTH` (list), in all five languages where the word appears: 24 hits in the dry run (a naive substring check also hit "Listen" in `INTRO_STORY`, so T2 must match word stems at word boundaries) |
-| T3 zone message budget | EN `HINT_*` at most 60 characters and at most two sentences | `HINT_STONE_THROW` 65, `HINT_TRAP_STUMP` 64, `HINT_TRAP_PLATFORM` 73, `HINT_PLATFORM_STONE` 75, `HINT_STONE_STUMP` 77 |
+| T3 zone message budget | EN `HINT_*` at most 60 characters and at most two sentences | `HINT_STONE_THROW` 65, `HINT_TRAP_STUMP` 64, `HINT_TRAP_PLATFORM` 73, `HINT_PLATFORM_STONE` 75, `HINT_STONE_STUMP` 77 (all rewritten within 60 by #373) |
 | T4 no key names in zone messages | No binding token (J, K, L, W, A, S, D, Z, X, C, Esc, Tab, Enter, Space) followed by `+` or `:` or standing as a key list | none (the naive single-letter check falsely flags the English article "A" four times; the tool must match the binding pattern, not any capital letter) |
 | T5 unused keys | Every catalog key is referenced by `Msg` and by code or a map | `COINS` (deleted by #374) |
 
@@ -404,7 +405,7 @@ rewrite (or with an explicit, argued allowlist entry per remaining hit, removed 
 | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) | EN rewrite of the tutorial tales (witch's gifts, "ask", formulae) after #338/#340 | G5, G6, G7, G16, G14 (done) |
 | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) | EN rewrite of the pre-boss and victory lines in tale voice | G11, G12, G13 |
 | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) | Ending in the healer's voice within the MVP decision of STORY.md | G8, G9, G10, G15, G19 |
-| [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) | Zone message rewrite: one "exit ahead" form, trap lines within 60 EN chars | G17 |
+| [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) | Zone message rewrite: one "exit ahead" form, trap lines within 60 EN chars | G17 (done, D97) |
 | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) | Remove or use the unused `COINS` key | G18 (done: deleted) |
 | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) | Native-speaker review of uk/pl/de/be, glossary forms (including the fire's name from #340; Polish "czarownica" was fixed by #370) | G3, G14, G20 |
 | [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368) | In-game visual checks | Look of rewritten texts in the running game |
