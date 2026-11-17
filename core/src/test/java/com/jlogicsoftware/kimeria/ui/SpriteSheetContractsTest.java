@@ -32,6 +32,7 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);
         matches(SpriteSheets.TRAP_LOG, 3, 1);
+        matches(SpriteSheets.TRAP_FALLING_PLATFORM, 4, 1); // #362: fan1..fan4, the cracked slab in each
         matches(SpriteSheets.TRAP_PERCH, 2, 1); // #349: perch, perch-left
         matches(SpriteSheets.TRAP_ROTTEN_PERCH, 6, 1); // #349: intact, crumble1, crumble2 and their -left copies
         matches(SpriteSheets.TRAP_HONEY_FUNGUS, 6, 1); // #295 phase 1: idle1..3, swell1, swell2, spent
@@ -41,6 +42,28 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.DECOR_VINE, 1, 1); // #239 step 5: hang
         matches(SpriteSheets.DECOR_LOOKALIKE, 1, 1); // #299: static
         matches(SpriteSheets.DECOR_TRUNK, 1, 1); // #349: the tree trunk
+    }
+
+    /** #362 (D71): the plain falling platform's at-rest cue, the hairline crack, is in every fan frame, so a re-export without it fails. */
+    @Test void everyFallingPlatformFrameCarriesTheCrack() throws Exception {
+        var sheet = SpriteSheets.TRAP_FALLING_PLATFORM;
+        java.awt.image.BufferedImage png;
+        try (var input = getClass().getClassLoader().getResourceAsStream(sheet.path())) {
+            assertNotNull(input, sheet.path());
+            png = javax.imageio.ImageIO.read(input);
+        }
+        int ink = 0x211f30, frames = png.getWidth() / sheet.width();
+        int[][] crack = {{22, 1}, {23, 3}}, gaps = {{22, 0}, {23, 4}};
+        for (int frame = 0; frame < frames; frame++) {
+            int left = frame * sheet.width();
+            for (int[] p : crack) {
+                int argb = png.getRGB(left + p[0], p[1]);
+                assertEquals(0xff, argb >>> 24, "frame " + frame + ": the crack pixel " + p[0] + "," + p[1] + " is transparent");
+                assertEquals(ink, argb & 0xffffff, "frame " + frame + ": the crack pixel " + p[0] + "," + p[1] + " is not ink");
+            }
+            for (int[] p : gaps)
+                assertEquals(0, png.getRGB(left + p[0], p[1]) >>> 24, "frame " + frame + ": no gap in the slab edge at " + p[0] + "," + p[1]);
+        }
     }
 
     /** #255: the blast is drawn standing on the stump's base, so each frame's lowest opaque row is its last row. */

@@ -1563,11 +1563,11 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   a **teaching room**. A cue not drawn yet is allowed only as `pending #NNN` with an open issue.
 - **Audit (2026-11-16, from sprites and code, not frames of the running game):** VISIBLE: thorn tuft, bomb, spore
   puffball, thorn vine, both honey fungi, the rotten-log skin. DISGUISED: falling branch, exploding stump and root
-  (cue: #346), plain falling platform (the author counts it as a trap, 2026-11-16). HIDDEN: thorn root (a brown
+  (cue: #346), plain falling platform (the author counts it as a trap, 2026-11-16; cue: #362, a hairline crack). HIDDEN: thorn root (a brown
   mound), falling stone (nothing until it falls; in `forest-2` its zone starts 16 px before the column and no hint
   teaches it there). Each pending cue has an issue: root #359, stone #360 (a "loose overhang":
   cracked lip and grit trickle; the author chose the cue alone, no wider zone, then measure), branch
-  #361, platform #362.
+  #361; the platform's crack is done (#362).
 - **Consistent with earlier decisions:** D42's default ("hidden-trigger traps stay deterministic but get a visible
   cue") becomes the rule; D63's look-alike mushrooms stay allowed, because both glow as active and the puzzle is which
   one kills, not whether something is there. Supporting input: the #352 reference study ([GAME_DESIGN.md, "Primal Planet level study"](GAME_DESIGN.md#primal-planet-level-study-playtest-f16-352)).

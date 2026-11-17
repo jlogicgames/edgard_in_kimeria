@@ -103,7 +103,7 @@ SPRITES = {
     'ThornVine': ('active', 'objects/trap-vine.png', (0, 0, 24, 40), 1, 'top', FULL),
     'HoneyFungus': ('active', 'objects/trap-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
     'FalseHoneyFungus': ('active', 'objects/trap-false-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
-    'FallingPlatform': ('active', 'objects/FallingOn.png', (0, 0, 32, 10), 1, 'top', FULL),
+    'FallingPlatform': ('active', 'objects/trap-falling-platform.png', (0, 0, 32, 10), 4, 'top', FULL),  # #362: every fan frame
     'FallingPlatform:log': ('active', 'objects/trap-log.png', (0, 0, 32, 16), 1, 'top', FULL),
     'Platform': ('active', 'objects/platform.png', (0, 0, 32, 16), 1, 'top', FULL),
     # #349 (D80): the branch skins; `-left` is the copy drawn on the left of a trunk (`mirror`), a later frame of the strip.

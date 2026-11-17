@@ -39,8 +39,11 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
         }
     }
 
-    /** Native sprite height (source art is 32x10 per frame) -- see Escalator's VISUAL_HEIGHT for why. */
+    /** Native sprite height ({@link SpriteSheets#TRAP_FALLING_PLATFORM} is 32x10 per frame) -- see Escalator's VISUAL_HEIGHT for why. */
     private static final float VISUAL_HEIGHT = 10f;
+    /** The plain skin's fan frames (fan1..fan4) and their frame time at rest and while falling, in seconds. */
+    private static final int FAN_FRAMES = 4;
+    private static final float FAN_IDLE_SECONDS = 0.1f, FAN_FALLING_SECONDS = 0.3f;
 
     private final TrapWarnings warnings;
     private boolean falling = false;
@@ -81,12 +84,11 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
             setState(State.IDLE);
             return;
         }
-        String image = "images/objects/FallingOn.png";
-        // The source art is 128x10 (four 32x10 frames), not the 32x16 the
-        // original Dart code assumed -- use the real sheet size to avoid
-        // sampling outside the image.
-        putAnimation(State.IDLE, assets.animation(image, 4, 0.1f, 32, 10, 0, 0, 4), true);
-        putAnimation(State.FALLING, assets.animation(image, 4, 0.3f, 32, 10, 0, 0, 4), true);
+        // Four 32x10 fan frames (grid art/objects/forest-traps/falling-platform.grid); the slab's hairline crack is the
+        // D71 at-rest cue (#362), drawn in every frame.
+        SpriteSheets.Sheet sheet = SpriteSheets.TRAP_FALLING_PLATFORM;
+        putAnimation(State.IDLE, assets.animation(sheet.path(), FAN_FRAMES, FAN_IDLE_SECONDS, sheet.width(), sheet.height(), 0, 0, FAN_FRAMES), true);
+        putAnimation(State.FALLING, assets.animation(sheet.path(), FAN_FRAMES, FAN_FALLING_SECONDS, sheet.width(), sheet.height(), 0, 0, FAN_FRAMES), true);
         setState(State.IDLE);
     }
 
