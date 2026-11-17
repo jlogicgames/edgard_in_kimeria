@@ -15,9 +15,9 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.FIREBALL, 1, 1);
         matches(SpriteSheets.LEVER, 2, 1);
         matches(SpriteSheets.LADDER, 2, 1);
-        // The hero (#343, D79): 7 columns (the 7-frame attack) by 10 clips, both facings; the ladder 4 by 3 (tools/sprite_layouts.py HERO_SHEETS).
-        matches(SpriteSheets.HERO_RIGHT, 7, 10);
-        matches(SpriteSheets.HERO_LEFT, 7, 10);
+        // The hero (#343, D79): 7 columns (the 7-frame attack) by 15 clips (10 core, 5 of the second set), both facings; the ladder 4 by 3 (tools/sprite_layouts.py HERO_SHEETS).
+        matches(SpriteSheets.HERO_RIGHT, 7, 15);
+        matches(SpriteSheets.HERO_LEFT, 7, 15);
         matches(SpriteSheets.HERO_LADDER, 4, 3);
         // Forest trap sheets (#230): frame counts follow tools/sprite_layouts.py FOREST_TRAP_SHEETS.
         matches(SpriteSheets.TRAP_STUMP, 8, 1);

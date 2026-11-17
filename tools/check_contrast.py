@@ -175,7 +175,8 @@ def chroma_and_ink(sprite, glow=1.0):
 
 
 # More frames measured under the same key: the hero faces either way at every placement (#343, D79).
-EXTRA_FRAMES = {'Player': (('hero/hero-left.png', (0, 0, 64, 64), 4),)}  # idle facing left
+EXTRA_FRAMES = {'Player': (('hero/hero-left.png', (0, 0, 64, 64), 4),  # idle facing left
+                          ('hero/hero-right.png', (0, 640, 64, 64), 4), ('hero/hero-left.png', (0, 640, 64, 64), 4))}  # carry idle (#343 part 2)
 
 
 def frames(key):

@@ -139,10 +139,10 @@ class AllocationBudgetTest {
     static final double HONEY_FUNGUS_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. #296: the same scenario now draws the {@code SporeCloud} (30 particles each); the measurement is in the report. Headless there is no GL context, so the shader layer is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles alone. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
-    /** Measured in the report (#343, D79): the hero's draw path, every state in both facings and the three ladder clips, with the held-object grip, through the batch. */
+    /** Measured 0.0 B/frame (#343, D79): the hero's draw path, every state in both facings, the three ladder clips and #341's three pull frames with the wrist, with the held-object grip, through the batch. */
     static final double HERO_DRAW_CEILING = 8;
     private static final Player.State[] HERO_STATES = Player.State.values();
-    private static final int HERO_STATE_FRAMES = 12, HERO_FACING_FRAMES = 5;
+    private static final int HERO_STATE_FRAMES = 12, HERO_FACING_FRAMES = 5, HERO_PULL_FRAMES = 7;
     private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
     private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64, TRAP_TILE = 16, ROOT_HEIGHT = 24;
     private static final float HERO_WIDTH = 11, HERO_HEIGHT = 22;
@@ -337,7 +337,9 @@ class AllocationBudgetTest {
             hero.setState(HERO_STATES[(i / HERO_STATE_FRAMES) % HERO_STATES.length]);
             hero.facingRight = (i / HERO_FACING_FRAMES) % 2 == 0;
             hero.restoreAnimationTime(i * STEP);
+            hero.showPull((i / HERO_PULL_FRAMES) % (Player.PULL_FRAMES + 1) - 1); // #341's pull: none, tug, lift, land
             hero.render(batch);
+            hero.pullWrist(Player.PULL_TUG, grip);
             hero.heldObjectGrip(grip);
             sum[0] += grip.x + hero.frameX() + hero.frameY();
         });

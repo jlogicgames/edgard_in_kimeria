@@ -92,7 +92,9 @@ OPAQUE_DIALOGUE_IMAGES = {'window', 'plate', 'box', 'page', 'choice'}
 # Facing sheets share one layout; the sword stays in Edgard's right hand, so the left sheet is drawn, not flipped at runtime.
 HERO_FRAME_SIZE = 64
 HERO_CLIPS = (('idle', 4), ('run', 6), ('jump', 2), ('fall', 2), ('attack', 7), ('look', 2), ('clamber', 1),
-              ('hit', 2), ('appear', 4), ('disappear', 4))
+              ('hit', 2), ('appear', 4), ('disappear', 4),
+              # the second set (#343 part 2): drawn over the states by Player; pull is #341's tug, lift, land
+              ('carry_idle', 4), ('carry_run', 6), ('throw', 3), ('land', 1), ('pull', 3))
 HERO_LADDER_CLIPS = (('up', 4), ('down', 4), ('hold', 1))  # back view, used by both facings
 HERO_SHEETS = {'right': HERO_CLIPS, 'left': HERO_CLIPS, 'ladder': HERO_LADDER_CLIPS}
 HERO_FRAME_PREFIX = {'right': 'r', 'left': 'l', 'ladder': 'ladder'}  # frame names in the grid: r.idle1, l.run3, ladder.up2

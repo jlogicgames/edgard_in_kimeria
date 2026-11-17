@@ -78,6 +78,22 @@ public class Player extends Actor<Player.State> implements CollideBody {
     };
     /** Rows of hero-ladder.png, a back view used by both facings: climbing up, climbing down, holding still. */
     private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2, LADDER_CLIMB_FRAMES = 4;
+    /**
+     * The second set (#343 part 2): rows of both facing sheets drawn over the state's own clip without changing the state
+     * machine or any timing. Carrying draws the carry clips (the sword on his back) in place of idle, look and run; a
+     * throw plays its three frames, and a dusty landing (not carrying) its squat, without blocking input.
+     */
+    private static final int CARRY_IDLE_ROW = 10, CARRY_RUN_ROW = 11, THROW_ROW = 12, LAND_ROW = 13, PULL_ROW = 14;
+    private static final int CARRY_IDLE_FRAMES = 4, CARRY_RUN_FRAMES = 6, THROW_FRAMES = 3, LAND_FRAMES = 1;
+    private static final float THROW_SECONDS = THROW_FRAMES * Player.STEP_TIME, LAND_SECONDS = LAND_FRAMES * Player.STEP_TIME, OVERLAY_OFF = -1f;
+    /**
+     * The thread pull for #341: tug, lift and land, drawn in place of everything else while {@link #showPull} holds one.
+     * The thread is tied to the LEFT wrist in both facings (the far hand facing right, the near one facing left).
+     */
+    public static final int NO_PULL = -1, PULL_TUG = 0, PULL_LIFT = 1, PULL_LAND = 2, PULL_FRAMES = 3;
+    /** The left wrist per pull frame: the forearm pixel next to the hand, in frame pixels, measured on each facing sheet. */
+    private static final int[][] PULL_WRIST_RIGHT = {{17, 44}, {17, 44}, {23, 52}}, PULL_WRIST_LEFT = {{46, 44}, {46, 44}, {24, 52}};
+    private static final float PIXEL_CENTRE = .5f;
 
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
@@ -156,6 +172,17 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Facing-left clips, drawn instead of mirroring so the sword stays in the right hand (#343, playtest F11). */
     private final Map<State, Animation<TextureRegion>> leftAnimations = new EnumMap<>(State.class);
     private Animation<TextureRegion> ladderUp, ladderDown, ladderHold;
+    /** One row of both facing sheets. */
+    private record Facing(Animation<TextureRegion> right, Animation<TextureRegion> left, int row) {
+        Animation<TextureRegion> of(boolean facingRight) { return facingRight ? right : left; }
+    }
+    private Facing carryIdle, carryRun, throwClip, landClip, pullClip;
+    private float throwTime = OVERLAY_OFF, landTime = OVERLAY_OFF;
+    private int pullFrame = NO_PULL;
+    /** What {@link #selectDrawn()} chose this frame: no allocation, read by render and the measuring tests. */
+    private Animation<TextureRegion> drawn;
+    private float drawnTime;
+    private int drawnRow, drawnColumn;
 
     public Player(Assets assets, GameContext game, float x, float y) {
         super(x, y, BOX_SIZE, BOX_SIZE, State.class);
@@ -179,6 +206,20 @@ public class Player extends Actor<Player.State> implements CollideBody {
         ladderDown = ladderClip(assets, LADDER_DOWN_ROW, LADDER_CLIMB_FRAMES);
         ladderHold = ladderClip(assets, LADDER_HOLD_ROW, 1);
         putAnimation(State.LADDER, ladderUp, true);
+        carryIdle = facing(assets, CARRY_IDLE_ROW, CARRY_IDLE_FRAMES, true);
+        carryRun = facing(assets, CARRY_RUN_ROW, CARRY_RUN_FRAMES, true);
+        throwClip = facing(assets, THROW_ROW, THROW_FRAMES, false);
+        landClip = facing(assets, LAND_ROW, LAND_FRAMES, false);
+        pullClip = facing(assets, PULL_ROW, PULL_FRAMES, false);
+    }
+
+    private static Facing facing(Assets assets, int row, int frames, boolean loop) {
+        Clip clip = new Clip(State.IDLE, frames, row, 0, loop);
+        Animation<TextureRegion> right = clip(assets, SpriteSheets.HERO_RIGHT, clip), left = clip(assets, SpriteSheets.HERO_LEFT, clip);
+        Animation.PlayMode mode = loop ? Animation.PlayMode.LOOP : Animation.PlayMode.NORMAL;
+        right.setPlayMode(mode);
+        left.setPlayMode(mode);
+        return new Facing(right, left, row);
     }
 
     private static Animation<TextureRegion> clip(Assets assets, SpriteSheets.Sheet sheet, Clip clip) {
@@ -201,6 +242,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public void spawned() {
         carried = null;
         ladder = null;
+        throwTime = landTime = OVERLAY_OFF;
+        pullFrame = NO_PULL;
         carryHintVisible = false;
         look.clear();
         resetJumpInput();
@@ -329,6 +372,14 @@ public class Player extends Actor<Player.State> implements CollideBody {
         updateCameraPosition();
         // The climbing pose holds still while the hero does.
         if (ladder == null || ladderDirection() != 0) tickAnimation(dt);
+        tickOverlays(dt);
+    }
+
+    private void tickOverlays(float dt) {
+        if (throwTime != OVERLAY_OFF) throwTime = throwTime + dt >= THROW_SECONDS ? OVERLAY_OFF : throwTime + dt;
+        // The squat counts from the first frame it shows (the landing frame may still be FALLING); leaving the ground ends it.
+        if (landTime != OVERLAY_OFF && !onGround) landTime = OVERLAY_OFF;
+        else if (landTime != OVERLAY_OFF && overlaid()) landTime = landTime + dt >= LAND_SECONDS ? OVERLAY_OFF : landTime + dt;
     }
 
     public boolean onLadder() { return ladder != null; }
@@ -519,13 +570,18 @@ public class Player extends Actor<Player.State> implements CollideBody {
         FALL_GRIP_RIGHT = {29, 22}, LADDER_GRIP = {28, 20};
     private static final int[] IDLE_GRIP_LEFT = {16, 34}, RUN_GRIP_LEFT = {32, 33}, JUMP_GRIP_LEFT = {16, 22},
         FALL_GRIP_LEFT = {17, 22}, ATTACK_GRIP_LEFT = {18, 34};
+    /** The near fist of the carry clips (#343 part 2), the sword on his back. */
+    private static final int[] CARRY_IDLE_GRIP_RIGHT = {32, 32}, CARRY_IDLE_GRIP_LEFT = {15, 32},
+        CARRY_RUN_GRIP_RIGHT = {32, 31}, CARRY_RUN_GRIP_LEFT = {15, 31};
     private static final int[][] ATTACK_GRIP_RIGHT = {{31, 22}, {31, 14}, {35, 22}, {33, 27}, {32, 32}, {30, 33}, {31, 34}};
 
     /** Attachment follows the authored pose of the facing being drawn. */
     public void heldObjectGrip(Vector2 out) {
         var animation = animations.get(current);
         int frame = animation == null ? 0 : animation.getKeyFrameIndex(stateTime);
-        int[] grip = switch (current) {
+        int[] grip = carried != null && overlaid() ? (current == State.RUNNING
+            ? (facingRight ? CARRY_RUN_GRIP_RIGHT : CARRY_RUN_GRIP_LEFT)
+            : (facingRight ? CARRY_IDLE_GRIP_RIGHT : CARRY_IDLE_GRIP_LEFT)) : switch (current) {
             case IDLE, LOOK_UP, LOOK_DOWN -> facingRight ? IDLE_GRIP_RIGHT : IDLE_GRIP_LEFT;
             case RUNNING -> facingRight ? RUN_GRIP_RIGHT : RUN_GRIP_LEFT;
             case ATTACKING -> facingRight ? ATTACK_GRIP_RIGHT[frame % ATTACK_GRIP_RIGHT.length]
@@ -544,36 +600,72 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** World Y of the drawn frame's top edge (Y grows down): the frame's bottom row lands on the box bottom, the floor line. */
     public float frameY() { return position.y + size.y - FRAME_SIZE; }
 
-    /** The clip drawn this frame: the facing sheet's, or on a ladder the up, down or hold clip of the back view. */
-    private Animation<TextureRegion> drawnAnimation() {
-        if (current == State.LADDER) {
+    /** True in the states the second set draws over: standing, looking and running. */
+    private boolean overlaid() {
+        return current == State.IDLE || current == State.RUNNING || current == State.LOOK_UP || current == State.LOOK_DOWN;
+    }
+
+    /**
+     * Chooses what is drawn this frame, in priority order: a thread-pull frame (#341), the ladder's up, down or hold
+     * clip, then over standing, looking and running the throw, the carry clips and the landing squat, else the state's
+     * clip in the facing sheet.
+     */
+    private void selectDrawn() {
+        drawnTime = stateTime;
+        drawnColumn = 0;
+        if (pullFrame != NO_PULL) {
+            drawn = pullClip.of(facingRight); drawnRow = PULL_ROW; drawnTime = pullFrame * STEP_TIME;
+        } else if (current == State.LADDER) {
             float direction = ladderDirection();
-            return direction < 0 ? ladderUp : direction > 0 ? ladderDown : ladderHold;
+            drawn = direction < 0 ? ladderUp : direction > 0 ? ladderDown : ladderHold;
+            drawnRow = direction < 0 ? LADDER_UP_ROW : direction > 0 ? LADDER_DOWN_ROW : LADDER_HOLD_ROW;
+        } else if (overlaid() && throwTime != OVERLAY_OFF) {
+            drawn = throwClip.of(facingRight); drawnRow = THROW_ROW; drawnTime = throwTime;
+        } else if (overlaid() && carried != null) {
+            Facing clip = current == State.RUNNING ? carryRun : carryIdle;
+            drawn = clip.of(facingRight); drawnRow = clip.row();
+        } else if (overlaid() && landTime != OVERLAY_OFF) {
+            drawn = landClip.of(facingRight); drawnRow = LAND_ROW; drawnTime = landTime;
+        } else {
+            drawn = facingRight ? animations.get(current) : leftAnimations.get(current);
+            Clip clip = clipOf(current);
+            drawnRow = clip.row(); drawnColumn = clip.column();
         }
-        return facingRight ? animations.get(current) : leftAnimations.get(current);
     }
 
     /** The region drawn this frame. */
     public TextureRegion currentFrame() {
-        Animation<TextureRegion> animation = drawnAnimation();
-        return animation == null ? null : animation.getKeyFrame(stateTime);
+        selectDrawn();
+        return drawn == null ? null : drawn.getKeyFrame(drawnTime);
     }
 
     /** The sheet {@link #currentFrame()} comes from, for tests that measure its pixels. */
     public SpriteSheets.Sheet currentSheet() {
-        return current == State.LADDER ? SpriteSheets.HERO_LADDER : facingRight ? SpriteSheets.HERO_RIGHT : SpriteSheets.HERO_LEFT;
+        if (current == State.LADDER && pullFrame == NO_PULL) return SpriteSheets.HERO_LADDER;
+        return facingRight ? SpriteSheets.HERO_RIGHT : SpriteSheets.HERO_LEFT;
     }
 
     /** The cell (column, row) of {@link #currentFrame()} in {@link #currentSheet()}. */
     public void currentCell(GridPoint2 out) {
-        Animation<TextureRegion> animation = drawnAnimation();
-        int index = animation == null ? 0 : animation.getKeyFrameIndex(stateTime);
-        if (current == State.LADDER) {
-            out.set(index, animation == ladderUp ? LADDER_UP_ROW : animation == ladderDown ? LADDER_DOWN_ROW : LADDER_HOLD_ROW);
-            return;
-        }
-        Clip clip = clipOf(current);
-        out.set(clip.column() + index, clip.row());
+        selectDrawn();
+        out.set(drawnColumn + (drawn == null ? 0 : drawn.getKeyFrameIndex(drawnTime)), drawnRow);
+    }
+
+    /** #341: draws pull frame {@link #PULL_TUG}, {@link #PULL_LIFT} or {@link #PULL_LAND} in place of everything else; {@link #NO_PULL} stops. */
+    public void showPull(int frame) {
+        if (frame < NO_PULL || frame >= PULL_FRAMES) throw new IllegalArgumentException("pull frame " + frame);
+        pullFrame = frame;
+    }
+
+    public int pullFrame() { return pullFrame; }
+
+    /**
+     * #341: where the thread is tied in pull frame {@code frame} in the current facing: the centre of the left wrist's
+     * pixel, in world coordinates (Y grows down), written into {@code out} (returned). Allocates nothing.
+     */
+    public Vector2 pullWrist(int frame, Vector2 out) {
+        int[] wrist = (facingRight ? PULL_WRIST_RIGHT : PULL_WRIST_LEFT)[frame];
+        return out.set(frameX() + wrist[0] + PIXEL_CENTRE, frameY() + wrist[1] + PIXEL_CENTRE);
     }
 
     private static Clip clipOf(State state) {
@@ -683,6 +775,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             carried.followHolder();
             carried.release(carried.getX(), carried.getY(), true, facingRight);
             carried = null;
+            throwTime = 0;
         } else if (level.rangedStock.spend()) {
             Rectangle body = hitboxBounds();
             level.queueSpawn(new Fireball(level, body.x + (body.width - Fireball.BODY_SIZE) / 2, body.y + FIREBALL_SPAWN_OFFSET_Y, facingRight));
@@ -927,6 +1020,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     /** A puff at the feet (the floor line, larger Y is lower) and a quieter scuff than the jump's. */
     private void landingPuff() {
+        if (carried == null) landTime = 0;
         if (level != null) level.fx().landingPuff(position.x + hitbox.offsetX + hitbox.width / 2f, position.y + hitbox.offsetY + hitbox.height);
         if (game.playSounds()) game.playSound("dust_puff", LANDING_SOUND_VOLUME);
     }
