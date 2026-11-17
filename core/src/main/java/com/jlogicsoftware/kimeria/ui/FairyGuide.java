@@ -42,6 +42,13 @@ public final class FairyGuide {
     /** D87: how long the pulled lever's mechanisms stay marked, the glow strength then (fading over the last part), and the edge inset of her centre. */
     public static final float CHANGED_SECONDS = 1.5f, CHANGED_ALPHA = .8f, CHANGED_FADE_SECONDS = .4f, EDGE_MARGIN = 16f,
         TWINKLE_RANGE = 8f; // she twinkles within this of the edge point, which keeps moving while the lift runs
+    /**
+     * D87 update (#434): several linked mechanisms off screen are shown in turn. She dwells {@code DWELL_SECONDS} at each edge point (two
+     * loops of the twinkle), then flies to the next in clockwise order around the view centre; one hop never lasts longer than
+     * {@code HOP_MAX_SECONDS} (a target she cannot reach must not hold the cycle). The post-pull cue gets {@code HOP_FLIGHT_SECONDS}
+     * of flight for each target besides the dwell, and never less than {@link #CHANGED_SECONDS}.
+     */
+    public static final float DWELL_SECONDS = APPEAR_FRAME_SECONDS * APPEAR_FRAMES * 2, HOP_FLIGHT_SECONDS = .4f, HOP_MAX_SECONDS = 2f;
     /** Her own light (D76: without it her ink contour falls to 0.187 on dark tiles): the glow at 20 px, breathing. */
     static final int LIGHT_SIZE = 20;
     static final float LIGHT_ALPHA_MIN = .6f, LIGHT_ALPHA_MAX = .9f;
@@ -65,11 +72,24 @@ public final class FairyGuide {
     private final Array<Entity> passive = new Array<>(false, PASSIVE_CAPACITY);
     /** The mechanisms of the lever just pulled (filled by {@code Level.activateTrigger}) and those of the selected lever. */
     private final Array<Entity> changed = new Array<>(false, PASSIVE_CAPACITY), linked = new Array<>(false, PASSIVE_CAPACITY);
+    /** The post-pull copy of {@link #changed} the off-screen cue works from; it can outlive the in-view marks when several are off screen (D87 update (#434)). */
+    private final Array<Entity> cue = new Array<>(false, PASSIVE_CAPACITY);
     private final Vector2 edge = new Vector2();
     private Supplier<Rectangle> viewSource;
-    private float changedLeft;
-    /** The off-screen mechanism she is flying to the edge for, or null. */
+    private float changedLeft, cueLeft;
+    private boolean cueSizing;
+    /** The off-screen mechanism she is flying to the edge for, or null; how long she has twinkled at it and how long the hop has lasted (D87 update (#434)). */
     private Entity offscreen;
+    private float dwell, hopTime;
+    /**
+     * Where the last target was (its centre, x, y) when it was chosen, frozen then and kept so the next hop starts after its place even once it left
+     * the cycle or a lift moved on. Its angle is taken round the view centre at the hop, so a moving camera does not make the key stale.
+     */
+    private boolean hasKey;
+    private float keyPX, keyPY, keyX, keyY, keyA;
+    /** Scratch of the next-target scans (no allocation per hop). */
+    private float bestD, afterA, afterX, afterY, firstA, firstX, firstY;
+    private Entity after, first;
     private Entity selected;
     /** The target she is pointing at, so a new target restarts the point clip even where she already hovers. */
     private Entity pointedAt;
@@ -97,6 +117,8 @@ public final class FairyGuide {
     public Array<Entity> beginChanged() {
         changed.clear();
         changedLeft = CHANGED_SECONDS;
+        cueLeft = CHANGED_SECONDS;
+        cueSizing = true; // the first update copies the set into the cue and sizes the window (D87 update (#434))
         return changed;
     }
 
@@ -105,8 +127,8 @@ public final class FairyGuide {
      * comes back to Edgard's shoulder without a flight on the next update.
      */
     public void reset() {
-        changed.clear(); linked.clear(); passive.clear();
-        changedLeft = 0;
+        changed.clear(); linked.clear(); passive.clear(); cue.clear();
+        changedLeft = 0; cueLeft = 0; cueSizing = false; hasKey = false; dwell = 0; hopTime = 0;
         offscreen = null; selected = null; pointedAt = null;
         setMode(Mode.HIDDEN);
     }
@@ -131,11 +153,14 @@ public final class FairyGuide {
             hero.collectLinkedTargets(linked, selected);
             changedLeft = Math.max(0, changedLeft - dt);
             if (changedLeft == 0) changed.clear();
+            cueLeft = Math.max(0, cueLeft - dt);
+            if (cueLeft == 0) cue.clear();
         } else {
             passive.clear();
             linked.clear();
             changed.clear();
-            changedLeft = 0;
+            cue.clear();
+            changedLeft = 0; cueLeft = 0; cueSizing = false; hasKey = false;
             offscreen = null;
         }
         if (!present) {
@@ -157,6 +182,7 @@ public final class FairyGuide {
             setMode(Mode.IDLE);
         }
         Rectangle view = viewSource != null ? viewSource.get() : null;
+        if (cueSizing) sizeCue(view);
         offscreen = offscreenTarget(view);
         if (offscreen != null) {
             edgePoint(view, EDGE_MARGIN, offscreen.centerX(), offscreen.centerY(), edge);
@@ -172,23 +198,87 @@ public final class FairyGuide {
             : distance > FLYING || sent ? Mode.FLY : Mode.IDLE;
         if (next != mode || next == Mode.POINT && selected != pointedAt) setMode(next);
         pointedAt = mode == Mode.POINT ? selected : null;
+        if (offscreen != null) { // the dwell counts from her arrival, not from the start of the flight
+            hopTime += dt;
+            if (mode == Mode.TWINKLE) dwell += dt;
+        }
     }
 
     /**
-     * The mechanism to send her to: the nearest (to the view centre, ties by smaller x then y) of the selected lever's and the
-     * just-pulled lever's mechanisms that does not overlap {@code view}; the one she already serves keeps the job while it
-     * stays off screen, so two near-equal distances do not make her flip. Null when all are in view.
+     * The first update after a pull (D87 update (#434)): copies the marked set into the cue and, when several of them are off screen, gives the
+     * cue time for a dwell and a flight at each, so every one is shown at least once; never less than {@link #CHANGED_SECONDS}.
+     * One off-screen mechanism needs {@code DWELL + FLIGHT} = 1.2 s, under the 1.5 s, so a single one behaves as in D87.
      */
-    private Entity offscreenTarget(Rectangle view) {
-        if (view == null || view.width <= 0 || view.height <= 0) return null;
-        if (offscreen != null && !offscreen.isRemoved() && !overlapsView(offscreen, view)
-            && (linked.contains(offscreen, true) || changed.contains(offscreen, true))) return offscreen;
-        bestD = Float.MAX_VALUE;
-        Entity best = nearestOffscreen(linked, view, null);
-        return nearestOffscreen(changed, view, best);
+    private void sizeCue(Rectangle view) {
+        cueSizing = false;
+        cue.clear();
+        cue.addAll(changed);
+        int n = 0;
+        if (view != null && view.width > 0 && view.height > 0)
+            for (int i = 0; i < cue.size; i++) if (!cue.get(i).isRemoved() && !overlapsView(cue.get(i), view)) n++;
+        cueLeft = Math.max(cueLeft, n * (DWELL_SECONDS + HOP_FLIGHT_SECONDS));
     }
 
-    private float bestD;
+    /**
+     * The mechanism to send her to (D87 update (#434)). With none, or none off screen, null. The first is the nearest to the view centre (ties:
+     * smaller x, then y) of the selected lever's mechanisms and the post-pull cue's that do not overlap {@code view}. She keeps it for
+     * {@link #DWELL_SECONDS} of twinkle (or {@link #HOP_MAX_SECONDS}); then, if another is off screen, the next in clockwise order
+     * round the view centre (Y down, so increasing {@code atan2}), the first again after the last. One that comes into view, is
+     * removed or leaves the lists ends its dwell at once and the cycle goes on after its place in the order; one that joins waits for
+     * the next hop. A single off-screen target is kept as long as it stays off screen, exactly as in D87.
+     */
+    private Entity offscreenTarget(Rectangle view) {
+        if (view == null || view.width <= 0 || view.height <= 0) { hasKey = false; return null; }
+        Entity cur = offscreen;
+        boolean listed = cur != null && (linked.contains(cur, true) || cue.contains(cur, true));
+        boolean valid = listed && !cur.isRemoved() && !overlapsView(cur, view);
+        if (valid) {
+            if (dwell < DWELL_SECONDS && hopTime < HOP_MAX_SECONDS) return cur; // the key stays as frozen on arrival, even if a lift moves her target's angle
+        } else if (!listed) hasKey = false; // another lever or the end of the cue: a new cycle, from the nearest
+        Entity next = hasKey ? nextAfterKey(view) : nearestOffscreen(view);
+        if (next == null) { hasKey = false; return null; }
+        dwell = 0; hopTime = 0; // a lone target gets a new dwell and does not move
+        setKey(next, view);
+        return next;
+    }
+
+    private void setKey(Entity e, Rectangle view) {
+        keyPX = e.centerX(); keyPY = e.centerY(); keyX = e.getX(); keyY = e.getY();
+        hasKey = true;
+    }
+
+    private static float angle(Entity e, Rectangle view) {
+        return MathUtils.atan2(e.centerY() - (view.y + view.height / 2f), e.centerX() - (view.x + view.width / 2f));
+    }
+
+    private static boolean keyLess(float a1, float x1, float y1, float a2, float x2, float y2) {
+        return a1 < a2 || a1 == a2 && (x1 < x2 || x1 == x2 && y1 < y2);
+    }
+
+    /** The off-screen candidate with the smallest key greater than the last one's, or the smallest of all (the wrap); null with none. */
+    private Entity nextAfterKey(Rectangle view) {
+        after = null; first = null;
+        keyA = MathUtils.atan2(keyPY - (view.y + view.height / 2f), keyPX - (view.x + view.width / 2f));
+        scanKeys(linked, view);
+        scanKeys(cue, view);
+        return after != null ? after : first;
+    }
+
+    private void scanKeys(Array<Entity> list, Rectangle view) {
+        for (int i = 0; i < list.size; i++) {
+            Entity e = list.get(i);
+            if (e.isRemoved() || overlapsView(e, view)) continue;
+            float a = angle(e, view), x = e.getX(), y = e.getY();
+            if (first == null || keyLess(a, x, y, firstA, firstX, firstY)) { first = e; firstA = a; firstX = x; firstY = y; }
+            if (keyLess(keyA, keyX, keyY, a, x, y) && (after == null || keyLess(a, x, y, afterA, afterX, afterY))) { after = e; afterA = a; afterX = x; afterY = y; }
+        }
+    }
+
+    /** The nearest off-screen candidate to the view centre (the start of a cycle); null when all are in view. */
+    private Entity nearestOffscreen(Rectangle view) {
+        bestD = Float.MAX_VALUE;
+        return nearestOffscreen(cue, view, nearestOffscreen(linked, view, null));
+    }
 
     /** {@code best} or, when one of {@code list} is off screen and nearer to the view centre, that one (the nearest of the list). */
     private Entity nearestOffscreen(Array<Entity> list, Rectangle view, Entity best) {

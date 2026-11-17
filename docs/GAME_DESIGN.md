@@ -195,8 +195,8 @@ states, both in view at the pull, a wrong pull free ([D86](DECISIONS.md#d86-fore
 [D84](DECISIONS.md#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17)). Built with automated tests only; the author's
 play-through is tracked by [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418).
 When such a lever is selected or pulled, the fairy guide marks every mechanism it drives: those in view keep a clear glow for 1.5 s after the pull,
-and one outside the camera view sends her to the screen edge in its direction, where she twinkles, then she returns to Edgard
-([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419)).
+and one outside the camera view sends her to the screen edge in its direction, where she twinkles, then she returns to Edgard; with several outside the view she shows each in turn, 0.8 s at each edge point, for as long as Up is held at the lever and, after a pull, long enough to show every one
+([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419), [D87 update](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), [#434](https://github.com/jlogicgames/edgard_in_kimeria/issues/434)).
 
 The Mechanics MVP should test an introduction to one visible link, a route choice with
 a legible optional consequence, and a combination with a familiar enemy or hazard.
