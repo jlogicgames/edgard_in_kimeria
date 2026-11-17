@@ -45,10 +45,10 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13.
 | `explosion.wav` | synth, voice + noise burst + sub (#324) | 0.45 s | -7.2 / -15.0 | a bomb exploding (`Bomb.explode`), an explosive stump/root exploding (`Level`, the `ExplosiveTrap` callback) | accepted 2026-11-13 |
 | `stone_impact.wav` | synth, voice + crack + pebbles (#347) | 0.30 s | -6.5 / -16.5 | a falling stone lands (`Level.spawnFallingTrap` impact callback) | accepted 2026-11-16 |
 | `thread.wav` | synth, voice (#341) | 0.22 s | -12.9 / -19.0 | the silver thread goes taut on death (`Player.handleRespawnPhase`, at 0.7 volume) | not heard yet ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)) |
-| `deadfall_creak.wav` | synth, voice (#363) | 0.60 s | -7.7 / -18.5 | the trip-line deadfall's vine is tripped: the warning (`Level`, the `DeadfallTrap` listener) | waiting for the author's audition ([#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436)) |
-| `deadfall_knock.wav` | synth, voice (#363) | 0.18 s | -5.1 / -17.0 | the deadfall's ropes hit the snag: the consequence, with bark chips (`Level`, the `DeadfallTrap` listener) | waiting for the author's audition ([#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436)) |
-| `bramble_rustle.wav` | synth, noise snaps + whispered bed (#364) | 0.36 s | -9.0 / -27.3 | a bramble's warning starts, only while the bramble is in the camera view (`Level.brambleInView`, the `Bramble` cue) | not heard yet ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
-| `bramble_lash.wav` | synth, swept noise (#364) | 0.16 s | -9.1 / -21.0 | a bramble's arm starts to grow, same rule | not heard yet ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
+| `deadfall_creak.wav` | synth, voice (#363) | 0.60 s | -7.7 / -18.5 | the trip-line deadfall's vine is tripped: the warning (`Level`, the `DeadfallTrap` listener) | auditioned by the author 2026-11-17, approved |
+| `deadfall_knock.wav` | synth, voice (#363) | 0.18 s | -5.1 / -17.0 | the deadfall's ropes hit the snag: the consequence, with bark chips (`Level`, the `DeadfallTrap` listener) | auditioned by the author 2026-11-17, approved |
+| `bramble_rustle.wav` | synth, noise snaps + whispered bed (#364) | 0.36 s | -9.0 / -27.3 | a bramble's warning starts, only while the bramble is in the camera view (`Level.brambleInView`, the `Bramble` cue) | auditioned by the author 2026-11-17, approved |
+| `bramble_lash.wav` | synth, swept noise (#364) | 0.16 s | -9.1 / -21.0 | a bramble's arm starts to grow, same rule | auditioned by the author 2026-11-17, approved |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -107,11 +107,11 @@ Quiet background sounds sit well below (see each recipe).
   loop-seam test covers it). RMS -20.0 dBFS, peak -9.2 dBFS: lower than the effects (-16.5 .. -19.4) because it can play for
   seconds, and 99 % of its energy is below 600 Hz (the test requires 80 %). The start and the stop are abrupt; if that is
   audible, add a volume ramp. Before: noise low-passed at 180 Hz plus a 55 Hz sine with modulation, seed 3301, RMS -17.8.
-- `bramble_rustle.wav` (seed 6401, #364, D89, not heard yet: [#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)): the bramble's D7 warning, 0.36 s of **dry cane snaps over a
+- `bramble_rustle.wav` (seed 6401, #364, D89, auditioned by the author 2026-11-17, approved): the bramble's D7 warning, 0.36 s of **dry cane snaps over a
   whispered bed**: 18 snaps of 12 ms noise with a 4 ms swell, band-passed around 3.2 kHz (bandwidth 1.8 kHz, centre varied
   +-25 %), at random times, over the `ha` /a/ formant breath (35 %, 30 ms swell, 160 ms decay), then a 5.5 kHz low-pass.
   Brighter than `grit_fall` (it is a warning, not a background), still unvoiced. RMS -27.3 dBFS, peak -9.0 (the cap limits it).
-- `bramble_lash.wav` (seed 6402, #364, D89, not heard yet: [#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)): the arm shooting out, 0.16 s of **a rising "shk"**: noise through
+- `bramble_lash.wav` (seed 6402, #364, D89, auditioned by the author 2026-11-17, approved): the arm shooting out, 0.16 s of **a rising "shk"**: noise through
   a band-pass whose centre sweeps 1.2 to 4.2 kHz (bandwidth 900 Hz), 12 ms swell, 50 ms decay, tanh drive 3.0 to lower the
   crest factor. RMS -21.0 dBFS, peak -9.1. Both are played only while the bramble's box overlaps the camera's view, so a
   clocked trap off screen never ticks and one on screen is always heard.
@@ -152,13 +152,13 @@ consequence, plays when the ropes hit the snag, with six bark chips falling from
 dull wooden "dok", a closed /o/ falling to /u/ (150 -> 95 Hz), 4 ms attack, 50 ms decay, 1.4 kHz low-pass
 (`DEADFALL_KNOCK_VOICE`). 0.18 s, RMS -17.0 dBFS, peak -5.1 dBFS, centroid 372 Hz. Both are in the voice set's RMS table.
 The swing itself has no sound (the moving log is the signal) and the trap has no idle sound (it is visible). Every other
-file regenerated byte-identical. Previews: `art/audio/previews/deadfall_creak.png`, `deadfall_knock.png`. Waiting for the
-author's audition, with the trap: [#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436).
+file regenerated byte-identical. Previews: `art/audio/previews/deadfall_creak.png`, `deadfall_knock.png`. Auditioned by the
+author 2026-11-17, with the trap: approved.
 
 ### Hanging hive (#365, seeds 6501-6504, D90)
 
 Three sounds for the hanging hive ([D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17)),
-all generated, none heard by the author yet (audition: [#440](https://github.com/jlogicgames/edgard_in_kimeria/issues/440)); every other
+all generated and auditioned by the author 2026-11-17, approved; every other
 file regenerated byte-identical. Previews in `art/audio/previews/`.
 
 - `hive_buzz` (warning, at the start of each shake): `render_voice` with a nasal /i/ to /e/, 150 -> 190 Hz, full roughness and a

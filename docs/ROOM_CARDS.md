@@ -253,7 +253,7 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 | D26 | no support, no one-shot state the route needs: a jump leaves the log tied, a trip leaves it hanging from the snag above head height and the vine cut, and the exit is reachable from both (`DeadfallTrapTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the log hauled up and lashed to the bough by the tree trunk |
-| Status | new, [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) (card, art and placement approved by the author 2026-11-17). The deadfall is the room's only object and is in view from the entrance with the exit (D84). Built and tested with a scripted hero, not yet played by the author or a novice ([#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436)) |
+| Status | new, [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) (card, art and placement approved by the author 2026-11-17). The deadfall is the room's only object and is in view from the entrance with the exit (D84). Built and tested with a scripted hero; played by the author 2026-11-17, approved |
 | Decisions | D88, D72 |
 
 Sketch (Y grows downward, floor top y 320; walls x 4960-4976 and 5584-5600; P is the rope knot, x 5296, y 252):
@@ -339,7 +339,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 | D26 | no lever, no support, no one-shot state: the ladder is always down and the arm comes back every 4 s, so waiting on the ladder always gives another window; the band never reaches the floor, so the walk to the ladder is safe (`Forest1BrambleTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the thorn arm sweeping over the ladder top under the shelf's end |
-| Status | new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero, not yet played by the author or a novice ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
+| Status | new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
 | Decisions | D89, D72 |
 
 Sketch (Y grows downward, floor top y 320, shelf top y 208; walls x 5600-5616 and 6224-6240):
@@ -414,7 +414,7 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 | D26 | no lever, support or one-shot state on the route: both hives are passed by timing alone, from every start offset (`Forest1HiveTest`); a knock-down only removes a danger, and a retry rebuilds both hives |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the ladder with the hive hanging over it, its curtain running down the rungs |
-| Status | new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; not yet played by the author or a novice ([#440](https://github.com/jlogicgames/edgard_in_kimeria/issues/440)) |
+| Status | new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
 | Decisions | D90, D72 |
 
 Sketch (Y grows downward, floor top y 320, ledge top y 208; walls x 6240-6256 and 6864-6880):
