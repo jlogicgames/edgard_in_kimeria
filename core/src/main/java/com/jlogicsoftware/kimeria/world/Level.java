@@ -417,6 +417,7 @@ public class Level implements WorldObject {
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
         victory = completionSent = false;
         clearCameraEffects();
+        fairy.reset(); // the marks belong to the room that was left (D87)
         player = nextPlayer;
         spawnObjects();
         addCollisions();

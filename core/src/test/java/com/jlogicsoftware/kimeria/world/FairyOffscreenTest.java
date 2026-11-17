@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * D87 (#419): the fairy guide sends her to the screen edge toward a linked mechanism that is off screen, and the pulled lever's
- * mechanisms keep a clear glow for 1.5 s. The integration cases use the real forest-1 route room (one lever, a ladder and a lift)
+ * mechanisms keep a clear glow for 1.5 s. The integration cases use the real forest-1 route room (room 3 since D86) (one lever, a ladder and a lift)
  * and its real camera rule ({@code Player.roomCameraTarget}); the others fix the view by hand to put a mechanism off screen on purpose.
  * World Y grows downward: a mechanism below the view has the larger y, so its edge point is below the view's centre.
  */
@@ -97,6 +97,7 @@ class FairyOffscreenTest {
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), new Player(h.assets(), h.game(), 0, 0), "forest-1", () -> view, stock);
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // forest-1-mob -> forest-1-traps
+        level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-lever (D86)
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-route
         followCamera = true;
         return level;
@@ -251,7 +252,8 @@ class FairyOffscreenTest {
     @Test void aPullThatDrivesNothingMarksNothing() {
         Level level = route();
         walkToLever(level);
-        level.fairy().beginChanged(); // what a trigger without mechanisms leaves: an empty marked set
+        level.activateTrigger(new com.jlogicsoftware.kimeria.entity.items.Trigger(LEVER_X, 272, 16, 16, "drives-nothing")); // a real pull, no linked mechanism
+        assertEquals(0, level.fairy().changedTargets().size);
         settle(level, 10);
         assertEquals(0, level.fairy().changedTargets().size);
         assertNull(level.fairy().offscreenTarget());
@@ -290,11 +292,61 @@ class FairyOffscreenTest {
         assertEquals(view.y + view.height - EDGE, fairy.goalY(), 3f, "below the view is its bottom edge");
     }
 
-    @Test void theFairyNeverMovesTheSelectionOrTheEligibility() {
+    @Test void theFairyCueNeverMovesTheSelectionOrTheEligibility() {
         Level level = route();
         walkToLever(level);
         held.add(Input.Keys.W);
-        settle(level, 5);
-        assertSame(level.player.interactionFeedbackTarget(), level.fairy().selected());
+        settle(level, SETTLE);
+        assertNotNull(level.fairy().offscreenTarget(), "the cue is on");
+        Entity selected = level.fairy().selected();
+        boolean canInteract = level.player.canInteract();
+        float heroX = level.player.position.x;
+        // The same walk and the same keys with no view (no cue): the hero's selection and position are identical.
+        Level plain = route();
+        followCamera = false;
+        view.set(0, 0, 0, 0);
+        walkToLever(plain);
+        held.add(Input.Keys.W);
+        settle(plain, SETTLE);
+        assertNull(plain.fairy().offscreenTarget());
+        assertEquals(selected.getClass(), plain.fairy().selected().getClass());
+        assertEquals(canInteract, plain.player.canInteract());
+        assertEquals(heroX, plain.player.position.x, 1e-3f);
+        assertSame(plain.player.interactionFeedbackTarget(), plain.fairy().selected());
+    }
+
+    @Test void aRoomChangeDropsTheMarksAndTheCue() {
+        Level level = route();
+        walkToLever(level);
+        pull(level, false);
+        assertEquals(2, level.fairy().changedTargets().size);
+        level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0));
+        frame(level);
+        assertEquals(0, level.fairy().changedTargets().size);
+        assertNull(level.fairy().offscreenTarget());
+        assertEquals(0, level.fairy().changedSecondsLeft());
+        assertNotEquals(FairyGuide.Mode.TWINKLE, level.fairy().mode());
+    }
+
+    @Test void aResetOfTheCurrentRoomDropsTheMarksToo() {
+        Level level = route();
+        walkToLever(level);
+        pull(level, false);
+        level.resetCurrentRoom(new Player(h.assets(), h.game(), 0, 0));
+        frame(level);
+        assertEquals(0, level.fairy().changedTargets().size);
+        assertNull(level.fairy().offscreenTarget());
+    }
+
+    @Test void aThrownStoneHittingALeverMarksItsMechanismsToo() {
+        Level level = h.roomOf("forest-0", 4); // the stone room: a throw-activated lever across the chasm
+        var lever = level.triggers.stream().filter(t -> t.throwActivated).findFirst().orElseThrow();
+        var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
+        stone.restore(new com.jlogicsoftware.kimeria.entity.items.Carryable.Snapshot(lever.getX(), lever.getY(), 0, 0, true, false));
+        assertEquals(0, level.fairy().changedTargets().size);
+        assertTrue(level.throwHitsLever(stone));
+        assertTrue(level.fairy().changedTargets().size > 0, "the stone's hit marks what the lever drives");
+        assertEquals(FairyGuide.CHANGED_SECONDS, level.fairy().changedSecondsLeft(), 1e-6);
     }
 }

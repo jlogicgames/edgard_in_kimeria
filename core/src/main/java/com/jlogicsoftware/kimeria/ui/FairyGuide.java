@@ -100,6 +100,17 @@ public final class FairyGuide {
         return changed;
     }
 
+    /**
+     * A room change (D87): the marks, the selection and the off-screen cue belong to the room that was left. She drops them and
+     * comes back to Edgard's shoulder without a flight on the next update.
+     */
+    public void reset() {
+        changed.clear(); linked.clear(); passive.clear();
+        changedLeft = 0;
+        offscreen = null; selected = null; pointedAt = null;
+        setMode(Mode.HIDDEN);
+    }
+
     /** The one-time twinkle she arrives in after the forest-0 start tale (D82): played at his shoulder on the next update. */
     public void arrive() { arrivePending = true; }
 
