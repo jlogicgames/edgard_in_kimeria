@@ -97,6 +97,8 @@ SPRITES = {
     'Decor:trunk': ('decor', 'objects/decor-trunk.png', (0, 0, 16, 288), 1, 'floor', FULL),  # #349: behind the branches
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),
+    # #364 (D89): the bramble's clump at rest, at the root end of its box (`root=right` is the mirrored `Bramble-right`).
+    'Bramble': ('active', 'objects/trap-bramble.png', (0, 0, 16, 24), 6, 'floor', FULL),  # all six: rest, the rustle tell, the arm
     'FallingBranch': ('active', 'objects/trap-branch.png', (0, 0, 32, 16), 1, 'top', FULL),
     'FallingStone': ('active', 'objects/trap-stone-lip.png', (0, 0, 24, 8), 1, 'view', FULL),  # the loose overhang at rest (#360)
     'ExplosiveStump': ('active', 'objects/trap-stump.png', (0, 0, 16, 16), 4, 'floor', FULL),  # the idle tell loop (#346)
@@ -135,7 +137,7 @@ SPRITES = {
     'Deadfall:log': ('active', 'objects/trap-deadfall.png', (0, 0, 32, 16), 1, 'top', FULL),
     'Deadfall:vine': ('active', 'objects/trap-deadfall-vine.png', (0, 0, 24, 8), 1, 'top', FULL),
 }
-MIRRORED = {f'{key}-right': key for key in ('Deadfall', 'Deadfall:log', 'Deadfall:vine')}
+MIRRORED = {f'{key}-right': key for key in ('Deadfall', 'Deadfall:log', 'Deadfall:vine', 'Bramble')}
 SPRITES.update({mirrored: SPRITES[key] for mirrored, key in MIRRORED.items()})
 # Types that draw no sprite of their own, with what they are (a new type must be added to one of the two tables).
 NO_SPRITE = {
@@ -204,6 +206,9 @@ def chroma_and_ink(sprite, glow=1.0):
 # More frames measured under the same key: the hero faces either way at every placement (#343, D79).
 EXTRA_FRAMES = {'Player': (('hero/hero-left.png', (0, 0, 64, 64), 4),  # idle facing left
                           ('hero/hero-right.png', (0, 640, 64, 64), 4), ('hero/hero-left.png', (0, 640, 64, 64), 4))}  # carry idle (#343 part 2)
+
+
+BRAMBLE_CLUMP = 16  # the clump frame's width: it is drawn at the root end of the object, not centred on it
 
 
 def frames(key):
@@ -293,6 +298,8 @@ def key_of(group, obj, props):
         return 'Decor:' + props.get('kind', 'bush'), kind
     if kind == 'Collectable':
         return 'Collectable:' + (props.get('item') or obj.get('name') or 'Coin').title(), kind
+    if kind == 'Bramble':
+        return ('Bramble-right' if props.get('root') == 'right' else 'Bramble'), kind  # -right: drawn mirrored (Bramble.java)
     if kind == 'FallingPlatform' and props.get('skin') == 'log':
         return 'FallingPlatform:log', kind
     if kind == 'FallingPlatform' and props.get('skin') == 'branch':
@@ -329,8 +336,10 @@ def placements(errors, roots=None):
                 if key not in SPRITES:
                     errors.append(f'{name}: sprite {key!r} is not classified in tools/check_contrast.py')
                     continue
-                yield (name, key, float(obj.get('x')), float(obj.get('y')) + offset_y,
-                       float(obj.get('width', TILE)), float(obj.get('height', TILE)))
+                x, w = float(obj.get('x')), float(obj.get('width', TILE))
+                if kind == 'Bramble':  # measure the clump where the game draws it, at the root end of the box
+                    x, w = (x + w - BRAMBLE_CLUMP if key in MIRRORED else x), BRAMBLE_CLUMP
+                yield (name, key, x, float(obj.get('y')) + offset_y, w, float(obj.get('height', TILE)))
 
 
 def floor_camera_top(root, x, y):

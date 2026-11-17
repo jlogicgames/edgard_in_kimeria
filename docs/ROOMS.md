@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has seven rooms since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has eight rooms since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -938,6 +938,29 @@ trap card: [TRAPS.md](TRAPS.md#trip-line-deadfall-deadfall).
   hero who walks straight in is hit 2.65 s after the entrance (2.97 s with the assist), 0.27 s (0.18 s) into the swing.
 - D26: no support and no one-shot state the route needs; the spent log hangs above head height and the cut vine is
   scenery, so the exit stays reachable from every state.
+
+## forest-1 bramble room (#364, D89)
+
+`forest-1-bramble`, x 5600-6240 (640 px, one camera view), floor top y 320, walls at x 5600-5616 and 6224-6240. It is
+appended at the map's end (forest-1 grew from 350 to 390 tiles) and listed after `forest-1-lever` in `Rooms`, so it is
+played between the lever lesson and the route room. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-bramble); trap
+card: [TRAPS.md](TRAPS.md#creeping-bramble-bramble).
+
+- RoomStart (5632, 272); RoomExit (5920, 176, 32 x 32) on the shelf's left end.
+- A solid shelf x 5904-6192, top y 208 (16 px thick, tiles row 13), with the floor running under it.
+- A static `Ladder` x 6192-6208, y 208-320 (no lever, no `dropDistance`), one tile off the right wall; the 16 px between
+  it and the wall are open down to the floor.
+- `Bramble` x 6160, y 184, 64 x 24, `root=right`: rooted in the right wall's face, the band y 190-206 (Y down: 18 to 2 px
+  above the shelf line), the grown arm over the ladder top and the shelf's last 48 px; the clump's always-lethal 12 px
+  (x 6212-6224) are clear of the ladder. **Recipe:** a ladder whose top a bramble guards stands at least one tile off the
+  root face, or its top is inside the clump and there is no way out (D89).
+- Nothing else: the bramble is in view, cycling, from the entrance, and the floor walk to the ladder is out of its reach.
+- Measured (`Forest1BrambleTest`): mastered route 10.73 s from a fresh start (the same with the longer-warnings assist),
+  9.42 to 12.80 s over every start offset for a hero who goes when the lane is open or waits on the ladder; a blind climb
+  from a fresh start is caught 6.70 s after the entrance. On the fixture `bramble-test.tmx` (same recipe) a blind climb-out
+  after a fixed wait survives 37 of 80 offsets, the longest safe run 1.85 s (`BrambleTest`).
+- D26: no lever, support or one-shot state; the arm comes back every 4 s, so waiting on the ladder always gives another
+  window.
 
 ## forest-1 lever room (#418, D86)
 

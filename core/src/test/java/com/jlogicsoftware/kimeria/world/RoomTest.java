@@ -123,10 +123,10 @@ class RoomTest {
      * not x, sets the order) and holds the Player spawn as its entrance; the deadfall room (D88), the trap course, the lever lesson room (D86), the route room,
      * the guard room and the tree room follow, and the tree room is last and holds the Checkpoint at its top.
      */
-    @Test void forestOneIsTheMobRoomThenTheDeadfallThenTheTrapCourseThenTheLeverLessonThenTheRouteRoomThenTheGuardRoomThenTheTreeRoomWithTheCheckpoint() {
+    @Test void forestOneIsTheMobRoomThenTheDeadfallThenTheTrapCourseThenTheLeverLessonThenTheBrambleThenTheRouteRoomThenTheGuardRoomThenTheTreeRoomWithTheCheckpoint() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(7, layout.rooms.size());
+        assertEquals(8, layout.rooms.size());
         assertEquals("forest-1-mob", layout.rooms.get(0).id());
         assertEquals("forest-1-deadfall", layout.rooms.get(1).id());
         assertEquals("forest-1-traps", layout.rooms.get(2).id());
@@ -136,16 +136,18 @@ class RoomTest {
         assertNotNull(layout.rooms.get(1).exit(), "the deadfall room (#363, D88) leads to the trap course");
         assertNotNull(layout.rooms.get(2).exit());
         assertEquals("forest-1-lever", layout.rooms.get(3).id());
-        assertNotNull(layout.rooms.get(3).exit(), "the lever lesson room (#418, D86) leads to the route room");
-        assertEquals("forest-1-route", layout.rooms.get(4).id());
-        assertNotNull(layout.rooms.get(4).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
-        assertNotNull(layout.rooms.get(5).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
-        assertEquals("forest-1-guard", layout.rooms.get(5).id());
-        assertNull(layout.rooms.get(6).exit());
-        assertEquals("forest-1-tree", layout.rooms.get(6).id());
+        assertNotNull(layout.rooms.get(3).exit(), "the lever lesson room (#418, D86) leads to the bramble room");
+        assertEquals("forest-1-bramble", layout.rooms.get(4).id());
+        assertNotNull(layout.rooms.get(4).exit(), "the bramble room (#364, D89) leads to the route room");
+        assertEquals("forest-1-route", layout.rooms.get(5).id());
+        assertNotNull(layout.rooms.get(5).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
+        assertNotNull(layout.rooms.get(6).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
+        assertEquals("forest-1-guard", layout.rooms.get(6).id());
+        assertNull(layout.rooms.get(7).exit());
+        assertEquals("forest-1-tree", layout.rooms.get(7).id());
         var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertEquals(1, checkpoint.size());
-        assertEquals(6, layout.owner(checkpoint.get(0)));
+        assertEquals(7, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasFourCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

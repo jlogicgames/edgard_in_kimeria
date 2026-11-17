@@ -235,6 +235,30 @@ GRIT_LEVEL_RANGE = (0.2, 1.0)       # random grain level
 GRIT_LOWPASS_HZ = 3000.0     # darkens the whole patter
 GRIT_RMS_DB = -30.0          # quiet background patter (before: -36.7); its sparse grains make a high crest factor, so the
                              # peak cap (GRIT_PEAK_DB) is what limits it, not this target
+# ---------------------------------------------------------------- creeping bramble (#364, D89): the warning and the grow
+# The rustle is the bramble's D7 warning tell: a dry crackle of brittle canes over a whispered "hhh" bed, quiet like the
+# grit but brighter. The lash is the arm shooting out: a short rising "shk", a breath whose band sweeps up.
+BRAMBLE_RUSTLE_SEED = 6401
+BRAMBLE_RUSTLE_DURATION = 0.36
+BRAMBLE_RUSTLE_TICKS = 18           # dry cane snaps
+BRAMBLE_RUSTLE_TICK_LEN = 0.012     # s, one snap
+BRAMBLE_RUSTLE_TICK_ATTACK = 0.004  # s, a whisper-soft onset, not a click
+BRAMBLE_RUSTLE_TICK_BAND = (3200.0, 1800.0)  # centre, bandwidth (varied per tick by +-25 %)
+BRAMBLE_RUSTLE_BED_GAIN = 0.35      # the breathy bed under the snaps
+BRAMBLE_RUSTLE_ATTACK = 0.03        # s, the bed swells in
+BRAMBLE_RUSTLE_TAU = 0.16           # s, the bed decays
+BRAMBLE_RUSTLE_LOWPASS_HZ = 5500.0
+BRAMBLE_RUSTLE_RMS_DB = -27.0       # quieter than the voices, a little louder than the grit: it is a warning
+BRAMBLE_RUSTLE_PEAK_DB = -9.0 
+BRAMBLE_LASH_SEED = 6402
+BRAMBLE_LASH_DURATION = 0.16
+BRAMBLE_LASH_SWEEP = (1200.0, 4200.0)  # band centre from, to (Hz): the rising "shk"
+BRAMBLE_LASH_BANDWIDTH = 900.0
+BRAMBLE_LASH_ATTACK = 0.012         # s
+BRAMBLE_LASH_TAU = 0.05             # s
+BRAMBLE_LASH_DRIVE = 3.0            # a little tanh grit
+BRAMBLE_LASH_RMS_DB = -21.0
+BRAMBLE_LASH_PEAK_DB = -9.0
 
 
 # ---------------------------------------------------------------- batch 2 of #313: boss and menu voices
@@ -575,11 +599,46 @@ def grit_fall() -> list[float]:
     return finish_rms(lowpass(out, GRIT_LOWPASS_HZ), GRIT_RMS_DB, GRIT_PEAK_DB)
 
 
+def bramble_rustle() -> list[float]:
+    """Dry cane snaps (soft-attack band-passed ticks) over a whispered "hhh" bed shaped by the /a/ formants."""
+    rng = random.Random(BRAMBLE_RUSTLE_SEED)
+    n = n_samples(BRAMBLE_RUSTLE_DURATION)
+    out = [0.0] * n
+    nt, na = n_samples(BRAMBLE_RUSTLE_TICK_LEN), n_samples(BRAMBLE_RUSTLE_TICK_ATTACK)
+    for _ in range(BRAMBLE_RUSTLE_TICKS):
+        start = rng.randrange(n_samples(0.01), n - nt - n_samples(0.02))
+        level = rng.uniform(0.3, 1.0)
+        fc = BRAMBLE_RUSTLE_TICK_BAND[0] * rng.uniform(0.75, 1.25)
+        tick = bandpass(noise(rng, nt), fc, BRAMBLE_RUSTLE_TICK_BAND[1])
+        for j in range(nt):
+            out[start + j] += tick[j] * level * min(j / na, 1.0) * math.exp(-4.0 * j / nt)
+    raw, bed = noise(rng, n), [0.0] * n
+    for fc, bw, gain in HA_FORMANTS:
+        bed = [b + gain * v for b, v in zip(bed, bandpass(raw, fc, bw))]
+    tp, bp = max(abs(v) for v in out) or 1.0, max(abs(v) for v in bed) or 1.0
+    env = envelope(n, BRAMBLE_RUSTLE_ATTACK, BRAMBLE_RUSTLE_TAU)
+    mix = [t / tp + BRAMBLE_RUSTLE_BED_GAIN * b / bp * e for t, b, e in zip(out, bed, env)]
+    return finish_rms(lowpass(mix, BRAMBLE_RUSTLE_LOWPASS_HZ), BRAMBLE_RUSTLE_RMS_DB, BRAMBLE_RUSTLE_PEAK_DB)
+
+
+def bramble_lash() -> list[float]:
+    """A rising "shk": noise through a band-pass whose centre sweeps up, a quick swell and decay, lightly driven."""
+    rng = random.Random(BRAMBLE_LASH_SEED)
+    n = n_samples(BRAMBLE_LASH_DURATION)
+    lo, hi = BRAMBLE_LASH_SWEEP
+    swept = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, BRAMBLE_LASH_BANDWIDTH)
+    peak = max(abs(v) for v in swept) or 1.0
+    env = envelope(n, BRAMBLE_LASH_ATTACK, BRAMBLE_LASH_TAU)
+    return finish_rms([math.tanh(BRAMBLE_LASH_DRIVE * v / peak) * e for v, e in zip(swept, env)],
+                      BRAMBLE_LASH_RMS_DB, BRAMBLE_LASH_PEAK_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
                "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
-               "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock}
+               "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
+               "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash}
 
 
 def generate(out_dir: Path) -> list[Path]:

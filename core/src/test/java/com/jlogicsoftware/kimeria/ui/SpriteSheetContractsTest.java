@@ -34,6 +34,7 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_DEADFALL_VINE, 3, 1); // taut, tugged, cut
         matches(SpriteSheets.TRAP_DEADFALL_ROPE, 1, 1);
         matches(SpriteSheets.TRAP_PUFFBALL, 4, 1);
+        matches(SpriteSheets.TRAP_BRAMBLE, 6, 1);
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);
         matches(SpriteSheets.TRAP_LOG, 3, 1);

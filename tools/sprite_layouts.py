@@ -42,6 +42,8 @@ FOREST_TRAP_SHEETS = {
     'blast': ((32, 32), tuple(f'blast{n}' for n in range(1, 13))),
     'thorn-root': ((16, 24), ('hidden', 'peek1', 'peek2', 'rising', 'up')),
     'thorn-tuft': ((16, 16), ('calm', 'bristle', 'spiked')),
+    # #364 (D89): the creeping bramble; the clump at rest, its two rustle frames, the arm's two cane segments and its tip.
+    'bramble': ((16, 24), ('rest', 'rustle1', 'rustle2', 'cane1', 'cane2', 'tip')),
     'branch': ((32, 16), ('resting', 'rustle', 'sag', 'falling')),
     'stone': ((16, 16), ('stone', 'cracked')),
     'shadow': ((24, 8), ('small', 'medium', 'large')),

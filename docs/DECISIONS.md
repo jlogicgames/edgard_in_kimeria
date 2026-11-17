@@ -2488,3 +2488,60 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Checks:** `DeadfallTrap.problem` at load for every room, mirrored in `tools/check_tiled_links.py`; the contrast gate
   measures the bough, the tied log and the vine where they are drawn (worst 0.464, 0.410, 0.323); `DeadfallTrapTest`;
   `AllocationBudgetTest.deadfallTripAndSwing` (0.0 B/frame) and `forest1DeadfallRoom`.
+
+## D89. The creeping bramble: a clocked thorn arm across a lane, taught at a ladder exit (#364, 2026-11-17)
+
+- **Status:** card, art, sound plan and the new room `forest-1-bramble` approved by the author on 2026-11-17
+  ([#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364), trap N3 of the #348 proposals). The trap, its art,
+  its sounds, its load checks, its tests and its room `forest-1-bramble` (fifth in forest-1's play order, after the lever
+  lesson) are built. Automated tests only: nobody has seen it move or heard it ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)).
+- **The trap** (Tiled type `Bramble`, class `entity/objects/Bramble`, card in [TRAPS.md](TRAPS.md)): VISIBLE, rhythm family
+  (the D46 rules: a deterministic clock `(elapsed + phase) mod period`, advanced only in `Level.update`, reset by every room
+  rebuild, lethal by one overlap test with the hero's body box). One cycle: rest, the shared warning
+  (`TrapWarnings.DEFAULT_WARNING_SECONDS`, 0.8 s / 1.2 s), grow 0.25 s, hold `hold` s (default 1.0, 0.6-1.5), retract 0.5 s.
+  Default `period` 4.0 s: rest 1.45 s (1.05 s with the assist), and rest plus warning, when the lane is open, 2.25 s either
+  way. Load rule: at least 0.8 s of rest with the assisted warning, `period >= 2.75 + hold`.
+- **Geometry (world Y grows downward).** The object box is the full grown reach (width 48-96 px) by 24 px (the sprite); its
+  bottom edge is the floor line. The lethal band runs from `floor - 18` to `floor - 2`: every hero standing on that floor
+  (body `floor - 22` to `floor`) overlaps it, a body above its top does not. Along the lane it covers the first 12 px from the
+  root face in every phase (the clump, drawn at rest: the danger is always shown), and from the root face to the tip while the
+  arm grows, holds and retracts; the tip moves linearly, about 208 px/s out and 104 px/s back, so the hero (100 px/s) cannot
+  outrun the grow: the warning means leave now or wait.
+- **Placement rule** (`Bramble.placementProblem` with `Level.requireSafeSetting`, run by `Level.validateBramble` for every bramble of
+  every room when the level loads, as the deadfall, the branch, the fungi and the explosives are; mirrored in
+  `tools/check_tiled_links.py`, which reads its numbers from `Bramble.java` and `TrapWarnings.java`):
+  `root` is `left` or `right` and names the side whose edge must lie against a solid face (a collision that is not a one-way
+  platform) over the whole band; the floor (or a shelf top) at the box's bottom must run under the tip end and 16 px beyond it
+  (faces and floors may be split into several collisions and may be off by up to 0.5 px: their spans are merged with
+  `FLOOR_TOLERANCE`, DeadfallTrap's rule),
+  so the hero can stand clear of the grown arm; the D46 rule that the lethal part never covers the entrance, the `RoomExit`
+  or a `Checkpoint` (`Level.requireSafeSetting`, at full reach); the properties are `root`, `period`, `phase`, `hold` only.
+- **The ladder exit recipe (found while building).** The clump is lethal at every moment and reaches 12 px from the root
+  face, so a ladder whose top the bramble guards must stand at least one tile off that face: the ladder is at x 592-608 of
+  the room, the 16 px beside it open down to the floor, and the root face is the wall at x 624. With the ladder against the
+  wall the hero on its top is inside the clump and no exit exists (the first fixture showed it; a pillar tried in the gap
+  was not needed and made the wall sweep of `RoomCeilingTest` stand the hero inside it, so it was removed). A static ladder
+  (no lever, `dropDistance` 0) stands where it is authored and carries the hero up.
+- **Measured** (`BrambleTest` on `core/src/test/resources/tiles/bramble-test.tmx`): a hero who waits on the ladder with the
+  head under the band and climbs out when the retract ends reaches the exit from every start offset (0.05 s steps over the
+  period); a blind climb-out after a fixed wait survives 37 of 80 offsets, the longest safe run 1.85 s; waiting on the ladder
+  is safe for two whole cycles; the warning lasts the shared warning in play with and without the assist; the cues fire once
+  per cycle. `AllocationBudgetTest.brambleCycles`: 0.0 to 0.7 B/frame (ceiling 8).
+- **Art:** `trap-bramble` 16x24 x 6 (`rest`, `rustle1`, `rustle2`, `cane1`, `cane2`, `tip`; grid
+  `art/objects/forest-traps/bramble.grid`): the tuft's magenta cane and bone tips, a shape no scenery has. A `root=right`
+  bramble is drawn mirrored (`Batch.draw` with scale x -1; `check_contrast.py` measures the mirrored clump at the root end).
+  The arm is drawn as alternating cane segments behind a tip at the current extent; the mock-up's straight cane with paired
+  thorns read as a centipede and was redrawn wavy with irregular hooked thorns before approval.
+- **Sound:** `bramble_rustle` (dry snaps over a whispered bed, 0.36 s, RMS -27 dBFS) at the warning start and
+  `bramble_lash` (a rising "shk", 0.16 s, RMS -21 dBFS) at the grow start, generated by `tools/audio/generate_sounds.py`
+  (seeds 6401, 6402); heard only while the bramble's box overlaps the camera's visible world rect (`Level.brambleInView`), so an off-screen
+  clock does not tick, and the warning is heard from the entrance of its one-screen room (`Forest1BrambleTest`).
+  Not yet auditioned by the author ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)).
+- **The room** (`forest-1-bramble`, x 5600-6240 of `forest-1.tmx`, card in ROOM_CARDS.md): the floor under a shelf, a static
+  ladder at the shelf's right end one tile off the right wall, the bramble rooted in that wall over the ladder top, the exit on
+  the shelf's left end. No existing room could take the first meeting (the route
+  room's only climb-top lane ends at its exit, the lever and tree rooms have no death by design, the guard room would combine
+  it at once, the rest are at the introduction cap). Measured (`Forest1BrambleTest`): mastered 10.73 s (the same with the
+  assist), 9.42 to 12.80 s over every start offset, a blind climb from a fresh start caught at 6.70 s; the room scene in
+  `AllocationBudgetTest` 536.1 to 536.3 B/frame (the deadfall room 536.0 in the same runs). Contrast (`check_contrast.py`, all six frames at the root end): rest 0.419, worst frame 0.414 (`cane1`, `cane2`).
+- **Not decided or not verified:** the look in motion, the sounds, and a first play by the author ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)).

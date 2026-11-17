@@ -28,6 +28,7 @@ FUNGUS_ZONE_ABOVE, FUNGUS_MIN_HARMLESS_ZONE, FUNGUS_CLEARANCE, FUNGUS_CLOUD = 32
 PUFFBALL_SWELL_ASSISTED = 0.8 * 1.5  # TrapWarnings.DEFAULT_WARNING_SECONDS with the longer-warnings assist
 PUFFBALL_MIN_CALM = 0.8
 VINE_MIN_PERIOD, VINE_AMPLITUDE = 3.5, (35.0, 60.0)
+
 SKINS = ('', 'log', 'branch')
 PLATFORM_SKINS = ('', 'branch')  # StaticPlatform.Skin (#349, D80)
 VINE_HALF_WIDTH = 4.0
@@ -100,6 +101,66 @@ def puffball_ever_lethal(o, area):
     return overlaps(cloud, area)
 
 
+def bramble_band(o):
+    """The full-reach lethal band (x, y, w, h) of a bramble: floor - 18 down to floor - 2 (world Y grows downward)."""
+    x, y, w, h = box(o)
+    floor = y + h
+    return (x, floor - BRAMBLE_BAND_TOP, w, BRAMBLE_BAND_TOP - BRAMBLE_BAND_BOTTOM)
+
+
+def spans_cover(spans, start, end, tolerance):
+    """Bramble.covers: merged spans (gaps up to the tolerance allowed) cover start..end."""
+    covered = start
+    for a, b in sorted(spans):
+        if a <= covered + tolerance:
+            covered = max(covered, b)
+    return covered >= end - tolerance
+
+
+def bramble_placement(root, o, right):
+    """Bramble.placementProblem: the root edge against a solid face over the band, floor under the tip end and beyond."""
+    x, y, w, h = box(o)
+    floor, root_x = y + h, x + w if right else x
+    collisions = [c for c in layers(root).get('Collisions', []) if kind(c) != 'QuickSand']
+    face = [(box(c)[1], box(c)[1] + box(c)[3]) for c in collisions if kind(c) != 'Platform'
+            and abs((box(c)[0] if right else box(c)[0] + box(c)[2]) - root_x) < BRAMBLE_TOLERANCE]
+    if not spans_cover(face, floor - BRAMBLE_BAND_TOP, floor - BRAMBLE_BAND_BOTTOM, BRAMBLE_TOLERANCE):
+        return f"its root edge (x {root_x}) is not against a solid face over the band"
+    tip = x if right else x + w
+    run = [(box(c)[0], box(c)[0] + box(c)[2]) for c in collisions if abs(box(c)[1] - floor) < BRAMBLE_TOLERANCE]
+    if not spans_cover(run, tip - BRAMBLE_CLEAR, tip + BRAMBLE_CLEAR, BRAMBLE_TOLERANCE):
+        return f"needs floor at y {floor} under the tip end and {BRAMBLE_CLEAR} px beyond it"
+    return None
+
+
+def check_bramble(root, spawn, o):
+    errors = []
+    unknown = [p.get('name') for p in o.findall('properties/property') if p.get('name') not in BRAMBLE_PROPERTIES]
+    if unknown:
+        return [f"Bramble {describe(o)}: unknown property {unknown[0]}"]
+    if prop(o, 'root') not in ('left', 'right'):
+        return [f"Bramble {describe(o)}: property root must be left or right"]
+    period, phase = rhythm_number(o, 'period', BRAMBLE_DEFAULT_PERIOD, errors), rhythm_number(o, 'phase', 0.0, errors)
+    hold = rhythm_number(o, 'hold', BRAMBLE_DEFAULT_HOLD, errors)
+    if None in (period, phase, hold):
+        return errors
+    _, _, w, h = box(o)
+    needed = BRAMBLE_WARNING_ASSISTED + BRAMBLE_GROW + hold + BRAMBLE_RETRACT + BRAMBLE_MIN_REST
+    if h != BRAMBLE_HEIGHT:
+        return [f"Bramble {describe(o)}: height must be {BRAMBLE_HEIGHT}"]
+    if not BRAMBLE_REACH[0] <= w <= BRAMBLE_REACH[1]:
+        return [f"Bramble {describe(o)}: width (the reach) must be {BRAMBLE_REACH[0]} to {BRAMBLE_REACH[1]}"]
+    if not BRAMBLE_HOLD[0] <= hold <= BRAMBLE_HOLD[1]:
+        return [f"Bramble {describe(o)}: hold must be {BRAMBLE_HOLD[0]} to {BRAMBLE_HOLD[1]}"]
+    if period < needed - 1e-6:
+        return [f"Bramble {describe(o)}: period {period} is shorter than assisted warning + grow + hold + retract + minimum rest = {needed}"]
+    problem = bramble_placement(root, o, prop(o, 'root') == 'right')
+    if problem:
+        return [f"Bramble {describe(o)}: {problem}"]
+    return [f"Bramble {describe(o)}: its danger area covers the room {name}"
+            for name, area in standing_places(root, spawn, o) if overlaps(bramble_band(o), area)]
+
+
 def standing_places(root, spawn, o):
     """Where the hero must be able to stand in the room owning o: entrance body, exit and checkpoints."""
     rooms = [r for r in layers(root).get('Rooms', []) if kind(r) == 'Room']
@@ -155,6 +216,8 @@ def check_rhythm_traps(root, spawn):
             elif None not in (period, amplitude, phase) and period >= VINE_MIN_PERIOD:
                 errors.extend(f"ThornVine {describe(o)}: its danger area covers the room {name}"
                               for name, area in standing_places(root, spawn, o) if vine_ever_lethal(o, amplitude, area))
+        elif kind(o) == 'Bramble':
+            errors.extend(check_bramble(root, spawn, o))
         elif kind(o) == 'FallingPlatform' and prop(o, 'skin') not in SKINS:
             errors.append(f"FallingPlatform {describe(o)}: unknown skin '{prop(o, 'skin')}' (expected log or branch)")
     return errors
@@ -321,12 +384,39 @@ def fungus_problems(o, collisions, spawn, room, standing):
 DEADFALL_JAVA = ROOT / 'core' / 'src' / 'main' / 'java' / 'com' / 'jlogicsoftware' / 'kimeria' / 'entity' / 'objects' / 'DeadfallTrap.java'
 
 
-def deadfall_constant(name):
-    """A numeric constant of DeadfallTrap.java, with or without the `f` suffix, one of several declared on a line too."""
-    found = re.search(rf'\b{name}\s*=\s*(-?[0-9.]+)f?\s*[;,]', DEADFALL_JAVA.read_text(encoding='utf-8'))
+def java_constant(path, name):
+    """A numeric constant of a Java source, with or without the `f` suffix, one of several declared on a line too."""
+    found = re.search(rf'\b{name}\s*=\s*(-?[0-9.]+)f?\s*[;,]', path.read_text(encoding='utf-8'))
     if found is None:
-        raise ValueError(f'DeadfallTrap.java has no numeric constant {name}')
+        raise ValueError(f'{path.name} has no numeric constant {name}')
     return float(found.group(1))
+
+
+def deadfall_constant(name):
+    return java_constant(DEADFALL_JAVA, name)
+
+
+# Creeping bramble (#364, D89): mirrors Bramble.fromMap and Bramble.placementProblem, its numbers read from Bramble.java and
+# TrapWarnings.java so the two cannot drift apart.
+OBJECTS_JAVA = DEADFALL_JAVA.parent
+BRAMBLE_JAVA = OBJECTS_JAVA / 'Bramble.java'
+TRAP_WARNINGS_JAVA = OBJECTS_JAVA.parent.parent / 'TrapWarnings.java'
+BRAMBLE_PROPERTIES = tuple(re.findall(r'"(\w+)"', re.search(r'PROPERTIES = List\.of\(([^)]*)\)',
+                                                              BRAMBLE_JAVA.read_text(encoding='utf-8')).group(1)))
+BRAMBLE_DEFAULT_PERIOD = java_constant(BRAMBLE_JAVA, 'DEFAULT_PERIOD_SECONDS')
+BRAMBLE_DEFAULT_HOLD = java_constant(BRAMBLE_JAVA, 'DEFAULT_HOLD_SECONDS')
+BRAMBLE_HOLD = (java_constant(BRAMBLE_JAVA, 'MIN_HOLD_SECONDS'), java_constant(BRAMBLE_JAVA, 'MAX_HOLD_SECONDS'))
+BRAMBLE_GROW = java_constant(BRAMBLE_JAVA, 'GROW_SECONDS')
+BRAMBLE_RETRACT = java_constant(BRAMBLE_JAVA, 'RETRACT_SECONDS')
+BRAMBLE_MIN_REST = java_constant(BRAMBLE_JAVA, 'MIN_REST_SECONDS')
+BRAMBLE_WARNING_ASSISTED = (java_constant(TRAP_WARNINGS_JAVA, 'DEFAULT_WARNING_SECONDS')
+                            * java_constant(TRAP_WARNINGS_JAVA, 'ASSIST_MULTIPLIER'))  # TrapWarnings.longestDuration
+BRAMBLE_HEIGHT = java_constant(BRAMBLE_JAVA, 'HEIGHT')
+BRAMBLE_REACH = (java_constant(BRAMBLE_JAVA, 'MIN_REACH'), java_constant(BRAMBLE_JAVA, 'MAX_REACH'))
+BRAMBLE_BAND_TOP = java_constant(BRAMBLE_JAVA, 'BAND_TOP')
+BRAMBLE_BAND_BOTTOM = java_constant(BRAMBLE_JAVA, 'BAND_BOTTOM')
+BRAMBLE_CLEAR = java_constant(BRAMBLE_JAVA, 'CLEAR_STANDING')
+BRAMBLE_TOLERANCE = java_constant(BRAMBLE_JAVA, 'FLOOR_TOLERANCE')
 
 
 DEADFALL_BOUGH = (deadfall_constant('BOUGH_WIDTH'), deadfall_constant('BOUGH_HEIGHT'))
