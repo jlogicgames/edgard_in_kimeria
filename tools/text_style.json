@@ -1067,14 +1067,6 @@
       "term": "length",
       "issue": "#373",
       "reason": "Measured fit (two lines, D50); hint rewrite."
-    },
-    {
-      "check": "T5",
-      "key": "COINS",
-      "lang": "*",
-      "term": "unused",
-      "issue": "#374",
-      "reason": "Catalog key read by no code; removal or use is decided in its own issue."
     }
   ]
 }
