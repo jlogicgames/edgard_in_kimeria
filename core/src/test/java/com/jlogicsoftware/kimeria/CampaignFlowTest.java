@@ -224,8 +224,8 @@ class CampaignFlowTest {
 
     @Test void otherLevelsNeverOpenTheFarewell() throws Exception {
         startNewGameOnTutorial(); finishScripted(); game.loadNextLevel(); finishScripted();
-        // forest-1 needs real textures (sky), so it is completed without a loaded level.
-        assertNull(get("level"));
+        call("loadLevel"); // forest-1 loads headless since its sky went (#430)
+        assertEquals("forest-1", ((Level) get("level")).name);
         game.loadNextLevel();
         assertEquals("LOADING", state()); assertEquals(2, get("currentLevelIndex")); assertNull(get("healer"));
         call("loadLevel"); // forest-2, the boss level: its own scenes are unchanged
@@ -251,15 +251,15 @@ class CampaignFlowTest {
         call("newGame"); assertEquals("INTRO", state());
         finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
-        // forest-0 has no sky, so it loads headless; it is the first level.
-        call("loadLevel");
+        call("loadLevel"); // forest-0, the first level
         assertEquals("forest-0", ((Level) get("level")).name);
         game.loadNextLevel(); // D41: the tutorial's last room first opens the healer's farewell, saving nothing
         assertEquals("HEALER", state()); assertFalse(progress.exists());
         finishScripted(); // Checkpoint -> farewell -> forest-1
         assertEquals("LOADING", state()); assertEquals(1, get("currentLevelIndex"));
         assertEquals(1, new SavedProgress(prefs, 3).nextLevelIndex());
-        // forest-1 needs real textures (sky), so completion is driven without loading it.
+        call("loadLevel");
+        assertEquals("forest-1", ((Level) get("level")).name);
         game.loadNextLevel();
         assertEquals("LOADING", state()); assertEquals(2, get("currentLevelIndex"));
         assertEquals(2, new SavedProgress(prefs, 3).nextLevelIndex());

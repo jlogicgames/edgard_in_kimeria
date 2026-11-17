@@ -15,10 +15,8 @@ import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
-import com.jlogicsoftware.kimeria.effects.RainDrop;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.localization.Msg;
-import com.jlogicsoftware.kimeria.effects.SkyBackground;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
@@ -101,7 +99,7 @@ public class Level implements WorldObject {
     private final List<StaticPlatform> staticPlatforms = new ArrayList<>();
     /** The static one-way platforms of the current room as drawn (their colliders are in {@link #collisionBlocks}). */
     public List<StaticPlatform> staticPlatforms() { return java.util.Collections.unmodifiableList(staticPlatforms); }
-    /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies, rain. */
+    /** Everything else: enemies, collectables, bombs, checkpoints, torches, fireflies. */
     public final List<WorldObject> objects = new ArrayList<>();
     /** Cosmetic scenery (#239): drawn right after the background, behind platforms, objects and the hero; no collision. */
     public final List<Decor> decor = new ArrayList<>();
@@ -138,6 +136,9 @@ public class Level implements WorldObject {
      * so at most one burst of 48 drops is alive; twice that is the headroom (KimeriaBloodSystemCapacityTest measures the peak).
      */
     public static final int BLOOD_CAPACITY = 96;
+    /** The map's {@code background} when it sets none (D92): only test maps fall back here; every shipped map sets it (ShippedBackgroundTest, check_contrast.py). */
+    public static final String DEFAULT_BACKGROUND = "#4a92b8";
+    private static final int RGB = 3, HEX_RGB = 6, HEX_ARGB = 8, OPAQUE = 0xff, BYTE = 0xff, BITS_PER_CHANNEL = 8, HEX_RADIX = 16;
     private static final long BLOOD_SEED_MIX = 0x9E3779B97F4A7C15L;
     private static final long FX_SEED_MIX = 0xC2B2AE3D27D4EB4FL;
     /** All blood of the level: no object is queued per hit. Cleared with the room. */
@@ -147,8 +148,11 @@ public class Level implements WorldObject {
     private final GameContext game;
     /** The camera's visible world rect; the bramble's cues are heard only while it overlaps it (D89). */
     private final Supplier<Rectangle> visibleWorldRect;
-    /** Screen-fixed drifting clouds behind the world; null on levels without a sky. */
-    private SkyBackground sky;
+    /**
+     * The flat colour behind the world (D92): the map property {@code background}, a Tiled colour ({@code #RRGGBB} or
+     * {@code #AARRGGBB}, opaque). Read once at load; {@link #backgroundRgb()} hands out this array, never a copy.
+     */
+    private final float[] background = new float[RGB];
     public final RoomLayout roomLayout;
     private int currentRoom;
     /**
@@ -542,14 +546,30 @@ public class Level implements WorldObject {
             if (!token.isBlank()) ingredients.add(ItemType.fromMapName(token.trim()));
         }
         game.artifacts().requireForLevel(name, ingredients);
-        if ("forest-1".equals(levelName)) {
-            sky = new SkyBackground(assets);
-            for (int i = 0; i < 48; i++) {
-                ambience.add(new RainDrop(new Vector2(map.widthPx(), map.heightPx()), visibleWorldRect));
-            }
-        }
+        parseBackground(map.prop("background", DEFAULT_BACKGROUND), background);
 
         placePlayer();
+    }
+
+    /** The flat colour behind the world as RGB in 0..1 (D92); the level's own array, read every frame, never modified. */
+    public float[] backgroundRgb() { return background; }
+
+    /**
+     * Parses a Tiled colour property into {@code rgb}: {@code #RRGGBB}, or {@code #AARRGGBB} with alpha ff. Anything else
+     * throws IllegalArgumentException: a mistyped colour must fail the load, never fall back to a default.
+     */
+    public static void parseBackground(String value, float[] rgb) {
+        String hex = value.startsWith("#") ? value.substring(1) : value;
+        if (hex.length() != HEX_RGB && hex.length() != HEX_ARGB) throw new IllegalArgumentException("background: expected #RRGGBB or #AARRGGBB, got '" + value + "'");
+        long argb = 0;
+        for (int i = 0; i < hex.length(); i++) { // digit by digit: Long.parseLong would accept a sign ("#-4a92b")
+            int digit = Character.digit(hex.charAt(i), HEX_RADIX);
+            if (digit < 0) throw new IllegalArgumentException("background: not a hex colour: '" + value + "'");
+            argb = argb * HEX_RADIX + digit;
+        }
+        if (hex.length() == HEX_ARGB && (argb >>> (RGB * BITS_PER_CHANNEL)) != OPAQUE)
+            throw new IllegalArgumentException("background: must be opaque (alpha ff), got '" + value + "'");
+        for (int i = 0; i < RGB; i++) rgb[i] = ((argb >>> ((RGB - 1 - i) * BITS_PER_CHANNEL)) & BYTE) / (float) BYTE;
     }
 
     public boolean healerAhead() {
@@ -1346,7 +1366,6 @@ public class Level implements WorldObject {
 
     /** The world keeps moving during victory; only the hero uses a protected scripted walk. */
     private void updateWorld(float dt) {
-        if (sky != null) sky.update(dt);
         for (int i = 0; i < ambience.size(); i++) ambience.get(i).update(dt);
         // Before the objects: a hit this frame sprays after this point, so its drops first move next frame, as queued objects did.
         blood.update(dt);
@@ -1410,7 +1429,6 @@ public class Level implements WorldObject {
     }
 
     public void render(Batch batch, Rectangle visibleWorldRect) {
-        if (sky != null) sky.render(batch, visibleWorldRect);
         renderBackground(batch, visibleWorldRect);
         for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);

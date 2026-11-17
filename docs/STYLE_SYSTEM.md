@@ -47,8 +47,8 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
   first meeting. `TrapTeachingRoomTest` holds them together: the teaching room is a shipped room with a card that shows
   the trap, no earlier room shows the type, and a DISGUISED or HIDDEN trap's room introduces its element. The registry
   in ROOM_CARDS.md groups reskins under one element; a reskin is not novelty (D72) and shares the trap's card family.
-- **Trap and art.** VISIBLE means the "active" contrast tier (D76: outline at least 0.28 against the sky and the
-  map background, checked by `check_contrast.py` for every placed sprite) or motion; the at-rest frame is designed
+- **Trap and art.** VISIBLE means the "active" contrast tier (D76: outline at least 0.28 against the level's background colour (D92) and the
+  map's tiles, checked by `check_contrast.py` for every placed sprite) or motion; the at-rest frame is designed
   with the trap card.
 - **Pickup and art.** Every collectable wears the one pickup cue (a 2 px bob, an additive halo except on the coin, a sparkle;
   [#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345)) and nothing that can hurt wears it, so a

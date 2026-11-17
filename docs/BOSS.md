@@ -278,7 +278,7 @@ the animation, movement and energy remain assigned as above. Counter warning and
 remain unchanged, preserving time to finish the hero's sword attack and jump away.
 
 During boss death and the protected hero exit, the entire active room now continues its
-normal update/cleanup pass: fireflies, torch fire, sky/weather, moving platforms,
+normal update/cleanup pass: fireflies, torch fire, moving platforms,
 enemies and hazards. Queued visual effects still spawn and finish. The hero uses the same
 scripted movement and remains protected from damage and terrain. Pause still stops updates;
 completion/save is still latched exactly once after the hero leaves the viewport.

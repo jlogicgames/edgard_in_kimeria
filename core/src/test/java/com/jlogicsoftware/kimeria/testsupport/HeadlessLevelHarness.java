@@ -70,7 +70,7 @@ public final class HeadlessLevelHarness {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics; previousInput = Gdx.input; previousFiles = Gdx.files;
         previousGl = Gdx.gl; previousGl20 = Gdx.gl20;
         GdxNativesLoader.load();
-        // forest-1 builds a sky texture: decode the real PNG, stub only the GPU upload.
+        // Rendering builds the shared SoftDot and Shaders.whiteQuad textures: real pixels, stub only the GPU upload.
         Gdx.gl = Gdx.gl20 = (GL20) Proxy.newProxyInstance(GL20.class.getClassLoader(), new Class<?>[]{GL20.class},
             (proxy, method, args) -> {
                 Class<?> r = method.getReturnType();

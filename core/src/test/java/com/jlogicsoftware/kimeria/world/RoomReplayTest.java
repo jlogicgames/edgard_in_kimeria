@@ -79,14 +79,7 @@ class RoomReplayTest {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics;
         previousInput = Gdx.input; previousFiles = Gdx.files;
         GdxNativesLoader.load();
-        HeadlessFiles files = new HeadlessFiles();
-        Gdx.files = (Files) Proxy.newProxyInstance(Files.class.getClassLoader(), new Class<?>[]{Files.class}, (proxy, method, args) -> {
-            // Read the exact shipped map under an alias, omitting only forest-1's decorative sky/rain.
-            // All room markers, collision objects, hazards, enemies, and player physics remain intact.
-            if (method.getName().equals("internal") && args[0].equals("tiles/replay-forest-1.tmx"))
-                return files.internal("tiles/forest-1.tmx");
-            return method.invoke(files, args);
-        });
+        Gdx.files = new HeadlessFiles();
         Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class<?>[]{Input.class}, (proxy, method, args) -> switch (method.getName()) {
             case "isKeyPressed" -> held.contains((int) args[0]);
             case "isKeyJustPressed" -> pressed.contains((int) args[0]);
@@ -340,7 +333,7 @@ class RoomReplayTest {
     @Test void secondLevelRefillIsCollectedAfterTheFirstRedMob() {
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(2);
-        Level level = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, stock);
+        Level level = new Level(assets, game, player(), "forest-1", Rectangle::new, stock);
         for (int attempt = 0; attempt < 3; attempt++) {
             held.clear(); pressed.clear(); timeScale = 1;
             if (attempt > 0) level.resetCurrentRoom(player());
@@ -353,7 +346,7 @@ class RoomReplayTest {
     }
 
     private void measure(String route, int roomIndex, boolean collect, int delayFrames, float[] jumps) {
-        String mapName = route.startsWith("forest-1") ? "replay-forest-1" : "forest-2";
+        String mapName = route.startsWith("forest-1") ? "forest-1" : "forest-2";
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
         Level level = new Level(assets, game, player(), mapName, Rectangle::new, stock);

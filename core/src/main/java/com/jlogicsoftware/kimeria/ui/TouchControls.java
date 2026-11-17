@@ -54,7 +54,7 @@ public class TouchControls {
     private static final float STICK_DEADZONE = 0.3f;
 
     private static final float BUTTON_HIT_SCALE = 1.2f, SHOOT_BUTTON_SCALE = 0.85f;
-    /** Light, near-opaque art (D55) so it reads on the dark bars and over sky/ground; the pressed art is amber. */
+    /** Light, near-opaque art (D55) so it reads on the dark bars and over the level background and ground; the pressed art is amber. */
     static final float CONTROL_ALPHA = 0.94f;
     private static final float HINT_SIDE_MARGIN = 24f;
     private static final float PRESSED_SCALE = 0.92f;

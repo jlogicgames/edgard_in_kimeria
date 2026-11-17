@@ -1728,6 +1728,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Status:** Rule accepted by the author, 2026-11-16, with the 0.28 active floor; the recolour of the bush, the static
   look-alike mushroom and the hanging vine, and the lever outline, approved and built the same day. Playtest F15 in [PLAYTEST_1.md](PLAYTEST_1.md).
   Section and measured inventory: [ART_DIRECTION.md, "Contrast tiers"](ART_DIRECTION.md#contrast-tiers-d76-playtest-f15-344).
+  *Update 2026-11-17 (D92):* the background is now each map's flat `background` colour, one sample per placement; the
+  sky and its offsets below are history.
 - **Rule:** every sprite belongs to one tier. It is measured against what the game draws behind it (the screen-fixed
   sky at several horizontal offsets plus the tile layer) at every placement, in its rest frame (glowing sprites at full
   and dimmest glow, the bush in every frame); the worst placement counts.
@@ -2603,6 +2605,52 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (the shared isolated-scene ceiling); the room scene `forest1HiveRoom` 536.7 B/frame in 3 isolated runs and 536.0 in the full
   check, ceiling 590 (highest run + about 10 %), the same as the deadfall and bramble rooms. The band is drawn a row at a time from 32 cached one-row regions, so both of its ends clip
   exactly without a region per frame.
+
+## D92. The world is drawn over a flat per-level background; the forest rain and sky are gone (#430, 2026-11-17)
+
+- **Status.** Part 1 of three ([#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430)): the removal, the map
+  property and the gate switch. Approved by the author on 2026-11-17 for the later parts: the night colour `2c3f66`, the
+  moon rim, the decor night palettes and the honey fungus breath (`FungusTrap.GLOW_MIN` 0.55 to 0.80, a change to D63)
+  land together in one change of [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430), because the gate
+  cannot pass on night with day sprites, nor on day with rimmed ones. Clouds and a moon:
+  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451). Swamp weather: part 2 of #430.
+- **Backgrounds still to be drawn.** Open levels show a night sky (the castle shows night through its windows; author,
+  2026-11-17). The night sky with its moon and clouds is still to be drawn in
+  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451); the contrast gate is re-run over that real background
+  then, and any sprite it fails is fixed then.
+- **Why.** The forest-1 rain (`RainDrop`, one `WorldObject` per drop, a mutable static wind) and sky (`SkyBackground`,
+  `sky.png`) were Dart-port leftovers chosen by level name in `Level`. The gate measured every sprite of all three maps
+  over `sky.png`, but forest-0 and forest-2 never drew it: they showed the clear colour `87ceeb`. Over `87ceeb` the gate
+  fails 10 checks (bush, look-alike, trunk and vine too loud; the coin 0.185 and the hive's stingers 0.262 below the active
+  floor). For two of the three maps it had measured a background the player never saw.
+- **Decision.** Each map sets the colour behind the world in its map property `background`, a Tiled colour (`#AARRGGBB` with
+  alpha `ff`, or `#RRGGBB`). `Level` reads it once at load (`Level.parseBackground`; a malformed or translucent value fails
+  the load) and `KimeriaGame` clears to it at both clear sites (the direct pass and the post-processed scene buffer, which
+  had its own copy of the old literal). Before a level loads, and on a map without the property (test maps), the default is
+  `Level.DEFAULT_BACKGROUND` `4a92b8`, `sky.png`'s own blue without its clouds. The three forest maps set `4a92b8`
+  explicitly. forest-1 loses its clouds and rain; forest-0 and forest-2 move from the pale `87ceeb` to the same blue.
+- **Gate.** `tools/check_contrast.py` composites every sprite over its map's `background` colour plus the tile layer, one
+  sample per placement (no sky offsets), and fails a shipped map without the property (`map_background`;
+  `test_check_contrast.BackgroundTest`). The run takes 2.6 s instead of about 8 s. Measured on 2026-11-17: 0 errors; every
+  active worst value equals the old sky's (worst YellowMob 0.284), because clouds were never an active sprite's worst case;
+  two decor sprites got quieter (hanging vine 0.156 to 0.059, trunk 0.174 to 0.121). The silver thread's worst moved from
+  0.340 to **0.335** (forest-2, `forest-walls`): the old composite pasted the 360 px sky strip into 368 px maps, so the bottom
+  8 rows were transparent and measured as black. `TouchControlArtTest` and `tools/touch_control_sprites.py` use
+  `4a92b8` in place of `87ceeb`.
+- **Allocation (measured, unchanged ceilings).** Three isolated runs of `AllocationBudgetTest` on `origin/main` and three
+  after the removal, same machine, B/frame: forest-1 trap course 328.1 to 544.3 before, 328.0 to 544.3 after; mob room
+  320.0 to 488.0 / 346.1 to 536.0; deadfall 320.0 to 536.0 / 320.0 to 536.0; lever 440.0 to 488.0 / 352.0 to 536.0;
+  bramble 320.0 to 536.0 / 320.0 to 536.0; route 320.0 to 536.0 / 320.0 to 536.0; guard 232.7 to 544.7 / 232.7 to 544.4;
+  hive 224.0 to 536.0 / 224.0 to 536.7; tree 320.0 to 488.0 / 352.0 to 536.0; tree ride 250.8 to 563.4 / 346.8 to 562.8.
+  The rain and sky cost nothing measurable: the 536 B/frame runs are the harness and level code (D83), so the earlier
+  comments that called the sky and rain dominant were wrong and are corrected. No ceiling changed.
+- **Tests changed.** The `replay-forest-1` file aliases in `BossCombatTest`, `DirectionalActionsTest`,
+  `FallingPlatformFloorTest`, `Forest1TrapsTest` and `RoomReplayTest` are gone (forest-1 loads as shipped);
+  `RhythmTrapsTest` now loads forest-1 like the other maps; `CampaignFlowTest` loads forest-1 instead of completing it
+  unloaded; `FallingTrapsTest` no longer stubs GL. `HeadlessLevelHarness` keeps its GL stub with its real reason: rendering
+  builds the shared `SoftDot` and `Shaders.whiteQuad` textures. New: `LevelBackgroundTest` (parsing; a sign such as
+  `#-4a92b` is rejected digit by digit) and `ShippedBackgroundTest` (every shipped map sets `background`, even if the Python
+  gate is skipped). No threshold changed.
 
 ## D93. Principle 4 measured: a hazard's own act is seen and heard, hit or miss (#388, 2026-11-17)
 

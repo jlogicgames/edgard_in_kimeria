@@ -2,7 +2,7 @@
 
 The thread is not a placed map object, so `check_contrast.py` does not see it; this test measures it the same way. The
 strand (read from the exported PNG, so a recolour is measured here) is stamped along the curves the game draws, from a death
-point to every RoomStart of the three maps, taut and slack, level and sloped, over every sky offset; the worst outline must
+point to every RoomStart of the three maps, taut and slack, level and sloped, over each map's background colour (D92); the worst outline must
 reach `check_contrast.ACTIVE_OUTLINE_MIN`. Measured 2026-11-17: 0.340 worst, forest-0's lever room (D81 in docs/DECISIONS.md).
 """
 import math
@@ -52,11 +52,10 @@ class SilverThreadTest(unittest.TestCase):
 
     def test_the_thread_is_active_tier_at_every_room_start(self):
         strand = Image.open(thread.TARGET).convert('RGBA').crop(STRAND)
-        sky = contrast.sky_strip()
         worst = None
         for name, root in contrast.map_roots().items():
             layer, _, _ = contrast.tile_layer(root)
-            backgrounds = contrast.backgrounds(layer, sky)
+            background = contrast.composite(layer, contrast.map_background(root, name))
             starts = [(float(o.get('x')), float(o.get('y')), o.get('name')) for g in root.findall('objectgroup')
                       for o in g.findall('object') if o.get('type') == 'RoomStart']
             self.assertTrue(starts, f'{name}: no RoomStart')
@@ -66,10 +65,9 @@ class SilverThreadTest(unittest.TestCase):
                     sprite_layer = stamped(layer.size, curve(ax + dx, ay + dy, ax, ay, sag), strand)
                     box = sprite_layer.getbbox()
                     sprite = sprite_layer.crop(box)
-                    for background in backgrounds:
-                        outline, _ = contrast.measure(sprite, background, box[0], box[1])
-                        if outline is not None and (worst is None or outline < worst[0]):
-                            worst = (outline, name, room, dx, dy, sag)
+                    outline, _ = contrast.measure(sprite, background, box[0], box[1])
+                    if outline is not None and (worst is None or outline < worst[0]):
+                        worst = (outline, name, room, dx, dy, sag)
         self.assertGreaterEqual(worst[0], contrast.ACTIVE_OUTLINE_MIN, f'thread outline {worst}')
 
 

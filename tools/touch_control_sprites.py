@@ -4,7 +4,7 @@
 `art/hud/touch/<name>.grid` is the drawing (same grid format as the forest traps, see
 `forest_trap_sprites.parse`); this module only validates it against
 `sprite_layouts.TOUCH_CONTROL_SIZES` and exports `assets/images/HUD/touch/<name>.png`, plus a
-contact sheet on the three backgrounds the controls sit on (dark bar, sky, ground). It contains
+contact sheet on the three backgrounds the controls sit on (dark bar, level background, ground). It contains
 no drawing logic. The old `Joystick.png`, `JumpButton.png`, `Knob.png` and `PauseButton.png`
 stay as they are for any other user.
 """
@@ -21,7 +21,7 @@ ROOT = grids.ROOT
 GRID_DIR = ROOT / 'art/hud/touch'
 TARGET_DIR = ROOT / 'assets/images/HUD/touch'
 PREVIEW = ROOT / 'docs/references/touch-controls-art.png'
-BACKGROUNDS = ((0x10, 0x10, 0x1c), (0x87, 0xce, 0xeb), (0x7a, 0x4e, 0x2c))  # dark bar, sky, ground
+BACKGROUNDS = ((0x10, 0x10, 0x1c), (0x4a, 0x92, 0xb8), (0x7a, 0x4e, 0x2c))  # dark bar, level background (D92), ground
 SCALE = 3
 PAD = 6
 
@@ -55,7 +55,7 @@ def export(name):
 
 
 def contact_sheet(images):
-    """Blocks of three background strips: dark bar, sky, ground."""
+    """Blocks of three background strips: dark bar, level background, ground."""
     names = list(images)
     cell = LARGEST_SPRITE * SCALE + PAD
     blocks = [names[i:i + PER_ROW] for i in range(0, len(names), PER_ROW)]

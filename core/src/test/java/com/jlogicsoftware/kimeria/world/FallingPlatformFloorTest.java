@@ -71,13 +71,7 @@ class FallingPlatformFloorTest {
     @BeforeEach void setUp() {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics; previousInput = Gdx.input; previousFiles = Gdx.files;
         GdxNativesLoader.load();
-        HeadlessFiles files = new HeadlessFiles();
-        Gdx.files = (Files) Proxy.newProxyInstance(Files.class.getClassLoader(), new Class<?>[]{Files.class}, (proxy, method, args) -> {
-            // The exact shipped map under an alias, omitting only forest-1's decorative sky/rain (as Forest1TrapsTest).
-            if (method.getName().equals("internal") && args[0].equals("tiles/replay-forest-1.tmx"))
-                return files.internal("tiles/forest-1.tmx");
-            return method.invoke(files, args);
-        });
+        Gdx.files = new HeadlessFiles();
         Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class<?>[]{Input.class}, (proxy, method, args) -> switch (method.getName()) {
             case "isKeyPressed" -> held.contains((int) args[0]);
             case "isKeyJustPressed" -> pressed.contains((int) args[0]);
@@ -102,7 +96,7 @@ class FallingPlatformFloorTest {
 
     /** The trap course, room 3 since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after that. */
     private Level forest1() {
-        Level l = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, emptyStock());
+        Level l = new Level(assets, game, player(), "forest-1", Rectangle::new, emptyStock());
         l.enterNextRoom(player());
         l.enterNextRoom(player());
         return l;
