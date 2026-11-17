@@ -122,8 +122,7 @@ Each has an open issue whose checklist includes updating this page.
 - Principle 4 is met by the falling stone only; every other hazard is to be audited
   ([#388](https://github.com/jlogicgames/edgard_in_kimeria/issues/388)).
 - At-rest cues pending for the disguised and hidden traps: falling stone
-  ([#360](https://github.com/jlogicgames/edgard_in_kimeria/issues/360)), falling branch
-  ([#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361)), plain falling platform
+  ([#360](https://github.com/jlogicgames/edgard_in_kimeria/issues/360)), plain falling platform
   ([#362](https://github.com/jlogicgames/edgard_in_kimeria/issues/362)).
 - The playtest changes are not yet checked in the running game: sizes, trap read distance, impact feedback
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).

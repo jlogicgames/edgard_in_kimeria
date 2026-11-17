@@ -36,6 +36,8 @@ public abstract class FallingTrap extends Entity {
     private final Runnable kill;
     private final BooleanSupplier heroGrounded;
     private final float landingBottom;
+    /** Scratch boxes for the contact check while falling, reused every frame (no allocation per frame). */
+    private final Rectangle swept = new Rectangle(), landed = new Rectangle();
     private State state = State.ARMED;
     private float warningTotal, warningElapsed, speed;
 
@@ -114,8 +116,8 @@ public abstract class FallingTrap extends Entity {
         boolean lands = position.y + size.y >= landingBottom;
         if (lands) position.y = landingBottom - size.y;
         // Swept box: a long frame cannot tunnel through a hero who can be hurt this frame.
-        Rectangle swept = new Rectangle(position.x, top, size.x, position.y + size.y - top);
-        Rectangle landed = new Rectangle(position.x, position.y, size.x, size.y);
+        swept.set(position.x, top, size.x, position.y + size.y - top);
+        landed.set(position.x, position.y, size.x, size.y);
         boolean spare = sparesAirborneHero();
         boolean canHurt = !spare || lands || heroGrounded.getAsBoolean();
         if (canHurt && hero.get().overlaps(lands && spare ? landed : swept)) kill.run();

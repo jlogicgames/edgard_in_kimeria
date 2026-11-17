@@ -1958,7 +1958,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     reads the numbers from the Java class, but the logic is written twice, so the two must change together; both have
     the same boundary tests.
 - **Reads apart from `FallingBranch`:** underfoot versus overhead, dead grey versus tan with violet buds, a mid-top split
-  versus the joint crack planned by #361. From the plain falling platform (a striped slab) and the log (brown, intact
+  versus the pale cracked band at the joint (#361). From the plain falling platform (a striped slab) and the log (brown, intact
   until landed on): by material; the crumble frames are shared on purpose, because it is the same element.
 - **Room:** `forest-1-tree` (forest-1's fourth and last room; the guard room's checkpoint became its `RoomExit` at the
   same x, so D68's times are unchanged). Two trees: a column of five rotten branches next to the entrance (the fast line)

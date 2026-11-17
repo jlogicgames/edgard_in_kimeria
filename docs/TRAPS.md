@@ -89,7 +89,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | --- | --- | --- | --- | --- | --- | --- |
 | `ThornRoot` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
 | `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, first trap of the stretch | D44, D58 |
-| `FallingBranch` | position | DISGUISED | pending #361 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
+| `FallingBranch` | position | DISGUISED | cracked joint (#361) | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
 | `FallingStone` | position | HIDDEN | pending #360 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
 | `ExplosiveStump` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
 | `ExplosiveRoot` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's idle tell and wind-up language) | D47, D59 |
@@ -181,8 +181,8 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | --- | --- |
 | Family | position |
 | Visibility (D71) | DISGUISED |
-| At rest | a hanging branch that reads as scenery; no foliage tiles above it (a D48 gap) |
-| At-rest cue | pending [#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361): a cracked joint at the bough |
+| At rest | a tan branch with violet buds hanging overhead, its joint cracked; no foliage tiles above it (a D48 gap, [#421](https://github.com/jlogicgames/edgard_in_kimeria/issues/421)) |
+| At-rest cue | a cracked joint at the bough, drawn on every instance in the resting and rustle frames ([#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361)): a pale raw-wood band (`fff4b0`) round the joint, 2 px right of the knob and through the whole depth of the bough, cut by an ink zig-zag, with one loose chip of light wood 3 px under it. It reads apart from the rotten branch (D80) by place (overhead, not underfoot), colour (tan, not dead grey) and crack (a pale band across the joint, not a 1 px split mid-top) |
 | Reads from | its zone (`forest-0-wall`: x 1728-1776, the column itself) |
 | Trigger | the hero body box overlaps the authored zone (`zoneX`, `zoneY`, `zoneWidth`, `zoneHeight`) |
 | Telegraph (D7) | rustles in the first half of the warning, sags in the second |
@@ -193,7 +193,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-wall` with `HINT_WALL_BRANCH` |
 | Load checks | `FallingTrapLayout.validate`; mirrored in `check_tiled_links.py` |
 | Tests | `FallingTrapsTest`, `WallLessonTest` |
-| Art and sound | `trap-branch` 32×16 |
+| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier, outline 0.463 at rest in `forest-0-wall` (D76; 0.483 before the cue), rustle 0.429 |
 | Decision | D45, D48 |
 
 ### Falling stone (`FallingStone`)
