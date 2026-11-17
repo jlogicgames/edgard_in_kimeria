@@ -1467,6 +1467,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 - **Status:** Implemented by [#187](https://github.com/jlogicgames/edgard_in_kimeria/issues/187) (part of [#103](https://github.com/jlogicgames/edgard_in_kimeria/issues/103)); automated tests only. The author has not played the room and the new ledge tiles have not been seen in the running game, so #187 stays open for that check. Refines D58 (see "Placement") and answers D31's open "one-shot versus reversible" question (see "One-shot").
 - **Placement (author decision, 2026-11-15):** `forest-1` becomes a multi-room level. Room 1, `forest-1-traps` (x 0-1280), is the #260 trap course with every object, id and measured behaviour unchanged: its `RoomStart` is the old `Player` spawn (32, 272) and a `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was, so a retry still restarts at x 32 (the course stays one room; D58's "not split" holds). Room 2, `forest-1-route` (x 1280-2112), is new; the `Checkpoint` (id 7) moved to its end. **Update (#104, D68):** the combination room was appended after room 2 as planned: this room's checkpoint became a `RoomExit` (2048, 112, 48 x 32, the old checkpoint's x, so the times below are unchanged) and the level `Checkpoint` moved to the end of room 3. `forest-1` still has no hints (D33, `TutorialLevelTest`).
+- **Update (D84, playtest 2026-11-17):** the two-mechanism legibility claimed below failed in play: the author got stuck, because only the ladder visibly reacted to the pull. [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418) and [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419) track the fix; see [D84](#d84-a-puzzle-never-makes-the-player-guess-or-look-stupid-playtest-418-419-2026-11-17).
 - **Rule (D31, the "optional route" check):** one lever drives two supports **in opposite states**. A `Ladder` starts raised (its foot 112 px above the floor, out of every jump) and a vertical lift (`Escalator`) starts running, from its top (y 176) on its way down. One pull lowers the ladder **and stops the lift where it is**; the next pull raises the ladder and starts the lift again. The lift is the **mandatory** way to the checkpoint ledge and needs no lever; the ladder is the **optional** way up to a slab. So the lever is a real choice, readable before it is made: the entrance shows the lever, a raised ladder over a slab with a refill pad above it, and a lift in motion beside the exit; pulling it shows at once that the ladder comes down and the lift freezes, so the way on is closed until the lever is pulled again.
 - **One-shot (author decision, 2026-11-15: "a one-shot element is needed, after which the reward is lost until Restart Level"):** the single-charge fireball refill (D27) lies on a pad 80 px above the slab, out of reach of a jump (the first hop can be made only from a platform in between). That platform is an existing `FallingPlatform` (the same look and the same shared warning as the four platforms of room 1, D46), the **step**, 40 px above the slab and 40 px below the pad. Standing on it starts a 1 s warning (1.5 s with the longer-warnings assist), then it falls and is gone for good. Whoever hops onto it and on to the pad in time takes the refill; whoever steps on it and back, hesitates or falls off has **spent the one-shot** and the pad is out of reach: the refill is lost until Restart Level (or, before the room is secured, until a death retry). The exit stays reachable through the lift in every such state. **Legibility without a hint:** the step is in plain sight from the slab (and from the entrance), it looks and behaves like the platforms the player has already seen collapse in room 1, and the reward it guards is in sight above it; the consequence (the platform lights, then drops) is the one the level has already shown twice. **Why a falling platform and not a jamming lever:** it is an existing, snapshot-aware one-shot object (the room snapshot keeps its position, timers and removed state, so D26's state boundary needs no new code), whereas a one-shot lever would need a new owner class, a save snapshot and a visual. Answer to D31: the lever toggles stay **reversible**; the one-shot belongs to a **support the optional reward depends on**; no new code.
 - **The bat (author's request, 2026-11-15):** one existing `Bat` (no new art) patrols horizontally at the hero's own height over the floor stretch before the lift, x 1856-1904 (id 59, (1856, 296), 16 x 16, `offNeg` 0, `offPos` 3, 50 px/s). It never chases; it blocks the walk to the lift, so the mandatory route has to deal with it: the **sword** (one hit), a **stomp or a hop over it** (a scripted hop clears it from 39 of 42 takeoff gaps) or a **fireball from afar**. **Zero fireballs are enough**, and a fireball is an optional shortcut (D26, #104's rule). Its beat stays clear of everything the one-shot decision involves: 300+ px from the lever's reach, 100+ px from the ladder, 80+ px from the step and 14 px before the lift's boarding point; and a hero who drops off the pad lands clear of it: the second review found that holding Right off the pad's right edge drifts about 90 px (the first beat, starting at x 1760, killed 20 of 58 swept bat phases), so the beat now starts at x 1856 and `droppingOffEitherPadEdgeWhateverTheBatsPhaseNeverLandsInItsBeat` sweeps 54 bat phases for a walk off the right edge and a walk or jump off the left (the farthest landing is centre x 1838.5, the bat's reach starts at 1859). A deliberate running jump to the right off the pad can land in the beat; that is an act, not a drift. The decision at the slab is never made under attack (`theBatPatrolsTheFloorLevelStretchBeforeTheLiftAndNothingElse`, `theBatNeverReachesTheLeverOrTheSlabHeroAndNeverChases`). **Retry rules:** a death or room retry on a first visit brings the bat back alive at x 1856 (the existing enemy rule); a kill is secured with the room (a room appended after it, #104, or a healer return), so a secured kill stays a kill (`deathAndRetryBringTheBatBackAndASecuredKillStaysAKill`).
@@ -2185,3 +2186,57 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   allocation in the rider branch gives a median of 24.0 and fails 10 of 10, isolated and loaded. The ordinary median
   difference (no injection) was 0.0 B/frame in all 80 runs (min 0.0, max 0.0, printed to 0.1 B), so the margin under the
   8 B ceiling is the whole 8 B.
+
+## D84. A puzzle never makes the player guess or look stupid (playtest, #418, #419, 2026-11-17)
+
+- **Status:** the one-sentence principle and the two applications (#418, #419) are the author's, 2026-11-17. The four
+  rules and the checks below are the agent's reading of that sentence, for the author to confirm or edit. The
+  applications are open issues
+  ([#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418),
+  [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419)) and are not built.
+- **Decision:** the author's words (translated from Russian): "Don't torment the player with guesswork; a puzzle must not
+  make the player look stupid." Agent's reading, for room and mechanism design, as four rules:
+  1. **Teach before gating.** Every new mechanic, and every new combination of known ones (for example one control that
+     drives several mechanisms), is shown first in a safe place, where failing costs nothing, before it stands between the
+     player and progress.
+  2. **Cause and effect are visible.** The effect of every player action is visible at the moment it happens. If the
+     effect lands off screen, the game points at it (the fairy of D82 is the tool, extended by [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419) to off-screen targets).
+  3. **A stuck player can see what to try next.** From any reachable state the player can see something they have not
+     tried yet: a lever not pulled, a mechanism that reacted, a path that changed. A room that looks impassable while a
+     solution exists is a defect of the room, not of the player.
+  4. **Difficulty is execution and planning.** Challenge comes from timing, precision, route choice and resource use
+     (consistent with D26), never from a hidden rule or an unreadable state.
+- **Why:** a puzzle that is solved by trying everything is not a puzzle, and a player who finds the answer by luck learns
+  nothing. Worse, a failure the player cannot explain reads as the player's own stupidity (agent's gloss).
+- **Relation to earlier rules:** it extends, and does not replace:
+  - [D7](#d7-traps-are-deterministic-puzzle-elements): a trap is deterministic and warns before it kills, so its
+    telegraph is the trap form of rule 2.
+  - [D26](#d26-observe-and-plan-before-committing): observe, plan, then commit; D84 asks that what the player observes
+    is enough to plan with.
+  - [D31](#d31-forest-uses-linked-route-reconfiguration): a lever's effect is a visible link; D84 requires the link to be
+    seen when it fires, whatever the number of links.
+  - [D72](#d72-every-room-gives-the-player-something-new): each new element is first met alone, then combined; D84 makes
+    the same demand of a new combination of known elements, which D72 counts as a combination but does not require to be
+    shown on its own.
+  - [D82](#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16):
+    the fairy points at the selected target; D84 extends that to a linked mechanism that is off screen.
+- **How to apply (checks for a room, a mechanism or a review):**
+  - List every control that drives more than one mechanism, and every combination of mechanics the room asks for. For each,
+    name the earlier safe place where the player met it, or add one.
+  - For each player action, name the frame where its effect is seen and whether it is on screen. If not, say how the game
+    points at it.
+  - From each stuck state the room can reach, name what the player can try next and where they see it.
+  - Agent proposal: if the only way to find the answer is to try everything, the room fails this decision, whatever its measured time.
+  - A room card records the check; see the kimeria-room-design skill.
+- **Case that broke the principle:** the `forest-1-route` room ([D67](#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)),
+  playtest 2026-11-17. The `Route` lever is the only lever in the game that drives two mechanisms (it lowers the ladder and
+  stops the lift). Nothing taught that earlier, and after the pull only the ladder visibly reacted, so the room looked
+  impassable and the author got stuck, although the lift was the way on.
+- **Applications (first two):**
+  - [#418](https://github.com/jlogicgames/edgard_in_kimeria/issues/418): a teaching room for a lever that drives two
+    mechanisms, placed in forest-1 between `forest-1-traps` and `forest-1-route` (rule 1).
+  - [#419](https://github.com/jlogicgames/edgard_in_kimeria/issues/419): the fairy guide (D82) flies to the screen edge and
+    twinkles toward a linked mechanism that is off screen (rule 2).
+  - Both issues stay open until built. When one lands, its PR updates this list and the document it changes.
+- **Details:** playtest of 2026-11-17 (the forest-1 route room); [GAME_DESIGN.md](GAME_DESIGN.md#intent-and-player-experience),
+  [GAME_DESIGN.md](GAME_DESIGN.md#forest-linked-route-reconfiguration).
