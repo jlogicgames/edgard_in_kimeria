@@ -74,7 +74,7 @@ the render loop.
 | `NEW_GAME_CONFIRMATION` | Starting over replaces the saved run; Cancel preserves it. |
 | `HEALER`, `HEALER_*` | The healer is an old man, the recurring narrator/guide. Preserve the agreed story; do not introduce quests or places. |
 | `INTRO_STORY` | The healer narrates Rufardus, L'Kardina's expulsion/curse and Edgard's departure. No ingredient tutorial here. |
-| `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. |
+| `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. Told by the healer (#372): three paragraphs in every language, the second one (and only it) brings back the sun and the light, the third is the closing line in capitals (THE END, КІНЕЦЬ, KONIEC, ENDE, КАНЕЦ). Keep this structure: the ending page lights the arms with the light paragraph (#416). |
 | `BAT`, `MUSHROOM` | Ingredient/item labels on the healer's checklist. `BAT` reads "Bat wing" (the jar item, not the enemy; #345). The coins are named by `FOREST_COINS_COUNT`; earlier-level coins do not satisfy this payment. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
 | `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. The spoken lines say this in the tale voice (#371): the sword strikes the guardian "ten times harder", the healer's fire "burns no hotter"; translate with the glossary forms and no register word. |

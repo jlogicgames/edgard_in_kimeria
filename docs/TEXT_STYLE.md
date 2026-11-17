@@ -39,7 +39,10 @@ checked by T3; the shape is a review rule.
   fixed here when the rewrite settles it, not a word-for-word translation. Settled by the tutorial tales
   ([#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370)) and the first-death line (#341): opening UK
   "Слухай, Едгарде", PL "Słuchaj, Edgardzie", DE "Höre, Edgard", BE "Слухай, Эдгардзе"; closing UK "Рушай",
-  PL "Ruszaj", DE "Geh weiter", BE "Рушай".
+  PL "Ruszaj", DE "Geh weiter", BE "Рушай". The ending ([#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372))
+  is the healer's tale too: it opens "Hear how my tale ends" and closes with the tale's own ending formula, EN "So ends my
+  tale of Kimeria", UK "Тут і казці про Кімерію кінець", PL "I tak kończy się moja opowieść o Kimerii", DE "So endet meine
+  Geschichte von Kimeria", BE "Тут і казцы пра Кімерыю канец", followed by the closing line (THE END) in capitals.
 - **Three where it fits.** Three gifts, three warnings, three images in a list; the third is the
   strongest or breaks the pattern.
 - **Show what the tale names.** A helper or magical object the tale names is visible in play, or the
