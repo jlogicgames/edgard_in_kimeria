@@ -28,6 +28,7 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_BRANCH, 4, 1);
         matches(SpriteSheets.TRAP_STONE, 2, 1);
         matches(SpriteSheets.TRAP_SHADOW, 3, 1);
+        matches(SpriteSheets.TRAP_STONE_LIP, 2, 1); // #360: loose, broken
         matches(SpriteSheets.TRAP_PUFFBALL, 4, 1);
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);

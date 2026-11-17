@@ -23,6 +23,8 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
+import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
+import com.jlogicsoftware.kimeria.entity.objects.FallingTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
@@ -693,6 +695,22 @@ class AllocationBudgetTest {
         assertWithinBudget("falling platform crack at rest", FALLING_PLATFORM_REST_CEILING, bytes);
     }
 
+    /**
+     * An armed falling stone (#360): the loose-overhang lip drawn every frame and the grit trickle (four specks every 1.5 s on the
+     * stone's own {@code KimeriaParticleSystem}), spawn, update and render through the batch; measured 0.0 to 0.1 B/frame in 4 runs, over the probe's 300 warm-up and 1,200 measured frames (16 trickles).
+     */
+    @Test void fallingStoneLooseOverhang() {
+        Rectangle far = new Rectangle(FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        FallingStone stone = new FallingStone(harness.assets(), FallingStone.skin(FallingStone.DEFAULT_SKIN),
+            new Rectangle(0, 0, TRAP_TILE, TRAP_TILE), new Rectangle(0, FUNGUS_FLOOR - FUNGUS_ZONE, FUNGUS_ZONE, FUNGUS_ZONE), FUNGUS_FLOOR, 0,
+            harness.game().trapWarnings(), () -> far, () -> true, () -> { });
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> { stone.update(STEP); stone.render(batch); peak[0] = Math.max(peak[0], stone.grit().count()); });
+        assertEquals(FallingTrap.State.ARMED, stone.state(), "the hero is far: the cue only");
+        assertEquals(FallingStone.TRICKLE_SPECKS, peak[0], "the trickle must actually run in this scenario");
+        assertWithinBudget("falling stone loose overhang", FALLING_STONE_CUE_CEILING, bytes);
+    }
+
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
     @Test void falseHoneyFungusCloudsInTurn() {
         FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
@@ -723,7 +741,7 @@ class AllocationBudgetTest {
     private static final float THORN_BESIDE = 12;
     /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17): ten plain falling platforms at rest, the fan animation with the cracked slab, update and render; the same 8 B ceiling as the other isolated paths. */
     static final double FALLING_PLATFORM_REST_CEILING = 8;
-    static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
+    static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, FALLING_STONE_CUE_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
     private static final int STONE_ROOM = 4, THROW_CYCLES = 30;

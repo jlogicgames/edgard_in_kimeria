@@ -45,6 +45,7 @@ FOREST_TRAP_SHEETS = {
     'branch': ((32, 16), ('resting', 'rustle', 'sag', 'falling')),
     'stone': ((16, 16), ('stone', 'cracked')),
     'shadow': ((24, 8), ('small', 'medium', 'large')),
+    'stone-lip': ((24, 8), ('loose', 'broken')),  # #360: the stone's at-rest cue, the loose overhang over its start point
     'puffball': ((16, 16), ('idle', 'swell1', 'swell2', 'burst')),
     'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
