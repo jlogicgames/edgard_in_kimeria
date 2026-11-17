@@ -78,10 +78,20 @@ class AllocationBudgetTest {
     static final double BLOOD_SPRAY_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs, a 48-drop empowered spray every 60 frames (old {@code BloodBurst}: 2,928 B constructor, about 49 B/frame over the cycle, read from the plan's section 1). */
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
-    /** Measured 1,322.0 to 1,322.2 B/frame in 3 runs (#303: the index loops, the scratch rectangles and the HashSet removal; before: 2,441.8 to 2,441.9; step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5); one torch and 48 {@code RainDrop}s. Ceiling = highest run + about 10 %. */
-    static final double FOREST_1_CEILING = 1450;
+    /**
+     * Measured 290.3 to 602.3 B/frame in 3 isolated runs (#375, D85, 2026-11-17: 601.8, 602.3, 290.3; 602.2 in the full suite): the trap course,
+     * now room 2, after #375 moved its first RedMob and its refill to forest-1-mob and removed its lever and torch, with 48 {@code RainDrop}s.
+     * Ceiling = highest run + about 10 %. History: 1,322.0 to 1,322.2 B/frame with that torch (#303, ceiling 1450); before #303 2,441.8 to 2,441.9;
+     * step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5.
+     */
+    static final double FOREST_1_CEILING = 665;
     /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
+    /**
+     * Measured 345.8 to 561.8 B/frame in 3 isolated runs (#375, D85, 2026-11-17: 561.8, 561.8, 345.8; 561.8 in the full suite): forest-1's first
+     * room at rest (the RedMob asleep, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %.
+     */
+    static final double FOREST_1_MOB_CEILING = 620;
     /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_GUARD_CEILING = 1280;
     /**
@@ -231,13 +241,15 @@ class AllocationBudgetTest {
         assertWithinBudget("forest-2 room 2 with mob kill blood", FOREST_2_ROOM_2_BLOOD_CEILING, bytes);
     }
 
-    @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 0)); }
-    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 1)); }
+    /** The first-RedMob room (#375): the mob asleep, the refill, the level-wide sky and rain. */
+    @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
+    @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 1)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 2)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
-    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 2)); }
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 3)); }
 
     /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
-    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 3)); }
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 4)); }
 
     /**
      * The tree room with the hero riding a rotten branch down (D69 path: the snap to a sinking platform, the solid-floor guard, then the floor):
@@ -245,7 +257,7 @@ class AllocationBudgetTest {
      * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
      */
     @Test void forest1TreeRoomRidingARottenBranchDown() {
-        Level level = harness.roomOf("forest-1", 3);
+        Level level = harness.roomOf("forest-1", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
         FallingPlatform.Snapshot intact = top.snapshot();
@@ -274,7 +286,7 @@ class AllocationBudgetTest {
      * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
      */
     @Test void forest1GuardRoomWithTheGuardAwake() {
-        Level level = harness.roomOf("forest-1", 2);
+        Level level = harness.roomOf("forest-1", 3);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
@@ -302,7 +314,7 @@ class AllocationBudgetTest {
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 1);
+        Level level = harness.roomOf("forest-1", 2);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -324,7 +336,7 @@ class AllocationBudgetTest {
      * object, so this guard is as strong as the JIT allows, and the fix itself is the allocation-free {@code Escalator.riderVelocityX()}.)
      */
     @Test void ridingARunningEscalatorCostsNoMoreThanStandingStill() {
-        Level level = harness.roomOf("forest-1", 0);
+        Level level = harness.roomOf("forest-1", 1);
         var escalator = level.escalators.stream().filter(e -> !e.isVertical && e.isRunning()).findFirst().orElseThrow();
         Runnable ride = () -> {
             level.player.position.set(escalator.getX() + 3, escalator.getY() - 48);
@@ -374,7 +386,7 @@ class AllocationBudgetTest {
     }
 
     @Test void silverThreadBeat() {
-        Level level = harness.roomOf("forest-1", 0);
+        Level level = harness.roomOf("forest-1", 1);
         // Built before the probe (allocation allowed): dying heroes at every stage of the beat, landing and arriving ones.
         Player[] stages = new Player[THREAD_STAGES];
         for (int k = 0; k < THREAD_STAGES; k++) {
@@ -791,7 +803,7 @@ class AllocationBudgetTest {
      */
     @Test void healerDialogueScreen() {
         harness.font = new MetricsFont(FontSizes.DIALOGUE);
-        Level level = harness.roomOf("forest-1", 0);
+        Level level = harness.roomOf("forest-1", 1);
         ArtifactInventory inventory = new ArtifactInventory();
         for (boolean instant : new boolean[]{false, true}) {
             Overlay overlay = new Overlay(harness.assets(), 640, 360);

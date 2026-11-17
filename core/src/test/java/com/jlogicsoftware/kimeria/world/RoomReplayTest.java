@@ -108,6 +108,10 @@ class RoomReplayTest {
         // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
         measure("forest-1", false, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
     }
+    /** #375: the first RedMob alone, then the refill; the sword takes the mob, no jump is needed. */
+    @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
+        measure("forest-1-mob", false, false, 0, new float[]{});
+    }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
         measure("forest-entry", false, false, 0, new float[]{95, 225, 345, 535, 860, 940});
     }
@@ -299,14 +303,14 @@ class RoomReplayTest {
         assertFalse(level.player.isGotHit());
     }
 
-    @Test void secondLevelRefillCanBeCollectedByJumpingWithLiveHazards() {
+    @Test void secondLevelRefillIsCollectedAfterTheFirstRedMob() {
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(2);
         Level level = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, stock);
         for (int attempt = 0; attempt < 3; attempt++) {
             held.clear(); pressed.clear(); timeScale = 1;
             if (attempt > 0) level.resetCurrentRoom(player());
-            float seconds = replay(level, "forest-1", false, 0, new float[]{125, 260, 540}, true);
+            float seconds = replay(level, "forest-1-mob", false, 0, new float[]{}, true);
             assertEquals(3, level.rangedStock.count());
             assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.FireballRefill && !o.isRemoved()));
             assertTrue(seconds <= REQUIRED_LIMIT);
@@ -315,11 +319,12 @@ class RoomReplayTest {
     }
 
     private void measure(String route, boolean canopy, boolean collect, int delayFrames, float[] jumps) {
-        String mapName = route.equals("forest-1") ? "replay-forest-1" : "forest-2";
+        String mapName = route.startsWith("forest-1") ? "replay-forest-1" : "forest-2";
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
         Level level = new Level(assets, game, player(), mapName, Rectangle::new, stock);
-        if (canopy) level.enterNextRoom(player());
+        // forest-1's trap course is room 2 since #375 put the first RedMob in a room of its own before it.
+        if (canopy || route.equals("forest-1")) level.enterNextRoom(player());
         float firstTime = 0;
         for (int attempt = 0; attempt < 3; attempt++) {
             coins = 0; timeScale = 1; held.clear(); pressed.clear();
@@ -375,7 +380,7 @@ class RoomReplayTest {
                         }
                     }
                 }
-                if (artifactsRoute && route.equals("forest-1")) {
+                if (artifactsRoute && route.startsWith("forest-1")) {
                     var refill = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.FireballRefill
                         && !o.isRemoved()).map(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::cast).findFirst().orElse(null);
                     float stop = refill == null ? -1 : refill.getX() - player.hitbox.offsetX;
@@ -416,7 +421,7 @@ class RoomReplayTest {
             level.update(REAL_STEP * timeScale);
             assertFalse(player.isGotHit(), route + " died at frame " + frame);
             // Stop this pickup exercise before Checkpoint secures it, so retries test rollback.
-            if (artifactsRoute && route.equals("forest-1") && level.rangedStock.count() == 3)
+            if (artifactsRoute && route.startsWith("forest-1") && level.rangedStock.count() == 3)
                 return (frame + 1) * REAL_STEP;
             if (level.atRoomExit() || player.getState() == Player.State.DISAPPEARING)
                 return (frame + 1) * REAL_STEP;
