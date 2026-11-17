@@ -77,6 +77,14 @@ by a single fight choice. The author reviewed the wording in play and accepted i
 test version (2026-10-20); replacement artwork review is recorded separately in
 [portrait validation](PORTRAITS.md#author-review).
 
+**Tale voice ([#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371), 2026-11-17).** Every pre-boss and
+victory line is now in the tale voice of [TEXT_STYLE.md](TEXT_STYLE.md) (D74): the healer names "the guardian", never the
+boss; the elixir makes the sword "strike ten times harder" and does not touch "my fire" (the fireball, his gift); the
+encounter lock is told with the silver thread (the elixir stays when the night swallows Edgard and fades when the guardian
+falls); he names what is missing himself instead of pointing at the checklist; the paid line no longer narrates the
+player drinking. A returning visit opens with Edgard's name, and the lock line closes with the sending-off "Go on". The
+mechanics above are unchanged. Every line is at most 152 EN characters and fits three of the box's four lines.
+
 The first unpaid pre-boss meeting uses the introduction above. After Edgard returns from a
 collection trip, the healer greets him as a returning visitor and restates the existing Bat,
 Mushroom and all-current-forest-coins recipe before checking what he brought. The following refusal,

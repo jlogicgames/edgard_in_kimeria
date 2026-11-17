@@ -77,7 +77,7 @@ the render loop.
 | `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. |
 | `BAT`, `MUSHROOM` | Ingredient/item labels on the healer's checklist. `BAT` reads "Bat wing" (the jar item, not the enemy; #345). The coins are named by `FOREST_COINS_COUNT`; earlier-level coins do not satisfy this payment. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |
-| `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. |
+| `HEALER_READY`, `HEALER_PAID`, `PAID` | Ready to brew / payment completed and elixir already drunk. Physical sword damage is tenfold against this boss only; magical fireballs always remove 2 energy. The spoken lines say this in the tale voice (#371): the sword strikes the guardian "ten times harder", the healer's fire "burns no hotter"; translate with the glossary forms and no register word. |
 | `HEALER_RETURN`, `HEALER_FIGHT` | Return for missing pickups / commit to the boss fight, with no return once it starts. |
 | `ABOUT_BODY*`, `ABOUT_GAMEPAD*` | Preserve exact key/button bindings for normal and left-handed modes. Key names such as J, K, L, Z, X, C identify physical controls. |
 | `HINT_*` (all zone messages) | **Size (D49, #249):** zone messages are drawn in the 20 px font, 400 px wide, at most two lines in every language (`LocalizationLayoutTest` counts wrapped lines); the label above the hero is 16 px (D70), 200 px wide (D50 reverted D49's 39/20 px; the uk and be `HINT_TRAP_PLATFORM` D49 had shortened is back to its full wording, which fits two lines). |
