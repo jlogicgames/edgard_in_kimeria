@@ -43,6 +43,8 @@ public final class SpriteSheets {
     public static final Sheet HERO_RIGHT = new Sheet("images/hero/hero-right.png", 64, 64);
     public static final Sheet HERO_LEFT = new Sheet("images/hero/hero-left.png", 64, 64);
     public static final Sheet HERO_LADDER = new Sheet("images/hero/hero-ladder.png", 64, 64);
+    // The silver thread on death (#341, D81): the 1x2 strand at (0, 0) and the 5x5 glint at (1, 0); tools/silver_thread_sprites.py.
+    public static final Sheet SILVER_THREAD = new Sheet("images/objects/silver-thread.png", 6, 5);
 
     private SpriteSheets() { }
 

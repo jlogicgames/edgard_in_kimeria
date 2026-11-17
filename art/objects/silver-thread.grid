@@ -1,0 +1,14 @@
+# The silver thread on death (#341, D81; the image of #228): one sheet, two parts, no frame animation.
+# Column 0, rows 0-1: the strand, stamped once per pixel along the computed curve between Edgard's wrist and the
+# room start: silver over an ink underside (D76 active tier; the D78 dialogue silvers measured 0.10 on the forest sky).
+# Columns 1-5: the glint, the D78 dialogue star, that runs from the start to the wrist as the thread goes taut.
+size 6 5
+color S d8dee9
+color I 0b0d18
+color W ffffff
+frame thread
+S..S..
+I.SWS.
+.SWWWS
+..SWS.
+...S..

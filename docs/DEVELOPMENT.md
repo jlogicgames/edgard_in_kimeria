@@ -168,7 +168,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs with two authored +1 refills, capacity three, full-stock hints and a three-icon HUD; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
 - [x] Trigger → actionable wall removal and torch toggle via Up + Action
-- [x] Checkpoint → next level or ending; death in slow motion, then an instant room reset and respawn (no lives)
+- [x] Checkpoint → next level or ending; death in slow motion, the silver thread's pull under a death fade, then a room reset and respawn (no lives; D81)
 - [x] Torch, firefly and rain ambience; fog only in menus
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
 - [x] HUD, main menu, About, Options, pause menu

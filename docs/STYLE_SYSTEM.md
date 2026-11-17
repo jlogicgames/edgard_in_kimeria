@@ -57,8 +57,8 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
   wind-ups); the consequence is a particle effect and a generated sound, with shake through `ScreenShake` only.
 - **Dialogue screen, art and text (D78).** The frame keeps the contrast tiers by analogy: what names the speaker or can be
   chosen is loud, the ornament and the listener quiet, every element measured (`test_dialogue_frame_sprites.py`, layout
-  read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box in three of its four lines in five languages, one spare for the
-  first-death line (`HealerDialogueTest`).
+  read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box in three of its four lines in five languages, one spare
+  (the first-death line, D81, takes two; `HealerDialogueTest`).
 - **Text in rooms.** Zone messages are authored in the map (`Hint` objects, D33) and written under TEXT_STYLE's plain
   voice; a hint is never a trap's at-rest cue (D71).
 - **Text size and text style.** Pixel limits live in the layout tests (D50, D70); character budgets and voice in

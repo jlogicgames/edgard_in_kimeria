@@ -6,6 +6,8 @@ public final class RoomFade {
     private float elapsed;
     private boolean active, switched;
     public boolean active() { return active; }
+    /** True from the black midpoint (the switch has run) until the fade-in ends. */
+    public boolean dark() { return active && switched; }
     public void start() { if (!active) { active = true; switched = false; elapsed = 0; } }
     public void cancel() { active = false; elapsed = 0; switched = false; }
     public void update(float dt, Runnable switchRoom) {

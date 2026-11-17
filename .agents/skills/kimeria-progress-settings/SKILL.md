@@ -55,7 +55,9 @@ the desktop launcher must read settings before Gdx.app exists.
   after the boss exit and final guide advance) opens the ending; clear only the run save after that scroll finishes/skips,
   then return to the menu without Continue. Never wrap/save index zero. See
   [MVP](../../../docs/MVP.md) for interruption and legacy-index behavior.
-- Death, room transitions, collection return and Restart Level do not save.
+- Death, room transitions, collection return and Restart Level do not save,
+  except the first-death flag (`KEY_FIRST_DEATH_TOLD`, D81): written false by New
+  Game and true when the healer's first-death line opens; absent counts as told.
   Coins, inventory, collection identities, boss/elixir and encounter state remain
   in memory; Continue starts the saved level with zero coins and no elixir.
 - Continue is hidden until a valid save exists and preselected when one exists.

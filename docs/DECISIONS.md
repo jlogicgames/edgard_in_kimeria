@@ -72,7 +72,10 @@ verification of subsequent implementation changes still apply.
     player-Y threshold. See [ROOMS.md](ROOMS.md#authoring).
   - Then the respawn is instant: well under half a second. The camera returns to the entrance
     with a fast, eased pan of fixed duration (about 0.3 to 0.4 s, whatever the distance), never
-    a hard cut, and the player appears as it arrives.
+    a hard cut, and the player appears as it arrives. **Amended by
+    [D81](#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)
+    (#341):** after a death with a visible cause the silver thread pulls Edgard back under a death fade and the camera
+    snaps at black; death to control is 0.967 s (was 1.117 s); a pit keeps its pan and 0.417 s.
   - Entering the next room uses a whole-scene **fade out → fade in**: about 0.25 s
     each way, in real time. The world and input freeze during it. The room, player
     position, and camera switch only at full black; at least one black frame is
@@ -1991,3 +1994,92 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)); first learning
   ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)). The jump height the layout relies on (about 58 px,
   48 px steps) is measured only at the 60 Hz step of the tests: gravity is added per physics step.
+
+## D81. The silver thread pulls Edgard back on every death; the healer speaks on the first (playtest F7, F9, #341, 2026-11-16)
+
+- **Status:** Accepted by the author, 2026-11-16 (the Phase A proposal as recommended: timeline, look, line A, legacy
+  saves told, the pluck). Built; playtest F7 and F9 in [PLAYTEST_1.md](PLAYTEST_1.md). Amends
+  [D3](#d3-death-resets-the-current-room-and-respawn-is-instant)'s respawn presentation; D3's room reset is unchanged.
+- **Decision:**
+  - **Every death with a visible cause shows the silver thread** of [#228](STORY.md): it draws out from Edgard's wrist
+    toward the room start (0.10 to 0.30 s after the killing frame, hanging 16 px), tightens while a glint runs from
+    the start to the wrist (0.30 to 0.45 s), and pulls (from 0.45 s: the hero is drawn up to 10 px toward the start and
+    2 px up; his box stays). The world keeps its ×0.2 slow motion until black, so the cause stays live. A death fade
+    (`RoomFade`, its 0.25 s halves) starts as the thread goes taut and reaches black at 0.70 s, where the slow motion
+    used to end; the room is rebuilt there and the camera snaps to the start (no pan). Edgard lands at the start with
+    the thread slack under the 0.25 s fade-in (the landing pose for 0.20 s, then idle; the slack thread dissolves
+    from its far end over the fade-in) and takes input on the first frame after it.
+  - **A fall into a pit** (nothing to see, D3) keeps its instant rebuild and 0.35 s camera pan; the 0.40 s appear clip is
+    replaced by the landing pose (0.25 s) and idle (0.15 s), with the slack thread dissolving over the 0.40 s.
+  - **Death to control** (first frame the hero moves with Right held, real `KimeriaGame` frame code, 60 Hz,
+    `KimeriaGameDeathTimingTest`): before, a hit took **67 frames, 1.117 s** (0.70 s slow motion, then the 0.40 s
+    appear clip under a 0.35 s pan; the same on forest-0, -1 and -2, 1.111 s at 144 Hz, 1.133 s at 30 Hz) and a pit
+    **25 frames, 0.417 s**; there was no fade. Now a hit takes **58 frames, 0.967 s** (also at 144 Hz, within a frame) and
+    a pit **25 frames, 0.417 s**. Both are pinned; neither may grow without a new decision (D3 fast retry).
+  - **Trade-off, accepted:** the cause of death is fully visible for 0.45 s instead of 0.70 s; the fade dims it to black
+    by 0.70 s (readable to about 0.55 s).
+  - **The look (D76 active tier):** 2 px, silver `d8dee9` over ink `0b0d18`, and the D78 glint star, authored in
+    `art/objects/silver-thread.grid` and exported exactly by `tools/silver_thread_sprites.py`. The D78 dialogue silvers
+    (`9aa3b6` over `5d6577`) measured 0.104 on the forest sky, and `d8dee9` over `5d6577` 0.196; with the ink, the worst
+    outline over every RoomStart of forest-0, -1 and -2, four thread shapes (taut and slack, level and sloped) and eight
+    sky offsets is **0.340** (forest-0's lever room, with the landing wrist as the anchor; floor 0.28), pinned by `tools/test_silver_thread_sprites.py`. The dialogue thread keeps
+    its own palette: it sits on the walnut page, not the sky.
+  - **A deliberate, argued exception to principle 6** ("nothing procedural stands in for an object",
+    [STYLE_SYSTEM.md](STYLE_SYSTEM.md)): the thread is not an object sprite but a line between two moving points (the
+    wrist of a falling hero and the room start), whose length and slope change with every death; a fixed sprite cannot
+    carry that. What is computed is only the curve: a chord with a parabolic sag, stamped one pixel step at a time with
+    the authored 1x2 strand (`effects.SilverThread`), so it stays native pixel art in authored colours with no rotation,
+    scaling or blending. Nothing else is procedural; the hero's poses stay authored frames. `check_sprite_art.py` guards
+    the strand image like any world sprite; no gate exemption is used.
+  - **The sag stops at the floor** (review of #341): while the thread draws out, its 16 px sag never takes it below the
+    higher of the two floor lines (the hero's and the start's); where the chord itself is lower (a death below the start),
+    the thread follows the chord. Without it, a death 48 px below the start hung the thread up to 27 px under the
+    start's floor line (`SilverThreadTest.aDeathBelowTheStartNeverSagsUnderTheStartsFloor`, which fails with the clamp
+    off). The slack thread after the pull is a drape that meets the floor at its lowest point and a coil lying on it.
+  - **Facing and poses:** the pull frames of [#343](https://github.com/jlogicgames/edgard_in_kimeria/issues/343)'s
+    second set (D79), drawn through `Player.showPull`: the tug from 0.10 s, the lift from 0.45 s, the land after a
+    respawn (0.20 s under the fade-in, 0.25 s after a pit), `NO_PULL` after. The thread is tied to the **left** wrist in
+    both facings and the frames are drawn yanked backward by it, so the pull faces **away** from the start: a start on
+    the left (a smaller X) turns him to face right, one on the right to face left; the turn happens when the thread
+    appears (0.10 s), so the cause of death is seen in his own facing first. The thread starts at
+    `Player.pullWrist` (the wrist pixel's centre in world coordinates: tug and lift (17, 44) facing right, (46, 44)
+    facing left; land (23, 52) and (24, 52), frame pixels) and ends at the landing frame's left wrist at the room start;
+    `SilverThread` maps points to pixels by floor, since they are pixel centres. `SilverThreadTest` checks, in both
+    facings, that the first stamp lies on an opaque pixel of the frame actually drawn. A death within 32 px of the start
+    sends the thread straight up out of the view, to the healer's end, without a turn.
+  - **Sound:** a plucked "tinn" as the thread goes taut (`thread.wav`, `THREAD_VOICE` in `tools/audio/generate_sounds.py`,
+    seed 2701, RMS -19.0 dBFS, 0.22 s), a consequence sound after the hit's voice (principle 4).
+  - **The first death of a New Game run** opens one healer line on the dialogue screen (D78), `HEALER_FIRST_DEATH`, at the
+    black of the death fade (a pit: on the rebuild frame); `Next >` closes it into the fade-in. EN, approved: "Edgard, the
+    night swallowed you, so I drew the silver thread, and you rise again at the path's edge. Go on." It takes 2 of the
+    text box's 4 lines in all five languages. No reply from Edgard.
+  - **Once per run, saved at once:** `Settings.KEY_FIRST_DEATH_TOLD` is written false when a New Game starts and true
+    when the line opens (consumed on opening, like the tales), not with the level save, because a death can come after
+    Continue and before the next level is completed. Continue reads it; a save without the key (written before this
+    change) counts as told; New Game and the end of a run (`SavedProgress.clear`) remove it. Never on a later death,
+    Restart Level or a collection return (neither is a death). This is the one persisted narrative flag; it adds no
+    checkpoint, healing or persistence mechanic ([STORY.md](STORY.md#why-edgard-returns-after-every-fall--accepted-2026-11-10-228)).
+  - The respawn-beam candidate of the effects plan ([#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402))
+    is to be checked against this decision before it lands, as #341 asked; the thread is the respawn effect.
+- **Why:** playtest F7 and F9: the thread was told twice and never shown (principle 5); the animation fits inside the
+  old retry cost (D3, principle 2) by replacing the camera pan and the appear clip, which said nothing.
+- **Allocation (`AllocationBudgetTest.silverThreadBeat`, 3 runs):** the thread beat's draw path through the real
+  `Player`, every stage (draw-out, tighten with the glint, pull, landing with the slack thread, pit arrival), with the
+  #343 pull frames drawn through `showPull`, **0.6 to 0.7 B/frame** (2026-11-17, 3 runs; 0.0 before #343, when the
+  beat drew fixed regions; the hero's own draw path, `heroDrawPathInBothFacingsAndOnTheLadder`, measures the same 0.6, and
+  the thread adds no per-frame `new`); a dying hero's update, **0.0 to 0.1 B/frame** once the 40.0 B/frame of the harness's `Proxy` stubs are taken
+  off (a boxed frame time and the pause key's argument array; the real backends allocate neither); ceiling 8. The
+  game's per-frame additions are field reads and one `Runnable` held in a field (`rebuildUnderBlack`).
+- **Changed existing tests (no threshold relaxed):** `BossCombatTest` asserted `Player.State.APPEARING` after a pit
+  respawn. That clip no longer plays on a respawn: D81 replaces it with the landing (respawn phase `ARRIVING`, the
+  landing pose drawn over the `IDLE` state, `Player.drawsLandingPose`), which keeps the clip's 0.40 s. The test now asserts
+  exactly that state, the same 26 frames, then phase `NONE`, no landing pose and `canFight`; it is no looser than the old
+  state check (a first rewrite to a bare `!canFight()` was, and the review sent it back). It also called the
+  no-argument `rebuildRoom`, now `rebuildRoom(false)` (the pit path).
+- **Tests added:** `KimeriaGameDeathTimingTest` (death to control at 60 and 144 Hz, the rebuild at black, the
+  once-per-run rule, including that a collection return from the pre-boss healer opens no line and leaves it untold);
+  `HealerDialogueTest.theFirstDeathLineTakesTwoOfTheFourLinesInEveryLanguage`; `SilverThreadTest` (where the thread is
+  drawn, from the real batch calls); `AllocationBudgetTest.silverThreadBeat`; `tools/test_silver_thread_sprites.py`.
+- **Not verified:** the beat, the thread's look and the pluck in the running game, by the author's eye and ear (desktop
+  and web): [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368). Native-speaker review of the uk, pl, de
+  and be line: [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369).

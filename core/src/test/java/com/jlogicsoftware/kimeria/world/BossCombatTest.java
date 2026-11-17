@@ -439,8 +439,15 @@ class BossCombatTest {
         assertEquals(11.5f, retry.feedback().displayedEnergy(retry.energy()));
         level.updatePresentation(.125f);
         assertEquals(12f, retry.feedback().displayedEnergy(retry.energy()));
-        assertEquals(Player.State.APPEARING, level.player.getState());
+        // D81 (#341): after a pit the hero lands (respawn phase ARRIVING, the landing pose over the idle state) where the
+        // APPEARING clip used to play; the arrival keeps the clip's 0.40 s, so the same 26 frames end it.
+        assertEquals(Player.RespawnPhase.ARRIVING, level.player.respawnPhase());
+        assertEquals(Player.State.IDLE, level.player.getState());
+        assertTrue(level.player.drawsLandingPose());
+        assertFalse(level.player.canFight());
         frames(26);
+        assertEquals(Player.RespawnPhase.NONE, level.player.respawnPhase());
+        assertFalse(level.player.drawsLandingPose());
         assertTrue(level.player.canFight(), "Feedback never extends the existing arrival");
         assertEquals(Boss.State.THRONE, retry.getState());
     }
@@ -901,7 +908,7 @@ class BossCombatTest {
         gameField(running, "player", new Player(assets, running, 0, 0));
         var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true);
         var enter = KimeriaGame.class.getDeclaredMethod("enterNextRoom"); enter.setAccessible(true);
-        var rebuild = KimeriaGame.class.getDeclaredMethod("rebuildRoom"); rebuild.setAccessible(true);
+        var rebuild = KimeriaGame.class.getDeclaredMethod("rebuildRoom", boolean.class); rebuild.setAccessible(true);
         var levelField = KimeriaGame.class.getDeclaredField("level"); levelField.setAccessible(true);
         var healerField = KimeriaGame.class.getDeclaredField("healer"); healerField.setAccessible(true);
         var choose = KimeriaGame.class.getDeclaredMethod("chooseHealer", com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.class);
@@ -923,7 +930,7 @@ class BossCombatTest {
         choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.RETURN);
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         assertEquals(25, running.coinsCollected());
-        rebuild.invoke(running);
+        rebuild.invoke(running, false);
         assertEquals(23, running.coinsCollected(), "Only this revisit's two provisional coins roll back");
         assertEquals(2, world.objects.stream().filter(Collectable.class::isInstance).count());
         assertTrue(running.artifacts().hasFullSet("forest-2"));
@@ -945,7 +952,7 @@ class BossCombatTest {
         assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest-2"));
         choose.invoke(running, com.jlogicsoftware.kimeria.ui.HealerDialogue.Choice.FIGHT);
         enter.invoke(running);
-        rebuild.invoke(running);
+        rebuild.invoke(running, false);
         assertEquals(19, running.coinsCollected(), "Boss death must not refund payment");
         assertEquals(10, running.artifacts().bossWeaponDamageMultiplier("forest-2"));
         assertFalse(world.healerAhead());

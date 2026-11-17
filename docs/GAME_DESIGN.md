@@ -571,7 +571,8 @@ continuing after closing the application have different recovery boundaries.
 
 | Event | Rule |
 | --- | --- |
-| Death in a room | Restore its retry state, including ranged stock. Roll back this attempt's pickups; retain earlier secured progress. |
+| Death in a room | Restore its retry state, including ranged stock. Roll back this attempt's pickups; retain earlier secured progress. The silver thread pulls Edgard back to the room entrance under a death fade ([D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)). |
+| First death of a New Game run | The healer's one line on the dialogue screen (`HEALER_FIRST_DEATH`, D81). A flag is saved when it opens, so Continue never repeats it; New Game clears it; never on a later death, Restart Level or a collection return. |
 | Successful room exit | Secure results; remaining stock becomes the next room's starting stock. A room transition is not a persistent save. |
 | Level completion | Automatically save the next level. |
 | Continue after closing the game | Start the saved level from its beginning. Currently only the level index is saved. |
@@ -581,6 +582,11 @@ A failed attempt rolls back ammunition expenditure and collection together with
 refill-source state, preventing duplicated resources. A healer collection return
 uses its corresponding secured boundary in [HEALER.md](HEALER.md#state-policy),
 rather than unconditionally resetting the entire previously traversed level.
+
+Death to control (D3, measured and pinned by `KimeriaGameDeathTimingTest`, [D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)):
+a death with a visible cause gives control back after **0.967 s** (58 frames at 60 Hz; it was 1.117 s
+before the thread), a fall into a pit after **0.417 s** (unchanged). The thread replaced the camera pan
+and the appear clip; it adds no time.
 
 Updated [D3](DECISIONS.md#d3-death-resets-the-current-room-and-respawn-is-instant)
 and [ROOMS.md](ROOMS.md#replay-budget-70) target roughly 20 seconds of mastered
@@ -592,7 +598,8 @@ hypothesis, including observation and attempts.
 Current persistence is documented in
 [D8](DECISIONS.md#d8-main-menu-has-continue-and-new-game) and
 [DEVELOPMENT.md](DEVELOPMENT.md#game-state-progress-and-saves).
-It does not save inventory or elixir. Stage → level → room hierarchy alone does
+It does not save inventory or elixir. Besides the level, it saves one narrative flag: whether this
+run's healer has said the first-death line (D81). Stage → level → room hierarchy alone does
 not require mid-level saves or saving only at stage boundaries.
 
 **Open for the campaign:** persistent tablet progress and how Continue restores

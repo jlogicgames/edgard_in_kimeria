@@ -26,8 +26,8 @@ public final class HealerDialogue {
     /** Scripted scenes (no checklist, no choices) finish with {@link Choice#CONTINUE}. */
     private final Kind kind;
 
-    /** Which conversation this is; the three scripted ones are never offered choices. */
-    public enum Kind { PRE_BOSS, VICTORY, TUTORIAL_START, TUTORIAL_END }
+    /** Which conversation this is; the scripted ones are never offered choices. */
+    public enum Kind { PRE_BOSS, VICTORY, TUTORIAL_START, TUTORIAL_END, FIRST_DEATH }
 
     private HealerDialogue(Kind kind, List<Msg> lines) {
         eligible = paid = false;
@@ -51,6 +51,11 @@ public final class HealerDialogue {
     public static HealerDialogue tutorialEnd() {
         return new HealerDialogue(Kind.TUTORIAL_END, List.of(Msg.HEALER_TALE_PRAISE, Msg.EDGARD_TALE_READY,
             Msg.HEALER_TALE_HEROES, Msg.HEALER_TALE_BLESSING));
+    }
+
+    /** The healer's one line after the first death of a New Game run: he drew the silver thread (#341, D81). */
+    public static HealerDialogue firstDeath() {
+        return new HealerDialogue(Kind.FIRST_DEATH, List.of(Msg.HEALER_FIRST_DEATH));
     }
 
     public boolean postVictory() { return postVictory; }

@@ -13,7 +13,7 @@ import json
 import re
 import struct
 import sys
-from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE,
+from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -147,6 +147,8 @@ def image_contracts(root):
                    'opaque' if name in OPAQUE_DIALOGUE_IMAGES else 'binary') for name, size in DIALOGUE_IMAGES.items()]
     # The hero (#343, D79): world pixel art, 16 palette entries including transparency, binary alpha.
     contracts += [(f'assets/images/hero/hero-{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in HERO_IMAGES.items()]
+    # The silver thread on death (#341, D81): the strand and glint the computed curve is stamped with.
+    contracts.append(('assets/images/objects/silver-thread.png', SILVER_THREAD_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     for relative, size, colors, alpha_mode in contracts:
         path = root / relative
         if not path.is_file():

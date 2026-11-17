@@ -155,8 +155,9 @@ screen, or level-save write. Timing uses real time, independent of death slow mo
 Pause freezes the fade; Resume continues it. Restart Level and leaving gameplay
 cancel the transition.
 
-Death keeps the existing slow-motion/fast eased camera return and respawn
-animation. It rebuilds the current room graph, restores that room's latest secured
+Death keeps its slow motion; after a death with a visible cause the silver thread pulls
+Edgard back under a death fade and the camera snaps at black, after a pit the fast eased
+camera return stays ([D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)). It rebuilds the current room graph, restores that room's latest secured
 snapshots for mutable room owners, and discards the attempt's queued effects. On a
 first visit the authored map is the baseline. Falling platforms retain their secured
 position, phase, timers and removed state, including after death; warning lights are
