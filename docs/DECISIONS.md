@@ -897,7 +897,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   each a plain corridor with a safe entrance and a clear exit; the last room ends with the usual
   `Checkpoint` level exit. *Note (#200): the rooms were later shortened and the last room is 720 px with a falling platform and a bomb, see [D40](#d40-the-tutorial-traps-lesson-rule).* The rooms are reserved, in order, for one lesson each (room property
   `lesson`): `lever` (#186), `ladder-bridge` (#196), `wall` (#197), `moving-platform` (#198),
-  `thrown-stone` (#199), `existing-traps` (#200). Each lesson ticket fills only its room.
+  `thrown-stone` (#199), `falling-platform` (#200, was `existing-traps`, renamed in #377). Each lesson ticket fills only its room.
 - **Hints are authored in the map.** An object layer `Hints` holds `Hint` rectangles inside one
   room. Property `message` names a `Msg` key (shown at the zone: centred on it, 30% down it; see Hint presentation)
   and/or `controls=true` turns on the contextual pickup/lever/ladder instructions of D24 while the

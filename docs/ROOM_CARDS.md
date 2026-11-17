@@ -198,7 +198,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | Retry cost | about 6 s at worst |
 | D26 | the pit is a retry, never a soft-lock (D40) |
 | Hints | platform, stump |
-| Status | D72 audit 2026-11-16: keep. The map's `lesson=existing-traps` property is stale (the stump is no longer new); rename it when the map is next edited ([#377](https://github.com/jlogicgames/edgard_in_kimeria/issues/377)). |
+| Status | D72 audit 2026-11-16: keep. The map's `lesson` property is `falling-platform` (was `existing-traps`, renamed in [#377](https://github.com/jlogicgames/edgard_in_kimeria/issues/377)). |
 | Decisions | D40, D47 |
 
 ## forest-1 (play order 2)

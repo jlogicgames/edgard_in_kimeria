@@ -269,7 +269,7 @@
   <object id="33" name="forest-0-stone" type="RoomExit" x="3736" y="272" width="32" height="48"/>
   <object id="37" name="forest-0-traps" type="Room" x="3792" y="0" width="720" height="368">
    <properties>
-    <property name="lesson" value="existing-traps"/>
+    <property name="lesson" value="falling-platform"/>
    </properties>
   </object>
   <object id="38" name="forest-0-traps" type="RoomStart" x="3824" y="272">
