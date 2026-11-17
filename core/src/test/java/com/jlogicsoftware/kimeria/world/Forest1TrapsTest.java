@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * The traps and the second RedMob placed in forest-1 by #260 (D58): a thorn tuft, a RedMob, a spore puffball and a
  * rotten log over a pit, in the 620 px between the wall and the checkpoint. Ordinary keyboard input drives the hero
- * through the real shipped map (read under an alias that drops only the decorative sky). Times are author
+ * through the real shipped map. Times are author
  * (mastered) measurements of a scripted hero, not novice playtests. Plan and numbers: docs/ROOMS.md.
  *
  * <p>Y grows downward: the floor top is y 320; a trap standing on it has y = 320 - height.
@@ -77,13 +77,7 @@ class Forest1TrapsTest {
     @BeforeEach void setUp() {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics; previousInput = Gdx.input; previousFiles = Gdx.files;
         GdxNativesLoader.load();
-        HeadlessFiles files = new HeadlessFiles();
-        Gdx.files = (Files) Proxy.newProxyInstance(Files.class.getClassLoader(), new Class<?>[]{Files.class}, (proxy, method, args) -> {
-            // The exact shipped map under an alias, omitting only forest-1's decorative sky/rain (as RoomReplayTest).
-            if (method.getName().equals("internal") && args[0].equals("tiles/replay-forest-1.tmx"))
-                return files.internal("tiles/forest-1.tmx");
-            return method.invoke(files, args);
-        });
+        Gdx.files = new HeadlessFiles();
         Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class<?>[]{Input.class}, (proxy, method, args) -> switch (method.getName()) {
             case "isKeyPressed" -> held.contains((int) args[0]);
             case "isKeyJustPressed" -> pressed.contains((int) args[0]);
@@ -113,7 +107,7 @@ class Forest1TrapsTest {
     private RangedStock emptyStock() { RangedStock s = new RangedStock(); s.restore(0); return s; }
 
     private Level level() {
-        Level l = new Level(assets, game, player(), "replay-forest-1", Rectangle::new, emptyStock());
+        Level l = new Level(assets, game, player(), "forest-1", Rectangle::new, emptyStock());
         l.enterNextRoom(player()); // the trap course is room 3 since #375 put the first RedMob in a room of its own before it
         l.enterNextRoom(player()); // and #363 the deadfall room after that
         rememberMob(l);

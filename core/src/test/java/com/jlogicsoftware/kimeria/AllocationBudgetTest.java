@@ -85,37 +85,39 @@ class AllocationBudgetTest {
     static final double BLOOD_EMPOWERED_SPRAY_CEILING = 8;
     /**
      * Measured 290.3 to 602.3 B/frame in 3 isolated runs (#375, D85, 2026-11-17: 601.8, 602.3, 290.3; 602.2 in the full suite): the trap course,
-     * now room 2, after #375 moved its first RedMob and its refill to forest-1-mob and removed its lever and torch, with 48 {@code RainDrop}s.
-     * Ceiling = highest run + about 10 %. History: 1,322.0 to 1,322.2 B/frame with that torch (#303, ceiling 1450); before #303 2,441.8 to 2,441.9;
+     * now room 2, after #375 moved its first RedMob and its refill to forest-1-mob and removed its lever and torch, then with the
+     * level-wide rain and sky that #430 later removed. Ceiling = highest run + about 10 %. #430 (D92, 2026-11-17) removed the rain and the sky: 328.0 to 544.3 in 3 isolated runs of the class
+     * after, 328.1 to 544.3 before on the same machine, so they cost nothing measurable and the ceiling stays; every forest-1 room scene below
+     * measured the same before and after (D92 has the table). History: 1,322.0 to 1,322.2 B/frame with that torch (#303, ceiling 1450); before #303 2,441.8 to 2,441.9;
      * step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5.
      */
     static final double FOREST_1_CEILING = 665;
-    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
     /**
      * Measured 345.8 to 561.8 B/frame in 3 isolated runs (#375, D85, 2026-11-17: 561.8, 561.8, 345.8; 561.8 in the full suite): forest-1's first
-     * room at rest (the RedMob asleep, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %.
+     * room at rest (the RedMob asleep, the refill), update + render. Ceiling = highest run + about 10 %.
      */
     static final double FOREST_1_MOB_CEILING = 620;
-    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill; the level-wide sky and rain are drawn here too), update + render. Ceiling = highest run + about 10 %. */
+    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_GUARD_CEILING = 1280;
     /**
      * Measured 513.8 to 564.5 B/frame in 10 isolated runs of the class (#418, D86, 2026-11-17): at rest 513.8 to 561.9, riding the lift 561.6 to 562.3, pulling the lever 564.3 to 564.5
-     * (one earlier run of the rest scene: 345.8; JIT state, D83; the mob, route and tree scenes moved together with it): the forest-1 lever lesson room (a running lift, a lever, a raised ladder; no enemy or hazard; the level-wide sky and rain
-     * are drawn here too), update + render. Ceiling = the highest run (564.5, pulling the lever) + about 10 %, the rule D85 (#375) set for the other forest-1 rooms; the riding scene
+     * (one earlier run of the rest scene: 345.8; JIT state, D83; the mob, route and tree scenes moved together with it): the forest-1 lever lesson room (a running lift, a lever, a raised ladder; no enemy or hazard),
+     * update + render. Ceiling = the highest run (564.5, pulling the lever) + about 10 %, the rule D85 (#375) set for the other forest-1 rooms; the riding scene
      * measures the same as the route room's here (561.8), as it should: the cost is the harness and level code (D83).
      */
     static final double FOREST_1_LEVER_CEILING = 620;
-    /** The forest-1 deadfall room at rest (#363): measured 357.7 to 536.7 B/frame in 4 isolated runs and 536.0 in the full :core:check (2026-11-17), the mob room 224.0 to 536.0 in the same runs: the level-wide sky and rain dominate, as in the other forest-1 rooms, so it takes the mob and lever rooms' ceiling (highest run + about 15 %). */
+    /** The forest-1 deadfall room at rest (#363): measured 357.7 to 536.7 B/frame in 4 isolated runs and 536.0 in the full :core:check (2026-11-17), the mob room 224.0 to 536.0 in the same runs: the harness and level code dominate, as in the other forest-1 rooms (D83; #430 showed the sky and rain cost nothing measurable), so it takes the mob and lever rooms' ceiling (highest run + about 15 %). */
     static final double FOREST_1_DEADFALL_CEILING = 620;
-    /** The forest-1 bramble room (#364, D89): measured 536.1 to 536.3 B/frame in 3 isolated runs (2026-11-17), the deadfall room 536.0 in the same runs, so the bramble adds nothing measurable; the level-wide sky and rain dominate, so it takes the other forest-1 one-screen rooms' ceiling. */
+    /** The forest-1 bramble room (#364, D89): measured 536.1 to 536.3 B/frame in 3 isolated runs (2026-11-17), the deadfall room 536.0 in the same runs, so the bramble adds nothing measurable; it takes the other forest-1 one-screen rooms' ceiling. */
     static final double FOREST_1_BRAMBLE_CEILING = 620;
-    /** The forest-1 hive room (#365, D90): measured 536.7 B/frame in 3 isolated runs (2026-11-17), the same as the deadfall and bramble rooms: the two hives add nothing measurable over the level-wide sky and rain. Ceiling = the highest run + about 10 %. */
+    /** The forest-1 hive room (#365, D90): measured 536.7 B/frame in 3 isolated runs (2026-11-17), the same as the deadfall and bramble rooms: the two hives add nothing measurable over the rest of the room. Ceiling = the highest run + about 10 %. */
     static final double FOREST_1_HIVE_CEILING = 590;
     /**
      * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
      * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
-     * trunks, five rotten and six sound branches; the level-wide sky and rain are drawn here too), update + render. The value moves with JIT state
+     * trunks, five rotten and six sound branches), update + render. The value moves with JIT state
      * together with the other room scenes (the 897.8 runs had the route room at 897.9 and the guard room at 906.2). The cost is the harness and
      * level code, as the other room scenarios; the ceiling is the highest full-suite run plus about 10 %, the whole-room convention of
      * FOREST_1_ROUTE_CEILING (1130) and FOREST_1_GUARD_CEILING (1280). A first ceiling of 880, set from the first 3 runs, failed the next 2.
@@ -267,20 +269,20 @@ class AllocationBudgetTest {
         assertWithinBudget("forest-2 room 2 with mob kill blood", FOREST_2_ROOM_2_BLOOD_CEILING, bytes);
     }
 
-    /** The first-RedMob room (#375): the mob asleep, the refill, the level-wide sky and rain. */
+    /** The first-RedMob room (#375): the mob asleep, the refill. */
     @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 2)); }
     @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 5)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
     @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 6)); }
 
-    /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
+    /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches. */
     @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 8)); } // the tree room is room 8 since the hive room (#365)
-    /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder; the level-wide sky and rain are drawn here too. */
+    /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder. */
     @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 3)); }
-    /** The deadfall room at rest (#363): the tied log, the bough, the vine, the trunk; the level-wide sky and rain are drawn here too. */
+    /** The deadfall room at rest (#363): the tied log, the bough, the vine, the trunk. */
     @Test void forest1DeadfallRoom() { assertWithinBudget("forest-1 deadfall room", FOREST_1_DEADFALL_CEILING, room("forest-1", 1)); }
-    /** The bramble room (#364): the bramble cycling (its arm grows and retracts during the measurement), the static ladder; the level-wide sky and rain are drawn here too. */
+    /** The bramble room (#364): the bramble cycling (its arm grows and retracts during the measurement), the static ladder. */
     @Test void forest1BrambleRoom() { assertWithinBudget("forest-1 bramble room", FOREST_1_BRAMBLE_CEILING, room("forest-1", 4)); }
     @Test void forest1HiveRoom() { assertWithinBudget("forest-1 hive room", FOREST_1_HIVE_CEILING, room("forest-1", 7)); }
 

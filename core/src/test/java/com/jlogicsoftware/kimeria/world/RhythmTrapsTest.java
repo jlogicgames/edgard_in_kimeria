@@ -491,7 +491,6 @@ class RhythmTrapsTest {
             if (text.contains("\"ThornVine\"")) used.add("ThornVine");
             if (text.contains("\"skin\"")) used.add("skin");
             assertTrue(SHIPPED_ALLOWANCE.get(name).containsAll(used), name + " uses " + used + ", allowed " + SHIPPED_ALLOWANCE.get(name));
-            if (name.equals("forest-1")) continue; // its decorative sky needs a GL texture; the map text check above covers it
             // Loading runs the strict validation of every trap in the map (rhythm, room, entrance, exit, checkpoints).
             Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, Rectangle::new);
             if (!used.contains("skin")) assertTrue(level.fallingPlatforms.stream().allMatch(f -> f.skin() == FallingPlatform.Skin.PLATFORM), name);

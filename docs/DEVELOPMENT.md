@@ -169,7 +169,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs with two authored +1 refills, capacity three, full-stock hints and a three-icon HUD; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
 - [x] Trigger → actionable wall removal and torch toggle via Up + Action
 - [x] Checkpoint → next level or ending; death in slow motion, the silver thread's pull under a death fade, then a room reset and respawn (no lives; D81)
-- [x] Torch, firefly and rain ambience; fog only in menus
+- [x] Torch and firefly ambience; fog only in menus; a flat per-level background colour (map property `background`, D92)
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)
 - [x] HUD, main menu, About, Options, pause menu
 - [x] Continue / New Game with overwrite confirmation and automatic level-only saves
@@ -474,7 +474,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | Lever shake through `Level.activateTrigger` | 16 | 4.5 |
 | Lever grit burst through `Level.activateTrigger` | 16 | 4.6 |
 | `BossHud.render` with an empowered boss | 104 | 96.0 |
-| forest-1 (one torch, 48 `RainDrop`s) | 2,640 | 2,441.8 to 2,441.9 |
+| forest-1 trap course (room 2) | 665 | 328.0 to 544.3 (the same before and after #430 removed the rain and sky, D92) |
 | forest-2 room 0 / room 1 / room 2 | 9,720 / 2,360 / 2,120 | 8,920.6 to 9,000.0 / 2,184.0 / 1,960.0 to 1,960.6 |
 | forest-2 room 2 with an empowered spray every 60 frames through `Level.blood` | 2,120 | 1,991.9 to 1,992.6 |
 

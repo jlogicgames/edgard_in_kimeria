@@ -6,7 +6,13 @@ from unittest import mock
 from PIL import Image
 import check_contrast as gate
 
-SKY_BLUE = (74, 146, 184, 255)  # the plain sky of sky.png
+FOREST_BLUE = (74, 146, 184, 255)  # the forest maps' background (D92), #4a92b8
+NIGHT_HEX = '#2c3f66'  # the night colour approved for #430's last part
+NIGHT = (0x2c, 0x3f, 0x66)
+AT = 10  # where the test squares are drawn on the 40 px background
+LAYER = 4  # a 4 px test tile layer with one ink pixel
+INK_AT = (1, 1)
+INK_BOX = INK_AT + (INK_AT[0] + 1, INK_AT[1] + 1)
 INK = (0x0b, 0x08, 0x14, 255)
 MUTED = (0x67, 0x7d, 0x62, 255)  # the recoloured bush body
 # Halo fixtures (#345): a 4 px test halo with a lit 2 px centre, drawn at the centre of the 40 px background.
@@ -18,7 +24,7 @@ HALO_TEST_ALPHA = 0.5
 HALO_ADDED = 50  # 100 * 0.5 added to each channel
 LIT_PIXEL = (19, 19)
 UNLIT_PIXEL = (18, 18)
-SKY_LIT = tuple(min(255, c + HALO_ADDED) for c in SKY_BLUE[:3]) + SKY_BLUE[3:]
+FOREST_LIT = tuple(min(255, c + HALO_ADDED) for c in FOREST_BLUE[:3]) + FOREST_BLUE[3:]
 OUTLINE = 2  # index of the outline in a gate.run() result row
 WHITE_RIM = (250, 250, 250, 255)
 WARM_HALO = (110, 100, 72, 255)
@@ -51,19 +57,19 @@ def square(colour, size=6, contour=None):
     return image
 
 
-def background(colour=SKY_BLUE):
+def background(colour=FOREST_BLUE):
     return Image.new('RGBA', (40, 40), colour)
 
 
 class MetricTest(unittest.TestCase):
     def test_outline_is_the_lightness_step_at_the_edge(self):
-        outline, body = gate.measure(square(INK), background(), 10, 10)
-        expected = gate.oklab(SKY_BLUE)[0] - gate.oklab(INK)[0]
+        outline, body = gate.measure(square(INK), background(), AT, AT)
+        expected = gate.oklab(FOREST_BLUE)[0] - gate.oklab(INK)[0]
         self.assertAlmostEqual(outline, expected, places=6)
         self.assertGreater(body, outline)  # colour distance includes the lightness step
 
     def test_a_sprite_the_colour_of_its_background_has_no_contrast(self):
-        outline, body = gate.measure(square(SKY_BLUE), background(), 10, 10)
+        outline, body = gate.measure(square(FOREST_BLUE), background(), AT, AT)
         self.assertAlmostEqual(outline, 0.0, places=6)
         self.assertAlmostEqual(body, 0.0, places=6)
 
@@ -87,8 +93,8 @@ class MetricTest(unittest.TestCase):
         halo = Image.new('RGBA', (HALO_TEST_SIZE, HALO_TEST_SIZE))
         halo.paste(HALO_GREY, HALO_LIT_BOX)
         lit = gate.with_halo(background(), halo, HALO_CENTRE, HALO_CENTRE, HALO_TEST_ALPHA)
-        self.assertEqual(lit.getpixel(LIT_PIXEL), SKY_LIT)
-        self.assertEqual(lit.getpixel(UNLIT_PIXEL), SKY_BLUE, 'the transparent part of the halo adds nothing')
+        self.assertEqual(lit.getpixel(LIT_PIXEL), FOREST_LIT)
+        self.assertEqual(lit.getpixel(UNLIT_PIXEL), FOREST_BLUE, 'the transparent part of the halo adds nothing')
 
     def test_a_halo_behind_a_light_rim_lowers_its_outline(self):
         # why the shipped halo's centre is empty: added light right outside a white rim eats the edge contrast
@@ -236,14 +242,42 @@ class FairyTest(unittest.TestCase):
         self.assertGreater(lit, bare + LIGHT_LIFT_MIN)
 
     def test_the_fairy_without_her_light_would_fail_and_with_it_passes(self):
-        images = {name: gate.backgrounds(gate.tile_layer(ET.parse(gate.ROOT / f'assets/tiles/{name}.tmx').getroot())[0],
-                                         gate.sky_strip()) for name in gate.MAPS}
+        roots = {name: ET.parse(gate.ROOT / f'assets/tiles/{name}.tmx').getroot() for name in gate.MAPS}
+        images = {name: gate.composite(gate.tile_layer(root)[0], gate.map_background(root, name)) for name, root in roots.items()}
         errors, report = gate.check_fairy(images)
         self.assertEqual(errors, [])
         self.assertEqual(len(report), gate.FAIRY_BODY_FRAMES + FAIRY_GLINTS)
         with mock.patch.object(gate, 'FAIRY_LIGHT_ALPHA', 0.0):
             errors, _ = gate.check_fairy(images)
         self.assertTrue(any('Fairy frame' in e for e in errors), 'her ink contour needs her light on dark tiles')
+
+
+
+class BackgroundTest(unittest.TestCase):
+    """D92: the gate measures over each map's own `background` property, the colour the game clears to."""
+
+    def root(self, value=None):
+        props = '' if value is None else f'<properties><property name="background" type="color" value="{value}"/></properties>'
+        return ET.fromstring(f'<map>{props}</map>')
+
+    def test_tiled_colours_parse_as_the_game_reads_them(self):
+        self.assertEqual(gate.map_background(self.root('#ff4a92b8')), FOREST_BLUE[:gate.RGB])
+        self.assertEqual(gate.map_background(self.root(NIGHT_HEX)), NIGHT)
+
+    def test_a_missing_or_bad_background_fails(self):
+        for value in (None, '#804a92b8', '#4a92b', 'blue', '#gg92b8'):
+            with self.assertRaises(ValueError, msg=value):
+                gate.map_background(self.root(value))
+
+    def test_every_shipped_map_sets_its_background(self):
+        for name in gate.MAPS:
+            gate.map_background(ET.parse(gate.ROOT / f'assets/tiles/{name}.tmx').getroot(), name)
+
+    def test_the_composite_is_the_colour_under_the_tiles(self):
+        layer = Image.new('RGBA', (LAYER, LAYER)); layer.paste(INK, INK_BOX)
+        image = gate.composite(layer, FOREST_BLUE[:gate.RGB])
+        self.assertEqual(image.getpixel((0, 0)), FOREST_BLUE)
+        self.assertEqual(image.getpixel(INK_AT), INK)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 # Tree trunk (#349, D80): the decor kind `trunk`, native 16x288, one frame, standing on the floor; branches are
 # one-way Platform / FallingPlatform objects drawn over it. Decor tier (D76): no ink, contour in its own hue, a muted
-# grey-brown near the sky's lightness, no accent hue. Not solid, never moves.
+# grey-brown near the level background's lightness (D92), no accent hue. Not solid, never moves.
 size 16 288
 color c 6d665e
 color b 8b8379

@@ -42,7 +42,7 @@ GATES = (
     ('map links', lambda p: is_map(p) or p == 'tools/check_tiled_links.py', ['tools/check_tiled_links.py']),
     ('doc gaps', lambda p: p.startswith('docs/') and p.endswith('.md'), ['tools/check_doc_gaps.py', '--only', PATHS]),
     ('skills', lambda p: p.startswith(('.agents/skills/', '.claude/skills/')), ['tools/check_skills.py']),
-    # About 2.5 s: it draws every placed sprite over the sky and the map background (D76).
+    # About 2.5 s: it draws every placed sprite over each map's background colour and tile layer (D76, D92).
     ('contrast', lambda p: p.startswith('assets/images/') or is_map(p) or p == 'tools/check_contrast.py',
      ['tools/check_contrast.py']),
 )

@@ -7,11 +7,11 @@ import java.awt.image.BufferedImage;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * D55 (#226): the touch controls must stay readable on the dark portrait strip / side bars and over sky and ground.
+ * D55 (#226): the touch controls must stay readable on the dark portrait strip / side bars and over the level background and ground.
  * Measures the shipped PNGs and the label colour with WCAG relative luminance, so a darker redraw fails here.
  */
 class TouchControlArtTest {
-    private static final int DARK_BAR = 0x10101c, SKY = 0x87ceeb, GROUND = 0x7a4e2c;
+    private static final int DARK_BAR = 0x10101c, BACKGROUND = 0x4a92b8, GROUND = 0x7a4e2c; // BACKGROUND: the forest maps' (D92)
     private static final double BAR_CONTRAST = 7.0, LABEL_CONTRAST = 7.0, PRESSED_DIFFERENCE = 1.4, EDGE_CONTRAST = 3.0;
     private static final int RING_OFFSET = 2, ICON_SIDE_X = 12;
 
@@ -23,11 +23,11 @@ class TouchControlArtTest {
     }
 
     /** The outermost opaque pixel is the dark outline, the next the white ring: one of them contrasts with each background. */
-    @Test void everyControlHasADarkOutlineAndALightRingSoItReadsOnBarSkyAndGround() throws Exception {
+    @Test void everyControlHasADarkOutlineAndALightRingSoItReadsOnBarBackgroundAndGround() throws Exception {
         for (String name : new String[] {"disc", "disc-down", "jump", "pause", "base", "knob"}) {
             BufferedImage png = load(name);
             int outline = png.getRGB(png.getWidth() / 2, firstOpaque(png)), ring = png.getRGB(png.getWidth() / 2, firstOpaque(png) + RING_OFFSET);
-            for (int background : new int[] {DARK_BAR, SKY, GROUND}) {
+            for (int background : new int[] {DARK_BAR, BACKGROUND, GROUND}) {
                 double best = Math.max(contrast(luminance(outline), luminance(background)), contrast(luminance(ring), luminance(background)));
                 assertTrue(best >= EDGE_CONTRAST, name + " edge vs " + Integer.toHexString(background) + " = " + best);
             }

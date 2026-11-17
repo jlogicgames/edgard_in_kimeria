@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="430" height="23" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="146">
+ <properties>
+  <property name="background" type="color" value="#ff4a92b8"/>
+ </properties>
  <tileset firstgid="1" source="Forest.tsx"/>
  <layer id="1" name="Background" width="430" height="23">
   <data encoding="csv">

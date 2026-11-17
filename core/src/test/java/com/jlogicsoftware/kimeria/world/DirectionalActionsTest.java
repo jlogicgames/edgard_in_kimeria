@@ -119,14 +119,7 @@ class DirectionalActionsTest {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics;
         previousInput = Gdx.input; previousFiles = Gdx.files;
         GdxNativesLoader.load();
-        HeadlessFiles files = new HeadlessFiles();
-        Gdx.files = (Files) Proxy.newProxyInstance(Files.class.getClassLoader(), new Class<?>[]{Files.class}, (proxy, method, args) -> {
-            // Read the exact shipped map under an alias, omitting only forest-1's decorative sky/rain.
-            // All room markers, collision objects, hazards, enemies, and player physics remain intact.
-            if (method.getName().equals("internal") && args[0].equals("tiles/replay-forest-1.tmx"))
-                return files.internal("tiles/forest-1.tmx");
-            return method.invoke(files, args);
-        });
+        Gdx.files = new HeadlessFiles();
         Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class<?>[]{Input.class}, (proxy, method, args) -> switch (method.getName()) {
             case "isPeripheralAvailable" -> backendReportsTouch && args[0] == Input.Peripheral.MultitouchScreen;
             case "isTouched" -> fingers[args == null || args.length == 0 ? 0 : (int) args[0]];

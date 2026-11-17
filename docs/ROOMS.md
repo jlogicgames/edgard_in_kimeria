@@ -57,7 +57,7 @@ Other SpawnPoints and Collisions objects belong to the room containing their
 initial rectangle's centre (left/top inclusive, right/bottom exclusive). Keep
 collision shapes, patrol routes, and interactive objects within their room.
 Moving objects retain this ownership. Trigger targets must be in the same room;
-cross-room links are rejected. Atmosphere (sky, rain, fireflies; fog is menu-only)
+cross-room links are rejected. Atmosphere (fireflies; fog is menu-only)
 is decorative and continues across retries. Rooms may span several screens.
 
 ### Hint zones (#195, D33)
@@ -371,9 +371,9 @@ Reproduce all five measurements with:
 ```
 
 These are **headless gameplay measurements**, not a recorded human playtest.
-Texture/font rendering and camera drawing are omitted; an alias of the exact
-`forest-1.tmx` file skips only its decorative sky/rain, which have no collision,
-AI, or movement role. Map contents and all gameplay objects are retained.
+Texture/font rendering and camera drawing are omitted; the shipped `forest-1.tmx`
+is loaded as is (until #430 an alias skipped its decorative sky and rain).
+Map contents and all gameplay objects are retained.
 This measures the replay cost at 60 fps. The author has since played the rooms by hand and
 accepted visual readability and input comfort for the test version (2026-10-20, #75);
 behaviour at other frame rates is deferred to [PRE_RELEASE_TODO.md](PRE_RELEASE_TODO.md).
@@ -918,7 +918,7 @@ After the unchanged lever-272 wall: jump the tuft, sword or stomp the mob, cross
 
 ### Tests
 
-New `Forest1TrapsTest` (headless, the shipped map under an alias that drops only the decorative sky): census and positions, the clearances between every trap and the mob's reach, the 48 px rule for the room exit (the checkpoint before #187), the zero-ammunition mastered route under 20 s with a sword kill, three identical attempts after retries, a death at the log and its retry, a walker killed by the tuft and a jumper not, the tuft's 0.8 s / 1.2 s warning, the swell before the cloud and the cloud killing a hero timed into it, the mob beaten by sword and by stomp (swept takeoffs), the mob staying inside its reach, the log's fall and the pit as a retry (also with the assist), and the whole route with the assist. Changed existing tests (stated in D58): `RoomReplayTest` takeoff list for forest-1, `RhythmTrapsTest` allowance for forest-1. Left out on purpose and recorded in D58: exploding root, swinging vine, falling branch and stone, stump and root (no room or art support).
+New `Forest1TrapsTest` (headless, the shipped map): census and positions, the clearances between every trap and the mob's reach, the 48 px rule for the room exit (the checkpoint before #187), the zero-ammunition mastered route under 20 s with a sword kill, three identical attempts after retries, a death at the log and its retry, a walker killed by the tuft and a jumper not, the tuft's 0.8 s / 1.2 s warning, the swell before the cloud and the cloud killing a hero timed into it, the mob beaten by sword and by stomp (swept takeoffs), the mob staying inside its reach, the log's fall and the pit as a retry (also with the assist), and the whole route with the assist. Changed existing tests (stated in D58): `RoomReplayTest` takeoff list for forest-1, `RhythmTrapsTest` allowance for forest-1. Left out on purpose and recorded in D58: exploding root, swinging vine, falling branch and stone, stump and root (no room or art support).
 
 ### Author's answers recorded
 

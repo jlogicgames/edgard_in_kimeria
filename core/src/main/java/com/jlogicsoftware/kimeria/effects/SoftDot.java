@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 /**
  * A single shared soft radial-gradient dot texture used by every particle
- * effect (torch sparks/embers/smoke, fireflies, rain). Stands in for the
+ * effect (torch sparks/embers/smoke, fireflies). Stands in for the
  * {@code MaskFilter.blur} glow the original Flutter/Skia particles used,
  * which SpriteBatch has no equivalent for.
  */

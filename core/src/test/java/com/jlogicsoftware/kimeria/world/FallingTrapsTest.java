@@ -6,7 +6,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.backends.headless.HeadlessFiles;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
@@ -76,22 +75,10 @@ class FallingTrapsTest {
     private Graphics previousGraphics;
     private Input previousInput;
     private Files previousFiles;
-    private GL20 previousGl, previousGl20;
 
     @BeforeEach void setUp() {
         previousApp = Gdx.app; previousGraphics = Gdx.graphics; previousInput = Gdx.input; previousFiles = Gdx.files;
-        previousGl = Gdx.gl; previousGl20 = Gdx.gl20;
         GdxNativesLoader.load();
-        // forest-1 builds a sky texture: decode the real PNG, stub only the GPU upload.
-        Gdx.gl = Gdx.gl20 = (GL20) Proxy.newProxyInstance(GL20.class.getClassLoader(), new Class<?>[]{GL20.class},
-            (proxy, method, args) -> {
-                Class<?> r = method.getReturnType();
-                if (r == int.class) return 1;
-                if (r == boolean.class) return false;
-                if (r == float.class) return 0f;
-                if (r == long.class) return 0L;
-                return null;
-            });
         Gdx.files = new HeadlessFiles();
         Gdx.input = (Input) Proxy.newProxyInstance(Input.class.getClassLoader(), new Class<?>[]{Input.class}, (proxy, method, args) -> switch (method.getName()) {
             case "isKeyPressed" -> held.contains((int) args[0]);
@@ -116,7 +103,6 @@ class FallingTrapsTest {
 
     @AfterEach void restoreGlobals() {
         Gdx.app = previousApp; Gdx.graphics = previousGraphics; Gdx.input = previousInput; Gdx.files = previousFiles;
-        Gdx.gl = previousGl; Gdx.gl20 = previousGl20;
         held.clear(); pressed.clear();
     }
 

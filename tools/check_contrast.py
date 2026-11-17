@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Contrast tiers gate (D76, #344, playtest F15): active sprites must be loud, decor must be quiet.
 
-Every sprite placed in the shipped maps is drawn, in its rest frame, over what the game draws behind it: the
-screen-fixed sky (`SkyBackground`: sky.png scaled to the 360 px view, tiled) at several horizontal offsets, because
-the camera moves any cloud behind anything, plus the map's `Background` tile layer. Metrics (OKLab):
+Every sprite placed in the shipped maps is drawn, in its rest frame, over what the game draws behind it: the map's
+flat `background` colour (D92: the map property every shipped map must set, the clear colour behind the world) plus
+the map's `Background` tile layer. Metrics (OKLab):
 
 - outline: mean |L(silhouette pixel) - L(background pixel just outside it)| over every pair of an opaque pixel and a
   transparent 4-neighbour. Figure against ground at the edge; independent of scale.
 - body: mean OKLab distance between each opaque pixel and the background under it.
 - chroma: 90th percentile of the sprite's OKLab chroma.
 
-Rules (the worst placement and sky offset counts; glowing sprites at full and dimmest glow; the bush, the lever and the stump and root idle loops in every frame;
+Rules (the worst placement counts; glowing sprites at full and dimmest glow; the bush, the lever and the stump and root idle loops in every frame;
 collectables with their pickup halo (#345), at rest with the dimmest halo and at the top of the bob with the brightest; the coin has no
 halo, NO_HALO):
 - active (hero, traps, enemies, collectables, mechanisms): outline >= ACTIVE_OUTLINE_MIN;
@@ -36,11 +36,15 @@ DECOR_CHROMA_MAX = 0.10
 INK_L_MAX = 0.30
 CHROMA_PERCENTILE = 0.9
 ALPHA_MIN = 128
-VIEW_HEIGHT = 360  # KimeriaGame.LOGICAL_H: the sky is scaled to the view height
+VIEW_HEIGHT = 360  # KimeriaGame.LOGICAL_H
 TILE = 16
 TILESET_COLUMNS = 20
-SKY_OFFSETS = 8  # horizontal sky positions tried per placement (the sky is screen-fixed, the camera moves)
-SKY = 'assets/images/background/sky.png'
+BACKGROUND_PROPERTY = 'background'  # D92: a Tiled colour, #RRGGBB or #AARRGGBB with alpha ff (Level.parseBackground)
+HEX_RGB = 6  # digits of #RRGGBB
+HEX_ARGB = 8  # digits of #AARRGGBB
+HEX_PAIR = 2  # digits per channel
+HEX_BASE = 16
+OPAQUE_HEX = 'ff'
 TILESET = 'assets/images/Tileset/Tileset.png'
 NEIGHBOURS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
@@ -76,8 +80,7 @@ FAIRY_LIGHT_ALPHA = java_float(FAIRY_JAVA, 'LIGHT_ALPHA_MIN')
 FAIRY_GLOW_SIZE, FAIRY_GLOW_BORDER = java_int(FAIRY_JAVA, 'GLOW_SIZE'), java_int(FAIRY_JAVA, 'GLOW_BORDER')
 FAIRY_GLOW_PAD, FAIRY_GLINT_GROW = java_float(FAIRY_JAVA, 'GLOW_PAD'), java_float(FAIRY_JAVA, 'GLINT_GROW')
 FAIRY_GLINT_SIZE = java_int(FAIRY_JAVA, 'GLINT_SIZE')
-FAIRY_SWEEP = (64, 40, 328, 48)  # x step, y from, y to, y step: one in every 4 x 3 tiles of every map, at sky offsets 0 and 4
-FAIRY_SKY_OFFSETS = (0, SKY_OFFSETS // 2)
+FAIRY_SWEEP = (64, 40, 328, 48)  # x step, y from, y to, y step: one in every 4 x 3 tiles of every map
 FAIRY_TARGET = 16  # the glints are measured on a lever-sized target's corners
 RGB = 3  # colour channels of a pixel, without alpha
 CHANNEL_MAX = 255
@@ -156,7 +159,7 @@ NO_SPRITE = {
     None: 'an untyped collision block; drawn by the tile layer',
 }
 SPRITE_GROUPS = ('SpawnPoints', 'Collisions')
-# Tile-layer scenery reported against the sky (report only, #189): (row range, column range) in the tileset.
+# Tile-layer scenery reported against the map background (report only, #189): (row range, column range) in the tileset.
 TILE_SCENERY = {'sign': ((0, 2), (9, 10)), 'rock / rubble': ((0, 2), (12, 16)),
                 'tile bush': ((4, 6), (6, 8)), 'dead tree': ((4, 6), (9, 16))}
 
@@ -307,22 +310,31 @@ def tile_layer(root):
     return layer, gids, width
 
 
-def sky_strip():
-    sky = Image.open(ROOT / SKY).convert('RGBA')
-    return sky.resize((round(sky.width * VIEW_HEIGHT / sky.height), VIEW_HEIGHT), Image.BILINEAR)
+def parse_colour(value):
+    """(r, g, b) of a Tiled colour as Level.parseBackground reads it: #RRGGBB, or #AARRGGBB with alpha ff."""
+    digits = value[1:] if value.startswith('#') else value
+    if len(digits) not in (HEX_RGB, HEX_ARGB) or any(c not in '0123456789abcdefABCDEF' for c in digits):
+        raise ValueError(f'{BACKGROUND_PROPERTY}: expected #RRGGBB or #AARRGGBB, got {value!r}')
+    if len(digits) == HEX_ARGB:
+        if digits[:HEX_PAIR].lower() != OPAQUE_HEX:
+            raise ValueError(f'{BACKGROUND_PROPERTY}: must be opaque (alpha ff), got {value!r}')
+        digits = digits[HEX_PAIR:]
+    return tuple(int(digits[i:i + HEX_PAIR], HEX_BASE) for i in range(0, HEX_RGB, HEX_PAIR))
 
 
-def backgrounds(layer, sky):
-    """One composited background per sky offset."""
-    result = []
-    for n in range(SKY_OFFSETS):
-        offset = n * sky.width // SKY_OFFSETS
-        image = Image.new('RGBA', layer.size)
-        for x in range(-offset, layer.width, sky.width):
-            image.paste(sky, (x, 0))
-        image.alpha_composite(layer)
-        result.append(image)
-    return result
+def map_background(root, name='map'):
+    """The map's flat background colour (D92). A shipped map without the property fails: the gate never guesses."""
+    for prop in root.findall('properties/property'):
+        if prop.get('name') == BACKGROUND_PROPERTY:
+            return parse_colour(prop.get('value', ''))
+    raise ValueError(f'{name}: set the map property {BACKGROUND_PROPERTY!r} (D92), the colour behind the world')
+
+
+def composite(layer, colour):
+    """What the game draws behind every sprite: the flat background colour, then the tile layer."""
+    image = Image.new('RGBA', layer.size, tuple(colour) + (CHANNEL_MAX,))
+    image.alpha_composite(layer)
+    return image
 
 
 def key_of(group, obj, props):
@@ -502,11 +514,10 @@ def check_fairy(images):
     for name, sprite, light, lx, ly, alpha in fairy_cases():
         pairs = edge_pairs(sprite, light, lx, ly, alpha)
         worst = (1.0, None, 0, 0)
-        for map_name, backgrounds_of_map in images.items():
-            for offset in FAIRY_SKY_OFFSETS:
-                outline, x, y = swept_outline(pairs, backgrounds_of_map[offset], step_x, y_from, y_to, step_y, sprite.width)
-                if outline < worst[0]:
-                    worst = (outline, map_name, x, y)
+        for map_name, background in images.items():
+            outline, x, y = swept_outline(pairs, background, step_x, y_from, y_to, step_y, sprite.width)
+            if outline < worst[0]:
+                worst = (outline, map_name, x, y)
         outline, place, x, y = worst
         report[name] = outline
         if outline < ACTIVE_OUTLINE_MIN:
@@ -514,12 +525,12 @@ def check_fairy(images):
     return errors, report
 
 
-def tile_report(sky):
-    """Report only (#189): mean outline and body of the tile scenery against the sky."""
+def tile_report(roots):
+    """Report only (#189): mean outline and body of the tile scenery against each map's background colour."""
     sums = {name: [[], []] for name in TILE_SCENERY}
-    for name in MAPS:
-        layer, gids, width = tile_layer(ET.parse(ROOT / f'assets/tiles/{name}.tmx').getroot())
-        background = backgrounds(Image.new('RGBA', layer.size), sky)[0]
+    for name, root in roots.items():
+        layer, gids, width = tile_layer(root)
+        background = composite(Image.new('RGBA', layer.size), map_background(root, name))
         for index, gid in enumerate(gids):
             category = next((c for c, ((r0, r1), (c0, c1)) in TILE_SCENERY.items()
                              if gid and r0 <= (gid - 1) // TILESET_COLUMNS <= r1 and c0 <= (gid - 1) % TILESET_COLUMNS <= c1), None)
@@ -540,33 +551,31 @@ def tile_report(sky):
 
 def run():
     errors = []
-    sky = sky_strip()
-    layers = {name: tile_layer(ET.parse(ROOT / f'assets/tiles/{name}.tmx').getroot())[0] for name in MAPS}
-    images = {name: backgrounds(layer, sky) for name, layer in layers.items()}
+    roots = map_roots()
+    images = {name: composite(tile_layer(root)[0], map_background(root, name)) for name, root in roots.items()}
     results = {}
     halo = Image.open(ROOT / 'assets/images' / HALO_SHEET).convert('RGBA')
-    roots = map_roots()
     for name, key, x, y, w, h in placements(errors, roots):
         anchor, glows = SPRITES[key][4], SPRITES[key][5]
         for frame in frames(key):
             left = int(x + w / 2 - frame.width / 2)
             top = int(y) if anchor == 'top' else int(lip_top(roots[name], x, y)) if anchor == 'view' else int(y + h - frame.height)
             for glow in glows:
-                for background in images[name]:
-                    if not key.startswith('Collectable:'):
-                        outline, body = measure(frame, background, left, top, glow)
-                        results.setdefault(key, []).append((name, x, outline, body))
-                        continue
-                    for lift, alpha in HALO_STATES:  # what the game draws: the halo behind the bobbing item
-                        reach = halo.width // 2 + HALO_MARGIN
-                        cx, cy = int(x + w / 2), int(y + h / 2) - lift
-                        box = (max(0, cx - reach), max(0, cy - reach),
-                               min(background.width, cx + reach), min(background.height, cy + reach))  # never past the map
-                        local = background.crop(box)
-                        if key not in NO_HALO:
-                            local = with_halo(local, halo, cx - box[0], cy - box[1], alpha)
-                        outline, body = measure(frame, local, left - box[0], top - lift - box[1], glow)
-                        results.setdefault(key, []).append((name, x, outline, body))
+                background = images[name]
+                if not key.startswith('Collectable:'):
+                    outline, body = measure(frame, background, left, top, glow)
+                    results.setdefault(key, []).append((name, x, outline, body))
+                    continue
+                for lift, alpha in HALO_STATES:  # what the game draws: the halo behind the bobbing item
+                    reach = halo.width // 2 + HALO_MARGIN
+                    cx, cy = int(x + w / 2), int(y + h / 2) - lift
+                    box = (max(0, cx - reach), max(0, cy - reach),
+                           min(background.width, cx + reach), min(background.height, cy + reach))  # never past the map
+                    local = background.crop(box)
+                    if key not in NO_HALO:
+                        local = with_halo(local, halo, cx - box[0], cy - box[1], alpha)
+                    outline, body = measure(frame, local, left - box[0], top - lift - box[1], glow)
+                    results.setdefault(key, []).append((name, x, outline, body))
     for key in SPRITES:
         if key in results:
             errors.extend(check_sprite(key, results[key]))
@@ -574,7 +583,7 @@ def run():
     errors.extend(fairy_errors)
     for name, outline in fairy.items():
         results[name] = [('sweep', 0, outline, 0.0)]
-    return results, errors, tile_report(sky)
+    return results, errors, tile_report(roots)
 
 
 def main():

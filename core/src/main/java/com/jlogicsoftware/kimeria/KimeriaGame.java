@@ -70,7 +70,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private static final int RGB_BLUE = 2;
     private static final float[] BLACK_CLEAR = {0f, 0f, 0f};
     private static final float[] BACKDROP_CLEAR = {0.16f, 0.16f, 0.19f};
-    private static final float[] SKY_CLEAR = {0.53f, 0.8f, 0.92f};
+    /** Behind the world while no level is loaded (D92); a loaded level's own {@code background} replaces it. */
+    private static final float[] WORLD_CLEAR = new float[3];
+    static { Level.parseBackground(Level.DEFAULT_BACKGROUND, WORLD_CLEAR); }
     /** Portrait phones: the strip under the picture that holds the touch controls (#226). */
     private static final float[] STRIP_CLEAR = {0.06f, 0.06f, 0.08f};
     /** Black tint drawn over the menu backdrop on every menu screen (start, main, submenus). */
@@ -741,14 +743,14 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         camera.position.set(cameraTarget.x + LOGICAL_W / 2f + shakeX, cameraTarget.y + LOGICAL_H / 2f + shakeY, 0);
         camera.update();
 
-        // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay keeps the sky.
+        // The menu backdrop is a dark scene so the fog and fireflies stand out; gameplay shows the level's background (D92).
         float[] clear;
         if (storyScreenActive() || uiState == UiState.HEALER || pausedHealer) {
             clear = BLACK_CLEAR;
         } else if (menuBackdropActive) {
             clear = BACKDROP_CLEAR;
         } else {
-            clear = SKY_CLEAR;
+            clear = worldClear();
         }
         boolean framed = touchLayout.portrait() || touchLayout.sideBars();
         if (framed) {
@@ -886,6 +888,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (choice != null) chooseHealer(choice);
     }
 
+    /** The flat colour behind the world (D92): the loaded level's map {@code background}, or the default before one loads. */
+    private float[] worldClear() { return level != null ? level.backgroundRgb() : WORLD_CLEAR; }
+
     private static void clearScreen(float[] rgb) {
         Gdx.gl.glClearColor(rgb[0], rgb[1], rgb[RGB_BLUE], 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -918,8 +923,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void renderPostProcessedScene(boolean glitched, RippleEffect ripple) {
         ensureSceneBuffer();
         sceneBuffer.begin();
-        if (pausedHealer) Gdx.gl.glClearColor(0, 0, 0, 1);
-        else Gdx.gl.glClearColor(0.53f, 0.8f, 0.92f, 1f);
+        float[] world = pausedHealer ? BLACK_CLEAR : worldClear();
+        Gdx.gl.glClearColor(world[0], world[1], world[RGB_BLUE], 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         if (pausedHealer) renderHealerScene();
         else renderWorld();

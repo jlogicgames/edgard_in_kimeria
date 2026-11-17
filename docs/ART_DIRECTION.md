@@ -181,8 +181,9 @@ Every death with a visible cause shows the silver thread of #228 pulling Edgard 
   game stamps the strand one pixel step at a time along a chord with a parabolic sag between the wrist and the start
   (`effects.SilverThread`); only that curve is computed, the colours are authored (D81's argued exception to principle 6:
   a line between two moving points, not an object sprite).
-- **Tier (D76):** active. Worst outline 0.340 over every RoomStart of the three maps, taut and slack, level and sloped,
-  every sky offset (`tools/test_silver_thread_sprites.py`); the D78 dialogue silvers measured 0.104 there.
+- **Tier (D76):** active. Worst outline 0.335 over every RoomStart of the three maps, taut and slack, level and sloped,
+  over each map's background (`tools/test_silver_thread_sprites.py`; 0.340 over the old sky, see D92); the D78 dialogue silvers
+  measured 0.104 on the old sky.
 - **Hero poses:** the three pull frames of #343 (row 14 of both facing sheets): tug, lift, land. The thread is tied to
   the **left** wrist in both facings, and the frames are drawn yanked backward by it, so the pull faces **away** from the
   start (a start on the left, a smaller X, means facing right). Wrists, frame pixels: tug and lift (17, 44) facing right
@@ -363,7 +364,7 @@ depends on it.
   rebuild (death, retry, Restart Level, room change).
 - **Web cost.** Worst case 24 + 32 = 56 quad draws for about 1 s after a lever, at most 24 for 0.4 s after a
   jump, nothing while idle (`render` returns at once when the count is 0). Torches already draw more every
-  frame. Both textures are already bound by torches, fireflies and rain; a frame that mixes these draws
+  frame. Both textures are already bound by torches and fireflies; a frame that mixes these draws
   with sprites may flush the batch a few extra times. Measuring that belongs to the atlas work,
   [#284](https://github.com/jlogicgames/edgard_in_kimeria/issues/284); #239 adds no atlas.
 
@@ -454,8 +455,8 @@ depends on it.
 - **Cost.** One rotated `batch.draw` per vine; the sheet is 8×40 px. `AllocationBudgetTest.hangingVinesSwayingThroughTheRealLevel` measures the allocation.
 - The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
 - **Colour (decor tier, D76, recoloured 2026-11-16).** Pale dull olive stem `9d9f7b / 8a8c6d`, grey-green leaves `88a083 / 738b73`,
-  contour `757a67` (no ink), light enough to stay quiet in front of the clouds of the screen-fixed sky (outline at most 0.16; it was
-  0.57 in front of a cloud with the ink contour and violet leaves).
+  contour `757a67` (no ink), light enough to stay quiet in front of the clouds of the old screen-fixed sky (outline at most 0.16; it was
+  0.57 in front of a cloud with the ink contour and violet leaves); 0.059 over the flat background of D92.
 
 ##### Static look-alike mushroom (#299), as built
 
@@ -726,13 +727,16 @@ sprite belongs to one of three tiers. It is measured against what the game draws
 |---|---|---|---|
 | Active | hero, traps and their at-rest cues (D71), enemies, collectables, mechanisms, terrain | outline at least 0.28 | ink contour `0b0814` (or the sheet's own near-black); the accent hues are reserved here |
 | Decor | `Decor` kinds, `HangingVine`, later shrubs, flowers, ferns (#189) | outline at most 0.20, body 0.08 to 0.20, p90 chroma at most 0.10, no ink pixel | contour in its own darker hue, no ink, no accent hue, no idle animation (it may react to the hero or the world) |
-| Background | sky, tile scenery, later parallax layers (#236) | no louder than decor | desaturated, static |
+| Background | the level's flat `background` colour (D92), tile scenery, later clouds and moon (#451) and parallax layers (#236) | no louder than decor | desaturated, static |
 
 - **Outline** is the mean lightness difference between each silhouette pixel and the background pixel just outside it.
 - **Body** is the mean colour distance between each opaque pixel and the background under it.
 - **Chroma** is the 90th percentile of the sprite's chroma.
 
-The sky is screen-fixed, so the gate tries several sky offsets: any cloud can pass behind any sprite. Glowing sprites are
+**What is behind the world ([D92](DECISIONS.md#d92-the-world-is-drawn-over-a-flat-per-level-background-the-forest-rain-and-sky-are-gone-430-2026-11-17)).** Each map sets a flat colour in its map property `background` (a Tiled colour); the
+game clears to it, and the gate composites every sprite over that colour plus the map's tile layer, one sample per
+placement. Every shipped map must set it. The forest maps use `4a92b8` for now; the night colour `2c3f66` lands with the
+moon rim in [#430](https://github.com/jlogicgames/edgard_in_kimeria/issues/430), and clouds and a moon come with [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451). Glowing sprites are
 measured at their dimmest glow, and the bush in every frame. Collectables are measured over their pickup halo (#345), at rest
 with the dimmest halo and at the top of the bob with the brightest (the coin, which has none, at both positions).
 
@@ -840,7 +844,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-branch` | 32×16 | resting, rustle, sag, falling | resting and rustle carry the at-rest cue (#361): a pale raw-wood band round the joint, cut by an ink zig-zag, and a chip under it; rustle = leaves shake, sag = drooping with a split at the trunk |
 | `trap-stone` | 16×16 | stone, cracked | boulder and impact frame |
 | `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 8, forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
-| `trap-deadfall` | 32×16 | tied, strain, slip, swing, caught | the trip-line deadfall's log (#363, D88): a 24×10 bark log seen broadside with its end grain (`e8c890`/`9c6a34`) on the left; tied/strain/slip carry the bone lashing (`efe6c4`/`b8ad9c`) up to the bough, strain adds frayed fibres, slip draws the log one row lower; swing has three bone speed streaks on its trailing side; caught has a frayed cord stub. Rope eyes at x 8 and 23, row 4. Active tier, worst outline 0.410 tied (forest-1-deadfall, 8 sky offsets) |
+| `trap-deadfall` | 32×16 | tied, strain, slip, swing, caught | the trip-line deadfall's log (#363, D88): a 24×10 bark log seen broadside with its end grain (`e8c890`/`9c6a34`) on the left; tied/strain/slip carry the bone lashing (`efe6c4`/`b8ad9c`) up to the bough, strain adds frayed fibres, slip draws the log one row lower; swing has three bone speed streaks on its trailing side; caught has a frayed cord stub. Rope eyes at x 8 and 23, row 4. Active tier, worst outline 0.410 tied (forest-1-deadfall; the same over the old sky and the D92 background) |
 | `trap-deadfall-bough` | 112×24 | bough | the bough the deadfall hangs from: the sound branch's bark (`4a2e1c`/`8a5a30`/`c08a4c`), two bone rope knots at x 40 and 55, a bare snag from its underside to (8, 17) where the log ends, a leaf tuft at the thin end, end grain at the thick end that meets a `Decor:trunk`; mirrored for `swing=right`. Outline 0.464 |
 | `trap-deadfall-vine` | 24×8 | taut, tugged, cut | the trip vine: bone (`efe6c4`/`b8ad9c`) between two dark pegs, 4 px over the floor; tugged into a V during the warning, cut in two after the release. Outline 0.323 taut |
 | `trap-deadfall-rope` | 1×8 | rope | a twisted bone cord strip the game stretches and rotates from a knot to a log eye (as the silver thread's strand) |
