@@ -21,7 +21,8 @@ import java.util.Locale;
  * finished, so it cannot flicker. Timing depends only on hero position and {@code dt}.
  * <p>
  * Y grows downward: {@code position.y + size.y} is the floor line. The sprite is drawn at its native size, centred on the
- * rectangle and standing on its bottom edge.
+ * rectangle and standing on its bottom edge. A {@code hangs} kind (the crown, #421) is placed by its top edge instead (the
+ * room's top or under a solid, tools/check_tiled_links.py); its rectangle is its sprite's size, so it is drawn the same way.
  */
 public final class Decor extends Entity {
     /** Frames per strip: idle, brush1, brush2, settle (tools/sprite_layouts.py DECOR_SHEETS). */
@@ -38,19 +39,23 @@ public final class Decor extends Entity {
      * One kind: its sheet, its frame count, whether it {@code brushes} (plays its brush-past frames when the hero walks
      * through it, D64) and whether it is {@code still}. A still kind (#299, the pale look-alike mushroom) has one frame and
      * never reacts to the hero, so motion stays the cue that an active mushroom is alive. A kind that neither brushes nor is
-     * still (the trunk, #349) is plain scenery: one frame, no reaction, and none of the look-alike's placement rules.
+     * still (the trunk, #349) is plain scenery: one frame, no reaction, and none of the look-alike's placement rules. A kind
+     * that {@code hangs} (the crown, #421) is attached by its top edge, not its bottom; read only by tools/check_tiled_links.py.
      */
-    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean brushes, boolean still) { }
+    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean brushes, boolean still, boolean hangs) { }
 
     /**
-     * One entry per kind: a new kind is one sheet and one table entry. The names and the {@code still} flags are read by
-     * tools/check_tiled_links.py, which keeps still kinds away from active mushrooms, hint zones and pickups.
+     * One entry per kind: a new kind is one sheet and one table entry. The names and the {@code still} and {@code hangs} flags
+     * are read by tools/check_tiled_links.py, which keeps still kinds away from active mushrooms, hint zones and pickups, and
+     * stands every kind on a solid except a hanging one, which it hangs from the room's top or a solid's underside.
      */
     private static final java.util.Map<String, Kind> KINDS = java.util.Map.of(
-        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, true, false),
-        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, false, true),
+        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, true, false, false),
+        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, false, true, false),
         // #349 (D80): the trunk behind tree branches. No brush, and not `still`, which means a look-alike mushroom.
-        "trunk", new Kind(SpriteSheets.DECOR_TRUNK, 1, false, false));
+        "trunk", new Kind(SpriteSheets.DECOR_TRUNK, 1, false, false, false),
+        // #421: the leaf crown over a trunk, hung from the room's top; the FallingBranch in forest-0-wall grows from that tree.
+        "crown", new Kind(SpriteSheets.DECOR_CROWN, 1, false, false, true));
 
     public static java.util.Set<String> kindNames() { return KINDS.keySet(); }
 
@@ -106,7 +111,7 @@ public final class Decor extends Entity {
     }
 
     public boolean playing() { return playing; }
-    /** The map's {@code kind}, lower case ({@code bush}, {@code lookalike}, {@code trunk}). */
+    /** The map's {@code kind}, lower case ({@code bush}, {@code lookalike}, {@code trunk}, {@code crown}). */
     public String kind() { return kind; }
     /** True for a kind that never animates (#299). */
     public boolean isStill() { return still; }

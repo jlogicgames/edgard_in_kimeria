@@ -630,7 +630,7 @@ def check_map(path):
             errors.append(f"Trigger {describe(trigger)}: no 'target' set and {len(solid)} mechanisms share its name "
                           "(set the 'target' property, or give it exactly one same-named mechanism)")
     errors += check_falling_traps(root, groups)
-    errors += check_decor(spawn, collisions)
+    errors += check_decor(root, spawn, collisions)
     errors += check_still_decor(spawn, groups.get('Hints', []))
     errors += check_hanging_vines(root, spawn, collisions)
     errors += check_branches(root, spawn, collisions)
@@ -702,15 +702,39 @@ def decor_kinds():
     return tuple(re.findall(r'"([^"]+)"\s*,\s*new Kind\(', block.group(1))) if block else ()
 
 
+DECOR_STILL_ARG, DECOR_HANGS_ARG = 3, 4  # positions in `new Kind(sheet, frames, brushes, still, hangs)`
+
+
+def _decor_kinds_with(arg):
+    """The kinds whose boolean argument at position `arg` of their Kind(...) in Decor.KINDS is true."""
+    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
+    if not block:
+        return ()
+    return tuple(name for name, args in re.findall(r'"([^"]+)"\s*,\s*new Kind\(([^)]*)\)', block.group(1))
+                 if [a.strip() for a in args.split(',')][arg] == 'true')
+
+
 def decor_still_kinds():
     """The kinds with the `still` flag in Decor.KINDS (#299): never animated, so they must not pose as an active mushroom."""
-    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
-    return tuple(re.findall(r'"([^"]+)"\s*,\s*new Kind\([^)]*,\s*true\)', block.group(1))) if block else ()
+    return _decor_kinds_with(DECOR_STILL_ARG)
 
 
-def check_decor(spawn, collisions):
-    """Decor (#239): a known kind, a positive size, and the bottom edge on the top of a solid block (world Y grows downward)."""
-    kinds, errors = decor_kinds(), []
+def decor_hanging_kinds():
+    """The kinds with the `hangs` flag in Decor.KINDS (#421): attached by their top edge, like a HangingVine."""
+    return _decor_kinds_with(DECOR_HANGS_ARG)
+
+
+def _hangs(root, o, collisions):
+    """Whether `o`'s top edge is its room's top or the bottom of a solid block it overlaps (world Y grows downward)."""
+    body, room = _rect(o), thorn_room(root, o)
+    return (room is not None and body[1] == room[1]) or any(
+        kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') + _num(c, 'height') == body[1] for c in collisions)
+
+
+def check_decor(root, spawn, collisions):
+    """Decor (#239): a known kind, a positive size, and the bottom edge on the top of a solid block (world Y grows downward);
+    a hanging kind (#421) instead has its top edge on its room's top or under a solid block, as a HangingVine."""
+    kinds, hanging, errors = decor_kinds(), decor_hanging_kinds(), []
     for o in (o for o in spawn if kind(o) == 'Decor'):
         label = f"Decor {describe(o)}"
         if (prop(o, 'kind') or '').lower() not in kinds:
@@ -718,6 +742,10 @@ def check_decor(spawn, collisions):
         body = _rect(o)
         if not (body[2] > 0 and body[3] > 0):
             errors.append(f"{label}: needs a positive size"); continue
+        if (prop(o, 'kind') or '').lower() in hanging:
+            if not _hangs(root, o, collisions):
+                errors.append(f"{label}: its top edge ({body[1]:g}) is neither the room's top nor the bottom of a solid block")
+            continue
         bottom = body[1] + body[3]
         if not any(kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') == bottom for c in collisions):
             errors.append(f"{label}: its bottom edge ({bottom:g}) is not on the top of a solid block")
@@ -790,9 +818,7 @@ def check_hanging_vines(root, spawn, collisions):
         if not (body[2] > 0 and body[3] > 0):
             errors.append(f"{label}: needs a positive size"); continue
         room = thorn_room(root, o)
-        hangs = (room is not None and body[1] == room[1]) or any(
-            kind(c) != 'QuickSand' and _x_overlap(_rect(c), body) and _num(c, 'y') + _num(c, 'height') == body[1] for c in collisions)
-        if not hangs:
+        if not _hangs(root, o, collisions):
             errors.append(f"{label}: its top edge ({body[1]:g}) is neither the room's top nor the bottom of a solid block"); continue
         anchor = body[0] + body[2] / 2
         near = [s for s in stones if thorn_room(root, s) == room and abs(_num(s, 'x') + _num(s, 'width') / 2 - anchor) < reach]

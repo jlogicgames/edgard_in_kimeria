@@ -12,6 +12,9 @@ VINE_SIZE = (8, 40)
 LOOKALIKE_SIZE = (24, 16)  # decor-lookalike: the same 24x16 tuft footprint as the active pair
 DULL_SPREAD = 0x30  # largest channel spread (max - min) of a look-alike colour: pale grey-lilac or bone, never saturated
 VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceiling
+CROWN_SIZE = (96, 40)  # decor-crown (#421)
+CROWN_TRUNK_COLUMNS = range(42, 54)  # a trunk at crown x + 40: its 16 px frame's body columns 2-13
+CROWN_CAP_ROWS = (32, 37)  # the trunk's top (y 32 in forest-0) and its rounded cap rows 1-4, in crown rows
 
 
 class ForestTrapSpritesTest(unittest.TestCase):
@@ -84,6 +87,20 @@ class ForestTrapSpritesTest(unittest.TestCase):
         self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
         top = master.crop((0, 0, size[0], 1))
         self.assertTrue(all(top.getchannel('A').getpixel((x, 0)) == OPAQUE_ALPHA for x in VINE_STEM_COLUMNS), 'the stem touches the ceiling')
+
+    def test_the_decor_crown_is_one_frame_hung_from_its_top_row_with_its_middle_lobe_lowest(self):
+        size, frames = DECOR_SHEETS['crown']
+        self.assertEqual((CROWN_SIZE, ('crown',)), (size, frames))
+        master, colors = traps.sheet_image('decor:crown')
+        self.assertEqual(WORLD_IMAGES['decor-crown'], master.size)
+        self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+        shipped = Image.open(traps.ROOT / 'assets/images/objects/decor-crown.png')
+        self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), 'run tools/forest_trap_sprites.py decor:crown')
+        alpha = master.getchannel('A')
+        self.assertEqual((0, size[1]), (alpha.getbbox()[1], alpha.getbbox()[BBOX_BOTTOM]), 'hung from its top row, 40 px deep')
+        self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
+        for x in CROWN_TRUNK_COLUMNS:  # the trunk's cap (its rows 1-4, under the crown's rows 32-36) must be covered
+            self.assertTrue(all(alpha.getpixel((x, y)) == OPAQUE_ALPHA for y in range(*CROWN_CAP_ROWS)), f'column {x}')
 
     def test_the_static_lookalike_is_one_pale_frame_resting_on_the_floor(self):
         size, frames = DECOR_SHEETS['lookalike']

@@ -1,0 +1,53 @@
+# Leaf crown (#421): the decor kind `crown`, native 96x40, one frame, hung from the room top (its top edge on the
+# room's top edge). It tops a `Decor:trunk` standing under its middle (trunk object x = crown x + 40): the middle lobe
+# hangs to the last row and hides the trunk's rounded cap. Leaf clusters with lighter tops and darker undersides.
+# Decor tier (D76): the bush's muted grey-green family, one step lighter than the bush (over the map background 4a92b8,
+# D92: outline 0.087 against the bush palette's 0.157, ceiling 0.20); contour 607660 in its own darker green, no ink 0b0814,
+# no violet (violet is the FallingBranch's bud accent). Not solid, never moves.
+size 96 40
+color k 607660
+color d 6e8466
+color m 7b9170
+color l 889e79
+color n 948f62
+frame crown
+..kmmmlmmmdmmmmlmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdlmmmmdmmmlnlmk..
+..kmmlnlmmddmmlndmmlnllmmmddmmmlllmmddmmmmlnlmmddmmlnllmmmddmmmlllmmddmmmmlnlmmdnlmmmddmmlnllk..
+..kmmllmmmdmmmmlmmmmllmmmmdmmmmllmmmdmmmmmllmmmdmmmmllmmmmdmmmmllmmmdmmmmmllmmmdlmmmmdmmmmllmk..
+..kmmmmmmddmmmmmmmmmmmmmmddmmmmmmmmddmmmmmmmmmddmmmmmmmmmddmmmmmmmmddmmmmmmmmmddmmmmddmmmmmmmk..
+.kmmlmmmdddmmmlmmmmlmmmmdddmmmlmmmdddmmlmmmmmdddmmmlmmmmdddmmmlmmmdddmmlmmmmmdddmmmdddmmmlmmmmk.
+.kmlnlmmmdmmmlnlmmlnlmmmmdmmmlnlmmmdmmlnlmmmmmdmmmlnlmmmmdmmmlnlmmmdmmlnlmmmmmdmmmmmmdmmlnlmmmk.
+.kmllmmmmdmmmllmmmllmmmmmdmmmllmmmmdmmllmmmmmmdmmmllmmmmmdmmmllmmmmdmmllmmmmmmdmmmmmmdmmllmmmmk.
+kmmmmmmmddmmmmmmmmmmmmmmddmmmmmmmmddmmmmmmmmmddmmmmmmmmmddmmmmmmmmddmmmmmmmmmddmmmmmddmmmmmmmmmk
+kmmmmmmdddmmmmmmmmmmmmmdddmmmmmmmdddmmmmmmmmdddmmmmmmmmdddmmmmmmmdddmmmmmmmmdddmmmmdddmmmmmmmmmk
+kdmmmddddkdmmmmdmmmmmddddkdmmmmmdddkdmmmmddddkdmmmmmmddddkdmmmmmdddkdmmmmddddkdmmddddkdmmmmmmddk
+kddddddkklnlmdddmmdddkklnlmmdddddkklnlmddddkklnlmmdddkklnlmmdddddkklnlmddddkklnldkklnlmmddddddk.
+.kddkkklnllmmmdkmmmdkklnllmmmmdkklnllmmmdkklnllmmmmdkklnllmmmmdkklnllmmmdkklnllmkklnllmmmmdddk..
+.kkklnllmmmmmmdkmmmmdklnllmmmmmdlnllmmmmmdklnllmmmmmdklnllmmmmmdlnllmmmmmdklnllmklnllmmmmmmmmdk.
+kmlnllmmmmmmmmdlmmmmdlnllmmmmmmdnllmmmmmmdlnllmmmmmmdlnllmmmmmmdnllmmmmmmdlnllmmlnllmmmmmmmmmmmk
+kllmmmmmlmmmmddllmmmddllmmmmlmmdlmmmmlmmddllmmmmlmmmddllmmmmlmmdlmmmmlmmddllmmmmdllmmmmlmmmmmmmk
+kmmmmmlnlmmmdddmnlmmdddmmmmlnlmdmmmlnlmdddmmmmmlnlmmdddmmmmlnlmdmmmlnlmdddmmmmmlddmmmmlnlmmmmmmk
+kmmmmmllmmmmddmmlmmmddmmmmmllmmdmmmllmmddmmmmmmllmmmddmmmmmllmmdmmmllmmddmmmmmmldmmmmmllmmmmmmmk
+kdmmmmmmmmmddkdmmmmddkdmmmmmmmddmmmmmmddkdmmmmmmmmmddkdmmmmmmmddmmmmmmddkdmmmmmmkdmmmmmmmmmmmddk
+kddmmmmmmddddkddmmddddkddmmmmmddmmmmmddddkddmmmmmmddddkddmmmmmddmmmmmddddkddmmmmddkddmmmmmmmdddk
+.kdddmmddddkklnlddddkklnldddddkkddddddkklnldddmdddddkklnldddddkkddddddkklnldddmdlnlddddmmddddk..
+..kkdddddkklnllmdkklnllmmmddddkkmddkklnllmmmdddddkklnllmmmddddkkmddkklnllmmmddddlnllmmdddddddkk.
+.kmlkkkkklnllmmmklnllmmmmmmmddklmmdklnllmmmmmmddklnllmmmmmmmddklmmdklnllmmmmmmddnllmmmmmmdddkmk.
+kmlnlmmmlnlmmmmmnllmmmmmmmmmdlnlmmdlnlmmmmmmmmdlnllmmmmmmmmmdlnlmmdlnlmmmmmmmmdlmmmmmmmmmmdkmlnk
+kmllmmmmllmmmmmmlmmmmmmlmmmmdllmmddllmmmmmlmmmdllmmmmmmlmmmmdllmmddllmmmmmlmmmdlmmmmmlmmmddkmllk
+kmmmmmmmmmmmmlmmmmmmmmlnlmmmddmmmddmmmmmmlnlmmddmmmmmmlnlmmmddmmmddmmmmmmlnlmmddmmmmlnlmmdkmmmmk
+kdmmmmmmmmmmlnlmdmmmmmllmmmddkdmddkdmmmmmllmmddkdmmmmmllmmmddkdmddkdmmmmmllmmddkmmmmllmmddkdmmmk
+kddmmmmmmmmmllmmddmmmmmmmmdddkddddkddmmmmmmmdddkddmmmmmmmmdddkddddkddmmmmmmmdddkmmmmmmmdddkddmdk
+.kddmmmmmmmmmmmddkkmmlnlmmmmmmmmdkkmmlnlmmmmmmmmmmmlnlmmmmmmkkddmmmmlnlmmmmmmmmmmmmmmdddkkdddk..
+.kdddmmmmmmmmdddkmmlnllmmmmmmmmmkmmlnllmmmmmmmmmmmlnllmmmmmmmmkdmmmllmmmmmmlmmmddddmmddddkkkk...
+..kddddmmmmddddkdmmllmmmmmlmmmmdkmmllmmmmmlmmmmmmmllmmmmmlmmmmmkdmmmmmmmlnlmmmmdkddddddddk......
+...kkddddddddkkkddmmmmmmlnlmmmdkmmmmmmmmmlnlmmmmmmmmmmmmlnlmmmmdkmmmmmmmllmmmddkkkkkkkkkk.......
+.....kkkkkkkk..kdddmmmmmllmmddkkdmmmmmmmmllmmmmmmmmmmmmmllmmmmdk.kdmmmmmmmmmddk.................
+................kdddmmmmmmmdddkkddmmmlmmmmmmmmmmmmmlmmmmmmmmmddk.kkdddddddddkk..................
+.................kkdddddddddkk..kddmlnlmmmmmmmmmmmlnlmmmmmmmddk....kkkkkkkkk....................
+...................kkkkkkkkk.....kddllmmmmmmmmmmmmllmmmmmmmddk..................................
+..................................kdddmmmmmmlmmmmmmmmmmmmdddk...................................
+...................................kkddmmmmlnlmmmmmmmmmddkk.....................................
+.....................................kkddmmllmmmmmmmmddkk.......................................
+.......................................kkdddmmmddddddkk.........................................
+.........................................kkkkkkkkkkkk...........................................

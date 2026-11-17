@@ -81,6 +81,7 @@ DECOR_SHEETS = {
     'vine': ((8, 40), ('hang',)),  # #239 step 5: the stone-linked HangingVine
     'lookalike': ((24, 16), ('static',)),  # #299: the static look-alike, one frame, never animated
     'trunk': ((16, 288), ('trunk',)),  # #349 (D80): the tree trunk behind the branches, one frame
+    'crown': ((96, 40), ('crown',)),  # #421: the leaf crown hung over a trunk, one frame
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})
 # The shared pickup cue (#345): drawn by every Collectable; runtime export `pickup-<name>.png`, one horizontal strip.

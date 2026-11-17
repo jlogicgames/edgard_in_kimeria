@@ -98,6 +98,7 @@ SPRITES = {
     'Decor:lookalike': ('decor', 'objects/decor-lookalike.png', (0, 0, 24, 16), 1, 'floor', FULL),
     'HangingVine': ('decor', 'objects/decor-vine.png', (0, 0, 8, 40), 1, 'top', FULL),
     'Decor:trunk': ('decor', 'objects/decor-trunk.png', (0, 0, 16, 288), 1, 'floor', FULL),  # #349: behind the branches
+    'Decor:crown': ('decor', 'objects/decor-crown.png', (0, 0, 96, 40), 1, 'top', FULL),  # #421: hung over a trunk
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),
     # #364 (D89): the bramble's clump at rest, at the root end of its box (`root=right` is the mirrored `Bramble-right`).
