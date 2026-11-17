@@ -14,7 +14,8 @@ import re
 import struct
 import sys
 from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
-    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES)
+    WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
+    ARMS_IMAGE_SIZE)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -145,6 +146,8 @@ def image_contracts(root):
     # The dialogue screen frame (#337, D78): native pixel art on the world-art palette limit.
     contracts += [(f'assets/images/ui/dialogue-{name}.png', size, WORLD_PALETTE_SIZE,
                    'opaque' if name in OPAQUE_DIALOGUE_IMAGES else 'binary') for name, size in DIALOGUE_IMAGES.items()]
+    # The Kimeria arms (#350, #416): the menu mark and the ending's sun, native pixel art, binary alpha.
+    contracts.append(('assets/images/ui/kimeria-arms.png', ARMS_IMAGE_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     # The hero (#343, D79): world pixel art, 16 palette entries including transparency, binary alpha.
     contracts += [(f'assets/images/hero/hero-{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in HERO_IMAGES.items()]
     # The silver thread on death (#341, D81): the strand and glint the computed curve is stamped with.

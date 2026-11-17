@@ -2731,6 +2731,34 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Not verified:** the new and missing sounds on a real output and the look in the running game
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
 
+## D95. The sun on the Kimeria arms lights up on the ending page (#416, 2026-11-17)
+
+- **Status:** Accepted by the author, 2026-11-17 (through the orchestrating session), from the phase A frames and
+  mock-ups of [#416](https://github.com/jlogicgames/edgard_in_kimeria/issues/416) (part of #350, playtest F12). The
+  opening keeps no arms: the author chose not to show the dark arms there.
+- **Before:** the ending was text only, although it says Edgard brought light back to the world.
+- **Decision:**
+  - The ending page draws the Kimeria arms ([ART_DIRECTION.md, "Kingdom arms"](ART_DIRECTION.md#kingdom-arms-350-playtest-f12))
+    at 3x (72x108), centred, top at 40 (`IntroPages.TEXT_TOP`). The ending's text starts 20 px under them, at 168
+    (`IntroScreen.ENDING_TEXT_TOP`); the page bottom stays 304 (`IntroPages.PAGE_BOTTOM`), so the ending has 136 px of text.
+  - The arms are dark (the sun put out) while the page appears. The sun lights as the paragraph that brings the light
+    back starts to fade in: the last paragraph before the closing line (THE END), in every language. The steps are
+    ember, glow, kindle (0.12 s each) and a flare (0.24 s), then the lit arms hold: 0.6 s in all.
+  - D77 holds unchanged: with instant text, and after a press while the page appears, the arms are lit at once (the
+    final state). The animation never delays a press; Escape fades the arms out with the frame they had.
+  - The art is one strip, `art/ui/arms/arms.grid` exported by `tools/arms_sprites.py` to `assets/images/ui/kimeria-arms.png`
+    (six 24x36 frames, 10 colours, binary alpha). Frame `lit` is `art/heraldry/kimeria-arms.png` pixel for pixel, and
+    only the sun changes between frames (`tools/test_arms_sprites.py`). `ui/KimeriaArms` cuts the regions once and is
+    shared with the main menu (#415).
+- **Measured:** with the real body font, the ending ends at 244 of 304 in all five languages today; the healer's ending
+  of [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) ends at 237 in EN and at 253 with a German
+  written long on purpose (337 characters). `IntroPagesTest` keeps the ending one page under the arms. The ending's
+  frame loop allocates 0.0 to 0.1 B/frame (`AllocationBudgetTest.endingArms`, 3 runs, instant text off and on).
+- **Gate:** `IntroPagesTest` (one page and the text top; the ending's structure in all five catalogs and in #372's
+  text: one closing line in capitals, the same paragraphs as English, and the light paragraph is the first to speak of
+  light or the sun), `IntroScreenTest` (the frame sequence, instant text, a press, Escape), `KimeriaArmsTest` (the
+  caller's batch colour survives), `AllocationBudgetTest.endingArms`, and `check_sprite_art.py` for the strip.
+
 ## D96. The first coin is met in the tree room and the Bat ingredient in the wall room (#417, 2026-11-17)
 
 - **Why.** After the D72 split of `forest-entry` (#376) it still introduced four elements (yellowmob, quicksand, coin,

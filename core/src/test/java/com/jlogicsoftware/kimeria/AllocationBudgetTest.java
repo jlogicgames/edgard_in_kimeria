@@ -37,6 +37,7 @@ import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
+import com.jlogicsoftware.kimeria.ui.KimeriaArms;
 import com.jlogicsoftware.kimeria.ui.Overlay;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -877,6 +878,8 @@ class AllocationBudgetTest {
     static final double DIALOGUE_SCREEN_CEILING = 8;
     static final int DIALOGUE_SELECT_FRAMES = 60;
     static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
+    /** Enough endings for the warm-up and the measured window (25 s): one lasts about 7 s (today's ending lights with its third paragraph), or 3 s with instant text (#416). */
+    static final int ENDING_COPIES = 12;
     /** Thorn roots at rest, warning, rising and up inside the measured window (#359, thornRootsRiseInTurn): measured 0.0 B/frame in 2 full-suite runs and 1.5 in 2 isolated runs (2026-11-17). Before #359: 64.0 B/frame (a new {@code Rectangle} per zone or column test). */
     static final double THORN_ROOT_CEILING = 8;
     /** Deadfalls tripped in turn (#363, deadfallTripAndSwing): measured 0.0 B/frame in 3 isolated runs and 0.6 in the full :core:check (2026-11-17). The vine and log boxes are scratch rectangles and the frames are cached; the same 8 B ceiling as the other isolated trap paths. */
@@ -1164,6 +1167,47 @@ class AllocationBudgetTest {
      * keeps pages turning through the whole measured window. Layout, measuring and the text blocks are built at load,
      * outside the measurement.
      */
+    /**
+     * The ending's arms (#416, D95) frame after frame: the real English ending under the arms, dark, the sun lighting up,
+     * lit, then the fade out, with instant text off and on. Endings are opened at load (outside the measurement) and played
+     * one after another, each left with Escape once its sun is lit, so the lighting steps run many times in the window.
+     * Measured 0.0 to 0.1 B/frame in 3 runs, instant text off and on (#416, 2026-11-17).
+     */
+    @Test void endingArms() {
+        harness.font = new MetricsFont(FontSizes.BODY);
+        String ending = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
+            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("ENDING_STORY");
+        KimeriaArms arms = new KimeriaArms(harness.assets());
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360);
+            IntroScreen[] endings = new IntroScreen[ENDING_COPIES];
+            for (int i = 0; i < endings.length; i++) endings[i] = IntroScreen.open(ending, overlay, harness.assets(), 640, instant, arms);
+            // One whole ending first, outside the measurement, so every state change (lit, Escape, fade, done) has run once.
+            IntroScreen first = IntroScreen.open(ending, overlay, harness.assets(), 640, instant, arms);
+            while (!first.done()) {
+                first.update(STEP);
+                if (first.state() == IntroScreen.State.READING && first.armsFrame() == KimeriaArms.LIT) first.skip();
+                overlay.beginFrame();
+                first.render(batch, overlay);
+                overlay.flushText(batch);
+            }
+            int[] at = new int[1], lit = new int[1];
+            double bytes = AllocationProbe.bytesPerFrame(i -> {
+                IntroScreen intro = endings[at[0]];
+                if (intro.done() && at[0] < endings.length - 1) intro = endings[++at[0]];
+                intro.update(STEP);
+                if (intro.state() == IntroScreen.State.READING && intro.armsFrame() == KimeriaArms.LIT) { lit[0]++; intro.skip(); }
+                overlay.beginFrame();
+                intro.render(batch, overlay);
+                overlay.flushText(batch);
+            });
+            assertTrue(lit[0] >= 3, "the sun must light several times during the measurement: " + lit[0]);
+            assertTrue(!endings[at[0]].done(), "the last ending must still be running: raise ENDING_COPIES");
+            System.out.printf("ALLOCATION ending arms, instant text %s: %.1f B/frame, %d endings lit%n", instant ? "on" : "off", bytes, lit[0]);
+            assertWithinBudget("ending arms, instant text " + (instant ? "on" : "off"), PAGED_INTRO_CEILING, bytes);
+        }
+    }
+
     @Test void pagedIntro() {
         harness.font = new MetricsFont(FontSizes.BODY);
         String opening = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",

@@ -28,6 +28,7 @@ import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.input.IntroInput;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
+import com.jlogicsoftware.kimeria.ui.KimeriaArms;
 import com.jlogicsoftware.kimeria.ui.HealerDialogue;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
@@ -203,6 +204,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final IntroInput dialogueInput = new IntroInput();
     private boolean pausedHealer;
     private IntroScreen intro;
+    /** The Kimeria arms whose sun lights up on the ending page (#416, D95); cut once at load. */
+    private KimeriaArms arms;
     private final IntroInput introInput = new IntroInput();
     private Music introMusic;
     private boolean introMusicPlaying;
@@ -242,6 +245,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         touchControls.setLayout(touchLayout);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H);
         healerView = new HealerDialogueView(assets);
+        arms = new KimeriaArms(assets);
         menuBackdrop = new MenuBackdrop();
 
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/main_menu.mp3"));
@@ -479,9 +483,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private boolean storyScreenActive() { return uiState == UiState.INTRO || uiState == UiState.ENDING; }
 
-    /** Opening and ending share the same static pages (#336), fade, music and fresh-input rules. */
+    /** Opening and ending share the same static pages (#336), fade, music and fresh-input rules; the ending adds the arms (#416). */
     private void openStory(Msg message, UiState state) {
-        intro = IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText());
+        intro = IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null);
         introInput.reset(Gdx.input);
         uiState = state;
     }
