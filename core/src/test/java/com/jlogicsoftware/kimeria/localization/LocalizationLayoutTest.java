@@ -52,7 +52,7 @@ class LocalizationLayoutTest {
                 zone = new MetricsFont(FontSizes.ZONE), context = new MetricsFont(FontSizes.LABEL);
             Overlay overlay = new Overlay(new Assets() {
                 @Override public BitmapFont font(int size) { return new MetricsFont(size); }
-            }, 640, 360);
+            }, 640, 360, null);
             for (Language language : Language.values()) {
                 String prefix = language.code() + " ";
                 for (Msg message : new Msg[]{Msg.TITLE, Msg.NEW_GAME, Msg.OPTIONS, Msg.ASSIST, Msg.ABOUT, Msg.PAUSE_MENU, Msg.LOADING})
@@ -101,7 +101,7 @@ class LocalizationLayoutTest {
                     Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), Msg.RESTART_LEVEL.t(language))) {
                     Menu menu = new Menu(null, null, List.of(new MenuItem(label, () -> {})), null);
                     assertTrue(new GlyphLayout(button, label).width <= overlay.buttonsWidth(menu) - 48, prefix + label);
-                    assertTrue(overlay.buttonsWidth(menu) <= 592, prefix + label);
+                    assertTrue(overlay.buttonsWidth(menu) <= Overlay.MAX_BUTTONS_W, prefix + label);
                 }
                 // The Assist menu is a fixed 440 px column (D62): the longest On/Off label must fit it.
                 for (String label : List.of(Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),

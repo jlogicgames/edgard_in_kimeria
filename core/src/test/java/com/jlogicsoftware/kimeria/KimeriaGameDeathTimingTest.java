@@ -73,7 +73,7 @@ class KimeriaGameDeathTimingTest {
         set("touchControls", new TouchControls(assets, game,
             new com.badlogic.gdx.utils.viewport.Viewport() { @Override public com.badlogic.gdx.math.Vector2 unproject(com.badlogic.gdx.math.Vector2 v) { return v; } },
             640, 360, true));
-        set("overlay", new Overlay(assets, 640, 360));
+        set("overlay", new Overlay(assets, 640, 360, null));
         set("playSounds", false);
         HeadlessPreferences prefs = new HeadlessPreferences(new FileHandle(directory.resolve("settings-" + hz + ".xml").toFile()));
         progress = new SavedProgress(prefs, KimeriaGame.levelNames().size());

@@ -898,6 +898,12 @@ class AllocationBudgetTest {
     static final double FALLING_PLATFORM_REST_CEILING = 8;
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, FALLING_STONE_CUE_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
+    /**
+     * #415: the arms beside the selected menu button, the selection stepping down the main menu's five rows; measured 0.0 B/frame
+     * in 3 runs (2026-11-17). The same 8 B ceiling as the other isolated paths. This is the selection arms only: the rest of the menu
+     * frame ({@code Overlay.buttons} labels, layouts, mouse copy) still allocates, tracked in #464.
+     */
+    static final double MENU_SELECTION_ARMS_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
     private static final int STONE_ROOM = 4, THROW_CYCLES = 30;
     private static final float REACH_SCAN = 40, REACH_SCAN_STEP = 2;
@@ -1114,7 +1120,7 @@ class AllocationBudgetTest {
         Level level = harness.roomOf("forest-1", 2);
         ArtifactInventory inventory = new ArtifactInventory();
         for (boolean instant : new boolean[]{false, true}) {
-            Overlay overlay = new Overlay(harness.assets(), 640, 360);
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
             HealerDialogueView view = new HealerDialogueView(harness.assets());
             HealerDialogue tale = HealerDialogue.tutorialStart();
             tale.setInstantText(true);
@@ -1130,7 +1136,7 @@ class AllocationBudgetTest {
             System.out.printf("ALLOCATION dialogue screen, tale line, instant text %s: %.1f B/frame%n", instant ? "on" : "off", bytes);
             assertWithinBudget("dialogue screen, tale line, instant text " + (instant ? "on" : "off"), DIALOGUE_SCREEN_CEILING, bytes);
         }
-        Overlay overlay = new Overlay(harness.assets(), 640, 360);
+        Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
         HealerDialogueView view = new HealerDialogueView(harness.assets());
         HealerDialogue stop = new HealerDialogue(false, true, false, false, false);
         stop.setInstantText(true);
@@ -1179,7 +1185,7 @@ class AllocationBudgetTest {
             new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("ENDING_STORY");
         KimeriaArms arms = new KimeriaArms(harness.assets());
         for (boolean instant : new boolean[]{false, true}) {
-            Overlay overlay = new Overlay(harness.assets(), 640, 360);
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
             IntroScreen[] endings = new IntroScreen[ENDING_COPIES];
             for (int i = 0; i < endings.length; i++) endings[i] = IntroScreen.open(ending, overlay, harness.assets(), 640, instant, arms);
             // One whole ending first, outside the measurement, so every state change (lit, Escape, fade, done) has run once.
@@ -1220,7 +1226,7 @@ class AllocationBudgetTest {
         });
         System.out.printf("ALLOCATION harness input polling alone: %.1f B/frame%n", harnessInput);
         for (boolean instant : new boolean[]{false, true}) {
-            Overlay overlay = new Overlay(harness.assets(), 640, 360);
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
             IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
             assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
             // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
@@ -1297,5 +1303,18 @@ class AllocationBudgetTest {
         MenuBackdrop backdrop = new MenuBackdrop();
         double bytes = AllocationProbe.bytesPerFrame(i -> backdrop.update(STEP));
         assertWithinBudget("MenuBackdrop.update", MENU_BACKDROP_CEILING, bytes);
+    }
+
+    /**
+     * The selection arms (#415) as {@code Overlay.buttons} draws them every menu frame: both arms beside the selected button
+     * of the main menu (220 px buttons from y 79, 48 px apart), the selection moving to the next row every frame. The selection
+     * arms: 0.0 B/frame; the rest of the menu frame: #464.
+     */
+    @Test void menuSelectionArms() {
+        harness.font = new MetricsFont(FontSizes.BUTTON);
+        Overlay overlay = new Overlay(harness.assets(), 640, 360, new KimeriaArms(harness.assets()));
+        double bytes = AllocationProbe.bytesPerFrame(i ->
+            overlay.drawSelectionArms(batch, 210f, 79f + (i % 5) * (Overlay.BUTTON_H + Overlay.BUTTON_GAP), Overlay.BUTTON_W));
+        assertWithinBudget("menu selection arms", MENU_SELECTION_ARMS_CEILING, bytes);
     }
 }

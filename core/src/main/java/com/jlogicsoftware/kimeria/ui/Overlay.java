@@ -39,6 +39,15 @@ import java.util.List;
  */
 public class Overlay {
     public static final float BUTTON_W = 220f, BUTTON_H = 40f, BUTTON_GAP = 8f;
+    /**
+     * #415: the selected button is marked by the Kimeria arms (24x36, native), one on each side, outside the gold frame
+     * (3 px) with a 6 px gap, centred on the button's row. {@link #MAX_BUTTONS_W} keeps both inside the 640 px screen with an
+     * 8 px margin: 640 - 2 * (8 + 3 + 6 + 24) = 558.
+     */
+    public static final float SELECTED_FRAME = 3f, SELECTION_ARMS_GAP = 6f;
+    public static final float SELECTION_ARMS_W = KimeriaArms.WIDTH, SELECTION_ARMS_H = KimeriaArms.HEIGHT;
+    public static final float SCREEN_MARGIN = 8f;
+    public static final float MAX_BUTTONS_W = 640f - 2f * (SCREEN_MARGIN + SELECTED_FRAME + SELECTION_ARMS_GAP + SELECTION_ARMS_W);
 
     private static final Color IDLE_BORDER = new Color(0.45f, 0.45f, 0.52f, 1f);
     private static final Color IDLE_FILL = new Color(0.10f, 0.10f, 0.14f, 0.92f);
@@ -52,6 +61,8 @@ public class Overlay {
     private final BitmapFont bodyFont;
     private final BitmapFont buttonFont;
     private final BitmapFont hintFont;
+    /** The arms beside the selected button (#415): frame {@link KimeriaArms#LIT} at scale 1; the game's one shared instance. */
+    private final KimeriaArms arms;
     private final Matrix4 textProjection;
     private final float logicalHeight;
     private final List<Runnable> textQueue = new ArrayList<>();
@@ -68,11 +79,16 @@ public class Overlay {
     private final Matrix4 savedProjection = new Matrix4();
     private Vector2 lastMouse;
 
-    public Overlay(Assets assets, float logicalWidth, float logicalHeight) {
+    /**
+     * @param arms the game's shared {@link KimeriaArms} (cut once at load), drawn beside the selected menu button. A test
+     *             that never draws a button list may pass null.
+     */
+    public Overlay(Assets assets, float logicalWidth, float logicalHeight, KimeriaArms arms) {
         titleFont = assets.font(FontSizes.TITLE);
         bodyFont = assets.font(FontSizes.BODY);
         buttonFont = assets.font(FontSizes.BUTTON);
         hintFont = assets.font(FontSizes.LABEL);
+        this.arms = arms;
         this.logicalHeight = logicalHeight;
 
         OrthographicCamera textCamera = new OrthographicCamera();
@@ -192,20 +208,40 @@ public class Overlay {
         });
     }
 
-    private void buttonLabel(SpriteBatch batch, BitmapFont font, String label, float x, float y,
-                             float width, float height, boolean selected, Color color) {
+    private void buttonLabel(Batch batch, BitmapFont font, String label, float x, float y,
+                             float width, float height, Color color) {
         GlyphLayout layout = new GlyphLayout(font, label);
         float labelY = y + (height - layout.height) / 2f;
-        float markerWidth = new GlyphLayout(font, "<").width;
         textQueue.add(() -> {
             font.setColor(color);
             font.draw(batch, layout, x + (width - layout.width) / 2f, toTextY(labelY));
-            if (selected) {
-                font.draw(batch, ">", x + 10, toTextY(labelY));
-                font.draw(batch, "<", x + width - 10 - markerWidth, toTextY(labelY));
-            }
             font.setColor(Color.WHITE);
         });
+    }
+
+    /** Left edge of the arms left of a selected button whose left edge is {@code buttonX} (#415). */
+    public static float selectionArmsLeftX(float buttonX) {
+        return buttonX - SELECTED_FRAME - SELECTION_ARMS_GAP - SELECTION_ARMS_W;
+    }
+
+    /** Left edge of the arms right of a selected button {@code buttonW} wide (#415). */
+    public static float selectionArmsRightX(float buttonX, float buttonW) {
+        return buttonX + buttonW + SELECTED_FRAME + SELECTION_ARMS_GAP;
+    }
+
+    /** Top edge (Y-down) of both arms beside a selected button whose top edge is {@code buttonY}: centred on its row. */
+    public static float selectionArmsTop(float buttonY) {
+        return buttonY + (BUTTON_H - SELECTION_ARMS_H) / 2f;
+    }
+
+    /**
+     * The arms on both sides of the selected button at ({@code buttonX}, {@code buttonY}), {@code buttonW} wide (#415). These two
+     * draws allocate nothing; the rest of the menu frame still does (#464).
+     */
+    public void drawSelectionArms(Batch batch, float buttonX, float buttonY, float buttonW) {
+        float top = selectionArmsTop(buttonY), half = SELECTION_ARMS_W / 2f;
+        arms.draw(batch, KimeriaArms.LIT, selectionArmsLeftX(buttonX) + half, top, 1);
+        arms.draw(batch, KimeriaArms.LIT, selectionArmsRightX(buttonX, buttonW) + half, top, 1);
     }
 
     /** Height a button list for {@code menu} will occupy, for callers laying out a screen around it. */
@@ -214,12 +250,15 @@ public class Overlay {
         return n * BUTTON_H + Math.max(0, n - 1) * BUTTON_GAP;
     }
 
-    /** Leave space for both selection markers; drawing and mouse hit areas use the same width. */
+    /**
+     * Leaves 24 px of padding each side of the widest label; drawing and mouse hit areas use the same width. Capped at
+     * {@link #MAX_BUTTONS_W} so the selection arms beside the button stay on screen (#415).
+     */
     public float buttonsWidth(Menu menu) {
         float width = menu.buttonWidth;
         for (MenuItem item : menu.items) if (item.visible.getAsBoolean())
             width = Math.max(width, new GlyphLayout(buttonFont, item.label.get()).width + 48f);
-        return Math.min(592f, width);
+        return Math.min(MAX_BUTTONS_W, width);
     }
 
     /**
@@ -239,7 +278,7 @@ public class Overlay {
      * @param onActivate the louder press sound, played the frame any button
      *                    (or Back) actually fires
      */
-    public void buttons(SpriteBatch batch, Menu menu, float centerX, float startY,
+    public void buttons(Batch batch, Menu menu, float centerX, float startY,
                          Vector2 mouseLogical, boolean mouseClicked, boolean confirmPressed, boolean backPressed,
                          Runnable onHover, Runnable onActivate) {
         int n = menu.items.size();
@@ -268,7 +307,7 @@ public class Overlay {
             boolean selected = menu.selected == i;
 
             // Three distinct looks: idle (dark, quiet), hovered (lighter fill), selected (gold
-            // frame, gold label and > < markers). Hovered + selected stack.
+            // frame, gold label and the Kimeria arms outside it, #415). Hovered + selected stack.
             if (selected) {
                 batch.setColor(SELECTED_BORDER);
                 batch.draw(Shaders.whiteQuad(), bx - 3, by - 3, buttonW + 6, BUTTON_H + 6);
@@ -279,10 +318,11 @@ public class Overlay {
             batch.setColor(hovered ? HOVER_FILL : IDLE_FILL);
             batch.draw(Shaders.whiteQuad(), bx, by, buttonW, BUTTON_H);
             batch.setColor(Color.WHITE);
+            if (selected) drawSelectionArms(batch, bx, by, buttonW);
 
             Color textColor = selected ? SELECTED_TEXT : hovered ? HOVER_TEXT : IDLE_TEXT;
             buttonLabel(batch, buttonFont, menu.items.get(i).label.get(), bx, by,
-                buttonW, BUTTON_H, selected, textColor);
+                buttonW, BUTTON_H, textColor);
 
             if (hovered && mouseClicked) {
                 onActivate.run();

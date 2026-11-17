@@ -52,7 +52,7 @@ class IntroPagesTest {
         Assets assets = new Assets() {
             @Override public BitmapFont font(int size) { return new MetricsFont(size); }
         };
-        return new Overlay(assets, 640, 360);
+        return new Overlay(assets, 640, 360, null);
     }
 
     private static String rebuilt(IntroPages pages) {
