@@ -29,7 +29,7 @@ class TutorialLevelTest {
     @Test void forestZeroReservesSixRoomsForTheLessonsInOrder() {
         TiledMapData map = map("forest-0");
         RoomLayout layout = new RoomLayout(map);
-        List<String> lessons = List.of("lever", "ladder-bridge", "wall", "moving-platform", "thrown-stone", "existing-traps");
+        List<String> lessons = List.of("lever", "ladder-bridge", "wall", "moving-platform", "thrown-stone", "falling-platform");
         assertEquals(lessons.size(), layout.rooms.size());
         var markers = map.layer("Rooms").stream().filter(o -> "Room".equals(o.type)).toList();
         for (int i = 0; i < lessons.size(); i++) {
