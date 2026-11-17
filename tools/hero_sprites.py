@@ -14,6 +14,7 @@ In a block `_` keeps the pixel underneath and `.` clears it, so a frame can be a
 """
 from pathlib import Path
 from PIL import Image
+import moon_rim
 from sprite_layouts import HERO_SHEETS, HERO_FRAME_PREFIX, HERO_IMAGES, HERO_FRAME_SIZE, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,6 +26,8 @@ COLOR_ARGS = 2   # color <char> <RRGGBB>
 NAME_ARGS = 1    # frame <name>
 SOURCE_ARGS = 3  # frame <name> from|flip <other>
 AT_ARGS = 2      # at <x> <y>
+# Sheets exported with the moon rim (D92, tools/moon_rim.py); empty until #430's night change turns them on.
+RIM_SHEETS = frozenset()
 
 
 class Block:
@@ -104,13 +107,15 @@ def sheet_images(path=GRID):
         for row, (clip, count) in enumerate(clips):
             for n in range(count):
                 image.paste(frame_image(colors, frames[frame_name(sheet, clip, n + 1)]), (n * N, row * N))
-        images[sheet] = image
+        images[sheet] = moon_rim.rim(image, (N, N)) if sheet in RIM_SHEETS else image
     return images
 
 
 def indexed(master, colors):
     """`master` as a 4-bit indexed PNG image with the grid's own palette (index 0 transparent): exact, no quantizing."""
     opaque = [c for c in colors.values() if c]
+    if len(opaque) > WORLD_PALETTE_SIZE - 1:  # the moon rim (D92) is one more colour: the grid must leave it a slot
+        raise ValueError(f'{len(opaque)} opaque colours, at most {WORLD_PALETTE_SIZE - 1} fit a 4-bit sheet')
     index = {c + (OPAQUE_ALPHA,): i + 1 for i, c in enumerate(opaque)}
     pixels = bytes(index.get(p, 0) for p in master.get_flattened_data())
     image = Image.frombytes('P', master.size, pixels)
@@ -125,7 +130,8 @@ def export():
     colors, _ = parse()
     for sheet, master in sheet_images().items():
         target = ROOT / f'assets/images/hero/hero-{sheet}.png'
-        indexed(master, colors).save(target, bits=WORLD_PALETTE_BITS, transparency=0)
+        palette = {**colors, 'moon rim': moon_rim.RIM} if sheet in RIM_SHEETS else colors
+        indexed(master, palette).save(target, bits=WORLD_PALETTE_BITS, transparency=0)
         print(target.relative_to(ROOT))
 
 

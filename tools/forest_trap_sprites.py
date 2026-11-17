@@ -12,6 +12,7 @@ characters of each row: a symmetry aid for round shapes, like an editor's mirror
 """
 from pathlib import Path
 from PIL import Image
+import moon_rim
 from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +34,8 @@ MIRROR_ARGS = 2  # frame <name> mirror
 FLIP_ARGS = 3  # frame <name> flip <other>
 HALF = 2
 FIRST_LINE = 1
+# Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name; empty until #430's night change turns them on.
+RIM_SHEETS = frozenset()
 BACKGROUNDS = ((0x0c, 0x0a, 0x1e), (0x3a, 0x12, 0x4e), (0x16, 0x3c, 0x44))  # night, canopy, trunk
 
 
@@ -99,7 +102,10 @@ def sheet_image(name):
             for char in rows[y]:
                 colour = colors[char]
                 data += bytes(colour + (OPAQUE_ALPHA,)) if colour else bytes(RGBA_CHANNELS)
-    return Image.frombytes('RGBA', (width, size[1]), bytes(data)), len(colors) - 1
+    image = Image.frombytes('RGBA', (width, size[1]), bytes(data))
+    if name in RIM_SHEETS:  # D92: the lit contour recoloured, one more palette entry (export_sheet checks the 16)
+        return moon_rim.rim(image, size), len(colors)
+    return image, len(colors) - 1
 
 
 def export_sheet(name):
