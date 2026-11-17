@@ -93,7 +93,7 @@ again after each collection return. Lines are chosen by state (`HealerDialogue` 
 | `HEALER_LOCK` | Healer | After Pay | Plain ("its retries") |
 | `HEALER_RETURN`, `HEALER_BREW`, `HEALER_FIGHT` | Choice buttons | Choice step | Label, imperative |
 | `BAT`, `MUSHROOM`, `FOREST_COINS_COUNT`, `PAID` | Checklist beside the portraits | Every pre-boss meeting | Label |
-| `COINS` | **Unused**: no code reads it (the checklist uses `FOREST_COINS_COUNT`) | Never | Label |
+| `COINS` | **Unused**: no code read it (the checklist uses `FOREST_COINS_COUNT`). **Deleted (#374)** from `Msg` and all five catalogs | Never | Label |
 
 ### 1.5 The healer after the boss (once per boss victory)
 
@@ -182,7 +182,7 @@ pulling Edgard back (D81, [#341](https://github.com/jlogicgames/edgard_in_kimeri
 | Once per run | Opening, 11 tutorial-tale lines, 3 victory lines, ending |
 | Per pre-boss meeting (1 to n per run) | 2 to 4 healer lines and the checklist |
 | Menu visits | Menu labels, `MENU_HINT`, About |
-| Never | `COINS` |
+| Never | `COINS` (deleted by #374) |
 
 The text a player reads most is the plain-voice layer (labels and zone messages); the tale layer is
 read once. The style rules in section 4 keep the two voices apart on purpose.
@@ -262,7 +262,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | G15 | "Sleeping lands", "sleeping kingdom": sleep is never explained (the curse is night, not sleep). Either a deliberate image (the land sleeps under the night) or drift. | `INTRO_STORY` | Author's call, settled with the frame in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. **Resolved (#370, the author's choice):** `EDGARD_TALE_READY` opens with "Forgive my haste, healer." | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
 | G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
-| G18 | `COINS` is in all five catalogs and read by no code. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
+| G18 | `COINS` is in all five catalogs and read by no code. **Resolved (#374):** the key is deleted from `Msg` and all five catalogs, with its allowlist entry. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
 | G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. | `INTRO_STORY` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G20 | The apostrophe in L'Kardina: STORY.md writes the Ukrainian form with a typographic ’ (Л’Кардина); all catalogs use ASCII '. Fix one form per language in the glossary. | `INTRO_STORY` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369); glossary row "Villain" |
 
@@ -363,7 +363,7 @@ go in a Python tool with its own test, data in one JSON file.
 | T2 tale register | Tale-voice keys (`INTRO_STORY`, `ENDING_STORY`, spoken `HEALER_*`, `EDGARD_*`) contain no control or jargon word (word-boundary stems in five languages, extending the list in `HealerDialogueTest`) | `HEALER_READY` (boss), `HEALER_PAID` (boss, damage), `HEALER_LOCK` (retries, boss), `HEALER_INGREDIENTS` and `HEALER_BOTH` (list), in all five languages where the word appears: 24 hits in the dry run (a naive substring check also hit "Listen" in `INTRO_STORY`, so T2 must match word stems at word boundaries) |
 | T3 zone message budget | EN `HINT_*` at most 60 characters and at most two sentences | `HINT_STONE_THROW` 65, `HINT_TRAP_STUMP` 64, `HINT_TRAP_PLATFORM` 73, `HINT_PLATFORM_STONE` 75, `HINT_STONE_STUMP` 77 |
 | T4 no key names in zone messages | No binding token (J, K, L, W, A, S, D, Z, X, C, Esc, Tab, Enter, Space) followed by `+` or `:` or standing as a key list | none (the naive single-letter check falsely flags the English article "A" four times; the tool must match the binding pattern, not any capital letter) |
-| T5 unused keys | Every catalog key is referenced by `Msg` and by code or a map | `COINS` |
+| T5 unused keys | Every catalog key is referenced by `Msg` and by code or a map | `COINS` (deleted by #374) |
 
 **B. `:core:test`**: keep `LocalizationLayoutTest` (pixel limits) and `HealerDialogueTest`
 (the text box, D78; speaker regions before #337); move the tutorial-only register check into the shared T2 list or have the Java
@@ -405,6 +405,6 @@ rewrite (or with an explicit, argued allowlist entry per remaining hit, removed 
 | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) | EN rewrite of the pre-boss and victory lines in tale voice | G11, G12, G13 |
 | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) | Ending in the healer's voice within the MVP decision of STORY.md | G8, G9, G10, G15, G19 |
 | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) | Zone message rewrite: one "exit ahead" form, trap lines within 60 EN chars | G17 |
-| [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) | Remove or use the unused `COINS` key | G18 |
+| [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) | Remove or use the unused `COINS` key | G18 (done: deleted) |
 | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) | Native-speaker review of uk/pl/de/be, glossary forms (including the fire's name from #340; Polish "czarownica" was fixed by #370) | G3, G14, G20 |
 | [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368) | In-game visual checks | Look of rewritten texts in the running game |
