@@ -21,6 +21,7 @@ import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
+import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
@@ -605,6 +606,31 @@ class AllocationBudgetTest {
         assertWithinBudget("explosive idle tell", EXPLOSIVE_IDLE_TELL_CEILING, bytes);
     }
 
+    /**
+     * Thorn roots (#359) in turn, as {@link #honeyFungusBurstsInTurn}: every {@code FUNGUS_CYCLE_FRAMES} the hero steps beside
+     * the next root's column (inside its zone, clear of the 6 px column), so the measured window holds roots at rest (the cue
+     * frame), warning with the wobble, rising and up; {@code update} (zone and column tests) and {@code render} of all of them each frame.
+     */
+    @Test void thornRootsRiseInTurn() {
+        ThornTrap[] roots = new ThornTrap[FUNGUS_CYCLES];
+        Rectangle hero = new Rectangle(0, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        Runnable none = () -> { };
+        for (int k = 0; k < roots.length; k++)
+            roots[k] = new ThornTrap(harness.assets(), harness.game().trapWarnings(), ThornTrap.Kind.ROOT, k * FUNGUS_SPACING,
+                FUNGUS_FLOOR - ROOT_HEIGHT, TRAP_TILE, ROOT_HEIGHT, FUNGUS_ZONE, FUNGUS_ZONE, () -> hero, none);
+        boolean[] seen = new boolean[ThornTrap.Phase.values().length];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = Math.min(i / FUNGUS_CYCLE_FRAMES, roots.length - 1);
+            hero.x = i % FUNGUS_CYCLE_FRAMES < FUNGUS_ENTER_FRAME ? k * FUNGUS_SPACING - FUNGUS_SPACING / 2f : k * FUNGUS_SPACING + THORN_BESIDE;
+            for (ThornTrap root : roots) { root.update(STEP); root.render(batch); }
+            if (i >= AllocationProbe.WARMUP_FRAMES) seen[roots[k].phase().ordinal()] = true;
+        });
+        for (ThornTrap.Phase phase : ThornTrap.Phase.values())
+            assertTrue(seen[phase.ordinal()], "the measured window must hold a root in " + phase);
+        assertEquals(ThornTrap.Phase.ARMED, roots[roots.length - 1].phase(), "the last root must rise in the window");
+        assertWithinBudget("thorn roots rise in turn", THORN_ROOT_CEILING, bytes);
+    }
+
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */
     @Test void falseHoneyFungusCloudsInTurn() {
         FalseHoneyFungus[] fungi = new FalseHoneyFungus[FUNGUS_CYCLES];
@@ -629,6 +655,10 @@ class AllocationBudgetTest {
     static final double DIALOGUE_SCREEN_CEILING = 8;
     static final int DIALOGUE_SELECT_FRAMES = 60;
     static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
+    /** Thorn roots at rest, warning, rising and up inside the measured window (#359, thornRootsRiseInTurn): measured 0.0 B/frame in 2 full-suite runs and 1.5 in 2 isolated runs (2026-11-17). Before #359: 64.0 B/frame (a new {@code Rectangle} per zone or column test). */
+    static final double THORN_ROOT_CEILING = 8;
+    /** The hero's left edge this far right of a thorn root's left edge: inside its zone, clear of the 6 px column (5 to 11). */
+    private static final float THORN_BESIDE = 12;
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
