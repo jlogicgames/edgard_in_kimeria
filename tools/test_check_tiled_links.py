@@ -111,6 +111,50 @@ class TiledLinksTest(unittest.TestCase):
         self.assertIn('exit', run('<object id="2" type="ThornVine" x="258" y="256" width="24" height="40"/>')[0])
         self.assertIn('checkpoint', run('<object id="2" type="ThornVine" x="140" y="256" width="24" height="40"/>')[0])
 
+    def test_bramble_fixtures_agree_with_the_game(self):
+        """#364 (D89): the Java loader accepts bramble-test and refuses the three broken fixtures for the same reasons."""
+        tiles = ROOT / 'core' / 'src' / 'test' / 'resources' / 'tiles'
+        self.assertEqual([], links.check_map(tiles / 'bramble-test.tmx'))
+        for name, reason in (('bramble-bad-period-test', 'shorter than'), ('bramble-no-face-test', 'solid face'),
+                             ('bramble-covers-exit-test', 'covers the room exit')):
+            errors = links.check_map(tiles / f'{name}.tmx')
+            self.assertEqual(1, len(errors), name)
+            self.assertIn(reason, errors[0], name)
+
+    def test_bramble_properties_are_strict(self):
+        wall = '<object id="8" type="Wall" x="0" y="0" width="16" height="320"/><object id="7" x="0" y="320" width="640" height="48"/>'
+
+        def bramble(props, width=64, height=24):
+            body = ''.join(f'<property name="{k}" value="{v}"/>' for k, v in props.items())
+            return check(tmx(f'<object id="2" type="Bramble" x="16" y="296" width="{width}" height="{height}">'
+                             f'<properties>{body}</properties></object>', collisions=wall))
+        self.assertEqual([], bramble({'root': 'left'}))
+        self.assertEqual([], bramble({'root': 'left', 'period': 4.5, 'phase': 1, 'hold': 1.5}))
+        self.assertIn('root must be', bramble({})[0])
+        self.assertIn('root must be', bramble({'root': 'up'})[0])
+        self.assertIn('unknown property', bramble({'root': 'left', 'speed': 2})[0])
+        self.assertIn('not a number', bramble({'root': 'left', 'hold': 'long'})[0])
+        self.assertIn('hold must be', bramble({'root': 'left', 'hold': 2})[0])
+        self.assertIn('width', bramble({'root': 'left'}, width=112)[0])
+        self.assertIn('height', bramble({'root': 'left'}, height=16)[0])
+        self.assertIn('root edge', bramble({'root': 'right'})[0])
+
+    def test_bramble_accepts_a_split_face_a_split_floor_and_a_half_pixel_offset(self):
+        """Bramble.placementProblem merges spans within FLOOR_TOLERANCE, as DeadfallTrap does (review of #364)."""
+        def bramble(collisions):
+            return check(tmx('<object id="2" type="Bramble" x="16" y="296" width="64" height="24">'
+                             '<properties><property name="root" value="left"/></properties></object>', collisions=collisions))
+        split_face = ('<object id="8" type="Wall" x="0" y="0" width="16" height="306"/>'
+                      '<object id="9" type="Wall" x="0" y="306" width="16" height="14"/>')
+        split_floor = '<object id="7" x="0" y="320" width="72" height="48"/><object id="6" x="72" y="320" width="568" height="48"/>'
+        self.assertEqual([], bramble(split_face + split_floor))
+        self.assertEqual([], bramble('<object id="8" type="Wall" x="0.4" y="0" width="16" height="320"/>'
+                                     '<object id="7" x="0" y="320.3" width="640" height="48"/>'))
+        gap = '<object id="7" x="0" y="320" width="72" height="48"/><object id="6" x="80" y="320" width="560" height="48"/>'
+        self.assertIn('needs floor', bramble(split_face + gap)[0])
+        short_face = '<object id="8" type="Wall" x="0" y="0" width="16" height="306"/>'
+        self.assertIn('root edge', bramble(short_face + split_floor)[0])
+
     def test_rhythm_test_fixtures_agree_with_the_game(self):
         tiles = ROOT / 'core' / 'src' / 'test' / 'resources' / 'tiles'
         self.assertEqual([], links.check_map(tiles / 'rhythm-test.tmx'))

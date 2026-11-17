@@ -67,6 +67,7 @@ what the player does about them.
 | touch-explosive | `ExplosiveStump`, `ExplosiveRoot`, `Bomb` | jumps it, walks clear of the wind-up, or sets it off from afar |
 | puffball | `Puffball` | crosses a rhythmic spore cloud in its calm |
 | thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm |
+| bramble | `Bramble` | waits out a thorn arm that grows across a lane on a clock and passes in its open window (D89) |
 | honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst |
 | false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud |
 | deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past |
@@ -205,7 +206,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 7 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 1 of 8 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
@@ -239,7 +240,7 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 7 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 2 of 8 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by. |
 | Introduces | deadfall |
@@ -271,7 +272,7 @@ x    4960 4992        5176-5192        5228  5296  5364      5536    5600
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 7 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 3 of 8 (1280 px, two screens) |
 | Role | combination |
 | Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
 | Introduces | running-platform, puffball |
@@ -304,7 +305,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 7 (640 px, one screen) |
+| Level | forest-1, play order 2, room 4 of 8 (640 px, one screen) |
 | Role | lesson |
 | Purpose | One lever drives two mechanisms in opposite states: pulling it lowers the ladder and stops the lift, pulling again raises the ladder and restarts the lift; both are in view when it is pulled, and a wrong pull costs nothing. |
 | Introduces | - |
@@ -320,11 +321,45 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 | Status | New (#418, D86, after the D84 playtest). D84 check: (1) taught before gating: the combination is met here, with nothing at stake, before the route room gates progress with it; (2) the effects land on screen: the room is one screen wide (640 px = the camera's view), the lift is 80 px and the ladder 192 px from the lever; (3) a stuck player always sees something untried: the lever, the running lift or the hanging ladder; (4) the challenge is only boarding a moving lift. The room is built, tested with a scripted hero and not yet played by the author or a novice (#418). |
 | Decisions | D84, D86, D67 |
 
+### forest-1-bramble
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 5 of 8 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | A thorn arm grows over a ladder top on a clock: watch it from the floor, wait on the ladder, climb out when it pulls back. |
+| Introduces | bramble |
+| Develops | ladder: its top is now a place to wait and watch, and leaving it is timed |
+| Combines | - |
+| Repeats | ladder |
+| Mastered route | 10.73 s from a fresh start, the same with the longer-warnings assist; 9.42 to 12.80 s over every start offset (0.05 s steps) for a hero who goes when the lane is open or waits on the ladder for the arm to come back (`Forest1BrambleTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | 6.70 s: a hero who climbs straight out from a fresh start is caught 6.70 s after the entrance and replays the room from its entrance (`Forest1BrambleTest`) |
+| D26 | no lever, no support, no one-shot state: the ladder is always down and the arm comes back every 4 s, so waiting on the ladder always gives another window; the band never reaches the floor, so the walk to the ladder is safe (`Forest1BrambleTest`) |
+| Hints | none (forest-1 has none, D33) |
+| Landmark | the thorn arm sweeping over the ladder top under the shelf's end |
+| Status | new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero, not yet played by the author or a novice ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
+| Decisions | D89, D72 |
+
+Sketch (Y grows downward, floor top y 320, shelf top y 208; walls x 5600-5616 and 6224-6240):
+
+```
+x    5600 5632              5904 5920                    6160     6192 6208 6224 6240
+     |wall|start             [ shelf 5904-6192, y 208-224 ]  B~~~~~~~~~~~~~~~~|wall|
+     |    | @                 E (exit 5920-5952, y 176-208)          | L  |    |    |
+=====+=====================================================================+====+====  floor y 320
+```
+
+- `Bramble` (id 127) x 6160, y 184, 64 x 24, `root=right`: rooted in the right wall's face at x 6224, the band y 190-206,
+  the grown arm over x 6160-6224, the always-lethal clump x 6212-6224.
+- Static `Ladder` (id 126) x 6192-6208, y 208-320, no lever: one tile off the wall, so its top is clear of the clump (D89).
+- `RoomExit` (id 125) x 5920-5952, y 176-208, on the shelf's left end. `RoomStart` (5632, 272).
+
 ### forest-1-route
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 7 (832 px) |
+| Level | forest-1, play order 2, room 6 of 8 (832 px) |
 | Role | variation |
 | Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
 | Introduces | bat-enemy |
@@ -344,7 +379,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 6 of 7 (768 px) |
+| Level | forest-1, play order 2, room 7 of 8 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
 | Introduces | - |
@@ -364,7 +399,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 7 of 7 (640 px, one screen) |
+| Level | forest-1, play order 2, room 8 of 8 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb |

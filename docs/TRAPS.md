@@ -100,6 +100,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `FalseHoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-canopy` (`forest-2`), after the harmless `HoneyFungus` of `forest-0-lever` | D63 |
 | `FallingPlatform` | crumble | DISGUISED | a hairline crack through the slab (#362) | `FALLING_PLATFORM_SECONDS` 1.0 / 1.5 s | `forest-0-traps` | D7, D40, D46, D69, D80 |
 | `Deadfall` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-deadfall`, met alone on open floor | D88 |
+| `Bramble` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s inside the period | `forest-1-bramble`, seen cycling from the floor before the climb | D46, D89 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46) or `skin=branch` (the rotten tree branch, D80) is the same type
@@ -377,6 +378,32 @@ means a smaller Y.
 | Art and sound | sheets `trap-deadfall` (log, 32×16: `tied`, `strain`, `slip`, `swing`, `caught`), `trap-deadfall-bough` (112×24: the bough, its two rope knots and the snag; its thick end meets a `Decor:trunk`), `trap-deadfall-vine` (24×8: `taut`, `tugged`, `cut`), the rope a stretched 1×8 strip; grids under `art/objects/forest-traps/`; palette of the sound branch (`perch`) plus end grain `e8c890`/`9c6a34` and the bone `efe6c4`/`b8ad9c` of cord and vine, no accent hue. Active tier: the contrast gate measures the three parts drawn at rest where the game draws them (`tools/check_contrast.py`, `deadfall_parts`), worst over 8 sky offsets in `forest-1-deadfall`: bough 0.464, tied log 0.410, taut vine 0.323 (floor 0.28); from the approved mock-up, also vine 0.343 tugged / 0.369 cut, swinging log 0.389, caught log 0.423. Sounds: `deadfall_creak` at the trip (warning, 0.6 s, ends before the base 0.8 s release), `deadfall_knock` when the ropes hit the snag (consequence), with six bark chips (`KIND_GRIT`, `EnvironmentFx.barkChips`) falling from it |
 | Decision | D88 |
 
+### Creeping bramble (`Bramble`)
+
+Approved by the author on 2026-11-17 ([#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364),
+[D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17)).
+
+| Field | Value |
+| --- | --- |
+| Family | rhythm |
+| Visibility (D71) | VISIBLE |
+| At rest | frame `rest`: a knot of magenta canes rooted in a wall or ledge face, brown roots going into the face, four bone thorn tips always pointing out of it. The thorn family's language (magenta cane, bone tips, ink contour, as the tuft and the root), in a shape no scenery and no other trap has: a clump on a vertical face, not on the floor. Outline in `forest-1-bramble` (`check_contrast.py`, all six frames at the root end, mirrored for `root=right`; worst sky offset): `rest` 0.419, worst frame 0.414 (`cane1`, `cane2`) |
+| At-rest cue | none needed: the clump is the danger, and it is lethal at every moment |
+| Reads from | ~320 px: the clump at rest, and the arm going out and back every period |
+| Trigger | the level clock, `(elapsed + phase) mod period`, as the puffball (D46); no dependence on the hero |
+| Telegraph (D7) | the clump rustles (`rustle1` for the first half of the warning, `rustle2` for the second: the canes shift by a pixel and a first, then a second bone tip pokes past the clump), with the rustle sound |
+| Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s inside the period |
+| Rhythm | one cycle: **rest**, then **warning** (0.8 / 1.2 s), then **grow** 0.25 s (the tip runs from the clump to the full reach), **hold** (property `hold`, default 1.0 s, allowed 0.6-1.5 s), **retract** 0.5 s (the tip runs back), and rest again. Defaults: `period` 4.0 s, `phase` 0, so rest is 1.45 s (1.05 s with the assist); rest plus warning, the window in which the lane is open, is 2.25 s with or without the assist. Load rule: rest at least 0.8 s with the assisted warning, so `period >= 1.2 + 0.25 + hold + 0.5 + 0.8` (3.75 s at the default hold) |
+| Lethal part | world Y grows downward. A band 16 px tall whose top is 18 px above the floor line and whose bottom is 2 px above it (`floor - 18` to `floor - 2`), so a hero standing on the floor (body `floor - 22` to `floor`) always overlaps it and a graze over the tips does not. Along the lane: the first 12 px from the root face in every phase (the clump); from the root face to the tip while it grows, holds and retracts (the tip moves linearly, 12 px to the full reach in 0.25 s, back in 0.5 s). The full reach is the object's width (48-96 px, default recipe 64) |
+| Rhythm, measured | `BrambleTest`, fixture `bramble-test.tmx` (the teaching recipe): a hero who waits on the ladder and climbs out when the retract ends reaches the exit from every start offset (0.05 s steps); a blind climb-out survives 37 of 80 offsets, the longest safe run 1.85 s |
+| Counter | pass during rest or warning (the lane beyond the clump is open for 2.25 s per cycle); wait outside the reach, or below the lane's floor line on a ladder, and go at the next retract. The tip grows at about 200 px/s, faster than the hero runs, so the warning means "leave now or wait". On an open lane a jump over the grown arm also passes; the teaching room puts it over a ladder exit, where the hero comes up inside the lane and only the timed pass works. No ammunition answer: a fireball or a stone does nothing to it |
+| Reset | the clock restarts at the authored phase on every room rebuild (retry, Restart Level, room re-entry); no saved room state, as the puffball. Pause freezes it (the clock advances only in `update`) |
+| Taught in | `forest-1-bramble` (after `forest-1-lever`): seen cycling from the floor, out of reach, before the hero climbs the ladder it guards. Recipe: the guarded ladder stands at least one tile off the root face, since the clump's 12 px are always lethal (D89) |
+| Load checks | `Bramble.fromMap`: the properties `root` (`left` or `right`, required), `period`, `phase`, `hold` read strictly (finite numbers, no unknown key), height 24, width 48-96, the rhythm rule above; `Level.validateBramble`, for every bramble of every room at level load: `Bramble.placementProblem`, the root edge against a solid face (not a one-way platform) over the band's whole height, and a floor or shelf top under the tip end and 16 px beyond it (split collisions and 0.5 px offsets merged with `FLOOR_TOLERANCE`, as the deadfall); `Level.requireSafeSetting` (inside the room; the lethal part at full reach never covers the entrance, the `RoomExit` or a `Checkpoint`). Mirrored in `check_tiled_links.py` (`check_bramble`) |
+| Tests | `BrambleTest` (fixtures `bramble-test.tmx` and three broken ones): the warning equals the shared warning in play (0.8 and 1.2 s); every phase boundary at both assist values; the cues once per cycle; the tip's extent; the lethal band as a rectangle against the floor line (top `floor - 18`, bottom `floor - 2`, from the root face); a standing hero hit only where the thorns are; reset on retry and Restart Level; pause; the static ladder; the waiting and blind ladder exits; the load failures; split faces and floors and sub-pixel offsets within the tolerance. `AllocationBudgetTest.brambleCycles` 0.0 to 0.7 B/frame (ceiling 8). `tools/test_check_tiled_links.py` (the mirror agrees with the fixtures). `Forest1BrambleTest` (the room: census, in view from the entrance, its cues heard from the entrance (camera-view gate), mastered route 10.73 s, every start offset 9.42 to 12.80 s, retry) |
+| Art and sound | `trap-bramble` 16×24 × 6 (`rest`, `rustle1`, `rustle2`, `cane1`, `cane2`, `tip`; grid `art/objects/forest-traps/bramble.grid`): the clump is drawn at the root; the arm is alternating `cane1`/`cane2` segments behind the `tip` at the current extent, so it grows and retracts by whole pixels; drawn mirrored for `root=right`. Palette: ink `0b0814`, cane `c2307a`/`6e1650`, root `4a2e1c`, bone `efe6c4`/`a89c78` (the tuft's magenta and bone, no new accent). Active tier (D76). Sounds `bramble_rustle` at the warning and `bramble_lash` at the grow, heard only while the bramble is in the camera view (SOUND_DIRECTION; not heard yet, [#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
+| Decision | D46 (rhythm rules), D89 |
+
 ## Proposed traps (D71, not built)
 
 Chosen by the author on 2026-11-16 for later work; each has its own issue and needs an approved card before code. The
@@ -384,7 +411,6 @@ third, the trip-line deadfall (#363), is built: its card is above.
 
 | Trap | At rest (VISIBLE) | Telegraph and lethal part | Counter | Room purpose | Issue |
 | --- | --- | --- | --- | --- | --- |
-| Creeping bramble | a thorn clump rooted in a wall or ledge side, tips always showing | rhythm: rustle and a first tip for the shared warning, then thorns grow across a lane, hold, retract | pass in the retracted window | a timing gate on a horizontal lane (a ledge top, a ladder exit) | [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) |
 | Hanging hive | a hive on a branch with a few drifting specks at its mouth (deterministic) | rhythm: the hive shakes and specks gather for the shared warning, then a 1 s curtain of stingers falls straight down | time the pass; optionally knock the hive down with a stone or fireball (never required, D26) | combine with a vertical route (drop, ladder) | [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) |
 
 **Candidate (author, 2026-11-16):** an **ember fissure**, a glowing ground crack that jets embers upward on a rhythm

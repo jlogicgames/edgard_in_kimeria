@@ -65,6 +65,7 @@ class Forest1RouteTest {
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
         level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player()); // -> forest-1-lever (#418)
+        level.enterNextRoom(player()); // -> forest-1-bramble (#364)
         level.enterNextRoom(player());
         theBat = level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElseThrow();
         return level;
@@ -566,6 +567,8 @@ class Forest1RouteTest {
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertEquals("forest-1-lever", level.currentRoomName(), "the lever lesson room (#418) comes between the trap course and the route room");
+        level.enterNextRoom(player());
+        assertEquals("forest-1-bramble", level.currentRoomName(), "and the bramble room (#364) after it");
         level.enterNextRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
         assertTrue(level.hasNextRoom(), "the guard room (#104) follows the route room; its checkpoint ends the level");

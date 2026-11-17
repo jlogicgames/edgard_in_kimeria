@@ -125,6 +125,11 @@ class RuleTest(unittest.TestCase):
             errors = gate.check_sprite('Decor:bush', [('forest-9', 1.0, 0.01, gate.DECOR_BODY_MIN - 0.01)])
         self.assertTrue(any('body' in e for e in errors))
 
+# A test bramble placement: the box's width and the x of a left-root and a right-root box.
+BRAMBLE_REACH = 64.0
+BRAMBLE_LEFT_X = 100.0
+BRAMBLE_RIGHT_X = 300.0
+
 
 class ClassificationTest(unittest.TestCase):
     def roots(self, objects):
@@ -185,6 +190,19 @@ class ClassificationTest(unittest.TestCase):
         mirrored, plain = gate.frames('Deadfall:vine-right')[0], gate.frames('Deadfall:vine')[0]
         self.assertEqual(mirrored.tobytes(), plain.transpose(gate.Image.Transpose.FLIP_LEFT_RIGHT).tobytes())
 
+    def test_a_bramble_is_measured_at_its_root_end_and_mirrored_for_a_right_root(self):
+        """#364 (D89): the game draws the clump at the root end of the box, flipped when root=right."""
+        reach, left_x, right_x = BRAMBLE_REACH, BRAMBLE_LEFT_X, BRAMBLE_RIGHT_X
+        template = ('<object type="Bramble" x="{x}" y="296" width="{w}" height="24"><properties>'
+                    '<property name="root" value="{root}"/></properties></object>')
+        objects = template.format(x=left_x, w=reach, root='left') + template.format(x=right_x, w=reach, root='right')
+        errors = []
+        found = [(key, x, w) for _, key, x, _, w, _ in gate.placements(errors, self.roots(objects))]
+        self.assertEqual(errors, [])
+        clump = gate.BRAMBLE_CLUMP
+        self.assertEqual(found, [('Bramble', left_x, clump), ('Bramble-right', right_x + reach - clump, clump)])
+        left, right = gate.frames('Bramble')[0], gate.frames('Bramble-right')[0]
+        self.assertEqual(list(right.getdata()), list(left.transpose(gate.Image.Transpose.FLIP_LEFT_RIGHT).getdata()))
 
 class ShippedArtTest(unittest.TestCase):
     def test_shipped_decor_is_inside_the_decor_tier(self):

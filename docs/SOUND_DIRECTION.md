@@ -47,6 +47,8 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13.
 | `thread.wav` | synth, voice (#341) | 0.22 s | -12.9 / -19.0 | the silver thread goes taut on death (`Player.handleRespawnPhase`, at 0.7 volume) | not heard yet ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)) |
 | `deadfall_creak.wav` | synth, voice (#363) | 0.60 s | -7.7 / -18.5 | the trip-line deadfall's vine is tripped: the warning (`Level`, the `DeadfallTrap` listener) | waiting for the author's audition ([#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436)) |
 | `deadfall_knock.wav` | synth, voice (#363) | 0.18 s | -5.1 / -17.0 | the deadfall's ropes hit the snag: the consequence, with bark chips (`Level`, the `DeadfallTrap` listener) | waiting for the author's audition ([#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436)) |
+| `bramble_rustle.wav` | synth, noise snaps + whispered bed (#364) | 0.36 s | -9.0 / -27.3 | a bramble's warning starts, only while the bramble is in the camera view (`Level.brambleInView`, the `Bramble` cue) | not heard yet ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
+| `bramble_lash.wav` | synth, swept noise (#364) | 0.16 s | -9.1 / -21.0 | a bramble's arm starts to grow, same rule | not heard yet ([#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -105,6 +107,14 @@ Quiet background sounds sit well below (see each recipe).
   loop-seam test covers it). RMS -20.0 dBFS, peak -9.2 dBFS: lower than the effects (-16.5 .. -19.4) because it can play for
   seconds, and 99 % of its energy is below 600 Hz (the test requires 80 %). The start and the stop are abrupt; if that is
   audible, add a volume ramp. Before: noise low-passed at 180 Hz plus a 55 Hz sine with modulation, seed 3301, RMS -17.8.
+- `bramble_rustle.wav` (seed 6401, #364, D89, not heard yet: [#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)): the bramble's D7 warning, 0.36 s of **dry cane snaps over a
+  whispered bed**: 18 snaps of 12 ms noise with a 4 ms swell, band-passed around 3.2 kHz (bandwidth 1.8 kHz, centre varied
+  +-25 %), at random times, over the `ha` /a/ formant breath (35 %, 30 ms swell, 160 ms decay), then a 5.5 kHz low-pass.
+  Brighter than `grit_fall` (it is a warning, not a background), still unvoiced. RMS -27.3 dBFS, peak -9.0 (the cap limits it).
+- `bramble_lash.wav` (seed 6402, #364, D89, not heard yet: [#438](https://github.com/jlogicgames/edgard_in_kimeria/issues/438)): the arm shooting out, 0.16 s of **a rising "shk"**: noise through
+  a band-pass whose centre sweeps 1.2 to 4.2 kHz (bandwidth 900 Hz), 12 ms swell, 50 ms decay, tanh drive 3.0 to lower the
+  crest factor. RMS -21.0 dBFS, peak -9.1. Both are played only while the bramble's box overlaps the camera's view, so a
+  clocked trap off screen never ticks and one on screen is always heard.
 - `grit_fall.wav` (seed 4402, batch 3, accepted by the author 2026-11-13): 0.5 s of **whispered patter**: 24 grains of 18 ms noise, each with an
   8 ms swell (breath, no click) and band-passed around 1.9 kHz (bandwidth 1.5 kHz, centre varied +-25 %), grain times drawn
   from an exponential (tau 180 ms) so the density decays, then a 3 kHz low-pass. Unvoiced on purpose, like `dust_puff`:

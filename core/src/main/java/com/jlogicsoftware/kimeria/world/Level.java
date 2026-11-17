@@ -46,6 +46,7 @@ import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
+import com.jlogicsoftware.kimeria.entity.objects.Bramble;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
@@ -141,6 +142,8 @@ public class Level implements WorldObject {
 
     private final Assets assets;
     private final GameContext game;
+    /** The camera's visible world rect; the bramble's cues are heard only while it overlaps it (D89). */
+    private final Supplier<Rectangle> visibleWorldRect;
     /** Screen-fixed drifting clouds behind the world; null on levels without a sky. */
     private SkyBackground sky;
     public final RoomLayout roomLayout;
@@ -248,6 +251,8 @@ public class Level implements WorldObject {
     private boolean rumbling;
     private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall", STONE_IMPACT_SOUND = "stone_impact";
     private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
+    /** The bramble's warning rustle and its grow lash (#364, D89). */
+    static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
     private final EnvironmentFx fx;
     private final FairyGuide fairy;
 
@@ -476,6 +481,7 @@ public class Level implements WorldObject {
         fx = new EnvironmentFx(() -> !game.screenShakeDisabled(), TimeUtils.nanoTime() ^ FX_SEED_MIX);
         fairy = new FairyGuide(assets);
         fairy.setView(visibleWorldRect);
+        this.visibleWorldRect = visibleWorldRect;
         this.player = player;
         this.name = levelName;
         this.entryCoins = game.coinsCollected();
@@ -497,6 +503,7 @@ public class Level implements WorldObject {
             if ("HoneyFungus".equals(o.type) || "FalseHoneyFungus".equals(o.type)) validateFungus(o, owner); // D63: every room, at load.
             if ("FallingPlatform".equals(o.type) && "branch".equals(o.prop("skin", ""))) validateBranch(o, owner); // D80: every room, at load.
             if ("Deadfall".equals(o.type)) validateDeadfall(o, owner); // D88: every room, at load.
+            if ("Bramble".equals(o.type)) validateBramble(o, owner); // D89: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -792,6 +799,11 @@ public class Level implements WorldObject {
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
                     objects.add(puffball);
                 }
+                case "Bramble" -> {
+                    Bramble bramble = Bramble.fromMap(assets, o, game.trapWarnings(), describe(o)); // placement checked at load (D89)
+                    bramble.onCues(() -> brambleSound(bramble, BRAMBLE_RUSTLE_SOUND), () -> brambleSound(bramble, BRAMBLE_LASH_SOUND));
+                    objects.add(bramble);
+                }
                 case "HoneyFungus" -> objects.add(HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero));
                 case "FalseHoneyFungus" -> {
                     FalseHoneyFungus fungus = FalseHoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
@@ -813,21 +825,51 @@ public class Level implements WorldObject {
         spawnLevers();
     }
 
+    /** D89: the bramble's root is against a solid face over its band, and the tip end has floor and room to stand beyond it. */
+    private void validateBramble(TiledObject o, int owner) {
+        Bramble bramble = Bramble.fromMap(assets, o, game.trapWarnings(), describe(o));
+        List<Rectangle> solids = new ArrayList<>(), floors = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions")) {
+            if ("QuickSand".equals(c.type)) continue;
+            Rectangle r = new Rectangle(c.x, c.y, c.width, c.height);
+            floors.add(r);
+            if (!"Platform".equals(c.type)) solids.add(r);
+        }
+        String problem = Bramble.placementProblem(new Rectangle(o.x, o.y, o.width, o.height), bramble.rootRight(), solids, floors);
+        if (problem != null) throw new IllegalArgumentException("Bramble " + describe(o) + ": " + problem);
+        requireSafeSetting(o, bramble, bramble.fullBounds(), owner);
+    }
+
+    /** A bramble cue is heard only while the bramble is inside the camera view: a clocked trap off screen must not tick every period. */
+    private void brambleSound(Bramble bramble, String sound) {
+        if (game.playSounds() && brambleInView(bramble)) game.playSound(sound);
+    }
+
+    /** True while any part of the bramble's box is inside the camera's visible world rect (D89). */
+    boolean brambleInView(Bramble bramble) {
+        Rectangle view = visibleWorldRect.get();
+        return view != null && view.width > 0 && view.height > 0 && bramble.boxOverlaps(view);
+    }
+
     /**
      * A rhythmic trap's danger area must lie inside its room and must never cover a place the hero has to stand:
      * the entrance (every retry restarts at the authored phase), the room exit or a checkpoint.
      */
     private void requireSafeSetting(TiledObject o, LethalHazard hazard, Rectangle area) {
+        requireSafeSetting(o, hazard, area, currentRoom);
+    }
+
+    private void requireSafeSetting(TiledObject o, LethalHazard hazard, Rectangle area, int owner) {
         if (!currentRoomBoundsOf(area))
             throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area leaves the room");
-        RoomLayout.Room room = roomLayout.rooms.get(currentRoom);
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
         var box = player.hitbox;
         if (hazard.everLethalIn(new Rectangle(room.entrance().x + box.offsetX, room.entrance().y + box.offsetY, box.width, box.height)))
             throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers the room entrance");
         if (room.exit() != null && hazard.everLethalIn(room.exit()))
             throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers the room exit");
         for (TiledObject other : map.layer("SpawnPoints"))
-            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == currentRoom
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner
                 && hazard.everLethalIn(new Rectangle(other.x, other.y, other.width, other.height)))
                 throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area covers a checkpoint");
     }

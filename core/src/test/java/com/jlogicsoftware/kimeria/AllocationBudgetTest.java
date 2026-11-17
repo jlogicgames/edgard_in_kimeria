@@ -107,6 +107,8 @@ class AllocationBudgetTest {
     static final double FOREST_1_LEVER_CEILING = 620;
     /** The forest-1 deadfall room at rest (#363): measured 357.7 to 536.7 B/frame in 4 isolated runs and 536.0 in the full :core:check (2026-11-17), the mob room 224.0 to 536.0 in the same runs: the level-wide sky and rain dominate, as in the other forest-1 rooms, so it takes the mob and lever rooms' ceiling (highest run + about 15 %). */
     static final double FOREST_1_DEADFALL_CEILING = 620;
+    /** The forest-1 bramble room (#364, D89): measured 536.1 to 536.3 B/frame in 3 isolated runs (2026-11-17), the deadfall room 536.0 in the same runs, so the bramble adds nothing measurable; the level-wide sky and rain dominate, so it takes the other forest-1 one-screen rooms' ceiling. */
+    static final double FOREST_1_BRAMBLE_CEILING = 620;
     /**
      * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
      * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
@@ -187,6 +189,9 @@ class AllocationBudgetTest {
     private static final float BRANCH_Y = 240, BRANCH_WIDTH = 32, BRANCH_HEIGHT = 16;
     /** Measured 0.0 to 0.1 B/frame in 7 of 8 runs and 6.0 in one (#361; 736.6 before the branch cached its four frames and the fall reused its two contact boxes). */
     static final double FALLING_BRANCH_CEILING = 8;
+    /** #364 (D89): two brambles (a left and a right root) through whole cycles, the lethal test against the hero and the draw every frame. Measured 0.0 to 0.7 B/frame in 3 isolated runs (2026-11-17; the 0.7 is the probe noise the other trap scenes show). */
+    static final double BRAMBLE_CEILING = 8;
+    private static final float BRAMBLE_REACH = 64, BRAMBLE_HEIGHT = 24;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
 
@@ -262,16 +267,18 @@ class AllocationBudgetTest {
     /** The first-RedMob room (#375): the mob asleep, the refill, the level-wide sky and rain. */
     @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
     @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 2)); }
-    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 4)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 5)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
-    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 5)); }
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 6)); }
 
     /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
-    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 6)); }
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 7)); }
     /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder; the level-wide sky and rain are drawn here too. */
     @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 3)); }
     /** The deadfall room at rest (#363): the tied log, the bough, the vine, the trunk; the level-wide sky and rain are drawn here too. */
     @Test void forest1DeadfallRoom() { assertWithinBudget("forest-1 deadfall room", FOREST_1_DEADFALL_CEILING, room("forest-1", 1)); }
+    /** The bramble room (#364): the bramble cycling (its arm grows and retracts during the measurement), the static ladder; the level-wide sky and rain are drawn here too. */
+    @Test void forest1BrambleRoom() { assertWithinBudget("forest-1 bramble room", FOREST_1_BRAMBLE_CEILING, room("forest-1", 4)); }
 
     /**
      * Deadfalls tripped in turn (#363): one stays tied (the hero far), and the hero's box steps onto the vine of the next one
@@ -316,7 +323,7 @@ class AllocationBudgetTest {
      * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
      */
     @Test void forest1TreeRoomRidingARottenBranchDown() {
-        Level level = harness.roomOf("forest-1", 6);
+        Level level = harness.roomOf("forest-1", 7);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
         FallingPlatform.Snapshot intact = top.snapshot();
@@ -345,7 +352,7 @@ class AllocationBudgetTest {
      * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
      */
     @Test void forest1GuardRoomWithTheGuardAwake() {
-        Level level = harness.roomOf("forest-1", 5);
+        Level level = harness.roomOf("forest-1", 6);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
@@ -373,7 +380,7 @@ class AllocationBudgetTest {
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 4);
+        Level level = harness.roomOf("forest-1", 5);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -690,6 +697,25 @@ class AllocationBudgetTest {
         assertWithinBudget("honey fungus bursts", HONEY_FUNGUS_CEILING, bytes);
     }
 
+    /** #364: two brambles grow, hold and retract (rustle frames, cane segments, tip, the mirrored draw) while the hero is tested against them. */
+    @Test void brambleCycles() {
+        com.jlogicsoftware.kimeria.entity.objects.Bramble left = new com.jlogicsoftware.kimeria.entity.objects.Bramble(harness.assets(),
+            0, FUNGUS_FLOOR - BRAMBLE_HEIGHT, BRAMBLE_REACH, BRAMBLE_HEIGHT, harness.game().trapWarnings(), false, 4f, 0f, 1f);
+        com.jlogicsoftware.kimeria.entity.objects.Bramble right = new com.jlogicsoftware.kimeria.entity.objects.Bramble(harness.assets(),
+            FUNGUS_SPACING, FUNGUS_FLOOR - BRAMBLE_HEIGHT, BRAMBLE_REACH, BRAMBLE_HEIGHT, harness.game().trapWarnings(), true, 4f, 1.3f, 1f);
+        Rectangle hero = new Rectangle(BRAMBLE_REACH / 2f, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        int[] hits = new int[1];
+        int[] cues = new int[1];
+        left.onCues(() -> cues[0]++, () -> cues[0]++);
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            left.update(STEP); right.update(STEP);
+            if (left.lethalTo(hero) || right.lethalTo(hero)) hits[0]++;
+            left.render(batch); right.render(batch);
+        });
+        assertTrue(hits[0] > 0 && cues[0] > 0, "the arm must actually grow over the hero in this scenario");
+        assertWithinBudget("bramble cycles", BRAMBLE_CEILING, bytes);
+    }
+
     /** Two fungi that never get triggered: only the idle glow (tint set, draw, tint restored) runs every frame. */
     @Test void idleFungusGlow() {
         Rectangle far = new Rectangle(FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
@@ -896,7 +922,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuidePointingOffScreenWithAPostPullGlow() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 4, () -> view);
+        Level level = harness.roomOf("forest-1", 5, () -> view);
         var t = level.player.roomCameraTarget();
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         harness.held.add(com.badlogic.gdx.Input.Keys.W);
@@ -925,7 +951,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuideCyclingBetweenTwoOffScreenTargets() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 4, () -> view);
+        Level level = harness.roomOf("forest-1", 5, () -> view);
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         harness.held.add(com.badlogic.gdx.Input.Keys.W);
         view.set(0, 0, 640, 360); // far left of the room: the ladder and the lift are both off screen, to the right
@@ -949,7 +975,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuidePostPullCueCyclingBetweenTwoOffScreenTargets() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 4, () -> view);
+        Level level = harness.roomOf("forest-1", 5, () -> view);
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         view.set(0, 0, 640, 360);
         for (int i = 0; i < SELECT_FRAMES; i++) level.update(STEP);

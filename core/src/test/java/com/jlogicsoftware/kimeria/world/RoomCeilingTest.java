@@ -76,11 +76,11 @@ class RoomCeilingTest {
     }
 
     @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
-    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 7); }
+    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 8); }
 
     /** The route room's exit ledge (top y 144, against the right wall) is a 176 px head start up that wall. */
     @Test void theRouteRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 4), false, 60 * 20, 176);
+        highestPointReached(roomOf("forest-1", 5), false, 60 * 20, 176);
     }
 
     /** The lever lesson room's exit ledge (top y 208, against the right wall, #418) is a 112 px head start up that wall. */
@@ -92,7 +92,7 @@ class RoomCeilingTest {
 
     @Test void everyRoomIsClosedFromAboveByASlabEndingAtItsTopEdge() {
         for (String map : new String[]{"forest-0", "forest-1", "forest-2"}) {
-            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 7 : map.equals("forest-2") ? 3 : 2;
+            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 8 : map.equals("forest-2") ? 3 : 2;
             for (int index = 0; index < rooms; index++) {
                 Level level = roomOf(map, index);
                 Rectangle room = level.currentRoomBounds();
