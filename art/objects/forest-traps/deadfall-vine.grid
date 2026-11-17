@@ -1,0 +1,34 @@
+# Deadfall trip vine (#363, D88), native 24x8: taut, tugged (the warning), cut (spent). Two dark pegs at x 2-3 and
+# 20-21; the bone vine between them, 4 px over the floor; row 7 stands on the floor line.
+size 24 8
+color k 0b0814
+color W 4a2e1c
+color b efe6c4
+color s b8ad9c
+frame taut
+........................
+........................
+..kk................kk..
+..kWkk............kkWk..
+..kWbbbbbbbbbbbbbbbbWk..
+..kWsssssssssssssssskk..
+..kWk..............kWk..
+..kWk..............kWk..
+frame tugged
+........................
+........................
+..kk................kk..
+..kWkk............kkWk..
+..kWbbbbb......bbbbbWk..
+..kWsssssbbbbbbsssssk...
+..kWk...kssssssk...kWk..
+..kWk..............kWk..
+frame cut
+........................
+........................
+..kk................kk..
+..kWkk..............kk..
+..kWbbb.............Wk..
+..kWsssb..........bbWk..
+..kWk..sb.......bbsWk...
+..kWk...sbb...........k.

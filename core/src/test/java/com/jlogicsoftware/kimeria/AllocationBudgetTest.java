@@ -20,6 +20,7 @@ import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
+import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
@@ -104,6 +105,8 @@ class AllocationBudgetTest {
      * measures the same as the route room's here (561.8), as it should: the cost is the harness and level code (D83).
      */
     static final double FOREST_1_LEVER_CEILING = 620;
+    /** The forest-1 deadfall room at rest (#363): measured 357.7 to 536.7 B/frame in 4 isolated runs and 536.0 in the full :core:check (2026-11-17), the mob room 224.0 to 536.0 in the same runs: the level-wide sky and rain dominate, as in the other forest-1 rooms, so it takes the mob and lever rooms' ceiling (highest run + about 15 %). */
+    static final double FOREST_1_DEADFALL_CEILING = 620;
     /**
      * Measured 537.8 to 897.8 B/frame in 5 full-suite runs of {@code :core:test} and {@code :core:check} (#349, D80, 2026-11-16, with the CollideBody
      * index loops: 801.8, 801.8, 537.8, 897.8, 897.8; before them 713.9 isolated and 881.7 in the full suite): the forest-1 tree room at rest (two
@@ -258,15 +261,54 @@ class AllocationBudgetTest {
 
     /** The first-RedMob room (#375): the mob asleep, the refill, the level-wide sky and rain. */
     @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
-    @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 1)); }
-    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 3)); }
+    @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 2)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 4)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
-    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 4)); }
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 5)); }
 
     /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches; the level-wide sky and rain are drawn here too. */
-    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 5)); }
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 6)); }
     /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder; the level-wide sky and rain are drawn here too. */
-    @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 2)); }
+    @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 3)); }
+    /** The deadfall room at rest (#363): the tied log, the bough, the vine, the trunk; the level-wide sky and rain are drawn here too. */
+    @Test void forest1DeadfallRoom() { assertWithinBudget("forest-1 deadfall room", FOREST_1_DEADFALL_CEILING, room("forest-1", 1)); }
+
+    /**
+     * Deadfalls tripped in turn (#363): one stays tied (the hero far), and the hero's box steps onto the vine of the next one
+     * every {@value #DEADFALL_CYCLE_FRAMES} frames, so the measured window holds the warning (strain, slip), the swing with its
+     * kill test, the catch with the listener and the caught state; {@code update} and {@code render} (ropes, log, bough, vine)
+     * every frame. The traps are built before the probe and the hero box is moved, never rebuilt.
+     */
+    @Test void deadfallTripAndSwing() {
+        Rectangle far = new Rectangle(FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        Rectangle hero = new Rectangle(-FUNGUS_FAR_X, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        int[] caught = new int[1];
+        DeadfallTrap.Listener listener = new DeadfallTrap.Listener() {
+            @Override public void tripped(DeadfallTrap trap) { }
+            @Override public void caught(DeadfallTrap trap) { caught[0]++; }
+        };
+        Runnable none = () -> { };
+        float y = FUNGUS_FLOOR - DeadfallTrap.FLOOR_BELOW_PIVOT - DeadfallTrap.PIVOT_Y;
+        DeadfallTrap tied = new DeadfallTrap(harness.assets(), harness.game().trapWarnings(), -DEADFALL_SPACING, y, false, () -> far, none, listener);
+        DeadfallTrap[] traps = new DeadfallTrap[DEADFALL_CYCLES];
+        for (int k = 0; k < traps.length; k++)
+            traps[k] = new DeadfallTrap(harness.assets(), harness.game().trapWarnings(), k * DEADFALL_SPACING, y, k % 2 == 1, () -> hero, none, listener);
+        float[] vineX = new float[traps.length];
+        for (int k = 0; k < traps.length; k++) vineX[k] = traps[k].vineBox().x;
+        boolean[] seen = new boolean[DeadfallTrap.Phase.values().length];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = Math.min(i / DEADFALL_CYCLE_FRAMES, traps.length - 1);
+            hero.x = vineX[k];
+            tied.update(STEP); tied.render(batch);
+            for (DeadfallTrap trap : traps) { trap.update(STEP); trap.render(batch); }
+            if (i >= AllocationProbe.WARMUP_FRAMES) seen[traps[k].phase().ordinal()] = true;
+        });
+        for (DeadfallTrap.Phase phase : DeadfallTrap.Phase.values())
+            assertTrue(seen[phase.ordinal()] || phase == DeadfallTrap.Phase.TIED, "the measured window must hold a deadfall in " + phase);
+        assertEquals(DeadfallTrap.Phase.TIED, tied.phase(), "the far deadfall stays tied");
+        assertTrue(caught[0] >= DEADFALL_CYCLES - 2, "the swings ran to the catch: " + caught[0]);
+        assertWithinBudget("deadfalls tripped in turn", DEADFALL_CEILING, bytes);
+    }
 
     /**
      * The tree room with the hero riding a rotten branch down (D69 path: the snap to a sinking platform, the solid-floor guard, then the floor):
@@ -274,7 +316,7 @@ class AllocationBudgetTest {
      * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
      */
     @Test void forest1TreeRoomRidingARottenBranchDown() {
-        Level level = harness.roomOf("forest-1", 5);
+        Level level = harness.roomOf("forest-1", 6);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
         FallingPlatform.Snapshot intact = top.snapshot();
@@ -303,7 +345,7 @@ class AllocationBudgetTest {
      * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
      */
     @Test void forest1GuardRoomWithTheGuardAwake() {
-        Level level = harness.roomOf("forest-1", 4);
+        Level level = harness.roomOf("forest-1", 5);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
@@ -331,7 +373,7 @@ class AllocationBudgetTest {
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 3);
+        Level level = harness.roomOf("forest-1", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -346,7 +388,7 @@ class AllocationBudgetTest {
 
     /** The lever room with the hero standing on the lift the whole time (the rider path of {@code Player} runs every frame), as the route room's riding scene. */
     @Test void forest1LeverRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 2);
+        Level level = harness.roomOf("forest-1", 3);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -361,7 +403,7 @@ class AllocationBudgetTest {
 
     /** The lever room with the hero on the slab pulling the lever (Up + Action) every {@value #PULL_CYCLE_FRAMES} frames: the ladder moves, the lift starts and stops, the lever animates. */
     @Test void forest1LeverRoomPullingTheLever() {
-        Level level = harness.roomOf("forest-1", 2);
+        Level level = harness.roomOf("forest-1", 3);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         level.player.position.set(4528 + 8 - HERO_CENTRE_OFFSET_X, 208 - HERO_FRAME_SIZE); // the lever's centre (x 4528 + 8), standing on the slab
         for (int i = 0; i < 5; i++) level.update(STEP);
@@ -391,7 +433,7 @@ class AllocationBudgetTest {
      * object, so this guard is as strong as the JIT allows, and the fix itself is the allocation-free {@code Escalator.riderVelocityX()}.)
      */
     @Test void ridingARunningEscalatorCostsNoMoreThanStandingStill() {
-        Level level = harness.roomOf("forest-1", 1);
+        Level level = harness.roomOf("forest-1", 2);
         var escalator = level.escalators.stream().filter(e -> !e.isVertical && e.isRunning()).findFirst().orElseThrow();
         Runnable ride = () -> {
             level.player.position.set(escalator.getX() + 3, escalator.getY() - 48);
@@ -441,7 +483,7 @@ class AllocationBudgetTest {
     }
 
     @Test void silverThreadBeat() {
-        Level level = harness.roomOf("forest-1", 1);
+        Level level = harness.roomOf("forest-1", 2);
         // Built before the probe (allocation allowed): dying heroes at every stage of the beat, landing and arriving ones.
         Player[] stages = new Player[THREAD_STAGES];
         for (int k = 0; k < THREAD_STAGES; k++) {
@@ -784,6 +826,11 @@ class AllocationBudgetTest {
     static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     /** Thorn roots at rest, warning, rising and up inside the measured window (#359, thornRootsRiseInTurn): measured 0.0 B/frame in 2 full-suite runs and 1.5 in 2 isolated runs (2026-11-17). Before #359: 64.0 B/frame (a new {@code Rectangle} per zone or column test). */
     static final double THORN_ROOT_CEILING = 8;
+    /** Deadfalls tripped in turn (#363, deadfallTripAndSwing): measured 0.0 B/frame in 3 isolated runs and 0.6 in the full :core:check (2026-11-17). The vine and log boxes are scratch rectangles and the frames are cached; the same 8 B ceiling as the other isolated trap paths. */
+    static final double DEADFALL_CEILING = 8;
+    /** A trip every 100 frames: 0.8 s of warning and 0.5 s of swing are 78 frames, then the catch. 16 cycles cover warm-up and measure. */
+    private static final int DEADFALL_CYCLES = 16, DEADFALL_CYCLE_FRAMES = 100;
+    private static final float DEADFALL_SPACING = 400;
     /** The hero's left edge this far right of a thorn root's left edge: inside its zone, clear of the 6 px column (5 to 11). */
     private static final float THORN_BESIDE = 12;
     /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17): ten plain falling platforms at rest, the fan animation with the cracked slab, update and render; the same 8 B ceiling as the other isolated paths. */
@@ -849,7 +896,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuidePointingOffScreenWithAPostPullGlow() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 3, () -> view);
+        Level level = harness.roomOf("forest-1", 4, () -> view);
         var t = level.player.roomCameraTarget();
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         harness.held.add(com.badlogic.gdx.Input.Keys.W);
@@ -878,7 +925,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuideCyclingBetweenTwoOffScreenTargets() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 3, () -> view);
+        Level level = harness.roomOf("forest-1", 4, () -> view);
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         harness.held.add(com.badlogic.gdx.Input.Keys.W);
         view.set(0, 0, 640, 360); // far left of the room: the ladder and the lift are both off screen, to the right
@@ -902,7 +949,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuidePostPullCueCyclingBetweenTwoOffScreenTargets() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 3, () -> view);
+        Level level = harness.roomOf("forest-1", 4, () -> view);
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         view.set(0, 0, 640, 360);
         for (int i = 0; i < SELECT_FRAMES; i++) level.update(STEP);
@@ -1003,7 +1050,7 @@ class AllocationBudgetTest {
      */
     @Test void healerDialogueScreen() {
         harness.font = new MetricsFont(FontSizes.DIALOGUE);
-        Level level = harness.roomOf("forest-1", 1);
+        Level level = harness.roomOf("forest-1", 2);
         ArtifactInventory inventory = new ArtifactInventory();
         for (boolean instant : new boolean[]{false, true}) {
             Overlay overlay = new Overlay(harness.assets(), 640, 360);

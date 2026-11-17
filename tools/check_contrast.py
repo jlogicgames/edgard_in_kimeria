@@ -129,7 +129,14 @@ SPRITES = {
     'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
+    # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
+    # object, the tied log hauled up on the far side, the taut trip vine on the floor. `-right` keys are the mirrored copies.
+    'Deadfall': ('active', 'objects/trap-deadfall-bough.png', (0, 0, 112, 24), 1, 'top', FULL),
+    'Deadfall:log': ('active', 'objects/trap-deadfall.png', (0, 0, 32, 16), 1, 'top', FULL),
+    'Deadfall:vine': ('active', 'objects/trap-deadfall-vine.png', (0, 0, 24, 8), 1, 'top', FULL),
 }
+MIRRORED = {f'{key}-right': key for key in ('Deadfall', 'Deadfall:log', 'Deadfall:vine')}
+SPRITES.update({mirrored: SPRITES[key] for mirrored, key in MIRRORED.items()})
 # Types that draw no sprite of their own, with what they are (a new type must be added to one of the two tables).
 NO_SPRITE = {
     'Torch': 'a particle light (effects.Torch), no sprite',
@@ -205,7 +212,35 @@ def frames(key):
     for sheet, (x, y, w, h), count in ((sheet, box, count), *EXTRA_FRAMES.get(key, ())):
         image = Image.open(ROOT / 'assets/images' / sheet).convert('RGBA')
         result += [image.crop((x + n * w, y, x + n * w + w, y + h)) for n in range(count)]
+    if key in MIRRORED:
+        result = [frame.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for frame in result]
     return result
+
+
+DEADFALL_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/DeadfallTrap.java'
+
+
+def java_number(path, name):
+    """A numeric constant with or without the `f` suffix, one of several declared on a line too."""
+    text = (ROOT / path).read_text(encoding='utf-8')
+    return float(re.search(rf'\b{name}\s*=\s*(-?[0-9.]+)f?\s*[;,]', text).group(1))
+
+
+def deadfall_parts(x, y, swing_right):
+    """(key, left, top, width, height) of the three parts DeadfallTrap.render draws at rest, for a bough object at (x, y)."""
+    n = lambda name: java_number(DEADFALL_JAVA, name)
+    width, pivot_x, pivot_y = n('BOUGH_WIDTH'), n('PIVOT_X'), n('PIVOT_Y')
+    toward, suffix = (1.0, '-right') if swing_right else (-1.0, '')
+    px, py = x + (width - pivot_x if swing_right else pivot_x), y + pivot_y
+    floor = py + n('FLOOR_BELOW_PIVOT')
+    tied = math.radians(n('TIED_DEGREES'))
+    cx, cy = px - toward * n('ROPE_LENGTH') * math.sin(tied), py + n('ROPE_LENGTH') * math.cos(tied)
+    _, _, (_, _, log_w, log_h), *_ = SPRITES['Deadfall:log']
+    _, _, (_, _, vine_w, vine_h), *_ = SPRITES['Deadfall:vine']
+    vine_left = px + toward * n('VINE_SPRITE_CENTRE') - vine_w / 2
+    return [('Deadfall' + suffix, x, y, width, n('BOUGH_HEIGHT')),
+            ('Deadfall:log' + suffix, cx - n('FRAME_CENTRE_X'), cy - n('FRAME_CENTRE_Y'), log_w, log_h),
+            ('Deadfall:vine' + suffix, vine_left, floor - n('VINE_SPRITE_DROP'), vine_w, vine_h)]
 
 
 def with_halo(background, halo, centre_x, centre_y, alpha):
@@ -280,6 +315,11 @@ def placements(errors, roots=None):
             offset_y = float(group.get('offsety', '0'))
             for obj in group.findall('object'):
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Deadfall':
+                    for key, left, top, w, h in deadfall_parts(float(obj.get('x')), float(obj.get('y')) + offset_y,
+                                                               props.get('swing') == 'right'):
+                        yield name, key, left, top, w, h
+                    continue
                 key, kind = key_of(group.get('name'), obj, props)
                 if key is None:
                     if kind not in NO_SPRITE and kind != 'Platform':

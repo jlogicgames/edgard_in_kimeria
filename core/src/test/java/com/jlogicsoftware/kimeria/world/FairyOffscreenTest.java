@@ -96,7 +96,8 @@ class FairyOffscreenTest {
         RangedStock stock = new RangedStock();
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), new Player(h.assets(), h.game(), 0, 0), "forest-1", () -> view, stock);
-        level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // forest-1-mob -> forest-1-traps
+        level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // forest-1-mob -> forest-1-deadfall (#363)
+        level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-traps
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-lever (D86)
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-route
         followCamera = true;

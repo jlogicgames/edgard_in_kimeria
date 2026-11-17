@@ -69,6 +69,7 @@ what the player does about them.
 | thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm |
 | honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst |
 | false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud |
+| deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past |
 | quicksand | `Collisions:QuickSand` | keeps moving across sinking ground |
 | redmob | `RedMob` | beats a walking enemy with a visible whip wind-up (sword or stomp) |
 | yellowmob | `YellowMob` | stomps a walking enemy |
@@ -204,7 +205,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 6 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 1 of 7 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
@@ -234,11 +235,43 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
   4160 until the hero's centre passes about 3840), so the mob and the refill are each met alone, in that order.
 - RoomExit (4256, 272, 32 x 48).
 
+### forest-1-deadfall
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 2 of 7 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by. |
+| Introduces | deadfall |
+| Develops | - |
+| Combines | - |
+| Mastered route | 5.17 s jumping the vine (take-offs 2 to 60 px before it), 6.47 s tripping it and stopping (6.88 s with the longer-warnings assist) (`DeadfallTrapTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | 2.65 s: a hero who walks in without jumping is hit 2.65 s after the entrance (2.97 s with the assist) |
+| D26 | no support, no one-shot state the route needs: a jump leaves the log tied, a trip leaves it hanging from the snag above head height and the vine cut, and the exit is reachable from both (`DeadfallTrapTest`) |
+| Hints | none (forest-1 has none, D33) |
+| Landmark | the log hauled up and lashed to the bough by the tree trunk |
+| Status | new, [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) (card, art and placement approved by the author 2026-11-17). The deadfall is the room's only object and is in view from the entrance with the exit (D84). Built and tested with a scripted hero, not yet played by the author or a novice ([#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436)) |
+| Decisions | D88, D72 |
+
+Sketch (Y grows downward, floor top y 320; walls x 4960-4976 and 5584-5600; P is the rope knot, x 5296, y 252):
+
+```
+x    4960 4992        5176-5192        5228  5296  5364      5536    5600
+     |wall|start       vine (trip)      [ swing band ]  trunk  exit  |wall|
+     |    |  @          =             bough====P====log| |      [ ]  |    |
+=====+==========================================================+=====  floor y 320
+```
+
+- RoomStart (4992, 272). Deadfall (the bough, 112 x 24) at (5248, 243), `swing` left: the log is tied on the right
+  and swings left, at a hero coming from the entrance. A `Decor:trunk` at x 5356 holds the bough's thick end.
+- RoomExit (5536, 272, 32 x 48).
+
 ### forest-1-traps
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 6 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 3 of 7 (1280 px, two screens) |
 | Role | combination |
 | Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
 | Introduces | running-platform, puffball |
@@ -271,7 +304,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 6 (640 px, one screen) |
+| Level | forest-1, play order 2, room 4 of 7 (640 px, one screen) |
 | Role | lesson |
 | Purpose | One lever drives two mechanisms in opposite states: pulling it lowers the ladder and stops the lift, pulling again raises the ladder and restarts the lift; both are in view when it is pulled, and a wrong pull costs nothing. |
 | Introduces | - |
@@ -291,7 +324,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 6 (832 px) |
+| Level | forest-1, play order 2, room 5 of 7 (832 px) |
 | Role | variation |
 | Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
 | Introduces | bat-enemy |
@@ -311,7 +344,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 6 (768 px) |
+| Level | forest-1, play order 2, room 6 of 7 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
 | Introduces | - |
@@ -331,7 +364,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 6 of 6 (640 px, one screen) |
+| Level | forest-1, play order 2, room 7 of 7 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb |

@@ -155,6 +155,37 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(keys, ['Trigger', 'Decor:lookalike', 'Actionable:Wall'])
 
 
+    # #363 (D88): a bough at (0, BOUGH_Y) with swing=left, and a mirrored one at RIGHT_X (DeadfallTrap's geometry).
+    BOUGH_Y = 243.0
+    RIGHT_X = 400.0
+    PIVOT_X = 48.0
+    RIGHT_PIVOT_X = 64.0
+    FLOOR = 320.0
+    VINE_CENTRE = 110.0
+    VINE_W = 24.0
+    VINE_H = 8.0
+    LOG_W = 32.0
+
+    def test_a_deadfall_is_measured_as_the_three_parts_it_draws_at_rest(self):
+        objects = (f'<object type="Deadfall" x="0" y="{self.BOUGH_Y:g}" width="112" height="24"/>'
+                   f'<object type="Deadfall" x="{self.RIGHT_X:g}" y="{self.BOUGH_Y:g}" width="112" height="24"><properties>'
+                   '<property name="swing" value="right"/></properties></object>')
+        errors = []
+        found = list(gate.placements(errors, self.roots(objects)))
+        self.assertEqual(errors, [])
+        self.assertEqual([p[1] for p in found], ['Deadfall', 'Deadfall:log', 'Deadfall:vine',
+                                                  'Deadfall-right', 'Deadfall:log-right', 'Deadfall:vine-right'])
+        (_, _, bough_x, bough_y, _, _), (_, _, log_x, _, _, _), (_, _, vine_x, vine_y, _, _) = found[:len(found) // 2]
+        _, _, mirrored_log_x, _, _, _ = found[len(found) // 2 + 1]
+        self.assertEqual((bough_x, bough_y), (0.0, self.BOUGH_Y))
+        self.assertEqual((vine_x, vine_y), (self.PIVOT_X - self.VINE_CENTRE - self.VINE_W / 2, self.FLOOR - self.VINE_H),
+                         'the vine sprite stands on the floor before the pivot')
+        self.assertGreater(log_x, self.PIVOT_X, 'the tied log hangs on the far side of the pivot')
+        self.assertLess(mirrored_log_x + self.LOG_W, self.RIGHT_X + self.RIGHT_PIVOT_X, 'mirrored: the tied log is left of the pivot')
+        mirrored, plain = gate.frames('Deadfall:vine-right')[0], gate.frames('Deadfall:vine')[0]
+        self.assertEqual(mirrored.tobytes(), plain.transpose(gate.Image.Transpose.FLIP_LEFT_RIGHT).tobytes())
+
+
 class ShippedArtTest(unittest.TestCase):
     def test_shipped_decor_is_inside_the_decor_tier(self):
         results, errors, _ = gate.run()

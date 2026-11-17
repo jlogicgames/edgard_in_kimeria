@@ -99,6 +99,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `HoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-lever`, harmless demonstration | D63 |
 | `FalseHoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-canopy` (`forest-2`), after the harmless `HoneyFungus` of `forest-0-lever` | D63 |
 | `FallingPlatform` | crumble | DISGUISED | a hairline crack through the slab (#362) | `FALLING_PLATFORM_SECONDS` 1.0 / 1.5 s | `forest-0-traps` | D7, D40, D46, D69, D80 |
+| `Deadfall` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-deadfall`, met alone on open floor | D88 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46) or `skin=branch` (the rotten tree branch, D80) is the same type
@@ -351,13 +352,38 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Art and sound | plain: `trap-falling-platform` 32×10 × 4 (fan1..fan4, grid `art/objects/forest-traps/falling-platform.grid`, the old `FallingOn.png` plus the crack), active tier, outline 0.379 at its worst placement and frame (D76; unchanged by the crack); `trap-log`; `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.427 at its worst placement (D76; the sound branch `trap-perch` 0.458, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet buds) and crack (mid-top, not #361's joint). No sound of its own, like the other skins |
 | Decision | D7, D40, D46, D69, D80 |
 
+### Trip-line deadfall (`Deadfall`)
+
+Geometry below is for a log that swings **left**, towards a hero coming from the left (the default); `swing=right`
+mirrors it. P is the rope knot on the bough; F is the floor line, 68 px below P. World Y grows downward, so "above"
+means a smaller Y.
+
+| Field | Value |
+| --- | --- |
+| Family | touch |
+| Visibility (D71) | VISIBLE |
+| At rest | frame `tied`: a dark bark log (24×10) hauled up on the far side and lashed to the bough with a pale cord, its two ropes slack under it, the log's underside at F-53 (31 px over the hero's head); a pale, bone-coloured trip vine (`efe6c4`) stretched taut between two dark pegs across the floor, 16 px wide and 4 px high, at P.x-120 to P.x-104. No scenery is a horizontal log hung on ropes, and no scenery is pale at ankle height on a floor. A bare snag sticks down from the bough on the near side, its tip at P.x-40, 8 px under the bough: where the log will end |
+| At-rest cue | none needed: the log, the ropes and the vine are all drawn at rest |
+| Reads from | ~320 px: the tied log and the vine enter the screen together |
+| Trigger | the hero body box (11×22) overlaps the vine's box (x P.x-120 to P.x-104, y F-5 to F); a hero in the air above F-5 clears it. Either walking direction trips it. Nothing else trips it (no stone, no fireball): the answer is the hero's own feet |
+| Telegraph (D7) | frame `strain` for the first half of the warning (the vine tugged into a V, the log shivers 1 px sideways every 0.1 s), frame `slip` for the second (the lashing's knot slips, the log drops 1 px on its ropes) |
+| Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s, sampled once at the trip |
+| Lethal part | the log's box (24×10) while it swings: one pass from the tied angle (+80°, far side) to the snag (-78°, near side, where the ropes meet the snag's tip) in 0.5 s, on an eased arc (rope 56 px from P to the log's centre, `θ = 80° - 158° · (1 - cos(π t / 0.5)) / 2`). It is at body height (its underside below F-22) only from 0.16 s to 0.34 s after the release, over x P.x-50 to P.x+50. Before the release and once it hangs from the snag it is harmless. A hero who trips the vine and keeps walking (100 px/s) is hit with either warning length: in `forest-1-deadfall` 0.27 s into the swing with 0.8 s, 0.18 s with 1.2 s (`DeadfallTrapTest`) |
+| Counter | jump the vine: nothing fires and the log stays tied, so the hero walks under it; or trip it and stop (or step back): at the trip the hero's centre is at P.x-125, 70 px before the band, so stopping within 0.68 s of the trip is safe with either warning (measured), and the log goes by in front of him; walking back is safe too; then walk on. Jump take-offs from 2 to 60 px before the vine clear it (measured). No ammunition answer and none needed (D26) |
+| Reset | retry, Restart Level and room re-entry rebuild it tied, with the vine whole. At the catch the ropes lie across the snag's tip and the log eases in under it over 0.25 s (no jump, `DeadfallTrap.SETTLE_SECONDS`); until the rebuild it hangs from the snag on what is left of its ropes (frame `caught`, centre P.x-40, underside at F-36, 14 px over the head) and the vine lies cut in two (frame `cut`), harmless scenery |
+| Taught in | `forest-1-deadfall`, met alone on open floor, the only object in the room |
+| Load checks | `DeadfallTrap.problem` (in `Level` for every room at load): the object is the bough's own 112×24 rectangle and `swing` is empty, `left` or `right`; solid floor (not quicksand) at F from P.x-184 (64 px before the vine, room to stop or to take off) to P.x+56; nothing solid (blocks, falling platforms, walls with their travel, ladders, escalators with their travel) from the bough down to the floor within P.x±68 (the swing), nor within 96 px over the floor from P.x-184 to P.x-68 (the jump over the vine); all of it inside the room; the entrance not on the vine; no entrance, exit or checkpoint where the log passes at body height (P.x±62, F-27 to F). Mirrored in `check_tiled_links.py` |
+| Tests | `DeadfallTrapTest` (the room; the trip at the vine's first pixel; no jump at the catch (at most 2.13 px a frame); the warning equals the shared one with both assist values, strain then slip; the body-height window and band; harmless before the release and after the catch; the jump window; a walker who keeps going is hit with both warnings; stopping and walking back live; a hero who cannot be hurt is not seen; `swing=right`; reset on retry and Restart Level; pause; the load check), `test_check_tiled_links.DeadfallLinksTest`, `test_check_contrast` (the three parts); `AllocationBudgetTest.deadfallTripAndSwing` (0.0 B/frame) and `forest1DeadfallRoom` |
+| Art and sound | sheets `trap-deadfall` (log, 32×16: `tied`, `strain`, `slip`, `swing`, `caught`), `trap-deadfall-bough` (112×24: the bough, its two rope knots and the snag; its thick end meets a `Decor:trunk`), `trap-deadfall-vine` (24×8: `taut`, `tugged`, `cut`), the rope a stretched 1×8 strip; grids under `art/objects/forest-traps/`; palette of the sound branch (`perch`) plus end grain `e8c890`/`9c6a34` and the bone `efe6c4`/`b8ad9c` of cord and vine, no accent hue. Active tier: the contrast gate measures the three parts drawn at rest where the game draws them (`tools/check_contrast.py`, `deadfall_parts`), worst over 8 sky offsets in `forest-1-deadfall`: bough 0.464, tied log 0.410, taut vine 0.323 (floor 0.28); from the approved mock-up, also vine 0.343 tugged / 0.369 cut, swinging log 0.389, caught log 0.423. Sounds: `deadfall_creak` at the trip (warning, 0.6 s, ends before the base 0.8 s release), `deadfall_knock` when the ropes hit the snag (consequence), with six bark chips (`KIND_GRIT`, `EnvironmentFx.barkChips`) falling from it |
+| Decision | D88 |
+
 ## Proposed traps (D71, not built)
 
-Chosen by the author on 2026-11-16 for later work; each has its own issue and needs an approved card before code.
+Chosen by the author on 2026-11-16 for later work; each has its own issue and needs an approved card before code. The
+third, the trip-line deadfall (#363), is built: its card is above.
 
 | Trap | At rest (VISIBLE) | Telegraph and lethal part | Counter | Room purpose | Issue |
 | --- | --- | --- | --- | --- | --- |
-| Trip-line deadfall | a log pulled back and tied off on a bough; a pale trip vine stretched across the floor | touching the vine: creak and shiver for the shared warning, then one swing across body height | jump the vine (no trigger at all); or trip it and step back | teach "a visible trigger can be avoided" | [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) |
 | Creeping bramble | a thorn clump rooted in a wall or ledge side, tips always showing | rhythm: rustle and a first tip for the shared warning, then thorns grow across a lane, hold, retract | pass in the retracted window | a timing gate on a horizontal lane (a ledge top, a ladder exit) | [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) |
 | Hanging hive | a hive on a branch with a few drifting specks at its mouth (deterministic) | rhythm: the hive shakes and specks gather for the shared warning, then a 1 s curtain of stingers falls straight down | time the pass; optionally knock the hive down with a stone or fireball (never required, D26) | combine with a vertical route (drop, ladder) | [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) |
 

@@ -17,7 +17,7 @@ rooms: the original 1280 px course, a 672 px forest course with an ascending
 optional coin route, and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has six rooms since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has seven rooms since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -920,6 +920,24 @@ New `Forest1TrapsTest` (headless, the shipped map under an alias that drops only
 ### Author's answers recorded
 
 Three traps, not four; retry cost accepted, no split; the thorn tuft first; the log last; no exploding root and no fireball choice; an enemy in the stretch (second RedMob). Open for the running game (tracked by #260): the new sprites and pit edge tiles on this map, and how the 12-13 s retry loop feels.
+
+## forest-1 deadfall room (#363, D88)
+
+`forest-1-deadfall`, x 4960-5600 (640 px, one camera view), floor top y 320, walls at x 4960-4976 and 5584-5600. It is
+appended after the lever room on the map (forest-1 grew from 310 to 350 tiles) and listed second in `Rooms`, so it is
+played right after `forest-1-mob` and before the trap course. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-deadfall);
+trap card: [TRAPS.md](TRAPS.md#trip-line-deadfall-deadfall).
+
+- RoomStart (4992, 272); RoomExit (5536, 272, 32 x 48).
+- `Deadfall` (the bough, 112 x 24) at (5248, 243), `swing` left: rope knot P (5296, 252), the log tied on the right and
+  swinging left at a hero coming from the entrance; the trip vine at x 5176-5192; the swing band x 5246-5346. A
+  `Decor:trunk` at x 5356 holds the bough's thick end.
+- Nothing else: the trap is met alone, and the tied log, the vine and the exit are all on screen from the entrance (D84).
+- Measured (`DeadfallTrapTest`): jumping the vine from 2 to 60 px before it fires nothing and reaches the exit in 5.17 s;
+  tripping it and stopping within 0.68 s is safe with either warning (6.47 s to the exit, 6.88 s with the assist); a
+  hero who walks straight in is hit 2.65 s after the entrance (2.97 s with the assist), 0.27 s (0.18 s) into the swing.
+- D26: no support and no one-shot state the route needs; the spent log hangs above head height and the cut vine is
+  scenery, so the exit stays reachable from every state.
 
 ## forest-1 lever room (#418, D86)
 

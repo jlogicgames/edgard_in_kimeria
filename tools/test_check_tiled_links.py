@@ -322,6 +322,53 @@ class ExplosiveTrapLinksTest(unittest.TestCase):
             self.assertTrue(links.check_map(TILES / f'explosive-{name}.tmx'), f'explosive-{name}.tmx must fail like the Java loader does')
 
 
+class DeadfallLinksTest(unittest.TestCase):
+    """D88: mirror of DeadfallTrap.problem (the bough's size, swing, floor run, free swing and approach, standing places)."""
+    FLOOR = '<object id="9" x="0" y="320" width="640" height="48"/>'
+    TRAP = '<object id="3" type="Deadfall" x="288" y="243" width="112" height="24"/>'  # pivot x 336, floor 320
+    ROOM = ('<objectgroup name="Rooms"><object name="one" type="Room" x="0" y="0" width="640" height="368"/>'
+            '<object name="one" type="RoomStart" x="32" y="272"><point/></object>'
+            '<object name="one" type="RoomExit" x="576" y="272" width="32" height="48"/></objectgroup>')
+
+    def deadfall(self, trap=TRAP, spawn='', collisions=FLOOR, rooms=ROOM):
+        return check(tmx(trap + spawn, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_a_deadfall_on_open_floor_passes_either_way(self):
+        self.assertEqual([], self.deadfall())
+        right = self.TRAP.replace('/>', '><properties><property name="swing" value="right"/></properties></object>')
+        self.assertEqual([], self.deadfall(right.replace('x="288"', 'x="160"')))
+
+    def test_size_and_swing_are_checked(self):
+        self.assertIn('112x24', self.deadfall(self.TRAP.replace('width="112"', 'width="96"'))[0])
+        up = self.TRAP.replace('/>', '><properties><property name="swing" value="up"/></properties></object>')
+        self.assertIn("swing 'up'", self.deadfall(up)[0])
+
+    def test_a_pit_a_pillar_in_the_swing_and_a_low_ceiling_over_the_vine_fail(self):
+        pit = '<object id="9" x="0" y="320" width="300" height="48"/><object id="8" x="340" y="320" width="300" height="48"/>'
+        self.assertIn('solid floor', self.deadfall(collisions=pit)[0])
+        self.assertIn("log's swing", self.deadfall(collisions=self.FLOOR + '<object id="8" x="390" y="280" width="16" height="40"/>')[0])
+        self.assertIn('free height', self.deadfall(collisions=self.FLOOR + '<object id="8" x="180" y="240" width="48" height="16"/>')[0])
+        wall = ('<object id="6" type="Actionable" x="300" y="200" width="16" height="48"><properties>'
+                '<property name="type" value="Wall"/></properties></object>')
+        self.assertIn("log's swing", self.deadfall(spawn=wall)[0])
+
+    def test_the_entrance_may_not_be_on_the_vine_and_no_standing_place_in_the_band(self):
+        self.assertIn('trip vine under the room entrance', self.deadfall(rooms=self.ROOM.replace('x="32" y="272"', 'x="202" y="272"'))[0])
+        self.assertIn('through the room exit', self.deadfall(rooms=self.ROOM.replace('x="576" y="272"', 'x="330" y="272"'))[0])
+
+    def test_the_geometry_is_read_from_the_java_class(self):
+        self.assertEqual(links.DEADFALL_BOUGH, (112.0, 24.0))
+        self.assertEqual(links.DEADFALL_VINE, (104.0, 120.0, 5.0))
+        self.assertEqual(links.DEADFALL_SWEEP_HALF, 68.0)
+        self.assertEqual(links.DEADFALL_BAND, (62.0, 27.0))
+        with self.assertRaises(ValueError):
+            links.deadfall_constant('NO_SUCH_CONSTANT')
+
+    def test_it_must_fit_in_its_room_and_stay_out_of_collisions(self):
+        self.assertIn('inside its room', self.deadfall(self.TRAP.replace('x="288"', 'x="120"'))[0])
+        self.assertTrue(any('Collisions layer' in e for e in check(tmx(collisions=self.FLOOR + self.TRAP))))
+
+
 class HoneyFungusLinksTest(unittest.TestCase):
     """D63: mirror of FungusTrap.problem (thorn jump envelope, zone off the entrance, the lethal cloud kept 48 px clear)."""
     FLOOR = '<object id="9" x="0" y="320" width="640" height="48"/>'

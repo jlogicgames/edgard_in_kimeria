@@ -106,7 +106,7 @@ class RoomReplayTest {
 
     @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
         // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
-        measure("forest-1", 1, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
+        measure("forest-1", 2, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
     }
     /** #375: the first RedMob alone, then the refill; the sword takes the mob, no jump is needed. */
     @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
@@ -343,7 +343,7 @@ class RoomReplayTest {
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
         Level level = new Level(assets, game, player(), mapName, Rectangle::new, stock);
-        // forest-1's trap course is room 1 (0-based) since #375 put the first RedMob in a room of its own before it.
+        // forest-1's trap course is room 2 (0-based) since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after it.
         for (int room = 0; room < roomIndex; room++) level.enterNextRoom(player());
         float firstTime = 0;
         for (int attempt = 0; attempt < 3; attempt++) {

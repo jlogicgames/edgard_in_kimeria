@@ -316,6 +316,78 @@ def fungus_problems(o, collisions, spawn, room, standing):
     return []
 
 
+# Trip-line deadfall (#363, D88): mirrors DeadfallTrap.problem. The object is the bough's 112x24 rectangle. The geometry is
+# read from the Java constants (as check_contrast.py does), so the two cannot drift apart.
+DEADFALL_JAVA = ROOT / 'core' / 'src' / 'main' / 'java' / 'com' / 'jlogicsoftware' / 'kimeria' / 'entity' / 'objects' / 'DeadfallTrap.java'
+
+
+def deadfall_constant(name):
+    """A numeric constant of DeadfallTrap.java, with or without the `f` suffix, one of several declared on a line too."""
+    found = re.search(rf'\b{name}\s*=\s*(-?[0-9.]+)f?\s*[;,]', DEADFALL_JAVA.read_text(encoding='utf-8'))
+    if found is None:
+        raise ValueError(f'DeadfallTrap.java has no numeric constant {name}')
+    return float(found.group(1))
+
+
+DEADFALL_BOUGH = (deadfall_constant('BOUGH_WIDTH'), deadfall_constant('BOUGH_HEIGHT'))
+DEADFALL_PIVOT = (deadfall_constant('PIVOT_X'), deadfall_constant('PIVOT_Y'))  # swing=left; swing=right mirrors x
+DEADFALL_FLOOR_BELOW_PIVOT = deadfall_constant('FLOOR_BELOW_PIVOT')
+DEADFALL_VINE = (deadfall_constant('VINE_NEAR'), deadfall_constant('VINE_FAR'), deadfall_constant('VINE_HEIGHT'))
+DEADFALL_APPROACH_FLOOR = deadfall_constant('APPROACH_FLOOR')
+DEADFALL_FAR_FLOOR = deadfall_constant('FAR_FLOOR')
+DEADFALL_HEADROOM = deadfall_constant('HEADROOM')
+DEADFALL_SWEEP_HALF = deadfall_constant('ROPE_LENGTH') + deadfall_constant('LOG_WIDTH') / 2  # DeadfallTrap.SWEEP_HALF_WIDTH
+DEADFALL_BAND = (deadfall_constant('BAND_HALF_WIDTH'), deadfall_constant('BAND_ABOVE_FLOOR'))
+DEADFALL_SIZE_TOLERANCE = deadfall_constant('SIZE_TOLERANCE')
+
+
+def deadfall_problems(o, collisions, spawn, room, standing):
+    """Mirror of DeadfallTrap.problem. `standing` is a list of (name, (x, y, w, h)) places the hero must be able to stand."""
+    x, y, w, h = box(o)
+    if abs(w - DEADFALL_BOUGH[0]) > DEADFALL_SIZE_TOLERANCE or abs(h - DEADFALL_BOUGH[1]) > DEADFALL_SIZE_TOLERANCE:
+        return [f"must be the bough's own {int(DEADFALL_BOUGH[0])}x{int(DEADFALL_BOUGH[1])} rectangle"]
+    swing = prop(o, 'swing')
+    if swing not in ('', 'left', 'right'):
+        return [f"has swing '{swing}' (left or right)"]
+    toward = 1.0 if swing == 'right' else -1.0
+    px = x + (DEADFALL_BOUGH[0] - DEADFALL_PIVOT[0] if swing == 'right' else DEADFALL_PIVOT[0])
+    floor = y + DEADFALL_PIVOT[1] + DEADFALL_FLOOR_BELOW_PIVOT
+    run_start = px + toward * (DEADFALL_VINE[1] + DEADFALL_APPROACH_FLOOR)
+    run_end = px - toward * DEADFALL_FAR_FLOOR
+    run_left, run_right = min(run_start, run_end), max(run_start, run_end)
+    sweep = [px - DEADFALL_SWEEP_HALF, y, 2 * DEADFALL_SWEEP_HALF, floor - y - 1.0]
+    near = px + toward * DEADFALL_SWEEP_HALF
+    approach = [min(run_start, near), floor - DEADFALL_HEADROOM, abs(near - run_start), DEADFALL_HEADROOM - 1.0]
+    if room and (run_left < room[0] or run_right > room[0] + room[2] or y < room[1] or approach[1] < room[1]
+                 or floor > room[1] + room[3]):
+        return [f'needs its bough, its swing and its floor run ({int(run_left)} to {int(run_right)}) inside its room']
+    spans = sorted((float(c.get('x', 0)), float(c.get('x', 0)) + float(c.get('width', 0)))
+                   for c in collisions if kind(c) != 'QuickSand' and abs(float(c.get('y', 0)) - floor) < FLOOR_TOLERANCE)
+    covered = run_left
+    for start, end in spans:
+        if start <= covered + FLOOR_TOLERANCE:
+            covered = max(covered, end)
+    if covered < run_right:
+        return [f'needs solid floor at y {int(floor)} ({int(DEADFALL_FLOOR_BELOW_PIVOT)} px under the knots) from x {int(run_left)} '
+                f'to {int(run_right)}: room to stop before the swing and to land past the vine']
+    things = [box(c) for c in collisions if kind(c) != 'QuickSand'] + [s for s in map(swept, spawn) if s]
+    for thing in things:
+        if overlaps(thing, sweep):
+            return [f"has something solid in the log's swing (from the bough to the floor, {int(DEADFALL_SWEEP_HALF)} px "
+                    'either side of the knots)']
+        if overlaps(thing, approach):
+            return [f'needs {int(DEADFALL_HEADROOM)} px of free height over the floor before the swing (jump the vine, stop and wait)']
+    vine = [min(px + toward * DEADFALL_VINE[0], px + toward * DEADFALL_VINE[1]), floor - DEADFALL_VINE[2],
+            DEADFALL_VINE[1] - DEADFALL_VINE[0], DEADFALL_VINE[2]]
+    band = [px - DEADFALL_BAND[0], floor - DEADFALL_BAND[1], 2 * DEADFALL_BAND[0], DEADFALL_BAND[1]]
+    for name, area in standing:
+        if name == 'entrance' and overlaps(area, vine):
+            return ['has its trip vine under the room entrance (the hero would start tripping it)']
+        if overlaps(area, band):
+            return [f'swings its log through the room {name}']
+    return []
+
+
 def thorn_room(root, o):
     """The (x, y, w, h) of the room holding the object's centre, or the whole map, or None when the map has no size."""
     cx, cy = float(o.get('x', 0)) + float(o.get('width', 0)) / 2, float(o.get('y', 0)) + float(o.get('height', 0)) / 2
@@ -370,6 +442,12 @@ def check_map(path):
     for o in (o for o in spawn if kind(o) in FUNGI):
         errors.extend(f"{kind(o)} {describe(o)} {e}"
                       for e in fungus_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o)))
+    for o in collisions:
+        if kind(o) == 'Deadfall':
+            errors.append(f"{describe(o)}: Deadfall is in the Collisions layer; traps must be in SpawnPoints")
+    for o in (o for o in spawn if kind(o) == 'Deadfall'):
+        errors.extend(f"Deadfall {describe(o)} {e}"
+                      for e in deadfall_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o)))
     for trigger in (o for o in spawn if kind(o) == 'Trigger'):
         target = prop(trigger, 'target').strip()
         if target:

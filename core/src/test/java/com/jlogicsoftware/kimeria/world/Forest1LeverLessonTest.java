@@ -59,7 +59,8 @@ class Forest1LeverLessonTest {
     /** The whole level from a restart, standing at the lever lesson room's entrance. */
     private Level room() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
-        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-traps
+        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
+        level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player()); // -> forest-1-lever
         return level;
     }
@@ -482,6 +483,8 @@ class Forest1LeverLessonTest {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
         assertEquals("forest-1-mob", level.currentRoomName());
         level.enterNextRoom(player());
+        assertEquals("forest-1-deadfall", level.currentRoomName());
+        level.enterNextRoom(player());
         assertEquals("forest-1-traps", level.currentRoomName());
         level.enterNextRoom(player());
         assertEquals("forest-1-lever", level.currentRoomName());
@@ -514,7 +517,8 @@ class Forest1LeverLessonTest {
 
     @Test void theTransitionsTrapCourseToLeverRoomAndLeverRoomToRouteRoomPlaceTheHeroAtTheRightRoomStartInsideTheCamera() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
-        level.enterNextRoom(player()); // forest-1-mob -> forest-1-traps
+        level.enterNextRoom(player()); // forest-1-mob -> forest-1-deadfall (#363)
+        level.enterNextRoom(player()); // -> forest-1-traps
         assertEquals("forest-1-traps", level.currentRoomName());
         level.enterNextRoom(player()); // the trap course's exit leads to the lever room, which lies after the map's old end
         assertEquals("forest-1-lever", level.currentRoomName());

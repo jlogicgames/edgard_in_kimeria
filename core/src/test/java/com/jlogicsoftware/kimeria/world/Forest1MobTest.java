@@ -59,7 +59,7 @@ class Forest1MobTest {
         assertTrue(l.escalators.isEmpty(), "no machinery");
         assertTrue(l.fallingPlatforms.isEmpty(), "no supports");
         assertEquals("", l.player.zoneHint(), "no hints (forest-1 has none, D33)");
-        assertEquals("forest-1-traps", nextRoomName(l));
+        assertEquals("forest-1-deadfall", nextRoomName(l), "the deadfall room (#363) follows");
     }
 
     private String nextRoomName(Level l) { l.enterNextRoom(player()); return l.currentRoomName(); }

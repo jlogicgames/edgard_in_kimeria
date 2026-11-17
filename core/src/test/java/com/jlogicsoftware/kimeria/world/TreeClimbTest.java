@@ -58,7 +58,7 @@ class TreeClimbTest {
 
     private Level room() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
-        for (int i = 0; i < 5; i++) level.enterNextRoom(player()); // mob, traps, lever, route, guard, tree (#375, #418)
+        for (int i = 0; i < 6; i++) level.enterNextRoom(player()); // mob, deadfall, traps, lever, route, guard, tree (#375, #418, #363)
         return level;
     }
 
@@ -187,7 +187,8 @@ class TreeClimbTest {
 
     @Test void theTreeRoomIsEnteredFromTheGuardRoomExitAndARetryRestoresEveryRottenBranch() {
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new);
-        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-traps
+        level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
+        level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player());
         level.enterNextRoom(player());
         level.enterNextRoom(player()); // traps, lever, route, guard (#418)

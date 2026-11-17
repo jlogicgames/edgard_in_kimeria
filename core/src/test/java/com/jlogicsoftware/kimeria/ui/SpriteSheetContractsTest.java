@@ -29,6 +29,10 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_STONE, 2, 1);
         matches(SpriteSheets.TRAP_SHADOW, 3, 1);
         matches(SpriteSheets.TRAP_STONE_LIP, 2, 1); // #360: loose, broken
+        matches(SpriteSheets.TRAP_DEADFALL, 5, 1); // #363: tied, strain, slip, swing, caught
+        matches(SpriteSheets.TRAP_DEADFALL_BOUGH, 1, 1);
+        matches(SpriteSheets.TRAP_DEADFALL_VINE, 3, 1); // taut, tugged, cut
+        matches(SpriteSheets.TRAP_DEADFALL_ROPE, 1, 1);
         matches(SpriteSheets.TRAP_PUFFBALL, 4, 1);
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);

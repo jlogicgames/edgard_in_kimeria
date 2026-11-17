@@ -32,6 +32,11 @@ public final class SpriteSheets {
     // Tree branches (#349, D80): perch, perch-left (the sound branch); intact, crumble1, crumble2 and their -left copies (the rotten branch).
     public static final Sheet TRAP_PERCH = new Sheet("images/objects/trap-perch.png", 32, 16);
     public static final Sheet TRAP_ROTTEN_PERCH = new Sheet("images/objects/trap-rotten-perch.png", 32, 16);
+    // The trip-line deadfall (#363, D88): the log (tied, strain, slip, swing, caught), the bough, the trip vine (taut, tugged, cut), the rope strip.
+    public static final Sheet TRAP_DEADFALL = new Sheet("images/objects/trap-deadfall.png", 32, 16);
+    public static final Sheet TRAP_DEADFALL_BOUGH = new Sheet("images/objects/trap-deadfall-bough.png", 112, 24);
+    public static final Sheet TRAP_DEADFALL_VINE = new Sheet("images/objects/trap-deadfall-vine.png", 24, 8);
+    public static final Sheet TRAP_DEADFALL_ROPE = new Sheet("images/objects/trap-deadfall-rope.png", 1, 8);
     // #295 phase 1 (art only, no code draws them yet): idle1..idle3, swell1, swell2, spent; tools/sprite_layouts.py FOREST_TRAP_SHEETS.
     public static final Sheet TRAP_HONEY_FUNGUS = new Sheet("images/objects/trap-honey-fungus.png", 24, 16);
     public static final Sheet TRAP_FALSE_HONEY_FUNGUS = new Sheet("images/objects/trap-false-honey-fungus.png", 24, 16);

@@ -2462,3 +2462,29 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Not verified:** the look and the 0.8 s / 0.4 s feel in the running game (desktop, web, touch), and that a player reads the
     sequence as "each of these". No shipped room has two off-screen mechanisms for one lever, so only a test map shows it. Tracked by
     [#434](https://github.com/jlogicgames/edgard_in_kimeria/issues/434) (Chrome check, author play-through).
+
+## D88. The trip-line deadfall: a touch trap whose trigger is drawn on the floor (#363, 2026-11-17)
+
+- **Status:** built by [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363). The card, the art and the
+  placement were approved by the author on 2026-11-17; automated tests only, not yet played by the author or seen in the
+  running game, and the two sounds wait for the author's audition: both tracked by [#436](https://github.com/jlogicgames/edgard_in_kimeria/issues/436).
+- **Decision:** a new VISIBLE trap of the touch family (D47), `Deadfall` (card: TRAPS.md, "Trip-line deadfall"). A log is
+  hauled up on the far side of a bough and lashed there; a pale trip vine lies across the floor in front of it. The vine is
+  the only trigger (the hero's body box, from either side; no stone or fireball), so the answer is in the hero's own feet:
+  jump the vine and nothing fires, or trip it, stop and let the log go by. The trip starts the shared D7 warning
+  (`TrapWarnings.DEFAULT_WARNING_SECONDS`, 0.8 / 1.2 s), then one eased 0.5 s swing on two parallel 56 px ropes from +80
+  to -78 degrees, where the ropes meet a snag on the near side; the log kills only while it swings and is at body height
+  only 0.16-0.34 s into it. Afterwards the log eases in under the snag over 0.25 s (no jump at the catch) and hangs there above head height, and the vine lies cut: harmless until the
+  room is rebuilt (retry, Restart Level, re-entry), so no state is carried across a visit.
+- **Why this geometry:** the log swings at the hero, not with him, so a walker who trips the vine and keeps going is hit
+  with either warning length (the assist does not turn the trap into a free pass), while the vine lies 104-120 px before the
+  knots (a hero who trips it has his centre 125 px before them, about 70 px short of the swing band) so that stopping is a generous answer (measured: safe up to 0.68 s after the trip with either warning).
+- **Placement (D72):** a new one-screen room, `forest-1-deadfall`, second in forest-1's play order, introduces the
+  `deadfall` element alone (registry row in ROOM_CARDS.md). No existing room could take it: the mob room, the trap course
+  and forest-canopy are at the two-introduction cap, the forest-0 lesson rooms hold their one trap (D48), the lever and
+  tree rooms are built to have no death, and in the route, guard and walls rooms it would not be met alone.
+- **Consequence (D75):** the creak at the trip is the warning's sound, the knock and six bark chips at the snag are the
+  consequence (SOUND_DIRECTION.md, "Trip-line deadfall").
+- **Checks:** `DeadfallTrap.problem` at load for every room, mirrored in `tools/check_tiled_links.py`; the contrast gate
+  measures the bough, the tied log and the vine where they are drawn (worst 0.464, 0.410, 0.323); `DeadfallTrapTest`;
+  `AllocationBudgetTest.deadfallTripAndSwing` (0.0 B/frame) and `forest1DeadfallRoom`.
