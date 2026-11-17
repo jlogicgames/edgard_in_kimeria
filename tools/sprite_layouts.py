@@ -114,6 +114,11 @@ DIALOGUE_SHEETS = {
 DIALOGUE_IMAGES = {name: (size[0] * len(frames), size[1]) for name, (size, frames) in DIALOGUE_SHEETS.items()}
 # Frames with no transparent pixel (bands with an opaque fill); the rest keep binary alpha.
 OPAQUE_DIALOGUE_IMAGES = {'window', 'plate', 'box', 'page', 'choice'}
+# The Kimeria arms (#350, #416, D95): hand-drawn grid art/ui/arms/arms.grid -> assets/images/ui/kimeria-arms.png, one strip.
+# Frame `lit` is the reference drawing art/heraldry/kimeria-arms.png; the others are the sun lighting up on the ending page.
+ARMS_FRAME_SIZE = (24, 36)
+ARMS_FRAMES = ('dark', 'ember', 'glow', 'kindle', 'lit', 'flare')
+ARMS_IMAGE_SIZE = (ARMS_FRAME_SIZE[0] * len(ARMS_FRAMES), ARMS_FRAME_SIZE[1])
 # The hero (#343, D79): hand-drawn grids in art/hero/hero.grid -> three sheets of 64x64 cells, one clip per row.
 # Facing sheets share one layout; the sword stays in Edgard's right hand, so the left sheet is drawn, not flipped at runtime.
 HERO_FRAME_SIZE = 64

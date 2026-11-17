@@ -11,6 +11,8 @@ import com.badlogic.gdx.math.MathUtils;
  * Real-time opening/ending story in logical pixels; independent of gameplay time scaling. Static pages (#336): after a
  * black fade-in the paragraphs of a page appear one after another, top to bottom, and stay; the player turns the page
  * and the last turn fades to black. With instant text (#342) a page appears whole and turns at once.
+ * <p>The ending (#416, D95) draws the Kimeria arms above its text: dark while the page appears, the sun lights up as the
+ * paragraph that brings the light back fades in, and it is lit whenever the page is shown whole (instant text, a press).
  */
 public final class IntroScreen {
     public enum State { FADE_IN, READING, FADE_OUT, DONE }
@@ -31,6 +33,17 @@ public final class IntroScreen {
     public static final int CUE_SIZE = 8;
     private static final float CUE_PULSE_SPEED = 4f, CUE_ALPHA_BASE = 0.55f, CUE_ALPHA_SWING = 0.45f;
 
+    /** The arms on the ending page (#416, D95): 3x (72x108), top at the text top of other pages, 20 px above the ending's text. */
+    public static final int ARMS_SCALE = 3;
+    public static final float ARMS_TOP = IntroPages.TEXT_TOP, ARMS_GAP = 20f;
+    public static final float ENDING_TEXT_TOP = ARMS_TOP + KimeriaArms.HEIGHT * ARMS_SCALE + ARMS_GAP;
+    /**
+     * The sun lights in these steps, each ending this many seconds after its paragraph starts to fade in (0.6 s in all),
+     * then holds {@link KimeriaArms#LIT}. The flare is the light bursting out once before it settles.
+     */
+    private static final int[] LIGHT_FRAMES = {KimeriaArms.EMBER, KimeriaArms.GLOW, KimeriaArms.KINDLE, KimeriaArms.FLARE};
+    private static final float[] LIGHT_FRAME_ENDS = {0.12f, 0.24f, 0.36f, 0.6f};
+
     private static final String CUE_ART = "images/HUD/touch/cue.png";
     private final String text;
     private final IntroPages pages;
@@ -38,6 +51,11 @@ public final class IntroScreen {
     private final boolean instant;
     private final float cueCenterX;
     private final TextureRegion cue;
+    /** Null for a story without the arms (the opening). */
+    private final KimeriaArms arms;
+    /** The paragraph that brings the light back, its page and when it starts to fade in on that page. */
+    private final int lightParagraph, lightPage;
+    private final float lightStart;
     private State state = State.FADE_IN;
     private Phase phase = Phase.REVEAL;
     private int page;
@@ -48,7 +66,19 @@ public final class IntroScreen {
 
     /** For tests and headless flows; {@code blocks} may be null when nothing is drawn. The cue sits at {@code screenWidth / 2}, like the text. */
     public IntroScreen(String text, IntroPages pages, BitmapFontCache[] blocks, boolean instant, float screenWidth, TextureRegion cue) {
+        this(text, pages, blocks, instant, screenWidth, cue, null);
+    }
+
+    /** As above, with the Kimeria arms drawn over the text when {@code arms} is not null (the ending). */
+    public IntroScreen(String text, IntroPages pages, BitmapFontCache[] blocks, boolean instant, float screenWidth, TextureRegion cue,
+                       KimeriaArms arms) {
         this.cue = cue;
+        this.arms = arms;
+        this.lightParagraph = lightParagraph(pages);
+        int at = 0;
+        while (pages.end(at) <= lightParagraph) at++;
+        this.lightPage = at;
+        this.lightStart = (lightParagraph - pages.first(at)) * PARAGRAPH_STAGGER_SECONDS;
         this.cueCenterX = screenWidth / 2f;
         this.text = text;
         this.pages = pages;
@@ -58,11 +88,46 @@ public final class IntroScreen {
 
     /** Splits {@code text} into pages with the body font and caches one text block per paragraph (once, at load). */
     public static IntroScreen open(String text, Overlay overlay, Assets assets, float screenWidth, boolean instant) {
+        return open(text, overlay, assets, screenWidth, instant, null);
+    }
+
+    /** As above; with {@code arms} (the ending) the text starts at {@link #ENDING_TEXT_TOP}, under the arms. */
+    public static IntroScreen open(String text, Overlay overlay, Assets assets, float screenWidth, boolean instant, KimeriaArms arms) {
         float wrap = screenWidth - TEXT_MARGIN * 2f;
-        IntroPages pages = IntroPages.split(text, paragraph -> overlay.bodyHeight(paragraph, wrap));
+        IntroPages pages = split(text, paragraph -> overlay.bodyHeight(paragraph, wrap), arms != null);
         BitmapFontCache[] blocks = new BitmapFontCache[pages.paragraphCount()];
         for (int i = 0; i < blocks.length; i++) blocks[i] = overlay.bodyBlock(pages.paragraph(i), screenWidth / 2f, pages.top(i), wrap);
-        return new IntroScreen(text, pages, blocks, instant, screenWidth, assets.region(CUE_ART, 0, 0, CUE_SIZE, CUE_SIZE));
+        return new IntroScreen(text, pages, blocks, instant, screenWidth, assets.region(CUE_ART, 0, 0, CUE_SIZE, CUE_SIZE), arms);
+    }
+
+    /** The page split {@link #open} uses: under the arms ({@link #ENDING_TEXT_TOP}) or at the usual text top. */
+    public static IntroPages split(String text, IntroPages.Measure measure, boolean withArms) {
+        return IntroPages.split(text, measure, withArms ? ENDING_TEXT_TOP : IntroPages.TEXT_TOP);
+    }
+
+    /**
+     * The paragraph that brings the light back: the last one before the closing line (THE END, КІНЕЦЬ, ENDE...), found
+     * from the text, not by a fixed count. The closing line is every trailing paragraph written in capitals; a story
+     * without one lights with its last paragraph. Both the ending on main ("Light has returned to the world.") and the
+     * healer's of #372 ("Then the sun shone again...") put the light there; {@code IntroPagesTest} checks the structure and
+     * the light words in all five shipped catalogs, so a translation that moves the light fails a test, not the game.
+     * Runs once at load.
+     */
+    public static int lightParagraph(IntroPages pages) {
+        int last = pages.paragraphCount() - 1;
+        while (last > 0 && isClosingLine(pages.paragraph(last))) last--;
+        return last;
+    }
+
+    /** A closing line such as THE END: it has a letter and no lower-case letter. */
+    public static boolean isClosingLine(String paragraph) {
+        boolean letter = false;
+        for (int i = 0; i < paragraph.length(); i++) {
+            char c = paragraph.charAt(i);
+            if (Character.isLowerCase(c)) return false;
+            letter |= Character.isLetter(c);
+        }
+        return letter;
     }
 
     /** Fades everything out now (Escape, Back): the one way to leave the story before its last page. */
@@ -145,8 +210,24 @@ public final class IntroScreen {
         };
     }
 
-    /** Queues the visible paragraphs (text, Y-up pass) and draws the page-turn cue (Y-down screen projection). */
+    /**
+     * The arms frame now: dark until the light paragraph starts to fade in, then the lighting steps, then lit. Lit at once
+     * whenever the page is whole (instant text, a press during the reveal, the wait for the turn), so D77's final state holds.
+     * An Escape during the reveal freezes the frame it had while the story fades out.
+     */
+    public int armsFrame() {
+        if (instant || page > lightPage) return KimeriaArms.LIT;
+        if (page < lightPage || state == State.FADE_IN) return KimeriaArms.DARK;
+        if (phase != Phase.REVEAL) return KimeriaArms.LIT;
+        float t = phaseTime - lightStart;
+        if (t < 0f) return KimeriaArms.DARK;
+        for (int i = 0; i < LIGHT_FRAMES.length; i++) if (t < LIGHT_FRAME_ENDS[i]) return LIGHT_FRAMES[i];
+        return KimeriaArms.LIT;
+    }
+
+    /** Queues the visible paragraphs (text, Y-up pass) and draws the arms and the page-turn cue (Y-down screen projection). */
     public void render(Batch batch, Overlay overlay) {
+        if (arms != null) arms.draw(batch, armsFrame(), cueCenterX, ARMS_TOP, ARMS_SCALE);
         if (blocks == null) return;
         for (int i = pages.first(page); i < pages.end(page); i++) overlay.queueBlock(blocks[i], paragraphAlpha(i));
         if (state == State.READING && phase == Phase.WAIT && lock <= 0f) drawCue(batch);
@@ -164,6 +245,8 @@ public final class IntroScreen {
     public float cueCenterX() { return cueCenterX; }
     public String text() { return text; }
     public IntroPages pages() { return pages; }
+    /** Index of the paragraph that lights the sun (see {@link #lightParagraph(IntroPages)}). */
+    public int lightParagraph() { return lightParagraph; }
     public int pageIndex() { return page; }
     public Phase phase() { return phase; }
     /** True while a press would do nothing because of the input lock. */

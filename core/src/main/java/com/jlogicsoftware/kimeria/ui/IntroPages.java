@@ -12,6 +12,8 @@ public final class IntroPages {
 
     /** Distance from the screen top to the first line, and the room a page may use (the page-turn cue sits below it). */
     public static final float TEXT_TOP = 40f, MAX_HEIGHT = 264f;
+    /** The lowest a page's text may reach, from the screen top, whatever its first line's top. */
+    public static final float PAGE_BOTTOM = TEXT_TOP + MAX_HEIGHT;
     /** One blank body line between paragraphs. */
     public static final float PARAGRAPH_GAP = FontSizes.BODY;
 
@@ -23,7 +25,15 @@ public final class IntroPages {
         this.paragraphs = paragraphs; this.tops = tops; this.heights = heights; this.firsts = firsts;
     }
 
-    public static IntroPages split(String text, Measure measure) {
+    public static IntroPages split(String text, Measure measure) { return split(text, measure, TEXT_TOP); }
+
+    /**
+     * As {@link #split(String, Measure)}, with the first line at {@code top} instead of {@link #TEXT_TOP}: the ending puts the
+     * Kimeria arms above its text (#416, D95). The bottom of the page stays {@link #PAGE_BOTTOM}, so a page holds
+     * {@code PAGE_BOTTOM - top}.
+     */
+    public static IntroPages split(String text, Measure measure, float top) {
+        float room = PAGE_BOTTOM - top;
         String[] parts = text.split("\n\n");
         float[] heights = new float[parts.length], tops = new float[parts.length];
         int[] firsts = new int[parts.length + 1];
@@ -31,15 +41,15 @@ public final class IntroPages {
         float used = 0f;
         for (int i = 0; i < parts.length; i++) {
             heights[i] = measure.height(parts[i]);
-            if (heights[i] > MAX_HEIGHT) throw new IllegalStateException("Paragraph " + i + " is " + heights[i]
-                + " px high, a page holds " + MAX_HEIGHT + ": " + parts[i]);
-            boolean fits = i > 0 && used + PARAGRAPH_GAP + heights[i] <= MAX_HEIGHT;
+            if (heights[i] > room) throw new IllegalStateException("Paragraph " + i + " is " + heights[i]
+                + " px high, a page holds " + room + ": " + parts[i]);
+            boolean fits = i > 0 && used + PARAGRAPH_GAP + heights[i] <= room;
             if (fits) {
-                tops[i] = TEXT_TOP + used + PARAGRAPH_GAP;
+                tops[i] = top + used + PARAGRAPH_GAP;
                 used += PARAGRAPH_GAP + heights[i];
             } else {
                 firsts[pages++] = i;
-                tops[i] = TEXT_TOP;
+                tops[i] = top;
                 used = heights[i];
             }
         }

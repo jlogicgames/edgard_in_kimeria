@@ -106,6 +106,10 @@ that L'Kardina's curse put out, held against the eternal night.
 - **The full arms** (crown, shield and sun) belong to the king and his places: banners and shields in the fortress
   ([#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116)) and Kimeria on the world map
   ([#94](https://github.com/jlogicgames/edgard_in_kimeria/issues/94)).
+- **The lit arms close the story** ([#416](https://github.com/jlogicgames/edgard_in_kimeria/issues/416),
+  [D95](DECISIONS.md#d95-the-sun-on-the-kimeria-arms-lights-up-on-the-ending-page-416-2026-11-17)): the ending page shows
+  the full arms with the sun put out, and the sun lights again as the words bring the light back. The opening shows no
+  arms.
 
 ### Not yet decided
 
@@ -190,6 +194,9 @@ it, an ending screen in the opening's page style plays the same music.
 Its localized text establishes that Edgard defeated every enemy, cleared the kingdom of
 monsters and brought light back to the world. This outcome is now agreed; no new account
 of L'Kardina's fate or the mechanism of dispelling darkness is added.
+Above the text the Kimeria arms show the same outcome without words: the sun on the shield is dark while the page
+appears and lights up with the paragraph that brings the light back (#416, D95, see "Kingdom heraldry"). With the
+Instant text option the arms are lit at once.
 
 After the ending, the game returns to the main menu and removes the run save. A new run
 starts from the opening and the `forest-0` tutorial. Later mechanics will expand these levels;

@@ -853,6 +853,14 @@ full arms.
 | HUD coin | the sun engraved in the painted 3/4 coin, in place of the original "C" | HUD illustration |
 | Fortress banners and wall shields ([#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116)) | the full arms, or the sun on blue cloth | **decor** (D76): no ink contour, none of the reserved gold, p90 chroma at most 0.10. A dull ochre sun on grey-blue cloth with a darker blue contour. Only a banner the player interacts with may use full colour, and then it is active and measured as such. |
 | World map ([#94](https://github.com/jlogicgames/edgard_in_kimeria/issues/94)) | the full arms mark Kimeria | map art |
+| Ending ([#416](https://github.com/jlogicgames/edgard_in_kimeria/issues/416), [D95](DECISIONS.md#d95-the-sun-on-the-kimeria-arms-lights-up-on-the-ending-page-416-2026-11-17)) | the full arms at 3x above the ending's text; the sun is dark while the page appears and lights with the paragraph that brings the light back | UI art, full colour, Nearest; no dark arms on the opening |
+
+The ending's frames are one strip, `art/ui/arms/arms.grid` → `tools/arms_sprites.py` → `assets/images/ui/kimeria-arms.png`
+(six 24×36 frames: dark, ember, glow, kindle, lit, flare; 10 colours, binary alpha). Frame `lit` is the reference drawing
+pixel for pixel, and only the sun changes between frames (`tools/test_arms_sprites.py`). The put-out sun is a black disc
+`12142c` with a cold ash rim `464e70` and no rays; the crown and the gold border stay gold in every frame, because they
+are metal, not light. Code draws the strip through `ui/KimeriaArms` at a whole-number scale.
+[Frames at 8x](references/kimeria-arms-frames.png).
 
 ## Forest trap sprites (#230)
 
