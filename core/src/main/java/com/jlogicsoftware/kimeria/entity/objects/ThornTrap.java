@@ -88,6 +88,8 @@ public class ThornTrap extends Entity {
     private Phase phase = Phase.DORMANT;
     private float phaseTime;
     private float warningTotal;
+    /** Reused by {@link #update(float)} so the per-frame zone and column tests allocate nothing (#359). */
+    private final Rectangle zoneScratch = new Rectangle(), columnScratch = new Rectangle();
 
     public ThornTrap(Assets assets, TrapWarnings warnings, Kind kind, float x, float y, float w, float h,
                      float zoneLeft, float zoneRight, Supplier<Rectangle> heroBody, Runnable kill) {
@@ -128,20 +130,29 @@ public class ThornTrap extends Entity {
     public float warningTotal() { return warningTotal; }
 
     /** The area that starts the warning: the footprint widened by the zone, from {@value #ZONE_ABOVE} px above the footprint to its floor. */
-    public Rectangle triggerZone() { return zoneOf(position.x, position.y, size.x, size.y, zoneLeft, zoneRight); }
+    public Rectangle triggerZone() { return zoneInto(new Rectangle()); }
+
+    /** {@link #triggerZone()} written into {@code out}, so {@link #update(float)} reuses one rectangle. */
+    private Rectangle zoneInto(Rectangle out) { return zoneInto(out, position.x, position.y, size.x, size.y, zoneLeft, zoneRight); }
 
     static Rectangle zoneOf(float x, float y, float w, float h, float left, float right) {
-        return new Rectangle(x - left, y - ZONE_ABOVE, w + left + right, h + ZONE_ABOVE);
+        return zoneInto(new Rectangle(), x, y, w, h, left, right);
+    }
+
+    private static Rectangle zoneInto(Rectangle out, float x, float y, float w, float h, float left, float right) {
+        return out.set(x - left, y - ZONE_ABOVE, w + left + right, h + ZONE_ABOVE);
     }
 
     /** What kills the hero right now (empty-sized outside the lethal phases). */
-    public Rectangle lethalBounds() {
+    public Rectangle lethalBounds() { return lethalInto(new Rectangle()); }
+
+    private Rectangle lethalInto(Rectangle out) {
         float height = switch (phase) {
             case ARMED -> kind.killHeight;
             case RISING -> kind.killHeight * ROOT_RISING_FRACTION;
             default -> 0f;
         };
-        return new Rectangle(position.x + (size.x - kind.killWidth) / 2f, position.y + size.y - height, kind.killWidth, height);
+        return out.set(position.x + (size.x - kind.killWidth) / 2f, position.y + size.y - height, kind.killWidth, height);
     }
 
     public boolean isLethal() { return phase == Phase.ARMED || phase == Phase.RISING; }
@@ -150,7 +161,7 @@ public class ThornTrap extends Entity {
     public void update(float dt) {
         if (isRemoved()) return;
         Rectangle hero = heroBody.get();
-        if (phase == Phase.DORMANT && hero != null && hero.overlaps(triggerZone())) {
+        if (phase == Phase.DORMANT && hero != null && hero.overlaps(zoneInto(zoneScratch))) {
             phase = Phase.WARNING;
             phaseTime = 0f;
             warningTotal = warnings.duration(TrapWarnings.DEFAULT_WARNING_SECONDS);
@@ -165,7 +176,7 @@ public class ThornTrap extends Entity {
                 phase = Phase.ARMED;
             }
         }
-        if (isLethal() && hero != null && hero.overlaps(lethalBounds())) kill.run();
+        if (isLethal() && hero != null && hero.overlaps(lethalInto(columnScratch))) kill.run();
     }
 
     /** Frame index into the sheet for the current phase and time. */

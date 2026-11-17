@@ -87,7 +87,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 <!-- trap-catalogue:start -->
 | Type | Family | Visibility | At-rest cue | Warning | Taught in | Decision |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ThornRoot` | proximity | HIDDEN | pending #359 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
+| `ThornRoot` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
 | `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, first trap of the stretch | D44, D58 |
 | `FallingBranch` | position | DISGUISED | pending #361 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
 | `FallingStone` | position | HIDDEN | pending #360 | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
@@ -138,9 +138,9 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Field | Value |
 | --- | --- |
 | Family | proximity |
-| Visibility (D71) | HIDDEN |
-| At rest | frame `hidden`: a three-row brown dirt mound, no bone; likely lost against the ground tile |
-| At-rest cue | pending [#359](https://github.com/jlogicgames/edgard_in_kimeria/issues/359): a bone sliver in the mound, active tier |
+| Visibility (D71) | VISIBLE (was HIDDEN until [#359](https://github.com/jlogicgames/edgard_in_kimeria/issues/359)) |
+| At rest | frame `hidden`: the dirt mound with the stake's bone tip breaking through and two dark thorn barbs at its edges, a thorny silhouette no scenery shares; outline 0.380 (active tier) |
+| At-rest cue | none needed: the rest frame shows the stake; the barbs stay through `peek1`, `peek2` and `rising`, so the warning is the tip rising two rows and wobbling |
 | Reads from | its zone: 64 px before the column in `forest-0-ladder`, 80 px by default |
 | Trigger | the hero body box (11×22) overlaps the footprint widened by `zone` per side, from 32 px above to the floor |
 | Telegraph (D7) | tip peeks and wobbles (`peek1`/`peek2`, every 0.1 s) |
@@ -151,7 +151,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-ladder` with `HINT_LADDER_ROOT` |
 | Load checks | `ThornTrap.openFloorProblem` (jump envelope, floor, headroom); mirrored in `check_tiled_links.py` |
 | Tests | `ProximityTrapsTest`, `LadderLessonTest` |
-| Art and sound | `trap-thorn-root` 16×24: hidden, peek1, peek2, rising, up |
+| Art and sound | `trap-thorn-root` 16×24: hidden (tip and barbs, #359), peek1, peek2, rising, up |
 | Decision | D44, D48 |
 
 ### Bristling thorn tuft (`ThornTuft`)

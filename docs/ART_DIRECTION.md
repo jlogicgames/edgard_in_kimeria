@@ -751,7 +751,7 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 
 | Tier | Sprites |
 |---|---|
-| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.35 (HIDDEN, cue #359) |
+| Active: traps | branch 0.48, log platform 0.48, honey fungus 0.45, bomb 0.42, root 0.35 (idle tell; was 0.41), thorn vine 0.41, puffball 0.40, stump 0.33 (idle tell; was 0.39), falling platform 0.38, false honey fungus 0.36, thorn tuft 0.36, thorn root 0.38 (tip and barbs at rest, #359; was 0.35) |
 | Active: collectables | with the pickup halo (#345): Bat wing jar 0.54 (the flapping bat was 0.41), Mushroom 0.53, coin 0.37 (no halo); fireball refill 0.43 |
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.37, stone 0.30 |
 | Active: enemies and hero | hero 0.35 (D79, both facings; the old 48 px hero was 0.46), RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 |
