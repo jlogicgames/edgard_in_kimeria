@@ -681,7 +681,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 
 | Area | Issue | Main candidates |
 | --- | --- | --- |
-| Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | bomb, stump and root blasts; fireball trail and hits; stone and branch landing; boss strike, counter and death; spores |
+| Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves → [#473](https://github.com/jlogicgames/edgard_in_kimeria/issues/473); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
 | Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle and flying beetle blasts, snail spit, bites, the notice pop of #240, death poof (check against the D65 blood) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
