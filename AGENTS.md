@@ -93,6 +93,21 @@ trap needs an always-drawn at-rest cue and a teaching room. `TrapCatalogTest` fa
 row. When it acts it is seen and heard, hit or miss; the hero's death beat does not count (D93). Procedure: the
 `kimeria-trap-design` skill (`.agents/skills/`).
 
+## Monsters (D100)
+
+A monster that reacts to the hero notices in its own body language (a stop and a reaction drawn in its frames, about 0.5 s,
+not scaled by the assist) and a short call in its own voice: no mark over its head, no shared alert sound. Its lethal
+wind-up takes its length from `TrapWarnings`. New monsters are met in play: no teaching room, no hint text. Design the
+monster's card in `docs/GAME_DESIGN.md` ("Forest monster ideas") first; the beetle is the template (`Beetle`, `BeetleFx`).
+
+## Monster bodies (D101)
+
+A monster killed without bursting leaves its body (`Remains`): its pose must differ from every live frame (the readability
+rule, not the palette), and it is drawn in the decor tier (D76) after the kill frame. It is harmless, blocks nothing and counts
+as defeated; it rocks when the hero passes; the sword, a stone or a stomp (with the normal bounce) crumble it, a fireball or a
+torch burn it, and no weapon is spent or stopped by it. A burst or blast leaves nothing; a reset or a passed room leaves no
+body. Add every new `Remains` class to `RemainsTest`, which fails on an unlisted one.
+
 ## Player-facing text
 
 New or changed strings follow `docs/TEXT_STYLE.md`: tale voice for narration and the healer (no

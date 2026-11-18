@@ -13,6 +13,7 @@ import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
+import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
 import com.jlogicsoftware.kimeria.effects.PickupSparksFx;
@@ -30,6 +31,7 @@ import com.jlogicsoftware.kimeria.physics.CollisionUtils;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
+import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
@@ -161,6 +163,9 @@ public class Level implements WorldObject {
     private static final long PICKUP_SPARKS_SEED_MIX = 0xD6E8FEB86659FD93L;
     /** The spark burst of every pickup (#402): one for the level. Cleared with the room, so a pickup that returns after a death replays nothing. */
     private final PickupSparksFx pickupSparks = new PickupSparksFx(TimeUtils.nanoTime() ^ PICKUP_SPARKS_SEED_MIX);
+    private static final long BEETLE_FX_SEED_MIX = 0xBF58476D1CE4E5B9L;
+    /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
+    private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
 
     private final Assets assets;
     private final GameContext game;
@@ -476,7 +481,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear();
         startLeaves();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
@@ -521,6 +526,8 @@ public class Level implements WorldObject {
     public FireballFx fireballFx() { return fireballFx; }
     /** The spark burst and ring of every pickup (#402); {@code Collectable}'s callback fires it, tests read it. */
     public PickupSparksFx pickupSparks() { return pickupSparks; }
+    /** The beetles' specks, bursts and deaths (#327); {@code Beetle} writes into them, tests read them. */
+    public BeetleFx beetleFx() { return beetleFx; }
 
     /** The fireball's fizzle (#397): a hit on terrain at full volume, a burn-out at the end of its life quieter. */
     public void fireballFizzle(boolean burnOut) {
@@ -566,6 +573,7 @@ public class Level implements WorldObject {
             if ("Bramble".equals(o.type)) validateBramble(o, owner); // D89: every room, at load.
             if ("HangingHive".equals(o.type)) hiveFor(o, owner); // D90: every room, at load.
             if ("EmberFissure".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91: every room, at load.
+            if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -788,6 +796,14 @@ public class Level implements WorldObject {
                     roomEnemies.put(o.id, bat);
                 }
                 case "Checkpoint" -> objects.add(new Checkpoint(o.x, o.y, o.width, o.height));
+                case "Beetle" -> {
+                    Beetle beetle = new Beetle(assets, game, o.x, o.y, o.width, o.height,
+                        o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    beetle.setPlayer(player);
+                    beetle.setLevel(this);
+                    objects.add(beetle);
+                    roomEnemies.put(o.id, beetle);
+                }
                 case "YellowMob" -> {
                     YellowMob mob = new YellowMob(assets, game, o.x, o.y, o.width, o.height,
                         o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
@@ -1136,6 +1152,24 @@ public class Level implements WorldObject {
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
+    /** The beetle (D100) fails at load when its range and blast leave the room, its floor has a gap, or a burst could cover a standing place. */
+    private void validateBeetle(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Map<String, Rectangle> standing = new java.util.LinkedHashMap<>();
+        standing.put("entrance", new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
+            player.hitbox.width, player.hitbox.height));
+        if (room.exit() != null) standing.put("exit", room.exit());
+        for (TiledObject other : map.layer("SpawnPoints"))
+            if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
+                standing.put("checkpoint [" + other.id + "]", new Rectangle(other.x, other.y, other.width, other.height));
+        List<Rectangle> floors = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions"))
+            if (!"QuickSand".equals(c.type)) floors.add(new Rectangle(c.x, c.y, c.width, c.height));
+        String problem = Beetle.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), floors,
+            room.bounds(), standing);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
     /** Rotten tree branches (D80) fail at load above a sound branch (D69) or when they are the only way up (D26). */
     private void validateBranch(TiledObject o, int owner) {
         RoomLayout.Room room = roomLayout.rooms.get(owner);
@@ -1473,6 +1507,7 @@ public class Level implements WorldObject {
         blood.update(dt);
         fireballFx.update(dt);
         pickupSparks.update(dt);
+        beetleFx.update(dt);
         leafFx.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
@@ -1544,6 +1579,7 @@ public class Level implements WorldObject {
         for (int i = 0; i < objects.size(); i++) objects.get(i).render(batch);
         blood.render(batch);
         fireballFx.render(batch);
+        beetleFx.render(batch);
         fx.render(batch);
         leafFx.render(batch);
         // Fireflies are small lights: added onto the scene like the menu's, then the normal blend is restored.

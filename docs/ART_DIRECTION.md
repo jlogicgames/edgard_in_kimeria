@@ -691,7 +691,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle and flying beetle blasts, snail spit, bites, the notice pop of #240, death poof (check against the D65 blood) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); flying beetle blast, snail spit, bites, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -752,6 +752,45 @@ choice after a capture: a tiny authored leaf stays the fallback). `effects.LeafF
   What tells a leaf from those cues: grit is grey-violet, 1 to 2 px, 70 to 110 px/s for 0.5 to 0.9 s from a trap lip; bark chips are brown,
   1 to 2 px, about 60 px/s for 0.35 to 0.6 s; leaves are green, 5 to 6 px, 12 to 20 px/s for 9 to 14 s, from the room's top.
 - **Cost.** 24 slots, 0.0 B/frame (`AllocationBudgetTest.fallingLeavesThroughTheRealLevel`); tests `LeafFxTest`, `LeafRoomsTest`.
+
+**Forest beetle, built (#327, #398, D100, approved by the author 2026-11-18 as a concept; the in-game look is to be checked on #327).**
+The body is an authored sprite; every effect is a particle on `KimeriaParticleSystem` (`effects.BeetleFx`, one per `Level`). pixelfx's
+`explosions/grenade`, `explosions/small-explosion`, `ui/exclamation` and `spawn/poof` named the needs only: nothing was copied or exported.
+
+- **Sheet** `assets/images/objects/monster-beetle.png`, ten 24×16 frames in one strip, drawn in `art/objects/monster/beetle.grid` and
+  exported by `tools/forest_trap_sprites.py monster:beetle` (layout `MONSTER_SHEETS` in `tools/sprite_layouts.py`) with the moon rim:
+  `crawl1`, `crawl2` (patrol and chase), `look`, `wiggle`, `crouch`, `air` (the notice: head up, antennae wiggle, a hop; `air` is drawn
+  2 px up), `brace`, `bright`, `white` (the wind-up), `dead` (on its back). Feet on row 15, facing right, mirrored about the body centre.
+- **Palette** (14 entries with transparency, 15 with the rim): ink `0b0814`; shell `1c2616`, `34482a`, `56683a`; bronze glint `9a8458`;
+  head `14180f`; eye `efe6c4`; legs `7a7f6a` (light enough that the rim leaves them alone); bright frame `6a7a5a`, `a8b49a`, `d0d6c4`
+  and `ffffff`; white frame `ffffff` with a pale contour `d8d6e8`. No reserved hue: dark green-bronze, away from the healer's aqua and
+  the lime spores. Outline at the RedMob and YellowMob spawns 0.329 to 0.515 (active floor 0.28); `check_contrast.py` measures every
+  placed `Beetle` in all ten frames.
+- **Notice:** frames only, no mark over the head and no particles (D100: the "!" was rejected as not belonging in the tale).
+- **Wind-up** (the shared D7 warning): a 1 px shake, `brace`/`bright` blinking from 0.2 s to 0.05 s, `white` for the last 0.12 s; 2 px
+  specks (`KIND_FLAME`; a third `ffffff`, most of the rest `d8d6e8`, a few `9a97ad`) born on the 80×32 blast box's sides and top and
+  drawn in to the body over 0.3 to 0.4 s, 50 a second rising to 150: the reach is read on them (denser and brighter after the look
+  check of 2026-11-18, which found 30 to 90 too sparse at game scale).
+- **Burst:** a white additive flash (`SoftDot`, 40 px, 0.1 s), 26 white and pale droplets 1 to 3 px (`KIND_FLAME`) whose end points
+  stay inside the box (tested every frame), 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising 8 to
+  16 px over 0.35 to 0.55 s. No fire colour, no ring, no shader, no shake: the only cold, flat burst among the Forest's blasts.
+- **Death** (a fireball or a stone): it flips onto its back (`dead`, a 4 px hop over 0.2 s) and stays as a body (D101). 0.08 s after
+  the hit, once the fireball's flash is spent, 12 puffs in a ring (two pale `d8d6e8` to one grey `9a97ad`, 5 to 8 px, 0.4 to
+  0.55 s) and five shell chips (`KIND_GRIT`, bronze and shell) knocked out to the floor. The look check of 2026-11-18 found the old
+  0.3 s grey poof hidden by the fireball's ring. No blood, from any weapon.
+- **Body (D101):** the pose tells it from a live beetle (on its back, legs up). The active `dead` frame holds 0.3 s, then cross-fades
+  over 0.6 s into `assets/images/objects/monster-beetle-body.png`. That sheet is the same frame recoloured in a decor-tier palette
+  (`art/objects/monster/beetle-body.grid`: `4f5452` contour in its own hue, grey-olive shell `59605a`, `626a60`, `6e7568`, muted
+  bronze `7b786a`, legs `6c7068`; no ink, no rim). Measured by `check_contrast.py` on every floor top of the three maps: outline
+  0.083 to 0.156, body 0.104 to 0.178, p90 chroma 0.018 (decor: at most 0.20, 0.08 to 0.20, 0.10). Left as it is, the active
+  `dead` frame fits neither tier (outline 0.217 to 0.379, ink down to L 0.146). It rocks about the bottom of the shell, which is
+  reactive, like the bush's brush, not an idle loop.
+  - **Crumble** (the sword, a stone, a stomp): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in browns
+    `6b5a3a` and `4a3d28`, shell `34482a` and bronze `9a8458`, and 5 dust puffs.
+  - **Burn** (a fireball or a torch): one warm glow (`FireballFx.HALO`, 28 px), 70 flames a second in the fireball's own ramp
+    (`FireballFx.RAMP`) rising 6 to 14 px, the body darkening to 15 % over 0.3 s, and a dark wisp of 4 puffs at the end.
+- **Cost:** pools of 108 and 296 from measured peaks of 85 and 236 (`BeetleFxTest`, with three bodies crumbling and three burning
+  at once); 0.1 B/frame through the real level.
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

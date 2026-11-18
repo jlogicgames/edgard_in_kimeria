@@ -31,9 +31,20 @@ public final class FireballFx {
     public static final float TRAIL_SPACING_PX = 2;
     private static final long HARD_SEED_MIX = 0x9E3779B97F4A7C15L;
 
-    /** The sprite's warm ramp, hot to cool: pale core `fdfaa0`, yellow `fde902`, orange `fc5601`, red `c50e10`. */
+    /**
+     * The sprite's warm ramp, hot to cool: pale core `fdfaa0`, yellow `fde902`, orange `fc5601`, red `c50e10`. Shared with
+     * {@link BeetleFx}'s burning body (D101) through {@link #ramp}: one fire palette in the game.
+     */
     private static final float[] RAMP = {.992f, .980f, .627f, .992f, .914f, .008f, .988f, .337f, .004f, .773f, .055f, .063f};
     private static final int PALE = 0, YELLOW = 1, ORANGE = 2, RED = 3;
+    /** Colours in {@link #RAMP} and floats per colour. */
+    static final int RAMP_COLOURS = 4, RAMP_STRIDE = 3;
+
+    /** One channel of the warm ramp ({@code colour * RAMP_STRIDE + channel}), read-only for the other effects (D101). */
+    static float ramp(int index) { return RAMP[index]; }
+
+    /** One channel (0 red, 1 green, 2 blue) of the warm halo, read-only for the other effects (D101). */
+    static float halo(int channel) { return HALO[channel]; }
     /**
      * The warm halo, added to what is behind it: the sprite's amber at about two thirds, so over the blue sky it reads as
      * warm light (peach), not mauve.

@@ -22,6 +22,30 @@ Implementation is under `core/src/main/java/com/jlogicsoftware/kimeria/`:
 `entity/player/Player.java`, `physics/{CollideBody,CollisionUtils}.java` and
 `world/Level.java`. Combat ordering lives across Player, enemy and Level updates.
 
+## A new monster (D100)
+
+Card first in [game design](../../../docs/GAME_DESIGN.md) ("Forest monster ideas"; the beetle card is the template), approved
+by the author. The notice is body language in the monster's own frames plus a call in its own voice (no "!" mark, no shared
+alert sound); a lethal wind-up samples `TrapWarnings` once; no teaching room and no hint text. Effects are particles in one
+owner per `Level` (`effects.BeetleFx`); its sprite strip comes from a grid (`tools/forest_trap_sprites.py monster:<name>`).
+
+## A monster's body (D101)
+
+Decide on the card whether the monster leaves a body (the applies-to list in [D101](../../../docs/DECISIONS.md)): a quiet kill
+does, a burst or blast does not. Then:
+
+1. **Pose.** The body frame's pose differs from every live frame, both ways round (`RemainsTest` measures the silhouette: at
+   least 25 % of the pixels either covers must differ). A recoloured live frame is not a body.
+2. **Tier.** Draw the kill in the monster's active `dead` frame, then cross-fade into the same frame in a decor palette: a
+   second grid (`art/objects/monster/<name>-body.grid`, no ink, no rim), added to `BODY_SWEEP` in `tools/check_contrast.py`.
+3. **Behaviour.** Implement `Remains`: stay in the level as a defeated enemy; react when the hero comes near (the beetle rocks,
+   a big body twitches); `crumble()` for the sword, a stone and a stomp (the stomp bounces the hero), `burnUp()` for a fireball
+   or a torch; weapons fly on. The `Player`, `Carryable` and `Fireball` loops already call these; do not add a hurtbox.
+4. **Effects and sound.** Crumble and burn particles in the monster's effects owner, sized from a measured peak; the shared
+   sounds `remains_crumble` and `remains_burn`; the reaction is silent.
+5. **Gate.** Add a `Case` to `RemainsTest`; extend the monster's `AllocationBudgetTest` scenario with the body; run
+   `./gradlew :core:check`.
+
 ## Keep visible contact consistent with geometry
 
 - Contact, sword, stomp and aggro use facing-aware hitbox bounds, not sprite

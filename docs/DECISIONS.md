@@ -2908,3 +2908,149 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **What a boss fireball hit shows:** the 75 ms impact sound, the 250 ms glow over the lost HP slots and the heavy fireball burst (#397), drawn over the boss's hurt flash.
 - **Why:** the fire is the healer's gift (D66) and reads as burning, not cutting; blood stays with the blade, so the two weapons feel different.
 - **Tests:** a boss fireball hit with and without the elixir removes 2 energy, leaves zero live blood drops and spawns the same burst; a sword hit sprays as before.
+
+## D100. The forest beetle: a kamikaze that hears, commits and bursts; monsters notice in body language and are met in play (#327, #240, #398)
+
+- **Status:** Accepted (author, 2026-11-18).
+- **Decision:**
+  - **Body.** One strip of ten 24×16 frames (`crawl1`, `crawl2`, `look`, `wiggle`, `crouch`, `air`, `brace`, `bright`,
+    `white`, `dead`), 15 colours with the moon rim; drawn about 14 px tall, half the hero; a dark green-bronze shell, no
+    reserved hue. Body hitbox `rect(1, 2, 22, 14)`. **Contact is harmless** (no hurtbox): only the burst kills.
+  - **Patrol** 24 px/s inside the authored range (`offNeg`/`offPos`); it never leaves the range, chasing included.
+  - **Hearing** 96 px either side, centre to centre, within a 48 px band above its floor line; lost beyond 144 px or after
+    1.0 s out of the band.
+  - **Notice, in body language** (#240): it stops, raises its head and wiggles its antennae (`look`, `wiggle`, `look`,
+    `wiggle`, 0.1 s each), crouches (0.06 s), hops on the spot (`air` drawn 2 px up, 0.1 s; the hitbox stays) and lands
+    (0.04 s): 0.5 s, then the chase. Its own call `beetle_notice` (a dry double click) plays at the start. Not scaled by
+    the assist: it is information, not the lethal warning (D7).
+  - **Chase** 70 px/s (the hero runs 100).
+  - **Trigger:** the hero's hitbox touches the body grown 8 px left and right, at body height; a hero above it does not
+    trigger it. The trigger is a fixed inner part of the blast box, so it cannot drift from the reach (the purpose of
+    D10's melee rule, which does not fit a centred burst).
+  - **Commit (the Broforce rule):** once triggered it stops where it is and bursts after
+    `TrapWarnings.duration(DEFAULT_WARNING_SECONDS)`, sampled once: 0.8 s, 1.2 s with the assist. Nothing the hero does
+    moves, stops or restarts it; the hero lives by being outside the blast box at the instant. This closes #240's item
+    "enemy wind-ups follow the trap assist" for this enemy.
+  - **The warning is the body:** a 1 px shake, a blink between its own colours and the `bright` frame that quickens from
+    0.2 s to 0.05 s, then `white` for the last 0.12 s; pale specks born on the blast box's edges are drawn in to the body,
+    so the reach is shown. Heard: `beetle_windup` (0.8 s) or `beetle_windup_long` (1.2 s).
+  - **Burst:** an 80×32 box centred on the body, bottom on its floor line, tested once through
+    `player.collidedWithActor(false)` (D47); a white flash, a flat white spray inside the box and grey steam; `beetle_pop`.
+    No shake (a small burst; D62, #448).
+  - **Answers:** a fireball or a thrown stone kills it in any state, the wind-up included (the one save after it
+    commits), without a burst: the `dead` frame under a small grey poof, removed at 0.3 s. *Update (D101, 2026-11-18): the
+    body stays, on its back; the poof is larger, paler and starts 0.08 s after the hit, so it reads over the fireball's ring.* The sword in any state, and a
+    stomp on a beetle that has not triggered, burst it at once with no wind-up; the hero is inside the box, so melee kills
+    the hero. A stomp on a triggered beetle bounces the hero off without a kill. No blood (D65 does not apply to it).
+  - **Shared pattern for every monster that notices the hero (#240):** the notice is the creature's own body language
+    (a stop and a reaction drawn in its frames) and a short call in its own voice; no mark over its head and no shared
+    alert sound, which do not belong in a fairy tale. Its length is set per monster, about 0.5 s, not scaled by the assist;
+    the lethal wind-up after it takes its length from `TrapWarnings`.
+  - **New monsters are met in play:** no monster (the beetle, the spider, the snail, the flying beetle, the wolf) gets a
+    teaching room or a hint text; the player learns it by meeting it. Its first room lists it as an introduction on its
+    room card (D72), with no zone message about it.
+  - **Room rules:** D3/D6 as for every enemy (reset on death; killed or burst stays gone in passed rooms and on revisits;
+    one left winding up returns calm at its spawn). Load-time checks: range ±40 px inside the room on gapless floor; no
+    blast position covers the entrance body, `RoomExit` or a `Checkpoint`. Placement: no beetle range in front of the
+    forest-2 rubble at x 96 to 128.
+  - **Effects** on `KimeriaParticleSystem` only (one owner per `Level`); the beetle's strip is the only sprite.
+- **Measured from the code (hero) and the concept sheet:** from the trigger the hero needs 21 px (0.21 s) to leave the
+  box, 29 px (0.29 s) from contact, leaving at least 0.51 s of the 0.8 s warning (0.91 s with the assist); a jump keeps
+  the feet above 32 px for 0.61 s; the bounce off a triggered beetle keeps them above it from 0.08 s to 0.81 s after the
+  stomp. Contrast (`tools/check_contrast.py` metrics, frames at the seven RedMob and YellowMob spawns of the three maps):
+  outline 0.329 (`look`, `wiggle`) to 0.515 (`white`), active floor 0.28; p90 chroma 0.055; along the floors it falls to
+  0.21 only in front of the forest-2 rubble, hence the placement rule.
+- **Why:** a bomb on legs puts the explosive family's lesson in motion: read the commit, then get clear. Harmless contact
+  and a fixed spot keep every death attributable to the burst the player watched wind up (D5). Melee bursts it because the
+  player should learn to keep their distance; the ranged answer costs ammunition or a stone. A creature that shows it has
+  noticed you with its own body stays inside the tale; a floating mark does not.
+- **Exception, stated:** the instant burst from the sword or a stomp has no D7 wind-up. It is the consequence of the hero's
+  own act on a creature known to burst; the first meeting may cost one retry (D2, D3).
+- **Not verified:** the look and timing in the running game, and the sounds (generated and auditioned in the build).
+- **Built (#327):** `entity/enemy/Beetle.java` (Tiled type `Beetle` in `SpawnPoints`, `offNeg`/`offPos` as the mobs; the
+  load-time checks are `Beetle.problem`, run by `Level` for every room), `effects/BeetleFx.java` (one per `Level`; pools
+  108 soft and 296 hard since D101, from measured peaks of 85 and 236; the look check of 2026-11-18 made the wind-up specks
+  denser, 50 to 150 a second instead of 30 to 90, and brighter), the sheet `assets/images/objects/monster-beetle.png` from
+  `art/objects/monster/beetle.grid` (`tools/forest_trap_sprites.py monster:beetle`), the four sounds from
+  `tools/audio/generate_sounds.py` (seeds 6801-6806). The wind-up sound is a one-shot like the other warnings: it plays to
+  its end even when the beetle is killed during it. No shipped room places a beetle yet; placement is a room-design step
+  (D72, #327). Tests: `BeetleTest` (the real `Level` on `beetle-test.tmx` and two failing fixtures), `BeetleFxTest`
+  (capacity), `AllocationBudgetTest.beetleThroughTheRealLevel` (0.2 B/frame in 3 runs, ceiling 8; 0.1 with the body of
+  D101).
+
+## D101. Monster bodies: a monster killed quietly leaves its body, posed apart from the living, which reacts to the hero and is finished by a weapon (#327, #240, #398)
+
+- **Status:** Accepted (author, 2026-11-18).
+- **Decision:**
+  - **What stays.** A monster that is killed and does not burst or explode leaves its body where it fell. A monster
+    that bursts or explodes leaves nothing: the beetle's burst (whether it bursts on its own, under the sword or under a
+    stomp, D100) and the flying beetle's blast. Its end is the effect.
+  - **The pose tells the body apart (the readability rule).** A body's pose differs from every live frame of its monster,
+    so it never reads as a monster at rest: the beetle lies on its back, legs up. Every future body follows this rule. A
+    recoloured live frame is not a body. The pose is the guarantee, not the palette.
+  - **Contrast tier (D76): decor.** A body is harmless scenery in the play plane that reacts to the hero, like the bush
+    (D64), so it belongs to the decor tier. It shows the kill in the monster's own active `dead` frame, then cross-fades
+    into the same frame in an ink-free, muted palette (the beetle: hold 0.3 s, fade 0.6 s). The active frame cannot stay,
+    because it fits neither tier as a lasting sprite: the beetle's `dead` frame measures outline 0.217 to 0.379 along the
+    floors of the three maps (over the decor ceiling of 0.20, under the active floor of 0.28 at its worst) and has ink
+    pixels down to OKLab L 0.146. The decor variant measures outline 0.083 to 0.156, body 0.104 to 0.178 and p90 chroma
+    0.018, with no ink. It is the same pixels, recoloured by the grid pipeline, and is not a new drawing.
+  - **Harmless, in nobody's way.** A body has no hurtbox. It blocks neither the hero nor monsters nor projectiles, and it
+    counts as defeated (D6), so the combat loops never treat it as an enemy.
+  - **It reacts to the hero passing.** When the hero's body enters the body's box grown 6 px either side, the body takes
+    a push the way the hero moves and rocks on its back. This is a damped swing of the same frame about the bottom of the
+    shell: the beetle's first peak is 10°, at about 2.5 swings a second, and it comes to rest about 1.4 s after a push.
+    Each new arrival pushes it again. The rocking is reactive, not an idle animation (D76).
+  - **Weapons finish it.**
+    - **The sword, a thrown stone or a stomp** crumble it: it is gone at once, brown and shell chips fall to the floor
+      under a little dust, and `remains_crumble` plays. A stomp gives the hero the normal stomp bounce.
+    - **A fireball or a thrown torch** burns it: it darkens for 0.3 s inside flames in the fireball's own ramp under
+      one warm glow, ends in a dark wisp, and `remains_burn` plays.
+    - **No weapon is spent or stopped by a body.** The fireball and the stone fly on, and the sword's swing still
+      reaches a live monster behind it. A body never shields a monster and never costs ammunition. This holds for
+      every body.
+  - **Room rules (D3, D6).** A body is not saved room state. A death or a room reset rebuilds the room as authored, so
+    the monster is back alive and its body is gone. A body lasts until the hero leaves the room. A monster killed in a
+    passed room stays gone on revisits, and so does its body.
+  - **No cap per room.** A room has at most one body per killed monster. The bodies are the monsters' own objects, and
+    the particle pools are sized from measured worst cases.
+  - **Sound.** The rocking is silent: it plays on every pass and would nag. `remains_crumble` (a dry crunch) and
+    `remains_burn` (a flaring hiss with crackles) are shared by every monster's body.
+- **Applies to:**
+  - **Beetle (#327): yes, built.** A fireball or a stone kills it quietly and leaves the body. The sword and a stomp
+    burst it (D100) and leave nothing.
+  - **Spider (#328): yes.** Its body lies legs up and curled, and rocks like the beetle's.
+  - **Snail (#329): yes.** Its empty shell stays and rocks.
+  - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
+    and its body lies on the floor below. Over a pit it falls out and leaves nothing.
+  - **Wolf (#331): yes, with its own reaction.** A large body does not rock. It twitches (a 1 px shudder of the same
+    frame) when the hero passes. It crumbles and burns like the others.
+  - **Bat (existing): yes.** It falls when killed. Over a pit it leaves nothing.
+  - **RedMob and YellowMob (existing): the author decides per mob in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).** Both are in rooms the author has played,
+    and their death animation and the sword's blood (D65) would change.
+  - **Boss: no.** Its defeat is a scripted scene with the healer.
+  - **Traps** (stump, root, bomb, hive): **no.** They are not monsters, and their spent states are already authored.
+- **Why:** the body is the clearest record of what the hero did. It keeps a quiet kill readable after the hit's flash,
+  where the fireball's ring hid the old 0.3 s poof (look check, 2026-11-18). It also turns the room into a small toy that
+  answers every weapon, at no cost in danger or puzzle state. A burst leaves nothing because the burst is the death: a
+  body there would contradict what the player saw. The pose rather than the colour carries the difference, because a
+  colour-only difference is the look-alike problem of F15 in reverse.
+- **Built (#327):**
+  - **Code.** The interface `entity/enemy/Remains.java` (`isRemains`, `remainsInto`, `crumble`, `burnUp`). The beetle's
+    `DEAD` state is the body, plus a `BURN` state. The sword (`Player`), the thrown stone or torch (`Carryable`) and the
+    fireball (`Fireball`) test bodies after live enemies and fly on.
+  - **Effects.** `BeetleFx.crumble`, `burnGlow`, `burnFlame` and `burnOut`, with the fire colours shared from
+    `FireballFx.RAMP`.
+  - **Art.** The decor body sheet `assets/images/objects/monster-beetle-body.png`, from
+    `art/objects/monster/beetle-body.grid`.
+  - **Contrast gate.** `check_contrast.py` measures every body on every floor top of every shipped map (`BODY_SWEEP`),
+    since a body has no placement of its own.
+  - **Sounds.** Seeds 6807 and 6808.
+  - **Gate:** `RemainsTest`. It lists every `Remains` class and fails on an unlisted one. Through the real level it
+    checks that the pose differs (the closest live frame differs in 30.5 % of the silhouette, floor 25 %), that the
+    body counts as defeated, that it rocks, crumbles and burns, that a reset or a passed room leaves no body, and that a
+    burst leaves none.
+  - **Tests and budgets.** Behaviour in `BeetleTest`. `BeetleFxTest` sizes the pools at 108 and 296 from peaks of 85 and
+    236, including three bodies crumbling and three burning at once. `AllocationBudgetTest.beetleThroughTheRealLevel`
+    measured 0.1 B/frame in 3 runs.
+  - **The other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).**

@@ -77,6 +77,7 @@ what the player does about them.
 | redmob | `RedMob` | beats a walking enemy with a visible whip wind-up (sword or stomp) |
 | yellowmob | `YellowMob` | stomps a walking enemy |
 | bat-enemy | `Bat` | passes or beats a flying enemy |
+| beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) |
 | boss | `Boss` | fights the stage boss |
 | fireball-refill | `FireballRefill` | picks up a ranged-attack charge |
 | coin | `Collectable:Coin` | collects coins, often off the required route |

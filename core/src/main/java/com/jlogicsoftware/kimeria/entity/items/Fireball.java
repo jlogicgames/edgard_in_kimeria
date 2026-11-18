@@ -7,6 +7,7 @@ import com.jlogicsoftware.kimeria.effects.FireballFx;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.world.Level;
@@ -63,6 +64,9 @@ public final class Fireball extends Entity {
                 burst(direction, heavy, getX());
                 break;
             }
+            // D101: a fireball that passes a monster's body burns it up and flies on: a body never shields a monster or costs a ball.
+            if (!removed) for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof Remains body
+                && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds)) body.burnUp();
             // D47: a fireball that reaches an intact explosive trap lights it from afar and is spent doing so.
             if (!removed) for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof ExplosiveTrap trap
                 && trap.triggerBoxInto(trapBox).overlaps(bounds) && trap.igniteFromAfar()) {

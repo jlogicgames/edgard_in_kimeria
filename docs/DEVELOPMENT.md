@@ -482,6 +482,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | A fireball burst every 60 frames through `Level.fireballFx()` (light, heavy, burn-out in turn), with the ring slots | 8 | 0.0 to 0.3 (headless: the ring's shader draw is skipped) |
 | A pickup burst (12 sparks and a ring) every 60 frames through `Level.pickupSparks()` (#402) | 8 | 0.0 (headless: the ring's shader draw is skipped) |
 | Ten falling leaves of forest-1's deadfall room through `Level.leafFx()`, update and render (#473) | 8 | 0.0 (the whole room is the existing deadfall room row, 320.0 to 536.0 of 620) |
+| Beetles crawling, noticing, committing, winding up with specks, bursting or dying, their bodies rocking, crumbling and burning (D101), with `Level.beetleFx()`, through beetle-test.tmx (#327) | 8 | 0.1 in 3 runs (0.2 before the body; headless: no sound is played) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the
 particles (those read 0.0). The room figures are the harness, entities and level code; the particle objects contribute almost nothing.

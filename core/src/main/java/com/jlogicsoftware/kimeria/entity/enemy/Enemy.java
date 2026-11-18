@@ -15,7 +15,7 @@ import com.jlogicsoftware.kimeria.world.Level;
 public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements GravityBody {
     protected static final float TILE_SIZE = 16f;
     /** Upward speed the player gets from stomping an enemy. */
-    private static final float BOUNCE_HEIGHT = 260f;
+    protected static final float BOUNCE_HEIGHT = 260f;
     /** How far (px) the player's feet may sit below the enemy's top on the previous frame and still count as above it. */
     private static final float STOMP_TOLERANCE = 2f;
     /** Height of the body, from the top, where a sword hit lands: the same fraction as the boss's. */
@@ -141,7 +141,7 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
     protected float bloodFloorY(Rectangle body) { return body.y + body.height; }
 
     /** True when the player is moving down and was entirely above this enemy's hitbox on the previous frame. */
-    private boolean stompedByPlayer() {
+    protected boolean stompedByPlayer() {
         return isStomp(player.velocity.y, player.previousFeetY(), hitboxBoundsInto(bodyScratch).y);
     }
 

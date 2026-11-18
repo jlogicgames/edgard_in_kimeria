@@ -64,6 +64,11 @@ public final class SpriteSheets {
     // The silver thread on death (#341, D81): the 1x2 strand at (0, 0) and the 5x5 glint at (1, 0); tools/silver_thread_sprites.py.
     public static final Sheet SILVER_THREAD = new Sheet("images/objects/silver-thread.png", 6, 5);
 
+    // The forest beetle (#327, D100): ten 24x16 frames, one strip; tools/sprite_layouts.py MONSTER_SHEETS, art/objects/monster/beetle.grid.
+    public static final Sheet MONSTER_BEETLE = new Sheet("images/objects/monster-beetle.png", 24, 16);
+    /** D101: the beetle's body, its dead frame in a decor-tier palette (art/objects/monster/beetle-body.grid). */
+    public static final Sheet MONSTER_BEETLE_BODY = new Sheet("images/objects/monster-beetle-body.png", 24, 16);
+
     private SpriteSheets() { }
 
     public record Sheet(String path, int width, int height) {
