@@ -47,6 +47,10 @@ public final class HeadlessLevelHarness {
     };
     /** Returned by {@code Assets.font}; null unless a test sets it before building the object that asks for a font. */
     public BitmapFont font;
+    /** Returned by {@code GameContext.playSounds}; off unless a test turns it on to read {@link #sounds}. */
+    public boolean playSounds;
+    /** Every name passed to {@code GameContext.playSound}, in order. */
+    public final java.util.List<String> sounds = new java.util.ArrayList<>();
     private final GameContext game = (GameContext) Proxy.newProxyInstance(
         GameContext.class.getClassLoader(), new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
             case "logicalResolution" -> new Vector2(640, 360);
@@ -57,6 +61,8 @@ public final class HeadlessLevelHarness {
             case "isGameStarted" -> true;
             case "screenShakeDisabled" -> screenShakeDisabled;
             case "artifacts" -> artifacts;
+            case "playSounds" -> playSounds;
+            case "playSound" -> { sounds.add((String) args[0]); yield null; }
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
 

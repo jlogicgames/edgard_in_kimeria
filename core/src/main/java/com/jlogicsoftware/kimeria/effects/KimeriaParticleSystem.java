@@ -14,7 +14,9 @@ import com.badlogic.gdx.math.RandomXS128;
  * <p>Every particle flies in a straight line from its start to its end over its life ({@code lerp}), with a size and
  * alpha curve picked by its kind: {@link #KIND_GLOW} fades with the square of its remaining life, shrinks and is drawn
  * additively; {@link #KIND_SMOKE} fades linearly, grows and is drawn with normal blending; {@link #KIND_GRIT} fades
- * linearly, keeps its size and is drawn with normal blending. World Y grows downward, so a
+ * linearly, keeps its size and is drawn with normal blending; {@link #KIND_FLAME} stays opaque, shrinks to nothing and is
+ * drawn with normal blending, so it dies out without an alpha fade (a fading warm colour over the blue sky turns olive or
+ * magenta, #397). World Y grows downward, so a
  * particle that rises has an end Y smaller than its start Y.
  *
  * <p>Live particles are kept dense and in spawn order (index 0 is the oldest). Each system owns one
@@ -27,6 +29,8 @@ public final class KimeriaParticleSystem {
     public static final byte KIND_SMOKE = 1;
     /** Normal blending, constant size, alpha 1 - t: falling grit drawn as hard squares (#239). */
     public static final byte KIND_GRIT = 2;
+    /** Normal blending, fully opaque, size {@code size * (1 - t)}: a hard flame pixel that shrinks out instead of fading (#397). */
+    public static final byte KIND_FLAME = 3;
 
     private static final float PEAK_ALPHA = 0.7f;
     private static final float GLOW_SHRINK = 0.4f;
@@ -117,15 +121,17 @@ public final class KimeriaParticleSystem {
     public float drawSize(int i) {
         float t = FULL - life[i] / maxLife[i];
         if (kind[i] == KIND_GRIT) return size[i];
+        if (kind[i] == KIND_FLAME) return size[i] * (FULL - t);
         return size[i] * (kind[i] == KIND_SMOKE ? (FULL + SMOKE_GROWTH * t) : (FULL - GLOW_SHRINK * t));
     }
     public float alpha(int i) {
+        if (kind[i] == KIND_FLAME) return FULL;
         float t = FULL - life[i] / maxLife[i];
         return (kind[i] == KIND_GLOW ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
 
     /**
-     * Draws the normal-blended particles (smoke and grit, behind), then the additive ones, and restores white and normal blending.
+     * Draws the normal-blended particles (smoke, grit and flame, behind), then the additive ones, and restores white and normal blending.
      * One blend switch per pass, and none for a pass with nothing to draw.
      */
     public void render(Batch batch, TextureRegion region) {

@@ -2899,3 +2899,12 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   uneven browser patterns to 0.1 px, the air time to 0.9 s at 60 Hz and to it within one frame of the coarser rate at
   every pattern, the quicksand sink speed to 9.8 ± 0.2 px/s for the hero and an enemy, and rides the reported lift to the
   ledge at each pattern.
+
+## D99. Blood comes only from the sword; a fireball hit sprays none (#397, 2026-11-18)
+
+- **Status:** Accepted by the author, 2026-11-18.
+- **Decision (author):** a fireball hit on any enemy, the forest boss included, sprays no blood. Blood comes only from a sword hit (D65 for monsters, the boss landed-hit spray for the boss). This replaces the earlier BOSS.md rule that a fireball hit on the boss sprays 32 droplets.
+- **The elixir never touches the fireball:** damage stays 2 per landed fireball (BOSS.md), and its look and sound are the same with and without the elixir: no empowered variant, no impact shake.
+- **What a boss fireball hit shows:** the 75 ms impact sound, the 250 ms glow over the lost HP slots and the heavy fireball burst (#397), drawn over the boss's hurt flash.
+- **Why:** the fire is the healer's gift (D66) and reads as burning, not cutting; blood stays with the blade, so the two weapons feel different.
+- **Tests:** a boss fireball hit with and without the elixir removes 2 energy, leaves zero live blood drops and spawns the same burst; a sword hit sprays as before.

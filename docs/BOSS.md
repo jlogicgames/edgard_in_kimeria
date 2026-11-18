@@ -104,7 +104,8 @@ the normal strike or its pending completion shake. Lethal damage wins over that 
 remaining attack/body damage. A hero already killed by another hazard cannot land a
 posthumous sword hit or fireball hit. Hits during the orange retaliation sequence are
 rejected before damage, feedback, shake or death handling; a contacting fireball is still
-consumed, and a sword swing cannot become a delayed hit after protection ends. When
+consumed and still bursts, with the light burst and ring of a wall or monster hit (not the heavy one, #397), but gives no
+landed-hit feedback (no impact sound, no slot glow, no blood), and a sword swing cannot become a delayed hit after protection ends. When
 vulnerable, sword hits use 1x/10x damage and fireballs use 2. A lethal hit cancels the
 attack and its completion shake. An empowered sword hit still
 creates its own brief impact shake, including on the lethal hit. There is no recursive counter queue.
@@ -200,11 +201,12 @@ boss sits on the throne and during the protected victory walk. It disappears wit
 or level. The label is localized in all five supported languages; a green potion and `x10` indicate the
 consumed elixir and remain on boss retry. No automatic artifact bonus is implied.
 
-Each accepted sword swing or fireball triggers one 75 ms impact sound, a 32-droplet crimson blood spray
-at the contact side (48 droplets with 1.8x thickness, 4x trails and a brief impact shake while the elixir is active),
-and a 250 ms glow/fade over the lost slots. Only an empowered sword hit uses 48 droplets
-and impact shake. Fireballs and ordinary sword hits use 32 droplets and no impact shake.
-Hits rejected during orange retaliation produce no landed-hit feedback. Vulnerable lethal
+Each accepted sword swing or fireball triggers one 75 ms impact sound and a 250 ms glow/fade over the lost slots.
+A sword hit also sprays a 32-droplet crimson blood spray at the contact side (48 droplets with 1.8x thickness, 4x trails
+and a brief impact shake while the elixir is active); only an empowered sword hit uses 48 droplets and impact shake.
+A fireball sprays no blood ([D99](DECISIONS.md#d99-blood-comes-only-from-the-sword-a-fireball-hit-sprays-none-397-2026-11-18): blood comes only from the sword, and the elixir never changes a fireball's damage, look or sound): its impact is the fireball's own heavy burst of flame
+(`FireballFx.heavyHit`, #397), drawn over the boss's hurt flash, with no impact shake.
+Hits rejected during orange retaliation produce no landed-hit feedback; a rejected fireball still shows its light burst. Vulnerable lethal
 hits still show their impact. Missing a swing or bouncing off the head produces no
 sword-damage feedback.
 
@@ -223,7 +225,7 @@ from `Boss`; no object is created per hit, 0.0 B/frame measured by `AllocationBu
 formulas and random-call order as the earlier per-hit object (pinned by `ParticleGoldenTest`).
 A monster killed by the player's sword gets a light version of the same spray (#319, D65): 12 drops
 (`KimeriaBloodSystem.LIGHT_DROPLETS`) through `Level.mobBlood` via `Enemy.hitBySword`, same crimson, slower and
-smaller drops with shorter streaks, from the near edge of the body away from the hero. Fireballs, thrown stones and stomps
+smaller drops with shorter streaks, from the near edge of the body away from the hero. Fireballs (on the boss too), thrown stones and stomps
 spray nothing.
 The star texture has been removed.
 Planned extra effects for the boss ground strike, empowered hit, counter and death (not built): [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397).

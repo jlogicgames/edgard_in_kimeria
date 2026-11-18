@@ -756,6 +756,41 @@ def ember_jet() -> list[float]:
             out[start + j] += level * tick[j] / tp * math.sin(math.pi * j / nc)
     return finish_rms(lowpass(out, EMBER_JET_LOWPASS_HZ), EMBER_JET_RMS_DB, EMBER_JET_PEAK_DB)
 
+# The fireball going out (#397): on terrain at full volume, at the end of its life at 0.6 (Level.fireballFizzle). A short
+# "pfsss": noise through a band-pass whose centre falls as the flame cools, a quick swell and a fast decay, with a few dry
+# crackles; not a voice (fire, like ember_jet), so it sits with the environment sounds, quieter than the fissure's jet.
+FIREBALL_FIZZLE_SEED = 6701
+FIREBALL_FIZZLE_DURATION = 0.35
+FIREBALL_FIZZLE_SWEEP = (2600.0, 900.0)   # Hz, band-pass centre from start to end: the hiss cools
+FIREBALL_FIZZLE_BANDWIDTH = 1600.0
+FIREBALL_FIZZLE_ATTACK = 0.015            # s, swells in (no click)
+FIREBALL_FIZZLE_TAU = 0.11                # s, dies out fast
+FIREBALL_FIZZLE_DRIVE = 1.4               # soft saturation of the hiss
+FIREBALL_FIZZLE_CRACKLES = 5
+FIREBALL_FIZZLE_CRACKLE_SPAN = 0.5        # crackles fall in the first half, where the flame still burns
+FIREBALL_FIZZLE_LOWPASS_HZ = 6000.0
+FIREBALL_FIZZLE_RMS_DB = -25.0            # peak-limited by the -9 dBFS cap: the fast decay has a high crest
+FIREBALL_FIZZLE_PEAK_DB = -9.0            # the environment cap (test_ambient_levels)
+
+
+def fireball_fizzle() -> list[float]:
+    rng = random.Random(FIREBALL_FIZZLE_SEED)
+    n = n_samples(FIREBALL_FIZZLE_DURATION)
+    hi, lo = FIREBALL_FIZZLE_SWEEP
+    hiss = bandpass(noise(rng, n), lambda t: hi + (lo - hi) * t, FIREBALL_FIZZLE_BANDWIDTH)
+    peak = max(abs(v) for v in hiss) or 1.0
+    env = envelope(n, FIREBALL_FIZZLE_ATTACK, FIREBALL_FIZZLE_TAU)
+    out = [math.tanh(FIREBALL_FIZZLE_DRIVE * v / peak) * e for v, e in zip(hiss, env)]
+    nc = n_samples(EMBER_CRACKLE_LEN)
+    for _ in range(FIREBALL_FIZZLE_CRACKLES):
+        start = rng.randrange(n_samples(FIREBALL_FIZZLE_ATTACK), int(n * FIREBALL_FIZZLE_CRACKLE_SPAN))
+        tick = bandpass(noise(rng, nc), EMBER_CRACKLE_BAND[0] * rng.uniform(0.8, 1.2), EMBER_CRACKLE_BAND[1])
+        tp = max(abs(v) for v in tick) or 1.0
+        level = rng.uniform(*EMBER_CRACKLE_GAIN)
+        for j in range(nc):
+            out[start + j] += level * tick[j] / tp * math.sin(math.pi * j / nc)
+    return finish_rms(lowpass(out, FIREBALL_FIZZLE_LOWPASS_HZ), FIREBALL_FIZZLE_RMS_DB, FIREBALL_FIZZLE_PEAK_DB)
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -763,7 +798,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
                "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
                "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall,
-               "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet}
+               "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet,
+               "fireball_fizzle.wav": fireball_fizzle}
 
 
 def generate(out_dir: Path) -> list[Path]:

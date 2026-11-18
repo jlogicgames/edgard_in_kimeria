@@ -73,6 +73,9 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         velocity.x = 0;
     }
 
+    /** True once a death or transition abandoned this boss: it takes no more hits ({@link #hitByFireball} returns at once). */
+    public boolean isAbandoned() { return abandoned; }
+
     /** Death/transition abandons the attack without emitting damage or a completion event. */
     public void abandonAttack() {
         abandoned = true;
@@ -138,30 +141,35 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         if (weapon) {
             boolean empowered = game.artifacts().bossWeaponDamageMultiplier(level.name) > 1;
             int damage = (int) game.artifacts().bossWeaponDamageMultiplier(level.name);
-            resolveLandedHit(damage, empowered);
+            resolveLandedHit(damage, empowered, true);
             return;
         }
         resolveSolidContact();
     }
 
-    /** A landed magical fireball always removes two energy, regardless of the sword elixir. */
+    /**
+     * A landed magical fireball always removes two energy, regardless of the sword elixir. It sprays no blood: blood comes
+     * only from the sword; the fireball's own burst ({@code FireballFx.heavyHit}) is its impact.
+     */
     public void hitByFireball() {
         if (isDefeated() || abandoned || !player.canFight()) return;
-        resolveLandedHit(FIREBALL_DAMAGE, false);
+        resolveLandedHit(FIREBALL_DAMAGE, false, false);
     }
 
-    /** Shared landed-hit feedback and state handling; damage and empowered visuals stay source-specific. */
-    private void resolveLandedHit(int damage, boolean empowered) {
+    /** Shared landed-hit feedback and state handling; damage, empowered visuals and blood stay source-specific. */
+    private void resolveLandedHit(int damage, boolean empowered, boolean bleeds) {
         // The orange retaliation sequence is a single protected interval. Keep this before
         // energy, feedback, death, and shake mutations so every damage source shares the rule.
         if (isCounterSequence()) return;
         int before = energy;
         energy = Math.max(0, energy - damage);
         feedback.damaged(before, energy);
-        Rectangle body = hitboxBounds();
-        float direction = player.hitboxBounds().x + player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
-        level.blood(direction > 0 ? body.x : body.x + body.width,
-            body.y + body.height * BLOOD_IMPACT_Y_FRACTION, direction, body.y + body.height, empowered);
+        if (bleeds) {
+            Rectangle body = hitboxBounds();
+            float direction = player.hitboxBounds().x + player.hitbox.width / 2 < body.x + body.width / 2 ? 1 : -1;
+            level.blood(direction > 0 ? body.x : body.x + body.width,
+                body.y + body.height * BLOOD_IMPACT_Y_FRACTION, direction, body.y + body.height, empowered);
+        }
         if (game.playSounds()) game.playSound("boss_hit");
         if (energy == 0) {
             completedStrike = false;

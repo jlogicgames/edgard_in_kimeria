@@ -22,7 +22,8 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "thread.wav": (0.18, 0.26), "deadfall_creak.wav": (0.5, 0.7), "deadfall_knock.wav": (0.14, 0.22),
           "bramble_rustle.wav": (0.30, 0.42), "bramble_lash.wav": (0.12, 0.20),
           "hive_buzz.wav": (0.6, 0.8), "stinger_rain.wav": (0.9, 1.1), "hive_fall.wav": (0.35, 0.5),
-          "fissure_rumble.wav": (0.5, 0.7), "ember_jet.wav": (0.7, 0.9)}
+          "fissure_rumble.wav": (0.5, 0.7), "ember_jet.wav": (0.7, 0.9),
+          "fireball_fizzle.wav": (0.3, 0.4)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
@@ -34,7 +35,8 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}
 # Environment sounds (batch 3): quiet backgrounds, below every voice effect; same tolerance.
 AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rustle.wav": -27.0, "bramble_lash.wav": -21.0,
-                  "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0}
+                  "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0,
+                  "fireball_fizzle.wav": -25.0}
 AMBIENT_MAX_RMS_DB = -20.0
 VOICE_RMS_TOLERANCE_DB = 0.5
 MIN_EFFECT_SECONDS = 0.10     # shorter than this is not a usable effect on a waking output
@@ -173,7 +175,8 @@ class GenerateSoundsTest(unittest.TestCase):
     def test_voice_effects_start_and_end_softly(self) -> None:
         """No click: the first 2 ms stay well under the peak (breath or vowel ramps in, as for the jump)."""
         for name in list(VOICE_RMS_DB) + list(EXPLOSION_RMS_DB) + ["grit_fall.wav", "bramble_rustle.wav", "bramble_lash.wav",
-                                                                    "stinger_rain.wav", "ember_jet.wav"]:
+                                                                    "stinger_rain.wav", "ember_jet.wav",
+                                                                    "fireball_fizzle.wav"]:
             x = [v / 32768.0 for v in read(ROOT / "assets/audio" / name)[3]]
             self.assertLess(max(abs(v) for v in x[:gs.n_samples(0.002)]), 0.1 * max(abs(v) for v in x), name)
 
