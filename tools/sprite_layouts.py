@@ -102,6 +102,12 @@ FAIRY_SHEETS = {
     'glint': ((5, 5), ('big', 'small')),  # fairy dust at the selected target's corners
 }
 WORLD_IMAGES.update({f'fairy-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in FAIRY_SHEETS.items()})
+# Forest monsters (#327, D100): runtime export `monster-<name>.png`, one horizontal strip; the order is the entity's.
+MONSTER_SHEETS = {
+    'beetle': ((24, 16), ('crawl1', 'crawl2', 'look', 'wiggle', 'crouch', 'air', 'brace', 'bright', 'white', 'dead')),
+    'beetle-body': ((24, 16), ('body',)),  # D101: the dead frame in a decor-tier palette, the body that stays
+}
+WORLD_IMAGES.update({f'monster-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in MONSTER_SHEETS.items()})
 # The dialogue screen (#337, D78): hand-drawn grids in art/ui/dialogue -> assets/images/ui/dialogue-<name>.png, one horizontal
 # strip each; name -> (frame size, ordered frame names). The nine-patch insets are in HealerDialogueView.
 DIALOGUE_SHEETS = {

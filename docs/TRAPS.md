@@ -131,6 +131,7 @@ and row: their rotten look is the cue for those skins; the plain skin's cue is t
 | `Bat` | enemy | Enemy: telegraphs are enemy wind-ups (#240), not trap cards. |
 | `RedMob` | enemy | Enemy, as above. |
 | `YellowMob` | enemy | Enemy, as above. |
+| `Beetle` | enemy | Enemy (D100): its burst's warning is the shared `TrapWarnings` wind-up on its own body, recorded in D100 and the beetle card of GAME_DESIGN.md, not a trap card. |
 | `Boss` | enemy | The boss ([BOSS.md](BOSS.md)). |
 <!-- non-trap-types:end -->
 

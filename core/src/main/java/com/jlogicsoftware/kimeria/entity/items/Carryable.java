@@ -10,6 +10,7 @@ import com.jlogicsoftware.kimeria.physics.ProjectileStep;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -137,6 +138,13 @@ public final class Carryable extends Entity {
                         if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
                         velocity.x = 0; thrown = false;
                         break;
+                    }
+                }
+                // D101: a thrown stone crumbles a monster's body, a thrown torch burns it; either flies on (a body stops nothing).
+                if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                    if (level.objects.get(o) instanceof Remains body && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds())) {
+                        if (kind == Kind.STONE) body.crumble();
+                        else body.burnUp();
                     }
                 }
                 // D47: a thrown stone that reaches an intact explosive trap lights it from afar, then drops like after any hit

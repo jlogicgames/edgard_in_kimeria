@@ -14,6 +14,7 @@ import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
@@ -191,7 +192,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private boolean isAttacking = false;
     private boolean attackHitboxAdded = false;
     private float attackElapsed = 0f;
-    private final Rectangle attackHitbox = new Rectangle();
+    private final Rectangle attackHitbox = new Rectangle(), remainsScratch = new Rectangle();
     /** The sword's reach, authored for the right-facing sprite: 17px past the body in front, 9px behind it. */
     private static final Hitbox SWORD_HITBOX = Hitbox.rect(9, 12, 37, 36);
 
@@ -1297,6 +1298,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
         for (int i = 0, n = level.objects.size(); i < n; i++) {
             var obj = level.objects.get(i);
+            // D101: the swing crumbles a monster's body and goes on, so a body never shields a live monster behind it.
+            if (obj instanceof Remains body && body.isRemains()) {
+                if (body.remainsInto(remainsScratch).overlaps(attackHitbox)) body.crumble();
+                continue;
+            }
             if (obj instanceof Enemy<?> enemy) {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
                     if (enemy instanceof Boss boss) { if (bossesHit.add(boss)) boss.collidedWithActor(true); }

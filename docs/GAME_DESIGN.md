@@ -649,13 +649,53 @@ below when the hero enters their awareness area (the hearing range).
 
 | Monster | Size and movement | Behavior |
 | --- | --- | --- |
-| Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. |
+| Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. Built: the card below (D100). |
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. |
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
 | Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
 
-Their warning, attack and death effects (plan, not built) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
+the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
+([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
+which monsters and how: the list in D101). The beetle's body is built; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+
+### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
+
+A kamikaze, after the Broforce suicide mook: it never bites, it hears the hero, runs up, commits and bursts where it
+stands. It is the template for the flying beetle ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330))
+and for the notice beat of every monster that reacts to the hero ([#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240)). Like
+every new monster it is met in play, with no teaching room and no hint text. Numbers are the built values (D100); the hero's are
+measured from the code (run 100 px/s, hitbox 11×22, drawn at most 31 px tall, jump feet rise about 60 px at 588 px/s²,
+sword box 17 px beyond the hitbox front, active for the whole 0.7 s swing).
+
+| Item | Proposal | Why |
+| --- | --- | --- |
+| Size and look | 24×16 frames, ten in one strip (`crawl1`, `crawl2`, `look`, `wiggle`, `crouch`, `air`, `brace`, `bright`, `white`, `dead`), 14 colours with transparency, 15 with the moon rim (limit 16); drawn about 14 px tall with legs; a dark green-bronze shell with a bronze glint, black head, pale legs; body hitbox `rect(1, 2, 22, 14)`, feet on the floor line | about half the hero's 31 px; slightly larger than the drawn body (D10); no reserved hue at rest |
+| Contact | **harmless**: no hurtbox; touching or walking into it never kills | only the burst kills, so every death has the one cause the player saw winding up (D5) |
+| Patrol | crawls 24 px/s to and fro inside its authored range (Tiled `offNeg`/`offPos`, as the mobs), turns at the ends, never leaves the range, not even in a chase | the author controls where it can burst, so safe spots and the exit are authored (D7, D26) |
+| Awareness ("hearing") | the hero's hitbox centre within **96 px** of the body centre horizontally, either side, and the hitbox overlapping the band from the beetle's floor line to 48 px above it; lost beyond 144 px or after 1.0 s out of the band | six tiles: the player sees it well before it hears (read distance about 320 px, D71); the band keeps a hero on a ledge above from pulling it |
+| Notice beat (#240) | **body language, no mark over its head**: it stops, raises its head and wiggles its antennae (`look`, `wiggle`, `look`, `wiggle`, 0.1 s each), crouches (`crouch`, 0.06 s), hops on the spot (`air`, drawn 2 px up, 0.1 s; the hitbox stays), lands (`crouch`, 0.04 s), then runs: **0.5 s** in all, not scaled by the assist. Heard: its own call, `beetle_notice`, a dry double click | the reaction is the creature's own, as in a fairy tale (the author rejected a "!" mark); the same pattern holds for every monster that notices the hero: an in-body reaction and a call in its own voice, no shared marker or alert sound; information, not the lethal warning (D7 scales only the warning) |
+| Chase | scuttles at **70 px/s** (crawl frames twice as fast) until it is at its range edge (it waits there, facing the hero) or close enough to commit | slower than the hero, so running away always works |
+| Trigger | the hero's hitbox touches the body hitbox grown by **8 px** left and right, at body height. A hero above it (jumping over) does not trigger it | close, as a kamikaze is; the blast reaches 40 px either side, so from the trigger the hero needs 21 px (0.21 s) to get out, 29 px (0.29 s) from contact |
+| Wind-up (D7 warning) | the beetle commits **on the spot**: it stops, braces and bursts after `TrapWarnings.duration(DEFAULT_WARNING_SECONDS)`, sampled once: **0.8 s, 1.2 s with the assist**, whatever the hero does. Seen: the body shakes (1 px) and blinks between its own colours and a bright frame, faster and faster, then goes **white** for the last 0.12 s; pale specks are born on the edge of the blast box and drawn in to the body, so the reach is read on the particles. Heard: `beetle_windup` | the shared warning, so the assist applies (#240's item); 0.8 s leaves 0.5 s after the escape run, more than a reaction time |
+| Burst | one **80×32** box, centred on the body, bottom on its floor line; the hero's hitbox is tested **once**, at the instant, through `player.collidedWithActor(false)` (as D47); the beetle is gone. Seen: a white flash, a flat spray of white droplets inside the box and grey steam, about 0.5 s. Heard: `beetle_pop`. No shake | low and wide, unlike the 64×64 stump and bomb blasts: outside the box is safe, including above it (a jump keeps the feet above 32 px for 0.61 s) |
+| Fireball, thrown stone | the **only kill**: in any state, wind-up included (the one save after it commits), it dies without bursting (below). The stone stops and drops (D39), the fireball is spent | the safe answer costs ammunition or a stone; the fireball's and stone's own hit effects play as on any enemy |
+| Sword, stomp | the sword, in any state (calm, noticing, chasing or winding up), and a stomp on a beetle that has not triggered make it **burst at once, with no wind-up**; the hero is inside the box (the sword reaches 17 px, the stomp stands on it), so melee kills the hero. A stomp on a triggered beetle bounces the hero off, no kill. No blood (D65 does not apply) | the author's rule: melee is punished; the bounce off a winding-up beetle throws the feet above the box from 0.08 s to 0.81 s after the stomp |
+| Death (fireball, stone) | flips onto its back (`dead`, a 4 px hop over 0.2 s) and **stays as a body** (D101); a pale poof of 12 puffs starts 0.08 s after the hit, once the fireball's flash is spent, and five shell chips are knocked out to the floor; the kill sound `bounce` | a kill reads as a kill without a burst, and the body keeps reading after the fireball's ring |
+| Body (D101) | the `dead` frame holds 0.3 s, then cross-fades over 0.6 s into the same frame in a decor-tier palette (`monster-beetle-body.png`); harmless, blocks nothing, counts as defeated; rocks (10°, about 2.5 swings a second, still in about 1.4 s) when the hero comes within 6 px; the sword, a stone or a stomp (with the normal bounce) crumble it, a fireball or a torch burn it (0.3 s); weapons fly on; gone after a reset or when the hero leaves the room | its pose, on its back, tells it from a live beetle; the decor palette keeps a harmless object out of the active tier (D76) |
+| Traps and other enemies | the burst hurts only the hero; traps do not hurt the beetle; it does not light stumps or roots | one new element at a time (D72); chaining blasts is a later room idea |
+| Rollback (D3, D6) | a death resets it to its authored spawn, direction and calm state; a killed or burst beetle (and its body) stays gone in a passed room and on a healer revisit; one left winding up when the hero exits comes back calm at its spawn | the enemy rules as they are; no room-state snapshot is needed |
+| Authoring checks | the range plus 40 px either side lies inside the room on a floor without gaps; the blast box at any point of the range never covers the room entrance body, the `RoomExit` or a `Checkpoint`; no beetle range in front of the forest-2 rubble at x 96 to 128, where its outline falls to 0.21 (the active floor is 0.28) | every retry is survivable and the exit stays reachable (as D46, D47) |
+
+Effects are particles on `KimeriaParticleSystem` (`effects.BeetleFx`, one per level, like `FireballFx`); the only sprite is
+the beetle's own sheet (`assets/images/objects/monster-beetle.png`). Contrast of the ten frames (`tools/check_contrast.py`
+metrics at the seven RedMob and YellowMob spawns of the three maps): outline 0.329 (`look`, `wiggle`) to 0.515 (`white`),
+above the active 0.28; the gate measures every placed `Beetle`. Code: `entity/enemy/Beetle.java`; tests: `BeetleTest`,
+`BeetleFxTest`, `RemainsTest` (D101), `AllocationBudgetTest.beetleThroughTheRealLevel`. The body's decor variant measures
+outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20). No shipped room places one yet: that is a room-design step
+with its own card (D72, #327).
 
 ## Rooms, dangers and skill development
 

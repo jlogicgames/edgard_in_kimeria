@@ -189,7 +189,29 @@ Restart Level, transition, New Game, Continue and leaving the run clear the effe
 
 Every monster dies from one hit. A monster killed by the sword also sprays a light burst of 12 crimson blood
 droplets away from the hero (#319); one killed by a fireball, a thrown stone or a stomp dies without any spray.
+The forest beetle is the exception (below): the sword and a stomp set it off instead of killing it, and it never bleeds.
+
+## Forest beetle
+
+A green-bronze beetle about half Edgard's height (D100, #327) crawls to and fro along its own stretch of floor and
+never leaves it. Touching it is harmless. When Edgard comes within about six tiles on its level it hears him: it stops,
+raises its head, wiggles its antennae and hops (half a second, with a dry double click), then scuttles at him, slower than
+he runs. When it reaches his feet it commits where it stands: it shakes, blinks brighter and brighter, turns white and
+bursts after the shared trap warning (0.8 s, 1.2 s with the longer-warnings assist), whatever he does. Pale specks drawn in
+from the edges of the burst show how far it reaches: a low, wide box, five tiles across and two high. Outside it, or above
+it in a jump, Edgard is safe. A fireball or a thrown stone kills it at any moment, even while it winds up: it flips onto
+its back under a pale puff instead of bursting, and its body stays. The sword, or landing on it before it commits, makes
+it burst at once, under him; landing on one that is already winding up bounces him off. There is no hint about it: it is
+met in play. No shipped
+room places one yet (#327); authoring: `Beetle` in `SpawnPoints` with `offNeg`/`offPos` like the mobs, checked at load.
 There is no violence or blood option in Settings.
+
+**Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
+on its back), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
+walks past. The sword, a thrown stone or landing on one crumbles it (landing bounces him as on a monster), and a
+fireball or a thrown torch burns it up. No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
+until Edgard leaves the room. A death resets the room with the monster alive again, and a passed room shows neither the
+monster nor its body. The beetle is the first; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 Options -> Assist has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
 letter by letter, and one press moves to the next line.

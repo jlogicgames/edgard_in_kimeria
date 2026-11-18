@@ -198,6 +198,38 @@ environment cap), RMS -25.1 dBFS (peak-limited: the fast decay has a high crest)
 full volume when a fireball hits terrain, 0.6 when it burns out at the end of its life. A hit on a creature, a stump or root or a hive
 keeps that target's own sound (`bounce`, `boss_hit`, the trap's warning, `hive_fall`). Preview: `art/audio/previews/fireball_fizzle.png`.
 
+### Forest beetle (#327, seeds 6801-6806, D100)
+
+Four voice-synth sounds for the beetle, generated; not heard by the author yet in the game (the look check of #327 is the
+place). Each is a voice like the rest of the set, at its quiet end.
+
+- `beetle_notice` (0.22 s, RMS -19.0 dBFS): the beetle's own call when it notices the hero (D100: no shared alert sound):
+  two dry mandible clicks (8 ms band-passed noise around 3.8 kHz) and a short rising chirp, `render_voice` 300 -> 560 Hz,
+  /e/ to /i/. Centroid 476 Hz.
+- `beetle_windup` (0.80 s) and `beetle_windup_long` (1.20 s, the longer-warnings assist), RMS -19.4 dBFS: a rising buzzing
+  whine, `render_voice` 110 -> 330 Hz, /uh/ to /i/, rough from the start with a 16 Hz flutter, lower and rougher than
+  `hive_buzz` so the two warnings never sound alike; one dry tick per blink of the beetle (the period shrinks from 0.2 to
+  0.05 s as `Beetle` draws it) and a short breath in over the last 70 ms. A one-shot like the other warnings: it plays to
+  its end even when the beetle is killed during it.
+- `beetle_pop` (0.36 s, RMS -18.0 dBFS): the burst, a voiced plosive "pok!" (300 -> 170 Hz, /o/ to /uh/, 3 ms attack) and
+  a steam hiss tail (noise around 4.2 kHz, 0.10 s decay); smaller than `explosion` (no sub, no boom). Centroid 2.0 kHz.
+
+The beetle's death under a fireball or a stone plays the existing kill sound `bounce`. Previews:
+`art/audio/previews/beetle_*.png`. Constants: `BEETLE_*` in `tools/audio/generate_sounds.py`.
+
+### Monster bodies (D101, seeds 6807-6808)
+
+Two environment sounds shared by every monster's body (D101). They are quiet, under the voice set, and peak-capped at
+-9 dBFS like `fireball_fizzle`. The body's rocking is silent: it plays on every pass and would nag.
+
+- `remains_crumble` (0.28 s, RMS -27.0 dBFS, peak-limited): a dry crunch, 11 low-mid ticks (7 ms band-passed noise around
+  1.7 kHz) that thin out over 0.16 s, over a short gritty rustle around 900 Hz. It plays when the sword, a stone or a stomp
+  crumbles a body.
+- `remains_burn` (0.40 s, RMS -25.0 dBFS): the fizzle's family, warmer and lower, a hiss sweeping 1.9 kHz -> 700 Hz that
+  flares in 30 ms and dies over 0.16 s, with 9 ember crackles. It plays when a fireball or a torch burns a body.
+
+Previews: `art/audio/previews/remains_*.png`. Constants: `REMAINS_*` in `tools/audio/generate_sounds.py`.
+
 ### Silver thread (#341, seed 2701, D81)
 
 A plucked "tinn" as the thread goes taut on a death with a visible cause, 0.45 s after the hit's voice: `render_voice` with a

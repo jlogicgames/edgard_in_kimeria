@@ -3,7 +3,7 @@ import unittest
 from PIL import Image
 
 import forest_trap_sprites as traps
-from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, MONSTER_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
 HONEY_FUNGUS_FRAMES = 6
@@ -50,6 +50,18 @@ class ForestTrapSpritesTest(unittest.TestCase):
                 self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
                 shipped = Image.open(traps.ROOT / f'assets/images/objects/fairy-{name}.png')
                 self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), f'run tools/forest_trap_sprites.py fairy:{name}')
+                self.assertTrue(set(master.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
+
+    def test_the_monster_sheets_match_their_layout_and_shipped_exports(self):
+        # #327 (D100): the beetle's ten frames, exported with the moon rim, 16 palette entries at most.
+        for name, (size, frames) in MONSTER_SHEETS.items():
+            with self.subTest(sheet=name):
+                master, colors = traps.sheet_image(f'monster:{name}')
+                self.assertEqual(WORLD_IMAGES[f'monster-{name}'], master.size)
+                self.assertEqual((size[0] * len(frames), size[1]), master.size)
+                self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+                shipped = Image.open(traps.ROOT / f'assets/images/objects/monster-{name}.png')
+                self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), f'run tools/forest_trap_sprites.py monster:{name}')
                 self.assertTrue(set(master.getchannel('A').tobytes()) <= {0, OPAQUE_ALPHA})
 
     def test_the_fairy_point_frames_are_the_flipped_left_copies(self):

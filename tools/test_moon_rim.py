@@ -134,7 +134,9 @@ class RimTest(unittest.TestCase):
 class ExporterFlagTest(unittest.TestCase):
     def test_the_night_change_rims_every_hero_sheet_and_only_known_trap_sheets(self):
         self.assertEqual(hero.RIM_SHEETS, frozenset(hero.HERO_SHEETS))
-        self.assertTrue(traps.RIM_SHEETS <= set(traps.FOREST_TRAP_SHEETS), traps.RIM_SHEETS - set(traps.FOREST_TRAP_SHEETS))
+        # Known sheets: the traps and the Forest monsters (#327), whose layouts the exporter names `monster:<name>`.
+        known = set(traps.FOREST_TRAP_SHEETS) | {traps.MONSTER_PREFIX + n for n in traps.MONSTER_SHEETS}
+        self.assertTrue(traps.RIM_SHEETS <= known, traps.RIM_SHEETS - known)
         self.assertIn(TRIED_SHEET, traps.RIM_SHEETS)
 
     def test_a_flagged_trap_sheet_is_rimmed_with_one_more_colour(self):

@@ -791,6 +791,171 @@ def fireball_fizzle() -> list[float]:
             out[start + j] += level * tick[j] / tp * math.sin(math.pi * j / nc)
     return finish_rms(lowpass(out, FIREBALL_FIZZLE_LOWPASS_HZ), FIREBALL_FIZZLE_RMS_DB, FIREBALL_FIZZLE_PEAK_DB)
 
+
+# ---------------------------------------------------------------- forest beetle (#327, D100)
+# Notice (beetle_notice): the beetle's own call as it notices the hero, no shared alert sound (D100): two dry mandible
+# clicks and a short rising chirp, a voice like the others, at the quiet end of the voice set.
+BEETLE_NOTICE_SEED = 6801
+BEETLE_NOTICE_DURATION = 0.22
+BEETLE_CLICK_TIMES = (0.012, 0.050)       # s, the two clicks
+BEETLE_CLICK_LEN = 0.008                  # s, one click
+BEETLE_CLICK_BAND = (3800.0, 2200.0)      # centre, bandwidth: dry and bright
+BEETLE_CLICK_GAIN = 0.9                   # relative to the chirp's peak
+BEETLE_CHIRP_VOICE = Voice(6802, 0.13, (300.0, 560.0), FORMANTS_E, FORMANTS_I, -19.0, asp_len=0.010, asp_level=0.4,
+                           attack=0.008, tau=0.070, release=0.020, jitter=0.03, rough=0.3, rough_start=0.5, lowpass=3600.0)
+BEETLE_CHIRP_START = 0.085                # s, the chirp follows the clicks
+BEETLE_NOTICE_RMS_DB = -19.0
+# Wind-up (beetle_windup 0.8 s, beetle_windup_long 1.2 s with the assist): a rising buzzing whine whose ticks quicken with
+# the blink (0.2 s down to 0.05 s, as Beetle draws it), ending in a short intake before the pop. A voice like hive_buzz,
+# lower and rougher at the start, so the two warnings never sound alike. Played once, as long as the wind-up, so it never
+# wraps; it runs to its end even if the beetle is killed in the wind-up (D100).
+BEETLE_WINDUP_VOICES = {0.8: Voice(6803, 0.80, (110.0, 330.0), FORMANTS_UH, FORMANTS_I, -19.4, asp_len=0.020, asp_level=0.3,
+                                   attack=0.120, tau=3.0, release=0.030, jitter=0.06, rough=0.7, rough_start=0.0,
+                                   vibrato=(16.0, 0.08), lowpass=2800.0),
+                        1.2: Voice(6804, 1.20, (110.0, 330.0), FORMANTS_UH, FORMANTS_I, -19.4, asp_len=0.020, asp_level=0.3,
+                                   attack=0.150, tau=4.5, release=0.030, jitter=0.06, rough=0.7, rough_start=0.0,
+                                   vibrato=(16.0, 0.08), lowpass=2800.0)}
+BEETLE_BLINK = (0.2, 0.05)                # s, blink period at the start and at the end of the wind-up
+BEETLE_TICK_LEN = 0.006
+BEETLE_TICK_BAND = (3000.0, 1800.0)
+BEETLE_TICK_GAIN = 0.35                   # relative to the buzz's peak
+BEETLE_INTAKE_LEN = 0.07                  # s, the breath in at the very end
+BEETLE_INTAKE_BAND = (1800.0, 1600.0)
+BEETLE_INTAKE_GAIN = 0.5
+BEETLE_WINDUP_RMS_DB = -19.4
+# Burst (beetle_pop): a voiced plosive "pok!" and a short steam hiss after it; smaller than the explosion (no sub, no boom).
+BEETLE_POP_SEED = 6805
+BEETLE_POP_DURATION = 0.36
+BEETLE_POP_VOICE = Voice(6806, 0.12, (300.0, 170.0), FORMANTS_O, FORMANTS_UH, -18.0, asp_len=0.006, asp_level=0.9,
+                         attack=0.003, tau=0.040, release=0.020, jitter=0.05, rough=0.5, rough_start=0.3, lowpass=2400.0)
+BEETLE_HISS_START = 0.03                  # s
+BEETLE_HISS_BAND = (4200.0, 3000.0)       # steam
+BEETLE_HISS_ATTACK = 0.012
+BEETLE_HISS_TAU = 0.10
+BEETLE_HISS_GAIN = 0.45                   # relative to the pop's peak
+BEETLE_POP_RMS_DB = -18.0
+
+
+def _add_tick(rng, out, start, length, band, level):
+    tick = bandpass(noise(rng, length), band[0] * rng.uniform(0.85, 1.15), band[1])
+    tp = max(abs(v) for v in tick) or 1.0
+    for j in range(min(length, len(out) - start)):
+        out[start + j] += level * tick[j] / tp * math.sin(math.pi * j / length)
+
+
+def beetle_notice() -> list[float]:
+    rng = random.Random(BEETLE_NOTICE_SEED)
+    out = [0.0] * n_samples(BEETLE_NOTICE_DURATION)
+    chirp = render_voice(BEETLE_CHIRP_VOICE)
+    start = n_samples(BEETLE_CHIRP_START)
+    for i, v in enumerate(chirp[:len(out) - start]):
+        out[start + i] += v
+    for t in BEETLE_CLICK_TIMES:
+        _add_tick(rng, out, n_samples(t), n_samples(BEETLE_CLICK_LEN), BEETLE_CLICK_BAND, BEETLE_CLICK_GAIN)
+    return finish_rms(out, BEETLE_NOTICE_RMS_DB)
+
+
+def _beetle_windup(seconds: float) -> list[float]:
+    voice = BEETLE_WINDUP_VOICES[seconds]
+    out = render_voice(voice)
+    rng = random.Random(voice.seed)
+    t, slow, fast = 0.0, *BEETLE_BLINK
+    while True:   # one tick per blink, the period shrinking with the wind-up as Beetle's blink does
+        t += slow + (fast - slow) * (t / seconds)
+        if t >= seconds - BEETLE_INTAKE_LEN:
+            break
+        _add_tick(rng, out, n_samples(t), n_samples(BEETLE_TICK_LEN), BEETLE_TICK_BAND, BEETLE_TICK_GAIN)
+    ni = n_samples(BEETLE_INTAKE_LEN)
+    intake = bandpass(noise(rng, ni), *BEETLE_INTAKE_BAND)
+    ip = max(abs(v) for v in intake) or 1.0
+    base = len(out) - ni
+    for j in range(ni):
+        out[base + j] += BEETLE_INTAKE_GAIN * intake[j] / ip * (j / ni)
+    return finish_rms(out, BEETLE_WINDUP_RMS_DB)
+
+
+def beetle_windup() -> list[float]:
+    return _beetle_windup(0.8)
+
+
+def beetle_windup_long() -> list[float]:
+    return _beetle_windup(1.2)
+
+
+def beetle_pop() -> list[float]:
+    rng = random.Random(BEETLE_POP_SEED)
+    out = [0.0] * n_samples(BEETLE_POP_DURATION)
+    pop = render_voice(BEETLE_POP_VOICE)
+    for i, v in enumerate(pop[:len(out)]):
+        out[i] += v
+    start = n_samples(BEETLE_HISS_START)
+    nh = len(out) - start
+    hiss = bandpass(noise(rng, nh), *BEETLE_HISS_BAND)
+    hp = max(abs(v) for v in hiss) or 1.0
+    env = envelope(nh, BEETLE_HISS_ATTACK, BEETLE_HISS_TAU)
+    for j in range(nh):
+        out[start + j] += BEETLE_HISS_GAIN * hiss[j] / hp * env[j]
+    return finish_rms(out, BEETLE_POP_RMS_DB)
+
+
+# ---------------------------------------------------------------- monster bodies (D101)
+# Shared by every monster's body; the rocking is silent. Environment sounds, like the fizzle: peak-capped at -9 dBFS.
+# Crumble (remains_crumble): a dry crunch, a quick run of low-mid ticks that thin out, over a short gritty rustle.
+REMAINS_CRUMBLE_SEED = 6807
+REMAINS_CRUMBLE_DURATION = 0.28
+REMAINS_CRUMBLE_TICKS = 11
+REMAINS_CRUMBLE_START = 0.006             # s, the first tick, after the rustle's swell (no click)
+REMAINS_CRUMBLE_SPAN = 0.16               # s, the ticks fall in this first part, denser at the start
+REMAINS_CRUMBLE_TICK_LEN = 0.007
+REMAINS_CRUMBLE_TICK_BAND = (1700.0, 1400.0)
+REMAINS_CRUMBLE_TICK_GAIN = (0.5, 1.0)
+REMAINS_CRUMBLE_RUSTLE_BAND = (900.0, 900.0)
+REMAINS_CRUMBLE_RUSTLE_ATTACK = 0.004
+REMAINS_CRUMBLE_RUSTLE_TAU = 0.07
+REMAINS_CRUMBLE_RUSTLE_GAIN = 0.35
+REMAINS_CRUMBLE_RMS_DB = -27.0            # peak-limited by the -9 dBFS cap: the ticks have a high crest
+# Burn (remains_burn): the fizzle's family, warmer and fuller: a hiss that flares and cools, with crackles all through.
+REMAINS_BURN_SEED = 6808
+REMAINS_BURN_DURATION = 0.4
+REMAINS_BURN_SWEEP = (1900.0, 700.0)      # Hz, band-pass centre from start to end: lower than the fireball's fizzle
+REMAINS_BURN_BANDWIDTH = 1400.0
+REMAINS_BURN_ATTACK = 0.03                # s, the flare
+REMAINS_BURN_TAU = 0.16
+REMAINS_BURN_DRIVE = 1.6
+REMAINS_BURN_CRACKLES = 9
+REMAINS_BURN_CRACKLE_SPAN = 0.8
+REMAINS_BURN_RMS_DB = -25.0
+REMAINS_PEAK_DB = -9.0                    # the environment cap (test_ambient_levels)
+
+
+def remains_crumble() -> list[float]:
+    rng = random.Random(REMAINS_CRUMBLE_SEED)
+    n = n_samples(REMAINS_CRUMBLE_DURATION)
+    rustle = bandpass(noise(rng, n), *REMAINS_CRUMBLE_RUSTLE_BAND)
+    rp = max(abs(v) for v in rustle) or 1.0
+    env = envelope(n, REMAINS_CRUMBLE_RUSTLE_ATTACK, REMAINS_CRUMBLE_RUSTLE_TAU)
+    out = [REMAINS_CRUMBLE_RUSTLE_GAIN * v / rp * e for v, e in zip(rustle, env)]
+    for k in range(REMAINS_CRUMBLE_TICKS):
+        t = REMAINS_CRUMBLE_START + REMAINS_CRUMBLE_SPAN * (k / REMAINS_CRUMBLE_TICKS) ** 1.6 * rng.uniform(0.9, 1.1)
+        level = rng.uniform(*REMAINS_CRUMBLE_TICK_GAIN) * (1 - 0.6 * k / REMAINS_CRUMBLE_TICKS)
+        _add_tick(rng, out, n_samples(t), n_samples(REMAINS_CRUMBLE_TICK_LEN), REMAINS_CRUMBLE_TICK_BAND, level)
+    return finish_rms(out, REMAINS_CRUMBLE_RMS_DB, REMAINS_PEAK_DB)
+
+
+def remains_burn() -> list[float]:
+    rng = random.Random(REMAINS_BURN_SEED)
+    n = n_samples(REMAINS_BURN_DURATION)
+    hi, lo = REMAINS_BURN_SWEEP
+    hiss = bandpass(noise(rng, n), lambda t: hi + (lo - hi) * t, REMAINS_BURN_BANDWIDTH)
+    peak = max(abs(v) for v in hiss) or 1.0
+    env = envelope(n, REMAINS_BURN_ATTACK, REMAINS_BURN_TAU)
+    out = [math.tanh(REMAINS_BURN_DRIVE * v / peak) * e for v, e in zip(hiss, env)]
+    nc = n_samples(EMBER_CRACKLE_LEN)
+    for _ in range(REMAINS_BURN_CRACKLES):
+        start = rng.randrange(n_samples(REMAINS_BURN_ATTACK), int(n * REMAINS_BURN_CRACKLE_SPAN))
+        _add_tick(rng, out, start, nc, EMBER_CRACKLE_BAND, rng.uniform(*EMBER_CRACKLE_GAIN))
+    return finish_rms(lowpass(out, FIREBALL_FIZZLE_LOWPASS_HZ), REMAINS_BURN_RMS_DB, REMAINS_PEAK_DB)
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -799,7 +964,9 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
                "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall,
                "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet,
-               "fireball_fizzle.wav": fireball_fizzle}
+               "fireball_fizzle.wav": fireball_fizzle, "beetle_notice.wav": beetle_notice,
+               "beetle_windup.wav": beetle_windup, "beetle_windup_long.wav": beetle_windup_long, "beetle_pop.wav": beetle_pop,
+               "remains_crumble.wav": remains_crumble, "remains_burn.wav": remains_burn}
 
 
 def generate(out_dir: Path) -> list[Path]:

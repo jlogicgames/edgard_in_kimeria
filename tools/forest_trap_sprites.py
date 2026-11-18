@@ -13,7 +13,7 @@ characters of each row: a symmetry aid for round shapes, like an editor's mirror
 from pathlib import Path
 from PIL import Image
 import moon_rim
-from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA, RGB_CHANNELS
+from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, MONSTER_SHEETS, WORLD_PALETTE_SIZE, WORLD_PALETTE_BITS, OPAQUE_ALPHA, RGB_CHANNELS
 
 ROOT = Path(__file__).resolve().parents[1]
 GRID_DIR = ROOT / 'art/objects/forest-traps'
@@ -23,6 +23,8 @@ PICKUP_GRID_DIR = ROOT / 'art/objects/pickup'
 PICKUP_PREFIX = 'pickup:'  # the shared pickup cue (#345): 'pickup:glow' -> pickup-glow.png from art/objects/pickup/glow.grid
 FAIRY_GRID_DIR = ROOT / 'art/objects/fairy'
 FAIRY_PREFIX = 'fairy:'  # the fairy helper (#338): 'fairy:body' -> fairy-body.png from art/objects/fairy/body.grid
+MONSTER_GRID_DIR = ROOT / 'art/objects/monster'
+MONSTER_PREFIX = 'monster:'  # Forest monsters (#327): 'monster:beetle' -> monster-beetle.png from art/objects/monster/beetle.grid
 PREVIEW_DIR = ROOT / 'docs/references/forest-traps'
 RGBA_CHANNELS = 4
 PREVIEW_SCALE = 6
@@ -37,7 +39,7 @@ FIRST_LINE = 1
 # Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name: the active sheets whose ink contour falls
 # under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
-                        'hive', 'honey-fungus', 'log', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
+                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
                         'thorn-root', 'thorn-tuft'})
 # Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack).
 RIM_KEEP = {'falling-platform': 'c'}
@@ -80,7 +82,10 @@ def parse(path):
 
 
 def layout(name):
-    """(grid path, runtime stem, expected (size, frames)) for a trap name or a `decor:` / `pickup:` / `fairy:` name."""
+    """(grid path, runtime stem, expected (size, frames)) for a trap name or a `decor:` / `pickup:` / `fairy:` / `monster:` name."""
+    if name.startswith(MONSTER_PREFIX):
+        short = name[len(MONSTER_PREFIX):]
+        return MONSTER_GRID_DIR / f'{short}.grid', f'monster-{short}', MONSTER_SHEETS[short]
     if name.startswith(FAIRY_PREFIX):
         short = name[len(FAIRY_PREFIX):]
         return FAIRY_GRID_DIR / f'{short}.grid', f'fairy-{short}', FAIRY_SHEETS[short]
@@ -163,7 +168,7 @@ def preview(name, master, scale=PREVIEW_SCALE):
 
 def export_all(names=None):
     for name in names or [*FOREST_TRAP_SHEETS, *(DECOR_PREFIX + n for n in DECOR_SHEETS), *(PICKUP_PREFIX + n for n in PICKUP_SHEETS),
-                          *(FAIRY_PREFIX + n for n in FAIRY_SHEETS)]:
+                          *(FAIRY_PREFIX + n for n in FAIRY_SHEETS), *(MONSTER_PREFIX + n for n in MONSTER_SHEETS)]:
         preview(name, export_sheet(name))
 
 

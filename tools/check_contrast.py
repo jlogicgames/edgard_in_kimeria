@@ -144,6 +144,10 @@ SPRITES = {
     'Bat': ('active', 'enemy/Bat.png', (0, 0, 16, 16), 1, 'top', FULL),
     'RedMob': ('active', 'enemy/Mobs.png', (0, 160, 48, 32), 1, 'floor', FULL),
     'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 1, 'floor', FULL),
+    'Beetle': ('active', 'objects/monster-beetle.png', (0, 0, 24, 16), 10, 'floor', FULL),  # #327 (D100): every frame, the wind-up's white too
+    # D101: the body a killed beetle leaves. It has no placement of its own: it lies wherever a beetle dies, so it is measured
+    # by BODY_SWEEP on every floor top of every shipped map (body_sweep), as decor: harmless, it must not read as a live beetle.
+    'Beetle:body': ('decor', 'objects/monster-beetle-body.png', (0, 0, 24, 16), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
@@ -590,6 +594,32 @@ def tile_report(roots):
     return {c: (sum(o) / len(o), sum(b) / len(b)) for c, (o, b) in sums.items() if o}
 
 
+# D101: monster bodies have no map placement; they lie on whatever floor the monster died on. Each is measured standing on
+# every floor top (untyped Collisions and Platform objects, not walls or quicksand) every BODY_STEP px of every shipped map.
+BODY_SWEEP = ('Beetle:body',)
+BODY_STEP = 32
+FLOOR_TYPES = (None, 'Platform')
+
+
+def body_sweep(roots, images):
+    """(key, map, x, outline, body) for every monster body standing on every floor top, every BODY_STEP px."""
+    for key in BODY_SWEEP:
+        for frame in frames(key):
+            for name, root in roots.items():
+                for group in root.findall('objectgroup'):
+                    if group.get('name') != 'Collisions':
+                        continue
+                    offset_y = float(group.get('offsety', '0'))
+                    for obj in group.findall('object'):
+                        if obj.get('type') not in FLOOR_TYPES:
+                            continue
+                        x0, top, width = float(obj.get('x')), float(obj.get('y')) + offset_y, float(obj.get('width', TILE))
+                        for left in range(int(x0), int(x0 + width - frame.width) + 1, BODY_STEP):
+                            outline, body = measure(frame, images[name], left, int(top) - frame.height)
+                            if outline is not None:
+                                yield key, name, left, outline, body
+
+
 def run():
     errors = []
     roots = map_roots()
@@ -617,6 +647,8 @@ def run():
                         local = with_halo(local, halo, cx - box[0], cy - box[1], alpha)
                     outline, body = measure(frame, local, left - box[0], top - lift - box[1], glow)
                     results.setdefault(key, []).append((name, x, outline, body))
+    for key, name, x, outline, body in body_sweep(roots, images):
+        results.setdefault(key, []).append((name, x, outline, body))
     for key in SPRITES:
         if key in results:
             errors.extend(check_sprite(key, results[key]))

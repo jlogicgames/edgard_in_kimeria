@@ -24,6 +24,7 @@ import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
+import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
@@ -167,6 +168,8 @@ class AllocationBudgetTest {
     private static final int FIREBALL_ROOM = 2, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
     /** Measured 0.0 B/frame in 3 runs (2026-11-18, #402); headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the sparks and the ring slots: a pickup burst (12 sparks and a ring) every 60 frames through the real {@code Level.pickupSparks()}, spawn, update and render. */
     static final double PICKUP_SPARKS_CEILING = 8;
+    /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-18, #327 and D101; 0.2 before the body; the same 8 B ceiling as the other isolated paths; the harness does not play sounds, so {@code playSound} is not reached): beetles crawling, noticing, committing, winding up with specks, bursting or dying under a kill, their bodies rocking, crumbling and burning, through the real {@code Level} of beetle-test.tmx, update and render every frame. */
+    static final double BEETLE_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
@@ -691,6 +694,55 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "the bursts must actually throw particles in this scenario");
         assertWithinBudget("fireball impact", FIREBALL_IMPACT_CEILING, bytes);
+    }
+
+    private static final int BEETLE_CYCLE_FRAMES = 120, BEETLE_HEARD_FRAME = 5, BEETLE_ESCAPE_FRAME = 45, BEETLE_KILL_FRAME = 55, BEETLE_SETTLE_FRAMES = 60;
+    /** D101: the hero walks up to an odd beetle's body (it rocks), then the body is crumbled or burnt. */
+    private static final int BEETLE_PUSH_FRAME = 70, BEETLE_FINISH_FRAME = 95, BEETLE_KINDS = 4, BEETLE_BURNT = 3;
+    private static final float HERO_AT_BODY_X = 254 - 29;
+    private static final float BEETLE_LEFT_END = 256, BEETLE_Y = 304, BEETLE_W = 24, BEETLE_H = 16, BEETLE_RANGE_TILES = 8;
+    private static final float HERO_TOUCHING_X = 250 - 29, HERO_CLEAR_X = 200 - 29, HERO_FAR_X = 600 - 29, HERO_Y = 272;
+
+    /**
+     * Beetles in turn through the real {@code Level} of beetle-test.tmx (#327, D100): each crawls a few frames, then hears the hero, notices (0.5 s), finds
+     * him touching and commits, winds up with its specks; the hero steps out of the box at frame {@value #BEETLE_ESCAPE_FRAME}
+     * of the cycle; even beetles burst, odd ones are killed at frame {@value #BEETLE_KILL_FRAME} as a fireball would (the poof)
+     * and leave their body (D101): the hero walks up to it at frame {@value #BEETLE_PUSH_FRAME} (it rocks, fading into the decor
+     * body), and at frame {@value #BEETLE_FINISH_FRAME} it crumbles or, one beetle in four, burns.
+     * {@code update} and {@code render} of the beetle and {@code Level.beetleFx()} every frame. Beetles are built before the probe.
+     */
+    @Test void beetleThroughTheRealLevel() {
+        Level level = harness.roomOf("beetle-test", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / BEETLE_CYCLE_FRAMES + 1;
+        Beetle[] beetles = new Beetle[cycles];
+        for (int k = 0; k < cycles; k++) {
+            beetles[k] = new Beetle(harness.assets(), harness.game(), BEETLE_LEFT_END, BEETLE_Y, BEETLE_W, BEETLE_H, 0, BEETLE_RANGE_TILES);
+            beetles[k].setPlayer(level.player);
+            beetles[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Beetle.State.values().length];
+        int[] peak = new int[1];
+        float[] maxRock = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / BEETLE_CYCLE_FRAMES, f = i % BEETLE_CYCLE_FRAMES;
+            Beetle b = beetles[k];
+            if (f == 0) level.player.position.set(HERO_FAR_X, HERO_Y);
+            if (f == BEETLE_HEARD_FRAME) level.player.position.set(HERO_TOUCHING_X, HERO_Y);
+            if (f == BEETLE_ESCAPE_FRAME) level.player.position.set(HERO_CLEAR_X, HERO_Y);
+            if (f == BEETLE_KILL_FRAME && k % 2 == 1) b.collidedWithActor(true);
+            if (f == BEETLE_PUSH_FRAME && k % 2 == 1) level.player.position.set(HERO_AT_BODY_X, HERO_Y);
+            if (f == BEETLE_FINISH_FRAME && k % 2 == 1) { if (k % BEETLE_KINDS == BEETLE_BURNT) b.burnUp(); else b.crumble(); }
+            if (!b.isRemoved()) { b.update(STEP); b.render(batch); seen[b.getState().ordinal()] = true; maxRock[0] = Math.max(maxRock[0], Math.abs(b.rockAngle())); }
+            level.beetleFx().update(STEP);
+            level.beetleFx().render(batch);
+            peak[0] = Math.max(peak[0], level.beetleFx().soft().count() + level.beetleFx().hard().count());
+        });
+        for (Beetle.State state : Beetle.State.values()) if (state != Beetle.State.CHASE) assertTrue(seen[state.ordinal()], "the scenario must reach " + state); // CHASE commits within its first frame here
+        assertTrue(peak[0] > 0, "the beetles must actually throw particles");
+        assertFalse(level.player.isGotHit(), "the hero stepped clear of every burst");
+        assertTrue(maxRock[0] > 0, "an odd beetle's body must rock when the hero walks up to it");
+        assertWithinBudget("beetle notice, wind-up, burst, death and body", BEETLE_CEILING, bytes);
     }
 
     /** A pickup spark burst every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.pickupSparks()} (#402), updated and drawn each frame. */
