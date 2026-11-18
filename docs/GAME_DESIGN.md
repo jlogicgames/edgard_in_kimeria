@@ -696,7 +696,8 @@ metrics at the seven RedMob and YellowMob spawns of the three maps): outline 0.3
 above the active 0.28; the gate measures every placed `Beetle`. Code: `entity/enemy/Beetle.java`; tests: `BeetleTest`,
 `BeetleFxTest`, `RemainsTest` (D101), `AllocationBudgetTest.beetleThroughTheRealLevel`. The body's decor variant measures
 outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20). Placed (#327, cards approved 2026-11-18): introduced in `forest-1-guard`
-past the tunnel and developed at the sound tree's foot in `forest-1-tree` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); forest-2 has none (author, 2026-11-18).
+past the tunnel and developed at the sound tree's foot in `forest-1-tree` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); repeated in forest-2 on
+the exit ledge of `forest-fissure` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure), approved by the author 2026-11-18).
 
 ## Rooms, dangers and skill development
 

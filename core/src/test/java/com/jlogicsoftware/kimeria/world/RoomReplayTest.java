@@ -127,6 +127,8 @@ class RoomReplayTest {
     }
 
     private static final float[] ENTRY_JUMPS = {95, 225, 345, 535}, WALLS_JUMPS = {860, 940};
+    /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
+    private static final float FISSURE_RETURN_S = 8.25f;
 
 
 
@@ -155,8 +157,11 @@ class RoomReplayTest {
             assertTrue(walls <= COLLECTION_LIMIT);
             assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT), "#417: the Bat is on the second wall's top");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
+            assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Beetle),
+                "#327: the beetle killed on the first pass stays gone on a collection return, body included (D101)");
             float fissure = replay(level, "forest-fissure", false, 0, new float[]{}, true);
             assertTrue(fissure <= COLLECTION_LIMIT);
+            assertEquals(FISSURE_RETURN_S, fissure, 0.1f, "#327: the collection return walks the empty ledge (pinned, D68)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
             float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
@@ -451,7 +456,9 @@ class RoomReplayTest {
                 }
                 boolean mechanism = player.canInteract();
                 boolean action = mechanism;
-                for (var object : level.objects) if (object instanceof Enemy<?> enemy) {
+                // The sword bursts a beetle on the hero (D100): in the fissure room the shared route answers it, by the lure (#327).
+                for (var object : level.objects) if (object instanceof Enemy<?> enemy
+                    && !(fissureRoute != null && enemy instanceof com.jlogicsoftware.kimeria.entity.enemy.Beetle)) {
                     Rectangle e = enemy.hitboxBounds(), me = player.hitboxBounds();
                     if (player.isOnGround() && e.x >= me.x && e.x - (me.x + me.width) < 18
                         && e.y < me.y + me.height && e.y + e.height > me.y) { action = true; mechanism = false; }
