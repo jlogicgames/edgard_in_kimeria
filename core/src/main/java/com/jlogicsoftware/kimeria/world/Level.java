@@ -19,6 +19,7 @@ import com.jlogicsoftware.kimeria.effects.PickupSparksFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
+import com.jlogicsoftware.kimeria.effects.LeafFx;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.effects.Torch;
@@ -285,6 +286,23 @@ public class Level implements WorldObject {
     static final String FIREBALL_FIZZLE_SOUND = "fireball_fizzle";
     private static final float BURN_OUT_VOLUME = .6f;
     private final EnvironmentFx fx;
+    private final LeafFx leafFx = new LeafFx();
+    public LeafFx leafFx() { return leafFx; }
+    /** Objects whose column or cloud must stay clear of falling leaves (#473): the traps. Package-private: {@code LeafRoomsTest} checks it covers every trap of the catalogue (docs/TRAPS.md). */
+    static final java.util.Set<String> LEAF_AVOIDED = java.util.Set.of("FallingBranch", "FallingStone", "Deadfall",
+        "HangingHive", "ThornVine", "Bramble", "EmberFissure", "ThornRoot", "ThornTuft", "ExplosiveStump", "ExplosiveRoot",
+        "FalseHoneyFungus", "HoneyFungus", "FallingPlatform", "Puffball", "Bomb");
+    private static final float LEAF_AVOID_MARGIN_PX = 24;
+    private void startLeaves() {
+        RoomLayout.Room room = roomLayout.rooms.get(currentRoom);
+        if (room.leaves() <= 0) { leafFx.start(room.bounds(), 0); return; }
+        com.badlogic.gdx.utils.FloatArray avoid = new com.badlogic.gdx.utils.FloatArray();
+        for (java.util.List<TiledObject> group : map.objectGroups.values()) for (TiledObject o : group) {
+            if (!LEAF_AVOIDED.contains(o.type) || roomLayout.owner(o) != currentRoom) continue;
+            avoid.add(o.x - LEAF_AVOID_MARGIN_PX); avoid.add(o.x + o.width + LEAF_AVOID_MARGIN_PX);
+        }
+        leafFx.start(room.bounds(), room.leaves(), avoid.toArray());
+    }
     private final FairyGuide fairy;
 
     /** The environment effects of this level (screen shake, jump dust, ceiling grit). */
@@ -459,6 +477,7 @@ public class Level implements WorldObject {
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear();
+        startLeaves();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
         victory = completionSent = false;
@@ -569,6 +588,7 @@ public class Level implements WorldObject {
         spawnObjects();
         addCollisions();
 
+        startLeaves();
         for (int i = 0, fireflies = map.propInt("fireflies", 0); i < fireflies; i++) {
             ambience.add(Firefly.smallGlow(new Vector2(map.widthPx(), map.heightPx()), FIREFLY_LIGHT));
         }
@@ -1453,6 +1473,7 @@ public class Level implements WorldObject {
         blood.update(dt);
         fireballFx.update(dt);
         pickupSparks.update(dt);
+        leafFx.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
         updateDecor(dt);
@@ -1524,6 +1545,7 @@ public class Level implements WorldObject {
         blood.render(batch);
         fireballFx.render(batch);
         fx.render(batch);
+        leafFx.render(batch);
         // Fireflies are small lights: added onto the scene like the menu's, then the normal blend is restored.
         // Rooms without fireflies skip the switch, which would otherwise flush the batch twice a frame.
         if (!ambience.isEmpty()) {

@@ -37,6 +37,7 @@ D93: seen and heard when the hazard acts, hit or miss); its sound is
 | `KIND_SMOKE` | normal | `size * (1 + 1.0 t)` (grows) | `0.7 * (1 - t)` |
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` |
 | `KIND_FLAME` | normal | `size * (1 - t)` (shrinks out) | `1` (opaque, no fade) |
+| `KIND_LEAF` | normal | long side `size`, width flips edge-on to full; sways and tilts | `0.85`, ramped in and out (`spawnLeaf`; `effects.LeafFx`, #473) |
 
 `KIND_FLAME` (#397) is for warm pixels over the sky: a fading warm colour mixes with the blue into olive or magenta, a shrinking
 opaque one does not. The fireball's `effects.FireballFx` (one per `Level`) uses it for its trail, splash and sparks and `KIND_GLOW`

@@ -11,7 +11,10 @@ import java.util.Set;
 
 /** Ordered, non-overlapping rooms. Coordinates include Tiled layer offsets. */
 public final class RoomLayout {
-    public record Room(String id, Rectangle bounds, Vector2 entrance, Rectangle exit) { }
+    /** {@code leaves}: how many leaves drift down in the room (the {@code leaves} property of its {@code Room} marker, 0 = none, #473). */
+    public record Room(String id, Rectangle bounds, Vector2 entrance, Rectangle exit, int leaves) {
+        public Room(String id, Rectangle bounds, Vector2 entrance, Rectangle exit) { this(id, bounds, entrance, exit, 0); }
+    }
     public final List<Room> rooms;
     public RoomLayout(TiledMapData map) {
         List<TiledObject> markers = map.layer("Rooms");
@@ -34,7 +37,8 @@ public final class RoomLayout {
             if (!bounds.contains(start.x, start.y) || (exit != null
                 && (exit.width <= 0 || exit.height <= 0 || !bounds.contains(rect(exit)))))
                 throw new IllegalArgumentException("Entrance/exit outside room: " + marker.name);
-            result.add(new Room(marker.name, bounds, new Vector2(start.x, start.y), exit == null ? null : rect(exit)));
+            result.add(new Room(marker.name, bounds, new Vector2(start.x, start.y), exit == null ? null : rect(exit),
+                Math.max(0, (int) marker.propFloat("leaves", 0))));
         }
         if (result.isEmpty()) {
             if (!markers.isEmpty()) throw new IllegalArgumentException("Room markers without rooms");

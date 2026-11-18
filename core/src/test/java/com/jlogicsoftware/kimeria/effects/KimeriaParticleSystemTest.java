@@ -157,4 +157,25 @@ class KimeriaParticleSystemTest {
         assertEquals(java.util.List.of(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA),
             only.blends, "one normal switch for the pass, then the restore; no additive switch");
     }
+
+    @Test void aLeafSwaysFlipsAndFadesInAndOutOverItsLife() {
+        KimeriaParticleSystem p = new KimeriaParticleSystem(4, 1);
+        p.spawnLeaf(100, 10, 100, 110, 10f, 6f, 8f, 0f, .4f, .5f, .4f);
+        p.update(.01f);
+        assertEquals(KimeriaParticleSystem.KIND_LEAF, p.kind(0));
+        assertTrue(p.alpha(0) < .05f, "fades in");
+        for (int i = 0; i < 500; i++) p.update(.01f);
+        assertEquals(.85f, p.alpha(0), 1e-4f, "opaque in the middle of its life");
+        assertTrue(p.drawWidth(0) <= 6f && p.drawWidth(0) >= 1f && p.drawHeight(0) <= 6f);
+        float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE, minW = Float.MAX_VALUE, maxW = 0;
+        for (int i = 0; i < 300; i++) {
+            p.update(.01f);
+            minX = Math.min(minX, p.x(0)); maxX = Math.max(maxX, p.x(0));
+            minW = Math.min(minW, p.drawWidth(0)); maxW = Math.max(maxW, p.drawWidth(0));
+        }
+        assertTrue(maxX - minX > 8f, "sways sideways: " + (maxX - minX));
+        assertTrue(maxW - minW > 3f, "flips from edge-on to broad: " + minW + " to " + maxW);
+        while (p.count() > 0 && p.life(0) > .2f) p.update(.01f);
+        assertTrue(p.alpha(0) < .85f, "fades out");
+    }
 }

@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.effects;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.RandomXS128;
 
 /**
@@ -32,14 +33,23 @@ public final class KimeriaParticleSystem {
     /** Normal blending, fully opaque, size {@code size * (1 - t)}: a hard flame pixel that shrinks out instead of fading (#397). */
     public static final byte KIND_FLAME = 3;
 
+    /**
+     * Normal blending, a falling leaf (#473): drifts down its line while swaying sideways on a sine, flips like a thin plate (its width runs from edge-on to full) and swings with the sway, fades in and out over the first and last {@code LEAF_EDGE} of its life, opaque between.
+     * Spawn it with {@link #spawnLeaf}.
+     */
+    public static final byte KIND_LEAF = 4;
+
+    private static final float LEAF_EDGE = 0.12f, LEAF_PEAK_ALPHA = 0.85f;
+    private static final float LEAF_SWAY_SECONDS = 3.4f, LEAF_TUMBLE_SECONDS = 2.2f, LEAF_FLAT_RATIO = 0.4f, LEAF_EDGE_ON = 0.15f;
+    private static final float LEAF_TILT_DEG = 50f, LEAF_TILT_LAG = 0.25f;
     private static final float PEAK_ALPHA = 0.7f;
     private static final float GLOW_SHRINK = 0.4f;
     private static final float SMOKE_GROWTH = 1f;
-    private static final float FULL = 1f;
+    private static final float FULL = 1f, DEGREES = 360f;
 
     private final int capacity;
     private final RandomXS128 random;
-    private final float[] x, y, fromX, fromY, toX, toY, life, maxLife, size, r, g, b;
+    private final float[] x, y, fromX, fromY, toX, toY, life, maxLife, size, r, g, b, swayAmp, swayPhase;
     private final byte[] kind;
     private int count;
 
@@ -52,6 +62,7 @@ public final class KimeriaParticleSystem {
         toX = new float[capacity]; toY = new float[capacity];
         life = new float[capacity]; maxLife = new float[capacity]; size = new float[capacity];
         r = new float[capacity]; g = new float[capacity]; b = new float[capacity];
+        swayAmp = new float[capacity]; swayPhase = new float[capacity];
         kind = new byte[capacity];
     }
 
@@ -73,6 +84,18 @@ public final class KimeriaParticleSystem {
         life[i] = maxLife[i] = lifeSeconds;
         size[i] = baseSize;
         r[i] = red; g[i] = green; b[i] = blue;
+        swayAmp[i] = 0; swayPhase[i] = 0;
+    }
+
+    /**
+     * Adds a {@link #KIND_LEAF}: a straight fall from start to end plus a sideways sway of {@code amplitude} px, started
+     * at {@code phase} (0 to 1 of a cycle). {@code size} is the leaf's long side.
+     */
+    public void spawnLeaf(float startX, float startY, float endX, float endY, float lifeSeconds, float baseSize, float amplitude,
+                          float phase, float red, float green, float blue) {
+        spawn(KIND_LEAF, startX, startY, endX, endY, lifeSeconds, baseSize, red, green, blue);
+        swayAmp[count - 1] = amplitude;
+        swayPhase[count - 1] = phase;
     }
 
     private void removeOldest() {
@@ -86,6 +109,7 @@ public final class KimeriaParticleSystem {
         toX[to] = toX[from]; toY[to] = toY[from];
         life[to] = life[from]; maxLife[to] = maxLife[from]; size[to] = size[from];
         r[to] = r[from]; g[to] = g[from]; b[to] = b[from];
+        swayAmp[to] = swayAmp[from]; swayPhase[to] = swayPhase[from];
         kind[to] = kind[from];
     }
 
@@ -102,15 +126,20 @@ public final class KimeriaParticleSystem {
             float rest = FULL - t;
             x[live] = fromX[live] * rest + toX[live] * t;
             y[live] = fromY[live] * rest + toY[live] * t;
+            if (kind[live] == KIND_LEAF) x[live] += swayAmp[live] * MathUtils.sinDeg(DEGREES * swayCycle(live, t));
             live++;
         }
         count = live;
     }
 
+    private float swayCycle(int i, float t) { return swayPhase[i] + t * maxLife[i] / LEAF_SWAY_SECONDS; }
+
     public void clear() { count = 0; }
 
     /** Position, size and alpha as {@link #render} uses them; for tests. */
     public float x(int i) { return x[i]; }
+    /** Where the particle appeared (its path's start). */
+    public float fromX(int i) { return fromX[i]; }
     public float y(int i) { return y[i]; }
     public byte kind(int i) { return kind[i]; }
     public float life(int i) { return life[i]; }
@@ -118,15 +147,31 @@ public final class KimeriaParticleSystem {
     public float green(int i) { return g[i]; }
     public float blue(int i) { return b[i]; }
     public float maxLife(int i) { return maxLife[i]; }
+    /** Width of the drawn rectangle: a leaf is a plate that flips about its long axis, so its width runs from edge-on to full. */
+    public float drawWidth(int i) {
+        if (kind[i] != KIND_LEAF) return drawSize(i);
+        float t = FULL - life[i] / maxLife[i];
+        float flip = Math.abs(MathUtils.cosDeg(DEGREES * (swayPhase[i] + t * maxLife[i] / LEAF_TUMBLE_SECONDS)));
+        return Math.max(1f, size[i] * (LEAF_EDGE_ON + (FULL - LEAF_EDGE_ON) * flip));
+    }
+    /** Height of the drawn rectangle: a leaf's short side, constant; the width for the rest. */
+    public float drawHeight(int i) { return kind[i] == KIND_LEAF ? size[i] * LEAF_FLAT_RATIO : drawSize(i); }
+    /** Rotation in degrees of a leaf's rectangle: it swings like a pendulum with its sway; 0 for the rest. */
+    public float tilt(int i) {
+        if (kind[i] != KIND_LEAF) return 0;
+        float t = FULL - life[i] / maxLife[i];
+        return LEAF_TILT_DEG * MathUtils.sinDeg(DEGREES * (swayCycle(i, t) + LEAF_TILT_LAG));
+    }
     public float drawSize(int i) {
         float t = FULL - life[i] / maxLife[i];
-        if (kind[i] == KIND_GRIT) return size[i];
+        if (kind[i] == KIND_GRIT || kind[i] == KIND_LEAF) return size[i];
         if (kind[i] == KIND_FLAME) return size[i] * (FULL - t);
         return size[i] * (kind[i] == KIND_SMOKE ? (FULL + SMOKE_GROWTH * t) : (FULL - GLOW_SHRINK * t));
     }
     public float alpha(int i) {
         if (kind[i] == KIND_FLAME) return FULL;
         float t = FULL - life[i] / maxLife[i];
+        if (kind[i] == KIND_LEAF) return LEAF_PEAK_ALPHA * Math.min(FULL, Math.min(t, FULL - t) / LEAF_EDGE);
         return (kind[i] == KIND_GLOW ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
 
@@ -150,9 +195,14 @@ public final class KimeriaParticleSystem {
                 batch.setBlendFunction(GL20.GL_SRC_ALPHA, normalPass ? GL20.GL_ONE_MINUS_SRC_ALPHA : GL20.GL_ONE);
                 switched = true;
             }
-            float s = drawSize(i);
             batch.setColor(r[i], g[i], b[i], alpha(i));
-            batch.draw(region, x[i] - s / 2f, y[i] - s / 2f, s, s);
+            if (kind[i] == KIND_LEAF) {
+                float w = drawWidth(i), h = drawHeight(i);
+                batch.draw(region, x[i] - w / 2f, y[i] - h / 2f, w / 2f, h / 2f, w, h, FULL, FULL, tilt(i));
+            } else { // the other kinds do not rotate: the plain draw, as before #473
+                float s = drawSize(i);
+                batch.draw(region, x[i] - s / 2f, y[i] - s / 2f, s, s);
+            }
         }
     }
 }

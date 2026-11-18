@@ -690,7 +690,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 
 | Area | Issue | Main candidates |
 | --- | --- | --- |
-| Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves → [#473](https://github.com/jlogicgames/edgard_in_kimeria/issues/473); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
+| Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
 | Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle and flying beetle blasts, snail spit, bites, the notice pop of #240, death poof (check against the D65 blood) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
@@ -729,6 +729,29 @@ code, no exported asset and no constant was copied, so no notice file is needed 
   output darkens the sky under normal blending. Where the shader cannot be built (`Shaders.tryLoad`) the ring is skipped.
 - **Sound**: `fireball_fizzle` on a terrain hit and, at 0.6 volume, on a burn-out (SOUND_DIRECTION.md); a creature, stump or hive hit
   keeps its own sound.
+
+**Falling leaves (#473, look approved by the author for testing 2026-11-18).** Quiet Forest ambience, particles not a sprite (the author's
+choice after a capture: a tiny authored leaf stays the fallback). `effects.LeafFx`, one per `Level`, owns one `KimeriaParticleSystem` of
+`KIND_LEAF`; pixelfx's `weather/falling-leaves` was a motion reference only (no code or constant copied).
+- **Where.** A `Room` marker's property `leaves` (int, default 0) is how many leaves drift down that room; the author's list (2026-11-18)
+  is every Forest room with trees or branches, 10 each: `forest-0-wall`, `forest-1-deadfall`, `-hive`, `-tree`, `forest-2`'s
+  `forest-entry`, `-fissure`, `-canopy`, `-boss`. The list may shrink after the author plays: the rooms whose trap warns by falling specks or
+  a shaking branch (tree, wall, deadfall, hive, canopy) are the ones to judge. The leaves start part-way down when the room is entered and
+  are cleared on every room change, death and retry (`Level.activateRoom`); they react to nothing (#239: no idle or event-driven sway of decor).
+- **Never from a trap.** No leaf appears over the columns of the room's trap objects (`Level.LEAF_AVOIDED`, each object's x-range plus 24 px);
+  leaves start in the top 48 px of the room, so none comes from a trap's position. A leaf may still drift across a trap column later. They
+  must never hide a D7 warning or a D71 at-rest cue: judge in play.
+- **Look.** 5 to 6 px on the long side, 2 to 2.4 px thick, a thin plate that flips about its long axis (width runs from edge-on to full
+  every 2.2 s) and swings ±50° with its sway; falls 12 to 20 px/s with up to 8 px/s drift and a ±4 to 9 px sine sway (3.4 s); lives 9 to
+  14 s, fades in and out over the first and last 12 %. Colours `526666`, `5b6f70`, `616764`: muted grey-greens and a dull olive pulled toward the background, so
+  every one is inside the decor tier's body distance of 0.08 to 0.20 (D76) from the Forest background `2c3f66`: Oklab 0.14, 0.17 and 0.16
+  (first look, 2026-11-18, was `6e8466`, `889e79`, `948f62` at 0.24 to 0.32, as loud as the falling stone's grit `9a97ad` at 0.32 and the
+  deadfall's bark `c08a4c` at 0.35, so the author had it dimmed). `tools/check_contrast.py` has no particle tier, so the number is computed
+  with its `oklab`. **Provisional:** the final value is revisited once the Forest background and its parallax layers are designed
+  ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); leaves drawn over a lighter or layered background need a new check.
+  What tells a leaf from those cues: grit is grey-violet, 1 to 2 px, 70 to 110 px/s for 0.5 to 0.9 s from a trap lip; bark chips are brown,
+  1 to 2 px, about 60 px/s for 0.35 to 0.6 s; leaves are green, 5 to 6 px, 12 to 20 px/s for 9 to 14 s, from the room's top.
+- **Cost.** 24 slots, 0.0 B/frame (`AllocationBudgetTest.fallingLeavesThroughTheRealLevel`); tests `LeafFxTest`, `LeafRoomsTest`.
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

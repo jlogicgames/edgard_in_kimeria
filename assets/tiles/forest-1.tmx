@@ -326,7 +326,11 @@
    <point/>
   </object>
   <object id="100" name="forest-1-mob" type="RoomExit" x="4256" y="272" width="32" height="48"/>
-  <object id="120" name="forest-1-deadfall" type="Room" x="4960" y="0" width="640" height="368"/>
+  <object id="120" name="forest-1-deadfall" type="Room" x="4960" y="0" width="640" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="121" name="forest-1-deadfall" type="RoomStart" x="4992" y="272">
    <point/>
   </object>
@@ -356,12 +360,20 @@
    <point/>
   </object>
   <object id="82" name="forest-1-guard" type="RoomExit" x="2800" y="272" width="16" height="48"/>
-  <object id="132" name="forest-1-hive" type="Room" x="6240" y="0" width="640" height="368"/>
+  <object id="132" name="forest-1-hive" type="Room" x="6240" y="0" width="640" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="133" name="forest-1-hive" type="RoomStart" x="6272" y="272">
    <point/>
   </object>
   <object id="134" name="forest-1-hive" type="RoomExit" x="6832" y="160" width="32" height="48"/>
-  <object id="83" name="forest-1-tree" type="Room" x="2880" y="0" width="640" height="368"/>
+  <object id="83" name="forest-1-tree" type="Room" x="2880" y="0" width="640" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="84" name="forest-1-tree" type="RoomStart" x="2912" y="272">
    <point/>
   </object>
