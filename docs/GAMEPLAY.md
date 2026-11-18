@@ -203,7 +203,7 @@ it in a jump, Edgard is safe. A fireball or a thrown stone kills it at any momen
 its back under a pale puff instead of bursting, and its body stays. The sword, or landing on it before it commits, makes
 it burst at once, under him; landing on one that is already winding up bounces him off. There is no hint about it: it is
 met in play, first on the open floor past the guard room's tunnel (`forest-1-guard`), then at the foot of the sound tree
-in the tree room (`forest-1-tree`) (#327); authoring: `Beetle` in `SpawnPoints` with `offNeg`/`offPos` like the mobs, checked at load.
+in the tree room (`forest-1-tree`), then on the exit ledge of the fissure room in forest-2 (`forest-fissure`) (#327); authoring: `Beetle` in `SpawnPoints` with `offNeg`/`offPos` like the mobs, checked at load.
 There is no violence or blood option in Settings.
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle

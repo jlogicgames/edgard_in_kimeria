@@ -2653,7 +2653,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   trap's own cost is `emberFissuresCostNothingOverAnEmptyFrame`, the median of 15 paired windows of the four fissures minus an
   empty frame, 0.0 B/frame in 3 isolated runs (the empty frame alone 0.0). Ceiling 8 B for both, unchanged; the room
   scene `forest2FissureRoom` 536.8 B/frame in 3 isolated runs and 328.0 to 472.0 in 3 full-suite runs, ceiling 590 (the hive room's).
-- **Not verified:** the sounds on a real output (the author's audition) and the room played in the running game: [#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463).
+- **Verified in play:** the author played every room, `forest-fissure` included, and heard `fissure_rumble` and `ember_jet`
+  in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)). No novice playtest (#135).
+- **Later (#327, 2026-11-18):** a beetle guards the exit ledge and the `RoomExit` moved 16 px right (x 3600); the route
+  times above are from before it. Current numbers: [ROOMS.md, forest-2 fissure room](ROOMS.md#forest-2-fissure-room-366-d91).
 
 ## D92. The world is drawn over a flat per-level background; the forest rain and sky are gone (#430, 2026-11-17)
 
@@ -2982,6 +2985,13 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `Forest1CombatTest` and `TreeClimbTest`. Tests: `BeetleTest` (the real `Level` on `beetle-test.tmx` and two failing
   fixtures), `BeetleFxTest` (capacity), `AllocationBudgetTest.beetleThroughTheRealLevel` (0.2 B/frame in 3 runs, ceiling
   8; 0.1 with the body of D101).
+- **Placed in forest-2 (#327, card approved by the author 2026-11-18):** on the exit ledge of `forest-fissure` (map x 3508,
+  y 224, `offNeg` 0, `offPos` 2; blast at most x 3480-3592; the `RoomExit` moved 16 px right to x 3600), tested in
+  `ForestFissureTest`: the lure 9.30 s from the entrance, a fireball from the lip 8.60 s, a death in its burst after the
+  climb 8.35 s at start offset 0 and 8.75 s at worst after the wait (11.70 s from entering, the wait included). A hero who
+  keeps walking clears the blast at every crawl phase, so the room repeats the beetle rather than developing it. Contrast
+  at this placement (the `check_contrast.py` rows for forest-2 x 3508, the ten frames over the ledge): outline 0.334 to
+  0.519, body at most 0.591, the same as at both forest-1 spawns.
 
 ## D101. Monster bodies: a monster killed quietly leaves its body, posed apart from the living, which reacts to the hero and is finished by a weapon (#327, #240, #398)
 

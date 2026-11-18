@@ -1002,7 +1002,8 @@ one above the ledge only). It is appended at the map's end (forest-2 grew from 1
 reached x 3712) and listed after `forest-walls` in `Rooms`, so it is played between the wall room and the canopy.
 Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure); trap card: [TRAPS.md](TRAPS.md#ember-fissure-emberfissure).
 
-- RoomStart (3040, 272); RoomExit (3584, 176, 32 x 48) on the ledge. A solid ledge x 3424-3648, top y 224 (tiles rows
+- RoomStart (3040, 272); RoomExit (3600, 176, 32 x 48) on the ledge, against the right wall (x 3584 until #327 moved it
+  16 px right, clear of the beetle's blast). A solid ledge x 3424-3648, top y 224 (tiles rows
   14-19, the ground-edge tiles), against the right wall.
 - `EmberFissure` A x 3232 (map y 332: the SpawnPoints layer is drawn 16 px up, so its top is y 316 and its floor line 320)
   on open floor, defaults (period 3.5 s, jet 1.0 s, height 96, phase 0).
@@ -1011,10 +1012,22 @@ Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure); trap card: [TRAPS.md](
 - **Recipe:** the step is the fixture's (`fissure-test.tmx`, room 1): wait on the floor short of the branch (body front
   x 3300) until a jet ends, jump on to the branch, through the column, and on to the ledge; the climb takes 3.75 to 6.73 s in
   the fixture. B is half a period out of step with A, so a hero who crosses A right after its jet meets B mid-calm.
-- Measured (`ForestFissureTest`, `RoomReplayTest`): mastered route 8.08 s from the entrance, 5.18 to 8.63 s over start offsets
-  of 0 to 3.5 s with and without the assist; a careless walker dies at A at 23 of 71 offsets, at most 3.5 s after entering.
-  Contrast at the placed fissures over `2c3f66`: fissure 0.377, jet tile 0.349, tip 0.398.
-- D26: no lever, support, ammunition or one-shot state; the clock restarts with the room.
+- **Beetle on the ledge (#327, D100):** `Beetle` (id 159) map x 3508, map y 224 (floor line 224), `offNeg` 0, `offPos` 2:
+  centre x 3520-3552, blast at most x 3480-3592, y 192-224, 8 px short of the exit; the lip x 3424-3480 is outside every
+  blast and its trigger. It hears the hero only on the ledge (its 48 px band is y 176-224), waits at its range end facing a
+  hero on the lip, and is answered there: a fireball from the lip (one charge; the room has no stone), the lure (step in
+  until it commits, step back on to the lip), or walking straight on past it (80 px in the 0.8 s wind-up, so it bursts
+  behind him at every crawl phase, with and without the assist). Its blast never reaches the branch or the floor below.
+- Measured (`ForestFissureTest`, `RoomReplayTest`, 2026-11-18, with the beetle): the mastered route by the lure 9.30 s from
+  the entrance (three identical attempts), 8.60 s with a fireball from the lip, 8.25 s on every collection return (the
+  beetle stays gone; the 0.17 s over the old 8.08 s is the exit's 16 px; both pinned in `RoomReplayTest`), 6.40 to 10.27 s
+  over start offsets of 0 to 3.5 s with and without the assist (pinned in `ForestFissureTest`); a death in the beetle's burst
+  after the mastered climb (a stop beside it when it commits) 8.35 s from the entrance at offset 0, 8.75 s at worst over the
+  offsets after the wait (11.70 s from entering); a careless walker dies at A at 23 of 71 offsets, at most 3.5 s after entering. Before the
+  beetle (#366): 8.08 s, 5.18 to 8.63 s over offsets. Contrast at the placed fissures over `2c3f66`: fissure 0.377, jet tile
+  0.349, tip 0.398; the beetle on the ledge outline 0.334 to 0.519, body at most 0.591 (as at its forest-1 spawns).
+- D26: no lever, support or one-shot state on the route; the clock restarts with the room; the beetle needs no charge and
+  a retry rebuilds it at its spawn.
 
 ## forest-1 lever room (#418, D86)
 

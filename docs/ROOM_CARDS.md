@@ -515,24 +515,25 @@ own floor.
 | --- | --- |
 | Level | forest-2, play order 3, room 3 of 5 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
 | Role | variation |
-| Purpose | A floor crack jets fire on a clock: watch the first one alone on open floor and pass between jets, then climb through the branch the second one pierces, starting right after a jet. |
+| Purpose | A floor crack jets fire on a clock: watch the first one alone on open floor and pass between jets, then climb through the branch the second one pierces, starting right after a jet; on the ledge a beetle guards the exit: shoot it from the lip, lure it to commit and step back, or walk on past it. |
 | Introduces | ember-fissure |
 | Develops | - |
 | Combines | - |
-| Mastered route | 8.08 s from the entrance (`RoomReplayTest`, three identical attempts, and every collection return); 5.18 to 8.63 s over start offsets of 0 to 3.5 s (0.05 s steps), with and without the longer-warnings assist, for a hero who waits short of each column until a jet ends (`ForestFissureTest`); target about 20 s (D19) |
+| Repeats | beetle |
+| Mastered route | 9.30 s from the entrance by the lure, the answer that needs no charge (`RoomReplayTest`, three identical attempts; `ForestFissureTest`), 8.60 s with one fireball from the ledge's lip, 8.25 s on every collection return (the beetle stays gone; `RoomReplayTest`); 6.40 to 10.27 s over start offsets of 0 to 3.5 s (0.05 s steps), with and without the longer-warnings assist, for a hero who waits short of each column until a jet ends and lures the beetle (`ForestFissureTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | the room, 8.6 s at most: a careless walker dies at the floor fissure at 23 of 71 start offsets, at most 3.5 s after entering (`ForestFissureTest`); a death at the branch replays the mastered route, 8.6 s at worst |
-| D26 | no lever, support, ammunition or one-shot state: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room |
-| Hints | none (forest-2 has none, D33) |
+| Retry cost | the most expensive death is a stop beside the beetle when it commits, after the mastered climb: 8.35 s from the entrance at start offset 0, and 8.75 s at worst over start offsets of 0 to 3.5 s counted from the end of the wait (the old card's basis and that of the offset times above; 11.70 s from entering with the wait included) (`ForestFissureTest`); a careless walker dies at the floor fissure at 23 of 71 start offsets, at most 3.5 s after entering |
+| D26 | no lever, support or one-shot state on the route: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room. The beetle never blocks the exit: its blast (x 3480-3592 at most, y 192-224) reaches neither the ledge's lip (x 3424-3480), nor the branch below it (a hero on it has his top at y 250), nor the exit (x 3600); it needs no charge: the lure, or walking straight past it, which reaches the exit at every crawl phase with and without the assist (it bursts behind him). A retry rebuilds it at its spawn |
+| Hints | none (forest-2 has none, D33; no hint for the beetle: new monsters are met in play, D100) |
 | Landmark | the column of fire through the branch, seen across the screen from the entrance |
-| Status | new, [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) (card, art, sound and placement approved by the author 2026-11-17). D84 check: one screen, so both fissures are in view and jetting from the entrance; the first is met alone on open floor; the danger is lethal exactly where drawn; the waiting places (either side of each column, the floor under the branch) are obvious; the sounds play only while a fissure is in view. Built and tested with a scripted hero; not yet played by the author ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
-| Decisions | D91, D72 |
+| Status | new, [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) (card, art, sound and placement approved by the author 2026-11-17). D84 check: one screen, so both fissures are in view and jetting from the entrance; the first is met alone on open floor; the danger is lethal exactly where drawn; the waiting places (either side of each column, the floor under the branch) are obvious; the sounds play only while a fissure is in view. The author played the room and heard `fissure_rumble` and `ember_jet` in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)). [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's third room and forest-2's only one. It crawls the exit ledge, in view from the entrance, and hears the hero only once he is on the ledge (never on the floor or the branch). The approved card counted it as a develop ("walking into it kills: the exit is 1 s away"); measured, a hero who keeps walking always clears the blast (80 px in the 0.8 s wind-up, its whole width), as in forest-1, so the card records it as a repeat. Built and tested with a scripted hero |
+| Decisions | D91, D72, D100, D101 |
 
 Sketch (Y grows downward, floor top y 320, ledge top y 224; walls x 3008-3024 and 3632-3648):
 
 ```
-x    3008 3040        3232-48           3328    3360-76 3392  3424                       3584-3616 3648
-     |wall|start        A              [ branch 3328-3392 ]   [ ledge 3424-3648, y 224 ]  E    |wall|
+x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-3564          3600-3632 3648
+     |wall|start        A              [ branch 3328-3392 ]   [ ledge 3424-3648, y 224 ]  b  >>  E |wall|
      |    | @           |||                      |||B         |                               |
 =====+===================================================================================+========  floor y 320
 ```
@@ -542,7 +543,10 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424              
 - One-way `Collisions:Platform` branch (ids 155, 156) x 3328-3392, y 272; `EmberFissure` B (id 152) x 3360, y 332, phase
   1.75 (half a period out of step with A): its column passes through the branch (embers pass one-way platforms).
 - Ledge (id 157) x 3424-3648, y 224-320, tiled with the ground-edge tiles; `RoomStart` (id 149) (3040, 272); `RoomExit`
-  (id 150) x 3584-3616, y 176-224, on the ledge.
+  (id 150) x 3600-3632, y 176-224, on the ledge against the wall (moved 16 px right by #327, from x 3584).
+- `Beetle` (id 159) map x 3508, map y 224 (top y 208, floor line 224, on the ledge), `offNeg` 0, `offPos` 2: its centre crawls
+  x 3520-3552, its blast covers at most x 3480-3592, y 192-224. The lip x 3424-3480 is outside every blast and its trigger
+  (from x 3501), so a hero there is heard and waited for, never reached.
 
 ### forest-canopy
 
