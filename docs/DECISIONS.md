@@ -2975,7 +2975,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   approved the look, the timing and the sounds ("all good", #327). No novice playtest (#135).
 - **Built (#327):** `entity/enemy/Beetle.java` (Tiled type `Beetle` in `SpawnPoints`, `offNeg`/`offPos` as the mobs; the
   load-time checks are `Beetle.problem`, run by `Level` for every room), `effects/BeetleFx.java` (one per `Level`; pools
-  108 soft and 296 hard since D101, from measured peaks of 85 and 236; the look check of 2026-11-18 made the wind-up specks
+  108 soft and 296 hard since D101, from measured peaks of 85 and 236; 84 and 240 since #328, from peaks of 67 and 192, once the
+  body's crumble and burn moved to the shared `RemainsFx`; the look check of 2026-11-18 made the wind-up specks
   denser, 50 to 150 a second instead of 30 to 90, and brighter), the sheet `assets/images/objects/monster-beetle.png` from
   `art/objects/monster/beetle.grid` (`tools/forest_trap_sprites.py monster:beetle`), the four sounds from
   `tools/audio/generate_sounds.py` (seeds 6801-6806). The wind-up sound is a one-shot like the other warnings: it plays to
@@ -3034,7 +3035,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Applies to:**
   - **Beetle (#327): yes, built.** A fireball or a stone kills it quietly and leaves the body. The sword and a stomp
     burst it (D100) and leave nothing.
-  - **Spider (#328): yes.** Its body lies legs up and curled, and rocks like the beetle's.
+  - **Spider (#328): yes, built (D102).** Its body lies on its back with its eight legs curled up, and rocks like the beetle's.
   - **Snail (#329): yes.** Its empty shell stays and rocks.
   - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
@@ -3069,3 +3070,80 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     236, including three bodies crumbling and three burning at once. `AllocationBudgetTest.beetleThroughTheRealLevel`
     measured 0.1 B/frame in 3 runs.
   - **The other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).**
+- **Update (#328, 2026-11-19): the second body.** The spider leaves one (D102). The crumble and the burn moved out of `BeetleFx`
+  into `effects/RemainsFx.java`, one per `Level`, shared by every body: each monster passes its own chip colours (the beetle's
+  `BeetleFx.SHELL_CHIPS`, the spider's `SpiderFx.SPIDER_CHIPS`); pools 57 and 218 from peaks of 45 and 174 (`RemainsFxTest`:
+  three bodies crumbled and three burnt, then as many again 0.2 s later). The rocking is `entity/enemy/RemainsSwing.java`, the
+  same swing for both. A sword kill leaves the body: the swing that killed a monster skips its body for the rest of that swing
+  (`Player`), so the blade does not crumble what it has just killed. `RemainsTest` lists the beetle and the spider; each case
+  names how its body reacts to the hero passing. `BODY_SWEEP` in `check_contrast.py` measures both bodies.
+
+## D102. The forest spider: it hears, notices, and pounces at where the hero stood; make it miss, then strike (#328, #240, #398)
+
+- **Status:** Accepted (author, 2026-11-19: the card, the eight recommendations, the art with eight legs and the five sounds).
+- **Decision:**
+  - **Body.** One strip of nine 32×16 frames (`crawl1`, `crawl2`, `rise`, `tap`, `crouch`, `leap`, `bite`, `recover`,
+    `dead`), 12 colours, 13 with the moon rim; drawn about 13 px tall; a plum-black abdomen with an ochre chevron, eight tan
+    legs with high knees, all rooted on the cephalothorax (four near, four far); no reserved hue. Body hitbox
+    `rect(2, 3, 20, 13)`. **Contact is harmless** (no hurtbox): only the fangs kill, during the leap and the bite.
+  - **Patrol:** it skitters (48 px/s for 0.3 s, still for 0.3 s) inside its authored range (`offNeg`/`offPos`) and never
+    leaves the range, its leap included.
+  - **Hearing:** 112 px either side, centre to centre, within a 40 px band above its floor line; lost beyond 160 px or
+    after 1.0 s out of the band.
+  - **Notice, in body language (D100's shared pattern):** it freezes and rises on its legs, drums the ground twice with a
+    raised foreleg and settles (`rise` 0.1 s, then `tap`, `rise`, `tap`, `rise`, `crawl1` 0.08 s each): 0.5 s, not scaled by
+    the assist; its own call `spider_notice`. No mark, no shared sound.
+  - **Chase** 85 px/s (the hero runs 100).
+  - **Commit:** when the hero's hitbox touches the pounce box (from the body's middle to 48 px ahead of its front, from the
+    floor line to 8 px above its top) it locks its target, the hero's centre at that instant, clamped into its range and
+    never behind it, and winds up on the spot for `TrapWarnings.duration(BITE_WARNING_SECONDS)`, sampled once: 0.5 s,
+    0.75 s with the assist. Nothing the hero does changes it.
+  - **The warning is the body and the reach:** the `crouch` frame (forelegs raised, fangs open, drawn 1 px back from the
+    hero) and pale silk glints, 60 a second, that run along the floor from its fangs and gather on the landing spot;
+    `spider_windup` (`_long`).
+  - **Pounce:** a 0.25 s low leap (a 6 px arc; the body really moves) to the locked spot (`spider_leap`), leaving a silk line
+    in the air, then the bite (`bite` frame 0.1 s, two fang glints and floor dust, `spider_bite`, hit or miss, D93). The fang
+    box (`rect(17, 3, 6, 8)` in the leap frame, `rect(17, 7, 6, 9)` on the floor, inside the drawn head and fangs) kills
+    through `player.collidedWithActor(false)` during the leap and the bite, swept every frame from where the fangs were.
+    **A solid stops the leap:** a wall, a crate, a block or a platform's side in the way (`Level.blocksObject`) ends the
+    flight against it, short of the spot, and it bites there; it never passes through. This is a runtime rule rather than a
+    load-time one, so a solid that moves into the range (a lowered wall) is covered too. A bite that reaches the hero on the
+    bite's last frame keeps the spider biting until it lands, so a bite never lands during the harmless recovery.
+    It bites once per leap: a hero the bite cannot kill (the developer's invulnerability, the victory walk) is not bitten again
+    every frame, and the spider always goes on to recover.
+    Then **recovery**: 0.6 s flattened and harmless, not scaled by the assist; then the chase again, with a full wind-up for
+    each new pounce.
+  - **Answers:** a fireball, a thrown stone or torch, the sword and a stomp (with the normal bounce) kill it in any state,
+    the leap included, and it leaves its body (D101). A bite that reaches the hero lands at the start of the spider's next
+    frame, so a killing hit on the same frame wins the tie. The sword is a trade only by timing: rushing it during the wind-up
+    works for a hero who goes at once (31 px of 48 to cover in 0.5 s); a swing that is live when it arrives meets it; a swing
+    that ends before it lands, or no swing, is a bite. After a miss its recovery is a free kill. The sword's kill sprays the
+    light blood of D65, as on every monster it kills; fire and stones spray none (D99).
+  - **Body (D101):** on its back, legs curled up; it rocks, crumbles and burns as the beetle's.
+  - **Room rules:** D3/D6 as for every enemy: a death resets it calm at its spawn; killed, it stays gone with its body in a
+    passed room; one left mid-pounce comes back calm. Load-time checks (`Spider.problem`, run by `Level` for every room), on the
+    spider as the game builds it whatever the Tiled object's size (the 32×16 frame): the frame's sweep inside the room, the
+    body's sweep on gapless floor, and no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside the pounce
+    box at any point of the range facing either way (`position.x` - 46 to `position.x` + 70). Met in play: no teaching room, no hint text (D100). Its placement is a room-card step of its
+    own.
+  - **Effects** on `KimeriaParticleSystem` only (`SpiderFx`, one per `Level`; the body's crumble and burn in the shared
+    `RemainsFx`, D101 update); the spider's strip and its decor body are the only sprites.
+- **Why:** the beetle teaches the player to stay out of melee; the spider teaches them to bait and punish. Its lunge
+  outreaches the sword, so standing still in its reach is the one mistake; the locked target makes the dodge one step and
+  the same on every retry (D7), and the long recovery rewards the player who made it miss. Harmless contact keeps every death
+  on the fangs the player watched wind up (D5). The wind-up is shorter than the shared 0.8 s because the target is locked:
+  at 0.8 s the dodge would be trivial and the rush would always win.
+- **Measured:** from the code, the hero needs 11 px (0.11 s) to step out of a locked bite, which leaves 0.39 s of the 0.5 s
+  warning (0.64 s with the assist). Contrast (the `check_contrast.py` metrics at the seven RedMob and YellowMob spawns and
+  the three beetle spawns of the three maps): outline 0.300 (`recover`) to 0.331 (`crouch`), `leap` 0.321, over the active
+  0.28; the decor body over every floor top of the three maps (`BODY_SWEEP`) outline 0.075 to 0.184 (decor ceiling 0.20). The
+  pose: the body differs from its closest live frame (`recover`) in 48.3 % of the silhouette (`RemainsTest`, floor 25 %).
+- **Built (#328):** `entity/enemy/Spider.java` (Tiled type `Spider` in `SpawnPoints`, `offNeg`/`offPos` as the mobs, 32×16),
+  `effects/SpiderFx.java` (pools 64 soft and 104 hard from measured peaks of 50 and 83, `SpiderFxTest`),
+  `TrapWarnings.BITE_WARNING_SECONDS`, the sheets `assets/images/objects/monster-spider.png` and `monster-spider-body.png`
+  from `art/objects/monster/spider.grid` and `spider-body.grid` (`tools/forest_trap_sprites.py monster:spider`), and the five
+  sounds from `tools/audio/generate_sounds.py` (seeds 6901-6907). The wind-up sound is a one-shot like the other warnings.
+  Tests: `SpiderTest` (the real `Level` on `spider-test.tmx`, a low wall in `spider-wall.tmx`, and two failing fixtures,
+  `spider-entrance.tmx` and `spider-gap.tmx`; the same-frame tie is driven through `Level.update`, which runs the hero before
+  the objects, and holds either way since the bite lands a frame later), `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (0.0 B/frame in 3 runs,
+  ceiling 8). The look, the timing and the sounds in the running game are judged once the spider is placed in a room.

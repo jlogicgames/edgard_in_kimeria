@@ -651,16 +651,16 @@ below when the hero enters their awareness area (the hearing range).
 | Monster | Size and movement | Behavior |
 | --- | --- | --- |
 | Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. Built: the card below (D100). |
-| Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. |
+| Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. |
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
 | Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
 
-Their warning, attack and death effects (the beetle's built, D100; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100, and the spider's, D102; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
-which monsters and how: the list in D101). The beetle's body is built; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+which monsters and how: the list in D101). The beetle's and the spider's bodies are built; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 ### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 
@@ -698,6 +698,44 @@ above the active 0.28; the gate measures every placed `Beetle`. Code: `entity/en
 outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20). Placed (#327, cards approved 2026-11-18): introduced in `forest-1-guard`
 past the tunnel and developed at the sound tree's foot in `forest-1-tree` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); repeated in forest-2 on
 the exit ledge of `forest-fissure` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure), approved by the author 2026-11-18).
+
+### Spider card (built, [D102](DECISIONS.md#d102-the-forest-spider-it-hears-notices-and-pounces-at-where-the-hero-stood-make-it-miss-then-strike-328-240-398), [#328](https://github.com/jlogicgames/edgard_in_kimeria/issues/328))
+
+The beetle teaches "never melee it, get clear"; the spider teaches the opposite. It pounces at the spot where the hero stood,
+from further than the sword reaches, then lies flat and harmless while it recovers: make it miss, then strike, or meet its
+leap with the blade at the right moment. It is the first monster whose melee answer is a matter of timing, and it is not the
+RedMob (a whip at contact range, lethal contact, no notice). Like every new monster it is met in play, with no teaching room
+and no hint text. Numbers are the built values (D102); the hero's are measured from the code (run 100 px/s, hitbox 11×22,
+sword box 17 px past the hitbox front and live for the whole 0.7 s swing, the hero stopped while swinging).
+
+| Item | Built | Why |
+| --- | --- | --- |
+| Size and look | 32×16 frames, nine in one strip (`crawl1`, `crawl2`, `rise`, `tap`, `crouch`, `leap`, `bite`, `recover`, `dead`), 12 colours, 13 with the moon rim; a plum-black abdomen with an ochre chevron of stitches, a smaller head with two pale eyes and pale fangs, eight tan legs with high knees, all rooted on the cephalothorax (four near, four far); drawn about 13 px tall; body hitbox `rect(2, 3, 20, 13)`, feet on the floor line | half the hero's height, like the beetle; the high-kneed legs make a silhouette no other sprite has; no reserved hue |
+| Contact | **harmless**: only the fangs kill, during the leap and the bite | every death comes from the wind-up the player watched (D5, D7) |
+| Patrol | it **skitters**: 48 px/s for 0.3 s, still for 0.3 s, inside `offNeg`/`offPos`; it never leaves the range, its leap included | the stop-and-go reads as a spider; the range is the authored safe line |
+| Awareness ("feels the ground") | the hero's centre within **112 px** either side, inside a **40 px** band above its floor line; lost beyond 160 px or after 1.0 s out of the band | a little longer and lower than the beetle's; a hero on a ledge above does not pull it |
+| Notice beat (#240) | **body language, no mark**: it rises tall on its legs (`rise`, 0.1 s), drums the ground with a raised foreleg twice (`tap`, `rise`, `tap`, `rise`, 0.08 s each) and settles (`crawl1`, 0.08 s): **0.5 s**, not scaled by the assist. Heard: its own call, `spider_notice` | D100's shared pattern: the creature's own reaction and its own voice |
+| Chase | **85 px/s**, crawl frames twice as fast; it waits at its range's end, facing the hero | faster than the beetle (70), slower than the hero (100): running away always works |
+| Commit | the hero's hitbox touches the **pounce box** (from the body's middle to **48 px** past its front, from the floor line to 8 px above its top); the target is **locked**: the hero's centre at that instant, clamped into its range and never behind it | a melee collider authored once (D10); the locked target makes the dodge the same every time (D7) |
+| Wind-up (D7 warning) | `TrapWarnings.duration(BITE_WARNING_SECONDS)`, sampled once: **0.5 s, 0.75 s with the assist**. Seen: the `crouch` frame (forelegs raised, fangs open), drawn 1 px back from the hero; pale **silk glints** (60 a second) run along the floor from its fangs and gather on the landing spot. Heard: `spider_windup` (`_long`) | the hero needs 11 px (0.11 s) to step out of a locked bite, leaving 0.39 s (0.64 s with the assist); at the shared 0.8 s the dodge would be trivial |
+| Leap and bite | a **0.25 s** low leap (a 6 px arc; the body moves) to the locked spot, a silk line left in the air, `spider_leap`; then the `bite` frame for 0.1 s with two fang glints and floor dust, `spider_bite`, hit or miss (D93). The fang box (inside the drawn head and fangs) is lethal during the leap and the bite, swept every frame. A solid in the way (a wall, a crate, a block) stops the leap and it bites against it; a bite due on the bite's last frame lands before the recovery | the act is seen and heard, hit or miss; nothing leaps through a wall |
+| Recovery | **0.6 s** in the `recover` frame, flattened and harmless, not scaled by the assist; then the chase again, and a full new wind-up for each pounce | the punish window: the reward for making it miss |
+| Fireball, stone, torch | kill it in any state, the leap included; it leaves its body (D101); no blood (D99) | the safe answer costs a charge or a stone |
+| Sword | kills it in any state, with the light spray of D65, and leaves the body. A trade only by timing: rushing during the wind-up works for a hero who goes at once (31 px of 48 in 0.5 s); a swing that is live when it arrives meets it; a swing that ends before it lands, or none, is a bite; after a miss the recovery is a free kill | timed melee, the spider's new decision |
+| Stomp | kills it in any state with the normal bounce, and leaves the body; jumping over a leap and landing on the recovering spider is its natural use | a low, flat creature is stompable |
+| Same frame | a bite that reaches the hero lands at the start of the spider's next frame, so a killing hit on the same frame wins | as the boss rule: an interruption wins a tie |
+| Body (D101) | `dead`: on its back, round belly down, eight legs curled up. The active frame holds 0.3 s, then cross-fades over 0.6 s into `monster-spider-body.png` (decor palette, no ink, no rim); rocks like the beetle's (`RemainsSwing`); the sword, a stone or a stomp crumble it into plum and tan chips, a fireball or a torch burns it; weapons fly on; the swing that killed it does not crumble it | the pose tells it from a live spider (48.3 % of the silhouette differs from its closest live frame) |
+| Traps, other enemies | the bite hurts only the hero; traps do not hurt it | one new element at a time (D72) |
+| Rollback (D3, D6) | a death resets it calm at its spawn; killed, it stays gone with its body in a passed room; one left mid-pounce comes back calm | the enemy rules as they are |
+| Authoring checks | on the 32×16 spider whatever the Tiled object's size: the range inside the room on gapless floor; no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside the pounce box at any point of the range, facing either way (`Spider.problem`) | the hero never enters or stands in a pounce |
+
+Effects are particles on `KimeriaParticleSystem` (`effects.SpiderFx`, one per level; the body's crumble and burn in the shared
+`effects.RemainsFx`); the only sprites are the spider's sheet (`assets/images/objects/monster-spider.png`) and its decor body.
+Contrast of the nine frames (`tools/check_contrast.py` metrics at the seven RedMob and YellowMob spawns and the three beetle
+spawns): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; the gate measures every placed `Spider`, and
+`BODY_SWEEP` the body on every floor top (outline 0.075 to 0.184, decor ceiling 0.20). Code: `entity/enemy/Spider.java`; tests:
+`SpiderTest`, `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel`. Its rooms are chosen on their
+room cards, as the beetle's were.
 
 ## Rooms, dangers and skill development
 

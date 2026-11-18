@@ -19,6 +19,11 @@ public final class ExpectedWarnings {
         return of(TrapWarnings.FALLING_PLATFORM_SECONDS, longer);
     }
 
+    /** The spider's bite wind-up (D102) with or without the assist. */
+    public static float bite(boolean longer) {
+        return of(TrapWarnings.BITE_WARNING_SECONDS, longer);
+    }
+
     public static float of(float baseSeconds, boolean longer) {
         return longer ? TrapWarnings.longestDuration(baseSeconds) : baseSeconds;
     }

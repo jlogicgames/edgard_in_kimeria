@@ -24,7 +24,7 @@ PICKUP_PREFIX = 'pickup:'  # the shared pickup cue (#345): 'pickup:glow' -> pick
 FAIRY_GRID_DIR = ROOT / 'art/objects/fairy'
 FAIRY_PREFIX = 'fairy:'  # the fairy helper (#338): 'fairy:body' -> fairy-body.png from art/objects/fairy/body.grid
 MONSTER_GRID_DIR = ROOT / 'art/objects/monster'
-MONSTER_PREFIX = 'monster:'  # Forest monsters (#327): 'monster:beetle' -> monster-beetle.png from art/objects/monster/beetle.grid
+MONSTER_PREFIX = 'monster:'  # Forest monsters (#327, #328): 'monster:beetle' -> monster-beetle.png from art/objects/monster/beetle.grid
 PREVIEW_DIR = ROOT / 'docs/references/forest-traps'
 RGBA_CHANNELS = 4
 PREVIEW_SCALE = 6
@@ -39,7 +39,7 @@ FIRST_LINE = 1
 # Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name: the active sheets whose ink contour falls
 # under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
-                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
+                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
                         'thorn-root', 'thorn-tuft'})
 # Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack).
 RIM_KEEP = {'falling-platform': 'c'}

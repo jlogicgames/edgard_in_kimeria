@@ -31,6 +31,7 @@ class TrapWarningsTest {
     void theSharedWarningValuesArePinnedHere() {
         assertEquals(0.8f, TrapWarnings.DEFAULT_WARNING_SECONDS, 0f);
         assertEquals(1f, TrapWarnings.FALLING_PLATFORM_SECONDS, 0f);
+        assertEquals(0.5f, TrapWarnings.BITE_WARNING_SECONDS, 0f);
         assertEquals(1.5f, TrapWarnings.longestDuration(1f), 0f, "assist multiplier");
         assertEquals(1.2f, TrapWarnings.longestDuration(TrapWarnings.DEFAULT_WARNING_SECONDS), 1e-6f);
     }

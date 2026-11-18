@@ -47,6 +47,8 @@ public final class HeadlessLevelHarness {
     };
     /** Returned by {@code Assets.font}; null unless a test sets it before building the object that asks for a font. */
     public BitmapFont font;
+    /** Returned by {@code GameContext.invulnerable}, the developer cheat (F2): off unless a test turns it on. */
+    public boolean invulnerable;
     /** Returned by {@code GameContext.playSounds}; off unless a test turns it on to read {@link #sounds}. */
     public boolean playSounds;
     /** Every name passed to {@code GameContext.playSound}, in order. */
@@ -62,6 +64,7 @@ public final class HeadlessLevelHarness {
             case "screenShakeDisabled" -> screenShakeDisabled;
             case "artifacts" -> artifacts;
             case "playSounds" -> playSounds;
+            case "invulnerable" -> invulnerable;
             case "playSound" -> { sounds.add((String) args[0]); yield null; }
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
