@@ -167,6 +167,9 @@ class AllocationBudgetTest {
     private static final int FIREBALL_ROOM = 2, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
     /** Measured 0.0 B/frame in 3 runs (2026-11-18, #402); headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the sparks and the ring slots: a pickup burst (12 sparks and a ring) every 60 frames through the real {@code Level.pickupSparks()}, spawn, update and render. */
     static final double PICKUP_SPARKS_CEILING = 8;
+    /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
+    static final double FALLING_LEAVES_CEILING = 8;
+    private static final int LEAF_ROOM = 1;
 
     /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
     static final double BOSS_HUD_CEILING = 8;
@@ -702,6 +705,27 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "the bursts must actually throw sparks in this scenario");
         assertWithinBudget("pickup sparks", PICKUP_SPARKS_CEILING, bytes);
+    }
+
+    /** The leaves of a Forest room (#473) through the real {@code Level}: the room's ten leaves come from its map, so the scenario is the game's own. */
+    @Test void fallingLeavesThroughTheRealLevel() {
+        Level whole = harness.roomOf("forest-1", LEAF_ROOM);
+        Rectangle view = new Rectangle(whole.currentRoomBounds());
+        int[] alive = new int[1];
+        double room = AllocationProbe.bytesPerFrame(i -> {
+            whole.update(STEP); whole.render(batch, view);
+            alive[0] = Math.max(alive[0], whole.leafFx().particles().count());
+        });
+        assertTrue(alive[0] > 0, "the whole-level scenario must have leaves");
+        assertWithinBudget("forest-1 deadfall room with leaves, whole level", FOREST_1_DEADFALL_CEILING, room);
+        Level level = harness.roomOf("forest-1", LEAF_ROOM);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            level.leafFx().update(STEP); level.leafFx().render(batch);
+            peak[0] = Math.max(peak[0], level.leafFx().particles().count());
+        });
+        assertTrue(peak[0] > 0, "the room must have leaves in this scenario");
+        assertWithinBudget("falling leaves", FALLING_LEAVES_CEILING, bytes);
     }
 
     /** A bush brushed by a walking hero every {@link #BURST_CYCLE_FRAMES} frames (its animation lasts 0.3 s): {@code notice}, {@code update} and {@code render} through the batch. */

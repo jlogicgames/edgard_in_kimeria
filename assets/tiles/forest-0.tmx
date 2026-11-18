@@ -255,6 +255,7 @@
   <object id="15" name="forest-0-ladder" type="RoomExit" x="1376" y="160" width="32" height="48"/>
   <object id="19" name="forest-0-wall" type="Room" x="1472" y="0" width="784" height="368">
    <properties>
+    <property name="leaves" type="int" value="10"/>
     <property name="lesson" value="wall"/>
    </properties>
   </object>

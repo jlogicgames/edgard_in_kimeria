@@ -252,7 +252,11 @@
   <object id="158" name="Wall" type="Wall" x="3632" y="0" width="16" height="224"/>
  </objectgroup>
  <objectgroup id="4" name="Rooms">
-  <object id="88" name="forest-entry" type="Room" x="0" y="0" width="736" height="368"/>
+  <object id="88" name="forest-entry" type="Room" x="0" y="0" width="736" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="89" name="forest-entry" type="RoomStart" x="64" y="272">
    <point/>
   </object>
@@ -262,16 +266,28 @@
    <point/>
   </object>
   <object id="147" name="forest-walls" type="RoomExit" x="1216" y="272" width="32" height="48"/>
-  <object id="148" name="forest-fissure" type="Room" x="3008" y="0" width="640" height="368"/>
+  <object id="148" name="forest-fissure" type="Room" x="3008" y="0" width="640" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="149" name="forest-fissure" type="RoomStart" x="3040" y="272">
    <point/>
   </object>
   <object id="150" name="forest-fissure" type="RoomExit" x="3584" y="176" width="32" height="48"/>
-  <object id="91" name="forest-canopy" type="Room" x="1280" y="0" width="1120" height="368"/>
+  <object id="91" name="forest-canopy" type="Room" x="1280" y="0" width="1120" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="92" name="forest-canopy" type="RoomStart" x="1344" y="272">
    <point/>
   </object>
-  <object id="97" name="forest-boss" type="Room" x="2560" y="0" width="448" height="368"/>
+  <object id="97" name="forest-boss" type="Room" x="2560" y="0" width="448" height="368">
+    <properties>
+     <property name="leaves" type="int" value="10"/>
+    </properties>
+   </object>
   <object id="98" name="forest-boss" type="RoomStart" x="2640" y="304">
    <point/>
   </object>

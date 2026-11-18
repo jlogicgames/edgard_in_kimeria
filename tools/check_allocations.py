@@ -34,6 +34,8 @@ HOT_METHODS = {
     ('effects/EnvironmentFx.java', 'emitGrit'): 'called from update while a grit burst is emitting',
     ('effects/EnvironmentFx.java', 'dustPuff'): 'called from Player.playerJump, which runs inside the player update',
     ('effects/EnvironmentFx.java', 'ceilingGrit'): 'called from Level.activateTrigger inside the player update',
+    ('effects/LeafFx.java', 'spawn'): 'called from LeafFx.update whenever the room is below its leaf count (#473)',
+    ('effects/LeafFx.java', 'avoided'): 'called from LeafFx.spawn, from update (#473)',
     ('effects/FireballFx.java', 'trail'): 'called from Fireball.update once per 2 px flown (#397)',
     ('effects/FireballFx.java', 'hit'): 'called from Fireball.update when the ball stops on terrain, a monster, a stump or root or a hive',
     ('effects/FireballFx.java', 'heavyHit'): 'called from Fireball.update when the ball stops on the boss',

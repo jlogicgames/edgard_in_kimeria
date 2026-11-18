@@ -59,7 +59,10 @@ initial rectangle's centre (left/top inclusive, right/bottom exclusive). Keep
 collision shapes, patrol routes, and interactive objects within their room.
 Moving objects retain this ownership. Trigger targets must be in the same room;
 cross-room links are rejected. Atmosphere (fireflies; fog is menu-only)
-is decorative and continues across retries. Rooms may span several screens.
+is decorative and continues across retries. The falling leaves are the exception: the `Room` marker's int property `leaves` (default 0,
+[#473](https://github.com/jlogicgames/edgard_in_kimeria/issues/473)) sets how many leaves drift down that room; they start fresh with the room, are cleared on
+every room change, death and retry, and never start over a trap object's columns (ART_DIRECTION.md, "Falling leaves"). Put it only on a room with trees
+or branches, and check the room's trap warnings with the leaves falling. Rooms may span several screens.
 
 ### Hint zones (#195, D33)
 

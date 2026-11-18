@@ -481,6 +481,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | A fireball flying through the real level, halo and trail drawn, a new ball every 60 frames (#397) | 8 | 0.0 to 2.8 (the 2.8 is a one-time ~3.4 KB in a fresh JVM's first measurement, 0.0 on repeats; its source is not identified: JIT warm-up or a one-time lazy initialisation) |
 | A fireball burst every 60 frames through `Level.fireballFx()` (light, heavy, burn-out in turn), with the ring slots | 8 | 0.0 to 0.3 (headless: the ring's shader draw is skipped) |
 | A pickup burst (12 sparks and a ring) every 60 frames through `Level.pickupSparks()` (#402) | 8 | 0.0 (headless: the ring's shader draw is skipped) |
+| Ten falling leaves of forest-1's deadfall room through `Level.leafFx()`, update and render (#473) | 8 | 0.0 (the whole room is the existing deadfall room row, 320.0 to 536.0 of 620) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the
 particles (those read 0.0). The room figures are the harness, entities and level code; the particle objects contribute almost nothing.
@@ -497,7 +498,7 @@ normal-blend particles first, then the additive ones, with one blend switch per 
 normal blending. Each system owns one `RandomXS128` (`random()`, the algorithm behind `MathUtils.random`), seeded in the constructor, so
 a seed reproduces a run. World Y grows downward: a rising particle has an end Y smaller than its start Y.
 
-Four kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
+Five kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
 
 | Kind | Blend | Size | Alpha | Used by |
 | --- | --- | --- | --- | --- |
@@ -505,6 +506,7 @@ Four kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed 
 | `KIND_SMOKE` | normal | `size * (1 + t)` | `0.7 * (1 - t)` | torch smoke, jump dust |
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` | ceiling grit (#239) |
 | `KIND_FLAME` | normal | `size * (1 - t)` | `1` (opaque) | the fireball's trail, splash and sparks (#397): it shrinks out instead of fading, because a fading warm colour over the blue sky turns olive or magenta |
+| `KIND_LEAF` | normal | long side `size`, width flips edge-on to full | `0.85`, ramped in and out over the first and last 12 % of life | the falling leaves (#473): a sine sway and a rotation by phase, spawned with `spawnLeaf` |
 
 Owners:
 
