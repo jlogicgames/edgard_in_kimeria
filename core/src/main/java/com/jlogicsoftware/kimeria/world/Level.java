@@ -1,5 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -145,6 +147,8 @@ public class Level implements WorldObject {
     public static final int BLOOD_CAPACITY = 96;
     /** The map's {@code background} when it sets none (D92): only test maps fall back here; every shipped map sets it (ShippedBackgroundTest, check_contrast.py). */
     public static final String DEFAULT_BACKGROUND = "#4a92b8";
+    /** Forest firefly light: the menu backdrop's lime (#472). Not a reserved hue (aqua, warm white, fire orange). */
+    private static final Color FIREFLY_LIGHT = Color.valueOf("b8f23a");
     private static final int RGB = 3, HEX_RGB = 6, HEX_ARGB = 8, OPAQUE = 0xff, BYTE = 0xff, BITS_PER_CHANNEL = 8, HEX_RADIX = 16;
     private static final long BLOOD_SEED_MIX = 0x9E3779B97F4A7C15L;
     private static final long FX_SEED_MIX = 0xC2B2AE3D27D4EB4FL;
@@ -566,7 +570,7 @@ public class Level implements WorldObject {
         addCollisions();
 
         for (int i = 0, fireflies = map.propInt("fireflies", 0); i < fireflies; i++) {
-            ambience.add(new Firefly(new Vector2(map.widthPx(), map.heightPx())));
+            ambience.add(Firefly.smallGlow(new Vector2(map.widthPx(), map.heightPx()), FIREFLY_LIGHT));
         }
         // The healer recipe's artifacts are level configuration read from the map, e.g. "BAT,MUSHROOM".
         // A mistyped name throws IllegalArgumentException from ItemType.fromMapName: failing loudly is intended.
@@ -1520,7 +1524,13 @@ public class Level implements WorldObject {
         blood.render(batch);
         fireballFx.render(batch);
         fx.render(batch);
-        for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
+        // Fireflies are small lights: added onto the scene like the menu's, then the normal blend is restored.
+        // Rooms without fireflies skip the switch, which would otherwise flush the batch twice a frame.
+        if (!ambience.isEmpty()) {
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+            for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        }
         if (!player.isRemoved()) player.render(batch);
         pickupSparks.render(batch); // over the hero: the item is at his hand when he takes it, and behind him the burst stays hidden until it leaves his outline
         fairy.renderFront(batch);
