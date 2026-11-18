@@ -84,14 +84,8 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     public static final float BODY_FADE_DELAY = .3f, BODY_FADE_SECONDS = .6f;
     /** The body rocks when the hero's body enters its box grown this many px left and right (D101). */
     public static final float NEAR_REACH = 6;
-    /** A push: the swing's first peak, in degrees, for a hero passing; the swing never exceeds the second. */
-    public static final float KICK_DEGREES = 10, MAX_ROCK_DEGREES = 24;
-    /**
-     * The swing: about 2.5 swings a second, under 5 % of the push in 1.2 s; it stops once the swing is under
-     * {@code REST_DEGREES} (0.3 degrees moves the shell's tips by under 0.1 px), about 1.4 s after a walking push.
-     */
-    private static final float ROCK_HZ = 2.5f, ROCK_DECAY = 2.5f, REST_DEGREES = .3f;
-    private static final float ROCK_OMEGA = MathUtils.PI2 * ROCK_HZ, REST_SPEED = REST_DEGREES * ROCK_OMEGA;
+    /** A push: the swing's first peak, in degrees, for a hero passing (the shared {@link RemainsSwing}). */
+    public static final float KICK_DEGREES = RemainsSwing.KICK_DEGREES;
     /** The pivot, in the 24x16 frame facing right: the middle of the bottom row of the upturned shell. */
     private static final float PIVOT_X = 11, PIVOT_Y = FRAME_HEIGHT;
     /** The burn: the body darkens to this tint over the burn, with flames at this rate, then a wisp; it is gone at the end. */
@@ -113,8 +107,9 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     private boolean clambering, inQuickSand;
     private Escalator currentEscalator;
     private final Rectangle nearScratch = new Rectangle();
-    /** The body's swing in degrees (positive: its top leans right) and its speed; whether the hero was near last frame. */
-    private float rockAngle, rockSpeed, flameDue;
+    /** The body's swing (D101); flames due while it burns. */
+    private final RemainsSwing swing = new RemainsSwing();
+    private float flameDue;
     /** Seconds since the kill: the flip, the poof and the cross-fade run on it, through a burn too. */
     private float deadClock;
     private boolean heroNear, poofDone;
@@ -147,7 +142,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     public float warningTotal() { return warningTotal; }
     public boolean isCommitted() { return current == State.WINDUP; }
     /** The body's swing now, in degrees (0 at rest; positive: its top leans right). */
-    public float rockAngle() { return rockAngle; }
+    public float rockAngle() { return swing.angle(); }
     public State state() { return current; }
 
     /** The floor line the beetle stands on: the bottom of its body. */
@@ -228,7 +223,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         boolean near = heroPresent() && heroNear();
         if (near && !heroNear) push();
         heroNear = near;
-        rock(dt);
+        swing.update(dt);
     }
 
     /** True when the hero's body touches the body grown {@link #NEAR_REACH} left and right. */
@@ -252,16 +247,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     private void push() {
         Rectangle hero = player.hitboxBoundsInto(heroScratch);
         float direction = player.velocity.x != 0 ? Math.signum(player.velocity.x) : hero.x + hero.width / 2f < centreX() ? 1 : -1;
-        rockSpeed += direction * KICK_DEGREES * ROCK_OMEGA;
-    }
-
-    /** A damped swing (semi-implicit Euler, stable at every frame rate the game runs): angle'' = -w^2 angle - 2 k angle'. */
-    private void rock(float dt) {
-        rockSpeed += (-ROCK_OMEGA * ROCK_OMEGA * rockAngle - SIDES * ROCK_DECAY * rockSpeed) * dt;
-        rockAngle += rockSpeed * dt;
-        if (rockAngle > MAX_ROCK_DEGREES) { rockAngle = MAX_ROCK_DEGREES; rockSpeed = 0; }
-        else if (rockAngle < -MAX_ROCK_DEGREES) { rockAngle = -MAX_ROCK_DEGREES; rockSpeed = 0; }
-        if (Math.abs(rockAngle) < REST_DEGREES && Math.abs(rockSpeed) < REST_SPEED) rockAngle = rockSpeed = 0;
+        swing.push(direction);
     }
 
     /** The body burning: flames at a steady rate while it darkens, then a wisp, then it is gone. */
@@ -269,9 +255,9 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         stateClock += dt;
         float cx = centreX(), floor = floorY();
         flameDue += BURN_FLAMES_PER_SECOND * dt;
-        while (flameDue >= 1) { flameDue -= 1; if (level != null) level.beetleFx().burnFlame(cx, floor); }
+        while (flameDue >= 1) { flameDue -= 1; if (level != null) level.remainsFx().burnFlame(cx, floor); }
         if (stateClock >= BURN_SECONDS) {
-            if (level != null) level.beetleFx().burnOut(cx, floor);
+            if (level != null) level.remainsFx().burnOut(cx, floor);
             removeFromParent();
         }
     }
@@ -283,7 +269,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     public void crumble() {
         if (!isRemains()) return;
         if (!poofDone) poof(); // crumbled before the poof was due: the kill's poof still plays, with the crumble
-        if (level != null) level.beetleFx().crumble(centreX(), floorY());
+        if (level != null) level.remainsFx().crumble(centreX(), floorY(), BeetleFx.SHELL_CHIPS);
         if (game.playSounds()) game.playSound(CRUMBLE_SOUND);
         removeFromParent();
     }
@@ -293,7 +279,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         if (!isRemains()) return;
         if (!poofDone) poof(); // burnt before the poof was due: the kill's poof still plays, under the flames
         enter(State.BURN);
-        if (level != null) level.beetleFx().burnGlow(centreX(), floorY(), BURN_SECONDS);
+        if (level != null) level.remainsFx().burnGlow(centreX(), floorY(), BURN_SECONDS);
         if (game.playSounds()) game.playSound(BURN_SOUND);
     }
 
@@ -438,7 +424,8 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         enter(State.DEAD);
         pendingRemoval = true;
         poofDone = heroNear = false;
-        rockAngle = rockSpeed = deadClock = 0;
+        swing.reset();
+        deadClock = 0;
         velocity.setZero();
         if (game.playSounds()) game.playSound(DEATH_SOUND);
     }
@@ -492,11 +479,11 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         float tint = current == State.BURN ? 1f - (1f - CHAR_TINT) * Math.min(1f, stateClock / BURN_SECONDS) : 1f;
         if (fade < 1) {
             batch.setColor(tint, tint, tint, 1f - fade);
-            batch.draw(frames[DEAD_FRAME], drawX, y, drawOrigin, PIVOT_Y, FRAME_WIDTH, FRAME_HEIGHT, scaleX, 1, rockAngle);
+            batch.draw(frames[DEAD_FRAME], drawX, y, drawOrigin, PIVOT_Y, FRAME_WIDTH, FRAME_HEIGHT, scaleX, 1, swing.angle());
         }
         if (fade > 0) {
             batch.setColor(tint, tint, tint, fade);
-            batch.draw(bodyFrame, drawX, y, drawOrigin, PIVOT_Y, FRAME_WIDTH, FRAME_HEIGHT, scaleX, 1, rockAngle);
+            batch.draw(bodyFrame, drawX, y, drawOrigin, PIVOT_Y, FRAME_WIDTH, FRAME_HEIGHT, scaleX, 1, swing.angle());
         }
         batch.setPackedColor(saved);
     }

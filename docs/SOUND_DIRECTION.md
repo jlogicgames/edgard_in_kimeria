@@ -217,6 +217,27 @@ Four voice-synth sounds for the beetle, generated; heard and approved by the aut
 The beetle's death under a fireball or a stone plays the existing kill sound `bounce`. Previews:
 `art/audio/previews/beetle_*.png`. Constants: `BEETLE_*` in `tools/audio/generate_sounds.py`.
 
+### Forest spider (#328, seeds 6901-6907, D102)
+
+Five voice-synth sounds for the spider, generated and approved by the author on 2026-11-19 from the files. The notice and the
+wind-up are noise-led (hiss and ticks over a whispered or fried voice), so they never sound like the beetle's voiced whine or
+`hive_buzz`. Its body reuses `remains_crumble` and `remains_burn`.
+
+- `spider_notice` (0.26 s, RMS -19.0 dBFS): the spider's own call (D100: no shared alert sound): four fang ticks climbing from
+  2.6 to 4.1 kHz, then a breathy "tss" (noise around 4.8 kHz) over a whispered, fried /i/ (`render_voice` 230 -> 200 Hz).
+  Centroid 978 Hz.
+- `spider_windup` (0.50 s) and `spider_windup_long` (0.75 s, the longer-warnings assist), RMS -19.4 dBFS: a hiss whose band climbs
+  from 1.4 to 3.4 kHz (it tightens) over a low fried growl (`render_voice` 85 -> 130 Hz, /uh/ to /e/), a fang rattle that speeds up
+  from a 0.09 s to a 0.03 s period, and a sharp breath in over the last 60 ms. A one-shot like the other warnings: it plays to its
+  end even when the spider is killed during it.
+- `spider_leap` (0.16 s, RMS -21.0 dBFS, an environment-level swish like `bramble_lash`): noise sweeping 1.2 -> 4.2 kHz, driven
+  for a low crest, at take-off.
+- `spider_bite` (0.20 s, RMS -18.0 dBFS): at the landing, hit or miss (D93): a double fang snap (8 ms ticks around 2.4 kHz, the
+  second harder) over a short dull /u/ thud (`render_voice` 170 -> 110 Hz). Centroid 307 Hz.
+
+The spider's death plays the shared kill sound `bounce`, as the beetle's. Previews: `art/audio/previews/spider_*.png`. Constants:
+`SPIDER_*` in `tools/audio/generate_sounds.py`.
+
 ### Monster bodies (D101, seeds 6807-6808)
 
 Two environment sounds shared by every monster's body (D101). They are quiet, under the voice set, and peak-capped at

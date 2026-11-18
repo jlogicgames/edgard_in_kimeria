@@ -25,6 +25,7 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
@@ -172,6 +173,8 @@ class AllocationBudgetTest {
     static final double PICKUP_SPARKS_CEILING = 8;
     /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-18, #327 and D101; 0.2 before the body; the same 8 B ceiling as the other isolated paths; the harness does not play sounds, so {@code playSound} is not reached): beetles crawling, noticing, committing, winding up with specks, bursting or dying under a kill, their bodies rocking, crumbling and burning, through the real {@code Level} of beetle-test.tmx, update and render every frame. */
     static final double BEETLE_CEILING = 8;
+    /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-19, #328, D102; the same 8 B ceiling as the beetle's; the harness does not play sounds): spiders skittering, noticing, chasing, winding up with their silk, leaping, biting and recovering, or killed and leaving a body that rocks, crumbles and burns, through the real {@code Level} of spider-test.tmx, update and render every frame. */
+    static final double SPIDER_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
@@ -738,6 +741,8 @@ class AllocationBudgetTest {
             if (!b.isRemoved()) { b.update(STEP); b.render(batch); seen[b.getState().ordinal()] = true; maxRock[0] = Math.max(maxRock[0], Math.abs(b.rockAngle())); }
             level.beetleFx().update(STEP);
             level.beetleFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
             peak[0] = Math.max(peak[0], level.beetleFx().soft().count() + level.beetleFx().hard().count());
         });
         for (Beetle.State state : Beetle.State.values()) if (state != Beetle.State.CHASE) assertTrue(seen[state.ordinal()], "the scenario must reach " + state); // CHASE commits within its first frame here
@@ -745,6 +750,57 @@ class AllocationBudgetTest {
         assertFalse(level.player.isGotHit(), "the hero stepped clear of every burst");
         assertTrue(maxRock[0] > 0, "an odd beetle's body must rock when the hero walks up to it");
         assertWithinBudget("beetle notice, wind-up, burst, death and body", BEETLE_CEILING, bytes);
+    }
+
+    private static final int SPIDER_CYCLE_FRAMES = 150, SPIDER_HEARD_FRAME = 5, SPIDER_ESCAPE_FRAME = 50, SPIDER_KILL_FRAME = 110;
+    private static final int SPIDER_PUSH_FRAME = 125, SPIDER_FINISH_FRAME = 140, SPIDER_KINDS = 4, SPIDER_BURNT = 3;
+    private static final float SPIDER_LEFT_END = 256, SPIDER_Y = 304, SPIDER_W = 32, SPIDER_H = 16, SPIDER_RANGE_TILES = 8;
+    /** Hero positions (x of the 64 px frame): in its hearing and pounce box; clear of the locked bite; beside the body. */
+    private static final float HERO_POUNCED_X = 330 - 29, HERO_STEPPED_X = 360 - 29, HERO_BESIDE_SPIDER_X = 310 - 29;
+
+    /**
+     * Spiders in turn through the real {@code Level} of spider-test.tmx (#328, D102): each skitters a few frames, hears the hero,
+     * notices (0.5 s), chases and commits at once with the hero in its pounce box, winds up with its silk; the hero steps clear
+     * of the locked bite at frame {@value #SPIDER_ESCAPE_FRAME}, so the leap and the bite miss and it recovers, then chases and
+     * winds up again; odd spiders are killed at frame {@value #SPIDER_KILL_FRAME} as a fireball would and leave their body
+     * (D101): the hero walks up to it at frame {@value #SPIDER_PUSH_FRAME} (it rocks), and at frame {@value #SPIDER_FINISH_FRAME}
+     * it crumbles or, one spider in four, burns. {@code update} and {@code render} of the spider, {@code Level.spiderFx()} and
+     * {@code Level.remainsFx()} every frame. Spiders are built before the probe.
+     */
+    @Test void spiderThroughTheRealLevel() {
+        Level level = harness.roomOf("spider-test", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / SPIDER_CYCLE_FRAMES + 1;
+        Spider[] spiders = new Spider[cycles];
+        for (int k = 0; k < cycles; k++) {
+            spiders[k] = new Spider(harness.assets(), harness.game(), SPIDER_LEFT_END, SPIDER_Y, SPIDER_W, SPIDER_H, 0, SPIDER_RANGE_TILES);
+            spiders[k].setPlayer(level.player);
+            spiders[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Spider.State.values().length];
+        int[] peak = new int[1];
+        float[] maxRock = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / SPIDER_CYCLE_FRAMES, f = i % SPIDER_CYCLE_FRAMES;
+            Spider s = spiders[k];
+            if (f == 0) level.player.position.set(HERO_FAR_X, HERO_Y);
+            if (f == SPIDER_HEARD_FRAME) level.player.position.set(HERO_POUNCED_X, HERO_Y);
+            if (f == SPIDER_ESCAPE_FRAME) level.player.position.set(HERO_STEPPED_X, HERO_Y);
+            if (f == SPIDER_KILL_FRAME && k % 2 == 1) s.collidedWithActor(true);
+            if (f == SPIDER_PUSH_FRAME && k % 2 == 1) level.player.position.set(HERO_BESIDE_SPIDER_X, HERO_Y);
+            if (f == SPIDER_FINISH_FRAME && k % 2 == 1) { if (k % SPIDER_KINDS == SPIDER_BURNT) s.burnUp(); else s.crumble(); }
+            if (!s.isRemoved()) { s.update(STEP); s.render(batch); seen[s.getState().ordinal()] = true; maxRock[0] = Math.max(maxRock[0], Math.abs(s.rockAngle())); }
+            level.spiderFx().update(STEP);
+            level.spiderFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+            peak[0] = Math.max(peak[0], level.spiderFx().soft().count() + level.spiderFx().hard().count());
+        });
+        for (Spider.State state : Spider.State.values()) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(peak[0] > 0, "the spiders must actually throw particles");
+        assertFalse(level.player.isGotHit(), "the hero stepped clear of every bite");
+        assertTrue(maxRock[0] > 0, "an odd spider's body must rock when the hero walks up to it");
+        assertWithinBudget("spider notice, wind-up, leap, bite, recovery, death and body", SPIDER_CEILING, bytes);
     }
 
     /** A pickup spark burst every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.pickupSparks()} (#402), updated and drawn each frame. */

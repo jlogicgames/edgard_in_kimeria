@@ -5,16 +5,15 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.RandomXS128;
 
 /**
- * The forest beetle's effects (#327, D100, D101): the specks of its wind-up, its burst, its death, and the end of the body it
- * leaves (crumbled by the sword or a stone, burnt by a fireball). One per {@code Level}, like
+ * The forest beetle's effects (#327, D100): the specks of its wind-up, its burst and its death. The end of the body it leaves
+ * (D101: crumbled or burnt) is shared by every monster and lives in {@link RemainsFx} (#478). One per {@code Level}, like
  * {@link FireballFx}; two {@link KimeriaParticleSystem}s with their own seeded streams. {@link #soft()} holds the burst's
  * white flash ({@code KIND_GLOW}, additive) and the grey steam and death poof ({@code KIND_SMOKE}), drawn with
  * {@link SoftDot}; {@link #hard()} holds the wind-up specks and the burst's spray ({@code KIND_FLAME}, opaque squares that
  * shrink out) and the death's shell chips ({@code KIND_GRIT}), drawn with {@link Shaders#whiteQuad()}.
  *
  * <p>Colours: white, the smoke greys {@code d8d6e8}, {@code 9a97ad}, {@code 5b5870} and, for the chips, the shell's
- * {@code 34482a} and bronze {@code 9a8458}; the crumble adds two browns, {@code 6b5a3a} and {@code 4a3d28}; the burning body
- * uses the fireball's own ramp ({@link FireballFx#ramp}), the one fire palette. No reserved hue. The specks are born on the edge of the 80x32 blast box
+ * {@code 34482a} and bronze {@code 9a8458} ({@link #SHELL_CHIPS}, which the body's crumble also uses). No reserved hue. The specks are born on the edge of the 80x32 blast box
  * and drawn in to the body, so the burst's reach is read before it happens; the spray's end points stay inside the box, so
  * what kills is what is seen (D5). Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a
  * smaller Y. Particles advance only in {@link #update}, so pause freezes them.
@@ -22,10 +21,10 @@ import com.badlogic.gdx.math.RandomXS128;
 public final class BeetleFx {
     /**
      * Measured peaks (BeetleFxTest: three beetles winding up 0.1 s apart at the assist's 1.2 s warning and bursting while three
-     * others die, then three bodies crumbled and three burnt together, 40 seeds, 30/60/144 fps): 85 soft, 236
-     * hard; with at least 25 % headroom. A full pool only drops the oldest.
+     * others die, 40 seeds, 30/60/144 fps): 67 soft, 192 hard, with at least 25 % headroom (108 and 296 while the bodies'
+     * crumble and burn lived here; they are {@link RemainsFx} since #328). A full pool only drops the oldest.
      */
-    public static final int SOFT_CAPACITY = 108, HARD_CAPACITY = 296;
+    public static final int SOFT_CAPACITY = 84, HARD_CAPACITY = 240;
     private static final long HARD_SEED_MIX = 0x632BE59BD9B4E019L;
 
     /** The blast box the specks outline and the spray fills: 80 wide, 32 tall, standing on the floor line (D100). */
@@ -41,6 +40,8 @@ public final class BeetleFx {
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DARK = {.357f, .345f, .439f};
     private static final float[] SHELL = {.204f, .282f, .165f}, BRONZE = {.604f, .518f, .345f};
     private static final float[] BROWN = {.420f, .353f, .227f}, DARK_BROWN = {.290f, .239f, .157f};
+    /** The beetle body's crumble chips (D101, {@link RemainsFx#crumble}): two browns, the shell and the bronze. */
+    public static final float[][] SHELL_CHIPS = {BROWN, DARK_BROWN, SHELL, BRONZE};
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};
 
     // Wind-up specks: 2 px squares born on the blast box's edges (the two sides and the top), drawn in to the body. Brighter
@@ -64,22 +65,6 @@ public final class BeetleFx {
     private static final float POOF_DIST_MIN = 10, POOF_DIST_MAX = 16, POOF_LIFE_MIN = .4f, POOF_LIFE_MAX = .55f;
     private static final float POOF_SIZE_MIN = 5, POOF_SIZE_MAX = 8, POOF_ANGLE_JITTER = 15, CIRCLE = 360;
     private static final float CHIP_SPREAD = 6, CHIP_DRIFT = 12, CHIP_LIFE = .45f, CHIP_SIZE_MIN = 1, CHIP_SIZE_MAX = 2, CHIP_FLOOR_INSET = 1;
-
-    // The body crumbles (D101, the sword or a stone): brown and shell chips from inside the body fall to the floor, a little dust.
-    private static final int CRUMBLE_CHIPS = 16, CRUMBLE_DUST = 5;
-    private static final float[][] CRUMBLE_COLOURS = {BROWN, DARK_BROWN, SHELL, BRONZE};
-    private static final float CRUMBLE_HALF_WIDTH = 10, CRUMBLE_LOW = 2, CRUMBLE_HIGH = 12, CRUMBLE_DRIFT = 6;
-    private static final float CRUMBLE_LIFE_MIN = .35f, CRUMBLE_LIFE_MAX = .6f, CRUMBLE_SIZE_MIN = 1, CRUMBLE_SIZE_MAX = 2.5f;
-    private static final float DUST_LOW = 2, DUST_HIGH = 8, DUST_RISE_MIN = 4, DUST_RISE_MAX = 8, DUST_LIFE_MIN = .3f, DUST_LIFE_MAX = .45f;
-    private static final float DUST_SIZE_MIN = 3, DUST_SIZE_MAX = 5;
-
-    // The body burns (D101, a fireball): flames in the fireball's ramp rise off the body, under one warm glow; a dark wisp at the end.
-    private static final float BURN_HALF_WIDTH = 10, BURN_LOW = 1, BURN_HIGH = 8, BURN_RISE_MIN = 6, BURN_RISE_MAX = 14;
-    private static final float BURN_LIFE_MIN = .18f, BURN_LIFE_MAX = .3f, BURN_SIZE_MIN = 1.5f, BURN_SIZE_MAX = 3;
-    private static final float BURN_GLOW_SIZE = 28;
-    private static final int WISP = 4;
-    private static final float WISP_HALF_WIDTH = 6, WISP_RISE_MIN = 10, WISP_RISE_MAX = 18, WISP_LIFE_MIN = .5f, WISP_LIFE_MAX = .7f;
-    private static final float WISP_SIZE_MIN = 3, WISP_SIZE_MAX = 5;
 
     private final KimeriaParticleSystem soft, hard;
 
@@ -155,50 +140,6 @@ public final class BeetleFx {
             float[] c = (i & 1) == 0 ? BRONZE : SHELL;
             hard.spawn(KimeriaParticleSystem.KIND_GRIT, x, centreY, x + range(chipRandom, -CHIP_DRIFT, CHIP_DRIFT), floorY - CHIP_FLOOR_INSET,
                 CHIP_LIFE, range(chipRandom, CHIP_SIZE_MIN, CHIP_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
-        }
-    }
-
-    /** The body of a beetle centred on {@code centreX}, lying on {@code floorY}, crumbles (D101): chips fall, a little dust. */
-    public void crumble(float centreX, float floorY) {
-        RandomXS128 random = hard.random();
-        for (int i = 0; i < CRUMBLE_CHIPS; i++) {
-            float x = centreX + range(random, -CRUMBLE_HALF_WIDTH, CRUMBLE_HALF_WIDTH), y = floorY - range(random, CRUMBLE_LOW, CRUMBLE_HIGH);
-            float[] c = CRUMBLE_COLOURS[i % CRUMBLE_COLOURS.length];
-            hard.spawn(KimeriaParticleSystem.KIND_GRIT, x, y, x + range(random, -CRUMBLE_DRIFT, CRUMBLE_DRIFT), floorY - CHIP_FLOOR_INSET,
-                range(random, CRUMBLE_LIFE_MIN, CRUMBLE_LIFE_MAX), range(random, CRUMBLE_SIZE_MIN, CRUMBLE_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
-        }
-        RandomXS128 dustRandom = soft.random();
-        for (int i = 0; i < CRUMBLE_DUST; i++) {
-            float x = centreX + range(dustRandom, -CRUMBLE_HALF_WIDTH, CRUMBLE_HALF_WIDTH), y = floorY - range(dustRandom, DUST_LOW, DUST_HIGH);
-            float[] c = (i & 1) == 0 ? BROWN : GREY;
-            soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, y, x, y - range(dustRandom, DUST_RISE_MIN, DUST_RISE_MAX),
-                range(dustRandom, DUST_LIFE_MIN, DUST_LIFE_MAX), range(dustRandom, DUST_SIZE_MIN, DUST_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
-        }
-    }
-
-    /** The start of a burning body (D101): one warm glow over it for {@code seconds}, in the fireball's halo colour. */
-    public void burnGlow(float centreX, float floorY, float seconds) {
-        float cy = floorY - BODY_CENTRE_ABOVE_FLOOR;
-        soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, cy, centreX, cy, seconds, BURN_GLOW_SIZE, FireballFx.halo(RED), FireballFx.halo(GREEN), FireballFx.halo(BLUE));
-    }
-
-    /** One flame off a burning body (D101), in the fireball's ramp; the body calls it at a steady rate while it burns. */
-    public void burnFlame(float centreX, float floorY) {
-        RandomXS128 random = hard.random();
-        float x = centreX + range(random, -BURN_HALF_WIDTH, BURN_HALF_WIDTH), y = floorY - range(random, BURN_LOW, BURN_HIGH);
-        int c = random.nextInt(FireballFx.RAMP_COLOURS) * FireballFx.RAMP_STRIDE;
-        hard.spawn(KimeriaParticleSystem.KIND_FLAME, x, y, x, y - range(random, BURN_RISE_MIN, BURN_RISE_MAX),
-            range(random, BURN_LIFE_MIN, BURN_LIFE_MAX), range(random, BURN_SIZE_MIN, BURN_SIZE_MAX), FireballFx.ramp(c), FireballFx.ramp(c + GREEN), FireballFx.ramp(c + BLUE));
-    }
-
-    /** The end of a burnt body (D101): a dark wisp of smoke rising where it lay. */
-    public void burnOut(float centreX, float floorY) {
-        RandomXS128 random = soft.random();
-        for (int i = 0; i < WISP; i++) {
-            float x = centreX + range(random, -WISP_HALF_WIDTH, WISP_HALF_WIDTH), y = floorY - BODY_CENTRE_ABOVE_FLOOR;
-            float[] c = (i & 1) == 0 ? DARK : GREY;
-            soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, y, x, y - range(random, WISP_RISE_MIN, WISP_RISE_MAX),
-                range(random, WISP_LIFE_MIN, WISP_LIFE_MAX), range(random, WISP_SIZE_MIN, WISP_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
         }
     }
 

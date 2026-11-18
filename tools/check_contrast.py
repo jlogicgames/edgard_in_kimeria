@@ -148,6 +148,8 @@ SPRITES = {
     # D101: the body a killed beetle leaves. It has no placement of its own: it lies wherever a beetle dies, so it is measured
     # by BODY_SWEEP on every floor top of every shipped map (body_sweep), as decor: harmless, it must not read as a live beetle.
     'Beetle:body': ('decor', 'objects/monster-beetle-body.png', (0, 0, 24, 16), 1, 'floor', FULL),
+    'Spider': ('active', 'objects/monster-spider.png', (0, 0, 32, 16), 9, 'floor', FULL),  # #328 (D102): every frame
+    'Spider:body': ('decor', 'objects/monster-spider-body.png', (0, 0, 32, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
@@ -596,7 +598,7 @@ def tile_report(roots):
 
 # D101: monster bodies have no map placement; they lie on whatever floor the monster died on. Each is measured standing on
 # every floor top (untyped Collisions and Platform objects, not walls or quicksand) every BODY_STEP px of every shipped map.
-BODY_SWEEP = ('Beetle:body',)
+BODY_SWEEP = ('Beetle:body', 'Spider:body')
 BODY_STEP = 32
 FLOOR_TYPES = (None, 'Platform')
 

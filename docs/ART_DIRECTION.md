@@ -691,7 +691,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); flying beetle blast, snail spit, bites, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk; flying beetle blast, snail spit, the wolf's bite, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -785,12 +785,47 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   0.083 to 0.156, body 0.104 to 0.178, p90 chroma 0.018 (decor: at most 0.20, 0.08 to 0.20, 0.10). Left as it is, the active
   `dead` frame fits neither tier (outline 0.217 to 0.379, ink down to L 0.146). It rocks about the bottom of the shell, which is
   reactive, like the bush's brush, not an idle loop.
-  - **Crumble** (the sword, a stone, a stomp): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in browns
+  - **Crumble** (the sword, a stone, a stomp; `RemainsFx` since #328, with the beetle's `BeetleFx.SHELL_CHIPS`): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in browns
     `6b5a3a` and `4a3d28`, shell `34482a` and bronze `9a8458`, and 5 dust puffs.
   - **Burn** (a fireball or a torch): one warm glow (`FireballFx.HALO`, 28 px), 70 flames a second in the fireball's own ramp
     (`FireballFx.RAMP`) rising 6 to 14 px, the body darkening to 15 % over 0.3 s, and a dark wisp of 4 puffs at the end.
-- **Cost:** pools of 108 and 296 from measured peaks of 85 and 236 (`BeetleFxTest`, with three bodies crumbling and three burning
-  at once); 0.1 B/frame through the real level.
+- **Cost:** `BeetleFx` pools of 84 and 240 from measured peaks of 67 and 192 (`BeetleFxTest`; 108 and 296 while the body's crumble
+  and burn lived here); the body's end is the shared `RemainsFx` (pools 57 and 218 from peaks of 45 and 174, `RemainsFxTest`);
+  0.1 B/frame through the real level.
+
+**Forest spider, built (#328, #398, D102; the card, the eight-legged art and the sounds approved by the author 2026-11-19).**
+The body is an authored sprite; every effect is a particle on `KimeriaParticleSystem` (`effects.SpiderFx`, one per `Level`; the body's
+crumble and burn in the shared `effects.RemainsFx`). pixelfx's `melee/claw-swipe`, `impacts/hit-spark` and `spawn/poof` named the
+needs only: nothing was copied or exported.
+
+- **Sheet** `assets/images/objects/monster-spider.png`, nine 32×16 frames in one strip, drawn in `art/objects/monster/spider.grid` and
+  exported by `tools/forest_trap_sprites.py monster:spider` with the moon rim: `crawl1`, `crawl2` (the skitter and the chase), `rise`,
+  `tap` (the notice: up on its legs, a foreleg drumming), `crouch` (the wind-up: forelegs up, fangs open), `leap`, `bite` (fangs to the
+  floor), `recover` (flattened), `dead` (on its back, legs curled up). Feet on row 15, facing right, mirrored about the body centre.
+  The author's art review of 2026-11-19 asked for eight legs: every frame shows eight, each root, high knee and foot, all rooted on the
+  cephalothorax and drawn behind the body, four near in tan with pale knees and four far in a shaded tan.
+- **Palette** (12 colours, 13 with the rim): ink `0b0814`; abdomen `22141e`, `3a2232`, `5e3442` with an ochre chevron `c89a4a`;
+  head `4a2e3c`, `6e4656`; eyes `f0e2a8`; fangs `e8e0cc`; near legs `c09670`, knees `e8c894`; far legs `9c7a5c` (all legs light
+  enough that the rim leaves them alone). No reserved hue: a dusky plum, away from the healer's aqua, the lime spores and the beetle's
+  green-bronze. Outline at the RedMob, YellowMob and beetle spawns 0.300 (`recover`) to 0.331 (`crouch`) (active floor 0.28);
+  `check_contrast.py` measures every placed `Spider` in all nine frames.
+- **Notice:** frames only, no mark and no particles (D100).
+- **Wind-up** (the D7 warning, `BITE_WARNING_SECONDS`): the `crouch` frame drawn 1 px back from the hero, and 1 px silk glints
+  (`KIND_FLAME`, half `ffffff`, half `d8d6e8`, 0.22 to 0.32 s), 60 a second, born on the floor line between the fangs and the locked
+  landing spot and running to it, so the reach is read on them, as the beetle's specks show its blast.
+- **Leap:** a silk line, one pale 1 px dot (`KIND_GRIT`, 0.3 s) per 2 px flown, left in the air behind the abdomen.
+- **Bite** (hit or miss, D93): two white fang glints (`SoftDot`, 7 px, 0.1 s) 2 px either side of the fangs and four dust puffs
+  (`KIND_SMOKE`, a brown and `9a97ad`) at its feet.
+- **Death** (any weapon): it flips onto its back and stays as a body (D101); 0.08 s after the hit, 12 puffs in a ring (pale and grey, as
+  the beetle's) and four leg flecks (tan and plum) to the floor. The sword's kill adds the light spray of D65; fire and stones none (D99).
+- **Body (D101):** `assets/images/objects/monster-spider-body.png`, the `dead` frame recoloured in a decor-tier palette
+  (`art/objects/monster/spider-body.grid`: contour `58505a` in its own hue, plum-grey `5c5460`, `645a66`, `6a606a`, head `685e68`,
+  `6e646c`, legs `706c66`, `78726a`, `6c6862`; no ink, no rim). Measured by `BODY_SWEEP` on every floor top of the three maps: outline
+  0.075 to 0.184, body 0.110 to 0.174, p90 chroma 0.023 (decor: at most 0.20). The pose differs from its closest live frame (`recover`)
+  in 48.3 % of the silhouette (`RemainsTest`, floor 25 %). It rocks about the bottom of its belly (`RemainsSwing`); its crumble chips
+  are its plum `3a2232`, `5e3442` and leg tans `c09670`, `9c7a5c` (`SpiderFx.SPIDER_CHIPS`).
+- **Cost:** `SpiderFx` pools of 64 and 104 from measured peaks of 50 and 83 (`SpiderFxTest`: three spiders winding up at the assist's
+  0.75 s, leaping and biting while three others die); 0.0 B/frame through the real level.
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

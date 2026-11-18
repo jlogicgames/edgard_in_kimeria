@@ -98,7 +98,8 @@ row. When it acts it is seen and heard, hit or miss; the hero's death beat does 
 A monster that reacts to the hero notices in its own body language (a stop and a reaction drawn in its frames, about 0.5 s,
 not scaled by the assist) and a short call in its own voice: no mark over its head, no shared alert sound. Its lethal
 wind-up takes its length from `TrapWarnings`. New monsters are met in play: no teaching room, no hint text. Design the
-monster's card in `docs/GAME_DESIGN.md` ("Forest monster ideas") first; the beetle is the template (`Beetle`, `BeetleFx`).
+monster's card in `docs/GAME_DESIGN.md` ("Forest monster ideas") first; the beetle and the spider (D102) are the templates
+(`Beetle`, `BeetleFx`; `Spider`, `SpiderFx`).
 
 ## Monster bodies (D101)
 
@@ -106,7 +107,8 @@ A monster killed without bursting leaves its body (`Remains`): its pose must dif
 rule, not the palette), and it is drawn in the decor tier (D76) after the kill frame. It is harmless, blocks nothing and counts
 as defeated; it rocks when the hero passes; the sword, a stone or a stomp (with the normal bounce) crumble it, a fireball or a
 torch burn it, and no weapon is spent or stopped by it. A burst or blast leaves nothing; a reset or a passed room leaves no
-body. Add every new `Remains` class to `RemainsTest`, which fails on an unlisted one.
+body; the swing that kills a monster does not crumble its body. Crumble and burn go through the shared `RemainsFx`. Add every
+new `Remains` class to `RemainsTest`, which fails on an unlisted one.
 
 ## Player-facing text
 

@@ -14,6 +14,8 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
+import com.jlogicsoftware.kimeria.effects.RemainsFx;
+import com.jlogicsoftware.kimeria.effects.SpiderFx;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
 import com.jlogicsoftware.kimeria.effects.PickupSparksFx;
@@ -32,6 +34,7 @@ import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
@@ -166,6 +169,11 @@ public class Level implements WorldObject {
     private static final long BEETLE_FX_SEED_MIX = 0xBF58476D1CE4E5B9L;
     /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
     private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
+    private static final long SPIDER_FX_SEED_MIX = 0x94D049BB133111EBL, REMAINS_FX_SEED_MIX = 0x2545F4914F6CDD1DL;
+    /** The spiders' silk glints, leap line, bites and deaths (#328, D102): one for the level. Cleared with the room. */
+    private final SpiderFx spiderFx = new SpiderFx(TimeUtils.nanoTime() ^ SPIDER_FX_SEED_MIX);
+    /** Every monster body's crumble and burn (D101, #478): one for the level. Cleared with the room. */
+    private final RemainsFx remainsFx = new RemainsFx(TimeUtils.nanoTime() ^ REMAINS_FX_SEED_MIX);
 
     private final Assets assets;
     private final GameContext game;
@@ -481,7 +489,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); remainsFx.clear();
         startLeaves();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
@@ -528,6 +536,10 @@ public class Level implements WorldObject {
     public PickupSparksFx pickupSparks() { return pickupSparks; }
     /** The beetles' specks, bursts and deaths (#327); {@code Beetle} writes into them, tests read them. */
     public BeetleFx beetleFx() { return beetleFx; }
+    /** The spiders' silk, leap, bite and death effects (#328); {@code Spider} writes into them, tests read them. */
+    public SpiderFx spiderFx() { return spiderFx; }
+    /** Every monster body's crumble and burn (D101, #478); the bodies write into them, tests read them. */
+    public RemainsFx remainsFx() { return remainsFx; }
 
     /** The fireball's fizzle (#397): a hit on terrain at full volume, a burn-out at the end of its life quieter. */
     public void fireballFizzle(boolean burnOut) {
@@ -574,6 +586,7 @@ public class Level implements WorldObject {
             if ("HangingHive".equals(o.type)) hiveFor(o, owner); // D90: every room, at load.
             if ("EmberFissure".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91: every room, at load.
             if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
+            if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -803,6 +816,14 @@ public class Level implements WorldObject {
                     beetle.setLevel(this);
                     objects.add(beetle);
                     roomEnemies.put(o.id, beetle);
+                }
+                case "Spider" -> {
+                    Spider spider = new Spider(assets, game, o.x, o.y, o.width, o.height,
+                        o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    spider.setPlayer(player);
+                    spider.setLevel(this);
+                    objects.add(spider);
+                    roomEnemies.put(o.id, spider);
                 }
                 case "YellowMob" -> {
                     YellowMob mob = new YellowMob(assets, game, o.x, o.y, o.width, o.height,
@@ -1154,6 +1175,20 @@ public class Level implements WorldObject {
 
     /** The beetle (D100) fails at load when its range and blast leave the room, its floor has a gap, or a burst could cover a standing place. */
     private void validateBeetle(TiledObject o, int owner) {
+        String problem = Beetle.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
+            roomLayout.rooms.get(owner).bounds(), standingPlaces(owner));
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /** The spider (D102) fails at load when its range leaves the room, its floor has a gap, or its reach could cover a standing place. */
+    private void validateSpider(TiledObject o, int owner) {
+        String problem = Spider.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
+            roomLayout.rooms.get(owner).bounds(), standingPlaces(owner));
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /** Where the hero must be able to stand in a room: its entrance body, its exit and its checkpoints (load-time checks). */
+    private Map<String, Rectangle> standingPlaces(int owner) {
         RoomLayout.Room room = roomLayout.rooms.get(owner);
         Map<String, Rectangle> standing = new java.util.LinkedHashMap<>();
         standing.put("entrance", new Rectangle(room.entrance().x + player.hitbox.offsetX, room.entrance().y + player.hitbox.offsetY,
@@ -1162,12 +1197,15 @@ public class Level implements WorldObject {
         for (TiledObject other : map.layer("SpawnPoints"))
             if ("Checkpoint".equals(other.type) && roomLayout.owner(other) == owner)
                 standing.put("checkpoint [" + other.id + "]", new Rectangle(other.x, other.y, other.width, other.height));
+        return standing;
+    }
+
+    /** The floors a crawling monster may stand on: every collision box but quicksand (load-time checks). */
+    private List<Rectangle> monsterFloors() {
         List<Rectangle> floors = new ArrayList<>();
         for (TiledObject c : map.layer("Collisions"))
             if (!"QuickSand".equals(c.type)) floors.add(new Rectangle(c.x, c.y, c.width, c.height));
-        String problem = Beetle.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), floors,
-            room.bounds(), standing);
-        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+        return floors;
     }
 
     /** Rotten tree branches (D80) fail at load above a sound branch (D69) or when they are the only way up (D26). */
@@ -1508,6 +1546,8 @@ public class Level implements WorldObject {
         fireballFx.update(dt);
         pickupSparks.update(dt);
         beetleFx.update(dt);
+        spiderFx.update(dt);
+        remainsFx.update(dt);
         leafFx.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
@@ -1580,6 +1620,8 @@ public class Level implements WorldObject {
         blood.render(batch);
         fireballFx.render(batch);
         beetleFx.render(batch);
+        spiderFx.render(batch);
+        remainsFx.render(batch);
         fx.render(batch);
         leafFx.render(batch);
         // Fireflies are small lights: added onto the scene like the menu's, then the normal blend is restored.

@@ -24,10 +24,13 @@ Implementation is under `core/src/main/java/com/jlogicsoftware/kimeria/`:
 
 ## A new monster (D100)
 
-Card first in [game design](../../../docs/GAME_DESIGN.md) ("Forest monster ideas"; the beetle card is the template), approved
-by the author. The notice is body language in the monster's own frames plus a call in its own voice (no "!" mark, no shared
-alert sound); a lethal wind-up samples `TrapWarnings` once; no teaching room and no hint text. Effects are particles in one
-owner per `Level` (`effects.BeetleFx`); its sprite strip comes from a grid (`tools/forest_trap_sprites.py monster:<name>`).
+Card first in [game design](../../../docs/GAME_DESIGN.md) ("Forest monster ideas"; the beetle card and the spider card are the
+templates: a burst on the spot, D100, and a locked pounce with a recovery, D102), approved by the author. The notice is body
+language in the monster's own frames plus a call in its own voice (no "!" mark, no shared alert sound); a lethal wind-up samples
+`TrapWarnings` once (a base of its own goes into `TrapWarnings`, like `BITE_WARNING_SECONDS`); no teaching room and no hint
+text. Effects are particles in one owner per `Level` (`effects.BeetleFx`, `effects.SpiderFx`); its sprite strip comes from a
+grid (`tools/forest_trap_sprites.py monster:<name>`). A lethal touch that can meet a killing hit on the same frame resolves on
+the monster's next frame, so the hit wins the tie (the spider's bite).
 
 ## A monster's body (D101)
 
@@ -38,12 +41,14 @@ does, a burst or blast does not. Then:
    least 25 % of the pixels either covers must differ). A recoloured live frame is not a body.
 2. **Tier.** Draw the kill in the monster's active `dead` frame, then cross-fade into the same frame in a decor palette: a
    second grid (`art/objects/monster/<name>-body.grid`, no ink, no rim), added to `BODY_SWEEP` in `tools/check_contrast.py`.
-3. **Behaviour.** Implement `Remains`: stay in the level as a defeated enemy; react when the hero comes near (the beetle rocks,
-   a big body twitches); `crumble()` for the sword, a stone and a stomp (the stomp bounces the hero), `burnUp()` for a fireball
-   or a torch; weapons fly on. The `Player`, `Carryable` and `Fireball` loops already call these; do not add a hurtbox.
-4. **Effects and sound.** Crumble and burn particles in the monster's effects owner, sized from a measured peak; the shared
-   sounds `remains_crumble` and `remains_burn`; the reaction is silent.
-5. **Gate.** Add a `Case` to `RemainsTest`; extend the monster's `AllocationBudgetTest` scenario with the body; run
+3. **Behaviour.** Implement `Remains`: stay in the level as a defeated enemy; react when the hero comes near (the beetle and
+   the spider rock with the shared `RemainsSwing`, a big body twitches); `crumble()` for the sword, a stone and a stomp (the stomp bounces the hero), `burnUp()` for a fireball
+   or a torch; weapons fly on. The `Player`, `Carryable` and `Fireball` loops already call these (the swing that killed a
+   monster skips its body); do not add a hurtbox.
+4. **Effects and sound.** Crumble and burn go through the shared `effects.RemainsFx` (`Level.remainsFx()`), with the monster's
+   own chip colours as a static palette (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`); re-measure its pools in
+   `RemainsFxTest` if a body adds more particles. The shared sounds `remains_crumble` and `remains_burn`; the reaction is silent.
+5. **Gate.** Add a `Case` to `RemainsTest` (with its reaction); extend the monster's `AllocationBudgetTest` scenario with the body; run
    `./gradlew :core:check`.
 
 ## Keep visible contact consistent with geometry

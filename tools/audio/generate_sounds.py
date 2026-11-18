@@ -956,6 +956,140 @@ def remains_burn() -> list[float]:
         _add_tick(rng, out, start, nc, EMBER_CRACKLE_BAND, rng.uniform(*EMBER_CRACKLE_GAIN))
     return finish_rms(lowpass(out, FIREBALL_FIZZLE_LOWPASS_HZ), REMAINS_BURN_RMS_DB, REMAINS_PEAK_DB)
 
+
+# ---------------------------------------------------------------- forest spider (#328, D102)
+# Notice (spider_notice): the spider's own call (no shared alert sound, D100): four quick fang ticks climbing in pitch,
+# then a short breathy "tss" over a whispered, fried /i/. Not the beetle's two clicks and voiced chirp.
+SPIDER_NOTICE_SEED = 6901
+SPIDER_NOTICE_DURATION = 0.26
+SPIDER_TICK_TIMES = (0.012, 0.034, 0.054, 0.072)  # s, the four fang ticks, closing up
+SPIDER_TICK_LEN = 0.006                           # s, one tick
+SPIDER_TICK_BANDS = ((2600.0, 1600.0), (3000.0, 1600.0), (3500.0, 1800.0), (4100.0, 2000.0))  # rising
+SPIDER_TICK_GAIN = 0.8                            # relative to the hiss's peak
+SPIDER_HISS_START = 0.085                         # s
+SPIDER_HISS_BAND = (4800.0, 3200.0)               # "tss"
+SPIDER_HISS_ATTACK = 0.018
+SPIDER_HISS_TAU = 0.06
+SPIDER_HISS_GAIN = 0.7
+SPIDER_WHISPER_VOICE = Voice(6902, 0.15, (230.0, 200.0), FORMANTS_I, FORMANTS_I, -19.0, asp_len=0.030, asp_level=1.0,
+                             attack=0.015, tau=0.06, release=0.020, jitter=0.08, rough=1.0, rough_start=0.0, lowpass=3400.0)
+SPIDER_WHISPER_GAIN = 0.45
+SPIDER_NOTICE_RMS_DB = -19.0
+# Wind-up (spider_windup 0.5 s, spider_windup_long 0.75 s with the assist): noise-led, so it never sounds like the
+# beetle's voiced whine or hive_buzz: a hiss that tightens (its band climbs) over a low fried growl, a fang rattle that
+# speeds up, and a sharp breath in over the last 60 ms. Played once, as long as the wind-up; it runs to its end even if
+# the spider is killed in the wind-up.
+SPIDER_WINDUP_VOICES = {0.5: Voice(6903, 0.50, (85.0, 130.0), FORMANTS_UH, FORMANTS_E, -19.4, asp_len=0.020, asp_level=0.3,
+                                   attack=0.060, tau=3.0, release=0.020, jitter=0.10, rough=1.0, rough_start=0.0,
+                                   lowpass=1800.0),
+                        0.75: Voice(6904, 0.75, (85.0, 130.0), FORMANTS_UH, FORMANTS_E, -19.4, asp_len=0.020, asp_level=0.3,
+                                    attack=0.080, tau=4.5, release=0.020, jitter=0.10, rough=1.0, rough_start=0.0,
+                                    lowpass=1800.0)}
+SPIDER_WINDUP_HISS = (1400.0, 3400.0)             # Hz, band-pass centre from start to end: tightening
+SPIDER_WINDUP_HISS_BW = 1600.0
+SPIDER_WINDUP_HISS_GAIN = 0.9                     # relative to the growl's peak
+SPIDER_WINDUP_GROWL_GAIN = 0.55
+SPIDER_RATTLE = (0.09, 0.03)                      # s, rattle period at the start and at the end
+SPIDER_RATTLE_LEN = 0.005
+SPIDER_RATTLE_BAND = (3200.0, 2000.0)
+SPIDER_RATTLE_GAIN = 0.45
+SPIDER_INTAKE_LEN = 0.06                          # s, the breath in just before the leap
+SPIDER_INTAKE_BAND = (2400.0, 1800.0)
+SPIDER_INTAKE_GAIN = 0.6
+SPIDER_WINDUP_RMS_DB = -19.4
+# Leap (spider_leap): a short swish at take-off, noise sweeping up; quiet, like the bramble's lash.
+SPIDER_LEAP_SEED = 6905
+SPIDER_LEAP_DURATION = 0.16
+SPIDER_LEAP_SWEEP = (1200.0, 4200.0)              # Hz, band-pass centre from start to end
+SPIDER_LEAP_BW = 1800.0
+SPIDER_LEAP_ATTACK = 0.025
+SPIDER_LEAP_TAU = 0.08
+SPIDER_LEAP_DRIVE = 2.5                           # tanh drive: a dense, low-crest swish
+SPIDER_LEAP_RMS_DB = -21.0
+# Bite (spider_bite): at the landing, hit or miss (D93): a hard double fang snap "tch-tchk" over a short dull /u/ thud.
+SPIDER_BITE_SEED = 6906
+SPIDER_BITE_DURATION = 0.20
+SPIDER_SNAP_TIMES = (0.012, 0.040)                # s
+SPIDER_SNAP_LEN = 0.008
+SPIDER_SNAP_BAND = (2400.0, 2200.0)
+SPIDER_SNAP_GAIN = (0.65, 0.8)                    # the second snap is the harder one; kept under the thud's peak
+SPIDER_THUD_VOICE = Voice(6907, 0.10, (170.0, 110.0), FORMANTS_U, FORMANTS_U, -18.0, asp_len=0.006, asp_level=0.5,
+                          attack=0.010, tau=0.060, release=0.020, jitter=0.05, rough=0.6, rough_start=0.2, lowpass=1600.0)
+SPIDER_THUD_START = 0.030
+SPIDER_THUD_GAIN = 1.0
+SPIDER_BITE_RMS_DB = -18.0
+
+
+def _add_at(out, start, x, gain):
+    for i, v in enumerate(x[:max(0, len(out) - start)]):
+        out[start + i] += gain * v
+
+
+def spider_notice() -> list[float]:
+    rng = random.Random(SPIDER_NOTICE_SEED)
+    out = [0.0] * n_samples(SPIDER_NOTICE_DURATION)
+    start = n_samples(SPIDER_HISS_START)
+    nh = len(out) - start
+    hiss = bandpass(noise(rng, nh), *SPIDER_HISS_BAND)
+    hp = max(abs(v) for v in hiss) or 1.0
+    env = envelope(nh, SPIDER_HISS_ATTACK, SPIDER_HISS_TAU)
+    _add_at(out, start, [h / hp * e for h, e in zip(hiss, env)], SPIDER_HISS_GAIN)
+    _add_at(out, start, render_voice(SPIDER_WHISPER_VOICE), SPIDER_WHISPER_GAIN)
+    for t, band in zip(SPIDER_TICK_TIMES, SPIDER_TICK_BANDS):
+        _add_tick(rng, out, n_samples(t), n_samples(SPIDER_TICK_LEN), band, SPIDER_TICK_GAIN)
+    return finish_rms(out, SPIDER_NOTICE_RMS_DB)
+
+
+def _spider_windup(seconds: float) -> list[float]:
+    voice = SPIDER_WINDUP_VOICES[seconds]
+    growl = render_voice(voice)
+    rng = random.Random(voice.seed)
+    n = len(growl)
+    lo, hi = SPIDER_WINDUP_HISS
+    hiss = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, SPIDER_WINDUP_HISS_BW)
+    hp = max(abs(v) for v in hiss) or 1.0
+    env = envelope(n, voice.attack, voice.tau)
+    out = [SPIDER_WINDUP_GROWL_GAIN * g + SPIDER_WINDUP_HISS_GAIN * h / hp * e for g, h, e in zip(growl, hiss, env)]
+    t, slow, fast = 0.0, *SPIDER_RATTLE
+    while True:   # the fang rattle speeds up through the wind-up
+        t += slow + (fast - slow) * (t / seconds)
+        if t >= seconds - SPIDER_INTAKE_LEN:
+            break
+        _add_tick(rng, out, n_samples(t), n_samples(SPIDER_RATTLE_LEN), SPIDER_RATTLE_BAND, SPIDER_RATTLE_GAIN)
+    ni = n_samples(SPIDER_INTAKE_LEN)
+    intake = bandpass(noise(rng, ni), *SPIDER_INTAKE_BAND)
+    ip = max(abs(v) for v in intake) or 1.0
+    _add_at(out, n - ni, [v / ip * (j / ni) for j, v in enumerate(intake)], SPIDER_INTAKE_GAIN)
+    return finish_rms(out, SPIDER_WINDUP_RMS_DB)
+
+
+def spider_windup() -> list[float]:
+    return _spider_windup(0.5)
+
+
+def spider_windup_long() -> list[float]:
+    return _spider_windup(0.75)
+
+
+def spider_leap() -> list[float]:
+    rng = random.Random(SPIDER_LEAP_SEED)
+    n = n_samples(SPIDER_LEAP_DURATION)
+    lo, hi = SPIDER_LEAP_SWEEP
+    swish = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, SPIDER_LEAP_BW)
+    peak = max(abs(v) for v in swish) or 1.0
+    env = envelope(n, SPIDER_LEAP_ATTACK, SPIDER_LEAP_TAU)
+    return finish_rms([math.tanh(SPIDER_LEAP_DRIVE * v / peak) * e for v, e in zip(swish, env)], SPIDER_LEAP_RMS_DB,
+                      REMAINS_PEAK_DB)
+
+
+def spider_bite() -> list[float]:
+    rng = random.Random(SPIDER_BITE_SEED)
+    out = [0.0] * n_samples(SPIDER_BITE_DURATION)
+    _add_at(out, n_samples(SPIDER_THUD_START), render_voice(SPIDER_THUD_VOICE), SPIDER_THUD_GAIN)
+    for t, gain in zip(SPIDER_SNAP_TIMES, SPIDER_SNAP_GAIN):
+        _add_tick(rng, out, n_samples(t), n_samples(SPIDER_SNAP_LEN), SPIDER_SNAP_BAND, gain)
+    return finish_rms(out, SPIDER_BITE_RMS_DB)
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -966,7 +1100,9 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet,
                "fireball_fizzle.wav": fireball_fizzle, "beetle_notice.wav": beetle_notice,
                "beetle_windup.wav": beetle_windup, "beetle_windup_long.wav": beetle_windup_long, "beetle_pop.wav": beetle_pop,
-               "remains_crumble.wav": remains_crumble, "remains_burn.wav": remains_burn}
+               "remains_crumble.wav": remains_crumble, "remains_burn.wav": remains_burn,
+               "spider_notice.wav": spider_notice, "spider_windup.wav": spider_windup,
+               "spider_windup_long.wav": spider_windup_long, "spider_leap.wav": spider_leap, "spider_bite.wav": spider_bite}
 
 
 def generate(out_dir: Path) -> list[Path]:

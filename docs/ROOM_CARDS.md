@@ -78,6 +78,7 @@ what the player does about them.
 | yellowmob | `YellowMob` | stomps a walking enemy |
 | bat-enemy | `Bat` | passes or beats a flying enemy |
 | beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) |
+| spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102) |
 | boss | `Boss` | fights the stage boss |
 | fireball-refill | `FireballRefill` | picks up a ranged-attack charge |
 | coin | `Collectable:Coin` | collects coins, often off the required route |

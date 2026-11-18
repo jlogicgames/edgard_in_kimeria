@@ -222,6 +222,25 @@ class BeetleTest {
         }
     }
 
+    /**
+     * The sword on a live beetle bursts it (D100), as on main before #328: it never leaves a body, so the swing's rule of not
+     * crumbling the body of the monster it has just killed (D101 update, #328) changes nothing for the beetle. Pinned over the
+     * whole swing: no beetle and no body at any frame after the hit.
+     */
+    @Test void aSwordKillLeavesNoBeetleBodyAtAnyFrameOfTheSwing() {
+        Level level = level();
+        Beetle b = beetle(level);
+        place(level, SWORD_RANGE);
+        until(level, () -> b.position.x <= LEFT_END + .01f && b.getState() == Beetle.State.CHASE, 60 * 5);
+        harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level); harness.held.clear();
+        assertTrue(b.isRemoved(), "burst on the hit");
+        for (int f = 0; f < 45; f++) {
+            assertNull(beetle(level), "no beetle and no body, frame " + f);
+            assertFalse(b.isRemains());
+            frame(level);
+        }
+    }
+
     @Test void aStompOnACalmBeetleBurstsItAtOnce() {
         Level level = level();
         Beetle b = beetle(level);
@@ -314,7 +333,7 @@ class BeetleTest {
         for (int f = 0; f < 60 && !b.isRemoved(); f++) { frame(level); bounced |= level.player.velocity.y < 0; }
         assertTrue(b.isRemoved(), "a stomp crumbles the body, as the sword and a stone do");
         assertTrue(bounced, "the normal stomp bounce");
-        assertTrue(kinds(level.beetleFx().hard(), KimeriaParticleSystem.KIND_GRIT) >= 10, "brown chips fall");
+        assertTrue(kinds(level.remainsFx().hard(), KimeriaParticleSystem.KIND_GRIT) >= 10, "brown chips fall");
         assertTrue(harness.sounds.contains(Beetle.CRUMBLE_SOUND));
         assertTrue(alive(level));
     }
@@ -326,7 +345,7 @@ class BeetleTest {
         place(level, 254);
         harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level); harness.held.clear();
         until(level, b::isRemoved, 30);
-        assertTrue(kinds(level.beetleFx().hard(), KimeriaParticleSystem.KIND_GRIT) >= 10, "brown chips fall");
+        assertTrue(kinds(level.remainsFx().hard(), KimeriaParticleSystem.KIND_GRIT) >= 10, "brown chips fall");
         assertTrue(harness.sounds.contains(Beetle.CRUMBLE_SOUND));
         assertFalse(harness.sounds.contains("beetle_pop"), "a body does not burst");
         assertTrue(alive(level));
@@ -360,7 +379,7 @@ class BeetleTest {
         assertTrue(fireballFlying(level), "the ball is not spent on a body");
         assertTrue(harness.sounds.contains(Beetle.BURN_SOUND));
         settle(level, 3);
-        assertTrue(flames(level.beetleFx().hard()) > 0, "flames in the fireball's ramp");
+        assertTrue(flames(level.remainsFx().hard()) > 0, "flames in the fireball's ramp");
         assertFalse(b.isRemains(), "a burning body is out of reach");
         until(level, b::isRemoved, (int) Math.ceil(Beetle.BURN_SECONDS / STEP) + 2);
         assertTrue(alive(level));

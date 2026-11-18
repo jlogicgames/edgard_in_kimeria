@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.world;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
+import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -37,17 +39,23 @@ class RemainsTest {
     /**
      * The body's silhouette must differ from every live frame, drawn either way round, in at least this share of the pixels
      * either covers. The beetle on its back differs from its closest live frames (look and wiggle, mirrored) in 30.5 % of them,
-     * measured 2026-11-18; a recoloured live frame would differ in 0 %.
+     * measured 2026-11-18; the spider on its back, legs curled up, from its closest (recover) in 48.3 %, measured 2026-11-19; a
+     * recoloured live frame would differ in 0 %.
      */
     private static final float POSE_DIFFERENCE = .25f;
 
-    /** One monster that leaves a body: its test map, how to find it, how to kill it quietly, and where its art is. */
+    /**
+     * One monster that leaves a body: its test map, how to find it, where its art is, and how its body reacts to the hero
+     * passing (the beetle and the spider rock; a big body would twitch), read as a size that is 0 at rest.
+     */
     private record Case(String map, Function<Level, Enemy<?>> find, String sheet, int frameWidth, int frameHeight,
-                        int[] liveFrames, int bodyFrame, String bodySheet) { }
+                        int[] liveFrames, int bodyFrame, String bodySheet, ToDoubleFunction<Remains> reaction) { }
 
     private static final Map<String, Case> CASES = Map.of(
         "Beetle", new Case("beetle-test", RemainsTest::beetle, "assets/images/objects/monster-beetle.png", 24, 16,
-            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, 9, "assets/images/objects/monster-beetle-body.png"));
+            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, 9, "assets/images/objects/monster-beetle-body.png", b -> ((Beetle) b).rockAngle()),
+        "Spider", new Case("spider-test", RemainsTest::spider, "assets/images/objects/monster-spider.png", 32, 16,
+            new int[]{0, 1, 2, 3, 4, 5, 6, 7}, 8, "assets/images/objects/monster-spider-body.png", b -> ((Spider) b).rockAngle()));
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -56,6 +64,11 @@ class RemainsTest {
 
     private static Enemy<?> beetle(Level level) {
         for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Beetle b) return b;
+        return null;
+    }
+
+    private static Enemy<?> spider(Level level) {
+        for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Spider s) return s;
         return null;
     }
 
@@ -144,7 +157,7 @@ class RemainsTest {
             var box = body.remainsInto(new com.badlogic.gdx.math.Rectangle());
             level.player.position.set(box.x - 29 + 2, box.y + box.height - 48);   // the hero's body just touching it
             float max = 0;
-            for (int f = 0; f < ROCK_FRAMES; f++) { frames(level, 1); max = Math.max(max, Math.abs(((Beetle) body).rockAngle())); }
+            for (int f = 0; f < ROCK_FRAMES; f++) { frames(level, 1); max = Math.max(max, Math.abs((float) c.reaction().applyAsDouble(body))); }
             assertTrue(max > 0, "it reacts to the hero passing");
         }
     }
