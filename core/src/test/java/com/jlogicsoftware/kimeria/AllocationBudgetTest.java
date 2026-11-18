@@ -102,7 +102,7 @@ class AllocationBudgetTest {
      * room at rest (the RedMob asleep, the refill), update + render. Ceiling = highest run + about 10 %.
      */
     static final double FOREST_1_MOB_CEILING = 620;
-    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill), update + render. Ceiling = highest run + about 10 %. */
+    /** Measured 1,162.1 to 1,162.2 B/frame (guard asleep, 3 isolated runs and the full class) and 849.7 to 1,017.8 B/frame (guard awake: JIT-dependent, always below the asleep scene) (#104, D68, 2026-11-15; the guard's attack adds nothing measurable): the forest-1 guard room (a lever, a raised ladder, the tunnel with its guard and spore puffball, the roof, the refill), update + render. Ceiling = highest run + about 10 %. Since #327 the room holds a beetle past the tunnel: 544.5 B/frame in 3 isolated runs (2026-11-18), the beetle crawling (the hero at the entrance is out of its hearing); its other states are {@link #beetleThroughTheRealLevel}. */
     static final double FOREST_1_GUARD_CEILING = 1280;
     /**
      * Measured 513.8 to 564.5 B/frame in 10 isolated runs of the class (#418, D86, 2026-11-17): at rest 513.8 to 561.9, riding the lift 561.6 to 562.3, pulling the lever 564.3 to 564.5
@@ -126,6 +126,8 @@ class AllocationBudgetTest {
      * together with the other room scenes (the 897.8 runs had the route room at 897.9 and the guard room at 906.2). The cost is the harness and
      * level code, as the other room scenarios; the ceiling is the highest full-suite run plus about 10 %, the whole-room convention of
      * FOREST_1_ROUTE_CEILING (1130) and FOREST_1_GUARD_CEILING (1280). A first ceiling of 880, set from the first 3 runs, failed the next 2.
+     * Since #327 the room holds a beetle at the sound tree's foot: 224.0 B/frame in 3 isolated runs (2026-11-18), the beetle crawling (the hero at
+     * the entrance is out of its hearing); its other states are {@link #beetleThroughTheRealLevel}.
      */
     static final double FOREST_1_TREE_CEILING = 990;
     /**

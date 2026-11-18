@@ -384,19 +384,20 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 | --- | --- |
 | Level | forest-1, play order 2, room 7 of 9 (768 px) |
 | Role | combination |
-| Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route. |
-| Introduces | - |
+| Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route; then a beetle on the open floor past the tunnel: shoot it, lure it to commit and step back, or run past it. |
+| Introduces | beetle |
 | Develops | redmob: a guard in a 32 px tunnel that cannot be jumped or stomped, so it must be beaten or avoided by the roof |
 | Combines | redmob + puffball: the cloud covers every place the sword reaches from, so the melee needs the calm; ladder + fireball-refill: the lever-lowered ladder leads to a roof route that pays one charge |
 | Repeats | lever |
-| Mastered route | 6.83 s timed melee, 6.15 s with a fireball, 7.67 s by the roof (`Forest1CombatTest`); target about 20 s |
+| Mastered route | 6.83 s timed melee, 6.15 s with a fireball, 7.67 s by the roof, all unchanged by the beetle: the floor routes run past it and it bursts behind the hero, and the roof run drops past it without triggering it and reaches the exit alive (`Forest1CombatTest`); from the tunnel's mouth to the exit, 3.65 s killing the beetle with a fireball, 4.53 s luring it (step out, step back into the tunnel, let it burst); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)); a straight run from the entrance dies once by design (D68) |
-| Retry cost | about 1.7 s for the first walk-in death; under 8 s at worst |
+| Retry cost | about 1.7 s for the first walk-in death (the cloud); 6.08 s for a death in the beetle's burst: the mastered melee from the entrance (x 2176), then a stop beside the beetle when it commits (`Forest1CombatTest`) |
 | Optional | the roof route and its refill |
-| D26 | the floor route needs no support; the roof is optional (D68) |
-| Hints | none |
-| Status | D72 audit 2026-11-16: keep |
-| Decisions | D68 |
+| D26 | the floor route needs no support; the roof is optional (D68); the beetle never blocks the exit: its blast (x 2572-2716 at most) reaches neither the tunnel (it ends at x 2560), nor the roof's drop (x 2704 on; its trigger ends at x 2696), nor the exit (x 2800), and a hero with no charge passes it by luring or by running on |
+| Hints | none (no hint for the beetle: new monsters are met in play, D100) |
+| Landmark | the beetle crawling under the roof's end, in view from the entrance |
+| Status | D72 audit 2026-11-16: keep. [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's first room. It is the only unknown on screen (the guard and the puffball are known) and is met after the tunnel, apart from the guard and the cloud; it is in view, crawling, from the entrance and hears the hero from inside the tunnel, which is a shelter its burst never reaches. Built and tested with a scripted hero; the author played the room on 2026-11-18 and approved the beetle's look and sounds ("all good", #327) |
+| Decisions | D68, D100, D101 |
 
 ### forest-1-hive
 
@@ -443,17 +444,17 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb, coin |
-| Develops | crumble-support: on a climb a broken branch costs height, not life, and the escape is upward (the next branch), not across, and the rotten column falls behind the climber, so a stop rides him down to the floor |
+| Develops | crumble-support: on a climb a broken branch costs height, not life, and the escape is upward (the next branch), not across, and the rotten column falls behind the climber, so a stop rides him down to the floor; beetle: it crawls at the sound tree's foot, not the rotten column's, so the sure climb costs a lure or a charge while the fast one stays free, and one branch up the hero is above its hearing band and it loses him |
 | Combines | - |
-| Mastered route | 4.95 s by the rotten column, 6.23 s by the sound tree (`TreeClimbTest`); target about 20 s |
+| Mastered route | 4.95 s by the rotten column (the beetle never commits), 6.23 s by the sound tree (`TreeClimbTest`), both unchanged by the beetle; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | no death by design: the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line (`TreeClimbTest`) |
-| D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`) |
+| Retry cost | one possible death, standing in the beetle's burst: a hero who walks to the sound tree and stops beside it when it commits dies 5.12 s after the entrance (`TreeClimbTest`); the rotten branches never kill: the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line |
+| D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`); the beetle's blast (x 3236-3412 at most, y 288-320) never reaches the rotten column (x 3184-3216) nor any branch, and a hero on the lowest branch is out of its hearing |
 | Optional | one coin on the floor at x 3040 (id 145), 128 px from the entrance and left of the first trunk, off the climb: the level's first coin, a pure first sighting (forest-1 has no healer, so it feeds no recipe; the healer counts only the forest's own coins) |
 | Hints | none |
 | Landmark | the two trees, with the level's end on the sound tree's crown |
-| Status | [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) (D96): the first coin was added here, so `forest-entry` meets coins as a repeat |
-| Decisions | D80, D96 |
+| Status | [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) (D96): the first coin was added here, so `forest-entry` meets coins as a repeat. [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's second room, met after `forest-1-guard` and `forest-1-hive`; it is known here, so the branch climb and the coin stay the only unknowns; the author played the room on 2026-11-18 and approved the beetle's look and sounds ("all good") |
+| Decisions | D80, D96, D100 |
 
 ## forest-2 (play order 3)
 

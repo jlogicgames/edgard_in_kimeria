@@ -1173,10 +1173,20 @@ y320        ================================================   floor; end walls 
 | Puffball | `Puffball` (id 77) | 2375 | 304 | 16 x 16 | `period` 4, `cloud` 1, `phase` 2.2 | the second threat: swell 0.8 s then a 1 s cloud every 4 s (calm 2.2 s); cloud x 2373-2393, y 298-318, over every place from which the sword reaches the guard |
 | Guard | `RedMob` (id 69) | 2394 | 288 | 48 x 32 | `offNeg` 0, `offPos` 0 | in the tunnel on the floor; never moves; faces left; strikes only within 6 px of its body (x 2400-2420); the sword reaches it from a gap of up to 17 px |
 | Refill | `FireballRefill` (id 76) | 2640 | 192 | 16 x 16 | none | one charge (D27) on the roof's far part; not a coin |
+| Beetle | `Beetle` (id 146, #327) | 2632 | 304 | 24 x 16 | `offNeg` 2, `offPos` 2 | the beetle's first room (D100): its centre crawls x 2612-2676 on the floor past the tunnel, in view from the entrance; its blast covers x 2572-2716 at most, so it never reaches the tunnel (a shelter), the roof's drop (its trigger ends at x 2696) or the exit |
 | Room 3 exit | `RoomExit` (id 82), room `forest-1-guard` | 2800 | 272 | 16 x 48 | none | on the floor, 96 px past the slab's end, 48 px from the right wall; where the level `Checkpoint` (id 7) stood until #349 moved it to the tree room (same x: same times) |
 | Floor, walls | collisions 72, 70, 71 | 2112 | 320 | 768 x 48; walls 16 x 320 at x 2112 and 2864 | | closed room; the invisible ceiling (D38) is added by the loader (`RoomCeilingTest` covers this room) |
 
 Tiles: the floor and the two end columns copy room 2's (ids 22-24, 42-44, 62-64, wall columns 79/99/105/119/139); the slab uses the platform block ids 26-28 that `forest-1` already uses (25 tiles, columns 144-168); the roof block uses the ledge ids 42/43/44 of room 2's exit ledge (rows 14-17, columns 144-159). No new art, no hint, one monster, one trap, no falling platform. Rooms 1 and 2 are unchanged except for the route room's exit.
+
+**Beetle (#327, 2026-11-18).** The beetle (id 146, row above) was added past the tunnel by the author's approval of its card
+([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); the guard, the puffball and the roof are unchanged. Measured in
+`Forest1CombatTest`: the three pinned routes keep their times (melee 6.83 s, shot 6.15 s, roof 7.67 s), because a hero
+running on triggers it and is clear of the blast when it bursts behind him; a hero in the tunnel's mouth is heard (its
+notice beat) but never reached; from the mouth to the exit, a fireball kill takes 3.65 s and a lure (step out until it
+commits, step back into the tunnel, let it burst) 4.53 s; the roof run drops past it without triggering it (7.67 s); a death
+in its burst after the mastered melee comes 6.08 s after the entrance. All four are pinned to 0.1 s. The author played the
+room on 2026-11-18 and approved the beetle's look and sounds.
 
 ### How it plays
 
@@ -1262,9 +1272,10 @@ y320        ========================================   floor; end walls at x 288
 | Trunks | `Decor` (ids 95, 96) | 3168, 3264 | 32 | 16 x 288 | `kind` trunk | scenery behind the branches (decor tier, no collision) |
 | Floor, walls | collisions 79, 80, 81 | 2880 | 320 | 640 x 48; walls 16 x 320 at x 2880 and 3504 | | closed room; the invisible ceiling is added by the loader (`RoomCeilingTest`) |
 | Coin | `Collectable` Coin (id 145) | 3040 | 304 | 16 x 16 | none | the first coin of the game, a sighting only: forest-1 has no healer |
+| Beetle | `Beetle` (id 147, #327) | 3264 | 304 | 24 x 16 | `offNeg` 0, `offPos` 6 | at the sound tree's foot (D100): its centre crawls x 3276-3372, its blast covers x 3236-3412 at most, clear of the rotten column (x 3184-3216) and under every branch |
 | Deadline | `Deadline` (id 26) | -1728 | 384 | 5376 x 16 | | widened to cover the new room |
 
-Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint, no enemy, no lethal trap. One coin (id 145, x 3040, y 304) on the floor, 128 px from the entrance and off the climb: the level's first coin ([D96](DECISIONS.md#d96-the-first-coin-is-met-in-the-tree-room-and-the-bat-ingredient-in-the-wall-room-417-2026-11-17), #417).
+Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint and no lethal trap; one monster, the beetle added by #327. One coin (id 145, x 3040, y 304) on the floor, 128 px from the entrance and off the climb: the level's first coin ([D96](DECISIONS.md#d96-the-first-coin-is-met-in-the-tree-room-and-the-bat-ingredient-in-the-wall-room-417-2026-11-17), #417).
 
 ### How it plays
 
@@ -1272,11 +1283,11 @@ From the entrance both trees are in view. The near tree's branches are grey and 
 
 ### Recovery and D26 (swept by `TreeClimbTest`)
 
-A fallen branch stays fallen until death or a healer revisit; the hero cannot die here, so within a visit it stays fallen. The sure line uses no rotten branch and reaches the crown with any of the 32 subsets of the column gone. Walking off a sinking rotten branch to either side, at seven moments of its warning and fall, always ends alive on the floor or a sound branch, never inside a solid. The load refuses a rotten branch that is the only way up or that hangs above a one-way platform (`FallingPlatform.branchProblem`, `tools/check_tiled_links.py`).
+A fallen branch stays fallen until death or a healer revisit; the branches never kill, so within a visit it stays fallen unless the hero dies in the beetle's burst (#327: a hero who walks to the sound tree and stops beside it when it commits dies 5.12 s after the entrance; the fast line never makes it commit, and a hero on the lowest branch is above its hearing band). The sure line uses no rotten branch and reaches the crown with any of the 32 subsets of the column gone. Walking off a sinking rotten branch to either side, at seven moments of its warning and fall, always ends alive on the floor or a sound branch, never inside a solid. The load refuses a rotten branch that is the only way up or that hangs above a one-way platform (`FallingPlatform.branchProblem`, `tools/check_tiled_links.py`).
 
 ### Tests
 
-`TreeClimbTest` (headless, real shipped map): census and coordinates, the room chain and retry, the placement under D69, the fast and sure lines and their order, the five stop-and-ride routes, the D26 sweep, the sideways exits, the telegraph and the one-way trigger, the load checks. Allocation: two scenes in `AllocationBudgetTest` (D80). Changed existing tests are listed in D80.
+`TreeClimbTest` (headless, real shipped map): census and coordinates, the room chain and retry, the placement under D69, the fast and sure lines and their order, the five stop-and-ride routes, the D26 sweep, the sideways exits, the telegraph and the one-way trigger, the load checks; since #327 the beetle's range and blast, the fast and sure lines past it, losing it from the lowest branch, and the room's one death. Allocation: two scenes in `AllocationBudgetTest` (D80). Changed existing tests are listed in D80.
 
 ## forest-2 trap placement plan (#261, D59)
 
