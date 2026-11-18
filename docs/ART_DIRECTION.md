@@ -661,7 +661,7 @@ The author approved the plan with these answers:
 
 ## Effects from pixelfx (plan, 2026-11-16, [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396))
 
-A plan agreed with the author, not implemented. [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) is a library of
+A plan agreed with the author; only the fireball is built (below). [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) is a library of
 244 procedural pixel art effects (MIT; credit Patch and Hugo Duprez in a notice file when the first effect lands).
 
 - **Category.** Only time-varying VFX come from it (blasts, smoke, dust, sparks, splashes, slashes, flashes, shock
@@ -680,6 +680,39 @@ A plan agreed with the author, not implemented. [patch-gg/pixelfx](https://githu
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
 | All worlds | [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402) | pickup burst, respawn, lost heart, level and room transitions |
+
+**Forest audit (#397, author's decision 2026-11-18).** The Forest effects that already exist are kept, not replaced by pixelfx
+versions: the bomb's explosion shader (`BombExplosionEffect`), the stump and root blast sheet (`ExplosiveTrap`), the falling stone's
+impact (`EnvironmentFx.stoneImpact`), the boss strike's `ShockwaveEffect`, the honey fungus spores (`SporeCloud`) and the D65 blood.
+The one gap was the hero's fireball, which had no trail and vanished where it stopped.
+
+**Fireball, done (#397, approved by the author 2026-11-18).** Route: particles on `KimeriaParticleSystem` (`effects.FireballFx`, one
+per `Level`), not an exported sheet, because the effect must follow the ball and react to what it hits; the ball keeps its authored
+sprite. pixelfx's `fire/fireball`, `impacts/hit-spark` and `impacts/blunt-hit` were a motion, colour and timing reference only: no
+code, no exported asset and no constant was copied, so no notice file is needed for it. The look, after the author's first review:
+
+- **Warm palette only**, from the fireball sprite: pale `fdfaa0`, yellow `fde902`, orange `fc5601`, red `c50e10`. No smoke, no grey,
+  no debris.
+- **Hard pixels that shrink out**: trail, splash and sparks are 1 to 3 px opaque squares (`KIND_FLAME`, added for this), so nothing
+  fades into olive or magenta over the sky. A trail flame's colour sets its life (pale .04 to .06 s, red .12 to .17 s), so the
+  trail is short (about 50 px of flight at most) and cools from the ball outward; one flame per 2 px flown, so it looks the same at
+  any frame rate.
+- **Warm halo**: a steady additive `SoftDot` light under the flying ball (30 px) and one fading halo per hit (30 px, 0.2 s; 46 px,
+  0.3 s on the boss; 16 px on a burn-out).
+- **Where it stops**: a flame splash that rises and dies out (24 flames and 14 sparks, living 0.2 to 0.32 s) thrown back off a wall
+  or on along the blow into a creature, stump, root or hive; on the boss a squashed ring of 30 flames and 22 sparks (0.3 to 0.44 s)
+  over the boss's own hurt flash (a fireball the boss's orange counter sequence rejects bursts lightly, like a wall hit); at the end of its life a burn-out of 4 small rising flames. No blood (D99), no shake, the same with
+  and without the elixir.
+- **Impact ring** (author's addition, approved 2026-11-18): an expanding fire-coloured ring at every hit, drawn through the existing
+  `shockwave.frag` with the uniforms `ShockwaveEffect` sets (the F3 debug ring), from a fixed pool of 4 ring slots in `FireballFx`, so
+  no object is created per hit; no existing shader was edited, and there is no screen ripple (`RippleEffect`). Light hit: 0.26 s,
+  20 px radius, 3 px wide; boss: 0.36 s, 36 px, 5 px; none on a burn-out. The ring ends a little before the burst's particles, so
+  the two read as one blast. The shader grows the ring with a slow start, so it is fed an eased progress, `0.3 + 0.58 * (1 - (1 -
+  t)^2)`: visible from the first frame of contact, fast, and stopped at 0.88 while still orange (the shader's last stretch reads
+  grey over the blue sky). It is drawn additively with a warm colour intensity (4, 2.2, 0.3), because the shader's premultiplied
+  output darkens the sky under normal blending. Where the shader cannot be built (`Shaders.tryLoad`) the ring is skipped.
+- **Sound**: `fireball_fizzle` on a terrain hit and, at 0.6 volume, on a burn-out (SOUND_DIRECTION.md); a creature, stump or hive hit
+  keeps its own sound.
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

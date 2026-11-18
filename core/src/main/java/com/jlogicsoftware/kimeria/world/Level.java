@@ -12,6 +12,7 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
+import com.jlogicsoftware.kimeria.effects.FireballFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
@@ -148,6 +149,9 @@ public class Level implements WorldObject {
     private static final long FX_SEED_MIX = 0xC2B2AE3D27D4EB4FL;
     /** All blood of the level: no object is queued per hit. Cleared with the room. */
     private final KimeriaBloodSystem blood = new KimeriaBloodSystem(BLOOD_CAPACITY, TimeUtils.nanoTime() ^ BLOOD_SEED_MIX);
+    private static final long FIREBALL_FX_SEED_MIX = 0x94D049BB133111EBL;
+    /** The fireballs' trails and hits (#397): one for the level, like the blood. Cleared with the room. */
+    private final FireballFx fireballFx = new FireballFx(TimeUtils.nanoTime() ^ FIREBALL_FX_SEED_MIX);
 
     private final Assets assets;
     private final GameContext game;
@@ -269,6 +273,9 @@ public class Level implements WorldObject {
     private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
     /** The ember fissure's sounds (#366): the warning rumble and the jet's roar. */
     static final String FISSURE_RUMBLE_SOUND = "fissure_rumble", EMBER_JET_SOUND = "ember_jet";
+    /** The fireball going out on terrain or at the end of its life (#397); the burn-out plays it quieter. */
+    static final String FIREBALL_FIZZLE_SOUND = "fireball_fizzle";
+    private static final float BURN_OUT_VOLUME = .6f;
     private final EnvironmentFx fx;
     private final FairyGuide fairy;
 
@@ -443,7 +450,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
         victory = completionSent = false;
@@ -482,6 +489,14 @@ public class Level implements WorldObject {
 
     /** The level's blood, for tests. */
     public KimeriaBloodSystem bloodParticles() { return blood; }
+
+    /** The fireballs' trail and hit particles (#397); the fireball writes into them, tests read them. */
+    public FireballFx fireballFx() { return fireballFx; }
+
+    /** The fireball's fizzle (#397): a hit on terrain at full volume, a burn-out at the end of its life quieter. */
+    public void fireballFizzle(boolean burnOut) {
+        if (game.playSounds()) game.playSound(FIREBALL_FIZZLE_SOUND, burnOut ? BURN_OUT_VOLUME : 1);
+    }
 
     public Level(Assets assets, GameContext game, Player player, String levelName,
                  Supplier<Rectangle> visibleWorldRect) {
@@ -1425,6 +1440,7 @@ public class Level implements WorldObject {
         for (int i = 0; i < ambience.size(); i++) ambience.get(i).update(dt);
         // Before the objects: a hit this frame sprays after this point, so its drops first move next frame, as queued objects did.
         blood.update(dt);
+        fireballFx.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
         updateDecor(dt);
@@ -1494,6 +1510,7 @@ public class Level implements WorldObject {
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).render(batch);
         for (int i = 0; i < objects.size(); i++) objects.get(i).render(batch);
         blood.render(batch);
+        fireballFx.render(batch);
         fx.render(batch);
         for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
         if (!player.isRemoved()) player.render(batch);

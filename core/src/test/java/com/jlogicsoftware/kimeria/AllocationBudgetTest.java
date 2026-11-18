@@ -158,6 +158,11 @@ class AllocationBudgetTest {
 
     /** Measured in 3 runs (#347): a 24-particle stone landing every 60 frames, spawn, update and render, like JUMP_DUST_CEILING. */
     static final double STONE_IMPACT_CEILING = 8;
+    /** Measured 2.8, 2.8, 2.8, 2.8, 2.8 and 0.0 B/frame in 6 runs (2026-11-18, #397 rework; the same 8 B ceiling as the other isolated paths); the 2.8 is a one-time ~3.4 KB in the first measurement of a fresh JVM, not a per-frame cost: a probe (2026-11-18) read 2.8 or 0.3 on its first run and 0.0 on every repeat in the same JVM, and 0.0 to 0.1 with either the ball's or the effect's render left out, so it is a one-time cost of the first run of that combined path whose source was not identified (JIT warm-up or a one-time lazy initialisation); no ball stops within the measured frames, so {@code playSounds()} is never reached here: a fireball flying through the real level, its halo drawn, its trail spawned, updated and drawn every frame, a new ball every 60 frames. */
+    static final double FIREBALL_TRAIL_CEILING = 8;
+    /** Measured 0.0 B/frame in 6 runs (2026-11-18, #397), and 0.0 in 3 more runs with the impact ring, 0.2 and 0.3 in two full-suite runs; headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles and the ring slots: a fireball burst every 60 frames through the real {@code Level.fireballFx()} (light, heavy, burn-out in turn), updated and drawn each frame. */
+    static final double FIREBALL_IMPACT_CEILING = 8;
+    private static final int FIREBALL_ROOM = 2, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
 
     /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
     static final double BOSS_HUD_CEILING = 8;
@@ -628,6 +633,52 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "the impact must actually throw particles in this scenario");
         assertWithinBudget("stone impact", STONE_IMPACT_CEILING, bytes);
+    }
+
+    /**
+     * A fireball shot every {@link #BURST_CYCLE_FRAMES} frames along a free line of forest-1 room 2 (#397): {@code Fireball.update}
+     * sheds its trail into {@code Level.fireballFx()}, which is updated and drawn each frame. The balls are built before the probe.
+     */
+    @Test void fireballTrailThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-1", FIREBALL_ROOM);
+        Rectangle line = new Rectangle(), room = level.currentRoomBounds();
+        float reach = STEP * BURST_CYCLE_FRAMES * 280 + Fireball.BODY_SIZE;
+        float startX = Float.NaN, startY = 0;
+        for (float y = room.y + Fireball.BODY_SIZE; Float.isNaN(startX) && y < room.y + room.height - Fireball.BODY_SIZE; y += Fireball.BODY_SIZE)
+            for (float x = room.x; x < room.x + room.width - reach; x += Fireball.BODY_SIZE)
+                if (!level.blocksObject(line.set(x, y, reach, Fireball.BODY_SIZE), false)) { startX = x; startY = y; break; }
+        assertFalse(Float.isNaN(startX), "the room must have a free line for this scenario");
+        Fireball[] shots = new Fireball[FIREBALL_SHOTS];
+        for (int k = 0; k < shots.length; k++) shots[k] = new Fireball(level, startX, startY, true);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            Fireball shot = shots[Math.min(i / BURST_CYCLE_FRAMES, shots.length - 1)];
+            if (!shot.isRemoved()) { shot.update(STEP); shot.render(batch); }
+            level.fireballFx().update(STEP);
+            level.fireballFx().render(batch);
+            peak[0] = Math.max(peak[0], level.fireballFx().hard().count());
+        });
+        assertTrue(peak[0] > 0, "the trail must actually burn in this scenario");
+        assertWithinBudget("fireball trail", FIREBALL_TRAIL_CEILING, bytes);
+    }
+
+    /** A fireball burst every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fireballFx()} (#397): a light hit, the boss's heavy hit and a burn-out in turn, each over its whole life. */
+    @Test void fireballImpactThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-1", FIREBALL_ROOM);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) {
+                int kind = i / BURST_CYCLE_FRAMES % FIREBALL_BURST_KINDS;
+                if (kind == 0) level.fireballFx().hit(100, 200, -1);
+                else if (kind == 1) level.fireballFx().heavyHit(100, 200, 1);
+                else level.fireballFx().fizzle(100, 200);
+            }
+            level.fireballFx().update(STEP);
+            level.fireballFx().render(batch);
+            peak[0] = Math.max(peak[0], level.fireballFx().soft().count() + level.fireballFx().hard().count());
+        });
+        assertTrue(peak[0] > 0, "the bursts must actually throw particles in this scenario");
+        assertWithinBudget("fireball impact", FIREBALL_IMPACT_CEILING, bytes);
     }
 
     /** A bush brushed by a walking hero every {@link #BURST_CYCLE_FRAMES} frames (its animation lasts 0.3 s): {@code notice}, {@code update} and {@code render} through the batch. */

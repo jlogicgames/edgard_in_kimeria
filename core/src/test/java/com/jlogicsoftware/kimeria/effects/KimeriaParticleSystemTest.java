@@ -133,4 +133,28 @@ class KimeriaParticleSystemTest {
         assertEquals(java.util.List.of(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE,
             com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA), mixed.blends);
     }
+
+    @Test void flameStaysOpaqueAndShrinksOutAtT0T05T1() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_FLAME, 0, 10, 0, 0, 1f, 3f, 1f, .5f, 0f);
+        assertEquals(3f, s.drawSize(0), 1e-6f);
+        assertEquals(1f, s.alpha(0), 0f, "opaque: no alpha fade");
+        s.update(0.5f);
+        assertEquals(1.5f, s.drawSize(0), 1e-5f, "half size at t = 0.5");
+        assertEquals(1f, s.alpha(0), 0f);
+        assertEquals(5f, s.y(0), 1e-4f, "rises: smaller Y is higher");
+        s.update(0.499f);
+        assertEquals(0.003f, s.drawSize(0), 1e-4f, "shrinks to nothing as life ends");
+        assertEquals(1f, s.alpha(0), 0f);
+    }
+
+    @Test void flameIsDrawnInTheNormalBlendPass() {
+        Recording only = new Recording();
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_FLAME, 0, 0, 0, 1, 1f, 1f, 1f, 1f, 1f);
+        s.render(only.batch, null);
+        assertEquals(1, only.draws);
+        assertEquals(java.util.List.of(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA),
+            only.blends, "one normal switch for the pass, then the restore; no additive switch");
+    }
 }

@@ -517,6 +517,87 @@ class BossCombatTest {
         assertTrue(boss.isDefeated());
     }
 
+    @Test void aFireballHitSpraysNoBloodASwordHitSpraysAsBefore() {
+        soundsEnabled = true;
+        encounter();
+        fireball(true);
+        assertEquals(10, boss.energy(), "the fireball landed");
+        assertEquals(0, level.bloodParticles().count(), "a fireball hit sprays no blood: blood comes only from the sword");
+        assertEquals(1, playedSounds.stream().filter("boss_hit"::equals).count(), "the impact sound stays");
+        assertEquals(1f, boss.feedback().lostSegmentAlpha(11), "the lost-slot glow stays");
+        outsideSwing(); vulnerableAgain();
+        boss.collidedWithActor(true);
+        assertEquals(32, level.bloodParticles().count(), "a sword hit sprays one 32-drop burst as before");
+    }
+
+    /**
+     * The elixir never touches the fireball (author's rule): with and without it a boss fireball hit removes the same 2
+     * energy, sprays no blood, plays the same sounds, does not shake and spawns the same burst. The ball starts touching the
+     * boss, so it flies less than one trail spacing and the pools hold only the burst.
+     */
+    @Test void theElixirChangesNothingInABossFireballHit() {
+        int[] soft = new int[2], hard = new int[2], rings = new int[2];
+        float[] halo = new float[2], ring = new float[2];
+        java.util.List<java.util.List<String>> sounds = new java.util.ArrayList<>();
+        for (int run = 0; run < 2; run++) {
+            soundsEnabled = true;
+            encounter();
+            if (run == 1) artifacts.drinkBossElixir("forest-2");
+            playedSounds.clear();
+            fireball(true);
+            assertEquals(10, boss.energy(), "two energy, elixir=" + (run == 1));
+            assertEquals(0, level.bloodParticles().count(), "no blood, elixir=" + (run == 1));
+            assertEquals(Vector2.Zero, shake(), "no shake, elixir=" + (run == 1));
+            soft[run] = level.fireballFx().soft().count();
+            hard[run] = level.fireballFx().hard().count();
+            halo[run] = level.fireballFx().soft().drawSize(0);
+            rings[run] = level.fireballFx().ringCount();
+            ring[run] = level.fireballFx().ringRadius(0);
+            assertNull(level.activeRipple(), "a ring only, no screen distortion, elixir=" + (run == 1));
+            sounds.add(new java.util.ArrayList<>(playedSounds));
+        }
+        assertTrue(hard[0] > 0, "the burst is there");
+        assertEquals(soft[0], soft[1], "the same halo count");
+        assertEquals(hard[0], hard[1], "the same flame and spark count");
+        assertEquals(halo[0], halo[1], 0f, "the same halo size");
+        assertEquals(1, rings[0], "one ring");
+        assertEquals(rings[0], rings[1], "the same ring count");
+        assertEquals(ring[0], ring[1], 0f, "the same ring size");
+        assertEquals(sounds.get(0), sounds.get(1), "the same sounds");
+    }
+
+    /**
+     * A fireball the orange counter sequence rejects still bursts, but lightly, like a wall or mob hit, with no landed-hit
+     * feedback; a vulnerable boss takes the heavy burst. The same with and without the elixir.
+     */
+    @Test void aRejectedFireballBurstsLightlyALandedOneHeavily() {
+        int[][] counts = new int[2][];
+        for (int run = 0; run < 2; run++) {
+            soundsEnabled = true;
+            encounter();
+            if (run == 1) artifacts.drinkBossElixir("forest-2");
+            fireball(true);
+            assertEquals(10, boss.energy(), "a vulnerable boss takes the fireball");
+            int heavyHard = level.fireballFx().hard().count();
+            float heavyRing = level.fireballFx().ringRadius(0);
+            assertTrue(boss.isCounterSequence(), "the landed hit starts the counter sequence");
+            level.fireballFx().clear();
+            playedSounds.clear();
+            float glow = boss.feedback().lostSegmentAlpha(9);
+            fireball(true);
+            assertEquals(10, boss.energy(), "the counter sequence rejects the second fireball");
+            assertEquals(0, level.bloodParticles().count(), "no blood");
+            assertFalse(playedSounds.contains("boss_hit"), "no impact sound");
+            assertEquals(glow, boss.feedback().lostSegmentAlpha(9), 0f, "no new slot glow");
+            int lightHard = level.fireballFx().hard().count();
+            assertEquals(1, level.fireballFx().ringCount(), "the ball still bursts with a ring");
+            assertTrue(level.fireballFx().ringRadius(0) < heavyRing, "the light ring, not the boss ring");
+            assertTrue(lightHard < heavyHard, "the light burst, not the heavy one");
+            counts[run] = new int[]{heavyHard, lightHard, (int) heavyRing, (int) level.fireballFx().ringRadius(0)};
+        }
+        assertArrayEquals(counts[0], counts[1], "the same with and without the elixir");
+    }
+
     @Test void fireballsAlwaysDealTwoDamageFromEitherSideWithOrWithoutElixir() {
         for (boolean elixir : new boolean[]{false, true}) for (boolean right : new boolean[]{false, true}) {
             encounter();

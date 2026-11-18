@@ -455,7 +455,8 @@ enforce it, for different reasons, and neither replaces the other:
   release build; the same command runs in `.codex/hooks.json` as a PostToolUse and a Stop hook with `--hook`). It checks **changed
   lines** against `--base` (`auto` by default: the merge-base with `origin/main` when it exists, else HEAD; `HEAD` with `--hook`;
   `-PallocationBase=<ref>` for another) inside methods named `update*`, `render*`,
-  `draw*` and the helpers listed in its `HOT_METHODS` table (the torch spawners, `EnvironmentFx.emitGrit`, `dustPuff`, `ceilingGrit`).
+  `draw*` and the helpers listed in its `HOT_METHODS` table (the torch spawners, `EnvironmentFx.emitGrit`, `dustPuff`, `ceilingGrit`,
+  the `FireballFx` spawners).
   It flags `new`, `String.format`/`valueOf`/concatenation, stream and collection-factory calls, for-each over a declared collection, and
   lambdas; it does not follow calls and has no types, so varargs and boxing are invisible to it. Existing code needs no baseline: touching
   an allocating line means fixing it. An `ALLOWED` entry must say what the excluded code carries (today one: the F1 debug overlay in
@@ -477,6 +478,8 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | forest-1 trap course (room 2) | 665 | 328.0 to 544.3 (the same before and after #430 removed the rain and sky, D92) |
 | forest-2 room 0 / room 1 / room 2 | 9,720 / 2,360 / 2,120 | 8,920.6 to 9,000.0 / 2,184.0 / 1,960.0 to 1,960.6 |
 | forest-2 room 2 with an empowered spray every 60 frames through `Level.blood` | 2,120 | 1,991.9 to 1,992.6 |
+| A fireball flying through the real level, halo and trail drawn, a new ball every 60 frames (#397) | 8 | 0.0 to 2.8 (the 2.8 is a one-time ~3.4 KB in a fresh JVM's first measurement, 0.0 on repeats; its source is not identified: JIT warm-up or a one-time lazy initialisation) |
+| A fireball burst every 60 frames through `Level.fireballFx()` (light, heavy, burn-out in turn), with the ring slots | 8 | 0.0 to 0.3 (headless: the ring's shader draw is skipped) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the
 particles (those read 0.0). The room figures are the harness, entities and level code; the particle objects contribute almost nothing.
@@ -493,13 +496,14 @@ normal-blend particles first, then the additive ones, with one blend switch per 
 normal blending. Each system owns one `RandomXS128` (`random()`, the algorithm behind `MathUtils.random`), seeded in the constructor, so
 a seed reproduces a run. World Y grows downward: a rising particle has an end Y smaller than its start Y.
 
-Three kinds (alpha is multiplied by a fixed peak of 0.7; `t = 1 - life / maxLife`):
+Four kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
 
 | Kind | Blend | Size | Alpha | Used by |
 | --- | --- | --- | --- | --- |
-| `KIND_GLOW` | additive | `size * (1 - 0.4 t)` | `0.7 * (1 - t)^2` | torch flame core, embers, sparkles |
+| `KIND_GLOW` | additive | `size * (1 - 0.4 t)` | `0.7 * (1 - t)^2` | torch flame core, embers, sparkles; the fireball's hit halos |
 | `KIND_SMOKE` | normal | `size * (1 + t)` | `0.7 * (1 - t)` | torch smoke, jump dust |
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` | ceiling grit (#239) |
+| `KIND_FLAME` | normal | `size * (1 - t)` | `1` (opaque) | the fireball's trail, splash and sparks (#397): it shrinks out instead of fading, because a fading warm colour over the blue sky turns olive or magenta |
 
 Owners:
 
@@ -515,6 +519,12 @@ Owners:
   `KIND_GRIT`, 24 particles per `ceilingGrit` burst emitted over 0.6 s, called when a lever lowers a wall). Each has its own seeded
   stream (the grit seed is the dust seed XOR a constant), so the two do not disturb each other or the torches. Both ignore the
   Screen shake option; they advance only in `Level.update` (pause freezes them) and are cleared with the room.
+- **`effects.FireballFx`** (#397, owned by `Level`, `Level.fireballFx()`) owns two systems: **soft** (8 slots, `KIND_GLOW` with
+  `SoftDot`, one warm halo per hit) and **hard** (240 slots, `KIND_FLAME` with `Shaders.whiteQuad()`, 1 to 3 px flame and sparks),
+  plus 4 fixed slots for the impact ring drawn through the existing `shockwave.frag` (no object per hit).
+  `Fireball.update` sheds one trail flame per 2 px flown and calls `hit`, `heavyHit` (the boss) or `fizzle` where the ball stops;
+  `Fireball.render` draws the ball's steady halo with `FireballFx.drawBallHalo`. `FireballFxTest` measured peaks of 3 soft and 185 hard
+  (three balls, three boss bursts 0.1 s apart, 40 seeds) and requires 25 % headroom. Cleared with the room with the blood.
 - `SoftDot.region()`, `SoftDot.glowRegion()` and `Shaders.whiteQuad()` each return one cached `TextureRegion`; callers must not mutate it.
 
 `ParticleGoldenTest` pins the torch and blood numerically (positions, sizes, alphas at chosen frames of a fixed seed); it passed

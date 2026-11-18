@@ -29,13 +29,19 @@ D93: seen and heard when the hazard acts, hit or miss); its sound is
 | A point flying in a straight line from start to end (flame, ember, spark, smoke, dust, falling grit) | `KimeriaParticleSystem` | `spawn(kind, startX, startY, endX, endY, life, size, r, g, b)`; position is `lerp(from, to, t)`, `t = 1 - life/maxLife` |
 | Ballistic drops with gravity that land on a floor and splash | `KimeriaBloodSystem` | `spray(originX, originY, direction, floorY, empowered)` (boss, 32/48 drops) and `sprayLight(...)` (12 drops, a monster killed by the sword, via `Level.mobBlood`); its own arrays, colour and gravity, so it does not fit the lerp model |
 
-`KimeriaParticleSystem` kinds (all multiply alpha by a peak of 0.7):
+`KimeriaParticleSystem` kinds (the first three multiply alpha by a peak of 0.7):
 
 | Kind | Blend | Size at `t` | Alpha at `t` |
 | --- | --- | --- | --- |
 | `KIND_GLOW` | additive | `size * (1 - 0.4 t)` (shrinks) | `0.7 * (1 - t)^2` |
 | `KIND_SMOKE` | normal | `size * (1 + 1.0 t)` (grows) | `0.7 * (1 - t)` |
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` |
+| `KIND_FLAME` | normal | `size * (1 - t)` (shrinks out) | `1` (opaque, no fade) |
+
+`KIND_FLAME` (#397) is for warm pixels over the sky: a fading warm colour mixes with the blue into olive or magenta, a shrinking
+opaque one does not. The fireball's `effects.FireballFx` (one per `Level`) uses it for its trail, splash and sparks and `KIND_GLOW`
+for its hit halos, and draws its impact ring through the existing `shockwave.frag` from fixed slots (no `ShockwaveEffect` object
+per hit); it is the model for a weapon or projectile effect.
 
 The false honey fungus's `effects.SporeCloud` (#296) is a composition of these kinds (SMOKE haze, GLOW specks) plus a shader layer; it adds no kind.
 
