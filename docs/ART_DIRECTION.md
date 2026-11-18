@@ -271,6 +271,15 @@ A checklist of ideas, not implemented rules:
 **Accessibility note:** screen shake must be **optional or reducible** (an Assist-style
 setting, D11), and no effect may hide a trap warning.
 
+**Fireflies (#472, approved by the author).** A Forest room's gameplay fireflies are small lime lights, not black dots:
+`Firefly.smallGlow` in `b8f23a` (the menu backdrop's lime), a glow of 1.75 to 2.25 px radius (about 4 px across), alpha
+0.65 at the peak with flights of 3 to 7 s, drawn additively (`Level.render` sets the blend around them). forest-2 has 24.
+The menu backdrop keeps its larger `Firefly.glowing` (4 to 6 px). Lime is not a reserved hue: aqua is the healer's own
+light, warm white is the pickup halo and fire orange the fireball and torches. A firefly is one small dot that drifts;
+a lime spore cloud (`SporeCloud`, #296) is a lethal area, so the two must stay apart in size and motion. A firefly is
+never a pickup, a trap cue or a warning. Allocation is pinned on the whole room, fireflies included:
+`AllocationBudgetTest.forest2RoomWithFireflies`, 568 B/frame in isolation.
+
 ### Environment effects plan (#239)
 
 Plan approved by the author (revised after the review). **Status, 2026-11-12:** steps 1 to 5 of section 7 are built (the shake manager and

@@ -146,6 +146,8 @@ class AllocationBudgetTest {
     static final double FOREST_2_ROOM_2_CEILING = 1250;
     /** Measured 704.0 to 912.0 B/frame in 3 isolated runs and 824.0 to 902.1 in the full suite (#303; before: 1,991.9 to 1,992.6): the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene. */
     static final double FOREST_2_ROOM_2_BLOOD_CEILING = 1250;
+    /** Measured 568.0 to 568.5 B/frame in isolated runs and 481.8 in the full class run (2026-11-18, #472): the whole room, its objects and its 24 fireflies together. Ceiling = highest isolated run + about 10 %. */
+    static final double FOREST_2_FIREFLIES_CEILING = 625;
 
     /** Measured 0.0 B/frame in 3 runs (before step 4: 24.0, the returned {@code Vector2}; the 32 B {@code Rectangle} of {@code KimeriaGame.render} is not in this scenario, which already reuses its view). */
     static final double CAMERA_SHAKE_CEILING = 8;
@@ -256,6 +258,11 @@ class AllocationBudgetTest {
         Level level = harness.roomOf(map, index);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         return AllocationProbe.bytesPerFrame(i -> { level.update(STEP); level.render(batch, view); });
+    }
+
+    /** The forest-2 room with its 24 gameplay fireflies (#472): their update and the additive blend switch around their render, through the real {@code Level.update} and {@code Level.render}. */
+    @Test void forest2RoomWithFireflies() {
+        assertWithinBudget("forest-2 room 0 with fireflies", FOREST_2_FIREFLIES_CEILING, room("forest-2", 0));
     }
 
     /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
