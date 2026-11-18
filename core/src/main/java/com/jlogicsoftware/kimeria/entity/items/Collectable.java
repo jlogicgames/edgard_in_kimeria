@@ -8,14 +8,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
-import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.entity.Entity;
-import com.jlogicsoftware.kimeria.entity.WorldObject;
-
-import java.util.function.Consumer;
 
 /**
- * Animated coins and artifacts, sharing pickup sound, ripple and the pickup cue (#345, playtest F19): a 2 px bob, a
+ * Animated coins and artifacts, sharing the pickup sound, the spark burst and ring (Level.pickupSparks) and the pickup cue (#345, playtest F19): a 2 px bob, a
  * warm-white halo pulsing with it and a sparkle, so a pickup never reads as an enemy (enemies have none of it). The
  * coin has no halo ({@link #hasHalo}).
  */
@@ -39,7 +35,6 @@ public class Collectable extends Entity {
 
     private final ItemType type;
     private final GameContext game;
-    private final Consumer<WorldObject> spawner;
     private final Animation<TextureRegion> animation;
     private float stateTime = 0f;
     private boolean collected = false;
@@ -48,18 +43,15 @@ public class Collectable extends Entity {
     private final TextureRegion[] sparkle = new TextureRegion[SPARKLE_FRAMES];
     private final float sparkleOffset;
 
-    public Collectable(Assets assets, GameContext game, Consumer<WorldObject> spawner,
-                        String name, float x, float y, float w, float h) {
-        this(assets, game, spawner, name, x, y, w, h, () -> {});
+    public Collectable(Assets assets, GameContext game, String name, float x, float y, float w, float h) {
+        this(assets, game, name, x, y, w, h, () -> {});
     }
 
-    public Collectable(Assets assets, GameContext game, Consumer<WorldObject> spawner,
-                        String name, float x, float y, float w, float h, Runnable onPickup) {
+    public Collectable(Assets assets, GameContext game, String name, float x, float y, float w, float h, Runnable onPickup) {
         super(x, y, w, h);
         this.onPickup = onPickup;
         this.type = ItemType.fromMapName(name);
         this.game = game;
-        this.spawner = spawner;
         animation = assets.animation(type.sheet, FRAME_COUNT, STEP_TIME, FRAME_SIZE, FRAME_SIZE, type.spriteX, type.spriteY);
         animation.setPlayMode(Animation.PlayMode.LOOP);
         halo = hasHalo(type) ? assets.region(HALO_SHEET, 0, 0, HALO_SIZE, HALO_SIZE) : null;
@@ -82,7 +74,6 @@ public class Collectable extends Entity {
         if (type == ItemType.COIN) {
             game.addCoin();
         }
-        spawner.accept(new RippleEffect(centerX(), centerY(), 0.75f, 300f, 12f, 60f, 20f));
         removeFromParent();
     }
 

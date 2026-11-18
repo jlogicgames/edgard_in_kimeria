@@ -24,7 +24,7 @@ class CollectableTest {
                     return frame;
                 }
             };
-            Collectable item = new Collectable(assets, null, ignored -> {}, type.name(), 0, 0, 16, 16);
+            Collectable item = new Collectable(assets, null, type.name(), 0, 0, 16, 16);
             assertEquals(List.of(type.spriteX + "," + type.spriteY, (type.spriteX + 16) + "," + type.spriteY), origins);
             List<TextureRegion> rendered = new ArrayList<>();
             Batch batch = (Batch) Proxy.newProxyInstance(Batch.class.getClassLoader(), new Class<?>[]{Batch.class},
@@ -51,7 +51,7 @@ class CollectableTest {
                     return region;
                 }
             };
-            Collectable item = new Collectable(assets, null, ignored -> {}, type.name(), 100, 200, 16, 16);
+            Collectable item = new Collectable(assets, null, type.name(), 100, 200, 16, 16);
             List<Float> drawnY = new ArrayList<>();
             Batch batch = (Batch) Proxy.newProxyInstance(Batch.class.getClassLoader(), new Class<?>[]{Batch.class},
                 (proxy, method, args) -> {
@@ -82,7 +82,7 @@ class CollectableTest {
                 return new TextureRegion() { @Override public String toString() { return path.substring(path.lastIndexOf('/') + 1); } };
             }
         };
-        Collectable item = new Collectable(assets, null, ignored -> {}, "Mushroom", 40, 200, 16, 16);  // sparkle offset 1.0 s: none drawn here
+        Collectable item = new Collectable(assets, null, "Mushroom", 40, 200, 16, 16);  // sparkle offset 1.0 s: none drawn here
         Batch batch = (Batch) Proxy.newProxyInstance(Batch.class.getClassLoader(), new Class<?>[]{Batch.class},
             (proxy, method, args) -> {
                 switch (method.getName()) {
@@ -101,7 +101,7 @@ class CollectableTest {
         assertEquals("alpha 0.9", calls.get(1), "the halo is brightest at the top of the bob");
         assertEquals("pickup-glow.png 36.0,194.0 24.0", calls.get(2), "the halo rises with the item");
         calls.clear();
-        Collectable coin = new Collectable(assets, null, ignored -> {}, "Coin", 40, 200, 16, 16);
+        Collectable coin = new Collectable(assets, null, "Coin", 40, 200, 16, 16);
         coin.render(batch);
         assertEquals(List.of("coin.png 40.0,200.0 16.0"), calls, "the coin draws no halo and leaves the blend alone: its white rim washes out against one (D76)");
         assertTrue(Collectable.hasHalo(ItemType.BAT) && Collectable.hasHalo(ItemType.MUSHROOM) && !Collectable.hasHalo(ItemType.COIN));
@@ -126,8 +126,8 @@ class CollectableTest {
                 if (method.getName().equals("draw") && args[0].toString().startsWith("sparkle")) drawn.add(args[0] + " " + args[1] + "," + args[2]);
                 return null;
             });
-        Collectable first = new Collectable(assets, null, ignored -> {}, "Coin", 0, 200, 16, 16);
-        Collectable second = new Collectable(assets, null, ignored -> {}, "Coin", 16, 200, 16, 16);
+        Collectable first = new Collectable(assets, null, "Coin", 0, 200, 16, 16);
+        Collectable second = new Collectable(assets, null, "Coin", 16, 200, 16, 16);
         first.render(batch); second.render(batch);
         assertEquals(List.of("sparkle0 11.0,198.0"), drawn, "x 0 sparkles at once, 3 px right of centre and 2 px above; x 16 waits 0.4 s");
     }
@@ -158,11 +158,11 @@ class CollectableTest {
                     events.add(method.getName());
                     return null;
                 });
-            Collectable item = new Collectable(assets, game, ignored -> events.add("ripple"), type.name(),
+            Collectable item = new Collectable(assets, game, type.name(),
                 0, 0, 16, 16, () -> events.add("pickup"));
             item.collideWithPlayer(); item.collideWithPlayer();
-            assertEquals(type == ItemType.COIN ? List.of("pickup", "playSound", "addCoin", "ripple")
-                : List.of("pickup", "playSound", "ripple"), events);
+            assertEquals(type == ItemType.COIN ? List.of("pickup", "playSound", "addCoin")
+                : List.of("pickup", "playSound"), events);
             assertTrue(item.isRemoved());
         }
     }

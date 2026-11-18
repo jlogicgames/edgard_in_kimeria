@@ -13,6 +13,7 @@ import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
+import com.jlogicsoftware.kimeria.effects.PickupSparksFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
@@ -152,6 +153,9 @@ public class Level implements WorldObject {
     private static final long FIREBALL_FX_SEED_MIX = 0x94D049BB133111EBL;
     /** The fireballs' trails and hits (#397): one for the level, like the blood. Cleared with the room. */
     private final FireballFx fireballFx = new FireballFx(TimeUtils.nanoTime() ^ FIREBALL_FX_SEED_MIX);
+    private static final long PICKUP_SPARKS_SEED_MIX = 0xD6E8FEB86659FD93L;
+    /** The spark burst of every pickup (#402): one for the level. Cleared with the room, so a pickup that returns after a death replays nothing. */
+    private final PickupSparksFx pickupSparks = new PickupSparksFx(TimeUtils.nanoTime() ^ PICKUP_SPARKS_SEED_MIX);
 
     private final Assets assets;
     private final GameContext game;
@@ -450,7 +454,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
         victory = completionSent = false;
@@ -492,6 +496,8 @@ public class Level implements WorldObject {
 
     /** The fireballs' trail and hit particles (#397); the fireball writes into them, tests read them. */
     public FireballFx fireballFx() { return fireballFx; }
+    /** The spark burst and ring of every pickup (#402); {@code Collectable}'s callback fires it, tests read it. */
+    public PickupSparksFx pickupSparks() { return pickupSparks; }
 
     /** The fireball's fizzle (#397): a hit on terrain at full volume, a burn-out at the end of its life quieter. */
     public void fireballFizzle(boolean burnOut) {
@@ -1189,8 +1195,9 @@ public class Level implements WorldObject {
 
     private void spawnCollectable(TiledObject o, ItemType type) {
         if (keptPickups.contains(o.id) || (type != ItemType.COIN && game.artifacts().contains(name, o.id))) return;
-        objects.add(new Collectable(assets, game, this::queueSpawn, type.name(), o.x, o.y, o.width, o.height, () -> {
+        objects.add(new Collectable(assets, game, type.name(), o.x, o.y, o.width, o.height, () -> {
             recordPickup(o.id);
+            pickupSparks.burst(o.x + o.width / 2f, o.y + o.height / 2f);
             if (type != ItemType.COIN) game.artifacts().collect(name, o.id, type);
         }));
     }
@@ -1441,6 +1448,7 @@ public class Level implements WorldObject {
         // Before the objects: a hit this frame sprays after this point, so its drops first move next frame, as queued objects did.
         blood.update(dt);
         fireballFx.update(dt);
+        pickupSparks.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
         updateDecor(dt);
@@ -1514,6 +1522,7 @@ public class Level implements WorldObject {
         fx.render(batch);
         for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
         if (!player.isRemoved()) player.render(batch);
+        pickupSparks.render(batch); // over the hero: the item is at his hand when he takes it, and behind him the burst stays hidden until it leaves his outline
         fairy.renderFront(batch);
     }
 

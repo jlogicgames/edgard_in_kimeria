@@ -11,6 +11,7 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.effects.PickupSparksFx;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
@@ -264,6 +265,44 @@ class RoomTest {
     private Collectable artifact(Level level, ItemType type) {
         return level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast)
             .filter(item -> item.type() == type).findFirst().orElseThrow();
+    }
+
+    /** The F3 debug hotkey's ripple is the one user of {@code RippleEffect} now: the level still finds it while it lives and drops it after its life. */
+    @Test void aQueuedRippleIsFoundWhileItLivesAndDroppedAfterItsLife() {
+        Level level = forest();
+        assertNull(level.activeRipple());
+        var ripple = new com.jlogicsoftware.kimeria.effects.RippleEffect(100, 100, .75f, 120, 12, 60, 30);
+        level.queueSpawn(ripple);
+        level.update(0f);
+        assertSame(ripple, level.activeRipple());
+        level.update(1f);
+        assertTrue(ripple.isRemoved());
+        assertNull(level.activeRipple());
+    }
+
+    /** #402: one spark burst per pickup, the same for a coin and for a Bat; none for a second touch, none replayed after a death, cleared with the room. */
+    @Test void aPickupThrowsOneSparkBurstAndDeathReplaysNothing() {
+        Level level = forest();
+        Collectable coin = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).findFirst().orElseThrow();
+        assertEquals(0, level.pickupSparks().sparks().count());
+        coin.collideWithPlayer();
+        assertEquals(1, level.pickupSparks().ringCount(), "and one ring");
+        level.update(0f);
+        assertNull(level.activeRipple(), "no screen ripple on a pickup: the lens hid the burst");
+        assertFalse(level.objects.stream().anyMatch(com.jlogicsoftware.kimeria.effects.RippleEffect.class::isInstance));
+        assertEquals(PickupSparksFx.SPARKS, level.pickupSparks().sparks().count());
+        assertEquals(coin.centerX(), level.pickupSparks().sparks().x(0), 0f, "from the item centre");
+        assertEquals(coin.centerY(), level.pickupSparks().sparks().y(0), 0f);
+        coin.collideWithPlayer();
+        assertEquals(PickupSparksFx.SPARKS, level.pickupSparks().sparks().count(), "already collected: nothing more");
+        level.resetCurrentRoom(player());
+        assertEquals(0, level.pickupSparks().sparks().count(), "cleared with the room");
+        level.update(1f);
+        assertEquals(0, level.pickupSparks().sparks().count(), "the coin that returns after the death replays nothing");
+        level.enterNextRoom(player());
+        Collectable bat = artifact(level, ItemType.BAT);
+        bat.collideWithPlayer();
+        assertEquals(PickupSparksFx.SPARKS, level.pickupSparks().sparks().count(), "the same burst for an ingredient");
     }
 
     @Test void artifactPickupIsProvisionalAndDeathRestoresItWithoutChangingCoins() {
