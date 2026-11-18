@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.world;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.RangedStock;
+import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
@@ -225,8 +226,9 @@ class Forest1CombatTest {
         assertEquals(1, level.ladders.size());
         assertEquals(0, level.escalators.size());
         assertEquals(0, level.fallingPlatforms.size(), "no one-shot support: the lever is a reversible toggle");
-        assertEquals(1, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster, the RedMob");
-        assertEquals(1, level.objects.stream().filter(Puffball.class::isInstance).count(), "one trap, the spore puffball: no thorns, no second monster");
+        assertEquals(2, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "two monsters: the RedMob and, past the tunnel, the beetle (#327)");
+        assertEquals(1, level.objects.stream().filter(Beetle.class::isInstance).count());
+        assertEquals(1, level.objects.stream().filter(Puffball.class::isInstance).count(), "one trap, the spore puffball: no thorns");
         assertEquals(1, level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
         assertEquals(0, level.objects.stream().filter(Checkpoint.class::isInstance).count(), "the checkpoint is at the tree room's top (#349)");
@@ -737,5 +739,188 @@ class Forest1CombatTest {
                 }
             }
         }
+    }
+
+    // ---- the beetle past the tunnel (#327, D100, D101) ----
+
+    /** The beetle (24 x 16 at x 2632, offNeg 2, offPos 2 tiles): its centre crawls x 2612-2676, so its blast (80 px wide) covers at most x 2572-2716. */
+    private static final float BEETLE_X = 2632, BEETLE_CENTRE_MIN = 2612, BEETLE_CENTRE_MAX = 2676, BLAST_LEFT_MIN = 2572, BLAST_RIGHT_MAX = 2716;
+    /** Where a hero stands in the tunnel's mouth: his centre, 2.5 px of hitbox short of the tunnel's end (x 2560). */
+    private static final float MOUTH_CENTRE = 2550;
+    /** Pinned measurements (#327), scripted hero at 60 frames per second, held to {@link #PIN_MARGIN} like the D68 routes. */
+    private static final float BEETLE_FIREBALL_S = 3.65f, BEETLE_LURE_S = 4.53f, BEETLE_DEATH_S = 6.08f;
+
+    private Beetle beetle(Level level) { return level.objects.stream().filter(Beetle.class::isInstance).map(Beetle.class::cast).findFirst().orElse(null); }
+    private float heroRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
+
+    /** Puts the hero in the tunnel's mouth facing right, standing. */
+    private void toMouth(Level level) {
+        putHero(level, MOUTH_CENTRE - 2, 272);
+        held.clear(); held.add(Input.Keys.D); frame(level); held.clear();
+        putHero(level, MOUTH_CENTRE, 272);
+        settle(level, 2);
+    }
+
+    /** Stands still until the beetle has heard him and waits at its range's left end, facing him. */
+    private int waitForTheBeetle(Level level) {
+        int frames = 0;
+        Beetle b = beetle(level);
+        while (!(b.state() == Beetle.State.CHASE && b.centreX() <= BEETLE_CENTRE_MIN + 0.5f)) {
+            held.clear(); frame(level); alive(level);
+            assertTrue(++frames < 60 * 10, "the beetle never came to wait at its range end: " + b.state() + " " + b.centreX());
+        }
+        return frames;
+    }
+
+    private int walkToTheExit(Level level) {
+        int frames = 0;
+        while (!won(level)) {
+            held.clear(); held.add(Input.Keys.D); frame(level); alive(level);
+            assertTrue(++frames < 60 * 20, "exit not reached from " + level.player.position);
+        }
+        held.clear();
+        return frames;
+    }
+
+    @Test void theBeetleCrawlsPastTheTunnelAndItsBurstNeverReachesTheTunnelTheRoofDropOrTheExit() {
+        Level level = room(0);
+        Beetle b = beetle(level);
+        assertEquals(BEETLE_X, b.getX(), 0.01f);
+        assertEquals(FLOOR, b.floorY(), 0.01f, "it crawls on the floor");
+        assertEquals(BEETLE_CENTRE_MIN, b.rangeNeg() + Beetle.FRAME_WIDTH / 2, 0.01f);
+        assertEquals(BEETLE_CENTRE_MAX, b.rangePos() + Beetle.FRAME_WIDTH / 2, 0.01f);
+        assertEquals(BLAST_LEFT_MIN, BEETLE_CENTRE_MIN - 40, 0.01f);
+        assertEquals(BLAST_RIGHT_MAX, BEETLE_CENTRE_MAX + 40, 0.01f);
+        assertTrue(BLAST_LEFT_MIN > ROOF_RIGHT, "the tunnel is a shelter: no blast reaches inside it");
+        assertTrue(BEETLE_CENTRE_MAX + 12 + Beetle.TRIGGER_REACH < SLAB_END, "a hero dropping off the roof's end lands clear of its trigger");
+        assertTrue(BLAST_RIGHT_MAX + 48 < CHECKPOINT_X, "the exit is far from any blast");
+        assertTrue(START_X + 48 + Beetle.HEAR_RADIUS < BEETLE_CENTRE_MIN, "it cannot hear the entrance");
+        assertEquals(Beetle.State.CRAWL, b.state());
+        for (int i = 0; i < 60 * 6; i++) {
+            frame(level); alive(level);
+            assertTrue(b.centreX() >= BEETLE_CENTRE_MIN - 0.01f && b.centreX() <= BEETLE_CENTRE_MAX + 0.01f, "inside its range: " + b.centreX());
+        }
+        assertEquals(Beetle.State.CRAWL, b.state(), "a hero at the entrance is never heard");
+    }
+
+    @Test void aHeroInTheTunnelMouthIsHeardButNeverHurt() {
+        Level level = room(0);
+        toMouth(level);
+        Beetle b = beetle(level);
+        boolean noticed = false;
+        for (int i = 0; i < 60 * 10; i++) {
+            frame(level); alive(level);
+            noticed |= b.state() == Beetle.State.NOTICE;
+            assertNotEquals(Beetle.State.WINDUP, b.state(), "it never reaches a hero in the tunnel");
+        }
+        assertTrue(noticed, "it hears him from the tunnel and shows it in its body first");
+        assertEquals(Beetle.State.CHASE, b.state());
+        assertEquals(BEETLE_CENTRE_MIN, b.centreX(), 0.5f, "it waits at its range end, facing him");
+    }
+
+    @Test void aFireballFromTheTunnelMouthKillsItQuietlyAndTheHeroWalksPastItsBody() {
+        Level level = room(1);
+        toMouth(level);
+        int frames = waitForTheBeetle(level);
+        pressed.add(Input.Keys.L); frame(level); frames++;
+        Beetle b = beetle(level);
+        while (b.state() != Beetle.State.DEAD) {
+            frame(level); alive(level);
+            assertTrue(++frames < 60 * 3, "the fireball did not kill it: " + b.state());
+        }
+        assertEquals(0, stock.count());
+        assertTrue(b.isRemains(), "a quiet kill leaves its body (D101)");
+        frames += walkToTheExit(level);
+        assertFalse(b.isRemoved(), "the body is harmless and stays until he leaves the room");
+        System.out.printf(Locale.ROOT, "forest-1 guard room, beetle by fireball from the tunnel mouth to the exit: %.2f s%n", frames * STEP);
+        assertEquals(BEETLE_FIREBALL_S, frames * STEP, PIN_MARGIN);
+    }
+
+    @Test void theLureFromTheTunnelMouthBurstsItHarmlesslyAndCostsNoCharge() {
+        Level level = room(0);
+        toMouth(level);
+        int frames = waitForTheBeetle(level);
+        Beetle b = beetle(level);
+        while (!b.isCommitted()) {
+            held.clear(); held.add(Input.Keys.D); frame(level); alive(level);
+            assertTrue(++frames < 60 * 5, "it never committed: " + b.state());
+        }
+        float committedAt = b.centreX();
+        while (heroRight(level) >= committedAt - 40) {
+            held.clear(); held.add(Input.Keys.A); frame(level); alive(level);
+            assertTrue(++frames < 60 * 5, "no way back out of the blast");
+        }
+        held.clear();
+        while (!b.isRemoved()) {
+            frame(level); alive(level);
+            assertTrue(++frames < 60 * 3, "it never burst");
+        }
+        assertTrue(heroRight(level) <= ROOF_RIGHT + 12, "he stepped back to the tunnel's mouth");
+        frames += walkToTheExit(level);
+        System.out.printf(Locale.ROOT, "forest-1 guard room, beetle lured from the tunnel mouth to the exit: %.2f s%n", frames * STEP);
+        assertEquals(BEETLE_LURE_S, frames * STEP, PIN_MARGIN);
+    }
+
+    @Test void theMasteredFloorRoutesRunPastTheBeetleAndItBurstsBehindTheHero() {
+        for (boolean shot : new boolean[]{false, true}) {
+            Level level = room(shot ? 1 : 0);
+            Beetle b = beetle(level);
+            if (shot) shotRoute(level, 2290); else meleeRoute(level);
+            assertTrue(won(level));
+            alive(level);
+            assertTrue(b.isRemoved() || b.isCommitted(), "running on, he triggered it and left it to burst behind him (shot " + shot + "): " + b.state());
+            System.out.printf(Locale.ROOT, "forest-1 guard room, floor route (shot %s): the beetle %s by the exit%n", shot, b.isRemoved() ? "has burst behind him" : "is winding up");
+        }
+    }
+
+    /**
+     * The card's retry cost for the beetle: from the room's start (x 2176), the mastered melee (the patient floor route), then a hero who stops
+     * beside the beetle the moment it commits and dies in its burst. The time is from the entrance to the death.
+     */
+    @Test void aDeathInTheBeetlesBurstAfterTheMasteredMeleeComes6Point08SecondsIn() {
+        Level level = room(0);
+        Beetle b = beetle(level);
+        int frames = 0;
+        actionWasDown = false;
+        while (!dead(level)) {
+            held.clear();
+            if (!b.isCommitted() && !b.isRemoved()) {
+                held.add(Input.Keys.D);
+                boolean atWait = centerX(level) >= WAIT_CENTRE && centerX(level) <= WAIT_CENTRE + 4;
+                if (atWait && !calmFor(level, theMob.isDefeated() ? NEED_CROSS : NEED_MELEE)) held.clear();
+                boolean melee = enemyAhead(level, 16);
+                if (melee && !actionWasDown) pressed.add(Input.Keys.K);
+                actionWasDown = melee;
+            }
+            frame(level);
+            assertTrue(++frames < 60 * 20, "never died: " + b.state() + " at " + level.player.position);
+        }
+        assertTrue(theMob.isDefeated(), "the guard fell first: this is the beetle's death, not the cloud's");
+        assertTrue(b.isRemoved(), "the burst killed him");
+        System.out.printf(Locale.ROOT, "forest-1 guard room, death in the beetle's burst after the mastered melee: %.2f s from the entrance%n", frames * STEP);
+        assertEquals(BEETLE_DEATH_S, frames * STEP, PIN_MARGIN);
+    }
+
+    @Test void theRoofRouteDropsPastTheBeetleWithoutTriggeringItAndReachesTheExitAlive() {
+        Level level = room(0);
+        Beetle b = beetle(level);
+        int frames = walkToLever(level);
+        frames += operate(level);
+        frames += walkToLadder(level);
+        frames += climbTo(level, DECK);
+        held.clear(); frame(level); frames++;
+        boolean committed = false, heard = false;
+        while (!won(level)) {
+            held.clear(); held.add(Input.Keys.D);
+            frame(level); alive(level);
+            committed |= b.isCommitted();
+            heard |= b.state() != Beetle.State.CRAWL;
+            assertTrue(++frames < 60 * 40, "roof walk stuck at " + level.player.position);
+        }
+        assertFalse(committed, "a hero dropping off the roof's end lands clear of its trigger");
+        assertFalse(b.isRemoved());
+        assertEquals(1, stock.count(), "the roof's refill was taken");
+        System.out.printf(Locale.ROOT, "forest-1 guard room, roof route past the beetle (heard %s): %.2f s%n", heard, frames * STEP);
+        assertEquals(ROOF_S, frames * STEP, PIN_MARGIN);
     }
 }

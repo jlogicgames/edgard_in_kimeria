@@ -1943,6 +1943,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D80. Tree branches: one-way perches and rotten branches (#349, playtest F13, 2026-11-16)
 
+- **Superseded in part:** the tree room's "no enemy, no death" is superseded for the beetle by D100 (#327, 2026-11-18): a
+  beetle at the sound tree's foot makes standing in its burst the room's one death; the branch rules below stand.
 - **Status:** Accepted by the author, 2026-11-16 (the Phase A card and placement: a non-lethal break, a decor trunk, no
   coin, the room at the end of `forest-1`). Built; playtest F13 in [PLAYTEST_1.md](PLAYTEST_1.md).
 - **Decision:** a tree is climbed by jumping up through one-way branches: a sound branch is a `Collisions` `Platform`
@@ -2939,9 +2941,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     No shake (a small burst; D62, #448).
   - **Answers:** a fireball or a thrown stone kills it in any state, the wind-up included (the one save after it
     commits), without a burst: the `dead` frame under a small grey poof, removed at 0.3 s. *Update (D101, 2026-11-18): the
-    body stays, on its back; the poof is larger, paler and starts 0.08 s after the hit, so it reads over the fireball's ring.* The sword in any state, and a
-    stomp on a beetle that has not triggered, burst it at once with no wind-up; the hero is inside the box, so melee kills
-    the hero. A stomp on a triggered beetle bounces the hero off without a kill. No blood (D65 does not apply to it).
+    body stays, on its back; the poof is larger, paler and starts 0.08 s after the hit, so it reads over the fireball's
+    ring.* The sword in any state, and a stomp on a beetle that has not triggered, burst it at once with no wind-up; the
+    hero is inside the box, so melee kills the hero. A stomp on a triggered beetle bounces the hero off without a kill. No blood (D65 does not apply to it).
   - **Shared pattern for every monster that notices the hero (#240):** the notice is the creature's own body language
     (a stop and a reaction drawn in its frames) and a short call in its own voice; no mark over its head and no shared
     alert sound, which do not belong in a fairy tale. Its length is set per monster, about 0.5 s, not scaled by the assist;
@@ -2966,17 +2968,20 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   noticed you with its own body stays inside the tale; a floating mark does not.
 - **Exception, stated:** the instant burst from the sword or a stomp has no D7 wind-up. It is the consequence of the hero's
   own act on a creature known to burst; the first meeting may cost one retry (D2, D3).
-- **Not verified:** the look and timing in the running game, and the sounds (generated and auditioned in the build).
+- **Verified in play:** the author played `forest-1-guard` and `forest-1-tree` with the placed beetles on 2026-11-18 and
+  approved the look, the timing and the sounds ("all good", #327). No novice playtest (#135).
 - **Built (#327):** `entity/enemy/Beetle.java` (Tiled type `Beetle` in `SpawnPoints`, `offNeg`/`offPos` as the mobs; the
   load-time checks are `Beetle.problem`, run by `Level` for every room), `effects/BeetleFx.java` (one per `Level`; pools
   108 soft and 296 hard since D101, from measured peaks of 85 and 236; the look check of 2026-11-18 made the wind-up specks
   denser, 50 to 150 a second instead of 30 to 90, and brighter), the sheet `assets/images/objects/monster-beetle.png` from
   `art/objects/monster/beetle.grid` (`tools/forest_trap_sprites.py monster:beetle`), the four sounds from
   `tools/audio/generate_sounds.py` (seeds 6801-6806). The wind-up sound is a one-shot like the other warnings: it plays to
-  its end even when the beetle is killed during it. No shipped room places a beetle yet; placement is a room-design step
-  (D72, #327). Tests: `BeetleTest` (the real `Level` on `beetle-test.tmx` and two failing fixtures), `BeetleFxTest`
-  (capacity), `AllocationBudgetTest.beetleThroughTheRealLevel` (0.2 B/frame in 3 runs, ceiling 8; 0.1 with the body of
-  D101).
+  its end even when the beetle is killed during it. Placed by #327 (cards approved by the author 2026-11-18): it is
+  introduced in `forest-1-guard` (x 2632, `offNeg` 2, `offPos` 2, past the tunnel) and developed in `forest-1-tree` (x 3264,
+  `offNeg` 0, `offPos` 6, at the sound tree's foot); see `docs/ROOM_CARDS.md`; the placements are tested in
+  `Forest1CombatTest` and `TreeClimbTest`. Tests: `BeetleTest` (the real `Level` on `beetle-test.tmx` and two failing
+  fixtures), `BeetleFxTest` (capacity), `AllocationBudgetTest.beetleThroughTheRealLevel` (0.2 B/frame in 3 runs, ceiling
+  8; 0.1 with the body of D101).
 
 ## D101. Monster bodies: a monster killed quietly leaves its body, posed apart from the living, which reacts to the hero and is finished by a weapon (#327, #240, #398)
 

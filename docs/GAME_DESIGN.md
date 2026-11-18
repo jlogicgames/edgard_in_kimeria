@@ -232,8 +232,9 @@ gives way after the shared warning and falls behind a climber who keeps going, b
 rides it down to the floor and climbs again. So the cost of hesitating is height, and the escape is upward. Two trees
 stand side by side: the near one is a column of rotten branches (4.95 s to the top), the far one a zig-zag of sound
 branches (6.23 s); both meet at the crown, which holds the level's checkpoint. A rotten branch is never the only way up
-(D26) and never hangs above a sound one (D69); the load refuses either. The room has no enemy and no lethal trap: a calm
-beat after the guard room, and its landmark is the pair of trees.
+(D26) and never hangs above a sound one (D69); the load refuses either. The room has no lethal trap and its landmark is
+the pair of trees. Since #327 a beetle crawls at the sound tree's foot (D100): the fast column is out of its reach, the sure
+climb costs a lure or a charge, and the room's one death is standing in its burst.
 
 **Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
 simple, lethal, organic hazards on the ground and overhead, grouped by trigger family
@@ -694,8 +695,8 @@ the beetle's own sheet (`assets/images/objects/monster-beetle.png`). Contrast of
 metrics at the seven RedMob and YellowMob spawns of the three maps): outline 0.329 (`look`, `wiggle`) to 0.515 (`white`),
 above the active 0.28; the gate measures every placed `Beetle`. Code: `entity/enemy/Beetle.java`; tests: `BeetleTest`,
 `BeetleFxTest`, `RemainsTest` (D101), `AllocationBudgetTest.beetleThroughTheRealLevel`. The body's decor variant measures
-outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20). No shipped room places one yet: that is a room-design step
-with its own card (D72, #327).
+outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20). Placed (#327, cards approved 2026-11-18): introduced in `forest-1-guard`
+past the tunnel and developed at the sound tree's foot in `forest-1-tree` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); forest-2 has none (author, 2026-11-18).
 
 ## Rooms, dangers and skill development
 
