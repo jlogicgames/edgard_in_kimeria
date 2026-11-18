@@ -157,7 +157,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Tilemap rendering from the unmodified `.tmx`/`.tsx`, with viewport culling
 - [x] Bat, Yellow mob, Red mob — patrol/chase/attack, without proximity slow motion
 - [x] Sword attack killing enemies
-- [x] Collectables (coin, bat, mushroom + pickup ripple), artifact HUD and room rollback;
+- [x] Collectables (coin, bat, mushroom + pickup spark burst and ring, #402), artifact HUD and room rollback;
       Bomb (explosion, kills player)
 - [x] Falling platform — warning torch, delay, drop; carries the player down without
       losing contact
@@ -214,11 +214,11 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 
 ## Deviations from the source projects
 
-- **Only one coin ripple shows at a time.** As in the Flame and Bevy versions, the ripple
-  distorts the rendered scene (`screen_effects.frag`, drawn from an offscreen buffer that is
-  only rendered while a ripple or the pause glitch is live), and collecting a second coin
-  mid-ripple takes over from the first. The wave phase travels with time, as in Rust; Flame
-  freezes it.
+- **A pickup has no screen ripple (#402).** The Flame and Bevy versions distort the scene around a picked-up coin; here a pickup
+  plays a spark burst and a faint ring (`effects.PickupSparksFx`, see Particles below) instead, because the lens hid the sparks.
+  `RippleEffect` and its `screen_effects.frag` pass are kept and used only by the F3 debug hotkey (reserved for the tablet-fragment pickup, [#136](https://github.com/jlogicgames/edgard_in_kimeria/issues/136): the ripple wave alone, without sparks or a ring): the offscreen buffer is rendered
+  only while an F3 ripple or the pause glitch is live, and a second F3 ripple takes over from the first. The wave phase travels with
+  time, as in Rust; Flame freezes it.
 - **`Torch`'s particle system is an allocation-free reimplementation** on the shared
   `effects.KimeriaParticleSystem` (fixed struct-of-arrays, 96 slots per torch, a full pool drops the
   oldest particle, one seeded `RandomXS128` per system; 0.1 B/frame measured), not a port of
@@ -456,7 +456,7 @@ enforce it, for different reasons, and neither replaces the other:
   lines** against `--base` (`auto` by default: the merge-base with `origin/main` when it exists, else HEAD; `HEAD` with `--hook`;
   `-PallocationBase=<ref>` for another) inside methods named `update*`, `render*`,
   `draw*` and the helpers listed in its `HOT_METHODS` table (the torch spawners, `EnvironmentFx.emitGrit`, `dustPuff`, `ceilingGrit`,
-  the `FireballFx` spawners).
+  the `FireballFx` spawners, `RingPool.start`).
   It flags `new`, `String.format`/`valueOf`/concatenation, stream and collection-factory calls, for-each over a declared collection, and
   lambdas; it does not follow calls and has no types, so varargs and boxing are invisible to it. Existing code needs no baseline: touching
   an allocating line means fixing it. An `ALLOWED` entry must say what the excluded code carries (today one: the F1 debug overlay in
@@ -480,6 +480,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | forest-2 room 2 with an empowered spray every 60 frames through `Level.blood` | 2,120 | 1,991.9 to 1,992.6 |
 | A fireball flying through the real level, halo and trail drawn, a new ball every 60 frames (#397) | 8 | 0.0 to 2.8 (the 2.8 is a one-time ~3.4 KB in a fresh JVM's first measurement, 0.0 on repeats; its source is not identified: JIT warm-up or a one-time lazy initialisation) |
 | A fireball burst every 60 frames through `Level.fireballFx()` (light, heavy, burn-out in turn), with the ring slots | 8 | 0.0 to 0.3 (headless: the ring's shader draw is skipped) |
+| A pickup burst (12 sparks and a ring) every 60 frames through `Level.pickupSparks()` (#402) | 8 | 0.0 (headless: the ring's shader draw is skipped) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the
 particles (those read 0.0). The room figures are the harness, entities and level code; the particle objects contribute almost nothing.
@@ -521,10 +522,16 @@ Owners:
   Screen shake option; they advance only in `Level.update` (pause freezes them) and are cleared with the room.
 - **`effects.FireballFx`** (#397, owned by `Level`, `Level.fireballFx()`) owns two systems: **soft** (8 slots, `KIND_GLOW` with
   `SoftDot`, one warm halo per hit) and **hard** (240 slots, `KIND_FLAME` with `Shaders.whiteQuad()`, 1 to 3 px flame and sparks),
-  plus 4 fixed slots for the impact ring drawn through the existing `shockwave.frag` (no object per hit).
+  plus 4 fixed slots (`effects.RingPool`) for the impact ring drawn through the existing `shockwave.frag` (no object per hit).
   `Fireball.update` sheds one trail flame per 2 px flown and calls `hit`, `heavyHit` (the boss) or `fizzle` where the ball stops;
   `Fireball.render` draws the ball's steady halo with `FireballFx.drawBallHalo`. `FireballFxTest` measured peaks of 3 soft and 185 hard
   (three balls, three boss bursts 0.1 s apart, 40 seeds) and requires 25 % headroom. Cleared with the room with the blood.
+- **`effects.PickupSparksFx`** (#402, owned by `Level`, `Level.pickupSparks()`) is what a pickup shows: 12 `KIND_FLAME` sparks of 1.5 to 3 px
+  (the sparkle's white and `fff4aa`, 0.4 to 0.6 s, 60 slots, a full pool drops the oldest) and one faint warm ring (4 slots of the shared
+  `effects.RingPool`, 16 px radius, 2 px wide, 0.2 s, colour intensity 1.7, 1.3, 0.4), fired from `Level.spawnCollectable`'s pickup
+  callback, so it is the same for the coin, the Bat and the Mushroom. Drawn after the hero (the item is at his hand when taken). Cleared
+  with the room, so a pickup that returns after a death replays nothing. `RingPool` holds the ring slots, the eased progress and the
+  `shockwave.frag` draw for it and `FireballFx`; per-pool values only (colour, size, life).
 - `SoftDot.region()`, `SoftDot.glowRegion()` and `Shaders.whiteQuad()` each return one cached `TextureRegion`; callers must not mutate it.
 
 `ParticleGoldenTest` pins the torch and blood numerically (positions, sizes, alphas at chosen frames of a fixed seed); it passed

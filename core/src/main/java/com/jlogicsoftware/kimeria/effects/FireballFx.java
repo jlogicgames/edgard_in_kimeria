@@ -2,7 +2,6 @@ package com.jlogicsoftware.kimeria.effects;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.RandomXS128;
 
@@ -87,32 +86,13 @@ public final class FireballFx {
     private static final float RING_LIFE = .26f, RING_RADIUS = 20, RING_WIDTH = 3;
     private static final float HEAVY_RING_LIFE = .36f, HEAVY_RING_RADIUS = 36, HEAVY_RING_WIDTH = 5;
     /**
-     * {@code shockwave.frag} grows the ring with {@code smoothstep(0.02, 1, progress)}, which crawls at the start and also
-     * gates its fade, so a linear progress shows the ring late. The ring is fed {@code RING_START + (RING_END - RING_START) *
-     * (1 - (1 - t)^2)} instead: it starts at about 14 % of its radius, visible from the first frame of contact, and expands
-     * fast. It stops at {@code RING_END}: the shader's last stretch adds so little warm light that the ring reads grey over the
-     * blue sky, so the ring ends while it is still orange.
-     */
-    private static final float RING_START = .3f, RING_END = .88f;
-    /**
      * The ring's colour as an intensity: {@code shockwave.frag} multiplies it by a fade that peaks near 0.25, and the result is
      * added to the sky, so an orange of 1 would read grey over blue. Four times the sprite's orange lands warm at the peak.
      */
     private static final float[] RING_COLOR = {4f, 2.2f, .3f};
-    /** {@code shockwave.frag}'s ring radius in quad UV (the ring fills the quad), as {@link ShockwaveEffect} sets it. */
-    private static final float RING_UV_RADIUS = .5f;
-    private static final String RING_SHADER = "shockwave.frag";
 
     private final KimeriaParticleSystem soft, hard;
-    private final float[] ringX = new float[RING_CAPACITY], ringY = new float[RING_CAPACITY], ringAge = new float[RING_CAPACITY];
-    private final float[] ringLife = new float[RING_CAPACITY], ringRadius = new float[RING_CAPACITY], ringWidth = new float[RING_CAPACITY];
-    /** Each slot is live until its own ring's life ends; {@code rings} counts the live ones. */
-    private final boolean[] ringLive = new boolean[RING_CAPACITY];
-    /** When each slot's ring started (a running count), so the oldest live ring is known. */
-    private final long[] ringStarted = new long[RING_CAPACITY];
-    /** Where the search for a free slot begins (after the last one taken), the live count and the start counter. */
-    private int rings, nextRing;
-    private long ringsStarted;
+    private final RingPool rings = new RingPool(RING_CAPACITY, RING_COLOR);
 
     public FireballFx(long seed) {
         soft = new KimeriaParticleSystem(SOFT_CAPACITY, seed);
@@ -120,36 +100,9 @@ public final class FireballFx {
     }
 
     /** Live impact rings, for tests. */
-    public int ringCount() { return rings; }
+    public int ringCount() { return rings.count(); }
     /** The radius the {@code i}-th live ring grows to, oldest first, for tests ({@code i} below {@link #ringCount}). */
-    public float ringRadius(int i) {
-        long after = Long.MIN_VALUE;
-        for (int n = 0; n <= i; n++) {
-            int next = -1;
-            for (int s = 0; s < RING_CAPACITY; s++)
-                if (ringLive[s] && ringStarted[s] > after && (next < 0 || ringStarted[s] < ringStarted[next])) next = s;
-            if (next < 0) throw new IndexOutOfBoundsException("ring " + i);
-            if (n == i) return ringRadius[next];
-            after = ringStarted[next];
-        }
-        throw new IndexOutOfBoundsException("ring " + i);
-    }
-
-    /** Starts a ring in the first free slot from {@code nextRing} on; only when every slot is live does it reuse the oldest ring. */
-    private void ring(float x, float y, float life, float radius, float width) {
-        int i = -1;
-        for (int n = 0; n < RING_CAPACITY && i < 0; n++) if (!ringLive[(nextRing + n) % RING_CAPACITY]) i = (nextRing + n) % RING_CAPACITY;
-        if (i < 0) {
-            i = 0;
-            for (int s = 1; s < RING_CAPACITY; s++) if (ringStarted[s] < ringStarted[i]) i = s;
-        } else {
-            ringLive[i] = true;
-            rings++;
-        }
-        nextRing = (i + 1) % RING_CAPACITY;
-        ringStarted[i] = ++ringsStarted;
-        ringX[i] = x; ringY[i] = y; ringAge[i] = 0; ringLife[i] = life; ringRadius[i] = radius; ringWidth[i] = width;
-    }
+    public float ringRadius(int i) { return rings.radius(i); }
 
     /** The warm halos of the hits, drawn additively with {@link SoftDot}. */
     public KimeriaParticleSystem soft() { return soft; }
@@ -183,7 +136,7 @@ public final class FireballFx {
      */
     public void hit(float x, float y, float sprayDirection) {
         halo(x, y, HIT_HALO_SIZE, HIT_HALO_LIFE);
-        ring(x, y, RING_LIFE, RING_RADIUS, RING_WIDTH);
+        rings.start(x, y, RING_LIFE, RING_RADIUS, RING_WIDTH);
         float aim = sprayDirection > 0 ? 0 : MathUtils.PI;
         RandomXS128 random = hard.random();
         for (int n = 0; n < HIT_FLAMES; n++) {
@@ -199,7 +152,7 @@ public final class FireballFx {
     /** The boss takes the fireball at ({@code x}, {@code y}): a heavier burst all round, see {@link #hit}. */
     public void heavyHit(float x, float y, float sprayDirection) {
         halo(x, y, HEAVY_HALO_SIZE, HEAVY_HALO_LIFE);
-        ring(x, y, HEAVY_RING_LIFE, HEAVY_RING_RADIUS, HEAVY_RING_WIDTH);
+        rings.start(x, y, HEAVY_RING_LIFE, HEAVY_RING_RADIUS, HEAVY_RING_WIDTH);
         RandomXS128 random = hard.random();
         for (int n = 0; n < HEAVY_FLAMES; n++) {
             float a = MathUtils.PI2 * n / HEAVY_FLAMES + jitter(random, RING_JITTER), d = range(random, HEAVY_FLAME_DIST_MIN, HEAVY_FLAME_DIST_MAX);
@@ -257,52 +210,20 @@ public final class FireballFx {
     public void update(float dt) {
         soft.update(dt);
         hard.update(dt);
-        // Each ring is freed when its own life ends: a light ring started after a boss ring ends first.
-        for (int i = 0; i < RING_CAPACITY; i++) {
-            if (!ringLive[i]) continue;
-            ringAge[i] += dt;
-            if (ringAge[i] >= ringLife[i]) { ringLive[i] = false; rings--; }
-        }
+        rings.update(dt);
     }
 
     /** The halos, then the flame and sparks on top; the shared regions are fetched only when something is alive. */
     public void render(Batch batch) {
         if (soft.count() > 0) soft.render(batch, SoftDot.region());
         if (hard.count() > 0) hard.render(batch, Shaders.whiteQuad());
-        if (rings > 0) renderRings(batch);
-    }
-
-    /** Each live ring through {@code shockwave.frag} with the uniforms {@link ShockwaveEffect#render} sets, added; the shader and normal blending are restored. */
-    private void renderRings(Batch batch) {
-        // Decorative: a GPU (or the headless tests) that cannot build the shader simply shows no ring, like SporeCloud's haze.
-        ShaderProgram shader = Shaders.tryLoad(RING_SHADER);
-        if (shader == null) return;
-        ShaderProgram previous = batch.getShader();
-        batch.setShader(shader);
-        // shockwave.frag writes premultiplied colour: added, it lights the sky warm; under normal blending its faint edge darkens it.
-        batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE);
-        for (int i = 0; i < RING_CAPACITY; i++) {
-            if (!ringLive[i]) continue;
-            float diameter = ringRadius[i] * 2;
-            shader.setUniformf("uSize", diameter, diameter);
-            shader.setUniformf("uTime", ringAge[i]);
-            float t = MathUtils.clamp(ringAge[i] / ringLife[i], 0, 1), rest = 1 - t;
-            shader.setUniformf("uProgress", RING_START + (RING_END - RING_START) * (1 - rest * rest));
-            shader.setUniformf("uMaxRadius", RING_UV_RADIUS);
-            shader.setUniformf("uWidth", ringWidth[i] / diameter);
-            shader.setUniformf("uColor", RING_COLOR[0], RING_COLOR[GREEN], RING_COLOR[BLUE]);
-            batch.draw(Shaders.whiteQuad(), ringX[i] - ringRadius[i], ringY[i] - ringRadius[i], diameter, diameter);
-            batch.flush(); // the uniforms change per ring: draw this one before the next sets them
-        }
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        batch.setShader(previous);
+        rings.render(batch);
     }
 
     /** Room change, retry and level restart: nothing carries over. */
     public void clear() {
         soft.clear();
         hard.clear();
-        rings = 0;
-        for (int i = 0; i < RING_CAPACITY; i++) ringLive[i] = false;
+        rings.clear();
     }
 }

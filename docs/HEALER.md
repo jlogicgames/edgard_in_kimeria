@@ -139,7 +139,7 @@ Rooms are then traversed forward again. No free backward-room navigation is adde
 | Triggers and levers | Recreated; each lever derives its display and action from its linked torch | Recreated |
 | Portable tools, fixed torches, linked doors and actionable walls | Resume their latest secured logical/physics state | Restore the latest secured state; first visit starts authored |
 | Static collision terrain and one-way platforms | Rebuilt from the authored descriptions | Rebuilt |
-| Pickup ripples, old explosions, platform warning particles | Discarded; never replayed from a previous visit | Discarded |
+| Pickup sparks and rings, old explosions, platform warning particles | Discarded; never replayed from a previous visit | Discarded |
 
 Falling platforms use the same one-snapshot-per-room rule as other mutable owners. A
 collapsed platform 115 can make optional Mushroom 95 unreachable until Restart Level; this is

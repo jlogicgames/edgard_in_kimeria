@@ -41,7 +41,8 @@ D93: seen and heard when the hazard acts, hit or miss); its sound is
 `KIND_FLAME` (#397) is for warm pixels over the sky: a fading warm colour mixes with the blue into olive or magenta, a shrinking
 opaque one does not. The fireball's `effects.FireballFx` (one per `Level`) uses it for its trail, splash and sparks and `KIND_GLOW`
 for its hit halos, and draws its impact ring through the existing `shockwave.frag` from fixed slots (no `ShockwaveEffect` object
-per hit); it is the model for a weapon or projectile effect.
+per hit); it is the model for a weapon or projectile effect. Rings come from the shared `effects.RingPool` (fixed slots, per-pool colour, size and
+life); the pickup's `effects.PickupSparksFx` (#402) is a small second user: sparks on `KIND_FLAME` plus a faint ring.
 
 The false honey fungus's `effects.SporeCloud` (#296) is a composition of these kinds (SMOKE haze, GLOW specks) plus a shader layer; it adds no kind.
 

@@ -51,6 +51,13 @@ multi-frame sheet are different measurements.
   washes out against added light (outline 0.123 against the D76 floor of 0.28 at forest-2 x 336), and the rim
   already does a halo's job; it keeps the bob and the sparkle (`Collectable.hasHalo`, `check_contrast.NO_HALO`). The sparkle is `pickup/sparkle.grid`, a 5×5 glint of three 0.1 s
   frames every 2.4 s, 3 px right of the item's centre and 2 px above it, started later per tile of x.
+- **Pickup burst (#402, approved by the author 2026-11-18):** at the moment of pickup, the same for every `Collectable`, a burst of
+  12 sparks (`effects.PickupSparksFx`, `KIND_FLAME`: opaque 1.5 to 3 px squares that shrink out, in the sparkle's white and
+  `fff4aa`, 0.4 to 0.6 s, flying 10 to 26 px from the item's centre) and a faint quick ring behind them (the existing
+  `shockwave.frag` through `RingPool`, 16 px radius, 2 px wide, 0.2 s, colour intensity 1.7, 1.3, 0.4: dim on purpose, the sparks are
+  the main read). Drawn after the hero, because the item is at his hand when he takes it. It goes with the `collect` sound and the cue
+  above; there is no screen ripple on a pickup (the lens hid the burst); `RippleEffect` is used only by the F3 debug hotkey and is reserved for picking up a tablet fragment, tracked by [#136](https://github.com/jlogicgames/edgard_in_kimeria/issues/136): that pickup plays only the ripple wave, without sparks or a ring. No sprite,
+  shader edit, shake or flash.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
   Bat wing jar, mushroom (D43), the gold coin with the Kimeria sun (#350) and fireball. These appear
@@ -679,7 +686,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
-| All worlds | [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402) | pickup burst, respawn, lost heart, level and room transitions |
+| All worlds | [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402) | pickup sparks and ring: **done** (see Pickup cue). The other items of #402 are not applicable or belong elsewhere: lost heart, no hearts exist (D2/D6); respawn beam, the silver thread already covers respawn (D81); level and room transitions belong to [#126](https://github.com/jlogicgames/edgard_in_kimeria/issues/126) (D3) |
 
 **Forest audit (#397, author's decision 2026-11-18).** The Forest effects that already exist are kept, not replaced by pixelfx
 versions: the bomb's explosion shader (`BombExplosionEffect`), the stump and root blast sheet (`ExplosiveTrap`), the falling stone's
@@ -704,7 +711,7 @@ code, no exported asset and no constant was copied, so no notice file is needed 
   over the boss's own hurt flash (a fireball the boss's orange counter sequence rejects bursts lightly, like a wall hit); at the end of its life a burn-out of 4 small rising flames. No blood (D99), no shake, the same with
   and without the elixir.
 - **Impact ring** (author's addition, approved 2026-11-18): an expanding fire-coloured ring at every hit, drawn through the existing
-  `shockwave.frag` with the uniforms `ShockwaveEffect` sets (the F3 debug ring), from a fixed pool of 4 ring slots in `FireballFx`, so
+  `shockwave.frag` with the uniforms `ShockwaveEffect` sets (the F3 debug ring), from a fixed pool of 4 ring slots (`RingPool`, owned by `FireballFx`), so
   no object is created per hit; no existing shader was edited, and there is no screen ripple (`RippleEffect`). Light hit: 0.26 s,
   20 px radius, 3 px wide; boss: 0.36 s, 36 px, 5 px; none on a burn-out. The ring ends a little before the burst's particles, so
   the two read as one blast. The shader grows the ring with a slow start, so it is fed an eased progress, `0.3 + 0.58 * (1 - (1 -

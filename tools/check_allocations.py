@@ -40,7 +40,7 @@ HOT_METHODS = {
     ('effects/FireballFx.java', 'fizzle'): 'called from Fireball.update when the ball burns out',
     ('effects/FireballFx.java', 'halo'): 'called from FireballFx.hit, heavyHit and fizzle, inside Fireball.update',
     ('effects/FireballFx.java', 'flame'): 'called from every FireballFx spawn helper, inside Fireball.update',
-    ('effects/FireballFx.java', 'ring'): 'called from FireballFx.hit and heavyHit, inside Fireball.update (writes a fixed ring slot)',
+    ('effects/RingPool.java', 'start'): 'called from FireballFx.hit and heavyHit, inside Fireball.update, and from PickupSparksFx.burst (writes a fixed ring slot)',
     ('effects/FireballFx.java', 'sparkCone'): 'called from FireballFx.hit and heavyHit, inside Fireball.update',
     ('effects/FireballFx.java', 'drawBallHalo'): 'called from Fireball.render every frame a ball flies',
     ('world/Level.java', 'fireballFizzle'): 'called from Fireball.update when the ball stops on terrain or burns out',

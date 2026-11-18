@@ -163,6 +163,8 @@ class AllocationBudgetTest {
     /** Measured 0.0 B/frame in 6 runs (2026-11-18, #397), and 0.0 in 3 more runs with the impact ring, 0.2 and 0.3 in two full-suite runs; headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles and the ring slots: a fireball burst every 60 frames through the real {@code Level.fireballFx()} (light, heavy, burn-out in turn), updated and drawn each frame. */
     static final double FIREBALL_IMPACT_CEILING = 8;
     private static final int FIREBALL_ROOM = 2, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
+    /** Measured 0.0 B/frame in 3 runs (2026-11-18, #402); headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the sparks and the ring slots: a pickup burst (12 sparks and a ring) every 60 frames through the real {@code Level.pickupSparks()}, spawn, update and render. */
+    static final double PICKUP_SPARKS_CEILING = 8;
 
     /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
     static final double BOSS_HUD_CEILING = 8;
@@ -681,6 +683,20 @@ class AllocationBudgetTest {
         assertWithinBudget("fireball impact", FIREBALL_IMPACT_CEILING, bytes);
     }
 
+    /** A pickup spark burst every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.pickupSparks()} (#402), updated and drawn each frame. */
+    @Test void pickupSparksThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-1", FIREBALL_ROOM);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.pickupSparks().burst(100, 200);
+            level.pickupSparks().update(STEP);
+            level.pickupSparks().render(batch);
+            peak[0] = Math.max(peak[0], level.pickupSparks().sparks().count());
+        });
+        assertTrue(peak[0] > 0, "the bursts must actually throw sparks in this scenario");
+        assertWithinBudget("pickup sparks", PICKUP_SPARKS_CEILING, bytes);
+    }
+
     /** A bush brushed by a walking hero every {@link #BURST_CYCLE_FRAMES} frames (its animation lasts 0.3 s): {@code notice}, {@code update} and {@code render} through the batch. */
     @Test void decorBrushThroughTheRealLevel() {
         Level level = harness.roomOf("forest-0", 0);
@@ -717,7 +733,7 @@ class AllocationBudgetTest {
         ItemType[] types = ItemType.values();
         Collectable[] items = new Collectable[types.length];
         for (int n = 0; n < types.length; n++)
-            items[n] = new Collectable(harness.assets(), harness.game(), ignored -> {}, types[n].name(), n * TRAP_TILE * 2, FUNGUS_FLOOR, TRAP_TILE, TRAP_TILE);
+            items[n] = new Collectable(harness.assets(), harness.game(), types[n].name(), n * TRAP_TILE * 2, FUNGUS_FLOOR, TRAP_TILE, TRAP_TILE);
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             for (int n = 0; n < items.length; n++) { items[n].update(STEP); items[n].render(batch); }
         });
