@@ -82,14 +82,12 @@ class RoomCardsTest {
      * Rooms shipped below the band before D105. Each carries 'Below density' citing its rework issue (#500). The set only
      * shrinks: a reworked room leaves it (the spider rooms left with the snail, #329), a new room never enters it.
      */
-    static final Set<String> GRANDFATHERED = Set.of("forest-1-mob", "forest-1-deadfall", "forest-1-bramble", "forest-1-hive",
-        "forest-1-tree");
-    /** The size of GRANDFATHERED: 7 at D105, 5 since the spider rooms' rework (#500). Lowered with every room that leaves. */
-    static final int GRANDFATHERED_AT_D105 = 5;
+    static final Set<String> GRANDFATHERED = Set.<String>of();
+    /** The size of GRANDFATHERED: 7 at D105, 5 after the spider rooms' rework, 0 after the batch-2 rework (#500). A room never joins. */
+    static final int GRANDFATHERED_AT_D105 = 0;
     /** Rooms shipped before D105 whose first meeting is late or crowded; each entry cites its issue (#500). Only shrinks. */
-    static final Set<String> FIRST_MEETING_GRANDFATHERED = Set.of("forest-1-mob", "forest-1-deadfall", "forest-1-traps",
-        "forest-1-guard", "forest-1-tree", "forest-entry", "forest-walls", "forest-canopy");
-    static final int FIRST_MEETING_GRANDFATHERED_AT_D105 = 8;
+    static final Set<String> FIRST_MEETING_GRANDFATHERED = Set.of("forest-1-traps", "forest-1-guard", "forest-entry", "forest-walls", "forest-canopy");
+    static final int FIRST_MEETING_GRANDFATHERED_AT_D105 = 5;
     private static final Pattern BEAT = Pattern.compile("([\\w-]+)@(\\d+(?:\\.\\d+)?)");
     /** A time in seconds as a whole token: "9.30 s", not the "9.3" inside "19.30 s". */
     private static final Pattern SECONDS = Pattern.compile("(?<![\\w.])(\\d+(?:\\.\\d+)?) s\\b");
@@ -104,8 +102,13 @@ class RoomCardsTest {
     private static final Pattern BACKTICK = Pattern.compile("`([^`]+)`");
     private static final Pattern ISSUE = Pattern.compile("#\\d+\\b");
 
-    /** A map object a beat may name: its registry key and its horizontal span in the map. */
-    record Placed(int id, String key, float left, float right) { }
+    /**
+     * A map object a beat may name: its registry key and its horizontal span in the map. {@code carriesNoDeath} (D107) is set for a
+     * crumble support that lies over a floor: it drops the hero alive onto it (D69), so it is no lethal neighbour.
+     */
+    record Placed(int id, String key, float left, float right, boolean carriesNoDeath) {
+        Placed(int id, String key, float left, float right) { this(id, key, left, right, false); }
+    }
 
     /** One room in play order with the registry keys of the objects it owns, and the objects themselves (D105). */
     record Room(String name, Set<String> keys, List<Placed> placed) {
@@ -304,6 +307,24 @@ class RoomCardsTest {
         return false;
     }
 
+    /** D107: every placed object of {@code key} in the room is a crumble support over a floor (and there is at least one). */
+    private static boolean allCarryNoDeath(Room room, String key) {
+        boolean any = false;
+        for (Placed p : room.placed) if (p.key.equals(key)) { any = true; if (!p.carriesNoDeath) return false; }
+        return any;
+    }
+
+    /**
+     * D107: whether {@code other} counts as a lethal neighbour of the first-met beat {@code first}. Not when it is a crumble support
+     * over a floor, and not when it is part of the same skill geometry as {@code first} (one object listed under both keys: a rotten
+     * branch is a {@code skin=branch} object like the sound ones the climb is made of).
+     */
+    private static boolean lethalNeighbour(Registry registry, Room room, Placed first, Placed other) {
+        if (other.id == first.id || !isLethal(kindOf(registry, other.key)) || other.carriesNoDeath) return false;
+        for (Placed p : room.placed) if (p.id == other.id && p != other && p.key.equals(first.key)) return false;
+        return true;
+    }
+
     /** Null-safe: an immutable set's {@code contains(null)} throws, and a key may map to no element or no kind. */
     private static boolean isLethal(String kind) { return kind != null && LETHAL_KINDS.contains(kind); }
 
@@ -318,6 +339,11 @@ class RoomCardsTest {
      * when there is none (the real tree for the shipped cards, a fixed map for the synthetic ones).
      */
     static List<String> densityProblems(String text, List<Room> rooms, java.util.function.Function<String, String> sourceOf) {
+        return densityProblems(text, rooms, sourceOf, GRANDFATHERED);
+    }
+
+    /** As above with the rooms allowed below the band given (the shipped list is empty since #500, so its rule is tested on a synthetic one). */
+    static List<String> densityProblems(String text, List<Room> rooms, java.util.function.Function<String, String> sourceOf, Set<String> grandfathered) {
         Registry registry = registry(text);
         Map<String, Map<String, String>> cards = cards(text);
         List<String> problems = new ArrayList<>();
@@ -331,7 +357,7 @@ class RoomCardsTest {
             String role = card.getOrDefault("Role", ""), name = room.name, level = levelOf(card);
             boolean lethal = false, boss = false;
             for (String key : room.keys) {
-                lethal |= isLethal(kindOf(registry, key));
+                lethal |= isLethal(kindOf(registry, key)) && !allCarryNoDeath(room, key);
                 boss |= "boss".equals(registry.elementOfKey.get(key));
             }
             // The exempt roles, each on its merits.
@@ -411,9 +437,9 @@ class RoomCardsTest {
                 if (distinct < MIN_DISTINCT) thin.add(distinct + " distinct element (at least " + MIN_DISTINCT + ")");
                 if (pace > MAX_SECONDS_PER_BEAT) thin.add(String.format(java.util.Locale.ROOT, "%.2f s per beat (at most %.1f)", pace, MAX_SECONDS_PER_BEAT));
                 if (!thin.isEmpty()) {
-                    if (!GRANDFATHERED.contains(name) || !citesIssue(below))
+                    if (!grandfathered.contains(name) || !citesIssue(below))
                         problems.add(name + ": below the density of D105: " + String.join(", ", thin)
-                            + (GRANDFATHERED.contains(name) ? "; its 'Below density' must cite the rework issue (#NNN)" : ""));
+                            + (grandfathered.contains(name) ? "; its 'Below density' must cite the rework issue (#NNN)" : ""));
                 } else if (!empty(below)) {
                     problems.add(name + ": passes the density of D105 but still carries 'Below density': remove it and the room from GRANDFATHERED");
                 }
@@ -421,7 +447,7 @@ class RoomCardsTest {
                     problems.add(String.format(java.util.Locale.ROOT, "%s: %.2f s per beat, denser than %.1f s, without an 'Overload reason' that cites an issue, D105",
                         name, pace, MIN_SECONDS_PER_BEAT));
             }
-            if (!empty(below) && !GRANDFATHERED.contains(name))
+            if (!empty(below) && !grandfathered.contains(name))
                 problems.add(name + ": 'Below density' is only for the rooms shipped below D105 (GRANDFATHERED), not for a new room");
 
             // First meetings: early or cheap, clear of other lethal objects, and pinned by a test that names the room.
@@ -449,7 +475,7 @@ class RoomCardsTest {
                     faults.add("first met as beat " + actual + " with no retry of at most " + CHEAP_RETRY_SECONDS + " s");
                 Placed first = backing.get(actual - 1);
                 for (Placed other : room.placed)
-                    if (other.id != first.id && isLethal(kindOf(registry, other.key)) && gap(first, other) < CLEARANCE_PX)
+                    if (lethalNeighbour(registry, room, first, other) && gap(first, other) < CLEARANCE_PX)
                         faults.add("'" + other.key + "' at x " + (int) other.left + " lies " + (int) gap(first, other) + " px from it (at least "
                             + (int) CLEARANCE_PX + ")");
                 Matcher test = BACKTICK.matcher(entry), pocket = POCKET.matcher(entry);
@@ -484,14 +510,42 @@ class RoomCardsTest {
      * An object's horizontal span: its box, or a polyline's points (a spider's route, D103), widened by a horizontal patrol
      * ({@code offNeg}/{@code offPos} tiles, unless {@code isVertical}), with its map id so two alike objects stay two.
      */
-    static Placed placed(String key, TiledObject o) {
+    static Placed placed(String key, TiledObject o) { return placed(key, o, false); }
+
+    static Placed placed(String key, TiledObject o, boolean carriesNoDeath) {
         float left = o.x, right = o.x + o.width;
         if (o.polyline != null) {
             left = Float.MAX_VALUE; right = -Float.MAX_VALUE;
             for (int i = 0; i < o.polyline.length; i += 2) { left = Math.min(left, o.polyline[i]); right = Math.max(right, o.polyline[i]); }
         }
         if (!o.propBool("isVertical", false)) { left -= o.propFloat("offNeg", 0) * TILE; right += o.propFloat("offPos", 0) * TILE; }
-        return new Placed(o.id, key, left, right);
+        return new Placed(o.id, key, left, right, carriesNoDeath);
+    }
+
+    /**
+     * D107: solid ground lies under the object's whole span, so the support lands the hero on it. A one-way {@code Platform} does not
+     * count (a falling support passes through it, D69), nor does quicksand; the floor blocks together must cover the span without a gap.
+     */
+    static boolean floorUnder(TiledMapData map, RoomLayout layout, TiledObject o) {
+        List<TiledObject> room = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions")) if (layout.owner(c) == layout.owner(o)) room.add(c);
+        return floorUnder(room, o);
+    }
+
+    /** {@link #floorUnder(TiledMapData, RoomLayout, TiledObject)} over the room's collision blocks. */
+    static boolean floorUnder(List<TiledObject> collisions, TiledObject o) {
+        List<float[]> floors = new ArrayList<>();
+        for (TiledObject c : collisions)
+            if (!"QuickSand".equals(c.type) && !"Platform".equals(c.type) && c.y >= o.y + o.height) floors.add(new float[]{c.x, c.x + c.width});
+        return covers(floors, o.x, o.x + o.width);
+    }
+
+    /** The spans together cover {@code left}..{@code right} without a gap. */
+    static boolean covers(List<float[]> spans, float left, float right) {
+        spans.sort((x, y) -> Float.compare(x[0], y[0]));
+        float covered = left;
+        for (float[] f : spans) if (f[0] <= covered) covered = Math.max(covered, f[1]);
+        return covered >= right;
     }
 
     /** The geometry key a skill beat names (registry, D105), or null: a free-standing tall wall, or a branch. */
@@ -523,7 +577,7 @@ class RoomCardsTest {
                         String key = key(group, o);
                         if (key == null || "Deadline".equals(key)) continue; // a Deadline is level-wide and may lie outside rooms
                         keys.get(layout.owner(o)).add(key);
-                        placed.get(layout.owner(o)).add(placed(key, o));
+                        placed.get(layout.owner(o)).add(placed(key, o, "FallingPlatform".equals(o.type) && floorUnder(map, layout, o)));
                     }
                 }
                 for (int i = 0; i < layout.rooms.size(); i++)
@@ -671,6 +725,7 @@ class RoomCardsTest {
         | coin | `Collectable:Coin` | collects | pickup |
         | climb | `Geometry:wall` (skill) | climbs | skill |
         | boss | `Boss` | fights | monster |
+        | crumble | `FallingPlatform` | crosses | hazard |
 
         ## Cards
         """;
@@ -680,6 +735,7 @@ class RoomCardsTest {
         + " void pins() { assertEquals(A, x, 0.1f); assertEquals(B, x, 0.1f); assertEquals(C, x, 0.1f); }"
         + " void dPuff() { pocket(\"d\", \"puff\", 400, \"WARNING\"); }"
         + " void entryPuff() { pocket(\"forest-entry\", \"puff\", 400, \"WARNING\"); }"
+        + " void dClimb() { pocket(\"d\", \"climb\", 200, \"WARNING\"); }"
         + " void wrongRoom() { pocket(\"elsewhere\", \"puff\", 400, \"WARNING\"); }"
         + " void wrongX() { pocket(\"d\", \"puff\", 401, \"WARNING\"); }";
 
@@ -697,8 +753,10 @@ class RoomCardsTest {
 
     private static final String DENSE_ROWS = "| Beats | thorn@108, mob@320, puff@508 |\n| Beat time | 9.00 (`T`) |";
 
-    private static List<String> density(String cards, Room... rooms) {
-        return densityProblems(DENSE_REGISTRY + KNOWN_CARD + cards, List.of(rooms), name -> "T".equals(name) ? T_SOURCE : null);
+    private static List<String> density(String cards, Room... rooms) { return density(Set.of(), cards, rooms); }
+
+    private static List<String> density(Set<String> grandfathered, String cards, Room... rooms) {
+        return densityProblems(DENSE_REGISTRY + KNOWN_CARD + cards, List.of(rooms), name -> "T".equals(name) ? T_SOURCE : null, grandfathered);
     }
 
     @Test void aDenseRoomPasses() {
@@ -796,15 +854,15 @@ class RoomCardsTest {
         String thin = card("forest-1-hive", "variation", "-", "thorn: again", "| Beats | thorn@108 |\n| Beat time | 9.00 (`T`) |\n")
             .replace("| Mastered route | 1 s |", "| Mastered route | 9.00 s |");
         Room mob = new Room("forest-1-hive", Set.of("ThornTuft"), List.of(at(1, "ThornTuft", 100, 16)));
-        assertTrue(density(thin, KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-hive: below the density")));
-        assertTrue(density(thin + "| Below density | reworked later, #soon |\n", KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-hive: below the density")),
+        assertTrue(density(Set.of("forest-1-hive"), thin, KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-hive: below the density")));
+        assertTrue(density(Set.of("forest-1-hive"), thin + "| Below density | reworked later, #soon |\n", KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-hive: below the density")),
             "it must cite a numbered issue");
-        assertEquals(List.of(), density(thin + "| Below density | reworked by #500 |\n", KNOWN, mob));
+        assertEquals(List.of(), density(Set.of("forest-1-hive"), thin + "| Below density | reworked by #500 |\n", KNOWN, mob));
         Room d = new Room("d", Set.of("ThornTuft"), List.of(at(1, "ThornTuft", 100, 16)));
-        assertTrue(density(thin.replace("forest-1-hive", "d") + "| Below density | reworked by #500 |\n", KNOWN, d).stream()
+        assertTrue(density(Set.of("forest-1-hive"), thin.replace("forest-1-hive", "d") + "| Below density | reworked by #500 |\n", KNOWN, d).stream()
             .anyMatch(s -> s.contains("only for the rooms shipped below D105")));
         String passing = dense("variation", "-", DENSE_ROWS).replace("### d", "### forest-1-hive") + "| Below density | reworked by #500 |\n";
-        assertTrue(density(passing, KNOWN, new Room("forest-1-hive", DENSE.keys(), DENSE.placed())).stream().anyMatch(s -> s.contains("still carries 'Below density'")));
+        assertTrue(density(Set.of("forest-1-hive"), passing, KNOWN, new Room("forest-1-hive", DENSE.keys(), DENSE.placed())).stream().anyMatch(s -> s.contains("still carries 'Below density'")));
     }
 
     /** {@code d} introduces the puffball (the lesson before it does not); {@code rows} are its Beats, Beat time and First meeting. */
@@ -835,6 +893,77 @@ class RoomCardsTest {
         Room crowded = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 100, 16), at(3, "Puffball", 250, 16), at(2, "RedMob", 300, 48)));
         assertTrue(meeting("d", crowded, second.replace("mob@420", "mob@320") + good).stream()
             .anyMatch(s -> s.contains("'RedMob' at x 300 lies 34 px from it (at least 96)")), "another lethal object within 96 px");
+    }
+
+    // ---- D107: a crumble support counts as lethal only when it can kill ----
+
+    private static List<String> climbMeeting(Room map) {
+        String base = card("k", "lesson", "lever, thorn, mob, coin", "-", "").replace("| Level | test |", "| Level | forest-0, room 1 |");
+        String card = card("d", "variation", "climb", "-", "| Beats | thorn@108, climb@200, mob@420 |\n| Beat time | 9.00 (`T`) |\n"
+            + "| First meeting | climb: beat 2, pocket at x 200 (`T.dClimb`) |\n").replace("| Mastered route | 1 s |", "| Mastered route | 9.00 s |");
+        return densityProblems(DENSE_REGISTRY + base + card, List.of(new Room("k", Set.of("Trigger", "ThornRoot", "RedMob", "Collectable:Coin")), map),
+            name -> "T".equals(name) ? T_SOURCE : null);
+    }
+
+    @Test void aCrumbleSupportOverAFloorIsNoLethalNeighbourButOverAPitItIs() {
+        Placed climb = at(7, "Geometry:wall", 200, 16);
+        Room over = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, new Placed(8, "FallingPlatform", 230, 262, true), at(2, "RedMob", 420, 48)));
+        assertEquals(List.of(), climbMeeting(over), "a support that drops the hero onto a floor is no neighbour that can kill (D107)");
+        Room pit = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, at(8, "FallingPlatform", 230, 32), at(2, "RedMob", 420, 48)));
+        assertTrue(climbMeeting(pit).stream().anyMatch(s -> s.contains("'FallingPlatform' at x 230 lies 14 px from it")), "over a pit it still counts");
+    }
+
+    /** The shipped maps: the rotten log over the pit (forest-1-traps) is lethal, the falling platforms and rotten branches over a floor are not. */
+    @Test void onTheShippedMapsOnlyTheSupportsOverAFloorCarryNoDeath() {
+        Map<Integer, Boolean> expected = new HashMap<>();
+        expected.put(37, false);                                          // the rotten log over the pit (forest-1-traps)
+        for (int id : new int[]{21, 22, 23, 24, 58, 85, 86, 87, 88, 89}) expected.put(id, true); // the escalator's platforms, the shelf's, the rotten column
+        Set<Integer> seen = new HashSet<>();
+        for (Room room : shippedRooms()) for (Placed p : room.placed())
+            if (room.name().startsWith("forest-1") && p.key().startsWith("FallingPlatform") && expected.containsKey(p.id())) {
+                assertEquals(expected.get(p.id()), p.carriesNoDeath(), room.name() + " object " + p.id() + " (" + p.key() + ")");
+                seen.add(p.id());
+            }
+        assertEquals(expected.keySet(), seen, "every listed support is on the shipped forest-1 map");
+    }
+
+    @Test void aFloorMustCoverTheWholeSpanAndBeSolid() {
+        assertTrue(covers(new ArrayList<>(List.of(new float[]{0, 100}, new float[]{100, 200})), 40, 160), "two blocks that meet cover it");
+        assertFalse(covers(new ArrayList<>(List.of(new float[]{0, 100})), 40, 160), "half over a pit is lethal");
+        assertFalse(covers(new ArrayList<>(List.of(new float[]{0, 90}, new float[]{110, 200})), 40, 160), "a gap under the middle is lethal");
+        assertFalse(covers(new ArrayList<>(), 40, 160), "nothing under it is a pit");
+    }
+
+    private static TiledObject box(String type, float x, float y, float w, float h) {
+        TiledObject o = new TiledObject();
+        o.type = type; o.x = x; o.y = y; o.width = w; o.height = h;
+        return o;
+    }
+
+    @Test void aOneWayPlatformOrQuicksandIsNoFloorForASupport() {
+        TiledObject support = box("FallingPlatform", 16, 16, 32, 16);
+        assertTrue(floorUnder(List.of(box("", 0, 48, 64, 16)), support), "a solid floor under it");
+        assertFalse(floorUnder(List.of(box("Platform", 0, 48, 64, 16)), support), "a one-way platform over a pit: the support passes through it (D69), lethal");
+        assertFalse(floorUnder(List.of(box("QuickSand", 0, 48, 64, 16)), support), "quicksand is no floor");
+        assertFalse(floorUnder(List.of(box("", 0, 48, 32, 16)), support), "half a floor is lethal");
+        assertFalse(floorUnder(List.of(box("", 0, 16, 64, 16)), support), "a block beside it, not under it, is no floor");
+    }
+
+    @Test void anObjectOfTheSkillsOwnGeometryIsNotItsOwnNeighbour() {
+        Placed climb = at(7, "Geometry:wall", 200, 16);
+        Room same = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, at(7, "FallingPlatform", 200, 16), at(2, "RedMob", 420, 48)));
+        assertEquals(List.of(), climbMeeting(same), "one object listed under the skill's key and its own (a rotten branch)");
+        Room other = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, at(9, "FallingPlatform", 200, 16), at(2, "RedMob", 420, 48)));
+        assertTrue(climbMeeting(other).stream().anyMatch(s -> s.contains("'FallingPlatform' at x 200 lies 0 px from it")), "another object is a neighbour");
+    }
+
+    @Test void aRewardRoomMayHoldACrumbleSupportOverAFloorButNotOverAPit() {
+        Room floor = new Room("d", Set.of("FallingPlatform"), List.of(new Placed(8, "FallingPlatform", 230, 262, true)));
+        assertEquals(List.of(), density(dense("reward", "-", ""), KNOWN, floor), "nothing in it can kill (D107)");
+        Room pit = new Room("d", Set.of("FallingPlatform"), List.of(at(8, "FallingPlatform", 230, 32)));
+        assertTrue(density(dense("reward", "-", ""), KNOWN, pit).contains("d: role reward, but the room holds a lethal element, D105"));
+        Room mixed = new Room("d", Set.of("FallingPlatform"), List.of(new Placed(8, "FallingPlatform", 230, 262, true), at(9, "FallingPlatform", 400, 32)));
+        assertTrue(density(dense("reward", "-", ""), KNOWN, mixed).contains("d: role reward, but the room holds a lethal element, D105"), "one over a pit is enough");
     }
 
     @Test void aLateFirstMeetingIsExcusedOnlyOnTheShrinkingListWithANumberedIssue() {

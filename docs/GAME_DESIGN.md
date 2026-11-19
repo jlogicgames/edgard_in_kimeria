@@ -233,8 +233,8 @@ rides it down to the floor and climbs again. So the cost of hesitating is height
 stand side by side: the near one is a column of rotten branches (4.95 s to the top), the far one a zig-zag of sound
 branches (6.23 s); both meet at the crown, which holds the level's checkpoint. A rotten branch is never the only way up
 (D26) and never hangs above a sound one (D69); the load refuses either. The room has no lethal trap and its landmark is
-the pair of trees. Since #327 a beetle crawls at the sound tree's foot (D100): the fast column is out of its reach, the sure
-climb costs a lure or a charge, and the room's one death is standing in its burst.
+the pair of trees. A beetle crawled at the sound tree's foot between #327 and #500 (D100); since #500 the room is forest-1's one
+`reward` room (D105): nothing in it can kill.
 
 **Forest traps (accepted 2026-11-05, [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan)):**
 simple, lethal, organic hazards on the ground and overhead, grouped by trigger family
@@ -696,7 +696,7 @@ metrics at the seven RedMob and YellowMob spawns of the three maps): outline 0.3
 above the active 0.28; the gate measures every placed `Beetle`. Code: `entity/enemy/Beetle.java`; tests: `BeetleTest`,
 `BeetleFxTest`, `RemainsTest` (D101), `AllocationBudgetTest.beetleThroughTheRealLevel`. The body's decor variant measures
 outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20). Placed (#327, cards approved 2026-11-18): introduced in `forest-1-guard`
-past the tunnel and developed at the sound tree's foot in `forest-1-tree` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); repeated in forest-2 on
+past the tunnel (it crawled at the sound tree's foot in `forest-1-tree` until that room became a reward room, #500) ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); repeated in forest-2 on
 the exit ledge of `forest-fissure` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure), approved by the author 2026-11-18).
 
 ### Spider card (built, [D102](DECISIONS.md#d102-the-forest-spider-it-hears-notices-and-pounces-at-where-the-hero-stood-make-it-miss-then-strike-328-240-398), [#328](https://github.com/jlogicgames/edgard_in_kimeria/issues/328); climbing and the silk drop, [D103](DECISIONS.md#d103-the-forest-spider-climbs-and-drops-a-route-of-floors-walls-and-a-silk-thread-two-strikes-one-tell-483-328), [#483](https://github.com/jlogicgames/edgard_in_kimeria/issues/483))

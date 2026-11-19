@@ -101,9 +101,9 @@ class RoomReplayTest {
         // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
         assertEquals(TRAPS_S, measure("forest-1", 2, false, 0, new float[]{125, 260, 540, 637, 993, 1089}), PIN_MARGIN, "the card's beat time (D105)");
     }
-    /** #375: the first RedMob alone, then the refill; the sword takes the mob, no jump is needed. */
+    /** #375, reworked under #500 (D105): the RedMob held behind a log, a falling branch, an exploding stump, then the refill; the route jumps the log (3680) and the stump (4050) and swords the mob. */
     @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
-        assertEquals(MOB_S, measure("forest-1-mob", 0, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
+        assertEquals(MOB_S, measure("forest-1-mob", 0, false, 0, new float[]{3680, 4050}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
         assertEquals(ENTRY_S, measure("forest-entry", 0, false, 0, ENTRY_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
@@ -128,7 +128,7 @@ class RoomReplayTest {
 
     private static final float[] ENTRY_JUMPS = {95, 225, 345, 535}, WALLS_JUMPS = {860, 940};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 12.27f, MOB_S = 7.43f, ENTRY_S = 6.80f, WALLS_S = 8.80f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 12.27f, MOB_S = 6.75f, ENTRY_S = 6.80f, WALLS_S = 8.80f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -359,7 +359,7 @@ class RoomReplayTest {
         for (int attempt = 0; attempt < 3; attempt++) {
             held.clear(); pressed.clear(); timeScale = 1;
             if (attempt > 0) level.resetCurrentRoom(player());
-            float seconds = replay(level, "forest-1-mob", false, 0, new float[]{}, true);
+            float seconds = replay(level, "forest-1-mob", false, 0, new float[]{3680, 4050}, true);
             assertEquals(3, level.rangedStock.count());
             assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.FireballRefill && !o.isRemoved()));
             assertTrue(seconds <= REQUIRED_LIMIT);

@@ -492,12 +492,12 @@ class FallingTrapsTest {
         assertTrue(stone(l).bodyBounds().y >= room.y, "the stone starts inside the room, flush with its top");
     }
 
-    @Test void theFallingTrapsAreTheTutorialsTheForestTwoApproachsAndTheTwoSpiderRoomStones() {
-        // #500 (D105): forest-1 has no branch and two stones, one in forest-1-spider and one in forest-1-climb (before, none).
+    @Test void theFallingTrapsAreTheTutorialsTheForestTwoApproachsAndForestOnesFiveReworkedRoomsTraps() {
+        // #500 (D105): forest-1 has two branches, one in forest-1-mob and one in forest-1-bramble, and three stones, one each in
+        // forest-1-deadfall, forest-1-spider and forest-1-climb (before the rework, none).
         String one = Gdx.files.internal("tiles/forest-1.tmx").readString();
-        assertFalse(one.contains("FallingBranch"), "forest-1 has no branch");
-        assertEquals(2, one.split("type=\"FallingStone\"", -1).length - 1, "forest-1: two stones (#500)");
-        assertTrue(load("forest-1").objects.stream().filter(FallingTrap.class::isInstance).allMatch(FallingStone.class::isInstance), "forest-1");
+        assertEquals(2, one.split("type=\"FallingBranch\"", -1).length - 1, "forest-1: two branches (#500)");
+        assertEquals(3, one.split("type=\"FallingStone\"", -1).length - 1, "forest-1: three stones (#500)");
         // #261 (D59): forest-2 has no branch and exactly one stone, at the end of forest-canopy.
         String two = Gdx.files.internal("tiles/forest-2.tmx").readString();
         assertFalse(two.contains("FallingBranch"), "forest-2 has no branch");

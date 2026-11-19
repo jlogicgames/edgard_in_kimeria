@@ -18,7 +18,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * forest-1's first room (#375, D72): the first RedMob, alone on flat ground, then the refill. The room lies after the tree
+ * forest-1's first room (#375, D72, reworked under #500 for D105): the first RedMob held behind a fallen log, then a falling branch and
+ * an exploding stump (both met in forest-0), then the refill. The room lies after the tree
  * room on the map (x 3520-4320) and is first in the Rooms list, which sets the play order. Y grows downward: floor top y 320.
  */
 class Forest1MobTest {
@@ -41,9 +42,49 @@ class Forest1MobTest {
     }
     private RedMob mob(Level l) { return l.objects.stream().filter(RedMob.class::isInstance).map(RedMob.class::cast).findFirst().orElse(null); }
     private FireballRefill refill(Level l) { return l.objects.stream().filter(FireballRefill.class::isInstance).map(FireballRefill.class::cast).findFirst().orElse(null); }
+    /** Take-off x (hero frame position) for the log (x 3728-3760) and for the stump (x 4112); the mastered route jumps both (D105). */
+    private static final float[] JUMPS = {3680, 4050};
+    private int nextJump;
+    private void jumpAt(Level l) {
+        if (nextJump < JUMPS.length && l.player.position.x >= JUMPS[nextJump] && l.player.isOnGround()) { held.add(Input.Keys.J); nextJump++; }
+    }
+    /** Walks (jumping the log) to hero frame position {@code stopX}, stands still, and returns the seconds until he is hit, or -1 after 20 s. */
+    private float standAt(float stopX) {
+        Level l = room(0);
+        nextJump = 0;
+        for (int f = 0; f < 60 * 20; f++) {
+            held.clear(); pressed.clear();
+            if (l.player.position.x < stopX) { held.add(Input.Keys.D); if (nextJump == 0) jumpAt(l); }
+            l.update(STEP);
+            if (l.player.isGotHit()) return (f + 1) * STEP;
+        }
+        return -1;
+    }
+    /** The card's retry costs: standing on the log inside the whip's reach (2.5 to 2.7 s), and standing beside the stump when it blows (6.17 s). */
+    @Test void theRetryCostsTheCardStates() {
+        assertEquals(2.65f, standAt(3730), 0.1f, "on the log, inside the whip");
+        assertEquals(2.47f, standAt(3745), 0.1f, "on the log, nearer the mob");
+        assertEquals(6.17f, standAt(4100), 0.1f, "beside the stump when it blows");
+        assertEquals(-1f, standAt(3700), 0.0f, "short of the log nothing reaches him");
+    }
+    /** The card's "same 6.75 s for a hero who never swings": he jumps the log and the stump and is never hit. */
+    @Test void aHeroWhoNeverSwingsStillReachesTheExitIn675Seconds() {
+        Level l = room(0);
+        nextJump = 0;
+        int f = 0;
+        while (!l.atRoomExit() && f++ < 60 * 20) {
+            held.clear(); pressed.clear();
+            held.add(Input.Keys.D);
+            jumpAt(l);
+            l.update(STEP);
+            assertFalse(l.player.isGotHit(), "never hit at " + f * STEP + " s");
+        }
+        assertTrue(l.atRoomExit());
+        assertEquals(6.75f, f * STEP, 0.1f);
+    }
     private float centerX(Level l) { Rectangle b = l.player.hitboxBounds(); return b.x + b.width / 2; }
 
-    @Test void theLevelStartsHereAndTheRoomHoldsOneRedMobOneRefillAndTheExitAndNothingElse() {
+    @Test void theLevelStartsHereAndTheRoomHoldsOneRedMobTheRefillTheExitAndTheLogBranchAndStump() {
         Level l = room(0);
         assertEquals("forest-1-mob", l.currentRoomName());
         assertEquals(new Rectangle(ROOM_X, 0, ROOM_END - ROOM_X, 368), l.currentRoomBounds());
@@ -65,7 +106,7 @@ class Forest1MobTest {
     private String nextRoomName(Level l) { l.enterNextRoom(player()); return l.currentRoomName(); }
 
     /** The mob is in view from the entrance; the refill is out of view for as long as the mob is alive and the hero is in its range. */
-    @Test void theMobIsMetAloneAndTheRefillComesIntoViewOnlyAfterIt() {
+    @Test void theRefillComesIntoViewOnlyAfterTheMob() {
         Level l = room(0);
         Vector2 cam = l.player.roomCameraTarget();
         assertTrue(cam.x <= MOB_X && MOB_X + 48 <= cam.x + VIEW_W, "the mob is on screen from the entrance");
@@ -74,6 +115,7 @@ class Forest1MobTest {
         for (int f = 0; f < 60 * 20 && !l.atRoomExit(); f++) {
             held.clear(); pressed.clear();
             held.add(Input.Keys.D);
+            jumpAt(l);
             boolean action = false;
             RedMob m = mob(l);
             if (m != null && !m.isDefeated()) {
@@ -105,6 +147,7 @@ class Forest1MobTest {
         for (int f = 0; f < 60 * 20 && !l.atRoomExit(); f++) {
             held.clear(); pressed.clear();
             held.add(Input.Keys.D);
+            jumpAt(l);
             l.update(STEP);
             assertFalse(l.player.isGotHit());
         }

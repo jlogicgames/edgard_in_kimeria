@@ -243,21 +243,21 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | --- | --- |
 | Level | forest-1, play order 2, room 1 of 11 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
-| Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
+| Purpose | The first enemy: it sees you and charges, but a fallen log holds it; step up on the log and read its raised arm, then sword or stomp it (or run on past it); a loose branch and an exploding stump on the way to the refill, which gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
 | Develops | - |
 | Combines | - |
-| Mastered route | 7.43 s, zero charges, the sword takes the mob (`RoomReplayTest`); 6.97 s to the refill with two charges; target about 20 s (D19) |
+| Repeats | falling-branch, touch-explosive |
+| Mastered route | 6.75 s, zero charges: the mob charges into the log, the hero jumps onto the log and swords it, walks on under the branch, jumps the stump, takes the refill (`RoomReplayTest`, `Forest1MobTest`); the same 6.75 s for a hero who never swings (never hit, `Forest1MobTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | under 3 s: the mob is the only hazard, its range starts about 150 px from the entrance |
-| Beats | redmob@3776 |
-| Beat time | 7.43 (`RoomReplayTest`) |
-| First meeting | redmob: beat 1, its range (x 3728-3872) is clear of other lethal objects, but it stands idle until the hero is in its reach (measured: idle for a hero centre up to x 3728, a hit from x 3732), so no safe spot shows it acting, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| Below density | 1 beat in 7.43 s (7.43 s per beat): the first RedMob in a room of its own (D85), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| D26 | no support, no one-shot state; the sword or a stomp needs no ammunition |
+| Retry cost | 6.17 s at worst (standing beside the stump when it blows, `Forest1MobTest`); 2.5 to 2.7 s for a hero who stops on the log inside the whip's reach |
+| Beats | redmob@3776, falling-branch@3984, touch-explosive@4112 |
+| Beat time | 6.75 (`RoomReplayTest`) |
+| First meeting | redmob: beat 1, pocket at x 3716, on the floor behind the log inside its range (x 3712-3872), where it notices him, runs at him and is stopped by the log (x 3728-3760), its whip short of him, 112 px from the branch column (`FirstMeetingPocketTest.forest1MobTheRedMob`, acting `RUN`) |
+| D26 | no lever, support or one-shot state; the log is plain geometry the mob cannot climb (no clamber on a non-wall block), so the hero can always step back behind it; the sword or a stomp needs no charge, and the stump is jumped or outrun |
 | Hints | none (forest-1 has none, D33) |
 | Status | new, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (cards approved by the author 2026-11-17); `Forest1MobTest` checks the mob and the refill are met one at a time. Role `variation`, not `lesson`: lesson rooms follow the tutorial rules D33-D40 and D48 (hint zones, one lesson element plus at most one trap), and this room has two elements, neither a trap, and no hints (forest-1 has none, D33); it is held to the two-introduction cap instead, which it meets |
-| Decisions | D85 (revises D58), D72 |
+| Decisions | D85, D72, D105 |
 
 Sketch (Y grows downward, floor top y 320; walls x 3520-3536 and 4304-4320):
 
@@ -268,11 +268,24 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 =====+==========================================================+=====  floor y 320
 ```
 
-- RoomStart (3552, 272). RedMob, the old id 11 moved here, at x 3776, y 288, `offNeg`/`offPos` 3 tiles (wakes for a
-  hero centre in x 3728-3824). It is the only object on screen from the entrance.
+Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): a fallen log, a loose branch and an exploding stump were added, and the mob's range grew one tile to the left.
+
+```
+x    3520 3552     3712 3728-3760 3776    3872     3984     4112   4208 4256    4320
+     |wall|start    :   [ log ]    M        :        |b       s      R   exit   |wall|
+=====+==================================================================+=====  floor y 320
+```
+
+- RoomStart (3552, 272). RedMob, the old id 11 moved here, at x 3776, y 288, `offNeg` 4, `offPos` 3 tiles (wakes for a
+  hero centre in x 3712-3824, span x 3712-3872).
+- New solid log (plain `Collisions`, id 176) x 3728-3760, y 304-320, two tiles wide: the sword reaches 17 px past the body, so
+  across a 16 px stump it would kill the mob from cover and its whip would never be read; across 32 px the hero must step onto
+  the log, inside the whip's reach. The mob blocked at the log's right face cannot reach the pocket at x 3716.
+- New `FallingBranch` (id 177) x 3984, y 208 (zone x 3976-4024, y 208-320), 112 px past the mob's span.
+- New `ExplosiveStump` (id 178) x 4112, y 304, jumped or outrun; clear of the refill (x 4208) and the exit (x 4256).
 - FireballRefill, the old id 25 moved here (identity kept), at x 4208, y 288 (one tile over the floor), picked up by walking.
   With the camera clamped to the room, it is off screen while the hero stands in the mob's range (screen right edge
-  4160 until the hero's centre passes about 3840), so the mob and the refill are each met alone, in that order.
+  4160 until the hero's centre passes about 3840), so the refill is seen only after the mob.
 - RoomExit (4256, 272, 32 x 48).
 
 ### forest-1-deadfall
@@ -281,34 +294,36 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 | --- | --- |
 | Level | forest-1, play order 2, room 2 of 11 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
 | Role | variation |
-| Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by. |
+| Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by; then keep walking under a loose stone and beat the RedMob at the exit. |
 | Introduces | deadfall |
 | Develops | - |
 | Combines | - |
-| Mastered route | 5.17 s jumping the vine (take-offs 2 to 60 px before it), 6.47 s tripping it and stopping (6.88 s with the longer-warnings assist) (`DeadfallTrapTest`); target about 20 s (D19) |
+| Repeats | falling-stone, redmob |
+| Mastered route | 5.85 s jumping the vine (take-offs 2 to 60 px before it, the stone walked under, the mob swung at), 7.15 s tripping it and stopping (7.57 s with the longer-warnings assist) (`DeadfallTrapTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 2.65 s: a hero who walks in without jumping is hit 2.65 s after the entrance (2.97 s with the assist) |
-| Beats | deadfall@5248 |
-| Beat time | 5.17 (`DeadfallTrapTest`) |
-| First meeting | deadfall: beat 1, retry 2.65 s, watched from the entrance with nothing else in the room, but a touch trap acts only when its vine is tripped (D88), so no safe spot shows it acting, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| Below density | 1 beat in 5.17 s (5.17 s per beat): the deadfall as the room's only object (D88), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Retry cost | 5.2 s at worst: a hero stopping under the stone is hit 5.18 s after the entrance, one who walks on past the mob without a swing 4.4 s; walking into the swing costs 2.00 s (2.32 s with the assist) (`DeadfallTrapTest`) |
+| Beats | deadfall@5184, falling-stone@5392, redmob@5472 |
+| Beat time | 5.85 (`DeadfallTrapTest`) |
+| First meeting | deadfall: beat 1, pocket at x 5120, on the vine (x 5112-5128): the hero trips it and stands, 54 px short of the swing band (x 5182-5282), and sees the log slip and swing past, never hit (`FirstMeetingPocketTest.forest1DeadfallTheDeadfall`, acting `SWING`); a touch trap whose trigger lies outside its lethal band (D88, D105, ROOMS.md "Density and first meetings") |
 | D26 | no support, no one-shot state the route needs: a jump leaves the log tied, a trip leaves it hanging from the snag above head height and the vine cut, and the exit is reachable from both (`DeadfallTrapTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the log hauled up and lashed to the bough by the tree trunk |
-| Status | new, [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) (card, art and placement approved by the author 2026-11-17). The deadfall is the room's only object and is in view from the entrance with the exit (D84). Built and tested with a scripted hero; played by the author 2026-11-17, approved |
-| Decisions | D88, D72 |
+| Status | new, [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) (card, art and placement approved by the author 2026-11-17). Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): the deadfall moved 64 px left (box x 5184-5296, trunk x 5292), a falling stone (id 179, x 5392, zone x 5376-5424) and a RedMob (id 180, x 5472, `offNeg` 3, `offPos` 0) before the exit. The trap is in view from the entrance with the exit (D84) |
+| Decisions | D88, D72, D105 |
 
-Sketch (Y grows downward, floor top y 320; walls x 4960-4976 and 5584-5600; P is the rope knot, x 5296, y 252):
+Sketch (Y grows downward, floor top y 320; walls x 4960-4976 and 5584-5600; P is the rope knot, x 5232, y 252; since #500 the
+trap is 64 px left of where D88 first placed it, to make room for the stone and the mob):
 
 ```
-x    4960 4992        5176-5192        5228  5296  5364      5536    5600
-     |wall|start       vine (trip)      [ swing band ]  trunk  exit  |wall|
-     |    |  @          =             bough====P====log| |      [ ]  |    |
+x    4960 4992  5112-5128   5182 --- 5282  5292   5392    5472   5536    5600
+     |wall|start  vine       [ swing band ]  trunk   o      M    exit   |wall|
+     |    |  @     =      bough====P====log| |      (lip)          [ ]  |    |
 =====+==========================================================+=====  floor y 320
 ```
 
-- RoomStart (4992, 272). Deadfall (the bough, 112 x 24) at (5248, 243), `swing` left: the log is tied on the right
-  and swings left, at a hero coming from the entrance. A `Decor:trunk` at x 5356 holds the bough's thick end.
+- RoomStart (4992, 272). Deadfall (the bough, 112 x 24) at (5184, 243), `swing` left: the log is tied on the right
+  and swings left, at a hero coming from the entrance. A `Decor:trunk` at x 5292 holds the bough's thick end.
+- `FallingStone` (id 179) x 5392, zone x 5376-5424, y 288-320; `RedMob` (id 180) x 5472, `offNeg` 3, `offPos` 0.
 - RoomExit (5536, 272, 32 x 48).
 
 ### forest-1-traps
@@ -327,7 +342,7 @@ x    4960 4992        5176-5192        5228  5296  5364      5536    5600
 | Retry cost | 12.73 s for a death at the log (D58; `Forest1TrapsTest`, unchanged by #375) |
 | Beats | crumble-support@160, running-platform@304, lever-wall@480, lever-platform@544, proximity-thorn@696, redmob@864, puffball@944, crumble-support@1088 |
 | Beat time | 12.27 (`RoomReplayTest`) |
-| First meeting | running-platform: beat 2 (`Forest1TrapsTest`), its patrol (x 256-384) passes 32 px from the falling platforms (x 96-224), under the 96 px clearance, built before D105 (D58) and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); puffball: beat 7, met one screen after the escalators right behind the known RedMob, built before D105 (D58) and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| First meeting | running-platform: beat 2, pocket at x 240, on the floor between the falling platforms (x 96-224, which drop the hero onto the floor, so D107 does not count them) and the escalator's patrol (x 256-384), the escalator seen running (`FirstMeetingPocketTest.forest1TrapsTheEscalator`); puffball: beat 7, met one screen after the escalators right behind the known RedMob, built before D105 (D58) and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | the pit is the level `Deadline`, a retry; nothing is re-armed (D58) |
 | Hints | none |
 | Status | D72 audit 2026-11-16: change; done by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (D85): the first RedMob (id 11) and the refill (id 25) moved to `forest-1-mob`, the lever-and-torch pair (ids 12, 13) was removed, the trap course x 616-1280 is untouched. |
@@ -412,28 +427,27 @@ x    6880 6912     7136  7184  7232   7440-7472  7584 7600 7616  7744       7872
 | --- | --- |
 | Level | forest-1, play order 2, room 6 of 11 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-spider` in the `Rooms` list, which sets the play order) |
 | Role | variation |
-| Purpose | A thorn arm grows over a ladder top on a clock: watch it from the floor, wait on the ladder, climb out when it pulls back. |
+| Purpose | A thorn arm grows over a ladder top on a clock: jump a thorn root, walk under a loose branch, watch the arm from the ladder's foot, wait on the ladder, climb out when it pulls back. |
 | Introduces | bramble |
 | Develops | ladder: its top is now a place to wait and watch, and leaving it is timed |
 | Combines | - |
-| Repeats | ladder |
-| Mastered route | 10.73 s from a fresh start, the same with the longer-warnings assist; 9.42 to 12.80 s over every start offset (0.05 s steps) for a hero who goes when the lane is open or waits on the ladder for the arm to come back (`Forest1BrambleTest`); target about 20 s (D19) |
+| Repeats | ladder, proximity-thorn, falling-branch |
+| Mastered route | 9.47 s from a fresh start, the same with the longer-warnings assist; 8.13 to 11.52 s over every start offset (0.05 s steps) for a hero who goes when the lane is open or waits on the ladder for the arm to come back (`Forest1BrambleTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 6.70 s: a hero who climbs straight out from a fresh start is caught 6.70 s after the entrance and replays the room from its entrance (`Forest1BrambleTest`) |
-| Beats | bramble@6160 |
-| Beat time | 10.73 (`Forest1BrambleTest`) |
-| First meeting | bramble: beat 1, pocket at x 6170 at the ladder's foot, where its band never reaches and the arm is seen growing and pulling back (`FirstMeetingPocketTest.forest1BrambleTheBramble`) |
-| Below density | 1 beat in 10.73 s (10.73 s per beat): the bramble as the room's only hazard (D89), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| D26 | no lever, no support, no one-shot state: the ladder is always down and the arm comes back every 4 s, so waiting on the ladder always gives another window; the band never reaches the floor, so the walk to the ladder is safe (`Forest1BrambleTest`) |
+| Retry cost | 5.42 s: a hero who climbs straight out from a fresh start is caught 5.42 s after the entrance and replays the room from its entrance (`Forest1BrambleTest`; 6.70 s before the entrance moved) |
+| Beats | proximity-thorn@5872, falling-branch@6000, bramble@6160 |
+| Beat time | 9.47 (`Forest1BrambleTest`) |
+| First meeting | bramble: beat 3, retry 5.42 s, pocket at x 6170 at the ladder's foot, where its band never reaches and the arm is seen growing and pulling back, 128 px from the branch column (`FirstMeetingPocketTest.forest1BrambleTheBramble`) |
+| D26 | no lever, no support, no one-shot state the route needs: the ladder is always down and the arm comes back every 4 s, so waiting on the ladder always gives another window; the band never reaches the floor, so the walk to the ladder is safe; the root is jumped and the branch falls behind a walker (`Forest1BrambleTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the thorn arm sweeping over the ladder top under the shelf's end |
-| Status | new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
-| Decisions | D89, D72 |
+| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): `RoomStart` x 5632 to 5760 (the route comes back left along the shelf, so every added beat lies left of the bramble; the nearer entrance cuts the blind-climb death from 6.70 s to 5.42 s), `Bramble` `phase` 1.28 (a fresh start meets the clock as before), a thorn root (id 181, x 5872, `zone` 64) and a loose branch (id 182, x 6000, y 224, under the shelf). Originally: new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
+| Decisions | D89, D72, D105 |
 
 Sketch (Y grows downward, floor top y 320, shelf top y 208; walls x 5600-5616 and 6224-6240):
 
 ```
-x    5600 5632              5904 5920                    6160     6192 6208 6224 6240
+x    5600 5760              5904 5920                    6160     6192 6208 6224 6240
      |wall|start             [ shelf 5904-6192, y 208-224 ]  B~~~~~~~~~~~~~~~~|wall|
      |    | @                 E (exit 5920-5952, y 176-208)          | L  |    |    |
 =====+=====================================================================+====+====  floor y 320
@@ -442,7 +456,9 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 - `Bramble` (id 127) x 6160, y 184, 64 x 24, `root=right`: rooted in the right wall's face at x 6224, the band y 190-206,
   the grown arm over x 6160-6224, the always-lethal clump x 6212-6224.
 - Static `Ladder` (id 126) x 6192-6208, y 208-320, no lever: one tile off the wall, so its top is clear of the clump (D89).
-- `RoomExit` (id 125) x 5920-5952, y 176-208, on the shelf's left end. `RoomStart` (5632, 272).
+- `RoomExit` (id 125) x 5920-5952, y 176-208, on the shelf's left end. `RoomStart` (5760, 272).
+- `ThornRoot` (id 181) x 5872, y 296, `zone` 64 (a root's zone is at least 64 px a side): jumped on the walk, 83 px from the entrance body.
+  `FallingBranch` (id 182) x 6000, y 224, hanging under the shelf, zone x 5992-6040, y 224-320: it falls behind a walker.
 
 ### forest-1-climb
 
@@ -540,25 +556,24 @@ x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         
 | Field | Value |
 | --- | --- |
 | Level | forest-1, play order 2, room 10 of 11 (640 px, one screen, x 6240-6880: appended at the map's end, listed after `forest-1-guard` in the `Rooms` list, which sets the play order) |
-| Role | variation |
-| Purpose | A hive drops a curtain of stingers on a clock: pass under the first in its calm on open ground, then climb a ladder the second hive's curtain runs down, starting right after a curtain. |
+| Role | combination |
+| Purpose | Pass under the floor hive in its calm, climb through the ladder hive's curtain, then step off the ladder onto the ledge where a spider guards the exit: make it miss and strike it. |
 | Introduces | hanging-hive |
 | Develops | - |
-| Combines | hanging-hive + ladder: the second hive's band covers the whole ladder to the exit ledge, so the climb must start right after a curtain and fit its window |
-| Repeats | ladder, carry-throw |
-| Mastered route | 7.12 s from a fresh start; 6.85 to 12.22 s over start offsets of 0 to 9 s (0.1 s steps), with and without the longer-warnings assist, for a hero who waits outside each band while it is in the air or about to be and starts the climb right after a curtain (`Forest1HiveTest`); target about 20 s (D19) |
+| Combines | hanging-hive + ladder: the second hive's band covers the whole ladder to the exit ledge, so the climb must start right after a curtain and fit its window; hanging-hive + spider: the curtain pushes the hero off the ladder onto a strip the spider cannot reach, and only there can he bait it |
+| Repeats | ladder, carry-throw, spider |
+| Mastered route | 8.85 s from a fresh start (8.58 to 14.22 s over start offsets of 0 to 9 s in 0.1 s steps, with and without the longer-warnings assist) for a hero who waits outside each band while it is in the air or about to be, starts the climb right after a curtain, then baits the spider's pounce, steps back and strikes it in its recovery (`Forest1HiveTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 7.5 s at most: a hero who walks and climbs without waiting dies in every one of 45 start offsets, 12 times under the floor hive and 33 times under the ladder hive, 3.1 to 7.5 s after the entrance, and replays the room from its entrance (`Forest1HiveTest`) |
-| Beats | hanging-hive@6440, hanging-hive@6604 |
-| Beat time | 7.12 (`Forest1HiveTest`) |
-| First meeting | hanging-hive: beat 1, pocket at x 6420, just short of the floor hive's band, where its curtain is seen falling, 140 px from the ladder hive (`FirstMeetingPocketTest.forest1HiveTheFloorHive`) |
-| Below density | 2 beats in 7.12 s (3.56 s per beat), one element (two hives), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Retry cost | 7.5 s at most: the hives 3.1 to 7.5 s after the entrance (12 deaths under the floor hive, 33 under the ladder hive in 45 start offsets), the spider 6.25 s for a hero who walks on along the ledge without baiting it (`Forest1HiveTest`) |
+| Beats | hanging-hive@6440, hanging-hive@6604, spider@6752 |
+| Beat time | 8.85 (`Forest1HiveTest`) |
+| First meeting | hanging-hive: beat 1, pocket at x 6420, just short of the floor hive's band, where its curtain is seen falling, 140 px from the ladder hive and 316 px from the spider (`FirstMeetingPocketTest.forest1HiveTheFloorHive`) |
 | Optional | knock the floor hive down: with the stone by the entrance by a jump-throw (28 of 28 tested throw points, body right edge x 6330 to 6438), or with a fireball near the top of a jump (10 of 13 tested jump timings, one charge); after that the floor pass is free. The ladder hive hangs out of reach of both |
-| D26 | no lever, support or one-shot state on the route: both hives are passed by timing alone, from every start offset (`Forest1HiveTest`); a knock-down only removes a danger, and a retry rebuilds both hives |
-| Hints | none (forest-1 has none, D33) |
+| D26 | no lever, support or one-shot state on the route: both hives are passed by timing alone, from every start offset, and the spider's reach (x 6697-6823) never covers the ladder, the ladder hive's band or the exit; a hero on the strip x 6624-6697 is outside it; the sword answers it with no charge; a knock-down only removes a danger, and a retry rebuilds everything calm (`Forest1HiveTest`) |
+| Hints | none (forest-1 has none, D33; no spider hint, D100) |
 | Landmark | the ladder with the hive hanging over it, its curtain running down the rungs |
-| Status | new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
-| Decisions | D90, D72 |
+| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): a spider (id 183) on the exit ledge, x 6736, y 192, `offNeg` 0, `offPos` 1 (range x 6736-6784, pounce reach x 6697-6823: the load check keeps it 9 px short of the exit, x 6832). Originally: new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
+| Decisions | D90, D72, D102, D105 |
 
 Sketch (Y grows downward, floor top y 320, ledge top y 208; walls x 6240-6256 and 6864-6880):
 
@@ -575,30 +590,28 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
   phase 2 (out of step with the first); its bough meets a `Decor:trunk` (id 140) at x 6588.
 - Static `Ladder` (id 137) x 6608-6624, y 208-320, no lever, against the ledge (id 144, x 6624-6864, y 208-320).
 - `Stone` (id 138) x 6336, y 308. `RoomStart` (id 133) (6272, 272); `RoomExit` (id 134) x 6832-6864, y 160-208, on the ledge.
+- `Spider` (id 183) x 6736, y 192, 32 x 16, on the ledge (floor top y 208), `offNeg` 0, `offPos` 1: the strip x 6624-6697 between the
+  ladder hive's band (x 6612-6620) and its reach is the safe place to bait it from.
 
 ### forest-1-tree
 
 | Field | Value |
 | --- | --- |
 | Level | forest-1, play order 2, room 11 of 11 (640 px, one screen) |
-| Role | variation |
-| Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
+| Role | reward |
+| Purpose | The calm after the hive and the level's one reward room: nothing in it can kill. Walk to the first coin, then climb a tree by jumping up through its branches (a grey branch gives way and carries you down alive, so keep climbing) to the level's end on the crown. |
 | Introduces | branch-climb, coin |
-| Develops | crumble-support: on a climb a broken branch costs height, not life, and the escape is upward (the next branch), not across, and the rotten column falls behind the climber, so a stop rides him down to the floor; beetle: it crawls at the sound tree's foot, not the rotten column's, so the sure climb costs a lure or a charge while the fast one stays free, and one branch up the hero is above its hearing band and it loses him |
+| Develops | crumble-support: on a climb a broken branch costs height, not life, and the escape is upward (the next branch), not across, and the rotten column falls behind the climber, so a stop rides him down to the floor |
 | Combines | - |
-| Mastered route | 4.95 s by the rotten column (the beetle never commits), 6.23 s by the sound tree (`TreeClimbTest`), both unchanged by the beetle; target about 20 s |
+| Mastered route | 4.95 s by the rotten column, 6.23 s by the sound tree (`TreeClimbTest`); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | one possible death, standing in the beetle's burst: a hero who walks to the sound tree and stops beside it when it commits dies 5.12 s after the entrance (`TreeClimbTest`); the rotten branches never kill: the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line |
-| Beats | branch-climb@3184 |
-| Beat time | 4.95 (`TreeClimbTest`) |
-| First meeting | branch-climb: beat 1 (`TreeClimbTest`), the rotten branches never kill, but they are the climb's own column and the beetle's patrol (x 3264-3384) is 48 px from it, under the 96 px clearance, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| Below density | 1 beat in 4.95 s (4.95 s per beat): the climb alone on the fast line, built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`); the beetle's blast (x 3236-3412 at most, y 288-320) never reaches the rotten column (x 3184-3216) nor any branch, and a hero on the lowest branch is out of its hearing |
+| Retry cost | none: nothing in the room kills; the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line (`TreeClimbTest`) |
+| D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`); nothing lethal is placed in the room (`TreeClimbTest`) |
 | Optional | one coin on the floor at x 3040 (id 145), 128 px from the entrance and left of the first trunk, off the climb: the level's first coin, a pure first sighting (forest-1 has no healer, so it feeds no recipe; the healer counts only the forest's own coins) |
 | Hints | none |
 | Landmark | the two trees, with the level's end on the sound tree's crown |
-| Status | [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) (D96): the first coin was added here, so `forest-entry` meets coins as a repeat. [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's second room, met after `forest-1-guard` and `forest-1-hive`; it is known here, so the branch climb and the coin stay the only unknowns; the author played the room on 2026-11-18 and approved the beetle's look and sounds ("all good") |
-| Decisions | D80, D96, D100 |
+| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19, the author chose "Alternative B" of the batch-2 design): the room is forest-1's one `reward` room; the beetle (id 147, [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327)) left it, nothing lethal was added, the level's end stays on the crown (checkpoint id 7, D80). A `reward` room is exempt from the density minimum and the first-meeting pocket and may hold nothing lethal; a rotten branch over the floor is not lethal (D107). Earlier: [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) (D96): the first coin was added here, so `forest-entry` meets coins as a repeat. [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's second room, met after `forest-1-guard` and `forest-1-hive`; it is known here, so the branch climb and the coin stay the only unknowns; the author played the room on 2026-11-18 and approved the beetle's look and sounds ("all good") |
+| Decisions | D80, D96, D105, D107 |
 
 ## forest-2 (play order 3)
 

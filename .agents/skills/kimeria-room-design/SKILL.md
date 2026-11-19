@@ -39,7 +39,13 @@ Work from the repository root. The substance is in the docs; this skill is the o
    lethal danger zone within 96 px of it, among the first two beats (or a retry of at most 6 s), not combined on first
    sight; for a monster the danger zone is its whole reach, hearing included. Record `pocket at x N` and pin it with a
    `FirstMeetingPocketTest` method (hero there, never hit, the element seen acting). An enemy that waits idle until the
-   hero is in reach, or a touch trap, shows nothing from a pocket: give it a moving or cycling neighbour-free stretch instead.
+   hero is in reach shows nothing from a pocket: stop it behind a 32 px solid log (it cannot climb a block; the sword
+   would reach across a 16 px one) so it charges and is stopped inside its range, as in `forest-1-mob`. A touch trap
+   shows nothing from a pocket either (the stump, the Bomb and the thorns have no pocket: meet them among known beats),
+   with one exception: a touch trap whose trigger lies **outside** its lethal band (the deadfall's vine, D88) has a
+   trip-and-stand pocket on the trigger, the hero tripping it and standing short of the band, acting signal `SWING`.
+   Clearance counts what can kill (D107): a crumble support over a floor is not a lethal neighbour, only one over a pit
+   is, and an object of the first-met skill's own geometry is not its own neighbour.
 6. **Cost:** mastered-route target about 20 s, first learning about 60 s (hypotheses, D19), and the retry cost of the
    most expensive death. A long retry is a reason to split, not to pad or trim the timing targets.
 7. **No guesswork (D84):** is every new rule or combination shown safely before it gates progress, and is every

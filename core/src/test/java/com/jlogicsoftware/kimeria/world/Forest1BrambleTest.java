@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1BrambleTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final String ROOM_NAME = "forest-1-bramble";
-    private static final float ROOM_X = 5600, START_X = 5632, SHELF_TOP = 208, FLOOR = 320, LADDER_X = 6192, VIEW_W = 640, VIEW_H = 360;
+    private static final float ROOM_X = 5600, START_X = 5760, SHELF_TOP = 208, FLOOR = 320, LADDER_X = 6192, VIEW_W = 640, VIEW_H = 360;
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     @TempDir Path directory;
 
@@ -42,6 +42,14 @@ class Forest1BrambleTest {
     private static Bramble bramble(Level level) {
         return level.objects.stream().filter(Bramble.class::isInstance).map(Bramble.class::cast).findFirst().orElseThrow();
     }
+    /** The thorn root (x 5872) is jumped from 30 px before it (its window is 7 to 63 px, ROOMS.md). */
+    private static final float ROOT_X = 5872, ROOT_TAKE_OFF = 30;
+    private boolean jumpedRoot;
+    private void walkRight(Level level) {
+        Rectangle me = level.player.hitboxBounds();
+        boolean jump = !jumpedRoot && me.x + me.width >= ROOT_X - ROOT_TAKE_OFF && level.player.isOnGround();
+        if (jump) { jumpedRoot = true; hold(Input.Keys.D, Input.Keys.J); h.pressed.add(Input.Keys.J); } else hold(Input.Keys.D);
+    }
     private static float feet(Level level) { Rectangle b = level.player.hitboxBounds(); return b.y + b.height; }
 
     private void assist(boolean on) {
@@ -53,8 +61,9 @@ class Forest1BrambleTest {
     /** Walk to the ladder, climb to the waiting place, wait for the arm to come back, climb out, run to the exit; frames. */
     private int solve(Level level) {
         int frames = 0;
+        jumpedRoot = false;
         while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < LADDER_X + 1) {
-            hold(Input.Keys.D); frame(level); frames++;
+            walkRight(level); frame(level); frames++;
             assertFalse(level.player.isGotHit(), "died on the floor at " + level.player.position);
             assertTrue(frames < 60 * 20, "ladder unreachable from " + level.player.position);
         }
@@ -92,7 +101,7 @@ class Forest1BrambleTest {
         assertEquals(SHELF_TOP, ladder.topY(), 0f, "the ladder is down from the start, no lever");
         assertEquals(FLOOR, ladder.bottomY(), 0f);
         assertTrue(level.triggers.isEmpty(), "no lever in this room");
-        assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>), "the bramble is the only hazard");
+        assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>), "no monster here");
         Bramble b = bramble(level);
         assertTrue(b.rootRight());
         Rectangle full = b.fullBounds();
@@ -130,7 +139,7 @@ class Forest1BrambleTest {
     }
 
     /** The mastered route from a fresh start: the room card's beat time (D105). */
-    static final float MASTERED_S = 10.73f;
+    static final float MASTERED_S = 9.47f;
 
     @Test void theMasteredRouteAndItsTimes() {
         float plain = solve(room()) * STEP;
@@ -157,10 +166,14 @@ class Forest1BrambleTest {
         System.out.printf("BRAMBLE ROOM route over every start offset: %.2f to %.2f s%n", best * STEP, worst * STEP);
     }
 
+    /** The retry cost on the card: a blind climb from a fresh start is caught this long after the entrance. */
+    static final float BLIND_CLIMB_DEATH_S = 5.42f;
+
     @Test void aDeathAtTheLadderTopRetriesTheRoomFromItsEntrance() {
         Level level = room();
         int frames = 0;
-        while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < LADDER_X + 1) { hold(Input.Keys.D); frame(level); frames++; }
+        jumpedRoot = false;
+        while (level.player.hitboxBounds().x + level.player.hitboxBounds().width / 2 < LADDER_X + 1) { walkRight(level); frame(level); frames++; }
         // Climb straight out without looking; keep climbing and running until the arm catches the hero.
         while (!level.player.isGotHit() && !level.atRoomExit()) {
             boolean up = level.player.onLadder() || feet(level) > SHELF_TOP + 1;
@@ -168,11 +181,13 @@ class Forest1BrambleTest {
             assertTrue(frames < 60 * 30);
         }
         hold();
+        assertTrue(level.player.isGotHit(), "the blind climb is caught, it does not get out");
+        assertEquals(BLIND_CLIMB_DEATH_S, frames * STEP, 0.1f, "the card's retry cost; D105 admits the bramble as beat 3 only at 6 s or less");
         System.out.printf("BRAMBLE ROOM a blind climb from a fresh start: %s after %.2f s%n", level.player.isGotHit() ? "caught" : "got out", frames * STEP);
         level.resetCurrentRoom(new Player(h.assets(), h.game(), 0, 0));
         assertEquals("forest-1-bramble", level.currentRoomName());
         assertEquals(START_X, level.player.position.x, 0.01f);
-        assertEquals(0f, bramble(level).cycleTime(), 0f, "the retry restarts the clock at the authored phase");
+        assertEquals(1.28f, bramble(level).cycleTime(), 1e-4f, "the retry restarts the clock at the authored phase (1.28 s: the entrance is 128 px nearer, D105)");
         assertTrue(frames * STEP < 20f, "a death costs at most the walk to the ladder and the climb");
     }
 }

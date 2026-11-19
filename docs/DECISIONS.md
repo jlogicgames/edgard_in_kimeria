@@ -1948,7 +1948,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D80. Tree branches: one-way perches and rotten branches (#349, playtest F13, 2026-11-16)
 
 - **Superseded in part:** the tree room's "no enemy, no death" is superseded for the beetle by D100 (#327, 2026-11-18): a
-  beetle at the sound tree's foot makes standing in its burst the room's one death; the branch rules below stand.
+  beetle at the sound tree's foot makes standing in its burst the room's one death; the branch rules below stand. **The beetle was
+  removed again by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (2026-11-19, D105, D107): the room is forest-1's one `reward` room and nothing in it kills.**
 - **Status:** Accepted by the author, 2026-11-16 (the Phase A card and placement: a non-lethal break, a decor trunk, no
   coin, the room at the end of `forest-1`). Built; playtest F13 in [PLAYTEST_1.md](PLAYTEST_1.md).
 - **Decision:** a tree is climbed by jumping up through one-way branches: a sound branch is a `Collisions` `Platform`
@@ -2269,7 +2270,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Implemented by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375), cards approved by the author
   on 2026-11-17. Automated tests only: nobody has played the new room. Revises D58 ("not split") and D67's room list.
-- **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** a room of its own for the first RedMob is the "met alone" reading D105 drops; `forest-1-mob` is below the density and is reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500).
+- **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499), done by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (2026-11-19):** a room of its own for the first RedMob is the "met alone" reading D105 drops; `forest-1-mob` now holds a log that stops the mob (the pocket), a falling branch and an exploding stump (ROOMS.md, "Reworked under D105, batch 2").
 - **Problem (D72 audit, #351):** `forest-1-traps` introduced four elements (redmob, running-platform, fireball-refill,
   puffball), and the first RedMob was met in the stretch x 256-450 together with the running escalators and the refill. The
   lever-and-torch pair (ids 12, 13) repeated `forest-0-lever` with no role.
@@ -2476,7 +2477,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** built by [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363). The card, the art and the
   placement were approved by the author on 2026-11-17; the room was played and the two sounds auditioned by the author on 2026-11-17, approved.
-- **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** the deadfall as its room's only object is the "met alone" reading D105 drops; `forest-1-deadfall` is below the density and is reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500).
+- **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499), done by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (2026-11-19):** the deadfall as its room's only object is the "met alone" reading D105 drops; `forest-1-deadfall` moved the trap 64 px left and added a falling stone and a RedMob; its pocket is on the vine ([D107](#d107-the-first-meeting-clearance-counts-what-can-kill-a-crumble-support-over-a-floor-is-not-a-lethal-neighbour-500-499)).
 - **Decision:** a new VISIBLE trap of the touch family (D47), `Deadfall` (card: TRAPS.md, "Trip-line deadfall"). A log is
   hauled up on the far side of a bough and lashed there; a pale trip vine lies across the floor in front of it. The vine is
   the only trigger (the hero's body box, from either side; no stone or fireball), so the answer is in the hero's own feet:
@@ -2987,7 +2988,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `art/objects/monster/beetle.grid` (`tools/forest_trap_sprites.py monster:beetle`), the four sounds from
   `tools/audio/generate_sounds.py` (seeds 6801-6806). The wind-up sound is a one-shot like the other warnings: it plays to
   its end even when the beetle is killed during it. Placed by #327 (cards approved by the author 2026-11-18): it is
-  introduced in `forest-1-guard` (x 2632, `offNeg` 2, `offPos` 2, past the tunnel) and developed in `forest-1-tree` (x 3264,
+  introduced in `forest-1-guard` (x 2632, `offNeg` 2, `offPos` 2, past the tunnel) and developed in `forest-1-tree` until #500 made that a reward room and removed it (x 3264,
   `offNeg` 0, `offPos` 6, at the sound tree's foot); see `docs/ROOM_CARDS.md`; the placements are tested in
   `Forest1CombatTest` and `TreeClimbTest`. Tests: `BeetleTest` (the real `Level` on `beetle-test.tmx` and two failing
   fixtures), `BeetleFxTest` (capacity), `AllocationBudgetTest.beetleThroughTheRealLevel` (0.2 B/frame in 3 runs, ceiling
@@ -3388,7 +3389,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   about 0.1 s. Density measures how much a room asks of a player who can die; a room built so nobody can is a teaching
   aid, not a sparse play room. A new lesson outside the tutorial needs its own decision, not an entry in the list. `boss` (D19: measured apart) is outside the band only in a room
   that holds the boss. `rest` and `reward`, the calm beat after danger (#352), are exempt from the minimum only in a room
-  with no lethal element, at most one per level; none ships today.
+  with no lethal element, at most one per level; `forest-1-tree` is the first (#500, D107).
 - **Gate:** `RoomCardsTest` reads the registry's `Beat kind` (a row without one fails with its name) and, per card:
   `Beats` (`id@x` in rising x, each backed by its own map object of that element, told apart by map id, whose span holds
   `x` within 16 px; a skill by the geometry above; two listed beats of one element within 96 px fail as one beat);
@@ -3549,3 +3550,33 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Gates:** `SnailTest` (25: with a swing and a fireball that meet an enemy and a gob together, a gob through a spider, a
   falling gob on a wall, a gob out of the room), `SnailFxTest`, `RemainsTest` (the snail's case), `AllocationBudgetTest`, `check_contrast.py` (`Snail`,
   `Snail:gob` along every line, `Snail:body`).
+
+## D107. The first-meeting clearance counts what can kill: a crumble support over a floor is not a lethal neighbour (#500, #499)
+
+- **Status:** Accepted (author, 2026-11-19: the batch-2 design's decision 2 and, with it, the reward tree room).
+  Gate built (`RoomCardsTest`). Revises D105's clearance and calm-room checks only; D69, D80 and the density band are unchanged.
+- **Problem:** `RoomCardsTest` judged "lethal" by the registry's Beat kind, and `crumble-support` is a `hazard`. In
+  `forest-1-tree` the rotten branches are the climb itself and never kill (D69, D80: a stop rides the hero down alive onto the
+  floor), yet they stood 0 px from the first-met `branch-climb` and failed its 96 px clearance whatever else moved. The same
+  rule failed `forest-1-traps`' escalator pocket against the falling platforms at x 96-224, which drop the hero 48 px onto the
+  floor, and would have failed a `reward` room's "nothing lethal" for the same rotten branches.
+- **Decision:** (1) a `FallingPlatform` (element `crumble-support`, any skin) counts as lethal only when what lies under it is
+  lethal: no solid collision beneath its span (a pit). Over a floor it carries the hero down alive and so is no neighbour that
+  can kill; the rotten log over the pit in `forest-1-traps` (id 37) still counts. (2) An object that is part of the first-met
+  skill's own geometry (a `skin=branch` object for `branch-climb`: the rotten branches are branches like the sound ones) is not
+  its own neighbour. The relief of (1) also decides whether a `rest` or `reward` room "holds nothing lethal". What the
+  excluded content carries: no lethal danger in that placement; a support over a pit, a monster, a trap or any other hazard
+  stays counted, and the beats and the band are untouched.
+- **Gate:** `RoomCardsTest`: `Placed.carriesNoDeath`, set from the map by `floorUnder`; synthetic cases for support over a floor
+  (not counted), over a pit (counted), the skill's own geometry (not its own neighbour, another object still is) and a reward
+  room (a support over a floor passes, over a pit or mixed fails); `onTheShippedMapsOnlyTheSupportsOverAFloorCarryNoDeath` pins
+  the shipped supports.
+- **Also in this batch (the density rework of [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), cards approved 2026-11-19):** `forest-1-mob`,
+  `forest-1-deadfall`, `forest-1-bramble` and `forest-1-hive` gained beats (ROOMS.md, "Reworked under D105, batch 2");
+  `forest-1-tree` became forest-1's one `reward` room (the beetle left, nothing lethal added, the level's end stays on the
+  crown); `GRANDFATHERED` is empty (ceiling 0) and `FIRST_MEETING_GRANDFATHERED` lost `forest-1-mob`, `forest-1-deadfall` and
+  `forest-1-tree`. **A touch trap whose trigger lies outside its lethal band** (only the deadfall, D88) has a trip-and-stand
+  pocket on its trigger (`DeadfallTrap.phase()`, acting `SWING`); a trap whose trigger is the lethal spot has none.
+  `forest-1-traps`' escalator pocket now passes (`forest1TrapsTheEscalator`); the room stays on the first-meeting list for its
+  puffball.
+- **Not verified:** how the reworked rooms feel to a first-time player (#135); the thresholds are authoring numbers.

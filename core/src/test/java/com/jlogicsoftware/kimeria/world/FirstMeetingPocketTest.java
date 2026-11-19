@@ -6,9 +6,12 @@ import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
+import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.objects.Bramble;
+import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
+import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -27,8 +30,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * the camera, {@code Player.roomCameraTarget}, at the logical resolution); and over the wait the element is seen acting
  * (a named state or phase, or {@link #MOVES} for one that patrols). {@code RoomCardsTest} checks that each card's
  * `First meeting` names one of these methods, with the room, the element and the pocket x in it; the 96 px clearance is
- * measured on the map there. First meetings that cannot pass (an enemy that waits idle until the hero is in its reach, a
- * touch trap that acts only when tripped, a late or crowded meeting) are tracked by #500 and not claimed here.
+ * measured on the map there. Two kinds of element that act only on contact pass by a stop: an enemy that waits idle until the hero
+ * is in its reach, stopped behind a solid log inside its range (the RedMob, {@code forest1MobTheRedMob}), and a touch trap whose
+ * trigger lies outside its lethal band, tripped and stood on (the deadfall's vine, {@code forest1DeadfallTheDeadfall}, D105). A trap
+ * whose trigger is the lethal spot has no pocket. A late or crowded meeting still on the grandfathered list is tracked by #500 and
+ * not claimed here.
  */
 class FirstMeetingPocketTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
@@ -47,6 +53,7 @@ class FirstMeetingPocketTest {
         if (e instanceof Actor<?> a) out.add(String.valueOf(a.getState()));
         if (e instanceof Bramble b) out.add(String.valueOf(b.currentPhase()));
         if (e instanceof HangingHive b) out.add(String.valueOf(b.currentPhase()));
+        if (e instanceof DeadfallTrap b) out.add(b.phase().name());
         if (e instanceof EmberFissure b) out.add(String.valueOf(b.currentPhase()));
         if (e.getX() != startX || e.getY() != startY) out.add(MOVES);
     }
@@ -71,6 +78,8 @@ class FirstMeetingPocketTest {
         for (var o : level.objects)
             if (type.isInstance(o) && ((Entity) o).getX() >= bounds.x && ((Entity) o).getX() < bounds.x + bounds.width
                 && (target == null || ((Entity) o).getX() < target.getX())) target = (Entity) o;
+        for (var o : level.escalators) // escalators are kept apart from the other objects
+            if (type.isInstance(o) && o.getX() >= bounds.x && o.getX() < bounds.x + bounds.width && (target == null || o.getX() < target.getX())) target = o;
         assertNotNull(target, room + " holds no " + type.getSimpleName() + " (" + element + ")");
         level.player.position.x = pocketX - level.player.getWidth() / 2;
         if (!Float.isNaN(standY)) {
@@ -102,6 +111,16 @@ class FirstMeetingPocketTest {
             assertFalse(seen.contains(never.name()), "the snail never spits at the hero on the step: it showed " + seen);
         assertTrue(seen.contains(Snail.State.WATCH.name()), "it watches him after the notice: " + seen);
     }
+    /** Behind the log (x 3728-3760) inside the RedMob's range: it notices him, runs and is stopped by the log, its whip short of him (D105). */
+    @Test void forest1MobTheRedMob() { pocket("forest-1", "forest-1-mob", "redmob", RedMob.class, 3716, "RUN"); }
+    /**
+     * On the trip vine (x 5112-5128): he trips it and stands, 54 px short of the swing band (x 5182-5282), and sees the log slip and
+     * swing past. Only for a touch trap whose trigger lies outside its lethal band (D88, D105); the stump, the Bomb and the thorns,
+     * whose trigger is the lethal spot, have no such pocket.
+     */
+    @Test void forest1DeadfallTheDeadfall() { pocket("forest-1", "forest-1-deadfall", "deadfall", DeadfallTrap.class, 5120, "SWING"); }
+    /** Between the falling platforms (x 96-224) and the first escalator's patrol (x 256-384): the platform is seen running (D105, D107). */
+    @Test void forest1TrapsTheEscalator() { pocket("forest-1", "forest-1-traps", "running-platform", Escalator.class, 240, MOVES); }
     @Test void forest1SpiderTheSpider() { pocket("forest-1", "forest-1-spider", "spider", Spider.class, 7030, "NOTICE"); }
     @Test void forest1BrambleTheBramble() { pocket("forest-1", "forest-1-bramble", "bramble", Bramble.class, 6170, "GROW"); }
     @Test void forest1RouteTheBat() { pocket("forest-1", "forest-1-route", "bat-enemy", Bat.class, 1760, MOVES); }

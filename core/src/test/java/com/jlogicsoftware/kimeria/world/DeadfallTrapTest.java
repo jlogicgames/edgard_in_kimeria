@@ -24,13 +24,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * The trip-line deadfall (#363, D88) and its teaching room {@code forest-1-deadfall} (room 2 of forest-1, x 4960-5600).
- * World Y grows downward: the floor's top is y 320, the rope knot P is at (5296, 252), 68 px above it; the log swings
- * left, at a hero coming from the entrance; the trip vine's box is x 5176-5192, y 315-320.
+ * World Y grows downward: the floor's top is y 320, the rope knot P is at (5232, 252), 68 px above it; the log swings
+ * left, at a hero coming from the entrance; the trip vine's box is x 5112-5128, y 315-320.
  */
 class DeadfallTrapTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float ROOM_X = 4960, ROOM_END = 5600, START_X = 4992, EXIT_X = 5536, FLOOR = 320;
-    private static final float P_X = 5296, P_Y = 252, VINE_LEFT = 5176, VINE_RIGHT = 5192;
+    private static final float P_X = 5232, P_Y = 252, VINE_LEFT = 5112, VINE_RIGHT = 5128;
     /** Player hitbox offset and size (Player.hitbox): body left = position.x + 18, body bottom = position.y + 48. */
     private static final float BODY_OFFSET_X = 18, BODY_W = 11, BODY_H = 22, BODY_BOTTOM = 48, VIEW_W = 640;
     private static final float HEAD = FLOOR - BODY_H;
@@ -53,6 +53,18 @@ class DeadfallTrapTest {
         if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
         frame(l);
     }
+    private boolean swinging;
+    /** The sword for the RedMob at the exit: one fresh press when a live one is just ahead of the grounded hero (as RoomReplayTest does). */
+    private boolean answerMob(Level l) {
+        boolean action = false;
+        for (var o : l.objects) if (o instanceof Enemy<?> e && !e.isDefeated()) {
+            Rectangle b = e.hitboxBounds(), me = l.player.hitboxBounds();
+            if (l.player.isOnGround() && b.x >= me.x && b.x - (me.x + me.width) < 18 && b.y < me.y + me.height && b.y + b.height > me.y) action = true;
+        }
+        if (action && !swinging) pressed.add(Input.Keys.K);
+        swinging = action;
+        return action;
+    }
     private boolean alive(Level l) { return !l.player.isGotHit(); }
     private float bodyRight(Level l) { Rectangle b = l.player.hitboxBounds(); return b.x + b.width; }
     private float centre(Level l) { Rectangle b = l.player.hitboxBounds(); return b.x + b.width / 2f; }
@@ -67,13 +79,13 @@ class DeadfallTrapTest {
 
     // -- the room --
 
-    @Test void theRoomHoldsOneTiedDeadfallAndTheExitAndNothingElse() {
+    @Test void theRoomHoldsOneTiedDeadfallAStoneAndARedMobBeforeTheExit() {
         Level l = room();
         assertEquals("forest-1-deadfall", l.currentRoomName());
         assertEquals(new Rectangle(ROOM_X, 0, ROOM_END - ROOM_X, 368), l.currentRoomBounds());
         assertEquals(START_X, l.player.position.x, 0.01f);
         assertEquals(1, l.objects.stream().filter(DeadfallTrap.class::isInstance).count());
-        assertEquals(0, l.objects.stream().filter(Enemy.class::isInstance).count(), "the deadfall is met alone");
+        assertEquals(1, l.objects.stream().filter(Enemy.class::isInstance).count(), "the RedMob at the exit, a known enemy (D105)");
         assertTrue(l.escalators.isEmpty() && l.fallingPlatforms.isEmpty() && l.ladders.isEmpty(), "no machinery");
         assertEquals("", l.player.zoneHint(), "no hints (forest-1 has none, D33)");
         DeadfallTrap t = trap(l);
@@ -217,7 +229,11 @@ class DeadfallTrapTest {
         for (int f = 0; f < 60 * 20; f++) {
             boolean jump = !jumped && bodyRight(l) >= VINE_LEFT - gap && l.player.isOnGround();
             jumped |= jump;
-            step(l, true, jump);
+            held.clear();
+            if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+            held.add(Input.Keys.D);
+            answerMob(l);
+            frame(l);
             if (!alive(l)) return -1;
             if (l.atRoomExit()) return f + 1;
         }
@@ -225,7 +241,7 @@ class DeadfallTrapTest {
     }
 
     /** The mastered route, jumping the vine, from the entrance to the exit: the room card's beat time (D105). */
-    static final float MASTERED_S = 5.17f;
+    static final float MASTERED_S = 5.85f;
 
     @Test void jumpingTheVineFiresNothingAndReachesTheExitFromAWideTakeOffWindow() throws Exception {
         for (boolean longer : new boolean[]{false, true}) {
@@ -244,6 +260,33 @@ class DeadfallTrapTest {
         }
     }
 
+    /** Jumps the vine, walks on without a sword until body-left x {@code stopX} (or to the exit) and stands; seconds until hit, or -1. */
+    private float swordlessDeath(float stopX) {
+        Level l = room();
+        boolean jumped = false;
+        for (int f = 0; f < 60 * 20; f++) {
+            boolean jump = !jumped && bodyRight(l) >= VINE_LEFT - 30 && l.player.isOnGround();
+            jumped |= jump;
+            held.clear();
+            if (jump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+            if (l.player.position.x < stopX) held.add(Input.Keys.D);
+            frame(l);
+            if (!alive(l)) return (f + 1) * STEP;
+        }
+        return -1;
+    }
+
+    /** The card's retry costs: standing under the stone is 5.18 s, walking on past the mob without a swing 4.4 s, walking into the swing 2.00 s. */
+    @Test void theRetryCostsTheCardStates() throws Exception {
+        assertEquals(5.18f, swordlessDeath(5380), 0.1f, "standing under the stone");
+        assertEquals(4.42f, swordlessDeath(Float.MAX_VALUE), 0.1f, "walking on past the mob without a swing");
+        Level l = room();
+        int f = 0;
+        while (alive(l) && !l.atRoomExit() && f++ < 60 * 20) step(l, true, false);
+        assertFalse(alive(l));
+        assertEquals(2.00f, f * STEP, 0.1f, "walking into the swing");
+    }
+
     @Test void aWalkerWhoTripsTheVineAndKeepsGoingIsHitWithEitherWarning() throws Exception {
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);
@@ -253,6 +296,7 @@ class DeadfallTrapTest {
             assertFalse(alive(l), "walking straight through is a hit, longer=" + longer);
             assertEquals(DeadfallTrap.Phase.SWING, trap(l).phase(), "the swinging log is what hit him");
             assertTrue(trap(l).swingTime() > 0.15f && trap(l).swingTime() < 0.35f, "hit in the body-height window: " + trap(l).swingTime());
+            assertEquals(longer ? 2.32f : 2.00f, f * STEP, 0.1f, "the card's walk-in death, longer=" + longer);
             System.out.printf(java.util.Locale.ROOT, "deadfall walk-in death %.2f s after the entrance, %.2f s into the swing (longer=%s)%n",
                 f * STEP, trap(l).swingTime(), longer);
         }
@@ -265,7 +309,7 @@ class DeadfallTrapTest {
         while (t.phase() == DeadfallTrap.Phase.TIED && f++ < 60 * 10) step(l, true, false);
         for (int i = 0; i < reactFrames; i++, f++) step(l, true, false);
         while (t.phase() != DeadfallTrap.Phase.CAUGHT && f++ < 60 * 10) { step(l, false, false); if (!alive(l)) return -1; }
-        while (!l.atRoomExit() && f++ < 60 * 30) { step(l, true, false); if (!alive(l)) return -1; }
+        while (!l.atRoomExit() && f++ < 60 * 30) { held.clear(); held.add(Input.Keys.D); answerMob(l); frame(l); if (!alive(l)) return -1; }
         return l.atRoomExit() ? f : -1;
     }
 
@@ -281,7 +325,10 @@ class DeadfallTrapTest {
                 int frames = tripAndStop(l, react);
                 assertTrue(frames > 0, "stopping " + react * STEP + " s after the trip must live and reach the exit, longer=" + longer);
                 assertEquals(DeadfallTrap.Phase.CAUGHT, trap(l).phase());
-                if (react == 0) System.out.printf(java.util.Locale.ROOT, "deadfall trip-and-stop route %.2f s (longer=%s)%n", frames * STEP, longer);
+                if (react == 0) {
+                    System.out.printf(java.util.Locale.ROOT, "deadfall trip-and-stop route %.2f s (longer=%s)%n", frames * STEP, longer);
+                    assertEquals(longer ? 7.57f : 7.15f, frames * STEP, 0.1f, "the card's trip-and-stop route, longer=" + longer);
+                }
             }
         }
     }
