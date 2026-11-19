@@ -72,7 +72,7 @@ class RoomCeilingTest {
                 if (map.equals("forest-1") && room == 3 && !left) continue;
                 // The hive room (#365) has the same kind of exit ledge (240 x 112 px of solid block against its right wall): its
                 // wall is swept from the ledge's top by theHiveRoomLedgeDoesNotLetTheHeroOverTheTop.
-                if (map.equals("forest-1") && room == 7 && !left) continue;
+                if (map.equals("forest-1") && room == 9 && !left) continue;
                 // The fissure room (#366) too: its exit ledge is 224 x 96 px of solid block against its right wall, swept from
                 // the ledge's top by theFissureRoomLedgeDoesNotLetTheHeroOverTheTop.
                 if (map.equals("forest-2") && room == 2 && !left) continue;
@@ -82,11 +82,11 @@ class RoomCeilingTest {
     }
 
     @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
-    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 9); }
+    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 11); }
 
     /** The route room's exit ledge (top y 144, against the right wall) is a 176 px head start up that wall. */
     @Test void theRouteRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 5), false, 60 * 20, 176);
+        highestPointReached(roomOf("forest-1", 7), false, 60 * 20, 176);
     }
 
     /** The lever lesson room's exit ledge (top y 208, against the right wall, #418) is a 112 px head start up that wall. */
@@ -95,7 +95,7 @@ class RoomCeilingTest {
     }
     /** The hive room's exit ledge (top y 208, against the right wall, #365) is a 112 px head start up that wall. */
     @Test void theHiveRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 7), false, 60 * 20, 112);
+        highestPointReached(roomOf("forest-1", 9), false, 60 * 20, 112);
     }
 
     /** Entry, walls, fissure and canopy; the boss room (index 4) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
@@ -108,7 +108,7 @@ class RoomCeilingTest {
 
     @Test void everyRoomIsClosedFromAboveByASlabEndingAtItsTopEdge() {
         for (String map : new String[]{"forest-0", "forest-1", "forest-2"}) {
-            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 9 : map.equals("forest-2") ? 4 : 2;
+            int rooms = map.equals("forest-0") ? 6 : map.equals("forest-1") ? 11 : map.equals("forest-2") ? 4 : 2;
             for (int index = 0; index < rooms; index++) {
                 Level level = roomOf(map, index);
                 Rectangle room = level.currentRoomBounds();

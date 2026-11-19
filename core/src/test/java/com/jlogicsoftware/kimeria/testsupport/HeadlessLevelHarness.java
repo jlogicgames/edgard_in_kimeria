@@ -126,6 +126,22 @@ public final class HeadlessLevelHarness {
     /** The view the plain {@code roomOf} gives the level: empty, one shared instance (a supplier that made a rect per call would itself allocate per frame under the fairy guide, D87). */
     private final Rectangle emptyView = new Rectangle();
 
+    /**
+     * The level {@code map} entered at the room named {@code room} (its `Room` marker's name), walking the `Rooms` list in play
+     * order, so a room inserted before it does not move it (#484). Fails when the map has no such room.
+     */
+    public Level room(String map, String room) { return room(map, room, () -> emptyView); }
+
+    /** As {@link #room(String, String)} with the camera's visible world rect the level reads. */
+    public Level room(String map, String room, java.util.function.Supplier<Rectangle> view) {
+        Level level = new Level(assets, game, new Player(assets, game, 0, 0), map, view);
+        while (!room.equals(level.currentRoomName())) {
+            if (!level.hasNextRoom()) throw new AssertionError(map + " has no room named " + room);
+            level.enterNextRoom(new Player(assets, game, 0, 0));
+        }
+        return level;
+    }
+
     /** As {@link #roomOf(String, int)} with the camera's visible world rect the level (and the fairy guide, D87) reads. */
     public Level roomOf(String name, int index, java.util.function.Supplier<Rectangle> view) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, view);

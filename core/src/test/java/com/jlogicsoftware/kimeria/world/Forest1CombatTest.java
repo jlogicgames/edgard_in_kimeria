@@ -71,9 +71,11 @@ class Forest1CombatTest {
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
         level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player()); // -> forest-1-lever (#418)
+        level.enterNextRoom(player()); // -> forest-1-spider (#484)
         level.enterNextRoom(player()); // -> forest-1-bramble (#364)
-        level.enterNextRoom(player());
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); // -> forest-1-climb (#484)
+        level.enterNextRoom(player()); // -> forest-1-route
+        level.enterNextRoom(player()); // -> forest-1-guard
         theMob = mob(level);
         return level;
     }
@@ -255,7 +257,7 @@ class Forest1CombatTest {
         FireballRefill refill = refill(level);
         assertEquals(REFILL_X, refill.getX(), 0.01f);
         assertEquals(DECK, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the slab beyond the tunnel's roof");
-        Rectangle exit = new RoomLayout(com.jlogicsoftware.kimeria.tiled.TiledMapData.load("tiles/forest-1.tmx", h.assets())).rooms.get(6).exit(); // room 7 since #375, #418, #363 and #364
+        Rectangle exit = new RoomLayout(com.jlogicsoftware.kimeria.tiled.TiledMapData.load("tiles/forest-1.tmx", h.assets())).rooms.get(8).exit(); // room 9 since #375, #418, #363, #364 and #484
         assertEquals(CHECKPOINT_X, exit.x, 0.01f, "the exit stands where the checkpoint stood, so the route times keep their meaning");
         assertEquals(FLOOR, exit.y + exit.height, 0.01f, "it stands on the floor");
         assertEquals(START_X, level.player.position.x, 0.01f);
@@ -714,7 +716,11 @@ class Forest1CombatTest {
         level.enterNextRoom(player());
         assertEquals("forest-1-lever", level.currentRoomName());
         level.enterNextRoom(player());
+        assertEquals("forest-1-spider", level.currentRoomName());
+        level.enterNextRoom(player());
         assertEquals("forest-1-bramble", level.currentRoomName());
+        level.enterNextRoom(player());
+        assertEquals("forest-1-climb", level.currentRoomName());
         level.enterNextRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
         assertTrue(level.hasNextRoom());

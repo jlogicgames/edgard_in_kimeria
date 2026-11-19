@@ -742,8 +742,10 @@ Contrast of the nine frames (`tools/check_contrast.py` metrics at the seven RedM
 spawns): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; the gate measures every placed `Spider`, and
 `BODY_SWEEP` the body on every floor top (outline 0.075 to 0.184, decor ceiling 0.20). Code: `entity/enemy/Spider.java`; tests:
 `SpiderTest`, `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (and, for D103,
-`spiderDropThroughTheRealLevel` and `spiderClimbThroughTheRealLevel`). Its rooms are chosen on their room cards ([#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484)), as the beetle's
-were.
+`spiderDropThroughTheRealLevel` and `spiderClimbThroughTheRealLevel`). Placed on room cards ([#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484)), as the beetle's were, in
+the order floor, wall, thread: `forest-1-spider` (a room of its own, where it is met alone on open ground), `forest-1-climb`
+(a room of its own, up the far face of a block where the hero waits for a running lift) and `forest-1-route` (its thread from the ladder slab's lip over the mandatory
+floor). The climb and the drop are develops of the one element `spider` (D103).
 
 ## Rooms, dangers and skill development
 

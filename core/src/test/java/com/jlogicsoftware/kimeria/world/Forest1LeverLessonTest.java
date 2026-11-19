@@ -490,7 +490,11 @@ class Forest1LeverLessonTest {
         assertEquals("forest-1-lever", level.currentRoomName());
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
-        assertEquals("forest-1-bramble", level.currentRoomName(), "the bramble room (#364) follows the lever room");
+        assertEquals("forest-1-spider", level.currentRoomName(), "the spider's first room (#484) follows the lever room");
+        level.enterNextRoom(player());
+        assertEquals("forest-1-bramble", level.currentRoomName(), "then the bramble room (#364)");
+        level.enterNextRoom(player());
+        assertEquals("forest-1-climb", level.currentRoomName(), "and the climbing spider's room (#484)");
         level.enterNextRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
     }
@@ -534,9 +538,13 @@ class Forest1LeverLessonTest {
         settle(level, 60);
         alive(level);
         assertTrue(onFloor(level));
-        level.enterNextRoom(player()); // the lever room's exit leads to the bramble room (#364) at the map's end
+        level.enterNextRoom(player()); // the lever room's exit leads to the spider's first room (#484) at the map's end
+        assertEquals("forest-1-spider", level.currentRoomName());
+        level.enterNextRoom(player()); // then the bramble room (#364)
         assertEquals("forest-1-bramble", level.currentRoomName());
-        level.enterNextRoom(player()); // the bramble room's exit leads to the route room, back near the start of the map
+        level.enterNextRoom(player()); // then the climbing spider's room (#484)
+        assertEquals("forest-1-climb", level.currentRoomName());
+        level.enterNextRoom(player()); // the climb room's exit leads to the route room, back near the start of the map
         assertEquals("forest-1-route", level.currentRoomName());
         Rectangle route = level.currentRoomBounds();
         assertEquals(1280, route.x, 0.01f);

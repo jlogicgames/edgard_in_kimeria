@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1BrambleTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final int ROOM_INDEX = 4;
+    private static final String ROOM_NAME = "forest-1-bramble";
     private static final float ROOM_X = 5600, START_X = 5632, SHELF_TOP = 208, FLOOR = 320, LADDER_X = 6192, VIEW_W = 640, VIEW_H = 360;
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     @TempDir Path directory;
@@ -36,7 +36,7 @@ class Forest1BrambleTest {
     @BeforeEach void setUp() { h.setUp(); }
     @AfterEach void tearDown() { h.restoreGlobals(); }
 
-    private Level room() { return h.roomOf("forest-1", ROOM_INDEX); }
+    private Level room() { return h.room("forest-1", ROOM_NAME); }
     private void frame(Level level) { level.update(STEP); h.pressed.clear(); }
     private void hold(int... keys) { h.held.clear(); for (int k : keys) h.held.add(k); }
     private static Bramble bramble(Level level) {
@@ -117,7 +117,7 @@ class Forest1BrambleTest {
         // The cues are gated on the camera's visible world rect, not on the distance to the hero (review of #364): the
         // bramble's centre is about 560 px from the entrance, yet the whole one-screen room is on screen there.
         Rectangle view = new Rectangle();
-        Level level = h.roomOf("forest-1", ROOM_INDEX, () -> view);
+        Level level = h.room("forest-1", ROOM_NAME, () -> view);
         Vector2 cam = level.player.roomCameraTarget();
         view.set(cam.x, cam.y, VIEW_W, VIEW_H);
         Bramble b = bramble(level);

@@ -42,6 +42,8 @@ class Forest1RouteTest {
     private static final float BAT_X = 1856, BAT_END = 1904;
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
+    /** #484: a hero who climbs to the slab and stops in its middle is bitten by its spider this long after the entrance. */
+    private static final float MID_SLAB_DEATH_S = 5.22f;
     /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
     private static final float RIDE_JUMP_Y = 195;
 
@@ -65,8 +67,10 @@ class Forest1RouteTest {
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
         level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player()); // -> forest-1-lever (#418)
+        level.enterNextRoom(player()); // -> forest-1-spider (#484)
         level.enterNextRoom(player()); // -> forest-1-bramble (#364)
-        level.enterNextRoom(player());
+        level.enterNextRoom(player()); // -> forest-1-climb (#484)
+        level.enterNextRoom(player()); // -> forest-1-route
         theBat = level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElseThrow();
         return level;
     }
@@ -165,7 +169,7 @@ class Forest1RouteTest {
         boolean grabbed = false;
         while (!(grabbed && !level.player.onLadder() && feet(level) <= SLAB_TOP + 1)) {
             held.clear(); held.add(Input.Keys.W);
-            frame(level);
+            frame(level); alive(level); // the slab is the spider's (#484): the climb onto it must not be bitten
             grabbed |= level.player.onLadder();
             assertTrue(++frames < 60 * 20, "climb stuck at " + level.player.position + " ladderY=" + ladder(level).getY());
         }
@@ -239,7 +243,8 @@ class Forest1RouteTest {
         assertEquals(1, level.objects.stream().filter(FireballRefill.class::isInstance).count());
         assertEquals(1, level.fallingPlatforms.size(), "exactly one one-shot object: the step to the refill pad");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
-        assertEquals(1, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster, the bat");
+        assertEquals(2, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "two monsters: the bat and the spider on the ladder slab (#484)");
+        assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::isInstance).count());
         assertEquals(1, level.objects.stream().filter(Bat.class::isInstance).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard), "no hazards in the route room");
         assertEquals(0, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.environment.Checkpoint.class::isInstance).count(), "the level checkpoint moved to the guard room (#104)");
@@ -568,7 +573,11 @@ class Forest1RouteTest {
         level.enterNextRoom(player());
         assertEquals("forest-1-lever", level.currentRoomName(), "the lever lesson room (#418) comes between the trap course and the route room");
         level.enterNextRoom(player());
+        assertEquals("forest-1-spider", level.currentRoomName(), "then the spider's first room (#484)");
+        level.enterNextRoom(player());
         assertEquals("forest-1-bramble", level.currentRoomName(), "and the bramble room (#364) after it");
+        level.enterNextRoom(player());
+        assertEquals("forest-1-climb", level.currentRoomName(), "and the climbing spider's room (#484)");
         level.enterNextRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
         assertTrue(level.hasNextRoom(), "the guard room (#104) follows the route room; its checkpoint ends the level");
@@ -639,10 +648,73 @@ class Forest1RouteTest {
         assertTrue(step.isRemoved(), "a one-shot: nothing brings it back");
     }
 
+    private com.jlogicsoftware.kimeria.entity.enemy.Spider spider(Level level) {
+        return level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::cast).findFirst().orElseThrow();
+    }
+
+    /**
+     * The optional detour meets the spider on its slab (#484): it hears the hero at the ladder's foot, waits at the slab's left
+     * end and winds up while he climbs, and its pounce lands behind a hero who walks on along the slab. Without the assist it is
+     * left chasing on the slab; with it, the drop off the pad's left end lands on it in its second wind-up and stomps it. Never a
+     * bite, at every skitter phase over 1.2 s, with and without the assist.
+     */
+    @Test void theOptionalDetourMeetsTheSpiderAtTheLadderTopAndWalkingOnMakesItMiss() throws Exception {
+        for (boolean longer : new boolean[]{false, true}) {
+            var field = com.jlogicsoftware.kimeria.TrapWarnings.class.getDeclaredField("longer");
+            field.setAccessible(true);
+            field.setBoolean(h.game().trapWarnings(), longer);
+            for (int wait = 0; wait <= 72; wait += 4) {
+                Level level = room();
+                held.clear();
+                settle(level, wait);
+                walkToLever(level);
+                operate(level);
+                walkToLadder(level);
+                var s = spider(level);
+                boolean committedWhileClimbing = false;
+                int frames = 0;
+                while (!(level.player.onLadder() || frames > 0) || level.player.onLadder() || feet(level) > SLAB_TOP + 1) {
+                    held.clear(); held.add(Input.Keys.W);
+                    frame(level); alive(level);
+                    committedWhileClimbing |= level.player.onLadder() && s.state() == com.jlogicsoftware.kimeria.entity.enemy.Spider.State.WINDUP;
+                    assertTrue(++frames < 60 * 20, "climb stuck");
+                }
+                assertTrue(committedWhileClimbing, "it winds up at the slab's end while he climbs (wait " + wait + ", assist " + longer + ")");
+                takeTheRefillAndDrop(level);   // asserts alive on every frame
+                walkToLever(level);
+                operate(level);
+                assertEquals(1, stock.count(), "the refill was taken");
+                assertEquals(longer, s.isDefeated(), "with the assist the drop off the pad stomps it, without it it is left on its slab");
+            }
+        }
+    }
+
+    /**
+     * The detour's death and its safe spot. Standing at the ladder's top is never bitten: the spider's leap cannot leave its range,
+     * which ends at the slab's left edge, so its bite falls short of the ladder. A hero who walks on to the slab's middle and
+     * stops there is bitten; pinned from the room's entrance.
+     */
+    @Test void theLadderTopIsSafeAndStoppingMidSlabIsBitten() {
+        Level level = room();
+        walkToLever(level); operate(level); walkToLadder(level); climb(level);
+        settle(level, 60 * 5);
+        alive(level);
+        level = room();
+        int frames = walkToLever(level) + operate(level) + walkToLadder(level) + climb(level);
+        while (centerX(level) < (SLAB_X + SLAB_END) / 2) { held.clear(); held.add(Input.Keys.D); frame(level); alive(level); frames++; }
+        while (!level.player.isGotHit()) {
+            held.clear(); frame(level);
+            assertTrue(++frames < 60 * 30, "never bitten mid-slab");
+        }
+        assertEquals(MID_SLAB_DEATH_S, frames * STEP, 6 * STEP, "the detour's retry cost (#484)");
+    }
+
     @Test void withTheStepIntactTheSlabReachesThePadAndWithItGoneNothingDoes() {
         // Intact: the detour route is exercised by the optional-route test. Gone: every takeoff from the slab falls short.
         Level level = room();
         withoutTheBat(level);
+        level.objects.removeIf(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::isInstance); // the geometry alone: the slab's spider is Forest1ShelfSpiderTest's (#484)
         reachTheSlab(level);
         spendTheStep(level);
         level.player.position.set(SLAB_X, SLAB_TOP - 48);
