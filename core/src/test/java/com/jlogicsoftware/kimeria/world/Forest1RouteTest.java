@@ -43,7 +43,7 @@ class Forest1RouteTest {
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
     /** #484: a hero who climbs to the slab and stops in its middle is bitten by its spider this long after the entrance. */
-    private static final float MID_SLAB_DEATH_S = 5.22f;
+    private static final float MID_SLAB_DEATH_S = 5.55f;
     /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
     private static final float RIDE_JUMP_Y = 195;
 
@@ -183,17 +183,28 @@ class Forest1RouteTest {
      */
     private int takeTheRefillAndDrop(Level level) {
         int frames = 0;
+        slabWindUps = 0;
+        var watched = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::cast).findFirst().orElse(null);
+        var before = watched == null ? null : watched.state();
         while (!(refillGone(level) && feet(level) > FLOOR - 2)) {
             held.clear(); held.add(refillGone(level) ? Input.Keys.A : Input.Keys.D); // after the refill the hero leaves the pad on its left side, away from the bat's beat
             boolean ground = level.player.isOnGround();
             if (ground && Math.abs(feet(level) - SLAB_TOP) < 2 && bodyRight(level) >= SLAB_END - 1) jump();
             if (ground && Math.abs(feet(level) - STEP_TOP) < 2 && bodyRight(level) >= STEP_END - 1) jump();
             frame(level); alive(level);
+            if (watched != null) {
+                if (watched.state() == com.jlogicsoftware.kimeria.entity.enemy.Spider.State.WINDUP && before != watched.state()) slabWindUps++;
+                before = watched.state();
+            }
             assertTrue(++frames < 60 * 20, "refill route stuck at " + level.player.position);
         }
         held.clear(); frame(level);
         return frames;
     }
+
+    /** How many times the slab's spider began a wind-up during the last {@link #takeTheRefillAndDrop} (#497). */
+    private int slabWindUps;
 
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private FallingPlatform step(Level level) { return level.fallingPlatforms.get(0); }
@@ -655,11 +666,11 @@ class Forest1RouteTest {
 
     /**
      * The optional detour meets the spider on its slab (#484): it hears the hero at the ladder's foot, waits at the slab's left
-     * end and winds up while he climbs, and its pounce lands behind a hero who walks on along the slab. Without the assist it is
-     * left chasing on the slab; with it, the drop off the pad's left end lands on it in its second wind-up and stomps it. Never a
-     * bite, at every skitter phase over 1.2 s, with and without the assist.
+     * end, holding while he climbs (its bite cannot reach the ladder's top, #497), and its pounce lands behind a hero who walks on along the slab. The drop off the pad's left
+     * end then stomps it, with and without the assist (#497: without it the spider used to be left on its slab). Never a bite, at
+     * every skitter phase over 1.2 s, with and without the assist.
      */
-    @Test void theOptionalDetourMeetsTheSpiderAtTheLadderTopAndWalkingOnMakesItMiss() throws Exception {
+    @Test void theOptionalDetourHoldsTheSpiderWhileClimbingAndWalkingOnMakesItWindUpAndMiss() throws Exception {
         for (boolean longer : new boolean[]{false, true}) {
             var field = com.jlogicsoftware.kimeria.TrapWarnings.class.getDeclaredField("longer");
             field.setAccessible(true);
@@ -680,19 +691,21 @@ class Forest1RouteTest {
                     committedWhileClimbing |= level.player.onLadder() && s.state() == com.jlogicsoftware.kimeria.entity.enemy.Spider.State.WINDUP;
                     assertTrue(++frames < 60 * 20, "climb stuck");
                 }
-                assertTrue(committedWhileClimbing, "it winds up at the slab's end while he climbs (wait " + wait + ", assist " + longer + ")");
+                assertFalse(committedWhileClimbing, "it holds at the slab's end while he climbs: its bite cannot reach the ladder's top (#497; wait " + wait + ", assist " + longer + ")");
                 takeTheRefillAndDrop(level);   // asserts alive on every frame
+                assertTrue(slabWindUps >= 1, "a hero who walks on along the slab makes it wind up, and it misses (wait " + wait + ", assist " + longer + ")");
                 walkToLever(level);
                 operate(level);
                 assertEquals(1, stock.count(), "the refill was taken");
-                assertEquals(longer, s.isDefeated(), "with the assist the drop off the pad stomps it, without it it is left on its slab");
+                assertTrue(s.isDefeated(), "the drop off the pad stomps it, with and without the assist: it holds at the slab's end now (#497; it was left on its slab without the assist)");
             }
         }
     }
 
     /**
-     * The detour's death and its safe spot. Standing at the ladder's top is never bitten: the spider's leap cannot leave its range,
-     * which ends at the slab's left edge, so its bite falls short of the ladder. A hero who walks on to the slab's middle and
+     * The detour's death and its safe spot. Standing at the ladder's top is never bitten: the leap may leave the range by up to its reach
+     * (#497) but only over authored floor, and the ladder's top step is not floor to the spider, so its bite falls short of the ladder
+     * and it holds rather than leaping at him. A hero who walks on to the slab's middle and
      * stops there is bitten; pinned from the room's entrance.
      */
     @Test void theLadderTopIsSafeAndStoppingMidSlabIsBitten() {
@@ -780,6 +793,7 @@ class Forest1RouteTest {
         level.player.position.set(SLAB_X, SLAB_TOP - 48);
         settle(level, 10);
         withoutTheBat(level);
+        level.objects.removeIf(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::isInstance); // the geometry alone, as above (#497: the slab's spider bites a hero teleported along it)
         assertPadClosed(level);
         level.resetCurrentRoom(player());
         recover(level);

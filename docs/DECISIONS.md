@@ -3087,7 +3087,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     legs with high knees, all rooted on the cephalothorax (four near, four far); no reserved hue. Body hitbox
     `rect(2, 3, 20, 13)`. **Contact is harmless** (no hurtbox): only the fangs kill, during the leap and the bite.
   - **Patrol:** it skitters (48 px/s for 0.3 s, still for 0.3 s) inside its authored range (`offNeg`/`offPos`) and never
-    leaves the range, its leap included.
+    leaves the range on foot. *Amended by #497 (see "Leap past the range end" below): its leap may leave the range by up to its reach.*
   - **Hearing:** 112 px either side, centre to centre, within a 40 px band above its floor line; lost beyond 160 px or
     after 1.0 s out of the band. *Amended by [D103](#d103-the-forest-spider-climbs-and-drops-a-route-of-floors-walls-and-a-silk-thread-two-strikes-one-tell-483-328):
     a 144 px circle around the body's centre, in its room, blocked by nothing; lost after 1.0 s beyond 192 px.*
@@ -3104,6 +3104,29 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **The warning is the body and the reach:** the `crouch` frame (forelegs raised, fangs open, drawn 1 px back from the
     hero) and pale silk glints, 60 a second, that run along the floor from its fangs and gather on the landing spot;
     `spider_windup` (`_long`).
+  - **Leap past the range end (#497, 2026-11-19, author's option B).** A spider at its range end used to commit on a hero standing
+    just past it, inside its 48 px pounce box, and clamp the leap to the range: it landed where it stood, bit nothing, recovered,
+    committed again and leapt in place for ever while the wind-up glints ran to the hero. Now the leap may leave the range by
+    up to `POUNCE_REACH` (48 px) towards the hero, never behind the spider, and is cut short by what the spider cannot cross:
+    it goes in 2 px steps over **authored floor under the whole body at the spider's floor line** (a collision box of the map, as
+    `monsterFloors` counts for the load check: not quicksand, not a ladder's top step, not an object that moves) and stops at the
+    last step that has it, so it never leaves the floor over a gap or a lip; a solid in the body's way still stops it at runtime
+    as before and it bites against it. **It commits only when the landing, or the flight to it, puts the fangs on the hero**
+    (swept from where they are now to where they would land, a solid cutting the flight at its face, on the hero's x span and in
+    the height of the bite box): otherwise it holds, facing him, never leaping in place. This replaces D102's leaping at a hero
+    behind a wall and biting against it; a leap still stops against a solid at runtime and bites there when the fangs reach him
+    (`aCrateInTheWayStopsTheLeapAgainstItsFaceAndBitesThere`). The gate predicts the stop on the 2 px grid at the floor line and the leap is locked to that same stop (`leapToX`), so prediction and flight agree (`aLongFlightAndAMarginalOverlapStillBiteAgainstTheFace`). A bump of 7 px or less (the 6 px arc plus the 1 px raise) would be flown over at runtime but the gate treats it as a wall, so the spider holds rather than leaping over it. The recovery does not snap it back: it crawls back into its range at the chase speed and the #488 hold
+    rule applies (the last step lands on the target, no overshoot, no turning); `clampToRange` only stops it moving further out.
+    A route spider (D103) leaps only along a floor leg: its leg ends are the polyline's vertices, so past a vertex where the floor
+    goes on it overshoots like a box spider, and where the leg ends at a wall (a solid) or a lip (no floor) the clamp cuts the
+    leap there. **Load check:** the standing-place reach grew from the pounce box (+70, -46 px from `position.x` at a range end) to the fangs' real
+    maximum extent (`FANG_EXTENT`: 48 + the fangs' middle 20 + half their width 3 = +71, -47), so no standing place is inside it;
+    `floorProblem` still requires gapless floor under the body's sweep over the range; floor under the
+    reach is not required at load: the runtime clamp to the real floor is enough, because a gap beyond the range end is a map the
+    author may want (the spider simply cannot cross it) and a hero across it is out of the fangs' reach. Measured pins that moved:
+    `forest-1-spider` walk-in death 3.58 to 2.32 s, `forest-1-route` mid-slab death 5.22 to 5.55 s; the detour's spider no longer
+    winds up while the hero climbs and is stomped by the drop in both assist modes (`Forest1SpiderTest`, `Forest1RouteTest`,
+    `SpiderTest`: `spider-edge.tmx` has a gap beyond the range end, `spider-crate.tmx` a crate in the flight). `Forest1RouteTest.aSecuredSpentStep…` removes the slab's spider before its teleporting `assertPadClosed`, as the geometry-only test beside it does: a teleported hero is a legitimate bite.
   - **Pounce:** a 0.25 s low leap (a 6 px arc; the body really moves) to the locked spot (`spider_leap`), leaving a silk line
     in the air, then the bite (`bite` frame 0.1 s, two fang glints and floor dust, `spider_bite`, hit or miss, D93). The fang
     box (`rect(17, 3, 6, 8)` in the leap frame, `rect(17, 7, 6, 9)` on the floor, inside the drawn head and fangs) kills
@@ -3266,15 +3289,15 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   lift), and `forest-1-route` (room 8) got a spider on its ladder slab whose
   thread hangs from the slab's lip over the mandatory floor (**develops** the drop). Order: floor, wall, thread, each the only new
   reading on its screen. Measured with a scripted hero (`Forest1SpiderTest`, `Forest1ClimbTest`, `Forest1ShelfSpiderTest`):
-  clearing 6.90 s baiting and striking, 5.85 s rushing with the sword, 5.17 s with a fireball, death 3.58 s in (walking on without
-  a strike is bitten: its range ends where the hero comes in); climb 10.77 s with a fireball as it tops the block's far edge, 13.33 s baiting and
+  clearing 6.90 s baiting and striking, 5.85 s rushing with the sword, 5.17 s with a fireball, death 2.32 s in (3.58 s before #497; walking on without
+  a strike is bitten); climb 10.77 s with a fireball as it tops the block's far edge, 13.33 s baiting and
   striking it on the block top, death 5.33 to 6.38 s in waiting under the lift and 5.57 to 6.92 s walking to it once it holds the block
   top, each pinned at every pause on the second step (the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp it in 1,700 of 1,736 runs, so the
   author chose this one after review); route unchanged at 11.02 s and
   18.32 s (a walker sets off the drop and is past when it falls, at every skitter phase, with and without the assist), death
-  under the lip 3.43 s in. The optional ladder detour meets the spider on its slab: it winds up while the hero climbs and
-  misses a hero who walks on, at every skitter phase with and without the assist; the ladder's top is out of its bite, and a
-  hero who stops mid-slab is bitten 5.22 s in. Contrast along the three routes passes (`check_contrast.py`). The placement
+  under the lip 3.43 s in. The optional ladder detour meets the spider on its slab: it holds while the hero climbs (#497; it used
+  to wind up) and misses a hero who walks on, at every skitter phase with and without the assist; the ladder's top is out of its
+  bite, and a hero who stops mid-slab is bitten 5.55 s in (5.22 s before #497). Contrast along the three routes passes (`check_contrast.py`). The placement
   previews were review images only and are not kept in the repo.
 
 ## D104. Quicksand leaves the Forest for the Swamp; the engine support stays (#486)

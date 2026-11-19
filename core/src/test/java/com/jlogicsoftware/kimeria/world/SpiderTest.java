@@ -309,17 +309,53 @@ class SpiderTest {
         harness.invulnerable = false;
     }
 
-    @Test void aSolidInTheWayStopsTheLeap() {
-        Level level = harness.roomOf("spider-wall", 0);   // a low wall x 280..288 between the hero and the spider
+    /** #497: a hero it cannot reach (behind a wall, or on top of it) is not leapt at, however long he stands in its pounce box. */
+    @Test void aHeroBehindAWallOrOnTopOfItIsNeverLeaptAtInPlace() {
+        for (boolean onTop : new boolean[]{false, true}) {
+            Level level = harness.roomOf("spider-wall", 0);   // a low wall x 280..288, 20 tall, between the hero and the spider
+            Spider s = spider(level);
+            if (onTop) level.player.position.set(284 + 5.5f - 29, 300 - 48); else place(level, 276);
+            for (int f = 0; f < 60 * 6; f++) {
+                if (onTop) { level.player.position.set(284 + 5.5f - 29, 300 - 48); level.player.velocity().setZero(); }
+                frame(level);
+                assertFalse(s.isCommitted(), "no wind-up at a hero its fangs cannot reach (onTop " + onTop + ", frame " + f + ", " + s.state() + ")");
+                assertTrue(alive(level));
+                assertTrue(s.hitboxBounds().x >= 288 - .01f, "never through the wall: " + s.hitboxBounds());
+            }
+            assertTrue(s.facingRight == false, "holding, facing him");
+        }
+    }
+
+    /** #497: a solid in the flight stops it against its face, at runtime, and it bites there when the fangs reach the hero. */
+    @Test void aCrateInTheWayStopsTheLeapAgainstItsFaceAndBitesThere() {
+        Level level = harness.roomOf("spider-crate", 0);   // a crate x 290..298, y 312..320
         Spider s = spider(level);
-        place(level, 276);
-        until(level, () -> s.state() == Spider.State.WINDUP, 60 * 3);
-        assertTrue(s.leapTarget() < 280, "it locked onto the hero, behind the wall");
-        until(level, () -> s.state() == Spider.State.RECOVER, 120);
-        assertTrue(s.hitboxBounds().x >= 288 - .01f, "it stopped against the wall, not through it: " + s.hitboxBounds());
-        assertEquals(FLOOR, s.floorY(), .01f, "and landed on its floor");
-        assertTrue(alive(level), "the wall kept the fangs off the hero");
-        assertTrue(harness.sounds.contains("spider_bite"), "it still bites, against the wall (D93)");
+        boolean wound = false;
+        for (int f = 0; f < 60 * 4 && alive(level); f++) {
+            placeOn(level, 300, 312);
+            frame(level);
+            wound |= s.state() == Spider.State.WINDUP;
+            assertTrue(s.hitboxBounds().x >= 298 - .01f, "never through the crate: " + s.hitboxBounds());
+        }
+        assertTrue(wound, "the fangs reach a hero standing on the low crate");
+        assertFalse(alive(level), "and bite him there");
+        assertTrue(harness.sounds.contains("spider_bite"), "against the crate's face, seen and heard (D93)");
+        assertEquals(296, s.position.x, .01f, "at the face");
+    }
+
+    /** #497: the gate and the runtime stop at the same place: a flight of 30 px or more and a 1 px overlap of the sweep still bite. */
+    @Test void aLongFlightAndAMarginalOverlapStillBiteAgainstTheFace() {
+        Level level = harness.roomOf("spider-crate", 0);
+        Spider s = spider(level);
+        float from = -1;
+        s.position.x = 340;   // 44 px from the crate's face
+        for (int f = 0; f < 60 * 4 && alive(level); f++) {
+            placeOn(level, 298, 312);   // body x 287..298: 1 px into the fangs' span at the face (fangs x 297..303)
+            frame(level);
+            if (from < 0 && s.state() == Spider.State.WINDUP) from = s.position.x;
+        }
+        assertTrue(from - 296 >= 30, "it took off from far: " + from);
+        assertFalse(alive(level), "the flight ends where the gate predicted, so the fangs land on him");
     }
 
     @Test void aFireballKillsItInEveryStateLeavingItsBodyWithoutBlood() {
@@ -903,5 +939,98 @@ class SpiderTest {
             }
         }
         assertTrue(maps >= 5);
+    }
+
+    // ---- #497: the leap may leave the range by up to its reach, over floor ----------------------------------------------
+
+    /** Hero body right edges that overlap the pounce box of the spider at a range end by 1 px, so only the overshoot reaches him. */
+    private static final float JUST_PAST_RIGHT = 464, JUST_PAST_LEFT = 211;
+
+    private void assertBitten(Level level, Spider s, float from, float to) {
+        until(level, () -> s.state() == Spider.State.WINDUP, 60 * 3);
+        float rangeEnd = s.facingRight ? s.rangePos() : s.rangeNeg();
+        assertEquals(rangeEnd, s.position.x, 2f, "it commits at its range end, the first spot its box reaches him from");
+        assertTrue(s.leapTarget() >= from && s.leapTarget() <= to, "it leaps past the end: " + s.leapTarget());
+        assertTrue(Math.abs(s.leapTarget() - rangeEnd) <= Spider.POUNCE_REACH, "by at most its reach");
+        until(level, () -> !alive(level), 60 * 3);
+    }
+
+    @Test void aHeroJustPastTheRightEndOfTheRangeIsBitten() {
+        Level level = level();
+        place(level, JUST_PAST_RIGHT);
+        Spider s = spider(level);
+        assertBitten(level, s, RIGHT_END + 1, RIGHT_END + Spider.POUNCE_REACH);
+    }
+
+    @Test void aHeroJustPastTheLeftEndOfTheRangeIsBitten() {
+        Level level = level();
+        place(level, JUST_PAST_LEFT);
+        Spider s = spider(level);
+        assertBitten(level, s, LEFT_END - Spider.POUNCE_REACH, LEFT_END - 1);
+    }
+
+    @Test void aRouteSpiderBitesPastTheEndOfItsFloorLegWhereTheFloorGoesOn() {
+        Level level = dropRoom();   // the shelf x 320..448 goes on left of the route's start (position.x 382)
+        Spider s = spider(level);
+        placeOn(level, 337, SHELF);
+        until(level, () -> s.state() == Spider.State.WINDUP, 60 * 3);
+        assertEquals(s.rangeNeg(), s.position.x, 2f);
+        assertTrue(s.leapTarget() < s.rangeNeg() && s.leapTarget() >= s.rangeNeg() - Spider.POUNCE_REACH, "past the leg's end: " + s.leapTarget());
+        until(level, () -> !alive(level), 60 * 3);
+    }
+
+    /** A gap 32 px past the range end: the leap stays on the floor, so a hero across the gap is out of its reach and it holds. */
+    @Test void aGapBeyondTheRangeEndStopsTheLeapAndItNeverLeapsInPlaceForEver() {
+        Level level = harness.roomOf("spider-edge", 0);   // floor x 0..420 and 452..640: its range ends at position.x 384
+        Spider s = spider(level);
+        place(level, 463);   // across the gap, body x 452..463: inside the pounce box of the spider at its end (right edge 454)
+        for (int f = 0; f < 60 * 6; f++) {
+            frame(level);
+            assertFalse(s.isCommitted(), "it never winds up at a hero its fangs cannot reach (frame " + f + ", " + s.state() + ")");
+            assertTrue(alive(level));
+            assertTrue(s.position.x <= 420 - 22 + .01f, "never off the floor: " + s.position.x);
+            assertEquals(FLOOR, s.floorY(), .01f);
+        }
+        assertEquals(RIGHT_END, s.position.x, .01f, "it holds at its range end");
+        assertTrue(s.facingRight, "facing the hero");
+        assertEquals(Spider.State.CHASE, s.state());
+    }
+
+    @Test void theSpiderCrawlsBackIntoItsRangeAfterTheBiteWithoutOvershootOrTurning() {
+        Level level = level();
+        harness.invulnerable = true;
+        place(level, JUST_PAST_RIGHT);
+        Spider s = spider(level);
+        until(level, () -> s.state() == Spider.State.RECOVER, 60 * 4);
+        assertTrue(s.position.x > RIGHT_END, "it overshot to bite: " + s.position.x);
+        place(level, FAR);   // the hero steps away, out of its box but still heard
+        float last = s.position.x;
+        boolean facedRight = s.facingRight;
+        until(level, () -> s.state() == Spider.State.CHASE, 60 * 2);
+        int turned = 0;
+        for (int f = 0; f < 60 * 4 && s.position.x > RIGHT_END + .01f; f++) {
+            frame(level);
+            assertTrue(s.position.x <= last + .001f, "only back towards its range: " + s.position.x);
+            last = s.position.x;
+            if (s.facingRight != facedRight) { turned++; facedRight = s.facingRight; }
+        }
+        assertTrue(s.position.x <= RIGHT_END + .01f, "back inside its range: " + s.position.x);
+        assertTrue(turned <= 1, "it turns to the hero once, no jitter: " + turned);
+        harness.invulnerable = false;
+    }
+
+    /** #497: at a lip, where the floor ends, the clamp stops the leap at the edge: a hero in the air beyond it is not followed off. */
+    @Test void aLegThatEndsAtALipClampsTheLeapThere() {
+        Level level = dropRoom();   // the shelf x 320..448: the route's floor leg ends at the right lip, position.x 426
+        Spider s = spider(level);
+        boolean wound = false;
+        for (int f = 0; f < 60 * 6; f++) {
+            placeOn(level, 449, SHELF);   // body x 438..449, in the air past the range end, level with the fangs
+            frame(level);
+            wound |= s.state() == Spider.State.WINDUP;
+            assertTrue(s.position.x <= 426 + .01f, "never past the lip: " + s.position.x);
+            assertTrue(s.state() != Spider.State.WINDUP || s.leapTarget() <= 426 + .01f, "the locked spot is on the floor: " + s.leapTarget());
+        }
+        assertTrue(wound, "the fangs from the lip reach him, so it commits");
     }
 }
