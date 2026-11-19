@@ -99,25 +99,25 @@ class RoomReplayTest {
 
     @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
         // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
-        measure("forest-1", 2, false, 0, new float[]{125, 260, 540, 637, 993, 1089});
+        assertEquals(TRAPS_S, measure("forest-1", 2, false, 0, new float[]{125, 260, 540, 637, 993, 1089}), PIN_MARGIN, "the card's beat time (D105)");
     }
     /** #375: the first RedMob alone, then the refill; the sword takes the mob, no jump is needed. */
     @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
-        measure("forest-1-mob", 0, false, 0, new float[]{});
+        assertEquals(MOB_S, measure("forest-1-mob", 0, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
-        measure("forest-entry", 0, false, 0, ENTRY_JUMPS);
+        assertEquals(ENTRY_S, measure("forest-entry", 0, false, 0, ENTRY_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }
     /** #376: the wall room split off forest-entry at x 736; 860 and 940 jump onto the two tall walls. */
     @Test void forestWallsRequiredRouteFitsTwentySeconds() {
-        measure("forest-walls", 1, false, 0, WALLS_JUMPS);
+        assertEquals(WALLS_S, measure("forest-walls", 1, false, 0, WALLS_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }
     /** #366: wait short of each fissure until a jet ends; jump on to the branch through the second jet and on to the ledge. */
     @Test void forestFissureRequiredRouteFitsTwentySeconds() {
-        measure("forest-fissure", 2, false, 0, new float[]{});
+        assertEquals(FISSURE_S, measure("forest-fissure", 2, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestCanopyRequiredRouteFitsTwentySeconds() {
-        measure("forest-canopy", 3, false, 0, new float[]{1400, FUNGUS_JUMP});
+        assertEquals(CANOPY_S, measure("forest-canopy", 3, false, 0, new float[]{1400, FUNGUS_JUMP}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestEntryAllCollectablesFitThirtySeconds() {
         measure("forest-entry", 0, true, 40, new float[]{95, 140, 300, 535});
@@ -127,6 +127,9 @@ class RoomReplayTest {
     }
 
     private static final float[] ENTRY_JUMPS = {95, 225, 345, 535}, WALLS_JUMPS = {860, 940};
+    /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
+    static final float TRAPS_S = 12.27f, MOB_S = 7.43f, ENTRY_S = 6.80f, WALLS_S = 8.80f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
+    private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
 
@@ -364,7 +367,8 @@ class RoomReplayTest {
         }
     }
 
-    private void measure(String route, int roomIndex, boolean collect, int delayFrames, float[] jumps) {
+    /** Replays the route three times from a fresh room and returns its time, the same on every attempt. */
+    private float measure(String route, int roomIndex, boolean collect, int delayFrames, float[] jumps) {
         String mapName = route.startsWith("forest-1") ? "forest-1" : "forest-2";
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
@@ -386,6 +390,7 @@ class RoomReplayTest {
         }
         System.out.printf(java.util.Locale.ROOT, "%s %s: %.2f s (three identical attempts)%n",
             route, collect ? "all collections" : "required", firstTime);
+        return firstTime;
     }
 
     private float replay(Level level, String route, boolean collect, int delayFrames, float[] jumps) {

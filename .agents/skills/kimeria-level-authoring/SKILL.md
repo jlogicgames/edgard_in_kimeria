@@ -17,9 +17,11 @@ and latest measurement section: older measurements may describe removed mechanic
 
 The map is the build step of a room, not its design. Before placing objects, follow the order of
 [the style system](../../../docs/STYLE_SYSTEM.md#4-card-first-the-common-workflow): the room's card with
-[kimeria-room-design](../kimeria-room-design/SKILL.md) (D72), a trap's card with
+[kimeria-room-design](../kimeria-room-design/SKILL.md) (D72, D105), a trap's card with
 [kimeria-trap-design](../kimeria-trap-design/SKILL.md) (D71), and any hint text with
 [kimeria-game-text](../kimeria-game-text/SKILL.md) (D74).
+A room's beats are on its card as `id@x` (D105): moving a gameplay object moves its `@x` there, and `RoomCardsTest`
+fails until the card follows.
 Read D3, D5, D7 and D10 in [design decisions](../../../docs/DECISIONS.md).
 For a boss chamber read [boss](../../../docs/BOSS.md); for collection-route
 changes read [healer](../../../docs/HEALER.md).

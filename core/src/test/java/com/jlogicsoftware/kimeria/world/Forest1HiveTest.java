@@ -118,9 +118,13 @@ class Forest1HiveTest {
         return frames * STEP;
     }
 
+    /** The mastered route from a fresh start: the room card's beat time (D105). */
+    static final float MASTERED_S = 7.12f;
+
     @Test void theMasteredRouteIsMeasuredAndEveryStartOffsetReachesTheExitWithAndWithoutTheAssist() throws Exception {
         float first = route(room(), 0f);
         assertTrue(first > 0, "the mastered route from the entrance");
+        assertEquals(MASTERED_S, first, 0.1f, "the mastered route from a fresh start (D105's beat time), pinned within 0.1 s");
         float slowest = 0, fastest = Float.MAX_VALUE;
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);

@@ -756,8 +756,10 @@ its leading mechanic over several levels.
 
 **Every room gives something new ([D72](DECISIONS.md#d72-every-room-gives-the-player-something-new), playtest F20).**
 Each room introduces, develops or combines at least one element the player has not met in that form; a reskin or
-more of the same geometry does not count, and outside the tutorial a room introduces at most two elements, each
-first met alone. Familiar mechanics still recur for mastery, but never as the whole room. Every shipped room has a
+more of the same geometry does not count, and outside the tutorial a room introduces at most two elements, one unknown
+at a time. Since [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) a room is also dense, about one beat every 3 s of the mastered route (3 beats or more),
+and a new element is first met in a safe pocket among known beats, not in a room of its own. Familiar mechanics recur
+for mastery and fill the room, but never as the whole of it. Every shipped room has a
 card in [ROOM_CARDS.md](ROOM_CARDS.md) with its role (lesson, variation, combination, challenge, approach, reward,
 rest, boss), purpose, novelty and D19 times, checked against the maps by `RoomCardsTest`; rule and workflow in
 [ROOMS.md](ROOMS.md#every-room-gives-something-new-d72). A level plan for campaign planning (#133) is a sequence of

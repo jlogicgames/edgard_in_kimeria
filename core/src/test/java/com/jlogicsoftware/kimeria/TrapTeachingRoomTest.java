@@ -129,6 +129,14 @@ class TrapTeachingRoomTest {
         assertEquals(List.of(), problems(traps(row("ThornRoot", "HIDDEN", "`a`, hint") + row("ThornTuft", "VISIBLE", "`b`")), CARDS, ROOMS));
     }
 
+    /** D105 added the registry's last column, Beat kind; the Tiled keys this test reads stay in the second. */
+    @Test void theBeatKindColumnLeavesTheTiledKeysInPlace() {
+        String withKinds = CARDS.replace("| What the player does |", "| What the player does | Beat kind |").replace("| --- | --- | --- |", "| --- | --- | --- | --- |")
+            .replace("| jumps |", "| jumps | hazard |").replace("| levers |", "| levers | mechanism |");
+        assertEquals(List.of(), problems(traps(row("ThornRoot", "HIDDEN", "`a`, hint") + row("ThornTuft", "VISIBLE", "`b`")), withKinds, ROOMS));
+        assertEquals("hazard", RoomCardsTest.registry(withKinds).kindOf.get("thorn"));
+    }
+
     @Test void aTeachingRoomWithoutACardOrBackticksFails() {
         assertTrue(problems(traps(row("ThornTuft", "VISIBLE", "`forest-9`")), CARDS, ROOMS).get(0).contains("not a shipped room"));
         assertTrue(problems(traps(row("ThornTuft", "VISIBLE", "the tutorial")), CARDS, ROOMS).get(0).contains("must start with"));

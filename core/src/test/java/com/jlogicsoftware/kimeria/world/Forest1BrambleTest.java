@@ -129,6 +129,9 @@ class Forest1BrambleTest {
         assertFalse(level.brambleInView(b), "no view (a headless level without a camera): silent");
     }
 
+    /** The mastered route from a fresh start: the room card's beat time (D105). */
+    static final float MASTERED_S = 10.73f;
+
     @Test void theMasteredRouteAndItsTimes() {
         float plain = solve(room()) * STEP;
         assist(true);
@@ -136,6 +139,7 @@ class Forest1BrambleTest {
         assist(false);
         System.out.printf("BRAMBLE ROOM mastered route %.2f s, %.2f s with the longer-warnings assist%n", plain, assisted);
         assertTrue(plain < 20f, "D19 mastered target about 20 s: " + plain);
+        assertEquals(MASTERED_S, plain, 0.1f, "the mastered route (D105's beat time), pinned within 0.1 s");
         assertTrue(assisted < 20f, "with the assist: " + assisted);
     }
 

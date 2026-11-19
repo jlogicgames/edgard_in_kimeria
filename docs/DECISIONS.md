@@ -1592,6 +1592,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Status:** Accepted by the author, 2026-11-16 ([#351](https://github.com/jlogicgames/edgard_in_kimeria/issues/351)), from
   playtest remark F20 ([PLAYTEST_1.md](PLAYTEST_1.md), D66). Gate built (`RoomCardsTest`); the two room changes it found are
   follow-up issues ([#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375), [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)).
+  **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499)
+  (#499, 2026-11-19):** "first met where it is the only unknown thing on screen" stays, but it never meant the only
+  object in the room; a room also keeps the player busy (at least 3 beats, 1.5 to 4.0 s per beat) and a first meeting
+  gets a safe pocket among known beats instead of a room of its own.
 - **Decision:** every room (the death-recovery unit) contains at least one novelty in play order: it **introduces** an element
   the player has never met (mechanic, enemy, trap, pickup, interaction, view or reward), **develops** a known element under a
   condition that changes the answer, or **combines** known elements whose solution needs both. A room that only repeats is
@@ -2265,6 +2269,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Implemented by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375), cards approved by the author
   on 2026-11-17. Automated tests only: nobody has played the new room. Revises D58 ("not split") and D67's room list.
+- **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** a room of its own for the first RedMob is the "met alone" reading D105 drops; `forest-1-mob` is below the density and is reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500).
 - **Problem (D72 audit, #351):** `forest-1-traps` introduced four elements (redmob, running-platform, fireball-refill,
   puffball), and the first RedMob was met in the stretch x 256-450 together with the running escalators and the refill. The
   lever-and-torch pair (ids 12, 13) repeated `forest-0-lever` with no role.
@@ -2471,6 +2476,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** built by [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363). The card, the art and the
   placement were approved by the author on 2026-11-17; the room was played and the two sounds auditioned by the author on 2026-11-17, approved.
+- **Revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** the deadfall as its room's only object is the "met alone" reading D105 drops; `forest-1-deadfall` is below the density and is reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500).
 - **Decision:** a new VISIBLE trap of the touch family (D47), `Deadfall` (card: TRAPS.md, "Trip-line deadfall"). A log is
   hauled up on the far side of a bough and lashed there; a pale trip vine lies across the floor in front of it. The vine is
   the only trigger (the hero's body box, from either side; no stone or fireball), so the answer is in the hero's own feet:
@@ -3081,6 +3087,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D102. The forest spider: it hears, notices, and pounces at where the hero stood; make it miss, then strike (#328, #240, #398)
 
 - **Status:** Accepted (author, 2026-11-19: the card, the eight recommendations, the art with eight legs and the five sounds).
+- **Placement revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** the spider's room of its own (`forest-1-spider`) and the two-beat `forest-1-climb` are below the density; the three spider rooms are reworked with the snail (#329) under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500). The spider's rules are unchanged.
 - **Decision:**
   - **Body.** One strip of nine 32×16 frames (`crawl1`, `crawl2`, `rise`, `tap`, `crouch`, `leap`, `bite`, `recover`,
     `dead`), 12 colours, 13 with the moon rim; drawn about 13 px tall; a plum-black abdomen with an ochre chevron, eight tan
@@ -3178,6 +3185,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Accepted (author, 2026-11-19: the Phase 1 card and its ten recommendations, with one change: the wall poses are
   drawn, not turned, so the legs grip above and below the body). Built (#483); placed in three forest-1 rooms (#484, below).
+- **Placement revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** the spider's room of its own (`forest-1-spider`) and the two-beat `forest-1-climb` are below the density; the three spider rooms are reworked with the snail (#329) under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500). The spider's rules are unchanged.
 - **Amends D102:** hearing is a **144 px circle**, from the body's centre to the hero's centre, in the spider's own room, and
   **nothing blocks it** (walls and floors do not: it feels the hero through rock and roots). It loses the hero after **1.0 s
   beyond 192 px**. The 40 px band is gone for every spider. Everything else in D102 holds on a floor.
@@ -3312,3 +3320,121 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Kept:** `CollisionBlock.quickSand`, the `CollideBody` sink branch and D98's sink speed, and the load checks that skip
   `QuickSand`, because the Swamp reuses them. The physics stays covered on the test map `practice-test.tmx`
   (`JumpFrameRateTest`, `RoomTest`).
+
+## D105. Rooms are dense: one beat about every 3 s, and a first meeting gets a safe pocket, not a room of its own (#499)
+
+- **Status:** Accepted (author, 2026-11-19: the Phase 1 draft and its ten recommendations,
+  [#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)). Gate built (`RoomCardsTest`). The rooms shipped below it
+  are reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (the three spider rooms with the snail,
+  #329). Revises D72's "met alone" reading and the placements built on it (D85, D88, D102 and D103 "Placed", #484).
+- **Problem:** the author found the rooms built so one mechanic sits alone "dull and empty" and asked for one mechanic per
+  3 s of play, so that a room holds 3 to 4 at once. D72 never asked for empty rooms: it says a new element is first met
+  where it is the only *unknown* thing on screen, and known things were always allowed beside it. The emptiness came from
+  applying it as "the only object" or "a room of its own" (D85's first RedMob, D88's deadfall, #484's spider), and from
+  nothing on the card measuring how much a room asks of the player. The spider's own room was a teaching room in all but
+  name, which D100 rules out for monsters.
+- **Decision, density:** a **beat** is one placed instance of a registry element that the **required route** makes the player
+  read and answer. The registry's **Beat kind** says what counts: a `hazard` (a trap) and a `monster` once per instance; a
+  `mechanism` once per lever the route pulls or hits, with everything it drives (pull, ladder and climb are one beat; a
+  ladder with no lever is not a beat of its own); a `platform` once per running platform the route boards or must pass while
+  it moves; a `skill` once per obstacle that needs it (one wall, one tree). A `pickup` and a `harmless` element never count;
+  plain geometry (a pit, a step) is not a beat; identical instances crossed in one movement (a row of falling platforms) are
+  one beat; mechanically, **two instances of one element whose spans lie within 96 px of each other are one beat** (the
+  span is the object's box, a polyline's points, widened by a horizontal patrol; 96 px is about 1 s of walking at the
+  hero's 100 px/s, the same yardstick as the pocket's clearance). A `skill` beat is posed by map geometry, never free: a
+  wall jump by a free-standing `Collisions:Wall` at least 96 px tall, a branch climb by an object with `skin=branch`.
+  Beats are listed in route order, which the gate reads as rising map x (every shipped required route runs left to
+  right), so "the first two beats" are the route's first two. The **beat time** `T` is the card's mastered time for the
+  required route with zero charges spent (D26, D27), the first time its `Mastered route` field states;
+  with `N` beats the room's pace is `T / N`. Outside the exempt roles a room has **at least 3 beats** of **at least 2
+  distinct elements** and **at most 4.0 s per beat**; the aim is about **3 s**. Under **1.5 s per beat** it needs an
+  `Overload reason` that cites an issue. At the 20 s target of D19 a room holds up to six or seven beats; the author's 3 to
+  4 is a room of about 9 to 12 s. 4.0 s is the 3 s aim with slack for walking and a lift's wait; 1.5 s is just under the
+  densest room the author has played and accepted (`forest-canopy`, 1.58 s).
+- **Decision, newness (what stays of D72):** every room introduces, develops or combines; a reskin or more geometry is not
+  novelty; outside lessons at most **two** introductions; **one unknown at a time**; repetition for mastery is welcome and is
+  now what fills a room to its density. **Dropped:** "met alone" read as the only object or a room of its own, and a new
+  trap or monster getting its own one-screen room as the default when no room has space: the default is now to put it into
+  a room of known beats. An element may be introduced and then developed or combined in the same room, its first
+  instance met under the pocket below and the later one after it on the route.
+- **Decision, first meetings:** a new element's first instance gets a **pocket**: (1) a safe spot on the required route,
+  outside every danger zone, from which it is in view and acting, where the player may stand as long as they like (D26,
+  D84); (2) no other lethal beat's danger zone within **96 px** of its own along the route, and nothing else lethal active
+  in view from the pocket (a known lever, lift or ladder may share the stretch); (3) it is among the room's **first two
+  beats**, or a death at it replays at most **6 s**; (4) it is not combined on first sight. A **monster** stays met in play
+  (D100: no teaching room, no hint); its danger zone for the pocket is its whole reach, its range plus its strike plus its
+  hearing (D103's 144 px circle for the spider). A DISGUISED or HIDDEN trap keeps its teaching room (D71), which is dense
+  too.
+- **Decision, times and retry:** D19 is unchanged (about 20 s mastered, about 60 s first learning, both hypotheses). Density
+  fills a room, it does not lengthen it. The most expensive retry stays within the 20 s; a room whose retry passes about 15 s
+  because of density is split, each half passing the band, never padded. A room under about 6 s rarely holds 3 beats without
+  falling under 1.5 s per beat: merge it or give it more route. First learning will rise with density; it is not measured
+  yet (#135).
+- **Decision, exempt roles, each earned, not declared:** `lesson` (D33-D40, D48: one lesson element plus at most one trap) is
+  outside the band in the tutorial level and in a fixed, shrink-only list of lessons elsewhere (`LESSON_ROOMS`), each
+  argued here and holding no lethal element. Today it holds only `forest-1-lever`, a different category from a play
+  room: it is a combination lesson (one lever driving a ladder and a lift in opposite states, taught before the route room
+  gates progress with it, D84, D86) with nothing lethal in it, so its retry cost is the pull that undoes a wrong pull,
+  about 0.1 s. Density measures how much a room asks of a player who can die; a room built so nobody can is a teaching
+  aid, not a sparse play room. A new lesson outside the tutorial needs its own decision, not an entry in the list. `boss` (D19: measured apart) is outside the band only in a room
+  that holds the boss. `rest` and `reward`, the calm beat after danger (#352), are exempt from the minimum only in a room
+  with no lethal element, at most one per level; none ships today.
+- **Gate:** `RoomCardsTest` reads the registry's `Beat kind` (a row without one fails with its name) and, per card:
+  `Beats` (`id@x` in rising x, each backed by its own map object of that element, told apart by map id, whose span holds
+  `x` within 16 px; a skill by the geometry above; two listed beats of one element within 96 px fail as one beat);
+  `Beat time` (`seconds (TestClass)`: the first time `Mastered route` states, matched as a whole token, and pinned in that
+  test as a float literal that an `assertEquals` uses as its expected value, directly or through the constant it
+  initialises, within 0.1 s); `First meeting` (per introduced element that counts as a beat: `id: beat k` as it really is
+  in the Beats, `, retry R s` when it is not among the first two; `pocket at x N`, the hero's centre at the safe spot on
+  the required route just before that beat; no other lethal object within 96 px of its span on the map; and a named test
+  method, `FirstMeetingPocketTest.method`, whose body names the room, the element id and N: it stands the hero there for
+  12 s in the real camera view (the target the player hands the camera, at the logical resolution), asserts every frame
+  that he is never hit and the element is in view, and that the element is seen acting during the wait: the spider
+  notices him, the bramble grows, the bat flies, the hive releases, the fissure jets); `Below density`. An issue citation is `#` and digits. The exempt roles are checked against the room (the
+  level, the fixed lesson list, a boss object, nothing lethal). Synthetic cases pin each rule. Every route test the cards
+  name now pins its time within 0.1 s (before, `RoomReplayTest`, the deadfall, bramble, route, hive and tree tests only
+  checked "under 20 s"): no threshold was loosened.
+- **Rooms shipped below it:** a fixed, shrink-only list in the test (`GRANDFATHERED`), each card with `Below density` citing
+  [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the test fails when a listed room passes and keeps the field, and a room not on the list cannot use it. Argued, not
+  taken for convenience: the field carries a tracked rework that removes it, the same mechanism as D72's `Overload reason`
+  while #375 and #376 were open. Beats verified against each room's route test (the scripted routes of `RoomReplayTest`
+  were traced object by object; the others from their tests), under the mechanical rules above:
+
+| Room | Beats on the required route | T (s) | s per beat | Result |
+| --- | --- | ---: | ---: | --- |
+| `forest-1-mob` | redmob | 7.43 | 7.43 | below, #500 |
+| `forest-1-deadfall` | deadfall | 5.17 | 5.17 | below, #500 |
+| `forest-1-traps` | crumble-support, running-platform (the two escalators, 48 px apart: one beat), lever-wall, lever-platform, proximity-thorn, redmob, puffball, crumble-support | 12.27 | 1.53 | passes |
+| `forest-1-spider` | spider | 6.90 | 6.90 | below, #500 with the snail (#329) |
+| `forest-1-bramble` | bramble | 10.73 | 10.73 | below, #500 |
+| `forest-1-climb` | running-platform, spider | 13.33 | 6.67 | below, #500 with the snail (#329) |
+| `forest-1-route` | spider, bat-enemy, running-platform | 11.02 | 3.67 | passes (reworked with the snail, #329) |
+| `forest-1-guard` | puffball, redmob, beetle | 6.83 | 2.28 | passes |
+| `forest-1-hive` | hanging-hive x2 (140 px apart) | 7.12 | 3.56 | below (one element), #500 |
+| `forest-1-tree` | branch-climb (the beetle never commits on the fast line) | 4.95 | 4.95 | below, #500 |
+| `forest-entry` | yellowmob, bat-enemy x2, touch-explosive | 6.80 | 1.70 | passes |
+| `forest-walls` | yellowmob, wall-jump (the two walls, 64 px apart: one beat), redmob | 8.80 | 2.93 | passes |
+| `forest-fissure` | ember-fissure x2 (112 px apart: two beats, each waited out), beetle | 9.30 | 3.10 | passes |
+| `forest-canopy` | redmob, false-honey-fungus, bat-enemy, thorn-vine, touch-explosive, falling-stone | 9.48 | 1.58 | passes |
+
+  Seven of the fourteen pass and seven are below. `forest-1-traps` passes by a hair: 12.27 s over 8 beats is 1.534 s per
+  beat, 0.03 s above the 1.5 s floor, so a faster mastered route would push it over; it is a candidate for the #500
+  rework. Against the first count: `forest-1-tree` has one beat, not two
+  (`TreeClimbTest`: on the fast line the beetle never commits); with the 96 px rule `forest-1-traps` has eight, not nine,
+  and is no longer too dense, so it carries no `Overload reason`; `forest-walls` has three, not four, and still passes.
+  `forest-fissure` keeps two fissure beats: they are 112 px apart and the route waits out each jet.
+- **First meetings found late, crowded or idle by the gate:** eight rooms built before D105 break the pocket:
+  `forest-1-mob` (the RedMob stands idle until the hero is in its reach: measured, idle for a hero centre up to x 3728, a
+  hit from x 3732, so no safe spot shows it acting), `forest-1-deadfall` (a touch trap acts only when its vine is tripped,
+  D88), `forest-1-traps` (the escalators' patrol 32 px from the falling platforms; the puffball beat 7 of 8, beside the
+  RedMob's patrol), `forest-1-guard` (the beetle beat 3 with a 6.08 s retry), `forest-1-tree` (the climb is the rotten
+  column itself and the beetle's patrol is 48 px from it), `forest-entry` (the YellowMob's patrol 16 px from the first
+  Bat's column), `forest-walls` (the first wall stands inside the YellowMob's patrol: a combination on first sight) and
+  `forest-canopy` (the false honey fungus 64 px from the Bat's column; the thorn vine beat 4, its retry not measured).
+  They are on a second shrink-only list (`FIRST_MEETING_GRANDFATHERED`), each entry citing [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), which re-measures,
+  re-orders or records the author's decision. The five first meetings that pass (the spider, the bramble, the route
+  room's bat, the floor hive, the first fissure) are pinned by `FirstMeetingPocketTest`.
+- **Why:** a room that asks one thing in 7 s reads as empty; a full room stays fair when each new thing is met in a pocket
+  of its own and deaths at it are cheap.
+- **Not verified:** how dense rooms feel to a first-time player and what they do to first learning (#135); the 96 px and
+  the 6 s are authoring numbers, not measured on players.
