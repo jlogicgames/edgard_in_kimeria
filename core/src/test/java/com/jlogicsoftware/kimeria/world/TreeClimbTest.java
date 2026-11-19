@@ -48,6 +48,8 @@ class TreeClimbTest {
     private static final float CROWN_X = 3232, CROWN = 32, CHECKPOINT_X = 3240;
     /** D19: about 20 s for a mastered route. */
     private static final float BUDGET = 20f;
+    /** The fast line by the rotten column: the room card's beat time (D105). */
+    static final float FAST_S = 4.95f;
     private static final int LIMIT = 60 * 40;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
@@ -236,6 +238,7 @@ class TreeClimbTest {
         int frames = climb(level, fastLine());
         report("fast line (rotten column)", frames);
         assertTrue(frames * STEP <= BUDGET, "fast line " + frames * STEP + " s");
+        assertEquals(FAST_S, frames * STEP, 0.1f, "the fast line (D105's beat time), pinned within 0.1 s");
         for (int i = 0; i < 60 * 3; i++) frame(level);
         assertTrue(rotten(level).isEmpty(), "every rotten branch the hero stood on gave way after he left it");
     }

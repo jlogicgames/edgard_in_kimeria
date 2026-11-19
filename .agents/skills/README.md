@@ -19,7 +19,7 @@ in `docs/`, and [docs/STYLE_SYSTEM.md](../../docs/STYLE_SYSTEM.md) says how the 
 
 | Skill | Use for | Rule and reference |
 | --- | --- | --- |
-| [kimeria-room-design](kimeria-room-design/SKILL.md) | Planning or auditing a room: the card before the map | D72, D84, [ROOM_CARDS.md](../../docs/ROOM_CARDS.md) |
+| [kimeria-room-design](kimeria-room-design/SKILL.md) | Planning or auditing a room: the card before the map, its novelty and density | D72, D105, D84, [ROOM_CARDS.md](../../docs/ROOM_CARDS.md) |
 | [kimeria-trap-design](kimeria-trap-design/SKILL.md) | A trap from idea to placement: the card before the code | D71, [TRAPS.md](../../docs/TRAPS.md) |
 | [kimeria-game-text](kimeria-game-text/SKILL.md) | Any player-facing string, in all five languages | D74, [TEXT_STYLE.md](../../docs/TEXT_STYLE.md) |
 | [kimeria-art-direction](kimeria-art-direction/SKILL.md) | Sprites, HUD icons, portraits, illustrations | D21, D76, [ART_DIRECTION.md](../../docs/ART_DIRECTION.md) |

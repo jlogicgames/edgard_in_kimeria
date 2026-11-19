@@ -235,7 +235,8 @@ Bomb after the stump, the rotten log after the falling platform) is not novelty,
 geometry. Repeating known elements for mastery is welcome, as long as the room has something else too. Outside the
 tutorial a room **introduces at most two elements**, and each is first met where it is the only unknown thing on
 screen before it is combined (the "teach alone, then combine" rule of the teaching walkthrough below, applied in play
-order). Lesson rooms keep their own stricter form (one lesson element, plus at most one trap: D33-D40, D48).
+order). "Only unknown" never meant "only object": since [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) a first meeting sits among known beats in a safe
+pocket, and the room itself is dense (below). Lesson rooms keep their own stricter form (one lesson element, plus at most one trap: D33-D40, D48).
 A calm, wordless beat after a dangerous one (#352) is a good role for a room, but it needs its own novelty, such as a
 new view or reward.
 
@@ -250,7 +251,8 @@ alone reruns it) fails when a shipped room has no card or a card names no room, 
 id or a Tiled key is not in the registry, the room where an element is first met does not introduce it, a card
 introduces something already met or develops or combines something not met yet, or a non-lesson room introduces more
 than two elements without an `Overload reason` citing an issue. It cannot judge whether a develop changes the answer
-or whether a new element is met alone: review that against the card.
+or whether a new element is met alone: review that against the card. Since D105 it also checks the density and the
+first meetings (see "Density and first meetings (D105)" below and [ROOM_CARDS.md](ROOM_CARDS.md)).
 
 **Audit of the Forest (#351, 2026-11-16).** Verdicts are on the cards. Ten rooms keep (the tutorial's
 `forest-0-wall` is watched: its wall repeats the ladder room's "press, the way opens"; `forest-1-route` and
@@ -268,6 +270,48 @@ practice objects that `forest-0` now teaches; [#376](https://github.com/jlogicga
 `Rooms` list), where the mob is met alone and the refill comes into view only after it (`Forest1MobTest`). The
 lever-and-torch pair (ids 12, 13) was removed. `forest-1-traps` now introduces two elements, the running escalators and
 the puffball, met one screen apart, and its `Overload reason` is gone; the trap course x 616-1280 is unchanged.
+
+### Density and first meetings (D105)
+
+Rule: [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499). Every room keeps the player busy: about **one beat every 3 s** of the mastered route.
+
+- **A beat** is one placed instance of a registry element the **required route** makes the player read and answer. The
+  registry's **Beat kind** says what counts: a `hazard` and a `monster` once per instance; a `mechanism` once per lever the
+  route pulls or hits, with everything it drives; a `platform` once per running platform the route boards or must pass
+  while it moves; a `skill` once per obstacle, posed by map geometry (a free-standing `Collisions:Wall` at least 96 px
+  tall for a wall jump, an object with `skin=branch` for a branch climb). A `pickup`, a `harmless` element and plain
+  geometry never count. Two instances of one element whose spans (box, polyline, horizontal patrol) lie within 96 px of
+  each other are one beat. Beats are listed in route order, read as rising map x.
+- **The band.** With the zero-charge mastered time `T` and `N` beats: at least **3 beats** of at least **2 distinct
+  elements**, at most **4.0 s per beat**, aim about **3 s**; under **1.5 s per beat** the card needs an `Overload reason`
+  that cites an issue. A 9 to 12 s room holds 3 or 4 beats; a room at the 20 s of D19 up to six or seven.
+- **A first meeting gets a pocket, not a room of its own:** a safe spot in view of the new element, outside every danger
+  zone; no other lethal danger zone within 96 px of it along the route and nothing else lethal active in view from the
+  pocket (known levers, lifts and ladders may share the stretch); among the room's first two beats, or a death at it
+  replays at most 6 s; not combined on first sight. For a monster (met in play, D100) the danger zone is its whole reach,
+  hearing included. `FirstMeetingPocketTest` pins the pocket: the hero stands at its x in the real camera view, is never
+  hit, and sees the element act.
+- **Times and retry.** D19 stands. Density fills a room, it does not lengthen it; a room whose retry passes about 15 s
+  because of density is split, each half passing the band. A short room is merged or given more route, never padded.
+- **Exempt, each earned:** `lesson` in `forest-0` and in the test's fixed list of lessons elsewhere (only `forest-1-lever`,
+  D86), holding nothing lethal outside the tutorial; `boss` only in a room with the boss; `rest` and `reward` skip the
+  minimum only in a room with nothing lethal, at most one per level.
+
+**Workflow under D105.** On the card, before the map: list the beats in route order as `id@x`, divide the planned
+mastered time by their number, and place each new element's first instance in its pocket. After building, write the
+measured zero-charge time first in `Mastered route`, pin it in the route test within 0.1 s, write `Beat time` as
+`seconds (TestClass)` naming that test, and for each first meeting add a method to `FirstMeetingPocketTest` that stands
+the hero at the card's `pocket at x N` and names the room and the element.
+
+**Audit (2026-11-19, verified against each room's route test).** Of the fourteen rooms the band applies to, seven pass
+(`forest-1-traps` at 1.53 s per beat, `forest-1-route`, `forest-1-guard`, `forest-entry`, `forest-walls`, `forest-fissure`,
+`forest-canopy`) and seven are too empty (`forest-1-mob`, `forest-1-deadfall`, `forest-1-spider`, `forest-1-bramble`,
+`forest-1-climb`, `forest-1-hive`, `forest-1-tree`). The numbers are on the cards and in D105. The too-empty rooms are on
+the gate's shrink-only list with `Below density`, and the forest-1 rework, the spider rooms with the snail (#329), is
+tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500). `forest-1-traps` passes by 0.03 s (1.534 s per beat), a rework candidate. Eight rooms meet a new element
+late, crowded or with no safe spot that shows it acting (`forest-1-mob`, `forest-1-deadfall`, `forest-1-traps`,
+`forest-1-guard`, `forest-1-tree`, `forest-entry`, `forest-walls`, `forest-canopy`), on a second shrink-only list under
+the same issue.
 
 ## forest-entry split (#376, D72)
 

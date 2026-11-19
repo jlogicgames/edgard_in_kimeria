@@ -1,17 +1,31 @@
 # Room cards
 
-One card per shipped room, in play order (`KimeriaGame.LEVEL_NAMES`, then each map's room order). The rule the
-cards serve is [D72](DECISIONS.md#d72-every-room-gives-the-player-something-new): every room introduces, develops or
-combines at least one element the player has not met in that form. How to write a card and when:
-[ROOMS.md, "Every room gives something new (D72)"](ROOMS.md#every-room-gives-something-new-d72). The skill
-`kimeria-room-design` (`.agents/skills/`) walks through it.
+One card per shipped room, in play order (`KimeriaGame.LEVEL_NAMES`, then each map's room order). The rules the
+cards serve are [D72](DECISIONS.md#d72-every-room-gives-the-player-something-new): every room introduces, develops or
+combines at least one element the player has not met in that form; and
+[D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499):
+every room keeps the player busy, about one beat every 3 s of the mastered route, and a new element is met in a safe
+pocket, not in a room of its own. How to write a card and when:
+[ROOMS.md, "Every room gives something new (D72)"](ROOMS.md#every-room-gives-something-new-d72) and its section
+"Density and first meetings (D105)". The skill `kimeria-room-design` (`.agents/skills/`) walks through it.
 
 `RoomCardsTest` (`:core:test`) reads this file and the maps. It fails when a shipped room has no card, a card names
 no room, a required field is empty, an element id is unknown, a Tiled type in a map is missing from the registry, the
 room where an element is first met does not list it under **Introduces**, a card introduces something already met,
 or develops or combines something not met yet, or a non-lesson room introduces more than two elements without an
-**Overload reason** that cites an issue. What the test cannot judge (whether a develop really changes the answer,
-whether each new element is first met alone) is the reviewer's and the author's job.
+**Overload reason** that cites an issue. For D105 it also fails when an element has no **Beat kind**, a room outside the
+exempt roles has fewer than 3 beats, fewer than 2 distinct elements or more than 4.0 s per beat (unless it is one of
+the rooms shipped below D105, on the test's shrink-only list, with **Below density** citing its rework issue), has
+fewer than 1.5 s per beat without an **Overload reason** that cites an issue (`#` and digits), lists a beat that is a
+pickup, has no map object (or, for a skill, geometry) of its own at that x, is out of rising-x order, or lies within
+96 px of a listed beat of the same element; gives a **Beat time** that is not the first time of **Mastered route** or
+that the named route test does not pin as a float literal; or introduces an element without a **First meeting** entry
+that is among the first two beats or cheap to retry (at most 6 s), clear of other lethal objects by 96 px, with its
+`pocket at x N`, and naming a test method that names the room, the element and N (`FirstMeetingPocketTest`, which
+stands the hero there in the real camera view and asserts he is never hit while the element is seen acting). A beat
+time must be asserted (`assertEquals`) as a float literal in the route test the card names. An exempt role is checked against the room: a `lesson`
+in `forest-0` or the test's fixed list, a `boss` with the boss, a `rest` or `reward` with nothing lethal. What the test
+cannot judge (whether a develop really changes the answer) is the reviewer's and the author's job.
 
 ## Card format
 
@@ -30,16 +44,24 @@ by a two-column table. Keys, in this order:
 | Mastered route | yes | measured time and the test that measures it, against about 20 s (D19) |
 | First learning | yes | measured value and source, or "not measured" with the issue that will measure it (D19: about 60 s) |
 | Retry cost | yes | what the most expensive death replays |
+| Beats | yes, outside `lesson`, `boss`, `rest`, `reward` | the required route's beats in rising map x, `id@x`, comma-separated: one placed instance of an element whose Beat kind counts, `x` inside that object's span (its box, a polyline's points, a horizontal patrol), each object backing one beat; a `skill` beat names its geometry's x; two instances of one element within 96 px are one beat, listed once (D105) |
+| Beat time | with Beats | `seconds (`TestClass`)`: the zero-charge mastered required time, the first time `Mastered route` states, pinned within 0.1 s in that test as a float literal (D105) |
+| First meeting | when a room outside `lesson` and `boss` introduces an element that counts as a beat | one entry per such element, separated by `;`: `id: beat k`, then `, retry R s` when it is not among the first two beats, then `pocket at x N` (the hero's centre at the safe spot just before that beat) and the test method that pins it in backticks (`FirstMeetingPocketTest.method`, whose body names the room, the element id and N); no `;` inside an entry (D105) |
+| Below density | only on the rooms shipped below D105 | the measured beats, time and pace, and the issue that reworks the room (D105) |
 | Optional | no | optional routes and rewards |
 | D26 | no | how every mandatory exit stays reachable |
 | Hints | no | hint zones, if any |
 | Landmark | no | the one thing the player will remember the room by (a suggestion from the Primal Planet study, #352) |
-| Overload reason | when over the cap | why more than two introductions, and the issue that resolves it |
+| Overload reason | when over a cap | why more than two introductions, or fewer than 1.5 s per beat (D105), and the issue that resolves it |
 | Status | no | the D72 audit verdict and follow-up |
 | Decisions | no | the D-numbers the room implements |
 
 Lesson rooms (`Role` = `lesson`) follow D33-D40 and D48 (one lesson element, plus at most one trap) instead of the
-two-introduction cap.
+two-introduction cap and the density of D105. Outside `forest-0` a lesson room holds no lethal element (a `hazard` or
+`monster`) and must be on the test's fixed list (`LESSON_ROOMS`, today only `forest-1-lever`, D86): it teaches a
+combination with nothing at stake (D84). `boss` rooms are outside the density too (D19 measures them apart), only when
+they hold the boss; `rest` and `reward` rooms, the calm beat after danger (#352), are exempt from its minimum only
+with nothing lethal in them, at most one per level.
 
 ## Element registry
 
@@ -47,45 +69,53 @@ What counts as an element is what changes what the player does. A Tiled type map
 map to the same element when only the look differs (a **reskin**, not novelty under D72). Keys are the object's
 `type`, then `:` and the `Actionable` `type`, the `Decor` `kind`, a non-default `skin`, `lever`/`running` for an
 `Escalator` (`running` = false or not), or the `Collectable` name; `Collisions:` prefixes a collision type.
-Elements without a Tiled key are skills the geometry asks for; their first sighting is declared on the cards only.
+Skills are what the geometry asks for; their first sighting is declared on the cards only. Their `Geometry:` keys are not Tiled types: `RoomCardsTest` derives them for D105 beats only, `Geometry:wall` from a free-standing `Collisions:Wall` (not from the map's top) at least 96 px tall, `Geometry:branch` from any object with `skin=branch`.
 How each trap looks and warns is its own card in [TRAPS.md](TRAPS.md) (D71); this registry only groups traps by
 what the player does about them.
 
-| Element id | Tiled keys | What the player does |
-| --- | --- | --- |
-| lever | `Trigger`, `Actionable:Torch` | operates a lever and reads its linked effect |
-| ladder | `Ladder` | lowers a ladder by lever and climbs it |
-| lever-wall | `Actionable:Wall` | raises and lowers a wall that blocks the way |
-| lever-platform | `Escalator:lever` | starts and stops a platform and rides it |
-| running-platform | `Escalator:running` | times a jump onto a platform that never stops |
-| carry-throw | `Stone` | picks up a stone and throws it (at a lever, at a trap) |
-| carry-torch | `CarryableTorch` | carries a torch and lights things with it |
-| crumble-support | `FallingPlatform`, `FallingPlatform:log`, `FallingPlatform:branch` | crosses before the support gives way |
-| proximity-thorn | `ThornRoot`, `ThornTuft` | jumps thorns that rise when the hero comes near |
-| falling-branch | `FallingBranch` | keeps walking under a branch that falls behind him |
-| falling-stone | `FallingStone` | reads the shadow and does not stand under it |
-| touch-explosive | `ExplosiveStump`, `ExplosiveRoot`, `Bomb` | jumps it, walks clear of the wind-up, or sets it off from afar |
-| puffball | `Puffball` | crosses a rhythmic spore cloud in its calm |
-| thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm |
-| bramble | `Bramble` | waits out a thorn arm that grows across a lane on a clock and passes in its open window (D89) |
-| hanging-hive | `HangingHive` | passes under, or climbs through, a falling curtain of stingers in its calm; may knock the hive down |
-| ember-fissure | `EmberFissure` | waits beside a floor crack for its jet of fire to sink and passes in the calm (D91) |
-| honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst |
-| false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud |
-| deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past |
-| quicksand | `Collisions:QuickSand` | keeps moving across sinking ground; no Forest room uses it (moved to the Swamp, planned under [#105](https://github.com/jlogicgames/edgard_in_kimeria/issues/105), [#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486)); the engine support stays |
-| redmob | `RedMob` | beats a walking enemy with a visible whip wind-up (sword or stomp) |
-| yellowmob | `YellowMob` | stomps a walking enemy |
-| bat-enemy | `Bat` | passes or beats a flying enemy |
-| beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) |
-| snail | `Snail` | crosses a snail's line during its reload, jumps or cuts its gob, comes up behind it or hides behind cover, or shoots it (D106) |
-| spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) |
-| boss | `Boss` | fights the stage boss |
-| fireball-refill | `FireballRefill` | picks up a ranged-attack charge |
-| coin | `Collectable:Coin` | collects coins, often off the required route |
-| ingredient | `Collectable:Bat`, `Collectable:Mushroom` | collects a healer ingredient |
-| wall-jump | (skill) | wall-jumps a wall the route cannot pass otherwise |
-| branch-climb | (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) |
+**Beat kind** (D105) says whether a placed instance counts as a beat on the required route: a `hazard` (a trap) and a
+`monster` once per instance; a `mechanism` once per lever the route pulls or hits, with everything it drives (pull,
+ladder and climb are one beat; a ladder with no lever is not a beat of its own); a `platform` once per running
+platform the route boards or must pass while it moves; a `skill` once per obstacle that needs it (one wall, one tree),
+posed by its geometry. A `pickup` and a `harmless` element never count. Two instances of one element whose spans lie
+within 96 px of each other are one beat (a row of falling platforms, the two walls of `forest-walls`); plain geometry
+(a pit, a step) is not a beat.
+
+| Element id | Tiled keys | What the player does | Beat kind |
+| --- | --- | --- | --- |
+| lever | `Trigger`, `Actionable:Torch` | operates a lever and reads its linked effect | mechanism |
+| ladder | `Ladder` | lowers a ladder by lever and climbs it | mechanism |
+| lever-wall | `Actionable:Wall` | raises and lowers a wall that blocks the way | mechanism |
+| lever-platform | `Escalator:lever` | starts and stops a platform and rides it | mechanism |
+| running-platform | `Escalator:running` | times a jump onto a platform that never stops | platform |
+| carry-throw | `Stone` | picks up a stone and throws it (at a lever, at a trap) | mechanism |
+| carry-torch | `CarryableTorch` | carries a torch and lights things with it | mechanism |
+| crumble-support | `FallingPlatform`, `FallingPlatform:log`, `FallingPlatform:branch` | crosses before the support gives way | hazard |
+| proximity-thorn | `ThornRoot`, `ThornTuft` | jumps thorns that rise when the hero comes near | hazard |
+| falling-branch | `FallingBranch` | keeps walking under a branch that falls behind him | hazard |
+| falling-stone | `FallingStone` | reads the shadow and does not stand under it | hazard |
+| touch-explosive | `ExplosiveStump`, `ExplosiveRoot`, `Bomb` | jumps it, walks clear of the wind-up, or sets it off from afar | hazard |
+| puffball | `Puffball` | crosses a rhythmic spore cloud in its calm | hazard |
+| thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm | hazard |
+| bramble | `Bramble` | waits out a thorn arm that grows across a lane on a clock and passes in its open window (D89) | hazard |
+| hanging-hive | `HangingHive` | passes under, or climbs through, a falling curtain of stingers in its calm; may knock the hive down | hazard |
+| ember-fissure | `EmberFissure` | waits beside a floor crack for its jet of fire to sink and passes in the calm (D91) | hazard |
+| honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst | harmless |
+| false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud | hazard |
+| deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past | hazard |
+| quicksand | `Collisions:QuickSand` | keeps moving across sinking ground; no Forest room uses it (moved to the Swamp, planned under [#105](https://github.com/jlogicgames/edgard_in_kimeria/issues/105), [#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486)); the engine support stays | hazard |
+| redmob | `RedMob` | beats a walking enemy with a visible whip wind-up (sword or stomp) | monster |
+| yellowmob | `YellowMob` | stomps a walking enemy | monster |
+| bat-enemy | `Bat` | passes or beats a flying enemy | monster |
+| beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) | monster |
+| snail | `Snail` | crosses a snail's line during its reload, jumps or cuts its gob, comes up behind it or hides behind cover, or shoots it (D106) | monster |
+| spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) | monster |
+| boss | `Boss` | fights the stage boss | monster |
+| fireball-refill | `FireballRefill` | picks up a ranged-attack charge | pickup |
+| coin | `Collectable:Coin` | collects coins, often off the required route | pickup |
+| ingredient | `Collectable:Bat`, `Collectable:Mushroom` | collects a healer ingredient | pickup |
+| wall-jump | `Geometry:wall` (skill) | wall-jumps a wall the route cannot pass otherwise | skill |
+| branch-climb | `Geometry:branch` (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) | skill |
 
 Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:crown`, `HangingVine`, `Torch`
 (decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (clamberable room walls), `Collisions:Platform`
@@ -220,6 +250,10 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | Mastered route | 7.43 s, zero charges, the sword takes the mob (`RoomReplayTest`); 6.97 s to the refill with two charges; target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | under 3 s: the mob is the only hazard, its range starts about 150 px from the entrance |
+| Beats | redmob@3776 |
+| Beat time | 7.43 (`RoomReplayTest`) |
+| First meeting | redmob: beat 1, its range (x 3728-3872) is clear of other lethal objects, but it stands idle until the hero is in its reach (measured: idle for a hero centre up to x 3728, a hit from x 3732), so no safe spot shows it acting, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Below density | 1 beat in 7.43 s (7.43 s per beat): the first RedMob in a room of its own (D85), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | no support, no one-shot state; the sword or a stomp needs no ammunition |
 | Hints | none (forest-1 has none, D33) |
 | Status | new, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (cards approved by the author 2026-11-17); `Forest1MobTest` checks the mob and the refill are met one at a time. Role `variation`, not `lesson`: lesson rooms follow the tutorial rules D33-D40 and D48 (hint zones, one lesson element plus at most one trap), and this room has two elements, neither a trap, and no hints (forest-1 has none, D33); it is held to the two-introduction cap instead, which it meets |
@@ -254,6 +288,10 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 | Mastered route | 5.17 s jumping the vine (take-offs 2 to 60 px before it), 6.47 s tripping it and stopping (6.88 s with the longer-warnings assist) (`DeadfallTrapTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | 2.65 s: a hero who walks in without jumping is hit 2.65 s after the entrance (2.97 s with the assist) |
+| Beats | deadfall@5248 |
+| Beat time | 5.17 (`DeadfallTrapTest`) |
+| First meeting | deadfall: beat 1, retry 2.65 s, watched from the entrance with nothing else in the room, but a touch trap acts only when its vine is tripped (D88), so no safe spot shows it acting, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Below density | 1 beat in 5.17 s (5.17 s per beat): the deadfall as the room's only object (D88), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | no support, no one-shot state the route needs: a jump leaves the log tied, a trip leaves it hanging from the snag above head height and the vine cut, and the exit is reachable from both (`DeadfallTrapTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the log hauled up and lashed to the bough by the tree trunk |
@@ -287,6 +325,9 @@ x    4960 4992        5176-5192        5228  5296  5364      5536    5600
 | Mastered route | 12.27 s to the room exit (`Forest1TrapsTest`, `RoomReplayTest`), unchanged by #375; 14.98 s with the longer-warnings assist; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | 12.73 s for a death at the log (D58; `Forest1TrapsTest`, unchanged by #375) |
+| Beats | crumble-support@160, running-platform@304, lever-wall@480, lever-platform@544, proximity-thorn@696, redmob@864, puffball@944, crumble-support@1088 |
+| Beat time | 12.27 (`RoomReplayTest`) |
+| First meeting | running-platform: beat 2 (`Forest1TrapsTest`), its patrol (x 256-384) passes 32 px from the falling platforms (x 96-224), under the 96 px clearance, built before D105 (D58) and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); puffball: beat 7, met one screen after the escalators right behind the known RedMob, built before D105 (D58) and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | the pit is the level `Deadline`, a retry; nothing is re-armed (D58) |
 | Hints | none |
 | Status | D72 audit 2026-11-16: change; done by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (D85): the first RedMob (id 11) and the refill (id 25) moved to `forest-1-mob`, the lever-and-torch pair (ids 12, 13) was removed, the trap course x 616-1280 is untouched. |
@@ -339,6 +380,10 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 | Mastered route | 6.90 s baiting the pounce, stepping back and striking it in its recovery, the same on a retry; 5.85 s rushing it with the sword during the wind-up; 5.17 s with one fireball from afar (`Forest1SpiderTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | 2.32 s (was 3.58 s before #497: its leap may now leave its range by up to its 48 px reach, so it bites a hero who stops just past the range's end): a hero who walks in and stops when it commits is bitten 2.32 s after the entrance and replays the room from its entrance; walking on without a strike is bitten too, because its range ends where the hero comes in, so the bite lands where he walks (`Forest1SpiderTest`) |
+| Beats | spider@7184 |
+| Beat time | 6.90 (`Forest1SpiderTest`) |
+| First meeting | spider: beat 1, retry 2.32 s, pocket at x 7030 (the hero's centre), inside its hearing, where it notices him and chases to its range's end without reaching him (`FirstMeetingPocketTest.forest1SpiderTheSpider`) |
+| Below density | 1 beat in 6.90 s (6.90 s per beat): the spider alone in a room of its own (#484); reworked with the snail (#329), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | no support and no one-shot state; the sword, a stomp or a fireball kill it, and a retry rebuilds it calm at its spawn |
 | Hints | none (no hint for the spider: new monsters are met in play, D100) |
 | Landmark | the spider skittering alone in the middle of the clearing |
@@ -373,6 +418,10 @@ x    6880 6912        7090  7136   7184   7232  7302           7456  7520
 | Mastered route | 10.73 s from a fresh start, the same with the longer-warnings assist; 9.42 to 12.80 s over every start offset (0.05 s steps) for a hero who goes when the lane is open or waits on the ladder for the arm to come back (`Forest1BrambleTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | 6.70 s: a hero who climbs straight out from a fresh start is caught 6.70 s after the entrance and replays the room from its entrance (`Forest1BrambleTest`) |
+| Beats | bramble@6160 |
+| Beat time | 10.73 (`Forest1BrambleTest`) |
+| First meeting | bramble: beat 1, pocket at x 6170 at the ladder's foot, where its band never reaches and the arm is seen growing and pulling back (`FirstMeetingPocketTest.forest1BrambleTheBramble`) |
+| Below density | 1 beat in 10.73 s (10.73 s per beat): the bramble as the room's only hazard (D89), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | no lever, no support, no one-shot state: the ladder is always down and the arm comes back every 4 s, so waiting on the ladder always gives another window; the band never reaches the floor, so the walk to the ladder is safe (`Forest1BrambleTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the thorn arm sweeping over the ladder top under the shelf's end |
@@ -403,9 +452,12 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 | Introduces | - |
 | Develops | spider: the wall climb. It comes up the block's far face to a hero it cannot reach on the floor (it never strikes from a wall), so a block is no refuge: the hero must meet it on the block top |
 | Combines | spider + running-platform: the running lift is the only way up to the exit, so the hero must wait on the block for it, and the wait is what the climbing spider punishes |
-| Mastered route | 10.77 s with one fireball, shot the moment it tops the block's far edge; 13.33 s with no charge, baiting its pounce on the block top, stepping back and striking it in its recovery, the same on a retry; both at every pause of 0 to 2 s on the second step (sampled every 4 frames); a shot fired even after its leap has begun still wins (D102's tie rule); the lift ride alone (no spider) is 10.77 s (`Forest1ClimbTest`); target about 20 s (D19) |
+| Mastered route | 13.33 s with no charge (the required route), baiting its pounce on the block top, stepping back and striking it in its recovery, the same on a retry; 10.77 s with one fireball, shot the moment it tops the block's far edge; both at every pause of 0 to 2 s on the second step (sampled every 4 frames); a shot fired even after its leap has begun still wins (D102's tie rule); the lift ride alone (no spider) is 10.77 s (`Forest1ClimbTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | 6.92 s at worst: a hero who waits at the block's left end, out of its reach, and walks to the lift as it comes down is bitten 5.57 to 6.92 s after the entrance; one who waits under the lift is bitten 5.33 to 6.38 s in; each death is pinned at every pause of 0 to 2 s on the second step, sampled every 4 frames (`Forest1ClimbTest`) |
+| Beats | running-platform@7904, spider@7952 |
+| Beat time | 13.33 (`Forest1ClimbTest`) |
+| Below density | 2 beats in 13.33 s (6.67 s per beat): the climbing spider and the lift; reworked with the snail (#329), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | no lever, support or one-shot state: the lift never stops, the steps are static one-way platforms, and its pounce on the block top never reaches the shelf or the exit; the lift's underside stops 19 px above the spider's body, clear of its leap's 6 px arc, so the lift never touches, moves or stops it (a full-cycle test with the spider waiting under it); a retry rebuilds it calm on its floor |
 | Hints | none (D100) |
 | Landmark | the spider coming up the block's far face while the lift comes down |
@@ -445,6 +497,9 @@ x    7520 7552     7696  7760  7808   E   7904-7936 7952        8032         816
 | Mastered route | 11.02 s required, 18.32 s with the optional refill (`Forest1RouteTest`), both unchanged by the spider: the walker sets off its drop and is past the column when it falls, and the detour walks across its slab without stopping; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | up to about 11 s (a death at the bat or the lift replays the room); a hero who stops under the slab's lip is bitten 3.43 s after the entrance (`Forest1ShelfSpiderTest`, unchanged), and one who climbs to the slab on the optional detour and stops in its middle 5.55 s after it (`Forest1RouteTest`; 5.22 s before #497) |
+| Beats | spider@1632, bat-enemy@1856, running-platform@1936 |
+| Beat time | 11.02 (`Forest1RouteTest`) |
+| First meeting | bat-enemy: beat 2, pocket at x 1760, past the known spider's drop column and 96 px short of the bat's patrol, where it is seen flying (`FirstMeetingPocketTest.forest1RouteTheBat`) |
 | Optional | the fireball refill on the pad over the one-shot step |
 | D26 | every state reached by supported actions reaches the exit without Restart Level (D67); the spider never blocks the lift or the exit: its slab is on the optional ladder route only, its thread lands 298 px short of the lift, and a retry rebuilds it calm on its slab. The detour meets it (`Forest1RouteTest`'s teleporting pad checks remove the spider, as they are about geometry, #497): it holds at the slab's end while the hero climbs (its leap may leave the slab's range only over authored floor, and a ladder's top step is not floor to it, so its bite cannot reach the ladder's top and it does not wind up, #497), and a hero who walks on along the slab makes it wind up and is past when it lands (asserted: at least one wind-up, never a bite); the drop off the pad's left end then stomps it, with and without the assist (it was left on its slab without it), at every skitter phase (`Forest1RouteTest`) |
 | Hints | none (no hint for the spider, D100) |
@@ -465,6 +520,9 @@ x    7520 7552     7696  7760  7808   E   7904-7936 7952        8032         816
 | Mastered route | 6.83 s timed melee, 6.15 s with a fireball, 7.67 s by the roof, all unchanged by the beetle: the floor routes run past it and it bursts behind the hero, and the roof run drops past it without triggering it and reaches the exit alive (`Forest1CombatTest`); from the tunnel's mouth to the exit, 3.65 s killing the beetle with a fireball, 4.53 s luring it (step out, step back into the tunnel, let it burst); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)); a straight run from the entrance dies once by design (D68) |
 | Retry cost | about 1.7 s for the first walk-in death (the cloud); 6.08 s for a death in the beetle's burst: the mastered melee from the entrance (x 2176), then a stop beside the beetle when it commits (`Forest1CombatTest`) |
+| Beats | puffball@2375, redmob@2394, beetle@2632 |
+| Beat time | 6.83 (`Forest1CombatTest`) |
+| First meeting | beetle: beat 3, retry 6.08 s (`Forest1CombatTest`), in view from the entrance and met past the tunnel, 158 px from the guard, but the retry is over 6 s, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | Optional | the roof route and its refill |
 | D26 | the floor route needs no support; the roof is optional (D68); the beetle never blocks the exit: its blast (x 2572-2716 at most) reaches neither the tunnel (it ends at x 2560), nor the roof's drop (x 2704 on; its trigger ends at x 2696), nor the exit (x 2800), and a hero with no charge passes it by luring or by running on |
 | Hints | none (no hint for the beetle: new monsters are met in play, D100) |
@@ -486,6 +544,10 @@ x    7520 7552     7696  7760  7808   E   7904-7936 7952        8032         816
 | Mastered route | 7.12 s from a fresh start; 6.85 to 12.22 s over start offsets of 0 to 9 s (0.1 s steps), with and without the longer-warnings assist, for a hero who waits outside each band while it is in the air or about to be and starts the climb right after a curtain (`Forest1HiveTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | 7.5 s at most: a hero who walks and climbs without waiting dies in every one of 45 start offsets, 12 times under the floor hive and 33 times under the ladder hive, 3.1 to 7.5 s after the entrance, and replays the room from its entrance (`Forest1HiveTest`) |
+| Beats | hanging-hive@6440, hanging-hive@6604 |
+| Beat time | 7.12 (`Forest1HiveTest`) |
+| First meeting | hanging-hive: beat 1, pocket at x 6420, just short of the floor hive's band, where its curtain is seen falling, 140 px from the ladder hive (`FirstMeetingPocketTest.forest1HiveTheFloorHive`) |
+| Below density | 2 beats in 7.12 s (3.56 s per beat), one element (two hives), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | Optional | knock the floor hive down: with the stone by the entrance by a jump-throw (28 of 28 tested throw points, body right edge x 6330 to 6438), or with a fireball near the top of a jump (10 of 13 tested jump timings, one charge); after that the floor pass is free. The ladder hive hangs out of reach of both |
 | D26 | no lever, support or one-shot state on the route: both hives are passed by timing alone, from every start offset (`Forest1HiveTest`); a knock-down only removes a danger, and a retry rebuilds both hives |
 | Hints | none (forest-1 has none, D33) |
@@ -522,6 +584,10 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | Mastered route | 4.95 s by the rotten column (the beetle never commits), 6.23 s by the sound tree (`TreeClimbTest`), both unchanged by the beetle; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | one possible death, standing in the beetle's burst: a hero who walks to the sound tree and stops beside it when it commits dies 5.12 s after the entrance (`TreeClimbTest`); the rotten branches never kill: the most expensive mistake (stopping on the top rotten branch, riding it down, then the sound tree) finishes in 11.05 s, 6.10 s more than the fast line |
+| Beats | branch-climb@3184 |
+| Beat time | 4.95 (`TreeClimbTest`) |
+| First meeting | branch-climb: beat 1 (`TreeClimbTest`), the rotten branches never kill, but they are the climb's own column and the beetle's patrol (x 3264-3384) is 48 px from it, under the 96 px clearance, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Below density | 1 beat in 4.95 s (4.95 s per beat): the climb alone on the fast line, built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | D26 | the sound tree reaches the crown with any rotten branch gone (load check `FallingPlatform.branchProblem`, swept over all 32 states in `TreeClimbTest`); the beetle's blast (x 3236-3412 at most, y 288-320) never reaches the rotten column (x 3184-3216) nor any branch, and a hero on the lowest branch is out of its hearing |
 | Optional | one coin on the floor at x 3040 (id 145), 128 px from the entrance and left of the first trunk, off the climb: the level's first coin, a pure first sighting (forest-1 has no healer, so it feeds no recipe; the healer counts only the forest's own coins) |
 | Hints | none |
@@ -545,6 +611,9 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | Mastered route | 6.80 s required, 10.40 s all coins and 6.12 s on a collection return (`RoomReplayTest`, three identical attempts), re-measured with the two pits of [#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486) with the same result as with the sand; target about 20 s, coins about 30 s |
 | First learning | not measured (#135) |
 | Retry cost | the whole room, about 7 s (the required route, 6.80 s, re-measured with the pits), for a death at the Bomb at its end or a fall into a pit (was about 16 s for the undivided room) |
+| Beats | yellowmob@192, bat-enemy@272, bat-enemy@512, touch-explosive@656 |
+| Beat time | 6.80 (`RoomReplayTest`) |
+| First meeting | yellowmob: beat 1 (`RoomReplayTest`), its patrol (x 128-256) passes 16 px from the first Bat's column (x 272), under the 96 px clearance, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
 | D26 | no one-shot support; the Bomb is the only one-shot object and the exit stays reachable after it blows; a fall into a pit (the level's Deadline, y 384) is a retry into the room, never a soft-lock; the required route crosses the pits by the stair and by a 48 px jump (`RoomReplayTest`, which fails if the route falls) |
 | Hints | none (the D24 controls zone is removed by #376: forest-0 teaches the controls) |
@@ -583,6 +652,9 @@ own floor.
 | Mastered route | 8.80 s required, 7.32 s on a collection return with its mobs already beaten, Bat included: the Bat lies on the walking route, so it costs no time (`RoomReplayTest`, three identical attempts); target about 20 s |
 | First learning | not measured (#135) |
 | Retry cost | the whole room, about 9 s, for a death at the RedMob by the exit |
+| Beats | yellowmob@832, wall-jump@912, redmob@1136 |
+| Beat time | 8.80 (`RoomReplayTest`) |
+| First meeting | wall-jump: beat 2 (`RoomReplayTest`), the first wall (x 912) stands inside the YellowMob's patrol (x 816-944), so it is met combined, not alone, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), so a hero who walks on after the climb passes through it; moved here from `forest-entry` by #417 |
 | D26 | no one-shot object; both walls are climbable from every state |
 | Hints | none |
@@ -604,6 +676,9 @@ own floor.
 | Mastered route | 9.30 s from the entrance by the lure, the answer that needs no charge (`RoomReplayTest`, three identical attempts; `ForestFissureTest`), 8.60 s with one fireball from the ledge's lip, 8.25 s on every collection return (the beetle stays gone; `RoomReplayTest`); 6.40 to 10.27 s over start offsets of 0 to 3.5 s (0.05 s steps), with and without the longer-warnings assist, for a hero who waits short of each column until a jet ends and lures the beetle (`ForestFissureTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | the most expensive death is a stop beside the beetle when it commits, after the mastered climb: 8.35 s from the entrance at start offset 0, and 8.75 s at worst over start offsets of 0 to 3.5 s counted from the end of the wait (the old card's basis and that of the offset times above; 11.70 s from entering with the wait included) (`ForestFissureTest`); a careless walker dies at the floor fissure at 23 of 71 start offsets, at most 3.5 s after entering |
+| Beats | ember-fissure@3232, ember-fissure@3360, beetle@3508 |
+| Beat time | 9.30 (`RoomReplayTest`) |
+| First meeting | ember-fissure: beat 1, pocket at x 3200, just short of the first column on open floor, where it is seen jetting, 112 px from the second (`FirstMeetingPocketTest.forestFissureTheFirstFissure`) |
 | D26 | no lever, support or one-shot state on the route: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room. The beetle never blocks the exit: its blast (x 3480-3592 at most, y 192-224) reaches neither the ledge's lip (x 3424-3480), nor the branch below it (a hero on it has his top at y 250), nor the exit (x 3600); it needs no charge: the lure, or walking straight past it, which reaches the exit at every crawl phase with and without the assist (it bursts behind him). A retry rebuilds it at its spawn |
 | Hints | none (forest-2 has none, D33; no hint for the beetle: new monsters are met in play, D100) |
 | Landmark | the column of fire through the branch, seen across the screen from the entrance |
@@ -643,6 +718,9 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 | Mastered route | 9.48 s (`Forest2TrapsTest`, `RoomReplayTest`); target about 20 s |
 | First learning | not measured (#135) |
 | Retry cost | about 9.5 s for a death at the falling stone |
+| Beats | redmob@1472, false-honey-fungus@1672, bat-enemy@1760, thorn-vine@1896, touch-explosive@2064, falling-stone@2224 |
+| Beat time | 9.48 (`RoomReplayTest`) |
+| First meeting | false-honey-fungus: beat 2 (`RoomReplayTest`), 64 px from the Bat's column (x 1760), under the 96 px clearance, tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); thorn-vine: beat 4, its retry not measured, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
 | Optional | coins and the Mushroom on the ascent over the falling platform |
 | D26 | the spent platform closes only the optional ascent; the exit stays reachable |
 | Hints | none |

@@ -42,6 +42,8 @@ class Forest1RouteTest {
     private static final float BAT_X = 1856, BAT_END = 1904;
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
+    /** The required route, sword only: the room card's beat time (D105). */
+    static final float REQUIRED_S = 11.02f;
     /** #484: a hero who climbs to the slab and stops in its middle is bitten by its spider this long after the entrance. */
     private static final float MID_SLAB_DEATH_S = 5.55f;
     /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
@@ -403,6 +405,7 @@ class Forest1RouteTest {
         assertTrue(lift(level).isRunning() && !ladder(level).isLowered(), "the lever was never touched");
         assertTrue(bat(level).isDefeated(), "the scripted hero beat the bat with the sword, no fireball");
         assertTrue(seconds <= 12f, "required route " + seconds + " s: the measured value plus the lift's schedule, well inside the 20 s budget");
+        assertEquals(REQUIRED_S, seconds, 0.1f, "the required route (D105's beat time), pinned within 0.1 s");
     }
 
     @Test void theRequiredRouteTakesTheSameTimeOnThreeAttemptsAfterRetriesAndTheRefillIsLeftBehind() {

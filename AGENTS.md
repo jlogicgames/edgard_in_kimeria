@@ -76,6 +76,18 @@ introduces, develops or combines, D19 times, retry cost) and keep `RoomCardsTest
 a registry row in the same change. Rule and workflow: `docs/ROOMS.md`, "Every room gives something new (D72)".
 A trap's teaching room in `docs/TRAPS.md` must match the room cards (`TrapTeachingRoomTest`).
 
+## Rooms are dense (D105)
+
+A room keeps the player busy: about one beat every 3 s of the zero-charge mastered route, at least 3 beats of 2
+distinct elements, 1.5 to 4.0 s per beat (`lesson` in the tutorial or a fixed list, and `boss` with the boss, are
+exempt). A beat is one placed hazard, monster, pulled lever (with what it drives), running platform or skill obstacle
+(posed by its geometry) on the required route; pickups never count, and two of one element within 96 px are one beat.
+The card lists `Beats` (`id@x`, rising x) and `Beat time` (`seconds (TestClass)`, pinned within 0.1 s); a new element's
+first meeting is a safe pocket among known beats (among the first two beats or a retry of at most 6 s, no other lethal
+object within 96 px), recorded under `First meeting` with its `pocket at x N` and pinned by a method of `FirstMeetingPocketTest` (hero
+there, never hit, the element seen acting), never a room of its own. A lesson outside the tutorial needs its own decision. `RoomCardsTest` checks it; only the rooms shipped below it before D105 may
+carry `Below density`, on a list that only shrinks (#500).
+
 ## Git in this repo
 
 - Never commit or push without the user's approval in that moment; never commit on `main`.
@@ -97,7 +109,7 @@ row. When it acts it is seen and heard, hit or miss; the hero's death beat does 
 
 A monster that reacts to the hero notices in its own body language (a stop and a reaction drawn in its frames, about 0.5 s,
 not scaled by the assist) and a short call in its own voice: no mark over its head, no shared alert sound. Its lethal
-wind-up takes its length from `TrapWarnings`. New monsters are met in play: no teaching room, no hint text. Design the
+wind-up takes its length from `TrapWarnings`. New monsters are met in play: no teaching room, no hint text; their first room is a dense room with a pocket around the monster's whole reach (D105). Design the
 monster's card in `docs/GAME_DESIGN.md` ("Forest monster ideas") first; the beetle, the spider (D102) and the snail (D106) are
 the templates (`Beetle`, `BeetleFx`; `Spider`, `SpiderFx`; `Snail`, `SnailFx`). A ranged monster owns its projectile, one per
 monster with no allocation, and every weapon breaks it and flies on (`Breakable`, the snail's gob). A monster that leaves its floor (the spider's walls and silk thread, D103) moves

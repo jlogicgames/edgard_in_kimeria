@@ -224,6 +224,9 @@ class DeadfallTrapTest {
         return -1;
     }
 
+    /** The mastered route, jumping the vine, from the entrance to the exit: the room card's beat time (D105). */
+    static final float MASTERED_S = 5.17f;
+
     @Test void jumpingTheVineFiresNothingAndReachesTheExitFromAWideTakeOffWindow() throws Exception {
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);
@@ -237,6 +240,7 @@ class DeadfallTrapTest {
             System.out.printf(java.util.Locale.ROOT, "deadfall jump take-offs %.0f-%.0f px before the vine, route %.2f s (longer=%s)%n", lo, hi, best * STEP, longer);
             assertTrue(lo <= 10 && hi >= 30, "a take-off window of at least 20 px: " + lo + ".." + hi);
             assertTrue(best * STEP < 20f, "the mastered route fits D19");
+            if (!longer) assertEquals(MASTERED_S, best * STEP, 0.1f, "the mastered route (D105's beat time), pinned within 0.1 s");
         }
     }
 
