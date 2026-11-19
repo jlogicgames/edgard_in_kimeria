@@ -78,7 +78,7 @@ what the player does about them.
 | yellowmob | `YellowMob` | stomps a walking enemy |
 | bat-enemy | `Bat` | passes or beats a flying enemy |
 | beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) |
-| spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread, and the room that first shows each of those lists it as an introduction (D103) |
+| spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) |
 | boss | `Boss` | fights the stage boss |
 | fireball-refill | `FireballRefill` | picks up a ranged-attack charge |
 | coin | `Collectable:Coin` | collects coins, often off the required route |
@@ -210,7 +210,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 9 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 1 of 11 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | The first enemy, alone on flat ground: read the whip's raised arm, then sword it, stomp it or spend a charge; the refill behind it gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
@@ -244,7 +244,7 @@ x    3520 3552      3728   3776  3824            4208   4256    4320
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 9 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 2 of 11 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by. |
 | Introduces | deadfall |
@@ -276,7 +276,7 @@ x    4960 4992        5176-5192        5228  5296  5364      5536    5600
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 9 (1280 px, two screens) |
+| Level | forest-1, play order 2, room 3 of 11 (1280 px, two screens) |
 | Role | combination |
 | Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
 | Introduces | running-platform, puffball |
@@ -309,7 +309,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 9 (640 px, one screen) |
+| Level | forest-1, play order 2, room 4 of 11 (640 px, one screen) |
 | Role | lesson |
 | Purpose | One lever drives two mechanisms in opposite states: pulling it lowers the ladder and stops the lift, pulling again raises the ladder and restarts the lift; both are in view when it is pulled, and a wrong pull costs nothing. |
 | Introduces | - |
@@ -325,11 +325,44 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 | Status | New (#418, D86, after the D84 playtest). D84 check: (1) taught before gating: the combination is met here, with nothing at stake, before the route room gates progress with it; (2) the effects land on screen: the room is one screen wide (640 px = the camera's view), the lift is 80 px and the ladder 192 px from the lever; (3) a stuck player always sees something untried: the lever, the running lift or the hanging ladder; (4) the challenge is only boarding a moving lift. The room is built and tested with a scripted hero; the author played it on 2026-11-17, and no novice has played it yet (#129-#131). |
 | Decisions | D84, D86, D67 |
 
+### forest-1-spider
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 5 of 11 (640 px, one screen, x 6880-7520: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | The spider alone on open ground: let it notice you, step into its reach, step back out of the locked pounce and strike it while it recovers, rush it with the sword during its wind-up, or shoot it from afar. |
+| Introduces | spider |
+| Develops | - |
+| Combines | - |
+| Mastered route | 6.90 s baiting the pounce, stepping back and striking it in its recovery, the same on a retry; 5.85 s rushing it with the sword during the wind-up; 5.17 s with one fireball from afar (`Forest1SpiderTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | 3.58 s: a hero who walks in and stops when it commits is bitten 3.58 s after the entrance and replays the room from its entrance; walking on without a strike is bitten too, because its range ends where the hero comes in, so the bite lands where he walks (`Forest1SpiderTest`) |
+| D26 | no support and no one-shot state; the sword, a stomp or a fireball kill it, and a retry rebuilds it calm at its spawn |
+| Hints | none (no hint for the spider: new monsters are met in play, D100) |
+| Landmark | the spider skittering alone in the middle of the clearing |
+| Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19). D72: no shipped room could show the spider alone (every room's own new element is in view from its entrance, or the room is at the two-introduction cap), so it got a room of its own, as the traps of #363-#366 did. It is the room's only object, in view and skittering from the entrance, and it hears only a hero within 144 px (x 7004 on), so it is watched before it reacts. Built and tested with a scripted hero |
+| Decisions | D72, D100, D101, D102 |
+
+Sketch (Y grows downward, floor top y 320; walls x 6880-6896 and 7504-7520):
+
+```
+x    6880 6912        7090  7136   7184   7232  7302           7456  7520
+     |wall|start        [ pounce reach ......... ]               exit |wall|
+     |    | @                  <  S  >                           [ ]  |    |
+=====+==========================================================+=====  floor y 320
+```
+
+- `Spider` (id 148) x 7184, y 304, 32 x 16, `offNeg` 3, `offPos` 3: `position.x` 7136-7232, its pounce reach x 7090-7302 at
+  most, 130 px from the entrance body and 154 px from the exit.
+- `RoomStart` (id 161) (6912, 272); `RoomExit` (id 162) x 7456-7488, y 272-320. Floor and walls: collisions 151-153; the
+  tiles copy `forest-1-deadfall`'s.
+
 ### forest-1-bramble
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 9 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 6 of 11 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-spider` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A thorn arm grows over a ladder top on a clock: watch it from the floor, wait on the ladder, climb out when it pulls back. |
 | Introduces | bramble |
@@ -359,31 +392,69 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 - Static `Ladder` (id 126) x 6192-6208, y 208-320, no lever: one tile off the wall, so its top is clear of the clump (D89).
 - `RoomExit` (id 125) x 5920-5952, y 176-208, on the shelf's left end. `RoomStart` (5632, 272).
 
+### forest-1-climb
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 7 of 11 (640 px, one screen, x 7520-8160: appended at the map's end, listed after `forest-1-bramble` in the `Rooms` list, which sets the play order) |
+| Role | combination |
+| Purpose | The spider climbs to the hero while he must wait: on the block, waiting for the lift to the exit, he sees it come up the block's far face and along its top; bait its pounce and strike it, shoot it as it tops the edge, or be bitten waiting. |
+| Introduces | - |
+| Develops | spider: the wall climb. It comes up the block's far face to a hero it cannot reach on the floor (it never strikes from a wall), so a block is no refuge: the hero must meet it on the block top |
+| Combines | spider + running-platform: the running lift is the only way up to the exit, so the hero must wait on the block for it, and the wait is what the climbing spider punishes |
+| Mastered route | 10.77 s with one fireball, shot the moment it tops the block's far edge; 13.33 s with no charge, baiting its pounce on the block top, stepping back and striking it in its recovery, the same on a retry; both at every pause of 0 to 2 s on the second step (sampled every 4 frames); a shot fired even after its leap has begun still wins (D102's tie rule); the lift ride alone (no spider) is 10.77 s (`Forest1ClimbTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | 6.92 s at worst: a hero who waits at the block's left end, out of its reach, and walks to the lift as it comes down is bitten 5.57 to 6.92 s after the entrance; one who waits under the lift is bitten 5.33 to 6.38 s in; each death is pinned at every pause of 0 to 2 s on the second step, sampled every 4 frames (`Forest1ClimbTest`) |
+| D26 | no lever, support or one-shot state: the lift never stops, the steps are static one-way platforms, and its pounce on the block top never reaches the shelf or the exit; the lift's underside stops 19 px above the spider's body, clear of its leap's 6 px arc, so the lift never touches, moves or stops it (a full-cycle test with the spider waiting under it); a retry rebuilds it calm on its floor |
+| Hints | none (D100) |
+| Landmark | the spider coming up the block's far face while the lift comes down |
+| Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19; the layout reworked to the author's Option A after review, 2026-11-19: the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp the spider as it came over the lip in 1,700 of 1,736 measured runs). The spider is known from `forest-1-spider` and the running lift from `forest-1-traps`, so nothing in the room is new but the climb. The whole room is in view from the entrance. Built and tested with a scripted hero |
+| Decisions | D72, D103 |
+
+Sketch (Y grows downward, floor top y 320, block top y 208, shelf top y 96; walls x 7520-7536 and 8144-8160):
+
+```
+x    7520 7552     7696  7760  7808   E   7904-7936 7952        8032         8160
+     |wall|start               [shelf 7808-7904, y 96]   L                    |wall|
+     |    |                    [ block 7808-7952, y 208 ]|<- face             |    |
+     |    |          s2 (240)  [                         ]|                   |    |
+     |    | @   s1 (272)       [                         ]|  ~~~~S~~~~        |    |
+=====+=========================+=========================+===================+=====  floor y 320
+```
+
+- `Spider` (id 149) polyline from (8032, 320): `0,0 -80,0 -80,-112 -160,-112`: the floor right of the block (x 7952-8032), up its
+  right face (x 7952, 112 px, the block on its left) and along its top (x 7872-7952). Its pounce on the top reaches x 7824 at
+  most, so the block's left 16 px are out of its reach; a hero there is out of its hearing too, and it waits on the face.
+- `Escalator` (id 167) x 7904-7936, vertical, running, its top between y 96 and 160 (its underside at most y 176, 19 px above the
+  spider's body on the block top). Block (id 157) x 7808-7952, y 208-320; shelf (id 166) x 7808-7904, y 96-112. One-way `Platform` steps (ids 158, 159) x 7696 y 272 and x 7760 y 240.
+- `RoomStart` (id 164) (7552, 272); `RoomExit` (id 165) x 7824-7856, y 64-96 on the shelf. The tiles are the forest-1 ledge and
+  platform tiles (ids 22-24, 42-44, 26-28).
+
 ### forest-1-route
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 6 of 9 (832 px) |
+| Level | forest-1, play order 2, room 8 of 11 (832 px) |
 | Role | variation |
-| Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill. |
+| Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill; a spider on the ladder slab drops on its silk thread at anyone who stops under the slab's end. |
 | Introduces | bat-enemy |
-| Develops | crumble-support: a one-shot step whose loss closes the optional refill until Restart Level; fireball-refill: the bat gives a reason to spend a charge, so the refill is worth something |
+| Develops | crumble-support: a one-shot step whose loss closes the optional refill until Restart Level; fireball-refill: the bat gives a reason to spend a charge, so the refill is worth something; spider: it drops from above on its thread at a hero under the slab's lip, so stepping back along the floor is no longer the answer: never stop under a lip, or step aside and strike it as it hangs |
 | Combines | ladder + running-platform: one lever lowers the ladder and stops the lift, so the two routes exclude each other (first taught by forest-1-lever, D86, so here it is a choice) |
 | Repeats | lever |
-| Mastered route | 11.02 s required, 18.32 s with the optional refill (`Forest1RouteTest`); target about 20 s |
+| Mastered route | 11.02 s required, 18.32 s with the optional refill (`Forest1RouteTest`), both unchanged by the spider: the walker sets off its drop and is past the column when it falls, and the detour walks across its slab without stopping; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | up to about 11 s (a death at the bat or the lift replays the room) |
+| Retry cost | up to about 11 s (a death at the bat or the lift replays the room); a hero who stops under the slab's lip is bitten 3.43 s after the entrance (`Forest1ShelfSpiderTest`), and one who climbs to the slab on the optional detour and stops in its middle 5.22 s after it (`Forest1RouteTest`) |
 | Optional | the fireball refill on the pad over the one-shot step |
-| D26 | every state reached by supported actions reaches the exit without Restart Level (D67) |
-| Hints | none |
-| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. |
-| Decisions | D67, D86 |
+| D26 | every state reached by supported actions reaches the exit without Restart Level (D67); the spider never blocks the lift or the exit: its slab is on the optional ladder route only, its thread lands 298 px short of the lift, and a retry rebuilds it calm on its slab. The detour meets it: it winds up while the hero climbs the ladder, its bite cannot reach the ladder's top, and a hero who walks on along the slab is past when it lands, at every skitter phase with and without the assist (`Forest1RouteTest`) |
+| Hints | none (no hint for the spider, D100) |
+| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19): the silk drop's first room. `Spider` (id 150), a polyline from (1632, 320): `0,0 0,-112 -80,-112`, a 112 px thread from the slab's right lip (it hangs at x 1638, drop box x 1635-1643) and the slab (x 1552-1632, top y 208); it starts at the lip. The drop is on the mandatory floor 218 px before the bat's beat, so it is met first; a walker sets it off and is past the column when it falls, so the first drop is seen and heard missing behind him, at every skitter phase with and without the assist (`Forest1ShelfSpiderTest`). The bat stays the room's only new element. Built and tested with a scripted hero |
+| Decisions | D67, D86, D103 |
 
 ### forest-1-guard
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 7 of 9 (768 px) |
+| Level | forest-1, play order 2, room 9 of 11 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route; then a beetle on the open floor past the tunnel: shoot it, lure it to commit and step back, or run past it. |
 | Introduces | beetle |
@@ -404,7 +475,7 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 8 of 9 (640 px, one screen, x 6240-6880: appended at the map's end, listed after `forest-1-guard` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 10 of 11 (640 px, one screen, x 6240-6880: appended at the map's end, listed after `forest-1-guard` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A hive drops a curtain of stingers on a clock: pass under the first in its calm on open ground, then climb a ladder the second hive's curtain runs down, starting right after a curtain. |
 | Introduces | hanging-hive |
@@ -441,7 +512,7 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 9 of 9 (640 px, one screen) |
+| Level | forest-1, play order 2, room 11 of 11 (640 px, one screen) |
 | Role | variation |
 | Purpose | Climb a tree by jumping up through its branches; a grey branch gives way, so keep climbing and never stop on it. |
 | Introduces | branch-climb, coin |

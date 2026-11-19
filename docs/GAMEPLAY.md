@@ -232,6 +232,11 @@ on its thread; its body falls to the floor below, and its thread snaps and fades
 `SpawnPoints` along its floors and walls, ending in a thread down from a lip, checked at load (every drop can be stepped out
 of and keeps clear of the entrance, exit and checkpoints, and the whole route is on screen).
 
+**Where it is met (#484).** In forest-1, in that order: alone on open ground in `forest-1-spider` (the pounce); climbing
+the far face of the block where Edgard must wait for the lift in `forest-1-climb` (it comes up the face and along the block's
+top to him, so he baits its pounce there, shoots it as it tops the edge, or is bitten waiting); and on the ladder slab of `forest-1-route`, whose thread hangs over the floor Edgard
+must walk (keep walking and it drops behind him; stop under the lip and it bites). Room cards: [ROOM_CARDS.md](ROOM_CARDS.md).
+
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
 on its back, the spider on its back with its legs curled up), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
 walks past. The sword, a thrown stone or landing on one crumbles it (landing bounces him as on a monster), and a

@@ -3125,8 +3125,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     passed room; one left mid-pounce comes back calm. Load-time checks (`Spider.problem`, run by `Level` for every room), on the
     spider as the game builds it whatever the Tiled object's size (the 32×16 frame): the frame's sweep inside the room, the
     body's sweep on gapless floor, and no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside the pounce
-    box at any point of the range facing either way (`position.x` - 46 to `position.x` + 70). Met in play: no teaching room, no hint text (D100). Its placement is a room-card step of its
-    own (#484).
+    box at any point of the range facing either way (`position.x` - 46 to `position.x` + 70). Met in play: no teaching room, no hint text (D100). Placed by [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484)
+    on room cards: first met alone in `forest-1-spider` (see D103, "Placed").
   - **Effects** on `KimeriaParticleSystem` only (`SpiderFx`, one per `Level`; the body's crumble and burn in the shared
     `RemainsFx`, D101 update); the spider's strip and its decor body are the only sprites.
 - **Why:** the beetle teaches the player to stay out of melee; the spider teaches them to bait and punish. Its lunge
@@ -3147,12 +3147,12 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   Tests: `SpiderTest` (the real `Level` on `spider-test.tmx`, a low wall in `spider-wall.tmx`, and two failing fixtures,
   `spider-entrance.tmx` and `spider-gap.tmx`; the same-frame tie is driven through `Level.update`, which runs the hero before
   the objects, and holds either way since the bite lands a frame later), `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (0.0 B/frame in 3 runs,
-  ceiling 8). The look, the timing and the sounds in the running game are judged once the spider is placed in a room (#484).
+  ceiling 8). Placed in three forest-1 rooms by #484 (D103, "Placed"); the author judges the look, the timing and the sounds there in play.
 
 ## D103. The forest spider climbs and drops: a route of floors, walls and a silk thread; two strikes, one tell (#483, #328)
 
 - **Status:** Accepted (author, 2026-11-19: the Phase 1 card and its ten recommendations, with one change: the wall poses are
-  drawn, not turned, so the legs grip above and below the body). Built (#483); not yet placed in a room or played (#484).
+  drawn, not turned, so the legs grip above and below the body). Built (#483); placed in three forest-1 rooms (#484, below).
 - **Amends D102:** hearing is a **144 px circle**, from the body's centre to the hero's centre, in the spider's own room, and
   **nothing blocks it** (walls and floors do not: it feels the hero through rock and roots). It loses the hero after **1.0 s
   beyond 192 px**. The 40 px band is gone for every spider. Everything else in D102 holds on a floor.
@@ -3163,7 +3163,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     whole length is a **wall**, climbed on the open side. A vertical piece over open air, at either end of the polyline, hanging
     from the end of a floor, is a **thread** down to the floor below. No ceilings, no undersides, nothing that moves. Floors and
     walls alternate; corners meet at a wall's foot (the floor on the open side) or over its top (the floor along the solid). A
-    floor-only route is the D102 spider. A room introduces at most one of its abilities at a time (D72); the route decides which.
+    floor-only route is the D102 spider. The climb and the drop are **develops** of the element `spider` (ROOM_CARDS.md), one
+    new ability per room (D72), listed under Develops by the room that first shows it; the route decides which (#484).
   - **On a route** it skitters (48 px/s for 0.3 s, still for 0.3 s) from end to end, and chases to the route point nearest the
     hero (the leg it is on wins a tie). On a wall it climbs at 64 px/s and comes down at 85 px/s, head along its motion, its
     belly against the face; a corner is a one-frame quarter-turn snap. **It never strikes from a wall**: a hero below draws it
@@ -3254,8 +3255,25 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `itHearsAHeroAboveItInACircle` for the circle. `AllocationBudgetTest.spiderThroughTheRealLevel` now requires the floor states
   only (`FLOOR_STATES`), because the enum grew by the drop's states, which its floor-only scenario cannot reach; its measured
   0.1 B/frame is unchanged in kind. No threshold or tolerance changed. The other D102 tests pass unchanged.
-- **Not yet placed (#484):** no spider is placed in a Forest room; the placement and the room cards are the next task, and the
-  look, the timing and the three sounds are judged in play then.
+- **Placed (#484, cards approved by the author 2026-11-19).** No shipped room could show the spider alone (D72): every room's own
+  new element is in view from its entrance, or the room is at the two-introduction cap, and the shipped wall faces were poor (the
+  `forest-walls` posts are drawn as thin poles 14 px from their collision face, the route room's exit block has the lift sliding over
+  it, the fissure ledge is crowded). So forest-1 grew two one-screen rooms (510 tiles, 11 rooms), as the traps of #363-#366 did:
+  `forest-1-spider` (room 5, a D102 box spider alone on a flat floor, **introduces** `spider`) and `forest-1-climb` (room 7, a
+  polyline up the far face of a block the hero must wait on for a running lift, **develops** the climb and combines it with the
+  lift), and `forest-1-route` (room 8) got a spider on its ladder slab whose
+  thread hangs from the slab's lip over the mandatory floor (**develops** the drop). Order: floor, wall, thread, each the only new
+  reading on its screen. Measured with a scripted hero (`Forest1SpiderTest`, `Forest1ClimbTest`, `Forest1ShelfSpiderTest`):
+  clearing 6.90 s baiting and striking, 5.85 s rushing with the sword, 5.17 s with a fireball, death 3.58 s in (walking on without
+  a strike is bitten: its range ends where the hero comes in); climb 10.77 s with a fireball as it tops the block's far edge, 13.33 s baiting and
+  striking it on the block top, death 5.33 to 6.38 s in waiting under the lift and 5.57 to 6.92 s walking to it once it holds the block
+  top, each pinned at every pause on the second step (the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp it in 1,700 of 1,736 runs, so the
+  author chose this one after review); route unchanged at 11.02 s and
+  18.32 s (a walker sets off the drop and is past when it falls, at every skitter phase, with and without the assist), death
+  under the lip 3.43 s in. The optional ladder detour meets the spider on its slab: it winds up while the hero climbs and
+  misses a hero who walks on, at every skitter phase with and without the assist; the ladder's top is out of its bite, and a
+  hero who stops mid-slab is bitten 5.22 s in. Contrast along the three routes passes (`check_contrast.py`). The placement
+  previews were review images only and are not kept in the repo.
 
 ## D104. Quicksand leaves the Forest for the Swamp; the engine support stays (#486)
 
