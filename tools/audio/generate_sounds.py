@@ -1167,6 +1167,123 @@ def spider_snap() -> list[float]:
               SPIDER_PLUCK_NOISE_GAIN)
     return finish_rms(out, SPIDER_SNAP_RMS_DB, REMAINS_PEAK_DB)
 
+
+# ---------------------------------------------------------------- forest snail (#329, D106)
+# Wet and low, so it never sounds like the spider's dry ticks, the beetle's clicks or hive_buzz. Seeds 7001 to 7009.
+# Notice (snail_notice): its own call, a soft wet lip-pop and then a short nasal hum that rises like a question, "mm?".
+SNAIL_NOTICE_DURATION = 0.30
+SNAIL_POP_SEED = 7001
+SNAIL_POP_LEN = 0.012                             # s, the lip-pop
+SNAIL_POP_BAND = (650.0, 500.0)
+SNAIL_POP_GAIN = 0.8
+SNAIL_HUM_VOICE = Voice(7002, 0.24, (150.0, 235.0), FORMANTS_U, FORMANTS_U, -19.0, asp_len=0.010, asp_level=0.2,
+                        attack=0.030, tau=0.20, release=0.040, jitter=0.03, vibrato=(9.0, 0.025), lowpass=1500.0)
+SNAIL_HUM_START = 0.035
+SNAIL_HUM_GAIN = 1.0
+SNAIL_NOTICE_RMS_DB = -19.0
+# Wind-up (snail_windup, snail_windup_long): a slow wet inhale that gurgles and swells as the throat fills, rising in pitch
+# with a bubbly tremolo, and ends on a short held catch. A one-shot: once started it plays to its end.
+SNAIL_WINDUP_VOICES = {0.8: Voice(7003, 0.80, (70.0, 120.0), FORMANTS_O, FORMANTS_U, -19.4, asp_len=0.030, asp_level=0.4,
+                                  attack=0.25, tau=2.0, release=0.050, jitter=0.06, rough=0.5, rough_start=0.1,
+                                  vibrato=(6.0, 0.04), lowpass=1400.0),
+                       1.2: Voice(7004, 1.20, (70.0, 120.0), FORMANTS_O, FORMANTS_U, -19.4, asp_len=0.030, asp_level=0.4,
+                                  attack=0.35, tau=3.0, release=0.050, jitter=0.06, rough=0.5, rough_start=0.1,
+                                  vibrato=(6.0, 0.04), lowpass=1400.0)}
+SNAIL_GURGLE_BAND = (450.0, 1100.0)               # Hz, band-pass centre from start to end: the throat filling
+SNAIL_GURGLE_BW = 500.0
+SNAIL_GURGLE_GAIN = 0.8                           # relative to the voice
+SNAIL_VOICE_GAIN = 0.6
+SNAIL_BUBBLE_RATE = (14.0, 30.0)                  # Hz, the tremolo's rate from start to end: bubbling faster
+SNAIL_BUBBLE_DEPTH = 0.7
+SNAIL_CATCH_LEN = 0.07                            # s, the held catch at the end: the sound closes off
+SNAIL_WINDUP_RMS_DB = -19.4
+# Spit (snail_spit): a sharp "ptoo": a plosive pop, a short burst of spray noise and a clipped /u/.
+SNAIL_SPIT_SEED = 7005
+SNAIL_SPIT_DURATION = 0.16
+SNAIL_PLOSIVE_LEN = 0.010
+SNAIL_PLOSIVE_BAND = (420.0, 400.0)
+SNAIL_PLOSIVE_GAIN = 1.0
+SNAIL_SPRAY_LEN = 0.06
+SNAIL_SPRAY_BAND = (2600.0, 2400.0)
+SNAIL_SPRAY_GAIN = 0.45
+SNAIL_SPRAY_START = 0.006
+SNAIL_TOO_VOICE = Voice(7006, 0.12, (230.0, 160.0), FORMANTS_U, FORMANTS_U, -18.0, asp_len=0.008, asp_level=0.6,
+                        attack=0.006, tau=0.05, release=0.020, jitter=0.04, lowpass=1800.0)
+SNAIL_TOO_START = 0.018
+SNAIL_TOO_GAIN = 0.9
+SNAIL_SPIT_RMS_DB = -18.0
+# Splat (snail_splat): wherever a gob ends, hit or miss (D93): a wet slap, a low thud with a short crackle of droplets.
+SNAIL_SPLAT_SEED = 7007
+SNAIL_SPLAT_DURATION = 0.20
+SNAIL_SLAP_VOICE = Voice(7008, 0.12, (120.0, 70.0), FORMANTS_UH, FORMANTS_U, -18.0, asp_len=0.012, asp_level=0.8,
+                         attack=0.004, tau=0.05, release=0.020, jitter=0.08, rough=0.7, rough_start=0.1, lowpass=1300.0)
+SNAIL_SLAP_GAIN = 1.0
+SNAIL_DROPLET_TIMES = (0.030, 0.052, 0.071, 0.097, 0.128)  # s, the droplets landing, thinning out
+SNAIL_DROPLET_LEN = 0.006
+SNAIL_DROPLET_BAND = (1700.0, 1100.0)
+SNAIL_DROPLET_GAIN = 0.35
+SNAIL_SPLAT_RMS_DB = -18.0
+
+
+def snail_notice() -> list[float]:
+    rng = random.Random(SNAIL_POP_SEED)
+    out = [0.0] * n_samples(SNAIL_NOTICE_DURATION)
+    _add_at(out, n_samples(SNAIL_HUM_START), render_voice(SNAIL_HUM_VOICE), SNAIL_HUM_GAIN)
+    _add_tick(rng, out, n_samples(0.004), n_samples(SNAIL_POP_LEN), SNAIL_POP_BAND, SNAIL_POP_GAIN)
+    return finish_rms(out, SNAIL_NOTICE_RMS_DB)
+
+
+def _snail_windup(seconds: float) -> list[float]:
+    voice = SNAIL_WINDUP_VOICES[seconds]
+    groan = render_voice(voice)
+    rng = random.Random(voice.seed)
+    n = len(groan)
+    lo, hi = SNAIL_GURGLE_BAND
+    gurgle = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, SNAIL_GURGLE_BW)
+    gp = max(abs(v) for v in gurgle) or 1.0
+    env = envelope(n, voice.attack, voice.tau)
+    slow, fast = SNAIL_BUBBLE_RATE
+    out, phase = [], 0.0
+    for i in range(n):
+        phase += (slow + (fast - slow) * i / n) / SAMPLE_RATE
+        bubble = 1.0 - SNAIL_BUBBLE_DEPTH * (0.5 + 0.5 * math.cos(2 * math.pi * phase))
+        out.append((SNAIL_VOICE_GAIN * groan[i] + SNAIL_GURGLE_GAIN * gurgle[i] / gp * env[i]) * bubble)
+    nc = n_samples(SNAIL_CATCH_LEN)
+    for j in range(nc):   # the held catch: the throat closes over the last moment
+        out[n - nc + j] *= 1.0 - j / nc
+    return finish_rms(out, SNAIL_WINDUP_RMS_DB)
+
+
+def snail_windup() -> list[float]:
+    return _snail_windup(0.8)
+
+
+def snail_windup_long() -> list[float]:
+    return _snail_windup(1.2)
+
+
+def snail_spit() -> list[float]:
+    rng = random.Random(SNAIL_SPIT_SEED)
+    out = [0.0] * n_samples(SNAIL_SPIT_DURATION)
+    _add_tick(rng, out, n_samples(0.003), n_samples(SNAIL_PLOSIVE_LEN), SNAIL_PLOSIVE_BAND, SNAIL_PLOSIVE_GAIN)
+    ns = n_samples(SNAIL_SPRAY_LEN)
+    spray = bandpass(noise(rng, ns), *SNAIL_SPRAY_BAND)
+    sp = max(abs(v) for v in spray) or 1.0
+    env = envelope(ns, 0.004, 0.02)
+    _add_at(out, n_samples(SNAIL_SPRAY_START), [v / sp * e for v, e in zip(spray, env)], SNAIL_SPRAY_GAIN)
+    _add_at(out, n_samples(SNAIL_TOO_START), render_voice(SNAIL_TOO_VOICE), SNAIL_TOO_GAIN)
+    return finish_rms(out, SNAIL_SPIT_RMS_DB)
+
+
+def snail_splat() -> list[float]:
+    rng = random.Random(SNAIL_SPLAT_SEED)
+    out = [0.0] * n_samples(SNAIL_SPLAT_DURATION)
+    _add_at(out, n_samples(0.002), render_voice(SNAIL_SLAP_VOICE), SNAIL_SLAP_GAIN)
+    for t in SNAIL_DROPLET_TIMES:
+        _add_tick(rng, out, n_samples(t), n_samples(SNAIL_DROPLET_LEN), SNAIL_DROPLET_BAND, SNAIL_DROPLET_GAIN)
+    return finish_rms(out, SNAIL_SPLAT_RMS_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -1180,7 +1297,9 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "remains_crumble.wav": remains_crumble, "remains_burn.wav": remains_burn,
                "spider_notice.wav": spider_notice, "spider_windup.wav": spider_windup,
                "spider_windup_long.wav": spider_windup_long, "spider_leap.wav": spider_leap, "spider_bite.wav": spider_bite,
-               "spider_drop.wav": spider_drop, "spider_reel.wav": spider_reel, "spider_snap.wav": spider_snap}
+               "spider_drop.wav": spider_drop, "spider_reel.wav": spider_reel, "spider_snap.wav": spider_snap,
+               "snail_notice.wav": snail_notice, "snail_windup.wav": snail_windup, "snail_windup_long.wav": snail_windup_long,
+               "snail_spit.wav": snail_spit, "snail_splat.wav": snail_splat}
 
 
 def generate(out_dir: Path) -> list[Path]:

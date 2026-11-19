@@ -7,6 +7,7 @@ import com.jlogicsoftware.kimeria.effects.FireballFx;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Breakable;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
@@ -54,6 +55,10 @@ public final class Fireball extends Entity {
             // Terrain throws the spray back off the wall; a creature or an object takes it on along the blow.
             // The burst starts where this step began, the last free position, so it sits on the wall face, not inside the wall.
             if (level.blocksObject(bounds, false)) { burst(-direction, false, position.x - dx); level.fireballFizzle(false); break; }
+            // D106: a fireball burns every snail's gob it reaches and flies on, unspent; tested before the enemies, so a ball spent
+            // on an enemy in the same step still burns the gob it reached (the gob's hit lands on its snail's next frame).
+            for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof Breakable gob
+                && gob.isBreakable() && gob.breakableInto(trapBox).overlaps(bounds)) gob.breakApart(true);
             for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof Enemy<?> enemy
                 && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds)) {
                 // A boss in its orange counter sequence (or abandoned) rejects the hit: the ball still bursts, lightly, as on a

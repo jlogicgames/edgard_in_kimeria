@@ -252,6 +252,27 @@ and one bite (D93). Climbing is silent, like the skitter.
 - `spider_snap` (0.12 s, RMS -24.0 dBFS): a small pluck, a 2.3 kHz tone dying over 50 ms over a 4 ms noise transient, after 3 ms
   of silence (no click); it plays with the kill sound only when a spider dies on its thread.
 
+### Forest snail (#329, seeds 7001-7008, [D106](DECISIONS.md#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398))
+
+Five voice-synth sounds for the snail, generated 2026-11-19 from the names and roles the author approved with the card; the
+author auditions them with this change. They are wet and low, so they never sound like the spider's dry ticks, the beetle's
+clicks or `hive_buzz`. Constants: `SNAIL_*` in `tools/audio/generate_sounds.py`; previews: `art/audio/previews/snail_*.png`.
+
+- `snail_notice` (0.30 s, RMS -19.0 dBFS): its own call (D100): a 12 ms lip-pop around 650 Hz, then a nasal /u/ hum rising
+  150 to 235 Hz with a slight vibrato, darkened to 1.5 kHz: a wet "mm?". Centroid 321 Hz.
+- `snail_windup` (0.80 s) and `snail_windup_long` (1.20 s, the longer-warnings assist), RMS -19.4 dBFS: a slow wet inhale: a
+  low rough /o/ to /u/ groan (70 to 120 Hz) under noise through a band-pass rising 450 to 1100 Hz (the throat filling), both
+  chopped by a bubbling tremolo that speeds up from 14 to 30 Hz, closing off over the last 70 ms (the held catch). A one-shot: it
+  plays to its end even when the snail is killed during it.
+- `snail_spit` (0.16 s, RMS -18.0 dBFS): "ptoo": a 10 ms plosive around 420 Hz, a 60 ms spray of noise around 2.6 kHz and a
+  clipped /u/ falling 230 to 160 Hz.
+- `snail_splat` (0.20 s, RMS -18.0 dBFS): wherever a gob ends, hit or miss (D93), and when a weapon breaks it or it pops on a
+  dying snail's lips: a wet slap, a short rough /uh/ to /u/ falling 120 to 70 Hz, with five droplet ticks (6 ms around 1.7 kHz)
+  thinning out over 0.13 s.
+
+Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble` and `remains_burn`; the crawl and the reload are
+silent. There is no "ready" sound when the reload ends: the stalks shooting up are the cue, and the wind-up has its own sound.
+
 ### Monster bodies (D101, seeds 6807-6808)
 
 Two environment sounds shared by every monster's body (D101). They are quiet, under the voice set, and peak-capped at

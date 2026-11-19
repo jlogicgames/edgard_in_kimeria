@@ -57,6 +57,12 @@ SPIDER_LIP_X = 160
 SPIDER_SHELF = 208
 SPIDER_LAST_HANG = 296
 DARK_FACE_X = 16
+# The snail fixture (#329, D106): floor top y 320, a block at x 180..196, the snail's range x 272..384 (frame tops 304).
+SNAIL_FLOOR = 320
+SNAIL_FRAME_TOP = 304
+SNAIL_LEFT_END = 272
+SNAIL_RIGHT_END = 384
+SNAIL_BLOCK_FACE = 196
 SWEEP = (1, 0, 5, 1)  # x step, y from, y to, y step over the dark ground
 
 
@@ -220,6 +226,24 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(found, [('Bramble', left_x, clump), ('Bramble-right', right_x + reach - clump, clump)])
         left, right = gate.frames('Bramble')[0], gate.frames('Bramble-right')[0]
         self.assertEqual(list(right.getdata()), list(left.transpose(gate.Image.Transpose.FLIP_LEFT_RIGHT).getdata()))
+
+    def test_a_snail_is_measured_along_its_range_and_its_gob_along_every_line(self):
+        """#329 (D106): the snail at every 16 px of its range, and its gob every 8 px along each firing line up to the first solid."""
+        root = ET.fromstring('<map><objectgroup name="Collisions"><object x="0" y="320" width="640" height="48"/>'
+                             '<object x="180" y="288" width="16" height="32"/></objectgroup><objectgroup name="SpawnPoints">'
+                             '<object type="Snail" x="320" y="304" width="24" height="16"><properties>'
+                             '<property name="offNeg" value="3"/><property name="offPos" value="4"/></properties></object>'
+                             '</objectgroup></map>')
+        errors = []
+        found = [(key, x, y) for _, key, x, y, _, _ in gate.placements(errors, {'forest-9': root})]
+        self.assertEqual(errors, [])
+        snails = [(x, y) for key, x, y in found if key == 'Snail']
+        self.assertEqual(snails[0], (SNAIL_LEFT_END, SNAIL_FRAME_TOP), 'from its left end, on the floor')
+        self.assertEqual(snails[-1], (SNAIL_RIGHT_END, SNAIL_FRAME_TOP), 'to its right end')
+        gobs = [(x, y) for key, x, y in found if key == 'Snail:gob']
+        self.assertTrue(all(y == SNAIL_FLOOR - gate.SNAIL_GOB_HEIGHT - gate.SNAIL_GOB / 2 for _, y in gobs), 'the drawn gob centred over the line')
+        self.assertGreaterEqual(min(x for x, _ in gobs), SNAIL_BLOCK_FACE, 'the block stops the line going left')
+        self.assertLessEqual(max(x for x, _ in gobs), SNAIL_RIGHT_END + gate.SNAIL_MOUTH_X + gate.SNAIL_GOB_RANGE, 'a line going right ends at its range')
 
     def test_a_spider_route_is_measured_on_its_floors_its_wall_and_its_thread(self):
         """#483 (D103): a polyline spider is measured in every pose along its route, where Spider draws it."""

@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.RemainsFx;
 import com.jlogicsoftware.kimeria.effects.ParticleTextures;
+import com.jlogicsoftware.kimeria.effects.SnailFx;
 import com.jlogicsoftware.kimeria.effects.SpiderFx;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
@@ -35,6 +36,7 @@ import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
@@ -176,6 +178,9 @@ public class Level implements WorldObject {
         "HangingVine", "ThornVine", "HangingHive", "Deadfall");
     /** The spiders' silk glints, leap line, bites, drops and deaths (#328, D102, D103): one for the level. Cleared with the room. */
     private final SpiderFx spiderFx = new SpiderFx(TimeUtils.nanoTime() ^ SPIDER_FX_SEED_MIX);
+    private static final long SNAIL_FX_SEED_MIX = 0xD1B54A32D192ED03L;
+    /** The snails' wind-up specks, gob drips and splats and deaths (#329, D106): one for the level. Cleared with the room. */
+    private final SnailFx snailFx = new SnailFx(TimeUtils.nanoTime() ^ SNAIL_FX_SEED_MIX);
     /** Every monster body's crumble and burn (D101, #478): one for the level. Cleared with the room. */
     private final RemainsFx remainsFx = new RemainsFx(TimeUtils.nanoTime() ^ REMAINS_FX_SEED_MIX);
 
@@ -493,7 +498,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); remainsFx.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); snailFx.clear(); remainsFx.clear();
         startLeaves();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
@@ -542,6 +547,8 @@ public class Level implements WorldObject {
     public BeetleFx beetleFx() { return beetleFx; }
     /** The spiders' silk, leap, bite and death effects (#328); {@code Spider} writes into them, tests read them. */
     public SpiderFx spiderFx() { return spiderFx; }
+    /** The snails' specks, gob drips and splats and deaths (#329, D106); {@code Snail} writes into them, tests read them. */
+    public SnailFx snailFx() { return snailFx; }
     /** Every monster body's crumble and burn (D101, #478); the bodies write into them, tests read them. */
     public RemainsFx remainsFx() { return remainsFx; }
 
@@ -592,6 +599,7 @@ public class Level implements WorldObject {
             if ("EmberFissure".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91: every room, at load.
             if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
             if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
+            if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -829,6 +837,13 @@ public class Level implements WorldObject {
                     spider.setLevel(this);
                     objects.add(spider);
                     roomEnemies.put(o.id, spider);
+                }
+                case "Snail" -> {
+                    Snail snail = new Snail(assets, game, o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    snail.setPlayer(player);
+                    snail.setLevel(this);
+                    objects.add(snail);
+                    roomEnemies.put(o.id, snail);
                 }
                 case "YellowMob" -> {
                     YellowMob mob = new YellowMob(assets, game, o.x, o.y, o.width, o.height,
@@ -1197,6 +1212,21 @@ public class Level implements WorldObject {
                 FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y), standingPlaces(owner))
             : Spider.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
                 room, standingPlaces(owner));
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /**
+     * The snail (D106) fails at load when its range leaves the room or has a gap under it, or when a firing line, from any point of
+     * its range facing either way, does not end on a solid face or a floor inside the room, rises above the camera's view, or
+     * crosses a standing place.
+     */
+    private void validateSnail(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        List<Rectangle> solids = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions"))
+            if (!"Platform".equals(c.type) && !"QuickSand".equals(c.type)) solids.add(new Rectangle(c.x, c.y, c.width, c.height));
+        String problem = Snail.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
+            solids, room, FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y), standingPlaces(owner));
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
@@ -1606,6 +1636,7 @@ public class Level implements WorldObject {
         pickupSparks.update(dt);
         beetleFx.update(dt);
         spiderFx.update(dt);
+        snailFx.update(dt);
         remainsFx.update(dt);
         leafFx.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
@@ -1680,6 +1711,7 @@ public class Level implements WorldObject {
         fireballFx.render(batch);
         beetleFx.render(batch);
         spiderFx.render(batch);
+        snailFx.render(batch);
         remainsFx.render(batch);
         fx.render(batch);
         leafFx.render(batch);

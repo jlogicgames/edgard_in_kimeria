@@ -157,6 +157,11 @@ SPRITES = {
     'Spider:wall': ('active', 'objects/monster-spider-wall.png', (0, 0, 16, 32), 3, 'top', FULL),
     'Spider:hang': ('active', 'objects/monster-spider.png', (288, 0, 32, 16), 2, 'top', FULL),
     'Spider:silk': ('active', 'objects/monster-spider.png', (352, 0, 1, 4), 1, 'top', FULL),
+    # #329 (D106): the snail is measured along its range (snail_parts) in every frame, and its gob, both wobble frames, along
+    # every firing line where the snail draws it (the gob's cell is the strip's ninth, its two 8x8 frames at the cell's top-left).
+    'Snail': ('active', 'objects/monster-snail.png', (0, 0, 24, 16), 8, 'floor', FULL),
+    'Snail:gob': ('active', 'objects/monster-snail.png', (192, 0, 8, 8), 2, 'top', FULL),
+    'Snail:body': ('decor', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
@@ -372,6 +377,46 @@ def spider_parts(root, x, y, text):
             yield 'Spider:silk', thread_x, silk_top, 1, SPIDER_SILK_TILE
 
 
+# The snail (#329, D106), as Snail draws it: its frame along its range, and its gob along every firing line.
+SNAIL_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/Snail.java'
+SNAIL_FRAME = (24, 16)
+SNAIL_GOB = 8           # the drawn gob, an 8x8 cell centred on its core
+SNAIL_STEP = 16         # px between measured snail positions along its range
+SNAIL_GOB_STEP = 8      # px between measured gob positions along a line
+SNAIL_MOUTH_X = java_float(SNAIL_JAVA, 'MOUTH_X')  # the mouth in the frame facing right
+SNAIL_PIVOT_X = java_float(SNAIL_JAVA, 'BODY_X') + java_float(SNAIL_JAVA, 'BODY_WIDTH') / 2  # the body's centre: the mirror's axis
+SNAIL_GOB_HEIGHT = java_float(SNAIL_JAVA, 'GOB_HEIGHT')
+SNAIL_GOB_RANGE = java_float(SNAIL_JAVA, 'GOB_RANGE')
+SNAIL_GOB_CORE = java_float(SNAIL_JAVA, 'GOB_CORE')
+
+
+def snail_parts(root, x, y, w, h, props):
+    """(key, left, top, w, h) for the snail at every SNAIL_STEP of its range and its gob every SNAIL_GOB_STEP along the
+    firing line from each end of the range, facing either way, up to its range or the first solid (Snail.lineEnd)."""
+    fw, fh = SNAIL_FRAME
+    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
+    floor = y + h
+    lefts = list(range(int(low), int(high) + 1, SNAIL_STEP))
+    if lefts[-1] != int(high):
+        lefts.append(int(high))
+    for left in lefts:
+        yield 'Snail', left, floor - fh, fw, fh
+    solids = spider_solids(root)
+    line_y = floor - SNAIL_GOB_HEIGHT
+    core_top, core = line_y - SNAIL_GOB_CORE / 2, SNAIL_GOB_CORE
+    for left in (low, high):
+        for right in (True, False):
+            mouth = left + SNAIL_MOUTH_X if right else left + 2 * SNAIL_PIVOT_X - SNAIL_MOUTH_X
+            d = 0
+            while d <= SNAIL_GOB_RANGE:
+                cx = mouth + (d if right else -d)
+                box_x = cx if right else cx - core
+                if any(sx < box_x + core and box_x < sx + sw and sy < core_top + core and core_top < sy + sh for sx, sy, sw, sh in solids):
+                    break
+                yield 'Snail:gob', cx - SNAIL_GOB / 2, line_y - SNAIL_GOB / 2, SNAIL_GOB, SNAIL_GOB
+                d += SNAIL_GOB_STEP
+
+
 DEADFALL_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/DeadfallTrap.java'
 
 
@@ -556,6 +601,11 @@ def placements(errors, roots=None):
                                                              obj.find('polyline').get('points', '')):
                         yield name, key, left, top, w, h
                     continue
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Snail':
+                    for key, left, top, w, h in snail_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y,
+                                                            float(obj.get('width', TILE)), float(obj.get('height', TILE)), props):
+                        yield name, key, left, top, w, h
+                    continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Deadfall':
                     for key, left, top, w, h in deadfall_parts(float(obj.get('x')), float(obj.get('y')) + offset_y,
                                                                props.get('swing') == 'right'):
@@ -732,7 +782,7 @@ def tile_report(roots):
 
 # D101: monster bodies have no map placement; they lie on whatever floor the monster died on. Each is measured standing on
 # every floor top (untyped Collisions and Platform objects, not walls or quicksand) every BODY_STEP px of every shipped map.
-BODY_SWEEP = ('Beetle:body', 'Spider:body')
+BODY_SWEEP = ('Beetle:body', 'Spider:body', 'Snail:body')
 BODY_STEP = 32
 FLOOR_TYPES = (None, 'Platform')
 

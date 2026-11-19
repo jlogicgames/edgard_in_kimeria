@@ -25,15 +25,20 @@ Implementation is under `core/src/main/java/com/jlogicsoftware/kimeria/`:
 ## A new monster (D100)
 
 Card first in [game design](../../../docs/GAME_DESIGN.md) ("Forest monster ideas"; the beetle card and the spider card are the
-templates: a burst on the spot, D100, and a locked pounce with a recovery, D102), approved by the author. The notice is body
+templates: a burst on the spot, D100, a locked pounce with a recovery, D102, and a ranged spit with a reload, D106), approved by
+the author. The notice is body
 language in the monster's own frames plus a call in its own voice (no "!" mark, no shared alert sound); a lethal wind-up samples
 `TrapWarnings` once (a base of its own goes into `TrapWarnings`, like `BITE_WARNING_SECONDS`); no teaching room and no hint
-text. Effects are particles in one owner per `Level` (`effects.BeetleFx`, `effects.SpiderFx`); its sprite strip comes from a
+text. Effects are particles in one owner per `Level` (`effects.BeetleFx`, `effects.SpiderFx`, `effects.SnailFx`); its sprite strip comes from a
 grid (`tools/forest_trap_sprites.py monster:<name>`). A lethal touch that can meet a killing hit on the same frame resolves on
 the monster's next frame, so the hit wins the tie (the spider's bite). A monster that leaves the floor follows the spider of D103:
 an authored route (a Tiled polyline: floors, walls, a thread from a lip) checked at load (`Spider.routeProblem`), the body box by
 pose (`Spider.boundsInto`), no strike from a wall, a drop box that is the fangs' swept column, and a body that falls to the floor
-below when it is killed off it.
+below when it is killed off it. A monster that shoots follows the snail of D106: it sees only along a line cut by solids
+(`Level.blocksObject`), fires only when the hero touches the projectile's own band, owns its projectile (one per monster, plain
+fields, swept every frame, its hit landing on the monster's next frame) and lets every weapon break it and fly on through
+`Breakable` (the sword, a stone, a fireball and a torch loops call it); its load check traces every line from every point of
+its range, both ways, to a solid or a floor inside the room and off every standing place (`Snail.problem`).
 
 ## A monster's body (D101)
 
@@ -49,7 +54,7 @@ does, a burst or blast does not. Then:
    or a torch; weapons fly on. The `Player`, `Carryable` and `Fireball` loops already call these (the swing that killed a
    monster skips its body); do not add a hurtbox.
 4. **Effects and sound.** Crumble and burn go through the shared `effects.RemainsFx` (`Level.remainsFx()`), with the monster's
-   own chip colours as a static palette (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`); re-measure its pools in
+   own chip colours as a static palette (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`, `SnailFx.SNAIL_CHIPS`); re-measure its pools in
    `RemainsFxTest` if a body adds more particles. The shared sounds `remains_crumble` and `remains_burn`; the reaction is silent.
 5. **Gate.** Add a `Case` to `RemainsTest` (with its reaction); extend the monster's `AllocationBudgetTest` scenario with the body; run
    `./gradlew :core:check`.
