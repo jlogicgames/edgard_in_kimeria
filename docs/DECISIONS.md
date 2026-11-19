@@ -3089,7 +3089,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Patrol:** it skitters (48 px/s for 0.3 s, still for 0.3 s) inside its authored range (`offNeg`/`offPos`) and never
     leaves the range, its leap included.
   - **Hearing:** 112 px either side, centre to centre, within a 40 px band above its floor line; lost beyond 160 px or
-    after 1.0 s out of the band.
+    after 1.0 s out of the band. *Amended by [D103](#d103-the-forest-spider-climbs-and-drops-a-route-of-floors-walls-and-a-silk-thread-two-strikes-one-tell-483-328):
+    a 144 px circle around the body's centre, in its room, blocked by nothing; lost after 1.0 s beyond 192 px.*
   - **Notice, in body language (D100's shared pattern):** it freezes and rises on its legs, drums the ground twice with a
     raised foreleg and settles (`rise` 0.1 s, then `tap`, `rise`, `tap`, `rise`, `crawl1` 0.08 s each): 0.5 s, not scaled by
     the assist; its own call `spider_notice`. No mark, no shared sound.
@@ -3125,7 +3126,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     spider as the game builds it whatever the Tiled object's size (the 32×16 frame): the frame's sweep inside the room, the
     body's sweep on gapless floor, and no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside the pounce
     box at any point of the range facing either way (`position.x` - 46 to `position.x` + 70). Met in play: no teaching room, no hint text (D100). Its placement is a room-card step of its
-    own.
+    own (#484).
   - **Effects** on `KimeriaParticleSystem` only (`SpiderFx`, one per `Level`; the body's crumble and burn in the shared
     `RemainsFx`, D101 update); the spider's strip and its decor body are the only sprites.
 - **Why:** the beetle teaches the player to stay out of melee; the spider teaches them to bait and punish. Its lunge
@@ -3146,4 +3147,112 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   Tests: `SpiderTest` (the real `Level` on `spider-test.tmx`, a low wall in `spider-wall.tmx`, and two failing fixtures,
   `spider-entrance.tmx` and `spider-gap.tmx`; the same-frame tie is driven through `Level.update`, which runs the hero before
   the objects, and holds either way since the bite lands a frame later), `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (0.0 B/frame in 3 runs,
-  ceiling 8). The look, the timing and the sounds in the running game are judged once the spider is placed in a room.
+  ceiling 8). The look, the timing and the sounds in the running game are judged once the spider is placed in a room (#484).
+
+## D103. The forest spider climbs and drops: a route of floors, walls and a silk thread; two strikes, one tell (#483, #328)
+
+- **Status:** Accepted (author, 2026-11-19: the Phase 1 card and its ten recommendations, with one change: the wall poses are
+  drawn, not turned, so the legs grip above and below the body). Built (#483); not yet placed in a room or played (#484).
+- **Amends D102:** hearing is a **144 px circle**, from the body's centre to the hero's centre, in the spider's own room, and
+  **nothing blocks it** (walls and floors do not: it feels the hero through rock and roots). It loses the hero after **1.0 s
+  beyond 192 px**. The 40 px band is gone for every spider. Everything else in D102 holds on a floor.
+- **Decision:**
+  - **Route.** A spider may be authored as a Tiled **polyline** of type `Spider` (`Spider.Route.trace`); a box with
+    `offNeg`/`offPos` stays the D102 floor-only spider. A horizontal piece is a **floor** (its points on the floor line; the
+    body stays on it). A vertical piece flush with one face of a static solid (an untyped or `Wall` collision box) over its
+    whole length is a **wall**, climbed on the open side. A vertical piece over open air, at either end of the polyline, hanging
+    from the end of a floor, is a **thread** down to the floor below. No ceilings, no undersides, nothing that moves. Floors and
+    walls alternate; corners meet at a wall's foot (the floor on the open side) or over its top (the floor along the solid). A
+    floor-only route is the D102 spider. A room introduces at most one of its abilities at a time (D72); the route decides which.
+  - **On a route** it skitters (48 px/s for 0.3 s, still for 0.3 s) from end to end, and chases to the route point nearest the
+    hero (the leg it is on wins a tie). On a wall it climbs at 64 px/s and comes down at 85 px/s, head along its motion, its
+    belly against the face; a corner is a one-frame quarter-turn snap. **It never strikes from a wall**: a hero below draws it
+    down to the floor, where D102's pounce applies. At the lip of its floor it waits facing over the edge, harmless.
+  - **The silk drop.** On the floor that ends at a thread, when the hero's hitbox touches the **drop box** (the column the
+    fangs sweep: 8 px wide, from the lip to the fang tips at the thread's end, the trigger being the reach as D10 asks) and the
+    spider is at the lip after its notice: it hangs head down over the edge (`hangwind`, legs drawn in, fangs spread, drawn
+    1 px up) for `TrapWarnings.duration(BITE_WARNING_SECONDS)` (**0.5 s, 0.75 s with the assist**, sampled once) while silk
+    glints run down the column to the thread's end and `spider_windup` (`_long`) plays. Then it **drops at 384 px/s**
+    (`spider_drop`), the thread paying out and shedding specks, the fangs lethal and swept every frame, to the thread's end,
+    which leaves the hanging frame's bottom **4 px above the floor**; it never lands there. It **bites** there, hit or miss
+    (`hang` frame, two fang glints and floor dust, `spider_bite`, 0.1 s, D93), once per drop; a bite resolves on its next
+    frame, so a same-frame kill wins. Then **0.6 s hanging, harmless**, then it **reels up at 64 px/s, head down, harmless**
+    (`spider_reel`), and steps back onto its floor at the lip. A new drop needs a full wind-up from the lip; it never drops or
+    pounces from the thread. The thread hangs out from the lip so that the hanging body clears the ledge's face by 1 px on either
+    side (`Spider.threadOut`: 6 px from a lip on the right of its floor, 8 px from one on its left, since the thread leaves the
+    frame just left of its mirror axis); a thread is at
+    most 112 px from lip to floor.
+  - **Answers.** Every weapon kills it wherever it reaches it: on a wall, at the lip, in the drop, hanging or reeling. The sword
+    reaches it hanging low (with D65's light spray), a stomp from its ledge reaches it on the thread, and weapons pass through
+    the thread, which is not a target.
+  - **Body (D101).** Killed on a wall or a thread, its body is set on the open side where it was (off the face, out past the
+    lip) and falls to the floor below, where it lies, rocks, crumbles and burns as on a floor; over a pit it is gone. **A thread
+    snaps** with its spider: five specks drift down from it, its stub fades over 0.4 s, `spider_snap` plays, and nothing is left.
+  - **Load checks** (`Spider.routeProblem`, run by `Level` for every room): every piece is level or upright; walls are at least
+    32 px and inside the room; corners meet; every floor passes D102's checks (in the room, gapless, no standing place in a
+    pounce box facing either way); the route stays inside the camera's view of its room (`FallingTrapLayout.floorCameraTop`);
+    a thread is at most 112 px, its column misses every solid, one-way platform and object that moves or hangs (`Actionable`,
+    `Escalator`, `FallingPlatform`, `FallingBranch`, `HangingVine`, `ThornVine`, `HangingHive`, `Deadfall`), it ends on
+    floor that runs 16 px past the drop box on each side (somewhere to step), it lands on no climbable (`Ladder`,
+    `HangingVine`) and no quicksand, and no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) is in its drop box.
+  - **Contrast placement rule.** `tools/check_contrast.py` measures a placed polyline spider in every pose along its route
+    (`spider_parts`): floor frames every 16 px, wall frames every 16 px up each wall head up and head down, the hanging frames
+    every 8 px down the thread and the silk tile every 4 px. A wall face too dark for the climbing spider fails the placement,
+    not the art (two faces of the shipped maps today, below).
+  - **Art.** `assets/images/objects/monster-spider-wall.png`: three drawn 16x32 frames (`wall1`, `wall2`, `walltap`) in
+    `art/objects/monster/spider-wall.grid`, head up with the wall on the right, the legs spread up and down the face with the
+    knees out and the feet on it, the body close to the wall, the ochre chevron down its back; mirrored for a wall on the left,
+    flipped for a head going down; the notice on a wall rises 1 px off the face and drums a raised foreleg (`walltap`). Three
+    cells added to the floor strip: `hang` and `hangwind` (upright, head down, mirrored about the thread; their far legs a lighter
+    tan `b08c68`), and `silk`, the thread's 1x4 tile (the fang pale with one pale-yellow texel), tiled down the thread every
+    frame without allocation. The drop is drawn in `hangwind`: the turned `leap` frame of Phase 1 hung its legs through the floor
+    at the thread's end and put its head 3 px off the thread.
+  - **Sounds** (seeds 6908-6910): `spider_drop` (0.25 s, a falling "zzzip": noise swept 4.2 to 0.9 kHz, chopped by a flutter
+    slowing from 90 to 45 Hz, after a tick), `spider_reel` (0.30 s, ten dry ticks rising in band and level, quiet),
+    `spider_snap` (0.12 s, a small 2.3 kHz pluck over a noise transient, with the kill sound). The rest are D102's.
+- **Why:** the D102 spider asks "make it miss, then strike" on one floor. Following the hero up walls and dropping from above
+  asks the same question from new directions, and the player brings the reading they already have: a crouch, glints along the
+  strike line to the spot, a strike along that line hit or miss, then a harmless recovery. Every lethal act runs along a straight
+  line the glints drew first, after a notice and a wind-up (D5, D7, D71, D100); travel never kills. The route is checked at
+  load, so the spider is always on screen when it acts and every drop can be stepped out of. Hearing through walls costs no
+  fairness, since hearing never kills and the whole route is in view; a line-of-sight rule would have failed exactly at the lip,
+  where a ledge's own corner hides the hero below.
+- **Measured:** the hero needs 10 px (0.10 s at 100 px/s) to leave the 8 px drop box, which leaves 0.40 s of the 0.5 s warning
+  (0.65 s with the assist); a drop of the longest thread takes 0.24 s; the punish window after a miss is 0.6 s hanging plus
+  1.4 s reeling up a 92 px thread. Contrast (`check_contrast.py` metrics over the night composites of the three maps): the wall
+  frames on every face of a static solid at least 32 px tall, every 16 px, both ways up and both sides: outline 0.198 to 0.415,
+  at least 0.28 on 63 of 65 faces; forest-2 x 16 (the map's left wall, as low as 0.198 at 44 % of heights) and forest-2 x 1296
+  (0.257 at 4 %) fail a placement there. The hanging frames at every lip of the three maps with a floor 48 to 112 px below:
+  0.311 to 0.391 (Phase 1's `hang` was 0.274 under one lip; the lighter far legs lifted it). The thread: 0.537 to 0.549. The pose
+  rule: the body differs from the hanging frames in 64.6 % (`hangwind`) and 68.5 % (`hang`) of the silhouette (floor 25 %).
+  `SpiderFx` pools unchanged (64 and 104): the drop's worst case (three spiders at the assist's warning down the longest thread,
+  biting, snapping and dying together) peaks at 50 soft and 69 hard (`SpiderFxTest`).
+- **Built (#483):** `entity/enemy/Spider.java` (`Spider.Route`, the states `SET`, `DROP`, `DANGLE`, `HANG` and `REEL`, the wall
+  pose through `CRAWL`, `NOTICE` and `CHASE`, `routeProblem`), the polyline in `tiled/TiledObject` and `TiledMapData`, `Level`
+  (spawn and load checks), `effects/SpiderFx.java` (`silkDown`, `shed`, `snap`), `SpriteSheets.MONSTER_SPIDER_WALL`, the
+  sheets from `spider.grid` and `spider-wall.grid` (`tools/forest_trap_sprites.py monster:spider monster:spider-wall`),
+  `tools/check_contrast.py` (`spider_parts`), `tools/check_allocations.py` (the new per-frame helpers) and three sounds in
+  `tools/audio/generate_sounds.py`. `Level` builds the shared particle textures once at load (`effects/ParticleTextures.java`:
+  `SoftDot` and `Shaders.whiteQuad`, an argued `check_sprite_art.py` entry: it draws nothing), never on the first frame that
+  draws one. **Tests:** `SpiderTest` (20 new cases on `spider-climb.tmx`, `spider-drop.tmx`, the
+  mirrored fixtures `spider-climb-left.tmx` (the solid on the wall's left, floors run right to left), `spider-left-drop.tmx` (a
+  thread left of its lip) and `spider-start-drop.tmx` (a thread at the route's start), and the failing fixture
+  `spider-drop-checkpoint.tmx`: tracing, patrol up and back, hearing and climbing, coming down head first, a
+  kill on the wall, the drop's wind-up with and without the assist, the miss, hang and reel, a full new wind-up, the sword and
+  the snapped thread, a kill in the drop, the same-frame tie, the reset, the route load checks, and that a floor-only route is
+  D102's spider; the mirrored paths; no snap for a kill in the drop's wind-up, where no thread is drawn; and the Java route
+  against the shared fixture `spider-routes.json`, which pins `check_contrast.spider_route` too); `SpiderFxTest` (the drop's pools and the glints' column); `RemainsTest` (the hanging frames join the pose rule;
+  bodies killed on a wall and on a thread lie on the floor below); `AllocationBudgetTest.spiderDropThroughTheRealLevel` (0.0, 0.0
+  and 0.0 B/frame in 3 isolated runs) and `spiderClimbThroughTheRealLevel` (0.1, 1.1 and 1.1 B/frame; with the measured frames doubled to
+  2400, 0.5, 0.6 and 0.6: the same 1.3 KB spread over twice the frames, so it is a one-time cost of the run, not a per-frame
+  one), ceiling 8, measured after
+  the textures moved to load, so no scenario depends on which kill comes first; all three spider scenarios 0.0 in the full
+  `:core:check`; `test_check_contrast.py` (the route sweep, the
+  dark-face rule and the shared route fixture); `test_generate_sounds.py` (the three sounds' bounds).
+- **Tests changed by the hearing, and why:** `SpiderTest.itLosesAHeroWhoGetsFar` became `itLosesAHeroWhoStaysFarForASecond`: the
+  spider no longer drops the hero at once beyond 160 px, it keeps chasing for 1.0 s beyond 192 px. `SpiderTest` gained
+  `itHearsAHeroAboveItInACircle` for the circle. `AllocationBudgetTest.spiderThroughTheRealLevel` now requires the floor states
+  only (`FLOOR_STATES`), because the enum grew by the drop's states, which its floor-only scenario cannot reach; its measured
+  0.1 B/frame is unchanged in kind. No threshold or tolerance changed. The other D102 tests pass unchanged.
+- **Not yet placed (#484):** no spider is placed in a Forest room; the placement and the room cards are the next task, and the
+  look, the timing and the three sounds are judged in play then.

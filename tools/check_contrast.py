@@ -150,6 +150,13 @@ SPRITES = {
     'Beetle:body': ('decor', 'objects/monster-beetle-body.png', (0, 0, 24, 16), 1, 'floor', FULL),
     'Spider': ('active', 'objects/monster-spider.png', (0, 0, 32, 16), 9, 'floor', FULL),  # #328 (D102): every frame
     'Spider:body': ('decor', 'objects/monster-spider-body.png', (0, 0, 32, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
+    # #483 (D103): a spider authored as a polyline route is measured along it (spider_parts): its floor frames every 16 px of
+    # each floor, its wall frames (wall1, wall2, walltap) every 16 px up each wall, head up and head down (`-down`, flipped), on
+    # the wall's side (`-left` mirrored for a solid on its left); on a thread its hanging frames every 8 px down the column and
+    # the 1x4 silk tile every 4 px. A dark wall face fails the placement here, not in the art (the placement rule of D103).
+    'Spider:wall': ('active', 'objects/monster-spider-wall.png', (0, 0, 16, 32), 3, 'top', FULL),
+    'Spider:hang': ('active', 'objects/monster-spider.png', (288, 0, 32, 16), 2, 'top', FULL),
+    'Spider:silk': ('active', 'objects/monster-spider.png', (352, 0, 1, 4), 1, 'top', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
@@ -159,7 +166,11 @@ SPRITES = {
     'Deadfall:vine': ('active', 'objects/trap-deadfall-vine.png', (0, 0, 24, 8), 1, 'top', FULL),
 }
 MIRRORED = {f'{key}-right': key for key in ('Deadfall', 'Deadfall:log', 'Deadfall:vine', 'Bramble')}
+MIRRORED.update({'Spider:wall-left': 'Spider:wall', 'Spider:wall-left-down': 'Spider:wall'})
 SPRITES.update({mirrored: SPRITES[key] for mirrored, key in MIRRORED.items()})
+# Keys drawn upside down (a spider heading down a wall, Spider.renderWall).
+FLIPPED = {'Spider:wall-down': 'Spider:wall', 'Spider:wall-left-down': 'Spider:wall'}
+SPRITES.update({flipped: SPRITES[key] for flipped, key in FLIPPED.items() if flipped not in SPRITES})
 # Types that draw no sprite of their own, with what they are (a new type must be added to one of the two tables).
 NO_SPRITE = {
     'Torch': 'a particle light (effects.Torch), no sprite',
@@ -240,7 +251,125 @@ def frames(key):
         result += [image.crop((x + n * w, y, x + n * w + w, y + h)) for n in range(count)]
     if key in MIRRORED:
         result = [frame.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for frame in result]
+    if key in FLIPPED:
+        result = [frame.transpose(Image.Transpose.FLIP_TOP_BOTTOM) for frame in result]
     return result
+
+
+# The spider's route (#483, D103), as Spider.Route traces it: the floor frame, the wall frame and the hanging frame.
+SPIDER_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/Spider.java'
+SPIDER_FRAME = (32, 16)
+SPIDER_WALL = (16, 32)
+SPIDER_BODY_X = 2
+SPIDER_BODY_WIDTH = 20
+SPIDER_HANG_CLEARANCE = java_float(SPIDER_JAVA, 'HANG_CLEARANCE')
+SPIDER_HANG_BODY_X = java_float(SPIDER_JAVA, 'HANG_BODY_X')
+SPIDER_HANG_BODY_WIDTH = java_float(SPIDER_JAVA, 'HANG_BODY_WIDTH')
+SPIDER_HANG_GAP = java_float(SPIDER_JAVA, 'HANG_GAP')
+SPIDER_HANG_THREAD_X = java_float(SPIDER_JAVA, 'HANG_THREAD_X')  # the spinnerets' x in the hanging frame
+SPIDER_STEP = 16
+SPIDER_HANG_STEP = 8
+SPIDER_START_FLOOR_FAR = 2  # a start thread's floor runs from point 1 (the lip) to point 2
+SPIDER_SILK_TILE = 4
+
+
+def spider_thread_out(lip_on_right):
+    """Spider.threadOut: the hanging body clears the ledge's face by HANG_CLEARANCE on either side of a lip."""
+    return SPIDER_HANG_CLEARANCE + (SPIDER_HANG_THREAD_X - SPIDER_HANG_BODY_X if lip_on_right
+                                    else SPIDER_HANG_BODY_X + SPIDER_HANG_BODY_WIDTH - SPIDER_HANG_THREAD_X)
+
+
+def spider_solids(root):
+    """The static solids a route's walls run along: untyped and Wall collision boxes, in world px."""
+    out = []
+    for group in root.findall('objectgroup'):
+        if group.get('name') != 'Collisions':
+            continue
+        offset_y = float(group.get('offsety', '0'))
+        for obj in group.findall('object'):
+            if obj.get('type') in (None, '', 'Wall'):
+                out.append((float(obj.get('x')), float(obj.get('y')) + offset_y, float(obj.get('width', TILE)),
+                            float(obj.get('height', TILE))))
+    return out
+
+
+def _covers(solids, x, top, bottom, on_right):
+    covered, grew = top, True
+    while grew and covered < bottom:
+        grew = False
+        for sx, sy, sw, sh in solids:
+            if (sx == x if on_right else sx + sw == x) and sy <= covered < sy + sh:
+                covered, grew = sy + sh, True
+    return covered >= bottom
+
+
+def spider_route(root, x, y, text):
+    """The route Spider.Route.trace builds from a polyline (#483, D103), in the same terms: legs as dicts with `kind` ('floor'
+    or 'wall'), `lo`, `hi` (position.x on a floor, the wall frame's top on a wall), `line` (the floor line, or the face's x) and,
+    on a wall, `solid_right`; threads as dicts with `side` (0 at the route's start, 1 at its end), `thread_x`, `anchor_y` and
+    `end_y` (the spinnerets at the thread's end). A polyline that is not a route gives no legs (Spider names it at load).
+    The JUnit and Python sides are pinned to the same fixture, core/src/test/resources/tiles/spider-routes.json."""
+    points = [(x + float(a), y + float(b)) for a, b in (pair.split(',') for pair in text.split())]
+    solids = spider_solids(root)
+    _, fh = SPIDER_FRAME
+    _, wh = SPIDER_WALL
+    segments = len(points) - 1
+    pieces = []
+    for s, ((ax, ay), (bx, by)) in enumerate(zip(points, points[1:])):
+        if ay == by:
+            pieces.append(('floor', s))
+            continue
+        top, bottom = min(ay, by), max(ay, by)
+        right, left_side = _covers(solids, ax, top, bottom, True), _covers(solids, ax, top, bottom, False)
+        if right != left_side:
+            pieces.append(('wall', s, right))  # the third field: the solid is on the face's right
+        elif s in (0, segments - 1) and not (right or left_side):
+            pieces.append(('thread', s))
+        else:
+            return {'legs': [], 'threads': []}
+    legs, threads = [], []
+    for piece in pieces:
+        kind, s = piece[0], piece[1]
+        (ax, ay), (bx, by) = points[s], points[s + 1]
+        if kind == 'floor':
+            legs.append({'kind': 'floor', 'lo': min(ax, bx) - SPIDER_BODY_X, 'hi': max(ax, bx) - SPIDER_BODY_X - SPIDER_BODY_WIDTH,
+                         'line': ay})
+        elif kind == 'wall':
+            legs.append({'kind': 'wall', 'lo': min(ay, by), 'hi': max(ay, by) - wh, 'line': ax, 'solid_right': piece[-1]})
+    for piece in pieces:
+        if piece[0] != 'thread':
+            continue
+        s = piece[1]
+        start = s == 0
+        (lip_x, lip_y), floor_y = (points[1], points[0][1]) if start else (points[s], points[s + 1][1])
+        floor_far = points[SPIDER_START_FLOOR_FAR][0] if start else points[s - 1][0]  # the other end of the floor it hangs from
+        out = 1 if floor_far < lip_x else -1
+        threads.append({'side': 0 if start else 1, 'thread_x': lip_x + out * spider_thread_out(out > 0), 'anchor_y': lip_y,
+                        'end_y': floor_y - SPIDER_HANG_GAP - fh})
+    return {'legs': legs, 'threads': threads}
+
+
+def spider_parts(root, x, y, text):
+    """(key, left, top, w, h) for every pose a spider takes along its polyline route, where Spider draws it."""
+    route = spider_route(root, x, y, text)
+    fw, fh = SPIDER_FRAME
+    ww, wh = SPIDER_WALL
+    for leg in route['legs']:
+        if leg['kind'] == 'floor':  # position.x from end to end, the frame on the floor line
+            for left in range(int(leg['lo']), int(leg['hi']) + 1, SPIDER_STEP):
+                yield 'Spider', left, leg['line'] - fh, fw, fh
+            continue
+        right = leg['solid_right']  # the frame on the open side of the face, head up and head down
+        cell_x = leg['line'] - ww if right else leg['line']
+        for cell_top in range(int(leg['lo']), int(leg['hi']) + 1, SPIDER_STEP):
+            for down in (False, True):
+                yield 'Spider:wall' + ('' if right else '-left') + ('-down' if down else ''), cell_x, cell_top, ww, wh
+    for thread in route['threads']:
+        thread_x, lip_y, end = thread['thread_x'], thread['anchor_y'], thread['end_y']
+        for cell_top in range(int(lip_y), int(end) + 1, SPIDER_HANG_STEP):
+            yield 'Spider:hang', thread_x - SPIDER_HANG_THREAD_X, cell_top, fw, fh
+        for silk_top in range(int(lip_y), int(end), SPIDER_SILK_TILE):
+            yield 'Spider:silk', thread_x, silk_top, 1, SPIDER_SILK_TILE
 
 
 DEADFALL_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/DeadfallTrap.java'
@@ -421,6 +550,11 @@ def placements(errors, roots=None):
                     continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'HangingHive':
                     yield from ((name, *part) for part in hive_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y))
+                    continue
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Spider' and obj.find('polyline') is not None:
+                    for key, left, top, w, h in spider_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y,
+                                                             obj.find('polyline').get('points', '')):
+                        yield name, key, left, top, w, h
                     continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Deadfall':
                     for key, left, top, w, h in deadfall_parts(float(obj.get('x')), float(obj.get('y')) + offset_y,

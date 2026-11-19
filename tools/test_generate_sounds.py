@@ -27,7 +27,8 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "beetle_windup_long.wav": (1.15, 1.25), "beetle_pop.wav": (0.3, 0.42),
           "remains_crumble.wav": (0.24, 0.32), "remains_burn.wav": (0.35, 0.45),
           "spider_notice.wav": (0.22, 0.30), "spider_windup.wav": (0.45, 0.55), "spider_windup_long.wav": (0.70, 0.80),
-          "spider_leap.wav": (0.12, 0.20), "spider_bite.wav": (0.16, 0.24)}
+          "spider_leap.wav": (0.12, 0.20), "spider_bite.wav": (0.16, 0.24),
+          "spider_drop.wav": (0.21, 0.29), "spider_reel.wav": (0.26, 0.34), "spider_snap.wav": (0.10, 0.14)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
@@ -42,7 +43,8 @@ EXPLOSION_RMS_DB = {"explosion.wav": -15.0}
 # Environment sounds (batch 3): quiet backgrounds, below every voice effect; same tolerance.
 AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rustle.wav": -27.0, "bramble_lash.wav": -21.0,
                   "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0,
-                  "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0}
+                  "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
+                  "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0}
 AMBIENT_MAX_RMS_DB = -20.0
 VOICE_RMS_TOLERANCE_DB = 0.5
 MIN_EFFECT_SECONDS = 0.10     # shorter than this is not a usable effect on a waking output
@@ -183,7 +185,8 @@ class GenerateSoundsTest(unittest.TestCase):
         for name in list(VOICE_RMS_DB) + list(EXPLOSION_RMS_DB) + ["grit_fall.wav", "bramble_rustle.wav", "bramble_lash.wav",
                                                                     "stinger_rain.wav", "ember_jet.wav",
                                                                     "fireball_fizzle.wav", "remains_crumble.wav", "remains_burn.wav",
-                                                                    "spider_leap.wav"]:
+                                                                    "spider_leap.wav", "spider_drop.wav", "spider_reel.wav",
+                                                                    "spider_snap.wav"]:
             x = [v / 32768.0 for v in read(ROOT / "assets/audio" / name)[3]]
             self.assertLess(max(abs(v) for v in x[:gs.n_samples(0.002)]), 0.1 * max(abs(v) for v in x), name)
 

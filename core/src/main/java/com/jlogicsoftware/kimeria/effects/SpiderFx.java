@@ -60,6 +60,12 @@ public final class SpiderFx {
     private static final float POOF_SIZE_MIN = 5, POOF_SIZE_MAX = 8, POOF_ANGLE_JITTER = 15, CIRCLE = 360;
     private static final float FLECK_SPREAD = 8, FLECK_DRIFT = 10, FLECK_LIFE = .45f, FLECK_SIZE = 1, FLECK_FLOOR_INSET = 1;
 
+    // The silk drop (#483, D103): the wind-up glints run down the drop column to the thread's end; specks shed from the thread
+    // as it pays out; a snapped thread sheds a few specks that drift down.
+    private static final float DROP_SPOT_JITTER = 1, SHED_DRIFT = 3, SHED_FALL = 10, SHED_LIFE = .35f;
+    private static final int SNAP_SPECKS = 5;
+    private static final float SNAP_FALL_MIN = 10, SNAP_FALL_MAX = 22, SNAP_LIFE_MIN = .35f, SNAP_LIFE_MAX = .55f, SNAP_DRIFT = 4;
+
     private final KimeriaParticleSystem soft, hard;
 
     public SpiderFx(long seed) {
@@ -85,6 +91,35 @@ public final class SpiderFx {
         float[] c = random.nextFloat() < SILK_WHITE_CHANCE ? WHITE_RGB : PALE;
         hard.spawn(KimeriaParticleSystem.KIND_FLAME, x, y, spotX + range(random, -SILK_SPOT_JITTER, SILK_SPOT_JITTER), y,
             range(random, SILK_LIFE_MIN, SILK_LIFE_MAX), SILK_SIZE, c[RED], c[GREEN], c[BLUE]);
+    }
+
+    /**
+     * One drop wind-up glint (D103) for a spider hanging at the lip with its fangs at ({@code x}, {@code fromY}): born in the drop
+     * column between the fangs and {@code spotY}, the thread's end, and running down to it, as the pounce's glints run along the floor.
+     */
+    public void silkDown(float x, float fromY, float spotY) {
+        RandomXS128 random = hard.random();
+        float y = fromY + random.nextFloat() * (spotY - fromY);
+        float[] c = random.nextFloat() < SILK_WHITE_CHANCE ? WHITE_RGB : PALE;
+        hard.spawn(KimeriaParticleSystem.KIND_FLAME, x, y, x, spotY + range(random, -DROP_SPOT_JITTER, DROP_SPOT_JITTER),
+            range(random, SILK_LIFE_MIN, SILK_LIFE_MAX), SILK_SIZE, c[RED], c[GREEN], c[BLUE]);
+    }
+
+    /** One speck shed by the thread at ({@code x}, {@code y}) as it pays out in the drop: it drifts aside and sinks a little. */
+    public void shed(float x, float y) {
+        RandomXS128 random = hard.random();
+        hard.spawn(KimeriaParticleSystem.KIND_GRIT, x, y, x + range(random, -SHED_DRIFT, SHED_DRIFT), y + SHED_FALL, SHED_LIFE,
+            LINE_SIZE, PALE[RED], PALE[GREEN], PALE[BLUE]);
+    }
+
+    /** The thread from {@code topY} to {@code bottomY} at {@code x} snaps when its spider is killed: a few specks drift down. */
+    public void snap(float x, float topY, float bottomY) {
+        RandomXS128 random = hard.random();
+        for (int i = 0; i < SNAP_SPECKS; i++) {
+            float y = topY + (i + random.nextFloat()) / SNAP_SPECKS * (bottomY - topY);
+            hard.spawn(KimeriaParticleSystem.KIND_GRIT, x, y, x + range(random, -SNAP_DRIFT, SNAP_DRIFT), y + range(random, SNAP_FALL_MIN, SNAP_FALL_MAX),
+                range(random, SNAP_LIFE_MIN, SNAP_LIFE_MAX), LINE_SIZE, PALE[RED], PALE[GREEN], PALE[BLUE]);
+        }
     }
 
     /** One dot of the silk line a leaping spider leaves at ({@code x}, {@code y}); it stays where it was laid and fades. */

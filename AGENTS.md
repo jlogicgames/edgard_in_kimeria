@@ -99,7 +99,8 @@ A monster that reacts to the hero notices in its own body language (a stop and a
 not scaled by the assist) and a short call in its own voice: no mark over its head, no shared alert sound. Its lethal
 wind-up takes its length from `TrapWarnings`. New monsters are met in play: no teaching room, no hint text. Design the
 monster's card in `docs/GAME_DESIGN.md` ("Forest monster ideas") first; the beetle and the spider (D102) are the templates
-(`Beetle`, `BeetleFx`; `Spider`, `SpiderFx`).
+(`Beetle`, `BeetleFx`; `Spider`, `SpiderFx`). A monster that leaves its floor (the spider's walls and silk thread, D103) moves
+on a route checked at load and strikes only along a line its wind-up has drawn; never from a wall.
 
 ## Monster bodies (D101)
 

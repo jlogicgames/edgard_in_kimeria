@@ -175,6 +175,8 @@ class AllocationBudgetTest {
     static final double BEETLE_CEILING = 8;
     /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-19, #328, D102; the same 8 B ceiling as the beetle's; the harness does not play sounds): spiders skittering, noticing, chasing, winding up with their silk, leaping, biting and recovering, or killed and leaving a body that rocks, crumbles and burns, through the real {@code Level} of spider-test.tmx, update and render every frame. */
     static final double SPIDER_CEILING = 8;
+    /** Measured in 3 runs (2026-11-19, #483, D103; the same 8 B ceiling as the floor spider's): see {@code spiderDropThroughTheRealLevel} and {@code spiderClimbThroughTheRealLevel}; the numbers are in D103. */
+    static final double SPIDER_ROUTE_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
@@ -796,11 +798,113 @@ class AllocationBudgetTest {
             level.remainsFx().render(batch);
             peak[0] = Math.max(peak[0], level.spiderFx().soft().count() + level.spiderFx().hard().count());
         });
-        for (Spider.State state : Spider.State.values()) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        for (Spider.State state : FLOOR_STATES) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
         assertTrue(peak[0] > 0, "the spiders must actually throw particles");
         assertFalse(level.player.isGotHit(), "the hero stepped clear of every bite");
         assertTrue(maxRock[0] > 0, "an odd spider's body must rock when the hero walks up to it");
         assertWithinBudget("spider notice, wind-up, leap, bite, recovery, death and body", SPIDER_CEILING, bytes);
+    }
+
+    /** The floor spider's states (D102); the climb and the drop (D103) have their own scenarios below. */
+    private static final Spider.State[] FLOOR_STATES = {Spider.State.CRAWL, Spider.State.NOTICE, Spider.State.CHASE, Spider.State.WINDUP,
+        Spider.State.LEAP, Spider.State.BITE, Spider.State.RECOVER, Spider.State.DEAD, Spider.State.BURN};
+    private static final int ROUTE_CYCLE_FRAMES = 300, ROUTE_HEARD_FRAME = 5, ROUTE_KILL_FRAME = 140, ROUTE_FINISH_FRAME = 220;
+    private static final int DROP_ASIDE_FRAME = 80, DROP_AGAIN_FRAME = 250, CLIMB_DOWN_FRAME = 110, CLIMB_KILL_FRAME = 120;
+    private static final float ROUTE_HERO_FAR_X = 3, DROP_UNDER_X = 460 - 29, DROP_ASIDE_X = 480 - 29;
+    private static final float CLIMB_LEDGE_X = 430 - 29, CLIMB_LEDGE_Y = 224 - 48, CLIMB_BELOW_X = 250 - 29;
+
+    /** The route of a fixture's spider, traced over its solids as {@code Level} does (built before the probe). */
+    private static Spider.Route route(float[] points, Rectangle... solids) { return Spider.Route.trace(points, java.util.List.of(solids)); }
+
+    /**
+     * Spiders in turn on their silk thread through the real {@code Level} of spider-drop.tmx (#483, D103): each hears the hero
+     * under its shelf, notices, runs to the lip and winds up hanging over it with glints down the column; the hero steps aside at
+     * frame {@value #DROP_ASIDE_FRAME}, so the drop and the bite at the thread's end miss, it hangs and reels back up, the thread
+     * drawn every frame; odd spiders are killed hanging at frame {@value #ROUTE_KILL_FRAME} (the thread snaps, the body falls) and
+     * crumble or, one in four, burn at frame {@value #ROUTE_FINISH_FRAME}; even ones see the hero back under them at frame
+     * {@value #DROP_AGAIN_FRAME} and wind up again. Update and render of the spider, {@code spiderFx} and {@code remainsFx}.
+     */
+    @Test void spiderDropThroughTheRealLevel() {
+        Level level = harness.roomOf("spider-drop", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / ROUTE_CYCLE_FRAMES + 1;
+        Spider[] spiders = new Spider[cycles];
+        for (int k = 0; k < cycles; k++) {
+            spiders[k] = new Spider(harness.assets(), harness.game(), route(new float[]{384, 208, 448, 208, 448, 320},
+                new Rectangle(0, 320, 640, 48), new Rectangle(320, 208, 128, 16)));
+            spiders[k].setPlayer(level.player);
+            spiders[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Spider.State.values().length];
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / ROUTE_CYCLE_FRAMES, f = i % ROUTE_CYCLE_FRAMES;
+            Spider s = spiders[k];
+            if (f == 0) level.player.position.set(ROUTE_HERO_FAR_X, HERO_Y);
+            if (f == ROUTE_HEARD_FRAME) level.player.position.set(DROP_UNDER_X, HERO_Y);
+            if (f == DROP_ASIDE_FRAME) level.player.position.set(DROP_ASIDE_X, HERO_Y);
+            if (f == ROUTE_KILL_FRAME && k % 2 == 1) s.collidedWithActor(true);
+            if (f == ROUTE_FINISH_FRAME && k % 2 == 1) { if (k % SPIDER_KINDS == SPIDER_BURNT) s.burnUp(); else s.crumble(); }
+            if (f == DROP_AGAIN_FRAME && k % 2 == 0) level.player.position.set(DROP_ASIDE_X, HERO_Y);
+            if (!s.isRemoved()) { s.update(STEP); s.render(batch); seen[s.getState().ordinal()] = true; }
+            level.spiderFx().update(STEP);
+            level.spiderFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+            peak[0] = Math.max(peak[0], level.spiderFx().soft().count() + level.spiderFx().hard().count());
+        });
+        for (Spider.State state : new Spider.State[]{Spider.State.NOTICE, Spider.State.CHASE, Spider.State.SET, Spider.State.DROP,
+            Spider.State.DANGLE, Spider.State.HANG, Spider.State.REEL, Spider.State.DEAD, Spider.State.BURN})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(peak[0] > 0, "the spiders must actually throw particles");
+        assertFalse(level.player.isGotHit(), "the hero stepped out of every drop");
+        assertWithinBudget("spider drop wind-up, drop, bite, hang, reel, thread, snap and body", SPIDER_ROUTE_CEILING, bytes);
+    }
+
+    /**
+     * Spiders in turn on a wall through the real {@code Level} of spider-climb.tmx (#483, D103): each hears the hero on the ledge
+     * above, notices, runs to the wall's foot and climbs it head up; at frame {@value #CLIMB_DOWN_FRAME} the hero is back on the
+     * floor below, out of the pounce's reach, and it comes down head first; odd spiders (the first after the warm-up: the shared
+     * soft-dot texture is built at level load, so kill order does not matter) are killed at frame
+     * {@value #CLIMB_KILL_FRAME}, on the wall, and their bodies fall to its foot and crumble or burn at frame
+     * {@value #ROUTE_FINISH_FRAME}. Update and render of the spider, {@code spiderFx} and {@code remainsFx}.
+     */
+    @Test void spiderClimbThroughTheRealLevel() {
+        Level level = harness.roomOf("spider-climb", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / ROUTE_CYCLE_FRAMES + 1;
+        Spider[] spiders = new Spider[cycles];
+        for (int k = 0; k < cycles; k++) {
+            spiders[k] = new Spider(harness.assets(), harness.game(), route(new float[]{320, 320, 400, 320, 400, 224, 528, 224},
+                new Rectangle(0, 320, 640, 48), new Rectangle(400, 224, 224, 96)));
+            spiders[k].setPlayer(level.player);
+            spiders[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Spider.State.values().length], wall = new boolean[2];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / ROUTE_CYCLE_FRAMES, f = i % ROUTE_CYCLE_FRAMES;
+            Spider s = spiders[k];
+            if (f == 0) level.player.position.set(ROUTE_HERO_FAR_X, HERO_Y);
+            if (f == ROUTE_HEARD_FRAME) level.player.position.set(CLIMB_LEDGE_X, CLIMB_LEDGE_Y);
+            if (f == CLIMB_DOWN_FRAME) level.player.position.set(CLIMB_BELOW_X, HERO_Y);
+            if (f == CLIMB_KILL_FRAME && k % 2 == 1) s.collidedWithActor(true);
+            if (f == ROUTE_FINISH_FRAME && k % 2 == 1) { if (k % SPIDER_KINDS == SPIDER_BURNT) s.burnUp(); else s.crumble(); }
+            if (!s.isRemoved()) {
+                s.update(STEP);
+                s.render(batch);
+                seen[s.getState().ordinal()] = true;
+                if (s.onWall()) wall[s.headUp() ? 0 : 1] = true;
+            }
+            level.spiderFx().update(STEP);
+            level.spiderFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+        });
+        assertTrue(wall[0] && wall[1], "it climbs the wall head up and comes down head first");
+        for (Spider.State state : new Spider.State[]{Spider.State.NOTICE, Spider.State.CHASE, Spider.State.DEAD, Spider.State.BURN})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertFalse(level.player.isGotHit(), "it never struck from the wall");
+        assertWithinBudget("spider wall climb, its body falling from the wall", SPIDER_ROUTE_CEILING, bytes);
     }
 
     /** A pickup spark burst every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.pickupSparks()} (#402), updated and drawn each frame. */

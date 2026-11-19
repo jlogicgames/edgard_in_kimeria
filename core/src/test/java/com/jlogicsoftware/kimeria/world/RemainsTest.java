@@ -39,8 +39,9 @@ class RemainsTest {
     /**
      * The body's silhouette must differ from every live frame, drawn either way round, in at least this share of the pixels
      * either covers. The beetle on its back differs from its closest live frames (look and wiggle, mirrored) in 30.5 % of them,
-     * measured 2026-11-18; the spider on its back, legs curled up, from its closest (recover) in 48.3 %, measured 2026-11-19; a
-     * recoloured live frame would differ in 0 %.
+     * measured 2026-11-18; the spider on its back, legs curled up, from its closest (recover) in 48.3 %, measured 2026-11-19 (its
+     * hanging frames of D103 are live frames too; its wall frames are 16x32 and upright, never lying on a floor); a recoloured live
+     * frame would differ in 0 %.
      */
     private static final float POSE_DIFFERENCE = .25f;
 
@@ -55,7 +56,7 @@ class RemainsTest {
         "Beetle", new Case("beetle-test", RemainsTest::beetle, "assets/images/objects/monster-beetle.png", 24, 16,
             new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, 9, "assets/images/objects/monster-beetle-body.png", b -> ((Beetle) b).rockAngle()),
         "Spider", new Case("spider-test", RemainsTest::spider, "assets/images/objects/monster-spider.png", 32, 16,
-            new int[]{0, 1, 2, 3, 4, 5, 6, 7}, 8, "assets/images/objects/monster-spider-body.png", b -> ((Spider) b).rockAngle()));
+            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 9, 10}, 8, "assets/images/objects/monster-spider-body.png", b -> ((Spider) b).rockAngle()));
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -202,6 +203,36 @@ class RemainsTest {
         assertTrue(b.isRemoved());
         assertFalse(b.isRemains());
         assertNull(beetle(level), "a burst or blast leaves nothing");
+    }
+
+    /** D103: a spider killed on a wall or on its thread leaves its body on the floor below, a body like any other. */
+    @Test void aSpiderKilledOnAWallOrAThreadLiesOnTheFloorBelow() {
+        Level climb = harness.roomOf("spider-climb", 0);
+        Spider climber = (Spider) spider(climb);
+        climb.player.position.set(430 - 29, 224 - 48);
+        for (int f = 0; f < 60 * 4 && !climber.onWall(); f++) frames(climb, 1);
+        assertTrue(climber.onWall(), "it climbs towards the hero on the ledge");
+        frames(climb, 20);
+        climber.collidedWithActor(true);
+        frames(climb, SETTLE_FRAMES);
+        assertTrue(climber.isRemains());
+        assertEquals(320, climber.floorY(), .5f);
+        Level drop = harness.roomOf("spider-drop", 0);
+        Spider dropper = (Spider) spider(drop);
+        drop.player.position.set(480 - 29, 320 - 48);
+        for (int f = 0; f < 60 * 4 && dropper.state() != Spider.State.SET; f++) {
+            if (f == 0) drop.player.position.set(460 - 29, 320 - 48);
+            frames(drop, 1);
+        }
+        drop.player.position.set(480 - 29, 320 - 48);
+        for (int f = 0; f < 60 * 2 && dropper.state() != Spider.State.HANG; f++) frames(drop, 1);
+        assertEquals(Spider.State.HANG, dropper.state());
+        dropper.collidedWithActor(true);
+        frames(drop, SETTLE_FRAMES);
+        assertTrue(dropper.isRemains());
+        assertEquals(320, dropper.floorY(), .5f);
+        dropper.crumble();
+        assertTrue(dropper.isRemoved(), "a weapon finishes it as any body");
     }
 
     @Test void theListIsNotEmpty() { assertFalse(List.copyOf(CASES.keySet()).isEmpty()); }

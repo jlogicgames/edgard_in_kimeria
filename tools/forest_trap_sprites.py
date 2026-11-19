@@ -39,7 +39,7 @@ FIRST_LINE = 1
 # Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name: the active sheets whose ink contour falls
 # under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
-                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
+                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'monster:spider-wall', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
                         'thorn-root', 'thorn-tuft'})
 # Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack).
 RIM_KEEP = {'falling-platform': 'c'}

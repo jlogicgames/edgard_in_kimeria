@@ -238,6 +238,19 @@ wind-up are noise-led (hiss and ticks over a whispered or fried voice), so they 
 The spider's death plays the shared kill sound `bounce`, as the beetle's. Previews: `art/audio/previews/spider_*.png`. Constants:
 `SPIDER_*` in `tools/audio/generate_sounds.py`.
 
+**The climb and the silk drop (#483, seeds 6908-6910, D103).** Three more, generated with the build, at environment level; their
+names and roles were approved with the card on 2026-11-19, the sounds themselves are judged when the spider is placed (#484). The
+drop's wind-up reuses `spider_windup` (`_long`) and the bite at the thread's end `spider_bite`, so one creature has one warning
+and one bite (D93). Climbing is silent, like the skitter.
+
+- `spider_drop` (0.25 s, RMS -21.0 dBFS): a falling "zzzip" of silk paying out: noise through a band-pass swept 4.2 to 0.9 kHz,
+  driven, chopped by a flutter slowing from 90 to 45 Hz, after a 5 ms tick at the let-go. It sweeps down where the leap's swish
+  sweeps up, and only it flutters.
+- `spider_reel` (0.30 s, RMS -27.0 dBFS): a soft rising ratchet, ten 14 ms dry ticks every 28 ms, their band rising 1.6 to 3.6
+  kHz and their level 0.5 to 0.9; quiet, because it is harmless; it tells a player looking away that the spider is going home.
+- `spider_snap` (0.12 s, RMS -24.0 dBFS): a small pluck, a 2.3 kHz tone dying over 50 ms over a 4 ms noise transient, after 3 ms
+  of silence (no click); it plays with the kill sound only when a spider dies on its thread.
+
 ### Monster bodies (D101, seeds 6807-6808)
 
 Two environment sounds shared by every monster's body (D101). They are quiet, under the voice set, and peak-capped at

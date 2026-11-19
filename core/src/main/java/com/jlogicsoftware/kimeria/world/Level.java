@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.RemainsFx;
+import com.jlogicsoftware.kimeria.effects.ParticleTextures;
 import com.jlogicsoftware.kimeria.effects.SpiderFx;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
@@ -170,7 +171,10 @@ public class Level implements WorldObject {
     /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
     private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
     private static final long SPIDER_FX_SEED_MIX = 0x94D049BB133111EBL, REMAINS_FX_SEED_MIX = 0x2545F4914F6CDD1DL;
-    /** The spiders' silk glints, leap line, bites and deaths (#328, D102): one for the level. Cleared with the room. */
+    /** Objects that move or hang, which a spider's thread must not pass through (D103 load check). */
+    private static final Set<String> SPIDER_BLOCKER_TYPES = Set.of("Actionable", "Escalator", "FallingPlatform", "FallingBranch",
+        "HangingVine", "ThornVine", "HangingHive", "Deadfall");
+    /** The spiders' silk glints, leap line, bites, drops and deaths (#328, D102, D103): one for the level. Cleared with the room. */
     private final SpiderFx spiderFx = new SpiderFx(TimeUtils.nanoTime() ^ SPIDER_FX_SEED_MIX);
     /** Every monster body's crumble and burn (D101, #478): one for the level. Cleared with the room. */
     private final RemainsFx remainsFx = new RemainsFx(TimeUtils.nanoTime() ^ REMAINS_FX_SEED_MIX);
@@ -559,6 +563,7 @@ public class Level implements WorldObject {
         this.game = game;
         fx = new EnvironmentFx(() -> !game.screenShakeDisabled(), TimeUtils.nanoTime() ^ FX_SEED_MIX);
         fairy = new FairyGuide(assets);
+        ParticleTextures.prepare(); // the shared particle textures, once at load, never on the first frame that draws one (#483)
         fairy.setView(visibleWorldRect);
         this.visibleWorldRect = visibleWorldRect;
         this.player = player;
@@ -818,8 +823,8 @@ public class Level implements WorldObject {
                     roomEnemies.put(o.id, beetle);
                 }
                 case "Spider" -> {
-                    Spider spider = new Spider(assets, game, o.x, o.y, o.width, o.height,
-                        o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    Spider spider = o.polyline != null ? new Spider(assets, game, Spider.Route.trace(o.polyline, spiderSolids()))
+                        : new Spider(assets, game, o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
                     spider.setPlayer(player);
                     spider.setLevel(this);
                     objects.add(spider);
@@ -1180,11 +1185,47 @@ public class Level implements WorldObject {
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
-    /** The spider (D102) fails at load when its range leaves the room, its floor has a gap, or its reach could cover a standing place. */
+    /**
+     * The spider (D102) fails at load when its range leaves the room, its floor has a gap, or its reach could cover a standing
+     * place. A spider on a traced route (a Tiled polyline, D103) also fails when a piece is not a floor, a wall or a thread, when it
+     * leaves the camera's view, or when a drop could not be stepped out of or could fall on a standing place.
+     */
     private void validateSpider(TiledObject o, int owner) {
-        String problem = Spider.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
-            roomLayout.rooms.get(owner).bounds(), standingPlaces(owner));
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        String problem = o.polyline != null
+            ? Spider.routeProblem(o.polyline, monsterFloors(), spiderSolids(), spiderBlockers(), spiderNoDrop(), room,
+                FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y), standingPlaces(owner))
+            : Spider.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
+                room, standingPlaces(owner));
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /** The static solids a spider's walls run along and its threads must miss: untyped and {@code Wall} collision boxes (D103). */
+    private List<Rectangle> spiderSolids() {
+        List<Rectangle> solids = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions"))
+            if (c.type.isEmpty() || "Wall".equals(c.type)) solids.add(new Rectangle(c.x, c.y, c.width, c.height));
+        return solids;
+    }
+
+    /** What a spider's thread must not pass through besides solids: one-way platforms and objects that move or hang (D103). */
+    private List<Rectangle> spiderBlockers() {
+        List<Rectangle> blockers = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions"))
+            if ("Platform".equals(c.type)) blockers.add(new Rectangle(c.x, c.y, c.width, c.height));
+        for (TiledObject s : map.layer("SpawnPoints"))
+            if (SPIDER_BLOCKER_TYPES.contains(s.type)) blockers.add(new Rectangle(s.x, s.y, s.width, s.height));
+        return blockers;
+    }
+
+    /** Where a drop must not land: climbables (the hero on them cannot step aside) and quicksand (D103). */
+    private List<Rectangle> spiderNoDrop() {
+        List<Rectangle> places = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions"))
+            if ("QuickSand".equals(c.type)) places.add(new Rectangle(c.x, c.y, c.width, c.height));
+        for (TiledObject s : map.layer("SpawnPoints"))
+            if ("Ladder".equals(s.type) || "HangingVine".equals(s.type)) places.add(new Rectangle(s.x, s.y, s.width, s.height));
+        return places;
     }
 
     /** Where the hero must be able to stand in a room: its entrance body, its exit and its checkpoints (load-time checks). */
