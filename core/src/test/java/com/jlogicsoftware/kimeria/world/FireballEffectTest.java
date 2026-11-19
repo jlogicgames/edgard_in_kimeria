@@ -98,6 +98,21 @@ class FireballEffectTest {
         assertNull(level.activeRipple(), "no screen distortion");
     }
 
+    /** #503, D93: a ball in flight when the hero dies goes out seen and heard, like one that burns out, not silently. */
+    @Test void aBallInFlightWhenTheHeroDiesFizzlesSeenAndHeard() {
+        Level level = harness.roomOf("forest-1", 2);
+        Fireball ball = freeShot(level);
+        level.objects.add(ball);
+        level.player.collidedWithActor(false);
+        assertFalse(level.player.canFight());
+        harness.sounds.clear();
+        ball.update(STEP);
+        assertTrue(ball.isRemoved());
+        assertEquals(1, level.fireballFx().soft().count(), "one small halo");
+        assertEquals(BURN_OUT_FLAMES, level.fireballFx().hard().count(), "a few flames");
+        assertEquals(java.util.List.of(FIZZLE), harness.sounds, "the fizzle plays once");
+    }
+
     @Test void aWallHitBurstsOnceAndSpraysBack() {
         Level level = harness.roomOf("forest-1", 2);
         Rectangle probe = new Rectangle();

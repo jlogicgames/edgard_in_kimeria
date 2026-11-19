@@ -187,6 +187,22 @@ class BeetleTest {
         }
     }
 
+    /** #503: the beetle's burst is resolved in its own update, before the hero's; a cast on that frame finds a dead hero and spawns nothing. */
+    @Test void aCastOnTheBurstFrameSpawnsNoBallAndSpendsNoCharge() {
+        Level probe = level();
+        committed(probe);
+        int due = until(probe, () -> !alive(probe), 60 * 5);   // frames from the commit to the burst that kills the hero
+        Level level = level();
+        committed(level);
+        for (int f = 0; f < due; f++) frame(level);
+        assertFalse(alive(level), "the burst killed the hero on this frame");
+        int stock = level.rangedStock.count();
+        harness.held.add(Input.Keys.L); harness.pressed.add(Input.Keys.L); frame(level); harness.held.clear();
+        assertEquals(stock, level.rangedStock.count(), "no charge spent after the burst");
+        for (int i = 0; i < level.objects.size(); i++)
+            assertFalse(level.objects.get(i) instanceof com.jlogicsoftware.kimeria.entity.items.Fireball, "no ball was cast");
+    }
+
     @Test void aThrownStoneKillsItWithoutABurst() {
         Level level = level();
         Beetle b = beetle(level);

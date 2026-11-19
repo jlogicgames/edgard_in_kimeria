@@ -41,7 +41,8 @@ public final class Fireball extends Entity {
         speed = right ? SPEED : -SPEED;
     }
     @Override public void update(float dt) {
-        if (!level.player.canFight()) { removeFromParent(); return; }
+        // #503, D93: a ball in flight when the hero can no longer fight is seen and heard going out, like one that burns out.
+        if (!level.player.canFight()) { level.fireballFx().fizzle(centerX(), centerY()); level.fireballFizzle(true); removeFromParent(); return; }
         if ((life -= dt) <= 0) { level.fireballFx().fizzle(centerX(), centerY()); level.fireballFizzle(true); removeFromParent(); return; }
         int steps = ProjectileStep.count(dt);
         float direction = Math.signum(speed);

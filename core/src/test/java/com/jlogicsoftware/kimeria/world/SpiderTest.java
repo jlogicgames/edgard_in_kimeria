@@ -260,6 +260,19 @@ class SpiderTest {
         assertTrue(s.isRemains(), "and the swing that killed it leaves its body");
     }
 
+    /** #503: a fireball cast on the frame the fangs arrive flies its first step on that frame, so it wins the tie like the sword. */
+    @Test void aFireballCastOnTheFrameTheFangsArriveWinsTheSameFrameTie() {
+        int due = biteFrame();
+        Level level = level();
+        Spider s = committed(level);
+        for (int f = 1; f < due; f++) frame(level);
+        press(level, Input.Keys.L);   // cast on the very frame the fangs reach the hero (Level.update, no shortcut)
+        assertTrue(s.isDefeated(), "the ball's first step lands on its cast frame, before the bite");
+        settle(level, 30);
+        assertTrue(alive(level), "the fireball wins the same-frame tie (D102)");
+        assertTrue(s.isRemains(), "a quiet kill: the body stays (D101)");
+    }
+
     /** A spider that misses (the hero stepped back) and has just landed; the hero is clear of its fangs. */
     private Spider landedAfterAMiss(Level level) {
         Spider s = committed(level);

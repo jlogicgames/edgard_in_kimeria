@@ -167,6 +167,9 @@ class AllocationBudgetTest {
     static final double STONE_IMPACT_CEILING = 8;
     /** Measured 2.8, 2.8, 2.8, 2.8, 2.8 and 0.0 B/frame in 6 runs (2026-11-18, #397 rework; the same 8 B ceiling as the other isolated paths); the 2.8 is a one-time ~3.4 KB in the first measurement of a fresh JVM, not a per-frame cost: a probe (2026-11-18) read 2.8 or 0.3 on its first run and 0.0 on every repeat in the same JVM, and 0.0 to 0.1 with either the ball's or the effect's render left out, so it is a one-time cost of the first run of that combined path whose source was not identified (JIT warm-up or a one-time lazy initialisation); no ball stops within the measured frames, so {@code playSounds()} is never reached here: a fireball flying through the real level, its halo drawn, its trail spawned, updated and drawn every frame, a new ball every 60 frames. */
     static final double FIREBALL_TRAIL_CEILING = 8;
+    /** The cast's extra over the same room with no cast, B/frame (#503): one {@code new Fireball} per 60-frame cycle. Measured 5.6 B/frame (about 340 B per cast; median of 9 paired windows, full suite {@code --rerun-tasks}, 2026-11-19, 99 casts); 16 is about three times that, headroom for JIT variation. */
+    static final double FIREBALL_CAST_EXTRA_CEILING = 16;
+    private static final int FIREBALL_CAST_PAIRS = 9, FIREBALL_CAST_WINDOW_FRAMES = 600;
     /** Measured 0.0 B/frame in 6 runs (2026-11-18, #397), and 0.0 in 3 more runs with the impact ring, 0.2 and 0.3 in two full-suite runs; headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles and the ring slots: a fireball burst every 60 frames through the real {@code Level.fireballFx()} (light, heavy, burn-out in turn), updated and drawn each frame. */
     static final double FIREBALL_IMPACT_CEILING = 8;
     private static final int FIREBALL_ROOM = 2, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
@@ -685,6 +688,40 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "the trail must actually burn in this scenario");
         assertWithinBudget("fireball trail", FIREBALL_TRAIL_CEILING, bytes);
+    }
+
+    /**
+     * The cast of #503 through the real {@code Level.update}, key to ball: a real press every {@link #BURST_CYCLE_FRAMES} frames
+     * ({@code Player.shoot} builds the ball and queues it, {@code stepNewFireballs} flies its first step, {@code finishUpdate} joins it)
+     * against the same room with no press. A whole forest-1 room allocates 220 to 540 B/frame by itself in this probe, and which
+     * figure a window reads depends on the JIT state, so two single windows cannot be subtracted: the paired probe alternates
+     * the two scenes and takes the median of the differences. The scene proves it cast: every press spends a charge, and a ball is
+     * seen in the object list after a press. The extra is one {@code new Fireball} per cast.
+     */
+    @Test void fireballCastWithTheRealKeyPress() {
+        Level cast = harness.roomOf("forest-1", FIREBALL_ROOM), quiet = harness.roomOf("forest-1", FIREBALL_ROOM);
+        Rectangle view = new Rectangle(cast.currentRoomBounds());
+        int[] presses = new int[1], spent = new int[1], seen = new int[1];
+        double extra = AllocationProbe.medianPairedDifference(FIREBALL_CAST_PAIRS, FIREBALL_CAST_WINDOW_FRAMES, () -> { },
+            i -> {
+                harness.pressed.clear(); harness.held.clear();
+                boolean press = i > 0 && i % BURST_CYCLE_FRAMES == 0;   // not on the level's very first frame
+                if (press) { cast.rangedStock.restore(3); harness.held.add(com.badlogic.gdx.Input.Keys.L); harness.pressed.add(com.badlogic.gdx.Input.Keys.L); presses[0]++; }
+                cast.update(STEP); cast.render(batch, view);
+                if (press) {
+                    if (cast.rangedStock.count() == 2) spent[0]++;
+                    boolean ball = false;
+                    for (int o = 0; o < cast.objects.size(); o++) ball |= cast.objects.get(o) instanceof Fireball f && !f.isRemoved();
+                    if (ball) seen[0]++;
+                }
+            },
+            () -> { }, i -> { harness.pressed.clear(); harness.held.clear(); quiet.update(STEP); quiet.render(batch, view); });
+        System.out.printf("ALLOCATION fireball cast: median cast minus no cast %.1f B/frame over %d pairs (%d presses, %d spent a charge, %d saw a ball)%n",
+            extra, FIREBALL_CAST_PAIRS, presses[0], spent[0], seen[0]);
+        assertTrue(presses[0] > 0, "the scene must press");
+        assertEquals(presses[0], spent[0], "every press cast a ball: a charge was spent");
+        assertEquals(presses[0], seen[0], "and the ball was in the level after its cast frame");
+        assertWithinBudget("fireball cast over the same room with no cast", FIREBALL_CAST_EXTRA_CEILING, extra);
     }
 
     /** A fireball burst every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fireballFx()} (#397): a light hit, the boss's heavy hit and a burn-out in turn, each over its whole life. */
