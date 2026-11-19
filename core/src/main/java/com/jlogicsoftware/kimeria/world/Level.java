@@ -13,6 +13,7 @@ import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
+import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.RemainsFx;
 import com.jlogicsoftware.kimeria.effects.ParticleTextures;
@@ -1609,11 +1610,21 @@ public class Level implements WorldObject {
         }
         updateWorld(dt);
         player.update(dt);
+        stepNewFireballs(dt);
         killOnLethalHazards();
         for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
 
         finishUpdate(dt);
+    }
+
+    /**
+     * A fireball cast this frame flies its first step now, on the frame it was cast (#503), as the sword resolves on its own
+     * frame: a monster's bite pending from this frame (D102) then meets the ball before the bite lands, so the hit wins the tie.
+     * It joins the object list at the end of the frame and first updates, as its second step, on the next.
+     */
+    private void stepNewFireballs(float dt) {
+        for (int i = 0; i < pendingSpawns.size(); i++) if (pendingSpawns.get(i) instanceof Fireball ball) ball.update(dt);
     }
 
     /** Rhythmic traps (D46) kill by the hero's body box, exactly like the bomb blast: Player.die holds the only guards. */
@@ -1669,7 +1680,7 @@ public class Level implements WorldObject {
         objects.removeIf(WorldObject::isRemoved);
 
         if (!pendingSpawns.isEmpty()) {
-            objects.addAll(pendingSpawns);
+            for (int i = 0; i < pendingSpawns.size(); i++) if (!pendingSpawns.get(i).isRemoved()) objects.add(pendingSpawns.get(i)); // a ball spent on its cast frame (#503) never joins
             pendingSpawns.clear();
         }
         fairy.update(dt, player);

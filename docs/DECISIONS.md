@@ -3076,6 +3076,16 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     236, including three bodies crumbling and three burning at once. `AllocationBudgetTest.beetleThroughTheRealLevel`
     measured 0.1 B/frame in 3 runs.
   - **The other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).**
+- **Update (#503, 2026-11-19): a fireball wins the same-frame tie too.** The hero updates after the monsters, and a cast ball used
+  to join the object list a frame late, so on the frame a bite (or the snail's gob, D106) became due the ball had not moved, and on
+  the next one the monster landed its hit first and the ball met a hero who could no longer fight. Now a ball cast this frame flies
+  its first step on that frame (`Level.stepNewFireballs`, straight after the hero's update and before the boss's combat), so it
+  kills, burns a gob or lights a trap before the pending hit lands: the sword and the fireball win the tie. **Known gap, [#505](https://github.com/jlogicgames/edgard_in_kimeria/issues/505):** a thrown stone does not (`Carryable.release` only sets its velocity, so it first moves a frame late); no test shows a stone winning, and D102's mention of a stone stands until #505 settles it. Its second
+  step is the next frame's, as before. A ball in flight when the hero cannot fight any more goes out like a burn-out, seen and
+  heard (`fireballFx().fizzle`, the quiet fizzle sound, D93), no longer silently. The beetle needs no tie: its burst is
+  immediate in its own update, before the hero can cast; a ball cast on the burst frame is never spawned (the hero is dead, nothing is
+  spent), pinned by `BeetleTest.aCastOnTheBurstFrameSpawnsNoBallAndSpendsNoCharge`. Tests: `SpiderTest.aFireballCastOnTheFrameTheFangsArriveWinsTheSameFrameTie`,
+  `SnailTest.aFireballCastOnTheFrameTheGobReachesTheHeroWinsTheTie`, `FireballEffectTest.aBallInFlightWhenTheHeroDiesFizzlesSeenAndHeard`.
 - **Update (#328, 2026-11-19): the second body.** The spider leaves one (D102). The crumble and the burn moved out of `BeetleFx`
   into `effects/RemainsFx.java`, one per `Level`, shared by every body: each monster passes its own chip colours (the beetle's
   `BeetleFx.SHELL_CHIPS`, the spider's `SpiderFx.SPIDER_CHIPS`); pools 57 and 218 from peaks of 45 and 174 (`RemainsFxTest`:

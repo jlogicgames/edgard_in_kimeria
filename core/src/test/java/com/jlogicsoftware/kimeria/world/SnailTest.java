@@ -226,6 +226,22 @@ class SnailTest {
         assertTrue(alive(level), "the blade wins the tie");
     }
 
+    /** #503: a fireball cast on the frame the gob reaches the hero burns it on its cast frame, before the hit lands. */
+    @Test void aFireballCastOnTheFrameTheGobReachesTheHeroWinsTheTie() {
+        Level probe = level();
+        Snail p = spat(probe);
+        place(probe, AHEAD);
+        int due = until(probe, () -> p.gobX() - Snail.GOB_CORE / 2 <= AHEAD, 60);   // frames until the gob has reached the hero
+        Level level = level();
+        Snail s = spat(level);
+        place(level, AHEAD);
+        for (int f = 1; f < due; f++) frame(level);
+        press(level, Input.Keys.L);   // cast on the very frame the gob arrives: its hit is pending, due on the next frame
+        assertFalse(s.gobActive(), "the ball's first step burns the gob on its cast frame");
+        settle(level, 10);
+        assertTrue(alive(level), "the fireball wins the tie");
+    }
+
     @Test void aFireballBurnsTheGobAwayAndFliesOnToKillTheSnail() {
         Level level = level();
         Snail s = spat(level);
