@@ -25,6 +25,7 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
@@ -177,6 +178,8 @@ class AllocationBudgetTest {
     static final double SPIDER_CEILING = 8;
     /** Measured in 3 runs (2026-11-19, #483, D103; the same 8 B ceiling as the floor spider's): see {@code spiderDropThroughTheRealLevel} and {@code spiderClimbThroughTheRealLevel}; the numbers are in D103. */
     static final double SPIDER_ROUTE_CEILING = 8;
+    /** Measured in 3 runs (2026-11-19, #329, D106; the same 8 B ceiling as the other monsters; the harness does not play sounds): snails crawling, noticing, winding up with their specks and swelling gob, spitting, their gobs flying with drips and ending (dropping and splatting past their range, cut by the blade or burnt), reloading, or killed with their gob still in the air and leaving a body that rocks, crumbles and burns, through the real {@code Level} of snail-test.tmx, update and render every frame; the numbers are in D106. */
+    static final double SNAIL_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
@@ -803,6 +806,68 @@ class AllocationBudgetTest {
         assertFalse(level.player.isGotHit(), "the hero stepped clear of every bite");
         assertTrue(maxRock[0] > 0, "an odd spider's body must rock when the hero walks up to it");
         assertWithinBudget("spider notice, wind-up, leap, bite, recovery, death and body", SPIDER_CEILING, bytes);
+    }
+
+    private static final int SNAIL_CYCLE_FRAMES = 300, SNAIL_SEEN_FRAME = 5, SNAIL_LIFT_FROM = 86, SNAIL_LIFT_TO = 200, SNAIL_BREAK_FRAME = 110;
+    private static final int SNAIL_KILL_FRAME = 100, SNAIL_PUSH_FRAME = 220, SNAIL_FINISH_FRAME = 260, SNAIL_KINDS = 4, SNAIL_ODD = 3, SNAIL_AT_END = 3;
+    private static final float SNAIL_X = 320, SNAIL_Y = 304, SNAIL_W = 24, SNAIL_H = 16, SNAIL_OFF_NEG = 3, SNAIL_OFF_POS = 4;
+    /** Hero positions (x of the 64 px frame): ahead in the snail's line; the feet 12 px up, above the line; beside the body. */
+    private static final float HERO_IN_LINE_X = 250 - 29, HERO_LIFT = 12, HERO_BESIDE_SNAIL_X = 318 - 29;
+
+    /**
+     * Snails in turn through the real {@code Level} of snail-test.tmx (#329, D106): each crawls a few frames, sees the hero ahead
+     * at frame {@value #SNAIL_SEEN_FRAME} (one in three has paused at its range's end first), notices (0.5 s), winds up with its specks and swelling gob and spits; the hero is held
+     * above the line from frame {@value #SNAIL_LIFT_FROM} to {@value #SNAIL_LIFT_TO}, so the gob flies its range shedding drips,
+     * drops and splats on the floor, while the snail reloads, then loses the hero and crawls on. One even snail in two has its
+     * gob cut by the blade, the other burnt, at frame {@value #SNAIL_BREAK_FRAME}. Odd snails are killed at frame
+     * {@value #SNAIL_KILL_FRAME} with their gob in the air (it flies on), leave their body, are walked up to at frame
+     * {@value #SNAIL_PUSH_FRAME} (it rocks) and crumble or, one in four, burn at frame {@value #SNAIL_FINISH_FRAME}.
+     * {@code update} and {@code render} of the snail, {@code Level.snailFx()} and {@code Level.remainsFx()} every frame. Snails are
+     * built before the probe.
+     */
+    @Test void snailThroughTheRealLevel() {
+        Level level = harness.roomOf("snail-test", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / SNAIL_CYCLE_FRAMES + 1;
+        Snail[] snails = new Snail[cycles];
+        for (int k = 0; k < cycles; k++) {
+            // One snail in three starts at its range's left end, so it pauses there before the hero comes into view.
+            snails[k] = new Snail(harness.assets(), harness.game(), SNAIL_X, SNAIL_Y, SNAIL_W, SNAIL_H, k % SNAIL_AT_END == SNAIL_AT_END - 1 ? 0 : SNAIL_OFF_NEG,
+                SNAIL_OFF_POS);
+            snails[k].setPlayer(level.player);
+            snails[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Snail.State.values().length];
+        int[] peak = new int[1], gobs = new int[1];
+        float[] maxRock = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / SNAIL_CYCLE_FRAMES, f = i % SNAIL_CYCLE_FRAMES;
+            Snail s = snails[k];
+            if (f == 0) level.player.position.set(HERO_FAR_X, HERO_Y);
+            if (f == SNAIL_SEEN_FRAME) level.player.position.set(HERO_IN_LINE_X, HERO_Y);
+            if (f >= SNAIL_LIFT_FROM && f < SNAIL_LIFT_TO) { level.player.position.set(HERO_IN_LINE_X, HERO_Y - HERO_LIFT); level.player.velocity().setZero(); }
+            if (f == SNAIL_LIFT_TO) level.player.position.set(HERO_FAR_X, HERO_Y);
+            if (f == SNAIL_BREAK_FRAME && k % 2 == 0) s.breakApart(k % SNAIL_KINDS == 0);
+            if (f == SNAIL_KILL_FRAME && k % 2 == 1) s.collidedWithActor(true);
+            if (f == SNAIL_PUSH_FRAME && k % 2 == 1) level.player.position.set(HERO_BESIDE_SNAIL_X, HERO_Y);
+            if (f == SNAIL_FINISH_FRAME && k % 2 == 1) { if (k % SNAIL_KINDS == SNAIL_ODD) s.burnUp(); else s.crumble(); }
+            if (!s.isRemoved()) {
+                s.update(STEP); s.render(batch); seen[s.state().ordinal()] = true;
+                if (s.gobActive()) gobs[0]++;
+                maxRock[0] = Math.max(maxRock[0], Math.abs(s.rockAngle()));
+            }
+            level.snailFx().update(STEP);
+            level.snailFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+            peak[0] = Math.max(peak[0], level.snailFx().soft().count() + level.snailFx().hard().count());
+        });
+        for (Snail.State state : Snail.State.values()) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(gobs[0] > 0, "the gobs must actually fly");
+        assertTrue(peak[0] > 0, "the snails must actually throw particles");
+        assertFalse(level.player.isGotHit(), "every gob passed under the hero or was broken");
+        assertTrue(maxRock[0] > 0, "an odd snail's body must rock when the hero walks up to it");
+        assertWithinBudget("snail notice, wind-up, spit, gob, reload, death and body", SNAIL_CEILING, bytes);
     }
 
     /** The floor spider's states (D102); the climb and the drop (D103) have their own scenarios below. */

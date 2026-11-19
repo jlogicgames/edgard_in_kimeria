@@ -652,15 +652,15 @@ below when the hero enters their awareness area (the hearing range).
 | --- | --- | --- |
 | Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. Built: the card below (D100). |
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
-| Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. |
+| Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
 | Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
 
-Their warning, attack and death effects (the beetle's built, D100, and the spider's, D102; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
-which monsters and how: the list in D101). The beetle's and the spider's bodies are built; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+which monsters and how: the list in D101). The beetle's, the spider's and the snail's bodies are built; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 ### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 
@@ -746,6 +746,47 @@ spawns): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; t
 the order floor, wall, thread: `forest-1-spider` (a room of its own, where it is met alone on open ground), `forest-1-climb`
 (a room of its own, up the far face of a block where the hero waits for a running lift) and `forest-1-route` (its thread from the ladder slab's lip over the mandatory
 floor). The climb and the drop are develops of the one element `spider` (D103).
+
+### Snail card (built, [D106](DECISIONS.md#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398), [#329](https://github.com/jlogicgames/edgard_in_kimeria/issues/329))
+
+The beetle says "get clear", the spider says "make it miss, then strike". The snail is the first monster that hurts from a
+distance and the first that only looks ahead. It holds a stretch of open floor with a slow spit, and its question is new: **when
+do you cross?** Wait behind cover for its shot, jump or cut the gob, and walk in during its long reload; or come from behind
+while it crawls the other way. Once you reach it, it is harmless. Like every new monster it is met in play, with no teaching
+room and no hint text. Numbers are the built values (D106); the hero's are measured from the code (run 100 px/s, hitbox 11×22,
+feet rise about 60 px in a jump, about 0.9 s in the air; sword box 17 px past the hitbox front, live for the whole 0.7 s swing,
+the hero stopped while swinging).
+
+| Item | Built | Why |
+| --- | --- | --- |
+| Size and look | 24×16 frames, eight in one strip (`crawl1`, `crawl2`, `look`, `blink`, `draw`, `spit`, `rest`, `dead`) and a ninth cell with the gob's two 8×8 wobble frames; 13 colours, 14 with the moon rim; a chestnut shell coiled in two turns (a dark groove, a cream whorl), a pale clay foot and neck, two eye stalks with pale tips; drawn about 14 px tall; body hitbox `rect(1, 3, 20, 13)`, the stalks outside it | about half the hero's height, like the beetle and the spider; the shell's ink contour and moon rim cover only its top two rows, so it reads as quiet as the spider (outline 0.302 to 0.339) |
+| Contact | **harmless**: only the gob kills | every death comes from an act the player watched wind up (D5, D7) |
+| Patrol | crawls at **12 px/s** inside `offNeg`/`offPos`, stops **0.8 s** at each end (`blink`), then turns; never leaves its range | slow is the snail; the pause and the turn are the windows to come up behind it |
+| Sight (it looks, it does not hear) | **only ahead**: a box from its front edge to **176 px** ahead, from its floor line to **48 px** above it, **cut at the first solid** at the gob's height; aware, it follows a hero who goes behind it with a turn after **0.4 s** and loses him after **1.5 s** out of sight | a safe back and cover that breaks its line are its new readings; the sight and the firing line are cut by the same solids, so if it can see you, it can hit you |
+| Notice beat (#240) | **body language, no mark**: it stops and its stalks shoot up and pull in twice (`look` 0.15 s, `blink` 0.1 s, twice): **0.5 s**, not scaled by the assist. Heard: its own call, `snail_notice`, a wet "mm?" | D100's shared pattern |
+| When aware | **no chase**: it holds still and faces the hero, stalks up | it guards a line, not a route |
+| Firing line | a band **4 px** tall centred **7 px** above its floor line, from its mouth to 176 px ahead, cut at the first solid; it fires only when the hero's hitbox touches the line and its reload is done; a hero it sees above the line is watched, not shot at | the trigger is the lethal reach itself (D10) |
+| Wind-up (D7 warning) | `TrapWarnings.duration(DEFAULT_WARNING_SECONDS)`, sampled once: **0.8 s, 1.2 s with the assist**, facing locked. Seen: `draw` (reared, throat swollen), a glow swelling at the mouth, pale specks drawn in along the line from its far end. Heard: `snail_windup` (`_long`), a wet gurgling inhale | the warning shows where the shot goes and how far; the gob's flight adds up to 1.47 s on top |
+| Spit and gob (D71, D93) | `spit` 0.15 s, `snail_spit` ("ptoo"); the gob flies straight and level at **120 px/s**, an authored 8×8 sprite that sheds drips; its **4×4 core** kills, swept every frame, the hit landing on the snail's next frame. It splats on the hero, on the first solid face, or after 176 px drops to the floor and splats there; droplets and a fading smear, `snail_splat`, hit or miss; no puddle. It passes through one-way platforms, monsters (the spider too), bodies and pickups; one gob per snail | seen in flight, heard when fired and when it ends; faster than the hero runs, so it is jumped, cut or put behind cover, never outrun |
+| Reload | **2.4 s** from the spit, harmless, not scaled by the assist (`rest`/`blink`, a slow swallow); then a full new wind-up | from 176 px the hero crosses in 1.76 s; one shot every 3.2 s, the D105 cadence |
+| Sword | kills it in any state, with the light spray of D65, and leaves the body; a live sword box that touches the gob cuts it (the blade wins a same-frame tie) | melee is safe once you are there; a cut costs the hero the 0.7 s swing |
+| Fireball, stone, torch | kill it in any state and leave the body (no blood, D99); against the gob each destroys it (fire with a puff of steam) and **flies on, unspent**; a weapon breaks the gob's drawn 8×6, so the chest-high fireball meets it | the right tool never costs a charge on a gob |
+| Stomp | the normal D10 stomp on the shell, with the bounce; it leaves the body | a low creature is stompable |
+| Killed mid-act | during the wind-up it fires nothing (the gob pops on its lips, seen and heard); a gob already in the air flies on | what the player has read still holds |
+| Shell | blocks nothing | the safe approach from behind stays safe |
+| Body (D101) | `dead`: the empty shell rolled onto its back, its mouth open upward, no foot, no stalks; the active frame holds 0.3 s, then cross-fades over 0.6 s into `monster-snail-body.png` (decor palette); rocks (`RemainsSwing`), crumbles into shell and foot chips, burns | 49.3 % of the silhouette differs from its closest live frame |
+| Rollback (D3, D6) | a death or a revisit brings it back calm at its spawn with no gob in the air; killed, it stays gone with its body in a passed room | the enemy rules as they are |
+| Authoring checks | `Snail.problem`, on the 24×16 snail: the range inside the room on gapless floor; every firing line, from every 4 px of the range facing either way, ends on a solid face or floor inside the room, below the camera's top, and crosses no standing place (the entrance body, the `RoomExit`, a `Checkpoint`), the drop past its range included | every retry can be survived and every shot is seen |
+
+With the spider in one room: the snail controls the far, open floor and forces a jump or a cut on its beat; the spider controls
+the near floor and punishes standing still. Both notice in 0.5 s of their own body language and strike along a line drawn in pale
+particles (the spider's glints run out to the landing spot, the snail's specks are drawn in to its mouth), and neither changes
+the other (the gob passes through the spider). Cover (crates, blocks, steps) breaks the snail's line with no new object.
+Effects are particles on `KimeriaParticleSystem` (`effects.SnailFx`, one per level; the body's crumble and burn in
+`effects.RemainsFx`); the only sprites are the snail's sheet with the gob's cell (`assets/images/objects/monster-snail.png`) and
+its decor body. The gate measures a placed `Snail` along its range and its gob along every firing line (`check_contrast.py`).
+Code: `entity/enemy/Snail.java`, `entity/enemy/Breakable.java`; tests: `SnailTest`, `SnailFxTest`, `RemainsTest`,
+`AllocationBudgetTest.snailThroughTheRealLevel`. Placement: with the spider rooms' rework under D105 ([#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)).
 
 ## Rooms, dangers and skill development
 

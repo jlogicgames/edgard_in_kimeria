@@ -110,6 +110,8 @@ MONSTER_SHEETS = {
                        'silk')),  # #328 (D102); hang, hangwind and the thread tile silk #483 (D103)
     'spider-wall': ((16, 32), ('wall1', 'wall2', 'walltap')),  # #483 (D103): on a wall, head up, the wall on the right
     'spider-body': ((32, 16), ('body',)),  # D101: the spider's dead frame in a decor-tier palette
+    'snail': ((24, 16), ('crawl1', 'crawl2', 'look', 'blink', 'draw', 'spit', 'rest', 'dead', 'gob')),  # #329 (D106); gob: two 8x8 frames
+    'snail-body': ((24, 16), ('body',)),  # D101: the snail's dead frame, the empty shell, in a decor-tier palette
 }
 WORLD_IMAGES.update({f'monster-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in MONSTER_SHEETS.items()})
 # The dialogue screen (#337, D78): hand-drawn grids in art/ui/dialogue -> assets/images/ui/dialogue-<name>.png, one horizontal

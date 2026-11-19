@@ -10,6 +10,7 @@ import com.jlogicsoftware.kimeria.physics.ProjectileStep;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Breakable;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
@@ -133,6 +134,12 @@ public final class Carryable extends Entity {
                     if (respawns) { returnHome(); break; }
                 }
                 if (landed) leverFlight = false;
+                // D106: a thrown stone breaks every snail's gob it reaches apart, a thrown torch burns it away; either flies on.
+                // Tested before the enemies, so a throw stopped by an enemy in the same step still breaks the gob it reached.
+                if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                    if (level.objects.get(o) instanceof Breakable gob && gob.isBreakable() && gob.breakableInto(trapBox).overlaps(bounds()))
+                        gob.breakApart(kind != Kind.STONE);
+                }
                 if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
                     if (level.objects.get(o) instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
                         if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);

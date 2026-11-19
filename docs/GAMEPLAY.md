@@ -237,13 +237,30 @@ the far face of the block where Edgard must wait for the lift in `forest-1-climb
 top to him, so he baits its pounce there, shoots it as it tops the edge, or is bitten waiting); and on the ladder slab of `forest-1-route`, whose thread hangs over the floor Edgard
 must walk (keep walking and it drops behind him; stop under the lip and it bites). Room cards: [ROOM_CARDS.md](ROOM_CARDS.md).
 
+## Forest snail
+
+A chestnut snail with a coiled shell and two eye stalks (D106, #329), about half Edgard's height, crawls very slowly along
+its own stretch of floor, stops at each end and turns. Touching it is harmless. It only looks ahead: Edgard behind it, or
+behind a block or a crate, is not seen. When he comes into its view, up to eleven tiles in front of it, its stalks shoot up and
+pull in twice (half a second, with a wet "mm?"), and it holds still, facing him; it never chases. If he is on its line, at
+shin height, it rears back, its throat swells and pale specks are drawn in along that line to its mouth (0.8 s, 1.2 s with
+the longer-warnings assist); then it spits one gob that flies straight and level, faster than Edgard runs. A jump clears it,
+the sword cuts it, and a fireball, a thrown stone or a torch breaks it and flies on. Otherwise it splats on him, on the first
+wall, or on the floor just past its eleven tiles, with a wet slap heard hit or miss. Then it reloads for 2.4 s, harmless:
+that is the time to cross its ground. Aware of him, it turns round if he goes behind it, and forgets him after a second and
+a half out of its sight. Every weapon kills it: the sword (which bleeds it lightly, like any monster), a fireball, a thrown
+stone or torch, or landing on it. Killed while it winds up, it spits nothing; a gob already in the air flies on. There is no
+hint about it: it is met in play. Authoring: `Snail` (24×16) in `SpawnPoints` with `offNeg`/`offPos` like the mobs, checked at
+load (from every point of its range, both ways, its shot must end on a wall or a floor inside the room and never cross the
+room's entrance, exit or checkpoints). Where it is met: with the spider rooms' rework (D105, [#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)).
+
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
-on its back, the spider on its back with its legs curled up), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
+on its back, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
 walks past. The sword, a thrown stone or landing on one crumbles it (landing bounces him as on a monster), and a
 fireball or a thrown torch burns it up. No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
 until Edgard leaves the room. A death resets the room with the monster alive again, and a passed room shows neither the
-monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle
-and the spider leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle,
+the spider and the snail leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 Options -> Assist has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
 letter by letter, and one press moves to the next line.
