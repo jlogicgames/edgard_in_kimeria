@@ -371,38 +371,40 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 11 (640 px, one screen, x 6880-7520: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 5 of 11 (1120 px, x 6880-8000: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order; widened from 640 px by #500) |
 | Role | variation |
-| Purpose | The spider alone on open ground: let it notice you, step into its reach, step back out of the locked pounce and strike it while it recovers, rush it with the sword during its wind-up, or shoot it from afar. |
-| Introduces | spider |
+| Purpose | Two monsters, one at a time, then two known traps: make the spider miss and strike it; step up out of the snail's line and watch it notice you, then jump its gob; keep walking under a loose stone; jump a thorn tuft. |
+| Introduces | spider, snail |
 | Develops | - |
 | Combines | - |
-| Mastered route | 6.90 s baiting the pounce, stepping back and striking it in its recovery, the same on a retry; 5.85 s rushing it with the sword during the wind-up; 5.17 s with one fireball from afar (`Forest1SpiderTest`); target about 20 s (D19) |
+| Repeats | falling-stone, proximity-thorn |
+| Mastered route | 11.53 s, zero charges: baiting the spider's pounce, stepping back and striking it in its recovery, then jumping the snail's gob and walking on past the snail in its reload without a swing (it is left alive behind the hero and its next gob falls short of him: pinned, it spat and is alive at the exit), walking on under the stone and jumping the tuft, the same on a retry; 9.80 s with one fireball at the spider from afar; 10.48 s rushing the spider with the sword during its wind-up (`Forest1SpiderTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 2.32 s (was 3.58 s before #497: its leap may now leave its range by up to its 48 px reach, so it bites a hero who stops just past the range's end): a hero who walks in and stops when it commits is bitten 2.32 s after the entrance and replays the room from its entrance; walking on without a strike is bitten too, because its range ends where the hero comes in, so the bite lands where he walks (`Forest1SpiderTest`) |
-| Beats | spider@7184 |
-| Beat time | 6.90 (`Forest1SpiderTest`) |
-| First meeting | spider: beat 1, retry 2.32 s, pocket at x 7030 (the hero's centre), inside its hearing, where it notices him and chases to its range's end without reaching him (`FirstMeetingPocketTest.forest1SpiderTheSpider`) |
-| Below density | 1 beat in 6.90 s (6.90 s per beat): the spider alone in a room of its own (#484); reworked with the snail (#329), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| D26 | no support and no one-shot state; the sword, a stomp or a fireball kill it, and a retry rebuilds it calm at its spawn |
-| Hints | none (no hint for the spider: new monsters are met in play, D100) |
-| Landmark | the spider skittering alone in the middle of the clearing |
-| Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19). D72: no shipped room could show the spider alone (every room's own new element is in view from its entrance, or the room is at the two-introduction cap), so it got a room of its own, as the traps of #363-#366 did. It is the room's only object, in view and skittering from the entrance, and it hears only a hero within 144 px (x 7004 on), so it is watched before it reacts. Built and tested with a scripted hero |
-| Decisions | D72, D100, D101, D102 |
+| Retry cost | 11.23 s at worst: a hero who answers the spider and the snail and stops in the stone's column is struck 11.23 s after the entrance; walking into the bristled tuft 11.08 s; walking into the gob without a jump 8.18 s; stopping in the spider's reach 2.32 s (`Forest1SpiderTest`) |
+| Beats | spider@7184, snail@7600, falling-stone@7744, proximity-thorn@7872 |
+| Beat time | 11.53 (`Forest1SpiderTest`) |
+| First meeting | spider: beat 1, retry 2.32 s, pocket at x 7030 (the hero's centre), inside its hearing, where it notices him and chases to its range's end without reaching him, with the snail off screen (the camera ends at x 7520 while the spider is met) (`FirstMeetingPocketTest.forest1SpiderTheSpider`); snail: beat 2, pocket at x 7456 on a one-way step (x 7440-7472, top y 288), inside its sight and above its firing line, where it notices him and watches without spitting (D106), out of the spider's hearing (`FirstMeetingPocketTest.forest1SpiderTheSnail`) |
+| D26 | no lever, no support, no one-shot state; the sword or a stomp answers both monsters, the stone and the tuft need no ammunition, and a retry rebuilds everything calm |
+| Hints | none (no hint for a monster: new monsters are met in play, D100) |
+| Landmark | the snail turning its stalks up at the hero on the log step |
+| Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19); reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) (card approved by the author 2026-11-19): the room grew from 640 to 1120 px so the snail is off screen while the spider is met (one unknown at a time, D72), and `forest-1-climb` moved 480 px right. Built and tested with a scripted hero |
+| Decisions | D72, D100, D101, D102, D105, D106 |
 
-Sketch (Y grows downward, floor top y 320; walls x 6880-6896 and 7504-7520):
+Sketch (Y grows downward, floor top y 320; walls x 6880-6896 and 7984-8000; `^` the one-way step x 7440-7472, top y 288):
 
 ```
-x    6880 6912        7090  7136   7184   7232  7302           7456  7520
-     |wall|start        [ pounce reach ......... ]               exit |wall|
-     |    | @                  <  S  >                           [ ]  |    |
-=====+==========================================================+=====  floor y 320
+x    6880 6912     7136  7184  7232   7440-7472  7584 7600 7616  7744       7872   7920    8000
+     |wall|start   [ spider range ]     ^step     [ snail range ]  stone      tuft   exit  |wall|
+     |    | @         <  S  >                       <  n  >        (lip)       *     [ ]   |    |
+=====+==================================================================================+=====  floor y 320
 ```
 
-- `Spider` (id 148) x 7184, y 304, 32 x 16, `offNeg` 3, `offPos` 3: `position.x` 7136-7232, its pounce reach x 7090-7302 at
-  most, 130 px from the entrance body and 154 px from the exit.
-- `RoomStart` (id 161) (6912, 272); `RoomExit` (id 162) x 7456-7488, y 272-320. Floor and walls: collisions 151-153; the
-  tiles copy `forest-1-deadfall`'s.
+- `Spider` (id 148) x 7184, y 304, 32 x 16, `offNeg` 3, `offPos` 3: `position.x` 7136-7232, its fang reach x 7089-7303 at most.
+- One-way `Collisions:Platform` (id 169) x 7440-7472, y 288-304, drawn as the plain platform.
+- `Snail` (id 168) x 7600, y 304, `offNeg` 1, `offPos` 1 (range 7584-7616): its lines end on the floor at x 7396-7428 (left)
+  and x 7794-7826 (right), clear of the entrance and the exit; from the step the hero is in its sight and 23 px above its line.
+- `FallingStone` (id 170) column x 7744 (zone x 7728-7776, y 288-320); `ThornTuft` (id 171) x 7872, zone 80.
+- `RoomStart` (id 161) (6912, 272); `RoomExit` (id 162) x 7920-7952, y 272-320. Floor (id 151) x 6880-8000; walls ids 152, 153.
 
 ### forest-1-bramble
 
@@ -446,42 +448,45 @@ x    5600 5632              5904 5920                    6160     6192 6208 6224
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 7 of 11 (640 px, one screen, x 7520-8160: appended at the map's end, listed after `forest-1-bramble` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 7 of 11 (640 px, one screen, x 8000-8640: at the map's end, listed after `forest-1-bramble` in the `Rooms` list, which sets the play order; moved 480 px right when `forest-1-spider` grew, #500) |
 | Role | combination |
-| Purpose | The spider climbs to the hero while he must wait: on the block, waiting for the lift to the exit, he sees it come up the block's far face and along its top; bait its pounce and strike it, shoot it as it tops the edge, or be bitten waiting. |
+| Purpose | The hero must wait on the block for the lift: the snail on the block top makes him jump, the spider coming up the block's far face punishes him for standing still; finish the snail, bait the spider and strike it, shoot it as it tops the edge, or be bitten waiting. |
 | Introduces | - |
 | Develops | spider: the wall climb. It comes up the block's far face to a hero it cannot reach on the floor (it never strikes from a wall), so a block is no refuge: the hero must meet it on the block top |
-| Combines | spider + running-platform: the running lift is the only way up to the exit, so the hero must wait on the block for it, and the wait is what the climbing spider punishes |
-| Mastered route | 13.33 s with no charge (the required route), baiting its pounce on the block top, stepping back and striking it in its recovery, the same on a retry; 10.77 s with one fireball, shot the moment it tops the block's far edge; both at every pause of 0 to 2 s on the second step (sampled every 4 frames); a shot fired even after its leap has begun still wins (D102's tie rule); the lift ride alone (no spider) is 10.77 s (`Forest1ClimbTest`); target about 20 s (D19) |
+| Combines | spider + running-platform: the running lift is the only way up to the exit, so the hero must wait on the block for it, and the wait is what the climbing spider punishes; snail + spider: both on the block top where the hero waits: its gob must be jumped and moving is what makes the spider's locked pounce miss, while a hero who stands still is the spider's target |
+| Repeats | falling-stone |
+| Mastered route | 13.33 s with no charge (the required route): under the stone on the approach, up the steps, the snail finished on the block top (the gob jumped, then the sword), the spider baited on the block top and struck in its recovery, then the lift, the same on a retry; 10.77 s with one fireball, shot the moment it tops the block's far edge (13.33 s for a pause of 1.87 s or more on the second step, which meets the snail later and misses a lift); both at every pause of 0 to 2 s on the second step (sampled every 4 frames); a shot fired even after its leap has begun still wins (D102's tie rule); the lift ride alone (no spider) is 10.77 s (`Forest1ClimbTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 6.92 s at worst: a hero who waits at the block's left end, out of its reach, and walks to the lift as it comes down is bitten 5.57 to 6.92 s after the entrance; one who waits under the lift is bitten 5.33 to 6.38 s in; each death is pinned at every pause of 0 to 2 s on the second step, sampled every 4 frames (`Forest1ClimbTest`) |
-| Beats | running-platform@7904, spider@7952 |
+| Retry cost | 6.65 s at worst: a hero who finishes the snail, waits at the block's left end, out of the spider's reach, and walks to the lift as it comes down is bitten 5.33 to 6.65 s after the entrance; one who waits under the lift is bitten 5.33 to 6.63 s in; each pinned at every pause of 0 to 2 s on the second step, sampled every 4 frames; standing on the snail's line at the block's left end is hit by the gob 4.73 s in; stopping under the stone 1.98 s in (`Forest1ClimbTest`) |
+| Beats | falling-stone@8112, snail@8344, running-platform@8384, spider@8432 |
 | Beat time | 13.33 (`Forest1ClimbTest`) |
-| Below density | 2 beats in 13.33 s (6.67 s per beat): the climbing spider and the lift; reworked with the snail (#329), built before D105; reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| D26 | no lever, support or one-shot state: the lift never stops, the steps are static one-way platforms, and its pounce on the block top never reaches the shelf or the exit; the lift's underside stops 19 px above the spider's body, clear of its leap's 6 px arc, so the lift never touches, moves or stops it (a full-cycle test with the spider waiting under it); a retry rebuilds it calm on its floor |
+| D26 | no lever, support or one-shot state: the lift never stops, the steps are static one-way platforms, and the spider's pounce on the block top never reaches the shelf or the exit; the snail's lines never reach the shelf or the exit; the lift's underside stops 19 px above the spider's body, clear of its leap's 6 px arc, and 16 px above the snail's shell, so the lift never touches either (a full-cycle test with the spider waiting under it); a retry rebuilds both calm |
 | Hints | none (D100) |
-| Landmark | the spider coming up the block's far face while the lift comes down |
-| Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19; the layout reworked to the author's Option A after review, 2026-11-19: the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp the spider as it came over the lip in 1,700 of 1,736 measured runs). The spider is known from `forest-1-spider` and the running lift from `forest-1-traps`, so nothing in the room is new but the climb. The whole room is in view from the entrance. Built and tested with a scripted hero |
-| Decisions | D72, D103 |
+| Landmark | the snail on the block top under the lift, the spider coming up the far face |
+| Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19; the layout reworked to the author's Option A after review, 2026-11-19: the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp the spider as it came over the lip in 1,700 of 1,736 measured runs). Reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) and a falling stone (card approved by the author 2026-11-19); the mastered route finishes the snail before the spider hears the hero, so the climb is still first seen alone. The whole room is in view from the entrance. Built and tested with a scripted hero |
+| Decisions | D72, D103, D105, D106 |
 
-Sketch (Y grows downward, floor top y 320, block top y 208, shelf top y 96; walls x 7520-7536 and 8144-8160):
+Sketch (Y grows downward, floor top y 320, block top y 208, shelf top y 96; walls x 8000-8016 and 8624-8640):
 
 ```
-x    7520 7552     7696  7760  7808   E   7904-7936 7952        8032         8160
-     |wall|start               [shelf 7808-7904, y 96]   L                    |wall|
-     |    |                    [ block 7808-7952, y 208 ]|<- face             |    |
-     |    |          s2 (240)  [                         ]|                   |    |
-     |    | @   s1 (272)       [                         ]|  ~~~~S~~~~        |    |
-=====+=========================+=========================+===================+=====  floor y 320
+x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         8640
+     |wall|start  :              [shelf 8288-8384, y 96]   L                    |wall|
+     |    |       :             [ block 8288-8432, y 208 ]|<- face             |    |
+     |    |       :   s2 (240)  [     n                    ]|                   |    |
+     |    | @     o  s1 (272)   [                          ]|  ~~~~S~~~~        |    |
+=====+=========================+==========================+===================+=====  floor y 320
 ```
 
-- `Spider` (id 149) polyline from (8032, 320): `0,0 -80,0 -80,-112 -160,-112`: the floor right of the block (x 7952-8032), up its
-  right face (x 7952, 112 px, the block on its left) and along its top (x 7872-7952). Its pounce on the top reaches x 7824 at
+- `FallingStone` (id 172) column x 8112 (zone x 8096-8144, y 288-320), over the approach before the first step.
+- `Snail` (id 173) on the block top x 8336, y 192, `offNeg` 0, `offPos` 1 (range 8336-8352), left of the lift: its left line runs
+  off the block's left edge and its gob falls onto the floor at x 8088-8104, past the entrance body; its right line lands at x
+  8606-8620.
+- `Spider` (id 149) polyline from (8512, 320): `0,0 -80,0 -80,-112 -160,-112`: the floor right of the block (x 8432-8512), up its
+  right face (x 8432, 112 px, the block on its left) and along its top (x 8352-8432). Its pounce on the top reaches x 8304 at
   most, so the block's left 16 px are out of its reach; a hero there is out of its hearing too, and it waits on the face.
-- `Escalator` (id 167) x 7904-7936, vertical, running, its top between y 96 and 160 (its underside at most y 176, 19 px above the
-  spider's body on the block top). Block (id 157) x 7808-7952, y 208-320; shelf (id 166) x 7808-7904, y 96-112. One-way `Platform` steps (ids 158, 159) x 7696 y 272 and x 7760 y 240.
-- `RoomStart` (id 164) (7552, 272); `RoomExit` (id 165) x 7824-7856, y 64-96 on the shelf. The tiles are the forest-1 ledge and
-  platform tiles (ids 22-24, 42-44, 26-28).
+- `Escalator` (id 167) x 8384-8416, vertical, running, its top between y 96 and 160 (its underside at most y 176). Block (id 157)
+  x 8288-8432, y 208-320; shelf (id 166) x 8288-8384, y 96-112. One-way `Platform` steps (ids 158, 159) x 8176 y 272 and x 8240 y 240.
+- `RoomStart` (id 164) (8032, 272); `RoomExit` (id 165) x 8304-8336, y 64-96 on the shelf.
 
 ### forest-1-route
 
@@ -489,22 +494,22 @@ x    7520 7552     7696  7760  7808   E   7904-7936 7952        8032         816
 | --- | --- |
 | Level | forest-1, play order 2, room 8 of 11 (832 px) |
 | Role | variation |
-| Purpose | One lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill; a spider on the ladder slab drops on its silk thread at anyone who stops under the slab's end. |
+| Purpose | A snail under the ladder slab fires along the entrance floor: jump its gob and finish it; then one lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill; a spider on the ladder slab drops on its silk thread at anyone who stops under the slab's end; the bat guards the lift. |
 | Introduces | bat-enemy |
 | Develops | crumble-support: a one-shot step whose loss closes the optional refill until Restart Level; fireball-refill: the bat gives a reason to spend a charge, so the refill is worth something; spider: it drops from above on its thread at a hero under the slab's lip, so stepping back along the floor is no longer the answer: never stop under a lip, or step aside and strike it as it hangs |
 | Combines | ladder + running-platform: one lever lowers the ladder and stops the lift, so the two routes exclude each other (first taught by forest-1-lever, D86, so here it is a choice) |
-| Repeats | lever |
-| Mastered route | 11.02 s required, 18.32 s with the optional refill (`Forest1RouteTest`), both unchanged by the spider: the walker sets off its drop and is past the column when it falls, and the detour walks across its slab without stopping; target about 20 s |
+| Repeats | lever, snail |
+| Mastered route | 11.02 s required: the snail first (its gob jumped, then the sword), then the drop, the bat and the lift; 18.45 s with the optional refill (the lever pulled in passing, the snail finished while the ladder comes down) (`Forest1RouteTest`); the walker sets off the spider's drop and is past the column when it falls, and the detour walks across its slab without stopping; target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | up to about 11 s (a death at the bat or the lift replays the room); a hero who stops under the slab's lip is bitten 3.43 s after the entrance (`Forest1ShelfSpiderTest`, unchanged), and one who climbs to the slab on the optional detour and stops in its middle 5.55 s after it (`Forest1RouteTest`; 5.22 s before #497) |
-| Beats | spider@1632, bat-enemy@1856, running-platform@1936 |
+| Retry cost | up to about 11 s (a death at the lift replays the room); a hero who walks straight in is hit by the gob 1.85 s after the entrance; one who stops under the slab's lip is bitten 3.40 s in (`Forest1ShelfSpiderTest`); one who answers the snail and walks into the bat is hit 5.43 s in; one who climbs to the slab on the optional detour and stops in its middle 5.77 s in (`Forest1RouteTest`) |
+| Beats | snail@1576, spider@1632, bat-enemy@1856, running-platform@1936 |
 | Beat time | 11.02 (`Forest1RouteTest`) |
-| First meeting | bat-enemy: beat 2, pocket at x 1760, past the known spider's drop column and 96 px short of the bat's patrol, where it is seen flying (`FirstMeetingPocketTest.forest1RouteTheBat`) |
+| First meeting | bat-enemy: beat 3, retry 5.43 s, pocket at x 1760, past the known spider's drop column and 96 px short of the bat's patrol, where it is seen flying, with the snail behind it unable to fire to its right (the stump) (`FirstMeetingPocketTest.forest1RouteTheBat`) |
 | Optional | the fireball refill on the pad over the one-shot step |
-| D26 | every state reached by supported actions reaches the exit without Restart Level (D67); the spider never blocks the lift or the exit: its slab is on the optional ladder route only, its thread lands 298 px short of the lift, and a retry rebuilds it calm on its slab. The detour meets it (`Forest1RouteTest`'s teleporting pad checks remove the spider, as they are about geometry, #497): it holds at the slab's end while the hero climbs (its leap may leave the slab's range only over authored floor, and a ladder's top step is not floor to it, so its bite cannot reach the ladder's top and it does not wind up, #497), and a hero who walks on along the slab makes it wind up and is past when it lands (asserted: at least one wind-up, never a bite); the drop off the pad's left end then stomps it, with and without the assist (it was left on its slab without it), at every skitter phase (`Forest1RouteTest`) |
-| Hints | none (no hint for the spider, D100) |
-| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19): the silk drop's first room. `Spider` (id 150), a polyline from (1632, 320): `0,0 0,-112 -80,-112`, a 112 px thread from the slab's right lip (it hangs at x 1638, drop box x 1635-1643) and the slab (x 1552-1632, top y 208); it starts at the lip. The drop is on the mandatory floor 218 px before the bat's beat, so it is met first; a walker sets it off and is past the column when it falls, so the first drop is seen and heard missing behind him, at every skitter phase with and without the assist (`Forest1ShelfSpiderTest`). The bat stays the room's only new element. Built and tested with a scripted hero |
-| Decisions | D67, D86, D103 |
+| D26 | every state reached by supported actions reaches the exit without Restart Level (D67); the snail and its stump never block the lift, the ladder's foot or the exit: the stump is a 16 px hop, and the snail, finished or passed, never fires to the right of it; the spider never blocks the lift or the exit: its slab is on the optional ladder route only, its thread lands 298 px short of the lift, and a retry rebuilds it calm on its slab. The detour meets it (`Forest1RouteTest`'s teleporting pad checks remove the spider, the bat and the snail, as they are about geometry, #497): it holds at the slab's end while the hero climbs (its leap may leave the slab's range only over authored floor, and a ladder's top step is not floor to it, so its bite cannot reach the ladder's top and it does not wind up, #497), and a hero who walks on along the slab makes it wind up and is past when it lands (asserted: at least one wind-up, never a bite); the drop off the pad's left end then stomps it, with and without the assist (it was left on its slab without it), at every skitter phase (`Forest1RouteTest`) |
+| Hints | none (no hint for a monster, D100) |
+| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19): the silk drop's first room. `Spider` (id 150), a polyline from (1632, 320): `0,0 0,-112 -80,-112`, a 112 px thread from the slab's right lip (it hangs at x 1638, drop box x 1635-1643) and the slab (x 1552-1632, top y 208); it starts at the lip. The drop is on the mandatory floor 218 px before the bat's beat; a walker sets it off and is past the column when it falls, so the first drop is seen and heard missing behind him, at every skitter phase with and without the assist (`Forest1ShelfSpiderTest`). Reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) (card approved by the author 2026-11-19): `Snail` (id 174) x 1576, y 304, no patrol (it holds still facing the entrance), under the slab right of the lowered ladder's foot; its line ends on the floor at x 1388, clear of the entrance body; a solid 16 x 16 stump (id 175, x 1600-1616, y 304-320) ends its line and its sight to the right, so it never fires at the drop column, the bat's pocket or a hero who passed it, and the drop column keeps floor 16 px past it on each side (x 1619-1659, D103). The snail is met and answered before the drop, which is still seen alone. The bat stays the room's only new element. Built and tested with a scripted hero |
+| Decisions | D67, D86, D103, D105, D106 |
 
 ### forest-1-guard
 
@@ -742,3 +747,4 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 | Retry cost | the fight restarts at the chamber entrance |
 | Status | D72 audit 2026-11-16: keep |
 | Decisions | BOSS.md |
+

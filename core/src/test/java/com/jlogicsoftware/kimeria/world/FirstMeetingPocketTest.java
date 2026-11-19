@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
+import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.objects.Bramble;
 import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
@@ -54,7 +55,15 @@ class FirstMeetingPocketTest {
      * Stands the hero with his centre at {@code pocketX} in {@code room} and checks the pocket around the first (lowest x)
      * {@code type} there, the {@code element} of the room card, which must show {@code acting} during the wait.
      */
-    private void pocket(String map, String room, String element, Class<? extends Entity> type, float pocketX, String acting) {
+    private Set<String> pocket(String map, String room, String element, Class<? extends Entity> type, float pocketX, String acting) {
+        return pocket(map, room, element, type, pocketX, Float.NaN, acting);
+    }
+
+    /**
+     * As {@link #pocket(String, String, String, Class, float, String)}, with the hero standing on a support whose top is at
+     * {@code standY} (world Y, growing downward) instead of the room's floor: a pocket raised out of a firing line (the snail, D106).
+     */
+    private Set<String> pocket(String map, String room, String element, Class<? extends Entity> type, float pocketX, float standY, String acting) {
         Rectangle view = new Rectangle();
         Level level = h.room(map, room, () -> view);
         Rectangle bounds = level.currentRoomBounds();
@@ -64,6 +73,10 @@ class FirstMeetingPocketTest {
                 && (target == null || ((Entity) o).getX() < target.getX())) target = (Entity) o;
         assertNotNull(target, room + " holds no " + type.getSimpleName() + " (" + element + ")");
         level.player.position.x = pocketX - level.player.getWidth() / 2;
+        if (!Float.isNaN(standY)) {
+            level.player.position.y = standY - level.player.getHeight();
+            level.player.velocity.setZero();
+        }
         assertEquals(pocketX, level.player.centerX(), 0.01f);
         float startX = target.getX(), startY = target.getY();
         Vector2 resolution = h.game().logicalResolution();
@@ -76,10 +89,19 @@ class FirstMeetingPocketTest {
             assertFalse(level.player.isGotHit(), room + ": the hero in the pocket at x " + pocketX + " was hit at " + f * STEP + " s");
             assertTrue(view.overlaps(box.set(target.getX(), target.getY(), target.getWidth(), target.getHeight())), room + ": the " + element + " left the camera's view at " + f * STEP + " s");
             signals(target, startX, startY, seen);
+            if (!Float.isNaN(standY)) assertEquals(standY, level.player.position.y + level.player.getHeight(), 0.5f, room + ": the hero left the raised pocket");
         }
         assertTrue(seen.contains(acting), room + ": the " + element + " never showed " + acting + " from the pocket, only " + seen);
+        return seen;
     }
 
+    /** The snail sees him on the one-way step (inside its sight, above its firing line): it notices and watches, never spits (D106). */
+    @Test void forest1SpiderTheSnail() {
+        Set<String> seen = pocket("forest-1", "forest-1-spider", "snail", Snail.class, 7456, 288, "NOTICE");
+        for (Snail.State never : new Snail.State[]{Snail.State.WINDUP, Snail.State.SPIT, Snail.State.RELOAD})
+            assertFalse(seen.contains(never.name()), "the snail never spits at the hero on the step: it showed " + seen);
+        assertTrue(seen.contains(Snail.State.WATCH.name()), "it watches him after the notice: " + seen);
+    }
     @Test void forest1SpiderTheSpider() { pocket("forest-1", "forest-1-spider", "spider", Spider.class, 7030, "NOTICE"); }
     @Test void forest1BrambleTheBramble() { pocket("forest-1", "forest-1-bramble", "bramble", Bramble.class, 6170, "GROW"); }
     @Test void forest1RouteTheBat() { pocket("forest-1", "forest-1-route", "bat-enemy", Bat.class, 1760, MOVES); }

@@ -18,7 +18,7 @@ ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fi
 (1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has eleven rooms since #484 (the 640 px `forest-1-spider`, fifth in play order after the lever lesson, and the 640 px `forest-1-climb`, seventh after the bramble room: the forest spider met alone, then climbing to a hero waiting for a lift, see "forest-1 spider rooms" below, both authored at the end of the map), nine since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has eleven rooms since #484 (the `forest-1-spider`, fifth in play order after the lever lesson, 1120 px since #500, and the 640 px `forest-1-climb`, seventh after the bramble room: the forest spider and the snail met one at a time, then the spider climbing to a hero waiting for a lift, see "forest-1 spider rooms" below, both authored at the end of the map), nine since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -307,8 +307,8 @@ the hero at the card's `pocket at x N` and names the room and the element.
 (`forest-1-traps` at 1.53 s per beat, `forest-1-route`, `forest-1-guard`, `forest-entry`, `forest-walls`, `forest-fissure`,
 `forest-canopy`) and seven are too empty (`forest-1-mob`, `forest-1-deadfall`, `forest-1-spider`, `forest-1-bramble`,
 `forest-1-climb`, `forest-1-hive`, `forest-1-tree`). The numbers are on the cards and in D105. The too-empty rooms are on
-the gate's shrink-only list with `Below density`, and the forest-1 rework, the spider rooms with the snail (#329), is
-tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500). `forest-1-traps` passes by 0.03 s (1.534 s per beat), a rework candidate. Eight rooms meet a new element
+the gate's shrink-only list with `Below density`, and the forest-1 rework is tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the spider
+rooms were reworked with the snail (#329) first and left the list, so five rooms remain below (see "forest-1 spider rooms"). `forest-1-traps` passes by 0.03 s (1.534 s per beat), a rework candidate. Eight rooms meet a new element
 late, crowded or with no safe spot that shows it acting (`forest-1-mob`, `forest-1-deadfall`, `forest-1-traps`,
 `forest-1-guard`, `forest-1-tree`, `forest-entry`, `forest-walls`, `forest-canopy`), on a second shrink-only list under
 the same issue.
@@ -1019,6 +1019,11 @@ card: [TRAPS.md](TRAPS.md#creeping-bramble-bramble).
 
 ## forest-1 spider rooms (#484, D102, D103)
 
+**Historical:** the coordinates, times and test notes in the list below are those of the #484 placement and are kept as its
+record. Since #500 `forest-1-spider` is 1120 px (x 6880-8000) and `forest-1-climb` lies at x 8000-8640, 480 px right of the
+x given here; the rooms as they are now, and their measured times, are under "Reworked under D105 with the snail" at the end
+of this section and on the room cards.
+
 The forest spider is placed on room cards in the order floor, wall, thread, each the only new reading on its screen (D72).
 No shipped room could show it alone, so forest-1 grew from 430 to 510 tiles with two one-screen rooms at the map's end,
 listed in `Rooms` so that the order is lever, **spider**, bramble, **climb**, route. Room cards:
@@ -1060,6 +1065,20 @@ listed in `Rooms` so that the order is lever, **spider**, bramble, **climb**, ro
   takes the spider out of the one test that checks the slab's geometry alone; its ladder climb now asserts the hero is never
   bitten. The new tests and the hive and bramble tests find their room by name (`HeadlessLevelHarness.room`), so a later
   insertion does not move them. No threshold or tolerance changed.
+
+**Reworked under D105 with the snail (#500, D106, cards approved by the author 2026-11-19).** The numbers above are the #484
+placement (historical); the rooms now are:
+
+- **`forest-1-spider`**, x 6880-8000 (1120 px; the floor block, id 151, widened, the right wall, id 153, at x 7984, the tile layer
+  given 30 columns of plain floor at x 7504), so `forest-1-climb` and everything in it moved 480 px right. Beats: the spider
+  (unchanged), the `Snail` (id 168) x 7600, `offNeg`/`offPos` 1, a one-way `Platform` step (id 169) x 7440-7472 at y 288 (its
+  pocket: in its sight, above its line), a `FallingStone` (id 170) x 7744 (zone x 7728-7776), a `ThornTuft` (id 171) x 7872;
+  the exit at x 7920. 11.53 s, 2.88 s per beat; retry 11.23 s (`Forest1SpiderTest`). The snail is out of view while the spider is met.
+- **`forest-1-climb`**, x 8000-8640: a `FallingStone` (id 172) x 8112 (zone x 8096-8144) over the approach and a `Snail` (id 173)
+  on the block top x 8336, `offNeg` 0, `offPos` 1. 13.33 s, 3.33 s per beat; retry 6.65 s (`Forest1ClimbTest`).
+- **`forest-1-route`**: a `Snail` (id 174) x 1576, y 304, with no patrol, under the slab, and a solid 16 x 16 stump (id 175, one
+  tile) at x 1600-1616 that ends its line and sight to the right. 11.02 s, 2.76 s per beat; the bat, now beat 3, kills 5.43 s in
+  (`Forest1RouteTest`). Load checks hold (`Snail.problem`: every line ends on floor or the stump, clear of the entrance and the exit).
 
 ## forest-1 hive room (#365, D90)
 

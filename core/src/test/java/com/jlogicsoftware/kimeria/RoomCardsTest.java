@@ -79,12 +79,13 @@ class RoomCardsTest {
     /** {@link #LESSON_ROOMS} only shrinks: a new lesson outside the tutorial is argued in a decision, not added here quietly. */
     static final int LESSON_ROOMS_AT_D105 = 1;
     /**
-     * Rooms shipped below the band before D105. Each carries 'Below density' citing its rework issue (#500, the spider
-     * rooms with the snail, #329). The set only shrinks: a reworked room leaves it, a new room never enters it.
+     * Rooms shipped below the band before D105. Each carries 'Below density' citing its rework issue (#500). The set only
+     * shrinks: a reworked room leaves it (the spider rooms left with the snail, #329), a new room never enters it.
      */
-    static final Set<String> GRANDFATHERED = Set.of("forest-1-mob", "forest-1-deadfall", "forest-1-spider",
-        "forest-1-bramble", "forest-1-climb", "forest-1-hive", "forest-1-tree");
-    static final int GRANDFATHERED_AT_D105 = 7;
+    static final Set<String> GRANDFATHERED = Set.of("forest-1-mob", "forest-1-deadfall", "forest-1-bramble", "forest-1-hive",
+        "forest-1-tree");
+    /** The size of GRANDFATHERED: 7 at D105, 5 since the spider rooms' rework (#500). Lowered with every room that leaves. */
+    static final int GRANDFATHERED_AT_D105 = 5;
     /** Rooms shipped before D105 whose first meeting is late or crowded; each entry cites its issue (#500). Only shrinks. */
     static final Set<String> FIRST_MEETING_GRANDFATHERED = Set.of("forest-1-mob", "forest-1-deadfall", "forest-1-traps",
         "forest-1-guard", "forest-1-tree", "forest-entry", "forest-walls", "forest-canopy");
@@ -557,14 +558,15 @@ class RoomCardsTest {
 
     /** The lists of rooms shipped below D105 only shrink, and name shipped rooms (#500). */
     @Test void theGrandfatheredListsOnlyShrink() {
-        assertTrue(GRANDFATHERED.size() <= GRANDFATHERED_AT_D105, "a room may leave GRANDFATHERED, never join it (D105)");
-        assertTrue(FIRST_MEETING_GRANDFATHERED.size() <= FIRST_MEETING_GRANDFATHERED_AT_D105, "FIRST_MEETING_GRANDFATHERED only shrinks (D105)");
+        // Each ceiling equals its list's size, so a room that leaves must lower it, and none can join after (D105).
+        assertEquals(GRANDFATHERED_AT_D105, GRANDFATHERED.size(), "a room may leave GRANDFATHERED, never join it: lower the ceiling with it (D105)");
+        assertEquals(FIRST_MEETING_GRANDFATHERED_AT_D105, FIRST_MEETING_GRANDFATHERED.size(), "FIRST_MEETING_GRANDFATHERED only shrinks: lower the ceiling with it (D105)");
         Set<String> names = new HashSet<>();
         for (Room room : shippedRooms()) names.add(room.name());
         for (String room : GRANDFATHERED) assertTrue(names.contains(room), room + " is not a shipped room");
         for (String room : FIRST_MEETING_GRANDFATHERED) assertTrue(names.contains(room), room + " is not a shipped room");
         for (String room : LESSON_ROOMS) assertTrue(names.contains(room), room + " is not a shipped room");
-        assertTrue(LESSON_ROOMS.size() <= LESSON_ROOMS_AT_D105, "LESSON_ROOMS only shrinks: a new lesson outside the tutorial needs its own decision (D105)");
+        assertEquals(LESSON_ROOMS_AT_D105, LESSON_ROOMS.size(), "LESSON_ROOMS only shrinks: a new lesson outside the tutorial needs its own decision (D105)");
     }
 
     @Test void theRegistryCoversTheSkillsAndElementsTheCardsUse() throws IOException {
@@ -791,18 +793,18 @@ class RoomCardsTest {
     }
 
     @Test void belowDensityIsOnlyForTheGrandfatheredRooms() {
-        String thin = card("forest-1-spider", "variation", "-", "thorn: again", "| Beats | thorn@108 |\n| Beat time | 9.00 (`T`) |\n")
+        String thin = card("forest-1-hive", "variation", "-", "thorn: again", "| Beats | thorn@108 |\n| Beat time | 9.00 (`T`) |\n")
             .replace("| Mastered route | 1 s |", "| Mastered route | 9.00 s |");
-        Room mob = new Room("forest-1-spider", Set.of("ThornTuft"), List.of(at(1, "ThornTuft", 100, 16)));
-        assertTrue(density(thin, KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-spider: below the density")));
-        assertTrue(density(thin + "| Below density | reworked later, #soon |\n", KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-spider: below the density")),
+        Room mob = new Room("forest-1-hive", Set.of("ThornTuft"), List.of(at(1, "ThornTuft", 100, 16)));
+        assertTrue(density(thin, KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-hive: below the density")));
+        assertTrue(density(thin + "| Below density | reworked later, #soon |\n", KNOWN, mob).stream().anyMatch(s -> s.startsWith("forest-1-hive: below the density")),
             "it must cite a numbered issue");
         assertEquals(List.of(), density(thin + "| Below density | reworked by #500 |\n", KNOWN, mob));
         Room d = new Room("d", Set.of("ThornTuft"), List.of(at(1, "ThornTuft", 100, 16)));
-        assertTrue(density(thin.replace("forest-1-spider", "d") + "| Below density | reworked by #500 |\n", KNOWN, d).stream()
+        assertTrue(density(thin.replace("forest-1-hive", "d") + "| Below density | reworked by #500 |\n", KNOWN, d).stream()
             .anyMatch(s -> s.contains("only for the rooms shipped below D105")));
-        String passing = dense("variation", "-", DENSE_ROWS).replace("### d", "### forest-1-spider") + "| Below density | reworked by #500 |\n";
-        assertTrue(density(passing, KNOWN, new Room("forest-1-spider", DENSE.keys(), DENSE.placed())).stream().anyMatch(s -> s.contains("still carries 'Below density'")));
+        String passing = dense("variation", "-", DENSE_ROWS).replace("### d", "### forest-1-hive") + "| Below density | reworked by #500 |\n";
+        assertTrue(density(passing, KNOWN, new Room("forest-1-hive", DENSE.keys(), DENSE.placed())).stream().anyMatch(s -> s.contains("still carries 'Below density'")));
     }
 
     /** {@code d} introduces the puffball (the lesson before it does not); {@code rows} are its Beats, Beat time and First meeting. */

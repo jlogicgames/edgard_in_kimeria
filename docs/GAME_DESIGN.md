@@ -743,8 +743,8 @@ spawns): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; t
 `BODY_SWEEP` the body on every floor top (outline 0.075 to 0.184, decor ceiling 0.20). Code: `entity/enemy/Spider.java`; tests:
 `SpiderTest`, `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (and, for D103,
 `spiderDropThroughTheRealLevel` and `spiderClimbThroughTheRealLevel`). Placed on room cards ([#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484)), as the beetle's were, in
-the order floor, wall, thread: `forest-1-spider` (a room of its own, where it is met alone on open ground), `forest-1-climb`
-(a room of its own, up the far face of a block where the hero waits for a running lift) and `forest-1-route` (its thread from the ladder slab's lip over the mandatory
+the order floor, wall, thread: `forest-1-spider` (on open ground, before the snail; reworked under D105 by #500), `forest-1-climb`
+(up the far face of a block where the hero waits for a running lift, beside a snail) and `forest-1-route` (its thread from the ladder slab's lip over the mandatory
 floor). The climb and the drop are develops of the one element `spider` (D103).
 
 ### Snail card (built, [D106](DECISIONS.md#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398), [#329](https://github.com/jlogicgames/edgard_in_kimeria/issues/329))
@@ -932,6 +932,8 @@ establish average room durations.
 - [TetherGeist developer interview](https://somanygames.co.uk/articles/tethergeist-developer-interview/):
   frequent checkpoints and instant retries avoid long replays; harder rooms/secrets
   are optional. No average room duration or one-minute learning figure is given.
+
+**Placed (#500, D105, cards approved by the author 2026-11-19):** met in `forest-1-spider` from a one-way step inside its sight and above its line, where it notices and watches without spitting, after the spider and out of view while the spider is met; then on the block top of `forest-1-climb`, where the hero waits for the lift and the spider climbs, and under the ladder slab of `forest-1-route`, before the spider's drop. Room cards: [ROOM_CARDS.md](ROOM_CARDS.md).
 
 ### Primal Planet level study (playtest F16, [#352](https://github.com/jlogicgames/edgard_in_kimeria/issues/352))
 

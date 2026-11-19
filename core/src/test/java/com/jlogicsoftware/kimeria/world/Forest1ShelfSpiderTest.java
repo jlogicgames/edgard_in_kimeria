@@ -16,7 +16,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * forest-1-route's spider (#484, D103): the silk drop's first room. The spider lives on the ladder slab (x 1552-1632, top y 208)
  * and hangs its thread from the slab's right lip (x 1632) down over the mandatory floor (y 320). The rest of the room is
- * {@link Forest1RouteTest}'s. Y grows downward. Scripted hero at 60 frames per second.
+ * {@link Forest1RouteTest}'s. Y grows downward. Scripted hero at 60 frames per second. Since #500 a snail stands under the slab (x 1576)
+ * with a 16 px stump right of it (x 1600-1616): the hero meets it first, so each walk here answers it as the mastered route does
+ * (jump its gob, finish it with the sword) and hops the stump; the snail's own times are {@link Forest1RouteTest}'s.
  */
 class Forest1ShelfSpiderTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
@@ -25,7 +27,7 @@ class Forest1ShelfSpiderTest {
     /** The drop box: 8 px of fang column under the thread (D103). */
     private static final float BOX_LEFT = 1635, BOX_RIGHT = 1643;
     /** Pinned (scripted, 60 fps): a hero who stops under the lip is bitten this long after the entrance; the room's other deaths are Forest1RouteTest's. */
-    static final float DEATH_S = 3.43f;
+    static final float DEATH_S = 3.40f;
     private static final float TOLERANCE = 6 * STEP;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
@@ -38,6 +40,16 @@ class Forest1ShelfSpiderTest {
     private static Spider spider(Level l) { return Forest1SpiderTest.spider(l); }
     private void frame(Level l) { l.update(STEP); pressed.clear(); }
     private float centreX(Level l) { Rectangle b = l.player.hitboxBounds(); return b.x + b.width / 2; }
+    private static final float STUMP_X = 1600, STUMP_W = 16;
+    private boolean snailSwing;
+
+    /** Walking right along the floor: answer the snail (jump its gob, swing when in reach) and hop the stump. */
+    private void walkRight(Level l) {
+        var snail = ScriptedAnswers.snail(l, 1280, 2112);
+        snailSwing = ScriptedAnswers.walkRight(l, snail, null, snailSwing, held, pressed);
+        Rectangle b = l.player.hitboxBounds();
+        if (l.player.isOnGround() && b.x + b.width >= STUMP_X - 6 && b.x + b.width <= STUMP_X) ScriptedAnswers.jump(held, pressed);
+    }
 
     @Test void itLivesOnTheLadderSlabAndHangsItsThreadFromTheSlabsRightLipOverTheFloor() {
         Level l = room();
@@ -70,8 +82,8 @@ class Forest1ShelfSpiderTest {
                 for (int i = 0; i < wait; i++) frame(l);
                 h.sounds.clear();
                 boolean dropped = false;
-                for (int f = 0; f < 60 * 6 && centreX(l) < 1780; f++) {
-                    held.clear(); held.add(Input.Keys.D);
+                for (int f = 0; f < 60 * 8 && centreX(l) < 1780; f++) {
+                    held.clear(); walkRight(l);
                     frame(l);
                     assertFalse(l.player.isGotHit(), "bitten walking on (wait " + wait + ", assist " + longer + ")");
                     dropped |= s.state() == Spider.State.DROP;
@@ -99,9 +111,10 @@ class Forest1ShelfSpiderTest {
         while (!l.player.isGotHit()) {
             assertTrue(++f < 60 * 10, "never bitten: " + s.state());
             held.clear(); pressed.clear();
-            if (centreX(l) < (BOX_LEFT + BOX_RIGHT) / 2) held.add(Input.Keys.D);
+            if (centreX(l) < (BOX_LEFT + BOX_RIGHT) / 2) walkRight(l);
             l.update(STEP);
         }
+        System.out.printf(java.util.Locale.ROOT, "forest-1-route drop death: %.2f s%n", f * STEP);
         assertEquals(DEATH_S, f * STEP, TOLERANCE, "retry cost");
         l.resetCurrentRoom(new Player(h.assets(), h.game(), 0, 0));
         Spider again = spider(l);
@@ -117,7 +130,7 @@ class Forest1ShelfSpiderTest {
         while (s.state() != Spider.State.SET) {
             assertTrue(++f < 60 * 10, "it never set: " + s.state());
             held.clear(); pressed.clear();
-            if (centreX(l) < (BOX_LEFT + BOX_RIGHT) / 2) held.add(Input.Keys.D);
+            if (centreX(l) < (BOX_LEFT + BOX_RIGHT) / 2) walkRight(l);
             l.update(STEP);
         }
         for (int i = 0; i < 12; i++) { held.clear(); held.add(Input.Keys.A); frame(l); }   // a step back out of the column

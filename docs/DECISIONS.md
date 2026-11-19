@@ -3087,7 +3087,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D102. The forest spider: it hears, notices, and pounces at where the hero stood; make it miss, then strike (#328, #240, #398)
 
 - **Status:** Accepted (author, 2026-11-19: the card, the eight recommendations, the art with eight legs and the five sounds).
-- **Placement revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** the spider's room of its own (`forest-1-spider`) and the two-beat `forest-1-climb` are below the density; the three spider rooms are reworked with the snail (#329) under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500). The spider's rules are unchanged.
+- **Placement revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499), done by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (2026-11-19):** the three spider rooms were reworked with the snail (D106): `forest-1-spider` grew to 1120 px and meets the spider, then the snail, then a falling stone and a thorn tuft; `forest-1-climb` adds a stone and a snail on the block top; `forest-1-route` a snail under the slab (D105, "Reworked under #500"). The spider's rules are unchanged.
 - **Decision:**
   - **Body.** One strip of nine 32×16 frames (`crawl1`, `crawl2`, `rise`, `tap`, `crouch`, `leap`, `bite`, `recover`,
     `dead`), 12 colours, 13 with the moon rim; drawn about 13 px tall; a plum-black abdomen with an ochre chevron, eight tan
@@ -3185,7 +3185,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Accepted (author, 2026-11-19: the Phase 1 card and its ten recommendations, with one change: the wall poses are
   drawn, not turned, so the legs grip above and below the body). Built (#483); placed in three forest-1 rooms (#484, below).
-- **Placement revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499):** the spider's room of its own (`forest-1-spider`) and the two-beat `forest-1-climb` are below the density; the three spider rooms are reworked with the snail (#329) under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500). The spider's rules are unchanged.
+- **Placement revised by [D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499) (#499), done by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (2026-11-19):** the three spider rooms were reworked with the snail (D106): `forest-1-spider` grew to 1120 px and meets the spider, then the snail, then a falling stone and a thorn tuft; `forest-1-climb` adds a stone and a snail on the block top; `forest-1-route` a snail under the slab (D105, "Reworked under #500"). The spider's rules are unchanged.
 - **Amends D102:** hearing is a **144 px circle**, from the body's centre to the hero's centre, in the spider's own room, and
   **nothing blocks it** (walls and floors do not: it feels the hero through rock and roots). It loses the hero after **1.0 s
   beyond 192 px**. The 40 px band is gone for every spider. Everything else in D102 holds on a floor.
@@ -3405,10 +3405,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 | `forest-1-mob` | redmob | 7.43 | 7.43 | below, #500 |
 | `forest-1-deadfall` | deadfall | 5.17 | 5.17 | below, #500 |
 | `forest-1-traps` | crumble-support, running-platform (the two escalators, 48 px apart: one beat), lever-wall, lever-platform, proximity-thorn, redmob, puffball, crumble-support | 12.27 | 1.53 | passes |
-| `forest-1-spider` | spider | 6.90 | 6.90 | below, #500 with the snail (#329) |
+| `forest-1-spider` | spider, snail, falling-stone, proximity-thorn (since #500; before, spider alone in 6.90 s) | 11.53 | 2.88 | passes (#500) |
 | `forest-1-bramble` | bramble | 10.73 | 10.73 | below, #500 |
-| `forest-1-climb` | running-platform, spider | 13.33 | 6.67 | below, #500 with the snail (#329) |
-| `forest-1-route` | spider, bat-enemy, running-platform | 11.02 | 3.67 | passes (reworked with the snail, #329) |
+| `forest-1-climb` | falling-stone, snail, running-platform, spider (since #500; before, the lift and the spider) | 13.33 | 3.33 | passes (#500) |
+| `forest-1-route` | snail, spider, bat-enemy, running-platform (the snail since #500) | 11.02 | 2.76 | passes (#500) |
 | `forest-1-guard` | puffball, redmob, beetle | 6.83 | 2.28 | passes |
 | `forest-1-hive` | hanging-hive x2 (140 px apart) | 7.12 | 3.56 | below (one element), #500 |
 | `forest-1-tree` | branch-climb (the beetle never commits on the fast line) | 4.95 | 4.95 | below, #500 |
@@ -3417,7 +3417,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 | `forest-fissure` | ember-fissure x2 (112 px apart: two beats, each waited out), beetle | 9.30 | 3.10 | passes |
 | `forest-canopy` | redmob, false-honey-fungus, bat-enemy, thorn-vine, touch-explosive, falling-stone | 9.48 | 1.58 | passes |
 
-  Seven of the fourteen pass and seven are below. `forest-1-traps` passes by a hair: 12.27 s over 8 beats is 1.534 s per
+  Seven of the fourteen passed and seven were below; since the spider rooms' rework (#500, below) nine pass and five are below. `forest-1-traps` passes by a hair: 12.27 s over 8 beats is 1.534 s per
   beat, 0.03 s above the 1.5 s floor, so a faster mastered route would push it over; it is a candidate for the #500
   rework. Against the first count: `forest-1-tree` has one beat, not two
   (`TreeClimbTest`: on the fast line the beetle never commits); with the 96 px rule `forest-1-traps` has eight, not nine,
@@ -3434,6 +3434,37 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   They are on a second shrink-only list (`FIRST_MEETING_GRANDFATHERED`), each entry citing [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), which re-measures,
   re-orders or records the author's decision. The five first meetings that pass (the spider, the bramble, the route
   room's bat, the floor hive, the first fissure) are pinned by `FirstMeetingPocketTest`.
+- **Reworked under #500 (the spider rooms with the snail, #329; cards approved by the author 2026-11-19, with the five
+  recommendations of the Phase 1 proposal).** `forest-1-spider` grew from 640 to 1120 px (x 6880-8000, forest-1 from 510 to 540
+  tiles), so `forest-1-climb` moved 480 px right (x 8000-8640); the rooms are found by name, and every later room and test held.
+  `forest-1-spider` introduces the spider and the snail, one at a time: the spider (unchanged, pocket x 7030) is met with the
+  snail off screen (the camera ends at x 7520 while it is fought, `Forest1SpiderTest`); the snail (x 7600, range 7584-7616) is
+  met from a one-way step (x 7440-7472, top y 288), inside its sight and above its firing line, where it notices the hero and
+  watches without spitting (`FirstMeetingPocketTest.forest1SpiderTheSnail`, which now stands the hero on a raised support);
+  then a falling stone (x 7744) and a thorn tuft (x 7872). Measured: 11.53 s baiting the spider and jumping the gob (the hero walks
+  on past the snail in its reload, with no swing: it is pinned alive behind him at the exit, and its next gob falls short), 9.80 s
+  with a fireball, 10.48 s rushing the spider; deaths at the spider
+  2.32 s, the gob 8.18 s, the tuft 11.08 s, the stone 11.23 s (the retry cost). `forest-1-climb` adds a stone over the approach
+  (x 8112) and a snail on the block top (x 8336, range 8336-8352) left of the lift: the mastered route finishes it (the gob
+  jumped, then the sword) before the spider hears the hero, so the climb is still first seen alone; 13.33 s, unchanged, the snail
+  fitting into the wait for the lift; deaths at the stone 1.98 s, the gob 4.73 s, waiting for the lift 5.33 to 6.65 s (the retry
+  cost, 6.92 s before). `forest-1-route` adds a snail under the slab (x 1576, no patrol: it holds still facing the entrance)
+  and a 16 x 16 solid stump (x 1600-1616) that ends its line to the right, so it never fires at the drop column, the bat's pocket
+  or a hero who passed it; 11.02 s required, unchanged; 18.45 s with the refill (18.32 s); deaths at the gob 1.85 s, the drop
+  3.40 s (3.43 s), the bat 5.43 s (its first meeting is now beat 3 and a cheap retry, at most 6 s), mid-slab 5.77 s (5.55 s,
+  +0.22 s: the detour now finishes the snail between the lever and the ladder, walking on to it while the ladder comes down and
+  back to the ladder's foot, so the climb to the slab starts later; the spider's bite itself is unchanged).
+  **Tests changed, and why (no tolerance loosened):** `FallingTrapsTest.onlyForestZeroAndTheForestTwoApproachUseTheFallingTraps`
+  became `theFallingTrapsAreTheTutorialsTheForestTwoApproachsAndTheTwoSpiderRoomStones` (a census: forest-1 now has two stones,
+  still no branch); `Forest1RouteTest`'s teleporting geometry sweeps, which took the bat out, take the snail out too, and
+  `FairyOffscreenTest` takes the snail out of the route room (both are about geometry or the fairy's cue; the snail fires
+  along the lever's floor); the scripted routes of `Forest1RouteTest`, `Forest1ShelfSpiderTest` and `Forest1ClimbTest` now
+  answer the snail as the mastered route does (`ScriptedAnswers`: jump a gob 24 px away, swing at a snail in reach) and hop
+  the stump; `Forest1ClimbTest`'s fireball route is pinned per pause (10.77 s, and 13.32 s for a pause of 1.87 s or more on the
+  second step, which meets the snail later and misses a lift), and its late-shot hero stops when the spider commits
+  instead of walking into the locked pounce (walking in, a point-blank shot at 15 px missed it at one pause); one test leaves a
+  key held from the previous case no longer (`droppingOffEitherPadEdge...`: a held Right walked the waiting hero into the
+  snail's line). `RoomCardsTest`'s `GRANDFATHERED` lost `forest-1-spider` and `forest-1-climb`.
 - **Why:** a room that asks one thing in 7 s reads as empty; a full room stays fair when each new thing is met in a pocket
   of its own and deaths at it are cheap.
 - **Not verified:** how dense rooms feel to a first-time player and what they do to first learning (#135); the 96 px and

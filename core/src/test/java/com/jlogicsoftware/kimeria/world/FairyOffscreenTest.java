@@ -103,6 +103,8 @@ class FairyOffscreenTest {
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-bramble (#364)
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-climb (#484)
         level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-route
+        // The snail under the slab (#500) fires along the lever's floor; these cases are about the fairy's cue, so it is taken out.
+        level.objects.removeIf(com.jlogicsoftware.kimeria.entity.enemy.Snail.class::isInstance);
         followCamera = true;
         return level;
     }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
+import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.items.FireballRefill;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
@@ -40,12 +41,14 @@ class Forest1RouteTest {
     private static final float LIFT_X = 1936, LIFT_RIGHT = 1968, BOTTOM = 304, TOP = 176, LEDGE_X = 1968, LEDGE_TOP = 144, CHECKPOINT_X = 2048;
     /** The bat's beat (x of the body; the part that hurts is x + 3 .. x + 13): 1856 to 1904. */
     private static final float BAT_X = 1856, BAT_END = 1904;
+    /** The snail under the slab and the stump that ends its line to the right (#500). */
+    private static final float SNAIL_X = 1576, STUMP_X = 1600;
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
     /** The required route, sword only: the room card's beat time (D105). */
     static final float REQUIRED_S = 11.02f;
     /** #484: a hero who climbs to the slab and stops in its middle is bitten by its spider this long after the entrance. */
-    private static final float MID_SLAB_DEATH_S = 5.55f;
+    private static final float MID_SLAB_DEATH_S = 5.77f;
     /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
     private static final float RIDE_JUMP_Y = 195;
 
@@ -77,7 +80,16 @@ class Forest1RouteTest {
         return level;
     }
 
-    private void frame(Level level) { level.update(STEP); pressed.clear(); }
+    private void frame(Level level) { hopTheStump(level); level.update(STEP); pressed.clear(); }
+
+    /** The scripted hero hops the 16 px stump (x 1600-1616, #500) that ends the snail's line, walking either way along the floor. */
+    private void hopTheStump(Level level) {
+        if (!level.player.isOnGround() || feet(level) < FLOOR - 1) return;
+        Rectangle b = level.player.hitboxBounds();
+        boolean right = held.contains(Input.Keys.D) && !held.contains(Input.Keys.A), left = held.contains(Input.Keys.A) && !held.contains(Input.Keys.D);
+        if ((right && b.x + b.width >= STUMP_X - 6 && b.x + b.width <= STUMP_X)
+            || (left && b.x <= STUMP_X + 16 + 6 && b.x >= STUMP_X + 16)) jump();
+    }
     private void settle(Level level, int frames) { for (int i = 0; i < frames; i++) frame(level); }
     private Ladder ladder(Level level) { return level.ladders.get(0); }
     private Escalator lift(Level level) { return level.escalators.get(0); }
@@ -93,8 +105,27 @@ class Forest1RouteTest {
     private Bat theBat;
     /** The room's bat, remembered at load because a slain bat leaves the object list. */
     private Bat bat(Level level) { return level.objects.stream().filter(Bat.class::isInstance).map(Bat.class::cast).findFirst().orElse(theBat); }
-    /** Geometry sweeps teleport the hero all over the floor; the bat has its own tests. */
-    private void withoutTheBat(Level level) { level.objects.removeIf(Bat.class::isInstance); }
+    /** Geometry sweeps teleport the hero all over the floor; the bat and the snail have their own tests. */
+    private void withoutTheBat(Level level) { level.objects.removeIf(o -> o instanceof Bat || o instanceof Snail); }
+    private Snail snail(Level level) { return ScriptedAnswers.snail(level, ROOM_X, ROOM_END); }
+
+    /**
+     * The snail under the slab (#500, D106), answered as the scripted (mastered) hero does: walk at it, jump its gob, finish it with
+     * the sword. Every route of this room starts with it, since it fires along the floor the lever stands on. Returns the frames used.
+     */
+    private int finishTheSnail(Level level) {
+        Snail s = snail(level);
+        int frames = 0;
+        boolean swinging = false;
+        while (s != null && !s.isDefeated()) {
+            held.clear();
+            swinging = ScriptedAnswers.finish(level, s, swinging, held, pressed);
+            frame(level); alive(level);
+            assertTrue(++frames < 60 * 20, "the snail was never finished: " + s.state() + " at " + level.player.position);
+        }
+        held.clear();
+        return frames;
+    }
     private Level roomWithoutTheBat() { Level level = room(); withoutTheBat(level); return level; }
 
     /** A live enemy on the hero's row, ahead of him and closer than {@code within} px (body to body). */
@@ -115,7 +146,11 @@ class Forest1RouteTest {
         return 3;
     }
 
-    private int walkToLever(Level level) {
+    /** The snail first (it fires along the lever's floor), then to the lever. */
+    private int walkToLever(Level level) { return finishTheSnail(level) + walkToLeverPastTheSnail(level); }
+
+    /** To the lever without stopping for the snail: a pull takes three frames, too short for its wind-up. */
+    private int walkToLeverPastTheSnail(Level level) {
         int frames = 0;
         while (!level.player.canInteract()) {
             held.clear(); held.add(centerX(level) > LEVER_X + 8 ? Input.Keys.A : Input.Keys.D);
@@ -151,13 +186,13 @@ class Forest1RouteTest {
     }
 
     /** The mandatory route from a standing start at the entrance: walk, ride, walk. */
-    private int mandatory(Level level) { return rideToCheckpoint(level); }
+    private int mandatory(Level level) { return finishTheSnail(level) + rideToCheckpoint(level); }
 
     /** Walks Right until the body is over the ladder's rungs. */
     private int walkToLadder(Level level) {
         int frames = 0;
-        while (centerX(level) < LADDER_X + 2) {
-            held.clear(); held.add(Input.Keys.D);
+        while (centerX(level) < LADDER_X + 2 || centerX(level) > LADDER_X + 14) {
+            held.clear(); held.add(centerX(level) < LADDER_X + 2 ? Input.Keys.D : Input.Keys.A);
             frame(level); alive(level);
             assertTrue(++frames < 60 * 20, "ladder unreachable from " + level.player.position);
         }
@@ -213,8 +248,9 @@ class Forest1RouteTest {
 
     /** The optional detour from a standing start: lever, ladder, refill, back to the lever, lever again; the hero ends by the lever with the lift running. */
     private int detour(Level level) {
-        int frames = walkToLever(level);
+        int frames = walkToLeverPastTheSnail(level);
         frames += operate(level);
+        frames += finishTheSnail(level);   // on to the snail while the ladder comes down, then back to the ladder
         assertTrue(ladder(level).isLowered() && !lift(level).isRunning());
         frames += walkToLadder(level);
         frames += climb(level);
@@ -256,7 +292,10 @@ class Forest1RouteTest {
         assertEquals(1, level.objects.stream().filter(FireballRefill.class::isInstance).count());
         assertEquals(1, level.fallingPlatforms.size(), "exactly one one-shot object: the step to the refill pad");
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Wall));
-        assertEquals(2, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "two monsters: the bat and the spider on the ladder slab (#484)");
+        assertEquals(3, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "three monsters: the snail under the slab (#500), the spider on it (#484) and the bat");
+        assertEquals(SNAIL_X, snail(level).position.x, 0.01f);
+        assertEquals(SNAIL_X, snail(level).rangeNeg(), 0.01f, "it does not patrol: it turns in place");
+        assertEquals(SNAIL_X, snail(level).rangePos(), 0.01f);
         assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Spider.class::isInstance).count());
         assertEquals(1, level.objects.stream().filter(Bat.class::isInstance).count());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.objects.LethalHazard), "no hazards in the route room");
@@ -404,6 +443,7 @@ class Forest1RouteTest {
         assertTrue(level.objects.stream().noneMatch(Fireball.class::isInstance));
         assertTrue(lift(level).isRunning() && !ladder(level).isLowered(), "the lever was never touched");
         assertTrue(bat(level).isDefeated(), "the scripted hero beat the bat with the sword, no fireball");
+        assertTrue(snail(level).isDefeated(), "and the snail under the slab (#500)");
         assertTrue(seconds <= 12f, "required route " + seconds + " s: the measured value plus the lift's schedule, well inside the 20 s budget");
         assertEquals(REQUIRED_S, seconds, 0.1f, "the required route (D105's beat time), pinned within 0.1 s");
     }
@@ -420,6 +460,43 @@ class Forest1RouteTest {
             assertFalse(refillGone(level), "the refill is optional: the required route leaves it where it is");
         }
         System.out.printf(Locale.ROOT, "forest-1 route room required, three identical attempts: %.2f s%n", first);
+    }
+
+    /** Pinned (scripted, 60 fps, #500): walking straight in is hit by the snail's gob; the bat, met after the snail, kills at about 5 s. */
+    static final float GOB_DEATH_S = 1.85f, BAT_DEATH_S = 5.43f;
+
+    /** The snail's death: a hero who walks straight in along the floor and never jumps or swings is hit by its gob. */
+    @Test void walkingStraightInIsHitByTheSnailsGob() {
+        Level level = room();
+        int frames = 0;
+        while (!level.player.isGotHit()) {
+            held.clear(); held.add(Input.Keys.D);
+            frame(level);
+            assertTrue(++frames < 60 * 10, "never hit");
+        }
+        System.out.printf(Locale.ROOT, "forest-1 route room gob death: %.2f s at x %.0f%n", frames * STEP, level.player.hitboxBounds().x);
+        assertTrue(level.player.hitboxBounds().x + 11 < SNAIL_X, "hit in front of the snail");
+        assertEquals(GOB_DEATH_S, frames * STEP, 6 * STEP, "retry cost of the snail");
+        level.resetCurrentRoom(player());
+        assertFalse(snail(level).isDefeated() || snail(level).gobActive(), "a retry brings it back calm with no gob in the air (D106)");
+    }
+
+    /**
+     * The bat's first meeting (D105): it is the room's beat 3, so a death at it must replay at most 6 s. A hero who answers the snail
+     * and walks on into the bat without a swing or a hop is hit this long after the entrance.
+     */
+    @Test void theBatIsACheapRetryAfterTheSnail() {
+        Level level = room();
+        int frames = finishTheSnail(level);
+        while (!level.player.isGotHit()) {
+            held.clear(); held.add(Input.Keys.D);
+            frame(level);
+            assertTrue(++frames < 60 * 15, "never hit");
+        }
+        System.out.printf(Locale.ROOT, "forest-1 route room bat death: %.2f s at x %.0f%n", frames * STEP, level.player.hitboxBounds().x);
+        assertTrue(level.player.hitboxBounds().x > STUMP_X + 16, "past the snail and the drop, at the bat");
+        assertEquals(BAT_DEATH_S, frames * STEP, 6 * STEP, "the bat's retry");
+        assertTrue(frames * STEP <= 6f, "at most 6 s: a cheap first meeting (D105)");
     }
 
     // ---- the optional route ----
@@ -717,7 +794,7 @@ class Forest1RouteTest {
         settle(level, 60 * 5);
         alive(level);
         level = room();
-        int frames = walkToLever(level) + operate(level) + walkToLadder(level) + climb(level);
+        int frames = walkToLeverPastTheSnail(level) + operate(level) + finishTheSnail(level) + walkToLadder(level) + climb(level);
         while (centerX(level) < (SLAB_X + SLAB_END) / 2) { held.clear(); held.add(Input.Keys.D); frame(level); alive(level); frames++; }
         while (!level.player.isGotHit()) {
             held.clear(); frame(level);
@@ -899,7 +976,9 @@ class Forest1RouteTest {
         Level level = room();
         stock.restore(2);
         shootTheBat = true;
-        // Shoot first, from the entrance side of the bat's beat, then do the detour and finish.
+        // The snail first (by the sword: it is no target for a charge here), then shoot the bat from the entrance side of its beat,
+        // then do the detour and finish.
+        finishTheSnail(level);
         float x0 = 0;
         for (int i = 0; i < 60 * 20 && !bat(level).isDefeated(); i++) {
             held.clear(); held.add(Input.Keys.D);
@@ -964,6 +1043,7 @@ class Forest1RouteTest {
                 for (boolean jumping : new boolean[]{false, true}) {
                     if (jumping && right) continue; // a deliberate running jump off the pad towards the lift is an act, not a drift: it can land in the beat
                     Level level = room();
+                    held.clear(); // the bat's phase only: the hero stands at the entrance (a key left held would walk him into the snail's line)
                     settle(level, phase);
                     float edgeX = right ? PAD_END : PAD_X;
                     level.player.position.set(edgeX - (right ? 14 : 6) - 20, PAD_TOP - 48);
