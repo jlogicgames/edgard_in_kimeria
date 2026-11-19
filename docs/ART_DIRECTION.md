@@ -691,7 +691,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); flying beetle blast, snail spit, the wolf's bite, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; flying beetle blast, the wolf's bite, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -850,6 +850,47 @@ author's request rather than turned).** Previews: `build/spider-capture/` (not s
   in 68.5 % and from `hangwind` in 64.6 % of the silhouette (`RemainsTest`).
 - **Cost:** the drop's worst case peaks at 50 soft and 69 hard, inside the same pools; 0.0 to 0.1 B/frame for the drop and 0.2 for
   the climb through the real level (`AllocationBudgetTest`).
+
+**Forest snail, built (#329, #398, [D106](DECISIONS.md#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398); the card approved by the author 2026-11-19, the shell toned down at the
+author's request).** The body and the gob are authored sprites; every effect is a particle on `KimeriaParticleSystem`
+(`effects.SnailFx`, one per `Level`; the body's crumble and burn in `effects.RemainsFx`). Concept previews: `build/snail-capture/`
+(not shipped).
+
+- **Sheet** `assets/images/objects/monster-snail.png`, eight 24×16 frames and a ninth cell in one strip, drawn in
+  `art/objects/monster/snail.grid` and exported by `tools/forest_trap_sprites.py monster:snail` with the moon rim: `crawl1`,
+  `crawl2` (the crawl), `look`, `blink` (the notice: stalks shot up, then pulled in), `draw` (the wind-up: reared back, neck
+  tall, throat swollen, shell tipped back), `spit` (thrust forward, low and long, mouth open), `rest` (the reload: head low,
+  stalks half in), `dead` (the empty shell rolled onto its back, its mouth open upward). The ninth cell, `gob`, holds the gob's
+  two 8×8 wobble frames at its top-left (`fly1` at x 0, `fly2` at x 8). Sole on row 15, facing right, mirrored about the body
+  centre (x 11).
+- **Palette** (13 colours, 14 with the rim): ink `0b0814`; shell groove `4a2a20`, whorls `7a4a32`, `9a6646`, cream highlight
+  `b89a78`, the shell's lip `a07656`; foot and neck `8c7c6e`, `a89a8a`; eye tips `d8d0c0`; mouth `2a1418`; the gob `6c6a3e`,
+  `b8b886`, `f2f2dc`. No reserved hue: chestnut and a greyed cream, away from the honey `e2b25a`, and the gob a muted olive-cream,
+  away from the lime spores.
+- **Loudness.** The first concept (orange shell, full ink contour) measured 0.41 to 0.44 and read big and icon-like beside the
+  spider. Now the shell's ink contour, and so its moon rim, covers only its top two rows; below them the shell's edge is its own
+  light lip `a07656`, and the foot and neck keep their own colour as their edge. Outline at the 23 RedMob, YellowMob, beetle and
+  spider spawns, both facings: 0.302 (`look`) to 0.339 (`draw`), the spider's band (active floor 0.28; without any rim 0.222).
+- **The gob** (8×8, a pale core, an olive rim, an ink edge, rimmed): 0.298 to 0.504 every 8 px along 176 px of line either side of
+  each spawn. The gate measures a placed snail along its range and the gob along every firing line (`snail_parts`).
+- **Notice:** frames only, no mark and no particles (D100).
+- **Wind-up** (the D7 warning, `DEFAULT_WARNING_SECONDS`): the `draw` frame; a glow swelling at the mouth (`KIND_GLOW`, 1 to 3 px,
+  `f2f2dc`, 30 a second); 1 px specks (`KIND_FLAME`, half white, half `b8b886`, 0.25 to 0.4 s), 40 a second, born along the firing
+  line at the gob's height and drawn into the mouth, so the reach and the height are read on them.
+- **Flight and splat** (D93): a 1 px drip (`KIND_GRIT`, `b8b886`) every 12 px flown, falling to the floor; where the gob ends,
+  seven droplets thrown back and up (1 to 2 px, the gob's three colours, 0.2 to 0.3 s) and a 4 px smear (along the floor, or
+  down a wall face) that fades in 0.4 s. Fire takes a gob with a puff of five pale and grey smoke dots rising, then the splat.
+- **Death** (any weapon): it rolls onto its back (a 3 px hop) and stays as a body (D101); 0.08 s after the hit, 12 puffs in a ring
+  and four shell and foot chips to the floor. The sword's kill adds the light spray of D65; fire and stones none (D99).
+- **Body (D101):** `assets/images/objects/monster-snail-body.png`, the `dead` frame recoloured in a decor-tier palette
+  (`art/objects/monster/snail-body.grid`: contour `5e524a` in its own hue, groove `544842`, whorls `6a5c54`, `7c6e62`, cream
+  `988a7a`, lip `6e6258`, mouth `4c403c`; no ink, no rim). Measured by `BODY_SWEEP` on every floor top of the three maps:
+  outline 0.091 to 0.157, body 0.100 to 0.181 (decor: at most 0.20). The pose differs from its closest live frame (`draw`) in
+  49.3 % of the silhouette (`RemainsTest`, floor 25 %). It rocks about the bottom of its shell (`RemainsSwing`); its crumble
+  chips are its shell browns, its cream and its foot (`SnailFx.SNAIL_CHIPS`).
+- **Cost:** `SnailFx` pools of 64 and 112 from measured peaks of 51 and 84 (`SnailFxTest`: three snails winding up at the
+  assist's 1.2 s, their gobs flying their range and splatting, a gob steamed and three snails dying); 0.1 to 0.2 B/frame through the
+  real level (`AllocationBudgetTest.snailThroughTheRealLevel`).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

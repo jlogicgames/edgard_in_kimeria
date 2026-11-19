@@ -132,6 +132,7 @@ and row: their rotten look is the cue for those skins; the plain skin's cue is t
 | `RedMob` | enemy | Enemy, as above. |
 | `YellowMob` | enemy | Enemy, as above. |
 | `Beetle` | enemy | Enemy (D100): its burst's warning is the shared `TrapWarnings` wind-up on its own body, recorded in D100 and the beetle card of GAME_DESIGN.md, not a trap card. |
+| `Snail` | enemy | Enemy (D106): its spit's warning is the shared `TrapWarnings` wind-up on its own body with specks drawn in along its firing line, recorded in D106 and the snail card of GAME_DESIGN.md, not a trap card. |
 | `Spider` | enemy | Enemy (D102, D103): its bite's warning is the shared `TrapWarnings` bite wind-up on its own body with silk glints to the landing spot (on a floor) or down the drop column (at a lip, before the silk drop), recorded in D102, D103 and the spider card of GAME_DESIGN.md, not a trap card. |
 | `Boss` | enemy | The boss ([BOSS.md](BOSS.md)). |
 <!-- non-trap-types:end -->

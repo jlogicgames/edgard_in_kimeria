@@ -14,6 +14,7 @@ import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Breakable;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
@@ -1299,6 +1300,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
             return;
         }
 
+        // D106: the live blade cuts every gob it touches first, in a pass of its own, so a hit on an enemy (which ends the loop
+        // below) never leaves a gob uncut that frame: the blade wins a tie with a gob every frame.
+        for (int i = 0, n = level.objects.size(); i < n; i++)
+            if (level.objects.get(i) instanceof Breakable gob && gob.isBreakable() && gob.breakableInto(remainsScratch).overlaps(attackHitbox))
+                gob.breakApart(false);
         for (int i = 0, n = level.objects.size(); i < n; i++) {
             var obj = level.objects.get(i);
             // D101: the swing crumbles a monster's body and goes on, so a body never shields a live monster behind it.

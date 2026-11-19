@@ -108,6 +108,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | yellowmob | `YellowMob` | stomps a walking enemy | monster |
 | bat-enemy | `Bat` | passes or beats a flying enemy | monster |
 | beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) | monster |
+| snail | `Snail` | crosses a snail's line during its reload, jumps or cuts its gob, comes up behind it or hides behind cover, or shoots it (D106) | monster |
 | spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) | monster |
 | boss | `Boss` | fights the stage boss | monster |
 | fireball-refill | `FireballRefill` | picks up a ranged-attack charge | pickup |

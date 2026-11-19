@@ -28,7 +28,9 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "remains_crumble.wav": (0.24, 0.32), "remains_burn.wav": (0.35, 0.45),
           "spider_notice.wav": (0.22, 0.30), "spider_windup.wav": (0.45, 0.55), "spider_windup_long.wav": (0.70, 0.80),
           "spider_leap.wav": (0.12, 0.20), "spider_bite.wav": (0.16, 0.24),
-          "spider_drop.wav": (0.21, 0.29), "spider_reel.wav": (0.26, 0.34), "spider_snap.wav": (0.10, 0.14)}
+          "spider_drop.wav": (0.21, 0.29), "spider_reel.wav": (0.26, 0.34), "spider_snap.wav": (0.10, 0.14),
+          "snail_notice.wav": (0.26, 0.34), "snail_windup.wav": (0.75, 0.85), "snail_windup_long.wav": (1.15, 1.25),
+          "snail_spit.wav": (0.13, 0.19), "snail_splat.wav": (0.16, 0.24)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
@@ -36,7 +38,9 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "stone_impact.wav": -16.5, "thread.wav": -19.0, "deadfall_creak.wav": -18.5, "deadfall_knock.wav": -17.0,
                 "hive_buzz.wav": -19.4, "hive_fall.wav": -19.0, "fissure_rumble.wav": -19.4,
                 "beetle_notice.wav": -19.0, "beetle_windup.wav": -19.4, "beetle_windup_long.wav": -19.4, "beetle_pop.wav": -18.0,
-                "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0}
+                "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
+                "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
+                "snail_splat.wav": -18.0}
 # #324: deliberately fuller than the voice set (a rare event), so it is outside the set's spread; it must stay within the
 # same spread of the jump instead.
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}

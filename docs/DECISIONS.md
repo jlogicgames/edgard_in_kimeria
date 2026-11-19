@@ -3042,7 +3042,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Beetle (#327): yes, built.** A fireball or a stone kills it quietly and leaves the body. The sword and a stomp
     burst it (D100) and leave nothing.
   - **Spider (#328): yes, built (D102).** Its body lies on its back with its eight legs curled up, and rocks like the beetle's.
-  - **Snail (#329): yes.** Its empty shell stays and rocks.
+  - **Snail (#329): yes, built ([D106](#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398)).** Its empty shell stays, rolled onto its back with its mouth open upward, and rocks like the others.
   - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
   - **Wolf (#331): yes, with its own reaction.** A large body does not rock. It twitches (a 1 px shudder of the same
@@ -3438,3 +3438,73 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   of its own and deaths at it are cheap.
 - **Not verified:** how dense rooms feel to a first-time player and what they do to first learning (#135); the 96 px and
   the 6 s are authoring numbers, not measured on players.
+
+## D106. The forest snail: it looks ahead, holds a line and spits a slow gob; cross its ground in the reload (#329, #240, #398)
+
+- **Status:** Accepted (author, 2026-11-19: the card, all thirteen recommendations of the Phase 1 proposal, and the art with the
+  shell toned down to the spider's loudness). D105 is the room density rule of #499.
+- **Decision:**
+  - **Body.** One strip of eight 24×16 frames (`crawl1`, `crawl2`, `look`, `blink`, `draw`, `spit`, `rest`, `dead`) and a ninth
+    cell holding the gob's two 8×8 wobble frames, 13 colours, 14 with the moon rim; a chestnut shell coiled in two turns with a
+    dark groove and a cream whorl, a pale clay foot and neck, two eye stalks with pale tips; drawn about 14 px tall; no reserved
+    hue. Body hitbox `rect(1, 3, 20, 13)`. **Contact is harmless**: only the gob kills.
+  - **Patrol:** 12 px/s inside its authored range (`offNeg`/`offPos`), a 0.8 s pause at each end (the `blink` frame), then it
+    turns; it never leaves its range.
+  - **Sight, ahead only:** a box from its front edge to 176 px ahead, from its floor line to 48 px above it, cut at the first
+    solid at the gob's height (`Level.blocksObject`). It does not hear. Aware, it follows a hero who goes behind it with a turn
+    after 0.4 s (behind it, the same box mirrored) and loses him after 1.5 s out of both. These clocks start with the notice and
+    run on through the spit and the reload. It never chases: aware, it holds still and faces the hero.
+  - **Notice, in body language (D100's pattern):** its stalks shoot up, pull in, shoot up, pull in (`look` 0.15 s, `blink`
+    0.1 s, twice): 0.5 s, not scaled by the assist; its own call `snail_notice`. No mark, no shared sound.
+  - **Firing line:** a 4 px band centred 7 px above its floor line, from its mouth to 176 px ahead, cut at the first solid. It
+    winds up only when the hero's hitbox touches the line and its reload is done; a hero it sees above the line is watched
+    (stalks up) and not shot at.
+  - **Wind-up:** `TrapWarnings.duration(DEFAULT_WARNING_SECONDS)`, sampled once: 0.8 s, 1.2 s with the assist; its facing locked,
+    nothing the hero does stops it. Seen: the `draw` frame (reared, neck tall, throat swollen), a glow swelling at the mouth
+    from 1 to 3 px, and pale specks born along the firing line and drawn into the mouth (40 a second), so the reach and the
+    height read before the shot. Heard: `snail_windup` (`_long`).
+  - **Spit and gob:** the `spit` frame for 0.15 s and `snail_spit`; the gob leaves the mouth at 120 px/s, straight and level, an
+    authored 8×8 sprite of two wobble frames that sheds a drip every 12 px. Its 4×4 core kills through
+    `player.collidedWithActor(false)`, swept every frame; the hit lands at the start of the snail's next frame, so a weapon that
+    breaks the gob on the same frame wins. It ends at the first of: the hero, a solid face (it splats on the face), or 176 px out,
+    where it falls at 588 px/s² and splats on the floor about 20 px further (or on a wall face it meets as it falls; one that
+    left the room would splat at its edge, which the load check makes unreachable). Every end is seen (droplets thrown back and a smear
+    that fades in 0.4 s) and heard (`snail_splat`), hit or miss (D93); no puddle, nothing lasting. It passes through one-way
+    platforms, monsters (the spider too), bodies, decor, pickups and traps. One gob per snail; it is owned by the snail, with no
+    allocation.
+  - **Reload:** 2.4 s from the spit, harmless, not scaled by the assist (`rest` and `blink` alternate every 0.4 s, a slow
+    swallow); then a full new wind-up for each shot. One shot every 3.2 s, the cadence of D105.
+  - **Answers:** the sword (with the light spray of D65), a fireball, a thrown stone or torch and a stomp (the normal bounce)
+    kill it in any state and leave its body (D101). Killed during the wind-up it fires nothing: the swelling gob pops on its
+    lips, seen and heard. A gob already in the air flies on when its snail dies, and the snail's object stays until the gob ends
+    even when its body is crumbled. Every weapon breaks the gob and flies on (`Breakable`): the sword's live box and a thrown stone
+    break it apart, a fireball and a thrown torch burn it away with a puff of steam; the fireball is not spent. A weapon breaks
+    what it visibly touches: the gob's drawn 8×6, not only its lethal core, since a fireball flies at the hero's chest and meets
+    only the gob's top edge. The weapon loops test gobs before enemies (the sword in a pass of its own; a fireball or a throw
+    in the same step before the enemy that spends or stops it), so a swing or a shot that also hits an enemy still breaks the
+    gob it reached. The shell blocks nothing.
+  - **Body (D101):** the empty shell rolled onto its back, its mouth open upward; the `dead` frame holds 0.3 s, then cross-fades
+    over 0.6 s into `monster-snail-body.png`; it rocks (`RemainsSwing`), crumbles into shell and foot chips, burns, as the others.
+  - **Room rules:** D3/D6 as for every enemy: a death or a revisit brings it back calm at its spawn with no gob in the air.
+    Load-time checks (`Snail.problem`, on the 24×16 snail whatever the Tiled object's size): its range inside the room on floor
+    without gaps; every firing line, from every 4 px of its range facing either way, ends on a solid face or on floor inside the
+    room, stays below the camera's top, and crosses no standing place (the entrance body, the `RoomExit`, a `Checkpoint`),
+    including the drop past its range. Met in play: no teaching room, no hint text (D100).
+  - **Effects** on `KimeriaParticleSystem` only (`effects.SnailFx`, one per `Level`: pools of 64 and 112 from measured peaks of
+    51 and 84; the body's crumble and burn in `RemainsFx`); the snail's strip with the gob's frames, and its decor body, are the
+    only sprites.
+- **Why:** the beetle and the spider are fights at close range; the snail is the first threat at a distance, and its decision is
+  the approach: read its gaze (ahead only, cut by cover) and its rhythm (a 0.8 s warning, then 2.4 s of reload) and cross its
+  ground then, or come from behind. Its gob is level at shin height, so a jump, a cut or cover always answers it, and a hero who
+  reaches it is safe. Its warning shares the spider's grammar (a line drawn in pale particles before the act), so the two
+  combine in one room without a new reading, and the gob never touches the spider, so each threat stays the one the player read.
+- **Measured:** live frames outline 0.302 (`look`) to 0.339 (`draw`) at the 23 monster spawns of the three maps, both facings
+  (active floor 0.28; the spider measures 0.300 to 0.331). The first concept measured 0.41 to 0.44 and read big and icon-like
+  beside the spider, so the shell was toned down: softer browns, and its ink contour, with the moon rim, kept only on the top two
+  rows of the shell, below which the shell's own light lip is its edge (without any rim the snail measured 0.222). The gob 0.298
+  to 0.504 every 8 px along 176 px of line either side of each spawn. The decor body 0.091 to 0.157 on every floor top
+  (`BODY_SWEEP`; ceiling 0.20). The pose differs from its closest live frame (`draw`) in 49.3 % (floor 25 %). Allocation
+  (`AllocationBudgetTest.snailThroughTheRealLevel`): 0.2, 0.2 and 0.1 B/frame in 3 runs (ceiling 8).
+- **Gates:** `SnailTest` (25: with a swing and a fireball that meet an enemy and a gob together, a gob through a spider, a
+  falling gob on a wall, a gob out of the room), `SnailFxTest`, `RemainsTest` (the snail's case), `AllocationBudgetTest`, `check_contrast.py` (`Snail`,
+  `Snail:gob` along every line, `Snail:body`).
