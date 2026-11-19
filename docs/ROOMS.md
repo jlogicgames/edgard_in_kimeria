@@ -985,8 +985,8 @@ listed in `Rooms` so that the order is lever, **spider**, bramble, **climb**, ro
   `forest-1-deadfall`). RoomStart (6912, 272); RoomExit (7456, 272, 32 x 48). `Spider` x 7184, y 304, `offNeg`/`offPos`
   3 (a D102 box): `position.x` 7136-7232, pounce reach x 7090-7302 at most. Measured (`Forest1SpiderTest`): 6.90 s baiting
   the pounce and striking in the recovery (the same on a retry), 5.85 s rushing with the sword, 5.17 s with a fireball;
-  a hero who stops in its reach is bitten 3.58 s in. **Finding:** walking straight on is no answer here, unlike the
-  beetle: the spider's range ends where the hero comes in, so the locked bite lands where he walks.
+  a hero who stops in its reach is bitten 2.32 s in (3.58 s before #497, when the leap could not leave the range). **Finding:** walking straight on is no answer here, unlike the
+  beetle: the locked bite lands where he walks.
 - **`forest-1-climb`**, x 7520-8160, floor top y 320, walls x 7520-7536 and 8144-8160 (the author's Option A after review).
   Two one-way `Platform` steps (x 7696 y 272, x 7760 y 240) lead onto a block (x 7808-7952, top y 208); the RoomExit (7824, 64,
   32 x 32) is on a shelf above it (x 7808-7904, top y 96), reached only by a running vertical `Escalator` (x 7904-7936, its top
@@ -1004,10 +1004,11 @@ listed in `Rooms` so that the order is lever, **spider**, bramble, **climb**, ro
   thread from the ladder slab's right lip (hanging at x 1638) and the slab. A walker on the mandatory floor sets off the
   drop and is past the column when it falls, at every skitter phase with and without the assist, so the required 11.02 s
   and the 18.32 s with the refill are unchanged; a hero who stops under the lip is bitten 3.43 s in
-  (`Forest1ShelfSpiderTest`). The optional ladder detour meets it: it hears the hero at the ladder's foot and winds up at the
-  slab's left end while he climbs; its leap cannot leave the slab, so the ladder's top is out of its bite, and a hero who walks
-  on along the slab is past when it lands, at every skitter phase with and without the assist (with the assist the drop off the
-  pad's left end then stomps it). A hero who stops mid-slab is bitten 5.22 s in (`Forest1RouteTest`).
+  (`Forest1ShelfSpiderTest`). The optional ladder detour meets it: it hears the hero at the ladder's foot and holds at the
+  slab's left end while he climbs; its leap never leaves the slab's floor, so the ladder's top is out of its bite and (#497) it does
+  not wind up there, and a hero who walks on along the slab is past when it lands, at every skitter phase with and without the
+  assist (the drop off the pad's left end then stomps it, with or without the assist). A hero who stops mid-slab is bitten 5.55 s in
+  (`Forest1RouteTest`; 5.22 s before #497).
 - Tests changed by the two new rooms, and why: every forest-1 test that reaches a room by its index or by counting room
   changes now counts the two rooms (`RoomTest`, `RoomCeilingTest`, `AllocationBudgetTest`,
   `Forest1CombatTest`, `Forest1LeverLessonTest`, `Forest1RouteTest`, `TreeClimbTest`, `Forest1HiveTest`,

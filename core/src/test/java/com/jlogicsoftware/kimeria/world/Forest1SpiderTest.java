@@ -28,7 +28,7 @@ class Forest1SpiderTest {
     /** Gap from the hero's body to the spider's at which the scripted hero swings once (the blade reaches it from closer than 17 px). */
     private static final float SWORD_GAP = 8;
     /** Pinned (scripted, 60 fps): the bait-and-punish route, a fireball from afar, walking straight past, and the walk-in death. */
-    static final float BAIT_S = 6.90f, FIREBALL_S = 5.17f, RUSH_S = 5.85f, DEATH_S = 3.58f;
+    static final float BAIT_S = 6.90f, FIREBALL_S = 5.17f, RUSH_S = 5.85f, DEATH_S = 2.32f;
     private static final float TOLERANCE = 6 * STEP;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();

@@ -1409,6 +1409,24 @@ public class Level implements WorldObject {
         return false;
     }
 
+    /**
+     * True when floor a spider could have crawled on covers {@code bounds}: an authored collision box (what the load checks of a
+     * spider count as floor, {@code monsterFloors}), not quicksand, a ladder's top step or an object that moves (#497).
+     */
+    public boolean spiderFloorAt(Rectangle bounds) {
+        for (int i = 0; i < collisionBlocks.size(); i++) {
+            CollisionBlock block = collisionBlocks.get(i);
+            if (!block.isActive() || block.isQuickSand() || !overlapsBox(bounds, block)) continue;
+            if (!isLadderTop(block)) return true;
+        }
+        return false;
+    }
+
+    private boolean isLadderTop(CollisionBlock block) {
+        for (int i = 0; i < ladders.size(); i++) if (ladders.get(i).topSupport() == block) return true;
+        return false;
+    }
+
     /** Feedback belongs to a visible linked object, never to the invisible trigger rectangle. */
     public Entity mechanismFeedbackTarget(Trigger trigger) {
         if (trigger == null) return null;

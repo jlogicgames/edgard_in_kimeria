@@ -56,6 +56,8 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         BODY_WIDTH / 2 + POUNCE_REACH, BODY_HEIGHT + POUNCE_ABOVE);
     /** Where the fangs' middle sits, from {@code position.x}, facing right and facing left (mirrored about the body's middle). */
     private static final float FANG_RIGHT = 20, FANG_LEFT = 2 * (BODY_X + BODY_WIDTH / 2) - FANG_RIGHT;
+    /** The furthest the fangs can reach past a range end: the leap's reach, the fangs' middle and half their width (#497). */
+    private static final float FANG_EXTENT = POUNCE_REACH + FANG_RIGHT + BITE_FANGS.width / 2;
     /** Left and right: the mirror spans twice the pivot (Actor.render), a reach counts on both sides. */
     private static final int SIDES = 2;
     private static final int CRAWL1 = 0, CRAWL2 = 1, RISE = 2, TAP = 3, CROUCH = 4, LEAP_FRAME = 5, BITE_FRAME = 6, RECOVER_FRAME = 7,
@@ -141,6 +143,8 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     private static final float BURN_FLAMES_PER_SECOND = 70, CHAR_TINT = .15f;
     /** A hero falls onto the body when its feet were this close above the body's top on the previous frame (as a stomp). */
     private static final float LANDING_TOLERANCE = 2;
+    /** The leap's reach is tested in steps of this many px, and floor under the body every {@code FLOOR_PROBE} px of it (#497). */
+    private static final float REACH_STEP = 2, FLOOR_PROBE = 4;
     /** A position counts as the end of a leg within this many px. */
     private static final float AT_END = .01f;
 
@@ -163,6 +167,8 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     private float stateClock, frameClock, outOfReach, silkDue, warningTotal, flameDue, deadClock;
     /** The leap: from here to there, on the floor line it took off from; the fangs' x last frame (the swept bite). */
     private float leapFromX, leapToX, leapFloorY, lastFangX, lineFlown;
+    private boolean stoppedBySolid;
+    private float solidStop;
     private boolean crawlFrame, heroNear, poofDone, bitePending;
     /**
      * One bite per leap or drop: set when the fangs reach the hero, cleared when the next strike starts. A hero the bite cannot
@@ -346,8 +352,9 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
             default -> { }
         }
         if (isThreadPose() || isWallPose()) return; // on its checked route: no gravity, no collisions (D103)
+        float was = position.x;
         position.x += velocity.x * dt;
-        clampToRange();
+        clampToRange(was);
         checkHorizontalCollisions(level);
         applyGravity(dt);
         checkVerticalCollisions(level, dt);
@@ -478,7 +485,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         if (route.wall[leg]) { climbTo(dt); return; }
         float direction = directionToPlayer(facingRight ? 1 : -1);
         facingRight = direction > 0;
-        if (inPounceBox()) { commit(); return; }
+        if (inPounceBox() && commit()) return; // it commits only when its landing can put the fangs on the hero (#497)
         float dx = targetU - position.x; // the target is already inside its range: under the hero, or the range's end
         if (Math.abs(dx) < AT_END) return; // it holds there, facing the hero (D102: no overshoot, no turning back)
         float step = CHASE_SPEED * dt;
@@ -522,24 +529,72 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         return outOfReach >= LOSE_SECONDS;
     }
 
-    private void clampToRange() {
-        if (position.x < rangeNeg) position.x = rangeNeg;
-        else if (position.x > rangePos) position.x = rangePos;
+    /** It stays in its range, but a spider the leap left past an end (#497) may crawl back in, and is never snapped back. */
+    private void clampToRange(float was) {
+        float low = Math.min(rangeNeg, was), high = Math.max(rangePos, was);
+        if (position.x < low) position.x = low;
+        else if (position.x > high) position.x = high;
     }
 
     // ---- the floor pounce (D102) --------------------------------------------------------------------------------------
 
     /**
-     * It commits on the spot and locks its target: the hero's centre now, where its fangs will land, kept inside its floor and
-     * never behind it. Then the shared bite warning, sampled once.
+     * It commits on the spot and locks its target: the hero's centre now, where its fangs will land, never behind it. The leap may
+     * leave the range by up to {@link #POUNCE_REACH} (#497), but never leaves the continuous floor under the body at its floor
+     * line, and a solid stops it. It commits only when that landing, or the flight to it, puts the fangs on the hero (in x and in height, a solid cutting the flight short); else it
+     * holds, facing him, rather than leaping in place for ever. Then the shared bite warning, sampled once. True when it committed.
      */
-    private void commit() {
-        enter(State.WINDUP);
+    private boolean commit() {
         Rectangle hero = player.hitboxBoundsInto(heroScratch);
         float target = hero.x + hero.width / 2f - (facingRight ? FANG_RIGHT : FANG_LEFT);
-        target = facingRight ? Math.max(position.x, target) : Math.min(position.x, target);
-        leapToX = Math.max(rangeNeg, Math.min(rangePos, target));
+        target = facingRight ? Math.max(position.x, Math.min(rangePos + POUNCE_REACH, target))
+            : Math.min(position.x, Math.max(rangeNeg - POUNCE_REACH, target));
+        float landing = reachableLanding(target);
+        float fang = facingRight ? FANG_RIGHT : FANG_LEFT, end = stoppedBySolid ? solidStop : landing; // a solid cuts the flight short
+        float from = Math.min(fangX(), end + fang) - BITE_FANGS.width / 2f, to = Math.max(fangX(), end + fang) + BITE_FANGS.width / 2f;
+        float fangTop = position.y + BITE_FANGS.offsetY;
+        boolean reaches = hero.x + hero.width > from && hero.x < to && hero.y + hero.height > fangTop && hero.y < fangTop + BITE_FANGS.height;
+        if (!reaches) return false;
+        enter(State.WINDUP);
+        leapToX = stoppedBySolid ? solidStop : landing; // the runtime flies to the stop the gate predicted: no leap in place
         startWarning();
+        return true;
+    }
+
+    /**
+     * The furthest x towards {@code target}, in 2 px steps from here, with floor under the whole body at its floor line: a leap
+     * never leaves the floor (#497). The first solid in the body's way is noted in {@code solidStop} (the leap lands against it at
+     * runtime, as D102 says). Without a level the target stands.
+     */
+    private float reachableLanding(float target) {
+        stoppedBySolid = false;
+        solidStop = position.x;
+        if (level == null) return target;
+        float step = target > position.x ? REACH_STEP : -REACH_STEP, x = position.x, good = x;
+        while (x != target) {
+            x = Math.abs(target - x) <= REACH_STEP ? target : x + step;
+            if (!floorAt(x)) break;
+            if (!stoppedBySolid && solidAt(x)) stoppedBySolid = true;
+            else if (!stoppedBySolid) solidStop = x;
+            good = x;
+        }
+        return good;
+    }
+
+    /** True when a solid is in the body's way at {@code x}, the body raised a pixel off its floor line. */
+    private boolean solidAt(float x) {
+        Rectangle body = leapBodyInto(fangScratch);
+        body.x += x - position.x;
+        return level.blocksObject(body, false);
+    }
+
+    /** True when the body at {@code x} on this floor line has authored floor under every 4 px of it (not a ladder's top step, #497). */
+    private boolean floorAt(float x) {
+        float floor = floorY(), left = x + BODY_X, right = left + BODY_WIDTH;
+        for (float column = left; column <= right + FLOOR_PROBE - 1; column += FLOOR_PROBE) {
+            if (!level.spiderFloorAt(fangScratch.set(Math.min(column, right - 1), floor + 1, 1, 1))) return false;
+        }
+        return true;
     }
 
     private void startWarning() {
@@ -1137,7 +1192,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     /** D102's checks for one floor leg: {@code position.x} from {@code leftX} to {@code rightX}, standing on {@code floor}. */
     private static String floorProblem(float leftX, float rightX, float floor, List<Rectangle> floors, Rectangle room,
                                        Map<String, Rectangle> standing) {
-        float pivot = BODY_X + BODY_WIDTH / 2, pounceRight = POUNCE.offsetX + POUNCE.width, pounceLeft = SIDES * pivot - pounceRight;
+        float pivot = BODY_X + BODY_WIDTH / 2, pounceRight = Math.max(POUNCE.offsetX + POUNCE.width, FANG_EXTENT), pounceLeft = SIDES * pivot - pounceRight;
         float y = floor - BODY_Y - BODY_HEIGHT, top = y + POUNCE.offsetY;
         Rectangle reach = new Rectangle(leftX + pounceLeft, top, rightX + pounceRight - (leftX + pounceLeft), floor - top);
         if (leftX < room.x || rightX + FRAME_WIDTH > room.x + room.width || top < room.y || floor > room.y + room.height)
