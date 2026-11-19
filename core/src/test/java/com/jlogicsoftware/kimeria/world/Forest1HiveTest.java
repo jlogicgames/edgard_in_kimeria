@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1HiveTest {
     private static final float STEP = 1f / 60f;
-    private static final int HIVE_ROOM = 7;
+    private static final String HIVE_ROOM = "forest-1-hive";
     private static final float LEDGE_TOP = 208f;
     /** The climber's cue: start up the ladder right after a curtain, while the cycle is still this young. */
     private static final float CLIMB_CUE_SECONDS = 1.2f;
@@ -46,7 +46,7 @@ class Forest1HiveTest {
 
     /** mob, deadfall, traps, lever, bramble, route, guard, then the hive room (#375, #363, #418, #364, #365). */
     private Level room() {
-        Level level = h.roomOf("forest-1", HIVE_ROOM);
+        Level level = h.room("forest-1", HIVE_ROOM);
         assertEquals("forest-1-hive", level.currentRoomName());
         return level;
     }

@@ -21,6 +21,7 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.tiled.TiledMapData;
 import org.junit.jupiter.api.Test;
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -120,37 +121,28 @@ class RoomTest {
         assertNull(layout.rooms.get(0).exit());
     }
     /**
-     * forest-1 (D67, #104, #349, #375, #418, #363): the first-RedMob room comes first in play order (it lies after the tree room on the map; the Rooms list,
-     * not x, sets the order) and holds the Player spawn as its entrance; the deadfall room (D88), the trap course, the lever lesson room (D86), the route room,
-     * the guard room and the tree room follow, and the tree room is last and holds the Checkpoint at its top.
+     * forest-1 (D67, #104, #349, #375, #418, #363, #484): the first-RedMob room comes first in play order (it lies after the tree room on the map; the
+     * Rooms list, not x, sets the order) and holds the Player spawn as its entrance; the deadfall room (D88), the trap course, the lever lesson room (D86),
+     * the spider's first room, the bramble room, the spider's climbing room, the route room, the guard room, the hive room and the tree room follow, and the
+     * tree room is last and holds the Checkpoint at its top.
      */
-    @Test void forestOneIsTheMobRoomThenTheDeadfallThenTheTrapCourseThenTheLeverLessonThenTheBrambleThenTheRouteRoomThenTheGuardRoomThenTheHiveThenTheTreeRoomWithTheCheckpoint() {
+    @Test void forestOneRunsFromTheMobRoomToTheTreeRoomWithTheCheckpointInPlayOrder() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(9, layout.rooms.size());
-        assertEquals("forest-1-mob", layout.rooms.get(0).id());
-        assertEquals("forest-1-deadfall", layout.rooms.get(1).id());
-        assertEquals("forest-1-traps", layout.rooms.get(2).id());
+        List<String> order = List.of("forest-1-mob", "forest-1-deadfall", "forest-1-traps", "forest-1-lever", "forest-1-spider", "forest-1-bramble",
+            "forest-1-climb", "forest-1-route", "forest-1-guard", "forest-1-hive", "forest-1-tree");
+        assertEquals(order.size(), layout.rooms.size());
+        for (int i = 0; i < order.size(); i++) {
+            assertEquals(order.get(i), layout.rooms.get(i).id(), "room " + i);
+            if (i < order.size() - 1) assertNotNull(layout.rooms.get(i).exit(), order.get(i) + " leads on to " + order.get(i + 1));
+        }
         var spawn = map.layer("SpawnPoints").stream().filter(o -> "Player".equals(o.type)).findFirst().orElseThrow();
         assertEquals(new Vector2(spawn.x, spawn.y), layout.rooms.get(0).entrance());
-        assertNotNull(layout.rooms.get(0).exit());
-        assertNotNull(layout.rooms.get(1).exit(), "the deadfall room (#363, D88) leads to the trap course");
-        assertNotNull(layout.rooms.get(2).exit());
-        assertEquals("forest-1-lever", layout.rooms.get(3).id());
-        assertNotNull(layout.rooms.get(3).exit(), "the lever lesson room (#418, D86) leads to the bramble room");
-        assertEquals("forest-1-bramble", layout.rooms.get(4).id());
-        assertNotNull(layout.rooms.get(4).exit(), "the bramble room (#364, D89) leads to the route room");
-        assertEquals("forest-1-route", layout.rooms.get(5).id());
-        assertNotNull(layout.rooms.get(5).exit(), "the route room's checkpoint became a RoomExit when the guard room was appended (#104)");
-        assertNotNull(layout.rooms.get(6).exit(), "the guard room's checkpoint became a RoomExit when the tree room was appended (#349)");
-        assertEquals("forest-1-guard", layout.rooms.get(6).id());
-        assertEquals("forest-1-hive", layout.rooms.get(7).id());
-        assertNotNull(layout.rooms.get(7).exit(), "the hive room (#365, D90) leads to the tree room");
-        assertNull(layout.rooms.get(8).exit());
-        assertEquals("forest-1-tree", layout.rooms.get(8).id());
+        int last = order.size() - 1;
+        assertNull(layout.rooms.get(last).exit());
         var checkpoint = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertEquals(1, checkpoint.size());
-        assertEquals(8, layout.owner(checkpoint.get(0)));
+        assertEquals(last, layout.owner(checkpoint.get(0)));
     }
     @Test void forestHasFiveCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");

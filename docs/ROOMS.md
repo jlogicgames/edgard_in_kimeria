@@ -18,7 +18,7 @@ ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fi
 (1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has nine rooms since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has eleven rooms since #484 (the 640 px `forest-1-spider`, fifth in play order after the lever lesson, and the 640 px `forest-1-climb`, seventh after the bramble room: the forest spider met alone, then climbing to a hero waiting for a lift, see "forest-1 spider rooms" below, both authored at the end of the map), nine since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -972,6 +972,49 @@ card: [TRAPS.md](TRAPS.md#creeping-bramble-bramble).
   after a fixed wait survives 37 of 80 offsets, the longest safe run 1.85 s (`BrambleTest`).
 - D26: no lever, support or one-shot state; the arm comes back every 4 s, so waiting on the ladder always gives another
   window.
+
+## forest-1 spider rooms (#484, D102, D103)
+
+The forest spider is placed on room cards in the order floor, wall, thread, each the only new reading on its screen (D72).
+No shipped room could show it alone, so forest-1 grew from 430 to 510 tiles with two one-screen rooms at the map's end,
+listed in `Rooms` so that the order is lever, **spider**, bramble, **climb**, route. Room cards:
+[ROOM_CARDS.md](ROOM_CARDS.md#forest-1-spider), [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-climb) and
+[ROOM_CARDS.md](ROOM_CARDS.md#forest-1-route).
+
+- **`forest-1-spider`**, x 6880-7520, floor top y 320, walls x 6880-6896 and 7504-7520 (tiles copied from
+  `forest-1-deadfall`). RoomStart (6912, 272); RoomExit (7456, 272, 32 x 48). `Spider` x 7184, y 304, `offNeg`/`offPos`
+  3 (a D102 box): `position.x` 7136-7232, pounce reach x 7090-7302 at most. Measured (`Forest1SpiderTest`): 6.90 s baiting
+  the pounce and striking in the recovery (the same on a retry), 5.85 s rushing with the sword, 5.17 s with a fireball;
+  a hero who stops in its reach is bitten 3.58 s in. **Finding:** walking straight on is no answer here, unlike the
+  beetle: the spider's range ends where the hero comes in, so the locked bite lands where he walks.
+- **`forest-1-climb`**, x 7520-8160, floor top y 320, walls x 7520-7536 and 8144-8160 (the author's Option A after review).
+  Two one-way `Platform` steps (x 7696 y 272, x 7760 y 240) lead onto a block (x 7808-7952, top y 208); the RoomExit (7824, 64,
+  32 x 32) is on a shelf above it (x 7808-7904, top y 96), reached only by a running vertical `Escalator` (x 7904-7936, its top
+  between y 96 and 160). RoomStart (7552, 272). `Spider` polyline from (8032, 320): `0,0 -80,0 -80,-112 -160,-112` (the floor
+  right of the block, its right face x 7952, its top x 7872-7952; its reach on the top ends at x 7824). Measured
+  (`Forest1ClimbTest`, every pause of 0 to 2 s on the second step, sampled every 4 frames): the lift ride alone 10.77 s; one fireball as it tops the
+  block's far edge 10.77 s; baiting and striking it on the block top 13.33 s; even a shot during its leap wins (D102's tie rule);
+  waiting under the lift is bitten 5.33 to 6.38 s in, walking to the lift once it holds the block top 5.57 to 6.92 s in (the
+  retry cost), each pinned at every pause. **Finding (re-review):** with the lift's lowest stop at y 176 its underside touched
+  the spider's frame, and twice in 31 pauses it cut the spider's leap short (the lift counts as a solid, `Level.blocksObject`),
+  so a hero waiting under it lived; the lift and the shelf moved up 16 px, and a full-cycle test keeps a spider under the lift. **Finding (review):** the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp it as
+  it came over the lip in 1,700 of 1,736 runs, so the room taught nothing; here the hero must wait for the lift, and the climb
+  is what brings the spider to him. Contrast on the block's right face: wall frames 0.296 to 0.376.
+- **`forest-1-route`** (below) gained `Spider` (id 150), a polyline from (1632, 320): `0,0 0,-112 -80,-112`, a 112 px
+  thread from the ladder slab's right lip (hanging at x 1638) and the slab. A walker on the mandatory floor sets off the
+  drop and is past the column when it falls, at every skitter phase with and without the assist, so the required 11.02 s
+  and the 18.32 s with the refill are unchanged; a hero who stops under the lip is bitten 3.43 s in
+  (`Forest1ShelfSpiderTest`). The optional ladder detour meets it: it hears the hero at the ladder's foot and winds up at the
+  slab's left end while he climbs; its leap cannot leave the slab, so the ladder's top is out of its bite, and a hero who walks
+  on along the slab is past when it lands, at every skitter phase with and without the assist (with the assist the drop off the
+  pad's left end then stomps it). A hero who stops mid-slab is bitten 5.22 s in (`Forest1RouteTest`).
+- Tests changed by the two new rooms, and why: every forest-1 test that reaches a room by its index or by counting room
+  changes now counts the two rooms (`RoomTest`, `RoomCeilingTest`, `AllocationBudgetTest`,
+  `Forest1CombatTest`, `Forest1LeverLessonTest`, `Forest1RouteTest`, `TreeClimbTest`, `Forest1HiveTest`,
+  `Forest1BrambleTest`, `FairyOffscreenTest`); `RoomCardsTest` counts 22 rooms. `Forest1RouteTest` counts two monsters and
+  takes the spider out of the one test that checks the slab's geometry alone; its ladder climb now asserts the hero is never
+  bitten. The new tests and the hive and bramble tests find their room by name (`HeadlessLevelHarness.room`), so a later
+  insertion does not move them. No threshold or tolerance changed.
 
 ## forest-1 hive room (#365, D90)
 

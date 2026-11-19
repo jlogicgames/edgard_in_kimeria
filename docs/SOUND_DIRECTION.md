@@ -239,7 +239,8 @@ The spider's death plays the shared kill sound `bounce`, as the beetle's. Previe
 `SPIDER_*` in `tools/audio/generate_sounds.py`.
 
 **The climb and the silk drop (#483, seeds 6908-6910, D103).** Three more, generated with the build, at environment level; their
-names and roles were approved with the card on 2026-11-19, the sounds themselves are judged when the spider is placed (#484). The
+names and roles were approved with the card on 2026-11-19; since #484 they are heard in `forest-1-spider` (the D102 set),
+`forest-1-climb` (silent climbing) and `forest-1-route` (`spider_drop`, `spider_reel`, `spider_snap`), where the author judges them in play. The
 drop's wind-up reuses `spider_windup` (`_long`) and the bite at the thread's end `spider_bite`, so one creature has one warning
 and one bite (D93). Climbing is silent, like the skitter.
 
