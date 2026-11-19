@@ -125,7 +125,7 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest-2` contains four rooms: the entry course (YellowMobs, Bats, the Bomb, on plain floor since #486), a wall room
+`forest-2` contains four rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
 with two wall jumps (split from the entry by #376), a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage

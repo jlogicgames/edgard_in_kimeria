@@ -515,10 +515,10 @@ layer offset that this text already includes in the visible position).
 | ---: | --- | --- |
 | 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
 | 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
-| 240–320 | Plain floor (the quicksand pit left the Forest, #486), vertical Bat enemy (272); optional one-way steps to the coins | Bat enemy |
+| 240–320 | A plain pit (80 px; the quicksand pool became a pit, #486), vertical Bat enemy (272); optional one-way steps to the coins | Pit + Bat enemy |
 | 416–480 | One-way ledge (id 122), reached from the stair; empty since #417 moved the Bat ingredient to `forest-walls` (the ladder, id 123/124, is removed by #376) | Scenery |
-| 512–608 | Horizontal Bat (patrol ends at about 608) over plain floor | Same, repeated |
-| 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the Bat's patrol end, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
+| 512–608 | Horizontal Bat (patrol ends at about 608); a second plain pit at x 560-608 (48 px) | Same, repeated |
+| 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the second pit, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
 | 704–736 | RoomExit (x 704-720), room wall (x 720-736) | End of the room |
 
 ### `forest-2` / `forest-walls` (x 736-1280, since #376)

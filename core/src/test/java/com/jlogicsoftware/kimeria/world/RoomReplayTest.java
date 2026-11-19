@@ -401,6 +401,8 @@ class RoomReplayTest {
         // Entry collection route: get the coin behind the entrance, then return once for the ground coin.
         int phase = collect && route.equals("forest-entry") ? 0 : 1;
         for (int frame = 0; frame < 60 * COLLECTION_LIMIT; frame++) {
+            // #486: forest-entry has two pits (x 240-320 and x 560-608); every route crosses them, none falls (the floor is y 320).
+            if (route.equals("forest-entry")) assertTrue(player.position.y < 300, "the route fell into a pit at x " + player.position.x);
             held.clear(); pressed.clear();
             if (frame >= delayFrames) {
                 if (collect && route.equals("forest-entry")) {

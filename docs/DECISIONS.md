@@ -3259,13 +3259,13 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D104. Quicksand leaves the Forest for the Swamp; the engine support stays (#486)
 
-- **Status:** Accepted (author, 2026-11-19: the `forest-entry` card without sand).
+- **Status:** Accepted (author, 2026-11-19: the `forest-entry` card without sand, with a plain pit where each pool stood).
 - **Decision:** the Forest has no quicksand pit, no quicksand tiles in use and no quicksand teaching. Quicksand is a Swamp
   mechanic by theme (`docs/GAME_DESIGN.md` stage table); its rules, tiles, sprites, sound and teaching room are designed with
   the Swamp (#105, #399, #486 Part 2).
-- **Forest change:** in `forest-entry` the two pits (x 240-320 and x 560-608) became plain floor. The room introduces only
-  `yellowmob`; the Bomb now develops against the second Bat's lane (a 24 px pocket, x 608-632, between the Bat's patrol end and
-  the blast) instead of against sand.
+- **Forest change:** in `forest-entry` the two pools (x 240-320 and x 560-608) became plain pits, as in `forest-0` (the floor block stops and restarts; the level's `Deadline` kills a fall). The room introduces only
+  `yellowmob`; the Bomb now develops against the second pit (a 24 px pocket, x 608-632, at its edge, between the pit and the
+  blast) instead of against sand.
 - **Kept:** `CollisionBlock.quickSand`, the `CollideBody` sink branch and D98's sink speed, and the load checks that skip
   `QuickSand`, because the Swamp reuses them. The physics stays covered on the test map `practice-test.tmx`
   (`JumpFrameRateTest`, `RoomTest`).
