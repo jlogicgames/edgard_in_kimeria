@@ -291,6 +291,17 @@ Rule: [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-fi
   replays at most 6 s; not combined on first sight. For a monster (met in play, D100) the danger zone is its whole reach,
   hearing included. `FirstMeetingPocketTest` pins the pocket: the hero stands at its x in the real camera view, is never
   hit, and sees the element act.
+- **Clearance counts what can kill ([D107](DECISIONS.md#d107-the-first-meeting-clearance-counts-what-can-kill-a-crumble-support-over-a-floor-is-not-a-lethal-neighbour-500-499)).**
+  A crumble support (`FallingPlatform`, any skin) is a lethal neighbour only when what lies under it is lethal (no solid
+  collision beneath its span: a pit; the rotten log over the pit in `forest-1-traps` still counts); over a floor it drops
+  the hero alive onto it (D69). An object that is part of the first-met skill's own geometry (the rotten branches are
+  `skin=branch` objects like the climb's sound ones) is not its own neighbour. The same relief decides whether a `rest` or
+  `reward` room "holds nothing lethal".
+- **A touch trap whose trigger lies outside its lethal band** (only the deadfall: its trip vine is 54 px short of the swing
+  band, D88) has a **trip-and-stand pocket on the trigger**: the hero stands on the vine, trips it, is never hit and sees
+  the log swing past (`FirstMeetingPocketTest` signal `DeadfallTrap.phase()`, acting `SWING`). It is not a loophole: a trap
+  whose trigger *is* the lethal spot (the exploding stump, the Bomb, the thorns) shows nothing from a pocket and is met
+  among known beats as before.
 - **Times and retry.** D19 stands. Density fills a room, it does not lengthen it; a room whose retry passes about 15 s
   because of density is split, each half passing the band. A short room is merged or given more route, never padded.
 - **Exempt, each earned:** `lesson` in `forest-0` and in the test's fixed list of lessons elsewhere (only `forest-1-lever`,
@@ -303,15 +314,39 @@ measured zero-charge time first in `Mastered route`, pin it in the route test wi
 `seconds (TestClass)` naming that test, and for each first meeting add a method to `FirstMeetingPocketTest` that stands
 the hero at the card's `pocket at x N` and names the room and the element.
 
-**Audit (2026-11-19, verified against each room's route test).** Of the fourteen rooms the band applies to, seven pass
+**Audit (2026-11-19, verified against each room's route test).** Of the fourteen rooms the band applies to, seven passed
 (`forest-1-traps` at 1.53 s per beat, `forest-1-route`, `forest-1-guard`, `forest-entry`, `forest-walls`, `forest-fissure`,
-`forest-canopy`) and seven are too empty (`forest-1-mob`, `forest-1-deadfall`, `forest-1-spider`, `forest-1-bramble`,
-`forest-1-climb`, `forest-1-hive`, `forest-1-tree`). The numbers are on the cards and in D105. The too-empty rooms are on
-the gate's shrink-only list with `Below density`, and the forest-1 rework is tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the spider
-rooms were reworked with the snail (#329) first and left the list, so five rooms remain below (see "forest-1 spider rooms"). `forest-1-traps` passes by 0.03 s (1.534 s per beat), a rework candidate. Eight rooms meet a new element
-late, crowded or with no safe spot that shows it acting (`forest-1-mob`, `forest-1-deadfall`, `forest-1-traps`,
-`forest-1-guard`, `forest-1-tree`, `forest-entry`, `forest-walls`, `forest-canopy`), on a second shrink-only list under
-the same issue.
+`forest-canopy`) and seven were too empty (`forest-1-mob`, `forest-1-deadfall`, `forest-1-spider`, `forest-1-bramble`,
+`forest-1-climb`, `forest-1-hive`, `forest-1-tree`). The numbers are on the cards and in D105. The too-empty rooms were on the
+gate's shrink-only list with `Below density`, and the forest-1 rework was tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the spider rooms were reworked with the
+snail (#329) first, and the other five by the batch below, so **the list is empty (ceiling 0)**. `forest-1-traps` passes by 0.03 s
+(1.534 s per beat), a rework candidate. Five rooms still meet a new element late, crowded or with no safe spot that shows it
+acting (`forest-1-traps` for the puffball, `forest-1-guard`, `forest-entry`, `forest-walls`, `forest-canopy`), on a second
+shrink-only list under the same issue.
+
+### Reworked under D105, batch 2 (#500, D107, cards approved by the author 2026-11-19)
+
+Five rooms of forest-1, no room widened, no new element, monster or trap type, no hint text; every added beat is an element met
+earlier in the level. Times are the zero-charge mastered routes of the room tests, pinned within 0.1 s.
+
+| Room | Beats (id@x) | Time | s/beat | What was added |
+| --- | --- | ---: | ---: | --- |
+| `forest-1-mob` | redmob@3776, falling-branch@3984, touch-explosive@4112 | 6.75 s | 2.25 | a 32 px log (id 176, x 3728-3760) holds the RedMob, `offNeg` 3 to 4; a `FallingBranch` (id 177); an `ExplosiveStump` (id 178) |
+| `forest-1-deadfall` | deadfall@5184, falling-stone@5392, redmob@5472 | 5.85 s | 1.95 | the deadfall and its trunk 64 px left; a `FallingStone` (id 179); a RedMob (id 180, `offNeg` 3) before the exit |
+| `forest-1-bramble` | proximity-thorn@5872, falling-branch@6000, bramble@6160 | 9.47 s | 3.16 | `RoomStart` 5632 to 5760, `Bramble` `phase` 1.28; a `ThornRoot` (id 181, `zone` 64); a `FallingBranch` (id 182) under the shelf |
+| `forest-1-hive` | hanging-hive@6440, hanging-hive@6604, spider@6752 | 8.85 s | 2.95 | a ledge `Spider` (id 183, x 6736, y 192, `offNeg` 0, `offPos` 1); its reach x 6697-6823 stays 9 px short of the exit, the strip x 6624-6697 is the bait place |
+| `forest-1-tree` | none: a `reward` room | 4.95 s (fast line) | - | the beetle (id 147) left; nothing lethal; the level still ends on the crown (D80) |
+
+- First meetings pinned in `FirstMeetingPocketTest`: `forest1MobTheRedMob` (x 3716, behind the log, acting `RUN`),
+  `forest1DeadfallTheDeadfall` (x 5120 on the vine, acting `SWING`), `forest1TrapsTheEscalator` (x 240; the falling platforms
+  beside it no longer count, D107), `forest1BrambleTheBramble` (x 6170, now beat 3 with a 5.42 s retry) and
+  `forest1HiveTheFloorHive` (x 6420, unchanged). `forest-1-tree` needs none: a `reward` room is calm.
+- Deviations from the design proposal, found in the build: the thorn root's `zone` is 64 (the load check wants at least 64 px a
+  side, not 32); the hive spider sits at x 6736 with range 6736-6784 (a spider at x 6752 with `offPos` 2 would reach the
+  exit, x 6832, and the load check refuses it); the measured times differ from the estimates (mob 6.75 s against about 8.1,
+  deadfall 5.85 against 6.2, hive 8.85 against 9.6, bramble 9.47 against 9.5) because the walk is faster than estimated.
+- Deaths (retry cost): mob 6.17 s at the stump (2.5 s on the log); deadfall 5.18 s under the stone, 4.4 s past the mob, 2.00 s in
+  the swing; bramble 5.42 s blind climb; hive 3.1 to 7.5 s the hives, 6.25 s the spider.
 
 ## forest-entry split (#376, D72)
 
@@ -384,7 +419,7 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
-| `forest-1` / `forest-1-mob` (room 1 since #375, D85, 2026-11-17) | 800 px | 7.43 s, mob by sword (6.97 s to the refill with two charges) | None (one fireball refill) | Within 20 s |
+| `forest-1` / `forest-1-mob` (room 1 since #375, D85, 2026-11-17) | 800 px | 6.75 s, log jumped, mob by sword, stump jumped (6.97 s before the #500 rework) | None (one fireball refill) | Within 20 s |
 | `forest-1` / unmarked room (now room 2, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09, and again after #375) | 1280 px | 11.58 s (historical) | None | Within 20 s |
 | `forest-1` / `forest-1-lever` (room 3 since #418, D86, 2026-11-17) | 640 px | 8.43 s (ride, pull, drop, climb) | None | Within 20 s |
 | `forest-1` / `forest-1-route` (room 4 since #418; #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
@@ -984,13 +1019,15 @@ played right after `forest-1-mob` and before the trap course. Room card: [ROOM_C
 trap card: [TRAPS.md](TRAPS.md#trip-line-deadfall-deadfall).
 
 - RoomStart (4992, 272); RoomExit (5536, 272, 32 x 48).
-- `Deadfall` (the bough, 112 x 24) at (5248, 243), `swing` left: rope knot P (5296, 252), the log tied on the right and
-  swinging left at a hero coming from the entrance; the trip vine at x 5176-5192; the swing band x 5246-5346. A
-  `Decor:trunk` at x 5356 holds the bough's thick end.
-- Nothing else: the trap is met alone, and the tied log, the vine and the exit are all on screen from the entrance (D84).
-- Measured (`DeadfallTrapTest`): jumping the vine from 2 to 60 px before it fires nothing and reaches the exit in 5.17 s;
-  tripping it and stopping within 0.68 s is safe with either warning (6.47 s to the exit, 6.88 s with the assist); a
-  hero who walks straight in is hit 2.65 s after the entrance (2.97 s with the assist), 0.27 s (0.18 s) into the swing.
+- `Deadfall` (the bough, 112 x 24) at (5184, 243) (5248 until #500 moved it 64 px left), `swing` left: rope knot P (5232, 252), the
+  log tied on the right and swinging left at a hero coming from the entrance; the trip vine at x 5112-5128; the swing band
+  x 5182-5282. A `Decor:trunk` at x 5292 holds the bough's thick end.
+- Since #500 (D105) the room also holds a `FallingStone` (id 179, x 5392) and a `RedMob` (id 180, x 5472, `offNeg` 3); the tied
+  log, the vine and the exit are all on screen from the entrance (D84).
+- Measured (`DeadfallTrapTest`): jumping the vine from 2 to 60 px before it fires nothing and reaches the exit in 5.85 s (the stone
+  walked under, the mob swung at); tripping it and stopping within 0.68 s is safe with either warning (7.15 s to the exit, 7.57 s
+  with the assist); a hero who walks straight in is hit 2.00 s after the entrance (2.32 s with the assist), 0.27 s (0.18 s) into
+  the swing. (5.17 s, 6.47 s and 2.65 s before #500.)
 - D26: no support and no one-shot state the route needs; the spent log hangs above head height and the cut vine is
   scenery, so the exit stays reachable from every state.
 
@@ -1001,7 +1038,7 @@ appended at the map's end (forest-1 grew from 350 to 390 tiles) and listed after
 played between the lever lesson and the route room. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-1-bramble); trap
 card: [TRAPS.md](TRAPS.md#creeping-bramble-bramble).
 
-- RoomStart (5632, 272); RoomExit (5920, 176, 32 x 32) on the shelf's left end.
+- RoomStart (5760, 272; 5632 until #500 moved it 128 px right); RoomExit (5920, 176, 32 x 32) on the shelf's left end.
 - A solid shelf x 5904-6192, top y 208 (16 px thick, tiles row 13), with the floor running under it.
 - A static `Ladder` x 6192-6208, y 208-320 (no lever, no `dropDistance`), one tile off the right wall; the 16 px between
   it and the wall are open down to the floor.
@@ -1392,10 +1429,10 @@ y320        ========================================   floor; end walls at x 288
 | Trunks | `Decor` (ids 95, 96) | 3168, 3264 | 32 | 16 x 288 | `kind` trunk | scenery behind the branches (decor tier, no collision) |
 | Floor, walls | collisions 79, 80, 81 | 2880 | 320 | 640 x 48; walls 16 x 320 at x 2880 and 3504 | | closed room; the invisible ceiling is added by the loader (`RoomCeilingTest`) |
 | Coin | `Collectable` Coin (id 145) | 3040 | 304 | 16 x 16 | none | the first coin of the game, a sighting only: forest-1 has no healer |
-| Beetle | `Beetle` (id 147, #327) | 3264 | 304 | 24 x 16 | `offNeg` 0, `offPos` 6 | at the sound tree's foot (D100): its centre crawls x 3276-3372, its blast covers x 3236-3412 at most, clear of the rotten column (x 3184-3216) and under every branch |
+| Beetle (removed) | `Beetle` (id 147, #327) | 3264 | 304 | 24 x 16 | `offNeg` 0, `offPos` 6 | left the room under #500 (D105): the room is forest-1's one `reward` room |
 | Deadline | `Deadline` (id 26) | -1728 | 384 | 5376 x 16 | | widened to cover the new room |
 
-Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint and no lethal trap; one monster, the beetle added by #327. One coin (id 145, x 3040, y 304) on the floor, 128 px from the entrance and off the climb: the level's first coin ([D96](DECISIONS.md#d96-the-first-coin-is-met-in-the-tree-room-and-the-bat-ingredient-in-the-wall-room-417-2026-11-17), #417).
+Tiles: the floor copies room 3's (ids 23/43/63) and the two end columns are the wall columns (79/99/139 with the floor's edge tiles). No hint and nothing lethal: the beetle added by #327 left under #500, which made the room forest-1's one `reward` room (D105, D107). One coin (id 145, x 3040, y 304) on the floor, 128 px from the entrance and off the climb: the level's first coin ([D96](DECISIONS.md#d96-the-first-coin-is-met-in-the-tree-room-and-the-bat-ingredient-in-the-wall-room-417-2026-11-17), #417).
 
 ### How it plays
 
@@ -1403,11 +1440,11 @@ From the entrance both trees are in view. The near tree's branches are grey and 
 
 ### Recovery and D26 (swept by `TreeClimbTest`)
 
-A fallen branch stays fallen until death or a healer revisit; the branches never kill, so within a visit it stays fallen unless the hero dies in the beetle's burst (#327: a hero who walks to the sound tree and stops beside it when it commits dies 5.12 s after the entrance; the fast line never makes it commit, and a hero on the lowest branch is above its hearing band). The sure line uses no rotten branch and reaches the crown with any of the 32 subsets of the column gone. Walking off a sinking rotten branch to either side, at seven moments of its warning and fall, always ends alive on the floor or a sound branch, never inside a solid. The load refuses a rotten branch that is the only way up or that hangs above a one-way platform (`FallingPlatform.branchProblem`, `tools/check_tiled_links.py`).
+A fallen branch stays fallen until death or a healer revisit; the branches never kill, so within a visit it stays fallen (the beetle of #327 that could kill a hero beside the sound tree left the room under #500; nothing in it kills). The sure line uses no rotten branch and reaches the crown with any of the 32 subsets of the column gone. Walking off a sinking rotten branch to either side, at seven moments of its warning and fall, always ends alive on the floor or a sound branch, never inside a solid. The load refuses a rotten branch that is the only way up or that hangs above a one-way platform (`FallingPlatform.branchProblem`, `tools/check_tiled_links.py`).
 
 ### Tests
 
-`TreeClimbTest` (headless, real shipped map): census and coordinates, the room chain and retry, the placement under D69, the fast and sure lines and their order, the five stop-and-ride routes, the D26 sweep, the sideways exits, the telegraph and the one-way trigger, the load checks; since #327 the beetle's range and blast, the fast and sure lines past it, losing it from the lowest branch, and the room's one death. Allocation: two scenes in `AllocationBudgetTest` (D80). Changed existing tests are listed in D80.
+`TreeClimbTest` (headless, real shipped map): census and coordinates, the room chain and retry, the placement under D69, the fast and sure lines and their order, the five stop-and-ride routes, the D26 sweep, the sideways exits, the telegraph and the one-way trigger, the load checks, and that the room holds no monster and nothing lethal (#500). Allocation: two scenes in `AllocationBudgetTest` (D80). Changed existing tests are listed in D80.
 
 ## forest-2 trap placement plan (#261, D59)
 

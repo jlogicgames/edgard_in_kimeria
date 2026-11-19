@@ -201,7 +201,7 @@ keeps that target's own sound (`bounce`, `boss_hit`, the trap's warning, `hive_f
 ### Forest beetle (#327, seeds 6801-6806, D100)
 
 Four voice-synth sounds for the beetle, generated; heard and approved by the author in the game on 2026-11-18, in
-`forest-1-guard` and `forest-1-tree` (#327), with the body's `remains_crumble` and `remains_burn`. Each is a voice like the rest of the set, at its quiet end.
+`forest-1-guard` and, until #500 removed it, `forest-1-tree` (#327), with the body's `remains_crumble` and `remains_burn`. Each is a voice like the rest of the set, at its quiet end.
 
 - `beetle_notice` (0.22 s, RMS -19.0 dBFS): the beetle's own call when it notices the hero (D100: no shared alert sound):
   two dry mandible clicks (8 ms band-passed noise around 3.8 kHz) and a short rising chirp, `render_voice` 300 -> 560 Hz,

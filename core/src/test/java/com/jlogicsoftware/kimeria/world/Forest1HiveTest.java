@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
+import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -86,19 +87,41 @@ class Forest1HiveTest {
 
     // -- the route --
 
-    /** Ordinary play: walk, wait outside each band while it is in the air or about to be, climb right after a curtain. Seconds, or -1 on a death. */
+    /** The card's retry cost for the spider: a hero who walks on along the ledge without baiting it is bitten this long after the entrance. */
+    static final float SPIDER_DEATH_S = 6.25f;
+    private boolean blindOnLedge;
+    private float diedAt;
+
+    /**
+     * Ordinary play: walk, wait outside each band while it is in the air or about to be, climb right after a curtain, then bait the
+     * ledge spider's pounce, step back and strike it in its recovery. Seconds, or -1 on a death.
+     */
     private float route(Level level, float delay) {
         held.clear();
         settle(level, Math.round(delay * 60));
         List<HangingHive> hives = hives(level);
         HangingHive floor = hives.get(0), ladder = hives.get(1);
         float floorBand = floor.centerX() - HangingHive.BAND_WIDTH / 2f, ladderBand = ladder.centerX() - HangingHive.BAND_WIDTH / 2f;
-        int frames = 0;
-        boolean climbing = false;
+        int frames = 0, back = -1;
+        boolean climbing = false, committed = false, swung = false;
+        Spider spider = level.objects.stream().filter(Spider.class::isInstance).map(Spider.class::cast).findFirst().orElseThrow();
         while (!level.atRoomExit()) {
             held.clear();
             Rectangle b = body(level);
             float right = b.x + b.width;
+            if (climbing && !level.player.onLadder() && b.y + b.height <= LEDGE_TOP + 1 && !spider.isDefeated()) {
+                if (blindOnLedge) held.add(Input.Keys.D);
+                else
+                // On the ledge: bait the pounce, step back out of the locked bite, strike it in its recovery (D102).
+                if (spider.state() == Spider.State.WINDUP && !committed) { committed = true; back = 12; }
+                if (back > 0) { held.add(Input.Keys.A); back--; }
+                else if (spider.state() == Spider.State.WINDUP || spider.state() == Spider.State.LEAP || spider.state() == Spider.State.BITE) { /* wait out the miss */ }
+                else {
+                    held.add(Input.Keys.D);
+                    Rectangle e = spider.hitboxBounds();
+                    if (committed && spider.state() == Spider.State.RECOVER && e.x >= b.x && e.x - right < 8 && !swung) { pressed.add(Input.Keys.K); swung = true; }
+                }
+            } else
             if (!climbing && right <= floorBand - 2f) {
                 if (!(right >= floorBand - 12f && dangerous(floor))) held.add(Input.Keys.D);
             } else if (!climbing && right < ladderBand - 6f) {
@@ -111,7 +134,7 @@ class Forest1HiveTest {
                 if (level.player.position.y + 48 <= LEDGE_TOP + 1 && !level.player.onLadder()) held.remove(Input.Keys.W);
             }
             frame(level);
-            if (!alive(level)) return -1;
+            if (!alive(level)) { diedAt = (frames + 1) * STEP + delay; return -1; }
             assertTrue(++frames < 60 * 40, "stuck at " + level.player.position);
         }
         held.clear();
@@ -119,7 +142,7 @@ class Forest1HiveTest {
     }
 
     /** The mastered route from a fresh start: the room card's beat time (D105). */
-    static final float MASTERED_S = 7.12f;
+    static final float MASTERED_S = 8.85f;
 
     @Test void theMasteredRouteIsMeasuredAndEveryStartOffsetReachesTheExitWithAndWithoutTheAssist() throws Exception {
         float first = route(room(), 0f);
@@ -136,6 +159,17 @@ class Forest1HiveTest {
         }
         System.out.println("forest-1-hive route: from the entrance " + first + " s; over start offsets 0-9 s " + fastest + " to " + slowest + " s");
         assertTrue(slowest < 20f, "D19: the mastered route stays about 20 s at worst (" + slowest + ")");
+    }
+
+    /** The spider's retry cost: the mastered climb, then walking on along the ledge without baiting it: bitten (measured, the card's worst case). */
+    @Test void aHeroWhoWalksOnAlongTheLedgeWithoutBaitingTheSpiderIsBitten() {
+        blindOnLedge = true;
+        Level level = room();
+        assertEquals(-1f, route(level, 0f), "bitten");
+        Spider spider = level.objects.stream().filter(Spider.class::isInstance).map(Spider.class::cast).findFirst().orElseThrow();
+        assertFalse(spider.isDefeated());
+        System.out.println("forest-1-hive spider death: " + diedAt + " s after entering");
+        assertEquals(SPIDER_DEATH_S, diedAt, 0.1f, "the card's retry cost at the spider");
     }
 
     @Test void aHeroWhoIgnoresTheHivesDiesSomewhereAndTheRetryCostsAtMostTheRoom() {

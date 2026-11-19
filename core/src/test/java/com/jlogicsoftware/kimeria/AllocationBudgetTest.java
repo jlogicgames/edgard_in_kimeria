@@ -128,8 +128,9 @@ class AllocationBudgetTest {
      * together with the other room scenes (the 897.8 runs had the route room at 897.9 and the guard room at 906.2). The cost is the harness and
      * level code, as the other room scenarios; the ceiling is the highest full-suite run plus about 10 %, the whole-room convention of
      * FOREST_1_ROUTE_CEILING (1130) and FOREST_1_GUARD_CEILING (1280). A first ceiling of 880, set from the first 3 runs, failed the next 2.
-     * Since #327 the room holds a beetle at the sound tree's foot: 224.0 B/frame in 3 isolated runs (2026-11-18), the beetle crawling (the hero at
-     * the entrance is out of its hearing); its other states are {@link #beetleThroughTheRealLevel}.
+     * Between #327 and #500 the room held a beetle at the sound tree's foot (224.0 B/frame in 3 isolated runs, 2026-11-18); it left the room
+     * under #500 (D105), so the scene is the trees alone again and the ceiling is kept as it was, not re-derived; the beetle's states are
+     * {@link #beetleThroughTheRealLevel}.
      */
     static final double FOREST_1_TREE_CEILING = 990;
     /**

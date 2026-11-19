@@ -753,7 +753,7 @@ choice after a capture: a tiny authored leaf stays the fallback). `effects.LeafF
   1 to 2 px, about 60 px/s for 0.35 to 0.6 s; leaves are green, 5 to 6 px, 12 to 20 px/s for 9 to 14 s, from the room's top.
 - **Cost.** 24 slots, 0.0 B/frame (`AllocationBudgetTest.fallingLeavesThroughTheRealLevel`); tests `LeafFxTest`, `LeafRoomsTest`.
 
-**Forest beetle, built (#327, #398, D100, approved by the author 2026-11-18 as a concept, and in the game in `forest-1-guard` and `forest-1-tree` the same day).**
+**Forest beetle, built (#327, #398, D100, approved by the author 2026-11-18 as a concept, and in the game in `forest-1-guard` and `forest-1-tree` the same day; it left `forest-1-tree` under #500).**
 The body is an authored sprite; every effect is a particle on `KimeriaParticleSystem` (`effects.BeetleFx`, one per `Level`). pixelfx's
 `explosions/grenade`, `explosions/small-explosion`, `ui/exclamation` and `spawn/poof` named the needs only: nothing was copied or exported.
 

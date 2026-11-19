@@ -3,7 +3,6 @@ package com.jlogicsoftware.kimeria.world;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
-import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
@@ -30,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * The forest-1 tree room (#349, D80): two trees. The nearer one holds a column of rotten branches straight up (the fast line: each branch gives way
  * a warning after it is landed on and falls behind the climber); the farther one a zig-zag of sound branches that starts on its far side (the sure
  * line, D26). Both end on the sound tree's crown branch, which holds the checkpoint. A rotten branch never kills: a hero who stops on one rides it
- * down to the floor and climbs the sound tree. A beetle (#327, D100) crawls at the sound tree's foot: the room's one possible death is standing in
- * its burst; the rotten column is out of its reach, and one branch up the hero is above its hearing band.
+ * down to the floor and climbs the sound tree. The room is forest-1's one reward room (D105, #500): nothing in it can kill (the beetle that
+ * crawled at the sound tree's foot, #327, left it), and a death is only a deadline fall.
  * Ordinary keyboard input drives a scripted hero through the real shipped map; times are author (mastered) measurements, not novice playtests.
  *
  * <p>Y grows downward: the floor top is y 320, the branch tops are y 272, 224, 176, 128 and 80, 48 px apart (a jump rises about 58 px), and the
@@ -185,8 +184,7 @@ class TreeClimbTest {
         assertEquals(CHECKPOINT_X, checkpoint.getX(), 0.01f);
         assertEquals(CROWN, checkpoint.getY() + checkpoint.getHeight(), 0.01f, "it stands on the crown");
         assertTrue(level.objects.stream().noneMatch(LethalHazard.class::isInstance), "no lethal trap");
-        assertEquals(1, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster: the beetle at the sound tree's foot (#327)");
-        assertNotNull(beetle(level));
+        assertEquals(0, level.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "no monster: the room is forest-1's one reward room (D105, #500)");
         var coins = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).toList();
         assertEquals(1, coins.size(), "#417 (D96): one first coin, nothing else to collect");
         assertEquals(com.jlogicsoftware.kimeria.entity.items.ItemType.COIN, coins.get(0).type());
@@ -429,94 +427,5 @@ class TreeClimbTest {
         assertThrows(IllegalArgumentException.class, () -> new StaticPlatform(h.assets(), 0, 0, 64, 16, StaticPlatform.Skin.BRANCH, false));
         assertThrows(IllegalArgumentException.class, () -> new FallingPlatform(h.assets(), 0, 0, 32, 16, o -> { }, new TrapWarnings(),
             FallingPlatform.Skin.LOG, true));
-    }
-
-    // ---- the beetle at the sound tree's foot (#327, D100) ----
-
-    /** The beetle (24 x 16 at x 3264, offNeg 0, offPos 6 tiles): its centre crawls x 3276-3372, so its blast covers at most x 3236-3412, y 288-320. */
-    private static final float BEETLE_X = 3264, BEETLE_CENTRE_MIN = 3276, BEETLE_CENTRE_MAX = 3372, BLAST_LEFT_MIN = 3236, BLAST_RIGHT_MAX = 3412;
-    /** The room's one death (#327), pinned to 0.1 s (6 frames) like the guard room's routes (D68). */
-    private static final float BEETLE_DEATH_S = 5.12f, PIN_MARGIN = 0.1f;
-
-    private Beetle beetle(Level level) { return level.objects.stream().filter(Beetle.class::isInstance).map(Beetle.class::cast).findFirst().orElse(null); }
-
-    @Test void theBeetleGuardsTheSoundTreesFootAndItsBurstNeverReachesTheRottenColumnOrTheCrown() {
-        Level level = room();
-        Beetle b = beetle(level);
-        assertEquals(BEETLE_X, b.getX(), 0.01f);
-        assertEquals(FLOOR, b.floorY(), 0.01f);
-        assertEquals(BEETLE_CENTRE_MIN, b.rangeNeg() + Beetle.FRAME_WIDTH / 2, 0.01f);
-        assertEquals(BEETLE_CENTRE_MAX, b.rangePos() + Beetle.FRAME_WIDTH / 2, 0.01f);
-        assertEquals(BLAST_LEFT_MIN, BEETLE_CENTRE_MIN - 40, 0.01f);
-        assertEquals(BLAST_RIGHT_MAX, BEETLE_CENTRE_MAX + 40, 0.01f);
-        assertTrue(BLAST_LEFT_MIN > ROTTEN_X + BRANCH_W, "the rotten column's foot is out of every blast");
-        assertTrue(BLAST_LEFT_MIN < SOUND_RIGHT_X && BLAST_RIGHT_MAX > SOUND_RIGHT_X + BRANCH_W, "the sound tree's foot is inside its reach");
-        assertTrue(START_X + 48 + Beetle.HEAR_RADIUS < BEETLE_CENTRE_MIN, "it cannot hear the entrance");
-        assertTrue(TOPS[0] <= FLOOR - Beetle.HEAR_BAND, "standing on the lowest branch is above its hearing band");
-        Rectangle blast = b.blastBoxInto(new Rectangle());
-        assertTrue(blast.y >= TOPS[0], "the burst is lower than the lowest branch");
-    }
-
-    @Test void theFastLineLeavesTheBeetleCalmOrWaitingAndNeverCommitted() {
-        Level level = room();
-        Beetle b = beetle(level);
-        int frames = 0;
-        List<Hold> holds = fastLine();
-        int next = 0;
-        float from = feet(level);
-        while (!won(level)) {
-            Hold target = holds.get(next);
-            held.clear();
-            float dx = target.x() - centerX(level);
-            if (Math.abs(dx) > 1.5f) held.add(dx > 0 ? Input.Keys.D : Input.Keys.A);
-            if (standingAt(level, target.top())) { from = target.top(); if (next < holds.size() - 1) next++; }
-            else if (standingAt(level, from) && Math.abs(dx) < 40 && target.top() < from) jump();
-            frame(level); alive(level);
-            assertFalse(b.isCommitted(), "the rotten column never brings the beetle's trigger");
-            assertTrue(++frames < LIMIT);
-        }
-        report("fast line with the beetle (state at the crown: " + b.state() + ")", frames);
-    }
-
-    @Test void theSureLineClimbsAwayFromTheBeetleAndItsBurstPassesUnderTheHero() {
-        Level level = room();
-        Beetle b = beetle(level);
-        int frames = climb(level, soundLine());
-        report("sure line with the beetle (" + (b.isRemoved() ? "it burst under him" : "it is " + b.state()) + ")", frames);
-        assertTrue(won(level));
-    }
-
-    @Test void onTheLowestSoundBranchTheHeroIsOutOfItsHearingAndItGoesBackToCrawling() {
-        Level level = room();
-        Beetle b = beetle(level);
-        int frames = climb(level, soundLine(), TOPS[0]);
-        held.clear();
-        int calm = 0;
-        while (b.state() != Beetle.State.CRAWL || calm == 0) {
-            frame(level); alive(level);
-            if (b.state() == Beetle.State.CRAWL) calm++;
-            assertTrue(++frames < LIMIT, "it never lost him: " + b.state());
-        }
-        for (int i = 0; i < 60 * 5; i++) {
-            frame(level); alive(level);
-            assertNotEquals(Beetle.State.WINDUP, b.state(), "a hero on the branch is never reached");
-        }
-        assertTrue(standingAt(level, TOPS[0]));
-    }
-
-    /** The room's one death (the card's retry cost): walking to the sound tree and stopping when the beetle commits, inside its burst. */
-    @Test void stoppingBesideTheCommittedBeetleIsTheRoomsOneDeathAndItComesEarly() {
-        Level level = room();
-        Beetle b = beetle(level);
-        int frames = 0;
-        while (!level.player.isGotHit()) {
-            held.clear();
-            if (!b.isCommitted() && !b.isRemoved() && centerX(level) < SOUND_RIGHT_X + BRANCH_W / 2) held.add(Input.Keys.D);
-            frame(level);
-            assertTrue(++frames < 60 * 15, "standing beside it never died: " + b.state());
-        }
-        assertTrue(b.isRemoved(), "the burst is what killed him");
-        report("death stopping beside the committed beetle", frames);
-        assertEquals(BEETLE_DEATH_S, frames * STEP, PIN_MARGIN);
     }
 }
