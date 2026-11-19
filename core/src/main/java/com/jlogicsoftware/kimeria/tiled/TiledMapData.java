@@ -132,6 +132,8 @@ public class TiledMapData {
                     obj.y = floatAttr(objEl, "y", 0) + offsetY;
                     obj.width = floatAttr(objEl, "width", 0);
                     obj.height = floatAttr(objEl, "height", 0);
+                    XmlEl polylineEl = objEl.firstChild("polyline");
+                    if (polylineEl != null) obj.polyline = points(polylineEl.attr("points", ""), obj.x, obj.y);
                     XmlEl propsEl = objEl.firstChild("properties");
                     if (propsEl != null) {
                         for (XmlEl propEl : propsEl.children("property")) {
@@ -147,6 +149,22 @@ public class TiledMapData {
         } catch (Exception e) {
             throw new RuntimeException("Failed to load TMX: " + tmxPath, e);
         }
+    }
+
+    /** Numbers per polyline point (x and y). */
+    private static final int XY = 2;
+
+    /** Tiled's "x,y x,y ..." points, relative to the object, as world-space x0, y0, x1, y1, ... */
+    static float[] points(String text, float originX, float originY) {
+        String[] pairs = text.trim().split("\\s+");
+        float[] out = new float[pairs.length * XY];
+        for (int i = 0; i < pairs.length; i++) {
+            String[] xy = pairs[i].split(",");
+            if (xy.length != XY) throw new IllegalArgumentException("polyline point must be x,y: " + pairs[i]);
+            out[XY * i] = originX + Float.parseFloat(xy[0]);
+            out[XY * i + 1] = originY + Float.parseFloat(xy[1]);
+        }
+        return out;
     }
 
     private static void loadTileset(FileHandle tsxFile, TiledMapData data, Assets assets) {

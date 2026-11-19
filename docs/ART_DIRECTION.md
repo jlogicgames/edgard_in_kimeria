@@ -691,7 +691,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk; flying beetle blast, snail spit, the wolf's bite, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); flying beetle blast, snail spit, the wolf's bite, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -826,6 +826,30 @@ needs only: nothing was copied or exported.
   are its plum `3a2232`, `5e3442` and leg tans `c09670`, `9c7a5c` (`SpiderFx.SPIDER_CHIPS`).
 - **Cost:** `SpiderFx` pools of 64 and 104 from measured peaks of 50 and 83 (`SpiderFxTest`: three spiders winding up at the assist's
   0.75 s, leaping and biting while three others die); 0.0 B/frame through the real level.
+
+**Forest spider on walls and on its thread (#483, D103; the card approved by the author 2026-11-19, the wall poses drawn at the
+author's request rather than turned).** Previews: `build/spider-capture/` (not shipped).
+
+- **Wall sheet** `assets/images/objects/monster-spider-wall.png`, three 16×32 frames in `art/objects/monster/spider-wall.grid`
+  (`tools/forest_trap_sprites.py monster:spider-wall`, with the moon rim), same 12 colours: `wall1`, `wall2` (the climb: the legs spread
+  up and down the face, knees out away from it, feet on it above the head and below the abdomen, the body close to the wall with its
+  belly dark against it and the ochre chevron down its back), `walltap` (the notice on a wall: risen 1 px off the face, a foreleg
+  drumming in the air). Drawn head up with the wall on the right; the game mirrors it for a wall on the left and flips it for a head
+  going down. The turned floor frames of Phase 1 fanned every leg to one side like a comb and did not read as clinging.
+- **Hanging frames** in the floor strip: `hang` (head down, legs splayed) and `hangwind` (the drop's wind-up and the drop: legs drawn
+  in, fangs spread), drawn upright and mirrored about the thread, their far legs in a lighter tan `b08c68` (13 colours, 14 with the
+  rim). `silk`: the thread's 1×4 tile (`e8e0cc` with one `f0e2a8` texel), repeated down the thread every frame; the last few
+  pixels are drawn one texel at a time, so nothing is allocated.
+- **Effects** (`SpiderFx`): drop wind-up glints (the floor glints turned vertical, 60 a second, down the column to the thread's
+  end); shed specks (one pale 1 px `KIND_GRIT` per 6 px of thread paid out, 0.35 s); the snap (five specks drifting down the broken
+  thread, 0.35 to 0.55 s); the stub of a snapped thread fades over 0.4 s. The bite at the thread's end reuses the floor bite.
+- **Contrast** (the `check_contrast.py` metrics; the gate measures a placed route in every pose, `spider_parts`): wall frames on
+  every face of a static solid at least 32 px tall in the three maps, both sides, both ways up: outline 0.198 to 0.415, at least
+  0.28 on 63 of 65 faces; forest-2 x 16 and x 1296 are too dark beside it, so a route there fails (the placement rule). Hanging
+  frames at every lip with a floor 48 to 112 px below: 0.311 to 0.391. The thread: 0.537 to 0.549. The body differs from `hang`
+  in 68.5 % and from `hangwind` in 64.6 % of the silhouette (`RemainsTest`).
+- **Cost:** the drop's worst case peaks at 50 soft and 69 hard, inside the same pools; 0.0 to 0.1 B/frame for the drop and 0.2 for
+  the climb through the real level (`AllocationBudgetTest`).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

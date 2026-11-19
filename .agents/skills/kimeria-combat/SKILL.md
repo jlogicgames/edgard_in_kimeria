@@ -30,7 +30,10 @@ language in the monster's own frames plus a call in its own voice (no "!" mark, 
 `TrapWarnings` once (a base of its own goes into `TrapWarnings`, like `BITE_WARNING_SECONDS`); no teaching room and no hint
 text. Effects are particles in one owner per `Level` (`effects.BeetleFx`, `effects.SpiderFx`); its sprite strip comes from a
 grid (`tools/forest_trap_sprites.py monster:<name>`). A lethal touch that can meet a killing hit on the same frame resolves on
-the monster's next frame, so the hit wins the tie (the spider's bite).
+the monster's next frame, so the hit wins the tie (the spider's bite). A monster that leaves the floor follows the spider of D103:
+an authored route (a Tiled polyline: floors, walls, a thread from a lip) checked at load (`Spider.routeProblem`), the body box by
+pose (`Spider.boundsInto`), no strike from a wall, a drop box that is the fangs' swept column, and a body that falls to the floor
+below when it is killed off it.
 
 ## A monster's body (D101)
 

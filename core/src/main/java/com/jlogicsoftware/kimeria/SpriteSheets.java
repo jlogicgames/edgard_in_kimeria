@@ -72,6 +72,8 @@ public final class SpriteSheets {
     public static final Sheet MONSTER_SPIDER = new Sheet("images/objects/monster-spider.png", 32, 16);
     /** D101: the spider's body, its dead frame in a decor-tier palette (art/objects/monster/spider-body.grid). */
     public static final Sheet MONSTER_SPIDER_BODY = new Sheet("images/objects/monster-spider-body.png", 32, 16);
+    /** D103 (#483): the spider on a wall, three 16x32 frames (wall1, wall2, walltap), head up, the wall on the right (spider-wall.grid). */
+    public static final Sheet MONSTER_SPIDER_WALL = new Sheet("images/objects/monster-spider-wall.png", 16, 32);
 
     private SpriteSheets() { }
 

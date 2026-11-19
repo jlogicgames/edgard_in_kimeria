@@ -210,7 +210,7 @@ There is no violence or blood option in Settings.
 
 A plum-black spider with an ochre chevron and eight high-kneed legs (D102, #328), about half Edgard's height, skitters to
 and fro along its own stretch of floor, stop and go, and never leaves it. Touching it is harmless. When Edgard comes within
-about seven tiles on its level it feels him: it rises on its legs and drums the ground twice with a raised foreleg (half a
+about nine tiles of it, above, below or level, through rock or not, it feels him (D103): it rises on its legs and drums the ground twice with a raised foreleg (half a
 second, with a dry chittering hiss), then runs at him, slower than he runs. Once he is within three tiles of its front it
 locks onto the spot where he stands and crouches, forelegs up and fangs open, while pale glints of silk run along the floor
 to that spot (0.5 s, 0.75 s with the longer-warnings assist). Then it leaps there in a quarter of a second and bites, with a
@@ -221,6 +221,16 @@ reach it before it leaps; after a miss, its recovery is a free strike. A kill th
 There is no hint about it: it is met in play. A wall or a crate in its way stops its leap. Authoring: `Spider` (32×16) in `SpawnPoints` with `offNeg`/`offPos` like
 the mobs, checked at load (its pounce box at every point of its range must keep clear of the room's entrance, exit and
 checkpoints).
+
+**Climbing and the silk drop (D103, #483).** A spider may own a longer route: floors, the walls between them and a silk
+thread hanging from the lip of a ledge. It climbs walls slower than it runs, belly to the face, and never strikes from one; a
+spider chasing Edgard comes down to the floor to pounce. At the lip of its ledge it waits over the edge. When Edgard walks
+under it, it hangs head down over the lip while glints run down the column below it (the same 0.5 s, 0.75 s with the assist),
+then drops on its thread in a fraction of a second, bites at the thread's end just above the floor (heard hit or miss), hangs
+there harmless for 0.6 s and climbs back up, still harmless. One step aside makes it miss. Every weapon kills it on a wall or
+on its thread; its body falls to the floor below, and its thread snaps and fades. Authoring: a `Spider` polyline in
+`SpawnPoints` along its floors and walls, ending in a thread down from a lip, checked at load (every drop can be stepped out
+of and keeps clear of the entrance, exit and checkpoints, and the whole route is on screen).
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
 on its back, the spider on its back with its legs curled up), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard

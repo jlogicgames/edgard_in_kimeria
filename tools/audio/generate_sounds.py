@@ -1018,6 +1018,44 @@ SPIDER_THUD_VOICE = Voice(6907, 0.10, (170.0, 110.0), FORMANTS_U, FORMANTS_U, -1
 SPIDER_THUD_START = 0.030
 SPIDER_THUD_GAIN = 1.0
 SPIDER_BITE_RMS_DB = -18.0
+# Drop (spider_drop, #483, D103): a fast falling "zzzip" of silk paying out: noise through a band-pass that sweeps down,
+# chopped by a fast flutter (the spool's zipper) that slows as it falls, after a tiny tick at the let-go. Not the leap's
+# swish, which sweeps up, is airy and has no flutter.
+SPIDER_DROP_SEED = 6908
+SPIDER_DROP_DURATION = 0.25
+SPIDER_DROP_SWEEP = (4200.0, 900.0)               # Hz, band-pass centre from start to end: falling
+SPIDER_DROP_BW = 1400.0
+SPIDER_DROP_FLUTTER = (90.0, 45.0)                # Hz, the zipper's rate at the start and at the end
+SPIDER_DROP_FLUTTER_DEPTH = 0.45
+SPIDER_DROP_ATTACK = 0.012
+SPIDER_DROP_TAU = 0.16
+SPIDER_DROP_TICK_LEN = 0.005
+SPIDER_DROP_TICK_BAND = (3800.0, 2000.0)
+SPIDER_DROP_TICK_GAIN = 0.5
+SPIDER_DROP_DRIVE = 3.5
+SPIDER_DROP_RMS_DB = -21.0
+# Reel (spider_reel): a soft rising ratchet of ten dry ticks as it climbs back up its thread, harmless, so quiet.
+SPIDER_REEL_SEED = 6909
+SPIDER_REEL_DURATION = 0.30
+SPIDER_REEL_TICKS = 10
+SPIDER_REEL_FIRST = 0.012                         # s, the first tick
+SPIDER_REEL_GAP = 0.028                           # s between ticks
+SPIDER_REEL_TICK_LEN = 0.014
+SPIDER_REEL_BAND = ((1600.0, 1200.0), (3600.0, 1800.0))  # the first and the last tick's band: rising
+SPIDER_REEL_GAIN = (0.5, 0.9)                     # the first and the last tick's level
+SPIDER_REEL_RMS_DB = -27.0
+# Snap (spider_snap): the thread breaking when its spider is killed off the floor: a tiny high pluck (a damped tone over a
+# short noise transient), played with the kill sound.
+SPIDER_SNAP_SEED = 6910
+SPIDER_SNAP_DURATION = 0.12
+SPIDER_PLUCK_HZ = 2300.0
+SPIDER_PLUCK_TAU = 0.05
+SPIDER_PLUCK_ATTACK = 0.004
+SPIDER_SNAP_DELAY = 0.003                         # s of silence first, so the pluck starts on a zero, not a click
+SPIDER_PLUCK_NOISE_LEN = 0.004
+SPIDER_PLUCK_NOISE_BAND = (5200.0, 3000.0)
+SPIDER_PLUCK_NOISE_GAIN = 0.6
+SPIDER_SNAP_RMS_DB = -24.0
 
 
 def _add_at(out, start, x, gain):
@@ -1090,6 +1128,45 @@ def spider_bite() -> list[float]:
         _add_tick(rng, out, n_samples(t), n_samples(SPIDER_SNAP_LEN), SPIDER_SNAP_BAND, gain)
     return finish_rms(out, SPIDER_BITE_RMS_DB)
 
+
+def spider_drop() -> list[float]:
+    rng = random.Random(SPIDER_DROP_SEED)
+    n = n_samples(SPIDER_DROP_DURATION)
+    lo, hi = SPIDER_DROP_SWEEP
+    zip_noise = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, SPIDER_DROP_BW)
+    peak = max(abs(v) for v in zip_noise) or 1.0
+    env = envelope(n, SPIDER_DROP_ATTACK, SPIDER_DROP_TAU)
+    fast, slow = SPIDER_DROP_FLUTTER
+    out, phase = [], 0.0
+    for i, (v, e) in enumerate(zip(zip_noise, env)):
+        phase += (fast + (slow - fast) * i / n) / SAMPLE_RATE
+        flutter = 1.0 - SPIDER_DROP_FLUTTER_DEPTH * (0.5 + 0.5 * math.cos(2 * math.pi * phase))
+        out.append(math.tanh(SPIDER_DROP_DRIVE * v / peak) * e * flutter)
+    _add_tick(rng, out, n_samples(SPIDER_DROP_ATTACK), n_samples(SPIDER_DROP_TICK_LEN), SPIDER_DROP_TICK_BAND, SPIDER_DROP_TICK_GAIN)
+    return finish_rms(out, SPIDER_DROP_RMS_DB, REMAINS_PEAK_DB)
+
+
+def spider_reel() -> list[float]:
+    rng = random.Random(SPIDER_REEL_SEED)
+    out = [0.0] * n_samples(SPIDER_REEL_DURATION)
+    (lo_c, lo_w), (hi_c, hi_w) = SPIDER_REEL_BAND
+    for k in range(SPIDER_REEL_TICKS):
+        f = k / (SPIDER_REEL_TICKS - 1)
+        band = (lo_c + (hi_c - lo_c) * f, lo_w + (hi_w - lo_w) * f)
+        gain = SPIDER_REEL_GAIN[0] + (SPIDER_REEL_GAIN[1] - SPIDER_REEL_GAIN[0]) * f
+        _add_tick(rng, out, n_samples(SPIDER_REEL_FIRST + k * SPIDER_REEL_GAP), n_samples(SPIDER_REEL_TICK_LEN), band, gain)
+    return finish_rms(out, SPIDER_REEL_RMS_DB, REMAINS_PEAK_DB)
+
+
+def spider_snap() -> list[float]:
+    rng = random.Random(SPIDER_SNAP_SEED)
+    n, delay = n_samples(SPIDER_SNAP_DURATION), n_samples(SPIDER_SNAP_DELAY)
+    env = envelope(n - delay, SPIDER_PLUCK_ATTACK, SPIDER_PLUCK_TAU)
+    out = [0.0] * delay + [math.sin(2 * math.pi * SPIDER_PLUCK_HZ * i / SAMPLE_RATE) * e for i, e in enumerate(env)]
+    _add_tick(rng, out, delay + n_samples(SPIDER_PLUCK_ATTACK), n_samples(SPIDER_PLUCK_NOISE_LEN), SPIDER_PLUCK_NOISE_BAND,
+              SPIDER_PLUCK_NOISE_GAIN)
+    return finish_rms(out, SPIDER_SNAP_RMS_DB, REMAINS_PEAK_DB)
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -1102,7 +1179,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "beetle_windup.wav": beetle_windup, "beetle_windup_long.wav": beetle_windup_long, "beetle_pop.wav": beetle_pop,
                "remains_crumble.wav": remains_crumble, "remains_burn.wav": remains_burn,
                "spider_notice.wav": spider_notice, "spider_windup.wav": spider_windup,
-               "spider_windup_long.wav": spider_windup_long, "spider_leap.wav": spider_leap, "spider_bite.wav": spider_bite}
+               "spider_windup_long.wav": spider_windup_long, "spider_leap.wav": spider_leap, "spider_bite.wav": spider_bite,
+               "spider_drop.wav": spider_drop, "spider_reel.wav": spider_reel, "spider_snap.wav": spider_snap}
 
 
 def generate(out_dir: Path) -> list[Path]:

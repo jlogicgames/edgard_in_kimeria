@@ -10,6 +10,8 @@ public class TiledObject {
     /** Tiled calls this "type" (or "class" in 1.9+); we accept either attribute. */
     public String type = "";
     public float x, y, width, height;
+    /** A Tiled polyline's points in world space, x0, y0, x1, y1, ... (the layer offset included), or null for a box or a point. */
+    public float[] polyline;
     public final Map<String, String> properties = new HashMap<>();
 
     public String prop(String key, String fallback) {

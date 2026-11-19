@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Behavioural checks for the contrast tiers gate (tools/check_contrast.py, D76)."""
+import json
 import unittest
 import xml.etree.ElementTree as ET
 from unittest import mock
@@ -47,6 +48,15 @@ LIGHT_PATCH = 5  # a light larger than the sprite, offset one pixel up and left
 LIGHT_AQUA = (60, 120, 110, 255)
 DARK_GROUND = 8
 DARK = (20, 20, 30, 255)
+# The spider's route fixture (#483, D103): a 96 px wall face at x 400 (frame x 384, tops 224 to 288), a shelf lip at x 160 on
+# y 208 whose thread ends at 300 (the last hanging frame every 8 px from 208 is at 296); forest-2's dark left map wall face.
+SPIDER_WALL_X = 384.0
+SPIDER_WALL_TOP = 224
+SPIDER_WALL_LAST = 288
+SPIDER_LIP_X = 160
+SPIDER_SHELF = 208
+SPIDER_LAST_HANG = 296
+DARK_FACE_X = 16
 SWEEP = (1, 0, 5, 1)  # x step, y from, y to, y step over the dark ground
 
 
@@ -210,6 +220,52 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(found, [('Bramble', left_x, clump), ('Bramble-right', right_x + reach - clump, clump)])
         left, right = gate.frames('Bramble')[0], gate.frames('Bramble-right')[0]
         self.assertEqual(list(right.getdata()), list(left.transpose(gate.Image.Transpose.FLIP_LEFT_RIGHT).getdata()))
+
+    def test_a_spider_route_is_measured_on_its_floors_its_wall_and_its_thread(self):
+        """#483 (D103): a polyline spider is measured in every pose along its route, where Spider draws it."""
+        root = ET.fromstring('<map><objectgroup name="Collisions"><object x="0" y="320" width="640" height="48"/>'
+                             '<object x="400" y="224" width="224" height="96"/><object x="96" y="208" width="64" height="16"/>'
+                             '</objectgroup><objectgroup name="SpawnPoints">'
+                             '<object type="Spider" x="320" y="320"><polyline points="0,0 80,0 80,-96 208,-96"/></object>'
+                             '<object type="Spider" x="112" y="208"><polyline points="0,0 48,0 48,112"/></object>'
+                             '</objectgroup></map>')
+        errors = []
+        found = [(key, x, y) for _, key, x, y, _, _ in gate.placements(errors, {'forest-9': root})]
+        self.assertEqual(errors, [])
+        keys = {key for key, _, _ in found}
+        self.assertEqual(keys, {'Spider', 'Spider:wall', 'Spider:wall-down', 'Spider:hang', 'Spider:silk'})
+        walls = [(x, y) for key, x, y in found if key == 'Spider:wall']
+        self.assertEqual(walls[0], (SPIDER_WALL_X, SPIDER_WALL_TOP), 'the wall frame on the open side of the face, from the wall top')
+        self.assertEqual(walls[-1], (SPIDER_WALL_X, SPIDER_WALL_LAST), 'down to the wall foot')
+        hangs = [(x, y) for key, x, y in found if key == 'Spider:hang']
+        self.assertEqual(hangs[0], (SPIDER_LIP_X + gate.spider_thread_out(True) - gate.SPIDER_HANG_THREAD_X, SPIDER_SHELF),
+                         'hanging 6 px out from the lip')
+        self.assertEqual(hangs[-1][1], SPIDER_LAST_HANG, 'down the column every 8 px to the thread end (300)')
+        flipped, upright = gate.frames('Spider:wall-down')[0], gate.frames('Spider:wall')[0]
+        self.assertEqual(flipped.tobytes(), upright.transpose(gate.Image.Transpose.FLIP_TOP_BOTTOM).tobytes())
+
+    def test_the_python_route_matches_the_shared_fixture(self):
+        """#483: spider_route re-implements Spider.Route.trace; both are pinned to one fixture, so the two cannot drift."""
+        tiles = gate.ROOT / 'core/src/test/resources/tiles'
+        fixture = json.loads((tiles / 'spider-routes.json').read_text(encoding='utf-8'))
+        maps = [name for name in fixture if not name.startswith('_')]
+        self.assertTrue(maps)
+        for name in maps:
+            root = ET.parse(tiles / f'{name}.tmx').getroot()
+            spider = next(o for o in root.iter('object') if o.get('type') == 'Spider')
+            route = gate.spider_route(root, float(spider.get('x')), float(spider.get('y')), spider.find('polyline').get('points'))
+            self.assertEqual(route, fixture[name], name)
+
+    def test_a_spider_wall_on_a_dark_face_fails_the_placement(self):
+        """#483 (D103): the placement rule. forest-2's left map wall (face x 16) is too dark beside the climbing spider."""
+        root = gate.map_roots()['forest-2']
+        image = gate.composite(gate.tile_layer(root)[0], gate.map_background(root, 'forest-2'))
+        results = [('forest-2', DARK_FACE_X, *gate.measure(frame, image, DARK_FACE_X, top)) for frame in gate.frames('Spider:wall-left')
+                   for top in range(DARK_FACE_X, SPIDER_WALL_LAST, gate.SPIDER_STEP)]
+        errors = gate.check_sprite('Spider:wall-left', results)
+        self.assertEqual(len(errors), 1)
+        self.assertIn('forest-2 x 16', errors[0])
+
 
 class ShippedArtTest(unittest.TestCase):
     def test_shipped_decor_is_inside_the_decor_tier(self):

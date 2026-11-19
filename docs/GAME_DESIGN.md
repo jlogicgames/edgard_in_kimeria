@@ -699,7 +699,7 @@ outline 0.083 to 0.156 on every floor top of the three maps (decor ceiling 0.20)
 past the tunnel and developed at the sound tree's foot in `forest-1-tree` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); repeated in forest-2 on
 the exit ledge of `forest-fissure` ([ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure), approved by the author 2026-11-18).
 
-### Spider card (built, [D102](DECISIONS.md#d102-the-forest-spider-it-hears-notices-and-pounces-at-where-the-hero-stood-make-it-miss-then-strike-328-240-398), [#328](https://github.com/jlogicgames/edgard_in_kimeria/issues/328))
+### Spider card (built, [D102](DECISIONS.md#d102-the-forest-spider-it-hears-notices-and-pounces-at-where-the-hero-stood-make-it-miss-then-strike-328-240-398), [#328](https://github.com/jlogicgames/edgard_in_kimeria/issues/328); climbing and the silk drop, [D103](DECISIONS.md#d103-the-forest-spider-climbs-and-drops-a-route-of-floors-walls-and-a-silk-thread-two-strikes-one-tell-483-328), [#483](https://github.com/jlogicgames/edgard_in_kimeria/issues/483))
 
 The beetle teaches "never melee it, get clear"; the spider teaches the opposite. It pounces at the spot where the hero stood,
 from further than the sword reaches, then lies flat and harmless while it recovers: make it miss, then strike, or meet its
@@ -713,7 +713,7 @@ sword box 17 px past the hitbox front and live for the whole 0.7 s swing, the he
 | Size and look | 32×16 frames, nine in one strip (`crawl1`, `crawl2`, `rise`, `tap`, `crouch`, `leap`, `bite`, `recover`, `dead`), 12 colours, 13 with the moon rim; a plum-black abdomen with an ochre chevron of stitches, a smaller head with two pale eyes and pale fangs, eight tan legs with high knees, all rooted on the cephalothorax (four near, four far); drawn about 13 px tall; body hitbox `rect(2, 3, 20, 13)`, feet on the floor line | half the hero's height, like the beetle; the high-kneed legs make a silhouette no other sprite has; no reserved hue |
 | Contact | **harmless**: only the fangs kill, during the leap and the bite | every death comes from the wind-up the player watched (D5, D7) |
 | Patrol | it **skitters**: 48 px/s for 0.3 s, still for 0.3 s, inside `offNeg`/`offPos`; it never leaves the range, its leap included | the stop-and-go reads as a spider; the range is the authored safe line |
-| Awareness ("feels the ground") | the hero's centre within **112 px** either side, inside a **40 px** band above its floor line; lost beyond 160 px or after 1.0 s out of the band | a little longer and lower than the beetle's; a hero on a ledge above does not pull it |
+| Awareness ("feels the ground", D103) | the hero's centre within a **144 px circle** around its body's centre, in its room, through walls and floors; lost after **1.0 s beyond 192 px** | a hero above or below is noticed; hearing never kills, and the whole route is on screen |
 | Notice beat (#240) | **body language, no mark**: it rises tall on its legs (`rise`, 0.1 s), drums the ground with a raised foreleg twice (`tap`, `rise`, `tap`, `rise`, 0.08 s each) and settles (`crawl1`, 0.08 s): **0.5 s**, not scaled by the assist. Heard: its own call, `spider_notice` | D100's shared pattern: the creature's own reaction and its own voice |
 | Chase | **85 px/s**, crawl frames twice as fast; it waits at its range's end, facing the hero | faster than the beetle (70), slower than the hero (100): running away always works |
 | Commit | the hero's hitbox touches the **pounce box** (from the body's middle to **48 px** past its front, from the floor line to 8 px above its top); the target is **locked**: the hero's centre at that instant, clamped into its range and never behind it | a melee collider authored once (D10); the locked target makes the dodge the same every time (D7) |
@@ -728,14 +728,22 @@ sword box 17 px past the hitbox front and live for the whole 0.7 s swing, the he
 | Traps, other enemies | the bite hurts only the hero; traps do not hurt it | one new element at a time (D72) |
 | Rollback (D3, D6) | a death resets it calm at its spawn; killed, it stays gone with its body in a passed room; one left mid-pounce comes back calm | the enemy rules as they are |
 | Authoring checks | on the 32×16 spider whatever the Tiled object's size: the range inside the room on gapless floor; no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside the pounce box at any point of the range, facing either way (`Spider.problem`) | the hero never enters or stands in a pounce |
+| Route (D103) | authored as a Tiled **polyline** of type `Spider`: level pieces are floors, upright pieces along one face of a static solid are walls, an upright piece over open air at either end, hanging from a floor's end, is a silk thread to the floor below (at most 112 px). A box with `offNeg`/`offPos` is the floor-only spider above | the route decides its abilities, so a room meets one new ability at a time (D72) |
+| On a wall (D103) | it skitters and chases along the route, climbing at 64 px/s and coming down at 85 px/s, head along its motion, belly against the face, legs spread up and down it (`wall1`, `wall2`; the notice in `walltap`); corners are a one-frame quarter-turn snap. **It never strikes from a wall**: a hero below draws it down to the floor, where the pounce applies | travel never kills; the climb is slower than the hero runs |
+| Silk drop (D103) | at the lip of its floor, when the hero touches the **drop box** (the 8 px column its fangs sweep, lip to thread's end): it hangs head down over the edge (`hangwind`, drawn 1 px up) for the same bite warning, **0.5 s, 0.75 s with the assist**, with glints running down the column and `spider_windup`; then it **drops at 384 px/s** (`spider_drop`), fangs lethal and swept, to the thread's end 4 px above the floor, and **bites there** hit or miss (`spider_bite`); **0.6 s hanging, harmless**, then it **reels up at 64 px/s, harmless** (`spider_reel`) and steps back onto its floor; a new drop needs a full wind-up from the lip | one grammar for both strikes: crouch, glints to the spot, strike along that line; the hero needs 10 px (0.10 s) to step out, leaving 0.40 s |
+| Answers off the floor (D103) | every weapon kills it wherever it reaches it: on a wall, at the lip, dropping, hanging, reeling; the sword reaches it hanging low, a stomp from its ledge reaches it on the thread; weapons pass through the thread | about 2 s to punish a missed drop |
+| Body off the floor (D103) | killed on a wall or a thread, the body is set on the open side and falls to the floor below (gone over a pit); a thread snaps with it: specks drift down, its stub fades in 0.4 s, `spider_snap`, nothing left | the body is the record of the kill (D101) |
+| Route checks (D103) | `Spider.routeProblem`: pieces level or upright, walls 32 px or more, corners meeting, every floor as above, the route inside the camera's view of its room; a thread's column clear of solids, one-way platforms and moving or hanging objects, ending on floor that runs 16 px past it on each side, over no climbable or quicksand, and no standing place in its drop box; the contrast gate measures every pose along the route, so a dark wall face rejects the placement | every drop can be stepped out of, and the spider is in view when it acts |
 
 Effects are particles on `KimeriaParticleSystem` (`effects.SpiderFx`, one per level; the body's crumble and burn in the shared
-`effects.RemainsFx`); the only sprites are the spider's sheet (`assets/images/objects/monster-spider.png`) and its decor body.
+`effects.RemainsFx`); the only sprites are the spider's sheet (`assets/images/objects/monster-spider.png`, with the hanging
+frames and the thread's 1×4 tile since D103), its wall sheet (`monster-spider-wall.png`) and its decor body.
 Contrast of the nine frames (`tools/check_contrast.py` metrics at the seven RedMob and YellowMob spawns and the three beetle
 spawns): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; the gate measures every placed `Spider`, and
 `BODY_SWEEP` the body on every floor top (outline 0.075 to 0.184, decor ceiling 0.20). Code: `entity/enemy/Spider.java`; tests:
-`SpiderTest`, `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel`. Its rooms are chosen on their
-room cards, as the beetle's were.
+`SpiderTest`, `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (and, for D103,
+`spiderDropThroughTheRealLevel` and `spiderClimbThroughTheRealLevel`). Its rooms are chosen on their room cards ([#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484)), as the beetle's
+were.
 
 ## Rooms, dangers and skill development
 
