@@ -515,10 +515,10 @@ layer offset that this text already includes in the visible position).
 | ---: | --- | --- |
 | 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
 | 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
-| 240–320 | Quicksand, vertical Bat enemy (272); optional one-way steps to the coins | Hazard + Bat enemy |
+| 240–320 | A plain pit (80 px; the quicksand pool became a pit, #486), vertical Bat enemy (272); optional one-way steps to the coins | Pit + Bat enemy |
 | 416–480 | One-way ledge (id 122), reached from the stair; empty since #417 moved the Bat ingredient to `forest-walls` (the ladder, id 123/124, is removed by #376) | Scenery |
-| 512–608 | Horizontal Bat (patrol ends at about 608) and a second quicksand | Same, repeated |
-| 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the sand, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
+| 512–608 | Horizontal Bat (patrol ends at about 608); a second plain pit at x 560-608 (48 px) | Same, repeated |
+| 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the second pit, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
 | 704–736 | RoomExit (x 704-720), room wall (x 720-736) | End of the room |
 
 ### `forest-2` / `forest-walls` (x 736-1280, since #376)
@@ -1357,7 +1357,7 @@ Preview (schematic drawn from the map, not a game screenshot): [forest-2-trap-pl
 
 Three rooms, left to right: `forest-entry` (x 0-1280), `forest-canopy` (x 1280-1952), `forest-boss` (x 2112-2560, entrance 2192,304; the 160 px between canopy and boss is void, the healer scene runs there). Mastered required routes: entry **16.27 s**, canopy **5.00 s** (budget about 20 s, D3).
 
-**`forest-entry` has no free floor.** Between the hazards that already stand there, the only gaps are 64 px (x 688-752, between the Bomb's blast and the YellowMob's reach), 16 px (896-912) and 48 px (1008-1056). A thorn tuft or explosive needs a 128-176 px jump envelope; a falling trap or vine needs a clear column; a puffball needs a crossing. The room already teaches stomp, ladder and lever, quicksand, the Bomb, wall jump and sword, and its route is 16.27 s, so a death late in it replays 16 s. **Plan: the entry room is not touched.**
+**`forest-entry` has no free floor.** Between the hazards that already stand there, the only gaps are 64 px (x 688-752, between the Bomb's blast and the YellowMob's reach), 16 px (896-912) and 48 px (1008-1056). A thorn tuft or explosive needs a 128-176 px jump envelope; a falling trap or vine needs a clear column; a puffball needs a crossing. The room already teaches stomp, ladder and lever, quicksand (removed from the Forest by #486), the Bomb, wall jump and sword, and its route is 16.27 s, so a death late in it replays 16 s. **Plan: the entry room is not touched.**
 
 **Later (#376, 2026-11-17):** the 64 px gap at x 688-752 is now the seam between `forest-entry` (x 0-736) and `forest-walls` (x 736-1280); the second YellowMob's left patrol end moved from x 752 to x 816. Neither room has gained free floor for a trap.
 

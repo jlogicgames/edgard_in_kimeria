@@ -29,7 +29,7 @@ class JumpFrameRateTest {
     private static final float DESIGNED_APEX = 59.67f;
     /** The air time of that jump at 60 Hz, from the press to the landing frame (54 frames). */
     private static final float DESIGNED_AIR_SECONDS = 0.9f;
-    /** The forest-2 entry room's first quicksand pit. */
+    /** The first quicksand pit of the test map {@code tiles/practice-test.tmx} (the shipped Forest has none since #486). */
     private static final float QUICKSAND_X = 240, QUICKSAND_TOP = 320;
     /** Allowed error of the measured sink speed, px/s (frame-time rounding over one second). */
     private static final float SINK_TOLERANCE = 0.2f;
@@ -131,17 +131,18 @@ class JumpFrameRateTest {
 
     /**
      * A body resting in quicksand sinks at {@link CollideBody#QUICKSAND_SINK_SPEED} at every frame rate. Measured on the
-     * hero and on the forest-2 entry room's YellowMob, both put on its first quicksand pit (x 240-320, top y 320); every
+     * hero and on a YellowMob, both put on the test map's first quicksand pit (x 240-320, top y 320); every
      * enemy (RedMob, YellowMob, Boss) and the hero share the same quicksand branch of {@code CollideBody}.
      */
     @Test void quicksandSinksAsFastAtEveryFrameRate() {
         StringBuilder report = new StringBuilder();
         boolean ok = true;
         for (Rate rate : RATES) {
-            Level level = new Level(h.assets(), h.game(), new Player(h.assets(), h.game(), 0, 0), "forest-2", Rectangle::new);
-            YellowMob mob = null;
-            for (Object o : level.objects) if (o instanceof YellowMob y) mob = y;
-            assertNotNull(mob, "forest-2 entry room has a YellowMob");
+            Level level = new Level(h.assets(), h.game(), new Player(h.assets(), h.game(), 0, 0), "practice-test", Rectangle::new);
+            YellowMob mob = new YellowMob(h.assets(), h.game(), 100, 288, 48, 32, 0, 0);
+            mob.setPlayer(level.player);
+            mob.setLevel(level);
+            level.objects.add(mob);
             frame = 0;
             placeOnQuicksand(level.player, QUICKSAND_X + 20);
             placeOnQuicksand(mob, QUICKSAND_X + 60);

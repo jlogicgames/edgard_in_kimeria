@@ -136,7 +136,7 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
 
 - [ ] Check the revised teaching layout (`9d5e630`, #73/#75) with Assist off and on:
   the 64 px runway after the bomb must let the player escape without meeting the mob;
-  the shortened bat patrol over the second quicksand must remain readable; assess
+  the shortened bat patrol over the second pit (x 496-608, pit x 560-608) must remain readable; assess
   the optional canopy collapse on the way to the Mushroom. Ask the player to explain
   failures involving stomp, sword, bomb and falling platform without prompting.
   Earlier acceptance of the previous layout and automated route success do not
