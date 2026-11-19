@@ -3256,3 +3256,16 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   0.1 B/frame is unchanged in kind. No threshold or tolerance changed. The other D102 tests pass unchanged.
 - **Not yet placed (#484):** no spider is placed in a Forest room; the placement and the room cards are the next task, and the
   look, the timing and the three sounds are judged in play then.
+
+## D104. Quicksand leaves the Forest for the Swamp; the engine support stays (#486)
+
+- **Status:** Accepted (author, 2026-11-19: the `forest-entry` card without sand).
+- **Decision:** the Forest has no quicksand pit, no quicksand tiles in use and no quicksand teaching. Quicksand is a Swamp
+  mechanic by theme (`docs/GAME_DESIGN.md` stage table); its rules, tiles, sprites, sound and teaching room are designed with
+  the Swamp (#105, #399, #486 Part 2).
+- **Forest change:** in `forest-entry` the two pits (x 240-320 and x 560-608) became plain floor. The room introduces only
+  `yellowmob`; the Bomb now develops against the second Bat's lane (a 24 px pocket, x 608-632, between the Bat's patrol end and
+  the blast) instead of against sand.
+- **Kept:** `CollisionBlock.quickSand`, the `CollideBody` sink branch and D98's sink speed, and the load checks that skip
+  `QuickSand`, because the Swamp reuses them. The physics stays covered on the test map `practice-test.tmx`
+  (`JumpFrameRateTest`, `RoomTest`).

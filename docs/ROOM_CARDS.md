@@ -73,7 +73,7 @@ what the player does about them.
 | honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst |
 | false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud |
 | deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past |
-| quicksand | `Collisions:QuickSand` | keeps moving across sinking ground |
+| quicksand | `Collisions:QuickSand` | keeps moving across sinking ground; no Forest room uses it (moved to the Swamp, planned under [#105](https://github.com/jlogicgames/edgard_in_kimeria/issues/105), [#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486)); the engine support stays |
 | redmob | `RedMob` | beats a walking enemy with a visible whip wind-up (sword or stomp) |
 | yellowmob | `YellowMob` | stomps a walking enemy |
 | bat-enemy | `Bat` | passes or beats a flying enemy |
@@ -465,20 +465,25 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | --- | --- |
 | Level | forest-2, play order 3, room 1 of 5 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
-| Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, keep moving over quicksand, pass the Bats, jump the Bomb, and see the coins. |
-| Introduces | yellowmob, quicksand |
-| Develops | touch-explosive: the Bomb (a reskin of the stump) stands 48 px past the second quicksand pool, so the hero comes off sinking ground straight into its jump, and backing away from its wind-up means backing onto the sand |
+| Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, pass the Bats, jump the Bomb, and see the coins; the floor is plain ground all the way, so the only new thing is the YellowMob. |
+| Introduces | yellowmob |
+| Develops | touch-explosive: the Bomb (a reskin of the stump) stands 48 px past the end of the second Bat's floor-level patrol (x 608), so the hero meets the Bat and the Bomb back to back, and the only safe place to back away from the wind-up is a 24 px pocket (x 608-632) between the Bat's lane and the blast |
 | Combines | - |
 | Repeats | bat-enemy, coin |
-| Mastered route | 6.80 s required, 10.40 s all coins and 6.12 s on a collection return (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
+| Mastered route | 6.80 s required, 10.40 s all coins and 6.12 s on a collection return (`RoomReplayTest`, three identical attempts), re-measured on the plain floor of [#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486) with the same result as with the sand; target about 20 s, coins about 30 s |
 | First learning | not measured (#135) |
-| Retry cost | the whole room, about 7 s, for a death at the Bomb at its end (was about 16 s for the undivided room) |
+| Retry cost | the whole room, about 7 s (the required route, 6.80 s, re-measured without the sand), for a death at the Bomb at its end (was about 16 s for the undivided room) |
 | Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
 | D26 | no one-shot support; the Bomb is the only one-shot object and the exit stays reachable after it blows |
 | Hints | none (the D24 controls zone is removed by #376: forest-0 teaches the controls) |
-| Landmark | the stair of three platforms over the first quicksand pool |
+| Landmark | the stair of three platforms (x 240-400), now over plain floor, climbing to the coin at its top |
 | Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736 |
 | Decisions | D72, D96 |
+
+Quicksand leaves the Forest ([#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486)). Pool 1 (x 240-320) and pool 2 (x 560-608) become plain Forest floor, so the floor block runs
+unbroken from x 0 to the wall at x 720. The stair of three platforms stays where it is and becomes an optional climb to
+the coin on its top. The Bat patrols, the Bomb, the YellowMob and the coins keep their places; only the Bomb's
+Develops line changes, from sand to the 24 px pocket between the second Bat's lane and the blast.
 
 Split detail ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)). The free floor between the
 Bomb's blast (x 632-696) and the second YellowMob (x 832, left patrol end x 752, hitbox from x 758) is 56 px, too
