@@ -247,17 +247,295 @@ frame, in addition to viewing the master. Record author review for each artwork 
 separately from renderer checks. Earlier approval of the coarse portrait version does
 not automatically approve its remaster or every future image.
 
-## Parallax (author request, 2026-11-05, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+## Forest look and parallax layers (draft for approval, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
-A request and idea, not an implemented rule.
+Draft card, 2026-11-19, from the author's decisions of the same day; the answers given that day are recorded in section 6. **Nothing here is built or binding until the author approves it
+and it gets a D-number.** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
+no palette size, alpha, banding or value-band limit applies to the background or the foreground; only the readability rules of section 3
+do. Mood: a blue night forest under a big moon (references: a silhouette forest with hazy blue depth and ground mist; a moonlit
+deciduous forest with dark framing trees; Replaced and Magnet for a lit walk edge, red enemies with glowing eyes and a little bloom).
+**Colour by meaning:** background blue; terrain brown with a lit cue where you can stand or grab; mechanisms the active family; traps
+and enemies the danger family (red, or their own hue if it clearly separates from blue); the hero stays Edgard (D79) and always stands
+out; pickups keep their cue. **Value structure (inverted, author, second pass):** near black at the ground, lighter going up, so the hero
+and the play read against black in the play band and the light sky stays above it. Aerial perspective still holds at every height
+(far lighter than grove, grove lighter than mid), but every layer darkens toward its foot, and mist bands lie between the layers.
+View 640x360.
 
-- **Layers:** a near, blurred **foreground** layer, the **main** layer where the hero acts, and
-  one or more **background** layers behind it.
-- **Readability rule (proposed):** the foreground layer must **never hide** traps, hints or the
-  hero; it frames the scene at the edges or is faint enough to see through.
-- **Performance:** desktop and web (including mobile browsers) are targets, so the number of layers, blur cost and overdraw
-  need a measured budget before the layers are fixed.
-- **Per-stage art:** each stage has its own set of layers.
+### 1. Colour roles
+
+The background ramps are generated in OKLab along one night hue (indigo-navy in the dark, cooler and greyer in the light) and dithered
+with an ordered 4x4 pattern, so the gradients are smooth with no visible band; the values below are the anchors, not a palette limit.
+
+| Role | Hue family | OKLab L (anchors) | Tier (D76) | Notes |
+|---|---|---|---|---|
+| Sky, top to ground | deep navy-indigo (third pass, author: a real night) | 0.285 at the top, 0.22 at y 150, 0.18 at y 205, 0.13 at y 255, 0.07 at y 300, 0.04 at the bottom | Background | a little lighter going up, near black at the ground; the D92 clear colour `2c3f66` stays the fallback |
+| Stars | pale blue-white | 0.88, 0.72, 0.58 | Background (shared) | sparse: 64 in the upper 208 px of the view, thinner toward the horizon, 1 px and a few 2x2; none within 18 px of the moon; fixed on screen |
+| Moon | white, ice-blue maria | disc `f4fbff`-like 0.985; maria in three flat tones 0.93, 0.87, 0.80 (pale cyan to ice blue); glow two hard rings of flat alpha (0.15, 0.07) | Background (shared) | radius 38 px (77 px across), fixed on screen; a hard stepped circular edge, crisp pixel clusters, no smooth halo; the brightest thing in the frame and the rim's light (D92) |
+| Clouds | periwinkle and lavender | white edge 0.93 toward the moon; body 0.70, 0.60, 0.51, 0.43 | Background (shared) | cumulus masses with a 1 px white edge on the outline facing the moon (up and right), flat tones, stepped edges; below the moon's 0.985 |
+| Far ridge | dark night blue | back row 0.165, front row 0.135 at their tops, a moonlit right edge +0.03, valley mist +0.088 at y 232 and +0.05 at y 211 (wispy: its height and thickness wave along the strip, fourth pass), 0.04 at the foot | Background | two overlapping rows of small spruces, a shade darker than the sky behind them |
+| Grove (new) | dark blue | 0.10 at the tops with a moonlit right edge (+0.06), wispy mist +0.085 at y 262 (fourth pass), 0.035 at the foot | Background | nearer, larger spruces: they fill the depth between mid and far |
+| Mid forest | near-black blue | trunks 0.085 at the top to 0.03 at the floor, a faint mist veil +0.03 at y 276, moonlit right edge up to +0.10, leaf masses 0.05 to 0.13, undergrowth 0.02 to 0.04 | Background | big trunks, some leaning or curved; leaf masses at branch ends and entering from the top edge. The moon is fixed on screen and the mid layer scrolls at 0.4, so trunks and branches cross the moon and its glow at many cameras (not only 0, 320 and 640): accepted as a dark silhouette against the moon, which stays the brightest thing in the frame; at cameras 0, 320 and 640 the previews keep the disc clear, with two thin trunks in the gaps beside it and the branches toward it shortened or dropped |
+| Terrain body | brown | soil `4a3424` 0.346 (topsoil `5c412c` 0.400, darker toward the bottom to `150e0a`); rock `3c3731` (0.340) down to `2b2724` (0.276) and the ink `272320`, never lighter than the soil (the boulder interior tiles 53 and 54 are low-contrast speckle, no per-tile feature, so the wall shows no repeat; an interior tile used as a top shows no lit cue: accepted) | Active (terrain) | replaces `Tileset.png` (#189), sketch `art/terrain/forest/` (`python3 tools/parallax_mock.py --terrain` renders it over the layers); the walk edge is a lit lip: blade tips, a 2 px straw line, a moss band and moss hanging over a shadow line |
+| Walk and grab cue | pale straw | `e1cfa5` 0.859 | Active | 1 px lit top edge, and a 1 px lit side where a wall is grabbable (the Replaced/Magnet edge). Approved by the author, 2026-11-19. Not the draft's `e0b869`: that is the honey fungus's reserved `e2b25a` (OKLab distance 0.017) |
+| Foreground | neutral near-black (one palette for every piece, third pass) | pixel defocus (author's pick, 2026-11-19): body `030303` 0.097, `010101` 0.067 toward the foot of a standing piece, bark and midribs `0e0d11` 0.162; the moon rim is a solid 1 px line `7d8db0` (0.643) on the edges facing the moon (up and right) with `3c4865` (0.404) behind it, and is dithered (`3c4865`, `1d2335` 0.259) only where it fades toward the foot of a standing piece (hanging pieces keep the full rim; no dotted single-pixel rim anywhere); the unlit edge is a soft alpha step, outside it the fringe in alpha 0.75, 0.50, 0.28 (the last one dithered) and a lit fringe beside the rim. The foreground reads nearer than the mid layer by its scale, its neutral (hueless) colour against the blue layers and its rim, not by value: its body (0.097) is no darker than the mid trunks (0.03 to 0.085) | Foreground (new, below) | open, lacy shapes: separate stems, fronds, blades and leaves with gaps the play shows through; a few clumps with open ground between them, not a continuous band. No Gaussian blur |
+| Ambient lights, by stage | Forest and Swamp: fireflies, the #472 lime `b8f23a` (`Firefly.smallGlow`); Steppe and Castle: pale spirit lights, hue to be chosen with those stages ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) | Forest and Swamp: Active (play layer, #472); spirit lights: Background | The fireflies replace the draft's periwinkle distant lights (author, 2026-11-19, section 6). Spirit lights: tiny, drifting; hue bans in 3 |
+| Hero | D79, unchanged | ink `0b0814` 0.146, hair `241a26` 0.235, skin `e6a86c` 0.777 / `c27a45` 0.645, breeches `2f4a8a` 0.423, headband `c22a24`, rim `c4cfe8` | Active | the moon rim carries the outline (D92) |
+| Danger | red | enemy body `86101f` 0.400, eyes and glow `ff6b57` 0.708 | Active | dark body, glowing eyes; never the hero's headband `c22a24` (0.14 apart). Traps may keep their own hue (bark, stone, spore lime). The beetle and the spider move into this family, dark crimson body with glowing eyes; the recolour is made after the layers exist and measured over them ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) |
+| Mechanisms | active family | the walk cue `e1cfa5` on the part you use (lift top, lever handle), steel or wood body, ink and rim. The lever's red knob (`e82026`) leaves red for the walk cue, recoloured after the layers exist ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) | Active | no reserved accent: gold `ffd23a` is fire and the coin, honey `e2b25a` the fungus traps |
+| Pickups | warm white, violet | halo `ffffff`/`fff4aa` (#345), jar, Mushroom | Active | unchanged: the bob, halo and sparkle cue |
+
+### 2. Layers
+
+| Layer | Factor | Content | Art and tiling (sketch) | Draw pass | Tiled |
+|---|---|---|---|---|---|
+| Sky | 0 | smooth gradient | one dithered 16 px column per tile row (`forest-sky`), repeated | back | layer `sky`, `parallaxx` and `parallaxy` 0 |
+| Stars | 0 (x and y) | sparse small stars | five 128x208 pieces side by side, `art/parallax/shared/` | back | layer `stars`; fixed on screen, shared by every world |
+| Moon | 0 (x and y) | the moon and its stepped glow | one 128 px piece, `art/parallax/shared/` | back | layer `moon`; **fixed on screen, the same position in every world** |
+| Clouds | 0, plus drift | cumulus | pieces in one 1024 px loop, `art/parallax/shared/` | back | layer `clouds`, properties `driftx` (px/s) and `wrapx` (px) |
+| Far ridge | 0.15 | two rows of small spruces, valley mist | one seamless 512 px strip (four pieces in order) | back | layer `far`, `parallaxx` and `parallaxy` 0.15; the pieces run 32 px past the room bottom (bleed) |
+| Grove | 0.25 | nearer spruces, mist at their foot | one seamless 768 px strip (three pieces in order) | back | layer `grove`, `parallaxx` and `parallaxy` 0.25; 48 px of bleed past the room bottom |
+| Mid forest | 0.4 | trunks, branches, leaf masses, undergrowth | one seamless 1024 px strip (four full-height pieces in order) | back | layer `mid`, `parallaxx` and `parallaxy` 0.4, `offsety` -48: 48 px of bleed over the room top (drawn, not mirrored: each canopy mass the room top cut closes in its own lumpy crown, a lone trunk carries on along its slope) and 64 px past the bottom |
+| Play | 1.0 | terrain (`forest-terrain`), decor, traps, enemies, hero | unchanged; 10 rows of deep soil past the room bottom (`deep-1` to `deep-3` in the terrain sketch, near black at the foot, `deep-3` under a pit) and the decor layer `play-above` (7 rows, `offsety` -112) carrying ropes and walls on over the room top | world | existing layers, plus `play-above` (no collision) |
+| Foreground | 1.6 (kept, third pass: see the cover-time rule in section 3) | few big, readable shapes, not a band (Hollow Knight, Dead Cells): a vine curtain (a sagging bough, vines with big pointed leaves) and a root curtain (roots of very different lengths, the deepest almost to the floor) hanging from the top, leaves and a bough in the top-left corner; big leaves, fern fronds and grass in a few low clumps on the floor line and a tuft; the tips of two tall leaves at the room end. Tall pieces rising from the screen bottom (`rise-fern`, `rise-trunk`, `rise-reeds`, up to two thirds of the view, sprites unchanged in size) go only where no camera carries their stems over an excluded rect (none in the busy mock room; two clear runs in the calm mock room); they are open (lace) and thinnest where they cross the hero's band | modular pieces placed by hand as tile objects, `forest-fg` is a collection of images (pixel defocus) | front | objectgroup `foreground` of tile objects per room, `parallaxx` and `parallaxy` 1.6, formula in Offset; every standing piece has a `-foot` under it and every hanging piece a `-top` over it (bleed) |
+
+- **Shared sky objects (author, 2026-11-19).** One moon and one set of clouds serve every world (Forest, Swamp, Steppe, Castle); in the
+  Castle they are seen through the windows. The moon is fixed on screen (factor 0 in x and y): it never moves with the camera and sits
+  at the same screen position in every room. The clouds drift continuously over time at a constant speed per cloud layer, independent of
+  the hero and the camera, and wrap at `wrapx`; the sketch uses 3 px/s.
+- **Sketch files.** `art/parallax/forest/*.grid` and `art/parallax/shared/*.grid` (one char per pixel, colours `RRGGBB` or `RRGGBBAA`)
+  are the drawing; soft edges are drawn there as flat colours with alpha, the exporter applies no filter; `tools/parallax_sprites.py` exports the sheets and `.tsx` files; `tools/parallax_mock.py` builds
+  `mock.tmx` over the first room of forest-1, renders previews at cameras 0, 320 and 640 and checks the
+  foreground (section 3); `--room calm` does the same for the calm room (`mock-calm.tmx`, terrain sketch, `preview-calm-{a,b,c}.png`
+  at cameras 0, 80 and 160 and 2x copies), and `--check` checks both mocks. Every preview also has its look frames, `-up` (camera top
+  8 - 100, the floor hero's full look up) and `-down` (8 + 150), the hero in his look pose (`preview-{0,320,640}-{up,down}.png`,
+  `preview-calm-{a,b,c}-{up,down}[-2x].png`); `--room calm` also writes `preview-calm-look.gif` (the hero standing mid-room, steady, a
+  1 s smoothstep look down, hold, a 0.2 s return, a look up, return, as `LookAround` pans) and `preview-calm-walk.gif` (start to exit at
+  100 px/s, steady camera, run cycle), 70 ms a frame (14.3 frames/s) at 2x nearest with one global 127-colour palette (each under 5 MB;
+  20 frames/s made the look GIF 5.3 MB).
+- **Code (verified 2026-11-19).** The game does not use libGDX's `TmxMapLoader` or `OrthogonalTiledMapRenderer`: `tiled/TiledMapData`
+  merges every `<layer>` CSV into one `backgroundGrid` and ignores `parallaxx/y`, `opacity`, `<imagelayer>` and `repeatx`. The parser
+  must keep these layers apart (by a layer property) and read those attributes and the cloud drift. Back layers draw in `Level.render`
+  before `renderBackground`; the foreground after `fairy.renderFront`; the HUD stays its own later pass.
+- **Offset.** `x * (1 - factor)` from the camera, snapped to whole pixels. To match what Tiled shows, use the view centre measured from
+  the map's `parallaxoriginx` (Tiled lines the layers up when the view is centred on the origin), not the camera's left edge. A room
+  change jumps the layers; `RoomFade` hides the jump.
+- **Vertical parallax (author, 2026-11-19).** Each layer's vertical factor is its horizontal factor (sky, stars, moon, clouds 0; far
+  0.15, grove 0.25, mid 0.4, play 1, foreground 1.6), measured from the floor camera, so the steady frame is the authored one:
+  `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
+  for a 368 px room and the 360 px view) and camTop the camera's top edge (whole pixels). The standing hero looks up 100 px and down
+  150 px (`LookAround`, a 1 s smoothstep pan, a 0.2 s return), not clamped to the room. The steady camera top is 8 with the hero on
+  the floor and as low as the room top (0) when he stands high (above y 256), so the look range is camera top 0 - 100 to 8 + 150, and a
+  layer of factor f shows room y 8 - 108 f to 368 + 150 f (the offset snapped as the game's `Math.round`, half up). Every layer
+  carries bleed art that far: far 23 px below the room (drawn 32), grove 38 (48), mid 35 above and 60 below (48 and 64), play 100 above
+  (`play-above`, 112) and 150 below (160 of deep soil; the ground's bottom row on the room's last row becomes its buried variant,
+  tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the deep soil), foreground 165 above
+  and 240 below. Over a hanging piece its `-top` (room y -184 to 7) draws what it hangs from, open: the bough, trunk or root plate
+  rises in limbs to past the top of a full look up, each with a side branch and a few broad leaf clusters, sky between them (no
+  slab); the piece's own rows 0 to 7 are empty. Under a standing piece its `-foot` (256 px) carries the same stems and blades straight
+  on down, a wide leaf base gathering into the stems it grows from within 22 px, darkening step by step to near black: no clod, no
+  roots (author, answer 10). Bleed art lies outside the steady frame (y 8 to 368), so the steady previews are unchanged by it;
+  only the buried bottom row (room y 352 to 368) and `rise-trunk`'s shell, now running straight into the soil, show there.
+  Tiled: the layers' `parallaxy` equals their `parallaxx` and the map's `parallaxoriginy` is 188 (8 + half the view): Tiled has one
+  origin per map, as for x, but every forest room lies at y 0, so in y it is right for every room. At a full look up the hero (floor
+  at y 320) is below the screen: that is the game's existing look (`docs/DIRECTIONAL_CONTROLS.md`, "the hero temporarily outside the
+  view"), kept by the author (answer 10).
+- **Foreground origin per room.** A factor of 1.6 cannot be authored on one map-wide layer: the layer would have to be about 10.6k px wide for forest-1
+  (every room's art 1.6 times its length). The foreground is therefore an objectgroup `foreground` of tile objects, each room's pieces
+  positioned relative to that room, and the game draws `screenX = (x - roomX) - f * (camX - roomX)` with f = 1.6, x the object's x relative to
+  the room origin, roomX the room's left edge and camX the camera's left edge (whole pixels). Tiled draws the group with one parallax origin,
+  so it shows the foreground correctly only for one room origin (the group's property `roomx`; the mock shows room 0): the other rooms' art is
+  seen offset in Tiled, and the game parser reads each room's group ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The mock
+  (`tools/parallax_mock.py`) implements the formula for one room.
+- **Web.** Each layer texture at most 2048 px wide; NPOT is fine with clamp and Nearest. Soft-alpha art is drawn 1:1 at integer
+  offsets with Nearest, never scaled.
+- **Pixel defocus is a new category, argued on its merits.** The foreground carries depth of field and the moon's glow
+  carries light, not objects: no outline, no tier to be loud in, nothing to interact with. They are the art allowed partial alpha, drawn
+  by hand in the grid as flat stepped tones and an ordered-dither fringe (no Gaussian blur: the author found blurred smudges clash with
+  the pixel art, third pass), never computed at run time (no shader, no render target). The background strips carry gradients and mist and may use as
+  many colours as the dither needs. This needs registered categories in `tools/sprite_layouts.py` that `check_sprite_art.py` accepts
+  ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** the parser and renderer above; `check_contrast.py` composites only the flat colour and one tile layer, and
+  must learn camera-dependent layer composites; the draw-call and fill budget on mobile web, measured; `AllocationBudgetTest` over the
+  layers; swaying trees (deferred from #239).
+
+### 3. Readability rules
+
+These are the only limits on the layers.
+
+- **Foreground cover (rule B, author, 2026-11-19).** On screens and in places with no trap the foreground may cover the terrain's
+  walk edge and the hero, even fully (like the full-screen chains of Dead Cells). It never covers what section 3 excludes (next
+  rule), at any camera x of the room with the steady camera (camera top 8). During a look (a held pose, the foreground moving 0.6
+  times the look against the play) it may cover a trap or an enemy for a moment: the player saw it before, and it adds difficulty
+  (author, 2026-11-19, answer 10). One exception for the hero: at the RoomStart and RoomExit boxes he stays visible above the
+  waist (the top 16 px of his 31 px figure, plus 16 px around), so a respawn and an exit always read. These rules and the cover time
+  are checked at the steady camera (camera top 8), where heights are exact: the hero walks and stands there, and a look is a held pose
+  in which the foreground moves 0.6 times the look against the play.
+- **Cover time (extends rule B, author, 2026-11-19, third pass; tightened in its review).** The foreground may cover the hero
+  where there is no trap or enemy, but never hides him (near) fully where he stands, and never for more than 0.5 s of walking. Hidden
+  means 85 % or more of his figure (an 11x31 px rect: the hitbox, `Player` `Hitbox.rect(18, 26, 11, 22)`, x 18 to 29 of the 48 px
+  box, 31 px up from the floor line) lies under foreground pixels of alpha 128 or more (128, not 200: the dark fringe at alpha 192
+  hides the dark hero as well as the solid body). The camera is the game's steady camera: the box centre (box x + 24,
+  `Player.centerX`) minus half the view, clamped to the room. Two rules, both in `python3 tools/parallax_mock.py --check`:
+  - *Standing:* at every box x of his floor route (1 px apart, from the RoomStart box to where he triggers the RoomExit) he is
+    never hidden.
+  - *Walking:* walking that route at 100 px/s (`Player.MOVE_SPEED`), on the floor and at a jump's apex (60 px up), the longest
+    hidden run is at most 0.5 s.
+
+  The game's camera follows a focus kept in a dead zone 33 px wide (`Player.DEAD_ZONE_WIDTH_FACTOR` 3 x the 11 px hitbox) around
+  the box centre, so while he walks it lags him by up to 16.5 px; replaying the walk with the dead zone and the camera's chase
+  changed the longest hidden run by at most 0.01 s, so the check uses the centred camera. Measured on the mocks after the review
+  pass: standing hidden at 0 of 665 box x in the calm room (39 before: by the reeds at x 138 to 159 and the trunk at x 411 to 427)
+  and 0 of 1145 in the busy room; walking 0 s on the floor and 0.19 s at the apex in the calm room (0.22 and 0.20 s before), 0 s in
+  the busy room. Sprite sizes stay; the pieces are drawn open instead (lace: separate stems, fronds and blades with gaps, thinnest
+  in the hero's band). A gap shows him only where it is 5 px or wider, since the fringe 2 px out from a piece still counts; so the
+  reeds are four 2 to 3 px blades about 10 px apart down to the ground, and the trunk is an old hollow trunk whose bark shell is
+  5 px on each side of an arched opening through the hero's band. While the camera follows, a piece of factor f passes the hero
+  at f x 100 px/s, so a higher factor shortens the cover; where the camera is clamped at a room end the piece stands still and he
+  passes it at 100 px/s whatever the factor. Factor measured (third pass, calm mock room, floor and apex, alpha 200): 1.6 gives
+  0.17 and 0.16 s, 1.8 0.17 and 0.14 s, 2.0 0.17 and 0.13 s; the busy mock room 0 s at all three. The longest cover was at a
+  clamped camera (the reeds by the start), which a factor cannot shorten, while 1.8 and 2.0 narrow the clear runs a tall piece
+  needs (calm room: 230 px at x 464 to 205 and 180 px; the 41 px reed run closes at 2.0), so the factor stays 1.6.
+- **Exclusion.** The foreground never covers a floor trap or a hanging trap, its at-rest cue (D71), an enemy, a pickup, a hint, the used
+  part of a mechanism, a D7 warning or a hint zone (author, second pass, confirms hanging traps). Each room is checked against those
+  rectangles (plus 16 px, none under what stands on the floor) at every camera x of the steady camera; a failing room is fixed in the map. The excluded
+  set is the active tier of `tools/check_contrast.py` plus a red mob's patrol range, a lift's travel and a spider's route (its silk
+  and leap range); the hero's start and exit boxes keep only the waist rule above. The sketch check is `python3 tools/parallax_mock.py --check` (objects of the room, every 1 px of camera; it
+  checks what is on screen at each offset and exits 1 on any cover, on the hero above the waist at RoomStart or RoomExit, or on a
+  cover time over 0.5 s, and prints the longest cover time of each mock; all at the steady camera); the game
+  gate is [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236). The excluded rects decide where the big pieces go: in the
+  busy mock room every column crosses a floor trap or a mechanism at some camera, so the big shapes hang from the top (each strand
+  as deep as its place allows) and the low clumps stay on the floor line.
+- **Look frames (vertical parallax).** `python3 tools/parallax_mock.py --check` also fails, at every camera x of the room and every
+  camera top from 0 - 100 to 8 + 150, 5 px apart (and 8 - 100, 8 + 150), on a visible layer edge. A cut is an opaque pixel (alpha > 24)
+  whose neighbour across a row is transparent, on the first or last row of a layer or of a foreground piece, on the seam row of a
+  foreground piece with a `-top` or `-foot` partner (its first drawn row, the last for a `-foot`, which is not always the image's row 0:
+  `hang-leaves-l` starts at its row 8; the partners come from `fg.grid`, not from a map, so a map that leaves one out fails, whatever the
+  length of the row), or, as a heuristic backstop, anywhere inside a layer of factor above 0 where a row of art ends flat over 20 px or
+  more (a strip or piece cut short; the longest drawn flat edge, the moon disc's top, is 18 px; a run length can miss a short cut, so it
+  is not the proof of a seam). The play layer and `play-above` count as one and are checked on their rows' ends only (walk surfaces and ceilings are flat by design); the foreground
+  pieces count as one (a `-foot` or `-top` continues its piece); the clouds wrap and are skipped. A cut is visible when it is on screen
+  with screen beyond it and no layer drawn in front of it is fully opaque over it on the composited frame. At every camera of that
+  range it also fails on any pixel of the bottom 40 % of the frame that lies below the room (y 368 and lower) and is not opaque play
+  or foreground. The sky (factor 0, every row filled) covers the whole view, so no pixel is ever bare. No edge is accepted. Measured:
+  0 visible edges and 0 px of open ground in both mocks (34614 and 8694 frames, about 10 s for both mocks). A scratch copy proves it catches a removed
+  `play-above` (a cut at room y 0 at camera top -100), a removed `vine-curtain-top` (both mocks, room y 8), a removed
+  `hang-leaves-l-top` (both mocks, the bough's seam row at room y 8), a removed `clump-fern-foot` (both mocks, room y 367),
+  `roots-curtain-top`, `trunk-near-top` (the trunk then runs into the bough hump of `hang-leaves-l-top`, but the bracket tile 105 shows
+  its cut top), and `offsety` -24 on the mid layer (its top cut in view at a look up). The earlier run-length test missed the busy
+  room's removed `hang-leaves-l-top`: the bough's seam row is not the image's first row (its rows 0 to 7 are empty), and only 12 px of
+  that row stayed on screen beside the trunk, shorter than the 20 px run; the seam rule has no length limit and catches it. Moving the mid layer up 16 px (`offsety` -64) or the far layer 16 px
+  (`offsety` -16) leaves their foot cut behind the deep soil at every camera (the soil covers the screen below the room), so the check passes them,
+  correctly; with the play layer hidden it catches the mid foot at room y 415, and with the play, grove and mid layers
+  hidden the far foot at room y 383.
+- **Calm room (bottom-rising foreground).** `python3 tools/parallax_mock.py --scan` measures every forest room: protected rects per
+  1000 px, the longest stretch no rect touches and where a column from the screen bottom to y 120 stays clear at every camera.
+  `forest-1-mob` (800 px, one red mob at room x 256, one fireball refill at x 688) has the longest clear stretch of all 22 rooms
+  (304 px), 5.0 rects per 1000 px (each object counted once, with the hero's start and exit boxes; the first room, `forest-1-traps`:
+  14.8, longest gap 96 px, widest tall run 16 px) and, among the rooms whose camera moves 160 px, the widest clear run for a tall piece
+  (230 px, x 464 to 694), best once the tutorial rooms are set aside (`forest-0-platform` has 279 px). Only the stems cross the floor band (y 272 to 320); fronds, boughs and blades spread above it and the
+  stems run straight on below the floor line, where nothing is protected. Its foreground: `rise-trunk` (a near trunk about 34 px wide where the hero passes, a
+  rounded snapped top with no spiky crown, bark furrows, a bough with a few broad rounded leaves on short stalks and gaps between
+  them, its bark shell running straight on into the soil, no roots: answer 10) and `rise-fern` (four separate arching fronds on thin stems from a loose base, pairs of small rounded
+  leaflets with clear gaps between them, no spikes or hooks: a saw edge reads as thorns, the trap language) together in the clear run,
+  `rise-reeds` (five separate blades straight from the ground, no bare stalk, soft rounded tips, close together through the floor band
+  and parting above it) in the 41 px run at x 151, the vine curtain and the corner leaves from the top, and three low clumps; the hero
+  passes behind the trunk, the fern and the reeds, hidden at most 0.17 s at a time (cover time, above; before the lace redraw 0.22 s on
+  the floor and 0.36 s at the apex).
+- **Ambient lights, by stage (author, 2026-11-19).** Forest and Swamp use fireflies: the #472 lime fireflies in the play layer, under
+  their own rules (the Fireflies (#472) paragraph below). The draft's periwinkle distant lights are withdrawn. Steppe and Castle use pale
+  spirit lights instead: 1 to 2 px, at most 12 on screen, alpha at most 0.6, drawn in the mid pass so they never lie over the play layer.
+  Their hue is to be chosen with those stages ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). Banned hues for
+  spirit lights: lime and sulphur (spores, fungi), yellow, gold and ember (fire), magenta, red (danger), violet (pickups), aqua and teal
+  (the fairy, D82). A spirit light drifts at most 8 px/s and breathes on a 3 to 5 s irregular period, never on the fungus's 2.5 s or the
+  fissure's 0.5 s beat. No trails.
+- **Motion.** Clouds drift at a constant speed (sketch 3 px/s); spirit lights at most 8 px/s (fireflies keep the #472 flights); the
+  moon never moves; the foreground moves only with the camera; nothing flashes, sways fast or changes colour. The ambience stays slower
+  than the slowest trap telegraph.
+- **The light stays above the play.** The play band (the floor up to a jump's height) sits on the dark foot of every layer; the light
+  sky, the moon, the clouds and the lit tree tops stay above it.
+
+### 4. Value check (OKLab L, `tools/check_contrast.py` formula; throwaway script, not in the repo)
+
+Measured on `preview-320.png` (fourth pass): ground band behind the hero 0.04, a mid trunk 0.08, the mist at y 230 0.19 (median) and
+0.215 in its lighter wisps (the column below uses the wisps), the sky top 0.285.
+
+| Colour (L) | vs ground 0.04 | vs mid trunk 0.08 | vs mist 0.215 | vs sky top 0.285 |
+|---|---|---|---|---|
+| Walk cue `e1cfa5` (0.859), hero rim `c4cfe8` (0.854) | 0.819, 0.814 | 0.779, 0.774 | 0.644, 0.639 | 0.574, 0.569 |
+| Terrain body `4a3424` (0.346) | 0.306 | 0.266 | 0.131 | 0.061 |
+| Hero skin `e6a86c` / `c27a45` | 0.737 / 0.605 | 0.697 / 0.565 | 0.562 / 0.430 | 0.492 / 0.360 |
+| Hero ink `0b0814`, hair `241a26`, breeches `2f4a8a` | 0.106, 0.195, 0.383 | 0.066, 0.155, 0.343 | 0.069, 0.020, 0.208 | 0.139, 0.050, 0.138 |
+| Danger body `86101f` (0.400) / eyes `ff6b57` (0.708) | 0.360 / 0.668 | 0.320 / 0.628 | 0.185 / 0.493 | 0.115 / 0.423 |
+
+In the play band (ground and trunk feet) every bright part clears the D76 floor of 0.28 by far, and the terrain body (0.306 and 0.266 over the
+ground and a trunk), the breeches and the enemy body separate by value too; the lit lip carries the terrain's outline. The ink and the hair sink into the dark, so **every active outline comes from the rim, the cue,
+the glow or a bright body**, as D92 already requires at night. The night sky helps high play: against the mist wisps every listed colour but
+the ink, the hair, the enemy body (0.185, fourth pass: the mist is lighter) and the terrain body (0.131) clears 0.20, and against the sky top only the enemy body, the breeches and the terrain body fall under 0.20.
+Rooms with high play must still be measured over the real layers before `RIM_SHEETS` changes
+([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+
+### 5. Supersedes when approved
+
+- **D76:** "Background ... static" becomes "no louder than decor, and moving only as the layers allow" (parallax, clouds, ambient lights).
+  "Decor ... no idle animation" stays for play-layer decor. The gate composites the layers at several camera offsets; `foreground` gets
+  its own row.
+- **D92:** `2c3f66` stays as the clear colour, the fallback and the horizon; the sky, far and mid replace it as what sprites are measured
+  over. The decor night palettes (mixed 35 % toward `2c3f66`) are re-measured over the darker mid band.
+- **D76, moon and clouds:** the Background tier rule "no louder than decor" is superseded for the moon, the cloud edges and the stars: the
+  moon (0.985) is the brightest thing in the frame and the cloud edge (0.93) and stars (0.88) are brighter than decor by design.
+- **D92 rim:** D92 lights a sprite's up, left and right edges; this card's rim faces the moon (up and right) on clouds and on the foreground.
+  D92's rule wins for sprites until the rim is re-measured over the layers ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+- **D101 bodies and `RemainsFx`:** the chip colours (`SHELL_CHIPS`, `SPIDER_CHIPS`) follow the beetle and spider recolour
+  ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+- **#451 (moon and clouds)** folds into the shared moon and cloud layers; close it with this work, its checklist moves to #236.
+- **Falling leaves (#236):** `526666`, `5b6f70`, `616764` were set 0.14 to 0.17 from `2c3f66`; re-measure over far and mid (0.250 to
+  0.371). They stay in front of the mid layer, not in the foreground.
+- **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`; the D76 gap for it closes then.
+
+### 6. Author answers (2026-11-19)
+
+Recorded here; sections 1 to 5 carry them. Nothing is still open except what the links say.
+
+1. **Recolour to the families.** The beetle and the spider go to the danger family: dark crimson body, glowing `ff6b57` eyes. The lever's
+   red knob `e82026` goes to the active family: the walk cue `e1cfa5` on its handle, no red. The recolour is made after the layers exist,
+   and the contrast gate measures over them ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The beetle, spider and
+   lever sections describe the old colours until that recolour lands ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+2. **Walk-edge cue.** Pale straw `e1cfa5` approved (section 1).
+3. **Foreground cover.** Superseded by rule B (answer 8): the waist limit holds only at RoomStart and RoomExit. It never covers a
+   floor trap or the other objects listed in section 3. Hanging traps are excluded too (answer 5).
+4. **Ambient lights by stage.** Forest and Swamp use fireflies (#472), and the periwinkle distant lights are withdrawn. Steppe and Castle
+   use pale spirit lights; their hue is to be chosen with those stages ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+5. **Second pass (same day).** Beauty first (Hollow Knight, Dead Cells): the palette, alpha, value-band and banding limits are dropped,
+   only the readability rules stay. Values inverted: black at the ground, lighter going up. More depth between mid and far (the grove
+   layer and mist bands). A much bigger moon, fixed on screen and shared by every world; clouds that read as cumulus, drifting over time
+   and shared by every world (the Castle shows both through its windows). The foreground right in front of the camera: large, very dark,
+   strongly blurred, factor 1.6, up to the waist in the play band and big below the floor and at the screen edges. Hanging traps are
+   excluded from foreground cover like floor traps.
+6. **Third pass (same day).** The direction stays, but the sky was far too bright: a real night, deep navy-indigo, a little lighter
+   up high and near black at the ground, with sparse small stars; the layers and mist darken with it and the moon stays the brightest
+   thing. The moon becomes a big pixel moon: a hard stepped edge, a near-white disc with pale ice-blue maria in flat tones, no smooth
+   halo; the clouds take periwinkle bodies with white edges toward the moon. The blurred foreground looked like another game: no
+   Gaussian blur; two pixel-consistent variants (A crisp silhouettes with a moonlit rim, B a hand-drawn pixel defocus), larger, for the
+   author to pick (section 1, Foreground; [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+7. **Fourth pass (same day).** The foreground question is answered: **variant B, the pixel defocus**; variant A (crisp) is
+   removed. B no longer melts into a dark band: a cool blue-violet body a step lighter than the ground (since answer 9 the neutral
+   near-black palette of section 1), a stepped moonlit rim
+   toward the moon, and a few big clumps with open ground between them (section 1, Foreground). The mid layer stays clear of the
+   moon at every preview camera, and the mist between far, grove and mid is a little more legible, still at night.
+8. **Rule B (same day).** The foreground may cover the walk edge and the hero, even fully, on screens and in places without traps;
+   never a trap (floor or hanging) or its cue, a hint, an enemy with its patrol, leap or silk range, a pickup or a used mechanism
+   part; the hero stays visible above the waist at RoomStart and RoomExit. The foreground turns bold: a few tall, readable shapes
+   placed where no excluded rect is near at any camera, plus the low clumps (section 1, Foreground; section 3).
+9. **Cover time (same day).** The tall near pieces hid the hero fully and for too long. Sprite sizes stay; the foreground is redrawn
+   open (lace) instead, and the hero is never (near) fully hidden where he stands, nor for more than 0.5 s of walking (section 3,
+   Cover time). Every
+   foreground piece moves to one neutral near-black palette with a solid moon rim; the trunk's top is rounded and its leaves broad
+   and rounded, with no hooks or spikes. The factor stays 1.6 (measured in section 3).
+10. **Look review (same day).** Below the floor the foreground's stems simply continue straight down, the same stems and blades,
+    darkening to near black: no roots and no clods ("you never see roots through earth"). No layer edge is accepted: the look check
+    is occlusion-aware instead (section 3). A foreground piece covering a trap or an enemy for a moment during a look is accepted:
+    the player saw it before, and it adds difficulty; the exclusions and the waist rule hold at the steady camera, and the factor
+    stays 1.6. The hero leaving the view at a full look up stays: it is the game's existing look (`docs/DIRECTIONAL_CONTROLS.md`).
 
 ## Environment effects (author checklist, 2026-11-05, [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239))
 
