@@ -3094,7 +3094,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Notice, in body language (D100's shared pattern):** it freezes and rises on its legs, drums the ground twice with a
     raised foreleg and settles (`rise` 0.1 s, then `tap`, `rise`, `tap`, `rise`, `crawl1` 0.08 s each): 0.5 s, not scaled by
     the assist; its own call `spider_notice`. No mark, no shared sound.
-  - **Chase** 85 px/s (the hero runs 100).
+  - **Chase** 85 px/s (the hero runs 100). It chases to a target (under the hero, or its range's end) and the last step is
+    clamped to land on it; at the target it holds still, facing the hero, with no overshoot and no turning back (#488; a wall
+    climb, D103, clamps the same way). Held under a hero it cannot reach, it keeps its x and its facing for as long as he does.
   - **Commit:** when the hero's hitbox touches the pounce box (from the body's middle to 48 px ahead of its front, from the
     floor line to 8 px above its top) it locks its target, the hero's centre at that instant, clamped into its range and
     never behind it, and winds up on the spot for `TrapWarnings.duration(BITE_WARNING_SECONDS)`, sampled once: 0.5 s,

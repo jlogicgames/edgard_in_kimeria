@@ -825,6 +825,51 @@ class SpiderTest {
         assertTrue(s.hitboxBounds().x >= 448, "out past the lip");
     }
 
+    // ---- the hold (#488): at its target it stands still ------------------------------------------------------------------
+
+    /** Keeps the hero hovering with its body's right edge at {@code right}, {@code up} px over the floor: out of the pounce's reach. */
+    private void hover(Level level, float right, float floor, float up) {
+        level.player.position.set(right - 29, floor - 48 - up);
+        level.player.velocity().setZero();
+    }
+
+    @Test void aChasingSpiderHoldsStillUnderAHeroItCannotReach() {
+        Level level = level();
+        Spider s = spider(level);
+        for (float right : new float[] {HEARD + 60.3f, HEARD}) {   // under the hero (inside its range), then past its left end
+            hover(level, right, FLOOR, 100);
+            until(level, () -> s.state() == Spider.State.CHASE, 60);
+            for (int f = 0; f < 60 * 4; f++) { hover(level, right, FLOOR, 100); frame(level); }
+            float x = s.position.x;
+            boolean facing = s.facingRight;
+            for (int f = 0; f < 60 * 2; f++) {
+                hover(level, right, FLOOR, 100);
+                frame(level);
+                assertEquals(Spider.State.CHASE, s.state());
+                assertEquals(x, s.position.x, 0f, "it holds, no dither (frame " + f + ")");
+                assertEquals(facing, s.facingRight, "its facing does not flip while it holds");
+            }
+        }
+    }
+
+    @Test void aChasingSpiderHoldsStillOnTheWallAtTheHeightNearestTheHero() {
+        Level level = climb();
+        Spider s = spider(level);
+        placeOn(level, 430, LEDGE);
+        until(level, () -> s.onWall() && s.position.y < 250, 60 * 4);
+        for (int f = 0; f < 60 * 4; f++) { hover(level, 392, 280, 0); frame(level); }
+        assertTrue(s.onWall(), "it waits on the wall");
+        float y = s.position.y;
+        boolean headUp = s.headUp();
+        for (int f = 0; f < 60 * 2; f++) {
+            hover(level, 392, 280, 0);
+            frame(level);
+            assertTrue(s.onWall());
+            assertEquals(y, s.position.y, 0f, "it holds, no dither (frame " + f + ")");
+            assertEquals(headUp, s.headUp(), "its head does not turn while it holds");
+        }
+    }
+
     /** #483 review: Spider.Route.trace and check_contrast.spider_route are pinned to one fixture, so they cannot drift. */
     @Test void theJavaRouteMatchesTheSharedFixture() throws Exception {
         java.nio.file.Path file = java.nio.file.Path.of("src/test/resources/tiles/spider-routes.json");

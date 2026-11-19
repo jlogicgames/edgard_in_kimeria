@@ -479,9 +479,10 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         float direction = directionToPlayer(facingRight ? 1 : -1);
         facingRight = direction > 0;
         if (inPounceBox()) { commit(); return; }
-        boolean atEdge = (direction < 0 && position.x <= rangeNeg) || (direction > 0 && position.x >= rangePos);
-        if (atEdge) return; // it waits at its range's end, facing the hero
-        velocity.x = direction * CHASE_SPEED;
+        float dx = targetU - position.x; // the target is already inside its range: under the hero, or the range's end
+        if (Math.abs(dx) < AT_END) return; // it holds there, facing the hero (D102: no overshoot, no turning back)
+        float step = CHASE_SPEED * dt;
+        velocity.x = Math.abs(dx) <= step ? dx / dt : Math.signum(dx) * CHASE_SPEED; // the last step lands on the target
         animateCrawl(dt, CHASE_FRAME_SECONDS);
     }
 
