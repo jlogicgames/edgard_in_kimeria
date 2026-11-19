@@ -17,29 +17,36 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * forest-1-climb (#484, D72, D103, the author's Option A): the spider climbs to the hero while he must wait. A one-screen room
- * appended at the map's end (x 7520-8160), seventh in the Rooms list. Two one-way steps (x 7696 y 272, x 7760 y 240) lead onto a
- * block (x 7808-7952, top y 208); the exit is on a shelf above it (x 7808-7904, top y 96), reached only by a running lift
- * (x 7904-7936, its top between y 96 and 160, so its underside clears the spider's leap). The spider lives on the floor right of the block (x 7952-8032), climbs the
- * block's right face (x 7952, 112 px) and comes along its top (x 7872-7952). Its pounce on the top reaches x 7824 at most, so
- * the block's left 16 px are out of its reach. Y grows downward. Scripted hero at 60 frames per second.
+ * forest-1-climb (#484, D72, D103, the author's Option A; reworked under D105 with the snail, #500, D106): the spider climbs to the
+ * hero while he must wait, and a snail on the block top makes him jump. A one-screen room at the map's end (x 8000-8640 since
+ * forest-1-spider grew by 480 px), seventh in the Rooms list. A falling stone (column x 8112) over the approach; two one-way steps
+ * (x 8176 y 272, x 8240 y 240) lead onto a block (x 8288-8432, top y 208); the exit is on a shelf above it (x 8288-8384, top y 96),
+ * reached only by a running lift (x 8384-8416, its top between y 96 and 160, so its underside clears the spider's leap and the
+ * snail). The snail patrols the block top (x 8336-8352) left of the lift. The spider lives on the floor right of the block (x
+ * 8432-8512), climbs the block's right face (x 8432, 112 px) and comes along its top (x 8352-8432). Its pounce on the top reaches
+ * x 8304 at most, so the block's left 16 px are out of its reach. Y grows downward. Scripted hero at 60 frames per second.
  */
 class Forest1ClimbTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     static final String ROOM = "forest-1-climb";
-    private static final float ROOM_X = 7520, ROOM_END = 8160, START_X = 7552, FACE_X = 7952, BLOCK_X = 7808, BLOCK_TOP = 208, FLOOR = 320;
-    private static final float VIEW_W = 640, SHELF_TOP = 96, LIFT_X = 7904, LIFT_BOTTOM = 160, EXIT_X = 7824;
+    private static final float ROOM_X = 8000, ROOM_END = 8640, START_X = 8032, FACE_X = 8432, BLOCK_X = 8288, BLOCK_TOP = 208, FLOOR = 320;
+    private static final float VIEW_W = 640, SHELF_TOP = 96, LIFT_X = 8384, LIFT_BOTTOM = 160, EXIT_X = 8304, STONE_X = 8112, SNAIL_X = 8336;
     /** Where the scripted hero waits on the block: under the lift, at the block's left end (out of its reach), and in its reach to bait it. */
-    private static final float UNDER_LIFT = 7912, LEFT_END = 7809, BAIT_SPOT = 7840;
+    private static final float UNDER_LIFT = 8392, LEFT_END = 8289, BAIT_SPOT = 8320;
     /** Pinned (scripted, 60 fps, pause 0 on the top step). */
     static final float BAIT_S = 13.33f, FIREBALL_S = 10.77f, NO_SPIDER_S = 10.77f;
+    /** The fireball route at each of {@link #PAUSES}, in frames: a late start on the step can meet the snail and miss a lift. */
+    static final int[] FIREBALL_FRAMES = {645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645, 645,
+        645, 645, 645, 645, 645, 645, 645, 645, 799, 799, 799};
     /** The deaths, in frames from the entrance, at each of {@link #PAUSES}: waiting under the lift, and walking to it once it holds the block top. */
-    static final int[] UNDER_LIFT_DEATH_FRAMES = {320, 322, 326, 330, 334, 338, 339, 340, 341, 341, 342, 343, 346, 350, 354, 358, 361, 362,
-        363, 364, 365, 366, 370, 374, 378, 382, 383, 383, 382, 382, 383};
-    static final int[] WALK_IN_DEATH_FRAMES = {338, 338, 338, 338, 334, 338, 339, 340, 341, 341, 342, 343, 346, 350, 354, 358, 361, 362,
-        363, 364, 415, 415, 415, 415, 415, 415, 415, 415, 404, 404, 405};
+    static final int[] UNDER_LIFT_DEATH_FRAMES = {320, 321, 325, 329, 333, 337, 337, 337, 337, 337, 337, 338, 342, 346, 350, 354, 357, 359,
+        361, 363, 366, 369, 373, 377, 381, 385, 388, 390, 392, 395, 398};
+    static final int[] WALK_IN_DEATH_FRAMES = {320, 321, 325, 329, 333, 337, 337, 337, 337, 337, 337, 338, 342, 346, 350, 391, 393, 393,
+        394, 394, 395, 395, 397, 398, 399, 399, 398, 397, 396, 395, 398};
     /** The latest death over the pauses on the top step: the room's retry cost. */
-    static final float RETRY_COST_S = 6.92f;
+    static final float RETRY_COST_S = 6.65f;
+    /** The snail's death (a hero who stands at the block's left end on its line) and the stone's (one who stops under it), pause 0. */
+    static final float GOB_DEATH_S = 4.73f, STONE_DEATH_S = 1.98f;
     private static final float TOLERANCE = 6 * STEP;
     /** Every pause on the second step from 0 to 2 s, 4 frames apart. */
     private static final int[] PAUSES = java.util.stream.IntStream.rangeClosed(0, 30).map(i -> 4 * i).toArray();
@@ -54,7 +61,7 @@ class Forest1ClimbTest {
     private static Spider spider(Level l) { return Forest1SpiderTest.spider(l); }
     private static boolean onTopOfTheBlock(Spider s) { return !s.onWall() && s.position.y < BLOCK_TOP; }
 
-    enum Plan { NO_SPIDER, UNDER_LIFT, WALK_IN, BAIT, FIREBALL, LATE_SHOT }
+    enum Plan { NO_SPIDER, UNDER_LIFT, WALK_IN, BAIT, FIREBALL, LATE_SHOT, STAND_IN_THE_LINE }
 
     /** Outcome of one scripted run: frames from the entrance, and whether it ended bitten or at the exit. */
     record Run(int frames, boolean bitten, boolean spiderDead, String why) {
@@ -70,6 +77,8 @@ class Forest1ClimbTest {
         Spider s = spider(l);
         if (plan == Plan.NO_SPIDER) s.collidedWithActor(true);
         Escalator lift = l.escalators.get(0);
+        com.jlogicsoftware.kimeria.entity.enemy.Snail snail = ScriptedAnswers.snail(l, ROOM_X, ROOM_END);
+        boolean snailSwing = false;
         boolean a = false, b = false, c = false, shot = false, committed = false, swung = false, walked = false;
         int paused = 0, back = 0;
         for (int f = 1; f < 60 * 30; f++) {
@@ -82,15 +91,21 @@ class Forest1ClimbTest {
             boolean onShelf = l.player.isOnGround() && Math.abs(feet - SHELF_TOP) < 1.5f;
             boolean alive = !s.isDefeated();
             if (!c) {   // the steps
-                if (!(b && !l.player.isOnGround() && me.x >= 7766)) held.add(Input.Keys.D);
+                if (!(b && !l.player.isOnGround() && me.x >= 8246)) held.add(Input.Keys.D);
                 if (onStep2 && paused < pause) { held.clear(); paused++; }
-                else if (!a && me.x >= 7668) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); a = true; }
-                else if (a && !b && l.player.isOnGround() && feet <= 273 && me.x >= 7714) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); b = true; }
-                else if (onStep2 && me.x >= 7778) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); c = true; }
+                else if (!a && me.x >= 8148) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); a = true; }
+                else if (a && !b && l.player.isOnGround() && feet <= 273 && me.x >= 8194) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); b = true; }
+                else if (onStep2 && me.x >= 8258) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); c = true; }
             } else if (riding || onShelf) {   // ride up, then walk left along the shelf to the exit
                 if (onShelf || lift.getY() <= SHELF_TOP + 1) held.add(Input.Keys.A);
             } else if (!l.player.isOnGround()) {
                 if (me.x < BLOCK_X + 8) held.add(Input.Keys.D);   // still in the jump onto the block
+            } else if (onBlock && plan == Plan.STAND_IN_THE_LINE) {
+                // stands still at the block's left end, on the snail's line: no jump, no swing
+            } else if (onBlock && !snail.isDefeated()
+                && !(alive && !shot && onTopOfTheBlock(s) && (plan == Plan.FIREBALL || plan == Plan.LATE_SHOT))) {
+                // the snail first: jump its gob, finish it with the sword (a shooter shoots a spider already on the block top first)
+                snailSwing = ScriptedAnswers.finish(l, snail, snailSwing, held, pressed);
             } else if (onBlock) {
                 float spot = UNDER_LIFT;
                 boolean board = true;
@@ -111,10 +126,13 @@ class Forest1ClimbTest {
                         board = shot;
                         if (onTopOfTheBlock(s) && !shot) { pressed.add(Input.Keys.L); shot = true; spot = Float.NaN; }
                     }
-                    case LATE_SHOT -> {   // wait under the lift and shoot only once its leap has begun
+                    case LATE_SHOT -> {   // wait under the lift and shoot only once its leap has begun (turning to it first)
                         board = false;
-                        if (s.state() == Spider.State.LEAP && !shot) { pressed.add(Input.Keys.L); shot = true; }
-                        spot = shot ? Float.NaN : UNDER_LIFT;
+                        if (s.state() == Spider.State.LEAP && !shot) {
+                            if (l.player.facingRight == (s.hitboxBounds().x > me.x)) { pressed.add(Input.Keys.L); shot = true; }
+                            else held.add(s.hitboxBounds().x > me.x ? Input.Keys.D : Input.Keys.A);
+                        }
+                        spot = shot || s.isCommitted() ? Float.NaN : UNDER_LIFT;   // committed, it is shot where the hero stands
                     }
                     default -> { }
                 }
@@ -124,7 +142,7 @@ class Forest1ClimbTest {
                 }
             }
             l.update(STEP);
-            if (l.player.isGotHit()) return new Run(f, true, s.isDefeated(), "bitten in " + s.state());
+            if (l.player.isGotHit()) return new Run(f, true, s.isDefeated(), "bitten in " + s.state() + ", snail " + snail.state());
             if (l.atRoomExit()) return new Run(f, false, s.isDefeated(), "exit");
         }
         Rectangle me = l.player.hitboxBounds();
@@ -136,7 +154,12 @@ class Forest1ClimbTest {
         assertEquals(ROOM, l.currentRoomName());
         assertEquals(new Rectangle(ROOM_X, 0, ROOM_END - ROOM_X, 368), l.currentRoomBounds());
         assertEquals(START_X, l.player.position.x, 0.01f);
-        assertEquals(1, l.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "one monster, the spider");
+        assertEquals(2, l.objects.stream().filter(o -> o instanceof Enemy<?>).count(), "two monsters, the spider and the snail");
+        com.jlogicsoftware.kimeria.entity.enemy.Snail snail = ScriptedAnswers.snail(l, ROOM_X, ROOM_END);
+        assertEquals(SNAIL_X, snail.position.x, 0.01f);
+        assertEquals(BLOCK_TOP, snail.floorY(), 0.01f, "the snail patrols the block top");
+        assertTrue(snail.rangePos() + com.jlogicsoftware.kimeria.entity.enemy.Snail.FRAME_WIDTH <= LIFT_X, "left of the lift's column");
+        assertEquals(1, l.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance).count(), "one falling stone over the approach");
         assertEquals(1, l.escalators.size(), "one lift");
         Escalator lift = l.escalators.get(0);
         assertTrue(lift.isVertical && lift.isRunning(), "a running lift (known since forest-1-traps)");
@@ -163,6 +186,7 @@ class Forest1ClimbTest {
     /** The lift alone, with the spider out of the way: the exit is reached only by riding it from the block. */
     @Test void theLiftRideReachesTheExitShelf() {
         Run r = run(Plan.NO_SPIDER, 0);
+        System.out.println("climb no spider: " + r);
         assertFalse(r.bitten(), r.why());
         assertEquals("exit", r.why());
         assertEquals(NO_SPIDER_S, r.seconds(), TOLERANCE);
@@ -170,11 +194,14 @@ class Forest1ClimbTest {
 
     /** Death: a hero who waits under the lift is bitten when the spider comes over the block's far edge and along its top, at every pause. */
     @Test void waitingUnderTheLiftIsBittenAtEveryPause() {
+        int[] frames = new int[PAUSES.length];
         for (int i = 0; i < PAUSES.length; i++) {
             Run r = run(Plan.UNDER_LIFT, PAUSES[i]);
             assertTrue(r.bitten(), "pause " + PAUSES[i] + ": " + r.why());
-            assertEquals(UNDER_LIFT_DEATH_FRAMES[i], r.frames(), "pause " + PAUSES[i]);
+            frames[i] = r.frames();
         }
+        System.out.println("climb under-lift deaths: " + java.util.Arrays.toString(frames));
+        assertArrayEquals(UNDER_LIFT_DEATH_FRAMES, frames);
     }
 
     /**
@@ -183,12 +210,15 @@ class Forest1ClimbTest {
      */
     @Test void walkingToTheLiftWhileItHoldsTheBlockTopIsBittenAtEveryPause() {
         int latest = 0;
+        int[] frames = new int[PAUSES.length];
         for (int i = 0; i < PAUSES.length; i++) {
             Run r = run(Plan.WALK_IN, PAUSES[i]);
             assertTrue(r.bitten(), "pause " + PAUSES[i] + ": " + r.why());
-            assertEquals(WALK_IN_DEATH_FRAMES[i], r.frames(), "pause " + PAUSES[i]);
+            frames[i] = r.frames();
             latest = Math.max(latest, r.frames());
         }
+        System.out.println("climb walk-in deaths: " + java.util.Arrays.toString(frames));
+        assertArrayEquals(WALK_IN_DEATH_FRAMES, frames);
         for (int f : UNDER_LIFT_DEATH_FRAMES) latest = Math.max(latest, f);
         assertEquals(RETRY_COST_S, latest * STEP, TOLERANCE, "the room's retry cost: the latest death");
     }
@@ -206,12 +236,16 @@ class Forest1ClimbTest {
 
     /** Survival with one charge: shoot it the moment it tops the block's far edge, then ride. */
     @Test void aShotAsItTopsTheBlockKillsItThenRideTheLift() {
-        for (int pause : PAUSES) {
-            Run r = run(Plan.FIREBALL, pause);
-            assertFalse(r.bitten(), "pause " + pause + ": " + r.why());
+        int[] frames = new int[PAUSES.length];
+        for (int i = 0; i < PAUSES.length; i++) {
+            Run r = run(Plan.FIREBALL, PAUSES[i]);
+            assertFalse(r.bitten(), "pause " + PAUSES[i] + ": " + r.why());
             assertTrue(r.spiderDead());
-            assertEquals(FIREBALL_S, r.seconds(), TOLERANCE, "pause " + pause);
+            frames[i] = r.frames();
         }
+        System.out.println("climb fireball: " + java.util.Arrays.toString(frames));
+        assertEquals(FIREBALL_S, frames[0] * STEP, TOLERANCE, "pause 0");
+        assertArrayEquals(FIREBALL_FRAMES, frames);
     }
 
     /** A shot is never too late while it is on the block top: fired once its leap has begun, it still kills it before the bite (D102's tie rule). */
@@ -261,6 +295,29 @@ class Forest1ClimbTest {
         assertEquals(SHELF_TOP, highestTop, 0.5f, "the lift ran its whole travel: up to the shelf");
         assertEquals(LIFT_BOTTOM + 16, lowestUnderside, 0.5f, "and down to its lowest stop");
         assertTrue(lowestUnderside <= s.hitboxBounds().y, "the lift's lowest underside (y " + lowestUnderside + ") stays above its body (y " + s.hitboxBounds().y + ")");
+    }
+
+    /** Death by the snail: a hero who comes up onto the block and stands at its left end, on the snail's line, is hit by the gob. */
+    @Test void standingOnTheSnailsLineIsHitByTheGob() {
+        Run r = run(Plan.STAND_IN_THE_LINE, 0);
+        System.out.println("climb gob death: " + r);
+        assertTrue(r.bitten(), r.why());
+        assertTrue(r.why().startsWith("bitten in CRAWL"), "the spider never struck; the gob did: " + r.why());
+        assertEquals(GOB_DEATH_S, r.seconds(), TOLERANCE, "retry cost of the snail");
+    }
+
+    /** Death by the stone: a hero who stops in its column on the approach when the shadow grows. */
+    @Test void stoppingUnderTheStoneOnTheApproachIsItsDeath() {
+        Level l = room();
+        int f = 0;
+        while (!l.player.isGotHit()) {
+            assertTrue(++f < 60 * 10, "never struck");
+            held.clear(); pressed.clear();
+            if (l.player.hitboxBounds().x + 6 < STONE_X) held.add(Input.Keys.D);
+            l.update(STEP);
+        }
+        System.out.printf(java.util.Locale.ROOT, "climb stone death: %.2f s%n", f * STEP);
+        assertEquals(STONE_DEATH_S, f * STEP, TOLERANCE, "retry cost of the stone");
     }
 
     /** A retry rebuilds it calm on its floor at the block's foot. */

@@ -232,8 +232,8 @@ on its thread; its body falls to the floor below, and its thread snaps and fades
 `SpawnPoints` along its floors and walls, ending in a thread down from a lip, checked at load (every drop can be stepped out
 of and keeps clear of the entrance, exit and checkpoints, and the whole route is on screen).
 
-**Where it is met (#484).** In forest-1, in that order: alone on open ground in `forest-1-spider` (the pounce); climbing
-the far face of the block where Edgard must wait for the lift in `forest-1-climb` (it comes up the face and along the block's
+**Where it is met (#484, #500).** In forest-1, in that order: on open ground in `forest-1-spider` (the pounce), before the snail and with the snail off screen; climbing
+the far face of the block where Edgard must wait for the lift in `forest-1-climb`, beside a snail on the block top (it comes up the face and along the block's
 top to him, so he baits its pounce there, shoots it as it tops the edge, or is bitten waiting); and on the ladder slab of `forest-1-route`, whose thread hangs over the floor Edgard
 must walk (keep walking and it drops behind him; stop under the lip and it bites). Room cards: [ROOM_CARDS.md](ROOM_CARDS.md).
 
