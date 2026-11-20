@@ -3642,7 +3642,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the play layer by name (and fails without it) and the sheet and column count of each map's first tileset, and now composites what the
   game draws behind each sprite: the flat colour, the scenery layers at every steady camera x where the placement is on screen (4 px apart,
   clouds at 8 drift phases where they can show) and the play layer; every sprite now passes the tiers over that real background (D108 update).
-- **Not done (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** forest-1's other rooms (forest-0 and forest-2: D112); a shared skill
+- **Not done (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** a shared skill
   (`.agents/skills`) and the STYLE_SYSTEM rows beyond the one added here; the draw-call budget measured on a phone; approval by the author.
 
 - **Update 2026-11-20, author decision: the decor tier is relative to the composited background (D76 amended).** The absolute ink floor of D76
@@ -3733,7 +3733,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   at the entry, cols 1 to 9, and the mounds) draw new back-rock tiles (`back-*` in `terrain.grid`: the boulder and slope drawings with the
   straw lip and the moss in the rock's own tones), and its 20 ground tops with no collision (the floating blocks, the block over the
   stone) show the soil body. forest-0 and forest-1 have no such cell. This also removes forest-1's ropes; its walls stay, so the hero
-  can still clamber on them; (3) every room of forest-0 and forest-2 has a `foreground-<room>` group, each piece kept only where the room
+  can still clamber on them; (3) every room of forest-0 and forest-2 (and, since 2026-11-20, forest-1) has a `foreground-<room>` group, each piece kept only where the room
   passes rule B and the cover time with everything placed before it (lists in `parallax_game.py`); the boss roams its arena, so
   `parallax_mock.py` protects the whole arena above the floor and the boss room keeps low clumps and reeds outside it; (4) the checks know
   rooms narrower than the view (`forest-0-lever` 576 px, `forest-walls` 544 px, `forest-boss` 448 px): one camera, centred as

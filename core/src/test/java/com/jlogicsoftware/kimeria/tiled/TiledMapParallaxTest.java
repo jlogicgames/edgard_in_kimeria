@@ -69,7 +69,7 @@ class TiledMapParallaxTest {
     }
 
     @Test void oneForegroundGroupPerRoomWithTopEdgesAndSizes() {
-        assertEquals(3, map.foregroundGroups.size(), "the escalators, the traps (split from the old course, #500, D110) and the mob room");
+        assertEquals(12, map.foregroundGroups.size(), "every room of forest-1: the escalators, the traps (split from the old course, #500, D110) and the mob room first, then the other nine (#236)");
         ForegroundGroup escalators = map.foregroundGroups.get(0), traps = map.foregroundGroups.get(1), mob = map.foregroundGroups.get(2);
         assertEquals(0f, escalators.roomX); assertEquals(640f, traps.roomX); assertEquals(MOB_ROOM_X, mob.roomX);
         assertEquals(FOREGROUND_FACTOR, mob.factorX); assertEquals(FOREGROUND_FACTOR, mob.factorY);
