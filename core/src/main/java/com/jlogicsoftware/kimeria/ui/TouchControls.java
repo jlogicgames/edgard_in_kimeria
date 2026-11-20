@@ -142,7 +142,7 @@ public class TouchControls {
         this.viewport = viewport;
         this.logicalWidth = logicalWidth;
         this.logicalHeight = logicalHeight;
-        // D55: light touch-only art (art/hud/touch); Joystick/JumpButton/Knob/PauseButton.png stay for other users.
+        // D55: light touch-only art (art/hud/touch).
         this.disc = assets.region(ART + "disc.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.discDown = assets.region(ART + "disc-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.base = assets.region(ART + "base.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
