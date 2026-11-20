@@ -69,15 +69,17 @@ class TiledMapParallaxTest {
     }
 
     @Test void oneForegroundGroupPerRoomWithTopEdgesAndSizes() {
-        assertEquals(2, map.foregroundGroups.size());
-        ForegroundGroup traps = map.foregroundGroups.get(0), mob = map.foregroundGroups.get(1);
-        assertEquals(0f, traps.roomX); assertEquals(MOB_ROOM_X, mob.roomX);
+        assertEquals(3, map.foregroundGroups.size(), "the escalators, the traps (split from the old course, #500, D110) and the mob room");
+        ForegroundGroup escalators = map.foregroundGroups.get(0), traps = map.foregroundGroups.get(1), mob = map.foregroundGroups.get(2);
+        assertEquals(0f, escalators.roomX); assertEquals(640f, traps.roomX); assertEquals(MOB_ROOM_X, mob.roomX);
         assertEquals(FOREGROUND_FACTOR, mob.factorX); assertEquals(FOREGROUND_FACTOR, mob.factorY);
         int vine = indexOf(mob, "vine-curtain");
         assertEquals(120f, mob.x[vine]); assertEquals(0f, mob.y[vine], "Tiled stores the bottom edge (208), the parser keeps the top (0)");
         assertEquals(288f, mob.width[vine]); assertEquals(208f, mob.height[vine]);
         assertNotNull(mob.regions[vine]);
-        assertTrue(indexOf(traps, "trunk-near") >= 0);
+        assertTrue(indexOf(escalators, "trunk-near") >= 0);
+        assertEquals(-1, indexOf(traps, "trunk-near"), "the trunk stayed with the escalators");
+        assertTrue(indexOf(traps, "vine-curtain") >= 0);
         assertEquals(-1, indexOf(mob, "trunk-near"), "the pieces of one room are not in another's group");
         for (int i = 0; i < mob.count; i++) assertNotNull(mob.regions[i], mob.names[i]);
     }

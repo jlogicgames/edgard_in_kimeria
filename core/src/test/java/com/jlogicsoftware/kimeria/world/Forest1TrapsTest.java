@@ -36,8 +36,9 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The traps and the second RedMob placed in forest-1 by #260 (D58): a thorn tuft, a RedMob, a spore puffball and a
- * rotten log over a pit, in the 620 px between the wall and the checkpoint. Ordinary keyboard input drives the hero
+ * The trap course of forest-1 (x 640-1280, one screen): a spore puffball, the second RedMob and a rotten log over a pit.
+ * #260 (D58) placed them in one 1280 px room with a thorn tuft; #500 (D110) split that room at x 640, moved the escalators
+ * and their lever into {@code forest-1-escalators}, removed the tuft and put the puffball first. Ordinary keyboard input drives the hero
  * through the real shipped map. Times are author
  * (mastered) measurements of a scripted hero, not novice playtests. Plan and numbers: docs/ROOMS.md.
  *
@@ -45,8 +46,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1TrapsTest {
     private static final float STEP = 1f / 60f;
+    /** Pinned measurements (D105, #500): scripted hero, 60 frames per second, within 0.1 s. */
+    private static final float PIN_MARGIN = 0.1f, COURSE_S = 6.00f, RETRY_AT_LOG_S = 6.47f;
     // Authored geometry (docs/ROOMS.md, "forest-1 trap placement plan").
-    static final float TUFT_X = 696, MOB_X = 864, PUFF_X = 944, LIP = 1024, PIT_END = 1168, LOG_X = 1088, LOG_END = 1120;
+    static final float START_X = 656, MOB_X = 928, PUFF_X = 768, LIP = 1024, PIT_END = 1168, LOG_X = 1088, LOG_END = 1120;
     static final float CHECKPOINT_X = 1216; // x of the room exit (the old checkpoint spot, D67)
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
@@ -108,8 +111,9 @@ class Forest1TrapsTest {
 
     private Level level() {
         Level l = new Level(assets, game, player(), "forest-1", Rectangle::new, emptyStock());
-        l.enterNextRoom(player()); // the trap course is room 3 since #375 put the first RedMob in a room of its own before it
-        l.enterNextRoom(player()); // and #363 the deadfall room after that
+        l.enterNextRoom(player()); // the trap course is room 4: #375 put the first RedMob in a room of its own before it,
+        l.enterNextRoom(player()); // #363 the deadfall room after that,
+        l.enterNextRoom(player()); // and #500 (D110) the escalator room, split off the course, right before it
         rememberMob(l);
         theLog = l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).findFirst().orElseThrow();
         return l;
@@ -117,11 +121,10 @@ class Forest1TrapsTest {
 
     private void frame(Level level) { level.update(STEP); pressed.clear(); }
 
-    private ThornTrap tuft(Level l) { return l.objects.stream().filter(ThornTrap.class::isInstance).map(ThornTrap.class::cast).findFirst().orElseThrow(); }
     private Puffball puff(Level l) { return l.objects.stream().filter(Puffball.class::isInstance).map(Puffball.class::cast).findFirst().orElseThrow(); }
     private FallingPlatform theLog;
     private FallingPlatform log(Level l) { return theLog; }
-    /** The new RedMob (the one authored at x 864), remembered at load because a slain mob leaves the list. */
+    /** The new RedMob (the one authored at x 928), remembered at load because a slain mob leaves the list. */
     private RedMob mob;
     private RedMob newMob(Level l) { return mob; }
     private void rememberMob(Level l) {
@@ -140,8 +143,8 @@ class Forest1TrapsTest {
 
     /** What the scripted hero does about the traps; the early lever, block and wall part is the same for all. */
     private static final class Plan {
-        boolean jumpTuft = true, killMob = true, waitForPuff = true, crossLog = true;
-        float tuftJumpRight = TUFT_X - 30, logStand = 0;
+        boolean killMob = true, waitForPuff = true, crossLog = true;
+        float logStand = 0;
         int dawdleOnLog = 0, waitedFrames = 0;
         float stopAtRight = Float.MAX_VALUE;
     }
@@ -166,17 +169,14 @@ class Forest1TrapsTest {
 
     private Run run(Level l, Plan plan, int maxFrames) {
         Player p = l.player;
-        int jump = 0, lastJump = -2, onLog = 0;
-        float[] early = {125, 260, 540}; // position.x takeoffs for the unchanged part (blocks, wall, lever 544)
+        int lastJump = -2, onLog = 0;
         boolean actionWasDown = false, wasMechanism = false;
         for (int f = 0; f < maxFrames; f++) {
             held.clear(); pressed.clear();
             float r = bodyRight(l);
             boolean right = true, doJump = false;
-            if (jump < early.length && p.position.x >= early[jump] && p.isOnGround() && f - lastJump > 1) { doJump = true; jump++; }
-            if (plan.jumpTuft && r >= plan.tuftJumpRight && r < plan.tuftJumpRight + 6 && p.isOnGround() && f - lastJump > 1) doJump = true;
-            // Wait in front of the cloud column (body right <= 928) until the calm is long enough.
-            if (plan.waitForPuff && r > 920 && r <= 930 && !puffClear(l)) { right = false; plan.waitedFrames++; }
+            // Wait in front of the cloud column (x 764-788; body right <= 762) until the calm is long enough.
+            if (plan.waitForPuff && r > 752 && r <= 762 && !puffClear(l)) { right = false; plan.waitedFrames++; }
             if (plan.crossLog) {
                 if (r >= LIP - 2 && r < LIP + 8 && p.isOnGround() && f - lastJump > 1) doJump = true;
                 if (r >= LOG_END - 2 && r < LOG_END + 18 && p.isOnGround() && f - lastJump > 1) {
@@ -201,21 +201,20 @@ class Forest1TrapsTest {
 
     // ---- geometry and census ----
 
-    @Test void theStretchHoldsExactlyTheThreeTrapsAndTheSecondRedMobAtTheirAuthoredPlaces() {
+    @Test void theCourseHoldsExactlyThePuffballTheSecondRedMobAndTheLogAtTheirAuthoredPlaces() {
         Level l = level();
-        assertEquals(1, l.objects.stream().filter(ThornTrap.class::isInstance).count(), "one tuft");
-        ThornTrap t = tuft(l);
-        assertEquals(ThornTrap.Kind.TUFT, t.kind());
-        assertEquals(TUFT_X, t.getX(), .01f);
-        assertEquals(320, t.getY() + t.getHeight(), .01f, "stands on the floor top (y grows downward)");
+        assertEquals("forest-1-traps", l.currentRoomName());
+        assertEquals(new Rectangle(640, 0, 640, 368), l.currentRoomBounds(), "exactly one 640 px screen: the whole course is in view at once (D84)");
+        assertEquals(0, l.objects.stream().filter(ThornTrap.class::isInstance).count(), "the thorn tuft left with the split (#500, D110)");
         assertEquals(1, l.objects.stream().filter(Puffball.class::isInstance).count(), "one puffball");
         assertEquals(320, puff(l).getY() + puff(l).getHeight(), .01f);
         assertEquals(PUFF_X, puff(l).getX(), .01f);
         assertEquals(1, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).count(), "one log");
-        assertEquals(4, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count(), "the four platforms are unchanged");
+        assertEquals(0, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count(), "the four platforms are in the escalator room now");
+        assertEquals(0, l.escalators.size(), "the escalators and their lever are in the escalator room");
         assertEquals(LOG_X, log(l).getX(), .01f);
         assertEquals(320, log(l).getY(), .01f, "flush with the floor");
-        assertEquals(1, l.objects.stream().filter(RedMob.class::isInstance).count(), "only the trap-stretch RedMob: the first one is in forest-1-mob (#375)");
+        assertEquals(1, l.objects.stream().filter(RedMob.class::isInstance).count(), "only the trap-course RedMob: the first one is in forest-1-mob (#375)");
         assertEquals(0, l.objects.stream().filter(o -> o.getClass().getSimpleName().matches("FallingBranch|FallingStone|ExplosiveTrap|ThornVine")).count());
         // The pit has no floor between the lips.
         Rectangle pit = new Rectangle(LIP + 1, 320, PIT_END - LIP - 2, 48);
@@ -223,31 +222,63 @@ class Forest1TrapsTest {
             assertFalse(pit.overlaps(new Rectangle(b.getX(), b.getY(), b.getWidth(), b.getHeight())), "a floor in the pit");
     }
 
+    /** The escalator room after the split (#500, D110): its four falling platforms, two escalators, the wall and the lever that opens it, and nothing lethal. */
+    @Test void theEscalatorRoomHoldsItsFourPlatformsTwoEscalatorsWallAndLeverAndNothingElse() {
+        Level l = new Level(assets, game, player(), "forest-1", Rectangle::new, emptyStock());
+        l.enterNextRoom(player());
+        l.enterNextRoom(player());
+        assertEquals("forest-1-escalators", l.currentRoomName());
+        assertEquals(new Rectangle(0, 0, 640, 368), l.currentRoomBounds());
+        assertEquals(4, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count(), "the four falling platforms");
+        assertEquals(4, l.fallingPlatforms.size(), "and no log");
+        assertEquals(2, l.escalators.size(), "two escalators: lever 33 and its overhead escalator 34 are gone");
+        assertEquals(1, l.escalators.stream().filter(e -> e.isVertical).count());
+        assertEquals(1, l.escalators.stream().filter(e -> !e.isVertical).count());
+        assertEquals(1, l.triggers.size(), "one lever");
+        assertEquals(1, l.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Actionable.class::isInstance).count(), "and the wall it opens");
+        assertEquals(0, l.objects.stream().filter(o -> o instanceof Puffball || o instanceof RedMob || o instanceof ThornTrap).count(), "nothing that kills");
+        assertEquals(32, l.player.position.x, .01f);
+        assertEquals(272, l.player.position.y, .01f);
+    }
+
+    /** The course's own walls (#500): the seam walls at x 624 and 640 and the floor from x 640 stand where the card and the drawn seam say. */
+    @Test void theSeamWallsAndTheFloorStandWhereTheCardSaysAndTheEntranceIsSafe() {
+        Level l = level();
+        Rectangle left = null;
+        for (var b : l.collisionBlocks) if (b.getX() == 640 && b.getWidth() == 16 && b.getY() == 0) left = new Rectangle(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+        assertNotNull(left, "the course's left wall (640, 0, 16 x 320)");
+        assertEquals(320, left.height, .01f);
+        assertEquals(START_X, l.player.position.x, .01f);
+        assertEquals(272, l.player.position.y, .01f);
+        assertFalse(l.player.canInteract());
+        Puffball p = puff(l);
+        float cloudLeft = p.getX() + p.getWidth() / 2f - 12;
+        assertTrue(cloudLeft - (START_X + 48) >= 48, "the cloud is clear of the entrance's 48 px square: " + (cloudLeft - (START_X + 48)));
+        assertTrue(cloudLeft - (START_X + 29) >= 60, "from the body's right edge the cloud is about 80 px away");
+    }
+
     @Test void nothingSharesAnEnvelopeOrATelegraphWithAnythingElse() {
         Level l = level();
-        Rectangle zone = tuft(l).triggerZone();
         Rectangle mobWorst = mobReach(l);
         Rectangle cloud = new Rectangle(puff(l).getX() + puff(l).getWidth() / 2f - 12, 288, 24, 32);
         Rectangle pit = new Rectangle(LIP, 300, PIT_END - LIP, 80);
         Rectangle checkpoint = new Rectangle(CHECKPOINT_X, 272, 32, 48); // the RoomExit
-        Rectangle[] areas = {zone, mobWorst, cloud, pit};
+        Rectangle[] areas = {cloud, mobWorst, pit};
         for (int i = 0; i < areas.length; i++) for (int j = i + 1; j < areas.length; j++)
             assertFalse(areas[i].overlaps(areas[j]), "areas " + i + " and " + j + " overlap: " + areas[i] + " " + areas[j]);
-        assertTrue(mobWorst.x - (zone.x + zone.width) >= 24, "the mob's reach starts 24 px past the tuft zone: " + (mobWorst.x - (zone.x + zone.width)));
-        assertTrue(cloud.x - (mobWorst.x + mobWorst.width) >= 24, "24 px between the mob's reach and the cloud");
-        assertTrue(pit.x - (cloud.x + cloud.width) >= 48, "a run-up between the cloud and the lip");
+        assertTrue(mobWorst.x - (cloud.x + cloud.width) >= 24, "24 px between the cloud and the mob's reach: " + (mobWorst.x - (cloud.x + cloud.width)));
+        assertTrue(pit.x - (mobWorst.x + mobWorst.width) >= 48, "a run-up between the mob's reach and the lip: " + (pit.x - (mobWorst.x + mobWorst.width)));
         assertTrue(checkpoint.x - (pit.x + pit.width) >= 48, "D44-D47: the room exit is 48 px clear of the pit");
-        assertTrue(zone.x - 608 >= 8, "the tuft zone starts past the last escalator's travel (x 608)");
         // The entrance is far away from everything (the loader also enforces this).
-        assertTrue(zone.x - 80 > 32 + 48);
+        assertTrue(cloud.x - (START_X + 48) >= 48);
         assertFalse(new Rectangle(CHECKPOINT_X - 48, 272, 112, 48).overlaps(cloud));
     }
 
     /** The mob's worst-case reach: where its body and the whip can be while it chases inside its patrol range. */
     private Rectangle mobReach(Level l) {
-        // offNeg 2 / offPos 2 tiles around x 864: the hero's centre must be in x 832-896; the body centre follows it,
+        // offNeg 2 / offPos 2 tiles around x 928: the hero's centre must be in x 896-960; the body centre follows it,
         // the body is 20 px wide and the whip reaches 6 px past the body.
-        float left = 832 - 10 - 6, right = 896 + 10 + 6;
+        float left = 896 - 10 - 6, right = 960 + 10 + 6;
         return new Rectangle(left, 288, right - left, 32);
     }
 
@@ -262,6 +293,8 @@ class Forest1TrapsTest {
         float seconds = r.frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-1 mastered route (zero ammunition): %.2f s, of which %.2f s waiting for the puffball%n", seconds, plan.waitedFrames * STEP);
         assertTrue(seconds <= 20f, "the 20 s budget: " + seconds);
+        assertEquals(COURSE_S, seconds, PIN_MARGIN, "the pinned mastered route (D105)");
+        assertEquals(0, plan.waitedFrames, "the mastered walker never waits for the puffball: it is sunk before he arrives");
         assertTrue(l.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.items.Fireball.class::isInstance), "no projectile");
         assertEquals(0, l.rangedStock.count());
         assertTrue(newMob(l).isDefeated(), "the sword took the second RedMob");
@@ -273,11 +306,10 @@ class Forest1TrapsTest {
         for (int attempt = 0; attempt < 3; attempt++) {
             if (attempt > 0) {
                 retry(l); rememberMob(l); rememberLog(l);
-                assertEquals(ThornTrap.Phase.DORMANT, tuft(l).phase(), "the tuft is hidden again");
                 assertFalse(log(l).isFalling());
                 assertFalse(newMob(l).isDefeated(), "the mob is back");
                 assertEquals(puff(level()).cycleTime(), puff(l).cycleTime(), 2 * STEP, "the rhythm restarts at its authored phase");
-                assertEquals(32, l.player.position.x, 8f, "back at the spawn");
+                assertEquals(START_X, l.player.position.x, 8f, "back at the spawn");
             }
             Run r = run(l, new Plan(), 60 * 30);
             assertTrue(r.won, "attempt " + attempt + ": " + r);
@@ -294,48 +326,21 @@ class Forest1TrapsTest {
         float costToLog = died.frames * STEP;
         System.out.printf(java.util.Locale.ROOT, "forest-1 retry after dying at the log: %.2f s to get back there%n", costToLog);
         assertTrue(costToLog <= 20f, "a death at the log replays at most the whole 20 s budget: " + costToLog);
+        assertEquals(RETRY_AT_LOG_S, costToLog, PIN_MARGIN, "the card's retry cost for a death at the log (was 12.73 s before the split, #500)");
         retry(l); rememberMob(l); rememberLog(l);
         assertTrue(run(l, new Plan(), 60 * 30).won);
     }
 
     // ---- each trap by itself ----
 
-    @Test void aWalkerWhoKeepsGoingIsKilledByTheBristlingTuftAndAJumperIsNot() {
-        Level l = level();
-        Plan walk = new Plan(); walk.jumpTuft = false; walk.crossLog = false; walk.killMob = false;
-        Run r = run(l, walk, 60 * 30);
-        assertTrue(r.died && l.player.isGotHit(), "the walker is hit by the tuft: " + r);
-        assertTrue(tuft(l).isLethal(), "it was the risen tuft");
-        assertTrue(bodyRight(l) < 740, "the death is at the tuft, not later: " + bodyRight(l));
-        retry(l);
-        Plan jump = new Plan(); jump.crossLog = false; jump.stopAtRight = 800;
-        Run j = run(l, jump, 60 * 30);
-        assertFalse(j.died, "the jumper clears the tuft: " + j);
-        assertTrue(tuft(l).isLethal(), "the tuft stays up behind the hero");
-        assertTrue(bodyRight(l) >= 790);
-    }
-
-    @Test void theTuftBristlesForTheSharedWarningBeforeItIsLethal() {
-        for (boolean assist : new boolean[]{false, true}) {
-            warnings = new TrapWarnings();
-            if (assist) setLonger(true);
-            Level l = level();
-            place(l, tuft(l).triggerZone().x + 8);
-            int frames = 0;
-            while (!tuft(l).isLethal() && frames < 200) { frame(l); frames++; }
-            float expected = ExpectedWarnings.standard(assist);
-            assertEquals(expected, frames * STEP, 4 * STEP, "bristle warning, assist " + assist);
-        }
-    }
-
     @Test void theSecondRedMobCanBeSteppedOnOrSlainAndNeverNeedsAmmunition() {
         // Sword: the default plan. Stomp: jump on its head.
         Level l = level();
-        place(l, 842);
+        place(l, 906);
         RedMob mob = newMob(l);
         assertFalse(mob.isDefeated());
-        Plan sword = new Plan(); sword.jumpTuft = false; sword.crossLog = false;
-        // Start next to the mob (past the tuft), sword it.
+        Plan sword = new Plan(); sword.crossLog = false;
+        // Start next to the mob (past the cloud), sword it.
         for (int i = 0; i < 60 * 6 && !mob.isDefeated() && !dead(l); i++) {
             held.clear(); pressed.clear();
             if (mobAhead(l)) pressed.add(Input.Keys.K); else held.add(Input.Keys.D);
@@ -347,7 +352,7 @@ class Forest1TrapsTest {
         int ok = 0;
         for (int gap = 8; gap <= 90; gap += 2) {
             Level s = level();
-            place(s, 790);
+            place(s, 806);
             RedMob m2 = newMob(s);
             for (int i = 0; i < 60 * 4 && !m2.isDefeated() && !dead(s); i++) {
                 held.clear(); pressed.clear();
@@ -362,10 +367,9 @@ class Forest1TrapsTest {
         assertTrue(ok >= 3, "a stomp takes the mob from several takeoff distances: " + ok);
     }
 
-    @Test void theMobStaysInsideItsPatrolAndOutsideTheTuftZoneAndTheCloudColumn() {
+    @Test void theMobStaysInsideItsPatrolAndOutsideTheCloudColumnAndShortOfThePit() {
         Level l = level();
-        place(l, 842); // hero inside the mob's range on its left edge, mob never killed, hero stands still
-        Rectangle zone = tuft(l).triggerZone();
+        place(l, 906); // hero inside the mob's range on its left edge, mob never killed, hero stands still
         float minX = Float.MAX_VALUE, maxX = -1;
         for (int i = 0; i < 60 * 10 && !dead(l); i++) {
             held.clear();
@@ -376,8 +380,8 @@ class Forest1TrapsTest {
             Rectangle reach = mobReach(l);
             assertTrue(b.x >= reach.x && b.x + b.width <= reach.x + reach.width, "mob body " + b + " inside the reach " + reach);
         }
-        assertTrue(minX > zone.x + zone.width, "the mob never enters the tuft zone: " + minX);
-        assertTrue(maxX < puff(l).getX() - 12, "the mob never reaches the cloud column: " + maxX);
+        assertTrue(minX > puff(l).getX() + puff(l).getWidth() / 2f + 12, "the mob never reaches the cloud column: " + minX);
+        assertTrue(maxX < LIP, "the mob never reaches the pit's lip: " + maxX);
     }
 
     @Test void thePuffballCloudKillsAHeroTimedIntoItAndALateWalkerFindsTheTellSwelling() {
@@ -395,6 +399,7 @@ class Forest1TrapsTest {
         Level m = level();
         Puffball q = puff(m);
         int swell = 0; boolean sawSwell = false;
+        for (int i = 0; i < 60 * 10 && q.currentPhase() == Puffball.Phase.CLOUD; i++) frame(m); // the cloud is out at the entry (phase 3.4): let it sink
         for (int i = 0; i < 60 * 10; i++) {
             frame(m);
             if (q.currentPhase() == Puffball.Phase.SWELL) { swell++; sawSwell = true; }
@@ -402,6 +407,47 @@ class Forest1TrapsTest {
         }
         assertTrue(sawSwell);
         assertEquals(TrapWarnings.DEFAULT_WARNING_SECONDS, swell * STEP, 3 * STEP, "swell before the cloud");
+    }
+
+    /**
+     * The puffball's first sight (#500, D110; D84: no gotcha): its clock starts at the room's entry at phase 3.4, so the cloud is out at the
+     * entry, sinks at 0.6 s, the mastered walker crosses its column in the calm (0.8 to 1.2 s), and a hero who dawdles meets the swell at 2.8 s
+     * (the tell) before the next cloud at 3.6 s.
+     */
+    @Test void thePuffballIsOutAtTheEntrySinksBeforeTheWalkerArrivesAndSwellsBeforeItsNextCloud() {
+        Level idle = level();
+        Puffball p = puff(idle);
+        assertEquals(Puffball.Phase.CLOUD, p.currentPhase(), "the cloud is out at the entry: the player sees the trap act");
+        float sank = -1, swelled = -1, clouded = -1;
+        for (int i = 1; i <= 60 * 5; i++) {
+            frame(idle);
+            float t = i * STEP;
+            if (sank < 0 && p.currentPhase() != Puffball.Phase.CLOUD) sank = t;
+            if (sank >= 0 && swelled < 0 && p.currentPhase() == Puffball.Phase.SWELL) swelled = t;
+            if (swelled >= 0 && clouded < 0 && p.currentPhase() == Puffball.Phase.CLOUD) clouded = t;
+        }
+        assertEquals(0.6f, sank, 3 * STEP, "the cloud sinks at 0.6 s");
+        assertEquals(2.8f, swelled, 3 * STEP, "the tell comes at 2.8 s");
+        assertEquals(3.6f, clouded, 3 * STEP, "the next cloud at 3.6 s");
+        Level walk = level();
+        Puffball q = puff(walk);
+        float cloudLeft = q.getX() + q.getWidth() / 2f - 12, cloudRight = cloudLeft + 24;
+        float first = -1, last = -1;
+        for (int i = 1; i <= 60 * 3 && !won(walk); i++) {
+            held.clear(); held.add(Input.Keys.D);
+            frame(walk);
+            assertFalse(walk.player.isGotHit(), "the mastered walker is never hit by the cloud at all: frame " + i);
+            assertFalse(dead(walk), "and never dies on the way across: frame " + i);
+            if (bodyRight(walk) > cloudLeft && bodyLeft(walk) < cloudRight) {
+                if (first < 0) first = i * STEP;
+                last = i * STEP;
+                assertEquals(Puffball.Phase.CALM, q.currentPhase(), "he crosses the column in the calm");
+            }
+            if (bodyLeft(walk) > cloudRight + 4) break;
+        }
+        assertTrue(first > sank, "he reaches the column after the cloud has sunk: " + first + " vs " + sank);
+        assertTrue(last < swelled, "and is across before the swell: " + last + " vs " + swelled);
+        System.out.printf(java.util.Locale.ROOT, "forest-1 puffball: sinks %.2f s, walker in the column %.2f to %.2f s, swell %.2f s, next cloud %.2f s%n", sank, first, last, swelled, clouded);
     }
 
     @Test void theLogHoldsForTheSharedWarningThenFallsAndALingererFallsIntoThePitWhichIsARetry() {

@@ -164,11 +164,12 @@ class ParallaxRendererTest {
         assertTrue(count > 0 && count < DRAW_LOG, "the log must hold the whole frame: " + count);
         Set<TextureRegion> sky = regionsOf(layer(map, "sky")), mid = regionsOf(layer(map, "mid"));
         assertTrue(sky.contains(batch.drawnRegion(0)), "the first thing drawn is the sky");
-        ForegroundGroup mob = map.foregroundGroups.get(1), traps = map.foregroundGroups.get(0);
+        ForegroundGroup mob = map.foregroundGroups.get(2), escalators = map.foregroundGroups.get(0), traps = map.foregroundGroups.get(1); // the old traps group was split in two (#500, D110)
         Set<TextureRegion> front = Collections.newSetFromMap(new IdentityHashMap<>());
         for (int i = 0; i < mob.count; i++) front.add(mob.regions[i]);
         Set<TextureRegion> other = Collections.newSetFromMap(new IdentityHashMap<>());
         for (int i = 0; i < traps.count; i++) if (!front.contains(traps.regions[i])) other.add(traps.regions[i]);
+        for (int i = 0; i < escalators.count; i++) if (!front.contains(escalators.regions[i])) other.add(escalators.regions[i]);
         assertTrue(front.contains(batch.drawnRegion(count - 1)), "the last thing drawn is a piece of this room's foreground");
         int lastMid = -1, firstPlay = count, firstFront = count;
         TextureRegion terrain = map.tile(map.backgroundGrid[map.heightTiles - 1][(int) (MOB_X / 16) + 1]);

@@ -34,21 +34,21 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1CombatTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float ROOM_X = 2112, ROOM_END = 2880, START_X = 2176, FLOOR = 320, DECK = 208, TUNNEL_CEILING = 288;
-    private static final float LEVER_X = 2224, LADDER_X = 2288, LADDER_CENTRE = 2296, CHECKPOINT_X = 2800, REFILL_X = 2640, SLAB_END = 2704;
+    private static final float ROOM_X = 2112, ROOM_END = 2880, START_X = 2208, FLOOR = 320, DECK = 208, TUNNEL_CEILING = 288;
+    private static final float LEVER_X = 2256, LADDER_X = 2288, LADDER_CENTRE = 2296, CHECKPOINT_X = 2800, REFILL_X = 2640, SLAB_END = 2704;
     private static final float ROOF_LEFT = 2304, ROOF_RIGHT = 2560;
     /** The guard's art x (its body is x + 6 .. x + 26); it never moves (range 0). The puffball (16 x 16 at x 2375) casts a cloud x 2373-2393. */
     private static final float GUARD_X = 2394, PUFF_X = 2375, CLOUD_LEFT = 2373, CLOUD_RIGHT = 2393;
     /** The hero waits (patient policies) with his centre at or left of this x, outside the cloud (its left edge is 2373; his body is 11 px wide). */
     private static final float WAIT_CENTRE = 2360;
     /** The puffball's authored phase and cycle (period 4 s: calm 2.2, swell 0.8, cloud 1.0). */
-    private static final float PHASE = 2.2f, CALM_END = 2.2f;
+    private static final float PHASE = 2.52f, CALM_END = 2.2f;
     /** How much calm a patient hero wants left when he steps in: to walk in and swing (melee) or only to cross the cloud's width (a shot guard). */
     private static final float NEED_MELEE = 1.0f, NEED_CROSS = 0.5f;
     private static final float BUDGET = 20f;
     /** Pinned measurements (D68): scripted hero, 60 frames per second. A route may differ from these by at most this much (6 frames). */
     private static final float PIN_MARGIN = 0.1f;
-    private static final float MELEE_S = 6.83f, SHOT_S = 6.15f, ROOF_S = 7.67f;
+    private static final float MELEE_S = 6.50f, SHOT_S = 5.82f, ROOF_S = 7.40f;
     private static final int IMPATIENT_OK = 30;
     private static final int RUNS = 216;
 
@@ -69,6 +69,7 @@ class Forest1CombatTest {
         stock.restore(charges);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
+        level.enterNextRoom(player()); // -> forest-1-escalators
         level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player()); // -> forest-1-lever (#418)
         level.enterNextRoom(player()); // -> forest-1-spider (#484)
@@ -257,7 +258,7 @@ class Forest1CombatTest {
         FireballRefill refill = refill(level);
         assertEquals(REFILL_X, refill.getX(), 0.01f);
         assertEquals(DECK, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the slab beyond the tunnel's roof");
-        Rectangle exit = new RoomLayout(com.jlogicsoftware.kimeria.tiled.TiledMapData.load("tiles/forest-1.tmx", h.assets())).rooms.get(8).exit(); // room 9 since #375, #418, #363, #364 and #484
+        Rectangle exit = new RoomLayout(com.jlogicsoftware.kimeria.tiled.TiledMapData.load("tiles/forest-1.tmx", h.assets())).rooms.get(9).exit(); // room 10 since #500 (D110), #375, #418, #363, #364 and #484
         assertEquals(CHECKPOINT_X, exit.x, 0.01f, "the exit stands where the checkpoint stood, so the route times keep their meaning");
         assertEquals(FLOOR, exit.y + exit.height, 0.01f, "it stands on the floor");
         assertEquals(START_X, level.player.position.x, 0.01f);
@@ -272,7 +273,7 @@ class Forest1CombatTest {
         alive(level);
         assertEquals(START_X, level.player.position.x, 0.5f, "standing still at the entrance: nothing moves the hero");
         assertTrue(guardUntouched());
-        assertTrue(CLOUD_LEFT - (START_X + 48) >= 140, "the cloud is far from the entrance's 48 px square");
+        assertTrue(CLOUD_LEFT - (START_X + 48) >= 117, "the cloud is far from the entrance's 48 px square");
         assertTrue(ROOM_END - 16 - (CHECKPOINT_X + 16) >= 48, "the exit is clear of the right wall");
         assertTrue(CHECKPOINT_X - SLAB_END >= 48, "and clear of where a hero drops off the slab's end");
     }
@@ -393,11 +394,14 @@ class Forest1CombatTest {
         System.out.println("forest-1 guard room, a straight run from the room's entry after a delay of 0, 3, .. 90 frames (K kill, x dead): " + row
             + "; the delay-0 run dies at frame " + none.frames + " and takes the same course twice");
         assertFalse(none.alive, "holding Right from the entry and swinging from 16 px walks into the cloud: the first death");
+        assertEquals(FIRST_DEATH_S, none.frames * STEP, PIN_MARGIN, "the card's first walk-in death (D68, #500): frame 82");
         assertEquals(none.alive, same.alive, "the retry replays the identical phase");
         assertEquals(FIRST_WORKING_DELAY, firstOk, "the first delay that works: " + row);
         assertEquals(6, lastDead, "every delay up to 6 frames (0.1 s) dies, every one from 9 frames (0.15 s) on works: " + row);
     }
     private static final int FIRST_WORKING_DELAY = 9;
+    /** The first walk-in death of the card, pinned within {@link #PIN_MARGIN} (frame 82 since #500, D110; frame 101 before). */
+    private static final float FIRST_DEATH_S = 1.37f;
 
     @Test void theMasteredMeleeNeedsNoChargeAndKillsTheGuardWithoutAHit() {
         Level level = room(0);
@@ -415,7 +419,7 @@ class Forest1CombatTest {
 
     @Test void aMistimedMeleeDiesInTheCloudAndRetryRestoresTheAuthoredRoomAndPhase() {
         Level level = room(0);
-        settle(level, 10);                               // the swell is about to start (cycle time 2.2 s at the room's start)
+        settle(level, 10);                               // the swell is about to start (cycle time 2.2 s when he reaches the wait spot; the clock starts at phase 2.52, D68)
         putHero(level, 2330, 272);
         floorRoute(level, false);
         assertTrue(dead(level), "an impatient hero who steps into the band while the swell runs out is killed by the cloud");
@@ -712,6 +716,7 @@ class Forest1CombatTest {
         stock.restore(0);
         Level level = new Level(h.assets(), h.game(), player(), "forest-1", Rectangle::new, stock);
         level.enterNextRoom(player()); // forest-1-mob (#375) -> forest-1-deadfall (#363)
+        level.enterNextRoom(player()); // -> forest-1-escalators
         level.enterNextRoom(player()); // -> forest-1-traps
         level.enterNextRoom(player());
         assertEquals("forest-1-lever", level.currentRoomName());
@@ -754,7 +759,7 @@ class Forest1CombatTest {
     /** Where a hero stands in the tunnel's mouth: his centre, 2.5 px of hitbox short of the tunnel's end (x 2560). */
     private static final float MOUTH_CENTRE = 2550;
     /** Pinned measurements (#327), scripted hero at 60 frames per second, held to {@link #PIN_MARGIN} like the D68 routes. */
-    private static final float BEETLE_FIREBALL_S = 3.65f, BEETLE_LURE_S = 4.53f, BEETLE_DEATH_S = 6.08f;
+    private static final float BEETLE_FIREBALL_S = 3.65f, BEETLE_LURE_S = 4.53f, BEETLE_DEATH_S = 5.82f;
 
     private Beetle beetle(Level level) { return level.objects.stream().filter(Beetle.class::isInstance).map(Beetle.class::cast).findFirst().orElse(null); }
     private float heroRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
@@ -880,10 +885,10 @@ class Forest1CombatTest {
     }
 
     /**
-     * The card's retry cost for the beetle: from the room's start (x 2176), the mastered melee (the patient floor route), then a hero who stops
+     * The card's retry cost for the beetle: from the room's start (x 2208), the mastered melee (the patient floor route), then a hero who stops
      * beside the beetle the moment it commits and dies in its burst. The time is from the entrance to the death.
      */
-    @Test void aDeathInTheBeetlesBurstAfterTheMasteredMeleeComes6Point08SecondsIn() {
+    @Test void aDeathInTheBeetlesBurstAfterTheMasteredMeleeComes5Point82SecondsIn() {
         Level level = room(0);
         Beetle b = beetle(level);
         int frames = 0;
@@ -905,6 +910,8 @@ class Forest1CombatTest {
         assertTrue(b.isRemoved(), "the burst killed him");
         System.out.printf(Locale.ROOT, "forest-1 guard room, death in the beetle's burst after the mastered melee: %.2f s from the entrance%n", frames * STEP);
         assertEquals(BEETLE_DEATH_S, frames * STEP, PIN_MARGIN);
+        assertTrue(level.player.isGotHit(), "the hero was actually hit by the burst");
+        assertTrue(frames * STEP <= 6.0f, "D105: a beat-3 first meeting states a retry of at most 6.0 s: " + frames * STEP);
     }
 
     @Test void theRoofRouteDropsPastTheBeetleWithoutTriggeringItAndReachesTheExitAlive() {

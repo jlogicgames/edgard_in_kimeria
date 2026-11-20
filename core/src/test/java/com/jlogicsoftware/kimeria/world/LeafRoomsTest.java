@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /** The {@code leaves} property of a {@code Room} marker (#473): parsed per room, default 0, and the leaves follow the room. */
 class LeafRoomsTest {
     private static final float STEP = 1f / 60f;
-    private static final int LEAVES = 10, MOB_ROOM = 0, DEADFALL_ROOM = 1, TRAPS_ROOM = 2;
+    private static final int LEAVES = 10, MOB_ROOM = 0, DEADFALL_ROOM = 1, ESCALATORS_ROOM = 2, TRAPS_ROOM = 3;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
     @BeforeEach void setUp() { harness.setUp(); }
@@ -26,6 +26,9 @@ class LeafRoomsTest {
         Level level = harness.roomOf("forest-1", MOB_ROOM);
         assertEquals(0, level.roomLayout.rooms.get(MOB_ROOM).leaves(), "a room without the property has none");
         assertEquals(LEAVES, level.roomLayout.rooms.get(DEADFALL_ROOM).leaves());
+        assertEquals("forest-1-escalators", level.roomLayout.rooms.get(ESCALATORS_ROOM).id());
+        assertEquals(0, level.roomLayout.rooms.get(ESCALATORS_ROOM).leaves());
+        assertEquals("forest-1-traps", level.roomLayout.rooms.get(TRAPS_ROOM).id());
         assertEquals(0, level.roomLayout.rooms.get(TRAPS_ROOM).leaves());
     }
 

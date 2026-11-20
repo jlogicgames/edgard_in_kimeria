@@ -36,7 +36,14 @@ FOREST_FIRST_GID, FOREST_TILES = 1, 140          # Forest.tsx: the play tileset,
 SCENERY = ('sky', 'stars', 'moon', 'clouds', 'far', 'grove', 'mid', 'play-above', 'play-below')
 EDGE_COLUMNS = 2                                  # spare columns past what a layer's factor needs (the camera is fractional)
 # the foreground of each room of forest-1 that has one: room name -> pieces (piece, x, top y), x relative to the room
-GAME_FOREGROUND = {'forest-1-traps': pm.FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND}
+# #500 batch 3 (D110) split the 1280 px trap course at x 640: the sketch's pieces left of x 600 stay with `forest-1-escalators` (x 0-640);
+# the ones from x 600 on move to `forest-1-traps` (x 640-1280) 640 px to the left, since pieces are relative to their room. The two
+# `edge-*` pieces stood at x 1568 and 1600, which the old room's camera (up to x 640, factor 1.6) carried to about x 544 and 576 on screen at
+# the room's end; in a one-screen room the camera never moves, so they are placed there directly, at x 560 and 592, framing its right edge.
+ESCALATORS_FOREGROUND = tuple(p for p in pm.FOREGROUND if p[1] < 600)
+TRAPS_FOREGROUND = (tuple((name, x - 640, top) for name, x, top in pm.FOREGROUND if 600 <= x < 1280)
+                    + tuple((name, x - 1008, top) for name, x, top in pm.FOREGROUND if name.startswith('edge-')))
+GAME_FOREGROUND = {'forest-1-escalators': ESCALATORS_FOREGROUND, 'forest-1-traps': TRAPS_FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND}
 
 
 def label(key):

@@ -60,7 +60,7 @@ class JumpFrameRateTest {
 
     private Level leverRoom() {
         Level level = new Level(h.assets(), h.game(), new Player(h.assets(), h.game(), 0, 0), "forest-1", Rectangle::new);
-        for (int i = 0; i < 3; i++) level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-lever
+        for (int i = 0; i < 4; i++) level.enterNextRoom(new Player(h.assets(), h.game(), 0, 0)); // -> forest-1-lever
         return level;
     }
 

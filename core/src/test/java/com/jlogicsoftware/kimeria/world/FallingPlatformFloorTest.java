@@ -94,10 +94,17 @@ class FallingPlatformFloorTest {
 
     private void frame(Level level) { level.update(STEP); pressed.clear(); }
 
-    /** The trap course, room 3 since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after that. */
+    /** The escalator room (the falling platforms), room 3 since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after that. */
     private Level forest1() {
         Level l = new Level(assets, game, player(), "forest-1", Rectangle::new, emptyStock());
         l.enterNextRoom(player());
+        l.enterNextRoom(player());
+        return l;
+    }
+
+    /** The trap course (the rotten log), room 4 since #500 (D110) split the escalators off it. */
+    private Level forest1Traps() {
+        Level l = forest1();
         l.enterNextRoom(player());
         return l;
     }
@@ -226,7 +233,7 @@ class FallingPlatformFloorTest {
     }
 
     @Test void theRottenLogOverThePitStillCarriesTheHeroDown() {
-        Level l = forest1();
+        Level l = forest1Traps();
         carriedDown(l, platformAt(l, 1088, 320));
     }
 
