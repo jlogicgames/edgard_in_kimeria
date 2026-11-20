@@ -53,6 +53,7 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `fissure_rumble.wav` | synth, voice (#366) | 0.60 s | -9.5 / -19.4 | an ember fissure's warning starts, only while the fissure or its column is in the camera view (`Level.fissureInView`, the `EmberFissure` warning listener) | heard by the author in play 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
 | `ember_jet.wav` | synth, swept noise + crackle (#366) | 0.80 s | -9.2 / -23.0 | an ember fissure's jet starts, same rule: the consequence (D93) | heard by the author in play 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
 | `fireball_fizzle.wav` | synth, swept noise + crackle (#397) | 0.35 s | -9.0 / -25.1 | the hero's fireball goes out on terrain, and at 0.6 volume when it burns out (`Level.fireballFizzle`) | approved by the author 2026-11-18 |
+| `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), and a honey fungus bursts, the same for the harmless and the false one (`Level`) | not heard yet ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -280,6 +281,21 @@ clicks or `hive_buzz`. Constants: `SNAIL_*` in `tools/audio/generate_sounds.py`;
 
 Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble` and `remains_burn`; the crawl and the reload are
 silent. There is no "ready" sound when the reload ends: the stalks shooting up are the cue, and the wind-up has its own sound.
+
+### Spore puff (#445, seeds 7201-7202, D93)
+
+One voice-synth sound, generated 2026-11-20, for the puffball's release and for the burst of the harmless `HoneyFungus` and the
+`FalseHoneyFungus`. The three share it on purpose (D63: the ear must not tell which fungus kills). Constants: `SPORE_*` in
+`tools/audio/generate_sounds.py`; preview: `art/audio/previews/spore_puff.png`. The author auditions it with this change.
+
+- `spore_puff` (0.30 s, RMS -27.1 dBFS, peak -9.0 dBFS, ambient tier): a soft "fwuff": noise through a dull band (500 Hz) with a
+  12 ms onset, then a brighter band (1.8 kHz) swelling in over 50 ms as the cloud spreads, both dying away, over a muffled
+  rough /uh/ thump (110 to 70 Hz) for the cap giving way. Centroid about 2.5 kHz. Quieter and airier than `dust_puff`, so it never
+  reads as the hero landing, and without the wet low gurgle of the snail.
+- Where it plays: the puffball once at the start of each cloud (never at the swell, never when a room opens inside a cloud), only
+  while the puffball's cap or cloud is in the camera view (`Level.puffballInView`); each honey fungus once when its swell ends.
+
+Not verified: how it sits in the mix next to the puffball's neighbours in the running game (author's audition, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)).
 
 ### Monster bodies (D101, seeds 6807-6808)
 

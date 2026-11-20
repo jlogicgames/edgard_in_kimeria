@@ -42,7 +42,8 @@ public class Assets implements Disposable {
         "deadfall_creak", "deadfall_knock", "bramble_rustle", "bramble_lash", "thorn_spring", "hive_buzz", "stinger_rain", "hive_fall",
         "fissure_rumble", "ember_jet", "fireball_fizzle", "beetle_notice", "beetle_windup", "beetle_windup_long", "beetle_pop",
         "remains_crumble", "remains_burn", "spider_notice", "spider_windup", "spider_windup_long", "spider_leap", "spider_bite",
-        "spider_drop", "spider_reel", "spider_snap", "snail_notice", "snail_windup", "snail_windup_long", "snail_spit", "snail_splat"};
+        "spider_drop", "spider_reel", "spider_snap", "snail_notice", "snail_windup", "snail_windup_long", "snail_spit", "snail_splat",
+        "spore_puff"};
 
     /**
      * Creates every sound effect now. A sound made on its first play is decoded then (a hitch on desktop), and on the web it

@@ -35,6 +35,8 @@ public class Puffball extends Entity implements LethalHazard {
     private final TrapWarnings warnings;
     private final float period, phase, cloudSeconds;
     private float elapsed;
+    private boolean wasCloud;
+    private Runnable onRelease = () -> { };
     private final TextureRegion[] cap = new TextureRegion[CAP_FRAMES], cloud = new TextureRegion[CLOUD_FRAMES];
 
     public Puffball(Assets assets, float x, float y, float w, float h, TrapWarnings warnings,
@@ -46,6 +48,7 @@ public class Puffball extends Entity implements LethalHazard {
         this.cloudSeconds = cloudSeconds;
         for (int i = 0; i < cap.length; i++) cap[i] = SpriteSheets.TRAP_PUFFBALL.frame(assets, i, 0);
         for (int i = 0; i < cloud.length; i++) cloud[i] = SpriteSheets.TRAP_SPORES.frame(assets, i, 0);
+        wasCloud = currentPhase() == Phase.CLOUD; // a room that opens inside a cloud is not a release
     }
 
     /** Reads and checks the map properties strictly; the message is prefixed with {@code label}. */
@@ -118,9 +121,25 @@ public class Puffball extends Entity implements LethalHazard {
         return cloudBounds().overlaps(area);
     }
 
+    /** Called once at the start of each cloud (the release); the level plays the spore puff from it (#445). */
+    public void onRelease(Runnable onRelease) { this.onRelease = onRelease; }
+
+    /** True when the cap or the cloud overlaps {@code view}; allocation free (the release is heard only while it is on screen). */
+    public boolean inView(Rectangle view) {
+        float cloudX = centerX() - CLOUD_SIZE / 2f, cloudY = position.y + size.y - CLOUD_SIZE;
+        boolean cap = position.x < view.x + view.width && view.x < position.x + size.x
+            && position.y < view.y + view.height && view.y < position.y + size.y;
+        boolean puff = cloudX < view.x + view.width && view.x < cloudX + CLOUD_SIZE
+            && cloudY < view.y + view.height && view.y < cloudY + CLOUD_SIZE;
+        return cap || puff;
+    }
+
     @Override
     public void update(float dt) {
         elapsed += dt;
+        boolean cloudNow = currentPhase() == Phase.CLOUD;
+        if (cloudNow && !wasCloud) onRelease.run();
+        wasCloud = cloudNow;
     }
 
     @Override
