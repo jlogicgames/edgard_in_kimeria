@@ -48,34 +48,14 @@ existing separate buffer and coyote-time implementation.
 
 Keyboard, gamepad and touch share this behavior in both handedness layouts. The
 direction held with Action is consumed until that direction is released; it cannot
-also start a look, grab/climb a ladder, or trigger another action. Touch reports
+also grab/climb a ladder or trigger another action. Touch reports
 “No action” for Up + Action with no target and Down + Action with an empty hand.
 
-## Standing look up/down (2026-10-23)
+## Standing look up/down (removed)
 
-Standing still on solid ground, hold Up or Down without Action/Ranged to look.
-The corresponding static head pose replaces idle immediately. After a continuous
-0.3-second hold, the camera eases vertically over one second: 100 logical pixels
-up or 150 down. Release, reverse, walk, jump, attack or interact to cancel/restart the hold;
-the camera eases back over 0.2 seconds, matching the immediate return to idle. Conflicting Up+Down selects no look.
-The full inspection distance is allowed even outside the current room or with
-the hero temporarily outside the view; horizontal room bounds remain intact. Deliberate inspection is an explicit exception to the ordinary
-vertical room clamp: current Forest rooms are only 8 px taller than the viewport.
-This changes neither hitboxes nor movement and is not crouching or ladder climbing.
-UI/layout boundaries discard the old hold and require vertical release before
-inspection can restart. A carried object stays in the unchanged front palm.
-When a reachable pickup or usable mechanism is available, allow a one-second
-hold before moving the camera, giving its Up + Action pickup/activation chord priority over
-inspection. Choose this delay at the beginning of each hold; other holds keep
-0.3 seconds. A carry-only Put down/Throw reminder does not extend the delay.
-Target eligibility governs this rule even if the held look direction hides the
-other direction's teaching label, or a later room omits teaching text.
-All devices use their active movement directions; mirrored gamepad action D-pad
-buttons never double as look directions.
-When an eligible mechanism or carryable is selected and its interaction mark (the fairy
-guide's glow, [D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16)) is visible, that selection suppresses standing look and vertical camera inspection. If
-inspection was already underway, it returns to the ordinary camera target over 0.2 s
-([D29](DECISIONS.md#d29-interaction-outline-takes-priority-over-standing-look)).
+Removed (2026-11-20, [D111](DECISIONS.md#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513)): there is no standing look. Holding Up or Down while standing still does
+nothing by itself; Up and Down keep every other use (ladders, Up/Down + Action pick up and put down, the touch stick, menus). The
+camera follows the hero and the room clamp only.
 
 ## Bindings and feedback
 
@@ -325,14 +305,7 @@ are identical to the selected standalone images, and all other runtime art is
 unchanged. The release browser loads the shared sheet and renders its lowered
 frame, local label and target brackets without console errors.
 
-Standing-look follow-up (2026-10-23): 100 logical pixels up / 150 down after a 0.3 s hold,
-1 s eased travel, 0.2 s return, per the author's tuning. Both poses use the first idle
-frame with only the head changed. The camera-shake clamp now bounds only shake,
-so it cannot cancel deliberate inspection beyond room bounds. Keyboard/browser
-inspection verifies both poses, full excursions and return; original body/palm/
-sword/feet pixels are unchanged. Physical controller/phone checks remain #101;
-ladder-zone physical-device acceptance remains with #101. Novice teaching
-acceptance remains #131. These are not claimed complete by simulated tests.
+Standing-look follow-up (2026-10-23, superseded by D111): the look was removed; its record is kept in D25.
 
 <a id="ladders-99"></a>
 
@@ -367,6 +340,5 @@ the moving sprite, so reaching its top leaves Edgard standing there. A grounded 
 platform at least one third down the ladder accepts both vertical directions and shows separate `Up: Climb` and `Down: Climb down`
 lines; the upper span and bottom accept Up, while the top surface accepts Down. Left/Right
 releases the ladder, and the climbing animation advances only during vertical movement.
-Eligible target outlines suppress
-standing-look camera movement (D29). These follow-up changes have not yet been exercised by
+These follow-up changes were not exercised by
 the automated or physical-device checks recorded above.

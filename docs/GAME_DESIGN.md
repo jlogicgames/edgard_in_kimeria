@@ -834,7 +834,7 @@ to implement everything.
 | Traps | Arrows and deflecting them; falling rocks; cutters; electrical discharges; quicksand. |
 | Light and creatures | A removable wall torch; throwing it to light the path; insects attracted to light; spiders repelled by it; eyes in darkness. |
 | Other items | Protection from one danger type; bottles with different effects; incendiary mixture. Inclusion and readable properties undecided. |
-| Movement and combat | Standing look up/down is implemented in #95; crouching remains open. Visible enemy windups; enemies reacting to the hero's arrival. Vertical ladders are already accepted above. |
+| Movement and combat | Standing look up/down was implemented in #95 and removed in D111; crouching remains open. Visible enemy windups; enemies reacting to the hero's arrival. Vertical ladders are already accepted above. |
 | Atmosphere and feedback | Parallax, fireflies, fog, landing/mechanism dust, moving bushes/vines and restrained camera shake. Effect candidates from pixelfx: [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396). |
 
 This list does not establish implementation status: old checklist marks refer to

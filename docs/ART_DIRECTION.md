@@ -75,8 +75,8 @@ and quantizes authored art. The source guard/hook also checks dimensions, indexe
 palette and binary world alpha in the new world/HUD PNG exports, without a Pillow
 build dependency. Renderer checks still have to verify filtering and visual fit.
 
-The look poses are frames of the hero sheets (D79): the idle body with the head turned up or down, drawn in
-`art/hero/hero.grid` like every other hero frame.
+The two look poses (D79, the idle body with the head turned up or down, `art/hero/hero.grid`) are no longer played (D111); their
+frames stay in the hero sheets unused.
 
 ## Group artwork by meaning
 
@@ -315,12 +315,9 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   are the drawing; soft edges are drawn there as flat colours with alpha, the exporter applies no filter; `tools/parallax_sprites.py` exports the sheets and `.tsx` files; `tools/parallax_game.py` installs them into the game (assets and forest-1's layers); `tools/parallax_mock.py` builds
   `mock.tmx` over the first room of forest-1, renders previews at cameras 0, 320 and 640 and checks the
   foreground (section 3); `--room calm` does the same for the calm room (`mock-calm.tmx`, terrain sketch, `preview-calm-{a,b,c}.png`
-  at cameras 0, 80 and 160 and 2x copies), and `--check` checks both mocks. Every preview also has its look frames, `-up` (camera top
-  8 - 100, the floor hero's full look up) and `-down` (8 + 150), the hero in his look pose (`preview-{0,320,640}-{up,down}.png`,
-  `preview-calm-{a,b,c}-{up,down}[-2x].png`); `--room calm` also writes `preview-calm-look.gif` (the hero standing mid-room, steady, a
-  1 s smoothstep look down, hold, a 0.2 s return, a look up, return, as `LookAround` pans) and `preview-calm-walk.gif` (start to exit at
-  100 px/s, steady camera, run cycle), 70 ms a frame (14.3 frames/s) at 2x nearest with one global 127-colour palette (each under 5 MB;
-  20 frames/s made the look GIF 5.3 MB).
+  at cameras 0, 80 and 160 and 2x copies), and `--check` checks both mocks. `--room calm` also writes `preview-calm-walk.gif` (start to exit at
+  100 px/s, steady camera, run cycle), 70 ms a frame (14.3 frames/s) at 2x nearest with one global 127-colour palette (under 5 MB).
+  The look frames (`-up`, `-down`) and `preview-calm-look.gif` went with the look up/down (D111).
 - **Code (built 2026-11-19, forest-1).** The game does not use libGDX's `TmxMapLoader` or `OrthogonalTiledMapRenderer`; `tiled/TiledMapData`
   keeps the scenery apart: a tile layer is scenery when it has a `parallaxx` or `parallaxy` attribute or the layer property `scenery=true`
   (the factor-1 `play-above` and `play-below`); it is read into a `SceneryLayer` (factors, `offsetx/y`, `opacity`, `driftx`, `wrapx`, cells
@@ -339,23 +336,18 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 - **Vertical parallax (author, 2026-11-19).** Each layer's vertical factor is its horizontal factor (sky, stars, moon, clouds 0; far
   0.15, grove 0.25, mid 0.4, play 1, foreground 1.6), measured from the floor camera, so the steady frame is the authored one:
   `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
-  for a 368 px room and the 360 px view) and camTop the camera's top edge (whole pixels). The standing hero looks up 100 px and down
-  150 px (`LookAround`, a 1 s smoothstep pan, a 0.2 s return), not clamped to the room. The steady camera top is 8 with the hero on
-  the floor and as low as the room top (0) when he stands high (above y 256), so the look range is camera top 0 - 100 to 8 + 150, and a
-  layer of factor f shows room y 8 - 108 f to 368 + 150 f (the offset snapped as the game's `Math.round`, half up). Every layer
-  carries bleed art that far: far 23 px below the room (drawn 32), grove 38 (48), mid 35 above and 60 below (48 and 64), play 100 above
+  for a 368 px room and the 360 px view) and camTop the camera's top edge (whole pixels). The hero no longer looks up or down
+  (D111): the camera top lies between the room top (0, with the hero standing high, above y 256) and 8 (on the floor), and moves during
+  a room change, so a layer of factor f is seen at most 8 f px off its authored place. Every layer still carries the bleed art drawn
+  for the old look range (far 23 px below the room (drawn 32), grove 38 (48), mid 35 above and 60 below (48 and 64), play 100 above
   (`play-above`, 112) and 150 below (160 of deep soil; the ground's bottom row on the room's last row becomes its buried variant,
   tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the deep soil), foreground 165 above
-  and 240 below. Over a hanging piece its `-top` (room y -184 to 7) draws what it hangs from, open: the bough, trunk or root plate
-  rises in limbs to past the top of a full look up, each with a side branch and a few broad leaf clusters, sky between them (no
-  slab); the piece's own rows 0 to 7 are empty. Under a standing piece its `-foot` (256 px) carries the same stems and blades straight
-  on down, a wide leaf base gathering into the stems it grows from within 22 px, darkening step by step to near black: no clod, no
-  roots (author, answer 10). Bleed art lies outside the steady frame (y 8 to 368), so the steady previews are unchanged by it;
-  only the buried bottom row (room y 352 to 368) and `rise-trunk`'s shell, now running straight into the soil, show there.
+  and 240 below); it is never in view now and is kept as shipped, trimming it is a separate art change. Over a hanging piece its `-top`
+  (room y -184 to 7) draws what it hangs from, open; under a standing piece its `-foot` (256 px) carries the same stems and blades
+  straight on down (author, answer 10); the piece's own rows 0 to 7 are empty. Bleed art lies outside the steady frame (y 8 to 368), so
+  the steady previews are unchanged by it; only the buried bottom row (room y 352 to 368) and `rise-trunk`'s shell show there.
   Tiled: the layers' `parallaxy` equals their `parallaxx` and the map's `parallaxoriginy` is 188 (8 + half the view): Tiled has one
-  origin per map, as for x, but every forest room lies at y 0, so in y it is right for every room. At a full look up the hero (floor
-  at y 320) is below the screen: that is the game's existing look (`docs/DIRECTIONAL_CONTROLS.md`, "the hero temporarily outside the
-  view"), kept by the author (answer 10).
+  origin per map, as for x, but every forest room lies at y 0, so in y it is right for every room.
 - **Foreground origin per room.** A factor of 1.6 cannot be authored on one map-wide layer: the layer would have to be about 10.6k px wide for forest-1
   (every room's art 1.6 times its length). The foreground is therefore an objectgroup `foreground` of tile objects, each room's pieces
   positioned relative to that room, and the game draws `screenX = (x - roomX) - f * (camX - roomX)` with f = 1.6, x the object's x relative to

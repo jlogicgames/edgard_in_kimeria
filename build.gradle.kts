@@ -140,7 +140,7 @@ val testParallaxGate = tasks.register<Exec>("testParallaxGate") {
 }
 val validateParallax = tasks.register<Exec>("validateParallax") {
     group = "verification"
-    description = "Checks the foreground of every forest room that has one against the map's objects: rule B, cover time, look frames (docs/ART_DIRECTION.md)."
+    description = "Checks the foreground of every forest room that has one against the map's objects: rule B, cover time (docs/ART_DIRECTION.md)."
     dependsOn(testParallaxGate)
     workingDir = rootDir.resolve("tools")
     commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "parallax_mock.py", "--check", "--game")

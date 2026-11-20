@@ -317,13 +317,13 @@ class AllocationBudgetTest {
     /**
      * The parallax layers and the room's foreground of forest-1's mob room (#236), update, {@code renderBack} and {@code renderFront}
      * through the {@link NoopBatch} with a real 640x360 view: the camera sweeps the room's 160 px and back every
-     * {@value #PARALLAX_SWEEP_FRAMES} frames while its top swings from a look up (100 px) to a look down (150 px), so every layer, the
+     * {@value #PARALLAX_SWEEP_FRAMES} frames while its top swings between the room top and the floor camera top (8 px apart), so every layer, the
      * cloud drift, the culling and the per-room foreground origin all run. Measured 0.0 B/frame in 3 runs (2026-11-19): index loops,
      * cached regions, no object per frame. Every forest-1 room scene below also draws these layers (its view is the room's rect).
      */
     static final double PARALLAX_CEILING = 8;
     private static final int PARALLAX_SWEEP_FRAMES = 320;
-    private static final float PARALLAX_CAMERA_SPAN = 160, PARALLAX_LOOK_UP = -92, PARALLAX_LOOK_DOWN = 158;
+    private static final float PARALLAX_CAMERA_SPAN = 160, PARALLAX_TOP_HIGH = 0, PARALLAX_TOP_FLOOR = 8;
     @Test void forest1ParallaxLayersAndForeground() {
         Rectangle view = new Rectangle(0, 0, 640, 360);
         Level level = harness.room("forest-1", "forest-1-mob", () -> view);
@@ -335,7 +335,7 @@ class AllocationBudgetTest {
             float t = (i % PARALLAX_SWEEP_FRAMES) / (float) PARALLAX_SWEEP_FRAMES;
             float sweep = t < 0.5f ? t * 2 : 2 - t * 2;
             view.x = room.x + PARALLAX_CAMERA_SPAN * sweep;
-            view.y = PARALLAX_LOOK_UP + (PARALLAX_LOOK_DOWN - PARALLAX_LOOK_UP) * sweep;
+            view.y = PARALLAX_TOP_HIGH + (PARALLAX_TOP_FLOOR - PARALLAX_TOP_HIGH) * sweep;
             parallax.update(STEP);
             parallax.renderBack(batch, view, originY);
             parallax.renderFront(batch, view, room, originY);

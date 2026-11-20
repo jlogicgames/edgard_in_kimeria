@@ -15,7 +15,7 @@ What it does, idempotently (a second run changes nothing):
   Layers with a `parallaxx`/`parallaxy` attribute or the property `scenery` are scenery to the game parser (it keeps them out of the
   play layer and of collision); the foreground is every object group whose name starts with `foreground`.
 The game draws them with `world/ParallaxRenderer`; `python3 tools/parallax_mock.py --check --game` checks the foreground of every
-room that has one against the map's objects (rule B, cover time, look frames). The pieces of each room are the lists below.
+room that has one against the map's objects (rule B, cover time). The pieces of each room are the lists below.
 """
 import re
 import shutil

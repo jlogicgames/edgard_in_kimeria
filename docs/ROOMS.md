@@ -878,10 +878,7 @@ comes from the torch: handle right/on, handle left/off. No new object IDs or col
 introduced. A first visit or fresh Level uses authored state; a room retry or collection
 return restores the secured torch state, from which the lever is rebuilt.
 
-Standing inspection ([D25](DECISIONS.md#d25-standing-look-with-delayed-vertical-inspection))
-adds a deliberate vertical offset to the ordinary room-clamped camera. Horizontal
-bounds and transition ownership remain unchanged. Pose/camera inspection never
-changes the active room, collision, hero position or visible carryable attachment.
+Standing inspection (D25) was removed (D111): the camera is the ordinary room-clamped one.
 
 
 ### Fireball refill revision (#98, 2026-10-25)
