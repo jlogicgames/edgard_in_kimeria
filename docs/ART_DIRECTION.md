@@ -152,7 +152,7 @@ Maintain the same handling of faces, contours, light and color across the new wo
 
 Edgard in the world is an original pixel drawing, `art/hero/hero.grid`, exported exactly by
 `tools/hero_sprites.py` to three sheets of 64×64 cells, one clip per row (`tools/sprite_layouts.py HERO_SHEETS`):
-`hero-right.png` and `hero-left.png` (idle 4, run 6, jump 2, fall 2, attack 7, look 2, clamber 1, hit 2, appear 4,
+`hero-right.png` and `hero-left.png` (idle 4, run 6, jump 2, fall 2, attack 7, clamber 1, hit 2, appear 4,
 disappear 4; then carry idle 4, carry run 6, throw 3, land 1, pull 3) and `hero-ladder.png` (up 4, down 4, hold 1; a
 back view used by both facings).
 
@@ -194,7 +194,7 @@ Every death with a visible cause shows the silver thread of #228 pulling Edgard 
 - **Tier (D76):** active. Worst outline 0.335 over every RoomStart of the three maps, taut and slack, level and sloped,
   over each map's background (`tools/test_silver_thread_sprites.py`; 0.340 over the old sky, see D92); the D78 dialogue silvers
   measured 0.104 on the old sky.
-- **Hero poses:** the three pull frames of #343 (row 14 of both facing sheets): tug, lift, land. The thread is tied to
+- **Hero poses:** the three pull frames of #343 (row 13 of both facing sheets): tug, lift, land. The thread is tied to
   the **left** wrist in both facings, and the frames are drawn yanked backward by it, so the pull faces **away** from the
   start (a start on the left, a smaller X, means facing right). Wrists, frame pixels: tug and lift (17, 44) facing right
   and (46, 44) facing left, land (23, 52) and (24, 52); `Player.pullWrist` gives the pixel centre in world coordinates
@@ -301,10 +301,10 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 | Stars | 0 (x and y) | sparse small stars | five 128x208 pieces side by side, `art/parallax/shared/` | back | layer `stars`; fixed on screen, shared by every world |
 | Moon | 0 (x and y) | the moon and its stepped glow | one 128 px piece, `art/parallax/shared/` | back | layer `moon`; **fixed on screen, the same position in every world** |
 | Clouds | 0, plus drift | cumulus | pieces in one 1024 px loop, `art/parallax/shared/` | back | layer `clouds`, properties `driftx` (px/s) and `wrapx` (px) |
-| Far ridge | 0.15 | two rows of small spruces, valley mist | one seamless 512 px strip (four pieces in order) | back | layer `far`, `parallaxx` and `parallaxy` 0.15; the pieces run 32 px past the room bottom (bleed) |
-| Grove | 0.25 | nearer spruces, mist at their foot | one seamless 768 px strip (three pieces in order) | back | layer `grove`, `parallaxx` and `parallaxy` 0.25; 48 px of bleed past the room bottom |
-| Mid forest | 0.4 | trunks, branches, leaf masses, undergrowth | one seamless 1024 px strip (four full-height pieces in order) | back | layer `mid`, `parallaxx` and `parallaxy` 0.4, `offsety` -48: 48 px of bleed over the room top (drawn, not mirrored: each canopy mass the room top cut closes in its own lumpy crown, a lone trunk carries on along its slope) and 64 px past the bottom |
-| Play | 1.0 | terrain (`forest-terrain`), decor, traps, enemies, hero | unchanged; 10 rows of deep soil past the room bottom (`deep-1` to `deep-3` in the terrain sketch, near black at the foot, `deep-3` under a pit) and the decor layer `play-above` (7 rows, `offsety` -112) carrying ropes and walls on over the room top | world | existing layers, plus `play-above` (no collision) |
+| Far ridge | 0.15 | two rows of small spruces, valley mist | one seamless 512 px strip (four pieces in order) | back | layer `far`, `parallaxx` and `parallaxy` 0.15; the pieces run 16 px past the room bottom (bleed, D111) |
+| Grove | 0.25 | nearer spruces, mist at their foot | one seamless 768 px strip (three pieces in order) | back | layer `grove`, `parallaxx` and `parallaxy` 0.25; 16 px of bleed past the room bottom (D111) |
+| Mid forest | 0.4 | trunks, branches, leaf masses, undergrowth | one seamless 1024 px strip (four full-height pieces in order) | back | layer `mid`, `parallaxx` and `parallaxy` 0.4, `offsety` -16: 16 px of bleed over the room top (drawn, not mirrored: each canopy mass the room top cut closes in its own lumpy crown, a lone trunk carries on along its slope) and 16 px past the bottom (D111) |
+| Play | 1.0 | terrain (`forest-terrain`), decor, traps, enemies, hero | unchanged; one row (16 px) of deep soil past the room bottom (`deep-1` in the terrain sketch, `deep-3` under a pit, near black) and the decor layer `play-above` (1 row, `offsety` -16) carrying ropes and walls on over the room top | world | existing layers, plus `play-above` (no collision) |
 | Foreground | 1.6 (kept, third pass: see the cover-time rule in section 3) | few big, readable shapes, not a band (Hollow Knight, Dead Cells): a vine curtain (a sagging bough, vines with big pointed leaves) and a root curtain (roots of very different lengths, the deepest almost to the floor) hanging from the top, leaves and a bough in the top-left corner; big leaves, fern fronds and grass in a few low clumps on the floor line and a tuft; the tips of two tall leaves at the room end. Tall pieces rising from the screen bottom (`rise-fern`, `rise-trunk`, `rise-reeds`, up to two thirds of the view, sprites unchanged in size) go only where no camera carries their stems over an excluded rect (none in the busy mock room; two clear runs in the calm mock room); they are open (lace) and thinnest where they cross the hero's band | modular pieces placed by hand as tile objects, `forest-fg` is a collection of images over one packed sheet, a sub-rectangle per piece (pixel defocus) | front | objectgroup `foreground` of tile objects per room, `parallaxx` and `parallaxy` 1.6, formula in Offset; every standing piece has a `-foot` under it and every hanging piece a `-top` over it (bleed) |
 
 - **Shared sky objects (author, 2026-11-19).** One moon and one set of clouds serve every world (Forest, Swamp, Steppe, Castle); in the
@@ -338,14 +338,16 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
   for a 368 px room and the 360 px view) and camTop the camera's top edge (whole pixels). The hero no longer looks up or down
   (D111): the camera top lies between the room top (0, with the hero standing high, above y 256) and 8 (on the floor), and moves during
-  a room change, so a layer of factor f is seen at most 8 f px off its authored place. Every layer still carries the bleed art drawn
-  for the old look range (far 23 px below the room (drawn 32), grove 38 (48), mid 35 above and 60 below (48 and 64), play 100 above
-  (`play-above`, 112) and 150 below (160 of deep soil; the ground's bottom row on the room's last row becomes its buried variant,
-  tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the deep soil), foreground 165 above
-  and 240 below); it is never in view now and is kept as shipped, trimming it is a separate art change. Over a hanging piece its `-top`
-  (room y -184 to 7) draws what it hangs from, open; under a standing piece its `-foot` (256 px) carries the same stems and blades
-  straight on down (author, answer 10); the piece's own rows 0 to 7 are empty. Bleed art lies outside the steady frame (y 8 to 368), so
-  the steady previews are unchanged by it; only the buried bottom row (room y 352 to 368) and `rise-trunk`'s shell show there.
+  a room change, so a layer of factor f is seen at most 8 f px off its authored place (12.8 px at the foreground's 1.6), and the screen
+  shake (at most `ScreenShake.LEVER_AMPLITUDE_PX` and `STONE_AMPLITUDE_PX`, 1.5 px, clamped to the room so it never carries the view
+  past the room's top or bottom) would add up to 1.5 (1 + f) px: the margin counts it anyway, conservatively. The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
+  16 above and 16 below (`offsety` -16), `play-above` 1 row and the deep soil 1 row (the ground's bottom row on the room's last row
+  becomes its buried variant, tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the
+  deep soil), the sky 24 rows. Over a hanging piece its `-top` (2 tile rows, room y -24 to 7) draws what it hangs from, open; under a
+  standing piece its `-foot` (1 tile row) carries the same stems and blades straight on down (author, answer 10); the two `edge-*`
+  pieces are 4 rows tall (to room y 391) and need no foot; the piece's own rows 0 to 7 are empty. Bleed art lies outside the steady
+  frame (y 8 to 368), so the steady previews are unchanged by it; only the buried bottom row (room y 352 to 368) and `rise-trunk`'s shell
+  show there. Trimming it changed no pixel of any room's frame at camera tops 0 to 8 (63 frames of the three game rooms, before and after).
   Tiled: the layers' `parallaxy` equals their `parallaxx` and the map's `parallaxoriginy` is 188 (8 + half the view): Tiled has one
   origin per map, as for x, but every forest room lies at y 0, so in y it is right for every room.
 - **Foreground origin per room.** A factor of 1.6 cannot be authored on one map-wide layer: the layer would have to be about 10.6k px wide for forest-1
@@ -388,12 +390,10 @@ These are the only limits on the layers.
 
 - **Foreground cover (rule B, author, 2026-11-19).** On screens and in places with no trap the foreground may cover the terrain's
   walk edge and the hero, even fully (like the full-screen chains of Dead Cells). It never covers what section 3 excludes (next
-  rule), at any camera x of the room with the steady camera (camera top 8). During a look (a held pose, the foreground moving 0.6
-  times the look against the play) it may cover a trap or an enemy for a moment: the player saw it before, and it adds difficulty
-  (author, 2026-11-19, answer 10). One exception for the hero: at the RoomStart and RoomExit boxes he stays visible above the
+  rule), at any camera x of the room with the steady camera (camera top 8); while the camera top moves by 0 to 8 px the foreground
+  shifts by at most 12.8 px, which the 16 px margin around each excluded rect absorbs. One exception for the hero: at the RoomStart and RoomExit boxes he stays visible above the
   waist (the top 16 px of his 31 px figure, plus 16 px around), so a respawn and an exit always read. These rules and the cover time
-  are checked at the steady camera (camera top 8), where heights are exact: the hero walks and stands there, and a look is a held pose
-  in which the foreground moves 0.6 times the look against the play.
+  are checked at the steady camera (camera top 8), where heights are exact: the hero walks and stands there.
 - **Cover time (extends rule B, author, 2026-11-19, third pass; tightened in its review).** The foreground may cover the hero
   where there is no trap or enemy, but never hides him (near) fully where he stands, and never for more than 0.5 s of walking. Hidden
   means 85 % or more of his figure (an 11x31 px rect: the hitbox, `Player` `Hitbox.rect(18, 26, 11, 22)`, x 18 to 29 of the 48 px
@@ -429,28 +429,16 @@ These are the only limits on the layers.
   gate is [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236). The excluded rects decide where the big pieces go: in the
   busy mock room every column crosses a floor trap or a mechanism at some camera, so the big shapes hang from the top (each strand
   as deep as its place allows) and the low clumps stay on the floor line.
-- **Look frames (vertical parallax).** `python3 tools/parallax_mock.py --check` also fails, at every camera x of the room and every
-  camera top from 0 - 100 to 8 + 150, 5 px apart (and 8 - 100, 8 + 150), on a visible layer edge. A cut is an opaque pixel (alpha > 24)
-  whose neighbour across a row is transparent, on the first or last row of a layer or of a foreground piece, on the seam row of a
-  foreground piece with a `-top` or `-foot` partner (its first drawn row, the last for a `-foot`, which is not always the image's row 0:
-  `hang-leaves-l` starts at its row 8; the partners come from `fg.grid`, not from a map, so a map that leaves one out fails, whatever the
-  length of the row), or, as a heuristic backstop, anywhere inside a layer of factor above 0 where a row of art ends flat over 20 px or
-  more (a strip or piece cut short; the longest drawn flat edge, the moon disc's top, is 18 px; a run length can miss a short cut, so it
-  is not the proof of a seam). The play layer and `play-above` count as one and are checked on their rows' ends only (walk surfaces and ceilings are flat by design); the foreground
-  pieces count as one (a `-foot` or `-top` continues its piece); the clouds wrap and are skipped. A cut is visible when it is on screen
-  with screen beyond it and no layer drawn in front of it is fully opaque over it on the composited frame. At every camera of that
-  range it also fails on any pixel of the bottom 40 % of the frame that lies below the room (y 368 and lower) and is not opaque play
-  or foreground. The sky (factor 0, every row filled) covers the whole view, so no pixel is ever bare. No edge is accepted. Measured:
-  0 visible edges and 0 px of open ground in both mocks (34614 and 8694 frames, about 10 s for both mocks). A scratch copy proves it catches a removed
-  `play-above` (a cut at room y 0 at camera top -100), a removed `vine-curtain-top` (both mocks, room y 8), a removed
-  `hang-leaves-l-top` (both mocks, the bough's seam row at room y 8), a removed `clump-fern-foot` (both mocks, room y 367),
-  `roots-curtain-top`, `trunk-near-top` (the trunk then runs into the bough hump of `hang-leaves-l-top`, but the bracket tile 105 shows
-  its cut top), and `offsety` -24 on the mid layer (its top cut in view at a look up). The earlier run-length test missed the busy
-  room's removed `hang-leaves-l-top`: the bough's seam row is not the image's first row (its rows 0 to 7 are empty), and only 12 px of
-  that row stayed on screen beside the trunk, shorter than the 20 px run; the seam rule has no length limit and catches it. Moving the mid layer up 16 px (`offsety` -64) or the far layer 16 px
-  (`offsety` -16) leaves their foot cut behind the deep soil at every camera (the soil covers the screen below the room), so the check passes them,
-  correctly; with the play layer hidden it catches the mid foot at room y 415, and with the play, grove and mid layers
-  hidden the far foot at room y 383.
+- **Bleed (vertical parallax).** `python3 tools/parallax_mock.py --check` (also `--game`) runs `check_bleed`: at every camera top from
+  0 to 8, the range the camera moves in (D111), no layer shows a cut edge, with a margin of 1.5 (1 + f) px for the screen shake (conservative:
+  the shake is clamped to the room). Every layer of the map must be present (`play-above`, and `play-below` in the game map); a tile
+  layer whose art touches its first image row must start above the screen, and a strip layer (sky, far, grove, mid) must end below
+  it at its last drawn row; the play layer, `play-above` and `play-below` count as one stack (first and last drawn rows). Every foreground
+  piece that has a `-top` or `-foot` in `fg.grid` must have it at the position `with_bleed` gives (a removed or moved partner fails); a
+  `-top` must start above the screen at its first drawn row (its piece's own rows 0 to 7 are empty) and a `-foot` or an `edge-*` piece
+  must end below it. No edge is accepted. Not vacuous: `BleedCheckTest` (in `test_parallax_game.py`) removes each `-top` and `-foot` in turn
+  in every room and mock, then `play-above`, `play-below`, `mid` and `sky`, and each removal fails the check; the shipped rooms pass.
+  The seam-run heuristics of the look-range check are gone with the look (D111).
 - **Calm room (bottom-rising foreground).** `python3 tools/parallax_mock.py --scan` measures every forest room: protected rects per
   1000 px, the longest stretch no rect touches and where a column from the screen bottom to y 120 stays clear at every camera.
   `forest-1-mob` (800 px, one red mob at room x 256, one fireball refill at x 688) has the longest clear stretch of all 22 rooms
@@ -469,7 +457,7 @@ These are the only limits on the layers.
   stump at x 592 now lie on the route, and the first sketch's middle stretch is protected. No x of the room takes `rise-trunk` any more and the
   fern and the reeds fit only at the room's ends: the foreground is the vine curtain and the corner bough from the top, `rise-reeds` at x -50 (left
   end), `rise-fern` at x 780 (right end) and three low clumps (`CALM_FOREGROUND` in `tools/parallax_mock.py`, also the game map's group
-  `foreground-forest-1-mob`). Rule B and the look frames pass in the game map (0 covered objects, standing hidden at 0 of 665 box x, the hero
+  `foreground-forest-1-mob`). Rule B and the bleed check pass in the game map (0 covered objects, standing hidden at 0 of 665 box x, the hero
   hidden 0.00 s on the floor and at the apex, 0 visible layer edges in 8694 frames); `mock-calm.tmx` and its previews were rebuilt.
 - **Ambient lights, by stage (author, 2026-11-19).** Forest and Swamp use fireflies: the #472 lime fireflies in the play layer, under
   their own rules (the Fireflies (#472) paragraph below). The draft's periwinkle distant lights are withdrawn. Steppe and Castle use pale
@@ -564,9 +552,7 @@ Recorded here; sections 1 to 5 carry them. Nothing is still open except what the
    and rounded, with no hooks or spikes. The factor stays 1.6 (measured in section 3).
 10. **Look review (same day).** Below the floor the foreground's stems simply continue straight down, the same stems and blades,
     darkening to near black: no roots and no clods ("you never see roots through earth"). No layer edge is accepted: the look check
-    is occlusion-aware instead (section 3). A foreground piece covering a trap or an enemy for a moment during a look is accepted:
-    the player saw it before, and it adds difficulty; the exclusions and the waist rule hold at the steady camera, and the factor
-    stays 1.6. The hero leaving the view at a full look up stays: it is the game's existing look (`docs/DIRECTIONAL_CONTROLS.md`).
+    is replaced by the bleed check (section 3). The exclusions and the waist rule hold at the steady camera, and the factor stays 1.6.
 
 ## Environment effects (author checklist, 2026-11-05, [#239](https://github.com/jlogicgames/edgard_in_kimeria/issues/239))
 

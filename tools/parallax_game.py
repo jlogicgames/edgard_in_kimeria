@@ -9,8 +9,8 @@ What it does, idempotently (a second run changes nothing):
   becomes `assets/images/Tileset/ForestTerrain.png` with its own `ForestTerrain.tsx`, which forest-1 uses as its play tileset (forest-0 and
   forest-2 keep `Forest.tsx` and the third-party `Tileset.png`, which the terrain exporter also reads for its `keep` tiles);
 - writes into forest-1.tmx the map-wide scenery layers (sky, stars, moon, clouds, far, grove, mid, each as wide as its
-  parallax factor needs: the camera reaches x = map width - 640, a layer of factor f is seen up to f * that + 640), `play-above` (7 rows,
-  `offsety` -112) and `play-below` (the deep soil, 10 rows, `offsety` = the room height), turns the Background's bottom ground row into its
+  parallax factor needs: the camera reaches x = map width - 640, a layer of factor f is seen up to f * that + 640), `play-above` (1 row,
+  `offsety` -16) and `play-below` (the deep soil, 1 row, `offsety` = the room height; the bleed is what the camera top's 0 to 8 px range and the shake need, D111), turns the Background's bottom ground row into its
   buried variant, and adds one `foreground-<room>` object group per room (tile objects relative to the room, `roomx` its x in the map).
   Layers with a `parallaxx`/`parallaxy` attribute or the property `scenery` are scenery to the game parser (it keeps them out of the
   play layer and of collision); the foreground is every object group whose name starts with `foreground`.
@@ -106,7 +106,7 @@ def build(text):
         if key is None or key in sprites.COLLECTIONS or key == 'play-above':
             continue
         width = 64 if props.get('wrapx') else columns_for(px, map_columns)
-        grid = pm.Layer(info[key], width)
+        grid = pm.Layer(info[key], width, pm.layer_rows(key))
         pm.BUILDERS[key](grid)
         attrs = (f' parallaxx="{px}" parallaxy="{py}"' if px else ' parallaxx="0" parallaxy="0"') + (f' offsety="{offset_y}"' if offset_y else '')
         layer(name, width, grid.rows, attrs, ''.join(f'<property name="{k}" type="float" value="{v}"/>' for k, v in props.items()))

@@ -24,11 +24,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * sheet, and a ladder plays a separate up, down and hold clip. Every check here reads the shipped PNGs.
  */
 class HeroFrameTest {
-    /** Rows of hero-right/left.png: idle, run, jump, fall, attack, look, clamber, hit, appear, disappear, then the second set: carry idle, carry run, throw, land, pull. */
-    private static final int[] FACING_FRAMES = {4, 6, 2, 2, 7, 2, 1, 2, 4, 4, 4, 6, 3, 1, 3};
-    private static final int JUMP_ROW = 2, FALL_ROW = 3, CLAMBER_ROW = 6;
-    private static final int CARRY_IDLE_ROW = 10, CARRY_RUN_ROW = 11, THROW_ROW = 12, LAND_ROW = 13, PULL_ROW = 14;
-    private static final int[] LABEL_POSE_ROWS = {0, 1, 5, CARRY_IDLE_ROW, CARRY_RUN_ROW}; // the label can show over these
+    /** Rows of hero-right/left.png: idle, run, jump, fall, attack, clamber, hit, appear, disappear, then the second set: carry idle, carry run, throw, land, pull. */
+    private static final int[] FACING_FRAMES = {4, 6, 2, 2, 7, 1, 2, 4, 4, 4, 6, 3, 1, 3};
+    private static final int JUMP_ROW = 2, FALL_ROW = 3, CLAMBER_ROW = 5;
+    private static final int CARRY_IDLE_ROW = 9, CARRY_RUN_ROW = 10, THROW_ROW = 11, LAND_ROW = 12, PULL_ROW = 13;
+    private static final int[] LABEL_POSE_ROWS = {0, 1, CARRY_IDLE_ROW, CARRY_RUN_ROW}; // the label can show over these
     private static final int[] LADDER_FRAMES = {4, 4, 1};        // up, down, hold
     private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2;
     private static final int LAST_ROW = 63;
