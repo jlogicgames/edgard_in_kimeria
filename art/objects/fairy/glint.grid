@@ -2,8 +2,11 @@
 # selected target, from the frame it is selected, so the selection reads even when the hero stands over the target
 # or the wall behind is bright. Two frames, the diagonal pairs alternating every 0.25 s. Ink k keeps it readable on pale
 # backgrounds. Not the pickup sparkle (warm yellow, one per item, every 2.4 s).
+# #236: ink `020106` (the fairy's); the export lights the top edges in `f2fff4` (forest_trap_sprites.RIM_STYLE); `K` is
+# the same ink, kept dark by the rim (RIM_KEEP), so the small star's side points stay ink and half its contour is dark.
 size 5 5
-color k 0b0814
+color k 020106
+color K 020106
 color g 7fe0cc
 color c f2fff4
 frame big
@@ -15,6 +18,6 @@ kcgck
 frame small
 .....
 ..k..
-.kck.
+.KcK.
 ..k..
 .....

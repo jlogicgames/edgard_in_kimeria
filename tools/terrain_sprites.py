@@ -15,6 +15,7 @@ DIR = ROOT / 'art/terrain/forest'
 OLD = ROOT / 'assets/images/Tileset/Tileset.png'
 SHEET = (320, 112)
 COLUMNS = 20
+AT_ROW = 2   # `at <col> <row>`: the row follows the column, two words after `at`
 
 
 def parse(path):
@@ -36,10 +37,10 @@ def sheet():
         x, y = tid % COLUMNS * tile, tid // COLUMNS * tile
         image.paste(old.crop((x, y, x + tile, y + tile)), (x, y))
     for piece in pieces:
-        at = piece[3]
-        col, row = int(at[at.index('at') + 1]), int(at[at.index('at') + 2])
+        at = piece[sprites.PIECE_OPTIONS]
+        col, row = int(at[at.index('at') + 1]), int(at[at.index('at') + AT_ROW])
         # `at <col> <row>` is consumed here; piece_image refuses any option left over
-        image.paste(sprites.piece_image(tile, colors, piece[:3] + [[]] + piece[4:]), (col * tile, row * tile))
+        image.paste(sprites.piece_image(tile, colors, piece[:sprites.PIECE_OPTIONS] + [[]] + piece[sprites.PIECE_ROWS:]), (col * tile, row * tile))
     return image
 
 

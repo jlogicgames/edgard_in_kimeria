@@ -2,7 +2,7 @@
 """Parallax tilesets (sketch, #236): hand-authored pixel grids -> tileset PNGs and Tiled `.tsx` files.
 
 `art/parallax/<set>/<tileset>.grid` is one tileset (`forest`: sky, far, grove, mid and the foreground fg (pixel
-defocus, exported as a Tiled collection of images: one PNG per piece, placed as tile objects); `shared`: stars, moon and clouds, used by every world): pieces (modular stamps) of
+defocus, exported as a Tiled collection of images: every piece a sub-rectangle of one packed sheet, so the game binds one texture, placed as tile objects); `shared`: stars, moon and clouds, used by every world): pieces (modular stamps) of
 whole 16 px tiles, one character per pixel (the drawing itself, like an artist's file). This module only parses, packs the
 pieces into a sheet and writes files; it contains no drawing logic, no filter and no ImageDraw/putpixel calls. Soft edges
 (the defocused foreground, the moon's glow) are drawn in the grid as flat colours with a straight alpha, never computed.
@@ -23,9 +23,18 @@ DIR = PARALLAX / 'forest'
 TILESETS = ('forest/sky', 'forest/far', 'forest/grove', 'forest/mid', 'forest/fg', 'shared/stars',
             'shared/moon', 'shared/clouds')
 SHEET_COLUMNS = 16
-COLLECTIONS = ('forest/fg',)   # tilesets exported as a Tiled collection of images: one PNG per piece, placed as tile objects
+COLLECTIONS = ('forest/fg',)   # tilesets exported as a Tiled collection of images over ONE packed sheet (a sub-rectangle per piece), placed as tile objects
+COLLECTION_COLUMNS = 56        # tiles across the packed sheet of a collection: its pieces are wider than SHEET_COLUMNS
 RGBA = 4
 OPAQUE = 255
+HEX_RGBA = 8       # hex digits of RRGGBBAA
+ALPHA = 3          # the alpha channel of an RGBA pixel
+RGB = 3            # the colour channels of a pixel
+PIECE_NAME = 0     # the fields of a parsed piece: [name, wtiles, htiles, options, rows]
+PIECE_W = 1
+PIECE_H = 2
+PIECE_OPTIONS = 3
+PIECE_ROWS = 4
 
 
 def parse(path):
@@ -44,11 +53,11 @@ def parse_text(text, label):
         if word == 'tile':
             tile = int(args[0])
         elif word == 'color':
-            colors[args[0]] = tuple(bytes.fromhex(args[1])) + (() if len(args[1]) == 8 else (OPAQUE,))
+            colors[args[0]] = tuple(bytes.fromhex(args[1])) + (() if len(args[1]) == HEX_RGBA else (OPAQUE,))
         elif word == 'piece':
-            pieces.append([args[0], int(args[1]), int(args[2]), args[3:], []])
-        elif pieces and tile and len(line) == pieces[-1][1] * tile:
-            pieces[-1][4].append(line)
+            pieces.append([args[PIECE_NAME], int(args[PIECE_W]), int(args[PIECE_H]), args[PIECE_OPTIONS:], []])
+        elif pieces and tile and len(line) == pieces[-1][PIECE_W] * tile:
+            pieces[-1][PIECE_ROWS].append(line)
         else:
             raise ValueError(f'{label}:{number}: unexpected line (row width must be wtiles*{tile})')
     for name, w, h, _, rows in pieces:
@@ -60,11 +69,16 @@ def parse_text(text, label):
     return tile, colors, pieces
 
 
-def pack(tile, pieces):
-    """Shelf-pack pieces left to right, SHEET_COLUMNS tiles wide. Returns ({name: (col, row, w, h)}, rows)."""
+def columns_of(key):
+    """Tiles across the sheet of a tileset."""
+    return COLLECTION_COLUMNS if key in COLLECTIONS else SHEET_COLUMNS
+
+
+def pack(tile, pieces, columns=SHEET_COLUMNS):
+    """Shelf-pack pieces left to right, `columns` tiles wide. Returns ({name: (col, row, w, h)}, rows)."""
     spots, col, row, shelf = {}, 0, 0, 0
     for name, w, h, _, _ in pieces:
-        if col + w > SHEET_COLUMNS:
+        if col + w > columns:
             col, row, shelf = 0, row + shelf, 0
         spots[name] = (col, row, w, h)
         col += w
@@ -92,12 +106,13 @@ def split(key):
 def sheet(key):
     folder, _, name = split(key)
     tile, colors, pieces = parse(folder / f'{name}.grid')
-    spots, rows = pack(tile, pieces)
-    image = Image.new('RGBA', (SHEET_COLUMNS * tile, rows * tile))
+    columns = columns_of(key)
+    spots, rows = pack(tile, pieces, columns)
+    image = Image.new('RGBA', (columns * tile, rows * tile))
     for piece in pieces:
         col, row, _, _ = spots[piece[0]]
         image.paste(piece_image(tile, colors, piece), (col * tile, row * tile))
-    soft = any(c and c[3] not in (0, OPAQUE) for c in colors.values())
+    soft = any(c and c[ALPHA] not in (0, OPAQUE) for c in colors.values())
     return tile, spots, image, soft
 
 
@@ -105,20 +120,31 @@ def layout(key):
     """{piece: (col, row, wtiles, htiles)} and the tile count of the tileset, for building maps. A collection has one tile
     per piece: its spot is (index, 0, w, h) and the gid of the piece is firstgid + index."""
     if key in COLLECTIONS:
-        _, _, pieces = parse(split(key)[0] / f'{split(key)[2]}.grid')
-        return {p[0]: (i, 0, p[1], p[2]) for i, p in enumerate(pieces)}, len(pieces)
+        folder, _, name = split(key)
+        _, _, pieces = parse(folder / f'{name}.grid')
+        return {p[PIECE_NAME]: (i, 0, p[PIECE_W], p[PIECE_H]) for i, p in enumerate(pieces)}, len(pieces)
     tile, spots, image, _ = sheet(key)
     return spots, image.width // tile * (image.height // tile)
+
+
+def blank_ids(key):
+    """Ids of the tiles of a sheet tileset that are fully transparent: a map layer leaves their cells empty (gid 0, nothing drawn)."""
+    if key in COLLECTIONS:
+        return set()
+    tile, _, image, _ = sheet(key)
+    columns = image.width // tile
+    return {row * columns + col for row in range(image.height // tile) for col in range(columns)
+            if not any(image.crop((col * tile, row * tile, col * tile + tile, row * tile + tile)).getchannel('A').get_flattened_data())}
 
 
 def indexed(image):
     """Exact indexed copy (index 0 transparent when any pixel is), no quantizer: the grid's own colours."""
     pixels = image.get_flattened_data()
-    colours = sorted({p[:3] for p in pixels if p[3]})
-    transparent = any(not p[3] for p in pixels)
+    colours = sorted({p[:RGB] for p in pixels if p[ALPHA]})
+    transparent = any(not p[ALPHA] for p in pixels)
     first = 1 if transparent else 0
     index = {c: i + first for i, c in enumerate(colours)}
-    result = Image.frombytes('P', image.size, bytes(index[p[:3]] if p[3] else 0 for p in pixels))
+    result = Image.frombytes('P', image.size, bytes(index[p[:RGB]] if p[ALPHA] else 0 for p in pixels))
     result.putpalette(([0, 0, 0] if transparent else []) + [v for c in colours for v in c])
     return result
 
@@ -138,23 +164,26 @@ def tsx_path(key):
     return folder / f'{world}-{name}.tsx'
 
 
-def collection_tsx(label, key, tile, pieces):
-    """Collection-of-images tileset: tile id = piece index, image `out/<label>/<piece>.png`."""
-    tiles = '\n'.join(f' <tile id="{i}"><image source="out/{label}/{p[0]}.png" width="{p[1] * tile}" height="{p[2] * tile}"/></tile>'
-                      for i, p in enumerate(pieces))
+def collection_tsx(label, tile, spots, image):
+    """Collection-of-images tileset over one packed sheet: tile id = piece index, each tile the sub-rectangle of `out/<label>.png`
+    that holds its piece (Tiled 1.9 tile `x`, `y`, `width`, `height`)."""
+    tiles = '\n'.join(
+        f' <tile id="{i}" x="{col * tile}" y="{row * tile}" width="{w * tile}" height="{h * tile}">'
+        f'<image source="out/{label}.png" width="{image.width}" height="{image.height}"/></tile>'
+        for i, (col, row, w, h) in enumerate(spots.values()))
     return (f'<?xml version="1.0" encoding="UTF-8"?>\n<tileset version="1.10" tiledversion="1.12.1" name="{label}" tilewidth="{tile}" '
-            f'tileheight="{tile}" tilecount="{len(pieces)}" columns="0">\n <grid orientation="orthogonal" width="1" height="1"/>\n{tiles}\n</tileset>\n')
+            f'tileheight="{tile}" tilecount="{len(spots)}" columns="0">\n <grid orientation="orthogonal" width="1" height="1"/>\n{tiles}\n</tileset>\n')
 
 
 def export_collection(key):
     folder, world, name = split(key)
     label = f'{world}-{name}'
-    tile, colors, pieces = parse(folder / f'{name}.grid')
-    (folder / 'out' / label).mkdir(parents=True, exist_ok=True)
-    for piece in pieces:
-        piece_image(tile, colors, piece).save(folder / 'out' / label / f'{piece[0]}.png')
-    tsx_path(key).write_text(collection_tsx(label, key, tile, pieces), encoding='utf-8')
-    print((folder / 'out' / label).relative_to(ROOT))
+    tile, spots, image, _ = sheet(key)
+    (folder / 'out').mkdir(parents=True, exist_ok=True)
+    target = folder / 'out' / f'{label}.png'
+    image.save(target)
+    tsx_path(key).write_text(collection_tsx(label, tile, spots, image), encoding='utf-8')
+    print(target.relative_to(ROOT))
 
 
 def export(key):
@@ -168,7 +197,7 @@ def export(key):
     if soft:
         image.save(target)
     else:
-        indexed(image).save(target, **({'transparency': 0} if any(not p[3] for p in image.get_flattened_data()) else {}))
+        indexed(image).save(target, **({'transparency': 0} if any(not p[ALPHA] for p in image.get_flattened_data()) else {}))
     tsx_path(key).write_text(tsx(label, tile, spots, image), encoding='utf-8')
     print(target.relative_to(ROOT))
 

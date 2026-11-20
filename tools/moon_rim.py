@@ -33,12 +33,15 @@ CHANNELS = 4  # RGBA
 ALPHA = 3  # index of alpha in an RGBA pixel
 CELL_ARGS = 2  # --cell W H
 LIT_SIDES = ((0, -1), (-1, 0), (1, 0))  # up, left, right in Y-down image space; down keeps its ink
+UP_SIDE = ((0, -1),)  # up only: a sprite lit from above, its sides and underside keep their ink
 
 
-def rim(image, cell=None, colour=RIM, keep=frozenset()):
+def rim(image, cell=None, colour=RIM, keep=frozenset(), sides=LIT_SIDES):
     """A copy of `image` with the moon rim; `cell` (w, h) is the frame size of a strip or grid sheet, default the image.
 
     `keep` holds (x, y) pixels never repainted: a trap's at-rest cue drawn in ink on a lit edge (the falling platform's crack).
+    `sides` are the lit sides, default up, left and right; the fairy (#338, #236) is lit from above only (UP_SIDE), so half her
+    contour keeps its ink and she reads on both the near-black play band and the moon.
     """
     source = image.convert('RGBA')
     width, height = source.size
@@ -57,7 +60,7 @@ def rim(image, cell=None, colour=RIM, keep=frozenset()):
             if data[at + ALPHA] < ALPHA_MIN or (x, y) in keep or oklab(data[at:at + ALPHA])[0] >= SOURCE_L:
                 continue
             left, top = x - x % cell_w, y - y % cell_h
-            for dx, dy in LIT_SIDES:
+            for dx, dy in sides:
                 nx, ny = x + dx, y + dy
                 if not (left <= nx < left + cell_w and top <= ny < top + cell_h) or not opaque(nx, ny):
                     out[at:at + ALPHA] = bytes(colour)

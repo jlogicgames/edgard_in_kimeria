@@ -175,7 +175,7 @@
     <property name="kind" value="bush"/>
    </properties>
   </object>
-  <object id="132" name="Bush" type="Decor" x="1040" y="312" width="32" height="24">
+  <object id="132" name="Bush" type="Decor" x="1060" y="312" width="32" height="24">
    <properties>
     <property name="kind" value="bush"/>
    </properties>

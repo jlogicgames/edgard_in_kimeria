@@ -2,8 +2,12 @@
 """Contrast tiers gate (D76, #344, playtest F15): active sprites must be loud, decor must be quiet.
 
 Every sprite placed in the shipped maps is drawn, in its rest frame, over what the game draws behind it: the map's
-flat `background` colour (D92: the map property every shipped map must set, the clear colour behind the world) plus
-the map's `Background` tile layer. Metrics (OKLab):
+flat `background` colour (D92: the map property every shipped map must set, the clear colour behind the world), the map's
+scenery layers (parallax layers and factor-1 decor, `world/ParallaxRenderer`, #236) and its `Background` tile layer, in the game's
+order. A scenery layer moves with the camera (`x - round(factor * camX)`, vertical shift 0 at the steady camera), so a placement is
+measured at every steady camera x (SCENERY_CAMERA_STEP apart) at which it is on screen, inside the camera range of its room, and the
+worst case counts; a clouds layer, which also drifts with time, is sampled at DRIFT_PHASES phases wherever it can show through. A map
+with no scenery layers (forest-0, forest-2) is measured over the flat colour and its `Background` layer alone. Metrics (OKLab):
 
 - outline: mean |L(silhouette pixel) - L(background pixel just outside it)| over every pair of an opaque pixel and a
   transparent 4-neighbour. Figure against ground at the edge; independent of scale.
@@ -15,13 +19,14 @@ collectables with their pickup halo (#345), at rest with the dimmest halo and at
 halo, NO_HALO):
 - active (hero, traps, enemies, collectables, mechanisms): outline >= ACTIVE_OUTLINE_MIN;
 - decor (`Decor` kinds, `HangingVine`): outline <= DECOR_OUTLINE_MAX, DECOR_BODY_MIN <= body <= DECOR_BODY_MAX,
-  chroma <= DECOR_CHROMA_MAX, and no ink pixel (L < INK_L_MAX).
+  chroma <= DECOR_CHROMA_MAX. D108: there is no absolute ink floor; decor is measured relative to the composited background.
 Every object type in SpawnPoints and Collisions must be classified here as a sprite or as drawing nothing of its own;
 an unknown type fails, so a new sprite cannot skip the check. Tile-layer scenery is reported, not gated: it is the
-third-party tileset that #189 replaces (D76).
+third-party tileset that #189 replaces (D76); the report is made for the maps that still draw that sheet and skips the others.
 """
 import math
 import re
+from collections import namedtuple
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -33,19 +38,27 @@ ACTIVE_OUTLINE_MIN = 0.28
 DECOR_OUTLINE_MAX = 0.20
 DECOR_BODY_MIN, DECOR_BODY_MAX = 0.08, 0.20
 DECOR_CHROMA_MAX = 0.10
-INK_L_MAX = 0.30
 CHROMA_PERCENTILE = 0.9
 ALPHA_MIN = 128
 VIEW_HEIGHT = 360  # KimeriaGame.LOGICAL_H
 TILE = 16
-TILESET_COLUMNS = 20
+VIEW_WIDTH = 640  # KimeriaGame.LOGICAL_W
+SCENERY_CAMERA_STEP = 4  # px between the steady camera x values a placement is measured at
+SWEEP_CAMERA_STEP = 128  # the same for the fairy and monster-body sweeps, whose positions are already sampled coarsely;
+# enough for bodies: a 4 px sweep gave identical results for every kind and map (measured)
+DRIFT_PHASES = 8  # samples of a clouds layer's drift along its wrap length
+HALF_UP = 0.5
+GID_MASK = 0x0FFFFFFF  # Tiled keeps the flip flags in a gid's top bits
+PLAY_LAYER = 'Background'  # the play layer: the game draws it after every scenery layer
+SCENERY_ATTRIBUTES = ('parallaxx', 'parallaxy')  # a layer with one, or the property scenery=true, is scenery (TiledMapData.isScenery)
+SCENERY_PROPERTY = 'scenery'
 BACKGROUND_PROPERTY = 'background'  # D92: a Tiled colour, #RRGGBB or #AARRGGBB with alpha ff (Level.parseBackground)
 HEX_RGB = 6  # digits of #RRGGBB
 HEX_ARGB = 8  # digits of #AARRGGBB
 HEX_PAIR = 2  # digits per channel
 HEX_BASE = 16
 OPAQUE_HEX = 'ff'
-TILESET = 'assets/images/Tileset/Tileset.png'
+TILESET = 'assets/images/Tileset/Tileset.png'   # the third-party sheet that TILE_SCENERY's tile ids index (#189)
 NEIGHBOURS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
@@ -87,6 +100,9 @@ CHANNEL_MAX = 255
 ALPHA = 3  # index of the alpha channel in an RGBA pixel
 ROW_OUTLINE = 2  # (map, x, outline, body): the indices of a result row
 ROW_BODY = 3
+SPRITE_ANCHOR = 4  # the columns of a SPRITES row used below
+SPRITE_GLOWS = 5
+ROW_CAMERA = 4  # the steady camera x of a result (None where no scenery moves)
 GLOWS = (1.0, GLOW_MIN)
 
 # key -> (tier, sheet, frame (x, y, w, h), frame count to check, anchor, glow levels). Anchor 'floor': the frame's
@@ -228,16 +244,15 @@ def measure(sprite, background, x, y, glow=1.0):
     return (sum(pairs) / len(pairs) if pairs else None), sum(body) / len(body)
 
 
-def chroma_and_ink(sprite, glow=1.0):
-    chroma, darkest = [], 1.0
+def chroma_p90(sprite, glow=1.0):
+    chroma = []
     for j in range(sprite.height):
         for i in range(sprite.width):
             if is_opaque(sprite, i, j):
-                lightness, a, b = oklab(sprite.getpixel((i, j)), glow)
+                _, a, b = oklab(sprite.getpixel((i, j)), glow)
                 chroma.append(math.hypot(a, b))
-                darkest = min(darkest, lightness)
     chroma.sort()
-    return chroma[max(0, int(CHROMA_PERCENTILE * len(chroma)) - 1)], darkest
+    return chroma[max(0, int(CHROMA_PERCENTILE * len(chroma)) - 1)]
 
 
 # More frames measured under the same key: the hero faces either way at every placement (#343, D79).
@@ -515,17 +530,193 @@ def with_halo(background, halo, centre_x, centre_y, alpha):
     return Image.merge('RGBA', (*ImageChops.add(background.convert('RGB'), layer).split(), background.getchannel('A')))
 
 
-def tile_layer(root):
-    width, height = int(root.get('width')), int(root.get('height'))
-    gids = [int(v) for v in root.find('layer/data').text.replace('\n', '').split(',') if v.strip()]
-    tileset = Image.open(ROOT / TILESET).convert('RGBA')
-    layer = Image.new('RGBA', (width * TILE, height * TILE))
+def tsx_of(first):
+    """The root element and the path of the `.tsx` a map's `<tileset>` points at (the shipped maps do not embed tilesets)."""
+    if not first.get('source'):
+        raise ValueError('a tileset without a source: the gate reads tilesets from their .tsx files')
+    path = (ROOT / 'assets/tiles' / first.get('source')).resolve()
+    return ET.parse(path).getroot(), path
+
+
+def play_tileset(root):
+    """(sheet path, columns) of the map's first tileset, the play layer's (gid 1 on): forest-1 draws the terrain sketch through
+    its own `ForestTerrain.tsx`, forest-0 and forest-2 keep the third-party sheet (#189, #236). Read from the `.tsx`."""
+    first = root.find('tileset')
+    if first is None:
+        raise ValueError('the map has no tileset')
+    tsx, path = tsx_of(first)
+    image = tsx.find('image')
+    if image is None:
+        raise ValueError(f'{path.name}: the play tileset must be a sheet')
+    return (path.parent / image.get('source')).resolve(), int(tsx.get('columns'))
+
+
+def sheet_tilesets(root):
+    """[(firstgid, columns, sheet)] of every sheet tileset of the map, in file order; a collection of images (the foreground
+    pieces) has no sheet and holds no layer tile."""
+    sets = []
+    for first in root.findall('tileset'):
+        tsx, path = tsx_of(first)
+        image = tsx.find('image')
+        if image is None:
+            continue
+        if int(tsx.get('tilewidth')) != TILE or int(tsx.get('tileheight')) != TILE:
+            raise ValueError(f'{path.name}: tiles must be {TILE} px')
+        sets.append((int(first.get('firstgid')), int(tsx.get('columns')), sheet_image((path.parent / image.get('source')).resolve())))
+    return sets
+
+
+_SHEETS = {}
+
+
+def sheet_image(path):
+    if path not in _SHEETS:
+        _SHEETS[path] = Image.open(path).convert('RGBA')
+    return _SHEETS[path]
+
+
+def render_cells(layer, sets, name):
+    """(image, gids, width) of a tile layer drawn from the map's tilesets; a flipped cell is refused (the game refuses it too)."""
+    width, height = int(layer.get('width')), int(layer.get('height'))
+    gids = [int(v) for v in layer.find('data').text.replace('\n', '').split(',') if v.strip()]
+    image = Image.new('RGBA', (width * TILE, height * TILE))
     for index, gid in enumerate(gids):
+        if gid & ~GID_MASK:
+            raise ValueError(f'{name}: layer {layer.get("name")} has a flipped cell, which the gate does not draw')
         if gid:
-            column, row = (gid - 1) % TILESET_COLUMNS, (gid - 1) // TILESET_COLUMNS
-            layer.paste(tileset.crop((column * TILE, row * TILE, column * TILE + TILE, row * TILE + TILE)),
+            first, columns, sheet = next(entry for entry in reversed(sets) if entry[0] <= gid)
+            column, row = (gid - first) % columns, (gid - first) // columns
+            image.paste(sheet.crop((column * TILE, row * TILE, column * TILE + TILE, row * TILE + TILE)),
                         ((index % width) * TILE, (index // width) * TILE))
-    return layer, gids, width
+    return image, gids, width
+
+
+def tile_layer(root, name='map'):
+    """The map's play layer: the layer named Background. A map without it fails: the gate never guesses which layer is the play layer."""
+    flat = [l.get('name') for l in root.findall('layer') if not is_scenery(l)]
+    if len(flat) > 1:  # TiledMapData overwrites every non-scenery tile layer into one play grid, last wins; this gate composites only one
+        raise ValueError(f'{name}: more than one non-scenery tile layer {flat} (the game overwrites layer by layer, last wins; the gate composites only {PLAY_LAYER!r})')
+    play = next((l for l in root.findall('layer') if l.get('name') == PLAY_LAYER), None)
+    if play is None:
+        raise ValueError(f'{name}: no layer named {PLAY_LAYER!r} (the play layer; scenery layers come before it)')
+    return render_cells(play, sheet_tilesets(root), name)
+
+
+Scenery = namedtuple('Scenery', 'name image factor offset_x offset_y wrap')
+
+
+def is_scenery(layer):
+    """TiledMapData.isScenery: a parallax attribute or the property scenery=true."""
+    props = {p.get('name'): p.get('value') for p in layer.findall('properties/property')}
+    return any(layer.get(a) is not None for a in SCENERY_ATTRIBUTES) or props.get(SCENERY_PROPERTY) == 'true'
+
+
+def scenery_layers(root, name='map'):
+    """The map's scenery layers in file order (their draw order), each as its image and parallax data (opacity folded into alpha)."""
+    sets, result = sheet_tilesets(root), []
+    for layer in root.findall('layer'):
+        if not is_scenery(layer):
+            continue
+        image = render_cells(layer, sets, name)[0]
+        opacity = float(layer.get('opacity', 1))
+        if opacity != 1:
+            image.putalpha(image.getchannel('A').point(lambda a: int(a * opacity)))
+        props = {p.get('name'): p.get('value') for p in layer.findall('properties/property')}
+        result.append(Scenery(layer.get('name'), image, float(layer.get('parallaxx', 1)), int(float(layer.get('offsetx', 0))),
+                              int(float(layer.get('offsety', 0))), int(float(props.get('wrapx', 0)))))
+    return result
+
+
+def shift(factor, cam):
+    """ParallaxRenderer.shift: how far a layer of `factor` trails the camera, round(factor * cam), half up."""
+    return math.floor(factor * cam + HALF_UP)
+
+
+def room_of(root, x, y):
+    """(x, y, width, height) of the Room holding (x, y)."""
+    for group in root.findall('objectgroup'):
+        for obj in group.findall('object'):
+            if obj.get('type') != 'Room':
+                continue
+            rx, ry, rw, rh = (float(obj.get(k)) for k in ('x', 'y', 'width', 'height'))
+            if rx <= x < rx + rw and ry <= y < ry + rh:
+                return rx, ry, rw, rh
+    raise ValueError(f'no Room holds ({x}, {y})')
+
+
+class Scene:
+    """What the game draws behind the sprites of one map: the flat colour, the scenery layers and the play layer."""
+
+    def __init__(self, name, root):
+        self.name, self.root = name, root
+        self.flat = tuple(map_background(root, name)) + (CHANNEL_MAX,)
+        self.play = tile_layer(root, name)[0]
+        self.layers = scenery_layers(root, name)
+        self.strips = {}
+
+    @property
+    def size(self):
+        return self.play.size
+
+    def cameras(self, x, y, width, step):
+        """The steady camera x values, `step` apart, at which x .. x + width is on screen, inside the camera range of the room
+        holding (x, y) (the camera is clamped to its room); (None,) for a map with no scenery layer, where the camera changes nothing."""
+        if not self.layers:
+            return (None,)
+        try:
+            room_x, _, room_width, _ = room_of(self.root, x, y)
+        except ValueError:   # a position between rooms (the fairy sweep): the whole map
+            room_x, room_width = 0, self.size[0]
+        low, high = room_x, room_x + max(room_width - VIEW_WIDTH, 0)
+        low, high = max(low, math.floor(x) - VIEW_WIDTH), min(high, math.ceil(x + width))
+        low, high = min(low, high), max(low, high)
+        return sorted({*range(int(low), int(high) + 1, step), int(high)})
+
+    def clamp(self, box):
+        left, top, right, bottom = box
+        return max(0, int(left)), max(0, int(top)), min(self.size[0], int(right)), min(self.size[1], int(bottom))
+
+    def draw(self, canvas, layers, box, cam, phase):
+        left, top, right, bottom = box
+        for layer in layers:
+            base = layer.offset_x + cam - shift(layer.factor, cam)
+            if layer.wrap:   # a clouds layer: drifted by `phase` of its wrap length, drawn twice so the seam never shows
+                base += layer.wrap * phase // DRIFT_PHASES
+            for origin in ((base - layer.wrap, base) if layer.wrap else (base,)):
+                canvas.alpha_composite(layer.image.crop((left - origin, top - layer.offset_y, right - origin, bottom - layer.offset_y)))
+
+    def backgrounds(self, box, cam):
+        """The RGBA images of `box` (world px, inside the map) that the game draws behind it at steady camera x `cam`: flat colour,
+        scenery in file order, the play layer. One image, or one per drift phase when a clouds layer can show through."""
+        left, top, right, bottom = box
+        phases = (0,)
+        drifting = [i for i, layer in enumerate(self.layers) if layer.wrap]
+        if cam is not None and drifting:
+            over = Image.new('RGBA', (right - left, bottom - top))   # everything drawn after the first clouds layer
+            self.draw(over, self.layers[drifting[0] + 1:], box, cam, 0)
+            over.alpha_composite(self.play.crop(box))
+            if over.getchannel('A').getextrema()[0] != CHANNEL_MAX:
+                phases = range(DRIFT_PHASES)
+        images = []
+        for phase in phases:
+            canvas = Image.new('RGBA', (right - left, bottom - top), self.flat)
+            if cam is not None:
+                self.draw(canvas, self.layers, box, cam, phase)
+            canvas.alpha_composite(self.play.crop(box))
+            images.append(canvas)
+        return images
+
+    def windows(self, box, x, y, width, step=SCENERY_CAMERA_STEP):
+        """[(camera, origin x, origin y, image)] for `box`: every distinct background over the cameras of `cameras`."""
+        box = self.clamp(box)
+        seen, result = set(), []
+        for cam in self.cameras(x, y, width, step):
+            for image in self.backgrounds(box, cam):
+                key = image.tobytes()
+                if key not in seen:
+                    seen.add(key)
+                    result.append((cam, box[0], box[1], image))
+        return result
 
 
 def parse_colour(value):
@@ -549,7 +740,7 @@ def map_background(root, name='map'):
 
 
 def composite(layer, colour):
-    """What the game draws behind every sprite: the flat background colour, then the tile layer."""
+    """The flat background colour, then one tile layer: a map with no scenery layers, and the test fixtures."""
     image = Image.new('RGBA', layer.size, tuple(colour) + (CHANNEL_MAX,))
     image.alpha_composite(layer)
     return image
@@ -628,14 +819,8 @@ def placements(errors, roots=None):
 
 def floor_camera_top(root, x, y):
     """Level.floorCameraTop for the room holding (x, y): a room taller than the view shows its bottom, hiding its top rows."""
-    for group in root.findall('objectgroup'):
-        for obj in group.findall('object'):
-            if obj.get('type') != 'Room':
-                continue
-            rx, ry, rw, rh = (float(obj.get(k)) for k in ('x', 'y', 'width', 'height'))
-            if rx <= x < rx + rw and ry <= y < ry + rh:
-                return ry + (rh - VIEW_HEIGHT) / 2 if rh <= VIEW_HEIGHT else ry + rh - VIEW_HEIGHT
-    raise ValueError(f'no Room holds ({x}, {y})')
+    _, ry, _, rh = room_of(root, x, y)
+    return ry + (rh - VIEW_HEIGHT) / 2 if rh <= VIEW_HEIGHT else ry + rh - VIEW_HEIGHT
 
 
 def lip_top(root, x, y):
@@ -649,6 +834,12 @@ def lip_top(root, x, y):
     return max(y, floor_camera_top(root, x, y))
 
 
+def at(row):
+    """Where a result row was measured: map, x, and the steady camera x when scenery moved behind it."""
+    camera = row[ROW_CAMERA] if len(row) > ROW_CAMERA and row[ROW_CAMERA] is not None else None
+    return f'{row[0]} x {row[1]:.0f}' + (f' camera {camera}' if camera is not None else '')
+
+
 def check_sprite(key, results):
     """Errors for one sprite key from its measured (map, x, outline, body) results."""
     tier = SPRITES[key][0]
@@ -656,20 +847,17 @@ def check_sprite(key, results):
     worst_high = max(results, key=lambda r: r[2])
     errors = []
     if tier == 'active' and worst_low[2] < ACTIVE_OUTLINE_MIN:
-        errors.append(f'{key} (active): outline {worst_low[2]:.3f} < {ACTIVE_OUTLINE_MIN} at {worst_low[0]} x {worst_low[1]:.0f}')
+        errors.append(f'{key} (active): outline {worst_low[ROW_OUTLINE]:.3f} < {ACTIVE_OUTLINE_MIN} at {at(worst_low)}')
     if tier == 'decor':
         if worst_high[2] > DECOR_OUTLINE_MAX:
-            errors.append(f'{key} (decor): outline {worst_high[2]:.3f} > {DECOR_OUTLINE_MAX} at {worst_high[0]} x {worst_high[1]:.0f}')
+            errors.append(f'{key} (decor): outline {worst_high[ROW_OUTLINE]:.3f} > {DECOR_OUTLINE_MAX} at {at(worst_high)}')
         bodies = [r[3] for r in results]
         if max(bodies) > DECOR_BODY_MAX or min(bodies) < DECOR_BODY_MIN:
             errors.append(f'{key} (decor): body {min(bodies):.3f}..{max(bodies):.3f} outside {DECOR_BODY_MIN}..{DECOR_BODY_MAX}')
         for n, frame in enumerate(frames(key)):
-            chroma, darkest = chroma_and_ink(frame)
+            chroma = chroma_p90(frame)
             if chroma > DECOR_CHROMA_MAX:
                 errors.append(f'{key} (decor) frame {n}: chroma {chroma:.3f} > {DECOR_CHROMA_MAX}')
-            if darkest < INK_L_MAX:
-                errors.append(f'{key} (decor) frame {n}: ink pixel (OKLab L {darkest:.3f} < {INK_L_MAX}); '
-                              f'a decor contour is a darker shade of its own hue')
     return errors
 
 
@@ -704,10 +892,10 @@ def edge_pairs(sprite, light, lx, ly, alpha):
     return pairs
 
 
-def swept_outline(pairs, background, step_x, y_from, y_to, step_y, size):
-    """Worst mean outline of the pairs over a grid of positions in `background`: (outline, x, y)."""
+def swept_outline(pairs, background, step_x, y_from, y_to, step_y, size, xs=None):
+    """Worst mean outline of the pairs over a grid of positions in `background` (x from `xs`, else every step_x): (outline, x, y)."""
     pixels, worst = background.load(), (1.0, 0, 0)
-    for x in range(0, background.width - size, step_x):
+    for x in (range(0, background.width - size, step_x) if xs is None else xs):
         for y in range(y_from, min(y_to, background.height - size), step_y):
             total = 0.0
             for lightness, dx, dy, added in pairs:
@@ -738,15 +926,35 @@ def fairy_cases():
     return cases
 
 
+def swept_scene(pairs, scene, step_x, y_from, y_to, step_y, size):
+    """swept_outline over a Scene: at every sweep x, every steady camera at which x is on screen (SWEEP_CAMERA_STEP apart) and
+    every drift phase; the strip of background around x is composited as the game draws it. (outline, x, y, camera)."""
+    worst = (1.0, 0, 0, None)
+    for x in range(0, scene.size[0] - size, step_x):
+        key = (x, size)
+        if key not in scene.strips:
+            box = (x - 1, 0, x + size + 1, scene.size[1])
+            scene.strips[key] = [(cam, ox, image) for cam, ox, _, image in scene.windows(box, x, y_from, size, SWEEP_CAMERA_STEP)]
+        for cam, origin, image in scene.strips[key]:
+            outline, _, y = swept_outline(pairs, image, step_x, y_from, y_to, step_y, size, xs=(x - origin,))
+            if outline < worst[0]:
+                worst = (outline, x, y, cam)
+    return worst
+
+
 def check_fairy(images):
-    """Errors for the fairy and her glints (active tier), and the worst outline of each case for the report."""
+    """Errors for the fairy and her glints (active tier), and the worst outline of each case for the report. `images` maps a map
+    name to a Scene (the game's composite) or to one flat image."""
     errors, report = [], {}
     step_x, y_from, y_to, step_y = FAIRY_SWEEP
     for name, sprite, light, lx, ly, alpha in fairy_cases():
         pairs = edge_pairs(sprite, light, lx, ly, alpha)
         worst = (1.0, None, 0, 0)
         for map_name, background in images.items():
-            outline, x, y = swept_outline(pairs, background, step_x, y_from, y_to, step_y, sprite.width)
+            if isinstance(background, Scene):
+                outline, x, y, _ = swept_scene(pairs, background, step_x, y_from, y_to, step_y, sprite.width)
+            else:
+                outline, x, y = swept_outline(pairs, background, step_x, y_from, y_to, step_y, sprite.width)
             if outline < worst[0]:
                 worst = (outline, map_name, x, y)
         outline, place, x, y = worst
@@ -757,14 +965,21 @@ def check_fairy(images):
 
 
 def tile_report(roots):
-    """Report only (#189): mean outline and body of the tile scenery against each map's background colour."""
+    """Report only (#189): mean outline and body of the tile scenery against each map's background colour. The categories are tile
+    ids of the third-party sheet (TILESET), so only the maps that draw that sheet are reported; the others are returned in `skipped`
+    with the sheet they draw."""
     sums = {name: [[], []] for name in TILE_SCENERY}
+    skipped = {}
     for name, root in roots.items():
-        layer, gids, width = tile_layer(root)
+        sheet, columns = play_tileset(root)
+        if sheet != (ROOT / TILESET).resolve():
+            skipped[name] = sheet.name
+            continue
+        layer, gids, width = tile_layer(root, name)
         background = composite(Image.new('RGBA', layer.size), map_background(root, name))
         for index, gid in enumerate(gids):
             category = next((c for c, ((r0, r1), (c0, c1)) in TILE_SCENERY.items()
-                             if gid and r0 <= (gid - 1) // TILESET_COLUMNS <= r1 and c0 <= (gid - 1) % TILESET_COLUMNS <= c1), None)
+                             if gid and r0 <= (gid - 1) // columns <= r1 and c0 <= (gid - 1) % columns <= c1), None)
             if category is None:
                 continue
             x, y = (index % width) * TILE, (index // width) * TILE
@@ -777,76 +992,266 @@ def tile_report(roots):
                 sums[category][0].append(outline)
             if body is not None:
                 sums[category][1].append(body)
-    return {c: (sum(o) / len(o), sum(b) / len(b)) for c, (o, b) in sums.items() if o}
+    return {c: (sum(o) / len(o), sum(b) / len(b)) for c, (o, b) in sums.items() if o}, skipped
 
 
-# D101: monster bodies have no map placement; they lie on whatever floor the monster died on. Each is measured standing on
-# every floor top (untyped Collisions and Platform objects, not walls or quicksand) every BODY_STEP px of every shipped map.
+# D101, D108: monster bodies have no map placement of their own. A body lies only where its monster can be killed, dropped
+# straight down to the first floor under it (velocity.x = 0 in Beetle/Spider/Snail.fall; one that falls out of the room is
+# gone), so each body is measured at those spots, derived from the monster's placements in the shipped maps (a new placement
+# is covered with no edit here):
+# - beetle and snail: every position.x of the authored range, on the range's floor (the load checks keep the whole range on
+#   floor without gaps; the beetle's notice hop and the body's flip hop land on the same floor);
+# - spider: every position.x of each floor leg, widened by Spider.POUNCE_REACH while authored floor stays under the whole
+#   body at that floor line (#497: the leap never leaves that floor); every wall pose and every thread pose, set on the open
+#   side as Spider.die does and dropped to the floor below.
+# Floor tops elsewhere (other rooms, ledges no monster of that kind reaches) carry nothing for this gate: no body can lie there.
 BODY_SWEEP = ('Beetle:body', 'Spider:body', 'Snail:body')
-BODY_STEP = 32
-FLOOR_TYPES = (None, 'Platform')
+BODY_STEP = 8  # px between measured body positions along a range or a route
+LANDING_TYPES = (None, 'Wall', 'Platform')  # every collision box a falling body settles on (not quicksand)
+SPIDER_POUNCE_REACH = java_number(SPIDER_JAVA, 'POUNCE_REACH')
+SPIDER_FLOOR_PROBE = java_number(SPIDER_JAVA, 'FLOOR_PROBE')
+SPIDER_REACH_STEP = java_number(SPIDER_JAVA, 'REACH_STEP')  # the leap's reach is tested in these steps
+SPIDER_WALL_BODY_X = java_number(SPIDER_JAVA, 'WALL_BODY_X')  # the turned body in the wall frame
+SPIDER_WALL_BODY_WIDTH = java_number(SPIDER_JAVA, 'WALL_BODY_WIDTH')
+HALF = 0.5
+SPIDER_START_LIP = 1  # a thread's lip: the route's second vertex, or its last but one (spider_route)
+SPIDER_END_LIP = -2
+SPIDER_BODY_FLOOR = java_number(SPIDER_JAVA, 'BODY_Y') + java_number(SPIDER_JAVA, 'BODY_HEIGHT')
 
 
-def body_sweep(roots, images):
-    """(key, map, x, outline, body) for every monster body standing on every floor top, every BODY_STEP px."""
-    for key in BODY_SWEEP:
+def landings(root):
+    """The collision boxes a falling body settles on, in world px."""
+    out = []
+    for group in root.findall('objectgroup'):
+        if group.get('name') != 'Collisions':
+            continue
+        offset_y = float(group.get('offsety', '0'))
+        for obj in group.findall('object'):
+            if obj.get('type') in LANDING_TYPES:
+                out.append((float(obj.get('x')), float(obj.get('y')) + offset_y, float(obj.get('width', TILE)),
+                            float(obj.get('height', TILE))))
+    return out
+
+
+DYNAMIC_TYPES = ('FallingPlatform', 'Escalator', 'Deadfall', 'QuickSand')  # solids that move, fall or swallow: landings() is static
+
+
+def dynamic_blocks(root):
+    """(type, x, y, width, height) of every object whose collision changes in play, in world px (any object group)."""
+    out = []
+    for group in root.findall('objectgroup'):
+        offset_y = float(group.get('offsety', '0'))
+        out += [(o.get('type'), float(o.get('x')), float(o.get('y')) + offset_y, float(o.get('width', TILE)), float(o.get('height', TILE)))
+                for o in group.findall('object') if o.get('type') in DYNAMIC_TYPES]
+    return out
+
+
+def check_static_column(blocks, name, kind, left, right, top, line):
+    """A body spot is derived from static Collisions only: fail when a dynamic block sits in the column it falls through (top to
+    `line`, unbounded below when nothing catches it) or at its floor line."""
+    for block, x, y, w, h in blocks:
+        if x < right and left < x + w and y + h > top - 1 and (line is None or y <= line + 1):
+            raise SystemExit(f'check_contrast: {name}: a {kind} body at x {left:g} (column {left:g}..{right:g}, y {top:g} to '
+                             f'{"open" if line is None else format(line, "g")}) crosses a {block} at ({x:g}, {y:g}); '
+                             'body_spots reads static Collisions only, so model the block before the gate can vouch for this spot')
+
+
+def drop(boxes, body_left, body_right, bottom):
+    """The floor line a body with this horizontal extent settles on, falling from `bottom`; None when nothing catches it."""
+    tops = [y for x, y, w, _ in boxes if x < body_right and body_left < x + w and y >= bottom - 1]
+    return min(tops) if tops else None
+
+
+def floor_under(boxes, left, right, line):
+    """True when authored floor at `line` lies under every SPIDER_FLOOR_PROBE px of left..right (Spider.floorAt)."""
+    column = left
+    while column <= right + SPIDER_FLOOR_PROBE - 1:
+        probe = min(column, right - 1)
+        if not any(x <= probe < x + w and abs(y - line) < 1 for x, y, w, _ in boxes):
+            return False
+        column += SPIDER_FLOOR_PROBE
+    return True
+
+
+def _steps(lo, hi):
+    lefts = list(range(int(lo), int(hi) + 1, BODY_STEP))
+    if not lefts or lefts[-1] != int(hi):
+        lefts.append(int(hi))
+    return lefts
+
+
+def spider_body_spots(root, boxes, x, y, props, polyline, blocks=(), name='map'):
+    """(position.x, floor line) of every place a spider's body can lie."""
+    if polyline is None:  # a range spider: one floor leg
+        legs = [{'kind': 'floor', 'lo': x - float(props.get('offNeg', 0)) * TILE, 'hi': x + float(props.get('offPos', 0)) * TILE,
+                 'line': y + SPIDER_BODY_FLOOR}]  # Spider.Route.floor: the line under the authored body
+        threads = []
+    else:
+        route = spider_route(root, x, y, polyline)
+        legs, threads = route['legs'], route['threads']
+        points = [x + float(pair.split(',')[0]) for pair in polyline.split()]
+        lips = (points[SPIDER_START_LIP], points[SPIDER_END_LIP])
+    spots = set()
+    for leg in legs:
+        if leg['kind'] == 'floor':
+            line = leg['line']
+            # Level.spiderFloorAt counts active falling platforms, escalators and deadfalls as floor; the widening reads static
+            # floor only, so fail when such a block continues the floor anywhere in the pounce band.
+            band = [b for b in blocks if b[0] != 'QuickSand']
+            check_static_column(band, name, 'Spider', leg['lo'] - SPIDER_POUNCE_REACH,
+                                leg['hi'] + SPIDER_POUNCE_REACH + SPIDER_BODY_X + SPIDER_BODY_WIDTH, line, line)
+            fits = lambda left: floor_under(boxes, left + SPIDER_BODY_X, left + SPIDER_BODY_X + SPIDER_BODY_WIDTH, line)
+            lo, hi = leg['lo'], leg['hi']
+            while lo - SPIDER_REACH_STEP >= leg['lo'] - SPIDER_POUNCE_REACH and fits(lo - SPIDER_REACH_STEP):
+                lo -= SPIDER_REACH_STEP
+            while hi + SPIDER_REACH_STEP <= leg['hi'] + SPIDER_POUNCE_REACH and fits(hi + SPIDER_REACH_STEP):
+                hi += SPIDER_REACH_STEP
+            spots.update((left, line) for left in _steps(lo, hi))
+            continue
+        ww, _ = SPIDER_WALL
+        right = leg['solid_right']
+        cell_x = leg['line'] - ww if right else leg['line']
+        centre = cell_x + (SPIDER_WALL_BODY_X + SPIDER_WALL_BODY_WIDTH * HALF if right else ww - SPIDER_WALL_BODY_X - SPIDER_WALL_BODY_WIDTH * HALF)
+        left = centre - SPIDER_BODY_X - SPIDER_BODY_WIDTH * HALF
+        left = min(left, leg['line'] - SPIDER_BODY_X - SPIDER_BODY_WIDTH) if right else max(left, leg['line'] - SPIDER_BODY_X)
+        for cell_top in _steps(leg['lo'], leg['hi']):
+            spots.add((left, cell_top))
+    for thread in threads:
+        centre = thread['thread_x'] - SPIDER_HANG_THREAD_X + SPIDER_HANG_BODY_X + SPIDER_HANG_BODY_WIDTH * HALF
+        left = centre - SPIDER_BODY_X - SPIDER_BODY_WIDTH * HALF
+        # Spider.die: the body is kept off the ledge, on the open side of its lip (the route's first or last vertex but one).
+        lip = lips[thread['side']]
+        left = max(left, lip - SPIDER_BODY_X) if thread['thread_x'] > lip else min(left, lip - SPIDER_BODY_X - SPIDER_BODY_WIDTH)
+        for top in _steps(thread['anchor_y'], thread['end_y']):
+            spots.add((left, top))
+    out = set()
+    for left, top in spots:
+        line = drop(boxes, left + SPIDER_BODY_X, left + SPIDER_BODY_X + SPIDER_BODY_WIDTH, top)
+        check_static_column(blocks, name, 'Spider', left + SPIDER_BODY_X, left + SPIDER_BODY_X + SPIDER_BODY_WIDTH, top, line)
+        if line is not None:
+            out.add((left, line))
+    return out
+
+
+def placed_body_placements(roots):
+    """(BODY_SWEEP key, map, object index) of every monster placed in `roots`: each must yield a measured body."""
+    return {(obj.get('type') + ':body', name, index) for name, root in roots.items() for group in root.findall('objectgroup')
+            if group.get('name') == 'SpawnPoints' for index, obj in enumerate(group.findall('object')) if obj.get('type') + ':body' in BODY_SWEEP}
+
+
+def body_spots(roots):
+    """(key, map, position.x, floor line) of every place a monster body can lie in the shipped maps (see above)."""
+    for key, name, _, left, line in body_spot_placements(roots):
+        yield key, name, left, line
+
+
+def body_spot_placements(roots):
+    """(key, map, object index, position.x, floor line): body_spots with the placement each spot belongs to."""
+    for name, root in roots.items():
+        boxes, blocks = landings(root), dynamic_blocks(root)
+        for group in root.findall('objectgroup'):
+            if group.get('name') != 'SpawnPoints':
+                continue
+            offset_y = float(group.get('offsety', '0'))
+            for index, obj in enumerate(group.findall('object')):
+                kind = obj.get('type')
+                if kind not in ('Beetle', 'Spider', 'Snail'):
+                    continue
+                props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
+                x, y = float(obj.get('x')), float(obj.get('y')) + offset_y
+                h = float(obj.get('height', TILE))
+                if kind == 'Spider':
+                    polyline = obj.find('polyline')
+                    spots = spider_body_spots(root, boxes, x, y, props, None if polyline is None else polyline.get('points', ''), blocks, name)
+                else:
+                    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
+                    spots = {(left, y + h) for left in _steps(low, high)}
+                    for left, line in spots:
+                        check_static_column(blocks, name, kind, left, left + float(obj.get('width', TILE)), line, line)
+                for left, line in sorted(spots):
+                    yield kind + ':body', name, index, left, line
+
+
+def body_sweep(roots, scenes):
+    """(key, map, x, outline, body, camera, placement) for every monster body at every spot of body_spots, over every steady
+    camera (SWEEP_CAMERA_STEP apart) at which it is on screen."""
+    for key, name, index, left, line in body_spot_placements(roots):
         for frame in frames(key):
-            for name, root in roots.items():
-                for group in root.findall('objectgroup'):
-                    if group.get('name') != 'Collisions':
-                        continue
-                    offset_y = float(group.get('offsety', '0'))
-                    for obj in group.findall('object'):
-                        if obj.get('type') not in FLOOR_TYPES:
-                            continue
-                        x0, top, width = float(obj.get('x')), float(obj.get('y')) + offset_y, float(obj.get('width', TILE))
-                        for left in range(int(x0), int(x0 + width - frame.width) + 1, BODY_STEP):
-                            outline, body = measure(frame, images[name], left, int(top) - frame.height)
-                            if outline is not None:
-                                yield key, name, left, outline, body
+            left_px, at_top = int(left), int(line) - frame.height
+            box = (left_px - 1, at_top - 1, left_px + frame.width + 1, at_top + frame.height + 1)
+            for cam, ox, oy, image in scenes[name].windows(box, left_px, line, frame.width, SWEEP_CAMERA_STEP):
+                outline, body = measure(frame, image, left_px - ox, at_top - oy)
+                if outline is not None:
+                    yield key, name, left_px, outline, body, cam, index
+
+
+def sprite_spots(key, x, y, w, h, root):
+    """[(frame, left, top)] of every frame of `key` for the placement (x, y, w, h), where the game draws it."""
+    anchor = SPRITES[key][SPRITE_ANCHOR]
+    spots = []
+    for frame in frames(key):
+        left = int(x + w / 2 - frame.width / 2)
+        top = int(y) if anchor == 'top' else int(lip_top(root, x, y)) if anchor == 'view' else int(y + h - frame.height)
+        spots.append((frame, left, top))
+    return spots
+
+
+def measure_placement(scene, root, key, x, y, w, h, halo):
+    """[(outline, body, camera)] of every frame, glow level and halo state of one placement over every background the game draws
+    behind it (every steady camera at which it is on screen, every drift phase)."""
+    spots, glows = sprite_spots(key, x, y, w, h, root), SPRITES[key][SPRITE_GLOWS]
+    collectable = key.startswith('Collectable:')
+    rects = [(left, top, left + frame.width, top + frame.height) for frame, left, top in spots]
+    reach = halo.width // 2 + HALO_MARGIN
+    cx, cy = int(x + w / 2), int(y + h / 2)
+    if collectable:   # the halo's box at rest and at the bob's top, as the game draws it behind the bobbing item
+        rects += [(cx - reach, cy - lift - reach, cx + reach, cy - lift + reach) for lift, _ in HALO_STATES]
+    lefts, tops, rights, bottoms = zip(*rects)
+    box = (min(lefts) - 1, min(tops) - 1, max(rights) + 1, max(bottoms) + 1)
+    rows = []
+    for cam, ox, oy, window in scene.windows(box, x, y, w):
+        for frame, left, top in spots:
+            for glow in glows:
+                if not collectable:
+                    rows.append((*measure(frame, window, left - ox, top - oy, glow), cam))
+                    continue
+                for lift, alpha in HALO_STATES:
+                    area = (max(0, cx - reach), max(0, cy - lift - reach), min(scene.size[0], cx + reach), min(scene.size[1], cy - lift + reach))
+                    area_left, area_top, area_right, area_bottom = area
+                    local = window.crop((area_left - ox, area_top - oy, area_right - ox, area_bottom - oy))   # never past the map
+                    if key not in NO_HALO:
+                        local = with_halo(local, halo, cx - area_left, cy - lift - area_top, alpha)
+                    rows.append((*measure(frame, local, left - area_left, top - lift - area_top, glow), cam))
+    return rows
 
 
 def run():
     errors = []
     roots = map_roots()
-    images = {name: composite(tile_layer(root)[0], map_background(root, name)) for name, root in roots.items()}
+    scenes = {name: Scene(name, root) for name, root in roots.items()}
     results = {}
     halo = Image.open(ROOT / 'assets/images' / HALO_SHEET).convert('RGBA')
     for name, key, x, y, w, h in placements(errors, roots):
-        anchor, glows = SPRITES[key][4], SPRITES[key][5]
-        for frame in frames(key):
-            left = int(x + w / 2 - frame.width / 2)
-            top = int(y) if anchor == 'top' else int(lip_top(roots[name], x, y)) if anchor == 'view' else int(y + h - frame.height)
-            for glow in glows:
-                background = images[name]
-                if not key.startswith('Collectable:'):
-                    outline, body = measure(frame, background, left, top, glow)
-                    results.setdefault(key, []).append((name, x, outline, body))
-                    continue
-                for lift, alpha in HALO_STATES:  # what the game draws: the halo behind the bobbing item
-                    reach = halo.width // 2 + HALO_MARGIN
-                    cx, cy = int(x + w / 2), int(y + h / 2) - lift
-                    box = (max(0, cx - reach), max(0, cy - reach),
-                           min(background.width, cx + reach), min(background.height, cy + reach))  # never past the map
-                    local = background.crop(box)
-                    if key not in NO_HALO:
-                        local = with_halo(local, halo, cx - box[0], cy - box[1], alpha)
-                    outline, body = measure(frame, local, left - box[0], top - lift - box[1], glow)
-                    results.setdefault(key, []).append((name, x, outline, body))
-    for key, name, x, outline, body in body_sweep(roots, images):
-        results.setdefault(key, []).append((name, x, outline, body))
+        for outline, body, cam in measure_placement(scenes[name], roots[name], key, x, y, w, h, halo):
+            results.setdefault(key, []).append((name, x, outline, body, cam))
+    measured = set()
+    for key, name, x, outline, body, cam, index in body_sweep(roots, scenes):
+        results.setdefault(key, []).append((name, x, outline, body, cam))
+        measured.add((key, name, index))
     for key in SPRITES:
         if key in results:
             errors.extend(check_sprite(key, results[key]))
-    fairy_errors, fairy = check_fairy(images)
+    for key, name, index in sorted(placed_body_placements(roots) - measured):  # a placed monster never measured is a gap, not a pass
+        errors.append(f'{key}: no body was measured for the monster placed in {name} (object {index}; no spot, or never on screen)')
+    fairy_errors, fairy = check_fairy(scenes)
     errors.extend(fairy_errors)
     for name, outline in fairy.items():
-        results[name] = [('sweep', 0, outline, 0.0)]
+        results[name] = [('sweep', 0, outline, 0.0, None)]
     return results, errors, tile_report(roots)
 
 
 def main():
-    results, errors, tiles = run()
+    results, errors, (tiles, skipped) = run()
     print(f'{"sprite":24} {"tier":7} {"outline min":>11} {"outline max":>11} {"body max":>8}')
     for key, rows in results.items():
         tier = SPRITES[key][0] if key in SPRITES else 'active'  # the fairy rows (#338) are active
@@ -855,6 +1260,8 @@ def main():
     print('tile scenery, report only (#189, background tier ceiling = decor ceiling):')
     for category, (outline, body) in tiles.items():
         print(f'  {category:16} outline {outline:.3f} body {body:.3f}')
+    for name, sheet in skipped.items():
+        print(f'  {name}: skipped, it draws {sheet}, not the third-party sheet the categories index')
     if errors:
         print('Contrast tiers (D76) failed:\n  ' + '\n  '.join(errors))
         return 1

@@ -117,7 +117,8 @@ The lever is a **floor lever in three-quarter (3/4) view** (#413, 2026-11-17; th
 3/4 view is the author's choice of 2026-10-23, the floor stance replaced the earlier
 wall-mounted plate). A wooden block stands on the ground with its top face, front face
 and right side visible; an iron handle comes out of a slot in its top and ends in the
-red knob. The handle leans right for on and left for off. The base's bottom row rests
+knob, the part you grab, in the walk-and-grab straw `e1cfa5` shaded `c4b07e` (the active family, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236),
+2026-11-20; it was red `e82026`); the export gives the sheet the moon rim (`RIM_OBJECTS`). The handle leans right for on and left for off. The base's bottom row rests
 on the floor line, and the base, pivot and viewing angle are identical across poses;
 do not return to a thin profile or to a wall mount. Other interactive items retain the frontal default unless revised
 separately. The hero's side-view animation does not dictate every object's angle.
@@ -209,7 +210,9 @@ The healer's fairy is an original pixel drawing in three sheets, from grids in `
 
 - **Identity:** a tiny maid, not a winged ball of light. She has copper hair, a teal dress with a pale edge, a
   lantern skirt glowing pale aqua-white (the firefly), and pale blue dragonfly wings with blue veins. Ink contour
-  `0b0814` (the hero's), 10 colours, binary alpha.
+  `020106`, a shade deeper than the hero's `0b0814`, lit from above in her lantern white `f2fff4` (the exporter's
+  `RIM_STYLE`: the moon rim's recolour on the up side only, in a colour she already has), so half her contour is light and
+  half dark ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20). 10 colours, binary alpha.
 - **`fairy-body.png`, 16×16 frames:**
   - idle ×4, 0.12 s each, the wings beating;
   - fly ×2, 0.06 s each;
@@ -220,11 +223,15 @@ The healer's fairy is an original pixel drawing in three sheets, from grids in `
 - **`fairy-glow.png`, 24×24:** three stepped aqua rings (`123432`, `286a66`, `3c9c92`), drawn additively as a
   nine-slice with 8 px corners. It is the target glow (selected 1.0, passive 0.3) and, at 20×20 with alpha 0.6 to 0.9,
   her own light. Aqua is used by nothing else: the pickup halo is warm white (#345).
-- **`fairy-glint.png`, 5×5 ×2:** an aqua-white star with an ink edge, big and small, at the selected target's corners.
+- **`fairy-glint.png`, 5×5 ×2:** an aqua-white star with an ink edge lit on top, big and small, at the selected target's
+  corners; the small star's side points stay ink (`K`, `RIM_KEEP`).
   It is not the pickup sparkle (warm yellow, one per item, every 2.4 s).
-- **Contrast (D76):** active. `check_contrast.py` sweeps every map, since she has no placement: her frames over her
-  light at its dimmest, 0.314 to 0.440; the glints over the selected glow, 0.336 and 0.380. Without her light she
-  would fail (0.187); `test_check_contrast.py` pins that.
+- **Contrast (D76):** active. `check_contrast.py` sweeps every map, since she has no placement, over what the game draws
+  (forest-1's scenery layers too): her frames over her light at its dimmest, 0.314 to 0.376; the glints over the selected
+  glow, 0.323 (big) and 0.377 (small). Over the layered forest-1 the plain ink contour had fallen to 0.136 to 0.269 (her
+  light lifts the near-black play band toward her ink) and a full moon rim to 0.035 (over the moon and the clouds); lit
+  from above only she clears both. Without her light three frames still fail (0.269 to 0.278); `test_check_contrast.py`
+  pins that.
 
 ## Production and continuity
 
@@ -249,8 +256,10 @@ not automatically approve its remaster or every future image.
 
 ## Forest look and parallax layers (draft for approval, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
-Draft card, 2026-11-19, from the author's decisions of the same day; the answers given that day are recorded in section 6. **Nothing here is built or binding until the author approves it
-and it gets a D-number.** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
+Draft card, 2026-11-19, from the author's decisions of the same day; the answers given that day are recorded in section 6. **Nothing here is binding until the author approves it
+and it gets a D-number ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), proposed).
+Built so far (2026-11-19): the game reads and draws these layers in forest-1 (code and layers below); forest-0 and forest-2 are not converted
+([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
 no palette size, alpha, banding or value-band limit applies to the background or the foreground; only the readability rules of section 3
 do. Mood: a blue night forest under a big moon (references: a silhouette forest with hazy blue depth and ground mist; a moonlit
 deciduous forest with dark framing trees; Replaced and Magnet for a lit walk edge, red enemies with glowing eyes and a little bloom).
@@ -280,8 +289,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 | Foreground | neutral near-black (one palette for every piece, third pass) | pixel defocus (author's pick, 2026-11-19): body `030303` 0.097, `010101` 0.067 toward the foot of a standing piece, bark and midribs `0e0d11` 0.162; the moon rim is a solid 1 px line `7d8db0` (0.643) on the edges facing the moon (up and right) with `3c4865` (0.404) behind it, and is dithered (`3c4865`, `1d2335` 0.259) only where it fades toward the foot of a standing piece (hanging pieces keep the full rim; no dotted single-pixel rim anywhere); the unlit edge is a soft alpha step, outside it the fringe in alpha 0.75, 0.50, 0.28 (the last one dithered) and a lit fringe beside the rim. The foreground reads nearer than the mid layer by its scale, its neutral (hueless) colour against the blue layers and its rim, not by value: its body (0.097) is no darker than the mid trunks (0.03 to 0.085) | Foreground (new, below) | open, lacy shapes: separate stems, fronds, blades and leaves with gaps the play shows through; a few clumps with open ground between them, not a continuous band. No Gaussian blur |
 | Ambient lights, by stage | Forest and Swamp: fireflies, the #472 lime `b8f23a` (`Firefly.smallGlow`); Steppe and Castle: pale spirit lights, hue to be chosen with those stages ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) | Forest and Swamp: Active (play layer, #472); spirit lights: Background | The fireflies replace the draft's periwinkle distant lights (author, 2026-11-19, section 6). Spirit lights: tiny, drifting; hue bans in 3 |
 | Hero | D79, unchanged | ink `0b0814` 0.146, hair `241a26` 0.235, skin `e6a86c` 0.777 / `c27a45` 0.645, breeches `2f4a8a` 0.423, headband `c22a24`, rim `c4cfe8` | Active | the moon rim carries the outline (D92) |
-| Danger | red | enemy body `86101f` 0.400, eyes and glow `ff6b57` 0.708 | Active | dark body, glowing eyes; never the hero's headband `c22a24` (0.14 apart). Traps may keep their own hue (bark, stone, spore lime). The beetle and the spider move into this family, dark crimson body with glowing eyes; the recolour is made after the layers exist and measured over them ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) |
-| Mechanisms | active family | the walk cue `e1cfa5` on the part you use (lift top, lever handle), steel or wood body, ink and rim. The lever's red knob (`e82026`) leaves red for the walk cue, recoloured after the layers exist ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) | Active | no reserved accent: gold `ffd23a` is fire and the coin, honey `e2b25a` the fungus traps |
+| Danger | red | enemy body `86101f` 0.400, eyes and glow `ff6b57` 0.708 | Active | dark body, glowing eyes; never the hero's headband `c22a24` (0.14 apart). Traps may keep their own hue (bark, stone, spore lime). The beetle, the spider and the snail are in this family since 2026-11-20 (section 6, answer 1): dark crimson `86101f` with shade `4a0c22`, `2a0612`, rose lights `9c2050`, `b85a80`, `c87896` (each at least 0.095 from the headband, which is orange-red), `ff6b57` eyes, dusty-rose legs `9a6070`, `b07c8c` (off the hero's copper and tan); their bodies (D101) a dusky indigo (beetle, L 0.176 to 0.242) or a dark dried umber (spider, snail, L 0.143 to 0.253) ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) |
+| Mechanisms | active family | the walk cue `e1cfa5` on the part you use (lift top, lever handle), steel or wood body, ink and rim. The lever's knob is the walk cue `e1cfa5` shaded `c4b07e` (was red `e82026`), the sheet has the moon rim: outline 0.439 at its worst, forest-1 (was 0.077 over the near-black play band; 2026-11-20, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)) | Active | no reserved accent: gold `ffd23a` is fire and the coin, honey `e2b25a` the fungus traps |
 | Pickups | warm white, violet | halo `ffffff`/`fff4aa` (#345), jar, Mushroom | Active | unchanged: the bob, halo and sparkle cue |
 
 ### 2. Layers
@@ -296,14 +305,14 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 | Grove | 0.25 | nearer spruces, mist at their foot | one seamless 768 px strip (three pieces in order) | back | layer `grove`, `parallaxx` and `parallaxy` 0.25; 48 px of bleed past the room bottom |
 | Mid forest | 0.4 | trunks, branches, leaf masses, undergrowth | one seamless 1024 px strip (four full-height pieces in order) | back | layer `mid`, `parallaxx` and `parallaxy` 0.4, `offsety` -48: 48 px of bleed over the room top (drawn, not mirrored: each canopy mass the room top cut closes in its own lumpy crown, a lone trunk carries on along its slope) and 64 px past the bottom |
 | Play | 1.0 | terrain (`forest-terrain`), decor, traps, enemies, hero | unchanged; 10 rows of deep soil past the room bottom (`deep-1` to `deep-3` in the terrain sketch, near black at the foot, `deep-3` under a pit) and the decor layer `play-above` (7 rows, `offsety` -112) carrying ropes and walls on over the room top | world | existing layers, plus `play-above` (no collision) |
-| Foreground | 1.6 (kept, third pass: see the cover-time rule in section 3) | few big, readable shapes, not a band (Hollow Knight, Dead Cells): a vine curtain (a sagging bough, vines with big pointed leaves) and a root curtain (roots of very different lengths, the deepest almost to the floor) hanging from the top, leaves and a bough in the top-left corner; big leaves, fern fronds and grass in a few low clumps on the floor line and a tuft; the tips of two tall leaves at the room end. Tall pieces rising from the screen bottom (`rise-fern`, `rise-trunk`, `rise-reeds`, up to two thirds of the view, sprites unchanged in size) go only where no camera carries their stems over an excluded rect (none in the busy mock room; two clear runs in the calm mock room); they are open (lace) and thinnest where they cross the hero's band | modular pieces placed by hand as tile objects, `forest-fg` is a collection of images (pixel defocus) | front | objectgroup `foreground` of tile objects per room, `parallaxx` and `parallaxy` 1.6, formula in Offset; every standing piece has a `-foot` under it and every hanging piece a `-top` over it (bleed) |
+| Foreground | 1.6 (kept, third pass: see the cover-time rule in section 3) | few big, readable shapes, not a band (Hollow Knight, Dead Cells): a vine curtain (a sagging bough, vines with big pointed leaves) and a root curtain (roots of very different lengths, the deepest almost to the floor) hanging from the top, leaves and a bough in the top-left corner; big leaves, fern fronds and grass in a few low clumps on the floor line and a tuft; the tips of two tall leaves at the room end. Tall pieces rising from the screen bottom (`rise-fern`, `rise-trunk`, `rise-reeds`, up to two thirds of the view, sprites unchanged in size) go only where no camera carries their stems over an excluded rect (none in the busy mock room; two clear runs in the calm mock room); they are open (lace) and thinnest where they cross the hero's band | modular pieces placed by hand as tile objects, `forest-fg` is a collection of images over one packed sheet, a sub-rectangle per piece (pixel defocus) | front | objectgroup `foreground` of tile objects per room, `parallaxx` and `parallaxy` 1.6, formula in Offset; every standing piece has a `-foot` under it and every hanging piece a `-top` over it (bleed) |
 
 - **Shared sky objects (author, 2026-11-19).** One moon and one set of clouds serve every world (Forest, Swamp, Steppe, Castle); in the
   Castle they are seen through the windows. The moon is fixed on screen (factor 0 in x and y): it never moves with the camera and sits
   at the same screen position in every room. The clouds drift continuously over time at a constant speed per cloud layer, independent of
   the hero and the camera, and wrap at `wrapx`; the sketch uses 3 px/s.
 - **Sketch files.** `art/parallax/forest/*.grid` and `art/parallax/shared/*.grid` (one char per pixel, colours `RRGGBB` or `RRGGBBAA`)
-  are the drawing; soft edges are drawn there as flat colours with alpha, the exporter applies no filter; `tools/parallax_sprites.py` exports the sheets and `.tsx` files; `tools/parallax_mock.py` builds
+  are the drawing; soft edges are drawn there as flat colours with alpha, the exporter applies no filter; `tools/parallax_sprites.py` exports the sheets and `.tsx` files; `tools/parallax_game.py` installs them into the game (assets and forest-1's layers); `tools/parallax_mock.py` builds
   `mock.tmx` over the first room of forest-1, renders previews at cameras 0, 320 and 640 and checks the
   foreground (section 3); `--room calm` does the same for the calm room (`mock-calm.tmx`, terrain sketch, `preview-calm-{a,b,c}.png`
   at cameras 0, 80 and 160 and 2x copies), and `--check` checks both mocks. Every preview also has its look frames, `-up` (camera top
@@ -312,13 +321,21 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   1 s smoothstep look down, hold, a 0.2 s return, a look up, return, as `LookAround` pans) and `preview-calm-walk.gif` (start to exit at
   100 px/s, steady camera, run cycle), 70 ms a frame (14.3 frames/s) at 2x nearest with one global 127-colour palette (each under 5 MB;
   20 frames/s made the look GIF 5.3 MB).
-- **Code (verified 2026-11-19).** The game does not use libGDX's `TmxMapLoader` or `OrthogonalTiledMapRenderer`: `tiled/TiledMapData`
-  merges every `<layer>` CSV into one `backgroundGrid` and ignores `parallaxx/y`, `opacity`, `<imagelayer>` and `repeatx`. The parser
-  must keep these layers apart (by a layer property) and read those attributes and the cloud drift. Back layers draw in `Level.render`
-  before `renderBackground`; the foreground after `fairy.renderFront`; the HUD stays its own later pass.
+- **Code (built 2026-11-19, forest-1).** The game does not use libGDX's `TmxMapLoader` or `OrthogonalTiledMapRenderer`; `tiled/TiledMapData`
+  keeps the scenery apart: a tile layer is scenery when it has a `parallaxx` or `parallaxy` attribute or the layer property `scenery=true`
+  (the factor-1 `play-above` and `play-below`); it is read into a `SceneryLayer` (factors, `offsetx/y`, `opacity`, `driftx`, `wrapx`, cells
+  resolved to regions) and never reaches `backgroundGrid` or collision. Several tilesets per map work (sheets and collections of images).
+  `<imagelayer>` and `repeatx` stay unread: the layers are tile layers, as wide as their factor needs. `world/ParallaxRenderer` draws the
+  scenery in `Level.render` before `renderBackground` and the room's foreground after `fairy.renderFront`; the HUD stays its own later pass
+  ([DEVELOPMENT.md](DEVELOPMENT.md#scenery-layers-and-the-foreground-parallax-236), D108). `python3 tools/parallax_game.py` writes the layers
+  into `assets/tiles/forest-1.tmx` from the sketch pieces; forest-1's play tileset is the terrain sketch (`assets/tiles/ForestTerrain.tsx`,
+  `assets/images/Tileset/ForestTerrain.png`; forest-0 and forest-2 keep `Forest.tsx` and the third-party sheet).
 - **Offset.** `x * (1 - factor)` from the camera, snapped to whole pixels. To match what Tiled shows, use the view centre measured from
-  the map's `parallaxoriginx` (Tiled lines the layers up when the view is centred on the origin), not the camera's left edge. A room
-  change jumps the layers; `RoomFade` hides the jump.
+  the map's `parallaxoriginx` (Tiled lines the layers up when the view is centred on the origin), not the camera's left edge. The
+  map-wide scenery layers (origin 0) never jump horizontally at a room change, and vertically only while the rooms share a floor camera top
+  (all forest rooms do, `everyForestRoomSharesOneFloorCameraTop`); the foreground's origin is the new room, so it jumps, and `RoomFade` hides
+  the jump. The layers are as wide as their factor needs, not as the map: a layer of factor f is seen up to f x (map width - 640) + 640
+  px (forest-1: far 117 columns, grove 167, mid 242, the factor-0 layers 42, the clouds 64 = `wrapx`).
 - **Vertical parallax (author, 2026-11-19).** Each layer's vertical factor is its horizontal factor (sky, stars, moon, clouds 0; far
   0.15, grove 0.25, mid 0.4, play 1, foreground 1.6), measured from the floor camera, so the steady frame is the authored one:
   `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
@@ -344,8 +361,9 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   positioned relative to that room, and the game draws `screenX = (x - roomX) - f * (camX - roomX)` with f = 1.6, x the object's x relative to
   the room origin, roomX the room's left edge and camX the camera's left edge (whole pixels). Tiled draws the group with one parallax origin,
   so it shows the foreground correctly only for one room origin (the group's property `roomx`; the mock shows room 0): the other rooms' art is
-  seen offset in Tiled, and the game parser reads each room's group ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The mock
-  (`tools/parallax_mock.py`) implements the formula for one room.
+  seen offset in Tiled. The game reads one group per room (`foreground-<room>`, `roomx` the room's x in the map, objects relative to the room) and draws
+  the group of the current room. The mock (`tools/parallax_mock.py`) implements the formula for one room; `--check --game` reads the game
+  map's own groups.
 - **Web.** Each layer texture at most 2048 px wide; NPOT is fine with clamp and Nearest. Soft-alpha art is drawn 1:1 at integer
   offsets with Nearest, never scaled.
 - **Pixel defocus is a new category, argued on its merits.** The foreground carries depth of field and the moon's glow
@@ -354,9 +372,23 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   the pixel art, third pass), never computed at run time (no shader, no render target). The background strips carry gradients and mist and may use as
   many colours as the dither needs. This needs registered categories in `tools/sprite_layouts.py` that `check_sprite_art.py` accepts
   ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
-- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** the parser and renderer above; `check_contrast.py` composites only the flat colour and one tile layer, and
-  must learn camera-dependent layer composites; the draw-call and fill budget on mobile web, measured; `AllocationBudgetTest` over the
-  layers; swaying trees (deferred from #239).
+- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** the other forest maps (forest-0 and forest-2 have no layers
+  and still use the third-party terrain sheet) and the other rooms' foreground (only forest-1's first room and `forest-1-mob` have a group);
+  `check_contrast.py` now composites what the game draws behind a sprite (the flat colour, the scenery layers at every steady camera x
+  where the placement is on screen, drift phases of the clouds, then the play layer), and over that real background every sprite now passes the
+  tiers; the decor rule is now relative to the composited background (D108, author decision 2026-11-20: no absolute ink floor). A monster
+  body is measured only where it can lie (D108: along its monster's range or route, dropped to the floor below), and the remains and the bush
+  were repainted by tone role (`art/objects/{monster/*-body,decor/bush}.grid`). Measured, outline max and body range per world: beetle 0.176 /
+  0.163 (forest-1), 0.171 / 0.176 (forest-2); spider 0.181 / 0.097 to 0.177 and snail 0.181 / 0.099 to 0.173 (forest-1, their only world);
+  bush 0.156 / 0.148 (forest-0), 0.198 / 0.198 (forest-1), at most 0.198 / 0.198 over all three worlds, the forest-2 bush at x 1060 0.156 / 0.147. `validateContrast` passes: the forest-2 bush that stood in front of the third-party cliff tiles
+  ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)) moved from x 1040 to 1060 (outline 0.156, body 0.147; D108). The trunk, the lever and the fairy were recoloured on 2026-11-20 (trunk
+  outline 0.351 to 0.197, body 0.160 to 0.407 to 0.084 to 0.194; lever 0.077 to 0.439;
+  fairy 0.136 to 0.269 to 0.314 to 0.376, glints 0.179 and 0.215 to 0.323 and 0.377);
+  the draw-call and fill budget on mobile
+  web, measured on a phone (through `NoopBatch`, the layers and the foreground of a `forest-1-mob` frame are 3 187 region draws and 9 texture
+  switches at 640 px and 3 698 and 9 at 800 px, after 4 198 and 15, and 4 866 and 21); swaying trees (deferred from #239). Built: the
+  parser, the renderer (`ParallaxRendererTest`, `TiledMapParallaxTest`), `AllocationBudgetTest.forest1ParallaxLayersAndForeground` (0.0 B/frame)
+  and the game-map check (`python3 tools/parallax_mock.py --check --game`, `validateParallax`).
 
 ### 3. Readability rules
 
@@ -441,6 +473,12 @@ These are the only limits on the layers.
   and parting above it) in the 41 px run at x 151, the vine curtain and the corner leaves from the top, and three low clumps; the hero
   passes behind the trunk, the fern and the reeds, hidden at most 0.17 s at a time (cover time, above; before the lace redraw 0.22 s on
   the floor and 0.36 s at the apex).
+  **After #507 (2026-11-19) the room is no longer this calm:** a red mob at x 192 (patrol 192 to 400), a falling branch at x 464 and an explosive
+  stump at x 592 now lie on the route, and the first sketch's middle stretch is protected. No x of the room takes `rise-trunk` any more and the
+  fern and the reeds fit only at the room's ends: the foreground is the vine curtain and the corner bough from the top, `rise-reeds` at x -50 (left
+  end), `rise-fern` at x 780 (right end) and three low clumps (`CALM_FOREGROUND` in `tools/parallax_mock.py`, also the game map's group
+  `foreground-forest-1-mob`). Rule B and the look frames pass in the game map (0 covered objects, standing hidden at 0 of 665 box x, the hero
+  hidden 0.00 s on the floor and at the apex, 0 visible layer edges in 8694 frames); `mock-calm.tmx` and its previews were rebuilt.
 - **Ambient lights, by stage (author, 2026-11-19).** Forest and Swamp use fireflies: the #472 lime fireflies in the play layer, under
   their own rules (the Fireflies (#472) paragraph below). The draft's periwinkle distant lights are withdrawn. Steppe and Castle use pale
   spirit lights instead: 1 to 2 px, at most 12 on screen, alpha at most 0.6, drawn in the mid pass so they never lie over the play layer.
@@ -498,8 +536,9 @@ Recorded here; sections 1 to 5 carry them. Nothing is still open except what the
 
 1. **Recolour to the families.** The beetle and the spider go to the danger family: dark crimson body, glowing `ff6b57` eyes. The lever's
    red knob `e82026` goes to the active family: the walk cue `e1cfa5` on its handle, no red. The recolour is made after the layers exist,
-   and the contrast gate measures over them ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The beetle, spider and
-   lever sections describe the old colours until that recolour lands ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+   and the contrast gate measures over them ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The lever's landed on
+   2026-11-20 (the knob in straw, section 1). The beetle, the spider and the snail
+   landed on 2026-11-20 (section 1, Danger, and their sections).
 2. **Walk-edge cue.** Pale straw `e1cfa5` approved (section 1).
 3. **Foreground cover.** Superseded by rule B (answer 8): the waist limit holds only at RoomStart and RoomExit. It never covers a
    floor trap or the other objects listed in section 3. Hanging traps are excluded too (answer 5).
@@ -680,7 +719,7 @@ depends on it.
 
 | Sheet | Frame size | Frames | Palette notes |
 | --- | --- | --- | --- |
-| `decor-bush` | 32×24 | idle, brush1, brush2, settle | Decor tier (D76, 2026-11-16): muted grey-green leaves `597059 / 677d62 / 758b6a`, dull olive highlights `858358 / 676547`, contour `4d6151` (its own darker green, no ink). Was violet `3b2a5c / 7a5ab0` with ink `0b0814`, which read like the pickups (F15). |
+| `decor-bush` | 32×24 | idle, brush1, brush2, settle | Forest (D108, 2026-11-20): dark slate in tone order, contour `0a1016`, twigs `14181c / 1e2227`, leaves `191f25 / 1b2127 / 22282f`, a lighter foot row `21272e` where it meets the floor's lit top. Before, decor tier (D76, 2026-11-16): muted grey-green leaves `597059 / 677d62 / 758b6a`, dull olive highlights `858358 / 676547`, contour `4d6151` (its own darker green, no ink). Was violet `3b2a5c / 7a5ab0` with ink `0b0814`, which read like the pickups (F15). |
 
   `kind` accepts `bush` here; the class is written so that a new kind is one sheet and one table entry (`lookalike` was added by #299, below).
 - **Later kinds.** The other kinds (shrub 16×16, flowers 16×16, fern 24×24 and a mushroom) are **not built
@@ -722,7 +761,7 @@ depends on it.
 | --- | --- | --- |
 | `forest-0` | 12 (two per room) | 200, 300, 700, 1140, 1560, 1860, 2340, 2620, 3140, 3420, 3860, 4230 |
 | `forest-1` | 3 | 240, 600, 780 |
-| `forest-2` | 7 | 400, 700, 1040, 1380, 1580, 1800, 2700 |
+| `forest-2` | 7 | 400, 768, 1060, 1380, 1580, 1800, 2700 |
 
   `DecorTest` pins these counts and measures every bush against the floor line. The brush trigger is the visible
   body (`Decor.BODY_INSET_LEFT/RIGHT/TOP`), pinned by `DecorTest`.
@@ -1039,11 +1078,12 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   exported by `tools/forest_trap_sprites.py monster:beetle` (layout `MONSTER_SHEETS` in `tools/sprite_layouts.py`) with the moon rim:
   `crawl1`, `crawl2` (patrol and chase), `look`, `wiggle`, `crouch`, `air` (the notice: head up, antennae wiggle, a hop; `air` is drawn
   2 px up), `brace`, `bright`, `white` (the wind-up), `dead` (on its back). Feet on row 15, facing right, mirrored about the body centre.
-- **Palette** (14 entries with transparency, 15 with the rim): ink `0b0814`; shell `1c2616`, `34482a`, `56683a`; bronze glint `9a8458`;
-  head `14180f`; eye `efe6c4`; legs `7a7f6a` (light enough that the rim leaves them alone); bright frame `6a7a5a`, `a8b49a`, `d0d6c4`
-  and `ffffff`; white frame `ffffff` with a pale contour `d8d6e8`. No reserved hue: dark green-bronze, away from the healer's aqua and
-  the lime spores. Outline at the RedMob and YellowMob spawns 0.329 to 0.515 (active floor 0.28); `check_contrast.py` measures every
-  placed `Beetle` in all ten frames.
+- **Palette** (14 entries with transparency, 15 with the rim; the danger family since 2026-11-20, #236): ink `0b0814`; shell
+  `4a0c22`, `86101f`, `9c2050`; rose glint `b85a80`; head `2a0612`; eye `ff6b57`; legs `9a6070` (light enough that the rim leaves them
+  alone); bright frame `a8406a`, `e0a0b8`, `f4d4de` and `ffffff`; white frame `ffffff` with a pale contour `d8d6e8`. No reserved hue:
+  crimson and rose, at least 0.095 from the hero's headband. Before: green-bronze `1c2616` to `9a8458`, eye `efe6c4`, legs `7a7f6a`.
+  Outline at the RedMob and YellowMob spawns 0.329 to 0.515 then; over forest-1's layers and the other maps 0.320 to 0.834 after the
+  recolour (0.334 before; active floor 0.28); `check_contrast.py` measures every placed `Beetle` in all ten frames.
 - **Notice:** frames only, no mark over the head and no particles (D100: the "!" was rejected as not belonging in the tale).
 - **Wind-up** (the shared D7 warning): a 1 px shake, `brace`/`bright` blinking from 0.2 s to 0.05 s, `white` for the last 0.12 s; 2 px
   specks (`KIND_FLAME`; a third `ffffff`, most of the rest `d8d6e8`, a few `9a97ad`) born on the 80×32 blast box's sides and top and
@@ -1054,17 +1094,19 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   16 px over 0.35 to 0.55 s. No fire colour, no ring, no shader, no shake: the only cold, flat burst among the Forest's blasts.
 - **Death** (a fireball or a stone): it flips onto its back (`dead`, a 4 px hop over 0.2 s) and stays as a body (D101). 0.08 s after
   the hit, once the fireball's flash is spent, 12 puffs in a ring (two pale `d8d6e8` to one grey `9a97ad`, 5 to 8 px, 0.4 to
-  0.55 s) and five shell chips (`KIND_GRIT`, bronze and shell) knocked out to the floor. The look check of 2026-11-18 found the old
+  0.55 s) and five shell chips (`KIND_GRIT`, `9c2050` and `86101f`) knocked out to the floor. The look check of 2026-11-18 found the old
   0.3 s grey poof hidden by the fireball's ring. No blood, from any weapon.
 - **Body (D101):** the pose tells it from a live beetle (on its back, legs up). The active `dead` frame holds 0.3 s, then cross-fades
   over 0.6 s into `assets/images/objects/monster-beetle-body.png`. That sheet is the same frame recoloured in a decor-tier palette
-  (`art/objects/monster/beetle-body.grid`: `4f5452` contour in its own hue, grey-olive shell `59605a`, `626a60`, `6e7568`, muted
-  bronze `7b786a`, legs `6c7068`; no ink, no rim). Measured by `check_contrast.py` on every floor top of the three maps: outline
-  0.083 to 0.156, body 0.104 to 0.178, p90 chroma 0.018 (decor: at most 0.20, 0.08 to 0.20, 0.10). Left as it is, the active
+  (`art/objects/monster/beetle-body.grid`, a dusky indigo since 2026-11-20, D108: contour `0f0d23` in its own hue, shell `13112a`,
+  `16142e`, `1a1832`, glint `1e1c34`, head `110f27`, legs `18172e`; no ink, no rim). Measured by `check_contrast.py` where a beetle can
+  die (D108: along its range, on its floor): outline 0.167 to 0.176, body 0.163 to 0.176, p90 chroma 0.050 (decor: at most 0.20, 0.08 to
+  0.20, 0.10). Before, a dim plum `4a1842` to `66325c` measured on every floor top. Before, grey-olive `4f5452` to `7b786a`: outline 0.083 to 0.156 and body 0.104 to 0.178 over
+  the flat `2c3f66`, outline 0.445 and body to 0.454 over forest-1's layers. Left as it is, the active
   `dead` frame fits neither tier (outline 0.217 to 0.379, ink down to L 0.146). It rocks about the bottom of the shell, which is
   reactive, like the bush's brush, not an idle loop.
-  - **Crumble** (the sword, a stone, a stomp; `RemainsFx` since #328, with the beetle's `BeetleFx.SHELL_CHIPS`): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in browns
-    `6b5a3a` and `4a3d28`, shell `34482a` and bronze `9a8458`, and 5 dust puffs.
+  - **Crumble** (the sword, a stone, a stomp; `RemainsFx` since #328, with the beetle's `BeetleFx.SHELL_CHIPS`): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in the body's
+    indigos `16142e`, `0f0d23`, `1a1832` and `1e1c34` (plums, and browns and green-bronze before #236), and 5 dust puffs.
   - **Burn** (a fireball or a torch): one warm glow (`FireballFx.HALO`, 28 px), 70 flames a second in the fireball's own ramp
     (`FireballFx.RAMP`) rising 6 to 14 px, the body darkening to 15 % over 0.3 s, and a dark wisp of 4 puffs at the end.
 - **Cost:** `BeetleFx` pools of 84 and 240 from measured peaks of 67 and 192 (`BeetleFxTest`; 108 and 296 while the body's crumble
@@ -1081,12 +1123,13 @@ needs only: nothing was copied or exported.
   `tap` (the notice: up on its legs, a foreleg drumming), `crouch` (the wind-up: forelegs up, fangs open), `leap`, `bite` (fangs to the
   floor), `recover` (flattened), `dead` (on its back, legs curled up). Feet on row 15, facing right, mirrored about the body centre.
   The author's art review of 2026-11-19 asked for eight legs: every frame shows eight, each root, high knee and foot, all rooted on the
-  cephalothorax and drawn behind the body, four near in tan with pale knees and four far in a shaded tan.
-- **Palette** (12 colours, 13 with the rim): ink `0b0814`; abdomen `22141e`, `3a2232`, `5e3442` with an ochre chevron `c89a4a`;
-  head `4a2e3c`, `6e4656`; eyes `f0e2a8`; fangs `e8e0cc`; near legs `c09670`, knees `e8c894`; far legs `9c7a5c` (all legs light
-  enough that the rim leaves them alone). No reserved hue: a dusky plum, away from the healer's aqua, the lime spores and the beetle's
-  green-bronze. Outline at the RedMob, YellowMob and beetle spawns 0.300 (`recover`) to 0.331 (`crouch`) (active floor 0.28);
-  `check_contrast.py` measures every placed `Spider` in all nine frames.
+  cephalothorax and drawn behind the body, four near with pale knees and four far in a darker shade (tan, dusty rose since #236).
+- **Palette** (12 colours, 13 with the rim; the danger family since 2026-11-20, #236): ink `0b0814`; abdomen `4a0c22`, `86101f`,
+  `9c2050` with a rose chevron `b85a80`; head `6a0e1e`, `86101f`; eyes `ff6b57`; fangs `e8e0cc`; near legs `b07c8c`, knees `d8b0c0`;
+  far legs `8e5a6a` (all legs light enough that the rim leaves them alone, and off the hero's tan). Before: plum `22141e` to `6e4656`,
+  an ochre chevron `c89a4a`, eyes `f0e2a8`, tan legs `c09670`, `e8c894`, `9c7a5c`. Outline at the RedMob, YellowMob and beetle spawns
+  0.300 (`recover`) to 0.331 (`crouch`) then; over forest-1's layers and the other maps 0.415 to 0.587 after the recolour (0.470 to
+  0.639 before; active floor 0.28); `check_contrast.py` measures every placed `Spider` in all nine frames.
 - **Notice:** frames only, no mark and no particles (D100).
 - **Wind-up** (the D7 warning, `BITE_WARNING_SECONDS`): the `crouch` frame drawn 1 px back from the hero, and 1 px silk glints
   (`KIND_FLAME`, half `ffffff`, half `d8d6e8`, 0.22 to 0.32 s), 60 a second, born on the floor line between the fangs and the locked
@@ -1095,13 +1138,16 @@ needs only: nothing was copied or exported.
 - **Bite** (hit or miss, D93): two white fang glints (`SoftDot`, 7 px, 0.1 s) 2 px either side of the fangs and four dust puffs
   (`KIND_SMOKE`, a brown and `9a97ad`) at its feet.
 - **Death** (any weapon): it flips onto its back and stays as a body (D101); 0.08 s after the hit, 12 puffs in a ring (pale and grey, as
-  the beetle's) and four leg flecks (tan and plum) to the floor. The sword's kill adds the light spray of D65; fire and stones none (D99).
+  the beetle's) and four leg flecks (`b07c8c` and `86101f`) to the floor. The sword's kill adds the light spray of D65; fire and stones none (D99).
 - **Body (D101):** `assets/images/objects/monster-spider-body.png`, the `dead` frame recoloured in a decor-tier palette
-  (`art/objects/monster/spider-body.grid`: contour `58505a` in its own hue, plum-grey `5c5460`, `645a66`, `6a606a`, head `685e68`,
-  `6e646c`, legs `706c66`, `78726a`, `6c6862`; no ink, no rim). Measured by `BODY_SWEEP` on every floor top of the three maps: outline
-  0.075 to 0.184, body 0.110 to 0.174, p90 chroma 0.023 (decor: at most 0.20). The pose differs from its closest live frame (`recover`)
+  (`art/objects/monster/spider-body.grid`, a dark dried umber since 2026-11-20, D108: contour `1e0600` in its own hue, abdomen `220800`,
+  `270b00`, `2d1001`, head `2a0e00`, `2f1202`, fangs `341b0c`, legs `2a1103`, `2f1608`, `270e01`; no ink, no rim). Measured by
+  `BODY_SWEEP` where a spider can die (D108: its floor legs and the pounce's reach, its walls and threads dropped to the floor below):
+  outline 0.038 to 0.181, body 0.097 to 0.177, p90 chroma 0.055 (decor: at most 0.20). A cool plum cannot clear the blue night forest
+  behind the forest-1 ledges by 0.08; the warm umber does. Before, a dim plum `4a1842` to `66325c`. Before, plum-grey `58505a` to `7c7676`: outline 0.075 to
+  0.184 and body 0.110 to 0.174 over the flat `2c3f66`, outline 0.474 and body to 0.459 over forest-1's layers. The pose differs from its closest live frame (`recover`)
   in 48.3 % of the silhouette (`RemainsTest`, floor 25 %). It rocks about the bottom of its belly (`RemainsSwing`); its crumble chips
-  are its plum `3a2232`, `5e3442` and leg tans `c09670`, `9c7a5c` (`SpiderFx.SPIDER_CHIPS`).
+  are the body's umbers `270b00`, `2a1103`, `2f1202` and `341b0c` (`SpiderFx.SPIDER_CHIPS`; plums, and plum and leg tans before #236).
 - **Cost:** `SpiderFx` pools of 64 and 104 from measured peaks of 50 and 83 (`SpiderFxTest`: three spiders winding up at the assist's
   0.75 s, leaping and biting while three others die); 0.0 B/frame through the real level.
 
@@ -1111,12 +1157,13 @@ author's request rather than turned).** Previews: `build/spider-capture/` (not s
 - **Wall sheet** `assets/images/objects/monster-spider-wall.png`, three 16×32 frames in `art/objects/monster/spider-wall.grid`
   (`tools/forest_trap_sprites.py monster:spider-wall`, with the moon rim), same 12 colours: `wall1`, `wall2` (the climb: the legs spread
   up and down the face, knees out away from it, feet on it above the head and below the abdomen, the body close to the wall with its
-  belly dark against it and the ochre chevron down its back), `walltap` (the notice on a wall: risen 1 px off the face, a foreleg
+  belly dark against it and the chevron down its back), `walltap` (the notice on a wall: risen 1 px off the face, a foreleg
   drumming in the air). Drawn head up with the wall on the right; the game mirrors it for a wall on the left and flips it for a head
   going down. The turned floor frames of Phase 1 fanned every leg to one side like a comb and did not read as clinging.
 - **Hanging frames** in the floor strip: `hang` (head down, legs splayed) and `hangwind` (the drop's wind-up and the drop: legs drawn
-  in, fangs spread), drawn upright and mirrored about the thread, their far legs in a lighter tan `b08c68` (13 colours, 14 with the
-  rim). `silk`: the thread's 1×4 tile (`e8e0cc` with one `f0e2a8` texel), repeated down the thread every frame; the last few
+  in, fangs spread), drawn upright and mirrored about the thread, their far legs in a lighter shade (`b08c68` tan, `9a6070` rose since #236). The floor sheet has 14 colours, 15 with the rim: the
+  hanging frames' far legs and the silk's glint `f0e2a8`, its own entry since the eyes left that pale (#236). `silk`: the thread's 1×4
+  tile (`e8e0cc` with one `f0e2a8` texel, unchanged), repeated down the thread every frame; the last few
   pixels are drawn one texel at a time, so nothing is allocated.
 - **Effects** (`SpiderFx`): drop wind-up glints (the floor glints turned vertical, 60 a second, down the column to the thread's
   end); shed specks (one pale 1 px `KIND_GRIT` per 6 px of thread paid out, 0.35 s); the snap (five specks drifting down the broken
@@ -1141,31 +1188,35 @@ author's request).** The body and the gob are authored sprites; every effect is 
   stalks half in), `dead` (the empty shell rolled onto its back, its mouth open upward). The ninth cell, `gob`, holds the gob's
   two 8×8 wobble frames at its top-left (`fly1` at x 0, `fly2` at x 8). Sole on row 15, facing right, mirrored about the body
   centre (x 11).
-- **Palette** (13 colours, 14 with the rim): ink `0b0814`; shell groove `4a2a20`, whorls `7a4a32`, `9a6646`, cream highlight
-  `b89a78`, the shell's lip `a07656`; foot and neck `8c7c6e`, `a89a8a`; eye tips `d8d0c0`; mouth `2a1418`; the gob `6c6a3e`,
-  `b8b886`, `f2f2dc`. No reserved hue: chestnut and a greyed cream, away from the honey `e2b25a`, and the gob a muted olive-cream,
-  away from the lime spores.
+- **Palette** (13 colours, 14 with the rim; the danger family since 2026-11-20, #236): ink `0b0814`; shell groove `4a0c22`, whorls
+  `86101f`, `9c2050`, rose highlight `c87896`, the shell's lip `b85a80`; foot and neck `9a6070`, `b07c8c`; eye tips `ff6b57`; mouth
+  `2a0612`; the gob `86101f`, `c87896`, `f4d4de` (a crimson slime, away from the fireball's gold). No reserved hue. Before: chestnut
+  `4a2a20` to `b89a78`, lip `a07656`, foot `8c7c6e`, `a89a8a`, eyes `d8d0c0`, the gob olive `6c6a3e`, `b8b886`, `f2f2dc`.
 - **Loudness.** The first concept (orange shell, full ink contour) measured 0.41 to 0.44 and read big and icon-like beside the
   spider. Now the shell's ink contour, and so its moon rim, covers only its top two rows; below them the shell's edge is its own
-  light lip `a07656`, and the foot and neck keep their own colour as their edge. Outline at the 23 RedMob, YellowMob, beetle and
-  spider spawns, both facings: 0.302 (`look`) to 0.339 (`draw`), the spider's band (active floor 0.28; without any rim 0.222).
-- **The gob** (8×8, a pale core, an olive rim, an ink edge, rimmed): 0.298 to 0.504 every 8 px along 176 px of line either side of
-  each spawn. The gate measures a placed snail along its range and the gob along every firing line (`snail_parts`).
+  light lip, and the foot and neck keep their own colour as their edge. Outline at the 23 RedMob, YellowMob, beetle and
+  spider spawns, both facings: 0.302 (`look`) to 0.339 (`draw`), the spider's band (active floor 0.28; without any rim 0.222); over
+  forest-1's layers along its range 0.467 after the recolour (0.493 before).
+- **The gob** (8×8, a pale core, a crimson rim (olive before #236), an ink edge, rimmed): 0.298 to 0.504 every 8 px along 176 px
+  of line either side of each spawn; over forest-1's layers along every firing line 0.578 after the recolour (0.582 before). The gate measures a placed snail along its range and the gob along every firing line (`snail_parts`).
 - **Notice:** frames only, no mark and no particles (D100).
 - **Wind-up** (the D7 warning, `DEFAULT_WARNING_SECONDS`): the `draw` frame; a glow swelling at the mouth (`KIND_GLOW`, 1 to 3 px,
-  `f2f2dc`, 30 a second); 1 px specks (`KIND_FLAME`, half white, half `b8b886`, 0.25 to 0.4 s), 40 a second, born along the firing
+  `f4d4de`, 30 a second); 1 px specks (`KIND_FLAME`, half white, half `c87896`, 0.25 to 0.4 s), 40 a second, born along the firing
   line at the gob's height and drawn into the mouth, so the reach and the height are read on them.
-- **Flight and splat** (D93): a 1 px drip (`KIND_GRIT`, `b8b886`) every 12 px flown, falling to the floor; where the gob ends,
+- **Flight and splat** (D93): a 1 px drip (`KIND_GRIT`, `c87896`) every 12 px flown, falling to the floor; where the gob ends,
   seven droplets thrown back and up (1 to 2 px, the gob's three colours, 0.2 to 0.3 s) and a 4 px smear (along the floor, or
   down a wall face) that fades in 0.4 s. Fire takes a gob with a puff of five pale and grey smoke dots rising, then the splat.
 - **Death** (any weapon): it rolls onto its back (a 3 px hop) and stays as a body (D101); 0.08 s after the hit, 12 puffs in a ring
   and four shell and foot chips to the floor. The sword's kill adds the light spray of D65; fire and stones none (D99).
 - **Body (D101):** `assets/images/objects/monster-snail-body.png`, the `dead` frame recoloured in a decor-tier palette
-  (`art/objects/monster/snail-body.grid`: contour `5e524a` in its own hue, groove `544842`, whorls `6a5c54`, `7c6e62`, cream
-  `988a7a`, lip `6e6258`, mouth `4c403c`; no ink, no rim). Measured by `BODY_SWEEP` on every floor top of the three maps:
-  outline 0.091 to 0.157, body 0.100 to 0.181 (decor: at most 0.20). The pose differs from its closest live frame (`draw`) in
+  (`art/objects/monster/snail-body.grid`, a dark dried umber since 2026-11-20, D108: contour `1e0600` in its own hue, groove `250900`,
+  whorls `2a0e00`, `301302`, highlight `341b0c`, lip `270d00`, mouth `170400`; no ink, no rim). Measured by `BODY_SWEEP` where a snail
+  can die (D108: along its range, on its floor): outline 0.043 to 0.181, body 0.099 to 0.173, p90 chroma 0.055 (decor: at most 0.20).
+  Before, a dim plum `4a1842` to `66325c`. Before, grey-brown `4c403c` to `988a7a`: outline 0.091 to 0.157 and body 0.100 to 0.181 over the
+  flat `2c3f66`, outline 0.432 and body to 0.441 over forest-1's layers. The pose differs from its closest live frame (`draw`) in
   49.3 % of the silhouette (`RemainsTest`, floor 25 %). It rocks about the bottom of its shell (`RemainsSwing`); its crumble
-  chips are its shell browns, its cream and its foot (`SnailFx.SNAIL_CHIPS`).
+  chips are the body's umbers (`SnailFx.SNAIL_CHIPS`; plums, and shell browns, cream and foot before #236), the death's chips the live shell
+  and foot.
 - **Cost:** `SnailFx` pools of 64 and 112 from measured peaks of 51 and 84 (`SnailFxTest`: three snails winding up at the
   assist's 1.2 s, their gobs flying their range and splatting, a gob steamed and three snails dying); 0.1 to 0.2 B/frame through the
   real level (`AllocationBudgetTest.snailThroughTheRealLevel`).
@@ -1256,7 +1307,7 @@ notes below are the drawings' history:
 |---|---|---|
 | `decor-bush` | `4d6151`→`415558`, `597059`→`495f5e`, `677d62`→`526763`, `758b6a`→`5b7069`, `858358`→`666b5d`, `676547`→`525852` | 0.106 / 0.151 |
 | `decor-lookalike` | `6d6154`→`56555a`, `aa9c8a`→`7e7b7d`, `998b7a`→`737073`, `897b6a`→`686669`, `796c60`→`5e5c62`, `a7a194`→`7c7f84`, `958e82`→`707278`, `b4ada0`→`84868c` | 0.106 / 0.157 |
-| `decor-trunk` | `6d665e`→`565861`, `8b8379`→`6a6b72`, `9a9288`→`74757c`, `7a736a`→`5f6169` | 0.095 / 0.160 |
+| `decor-trunk` | `6d665e`→`565861`, `8b8379`→`6a6b72`, `9a9288`→`74757c`, `7a736a`→`5f6169`; layered forest ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20): →`2a2e38`, `2b2f3a`, `2d303b`, `2b2e39` (OKLab L 0.301 to 0.312, just above the ink floor) | 0.095 / 0.160; over forest-1's layers and forest-0's `2c3f66`: 0.069 to 0.197 / 0.084 to 0.194 |
 | `decor-vine` | `757a67`→`5b6567`, `9d9f7b`→`757d74`, `8a8c6d`→`69716b`, `88a083`→`687e79`, `738b73`→`5a706e` | 0.130 / 0.173 |
 | `decor-crown` | `607660`→`4e6362`, `6e8466`→`576c66`, `7b9170`→`5f746c`, `889e79`→`687d72`, `948f62`→`707363` | 0.111 / 0.180 |
 
@@ -1286,7 +1337,8 @@ The decor recolour changed only the palette lines of `art/objects/decor/{bush,lo
 and the D64 brush trigger are unchanged. The lever (then the author's wall-mounted 3/4 drawing, `art/objects/lever-pixel.png`) gained a 1 px
 outline in its own near-black `010000` around both frames, painted into the master's cells so the export is exact; colours,
 frame, pivot and bottom line were unchanged. The floor lever that replaced it (#413, `art/objects/lever.grid`) keeps the
-near-black contour and measures 0.51 in both frames. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
+near-black contour and measures 0.51 in both frames. Over forest-1's layered near-black play band that ink fell to 0.077; the knob
+went to the walk-cue straw and the sheet got the moon rim (2026-11-20, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)): 0.439. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
 at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
 ## Dialogue screen (D78, playtest F3/F10, #337)

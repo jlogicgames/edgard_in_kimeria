@@ -1,17 +1,18 @@
 # Forest beetle (#327, D100): native 24x16 frames, facing right, feet on row 15.
 # crawl1, crawl2: patrol/chase; look, wiggle, crouch, air: the notice (head up, antennae wiggle, hop; air drawn 2 px up); brace, bright, white: the wind-up (shake + blink brace/bright, white last); dead.
+# Danger family (#236, 2026-11-20): dark crimson body 86101f, glowing eyes ff6b57, rose lights away from the hero's headband c22a24.
 size 24 16
 color k 0b0814
-color d 1c2616
-color t 34482a
-color s 56683a
-color h 9a8458
-color n 14180f
-color b efe6c4
-color L 7a7f6a
-color D 6a7a5a
-color T a8b49a
-color S d0d6c4
+color d 4a0c22
+color t 86101f
+color s 9c2050
+color h b85a80
+color n 2a0612
+color b ff6b57
+color L 9a6070
+color D a8406a
+color T e0a0b8
+color S f4d4de
 color W ffffff
 color P d8d6e8
 frame crawl1

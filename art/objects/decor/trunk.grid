@@ -1,12 +1,14 @@
 # Tree trunk (#349, D80): the decor kind `trunk`, native 16x288, one frame, standing on the floor; branches are
 # one-way Platform / FallingPlatform objects drawn over it. Decor tier (D76): no ink, contour in its own hue, a muted
 # grey-brown near the level background's lightness (D92), no accent hue. Not solid, never moves.
-# Night palette (D92, #430): every colour mixed 35 % toward the night background 2c3f66; the day values are in docs/ART_DIRECTION.md.
+# Layered-forest palette (#236): a dark slate just above the decor ink floor (OKLab L 0.301 to 0.311, INK_L_MAX 0.30), so it
+# sits in forest-1's near-black play band and the night blue of forest-0 and forest-2 alike (D76, check_contrast.py); the
+# earlier night values (D92, #430) and the day values are in docs/ART_DIRECTION.md.
 size 16 288
-color c 565861
-color b 6a6b72
-color l 74757c
-color n 5f6169
+color c 2a2e38
+color b 2b2f3a
+color l 2d303b
+color n 2b2e39
 frame trunk
 ................
 ......cccc......

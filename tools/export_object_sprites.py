@@ -115,7 +115,8 @@ def export_platform():
 # Object sheets exported with the moon rim (D92, tools/moon_rim.py): target stem -> frame cell. Applied to the exported
 # sheet, so re-running this script reproduces the rimmed PNG; the rim is idempotent.
 RIM_OBJECTS = {'ladder': (LADDER_FRAME_SIZE, LADDER_FRAME_SIZE), 'stone': WORLD_FRAMES['stone'],
-               'fireball': WORLD_FRAMES['fireball'], 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE}
+               'fireball': WORLD_FRAMES['fireball'], 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
+               'lever': (LEVER_FRAME_SIZE, LEVER_FRAME_SIZE)}  # #236: the lever's ink on the near-black forest play band
 
 
 def rim_objects():

@@ -21,7 +21,7 @@ screen; the clouds drift on their own at `driftx` px/s and wrap at `wrapx` (the 
 Without `--room`, `--check` checks every scene (forest-1's first room and the calm room); `--preview` and the build take one
 scene, forest-1's first room by default.
 
-The foreground is an objectgroup `foreground` of tile objects (one PNG per piece, `forest-fg.tsx` is a collection), each room's
+The foreground is an objectgroup `foreground` of tile objects (`forest-fg.tsx` is a collection of images over one packed sheet, a sub-rectangle per piece), each room's
 foreground authored relative to its room, because a factor of 1.6 cannot be authored on one map-wide layer (forest-1 would need
 about 10.6k px of it). Game formula: `screenX = (x - roomX) - f * (camX - roomX)`, with f = 1.6, x the object's x relative
 to the map, roomX the left edge of the room being shown and camX the camera's left edge. Tiled draws a parallax group with one
@@ -49,6 +49,7 @@ are snapped as the game's Math.round (half up). `--room calm` also writes
 `preview-calm-look.gif` and `preview-calm-walk.gif`.
 """
 import math
+from collections import namedtuple
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -61,7 +62,17 @@ import parallax_sprites as sprites
 ROOT = Path(__file__).resolve().parents[1]
 DIR = sprites.DIR
 MOCK = DIR / 'mock.tmx'
-ROWS, TILE = 23, 16
+ROWS = 23
+TILE = 16
+ALPHA = 3                               # the alpha channel of an RGBA pixel or array
+RGB_CHANNELS = 3
+OPAQUE = 255
+HALF_UP = 0.5
+SPOT_W = 2                              # a sprite-sheet spot is (col, row, w, h) in tiles
+SPOT_H = 3
+BOX_H = 3                               # an object box is (x, y, w, h)
+HERO_CELL = 64                          # one cell of the hero sheet, px
+HERO_CELL_DX = 8                        # the cell starts this far left of the box x
 PAD_COLUMNS = 24                        # the play layer is padded (its last column repeated) so the room's last camera shows ground
 ROOM_X = 0                              # left edge of the room in a mock: the mock's play layer starts at the room's left edge
 VIEW = (640, 360)
@@ -91,7 +102,9 @@ MOVE_SPEED = 100                        # px/s, Player.MOVE_SPEED
 HERO_FIGURE_W = 11                      # the hitbox width (Player: Hitbox.rect(18, 26, 11, 22)); the figure is HERO_H tall
 HERO_FIGURE_DX = 18                     # the figure's left edge, px right of the box x (the hitbox offsetX)
 HERO_CAMERA_DX = 24                     # the camera follows the box centre (Player.centerX: box x + 48 / 2)
-HIDDEN_ALPHA, HIDDEN_FRACTION, HIDDEN_MAX = 128, 0.85, 0.5
+HIDDEN_ALPHA = 128
+HIDDEN_FRACTION = 0.85
+HIDDEN_MAX = 0.5
 HERO_LIFTS = (0, 60)                    # his feet on the floor line and at a jump's apex (59.67 px, JumpFrameRateTest)
 MARGIN = 16
 FG_FACTOR = 1.6
@@ -103,9 +116,18 @@ REQUIRED_TYPES = {'HangingHive', 'Deadfall', 'Bat', 'Bramble', 'Collectable', 'F
                   'RedMob', 'Escalator', 'Trigger'}
 assert REQUIRED_TYPES <= EXCLUDED_TYPES, REQUIRED_TYPES - EXCLUDED_TYPES
 FUNGUS_TILES = {127, 128, 129}         # the honey fungus is drawn by play-layer tiles, not an object
-CLOUD_DRIFT, CLOUD_WRAP = 3, 1024
+CLOUD_DRIFT = 3
+CLOUD_WRAP = 1024
 GIF_FRAME_MS = 70                       # the preview GIFs' frame time: 14.3 frames/s (20 frames/s made the look GIF 5.3 MB)
-GIF_FPS = 1000 / GIF_FRAME_MS
+MS_PER_S = 1000
+GIF_FPS = MS_PER_S / GIF_FRAME_MS
+GIF_SCALE = 2                           # the GIFs are drawn at 2x, nearest neighbour
+PALETTE_SAMPLES = 16                    # frames sampled for the GIF palette
+MEGABYTE = 1e6
+RUN_FPS = 10                            # the hero's run cycle, frames/s, and its frames in the sheet row
+RUN_FRAMES = 6
+SMOOTH_BASE = 3                         # smoothstep: t * t * (3 - 2 * t)
+SMOOTH_SLOPE = 2
 GIF_COLOURS = 128                       # the preview GIFs' global palette (one index is the transparent 'unchanged')
 # Vertical parallax (author, 2026-11-19): each layer's y factor is its x factor, measured from the floor camera, so the steady
 # frame (camera top ORIGIN_Y) is the authored one: screenY = (y - originY) - f * (camTop - originY), originY = room y +
@@ -115,14 +137,17 @@ GIF_COLOURS = 128                       # the preview GIFs' global palette (one 
 # 1.6 (165 above, 240 below), over the full look range. Tiled lines the layers up when the view centre is on the map's parallax origin, so
 # `parallaxoriginy` is ORIGIN_Y + half the view; every forest room lies at y 0, so it is exact for every room in y.
 ORIGIN_Y = CAMERA_TOP
-LOOK_UP, LOOK_DOWN = 100, 150           # LookAround.UP_DISTANCE, DOWN_DISTANCE
+LOOK_UP = 100                           # LookAround.UP_DISTANCE
+LOOK_DOWN = 150                         # LookAround.DOWN_DISTANCE
 LOOK_STEP = 5                           # --check: camera tops from ROOM_TOP - LOOK_UP to ORIGIN_Y + LOOK_DOWN, 5 px apart
 ROOM_TOP = 0                            # the steady camera top is clamped to the room top (room y 0) when the hero stands high
 ROOM_H = ROWS * TILE
 BLEED_ROWS = 10                         # play layer rows past the room bottom (160 px: the 150 px look down)
 MAP_ROWS = ROWS + BLEED_ROWS
 PLAY_ABOVE = 7                          # rows of the `play-above` layer (112 px over the room top: the 100 px look up)
-FG_TOP, FG_HEIGHT = 176, 1024           # foreground canvas for the look frames: room y -176 to 848
+FG_TOP = 176                            # foreground canvas for the look frames: room y -176 to 848
+FG_HEIGHT = 1024
+PLAY_LAYERS = ('Background', 'play-above', 'play-below')   # the play layer and its decor bleed count as one in the look check
 GROUND_FRACTION = 0.4                   # --check: the bottom 40 % of a look frame, below the room, is play or foreground ground
 FLAT_RUN = 20                           # --check: art ending flat over this many px in a row is a cut (the longest drawn flat
                                         # edge, the moon disc's top and bottom, is 18 px)
@@ -147,18 +172,42 @@ class Scene:
         self.source, self.room, self.mock, self.play_tsx, self.foreground, self.previews = \
             source, room, mock, play_tsx, foreground, previews
         self.root = ET.parse(source).getroot()
+        self.game = False
+        self.origin = 0   # GameScene: the room's x in the map, added to the room-relative camera for map-wide layers
         box = next(o for o in self.root.iter('object') if o.get('type') == 'Room' and o.get('name') == room)
         self.x, self.width = int(float(box.get('x'))), int(float(box.get('width')))
         self.play_columns = self.width // TILE
         self.columns = self.play_columns + PAD_COLUMNS
         self.cameras = range(0, self.width - VIEW[0] + 1, CAMERA_STEP)
         start = hero_boxes(self)['RoomStart']
-        self.floor = start[1] + start[3]
+        self.floor = start[1] + start[BOX_H]
+
+
+class GameScene(Scene):
+    """A room of the game map itself (`assets/tiles/forest-1.tmx`), checked over the layers the game draws: the map-wide scenery
+    layers, the Background and the room's own foreground group (`foreground-<room>`, `roomx` the room's x, objects relative to
+    the room). The camera of the checks stays room-relative; map-wide layers are shifted by the room's x (`origin`)."""
+
+    def __init__(self, source, room):
+        super().__init__(source, room, source, None, (), {})
+        self.game, self.origin = True, self.x
+
+
+def game_scenes():
+    """One GameScene per room of the forest maps that has a foreground group, in map order."""
+    scenes = []
+    for path in sorted((ROOT / 'assets/tiles').glob('forest-*.tmx')):
+        root = ET.parse(path).getroot()
+        rooms = {int(float(o.get('x'))): o.get('name') for o in root.iter('object') if o.get('type') == 'Room'}
+        for group in root.findall('objectgroup'):
+            if group.get('name', '').startswith('foreground'):
+                scenes.append(GameScene(path, rooms[int(prop(group, 'roomx'))]))
+    return scenes
 
 
 def play_rows(scene):
     text = scene.source.read_text(encoding='utf-8')
-    data = re.search(r'<data encoding="csv">\s*(.*?)</data>', text, re.S).group(1)
+    data = re.search(r'<layer [^>]*name="Background"[^>]*>\s*<data encoding="csv">\s*(.*?)</data>', text, re.S).group(1)
     rows = [[int(v) for v in line.strip().rstrip(',').split(',')] for line in data.strip().splitlines()]
     c0, c1 = scene.x // TILE, scene.x // TILE + scene.play_columns
     return [row[c0:c1] + [row[c1 - 1]] * PAD_COLUMNS for row in rows]
@@ -166,7 +215,7 @@ def play_rows(scene):
 
 class Layer:
     def __init__(self, tileset, columns, rows=MAP_ROWS):
-        self.first, self.spots = tileset
+        self.first, self.spots, self.blank = tileset   # self.blank: ids of fully transparent tiles, which stay empty cells
         self.columns = columns
         self.rows = [[0] * columns for _ in range(rows)]
 
@@ -174,14 +223,15 @@ class Layer:
         c0, r0, w, h = self.spots[piece]
         for j in range(h):
             for i in range(w):
-                if 0 <= col + i < self.columns and 0 <= row + j < len(self.rows):
-                    self.rows[row + j][col + i] = self.first + (r0 + j) * SHEET_COLUMNS + c0 + i
+                tile_id = (r0 + j) * SHEET_COLUMNS + c0 + i
+                if tile_id not in self.blank and 0 <= col + i < self.columns and 0 <= row + j < len(self.rows):
+                    self.rows[row + j][col + i] = self.first + tile_id
 
     def strip(self, pieces, row):
         col, k = 0, 0
         while col < self.columns:
             self.stamp(pieces[k % len(pieces)], col, row)
-            col += self.spots[pieces[k % len(pieces)]][2]
+            col += self.spots[pieces[k % len(pieces)]][SPOT_W]
             k += 1
 
 
@@ -192,9 +242,17 @@ def sky(layer):
             layer.stamp(f'band-{min(row, ROWS - 1)}', col, row)
 
 
+STAR_PIECES = 5                         # the star pieces stars-0 .. stars-4, side by side
+STAR_SPACING = 8                        # columns between them
+# (piece, column, row) of the clouds, one 1024 px loop (wrapx = 64 columns): every piece ends at or before column 64
+CLOUDS = (('cloud-small', 1, 3), ('cloud-big', 11, 1), ('cloud-wisp', 34, 0), ('cloud-mid', 45, 3), ('cloud-wisp', 55, 2))
+FAR_ROW = 7                             # the first row of each strip layer
+GROVE_ROW = 5
+
+
 def stars(layer):
-    for i in range(5):
-        layer.stamp(f'stars-{i}', 8 * i, 0)
+    for i in range(STAR_PIECES):
+        layer.stamp(f'stars-{i}', STAR_SPACING * i, 0)
 
 
 def moon(layer):
@@ -204,21 +262,26 @@ def moon(layer):
 
 def clouds(layer):
     # one 1024 px loop (wrapx = 64 columns): every piece ends at or before column 64
-    for piece, col, row in (('cloud-small', 1, 3), ('cloud-big', 11, 1), ('cloud-wisp', 34, 0), ('cloud-mid', 45, 3),
-                            ('cloud-wisp', 55, 2)):
+    for piece, col, row in CLOUDS:
         layer.stamp(piece, col, row)
 
 
 def far(layer):
-    layer.strip(['ridge-a', 'ridge-b', 'ridge-c', 'ridge-d'], 7)
+    layer.strip(['ridge-a', 'ridge-b', 'ridge-c', 'ridge-d'], FAR_ROW)
 
 
 def grove(layer):
-    layer.strip(['grove-a', 'grove-b', 'grove-c'], 5)
+    layer.strip(['grove-a', 'grove-b', 'grove-c'], GROVE_ROW)
 
 
 def mid(layer):
     layer.strip(['mid-a', 'mid-b', 'mid-c', 'mid-d'], 0)   # layer offsety -48: the pieces start 48 px over the room top
+
+
+GRADED = ('deep-1', 'deep-2')           # the soil rows graded under a floor's bottom row, then deep-3
+DEEP_STRIDE_C = 7                       # the two variants of a deep tile alternate on a column and row stride
+DEEP_STRIDE_K = 3
+PERIOD_ROWS = 9                         # play_above reads rows 1 to 8 of a column for its period
 
 
 def play_bleed(rows, deep_first):
@@ -235,8 +298,9 @@ def play_bleed(rows, deep_first):
         row = []
         for c in range(width):
             solid = rows[ROWS - 1][c] != 0
-            kind = 'deep-3' if not solid or k >= 2 else ('deep-1', 'deep-2')[k]
-            row.append(deep_first + DEEP[kind][(c * 7 + k * 3) % 2])
+            kind = 'deep-3' if not solid or k >= len(GRADED) else GRADED[k]
+            variants = DEEP[kind]
+            row.append(deep_first + variants[(c * DEEP_STRIDE_C + k * DEEP_STRIDE_K) % len(variants)])
         rows.append(row)
     return rows
 
@@ -249,8 +313,8 @@ def play_above(rows):
     for c in range(len(rows[0])):
         if not rows[0][c]:
             continue
-        column = [rows[r][c] for r in range(1, 9)]
-        period = next(p for p in range(1, 9) if all(column[i] == column[i % p] for i in range(len(column))))
+        column = [rows[r][c] for r in range(1, PERIOD_ROWS)]
+        period = next(p for p in range(1, PERIOD_ROWS) if all(column[i] == column[i % p] for i in range(len(column))))
         for k in range(1, PLAY_ABOVE + 1):   # room row -k: the tile `period * m - k` rows below, inside rows 1..period
             r = -k % period or period
             above[PLAY_ABOVE - k][c] = rows[r][c] if column[0] else rows[0][c]
@@ -269,14 +333,16 @@ FOREGROUND = (('hang-leaves-l', -80, 0), ('trunk-near', -48, 0), ('clump-fern', 
 
 
 
-# The calm room: forest-1-mob (`--scan`: the longest stretches with nothing to protect, see the card). Two tall pieces rise
-# from the screen bottom where no camera of the room carries them over an object: the near trunk with a fern at its foot
-# left of the start and the fern fan in the middle stretch, which the hero walks through (rule B); the root curtain and the
-# vine curtain hang over the middle, a leaf bough enters at the top-right, low clumps sit on the floor line.
-CALM_FOREGROUND = (('hang-leaves-l', -80, 0), ('vine-curtain', 120, 0), ('rise-reeds', 134, 144), ('clump-grass', 288, 320),
-                   ('rise-trunk', 426, 128), ('rise-fern', 440, 128), ('clump-mixed', 744, 320), ('clump-fern', 832, 320))
+# The calm room: forest-1-mob (`--scan`: the longest stretches with nothing to protect, see the card). #507 reworked the room
+# (a red mob at x 192, a falling branch at 464 and an explosive stump at 592 on the route): the middle stretch the first sketch
+# put the tall pieces in is protected now, so only two tall pieces still fit where no camera carries them over an object: the
+# reeds at the left end and the fern fan at the right end; the vine curtain hangs over the left third, a leaf bough enters at
+# the top-left, low clumps sit on the floor line (the near trunk found no x: every column crosses a protected rect).
+CALM_FOREGROUND = (('hang-leaves-l', -80, 0), ('vine-curtain', 120, 0), ('rise-reeds', -50, 144), ('clump-grass', 288, 320),
+                   ('rise-fern', 780, 128), ('clump-mixed', 744, 320), ('clump-fern', 832, 320))
 
 
+TOP_OVERLAP = 8                         # a `-top` piece's last row is the piece's y 7: it reaches 8 px into the piece
 FOOT_DX = -32                           # a `-foot` or `-top` bleed piece is 64 px wider than its piece, centred on it
 
 
@@ -286,16 +352,16 @@ def with_bleed(foreground, spots):
     result = []
     for piece, x, top in foreground:
         result.append((piece, x, top))
-        h = spots[piece][3] * TILE
+        h = spots[piece][SPOT_H] * TILE
         if f'{piece}-foot' in spots:
             result.append((f'{piece}-foot', x + FOOT_DX, top + h))
         if f'{piece}-top' in spots:
-            result.append((f'{piece}-top', x + FOOT_DX, top + 8 - spots[f'{piece}-top'][3] * TILE))
+            result.append((f'{piece}-top', x + FOOT_DX, top + TOP_OVERLAP - spots[f'{piece}-top'][SPOT_H] * TILE))
     return result
 
 
 def foreground_xml(scene, info, first_id):
-    first, spots = info
+    first, spots, _ = info
     objects = []
     pieces = with_bleed(scene.foreground, spots)
     for n, (piece, x, top) in enumerate(pieces):
@@ -330,7 +396,7 @@ def build(scene):
     info = {}
     for key in sprites.TILESETS:
         spots, count = sprites.layout(key)
-        info[key] = (first, spots)
+        info[key] = (first, spots, sprites.blank_ids(key))
         tilesets.append((first, relative(sprites.tsx_path(key))))
         first += count
     layers, next_id = [], 1
@@ -376,8 +442,11 @@ def tile_images(mock=None):
         source = (mock.parent / element.get('source')).resolve()
         tsx = ET.parse(source).getroot()
         if tsx.find('image') is None:
-            for tile in tsx.findall('tile'):
-                pieces[int(element.get('firstgid')) + int(tile.get('id'))] = Image.open(source.parent / tile.find('image').get('source')).convert('RGBA')
+            for tile in tsx.findall('tile'):   # a collection: the tile's image, or its sub-rectangle of a packed sheet
+                sheet = Image.open(source.parent / tile.find('image').get('source')).convert('RGBA')
+                x, y = int(tile.get('x', 0)), int(tile.get('y', 0))
+                box = (x, y, x + int(tile.get('width', sheet.width)), y + int(tile.get('height', sheet.height)))
+                pieces[int(element.get('firstgid')) + int(tile.get('id'))] = sheet.crop(box)
             continue
         image = source.parent / tsx.find('image').get('source')
         sets.append((int(element.get('firstgid')), Image.open(image).convert('RGBA'), int(tsx.get('columns'))))
@@ -424,7 +493,7 @@ def render_objects(group, pieces, columns, top=0, height=ROWS * TILE, edges=None
         layer.paste(piece, (x, y))
         image.alpha_composite(layer)
         if edges is not None:
-            a = numpy.asarray(piece)[..., 3] > COVER_ALPHA
+            a = numpy.asarray(piece)[..., ALPHA] > COVER_ALPHA
             edges += [(y, x, x + piece.width, 'top', a[0]), (y + piece.height - 1, x, x + piece.width, 'bottom', a[-1])]
             # a seam row: a piece with a `-top` or `-foot` partner (fg.grid) ends where its partner takes over, on its first
             # (last for -foot) drawn row, which is not always the image's row 0; it is a cut with no length limit
@@ -444,7 +513,7 @@ def prop(layer, name, default=0.0):
 
 def jround(value):
     """Java's Math.round (half up), as the game snaps a layer offset; Python's round() rounds half to even."""
-    return math.floor(value + 0.5)
+    return math.floor(value + HALF_UP)
 
 
 def screen_x(x, factor, cam, room_x=ROOM_X):
@@ -516,7 +585,7 @@ def sprite_placements(scene):
 
 
 def draw_sprite(frame, key, x, y, w, h):
-    anchor = contrast.SPRITES[key][4]
+    anchor = contrast.SPRITES[key][contrast.SPRITE_ANCHOR]
     left = int(x + (w - frame.width) // 2)
     top = int(y + h - frame.height) if anchor == 'floor' else int(y)
     return frame, left, top
@@ -536,21 +605,26 @@ def screen_y(y, factor, cam_top):
     return y - ORIGIN_Y - jround(factor * (cam_top - ORIGIN_Y))
 
 
+Drawing = namedtuple('Drawing', 'element image oy px py')   # element, image, room y of the image's row 0, parallaxx, parallaxy
+
+
 class Layers:
     """The mock's layers ready to draw: [(element, image, room y of the image's row 0, parallaxx, parallaxy)], the hero
     stand-in sheet, the room's sprites and the hero boxes."""
 
     def __init__(self, scene, mock=None):
         root, sets, pieces = tile_images(mock or scene.mock)
-        self.root, self.layers = root, []
+        self.root, self.layers, self.origin = root, [], scene.origin
         for layer in root:
             px, py = float(layer.get('parallaxx', 1)), float(layer.get('parallaxy', 1))
             if layer.tag == 'layer' and layer.get('visible', '1') != '0':
-                self.layers.append((layer, render_layer(layer, sets), int(float(layer.get('offsety', 0))), px, py))
-            elif layer.tag == 'objectgroup':
+                self.layers.append(Drawing(layer, render_layer(layer, sets), int(float(layer.get('offsety', 0))), px, py))
+            elif layer.tag == 'objectgroup' and layer.get('name', '').startswith('foreground'):
+                if scene.game and prop(layer, 'roomx') != scene.origin:
+                    continue   # another room's foreground of the game map
                 edges = []
                 image = render_objects(layer, pieces, scene.columns, FG_TOP, FG_HEIGHT, edges)
-                self.layers.append((layer, image, -FG_TOP, px, py))
+                self.layers.append(Drawing(layer, image, -FG_TOP, px, py))
                 self.fg_edges = edges
         self.hero = Image.open(ROOT / 'assets/images/hero/hero-right.png').convert('RGBA')
         self.boxes = hero_boxes(scene)
@@ -560,11 +634,11 @@ class Layers:
         """Screen x of the image's column 0 (a wrapping layer: its drift instead)."""
         element, image, _, px, _ = layer
         if element.tag == 'objectgroup':
-            return screen_x(0, px, cam, prop(element, 'roomx')) - FG_PAD
+            return screen_x(0, px, cam, 0) - FG_PAD   # room-relative camera and objects: the room is the group's origin
         wrap = int(prop(element, 'wrapx'))
         if wrap:
             return jround(prop(element, 'driftx') * time) % wrap
-        return -jround(px * cam)
+        return -jround(px * (cam + self.origin))
 
     def frame(self, scene, cam, where, cam_top=ORIGIN_Y, time=0.0, hero=(0, 0)):
         """One frame: every layer at camera (cam, cam_top), the room's sprites, the hero (sheet cell `hero`: column, row)
@@ -581,9 +655,9 @@ class Layers:
                     paste_clipped(frame, sprite, left - cam, top - cam_top)
                 box = self.boxes['RoomStart'] if where == 'start' else self.boxes['RoomExit'] if where == 'exit' else None
                 hero_x = box[0] if where == 'start' else box[0] - HERO_W if where == 'exit' else where
-                floor = box[1] + box[3] if box else scene.floor
-                cell = self.hero.crop((hero[0] * 64, hero[1] * 64, hero[0] * 64 + 64, hero[1] * 64 + 64))
-                paste_clipped(frame, cell, int(hero_x) - 8 - cam, int(floor) - 64 - cam_top)
+                floor = box[1] + box[BOX_H] if box else scene.floor
+                cell = self.hero.crop((hero[0] * HERO_CELL, hero[1] * HERO_CELL, (hero[0] + 1) * HERO_CELL, (hero[1] + 1) * HERO_CELL))
+                paste_clipped(frame, cell, int(hero_x) - HERO_CELL_DX - cam, int(floor) - HERO_CELL - cam_top)
         return frame
 
 
@@ -613,7 +687,7 @@ def save_gif(frames, target, fps=GIF_FPS, colours=GIF_COLOURS):
     night's dithered gradients need far fewer than 256 to read), no dither; after the first frame a pixel that did not
     change is the transparent index, so the file stores only what moved."""
     rgb = [f.convert('RGB') for f in frames]
-    step = max(1, len(rgb) // 16)
+    step = max(1, len(rgb) // PALETTE_SAMPLES)
     sample = Image.new('RGB', (VIEW[0], VIEW[1] * len(rgb[::step])))
     for i, f in enumerate(rgb[::step]):
         sample.paste(f, (0, i * VIEW[1]))
@@ -621,22 +695,29 @@ def save_gif(frames, target, fps=GIF_FPS, colours=GIF_COLOURS):
     clear = colours - 1
     images, previous = [], None
     for f in rgb:
-        index = numpy.asarray(f.quantize(palette=palette, dither=Image.Dither.NONE)).repeat(2, 0).repeat(2, 1)
+        index = numpy.asarray(f.quantize(palette=palette, dither=Image.Dither.NONE)).repeat(GIF_SCALE, 0).repeat(GIF_SCALE, 1)
         shown_index = index.copy()
         if previous is not None:
             shown_index[index == previous] = clear
         previous = index
         image = Image.fromarray(shown_index.astype(numpy.uint8), 'P')
-        image.putpalette(palette.getpalette()[:3 * (colours - 1)] + [0, 0, 0])
+        image.putpalette(palette.getpalette()[:RGB_CHANNELS * (colours - 1)] + [0, 0, 0])
         images.append(image)
-    images[0].save(target, save_all=True, append_images=images[1:], duration=round(1000 / fps), loop=0, optimize=False,
+    images[0].save(target, save_all=True, append_images=images[1:], duration=round(MS_PER_S / fps), loop=0, optimize=False,
                    transparency=clear, disposal=1)
-    print(shown(target), f'{len(images)} frames, {target.stat().st_size / 1e6:.1f} MB')
+    print(shown(target), f'{len(images)} frames, {target.stat().st_size / MEGABYTE:.1f} MB')
+
+
+# the look GIF: (seconds, look offset at the start, at the end, the hero's sheet cell or None), as LookAround pans: a 1 s smoothstep
+# look down, hold, a 0.2 s return, then the same up
+LOOK_PLAN = ((0.5, 0, 0, None), (1.0, 0, LOOK_DOWN, (1, 5)), (0.75, LOOK_DOWN, LOOK_DOWN, (1, 5)), (0.2, LOOK_DOWN, 0, (0, 0)),
+             (0.5, 0, 0, None), (1.0, 0, -LOOK_UP, (0, 5)), (0.75, -LOOK_UP, -LOOK_UP, (0, 5)), (0.2, -LOOK_UP, 0, (0, 0)),
+             (0.5, 0, 0, None))
 
 
 def smoothstep(t):
     t = max(0.0, min(1.0, t))
-    return t * t * (3 - 2 * t)
+    return t * t * (SMOOTH_BASE - SMOOTH_SLOPE * t)
 
 
 def gifs(scene, fps=GIF_FPS):
@@ -646,11 +727,8 @@ def gifs(scene, fps=GIF_FPS):
     layers = Layers(scene)
     mid_x = scene.width // 2 - HERO_CAMERA_DX
     cam = hero_camera(scene, mid_x)
-    plan = [(0.5, 0, 0, None), (1.0, 0, LOOK_DOWN, (1, 5)), (0.75, LOOK_DOWN, LOOK_DOWN, (1, 5)),
-            (0.2, LOOK_DOWN, 0, (0, 0)), (0.5, 0, 0, None), (1.0, 0, -LOOK_UP, (0, 5)), (0.75, -LOOK_UP, -LOOK_UP, (0, 5)),
-            (0.2, -LOOK_UP, 0, (0, 0)), (0.5, 0, 0, None)]
     frames, clock = [], 0.0
-    for seconds, start, end, pose in plan:
+    for seconds, start, end, pose in LOOK_PLAN:
         n = round(seconds * fps)
         for i in range(n):
             offset = start + (end - start) * smoothstep((i + 1) / n)
@@ -661,7 +739,7 @@ def gifs(scene, fps=GIF_FPS):
     route = hero_route(scene)
     x = float(route[0])
     while x <= route[-1]:
-        frames.append(layers.frame(scene, hero_camera(scene, int(x)), int(x), ORIGIN_Y, clock, (int(clock * 10) % 6, 1)))
+        frames.append(layers.frame(scene, hero_camera(scene, int(x)), int(x), ORIGIN_Y, clock, (int(clock * RUN_FPS) % RUN_FRAMES, 1)))
         x += MOVE_SPEED / fps
         clock += 1 / fps
     save_gif(frames, DIR / 'preview-calm-walk.gif', fps)
@@ -716,7 +794,7 @@ def check(scene):
     root, _, pieces = tile_images(scene.mock)
     ok = True
     for group in root.findall('objectgroup'):
-        if group.get('name').startswith('foreground'):
+        if group.get('name').startswith('foreground') and (not scene.game or prop(group, 'roomx') == scene.origin):
             ok &= check_layer(scene, group, pieces)
     return check_look(scene) and ok
 
@@ -727,6 +805,13 @@ def blit(dst, src, x, y):
     x0, y0, x1, y1 = max(x, 0), max(y, 0), min(x + w, dst.shape[1]), min(y + h, dst.shape[0])
     if x1 > x0 and y1 > y0:
         dst[y0:y1, x0:x1] |= src[y0 - y:y1 - y, x0 - x:x1 - x]
+
+
+def edge_on_screen(order, cut, cam_top):
+    """Whether the cut row (layer index, room y, kind) lies on screen with screen beyond it at this camera top."""
+    index, y, kind = cut
+    row = screen_y(y, order[index].py, cam_top)
+    return 0 < row <= VIEW[1] - 1 if kind == 'top' else 0 <= row < VIEW[1] - 1
 
 
 def check_look(scene):
@@ -745,25 +830,29 @@ def check_look(scene):
     tops = look_tops()
     groups = {}
     for i, layer in enumerate(order):
-        if int(prop(layer[0], 'wrapx')):
+        if int(prop(layer.element, 'wrapx')):
             continue
-        key = 'play' if layer[0].get('name') in ('Background', 'play-above') else layer[0].get('name')
+        key = 'play' if layer.element.get('name') in PLAY_LAYERS else layer.element.get('name')
         groups.setdefault(key, []).append(i)
     cuts = {}   # (layer index, room y, kind) -> set of image columns
     for key, members in groups.items():
-        oy0 = min(order[i][2] for i in members)
-        height = max(order[i][2] + order[i][1].height for i in members) - oy0
-        width = max(order[i][1].width for i in members)
+        oy0 = min(order[i].oy for i in members)
+        height = max(order[i].oy + order[i].image.height for i in members) - oy0
+        width = max(order[i].image.width for i in members)
         alpha = numpy.zeros((height, width), bool)
         edges = []
         for i in members:
             element, image, oy, _, _ = order[i]
-            a = numpy.asarray(image)[..., 3] > COVER_ALPHA
+            a = numpy.asarray(image)[..., ALPHA] > COVER_ALPHA
             alpha[oy - oy0:oy - oy0 + a.shape[0], :a.shape[1]] |= a
             if element.tag == 'objectgroup':
                 edges += [(i, row - FG_TOP - oy0, x0, x1, kind, own) for row, x0, x1, kind, own in layers.fg_edges]
             else:
-                edges += [(i, oy - oy0, 0, a.shape[1], 'top', a[0]), (i, oy - oy0 + a.shape[0] - 1, 0, a.shape[1], 'bottom', a[-1])]
+                # `play-below` is the Background's own deep soil in the game map (a separate layer): its top row is interior to the
+                # play layer, where the soil under a pit meets the open room (flat by design, as the mock's single layer has it)
+                if element.get('name') != 'play-below':
+                    edges.append((i, oy - oy0, 0, a.shape[1], 'top', a[0]))
+                edges.append((i, oy - oy0 + a.shape[0] - 1, 0, a.shape[1], 'bottom', a[-1]))
         for i, row, x0, x1, kind, own in edges:
             own = own[max(-x0, 0):max(-x0, 0) + min(x1, width) - max(x0, 0)]
             x0, x1 = max(x0, 0), min(x1, width)
@@ -774,7 +863,7 @@ def check_look(scene):
             xs = numpy.nonzero(own & ~other)[0]   # the object's own pixel on its edge row, nothing of any member across
             if len(xs):
                 cuts.setdefault((i, row + oy0, kind), set()).update((xs + x0).tolist())
-        if key == 'play' or order[members[0]][3] == 0:   # the play layer is flat by design; a factor-0 layer is the sky's own
+        if key == 'play' or order[members[0]].px == 0:   # the play layer is flat by design; a factor-0 layer is the sky's own
             continue
         empty = numpy.zeros((1, width), bool)
         for kind, cut in (('top', alpha & ~numpy.vstack([empty, alpha[:-1]])),
@@ -784,14 +873,12 @@ def check_look(scene):
                     if n >= FLAT_RUN:
                         cuts.setdefault((members[0], int(row) + oy0, kind), set()).update(range(x, x + n))
     cuts = {k: numpy.array(sorted(v)) for k, v in cuts.items()}
-    opaque = [numpy.asarray(layer[1])[..., 3] == 255 for layer in order]
-    solid_layers = {i for i, layer in enumerate(order) if layer[0].get('name') in ('Background', 'play-above', 'foreground')}
+    opaque = [numpy.asarray(layer.image)[..., ALPHA] == OPAQUE for layer in order]
+    solid_layers = {i for i, layer in enumerate(order) if layer.element.get('name') in PLAY_LAYERS + ('foreground',) or layer.element.get('name', '').startswith('foreground')}
     ground_rows = numpy.arange(round(VIEW[1] * (1 - GROUND_FRACTION)), VIEW[1])
     seen, ground, frames = {}, 0, 0
     for cam_top in tops:
-        live = [(k, xs) for k, xs in cuts.items() if k not in seen and
-                (0 < screen_y(k[1], order[k[0]][4], cam_top) <= VIEW[1] - 1 if k[2] == 'top'
-                 else 0 <= screen_y(k[1], order[k[0]][4], cam_top) < VIEW[1] - 1)]
+        live = [(k, xs) for k, xs in cuts.items() if k not in seen and edge_on_screen(order, k, cam_top)]
         rows = ground_rows[ground_rows + cam_top >= ROOM_H]
         for cam in scene.cameras:
             frames += 1
@@ -802,8 +889,8 @@ def check_look(scene):
             for i in range(len(order) - 1, -1, -1):
                 front[i] = cover.copy()
                 layer = order[i]
-                x, y = layers.x_shift(layer, cam), screen_y(layer[2], layer[4], cam_top)
-                wrap = int(prop(layer[0], 'wrapx'))
+                x, y = layers.x_shift(layer, cam), screen_y(layer.oy, layer.py, cam_top)
+                wrap = int(prop(layer.element, 'wrapx'))
                 for dx in ((x - wrap, x) if wrap else (x,)):
                     blit(cover, opaque[i], dx, y)
                     if i in solid_layers:
@@ -813,7 +900,7 @@ def check_look(scene):
                 if k in seen:
                     continue
                 i, y, kind = k
-                sy = screen_y(y, order[i][4], cam_top)
+                sy = screen_y(y, order[i].py, cam_top)
                 sx = xs + layers.x_shift(order[i], cam)
                 on = (sx >= 0) & (sx < VIEW[0])
                 shown_xs = sx[on][~front[i][sy, sx[on]]]
@@ -821,7 +908,7 @@ def check_look(scene):
                     seen[k] = (cam, cam_top, int(shown_xs.min()), int(shown_xs.max()))
     name = scene.mock.name
     for (i, y, kind), (cam, cam_top, x0, x1) in sorted(seen.items(), key=lambda s: (s[0][1], s[0][0])):
-        print(f'{name} look: {order[i][0].get("name")} {kind} edge at room y {y} visible at camera {cam}, top {cam_top} '
+        print(f'{name} look: {order[i].element.get("name")} {kind} edge at room y {y} visible at camera {cam}, top {cam_top} '
               f'(screen x {x0}..{x1})')
     ok = not seen and not ground
     print(f'{name} look: {len(seen)} visible layer edges ({len(cuts)} cut rows) and {ground} px of open ground (bottom '
@@ -840,10 +927,11 @@ def protected(scene, unique=False):
     return rects
 
 
-def check_layer(scene, group, pieces):
+def check_layer(scene, group, pieces, out=print):
+    """Rule B and the hero's cover time of one foreground group; the report goes to `out` (a test passes a silent one)."""
     factor = float(group.get('parallaxx'))
-    room_x = prop(group, 'roomx')
-    alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., 3] > COVER_ALPHA
+    room_x = prop(group, 'roomx') - scene.origin   # the checks run on the room-relative camera
+    alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] > COVER_ALPHA
     height = alpha.shape[0]
     failures = set()
     rects = protected(scene)
@@ -859,22 +947,22 @@ def check_layer(scene, group, pieces):
                 failures.add(f'{name} at x {x0:.0f}')
     name = f'{scene.mock.name} {group.get("name")}'
     for failure in sorted(failures):
-        print(f'{name} covers', failure)
-    print(f'{name}: {len(failures)} covered objects (rule B: the hero and the walk edge may be covered elsewhere; '
+        out(f'{name} covers', failure)
+    out(f'{name}: {len(failures)} covered objects (rule B: the hero and the walk edge may be covered elsewhere; '
           f'above the waist, {HERO_H - WAIST} px, he stays clear at RoomStart and RoomExit)')
     hidden_ok = True
     standing = hero_standing(scene, group, pieces)
     hidden_ok &= not standing
     spots = ', '.join(f'{x0}..{x1}' if x1 > x0 else f'{x0}' for x0, x1 in
                       [(x, x + n - 1) for x, n in runs(standing)])
-    print(f'{name}: hero standing hidden ({HIDDEN_FRACTION:.0%} of his figure under alpha {HIDDEN_ALPHA}) at '
+    out(f'{name}: hero standing hidden ({HIDDEN_FRACTION:.0%} of his figure under alpha {HIDDEN_ALPHA}) at '
           f'{len(standing)} of {len(hero_route(scene))} box x' + (f' ({spots}): FAIL' if standing else ': ok'))
     for lift in HERO_LIFTS:
         hidden, at = hero_hidden(scene, group, pieces, lift=lift)
         where = 'on the floor' if not lift else f'{lift} px up (jump apex)'
         verdict = 'FAIL' if hidden > HIDDEN_MAX else 'ok'
         hidden_ok &= hidden <= HIDDEN_MAX
-        print(f'{name}: hero {where} hidden ({HIDDEN_FRACTION:.0%} of his figure under alpha {HIDDEN_ALPHA}) at most '
+        out(f'{name}: hero {where} hidden ({HIDDEN_FRACTION:.0%} of his figure under alpha {HIDDEN_ALPHA}) at most '
               f'{hidden:.2f} s in a row, from room x {at:.0f} (limit {HIDDEN_MAX} s): {verdict}')
     return not failures and hidden_ok
 
@@ -894,7 +982,7 @@ def hero_cover(scene, group, alpha, x, lift=0, factor=None):
     """Fraction of the hero's figure (box at room x, feet `lift` px above the floor line, steady camera) under `alpha`."""
     factor = float(group.get('parallaxx')) if factor is None else factor
     cam = hero_camera(scene, x)
-    left = x + HERO_FIGURE_DX - cam + jround(factor * (cam - prop(group, 'roomx'))) + FG_PAD   # canvas column of his left edge
+    left = x + HERO_FIGURE_DX - cam + jround(factor * (cam - (prop(group, 'roomx') - scene.origin))) + FG_PAD   # canvas column of his left edge
     y1 = int(scene.floor) - lift
     return alpha[y1 - HERO_H:y1, max(left, 0):max(left + HERO_FIGURE_W, 0)].sum() / (HERO_FIGURE_W * HERO_H)
 
@@ -902,7 +990,7 @@ def hero_cover(scene, group, alpha, x, lift=0, factor=None):
 def hero_standing(scene, group, pieces, alpha=None):
     """Box x of the route where the hero standing on the floor, under the steady camera, is hidden."""
     if alpha is None:
-        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., 3] >= HIDDEN_ALPHA
+        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] >= HIDDEN_ALPHA
     return [x for x in hero_route(scene) if hero_cover(scene, group, alpha, x) >= HIDDEN_FRACTION]
 
 
@@ -911,7 +999,7 @@ def hero_hidden(scene, group, pieces, factor=None, alpha=None, lift=0):
     HIDDEN_FRACTION covered by foreground pixels of alpha HIDDEN_ALPHA or more, walking the route at MOVE_SPEED with the
     game's camera (the camera's y is the floor framing at any lift: at that steady camera top every layer is as authored)."""
     if alpha is None:
-        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., 3] >= HIDDEN_ALPHA
+        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] >= HIDDEN_ALPHA
     best, best_at, run, run_at = 0, 0, 0, 0
     for x in hero_route(scene):
         if hero_cover(scene, group, alpha, x, lift, factor) >= HIDDEN_FRACTION:
@@ -951,6 +1039,9 @@ def runs(xs):
     return result
 
 
+PER_KM = 1000                           # --scan counts rects per 1000 px
+
+
 def scan():
     """Every room of the forest maps: protected rects (objects, ranges, the hero's start and exit) per 1000 px, the longest
     room-x stretch no protected rect touches, and the foreground px (and the widest run) where a column rising from the
@@ -967,7 +1058,7 @@ def scan():
             gap = max((n for x, n in runs([x for x in range(scene.width) if not cover[x]])), default=0)
             free = [x for x in free_columns(scene, TALL_TOP) if x >= 0] if len(scene.cameras) else []   # x < 0 is barely seen
             widest = max(runs(free), key=lambda r: r[1], default=(0, 0))
-            print(f'{path.stem:9} {room:20} {scene.width:5} {len(rects):5} {1000 * len(rects) / scene.width:7.1f} {gap:11} '
+            print(f'{path.stem:9} {room:20} {scene.width:5} {len(rects):5} {PER_KM * len(rects) / scene.width:7.1f} {gap:11} '
                   f'{len(free):12} {widest[1]:6} @{widest[0]}')
 
 
@@ -984,7 +1075,7 @@ def terrain():
         if path == PLAY_TSX:
             return 'source="Forest-new.tsx"'
         return f'source="{Path("../../parallax/forest") / path}"' if not path.startswith('..') else \
-            f'source="../../parallax/{path[3:]}"'
+            f'source="../../parallax/{path.removeprefix("../")}"'
     TERRAIN_MOCK.write_text(re.sub(r'source="([^"]+)"', source, text), encoding='utf-8')
     print(TERRAIN_MOCK.relative_to(ROOT))
     preview(FOREST_1, mock=TERRAIN_MOCK, out=TERRAIN_DIR)
@@ -1014,7 +1105,7 @@ CALM = Scene(ROOT / 'assets/tiles/forest-1.tmx', 'forest-1-mob', DIR / 'mock-cal
 SCENES = {'forest-1': FOREST_1, 'calm': CALM}
 
 
-OPTIONS = {'--scan', '--terrain', '--check', '--preview'}
+OPTIONS = {'--scan', '--terrain', '--check', '--preview', '--game'}
 
 
 def parse_args(args):
@@ -1042,6 +1133,10 @@ if __name__ == '__main__':
         sys.exit(0)
     if '--check' in options:
         scenes = [SCENES[chosen]] if chosen else list(SCENES.values())
+        if '--game' in options:   # the game map's own rooms (every room with a foreground group), not the sketches
+            scenes = game_scenes()
+            if not scenes:
+                sys.exit('--game: no foreground group in the forest maps')
         sys.exit(0 if all([check(scene) for scene in scenes]) else 1)
     scene = SCENES[chosen or 'forest-1']
     if '--preview' not in options:
