@@ -57,6 +57,7 @@ row 6 and ordinary recovery returns to row 5. The two attack sequences never sha
 | Counter escape allowance | 1.35 s from interruption before damage starts |
 | Death presentation | 0.8 s, then automatic exit at 100 px/s |
 | Completed attack shake | 0.18 s; at most 1.25 world pixels, decaying |
+| Strike sounds (#447, D93) | `boss_sweep` at the start of the normal sweep's damaging frame (0.3111 s), `boss_sweep_counter` at the start of the counter strike; one cue per strike, hit or miss; none when the wind-up is cancelled or after `abandonAttack` |
 
 The original balance used a 20 s mastered-room target. After considering 40 s in
 D18, the author selected about 20 s mastered / 60 s first learning as an ordinary-room

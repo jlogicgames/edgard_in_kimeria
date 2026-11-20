@@ -32,6 +32,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "spider_drop.wav": (0.21, 0.29), "spider_reel.wav": (0.26, 0.34), "spider_snap.wav": (0.10, 0.14),
           "snail_notice.wav": (0.26, 0.34), "snail_windup.wav": (0.75, 0.85), "snail_windup_long.wav": (1.15, 1.25),
           "snail_spit.wav": (0.13, 0.19), "snail_splat.wav": (0.16, 0.24),
+          "whip_crack.wav": (0.14, 0.18), "boss_sweep.wav": (0.27, 0.33), "boss_sweep_counter.wav": (0.37, 0.43),
           "spore_puff.wav": (0.26, 0.34)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
@@ -42,7 +43,7 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "beetle_notice.wav": -19.0, "beetle_windup.wav": -19.4, "beetle_windup_long.wav": -19.4, "beetle_pop.wav": -18.0,
                 "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
                 "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
-                "snail_splat.wav": -18.0}
+                "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0}
 # #324: deliberately fuller than the voice set (a rare event), so it is outside the set's spread; it must stay within the
 # same spread of the jump instead.
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}

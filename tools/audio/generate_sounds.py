@@ -1284,6 +1284,92 @@ def snail_splat() -> list[float]:
     return finish_rms(out, SNAIL_SPLAT_RMS_DB)
 
 
+# ---------------------------------------------------------------- RedMob whip and boss sweeps (#447, D93)
+# Consequences: the strike is heard where it lands, hit or miss. whip_crack plays at the start of the RedMob's strike frame;
+# boss_sweep at the start of the boss's normal sweep frame, boss_sweep_counter at the start of the counter strike.
+# whip_crack: a short rising swish of the lash, then the crack (a hard burst of high noise, a sharp 3 ms ring), a dry tail.
+WHIP_SEED = 7101
+WHIP_DURATION = 0.16
+WHIP_SWISH_LEN = 0.034       # s, the lash cutting the air before the crack
+WHIP_SWISH_SWEEP = (1500.0, 4500.0)
+WHIP_SWISH_BW = 2200.0
+WHIP_SWISH_GAIN = 0.35       # relative to the crack's peak
+WHIP_CRACK_BAND = (3600.0, 3800.0)
+WHIP_CRACK_LEN = 0.12
+WHIP_CRACK_ATTACK = 0.0015
+WHIP_CRACK_TAU = 0.022
+WHIP_CRACK_DRIVE = 3.0
+WHIP_RMS_DB = -18.0
+WHIP_PEAK_DB = -3.0
+# boss_sweep: a heavy axe whoosh, noise through a low wide band-pass rising 450 -> 1800 Hz, swelling to the strike, driven.
+BOSS_SWEEP_SEED = 7102
+BOSS_SWEEP_DURATION = 0.30
+BOSS_SWEEP_SWEEP = (450.0, 1800.0)
+BOSS_SWEEP_BW = 1000.0
+BOSS_SWEEP_ATTACK = 0.085
+BOSS_SWEEP_TAU = 0.11
+BOSS_SWEEP_DRIVE = 2.5
+BOSS_SWEEP_RMS_DB = -18.0
+BOSS_SWEEP_PEAK_DB = -3.0
+# boss_sweep_counter: the same whoosh, lower and longer (300 -> 1200 Hz, 0.40 s), then a dull /u/ thud of the axe's weight.
+BOSS_COUNTER_SEED = 7103
+BOSS_COUNTER_DURATION = 0.40
+BOSS_COUNTER_SWEEP = (300.0, 1200.0)
+BOSS_COUNTER_BW = 800.0
+BOSS_COUNTER_ATTACK = 0.10
+BOSS_COUNTER_TAU = 0.15
+BOSS_COUNTER_DRIVE = 2.5
+BOSS_COUNTER_THUD_VOICE = Voice(7104, 0.16, (110.0, 62.0), FORMANTS_U, FORMANTS_U, -18.0, asp_len=0.006, asp_level=0.5,
+                                attack=0.010, tau=0.090, release=0.030, jitter=0.05, rough=0.7, rough_start=0.2, lowpass=1200.0)
+BOSS_COUNTER_THUD_START = 0.17   # s
+BOSS_COUNTER_THUD_GAIN = 1.1     # relative to the whoosh's peak
+BOSS_COUNTER_RMS_DB = -18.0
+
+
+def whip_crack() -> list[float]:
+    rng = random.Random(WHIP_SEED)
+    n = n_samples(WHIP_DURATION)
+    out = [0.0] * n
+    ns = n_samples(WHIP_SWISH_LEN)
+    lo, hi = WHIP_SWISH_SWEEP
+    swish = bandpass(noise(rng, ns), lambda t: lo + (hi - lo) * t, WHIP_SWISH_BW)
+    sp = max(abs(v) for v in swish) or 1.0
+    for j in range(ns):
+        out[j] += WHIP_SWISH_GAIN * swish[j] / sp * (j / ns) ** 2
+    nc = n_samples(WHIP_CRACK_LEN)
+    crack = bandpass(noise(rng, nc), WHIP_CRACK_BAND[0], WHIP_CRACK_BAND[1])
+    cp = max(abs(v) for v in crack) or 1.0
+    env = envelope(nc, WHIP_CRACK_ATTACK, WHIP_CRACK_TAU)
+    for j in range(nc):
+        if ns + j < n:
+            out[ns + j] += math.tanh(WHIP_CRACK_DRIVE * crack[j] / cp) * env[j]
+    return finish_rms(out, WHIP_RMS_DB, WHIP_PEAK_DB)
+
+
+def _axe_whoosh(seed, duration, sweep, bw, attack, tau, drive) -> list[float]:
+    rng = random.Random(seed)
+    n = n_samples(duration)
+    lo, hi = sweep
+    swept = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, bw)
+    peak = max(abs(v) for v in swept) or 1.0
+    env = envelope(n, attack, tau)
+    return [math.tanh(drive * v / peak) * e for v, e in zip(swept, env)]
+
+
+def boss_sweep() -> list[float]:
+    x = _axe_whoosh(BOSS_SWEEP_SEED, BOSS_SWEEP_DURATION, BOSS_SWEEP_SWEEP, BOSS_SWEEP_BW, BOSS_SWEEP_ATTACK,
+                    BOSS_SWEEP_TAU, BOSS_SWEEP_DRIVE)
+    return finish_rms(x, BOSS_SWEEP_RMS_DB, BOSS_SWEEP_PEAK_DB)
+
+
+def boss_sweep_counter() -> list[float]:
+    x = _axe_whoosh(BOSS_COUNTER_SEED, BOSS_COUNTER_DURATION, BOSS_COUNTER_SWEEP, BOSS_COUNTER_BW, BOSS_COUNTER_ATTACK,
+                    BOSS_COUNTER_TAU, BOSS_COUNTER_DRIVE)
+    peak = max(abs(v) for v in x) or 1.0
+    _add_at(x, n_samples(BOSS_COUNTER_THUD_START), render_voice(BOSS_COUNTER_THUD_VOICE), BOSS_COUNTER_THUD_GAIN * peak)
+    return finish_rms(x, BOSS_COUNTER_RMS_DB, BOSS_SWEEP_PEAK_DB)
+
+
 # Spore puff (spore_puff): the puffball's release and both honey fungi's burst (#445). One sound for all three: the harmless and the
 # false fungus must not be told apart by ear (D63). A soft "fwuff": a muffled thump of the cap giving way under a breath of
 # airy noise that brightens as the cloud spreads. Quieter and longer than dust_puff, so it never reads as the hero's landing.
@@ -1367,6 +1453,7 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "spider_drop.wav": spider_drop, "spider_reel.wav": spider_reel, "spider_snap.wav": spider_snap,
                "snail_notice.wav": snail_notice, "snail_windup.wav": snail_windup, "snail_windup_long.wav": snail_windup_long,
                "snail_spit.wav": snail_spit, "snail_splat.wav": snail_splat,
+               "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter,
                "spore_puff.wav": spore_puff}
 
 

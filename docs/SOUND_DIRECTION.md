@@ -53,6 +53,9 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `fissure_rumble.wav` | synth, voice (#366) | 0.60 s | -9.5 / -19.4 | an ember fissure's warning starts, only while the fissure or its column is in the camera view (`Level.fissureInView`, the `EmberFissure` warning listener) | heard by the author in play 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
 | `ember_jet.wav` | synth, swept noise + crackle (#366) | 0.80 s | -9.2 / -23.0 | an ember fissure's jet starts, same rule: the consequence (D93) | heard by the author in play 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
 | `fireball_fizzle.wav` | synth, swept noise + crackle (#397) | 0.35 s | -9.0 / -25.1 | the hero's fireball goes out on terrain, and at 0.6 volume when it burns out (`Level.fireballFizzle`) | approved by the author 2026-11-18 |
+| `whip_crack.wav` | synth, swept noise + driven crack (#447) | 0.16 s | -3.1 / -18.0 | the RedMob's whip starts its strike frame, hit or miss (D93, `RedMob`) | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
+| `boss_sweep.wav` | synth, swept noise (#447) | 0.30 s | -7.1 / -18.0 | the boss's normal sweep starts its active frame, hit or miss (`Boss`) | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
+| `boss_sweep_counter.wav` | synth, swept noise + thud (#447) | 0.40 s | -5.7 / -18.0 | the boss's counter sweep starts, hit or miss; the author may drop it and let `boss_sweep` serve both | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), and a honey fungus bursts, the same for the harmless and the false one (`Level`) | not heard yet ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
@@ -356,6 +359,29 @@ the pointer moves across buttons. At 0.35 volume it sits about 9 dB lower. The l
 `collect` is the quietest on purpose: it plays on every coin. The level test
 (`tools/test_generate_sounds.py`, `VOICE_RMS_DB`) pins each converted sound to its target (+-0.5 dB), the peak cap and a
 spread of at most 3 dB across the set; a sound joins that table when its replacement is generated.
+
+### RedMob whip and boss sweeps (#447, seeds 7101-7104, D93)
+
+The consequence of three strikes that were silent (hazard audit #388, principle 4): the sound is heard where the strike lands,
+hit or miss, once per strike, at the start of its active frame, and never after the boss is abandoned. The wind-up side stays in
+[#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240). All three sit at -18.0 dBFS RMS, inside the voice set.
+
+- `whip_crack` (0.16 s): a 34 ms rising swish (noise swept 1.5 -> 4.5 kHz, the lash cutting the air), then the crack: a 1.5 ms
+  attack of band-passed noise around 3.6 kHz, driven hard, with a 22 ms decay. Centroid about 4.3 kHz, the brightest sound in the set.
+- `boss_sweep` (0.30 s): a heavy axe whoosh, noise through a wide band-pass sweeping 450 -> 1800 Hz, swelling over 85 ms, driven.
+- `boss_sweep_counter` (0.40 s): the same whoosh lower and longer (300 -> 1200 Hz), then a dull /u/ thud (`render_voice`, 110 -> 62 Hz)
+  at 0.17 s for the axe's weight. Centroid 723 Hz against the normal sweep's 1862 Hz.
+
+**Listening note** (audition: [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)). Hear them in `forest-1-mob` (the whip: stand in reach, jump away during the wind-up, the crack still sounds),
+and in `forest-2`, the boss room (a normal sweep missing you; hit the boss mid-swing to bring on the counter, step out of it).
+Asked of the author: is the whip crack sharp without being shrill? Is the normal sweep a whoosh and not a hiss? Does the
+counter feel heavier, or is it only longer?
+
+**Recommendation: two sounds.** The counter is the rare, uninterruptible strike the player was warned about for 1.15 s and it
+reaches a taller box; the extra thud lets the player hear which sweep it was without looking. If the author prefers look-alikes
+to share one sound (D93), delete `boss_sweep_counter` and play `boss_sweep` from `Boss` for both (one constant, `COUNTER_SOUND`).
+Constants: `WHIP_*`, `BOSS_SWEEP_*`, `BOSS_COUNTER_*` in `tools/audio/generate_sounds.py`. Previews:
+`art/audio/previews/whip_crack.png`, `boss_sweep.png`, `boss_sweep_counter.png`.
 
 ### `keepalive.wav`: not a sound effect (seed 5501, #316)
 

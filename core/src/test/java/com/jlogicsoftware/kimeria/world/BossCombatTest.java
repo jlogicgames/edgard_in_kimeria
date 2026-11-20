@@ -869,6 +869,58 @@ class BossCombatTest {
         }
     }
 
+    private long sweeps(String name) { return playedSounds.stream().filter(name::equals).count(); }
+
+    /** #447, D93: one cue per sweep at the start of its active frame, hit or miss, none after an abandon. */
+    @Test void eachSweepIsHeardOnceHitOrMissAndNeverAfterAnAbandon() {
+        soundsEnabled = true;
+        encounter(); startNormal(); outsideSwing();
+        frames((int) (Boss.NORMAL_FRAME * 2 / REAL_STEP) - 1);
+        assertEquals(0, sweeps("boss_sweep"), "silent during the wind-up");
+        untilState(Boss.State.RECOVERY);
+        assertEquals(1, sweeps("boss_sweep"), "a missed normal sweep is heard");
+        assertEquals(0, sweeps("boss_sweep_counter"));
+        frames(60);
+        assertEquals(1, sweeps("boss_sweep"));
+
+        playedSounds.clear();
+        encounter(); startNormal(); sword(); outsideSwing();
+        assertEquals(0, sweeps("boss_sweep"), "a cancelled normal sweep never struck");
+        untilState(Boss.State.COUNTER);
+        frames(1);
+        assertEquals(1, sweeps("boss_sweep_counter"), "the counter sweep");
+        untilState(Boss.State.COUNTER_RECOVERY);
+        frames(30);
+        assertEquals(1, sweeps("boss_sweep_counter"), "one cue per counter");
+        assertEquals(0, sweeps("boss_sweep"));
+
+        playedSounds.clear();
+        encounter(); startNormal(); boss.abandonAttack(); frames(60);
+        assertEquals(0, sweeps("boss_sweep") + sweeps("boss_sweep_counter"), "nothing after abandonAttack");
+    }
+
+    /** Puts the hero's hitbox on the boss's current axe box. */
+    private void intoAxe() {
+        Rectangle axe = boss.attackBounds(), hero = level.player.hitboxBoundsInto(new Rectangle());
+        level.player.position.add(axe.x - hero.x, axe.y - hero.y);
+    }
+
+    @Test void aSweepThatLandsIsHeardOnceToo() {
+        soundsEnabled = true;
+        encounter(); startNormal();
+        for (int f = 0; f < 90 && !level.player.isGotHit(); f++) { if (boss.isAttackActive()) intoAxe(); frames(1); }
+        assertTrue(level.player.isGotHit(), "the normal sweep landed");
+        assertEquals(1, sweeps("boss_sweep"), "a landed normal sweep is heard once");
+
+        playedSounds.clear();
+        encounter(); startNormal(); sword(); outsideSwing();
+        untilState(Boss.State.COUNTER);
+        for (int f = 0; f < 30 && !level.player.isGotHit(); f++) { intoAxe(); frames(1); }
+        assertTrue(level.player.isGotHit(), "the counter landed");
+        assertEquals(1, sweeps("boss_sweep_counter"), "a landed counter is heard once");
+        assertEquals(0, sweeps("boss_sweep"));
+    }
+
     @Test void completedMissShakesOnceAndClearingOrDeathLeavesNoResidualEffect() {
         encounter(); startNormal(); outsideSwing(); untilState(Boss.State.RECOVERY);
         assertEquals(Boss.State.RECOVERY, boss.getState());

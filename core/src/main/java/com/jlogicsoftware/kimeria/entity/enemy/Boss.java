@@ -26,11 +26,12 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     private static final float BLOOD_IMPACT_Y_FRACTION = .45f;
     private static final Hitbox NORMAL_BOX = Hitbox.rect(24, 22, 16, 8);
     private static final Hitbox COUNTER_BOX = Hitbox.rect(24, 12, 16, 15);
+    private static final String NORMAL_SOUND = "boss_sweep", COUNTER_SOUND = "boss_sweep_counter";
     private final Level level;
     private int energy = MAX_ENERGY;
     private final BossFeedback feedback = new BossFeedback();
     private float elapsed;
-    private boolean awakened, completedStrike, abandoned;
+    private boolean awakened, completedStrike, abandoned, strikeHeard;
     private boolean clambering, quickSand;
     private Escalator escalator;
 
@@ -54,6 +55,13 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         change(State.THRONE);
     }
 
+    /** One cue per sweep, at the start of its active frame, hit or miss (D93, #447); never after an abandon. */
+    private void sweepSound(String name) {
+        if (strikeHeard) return;
+        strikeHeard = true;
+        if (game.playSounds()) game.playSound(name);
+    }
+
     public int energy() { return energy; }
     public BossFeedback feedback() { return feedback; }
     public void updatePresentation(float realDt) { feedback.update(realDt); }
@@ -70,6 +78,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     private void change(State state) {
         setState(state);
         elapsed = stateTime = 0;
+        strikeHeard = false;
         velocity.x = 0;
     }
 
@@ -112,6 +121,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
                 }
             }
             case NORMAL -> {
+                if (elapsed >= NORMAL_FRAME * 2) sweepSound(NORMAL_SOUND);
                 if (elapsed >= NORMAL_DURATION) {
                     // Commit only in resolveCombat, after this frame's sword hit can cancel it.
                     completedStrike = true;
@@ -119,7 +129,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
             }
             case HURT -> { if (elapsed >= HURT_DURATION) change(State.WARNING); }
             case WARNING -> { if (elapsed >= WARNING_DURATION) change(State.COUNTER); }
-            case COUNTER -> { if (elapsed >= COUNTER_DURATION) completedStrike = true; }
+            case COUNTER -> { sweepSound(COUNTER_SOUND); if (elapsed >= COUNTER_DURATION) completedStrike = true; }
             case RECOVERY, COUNTER_RECOVERY -> { if (elapsed >= RECOVERY_DURATION) change(State.WALK); }
             default -> { }
         }
