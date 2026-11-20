@@ -14,8 +14,8 @@ no room, a required field is empty, an element id is unknown, a Tiled type in a 
 room where an element is first met does not list it under **Introduces**, a card introduces something already met,
 or develops or combines something not met yet, or a non-lesson room introduces more than two elements without an
 **Overload reason** that cites an issue. For D105 it also fails when an element has no **Beat kind**, a room outside the
-exempt roles has fewer than 3 beats, fewer than 2 distinct elements or more than 4.0 s per beat (unless it is one of
-the rooms shipped below D105, on the test's shrink-only list, with **Below density** citing its rework issue), has
+exempt roles has fewer than 3 beats, fewer than 2 distinct elements or more than 4.0 s per beat (no shipped room is
+exempt: #500 reworked the rooms that were below D105), has
 fewer than 1.5 s per beat without an **Overload reason** that cites an issue (`#` and digits), lists a beat that is a
 pickup, has no map object (or, for a skill, geometry) of its own at that x, is out of rising-x order, or lies within
 96 px of a listed beat of the same element; gives a **Beat time** that is not the first time of **Mastered route** or
@@ -47,7 +47,7 @@ by a two-column table. Keys, in this order:
 | Beats | yes, outside `lesson`, `boss`, `rest`, `reward` | the required route's beats in rising map x, `id@x`, comma-separated: one placed instance of an element whose Beat kind counts, `x` inside that object's span (its box, a polyline's points, a horizontal patrol), each object backing one beat; a `skill` beat names its geometry's x; two instances of one element within 96 px are one beat, listed once (D105) |
 | Beat time | with Beats | `seconds (`TestClass`)`: the zero-charge mastered required time, the first time `Mastered route` states, pinned within 0.1 s in that test as a float literal (D105) |
 | First meeting | when a room outside `lesson` and `boss` introduces an element that counts as a beat | one entry per such element, separated by `;`: `id: beat k`, then `, retry R s` when it is not among the first two beats, then `pocket at x N` (the hero's centre at the safe spot just before that beat) and the test method that pins it in backticks (`FirstMeetingPocketTest.method`, whose body names the room, the element id and N); no `;` inside an entry (D105) |
-| Below density | only on the rooms shipped below D105 | the measured beats, time and pace, and the issue that reworks the room (D105) |
+| Below density | none: no shipped room is exempt since #500 (the gate rejects the field) | the measured beats, time and pace, and the issue that reworks the room (D105) |
 | Optional | no | optional routes and rewards |
 | D26 | no | how every mandatory exit stays reachable |
 | Hints | no | hint zones, if any |
@@ -642,30 +642,30 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | --- | --- |
 | Level | forest-2, play order 3, room 1 of 5 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
-| Purpose | New ground and a new enemy before any climbing: stomp a YellowMob, cross two plain pits (a fall is a retry), pass the Bats, jump the Bomb, and see the coins. The only new thing is the YellowMob. |
+| Purpose | New ground and a new enemy before any climbing: a YellowMob charges, is stopped by a low earth block and is stomped from it; then cross two plain pits (a fall is a retry) past two Bats and jump the Bomb, and see the coins. The only new thing is the YellowMob. |
 | Introduces | yellowmob |
 | Develops | touch-explosive: the Bomb (a reskin of the stump) stands 48 px past the second pit (x 560-608), so the hero lands from that jump straight into the Bomb's range, and backing away from its wind-up leaves only a 24 px pocket (x 608-632) at the pit's edge, between the pit and the blast |
 | Combines | - |
 | Repeats | bat-enemy, coin |
-| Mastered route | 6.80 s required, 10.40 s all coins and 6.12 s on a collection return (`RoomReplayTest`, three identical attempts), re-measured with the two pits of [#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486) with the same result as with the sand; target about 20 s, coins about 30 s |
+| Mastered route | 6.83 s required (jump the cover onto the YellowMob, the stomp, up the stair past Bat 41, over pit 2 past Bat 43, jump the Bomb), 12.05 s all coins (the route waits on the ground while Bat 41 is within 40 px, which the coins at x 336 and 368 under and beside its column need) and 6.15 s on a collection return (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
 | First learning | not measured (#135) |
-| Retry cost | the whole room, about 7 s (the required route, 6.80 s, re-measured with the pits), for a death at the Bomb at its end or a fall into a pit (was about 16 s for the undivided room) |
-| Beats | yellowmob@192, bat-enemy@272, bat-enemy@512, touch-explosive@656 |
-| Beat time | 6.80 (`RoomReplayTest`) |
-| First meeting | yellowmob: beat 1 (`RoomReplayTest`), its patrol (x 128-256) passes 16 px from the first Bat's column (x 272), under the 96 px clearance, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
-| Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
-| D26 | no one-shot support; the Bomb is the only one-shot object and the exit stays reachable after it blows; a fall into a pit (the level's Deadline, y 384) is a retry into the room, never a soft-lock; the required route crosses the pits by the stair and by a 48 px jump (`RoomReplayTest`, which fails if the route falls) |
+| Retry cost | the whole room, about 7 s (the required route, 6.83 s, `RoomReplayTest`), for a death at the Bomb at its end or a fall into pit 2; (was about 16 s for the undivided room) |
+| Beats | yellowmob@192, bat-enemy@352, bat-enemy@512, touch-explosive@656 |
+| Beat time | 6.83 (`RoomReplayTest`) |
+| First meeting | yellowmob: beat 1, pocket at x 100, on the floor behind the 32 px cover (x 112-144) inside its range (hero centre x 96-192): it wakes, runs at him and is stopped by the cover, 112 px from Bat 41's column (x 352). Both Bats are known (met since forest-1-route) and in view from the pocket (the room is barely wider than a screen), neither can reach it (`FirstMeetingPocketTest.forestEntryTheYellowMob`, acting `RUN`) |
+| Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the coins at x 336 (floor) and x 368 (platform 3) lie under and beside Bat 41's column, so taking them means waiting under the Bat (all coins 12.05 s, `RoomReplayTest`); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
+| D26 | no one-shot support; the coins near Bat 41 cost a wait under the Bat but no coin is required; the Bomb is the only one-shot object and the exit stays reachable after it blows; a fall into a pit (the level's Deadline, y 384) is a retry into the room, never a soft-lock; the required route crosses the pits by the stair and by a 48 px jump (`RoomReplayTest`, which fails if the route falls) |
 | Hints | none (the D24 controls zone is removed by #376: forest-0 teaches the controls) |
 | Landmark | the stair of three platforms (x 240-400) over the first pit, climbing to the coin at its top |
-| Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736 |
-| Decisions | D72, D96 |
+| Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736. Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (batch 4, 2026-11-20): the step became a 32 px cover (x 112-144), the mob came down behind it, Bat 41 moved 80 px right, the twig moved to the pit lip |
+| Decisions | D72, D96, D105 |
 
 Quicksand leaves the Forest ([#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486)). Each former pool becomes a
 plain pit, as in `forest-0`: the floor block stops and restarts (x 0-240, x 320-560, x 608-736) and the level's `Deadline`
 (id 125, y 384) kills a fall. Pit 1 is x 240-320 (80 px) under the stair; pit 2 is x 560-608 (48 px) under the end of the
 second Bat's floor-level patrol. A hero's run jump covers about 86 px, so pit 1 leaves 17 px of margin and pit 2 49 px
-(the hitbox is 11 px wide). The first YellowMob chases only while the hero's centre is within x 128-208, so its hitbox ends
-below x 225, 15 px short of pit 1's edge (x 240); its patrol is unchanged. The Bat patrols, the Bomb, the YellowMob and the
+(the hitbox is 11 px wide). The first YellowMob chases only while the hero's centre is within x 96-192 (since #500), so its hitbox ends
+never travels right of its spawn (`offPos` 0), so its hitbox (x 198-218 at rest) ends at x 218, 22 px short of pit 1's edge (x 240). The Bat patrols, the Bomb, the YellowMob and the
 coins keep their places. No new element: a pit is plain `Collisions` plus the `Deadline`, both outside the registry.
 
 Split detail ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)). The free floor between the
@@ -673,8 +673,8 @@ Bomb's blast (x 632-696) and the second YellowMob (x 832, left patrol end x 752,
 narrow for this room's exit and right wall plus the next room's left wall and a 48 px safe entrance. The split is at
 **x 736**: `forest-entry` ends with its exit at x 704-720 (8 px clear of the blast) and a wall at x 720-736;
 `forest-walls` starts with a wall at x 736-752 and its entrance at x 752. To keep that entrance safe, the second
-YellowMob's left patrol is shortened from `offNeg` 5 to 1 (left end x 816, hitbox from x 822, 41 px from the hero's
-body); its right end and the climb are unchanged. The floor block x 608-1280 is cut at x 736 so each room owns its
+YellowMob's left patrol was shortened from `offNeg` 5 to 1 (left end x 816, hitbox from x 822, 41 px from the hero's
+body); history: #500 moved that mob past the walls (x 1040) and the note no longer applies. The floor block x 608-1280 is cut at x 736 so each room owns its
 own floor.
 
 ### forest-walls
@@ -683,23 +683,23 @@ own floor.
 | --- | --- |
 | Level | forest-2, play order 3, room 2 of 5 (x 736-1280, 544 px, 0.85 screen) |
 | Role | challenge |
-| Purpose | Climb two tall walls by wall jumps, starting where a YellowMob walks, take the Bat ingredient lying on the second wall's top, then pass a RedMob to the exit. |
+| Purpose | Climb two tall walls by wall jumps, met alone on open floor; take the Bat ingredient lying on the second wall's top; then a YellowMob guards the second wall's foot and a RedMob the exit. |
 | Introduces | wall-jump, ingredient |
 | Develops | - |
-| Combines | yellowmob + wall-jump: the YellowMob patrols up to the foot of the first wall, so the climb starts only after it is stomped or timed past |
+| Combines | - |
 | Repeats | yellowmob, redmob |
-| Mastered route | 8.80 s required, 7.32 s on a collection return with its mobs already beaten, Bat included: the Bat lies on the walking route, so it costs no time (`RoomReplayTest`, three identical attempts); target about 20 s |
+| Mastered route | 7.45 s required (wall-jump both walls, sword the YellowMob and the RedMob), 7.32 s on a collection return with its mobs already beaten, Bat included: the Bat lies on the walking route, so it costs no time (`RoomReplayTest`, three identical attempts); target about 20 s |
 | First learning | not measured (#135) |
-| Retry cost | the whole room, about 9 s, for a death at the RedMob by the exit |
-| Beats | yellowmob@832, wall-jump@912, redmob@1136 |
-| Beat time | 8.80 (`RoomReplayTest`) |
-| First meeting | wall-jump: beat 2 (`RoomReplayTest`), the first wall (x 912) stands inside the YellowMob's patrol (x 816-944), so it is met combined, not alone, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Retry cost | the whole room, 7.45 s (the required route, `RoomReplayTest`), for a death at the RedMob by the exit |
+| Beats | wall-jump@912, yellowmob@1040, redmob@1136 |
+| Beat time | 7.45 (`RoomReplayTest`) |
+| First meeting | wall-jump: beat 1, pocket at x 880, on the floor 26 px short of the first wall (x 912-928, 112 px tall), the whole wall in view and nothing lethal stirring, 112 px from the YellowMob's span: a skill's pocket, D109 (`FirstMeetingPocketTest.forestWallsTheWallJump`) |
 | Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), so a hero who walks on after the climb passes through it; moved here from `forest-entry` by #417 |
-| D26 | no one-shot object; both walls are climbable from every state |
+| D26 | no one-shot object; both walls are climbable from every state; a hero who drops off the second wall lands out of the YellowMob's range and can climb back; the RedMob's range no longer meets the YellowMob's |
 | Hints | none |
 | Landmark | the two tall walls (x 912 and x 992) |
-| Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat ingredient from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417) |
-| Decisions | D72, D96 |
+| Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat ingredient from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417). Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (batch 4, 2026-11-20): the YellowMob moved from before the walls to the foot of the second one (x 1040), so the wall jump is met alone; the RedMob wakes from x 1104 |
+| Decisions | D72, D96, D105, D109 |
 
 ### forest-fissure
 
@@ -753,18 +753,18 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 | Introduces | thorn-vine, false-honey-fungus |
 | Develops | touch-explosive: the exploding root, with fireballs now in hand, makes the from-afar choice cost ammunition; crumble-support: the falling platform holds an optional ascent that a bad landing spends; honey-fungus: its lethal look-alike twin |
 | Combines | - |
-| Repeats | redmob, bat-enemy, falling-stone, coin, ingredient |
-| Mastered route | 9.48 s (`Forest2TrapsTest`, `RoomReplayTest`); target about 20 s |
+| Repeats | redmob, falling-stone, coin, ingredient |
+| Mastered route | 9.48 s (`Forest2TrapsTest`, `RoomReplayTest`), unchanged with Bat 65 gone; target about 20 s |
 | First learning | not measured (#135) |
-| Retry cost | about 9.5 s for a death at the falling stone |
-| Beats | redmob@1472, false-honey-fungus@1672, bat-enemy@1760, thorn-vine@1896, touch-explosive@2064, falling-stone@2224 |
+| Retry cost | about 9.5 s for a death at the falling stone; a death at the vine 5.93 s at the soonest (a walker held 36 frames at the entrance, `Forest2TrapsTest.theCheapestDeathAtTheVineOnTheMasteredPaceIsPinned`): the mastered pace, held up to 35 frames, passes |
+| Beats | redmob@1472, false-honey-fungus@1672, thorn-vine@1896, touch-explosive@2064, falling-stone@2224 |
 | Beat time | 9.48 (`RoomReplayTest`) |
-| First meeting | false-honey-fungus: beat 2 (`RoomReplayTest`), 64 px from the Bat's column (x 1760), under the 96 px clearance, tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); thorn-vine: beat 4, its retry not measured, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| First meeting | false-honey-fungus: beat 2, pocket at x 1640, inside its trigger zone (from x 1608) and 26 px short of its cloud (x 1672-1696): it swells and bursts in front of him and is spent, a trip-and-stand pocket (D109), 136 px from the RedMob's span (`FirstMeetingPocketTest.forestCanopyTheFalseFungus`, acting `BURST`); thorn-vine: beat 3, retry 5.93 s (measured, hero hit, at most 6 s), pocket at x 1848, 20 px short of the tip's sweep, 144 px from the root: the vine is seen swinging toward him and back (`FirstMeetingPocketTest.forestCanopyTheThornVine`, acting `SWING_LEFT`) |
 | Optional | coins and the Mushroom on the ascent over the falling platform |
 | D26 | the spent platform closes only the optional ascent; the exit stays reachable |
 | Hints | none |
-| Status | D72 audit 2026-11-16: keep |
-| Decisions | D59, D63 |
+| Status | D72 audit 2026-11-16: keep. Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (batch 4, 2026-11-20): Bat 65 (x 1760) left the room, so the false honey fungus has its pocket and the vine is beat 3 instead of 4; the vine's `phase` went from 0 to 2.77 s so its cheapest death is 5.93 s, inside D105's 6 s (it was 6.45 s); the mastered route is unchanged at 9.48 s and the room left the first-meeting list |
+| Decisions | D59, D63, D105, D109 |
 
 ### forest-boss
 

@@ -48,7 +48,7 @@ class Forest2TrapsTest {
     // Authored geometry (docs/ROOMS.md, "forest-2 trap placement plan").
     /** The false honey fungus (D63) stands at x 1672: the mastered hero takes off here (body right edge 22 px short of its cloud) and clears it. */
     static final float FUNGUS_JUMP_X = 1621;
-    static final float VINE_X = 1896, ROOT_X = 2064, STONE_X = 2224, EXIT_X = 2320, ENTRANCE_X = 1344, BAT_X = 1760;
+    static final float VINE_X = 1896, ROOT_X = 2064, STONE_X = 2224, EXIT_X = 2320, ENTRANCE_X = 1344;
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TrapWarnings warnings = new TrapWarnings();
@@ -141,6 +141,9 @@ class Forest2TrapsTest {
 
     /** What the scripted hero does; the canopy's old part (RedMob at 1472) is the same for all. */
     private static final class Plan {
+        /** Frames the vine first lay wholly in the camera view, and the hero first came within its reach (-1 until then); filled by the run. */
+        int seenFrame = -1, fullFrame = -1, reachFrame = -1;
+        float minAngle = 0, maxAngle = 0;
         boolean jumpRoot = true;
         float rootJumpRight = ROOT_X - 30, startWaitSeconds = 0;
         int waitAtVine = 0, delayFrames = 0;
@@ -168,6 +171,17 @@ class Forest2TrapsTest {
             if (action && (!actionWasDown || wasMechanism != mechanism)) pressed.add(Input.Keys.K);
             wasMechanism = mechanism; actionWasDown = action;
             frame(l);
+            if (plan.reachFrame < 0) {
+                ThornVine v = vine(l);
+                float reachX = v.anchorX() - (v.length() + 4);
+                var camera = p.roomCameraTarget();
+                var size = game.logicalResolution();
+                Rectangle view = new Rectangle(camera.x, camera.y, size.x, size.y), sweep = new Rectangle(v.anchorX() - (v.length() + 4), v.anchorY(), 2 * (v.length() + 4), v.length());
+                if (plan.seenFrame < 0 && view.overlaps(sweep)) plan.seenFrame = f;
+                if (plan.fullFrame < 0 && view.contains(sweep)) plan.fullFrame = f;
+                if (plan.seenFrame >= 0) { plan.minAngle = Math.min(plan.minAngle, v.angle()); plan.maxAngle = Math.max(plan.maxAngle, v.angle()); }
+                if (bodyRight(l) >= reachX) plan.reachFrame = f;
+            }
             if (dead(l)) return new Run(f + 1, false, true, p.position.x);
             if (l.atRoomExit() || p.getState() == Player.State.DISAPPEARING) return new Run(f + 1, true, false, p.position.x);
         }
@@ -207,16 +221,14 @@ class Forest2TrapsTest {
         Rectangle blast = root(l).blastBox();
         float envLeft = ROOT_X - 64, envRight = ROOT_X + 16 + 64;
         Rectangle zone = stone(l).zone();
-        float batReachEnd = BAT_X + 24;
-        assertTrue(vineLeft - batReachEnd >= 48, "Bat reach to vine swept area");
         assertTrue(envLeft - vineRight >= 48, "vine swept area to the root's jump envelope");
         assertTrue(zone.x - envRight >= 48, "root envelope to the stone zone");
         assertTrue(EXIT_X - (zone.x + zone.width) >= 48, "stone zone to the RoomExit");
         assertTrue(EXIT_X - (blast.x + blast.width) >= 48, "root blast square to the RoomExit");
         assertTrue(blast.x - ENTRANCE_X >= 48);
-        // No enemy stands or patrols between the Bat and the exit; the only walking enemies of the room are before the Bat.
-        for (var o : l.objects) if (o instanceof Enemy<?> e && e.getX() > 1500 && e.getX() < 1790)
-            assertTrue(e.getX() < vineLeft - 48, "a flying enemy only at the Bat's x");
+        // #500 (D105): Bat 65 left the room, so no enemy stands or patrols between the RedMob's span and the exit.
+        for (var o : l.objects) if (o instanceof Enemy<?> e && e.getX() > 1540)
+            fail("no enemy stands past the RedMob's span: " + e.getClass().getSimpleName() + " at x " + e.getX());
     }
 
     @Test void theBossRoomWasOnlyTranslatedBy448() {
@@ -266,15 +278,74 @@ class Forest2TrapsTest {
         assertTrue(s <= 20f);
     }
 
-    @Test void theMasteredRouteArrivesAtTheVineWithSlackAndABlindWalkerThatIsAboutOneSecondLateIsKilled() {
-        // Measured with the walker held at the entrance first (0.1 s steps): 0 to 0.8 s late passes, 0.9 to 1.3 s late dies.
-        for (int delay : new int[]{0, 18, 48}) {
+    @Test void theMasteredRouteArrivesAtTheVineWithSlackAndABlindWalkerThatIsHalfASecondLateIsKilled() {
+        // Measured with the walker held at the entrance first (1 frame steps, vine phase 2.77 s since #500): 0 to 35 frames (0.6 s) late passes, 36 frames and more die.
+        for (int delay : new int[]{0, 18, 35}) {
             Level l = level(); Plan p = new Plan(); p.delayFrames = delay;
             assertTrue(run(l, p, 60 * 40, Float.MAX_VALUE).exited(), "delay " + delay);
         }
-        Level l = level(); Plan p = new Plan(); p.delayFrames = 66;
-        assertTrue(run(l, p, 60 * 40, Float.MAX_VALUE).died(), "a blind walker 1.1 s late meets the lethal vine");
+        Level l = level(); Plan p = new Plan(); p.delayFrames = 40;
+        assertTrue(run(l, p, 60 * 40, Float.MAX_VALUE).died(), "a blind walker 0.7 s late meets the lethal vine");
     }
+
+    /**
+     * #500 (D105): the cheapest death at the vine. A walker held back 0 to 120 frames at the entrance walks the mastered route;
+     * the earliest of those hit by the vine dies at the pinned time, hit and not fallen. The mastered pace itself passes.
+     */
+    @Test void theCheapestDeathAtTheVineOnTheMasteredPaceIsPinned() {
+        int earliest = Integer.MAX_VALUE, firstDelay = -1;
+        for (int delay = 0; delay <= 120; delay++) {
+            Level l = level(); Plan p = new Plan(); p.delayFrames = delay;
+            Run r = run(l, p, 60 * 40, Float.MAX_VALUE);
+            if (!r.died()) continue;
+            assertTrue(l.player.isGotHit(), "hit by the vine, not fallen (delay " + delay + ")");
+            if (r.frames() < earliest) { earliest = r.frames(); firstDelay = delay; }
+        }
+        float seconds = earliest * STEP;
+        System.out.printf(java.util.Locale.ROOT, "forest-canopy cheapest death at the vine: %.2f s (walker held %d frames)%n", seconds, firstDelay);
+        assertEquals(VINE_DEATH_S, seconds, 0.1f, "the measured retry of the vine's first meeting");
+        assertTrue(seconds <= 6f, "a first meeting met as beat 3 has a retry of at most 6 s (D105)");
+    }
+    /**
+     * #500 (D105, D84): the vine is seen acting before the mastered hero can reach it: from the frame any part of its sweep lies in the camera
+     * view to the frame the hero's body reaches its swept area, it is in view for at least one full period and swings both ways to
+     * (nearly) its full amplitude, so a first-timer sees it swing before he can be hit.
+     */
+    @Test void theVineIsSeenSwingingForAFullPeriodBeforeTheMasteredHeroCanReachIt() {
+        Level l = level(); Plan p = new Plan();
+        run(l, p, 60 * 40, Float.MAX_VALUE);
+        assertTrue(p.seenFrame >= 0 && p.reachFrame > p.seenFrame, "the vine is in view before the hero reaches it: " + p.seenFrame + " / " + p.reachFrame);
+        float seconds = (p.reachFrame - p.seenFrame) * STEP, amplitude = (float) Math.toRadians(50);
+        System.out.printf(java.util.Locale.ROOT, "forest-canopy vine in view %.2f s before the mastered hero reaches it%n", seconds);
+        assertTrue(seconds >= vine(l).period(), "in view for at least one period (" + vine(l).period() + " s): " + seconds);
+        float whole = (p.reachFrame - p.fullFrame) * STEP;
+        System.out.printf(java.util.Locale.ROOT, "forest-canopy vine's whole sweep in view %.2f s before reach%n", whole);
+        assertEquals(WHOLE_SWEEP_SEEN_S, whole, 0.1f, "measured: the whole sweep is in view for about half a period, not a full one (reported, not loosened)");
+        assertTrue(p.minAngle < -0.9f * amplitude && p.maxAngle > 0.9f * amplitude, "seen swinging both ways: " + p.minAngle + " / " + p.maxAngle);
+    }
+
+    /** How long the vine's whole sweep is in the camera view before the mastered hero reaches it (the first part of it is in view for 4.9 s). */
+    static final float WHOLE_SWEEP_SEEN_S = 2.27f;
+
+    /**
+     * The card's retry figures (ROOM_CARDS.md, `forest-canopy`: the thorn vine's first meeting and the retry cost) are the pinned death time,
+     * so a stale card number fails.
+     */
+    @Test void theCardsVineRetryFiguresAreThePinnedValue() throws Exception {
+        java.nio.file.Path root = java.nio.file.Paths.get("").toAbsolutePath();
+        while (root != null && !java.nio.file.Files.isRegularFile(root.resolve("docs/ROOM_CARDS.md"))) root = root.getParent();
+        assertNotNull(root);
+        String text = java.nio.file.Files.readString(root.resolve("docs/ROOM_CARDS.md"));
+        String card = text.substring(text.indexOf("### forest-canopy"), text.indexOf("### forest-boss"));
+        var m1 = java.util.regex.Pattern.compile("thorn-vine: beat 3, retry (\\d+\\.\\d+) s").matcher(card);
+        var m2 = java.util.regex.Pattern.compile("death at the vine (\\d+\\.\\d+) s at the soonest").matcher(card);
+        assertTrue(m1.find() && m2.find(), "the card states the vine's retry twice");
+        assertEquals(VINE_DEATH_S, Float.parseFloat(m1.group(1)), 0.1f, "First meeting");
+        assertEquals(VINE_DEATH_S, Float.parseFloat(m2.group(1)), 0.1f, "Retry cost");
+    }
+
+    /** The measured time of the cheapest death at the vine, in seconds (phase 2.77 s, #500): at most D105's 6 s for a first meeting met as beat 3. */
+    static final float VINE_DEATH_S = 5.93f;
 
     // ---- T1: the vine ----
 

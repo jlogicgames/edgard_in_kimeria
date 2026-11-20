@@ -41,9 +41,12 @@ Work from the repository root. The substance is in the docs; this skill is the o
    `FirstMeetingPocketTest` method (hero there, never hit, the element seen acting). An enemy that waits idle until the
    hero is in reach shows nothing from a pocket: stop it behind a 32 px solid log (it cannot climb a block; the sword
    would reach across a 16 px one) so it charges and is stopped inside its range, as in `forest-1-mob`. A touch trap
-   shows nothing from a pocket either (the stump, the Bomb and the thorns have no pocket: meet them among known beats),
-   with one exception: a touch trap whose trigger lies **outside** its lethal band (the deadfall's vine, D88) has a
-   trip-and-stand pocket on the trigger, the hero tripping it and standing short of the band, acting signal `SWING`.
+   shows nothing from a pocket unless its trigger lies **outside** its lethal band (D109): then the trigger reaches at least 16 px,
+   a body width, past the band and the pocket stands at least that clear of it (`FirstMeetingPocketTest.tripAndStand`). The deadfall's vine
+   (D88) and the false honey fungus's zone (D63) use it today, and the thorn root and tuft meet it too; the exploding stump and root and the
+   Bomb, whose trigger lies inside their blast, do not and are met among known beats. Such a trap has a trip-and-stand pocket on the trigger, the hero tripping it and standing short of the band,
+   acting signal `SWING` (deadfall) or `BURST` (fungus, D109). A skill (a wall jump) never acts: its pocket shows the whole
+   first obstacle in the camera view while no enemy, lethal hazard or trap of the room changes state, pinned by `skillPocket` (D109).
    Clearance counts what can kill (D107): a crumble support over a floor is not a lethal neighbour, only one over a pit
    is, and an object of the first-met skill's own geometry is not its own neighbour.
 6. **Cost:** mastered-route target about 20 s, first learning about 60 s (hypotheses, D19), and the retry cost of the

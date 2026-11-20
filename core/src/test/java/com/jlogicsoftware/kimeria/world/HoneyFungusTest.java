@@ -32,8 +32,8 @@ class HoneyFungusTest {
     private static final int SETTLE_FRAMES = 3, SECONDS_FRAMES = 60, LONG_WAIT_FRAMES = 60 * 6;
     /** forest-0 (room 0 and room 2) and forest-2 (forest-canopy, room 3 since #366) as built: footprint x, zone sides. */
     private static final float LEVER_X = 150, LEVER_ZONE = 40, WALL_X = 1804, WALL_ZONE_LEFT = 24, WALL_ZONE_RIGHT = 48, CANOPY_X = 1672;
-    /** The nearest other hazards in forest-canopy, from the map: the RedMob at 1472 patrols to 1472 + 16 + 48; the bat at 1760 hurts from 1752; the vine at 1896. */
-    private static final float BRANCH_ZONE_RIGHT = 1776, CANOPY_MOB_PATROL_RIGHT = 1536, CANOPY_BAT_LEFT = 1752, CANOPY_VINE_X = 1896;
+    /** The nearest other hazards in forest-canopy, from the map: the RedMob at 1472 patrols to 1472 + 16 + 48; the vine at 1896 (Bat 65 left the room under #500, D105). */
+    private static final float BRANCH_ZONE_RIGHT = 1776, CANOPY_MOB_PATROL_RIGHT = 1536, CANOPY_VINE_X = 1896;
     private static final float CANOPY_START_RIGHT = 1625, CANOPY_PASSED_LEFT = 1705, NO_JUMP_GAP = -1000;
     private static final int CANOPY_ROOM = 3; // after entry, walls and fissure (#366)
     private static final float CANOPY_ENTRANCE_X = 1344;
@@ -376,7 +376,6 @@ class HoneyFungusTest {
         Rectangle cloud = f.cloudBounds();
         assertEquals(FLOOR, cloud.y + cloud.height, 0f);
         assertTrue(cloud.x - CANOPY_MOB_PATROL_RIGHT >= FungusTrap.CLEARANCE, "the RedMob's patrol is 48 px or more from the cloud");
-        assertTrue(CANOPY_BAT_LEFT - (cloud.x + cloud.width) >= FungusTrap.CLEARANCE, "the bat is 48 px or more from the cloud");
         assertTrue(CANOPY_VINE_X - (cloud.x + cloud.width) >= FungusTrap.CLEARANCE, "so is the D59 stretch, which starts at the vine");
         Rectangle entrance = new Rectangle(CANOPY_ENTRANCE_X + 18, 272 + 26, BODY_W, BODY_H);
         assertTrue(cloud.x - (entrance.x + entrance.width) >= FungusTrap.CLEARANCE);
