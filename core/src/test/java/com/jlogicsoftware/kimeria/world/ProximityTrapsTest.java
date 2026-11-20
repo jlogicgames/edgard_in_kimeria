@@ -19,6 +19,7 @@ import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
+import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +49,7 @@ class ProximityTrapsTest {
         @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
         @Override public BitmapFont font(int size) { return null; }
     };
+    private final java.util.List<String> sounds = new java.util.ArrayList<>();
     private final GameContext game = (GameContext) Proxy.newProxyInstance(
         GameContext.class.getClassLoader(), new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
             case "logicalResolution" -> new Vector2(640, 360);
@@ -55,7 +57,8 @@ class ProximityTrapsTest {
             case "gamepad" -> pad;
             case "touch" -> touch;
             case "language" -> Language.ENGLISH;
-            case "isGameStarted" -> true;
+            case "isGameStarted", "playSounds" -> true;
+            case "playSound" -> { sounds.add((String) args[0]); yield null; }
             case "artifacts" -> artifacts;
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
@@ -323,6 +326,17 @@ class ProximityTrapsTest {
         assertTrue(alive(level));
         assertEquals(0, root(level).frameIndex());
         assertEquals(ThornTrap.Phase.DORMANT, root(fresh()).phase(), "Restart Level builds the room again");
+        sounds.clear();
+        int specks = level.fx().grit().count();
+        settle(level, 2);
+        retry(level);
+        assertFalse(sounds.contains("thorn_spring"), "a reset is not a spring");
+        assertEquals(0, level.fx().grit().count() - specks, "no specks from a reset");
+        sounds.clear();
+        Level again = fresh();
+        settle(again, 2);
+        assertTrue(sounds.isEmpty(), "room entry plays no spring");
+        assertEquals(0, again.fx().grit().count(), "room entry throws no specks");
     }
 
     // -- tuft behaviour --
@@ -372,6 +386,30 @@ class ProximityTrapsTest {
         place(level, 225f);
         frame(level);
         assertEquals(ThornTrap.Phase.WARNING, root(level).phase());
+    }
+
+    // -- the spring cue (#446, D93) --
+
+    @Test void eachThornTrapSpringsWithOneSharedSoundInTheFrameItTurnsLethalAndTheRootThrowsSpecks() {
+        for (ThornTrap.Kind kind : ThornTrap.Kind.values()) {
+            Level level = fresh();
+            ThornTrap t = trap(level, kind);
+            sounds.clear();
+            int specksBefore = level.fx().grit().count();
+            place(level, kind == ThornTrap.Kind.ROOT ? ROOT_X - 70 : TUFT_X - 70);
+            int frames = 0;
+            while (!t.isLethal() && frames++ < 60 * 5) {
+                assertTrue(sounds.isEmpty(), kind + ": silent while it is only warning, frame " + frames);
+                assertFalse(t.isLethal());
+                frame(level);
+            }
+            assertTrue(t.isLethal());
+            assertEquals(java.util.List.of("thorn_spring"), sounds, kind + ": one cue, in the frame it turns lethal");
+            int specks = level.fx().grit().count() - specksBefore;
+            assertEquals(kind == ThornTrap.Kind.ROOT ? EnvironmentFx.THORN_SPECKS : 0, specks, kind + ": only the root has a mound to throw specks from");
+            settle(level, 60);
+            assertEquals(1, sounds.size(), kind + ": never again while it stays up");
+        }
     }
 
     // -- the hero can always pass: jumping, or running through, or waiting --

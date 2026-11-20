@@ -160,7 +160,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-0-ladder` with `HINT_LADDER_ROOT` |
 | Load checks | `ThornTrap.openFloorProblem` (jump envelope, floor, headroom); mirrored in `check_tiled_links.py` |
 | Tests | `ProximityTrapsTest`, `LadderLessonTest` |
-| Art and sound | `trap-thorn-root` 16×24: hidden (tip and barbs, #359), peek1, peek2, rising, up; no sound and no particles when it springs. Consequence (D93): none yet ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446)) |
+| Art and sound | `trap-thorn-root` 16×24: hidden (tip and barbs, #359), peek1, peek2, rising, up. Consequence (D93): `thorn_spring` in the frame it turns lethal (`rising`), once, shared with the tuft, plus three soil specks (`KIND_GRIT`) from its mound |
 | Decision | D44, D48 |
 
 ### Bristling thorn tuft (`ThornTuft`)
@@ -181,7 +181,7 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Taught in | `forest-1-spider`, on open floor: the tuft of `forest-1-traps` left with the split of that room (#500, D110), so the spider room is now the first room in play order that shows it |
 | Load checks | as the thorn root |
 | Tests | `ProximityTrapsTest`, `Forest1SpiderTest` (the tuft, #500) |
-| Art and sound | `trap-thorn-tuft` 16×16: calm, bristle, spiked; no sound when it bristles into `spiked`. Consequence (D93): none yet ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446)) |
+| Art and sound | `trap-thorn-tuft` 16×16: calm, bristle, spiked. Consequence (D93): `thorn_spring` in the frame it turns `spiked`, once, the same sound as the thorn root (no specks: it has no mound) |
 | Decision | D44, D58 |
 
 ### Falling branch (`FallingBranch`)
