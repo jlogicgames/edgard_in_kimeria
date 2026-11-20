@@ -290,7 +290,7 @@ resolved at load; `AllocationBudgetTest.forest1ParallaxLayersAndForeground`).
 `tools/parallax_game.py` installs the sketch into `assets/` and the three forest maps (idempotent, tested by `test_parallax_game.py`;
 it also retiles each play layer: no seam where two rooms' floors meet, soil instead of the old rope over the room-edge walls, D112);
 `python3 tools/parallax_mock.py --check --game` checks the foreground of every room that has one against the map's objects
-(`validateParallax`). Every forest map has the layers; every room of forest-0 and forest-2 has a foreground.
+(`validateParallax`). Every forest map has the layers; every room of the three forest maps has a foreground.
 
 Package layout:
 

@@ -53,7 +53,19 @@ EDGE_COLUMNS = 2                                  # spare columns past what a la
 ESCALATORS_FOREGROUND = tuple(p for p in pm.FOREGROUND if p[1] < 600)
 TRAPS_FOREGROUND = (tuple((name, x - 640, top) for name, x, top in pm.FOREGROUND if 600 <= x < 1280)
                     + tuple((name, x - 1008, top) for name, x, top in pm.FOREGROUND if name.startswith('edge-')))
-FOREST_1 = {'forest-1-escalators': ESCALATORS_FOREGROUND, 'forest-1-traps': TRAPS_FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND}
+# the other nine rooms of forest-1 (2026-11-20, #236): placed by the same greedy rule as forest-0 and forest-2 (each piece kept only where rule B and
+# the cover time still pass), preferring the big soft pieces (curtains, tall reeds) over floor clumps (broad-leaf clumps only: the pointed fern and mixed clumps read as thorns), the corner bough moved or left out from room to room, and the spider's roots kept off the moon at its first camera
+FOREST_1 = {'forest-1-escalators': ESCALATORS_FOREGROUND, 'forest-1-traps': TRAPS_FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND,
+    'forest-1-lever': (('hang-leaves-l', -80, 0), ('vine-curtain', 56, 0), ('clump-leaves', 464, 320)),
+    'forest-1-spider': (('hang-leaves-l', -16, 0), ('roots-curtain', 96, 0), ('vine-curtain', 680, 0), ('clump-leaves', 264, 320)),
+    'forest-1-bramble': (('roots-curtain', 72, 0), ('rise-reeds', 448, 144), ('clump-leaves', 300, 320)),
+    'forest-1-climb': (('hang-leaves-l', -64, 0), ('vine-curtain', 544, 0), ('clump-leaves', 8, 320)),
+    'forest-1-route': (('roots-curtain', 16, 0), ('clump-leaves', 560, 320), ('clump-grass', 720, 320)),
+    'forest-1-guard': (('hang-leaves-l', 0, 0), ('vine-curtain', 280, 0), ('roots-curtain', 648, 0), ('clump-leaves', -16, 320)),
+    'forest-1-hive': (('roots-curtain', -16, 0), ('rise-reeds', 248, 144), ('clump-leaves', 400, 320)),
+    'forest-1-tree': (('hang-leaves-l', -64, 0), ('roots-curtain', 40, 0), ('rise-reeds', 480, 144), ('clump-leaves', -16, 320)),
+    'forest-1-deadfall': (('vine-curtain', 120, 0), ('rise-reeds', 384, 144), ('clump-leaves', -16, 320)),
+}
 # forest-0 and forest-2 (converted 2026-11-20, #236): every room has a foreground. The pieces were placed one by one, each kept only
 # where the room still passes rule B and the cover time (`parallax_mock.check_layer`) with everything placed before it: the corner
 # leaves, one curtain from the top (vine and roots in turn, the roots kept off the moon at the room's first and last camera), a tall

@@ -367,9 +367,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   the pixel art, third pass), never computed at run time (no shader, no render target). The background strips carry gradients and mist and may use as
   many colours as the dither needs. This needs registered categories in `tools/sprite_layouts.py` that `check_sprite_art.py` accepts
   ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
-- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** forest-1's other rooms' foreground (forest-1 has a
-  group only in `forest-1-escalators`, `forest-1-traps` and `forest-1-mob`; every room of forest-0 and forest-2 has one, D112);
-  `check_contrast.py` now composites what the game draws behind a sprite (the flat colour, the scenery layers at every steady camera x
+- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** `check_contrast.py` now composites what the game draws behind a sprite (the flat colour, the scenery layers at every steady camera x
   where the placement is on screen, drift phases of the clouds, then the play layer), and over that real background every sprite now passes the
   tiers; the decor rule is now relative to the composited background (D108, author decision 2026-11-20: no absolute ink floor). A monster
   body is measured only where it can lie (D108: along its monster's range or route, dropped to the floor below), and the remains and the bush
