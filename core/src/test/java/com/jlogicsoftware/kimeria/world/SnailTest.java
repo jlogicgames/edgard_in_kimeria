@@ -242,6 +242,98 @@ class SnailTest {
         assertTrue(alive(level), "the fireball wins the tie");
     }
 
+    private void carryTheStone(Level level) {
+        place(level, 108);
+        harness.held.add(Input.Keys.W); frame(level);
+        harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level);
+        harness.held.clear(); frame(level);
+        assertNotNull(level.player.carriedObject(), "picked up the stone");
+    }
+
+    /**
+     * #505: on a shared floor the gob flies 7 px above the floor line ({@link Snail#GOB_HEIGHT}) and a stone leaves the hero's hands
+     * above that band (box y 294..306 against the band's 311..315), so on the frame the gob arrives no stone is in its way, whatever the
+     * frame order: this pins the geometry (true with or without the first-step rule). The tie is real from a ledge, below.
+     */
+    @Test void onASharedFloorAStoneThrownWhenTheGobArrivesIsAboveItsBand() {
+        Level probe = level();
+        carryTheStone(probe);
+        Snail p = spat(probe);
+        place(probe, AHEAD);
+        int due = until(probe, () -> p.gobX() - Snail.GOB_CORE / 2 <= AHEAD, 60);
+        Level level = level();
+        carryTheStone(level);
+        Snail s = spat(level);
+        place(level, AHEAD);
+        for (int f = 1; f < due; f++) frame(level);
+        assertTrue(s.gobActive(), "the gob is in the air, its hit due on this frame");
+        var stone = level.player.carriedObject();
+        press(level, Input.Keys.L);
+        assertNull(level.player.carriedObject(), "the stone was thrown");
+        assertTrue(stone.bounds().y + stone.bounds().height < s.gobY() - Snail.GOB_CORE / 2, "above the gob's band");
+        assertTrue(s.gobActive(), "so the gob is not broken on this frame");
+        settle(level, 5);
+        assertFalse(alive(level), "and its hit lands");
+    }
+
+    /** Holds the snail {@code lift} px above the floor each frame (it settles back to the floor otherwise) until it spits. */
+    private void spitFromALedge(Level level, Snail s, float lift) {
+        float y = s.position.y;
+        for (int f = 0; f < 60 * 3 && !s.gobActive(); f++) { s.position.y = y - lift; frame(level); }
+        assertTrue(s.gobActive(), "it spat from the ledge");
+        assertEquals(FLOOR - lift - Snail.GOB_HEIGHT, s.gobY(), .01f, "the gob flies at the ledge's height");
+    }
+
+    /** The frame, counted from the spit, on which the gob reaches a hero who does nothing, with the snail {@code lift} px up. */
+    private int gobArrival(float lift) {
+        Level level = level();
+        Snail s = snail(level);
+        place(level, AHEAD);
+        spitFromALedge(level, s, lift);
+        int due = until(level, () -> s.gobX() - Snail.GOB_CORE / 2 <= AHEAD, 60);
+        frame(level); frame(level);
+        assertFalse(alive(level), "without a throw the hit lands (lift " + lift + ")");
+        return due;
+    }
+
+    /**
+     * #505: from a ledge 6 to 16 px up the gob flies at the stone's height, so a stone thrown on the frame the gob arrives breaks it
+     * on its release frame and the hero lives. Without {@code Level.stepNewThrows} the stone first moves a frame late and the hero dies.
+     */
+    @Test void aStoneThrownOnTheFrameTheGobArrivesFromALedgeWinsTheTie() {
+        for (float lift : new float[] {6, 8, 12, 16}) {
+            int due = gobArrival(lift);
+            Level level = level();
+            carryTheStone(level);
+            Snail s = snail(level);
+            place(level, AHEAD);
+            spitFromALedge(level, s, lift);
+            for (int f = 1; f < due; f++) frame(level);
+            assertTrue(s.gobActive(), "the gob is in the air, its hit due on this frame (lift " + lift + ")");
+            harness.sounds.clear();
+            press(level, Input.Keys.L);
+            assertFalse(s.gobActive(), "the stone's first step breaks the gob on its release frame (lift " + lift + ")");
+            assertTrue(harness.sounds.contains("snail_splat"));
+            settle(level, 10);
+            assertTrue(alive(level), "the stone wins the tie (lift " + lift + ")");
+        }
+    }
+
+    /** #505: the first step is one step, 220 px/s for one frame, taken on the release frame, and the next frame is another one. */
+    @Test void aThrownStoneNeverMovesTwiceInAFrame() {
+        Level level = level();
+        carryTheStone(level);
+        var stone = level.player.carriedObject();
+        place(level, 190, true);
+        frame(level);   // the stone follows the hero's hands
+        float held = stone.getX();
+        press(level, Input.Keys.L);
+        assertEquals(220 * STEP, stone.getX() - held, .01f, "one step on the release frame, not two and not none");
+        float x0 = stone.getX();
+        frame(level);
+        assertEquals(220 * STEP, stone.getX() - x0, .01f, "and one step on the next frame");
+    }
+
     @Test void aFireballBurnsTheGobAwayAndFliesOnToKillTheSnail() {
         Level level = level();
         Snail s = spat(level);

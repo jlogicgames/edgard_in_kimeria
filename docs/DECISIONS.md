@@ -3088,12 +3088,31 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   to join the object list a frame late, so on the frame a bite (or the snail's gob, D106) became due the ball had not moved, and on
   the next one the monster landed its hit first and the ball met a hero who could no longer fight. Now a ball cast this frame flies
   its first step on that frame (`Level.stepNewFireballs`, straight after the hero's update and before the boss's combat), so it
-  kills, burns a gob or lights a trap before the pending hit lands: the sword and the fireball win the tie. **Known gap, [#505](https://github.com/jlogicgames/edgard_in_kimeria/issues/505):** a thrown stone does not (`Carryable.release` only sets its velocity, so it first moves a frame late); no test shows a stone winning, and D102's mention of a stone stands until #505 settles it. Its second
+  kills, burns a gob or lights a trap before the pending hit lands: the sword and the fireball win the tie (and, since #505, a thrown stone: see the next update). Its second
   step is the next frame's, as before. A ball in flight when the hero cannot fight any more goes out like a burn-out, seen and
   heard (`fireballFx().fizzle`, the quiet fizzle sound, D93), no longer silently. The beetle needs no tie: its burst is
   immediate in its own update, before the hero can cast; a ball cast on the burst frame is never spawned (the hero is dead, nothing is
   spent), pinned by `BeetleTest.aCastOnTheBurstFrameSpawnsNoBallAndSpendsNoCharge`. Tests: `SpiderTest.aFireballCastOnTheFrameTheFangsArriveWinsTheSameFrameTie`,
   `SnailTest.aFireballCastOnTheFrameTheGobReachesTheHeroWinsTheTie`, `FireballEffectTest.aBallInFlightWhenTheHeroDiesFizzlesSeenAndHeard`.
+- **Update (#505, 2026-11-20): a thrown stone wins the same-frame tie too.** `Carryable.release` only set the stone's velocity, so a
+  stone thrown on the frame a bite was due first moved in the next frame's `updateWorld`, after the monster had updated and landed
+  the hit. The rule is the fireball's: a throw flies its first step on its release frame. Frame order before: `updateWorld` (the
+  monsters; the due bite lands on their next update) then `player.update` (release, velocity only) then the next frame's
+  `updateWorld`, where the monster hits first. After: `updateWorld`, `player.update` (release), `Level.stepNewThrows` (the stone's
+  first step, straight after `stepNewFireballs`), and the next frame's `updateWorld` is its second step; the stone was already
+  updated this frame as held, and `Carryable.firstStepPending` (set by a throw, cleared by any update or restore) lets only a throw
+  just released take the extra step, so nothing moves twice in a frame. The first step runs the whole `Carryable.update`: it breaks
+  a gob (`Breakable`) before the enemy test, crumbles bodies (D101), kills an enemy, lights a stump and knocks down a hive, as on any
+  step. **The tie is real for the spider, and for the snail when it stands above the hero's floor:** the gob flies 7 px above the
+  snail's floor (`Snail.GOB_HEIGHT`) and a stone leaves the hero's hands above that band, so on a shared floor the two never meet
+  on the release frame whatever the frame order (a stone breaks a gob at range, D106); but with the snail 6 to 16 px up (a one-tile
+  ledge is 16) the gob is at the stone's height and, before this change, the hero died with the stone a frame late. Tests:
+  `SpiderTest.aStoneThrownOnTheFrameTheFangsArriveWinsTheSameFrameTie`,
+  `SnailTest.aStoneThrownOnTheFrameTheGobArrivesFromALedgeWinsTheTie` (lifts 6, 8, 12, 16; fails without `stepNewThrows`),
+  `SnailTest.onASharedFloorAStoneThrownWhenTheGobArrivesIsAboveItsBand` (pins the shared-floor geometry),
+  `SnailTest.aThrownStoneNeverMovesTwiceInAFrame` (one step of 220 px/s on the release frame, one on the next), and
+  `AllocationBudgetTest.stoneThrowWithTheRealKeyPress` (a real pick-up and throw, 3.5 B/frame over the same room with none;
+  ceiling 16). A thrown torch takes the same first step, and its flame is updated once that frame by construction (`Carryable.fly` is the flight alone and does not touch the flame; no test observes the flame's clock).
 - **Update (#328, 2026-11-19): the second body.** The spider leaves one (D102). The crumble and the burn moved out of `BeetleFx`
   into `effects/RemainsFx.java`, one per `Level`, shared by every body: each monster passes its own chip colours (the beetle's
   `BeetleFx.SHELL_CHIPS`, the spider's `SpiderFx.SPIDER_CHIPS`); pools 57 and 218 from peaks of 45 and 174 (`RemainsFxTest`:
@@ -3196,8 +3215,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   from `art/objects/monster/spider.grid` and `spider-body.grid` (`tools/forest_trap_sprites.py monster:spider`), and the five
   sounds from `tools/audio/generate_sounds.py` (seeds 6901-6907). The wind-up sound is a one-shot like the other warnings.
   Tests: `SpiderTest` (the real `Level` on `spider-test.tmx`, a low wall in `spider-wall.tmx`, and two failing fixtures,
-  `spider-entrance.tmx` and `spider-gap.tmx`; the same-frame tie is driven through `Level.update`, which runs the hero before
-  the objects, and holds either way since the bite lands a frame later), `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (0.0 B/frame in 3 runs,
+  `spider-entrance.tmx` and `spider-gap.tmx`; the same-frame tie is driven through `Level.update`: the objects update before the hero, and the tie
+  holds because the bite lands on the spider's next frame and a sword, fireball or stone takes effect on its own frame: #503, #505), `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (0.0 B/frame in 3 runs,
   ceiling 8). Placed in three forest-1 rooms by #484 (D103, "Placed"); the author judges the look, the timing and the sounds there in play.
 
 ## D103. The forest spider climbs and drops: a route of floors, walls and a silk thread; two strikes, one tell (#483, #328)
