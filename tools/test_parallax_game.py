@@ -14,8 +14,43 @@ def silent(*_):
 
 class InstalledMapTest(unittest.TestCase):
     def test_the_installed_layers_are_what_the_installer_writes(self):
-        text = game.MAP.read_text(encoding='utf-8')
-        self.assertEqual(text, game.build(text), 'run python3 tools/parallax_game.py: the map differs from the sketch pieces')
+        for name in game.MAPS:
+            with self.subTest(map=name):
+                text = (game.TILES / f'{name}.tmx').read_text(encoding='utf-8')
+                self.assertEqual(text, game.build(text, name), 'run python3 tools/parallax_game.py: the map differs from the sketch pieces')
+
+    def test_every_room_of_every_forest_map_has_a_foreground(self):
+        for name in game.MAPS:
+            root = ET.parse(game.TILES / f'{name}.tmx').getroot()
+            rooms = {o.get('name') for o in root.iter('object') if o.get('type') == 'Room'}
+            if name != 'forest-1':   # forest-1 keeps the three rooms of the first pass (#236)
+                self.assertEqual(rooms, set(game.MAPS[name]), name)
+
+    def test_retile_closes_the_seam_where_two_floors_meet_and_drops_the_ropes(self):
+        rows = [[105, 0, 0, 79], [99, 0, 0, 99], [23, 24, 22, 23], [43, 44, 42, 43]]
+        self.assertEqual([[44, 0, 0, 42], [44, 0, 0, 42], [23, 23, 23, 23], [43, 43, 43, 43]], game.retile(rows), "the map edge counts as soil")
+        self.assertEqual(game.retile(rows), game.retile(game.retile(rows)), 'idempotent')
+        pit = [[23, 24, 0, 22, 23]]
+        self.assertEqual(pit, game.retile(pit), 'a real edge at a pit stays')
+        short = [[0, 0, 0], [0, 79, 0], [0, 99, 0]]
+        self.assertEqual([[0, 0, 0], [0, 23, 0], [0, 43, 0]], game.retile(short), "a short wall's top is the lit walk edge")
+
+    def test_scenery_never_carries_the_walk_edge(self):
+        """D112: the lit lip means "stand here": a drawn cell with no collision shows the soil body or the back rock."""
+        rows = [[33, 34, 35, 0, 22, 23, 24], [53, 54, 55, 0, 42, 43, 44]]
+        self.assertEqual([[82, 83, 84, 0, 42, 43, 43], [85, 86, 87, 0, 42, 43, 43]], game.retile(rows, frozenset({(9, 9)})))
+        solid = frozenset((r, c) for r in range(2) for c in range(7))
+        self.assertEqual([[33, 34, 35, 0, 22, 23, 23], [53, 54, 55, 0, 42, 43, 43]], game.retile(rows, solid), 'solid ground keeps its lip')
+
+    def test_only_a_slab_set_into_a_floor_becomes_floor(self):
+        self.assertEqual([[23, 23, 23]], game.retile([[23, 27, 23]]))
+        slab = [[26, 27, 28, 27], [43, 43, 43, 0]]
+        self.assertEqual(slab[0], game.retile(slab)[0], 'a slab lip over a block keeps its caps (forest-1, row 13)')
+
+    def test_a_narrow_room_has_the_one_centred_camera(self):
+        scene = next(s for s in pm.game_scenes() if s.room == 'forest-boss')
+        self.assertEqual([(448 - pm.VIEW[0]) // 2], list(scene.cameras))
+        self.assertEqual(scene.cameras[0], pm.hero_camera(scene, 100))
 
     def test_every_foreground_room_is_found_in_the_map(self):
         scenes = pm.game_scenes()

@@ -7,7 +7,8 @@ scenery layers (parallax layers and factor-1 decor, `world/ParallaxRenderer`, #2
 order. A scenery layer moves with the camera (`x - round(factor * camX)`, vertical shift 0 at the steady camera), so a placement is
 measured at every steady camera x (SCENERY_CAMERA_STEP apart) at which it is on screen, inside the camera range of its room, and the
 worst case counts; a clouds layer, which also drifts with time, is sampled at DRIFT_PHASES phases wherever it can show through. A map
-with no scenery layers (forest-0, forest-2) is measured over the flat colour and its `Background` layer alone. Metrics (OKLab):
+with no scenery layers (none ships since #236 converted forest-0 and forest-2) is measured over the flat colour and its `Background`
+layer alone. Metrics (OKLab):
 
 - outline: mean |L(silhouette pixel) - L(background pixel just outside it)| over every pair of an opaque pixel and a
   transparent 4-neighbour. Figure against ground at the edge; independent of scale.
@@ -22,7 +23,8 @@ halo, NO_HALO):
   chroma <= DECOR_CHROMA_MAX. D108: there is no absolute ink floor; decor is measured relative to the composited background.
 Every object type in SpawnPoints and Collisions must be classified here as a sprite or as drawing nothing of its own;
 an unknown type fails, so a new sprite cannot skip the check. Tile-layer scenery is reported, not gated: it is the
-third-party tileset that #189 replaces (D76); the report is made for the maps that still draw that sheet and skips the others.
+third-party props (#189) that the terrain sheet still carries at their old tile ids; the report is made for the maps that draw that
+sheet and skips the others.
 """
 import math
 import re
@@ -58,7 +60,7 @@ HEX_ARGB = 8  # digits of #AARRGGBB
 HEX_PAIR = 2  # digits per channel
 HEX_BASE = 16
 OPAQUE_HEX = 'ff'
-TILESET = 'assets/images/Tileset/Tileset.png'   # the third-party sheet that TILE_SCENERY's tile ids index (#189)
+TILESET = 'assets/images/Tileset/ForestTerrain.png'   # the play sheet whose third-party props TILE_SCENERY's tile ids index (#189)
 NEIGHBOURS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
@@ -204,7 +206,7 @@ NO_SPRITE = {
 }
 SPRITE_GROUPS = ('SpawnPoints', 'Collisions')
 # Tile-layer scenery reported against the map background (report only, #189): (row range, column range) in the tileset.
-TILE_SCENERY = {'sign': ((0, 2), (9, 10)), 'rock / rubble': ((0, 2), (12, 16)),
+TILE_SCENERY = {'sign': ((0, 2), (9, 10)),
                 'tile bush': ((4, 6), (6, 8)), 'dead tree': ((4, 6), (9, 16))}
 
 
@@ -540,7 +542,7 @@ def tsx_of(first):
 
 def play_tileset(root):
     """(sheet path, columns) of the map's first tileset, the play layer's (gid 1 on): forest-1 draws the terrain sketch through
-    its own `ForestTerrain.tsx`, forest-0 and forest-2 keep the third-party sheet (#189, #236). Read from the `.tsx`."""
+    its own `ForestTerrain.tsx`, as forest-0 and forest-2 do since #236. Read from the `.tsx`."""
     first = root.find('tileset')
     if first is None:
         raise ValueError('the map has no tileset')
@@ -668,6 +670,8 @@ class Scene:
         except ValueError:   # a position between rooms (the fairy sweep): the whole map
             room_x, room_width = 0, self.size[0]
         low, high = room_x, room_x + max(room_width - VIEW_WIDTH, 0)
+        if room_width < VIEW_WIDTH:   # a room narrower than the view is centred in it (Player.cameraTarget)
+            return (int(room_x + (room_width - VIEW_WIDTH) // 2),)
         low, high = max(low, math.floor(x) - VIEW_WIDTH), min(high, math.ceil(x + width))
         low, high = min(low, high), max(low, high)
         return sorted({*range(int(low), int(high) + 1, step), int(high)})
@@ -966,7 +970,7 @@ def check_fairy(images):
 
 def tile_report(roots):
     """Report only (#189): mean outline and body of the tile scenery against each map's background colour. The categories are tile
-    ids of the third-party sheet (TILESET), so only the maps that draw that sheet are reported; the others are returned in `skipped`
+    ids of the props in the play sheet (TILESET), so only the maps that draw that sheet are reported; the others are returned in `skipped`
     with the sheet they draw."""
     sums = {name: [[], []] for name in TILE_SCENERY}
     skipped = {}
@@ -1261,7 +1265,7 @@ def main():
     for category, (outline, body) in tiles.items():
         print(f'  {category:16} outline {outline:.3f} body {body:.3f}')
     for name, sheet in skipped.items():
-        print(f'  {name}: skipped, it draws {sheet}, not the third-party sheet the categories index')
+        print(f'  {name}: skipped, it draws {sheet}, not the sheet the categories index')
     if errors:
         print('Contrast tiers (D76) failed:\n  ' + '\n  '.join(errors))
         return 1

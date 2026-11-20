@@ -2713,8 +2713,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     `falling-platform`, `false-honey-fungus` (so the honey pair stays alike), `hive`, `honey-fungus`, `log`, `perch`,
     `puffball`, `root`, `rotten-perch`, `stone-lip`, `stump`, `thorn-root`, `thorn-tuft`
     (`forest_trap_sprites.RIM_SHEETS`); the objects `ladder`, `stone`, `fireball`, `wall-brick`, `platform`
-    (`export_object_sprites.RIM_OBJECTS`); the inherited sheets above. Off where the gate passes without it (the lever,
-    the pickups and coin, the torch, the stingers, the deadfall vine, the fairy);
+    (`export_object_sprites.RIM_OBJECTS`; since #236 also the lever and the bat and mushroom pickups, D112); the inherited sheets
+    above. Off where the gate passes without it (the coin, the torch, the stingers, the deadfall vine, the fairy);
   - Tests: `tools/test_moon_rim.py` (lit sides rimmed, underside kept, light edges and the silhouette untouched, frames
     in a strip independent, idempotent, mirror-symmetric, the CLI, the thorn tuft on a plain `2c3f66` patch 0.226 to
     0.411 against the 0.28 floor, a flagged sheet rimmed with one more colour, the hero's palette with the rim slot and a
@@ -3603,7 +3603,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `(y - originY) - round(f * (camTop - originY))`, `originX` 0 for a map-wide layer and the room's x for the foreground, `originY` the room's
   floor camera top; clouds drift by accumulated time, not by the camera; the moon is a factor-0 layer; (4) draw order: scenery, play layer,
   objects and hero, fairy, foreground, HUD; (5) a layer is only as wide as its factor needs; (6) forest-1 uses the terrain sketch as its own
-  play tileset (`ForestTerrain.tsx`); forest-0, forest-2 and other worlds keep theirs; (7) the parser is strict: a foreground group needs
+  play tileset (`ForestTerrain.tsx`); forest-0, forest-2 and other worlds keep theirs (forest-0 and forest-2: superseded by D112); (7) the parser is strict: a foreground group needs
   `roomx` and must be named `foreground-<room name>` for a `Room` object at that x, a flipped or rotated scenery cell is refused, the
   factors are doubles (the mock's 0.15, not a float's), and a foreground `y` is in map coordinates (the floor camera top is too; every forest
   room lies at y 0); (8) cost: the installer leaves the cell of a fully transparent tile empty (no draw), `forest-fg` is a Tiled collection
@@ -3623,7 +3623,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the play layer by name (and fails without it) and the sheet and column count of each map's first tileset, and now composites what the
   game draws behind each sprite: the flat colour, the scenery layers at every steady camera x where the placement is on screen (4 px apart,
   clouds at 8 drift phases where they can show) and the play layer; every sprite now passes the tiers over that real background (D108 update).
-- **Not done (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** the other forest maps and rooms; a shared skill
+- **Not done (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** forest-1's other rooms (forest-0 and forest-2: D112); a shared skill
   (`.agents/skills`) and the STYLE_SYSTEM rows beyond the one added here; the draw-call budget measured on a phone; approval by the author.
 
 - **Update 2026-11-20, author decision: the decor tier is relative to the composited background (D76 amended).** The absolute ink floor of D76
@@ -3696,3 +3696,43 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Hero frames:** the clips `LOOK_UP` and `LOOK_DOWN` (D79, 1 frame each) are removed from `Player`. The look frames (`r.look1`, `r.look2` and the left pair, sheet row 5) were first left in the grid and the sheets; a follow-up change removed them: the `look` clip left `HERO_CLIPS` (`tools/sprite_layouts.py`), the hero sheets went from 15 to 14 rows (960 to 896 px), and every later row moved up by one (clamber 6 to 5, hit 7 to 6, appear 8 to 7, disappear 9 to 8, carry idle 10 to 9, carry run 11 to 10, throw 12 to 11, land 13 to 12, pull 14 to 13) in `Player`, `HeroFrameTest`, `SpriteSheetContractsTest` and the contrast gate's carry-idle crop.
 - **Vertical parallax:** the camera top still changes. A forest room is 368 px tall and the view 360 px, so `Player.cameraTarget` keeps the top between the room top (hero standing high, above y 256) and `FallingTrapLayout.floorCameraTop` (room bottom minus the view, 8 px lower, hero on the floor), and a room change pans it. So the vertical parallax code (`ParallaxRenderer`, factor 1 on `parallaxy`) stays; only the look-sized ranges went: `parallax_mock.py` lost `LOOK_PLAN`, the camera-top sweep (-100 to 158), the look frames and GIF and `check_look` (visible layer edges and open ground at the look tops), keeping rule B, the cover time and the exclusions at the steady camera. The bleed art drawn for the look range was trimmed by the follow-up change, so no gap is left untracked: the bleed a layer of factor f needs over the camera top's 0 to 8 px is at most 8 f plus the shake's 1.5 (1 + f) px (12.8 + 2.4 px at the foreground's 1.6, none for the play layer; the shake, at most `ScreenShake.LEVER_AMPLITUDE_PX` and `STONE_AMPLITUDE_PX` of 1.5 px, is clamped to the room, so counting it is conservative), and every layer keeps one tile row (16 px) of margin. `play-above` 7 to 1 row (`offsety` -112 to -16), the deep soil 10 to 1 row (`deep-2` pieces removed from the terrain grid, tile ids unchanged), `mid` from 30 to 25 rows (`offsety` -48 to -16), `far` 18 to 17, `grove` 21 to 19, the sky and the other factor-0 layers 33 to 24 rows, foreground `-top` pieces 12 to 2 rows, `-foot` pieces 16 to 1 row, the `edge-*` pieces 15 and 13 to 4 rows (their feet removed). `parallax_mock.py --check` gained `check_bleed` (a cut edge or a missing `-top`, `-foot`, `play-above`, `play-below` or strip layer at any camera top 0 to 8, with the shake; `BleedCheckTest` removes each in turn and the check fails). Measured: the frames of the three game rooms at camera tops 0 to 8 (63 frames) are pixel-identical before and after; the shipped assets shrank from 310 to 233 KB (`forest-fg.png` 92 to 55, `forest-1.tmx` 154 to 115, the hero sheets 13 to 12, the mid strip 26 to 25) and the art sources (grids, exports, mocks) by about 1 MB. The stale look previews (`preview-*-up.png`, `preview-*-down.png`) are deleted.
 - **Gate:** `AllocationBudgetTest.forest1ParallaxLayersAndForeground` now sweeps the camera top 0 to 8; `ParallaxRendererTest` pins the shift at 0 and 8; `DirectionalActionsTest` keeps the Up + Action lever and the touch pickup tests, and drops the look tests; `LookAroundTest` is deleted. No other assertion was changed in that change. The follow-up that trimmed the bleed changed three pins of `TiledMapParallaxTest` to the new art (shipped geometry, not tolerances): `mid` `offsety` -48 to -16, `play-above` `offsety` -112 to -16, `play-below` 10 to 1 rows; and `HeroFrameTest` and `SpriteSheetContractsTest` follow the hero sheet's 14 rows.
+
+## D112. forest-0 and forest-2 take the Forest look, and the third-party terrain sheet is retired ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+
+- **Status:** Proposed, 2026-11-20, with D108 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the canopy clumps and the recolours below
+  wait for the author's look like the rest of the card.
+- **Problem:** forest-0 (6 rooms) and forest-2 (5 rooms) still drew the flat `2c3f66` and the third-party `Tileset.png`: two games side by
+  side, a seam through the ground at every room edge (the blocks' outlined ends met there) and a straw rope, the grab cue's colour, over
+  every room-edge wall.
+- **Decision:** (1) `tools/parallax_game.py` installs the layers of D108 into all three forest maps (sky, stars, moon, clouds, far, grove,
+  mid, `play-above`, `play-below`, the buried bottom row) and `ForestTerrain.tsx` as their play tileset; (2) `retile` changes only which
+  tile a drawn cell shows, never whether it is drawn (collision and `CollisionVisibilityTest` read that): a ground tile takes its left,
+  middle or right column from its neighbours, keeping its authored row, so floors meeting at a room edge read as one; the rope column over
+  a `Wall` becomes soil like the other walls (lit top where open air is above it: a short wall in `forest-walls` can be stood on), and a
+  slab tile with a floor top on both sides (forest-2, x 1520) becomes the floor's top (a slab lip over a block keeps its caps). The lit
+  lip means "stand here", so a drawn cell with no solid collision never carries it: forest-2's 91 rock cells that are scenery (the ruin
+  at the entry, cols 1 to 9, and the mounds) draw new back-rock tiles (`back-*` in `terrain.grid`: the boulder and slope drawings with the
+  straw lip and the moss in the rock's own tones), and its 20 ground tops with no collision (the floating blocks, the block over the
+  stone) show the soil body. forest-0 and forest-1 have no such cell. This also removes forest-1's ropes; its walls stay, so the hero
+  can still clamber on them; (3) every room of forest-0 and forest-2 has a `foreground-<room>` group, each piece kept only where the room
+  passes rule B and the cover time with everything placed before it (lists in `parallax_game.py`); the boss roams its arena, so
+  `parallax_mock.py` protects the whole arena above the floor and the boss room keeps low clumps and reeds outside it; (4) the checks know
+  rooms narrower than the view (`forest-0-lever` 576 px, `forest-walls` 544 px, `forest-boss` 448 px): one camera, centred as
+  `Player.cameraTarget` does (`parallax_mock.room_cameras`, `check_contrast.Scene.cameras`), and the last room's route ends at its right
+  wall; (5) the hanging vines (#239) hang in front of a dark canopy clump of the play layer (`canopy-*` in `terrain.grid`, no collision,
+  over the room top in `forest-0-platform` and `forest-canopy`): in front of the moving sky no vine colour stays decor (outline 0.315 at best,
+  over the moon and the clouds, 0.43 over a mid trunk), in front of the clump one does; `check_tiled_links.py` does not let a stone's lip
+  hang from a canopy cell; (6) `Tileset.png` and `Forest.tsx` are deleted. What the maps drew from them: the terrain tiles (ground, slab,
+  ledge, boulder, slope) were already redrawn in `terrain.grid` (the sheet the game loaded since D108 for forest-1); the 24 non-empty
+  prop tiles (village sign, bare trees, ochre tufts) are copied pixel for pixel into `terrain.grid` (`prop-<id>`, #189), so the exported
+  sheet was identical before the canopy and back-rock tiles were added.
+- **Measured over the new layers (`check_contrast.py`, every placement and camera):** recoloured in OKLab, hue and tone roles kept: the
+  crown (L x0.55) outline 0.036 to 0.184, body 0.144 to 0.190 (was 0.302 and 0.385); the look-alike (L x0.55 - 0.10) 0.157 and 0.145 (was
+  0.413 and 0.475); the trunk (L - 0.07, chroma x0.3) 0.072 to 0.170 and 0.090 to 0.189 (was 0.222 and 0.237), forest-1's trunks included;
+  the vine (L x0.6) 0.120 and 0.139 over the clump (was 0.428 and 0.457); the beetle body to the spider's and snail's dried umber (hue 1.0
+  rad, chroma 0.045, L kept), body 0.094 to 0.175 (was 0.034 over forest-2's grove spruces; `BeetleFx.SHELL_CHIPS` follow). The bat and
+  mushroom pickups get the moon rim (D92: an active outline under 0.28 carries it), outline 0.375 and 0.390 at worst (was 0.151 and
+  0.057 over their halo on near black). Three forest-2 bushes in front of the third-party ochre tufts moved off them as in D108 (x 400 to
+  432, 768 to 816, 1800 to 1808), body at most 0.198. No threshold changed. Rule B: 0 covered objects in 14 rooms, the hero hidden 0.00 s.
+- **Gate:** `validateContrast`, `validateParallax` (`--check --game`, now 14 rooms), `tools/test_parallax_game.py` (every map is what the
+  installer writes, every forest-0 and forest-2 room has a foreground, `retile` and the narrow-room camera), `TiledMapParallaxTest`.

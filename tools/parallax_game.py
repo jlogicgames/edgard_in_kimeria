@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Installs the Forest parallax sketch into the game (#236): assets and the layers of `assets/tiles/forest-1.tmx`.
+"""Installs the Forest parallax sketch into the game (#236): assets and the layers of `assets/tiles/forest-{0,1,2}.tmx`.
 
-    python3 tools/parallax_game.py            # copy the assets and (re)write the parallax layers of forest-1.tmx
+    python3 tools/parallax_game.py            # copy the assets and (re)write the parallax layers of every forest map
 
 What it does, idempotently (a second run changes nothing):
 - copies the exported parallax tilesets (`art/parallax/*/out`) to `assets/images/parallax/` and writes their `.tsx` files to
-  `assets/tiles/parallax/` (image paths rewritten); the terrain sketch (`art/terrain/forest/out/Tileset.png`, the same 140 tile ids)
-  becomes `assets/images/Tileset/ForestTerrain.png` with its own `ForestTerrain.tsx`, which forest-1 uses as its play tileset (forest-0 and
-  forest-2 keep `Forest.tsx` and the third-party `Tileset.png`, which the terrain exporter also reads for its `keep` tiles);
-- writes into forest-1.tmx the map-wide scenery layers (sky, stars, moon, clouds, far, grove, mid, each as wide as its
+  `assets/tiles/parallax/` (image paths rewritten); the terrain sketch (`art/terrain/forest/out/ForestTerrain.png`, 140 tiles at the tile
+  ids of the retired third-party sheet) becomes `assets/images/Tileset/ForestTerrain.png` with its own `ForestTerrain.tsx`, the play
+  tileset of every forest map;
+- retiles each map's play layer (`retile`: no seam where two rooms' floors meet, no rope over the room-edge walls);
+- writes into each forest map the map-wide scenery layers (sky, stars, moon, clouds, far, grove, mid, each as wide as its
   parallax factor needs: the camera reaches x = map width - 640, a layer of factor f is seen up to f * that + 640), `play-above` (1 row,
   `offsety` -16) and `play-below` (the deep soil, 1 row, `offsety` = the room height; the bleed is what the camera top's 0 to 8 px range and the shake need, D111), turns the Background's bottom ground row into its
   buried variant, and adds one `foreground-<room>` object group per room (tile objects relative to the room, `roomx` its x in the map).
@@ -28,11 +29,20 @@ import parallax_sprites as sprites
 ROOT = Path(__file__).resolve().parents[1]
 TILES = ROOT / 'assets/tiles'
 IMAGES = ROOT / 'assets/images/parallax'
-MAP = TILES / 'forest-1.tmx'
-TERRAIN_FROM = ROOT / 'art/terrain/forest/out/Tileset.png'
+TERRAIN_FROM = ROOT / 'art/terrain/forest/out/ForestTerrain.png'
 TERRAIN_TO = ROOT / 'assets/images/Tileset/ForestTerrain.png'
-TERRAIN_TSX = TILES / 'ForestTerrain.tsx'   # forest-1's play tileset: the terrain sketch (forest-0 and forest-2 keep Forest.tsx)
-FOREST_FIRST_GID, FOREST_TILES = 1, 140          # Forest.tsx: the play tileset, the first of the map
+TERRAIN_TSX = TILES / 'ForestTerrain.tsx'   # the play tileset of every forest map: the terrain sketch
+FOREST_FIRST_GID, FOREST_TILES = 1, 140          # ForestTerrain.tsx: the play tileset, the first of the map
+# the ground tiles of the play tileset: (left, middle, right) of its top, body, bottom and buried bottom rows (D111)
+GROUND = ((22, 23, 24), (42, 43, 44), (62, 63, 64), (71, 72, 73))
+# the boulder (33-35 over 53-55) and the slope (36-38 over 56-58) -> their back-rock variants (terrain.grid `back-*`): the same rock
+# with no straw lip and no moss, for the rock that is scenery, not ground (forest-2's ruin and mounds)
+BACK_ROCK = dict(zip((33, 34, 35, 53, 54, 55, 36, 37, 38, 56, 57, 58), (82, 83, 84, 85, 86, 87, 74, 75, 76, 77, 78, 67)))
+SLAB = (26, 27, 28)                               # the floating slab (left, middle, right): its underside is open
+ROPE = (79, 99, 105, 119, 139)                    # the rope column and its bracket (third-party layout, drawn over the room-edge walls)
+TERRAIN_TSX_TEXT = ('<?xml version="1.0" encoding="UTF-8"?>\n<tileset version="1.10" tiledversion="1.11.2" name="ForestTerrain" '
+                    'tilewidth="16" tileheight="16" tilecount="140" columns="20">\n'
+                    ' <image source="../images/Tileset/ForestTerrain.png" width="320" height="112"/>\n</tileset>\n')
 SCENERY = ('sky', 'stars', 'moon', 'clouds', 'far', 'grove', 'mid', 'play-above', 'play-below')
 EDGE_COLUMNS = 2                                  # spare columns past what a layer's factor needs (the camera is fractional)
 # the foreground of each room of forest-1 that has one: room name -> pieces (piece, x, top y), x relative to the room
@@ -43,7 +53,29 @@ EDGE_COLUMNS = 2                                  # spare columns past what a la
 ESCALATORS_FOREGROUND = tuple(p for p in pm.FOREGROUND if p[1] < 600)
 TRAPS_FOREGROUND = (tuple((name, x - 640, top) for name, x, top in pm.FOREGROUND if 600 <= x < 1280)
                     + tuple((name, x - 1008, top) for name, x, top in pm.FOREGROUND if name.startswith('edge-')))
-GAME_FOREGROUND = {'forest-1-escalators': ESCALATORS_FOREGROUND, 'forest-1-traps': TRAPS_FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND}
+FOREST_1 = {'forest-1-escalators': ESCALATORS_FOREGROUND, 'forest-1-traps': TRAPS_FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND}
+# forest-0 and forest-2 (converted 2026-11-20, #236): every room has a foreground. The pieces were placed one by one, each kept only
+# where the room still passes rule B and the cover time (`parallax_mock.check_layer`) with everything placed before it: the corner
+# leaves, one curtain from the top (vine and roots in turn, the roots kept off the moon at the room's first and last camera), a tall
+# piece at a room end, low clumps on the floor line and a tuft. The boss
+# roams its whole arena, so the boss room keeps only the low clumps under its floor line and reeds outside the arena.
+FOREST_0 = {
+    'forest-0-lever': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-fern', 448, 128), ('clump-fern', 72, 320), ('clump-leaves', 440, 320), ('tuft', 184, 312)),
+    'forest-0-ladder': (('hang-leaves-l', -80, 0), ('roots-curtain', 172, 0), ('rise-reeds', -50, 144), ('clump-leaves', -24, 320), ('clump-grass', 288, 320), ('clump-mixed', 568, 320), ('clump-fern', 896, 320), ('tuft', 104, 312)),
+    'forest-0-wall': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', -50, 144), ('clump-grass', 40, 320), ('clump-mixed', 288, 320), ('clump-fern', 608, 320), ('tuft', 144, 312)),
+    'forest-0-platform': (('hang-leaves-l', -80, 0), ('roots-curtain', 28, 0), ('rise-reeds', -50, 144), ('clump-mixed', -40, 320), ('clump-fern', 320, 320), ('clump-leaves', 672, 320), ('tuft', 152, 312)),
+    'forest-0-stone': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', -50, 144), ('clump-fern', 48, 320), ('clump-leaves', 296, 320), ('clump-grass', 672, 320), ('tuft', 176, 312)),
+    'forest-0-traps': (('hang-leaves-l', -80, 0), ('roots-curtain', 172, 0), ('rise-reeds', -50, 144), ('clump-leaves', 32, 320), ('clump-grass', 384, 320), ('tuft', 128, 312)),
+}
+FOREST_2 = {
+    'forest-entry': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', -50, 144), ('clump-fern', 40, 320), ('clump-leaves', 416, 320), ('clump-grass', 696, 320), ('tuft', 176, 312)),
+    'forest-walls': (('hang-leaves-l', -80, 0), ('roots-curtain', 20, 0), ('rise-fern', 423, 128), ('clump-leaves', 64, 320), ('clump-grass', 312, 320), ('tuft', 168, 312)),
+    'forest-fissure': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', 390, 144), ('clump-grass', 56, 320), ('clump-mixed', 360, 320), ('tuft', 120, 312)),
+    'forest-canopy': (('hang-leaves-l', -80, 0), ('roots-curtain', -4, 0), ('rise-fern', 1268, 128), ('clump-mixed', 24, 320), ('clump-fern', 360, 320), ('clump-leaves', 736, 320), ('clump-grass', 1072, 320), ('tuft', 152, 312)),
+    'forest-boss': (('rise-reeds', 426, 144), ('clump-fern', 40, 320), ('clump-leaves', 312, 320), ('tuft', 112, 312)),
+}
+MAPS = {'forest-0': FOREST_0, 'forest-1': FOREST_1, 'forest-2': FOREST_2}   # every forest map and its rooms' foreground
+GAME_FOREGROUND = {room: pieces for rooms in MAPS.values() for room, pieces in rooms.items()}
 
 
 def label(key):
@@ -60,8 +92,7 @@ def install_assets():
         IMAGES.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(folder / 'out' / f'{label(key)}.png', IMAGES / f'{label(key)}.png')
     shutil.copyfile(TERRAIN_FROM, TERRAIN_TO)
-    TERRAIN_TSX.write_text((TILES / 'Forest.tsx').read_text(encoding='utf-8').replace('Tileset/Tileset.png', 'Tileset/ForestTerrain.png')
-                           .replace('name="Forest"', 'name="ForestTerrain"'), encoding='utf-8')
+    TERRAIN_TSX.write_text(TERRAIN_TSX_TEXT, encoding='utf-8')
 
 
 def columns_for(factor, map_columns):
@@ -78,8 +109,65 @@ def background_rows(text):
     return match, rows
 
 
-def build(text):
-    """The text of forest-1.tmx with the parallax layers (re)written."""
+def retile(rows, solid=frozenset()):
+    """The play rows with the room-edge seams and the ropes gone (#236), every cell's emptiness unchanged (collision and
+    `CollisionVisibilityTest` read it): a ground tile takes its left, middle or right column by its horizontal neighbours, keeping
+    its authored row (top, body, bottom), so two blocks that meet at a room edge read as one floor; a rope cell (the third-party
+    rope column drawn over a `Wall`: the grab cue's straw where no rope is) becomes soil like the other walls, its top cell the lit
+    walk edge where open air is above it (a short wall's top can be stood on), the rest the soil body; a slab tile set into a floor
+    (ground tops on both sides) becomes the floor's top. The lit walk edge is the "stand here" cue, so a drawn cell that is not in
+    `solid` ((row, column) cells of the map's solid collision blocks) never carries it: a ground top there shows the soil body, a
+    boulder or slope cell its back-rock variant (D112)."""
+    rows = [list(r) for r in rows]
+    width = len(rows[0])
+    tops = GROUND[0]
+    for r, row in enumerate(rows):
+        for c, gid in enumerate(row):
+            if gid in ROPE:
+                row[c] = GROUND[0 if r and not rows[r - 1][c] else 1][1]
+            elif gid in SLAB and 0 < c < width - 1 and row[c - 1] in tops and row[c + 1] in tops:
+                row[c] = GROUND[0][1]   # a floating slab's tile set into a floor (forest-2, x 1520): the floor's own top
+    if solid:
+        for r, row in enumerate(rows):
+            for c, gid in enumerate(row):
+                if (r, c) in solid:
+                    continue
+                if gid in BACK_ROCK:
+                    row[c] = BACK_ROCK[gid]
+                elif gid in tops:
+                    row[c] = GROUND[1][tops.index(gid)]
+    for row in rows:
+        family = [next((k for k, kind in enumerate(GROUND) if gid in kind), None) for gid in row]
+        for c, kind in enumerate(family):
+            if kind is None:
+                continue
+            left = c == 0 or family[c - 1] is not None
+            right = c == width - 1 or family[c + 1] is not None
+            row[c] = GROUND[kind][1 if left and right else 0 if right else 2 if left else 1]
+    return rows
+
+
+def solid_cells(text):
+    """(row, column) of every cell a solid collision block covers (Platform and QuickSand are not ground to stand on)."""
+    import xml.etree.ElementTree as ET
+    cells = set()
+    for group in ET.fromstring(text).findall('objectgroup'):
+        if group.get('name') != 'Collisions':
+            continue
+        ox, oy = float(group.get('offsetx', 0)), float(group.get('offsety', 0))
+        for o in group.findall('object'):
+            if o.get('type') in ('Platform', 'QuickSand'):
+                continue
+            x, y = float(o.get('x')) + ox, float(o.get('y')) + oy
+            w, h = float(o.get('width', 0)), float(o.get('height', 0))
+            for r in range(int(y // pm.TILE), int((y + h - 1) // pm.TILE) + 1):
+                for c in range(int(x // pm.TILE), int((x + w - 1) // pm.TILE) + 1):
+                    cells.add((r, c))
+    return frozenset(cells)
+
+
+def build(text, map_name='forest-1'):
+    """The text of `map_name`.tmx with the parallax layers (re)written."""
     text = re.sub(r' ?<layer [^>]*name="(?:%s)"[^>]*>.*?</layer>\n?' % '|'.join(SCENERY), '', text, flags=re.S)
     text = re.sub(r' <objectgroup [^>]*name="foreground[^"]*"[^>]*>.*?</objectgroup>\n?', '', text, flags=re.S)
     text = re.sub(r' <tileset firstgid="\d+" source="parallax/[^"]*"/>\n', '', text)
@@ -93,6 +181,7 @@ def build(text):
         info[key] = (first, spots, sprites.blank_ids(key))
         sets.append(f' <tileset firstgid="{first}" source="parallax/{label(key)}.tsx"/>\n')
         first += count
+    rows = retile(rows, solid_cells(text))
     bled = pm.play_bleed(rows, FOREST_FIRST_GID)    # the Background's buried bottom row and the deep soil rows below
     rows[pm.ROWS - 1] = bled[pm.ROWS - 1]
     layers = []
@@ -116,14 +205,13 @@ def build(text):
     text = text[:match.start(2)] + pm.csv(rows) + '\n' + text[match.end(2):]
     first_info = info['forest/fg']
     groups = []
-    for room, pieces in GAME_FOREGROUND.items():
+    for room, pieces in MAPS[map_name].items():
         room_x = int(float(re.search(r'name="%s" type="Room" x="(\d+)"' % room, text).group(1)))
         objects, after = pm.foreground_xml(SimpleNamespace(foreground=pieces), first_info, next_object)
         next_object = after
         groups.append(f' <objectgroup id="{next_layer}" name="foreground-{room}" parallaxx="{pm.FG_FACTOR}" parallaxy="{pm.FG_FACTOR}">\n'
                       f'  <properties><property name="roomx" type="float" value="{room_x}"/></properties>\n{objects}\n </objectgroup>\n')
         next_layer += 1
-    text = text.replace('<tileset firstgid="1" source="Forest.tsx"/>', '<tileset firstgid="1" source="ForestTerrain.tsx"/>')
     anchor = '<tileset firstgid="1" source="ForestTerrain.tsx"/>\n'
     text = text.replace(anchor, anchor + ''.join(sets))
     here = text.index(' <layer id="', text.index(anchor))
@@ -138,5 +226,7 @@ def build(text):
 
 if __name__ == '__main__':
     install_assets()
-    MAP.write_text(build(MAP.read_text(encoding='utf-8')), encoding='utf-8')
-    print(MAP.relative_to(ROOT))
+    for name in MAPS:
+        path = TILES / f'{name}.tmx'
+        path.write_text(build(path.read_text(encoding='utf-8'), name), encoding='utf-8')
+        print(path.relative_to(ROOT))

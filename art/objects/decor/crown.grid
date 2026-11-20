@@ -5,12 +5,13 @@
 # against the bush palette's 0.157); night palette (D92): every colour mixed 35 % toward 2c3f66 (contour 607660 -> 4e6362),
 # outline 0.111, body 0.180 over the night, ceiling 0.20; contour in its own darker green, no ink 0b0814,
 # no violet (violet is the FallingBranch's bud accent). Not solid, never moves.
+# Layered-forest recolour (#236, D112): OKLab L x0.55, hue kept, over the new layers outline 0.036 to 0.184, body 0.144 to 0.190.
 size 96 40
-color k 4e6362
-color d 576c66
-color m 5f746c
-color l 687d72
-color n 707363
+color k 162929
+color d 1b2e29
+color m 1f322b
+color l 23362d
+color n 2d3022
 frame crown
 ..kmmmlmmmdmmmmlmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdlmmmmdmmmlnlmk..
 ..kmmlnlmmddmmlndmmlnllmmmddmmmlllmmddmmmmlnlmmddmmlnllmmmddmmmlllmmddmmmmlnlmmdnlmmmddmmlnllk..

@@ -40,8 +40,8 @@ public final class BeetleFx {
     private static final int RED = 0, GREEN = 1, BLUE = 2;
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DARK = {.357f, .345f, .439f};
     private static final float[] SHELL = {.525f, .063f, .122f}, SHELL_LIT = {.612f, .125f, .314f};
-    private static final float[] BODY_EDGE = {.059f, .051f, .137f}, BODY_SHELL = {.086f, .078f, .180f};
-    private static final float[] BODY_LIT = {.102f, .094f, .196f}, BODY_GLINT = {.118f, .110f, .204f};
+    private static final float[] BODY_EDGE = {.122f, .039f, 0f}, BODY_SHELL = {.153f, .071f, .008f};
+    private static final float[] BODY_LIT = {.169f, .086f, .020f}, BODY_GLINT = {.184f, .102f, .031f};
     /** The beetle body's crumble chips (D101, {@link RemainsFx#crumble}): beetle-body.grid's contour, shell, lit shell and glint. */
     public static final float[][] SHELL_CHIPS = {BODY_SHELL, BODY_EDGE, BODY_LIT, BODY_GLINT};
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};

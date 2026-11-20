@@ -4,11 +4,13 @@
 # Layered-forest palette (#236): a dark slate just above the decor ink floor (OKLab L 0.301 to 0.311, INK_L_MAX 0.30), so it
 # sits in forest-1's near-black play band and the night blue of forest-0 and forest-2 alike (D76, check_contrast.py); the
 # earlier night values (D92, #430) and the day values are in docs/ART_DIRECTION.md.
+# Layered-forest recolour (#236, D112): OKLab L - 0.07, chroma x0.3 (forest-0 put a trunk in front of the clouds): outline 0.072 to
+# 0.170, body 0.090 to 0.189 in all three forest maps.
 size 16 288
-color c 2a2e38
-color b 2b2f3a
-color l 2d303b
-color n 2b2e39
+color c 1c1d20
+color b 1d1e21
+color l 1e1f22
+color n 1d1d21
 frame trunk
 ................
 ......cccc......

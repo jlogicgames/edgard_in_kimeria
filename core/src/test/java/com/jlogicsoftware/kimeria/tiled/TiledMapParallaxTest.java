@@ -140,7 +140,7 @@ class TiledMapParallaxTest {
     }
 
     @Test void aMapWithoutSceneryHasNone() {
-        TiledMapData plain = TiledMapData.load("tiles/forest-0.tmx", harness.assets());
+        TiledMapData plain = TiledMapData.load("tiles/room-test.tmx", harness.assets());   // every shipped forest map has layers since #236
         assertTrue(plain.sceneryLayers.isEmpty());
         assertTrue(plain.foregroundGroups.isEmpty());
     }

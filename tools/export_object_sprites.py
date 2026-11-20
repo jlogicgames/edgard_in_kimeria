@@ -9,7 +9,7 @@ from sprite_layouts import (WORLD_FRAMES, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE,
     WORLD_PALETTE_BITS, HUD_PALETTE_BITS, ALPHA_THRESHOLD, OPAQUE_ALPHA,
     LEVER_FRAME_SIZE, LEVER_FRAME_COUNT, LADDER_FRAME_SIZE, LADDER_FRAME_COUNT,
     WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE,
-    ITEM_STRIP_SIZE, ITEM_STRIPS, HUD_ICONS, RGB_CHANNELS)
+    ITEM_FRAME_SIZE, ITEM_STRIP_SIZE, ITEM_STRIPS, HUD_ICONS, RGB_CHANNELS)
 import forest_trap_sprites as grids
 from dialogue_frame_sprites import indexed
 
@@ -116,7 +116,9 @@ def export_platform():
 # sheet, so re-running this script reproduces the rimmed PNG; the rim is idempotent.
 RIM_OBJECTS = {'ladder': (LADDER_FRAME_SIZE, LADDER_FRAME_SIZE), 'stone': WORLD_FRAMES['stone'],
                'fireball': WORLD_FRAMES['fireball'], 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
-               'lever': (LEVER_FRAME_SIZE, LEVER_FRAME_SIZE)}  # #236: the lever's ink on the near-black forest play band
+               'lever': (LEVER_FRAME_SIZE, LEVER_FRAME_SIZE),  # #236: the lever's ink on the near-black forest play band
+               # #236: the healer's ingredients over their halo on forest-2's near-black layers (outline 0.151 and 0.057 with ink)
+               'bat': (ITEM_FRAME_SIZE, ITEM_FRAME_SIZE), 'mushroom': (ITEM_FRAME_SIZE, ITEM_FRAME_SIZE)}
 
 
 def rim_objects():

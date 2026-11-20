@@ -5,14 +5,16 @@
 # dusky indigo (OKLab L 0.176 to 0.242, chroma 0.05, hue -75). It lies on forest-1's near-black ground and forest-2's blue sky,
 # and a cool hue sits between both (D108 band 0.08..0.20 at every spot where a beetle can die); no ink 0b0814, no moon rim.
 # Keep it in step with beetle.grid.
+# Forest-2 conversion (#236, D112): the dusky indigo matched forest-2's grove spruces (body 0.034); the tone roles now sit on the
+# spider's and snail's dried umber (hue 1.0 rad, chroma 0.045, L kept): body 0.094 to 0.175 at every spot, chips in BeetleFx follow.
 size 24 16
-color k 0f0d23
-color d 13112a
-color t 16142e
-color s 1a1832
-color h 1e1c34
-color n 110f27
-color L 18172e
+color k 1f0a00
+color d 240f01
+color t 271202
+color s 2b1605
+color h 2f1a08
+color n 210d00
+color L 2a1404
 frame body
 ........................
 ........................

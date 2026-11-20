@@ -235,10 +235,13 @@ def falling(kind, zone='zoneX=144 zoneY=224 zoneWidth=48 zoneHeight=96', extra='
     return f'<object id="5" name="t" type="{kind}" {box}><properties>{props}{extra}</properties></object>'
 
 
-def with_tiles(tmx_text, row, column, width=40, height=23):
+SOIL_GID = 43  # the terrain's soil body (ForestTerrain.tsx, firstgid 1)
+
+
+def with_tiles(tmx_text, row, column, width=40, height=23, gid=SOIL_GID):
     """The map with a tile layer whose only drawn cell is (row, column) (#360: a lip hangs under a drawn tile row)."""
     cells = ['0'] * (width * height)
-    cells[row * width + column] = '1'
+    cells[row * width + column] = str(gid)
     layer = f'<layer name="Background" width="{width}" height="{height}"><data encoding="csv">{",".join(cells)}</data></layer>'
     return tmx_text.replace('<objectgroup name="SpawnPoints">', layer + '<objectgroup name="SpawnPoints">', 1)
 
@@ -287,6 +290,26 @@ class FallingTrapLinksTest(unittest.TestCase):
                       'inside the drawn row, not under it')
         self.assertIn('floats', check(with_tiles(fmap(falling('FallingStone', STONE_ZONE, lip(48), STONE_BOX)), row=2, column=30))[0],
                       'a tile row beside the column')
+        for gid in sorted(links.CANOPY_GIDS):   # D112: the canopy clump is foliage for the vines, not a row a stone hangs from
+            self.assertIn('floats', check(with_tiles(fmap(falling('FallingStone', STONE_ZONE, lip(48), STONE_BOX)), row=2, column=25, gid=gid))[0],
+                          f'canopy gid {gid}')
+
+    def test_forest_2s_stone_would_float_under_a_canopy_instead_of_its_block(self):
+        """Mutation of the shipped map: the soil block over forest-2's stone (cols 138 to 141, rows 0 to 2) swapped for canopy fails."""
+        import re
+        text = (links.MAPS / 'forest-2.tmx').read_text(encoding='utf-8')
+        match = re.search(r'(<layer [^>]*name="Background"[^>]*>\s*<data encoding="csv">\s*)(.*?)(</data>)', text, re.S)
+        rows = [line.rstrip(',').split(',') for line in match.group(2).strip().splitlines()]
+        for r in range(3):
+            for c in range(138, 142):
+                rows[r][c] = '61'
+        mutated = text[:match.start(2)] + ',\n'.join(','.join(row) for row in rows) + '\n' + text[match.end(2):]
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'forest-2.tmx'
+            path.write_text(mutated, encoding='utf-8')
+            self.assertTrue(any('floats' in e for e in links.check_map(path)))
+        self.assertEqual([], links.check_map(links.MAPS / 'forest-2.tmx'))
 
     def test_a_misspelled_falling_trap_property_is_refused(self):
         lip = lambda v: f'<property name="lipTop" value="{v}"/>'

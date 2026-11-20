@@ -258,8 +258,9 @@ not automatically approve its remaster or every future image.
 
 Draft card, 2026-11-19, from the author's decisions of the same day; the answers given that day are recorded in section 6. **Nothing here is binding until the author approves it
 and it gets a D-number ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), proposed).
-Built so far (2026-11-19): the game reads and draws these layers in forest-1 (code and layers below); forest-0 and forest-2 are not converted
-([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
+Built so far: the game reads and draws these layers in forest-1 (2026-11-19, code and layers below) and in forest-0 and forest-2
+(2026-11-20, [D112](DECISIONS.md#d112-forest-0-and-forest-2-take-the-forest-look-and-the-third-party-terrain-sheet-is-retired-236); approval:
+[#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
 no palette size, alpha, banding or value-band limit applies to the background or the foreground; only the readability rules of section 3
 do. Mood: a blue night forest under a big moon (references: a silhouette forest with hazy blue depth and ground mist; a moonlit
 deciduous forest with dark framing trees; Replaced and Magnet for a lit walk edge, red enemies with glowing eyes and a little bloom).
@@ -325,8 +326,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   `<imagelayer>` and `repeatx` stay unread: the layers are tile layers, as wide as their factor needs. `world/ParallaxRenderer` draws the
   scenery in `Level.render` before `renderBackground` and the room's foreground after `fairy.renderFront`; the HUD stays its own later pass
   ([DEVELOPMENT.md](DEVELOPMENT.md#scenery-layers-and-the-foreground-parallax-236), D108). `python3 tools/parallax_game.py` writes the layers
-  into `assets/tiles/forest-1.tmx` from the sketch pieces; forest-1's play tileset is the terrain sketch (`assets/tiles/ForestTerrain.tsx`,
-  `assets/images/Tileset/ForestTerrain.png`; forest-0 and forest-2 keep `Forest.tsx` and the third-party sheet).
+  into the three forest maps from the sketch pieces; their play tileset is the terrain sketch (`assets/tiles/ForestTerrain.tsx`,
+  `assets/images/Tileset/ForestTerrain.png`); the third-party `Tileset.png` and `Forest.tsx` are deleted (D112).
 - **Offset.** `x * (1 - factor)` from the camera, snapped to whole pixels. To match what Tiled shows, use the view centre measured from
   the map's `parallaxoriginx` (Tiled lines the layers up when the view is centred on the origin), not the camera's left edge. The
   map-wide scenery layers (origin 0) never jump horizontally at a room change, and vertically only while the rooms share a floor camera top
@@ -366,8 +367,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   the pixel art, third pass), never computed at run time (no shader, no render target). The background strips carry gradients and mist and may use as
   many colours as the dither needs. This needs registered categories in `tools/sprite_layouts.py` that `check_sprite_art.py` accepts
   ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
-- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** the other forest maps (forest-0 and forest-2 have no layers
-  and still use the third-party terrain sheet) and the other rooms' foreground (only forest-1's first room and `forest-1-mob` have a group);
+- **Open items (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** forest-1's other rooms' foreground (forest-1 has a
+  group only in `forest-1-escalators`, `forest-1-traps` and `forest-1-mob`; every room of forest-0 and forest-2 has one, D112);
   `check_contrast.py` now composites what the game draws behind a sprite (the flat colour, the scenery layers at every steady camera x
   where the placement is on screen, drift phases of the clouds, then the play layer), and over that real background every sprite now passes the
   tiers; the decor rule is now relative to the composited background (D108, author decision 2026-11-20: no absolute ink floor). A monster
@@ -508,7 +509,9 @@ Rooms with high play must still be measured over the real layers before `RIM_SHE
 - **#451 (moon and clouds)** folds into the shared moon and cloud layers; close it with this work, its checklist moves to #236.
 - **Falling leaves (#236):** `526666`, `5b6f70`, `616764` were set 0.14 to 0.17 from `2c3f66`; re-measure over far and mid (0.250 to
   0.371). They stay in front of the mid layer, not in the foreground.
-- **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`; the D76 gap for it closes then.
+- **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`, deleted with D112. Its props (the village
+  sign, the bare trees, the ochre tufts) are copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in
+  `terrain.grid`) and stay reported, not gated, until they are redrawn ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)).
 
 ### 6. Author answers (2026-11-19)
 
@@ -776,7 +779,9 @@ depends on it.
 - The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
 - **Colour (decor tier, D76, recoloured 2026-11-16).** Pale dull olive stem `9d9f7b / 8a8c6d`, grey-green leaves `88a083 / 738b73`,
   contour `757a67` (no ink), light enough to stay quiet in front of the clouds of the old screen-fixed sky (outline at most 0.16; it was
-  0.57 in front of a cloud with the ink contour and violet leaves); 0.059 over the flat background of D92.
+  0.57 in front of a cloud with the ink contour and violet leaves); 0.059 over the flat background of D92. Over the layered forest
+  (D112) no colour stays quiet in front of both the moon or a cloud and a near-black mid trunk (0.315 at best), so the vines hang in
+  front of a dark canopy clump of the play layer (`canopy-*`, `terrain.grid`) and are darkened (L x0.6): outline 0.120, body 0.139.
 
 ##### Static look-alike mushroom (#299), as built
 

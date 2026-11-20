@@ -4,15 +4,16 @@
 # Decor tier (D76, #344, 2026-11-16): recoloured to muted grey-beige with a contour in its own hue, no ink 0b0814, so it reads as
 # scenery; the tuft shape and the rings stay. The real-or-false game stays between the two active fungi (D63).
 # Night palette (D92, #430): every colour mixed 35 % toward the night background 2c3f66; the day values are in docs/ART_DIRECTION.md.
+# Layered-forest recolour (#236, D112): OKLab L x0.55 - 0.10, hue kept, over forest-2's near-black ground: outline 0.157, body 0.145.
 size 24 16
-color k 56555a
-color h 7e7b7d
-color a 737073
-color s 686669
-color g 5e5c62
-color b 7c7f84
-color B 707278
-color p 84868c
+color k 0b0a0e
+color h 1d1a1c
+color a 181618
+color s 131114
+color g 0f0d12
+color b 1a1c20
+color B 15171b
+color p 1e1f24
 frame static
 ........................
 ........................

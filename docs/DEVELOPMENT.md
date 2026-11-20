@@ -287,9 +287,10 @@ whatever the camera's fraction. Clouds add an accumulated drift, fractional and 
 factor-0 layer. A room change moves the foreground's origin: `RoomFade` hides the jump; map-wide layers hold their place while the rooms share a floor camera top (all forest rooms do). The clouds run on game time (`Level.update`), so they stop in the pause and the fades. A group's `y` is in map coordinates and the group must be named `foreground-<room name>` with `roomx` = that room's x (checked at load). Nothing allocates per frame (index loops, regions
 resolved at load; `AllocationBudgetTest.forest1ParallaxLayersAndForeground`).
 
-`tools/parallax_game.py` installs the sketch into `assets/` and `assets/tiles/forest-1.tmx` (idempotent, tested by `test_parallax_game.py`);
+`tools/parallax_game.py` installs the sketch into `assets/` and the three forest maps (idempotent, tested by `test_parallax_game.py`;
+it also retiles each play layer: no seam where two rooms' floors meet, soil instead of the old rope over the room-edge walls, D112);
 `python3 tools/parallax_mock.py --check --game` checks the foreground of every room that has one against the map's objects
-(`validateParallax`). Only forest-1 has the layers so far; forest-0 and forest-2 render as before.
+(`validateParallax`). Every forest map has the layers; every room of forest-0 and forest-2 has a foreground.
 
 Package layout:
 
