@@ -80,3 +80,63 @@ class GameCheckTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class BleedCheckTest(unittest.TestCase):
+    """D111: `check_bleed` passes the shipped rooms and fails when a bleed piece or layer is removed (not vacuous)."""
+
+    def run_bleed(self, scene, mutate):
+        original = pm.tile_images
+        def patched(mock=None):
+            root, sets, pieces = original(mock)
+            mutate(root)
+            return root, sets, pieces
+        pm.tile_images = patched
+        try:
+            return pm.check_bleed(scene, out=silent)
+        finally:
+            pm.tile_images = original
+
+    @staticmethod
+    def drop_objects(suffix):
+        def mutate(root):
+            for group in root.findall('objectgroup'):
+                for obj in list(group.findall('object')):
+                    if obj.get('name', '').endswith(suffix):
+                        group.remove(obj)
+        return mutate
+
+    @staticmethod
+    def drop_layer(name):
+        def mutate(root):
+            for layer in list(root):
+                if layer.get('name') == name:
+                    root.remove(layer)
+        return mutate
+
+    def test_the_shipped_rooms_pass(self):
+        for scene in pm.game_scenes() + list(pm.SCENES.values()):
+            with self.subTest(scene=scene.room):
+                self.assertTrue(self.run_bleed(scene, lambda root: None))
+
+    def test_a_removed_top_foot_or_layer_fails(self):
+        scene = pm.game_scenes()[0]
+        for label, mutate in (('a -top', self.drop_objects('-top')), ('a -foot', self.drop_objects('-foot')),
+                              ('play-above', self.drop_layer('play-above')), ('play-below', self.drop_layer('play-below')),
+                              ('mid', self.drop_layer('mid')), ('sky', self.drop_layer('sky'))):
+            with self.subTest(removed=label):
+                self.assertFalse(self.run_bleed(scene, mutate))
+
+    def test_every_single_top_and_foot_is_needed(self):
+        for scene in pm.game_scenes() + list(pm.SCENES.values()):
+            names = {o.get('name') for d in pm.Layers(scene).layers if d.element.tag == 'objectgroup'   # this room's own group
+                     for o in d.element.findall('object') if o.get('name', '').endswith(('-top', '-foot'))}
+            self.assertTrue(names)
+            for name in sorted(names):
+                with self.subTest(scene=scene.room, removed=name):
+                    def mutate(root, name=name):
+                        for group in root.findall('objectgroup'):
+                            for obj in list(group.findall('object')):
+                                if obj.get('name') == name:
+                                    group.remove(obj)
+                    self.assertFalse(self.run_bleed(scene, mutate))

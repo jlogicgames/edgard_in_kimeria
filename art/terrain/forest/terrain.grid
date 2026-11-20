@@ -455,8 +455,8 @@ piece rope-end 1 1 at 18 6
 ................
 ................
 
-# Deep soil (vertical parallax bleed: the play layer runs 10 tile rows past the room bottom so a 150 px look down
-# shows earth): deep-1 under a ground bottom, deep-2 under it, deep-3 below and under a pit (near black, tileable).
+# Deep soil (vertical parallax bleed: the play layer runs one tile row past the room bottom, 16 px, which the camera top's 0 to 8 px
+# range and the shake need, D111): deep-1 under a ground bottom, deep-3 under a pit (near black, tileable).
 piece deep-1a 1 1 at 4 3
 1111111111111111
 11k111k111k111k1
@@ -491,40 +491,6 @@ kkkkkkkkkkkkkkkk
 kkkkk3kkkkkkkkkk
 1kkk1kkk1kkk1kkk
 kkkkkkkkkkkkkkkk
-piece deep-2a 1 1 at 6 3
-kkkkkkkkkkkkkkkk
-mkmkmkmkmkmkmkmk
-kmkkkmkkkmkkkmkk
-mkmkmkmkmkmkmkmk
-kkkmkk1mkkkmkkkm
-mkmkmkmkmkmkmkmk
-kmkmkmkmkmkmkmkm
-mmmkmmmkmmmkmmmk
-kmkmkmkmkmkmkmkm
-mkmmmkmmmkmmmkmm
-kmkmkmkmkmkmkmkm
-mmmmmmmmmmmmkmmm
-kmkmkmkmkmkmkmkm
-m1mmmmmmmmmmmmmm
-mmkmmmkmmmkmmmkm
-mmmmmmmmmmmmmmmm
-piece deep-2b 1 1 at 7 3
-kkkkkkkkkkkkkkkk
-kmkmkmkmkmkmkmkm
-mkkkmkkkmkkkmkkk
-kmkmkmkmkmk1kmkm
-kkmkkkmkkkmkkkmk
-kmkmkmkmkmkmkmkm
-mkmkmkmkmkmkmkmk
-mmkmmmkmmmkmmmkm
-mkmkmkmkmkmkmkmk
-kmm1kmmmkmmmkmmm
-mkmkmkmkmkmkmkmk
-mmmmmmmmmmmmmmmm
-mkmkmkmkmkmkmkmk
-mmmmmmmmmmmmmmmm
-mkmmmkmmmkmmmkmm
-mmmmmmmmmmmmmmmm
 piece deep-3a 1 1 at 8 3
 mzmzmzmzmzmzmzmz
 zmzzzmzzzmzzzmzz

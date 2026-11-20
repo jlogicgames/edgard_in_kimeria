@@ -77,18 +77,18 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final Clip[] CLIPS = {
         new Clip(State.IDLE, 4, 0, 0, true), new Clip(State.RUNNING, 6, 1, 0, true),
         new Clip(State.JUMPING, 2, 2, 0, false), new Clip(State.FALLING, 2, 3, 0, true),
-        new Clip(State.ATTACKING, 7, 4, 0, false), new Clip(State.CLIMBING, 1, 6, 0, true),
-        new Clip(State.HIT, 2, 7, 0, false), new Clip(State.APPEARING, 4, 8, 0, false),
-        new Clip(State.DISAPPEARING, 4, 9, 0, true)
+        new Clip(State.ATTACKING, 7, 4, 0, false), new Clip(State.CLIMBING, 1, 5, 0, true),
+        new Clip(State.HIT, 2, 6, 0, false), new Clip(State.APPEARING, 4, 7, 0, false),
+        new Clip(State.DISAPPEARING, 4, 8, 0, true)
     };
     /** Rows of hero-ladder.png, a back view used by both facings: climbing up, climbing down, holding still. */
     private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2, LADDER_CLIMB_FRAMES = 4;
     /**
      * The second set (#343 part 2): rows of both facing sheets drawn over the state's own clip without changing the state
-     * machine or any timing. Carrying draws the carry clips (the sword on his back) in place of idle, look and run; a
+     * machine or any timing. Carrying draws the carry clips (the sword on his back) in place of idle and run; a
      * throw plays its three frames, and a dusty landing (not carrying) its squat, without blocking input.
      */
-    private static final int CARRY_IDLE_ROW = 10, CARRY_RUN_ROW = 11, THROW_ROW = 12, LAND_ROW = 13, PULL_ROW = 14;
+    private static final int CARRY_IDLE_ROW = 9, CARRY_RUN_ROW = 10, THROW_ROW = 11, LAND_ROW = 12, PULL_ROW = 13;
     private static final int CARRY_IDLE_FRAMES = 4, CARRY_RUN_FRAMES = 6, THROW_FRAMES = 3, LAND_FRAMES = 1;
     private static final float THROW_SECONDS = THROW_FRAMES * Player.STEP_TIME, LAND_SECONDS = LAND_FRAMES * Player.STEP_TIME, OVERLAY_OFF = -1f;
     /**

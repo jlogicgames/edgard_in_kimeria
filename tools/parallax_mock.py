@@ -131,18 +131,24 @@ GIF_COLOURS = 128                       # the preview GIFs' global palette (one 
 # `parallaxoriginy` is ORIGIN_Y + half the view; every forest room lies at y 0, so it is exact for every room in y.
 ORIGIN_Y = CAMERA_TOP
 ROOM_H = ROWS * TILE
-BLEED_ROWS = 10                         # play layer rows past the room bottom (160 px of deep soil; the shipped art, kept after the look-around removal, D111)
-MAP_ROWS = ROWS + BLEED_ROWS
-PLAY_ABOVE = 7                          # rows of the `play-above` layer (112 px over the room top; the shipped art, kept after the look-around removal, D111)
-FG_TOP = 176                            # foreground canvas: room y -176 to 848
-FG_HEIGHT = 1024
-DEEP = {'deep-1': (64, 65), 'deep-2': (66, 67), 'deep-3': (68, 69)}   # deep soil tile ids in Forest-new.tsx (terrain.grid)
+# Bleed (D111): the camera top lies in 0..ORIGIN_Y, so a layer of vertical factor f trails the camera by at most
+# round(f * ORIGIN_Y) px (12.8 at the foreground's 1.6), and the screen shake moves the camera by up to SHAKE px after the view was
+# taken, which a layer of factor f shows as up to SHAKE * (1 + f) px. A factor-1 layer needs no art past the room (0 px), the others
+# at most 12.8 + 2.4 px; every layer gets one tile row (16 px) of margin, which covers all of it.
+SHAKE = 1.5                             # px, the largest camera shake (ScreenShake.LEVER_AMPLITUDE_PX, STONE_AMPLITUDE_PX); conservative: it is clamped to the room, so it never carries the view past the room's top or bottom
+BLEED_ROWS = 1                          # play layer rows past the room bottom (16 px of deep soil)
+MAP_ROWS = ROWS + BLEED_ROWS            # the rows of every layer that starts at the room top
+PLAY_ABOVE = 1                          # rows of the `play-above` layer (16 px over the room top)
+MID_ABOVE = 1                           # rows the `mid` strip starts above the room top (layer offsety -16)
+FG_TOP = 32                             # foreground canvas: room y -32 to 416
+FG_HEIGHT = 448
+DEEP = {'deep-1': (64, 65), 'deep-3': (68, 69)}   # deep soil tile ids in Forest-new.tsx (terrain.grid)
 BURIED = {61: 70, 62: 71, 63: 72}      # the ground's bottom row (left, middle, right) -> its buried variant over deep soil
 # (layer name, tileset key, parallaxx, parallaxy, extra properties, offsety)
 LAYERS = (('sky', 'forest/sky', 0, 0, {}, 0), ('stars', 'shared/stars', 0, 0, {}, 0), ('moon', 'shared/moon', 0, 0, {}, 0),
           ('clouds', 'shared/clouds', 0, 0, {'driftx': CLOUD_DRIFT, 'wrapx': CLOUD_WRAP}, 0),
           ('far', 'forest/far', 0.15, 0.15, {}, 0), ('grove', 'forest/grove', 0.25, 0.25, {}, 0),
-          ('mid', 'forest/mid', 0.4, 0.4, {}, -48), ('play-above', 'play-above', 1, 1, {}, -PLAY_ABOVE * TILE),
+          ('mid', 'forest/mid', 0.4, 0.4, {}, -MID_ABOVE * TILE), ('play-above', 'play-above', 1, 1, {}, -PLAY_ABOVE * TILE),
           ('Background', None, 1, 1, {}, 0), ('foreground', 'forest/fg', FG_FACTOR, FG_FACTOR, {'roomx': ROOM_X}, 0))
 MOON_AT = (480, 64)   # screen centre of the moon (the 128 px piece snaps to whole tiles: this is its exact centre); the same in every world
 
@@ -196,6 +202,11 @@ def play_rows(scene):
     rows = [[int(v) for v in line.strip().rstrip(',').split(',')] for line in data.strip().splitlines()]
     c0, c1 = scene.x // TILE, scene.x // TILE + scene.play_columns
     return [row[c0:c1] + [row[c1 - 1]] * PAD_COLUMNS for row in rows]
+
+
+def layer_rows(key):
+    """Rows of a scenery layer: MAP_ROWS from its top, the mid strip also its rows above the room."""
+    return MAP_ROWS + (MID_ABOVE if key == 'forest/mid' else 0)
 
 
 class Layer:
@@ -260,10 +271,10 @@ def grove(layer):
 
 
 def mid(layer):
-    layer.strip(['mid-a', 'mid-b', 'mid-c', 'mid-d'], 0)   # layer offsety -48: the pieces start 48 px over the room top
+    layer.strip(['mid-a', 'mid-b', 'mid-c', 'mid-d'], 0)   # layer offsety -16: the pieces start 16 px over the room top
 
 
-GRADED = ('deep-1', 'deep-2')           # the soil rows graded under a floor's bottom row, then deep-3
+GRADED = ('deep-1',)                    # the soil rows graded under a floor's bottom row, then deep-3 (one row now, D111)
 DEEP_STRIDE_C = 7                       # the two variants of a deep tile alternate on a column and row stride
 DEEP_STRIDE_K = 3
 PERIOD_ROWS = 9                         # play_above reads rows 1 to 8 of a column for its period
@@ -271,7 +282,7 @@ PERIOD_ROWS = 9                         # play_above reads rows 1 to 8 of a colu
 
 def play_bleed(rows, deep_first):
     """The room's play rows plus BLEED_ROWS of deep soil (Forest-new.tsx, `deep_first` its firstgid): deep-1 under a
-    floor's bottom row, deep-2 under it, deep-3 below and under an open column (a pit falls into near black). The
+    floor's bottom row, deep-3 under an open column (a pit falls into near black). The
     ground's bottom row on the room's last row becomes its buried variant (no nubs, graded into deep-1), since the
     soil goes on under it."""
     rows = [list(r) for r in rows]
@@ -292,8 +303,8 @@ def play_bleed(rows, deep_first):
 
 def play_above(rows):
     """PLAY_ABOVE rows over the room top: a column whose top tile is drawn (a rope, a trunk, a wall) carries on upward
-    with the repeat of its tiles below row 0 (the shortest period of rows 1 to 8, continued backwards), so a higher camera shows
-    no cut; decor only, no collision."""
+    with the repeat of its tiles below row 0 (the shortest period of rows 1 to 8, continued backwards), so the camera's shake
+    shows no cut; decor only, no collision."""
     above = [[0] * len(rows[0]) for _ in range(PLAY_ABOVE)]
     for c in range(len(rows[0])):
         if not rows[0][c]:
@@ -398,7 +409,7 @@ def build(scene):
         if key == 'play-above':
             rows = play_above(play_rows(scene))
         elif key:
-            layer = Layer(info[key], scene.columns)
+            layer = Layer(info[key], scene.columns, layer_rows(key))
             BUILDERS[key](layer)
             rows = layer.rows
         else:
@@ -710,11 +721,89 @@ def exclusions(scene, unique=False):
     return rects
 
 
+BOX_TOP = 1                             # a PIL bbox is (left, top, right, bottom)
+BOX_BOTTOM = 3
+STRIP_LAYERS = ('sky', 'far', 'grove', 'mid')   # the layers whose art runs on to the bottom of the view; stars, moon and clouds are free pieces
+
+
+def drawn_rows(image):
+    """(first, last + 1) drawn rows of `image` (alpha above 0), or None when it is empty."""
+    box = image.getchannel('A').getbbox()
+    return None if box is None else (box[BOX_TOP], box[BOX_BOTTOM])
+
+
+def check_bleed(scene, out=print):
+    """No layer shows a cut edge at any camera top from 0 to ORIGIN_Y (the whole range the camera moves in, D111), with the
+    camera shake on top, and no bleed piece is missing. A cut is a drawn first row above the screen's top or a drawn last row
+    above its bottom, by the margin its factor needs (SHAKE * (1 + f), conservative: the shake is clamped to the room).
+    - Every layer of LAYERS is present (`play-above` too; `play-below` in the game map, where the deep soil is its own layer).
+    - A tile layer whose art touches its first image row must start above the screen; the last DRAWN row of a strip layer (sky,
+      far, grove, mid) must end below the screen.
+      The play layer, `play-above` and `play-below` count as one stack (its first and last drawn rows).
+    - Every foreground piece that has a `-top` or `-foot` in fg.grid has it, at the position `with_bleed` gives (a removed or
+      moved partner fails); a `-top` must start above the screen at its first DRAWN row (its piece's own rows 0 to 7 are empty),
+      a `-foot` and an `edge-*` piece must end below it at their last drawn row.
+    The report goes to `out` (a test passes a silent one)."""
+    layers, ok = Layers(scene), True
+    def fail(text):
+        nonlocal ok
+        out(f'{scene.source.name} {text}')
+        ok = False
+    def edges(label, top_y, rows, factor, top_edge, bottom_edge):
+        margin = math.ceil(SHAKE * (1 + factor))
+        for cam_top in range(ORIGIN_Y + 1):
+            top = screen_y(top_y + rows[0], factor, cam_top)
+            if top_edge and top > -margin:
+                fail(f'{label}: its first drawn row is at screen y {top} at camera top {cam_top} (needs {-margin} or less)')
+                break
+        for cam_top in range(ORIGIN_Y + 1):
+            bottom = screen_y(top_y + rows[1], factor, cam_top)
+            if bottom_edge and bottom < VIEW[1] + margin:
+                fail(f'{label}: its last drawn row ends at screen y {bottom} at camera top {cam_top} (needs {VIEW[1] + margin} or more)')
+                break
+    present = {d.element.get('name') for d in layers.layers}
+    for name in [layer[0] for layer in LAYERS] + ['play-above'] + (['play-below'] if scene.game else []):
+        if name not in present and name != 'foreground':
+            fail(f'layer {name} is missing')
+    play = [d for d in layers.layers if d.element.get('name') in ('play-above', 'Background', 'play-below')]
+    if play:
+        first, last = min(play, key=lambda d: d.oy), max(play, key=lambda d: d.oy + d.image.height)
+        edges('play layer top', first.oy, drawn_rows(first.image) or (0, 0), 1, True, False)
+        edges('play layer bottom', last.oy, drawn_rows(last.image) or (0, 0), 1, False, True)
+    for d in layers.layers:
+        if d.element.tag == 'layer' and d.element.get('name') not in ('play-above', 'Background', 'play-below'):
+            rows = drawn_rows(d.image) or (0, 0)
+            edges(d.element.get('name'), d.oy, rows, d.py, rows[0] == 0, d.element.get('name') in STRIP_LAYERS)
+    spots = sprites.layout('forest/fg')[0]
+    _, _, pieces = tile_images(scene.mock)
+    for d in layers.layers:
+        if d.element.tag != 'objectgroup':
+            continue
+        placed = {(o.get('name'), int(float(o.get('x'))), int(float(o.get('y')))) for o in d.element.findall('object')}
+        for name, x, y in sorted(placed):
+            if name.endswith(('-top', '-foot')):
+                continue
+            top = y - spots[name][SPOT_H] * TILE
+            for partner in with_bleed([(name, x, top)], spots)[1:]:
+                partner_name, partner_x, partner_top = partner
+                want_y = partner_top + spots[partner_name][SPOT_H] * TILE   # an object's y is its bottom edge
+                want = (partner_name, partner_x, want_y)
+                if want not in placed:
+                    fail(f'{name} at x {x}: its bleed piece {partner_name} is missing at x {partner_x}, y {want_y}')
+        for obj in d.element.findall('object'):
+            name, piece = obj.get('name'), pieces[int(obj.get('gid')) & GID_MASK]
+            rows = drawn_rows(piece)
+            if rows:
+                edges(f'{name} at x {int(float(obj.get("x")))}', int(float(obj.get('y'))) - piece.height, rows, d.py,
+                      name.endswith('-top'), name.endswith('-foot') or name.startswith('edge-'))
+    return ok
+
+
 def check(scene):
     """The steady-camera rules (exclusions, the hero at the start and exit, standing and walking cover: camera top
-    ORIGIN_Y only, as the hero walks and stands)."""
+    ORIGIN_Y only, as the hero walks and stands) and the bleed at every camera top (check_bleed)."""
     root, _, pieces = tile_images(scene.mock)
-    ok = True
+    ok = check_bleed(scene)
     for group in root.findall('objectgroup'):
         if group.get('name').startswith('foreground') and (not scene.game or prop(group, 'roomx') == scene.origin):
             ok &= check_layer(scene, group, pieces)
