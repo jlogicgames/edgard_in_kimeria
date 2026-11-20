@@ -3344,8 +3344,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Accepted (author, 2026-11-19: the Phase 1 draft and its ten recommendations,
   [#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)). Gate built (`RoomCardsTest`). The rooms shipped below it
-  are reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (the three spider rooms with the snail,
-  #329). Revises D72's "met alone" reading and the placements built on it (D85, D88, D102 and D103 "Placed", #484).
+  were all reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), done: the three spider rooms with the snail ([#504](https://github.com/jlogicgames/edgard_in_kimeria/pull/504)),
+  five sparse forest-1 rooms ([#507](https://github.com/jlogicgames/edgard_in_kimeria/pull/507), D107), `forest-1-traps` and `forest-1-guard` ([#509](https://github.com/jlogicgames/edgard_in_kimeria/pull/509), D110) and the three forest-2 rooms (batch 4, D109). Revises D72's "met alone" reading and the placements built on it (D85, D88, D102 and D103 "Placed", #484).
 - **Problem:** the author found the rooms built so one mechanic sits alone "dull and empty" and asked for one mechanic per
   3 s of play, so that a room holds 3 to 4 at once. D72 never asked for empty rooms: it says a new element is first met
   where it is the only *unknown* thing on screen, and known things were always allowed beside it. The emptiness came from
@@ -3413,7 +3413,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   level, the fixed lesson list, a boss object, nothing lethal). Synthetic cases pin each rule. Every route test the cards
   name now pins its time within 0.1 s (before, `RoomReplayTest`, the deadfall, bramble, route, hive and tree tests only
   checked "under 20 s"): no threshold was loosened.
-- **Rooms shipped below it:** a fixed, shrink-only list in the test (`GRANDFATHERED`), each card with `Below density` citing
+- **Rooms shipped below it (history, done: the lists were emptied by #500 and then deleted from the test, so no shipped room is exempt and none can be added back):** a fixed, shrink-only list in the test (`GRANDFATHERED`), each card with `Below density` citing
   [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the test fails when a listed room passes and keeps the field, and a room not on the list cannot use it. Argued, not
   taken for convenience: the field carries a tracked rework that removes it, the same mechanism as D72's `Overload reason`
   while #375 and #376 were open. Beats verified against each room's route test (the scripted routes of `RoomReplayTest`
@@ -3436,9 +3436,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 | `forest-fissure` | ember-fissure x2 (112 px apart: two beats, each waited out), beetle | 9.30 | 3.10 | passes |
 | `forest-canopy` | redmob, false-honey-fungus, bat-enemy, thorn-vine, touch-explosive, falling-stone | 9.48 | 1.58 | passes |
 
-  Seven of the fourteen passed and seven were below; since the spider rooms' rework (#500, below) nine pass and five are below. `forest-1-traps` passes by a hair: 12.27 s over 8 beats is 1.534 s per
-  beat, 0.03 s above the 1.5 s floor, so a faster mastered route would push it over; it is a candidate for the #500
-  rework. Against the first count: `forest-1-tree` has one beat, not two
+  Seven of the fourteen passed and seven were below; at that point, after the spider rooms' rework (#500, below), nine passed and five were below (history: all rooms pass since #500 finished). `forest-1-traps` passes by a hair: 12.27 s over 8 beats is 1.534 s per
+  beat, 0.03 s above the 1.5 s floor, so a faster mastered route would push it over; it was a candidate for the #500
+  rework, done by batch 3 (D110: split, 2.00 s per beat). Against the first count: `forest-1-tree` has one beat, not two
   (`TreeClimbTest`: on the fast line the beetle never commits); with the 96 px rule `forest-1-traps` has eight, not nine,
   and is no longer too dense, so it carries no `Overload reason`; `forest-walls` has three, not four, and still passes.
   `forest-fissure` keeps two fissure beats: they are 112 px apart and the route waits out each jet.
@@ -3450,8 +3450,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   column itself and the beetle's patrol is 48 px from it), `forest-entry` (the YellowMob's patrol 16 px from the first
   Bat's column), `forest-walls` (the first wall stands inside the YellowMob's patrol: a combination on first sight) and
   `forest-canopy` (the false honey fungus 64 px from the Bat's column; the thorn vine beat 4, its retry not measured).
-  They are on a second shrink-only list (`FIRST_MEETING_GRANDFATHERED`), each entry citing [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), which re-measures,
-  re-orders or records the author's decision. The five first meetings that pass (the spider, the bramble, the route
+  They were on a second shrink-only list (`FIRST_MEETING_GRANDFATHERED`), each entry citing [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), which re-measured,
+  re-ordered or recorded the author's decision for each (all done by batches 2 to 4; the list was deleted). The five first meetings that pass (the spider, the bramble, the route
   room's bat, the floor hive, the first fissure) are pinned by `FirstMeetingPocketTest`.
 - **Reworked under #500 (the spider rooms with the snail, #329; cards approved by the author 2026-11-19, with the five
   recommendations of the Phase 1 proposal).** `forest-1-spider` grew from 640 to 1120 px (x 6880-8000, forest-1 from 510 to 540
@@ -3584,7 +3584,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `forest-1-deadfall`, `forest-1-bramble` and `forest-1-hive` gained beats (ROOMS.md, "Reworked under D105, batch 2");
   `forest-1-tree` became forest-1's one `reward` room (the beetle left, nothing lethal added, the level's end stays on the
   crown); `GRANDFATHERED` is empty (ceiling 0) and `FIRST_MEETING_GRANDFATHERED` lost `forest-1-mob`, `forest-1-deadfall` and
-  `forest-1-tree`. **A touch trap whose trigger lies outside its lethal band** (only the deadfall, D88) has a trip-and-stand
+  `forest-1-tree`. **A touch trap whose trigger lies outside its lethal band** (only the deadfall, D88; superseded by [D109](#d109-a-skills-first-meeting-has-a-pocket-in-view-and-calm-and-the-false-honey-fungus-has-a-trip-and-stand-pocket-500-499), which adds the false honey fungus and a measured condition) has a trip-and-stand
   pocket on its trigger (`DeadfallTrap.phase()`, acting `SWING`); a trap whose trigger is the lethal spot has none.
   `forest-1-traps`' escalator pocket now passes (`forest1TrapsTheEscalator`); the room stays on the first-meeting list for its
   puffball.
@@ -3652,6 +3652,30 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   escalator, deadfall or quicksand lies in a monster's range or drop column (it reads static collisions only); a placed monster kind
   with no measured body fails; a map with more than one non-scenery tile layer fails (the game overwrites layer by layer, last wins); the 128 px body camera step
   is enough because a 4 px sweep gave identical results for every kind and map (measured).
+
+## D109. A skill's first meeting has a pocket in view and calm, and the false honey fungus has a trip-and-stand pocket (#500, #499)
+
+- **Status:** Accepted (author, 2026-11-20: decisions 1 and 2 of the batch-4 design). Gate built (`FirstMeetingPocketTest.skillPocket`, new
+  signals in `signals`). Extends D105's first-meeting pocket; the band and the clearance are unchanged.
+- **Problem:** D105 asks a first meeting's pocket to show the new element "in view and acting". A wall jump is geometry and never acts, so
+  `forest-walls`, whose first wall stood inside a YellowMob's patrol, had no pocket to pin; and the false honey fungus, a touch trap
+  whose trigger zone reaches 64 px beyond its 24 px cloud, was excluded with the stump and the Bomb by a line that said "only the
+  deadfall" (D105, ROOMS.md).
+- **Decision:** (1) *A skill's pocket* is a spot where the whole first obstacle lies inside the camera view and no enemy, hazard or trap of the room stirs during
+  the wait (`skillPocket`: the hero stands 12 s, is never hit, the climbable `Wall` block at the card's geometry x is inside the view every
+  frame, and no enemy, hazard or trap changes position, state or phase). It replaces "seen acting" for a skill only. (2) *A touch trap whose trigger lies outside its lethal
+  band* has a trip-and-stand pocket. The condition is measured, so no trap is excluded by name (author, 2026-11-20): the deadfall (D88), the false honey fungus (D63) and the thorn root and tuft meet it, while the exploding stump and root and the Bomb, whose trigger lies inside their blast, do not and still have no pocket. At the fungus the hero stands in its zone short of the cloud, sees it swell and burst (`FungusTrap.state()`, acting `BURST`) and is never touched. What the exemption carries: nothing is excused; each pocket is a measured, pinned test.
+- **Applied in batch 4 (cards approved 2026-11-20):** `forest-entry` (the YellowMob behind a 32 px cover; Bat 41 moved to x 352; the two known Bats
+  stay in view from the pocket, 112 px away, as in the fissure room), `forest-walls` (the wall jump met alone, YellowMob moved to x 1040) and
+  `forest-canopy` (Bat 65 removed). `forest-entry`, `forest-walls` and `forest-canopy` left `FIRST_MEETING_GRANDFATHERED` (the list is now empty, ceiling 0, with batch 3, D110). Details and measured times: ROOMS.md, "Reworked under D105, batch 4". The trip-and-stand condition is measured, not a list (`FirstMeetingPocketTest.tripAndStand`, asserted from the map by both pocket tests; the stump and the root fail it): the trigger reaches at least a hero's body width (16 px) past the lethal band and the pocket stands at least that clear of it; the deadfall and the fungus are the members today. The skill pocket also fails when any enemy, hazard or trap of the room (enemies, lethal hazards, deadfalls, fungus, falling, exploding and thorn traps, puffballs) changes position, state or phase (`aSkillPocketTooFarFromTheWallFails`).
+- **Found in the build:** the thorn vine, now beat 3 of `forest-canopy`, had a cheapest death at **6.45 s**, not the estimated 5 s (that was the
+  mastered hero's arrival), over D105's 6 s. The gate was not loosened: the vine's `phase` went from 0 to 2.77 s (scanned 0 to 4.4 s), which makes
+  the cheapest death **5.93 s** with the mastered route unchanged (9.48 s, no wait). The vine is in view for 4.90 s (more than its 4.5 s period) before the
+  mastered hero can reach it, so a first-timer sees it swing (D84). The cost: the slack before the vine hits a late walker fell from 0.85 s to **0.6 s**
+  (held 0 to 35 frames passes; at phase 2.9 it would be 0.45 s with a 5.80 s retry, at 2.7 0.65 s with a 6.00 s retry). It is no gotcha: the mastered hero
+  needs no wait at all, so the 0.6 s is margin on a route that never stops, a first-timer is not killed by arriving on time, he is killed only by arriving
+  0.6 s or more late and then sees the swing, and the coin route (the only one with waits, near Bat 41 in `forest-entry`) is another room. `forest-canopy` left the list too.
+- **Not verified:** how the reworked rooms feel to a first-time player (#135).
 
 ## D110. forest-1's trap course is split in two: the escalators and the puffball each get a room, and the course loses a tuft and a lever pair (#500, #499)
 

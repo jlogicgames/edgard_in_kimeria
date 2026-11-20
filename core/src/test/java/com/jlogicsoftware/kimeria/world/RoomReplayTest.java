@@ -124,15 +124,15 @@ class RoomReplayTest {
         assertEquals(CANOPY_S, measure("forest-canopy", 3, false, 0, new float[]{1400, FUNGUS_JUMP}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestEntryAllCollectablesFitThirtySeconds() {
-        measure("forest-entry", 0, true, 40, new float[]{95, 140, 300, 535});
+        measure("forest-entry", 0, true, 40, new float[]{80, 140, 300, 535});
     }
     @Test void forestCanopyAllCollectablesFitThirtySeconds() {
         measure("forest-canopy", 3, true, 0, new float[]{1400, 1460, 1555});
     }
 
-    private static final float[] ENTRY_JUMPS = {95, 225, 345, 535}, WALLS_JUMPS = {860, 940};
+    private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {860, 940};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 6.80f, WALLS_S = 8.80f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 6.83f, WALLS_S = 7.45f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -397,6 +397,16 @@ class RoomReplayTest {
         return firstTime;
     }
 
+    /** Whether a Bat's hitbox is within 40 px of the hero's, both ways (the collection route's wait under the stair's Bat, #500). */
+    private static boolean batClose(Level level, Player player) {
+        Rectangle me = player.hitboxBounds();
+        for (var object : level.objects) if (object instanceof com.jlogicsoftware.kimeria.entity.enemy.Bat bat) {
+            Rectangle b = bat.hitboxBounds();
+            if (b.x - (me.x + me.width) < 40 && me.x - (b.x + b.width) < 40 && b.y - (me.y + me.height) < 40 && me.y - (b.y + b.height) < 40) return true;
+        }
+        return false;
+    }
+
     private float replay(Level level, String route, boolean collect, int delayFrames, float[] jumps) {
         return replay(level, route, collect, delayFrames, jumps, false);
     }
@@ -421,7 +431,10 @@ class RoomReplayTest {
                 }
                 if (fissureRoute != null) fissureRoute.drive(level, held, pressed);
                 else held.add(phase == 0 || phase == 2 ? Input.Keys.A : Input.Keys.D);
-                if (jump < jumps.length && player.position.x >= jumps[jump] && player.isOnGround()
+                // #500 (D105): Bat 41 hangs in the stair's gap at x 352; the collection route (coins under and past it) waits on the ground while the Bat is within 40 px of him.
+                boolean batWait = collect && route.equals("forest-entry") && player.isOnGround() && batClose(level, player);
+                if (batWait) { held.remove(Input.Keys.D); held.remove(Input.Keys.A); }
+                if (!batWait && jump < jumps.length && player.position.x >= jumps[jump] && player.isOnGround()
                     && frame - lastJumpFrame > 1) {
                     held.add(Input.Keys.J); jump++; lastJumpFrame = frame;
                 }
@@ -481,7 +494,7 @@ class RoomReplayTest {
             }
             // Match KimeriaGame.render: scale the world step, but keep keyboard buffering on real time.
             level.update(REAL_STEP * timeScale);
-            assertFalse(player.isGotHit(), route + " died at frame " + frame);
+            assertFalse(player.isGotHit(), route + " died at frame " + frame + " at " + player.position + " phase " + phase);
             // Stop this pickup exercise before Checkpoint secures it, so retries test rollback.
             if (artifactsRoute && route.startsWith("forest-1") && level.rangedStock.count() == 3)
                 return (frame + 1) * REAL_STEP;

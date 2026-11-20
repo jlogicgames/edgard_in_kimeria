@@ -85,8 +85,7 @@ exempt). A beat is one placed hazard, monster, pulled lever (with what it drives
 The card lists `Beats` (`id@x`, rising x) and `Beat time` (`seconds (TestClass)`, pinned within 0.1 s); a new element's
 first meeting is a safe pocket among known beats (among the first two beats or a retry of at most 6 s, no other lethal
 object within 96 px), recorded under `First meeting` with its `pocket at x N` and pinned by a method of `FirstMeetingPocketTest` (hero
-there, never hit, the element seen acting), never a room of its own. A lesson outside the tutorial needs its own decision. `RoomCardsTest` checks it; only the rooms shipped below it before D105 may
-carry `Below density`, on a list that only shrinks (#500).
+there, never hit, the element seen acting), never a room of its own. A skill (a wall jump) never acts: its pocket shows the whole first obstacle in view while no lethal object in the room stirs (`skillPocket`, D109). A lesson outside the tutorial needs its own decision. `RoomCardsTest` checks it, and no shipped room is exempt: the rooms that were below it before D105 were all reworked (#500).
 
 ## Git in this repo
 

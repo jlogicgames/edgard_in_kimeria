@@ -291,17 +291,23 @@ Rule: [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-fi
   replays at most 6 s; not combined on first sight. For a monster (met in play, D100) the danger zone is its whole reach,
   hearing included. `FirstMeetingPocketTest` pins the pocket: the hero stands at its x in the real camera view, is never
   hit, and sees the element act.
+- **A skill's pocket ([D109](DECISIONS.md#d109-a-skills-first-meeting-has-a-pocket-in-view-and-calm-and-the-false-honey-fungus-has-a-trip-and-stand-pocket-500-499)).** A wall jump never acts, so "seen acting" does not apply to a skill: its pocket is a
+  spot where the **whole first obstacle is in the camera view** and **no enemy of the room stirs** during the wait
+  (`FirstMeetingPocketTest.skillPocket(map, room, element, pocketX, geometryX)`: the hero stands 12 s, is never hit, the
+  climbable `Wall` block at `geometryX` lies inside the view every frame, and no enemy, hazard or trap of the room stirs: enemies, lethal hazards, deadfalls, fungus, falling, exploding and thorn traps and puffballs keep their position, state and
+  phase). The view check is trivial in a room narrower than the view; `aSkillPocketTooFarFromTheWallFails` shows it and the stirring check can fail.
 - **Clearance counts what can kill ([D107](DECISIONS.md#d107-the-first-meeting-clearance-counts-what-can-kill-a-crumble-support-over-a-floor-is-not-a-lethal-neighbour-500-499)).**
   A crumble support (`FallingPlatform`, any skin) is a lethal neighbour only when what lies under it is lethal (no solid
   collision beneath its span: a pit; the rotten log over the pit in `forest-1-traps` still counts); over a floor it drops
   the hero alive onto it (D69). An object that is part of the first-met skill's own geometry (the rotten branches are
   `skin=branch` objects like the climb's sound ones) is not its own neighbour. The same relief decides whether a `rest` or
   `reward` room "holds nothing lethal".
-- **A touch trap whose trigger lies outside its lethal band** (only the deadfall: its trip vine is 54 px short of the swing
-  band, D88) has a **trip-and-stand pocket on the trigger**: the hero stands on the vine, trips it, is never hit and sees
-  the log swing past (`FirstMeetingPocketTest` signal `DeadfallTrap.phase()`, acting `SWING`). It is not a loophole: a trap
-  whose trigger *is* the lethal spot (the exploding stump, the Bomb, the thorns) shows nothing from a pocket and is met
-  among known beats as before.
+- **A touch trap whose trigger lies outside its lethal band** (the deadfall: its trip vine is 54 px short of the swing
+  band, D88; and the false honey fungus: its trigger zone reaches 64 px beyond its 24 px cloud, D63, [D109](DECISIONS.md#d109-a-skills-first-meeting-has-a-pocket-in-view-and-calm-and-the-false-honey-fungus-has-a-trip-and-stand-pocket-500-499)) has a
+  **trip-and-stand pocket on the trigger**, a measured condition (`FirstMeetingPocketTest.tripAndStand`, asserted from the map by the deadfall and fungus pocket tests; `anExplodingStumpOrRootFailsTheTripAndStandCondition` shows the stump and root fail it): the trigger reaches at least a
+  hero's body width (16 px) past the lethal band and the pocket stands at least that clear of the band. The deadfall, the false honey fungus and the thorn root and tuft (their zone reaches 64 px past the kill band; `aThornRootOrTuftMeetsTheTripAndStandCondition`) meet it; the exploding stump and root and the Bomb, whose trigger lies inside their blast, do not and are met among known beats as before. Decided by the author 2026-11-20: the measured rule decides, no trap is excluded by name. The deadfall's pocket: the hero stands on the vine, trips it, is never hit and sees the log swing past
+  (`FirstMeetingPocketTest` signal `DeadfallTrap.phase()`, acting `SWING`); or stands in the fungus's zone short of its cloud and
+  sees it swell and burst (signal `FungusTrap.state()`, acting `BURST`).
 - **Times and retry.** D19 stands. Density fills a room, it does not lengthen it; a room whose retry passes about 15 s
   because of density is split, each half passing the band. A short room is merged or given more route, never padded.
 - **Exempt, each earned:** `lesson` in `forest-0` and in the test's fixed list of lessons elsewhere (only `forest-1-lever`,
@@ -319,10 +325,10 @@ the hero at the card's `pocket at x N` and names the room and the element.
 `forest-canopy`) and seven were too empty (`forest-1-mob`, `forest-1-deadfall`, `forest-1-spider`, `forest-1-bramble`,
 `forest-1-climb`, `forest-1-hive`, `forest-1-tree`). The numbers are on the cards and in D105. The too-empty rooms were on the
 gate's shrink-only list with `Below density`, and the forest-1 rework was tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the spider rooms were reworked with the
-snail (#329) first, and the other five by the batch below, so **the list is empty (ceiling 0)**. `forest-1-traps` passes by 0.03 s
-(1.534 s per beat), a rework candidate. Five rooms still met a new element late, crowded or with no safe spot that shows it
+snail (#329, [#504](https://github.com/jlogicgames/edgard_in_kimeria/pull/504)) first, and the other five by batch 2 below ([#507](https://github.com/jlogicgames/edgard_in_kimeria/pull/507)), so **the list was empty** and the test deleted it (no shipped room is exempt). `forest-1-traps` passed by 0.03 s
+(1.534 s per beat); batch 3 split it (below, 2.00 s per beat). Five rooms met a new element late, crowded or with no safe spot that shows it
 acting (`forest-1-traps` for the puffball, `forest-1-guard`, `forest-entry`, `forest-walls`, `forest-canopy`), on a second
-shrink-only list under the same issue; batch 3 (below, D110) took `forest-1-traps` and `forest-1-guard` off it, three remain.
+shrink-only list under the same issue; batch 3 (below, D110) took `forest-1-traps` and `forest-1-guard` off it and batch 4 (below, D109) cleared `forest-entry`, `forest-walls` and `forest-canopy` (once its thorn vine was retimed), so the second list is empty too: **#500 is done** (batches [#504](https://github.com/jlogicgames/edgard_in_kimeria/pull/504), [#507](https://github.com/jlogicgames/edgard_in_kimeria/pull/507), [#509](https://github.com/jlogicgames/edgard_in_kimeria/pull/509) and the forest-2 batch 4), and `RoomCardsTest` no longer carries either list.
 
 ### Reworked under D105, batch 2 (#500, D107, cards approved by the author 2026-11-19)
 
@@ -375,6 +381,35 @@ pinned within 0.1 s.
 - Deaths (retry cost): the trap course 6.47 s at the log (12.73 s before the split); the guard room 1.37 s in the cloud on the
   first walk-in and 5.82 s in the beetle's burst after the mastered melee.
 - Changed assertion: the guard room's entrance-to-cloud clearance, 140 to 117 px (D68, Update; the rule it stands for holds).
+
+### Reworked under D105, batch 4 (#500, D109, cards approved by the author 2026-11-20)
+
+The three forest-2 rooms on the first-meeting list. No room added, widened or moved; no new element, monster or trap type; no hint
+text. Times are the zero-charge mastered routes of the room tests, pinned within 0.1 s. Map ids are in `forest-2.tmx`.
+
+| Room | Beats (id@x) | Time | s/beat | What changed |
+| --- | --- | ---: | ---: | --- |
+| `forest-entry` | yellowmob@192, bat-enemy@352, bat-enemy@512, touch-explosive@656 | 6.83 s | 1.71 | the step (Collisions id 6) became a 32 px cover at x 112-144, drawn with the step's end caps (tiles 26, 28, row 19, cols 7-8); the YellowMob (id 50) stands on the floor (Tiled y 304), `offNeg` 6, `offPos` 0 (it wakes for a hero centre in x 96-192, stops against the cover); Bat 41 moved from x 272 to x 352; the twig moved from the old step to col 14, on the floor at pit 1's lip |
+| `forest-walls` | wall-jump@912, yellowmob@1040, redmob@1136 | 7.45 s | 2.48 | YellowMob 16 moved from x 832 to x 1040 (`offNeg` 0, `offPos` 1); RedMob 60 `offNeg` 5 to 2 (wakes from x 1104); bush 132 moved from x 1040 to x 944 |
+| `forest-canopy` | redmob@1472, false-honey-fungus@1672, thorn-vine@1896, touch-explosive@2064, falling-stone@2224 | 9.48 s | 1.90 | Bat 65 (x 1760) removed; the vine's `phase` 0 to 2.77 s |
+
+- First meetings pinned in `FirstMeetingPocketTest`: `forestEntryTheYellowMob` (x 100, behind the cover, acting `RUN`; Bats 41 and 43 are
+  known and in view, neither reaches it), `forestWallsTheWallJump` (x 880, a skill's pocket, D109), `forestCanopyTheFalseFungus` (x 1640 in its
+  trigger zone, acting `BURST`, D109) and `forestCanopyTheThornVine` (x 1848, acting `SWING_LEFT`).
+- `forest-entry`'s mastered route jumps the cover and stomps the YellowMob, which stands about 40 px short of the cover when the hero is
+  airborne (it stops chasing a hero who is not at its height); the pocket test shows the mob charging a hero who stays behind the cover.
+  The all-coins route (12.05 s, was 10.40 s) waits on the ground while Bat 41 is within 40 px (`RoomReplayTest.batClose`): the coins at
+  x 336 (floor) and x 368 (platform 3) lie under and beside the Bat's column: a hero who wants them waits under the Bat, a risk-and-reward choice.
+- `forest-walls`' route swords the YellowMob rather than stomping it from wall 45 (7.45 s against the estimate of about 8.8 s).
+- **The thorn vine's retry (phase retimed).** The vine is now beat 3, so D105 asks a retry of at most 6 s. With `phase` 0 the cheapest death
+  was **6.45 s** (the Phase 1 estimate of about 5 s was the mastered hero's arrival, not a death), so the vine's `phase` (id 127) went from 0 to
+  **2.77 s**. Scanned over 0 to 4.4 s in 0.1 s steps (0.01 s steps from 2.65 to 2.85) with a walker held 0 to 269 frames at the entrance: slack and retry
+  trade one frame for one frame. At 2.77 s the mastered pace still passes with no wait (a walker held 0 to 35 frames, 0.6 s, passes; was 0.85 s at
+  phase 0) and the cheapest death is **5.93 s** (held 36 frames; phase 2.9 would give 0.45 s and 5.80 s, phase 2.7 0.65 s and 6.00 s, no margin), hero
+  hit (`Forest2TrapsTest.theCheapestDeathAtTheVineOnTheMasteredPaceIsPinned`, asserted at most 6 s). The vine swings all the time and is in view (any part of its sweep) for
+  **4.90 s** before the mastered hero's body reaches its swept area, more than its 4.5 s period, swinging both ways to its full amplitude
+  (`Forest2TrapsTest.theVineIsSeenSwingingForAFullPeriodBeforeTheMasteredHeroCanReachIt`); its whole sweep is in view for 2.27 s of that. The mastered route stays 9.48 s (1.90 s per beat); the
+  fungus pocket and every other pin are unchanged. `forest-canopy` left `FIRST_MEETING_GRANDFATHERED`, which is now empty (ceiling 0, with batch 3).
 
 ## forest-entry split (#376, D72)
 
@@ -623,8 +658,9 @@ layer offset that this text already includes in the visible position).
 | x | What appears | Role |
 | ---: | --- | --- |
 | 64 | Start. The first mob's zone begins 4 tiles ahead. | Safe entrance |
-| 192 | YellowMob (id 50), patrol 128–208, beside a one-tile step | **Stomp, alone**. Jump on it from above, or K. |
-| 240–320 | A plain pit (80 px; the quicksand pool became a pit, #486), vertical Bat enemy (272); optional one-way steps to the coins | Pit + Bat enemy |
+| 112–144 | A 32 px earth cover (Collisions id 6, since #500, D105) | The mob stops against it |
+| 192 | YellowMob (id 50) on the floor, wakes for a hero centre in x 96–192 | **Stomp**. Jump on it from the cover or over it, or K. |
+| 240–320 | A plain pit (80 px; the quicksand pool became a pit, #486), vertical Bat enemy (352 since #500); optional one-way steps to the coins | Pit + Bat enemy |
 | 416–480 | One-way ledge (id 122), reached from the stair; empty since #417 moved the Bat ingredient to `forest-walls` (the ladder, id 123/124, is removed by #376) | Scenery |
 | 512–608 | Horizontal Bat (patrol ends at about 608); a second plain pit at x 560-608 (48 px) | Same, repeated |
 | 656 | **Bomb** (id 54) | **Bomb**: flat ground 48 px past the second pit, 0.8 s warning (1.2 s with Assist), 64 px blast (x 632-696) |
@@ -635,9 +671,9 @@ layer offset that this text already includes in the visible position).
 | x | What appears | Role |
 | ---: | --- | --- |
 | 752 | Start, beside the room wall (x 736-752) | Safe entrance |
-| 832 | YellowMob (id 16), patrol x 816-944 (`offNeg` 1 since #376) | Stomp repeated, at the foot of the climb |
-| 912, 992 | Two tall walls | Wall jump |
-| 1136 | RedMob (id 60), zone 1056–1216, just before the exit | Sword or stomp; first met in `forest-1` |
+| 912, 992 | Two tall walls | Wall jump, met alone (since #500, D105) |
+| 1040 | YellowMob (id 16), zone x 1040–1056 (moved from x 832 by #500) | Stomp repeated, at the foot of the second wall, read from above |
+| 1136 | RedMob (id 60), zone 1104–1216 (`offNeg` 2 since #500), just before the exit | Sword or stomp; first met in `forest-1` |
 
 (Historical, #73.) The bomb used to sit 4 tiles from the start inside the first YellowMob's patrol, so stomp
 and bomb were the first two things met and overlapped. The bomb is now about 470 px
@@ -653,7 +689,7 @@ the blast square (about 624–688) and a running escape of about 64 px overlap n
 | 1488 | Optional one-way platform | Start of the optional climb |
 | 1568 | **FallingPlatform** (id 115, was a fixed platform) holding coin 87 | **Falling platform, alone**: 1 s warning (1.5 s with Assist). Ground is 80 px below; isolated from bombs and nearby walking enemies at spawn; a bad landing can spend the optional ascent |
 | 1648–1728 | One-way platform and the Mushroom | Optional reward |
-| 1760 | Vertical Bat enemy near the Mushroom | Optional hazard |
+| 1760 | (Bat 65 removed by #500, D105) | |
 | 1872 | RoomExit | |
 
 The collapse is one-way and remains secured after room exit or healer return. A player
@@ -1512,11 +1548,11 @@ floor  =========================================================================
 
 | # | Trap | Object, position (visible px) | Size | Properties | What it owns | Why there, what it tests |
 | --- | --- | --- | --- | --- | --- | --- |
-| T1 | Swinging thorn vine (rhythm, D46, first placement in any level) | `ThornVine` x **1896** (anchor at the centre, x 1908), y 256 (top edge = anchor; floor 64 below) | 24 x 40 | `period` 4.5, `amplitude` 50, `phase` 0 | swept area x 1864-1952, danger only while within about 32 deg of vertical | Timing by watching, not reaction; first thing after the Bat so it is met alone, 124 px from the Bat's reach |
+| T1 | Swinging thorn vine (rhythm, D46, first placement in any level) | `ThornVine` x **1896** (anchor at the centre, x 1908), y 256 (top edge = anchor; floor 64 below) | 24 x 40 | `period` 4.5, `amplitude` 50, `phase` 0 (2.77 since #500, history below) | swept area x 1864-1952, danger only while within about 32 deg of vertical | Timing by watching, not reaction; (history, as planned: first thing after the Bat, 124 px from the Bat's reach; Bat 65 left the room under #500 and the vine is met among known beats) |
 | T2 | Exploding root (touch, D47, first placement) | `ExplosiveRoot` x 2064, y 296 | 16 x 24 | none | jump envelope x 2000-2144 (floor, 96 px clear above), blast square x 2040-2104 | The choice trap: jump over it (no ammunition), walk through the lit root (the blast comes after 0.8 s; a walker is 80 px past), or pay a fireball / thrown stone from afar |
 | T3 | Falling stone (position, D45) | `FallingStone` x 2224, y 0 (flush with the room top, 320 px drop, 0.84 s flight), `skin` forest, `lipTop` 48 (#360: its lip under the dirt block) | 16 x 16 | `zoneX` 2208, `zoneY` 288, `zoneWidth` 32, `zoneHeight` 32 | lethal column x 2224-2240, shadow on the floor | Last: a trap that watches where you stand; the shadow is the telegraph; the answer is to keep walking |
 
-Gaps (px): Bat reach end 1784 -> vine swept 1864: **80**; vine swept end 1952 -> root envelope 2000: **48**; root envelope end 2144 -> stone zone 2208: **64**; stone zone end 2240 -> `RoomExit` 2320: **80** (rule: 48 px from entrance, exit, checkpoint; there is no checkpoint in this room). No trap shares an envelope or a telegraph with an enemy or the Bomb: the Bomb is in another room, 1100+ px back. The three traps use three different telegraph kinds (motion, smoke, ground shadow) one after another.
+Gaps (px; history, Bat 65 left the room under #500): Bat reach end 1784 -> vine swept 1864: **80**; vine swept end 1952 -> root envelope 2000: **48**; root envelope end 2144 -> stone zone 2208: **64**; stone zone end 2240 -> `RoomExit` 2320: **80** (rule: 48 px from entrance, exit, checkpoint; there is no checkpoint in this room). No trap shares an envelope or a telegraph with an enemy or the Bomb: the Bomb is in another room, 1100+ px back. The three traps use three different telegraph kinds (motion, smoke, ground shadow) one after another.
 
 ### How each telegraph reads without a hint (D7)
 
@@ -1531,7 +1567,7 @@ forest-2 has no hint zones besides the full-room controls zone, and the plan add
 | collection returns through the canopy | 9.62 s first return, 9.48 s later returns (was 5.13 / 5.00 s) | | still inside the 30 s collection limit |
 | `forest-boss` | unchanged (only moved +448 px) | unchanged | a death in the boss fight resets the boss room only, so the new traps are never replayed in the fight |
 
-The mastered route reaches the vine at 4.87 s after room entry and passes it; a hero held at the entrance first still passes when 0 to 0.8 s later, a blind walker 0.9 to 1.3 s later is killed (0.1 s steps). With a blind walker (no jump, no wait) started at every 0.1 s offset, 30 of 45 pass and 15 are killed, so a safe window exists in every period and a careful hero waits at the edge and watches the swing.
+**History (as built by #261, vine `phase` 0):** the mastered route reaches the vine at 4.87 s after room entry and passes it; a hero held at the entrance first still passed when 0 to 0.8 s later, a blind walker 0.9 to 1.3 s later was killed (0.1 s steps). **Since #500 (D105, D109): `phase` 2.77 s**: held 0 to 35 frames (0.6 s) passes, 36 frames and more is killed, the cheapest death 5.93 s. With a blind walker (no jump, no wait) started at every 0.1 s offset, 30 of 45 pass and 15 are killed, so a safe window exists in every period and a careful hero waits at the edge and watches the swing.
 
 ### Required route and D26
 

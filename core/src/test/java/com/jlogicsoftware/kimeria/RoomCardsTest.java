@@ -42,9 +42,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link #MAX_SECONDS_PER_BEAT} s per beat. Every element a room introduces (pickups and harmless ones aside) has a
  * {@code First meeting} entry: among the first {@link #EARLY_BEATS} beats or a death at it replays at most
  * {@link #CHEAP_RETRY_SECONDS} s, no other lethal object within {@link #CLEARANCE_PX}, and a named test that holds the
- * room's name ({@code FirstMeetingPocketTest}). The exempt roles are checked against the room. Rooms shipped below the
- * rule before D105 are on fixed lists that can only shrink ({@link #GRANDFATHERED}, {@link #FIRST_MEETING_GRANDFATHERED}),
- * each citing its rework issue.
+ * room's name ({@code FirstMeetingPocketTest}). The exempt roles are checked against the room. No shipped room is exempt: the
+ * lists of rooms shipped below the rule before D105 are gone since #500 reworked the last of them, so a room cannot be added back.
+ * (The gate keeps the mechanism for a tracked, temporary exemption as parameters of {@code densityProblems}, pinned by synthetic cases.)
  */
 class RoomCardsTest {
     static final int MAX_INTRODUCTIONS = 2;
@@ -78,16 +78,7 @@ class RoomCardsTest {
     static final Set<String> LESSON_ROOMS = Set.of("forest-1-lever");
     /** {@link #LESSON_ROOMS} only shrinks: a new lesson outside the tutorial is argued in a decision, not added here quietly. */
     static final int LESSON_ROOMS_AT_D105 = 1;
-    /**
-     * Rooms shipped below the band before D105. Each carries 'Below density' citing its rework issue (#500). The set only
-     * shrinks: a reworked room leaves it (the spider rooms left with the snail, #329), a new room never enters it.
-     */
-    static final Set<String> GRANDFATHERED = Set.<String>of();
-    /** The size of GRANDFATHERED: 7 at D105, 5 after the spider rooms' rework, 0 after the batch-2 rework (#500). A room never joins. */
-    static final int GRANDFATHERED_AT_D105 = 0;
-    /** Rooms shipped before D105 whose first meeting is late or crowded; each entry cites its issue (#500). Only shrinks. */
-    static final Set<String> FIRST_MEETING_GRANDFATHERED = Set.of("forest-entry", "forest-walls", "forest-canopy");
-    static final int FIRST_MEETING_GRANDFATHERED_AT_D105 = 3;
+    // No GRANDFATHERED sets: #500 reworked every room shipped below D105 (batches 1 to 4), so the lists were deleted rather than kept empty.
     private static final Pattern BEAT = Pattern.compile("([\\w-]+)@(\\d+(?:\\.\\d+)?)");
     /** A time in seconds as a whole token: "9.30 s", not the "9.3" inside "19.30 s". */
     private static final Pattern SECONDS = Pattern.compile("(?<![\\w.])(\\d+(?:\\.\\d+)?) s\\b");
@@ -339,11 +330,17 @@ class RoomCardsTest {
      * when there is none (the real tree for the shipped cards, a fixed map for the synthetic ones).
      */
     static List<String> densityProblems(String text, List<Room> rooms, java.util.function.Function<String, String> sourceOf) {
-        return densityProblems(text, rooms, sourceOf, GRANDFATHERED);
+        return densityProblems(text, rooms, sourceOf, Set.of());
     }
 
-    /** As above with the rooms allowed below the band given (the shipped list is empty since #500, so its rule is tested on a synthetic one). */
+    /** As above with the rooms allowed below the band given (no shipped room is, since #500, so its rule is tested on synthetic ones). */
     static List<String> densityProblems(String text, List<Room> rooms, java.util.function.Function<String, String> sourceOf, Set<String> grandfathered) {
+        return densityProblems(text, rooms, sourceOf, grandfathered, Set.of());
+    }
+
+    /** As above with the rooms excused a late or crowded first meeting given too (the shipped list shrinks with #500, so its rule is tested on a synthetic one). */
+    static List<String> densityProblems(String text, List<Room> rooms, java.util.function.Function<String, String> sourceOf, Set<String> grandfathered,
+                                        Set<String> firstMeetingGrandfathered) {
         Registry registry = registry(text);
         Map<String, Map<String, String>> cards = cards(text);
         List<String> problems = new ArrayList<>();
@@ -441,14 +438,14 @@ class RoomCardsTest {
                         problems.add(name + ": below the density of D105: " + String.join(", ", thin)
                             + (grandfathered.contains(name) ? "; its 'Below density' must cite the rework issue (#NNN)" : ""));
                 } else if (!empty(below)) {
-                    problems.add(name + ": passes the density of D105 but still carries 'Below density': remove it and the room from GRANDFATHERED");
+                    problems.add(name + ": passes the density of D105 but still carries 'Below density': remove it and the room from the exemption set");
                 }
                 if (pace < MIN_SECONDS_PER_BEAT && !citesIssue(card.get("Overload reason")))
                     problems.add(String.format(java.util.Locale.ROOT, "%s: %.2f s per beat, denser than %.1f s, without an 'Overload reason' that cites an issue, D105",
                         name, pace, MIN_SECONDS_PER_BEAT));
             }
             if (!empty(below) && !grandfathered.contains(name))
-                problems.add(name + ": 'Below density' is only for the rooms shipped below D105 (GRANDFATHERED), not for a new room");
+                problems.add(name + ": 'Below density' is only for the rooms shipped below D105 (the exemption set given to the gate, empty for the shipped rooms), not for a new room");
 
             // First meetings: early or cheap, clear of other lethal objects, and pinned by a test that names the room.
             Map<String, String> meetings = new HashMap<>();
@@ -487,12 +484,12 @@ class RoomCardsTest {
                     || !Pattern.compile("[(,]\\s*" + (pocket.find(0) ? pocket.group(1) : "-") + "\\b").matcher(method).find())
                     faults.add("its test method does not name the room, the element and the pocket x");
                 if (faults.isEmpty()) continue;
-                if (FIRST_MEETING_GRANDFATHERED.contains(name) && citesIssue(entry.substring(m.end()))) { excusedAny = true; continue; }
+                if (firstMeetingGrandfathered.contains(name) && citesIssue(entry.substring(m.end()))) { excusedAny = true; continue; }
                 problems.add(name + ": first meeting of '" + id + "': " + String.join("; ", faults) + " (D105)"
-                    + (FIRST_MEETING_GRANDFATHERED.contains(name) ? "; the entry must cite the rework issue (#NNN)" : ""));
+                    + (firstMeetingGrandfathered.contains(name) ? "; the entry must cite the rework issue (#NNN)" : ""));
             }
-            if (FIRST_MEETING_GRANDFATHERED.contains(name) && !excusedAny)
-                problems.add(name + ": its first meetings pass D105: remove the room from FIRST_MEETING_GRANDFATHERED");
+            if (firstMeetingGrandfathered.contains(name) && !excusedAny)
+                problems.add(name + ": its first meetings pass D105: remove the room from the first-meeting exemption set");
         }
         return problems;
     }
@@ -598,8 +595,8 @@ class RoomCardsTest {
         assertTrue(problems.isEmpty(), "docs/ROOM_CARDS.md is out of step with the maps (D72):\n  " + String.join("\n  ", problems));
     }
 
-    /** D105: every shipped card is dense, or is one of the rooms shipped below it before D105 and cites its rework. */
-    @Test void everyShippedRoomIsDenseOrATrackedRework() throws IOException {
+    /** D105: every shipped card is dense and meets its new elements in a pocket; no room shipped below D105 remains (#500). */
+    @Test void everyShippedRoomIsDense() throws IOException {
         Map<String, Path> tests = new HashMap<>();
         try (var files = Files.walk(root().resolve("core/src/test/java"))) {
             files.filter(f -> f.toString().endsWith(".java")).forEach(f -> tests.put(f.getFileName().toString().replace(".java", ""), f));
@@ -610,15 +607,10 @@ class RoomCardsTest {
         assertTrue(problems.isEmpty(), "docs/ROOM_CARDS.md breaks the room density (D105):\n  " + String.join("\n  ", problems));
     }
 
-    /** The lists of rooms shipped below D105 only shrink, and name shipped rooms (#500). */
-    @Test void theGrandfatheredListsOnlyShrink() {
-        // Each ceiling equals its list's size, so a room that leaves must lower it, and none can join after (D105).
-        assertEquals(GRANDFATHERED_AT_D105, GRANDFATHERED.size(), "a room may leave GRANDFATHERED, never join it: lower the ceiling with it (D105)");
-        assertEquals(FIRST_MEETING_GRANDFATHERED_AT_D105, FIRST_MEETING_GRANDFATHERED.size(), "FIRST_MEETING_GRANDFATHERED only shrinks: lower the ceiling with it (D105)");
+    /** The fixed lesson list names shipped rooms and only shrinks; no shipped room is exempt from the band (#500). */
+    @Test void theLessonListOnlyShrinks() {
         Set<String> names = new HashSet<>();
         for (Room room : shippedRooms()) names.add(room.name());
-        for (String room : GRANDFATHERED) assertTrue(names.contains(room), room + " is not a shipped room");
-        for (String room : FIRST_MEETING_GRANDFATHERED) assertTrue(names.contains(room), room + " is not a shipped room");
         for (String room : LESSON_ROOMS) assertTrue(names.contains(room), room + " is not a shipped room");
         assertEquals(LESSON_ROOMS_AT_D105, LESSON_ROOMS.size(), "LESSON_ROOMS only shrinks: a new lesson outside the tutorial needs its own decision (D105)");
     }
@@ -870,7 +862,7 @@ class RoomCardsTest {
         String base = card("k", "lesson", "lever, thorn, mob, coin", "-", "").replace("| Level | test |", "| Level | forest-0, room 1 |");
         String card = card(room, "variation", "puff", "-", rows).replace("| Mastered route | 1 s |", "| Mastered route | 9.00 s |");
         return densityProblems(DENSE_REGISTRY + base + card, List.of(new Room("k", Set.of("Trigger", "ThornRoot", "RedMob", "Collectable:Coin")), map),
-            name -> "T".equals(name) ? T_SOURCE : null);
+            name -> "T".equals(name) ? T_SOURCE : null, Set.<String>of(), Set.of("forest-entry"));
     }
 
     @Test void aFirstMeetingIsEarlyOrCheapClearAndPinnedByATestOfItsRoom() {
@@ -974,7 +966,7 @@ class RoomCardsTest {
         assertEquals(List.of(), meeting("forest-entry", crowded, rows + entry + ", crowded, tracked by #500 |\n"));
         Room clear = new Room("forest-entry", DENSE.keys(), List.of(at(1, "ThornTuft", 100, 16), at(3, "Puffball", 250, 16), at(2, "RedMob", 420, 48)));
         assertTrue(meeting("forest-entry", clear, rows.replace("mob@320", "mob@420") + entry + ", tracked by #500 |\n")
-            .contains("forest-entry: its first meetings pass D105: remove the room from FIRST_MEETING_GRANDFATHERED"));
+            .contains("forest-entry: its first meetings pass D105: remove the room from the first-meeting exemption set"));
     }
 
     @Test void aRegistryRowWithoutABeatKindFailsClearly() {

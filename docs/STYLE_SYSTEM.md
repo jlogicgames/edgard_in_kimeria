@@ -141,10 +141,6 @@ Each has an open issue whose checklist includes updating this page.
 - The uk, pl, de and be glossary forms are not yet reviewed by native speakers
   ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)).
 - The Codex side of the hooks and of the Claude skill import is not yet checked in Codex itself ([#389](https://github.com/jlogicgames/edgard_in_kimeria/issues/389)).
-- Rooms below the density of D105: none since the batch-2 rework (the spider rooms with the snail, then `forest-1-mob`,
-  `forest-1-deadfall`, `forest-1-bramble`, `forest-1-hive` and the reward room `forest-1-tree`); three rooms meet a new element
-  late, crowded or idle (`forest-entry`, `forest-walls`, `forest-canopy`; batch 3, D110, split `forest-1-traps` and shifted
-  `forest-1-guard`) ([#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500)).
 - First-learning times (D19's 60 s) are not measured on any room
   ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
 
