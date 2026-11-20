@@ -34,6 +34,8 @@ HOT_METHODS = {
     ('effects/EnvironmentFx.java', 'emitGrit'): 'called from update while a grit burst is emitting',
     ('effects/EnvironmentFx.java', 'dustPuff'): 'called from Player.playerJump, which runs inside the player update',
     ('effects/EnvironmentFx.java', 'ceilingGrit'): 'called from Level.activateTrigger inside the player update',
+    ('effects/EnvironmentFx.java', 'thornSpecks'): 'called from Level.thornSprung, inside ThornTrap.update, in the frame a thorn root turns lethal (#446)',
+    ('world/Level.java', 'thornSprung'): 'called from ThornTrap.update through its onSpring callback, in the frame a thorn trap turns lethal (#446)',
     ('effects/LeafFx.java', 'spawn'): 'called from LeafFx.update whenever the room is below its leaf count (#473)',
     ('effects/LeafFx.java', 'avoided'): 'called from LeafFx.spawn, from update (#473)',
     ('entity/enemy/Beetle.java', 'crawl'): 'called from Beetle.updateEnemy every frame (#327)',

@@ -83,6 +83,8 @@ public class ThornTrap extends Entity {
     private final TrapWarnings warnings;
     private final Supplier<Rectangle> heroBody;
     private final Runnable kill;
+    /** Called once, in the frame the trap turns lethal (#446): the shared spring cue; set by {@code Level}. */
+    private Runnable onSpring = () -> { };
     private final float zoneLeft, zoneRight;
     private final TextureRegion[] frames;
     private Phase phase = Phase.DORMANT;
@@ -121,6 +123,8 @@ public class ThornTrap extends Entity {
         if (!NUMBER.matcher(raw).matches()) throw new IllegalArgumentException(key + " '" + raw + "' is not a plain number");
         return Float.parseFloat(raw);
     }
+
+    public void onSpring(Runnable onSpring) { this.onSpring = onSpring; }
 
     public Kind kind() { return kind; }
     public Phase phase() { return phase; }
@@ -171,6 +175,7 @@ public class ThornTrap extends Entity {
             if (phase == Phase.WARNING && phaseTime >= warningTotal) {
                 phaseTime -= warningTotal;
                 phase = kind == Kind.ROOT ? Phase.RISING : Phase.ARMED;
+                onSpring.run(); // the frame it turns lethal: heard once, hit or miss (D93)
             }
             if (phase == Phase.RISING && phaseTime >= RISE_SECONDS) {
                 phase = Phase.ARMED;

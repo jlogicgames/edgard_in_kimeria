@@ -44,6 +44,14 @@ public final class EnvironmentFx {
     /** Bark browns of the deadfall's bough: dark, mid, light (`4a2e1c`, `8a5a30`, `c08a4c`). */
     private static final float[] BARK_COLORS = {.290f, .180f, .110f, .541f, .353f, .188f, .753f, .541f, .298f};
 
+    /** The thorn root breaks through its mound (#446): a few dark soil specks thrown up and out, then fading. */
+    public static final int THORN_SPECKS = 3;
+    private static final int THORN_SPECK_SIDES = 2;
+    private static final float THORN_SPECK_SPREAD_PX = 4, THORN_SPECK_DRIFT_PX = 14, THORN_SPECK_START_RISE_PX = 8;
+    private static final float THORN_SPECK_LIFE_MIN = .25f, THORN_SPECK_LIFE_MAX = .4f, THORN_SPECK_SIZE_MIN = 1.5f, THORN_SPECK_SIZE_MAX = 2, THORN_SPECK_DRIFT_MIN_FRACTION = .5f;
+    /** The root's mound colours (`8a5a30` earth, `a89c78` pale tip): lighter than the first dark soil, which sat at zero lightness distance (OKLab L 0.003) from the forest's `2c3f66`; these are 0.14 and 0.32 above it. */
+    private static final float[] SOIL_COLORS = {.541f, .353f, .188f, .659f, .612f, .471f};
+
     private static final float GRIT_EXTRA_SPREAD_PX = 24, GRIT_MAX_FALL_PX = 64;
     private static final float GRIT_SPEED_MIN = 70, GRIT_SPEED_MAX = 110;
     private static final float GRIT_LIFE_MIN = .5f, GRIT_LIFE_MAX = .9f;
@@ -141,6 +149,21 @@ public final class EnvironmentFx {
             grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, y, startX + away * BARK_DRIFT_PX * random.nextFloat(),
                 y + range(random, BARK_FALL_MIN, BARK_FALL_MAX), life, range(random, BARK_SIZE_MIN, BARK_SIZE_MAX),
                 BARK_COLORS[c], BARK_COLORS[c + GREEN], BARK_COLORS[c + BLUE]);
+        }
+    }
+
+    /** {@value #THORN_SPECKS} soil specks from the thorn root's mound at ({@code x}, {@code floorY}); the first goes left, the next right, and so on. */
+    public void thornSpecks(float x, float floorY) {
+        RandomXS128 random = grit.random();
+        for (int n = 0; n < THORN_SPECKS; n++) {
+            float startX = x + range(random, -THORN_SPECK_SPREAD_PX, THORN_SPECK_SPREAD_PX);
+            float away = n % THORN_SPECK_SIDES == 0 ? -1 : 1;
+            float life = range(random, THORN_SPECK_LIFE_MIN, THORN_SPECK_LIFE_MAX);
+            float size = range(random, THORN_SPECK_SIZE_MIN, THORN_SPECK_SIZE_MAX);
+            int c = random.nextInt(SOIL_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, floorY - THORN_SPECK_START_RISE_PX,
+                startX + away * THORN_SPECK_DRIFT_PX * (THORN_SPECK_DRIFT_MIN_FRACTION + random.nextFloat() * (1 - THORN_SPECK_DRIFT_MIN_FRACTION)), floorY - size / 2f, life, size,
+                SOIL_COLORS[c], SOIL_COLORS[c + GREEN], SOIL_COLORS[c + BLUE]);
         }
     }
 

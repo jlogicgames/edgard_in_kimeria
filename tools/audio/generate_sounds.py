@@ -1284,12 +1284,48 @@ def snail_splat() -> list[float]:
     return finish_rms(out, SNAIL_SPLAT_RMS_DB)
 
 
+# ---------------------------------------------------------------- thorn root and tuft (#446, D75 principle 4)
+# Spring (thorn_spring): the thorns turn lethal. A dull dirt "thk" under a rough rasp: noise through a band-pass, chopped by a
+# fast pulse (a rasping buzz, the roughness) so it is a hard dry scrape, not bramble_lash's smooth rising "shk". One sound
+# for both the root and the tuft (one family, D93). Quiet like the other environment cues, but plays only once per trap.
+THORN_SPRING_SEED = 6601
+THORN_SPRING_DURATION = 0.22
+THORN_THUMP_BAND = (330.0, 260.0)    # Hz centre, bandwidth: the mound breaking
+THORN_THUMP_TAU = 0.035              # s
+THORN_RASP_BAND = (1900.0, 1500.0)
+THORN_RASP_PULSE_HZ = 85.0           # the chop that makes it a rasp
+THORN_RASP_PULSE_DEPTH = 0.7         # 0 = no chop, 1 = fully gated
+THORN_RASP_ATTACK = 0.006            # s
+THORN_RASP_TAU = 0.07                # s
+THORN_RASP_GAIN = 0.9                # against the thump (peak 1.0)
+THORN_RASP_DRIVE = 2.5               # a little tanh grit
+THORN_SPRING_LOWPASS_HZ = 4500.0
+THORN_SPRING_RMS_DB = -26.0       # peak-limited (the chopped rasp is sparse): quieter than bramble_lash
+THORN_SPRING_PEAK_DB = -9.0
+
+
+def thorn_spring() -> list[float]:
+    rng = random.Random(THORN_SPRING_SEED)
+    n = n_samples(THORN_SPRING_DURATION)
+    thump = bandpass(noise(rng, n), *THORN_THUMP_BAND)
+    rasp = bandpass(noise(rng, n), *THORN_RASP_BAND)
+    tp, rp = max(abs(v) for v in thump) or 1.0, max(abs(v) for v in rasp) or 1.0
+    te, re = envelope(n, 0.004, THORN_THUMP_TAU), envelope(n, THORN_RASP_ATTACK, THORN_RASP_TAU)
+    out = []
+    for i in range(n):
+        gate = 1.0 - THORN_RASP_PULSE_DEPTH * (0.5 + 0.5 * math.sin(2 * math.pi * THORN_RASP_PULSE_HZ * i / SAMPLE_RATE))
+        r = math.tanh(THORN_RASP_DRIVE * rasp[i] / rp * gate) * re[i] * THORN_RASP_GAIN
+        out.append(thump[i] / tp * te[i] + r)
+    return finish_rms(lowpass(out, THORN_SPRING_LOWPASS_HZ), THORN_SPRING_RMS_DB, THORN_SPRING_PEAK_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
                "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
                "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
                "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
+               "thorn_spring.wav": thorn_spring,
                "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall,
                "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet,
                "fireball_fizzle.wav": fireball_fizzle, "beetle_notice.wav": beetle_notice,

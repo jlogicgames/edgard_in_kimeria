@@ -1233,6 +1233,26 @@ class AllocationBudgetTest {
         assertWithinBudget("thorn roots rise in turn", THORN_ROOT_CEILING, bytes);
     }
 
+    /**
+     * The thorn root's spring through the real {@code Level} of thorn-test.tmx (#446): {@code Level.thornSprung} (the cue, its
+     * {@code playSounds()} test; the harness plays no sound) and {@code EnvironmentFx.thornSpecks} every {@value #BURST_CYCLE_FRAMES} frames,
+     * with {@code fx.update} and {@code fx.render} each frame, the specks living at most 0.4 s.
+     */
+    @Test void thornSpringThroughTheRealLevel() {
+        Level level = harness.roomOf("thorn-test", 0);
+        ThornTrap root = level.objects.stream().filter(ThornTrap.class::isInstance).map(ThornTrap.class::cast)
+            .filter(t -> t.kind() == ThornTrap.Kind.ROOT).findFirst().orElseThrow();
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.thornSprung(root);
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().grit().count());
+        });
+        assertTrue(peak[0] > 0, "the specks must actually fly in this scenario");
+        assertWithinBudget("thorn spring", THORN_SPRING_CEILING, bytes);
+    }
+
     /** The falling branch (#361): one at rest with its cracked-joint cue (the hero far), and a row of branches that the hero
      * walks under in turn, one every {@value #BRANCH_CYCLE_FRAMES} frames: rustle, sag, fall and land, {@code update} and
      * {@code render} each frame. The branches are built before the probe; the hero box is moved, never rebuilt. */
@@ -1384,6 +1404,8 @@ class AllocationBudgetTest {
     static final int ENDING_COPIES = 12;
     /** Thorn roots at rest, warning, rising and up inside the measured window (#359, thornRootsRiseInTurn): measured 0.0 B/frame in 2 full-suite runs and 1.5 in 2 isolated runs (2026-11-17). Before #359: 64.0 B/frame (a new {@code Rectangle} per zone or column test). */
     static final double THORN_ROOT_CEILING = 8;
+    /** Thorn spring cue and specks (#446, thornSpringThroughTheRealLevel): measured 0.0 B/frame in 3 isolated runs (2026-11-20): the cue and 3 specks every 60 frames, update and render. The same 8 B ceiling as the other isolated paths. */
+    static final double THORN_SPRING_CEILING = 8;
     /** Deadfalls tripped in turn (#363, deadfallTripAndSwing): measured 0.0 B/frame in 3 isolated runs and 0.6 in the full :core:check (2026-11-17). The vine and log boxes are scratch rectangles and the frames are cached; the same 8 B ceiling as the other isolated trap paths. */
     static final double DEADFALL_CEILING = 8;
     /** A trip every 100 frames: 0.8 s of warning and 0.5 s of swing are 78 frames, then the catch. 16 cycles cover warm-up and measure. */
