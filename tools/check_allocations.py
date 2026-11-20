@@ -212,6 +212,8 @@ HOT_METHODS = {
     ('effects/FireballFx.java', 'sparkCone'): 'called from FireballFx.hit and heavyHit, inside Fireball.update',
     ('effects/FireballFx.java', 'drawBallHalo'): 'called from Fireball.render every frame a ball flies',
     ('world/Level.java', 'fireballFizzle'): 'called from Fireball.update when the ball stops on terrain, burns out or the hero can no longer fight (#503)',
+    ('world/Level.java', 'stepNewThrows'): 'called from Level.update every frame: flies a stone or torch thrown this frame its first step (#505); an index loop over objects, no iterator',
+    ('entity/items/Carryable.java', 'stepIfJustThrown'): 'called from Level.stepNewThrows for every Carryable every frame (#505); a flag test, then Carryable.fly (the flight alone)',
     ('world/Level.java', 'stepNewFireballs'): 'called from Level.update every frame: flies a ball cast this frame its first step (#503); an index loop over pendingSpawns, no iterator',
     ('entity/items/Fireball.java', 'burst'): 'called from Fireball.update when the ball stops',
     ('effects/SporeCloud.java', 'burst'): 'called from FungusTrap.update when the swell ends (writes the cloud into the fixed pool)',

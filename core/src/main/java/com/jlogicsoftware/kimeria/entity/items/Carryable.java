@@ -40,6 +40,8 @@ public final class Carryable extends Entity {
     private final Rectangle boundsScratch = new Rectangle(), blockBox = new Rectangle(), trapBox = new Rectangle();
     private Player holder;
     private boolean thrown;
+    /** True from a throw until the object first moves (#505): {@link Level} flies it that step on its release frame. */
+    private boolean firstStepPending;
     /** True from a throw until the object comes to rest: a throw-activated Trigger (a lever) touched meanwhile fires once (D39). */
     private boolean leverFlight;
     private final float homeX, homeY;
@@ -68,7 +70,20 @@ public final class Carryable extends Entity {
         position.set(x, y);
         thrown = throwObject;
         leverFlight = throwObject;
+        firstStepPending = throwObject;
         velocity.set(throwObject ? (right ? THROW_SPEED : -THROW_SPEED) : 0, throwObject ? -THROW_UPWARD_SPEED : 0);
+    }
+
+    /**
+     * A throw flies its first step on the frame it was thrown (#505), as a fireball does (#503): the hero updates after the
+     * monsters, so a bite or a gob pending from this frame (D102, D106) then meets the stone before it lands and the hit wins
+     * the tie. Called by {@code Level.stepNewThrows} straight after the hero's update; a no-op for everything not thrown this
+     * frame. The next frame's update is its second step, so nothing moves twice in one frame.
+     */
+    public void stepIfJustThrown(float dt) {
+        if (!firstStepPending) return;
+        firstStepPending = false;
+        fly(dt);
     }
 
     public void setRespawns(boolean respawns) { this.respawns = respawns; }
@@ -93,6 +108,7 @@ public final class Carryable extends Entity {
         holder = null;
         position.set(snapshot.x(), snapshot.y());
         velocity.set(snapshot.velocityX(), snapshot.velocityY());
+        firstStepPending = false;
         thrown = snapshot.thrown();
         leverFlight = false;
         removed = snapshot.removed();
@@ -107,76 +123,79 @@ public final class Carryable extends Entity {
     }
 
     @Override public void update(float dt) {
-        if (holder != null) followHolder();
-        else {
-            // Substeps prevent fast throws crossing a thin wall or an enemy in one frame.
-            int steps = ProjectileStep.count(dt);
-            float step = ProjectileStep.frameSeconds(dt) / steps;
-            for (int i = 0; i < steps; i++) {
-                float oldY = position.y;
-                boolean landed = false;
-                position.x += velocity.x * step;
-                if (level.blocksObject(bounds(), false)) { position.x -= velocity.x * step; velocity.x = 0; thrown = false; }
-                velocity.y = Math.min(MAX_FALL_SPEED, velocity.y + GRAVITY * step);
-                position.y += velocity.y * step;
-                for (int b = 0; b < level.collisionBlocks.size(); b++) {
-                    var block = level.collisionBlocks.get(b);
-                    if (!block.isActive() || block.isQuickSand()) continue;
-                    if (!bounds().overlaps(blockBox.set(block.getX(), block.getY(), block.getWidth(), block.getHeight()))) continue;
-                    if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > blockBox.y + PLATFORM_TOLERANCE)) continue;
-                    position.y = velocity.y >= 0 ? blockBox.y - size.y : blockBox.y + blockBox.height;
-                    velocity.setZero(); thrown = false; landed = true;
+        firstStepPending = false;
+        if (holder != null) followHolder(); else fly(dt);
+        if (flame != null) { positionFlame(); flame.update(dt); }
+    }
+
+    /** One frame of flight: substeps, collisions and what the object reaches. Never touches the torch's flame, so a first step (#505) leaves it for the frame's one update. */
+    private void fly(float dt) {
+        // Substeps prevent fast throws crossing a thin wall or an enemy in one frame.
+        int steps = ProjectileStep.count(dt);
+        float step = ProjectileStep.frameSeconds(dt) / steps;
+        for (int i = 0; i < steps; i++) {
+            float oldY = position.y;
+            boolean landed = false;
+            position.x += velocity.x * step;
+            if (level.blocksObject(bounds(), false)) { position.x -= velocity.x * step; velocity.x = 0; thrown = false; }
+            velocity.y = Math.min(MAX_FALL_SPEED, velocity.y + GRAVITY * step);
+            position.y += velocity.y * step;
+            for (int b = 0; b < level.collisionBlocks.size(); b++) {
+                var block = level.collisionBlocks.get(b);
+                if (!block.isActive() || block.isQuickSand()) continue;
+                if (!bounds().overlaps(blockBox.set(block.getX(), block.getY(), block.getWidth(), block.getHeight()))) continue;
+                if (block.isPlatform() && (velocity.y < 0 || oldY + size.y > blockBox.y + PLATFORM_TOLERANCE)) continue;
+                position.y = velocity.y >= 0 ? blockBox.y - size.y : blockBox.y + blockBox.height;
+                velocity.setZero(); thrown = false; landed = true;
+                break;
+            }
+            // Checked before a landing ends the flight, so a stone dropping onto the lever still counts.
+            if (leverFlight && level.throwHitsLever(this)) {
+                leverFlight = false;
+                if (respawns) { returnHome(); break; }
+            }
+            if (landed) leverFlight = false;
+            // D106: a thrown stone breaks every snail's gob it reaches apart, a thrown torch burns it away; either flies on.
+            // Tested before the enemies, so a throw stopped by an enemy in the same step still breaks the gob it reached.
+            if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof Breakable gob && gob.isBreakable() && gob.breakableInto(trapBox).overlaps(bounds()))
+                    gob.breakApart(kind != Kind.STONE);
+            }
+            if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
+                    if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
+                    velocity.x = 0; thrown = false;
                     break;
                 }
-                // Checked before a landing ends the flight, so a stone dropping onto the lever still counts.
-                if (leverFlight && level.throwHitsLever(this)) {
-                    leverFlight = false;
-                    if (respawns) { returnHome(); break; }
-                }
-                if (landed) leverFlight = false;
-                // D106: a thrown stone breaks every snail's gob it reaches apart, a thrown torch burns it away; either flies on.
-                // Tested before the enemies, so a throw stopped by an enemy in the same step still breaks the gob it reached.
-                if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
-                    if (level.objects.get(o) instanceof Breakable gob && gob.isBreakable() && gob.breakableInto(trapBox).overlaps(bounds()))
-                        gob.breakApart(kind != Kind.STONE);
-                }
-                if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
-                    if (level.objects.get(o) instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
-                        if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
-                        velocity.x = 0; thrown = false;
-                        break;
-                    }
-                }
-                // D101: a thrown stone crumbles a monster's body, a thrown torch burns it; either flies on (a body stops nothing).
-                if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
-                    if (level.objects.get(o) instanceof Remains body && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds())) {
-                        if (kind == Kind.STONE) body.crumble();
-                        else body.burnUp();
-                    }
-                }
-                // D47: a thrown stone that reaches an intact explosive trap lights it from afar, then drops like after any hit
-                // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.
-                if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
-                    if (level.objects.get(o) instanceof ExplosiveTrap trap && trap.triggerBoxInto(trapBox).overlaps(bounds()) && trap.igniteFromAfar()) {
-                        velocity.x = 0; thrown = false;
-                        break;
-                    }
-                }
-                // #365 (D90): a thrown stone that reaches a hanging hive knocks it down, then drops (not consumed), as above.
-                if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
-                    if (level.objects.get(o) instanceof HangingHive hive && hive.bodyInto(trapBox).overlaps(bounds()) && hive.knockDown()) {
-                        velocity.x = 0; thrown = false;
-                        break;
-                    }
+            }
+            // D101: a thrown stone crumbles a monster's body, a thrown torch burns it; either flies on (a body stops nothing).
+            if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof Remains body && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds())) {
+                    if (kind == Kind.STONE) body.crumble();
+                    else body.burnUp();
                 }
             }
-            // A throw that starts inside a wall the hero presses against is lifted onto that wall's top, outside the room.
-            if (respawns && getY() + size.y <= level.currentRoomBounds().y) returnHome();
-            if (getY() > level.currentRoomBounds().y + level.currentRoomBounds().height) {
-                if (respawns) returnHome(); else removeFromParent();
+            // D47: a thrown stone that reaches an intact explosive trap lights it from afar, then drops like after any hit
+            // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.
+            if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof ExplosiveTrap trap && trap.triggerBoxInto(trapBox).overlaps(bounds()) && trap.igniteFromAfar()) {
+                    velocity.x = 0; thrown = false;
+                    break;
+                }
+            }
+            // #365 (D90): a thrown stone that reaches a hanging hive knocks it down, then drops (not consumed), as above.
+            if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof HangingHive hive && hive.bodyInto(trapBox).overlaps(bounds()) && hive.knockDown()) {
+                    velocity.x = 0; thrown = false;
+                    break;
+                }
             }
         }
-        if (flame != null) { positionFlame(); flame.update(dt); }
+        // A throw that starts inside a wall the hero presses against is lifted onto that wall's top, outside the room.
+        if (respawns && getY() + size.y <= level.currentRoomBounds().y) returnHome();
+        if (getY() > level.currentRoomBounds().y + level.currentRoomBounds().height) {
+            if (respawns) returnHome(); else removeFromParent();
+        }
     }
 
     @Override public void render(Batch batch) {

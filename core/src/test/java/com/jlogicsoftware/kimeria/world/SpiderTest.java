@@ -273,6 +273,36 @@ class SpiderTest {
         assertTrue(s.isRemains(), "a quiet kill: the body stays (D101)");
     }
 
+    /** Picks the resting stone up at x 96 (the hero stands beside it), as in SnailTest, and leaves it carried. */
+    private void carryTheStone(Level level) {
+        place(level, 108);
+        harness.held.add(Input.Keys.W); frame(level);
+        harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level);
+        harness.held.clear(); frame(level);
+        assertNotNull(level.player.carriedObject(), "picked up the stone");
+    }
+
+    /** #505: a stone thrown on the frame the fangs arrive flies its first step on that frame, so it wins the tie like a fireball. */
+    @Test void aStoneThrownOnTheFrameTheFangsArriveWinsTheSameFrameTie() {
+        Level probe = level();
+        carryTheStone(probe);
+        Spider p = committed(probe);
+        Rectangle fangs = new Rectangle();
+        int due = until(probe, () -> p.fangBoxInto(fangs) != null && fangs.overlaps(probe.player.hitboxBounds()), 120);
+        frame(probe);
+        assertFalse(alive(probe), "with no throw the bite lands on the next frame");
+        Level level = level();
+        carryTheStone(level);
+        Spider s = committed(level);
+        for (int f = 1; f < due; f++) frame(level);   // the press below is the frame the fangs arrive
+        assertFalse(s.isDefeated());
+        press(level, Input.Keys.L);   // thrown on the very frame the fangs reach the hero (Level.update, no shortcut)
+        assertTrue(s.isDefeated(), "the stone's first step lands on its release frame, before the bite");
+        settle(level, 30);
+        assertTrue(alive(level), "the stone wins the same-frame tie (D102)");
+        assertTrue(s.isRemains(), "a quiet kill: the body stays (D101)");
+    }
+
     /** A spider that misses (the hero stepped back) and has just landed; the hero is clear of its fangs. */
     private Spider landedAfterAMiss(Level level) {
         Spider s = committed(level);

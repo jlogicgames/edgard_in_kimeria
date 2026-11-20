@@ -1614,6 +1614,7 @@ public class Level implements WorldObject {
         updateWorld(dt);
         player.update(dt);
         stepNewFireballs(dt);
+        stepNewThrows(dt);
         killOnLethalHazards();
         for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
@@ -1628,6 +1629,15 @@ public class Level implements WorldObject {
      */
     private void stepNewFireballs(float dt) {
         for (int i = 0; i < pendingSpawns.size(); i++) if (pendingSpawns.get(i) instanceof Fireball ball) ball.update(dt);
+    }
+
+    /**
+     * A stone or torch thrown this frame flies its first step now (#505), as a fireball does: a bite or a gob pending from this
+     * frame (D102, D106) then meets it before it lands, so the hit wins the tie. It is already in the object list and updated
+     * this frame as held, so only its release frame is stepped here; the next frame's update is its second step.
+     */
+    private void stepNewThrows(float dt) {
+        for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.stepIfJustThrown(dt);
     }
 
     /** Rhythmic traps (D46) kill by the hero's body box, exactly like the bomb blast: Player.die holds the only guards. */

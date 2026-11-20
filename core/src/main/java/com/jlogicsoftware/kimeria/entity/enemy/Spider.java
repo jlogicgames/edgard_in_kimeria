@@ -29,7 +29,9 @@ import java.util.Map;
  * there and bites (D102); at a lip it hangs head down over the edge, drops down its thread and bites at the thread's end (D103),
  * then hangs harmless and reels back up. On a wall it never strikes. Its body never hurts: only the fang box kills, during the
  * leap, the drop and the bites. A bite that reaches the hero is resolved at the start of the spider's next frame, so a kill
- * that lands on the same frame (the sword, a stomp, a fireball or a stone) wins. Every weapon kills it in any state, quietly: it
+ * that lands on the same frame (the sword, a stomp, a fireball or a stone) wins: a fireball and a thrown stone fly
+ * their first step on their own cast or release frame ({@code Level.stepNewFireballs}, {@code Level.stepNewThrows}, #503, #505),
+ * before the bite lands. Every weapon kills it in any state, quietly: it
  * leaves its body (D101, {@link Remains}), on its back with its legs curled up, on the floor below wherever it died; a thread it
  * hung from snaps. A sword kill sprays the light blood of D65. Its effects are {@link SpiderFx} and, for the body's end,
  * {@link RemainsFx}; its sprites are the floor strip ({@link SpriteSheets#MONSTER_SPIDER}, with the hanging frames and the thread

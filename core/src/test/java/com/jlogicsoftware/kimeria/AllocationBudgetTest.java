@@ -1421,6 +1421,9 @@ class AllocationBudgetTest {
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
     private static final int STONE_ROOM = 4, THROW_CYCLES = 30;
     private static final float REACH_SCAN = 40, REACH_SCAN_STEP = 2;
+    /** The throw's extra over the same room with no throw, B/frame (#505): pick up, throw, fly, first step on the release frame. Measured 3.5 B/frame (median of 9 paired windows, 100 cycles, all threw; 2026-11-20); 16 leaves headroom for JIT variation, as for the fireball cast. The 3.5 B includes the harness's own {@code snapshot()} record (the scene's proof that it threw); the cost inside {@code stepNewThrows} (an index loop and a flag test) is the same with or without a throw, so it cancels in the pair and is guarded by {@code HOT_METHODS}. */
+    static final double STONE_THROW_EXTRA_CEILING = 16;
+    private static final int STONE_THROW_PAIRS = 9, STONE_THROW_WINDOW_FRAMES = 600;
     private static final String HINT_TEXT = "Up + Action: turn the lever on", ZONE_TEXT = "Light the torch with the lever to open the way forward";
     private static final float HINT_X = 200, HINT_Y = 220, ZONE_X = 320, ZONE_Y = 120;
     private static final int FPS_SHOWN = 60, FPS_CHANGE_FRAMES = 30;
@@ -1444,6 +1447,45 @@ class AllocationBudgetTest {
         });
         assertTrue(flights[0] > 1, "stones must actually fly in this scenario");
         assertWithinBudget("thrown stone and fireball", STONE_FIREBALL_CEILING, bytes);
+    }
+
+    /**
+     * A real throw through {@code Level.update} (#505): the hero beside the stone picks it up (Up + Action) and throws it (the cast key) every
+     * {@link #BURST_CYCLE_FRAMES} frames, so {@code Carryable.release}, {@code stepNewThrows} (the first step on the release frame) and the flight
+     * run, against the same room with no input (a paired probe, as {@link #fireballCastWithTheRealKeyPress}). The scene proves it threw: every
+     * cycle's throw is seen as a stone in flight after its release frame, with the hero's hands empty.
+     */
+    @Test void stoneThrowWithTheRealKeyPress() {
+        Level throwing = harness.roomOf("forest-0", STONE_ROOM), quiet = harness.roomOf("forest-0", STONE_ROOM);
+        Rectangle view = new Rectangle(throwing.currentRoomBounds());
+        Carryable stone = throwing.objects.stream().filter(Carryable.class::isInstance).map(Carryable.class::cast).findFirst().orElseThrow();
+        Carryable.Snapshot rest = stone.snapshot();
+        for (float dy = -REACH_SCAN; dy <= REACH_SCAN && throwing.player.selectedCarryable() == null; dy += REACH_SCAN_STEP)
+            throwing.player.position.set(stone.getX() - HERO_WIDTH, stone.getY() + dy);
+        assertNotNull(throwing.player.selectedCarryable(), "the stone must be in reach in this scenario");
+        float heroX = throwing.player.getX(), heroY = throwing.player.getY();
+        int[] cycles = new int[1], thrownSeen = new int[1];
+        int pickUp = 1, throwAt = 20;
+        double extra = AllocationProbe.medianPairedDifference(STONE_THROW_PAIRS, STONE_THROW_WINDOW_FRAMES, () -> { },
+            i -> {
+                int phase = i % BURST_CYCLE_FRAMES;
+                harness.pressed.clear(); harness.held.clear();
+                if (phase == 0) {
+                    throwing.player.position.set(heroX, heroY); throwing.player.velocity().setZero(); throwing.player.facingRight = true;
+                    stone.restore(rest); cycles[0]++;
+                }
+                if (phase == pickUp) { harness.held.add(com.badlogic.gdx.Input.Keys.W); harness.held.add(com.badlogic.gdx.Input.Keys.K); harness.pressed.add(com.badlogic.gdx.Input.Keys.K); }
+                if (phase == throwAt) { harness.held.add(com.badlogic.gdx.Input.Keys.L); harness.pressed.add(com.badlogic.gdx.Input.Keys.L); }
+                throwing.update(STEP); throwing.render(batch, view);
+                if (phase == throwAt && throwing.player.carriedObject() == null && stone.snapshot().thrown()) thrownSeen[0]++;
+            },
+            () -> { }, i -> { harness.pressed.clear(); harness.held.clear(); quiet.update(STEP); quiet.render(batch, view); });
+        harness.pressed.clear(); harness.held.clear();
+        System.out.printf("ALLOCATION stone throw: median throw minus no throw %.1f B/frame over %d pairs (%d cycles, %d threw)%n",
+            extra, STONE_THROW_PAIRS, cycles[0], thrownSeen[0]);
+        assertTrue(cycles[0] > 0, "the scene must run cycles");
+        assertEquals(cycles[0], thrownSeen[0], "every cycle picked the stone up and threw it, in flight on its release frame");
+        assertWithinBudget("stone throw over the same room with no throw", STONE_THROW_EXTRA_CEILING, extra);
     }
 
     /**
