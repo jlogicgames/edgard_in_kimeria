@@ -97,9 +97,13 @@ class RoomReplayTest {
         Gdx.input = previousInput; Gdx.files = previousFiles;
     }
 
+    /** #260 (D58), split under #500 (D110): the trap course is the second half of the old one-room course, x 640-1280; 993 leaves the pit lip for the log, 1089 leaves the log. */
     @Test void singleRoomSecondLevelRequiredRouteFitsTwentySeconds() {
-        // #260 (D58): 637 jumps the thorn tuft, 993 leaves the pit lip for the log, 1089 leaves the log; the old 1120 stop is gone.
-        assertEquals(TRAPS_S, measure("forest-1", 2, false, 0, new float[]{125, 260, 540, 637, 993, 1089}), PIN_MARGIN, "the card's beat time (D105)");
+        assertEquals(TRAPS_S, measure("forest-1-traps", 3, false, 0, new float[]{993, 1089}), PIN_MARGIN, "the card's beat time (D105)");
+    }
+    /** #500 (D110): the first half of the old course, x 0-640: 125 and 260 hop the falling platforms and the step block; the lever and the wall are worked by the shared route. */
+    @Test void forestOneEscalatorsRoomRequiredRouteFitsTwentySeconds() {
+        assertEquals(ESCALATORS_S, measure("forest-1-escalators", 2, false, 0, new float[]{125, 260}), PIN_MARGIN, "the card's beat time (D105)");
     }
     /** #375, reworked under #500 (D105): the RedMob held behind a log, a falling branch, an exploding stump, then the refill; the route jumps the log (3680) and the stump (4050) and swords the mob. */
     @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
@@ -128,7 +132,7 @@ class RoomReplayTest {
 
     private static final float[] ENTRY_JUMPS = {95, 225, 345, 535}, WALLS_JUMPS = {860, 940};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 12.27f, MOB_S = 6.75f, ENTRY_S = 6.80f, WALLS_S = 8.80f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 6.80f, WALLS_S = 8.80f, FISSURE_S = 9.30f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -373,7 +377,7 @@ class RoomReplayTest {
         var stock = new com.jlogicsoftware.kimeria.RangedStock();
         stock.restore(0);
         Level level = new Level(assets, game, player(), mapName, Rectangle::new, stock);
-        // forest-1's trap course is room 2 (0-based) since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after it.
+        // forest-1's escalator room is room 2 (0-based) since #375 put the first RedMob in a room of its own before it and #363 the deadfall room after it; the trap course (D110, #500) is room 3.
         for (int room = 0; room < roomIndex; room++) level.enterNextRoom(player());
         float firstTime = 0;
         for (int attempt = 0; attempt < 3; attempt++) {

@@ -90,13 +90,13 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | Type | Family | Visibility | At-rest cue | Warning | Taught in | Decision |
 | --- | --- | --- | --- | --- | --- | --- |
 | `ThornRoot` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
-| `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, first trap of the stretch | D44, D58 |
+| `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-spider`, on open floor (D110) | D44, D58, D110 |
 | `FallingBranch` | position | DISGUISED | cracked joint (#361) | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
 | `FallingStone` | position | HIDDEN | loose overhang: a cracked rock lip with the stone's crown wedged in it, grit trickling every 1.5 s | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
 | `ExplosiveStump` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
 | `ExplosiveRoot` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's idle tell and wind-up language) | D47, D59 |
 | `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-entry` (`forest-2`) | D7, D51, D60 |
-| `Puffball` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, seen swelling from afar | D46, D58 |
+| `Puffball` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, seen clouding from the entrance | D46, D58, D110 |
 | `ThornVine` | rhythm | VISIBLE | none needed | the motion is the warning | `forest-canopy` (`forest-2`), seen swinging from afar | D46, D59 |
 | `HoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-lever`, harmless demonstration | D63 |
 | `FalseHoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-canopy` (`forest-2`), after the harmless `HoneyFungus` of `forest-0-lever` | D63 |
@@ -178,9 +178,9 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Lethal part | `spiked`, 12×12 px centred, until the room is rebuilt |
 | Counter | jump it (take-offs 2-61 px before it); trigger it and wait, then jump |
 | Reset | room rebuild |
-| Taught in | `forest-1-traps`, the first trap of the open stretch, on open floor |
+| Taught in | `forest-1-spider`, on open floor: the tuft of `forest-1-traps` left with the split of that room (#500, D110), so the spider room is now the first room in play order that shows it |
 | Load checks | as the thorn root |
-| Tests | `ProximityTrapsTest`, `Forest1TrapsTest`, `Forest1SpiderTest` (the tuft, #500) |
+| Tests | `ProximityTrapsTest`, `Forest1SpiderTest` (the tuft, #500) |
 | Art and sound | `trap-thorn-tuft` 16×16: calm, bristle, spiked; no sound when it bristles into `spiked`. Consequence (D93): none yet ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446)) |
 | Decision | D44, D58 |
 
@@ -291,7 +291,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Lethal part | the 24×24 cloud for `cloud` s (default 1 s) |
 | Counter | cross in the calm window |
 | Reset | the clock restarts at the authored phase on room rebuild |
-| Taught in | `forest-1-traps`, seen swelling from afar |
+| Taught in | `forest-1-traps`, seen clouding from the entrance: the cloud is out at the entry, sinks, then swells before the next one (D110) |
 | Load checks | `Level.requireSafeSetting` (entrance, exit, checkpoint) |
 | Tests | `RhythmTrapsTest`, `Forest1TrapsTest` |
 | Art and sound | `trap-puffball`, `trap-spores`; the burst has no sound. Consequence (D93): none yet ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445)) |

@@ -241,7 +241,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 1 of 11 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 1 of 12 (800 px, x 3520-4320: placed after the tree room on the map, first in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | The first enemy: it sees you and charges, but a fallen log holds it; step up on the log and read its raised arm, then sword or stomp it (or run on past it); a loose branch and an exploding stump on the way to the refill, which gives a spent charge back. |
 | Introduces | redmob, fireball-refill |
@@ -292,7 +292,7 @@ x    3520 3552     3712 3728-3760 3776    3872     3984     4112   4208 4256    
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 2 of 11 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 2 of 12 (640 px, one screen, x 4960-5600: appended after the lever room on the map, second in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A trap whose trigger is in plain sight: jump the trip vine, or trip it, stop and let the log swing by; then keep walking under a loose stone and beat the RedMob at the exit. |
 | Introduces | deadfall |
@@ -326,47 +326,68 @@ x    4960 4992  5112-5128   5182 --- 5282  5292   5392    5472   5536    5600
 - `FallingStone` (id 179) x 5392, zone x 5376-5424, y 288-320; `RedMob` (id 180) x 5472, `offNeg` 3, `offPos` 0.
 - RoomExit (5536, 272, 32 x 48).
 
+### forest-1-escalators
+
+| Field | Value |
+| --- | --- |
+| Level | forest-1, play order 2, room 3 of 12 (640 px, one screen, x 0-640: the first half of the old trap course, split under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), D110) |
+| Role | variation |
+| Purpose | Machinery that runs by itself: cross the crumbling platforms, pass the escalators that never stop, and open the wall with its lever. |
+| Introduces | running-platform |
+| Develops | - |
+| Combines | - |
+| Repeats | crumble-support, lever, lever-wall |
+| Mastered route | 5.48 s to the room exit (`RoomReplayTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | none: nothing in the room kills (the falling platforms drop the hero onto the floor, D69, D107) |
+| Beats | crumble-support@160, running-platform@304, lever-wall@480 |
+| Beat time | 5.48 (`RoomReplayTest`) |
+| First meeting | running-platform: beat 2, pocket at x 240, on the floor between the falling platforms (x 96-224, which drop the hero onto the floor, so D107 does not count them) and the escalator's patrol (x 256-384), the escalator seen running (`FirstMeetingPocketTest.forest1EscalatorsTheEscalator`) |
+| D26 | no support the route needs: the platforms drop the hero onto the floor and the step blocks are hops; the wall's lever is a reversible toggle |
+| Hints | none (forest-1 has none, D33) |
+| Status | split from `forest-1-traps` under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (batch 3, D110, approved by the author 2026-11-20): the room is x 0-640 of the old course, with a seam wall at x 624 and the exit 16 px wide before it; lever 33 and its overhead escalator 34, a repeat with no role (the escalator ran above the hero's body), were removed. |
+| Decisions | D58, D67, D72, D85, D105, D110 |
+
 ### forest-1-traps
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 3 of 11 (1280 px, two screens) |
-| Role | combination |
-| Purpose | Machinery that runs by itself, then the trap course: tuft, a known enemy, a spore cloud and a log over a lethal pit. |
-| Introduces | running-platform, puffball |
-| Develops | crumble-support: the log crumbles over a lethal pit, not a recoverable drop; proximity-thorn: the tuft's wider 80 px zone |
+| Level | forest-1, play order 2, room 4 of 12 (640 px, one screen, x 640-1280: the trap course, split from the escalators under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500), D110) |
+| Role | variation |
+| Purpose | A spore cloud that keeps its own time, read from the entrance and crossed in its calm; then the known RedMob and a log that crumbles over a lethal pit. |
+| Introduces | puffball |
+| Develops | crumble-support: the log crumbles over a lethal pit, not a recoverable drop |
 | Combines | - |
-| Repeats | redmob, lever, lever-wall, lever-platform |
-| Mastered route | 12.27 s to the room exit (`Forest1TrapsTest`, `RoomReplayTest`), unchanged by #375; 14.98 s with the longer-warnings assist; target about 20 s |
+| Repeats | redmob |
+| Mastered route | 6.00 s to the room exit with no wait at the puffball (`Forest1TrapsTest`, `RoomReplayTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 12.73 s for a death at the log (D58; `Forest1TrapsTest`, unchanged by #375) |
-| Beats | crumble-support@160, running-platform@304, lever-wall@480, lever-platform@544, proximity-thorn@696, redmob@864, puffball@944, crumble-support@1088 |
-| Beat time | 12.27 (`RoomReplayTest`) |
-| First meeting | running-platform: beat 2, pocket at x 240, on the floor between the falling platforms (x 96-224, which drop the hero onto the floor, so D107 does not count them) and the escalator's patrol (x 256-384), the escalator seen running (`FirstMeetingPocketTest.forest1TrapsTheEscalator`); puffball: beat 7, met one screen after the escalators right behind the known RedMob, built before D105 (D58) and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Retry cost | 6.47 s for a death at the log, standing on it until it drops (`Forest1TrapsTest`; 12.73 s before the split) |
+| Beats | puffball@768, redmob@928, crumble-support@1088 |
+| Beat time | 6.00 (`RoomReplayTest`) |
+| First meeting | puffball: beat 1, pocket at x 744, between the entrance and the cloud (x 766-786), 152 px short of the RedMob's span and far from its wake range (x 896-960), the cloud seen out at the entry and sinking (`FirstMeetingPocketTest.forest1TrapsThePuffball`, acting `CLOUD`) |
 | D26 | the pit is the level `Deadline`, a retry; nothing is re-armed (D58) |
 | Hints | none |
-| Status | D72 audit 2026-11-16: change; done by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (D85): the first RedMob (id 11) and the refill (id 25) moved to `forest-1-mob`, the lever-and-torch pair (ids 12, 13) was removed, the trap course x 616-1280 is untouched. |
-| Decisions | D58, D67, D72, D85 |
+| Status | D72 audit 2026-11-16: change; done by [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (D85). Split under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (batch 3, D110, approved by the author 2026-11-20): the escalators became `forest-1-escalators`; the puffball (x 944 to 768, `phase` 0 to 3.4) and the RedMob 38 (x 864 to 928) swapped order so the puffball is met first from a pocket: its cloud is out at the entry, sinks at 0.6 s, the straight walker crosses its column at 0.8 to 1.1 s in the calm and a hero who waits sees the swell at 2.8 s before the next cloud at 3.6 s (`Forest1TrapsTest`); the thorn tuft 35 left (forest-1 keeps one in `forest-1-spider`). |
+| Decisions | D58, D72, D85, D105, D110 |
 
-What changed (x 0-1280, unchanged geometry):
+The course after the split (x 640-1280; each room is exactly one 640 px screen, so the puffball is never in view from the
+escalators and the whole course is in view on entering):
 
 ```
-x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   696  864  944  1024-1168  1216
-   start platforms  L12  T13   L15   esc 17   R25  M11   esc19  wall 14  L33   tuft M38 puff  pit+log    exit
-                    ---  ---               ---  ---
-                    removed (12, 13); moved to forest-1-mob (11, 25)
+x  656    768   896-1008    1024-1168       1216
+   start  puff  M38 (span)  pit + log 1088  exit
+          cloud 766-786                      
 ```
 
-- Escalators (x 256-464) are then met alone: from there the screen ends before x 784, so the tuft (known, x 696) is the
-  only other thing in view and the puffball (x 944) is not. The puffball enters the screen only when the hero's centre
-  passes about x 624, after the escalators.
-- The trap course after the wall (tuft, RedMob 38, puffball, log, room exit) keeps every object, id and coordinate.
+- Walls x 624-640 (`forest-1-escalators`) and 640-656 (`forest-1-traps`) are drawn and solid; the floor is cut at the seam
+  (x 0-640 and 640-1024) so each room owns its floor.
+- The 96 px rule: the puffball's box is 112 px from the RedMob's span and 304 px from the log.
 
 ### forest-1-lever
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 4 of 11 (640 px, one screen) |
+| Level | forest-1, play order 2, room 5 of 12 (640 px, one screen) |
 | Role | lesson |
 | Purpose | One lever drives two mechanisms in opposite states: pulling it lowers the ladder and stops the lift, pulling again raises the ladder and restarts the lift; both are in view when it is pulled, and a wrong pull costs nothing. |
 | Introduces | - |
@@ -386,7 +407,7 @@ x  32    96-224     128  240   272   304-384  312  352   432    480-528  544   6
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 5 of 11 (1120 px, x 6880-8000: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order; widened from 640 px by #500) |
+| Level | forest-1, play order 2, room 6 of 12 (1120 px, x 6880-8000: appended at the map's end, listed after `forest-1-lever` in the `Rooms` list, which sets the play order; widened from 640 px by #500) |
 | Role | variation |
 | Purpose | Two monsters, one at a time, then two known traps: make the spider miss and strike it; step up out of the snail's line and watch it notice you, then jump its gob; keep walking under a loose stone; jump a thorn tuft. |
 | Introduces | spider, snail |
@@ -425,7 +446,7 @@ x    6880 6912     7136  7184  7232   7440-7472  7584 7600 7616  7744       7872
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 6 of 11 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-spider` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 7 of 12 (640 px, one screen, x 5600-6240: appended at the map's end, listed after `forest-1-spider` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A thorn arm grows over a ladder top on a clock: jump a thorn root, walk under a loose branch, watch the arm from the ladder's foot, wait on the ladder, climb out when it pulls back. |
 | Introduces | bramble |
@@ -464,7 +485,7 @@ x    5600 5760              5904 5920                    6160     6192 6208 6224
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 7 of 11 (640 px, one screen, x 8000-8640: at the map's end, listed after `forest-1-bramble` in the `Rooms` list, which sets the play order; moved 480 px right when `forest-1-spider` grew, #500) |
+| Level | forest-1, play order 2, room 8 of 12 (640 px, one screen, x 8000-8640: at the map's end, listed after `forest-1-bramble` in the `Rooms` list, which sets the play order; moved 480 px right when `forest-1-spider` grew, #500) |
 | Role | combination |
 | Purpose | The hero must wait on the block for the lift: the snail on the block top makes him jump, the spider coming up the block's far face punishes him for standing still; finish the snail, bait the spider and strike it, shoot it as it tops the edge, or be bitten waiting. |
 | Introduces | - |
@@ -508,7 +529,7 @@ x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 8 of 11 (832 px) |
+| Level | forest-1, play order 2, room 9 of 12 (832 px) |
 | Role | variation |
 | Purpose | A snail under the ladder slab fires along the entrance floor: jump its gob and finish it; then one lever, two supports in opposite states: choose the optional ladder or the mandatory lift, and pay a one-shot step for a refill; a spider on the ladder slab drops on its silk thread at anyone who stops under the slab's end; the bat guards the lift. |
 | Introduces | bat-enemy |
@@ -531,31 +552,31 @@ x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 9 of 11 (768 px) |
+| Level | forest-1, play order 2, room 10 of 12 (768 px) |
 | Role | combination |
 | Purpose | A guard that cannot be jumped, under a spore cloud: time the sword, pay a charge, or take the roof route; then a beetle on the open floor past the tunnel: shoot it, lure it to commit and step back, or run past it. |
 | Introduces | beetle |
 | Develops | redmob: a guard in a 32 px tunnel that cannot be jumped or stomped, so it must be beaten or avoided by the roof |
 | Combines | redmob + puffball: the cloud covers every place the sword reaches from, so the melee needs the calm; ladder + fireball-refill: the lever-lowered ladder leads to a roof route that pays one charge |
 | Repeats | lever |
-| Mastered route | 6.83 s timed melee, 6.15 s with a fireball, 7.67 s by the roof, all unchanged by the beetle: the floor routes run past it and it bursts behind the hero, and the roof run drops past it without triggering it and reaches the exit alive (`Forest1CombatTest`); from the tunnel's mouth to the exit, 3.65 s killing the beetle with a fireball, 4.53 s luring it (step out, step back into the tunnel, let it burst); target about 20 s |
+| Mastered route | 6.50 s timed melee, 5.82 s with a fireball, 7.40 s by the roof, each 0.3 s shorter than before #500 (the start, the lever and the puffball's clock moved together, D68), none changed by the beetle: the floor routes run past it and it bursts behind the hero, and the roof run drops past it without triggering it and reaches the exit alive (`Forest1CombatTest`); from the tunnel's mouth to the exit, 3.65 s killing the beetle with a fireball, 4.53 s luring it (step out, step back into the tunnel, let it burst); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)); a straight run from the entrance dies once by design (D68) |
-| Retry cost | about 1.7 s for the first walk-in death (the cloud); 6.08 s for a death in the beetle's burst: the mastered melee from the entrance (x 2176), then a stop beside the beetle when it commits (`Forest1CombatTest`) |
+| Retry cost | about 1.4 s for the first walk-in death (the cloud); 5.82 s for a death in the beetle's burst: the mastered melee from the entrance (x 2208), then a stop beside the beetle when it commits (`Forest1CombatTest`) |
 | Beats | puffball@2375, redmob@2394, beetle@2632 |
-| Beat time | 6.83 (`Forest1CombatTest`) |
-| First meeting | beetle: beat 3, retry 6.08 s (`Forest1CombatTest`), in view from the entrance and met past the tunnel, 158 px from the guard, but the retry is over 6 s, built before D105 and tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) |
+| Beat time | 6.50 (`Forest1CombatTest`) |
+| First meeting | beetle: beat 3, retry 5.82 s (Forest1CombatTest), pocket at x 2550, in the tunnel's mouth under the roof, where it hears him, notices, chases and waits at its range end facing him, never committing, its blast (x 2572 on) short of the tunnel, 158 px past the guard (`FirstMeetingPocketTest.forest1GuardTheBeetle`, acting `NOTICE`) |
 | Optional | the roof route and its refill |
 | D26 | the floor route needs no support; the roof is optional (D68); the beetle never blocks the exit: its blast (x 2572-2716 at most) reaches neither the tunnel (it ends at x 2560), nor the roof's drop (x 2704 on; its trigger ends at x 2696), nor the exit (x 2800), and a hero with no charge passes it by luring or by running on |
 | Hints | none (no hint for the beetle: new monsters are met in play, D100) |
 | Landmark | the beetle crawling under the roof's end, in view from the entrance |
-| Status | D72 audit 2026-11-16: keep. [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's first room. It is the only unknown on screen (the guard and the puffball are known) and is met after the tunnel, apart from the guard and the cloud; it is in view, crawling, from the entrance and hears the hero from inside the tunnel, which is a shelter its burst never reaches. Built and tested with a scripted hero; the author played the room on 2026-11-18 and approved the beetle's look and sounds ("all good", #327) |
+| Status | D72 audit 2026-11-16: keep. [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's first room. It is the only unknown on screen (the guard and the puffball are known) and is met after the tunnel, apart from the guard and the cloud; it is in view, crawling, from the entrance and hears the hero from inside the tunnel, which is a shelter its burst never reaches. Built and tested with a scripted hero; the author played the room on 2026-11-18 and approved the beetle's look and sounds ("all good", #327). Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) batch 3 (D110, 2026-11-20): `RoomStart` 61 x 2176 to 2208, the lever 63 x 2224 to 2256 and the puffball 77 `phase` 2.2 to 2.52, together, so every route is 0.32 s shorter and the beetle's retry 5.82 s, while the first death and the price list of D68 are unchanged; the entrance-to-cloud clearance is asserted 117 px (was 140), D68 revised |
 | Decisions | D68, D100, D101 |
 
 ### forest-1-hive
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 10 of 11 (640 px, one screen, x 6240-6880: appended at the map's end, listed after `forest-1-guard` in the `Rooms` list, which sets the play order) |
+| Level | forest-1, play order 2, room 11 of 12 (640 px, one screen, x 6240-6880: appended at the map's end, listed after `forest-1-guard` in the `Rooms` list, which sets the play order) |
 | Role | combination |
 | Purpose | Pass under the floor hive in its calm, climb through the ladder hive's curtain, then step off the ladder onto the ledge where a spider guards the exit: make it miss and strike it. |
 | Introduces | hanging-hive |
@@ -597,7 +618,7 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 
 | Field | Value |
 | --- | --- |
-| Level | forest-1, play order 2, room 11 of 11 (640 px, one screen) |
+| Level | forest-1, play order 2, room 12 of 12 (640 px, one screen) |
 | Role | reward |
 | Purpose | The calm after the hive and the level's one reward room: nothing in it can kill. Walk to the first coin, then climb a tree by jumping up through its branches (a grey branch gives way and carries you down alive, so keep climbing) to the level's end on the crown. |
 | Introduces | branch-climb, coin |

@@ -86,8 +86,8 @@ class RoomCardsTest {
     /** The size of GRANDFATHERED: 7 at D105, 5 after the spider rooms' rework, 0 after the batch-2 rework (#500). A room never joins. */
     static final int GRANDFATHERED_AT_D105 = 0;
     /** Rooms shipped before D105 whose first meeting is late or crowded; each entry cites its issue (#500). Only shrinks. */
-    static final Set<String> FIRST_MEETING_GRANDFATHERED = Set.of("forest-1-traps", "forest-1-guard", "forest-entry", "forest-walls", "forest-canopy");
-    static final int FIRST_MEETING_GRANDFATHERED_AT_D105 = 5;
+    static final Set<String> FIRST_MEETING_GRANDFATHERED = Set.of("forest-entry", "forest-walls", "forest-canopy");
+    static final int FIRST_MEETING_GRANDFATHERED_AT_D105 = 3;
     private static final Pattern BEAT = Pattern.compile("([\\w-]+)@(\\d+(?:\\.\\d+)?)");
     /** A time in seconds as a whole token: "9.30 s", not the "9.3" inside "19.30 s". */
     private static final Pattern SECONDS = Pattern.compile("(?<![\\w.])(\\d+(?:\\.\\d+)?) s\\b");
@@ -593,7 +593,7 @@ class RoomCardsTest {
 
     @Test void everyShippedRoomHasACardThatGivesTheEnforcedNovelty() throws IOException {
         List<Room> rooms = shippedRooms();
-        assertEquals(22, rooms.size(), "forest-0 has six rooms, forest-1 eleven, forest-2 five: update this count with a new card");
+        assertEquals(23, rooms.size(), "forest-0 has six rooms, forest-1 twelve, forest-2 five: update this count with a new card");
         List<String> problems = problems(shippedCards(), rooms);
         assertTrue(problems.isEmpty(), "docs/ROOM_CARDS.md is out of step with the maps (D72):\n  " + String.join("\n  ", problems));
     }

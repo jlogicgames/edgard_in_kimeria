@@ -129,7 +129,7 @@ class RoomTest {
     @Test void forestOneRunsFromTheMobRoomToTheTreeRoomWithTheCheckpointInPlayOrder() {
         TiledMapData map = map("forest-1");
         RoomLayout layout = new RoomLayout(map);
-        List<String> order = List.of("forest-1-mob", "forest-1-deadfall", "forest-1-traps", "forest-1-lever", "forest-1-spider", "forest-1-bramble",
+        List<String> order = List.of("forest-1-mob", "forest-1-deadfall", "forest-1-escalators", "forest-1-traps", "forest-1-lever", "forest-1-spider", "forest-1-bramble",
             "forest-1-climb", "forest-1-route", "forest-1-guard", "forest-1-hive", "forest-1-tree");
         assertEquals(order.size(), layout.rooms.size());
         for (int i = 0; i < order.size(); i++) {

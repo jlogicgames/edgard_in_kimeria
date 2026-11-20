@@ -96,6 +96,8 @@ class DeadfallTrapTest {
         assertEquals(new Rectangle(VINE_LEFT, FLOOR - 5, 16, 5), t.vineBox());
         assertEquals(-1f, t.toward(), "swing=left: the log comes at a hero from the entrance");
         l.enterNextRoom(player());
+        assertEquals("forest-1-escalators", l.currentRoomName(), "the escalator room follows (#500, D110)");
+        l.enterNextRoom(player());
         assertEquals("forest-1-traps", l.currentRoomName(), "the trap course follows");
     }
 

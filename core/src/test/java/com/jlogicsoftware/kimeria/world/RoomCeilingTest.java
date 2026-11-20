@@ -69,10 +69,10 @@ class RoomCeilingTest {
                 // The lever lesson room (#418) differs from the route room: its exit ledge is 192 x 112 px of solid block against the right wall, so this sweep, which puts the hero on the floor
                 // there, places him inside it and collision resolution ejects him through the floor. Real play cannot reach that state; the dedicated ledge test below covers the real wall.
                 // That wall is swept from the ledge's top by theLeverLessonRoomLedgeDoesNotLetTheHeroOverTheTop.
-                if (map.equals("forest-1") && room == 3 && !left) continue;
+                if (map.equals("forest-1") && room == 4 && !left) continue;
                 // The hive room (#365) has the same kind of exit ledge (240 x 112 px of solid block against its right wall): its
                 // wall is swept from the ledge's top by theHiveRoomLedgeDoesNotLetTheHeroOverTheTop.
-                if (map.equals("forest-1") && room == 9 && !left) continue;
+                if (map.equals("forest-1") && room == 10 && !left) continue;
                 // The fissure room (#366) too: its exit ledge is 224 x 96 px of solid block against its right wall, swept from
                 // the ledge's top by theFissureRoomLedgeDoesNotLetTheHeroOverTheTop.
                 if (map.equals("forest-2") && room == 2 && !left) continue;
@@ -82,20 +82,20 @@ class RoomCeilingTest {
     }
 
     @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
-    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 11); }
+    @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 12); }
 
     /** The route room's exit ledge (top y 144, against the right wall) is a 176 px head start up that wall. */
     @Test void theRouteRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 7), false, 60 * 20, 176);
+        highestPointReached(roomOf("forest-1", 8), false, 60 * 20, 176);
     }
 
     /** The lever lesson room's exit ledge (top y 208, against the right wall, #418) is a 112 px head start up that wall. */
     @Test void theLeverLessonRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 3), false, 60 * 20, 112);
+        highestPointReached(roomOf("forest-1", 4), false, 60 * 20, 112);
     }
     /** The hive room's exit ledge (top y 208, against the right wall, #365) is a 112 px head start up that wall. */
     @Test void theHiveRoomLedgeDoesNotLetTheHeroOverTheTop() {
-        highestPointReached(roomOf("forest-1", 9), false, 60 * 20, 112);
+        highestPointReached(roomOf("forest-1", 10), false, 60 * 20, 112);
     }
 
     /** Entry, walls, fissure and canopy; the boss room (index 4) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */

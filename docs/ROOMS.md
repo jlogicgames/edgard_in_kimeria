@@ -18,7 +18,7 @@ ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fi
 (1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
-`forest-1` has eleven rooms since #484 (the `forest-1-spider`, fifth in play order after the lever lesson, 1120 px since #500, and the 640 px `forest-1-climb`, seventh after the bramble room: the forest spider and the snail met one at a time, then the spider climbing to a hero waiting for a lift, see "forest-1 spider rooms" below, both authored at the end of the map), nine since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
+`forest-1` has twelve rooms since #500 batch 3 ([D110](DECISIONS.md#d110-forest-1s-trap-course-is-split-in-two-the-escalators-and-the-puffball-each-get-a-room-and-the-course-loses-a-tuft-and-a-lever-pair-500-499): the 1280 px trap course was split at x 640 into the 640 px `forest-1-escalators`, third in play order, and the 640 px `forest-1-traps`, fourth; see "Reworked under D105, batch 3" below), eleven since #484 (the `forest-1-spider`, fifth in play order after the lever lesson, 1120 px since #500, and the 640 px `forest-1-climb`, seventh after the bramble room: the forest spider and the snail met one at a time, then the spider climbing to a hero waiting for a lift, see "forest-1 spider rooms" below, both authored at the end of the map), nine since #365 (the 640 px `forest-1-hive`, [D90](DECISIONS.md#d90-the-hanging-hive-a-rhythm-trap-whose-stingers-fall-as-a-band-365-2026-11-17), eighth in play order after the guard room: the hanging hive over open floor, then over a ladder, see "forest-1 hive room" below, authored at the end of the map), eight since #364 (the 640 px `forest-1-bramble`, [D89](DECISIONS.md#d89-the-creeping-bramble-a-clocked-thorn-arm-across-a-lane-taught-at-a-ladder-exit-364-2026-11-17), fifth in play order after the lever lesson: the creeping bramble over a ladder top, see "forest-1 bramble room" below, authored at the end of the map), seven since #363 (the 640 px `forest-1-deadfall`, [D88](DECISIONS.md#d88-the-trip-line-deadfall-a-touch-trap-whose-trigger-is-drawn-on-the-floor-363-2026-11-17), second in play order: the trip-line deadfall met alone, authored after the end of the map like `forest-1-mob` and listed between it and the trap course), six since #418, five since #375 ([D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17): the 800 px `forest-1-mob`, the first RedMob alone and then a refill, is played first although it lies after the tree room on the map, because the `Rooms` list sets the order), four since #349, three since #104 and two since #187 ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)): the 1280 px trap course (`forest-1-traps`, [D58](DECISIONS.md#d58-forest-1-traps-and-a-second-redmob-three-traps-and-one-enemy-in-the-open-stretch)), the 640 px lever lesson room (`forest-1-lever`, [D86](DECISIONS.md#d86-forest-1-gets-a-lever-lesson-room-one-lever-a-ladder-and-a-lift-in-opposite-states-418-2026-11-17), see "forest-1 lever room" below, authored after the end of the map like `forest-1-mob` and listed between the trap course and the route room), the 832 px route room (`forest-1-route`, see "forest-1 route room" below) and the 768 px guard room (`forest-1-guard`, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15), see "forest-1 guard room" below) and the 640 px tree room (`forest-1-tree`, [D80](DECISIONS.md#d80-tree-branches-one-way-perches-and-rotten-branches-349-playtest-f13-2026-11-16), see "forest-1 tree room" below); the checkpoint on the tree room's crown leads to `forest-2`. See [MVP.md](MVP.md). Replay budgets and measured
 routes for #70 are recorded below.
 
 For the future stage → levels → rooms hierarchy, see the
@@ -320,9 +320,9 @@ the hero at the card's `pocket at x N` and names the room and the element.
 `forest-1-climb`, `forest-1-hive`, `forest-1-tree`). The numbers are on the cards and in D105. The too-empty rooms were on the
 gate's shrink-only list with `Below density`, and the forest-1 rework was tracked by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500); the spider rooms were reworked with the
 snail (#329) first, and the other five by the batch below, so **the list is empty (ceiling 0)**. `forest-1-traps` passes by 0.03 s
-(1.534 s per beat), a rework candidate. Five rooms still meet a new element late, crowded or with no safe spot that shows it
+(1.534 s per beat), a rework candidate. Five rooms still met a new element late, crowded or with no safe spot that shows it
 acting (`forest-1-traps` for the puffball, `forest-1-guard`, `forest-entry`, `forest-walls`, `forest-canopy`), on a second
-shrink-only list under the same issue.
+shrink-only list under the same issue; batch 3 (below, D110) took `forest-1-traps` and `forest-1-guard` off it, three remain.
 
 ### Reworked under D105, batch 2 (#500, D107, cards approved by the author 2026-11-19)
 
@@ -338,7 +338,7 @@ earlier in the level. Times are the zero-charge mastered routes of the room test
 | `forest-1-tree` | none: a `reward` room | 4.95 s (fast line) | - | the beetle (id 147) left; nothing lethal; the level still ends on the crown (D80) |
 
 - First meetings pinned in `FirstMeetingPocketTest`: `forest1MobTheRedMob` (x 3716, behind the log, acting `RUN`),
-  `forest1DeadfallTheDeadfall` (x 5120 on the vine, acting `SWING`), `forest1TrapsTheEscalator` (x 240; the falling platforms
+  `forest1DeadfallTheDeadfall` (x 5120 on the vine, acting `SWING`), `forest1TrapsTheEscalator` (x 240; renamed `forest1EscalatorsTheEscalator` by batch 3; the falling platforms
   beside it no longer count, D107), `forest1BrambleTheBramble` (x 6170, now beat 3 with a 5.42 s retry) and
   `forest1HiveTheFloorHive` (x 6420, unchanged). `forest-1-tree` needs none: a `reward` room is calm.
 - Deviations from the design proposal, found in the build: the thorn root's `zone` is 64 (the load check wants at least 64 px a
@@ -347,6 +347,34 @@ earlier in the level. Times are the zero-charge mastered routes of the room test
   deadfall 5.85 against 6.2, hive 8.85 against 9.6, bramble 9.47 against 9.5) because the walk is faster than estimated.
 - Deaths (retry cost): mob 6.17 s at the stump (2.5 s on the log); deadfall 5.18 s under the stone, 4.4 s past the mob, 2.00 s in
   the swing; bramble 5.42 s blind climb; hive 3.1 to 7.5 s the hives, 6.25 s the spider.
+
+### Reworked under D105, batch 3 (#500, D110, cards approved by the author 2026-11-20)
+
+Two rooms of forest-1 take the last forest-1 rooms off the first-meeting list (`FIRST_MEETING_GRANDFATHERED` 5 to 3: only
+`forest-entry`, `forest-walls` and `forest-canopy` remain). Known elements only, no new monster or trap type, no hint text.
+Coordinates are the map's (Y grows downward, floor top y 320); times are the zero-charge mastered routes of the room tests,
+pinned within 0.1 s.
+
+| Room | Beats (id@x) | Time | s/beat | What changed |
+| --- | --- | ---: | ---: | --- |
+| `forest-1-escalators` (new, x 0-640) | crumble-support@160, running-platform@304, lever-wall@480 | 5.48 s | 1.83 | the first half of the old trap course; lever 33 and its overhead escalator 34 removed (a repeat with no role) |
+| `forest-1-traps` (x 640-1280) | puffball@768, redmob@928, crumble-support@1088 | 6.00 s | 2.00 | the second half: the puffball moved 944 to 768 (`phase` 0 to 3.4), the RedMob 864 to 928, thorn tuft 35 removed |
+| `forest-1-guard` | puffball@2375, redmob@2394, beetle@2632 | 6.50 s | 2.17 | `RoomStart` 61 x 2176 to 2208, lever 63 x 2224 to 2256, puffball 77 `phase` 2.2 to 2.52: every route 0.32 s shorter, the beetle's retry 6.08 to 5.82 s |
+
+- Split (map): `Room` 184 `forest-1-escalators` (0, 0, 640, 368) with `RoomStart` 185 (32, 272) and `RoomExit` 186 (608, 272, 16 x
+  48), inserted in the `Rooms` layer before `Room` 43 (the layer order is the play order); `Room` 43 `forest-1-traps` is
+  (640, 0, 640, 368) with `RoomStart` 44 (656, 272); walls 187 (x 624) and 188 (x 640), floor 3 cut to x 0-640 and a new
+  floor 189 at x 640-1024; the seam tiles (columns 39 and 40 of the `Background` layer) copy those of the other forest-1 seams
+  so both solid walls are drawn; the bushes 41 and 42 moved to x 560 and 832. No other room moved; ids 33, 34, 35 are gone.
+- Puffball first sight (D84): the clock starts at the room's entry at `phase` 3.4, so the cloud is out at the entry, sinks at
+  0.6 s, the straight walker is in its column at 0.8 to 1.13 s in the calm (no wait) and the swell comes at 2.8 s, the next
+  cloud at 3.6 s. The guard room's puffball is the opposite on purpose: its first death is deterministic (D68).
+- First meetings pinned in `FirstMeetingPocketTest`: `forest1EscalatorsTheEscalator` (x 240; was `forest1TrapsTheEscalator`),
+  `forest1TrapsThePuffball` (x 744, acting `CLOUD`: the puffball does not move or act, so `signals()` reports its phase) and
+  `forest1GuardTheBeetle` (x 2550, the tunnel's mouth, acting `NOTICE`).
+- Deaths (retry cost): the trap course 6.47 s at the log (12.73 s before the split); the guard room 1.37 s in the cloud on the
+  first walk-in and 5.82 s in the beetle's burst after the mastered melee.
+- Changed assertion: the guard room's entrance-to-cloud clearance, 140 to 117 px (D68, Update; the rule it stands for holds).
 
 ## forest-entry split (#376, D72)
 
@@ -420,10 +448,12 @@ coins. The `forest-1` trap course has no collectables, so it needs no separate d
 | Level / room | Width | Required route | All room coins | Result |
 | --- | ---: | ---: | ---: | --- |
 | `forest-1` / `forest-1-mob` (room 1 since #375, D85, 2026-11-17) | 800 px | 6.75 s, log jumped, mob by sword, stump jumped (6.97 s before the #500 rework) | None (one fireball refill) | Within 20 s |
-| `forest-1` / unmarked room (now room 2, `forest-1-traps`; 12.27 s since the D58 traps, measured 2026-11-09, and again after #375) | 1280 px | 11.58 s (historical) | None | Within 20 s |
+| `forest-1` / unmarked room (the old 1280 px trap course, 12.27 s since the D58 traps, split by #500, D110) | 1280 px | 11.58 s (historical) | None | Within 20 s |
+| `forest-1` / `forest-1-escalators` (room 3 since #500, D110) | 640 px | 5.48 s | None | Within 20 s |
+| `forest-1` / `forest-1-traps` (room 4 since #500, D110) | 640 px | 6.00 s | None | Within 20 s |
 | `forest-1` / `forest-1-lever` (room 3 since #418, D86, 2026-11-17) | 640 px | 8.43 s (ride, pull, drop, climb) | None | Within 20 s |
 | `forest-1` / `forest-1-route` (room 4 since #418; #187, D67, 2026-11-15) | 832 px | 11.02 s, bat by sword (18.32 s with the refill detour) | None (one fireball refill) | Within 20 s |
-| `forest-1` / `forest-1-guard` (room 5 since #418; #104, D68, 2026-11-15) | 768 px | 6.83 s timed melee (the floor); fireball 6.15 s; roof 7.67 s | None (one optional fireball refill on the roof) | Within 20 s |
+| `forest-1` / `forest-1-guard` (room 5 since #418; #104, D68, 2026-11-15) | 768 px | 6.50 s timed melee (the floor); fireball 5.82 s; roof 7.40 s (6.83, 6.15 and 7.67 s before #500 batch 3) | None (one optional fireball refill on the roof) | Within 20 s |
 | `forest-3` (now `forest-2`) / `forest-entry` | 1280 px | 17.60 s | 20.27 s | Within 20 / 30 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 672 px | 5.17 s | 5.47 s | Within 20 / 30 s |
 
@@ -699,10 +729,11 @@ These timings were rechecked on the teaching layout during the merge review on
 
 | Level / room | Required route | All room coins |
 | --- | ---: | ---: |
-| `forest-1` / unmarked (now room 2, `forest-1-traps`; 12.27 s since D58) | 11.58 s (historical) | No coins |
+| `forest-1` / unmarked (the old trap course; 12.27 s since D58, split by #500, D110) | 11.58 s (historical) | No coins |
+| `forest-1` / `forest-1-escalators`, `forest-1-traps` (#500, D110) | 5.48 s, 6.00 s | No coins |
 | `forest-1` / `forest-1-lever` (room 3, #418) | 8.43 s | No coins |
 | `forest-1` / `forest-1-route` (room 4 since #418, #187) | 11.02 s | No coins (refill detour: whole room 18.32 s) |
-| `forest-1` / `forest-1-guard` (room 5 since #418, #104) | 6.83 s (timed melee; roof 7.67 s with the refill) | No coins |
+| `forest-1` / `forest-1-guard` (room 5 since #418, #104) | 6.50 s (timed melee; roof 7.40 s with the refill; 6.83 and 7.67 s before #500 batch 3) | No coins |
 | `forest-3` (now `forest-2`) / `forest-entry` | 16.27 s | 20.00 s |
 | `forest-3` (now `forest-2`) / `forest-canopy` | 5.00 s | 5.00 s |
 
@@ -959,6 +990,8 @@ Map hashes: before the change `forest-1.tmx` SHA-256 `4363b8d4cb3e80ef6990338aa8
 Preview with the placed objects and zones: [forest-1-trap-placement.png](references/forest-1-trap-placement.png) (a schematic drawn from the map and tileset, not a game screenshot).
 
 ### What the level is
+
+**Update (#500 batch 3, D110, 2026-11-20):** the course was split at x 640 into `forest-1-escalators` (x 0-640) and `forest-1-traps` (x 640-1280); the thorn tuft 35 and lever 33 with escalator 34 were removed and the puffball (x 768) and RedMob (x 928) moved; the coordinates in this plan are historical (see "Reworked under D105, batch 3").
 
 Room 2 of 5 since #375 (D85; room 1 of 2 since #187, D67): `forest-1-traps`, x 0-1280, which lost its first RedMob, its refill and its lever-and-torch pair to the new first room `forest-1-mob` in #375 (the coordinates below are otherwise current), whose `RoomStart` is the old `Player` spawn x 32 (so every retry restarts there, as when the level was one unmarked room) and whose `RoomExit` (1216, 272, 32 x 48) stands where the `Checkpoint` was; the checkpoint moved to the route room appended after it. Before #187 this was the whole level, 80 x 23 tiles (1280 x 368 px). No hints (`TutorialLevelTest`). The first part is unchanged apart from what #375 moved or removed: four `FallingPlatform`
 (x 96-224), escalators, lever 272 and the `Wall` at x 480-528, lever 544. The stretch **x 580-1200 was empty floor**
@@ -1251,7 +1284,7 @@ y320        ====================================================
 
 | What | Object | x (px) | y (px) | Size | Properties | Role |
 | --- | --- | ---: | ---: | --- | --- | --- |
-| Room 2 (room 1 before #375), `forest-1-traps` | `Room`, `RoomStart` (32, 272), `RoomExit` | 0 | 0 | 1280 x 368; exit 1216, 272, 32 x 48 | none | the trap course; the exit replaces its checkpoint |
+| Room 2 (room 1 before #375), `forest-1-traps` | `Room`, `RoomStart` (32, 272), `RoomExit` | 0 | 0 | 1280 x 368; exit 1216, 272, 32 x 48 | none | the trap course; the exit replaces its checkpoint. Since #500 batch 3 (D110) it is x 640-1280 (start 656) and the escalators are `forest-1-escalators`, x 0-640 |
 | Room 3 (room 2 before #375), `forest-1-route` | `Room` (id 46), `RoomStart` (id 47) | 1280 | 0 | 832 x 368; start 1344, 272 | none | third room since #375; safe entrance, floor under it, nothing in reach; ends at the `RoomExit` below |
 | Lever | `Trigger` `Route` (id 48) | 1440 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor |
 | Ladder | `Ladder` `Route` (id 49) | 1536 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; optional route |
@@ -1315,19 +1348,19 @@ y208        ............sssssssssssssssssssssssss...........   the slab, x 2304-
 y224-288    ............################....................   the roof block, x 2304-2560
 y288-320    ................P.G.............................   the tunnel (32 px high): puffball P (x 2375), guard G (body 2400-2420)
 y272-320    ...........................................X....   the room exit on the floor (x 2800; the checkpoint until #349)
-y304        ....@..l........................................   entrance 2176, lever 2224
+y304        ....@..l........................................   entrance 2208, lever 2256
 y320        ================================================   floor; end walls at x 2112 and 2864
 ```
 
 | What | Object | x (px) | y (px) | Size | Properties | Role |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Room 2 exit | `RoomExit` (id 75), room `forest-1-route` | 2048 | 112 | 48 x 32 | none | the route room's checkpoint became this exit (D67 times unchanged) |
-| Room 3, `forest-1-guard` | `Room` (id 60), `RoomStart` (id 61) | 2112 | 0 | 768 x 368; start 2176, 272 | none | third room; safe entrance, floor under it, nothing in reach; the start point is the top-left of the hero's 48 x 48 square |
-| Lever | `Trigger` `Bridge` (id 63) | 2224 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor; reach x 2214.5-2249.5 |
+| Room 3, `forest-1-guard` | `Room` (id 60), `RoomStart` (id 61) | 2112 | 0 | 768 x 368; start 2208, 272 (2176 before #500, D110) | none | third room; safe entrance, floor under it, nothing in reach; the start point is the top-left of the hero's 48 x 48 square |
+| Lever | `Trigger` `Bridge` (id 63) | 2256 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor; reach x 2246.5-2281.5 (x 2224 before #500, D110) |
 | Ladder | `Ladder` `Bridge` (id 64) | 2288 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; leads to the roof |
 | Slab (roof) | collision (id 73) | 2304 | 208 | 400 x 16 | plain collision, one piece | the roof route: up from the ladder, 112 px above the floor, over the tunnel, ends at x 2704 |
 | Roof block | collision (id 78) | 2304 | 224 | 256 x 64 | plain collision | closes the tunnel from above: ceiling y 288, so the opening is 32 px high (x 2304-2560): no hop over the guard, no stomp |
-| Puffball | `Puffball` (id 77) | 2375 | 304 | 16 x 16 | `period` 4, `cloud` 1, `phase` 2.2 | the second threat: swell 0.8 s then a 1 s cloud every 4 s (calm 2.2 s); cloud x 2373-2393, y 298-318, over every place from which the sword reaches the guard |
+| Puffball | `Puffball` (id 77) | 2375 | 304 | 16 x 16 | `period` 4, `cloud` 1, `phase` 2.52 (2.2 before #500, D110) | the second threat: swell 0.8 s then a 1 s cloud every 4 s (calm 2.2 s); cloud x 2373-2393, y 298-318, over every place from which the sword reaches the guard |
 | Guard | `RedMob` (id 69) | 2394 | 288 | 48 x 32 | `offNeg` 0, `offPos` 0 | in the tunnel on the floor; never moves; faces left; strikes only within 6 px of its body (x 2400-2420); the sword reaches it from a gap of up to 17 px |
 | Refill | `FireballRefill` (id 76) | 2640 | 192 | 16 x 16 | none | one charge (D27) on the roof's far part; not a coin |
 | Beetle | `Beetle` (id 146, #327) | 2632 | 304 | 24 x 16 | `offNeg` 2, `offPos` 2 | the beetle's first room (D100): its centre crawls x 2612-2676 on the floor past the tunnel, in view from the entrance; its blast covers x 2572-2716 at most, so it never reaches the tunnel (a shelter), the roof's drop (its trigger ends at x 2696) or the exit |
@@ -1338,16 +1371,16 @@ Tiles: the floor and the two end columns copy room 2's (ids 22-24, 42-44, 62-64,
 
 **Beetle (#327, 2026-11-18).** The beetle (id 146, row above) was added past the tunnel by the author's approval of its card
 ([ROOM_CARDS.md](ROOM_CARDS.md#forest-1-guard)); the guard, the puffball and the roof are unchanged. Measured in
-`Forest1CombatTest`: the three pinned routes keep their times (melee 6.83 s, shot 6.15 s, roof 7.67 s), because a hero
+`Forest1CombatTest`: the three pinned routes keep their times (melee 6.83 s, shot 6.15 s, roof 7.67 s before #500 batch 3, which moved the start, the lever and the puffball's clock together and shortened them to 6.50, 5.82 and 7.40 s), because a hero
 running on triggers it and is clear of the blast when it bursts behind him; a hero in the tunnel's mouth is heard (its
 notice beat) but never reached; from the mouth to the exit, a fireball kill takes 3.65 s and a lure (step out until it
-commits, step back into the tunnel, let it burst) 4.53 s; the roof run drops past it without triggering it (7.67 s); a death
-in its burst after the mastered melee comes 6.08 s after the entrance. All four are pinned to 0.1 s. The author played the
+commits, step back into the tunnel, let it burst) 4.53 s; the roof run drops past it without triggering it (7.40 s); a death
+in its burst after the mastered melee comes 5.82 s after the entrance (6.08 s before #500 batch 3). All four are pinned to 0.1 s. The author played the
 room on 2026-11-18 and approved the beetle's look and sounds.
 
 ### How it plays
 
-The floor route (the support-free route: no lever, ladder or other support) runs through a low tunnel; the roof route is the second way through, and both reach the checkpoint with zero charges. In it a spore puffball and, right after it, a RedMob that never moves. The cap swells for 0.8 s before each 1 s cloud; the cloud covers the whole width from which the sword reaches the guard (7-17 px from it, the whip reaches 6 px), so the swing must start in the calm and be finished before the cloud arrives (the hero is frozen while it plays). **Timed melee:** arrive in the calm, step in, swing once, walk on: 6.83 s once the cycle is known (it restarts at the same phase after every retry). **Fireball:** shoot from outside (the guard never moves and the cloud does not stop a fireball), then cross the cloud's width in the calm: 6.15 s, one charge. **Roof:** pull the lever (the ladder comes down in about 0.7 s), climb, walk the roof (nothing threatens it), take the refill, drop off the end: 7.67 s, +1 charge. The roof route needs the lever and never touches the tunnel. At a **full stock** (three) the refill pays nothing (D27).
+The floor route (the support-free route: no lever, ladder or other support) runs through a low tunnel; the roof route is the second way through, and both reach the checkpoint with zero charges. In it a spore puffball and, right after it, a RedMob that never moves. The cap swells for 0.8 s before each 1 s cloud; the cloud covers the whole width from which the sword reaches the guard (7-17 px from it, the whip reaches 6 px), so the swing must start in the calm and be finished before the cloud arrives (the hero is frozen while it plays). **Timed melee:** arrive in the calm, step in, swing once, walk on: 6.83 s once the cycle is known (6.50 s since #500 batch 3; 6.83 s before; it restarts at the same phase after every retry). **Fireball:** shoot from outside (the guard never moves and the cloud does not stop a fireball), then cross the cloud's width in the calm: 5.82 s, one charge (6.15 s before #500 batch 3). **Roof:** pull the lever (the ladder comes down in about 0.7 s), climb, walk the roof (nothing threatens it), take the refill, drop off the end: 7.40 s, +1 charge (7.67 s before #500 batch 3). The roof route needs the lever and never touches the tunnel. At a **full stock** (three) the refill pays nothing (D27).
 
 ### Finding and revisions (answers #104's "does the combination add a new decision?", and the author's request)
 
@@ -1357,27 +1390,27 @@ The floor route (the support-free route: no lever, ladder or other support) runs
 
 | Choice | Succeeds | Time from the entrance | Charges |
 | --- | ---: | ---: | --- |
-| Melee, impatient, at artificial start phases (hero teleported 30 px before the cloud) | 30 of 60 (50 %); the cloud kills the rest | 6.87 s when it works | 0 |
-| **Straight run from the room's entry (a player's first walk-in)** | **dies, every time, at frame 101**; works only after a pause of 9 frames (0.15 s) or more | 6.8 s once it works | 0 |
-| Melee, patient (waits for 1.0 s of calm) | 60 of 60 | 7.89 s on average (the wait averages 1.06 s) | 0 |
-| Melee, mastered (knows the phase) | always | **6.83 s** | 0 |
-| Fireball, then a patient crossing | 30 of 30 phases | **6.15 s** | -1 |
-| Roof (lever, ladder, roof, refill) | 10 of 10 phases | **7.67 s** | **+1** |
+| Melee, impatient, at artificial start phases (hero teleported 30 px before the cloud) | 30 of 60 (50 %); the cloud kills the rest | 5.33 s when it works (`Forest1CombatTest`, measured from the teleport, 30 px before the cloud) | 0 |
+| **Straight run from the room's entry (a player's first walk-in)** | **dies, every time, at frame 82**; works only after a pause of 9 frames (0.15 s) or more | 6.8 s once it works | 0 |
+| Melee, patient (waits for 1.0 s of calm) | 60 of 60 | 6.36 s on average (`Forest1CombatTest`, measured from the same teleport; includes the wait) | 0 |
+| Melee, mastered (knows the phase) | always | **6.50 s** | 0 |
+| Fireball, then a patient crossing | 30 of 30 phases | **5.82 s** | -1 |
+| Roof (lever, ladder, roof, refill) | 10 of 10 phases | **7.40 s** | **+1** |
 
-**A real player does not arrive at an arbitrary phase.** The 50 % comes from a sweep with the hero teleported to 30 px before the cloud at 60 artificial start phases; a player enters at the room's start, where the cloud is always at the same point of its cycle (2.2 s, the swell about to begin), and the retry replays the identical phase. Measured with the hero holding Right from the entry and swinging from 16 px (no teleport): **a straight run with no pause dies, every time, at frame 101** (the hero reaches the cloud's edge as the swell ends); a pause before setting off of 0, 3 or 6 frames (up to 0.1 s) dies the same way, and **a pause of 9 frames (0.15 s) or more succeeds** (sweep of 0-90 frames in steps of 3: 3 deaths, then 28 successes). So the first walk-in is a deterministic first death and the retry teaches the stop-and-wait; whether the swell and the cloud read as that cue is the author's play-through to judge.
+**A real player does not arrive at an arbitrary phase.** The 50 % comes from a sweep with the hero teleported to 30 px before the cloud at 60 artificial start phases; a player enters at the room's start, where the cloud is always at the same point of its cycle (2.52 s into its cycle since #500, D110: the clock starts 0.32 s further on and the walk is 0.32 s shorter, so the hero meets it at the same point), and the retry replays the identical phase. Measured with the hero holding Right from the entry and swinging from 16 px (no teleport): **a straight run with no pause dies, every time, at frame 82 (1.37 s; frame 101 before #500 batch 3)** (the hero reaches the cloud's edge as the swell ends); a pause before setting off of 0, 3 or 6 frames (up to 0.1 s) dies the same way, and **a pause of 9 frames (0.15 s) or more succeeds** (sweep of 0-90 frames in steps of 3: 3 deaths, then 28 successes). So the first walk-in is a deterministic first death and the retry teaches the stop-and-wait; whether the swell and the cloud read as that cue is the author's play-through to judge.
 
-**Does the sword still dominate?** Not as an instant answer. For an unaware hero the roof (7.67 s, safe, +1 charge) is faster than the patient melee (7.89 s), and the shot buys 0.68 s over the mastered melee for one charge. For a hero who knows the cycle and is at a **full stock** the mastered melee is still the best (0.84 s faster than the roof, free), so the decision there is only 0.84 s of insurance. The risk is a learning risk, not an execution risk. Whether that is a meaningful decision is the author's play-through to judge.
+**Does the sword still dominate?** Not as an instant answer. For an unaware hero the roof (7.40 s, safe, +1 charge) costs 1.04 s more than the patient melee from the same 30 px point (7.40 s against 6.36 s; the sweeps start at a teleport, the roof from the entrance, so the old "roof is faster than a patient melee" comparison is dropped), and the shot buys 0.68 s over the mastered melee for one charge. For a hero who knows the cycle and is at a **full stock** the mastered melee is still the best (0.90 s faster than the roof, free), so the decision there is only 0.90 s of insurance. The risk is a learning risk, not an execution risk. Whether that is a meaningful decision is the author's play-through to judge.
 
 ### Recovery and D26 (swept by `Forest1CombatTest`)
 
 - The floor route needs no support, no lever and no charge; the lever is a reversible toggle and is in reach only on the floor (swept over every x and two heights in both ladder states), so the ladder is never taken from under a hero.
 - **216 runs, 0 failures, no Restart Level:** lever pulled 0, 1 or 2 times, guard alive or dead, refill taken or not, the cloud at four points of its cycle (0, 1.2, 2.3, 3.5 s), hero at the entrance, the ladder's foot, the tunnel's mouth, the ladder's top, the roof, by the refill, or (guard dead) beyond the guard; zero charges.
-- Clearances (asserted, measured over a standing, a jumping and a climbing hero): the lever's reach (x 2214.5-2249.5, y 282.5-320) is **123.5 px** from the danger (guard, whip and cloud, x 2373-2420, y 292-320); a climber (x 2290.5-2301.5) is **71.5 px** away; the cloud lies wholly under the roof; a hero 40 px short of the guard stands for 10 s untouched.
-- State boundary: death (the cloud) and room retry on a first visit restore the authored room (guard alive in its place, the puffball's cycle back at its authored phase 2.2 s, ladder raised, lever down, refill back, the unsecured charge rolled back, hero at x 2176; the same route takes the same time twice). A secured room (a forward exit, a healer return; `keepPickups()` and `Level.secureVisit()` in the test) keeps a dead guard dead, a taken refill gone and the ladder as left, and the floor still finishes. Restart Level rebuilds the room from the map.
+- Clearances (asserted, measured over a standing, a jumping and a climbing hero): the lever's reach (x 2246.5-2281.5, y 282.5-320 since #500; 2214.5-2249.5 before) is **91.5 px** from the danger (guard, whip and cloud, x 2373-2420, y 292-320); a climber (x 2290.5-2303.7) is **69.3 px** away (71.5 px before #500); the cloud lies wholly under the roof; a hero 40 px short of the guard stands for 10 s untouched.
+- State boundary: death (the cloud) and room retry on a first visit restore the authored room (guard alive in its place, the puffball's cycle back at its authored phase 2.52 s, ladder raised, lever down, refill back, the unsecured charge rolled back, hero at x 2208; the same route takes the same time twice). A secured room (a forward exit, a healer return; `keepPickups()` and `Level.secureVisit()` in the test) keeps a dead guard dead, a taken refill gone and the ladder as left, and the floor still finishes. Restart Level rebuilds the room from the map.
 
 ### Measured (scripted hero, real input; author check, not a novice playtest)
 
-Mastered melee 6.83 s, fireball 6.15 s, roof 7.67 s: all well inside the 20 s budget (D19), each pinned by the tests within 0.1 s. First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#129-#131). Allocation: 1,162.1 to 1,162.2 B/frame with the guard asleep, 849.7 to 1,017.8 with its attack running (ceiling 1,280, `AllocationBudgetTest.forest1GuardRoom`).
+Mastered melee 6.50 s, fireball 5.82 s, roof 7.40 s (since #500 batch 3; 6.83, 6.15 and 7.67 s before): all well inside the 20 s budget (D19), each pinned by the tests within 0.1 s. First-learning time (the 60 s hypothesis) was not measured: that needs a person who has not seen the room (#129-#131). Allocation: 1,162.1 to 1,162.2 B/frame with the guard asleep, 849.7 to 1,017.8 with its attack running (ceiling 1,280, `AllocationBudgetTest.forest1GuardRoom`).
 
 ### Tests
 

@@ -97,6 +97,13 @@ class AllocationBudgetTest {
      * step 1: 2,530.2 to 2,564.4; step 0: 4,491.8 to 4,525.5.
      */
     static final double FOREST_1_CEILING = 665;
+    /**
+     * The escalator room, split off the trap course by #500 (D110, 2026-11-20): measured 320.0 to 536.0 B/frame in 3 isolated runs of the class (JIT-dependent, the
+     * same band as every other forest-1 room scene). Ceiling 620 = the highest run (536.0) + about 16 %, the same as the other forest-1 room ceilings (mob, lever, deadfall, bramble: 620 over the same 536.0 band). The trap course (FOREST_1_CEILING
+     * above, now only the puffball, the second RedMob and the log) measured 544.3, 328.3, 328.3 in the same runs, the same as before the split, so its ceiling stays;
+     * the guard room measured 544.0, 232.0, 232.0 (guard awake 544.0, 328.0, 328.0) after its start moved 32 px, under its unchanged ceiling.
+     */
+    static final double FOREST_1_ESCALATORS_CEILING = 620;
     /** Measured 1,025.6 to 1,026.3 B/frame in isolated and full-suite runs, bat alive (#187, D67, 2026-11-15), the same with the hero riding the lift (forest1RouteRoomRidingTheLift): the forest-1 route room (a running lift, a lever, a raised ladder, a refill), update + render. Ceiling = highest run + about 10 %. */
     static final double FOREST_1_ROUTE_CEILING = 1130;
     /**
@@ -173,7 +180,7 @@ class AllocationBudgetTest {
     private static final int FIREBALL_CAST_PAIRS = 9, FIREBALL_CAST_WINDOW_FRAMES = 600;
     /** Measured 0.0 B/frame in 6 runs (2026-11-18, #397), and 0.0 in 3 more runs with the impact ring, 0.2 and 0.3 in two full-suite runs; headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles and the ring slots: a fireball burst every 60 frames through the real {@code Level.fireballFx()} (light, heavy, burn-out in turn), updated and drawn each frame. */
     static final double FIREBALL_IMPACT_CEILING = 8;
-    private static final int FIREBALL_ROOM = 2, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
+    private static final int FIREBALL_ROOM = 3, FIREBALL_SHOTS = 30, FIREBALL_BURST_KINDS = 3;
     /** Measured 0.0 B/frame in 3 runs (2026-11-18, #402); headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the sparks and the ring slots: a pickup burst (12 sparks and a ring) every 60 frames through the real {@code Level.pickupSparks()}, spawn, update and render. */
     static final double PICKUP_SPARKS_CEILING = 8;
     /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-18, #327 and D101; 0.2 before the body; the same 8 B ceiling as the other isolated paths; the harness does not play sounds, so {@code playSound} is not reached): beetles crawling, noticing, committing, winding up with specks, bursting or dying under a kill, their bodies rocking, crumbling and burning, through the real {@code Level} of beetle-test.tmx, update and render every frame. */
@@ -309,20 +316,23 @@ class AllocationBudgetTest {
 
     /** The first-RedMob room (#375): the mob asleep, the refill. */
     @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
-    @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 2)); }
-    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 7)); }
+    /** The trap course (the puffball, the second RedMob, the rotten log over the pit), room 4 since #500 (D110) split the escalators off it. */
+    @Test void forest1() { assertWithinBudget("forest-1", FOREST_1_CEILING, room("forest-1", 3)); }
+    /** The escalator room (the falling platforms, two running escalators, the lever and its wall), room 3 since #500 (D110). */
+    @Test void forest1EscalatorsRoom() { assertWithinBudget("forest-1 escalators room", FOREST_1_ESCALATORS_CEILING, room("forest-1", 2)); }
+    @Test void forest1RouteRoom() { assertWithinBudget("forest-1 route room", FOREST_1_ROUTE_CEILING, room("forest-1", 8)); }
     /** The guard room (#104, D68): the RedMob asleep in its tunnel, the puffball cycling (swell and cloud included), a lever, a raised ladder, the roof and its refill. */
-    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 8)); }
+    @Test void forest1GuardRoom() { assertWithinBudget("forest-1 guard room", FOREST_1_GUARD_CEILING, room("forest-1", 9)); }
 
     /** The tree room (#349, D80): two trunks, five rotten branches at rest, six sound branches. */
-    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 10)); } // the tree room is room 10 since the spider rooms (#484)
+    @Test void forest1TreeRoom() { assertWithinBudget("forest-1 tree room", FOREST_1_TREE_CEILING, room("forest-1", 11)); } // the tree room is room 12 (index 11) since #500 (D110), index 10 since the spider rooms (#484)
     /** The lever lesson room (#418, D86): a running lift, a lever, a raised ladder. */
-    @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 3)); }
+    @Test void forest1LeverRoom() { assertWithinBudget("forest-1 lever room", FOREST_1_LEVER_CEILING, room("forest-1", 4)); }
     /** The deadfall room at rest (#363): the tied log, the bough, the vine, the trunk. */
     @Test void forest1DeadfallRoom() { assertWithinBudget("forest-1 deadfall room", FOREST_1_DEADFALL_CEILING, room("forest-1", 1)); }
     /** The bramble room (#364): the bramble cycling (its arm grows and retracts during the measurement), the static ladder. */
-    @Test void forest1BrambleRoom() { assertWithinBudget("forest-1 bramble room", FOREST_1_BRAMBLE_CEILING, room("forest-1", 5)); }
-    @Test void forest1HiveRoom() { assertWithinBudget("forest-1 hive room", FOREST_1_HIVE_CEILING, room("forest-1", 9)); }
+    @Test void forest1BrambleRoom() { assertWithinBudget("forest-1 bramble room", FOREST_1_BRAMBLE_CEILING, room("forest-1", 6)); }
+    @Test void forest1HiveRoom() { assertWithinBudget("forest-1 hive room", FOREST_1_HIVE_CEILING, room("forest-1", 10)); }
     /** The fissure room (#366, D91): two ember fissures out of step, cycling through warnings, jets and sparks, one under a branch. */
     @Test void forest2FissureRoom() { assertWithinBudget("forest-2 fissure room", FOREST_2_FISSURE_CEILING, room("forest-2", 2)); }
 
@@ -369,7 +379,7 @@ class AllocationBudgetTest {
      * its fall with the hero and its removal all run inside the measured window. Each trigger spawns the shared warning light (a Torch), as the log's does.
      */
     @Test void forest1TreeRoomRidingARottenBranchDown() {
-        Level level = harness.roomOf("forest-1", 10); // the tree room (#365 put the hive room before it, #484 the two spider rooms)
+        Level level = harness.roomOf("forest-1", 11); // the tree room (#365 put the hive room before it, #484 the two spider rooms)
         Rectangle view = new Rectangle(level.currentRoomBounds());
         FallingPlatform top = level.fallingPlatforms.get(level.fallingPlatforms.size() - 1);
         FallingPlatform.Snapshot intact = top.snapshot();
@@ -398,7 +408,7 @@ class AllocationBudgetTest {
      * against nobody: the hero is never hurt and nothing dies. The puffball's swell and cloud run in the other half of every cycle.
      */
     @Test void forest1GuardRoomWithTheGuardAwake() {
-        Level level = harness.roomOf("forest-1", 8);
+        Level level = harness.roomOf("forest-1", 9);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var guard = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.enemy.RedMob.class::cast).findFirst().orElseThrow();
@@ -419,14 +429,14 @@ class AllocationBudgetTest {
         assertTrue(attacked[0], "the scene must have the guard attack");
         assertWithinBudget("forest-1 guard room, guard awake", FOREST_1_GUARD_CEILING, bytes);
     }
-    /** The puffball cycles every 4 s (240 frames) from phase 2.2 s: swell 0-48, cloud 48-108, calm 108-240; the attack takes 48 frames, so it ends before the next swell. */
+    /** The puffball cycles every 4 s (240 frames) from phase 2.52 s (since #500, D110): the swell has 29 frames left, cloud 29-89, calm 89-221, the next swell from 221; the attack starts at frame 120 and takes 48 frames, so it ends at 168, before that swell. */
     private static final int GUARD_CYCLE_FRAMES = 240, CALM_FRAME = 120;
-    /** forest-1-guard: the hero's hitbox centre sits 23.5 px right of {@code position.x}; the guard's whip reaches x 2394-2400 on the floor, so a hero centred at x 2390 is in it; the entrance is (2176, 272). */
-    private static final float HERO_CENTRE_OFFSET_X = 23.5f, HERO_AT_WHIP_X = 2390, ENTRANCE_X = 2176, ENTRANCE_Y = 272;
+    /** forest-1-guard: the hero's hitbox centre sits 23.5 px right of {@code position.x}; the guard's whip reaches x 2394-2400 on the floor, so a hero centred at x 2390 is in it; the entrance is (2208, 272) since #500 (D110). */
+    private static final float HERO_CENTRE_OFFSET_X = 23.5f, HERO_AT_WHIP_X = 2390, ENTRANCE_X = 2208, ENTRANCE_Y = 272;
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 7);
+        Level level = harness.roomOf("forest-1", 8);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -441,7 +451,7 @@ class AllocationBudgetTest {
 
     /** The lever room with the hero standing on the lift the whole time (the rider path of {@code Player} runs every frame), as the route room's riding scene. */
     @Test void forest1LeverRoomRidingTheLift() {
-        Level level = harness.roomOf("forest-1", 3);
+        Level level = harness.roomOf("forest-1", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
         level.player.position.set(lift.getX() + 3, lift.getY() - 48);
@@ -456,7 +466,7 @@ class AllocationBudgetTest {
 
     /** The lever room with the hero on the slab pulling the lever (Up + Action) every {@value #PULL_CYCLE_FRAMES} frames: the ladder moves, the lift starts and stops, the lever animates. */
     @Test void forest1LeverRoomPullingTheLever() {
-        Level level = harness.roomOf("forest-1", 3);
+        Level level = harness.roomOf("forest-1", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         level.player.position.set(4528 + 8 - HERO_CENTRE_OFFSET_X, 208 - HERO_FRAME_SIZE); // the lever's centre (x 4528 + 8), standing on the slab
         for (int i = 0; i < 5; i++) level.update(STEP);
@@ -494,7 +504,7 @@ class AllocationBudgetTest {
             org.junit.jupiter.api.Assertions.assertSame(escalator, level.player.currentEscalator(), "the hero rides");
         };
         Runnable stand = () -> {
-            level.player.position.set(700, 272); // plain floor, no escalator
+            level.player.position.set(570, 272); // plain floor, no escalator
             for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
             org.junit.jupiter.api.Assertions.assertNull(level.player.currentEscalator(), "the baseline stands on the floor");
         };
@@ -536,7 +546,7 @@ class AllocationBudgetTest {
     }
 
     @Test void silverThreadBeat() {
-        Level level = harness.roomOf("forest-1", 2);
+        Level level = harness.roomOf("forest-1", 3);
         // Built before the probe (allocation allowed): dying heroes at every stage of the beat, landing and arriving ones.
         Player[] stages = new Player[THREAD_STAGES];
         for (int k = 0; k < THREAD_STAGES; k++) {
@@ -1437,7 +1447,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuidePointingOffScreenWithAPostPullGlow() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 7, () -> view);
+        Level level = harness.roomOf("forest-1", 8, () -> view);
         var t = level.player.roomCameraTarget();
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         harness.held.add(com.badlogic.gdx.Input.Keys.W);
@@ -1466,7 +1476,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuideCyclingBetweenTwoOffScreenTargets() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 7, () -> view);
+        Level level = harness.roomOf("forest-1", 8, () -> view);
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         harness.held.add(com.badlogic.gdx.Input.Keys.W);
         view.set(0, 0, 640, 360); // far left of the room: the ladder and the lift are both off screen, to the right
@@ -1490,7 +1500,7 @@ class AllocationBudgetTest {
      */
     @Test void fairyGuidePostPullCueCyclingBetweenTwoOffScreenTargets() {
         Rectangle view = new Rectangle();
-        Level level = harness.roomOf("forest-1", 7, () -> view);
+        Level level = harness.roomOf("forest-1", 8, () -> view);
         level.player.position.set(ROUTE_LEVER_X - HERO_CENTRE_OFFSET_X, ROUTE_FLOOR_Y);
         view.set(0, 0, 640, 360);
         for (int i = 0; i < SELECT_FRAMES; i++) level.update(STEP);
@@ -1591,7 +1601,7 @@ class AllocationBudgetTest {
      */
     @Test void healerDialogueScreen() {
         harness.font = new MetricsFont(FontSizes.DIALOGUE);
-        Level level = harness.roomOf("forest-1", 2);
+        Level level = harness.roomOf("forest-1", 3);
         ArtifactInventory inventory = new ArtifactInventory();
         for (boolean instant : new boolean[]{false, true}) {
             Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
