@@ -305,6 +305,8 @@ public class Level implements WorldObject {
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
     /** The spore puff (#445): the puffball's release and both honey fungi's burst. */
     private static final String SPORE_PUFF_SOUND = "spore_puff";
+    /** The thorn root's and tuft's spring (#446): one sound for the family. */
+    private static final String THORN_SPRING_SOUND = "thorn_spring";
     /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
     private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
     /** The ember fissure's sounds (#366): the warning rumble and the jet's roar. */
@@ -924,8 +926,12 @@ public class Level implements WorldObject {
                     registerRoomStateOwner(o.id, platform);
                 }
                 case "FallingBranch", "FallingStone" -> spawnFallingTrap(o);
-                case "ThornRoot", "ThornTuft" -> objects.add(ThornTrap.fromMap(assets, game.trapWarnings(), o,
-                    () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false)));
+                case "ThornRoot", "ThornTuft" -> {
+                    ThornTrap thorn = ThornTrap.fromMap(assets, game.trapWarnings(), o,
+                        () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false));
+                    thorn.onSpring(() -> thornSprung(thorn));
+                    objects.add(thorn);
+                }
                 case "ExplosiveStump", "ExplosiveRoot" -> {
                     ExplosiveTrap trap = ExplosiveTrap.fromMap(assets, game.trapWarnings(), o,
                         () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false),
@@ -1003,6 +1009,13 @@ public class Level implements WorldObject {
     /** Both honey fungi burst with this one sound (D63: it must not tell which one kills); the hero's own trigger puts them in view. */
     private void sporePuff() {
         if (game.playSounds()) game.playSound(SPORE_PUFF_SOUND);
+    }
+
+    /** The thorns turn lethal (#446): one sound for the root and the tuft; the root also throws a few specks from its mound. */
+    public void thornSprung(ThornTrap thorn) {
+        if (game.playSounds()) game.playSound(THORN_SPRING_SOUND);
+        if (thorn.kind() == ThornTrap.Kind.ROOT)
+            fx.thornSpecks(thorn.position.x + thorn.size.x / 2f, thorn.position.y + thorn.size.y);
     }
 
     /** A bramble cue is heard only while the bramble is inside the camera view: a clocked trap off screen must not tick every period. */

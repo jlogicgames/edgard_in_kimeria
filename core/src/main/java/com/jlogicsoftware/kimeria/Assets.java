@@ -39,7 +39,7 @@ public class Assets implements Disposable {
      */
     public static final String[] SOUND_EFFECTS = {"jump", "bounce", "collect", "hit", "disappear", "boss_hit", "boss_restore",
         "button_click", "dust_puff", "wall_rumble", "grit_fall", "explosion", "stone_impact", "keepalive", "thread",
-        "deadfall_creak", "deadfall_knock", "bramble_rustle", "bramble_lash", "hive_buzz", "stinger_rain", "hive_fall",
+        "deadfall_creak", "deadfall_knock", "bramble_rustle", "bramble_lash", "thorn_spring", "hive_buzz", "stinger_rain", "hive_fall",
         "fissure_rumble", "ember_jet", "fireball_fizzle", "beetle_notice", "beetle_windup", "beetle_windup_long", "beetle_pop",
         "remains_crumble", "remains_burn", "spider_notice", "spider_windup", "spider_windup_long", "spider_leap", "spider_bite",
         "spider_drop", "spider_reel", "spider_snap", "snail_notice", "snail_windup", "snail_windup_long", "snail_spit", "snail_splat",

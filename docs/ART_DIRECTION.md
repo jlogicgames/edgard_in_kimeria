@@ -508,7 +508,7 @@ Rooms with high play must still be measured over the real layers before `RIM_SHE
 - **Falling leaves (#236):** `526666`, `5b6f70`, `616764` were set 0.14 to 0.17 from `2c3f66`; re-measure over far and mid (0.250 to
   0.371). They stay in front of the mid layer, not in the foreground.
 - **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`, deleted with D112. Its props (the village
-  sign, the bare trees, the ochre tufts) are copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in
+  sign, the bare trees, the floor tufts, recoloured dark moss `3a5a50`/`2a443f`/`4c7064` because the ochre was the honey fungus's reserved hue) are copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in
   `terrain.grid`) and stay reported, not gated, until they are redrawn ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)).
 
 ### 6. Author answers (2026-11-19)
