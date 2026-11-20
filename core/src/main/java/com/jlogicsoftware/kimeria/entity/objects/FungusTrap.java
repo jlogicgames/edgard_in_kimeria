@@ -62,6 +62,7 @@ public abstract class FungusTrap extends Entity {
     private final TextureRegion[] frames = new TextureRegion[FRAME_COUNT];
     private State state = State.IDLE;
     private float clock, stateTime, warningTotal;
+    private Runnable onBurst = () -> { };
 
     protected FungusTrap(Assets assets, SpriteSheets.Sheet sheet, TrapWarnings warnings, float x, float y, float w, float h,
                          float zoneLeft, float zoneRight, Supplier<Rectangle> heroBody) {
@@ -85,6 +86,9 @@ public abstract class FungusTrap extends Entity {
 
     /** Hook called every update after the state machine, for a subclass with its own moving parts. */
     protected void updateBurst(float dt) { }
+
+    /** Called once when the burst starts, the same for both fungi (D63: the sound must not tell which one kills; #445). */
+    public void onBurst(Runnable onBurst) { this.onBurst = onBurst; }
 
     public State state() { return state; }
     public boolean isSpent() { return state == State.SPENT; }
@@ -142,6 +146,7 @@ public abstract class FungusTrap extends Entity {
                     stateTime -= warningTotal;
                     state = State.BURST;
                     burst();
+                    onBurst.run();
                 }
             }
             case BURST -> {

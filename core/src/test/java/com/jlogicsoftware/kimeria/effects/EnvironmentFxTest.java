@@ -36,6 +36,27 @@ class EnvironmentFxTest {
         for (int i = 0; i < d.count(); i++) assertTrue(d.y(i) < FEET_Y, "rises: smaller Y is higher");
     }
 
+    @Test void aThornRootThrowsItsSpecksFromTheMoundOutAndSettlesOnTheFloor() {
+        EnvironmentFx fx = fx(1);
+        float floorY = 320, x = 300;
+        fx.thornSpecks(x, floorY);
+        KimeriaParticleSystem g = fx.grit();
+        assertEquals(EnvironmentFx.THORN_SPECKS, g.count());
+        assertEquals(0, fx.dust().count());
+        float[] startY = new float[g.count()];
+        float lifeMin = Float.MAX_VALUE;
+        for (int i = 0; i < g.count(); i++) {
+            startY[i] = g.y(i);
+            lifeMin = Math.min(lifeMin, g.maxLife(i));
+        }
+        for (float t = 0; t < lifeMin - 2 * STEP; t += STEP) fx.update(STEP);
+        assertEquals(EnvironmentFx.THORN_SPECKS, g.count(), "none has faded before its life ends");
+        for (int i = 0; i < g.count(); i++) {
+            assertTrue(Math.abs(g.x(i) - x) <= 4 + 14, "stays within spread plus drift");
+            assertTrue(g.y(i) > startY[i] && g.y(i) <= floorY, "falls toward the floor line (larger Y is lower), never below it");
+        }
+    }
+
     @Test void aLandingPuffIsASmallerPuffOfTheSameDustAtTheFeet() {
         EnvironmentFx fx = fx(1);
         fx.landingPuff(FEET_X, FEET_Y);

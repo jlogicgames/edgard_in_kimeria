@@ -1370,12 +1370,79 @@ def boss_sweep_counter() -> list[float]:
     return finish_rms(x, BOSS_COUNTER_RMS_DB, BOSS_SWEEP_PEAK_DB)
 
 
+# Spore puff (spore_puff): the puffball's release and both honey fungi's burst (#445). One sound for all three: the harmless and the
+# false fungus must not be told apart by ear (D63). A soft "fwuff": a muffled thump of the cap giving way under a breath of
+# airy noise that brightens as the cloud spreads. Quieter and longer than dust_puff, so it never reads as the hero's landing.
+SPORE_PUFF_SEED = 7201
+SPORE_PUFF_DURATION = 0.30
+SPORE_THUMP_VOICE = Voice(7202, 0.10, (110.0, 70.0), FORMANTS_UH, FORMANTS_U, -18.0, asp_len=0.010, asp_level=0.5,
+                          attack=0.006, tau=0.04, release=0.020, jitter=0.06, rough=0.5, rough_start=0.1, lowpass=700.0)
+SPORE_THUMP_GAIN = 0.3
+SPORE_AIR_BANDS = ((500.0, 700.0), (1800.0, 1600.0))  # Hz, (centre, bandwidth): the dull first breath, then the bright spread
+SPORE_AIR_ATTACKS = (0.012, 0.050)                    # s, soft onsets: never a click
+SPORE_AIR_TAUS = (0.050, 0.075)
+SPORE_AIR_GAINS = (1.0, 0.55)
+SPORE_PUFF_RMS_DB = -27.1
+SPORE_PUFF_PEAK_DB = -9.0                      # the environment cap (test_ambient_levels)
+
+
+def spore_puff() -> list[float]:
+    rng = random.Random(SPORE_PUFF_SEED)
+    n = n_samples(SPORE_PUFF_DURATION)
+    out = [0.0] * n
+    raw = noise(rng, n)
+    for (fc, bw), attack, tau, gain in zip(SPORE_AIR_BANDS, SPORE_AIR_ATTACKS, SPORE_AIR_TAUS, SPORE_AIR_GAINS):
+        air = bandpass(raw, fc, bw)
+        pk = max(abs(v) for v in air) or 1.0
+        env = envelope(n, attack, tau)
+        for i in range(n):
+            out[i] += gain * air[i] / pk * env[i]
+    _add_at(out, n_samples(0.002), render_voice(SPORE_THUMP_VOICE), SPORE_THUMP_GAIN)
+    return finish_rms(out, SPORE_PUFF_RMS_DB, SPORE_PUFF_PEAK_DB)
+
+
+# ---------------------------------------------------------------- thorn root and tuft (#446, D75 principle 4)
+# Spring (thorn_spring): the thorns turn lethal. A dull dirt "thk" under a rough rasp: noise through a band-pass, chopped by a
+# fast pulse (a rasping buzz, the roughness) so it is a hard dry scrape, not bramble_lash's smooth rising "shk". One sound
+# for both the root and the tuft (one family, D93). Quiet like the other environment cues, but plays only once per trap.
+THORN_SPRING_SEED = 6601
+THORN_SPRING_DURATION = 0.22
+THORN_THUMP_BAND = (330.0, 260.0)    # Hz centre, bandwidth: the mound breaking
+THORN_THUMP_TAU = 0.035              # s
+THORN_RASP_BAND = (1900.0, 1500.0)
+THORN_RASP_PULSE_HZ = 85.0           # the chop that makes it a rasp
+THORN_RASP_PULSE_DEPTH = 0.7         # 0 = no chop, 1 = fully gated
+THORN_RASP_ATTACK = 0.006            # s
+THORN_RASP_TAU = 0.07                # s
+THORN_RASP_GAIN = 0.9                # against the thump (peak 1.0)
+THORN_RASP_DRIVE = 2.5               # a little tanh grit
+THORN_SPRING_LOWPASS_HZ = 4500.0
+THORN_SPRING_RMS_DB = -26.0       # peak-limited (the chopped rasp is sparse): quieter than bramble_lash
+THORN_SPRING_PEAK_DB = -9.0
+
+
+def thorn_spring() -> list[float]:
+    rng = random.Random(THORN_SPRING_SEED)
+    n = n_samples(THORN_SPRING_DURATION)
+    thump = bandpass(noise(rng, n), *THORN_THUMP_BAND)
+    rasp = bandpass(noise(rng, n), *THORN_RASP_BAND)
+    tp, rp = max(abs(v) for v in thump) or 1.0, max(abs(v) for v in rasp) or 1.0
+    te, re = envelope(n, 0.004, THORN_THUMP_TAU), envelope(n, THORN_RASP_ATTACK, THORN_RASP_TAU)
+    out = []
+    for i in range(n):
+        gate = 1.0 - THORN_RASP_PULSE_DEPTH * (0.5 + 0.5 * math.sin(2 * math.pi * THORN_RASP_PULSE_HZ * i / SAMPLE_RATE))
+        r = math.tanh(THORN_RASP_DRIVE * rasp[i] / rp * gate) * re[i] * THORN_RASP_GAIN
+        out.append(thump[i] / tp * te[i] + r)
+    return finish_rms(lowpass(out, THORN_SPRING_LOWPASS_HZ), THORN_SPRING_RMS_DB, THORN_SPRING_PEAK_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
                "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
                "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
                "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
+               "thorn_spring.wav": thorn_spring,
                "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall,
                "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet,
                "fireball_fizzle.wav": fireball_fizzle, "beetle_notice.wav": beetle_notice,
@@ -1386,7 +1453,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "spider_drop.wav": spider_drop, "spider_reel.wav": spider_reel, "spider_snap.wav": spider_snap,
                "snail_notice.wav": snail_notice, "snail_windup.wav": snail_windup, "snail_windup_long.wav": snail_windup_long,
                "snail_spit.wav": snail_spit, "snail_splat.wav": snail_splat,
-               "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter}
+               "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter,
+               "spore_puff.wav": spore_puff}
 
 
 def generate(out_dir: Path) -> list[Path]:
