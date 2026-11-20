@@ -294,7 +294,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-1-traps`, seen clouding from the entrance: the cloud is out at the entry, sinks, then swells before the next one (D110) |
 | Load checks | `Level.requireSafeSetting` (entrance, exit, checkpoint) |
 | Tests | `RhythmTrapsTest`, `Forest1TrapsTest` |
-| Art and sound | `trap-puffball`, `trap-spores`; the burst has no sound. Consequence (D93): none yet ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445)) |
+| Art and sound | `trap-puffball`, `trap-spores`; Consequence (D93): `spore_puff`, at the release, only while the puffball is inside the camera view (`Level.puffballInView`, the bramble and hive rule), once per cloud, never at the swell. Pinned by `SporePuffSoundTest` |
 | Decision | D46, D58 |
 
 ### Swinging thorn vine (`ThornVine`)
@@ -336,7 +336,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | the false one in `forest-canopy` (`forest-2`), after the harmless one in `forest-0-lever` and `forest-0-wall` |
 | Load checks | `Level.validateFungus`, `Level.requireSafeSetting` (false one) |
 | Tests | `HoneyFungusTest` |
-| Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud`; neither burst has a sound; both must get the same one, so the sound does not tell which kills (D63). Consequence (D93): none yet ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445)) |
+| Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud`; Consequence (D93): `spore_puff`, the same for both bursts (D63: the sound does not tell which kills), once at the burst after the swell. Pinned by `SporePuffSoundTest` |
 | Decision | D63 |
 
 ### Falling platform, rotten log and rotten branch (`FallingPlatform`)

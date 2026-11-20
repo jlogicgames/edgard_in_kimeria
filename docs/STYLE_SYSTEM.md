@@ -130,7 +130,6 @@ Each has an open issue whose checklist includes updating this page.
 - Principle 4 (D93): these hazards act without a sound or particles of their own:
   - the falling branch lands without the stone's impact feedback ([#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443));
   - the falling platform, rotten log and rotten branch give way in silence ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444));
-  - the puffball and the honey fungi burst in silence ([#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445));
   - the thorn root and the thorn tuft spring in silence ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446));
   - the RedMob's whip and the boss's sweeps strike in silence ([#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447));
   - whether the bomb and the exploding stump and root shake the screen is not decided yet ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448)).

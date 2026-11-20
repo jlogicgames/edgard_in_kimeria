@@ -303,6 +303,8 @@ public class Level implements WorldObject {
     private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
     /** The bramble's warning rustle and its grow lash (#364, D89). */
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
+    /** The spore puff (#445): the puffball's release and both honey fungi's burst. */
+    private static final String SPORE_PUFF_SOUND = "spore_puff";
     /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
     private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
     /** The ember fissure's sounds (#366): the warning rumble and the jet's roar. */
@@ -937,6 +939,7 @@ public class Level implements WorldObject {
                 case "Puffball" -> {
                     Puffball puffball = Puffball.fromMap(assets, o, game.trapWarnings(), describe(o));
                     requireSafeSetting(o, puffball, puffball.cloudBounds());
+                    puffball.onRelease(() -> puffballSound(puffball));
                     objects.add(puffball);
                 }
                 case "Bramble" -> {
@@ -946,10 +949,15 @@ public class Level implements WorldObject {
                 }
                 case "HangingHive" -> spawnHive(o);
                 case "EmberFissure" -> spawnFissure(o);
-                case "HoneyFungus" -> objects.add(HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero));
+                case "HoneyFungus" -> {
+                    HoneyFungus fungus = HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
+                    fungus.onBurst(this::sporePuff);
+                    objects.add(fungus);
+                }
                 case "FalseHoneyFungus" -> {
                     FalseHoneyFungus fungus = FalseHoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
                     requireSafeSetting(o, fungus, fungus.cloudBounds());
+                    fungus.onBurst(this::sporePuff);
                     objects.add(fungus);
                 }
                 case "Decor" -> decor.add(Decor.fromMap(assets, o, describe(o)));
@@ -980,6 +988,21 @@ public class Level implements WorldObject {
         String problem = Bramble.placementProblem(new Rectangle(o.x, o.y, o.width, o.height), bramble.rootRight(), solids, floors);
         if (problem != null) throw new IllegalArgumentException("Bramble " + describe(o) + ": " + problem);
         requireSafeSetting(o, bramble, bramble.fullBounds(), owner);
+    }
+
+    /** The puffball's clocked release is heard only while the puffball is inside the camera view (#445): off screen it must not puff every period. */
+    private void puffballSound(Puffball puffball) {
+        if (game.playSounds() && puffballInView(puffball)) game.playSound(SPORE_PUFF_SOUND);
+    }
+
+    boolean puffballInView(Puffball puffball) {
+        Rectangle view = visibleWorldRect.get();
+        return view != null && view.width > 0 && view.height > 0 && puffball.inView(view);
+    }
+
+    /** Both honey fungi burst with this one sound (D63: it must not tell which one kills); the hero's own trigger puts them in view. */
+    private void sporePuff() {
+        if (game.playSounds()) game.playSound(SPORE_PUFF_SOUND);
     }
 
     /** A bramble cue is heard only while the bramble is inside the camera view: a clocked trap off screen must not tick every period. */
