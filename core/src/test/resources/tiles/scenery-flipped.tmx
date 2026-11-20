@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="2" height="1" tilewidth="16" tileheight="16">
+ <layer name="flipped" width="2" height="1" parallaxx="0.5">
+  <data encoding="csv">0,2147483649</data>
+ </layer>
+</map>

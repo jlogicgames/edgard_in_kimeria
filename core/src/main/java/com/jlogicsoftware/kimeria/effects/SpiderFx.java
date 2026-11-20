@@ -14,8 +14,8 @@ import com.badlogic.gdx.math.RandomXS128;
  *
  * <p>The silk glints run along the floor line from the spider's fangs and gather on the spot its bite will land, so the reach
  * is read before it happens (D7, D102), as the beetle's specks show its blast. Colours: white, the pale and grey of the smoke
- * ({@code d8d6e8}, {@code 9a97ad}), a dust brown, and the spider's own plum and leg tan for the flecks and its body's crumble
- * ({@link #SPIDER_CHIPS}). No reserved hue. Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at
+ * ({@code d8d6e8}, {@code 9a97ad}), a dust brown, the spider's crimson {@code 86101f} and dusty-rose leg {@code b07c8c} for the
+ * death's flecks (the danger family, #236), and its body's muted palette for the body's crumble ({@link #SPIDER_CHIPS}). No reserved hue. Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at
  * a smaller Y. Particles advance only in {@link #update}, so pause freezes them.
  */
 public final class SpiderFx {
@@ -31,10 +31,11 @@ public final class SpiderFx {
     private static final int RED = 0, GREEN = 1, BLUE = 2;
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DUST = {.420f, .353f, .227f};
-    private static final float[] PLUM = {.227f, .133f, .196f}, PLUM_LIGHT = {.369f, .204f, .259f};
-    private static final float[] LEG = {.753f, .588f, .439f}, LEG_FAR = {.612f, .478f, .361f};
-    /** The spider body's crumble chips (D101, {@link RemainsFx#crumble}): its plum and its leg tans. */
-    public static final float[][] SPIDER_CHIPS = {PLUM, LEG, PLUM_LIGHT, LEG_FAR};
+    private static final float[] CRIMSON = {.525f, .063f, .122f}, LEG = {.690f, .486f, .549f};
+    private static final float[] BODY_ABDOMEN = {.153f, .043f, .000f}, BODY_HEAD = {.184f, .071f, .008f};
+    private static final float[] BODY_LEG = {.165f, .067f, .012f}, BODY_FANG = {.204f, .106f, .047f};
+    /** The spider body's crumble chips (D101, {@link RemainsFx#crumble}): spider-body.grid's abdomen, legs, head and fangs. */
+    public static final float[][] SPIDER_CHIPS = {BODY_ABDOMEN, BODY_LEG, BODY_HEAD, BODY_FANG};
 
     // Wind-up silk: 1 px glints born between the fangs and the landing spot on the floor line, running to the spot.
     private static final float SILK_SIZE = 1, SILK_LIFE_MIN = .22f, SILK_LIFE_MAX = .32f, SILK_WHITE_CHANCE = .5f;
@@ -157,7 +158,7 @@ public final class SpiderFx {
         RandomXS128 fleckRandom = hard.random();
         for (int i = 0; i < FLECKS; i++) {
             float x = centreX + range(fleckRandom, -FLECK_SPREAD, FLECK_SPREAD);
-            float[] c = (i & 1) == 0 ? LEG : PLUM;
+            float[] c = (i & 1) == 0 ? LEG : CRIMSON;
             hard.spawn(KimeriaParticleSystem.KIND_GRIT, x, centreY, x + range(fleckRandom, -FLECK_DRIFT, FLECK_DRIFT), floorY - FLECK_FLOOR_INSET,
                 FLECK_LIFE, FLECK_SIZE, c[RED], c[GREEN], c[BLUE]);
         }

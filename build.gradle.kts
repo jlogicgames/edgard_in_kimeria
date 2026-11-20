@@ -131,6 +131,24 @@ project(":core").tasks.named("check") { dependsOn(validateContrast) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateContrast) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateContrast) }
 
+val testParallaxGate = tasks.register<Exec>("testParallaxGate") {
+    group = "verification"
+    description = "Runs the unit tests of tools/parallax_game.py and the game-map mode of tools/parallax_mock.py, so a broken gate fails the build."
+    workingDir = rootDir.resolve("tools")
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "-m", "unittest", "test_parallax_game")
+}
+val validateParallax = tasks.register<Exec>("validateParallax") {
+    group = "verification"
+    description = "Checks the foreground of every forest room that has one against the map's objects: rule B, cover time, look frames (docs/ART_DIRECTION.md)."
+    dependsOn(testParallaxGate)
+    workingDir = rootDir.resolve("tools")
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "parallax_mock.py", "--check", "--game")
+}
+project(":core").tasks.named("check") { dependsOn(validateParallax) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateParallax) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateParallax) }
+
 // Style-system gates for docs and skills (D75, docs/STYLE_SYSTEM.md). They judge documentation and agent skills, which
 // ship nothing in the game, so they run in :core:check and not in the release builds.
 val testStyleSystemGates = tasks.register<Exec>("testStyleSystemGates") {

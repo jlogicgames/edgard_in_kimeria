@@ -1,15 +1,18 @@
-# The forest beetle's body (#327, D101): the `dead` frame of beetle.grid, pixel for pixel, in a decor-tier palette (D76): muted
-# grey-olive with a contour in its own hue, no ink 0b0814, no moon rim, so a harmless body never reads as a live beetle. The game
+# The forest beetle's body (#327, D101): the `dead` frame of beetle.grid, pixel for pixel, in a decor-tier palette (D76): a
+# dim colour with a contour in its own hue, no ink 0b0814, no moon rim, so a harmless body never reads as a live beetle. The game
 # draws the active `dead` frame at the kill and cross-fades into this one; it rocks when the hero passes (reactive, not idle).
-# Night palette (D92): the shell's own hues mixed toward the night background 2c3f66 and greyed; keep it in step with beetle.grid.
+# Forest recolour (#236, D108, 2026-11-20): hand-set tone roles (contour k, shade d, shell t, lit s, glint h, legs n/L) on one
+# dusky indigo (OKLab L 0.176 to 0.242, chroma 0.05, hue -75). It lies on forest-1's near-black ground and forest-2's blue sky,
+# and a cool hue sits between both (D108 band 0.08..0.20 at every spot where a beetle can die); no ink 0b0814, no moon rim.
+# Keep it in step with beetle.grid.
 size 24 16
-color k 4f5452
-color d 59605a
-color t 626a60
-color s 6e7568
-color h 7b786a
-color n 545852
-color L 6c7068
+color k 0f0d23
+color d 13112a
+color t 16142e
+color s 1a1832
+color h 1e1c34
+color n 110f27
+color L 18172e
 frame body
 ........................
 ........................

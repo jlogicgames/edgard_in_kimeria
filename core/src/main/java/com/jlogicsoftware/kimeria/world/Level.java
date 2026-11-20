@@ -96,6 +96,8 @@ public class Level implements WorldObject {
     private static final float CARRYABLE_SEARCH_STEP = 1f;
     public final String name;
     public final TiledMapData map;
+    /** The scenery layers behind the play layer and the room's foreground in front of the world (#236); empty for a map without them. */
+    private final ParallaxRenderer parallax;
     public Player player;
     public final RangedStock rangedStock;
     private int roomStartAmmo;
@@ -578,6 +580,7 @@ public class Level implements WorldObject {
         this.name = levelName;
         this.entryCoins = game.coinsCollected();
         this.map = TiledMapData.load("tiles/" + levelName + ".tmx", assets);
+        this.parallax = new ParallaxRenderer(map);
 
         roomLayout = new RoomLayout(map);
         // Fail early on ambiguous ownership and cross-room trigger links.
@@ -1684,6 +1687,7 @@ public class Level implements WorldObject {
             pendingSpawns.clear();
         }
         fairy.update(dt, player);
+        parallax.update(dt); // the clouds drift with the world's time, not the camera's
     }
 
     /**
@@ -1710,6 +1714,7 @@ public class Level implements WorldObject {
     }
 
     public void render(Batch batch, Rectangle visibleWorldRect) {
+        if (!parallax.isEmpty()) parallax.renderBack(batch, visibleWorldRect, ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height));
         renderBackground(batch, visibleWorldRect);
         for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
@@ -1736,6 +1741,7 @@ public class Level implements WorldObject {
         if (!player.isRemoved()) player.render(batch);
         pickupSparks.render(batch); // over the hero: the item is at his hand when he takes it, and behind him the burst stays hidden until it leaves his outline
         fairy.renderFront(batch);
+        if (!parallax.isEmpty()) parallax.renderFront(batch, visibleWorldRect, currentRoomBounds(), ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height));
     }
 
     /** F1 debug gizmos: collision blocks in green, Deadlines in orange, actor hitboxes in red. */

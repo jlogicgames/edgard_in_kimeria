@@ -16,6 +16,7 @@ import moon_rim  # noqa: E402
 INK = (0x0b, 0x08, 0x14, 255)
 BONE = (0xef, 0xe6, 0xc4, 255)
 RIM = moon_rim.RIM + (255,)
+RGB = 3  # the colour channels of an RGBA pixel; the fourth is alpha
 SIZE = 6  # a 6x6 cell holding a 4x4 ink square at (1, 1)
 SQUARE_START = 1  # the square covers 1..4 in x and y
 SQUARE_END = 5
@@ -134,8 +135,9 @@ class RimTest(unittest.TestCase):
 class ExporterFlagTest(unittest.TestCase):
     def test_the_night_change_rims_every_hero_sheet_and_only_known_trap_sheets(self):
         self.assertEqual(hero.RIM_SHEETS, frozenset(hero.HERO_SHEETS))
-        # Known sheets: the traps and the Forest monsters (#327), whose layouts the exporter names `monster:<name>`.
-        known = set(traps.FOREST_TRAP_SHEETS) | {traps.MONSTER_PREFIX + n for n in traps.MONSTER_SHEETS}
+        # Known sheets: the traps and the Forest monsters (#327), whose layouts the exporter names `monster:<name>`, and the
+        # sheets with a rim style of their own (the fairy, #236).
+        known = set(traps.FOREST_TRAP_SHEETS) | {traps.MONSTER_PREFIX + n for n in traps.MONSTER_SHEETS} | set(traps.RIM_STYLE)
         self.assertTrue(traps.RIM_SHEETS <= known, traps.RIM_SHEETS - known)
         self.assertIn(TRIED_SHEET, traps.RIM_SHEETS)
 
@@ -146,6 +148,24 @@ class ExporterFlagTest(unittest.TestCase):
             rimmed, rimmed_colours = traps.sheet_image(TRIED_SHEET)
         self.assertEqual(rimmed.tobytes(), moon_rim.rim(plain, cell_of(TRIED_SHEET)).tobytes())
         self.assertEqual(rimmed_colours, colours + 1)
+
+    def test_the_fairy_is_lit_from_above_in_her_own_white_and_keeps_her_palette(self):
+        for name in ('fairy:body', 'fairy:glint'):
+            with mock.patch.object(traps, 'RIM_SHEETS', frozenset()):
+                plain, _ = traps.sheet_image(name)
+            rimmed, _ = traps.sheet_image(name)
+            colour, sides = traps.RIM_STYLE[name]
+            self.assertEqual(sides, moon_rim.UP_SIDE)
+            self.assertNotEqual(rimmed.tobytes(), plain.tobytes(), name)
+            palette = {p[:RGB] for p in plain.get_flattened_data() if p[RGB]}
+            self.assertIn(colour, palette, f'{name}: the rim is a colour she already has')
+            self.assertEqual({p[:RGB] for p in rimmed.get_flattened_data() if p[RGB]}, palette, name)
+
+    def test_up_only_sides_leave_the_side_contour_in_ink(self):
+        out = moon_rim.rim(ink_square(), sides=moon_rim.UP_SIDE)
+        self.assertEqual(out.getpixel((MIDDLE, TOP)), RIM)
+        self.assertEqual(out.getpixel((LEFT, MIDDLE)), INK)
+        self.assertEqual(out.getpixel((RIGHT, MIDDLE)), INK)
 
     def test_a_flagged_hero_sheet_is_rimmed_frame_by_frame(self):
         with mock.patch.object(hero, 'RIM_SHEETS', frozenset()):

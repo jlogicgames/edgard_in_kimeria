@@ -1,0 +1,616 @@
+# Forest terrain sketch (replaces the third-party Tileset.png, #189). One char = one pixel; `.` transparent.
+# Same 320x112 sheet and tile ids as the old Tileset.png: a piece sits at `at <col> <row>` of the 20x7 sheet.
+# `keep` lists old tile ids the maps use that are props, not terrain (sign, bare trees, fungus): copied unchanged for now.
+# Walk edge: blade tips on row 0, the straw line on row 1 (the cue), a straw and moss band, dark moss, a shadow line, and
+# moss strands hanging over the soil. Soil and rock textures repeat every 16 px, so any arrangement of tiles is seamless.
+# Variants (tile ids no map uses, for long floors): ground top 1-3, ground body 5-7, ground bottom 9-10, rock fill 12-13.
+tile 16
+color S e1cfa5
+color a c4b07e
+color G 8e8a50
+color g 62603a
+color n 3b3a25
+color 1 150e0a
+color 2 22180f
+color 3 2f2117
+color 4 3c2a1d
+color 5 4a3424
+color 6 5c412c
+color 7 765639
+color c 3c3731
+color C 34302b
+color x 272320
+color R 39332e
+color q 312c28
+color Q 2b2724
+color P 26211e
+color s c9ac80
+color h a98660
+color l 8c6b47
+color b 6f5238
+color d 4a3626
+color k 0e0a07
+color m 080605
+color z 040303
+keep 29 30 49 50 89 90 91 92 93 94 95 96 109 110 111 112 113 114 115 116 126 127 128 129 130 131 132 133 134 135 136 137
+
+piece ground 3 3 at 1 1
+..SaS........SS..a.SaS.S.S.S...aSSa.S.a....S.S..
+.SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.
+SSSaSaSaSSSaSaSaSaSSSSaaaaSaaSSSSSaaSSSSSaaaSSSS
+aaaGGGGGGaaGGGGGGGGaaGaaaGaaaaaGGGGGGGaGGaaGGGaa
+GGggGggGgGgGGgGGGGgGgggggggGgGGgGgGgggGgggGGGGGG
+ggggnngggnnnnngnnnngggggnnnggggnnngggnnggnggnggg
+nGGnGGnnnnnnGGnnGnGnGnnGnnnnnnnnGnnnGGnnnnnnnGnn
+1gg1gg111111gg11g1g1g11g11111111g111gg1111111g11
+1gn6gg555555gg55g5g6g65g55555555g556ng5555555g57
+1g66nn655555nn65g5g6n56n55556565g5666n6555556g67
+1n56665555555555g6g6665555555555g656665555555g56
+1366666565556565n6n6666565556565n666666565556n67
+15566655555555555556665555555555555666555555557.
+.26555556565555565655555656555556565555565655557
+135556565655555555555656565555555555565656555557
+135565666665555555556566666555555555656666655556
+155555565655555555555556565555555555555656555557
+.25555656565555555555565656555555555556565655557
+135555555555555555555555555555555555555555555557
+.25555555554555555555555555455555555555555545557
+14455554445544544445555444554454444555544455447.
+155444455555554555544445555555455554444555555547
+155555555555555555555555555555555555555555555556
+155555555555555555555555555555555555555555555557
+15555555555555555555555555555555555555555555557.
+155555555555555555555555555555555555555555555557
+15555555555555555555555555555555555555555555557.
+.25565555554555555556555555455555555655555545557
+15555555455545554555555545554555455555554555457.
+155555555555555555555555555555555555555555555557
+135555555555555555555555555555555555555555555557
+15555565666555555555556566655555555555656665557.
+135555565655555555555556565555555555555656555556
+155555555555555555555555555555555555555555555557
+155555555555555555555555555555555555555555555557
+13555555554455555555555555445555555555555544557.
+133444433344344434344443334434443434444333443447
+144333344444443444433334444444344443333444444436
+134444344444443444444434444444344444443444444437
+14444443444444444444444344444444444444434444447.
+13343433333333333334343333333333333434333333337.
+13333333333333333333333333333333333333333333337.
+233333333333333333333333333333333333333333333332
+.23333333322333333333333332233333333333333223321
+.1233322223222222223332222222232222333322233221.
+..12221122211111333222112211232332322222322221..
+...221..111...3.222221..11..12222121112121111...
+...11.........3.11111........1111.1...1.1.......
+
+piece ground-top-1 1 1 at 1 0
+.aS..S....aSaa..
+SSSSSSSSSSSSSSSS
+SaaSaSaSSSaSSSaa
+aaGaGaGaaGaaaGGa
+gggggGgggGggGgGG
+ggnnnggnnnnngnng
+nGnnnnGnnGnnnnGn
+1g1111g11g1111g1
+5n5656g55g5555n5
+656637n55n556565
+5656375555555555
+666Cc37565556565
+55CCC37cCCcc5555
+65xx37CcxCCc5555
+555xxCC6xxCC5555
+5525222262225555
+
+piece ground-top-2 1 1 at 2 0
+.S.Sa..aSa.SSS.a
+SSSSSSSSSSSSSSSS
+SaSaaSaaSaaSaSSa
+GGaGGGGGGaGGGaGG
+GgggggggGGGgGGGg
+ngnngnnnnggnnggn
+GGnnnnnGnnnGnnGG
+gg11111g111g11gg
+gg56565g555g55gg
+gg66653g555n65nn
+ng56663g55555555
+6n666Ccn75556565
+5556CCC37c555555
+6565xx37Cc655555
+55555xx37C555555
+5555623722655555
+
+piece ground-top-3 1 1 at 3 0
+.S.SSa..SaS.S.SS
+SSSSSSSSSSSSSSSS
+aaSSaSSaSSSSaaSS
+GGGGGaaGaaGaaGGa
+gGGggggGgGgggGGg
+gggnnnnngngnnggg
+nnGGnGnGnGnnnnGG
+11gg1g1g1g1111gg
+55ng5g5g5g5555gg
+656n6n6n7g5565gg
+565666375n5555gn
+666666637cccccn5
+5556665C37Cccc55
+6565555xx37CcC55
+55555656xxCC2255
+5555656262652555
+
+piece ground-body-1 1 1 at 5 0
+5555555656555555
+5555556565655555
+5555375555555555
+5555375555545555
+4443755444554454
+5553744555555545
+5537555555555555
+5553755555555555
+5555555555555555
+5555555555555555
+5555555555555555
+5555655555545555
+45CccCc545554555
+5xCCCcC555555555
+55xxC25555555555
+5222226566655555
+
+piece ground-body-2 1 1 at 6 0
+5555555656555555
+5555556565655555
+5555555555555555
+555555555Cccc555
+44455554CCCCcc54
+55544445xxCCCc45
+555555555xxCC555
+555555CCc5225555
+555555xCC5555555
+5555552255555555
+5555555555555555
+5555655555545555
+4555555545554555
+5555555555Cc5555
+5555555555xC5555
+5555556566225555
+
+piece ground-body-3 1 1 at 7 0
+5555555656555555
+5555556565655555
+5555555555555555
+5555555555545555
+4445375444554454
+5554374555555545
+5555375555555555
+5555375555537555
+555553755537c555
+555537555537C555
+5553755555537555
+5555655555545555
+4555555545554555
+5555555555555555
+5555555555555555
+5555556566655555
+
+piece ground-bottom-1 1 1 at 9 0
+5555555656555555
+5555555555555555
+5555555555555555
+5537555CCcc45555
+343744CxCCcc3444
+443733x222Cc4434
+4443743xxCC44434
+4444374224224444
+3334337333333333
+3333337333333333
+3333333333333333
+3333333333223333
+2223333222332232
+3222222333333321
+211211222222221.
+13.1..11111111..
+
+piece ground-bottom-2 1 1 at 10 0
+5555555656555555
+5555555555555555
+5555555555555555
+5555555537CCcc55
+3434444337xCCc44
+4443333437xxCC34
+4444443374242234
+44444443744Cc444
+33343433733xC333
+3333333337332333
+3333333322222322
+3333322211111211
+22232111.3...1..
+33321....3......
+2221.....3......
+111.............
+
+piece slab 3 1 at 5 1
+....aS...S.aS.S.1SS1aSS11Sa1S1SSSSa...S.SSaa....
+.SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.
+SSSaSSSaaaaSSSSSSSSaaaSaaSSSSSSaSaSaSaSSaSSaSSSS
+aaaGaGaaaGGaGGaGaGaGGGGGGGGaGaaaGGGGGaGaGaGGGGaa
+GGgggGggGGGGgGgGgggGGggGggGggggGgGGgGgGGgggggGGG
+ggggngggnngngnggggnnngggggnggggnggnggggnngggnngg
+nnGnnnnnGGnnGnGnnGGnnnnGnGGnnnnGnGnGnnnnnnnnnnnn
+11g11111gg11g1g11gg1111g1gg1111g1g1g111111111111
+13g65655gg55n5g55gg6565gCgg5555g5g5n565555555557
+25g5CCc5ng5555g5522222222222555n5n2222555522222.
+.2g5xCC55g55552521111111111125222211112222111111
+.12522545n445212111111111111121111....1111...3..
+..144444344421.11111111111111111.3.....3.....3..
+...2434422221...1111111111111111.3.....3........
+...122221111....1111111111111111................
+....1111..3.....1111111111111111................
+
+piece ledge 2 1 at 1 5
+..S.aaSS.SS..S.a...S..S.a...SS..
+.SSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.
+SSSSSaaaSSaaaSaSSSSaaSSSSSaSaSSS
+aaaGaGGGaaGaaaGaaGGGGaaaGaGaGGaa
+GGgGGggGggGGgGggGggGGGggGGGgggGG
+ggnnnngggnnnnggnnngnnnnnnnggnggg
+nGnnnGnnnnnnnnnGnnnGGGnnnnnnnGnn
+1g111g111111111g111ggg1111111g11
+1n565g555CCcc55g555nggCCcc555g57
+23555n555xCCc55n5555nnxCCc555g52
+.25555555xxCC555555555xxCC555g21
+.125555452222454555555222444521.
+..1444442444344434444244344431..
+...34222122422344443212224424...
+...22111.112112222221.1112212...
+...11.3..331..1111113....11.1...
+
+piece bracket 1 1 at 4 5
+sSSSSSSSSSSSSSSS
+hhhhhhhhhhhhhhhh
+lllllllllllllllb
+ddddddddddldddd.
+......hbbdb.....
+......hdddd.....
+.......hdd......
+......lhd.......
+.....lbd........
+....lbd.........
+...lbd..........
+..lbd...........
+.lbd............
+lbd.............
+bd..............
+................
+
+piece boulder 3 2 at 12 1
+................................................
+................................................
+................................................
+..................SSSSSSSSSSS...................
+..............SSSSSSSaaaSSSSSSSSS...............
+............SSSaaSGGaGGaaGaGGSaSaSS.............
+.........SSSaSaGaagggggggggggaGaGaSSSS..........
+........SSSaGGggggnnnnnnnnnnnggggaaaaSS.........
+......SSaGaaggnnnnPPPPPPPPPPPnnnnggaGGSSS.......
+....SSaaagggnnPPPPqqPPPPQRRPPPPPPnngggGSSSS.....
+...SSaGagnnnPPQPPqqQPPPPPQPPPPQPPPPnnngGGSSS....
+..SSGaggnPPPRRPPPQqPPPPPPQRRRRPPPQqPPPnggGGaS...
+SSSGggnnPqqqqqRRPQQPPPPqRqqqqqRRPQQPPPPnnggaaSS.
+aaagnnPPqQqQqQqQPPPPPQRQqQqQqQqQPPPPPQRPPnngGSSS
+GGgnPPqqqqqqqqqqRPPqRqqqqqqqqqqqRPPqRqqqqPPngGaa
+ggnPqQqQqQqQqQqQqRRQqQqQqQqQqQqQqRRQqQqQqQqPnggG
+nnPQQqqqqqqqqQQQPPPPPPPPPQqPPPPqPqPPPPPPPPPPQPPP
+PPPPPQQQQQQQQPPPPPPqPPPPPQPQPPPPPPPPqPPPPPPQPPQP
+qPPPqPPPPPPPqRRRPPPPPPPPqQPPQPPPPqPPPPPPPPQPPPPP
+QPPPqPPPPPQRQqQqPPqPqPPPPPPqPPPPPPQPPPPPPQQPPPqP
+QPPQqPPPPPPqQqqqPQqPPPPPqPPPPPPqPPPPPPPPPPPqPPPP
+qPqqqPPPPPPqqqQqqPPPQPPPPPPPPPPPQPPPPPPPPPPPPPPQ
+QPqQqPPPPPPQqqqqPPPqPPPQPPPPPPPPPQPqqPPqPPPPPPQP
+PQqqqPqPPPPPQqQqPPPPQPPQPPPQPPQPPQPqPPPPQQPPqQPP
+PQqQQPQPPPPPQqqqPPPPPPPPPQPPQPPPQPPPPPPQqPPPqPPP
+PqqqPPPPQRRPPQQQPPPPPPqPPPPPPQPPPPPPQPPPPPPPPPQP
+PqqQPPPPPQPPPPQPPPPPPPPPPPPPPPPqPQPPPPPPPPPPPPPP
+PQqPPPPPPQRRRRPPPPPPPPPPPPPQPPPPPPPqPPPQPPPPPPPP
+PQQPPPPqRqqqqqRRPPPQPPPPPPPqQqPQPPPqqPPPQQPPPPPq
+.PPPPQRQqQqQqQqQPPPPQqPqPPPPPPPPPQPQQqqPPPPPPPQP
+SPPqRqqqqqqqqqqqQPQPPqPPPPQPPPPqPPPPPPPPPPPPPPPP
+SRRQqQqQqQqQqQqQPPPPPPQPPPPPPPqPQPPPPPPPPPPPqqPq
+
+piece slope 3 2 at 15 1
+................................................
+................................................
+................................................
+................................................
+................................................
+................................................
+SS..............................................
+SaSSS...........................................
+GGaSSSSSS.......................................
+ggGGaaaaSSSS....................................
+nngggGGGGSaaSSS.................................
+PPnnnggggaGGaSaSSS..............................
+PQPPPnnnngggaGGSSaSSS...........................
+PPPPPPPPPnnngggaGGSaSSS.........................
+RPPqRqqqqPPPnnngggGGGaaSSS......................
+qRRQqQqQqQqQPPPnnngggaaSaaS.....................
+QPPQQqqqqqqqqQQPPPnnnggGGGSSSS..................
+qPPPPQQQQQQQQPPPqPPPPnngggaaaaS.................
+qPPPqPPPPPPPqRRRqPPPqPPnnngaGGSSSS..............
+QPPPqPPPPPQRQqQqQPPPqPPPPPngggaaSaS.............
+QPPQqPPPPPPqQqqqQPPQqPPPPPPnnngGGGaS............
+qPqqqPPPPPPqqqQqqPqqqPPPPPPPPPngggGaSS..........
+QPqQqPPPPPPQqqqqQPqQqPPPPPPQqqPnnngaaaS.........
+PQqqqPqPPPPPQqQqPQqqqPqPPPPPQqQPPPngaGaS........
+PQqQQPQPPPPPQqqqPQqQQPQPPPPPQqqqPQPnggGSS.......
+PqqqPPPPQRRPPQQQPqqqPPPPQRRPPQQQPqqPnngGaSS.....
+PqqQPPPPPQPPPPQPPqqQPPPPPQPPPPQPPqqQPPngGSSS....
+PQqPPPPPPQRRRRPPPQqPPPPPPQRRRRPPPQqPPPPngGGSS...
+PQQPPPPqRqqqqqRRPQQPPPPqRqqqqqRRPQQPPPPPnggaSS..
+.PPPPQRQqQqQqQqQPPPPPQRQqQqQqQqQPPPPPQRQPnngGaS.
+SPPqRqqqqqqqqqqqRPPqRqqqqqqqqqqqRPPqRqqqqPPngaSS
+SRRQqQqQqQqQqQqQqRRQqQqQqQqQqQqQqRRQqQqQqQqPngaS
+
+piece rock-fill-1 1 1 at 12 0
+QPPQQqqqqqqqqQQQ
+qPPPPQQQQQQQQPPP
+qPPPqPPPPPPPqRRR
+QPPPqPPPPPQRQqQq
+QPPQqPPPPGPqQqqq
+qPqqqPPPggggqqQq
+QPqQqPPPPPPQqqqq
+PQqqqPqPPPPPQqQq
+PQqQQPQPPPPPQqqq
+PqqqPPPPPRRPPQQQ
+PqqQPPPPPQPPPPQP
+PQqPPPPPPPRRRRPP
+PQQPPPPqRqqqqqRR
+PPPPPQPQqQqQqQqQ
+RPPqRqqqqqqqqqqq
+qRRQqQqQqQqQqQqQ
+
+piece rock-fill-2 1 1 at 13 0
+QPPQQqqqqqqqqQQQ
+qPPPPQQQQQQQQPPP
+qPPPqPPPPPPPqRRR
+QPPPqPPPPPQRQqQq
+QPPQqPPPPPPqQqqq
+qPqqqPPPPPPqqqQq
+QPqPPPPPPPPQqqqq
+PQqPPPqPPPPPQqQq
+PQqQQPQPPPPPQqqq
+PqqGPPPPQRRPPQQQ
+PqggggPPPQPPPPQP
+PQqPPPPPPQRRRRPP
+PQQPPPPqRqqqqqRR
+PPPPPQRQqQqQqQqQ
+RPPqRqqqqqqqqqqq
+qRRQqQqQqQqQqQqQ
+
+piece rope-top 1 1 at 18 3
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bsb......
+.......hdd......
+.......sb.......
+.......dh.......
+.......bs.......
+piece rope-a 1 1 at 18 4
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+piece rope-knot 1 1 at 18 5
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+......hbsd......
+......lhdd......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+piece rope-end 1 1 at 18 6
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......hd.......
+.......sb.......
+.......dh.......
+.......bs.......
+.......db.......
+.......d.b......
+................
+................
+
+# Deep soil (vertical parallax bleed: the play layer runs 10 tile rows past the room bottom so a 150 px look down
+# shows earth): deep-1 under a ground bottom, deep-2 under it, deep-3 below and under a pit (near black, tileable).
+piece deep-1a 1 1 at 4 3
+1111111111111111
+11k111k111k111k1
+1112211111111111
+k1k1k1k1k1k1k1k1
+1111111111111111
+k1k1k1k1k1k2k1k1
+1k1k1k1k1k1k1k1k
+k1k1k1k1k1k1k1k1
+1k1k1k1k1k1k1k1k
+k1k1k1k3k1k1k1k1
+1k1k1k1k1k1k1k1k
+kkkkkkkkkkkkkkkk
+1k1k1k1k1k1k121k
+kkkkkkkkkkkkkkkk
+kk1kkk1kkk1kkk1k
+kkkkkkkkkkkkkkkk
+piece deep-1b 1 1 at 5 3
+1111111111111111
+k111k111k221k111
+1111111111111111
+k1k1k1k1k1k1k1k1
+1111111111111111
+k1k1k1k1k1k1k1k1
+1k1k1k1k1k1k1k1k
+k121k1k1k1k1k1k1
+1k1k1k1k1k1k1k1k
+k1k1k1k1k1k1k1k1
+1k1k1k1k1k1k1k2k
+kkkkkkkkkkkkkkkk
+1k1k1k1k1k1k1k1k
+kkkkk3kkkkkkkkkk
+1kkk1kkk1kkk1kkk
+kkkkkkkkkkkkkkkk
+piece deep-2a 1 1 at 6 3
+kkkkkkkkkkkkkkkk
+mkmkmkmkmkmkmkmk
+kmkkkmkkkmkkkmkk
+mkmkmkmkmkmkmkmk
+kkkmkk1mkkkmkkkm
+mkmkmkmkmkmkmkmk
+kmkmkmkmkmkmkmkm
+mmmkmmmkmmmkmmmk
+kmkmkmkmkmkmkmkm
+mkmmmkmmmkmmmkmm
+kmkmkmkmkmkmkmkm
+mmmmmmmmmmmmkmmm
+kmkmkmkmkmkmkmkm
+m1mmmmmmmmmmmmmm
+mmkmmmkmmmkmmmkm
+mmmmmmmmmmmmmmmm
+piece deep-2b 1 1 at 7 3
+kkkkkkkkkkkkkkkk
+kmkmkmkmkmkmkmkm
+mkkkmkkkmkkkmkkk
+kmkmkmkmkmk1kmkm
+kkmkkkmkkkmkkkmk
+kmkmkmkmkmkmkmkm
+mkmkmkmkmkmkmkmk
+mmkmmmkmmmkmmmkm
+mkmkmkmkmkmkmkmk
+kmm1kmmmkmmmkmmm
+mkmkmkmkmkmkmkmk
+mmmmmmmmmmmmmmmm
+mkmkmkmkmkmkmkmk
+mmmmmmmmmmmmmmmm
+mkmmmkmmmkmmmkmm
+mmmmmmmmmmmmmmmm
+piece deep-3a 1 1 at 8 3
+mzmzmzmzmzmzmzmz
+zmzzzmzzzmzzzmzz
+mzmzmzmzmzmzmzmz
+zzzmzzzmzzzmzzzm
+mzmzmzmzmzmzmzmz
+zmzzkmzzzmzzzmzz
+mzmzmzmzmzmzmzmz
+zzzmzzzmzzzmzzzm
+mzmzmzmzmzmzmzmz
+zmzzzmzzzmzzzmzz
+mzmzmzmzmzmzmzmz
+zzzmzzzmzzzmzzzm
+mzmzmzmzmzmzkzmz
+zmzzzmzzzmzzzmzz
+mzmzmzmzmzmzmzmz
+zzzmzzzmzzzmzzzm
+piece deep-3b 1 1 at 9 3
+zmzmzmzmzmzmzmzm
+zzmzzzmzzzmzzzmz
+zmzmzmzmzmkmzmzm
+mzzzmzzzmzzzmzzz
+zmzmzmzmzmzmzmzm
+zzmzzzmzzzmzzzmz
+zmzmzmzmzmzmzmzm
+mzzzmzzzmzzzmzzz
+zmzmzmzmzmzmzmzm
+zzmzzzmzzzmzzzmz
+zmzmzmzmzmzmzmzm
+mzkzmzzzmzzzmzzz
+zmzmzmzmzmzmzmzm
+zzmzzzmzzzmzzzmz
+zmzmzmzmzmzmzmzm
+mzzzmzzzmzzzmzzz
+
+# Buried ground bottom (vertical parallax bleed): the ground's bottom row where deep soil continues under it, the
+# nubs and the dark shadow line replaced by a dithered grade 2f2117 -> 22180f -> 150e0a into deep-1 (left corner,
+# middle, right corner of the 3x3 ground: tile ids 61 to 63 -> 70 to 72).
+piece ground-buried-l 1 1 at 10 3
+1355555656555555
+1555555555555555
+1555555555555555
+1355555555445555
+1334444333443444
+1443333444444434
+1344443444444434
+1444444344444444
+1334343333333333
+3333333333333333
+3233323332333233
+2222222222222222
+2222222222222222
+1211121112111211
+1111111111111111
+1111111111111111
+piece ground-buried 1 1 at 11 3
+5555555656555555
+5555555555555555
+5555555555555555
+5555555555445555
+3434444333443444
+4443333444444434
+4444443444444434
+4444444344444444
+3334343333333333
+3333333333333333
+3233323332333233
+2222222222222222
+2222222222222222
+1211121112111211
+1111111111111111
+1111111111111111
+piece ground-buried-r 1 1 at 12 3
+5555555656555556
+5555555555555557
+5555555555555557
+555555555544557.
+3434444333443447
+4443333444444436
+4444443444444437
+444444434444447.
+333434333333337.
+333333333333333.
+323332333233323.
+222222222222222.
+222222222222222.
+121112111211121.
+111111111111111.
+1111111111111111

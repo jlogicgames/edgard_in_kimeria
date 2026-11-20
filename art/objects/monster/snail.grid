@@ -1,25 +1,27 @@
-# Forest snail (#329, D106): native 24x16 frames, facing right, sole on row 15. A chestnut shell coiled in two turns
-# (dark groove s, lit whorls t/S, cream highlight c); its ink contour covers only the top two rows of the shell, below
+# Forest snail (#329, D106): native 24x16 frames, facing right, sole on row 15. A crimson shell coiled in two turns
+# (dark groove s, lit whorls t/S, rose highlight c); its ink contour covers only the top two rows of the shell, below
 # that the shell edge is the light lip o, so the moon rim caps the shell and the snail measures like the spider (D106).
-# The foot and neck (f, u, F) keep their own colour as the edge; the stalks end in pale eyes e; m is the mouth.
+# The foot and neck (f, u, F) keep their own colour as the edge; the stalks end in glowing eyes e; m is the mouth.
 # crawl1, crawl2: the crawl; look, blink: the notice (stalks up, pulled in); draw: the wind-up (reared, throat
 # swollen); spit: thrust forward; rest: the reload (head low); dead: the empty shell on its back, mouth open upward.
 # gob: the gob's two 8x8 wobble frames (fly1 at x 0, fly2 at x 8) in the cell's top-left; the rest of the cell is empty.
+# gob: crimson g, rose G, pale w.
+# Danger family (#236, 2026-11-20): dark crimson body 86101f, glowing eyes ff6b57, rose lights away from the hero's headband c22a24.
 # The concept was generated from shapes for the author's review (#329); this grid is now the drawing, edited by hand.
 size 24 16
 color k 0b0814
-color s 4a2a20
-color S 7a4a32
-color t 9a6646
-color c b89a78
-color o a07656
-color f 8c7c6e
-color u a89a8a
-color e d8d0c0
-color m 2a1418
-color g 6c6a3e
-color G b8b886
-color w f2f2dc
+color s 4a0c22
+color S 86101f
+color t 9c2050
+color c c87896
+color o b85a80
+color f 9a6070
+color u b07c8c
+color e ff6b57
+color m 2a0612
+color g 86101f
+color G c87896
+color w f4d4de
 frame crawl1
 ........................
 ........k...............

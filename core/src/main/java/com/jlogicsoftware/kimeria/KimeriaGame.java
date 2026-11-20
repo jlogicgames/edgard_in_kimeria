@@ -68,6 +68,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
+    /**
+     * Sprites the batch holds before it flushes: the most libGDX allows (4 vertices each, vertex indices are shorts, so at most 32767 / 4 = 8191).
+     * The parallax layers draw about 4 200 tile regions a frame (#236), which a 1000-sprite batch flushed five times.
+     */
+    private static final int BATCH_SPRITES = 8191;
     private static final int RGB_BLUE = 2;
     private static final float[] BLACK_CLEAR = {0f, 0f, 0f};
     private static final float[] BACKDROP_CLEAR = {0.16f, 0.16f, 0.19f};
@@ -229,7 +234,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         Localization.current();
         assets = new Assets();
         assets.preloadSounds();
-        batch = new SpriteBatch();
+        batch = new SpriteBatch(BATCH_SPRITES);
         shapeRenderer = new ShapeRenderer();
         camera = new OrthographicCamera();
         camera.setToOrtho(true, LOGICAL_W, LOGICAL_H);

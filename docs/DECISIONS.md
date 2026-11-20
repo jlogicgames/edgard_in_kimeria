@@ -1742,7 +1742,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     **at least 0.28**. The near-black ink contour and the accent hues (magenta, lime, ember and gold, honey, sulphur,
     the pickup violet) belong to this tier only.
   - **Decor** (scenery sprites in the play plane: the `Decor` kinds and `HangingVine`): outline **at most 0.20**, body
-    **0.08 to 0.20**, p90 chroma **at most 0.10**, no ink pixel (OKLab L under 0.30), no accent hue, no idle animation.
+    **0.08 to 0.20**, p90 chroma **at most 0.10**, no accent hue, no idle animation. *(The absolute ink floor, no pixel under OKLab L 0.30, is superseded by D108, 2026-11-20.)*
   - **Background** (sky, tile scenery, later parallax layers): no louder than decor, and static.
 - **Metrics (OKLab):** outline is the mean lightness difference between each silhouette pixel and the background pixel
   just outside it. Body is the mean colour distance between each opaque pixel and the background under it. Chroma is
@@ -2162,6 +2162,11 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - Measured by `check_contrast.py` over a sweep of every map (x every 64 px, y 40 to 328 every 48 px, two sky
     offsets), since she has no placement: frames 0.314 to 0.440, glints over the selected glow 0.336 (big) and
     0.380 (small).
+  - Over forest-1's scenery layers ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20) her ink
+    fell to 0.136 to 0.269 (glints 0.179, 0.215): the play band is near black and her own light lifts it toward the ink.
+    Her ink went to `020106` and her top edges are lit in her lantern white `f2fff4` (up only, `RIM_STYLE` in
+    `tools/forest_trap_sprites.py`; a full up-left-right rim fell to 0.035 over the moon): frames 0.314 to 0.376, glints
+    0.323 and 0.377. Her ink changed (`0b0814` to `020106`) and her top edges are lit; the rest of her palette, her identity, frames and timings are unchanged; no threshold changed.
   - The glow only adds light behind a target and raised every measured target's outline (stone 0.293 to 0.686,
     lever 0.579 to 0.881).
   - The gate now takes about 5.6 s (was about 2.5 s).
@@ -2927,7 +2932,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Decision:**
   - **Body.** One strip of ten 24×16 frames (`crawl1`, `crawl2`, `look`, `wiggle`, `crouch`, `air`, `brace`, `bright`,
     `white`, `dead`), 15 colours with the moon rim; drawn about 14 px tall, half the hero; a dark green-bronze shell, no
-    reserved hue. Body hitbox `rect(1, 2, 22, 14)`. **Contact is harmless** (no hurtbox): only the burst kills.
+    reserved hue. *Recoloured by #236 (2026-11-20): the danger family, a dark crimson `86101f` shell with `ff6b57` eyes; its body
+    (D101) a dusky indigo, L 0.176 to 0.242 (`docs/ART_DIRECTION.md`, Forest beetle).* Body hitbox `rect(1, 2, 22, 14)`. **Contact is harmless** (no hurtbox): only the burst kills.
   - **Patrol** 24 px/s inside the authored range (`offNeg`/`offPos`); it never leaves the range, chasing included.
   - **Hearing** 96 px either side, centre to centre, within a 48 px band above its floor line; lost beyond 144 px or after
     1.0 s out of the band.
@@ -3102,7 +3108,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Decision:**
   - **Body.** One strip of nine 32×16 frames (`crawl1`, `crawl2`, `rise`, `tap`, `crouch`, `leap`, `bite`, `recover`,
     `dead`), 12 colours, 13 with the moon rim; drawn about 13 px tall; a plum-black abdomen with an ochre chevron, eight tan
-    legs with high knees, all rooted on the cephalothorax (four near, four far); no reserved hue. Body hitbox
+    legs with high knees, all rooted on the cephalothorax (four near, four far); no reserved hue. *Recoloured by #236 (2026-11-20):
+    the danger family, a dark crimson `86101f` body, `ff6b57` eyes, dusty-rose legs; its body (D101) a dark dried umber, L 0.143 to 0.253.* Body hitbox
     `rect(2, 3, 20, 13)`. **Contact is harmless** (no hurtbox): only the fangs kill, during the leap and the bite.
   - **Patrol:** it skitters (48 px/s for 0.3 s, still for 0.3 s) inside its authored range (`offNeg`/`offPos`) and never
     leaves the range on foot. *Amended by #497 (see "Leap past the range end" below): its leap may leave the range by up to its reach.*
@@ -3489,7 +3496,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Body.** One strip of eight 24×16 frames (`crawl1`, `crawl2`, `look`, `blink`, `draw`, `spit`, `rest`, `dead`) and a ninth
     cell holding the gob's two 8×8 wobble frames, 13 colours, 14 with the moon rim; a chestnut shell coiled in two turns with a
     dark groove and a cream whorl, a pale clay foot and neck, two eye stalks with pale tips; drawn about 14 px tall; no reserved
-    hue. Body hitbox `rect(1, 3, 20, 13)`. **Contact is harmless**: only the gob kills.
+    hue. *Recoloured by #236 (2026-11-20): the danger family, a dark crimson `86101f` shell, `ff6b57` eye tips, a crimson gob;
+    its body (D101) a dark dried umber, L 0.143 to 0.253.* Body hitbox `rect(1, 3, 20, 13)`. **Contact is harmless**: only the gob kills.
   - **Patrol:** 12 px/s inside its authored range (`offNeg`/`offPos`), a 0.8 s pause at each end (the `blink` frame), then it
     turns; it never leaves its range.
   - **Sight, ahead only:** a box from its front edge to 176 px ahead, from its floor line to 48 px above it, cut at the first
@@ -3580,3 +3588,66 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `forest-1-traps`' escalator pocket now passes (`forest1TrapsTheEscalator`); the room stays on the first-meeting list for its
   puffball.
 - **Not verified:** how the reworked rooms feel to a first-time player (#135); the thresholds are authoring numbers.
+
+## D108. The Forest parallax layers are read and drawn by the game: scenery apart from the play layer, a foreground per room ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+
+- **Status:** Proposed. Built in forest-1 (2026-11-19) from the card "Forest look and parallax layers" in
+  [ART_DIRECTION.md](ART_DIRECTION.md); the card and this number wait for the author's approval ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); nothing below is final until then.
+- **Problem:** `TiledMapData` merged every tile layer into one play grid and had no notion of parallax, offsets, opacity or a second tileset,
+  so a layered night forest could not exist in the game.
+- **Decision:** (1) a tile layer is *scenery* when it has a `parallaxx` or `parallaxy` attribute or the layer property `scenery=true`; scenery
+  is read apart (`SceneryLayer`: factors, offsets, opacity, `driftx`, `wrapx`, regions resolved at load) and never feeds collision or the
+  play layer; (2) the foreground is an object group per room (`foreground-<room>`, `roomx`, tile objects relative to the room, factor 1.6),
+  drawn only in that room; (3) the maths is the card's, in whole pixels as Java's `Math.round` (half up): `x - round(f * (camX - originX))` and
+  `(y - originY) - round(f * (camTop - originY))`, `originX` 0 for a map-wide layer and the room's x for the foreground, `originY` the room's
+  floor camera top; clouds drift by accumulated time, not by the camera; the moon is a factor-0 layer; (4) draw order: scenery, play layer,
+  objects and hero, fairy, foreground, HUD; (5) a layer is only as wide as its factor needs; (6) forest-1 uses the terrain sketch as its own
+  play tileset (`ForestTerrain.tsx`); forest-0, forest-2 and other worlds keep theirs; (7) the parser is strict: a foreground group needs
+  `roomx` and must be named `foreground-<room name>` for a `Room` object at that x, a flipped or rotated scenery cell is refused, the
+  factors are doubles (the mock's 0.15, not a float's), and a foreground `y` is in map coordinates (the floor camera top is too; every forest
+  room lies at y 0); (8) cost: the installer leaves the cell of a fully transparent tile empty (no draw), `forest-fg` is a Tiled collection
+  whose tiles are sub-rectangles of one packed sheet (896 x 1696), the cull rectangle is the view plus one tile (the shake moves the camera
+  up to 1.5 px after `visibleWorldRect`), the batch holds 8191 sprites (the libGDX maximum); a frame of `forest-1-mob` with the 640 px view
+  went from 4 198 region draws and 15 texture switches to 3 187 and 9 (800 px view: 4 866 and 21 to 3 698 and 9), measured through `NoopBatch`
+  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`): they
+  stop in the pause, a room fade and after black in a death fade, and slow with the death slow motion; "map-wide layers never jump at a
+  room change" holds while the rooms share a floor camera top (`everyForestRoomSharesOneFloorCameraTop`).
+- **Gate:** `TiledMapParallaxTest` (the split, factors, foreground groups), `ParallaxRendererTest` (the maths, half-up rounding, per-room origin,
+  cloud drift, the moon, draw order in a real frame, the cull slack, the batch colour, the shared floor camera top), `AllocationBudgetTest.forest1ParallaxLayersAndForeground` (0.0 B/frame, ceiling 8),
+  `python3 tools/parallax_mock.py --check --game` (`validateParallax`: rule B, cover time and look frames of every room with a foreground,
+  against the game map), `tools/test_parallax_game.py` (the installed map equals what the installer writes).
+- **What changed on the way:** `forest-1-mob` (reworked by #507) put a red mob, a falling branch and an explosive stump over the sketch's tall
+  pieces, so its foreground lost `rise-trunk` and moved the reeds and the fern to the room's ends (card, "Calm room"). The buried right-edge
+  ground tile (`ground-buried-r`, id 72) had a transparent bottom-right pixel that cut the deep soil's top: filled. `check_contrast.py` reads
+  the play layer by name (and fails without it) and the sheet and column count of each map's first tileset, and now composites what the
+  game draws behind each sprite: the flat colour, the scenery layers at every steady camera x where the placement is on screen (4 px apart,
+  clouds at 8 drift phases where they can show) and the play layer; every sprite now passes the tiers over that real background (D108 update).
+- **Not done (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** the other forest maps and rooms; a shared skill
+  (`.agents/skills`) and the STYLE_SYSTEM rows beyond the one added here; the draw-call budget measured on a phone; approval by the author.
+
+- **Update 2026-11-20, author decision: the decor tier is relative to the composited background (D76 amended).** The absolute ink floor of D76
+  (no decor pixel under OKLab L 0.30, `INK_L_MAX`) is dropped from `check_contrast.py`. It carried one thing: keeping decor off black ink
+  contours over the flat navy `2c3f66` (L 0.37), where a near-black outline is loud. It no longer applies because the new Forest ground is
+  itself near black (L about 0.035): over it any colour at or above L 0.30 is at least 0.27 away, past the 0.20 ceiling, so the floor made decor
+  impossible there. Kept unchanged: outline at most 0.20, body 0.08 to 0.20 against the real composited background at every camera (the 0.08 floor keeps
+  decor visible), p90 chroma at most 0.10; the active and background tiers are untouched. `test_check_contrast.py`: a dark decor on a dark ground
+  passes, a too bright one fails, one under the 0.08 body floor fails. The remains (beetle, spider, snail) and the bush were re-darkened (palette x0.45 and x0.22 of the old plum and grey-green,
+  chips of `BeetleFx`, `SpiderFx`, `SnailFx` follow); results and what still fails are in ART_DIRECTION, open items.
+- **Update 2026-11-20 (D108): a monster body is measured only where it can lie.** `BODY_SWEEP` used to stand every body on every floor
+  top of every map: cream terrain tops, the lilac sky behind ledges, forest-2's light tiles, rooms where that monster never appears. A body
+  (D101) exists only where its monster is killed, and `fall` drops it straight down (`velocity.x = 0`) to the first floor under it or removes
+  it below the room. So `check_contrast.py` (`body_spots`) now derives the spots from the placements: a beetle or a snail along its authored
+  range on the range's floor (the load checks keep that range on floor without gaps; the notice hop and the flip land there); a spider along
+  each floor leg widened by `Spider.POUNCE_REACH` while authored floor stays under its whole body (#497), and from every wall pose and every
+  thread pose, set on the open side as `Spider.die` does and dropped to the first collision box below. The positions removed carry nothing
+  for the gate: no body can lie there. A new placement is swept with no edit (`test_check_contrast.py`, a newly placed monster's route).
+  The remains were then repainted by tone role (not a uniform multiply): the beetle a dusky indigo (L 0.176 to 0.242), the spider and
+  the snail a dark dried umber (L 0.143 to 0.253, hue 50; a cool hue cannot clear the blue night forest behind the forest-1 ledges by 0.08).
+  All three pass at every spot (outline at most 0.181, body 0.097 to 0.177). The bush was repainted to a slate with a lighter foot row
+  and passes at every placement. It first failed at forest-2 x 1040, in front of the third-party cliff tiles (#189): the background there
+  averaged L 0.453, while forest-1's bushes stand on L 0.037, and no palette meets both. The placement was fixed, not the palette: bush id 132
+  moved x 1040 to 1060, off those tiles (still on the ground floor, clear of traps, pickups and exits); measured outline 0.156, body 0.147
+  there. The threshold is unchanged; `validateContrast` passes. The gate was also hardened: `body_spots` fails when a falling platform,
+  escalator, deadfall or quicksand lies in a monster's range or drop column (it reads static collisions only); a placed monster kind
+  with no measured body fails; a map with more than one non-scenery tile layer fails (the game overwrites layer by layer, last wins); the 128 px body camera step
+  is enough because a 4 px sweep gave identical results for every kind and map (measured).

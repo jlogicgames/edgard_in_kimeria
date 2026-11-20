@@ -132,6 +132,14 @@ Write EN first and get the author's approval before translating; then all five c
 change. `python3 tools/check_text_style.py` (also `./gradlew validateTextStyle`, part of `:core:check`)
 and `./gradlew :core:test` must pass. Never add an allowlist entry for new text: fix the text.
 
+## Parallax layers (D108)
+
+forest-1 draws scenery layers (a tile layer with `parallaxx`/`parallaxy` or the property `scenery=true`) behind the play layer and a
+`foreground-<room>` object group in front of the world (`world.ParallaxRenderer`; maths and card: `docs/ART_DIRECTION.md`, "Forest look and
+parallax layers"). A change to a layer or a foreground piece goes through `tools/parallax_game.py`, then `python3 tools/parallax_mock.py --check
+--game` (`validateParallax`) must pass: the foreground never covers a protected object (rule B) and never hides the hero. Draw code stays
+allocation free (`AllocationBudgetTest`). Status: proposed, awaiting the author ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+
 ## Hints
 
 `Hud` draws two separate channels: the map-authored zone message (anchor at 45% down the zone,

@@ -1,17 +1,20 @@
 # The forest spider's body (#328, D101, D102): the `dead` frame of spider.grid, pixel for pixel, in a decor-tier palette (D76):
-# muted plum-grey with a contour in its own hue, no ink 0b0814, no moon rim, so a harmless body never reads as a live spider.
-# Night palette (D92): the spider's own hues mixed toward the background 2c3f66 and greyed; keep it in step with spider.grid.
+# a dim colour with a contour in its own hue, no ink 0b0814, no moon rim, so a harmless body never reads as a live spider.
+# Forest recolour (#236, D108, 2026-11-20): hand-set tone roles (contour k, belly a, abdomen b/c, head h/H, fang f, legs l/L/n)
+# on one dark umber (OKLab L 0.164 to 0.253, chroma 0.055, hue 50): a dried husk. Its spots are forest-1's near-black ground and
+# the blue night forest behind the ledges; the warm hue keeps it off that blue (D108 band 0.08..0.20); no ink, no moon rim.
+# Keep it in step with spider.grid.
 size 32 16
-color k 58505a
-color a 5c5460
-color b 645a66
-color c 6a606a
-color h 685e68
-color H 6e646c
-color f 7c7676
-color l 706c66
-color L 78726a
-color n 6c6862
+color k 1e0600
+color a 220800
+color b 270b00
+color c 2d1001
+color h 2a0e00
+color H 2f1202
+color f 341b0c
+color l 2a1103
+color L 2f1608
+color n 270e01
 frame body
 ................................
 ................................
