@@ -733,8 +733,11 @@ def stone_lip_height():
 
 
 def background_grid(root):
-    """The gids of the map's tile layer as rows (FallingTrapLayout reads TiledMapData.backgroundGrid), or None without one."""
-    data = root.find('layer/data')
+    """The gids of the map's play layer as rows (FallingTrapLayout reads TiledMapData.backgroundGrid), or None without one. The
+    play layer is the one named Background: a forest map's scenery layers (#236) come before it in the file."""
+    data = root.find("layer[@name='Background']/data")
+    if data is None:
+        data = root.find('layer/data')   # a test map's single, unnamed tile layer
     if data is None or not (data.text or '').strip():
         return None
     width = int(root.get('width', 0))
@@ -742,8 +745,15 @@ def background_grid(root):
     return [cells[i:i + width] for i in range(0, len(cells), width)]
 
 
+# Cells a stone's lip cannot hang from: empty, or the dark canopy clump of the play layer (terrain.grid `canopy-*`, gids 1, 21, 41,
+# 61, 81, 101, 80, 100, 120, 20, 40, 60 of ForestTerrain.tsx, firstgid 1): foliage drawn for the hanging vines, no rock or soil (D112).
+CANOPY_GIDS = frozenset((1, 21, 41, 61, 81, 101, 80, 100, 120, 20, 40, 60))
+HANGS_FROM_NOTHING = CANOPY_GIDS | {0}
+
+
 def under_tiles(top, body, root):
-    """FallingTrapLayout.underTiles: `top` is the bottom face of a drawn tile row over the column, open air below it."""
+    """FallingTrapLayout.underTiles: `top` is the bottom face of a drawn tile row over the column, open air below it; a canopy cell
+    is not a row to hang from (stricter than the game, which only asks for a drawn cell)."""
     grid = background_grid(root)
     tw, th = int(root.get('tilewidth', 16)), int(root.get('tileheight', 16))
     if grid is None or top % th != 0:
@@ -752,7 +762,7 @@ def under_tiles(top, body, root):
     above = below - 1
     if above < 0 or below >= len(grid) or first < 0 or last >= len(grid[0]):
         return False
-    return all(grid[above][c] != 0 and grid[below][c] == 0 for c in range(first, last + 1))
+    return all(grid[above][c] not in HANGS_FROM_NOTHING and grid[below][c] == 0 for c in range(first, last + 1))
 
 
 def floor_camera_top(room, view):

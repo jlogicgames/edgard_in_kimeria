@@ -80,7 +80,7 @@ HERO_BOX = (48, 48)                     # a RoomStart box (the Player spawn box)
 CAMERA_STEP = 1
 CAMERA_TOP = 8                          # FallingTrapLayout.floorCameraTop for a 368 px room and a 360 px view: 0 + (368 - 360)
 BACKGROUND = '#2c3f66'
-PLAY_TSX = '../../../assets/tiles/Forest.tsx'
+PLAY_TSX = '../../../assets/tiles/ForestTerrain.tsx'
 TERRAIN_TSX = '../../terrain/forest/Forest-new.tsx'
 TALL_TOP = 120                          # --scan: a bottom-rising piece reaching y 120 (two thirds of the view)
 SHEET_COLUMNS = sprites.SHEET_COLUMNS
@@ -142,6 +142,7 @@ PLAY_ABOVE = 1                          # rows of the `play-above` layer (16 px 
 MID_ABOVE = 1                           # rows the `mid` strip starts above the room top (layer offsety -16)
 FG_TOP = 32                             # foreground canvas: room y -32 to 416
 FG_HEIGHT = 448
+CANOPY_TOP = {1, 61, 80, 20}           # the canopy clump's top-row gids (terrain.grid: canopy-l, -m1, -m2, -r), firstgid 1
 DEEP = {'deep-1': (64, 65), 'deep-3': (68, 69)}   # deep soil tile ids in Forest-new.tsx (terrain.grid)
 BURIED = {61: 70, 62: 71, 63: 72}      # the ground's bottom row (left, middle, right) -> its buried variant over deep soil
 # (layer name, tileset key, parallaxx, parallaxy, extra properties, offsety)
@@ -169,9 +170,17 @@ class Scene:
         self.x, self.width = int(float(box.get('x'))), int(float(box.get('width')))
         self.play_columns = self.width // TILE
         self.columns = self.play_columns + PAD_COLUMNS
-        self.cameras = range(0, self.width - VIEW[0] + 1, CAMERA_STEP)
+        self.cameras = room_cameras(self.width)
         start = hero_boxes(self)['RoomStart']
         self.floor = start[1] + start[BOX_H]
+
+
+def room_cameras(width):
+    """Room-relative steady camera x values of a room `width` px wide: 0 to width - view, or, for a room narrower than the view, the
+    one camera that centres it (Player.cameraTarget: room x + (room width - view width) / 2, negative)."""
+    if width < VIEW[0]:
+        return range((width - VIEW[0]) // 2, (width - VIEW[0]) // 2 + 1)
+    return range(0, width - VIEW[0] + 1, CAMERA_STEP)
 
 
 class GameScene(Scene):
@@ -308,6 +317,10 @@ def play_above(rows):
     above = [[0] * len(rows[0]) for _ in range(PLAY_ABOVE)]
     for c in range(len(rows[0])):
         if not rows[0][c]:
+            continue
+        if rows[0][c] in CANOPY_TOP:   # a canopy clump's top row tiles vertically: it repeats over the room top
+            for k in range(PLAY_ABOVE):
+                above[k][c] = rows[0][c]
             continue
         column = [rows[r][c] for r in range(1, PERIOD_ROWS)]
         period = next(p for p in range(1, PERIOD_ROWS) if all(column[i] == column[i % p] for i in range(len(column))))
@@ -529,11 +542,24 @@ def room_objects(scene):
 
 
 def hero_boxes(scene):
-    """Room-relative x of the room's RoomStart and RoomExit, and their boxes (x, y, w, h)."""
-    boxes = {}
-    for kind, _, x, y, w, h, _ in room_objects(scene):
+    """Room-relative x of the room's RoomStart and RoomExit, and their boxes (x, y, w, h). A RoomStart is a point: the hero's
+    box (HERO_BOX) stands on the first solid top under it. The last room of a map has no RoomExit (RoomLayout); there the
+    route ends at the room's right wall, so the stand-in exit box is put against the wall on the start's floor."""
+    boxes, solids = {}, []
+    for kind, props, x, y, w, h, _ in room_objects(scene):
         if kind in ('RoomStart', 'RoomExit'):
             boxes[kind] = (x, y, w or HERO_BOX[0], h or HERO_BOX[1])
+    for group in scene.root.iter('objectgroup'):
+        if group.get('name') == 'Collisions':
+            solids += [(float(o.get('x')) - scene.x, float(o.get('y')), float(o.get('width', 0))) for o in group.findall('object')
+                       if o.get('type') not in ('Platform', 'QuickSand')]
+    x, y, w, h = boxes['RoomStart']
+    tops = [top for left, top, width in solids if y < top < y + h and left < x + w and x < left + width]
+    if tops:   # the box would sink into the floor: it stands on it
+        boxes['RoomStart'] = (x, min(tops) - h, w, h)
+    if 'RoomExit' not in boxes:
+        floor = boxes['RoomStart'][1] + h
+        boxes['RoomExit'] = (scene.width - TILE - HERO_BOX[0] + HERO_W, floor - HERO_BOX[1], HERO_BOX[0] - HERO_W, HERO_BOX[1])
     return boxes
 
 
@@ -690,7 +716,7 @@ def paste_clipped(frame, image, x, y):
 
 def exclusions(scene, unique=False):
     """Room-relative rects (name, x0, y0, x1, y1) the foreground must never cover: every object of the active tier (with a red
-    mob's patrol range, a lift's travel and a spider's route), the parts the game draws for the hive, the deadfall, the fissure
+    mob's patrol range, a lift's travel, a spider's route and the boss's whole arena above the floor), the parts the game draws for the hive, the deadfall, the fissure
     and the spider, and the honey fungus tiles."""
     rects = []
     for kind, props, x, y, w, h, points in room_objects(scene):
@@ -703,6 +729,8 @@ def exclusions(scene, unique=False):
             y0, y1 = y0 - neg, y1 + pos
         else:
             x0, x1 = x0 - neg, x1 + pos
+        if kind == 'Boss':   # the boss has no authored range: it roams its whole arena, wall to wall and up to its jumps
+            x0, y0, x1, y1 = 0, 0, scene.width, scene.floor
         if points:   # a spider's route: its silk and leap range lie on the polyline
             for point in points.split():
                 px, py = (float(v) for v in point.split(','))
@@ -867,7 +895,10 @@ def hero_route(scene):
 
 
 def hero_camera(scene, x):
-    """The game's steady camera left edge for a hero box at x (Player.cameraTarget on the box centre), room-relative."""
+    """The game's steady camera left edge for a hero box at x (Player.cameraTarget on the box centre), room-relative; a room
+    narrower than the view is centred in it."""
+    if scene.width < VIEW[0]:
+        return scene.cameras[0]
     return max(0, min(scene.width - VIEW[0], x + HERO_CAMERA_DX - VIEW[0] // 2))
 
 

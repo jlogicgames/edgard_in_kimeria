@@ -61,6 +61,8 @@ SPIDER_LIP_X = 160
 SPIDER_SHELF = 208
 SPIDER_LAST_HANG = 296
 DARK_FACE_X = 16
+OLD_CLIFF = (0x7e, 0x63, 0x39, 255)  # the retired third-party cliff tiles' mean colour beside forest-2's left wall (D112)
+CLIFF_WIDTH = 48
 # The snail fixture (#329, D106): floor top y 320, a block at x 180..196, the snail's range x 272..384 (frame tops 304).
 SNAIL_FLOOR = 320
 SNAIL_FRAME_TOP = 304
@@ -371,7 +373,7 @@ class ClassificationTest(unittest.TestCase):
     def test_a_map_with_two_non_scenery_tile_layers_fails_loudly(self):
         """The game overwrites every non-scenery layer into the play grid, last wins; the gate composites only Background."""
         layer = '<layer name="{}" width="1" height="1"{}><data encoding="csv">0</data></layer>'
-        head = '<map width="1" height="1"><tileset firstgid="1" source="Forest.tsx"/>'
+        head = '<map width="1" height="1"><tileset firstgid="1" source="ForestTerrain.tsx"/>'
         two = ET.fromstring(head + layer.format('Background', '') + layer.format('Extra', '') + '</map>')
         with self.assertRaises(ValueError):
             gate.tile_layer(two, 'broken')
@@ -453,9 +455,11 @@ class ClassificationTest(unittest.TestCase):
             self.assertEqual(route, fixture[name], name)
 
     def test_a_spider_wall_on_a_dark_face_fails_the_placement(self):
-        """#483 (D103): the placement rule. forest-2's left map wall (face x 16) is too dark beside the climbing spider."""
+        """#483 (D103): the placement rule. A wall face as light as the spider's body fails it: forest-2's left map wall (face x 16)
+        stood against the third-party cliff (its mean colour `7e6339`, L 0.52) until #236 retired that sheet (D112)."""
         root = gate.map_roots()['forest-2']
-        image = gate.composite(gate.tile_layer(root)[0], gate.map_background(root, 'forest-2'))
+        image = gate.composite(gate.Image.new('RGBA', gate.tile_layer(root)[0].size), gate.map_background(root, 'forest-2'))
+        image.paste(gate.Image.new('RGBA', (CLIFF_WIDTH, SPIDER_WALL_LAST), OLD_CLIFF), (DARK_FACE_X, 0))
         results = [('forest-2', DARK_FACE_X, *gate.measure(frame, image, DARK_FACE_X, top)) for frame in gate.frames('Spider:wall-left')
                    for top in range(DARK_FACE_X, SPIDER_WALL_LAST, gate.SPIDER_STEP)]
         errors = gate.check_sprite('Spider:wall-left', results)
@@ -558,6 +562,8 @@ class SceneryCompositeTest(unittest.TestCase):
 
     def test_a_map_without_scenery_is_flat_colour_and_play_layer_only(self):
         root = gate.map_roots()[FOREST_2_MAP]
+        for layer in [l for l in root.findall('layer') if gate.is_scenery(l)]:   # every shipped map has scenery since #236
+            root.remove(layer)
         scene = gate.Scene(FOREST_2_MAP, root)
         self.assertEqual(scene.layers, [])
         self.assertEqual(scene.cameras(0, 0, 1, gate.SCENERY_CAMERA_STEP), (None,))
@@ -579,7 +585,7 @@ class SceneryCompositeTest(unittest.TestCase):
         self.assertNotEqual(first.tobytes(), second.tobytes())
 
     def test_a_map_without_a_background_layer_fails_loudly(self):
-        root = ET.fromstring('<map width="1" height="1"><tileset firstgid="1" source="Forest.tsx"/>'
+        root = ET.fromstring('<map width="1" height="1"><tileset firstgid="1" source="ForestTerrain.tsx"/>'
                              '<layer name="ground" width="1" height="1"><data encoding="csv">0</data></layer></map>')
         with self.assertRaises(ValueError):
             gate.tile_layer(root, 'broken')
@@ -590,8 +596,13 @@ class SceneryCompositeTest(unittest.TestCase):
         self.assertEqual(columns, PLAY_TILES)
 
     def test_the_tile_scenery_report_skips_a_map_with_a_different_sheet(self):
-        _, skipped = gate.tile_report(gate.map_roots())
-        self.assertEqual(skipped, {FOREST_1_MAP: 'ForestTerrain.png'})
+        roots = gate.map_roots()
+        reported, skipped = gate.tile_report(roots)
+        self.assertEqual(skipped, {}, 'every forest map draws the terrain sheet that carries the props (#236)')
+        self.assertTrue(reported)
+        other = ET.fromstring('<map width="1" height="1"><tileset firstgid="1" source="parallax/forest-sky.tsx"/></map>')
+        _, skipped = gate.tile_report({'other': other})
+        self.assertEqual(skipped, {'other': 'forest-sky.png'})
 
 
 if __name__ == '__main__':

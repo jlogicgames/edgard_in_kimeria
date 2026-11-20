@@ -44,7 +44,7 @@ REQUIRED_RUNTIME_FILES = (
     "assets/tiles/forest-0.tmx",
     "assets/tiles/forest-2.tmx",
     "assets/tiles/forest-1.tmx",
-    "assets/tiles/Forest.tsx",
+    "assets/tiles/ForestTerrain.tsx",
 )
 
 FORBIDDEN_SUFFIXES = {

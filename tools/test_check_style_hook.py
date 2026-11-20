@@ -92,7 +92,7 @@ class StyleHookTest(unittest.TestCase):
         routes = {name: applies for name, applies, _ in self.saved}
         self.assertTrue(routes['text style']('assets/localization/de.json'))
         self.assertTrue(routes['text style']('assets/tiles/forest-0.tmx'))
-        self.assertTrue(routes['map links']('assets/tiles/Forest.tsx'))
+        self.assertTrue(routes['map links']('assets/tiles/ForestTerrain.tsx'))
         self.assertTrue(routes['doc gaps']('docs/sub/X.md'))
         self.assertFalse(routes['doc gaps']('docs/references/a.png'))
         self.assertTrue(routes['skills']('.claude/skills/kimeria-sound/SKILL.md'))

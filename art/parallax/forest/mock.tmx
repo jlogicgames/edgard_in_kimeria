@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="64" height="24" tilewidth="16" tileheight="16" infinite="0" backgroundcolor="#2c3f66" parallaxoriginx="320" parallaxoriginy="188" nextlayerid="30" nextobjectid="30">
  <properties><property name="sourcemap" value="assets/tiles/forest-1.tmx"/><property name="sourceroom" value="forest-1-traps"/><property name="sourceroomx" type="int" value="640"/></properties>
- <tileset firstgid="1" source="../../../assets/tiles/Forest.tsx"/>
+ <tileset firstgid="1" source="../../../assets/tiles/ForestTerrain.tsx"/>
  <tileset firstgid="141" source="../../terrain/forest/Forest-new.tsx"/>
  <tileset firstgid="281" source="forest-sky.tsx"/>
  <tileset firstgid="313" source="forest-far.tsx"/>
