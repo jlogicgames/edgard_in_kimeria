@@ -40,9 +40,15 @@ FIRST_LINE = 1
 # under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
                         'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'monster:spider-wall', 'monster:snail', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
-                        'thorn-root', 'thorn-tuft'})
-# Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack).
-RIM_KEEP = {'falling-platform': 'c'}
+                        'thorn-root', 'thorn-tuft', 'fairy:body', 'fairy:glint'})
+# Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack), and the
+# small glint's side points (`K`, the ink), so its rim is the top point alone and half its contour stays dark.
+RIM_KEEP = {'falling-platform': 'c', 'fairy:glint': 'K'}
+# The fairy (#338, D82, #236) is no moon-rimmed trap: she carries her own light. Her contour is lit from above in her lantern
+# white `f2fff4` (already in her palette, so no new entry), and only from above, so her sides and underside keep the ink:
+# half light, half dark reads both on the near-black play band (lifted by her own glow) and over the moon and the clouds.
+FAIRY_RIM = (0xf2, 0xff, 0xf4)
+RIM_STYLE = {'fairy:body': (FAIRY_RIM, moon_rim.UP_SIDE), 'fairy:glint': (FAIRY_RIM, moon_rim.UP_SIDE)}
 BACKGROUNDS = ((0x0c, 0x0a, 0x1e), (0x3a, 0x12, 0x4e), (0x16, 0x3c, 0x44))  # night, canopy, trunk
 
 
@@ -117,7 +123,8 @@ def sheet_image(name):
         chars = RIM_KEEP.get(name, '')
         keep = {(index * size[0] + x, y) for index, (_, rows) in enumerate(frames) for y, row in enumerate(rows)
                 for x, char in enumerate(row) if char in chars}
-        return moon_rim.rim(image, size, keep=keep), len(colors)
+        colour, sides = RIM_STYLE.get(name, (moon_rim.RIM, moon_rim.LIT_SIDES))
+        return moon_rim.rim(image, size, colour=colour, keep=keep, sides=sides), len(colors)
     return image, len(colors) - 1
 
 

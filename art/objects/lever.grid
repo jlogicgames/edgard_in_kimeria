@@ -1,12 +1,14 @@
-# The floor lever (#413): a 3/4 wooden block standing on the ground, an iron handle in a slot in its top, the red knob.
+# The floor lever (#413): a 3/4 wooden block standing on the ground, an iron handle in a slot in its top, the knob.
+# Active family (#236, Forest look card): the knob, the part you grab, is the walk-and-grab cue straw (`e1cfa5`, shade
+# `c4b07e`), no red; the export gives the sheet the moon rim (D92, tools/moon_rim.py, RIM_OBJECTS) so the ink contour
+# reads on the near-black play band of the layered forest.
 # Frame "on" (handle leaning right) is frame 0, frame "off" (handle leaning left) is frame 1: the SpriteSheets.LEVER order.
 # The base (rows 10-15) and the pivot (cols 7-8) are identical in both frames; row 15 rests on the floor line. The light
 # comes from the upper left in both frames, so "off" is drawn, not mirrored.
 size 16 16
 color K 010000
-color R e82026
-color P fc8685
-color D 670001
+color R e1cfa5
+color D c4b07e
 color Y e49620
 color O dc9121
 color B 985614
@@ -17,7 +19,7 @@ color L a8a7a8
 color g 464545
 frame on
 ..........KKK...
-.........KPRRK..
+.........KRRRK..
 .........KRRDK..
 .........KRDDK..
 ........KLgKKK..
@@ -34,7 +36,7 @@ frame on
 ..KKKKKKKKKKKKK.
 frame off
 ...KKK..........
-..KPRRK.........
+..KRRRK.........
 ..KRRDK.........
 ..KRDDK.........
 ..KKKLgK........

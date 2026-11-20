@@ -361,11 +361,11 @@ pinned within 0.1 s.
 | `forest-1-traps` (x 640-1280) | puffball@768, redmob@928, crumble-support@1088 | 6.00 s | 2.00 | the second half: the puffball moved 944 to 768 (`phase` 0 to 3.4), the RedMob 864 to 928, thorn tuft 35 removed |
 | `forest-1-guard` | puffball@2375, redmob@2394, beetle@2632 | 6.50 s | 2.17 | `RoomStart` 61 x 2176 to 2208, lever 63 x 2224 to 2256, puffball 77 `phase` 2.2 to 2.52: every route 0.32 s shorter, the beetle's retry 6.08 to 5.82 s |
 
-- Split (map): `Room` 184 `forest-1-escalators` (0, 0, 640, 368) with `RoomStart` 185 (32, 272) and `RoomExit` 186 (608, 272, 16 x
+- Split (map): `Room` 220 `forest-1-escalators` (0, 0, 640, 368) with `RoomStart` 221 (32, 272) and `RoomExit` 222 (608, 272, 16 x
   48), inserted in the `Rooms` layer before `Room` 43 (the layer order is the play order); `Room` 43 `forest-1-traps` is
-  (640, 0, 640, 368) with `RoomStart` 44 (656, 272); walls 187 (x 624) and 188 (x 640), floor 3 cut to x 0-640 and a new
-  floor 189 at x 640-1024; the seam tiles (columns 39 and 40 of the `Background` layer) copy those of the other forest-1 seams
-  so both solid walls are drawn; the bushes 41 and 42 moved to x 560 and 832. No other room moved; ids 33, 34, 35 are gone.
+  (640, 0, 640, 368) with `RoomStart` 44 (656, 272); walls 223 (x 624) and 224 (x 640), floor 3 cut to x 0-640 and a new
+  floor 225 at x 640-1024; the seam tiles (columns 39 and 40 of the `Background` layer) copy columns 219 and 220, another forest-1 seam, so
+  both solid walls are drawn; the foreground group of the old room was split into `foreground-forest-1-escalators` and `foreground-forest-1-traps` (D110); the bushes 41 and 42 moved to x 560 and 832. No other room moved; ids 33, 34, 35 are gone.
 - Puffball first sight (D84): the clock starts at the room's entry at `phase` 3.4, so the cloud is out at the entry, sinks at
   0.6 s, the straight walker is in its column at 0.8 to 1.13 s in the calm (no wait) and the swell comes at 2.8 s, the next
   cloud at 3.6 s. The guard room's puffball is the opposite on purpose: its first death is deterministic (D68).

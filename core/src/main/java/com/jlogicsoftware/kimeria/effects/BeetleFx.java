@@ -12,8 +12,9 @@ import com.badlogic.gdx.math.RandomXS128;
  * {@link SoftDot}; {@link #hard()} holds the wind-up specks and the burst's spray ({@code KIND_FLAME}, opaque squares that
  * shrink out) and the death's shell chips ({@code KIND_GRIT}), drawn with {@link Shaders#whiteQuad()}.
  *
- * <p>Colours: white, the smoke greys {@code d8d6e8}, {@code 9a97ad}, {@code 5b5870} and, for the chips, the shell's
- * {@code 34482a} and bronze {@code 9a8458} ({@link #SHELL_CHIPS}, which the body's crumble also uses). No reserved hue. The specks are born on the edge of the 80x32 blast box
+ * <p>Colours: white, the smoke greys {@code d8d6e8}, {@code 9a97ad}, {@code 5b5870} and, for the death's chips, the live shell's
+ * crimson {@code 86101f} and its lit {@code 9c2050} (the danger family, #236); the body's crumble uses the body's muted palette
+ * ({@link #SHELL_CHIPS}). No reserved hue. The specks are born on the edge of the 80x32 blast box
  * and drawn in to the body, so the burst's reach is read before it happens; the spray's end points stay inside the box, so
  * what kills is what is seen (D5). Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a
  * smaller Y. Particles advance only in {@link #update}, so pause freezes them.
@@ -38,10 +39,11 @@ public final class BeetleFx {
     private static final float WHITE = 1f;
     private static final int RED = 0, GREEN = 1, BLUE = 2;
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DARK = {.357f, .345f, .439f};
-    private static final float[] SHELL = {.204f, .282f, .165f}, BRONZE = {.604f, .518f, .345f};
-    private static final float[] BROWN = {.420f, .353f, .227f}, DARK_BROWN = {.290f, .239f, .157f};
-    /** The beetle body's crumble chips (D101, {@link RemainsFx#crumble}): two browns, the shell and the bronze. */
-    public static final float[][] SHELL_CHIPS = {BROWN, DARK_BROWN, SHELL, BRONZE};
+    private static final float[] SHELL = {.525f, .063f, .122f}, SHELL_LIT = {.612f, .125f, .314f};
+    private static final float[] BODY_EDGE = {.059f, .051f, .137f}, BODY_SHELL = {.086f, .078f, .180f};
+    private static final float[] BODY_LIT = {.102f, .094f, .196f}, BODY_GLINT = {.118f, .110f, .204f};
+    /** The beetle body's crumble chips (D101, {@link RemainsFx#crumble}): beetle-body.grid's contour, shell, lit shell and glint. */
+    public static final float[][] SHELL_CHIPS = {BODY_SHELL, BODY_EDGE, BODY_LIT, BODY_GLINT};
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};
 
     // Wind-up specks: 2 px squares born on the blast box's edges (the two sides and the top), drawn in to the body. Brighter
@@ -137,7 +139,7 @@ public final class BeetleFx {
         RandomXS128 chipRandom = hard.random();
         for (int i = 0; i < CHIPS; i++) {
             float x = centreX + range(chipRandom, -CHIP_SPREAD, CHIP_SPREAD);
-            float[] c = (i & 1) == 0 ? BRONZE : SHELL;
+            float[] c = (i & 1) == 0 ? SHELL_LIT : SHELL;
             hard.spawn(KimeriaParticleSystem.KIND_GRIT, x, centreY, x + range(chipRandom, -CHIP_DRIFT, CHIP_DRIFT), floorY - CHIP_FLOOR_INSET,
                 CHIP_LIFE, range(chipRandom, CHIP_SIZE_MIN, CHIP_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
         }

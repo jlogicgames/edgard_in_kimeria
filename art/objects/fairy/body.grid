@@ -1,10 +1,13 @@
 # The fairy helper (#338, D82): a tiny maid with dragonfly wings and a skirt that glows like a firefly's lantern,
 # one of the little lights the night did not put out. 16x16, front view. idle and fly frames are symmetric ('mirror');
 # point frames hold the wand out to the right, and the -left copies are flipped in the grid (nothing is mirrored at
-# runtime). appear1/appear2 are the one-time twinkle she arrives in after the forest-0 start tale. Ink k is the hero's.
+# runtime). appear1/appear2 are the one-time twinkle she arrives in after the forest-0 start tale.
+# Ink k `020106` (#236): a shade deeper than the hero's `0b0814`, so the half of her contour that keeps its ink reads against
+# her own glow over the near-black play band; the export lights her top edges in her lantern white `f2fff4`
+# (forest_trap_sprites.RIM_STYLE).
 # Order (FairyGuide): idle1-4, fly1-2, point1-3, point1-left..point3-left, appear1-2.
 size 16 16
-color k 0b0814
+color k 020106
 color h a0481c
 color s f2c8a0
 color e 2a1830

@@ -1,20 +1,21 @@
 # Forest spider on a wall (#483, D103): native 16x32 frames, head up, the wall on the right (feet on
 # column 15). Mirrored for a wall on the left, flipped for a spider heading down. Same 12 colours as spider.grid.
+# Danger family (#236, 2026-11-20): dark crimson body 86101f, glowing eyes ff6b57, rose lights away from the hero's headband c22a24.
 # wall1, wall2: the climb (legs spread up and down the face, knees out, the belly against the wall); walltap: the notice
 # on a wall (risen 1 px off the face, a foreleg drumming in the air), #483 (D103).
 size 16 32
 color k 0b0814
-color a 22141e
-color b 3a2232
-color c 5e3442
-color m c89a4a
-color h 4a2e3c
-color H 6e4656
-color e f0e2a8
+color a 4a0c22
+color b 86101f
+color c 9c2050
+color m b85a80
+color h 6a0e1e
+color H 86101f
+color e ff6b57
 color f e8e0cc
-color l c09670
-color L e8c894
-color n 9c7a5c
+color l b07c8c
+color L d8b0c0
+color n 8e5a6a
 frame wall1
 .............lll
 ........nllll...

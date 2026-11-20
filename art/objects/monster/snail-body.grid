@@ -1,14 +1,17 @@
 # The forest snail's body (#329, D101, D106): the `dead` frame of snail.grid, pixel for pixel, in a decor-tier
-# palette (D76): grey-brown with a contour in its own hue, no ink 0b0814, no moon rim, so the empty shell never reads
+# palette (D76): a dim colour with a contour in its own hue, no ink 0b0814, no moon rim, so the empty shell never reads
 # as a live snail. Keep it in step with snail.grid.
+# Forest recolour (#236, D108, 2026-11-20): hand-set tone roles (hollow m, contour k, shade s, rim o, shell S, whorl t, lip c)
+# on one dark umber (OKLab L 0.143 to 0.253, chroma 0.055, hue 50): an emptied, dried shell. Its spots are forest-1's near-black
+# ground and the blue night forest behind the ledges; the warm hue keeps it off that blue (D108 band 0.08..0.20); no ink.
 size 24 16
-color k 5e524a
-color o 6e6258
-color s 544842
-color S 6a5c54
-color t 7c6e62
-color c 988a7a
-color m 4c403c
+color k 1e0600
+color o 270d00
+color s 250900
+color S 2a0e00
+color t 301302
+color c 341b0c
+color m 170400
 frame body
 ........................
 ........................

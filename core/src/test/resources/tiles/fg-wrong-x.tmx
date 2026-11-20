@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="40" height="23" tilewidth="16" tileheight="16">
+ <properties>
+  <property name="background" type="color" value="#ff2c3f66"/>
+ </properties>
+ <objectgroup name="Rooms">
+  <object name="one" type="Room" x="0" y="0" width="640" height="368"/>
+ </objectgroup>
+ <objectgroup name="foreground-one" parallaxx="1.6" parallaxy="1.6">
+  <properties><property name="roomx" type="float" value="640"/></properties>
+ </objectgroup>
+</map>

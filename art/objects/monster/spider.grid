@@ -4,21 +4,23 @@
 # fangs open); leap: in the air; bite: landed, fangs down; recover: flattened, harmless; dead: on its back, legs curled up.
 # hang, hangwind (#483, D103): on the thread head down, drawn upright and mirrored about x 15|16, far legs in the lighter
 # N; hangwind is the drop wind-up (legs drawn in, fangs spread). silk: the thread tile, 1x4 at the cell's top-left (the fang
-# pale f with one e texel), tiled down the thread at run time.
+# pale f with one g texel, the pale f0e2a8 the eyes had before #236), tiled down the thread at run time.
+# Danger family (#236, 2026-11-20): dark crimson body 86101f, glowing eyes ff6b57, rose lights away from the hero's headband c22a24.
 size 32 16
 color k 0b0814
-color a 22141e
-color b 3a2232
-color c 5e3442
-color m c89a4a
-color h 4a2e3c
-color H 6e4656
-color e f0e2a8
+color a 4a0c22
+color b 86101f
+color c 9c2050
+color m b85a80
+color h 6a0e1e
+color H 86101f
+color e ff6b57
 color f e8e0cc
-color l c09670
-color L e8c894
-color n 9c7a5c
-color N b08c68
+color l b07c8c
+color L d8b0c0
+color n 8e5a6a
+color N 9a6070
+color g f0e2a8
 frame crawl1
 ..........n.....................
 .......L..n.L.........n.........
@@ -210,7 +212,7 @@ frame silk
 f...............................
 f...............................
 f...............................
-e...............................
+g...............................
 ................................
 ................................
 ................................

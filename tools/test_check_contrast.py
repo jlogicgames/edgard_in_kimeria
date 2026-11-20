@@ -17,6 +17,10 @@ INK_AT = (1, 1)
 INK_BOX = INK_AT + (INK_AT[0] + 1, INK_AT[1] + 1)
 INK = (0x0b, 0x08, 0x14, 255)
 MUTED = (0x67, 0x7d, 0x62, 255)  # the recoloured bush body
+NEAR_BLACK_GROUND = (4, 5, 9, 255)  # the Forest ground's depth (OKLab L about 0.03 to 0.12 in the game's composite)
+DARK_DECOR = (30, 34, 44, 255)  # a dim slate body and its darker edge: quiet over that ground (D108)
+DARK_DECOR_EDGE = (22, 26, 34, 255)
+FAINT_DECOR = (8, 9, 14, 255)  # almost the ground itself: under the body floor
 # Halo fixtures (#345): a 4 px test halo with a lit 2 px centre, drawn at the centre of the 40 px background.
 HALO_TEST_SIZE = 4
 HALO_LIT_BOX = (1, 1, 3, 3)
@@ -78,6 +82,27 @@ def background(colour=FOREST_BLUE):
     return Image.new('RGBA', (40, 40), colour)
 
 
+BODY_FLOOR = 320  # the synthetic map's ground line, and the ledge above it no monster reaches
+BODY_LEDGE = 224
+BEETLE_X = 320
+BEETLE_OFF_NEG = 2  # tiles left of the spawn
+BEETLE_OFF_POS = 3
+NEAR_BLOCK = 8  # a dynamic block this far into a monster's range
+FAR_BLOCK = 400  # and one out of every reach
+DROP_BLOCK_RISE = 64  # a block this far over the floor, in a spider's drop column
+WALL_FACE = 400  # left face of the wall a spider climbs in the wall-pose test
+WIDE_FLOOR = 640
+SPIDER_RANGE_X = 320
+SPIDER_OFF_NEG = 2
+SPIDER_OFF_POS = 3
+BAND_BLOCK_INSET = 8  # a block starting this far inside the pounce band
+TWO_PLACEMENTS = 2
+SHORT_FLOOR_WIDTH = 400  # a floor ending 10 px past the authored body
+SHELF_LEFT = 96  # the shelf a spider walks, its lip at the right end
+SHELF_RIGHT = 160
+SHELF_TOP = 208
+
+
 class MetricTest(unittest.TestCase):
     def test_outline_is_the_lightness_step_at_the_edge(self):
         outline, body = gate.measure(square(INK), background(), AT, AT)
@@ -136,8 +161,34 @@ class RuleTest(unittest.TestCase):
         with mock.patch.object(gate, 'frames', return_value=[loud]):
             errors = gate.check_sprite('Decor:bush', [('forest-9', 1.0, 0.45, 0.30)])
         text = '\n'.join(errors)
-        for word in ('outline', 'body', 'chroma', 'ink'):
+        for word in ('outline', 'body', 'chroma'):
             self.assertIn(word, text)
+
+    def test_dark_decor_on_a_dark_ground_passes_there_is_no_absolute_ink_floor(self):
+        # D108: the decor band is relative to the background behind it; a near-black sprite on a near-black ground is quiet.
+        dark = square(DARK_DECOR, contour=DARK_DECOR_EDGE)
+        ground = background(NEAR_BLACK_GROUND)
+        outline, body = gate.measure(dark, ground, AT, AT)
+        self.assertLessEqual(outline, gate.DECOR_OUTLINE_MAX)
+        self.assertGreaterEqual(body, gate.DECOR_BODY_MIN)
+        self.assertLessEqual(body, gate.DECOR_BODY_MAX)
+        with mock.patch.object(gate, 'frames', return_value=[dark]):
+            self.assertEqual(gate.check_sprite('Decor:bush', [('forest-9', 1.0, outline, body)]), [])
+
+    def test_decor_too_bright_for_its_dark_ground_still_fails(self):
+        bright = square(MUTED)
+        outline, body = gate.measure(bright, background(NEAR_BLACK_GROUND), AT, AT)
+        with mock.patch.object(gate, 'frames', return_value=[bright]):
+            errors = gate.check_sprite('Decor:bush', [('forest-9', 1.0, outline, body)])
+        self.assertTrue(any('outline' in e for e in errors) and any('body' in e for e in errors), errors)
+
+    def test_decor_too_close_to_a_dark_ground_fails_the_body_floor(self):
+        faint = square(FAINT_DECOR)
+        outline, body = gate.measure(faint, background(NEAR_BLACK_GROUND), AT, AT)
+        self.assertLess(body, gate.DECOR_BODY_MIN)
+        with mock.patch.object(gate, 'frames', return_value=[faint]):
+            errors = gate.check_sprite('Decor:bush', [('forest-9', 1.0, outline, body)])
+        self.assertTrue(any('body' in e for e in errors), errors)
 
     def test_muted_decor_passes(self):
         with mock.patch.object(gate, 'frames', return_value=[square(MUTED)]):
@@ -268,6 +319,127 @@ class ClassificationTest(unittest.TestCase):
         flipped, upright = gate.frames('Spider:wall-down')[0], gate.frames('Spider:wall')[0]
         self.assertEqual(flipped.tobytes(), upright.transpose(gate.Image.Transpose.FLIP_TOP_BOTTOM).tobytes())
 
+    def test_a_newly_placed_beetle_leaves_its_body_only_along_its_range(self):
+        """D108: a body is measured where its monster can die, derived from the placement: a new beetle is swept along its range on
+        its floor, and a ledge it never reaches is not."""
+        root = ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="640" height="48"/>'
+                             f'<object x="400" y="{BODY_LEDGE}" width="224" height="16"/></objectgroup><objectgroup name="SpawnPoints">'
+                             f'<object type="Beetle" x="{BEETLE_X}" y="{BODY_FLOOR - gate.TILE}" width="24" height="16"><properties>'
+                             f'<property name="offNeg" value="{BEETLE_OFF_NEG}"/><property name="offPos" value="{BEETLE_OFF_POS}"/>'
+                             '</properties></object></objectgroup></map>')
+        spots = [(key, x, line) for key, _, x, line in gate.body_spots({'forest-9': root})]
+        self.assertEqual({key for key, _, _ in spots}, {'Beetle:body'})
+        self.assertEqual({line for _, _, line in spots}, {BODY_FLOOR}, 'on its own floor, never on the ledge')
+        xs = [x for _, x, _ in spots]
+        self.assertEqual((min(xs), max(xs)), (BEETLE_X - BEETLE_OFF_NEG * gate.TILE, BEETLE_X + BEETLE_OFF_POS * gate.TILE))
+
+    def _beetle_map(self, extra):
+        return ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="640" height="48"/></objectgroup>'
+                             f'<objectgroup name="SpawnPoints"><object type="Beetle" x="{BEETLE_X}" y="{BODY_FLOOR - gate.TILE}" width="24" height="16">'
+                             f'<properties><property name="offNeg" value="{BEETLE_OFF_NEG}"/><property name="offPos" value="{BEETLE_OFF_POS}"/>'
+                             f'</properties></object>{extra}</objectgroup></map>')
+
+    def test_a_dynamic_block_on_a_monsters_range_fails_the_body_spots(self):
+        """body_spots reads static Collisions only: a falling platform, escalator, deadfall or quicksand in a range fails loudly."""
+        for kind in gate.DYNAMIC_TYPES:
+            root = self._beetle_map(f'<object type="{kind}" x="{BEETLE_X + NEAR_BLOCK}" y="{BODY_FLOOR}" width="32" height="16"/>')
+            with self.assertRaises(SystemExit, msg=kind) as caught:
+                list(gate.body_spots({'forest-9': root}))
+            self.assertIn(kind, str(caught.exception))
+        far = self._beetle_map(f'<object type="Escalator" x="{BEETLE_X + FAR_BLOCK}" y="{BODY_FLOOR}" width="32" height="16"/>')
+        self.assertTrue(list(gate.body_spots({'forest-9': far})), 'a block out of reach changes nothing')
+
+    def test_a_dynamic_block_in_a_spiders_drop_column_fails_the_body_spots(self):
+        root = ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="640" height="48"/>'
+                             f'<object x="{SHELF_LEFT}" y="{SHELF_TOP}" width="{SHELF_RIGHT - SHELF_LEFT}" height="16"/></objectgroup>'
+                             '<objectgroup name="SpawnPoints"><object type="Spider" x="112" y="208"><polyline points="0,0 48,0 48,112"/></object>'
+                             f'<object type="FallingPlatform" x="{SHELF_RIGHT + NEAR_BLOCK}" y="{BODY_FLOOR - DROP_BLOCK_RISE}" width="32" height="16"/>'
+                             '</objectgroup></map>')
+        with self.assertRaises(SystemExit):
+            list(gate.body_spots({'forest-9': root}))
+
+    def test_the_shipped_maps_have_no_dynamic_block_in_a_body_spot(self):
+        self.assertTrue(list(gate.body_spots(gate.map_roots())))
+
+    def test_a_placed_body_kind_with_no_result_fails_the_run(self):
+        """A BODY_SWEEP monster with a placement and no measured body is a gap, not a pass."""
+        with mock.patch.object(gate, 'placements', return_value=[]), mock.patch.object(gate, 'body_sweep', return_value=iter(())), \
+                mock.patch.object(gate, 'check_fairy', return_value=([], {})), mock.patch.object(gate, 'tile_report', return_value=({}, [])):
+            _, errors, _ = gate.run()
+        self.assertTrue(any(e.startswith('Beetle:body') and 'no body was measured' in e for e in errors), errors)
+
+    def test_a_map_with_two_non_scenery_tile_layers_fails_loudly(self):
+        """The game overwrites every non-scenery layer into the play grid, last wins; the gate composites only Background."""
+        layer = '<layer name="{}" width="1" height="1"{}><data encoding="csv">0</data></layer>'
+        head = '<map width="1" height="1"><tileset firstgid="1" source="Forest.tsx"/>'
+        two = ET.fromstring(head + layer.format('Background', '') + layer.format('Extra', '') + '</map>')
+        with self.assertRaises(ValueError):
+            gate.tile_layer(two, 'broken')
+        for scenery in (' parallaxx="0.5"', ' parallaxy="0.5"'):
+            self.assertTrue(gate.is_scenery(ET.fromstring(layer.format('s', scenery))))
+        ok = ET.fromstring(head + layer.format('Background', '') + layer.format('sky', ' parallaxx="0.5"')
+                           + '<layer name="moon" width="1" height="1"><properties><property name="scenery" value="true"/></properties>'
+                           '<data encoding="csv">0</data></layer></map>')
+        self.assertTrue(gate.is_scenery(ok.findall('layer')[-1]))
+        self.assertEqual([l.get('name') for l in ok.findall('layer') if not gate.is_scenery(l)], ['Background'])
+
+    def test_a_spider_wall_pose_is_swept_on_the_open_side_and_dropped_to_the_floor(self):
+        """D108: every wall pose of a route (down the wall every 8 px) is a spot, set on the open side and dropped to the floor below."""
+        root = ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{WIDE_FLOOR}" height="48"/>'
+                             f'<object x="{WALL_FACE}" y="{BODY_LEDGE}" width="224" height="96"/></objectgroup><objectgroup name="SpawnPoints">'
+                             f'<object type="Spider" x="{SPIDER_RANGE_X}" y="{BODY_FLOOR}"><polyline points="0,0 80,0 80,-96 208,-96"/></object>'
+                             '</objectgroup></map>')
+        spots = list(gate.body_spots({'forest-9': root}))
+        right_edge = lambda x: x + gate.SPIDER_BODY_X + gate.SPIDER_BODY_WIDTH
+        wall = [x for _, _, x, line in spots if line == BODY_FLOOR and right_edge(x) <= WALL_FACE]
+        self.assertTrue(wall, 'a wall pose falls to the ground on the open side of the face')
+        self.assertTrue(all(right_edge(x) <= WALL_FACE for x in wall))
+
+    def test_a_range_spider_is_widened_by_the_pounce_reach_while_floor_lasts(self):
+        legs = lambda width: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{width}" height="48"/>'
+                                           f'</objectgroup><objectgroup name="SpawnPoints"><object type="Spider" x="{SPIDER_RANGE_X}" '
+                                           f'y="{BODY_FLOOR - gate.SPIDER_BODY_FLOOR}"><properties><property name="offNeg" value="{SPIDER_OFF_NEG}"/>'
+                                           f'<property name="offPos" value="{SPIDER_OFF_POS}"/></properties></object></objectgroup></map>')
+        xs = lambda root: [x for _, _, x, _ in gate.body_spots({'forest-9': root})]
+        wide = xs(legs(WIDE_FLOOR))
+        self.assertEqual(min(wide), SPIDER_RANGE_X - SPIDER_OFF_NEG * gate.TILE - gate.SPIDER_POUNCE_REACH)
+        self.assertEqual(max(wide), SPIDER_RANGE_X + SPIDER_OFF_POS * gate.TILE + gate.SPIDER_POUNCE_REACH)
+        authored_hi = SPIDER_RANGE_X + SPIDER_OFF_POS * gate.TILE
+        body_end = gate.SPIDER_BODY_X + gate.SPIDER_BODY_WIDTH
+        short = xs(legs(authored_hi + body_end))
+        self.assertEqual(max(short), authored_hi, 'floor ends under the authored body: no widening to the right')
+        partial = xs(legs(SHORT_FLOOR_WIDTH))
+        self.assertEqual(max(partial), SHORT_FLOOR_WIDTH - body_end, 'the pounce stops where the body would leave the floor')
+
+    def test_a_dynamic_block_continuing_a_spiders_floor_in_the_pounce_band_fails(self):
+        root = lambda kind: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{WIDE_FLOOR}" height="48"/>'
+                                          f'</objectgroup><objectgroup name="SpawnPoints"><object type="Spider" x="{SPIDER_RANGE_X}" '
+                                          f'y="{BODY_FLOOR - gate.SPIDER_BODY_FLOOR}"><properties><property name="offPos" value="{SPIDER_OFF_POS}"/>'
+                                          '</properties></object><object type="' + kind + f'" x="{SPIDER_RANGE_X + SPIDER_OFF_POS * gate.TILE + gate.SPIDER_POUNCE_REACH - BAND_BLOCK_INSET}" '
+                                          f'y="{BODY_FLOOR}" width="32" height="16"/></objectgroup></map>')
+        with self.assertRaises(SystemExit):
+            list(gate.body_spots({'forest-9': root('FallingPlatform')}))
+
+    def test_each_placed_monster_needs_its_own_measured_body(self):
+        two = ET.fromstring('<map><objectgroup name="SpawnPoints"><object type="Beetle" x="0" y="0"/><object type="Beetle" x="64" y="0"/></objectgroup></map>')
+        self.assertEqual(len(gate.placed_body_placements({'forest-9': two})), TWO_PLACEMENTS)
+
+    def test_a_spider_body_lies_on_its_floor_or_drops_from_its_thread(self):
+        """D108: a spider's body lies along its floor leg (the pounce never leaves that floor) or falls from its thread to the floor below."""
+        root = ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="640" height="48"/>'
+                             f'<object x="{SHELF_LEFT}" y="{SHELF_TOP}" width="{SHELF_RIGHT - SHELF_LEFT}" height="16"/></objectgroup>'
+                             '<objectgroup name="SpawnPoints"><object type="Spider" x="112" y="208"><polyline points="0,0 48,0 48,112"/>'
+                             '</object></objectgroup></map>')
+        spots = [(x, line) for _, _, x, line in gate.body_spots({'forest-9': root})]
+        shelf = [x for x, line in spots if line == SHELF_TOP]
+        self.assertTrue(shelf)
+        self.assertGreaterEqual(min(shelf) + gate.SPIDER_BODY_X, SHELF_LEFT, 'the pounce stops where the shelf ends')
+        self.assertLessEqual(max(shelf) + gate.SPIDER_BODY_X + gate.SPIDER_BODY_WIDTH, SHELF_RIGHT)
+        dropped = [x for x, line in spots if line == BODY_FLOOR]
+        self.assertTrue(dropped, 'killed on its thread, the body falls to the ground')
+        self.assertTrue(all(x + gate.SPIDER_BODY_X >= SHELF_RIGHT for x in dropped), 'on the open side of the lip')
+        self.assertEqual({line for _, line in spots}, {SHELF_TOP, BODY_FLOOR})
+
     def test_the_python_route_matches_the_shared_fixture(self):
         """#483: spider_route re-implements Spider.Route.trace; both are pinned to one fixture, so the two cannot drift."""
         tiles = gate.ROOT / 'core/src/test/resources/tiles'
@@ -323,8 +495,10 @@ class FairyTest(unittest.TestCase):
         self.assertGreater(lit, bare + LIGHT_LIFT_MIN)
 
     def test_the_fairy_without_her_light_would_fail_and_with_it_passes(self):
+        # Over what the game draws behind her (#236: the scenery layers too). Her lit top edge (#236) carries her over the flat
+        # colour and the tiles alone; over the layered forest-1 her ink half still needs her light (0.269 to 0.278 without it).
         roots = {name: ET.parse(gate.ROOT / f'assets/tiles/{name}.tmx').getroot() for name in gate.MAPS}
-        images = {name: gate.composite(gate.tile_layer(root)[0], gate.map_background(root, name)) for name, root in roots.items()}
+        images = {name: gate.Scene(name, root) for name, root in roots.items()}
         errors, report = gate.check_fairy(images)
         self.assertEqual(errors, [])
         self.assertEqual(len(report), gate.FAIRY_BODY_FRAMES + FAIRY_GLINTS)
@@ -359,6 +533,65 @@ class BackgroundTest(unittest.TestCase):
         image = gate.composite(layer, FOREST_BLUE[:gate.RGB])
         self.assertEqual(image.getpixel((0, 0)), FOREST_BLUE)
         self.assertEqual(image.getpixel(INK_AT), INK)
+
+
+FOREST_1_MAP = 'forest-1'
+FOREST_2_MAP = 'forest-2'
+FAR_FACTOR = 0.15          # the far layer's parallaxx in forest-1
+HALF_SHIFT_CAMERA = 10     # 0.15 * 10 = 1.5: half up is 2
+LOW_SHIFT_CAMERA = 3       # 0.15 * 3 = 0.45 -> 0
+EXPECTED_HIGH_SHIFT = 2
+VIEW_TOP = 8               # the steady camera top of a 368 px room
+VIEW_BOTTOM = 368
+VIEW_BOX = (0, VIEW_TOP, 640, VIEW_BOTTOM)
+FAR_ROOM_X = 4960          # forest-1-deadfall: a room that does not start at the map's left edge
+FAR_ROOM_WIDTH = 640
+SAMPLE_Y = 100
+PLAY_TILES = 20
+
+
+class SceneryCompositeTest(unittest.TestCase):
+    """#236: a sprite is measured over what the game draws behind it, scenery layers included."""
+    def test_a_layer_trails_the_camera_by_its_factor_rounded_half_up(self):
+        self.assertEqual(gate.shift(FAR_FACTOR, HALF_SHIFT_CAMERA), EXPECTED_HIGH_SHIFT)
+        self.assertEqual(gate.shift(FAR_FACTOR, LOW_SHIFT_CAMERA), 0)
+
+    def test_a_map_without_scenery_is_flat_colour_and_play_layer_only(self):
+        root = gate.map_roots()[FOREST_2_MAP]
+        scene = gate.Scene(FOREST_2_MAP, root)
+        self.assertEqual(scene.layers, [])
+        self.assertEqual(scene.cameras(0, 0, 1, gate.SCENERY_CAMERA_STEP), (None,))
+        flat = gate.composite(gate.tile_layer(root)[0], gate.map_background(root, FOREST_2_MAP))
+        self.assertEqual(scene.backgrounds(VIEW_BOX, None)[0].tobytes(), flat.crop(VIEW_BOX).tobytes())
+
+    def test_the_camera_range_stays_inside_the_room_and_on_screen(self):
+        scene = gate.Scene(FOREST_1_MAP, gate.map_roots()[FOREST_1_MAP])
+        cameras = scene.cameras(FAR_ROOM_X + SAMPLE_Y, SAMPLE_Y, gate.TILE, gate.SCENERY_CAMERA_STEP)
+        self.assertGreaterEqual(min(cameras), FAR_ROOM_X)
+        self.assertLessEqual(max(cameras), FAR_ROOM_X + max(FAR_ROOM_WIDTH - gate.VIEW_WIDTH, 0) + PLAY_TILES * gate.TILE)
+        self.assertEqual(cameras, sorted(set(cameras)))
+
+    def test_scenery_shows_through_the_play_layer_and_moves_with_the_camera(self):
+        scene = gate.Scene(FOREST_1_MAP, gate.map_roots()[FOREST_1_MAP])
+        flat = gate.composite(scene.play, gate.map_background(scene.root, FOREST_1_MAP))
+        first, second = (scene.backgrounds((cam, VIEW_TOP, cam + gate.VIEW_WIDTH, VIEW_BOTTOM), cam)[0] for cam in (0, PLAY_TILES * gate.TILE))
+        self.assertNotEqual(first.tobytes(), flat.crop(VIEW_BOX).tobytes())
+        self.assertNotEqual(first.tobytes(), second.tobytes())
+
+    def test_a_map_without_a_background_layer_fails_loudly(self):
+        root = ET.fromstring('<map width="1" height="1"><tileset firstgid="1" source="Forest.tsx"/>'
+                             '<layer name="ground" width="1" height="1"><data encoding="csv">0</data></layer></map>')
+        with self.assertRaises(ValueError):
+            gate.tile_layer(root, 'broken')
+
+    def test_the_sheet_columns_are_read_from_the_tileset(self):
+        sheet, columns = gate.play_tileset(gate.map_roots()[FOREST_1_MAP])
+        self.assertEqual(sheet.name, 'ForestTerrain.png')
+        self.assertEqual(columns, PLAY_TILES)
+
+    def test_the_tile_scenery_report_skips_a_map_with_a_different_sheet(self):
+        _, skipped = gate.tile_report(gate.map_roots())
+        self.assertEqual(skipped, {FOREST_1_MAP: 'ForestTerrain.png'})
 
 
 if __name__ == '__main__':

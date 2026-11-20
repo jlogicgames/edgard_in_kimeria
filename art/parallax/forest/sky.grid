@@ -1,0 +1,451 @@
+# Parallax sketch tileset (pass 2). One char = one pixel; `.` is transparent.
+# A piece is <wtiles> x <htiles> tiles; its rows are wtiles*tile characters wide.
+# Night sky (pass 3). band-r fills tile row r; one column repeats across the layer (ordered dither).
+tile 16
+color 0 000003
+color 1 000004
+color 2 000006
+color 3 010007
+color 4 010009
+color 5 01000b
+color 6 01000d
+color 7 02010f
+color 8 020111
+color 9 020214
+color a 030316
+color b 040418
+color c 04051a
+color d 05061d
+color e 06071f
+color f 070821
+color g 090a24
+color h 0a0c26
+color i 0c0e28
+color j 0d0f2b
+color k 0e112d
+color l 101330
+color m 111532
+color n 131735
+color o 141937
+color p 161a3a
+color q 181c3c
+color r 191e3f
+color s 1b2041
+color t 1c2244
+color u 1e2446
+color v 202649
+color w 21284c
+
+piece band-0 1 1
+vvvwvvvwvvvwvvvw
+wvwvwvwvwvwvwvwv
+vwvvvwvvvwvvvwvv
+wvwvwvwvwvwvwvwv
+vvvvvvvvvvvvvvvv
+vvwvvvwvvvwvvvwv
+vvvvvvvvvvvvvvvv
+wvvvwvvvwvvvwvvv
+vvvvvvvvvvvvvvvv
+vvvvvvvvvvvvvvvv
+vvvvvvvvvvvvvvvv
+vvvvvvvvvvvvvvvv
+uvvvuvvvuvvvuvvv
+vvvvvvvvvvvvvvvv
+vvuvvvuvvvuvvvuv
+vvvvvvvvvvvvvvvv
+
+piece band-1 1 1
+uvuvuvuvuvuvuvuv
+vuvvvuvvvuvvvuvv
+uvuvuvuvuvuvuvuv
+vvvuvvvuvvvuvvvu
+uvuvuvuvuvuvuvuv
+vuvuvuvuvuvuvuvu
+uvuvuvuvuvuvuvuv
+vuvuvuvuvuvuvuvu
+uuuvuuuvuuuvuuuv
+vuvuvuvuvuvuvuvu
+uvuuuvuuuvuuuvuu
+vuvuvuvuvuvuvuvu
+uuuuuuuuuuuuuuuu
+uuvuuuvuuuvuuuvu
+uuuuuuuuuuuuuuuu
+vuuuvuuuvuuuvuuu
+
+piece band-2 1 1
+uuuuuuuuuuuuuuuu
+uuuuuuuuuuuuuuuu
+uuuuuuuuuuuuuuuu
+uuuuuuuuuuuuuuuu
+tuuutuuutuuutuuu
+uuuuuuuuuuuuuuuu
+uutuuutuuutuuutu
+uuuuuuuuuuuuuuuu
+tutututututututu
+utuuutuuutuuutuu
+tutututututututu
+uuutuuutuuutuuut
+tutututututututu
+utututututututut
+tutututututututu
+utututututututut
+
+piece band-3 1 1
+tttutttutttutttu
+utututututututut
+tutttutttutttutt
+utututututututut
+tttttttttttttttt
+ttutttutttutttut
+tttttttttttttttt
+utttutttutttuttt
+tttttttttttttttt
+tttttttttttttttt
+tttttttttttttttt
+tttttttttttttttt
+stttstttstttsttt
+tttttttttttttttt
+ttstttstttstttst
+tttttttttttttttt
+
+piece band-4 1 1
+stststststststst
+tstttstttstttstt
+stststststststst
+tttstttstttsttts
+stststststststst
+tstststststststs
+stststststststst
+tstststststststs
+ssstssstssstssst
+tstststststststs
+ssssssssssssssss
+tstststststststs
+ssssssssssssssss
+ssssssssssssssss
+ssssssssssssssss
+ssssssssssssssss
+
+piece band-5 1 1
+rsssrsssrsssrsss
+ssssssssssssssss
+rsrsrsrsrsrsrsrs
+ssssssssssssssss
+rsrsrsrsrsrsrsrs
+srsrsrsrsrsrsrsr
+rsrsrsrsrsrsrsrs
+srsrsrsrsrsrsrsr
+rrrsrrrsrrrsrrrs
+srsrsrsrsrsrsrsr
+rrrrrrrrrrrrrrrr
+srsrsrsrsrsrsrsr
+rrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrr
+
+piece band-6 1 1
+qrrrqrrrqrrrqrrr
+rrrrrrrrrrrrrrrr
+qrqrqrqrqrqrqrqr
+rrrrrrrrrrrrrrrr
+qrqrqrqrqrqrqrqr
+rqrqrqrqrqrqrqrq
+qrqrqrqrqrqrqrqr
+rqrqrqrqrqrqrqrq
+qqqrqqqrqqqrqqqr
+rqrqrqrqrqrqrqrq
+qqqqqqqqqqqqqqqq
+rqrqrqrqrqrqrqrq
+qqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqq
+
+piece band-7 1 1
+pqqqpqqqpqqqpqqq
+qqqqqqqqqqqqqqqq
+pqpqpqpqpqpqpqpq
+qqqqqqqqqqqqqqqq
+pqpqpqpqpqpqpqpq
+qpqpqpqpqpqpqpqp
+pqpqpqpqpqpqpqpq
+qpqpqpqpqpqpqpqp
+pppqpppqpppqpppq
+qpqpqpqpqpqpqpqp
+pppppppppppppppp
+qpqpqpqpqpqpqpqp
+pppppppppppppppp
+pppppppppppppppp
+pppppppppppppppp
+pppppppppppppppp
+
+piece band-8 1 1
+opppopppopppoppp
+pppppppppppppppp
+opopopopopopopop
+pppppppppppppppp
+opopopopopopopop
+popopopopopopopo
+opopopopopopopop
+popopopopopopopo
+ooopooopooopooop
+popopopopopopopo
+oooooooooooooooo
+popopopopopopopo
+oooooooooooooooo
+oooooooooooooooo
+oooooooooooooooo
+oooooooooooooooo
+
+piece band-9 1 1
+nononononononono
+oooooooooooooooo
+nononononononono
+ooonooonooonooon
+nononononononono
+onononononononon
+nononononononono
+onononononononon
+nnnnnnnnnnnnnnnn
+nnonnnonnnonnnon
+nnnnnnnnnnnnnnnn
+nnnnnnnnnnnnnnnn
+mnnnmnnnmnnnmnnn
+nnnnnnnnnnnnnnnn
+mnmnmnmnmnmnmnmn
+nnnmnnnmnnnmnnnm
+
+piece band-10 1 1
+mnmnmnmnmnmnmnmn
+nmnmnmnmnmnmnmnm
+mnmmmnmmmnmmmnmm
+nmnmnmnmnmnmnmnm
+mmmmmmmmmmmmmmmm
+mmnmmmnmmmnmmmnm
+mmmmmmmmmmmmmmmm
+mmmmmmmmmmmmmmmm
+lmlmlmlmlmlmlmlm
+mmmmmmmmmmmmmmmm
+lmlmlmlmlmlmlmlm
+mmmlmmmlmmmlmmml
+lllmlllmlllmlllm
+mlmlmlmlmlmlmlml
+llllllllllllllll
+mlmlmlmlmlmlmlml
+
+piece band-11 1 1
+llllllllllllllll
+llllllllllllllll
+llllllllllllllll
+llllllllllllllll
+klklklklklklklkl
+lklllklllklllkll
+klklklklklklklkl
+lklklklklklklklk
+kkklkkklkkklkkkl
+lklklklklklklklk
+kkkkkkkkkkkkkkkk
+lkkklkkklkkklkkk
+kkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkk
+kkjkkkjkkkjkkkjk
+kkkkkkkkkkkkkkkk
+
+piece band-12 1 1
+jkjkjkjkjkjkjkjk
+kjkjkjkjkjkjkjkj
+jkjkjkjkjkjkjkjk
+kjkjkjkjkjkjkjkj
+jjjjjjjjjjjjjjjj
+jjkjjjkjjjkjjjkj
+jjjjjjjjjjjjjjjj
+jjjjjjjjjjjjjjjj
+ijjjijjjijjjijjj
+jjjjjjjjjjjjjjjj
+ijijijijijijijij
+jjjijjjijjjijjji
+ijijijijijijijij
+jijijijijijijiji
+ijiiijiiijiiijii
+jijijijijijijiji
+
+piece band-13 1 1
+iiiiiiiiiiiiiiii
+iiiiiiiiiiiiiiii
+hihihihihihihihi
+iiihiiihiiihiiih
+hihihihihihihihi
+ihihihihihihihih
+hhhhhhhhhhhhhhhh
+ihhhihhhihhhihhh
+ghhhghhhghhhghhh
+hhhhhhhhhhhhhhhh
+ghghghghghghghgh
+hhhghhhghhhghhhg
+ggghggghggghgggh
+hghghghghghghghg
+gggggggggggggggg
+gggggggggggggggg
+
+piece band-14 1 1
+fgggfgggfgggfggg
+gggggggggggggggg
+fgfgfgfgfgfgfgfg
+gfgfgfgfgfgfgfgf
+ffffffffffffffff
+ffgfffgfffgfffgf
+ffffffffffffffff
+ffffffffffffffff
+efefefefefefefef
+fefffefffefffeff
+efefefefefefefef
+fefefefefefefefe
+eeeeeeeeeeeeeeee
+eefeeefeeefeeefe
+eeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeee
+
+piece band-15 1 1
+dededededededede
+edededededededed
+dededededededede
+edededededededed
+dddddddddddddddd
+dddddddddddddddd
+ddcdddcdddcdddcd
+dddddddddddddddd
+cdcdcdcdcdcdcdcd
+dcdcdcdcdcdcdcdc
+cdcccdcccdcccdcc
+dcdcdcdcdcdcdcdc
+cccccccccccccccc
+cccccccccccccccc
+ccbcccbcccbcccbc
+cccccccccccccccc
+
+piece band-16 1 1
+bcbcbcbcbcbcbcbc
+cbcbcbcbcbcbcbcb
+bbbbbbbbbbbbbbbb
+cbbbcbbbcbbbcbbb
+abbbabbbabbbabbb
+bbbbbbbbbbbbbbbb
+abababababababab
+babababababababa
+aaaaaaaaaaaaaaaa
+aabaaabaaabaaaba
+aaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaa
+9a9a9a9a9a9a9a9a
+a9a9a9a9a9a9a9a9
+9a999a999a999a99
+a9a9a9a9a9a9a9a9
+
+piece band-17 1 1
+9999999999999999
+9999999999999999
+8989898989898989
+9998999899989998
+8889888988898889
+9898989898989898
+8888888888888888
+8888888888888888
+7878787878787878
+8788878887888788
+7878787878787878
+8787878787878787
+7777777777777777
+7777777777777777
+7767776777677767
+7777777777777777
+
+piece band-18 1 1
+6767676767676767
+7676767676767676
+6666666666666666
+7666766676667666
+5666566656665666
+6666666666666666
+5656565656565656
+6565656565656565
+5555555555555555
+5565556555655565
+5555555555555555
+5555555555555555
+4545454545454545
+5454545454545454
+4545454545454545
+5454545454545454
+
+piece band-19 1 1
+4445444544454445
+5454545454545454
+4544454445444544
+5454545454545454
+4444444444444444
+4454445444544454
+4444444444444444
+4444444444444444
+3444344434443444
+4444444444444444
+4434443444344434
+4444444444444444
+3434343434343434
+4344434443444344
+3434343434343434
+4343434343434343
+
+piece band-20 1 1
+3334333433343334
+4343434343434343
+3433343334333433
+4343434343434343
+3333333333333333
+3343334333433343
+3333333333333333
+4333433343334333
+3333333333333333
+3333333333333333
+3323332333233323
+3333333333333333
+2323232323232323
+3233323332333233
+2323232323232323
+3332333233323332
+
+piece band-21 1 1
+2323232323232323
+3232323232323232
+2322232223222322
+3232323232323232
+2222222222222222
+3232323232323232
+2222222222222222
+3222322232223222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+1212121212121212
+2222222222222222
+1212121212121212
+2221222122212221
+
+piece band-22 1 1
+1212121212121212
+2121212121212121
+1212121212121212
+2121212121212121
+1111111111111111
+2121212121212121
+1111111111111111
+2121212121212121
+1111111111111111
+1111111111111111
+1111111111111111
+1111111111111111
+0111011101110111
+1111111111111111
+0101010101010101
+1111111111111111

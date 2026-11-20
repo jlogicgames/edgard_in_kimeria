@@ -314,6 +314,36 @@ class AllocationBudgetTest {
         assertWithinBudget("forest-2 room 2 with mob kill blood", FOREST_2_ROOM_2_BLOOD_CEILING, bytes);
     }
 
+    /**
+     * The parallax layers and the room's foreground of forest-1's mob room (#236), update, {@code renderBack} and {@code renderFront}
+     * through the {@link NoopBatch} with a real 640x360 view: the camera sweeps the room's 160 px and back every
+     * {@value #PARALLAX_SWEEP_FRAMES} frames while its top swings from a look up (100 px) to a look down (150 px), so every layer, the
+     * cloud drift, the culling and the per-room foreground origin all run. Measured 0.0 B/frame in 3 runs (2026-11-19): index loops,
+     * cached regions, no object per frame. Every forest-1 room scene below also draws these layers (its view is the room's rect).
+     */
+    static final double PARALLAX_CEILING = 8;
+    private static final int PARALLAX_SWEEP_FRAMES = 320;
+    private static final float PARALLAX_CAMERA_SPAN = 160, PARALLAX_LOOK_UP = -92, PARALLAX_LOOK_DOWN = 158;
+    @Test void forest1ParallaxLayersAndForeground() {
+        Rectangle view = new Rectangle(0, 0, 640, 360);
+        Level level = harness.room("forest-1", "forest-1-mob", () -> view);
+        Rectangle room = new Rectangle(level.currentRoomBounds());
+        com.jlogicsoftware.kimeria.world.ParallaxRenderer parallax = new com.jlogicsoftware.kimeria.world.ParallaxRenderer(level.map);
+        float originY = com.jlogicsoftware.kimeria.world.ParallaxRenderer.originY(room, view.height);
+        batch.record(1 << 16); // the log is allocated once here, then only written: the probe sees no allocation
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            float t = (i % PARALLAX_SWEEP_FRAMES) / (float) PARALLAX_SWEEP_FRAMES;
+            float sweep = t < 0.5f ? t * 2 : 2 - t * 2;
+            view.x = room.x + PARALLAX_CAMERA_SPAN * sweep;
+            view.y = PARALLAX_LOOK_UP + (PARALLAX_LOOK_DOWN - PARALLAX_LOOK_UP) * sweep;
+            parallax.update(STEP);
+            parallax.renderBack(batch, view, originY);
+            parallax.renderFront(batch, view, room, originY);
+        });
+        assertTrue(batch.drawnCount() > 0, "the scenario must actually draw layers");
+        assertWithinBudget("forest-1 parallax layers and foreground", PARALLAX_CEILING, bytes);
+    }
+
     /** The first-RedMob room (#375): the mob asleep, the refill. */
     @Test void forest1MobRoom() { assertWithinBudget("forest-1 mob room", FOREST_1_MOB_CEILING, room("forest-1", 0)); }
     /** The trap course (the puffball, the second RedMob, the rotten log over the pit), room 4 since #500 (D110) split the escalators off it. */
