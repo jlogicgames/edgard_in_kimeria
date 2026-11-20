@@ -45,8 +45,6 @@ public final class GameplayInput {
         down = keys.downHeld() || pad.downHeld() || touch.downHeld();
     }
 
-    /** Vertical inspection yields to either action, including a held button. */
-    public int lookDirection() { return actionHeld || rangedHeld || up == down ? 0 : up ? -1 : 1; }
     public boolean verticalHeld() { return up || down; }
     public boolean up() { return up; }
     public boolean down() { return down; }

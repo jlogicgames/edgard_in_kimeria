@@ -41,12 +41,10 @@ The previews use the game's framing: a forest room is 368 px tall and the camera
 `FallingTrapLayout.floorCameraTop` (room y + 368 - 360 = 8), so a preview shows rows 8 to 368 and a bottom-rising piece must end
 at the room's bottom edge (y 368) to reach the screen bottom. These rules are checked at that steady camera only.
 
-Vertical parallax: every layer moves in y by its own factor from that floor camera (ORIGIN_Y, below), so the hero's look up
-(100 px) and down (150 px) shows the bleed art each layer carries past the room. Each preview has two look frames (`-up`,
-`-down`); `--check` also fails on a visible layer edge (occlusion-aware) and on open ground in the bottom 40 % below the
-room, at every camera x and camera top of the look range (room top - 100 to 8 + 150, 10 px apart; check_look). Layer offsets
-are snapped as the game's Math.round (half up). `--room calm` also writes
-`preview-calm-look.gif` and `preview-calm-walk.gif`.
+Vertical parallax: every layer moves in y by its own factor from that floor camera (ORIGIN_Y, below). The camera top still
+changes by up to 8 px (the room is 8 px taller than the view, so it follows the hero between room y 0 and ORIGIN_Y) and during a
+room change; there is no look up or down any more (D111), so no larger range is previewed or checked. Layer offsets are snapped
+as the game's Math.round (half up). `--room calm` also writes `preview-calm-walk.gif`.
 """
 import math
 from collections import namedtuple
@@ -66,7 +64,6 @@ ROWS = 23
 TILE = 16
 ALPHA = 3                               # the alpha channel of an RGBA pixel or array
 RGB_CHANNELS = 3
-OPAQUE = 255
 HALF_UP = 0.5
 SPOT_W = 2                              # a sprite-sheet spot is (col, row, w, h) in tiles
 SPOT_H = 3
@@ -118,7 +115,7 @@ assert REQUIRED_TYPES <= EXCLUDED_TYPES, REQUIRED_TYPES - EXCLUDED_TYPES
 FUNGUS_TILES = {127, 128, 129}         # the honey fungus is drawn by play-layer tiles, not an object
 CLOUD_DRIFT = 3
 CLOUD_WRAP = 1024
-GIF_FRAME_MS = 70                       # the preview GIFs' frame time: 14.3 frames/s (20 frames/s made the look GIF 5.3 MB)
+GIF_FRAME_MS = 70                       # the preview GIFs' frame time: 14.3 frames/s (20 frames/s made the GIFs too large)
 MS_PER_S = 1000
 GIF_FPS = MS_PER_S / GIF_FRAME_MS
 GIF_SCALE = 2                           # the GIFs are drawn at 2x, nearest neighbour
@@ -126,31 +123,19 @@ PALETTE_SAMPLES = 16                    # frames sampled for the GIF palette
 MEGABYTE = 1e6
 RUN_FPS = 10                            # the hero's run cycle, frames/s, and its frames in the sheet row
 RUN_FRAMES = 6
-SMOOTH_BASE = 3                         # smoothstep: t * t * (3 - 2 * t)
-SMOOTH_SLOPE = 2
 GIF_COLOURS = 128                       # the preview GIFs' global palette (one index is the transparent 'unchanged')
 # Vertical parallax (author, 2026-11-19): each layer's y factor is its x factor, measured from the floor camera, so the steady
 # frame (camera top ORIGIN_Y) is the authored one: screenY = (y - originY) - f * (camTop - originY), originY = room y +
-# ORIGIN_Y, y the art's room y, whole pixels. The standing hero looks up LOOK_UP px and down LOOK_DOWN px (LookAround,
-# not clamped to the room), so a layer of factor f is seen from room y ORIGIN_Y - f * LOOK_UP to ROOM_H + f * LOOK_DOWN:
-# far 0.15 (bleed 23 px below), grove 0.25 (38), mid 0.4 (35 above, 60 below), play 1 (100 above, 150 below), foreground
-# 1.6 (165 above, 240 below), over the full look range. Tiled lines the layers up when the view centre is on the map's parallax origin, so
+# ORIGIN_Y, y the art's room y, whole pixels. The camera top lies between the room top and ORIGIN_Y (8 px apart). Tiled lines the
+# layers up when the view centre is on the map's parallax origin, so
 # `parallaxoriginy` is ORIGIN_Y + half the view; every forest room lies at y 0, so it is exact for every room in y.
 ORIGIN_Y = CAMERA_TOP
-LOOK_UP = 100                           # LookAround.UP_DISTANCE
-LOOK_DOWN = 150                         # LookAround.DOWN_DISTANCE
-LOOK_STEP = 5                           # --check: camera tops from ROOM_TOP - LOOK_UP to ORIGIN_Y + LOOK_DOWN, 5 px apart
-ROOM_TOP = 0                            # the steady camera top is clamped to the room top (room y 0) when the hero stands high
 ROOM_H = ROWS * TILE
-BLEED_ROWS = 10                         # play layer rows past the room bottom (160 px: the 150 px look down)
+BLEED_ROWS = 10                         # play layer rows past the room bottom (160 px of deep soil; the shipped art, kept after the look-around removal, D111)
 MAP_ROWS = ROWS + BLEED_ROWS
-PLAY_ABOVE = 7                          # rows of the `play-above` layer (112 px over the room top: the 100 px look up)
-FG_TOP = 176                            # foreground canvas for the look frames: room y -176 to 848
+PLAY_ABOVE = 7                          # rows of the `play-above` layer (112 px over the room top; the shipped art, kept after the look-around removal, D111)
+FG_TOP = 176                            # foreground canvas: room y -176 to 848
 FG_HEIGHT = 1024
-PLAY_LAYERS = ('Background', 'play-above', 'play-below')   # the play layer and its decor bleed count as one in the look check
-GROUND_FRACTION = 0.4                   # --check: the bottom 40 % of a look frame, below the room, is play or foreground ground
-FLAT_RUN = 20                           # --check: art ending flat over this many px in a row is a cut (the longest drawn flat
-                                        # edge, the moon disc's top and bottom, is 18 px)
 DEEP = {'deep-1': (64, 65), 'deep-2': (66, 67), 'deep-3': (68, 69)}   # deep soil tile ids in Forest-new.tsx (terrain.grid)
 BURIED = {61: 70, 62: 71, 63: 72}      # the ground's bottom row (left, middle, right) -> its buried variant over deep soil
 # (layer name, tileset key, parallaxx, parallaxy, extra properties, offsety)
@@ -307,7 +292,7 @@ def play_bleed(rows, deep_first):
 
 def play_above(rows):
     """PLAY_ABOVE rows over the room top: a column whose top tile is drawn (a rope, a trunk, a wall) carries on upward
-    with the repeat of its tiles below row 0 (the shortest period of rows 1 to 8, continued backwards), so a look up shows
+    with the repeat of its tiles below row 0 (the shortest period of rows 1 to 8, continued backwards), so a higher camera shows
     no cut; decor only, no collision."""
     above = [[0] * len(rows[0]) for _ in range(PLAY_ABOVE)]
     for c in range(len(rows[0])):
@@ -467,23 +452,9 @@ def render_layer(layer, sets):
     return image
 
 
-def seam_kinds():
-    """{piece: {'top', 'foot'}} for every foreground piece that has a `<piece>-top` or `<piece>-foot` partner in fg.grid
-    (read from the sprite layout, not from a map, so a map that leaves a partner out is still caught)."""
-    spots = sprites.layout('forest/fg')[0]
-    kinds = {}
-    for name in spots:
-        for kind in ('top', 'foot'):
-            if name.endswith('-' + kind) and name[:-len(kind) - 1] in spots:
-                kinds.setdefault(name[:-len(kind) - 1], set()).add(kind)
-    return kinds
-
-
-def render_objects(group, pieces, columns, top=0, height=ROWS * TILE, edges=None):
+def render_objects(group, pieces, columns, top=0, height=ROWS * TILE):
     """The tile objects of a group on a canvas FG_PAD px wider to the left: canvas x = room-relative x + FG_PAD, canvas
-    y = room y + `top` (the steady checks use the room, 0 to 368; the look frames FG_TOP and FG_HEIGHT). With `edges` (a
-    list), each object's top and bottom canvas rows are added to it as (row, x0, x1, 'top' | 'bottom', its own opaque
-    pixels on that row)."""
+    y = room y + `top` (the steady checks use the room, 0 to 368; the previews FG_TOP and FG_HEIGHT)."""
     image = Image.new('RGBA', (columns * TILE + FG_PAD, height))
     for obj in group.findall('object'):
         piece = pieces[int(obj.get('gid')) & GID_MASK]
@@ -492,17 +463,6 @@ def render_objects(group, pieces, columns, top=0, height=ROWS * TILE, edges=None
         layer = Image.new('RGBA', image.size)
         layer.paste(piece, (x, y))
         image.alpha_composite(layer)
-        if edges is not None:
-            a = numpy.asarray(piece)[..., ALPHA] > COVER_ALPHA
-            edges += [(y, x, x + piece.width, 'top', a[0]), (y + piece.height - 1, x, x + piece.width, 'bottom', a[-1])]
-            # a seam row: a piece with a `-top` or `-foot` partner (fg.grid) ends where its partner takes over, on its first
-            # (last for -foot) drawn row, which is not always the image's row 0; it is a cut with no length limit
-            kinds = seam_kinds().get(obj.get('name'), ())
-            rows = numpy.nonzero(a.any(axis=1))[0]
-            if len(rows) and 'top' in kinds:
-                edges.append((y + int(rows[0]), x, x + piece.width, 'top', a[rows[0]]))
-            if len(rows) and 'foot' in kinds:
-                edges.append((y + int(rows[-1]), x, x + piece.width, 'bottom', a[rows[-1]]))
     return image
 
 
@@ -591,14 +551,6 @@ def draw_sprite(frame, key, x, y, w, h):
     return frame, left, top
 
 
-def look_tops():
-    """Camera tops of the look frames: ROOM_TOP - LOOK_UP to ORIGIN_Y + LOOK_DOWN, LOOK_STEP apart, both ends and the
-    floor hero's full look up (ORIGIN_Y - LOOK_UP) included. The steady camera top is ORIGIN_Y with the hero on the floor
-    and as low as the room top (0) when he stands high (above y 256), so a look up reaches room y 0 - LOOK_UP."""
-    return sorted(set(range(ROOM_TOP - LOOK_UP, ORIGIN_Y + LOOK_DOWN + 1, LOOK_STEP))
-                  | {ORIGIN_Y - LOOK_UP, ORIGIN_Y + LOOK_DOWN})
-
-
 def screen_y(y, factor, cam_top):
     """Game formula for a layer of vertical factor f: screenY = (y - originY) - f * (camTop - originY), y the art's room y
     (whole pixels; the steady camera top ORIGIN_Y shows every layer as authored)."""
@@ -622,10 +574,8 @@ class Layers:
             elif layer.tag == 'objectgroup' and layer.get('name', '').startswith('foreground'):
                 if scene.game and prop(layer, 'roomx') != scene.origin:
                     continue   # another room's foreground of the game map
-                edges = []
-                image = render_objects(layer, pieces, scene.columns, FG_TOP, FG_HEIGHT, edges)
+                image = render_objects(layer, pieces, scene.columns, FG_TOP, FG_HEIGHT)
                 self.layers.append(Drawing(layer, image, -FG_TOP, px, py))
-                self.fg_edges = edges
         self.hero = Image.open(ROOT / 'assets/images/hero/hero-right.png').convert('RGBA')
         self.boxes = hero_boxes(scene)
         self.placed = [draw_sprite(first_frame(key), key, x, y, w, h) for key, x, y, w, h in sprite_placements(scene)]
@@ -661,25 +611,20 @@ class Layers:
         return frame
 
 
-LOOK_FRAMES = (('up', ORIGIN_Y - LOOK_UP, (0, 5)), ('down', ORIGIN_Y + LOOK_DOWN, (1, 5)))   # name, camera top, hero cell
-
-
 def preview(scene, time=0.0, mock=None, out=None, upscale=False):
     """Frames at the scene's preview cameras, with the visible layers, the first frame of every object sprite of the room at
     its rect and the hero stand-in where the scene puts it (the room's start, its exit or an x): the steady camera (camera
-    top ORIGIN_Y) and the two look frames, `-up` (camera top ORIGIN_Y - LOOK_UP) and `-down` (ORIGIN_Y + LOOK_DOWN), the
-    hero in his look pose. With `upscale`, also a copy twice the size (nearest neighbour) next to each frame."""
+    top ORIGIN_Y). With `upscale`, also a copy twice the size (nearest neighbour) next to each frame."""
     layers = Layers(scene, mock)
     for cam, (name, where) in scene.previews.items():
-        for suffix, cam_top, hero in (('', ORIGIN_Y, (0, 0)),) + LOOK_FRAMES:
-            frame = layers.frame(scene, cam, where, cam_top, time, hero)
-            target = (out or DIR) / (name if not suffix else name.replace('.png', f'-{suffix}.png'))
-            frame.convert('RGB').save(target)
-            print(shown(target))
-            if upscale:
-                double = target.with_name(target.stem + '-2x.png')
-                frame.convert('RGB').resize((VIEW[0] * 2, VIEW[1] * 2), Image.NEAREST).save(double)
-                print(shown(double))
+        frame = layers.frame(scene, cam, where, ORIGIN_Y, time, (0, 0))
+        target = (out or DIR) / name
+        frame.convert('RGB').save(target)
+        print(shown(target))
+        if upscale:
+            double = target.with_name(target.stem + '-2x.png')
+            frame.convert('RGB').resize((VIEW[0] * 2, VIEW[1] * 2), Image.NEAREST).save(double)
+            print(shown(double))
 
 
 def save_gif(frames, target, fps=GIF_FPS, colours=GIF_COLOURS):
@@ -708,33 +653,10 @@ def save_gif(frames, target, fps=GIF_FPS, colours=GIF_COLOURS):
     print(shown(target), f'{len(images)} frames, {target.stat().st_size / MEGABYTE:.1f} MB')
 
 
-# the look GIF: (seconds, look offset at the start, at the end, the hero's sheet cell or None), as LookAround pans: a 1 s smoothstep
-# look down, hold, a 0.2 s return, then the same up
-LOOK_PLAN = ((0.5, 0, 0, None), (1.0, 0, LOOK_DOWN, (1, 5)), (0.75, LOOK_DOWN, LOOK_DOWN, (1, 5)), (0.2, LOOK_DOWN, 0, (0, 0)),
-             (0.5, 0, 0, None), (1.0, 0, -LOOK_UP, (0, 5)), (0.75, -LOOK_UP, -LOOK_UP, (0, 5)), (0.2, -LOOK_UP, 0, (0, 0)),
-             (0.5, 0, 0, None))
-
-
-def smoothstep(t):
-    t = max(0.0, min(1.0, t))
-    return t * t * (SMOOTH_BASE - SMOOTH_SLOPE * t)
-
-
 def gifs(scene, fps=GIF_FPS):
-    """The calm room as the game moves its camera: preview-calm-look.gif (the hero standing mid-room; steady, a 1 s
-    smoothstep look down, hold, a 0.2 s return, a look up, return, as LookAround pans) and preview-calm-walk.gif (the hero
-    walking from his start to the exit at MOVE_SPEED with the steady camera, the run cycle at 10 frames/s)."""
+    """The calm room as the game moves its camera: preview-calm-walk.gif (the hero walking from his start to the exit at
+    MOVE_SPEED with the steady camera, the run cycle at 10 frames/s)."""
     layers = Layers(scene)
-    mid_x = scene.width // 2 - HERO_CAMERA_DX
-    cam = hero_camera(scene, mid_x)
-    frames, clock = [], 0.0
-    for seconds, start, end, pose in LOOK_PLAN:
-        n = round(seconds * fps)
-        for i in range(n):
-            offset = start + (end - start) * smoothstep((i + 1) / n)
-            frames.append(layers.frame(scene, cam, mid_x, ORIGIN_Y + jround(offset), clock, pose or (0, 0)))
-            clock += 1 / fps
-    save_gif(frames, DIR / 'preview-calm-look.gif', fps)
     frames, clock = [], 0.0
     route = hero_route(scene)
     x = float(route[0])
@@ -790,130 +712,12 @@ def exclusions(scene, unique=False):
 
 def check(scene):
     """The steady-camera rules (exclusions, the hero at the start and exit, standing and walking cover: camera top
-    ORIGIN_Y only, as the hero walks and stands; a look is a held pose, not a route) and the look rules (check_look)."""
+    ORIGIN_Y only, as the hero walks and stands)."""
     root, _, pieces = tile_images(scene.mock)
     ok = True
     for group in root.findall('objectgroup'):
         if group.get('name').startswith('foreground') and (not scene.game or prop(group, 'roomx') == scene.origin):
             ok &= check_layer(scene, group, pieces)
-    return check_look(scene) and ok
-
-
-def blit(dst, src, x, y):
-    """OR a boolean image into a boolean frame at (x, y), clipped."""
-    h, w = src.shape
-    x0, y0, x1, y1 = max(x, 0), max(y, 0), min(x + w, dst.shape[1]), min(y + h, dst.shape[0])
-    if x1 > x0 and y1 > y0:
-        dst[y0:y1, x0:x1] |= src[y0 - y:y1 - y, x0 - x:x1 - x]
-
-
-def edge_on_screen(order, cut, cam_top):
-    """Whether the cut row (layer index, room y, kind) lies on screen with screen beyond it at this camera top."""
-    index, y, kind = cut
-    row = screen_y(y, order[index].py, cam_top)
-    return 0 < row <= VIEW[1] - 1 if kind == 'top' else 0 <= row < VIEW[1] - 1
-
-
-def check_look(scene):
-    """Look rules (vertical parallax), at every camera x of the room and every camera top of look_tops():
-    - no layer edge is visible: a cut is an opaque pixel (alpha > COVER_ALPHA) whose neighbour across a row is
-      transparent, either on the first or last row of a layer or of a foreground object, or inside a layer anywhere a
-      row of art ends flat over FLAT_RUN px or more (a strip or piece cut short, not a drawn edge). The play layer and
-      `play-above` count as one, so do the foreground objects (a `-foot` or `-top` continues its piece); the play layer
-      is checked on its rows' ends only (its walk surfaces and ceilings are flat by design); the clouds wrap and are
-      skipped. A cut is visible when it lies on screen with screen beyond it and no layer drawn in front of it is fully
-      opaque (alpha 255) over it on the composited frame;
-    - the bottom GROUND_FRACTION of the frame, where it lies below the room (y >= 368), is opaque play or foreground.
-    The sky layer (factor 0, every row filled) covers the whole view, so no pixel is ever bare."""
-    layers = Layers(scene)
-    order = layers.layers
-    tops = look_tops()
-    groups = {}
-    for i, layer in enumerate(order):
-        if int(prop(layer.element, 'wrapx')):
-            continue
-        key = 'play' if layer.element.get('name') in PLAY_LAYERS else layer.element.get('name')
-        groups.setdefault(key, []).append(i)
-    cuts = {}   # (layer index, room y, kind) -> set of image columns
-    for key, members in groups.items():
-        oy0 = min(order[i].oy for i in members)
-        height = max(order[i].oy + order[i].image.height for i in members) - oy0
-        width = max(order[i].image.width for i in members)
-        alpha = numpy.zeros((height, width), bool)
-        edges = []
-        for i in members:
-            element, image, oy, _, _ = order[i]
-            a = numpy.asarray(image)[..., ALPHA] > COVER_ALPHA
-            alpha[oy - oy0:oy - oy0 + a.shape[0], :a.shape[1]] |= a
-            if element.tag == 'objectgroup':
-                edges += [(i, row - FG_TOP - oy0, x0, x1, kind, own) for row, x0, x1, kind, own in layers.fg_edges]
-            else:
-                # `play-below` is the Background's own deep soil in the game map (a separate layer): its top row is interior to the
-                # play layer, where the soil under a pit meets the open room (flat by design, as the mock's single layer has it)
-                if element.get('name') != 'play-below':
-                    edges.append((i, oy - oy0, 0, a.shape[1], 'top', a[0]))
-                edges.append((i, oy - oy0 + a.shape[0] - 1, 0, a.shape[1], 'bottom', a[-1]))
-        for i, row, x0, x1, kind, own in edges:
-            own = own[max(-x0, 0):max(-x0, 0) + min(x1, width) - max(x0, 0)]
-            x0, x1 = max(x0, 0), min(x1, width)
-            if not 0 <= row < height or x1 <= x0:
-                continue
-            beyond = row - 1 if kind == 'top' else row + 1
-            other = alpha[beyond, x0:x1] if 0 <= beyond < height else numpy.zeros(x1 - x0, bool)
-            xs = numpy.nonzero(own & ~other)[0]   # the object's own pixel on its edge row, nothing of any member across
-            if len(xs):
-                cuts.setdefault((i, row + oy0, kind), set()).update((xs + x0).tolist())
-        if key == 'play' or order[members[0]].px == 0:   # the play layer is flat by design; a factor-0 layer is the sky's own
-            continue
-        empty = numpy.zeros((1, width), bool)
-        for kind, cut in (('top', alpha & ~numpy.vstack([empty, alpha[:-1]])),
-                          ('bottom', alpha & ~numpy.vstack([alpha[1:], empty]))):
-            for row in numpy.nonzero(cut.sum(axis=1) >= FLAT_RUN)[0]:
-                for x, n in runs(numpy.nonzero(cut[row])[0].tolist()):
-                    if n >= FLAT_RUN:
-                        cuts.setdefault((members[0], int(row) + oy0, kind), set()).update(range(x, x + n))
-    cuts = {k: numpy.array(sorted(v)) for k, v in cuts.items()}
-    opaque = [numpy.asarray(layer.image)[..., ALPHA] == OPAQUE for layer in order]
-    solid_layers = {i for i, layer in enumerate(order) if layer.element.get('name') in PLAY_LAYERS + ('foreground',) or layer.element.get('name', '').startswith('foreground')}
-    ground_rows = numpy.arange(round(VIEW[1] * (1 - GROUND_FRACTION)), VIEW[1])
-    seen, ground, frames = {}, 0, 0
-    for cam_top in tops:
-        live = [(k, xs) for k, xs in cuts.items() if k not in seen and edge_on_screen(order, k, cam_top)]
-        rows = ground_rows[ground_rows + cam_top >= ROOM_H]
-        for cam in scene.cameras:
-            frames += 1
-            # clouds count as cover only at their time-0 position (x_shift(layer, cam) without a clock): they drift in the game
-            front = [None] * len(order)   # front[i]: opaque pixels of every layer drawn after layer i
-            cover = numpy.zeros((VIEW[1], VIEW[0]), bool)
-            solid = numpy.zeros((VIEW[1], VIEW[0]), bool)
-            for i in range(len(order) - 1, -1, -1):
-                front[i] = cover.copy()
-                layer = order[i]
-                x, y = layers.x_shift(layer, cam), screen_y(layer.oy, layer.py, cam_top)
-                wrap = int(prop(layer.element, 'wrapx'))
-                for dx in ((x - wrap, x) if wrap else (x,)):
-                    blit(cover, opaque[i], dx, y)
-                    if i in solid_layers:
-                        blit(solid, opaque[i], dx, y)
-            ground += int((~solid[rows]).sum())
-            for k, xs in live:
-                if k in seen:
-                    continue
-                i, y, kind = k
-                sy = screen_y(y, order[i].py, cam_top)
-                sx = xs + layers.x_shift(order[i], cam)
-                on = (sx >= 0) & (sx < VIEW[0])
-                shown_xs = sx[on][~front[i][sy, sx[on]]]
-                if len(shown_xs):
-                    seen[k] = (cam, cam_top, int(shown_xs.min()), int(shown_xs.max()))
-    name = scene.mock.name
-    for (i, y, kind), (cam, cam_top, x0, x1) in sorted(seen.items(), key=lambda s: (s[0][1], s[0][0])):
-        print(f'{name} look: {order[i].element.get("name")} {kind} edge at room y {y} visible at camera {cam}, top {cam_top} '
-              f'(screen x {x0}..{x1})')
-    ok = not seen and not ground
-    print(f'{name} look: {len(seen)} visible layer edges ({len(cuts)} cut rows) and {ground} px of open ground (bottom '
-          f'{GROUND_FRACTION:.0%}, below the room) at {len(scene.cameras)} camera x by {len(tops)} camera tops '
-          f'({tops[0]} to {tops[-1]}), {frames} frames: ' + ('ok' if ok else 'FAIL'))
     return ok
 
 

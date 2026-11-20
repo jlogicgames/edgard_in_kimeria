@@ -659,7 +659,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 ## D25. Standing look with delayed vertical inspection
 
-- **Status:** Accepted by the author, 2026-10-23; distance/timing are initial tuning values.
+- **Status:** Superseded by [D111](#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513), 2026-11-20 (was: accepted by the author, 2026-10-23; distance/timing are initial tuning values).
 - **Decision:** Up/Down alone while stationary and grounded immediately replaces idle
   with a registered static head-up/head-down sprite. After 0.3 seconds, ease the camera
   over 1 second: 100 logical pixels up or 150 down. Permit the full offset beyond current vertical room bounds
@@ -805,7 +805,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 ## D29. Interaction outline takes priority over standing look
 
-- **Status:** Accepted by the author, 2026-10-26.
+- **Status:** Superseded by [D111](#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513), 2026-11-20, the look it yielded to is gone (was: accepted by the author, 2026-10-26). The interaction target and its eligibility are unchanged.
 - **Decision:** When Up/Down selects an eligible mechanism or carryable and the game draws
   its interaction outline, suppress standing look and vertical camera inspection until that
   outline disappears. If inspection was already active, cancel it and return to the ordinary
@@ -814,7 +814,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Why:** The highlight tells the player which object will receive Action. Vertical camera
   motion during that selection makes the target and hint drift while the player is deciding.
 - **Details:** [Standing look](#d25-standing-look-with-delayed-vertical-inspection),
-  [directional controls](DIRECTIONAL_CONTROLS.md#standing-look-updown-2026-10-23), and
+  [directional controls](DIRECTIONAL_CONTROLS.md#standing-look-updown-removed), and
   [gameplay controls](GAMEPLAY.md#controls).
 - **Note, D82 (#338):** the outline is now the fairy guide's glow, glints and fairy. Look suppression still keys on
   the same selection (`Player.interactionFeedbackTarget()`), so this rule is unchanged.
@@ -3615,7 +3615,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   room change" holds while the rooms share a floor camera top (`everyForestRoomSharesOneFloorCameraTop`).
 - **Gate:** `TiledMapParallaxTest` (the split, factors, foreground groups), `ParallaxRendererTest` (the maths, half-up rounding, per-room origin,
   cloud drift, the moon, draw order in a real frame, the cull slack, the batch colour, the shared floor camera top), `AllocationBudgetTest.forest1ParallaxLayersAndForeground` (0.0 B/frame, ceiling 8),
-  `python3 tools/parallax_mock.py --check --game` (`validateParallax`: rule B, cover time and look frames of every room with a foreground,
+  `python3 tools/parallax_mock.py --check --game` (`validateParallax`: rule B and cover time of every room with a foreground,
   against the game map), `tools/test_parallax_game.py` (the installed map equals what the installer writes).
 - **What changed on the way:** `forest-1-mob` (reworked by #507) put a red mob, a falling branch and an explosive stump over the sketch's tall
   pieces, so its foreground lost `rise-trunk` and moved the reeds and the fern to the room's ends (card, "Calm room"). The buried right-edge
@@ -3687,3 +3687,12 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Allocation (`AllocationBudgetTest`, 3 isolated runs, no ceiling raised):** the trap course 544.3, 328.3, 328.3 B/frame under its unchanged ceiling 665; the new escalator room 536.0, 320.0, 320.0 B/frame (its scene `forest1EscalatorsRoom`, ceiling 620 = highest run 536.0 + about 16 %, the same as the other forest-1 room ceilings); the guard room 544.0, 232.0, 232.0 (guard awake 544.0, 328.0, 328.0) under its unchanged 1,280.
 - **Gate:** `FIRST_MEETING_GRANDFATHERED` lost `forest-1-traps` and `forest-1-guard` (5 to 3 entries: `forest-entry`, `forest-walls`, `forest-canopy` remain); `RoomCardsTest` counts 23 rooms. `Forest1TrapsTest` lost its tuft tests (the tuft's mechanics stay covered by `ProximityTrapsTest` and `Forest1SpiderTest`) and gained the census of the split course, the seam, the first-sight facts and the pinned route and retry. The tests that walk `forest-1` by room index (`enterNextRoom`, `roomOf`) were re-indexed, none relaxed; the one changed assertion is D68's 140 to 117 px (its Update).
 - **Not verified:** how the split course feels to a first-time player (#135); the thresholds are authoring numbers.
+
+## D111. Look up and down are removed: the camera no longer pans for a look (D25, D29 superseded) ([#513](https://github.com/jlogicgames/edgard_in_kimeria/issues/513))
+
+- **Status:** Decided by the author, 2026-11-20. Supersedes D25 (standing look) and D29 (the outline yields to the look); their text stays as the record.
+- **Decision:** Holding Up or Down while standing still no longer shows a head pose or pans the camera (100 px up, 150 px down, after 0.3 s or 1 s by a target). `LookAround`, the `LOOK_UP` and `LOOK_DOWN` states and clips, `GameplayInput.lookDirection` and the look sentence of `ABOUT_BODY` and `ABOUT_BODY_LEFT_HANDED` (all five catalogs, a pure deletion) are gone. Up and Down keep every other use: ladders, Up/Down + Action to pick up and put down, the touch stick, menus. The camera is the ordinary follow camera clamped to the room (`Player.cameraTarget`).
+- **Why:** No puzzle, hint or room needs the look. The Forest parallax (D108) is built for the floor camera, and a 100 to 150 px pan moved every layer far past the art and the `parallax_mock.py` check; the author chose to drop the feature rather than keep fixing its interaction with the parallax.
+- **Hero frames:** the two look frames (`r.look1`, `r.look2` and the left pair, sheet row 5) stay in `art/hero/hero.grid` and the sheets, unused: the sheet layout (`HERO_CLIPS` in `tools/sprite_layouts.py`) is shared by the exporters and the checks, so dropping them is a separate art change. The clips `LOOK_UP` and `LOOK_DOWN` (D79, 1 frame each) are removed from `Player`.
+- **Vertical parallax:** the camera top still changes. A forest room is 368 px tall and the view 360 px, so `Player.cameraTarget` keeps the top between the room top (hero standing high, above y 256) and `FallingTrapLayout.floorCameraTop` (room bottom minus the view, 8 px lower, hero on the floor), and a room change pans it. So the vertical parallax code (`ParallaxRenderer`, factor 1 on `parallaxy`) stays; only the look-sized ranges went: `parallax_mock.py` lost `LOOK_PLAN`, the camera-top sweep (-100 to 158), the look frames and GIF and `check_look` (visible layer edges and open ground at the look tops), keeping rule B, the cover time and the exclusions at the steady camera. The bleed art drawn for the look range (`play-above` 7 rows, 10 rows of deep soil, the layers' bleed) stays as shipped; trimming it is an art change of its own.
+- **Gate:** `AllocationBudgetTest.forest1ParallaxLayersAndForeground` now sweeps the camera top 0 to 8; `ParallaxRendererTest` pins the shift at 0 and 8; `DirectionalActionsTest` keeps the Up + Action lever and the touch pickup tests, and drops the look tests; `LookAroundTest` is deleted. No other assertion was changed.

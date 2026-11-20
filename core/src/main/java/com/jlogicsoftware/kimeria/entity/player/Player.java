@@ -46,7 +46,7 @@ import java.util.Set;
 
 /** Port of Dart's {@code Player}. */
 public class Player extends Actor<Player.State> implements CollideBody {
-    public enum State {IDLE, LOOK_UP, LOOK_DOWN, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING, LADDER}
+    public enum State {IDLE, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING, LADDER}
 
     /**
      * Death and respawn, Katana Zero style, with the silver thread (#341, D81). DYING: the world slows to a crawl so
@@ -77,8 +77,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final Clip[] CLIPS = {
         new Clip(State.IDLE, 4, 0, 0, true), new Clip(State.RUNNING, 6, 1, 0, true),
         new Clip(State.JUMPING, 2, 2, 0, false), new Clip(State.FALLING, 2, 3, 0, true),
-        new Clip(State.ATTACKING, 7, 4, 0, false), new Clip(State.LOOK_UP, 1, 5, 0, false),
-        new Clip(State.LOOK_DOWN, 1, 5, 1, false), new Clip(State.CLIMBING, 1, 6, 0, true),
+        new Clip(State.ATTACKING, 7, 4, 0, false), new Clip(State.CLIMBING, 1, 6, 0, true),
         new Clip(State.HIT, 2, 7, 0, false), new Clip(State.APPEARING, 4, 8, 0, false),
         new Clip(State.DISAPPEARING, 4, 9, 0, true)
     };
@@ -180,8 +179,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public float horizontalMovement = 0f;
     private final JumpBuffer jumpBuffer = new JumpBuffer();
     private final GameplayInput gameplayInput = new GameplayInput();
-    private final LookAround look = new LookAround();
-    private boolean lookLayout;
     private Carryable carried;
     private final Vector2 carryHintAnchor = new Vector2();
     private final Vector2 carryHintCameraAnchor = new Vector2();
@@ -295,7 +292,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
         throwTime = landTime = OVERLAY_OFF;
         pullFrame = NO_PULL;
         carryHintVisible = false;
-        look.clear();
         resetJumpInput();
         startingPosition.set(position);
         resetCamera();
@@ -388,22 +384,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // has no networked/replay determinism requirement that would need
         // fixed steps.
         float stepDt = Math.min(dt, 0.05f);
-        if (lookLayout != game.leftHanded()) {
-            look.suppress();
-            lookLayout = game.leftHanded();
-        }
-        boolean jumpHeld = KeyBindings.of(game.leftHanded()).jumpHeld()
-            || game.gamepad().jumpHeld() || game.touch().jumpHeld();
-        boolean inspecting = !jumpHeld && onGround && horizontalMovement == 0 && !wallJumping && !clambering
-            && ladder == null && !isAttacking && !jumpBuffer.pending() && !victoryWalk;
-        // Give pickup/activation chords extra time before inspection moves their target.
-        // Use real eligibility: pressing Up can hide the pickup label without changing reach.
-        boolean interactionAvailable = inspecting && (selectedCarryable() != null || selectedMechanism() != null);
-        // Before the move: the fairy guide asks again after it (Level.finishUpdate, D82), so her mark follows the new position.
-        boolean interactionHighlighted = interactionFeedbackTarget() != null;
-        int lookDirection = inspecting && !verticalSpentOnAction && !interactionHighlighted
-            ? gameplayInput.lookDirection() : 0;
-        look.update(stepDt, lookDirection, gameplayInput.verticalHeld(), interactionAvailable && !interactionHighlighted);
         previousFeetY = position.y + hitbox.offsetY + hitbox.height;
         previousBodyX = position.x + hitbox.offsetX;
         checkAttackCollisions(stepDt);
@@ -530,14 +510,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
         // centerX() ignores facing, unlike the hitbox, so turning in place can't nudge the zone.
         cameraFocusX = clampToZone(cameraFocusX, centerX(), hitbox.width * DEAD_ZONE_WIDTH_FACTOR);
         Vector2 target = cameraTarget(cameraFocusX, position.y);
-        // Deliberate inspection is a vertical exception to the ordinary room clamp.
-        // Current rooms are only 8px taller than the viewport; clamping the peek would erase it.
-        target.y += look.offset();
         // Compare the room-clamped camera target, not distance walked or screen shake.
         // Crossing a dead-zone edge at a room boundary does not scroll the view.
         if (carried != null && carryHintVisible && !game.isCameraPanning()
             && !target.epsilonEquals(carryHintCameraAnchor, CAMERA_TARGET_TOLERANCE)) carryHintVisible = false;
-        game.moveCameraTo(target, look.cameraSpeed(CAMERA_CHASE_SPEED));
+        game.moveCameraTo(target, CAMERA_CHASE_SPEED);
     }
 
     /** Re-centres the dead zone on the player and pans the camera there (level start, respawn). */
@@ -638,7 +615,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         int[] grip = carried != null && overlaid() ? (current == State.RUNNING
             ? (facingRight ? CARRY_RUN_GRIP_RIGHT : CARRY_RUN_GRIP_LEFT)
             : (facingRight ? CARRY_IDLE_GRIP_RIGHT : CARRY_IDLE_GRIP_LEFT)) : switch (current) {
-            case IDLE, LOOK_UP, LOOK_DOWN -> facingRight ? IDLE_GRIP_RIGHT : IDLE_GRIP_LEFT;
+            case IDLE -> facingRight ? IDLE_GRIP_RIGHT : IDLE_GRIP_LEFT;
             case RUNNING -> facingRight ? RUN_GRIP_RIGHT : RUN_GRIP_LEFT;
             case ATTACKING -> facingRight ? ATTACK_GRIP_RIGHT[frame % ATTACK_GRIP_RIGHT.length]
                 : frame == ATTACK_GRIP_RIGHT.length - 1 ? IDLE_GRIP_LEFT : ATTACK_GRIP_LEFT;
@@ -658,7 +635,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     /** True in the states the second set draws over: standing, looking and running. */
     private boolean overlaid() {
-        return current == State.IDLE || current == State.RUNNING || current == State.LOOK_UP || current == State.LOOK_DOWN;
+        return current == State.IDLE || current == State.RUNNING;
     }
 
     /**
@@ -1065,7 +1042,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void updatePlayerState() {
-        State next = look.direction() < 0 ? State.LOOK_UP : look.direction() > 0 ? State.LOOK_DOWN : State.IDLE;
+        State next = State.IDLE;
 
         if (horizontalMovement < 0 && facingRight) {
             facingRight = false;
@@ -1148,7 +1125,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public void resetJumpInput() {
         jumpBuffer.reset();
         gameplayInput.reset();
-        look.suppress();
     }
 
     /**

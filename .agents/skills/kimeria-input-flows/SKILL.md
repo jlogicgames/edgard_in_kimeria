@@ -39,9 +39,8 @@ a consumer. A menu mapping and a gameplay mapping may intentionally differ.
   Down + Action only places/drops a held object and does nothing empty-handed.
   Ranged throws the held object or spends one fireball when empty-handed.
   Follow [directional controls](../../../docs/DIRECTIONAL_CONTROLS.md); proximity must
-  never turn a sword press into interaction. Standing Up/Down alone selects a static
-  look pose and delayed vertical inspection. Action, Ranged, horizontal movement,
-  jump and climbing take priority. Preserve release suppression at UI boundaries.
+  never turn a sword press into interaction. Standing Up/Down alone does nothing (the look was removed, D111).
+  Action, Ranged, horizontal movement, jump and climbing keep their own inputs. Preserve release suppression at UI boundaries.
 - Default and left-handed gameplay mappings are disjoint. Use KeyBindings and
   generic controller mappings rather than scattering raw keys/button indices.
   Left-handed gamepad movement uses the right stick and D-pad actions; menu

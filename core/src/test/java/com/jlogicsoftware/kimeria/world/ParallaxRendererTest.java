@@ -49,7 +49,7 @@ class ParallaxRendererTest {
 
     @Test void aFactorOfOneIsThePlayLayerWhateverTheCamera() {
         for (int cam : new int[]{0, 7, 1023, 8000}) assertEquals(100f, ParallaxRenderer.worldX(100, 1, cam, 0));
-        for (int top : new int[]{-100, 8, 158}) assertEquals(96f, ParallaxRenderer.worldY(96, 1, top, FLOOR_CAMERA_TOP));
+        for (int top : new int[]{0, 8}) assertEquals(96f, ParallaxRenderer.worldY(96, 1, top, FLOOR_CAMERA_TOP));
     }
 
     @Test void screenXAndYFollowTheCardFormulas() {
@@ -60,10 +60,10 @@ class ParallaxRendererTest {
         assertEquals(-8f, screen);
         // map-wide layers have origin 0: a 0.4 layer at camera 1000 trails by 400
         assertEquals(-400f, ParallaxRenderer.worldX(0, MID, 1000, 0) - 1000);
-        // vertical: screenY = (y - originY) - f * (camTop - originY); the steady frame is the authored one, a look up 100 px moves f x 100
+        // vertical: screenY = (y - originY) - f * (camTop - originY); the steady frame is the authored one, a hero standing high lifts the
+        // camera top by up to 8 px (the room is 8 px taller than the view): a 0.4 layer lags 3.2 px
         assertEquals(64f - FLOOR_CAMERA_TOP, ParallaxRenderer.worldY(64, MID, 8, FLOOR_CAMERA_TOP) - 8);
-        assertEquals(64f - FLOOR_CAMERA_TOP + 40, ParallaxRenderer.worldY(64, MID, -92, FLOOR_CAMERA_TOP) - (-92), "up 100 px: a 0.4 layer lags 40 px");
-        assertEquals(64f - FLOOR_CAMERA_TOP - 60, ParallaxRenderer.worldY(64, MID, 158, FLOOR_CAMERA_TOP) - 158, "down 150 px: 0.4 x 150 = 60");
+        assertEquals(64f - FLOOR_CAMERA_TOP + 3, ParallaxRenderer.worldY(64, MID, 0, FLOOR_CAMERA_TOP) - 0, "camera top 0: 0.4 x 8 = 3.2, snapped to 3");
     }
 
     @Test void theFloorCameraTopOfARoomIsItsBottomMinusTheView() {
