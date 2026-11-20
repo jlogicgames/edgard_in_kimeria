@@ -5,8 +5,7 @@
 `forest_trap_sprites.parse`); this module only validates it against
 `sprite_layouts.TOUCH_CONTROL_SIZES` and exports `assets/images/HUD/touch/<name>.png`, plus a
 contact sheet on the three backgrounds the controls sit on (dark bar, level background, ground). It contains
-no drawing logic. The old `Joystick.png`, `JumpButton.png`, `Knob.png` and `PauseButton.png`
-stay as they are for any other user.
+no drawing logic. The old `Joystick.png`, `JumpButton.png`, `Knob.png` and `PauseButton.png` were deleted.
 """
 from pathlib import Path
 from PIL import Image
