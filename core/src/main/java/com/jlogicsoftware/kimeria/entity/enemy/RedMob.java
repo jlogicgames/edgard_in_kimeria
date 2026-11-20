@@ -20,11 +20,12 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     private static final float ATTACK_FRAME_TIME = STEP_TIME * 2;
     private static final float WINDUP_TIME = ATTACK_FRAME_TIME * 2;
     private static final float ATTACK_TIME = ATTACK_FRAME_TIME * 4;
+    private static final String WHIP_SOUND = "whip_crack";
 
     private final Hitbox attackHitbox;
     private Level level;
     private float targetDirection = -1;
-    private boolean isAttacking = false;
+    private boolean isAttacking = false, whipHeard;
     private float attackElapsed = 0f;
     private boolean clambering, inQuickSand;
     private Escalator currentEscalator;
@@ -117,10 +118,15 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
         if (isAttacking || player.isGotHit()) return;
         isAttacking = true;
         attackElapsed = 0f;
+        whipHeard = false;
         setState(State.ATTACK);
     }
 
     private void checkAttackCollision() {
+        if (isAttackActive() && !whipHeard) {  // one crack per whip, hit or miss (D93, #447)
+            whipHeard = true;
+            if (game.playSounds()) game.playSound(WHIP_SOUND);
+        }
         if (isAttackActive() && attackTouchesPlayer()) {
             player.collidedWithActor(false);
         }
