@@ -3609,7 +3609,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   whose tiles are sub-rectangles of one packed sheet (896 x 1696), the cull rectangle is the view plus one tile (the shake moves the camera
   up to 1.5 px after `visibleWorldRect`), the batch holds 8191 sprites (the libGDX maximum); a frame of `forest-1-mob` with the 640 px view
   went from 4 198 region draws and 15 texture switches to 3 187 and 9 (800 px view: 4 866 and 21 to 3 698 and 9), measured through `NoopBatch`
-  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`): they
+  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`) by a fractional, unsnapped offset (the world is drawn at screen resolution, so the drift glides; the camera parallax stays whole pixels), the two copies `wrapx` apart so the seam stays closed: they
   stop in the pause, a room fade and after black in a death fade, and slow with the death slow motion; "map-wide layers never jump at a
   room change" holds while the rooms share a floor camera top (`everyForestRoomSharesOneFloorCameraTop`).
 - **Gate:** `TiledMapParallaxTest` (the split, factors, foreground groups), `ParallaxRendererTest` (the maths, half-up rounding, per-room origin,

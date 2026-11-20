@@ -310,7 +310,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 - **Shared sky objects (author, 2026-11-19).** One moon and one set of clouds serve every world (Forest, Swamp, Steppe, Castle); in the
   Castle they are seen through the windows. The moon is fixed on screen (factor 0 in x and y): it never moves with the camera and sits
   at the same screen position in every room. The clouds drift continuously over time at a constant speed per cloud layer, independent of
-  the hero and the camera, and wrap at `wrapx`; the sketch uses 3 px/s.
+  the hero and the camera, and wrap at `wrapx`; the sketch uses 3 px/s. The drift is not snapped to whole pixels (only the camera parallax is), so the clouds glide.
 - **Sketch files.** `art/parallax/forest/*.grid` and `art/parallax/shared/*.grid` (one char per pixel, colours `RRGGBB` or `RRGGBBAA`)
   are the drawing; soft edges are drawn there as flat colours with alpha, the exporter applies no filter; `tools/parallax_sprites.py` exports the sheets and `.tsx` files; `tools/parallax_game.py` installs them into the game (assets and forest-1's layers); `tools/parallax_mock.py` builds
   `mock.tmx` over the first room of forest-1, renders previews at cameras 0, 320 and 640 and checks the

@@ -71,11 +71,40 @@ class ParallaxRendererTest {
         assertEquals(1008f, ParallaxRenderer.originY(new Rectangle(0, 1000, 640, 368), VIEW_H));
     }
 
-    @Test void cloudDriftIsWholePixelsAndWrapsBelowItsLength() {
-        assertEquals(0, ParallaxRenderer.driftOffset(0f, 1024f));
-        assertEquals(3, ParallaxRenderer.driftOffset(2.5f, 1024f));
-        assertEquals(0, ParallaxRenderer.driftOffset(1023.6f, 1024f));
-        assertEquals(0, ParallaxRenderer.driftOffset(12f, 0f), "a layer without wrap does not drift");
+    @Test void cloudDriftIsFractionalAndWrapsBelowItsLength() {
+        assertEquals(0f, ParallaxRenderer.driftOffset(0f, 1024f));
+        assertEquals(2.5f, ParallaxRenderer.driftOffset(2.5f, 1024f), "not snapped to a whole pixel");
+        assertEquals(1023.5f, ParallaxRenderer.driftOffset(1023.5f, 1024f));
+        assertEquals(0.5f, ParallaxRenderer.driftOffset(1024.5f, 1024f), "wrapped below the length");
+        assertEquals(1023.5f, ParallaxRenderer.driftOffset(-0.5f, 1024f), "never negative");
+        assertEquals(0f, ParallaxRenderer.driftOffset(12f, 0f), "a layer without wrap does not drift");
+        float tiny = ParallaxRenderer.driftOffset(-1e-6f, 1024f);
+        assertTrue(tiny >= 0f && tiny < 1024f, "a tiny negative drift stays inside [0, wrap): " + tiny);
+    }
+
+    @Test void aNegativeDriftLayerStaysWithinItsWrap() {
+        TiledMapData map = forest1();
+        int clouds = indexOfLayer(map, "clouds");
+        map.sceneryLayers.get(clouds).driftX = -3f;
+        ParallaxRenderer renderer = new ParallaxRenderer(map);
+        for (int i = 0; i < 5000; i++) {
+            renderer.update(0.1f);
+            float d = renderer.driftOf(clouds);
+            assertTrue(d >= 0f && d < 1024f, "step " + i + ": " + d);
+        }
+    }
+
+    @Test void theFractionalDriftReachesTheBatchDraw() {
+        TiledMapData map = forest1();
+        ParallaxRenderer renderer = new ParallaxRenderer(map);
+        int clouds = indexOfLayer(map, "clouds");
+        Set<TextureRegion> cells = regionsOf(map.sceneryLayers.get(clouds));
+        Rectangle room = new Rectangle(MOB_X, 0, 800, 368), view = new Rectangle(MOB_X, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H);
+        draw(renderer, view, room);
+        float before = leftmostScreenX(cells, view.x);
+        renderer.update(0.05f);
+        draw(renderer, view, room);
+        assertEquals(0.15f, leftmostScreenX(cells, view.x) - before, 1e-3f, "3 px/s x 0.05 s = 0.15 px, not snapped");
     }
 
     private TiledMapData forest1() { return TiledMapData.load("tiles/forest-1.tmx", harness.assets()); }
@@ -137,11 +166,11 @@ class ParallaxRendererTest {
         Set<TextureRegion> cells = regionsOf(map.sceneryLayers.get(clouds));
         Rectangle room = new Rectangle(MOB_X, 0, 800, 368);
         Rectangle view = new Rectangle(MOB_X, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H);
-        assertEquals(0, renderer.driftOf(clouds));
+        assertEquals(0f, renderer.driftOf(clouds));
         draw(renderer, view, room);
         float at0 = leftmostScreenX(cells, view.x);
         for (int i = 0; i < 100; i++) renderer.update(0.1f);   // 10 s at 3 px/s
-        assertEquals(30, renderer.driftOf(clouds));
+        assertEquals(30f, renderer.driftOf(clouds), 0.01f);
         draw(renderer, view, room);
         float at10 = leftmostScreenX(cells, view.x);
         assertNotEquals(at0, at10, "the clouds moved");
@@ -150,8 +179,8 @@ class ParallaxRendererTest {
         assertEquals(at10, leftmostScreenX(cells, view.x), "the camera does not move the clouds on screen");
         for (int i = 0; i < 4000; i++) renderer.update(0.1f);   // 400 s: past one wrap (1024 / 3 = 341 s)
         assertTrue(renderer.driftOf(clouds) >= 0 && renderer.driftOf(clouds) < 1024);
-        assertEquals(Math.floorMod(Math.round(3 * 410f), 1024), renderer.driftOf(clouds), 2);
-        for (int i = 0; i < map.sceneryLayers.size(); i++) if (i != clouds) assertEquals(0, renderer.driftOf(i), "only the clouds drift");
+        assertEquals(3 * 410f - 1024f, renderer.driftOf(clouds), 0.5f);
+        for (int i = 0; i < map.sceneryLayers.size(); i++) if (i != clouds) assertEquals(0f, renderer.driftOf(i), "only the clouds drift");
     }
 
     @Test void aLevelFrameDrawsSceneryThenPlayThenTheRoomsForeground() {
