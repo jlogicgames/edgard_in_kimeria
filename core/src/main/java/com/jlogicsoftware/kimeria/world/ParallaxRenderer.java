@@ -19,8 +19,10 @@ import com.jlogicsoftware.kimeria.tiled.TiledMapData;
  * left edge ({@code roomx}) and its objects are positioned relative to that room. {@code originY} is the room's floor-camera top
  * (see {@link #originY}), where every layer shows as authored. A clouds layer ({@code driftx}, {@code wrapx}) also moves by its drift,
  * accumulated over game time ({@code update} runs inside {@code Level.update}: it stops while the game is paused, during a room fade and
- * after black in a death fade, and slows with the death slow motion) and wrapped, independent of the camera. The screen offsets are
- * whole pixels added to the camera's true position, so a layer lines up with the play layer whatever the camera's fraction.
+ * after black in a death fade, and slows with the death slow motion) and wrapped, independent of the camera. The camera
+ * parallax offsets are whole pixels added to the camera's true position, so a layer lines up with the play layer whatever the camera's
+ * fraction; the cloud drift alone is not snapped: it stays fractional so the clouds glide (the world is drawn at screen resolution, on
+ * the screen or in the scene buffer), and the two copies of the layer are exactly {@code wrapx} apart, so the seam stays closed.
  *
  * <p>Scenery layers use the room's {@code originY} (a vertical shift measured from the floor camera), so across a room change a
  * map-wide layer holds its place only while the rooms share a floor camera top, as every forest room does (rooms of 368 px at y 0, top
@@ -67,11 +69,20 @@ public final class ParallaxRenderer {
         return FallingTrapLayout.floorCameraTop(room, viewHeight);
     }
 
-    /** A cloud layer's offset in px at an accumulated drift: whole pixels, below {@code wrap}. */
-    public static int driftOffset(float driftPx, float wrap) { return wrap > 0 ? snap(driftPx) % (int) wrap : 0; }
+    /**
+     * A cloud layer's offset in px at an accumulated drift: kept fractional (never snapped) and wrapped into [0, {@code wrap}). The
+     * world is drawn at screen resolution, so a fractional offset glides by sub-pixel steps instead of jumping a whole world pixel.
+     */
+    public static float driftOffset(float driftPx, float wrap) {
+        if (wrap <= 0) return 0f;
+        float offset = driftPx % wrap;
+        if (offset < 0f) offset += wrap;
+        if (offset >= wrap) offset -= wrap;   // -1e-6f + 1024f rounds to 1024f
+        return offset;
+    }
 
-    /** The whole-pixel drift of scenery layer {@code index} now (0 for a still layer). */
-    int driftOf(int index) { return driftOffset(drift[index], map.sceneryLayers.get(index).wrapX); }
+    /** The fractional drift of scenery layer {@code index} now (0 for a still layer). */
+    float driftOf(int index) { return driftOffset(drift[index], map.sceneryLayers.get(index).wrapX); }
 
     /** Advances the clouds' drift by real time. */
     public void update(float dt) {
@@ -80,6 +91,7 @@ public final class ParallaxRenderer {
             if (layer.driftX == 0 || layer.wrapX <= 0) continue;
             drift[i] += layer.driftX * dt;
             if (drift[i] >= layer.wrapX) drift[i] -= layer.wrapX;
+            else if (drift[i] < 0) drift[i] += layer.wrapX;
         }
     }
 
