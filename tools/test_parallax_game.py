@@ -105,11 +105,11 @@ class GameCheckTest(unittest.TestCase):
         root, _, pieces = pm.tile_images(scene.mock)
         group = next(g for g in root.findall('objectgroup') if g.get('name') == 'foreground-forest-1-mob')
         self.assertTrue(pm.check_layer(scene, group, pieces, silent))
-        # a tall fern placed over the red mob (room x 192) must be caught
+        # the near canopy lowered over the red mob (room x 192) must be caught
         broken = pm.ET.fromstring(pm.ET.tostring(group))
-        fern = next(o for o in broken.findall('object') if o.get('name') == 'clump-fern')
-        fern.set('x', '150')
-        fern.set('y', '330')
+        canopy = next(o for o in broken.findall('object') if o.get('name') == 'near-canopy')
+        canopy.set('x', '150')
+        canopy.set('y', '330')
         self.assertFalse(pm.check_layer(scene, broken, pieces, silent))
 
 

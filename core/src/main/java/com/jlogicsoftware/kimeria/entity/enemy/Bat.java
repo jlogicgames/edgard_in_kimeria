@@ -21,7 +21,7 @@ public class Bat extends Enemy<Bat.State> {
         super(assets, game, "Bat", x, y, w, h, offNeg, offPos, State.class);
         this.isVertical = isVertical;
         moveDirection = 1;
-        // Art spans x 0..16, y 3..14 of the 16x16 frame. The body (sword, stomp) covers it fully; what
+        // Art spans x 0..16, y 2..14 of the 16x16 frame (bat.grid). The body (sword, stomp) covers it fully; what
         // kills on touch is a smaller box inside it, so the empty air around the wings is safe.
         hitbox = Hitbox.rect(0, 2, 16, 13);
         hurtbox = Hitbox.rect(3, 4, 10, 9);

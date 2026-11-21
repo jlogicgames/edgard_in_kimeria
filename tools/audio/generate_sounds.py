@@ -1284,7 +1284,7 @@ def snail_splat() -> list[float]:
     return finish_rms(out, SNAIL_SPLAT_RMS_DB)
 
 
-# ---------------------------------------------------------------- forest wolf (#331, D113)
+# ---------------------------------------------------------------- forest wolf (#331, D114)
 # An animal, never a person (author, 2026-11-21: the first set "sounds like the hero"). The hero's voice set (#313) glides
 # between 120 and 470 Hz through human vowels whose first formant lies at 300 to 800 Hz (FORMANTS_A/E/I/O/U/AA/UH); the boss
 # goes down to 72 Hz. The wolf's voiced sounds go through a snout resonance whose first formant is 950 to 1050 Hz, above

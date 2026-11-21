@@ -236,7 +236,7 @@ room's entrance, exit or checkpoints). Where it is met: with the spider rooms' r
 
 ## Forest wolf
 
-A lean crimson wolf (D113, #331), the largest Forest monster, trots slowly along its own stretch of floor, stops to sniff at each
+A lean crimson wolf (D114, #331), the largest Forest monster, trots slowly along its own stretch of floor, stops to sniff at each
 end and turns. Touching it is harmless. It sees far ahead (sixteen tiles, a band a little taller than Edgard, cut by any
 wall or crate at its eye height) and hears close by (four tiles, through anything). When it notices him it stops, pricks its ears,
 bristles and scrapes a paw (half a second, with a sharp bark), then sprints at him, faster than he runs, keeping to its own stretch

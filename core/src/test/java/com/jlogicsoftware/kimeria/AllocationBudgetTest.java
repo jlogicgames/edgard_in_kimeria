@@ -192,7 +192,7 @@ class AllocationBudgetTest {
     static final double SPIDER_ROUTE_CEILING = 8;
     /** Measured in 3 runs (2026-11-19, #329, D106; the same 8 B ceiling as the other monsters; the harness does not play sounds): snails crawling, noticing, winding up with their specks and swelling gob, spitting, their gobs flying with drips and ending (dropping and splatting past their range, cut by the blade or burnt), reloading, or killed with their gob still in the air and leaving a body that rocks, crumbles and burns, through the real {@code Level} of snail-test.tmx, update and render every frame; the numbers are in D106. */
     static final double SNAIL_CEILING = 8;
-    /** Measured 0.2, 0.6 and 0.6 B/frame in 3 runs before the floor re-check, and 0.0 in the one run after it (2026-11-21, #331, D113; the same 8 B ceiling as the other monsters; the harness does not play sounds): wolves trotting, sniffing, noticing, sprinting, skidding on a turn, winding up with their breath streaks, lunging, biting, recovering and baying under a hero out of reach, or killed in the lunge and leaving a body that twitches, crumbles and burns, through the real {@code Level} of wolf-test.tmx, update and render every frame; the numbers are in D113. */
+    /** Measured 0.2, 0.6 and 0.6 B/frame in 3 runs before the floor re-check, and 0.0 in the one run after it (2026-11-21, #331, D114; the same 8 B ceiling as the other monsters; the harness does not play sounds): wolves trotting, sniffing, noticing, sprinting, skidding on a turn, winding up with their breath streaks, lunging, biting, recovering and baying under a hero out of reach, or killed in the lunge and leaving a body that twitches, crumbles and burns, through the real {@code Level} of wolf-test.tmx, update and render every frame; the numbers are in D114. */
     static final double WOLF_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
@@ -958,7 +958,7 @@ class AllocationBudgetTest {
     private static final float WOLF_HERO_AHEAD_X = 489 - 29, WOLF_HERO_FAR_X = 3;
 
     /**
-     * Wolves in turn through the real {@code Level} of wolf-test.tmx (#331, D113). Each cycle the hero appears 150 px ahead (frame
+     * Wolves in turn through the real {@code Level} of wolf-test.tmx (#331, D114). Each cycle the hero appears 150 px ahead (frame
      * {@value #WOLF_SEEN_FRAME}; every even wolf spawns at its range's left end, so it sniffs there first); the wolf notices
      * (0.5 s) and sprints; the hero jumps behind it as it runs, so it skids and turns; it commits, winds up with its breath streaks
      * and lunges, and the hero is gone when the jaws leave (a miss). Even wolves bite, recover, chase a hero lifted 40 px (out of

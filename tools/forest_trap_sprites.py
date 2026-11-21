@@ -48,7 +48,7 @@ RIM_KEEP = {'falling-platform': 'c', 'fairy:glint': 'K'}
 # white `f2fff4` (already in her palette, so no new entry), and only from above, so her sides and underside keep the ink:
 # half light, half dark reads both on the near-black play band (lifted by her own glow) and over the moon and the clouds.
 FAIRY_RIM = (0xf2, 0xff, 0xf4)
-# The wolf (#331, D113) is lit from above only: its long back and head take the rim, its sides keep their ink. A full rim on a
+# The wolf (#331, D114) is lit from above only: its long back and head take the rim, its sides keep their ink. A full rim on a
 # 38 px body measured outline 0.52 to 0.74, far louder than the other danger-family monsters (0.30 to 0.34); from above only
 # it measures 0.32 to 0.37 at the monster spawns (2026-11-21), the family's loudness.
 RIM_STYLE = {'fairy:body': (FAIRY_RIM, moon_rim.UP_SIDE), 'fairy:glint': (FAIRY_RIM, moon_rim.UP_SIDE), 'monster:wolf': (moon_rim.RIM, moon_rim.UP_SIDE)}

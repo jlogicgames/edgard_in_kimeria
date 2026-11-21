@@ -415,7 +415,7 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(max(partial), SHORT_FLOOR_WIDTH - body_end, 'the pounce stops where the body would leave the floor')
 
     def test_a_wolfs_body_is_swept_along_its_range_widened_by_the_lunge_reach_while_floor_lasts(self):
-        """#331 (D113): a wolf killed in its lunge slides on to the line's end over floor, so its body is measured out to the reach."""
+        """#331 (D114): a wolf killed in its lunge slides on to the line's end over floor, so its body is measured out to the reach."""
         legs = lambda width: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{width}" height="48"/>'
                                            f'</objectgroup><objectgroup name="SpawnPoints"><object type="Wolf" x="{SPIDER_RANGE_X}" '
                                            f'y="{BODY_FLOOR - gate.WOLF_FRAME_HEIGHT}" width="48" height="24"><properties>'

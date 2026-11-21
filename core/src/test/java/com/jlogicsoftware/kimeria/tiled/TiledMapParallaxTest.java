@@ -73,14 +73,14 @@ class TiledMapParallaxTest {
         ForegroundGroup escalators = map.foregroundGroups.get(0), traps = map.foregroundGroups.get(1), mob = map.foregroundGroups.get(2);
         assertEquals(0f, escalators.roomX); assertEquals(640f, traps.roomX); assertEquals(MOB_ROOM_X, mob.roomX);
         assertEquals(FOREGROUND_FACTOR, mob.factorX); assertEquals(FOREGROUND_FACTOR, mob.factorY);
-        int vine = indexOf(mob, "vine-curtain");
-        assertEquals(120f, mob.x[vine]); assertEquals(0f, mob.y[vine], "Tiled stores the bottom edge (208), the parser keeps the top (0)");
-        assertEquals(288f, mob.width[vine]); assertEquals(208f, mob.height[vine]);
-        assertNotNull(mob.regions[vine]);
-        assertTrue(indexOf(escalators, "trunk-near") >= 0);
-        assertEquals(-1, indexOf(traps, "trunk-near"), "the trunk stayed with the escalators");
-        assertTrue(indexOf(traps, "vine-curtain") >= 0);
-        assertEquals(-1, indexOf(mob, "trunk-near"), "the pieces of one room are not in another's group");
+        int canopy = indexOf(mob, "near-canopy");
+        assertEquals(-88f, mob.x[canopy]); assertEquals(0f, mob.y[canopy], "Tiled stores the bottom edge (112), the parser keeps the top (0)");
+        assertEquals(224f, mob.width[canopy]); assertEquals(112f, mob.height[canopy]);
+        assertNotNull(mob.regions[canopy]);
+        assertEquals(-88f, escalators.x[indexOf(escalators, "near-canopy")], "the escalators' canopy is in the start corner");
+        assertEquals(540f, traps.x[indexOf(traps, "near-canopy")], "the traps room's canopy is its own, at the end corner");
+        assertTrue(indexOf(mob, "vine-curtain") >= 0);
+        assertEquals(-1, indexOf(escalators, "vine-curtain"), "the pieces of one room are not in another's group");
         for (int i = 0; i < mob.count; i++) assertNotNull(mob.regions[i], mob.names[i]);
     }
 
@@ -130,13 +130,13 @@ class TiledMapParallaxTest {
             }
         };
         TiledMapData loaded = TiledMapData.load("tiles/forest-1.tmx", recording);
-        ForegroundGroup mob = loaded.foregroundGroups.get(1);
-        int vine = indexOf(mob, "vine-curtain");
-        assertTrue(vine >= 0);
+        ForegroundGroup traps = loaded.foregroundGroups.get(1);
+        int fern = indexOf(traps, "near-fern");
+        assertTrue(fern >= 0);
         long sheetRegions = asked.stream().filter(r -> r.startsWith("images/parallax/forest-fg.png ")).count();
         assertTrue(sheetRegions >= loaded.foregroundGroups.get(0).count, "every piece is a region of the one sheet: " + sheetRegions);
         assertTrue(asked.stream().noneMatch(r -> r.contains("parallax/forest-fg/")), "no per-piece image files");
-        assertEquals(288f, mob.width[vine], "the drawn size is the object's, the region is the tile's sub-rectangle");
+        assertEquals(224f, traps.width[fern], "the drawn size is the object's, the region is the tile's sub-rectangle");
     }
 
     @Test void aMapWithoutSceneryHasNone() {

@@ -187,7 +187,7 @@ public class Level implements WorldObject {
     /** The snails' wind-up specks, gob drips and splats and deaths (#329, D106): one for the level. Cleared with the room. */
     private final SnailFx snailFx = new SnailFx(TimeUtils.nanoTime() ^ SNAIL_FX_SEED_MIX);
     private static final long WOLF_FX_SEED_MIX = 0xFF51AFD7ED558CCDL;
-    /** The wolves' wind-up breath, skid and bite dust, jaw glints and deaths (#331, D113): one for the level. Cleared with the room. */
+    /** The wolves' wind-up breath, skid and bite dust, jaw glints and deaths (#331, D114): one for the level. Cleared with the room. */
     private final WolfFx wolfFx = new WolfFx(TimeUtils.nanoTime() ^ WOLF_FX_SEED_MIX);
     /** Every monster body's crumble and burn (D101, #478): one for the level. Cleared with the room. */
     private final RemainsFx remainsFx = new RemainsFx(TimeUtils.nanoTime() ^ REMAINS_FX_SEED_MIX);
@@ -561,7 +561,7 @@ public class Level implements WorldObject {
     public SpiderFx spiderFx() { return spiderFx; }
     /** The snails' specks, gob drips and splats and deaths (#329, D106); {@code Snail} writes into them, tests read them. */
     public SnailFx snailFx() { return snailFx; }
-    /** The wolves' breath, dust, jaw glints and deaths (#331, D113); {@code Wolf} writes into them, tests read them. */
+    /** The wolves' breath, dust, jaw glints and deaths (#331, D114); {@code Wolf} writes into them, tests read them. */
     public WolfFx wolfFx() { return wolfFx; }
     /** Every monster body's crumble and burn (D101, #478); the bodies write into them, tests read them. */
     public RemainsFx remainsFx() { return remainsFx; }
@@ -615,7 +615,7 @@ public class Level implements WorldObject {
             if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
             if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
             if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
-            if ("Wolf".equals(o.type)) validateWolf(o, owner); // D113: every room, at load.
+            if ("Wolf".equals(o.type)) validateWolf(o, owner); // D114: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -1292,7 +1292,7 @@ public class Level implements WorldObject {
     }
 
     /**
-     * The wolf (D113) fails at load when its range is shorter than {@link Wolf#MIN_RANGE}, leaves the room or has a gap under it,
+     * The wolf (D114) fails at load when its range is shorter than {@link Wolf#MIN_RANGE}, leaves the room or has a gap under it,
      * when a standing place (the entrance body, the room exit, a checkpoint) is within its sight or reach, or when a solid hangs into
      * the {@link Wolf#HEADROOM} px above its floor over its reach.
      */

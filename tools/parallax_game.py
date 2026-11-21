@@ -45,46 +45,41 @@ TERRAIN_TSX_TEXT = ('<?xml version="1.0" encoding="UTF-8"?>\n<tileset version="1
                     ' <image source="../images/Tileset/ForestTerrain.png" width="320" height="112"/>\n</tileset>\n')
 SCENERY = ('sky', 'stars', 'moon', 'clouds', 'far', 'grove', 'mid', 'play-above', 'play-below')
 EDGE_COLUMNS = 2                                  # spare columns past what a layer's factor needs (the camera is fractional)
-# the foreground of each room of forest-1 that has one: room name -> pieces (piece, x, top y), x relative to the room
-# #500 batch 3 (D110) split the 1280 px trap course at x 640: the sketch's pieces left of x 600 stay with `forest-1-escalators` (x 0-640);
-# the ones from x 600 on move to `forest-1-traps` (x 640-1280) 640 px to the left, since pieces are relative to their room. The two
-# `edge-*` pieces stood at x 1568 and 1600, which the old room's camera (up to x 640, factor 1.6) carried to about x 544 and 576 on screen at
-# the room's end; in a one-screen room the camera never moves, so they are placed there directly, at x 560 and 592, framing its right edge.
-ESCALATORS_FOREGROUND = tuple(p for p in pm.FOREGROUND if p[1] < 600)
-TRAPS_FOREGROUND = (tuple((name, x - 640, top) for name, x, top in pm.FOREGROUND if 600 <= x < 1280)
-                    + tuple((name, x - 1008, top) for name, x, top in pm.FOREGROUND if name.startswith('edge-')))
-# the other nine rooms of forest-1 (2026-11-20, #236): placed by the same greedy rule as forest-0 and forest-2 (each piece kept only where rule B and
-# the cover time still pass), preferring the big soft pieces (curtains, tall reeds) over floor clumps (broad-leaf clumps only: the pointed fern and mixed clumps read as thorns), the corner bough moved or left out from room to room, and the spider's roots kept off the moon at its first camera
-FOREST_1 = {'forest-1-escalators': ESCALATORS_FOREGROUND, 'forest-1-traps': TRAPS_FOREGROUND, 'forest-1-mob': pm.CALM_FOREGROUND,
-    'forest-1-lever': (('hang-leaves-l', -80, 0), ('vine-curtain', 56, 0), ('clump-leaves', 464, 320)),
-    'forest-1-spider': (('hang-leaves-l', -16, 0), ('roots-curtain', 96, 0), ('vine-curtain', 680, 0), ('clump-leaves', 264, 320)),
-    'forest-1-bramble': (('roots-curtain', 72, 0), ('rise-reeds', 448, 144), ('clump-leaves', 300, 320)),
-    'forest-1-climb': (('hang-leaves-l', -64, 0), ('vine-curtain', 544, 0), ('clump-leaves', 8, 320)),
-    'forest-1-route': (('roots-curtain', 16, 0), ('clump-leaves', 560, 320), ('clump-grass', 720, 320)),
-    'forest-1-guard': (('hang-leaves-l', 0, 0), ('vine-curtain', 280, 0), ('roots-curtain', 648, 0), ('clump-leaves', -16, 320)),
-    'forest-1-hive': (('roots-curtain', -16, 0), ('rise-reeds', 248, 144), ('clump-leaves', 400, 320)),
-    'forest-1-tree': (('hang-leaves-l', -64, 0), ('roots-curtain', 40, 0), ('rise-reeds', 480, 144), ('clump-leaves', -16, 320)),
-    'forest-1-deadfall': (('vine-curtain', 120, 0), ('rise-reeds', 384, 144), ('clump-leaves', -16, 320)),
+# The foreground of every room (#236, D113): room name -> pieces (piece, x, top y), x relative to the room. The near pieces (`near-*`,
+# drawn by hand in art/parallax/forest/near/) frame the view from the top edge: a big top mass in the start corner (the canopy and the
+# hanging fern in turn) and another in the end corner, right of the moon at the last camera (the sprig where only it fits). Rooms with a
+# falling or thrown stone take no canopy: its hanging leaves could read as stones. Each piece was kept only where the room still passes
+# rule B and the cover time with everything placed before it, with at least a fifth (canopy, fern) or 0.3 (sprig) of it on screen over
+# the room at the first or last camera; one earlier thin piece (a curtain, the reeds) stays where fewer than three near pieces fit, and
+# forest-0-lever keeps its broad-leaf clump (the bleed test needs a standing piece in the first room). The boss room keeps its reeds.
+FOREST_1 = {
+    'forest-1-escalators': (('near-canopy', -88, 0), ('near-fern', 540, 0)),
+    'forest-1-traps': (('near-fern', -88, 0), ('near-canopy', 540, 0)),
+    'forest-1-mob': (('near-canopy', -88, 0), ('near-fern', 796, 0), ('vine-curtain', 120, 0)),
+    'forest-1-lever': (('near-fern', -88, 0), ('near-canopy', 540, 0), ('vine-curtain', 56, 0)),
+    'forest-1-spider': (('near-fern', -88, 0), ('near-sprig', 1308, 0), ('roots-curtain', 96, 0)),
+    'forest-1-bramble': (('near-fern', -88, 0), ('near-canopy', 540, 0), ('roots-curtain', 72, 0)),
+    'forest-1-climb': (('near-fern', -116, 0), ('near-sprig', 540, 0), ('vine-curtain', 544, 0)),
+    'forest-1-route': (('near-fern', -88, 0), ('near-canopy', 848, 0)),
+    'forest-1-guard': (('near-canopy', -88, 0), ('near-fern', 744, 0), ('vine-curtain', 280, 0)),
+    'forest-1-hive': (('near-fern', -88, 0), ('near-sprig', 540, 0), ('rise-reeds', 248, 144)),
+    'forest-1-tree': (('near-canopy', -88, 0), ('near-fern', 540, 0), ('roots-curtain', 40, 0)),
+    'forest-1-deadfall': (('near-fern', -88, 0), ('near-sprig', 540, 0), ('vine-curtain', 120, 0)),
 }
-# forest-0 and forest-2 (converted 2026-11-20, #236): every room has a foreground. The pieces were placed one by one, each kept only
-# where the room still passes rule B and the cover time (`parallax_mock.check_layer`) with everything placed before it: the corner
-# leaves, one curtain from the top (vine and roots in turn, the roots kept off the moon at the room's first and last camera), a tall
-# piece at a room end, low clumps on the floor line and a tuft. The boss
-# roams its whole arena, so the boss room keeps only the low clumps under its floor line and reeds outside the arena.
 FOREST_0 = {
-    'forest-0-lever': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-fern', 448, 128), ('clump-fern', 72, 320), ('clump-leaves', 440, 320), ('tuft', 184, 312)),
-    'forest-0-ladder': (('hang-leaves-l', -80, 0), ('roots-curtain', 172, 0), ('rise-reeds', -50, 144), ('clump-leaves', -24, 320), ('clump-grass', 288, 320), ('clump-mixed', 568, 320), ('clump-fern', 896, 320), ('tuft', 104, 312)),
-    'forest-0-wall': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', -50, 144), ('clump-grass', 40, 320), ('clump-mixed', 288, 320), ('clump-fern', 608, 320), ('tuft', 144, 312)),
-    'forest-0-platform': (('hang-leaves-l', -80, 0), ('roots-curtain', 28, 0), ('rise-reeds', -50, 144), ('clump-mixed', -40, 320), ('clump-fern', 320, 320), ('clump-leaves', 672, 320), ('tuft', 152, 312)),
-    'forest-0-stone': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', -50, 144), ('clump-fern', 48, 320), ('clump-leaves', 296, 320), ('clump-grass', 672, 320), ('tuft', 176, 312)),
-    'forest-0-traps': (('hang-leaves-l', -80, 0), ('roots-curtain', 172, 0), ('rise-reeds', -50, 144), ('clump-leaves', 32, 320), ('clump-grass', 384, 320), ('tuft', 128, 312)),
+    'forest-0-lever': (('near-canopy', -128, 0), ('near-fern', 488, 0), ('clump-leaves', 440, 320), ('vine-curtain', 76, 0)),
+    'forest-0-ladder': (('near-fern', -88, 0), ('near-canopy', 948, 0), ('roots-curtain', 172, 0)),
+    'forest-0-wall': (('near-canopy', -88, 0), ('near-fern', 772, 0), ('vine-curtain', 76, 0)),
+    'forest-0-platform': (('near-fern', -88, 0), ('near-sprig', 796, 0), ('rise-reeds', -50, 144)),
+    'forest-0-stone': (('near-fern', -88, 0), ('near-sprig', 692, 0), ('vine-curtain', 76, 0)),
+    'forest-0-traps': (('near-fern', -88, 0), ('near-canopy', 668, 0), ('roots-curtain', 172, 0)),
 }
 FOREST_2 = {
-    'forest-entry': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', -50, 144), ('clump-fern', 40, 320), ('clump-leaves', 416, 320), ('clump-grass', 696, 320), ('tuft', 176, 312)),
-    'forest-walls': (('hang-leaves-l', -80, 0), ('roots-curtain', 20, 0), ('rise-fern', 423, 128), ('clump-leaves', 64, 320), ('clump-grass', 312, 320), ('tuft', 168, 312)),
-    'forest-fissure': (('hang-leaves-l', -80, 0), ('vine-curtain', 76, 0), ('rise-reeds', 390, 144), ('clump-grass', 56, 320), ('clump-mixed', 360, 320), ('tuft', 120, 312)),
-    'forest-canopy': (('hang-leaves-l', -80, 0), ('roots-curtain', -4, 0), ('rise-fern', 1268, 128), ('clump-mixed', 24, 320), ('clump-fern', 360, 320), ('clump-leaves', 736, 320), ('clump-grass', 1072, 320), ('tuft', 152, 312)),
-    'forest-boss': (('rise-reeds', 426, 144), ('clump-fern', 40, 320), ('clump-leaves', 312, 320), ('tuft', 112, 312)),
+    'forest-entry': (('near-canopy', -88, 0), ('near-fern', 692, 0), ('vine-curtain', 76, 0)),
+    'forest-walls': (('near-fern', -128, 0), ('near-canopy', 452, 0), ('roots-curtain', 20, 0)),
+    'forest-fissure': (('near-canopy', -88, 0), ('near-fern', 540, 0), ('vine-curtain', 76, 0)),
+    'forest-canopy': (('near-fern', -88, 0), ('near-sprig', 1308, 0), ('rise-fern', 1268, 128)),
+    'forest-boss': (('rise-reeds', 426, 144),),
 }
 MAPS = {'forest-0': FOREST_0, 'forest-1': FOREST_1, 'forest-2': FOREST_2}   # every forest map and its rooms' foreground
 GAME_FOREGROUND = {room: pieces for rooms in MAPS.values() for room, pieces in rooms.items()}

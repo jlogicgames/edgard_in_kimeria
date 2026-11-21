@@ -56,8 +56,8 @@ public class HangingHive extends Entity implements LethalHazard {
     public static final float GATHER_PERIOD = 0.05f, GATHER_LIFE = 0.3f, GATHER_RING_PX = 10f;
     public static final int SCATTER_SPECKS = 10, SPECK_CAPACITY = 24;
     public static final float SCATTER_LIFE = 0.6f, SCATTER_PX = 24f, SCATTER_MIN_FRACTION = 0.5f, SPECK_PX = 1f;
-    // hive.grid's b efe6c4 (bone) and k 0b0814 (ink): the ink specks read on the sky, the bone ones on dirt.
-    private static final float BONE_R = 0.937f, BONE_G = 0.902f, BONE_B = 0.769f, INK_R = 0.043f, INK_G = 0.031f, INK_B = 0.078f;
+    // hive.grid's b c87896 (rose) and k 0b0814 (ink): the ink specks read on the sky, the rose ones on dirt.
+    private static final float ROSE_R = 0.784f, ROSE_G = 0.471f, ROSE_B = 0.588f, INK_R = 0.043f, INK_G = 0.031f, INK_B = 0.078f;
     private static final long SEED_MIX = 0x9E3779B97F4A7C15L;
     private static final float TWO = 2f, FULL_TURN = (float) (Math.PI * 2);
     private static final int REST = 0, SHAKE1 = 1, SHAKE2 = 2, RELEASE = 3, BARE = 4, FALLING = 5, FALLEN = 6, FRAMES = 7;
@@ -284,7 +284,7 @@ public class HangingHive extends Entity implements LethalHazard {
 
     private void emit(float x0, float y0, float x1, float y1, float life, boolean ink) {
         specks.spawn(KimeriaParticleSystem.KIND_GRIT, x0, y0, x1, y1, life, SPECK_PX,
-            ink ? INK_R : BONE_R, ink ? INK_G : BONE_G, ink ? INK_B : BONE_B);
+            ink ? INK_R : ROSE_R, ink ? INK_G : ROSE_G, ink ? INK_B : ROSE_B);
     }
 
     /** Recomputes the band from the clock (no state of its own, so it is the same after any frame rate). */

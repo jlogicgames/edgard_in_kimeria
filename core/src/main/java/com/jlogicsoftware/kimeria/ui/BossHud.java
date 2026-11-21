@@ -34,7 +34,7 @@ public final class BossHud {
         frame = assets.region(ART + "frame.png", 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
         filled = assets.region(ART + "segment-filled.png", 0, 0, SEGMENT_WIDTH, SEGMENT_HEIGHT);
         empty = assets.region(ART + "segment-empty.png", 0, 0, SEGMENT_WIDTH, SEGMENT_HEIGHT);
-        elixir = assets.region("images/Items.png", 80, 0, 16, 16);
+        elixir = assets.region(ART + "elixir.png", 0, 0, (int) ELIXIR_SIZE, (int) ELIXIR_SIZE);
         font = assets.font(FontSizes.LABEL);
     }
 

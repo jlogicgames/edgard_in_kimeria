@@ -12,7 +12,7 @@ in the game. Keep transparent backgrounds and use nearest-neighbour pixel art.
 Replacing these files at the same sizes needs no code change. To change dimensions or
 spacing, update the measurements grouped at the top of `ui/BossHud.java`. The current bar has twelve slots. Code repeats the segment
 images and animates their opacity; recent damage and restoration add a brief glow using
-the same PNGs. The existing green potion at (80,0) in `images/Items.png` is the elixir icon.
+the same PNGs. `elixir.png` (16 × 16) is the elixir icon, the green potion cropped unchanged from the old `images/Items.png` sheet (since removed).
 
 `frame.png` and `segment-empty.png` were authored locally as simple native-resolution pixel
 geometry. The filled tile uses built-in ImageGen, trimmed and reduced with nearest

@@ -284,6 +284,10 @@ only in the menu backdrop.
     **player's** hitbox is slightly *smaller* than the drawn body (forgiving near misses), an
     **enemy's** body hitbox is slightly *larger* than its drawn body (easy to hit and stomp).
     Anything lethal that is not an actor (a bomb) gets a hitbox that matches the art.
+    One exception, by the author (2026-11-21): the redrawn RedMob keeps its body hitbox
+    `rect(6, 4, 20, 28)` although its back edge is drawn from x 5 and the run's trailing foot reaches x 2, so a
+    hit on that trailing sliver misses. The author kept both the drawing and the box rather than make the mob
+    easier to kill; its hurtbox `rect(10, 6, 14, 26)` stays inside the art.
   - **An enemy has two boxes when it needs them.** The body hitbox (generous) is what the sword
     and stomps hit and what terrain collides with. The **hurtbox** (`Enemy.hurtbox`) is what
     kills the player on touch, and never reaches past the drawn art, so an enemy cannot kill
@@ -1131,7 +1135,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 - **Status:** Accepted by the author, 2026-11-05 ([#229](https://github.com/jlogicgames/edgard_in_kimeria/issues/229)); implemented. Evidence: [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md) (the original's item page: "You have 2 component ingredients of the potion: Bat, Mushroom"). It supersedes the Chicken/Key names in D16 and the earlier healer entries above; every rule in them (optional, secured only at room exits, consumed with the forest's coins, rollback, no combat bonus without payment) is unchanged.
 - **Decision:** the level property `ingredients` of `forest-3` (now `forest-2`) is `BAT,MUSHROOM`. `ItemType` is `COIN`, `BAT`, `MUSHROOM`; the map objects are `Collectable` named `Bat` / `Mushroom` (ids 94 and 95, positions unchanged; the object type `Bat` stays the enemy). They are still optional (D16), carry no door or other special rule (the Key was never a door key: it was only a collectable), and behave exactly like the Chicken and Key did. Healer texts, checklist labels (`BAT`, `MUSHROOM`) and tests use the new names in all five languages.
-- **Art:** original redraws, not DOS copies: a small purple bat (wings up/down) and a purple spotted mushroom, each a native 32×16 two-frame strip in `assets/images/objects/` (16 palette entries with alpha, binary alpha) plus 128×128 HUD icons. The coin keeps `Items.png`. Masters are hand-placed pixel maps in `art/objects/*-pixel.png` and `art/hud/*-master.png`; the HUD icons are the world frames smoothed up, not separately painted illustrations (no image generator was available). A later hand-painted HUD pass is welcome.
+- **Art:** original redraws, not DOS copies: a small purple bat (wings up/down) and a purple spotted mushroom, each a native 32×16 two-frame strip in `assets/images/objects/` (16 palette entries with alpha, binary alpha) plus 128×128 HUD icons. The coin kept `Items.png` (since removed: the coin is `objects/coin.png`, #350). Masters are hand-placed pixel maps in `art/objects/*-pixel.png` and `art/hud/*-master.png`; the HUD icons are the world frames smoothed up, not separately painted illustrations (no image generator was available). A later hand-painted HUD pass is welcome.
 - **Art revised ([#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345), playtest F19, 2026-11-16):** the flapping purple bat read as an enemy (a Bat enemy also exists), so players avoided it. The ingredient stays the Bat (`ItemType.BAT`, map objects and checklist logic unchanged) but is drawn as an item: a corked glass jar tied with twine, one dried bat wing inside (`art/objects/bat-pixel.png`, two frames, the glass glint moves; outline 0.425 at its one placement, D76). Its label is "Bat wing" in all five languages (`BAT` text and the five healer lines that name it; glossary row in TEXT_STYLE.md). Every collectable wears one pickup cue, enemies none: a 2 px bob up and back every 1.2 s in whole pixels (only the drawing moves, the pickup box stays), a 24×24 warm-white halo drawn additively behind it with alpha 0.5 at rest to 0.9 at the top of the bob (every collectable but the coin, below), and a 5×5 sparkle (three 0.1 s frames) every 2.4 s, started 0.4 s later per 16 px of x (`Collectable`, `art/objects/pickup/{glow,sparkle}.grid`; `CollectableTest`; `AllocationBudgetTest.collectablesWithThePickupCue` 0.0 B/frame in 3 runs). **The coin has no halo** (`Collectable.hasHalo`): its white rim washes out against added light, outline 0.123 at forest-2 x 336 against the D76 floor of 0.28, and the rim already does a halo's job; it keeps the bob and the sparkle. `check_contrast.py` measures every collectable as drawn, at rest with the dimmest halo and at the bob top with the brightest (`NO_HALO` for the coin): Bat wing jar 0.541, Mushroom 0.533, coin 0.371. The HUD icon is a hand-drawn 128×128 pixel grid of the same jar (`art/hud/bat-master.grid`, accepted 2026-11-16). The detailed 128×128 HUD icon of the jar replaces the old bat icon.
 - **Saves:** unchanged. Ingredients were never persisted (only the next level index is saved; the inventory is run-only), so a legacy save needs no mapping and a test pins it.
 - **Placement note:** the Mushroom hovers at the Key's old spot like every other pickup; a stepping platform under it was tried and rejected because it made the pickup a walk-through of the main route (the optional jump is the point).
@@ -3053,7 +3057,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Snail (#329): yes, built ([D106](#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398)).** Its empty shell stays, rolled onto its back with its mouth open upward, and rocks like the others.
   - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
-  - **Wolf (#331): yes, with its own reaction ([D113](#d113-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
+  - **Wolf (#331): yes, with its own reaction ([D114](#d114-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
     frame) when the hero passes. It crumbles and burns like the others.
   - **Bat (existing): yes.** It falls when killed. Over a pit it leaves nothing.
   - **RedMob and YellowMob (existing): the author decides per mob in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).** Both are in rooms the author has played,
@@ -3756,14 +3760,54 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Gate:** `validateContrast`, `validateParallax` (`--check --game`, now 14 rooms), `tools/test_parallax_game.py` (every map is what the
   installer writes, every forest-0 and forest-2 room has a foreground, `retile` and the narrow-room camera), `TiledMapParallaxTest`.
 
-## D113. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
+## D113. The foreground takes big near pieces, drawn by hand ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+
+- **Status:** Proposed, 2026-11-21, with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waits for
+  the author like the rest of the card; the author accepted the copy-only `stamp.py` on 2026-11-21 (below).
+- **Problem:** the author asked for a foreground that reads as right in front of the camera: big, dark shapes (Hollow Knight, Dead Cells),
+  not the thin strands and small clumps of `fg.grid`. The earlier big pieces (`trunk-near`, `rise-trunk`) read as flat black slabs. Two
+  first sets were rejected in review: one made by a script (polygons and seeded strokes, then a Gaussian blur: code-generated scenery and a
+  Gaussian blur; its root bank lay under the floor line, its mound read as spiky balls, its fern as a smeared block, its trunk as a tube),
+  then one built from copies of a single hard-edged lens leaf (the canopy's hanging ovals read as stones under forest-0-platform's
+  falling-stone hint, the bush as black eggs or boulders by the floor, the fern's pinnae were placed by a loop and a size rule).
+- **Decision:** (1) three pieces in `art/parallax/forest/fg.grid`, after the old ones (their tile ids and the mocks unchanged): `near-canopy`
+  224x112, `near-fern` 224x128 and `near-sprig` 128x112, all hanging from the top edge with a `-top`. How they are made, in
+  `art/parallax/forest/near/`: three leaves typed row by row (`leaf-broad.txt` 40x29, tilted down to the left; `leaf-small.txt` 32x19,
+  turned right; `leaf-edge.txt` 16x37, seen edge-on), each with a body gradient `a`, `k`, `l` toward the moon and soft edges of two or
+  three typed outer steps with dither (`h`, `g`, a dithered `i` away from the moon; `m`, `e`, a dithered `j` toward it), no dark outline;
+  fern pinnae in three sizes (`pinna.txt`) and a rachis (`rachis.txt`), typed: each fern frond has its own continuous stem glyph
+  (`f1` to `f4`, author 2026-11-21: "the stem is broken in several places, that is not natural"), drooping 1 px sideways every 8 to 14
+  rows, one way per frond, thinning to a tip; the sprig's stalk uses the short pieces `r20`, `r10`, `r5`. The placement lists
+  (`canopy.spec`, `fern.spec`, `sprig.spec`) are typed too: every leaf, pinna and stem has its own line, with irregular spacing, sizes and
+  gaps; each fern pinna sits on its own row of its stem, and the fronds differ in length (y 65 to 111), droop (two left, two right) and
+  pinna density (5 to 11 px apart, big near the top and smaller toward the tip). `stamp.py` copies the typed
+  characters onto a canvas at those positions (the later in front; a back leaf is the same leaf through the palette swap `a k l` to
+  `k l m`; a soft edge `g` or `h` landing on an opaque leaf becomes that leaf's dark edge `a`, an `i` or `j` there leaves it as it is,
+  so overlaps leave no see-through holes) and slices the canvas into the piece and its `-top`; it draws no shape, adds no noise, applies
+  no filter. Its output replaces everything after the near-pieces comment at the end of `fg.grid`. The author accepted this copy-only stamp
+  on 2026-11-21 (it is not a shape generator); without it the same rows would be pasted by hand. A trunk and a bush were drawn and dropped (a striped tube; a
+  pile of eggs); (2) the rooms of all three forest maps were recomposed (`tools/parallax_game.py`): a big top mass in the start corner
+  (canopy and fern in turn) and another in the end corner right of the moon at the last camera (the sprig where only it fits); the 7
+  rooms with a falling or thrown stone (forest-0-platform and -stone, forest-1-spider, -climb, -hive and -deadfall, forest-canopy) take no
+  canopy. Each piece was kept only where the room still passes rule B and the cover time with everything placed before it, with at least
+  a fifth (canopy, fern) or 0.3 (sprig) of it on screen over the room at the first or last camera; one earlier curtain or the reeds stay
+  beside them, forest-0-lever keeps its broad-leaf clump (the first room needs a standing piece with a `-foot` for `BleedCheckTest`) and
+  the boss room its reeds; (3) the tests follow the pieces (`TiledMapParallaxTest`: the mob room's and the escalators' canopies at x -88,
+  the traps room's at 540 and its fern; `test_parallax_game`: the mob room's canopy lowered over the red mob must fail). No threshold or
+  rule changed.
+- **Measured:** `parallax_mock.py --check --game`: 23 rooms, 0 covered objects, the hero standing hidden at 0 box x, hidden at most 0.00 s
+  on the floor and at the jump apex, no visible layer edge. `forest-fg.png` grows from 896x832 to 896x1072 px and from 54 710 to
+  68 158 bytes (+13 448).
+- **Gate:** `validateParallax`, `tools/test_parallax_game.py`, `TiledMapParallaxTest`, `validateContrast`.
+
+## D114. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
 
 - **Status:** Accepted and built (author, 2026-11-20: "the wolf must be faster and more dangerous than the other enemies";
   2026-11-21: the card and every recommendation of the proposal, the danger-family crimson, the first meeting in forest-2, the art
   with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in no room yet: the forest-2 room card
   comes first ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)). The lunge is **160 px in 0.25 s**
   (author, 2026-11-21: "Yes, 160"; see Why). Card:
-  [GAME_DESIGN.md, "Wolf card"](GAME_DESIGN.md#wolf-card-built-d113-331).
+  [GAME_DESIGN.md, "Wolf card"](GAME_DESIGN.md#wolf-card-built-d114-331).
 - **Decision:**
   - **The fastest and most dangerous Forest monster.** It is the first monster faster than the hero, it senses the furthest,
     commits from the furthest and strikes the furthest of the monsters that close in, and it gives the shortest window after a

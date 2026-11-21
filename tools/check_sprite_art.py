@@ -13,7 +13,7 @@ import json
 import re
 import struct
 import sys
-from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
+from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
     ARMS_IMAGE_SIZE)
 
@@ -51,8 +51,8 @@ ALLOWED = {
     ('effects/SpiderFx.java', 'render', 'quad'): "the spider's wind-up silk glints, leap silk line and leg flecks as 1 px squares (#328, D102, particle category, like the beetle's specks): live at most 0.45 s, depict no object; the spider is the authored monster-spider sprite",
     ('effects/SnailFx.java', 'render', 'particle'): "the snail's swelling gob glow, the steam of a burnt gob and its death poof (#329, D106, particle category): soft additive and smoke dots that live at most 0.55 s, depict no object; the snail and its gob are the authored monster-snail sprite",
     ('effects/SnailFx.java', 'render', 'quad'): "the snail's wind-up specks, the gob's drips, splat droplets and smear, and its shell chips as 1 to 2 px squares (#329, D106, particle category, like the spider's glints): live at most 0.45 s, depict no object; the snail and its gob are the authored monster-snail sprite",
-    ('effects/WolfFx.java', 'render', 'particle'): "the wolf's bite jaw glints, skid and bite dust and death poof (#331, D113, particle category): soft additive and smoke dots that live at most 0.55 s, depict no object; the wolf is the authored monster-wolf sprite",
-    ('effects/WolfFx.java', 'render', 'quad'): "the wolf's wind-up breath streaks and death fur flecks as 1 px squares (#331, D113, particle category, like the spider's glints): live at most 0.45 s, depict no object; the wolf is the authored monster-wolf sprite",
+    ('effects/WolfFx.java', 'render', 'particle'): "the wolf's bite jaw glints, skid and bite dust and death poof (#331, D114, particle category): soft additive and smoke dots that live at most 0.55 s, depict no object; the wolf is the authored monster-wolf sprite",
+    ('effects/WolfFx.java', 'render', 'quad'): "the wolf's wind-up breath streaks and death fur flecks as 1 px squares (#331, D114, particle category, like the spider's glints): live at most 0.45 s, depict no object; the wolf is the authored monster-wolf sprite",
     ('effects/RemainsFx.java', 'render', 'particle'): "a monster body's crumble dust, burn glow and burnt wisp (D101, #478, particle category): soft additive and smoke dots that live at most 0.7 s, depict no object; the body is the monster's authored decor sprite",
     ('effects/RemainsFx.java', 'render', 'quad'): "a monster body's crumble chips and burn flames as 1 to 3 px squares (D101, #478, particle category, like the fireball sparks): live at most 0.6 s, depict no object; the body is the monster's authored decor sprite",
     ('effects/PickupSparksFx.java', 'render', 'quad'): 'the pickup spark burst as 1 to 3 px squares that shrink out (#402, approved particle category, like the fireball sparks): live at most 0.6 s, depict no object; the item is the authored sprite',
@@ -169,6 +169,8 @@ def image_contracts(root):
     contracts.append(('assets/images/ui/kimeria-arms.png', ARMS_IMAGE_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     # The hero (#343, D79): world pixel art, 16 palette entries including transparency, binary alpha.
     contracts += [(f'assets/images/hero/hero-{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in HERO_IMAGES.items()]
+    # The redrawn enemy sheets (2026-11-21): RedMob and Bat from art/objects/enemy grids, world pixel art, binary alpha.
+    contracts += [(f'assets/images/enemy/{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in ENEMY_IMAGES.items()]
     # The silver thread on death (#341, D81): the strand and glint the computed curve is stamped with.
     contracts.append(('assets/images/objects/silver-thread.png', SILVER_THREAD_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     for relative, size, colors, alpha_mode in contracts:

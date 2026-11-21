@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.RandomXS128;
 
 /**
- * The forest wolf's effects (#331, D113): the pale breath streaks of its wind-up along the whole line its jaws will cover, the
+ * The forest wolf's effects (#331, D114): the pale breath streaks of its wind-up along the whole line its jaws will cover, the
  * dust of its skid and its bite, the two jaw glints of the bite and its death. The end of the body it leaves (D101) is
  * {@link RemainsFx}. One per {@code Level}, like {@link SpiderFx}; two {@link KimeriaParticleSystem}s with their own seeded
  * streams. {@link #soft()} holds the bite's jaw glints ({@code KIND_GLOW}, additive) and the dust and death poof
@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * that shrink out) and the fur flecks ({@code KIND_GRIT}), drawn with {@link Shaders#whiteQuad()}.
  *
  * <p>The breath streaks run along the floor line from the wolf's jaws to where its lunge will end, so the reach is read before it
- * happens (D7, D113), as the spider's silk glints show its bite. Colours: white, the pale and grey of the smoke ({@code d8d6e8},
+ * happens (D7, D114), as the spider's silk glints show its bite. Colours: white, the pale and grey of the smoke ({@code d8d6e8},
  * {@code 9a97ad}), a dust brown, the wolf's crimson {@code 86101f} and dusty-rose leg {@code b07c8c} for the death's fur flecks
  * (the danger family, #236), and its body's muted palette for the body's crumble ({@link #WOLF_CHIPS}). No reserved hue.
  * Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a smaller Y. Particles advance only in
