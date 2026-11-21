@@ -78,8 +78,7 @@ in the English source is named in each translation (T1).
 | King | Rufardus the Wise | Руфардус Мудрий | Rufardus Mądry | Rufardus der Weise | Руфардус Мудры | |
 | Donor | healer | знахар | znachor | Heiler | знахар | "old man" outside Edgard's speech |
 | Witch (common noun) | witch | відьма | wiedźma | Hexe | ведзьма | pl "czarownica" |
-| Boss in the tale | forest guardian | лісовий вартовий | strażnik lasu | Waldwächter | лясны вартавы | "boss" in spoken lines |
-| Boss as a HUD label | Boss | Бос | Boss | Boss | Бос | |
+| Boss in the tale and as a HUD label | forest guardian | лісовий вартовий | strażnik lasu | Waldwächter | лясны вартавы | "boss" in spoken lines. As the HUD label the same name is capitalised in the catalogs ("Forest Guardian", "Лісовий вартовий", "Strażnik lasu", "Waldwächter", "Лясны вартавы"): playtest F30, [#542](https://github.com/jlogicgames/edgard_in_kimeria/issues/542) |
 | Silver thread | silver thread | срібна нитка | srebrna nić | silberner Faden | срэбная нітка | |
 | Ranged magic | Fireball | Вогонь | Ogień | Feuer | Агонь | a second EN name ("Ranged", "fireballs"). #340 kept these labels and named the fire the healer's gift (`HEALER_TALE_FIREGIFT`); the remaining mismatches (EN "Fireball" against "Fire", be "вогненных шароў") are reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
 | Elixir | elixir | еліксир | eliksir | Elixier | эліксір | |
