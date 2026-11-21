@@ -31,6 +31,8 @@
   "SHOOT": "Далёкая",
   "LEFT_HANDED_LABEL": "Для ляўшэй",
   "ROTATE_HINT": "Павярніце тэлефон, каб малюнак быў большы",
+  "INTRO_SKIP_KEYBOARD": "Esc: прапусціць",
+  "INTRO_SKIP_GAMEPAD": "Start: прапусціць",
   "ASSIST": "Даступнасць",
   "LONGER_TRAP_WARNINGS": "Даўжэйшыя папярэджанні пастак",
   "SCREEN_SHAKE": "Дрыготкасць экрана",

@@ -31,6 +31,8 @@
   "SHOOT": "Fern",
   "LEFT_HANDED_LABEL": "Linkshändig",
   "ROTATE_HINT": "Handy drehen für ein größeres Bild",
+  "INTRO_SKIP_KEYBOARD": "Esc: überspringen",
+  "INTRO_SKIP_GAMEPAD": "Start: überspringen",
   "ASSIST": "Barrierefreiheit",
   "LONGER_TRAP_WARNINGS": "Längere Fallenwarnungen",
   "SCREEN_SHAKE": "Bildschirmwackeln",

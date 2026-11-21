@@ -43,6 +43,30 @@ class LocalizationLayoutTest {
         return new GlyphLayout(font, text, Color.WHITE, width, Align.center, true).runs.size;
     }
 
+    /** D118: the skip hint's rect (Y down, as on screen) with the real font, in every language and both modes. */
+    @Test void skipHintSitsInTheCornerClearOfThePageAndTheCue() {
+        var previous = Gdx.files;
+        Gdx.files = new HeadlessFiles();
+        GdxNativesLoader.load();
+        try {
+            Overlay overlay = new Overlay(new Assets() {
+                @Override public BitmapFont font(int size) { return new MetricsFont(size); }
+            }, 640, 360, null);
+            float right = 640f - com.jlogicsoftware.kimeria.ui.IntroScreen.SKIP_HINT_MARGIN, top = com.jlogicsoftware.kimeria.ui.IntroScreen.SKIP_HINT_TOP;
+            float cueRight = 320f + com.jlogicsoftware.kimeria.ui.IntroScreen.CUE_SIZE / 2f;
+            for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.INTRO_SKIP_KEYBOARD, Msg.INTRO_SKIP_GAMEPAD}) {
+                var layout = overlay.hintBlock(message.t(language), right, top).getLayouts().first();
+                float left = right + layout.runs.first().x, bottom = top + layout.height;
+                String where = language.code() + " " + message + " rect x " + left + ".." + (left + layout.width) + ", y " + top + ".." + bottom;
+                assertTrue(left > cueRight, "right of the page cue: " + where);
+                assertTrue(bottom <= 360f, "inside the screen: " + where);
+                assertTrue(top > com.jlogicsoftware.kimeria.ui.IntroPages.PAGE_BOTTOM, "below the page area: " + where);
+            }
+        } finally {
+            Gdx.files = previous;
+        }
+    }
+
     /** BossHud draws the label at the frame's left edge; the elixir icon sits on the same row, ELIXIR_OFFSET (176 px) in. */
     @Test void bossHudLabelEndsBeforeTheElixirIconInEveryLanguage() {
         var previous = Gdx.files;

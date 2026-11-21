@@ -107,6 +107,7 @@ class CampaignFlowTest {
         set("overlay", new Overlay(assets, 640, 360, null) {
             @Override public float bodyHeight(String text, float width) { return 120; }
             @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache bodyBlock(String text, float x, float y, float width) { return null; }
+            @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache hintBlock(String text, float rightX, float y) { return null; }
         });
         set("introMusic", Proxy.newProxyInstance(Music.class.getClassLoader(), new Class[]{Music.class}, (p, m, a) -> {
             switch (m.getName()) {
@@ -326,6 +327,12 @@ class CampaignFlowTest {
         assertEquals(IntroScreen.State.FADE_OUT, story.state());
         assertEquals(IntroScreen.Phase.REVEAL, story.phase(), "the tap on the button was not also a page turn");
         assertEquals(0, story.pageIndex());
+    }
+
+    @Test void touchShowsNoSkipHintText() throws Exception {
+        call("newGame");
+        update(2);
+        assertEquals(IntroScreen.SkipHint.NONE, ((IntroScreen) get("intro")).skipHint(), "a touch device names no key (D118)");
     }
 
     @Test void aTapAwayFromTheSkipButtonStillTurnsThePage() throws Exception {

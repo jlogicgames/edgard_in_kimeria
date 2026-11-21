@@ -31,6 +31,8 @@
   "SHOOT": "Дальня",
   "LEFT_HANDED_LABEL": "Для шульг",
   "ROTATE_HINT": "Поверніть телефон, щоб картинка була більшою",
+  "INTRO_SKIP_KEYBOARD": "Esc: пропустити",
+  "INTRO_SKIP_GAMEPAD": "Start: пропустити",
   "ASSIST": "Доступність",
   "LONGER_TRAP_WARNINGS": "Довші попередження пасток",
   "SCREEN_SHAKE": "Тремтіння екрана",
