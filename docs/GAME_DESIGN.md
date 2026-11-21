@@ -913,7 +913,7 @@ carrying or throwing. Every room need not support every option.
 
 Preserve readable danger under [D5](DECISIONS.md#d5-hits-must-be-fair) and
 [D7](DECISIONS.md#d7-traps-are-deterministic-puzzle-elements): the player understands
-what killed them and can apply that knowledge on retry. New traps keep Assist
+what killed them and can apply that knowledge on retry. New traps keep Accessibility
 support for longer warnings.
 
 **Authoring proposals to test:** a safe observation position; light, sound and
