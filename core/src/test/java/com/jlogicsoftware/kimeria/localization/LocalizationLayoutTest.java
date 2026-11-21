@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.ui.BossHud;
 import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
@@ -40,6 +41,23 @@ class LocalizationLayoutTest {
     /** Wrapped line count (not a pixel threshold: the two-line limit must not depend on the font size). */
     private static int lines(BitmapFont font, String text, float width) {
         return new GlyphLayout(font, text, Color.WHITE, width, Align.center, true).runs.size;
+    }
+
+    /** BossHud draws the label at the frame's left edge; the elixir icon sits on the same row, ELIXIR_OFFSET (176 px) in. */
+    @Test void bossHudLabelEndsBeforeTheElixirIconInEveryLanguage() {
+        var previous = Gdx.files;
+        Gdx.files = new HeadlessFiles();
+        GdxNativesLoader.load();
+        try {
+            BitmapFont label = new MetricsFont(FontSizes.LABEL);
+            for (Language language : Language.values()) {
+                String text = Msg.BOSS.t(language);
+                float width = new GlyphLayout(label, text).width;
+                assertTrue(width <= BossHud.ELIXIR_OFFSET, language.code() + " boss label \"" + text + "\" is " + width + " px; the elixir icon starts at " + BossHud.ELIXIR_OFFSET + " px");
+            }
+        } finally {
+            Gdx.files = previous;
+        }
     }
 
     @Test void localizedTextFitsActualMenusDialogueHelpAndTouchBounds() {

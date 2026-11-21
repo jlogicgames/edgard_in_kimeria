@@ -18,6 +18,10 @@ public final class BossHud {
     private static final int SEGMENT_WIDTH = 14, SEGMENT_HEIGHT = 16, SEGMENT_GAP = 3;
     private static final int INSET_X = 12, INSET_Y = 5;
     private static final float TOP = 50, LABEL_TOP = 32, ELIXIR_SIZE = 16;
+    /** Left edge of the elixir icon, from the frame's left edge; it sits on the label's row, so the label must end before it. */
+    public static final int ELIXIR_OFFSET = FRAME_WIDTH - 48;
+    /** How far the elixir icon sits above the label row (Y-down: subtracted from LABEL_TOP, so it is drawn higher). */
+    private static final float ELIXIR_RISE = 2;
     private final TextureRegion frame, filled, empty, elixir;
     private final BitmapFont font;
     private final GameContext game;
@@ -77,7 +81,7 @@ public final class BossHud {
             glow(batch, frame, x, TOP, FRAME_WIDTH, FRAME_HEIGHT);
             batch.setColor(Color.WHITE);
         }
-        if (empowered) batch.draw(elixir, x + FRAME_WIDTH - 48, LABEL_TOP - 2, ELIXIR_SIZE, ELIXIR_SIZE);
+        if (empowered) batch.draw(elixir, x + ELIXIR_OFFSET, LABEL_TOP - ELIXIR_RISE, ELIXIR_SIZE, ELIXIR_SIZE);
 
         previousProjection.set(batch.getProjectionMatrix());
         Color fontTint = font.getColor();
