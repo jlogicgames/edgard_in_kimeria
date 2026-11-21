@@ -203,7 +203,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       and menu holds are ignored on entry. A small pulsing triangle (no words) marks a page that waits for the button.
       The opening and the ending are each one page in all five languages (the longest opening, German, ends 258 px from
       the top of a 304 px page area). The layouts are cached per paragraph (`Overlay.bodyBlock`); `AllocationBudgetTest.pagedIntro`
-      measures 0.0 B/frame. Paging by touch is single-finger (a tap while another finger is held turns no page). On touch devices an icon-only skip button (top right, D77) leaves the story and never also turns a page; desktop and web look: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+      measures 0.0 B/frame. Paging by touch is single-finger (a tap while another finger is held turns no page). On touch devices an icon-only skip button (top right, D77) leaves the story and never also turns a page; the Ukrainian opening pages on the web were accepted by the author after playtest 2 raised nothing (2026-11-21, [PLAYTEST_2.md](PLAYTEST_2.md)); the ending page, de and be, and desktop: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
       `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
       `Msg.INTRO_STORY` when revising the healer-narrated account of Kimeria and L'Kardina.
 - [x] Optional forest healer: dialogue in all five supported languages, recipe checklist, paid elixir and

@@ -272,6 +272,7 @@ only in the menu backdrop.
   swap keeps the About text honest and the behaviour predictable. Z/X/C is the usual
   left-hand cluster beside the arrows.
 - **Tracked in:** #42
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** proposed, not yet approved: the Controls screen moves from About into Options and focusing Left-handed shows both hand layouts and swaps them on toggle; if approved, this decision is revised by issue [#532](https://github.com/jlogicgames/edgard_in_kimeria/issues/532).
 
 ## D10. Hitbox and collision conventions
 
@@ -492,6 +493,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Details:** [Player tools](GAME_DESIGN.md#player-tools),
   [movement](GAME_DESIGN.md#wind-and-ladders), [economy](GAME_DESIGN.md#economy-proposals),
   [pacing](GAME_DESIGN.md#pacing-and-duration).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** Up alone interacts and Down puts down, so the Up + Action and Down + Action chords go; Up and Down also climb ladders. This decision will be revised by issue [#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548).
 
 ## D19. Test a 20-second replay and 60-second first learning
 
@@ -845,6 +847,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   [gameplay controls](GAMEPLAY.md#controls), and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
 - **Note, D82 (#338):** "the outline" in this decision is now the fairy guide (glow, glints, fairy); it identifies
   the same nearest target with the same tie-break.
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the one direction for pickup and mechanism interaction becomes the Up key alone (no Action chord); a placement rule keeps interactive objects away from ladders. This decision will be reversed in part by issue [#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548).
 
 ## D31. Forest uses linked route reconfiguration
 
@@ -946,6 +949,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Why:** a reversible, route-independent first lesson lets a novice experiment safely and read cause and effect
   before ladders, walls and platforms (which reconfigure the route) arrive in later rooms.
 - **Not verified:** no novice playtest (#129–#131); the mastered route (walk, operate, exit) was measured headlessly.
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the forest-0 lever stops driving the decorative torch and drives another visible mechanism, still with no gating; this decision will be revised by issue [#549](https://github.com/jlogicgames/edgard_in_kimeria/issues/549).
 
 ## D35. The tutorial ladder lesson rule
 
@@ -1180,6 +1184,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Rooms:** authoring recipe and hint-zone advice for #235 in [ROOMS.md](ROOMS.md#rhythmic-traps-234-d46).
 - **Tests:** `RhythmTrapsTest` (headless, the real map `core/src/test/resources/tiles/rhythm-test.tmx` and two broken fixtures): swell tell equals the shared warning (literal 0.8 and 1.2), cloud lethal only inside the cloud while it lasts, a hero beside it is safe, safe windows exist and a scripted ordinary-controls walker passes at every phase offset (0.05 s steps) for both traps, vine hitbox and period, determinism, reset on retry, pause, the log falls like the platform, nothing in forest-0/1/3 changes.
 - **Not decided or not verified:** the sprites' look in motion, the sound (none yet), whether 4.0 s and 4.5 s feel right to a first-time player, and any shipped placement (#235).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the plain yellow falling-platform skin is replaced everywhere by the rotten-log look (`skin=log`); this decision will be revised by issue [#551](https://github.com/jlogicgames/edgard_in_kimeria/issues/551).
 
 ## D47. Explosive traps replace the bomb: exploding stump and exploding root
 
@@ -1254,6 +1259,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Saves are unaffected:** a save is only the zero-based next-level index plus the `level-order` key (D33); it stores no level name, and the list keeps its length and order (index 2 was and is the boss level). So existing saves and Continue work unchanged, the pre-`forest-0` migration (index 1 = the boss level) is unchanged, and `SavedProgressTest` and `CampaignFlowTest` pass. Artifact and coin keys are in-memory only (nothing persists them), so no renamed key can be lost.
 - **Bomb:** author decision of 2026-11-06: the bomb is **not replaced** by the exploding stump (D42 said "redraw or replace"; D47 swapped the tutorial one and left the old `Bomb` in the boss level). `Bomb` stays its own trap type, to be redrawn and to explode with the shader (the redrawn art is [#263](https://github.com/jlogicgames/edgard_in_kimeria/issues/263)). D47's statement that the class, the object type, `BombExplosionEffect` and the shader stay is therefore the final plan, not a stopgap, and the one `Bomb` in `forest-2.tmx` (id 54) stays.
 - **Not verified:** the renamed level in the running game (desktop and web), and the bomb art (redrawn later, see D60).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the forest `Bomb` becomes a leg-hold trap and the bomb moves to the Fortress later; this decision will be revised by issue [#561](https://github.com/jlogicgames/edgard_in_kimeria/issues/561).
 
 ## D52. Touch pause button at the top centre
 
@@ -1558,7 +1564,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Measured:** cap height 6 -> 7 px (13 -> 16), 7 -> 8 (15 -> 18, 16 gives 7). Hero label stack (3 lines, 200 px wide) height 32 -> 39 px, still 3 lines in all five languages. Dialogue: worst line 3 -> 4 lines (37 -> 62 px of the 72 px box). About controller help panel: 319 -> 327 px at 16 (limit 332, screen 360); 18 would need 380 px and overflows.
 - **Tests:** D33/D49/D50 pinned geometry (24 px gap, two-line zone messages, label on screen) pass unchanged with the label at 16; no tolerance changes. Only the font-size literals in `LocalizationLayoutTest` and `HealerDialogueTest` change; the touch-label checks now measure the 13 px font explicitly. `HintLayoutTest` cap-height inputs moved from 29/15 to 10/7 (measured from the "H" glyph in the .fnt: the 20 px font gives 10, the 16 px font gives 7); its assertions are unchanged. `ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize` is new in `LocalizationLayoutTest`: the 18 px checklist (width at most 361 px, top 48 plus height at most 130) and the three choice labels in the 560 px button, in all five languages. `FontSizesTest` is new.
 - **Status:** Accepted by the author, 2026-11-16 (sizes; touch labels stay 13).
-- **Verified (web release build, 2026-11-16, English, 4:3 pane):** main menu and menu hint (one line), About (panel fits), intro pages (2 to 3 lines), healer dialogue at 18 px (2 and 3 line replies inside the frame, speaker names under the portraits), and the forest-0 zone message with the 16 px hero label (no overlap). Uk/de/be, the boss HUD, the touch layout, the desktop build and the three-choice dialogue were checked by font metrics only (`LocalizationLayoutTest`, `HealerDialogueTest`), not rendered in the game; the in-game checks are tracked in #368.
+- **Verified (web release build, 2026-11-16, English, 4:3 pane):** main menu and menu hint (one line), About (panel fits), intro pages (2 to 3 lines), healer dialogue at 18 px (2 and 3 line replies inside the frame, speaker names under the portraits), and the forest-0 zone message with the 16 px hero label (no overlap). Playtest 2 (2026-11-21, web build, Ukrainian; [PLAYTEST_2.md](PLAYTEST_2.md)) covered the Ukrainian text at 16 and 18 px, the boss HUD label size and the three-choice dialogue: the testers raised nothing, which the author accepted as the check (weak evidence, not a measurement). De/be, the touch layout and the desktop build were checked by font metrics only (`LocalizationLayoutTest`, `HealerDialogueTest`), not rendered in the game; those in-game checks stay open in [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
 ## D71. Traps are visible before they fire (2026-11-16)
 
@@ -1648,7 +1654,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Changed numbers:** pool capacities `DUST_CAPACITY` 24 to 32 and `GRIT_CAPACITY` 32 to 48 (a stone adds 10 dust and 14 grit
   particles to a pool a jump or lever also uses). Peak live grit: a lever burst (24) plus a stone (14) is 38 of 48. No test threshold or tolerance was changed.
 - **Allocation:** new scenario `stoneImpactThroughTheRealLevel` 0.0 B/frame (ceiling 8); existing scenarios unchanged.
-- **Not verified:** the look on the real forest tiles and the sound on a real output: tracked in #368 (in-game visual verification of the playtest changes; also update this document when it is closed).
+- **Verified (playtest 2, 2026-11-21, web build; [PLAYTEST_2.md](PLAYTEST_2.md)):** the dust and grit on the real forest-0 tiles; the testers raised nothing, which the author accepted as the check.
+- **Not verified:** the sound on a real output (audio was not recorded in playtest 2): tracked in #368 (in-game verification of the playtest changes; also update this document when it is closed).
 
 ## D74. Text style system: two voices, glossary and a gate (#339, 2026-11-16)
 
@@ -1791,6 +1798,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) (its checklist carries the D76 background ceiling).
 - **Not verified:** the recoloured decor in the running game, by the author's eye (desktop and web): tracked in
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** trees and bushes are drawn opaque and clear in another palette, a little paler or darker than the active elements, and the glows are replaced by softer pixelfx effects, so the tier numbers are re-measured; this decision will be revised by issues [#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555), [#544](https://github.com/jlogicgames/edgard_in_kimeria/issues/544).
 
 ## D77. Story screens are static pages (playtest F2, #336, 2026-11-16)
 
@@ -1815,8 +1823,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   outline is white: the navy outline of the other discs measures 0.20 (OKLab) against the black story screen, under the
   0.28 active floor of [D76](#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16); the white one
   measures 0.99. `TouchControlArtTest` pins it; `validateContrast` covers world sprites, not touch art.
-- **Not verified:** the look on desktop and web and the button on a real touch device
+- **Verified (playtest 2, 2026-11-21, web build, Ukrainian; [PLAYTEST_2.md](PLAYTEST_2.md)):** the opening pages in Ukrainian on the web build; the testers raised nothing about reading them, which the author accepted as the check.
+- **Not verified:** the ending page, the de and be pages, the look on desktop and the button on a real touch device
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the intro shows a small skip hint, reversing "no new string" (author decision); this decision will be revised by issue [#534](https://github.com/jlogicgames/edgard_in_kimeria/issues/534). Proposed, not yet approved: the intro retold in tale formulae over several pages ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535)) on an open book ([#536](https://github.com/jlogicgames/edgard_in_kimeria/issues/536)).
 
 ## D78. The dialogue is a codec-style storybook screen (playtest F3/F10, #337, 2026-11-16)
 
@@ -1870,7 +1880,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **No new string.**
 - **Checked (2026-11-16, agent):** the web release build in headless Chromium at 1280 × 720, English, the forest-0 start
   tale: the healer's first line, Edgard's answer (the lit side, notch and name colours swap) and the fire gift (three
-  lines, one spare). Those captures predate the dim-gilt cap above (only the listener's rosette highlights changed). **Not verified:** the desktop build, the other languages and the pre-boss stop in a running game
+  lines, one spare). Those captures predate the dim-gilt cap above (only the listener's rosette highlights changed). Playtest 2 (2026-11-21, web build, Ukrainian; [PLAYTEST_2.md](PLAYTEST_2.md)) played the dialogue and raised no fit problem; the author accepted that as the check. **Not verified:** the desktop build, the other languages and the pre-boss stop in a running game
   (font metrics only), the opening's timing on screen, and a touch device
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
 
@@ -2116,8 +2126,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   once-per-run rule, including that a collection return from the pre-boss healer opens no line and leaves it untold);
   `HealerDialogueTest.theFirstDeathLineTakesTwoOfTheFourLinesInEveryLanguage`; `SilverThreadTest` (where the thread is
   drawn, from the real batch calls); `AllocationBudgetTest.silverThreadBeat`; `tools/test_silver_thread_sprites.py`.
-- **Not verified:** the beat, the thread's look and the pluck in the running game, by the author's eye and ear (desktop
-  and web): [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368). Native-speaker review of the uk, pl, de
+- **Verified (playtest 2, 2026-11-21, web build; [PLAYTEST_2.md](PLAYTEST_2.md)):** the thread pull's look on the web; the testers raised nothing, which the author accepted as the check.
+- **Not verified:** the pluck on a real output and the beat on desktop, by the author's eye and ear:
+  [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368). Native-speaker review of the uk, pl, de
   and be line: [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369).
 
 ## D82. The fairy helper shows the interaction target instead of the corner brackets (playtest F4, F14, #338, 2026-11-16)
@@ -2197,6 +2208,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Update ([D87](#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), #419):** a linked mechanism outside the camera view sends her to the screen edge in its direction to twinkle, and the pulled lever's mechanisms keep a clear glow for 1.5 s after the pull.
 - **Not verified:** the look, the read distance and the timing in the running game, desktop, web and touch
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)); the native-speaker quality of the uk, pl, de and be lines ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the fairy's aqua glow is replaced by a softer pixelfx effect; this decision will be revised by issue [#544](https://github.com/jlogicgames/edgard_in_kimeria/issues/544). Proposed, not yet approved: on the dialogue screen she flies from the healer's portrait to Edgard's ([#539](https://github.com/jlogicgames/edgard_in_kimeria/issues/539)).
 
 ## D83. The rider-path allocation test is measured as a median of paired windows; the per-frame for-each and stream are gone (#391, 2026-11-17)
 
@@ -2674,6 +2686,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)). No novice playtest (#135).
 - **Later (#327, 2026-11-18):** a beetle guards the exit ledge and the `RoomExit` moved 16 px right (x 3600); the route
   times above are from before it. Current numbers: [ROOMS.md, forest-2 fissure room](ROOMS.md#forest-2-fissure-room-366-d91).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the ember fissure leaves the forest for a new forest-natural clocked trap with the same beat timing, and returns later as a Swamp geyser; this decision will be revised by issue [#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562).
 
 ## D92. The world is drawn over a flat per-level background; the forest rain and sky are gone (#430, 2026-11-17)
 
@@ -3511,6 +3524,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   of its own and deaths at it are cheap.
 - **Not verified:** how dense rooms feel to a first-time player and what they do to first learning (#135); the 96 px and
   the 6 s are authoring numbers, not measured on players.
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the wall jump is removed, so it is no longer a skill example of this rule; this decision will be revised by issues [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545), [#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546).
 
 ## D106. The forest snail: it looks ahead, holds a line and spits a slow gob; cross its ground in the reload (#329, #240, #398)
 
@@ -3699,6 +3713,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   needs no wait at all, so the 0.6 s is margin on a route that never stops, a first-timer is not killed by arriving on time, he is killed only by arriving
   0.6 s or more late and then sees the swing, and the coin route (the only one with waits, near Bat 41 in `forest-entry`) is another room. `forest-canopy` left the list too.
 - **Not verified:** how the reworked rooms feel to a first-time player (#135).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the wall-jump skill pocket goes with the wall jump; this decision will be revised by issues [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545), [#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546).
 
 ## D110. forest-1's trap course is split in two: the escalators and the puffball each get a room, and the course loses a tuft and a lever pair (#500, #499)
 
@@ -3904,3 +3919,36 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   gap and the wall; a floor that vanishes during the wind-up, `wolf-split.tmx`; the failing load fixtures), `WolfFxTest`, `RemainsTest` (the wolf's case), `AllocationBudgetTest.wolfThroughTheRealLevel`,
   `check_contrast.py` (the wolf and its body, measured from the first placement, with its own `test_check_contrast.py` case),
   `tools/test_generate_sounds.py`, `SoundPreloadTest`; `FirstMeetingPocketTest` and `RoomCardsTest` with the placement (#331).
+## D116. Second external playtest: findings and direction (#563, 2026-11-21)
+
+- **Status:** Accepted by the author where marked, 2026-11-21; the other rows of the record are proposals until the author
+  approves them in their issues. Record and analysis: [PLAYTEST_2.md](PLAYTEST_2.md). Umbrella: [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563).
+- **Playtest:** players unfamiliar with the game, Ukrainian speakers, web build (GitHub Pages) in a desktop browser, written
+  feedback (31 remarks, F1-F31, plus the author's note on F21). Qualitative only: no room times, death counts or per-trap data; the
+  number of players, whether the ending was reached and the audio were not recorded.
+- **Accepted on silence:** the author ticked the open check boxes of #368 (Ukrainian text fit at 16 and 18 px, the boss HUD
+  label size, the three-choice dialogue at 18 px, the stone dust on forest-0 tiles, the Ukrainian opening pages and the thread-pull
+  visual on the web), #428 (forest-2 seam), #422 (forest-1 seams and the first RedMob), #138 (readable boss attacks, escape and retry cost) and #128
+  (a playable build for newcomers) because the testers played those parts and raised nothing: weak evidence, not a measurement. The
+  notes under D70, D73, D77, D78, D81 and the art and localization docs say what is covered and what #368 still holds open.
+- **Direction (author, 2026-11-21; each change gets its own D-number when its issue lands):**
+  - **Up and Down interact, no chords** ([#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548)): Up picks up and uses a mechanism, Down puts down; Up and Down also climb ladders;
+    no interactive object near a ladder, enforced at load and in `tools/check_tiled_links.py`. Interaction on a fresh press, climbing on hold. Reverses D30 and parts of D18.
+  - **The wall jump is removed** ([#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545), [#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546)): `forest-walls` keeps its two walls and gets a new way over, designed on its
+    room card first. Touches D18, D38, D105 and D109.
+  - **The decor tier rule changes** ([#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555)): trees and bushes are drawn opaque and clear in another palette, a little paler
+    or darker than the active elements. Amends D76. The pickup and fairy glows become softer pixelfx effects ([#544](https://github.com/jlogicgames/edgard_in_kimeria/issues/544)).
+  - **The yellow falling platform is replaced by the log skin** everywhere ([#551](https://github.com/jlogicgames/edgard_in_kimeria/issues/551)), the plain skin dropped from code, sprites, Tiled, docs and text.
+  - **The bomb leaves the forest** for a leg-hold trap, and goes to the Fortress later ([#561](https://github.com/jlogicgames/edgard_in_kimeria/issues/561)).
+  - **The ember fissure leaves the forest** for a forest clocked trap, and returns later as a Swamp geyser ([#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562)). Amends D91.
+  - **Exits are marked by a portal with a ripple transition** ([#552](https://github.com/jlogicgames/edgard_in_kimeria/issues/552), [#553](https://github.com/jlogicgames/edgard_in_kimeria/issues/553)): a pixelfx portal (MIT, the Sprite Fusion notice kept)
+    ported to `KimeriaParticleSystem`, allocation free, and a ripple when the hero leaves and enters a room (D3 timing to be stated).
+  - **Smaller author decisions:** the Assist menu is renamed Accessibility ([#533](https://github.com/jlogicgames/edgard_in_kimeria/issues/533)); the boss HUD label is "Forest Guardian"
+    ([#542](https://github.com/jlogicgames/edgard_in_kimeria/issues/542)); the forest-0 lever drives another visible mechanism, amending D34 ([#549](https://github.com/jlogicgames/edgard_in_kimeria/issues/549)); the Puffball is rethought and
+    redrawn ([#558](https://github.com/jlogicgames/edgard_in_kimeria/issues/558)); the coin's edge-on frame is fixed ([#560](https://github.com/jlogicgames/edgard_in_kimeria/issues/560)); the intro gets a skip hint, amending D77 ([#534](https://github.com/jlogicgames/edgard_in_kimeria/issues/534)).
+- **Proposals (not approved), each in its issue:** an About description and Controls under Options ([#531](https://github.com/jlogicgames/edgard_in_kimeria/issues/531), [#532](https://github.com/jlogicgames/edgard_in_kimeria/issues/532)); the intro retold
+  in tale formulae on a book ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535), [#536](https://github.com/jlogicgames/edgard_in_kimeria/issues/536)); the dialogue frame band and tale-voice lines ([#537](https://github.com/jlogicgames/edgard_in_kimeria/issues/537), [#538](https://github.com/jlogicgames/edgard_in_kimeria/issues/538)); the fairy on the dialogue
+  screen and the healer-screen icons and hand-over ([#539](https://github.com/jlogicgames/edgard_in_kimeria/issues/539), [#540](https://github.com/jlogicgames/edgard_in_kimeria/issues/540), [#541](https://github.com/jlogicgames/edgard_in_kimeria/issues/541)); the boss HUD redraw ([#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543)); edge rocks
+  ([#547](https://github.com/jlogicgames/edgard_in_kimeria/issues/547)); the forest-0 stone and vines lowered ([#550](https://github.com/jlogicgames/edgard_in_kimeria/issues/550)); a hint in `forest-1-lever` ([#554](https://github.com/jlogicgames/edgard_in_kimeria/issues/554)); branch redraws
+  ([#556](https://github.com/jlogicgames/edgard_in_kimeria/issues/556)); the pickup flight ([#557](https://github.com/jlogicgames/edgard_in_kimeria/issues/557)); the beetle blast ([#559](https://github.com/jlogicgames/edgard_in_kimeria/issues/559)).
+- **Not changed:** no threshold, tolerance or test was changed by this record.
