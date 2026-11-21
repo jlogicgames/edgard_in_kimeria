@@ -683,24 +683,47 @@ own floor.
 | Field | Value |
 | --- | --- |
 | Level | forest-2, play order 3, room 2 of 6 (x 736-1280, 544 px, 0.85 screen) |
-| Role | challenge |
-| Purpose | Climb two tall walls by wall jumps, met alone on open floor; take the Bat ingredient lying on the second wall's top; then a YellowMob guards the second wall's foot and a RedMob the exit. |
-| Introduces | wall-jump, ingredient |
-| Develops | - |
+| Role | variation |
+| Purpose | The two tall walls cannot be climbed: climb the tree in front of them and leap from its top branch across the first wall on to the second, where the Bat ingredient lies; drop from it on to the YellowMob, then the RedMob guards the exit. |
+| Introduces | ingredient |
+| Develops | branch-climb: the climb is no longer the goal (the crown of `forest-1-tree`) but the run-up for a leap: from the top branch a run jump crosses the first wall and lands on the second wall's 16 px top |
 | Combines | - |
 | Repeats | yellowmob, redmob |
-| Mastered route | 7.45 s required (wall-jump both walls, sword the YellowMob and the RedMob), 7.32 s on a collection return with its mobs already beaten, Bat included: the Bat lies on the walking route, so it costs no time (`RoomReplayTest`, three identical attempts); target about 20 s |
+| Mastered route | 5.55 s required (climb the three branches, leap on to the second wall and take the Bat, walk off on to the YellowMob and the RedMob: two stomps; no wall grab), 5.43 s on a collection return with its mobs already beaten, Bat included (`RoomReplayTest`, three identical attempts; `ForestWallsTest` asserts the route, the Bat and that the hero never grabs a wall); target about 20 s |
 | First learning | not measured (#135) |
-| Retry cost | the whole room, 7.45 s (the required route, `RoomReplayTest`), for a death at the RedMob by the exit |
-| Beats | wall-jump@912, yellowmob@1040, redmob@1136 |
-| Beat time | 7.45 (`RoomReplayTest`) |
-| First meeting | wall-jump: beat 1, pocket at x 880, on the floor 26 px short of the first wall (x 912-928, 112 px tall), the whole wall in view and nothing lethal stirring, 112 px from the YellowMob's span: a skill's pocket, D109 (`FirstMeetingPocketTest.forestWallsTheWallJump`) |
-| Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), so a hero who walks on after the climb passes through it; moved here from `forest-entry` by #417 |
-| D26 | no one-shot object; both walls are climbable from every state; a hero who drops off the second wall lands out of the YellowMob's range and can climb back; the RedMob's range no longer meets the YellowMob's |
-| Hints | none |
-| Landmark | the two tall walls (x 912 and x 992) |
-| Status | new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat ingredient from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417). Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (batch 4, 2026-11-20): the YellowMob moved from before the walls to the foot of the second one (x 1040), so the wall jump is met alone; the RedMob wakes from x 1104 |
-| Decisions | D72, D96, D105, D109 |
+| Retry cost | the whole room, at most 5.55 s (the required route; the RedMob is reached 4.75 s in, `ForestWallsTest`); the cheapest death is a late leap (take-off from x 909 on) that overshoots the second wall into the YellowMob's range: 3.73 s from the entrance, 2.3 s of climbing and 1.3 s from the take-off to the bite (`ForestWallsTest.aLateLeapOvershootsTheSecondWallAndIsBittenByTheYellowMobWithinFourSeconds`) |
+| Beats | branch-climb@880, yellowmob@1040, redmob@1136 |
+| Beat time | 5.55 (`RoomReplayTest`) |
+| First meeting | none: `branch-climb` was introduced in `forest-1-tree`, the yellowmob in `forest-entry` and the redmob in `forest-1`; the ingredient is a pickup, never a beat. The wall-jump pocket (`FirstMeetingPocketTest.forestWallsTheWallJump`) is removed, not replaced |
+| Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), unchanged: the mastered leap lands on it, 27 px of the top branch's take-offs do (x 882-908), the second tree reaches it from the gap; moved here from `forest-entry` by #417 |
+| D26 | no one-shot object: the branches are sound one-way platforms and never break; the floor is gapless (no pit). Every fall lands on the floor or a branch: a hero who drops left of the first wall climbs tree A again, one who walks off the top branch lands on branch B1 in the gap (x 975, `ForestWallsTest`), one who drops into the gap climbs out by B1 to the second wall's top in 1.27 s (`ForestWallsTest.aHeroWhoDropsIntoTheGapClimbsOutByTheSecondTreeToTheTopOfTheSecondWall`); a hero who overshoots the second wall lands in the YellowMob's range and is retried. The Bat stays reachable from every state until taken; the RedMob's range (x 1104-1216) does not meet the YellowMob's (x 1040-1056) |
+| Hints | none (forest-2 has none, D33) |
+| Landmark | the tree in front of the two walls, and the leap from its top on to the Bat |
+| Status | redesigned, [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545) (card approved by the author 2026-11-21: branches, a second tree with one branch in the gap, the stomp as the mastered answer, role `variation`, no crowns, the shipped branch and trunk sprites), after D116 removed the wall jump ([#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546)). Earlier: new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417); the YellowMob moved to the second wall's foot under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (batch 4). D84 check: the whole room is in view from the entrance; the tree and its branches are the only thing to try in front of the wall; every mistake is a slower way, never a death except the overshoot into the YellowMob. Built and tested with a scripted hero (`ForestWallsTest`: the route, the leap strip, the walker, the late leap, the gap) |
+| Decisions | D72, D80, D96, D105, D116 |
+
+Sketch (Y grows downward, floor top y 320; one character is 16 px, column 0 is x 736; `T` trunks, `=` branches, `W` the two walls, `B` the Bat, `Y` YellowMob, `R` RedMob, `E` the exit, `@` the entrance):
+
+```
+       0000000000111111111122222222223333
+       0123456789012345678901234567890123
+y 160  |       T      T                 |
+y 176  |       T==    T                 |    A3 x 880-912
+y 192  |       T      T                 |
+y 208  |       T  W   TB                |    wall 1 top y 208; the Bat on wall 2
+y 224  |     ==T  W   TW                |    A2 x 832-864 (mirror); wall 2 top y 224
+y 240  |       T  W   TW                |
+y 256  |       T  W   TW                |
+y 272  |       T==W ==TW             EE |    A1 x 880-912; B1 x 944-976 (mirror)
+y 288  |@      T  W   TW  YY    RR   EE |
+y 304  |@      T  W   TW  YY    RR   EE |
+y 320  ==================================
+```
+
+- Walls (ids 44, 45) x 912-928 y 208-320 and x 992-1008 y 224-320, the Bat (id 94), both mobs, the bushes, the entrance and the exit are unchanged.
+- Tree A: `Decor` trunk (id 230) x 864 and `Collisions:Platform` branches `skin=branch` A1 (id 232) x 880-912 y 272, A2 (id 233, `mirror`) x 832-864 y 224, A3 (id 234) x 880-912 y 176: three 48 px steps. Tree B: trunk (id 231) x 976 and B1 (id 235, `mirror`) x 944-976 y 272, 48 px above the gap's floor and 48 px below the second wall's top. The trunks are map y 48 (the SpawnPoints layer is drawn 16 px up), 288 tall, as in `forest-1-tree`.
+- The leap, measured by the body's centre x at the take-off from A3 (`ForestWallsTest.theLeapFromTheTopBranchLandsOnTheSecondWallFromA27PxStripOfTheBranch`): 882 to 908 lands on the second wall's top (centre x 987-1013), 881 and less meets its face, 909 and more overshoots it into the YellowMob. The mastered take-off is x 896.
+- A walker off the end of A3 lands on B1 (centre x 975, feet y 272), not on the first wall's top: the 96 px fall takes about 0.57 s and carries him about 57 px, far past the 16 px wall.
 
 ### forest-fissure
 
