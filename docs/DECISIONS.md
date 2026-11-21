@@ -2730,7 +2730,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - where it is on: the hero (all three sheets); the traps `bomb`, `bramble`, `branch`, `deadfall`, `deadfall-bough`,
     `falling-platform`, `false-honey-fungus` (so the honey pair stays alike), `hive`, `honey-fungus`, `log`, `perch`,
     `puffball`, `root`, `rotten-perch`, `stone-lip`, `stump`, `thorn-root`, `thorn-tuft`
-    (`forest_trap_sprites.RIM_SHEETS`); the objects `ladder`, `stone`, `fireball`, `wall-brick`, `platform`
+    (`forest_trap_sprites.RIM_SHEETS`); the objects `ladder`, `stone`, `fireball`, `wall-gate` (`wall-brick` until 2026-11-21), `platform`
     (`export_object_sprites.RIM_OBJECTS`; since #236 also the lever and the bat and mushroom pickups, D112); the inherited sheets
     above. Off where the gate passes without it (the coin, the torch, the stingers, the deadfall vine, the fairy);
   - Tests: `tools/test_moon_rim.py` (lit sides rimmed, underside kept, light edges and the silhouette untouched, frames

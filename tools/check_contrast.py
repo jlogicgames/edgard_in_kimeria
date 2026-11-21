@@ -158,7 +158,7 @@ SPRITES = {
     'CarryableTorch': ('active', 'objects/torch.png', (0, 0, 8, 16), 1, 'floor', FULL),
     'Stone': ('active', 'objects/stone.png', (0, 0, 8, 8), 1, 'floor', FULL),
     'FireballRefill': ('active', 'objects/fireball.png', (0, 0, 16, 16), 1, 'floor', FULL),
-    'Actionable:Wall': ('active', 'objects/wall-brick.png', (0, 0, 48, 96), 1, 'top', FULL),  # only a vertical Wall draws it
+    'Actionable:Wall': ('active', 'objects/wall-gate.png', (0, 0, 48, 96), 1, 'top', FULL),  # only a vertical Wall draws it
     'Bat': ('active', 'enemy/Bat.png', (0, 0, 16, 16), 4, 'top', FULL),  # the four flap frames of IDLE (art/objects/enemy/bat.grid)
     'RedMob': ('active', 'enemy/Mobs.png', (0, 160, 48, 32), 4, 'floor', FULL),  # every IDLE frame (art/objects/enemy/red-mob.grid)
     'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 1, 'floor', FULL),

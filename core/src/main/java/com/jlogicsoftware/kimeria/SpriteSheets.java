@@ -10,7 +10,7 @@ public final class SpriteSheets {
     public static final Sheet LEVER = new Sheet("images/objects/lever.png", 16, 16);
     public static final Sheet LADDER = new Sheet("images/objects/ladder.png", 16, 16);
     public static final Sheet PLATFORM = new Sheet("images/objects/platform.png", 32, 16);
-    public static final Sheet WALL = new Sheet("images/objects/wall-brick.png", 48, 96);
+    public static final Sheet WALL = new Sheet("images/objects/wall-gate.png", 48, 96);
     // Forest trap sprites (#230): authored and validated, not drawn by any code yet. Frame order: tools/sprite_layouts.py FOREST_TRAP_SHEETS.
     public static final Sheet TRAP_STUMP = new Sheet("images/objects/trap-stump.png", 16, 16);
     public static final Sheet TRAP_ROOT = new Sheet("images/objects/trap-root.png", 16, 24);
