@@ -130,5 +130,4 @@ No image generator: it was drawn per pixel as a text grid and converted 1:1, the
 white rim, a dark-gold and navy ring, and the sun on the gold field (a white sun disc with eight navy rays). Frame 2
 is the edge-on turn, the sun foreshortened to a column. The original's four colours are kept (`222034`, `c2b902`,
 `fff300`, `ffffff`) and so is its white rim, which carries the outline: 0.371 at forest-2 x336 in both frames, the same
-as the original (D76 active floor 0.28). The coin still draws no halo (`Collectable.hasHalo`). `Items.png` stays
-for the elixir icon of `BossHud`.
+as the original (D76 active floor 0.28). The coin still draws no halo (`Collectable.hasHalo`). The old `Items.png` sheet is removed; its elixir cell is `assets/images/ui/boss/elixir.png`.
