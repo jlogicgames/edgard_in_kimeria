@@ -161,7 +161,7 @@ SPRITES = {
     'Actionable:Wall': ('active', 'objects/wall-gate.png', (0, 0, 48, 96), 1, 'top', FULL),  # only a vertical Wall draws it
     'Bat': ('active', 'enemy/Bat.png', (0, 0, 16, 16), 4, 'top', FULL),  # the four flap frames of IDLE (art/objects/enemy/bat.grid)
     'RedMob': ('active', 'enemy/Mobs.png', (0, 160, 48, 32), 4, 'floor', FULL),  # every IDLE frame (art/objects/enemy/red-mob.grid)
-    'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 1, 'floor', FULL),
+    'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 4, 'floor', FULL),  # every IDLE frame (art/objects/enemy/yellow-mob.grid)
     'Beetle': ('active', 'objects/monster-beetle.png', (0, 0, 24, 16), 10, 'floor', FULL),  # #327 (D100): every frame, the wind-up's white too
     # D101: the body a killed beetle leaves. It has no placement of its own: it lies wherever a beetle dies, so it is measured
     # by BODY_SWEEP on every floor top of every shipped map (body_sweep), as decor: harmless, it must not read as a live beetle.
@@ -184,7 +184,7 @@ SPRITES = {
     # spawns of the three maps (the art pass of 2026-11-21).
     'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
     'Wolf:body': ('decor', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
-    'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
+    'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 4, 'floor', FULL),  # every THRONE frame, its rest state (art/objects/enemy/boss.grid)
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
     # object, the tied log hauled up on the far side, the taut trip vine on the floor. `-right` keys are the mirrored copies.

@@ -1,3 +1,4 @@
+import re
 import unittest
 from PIL import Image
 import enemy_sprites as enemies
@@ -16,7 +17,38 @@ FRAMES = 2
 READ_CELLS = {
     'red-mob': {(c, r) for r in (1, 2, 4, 5) for c in range(4)},
     'bat': {(c, r) for r in (0, 2) for c in range(4)} | {(0, 1), (0, 3)} | {(c, 4) for c in range(4)},
+    'boss': {(c, r) for r in range(1, 8) for c in range(4)},  # Boss.java: rows 1 to 7; row 0 (an unused walk), 8 and 9 never
+    'yellow-mob': {(c, r) for r in (1, 4, 5) for c in range(4)},
 }
+ENEMY_JAVA = ROOT / 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy'
+FLOOR_ROW = 31
+# D10, measured per frame on the grid: the boxes are read from the Java source, so a changed box fails here too.
+BOSS_AXE = set('sSBwaj')  # the axe: steel, edge, bevel, haft, its own ink and eye (boss.grid); everything else is the body
+BOSS_LIVE = ('idle1', 'idle2', 'idle3', 'idle4', 'walk1', 'walk2', 'walk3', 'walk4', 'raise', 'cock', 'sweep', 'follow',
+             'warn1', 'warn2', 'counter1', 'counter2', 'recoil', 'throne1', 'throne2', 'throne3', 'throne4')
+BOSS_ACTIVE = {'sweep': 'NORMAL_BOX', 'counter1': 'COUNTER_BOX', 'counter2': 'COUNTER_BOX'}  # Boss.isAttackActive frames
+BOSS_COUNTER_WINDUPS = ('warn1', 'warn2')  # the counter's tell: the eyes flare white (the normal attack's stay red)
+BOSS_NORMAL_WINDUPS = ('raise', 'cock')
+BOSS_CHEST_ROW = 17  # mid-chest: the normal wind-up holds the axe head below this row (at the hip), the counter above it
+BOSS_MARGIN = 2  # the body hitbox is at most this many pixels wider than the drawn body on either side ("slightly")
+YELLOW_LIVE = ('idle1', 'idle2', 'idle3', 'idle4', 'run1', 'run2', 'run3', 'run4')
+
+
+def java_box(java, name):
+    """(x, y, w, h) of `name = Hitbox.rect(x, y, w, h)` in an enemy's Java source."""
+    source = (ENEMY_JAVA / java).read_text(encoding='utf-8')
+    return tuple(int(v) for v in re.search(name + r'\s*=\s*Hitbox\.rect\((\d+), (\d+), (\d+), (\d+)\)', source).groups())
+
+
+def pixels(rows, chars=None, exclude=frozenset()):
+    return [(x, y) for y, row in enumerate(rows) for x, c in enumerate(row)
+            if c != '.' and c not in exclude and (chars is None or c in chars)]
+
+
+def inside(point, box, margin=0):
+    x, y = point
+    left, top, width, height = box
+    return left + margin <= x < left + width - margin and top + margin <= y < top + height
 
 
 def cell(image, size, column, row):
@@ -86,6 +118,69 @@ class EnemySpritesTest(unittest.TestCase):
         self.assertTrue(any('W' in row for row in drawn['flash']))
         bat = dict(parse(enemies.GRID_DIR / 'bat.grid')[FRAMES])
         self.assertTrue(any('W' in row for row in bat['flash']))
+
+
+class BossAndYellowMobBoxesTest(unittest.TestCase):
+    """D10 for the redrawn boss and yellow mob: the boxes stay as they were, the drawing is fitted to them."""
+
+    def setUp(self):
+        self.boss = dict(parse(enemies.GRID_DIR / 'boss.grid')[FRAMES])
+        self.yellow = dict(parse(enemies.GRID_DIR / 'yellow-mob.grid')[FRAMES])
+
+    def test_the_boss_body_lies_a_pixel_inside_its_body_hitbox_and_fills_it(self):
+        hitbox = java_box('Boss.java', 'hitbox')
+        for frame in BOSS_LIVE:
+            body = pixels(self.boss[frame], exclude=BOSS_AXE)
+            with self.subTest(frame=frame):
+                self.assertEqual([], [p for p in body if not inside(p, hitbox, 1) or p[1] < hitbox[1] + 1])
+                xs = [x for x, _ in body]
+                left, _, width, _ = hitbox
+                self.assertLessEqual(min(xs) - left, BOSS_MARGIN)
+                self.assertLessEqual(left + width - 1 - max(xs), BOSS_MARGIN)
+                self.assertEqual(FLOOR_ROW, max(y for _, y in body), 'feet on the floor line')
+
+    def test_the_boss_axe_fills_the_attack_box_on_every_active_frame_and_nothing_else_leaves_the_body(self):
+        hitbox = java_box('Boss.java', 'hitbox')
+        for frame, name in BOSS_ACTIVE.items():
+            box = java_box('Boss.java', name)
+            rows = self.boss[frame]
+            with self.subTest(frame=frame):
+                stray = [p for p in pixels(rows) if not inside(p, hitbox)
+                         and not (rows[p[1]][p[0]] in BOSS_AXE and inside(p, box))]
+                self.assertEqual([], stray, 'only the axe leaves the body hitbox, and only into the attack box')
+                axe = [p for p in pixels(rows, BOSS_AXE) if inside(p, box)]
+                left, top, width, height = box
+                self.assertEqual((left, left + width - 1), (min(x for x, _ in axe), max(x for x, _ in axe)))
+                self.assertEqual((top, top + height - 1), (min(y for _, y in axe), max(y for _, y in axe)))
+
+    def test_the_two_boss_attacks_wind_up_apart_low_and_red_or_high_and_white(self):
+        # The normal attack draws the axe back low at the hip with the eyes red; the counter raises it high with the eyes white.
+        steel = set('sSB')
+        for frame in BOSS_NORMAL_WINDUPS:
+            rows = self.boss[frame]
+            self.assertFalse(any('W' in row for row in rows), frame)
+            self.assertGreater(min(y for _, y in pixels(rows, steel)), BOSS_CHEST_ROW, frame)
+        for frame in BOSS_COUNTER_WINDUPS:
+            rows = self.boss[frame]
+            self.assertTrue(any('W' in row for row in rows), frame)
+            self.assertLess(min(y for _, y in pixels(rows, steel)), BOSS_CHEST_ROW, frame)
+
+    def test_the_boss_flash_is_the_recoil_silhouette(self):
+        self.assertEqual(pixels(self.boss['recoil']), pixels(self.boss['flash']))
+        self.assertEqual(set('W.'), {c for row in self.boss['flash'] for c in row})
+
+    def test_the_yellow_mob_lies_inside_its_body_hitbox_and_covers_its_hurtbox(self):
+        hitbox, hurtbox = java_box('YellowMob.java', 'hitbox'), java_box('YellowMob.java', 'hurtbox')
+        for frame in YELLOW_LIVE:
+            art = pixels(self.yellow[frame])
+            with self.subTest(frame=frame):
+                self.assertEqual([], [p for p in art if not inside(p, hitbox, 1) or p[1] < hitbox[1] + 1])
+                self.assertEqual(FLOOR_ROW, max(y for _, y in art))
+                # The lethal box never lies past the drawing: every row and every column of it holds art.
+                left, top, width, height = hurtbox
+                lethal = [p for p in art if inside(p, hurtbox)]
+                self.assertEqual(set(range(top, top + height)), {y for _, y in lethal})
+                self.assertEqual(set(range(left, left + width)), {x for x, _ in lethal})
 
 
 if __name__ == '__main__':

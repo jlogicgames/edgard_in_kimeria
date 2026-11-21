@@ -12,9 +12,11 @@ order is `forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32
 Historical wrap references in the validation notes below describe earlier builds.
 
 `forest-boss` is the authored third forest room (448 × 368, entrance 2640,304; the room was moved +448 px by #261/D59, nothing inside it changed).
-The author-owned Boss object (2912,304) and Boss.png are preserved. Physics settles the
+The author-owned Boss object (2912,304) is preserved. Physics settles the
 boss's feet onto y=320; its render frame is 48 × 32 regardless of the map marker's 32 × 32.
-No authored map geometry or sprite pixels were replaced for this implementation.
+No authored map geometry was replaced for this implementation. Boss.png was redrawn on 2026-11-21 (#236) as a hand-typed
+grid, `art/objects/enemy/boss.grid`, exported by `tools/enemy_sprites.py`, with the same layout, frame counts, timing and
+boxes; `tools/test_enemy_sprites.py` measures each frame against the boxes (D10).
 
 ## Sheet inspection
 
@@ -23,14 +25,14 @@ The author's **7th row** is row 6 here (normal); **3rd row** is row 2 (counter).
 
 | Row | Art | Use |
 | --- | --- | --- |
-| 0 | Walking without raised axe | Unused alternative walk |
-| 1 | Walking with axe | Ground pursuit, 0.1 s/frame |
-| 2 | Raised axe, wind-up, sweep, extended axe | Counter: columns 0–1 warning, 2–3 strike, 3 recovery |
-| 3 | Recoil alternating with white silhouette | Interruption reaction, 0.05 s/frame |
-| 4 | Red collapse into particles | Death, 0.2 s/frame |
-| 5 | Standing with raised axe | Idle and ordinary recovery |
-| 6 | A second axe sweep with a different arc | Normal melee, approximately 0.1556 s/frame |
-| 7 | Seated on a throne | Initial state, 0.2 s/frame |
+| 0 | Empty since the 2026-11-21 redraw (was an unused walk without the axe) | Never sampled |
+| 1 | Walking, the axe upright in the back fist | Ground pursuit, 0.1 s/frame |
+| 2 | Overhead: the axe straight up over the horns, then hanging down his back (eyes white), the chop starting with the axe coming over his head, the chop landed low in front | Counter: columns 0–1 warning, 2–3 strike, 3 recovery |
+| 3 | Recoil alternating with its white silhouette | Interruption reaction, 0.05 s/frame |
+| 4 | Stagger, knees, face down, ash | Death, 0.2 s/frame |
+| 5 | Standing, the axe upright in the back fist | Idle and ordinary recovery |
+| 6 | Low and level: the axe drawn back to the hip, then behind the heel in a crouch (eyes stay red), the sweep at the knees, the blade in the ground | Normal melee, approximately 0.1556 s/frame |
+| 7 | Sitting on the ground, one knee up, the axe standing beside him, the eyes smouldering | Initial state, 0.2 s/frame |
 | 8–9 | Empty | Never sampled |
 
 There is no separate getting-up animation, dedicated counter charge, or aftermath pose.

@@ -38,6 +38,8 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     public Boss(Assets assets, GameContext game, Level level, float x, float y) {
         super(assets, game, "Boss", x, y, 48, 32, 0, 0, State.class);
         this.level = level;
+        // The body is drawn within x 8..24, y 5..32 of every live frame (boss.grid), a pixel inside this box (D10); the axe
+        // fills NORMAL_BOX on the sweep and COUNTER_BOX on both counter frames (tools/test_enemy_sprites.py).
         hitbox = Hitbox.rect(7, 4, 18, 28);
         putAnimation(State.THRONE, spriteAnimation(4, .2f, 48, 32, 0, 224), true);
         putAnimation(State.WALK, spriteAnimation(4, .1f, 48, 32, 0, 32), true);

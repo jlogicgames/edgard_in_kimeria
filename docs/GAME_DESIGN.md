@@ -665,6 +665,21 @@ wings; its sheet grew from 80x72 to 80x80 so the four death frames, read 16 px t
 row 8). Grids: `art/objects/enemy/red-mob.grid`, `art/objects/enemy/bat.grid`; export and checks: `tools/enemy_sprites.py`,
 `tools/test_enemy_sprites.py`.
 
+The forest boss and the YellowMob were redrawn the same way on 2026-11-21 (colours: [ART_DIRECTION.md](ART_DIRECTION.md),
+section 1, Danger), with the same frames, timing and boxes. The boss is a horned warlord in blackened iron and a mulberry tabard
+with a long-hafted bearded axe (crescent edge with a lit bevel, a beard hooking down, the eye round the haft, a back spike).
+His two attacks read apart. The normal attack, which starts when the hero touches `NORMAL_BOX`, is low and level: he draws
+the axe back to his hip, crouches with it behind his heel (0.31 s, the eyes stay red), then sweeps it at knee height through
+`NORMAL_BOX`; the hero steps out of reach or hits him first, which interrupts it. The counter, which follows every landed
+sword or fireball hit, is high and overhead: during its invulnerable, orange 1.15 s warning he raises the axe straight up over
+his horns, then lets it hang down his back with the eyes white, then chops down in front through `COUNTER_BOX`, chest to
+knee height; the hero jumps and retreats out of reach before it lands (1.35 s after the hit) and strikes back during the recovery. At rest
+he sits on the ground, one knee up, the axe standing beside him, and he dies to ash. The YellowMob is a hunched,
+skull-masked charger in oxblood hide with a yellowed bone mask; its idle frames now stand on the floor line (they hung 4 px
+above it), and it falls face down with the whole mask, horns along the ground. Both bodies lie a pixel inside their body hitboxes on every live frame, the YellowMob's drawing covers every row and
+column of its hurtbox, and the boss's axe reaches each edge of its attack box on the active frames and leaves the body box on no
+other frame that hurts (D10, `tools/test_enemy_sprites.py`). Grids: `art/objects/enemy/boss.grid`, `art/objects/enemy/yellow-mob.grid`.
+
 Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D115, built and placed in no room yet, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
