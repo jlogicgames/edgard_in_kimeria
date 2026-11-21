@@ -841,7 +841,7 @@ Author-approved design, revised 2026-11-13. The whole point is doubt: the player
   bounds stays. Physics, hitboxes, trap timers and the Y-up text projection never read it. `KimeriaGame`
   will restore the unshaken camera position before drawing the HUD (the hint anchor is placed through
   `camera.project`), so the hint label does not move with the shake (D33/D49/D50 geometry stays pinned).
-- **Reduced-motion option.** `Settings.SCREEN_SHAKE` (key `screen-shake`, boolean) under Options → Assist
+- **Reduced-motion option.** `Settings.SCREEN_SHAKE` (key `screen-shake`, boolean) under Options → Accessibility
   (D11, `assistMenu`), item "Screen shake: On/Off". **Default:** on for desktop; on the web build it follows
   the browser's reduced-motion preference (`prefers-reduced-motion: reduce` gives off, anything else on).
   **A saved choice always wins:** the default is read only while the key is absent, so a player who ever
@@ -935,7 +935,7 @@ Author-approved design, revised 2026-11-13. The whole point is doubt: the player
   collision block; vine sway never changes `ThornVine.lethalAt`/`everLethalIn`; an unknown `kind` fails
   the load (like the falling stone `skin`), and `tools/check_tiled_links.py` mirrors that check.
 - `SettingsTest`: default on for desktop; with the platform value `reduced` the default is off; a saved value always wins in both cases; round trip; `LocalizationLayoutTest` and the catalog validation
-  (new key present in all five bundles, label fits the 440 px Assist menu).
+  (new key present in all five bundles, label fits the 440 px Accessibility menu).
 - Sprite contracts: `SpriteSheetContractsTest`, `tools/sprite_layouts.py` and `validateSpriteArt` gain
   the `decor-*` and `decor-vine` sheets; the exporter and its tests gain a table for them.
 - Regression guard, no new test needed: `BossCombatTest` and `RoomTest` call

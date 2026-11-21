@@ -731,6 +731,50 @@
           "фее"
         ]
       }
+    },
+    {
+      "concept": "accessibility menu",
+      "forms": {
+        "en": "Accessibility",
+        "uk": "Доступність",
+        "pl": "Dostępność",
+        "de": "Barrierefreiheit",
+        "be": "Даступнасць"
+      },
+      "stems": {
+        "en": [
+          "accessibility"
+        ],
+        "uk": [
+          "доступн"
+        ],
+        "pl": [
+          "dostępn"
+        ],
+        "de": [
+          "barrierefrei"
+        ],
+        "be": [
+          "даступн"
+        ]
+      },
+      "avoid": {
+        "en": [
+          "assist"
+        ],
+        "uk": [
+          "допомог"
+        ],
+        "pl": [
+          "ułatwien"
+        ],
+        "de": [
+          "spielhilfe"
+        ],
+        "be": [
+          "дапамог"
+        ]
+      }
     }
   ],
   "bindingTokens": [
