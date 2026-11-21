@@ -3755,3 +3755,40 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   432, 768 to 816, 1800 to 1808), body at most 0.198. No threshold changed. Rule B: 0 covered objects in 14 rooms, the hero hidden 0.00 s.
 - **Gate:** `validateContrast`, `validateParallax` (`--check --game`, now 14 rooms), `tools/test_parallax_game.py` (every map is what the
   installer writes, every forest-0 and forest-2 room has a foreground, `retile` and the narrow-room camera), `TiledMapParallaxTest`.
+
+## D113. The foreground takes big near pieces, drawn by hand ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+
+- **Status:** Proposed, 2026-11-21, with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waits for
+  the author like the rest of the card; the author accepted the copy-only `stamp.py` on 2026-11-21 (below).
+- **Problem:** the author asked for a foreground that reads as right in front of the camera: big, dark shapes (Hollow Knight, Dead Cells),
+  not the thin strands and small clumps of `fg.grid`. The earlier big pieces (`trunk-near`, `rise-trunk`) read as flat black slabs. Two
+  first sets were rejected in review: one made by a script (polygons and seeded strokes, then a Gaussian blur: code-generated scenery and a
+  Gaussian blur; its root bank lay under the floor line, its mound read as spiky balls, its fern as a smeared block, its trunk as a tube),
+  then one built from copies of a single hard-edged lens leaf (the canopy's hanging ovals read as stones under forest-0-platform's
+  falling-stone hint, the bush as black eggs or boulders by the floor, the fern's pinnae were placed by a loop and a size rule).
+- **Decision:** (1) three pieces in `art/parallax/forest/fg.grid`, after the old ones (their tile ids and the mocks unchanged): `near-canopy`
+  224x112, `near-fern` 224x128 and `near-sprig` 128x112, all hanging from the top edge with a `-top`. How they are made, in
+  `art/parallax/forest/near/`: three leaves typed row by row (`leaf-broad.txt` 40x29, tilted down to the left; `leaf-small.txt` 32x19,
+  turned right; `leaf-edge.txt` 16x37, seen edge-on), each with a body gradient `a`, `k`, `l` toward the moon and soft edges of two or
+  three typed outer steps with dither (`h`, `g`, a dithered `i` away from the moon; `m`, `e`, a dithered `j` toward it), no dark outline;
+  fern pinnae in three sizes (`pinna.txt`) and a rachis in three lengths (`rachis.txt`), typed. The placement lists (`canopy.spec`,
+  `fern.spec`, `sprig.spec`) are typed too: every leaf, pinna and rachis segment has its own line, with irregular spacing, sizes and gaps
+  (the fern's pinnae 6 to 10 px apart, some left out, big near the top and smaller toward the tip). `stamp.py` copies the typed
+  characters onto a canvas at those positions (the later in front; a back leaf is the same leaf through the palette swap `a k l` to
+  `k l m`; a soft edge `g` or `h` landing on an opaque leaf becomes that leaf's dark edge `a`, an `i` or `j` there leaves it as it is,
+  so overlaps leave no see-through holes) and slices the canvas into the piece and its `-top`; it draws no shape, adds no noise, applies
+  no filter. Its output replaces everything after the near-pieces comment at the end of `fg.grid`. The author accepted this copy-only stamp
+  on 2026-11-21 (it is not a shape generator); without it the same rows would be pasted by hand. A trunk and a bush were drawn and dropped (a striped tube; a
+  pile of eggs); (2) the rooms of all three forest maps were recomposed (`tools/parallax_game.py`): a big top mass in the start corner
+  (canopy and fern in turn) and another in the end corner right of the moon at the last camera (the sprig where only it fits); the 7
+  rooms with a falling or thrown stone (forest-0-platform and -stone, forest-1-spider, -climb, -hive and -deadfall, forest-canopy) take no
+  canopy. Each piece was kept only where the room still passes rule B and the cover time with everything placed before it, with at least
+  a fifth (canopy, fern) or 0.3 (sprig) of it on screen over the room at the first or last camera; one earlier curtain or the reeds stay
+  beside them, forest-0-lever keeps its broad-leaf clump (the first room needs a standing piece with a `-foot` for `BleedCheckTest`) and
+  the boss room its reeds; (3) the tests follow the pieces (`TiledMapParallaxTest`: the mob room's and the escalators' canopies at x -88,
+  the traps room's at 540 and its fern; `test_parallax_game`: the mob room's canopy lowered over the red mob must fail). No threshold or
+  rule changed.
+- **Measured:** `parallax_mock.py --check --game`: 23 rooms, 0 covered objects, the hero standing hidden at 0 box x, hidden at most 0.00 s
+  on the floor and at the jump apex, no visible layer edge. `forest-fg.png` grows from 896x832 to 896x1072 px and from 54 710 to
+  68 158 bytes (+13 448).
+- **Gate:** `validateParallax`, `tools/test_parallax_game.py`, `TiledMapParallaxTest`, `validateContrast`.

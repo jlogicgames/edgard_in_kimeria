@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="282" height="23" tilewidth="16" tileheight="16" infinite="0" parallaxoriginx="320" parallaxoriginy="188" nextlayerid="21" nextobjectid="186">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="282" height="23" tilewidth="16" tileheight="16" infinite="0" parallaxoriginx="320" parallaxoriginy="188" nextlayerid="21" nextobjectid="142">
  <properties>
   <property name="background" type="color" value="#ff2c3f66"/>
  </properties>
@@ -9,9 +9,9 @@
  <tileset firstgid="717" source="parallax/forest-grove.tsx"/>
  <tileset firstgid="1629" source="parallax/forest-mid.tsx"/>
  <tileset firstgid="3229" source="parallax/forest-fg.tsx"/>
- <tileset firstgid="3255" source="parallax/shared-stars.tsx"/>
- <tileset firstgid="3879" source="parallax/shared-moon.tsx"/>
- <tileset firstgid="4007" source="parallax/shared-clouds.tsx"/>
+ <tileset firstgid="3261" source="parallax/shared-stars.tsx"/>
+ <tileset firstgid="3885" source="parallax/shared-moon.tsx"/>
+ <tileset firstgid="4013" source="parallax/shared-clouds.tsx"/>
  <layer id="6" name="sky" width="42" height="24" parallaxx="0" parallaxy="0">
   <data encoding="csv">
 141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,141,
@@ -42,17 +42,17 @@
  </layer>
  <layer id="7" name="stars" width="42" height="24" parallaxx="0" parallaxy="0">
   <data encoding="csv">
-0,3256,3257,0,0,0,3261,0,0,0,0,0,0,3268,3269,3270,3463,0,0,0,0,0,0,0,0,0,0,3474,0,0,0,0,0,3672,0,0,3675,3676,0,0,0,0,
-0,0,0,0,3275,0,0,0,0,3280,0,0,3283,3284,3285,0,3479,0,0,0,0,3484,0,3486,0,0,0,0,0,0,0,0,0,3688,3689,0,0,0,0,3694,0,0,
-0,0,3289,0,0,0,0,3294,0,0,0,0,0,0,0,0,3495,3496,0,0,0,0,0,0,3503,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-3303,3304,3305,0,0,0,0,0,3311,0,0,0,3315,0,0,0,3511,0,0,0,0,0,3517,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3724,0,3726,0,0,
-0,0,0,0,3323,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3532,0,3534,0,3536,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3547,3548,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3755,3756,0,0,0,0,
-0,0,0,0,0,0,0,0,3359,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3568,0,0,0,0,0,0,0,0,0,0,0,0,3773,0,0,0,
-0,0,0,0,3371,0,0,0,0,3376,0,0,3379,0,0,0,0,0,0,0,0,0,0,0,0,0,3585,0,0,0,0,0,0,0,3785,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,3395,0,0,0,0,0,3593,0,0,0,3597,0,0,0,0,0,0,0,0,0,0,0,0,0,3803,0,0,3806,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3815,0,3817,0,0,0,0,3822,0,0,
-0,0,0,3418,0,0,0,0,0,0,3425,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,3262,3263,0,0,0,3267,0,0,0,0,0,0,3274,3275,3276,3469,0,0,0,0,0,0,0,0,0,0,3480,0,0,0,0,0,3678,0,0,3681,3682,0,0,0,0,
+0,0,0,0,3281,0,0,0,0,3286,0,0,3289,3290,3291,0,3485,0,0,0,0,3490,0,3492,0,0,0,0,0,0,0,0,0,3694,3695,0,0,0,0,3700,0,0,
+0,0,3295,0,0,0,0,3300,0,0,0,0,0,0,0,0,3501,3502,0,0,0,0,0,0,3509,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3309,3310,3311,0,0,0,0,0,3317,0,0,0,3321,0,0,0,3517,0,0,0,0,0,3523,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3730,0,3732,0,0,
+0,0,0,0,3329,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3538,0,3540,0,3542,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3553,3554,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3761,3762,0,0,0,0,
+0,0,0,0,0,0,0,0,3365,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3574,0,0,0,0,0,0,0,0,0,0,0,0,3779,0,0,0,
+0,0,0,0,3377,0,0,0,0,3382,0,0,3385,0,0,0,0,0,0,0,0,0,0,0,0,0,3591,0,0,0,0,0,0,0,3791,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,3401,0,0,0,0,0,3599,0,0,0,3603,0,0,0,0,0,0,0,0,0,0,0,0,0,3809,0,0,3812,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3821,0,3823,0,0,0,0,3828,0,0,
+0,0,0,3424,0,0,0,0,0,0,3431,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -71,12 +71,12 @@
  <layer id="8" name="moon" width="42" height="24" parallaxx="0" parallaxy="0">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3896,3897,3898,3899,3900,3901,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3912,3913,3914,3915,3916,3917,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3928,3929,3930,3931,3932,3933,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3944,3945,3946,3947,3948,3949,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3960,3961,3962,3963,3964,3965,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3976,3977,3978,3979,3980,3981,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3902,3903,3904,3905,3906,3907,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3918,3919,3920,3921,3922,3923,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3934,3935,3936,3937,3938,3939,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3950,3951,3952,3953,3954,3955,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3966,3967,3968,3969,3970,3971,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3982,3983,3984,3985,3986,3987,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -99,13 +99,13 @@
  <layer id="9" name="clouds" width="64" height="24" parallaxx="0" parallaxy="0">
   <properties><property name="driftx" type="float" value="3"/><property name="wrapx" type="float" value="1024"/></properties>
   <data encoding="csv">
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4168,4169,4170,4171,4172,4173,4174,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4013,4014,4015,4016,0,0,0,0,0,0,0,0,0,0,0,0,0,4183,4184,4185,4186,4187,4188,4189,4190,4191,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4027,4028,4029,4030,4031,4032,4033,4034,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4168,4169,4170,4171,4172,4173,4174,0,
-0,4113,4114,4115,4116,4117,0,0,0,0,0,0,0,4041,4042,4043,4044,4045,4046,4047,4048,4049,4050,4051,4052,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4106,4107,4108,4109,0,0,0,4183,4184,4185,4186,4187,4188,4189,4190,4191,
-0,4129,4130,4131,4132,4133,4134,0,0,0,0,4055,4056,4057,4058,4059,4060,4061,4062,4063,4064,4065,4066,4067,4068,4069,4070,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4120,4121,4122,4123,4124,4125,4126,4127,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,4071,4072,4073,4074,4075,4076,4077,4078,4079,4080,4081,4082,4083,4084,4085,4086,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4135,4136,4137,4138,4139,4140,4141,4142,4143,4144,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4151,4152,4153,4154,0,0,4157,4158,0,4160,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4174,4175,4176,4177,4178,4179,4180,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4019,4020,4021,4022,0,0,0,0,0,0,0,0,0,0,0,0,0,4189,4190,4191,4192,4193,4194,4195,4196,4197,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4033,4034,4035,4036,4037,4038,4039,4040,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4174,4175,4176,4177,4178,4179,4180,0,
+0,4119,4120,4121,4122,4123,0,0,0,0,0,0,0,4047,4048,4049,4050,4051,4052,4053,4054,4055,4056,4057,4058,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4112,4113,4114,4115,0,0,0,4189,4190,4191,4192,4193,4194,4195,4196,4197,
+0,4135,4136,4137,4138,4139,4140,0,0,0,0,4061,4062,4063,4064,4065,4066,4067,4068,4069,4070,4071,4072,4073,4074,4075,4076,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4126,4127,4128,4129,4130,4131,4132,4133,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,4077,4078,4079,4080,4081,4082,4083,4084,4085,4086,4087,4088,4089,4090,4091,4092,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4141,4142,4143,4144,4145,4146,4147,4148,4149,4150,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4157,4158,4159,4160,0,0,4163,4164,0,4166,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -632,102 +632,58 @@
  </objectgroup>
  <objectgroup id="15" name="foreground-forest-0-lever" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="0"/></properties>
-  <object id="104" name="hang-leaves-l" gid="3236" x="-80" y="96" width="160" height="96"/>
-  <object id="105" name="hang-leaves-l-top" gid="3248" x="-112" y="8" width="224" height="32"/>
-  <object id="106" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
-  <object id="107" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
-  <object id="108" name="rise-fern" gid="3240" x="448" y="368" width="320" height="240"/>
-  <object id="109" name="rise-fern-foot" gid="3252" x="416" y="384" width="384" height="16"/>
-  <object id="110" name="clump-fern" gid="3231" x="72" y="368" width="176" height="48"/>
-  <object id="111" name="clump-fern-foot" gid="3245" x="40" y="384" width="240" height="16"/>
-  <object id="112" name="clump-leaves" gid="3230" x="440" y="368" width="192" height="48"/>
-  <object id="113" name="clump-leaves-foot" gid="3244" x="408" y="384" width="256" height="16"/>
-  <object id="114" name="tuft" gid="3229" x="184" y="376" width="112" height="64"/>
-  <object id="115" name="tuft-foot" gid="3243" x="152" y="392" width="176" height="16"/>
+  <object id="104" name="near-canopy" gid="3255" x="-128" y="112" width="224" height="112"/>
+  <object id="105" name="near-canopy-top" gid="3256" x="-160" y="8" width="288" height="32"/>
+  <object id="106" name="near-fern" gid="3257" x="488" y="128" width="224" height="128"/>
+  <object id="107" name="near-fern-top" gid="3258" x="456" y="8" width="288" height="32"/>
+  <object id="108" name="clump-leaves" gid="3230" x="440" y="368" width="192" height="48"/>
+  <object id="109" name="clump-leaves-foot" gid="3244" x="408" y="384" width="256" height="16"/>
+  <object id="110" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
+  <object id="111" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
  </objectgroup>
  <objectgroup id="16" name="foreground-forest-0-ladder" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="576"/></properties>
-  <object id="116" name="hang-leaves-l" gid="3236" x="-80" y="96" width="160" height="96"/>
-  <object id="117" name="hang-leaves-l-top" gid="3248" x="-112" y="8" width="224" height="32"/>
-  <object id="118" name="roots-curtain" gid="3239" x="172" y="304" width="240" height="304"/>
-  <object id="119" name="roots-curtain-top" gid="3251" x="140" y="8" width="304" height="32"/>
-  <object id="120" name="rise-reeds" gid="3242" x="-50" y="368" width="96" height="224"/>
-  <object id="121" name="rise-reeds-foot" gid="3254" x="-82" y="384" width="160" height="16"/>
-  <object id="122" name="clump-leaves" gid="3230" x="-24" y="368" width="192" height="48"/>
-  <object id="123" name="clump-leaves-foot" gid="3244" x="-56" y="384" width="256" height="16"/>
-  <object id="124" name="clump-grass" gid="3232" x="288" y="368" width="144" height="48"/>
-  <object id="125" name="clump-grass-foot" gid="3246" x="256" y="384" width="208" height="16"/>
-  <object id="126" name="clump-mixed" gid="3233" x="568" y="368" width="208" height="48"/>
-  <object id="127" name="clump-mixed-foot" gid="3247" x="536" y="384" width="272" height="16"/>
-  <object id="128" name="clump-fern" gid="3231" x="896" y="368" width="176" height="48"/>
-  <object id="129" name="clump-fern-foot" gid="3245" x="864" y="384" width="240" height="16"/>
-  <object id="130" name="tuft" gid="3229" x="104" y="376" width="112" height="64"/>
-  <object id="131" name="tuft-foot" gid="3243" x="72" y="392" width="176" height="16"/>
+  <object id="112" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
+  <object id="113" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
+  <object id="114" name="near-canopy" gid="3255" x="948" y="112" width="224" height="112"/>
+  <object id="115" name="near-canopy-top" gid="3256" x="916" y="8" width="288" height="32"/>
+  <object id="116" name="roots-curtain" gid="3239" x="172" y="304" width="240" height="304"/>
+  <object id="117" name="roots-curtain-top" gid="3251" x="140" y="8" width="304" height="32"/>
  </objectgroup>
  <objectgroup id="17" name="foreground-forest-0-wall" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="1472"/></properties>
-  <object id="132" name="hang-leaves-l" gid="3236" x="-80" y="96" width="160" height="96"/>
-  <object id="133" name="hang-leaves-l-top" gid="3248" x="-112" y="8" width="224" height="32"/>
-  <object id="134" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
-  <object id="135" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
-  <object id="136" name="rise-reeds" gid="3242" x="-50" y="368" width="96" height="224"/>
-  <object id="137" name="rise-reeds-foot" gid="3254" x="-82" y="384" width="160" height="16"/>
-  <object id="138" name="clump-grass" gid="3232" x="40" y="368" width="144" height="48"/>
-  <object id="139" name="clump-grass-foot" gid="3246" x="8" y="384" width="208" height="16"/>
-  <object id="140" name="clump-mixed" gid="3233" x="288" y="368" width="208" height="48"/>
-  <object id="141" name="clump-mixed-foot" gid="3247" x="256" y="384" width="272" height="16"/>
-  <object id="142" name="clump-fern" gid="3231" x="608" y="368" width="176" height="48"/>
-  <object id="143" name="clump-fern-foot" gid="3245" x="576" y="384" width="240" height="16"/>
-  <object id="144" name="tuft" gid="3229" x="144" y="376" width="112" height="64"/>
-  <object id="145" name="tuft-foot" gid="3243" x="112" y="392" width="176" height="16"/>
+  <object id="118" name="near-canopy" gid="3255" x="-88" y="112" width="224" height="112"/>
+  <object id="119" name="near-canopy-top" gid="3256" x="-120" y="8" width="288" height="32"/>
+  <object id="120" name="near-fern" gid="3257" x="772" y="128" width="224" height="128"/>
+  <object id="121" name="near-fern-top" gid="3258" x="740" y="8" width="288" height="32"/>
+  <object id="122" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
+  <object id="123" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
  </objectgroup>
  <objectgroup id="18" name="foreground-forest-0-platform" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="2256"/></properties>
-  <object id="146" name="hang-leaves-l" gid="3236" x="-80" y="96" width="160" height="96"/>
-  <object id="147" name="hang-leaves-l-top" gid="3248" x="-112" y="8" width="224" height="32"/>
-  <object id="148" name="roots-curtain" gid="3239" x="28" y="304" width="240" height="304"/>
-  <object id="149" name="roots-curtain-top" gid="3251" x="-4" y="8" width="304" height="32"/>
-  <object id="150" name="rise-reeds" gid="3242" x="-50" y="368" width="96" height="224"/>
-  <object id="151" name="rise-reeds-foot" gid="3254" x="-82" y="384" width="160" height="16"/>
-  <object id="152" name="clump-mixed" gid="3233" x="-40" y="368" width="208" height="48"/>
-  <object id="153" name="clump-mixed-foot" gid="3247" x="-72" y="384" width="272" height="16"/>
-  <object id="154" name="clump-fern" gid="3231" x="320" y="368" width="176" height="48"/>
-  <object id="155" name="clump-fern-foot" gid="3245" x="288" y="384" width="240" height="16"/>
-  <object id="156" name="clump-leaves" gid="3230" x="672" y="368" width="192" height="48"/>
-  <object id="157" name="clump-leaves-foot" gid="3244" x="640" y="384" width="256" height="16"/>
-  <object id="158" name="tuft" gid="3229" x="152" y="376" width="112" height="64"/>
-  <object id="159" name="tuft-foot" gid="3243" x="120" y="392" width="176" height="16"/>
+  <object id="124" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
+  <object id="125" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
+  <object id="126" name="near-sprig" gid="3259" x="796" y="112" width="128" height="112"/>
+  <object id="127" name="near-sprig-top" gid="3260" x="764" y="8" width="192" height="32"/>
+  <object id="128" name="rise-reeds" gid="3242" x="-50" y="368" width="96" height="224"/>
+  <object id="129" name="rise-reeds-foot" gid="3254" x="-82" y="384" width="160" height="16"/>
  </objectgroup>
  <objectgroup id="19" name="foreground-forest-0-stone" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="3056"/></properties>
-  <object id="160" name="hang-leaves-l" gid="3236" x="-80" y="96" width="160" height="96"/>
-  <object id="161" name="hang-leaves-l-top" gid="3248" x="-112" y="8" width="224" height="32"/>
-  <object id="162" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
-  <object id="163" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
-  <object id="164" name="rise-reeds" gid="3242" x="-50" y="368" width="96" height="224"/>
-  <object id="165" name="rise-reeds-foot" gid="3254" x="-82" y="384" width="160" height="16"/>
-  <object id="166" name="clump-fern" gid="3231" x="48" y="368" width="176" height="48"/>
-  <object id="167" name="clump-fern-foot" gid="3245" x="16" y="384" width="240" height="16"/>
-  <object id="168" name="clump-leaves" gid="3230" x="296" y="368" width="192" height="48"/>
-  <object id="169" name="clump-leaves-foot" gid="3244" x="264" y="384" width="256" height="16"/>
-  <object id="170" name="clump-grass" gid="3232" x="672" y="368" width="144" height="48"/>
-  <object id="171" name="clump-grass-foot" gid="3246" x="640" y="384" width="208" height="16"/>
-  <object id="172" name="tuft" gid="3229" x="176" y="376" width="112" height="64"/>
-  <object id="173" name="tuft-foot" gid="3243" x="144" y="392" width="176" height="16"/>
+  <object id="130" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
+  <object id="131" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
+  <object id="132" name="near-sprig" gid="3259" x="692" y="112" width="128" height="112"/>
+  <object id="133" name="near-sprig-top" gid="3260" x="660" y="8" width="192" height="32"/>
+  <object id="134" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
+  <object id="135" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
  </objectgroup>
  <objectgroup id="20" name="foreground-forest-0-traps" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="3792"/></properties>
-  <object id="174" name="hang-leaves-l" gid="3236" x="-80" y="96" width="160" height="96"/>
-  <object id="175" name="hang-leaves-l-top" gid="3248" x="-112" y="8" width="224" height="32"/>
-  <object id="176" name="roots-curtain" gid="3239" x="172" y="304" width="240" height="304"/>
-  <object id="177" name="roots-curtain-top" gid="3251" x="140" y="8" width="304" height="32"/>
-  <object id="178" name="rise-reeds" gid="3242" x="-50" y="368" width="96" height="224"/>
-  <object id="179" name="rise-reeds-foot" gid="3254" x="-82" y="384" width="160" height="16"/>
-  <object id="180" name="clump-leaves" gid="3230" x="32" y="368" width="192" height="48"/>
-  <object id="181" name="clump-leaves-foot" gid="3244" x="0" y="384" width="256" height="16"/>
-  <object id="182" name="clump-grass" gid="3232" x="384" y="368" width="144" height="48"/>
-  <object id="183" name="clump-grass-foot" gid="3246" x="352" y="384" width="208" height="16"/>
-  <object id="184" name="tuft" gid="3229" x="128" y="376" width="112" height="64"/>
-  <object id="185" name="tuft-foot" gid="3243" x="96" y="392" width="176" height="16"/>
+  <object id="136" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
+  <object id="137" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
+  <object id="138" name="near-canopy" gid="3255" x="668" y="112" width="224" height="112"/>
+  <object id="139" name="near-canopy-top" gid="3256" x="636" y="8" width="288" height="32"/>
+  <object id="140" name="roots-curtain" gid="3239" x="172" y="304" width="240" height="304"/>
+  <object id="141" name="roots-curtain-top" gid="3251" x="140" y="8" width="304" height="32"/>
  </objectgroup>
 </map>
