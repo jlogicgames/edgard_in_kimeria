@@ -33,7 +33,9 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "snail_notice.wav": (0.26, 0.34), "snail_windup.wav": (0.75, 0.85), "snail_windup_long.wav": (1.15, 1.25),
           "snail_spit.wav": (0.13, 0.19), "snail_splat.wav": (0.16, 0.24),
           "whip_crack.wav": (0.14, 0.18), "boss_sweep.wav": (0.27, 0.33), "boss_sweep_counter.wav": (0.37, 0.43),
-          "spore_puff.wav": (0.26, 0.34)}
+          "spore_puff.wav": (0.26, 0.34),
+          "wolf_notice.wav": (0.18, 0.26), "wolf_windup.wav": (0.45, 0.55), "wolf_windup_long.wav": (0.70, 0.80),
+          "wolf_lunge.wav": (0.14, 0.22), "wolf_bite.wav": (0.14, 0.22), "wolf_bay.wav": (0.34, 0.46), "wolf_run.wav": (0.10, 0.14)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
@@ -43,7 +45,8 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "beetle_notice.wav": -19.0, "beetle_windup.wav": -19.4, "beetle_windup_long.wav": -19.4, "beetle_pop.wav": -18.0,
                 "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
                 "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
-                "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0}
+                "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0,
+                "wolf_notice.wav": -19.0, "wolf_windup.wav": -19.4, "wolf_windup_long.wav": -19.4, "wolf_bite.wav": -18.0}
 # #324: deliberately fuller than the voice set (a rare event), so it is outside the set's spread; it must stay within the
 # same spread of the jump instead.
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}
@@ -53,7 +56,7 @@ AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rus
                   "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0,
                   "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
                   "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0,
-                  "spore_puff.wav": -27.1}
+                  "spore_puff.wav": -27.1, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0}
 AMBIENT_MAX_RMS_DB = -20.0
 VOICE_RMS_TOLERANCE_DB = 0.5
 MIN_EFFECT_SECONDS = 0.10     # shorter than this is not a usable effect on a waking output
@@ -195,7 +198,8 @@ class GenerateSoundsTest(unittest.TestCase):
                                                                     "thorn_spring.wav", "stinger_rain.wav", "ember_jet.wav",
                                                                     "fireball_fizzle.wav", "remains_crumble.wav", "remains_burn.wav",
                                                                     "spider_leap.wav", "spider_drop.wav", "spider_reel.wav",
-                                                                    "spider_snap.wav"]:
+                                                                    "spider_snap.wav", "wolf_lunge.wav", "wolf_bay.wav",
+                                                                    "wolf_run.wav"]:
             x = [v / 32768.0 for v in read(ROOT / "assets/audio" / name)[3]]
             self.assertLess(max(abs(v) for v in x[:gs.n_samples(0.002)]), 0.1 * max(abs(v) for v in x), name)
 

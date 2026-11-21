@@ -65,6 +65,7 @@ OLD_CLIFF = (0x7e, 0x63, 0x39, 255)  # the retired third-party cliff tiles' mean
 CLIFF_WIDTH = 48
 # The snail fixture (#329, D106): floor top y 320, a block at x 180..196, the snail's range x 272..384 (frame tops 304).
 SNAIL_FLOOR = 320
+WOLF_FLOOR_BEYOND = 12  # px of floor past the wolf's authored range end: its lunge widens the body spots by that much and no more
 SNAIL_FRAME_TOP = 304
 SNAIL_LEFT_END = 272
 SNAIL_RIGHT_END = 384
@@ -412,6 +413,24 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(max(short), authored_hi, 'floor ends under the authored body: no widening to the right')
         partial = xs(legs(SHORT_FLOOR_WIDTH))
         self.assertEqual(max(partial), SHORT_FLOOR_WIDTH - body_end, 'the pounce stops where the body would leave the floor')
+
+    def test_a_wolfs_body_is_swept_along_its_range_widened_by_the_lunge_reach_while_floor_lasts(self):
+        """#331 (D115): a wolf killed in its lunge slides on to the line's end over floor, so its body is measured out to the reach."""
+        legs = lambda width: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{width}" height="48"/>'
+                                           f'</objectgroup><objectgroup name="SpawnPoints"><object type="Wolf" x="{SPIDER_RANGE_X}" '
+                                           f'y="{BODY_FLOOR - gate.WOLF_FRAME_HEIGHT}" width="48" height="24"><properties>'
+                                           f'<property name="offNeg" value="{SPIDER_OFF_NEG}"/><property name="offPos" value="{SPIDER_OFF_POS}"/>'
+                                           '</properties></object></objectgroup></map>')
+        spots = lambda root: [(key, x, line) for key, _, x, line in gate.body_spots({'forest-9': root})]
+        wide = spots(legs(WIDE_FLOOR))
+        self.assertEqual({key for key, _, _ in wide}, {'Wolf:body'})
+        self.assertEqual({line for _, _, line in wide}, {BODY_FLOOR})
+        xs = [x for _, x, _ in wide]
+        self.assertEqual(min(xs), SPIDER_RANGE_X - SPIDER_OFF_NEG * gate.TILE - gate.WOLF_LUNGE_REACH)
+        self.assertEqual(max(xs), SPIDER_RANGE_X + SPIDER_OFF_POS * gate.TILE + gate.WOLF_LUNGE_REACH)
+        body_end = gate.WOLF_BODY_X + gate.WOLF_BODY_WIDTH
+        authored_hi = SPIDER_RANGE_X + SPIDER_OFF_POS * gate.TILE
+        self.assertEqual(max(x for _, x, _ in spots(legs(authored_hi + body_end + WOLF_FLOOR_BEYOND))), authored_hi + WOLF_FLOOR_BEYOND, 'the lunge stops where the body would leave the floor')
 
     def test_a_dynamic_block_continuing_a_spiders_floor_in_the_pounce_band_fails(self):
         root = lambda kind: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{WIDE_FLOOR}" height="48"/>'

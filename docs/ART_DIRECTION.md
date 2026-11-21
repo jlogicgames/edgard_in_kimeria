@@ -996,7 +996,7 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; flying beetle blast, the wolf's bite, death poof; the notice is body language in each monster's own frames, no "!" pop (D100) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; wolf: **built** (see Forest wolf, D115), its breath streaks, skid and bite dust, jaw glints and death poof; flying beetle blast; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -1208,6 +1208,51 @@ author's request).** The body and the gob are authored sprites; every effect is 
 - **Cost:** `SnailFx` pools of 64 and 112 from measured peaks of 51 and 84 (`SnailFxTest`: three snails winding up at the
   assist's 1.2 s, their gobs flying their range and splatting, a gob steamed and three snails dying); 0.1 to 0.2 B/frame through the
   real level (`AllocationBudgetTest.snailThroughTheRealLevel`).
+
+**Forest wolf, built (#331, #398, [D115](DECISIONS.md#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398); the art approved by the author 2026-11-21, with the author's edits to `dead` and `bay`).** The body is an authored sprite; every
+effect is a particle on `KimeriaParticleSystem` (`effects.WolfFx`, one per `Level`; the body's crumble and burn in `effects.RemainsFx`).
+Concept sheet: `docs/references/forest-traps/monster-wolf-concept.png` (every frame and the body at 4× over forest-2's blue night forest,
+not game art); the exporter's contact sheets are `monster-wolf-preview.png` and `monster-wolf-body-preview.png` beside it.
+
+- **Sheet** `assets/images/objects/monster-wolf.png`, seventeen 48×24 frames in one strip (816×24), drawn in
+  `art/objects/monster/wolf.grid` and exported by `tools/forest_trap_sprites.py monster:wolf`: `stand` (idle), `trot1`, `trot2` (the
+  patrol; `trot1`, head carried lowest, is the sniff), `alert` (the notice: head snapped up, ears pricked, tail stiff), `hackle` (front
+  dropped, shoulders raised in a bristled ridge of spiky texels), `scrape` (the hackle with a forepaw drawn back), `run1` to `run4` (the
+  four-beat gallop: gathered, extended and two between, tail streaming straight out, ears back), `skid` (braced on stiff forelegs, rump
+  dropped, head turned back), `crouch` (the wind-up: front pressed low, rump and tail high, jaws open, fangs bared), `lunge` (stretched
+  flat out and low, forelegs reaching under the open jaws), `bite` (landed, head down, jaws shut), `shake` (the recovery: head down and
+  turned away, ears askew), `bay` (half-sitting, haunches low, forelegs straight, open muzzle raised to the sky, ears up), `dead` (lying
+  flat on its side along the floor, forelegs stretched forward under its flat head, hind legs back, tail limp: the author said a wolf
+  does not lie with its paws up, as the first drawing did and read as a beetle or a log). Drawn about 20 px tall and 38 px long; feet on
+  row 23, facing right, mirrored about the body centre (x 23). Every harmful moment has its own silhouette (`crouch`, `lunge`, `bite`);
+  the harmless pauses turn the head away (`shake`) or point the muzzle at the sky (`bay`).
+- **Palette** (11 colours, 12 with the rim; the danger family, #236): ink `0b0814`; pelt `2a0612`, `4a0c22`, `86101f`; rose lights
+  `9c2050`, `b85a80`, `c87896`; legs `9a6070`, `b07c8c`; eyes `ff6b57`; fangs `e8e0cc`. A grey or brown wolf would sink into the blue
+  night forest or read as decor.
+- **Loudness.** With the full moon rim (up, left, right) the 38 px body measured outline 0.52 to 0.74, far louder than the other
+  danger-family monsters. It is rimmed from above only (`RIM_STYLE`, as the fairy: its back and head take the rim, its sides and legs
+  keep their ink): outline at the 15 RedMob, YellowMob, beetle, spider and snail spawns of the three maps, both facings, every steady
+  camera: 0.315 (`alert`) to 0.367 (`shake`) for the live poses at worst, 0.388 (`bay`) and 0.425 (`dead`) (active floor 0.28; the
+  spider 0.300 to 0.331, the snail 0.302 to 0.339).
+- **Notice:** frames only, no mark and no particles (D100). **Wind-up** (the D7 warning, `BITE_WARNING_SECONDS`): the `crouch` frame,
+  drawn 1 px back from the hero; 1 px breath streaks (`KIND_FLAME`, half white, half `d8d6e8`, 0.22 to 0.32 s), 60 a second, born along
+  its floor line between the jaws and the end of the line its lunge will cover (traced at the commit) and running to that end.
+- **Skid and bite** (D93): a puff of floor dust, thrown back, under the brake and at the commit; at the bite two white jaw glints
+  (`KIND_GLOW`, 7 px, 0.1 s) and four dust puffs at its feet, hit or miss.
+- **Death** (any weapon): it drops onto its side (a 3 px hop) and stays as a body (D101); 0.08 s after the hit, 12 puffs in a ring and
+  four fur flecks (`86101f`, `b07c8c`) to the floor. The sword's kill adds the light spray of D65; fire and stones none (D99).
+- **Body (D101):** `assets/images/objects/monster-wolf-body.png`, the `dead` frame recoloured in a decor-tier palette
+  (`art/objects/monster/wolf-body.grid`, the dried umber of the spider's and the snail's bodies: contour `1e0600`, shade `250a00`,
+  coat `2d1001`, flank `2f1202`, belly and fang `341b0c`, legs `2a1103`, `2f1608`; no ink, no rim). Measured by `BODY_SWEEP` where a wolf
+  can die (along its range, widened by the lunge's reach over floor, as the body slides on when it is killed in the lunge): outline
+  0.068 to 0.184, body 0.101 to 0.185, p90 chroma 0.055 (decor: at most 0.20; 0.20 to 0.204 only where the 48 px body overhangs a
+  lit block beside the snail's narrow range at forest-1 x 1576, where no wolf can lie). The pose differs from its closest live frame (`bay`),
+  either way round, in 52.5 % of the silhouette (`RemainsTest`, floor 25 %); `bay` differs from `alert` in 50.1 %. It twitches
+  (a 1 px shudder for 0.3 s) when the hero comes within 6 px and never rocks; its crumble chips are the body's four umbers
+  (`WolfFx.WOLF_CHIPS`).
+- **Cost:** `WolfFx` pools of 64 and 72 from measured peaks of 50 and 55 (`WolfFxTest`: three wolves braking and winding up at the
+  assist's 0.75 s, then biting, while three others die); 0.2 to 0.6 B/frame through the real level before the floor re-check, 0.0 in one run after it
+  (`AllocationBudgetTest.wolfThroughTheRealLevel`).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

@@ -3057,7 +3057,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Snail (#329): yes, built ([D106](#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398)).** Its empty shell stays, rolled onto its back with its mouth open upward, and rocks like the others.
   - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
-  - **Wolf (#331): yes, with its own reaction.** A large body does not rock. It twitches (a 1 px shudder of the same
+  - **Wolf (#331): yes, with its own reaction ([D115](#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
     frame) when the hero passes. It crumbles and burns like the others.
   - **Bat (existing): yes.** It falls when killed. Over a pit it leaves nothing.
   - **RedMob and YellowMob (existing): the author decides per mob in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).** Both are in rooms the author has played,
@@ -3829,3 +3829,78 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Gate:** `tools/test_parallax_game.py` (the underside under a block with air below, the left and right faces, the wall foot's inner
   corner and no straw on it, no straw on any face, body or corner tile, the variants fixed by place and never alike side by side, the
   maps' drawn cells unchanged, every map what the installer writes), `validateParallax`, `validateContrast`, `CollisionVisibilityTest`.
+
+## D115. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
+
+- **Status:** Accepted and built (author, 2026-11-20: "the wolf must be faster and more dangerous than the other enemies";
+  2026-11-21: the card and every recommendation of the proposal, the danger-family crimson, the first meeting in forest-2, the art
+  with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in no room yet: the forest-2 room card
+  comes first ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)). The lunge is **160 px in 0.25 s**
+  (author, 2026-11-21: "Yes, 160"; see Why). Card:
+  [GAME_DESIGN.md, "Wolf card"](GAME_DESIGN.md#wolf-card-built-d115-331).
+- **Decision:**
+  - **The fastest and most dangerous Forest monster.** It is the first monster faster than the hero, it senses the furthest,
+    commits from the furthest and strikes the furthest of the monsters that close in, and it gives the shortest window after a
+    miss. **Without the assist, only a jump escapes its lunge**: running and stepping out are bitten. Besides escaping, the
+    hero can kill it as it comes (a live sword, a fireball, a stone) or go up out of its reach.
+  - **Body:** 48×24 frames, seventeen in one strip (`stand`, `trot1`, `trot2`, `alert`, `hackle`, `scrape`, `run1` to `run4`,
+    `skid`, `crouch`, `lunge`, `bite`, `shake`, `bay`, `dead`), drawn about 20 px tall and 38 px long, the largest Forest monster;
+    a crimson pelt in the danger family (#236), 11 colours, 12 with the moon rim lit from above only. Body hitbox `rect(6, 6, 34, 18)`;
+    jaw box `rect(40, 9, 7, 7)` (8 to 15 px above the floor line), whose front edge, the muzzle, is the reference of every reach.
+    **Contact is harmless**: only the jaws kill.
+  - **Patrol:** it trots at 40 px/s inside its authored range (`offNeg`/`offPos`), with a 0.6 s sniff at each end; it never
+    leaves the range on foot and never leaves its floor (no hops up steps, no leaps over gaps; leaping is a later develop,
+    [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)).
+  - **Senses:** sight **256 px** ahead, in a 48 px band above its floor line, cut at the first solid at its eye height (16 px);
+    hearing, a **64 px circle** around its body's centre, through anything.
+  - **Notice, in body language (D100):** alert, hackles, one paw scrape: **0.5 s**, not scaled by the assist; its own call
+    `wolf_notice`. No mark, no shared sound.
+  - **Chase:** **160 px/s** (1.6× the hero's 100), full speed in 0.25 s; turning costs a 0.125 s skid (about 10 px).
+  - **Commit and wind-up:** when the hero's hitbox touches the **72 px lunge box** (from the jaws' back edge to 72 px past the
+    muzzle, 24 px up from its floor line), its direction locks and it stops where it is and winds up for `TrapWarnings.duration(BITE_WARNING_SECONDS)`, sampled once:
+    **0.5 s, 0.75 s with the assist**, with pale breath streaks along the whole line its lunge will cover (traced at the commit over the floor under it) and `wolf_windup`
+    (`_long`).
+  - **Lunge and bite:** **160 px in 0.25 s** (640 px/s) along its floor; a jaw box of about 7×7, 8 to 15 px above the floor line,
+    lethal during the lunge and the 0.1 s bite and swept every frame; the bite is seen and heard, hit or miss (D93). The lunge
+    stops at a solid face and at the end of its floor (#497's rule), and may pass its range end over floor by up to its reach.
+    A bite that reaches the hero lands at the start of the wolf's next frame, so a killing hit on the same frame wins.
+  - **Floor re-check:** the line is traced once at the commit, and every lunge frame checks the floor and solids again: a floor
+    that goes during the wind-up (a lever-driven wall set inactive) or a solid that comes stops the lunge at the last good place,
+    its body never over air, and the bite still lands seen and heard.
+  - **Recovery:** **0.5 s**, harmless, not scaled by the assist; then a new full wind-up for each lunge.
+  - **Refuge and give-up:** a hero on anything more than **24 px** above its floor, or more than its 72 px commit box beyond its
+    range end, is out of reach (the code commits only when the hero touches the commit box; a hero 73 px or more past the muzzle at
+    the range end is safe although the 160 px lunge would cover him, the card's "range end plus the lunge" was loose wording): it runs to the nearest reachable point (under him, kept inside its range) and bays, and **gives up after 1.5 s**
+    (also after 1.5 s out of both senses); it does not notice that hero again until he has been out of its sight, which looks only
+    ahead, for 1.0 s, so it trots away and notices him again at its next turn, a patrol and not a loop under the ledge. A solid's
+    face cuts its sight at eye height (16 px), so a hero on a solid block beyond its face is not seen: a refuge for a first meeting
+    is a one-way platform, or within its 64 px hearing.
+  - **Answers:** every weapon (the sword with the light spray of D65, a fireball, a stone or torch, a stomp with the normal
+    bounce) kills it in any state and leaves its body (D101): on its side, legs straight out; it twitches, it does not rock.
+    Its death plays the shared `bounce`.
+  - **Room rules:** D3/D6 as for every enemy. Load checks (`Wolf.problem`): its range inside the room on gapless floor and at
+    least 160 px long; no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside its sight box (256 px, which
+    includes its reach);
+    at least 64 px of headroom over its whole reach. Met in play (D100): its first meeting is a refuge pocket in a forest-2
+    room, from which the hero sees it notice, sprint and bay (D105).
+  - **Assist:** only the wind-up is longer (0.75 s); notice, speeds, skid, recovery and give-up are not scaled.
+- **Why:** every other Forest monster loses a foot race, so walking away answers all of them; the author asked for one that
+  does not. The wolf keeps fair by what it cannot do: it warns twice (the notice, then the wind-up with its whole line drawn),
+  its contact is harmless, its jaws run low so a jump always clears them, it never strikes over a gap or through a wall, and its
+  chase ends at its range and at any refuge. **Why a 160 px lunge:** a hero who keeps running gains 100 px/s through the wind-up
+  *and* the 0.25 s lunge, so his near edge is 72 + 75 = 147 px from the muzzle when the jaws end. At 160 (0.25 s, 640 px/s) he is
+  bitten by 13 px without the assist, and with the assist's 0.75 s he is at 172 and missed by 12 px. The shared 0.8 s warning would let a runner escape (177 px against 160), so the
+  wolf shares the spider's bite warning. A real hero reacts later than the commit, which only makes the bite more certain; the
+  the constant is `Wolf.LUNGE_REACH`.
+- **Measured (`WolfTest`, perfect-reaction heroes):** a hero who runs from the commit is bitten at every commit gap from 40 to
+  72 px without the assist and missed from about 60 px up with it. The latest take-off after the commit that clears the jaws is
+  0.55 s at the edge of the lunge box and 0.45 s at the muzzle (0.82 s and 0.72 s with the assist, where a jump made at the commit
+  itself has landed before the jaws arrive: the first clearing take-off is 0.07 s after it). A hero who runs through the assist's
+  warning is struck again about 2.0 s after the first lunge began (1.97 s). Allocation (`AllocationBudgetTest.wolfThroughTheRealLevel`):
+  0.2, 0.6 and 0.6 B/frame in 3 runs before the floor re-check, 0.0 in the one run after it (ceiling 8). Contrast at the 15 monster spawns of the three maps (outline, active floor 0.28; the
+  spider measures 0.300 to 0.331, the snail 0.302 to 0.339): live frames 0.315 (`alert`) to 0.367 (`shake`) at worst; the body (decor,
+  ceiling 0.20) 0.068 to 0.184. The body's silhouette differs from its closest live frame (`bay`), either way round, in 52.5 %.
+- **Gates:** `WolfTest` (37 tests: the fairness pins above, each its own test; every weapon in every state; the refuge; the
+  gap and the wall; a floor that vanishes during the wind-up, `wolf-split.tmx`; the failing load fixtures), `WolfFxTest`, `RemainsTest` (the wolf's case), `AllocationBudgetTest.wolfThroughTheRealLevel`,
+  `check_contrast.py` (the wolf and its body, measured from the first placement, with its own `test_check_contrast.py` case),
+  `tools/test_generate_sounds.py`, `SoundPreloadTest`; `FirstMeetingPocketTest` and `RoomCardsTest` with the placement (#331).

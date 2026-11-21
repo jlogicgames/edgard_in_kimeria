@@ -1284,6 +1284,178 @@ def snail_splat() -> list[float]:
     return finish_rms(out, SNAIL_SPLAT_RMS_DB)
 
 
+# ---------------------------------------------------------------- forest wolf (#331, D115)
+# An animal, never a person (author, 2026-11-21: the first set "sounds like the hero"). The hero's voice set (#313) glides
+# between 120 and 470 Hz through human vowels whose first formant lies at 300 to 800 Hz (FORMANTS_A/E/I/O/U/AA/UH); the boss
+# goes down to 72 Hz. The wolf's voiced sounds go through a snout resonance whose first formant is 950 to 1050 Hz, above
+# every human vowel; its barks are a big dog's, 230 to 380 Hz (author, 2026-11-21: 400 to 680 Hz sounded like a puppy), rough
+# and with a breath through the nose, and its snarl is a pulsed, fully rough growl with a hiss through the teeth. Seeds 7301 to 7311.
+WOLF_SNOUT = ((950.0, 260.0, 1.0), (2100.0, 380.0, 0.7), (3300.0, 500.0, 0.35))   # bark and yip: a big animal's long muzzle
+WOLF_SNOUT_GROWL = ((1050.0, 300.0, 1.0), (2200.0, 400.0, 0.7), (3400.0, 500.0, 0.35))  # the snarl, a bared muzzle
+# Notice (wolf_notice): its own call, one sharp dog-like bark: a quick rising yip at the onset, a falling bark through the
+# snout, and a breath huffed out after it.
+WOLF_NOTICE_DURATION = 0.22
+WOLF_HUFF_SEED = 7301
+WOLF_YIP_VOICE = Voice(7311, 0.035, (300.0, 380.0), WOLF_SNOUT, WOLF_SNOUT, -19.0, asp_len=0.008, asp_level=0.6,
+                       attack=0.004, tau=0.05, release=0.008, jitter=0.04, rough=0.3, rough_start=0.0, lowpass=4500.0)
+WOLF_YIP_START = 0.004
+WOLF_YIP_GAIN = 0.7
+WOLF_BARK_VOICE = Voice(7302, 0.12, (380.0, 250.0), WOLF_SNOUT, WOLF_SNOUT, -19.0, asp_len=0.006, asp_level=0.4,
+                        attack=0.004, tau=0.06, release=0.025, jitter=0.06, rough=0.7, rough_start=0.0, lowpass=4500.0)
+WOLF_BARK_START = 0.030
+WOLF_BARK_GAIN = 1.0
+WOLF_HUFF_START = 0.140
+WOLF_HUFF_LEN = 0.075
+WOLF_HUFF_BAND = (2200.0, 1400.0)                # the breath through the nose after the bark
+WOLF_HUFF_GAIN = 0.35
+WOLF_NOTICE_RMS_DB = -19.0
+# Wind-up (wolf_windup, wolf_windup_long): a rising snarl: a fully rough growl climbing 240 to 330 Hz through the closed
+# snout, chopped into growl pulses that quicken, under a hiss through bared teeth that grows faster than the growl, ending on a
+# held catch. Exactly the bite warning, 0.5 s and 0.75 s, so it ends with the lunge. A one-shot: it plays to its end.
+WOLF_WINDUP_VOICES = {0.5: Voice(7303, 0.50, (240.0, 330.0), WOLF_SNOUT_GROWL, WOLF_SNOUT_GROWL, -19.4, asp_len=0.020,
+                                 asp_level=0.3, attack=0.30, tau=2.0, release=0.020, jitter=0.12, rough=1.0, rough_start=0.0,
+                                 lowpass=2600.0),
+                      0.75: Voice(7304, 0.75, (240.0, 330.0), WOLF_SNOUT_GROWL, WOLF_SNOUT_GROWL, -19.4, asp_len=0.020,
+                                  asp_level=0.3, attack=0.45, tau=3.0, release=0.020, jitter=0.12, rough=1.0, rough_start=0.0,
+                                  lowpass=2600.0)}
+WOLF_GROWL_PULSE = (28.0, 40.0)                  # Hz, the growl's pulse rate from start to end
+WOLF_GROWL_PULSE_DEPTH = 0.6
+WOLF_HISS_BAND = (2400.0, 4200.0)                # Hz, band-pass centre from start to end: the teeth baring
+WOLF_HISS_BW = 1200.0
+WOLF_HISS_GAIN = 0.7                             # relative to the growl, at the end; it grows as the square of the time
+WOLF_GROWL_GAIN = 0.8
+WOLF_CATCH_LEN = 0.06                            # s, the held catch: the breath stops before the lunge
+WOLF_WINDUP_RMS_DB = -19.4
+# Lunge (wolf_lunge): at take-off, a claw scrabble and a hard breath out. Environment level, as spider_leap.
+WOLF_LUNGE_SEED = 7305
+WOLF_LUNGE_DURATION = 0.18
+WOLF_SCRABBLE_TIMES = (0.004, 0.029, 0.054, 0.079)  # s, four claws on the ground
+WOLF_SCRABBLE_LEN = 0.006
+WOLF_SCRABBLE_BAND = (1900.0, 1000.0)
+WOLF_SCRABBLE_GAIN = 0.6
+WOLF_EXHALE_START = 0.055
+WOLF_EXHALE_LEN = 0.12
+WOLF_EXHALE_SWEEP = (1600.0, 900.0)              # Hz, band-pass centre from start to end: the breath falling
+WOLF_EXHALE_BW = 800.0
+WOLF_EXHALE_GAIN = 0.8
+WOLF_LUNGE_DRIVE = 2.5                           # tanh drive: a dense, low-crest scrabble, as spider_leap
+WOLF_LUNGE_RMS_DB = -21.0
+# Bite (wolf_bite): hit or miss (D93), a heavy jaw clack, two clicks over a short rough thud through the snout.
+WOLF_BITE_SEED = 7306
+WOLF_BITE_DURATION = 0.18
+WOLF_CLACK_TIMES = (0.010, 0.050)                # s
+WOLF_CLACK_LEN = 0.008
+WOLF_CLACK_BANDS = ((1600.0, 500.0), (1300.0, 500.0))
+WOLF_CLACK_GAIN = (0.7, 0.85)
+WOLF_THUD_VOICE = Voice(7307, 0.10, (190.0, 150.0), WOLF_SNOUT_GROWL, WOLF_SNOUT_GROWL, -18.0, asp_len=0.006, asp_level=0.4,
+                        attack=0.006, tau=0.05, release=0.020, jitter=0.08, rough=0.8, rough_start=0.0, lowpass=2200.0)
+WOLF_THUD_START = 0.030
+WOLF_THUD_GAIN = 1.0
+WOLF_BITE_RMS_DB = -18.0
+# Bay (wolf_bay): at a refuge or its range end, harmless: a frustrated double bark through the snout, the second lower and
+# shorter. Quieter than the notice (environment level), so it never reads as a new threat.
+WOLF_BAY_DURATION = 0.40
+WOLF_BAY_VOICES = (Voice(7308, 0.12, (340.0, 260.0), WOLF_SNOUT, WOLF_SNOUT, -22.0, asp_len=0.008, asp_level=0.5,
+                         attack=0.005, tau=0.06, release=0.025, jitter=0.06, rough=0.6, rough_start=0.0, lowpass=4500.0),
+                   Voice(7309, 0.10, (300.0, 230.0), WOLF_SNOUT, WOLF_SNOUT, -22.0, asp_len=0.008, asp_level=0.5,
+                         attack=0.005, tau=0.05, release=0.025, jitter=0.06, rough=0.6, rough_start=0.0, lowpass=4000.0))
+WOLF_BAY_STARTS = (0.010, 0.220)
+WOLF_BAY_GAINS = (1.0, 0.75)
+WOLF_BAY_RMS_DB = -22.0
+# Run (wolf_run): one per gallop cycle while it sprints, in view only: a soft paw patter, a muffled double thud and a faint
+# breath. The quietest sound of the set (ambient), under every warning.
+WOLF_RUN_SEED = 7310
+WOLF_RUN_DURATION = 0.12
+WOLF_PAW_TIMES = (0.004, 0.034)                  # s, the two paws
+WOLF_PAW_LEN = 0.030
+WOLF_PAW_BAND = (110.0, 80.0)
+WOLF_PAW_GAIN = 1.0
+WOLF_RUN_BREATH_BAND = (1200.0, 700.0)
+WOLF_RUN_BREATH_GAIN = 0.35
+WOLF_RUN_RMS_DB = -30.0
+
+
+def wolf_notice() -> list[float]:
+    rng = random.Random(WOLF_HUFF_SEED)
+    out = [0.0] * n_samples(WOLF_NOTICE_DURATION)
+    _add_at(out, n_samples(WOLF_YIP_START), render_voice(WOLF_YIP_VOICE), WOLF_YIP_GAIN)
+    _add_at(out, n_samples(WOLF_BARK_START), render_voice(WOLF_BARK_VOICE), WOLF_BARK_GAIN)
+    _add_tick(rng, out, n_samples(WOLF_HUFF_START), n_samples(WOLF_HUFF_LEN), WOLF_HUFF_BAND, WOLF_HUFF_GAIN)
+    return finish_rms(out, WOLF_NOTICE_RMS_DB)
+
+
+def _wolf_windup(seconds: float) -> list[float]:
+    voice = WOLF_WINDUP_VOICES[seconds]
+    growl = render_voice(voice)
+    rng = random.Random(voice.seed)
+    n = len(growl)
+    lo, hi = WOLF_HISS_BAND
+    hiss = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, WOLF_HISS_BW)
+    hp = max(abs(v) for v in hiss) or 1.0
+    slow, fast = WOLF_GROWL_PULSE
+    out, phase = [], 0.0
+    for i in range(n):
+        phase += (slow + (fast - slow) * i / n) / SAMPLE_RATE
+        pulse = 1.0 - WOLF_GROWL_PULSE_DEPTH * (0.5 + 0.5 * math.cos(2 * math.pi * phase))
+        out.append(WOLF_GROWL_GAIN * growl[i] * pulse + WOLF_HISS_GAIN * hiss[i] / hp * (i / n) ** 2)
+    nc = n_samples(WOLF_CATCH_LEN)
+    for j in range(nc):   # the held catch: the breath stops before the lunge
+        out[n - nc + j] *= 1.0 - j / nc
+    return finish_rms(out, WOLF_WINDUP_RMS_DB)
+
+
+def wolf_windup() -> list[float]:
+    return _wolf_windup(0.5)
+
+
+def wolf_windup_long() -> list[float]:
+    return _wolf_windup(0.75)
+
+
+def wolf_lunge() -> list[float]:
+    rng = random.Random(WOLF_LUNGE_SEED)
+    out = [0.0] * n_samples(WOLF_LUNGE_DURATION)
+    for t in WOLF_SCRABBLE_TIMES:
+        _add_tick(rng, out, n_samples(t), n_samples(WOLF_SCRABBLE_LEN), WOLF_SCRABBLE_BAND, WOLF_SCRABBLE_GAIN)
+    ne = n_samples(WOLF_EXHALE_LEN)
+    lo, hi = WOLF_EXHALE_SWEEP
+    breath = bandpass(noise(rng, ne), lambda t: lo + (hi - lo) * t, WOLF_EXHALE_BW)
+    bp = max(abs(v) for v in breath) or 1.0
+    env = envelope(ne, 0.010, 0.05)
+    _add_at(out, n_samples(WOLF_EXHALE_START), [v / bp * e for v, e in zip(breath, env)], WOLF_EXHALE_GAIN)
+    peak = max(abs(v) for v in out) or 1.0
+    return finish_rms([math.tanh(WOLF_LUNGE_DRIVE * v / peak) for v in out], WOLF_LUNGE_RMS_DB, REMAINS_PEAK_DB)
+
+
+def wolf_bite() -> list[float]:
+    rng = random.Random(WOLF_BITE_SEED)
+    out = [0.0] * n_samples(WOLF_BITE_DURATION)
+    _add_at(out, n_samples(WOLF_THUD_START), render_voice(WOLF_THUD_VOICE), WOLF_THUD_GAIN)
+    for t, band, gain in zip(WOLF_CLACK_TIMES, WOLF_CLACK_BANDS, WOLF_CLACK_GAIN):
+        _add_tick(rng, out, n_samples(t), n_samples(WOLF_CLACK_LEN), band, gain)
+    return finish_rms(out, WOLF_BITE_RMS_DB)
+
+
+def wolf_bay() -> list[float]:
+    out = [0.0] * n_samples(WOLF_BAY_DURATION)
+    for voice, start, gain in zip(WOLF_BAY_VOICES, WOLF_BAY_STARTS, WOLF_BAY_GAINS):
+        _add_at(out, n_samples(start), render_voice(voice), gain)
+    return finish_rms(out, WOLF_BAY_RMS_DB, REMAINS_PEAK_DB)
+
+
+def wolf_run() -> list[float]:
+    rng = random.Random(WOLF_RUN_SEED)
+    n = n_samples(WOLF_RUN_DURATION)
+    out = [0.0] * n
+    for t in WOLF_PAW_TIMES:
+        _add_tick(rng, out, n_samples(t), n_samples(WOLF_PAW_LEN), WOLF_PAW_BAND, WOLF_PAW_GAIN)
+    breath = bandpass(noise(rng, n), *WOLF_RUN_BREATH_BAND)
+    bp = max(abs(v) for v in breath) or 1.0
+    env = envelope(n, 0.020, 0.08)
+    _add_at(out, 0, [v / bp * e for v, e in zip(breath, env)], WOLF_RUN_BREATH_GAIN)
+    return finish_rms(out, WOLF_RUN_RMS_DB, REMAINS_PEAK_DB)
+
+
 # ---------------------------------------------------------------- RedMob whip and boss sweeps (#447, D93)
 # Consequences: the strike is heard where it lands, hit or miss. whip_crack plays at the start of the RedMob's strike frame;
 # boss_sweep at the start of the boss's normal sweep frame, boss_sweep_counter at the start of the counter strike.
@@ -1454,7 +1626,9 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "snail_notice.wav": snail_notice, "snail_windup.wav": snail_windup, "snail_windup_long.wav": snail_windup_long,
                "snail_spit.wav": snail_spit, "snail_splat.wav": snail_splat,
                "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter,
-               "spore_puff.wav": spore_puff}
+               "spore_puff.wav": spore_puff,
+               "wolf_notice.wav": wolf_notice, "wolf_windup.wav": wolf_windup, "wolf_windup_long.wav": wolf_windup_long,
+               "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run}
 
 
 def generate(out_dir: Path) -> list[Path]:

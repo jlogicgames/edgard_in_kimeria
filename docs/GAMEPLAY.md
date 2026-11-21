@@ -234,13 +234,32 @@ hint about it: it is met in play. Authoring: `Snail` (24×16) in `SpawnPoints` w
 load (from every point of its range, both ways, its shot must end on a wall or a floor inside the room and never cross the
 room's entrance, exit or checkpoints). Where it is met: with the spider rooms' rework (D105, [#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)).
 
+## Forest wolf
+
+A lean crimson wolf (D115, #331), the largest Forest monster, trots slowly along its own stretch of floor, stops to sniff at each
+end and turns. Touching it is harmless. It sees far ahead (sixteen tiles, a band a little taller than Edgard, cut by any
+wall or crate at its eye height) and hears close by (four tiles, through anything). When it notices him it stops, pricks its ears,
+bristles and scrapes a paw (half a second, with a sharp bark), then sprints at him, faster than he runs, keeping to its own stretch
+of floor. Within four and a half tiles of its muzzle it stops where it is and crouches, its breath streaks drawn along the whole
+line its lunge will cover (half a second, three quarters with the longer-warnings assist), then lunges ten tiles along that line
+in a quarter of a second, low over the floor, and bites, with a heavy clack heard hit or miss. Only the jaws kill. It cannot be
+outrun without the assist: a jump, timed within about half a second of its crouch, carries Edgard over the jaws (its jaws are low and the
+rooms it lives in have headroom to jump); the sword, a fireball or a stone kills it as it comes; and anything more than a block
+and a half up is out of its reach: it runs to the nearest point it can reach, bays (a double bark), gives up after a second and a
+half and trots on, and will not notice him again until he has been out of its sight for a second. After a bite it shakes its head
+for half a second, harmless, and chases again with a new crouch. It never goes off its floor or through a wall. Every weapon kills
+it: the sword, a fireball, a stone or a torch, or landing on it. It leaves its body lying flat on its side, which twitches when he
+comes near. There is no hint about it: it is met in play. Authoring: `Wolf` (48×24) in `SpawnPoints` with `offNeg`/`offPos` like the
+mobs, checked at load (a range of at least ten tiles on floor without gaps, nothing of the entrance, exit or checkpoints in its sight,
+and four tiles of headroom over its reach). Where it is met: a forest-2 room, with its room card first ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)).
+
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
-on its back, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
+on its back, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
 walks past. The sword, a thrown stone or landing on one crumbles it (landing bounces him as on a monster), and a
 fireball or a thrown torch burns it up. No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
 until Edgard leaves the room. A death resets the room with the monster alive again, and a passed room shows neither the
 monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle,
-the spider and the snail leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+the spider, the snail and the wolf leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 Options -> Assist has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
 letter by letter, and one press moves to the next line.

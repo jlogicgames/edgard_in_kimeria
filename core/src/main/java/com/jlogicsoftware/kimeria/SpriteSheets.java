@@ -76,6 +76,10 @@ public final class SpriteSheets {
     public static final Sheet MONSTER_SNAIL = new Sheet("images/objects/monster-snail.png", 24, 16);
     /** D101: the snail's body, the empty shell (its dead frame) in a decor-tier palette (art/objects/monster/snail-body.grid). */
     public static final Sheet MONSTER_SNAIL_BODY = new Sheet("images/objects/monster-snail-body.png", 24, 16);
+    // The forest wolf (#331, D115): seventeen 48x24 frames, one strip; tools/sprite_layouts.py MONSTER_SHEETS, art/objects/monster/wolf.grid.
+    public static final Sheet MONSTER_WOLF = new Sheet("images/objects/monster-wolf.png", 48, 24);
+    /** D101: the wolf's body, its dead frame (lying on its side) in a decor-tier palette (art/objects/monster/wolf-body.grid). */
+    public static final Sheet MONSTER_WOLF_BODY = new Sheet("images/objects/monster-wolf-body.png", 48, 24);
     public static final Sheet MONSTER_SPIDER_BODY = new Sheet("images/objects/monster-spider-body.png", 32, 16);
     /** D103 (#483): the spider on a wall, three 16x32 frames (wall1, wall2, walltap), head up, the wall on the right (spider-wall.grid). */
     public static final Sheet MONSTER_SPIDER_WALL = new Sheet("images/objects/monster-spider-wall.png", 16, 32);

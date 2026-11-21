@@ -18,6 +18,7 @@ import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.RemainsFx;
 import com.jlogicsoftware.kimeria.effects.ParticleTextures;
 import com.jlogicsoftware.kimeria.effects.SnailFx;
+import com.jlogicsoftware.kimeria.effects.WolfFx;
 import com.jlogicsoftware.kimeria.effects.SpiderFx;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
@@ -38,6 +39,7 @@ import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
+import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
@@ -184,6 +186,9 @@ public class Level implements WorldObject {
     private static final long SNAIL_FX_SEED_MIX = 0xD1B54A32D192ED03L;
     /** The snails' wind-up specks, gob drips and splats and deaths (#329, D106): one for the level. Cleared with the room. */
     private final SnailFx snailFx = new SnailFx(TimeUtils.nanoTime() ^ SNAIL_FX_SEED_MIX);
+    private static final long WOLF_FX_SEED_MIX = 0xFF51AFD7ED558CCDL;
+    /** The wolves' wind-up breath, skid and bite dust, jaw glints and deaths (#331, D115): one for the level. Cleared with the room. */
+    private final WolfFx wolfFx = new WolfFx(TimeUtils.nanoTime() ^ WOLF_FX_SEED_MIX);
     /** Every monster body's crumble and burn (D101, #478): one for the level. Cleared with the room. */
     private final RemainsFx remainsFx = new RemainsFx(TimeUtils.nanoTime() ^ REMAINS_FX_SEED_MIX);
 
@@ -505,7 +510,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); snailFx.clear(); remainsFx.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); snailFx.clear(); wolfFx.clear(); remainsFx.clear();
         startLeaves();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
@@ -556,6 +561,8 @@ public class Level implements WorldObject {
     public SpiderFx spiderFx() { return spiderFx; }
     /** The snails' specks, gob drips and splats and deaths (#329, D106); {@code Snail} writes into them, tests read them. */
     public SnailFx snailFx() { return snailFx; }
+    /** The wolves' breath, dust, jaw glints and deaths (#331, D115); {@code Wolf} writes into them, tests read them. */
+    public WolfFx wolfFx() { return wolfFx; }
     /** Every monster body's crumble and burn (D101, #478); the bodies write into them, tests read them. */
     public RemainsFx remainsFx() { return remainsFx; }
 
@@ -608,6 +615,7 @@ public class Level implements WorldObject {
             if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
             if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
             if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
+            if ("Wolf".equals(o.type)) validateWolf(o, owner); // D115: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -853,6 +861,13 @@ public class Level implements WorldObject {
                     objects.add(snail);
                     roomEnemies.put(o.id, snail);
                 }
+                case "Wolf" -> {
+                    Wolf wolf = new Wolf(assets, game, o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    wolf.setPlayer(player);
+                    wolf.setLevel(this);
+                    objects.add(wolf);
+                    roomEnemies.put(o.id, wolf);
+                }
                 case "YellowMob" -> {
                     YellowMob mob = new YellowMob(assets, game, o.x, o.y, o.width, o.height,
                         o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
@@ -999,6 +1014,12 @@ public class Level implements WorldObject {
     /** The puffball's clocked release is heard only while the puffball is inside the camera view (#445): off screen it must not puff every period. */
     private void puffballSound(Puffball puffball) {
         if (game.playSounds() && puffballInView(puffball)) game.playSound(SPORE_PUFF_SOUND);
+    }
+
+    /** True when {@code box} is within the camera's visible world rect: a cue that is heard only while it is on screen (D89, D90). */
+    public boolean inCameraView(Rectangle box) {
+        Rectangle view = visibleWorldRect.get();
+        return view != null && view.width > 0 && view.height > 0 && view.overlaps(box);
     }
 
     boolean puffballInView(Puffball puffball) {
@@ -1267,6 +1288,21 @@ public class Level implements WorldObject {
             if (!"Platform".equals(c.type) && !"QuickSand".equals(c.type)) solids.add(new Rectangle(c.x, c.y, c.width, c.height));
         String problem = Snail.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
             solids, room, FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y), standingPlaces(owner));
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /**
+     * The wolf (D115) fails at load when its range is shorter than {@link Wolf#MIN_RANGE}, leaves the room or has a gap under it,
+     * when a standing place (the entrance body, the room exit, a checkpoint) is within its sight or reach, or when a solid hangs into
+     * the {@link Wolf#HEADROOM} px above its floor over its reach.
+     */
+    private void validateWolf(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        List<Rectangle> solids = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions"))
+            if (!"Platform".equals(c.type) && !"QuickSand".equals(c.type)) solids.add(new Rectangle(c.x, c.y, c.width, c.height));
+        String problem = Wolf.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
+            solids, room, standingPlaces(owner));
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
@@ -1697,6 +1733,7 @@ public class Level implements WorldObject {
         beetleFx.update(dt);
         spiderFx.update(dt);
         snailFx.update(dt);
+        wolfFx.update(dt);
         remainsFx.update(dt);
         leafFx.update(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
@@ -1774,6 +1811,7 @@ public class Level implements WorldObject {
         beetleFx.render(batch);
         spiderFx.render(batch);
         snailFx.render(batch);
+        wolfFx.render(batch);
         remainsFx.render(batch);
         fx.render(batch);
         leafFx.render(batch);
