@@ -6,14 +6,15 @@
 # Night palette (D92, #430): every colour mixed 35 % toward the night background 2c3f66; the day values are in docs/ART_DIRECTION.md.
 # Layered-forest recolour (#236, D112): OKLab L x0.55 - 0.10, hue kept, over forest-2's near-black ground: outline 0.157, body 0.145.
 size 24 16
-color k 0b0a0e
-color h 1d1a1c
-color a 181618
-color s 131114
-color g 0f0d12
-color b 1a1c20
-color B 15171b
-color p 1e1f24
+# Depth palette (D120, 2026-11-21): one step lighter (+0.05 L); caps a mushroom grey-brown (hue 60), stems b B p grey-beige (hue 85).
+color k 1c130c
+color h 2e251d
+color a 2a2019
+color s 241b14
+color g 201710
+color b 2b2720
+color B 26221a
+color p 2f2b23
 frame static
 ........................
 ........................

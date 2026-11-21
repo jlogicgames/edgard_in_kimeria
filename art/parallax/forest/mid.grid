@@ -3,32 +3,33 @@
 # mid-a, b, c, d in this order form one seamless 1024 px strip (full height). No branch,
 # leaf mass or trunk crosses the moon (glow included) at cameras 0, 320 and 640.
 tile 16
-color 0 000001
-color 1 000002
-color 2 000003
-color 3 000004
-color 4 000005
-color 5 000006
-color 6 010007
-color 7 010109
-color 8 01010a
-color 9 01010c
-color a 01020e
-color b 02020f
-color c 020311
-color d 030413
-color e 030515
-color f 040617
-color g 050719
-color h 05081b
-color i 06091c
-color j 070b1e
-color k 080c20
-color l 0a0e22
-color m 0b0f24
-color n 0c1126
-color o 0e1328
-color p 0f142a
+# Depth palette (D120, 2026-11-21): every key is L x1.75 + 0.045, C 0.034, hue 250 (was near-black blue): lighter and bluer than the foreground.
+color 0 00030d
+color 1 000510
+color 2 000612
+color 3 000814
+color 4 010916
+color 5 010a17
+color 6 030e1b
+color 7 071422
+color 8 071522
+color 9 081623
+color a 0c1a28
+color b 0e1c2a
+color c 111f2d
+color d 152332
+color e 182635
+color f 1b2938
+color g 1e2c3b
+color h 202e3e
+color i 223140
+color j 263544
+color k 283747
+color l 2c3b4b
+color m 2f3e4d
+color n 324151
+color o 364555
+color p 384858
 
 # Bleed (vertical parallax 0.4): the camera top moves 0 to 8 px (D111), so a piece starts 1 tile row above the room top
 # (layer offsety -16: the layer trails the camera by up to 3.2 px, plus the shake) and runs 1 row past the room bottom, 25 rows

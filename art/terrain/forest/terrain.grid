@@ -8,6 +8,8 @@
 # Unused variants (tile ids no map uses): ground top 1-3, ground body 5-7, ground bottom 9-10, rock fill 12-13 (sheet ids, 0-based).
 # The ground piece's left and right columns are the block faces and its bottom row the underside (D114, `Block faces`).
 tile 16
+# Depth palette (D120, 2026-11-21): the canopy clump u v w is dark leaf green, the props' contour A bark, the sign B D E F H a dark
+# wood ramp, the tufts I J K moss (were navy, violet, ochre and teal-moss). The terrain keys are unchanged.
 color S e1cfa5
 color a c4b07e
 color G 8e8a50
@@ -35,18 +37,18 @@ color d 4a3626
 color k 0e0a07
 color m 080605
 color z 040303
-color A 222034
-color B 846942
-color D b59a73
-color E a58a63
-color F 947952
-color H 634921
-color I 3a5a50
-color J 2a443f
-color K 4c7064
-color u 070a12
-color v 0c111c
-color w 121a28
+color A 2d2621
+color B 3d2f22
+color D 554638
+color E 4d3e31
+color F 453629
+color H 2d1f13
+color I 2c3627
+color J 222c1d
+color K 38412f
+color u 040d04
+color v 0d190d
+color w 1a2514
 color y 1a2436
 
 piece ground 3 3 at 1 1

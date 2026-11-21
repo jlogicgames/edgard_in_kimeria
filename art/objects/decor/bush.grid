@@ -6,13 +6,14 @@
 # between forest-1's near-black ground and the night sky behind forest-0 and forest-2 (D108 band 0.08..0.20). The forest-2 bush that
 # stood at x 1040, in front of the third-party cliff tiles (#189), moved to x 1060 (placement fix, no palette change).
 size 32 24
-color k 0a1016
-color d 191f25
-color m 1b2127
-color l 22282f
-color n 1e2227
-color N 14181c
-color f 21272e
+# Depth palette (D120, 2026-11-21): the same lightness per key in a dark leaf green (hue 145, C 0.03), no slate.
+color k 071307
+color d 152215
+color m 172417
+color l 1e2b1e
+color n 182619
+color N 0f1b0f
+color f 1d2a1d
 frame idle
 ................................
 ................................

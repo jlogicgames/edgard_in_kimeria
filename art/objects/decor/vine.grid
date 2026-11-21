@@ -5,11 +5,12 @@
 # Layered-forest recolour (#236, D112): OKLab L x0.6, in front of the canopy clump the vines hang from (terrain.grid `canopy-*`):
 # outline 0.120, body 0.139.
 size 8 40
-color k 272f31
-color n 353c34
-color N 2f3631
-color l 2a3e39
-color d 223635
+# Depth palette (D120, 2026-11-21): the same lightness per key in moss green (hue 136, C 0.03), contour k bark.
+color k 352b23
+color n 333d2e
+color N 2d3828
+color l 333d2d
+color d 2b3526
 frame hang
 ..knNk..
 ..knNk..
