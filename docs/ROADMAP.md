@@ -168,8 +168,7 @@ impact ring where it stops (larger on the boss), the `fireball_fizzle` sound on 
 Forest effects are kept as they are. Falling leaves continue in [#473](https://github.com/jlogicgames/edgard_in_kimeria/issues/473)
 and the boss strike, counter and death effects in [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474).
 **Monster bodies ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398), 2026-11-18):** a monster killed without bursting leaves its body, in a pose
-that differs from the living monster. It rocks when the hero passes, the sword, a stone or a stomp crumble it, and a fireball
-burns it. A burst or blast leaves nothing. It is built on the beetle ([#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
+that differs from the living monster. It rocks when anyone passes, the sword or a stomp crumble it, a fireball burns it and a stone flies through it (D119). A burst or blast leaves nothing. It is built on the beetle ([#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 and the spider ([#328](https://github.com/jlogicgames/edgard_in_kimeria/issues/328), [D102](DECISIONS.md#d102-the-forest-spider-it-hears-notices-and-pounces-at-where-the-hero-stood-make-it-miss-then-strike-328-240-398),
 which moved the crumble and burn into the shared `RemainsFx`) and the snail ([#329](https://github.com/jlogicgames/edgard_in_kimeria/issues/329),
 [D106](DECISIONS.md#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398),

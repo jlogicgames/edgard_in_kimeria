@@ -38,8 +38,8 @@ import java.util.Map;
  * jaws run low and the load check keeps {@link #HEADROOM} px of headroom over its reach).
  *
  * <p>Every weapon kills it in any state; it leaves its body (D101, {@link Remains}): lying on its side along the floor, which
- * keeps its live palette (D117), twitches (a big body does not rock) when the hero comes near, is crumbled by the sword,
- * a stone or a stomp and burnt by a fireball or a torch. Killed in its lunge, the body slides on to the lunge's end. A bite that
+ * keeps its live palette (D117), twitches (a big body does not rock) when anyone comes near, is crumbled by the sword
+ * or a stomp and burnt by a fireball or a torch; a stone flies through it (D119). Killed in its lunge, the body slides on to the lunge's end. A bite that
  * reaches the hero lands at the start of the wolf's next frame, so a hit that kills it on the same frame wins (as the spider's).
  * Its effects are {@link WolfFx}; its sprite is one strip ({@link SpriteSheets#MONSTER_WOLF}). World Y grows downward: the floor
  * line is the body's bottom edge, the jaws run {@link #JAW_ABOVE_FLOOR_LOW} to {@link #JAW_ABOVE_FLOOR_HIGH} px above it (a
@@ -129,14 +129,14 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     private final TextureRegion[] frames = new TextureRegion[FRAMES];
     private final TextureRegion bodyFrame;
     private final float spawnX, spawnY;
-    private final Rectangle heroScratch = new Rectangle(), boxScratch = new Rectangle(), nearScratch = new Rectangle(),
+    private final Rectangle heroScratch = new Rectangle(), boxScratch = new Rectangle(), nearScratch = new Rectangle(), moverScratch = new Rectangle(),
         sightScratch = new Rectangle(), jawScratch = new Rectangle(), commitScratch = new Rectangle();
     private Level level;
     private boolean clambering, inQuickSand;
     private Escalator currentEscalator;
     private float stateClock, frameClock, senseClock, bayClock, coolClock, breathDue, warningTotal, speed, gallopClock, dustDue, flameDue,
         deadClock, twitchClock = TWITCH_SECONDS;
-    private boolean trotFrame, cooling, heroNear, poofDone, bitePending, bitThisLunge, bayed;
+    private boolean trotFrame, cooling, heroNear, moverNear, poofDone, bitePending, bitThisLunge, bayed;
     private int noticeStep, lastGallopFrame;
     // The lunge: from where, to where (the line the wind-up drew), and the jaw front last frame, for the sweep.
     private float lungeFromX, lungeToX, lastJawX, slideLeft;
@@ -594,7 +594,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         enter(State.DEAD);
         pendingRemoval = true;
         bitePending = false;
-        poofDone = heroNear = false;
+        poofDone = heroNear = moverNear = false;
         twitchClock = TWITCH_SECONDS;
         deadClock = 0;
         speed = 0;
@@ -639,15 +639,24 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         boolean near = heroPresent() && heroNear();
         if (near && !heroNear) twitchClock = 0;
         heroNear = near;
+        // D119: anyone moving through the body makes it twitch, not only the hero.
+        Enemy<?> mover = Remains.moverNear(level, this, grownBox(), moverScratch);
+        if (mover != null && !moverNear) twitchClock = 0;
+        moverNear = mover != null;
         if (twitchClock < TWITCH_SECONDS) twitchClock += dt;
     }
 
     private float twitchOffset() { return (((int) (twitchClock / TWITCH_STEP)) & 1) == 0 ? TWITCH_PIXELS : -TWITCH_PIXELS; }
 
-    private boolean heroNear() {
+    /** The body's box grown {@link #NEAR_REACH} left and right, in {@code nearScratch}. */
+    private Rectangle grownBox() {
         Rectangle body = hitboxBoundsInto(nearScratch);
         body.set(body.x - NEAR_REACH, body.y, body.width + SIDES * NEAR_REACH, body.height);
-        return body.overlaps(player.hitboxBoundsInto(heroScratch));
+        return body;
+    }
+
+    private boolean heroNear() {
+        return grownBox().overlaps(player.hitboxBoundsInto(heroScratch));
     }
 
     private boolean stompedOn() {

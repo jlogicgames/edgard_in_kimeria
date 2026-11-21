@@ -70,7 +70,7 @@ public final class Fireball extends Entity {
                 burst(direction, heavy, getX());
                 break;
             }
-            // D101: a fireball that passes a monster's body burns it up and flies on: a body never shields a monster or costs a ball.
+            // D101, kept by D119: a fireball that passes a monster's body burns it up and flies on: a body never shields a monster or costs a ball.
             if (!removed) for (int o = 0; o < level.objects.size(); o++) if (level.objects.get(o) instanceof Remains body
                 && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds)) body.burnUp();
             // D47: a fireball that reaches an intact explosive trap lights it from afar and is spent doing so.

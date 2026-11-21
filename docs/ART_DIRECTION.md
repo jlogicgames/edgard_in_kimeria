@@ -1097,7 +1097,7 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   the flat `2c3f66`, outline 0.445 and body to 0.454 over forest-1's layers. Left as it is, the active
   `dead` frame fits neither tier (outline 0.217 to 0.379, ink down to L 0.146). It rocks about the bottom of the shell, which is
   reactive, like the bush's brush, not an idle loop.
-  - **Crumble** (the sword, a stone, a stomp; `RemainsFx` since #328, with the beetle's `BeetleFx.SHELL_CHIPS`): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in the body's
+  - **Crumble** (the sword or a stomp, D119; `RemainsFx` since #328, with the beetle's `BeetleFx.SHELL_CHIPS`): 16 chips (`KIND_GRIT`, 1 to 2.5 px) from inside the body to the floor in the body's
     indigos `16142e`, `0f0d23`, `1a1832` and `1e1c34` (plums, and browns and green-bronze before #236), and 5 dust puffs.
   - **Burn** (a fireball or a torch): one warm glow (`FireballFx.HALO`, 28 px), 70 flames a second in the fireball's own ramp
     (`FireballFx.RAMP`) rising 6 to 14 px, the body darkening to 15 % over 0.3 s, and a dark wisp of 4 puffs at the end.

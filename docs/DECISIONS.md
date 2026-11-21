@@ -3031,7 +3031,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D101. Monster bodies: a monster killed quietly leaves its body, posed apart from the living, which reacts to the hero and is finished by a weapon (#327, #240, #398)
 
-- **Status:** Accepted (author, 2026-11-18).
+- **Status:** Accepted (author, 2026-11-18). *Amended by [D119](#d119-a-stone-passes-through-bodies-everyone-sways-bodies-and-bushes-amends-d101): a stone flies through a body, and any moving actor rocks it.*
 - **Decision:**
   - **What stays.** A monster that is killed and does not burst or explode leaves its body where it fell. A monster
     that bursts or explodes leaves nothing: the beetle's burst (whether it bursts on its own, under the sword or under a
@@ -4000,3 +4000,29 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Connected pad:** on the web a pad counts as connected only after its first button press, so a web player sees "Esc: skip" until then; a desktop with a pad plugged in shows "Start: skip" at once, as the About screen's pad line does (`aboutText`).
 - **Measured / not changed:** the page area and the page split are unchanged (the hint is outside it; `IntroPagesTest` passes in all five languages). The hint's rect is measured with the real QuestSquare-16 font in all five languages and both strings (`LocalizationLayoutTest.skipHintSitsInTheCornerClearOfThePageAndTheCue`): left of it right of the cue (x 324), bottom within 360 px, top (338) below the page bottom (304). Allocation (`AllocationBudgetTest`, the hint queued every frame): `pagedIntro` 0.0 B/frame, instant text off and on (ceiling 8; the harness's own input proxy, 120 B/frame, is subtracted as in D77); the ending scenario 0.0 B/frame (it does not set the hint, which is the same queued block). No threshold or tolerance changed.
 - **Not verified:** the look in the running game on desktop, web and a real touch device, and that a pad's B skips on real hardware ([#534](https://github.com/jlogicgames/edgard_in_kimeria/issues/534) keeps that box open).
+
+## D119. A stone passes through bodies; everyone sways bodies and bushes (amends D101)
+
+- **Status:** Accepted by the author, 2026-11-21. Amends D101 (what finishes a body, who rocks it) and D64 (who brushes a bush).
+- **Author's rule (translated):** "Important! A body must not block a fireball, otherwise it will be annoying. That is: a sword hit
+  or a jump from above destroys it; anyone running past (not only the player) makes it sway (bushes too: they sway from everyone);
+  but a fireball flies through them, just like a stone or anything else thrown flies through bodies."
+- **Author's answers on the open points (2026-11-21, translated):** "The thrown torch burns the body and flies on: acceptable, let it
+  burn and fly on." and "Fireball: yes, let it set the body on fire and fly on." So "flies through" means never stopped or spent:
+  the fireball and the torch keep burning a body on the way, as in D101.
+- **Rule:**
+  - Sword or stomp (with the normal bounce): crumbles the body.
+  - Fireball and thrown torch: burn the body (flames, burn sound, gone after 0.3 s) and fly on, never stopped, slowed or spent (D101 kept).
+  - A thrown stone and every other thrown object pass straight through: the body stays whole, the object is not stopped or deflected.
+    Changed from D101, where a stone crumbled the body.
+  - Any moving actor (the hero, a monster, the boss) rocks a body it touches (the wolf's body twitches), and brushes a decor bush
+    (`Decor.notice`). Changed from D101 and D64, where only the hero did. A mover is the hero or a live `Enemy` (the boss
+    included) moving sideways (`velocity.x` not 0); projectiles, thrown or falling objects and a snail's gob are not movers.
+- **Why the author met a "block":** no code path stopped the ball (`Fireball` and `Carryable` skipped defeated enemies and let bodies
+  be); the ball burnt each body it crossed, which reads as the body taking the ball. The author accepted that burn, so the fireball is unchanged.
+- **Implementation:** the stone no longer calls `crumble()` in `Carryable`; `Remains.moverNear` finds a moving live actor in a body's near
+  box, and `Level.updateDecor` offers every live enemy to every bush; index loops over `level.objects`, no allocation.
+- **Tests:** `BeetleTest.aThrownStonePassesThroughTheBodyAndLeavesItIntact` (replaces `aThrownStoneCrumblesTheBodyAndFliesOn`; the stone is not
+  stopped and the body whole), `aFireballBurnsTheBodyAndFliesOnUnslowed` (the ball's step is unchanged on every frame across the body),
+  `aMonsterWalkingThroughTheBodyRocksIt`, `DecorTest.aMonsterWalkingThroughABushMakesItSway`. `SpiderTest` and the torch test keep the
+  burn. No tolerance changed.

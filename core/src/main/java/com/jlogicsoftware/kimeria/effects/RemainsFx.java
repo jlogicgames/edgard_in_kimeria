@@ -4,8 +4,8 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.RandomXS128;
 
 /**
- * The end of a monster's body (D101), shared by every monster that leaves one (#478): it crumbles under the sword, a stone or
- * a stomp, and burns under a fireball or a torch. One per {@code Level}, like {@link FireballFx}; two
+ * The end of a monster's body (D101), shared by every monster that leaves one (#478): it crumbles under the sword or
+ * a stomp, and burns under a fireball or a torch (D119). One per {@code Level}, like {@link FireballFx}; two
  * {@link KimeriaParticleSystem}s with their own seeded streams. {@link #soft()} holds the crumble's dust, the burn's warm glow
  * ({@code KIND_GLOW}, additive) and the burnt body's wisp ({@code KIND_SMOKE}), drawn with {@link SoftDot}; {@link #hard()}
  * holds the chips ({@code KIND_GRIT}) and the flames ({@code KIND_FLAME}), drawn with {@link Shaders#whiteQuad()}.
@@ -28,7 +28,7 @@ public final class RemainsFx {
     private static final int RED = 0, GREEN = 1, BLUE = 2;
     private static final float[] GREY = {.604f, .592f, .678f}, DARK = {.357f, .345f, .439f}, DUST = {.420f, .353f, .227f};
 
-    // The body crumbles (the sword, a stone or a stomp): chips from inside the body fall to the floor, a little dust rises.
+    // The body crumbles (the sword or a stomp, D119): chips from inside the body fall to the floor, a little dust rises.
     private static final int CRUMBLE_CHIPS = 16, CRUMBLE_DUST = 5;
     private static final float CRUMBLE_HALF_WIDTH = 10, CRUMBLE_LOW = 2, CRUMBLE_HIGH = 12, CRUMBLE_DRIFT = 6;
     private static final float CRUMBLE_LIFE_MIN = .35f, CRUMBLE_LIFE_MAX = .6f, CRUMBLE_SIZE_MIN = 1, CRUMBLE_SIZE_MAX = 2.5f;

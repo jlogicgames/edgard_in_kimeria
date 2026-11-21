@@ -124,7 +124,7 @@ public class Level implements WorldObject {
     public final List<Decor> decor = new ArrayList<>();
     /** Scenery vines (#239 step 5): drawn with {@link #decor}, swaying when a falling stone lands within reach. */
     public final List<HangingVine> vines = new ArrayList<>();
-    private final Rectangle heroBodyScratch = new Rectangle(), hintBodyScratch = new Rectangle(), lethalBodyScratch = new Rectangle(),
+    private final Rectangle heroBodyScratch = new Rectangle(), actorBodyScratch = new Rectangle(), hintBodyScratch = new Rectangle(), lethalBodyScratch = new Rectangle(),
         exitBodyScratch = new Rectangle(), trapHeroScratch = new Rectangle();
     /** The targets one lever pull has already performed, so a target listed twice acts once (reused, never allocated per pull). */
     private static final int ACTIVATED_CAPACITY = 8;
@@ -1750,6 +1750,9 @@ public class Level implements WorldObject {
         for (int i = 0; i < decor.size(); i++) {
             Decor d = decor.get(i);
             if (hero) d.notice(heroBodyScratch, player.velocity.x);
+            // D119: a bush sways for every actor moving through it (monsters, the boss), not only the hero.
+            if (d.brushes() && !d.playing()) for (int o = 0; o < objects.size(); o++)
+                if (objects.get(o) instanceof Enemy<?> e && !e.isDefeated() && !e.isRemoved()) d.notice(e.hitboxBoundsInto(actorBodyScratch), e.velocity.x);
             d.update(dt);
         }
     }

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * The gate of D101 (monster bodies): every monster that leaves a body ({@link Remains}) is listed here and, through the real
  * {@code Level}, keeps the rule. Its body lies where it was killed quietly and counts as defeated; its pose differs from every
- * live frame (the readability guarantee); the hero passing rocks it; the sword, a stone and a stomp crumble it, a fire burns it;
+ * live frame (the readability guarantee); any actor passing rocks it (D119); the sword and a stomp crumble it, a fireball or a torch burns it (and flies on), a stone passes through;
  * it outlives neither a room reset nor a passed room. A burst or blast leaves nothing. A new {@code Remains} class that is not
  * listed in {@link #CASES} fails {@link #everyMonsterThatLeavesABodyIsCoveredHere()}.
  */

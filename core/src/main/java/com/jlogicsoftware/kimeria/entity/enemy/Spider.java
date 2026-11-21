@@ -161,7 +161,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     private final TextureRegion bodyFrame, silkTile, silkTexel;
     private final Route route;
     private final Rectangle pounceScratch = new Rectangle(), fangScratch = new Rectangle(), heroScratch = new Rectangle(),
-        nearScratch = new Rectangle(), dropScratch = new Rectangle(), selfScratch = new Rectangle();
+        nearScratch = new Rectangle(), moverScratch = new Rectangle(), dropScratch = new Rectangle(), selfScratch = new Rectangle();
     private final RemainsSwing swing = new RemainsSwing();
     private Level level;
     private boolean clambering, inQuickSand;
@@ -171,7 +171,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     private float leapFromX, leapToX, leapFloorY, lastFangX, lineFlown;
     private boolean stoppedBySolid;
     private float solidStop;
-    private boolean crawlFrame, heroNear, poofDone, bitePending;
+    private boolean crawlFrame, heroNear, moverNear, poofDone, bitePending;
     /**
      * One bite per leap or drop: set when the fangs reach the hero, cleared when the next strike starts. A hero the bite cannot
      * kill (the developer's invulnerability, the victory walk) is not bitten again and again, and the spider always goes on.
@@ -814,7 +814,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         }
         pendingRemoval = true;
         bitePending = false;
-        poofDone = heroNear = false;
+        poofDone = heroNear = moverNear = false;
         swing.reset();
         deadClock = 0;
         velocity.setZero();
@@ -863,13 +863,22 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         boolean near = heroPresent() && heroNear();
         if (near && !heroNear) push();
         heroNear = near;
+        // D119: anyone moving through the body rocks it, not only the hero (monsters, the boss).
+        Enemy<?> mover = Remains.moverNear(level, this, grownBox(), moverScratch);
+        if (mover != null && !moverNear) swing.push(Math.signum(mover.velocity.x));
+        moverNear = mover != null;
         swing.update(dt);
     }
 
-    private boolean heroNear() {
+    /** The body's box grown {@link #NEAR_REACH} left and right, in {@code nearScratch}. */
+    private Rectangle grownBox() {
         Rectangle body = hitboxBoundsInto(nearScratch);
         body.set(body.x - NEAR_REACH, body.y, body.width + SIDES * NEAR_REACH, body.height);
-        return body.overlaps(player.hitboxBoundsInto(heroScratch));
+        return body;
+    }
+
+    private boolean heroNear() {
+        return grownBox().overlaps(player.hitboxBoundsInto(heroScratch));
     }
 
     private boolean stompedOn() {
