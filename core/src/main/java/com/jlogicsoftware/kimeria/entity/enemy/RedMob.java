@@ -33,8 +33,8 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     public RedMob(Assets assets, GameContext game, float x, float y, float w, float h,
                   float offNeg, float offPos) {
         super(assets, game, "Mobs", x, y, w, h, offNeg, offPos, State.class);
-        // The art body is x 7..25, y 5..32 of the 48x32 frame; the hitbox is a pixel larger on each
-        // open side (bottom stays on the feet), so enemies are easy to hit and stomp (D10).
+        // The art body is x 5..25, y 3..32 of the 48x32 frame (red-mob.grid; the run's back foot reaches
+        // x 2). The hitbox (bottom on the feet) keeps enemies easy to hit and stomp (D10).
         hitbox = Hitbox.rect(6, 4, 20, 28);
         // What kills on touch stays inside the art, as it was originally.
         hurtbox = Hitbox.rect(10, 6, 14, 26);
