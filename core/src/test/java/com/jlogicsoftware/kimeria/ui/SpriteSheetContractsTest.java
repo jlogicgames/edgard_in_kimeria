@@ -54,6 +54,7 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.DECOR_VINE, 1, 1); // #239 step 5: hang
         matches(SpriteSheets.DECOR_LOOKALIKE, 1, 1); // #299: static
         matches(SpriteSheets.DECOR_TRUNK, 1, 1); // #349: the tree trunk
+        matches(SpriteSheets.DECOR_SNAG, 1, 1); // D122: the snapped trunk
         matches(SpriteSheets.DECOR_CROWN, 1, 1); // #421: the leaf crown over a trunk
     }
 

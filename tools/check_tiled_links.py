@@ -1108,11 +1108,67 @@ def check_branches(root, spawn, collisions):
     return errors
 
 
+# D122: a branch always grows from a trunk. Every object drawn as a branch or hanging from a bough lays its root over the bark
+# of a trunk kind (a Decor kind drawn behind the play tiles: trunk, snag). The trunk frames are 28 px wide (sprite_layouts
+# DECOR_SHEETS), centred on the object; their bark runs over frame columns 3 to 25 below the cap (rows 0 to 5), trunk.grid and
+# snag.grid. Root edges, from each sprite's grid: (column of the root's outermost pixel, joint row, side the trunk is on).
+TRUNK_FRAME_WIDTH, TRUNK_BARK_COLUMNS, TRUNK_CAP_ROWS = 28, (3, 25), 6
+MIN_ROOT_OVERLAP = 3  # px of the root drawn over the bark, measured 3 to 9 on the shipped maps (2026-11-21)
+DECOR_BEHIND_ARG = 5  # position of `behindTiles` in `new Kind(sheet, frames, brushes, still, hangs, behindTiles)`
+
+
+def decor_trunk_kinds():
+    """The kinds drawn behind the play tiles in Decor.KINDS (D122): the trunks a branch can grow from."""
+    return _decor_kinds_with(DECOR_BEHIND_ARG)
+
+
+def branch_root(o):
+    """(root x, joint y, side of the trunk) of a branch object, or None for any other object. World Y grows downward."""
+    x, y, t, mirror = _num(o, 'x'), _num(o, 'y'), kind(o), prop(o, 'mirror') == 'true'
+    if t == 'FallingBranch':  # branch.grid: the cracked joint's contour at column 1, rows 3-11
+        return x + 1, y + 7, 'left'
+    if t == 'HangingHive':  # hive.grid: the bough's collar at column 0, rows 0-5
+        return x, y + 2, 'left'
+    if t in ('Platform', 'FallingPlatform') and prop(o, 'skin') == 'branch':  # perch.grid / rotten-perch.grid: column 0 (31 mirrored)
+        return (x + 31, y + 6, 'right') if mirror else (x, y + 6, 'left')
+    if t == 'Deadfall':  # deadfall-bough.grid: the collar at column 111 (0 for swing=right), rows 1-10
+        return (x, y + 6, 'left') if prop(o, 'swing') == 'right' else (x + 111, y + 6, 'right')
+    return None
+
+
+def check_branch_roots(path):
+    """D122: every branch's root lies at least MIN_ROOT_OVERLAP px over a trunk's bark at its joint row."""
+    root = ET.parse(path).getroot()
+    apply_layer_offsets(root)
+    groups = layers(root)
+    spawn, collisions = groups.get('SpawnPoints', []), groups.get('Collisions', [])
+    trunk_kinds = decor_trunk_kinds()
+    barks = []
+    for t in spawn:
+        if kind(t) == 'Decor' and (prop(t, 'kind') or '').lower() in trunk_kinds:
+            left = _num(t, 'x') + (_num(t, 'width') - TRUNK_FRAME_WIDTH) / 2
+            barks.append((t, left + TRUNK_BARK_COLUMNS[0], left + TRUNK_BARK_COLUMNS[1], _num(t, 'y') + TRUNK_CAP_ROWS,
+                          _num(t, 'y') + _num(t, 'height')))
+    errors = []
+    for o in spawn + collisions:
+        at = branch_root(o)
+        if at is None:
+            continue
+        rx, ry, side = at
+        overlaps = [(rx - left + 1) if side == 'right' else (right - rx + 1) for _, left, right, top, bottom in barks
+                    if top <= ry < bottom and (left < rx if side == 'left' else right > rx) and left <= rx <= right]
+        best = max(overlaps, default=0)
+        if best < MIN_ROOT_OVERLAP:
+            errors.append(f"{path.name}: {kind(o)} {describe(o)}: its root (x {rx:g}, y {ry:g}) lies {best:g} px over a trunk's bark, "
+                          f"needs {MIN_ROOT_OVERLAP} (D122: a branch always grows from a trunk; place a Decor trunk or snag on its {side})")
+    return errors
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('maps', nargs='*', type=Path, help='maps to check (default: assets/tiles/*.tmx)')
     args = parser.parse_args(argv)
-    errors = [e for m in (args.maps or sorted(MAPS.glob('*.tmx'))) for e in check_map(m)]
+    errors = [e for m in (args.maps or sorted(MAPS.glob('*.tmx'))) for e in check_map(m) + check_branch_roots(m)]
     for e in errors:
         print(e, file=sys.stderr)
     return 1 if errors else 0

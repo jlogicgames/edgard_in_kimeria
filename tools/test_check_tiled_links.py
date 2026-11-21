@@ -514,7 +514,7 @@ class DecorLinksTest(unittest.TestCase):
         self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="500" y="296" width="32" height="24"'), FLOOR))[0])
 
     def test_the_kinds_are_read_from_the_java_table(self):
-        self.assertEqual({'bush', 'lookalike', 'trunk', 'crown'}, set(links.decor_kinds()))  # trunk: #349 (D80), crown: #421
+        self.assertEqual({'bush', 'lookalike', 'trunk', 'snag', 'crown'}, set(links.decor_kinds()))  # trunk: #349 (D80), snag: D122, crown: #421
         self.assertEqual(('lookalike',), links.decor_still_kinds())
         self.assertEqual(('crown',), links.decor_hanging_kinds())
 
@@ -597,6 +597,55 @@ class BranchPlacementTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class BranchRootLinksTest(unittest.TestCase):
+    """D122: a branch always grows from a trunk; its root lies at least MIN_ROOT_OVERLAP px over a trunk's bark."""
+
+    @staticmethod
+    def roots(spawn, collisions=''):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / 'm.tmx'
+            path.write_text(tmx(spawn, collisions), encoding='utf-8')
+            return links.check_branch_roots(path)
+
+    @staticmethod
+    def trunk(x, kind='trunk', y=32, h=288):
+        return (f'<object id="20" name="Trunk" type="Decor" x="{x}" y="{y}" width="16" height="{h}">'
+                f'<properties><property name="kind" value="{kind}"/></properties></object>')
+
+    @staticmethod
+    def perch(x, mirror=False, y=128):
+        flip = '<property name="mirror" type="bool" value="true"/>' if mirror else ''
+        return (f'<object id="21" name="Branch" type="Platform" x="{x}" y="{y}" width="32" height="16">'
+                f'<properties><property name="skin" value="branch"/>{flip}</properties></object>')
+
+    def test_the_trunk_kinds_are_read_from_the_java_table(self):
+        self.assertEqual({'trunk', 'snag'}, set(links.decor_trunk_kinds()))
+
+    def test_a_branch_beside_a_trunk_passes_on_either_side_and_one_px_further_fails(self):
+        # a trunk at x 100 is drawn from x 94; its bark runs from x 97 to 119
+        self.assertEqual([], self.roots(self.trunk(100), self.perch(116)))  # root x 116: 4 px over the bark
+        self.assertEqual([], self.roots(self.trunk(100), self.perch(117)))  # 3 px passes
+        self.assertIn('lies 2 px', self.roots(self.trunk(100), self.perch(118))[0])
+        self.assertEqual([], self.roots(self.trunk(100), self.perch(68, mirror=True)))  # root x 99: 3 px
+        self.assertIn('lies 2 px', self.roots(self.trunk(101), self.perch(68, mirror=True))[0])  # bark from x 98
+
+    def test_a_branch_with_no_trunk_or_with_the_trunk_on_the_wrong_side_is_named(self):
+        self.assertIn('lies 0 px', self.roots('', self.perch(116))[0])
+        self.assertIn('on its right', self.roots(self.trunk(100), self.perch(116, mirror=True))[0])
+        hive = '<object id="22" name="Hive" type="HangingHive" x="116" y="96" width="24" height="32"/>'
+        self.assertEqual([], self.roots(self.trunk(100) + hive))
+        self.assertIn('HangingHive', self.roots(self.trunk(80) + hive)[0])
+
+    def test_the_root_must_meet_bark_not_the_cap_or_below_the_trunk(self):
+        self.assertIn('lies 0 px', self.roots(self.trunk(100, 'snag', 200, 120), self.perch(116, y=192))[0])  # joint y 198, cap to 206
+        self.assertEqual([], self.roots(self.trunk(100, 'snag', 200, 120), self.perch(116, y=208)))
+        self.assertIn('lies 0 px', self.roots(self.trunk(100, 'bush', 296, 24), self.perch(116, y=300))[0])  # a bush is no trunk
+
+    def test_the_shipped_maps_pass(self):
+        for path in sorted((links.ROOT / 'assets' / 'tiles').glob('forest-*.tmx')):
+            self.assertEqual([], links.check_branch_roots(path), path.name)
 
 
 class StillDecorLinksTest(unittest.TestCase):

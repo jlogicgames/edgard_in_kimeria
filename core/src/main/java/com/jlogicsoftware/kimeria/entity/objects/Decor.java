@@ -41,8 +41,9 @@ public final class Decor extends Entity {
      * never reacts to the hero, so motion stays the cue that an active mushroom is alive. A kind that neither brushes nor is
      * still (the trunk, #349) is plain scenery: one frame, no reaction, and none of the look-alike's placement rules. A kind
      * that {@code hangs} (the crown, #421) is attached by its top edge, not its bottom; read only by tools/check_tiled_links.py.
+     * A kind drawn {@code behindTiles} (the trunk, D122) is drawn before the play tiles, so a tree passes behind a ledge.
      */
-    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean brushes, boolean still, boolean hangs) { }
+    private record Kind(SpriteSheets.Sheet sheet, int frames, boolean brushes, boolean still, boolean hangs, boolean behindTiles) { }
 
     /**
      * One entry per kind: a new kind is one sheet and one table entry. The names and the {@code still} and {@code hangs} flags
@@ -50,12 +51,15 @@ public final class Decor extends Entity {
      * stands every kind on a solid except a hanging one, which it hangs from the room's top or a solid's underside.
      */
     private static final java.util.Map<String, Kind> KINDS = java.util.Map.of(
-        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, true, false, false),
-        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, false, true, false),
-        // #349 (D80): the trunk behind tree branches. No brush, and not `still`, which means a look-alike mushroom.
-        "trunk", new Kind(SpriteSheets.DECOR_TRUNK, 1, false, false, false),
+        "bush", new Kind(SpriteSheets.DECOR_BUSH, FRAMES, true, false, false, false),
+        "lookalike", new Kind(SpriteSheets.DECOR_LOOKALIKE, 1, false, true, false, false),
+        // #349 (D80): the trunk behind tree branches. No brush, and not `still`, which means a look-alike mushroom. D122: every
+        // branch grows from one, and it is drawn behind the play tiles (a ledge in front of it hides it).
+        "trunk", new Kind(SpriteSheets.DECOR_TRUNK, 1, false, false, false, true),
+        // D122: a dead tree snapped off 200 px up, where a full trunk would cross the moon; drawn like the trunk.
+        "snag", new Kind(SpriteSheets.DECOR_SNAG, 1, false, false, false, true),
         // #421: the leaf crown over a trunk, hung from the room's top; the FallingBranch in forest-0-wall grows from that tree.
-        "crown", new Kind(SpriteSheets.DECOR_CROWN, 1, false, false, true));
+        "crown", new Kind(SpriteSheets.DECOR_CROWN, 1, false, false, true, false));
 
     public static java.util.Set<String> kindNames() { return KINDS.keySet(); }
 
@@ -67,7 +71,7 @@ public final class Decor extends Entity {
 
     private final String kind;
     private final SpriteSheets.Sheet sheet;
-    private final boolean still, brushes;
+    private final boolean still, brushes, behindTiles;
     private final TextureRegion[] frames;
     private final boolean mirror;
     private boolean playing, leanLeft;
@@ -81,6 +85,7 @@ public final class Decor extends Entity {
         sheet = k.sheet();
         still = k.still();
         brushes = k.brushes();
+        behindTiles = k.behindTiles();
         frames = new TextureRegion[k.frames()];
         for (int i = 0; i < frames.length; i++) frames[i] = sheet.frame(assets, i, 0);
         this.mirror = mirror;
@@ -111,10 +116,12 @@ public final class Decor extends Entity {
     }
 
     public boolean playing() { return playing; }
-    /** The map's {@code kind}, lower case ({@code bush}, {@code lookalike}, {@code trunk}, {@code crown}). */
+    /** The map's {@code kind}, lower case ({@code bush}, {@code lookalike}, {@code trunk}, {@code snag}, {@code crown}). */
     public String kind() { return kind; }
     /** True for a kind that never animates (#299). */
     public boolean isStill() { return still; }
+    /** True for a kind drawn before the play tiles (the trunk, D122): a ledge in front of a tree hides it. */
+    public boolean behindTiles() { return behindTiles; }
     /** True for a kind that plays its brush-past frames when the hero walks through it (the bush, D64). */
     public boolean brushes() { return brushes; }
     /** The frame drawn now: 0 at rest, then 1..frames-1 while playing. */

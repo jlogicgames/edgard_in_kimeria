@@ -13,7 +13,7 @@ LOOKALIKE_SIZE = (24, 16)  # decor-lookalike: the same 24x16 tuft footprint as t
 DULL_SPREAD = 0x30  # largest channel spread (max - min) of a look-alike colour: pale grey-lilac or bone, never saturated
 VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceiling
 CROWN_SIZE = (96, 40)  # decor-crown (#421)
-CROWN_TRUNK_COLUMNS = range(42, 54)  # a trunk at crown x + 40: its 16 px frame's body columns 2-13
+CROWN_TRUNK_COLUMNS = range(37, 57)  # a trunk at crown x + 40, its 28 px frame drawn from x - 6 (D122): its cap rows' columns 3-22
 CROWN_CAP_ROWS = (32, 37)  # the trunk's top (y 32 in forest-0) and its rounded cap rows 1-4, in crown rows
 
 

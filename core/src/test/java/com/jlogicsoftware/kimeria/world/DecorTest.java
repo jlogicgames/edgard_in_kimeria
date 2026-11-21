@@ -48,7 +48,7 @@ class DecorTest {
     }
 
     @Test void theBushKindLoadsAndAnUnknownOrMissingKindFailsTheLoad() {
-        assertEquals(java.util.Set.of("bush", "lookalike", "trunk", "crown"), Decor.kindNames());
+        assertEquals(java.util.Set.of("bush", "lookalike", "trunk", "snag", "crown"), Decor.kindNames());
         assertEquals(Decor.FRAMES, Decor.fromMap(harness.assets(), object("Bush"), "x").frameCount());
         var unknown = assertThrows(IllegalArgumentException.class, () -> Decor.fromMap(harness.assets(), object("tree"), "'Bush' [7]"));
         assertTrue(unknown.getMessage().contains("Decor 'Bush' [7]") && unknown.getMessage().contains("tree"), unknown.getMessage());
