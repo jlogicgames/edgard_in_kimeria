@@ -45,9 +45,11 @@ SLAB = (26, 27, 28)                               # the floating slab (left, mid
 BODY_VARIANTS = (43, 5, 9, 12)                    # the soil body and three variants that break its 16 px repeat
 FACES = ((42, 15), (44, 16))                      # (left face, its variant), (right face, its variant)
 INNER_UL, INNER_UR, INNER_ULR = 17, 18, 19        # a body cell under a wall foot: moss against the face above, up-left, up-right or both
+ROCK_RIGHT, ROCK_LEFT, ROCK_FOOT = (2, 3, 4), (6, 7, 8), (10, 11)   # the rock edges of a room (#547, terrain.grid `Rock edges`): three variants for a face with air on its right, on its left, and the feet (right, left)
 PILLAR_TOP, PILLAR_BODY = 25, 29                  # a ground column one tile wide: both faces
 KIND = {gid: k for k, kind in enumerate(GROUND) for gid in kind}   # tile -> its row: 0 top, 1 body, 2 underside, 3 buried
 KIND.update({gid: 1 for gid in BODY_VARIANTS + FACES[0] + FACES[1] + (INNER_UL, INNER_UR, INNER_ULR, PILLAR_BODY)})
+KIND.update({gid: 1 for gid in ROCK_RIGHT + ROCK_LEFT + ROCK_FOOT})
 KIND[PILLAR_TOP] = 0
 ROPE = (79, 99, 105, 119, 139)                    # the rope column and its bracket (third-party layout, drawn over the room-edge walls)
 TERRAIN_TSX_TEXT = ('<?xml version="1.0" encoding="UTF-8"?>\n<tileset version="1.10" tiledversion="1.11.2" name="ForestTerrain" '
@@ -135,7 +137,7 @@ def variant(r, c, count):
     return (x ^ x >> 16) % count
 
 
-def retile(rows, solid=frozenset()):
+def retile(rows, solid=frozenset(), edges=None):
     """The play rows with the room-edge seams and the ropes gone (#236) and the blocks given faces (D114), every cell's emptiness
     unchanged (collision and `CollisionVisibilityTest` read it). A rope cell (the third-party rope column drawn over a `Wall`: the grab
     cue's straw where no rope is) becomes soil like the other walls, its top cell the lit walk edge where open air is above it (a short
@@ -146,7 +148,9 @@ def retile(rows, solid=frozenset()):
     (a wall's foot) is soil, so the walk edge ends at the wall; a body cell with air below is the underside; a cell with air on its left
     shows the left face (shadow), on its right the right face (lit), on both the pillar; a body cell under a wall foot whose top-left or
     top-right neighbour is air carries the inner corner; the faces take a variant from `variant`, and
-    other body cells a soil body by `variant` among those unlike their left and upper neighbours."""
+    other body cells a soil body by `variant` among those unlike their left and upper neighbours. In the `edges` columns ({column: side of the room}) the faces and one-tile pillar cells above the floor (the first row whose inner neighbour is ground)
+    become rock (#547): a variant by `variant` unlike the one above, facing the room, the last one a foot."""
+    edges = edges or {}
     rows = [list(r) for r in rows]
     height, width = len(rows), len(rows[0])
     for r, row in enumerate(rows):
@@ -193,6 +197,20 @@ def retile(rows, solid=frozenset()):
                           else bodies[variant(r, c, len(bodies))])
             else:
                 row[c] = GROUND[kind][1 if left == right else 0 if left else 2]
+    for c, inside in sorted(edges.items()):   # inside: +1 where the room lies to the right of the column (its first column), -1 to the left
+        faces = ROCK_RIGHT if inside > 0 else ROCK_LEFT
+        run = []
+        for r, row in enumerate(rows):
+            if 0 <= c + inside < width and kinds[r][c + inside] is not None:
+                break   # the floor: from the first row whose inner neighbour is ground on, the column is soil, never rock or a foot
+            if row[c] in FACES[0] + FACES[1] + (PILLAR_TOP, PILLAR_BODY):
+                run.append(r)
+        for r in run:
+            above = rows[r - 1][c] if r else 0
+            options = [v for v in faces if v != above]
+            rows[r][c] = options[variant(r, c, len(options))]
+        if run:
+            rows[run[-1]][c] = ROCK_FOOT[inside < 0]
     return rows
 
 
@@ -215,6 +233,18 @@ def solid_cells(text):
     return frozenset(cells)
 
 
+def edge_columns(text):
+    """{column: +1 or -1} for the first (+1, the room lies to its right) and last (-1) column of every Room of the map: the end walls, drawn as rock."""
+    import xml.etree.ElementTree as ET
+    cols = {}
+    for o in ET.fromstring(text).iter('object'):
+        if o.get('type') == 'Room':
+            first = int(float(o.get('x'))) // pm.TILE
+            cols[first] = 1
+            cols[first + int(float(o.get('width'))) // pm.TILE - 1] = -1
+    return cols
+
+
 def build(text, map_name='forest-1'):
     """The text of `map_name`.tmx with the parallax layers (re)written."""
     text = re.sub(r' ?<layer [^>]*name="(?:%s)"[^>]*>.*?</layer>\n?' % '|'.join(SCENERY), '', text, flags=re.S)
@@ -230,7 +260,7 @@ def build(text, map_name='forest-1'):
         info[key] = (first, spots, sprites.blank_ids(key))
         sets.append(f' <tileset firstgid="{first}" source="parallax/{label(key)}.tsx"/>\n')
         first += count
-    rows = retile(rows, solid_cells(text))
+    rows = retile(rows, solid_cells(text), edge_columns(text))
     bled = pm.play_bleed(rows, FOREST_FIRST_GID)    # the Background's buried bottom row and the deep soil rows below
     rows[pm.ROWS - 1] = bled[pm.ROWS - 1]
     layers = []

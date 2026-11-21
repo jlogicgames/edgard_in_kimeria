@@ -5,7 +5,7 @@
 # Walk edge: blade tips on row 0, the straw line on row 1 (the cue), a straw and moss band, dark moss, a shadow line, and
 # moss strands hanging over the soil. Soil and rock textures meet seamlessly at every tile edge, so any arrangement works; the
 # soil body's 16 px repeat is broken by the body variants of `Block faces` below, which `retile` scatters (D114).
-# Unused variants (tile ids no map uses): ground top 1-3, ground body 5-7, ground bottom 9-10, rock fill 12-13 (sheet ids, 0-based).
+# Unused variants (tile ids no map uses): rock fill 12-13 (sheet ids, 0-based). Ids 1-3, 5-7 and 9-10 hold the rock edges (#547, `Rock edges` below).
 # The ground piece's left and right columns are the block faces and its bottom row the underside (D114, `Block faces`).
 tile 16
 # Depth palette (D120, 2026-11-21): the canopy clump u v w is dark leaf green, the props' contour A bark, the sign B D E F H a dark
@@ -50,6 +50,11 @@ color u 040d04
 color v 0d190d
 color w 1a2514
 color y 1a2436
+color f 463e37
+color i 2a2522
+color j 241f1c
+color o 1c1815
+color r 574d43
 
 piece ground 3 3 at 1 1
 ..SaS........SS..a.SaS.S.S.S...aSSa.S.a....S.S..
@@ -100,150 +105,6 @@ nGGnGGnnnnnnGGnnGnGnGnnGnnnnnnnnGnnnGGnnnnnnnGnn
 .....1111111.1111111.1111111.1111111.1111111....
 ......1.11...1.1.11...1.11...1.1.11...1.11......
 ........1....1....1.....1....1....1.....1.......
-
-piece ground-top-1 1 1 at 1 0
-.aS..S....aSaa..
-SSSSSSSSSSSSSSSS
-SaaSaSaSSSaSSSaa
-aaGaGaGaaGaaaGGa
-gggggGgggGggGgGG
-ggnnnggnnnnngnng
-nGnnnnGnnGnnnnGn
-1g1111g11g1111g1
-5n5656g55g5555n5
-656637n55n556565
-5656375555555555
-666Cc37565556565
-55CCC37cCCcc5555
-65xx37CcxCCc5555
-555xxCC6xxCC5555
-5525222262225555
-
-piece ground-top-2 1 1 at 2 0
-.S.Sa..aSa.SSS.a
-SSSSSSSSSSSSSSSS
-SaSaaSaaSaaSaSSa
-GGaGGGGGGaGGGaGG
-GgggggggGGGgGGGg
-ngnngnnnnggnnggn
-GGnnnnnGnnnGnnGG
-gg11111g111g11gg
-gg56565g555g55gg
-gg66653g555n65nn
-ng56663g55555555
-6n666Ccn75556565
-5556CCC37c555555
-6565xx37Cc655555
-55555xx37C555555
-5555623722655555
-
-piece ground-top-3 1 1 at 3 0
-.S.SSa..SaS.S.SS
-SSSSSSSSSSSSSSSS
-aaSSaSSaSSSSaaSS
-GGGGGaaGaaGaaGGa
-gGGggggGgGgggGGg
-gggnnnnngngnnggg
-nnGGnGnGnGnnnnGG
-11gg1g1g1g1111gg
-55ng5g5g5g5555gg
-656n6n6n7g5565gg
-565666375n5555gn
-666666637cccccn5
-5556665C37Cccc55
-6565555xx37CcC55
-55555656xxCC2255
-5555656262652555
-
-piece ground-body-1 1 1 at 5 0
-5555555656555555
-5555556565655555
-5555375555555555
-5555375555545555
-4443755444554454
-5553744555555545
-5537555555555555
-5553755555555555
-5555555555555555
-5555555555555555
-5555555555555555
-5555655555545555
-45CccCc545554555
-5xCCCcC555555555
-55xxC25555555555
-5222226566655555
-
-piece ground-body-2 1 1 at 6 0
-5555555656555555
-5555556565655555
-5555555555555555
-555555555Cccc555
-44455554CCCCcc54
-55544445xxCCCc45
-555555555xxCC555
-555555CCc5225555
-555555xCC5555555
-5555552255555555
-5555555555555555
-5555655555545555
-4555555545554555
-5555555555Cc5555
-5555555555xC5555
-5555556566225555
-
-piece ground-body-3 1 1 at 7 0
-5555555656555555
-5555556565655555
-5555555555555555
-5555555555545555
-4445375444554454
-5554374555555545
-5555375555555555
-5555375555537555
-555553755537c555
-555537555537C555
-5553755555537555
-5555655555545555
-4555555545554555
-5555555555555555
-5555555555555555
-5555556566655555
-
-piece ground-bottom-1 1 1 at 9 0
-5555555656555555
-5555555555555555
-5555555555555555
-5537555CCcc45555
-343744CxCCcc3444
-443733x222Cc4434
-4443743xxCC44434
-4444374224224444
-3334337333333333
-3333337333333333
-3333333333333333
-3333333333223333
-2223333222332232
-3222222333333321
-211211222222221.
-13.1..11111111..
-
-piece ground-bottom-2 1 1 at 10 0
-5555555656555555
-5555555555555555
-5555555555555555
-5555555537CCcc55
-3434444337xCCc44
-4443333437xxCC34
-4444443374242234
-44444443744Cc444
-33343433733xC333
-3333333337332333
-3333333322222322
-3333322211111211
-22232111.3...1..
-33321....3......
-2221.....3......
-111.............
 
 piece slab 3 1 at 5 1
 ....aS...S.aS.S.1SS1aSS11Sa1S1SSSSa...S.SSaa....
@@ -1593,3 +1454,153 @@ piece prop-137 1 1 at 17 6
 AIIIJIJKIKJKIJJA
 AJIIIJJJIJJJJJJA
 AJIIJJJJJJJJJJIA
+
+# Rock edges (#547): the room end walls are natural rock, not built pillars. Three variants per side (`rock-r-*`: air on the right, the
+# moon-lit face with a light rim; `rock-l-*`: air on the left, a dark ramp) and a foot each where the wall meets the floor. They reuse the
+# unused sheet ids 1-3, 5-7 and 9-10 (gids 2-4, 6-8, 10-11). The outer edge wobbles up to 3 px inward inside the 16 px collision column (it
+# never passes it); the top and bottom rows of every variant are plain, so any variant stacks on any other, and the inner columns are plain, so
+# the two columns of a room join meet with no seam. `retile` picks the variant by place and puts them only in the first and last column of a room.
+piece rock-r-a 1 1 at 1 0
+RRfRRRRRRRfRRRfr
+RRRRRiRRRRRRRRfr
+RRRRRRRRRRRRRRfi
+RRRqqRRRRRRRRfi.
+RRRRRRRRRRRRfr..
+RRRRRRRRRRorfr..
+RRRRiRRRRorRfr..
+RRRRRRRRorRRRfr.
+RRRRRRRorRfRRRfr
+RRRRRRorRRRRRRfr
+RRRRRorRRRRRRRfr
+RRRRRRRRRRRRRRfi
+RRRRRRRRqRRRRfr.
+RRRfRRRRRRRRRfr.
+RRRRRRRRRRRRRRfr
+RRRRRRRRRfRRRRfr
+
+piece rock-r-b 1 1 at 2 0
+RRRRRfRRRRRRRRfr
+RfRRRRRRRRRfRRfi
+RRRRRRRRRRRRRfr.
+RRRRRRRRRRRRRfr.
+RRRRRRRiiRRRRfr.
+RRRRRRorRRRRRRgn
+RRRRRRorRRRRRRfg
+RRRRRRRorRRRRRii
+RRRRRRRkrRRRfr..
+RRRRfRRorRRRfi..
+RRRRRRRRorRfr...
+RRfRRRRRorRfr...
+RRRRRRRRRorRfr..
+RRRRRRiiRRRRRfr.
+RRRRRRRRRRRRRRfr
+RRRRRRRRRRRRRRfr
+
+piece rock-r-c 1 1 at 3 0
+RRRfRRRRRRRRRRfr
+RRRRRRRRRRfRRRfr
+RRRRRRRRRRRRRRfr
+RRRRRRRRRorRRRfi
+RRRRRRRRoorRRfr.
+RRqRRRRRorRRRfi.
+RRRRRRRRQrRRfr..
+RRRRRRRorRRRfr..
+RRRRRRRRkrRRfr..
+RRRRRRRRorRRRfr.
+RRRRRRRRRorRRfr.
+RRRRRRRRRorRRRfr
+RRRRRRRRRoqqRRfr
+RRRRRRRRRRRRRRfr
+RRRRRRfRRRRRRRfr
+RRRRRRRRRRRRRRfr
+
+piece rock-l-a 1 1 at 5 0
+ojQqRRRRRRfRRRRR
+ojQqfRRRRRRRRRfR
+.ojQqRRRRRRRRRRR
+.ojQqRRRRRRRRRRR
+.ojQqRRiiRRRRRRR
+ngQqRRRRroRRRRRR
+gjQqRRRRroRRRRRR
+oiQqRRRroRRRRRRR
+..ojQqRrkRRRRRRR
+..ojQqRroRRfRRRR
+...ojQroRRRRRRRR
+...ojQroRRRRRfRR
+..ojQroRRRRRRRRR
+.ojQqRRRiiRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRRRRRRRRRRRR
+
+piece rock-l-b 1 1 at 6 0
+ojQqRRRRRRRRRRRR
+ojQqRRRRRfRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqqqoRRRRRRRRR
+ojQqRroRRRRRRRRR
+.ojQqroRRRRRRRRR
+.ojQqRroRRRRRRRR
+..ojQqrkRRRRRRRR
+..ojQqRroRRRRRRR
+..ojQqrQRRRRRRRR
+.ojQqRroRRRRRqRR
+.ojQqrooRRRRRRRR
+ojQqRroRRRRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRfRRRRRRRRRR
+ojQqRRRRRRRRfRRR
+
+piece rock-l-c 1 1 at 7 0
+ojQqRfRRRRRRRfRR
+ojQqRRRRRRiRRRRR
+ojQqRRRRRRRRRRRR
+.ojQqRRRRRRqqRRR
+..ojQqRRRRRRRRRR
+..ojroRRRRRRRRRR
+..ojQroRRRRiRRRR
+.ojQqRroRRRRRRRR
+ojQqRfRroRRRRRRR
+ojQqRRRRroRRRRRR
+ojQqRRRRRroRRRRR
+ojQqRRRRRRRRRRRR
+.ojQqRRqRRRRRRRR
+.ojQqRRRRRRRfRRR
+ojQqRRRRRRRRRRRR
+ojQqRRfRRRRRRRRR
+
+piece rock-r-foot 1 1 at 9 0
+RRRfRRRRRRRRRRfr
+RRRRRRRRRfRRRRfr
+RRRRRRRRRRRRRRfr
+RRRRRRfRRRRRRRfr
+RRRRRRRRRRRRRRfr
+RRfRRRRRRRRRRRfr
+RRRRRRRRRRRRRRfr
+RRRRRRRRRRfRRRfr
+RRRRRRRRRRRRRRfr
+RRRRRRRRRRRRRRfr
+RRRRRRRRRRRRRRfr
+RRRRiiRRRRRRRRfr
+RRRRRRRRRRRRnRfr
+RRRRRRRffRRnngfr
+RqRRiiRffRRRnn4r
+43n4R3433R43n343
+
+piece rock-l-foot 1 1 at 10 0
+ojQqRRRRRRRRfRRR
+ojQqRRfRRRRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRRRRRfRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRRRRRRRRRfRR
+ojQqRRRRRRRRRRRR
+ojQqRfRRRRRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRRRRRRRRRRRR
+ojQqRRRRRRiiRRRR
+ojQnRRRRRRRRRRRR
+ojgnnRRffRRRRRRR
+o4nnRRRffRiiRRqR
+343n34R3343R4n34
+
