@@ -3771,9 +3771,12 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `art/parallax/forest/near/`: three leaves typed row by row (`leaf-broad.txt` 40x29, tilted down to the left; `leaf-small.txt` 32x19,
   turned right; `leaf-edge.txt` 16x37, seen edge-on), each with a body gradient `a`, `k`, `l` toward the moon and soft edges of two or
   three typed outer steps with dither (`h`, `g`, a dithered `i` away from the moon; `m`, `e`, a dithered `j` toward it), no dark outline;
-  fern pinnae in three sizes (`pinna.txt`) and a rachis in three lengths (`rachis.txt`), typed. The placement lists (`canopy.spec`,
-  `fern.spec`, `sprig.spec`) are typed too: every leaf, pinna and rachis segment has its own line, with irregular spacing, sizes and gaps
-  (the fern's pinnae 6 to 10 px apart, some left out, big near the top and smaller toward the tip). `stamp.py` copies the typed
+  fern pinnae in three sizes (`pinna.txt`) and a rachis (`rachis.txt`), typed: each fern frond has its own continuous stem glyph
+  (`f1` to `f4`, author 2026-11-21: "the stem is broken in several places, that is not natural"), drooping 1 px sideways every 8 to 14
+  rows, one way per frond, thinning to a tip; the sprig's stalk uses the short pieces `r20`, `r10`, `r5`. The placement lists
+  (`canopy.spec`, `fern.spec`, `sprig.spec`) are typed too: every leaf, pinna and stem has its own line, with irregular spacing, sizes and
+  gaps; each fern pinna sits on its own row of its stem, and the fronds differ in length (y 65 to 111), droop (two left, two right) and
+  pinna density (5 to 11 px apart, big near the top and smaller toward the tip). `stamp.py` copies the typed
   characters onto a canvas at those positions (the later in front; a back leaf is the same leaf through the palette swap `a k l` to
   `k l m`; a soft edge `g` or `h` landing on an opaque leaf becomes that leaf's dark edge `a`, an `i` or `j` there leaves it as it is,
   so overlaps leave no see-through holes) and slices the canvas into the piece and its `-top`; it draws no shape, adds no noise, applies
