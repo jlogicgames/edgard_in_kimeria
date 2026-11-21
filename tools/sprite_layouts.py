@@ -138,6 +138,21 @@ ENEMY_SHEETS = {
     'bat': ('Bat', (16, 16), (80, 80), {
         'up': ((0, 0), (0, 2)), 'mid': ((1, 0), (1, 2)), 'level': ((2, 0), (0, 1), (2, 2), (0, 3)), 'down': ((3, 0), (3, 2)),
         'flash': ((0, 4),), 'fold': ((1, 4),), 'tumble': ((2, 4),), 'drop': ((3, 4),)}),
+    # Boss (docs/BOSS.md, "Sheet inspection"): WALK row 1, WARNING (2, 0)-(2, 1), COUNTER (2, 2)-(2, 3) with (2, 3) held through
+    # COUNTER_RECOVERY, HURT row 3, DEAD row 4, IDLE and RECOVERY row 5, NORMAL row 6, THRONE row 7. Rows 0, 8 and 9 are never read.
+    'boss': ('Boss', (48, 32), (192, 320), {
+        'idle1': ((0, 5),), 'idle2': ((1, 5),), 'idle3': ((2, 5),), 'idle4': ((3, 5),),
+        'walk1': ((0, 1),), 'walk2': ((1, 1),), 'walk3': ((2, 1),), 'walk4': ((3, 1),),
+        'raise': ((0, 6),), 'cock': ((1, 6),), 'sweep': ((2, 6),), 'follow': ((3, 6),),
+        'warn1': ((0, 2),), 'warn2': ((1, 2),), 'counter1': ((2, 2),), 'counter2': ((3, 2),),
+        'recoil': ((0, 3), (2, 3)), 'flash': ((1, 3), (3, 3)),
+        'throne1': ((0, 7),), 'throne2': ((1, 7),), 'throne3': ((2, 7),), 'throne4': ((3, 7),),
+        'stagger': ((0, 4),), 'kneel': ((1, 4),), 'fall': ((2, 4),), 'ash': ((3, 4),)}),
+    # YellowMob: IDLE row 5, RUN row 1, HIT row 4; the other rows are never read.
+    'yellow-mob': ('yellow_mob', (48, 32), (192, 320), {
+        'idle1': ((0, 5),), 'idle2': ((1, 5),), 'idle3': ((2, 5),), 'idle4': ((3, 5),),
+        'run1': ((0, 1),), 'run2': ((1, 1),), 'run3': ((2, 1),), 'run4': ((3, 1),),
+        'hit': ((0, 4),), 'flash': ((1, 4),), 'knees': ((2, 4),), 'down': ((3, 4),)}),
 }
 ENEMY_IMAGES = {sheet: size for sheet, _, size, _ in ENEMY_SHEETS.values()}
 # The dialogue screen (#337, D78): hand-drawn grids in art/ui/dialogue -> assets/images/ui/dialogue-<name>.png, one horizontal
