@@ -99,20 +99,20 @@ def export_item_strips():
         print(target.relative_to(ROOT))
 
 
-def export_brick_wall():
-    # Trim transparent source margins, preserve its silhouette, and anchor the base to the floor edge.
-    source = Image.open(ROOT / 'art/objects/wall-brick-master.png').convert('RGBA')
-    source.putalpha(source.getchannel('A').point(
-        lambda alpha: OPAQUE_ALPHA if alpha >= ALPHA_THRESHOLD else 0))
-    bounds = source.getchannel('A').getbbox()
-    if bounds is None:
-        raise ValueError('Brick wall master has no opaque artwork')
-    artwork = source.crop(bounds).resize(WALL_FRAME_SIZE, Image.Resampling.NEAREST)
-    artwork = artwork.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE,
-        dither=Image.Dither.NONE)
-    target = ROOT / 'assets/images/objects/wall-brick.png'
+def export_gate_wall():
+    # The lever-driven wooden gate: the hand-typed grid art/objects/wall-gate.grid, one 48x96 frame, exported exactly.
+    size, colors, frames = grids.parse(ROOT / 'art/objects/wall-gate.grid')
+    if size != WALL_FRAME_SIZE or [name for name, _ in frames] != ['wall']:
+        raise ValueError(f'wall-gate.grid must be one {WALL_FRAME_SIZE} frame named wall')
+    if len(colors) > WORLD_PALETTE_SIZE - 1:  # '.' is one of the entries; the moon rim takes the last free one
+        raise ValueError('wall-gate.grid: too many colours to leave room for the moon rim')
+    rows = frames[0][1]
+    artwork = Image.new('RGBA', size)
+    artwork.putdata([colors[char] + (OPAQUE_ALPHA,) if colors[char] else (0, 0, 0, 0) for row in rows for char in row])
+    target = ROOT / 'assets/images/objects/wall-gate.png'
     target.parent.mkdir(parents=True, exist_ok=True)
-    artwork.save(target, bits=WORLD_PALETTE_BITS)
+    artwork.quantize(colors=WORLD_PALETTE_SIZE, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(
+        target, bits=WORLD_PALETTE_BITS)
     print(target.relative_to(ROOT))
 
 
@@ -136,7 +136,7 @@ def export_platform():
 # Object sheets exported with the moon rim (D92, tools/moon_rim.py): target stem -> frame cell. Applied to the exported
 # sheet, so re-running this script reproduces the rimmed PNG; the rim is idempotent.
 RIM_OBJECTS = {'ladder': (LADDER_FRAME_SIZE, LADDER_FRAME_SIZE), 'stone': WORLD_FRAMES['stone'],
-               'fireball': WORLD_FRAMES['fireball'], 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
+               'fireball': WORLD_FRAMES['fireball'], 'wall-gate': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
                'lever': (LEVER_FRAME_SIZE, LEVER_FRAME_SIZE),  # #236: the lever's ink on the near-black forest play band
                # #236: the healer's ingredients over their halo on forest-2's near-black layers (outline 0.151 and 0.057 with ink)
                'bat': (ITEM_FRAME_SIZE, ITEM_FRAME_SIZE), 'mushroom': (ITEM_FRAME_SIZE, ITEM_FRAME_SIZE)}
@@ -147,7 +147,7 @@ def rim_objects():
         target = ROOT / 'assets/images/objects' / f'{name}.png'
         sheet = Image.open(target).convert('RGBA')
         if len({p[:RGB_CHANNELS] for p in sheet.get_flattened_data() if p[RGB_CHANNELS]}) >= WORLD_PALETTE_SIZE - 1:
-            # The rim is one more colour; a full generated palette (the brick wall's 15) first gives up its closest pair.
+            # The rim is one more colour; a full generated palette first gives up its closest pair.
             sheet = sheet.quantize(colors=WORLD_PALETTE_SIZE - 1, method=Image.Quantize.FASTOCTREE,
                                    dither=Image.Dither.NONE).convert('RGBA')
         rimmed = moon_rim.rim(sheet, cell)
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     export_escalators()
     export_ladders()
     export_item_strips()
-    export_brick_wall()
+    export_gate_wall()
     export_platform()
     rim_objects()
     for name in HUD_ICONS:
