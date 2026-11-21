@@ -1,20 +1,15 @@
-# The forest beetle's body (#327, D101): the `dead` frame of beetle.grid, pixel for pixel, in a decor-tier palette (D76): a
-# dim colour with a contour in its own hue, no ink 0b0814, no moon rim, so a harmless body never reads as a live beetle. The game
-# draws the active `dead` frame at the kill and cross-fades into this one; it rocks when the hero passes (reactive, not idle).
-# Forest recolour (#236, D108, 2026-11-20): hand-set tone roles (contour k, shade d, shell t, lit s, glint h, legs n/L) on one
-# dusky indigo (OKLab L 0.176 to 0.242, chroma 0.05, hue -75). It lies on forest-1's near-black ground and forest-2's blue sky,
-# and a cool hue sits between both (D108 band 0.08..0.20 at every spot where a beetle can die); no ink 0b0814, no moon rim.
-# Keep it in step with beetle.grid.
-# Forest-2 conversion (#236, D112): the dusky indigo matched forest-2's grove spruces (body 0.034); the tone roles now sit on the
-# spider's and snail's dried umber (hue 1.0 rad, chroma 0.045, L kept): body 0.094 to 0.175 at every spot, chips in BeetleFx follow.
+# The forest beetle's body (#327, D101): the `dead` frame of beetle.grid, pixel for pixel. Since #571 (D117, the author,
+# 2026-11-21) it keeps the live beetle's palette, ink contour and moon rim, exactly as the `dead` frame: no decor recolour,
+# no tint, no halo. The pose on its back is the cue that it is dead (it differs from every live frame, RemainsTest); the
+# body rocks when the hero passes (reactive, not idle). Keep it in step with beetle.grid: same keys, same colours.
 size 24 16
-color k 1f0a00
-color d 240f01
-color t 271202
-color s 2b1605
-color h 2f1a08
-color n 210d00
-color L 2a1404
+color k 0b0814
+color d 4a0c22
+color t 86101f
+color s 9c2050
+color h b85a80
+color n 2a0612
+color L 9a6070
 frame body
 ........................
 ........................

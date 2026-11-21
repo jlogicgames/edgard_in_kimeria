@@ -90,11 +90,17 @@ class WolfFxTest {
         assertTrue(fx.soft().count() >= 2 + 4, "two jaw glints and a puff of dust");
     }
 
-    @Test void theChipsOfTheBodyAreFourPaletteColours() {
+    /** D117 (#571): the body keeps the live wolf's palette, so its chips are wolf.grid colours (shade, coat, flank, belly). */
+    private static final int[] LIVE_PALETTE = {0x2a0612, 0x4a0c22, 0x86101f, 0x9c2050, 0xb85a80, 0xc87896, 0x9a6070, 0xb07c8c};
+
+    @Test void theChipsOfTheBodyAreFourLivePaletteColours() {
         assertEquals(4, WolfFx.WOLF_CHIPS.length);
         for (float[] c : WolfFx.WOLF_CHIPS) {
             assertEquals(3, c.length);
-            for (float v : c) assertTrue(v >= 0 && v <= .25f, "a dark, dried umber like the other bodies: " + v);
+            int rgb = Math.round(c[0] * 255) << 16 | Math.round(c[1] * 255) << 8 | Math.round(c[2] * 255);
+            boolean live = false;
+            for (int p : LIVE_PALETTE) live |= p == rgb;
+            assertTrue(live, "a chip in the live wolf's palette: " + Integer.toHexString(rgb));
         }
     }
 }

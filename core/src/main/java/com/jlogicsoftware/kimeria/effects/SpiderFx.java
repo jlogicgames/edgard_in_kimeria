@@ -15,7 +15,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * <p>The silk glints run along the floor line from the spider's fangs and gather on the spot its bite will land, so the reach
  * is read before it happens (D7, D102), as the beetle's specks show its blast. Colours: white, the pale and grey of the smoke
  * ({@code d8d6e8}, {@code 9a97ad}), a dust brown, the spider's crimson {@code 86101f} and dusty-rose leg {@code b07c8c} for the
- * death's flecks (the danger family, #236), and its body's muted palette for the body's crumble ({@link #SPIDER_CHIPS}). No reserved hue. Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at
+ * death's flecks (the danger family, #236), and its body's live palette for the body's crumble (D117) ({@link #SPIDER_CHIPS}). No reserved hue. Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at
  * a smaller Y. Particles advance only in {@link #update}, so pause freezes them.
  */
 public final class SpiderFx {
@@ -32,8 +32,8 @@ public final class SpiderFx {
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DUST = {.420f, .353f, .227f};
     private static final float[] CRIMSON = {.525f, .063f, .122f}, LEG = {.690f, .486f, .549f};
-    private static final float[] BODY_ABDOMEN = {.153f, .043f, .000f}, BODY_HEAD = {.184f, .071f, .008f};
-    private static final float[] BODY_LEG = {.165f, .067f, .012f}, BODY_FANG = {.204f, .106f, .047f};
+    private static final float[] BODY_ABDOMEN = {.525f, .063f, .122f}, BODY_HEAD = {.416f, .055f, .118f};
+    private static final float[] BODY_LEG = {.690f, .486f, .549f}, BODY_FANG = {.910f, .878f, .800f};
     /** The spider body's crumble chips (D101, {@link RemainsFx#crumble}): spider-body.grid's abdomen, legs, head and fangs. */
     public static final float[][] SPIDER_CHIPS = {BODY_ABDOMEN, BODY_LEG, BODY_HEAD, BODY_FANG};
 

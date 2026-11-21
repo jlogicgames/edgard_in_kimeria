@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * shrink out) and the death's shell chips ({@code KIND_GRIT}), drawn with {@link Shaders#whiteQuad()}.
  *
  * <p>Colours: white, the smoke greys {@code d8d6e8}, {@code 9a97ad}, {@code 5b5870} and, for the death's chips, the live shell's
- * crimson {@code 86101f} and its lit {@code 9c2050} (the danger family, #236); the body's crumble uses the body's muted palette
+ * crimson {@code 86101f} and its lit {@code 9c2050} (the danger family, #236); the body's crumble uses the body's live palette (D117)
  * ({@link #SHELL_CHIPS}). No reserved hue. The specks are born on the edge of the 80x32 blast box
  * and drawn in to the body, so the burst's reach is read before it happens; the spray's end points stay inside the box, so
  * what kills is what is seen (D5). Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a
@@ -40,8 +40,8 @@ public final class BeetleFx {
     private static final int RED = 0, GREEN = 1, BLUE = 2;
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DARK = {.357f, .345f, .439f};
     private static final float[] SHELL = {.525f, .063f, .122f}, SHELL_LIT = {.612f, .125f, .314f};
-    private static final float[] BODY_EDGE = {.122f, .039f, 0f}, BODY_SHELL = {.153f, .071f, .008f};
-    private static final float[] BODY_LIT = {.169f, .086f, .020f}, BODY_GLINT = {.184f, .102f, .031f};
+    private static final float[] BODY_EDGE = {.043f, .031f, .078f}, BODY_SHELL = {.525f, .063f, .122f};
+    private static final float[] BODY_LIT = {.612f, .125f, .314f}, BODY_GLINT = {.722f, .353f, .502f};
     /** The beetle body's crumble chips (D101, {@link RemainsFx#crumble}): beetle-body.grid's contour, shell, lit shell and glint. */
     public static final float[][] SHELL_CHIPS = {BODY_SHELL, BODY_EDGE, BODY_LIT, BODY_GLINT};
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};

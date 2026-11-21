@@ -29,7 +29,7 @@ import java.util.Map;
  * ({@link SpriteSheets#MONSTER_BEETLE}). World Y grows downward: the floor line is the body's bottom edge.
  *
  * <p>Killed quietly (a fireball or a stone), it leaves its body (D101, {@link Remains}): the {@code dead} frame flips over, then
- * cross-fades into the same frame in a decor-tier palette ({@link SpriteSheets#MONSTER_BEETLE_BODY}). The body rocks on its shell
+ * cross-fades into the body sheet, the same frame in the same live palette since D117 ({@link SpriteSheets#MONSTER_BEETLE_BODY}). The body rocks on its shell
  * when the hero comes near (a damped swing of the same frame about the bottom of the shell); a stomp bounces the hero off and
  * crumbles it, as the sword and a stone do; a fireball or a torch burns it. A burst leaves nothing. The body is told from the
  * live beetle by its pose: it lies on its back (D101).
@@ -80,7 +80,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
      */
     public static final float POOF_DELAY = .08f;
     private static final float FLIP_LIFT = 4, FLIP_SECONDS = .2f;
-    /** The active {@code dead} frame holds this long, then cross-fades into the decor body over the second (D76, D101). */
+    /** The active {@code dead} frame holds this long, then cross-fades into the body sheet over the second (D101; the same live palette since D117). */
     public static final float BODY_FADE_DELAY = .3f, BODY_FADE_SECONDS = .6f;
     /** The body rocks when the hero's body enters its box grown this many px left and right (D101). */
     public static final float NEAR_REACH = 6;
@@ -444,7 +444,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     }
 
     /**
-     * How far the body has faded from the active {@code dead} frame into the decor body: 0 at the kill, 1 once settled. It runs
+     * How far the body has faded from the active {@code dead} frame into the body sheet: 0 at the kill, 1 once settled. It runs
      * on through a burn, so a body burnt early keeps its fade and its flip.
      */
     public float bodyFade() {
@@ -465,7 +465,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     }
 
     /**
-     * The body: the flip (a small hop), the cross-fade from the active {@code dead} frame into the decor body, the swing about
+     * The body: the flip (a small hop), the cross-fade from the active {@code dead} frame into the body sheet, the swing about
      * the bottom of the shell, and while burning a darkening tint. Nothing allocates; the batch colour is put back.
      */
     private void renderBody(Batch batch) {

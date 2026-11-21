@@ -16,7 +16,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * <p>The specks are born along the firing line, at the gob's height, and run into the mouth, so the reach and the height of
  * the shot are read before it is fired (D7, D106), as the spider's glints show its landing spot. Colours: white, the gob's pale
  * rose and crimson ({@code f4d4de}, {@code c87896}, {@code 86101f}), the smoke's pale and grey, the live shell and foot for the
- * death's chips (the danger family, #236) and the empty shell's muted palette for the body's crumble ({@link #SNAIL_CHIPS}). No reserved hue. Cosmetic: nothing reads it back. World Y grows downward: a falling particle ends
+ * death's chips (the danger family, #236) and the empty shell's live palette for the body's crumble (D117) ({@link #SNAIL_CHIPS}). No reserved hue. Cosmetic: nothing reads it back. World Y grows downward: a falling particle ends
  * at a larger Y. Particles advance only in {@link #update}, so pause freezes them.
  */
 public final class SnailFx {
@@ -37,8 +37,8 @@ public final class SnailFx {
     private static final float[] FOOT = {.604f, .376f, .439f};
     /** The death's shell chips: snail.grid's crimson whorls, rose highlight and foot. */
     private static final float[][] DEATH_CHIPS = {SHELL, ROSE, SHELL_LIGHT, FOOT};
-    private static final float[] BODY_SHELL = {.165f, .055f, .000f}, BODY_WHORL = {.188f, .075f, .008f};
-    private static final float[] BODY_CREAM = {.204f, .106f, .047f}, BODY_LIP = {.153f, .051f, .000f};
+    private static final float[] BODY_SHELL = {.525f, .063f, .122f}, BODY_WHORL = {.612f, .125f, .314f};
+    private static final float[] BODY_CREAM = {.784f, .471f, .588f}, BODY_LIP = {.722f, .353f, .502f};
     /** The snail body's crumble chips (D101, {@link RemainsFx#crumble}): snail-body.grid's shell, cream whorl, whorl and lip. */
     public static final float[][] SNAIL_CHIPS = {BODY_SHELL, BODY_CREAM, BODY_WHORL, BODY_LIP};
 
