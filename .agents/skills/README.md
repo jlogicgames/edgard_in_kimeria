@@ -34,6 +34,13 @@ in `docs/`, and [docs/STYLE_SYSTEM.md](../../docs/STYLE_SYSTEM.md) says how the 
 | [kimeria-rendering](kimeria-rendering/SKILL.md) | Y-down world and Y-up text, shaders, viewport, HUD drawing | [DEVELOPMENT.md](../../docs/DEVELOPMENT.md#architecture) |
 | [kimeria-libgdx-rules](kimeria-libgdx-rules/SKILL.md) | Any libGDX code: the project rules the generic skills cannot know | [AGENTS.md](../../AGENTS.md) |
 
+## Process skills
+
+| Skill | Use for | Rule and reference |
+| --- | --- | --- |
+| [kimeria-issue](kimeria-issue/SKILL.md) | Writing, filing, updating, ticking and closing a GitHub issue in the project's format | [AGENTS.md](../../AGENTS.md) ("Gaps written into docs must be tracked") |
+| [kimeria-feedback-triage](kimeria-feedback-triage/SKILL.md) | A round of playtest or reviewer feedback: analysis, the author's decisions, issues, the playtest record, ticking boxes that waited for players | D66, [PLAYTEST_1.md](../../docs/PLAYTEST_1.md) |
+
 ## Vendored libGDX skills
 
 Reference for the libGDX API, each with a project note at the top; provenance and local edits in [SOURCE.md](SOURCE.md).
