@@ -108,8 +108,8 @@ that L'Kardina's curse put out, held against the eternal night.
   ([#94](https://github.com/jlogicgames/edgard_in_kimeria/issues/94)).
 - **The lit arms close the story** ([#416](https://github.com/jlogicgames/edgard_in_kimeria/issues/416),
   [D95](DECISIONS.md#d95-the-sun-on-the-kimeria-arms-lights-up-on-the-ending-page-416-2026-11-17)): the ending page shows
-  the full arms with the sun put out, and the sun lights again as the words bring the light back. The opening shows no
-  arms.
+  the full arms with the sun put out; the sun lights again first, and only then do the words tell how the light came back
+  ([#573](https://github.com/jlogicgames/edgard_in_kimeria/issues/573)). The opening shows no arms.
 - **The menus** carry the full arms as the mark of the chosen line: the player meets the kingdom's sign on the first
   screen, beside the button they are about to press ([#415](https://github.com/jlogicgames/edgard_in_kimeria/issues/415)).
 

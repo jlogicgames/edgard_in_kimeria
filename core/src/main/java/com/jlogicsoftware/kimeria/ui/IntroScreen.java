@@ -11,8 +11,8 @@ import com.badlogic.gdx.math.MathUtils;
  * Real-time opening/ending story in logical pixels; independent of gameplay time scaling. Static pages (#336): after a
  * black fade-in the paragraphs of a page appear one after another, top to bottom, and stay; the player turns the page
  * and the last turn fades to black. With instant text (#342) a page appears whole and turns at once.
- * <p>The ending (#416, D95) draws the Kimeria arms above its text: dark while the page appears, the sun lights up as the
- * paragraph that brings the light back fades in, and it is lit whenever the page is shown whole (instant text, a press).
+ * <p>The ending (#416, D95) draws the Kimeria arms above its text: dark for a short hold, the sun lights up on it, and only then
+ * does the text appear (D95, #573); it is lit whenever the page is shown whole (instant text, a press).
  */
 public final class IntroScreen {
     public enum State { FADE_IN, READING, FADE_OUT, DONE }
@@ -44,11 +44,16 @@ public final class IntroScreen {
     public static final float ARMS_TOP = IntroPages.TEXT_TOP, ARMS_GAP = 20f;
     public static final float ENDING_TEXT_TOP = ARMS_TOP + KimeriaArms.HEIGHT * ARMS_SCALE + ARMS_GAP;
     /**
-     * The sun lights in these steps, each ending this many seconds after its paragraph starts to fade in (0.6 s in all),
-     * then holds {@link KimeriaArms#LIT}. The flare is the light bursting out once before it settles.
+     * The sun lights in these steps, each ending this many seconds after the dark hold (1.0 s in all), then holds
+     * {@link KimeriaArms#LIT}. The flare is the light bursting out once before it settles. The text waits for it (D95, #573).
      */
     private static final int[] LIGHT_FRAMES = {KimeriaArms.EMBER, KimeriaArms.GLOW, KimeriaArms.KINDLE, KimeriaArms.FLARE};
-    private static final float[] LIGHT_FRAME_ENDS = {0.12f, 0.24f, 0.36f, 0.6f};
+    private static final float[] LIGHT_FRAME_ENDS = {0.2f, 0.4f, 0.6f, 1.0f};
+    /** On the page with the sun the shield stays dark this long, then lights; the text starts {@code TEXT_BEAT_SECONDS} after it is lit. */
+    public static final float ARMS_DARK_HOLD_SECONDS = 0.5f, TEXT_BEAT_SECONDS = 0.25f;
+    /** When the sun is lit and when the first paragraph starts to fade in, from the start of its page. */
+    public static final float ARMS_LIT_AT = ARMS_DARK_HOLD_SECONDS + LIGHT_FRAME_ENDS[LIGHT_FRAME_ENDS.length - 1];
+    public static final float TEXT_START_AT = ARMS_LIT_AT + TEXT_BEAT_SECONDS;
 
     private static final String CUE_ART = "images/HUD/touch/cue.png";
     private final String text;
@@ -59,9 +64,10 @@ public final class IntroScreen {
     private final TextureRegion cue;
     /** Null for a story without the arms (the opening). */
     private final KimeriaArms arms;
+    /** True for the ending: its arms are drawn (or, headless, its page is split under them). */
+    private final boolean sun;
     /** The paragraph that brings the light back, its page and when it starts to fade in on that page. */
     private final int lightParagraph, lightPage;
-    private final float lightStart;
     private State state = State.FADE_IN;
     private Phase phase = Phase.REVEAL;
     private int page;
@@ -82,11 +88,11 @@ public final class IntroScreen {
                        KimeriaArms arms) {
         this.cue = cue;
         this.arms = arms;
+        this.sun = arms != null || pages.top(0) == ENDING_TEXT_TOP;
         this.lightParagraph = lightParagraph(pages);
         int at = 0;
         while (pages.end(at) <= lightParagraph) at++;
         this.lightPage = at;
-        this.lightStart = (lightParagraph - pages.first(at)) * PARAGRAPH_STAGGER_SECONDS;
         this.cueCenterX = screenWidth / 2f;
         this.text = text;
         this.pages = pages;
@@ -169,7 +175,11 @@ public final class IntroScreen {
     public boolean turn() {
         if (state != State.READING || lock > 0f) return false;
         switch (phase) {
-            case REVEAL -> showWholePage();
+            case REVEAL -> {
+                // D95 (#573): a press while the sun lights completes the sun (the text then reveals as usual); it never skips it unseen.
+                if (phaseTime < textStart()) { phaseTime = textStart(); lock = INPUT_LOCK_SECONDS; }
+                else showWholePage();
+            }
             case WAIT -> {
                 if (page == pages.pageCount() - 1) skip();
                 else if (instant) startPage(page + 1);
@@ -219,8 +229,11 @@ public final class IntroScreen {
     }
 
     private float revealSeconds() {
-        return (pages.end(page) - pages.first(page) - 1) * PARAGRAPH_STAGGER_SECONDS + PARAGRAPH_FADE_SECONDS;
+        return textStart() + (pages.end(page) - pages.first(page) - 1) * PARAGRAPH_STAGGER_SECONDS + PARAGRAPH_FADE_SECONDS;
     }
+
+    /** Seconds after its page starts that the text begins to appear: after the sun on the page with the sun, else at once. */
+    private float textStart() { return sun && page == lightPage ? TEXT_START_AT : 0f; }
 
     /** Opacity (0 to 1) of paragraph {@code index}: zero outside the current page and before its turn to appear. */
     public float paragraphAlpha(int index) {
@@ -229,12 +242,13 @@ public final class IntroScreen {
         return switch (phase) {
             case WAIT -> 1f;
             case TURN -> 1f - Math.min(1f, phaseTime / PAGE_TURN_SECONDS);
-            case REVEAL -> MathUtils.clamp((phaseTime - (index - pages.first(page)) * PARAGRAPH_STAGGER_SECONDS) / PARAGRAPH_FADE_SECONDS, 0f, 1f);
+            case REVEAL -> MathUtils.clamp((phaseTime - textStart() - (index - pages.first(page)) * PARAGRAPH_STAGGER_SECONDS) / PARAGRAPH_FADE_SECONDS, 0f, 1f);
         };
     }
 
     /**
-     * The arms frame now: dark until the light paragraph starts to fade in, then the lighting steps, then lit. Lit at once
+     * The arms frame now: dark for a short hold when the page with the sun starts, then the lighting steps, then lit; the
+     * text appears only after that (D95, #573). Lit at once
      * whenever the page is whole (instant text, a press during the reveal, the wait for the turn), so D77's final state holds.
      * An Escape during the reveal freezes the frame it had while the story fades out.
      */
@@ -242,7 +256,7 @@ public final class IntroScreen {
         if (instant || page > lightPage) return KimeriaArms.LIT;
         if (page < lightPage || state == State.FADE_IN) return KimeriaArms.DARK;
         if (phase != Phase.REVEAL) return KimeriaArms.LIT;
-        float t = phaseTime - lightStart;
+        float t = phaseTime - ARMS_DARK_HOLD_SECONDS;
         if (t < 0f) return KimeriaArms.DARK;
         for (int i = 0; i < LIGHT_FRAMES.length; i++) if (t < LIGHT_FRAME_ENDS[i]) return LIGHT_FRAMES[i];
         return KimeriaArms.LIT;
