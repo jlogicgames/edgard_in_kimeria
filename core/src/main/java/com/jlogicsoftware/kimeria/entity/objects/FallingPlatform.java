@@ -41,9 +41,13 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
 
     /** Native sprite height ({@link SpriteSheets#TRAP_FALLING_PLATFORM} is 32x10 per frame) -- see Escalator's VISUAL_HEIGHT for why. */
     private static final float VISUAL_HEIGHT = 10f;
-    /** The plain skin's fan frames (fan1..fan4) and their frame time at rest and while falling, in seconds. */
-    private static final int FAN_FRAMES = 4;
-    private static final float FAN_IDLE_SECONDS = 0.1f, FAN_FALLING_SECONDS = 0.3f;
+    /**
+     * The plain skin's rope frames (named fan1..fan4 in the sheet: centre, right, centre, left) and their frame time at rest
+     * and while falling, in seconds: one sway is four frames, 1.6 s (0.63 Hz) at rest and 1.4 s (0.71 Hz) falling, a calm
+     * swing (#236; was 0.1 s, 2.5 Hz). Look only: the warning and the fall take their timing from TrapWarnings and FALL_DURATION.
+     */
+    private static final int ROPE_FRAMES = 4;
+    private static final float ROPE_IDLE_SECONDS = 0.4f, ROPE_FALLING_SECONDS = 0.35f;
 
     private final TrapWarnings warnings;
     private boolean falling = false;
@@ -84,11 +88,11 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
             setState(State.IDLE);
             return;
         }
-        // Four 32x10 fan frames (grid art/objects/forest-traps/falling-platform.grid); the slab's hairline crack is the
-        // D71 at-rest cue (#362), drawn in every frame.
+        // Four 32x10 frames (grid art/objects/forest-traps/falling-platform.grid): the lashed plank, its slack rope swaying;
+        // the plank's split is the D71 at-rest cue (#362), drawn in every frame.
         SpriteSheets.Sheet sheet = SpriteSheets.TRAP_FALLING_PLATFORM;
-        putAnimation(State.IDLE, assets.animation(sheet.path(), FAN_FRAMES, FAN_IDLE_SECONDS, sheet.width(), sheet.height(), 0, 0, FAN_FRAMES), true);
-        putAnimation(State.FALLING, assets.animation(sheet.path(), FAN_FRAMES, FAN_FALLING_SECONDS, sheet.width(), sheet.height(), 0, 0, FAN_FRAMES), true);
+        putAnimation(State.IDLE, assets.animation(sheet.path(), ROPE_FRAMES, ROPE_IDLE_SECONDS, sheet.width(), sheet.height(), 0, 0, ROPE_FRAMES), true);
+        putAnimation(State.FALLING, assets.animation(sheet.path(), ROPE_FRAMES, ROPE_FALLING_SECONDS, sheet.width(), sheet.height(), 0, 0, ROPE_FRAMES), true);
         setState(State.IDLE);
     }
 

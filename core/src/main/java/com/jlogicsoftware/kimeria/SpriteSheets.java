@@ -34,7 +34,7 @@ public final class SpriteSheets {
     public static final Sheet TRAP_EMBER_JET = new Sheet("images/objects/trap-ember-jet.png", 8, 16);
     public static final Sheet TRAP_VINE = new Sheet("images/objects/trap-vine.png", 24, 40);
     public static final Sheet TRAP_LOG = new Sheet("images/objects/trap-log.png", 32, 16);
-    // The plain falling platform (#362): fan1..fan4, the slab with its hairline crack (D71 cue) in every frame.
+    // The plain falling platform (#362, #236): fan1..fan4, the lashed plank's rope sway, its split (D71 cue) in every frame.
     public static final Sheet TRAP_FALLING_PLATFORM = new Sheet("images/objects/trap-falling-platform.png", 32, 10);
     // Tree branches (#349, D80): perch, perch-left (the sound branch); intact, crumble1, crumble2 and their -left copies (the rotten branch).
     public static final Sheet TRAP_PERCH = new Sheet("images/objects/trap-perch.png", 32, 16);
