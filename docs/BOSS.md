@@ -11,9 +11,9 @@ ending returns to the menu and clears progress; the campaign no longer wraps. Th
 order is `forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). See [MVP.md](MVP.md).
 Historical wrap references in the validation notes below describe earlier builds.
 
-`forest-boss` is the authored third forest room (448 × 368, entrance 2640,304; the room was moved +448 px by #261/D59, nothing inside it changed).
-The author-owned Boss object (2912,304) is preserved. Physics settles the
-boss's feet onto y=320; its render frame is 48 × 32 regardless of the map marker's 32 × 32.
+`forest-boss` is the authored third forest room (448 × 368, entrance 2640,272, hero feet on the 320 floor line (#572); the room was moved +448 px by #261/D59, nothing inside it changed).
+The author-owned Boss object (2912,304) is preserved; the `SpawnPoints` group offset (-16) loads it at y 288, so the
+boss's feet are on y=320 from the first frame; its render frame is 48 × 32 regardless of the map marker's 32 × 32.
 No authored map geometry was replaced for this implementation. Boss.png was redrawn on 2026-11-21 (#236) as a hand-typed
 grid, `art/objects/enemy/boss.grid`, exported by `tools/enemy_sprites.py`, with the same layout, frame counts, timing and
 boxes; `tools/test_enemy_sprites.py` measures each frame against the boxes (D10).
@@ -122,7 +122,7 @@ completed counter has its own completion shake; the interrupted normal has none.
 
 ## Retry, elixir and completion
 
-Death rebuilds the boss at full energy and throne, respawning the hero at 2640,304 with
+Death rebuilds the boss at full energy and throne, respawning the hero at 2640,272 with
 the existing arrival animation. Consumed elixir is run-only inventory state, outside room
 rollback. The healer consumes Bat, Mushroom and all unique forest coins after verification,
 then calls `drinkBossElixir("forest-2")`; no automatic artifact activation occurs.

@@ -219,7 +219,7 @@ class BossCombatTest {
             try { enter.invoke(running); } catch (Exception e) { throw new RuntimeException(e); }
         });
         assertEquals(2560, level.currentRoomBounds().x); // #261 (D59): the boss room moved +448 px, nothing in it changed
-        assertEquals(new Vector2(2640, 304), level.player.position);
+        assertEquals(new Vector2(2640, 272), level.player.position);
         assertNotNull(level.boss());
         assertFalse(level.healerAhead());
         hotkeys.invoke(running);
@@ -410,7 +410,7 @@ class BossCombatTest {
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertNotNull(level.boss());
-        assertEquals(new Vector2(2640, 304), level.player.position);
+        assertEquals(new Vector2(2640, 272), level.player.position);
         assertFalse(level.hasNextRoom());
         assertEquals(0, completions, "Room skipping must not write level completion");
     }
@@ -493,7 +493,7 @@ class BossCombatTest {
         level.resetCurrentRoom(player());
         Boss retry = (Boss) level.objects.stream().filter(Boss.class::isInstance).findFirst().orElseThrow();
         assertEquals(12, retry.energy()); assertEquals(Boss.State.THRONE, retry.getState());
-        assertEquals(new Vector2(2640, 304), level.player.position);
+        assertEquals(new Vector2(2640, 272), level.player.position);
         assertEquals(10f, artifacts.bossWeaponDamageMultiplier("forest-2"));
         level.player.arriveAfterReset(); frames(30);
         assertEquals(Boss.State.THRONE, retry.getState());
