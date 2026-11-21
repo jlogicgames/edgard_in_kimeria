@@ -114,6 +114,24 @@ MONSTER_SHEETS = {
     'snail-body': ((24, 16), ('body',)),  # D101: the snail's dead frame, the empty shell, in a decor-tier palette
 }
 WORLD_IMAGES.update({f'monster-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in MONSTER_SHEETS.items()})
+# The inherited enemy sheets, redrawn as grids (2026-11-21): art/objects/enemy/<name>.grid -> assets/images/enemy/<sheet>.png,
+# each frame in the cells the entity reads them from (Enemy.spriteAnimation -> Assets.animation: frame w x h cells from an
+# origin, at most four a row, a fifth on the next row). name -> (sheet, frame size, sheet size, {frame: cells (column, row)}).
+# A frame may fill several cells (the bat's RUN row repeats its flap); cells no animation reads stay empty.
+ENEMY_SHEETS = {
+    # RedMob: IDLE row 5, RUN row 1, ATTACK row 2 (two wind-up frames, the strike, the recovery), HIT row 4.
+    'red-mob': ('Mobs', (48, 32), (192, 448), {
+        'idle1': ((0, 5),), 'idle2': ((1, 5),), 'idle3': ((2, 5),), 'idle4': ((3, 5),),
+        'run1': ((0, 1),), 'run2': ((1, 1),), 'run3': ((2, 1),), 'run4': ((3, 1),),
+        'windup1': ((0, 2),), 'windup2': ((1, 2),), 'strike': ((2, 2),), 'recover': ((3, 2),),
+        'hit': ((0, 4),), 'flash': ((1, 4),), 'fall': ((2, 4),), 'down': ((3, 4),)}),
+    # Bat: IDLE five frames from (0, 0), RUN five from (0, 32) (the same flap), HIT four from (0, 64). The fifth frame of a
+    # five-frame clip wraps to column 0 of the next row; column 4 is never read.
+    'bat': ('Bat', (16, 16), (80, 80), {
+        'up': ((0, 0), (0, 2)), 'mid': ((1, 0), (1, 2)), 'level': ((2, 0), (0, 1), (2, 2), (0, 3)), 'down': ((3, 0), (3, 2)),
+        'flash': ((0, 4),), 'fold': ((1, 4),), 'tumble': ((2, 4),), 'drop': ((3, 4),)}),
+}
+ENEMY_IMAGES = {sheet: size for sheet, _, size, _ in ENEMY_SHEETS.values()}
 # The dialogue screen (#337, D78): hand-drawn grids in art/ui/dialogue -> assets/images/ui/dialogue-<name>.png, one horizontal
 # strip each; name -> (frame size, ordered frame names). The nine-patch insets are in HealerDialogueView.
 DIALOGUE_SHEETS = {

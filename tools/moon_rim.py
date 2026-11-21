@@ -15,7 +15,7 @@ of authored art, like the exporters' palette packing, not procedural drawing.
 - Left and right are both lit, so the rim of a mirrored frame is the mirror of the rim (the hero's left facing).
 
 Library use: `rim(image, cell)` returns a new RGBA image. The exporters call it for the sheets named in their `RIM_SHEETS`
-(`forest_trap_sprites.RIM_SHEETS`, `hero_sprites.RIM_SHEETS`). CLI, for sheets with no grid source (the inherited enemy
+(`forest_trap_sprites.RIM_SHEETS`, `hero_sprites.RIM_SHEETS`, and every sheet of `enemy_sprites`). CLI, for sheets with no grid source (the remaining inherited enemy
 and lift sheets): `python3 tools/moon_rim.py SHEET.png --cell W H [--pad] [--out OUT.png]` writes an RGBA PNG; `--pad`
 treats a partial last row or column of cells as transparent padding.
 """
@@ -73,7 +73,7 @@ def main(argv=None):
     parser.add_argument('sheet', type=Path)
     parser.add_argument('--cell', type=int, nargs=CELL_ARGS, metavar=('W', 'H'), help='frame size; default the whole image')
     parser.add_argument('--out', type=Path, help='output PNG; default overwrite the sheet')
-    parser.add_argument('--pad', action='store_true', help='pad a sheet whose last row or column is a partial cell (Bat.png)')
+    parser.add_argument('--pad', action='store_true', help='pad a sheet whose last row or column is a partial cell')
     args = parser.parse_args(argv)
     sheet = Image.open(args.sheet).convert('RGBA')
     cell = tuple(args.cell) if args.cell else None

@@ -159,8 +159,8 @@ SPRITES = {
     'Stone': ('active', 'objects/stone.png', (0, 0, 8, 8), 1, 'floor', FULL),
     'FireballRefill': ('active', 'objects/fireball.png', (0, 0, 16, 16), 1, 'floor', FULL),
     'Actionable:Wall': ('active', 'objects/wall-brick.png', (0, 0, 48, 96), 1, 'top', FULL),  # only a vertical Wall draws it
-    'Bat': ('active', 'enemy/Bat.png', (0, 0, 16, 16), 1, 'top', FULL),
-    'RedMob': ('active', 'enemy/Mobs.png', (0, 160, 48, 32), 1, 'floor', FULL),
+    'Bat': ('active', 'enemy/Bat.png', (0, 0, 16, 16), 4, 'top', FULL),  # the four flap frames of IDLE (art/objects/enemy/bat.grid)
+    'RedMob': ('active', 'enemy/Mobs.png', (0, 160, 48, 32), 4, 'floor', FULL),  # every IDLE frame (art/objects/enemy/red-mob.grid)
     'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 1, 'floor', FULL),
     'Beetle': ('active', 'objects/monster-beetle.png', (0, 0, 24, 16), 10, 'floor', FULL),  # #327 (D100): every frame, the wind-up's white too
     # D101: the body a killed beetle leaves. It has no placement of its own: it lies wherever a beetle dies, so it is measured

@@ -284,6 +284,10 @@ only in the menu backdrop.
     **player's** hitbox is slightly *smaller* than the drawn body (forgiving near misses), an
     **enemy's** body hitbox is slightly *larger* than its drawn body (easy to hit and stomp).
     Anything lethal that is not an actor (a bomb) gets a hitbox that matches the art.
+    One exception, by the author (2026-11-21): the redrawn RedMob keeps its body hitbox
+    `rect(6, 4, 20, 28)` although its back edge is drawn from x 5 and the run's trailing foot reaches x 2, so a
+    hit on that trailing sliver misses. The author kept both the drawing and the box rather than make the mob
+    easier to kill; its hurtbox `rect(10, 6, 14, 26)` stays inside the art.
   - **An enemy has two boxes when it needs them.** The body hitbox (generous) is what the sword
     and stomps hit and what terrain collides with. The **hurtbox** (`Enemy.hurtbox`) is what
     kills the player on touch, and never reaches past the drawn art, so an enemy cannot kill

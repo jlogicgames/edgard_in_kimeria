@@ -13,7 +13,7 @@ import json
 import re
 import struct
 import sys
-from sprite_layouts import (WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
+from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
     ARMS_IMAGE_SIZE)
 
@@ -167,6 +167,8 @@ def image_contracts(root):
     contracts.append(('assets/images/ui/kimeria-arms.png', ARMS_IMAGE_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     # The hero (#343, D79): world pixel art, 16 palette entries including transparency, binary alpha.
     contracts += [(f'assets/images/hero/hero-{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in HERO_IMAGES.items()]
+    # The redrawn enemy sheets (2026-11-21): RedMob and Bat from art/objects/enemy grids, world pixel art, binary alpha.
+    contracts += [(f'assets/images/enemy/{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in ENEMY_IMAGES.items()]
     # The silver thread on death (#341, D81): the strand and glint the computed curve is stamped with.
     contracts.append(('assets/images/objects/silver-thread.png', SILVER_THREAD_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     for relative, size, colors, alpha_mode in contracts:

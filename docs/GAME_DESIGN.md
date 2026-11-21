@@ -656,6 +656,15 @@ below when the hero enters their awareness area (the hearing range).
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
 | Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
 
+The inherited RedMob and Bat keep their behaviour, frames, timing and boxes and were redrawn on 2026-11-21 in the danger
+family with a red of their own, apart from the bugs' crimson and rose (colours: [ART_DIRECTION.md](ART_DIRECTION.md), section 1,
+Danger). The red mob is a hooded whip brigand in wine and scarlet with glowing eyes; its wind-up raises the whip in front, then
+cocks it behind the hood with the eyes flaring white, and the strike throws the lash out to the end of its attack box. Its
+idle frames now stand on the floor line (they hung 5 px above it). The bat is a sooty, red-eyed bat with scarlet-boned wine
+wings; its sheet grew from 80x72 to 80x80 so the four death frames, read 16 px tall from y 64, are whole (they were cut at
+row 8). Grids: `art/objects/enemy/red-mob.grid`, `art/objects/enemy/bat.grid`; export and checks: `tools/enemy_sprites.py`,
+`tools/test_enemy_sprites.py`.
+
 Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
