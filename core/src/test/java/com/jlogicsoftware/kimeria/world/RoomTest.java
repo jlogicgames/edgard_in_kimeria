@@ -65,7 +65,7 @@ class RoomTest {
     @Test void fireballRefillsRollbackOnDeathAndStayConsumedOnSecuredCollectionReturns() {
         Level level = forest();
         level.rangedStock.restore(1);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
         var first = refill(level);
         assertEquals(1696, first.getX());
         assertEquals(128, first.getY(), "SpawnPoints layer offset applies to the refill too");
@@ -81,7 +81,7 @@ class RoomTest {
         assertTrue(level.keptPickups().contains(121));
         for (int visit = 0; visit < 3; visit++) {
             level.returnForCollection(player());
-            level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+            level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
             assertTrue(level.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance));
             assertEquals(2, level.rangedStock.count(), "Secured refill cannot be farmed");
         }
@@ -92,7 +92,7 @@ class RoomTest {
         var stock = level.rangedStock;
         stock.restartLevel();
         Level restarted = new Level(assets, game, player(), "forest-2", Rectangle::new, stock);
-        restarted.enterNextRoom(player()); restarted.enterNextRoom(player()); restarted.enterNextRoom(player());
+        restarted.enterNextRoom(player()); restarted.enterNextRoom(player()); restarted.enterNextRoom(player()); restarted.enterNextRoom(player());
         assertFalse(refill(restarted).isRemoved(), "Restart rebuilds the authored opportunity");
         assertEquals(3, stock.count(), "Restart restores level-entry stock, not collected charges");
     }
@@ -144,23 +144,24 @@ class RoomTest {
         assertEquals(1, checkpoint.size());
         assertEquals(last, layout.owner(checkpoint.get(0)));
     }
-    @Test void forestHasFiveCompleteRoomsAndAnAuthoredBoss() {
+    @Test void forestHasSixCompleteRoomsAndAnAuthoredBoss() {
         TiledMapData map = map("forest-2");
         RoomLayout layout = new RoomLayout(map);
-        assertEquals(5, layout.rooms.size());
+        assertEquals(6, layout.rooms.size());
         for (var o : map.layer("SpawnPoints")) if (!"Deadline".equals(o.type)) layout.owner(o);
         for (var o : map.layer("Collisions")) layout.owner(o);
         assertNotNull(layout.rooms.get(0).exit());
         assertNotNull(layout.rooms.get(1).exit());
         assertNotNull(layout.rooms.get(2).exit());
         assertNotNull(layout.rooms.get(3).exit());
-        assertNull(layout.rooms.get(4).exit());
-        assertEquals(java.util.List.of("forest-entry", "forest-walls", "forest-fissure", "forest-canopy", "forest-boss"),
-            layout.rooms.stream().map(RoomLayout.Room::id).toList(), "#376 split forest-entry at x 736; #366 added forest-fissure");
+        assertNotNull(layout.rooms.get(4).exit());
+        assertNull(layout.rooms.get(5).exit());
+        assertEquals(java.util.List.of("forest-entry", "forest-walls", "forest-fissure", "forest-glade", "forest-canopy", "forest-boss"),
+            layout.rooms.stream().map(RoomLayout.Room::id).toList(), "#376 split forest-entry at x 736; #366 added forest-fissure; #331 added forest-glade");
         var checkpoints = map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).toList();
         assertTrue(checkpoints.isEmpty());
         var boss = map.layer("SpawnPoints").stream().filter(o -> "Boss".equals(o.type)).findFirst().orElseThrow();
-        assertEquals(4, layout.owner(boss));
+        assertEquals(5, layout.owner(boss));
     }
     @Test void malformedRoomsFailInsteadOfSilentlyBecomingWholeLevel() {
         TiledMapData map = map("forest-2");
@@ -232,6 +233,8 @@ class RoomTest {
         assertFalse(level.objects.contains(enemy));
         assertEquals(new Vector2(752, 272), level.player.position, "forest-walls entrance (#376)");
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
+        assertEquals(new Vector2(3680, 272), level.player.position, "forest-glade entrance (#331)");
         level.enterNextRoom(player());
         assertEquals(new Vector2(1344, 272), level.player.position);
         var secondCoin = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).findFirst().orElseThrow();
@@ -318,6 +321,7 @@ class RoomTest {
         level.enterNextRoom(player()); // #417: the Bat is in forest-walls
         artifact(level, ItemType.BAT).collideWithPlayer();
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
         level.enterNextRoom(player());
         artifact(level, ItemType.MUSHROOM).collideWithPlayer();
         assertEquals(2, artifacts.items().size());
@@ -336,7 +340,7 @@ class RoomTest {
 
     @Test void bossRoomCanBeEnteredWithoutAnyArtifacts() {
         Level level = forest();
-        for (int room = 0; room < 4; room++) level.enterNextRoom(player());
+        for (int room = 0; room < 5; room++) level.enterNextRoom(player());
         assertNotNull(level.boss());
         level.player.debugTriggerCheckpoint();
         assertEquals(Player.State.IDLE, level.player.getState(), "Debug checkpoint cannot bypass boss");
@@ -573,6 +577,7 @@ class RoomTest {
         level.enterNextRoom(player());
         collect(level, ItemType.BAT); // #417: forest-walls
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
         level.enterNextRoom(player());
         collect(level, ItemType.COIN);
         level.prepareHealer();
@@ -590,6 +595,7 @@ class RoomTest {
         level.enterNextRoom(player());
         collect(level, ItemType.BAT); // #417: forest-walls
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
         level.enterNextRoom(player());
         collect(level, ItemType.COIN, ItemType.MUSHROOM);
         assertEquals(6, level.forestCoinTotal());
@@ -630,6 +636,7 @@ class RoomTest {
             level.enterNextRoom(player());
             collect(level, wanted); // #417: the Bat is in forest-walls
             level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+            level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
             level.enterNextRoom(player());
             collect(level, wanted);
             level.prepareHealer();
@@ -653,6 +660,7 @@ class RoomTest {
         collect(level, ItemType.COIN); // Deliberately miss Bat.
         level.enterNextRoom(player()); // forest-walls: the Bat on the second wall, missed on purpose (#417).
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
         level.enterNextRoom(player());
         collect(level, ItemType.COIN); // Deliberately miss Mushroom.
         level.prepareHealer();
@@ -679,18 +687,20 @@ class RoomTest {
             assertTrue(artifacts.items().isEmpty());
             assertNotNull(artifact(level, ItemType.BAT));
             level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+            level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
             level.enterNextRoom(player());
             level.prepareHealer();
             assertEquals(6, level.forestCoinsSecured());
             var visitsField = Level.class.getDeclaredField("visits");
             visitsField.setAccessible(true);
-            assertEquals(4, ((java.util.Map<?, ?>) visitsField.get(level)).size(),
-                "Secured snapshots remain bounded to the four visited rooms across repeated returns");
+            assertEquals(5, ((java.util.Map<?, ?>) visitsField.get(level)).size(),
+                "Secured snapshots remain bounded to the five visited rooms across repeated returns");
         }
         level.returnForCollection(player());
         level.enterNextRoom(player());
         collect(level, ItemType.BAT);
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
         level.enterNextRoom(player());
         collect(level, ItemType.MUSHROOM);
         level.prepareHealer();
@@ -715,6 +725,7 @@ class RoomTest {
         level.enterNextRoom(player());
         assertThrows(IllegalStateException.class, level::beginPreBossHealerMeeting, "forest-walls is not before the healer");
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
+        level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
         level.enterNextRoom(player());
         assertTrue(level.healerAhead());
         level.prepareHealer(); // Preparation alone does not consume the first meeting.
@@ -724,12 +735,12 @@ class RoomTest {
         level.prepareHealer();
         assertTrue(level.beginPreBossHealerMeeting(), "A room death keeps recognition for the live level");
         level.returnForCollection(player());
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
         level.prepareHealer();
         assertTrue(level.beginPreBossHealerMeeting(), "Collection return keeps recognition");
 
         Level restarted = forest();
-        restarted.enterNextRoom(player()); restarted.enterNextRoom(player()); restarted.enterNextRoom(player());
+        restarted.enterNextRoom(player()); restarted.enterNextRoom(player()); restarted.enterNextRoom(player()); restarted.enterNextRoom(player());
         restarted.prepareHealer();
         assertFalse(restarted.beginPreBossHealerMeeting(), "A fresh Level starts a new encounter");
     }
@@ -738,7 +749,7 @@ class RoomTest {
         Level level = forest();
         Bomb trap = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         trap.collideWithPlayer(); trap.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .4f);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
         Bomb revisited = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         assertEquals(trap.snapshot(), revisited.snapshot());
         revisited.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .2f);
@@ -791,7 +802,7 @@ class RoomTest {
         initialFalling.collideWithActor(); initialFalling.update(2); initialFalling.update(2);
         assertTrue(initialFalling.isRemoved());
         collect(level, ItemType.COIN);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); collect(level, ItemType.COIN);
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); collect(level, ItemType.COIN);
         level.prepareHealer(); level.returnForCollection(player());
         assertTrue(roomOwner(level, 2002).isRemoved());
         assertFalse(level.collisionBlocks.contains(roomOwner(level, 2002)), "The removed wall must not block collision");
@@ -813,7 +824,7 @@ class RoomTest {
             restoredLift.update(.2f);
             savedLiftX = restoredLift.getX();
             expectedLiftSnapshot = restoredLift.snapshot();
-            level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+            level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
             collect(level, ItemType.COIN);
             level.prepareHealer();
             level.returnForCollection(player());
@@ -841,7 +852,7 @@ class RoomTest {
         first.collideWithActor(); first.update(8f); first.update(2f);
         assertTrue(first.isRemoved());
 
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
         level.prepareHealer();
         level.returnForCollection(player());
         var afterReturn = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 2010);
@@ -869,7 +880,7 @@ class RoomTest {
         first.collideWithActor();
         first.update(.2f);
         var securedWarning = first.snapshot();
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
         for (int frame = 0; frame < 90; frame++) level.update(1f / 60f);
         assertEquals(securedWarning, first.snapshot(), "Inactive room objects do not advance");
 
@@ -887,7 +898,7 @@ class RoomTest {
         warningResume.update(.4f);
         var midFall = warningResume.snapshot();
         assertTrue(midFall.fallSeconds() > 0f);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); // Secures the mid-fall state.
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); // Secures the mid-fall state.
         level.returnForCollection(player());
         var midFallResume = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 2011);
         assertEquals(midFall, midFallResume.snapshot(), "Mid-fall progress resumes without old torch state");
@@ -900,7 +911,7 @@ class RoomTest {
 
         for (int frame = 0; frame < 180 && !afterDeath.isRemoved(); frame++) afterDeath.update(1f / 60f);
         assertTrue(afterDeath.isRemoved());
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
         level.returnForCollection(player());
         var removedResume = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 2011);
         assertTrue(removedResume.isRemoved());

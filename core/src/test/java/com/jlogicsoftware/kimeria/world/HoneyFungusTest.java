@@ -35,7 +35,7 @@ class HoneyFungusTest {
     /** The nearest other hazards in forest-canopy, from the map: the RedMob at 1472 patrols to 1472 + 16 + 48; the vine at 1896 (Bat 65 left the room under #500, D105). */
     private static final float BRANCH_ZONE_RIGHT = 1776, CANOPY_MOB_PATROL_RIGHT = 1536, CANOPY_VINE_X = 1896;
     private static final float CANOPY_START_RIGHT = 1625, CANOPY_PASSED_LEFT = 1705, NO_JUMP_GAP = -1000;
-    private static final int CANOPY_ROOM = 3; // after entry, walls and fissure (#366)
+    private static final int CANOPY_ROOM = 4; // after entry, walls, fissure and glade (#366, #331)
     private static final float CANOPY_ENTRANCE_X = 1344;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
@@ -387,7 +387,8 @@ class HoneyFungusTest {
         assertEquals(0, count(room("forest-2", 0), FungusTrap.class), "forest-entry has no free floor (docs/ROOMS.md)");
         assertEquals(0, count(room("forest-2", 1), FungusTrap.class), "forest-walls neither");
         assertEquals(0, count(room("forest-2", 2), FungusTrap.class), "forest-fissure neither (#366)");
-        assertEquals(0, count(room("forest-2", 4), FungusTrap.class));
+        assertEquals(0, count(room("forest-2", 3), FungusTrap.class), "forest-glade neither (#331)");
+        assertEquals(0, count(room("forest-2", 5), FungusTrap.class));
         assertEquals(1, count(room("forest-2", CANOPY_ROOM), FungusTrap.class));
     }
 

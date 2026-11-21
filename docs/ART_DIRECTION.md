@@ -1236,7 +1236,8 @@ not game art); the exporter's contact sheets are `monster-wolf-preview.png` and 
   danger-family monsters. It is rimmed from above only (`RIM_STYLE`, as the fairy: its back and head take the rim, its sides and legs
   keep their ink): outline at the 15 RedMob, YellowMob, beetle, spider and snail spawns of the three maps, both facings, every steady
   camera: 0.315 (`alert`) to 0.367 (`shake`) for the live poses at worst, 0.388 (`bay`) and 0.425 (`dead`) (active floor 0.28; the
-  spider 0.300 to 0.331, the snail 0.302 to 0.339).
+  spider 0.300 to 0.331, the snail 0.302 to 0.339). Placed in `forest-glade` (#331) and measured over its range by `check_contrast.py`:
+  live frames 0.411 to 0.542, body (decor, ceiling 0.20) 0.152 to 0.197.
 - **Notice:** frames only, no mark and no particles (D100). **Wind-up** (the D7 warning, `BITE_WARNING_SECONDS`): the `crouch` frame,
   drawn 1 px back from the hero; 1 px breath streaks (`KIND_FLAME`, half white, half `d8d6e8`, 0.22 to 0.32 s), 60 a second, born along
   its floor line between the jaws and the end of the line its lunge will cover (traced at the commit) and running to that end.

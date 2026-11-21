@@ -562,7 +562,7 @@ class DirectionalActionsTest {
         tap(ranged()); frames(20);
         assertTrue(mob.isDefeated());
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        for (int room = 0; room < 4; room++) level.enterNextRoom(player());
+        for (int room = 0; room < 5; room++) level.enterNextRoom(player()); // entry, walls, fissure, glade, canopy, then the boss room (#331)
         frames(2);
         var boss = level.boss();
         var fireball = new com.jlogicsoftware.kimeria.entity.items.Fireball(level, boss.hitboxBounds().x, boss.hitboxBounds().y, true);
@@ -651,7 +651,7 @@ class DirectionalActionsTest {
     @Test void fullRefillUsesTheLocalHintOutsideTutorialAndAutomaticallyCollectsWhenSpaceOpens() {
         scene(false);
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
+        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2); // the canopy, after the glade (#331)
         var refill = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::isInstance)
             .map(com.jlogicsoftware.kimeria.entity.items.FireballRefill.class::cast).findFirst().orElseThrow();
         level.player.position.set(refill.getX() - level.player.hitbox.offsetX,

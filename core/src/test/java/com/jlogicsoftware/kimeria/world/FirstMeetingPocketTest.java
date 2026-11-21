@@ -9,6 +9,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
+import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
@@ -291,4 +292,15 @@ class FirstMeetingPocketTest {
     /** A skill's pocket (D109): on the floor 26 px short of the first wall, the whole wall in view and nothing lethal stirring. */
     @Test void forestWallsTheWallJump() { skillPocket("forest-2", "forest-walls", "wall-jump", 880, 912); }
     @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "ember-fissure", EmberFissure.class, 3200, "JET"); }
+    /**
+     * On the one-way branch (x 3952-4016, 32 px above the wolf's floor), where the trunk's face does not cut its sight (a platform is not a
+     * solid): it notices him, sprints under him, bays at its range end and gives up, and he is never committed to (D115, #331).
+     */
+    @Test void forestGladeTheWolf() {
+        Set<String> seen = pocket("forest-2", "forest-glade", "wolf", Wolf.class, 3976, 288, "BAY");
+        for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE})
+            assertFalse(seen.contains(never.name()), "the wolf never commits to a hero 32 px up: it showed " + seen);
+        for (Wolf.State shown : new Wolf.State[]{Wolf.State.NOTICE, Wolf.State.CHASE, Wolf.State.TROT})
+            assertTrue(seen.contains(shown.name()), "the pocket shows the wolf's " + shown + ": " + seen);
+    }
 }

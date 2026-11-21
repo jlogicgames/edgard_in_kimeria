@@ -180,8 +180,8 @@ SPRITES = {
     'Snail': ('active', 'objects/monster-snail.png', (0, 0, 24, 16), 8, 'floor', FULL),
     'Snail:gob': ('active', 'objects/monster-snail.png', (192, 0, 8, 8), 2, 'top', FULL),
     'Snail:body': ('decor', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
-    # #331 (D115): every frame of the wolf, and its body (D101); measured once the wolf is placed, until then at the monster
-    # spawns of the three maps (the art pass of 2026-11-21).
+    # #331 (D115): every frame of the wolf, and its body (D101); measured over its range in forest-glade (#331): live frames
+    # outline 0.411 to 0.542, body 0.152 to 0.197 (the art pass of 2026-11-21 measured it at the monster spawns of the three maps).
     'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
     'Wolf:body': ('decor', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 4, 'floor', FULL),  # every THRONE frame, its rest state (art/objects/enemy/boss.grid)

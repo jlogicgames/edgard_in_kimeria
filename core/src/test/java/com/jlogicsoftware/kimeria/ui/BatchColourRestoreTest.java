@@ -29,7 +29,7 @@ class BatchColourRestoreTest {
     }
 
     private Boss bossRoom() {
-        Level level = harness.roomOf("forest-2", 4);
+        Level level = harness.roomOf("forest-2", 5);
         return level.boss();
     }
 

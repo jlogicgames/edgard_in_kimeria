@@ -98,8 +98,8 @@ class RoomCeilingTest {
         highestPointReached(roomOf("forest-1", 10), false, 60 * 20, 112);
     }
 
-    /** Entry, walls, fissure and canopy; the boss room (index 4) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
-    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 4); }
+    /** Entry, walls, fissure, glade and canopy; the boss room (index 5) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
+    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 5); }
 
     /** The fissure room's exit ledge (top y 224, against the right wall, #366) is a 96 px head start up that wall. */
     @Test void theFissureRoomLedgeDoesNotLetTheHeroOverTheTop() {
@@ -150,7 +150,7 @@ class RoomCeilingTest {
      * the stone with {@code lipTop} 48. Checked against the hero's own camera target, standing on the floor, in both rooms with a stone.
      */
     @Test void theStoneLipIsInsideTheCameraViewWhileTheHeroStandsOnTheFloor() {
-        String[][] rooms = {{"forest-0", "3", "8"}, {"forest-2", "3", "48"}};
+        String[][] rooms = {{"forest-0", "3", "8"}, {"forest-2", "4", "48"}};
         for (String[] r : rooms) {
             Level level = roomOf(r[0], Integer.parseInt(r[1]));
             var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
