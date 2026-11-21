@@ -59,6 +59,13 @@ as prose gets lost (audit of `docs/DEVELOPMENT.md`, 2026-11-06, found five untra
 When closing such an issue, remove the doc note in the same PR. `tools/check_doc_gaps.py` (`validateDocGaps`, and the
 hooks) checks changed doc lines for these markers and "pending"; it cannot tell whether the issue is open.
 
+## Issues and feedback
+
+Write every GitHub issue with the `kimeria-issue` skill: duplicate search, English body, a checklist that names the
+owning skill, a separate "check in the running game" box and the docs to update; a box is ticked only on evidence.
+A round of playtest feedback goes through `kimeria-feedback-triage`: analysis against the build, the author's decisions
+before filing, a `docs/PLAYTEST_N.md` record, and the open boxes that waited for real players.
+
 ## Style system (D75)
 
 The game is kept in one style through `docs/STYLE_SYSTEM.md`: six principles, which document and gate own each

@@ -200,7 +200,8 @@ Every death with a visible cause shows the silver thread of #228 pulling Edgard 
   and (46, 44) facing left, land (23, 52) and (24, 52); `Player.pullWrist` gives the pixel centre in world coordinates
   and the thread starts there (`SilverThreadTest` checks it lands on an opaque pixel of the drawn frame, both facings).
   Tug from 0.10 s, lift from 0.45 s, land under the fade-in (0.20 s) or after a pit (0.25 s).
-- **Not verified:** the beat in the running game, by the author's eye (desktop and web):
+- **Verified (playtest 2, 2026-11-21, web build; [PLAYTEST_2.md](PLAYTEST_2.md)):** the beat's look on the web; the testers raised nothing, which the author accepted as the check.
+- **Not verified:** the beat on desktop and the pluck sound (desktop and web), by the author's eye and ear:
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
 ## The fairy helper (D82, playtest F4, F14, [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338))
@@ -676,8 +677,9 @@ depends on it.
   floor, and 6 specks of debris that lie on the floor 2 to 3 s and fade (`KIND_GRIT`, linear alpha). The cracked stone frame
   stays. A 1.5 px, 0.15 s shake through `ScreenShake` (off with the Screen shake option, D62; dust and debris stay). Everything
   rests on the floor line (`y + h` of the stone; Y grows downward), pinned by `FallingTrapsTest`. Pool sizes grew (D73): dust 24 to
-  32, grit 32 to 48 slots. The warning (the growing ground shadow) was checked in the capture and reads before the fall. Not
-  verified: the look on the real forest tiles (#368; update this note when it is closed).
+  32, grit 32 to 48 slots. The warning (the growing ground shadow) was checked in the capture and reads before the fall. Checked in
+  playtest 2 (2026-11-21, web build, [PLAYTEST_2.md](PLAYTEST_2.md)): the look on the real forest-0 tiles raised no remark,
+  which the author accepted as the check (#368).
 - **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
   (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
 - **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render
