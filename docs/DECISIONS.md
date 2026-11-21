@@ -2834,6 +2834,17 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     ember, glow, kindle (0.12 s each) and a flare (0.24 s), then the lit arms hold: 0.6 s in all.
   - D77 holds unchanged: with instant text, and after a press while the page appears, the arms are lit at once (the
     final state). The animation never delays a press; Escape fades the arms out with the frame they had.
+  - **Amended 2026-11-21 ([#573](https://github.com/jlogicgames/edgard_in_kimeria/issues/573), author's playtest): the sun
+    first, the text after.** The text no longer fades in while the sun lights ("otherwise you just skip past the
+    animation"). Before: the sun lit in 0.6 s as the light paragraph started to fade in, 1.6 s after the page began. Now,
+    from the start of the ending page: the shield stays dark 0.5 s, the sun lights in 1.0 s (ember 0.2, glow 0.2, kindle
+    0.2, flare 0.4; slowed from 0.6 s so it can be seen), a beat of 0.25 s, and only then does the first paragraph start to
+    fade in (1.75 s in all; `IntroScreen.TEXT_START_AT`); the paragraph stagger and fade are unchanged. The input rule:
+    **the first press during the sun completes it at once (the lit end state, no text yet) and the text then reveals as
+    usual; the next press shows the whole page (D77) and a third turns it.** A press never skips the sun unseen, and none
+    is delayed beyond the existing 0.6 s lock (re-armed after the completing press, so a held button cannot run on).
+    Instant text still shows the lit arms and the whole page at once. The opening (no arms) is unchanged. Escape and the
+    skip hint (D118) are untouched. The timing numbers still need the author's sign-off (#573 stays open until then).
   - The art is one strip, `art/ui/arms/arms.grid` exported by `tools/arms_sprites.py` to `assets/images/ui/kimeria-arms.png`
     (six 24x36 frames, 10 colours, binary alpha). Frame `lit` is `art/heraldry/kimeria-arms.png` pixel for pixel, and
     only the sun changes between frames (`tools/test_arms_sprites.py`). `ui/KimeriaArms` cuts the regions once and is

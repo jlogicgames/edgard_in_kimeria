@@ -193,24 +193,50 @@ class IntroScreenTest {
         return new IntroScreen(ENDING, pages, null, instant, 640f, null, null);
     }
 
-    @Test void theSunLightsWhenTheParagraphThatBringsTheLightBackStartsToAppear() {
+    @Test void theSunLightsFirstAndTheTextWaitsForIt() {
         IntroScreen intro = ending(false);
         assertEquals(1, intro.lightParagraph(), "the paragraph before THE END");
         assertEquals(KimeriaArms.DARK, intro.armsFrame(), "dark while the page fades in");
         intro.update(IntroScreen.FADE_IN_SECONDS);
         assertEquals(KimeriaArms.DARK, intro.armsFrame());
-        intro.update(IntroScreen.PARAGRAPH_STAGGER_SECONDS - 0.01f);
-        assertEquals(KimeriaArms.DARK, intro.armsFrame(), "still dark just before the light paragraph");
-        assertEquals(0f, intro.paragraphAlpha(1));
-        int[] expected = {KimeriaArms.EMBER, KimeriaArms.GLOW, KimeriaArms.KINDLE, KimeriaArms.FLARE, KimeriaArms.FLARE, KimeriaArms.LIT};
-        for (int frame : expected) {
-            intro.update(0.12f);
-            assertEquals(frame, intro.armsFrame(), "the lighting steps, 0.6 s in all");
+        intro.update(IntroScreen.ARMS_DARK_HOLD_SECONDS - 0.01f);
+        assertEquals(KimeriaArms.DARK, intro.armsFrame(), "still dark just before the lighting");
+        int[] expected = {KimeriaArms.EMBER, KimeriaArms.GLOW, KimeriaArms.KINDLE, KimeriaArms.FLARE, KimeriaArms.FLARE};
+        float[] steps = {0.02f, 0.2f, 0.2f, 0.2f, 0.19f};
+        for (int i = 0; i < expected.length; i++) {
+            intro.update(steps[i]);
+            assertEquals(expected[i], intro.armsFrame(), "the lighting steps, 1.0 s in all");
+            assertEquals(0f, intro.paragraphAlpha(0), "no text while the sun is lighting");
+            assertEquals(0f, intro.paragraphAlpha(1));
         }
-        assertEquals(IntroScreen.Phase.REVEAL, intro.phase(), "lit before the page is whole");
+        intro.update(0.2f);
+        assertEquals(KimeriaArms.LIT, intro.armsFrame());
+        assertEquals(0f, intro.paragraphAlpha(0), "a short beat after the sun is lit, still no text");
+        intro.update(IntroScreen.TEXT_BEAT_SECONDS - 0.02f);
+        assertEquals(0f, intro.paragraphAlpha(0), 1e-3f, "the text starts exactly after the beat");
+        intro.update(IntroScreen.PARAGRAPH_FADE_SECONDS / 2f);
+        assertEquals(0.5f, intro.paragraphAlpha(0), 0.05f, "then it rises");
+        assertEquals(0f, intro.paragraphAlpha(1));
+        assertEquals(IntroScreen.Phase.REVEAL, intro.phase());
         intro.update(10f);
         assertEquals(IntroScreen.Phase.WAIT, intro.phase());
         assertEquals(KimeriaArms.LIT, intro.armsFrame());
+    }
+
+    @Test void aPressDuringTheSunCompletesTheSunAndTheTextStillFollows() {
+        IntroScreen intro = ending(false);
+        intro.update(IntroScreen.FADE_IN_SECONDS);
+        waitOutTheLock(intro);
+        assertEquals(KimeriaArms.EMBER, intro.armsFrame(), "the sun is lighting");
+        assertTrue(intro.turn(), "the press completes the sun");
+        assertEquals(IntroScreen.Phase.REVEAL, intro.phase(), "the page is not shown whole: the animation is not skipped unseen");
+        assertEquals(0f, intro.paragraphAlpha(0), "no text yet");
+        assertEquals(KimeriaArms.LIT, intro.armsFrame(), "the sun is in its end state");
+        assertFalse(intro.turn(), "locked after the press");
+        waitOutTheLock(intro);
+        assertTrue(intro.paragraphAlpha(0) > 0f, "the text has begun to appear");
+        assertTrue(intro.turn(), "the next press shows the whole page (D77)");
+        assertEquals(IntroScreen.Phase.WAIT, intro.phase());
     }
 
     @Test void withInstantTextTheArmsAreLitFromTheFirstFrame() {
@@ -221,11 +247,11 @@ class IntroScreenTest {
         assertEquals(KimeriaArms.LIT, intro.armsFrame());
     }
 
-    @Test void aPressWhileTheEndingAppearsLightsTheSunAtOnceAndTheNextEndsTheStory() {
+    @Test void aPressWhileTheEndingTextAppearsShowsTheWholePageAndTheNextEndsTheStory() {
         IntroScreen intro = ending(false);
         intro.update(IntroScreen.FADE_IN_SECONDS);
         waitOutTheLock(intro);
-        assertEquals(KimeriaArms.DARK, intro.armsFrame());
+        intro.update(IntroScreen.TEXT_START_AT);
         assertTrue(intro.turn(), "the press shows the whole page");
         assertEquals(KimeriaArms.LIT, intro.armsFrame(), "the whole page is the lit arms: no animation to wait for");
         assertEquals(1f, intro.paragraphAlpha(2));
