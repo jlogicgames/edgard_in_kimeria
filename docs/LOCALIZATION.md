@@ -97,9 +97,10 @@ the render loop.
 | `ATTACK`, `INTERACT`, `SHOOT`, `PICK_UP`, `PUT_DOWN`, `NO_ACTION`, `THROW`, `FIREBALL`, `NO_AMMO`, `PLACE_BLOCKED`, `DIRECTION_CONFLICT` | Compact directional-action touch labels. Plain Action means sword; Up + Action selects the nearest pickup or mechanism; Down + Action only places a held item and shows No action when empty-handed. Ranged means object throw or consumable fireball. About text and all five catalogs describe the same bindings. |
 | `CLIMB`, `CLIMB_DOWN` | Ladder hint verbs inside a map `controls` hint zone (D33), shown after the Up/Down input: take hold and climb up, or step onto a ladder from its top edge. |
 | `ABOUT_RULES` | One-hit death, unlimited room retries, provisional pickup rollback and retained secured pickups. |
+| `ASSIST` | The Options entry and the title of the accessibility menu (renamed from Assist, #533, D116); it holds the longer trap warnings, screen shake and instant text. Glossary row: TEXT_STYLE.md, section 4. |
 | `LONGER_TRAP_WARNINGS` | The assist option extends trap warnings; it does not grant invulnerability. |
-| `INSTANT_TEXT` | The assist option that shows dialogue lines whole instead of letter by letter (#342); shown as `<label>: On/Off` in the 440 px Assist menu, checked in `LocalizationLayoutTest`. Label register (TEXT_STYLE.md): noun phrase, no hint text. The de, pl, uk and be texts are drafts. |
-| `SCREEN_SHAKE` | The assist option for camera shake (boss feedback and the lever-driven wall); shown as `<label>: On/Off` in the 440 px Assist menu (D62), checked in `LocalizationLayoutTest`. The de, pl, uk and be texts are drafts. |
+| `INSTANT_TEXT` | The assist option that shows dialogue lines whole instead of letter by letter (#342); shown as `<label>: On/Off` in the 440 px Accessibility menu, checked in `LocalizationLayoutTest`. Label register (TEXT_STYLE.md): noun phrase, no hint text. The de, pl, uk and be texts are drafts. |
+| `SCREEN_SHAKE` | The assist option for camera shake (boss feedback and the lever-driven wall); shown as `<label>: On/Off` in the 440 px Accessibility menu (D62), checked in `LocalizationLayoutTest`. The de, pl, uk and be texts are drafts. |
 
 The #95 binding/target prompt keys include `ACTION`, `STONE`, `TORCH`, `MECHANISM`,
 `UP`, `DOWN`, `STICK`, `LEFT_STICK`, `RIGHT_STICK`, `DPAD_UP` and `DPAD_ACTION`.

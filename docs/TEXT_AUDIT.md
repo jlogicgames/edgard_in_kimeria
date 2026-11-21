@@ -44,7 +44,7 @@ through the sleeping kingdom."
 | `PLAY`, `CONTINUE`, `NEW_GAME`, `ABOUT`, `OPTIONS`, `EXIT` | Main menu | Every launch | Label |
 | `NEW_GAME_CONFIRMATION`, `CONFIRM`, `CANCEL` | New Game with a saved run | Rare | Plain |
 | `RESUME`, `RESTART_LEVEL`, `EXIT_TO_MENU`, `PAUSE_MENU`, `BACK` | Pause menu (Esc, Start) | Each pause | Label |
-| `LANGUAGE_LABEL`, `DISPLAY_LABEL`, `FULLSCREEN`, `WINDOWED`, `LEFT_HANDED_LABEL`, `ASSIST`, `LONGER_TRAP_WARNINGS`, `SCREEN_SHAKE`, `ON`, `OFF` | Options and Assist | Occasional | Label |
+| `LANGUAGE_LABEL`, `DISPLAY_LABEL`, `FULLSCREEN`, `WINDOWED`, `LEFT_HANDED_LABEL`, `ASSIST`, `LONGER_TRAP_WARNINGS`, `SCREEN_SHAKE`, `ON`, `OFF` | Options and Accessibility | Occasional | Label |
 | `MENU_HINT` | Bottom line of every menu (`overlay.hint`) | Every menu screen | Plain, key list |
 | `RULES`, `CONTROLS` | About tabs | Occasional | Label |
 | `ABOUT_RULES` | About, Rules tab | Occasional | Plain, terse |
