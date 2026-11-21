@@ -112,7 +112,7 @@ class RoomReplayTest {
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
         assertEquals(ENTRY_S, measure("forest-entry", 0, false, 0, ENTRY_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }
-    /** #376: the wall room split off forest-entry at x 736; 860 and 940 jump onto the two tall walls. */
+    /** #376, #545 (D116): the wall room split off forest-entry at x 736; the route climbs the tree and leaps on to the second wall (ForestWallsRoute), no wall jump. */
     @Test void forestWallsRequiredRouteFitsTwentySeconds() {
         assertEquals(WALLS_S, measure("forest-walls", 1, false, 0, WALLS_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }
@@ -134,9 +134,9 @@ class RoomReplayTest {
         measure("forest-canopy", 4, true, 0, new float[]{1400, 1460, 1555});
     }
 
-    private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {860, 940};
+    private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 6.83f, WALLS_S = 7.45f, FISSURE_S = 9.30f, GLADE_S = 8.85f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 6.83f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -437,6 +437,8 @@ class RoomReplayTest {
         ForestFissureRoute fissureRoute = route.equals("forest-fissure") ? new ForestFissureRoute(level) : null;
         // #331: the glade is passed by watching the wolf: wait on the branch until it bays, then step off on to its back.
         ForestGladeRoute gladeRoute = route.equals("forest-glade") ? new ForestGladeRoute(level) : null;
+        // #545: the wall room is passed by the tree in front of the first wall and a leap from its top branch, never by a wall jump.
+        ForestWallsRoute wallsRoute = route.equals("forest-walls") ? new ForestWallsRoute(false) : null;
         // Entry collection route: get the coin behind the entrance, then return once for the ground coin.
         int phase = collect && route.equals("forest-entry") ? 0 : 1;
         for (int frame = 0; frame < 60 * COLLECTION_LIMIT; frame++) {
@@ -451,6 +453,7 @@ class RoomReplayTest {
                 }
                 if (fissureRoute != null) fissureRoute.drive(level, held, pressed);
                 else if (gladeRoute != null) gladeRoute.drive(level, held, pressed);
+                else if (wallsRoute != null) wallsRoute.drive(level, held, pressed);
                 else held.add(phase == 0 || phase == 2 ? Input.Keys.A : Input.Keys.D);
                 // #500 (D105): Bat 41 hangs in the stair's gap at x 352; the collection route (coins under and past it) waits on the ground while the Bat is within 40 px of him.
                 boolean batWait = collect && route.equals("forest-entry") && player.isOnGround() && batClose(level, player);
@@ -516,6 +519,7 @@ class RoomReplayTest {
             }
             // Match KimeriaGame.render: scale the world step, but keep keyboard buffering on real time.
             level.update(REAL_STEP * timeScale);
+            assertFalse(wallsRoute != null && player.isClambering(), "the wall room is crossed with no wall grab (#546)");
             assertFalse(player.isGotHit(), route + " died at frame " + frame + " at " + player.position + " phase " + phase);
             // Stop this pickup exercise before Checkpoint secures it, so retries test rollback.
             if (artifactsRoute && route.startsWith("forest-1") && level.rangedStock.count() == 3)

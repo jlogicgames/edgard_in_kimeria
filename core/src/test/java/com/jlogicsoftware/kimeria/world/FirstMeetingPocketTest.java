@@ -289,8 +289,6 @@ class FirstMeetingPocketTest {
     @Test void forestCanopyTheFalseFungus() { tripAndStand("forest-2", "forest-canopy", FalseHoneyFungus.class, 1640); pocket("forest-2", "forest-canopy", "false-honey-fungus", FalseHoneyFungus.class, 1640, "BURST"); }
     /** 20 px short of the tip's sweep: the vine is seen swinging at him and back, never reaching (D46). */
     @Test void forestCanopyTheThornVine() { pocket("forest-2", "forest-canopy", "thorn-vine", ThornVine.class, 1848, "SWING_LEFT"); }
-    /** A skill's pocket (D109): on the floor 26 px short of the first wall, the whole wall in view and nothing lethal stirring. */
-    @Test void forestWallsTheWallJump() { skillPocket("forest-2", "forest-walls", "wall-jump", 880, 912); }
     @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "ember-fissure", EmberFissure.class, 3200, "JET"); }
     /**
      * On the one-way branch (x 3952-4016, 32 px above the wolf's floor), where the trunk's face does not cut its sight (a platform is not a

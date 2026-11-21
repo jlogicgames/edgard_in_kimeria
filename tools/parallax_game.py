@@ -86,7 +86,7 @@ FOREST_0 = {
 }
 FOREST_2 = {
     'forest-entry': (('near-canopy', -88, 0), ('near-fern', 692, 0), ('vine-curtain', 76, 0)),
-    'forest-walls': (('near-fern', -128, 0), ('near-canopy', 452, 0), ('roots-curtain', 20, 0)),
+    'forest-walls': (('near-fern', -128, 0), ('near-canopy', 452, 0), ('roots-curtain', 290, 0)),
     'forest-fissure': (('near-canopy', -88, 0), ('near-fern', 540, 0), ('vine-curtain', 76, 0)),
     'forest-glade': (('near-fern', -88, 0), ('near-canopy', 732, 0), ('roots-curtain', 60, 0)),
     'forest-canopy': (('near-fern', -88, 0), ('near-sprig', 1308, 0), ('rise-fern', 1268, 128)),

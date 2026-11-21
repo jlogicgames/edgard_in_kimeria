@@ -390,17 +390,17 @@ text. Times are the zero-charge mastered routes of the room tests, pinned within
 | Room | Beats (id@x) | Time | s/beat | What changed |
 | --- | --- | ---: | ---: | --- |
 | `forest-entry` | yellowmob@192, bat-enemy@352, bat-enemy@512, touch-explosive@656 | 6.83 s | 1.71 | the step (Collisions id 6) became a 32 px cover at x 112-144, drawn with the step's end caps (tiles 26, 28, row 19, cols 7-8); the YellowMob (id 50) stands on the floor (Tiled y 304), `offNeg` 6, `offPos` 0 (it wakes for a hero centre in x 96-192, stops against the cover); Bat 41 moved from x 272 to x 352; the twig moved from the old step to col 14, on the floor at pit 1's lip |
-| `forest-walls` | wall-jump@912, yellowmob@1040, redmob@1136 | 7.45 s | 2.48 | YellowMob 16 moved from x 832 to x 1040 (`offNeg` 0, `offPos` 1); RedMob 60 `offNeg` 5 to 2 (wakes from x 1104); bush 132 moved from x 1040 to x 944 |
+| `forest-walls` | branch-climb@880, yellowmob@1040, redmob@1136 (until #545: wall-jump@912 in the first place, 7.45 s, 2.48 s per beat) | 5.55 s | 1.85 | YellowMob 16 moved from x 832 to x 1040 (`offNeg` 0, `offPos` 1); RedMob 60 `offNeg` 5 to 2 (wakes from x 1104); bush 132 moved from x 1040 to x 944 |
 | `forest-canopy` | redmob@1472, false-honey-fungus@1672, thorn-vine@1896, touch-explosive@2064, falling-stone@2224 | 9.48 s | 1.90 | Bat 65 (x 1760) removed; the vine's `phase` 0 to 2.77 s |
 
 - First meetings pinned in `FirstMeetingPocketTest`: `forestEntryTheYellowMob` (x 100, behind the cover, acting `RUN`; Bats 41 and 43 are
-  known and in view, neither reaches it), `forestWallsTheWallJump` (x 880, a skill's pocket, D109), `forestCanopyTheFalseFungus` (x 1640 in its
+  known and in view, neither reaches it), `forestCanopyTheFalseFungus` (x 1640 in its
   trigger zone, acting `BURST`, D109) and `forestCanopyTheThornVine` (x 1848, acting `SWING_LEFT`).
 - `forest-entry`'s mastered route jumps the cover and stomps the YellowMob, which stands about 40 px short of the cover when the hero is
   airborne (it stops chasing a hero who is not at its height); the pocket test shows the mob charging a hero who stays behind the cover.
   The all-coins route (12.05 s, was 10.40 s) waits on the ground while Bat 41 is within 40 px (`RoomReplayTest.batClose`): the coins at
   x 336 (floor) and x 368 (platform 3) lie under and beside the Bat's column: a hero who wants them waits under the Bat, a risk-and-reward choice.
-- `forest-walls`' route swords the YellowMob rather than stomping it from wall 45 (7.45 s against the estimate of about 8.8 s).
+- `forest-walls`' route swords the YellowMob rather than stomping it from wall 45 (7.45 s against the estimate of about 8.8 s). Since #545 (D116) the wall jump is gone: the route climbs a tree, leaps on to the second wall and stomps both mobs (5.55 s, `ForestWallsRoute`; `ForestWallsTest` asserts that both die to the stomp and bounce, never the sword), and the room has no first-meeting pocket.
 - **The thorn vine's retry (phase retimed).** The vine is now beat 3, so D105 asks a retry of at most 6 s. With `phase` 0 the cheapest death
   was **6.45 s** (the Phase 1 estimate of about 5 s was the mastered hero's arrival, not a death), so the vine's `phase` (id 127) went from 0 to
   **2.77 s**. Scanned over 0 to 4.4 s in 0.1 s steps (0.01 s steps from 2.65 to 2.85) with a walker held 0 to 269 frames at the entrance: slack and retry
@@ -671,9 +671,13 @@ layer offset that this text already includes in the visible position).
 | x | What appears | Role |
 | ---: | --- | --- |
 | 752 | Start, beside the room wall (x 736-752) | Safe entrance |
-| 912, 992 | Two tall walls | Wall jump, met alone (since #500, D105) |
+| 832-912 | Tree A (trunk x 864; branches A1 x 880-912 y 272, A2 x 832-864 y 224, A3 x 880-912 y 176) | Branch climb, a develop: the top branch is the take-off for the leap (#545, D116) |
+| 912, 992 | Two tall walls, no longer grabbable | Plain geometry; the leap from A3 crosses the first and lands on the second (take-off x 882-908), the Bat on its top |
+| 944-992 | Tree B in the gap (trunk x 976, branch B1 x 944-976 y 272) | The way out of the gap, and a second way to the second wall's top |
 | 1040 | YellowMob (id 16), zone x 1040–1056 (moved from x 832 by #500) | Stomp repeated, at the foot of the second wall, read from above |
-| 1136 | RedMob (id 60), zone 1104–1216 (`offNeg` 2 since #500), just before the exit | Sword or stomp; first met in `forest-1` |
+| 1136 | RedMob (id 60), zone 1104–1216 (`offNeg` 2 since #500), just before the exit | Sword or stomp (the mastered route stomps it, #545); first met in `forest-1` |
+
+Foreground (#545): the room's `roots-curtain` moved from x 20 to x 290 in `tools/parallax_game.py` (`FOREST_2`). At x 20 it hung over branches A1 and A2 (room x 96-176) and `parallax_mock.py --check --game` failed rule B ("covers Platform"); at x 290 it covers nothing. The installer also renumbers every foreground object id after the map's highest object id (198-229 became 236-267): its output must equal the map byte for byte (`test_parallax_game`), and no test or doc names those ids.
 
 (Historical, #73.) The bomb used to sit 4 tiles from the start inside the first YellowMob's patrol, so stomp
 and bomb were the first two things met and overlapped. The bomb is now about 470 px
