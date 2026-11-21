@@ -174,12 +174,12 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] HUD, main menu, About, Options, pause menu
 - [x] Continue / New Game with overwrite confirmation and automatic level-only saves
       on desktop and web; finishing the last level shows the ending, then clears the run save
-- [x] Options → Assist → Longer trap warnings: an independent, persisted toggle (off by default)
+- [x] Options → Accessibility → Longer trap warnings: an independent, persisted toggle (off by default)
       giving falling platforms a 1.5 s warning instead of 1 s, with no penalties
-- [x] Options → Assist → Screen shake (D62): a persisted On/Off toggle, on by default; on the web the default
+- [x] Options → Accessibility → Screen shake (D62): a persisted On/Off toggle, on by default; on the web the default
       follows `prefers-reduced-motion: reduce` until the player chooses. Off silences every camera shake,
       the boss shake included.
-- [x] Options → Assist → Instant text (D11, #342): a persisted On/Off toggle, off by default. On, every healer
+- [x] Options → Accessibility → Instant text (D11, #342): a persisted On/Off toggle, off by default. On, every healer
       dialogue line (`HealerDialogue.setInstantText`) is whole on its first frame and the first press advances.
       `KimeriaGame.instantText()` is read by the paged intro (#336): with it on, each page of the opening and the
       ending appears whole and turns at once.

@@ -262,7 +262,7 @@ until Edgard leaves the room. A death resets the room with the monster alive aga
 monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle,
 the spider, the snail and the wolf leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
-Options -> Assist has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
+Options -> Accessibility has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
 letter by letter, and one press moves to the next line.
 
 Before committing to the fight, return to the forest entrance as often as needed. Secured
