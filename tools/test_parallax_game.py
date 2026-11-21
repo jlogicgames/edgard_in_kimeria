@@ -1,11 +1,20 @@
 """Unit tests of tools/parallax_game.py and the game-map mode of tools/parallax_mock.py (#236)."""
 import contextlib
 import io
+import itertools
 import unittest
 import xml.etree.ElementTree as ET
 import parallax_game as game
 import parallax_mock as pm
 import parallax_sprites as sprites
+import terrain_sprites
+
+
+def canonical(rows):
+    """The rows with every face and soil variant shown as the ground piece's own tile (D114): the variants are looks, not shapes."""
+    base = {gid: 43 for gid in game.BODY_VARIANTS}
+    base.update({game.FACES[0][1]: game.FACES[0][0], game.FACES[1][1]: game.FACES[1][0]})
+    return [[base.get(v, v) for v in row] for row in rows]
 
 
 def silent(*_):
@@ -28,24 +37,83 @@ class InstalledMapTest(unittest.TestCase):
 
     def test_retile_closes_the_seam_where_two_floors_meet_and_drops_the_ropes(self):
         rows = [[105, 0, 0, 79], [99, 0, 0, 99], [23, 24, 22, 23], [43, 44, 42, 43]]
-        self.assertEqual([[44, 0, 0, 42], [44, 0, 0, 42], [23, 23, 23, 23], [43, 43, 43, 43]], game.retile(rows), "the map edge counts as soil")
+        self.assertEqual([[44, 0, 0, 42], [44, 0, 0, 42], [game.INNER_UR, 23, 23, game.INNER_UL], [43, 43, 43, 43]],
+                         canonical(game.retile(rows)), "the map edge counts as soil; the floor under a wall is its foot (D114)")
         self.assertEqual(game.retile(rows), game.retile(game.retile(rows)), 'idempotent')
         pit = [[23, 24, 0, 22, 23]]
         self.assertEqual(pit, game.retile(pit), 'a real edge at a pit stays')
         short = [[0, 0, 0], [0, 79, 0], [0, 99, 0]]
-        self.assertEqual([[0, 0, 0], [0, 23, 0], [0, 43, 0]], game.retile(short), "a short wall's top is the lit walk edge")
+        self.assertEqual([[0, 0, 0], [0, game.PILLAR_TOP, 0], [0, game.PILLAR_BODY, 0]], game.retile(short),
+                         "a short wall's top is the lit walk edge (a one-tile pillar: both faces, D114)")
 
     def test_scenery_never_carries_the_walk_edge(self):
         """D112: the lit lip means "stand here": a drawn cell with no collision shows the soil body or the back rock."""
         rows = [[33, 34, 35, 0, 22, 23, 24], [53, 54, 55, 0, 42, 43, 44]]
-        self.assertEqual([[82, 83, 84, 0, 42, 43, 43], [85, 86, 87, 0, 42, 43, 43]], game.retile(rows, frozenset({(9, 9)})))
+        self.assertEqual([[82, 83, 84, 0, 42, 43, 43], [85, 86, 87, 0, 42, 43, 43]], canonical(game.retile(rows, frozenset({(9, 9)}))))
         solid = frozenset((r, c) for r in range(2) for c in range(7))
-        self.assertEqual([[33, 34, 35, 0, 22, 23, 23], [53, 54, 55, 0, 42, 43, 43]], game.retile(rows, solid), 'solid ground keeps its lip')
+        self.assertEqual([[33, 34, 35, 0, 22, 23, 23], [53, 54, 55, 0, 42, 43, 43]], canonical(game.retile(rows, solid)), 'solid ground keeps its lip')
 
     def test_only_a_slab_set_into_a_floor_becomes_floor(self):
         self.assertEqual([[23, 23, 23]], game.retile([[23, 27, 23]]))
         slab = [[26, 27, 28, 27], [43, 43, 43, 0]]
         self.assertEqual(slab[0], game.retile(slab)[0], 'a slab lip over a block keeps its caps (forest-1, row 13)')
+
+    def test_a_block_with_air_below_gets_the_underside(self):
+        """D114: a raised block's lowest row is the underside (soil darkening to a lip over a dark underside), its corners included."""
+        block = [[0, 0, 0, 0, 0], [0, 22, 23, 24, 0], [0, 42, 43, 44, 0], [0, 42, 43, 44, 0], [0, 0, 0, 0, 0], [23, 23, 23, 23, 23]]
+        out = game.retile(block)
+        self.assertEqual([0, 62, 63, 64, 0], out[3], 'air below: the underside row')
+        self.assertEqual([0, 22, 23, 24, 0], out[1], 'the top keeps its lit walk edge and its caps')
+        self.assertEqual([0, 42, 43, 44, 0], canonical(out)[2], 'ground below: the faces and the body')
+        self.assertEqual([23] * 5, out[5], 'the floor under the gap keeps its top')
+
+    def test_a_left_edge_gets_the_left_face_and_a_right_edge_the_lit_face(self):
+        """D114: the moon is up and to the right: air on a cell's left shows the shadow face, on its right the lit face."""
+        wall = [[0, 43, 43, 43, 0] for _ in range(8)] + [[43] * 5]
+        out = game.retile(wall)
+        for r in range(8):
+            self.assertIn(out[r][1], game.FACES[0], f'row {r}: the left face')
+            self.assertIn(out[r][3], game.FACES[1], f'row {r}: the right face')
+            self.assertIn(out[r][2], game.BODY_VARIANTS, f'row {r}: the soil body between them')
+        self.assertEqual({2}, {len({row[1] for row in out[:8]}), len({row[3] for row in out[:8]})}, 'both face variants are used')
+
+    def test_a_wall_foot_carries_the_inner_corner_and_never_the_walk_edge(self):
+        """D114: where a wall stands on a floor the walk edge ends at the wall; the cell under the wall is soil with moss in the corner."""
+        rows = [[0, 0, 43, 43, 0, 0], [0, 0, 43, 43, 0, 0], [23, 23, 23, 23, 23, 23], [43] * 6]
+        out = game.retile(rows)
+        self.assertEqual([23, 23, game.INNER_UL, game.INNER_UR, 23, 23], out[2])
+        self.assertEqual([0, 0, 15, 16, 0, 0], [{42: 15, 44: 16}.get(v, v) for v in canonical(out)[1]], 'the wall shows both faces')
+        lone = [[0, 43, 0], [23, 23, 23], [43, 43, 43]]
+        self.assertEqual([23, game.INNER_ULR, 23], game.retile(lone)[1], 'a one-tile column: moss on both sides')
+
+    def test_the_new_tiles_never_carry_the_walk_edge(self):
+        """The straw `e1cfa5` means "stand here" (D112): only a top (its caps and the pillar's) may show it."""
+        sheet, (columns, tile) = terrain_sprites.sheet(), (game.SHEET_COLUMNS, pm.TILE)
+        walk_edge = terrain_sprites.parse(terrain_sprites.DIR / 'terrain.grid')[1]['S']
+        tops = set(game.GROUND[0]) | {game.PILLAR_TOP}
+        for gid in [g for g, kind in game.KIND.items() if kind] + [game.PILLAR_TOP]:
+            x, y = (gid - 1) % columns * tile, (gid - 1) // columns * tile
+            straw = sum(1 for p in sheet.crop((x, y, x + tile, y + tile)).getdata() if p[3] and p[:3] == walk_edge[:3])
+            with self.subTest(gid=gid):
+                self.assertEqual(gid in tops, straw > 0)
+
+    def test_variants_break_the_repeat_and_are_fixed_by_place(self):
+        field = [[43] * 24 for _ in range(10)]
+        out = game.retile(field)
+        self.assertEqual(set(game.BODY_VARIANTS), {v for row in out for v in row}, 'every soil body is used')
+        runs = max(sum(1 for _ in g) for row in out for _, g in itertools.groupby(row))
+        self.assertEqual(1, runs, 'no two alike side by side')
+        self.assertFalse(any(out[r][c] == out[r + 1][c] for r in range(9) for c in range(24)), 'nor one above the other')
+        self.assertEqual(out, game.retile(out), 'a reinstall picks the same tiles')
+        self.assertEqual(out, game.retile([[game.BODY_VARIANTS[(r + c) % 4] for c in range(24)] for r in range(10)]), 'the place decides, not the tile')
+
+    def test_retile_never_changes_which_cells_are_drawn(self):
+        for name in game.MAPS:
+            text = (game.TILES / f'{name}.tmx').read_text(encoding='utf-8')
+            _, rows = game.background_rows(text)
+            out = game.retile(rows, game.solid_cells(text))
+            with self.subTest(map=name):
+                self.assertEqual([[bool(v) for v in row] for row in rows], [[bool(v) for v in row] for row in out])
 
     def test_a_narrow_room_has_the_one_centred_camera(self):
         scene = next(s for s in pm.game_scenes() if s.room == 'forest-boss')
