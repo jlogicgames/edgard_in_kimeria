@@ -16,7 +16,7 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
     private static final float RUN_SPEED = 80f;
 
     private float targetDirection = -1;
-    private boolean clambering, wallJumping, inQuickSand;
+    private boolean inQuickSand;
     private Escalator currentEscalator;
     private Level level;
 
@@ -75,16 +75,6 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
     @Override
     public Hitbox hitbox() {
         return hitbox;
-    }
-
-    @Override
-    public boolean isClambering() {
-        return clambering;
-    }
-
-    @Override
-    public void setClambering(boolean value) {
-        clambering = value;
     }
 
     @Override

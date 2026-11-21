@@ -478,7 +478,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Movement progression:** Double jump becomes available starting with the Steppe.
   Design subsequent rooms around that ability rather than an arbitrary optional
   upgrade purchase. The unlock event and exact movement rules still need design;
-  the already implemented wall jump's future role remains undecided.
+  the already implemented wall jump's future role remains undecided (settled by [D121](#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21): removed).
 - **Economy:** Limited coins create a real choice between the healer elixir and
   extra fireballs. Do not author a surplus that buys every offered advantage.
   Prices, income, purchase limits and the resulting ranged-ammunition budget still
@@ -1041,6 +1041,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   platform, ledge or hint zone, and a vertical moving platform stays below it. 64 px is far more than one frame of jump travel, so nothing tunnels through.
 - **Consequences:** a head bump on the room top stops upward motion like any block. A carried stone thrown straight up used to leave the room (and was then removed above it, `Carryable`); it now stops
   at the slab and falls back (`blocksObject` already refused placement outside the room). Nothing may be authored above a room's top edge.
+- **Update ([D121](#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21), 2026-11-21):** the wall jump is gone, so the walls are no longer climbable. The ceiling slab stays and its assertions are unchanged.
 - **Not verified:** the ceiling is invisible; behavior is measured headlessly (`RoomCeilingTest`); the rooms it affects were played by the author on 2026-11-05 (see D33), with no remarks.
 
 ## D39. The tutorial thrown-stone lesson rule
@@ -3534,7 +3535,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   of its own and deaths at it are cheap.
 - **Not verified:** how dense rooms feel to a first-time player and what they do to first learning (#135); the 96 px and
   the 6 s are authoring numbers, not measured on players.
-- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the wall jump is removed, so it is no longer a skill example of this rule; this decision will be revised by issues [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545), [#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the wall jump is no longer a skill example of this rule; it was removed ([D121](#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21)), and the branch climb is the skill the rule still names.
 
 ## D106. The forest snail: it looks ahead, holds a line and spits a slow gob; cross its ground in the reload (#329, #240, #398)
 
@@ -3730,7 +3731,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   needs no wait at all, so the 0.6 s is margin on a route that never stops, a first-timer is not killed by arriving on time, he is killed only by arriving
   0.6 s or more late and then sees the swing, and the coin route (the only one with waits, near Bat 41 in `forest-entry`) is another room. `forest-canopy` left the list too.
 - **Not verified:** how the reworked rooms feel to a first-time player (#135).
-- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the wall-jump skill pocket goes with the wall jump; this decision will be revised by issues [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545), [#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the wall-jump skill pocket went with the wall jump, removed by [D121](#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21); a skill that remains (the branch climb) keeps this pocket rule, and `skillPocket` now finds a wall or a one-way branch at the card's geometry x.
 
 ## D110. forest-1's trap course is split in two: the escalators and the puffball each get a room, and the course loses a tuft and a lever pair (#500, #499)
 
@@ -4082,3 +4083,15 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   decor ceilings now (the sign was 0.223 body before). `parallax_mock.py --check --game`: passes, the same output as before (the cover
   rules read alpha, not colour).
 - **Not changed:** no threshold or tolerance; the drawings and the foreground placements; the sky, the moon and the clouds.
+## D121. The wall jump is removed: walls are solid and cannot be grabbed (#546, 2026-11-21)
+
+- **Status:** Accepted (author, 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21) direction, playtest 2 F12). Settles [D18](#d18-directional-controls-steppe-double-jump-and-replay-target)'s open question
+  ("the already implemented wall jump's future role remains undecided"): it has none. Revises [D38](#d38-every-room-has-an-invisible-ceiling)'s reason and [D109](#d109-a-skills-first-meeting-has-a-pocket-in-view-and-calm-and-the-false-honey-fungus-has-a-trip-and-stand-pocket-500-499)'s skill example. Landed after [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545) (PR 579), which gave `forest-walls` its way over by trees.
+- **Decision:** a hero who presses into a wall in the air just falls; jumping beside a wall is an ordinary jump. A `Wall` collision block stays solid from the side and from above, as any block.
+- **Code:** `Player` loses `clambering`, `wallJumping`, `wallJumpTimer`, the slide (vertical speed times 0.1), the wall-jump launch branch of `playerJump`, the clamber term of `tryJump` and the `CLIMBING` state with its clip. `CollideBody` loses `isClambering`/`setClambering`; its `Wall` branch was the same as the plain-block branch once the grab was gone, so it is merged into it. `CollisionBlock` loses `isWallClimbable` and `setWallClimbable` (and `Wall` its call for a lever wall), every enemy loses the unread `isClambering`/`setClambering` pair, and `YellowMob` its unused `wallJumping`. No per-frame work was added; the paths removed only shrink the frame.
+- **Hero art:** the clamber frame is dropped from `art/hero/hero.grid` and `HERO_CLIPS` in `tools/sprite_layouts.py`; `tools/hero_sprites.py` regenerates `hero-right.png`, `hero-left.png` (13 rows, not 14, so every row after the attack moves up one: hit 5, appear 6, disappear 7, carry idle 8, carry run 9, throw 10, land 11, pull 12; `Player` `CLIPS` and the second-set row constants, `HeroFrameTest` and `SpriteSheetContractsTest` follow; `tools/check_contrast.py` crops carry idle at y 512 now, not 576).
+- **Maps:** no map relies on climbing. `forest-walls` is crossed by its trees (#545); `RoomReplayTest` and `ForestWallsTest` no longer press jump on a wall, and the routes of every other room never did.
+- **Registry (D105, D109):** the `wall-jump` row and `RoomCardsTest`'s `Geometry:wall` derivation (and its 96 px constant) are removed; the one skill left in the registry is `branch-climb` (`Geometry:branch`). The test asserts that `wall-jump` is gone and that `branch-climb` is registered (the old assertion that the wall-jump row exists existed only for it). `FirstMeetingPocketTest.skillPocket` is kept as the gate a skill's pocket needs (D109's rule is about skills, not about the wall jump): it now finds the room's wall or one-way branch at `geometryX` instead of a climbable wall. No shipped card uses it today, because the branch-climb was met in `forest-1-tree` and `forest-walls` records no first meeting.
+- **D38 (the ceiling):** the slab was added because climbed walls led out of the room. It stays, unchanged: it still closes every room from above for a jump, a thrown stone and a ledge's head start, and `RoomCeilingTest` keeps every assertion, now naming the reason as a guard.
+- **Tests:** assertions that existed only to prove "the hero never grabs a wall" are removed (`ForestWallsTest` its grab checks, `RoomReplayTest` the grab assertion and its jump-on-grab driver step, the `grabbed` flag of the leap scan); the routes and their measured times are unchanged. `JumpBufferTest`, `OneWayPlatformTest`, `Forest1CombatTest`, `TrapsLessonTest` and `RoomCeilingTest` lose the climbing words only; their sweeps (jumping against walls, the pit's lip, the tunnel block) are kept as they are. No threshold or tolerance changed. `WallContactTest` pins the new behaviour: a hero in the air pressing into forest-walls' first wall, with two jump presses, falls exactly as a hero with no input (same speed and height every frame, never pushed up).
+- **Not verified:** the feel of jumping beside a wall in the running game, desktop and web ([#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546) keeps that box open).

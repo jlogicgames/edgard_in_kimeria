@@ -59,8 +59,6 @@ class RoomCardsTest {
      */
     static final float ONE_BEAT_PX = 96, CLEARANCE_PX = 96;
     static final int TILE = 16;
-    /** A free-standing wall (not a room wall from the map's top) at least this tall asks for a wall jump (D105). */
-    static final float WALL_JUMP_MIN_HEIGHT = 96;
     /** Beat kinds that count as a beat; {@code pickup} and {@code harmless} elements never do. */
     static final Set<String> BEAT_KINDS = Set.of("hazard", "monster", "mechanism", "platform", "skill");
     static final Set<String> LETHAL_KINDS = Set.of("hazard", "monster");
@@ -545,10 +543,9 @@ class RoomCardsTest {
         return covered >= right;
     }
 
-    /** The geometry key a skill beat names (registry, D105), or null: a free-standing tall wall, or a branch. */
+    /** The geometry key a skill beat names (registry, D105), or null: a branch (the wall jump is gone, D121). */
     static String geometryKey(String group, TiledObject o) {
         if ("branch".equals(o.prop("skin", ""))) return "Geometry:branch";
-        if ("Collisions".equals(group) && "Wall".equals(o.type) && o.y > 0 && o.height >= WALL_JUMP_MIN_HEIGHT) return "Geometry:wall";
         return null;
     }
 
@@ -617,7 +614,8 @@ class RoomCardsTest {
 
     @Test void theRegistryCoversTheSkillsAndElementsTheCardsUse() throws IOException {
         Registry registry = registry(shippedCards());
-        assertTrue(registry.elements.contains("wall-jump"), "skills without a Tiled key are registered too");
+        assertTrue(registry.elements.contains("branch-climb"), "skills without a Tiled key are registered too");
+        assertFalse(registry.elements.contains("wall-jump"), "the wall jump is removed (D121)");
         assertEquals("touch-explosive", registry.elementOfKey.get("Bomb"), "the Bomb is a reskin of the stump");
         assertEquals("proximity-thorn", registry.elementOfKey.get("ThornTuft"), "the tuft is a reskin of the root");
         assertTrue(registry.notElements.contains("Decor:bush"));
@@ -715,7 +713,7 @@ class RoomCardsTest {
         | mob | `RedMob` | fights | monster |
         | puff | `Puffball` | waits | hazard |
         | coin | `Collectable:Coin` | collects | pickup |
-        | climb | `Geometry:wall` (skill) | climbs | skill |
+        | climb | `Geometry:branch` (skill) | climbs | skill |
         | boss | `Boss` | fights | monster |
         | crumble | `FallingPlatform` | crosses | hazard |
 
@@ -803,7 +801,7 @@ class RoomCardsTest {
         String rows = "| Beats | thorn@108, climb@200, mob@320 |\n| Beat time | 9.00 (`T`) |";
         assertTrue(density(dense("variation", "-", rows), KNOWN, DENSE).contains("d: beat 'climb@200' has no climb object of its own at that x, D105"),
             "a skill is no free beat");
-        Room wall = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 100, 16), at(7, "Geometry:wall", 200, 16), at(2, "RedMob", 300, 48)));
+        Room wall = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 100, 16), at(7, "Geometry:branch", 200, 16), at(2, "RedMob", 300, 48)));
         assertEquals(List.of(), density(dense("variation", "-", rows), KNOWN, wall));
     }
 
@@ -898,7 +896,7 @@ class RoomCardsTest {
     }
 
     @Test void aCrumbleSupportOverAFloorIsNoLethalNeighbourButOverAPitItIs() {
-        Placed climb = at(7, "Geometry:wall", 200, 16);
+        Placed climb = at(7, "Geometry:branch", 200, 16);
         Room over = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, new Placed(8, "FallingPlatform", 230, 262, true), at(2, "RedMob", 420, 48)));
         assertEquals(List.of(), climbMeeting(over), "a support that drops the hero onto a floor is no neighbour that can kill (D107)");
         Room pit = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, at(8, "FallingPlatform", 230, 32), at(2, "RedMob", 420, 48)));
@@ -942,7 +940,7 @@ class RoomCardsTest {
     }
 
     @Test void anObjectOfTheSkillsOwnGeometryIsNotItsOwnNeighbour() {
-        Placed climb = at(7, "Geometry:wall", 200, 16);
+        Placed climb = at(7, "Geometry:branch", 200, 16);
         Room same = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, at(7, "FallingPlatform", 200, 16), at(2, "RedMob", 420, 48)));
         assertEquals(List.of(), climbMeeting(same), "one object listed under the skill's key and its own (a rotten branch)");
         Room other = new Room("d", DENSE.keys(), List.of(at(1, "ThornTuft", 80, 16), climb, at(9, "FallingPlatform", 200, 16), at(2, "RedMob", 420, 48)));

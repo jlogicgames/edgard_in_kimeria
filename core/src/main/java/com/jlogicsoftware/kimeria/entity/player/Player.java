@@ -46,7 +46,7 @@ import java.util.Set;
 
 /** Port of Dart's {@code Player}. */
 public class Player extends Actor<Player.State> implements CollideBody {
-    public enum State {IDLE, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, CLIMBING, LADDER}
+    public enum State {IDLE, RUNNING, JUMPING, FALLING, HIT, ATTACKING, APPEARING, DISAPPEARING, LADDER}
 
     /**
      * Death and respawn, Katana Zero style, with the silver thread (#341, D81). DYING: the world slows to a crawl so
@@ -77,9 +77,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final Clip[] CLIPS = {
         new Clip(State.IDLE, 4, 0, 0, true), new Clip(State.RUNNING, 6, 1, 0, true),
         new Clip(State.JUMPING, 2, 2, 0, false), new Clip(State.FALLING, 2, 3, 0, true),
-        new Clip(State.ATTACKING, 7, 4, 0, false), new Clip(State.CLIMBING, 1, 5, 0, true),
-        new Clip(State.HIT, 2, 6, 0, false), new Clip(State.APPEARING, 4, 7, 0, false),
-        new Clip(State.DISAPPEARING, 4, 8, 0, true)
+        new Clip(State.ATTACKING, 7, 4, 0, false),
+        new Clip(State.HIT, 2, 5, 0, false), new Clip(State.APPEARING, 4, 6, 0, false),
+        new Clip(State.DISAPPEARING, 4, 7, 0, true)
     };
     /** Rows of hero-ladder.png, a back view used by both facings: climbing up, climbing down, holding still. */
     private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2, LADDER_CLIMB_FRAMES = 4;
@@ -88,7 +88,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
      * machine or any timing. Carrying draws the carry clips (the sword on his back) in place of idle and run; a
      * throw plays its three frames, and a dusty landing (not carrying) its squat, without blocking input.
      */
-    private static final int CARRY_IDLE_ROW = 9, CARRY_RUN_ROW = 10, THROW_ROW = 11, LAND_ROW = 12, PULL_ROW = 13;
+    private static final int CARRY_IDLE_ROW = 8, CARRY_RUN_ROW = 9, THROW_ROW = 10, LAND_ROW = 11, PULL_ROW = 12;
     private static final int CARRY_IDLE_FRAMES = 4, CARRY_RUN_FRAMES = 6, THROW_FRAMES = 3, LAND_FRAMES = 1;
     private static final float THROW_SECONDS = THROW_FRAMES * Player.STEP_TIME, LAND_SECONDS = LAND_FRAMES * Player.STEP_TIME, OVERLAY_OFF = -1f;
     /**
@@ -102,10 +102,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     private static final float STEP_TIME = 0.1f;
     private static final float MOVE_SPEED = 100f;
+    /** Quicksand scales the hero's run and jump speed by this factor. */
+    private static final float QUICKSAND_SPEED_FACTOR = 0.1f;
     /**
      * Downward speed (px/s, gravity adds 588 px/s², 9.8 per 60 Hz step) at which touching the floor counts as a landing that kicks up dust:
      * 140 is about 0.24 s of falling, a 16 px drop. Walking off a ledge keeps the coyote flag until the speed passes 147,
-     * so a few pixels never puff, and a wall slide (speed times 0.1) never does either.
+     * so a few pixels never puff. Nothing slows a fall (D121), so touching a wall in the air changes nothing here.
      */
     public static final float LANDING_MIN_FALL_SPEED = 140f;
     /**
@@ -166,9 +168,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     public final Vector2 velocity = new Vector2();
     private boolean onGround = false;
-    private boolean clambering = false;
-    private boolean wallJumping = false;
-    private float wallJumpTimer = 0f;
     private boolean inQuickSand = false;
     private Escalator currentEscalator;
     private Ladder ladder;
@@ -461,7 +460,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         Rectangle body = hitboxBounds();
         position.x += entry.ladder().centerX() - (body.x + body.width / 2f);
         ladder = entry.ladder();
-        clambering = wallJumping = onGround = false;
+        onGround = false;
         horizontalMovement = 0;
         velocity.setZero();
     }
@@ -578,7 +577,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 InteractionTarget target = selectedInteraction();
                 if (target != null && target.carryable() != null) pickUp(target.carryable());
                 else if (target != null) level.activateTrigger(target.mechanism());
-            } else if (!isAttacking && onGround && ladder == null && !jumpBuffer.pending() && !clambering) isAttacking = true;
+            } else if (!isAttacking && onGround && ladder == null && !jumpBuffer.pending()) isAttacking = true;
         }
         if (gameplayInput.rangedPressed()) shoot();
     }
@@ -772,7 +771,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private boolean carryablesEligible() {
-        return level != null && carried == null && canFight() && !isAttacking && !clambering && ladder == null;
+        return level != null && carried == null && canFight() && !isAttacking && ladder == null;
     }
 
     private Rectangle pickupReachBounds() {
@@ -821,7 +820,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void putDownCarried() {
-        if (!canFight() || carried == null || isAttacking || clambering || ladder != null) return;
+        if (!canFight() || carried == null || isAttacking || ladder != null) return;
         Rectangle place = placementBounds();
         if (level.blocksObject(place, true)) return;
         carried.release(place.x, place.y, false, facingRight);
@@ -829,7 +828,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void pickUp(Carryable target) {
-        if (!canFight() || target == null || isAttacking || clambering || ladder != null) return;
+        if (!canFight() || target == null || isAttacking || ladder != null) return;
         carried = target;
         carryHintAnchor.set(centerX(), getY() + HINT_PLAYER_OFFSET_Y);
         carryHintCameraAnchor.set(cameraTarget(cameraFocusX, position.y));
@@ -1053,7 +1052,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (horizontalMovement != 0) next = State.RUNNING;
         if (velocity.y > 0) next = State.FALLING;
         if (velocity.y < 0) next = State.JUMPING;
-        if (clambering) next = State.CLIMBING;
         if (ladder != null) next = State.LADDER;
         if (isAttacking) next = State.ATTACKING;
 
@@ -1065,21 +1063,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
         if (velocity.y > gravityPerSecond() * COYOTE_SECONDS) onGround = false; // coyote time
 
-        if (!wallJumping) {
-            velocity.x = horizontalMovement * MOVE_SPEED;
-            if (inQuickSand) velocity.x *= 0.1f;
-            if (currentEscalator != null) {
-                velocity.x += currentEscalator.riderVelocityX();
-            }
+        velocity.x = horizontalMovement * MOVE_SPEED;
+        if (inQuickSand) velocity.x *= QUICKSAND_SPEED_FACTOR;
+        if (currentEscalator != null) {
+            velocity.x += currentEscalator.riderVelocityX();
         }
         position.x += velocity.x * dt;
-
-        if (clambering) velocity.y *= 0.1f;
-
-        if (wallJumping) {
-            wallJumpTimer -= dt;
-            if (wallJumpTimer <= 0) wallJumping = false;
-        }
     }
 
     /** A puff at the feet (the floor line, larger Y is lower) and a quieter scuff than the jump's. */
@@ -1095,20 +1084,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
             // Letting go with a hop: sideways drift comes from the held direction like any airborne jump.
             velocity.y = -jumpForce() * LADDER_JUMP_SPEED_FACTOR;
             releaseLadder();
-        } else if (clambering) {
-            velocity.y = -jumpForce() * 0.7f;
-            if (horizontalMovement < 0) velocity.x = jumpForce() * 0.5f;
-            else if (horizontalMovement > 0) velocity.x = -jumpForce() * 0.5f;
-            else velocity.x = facingRight ? -jumpForce() * 0.5f : jumpForce() * 0.5f;
-            clambering = false;
-            wallJumping = true;
-            wallJumpTimer = 0.1f;
         } else {
             // Ordinary ground jump only: a puff at the feet (feetY is the floor line, larger Y is lower) and its scuff.
             if (level != null) level.fx().dustPuff(position.x + hitbox.offsetX + hitbox.width / 2f, position.y + hitbox.offsetY + hitbox.height);
             if (game.playSounds()) game.playSound("dust_puff");
             velocity.y = -jumpForce();
-            if (inQuickSand) velocity.y *= 0.1f;
+            if (inQuickSand) velocity.y *= QUICKSAND_SPEED_FACTOR;
         }
         // The launch frame's own lift, as designed at 60 Hz: one reference step at launch speed, whatever the frame time (D98).
         if (dt > 0) position.y += velocity.y * REFERENCE_STEP;
@@ -1116,7 +1097,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     private void tryJump(float dt) {
-        if (jumpBuffer.consume(!isAttacking && respawnPhase == RespawnPhase.NONE && (onGround || clambering || ladder != null))) {
+        if (jumpBuffer.consume(!isAttacking && respawnPhase == RespawnPhase.NONE && (onGround || ladder != null))) {
             playerJump(dt);
         }
     }
@@ -1378,16 +1359,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
     @Override
     public Hitbox hitbox() {
         return hitbox;
-    }
-
-    @Override
-    public boolean isClambering() {
-        return clambering;
-    }
-
-    @Override
-    public void setClambering(boolean value) {
-        clambering = value;
     }
 
     @Override

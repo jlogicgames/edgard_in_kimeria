@@ -1487,9 +1487,9 @@ public class Level implements WorldObject {
     static final float CEILING_THICKNESS = 64f;
 
     /**
-     * Every room is closed from above (D38, #215). The side walls are clamberable, so without a ceiling
-     * the hero could wall-jump up one and over the top of the room, out of the level. The slab sits
-     * entirely above the room (its underside is the room's top edge), so it cuts no jump, ladder,
+     * Every room is closed from above (D38, #215). Walls cannot be grabbed since D121, so the slab no longer
+     * stops a climb; it still closes the room from above, so no jump, thrown object or push can leave the
+     * level through the top. The slab sits entirely above the room (its underside is the room's top edge), so it cuts no jump, ladder,
      * platform or hint zone inside the room. Added here rather than authored in each map so that
      * every present and future room, in every level, has it.
      */

@@ -401,8 +401,8 @@ class TrapsLessonTest {
         setLonger(false);
     }
 
-    @Test void thePitsNearWallCannotBeClamberedBackAndItNeverBypassesThePlatform() {
-        boolean climbedOut = false;
+    @Test void thePitsNearWallCannotBeJumpedBackAndItNeverBypassesThePlatform() {
+        boolean jumpedOut = false;
         for (float dx = 0; dx <= 40; dx += 8) for (int period : new int[]{3, 7, 15}) {
             Level level = freshRoom();
             place(level, LIP + dx);
@@ -410,11 +410,11 @@ class TrapsLessonTest {
                 held.clear(); held.add(Input.Keys.A);
                 if (i % period == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
                 frame(level);
-                if (level.player.isOnGround() && level.player.position.y > 300 && bodyRight(level) < LIP + 20) climbedOut = true;
+                if (level.player.isOnGround() && level.player.position.y > 300 && bodyRight(level) < LIP + 20) jumpedOut = true;
             }
             assertFalse(alive(level) && bodyLeft(level) > LIP, "never reached the far floor");
         }
-        System.out.println("pit wall clambered out: " + climbedOut);
-        assertFalse(climbedOut, "a fall into the pit is a retry, never a way back up");
+        System.out.println("pit wall jumped out: " + jumpedOut);
+        assertFalse(jumpedOut, "a fall into the pit is a retry, never a way back up");
     }
 }

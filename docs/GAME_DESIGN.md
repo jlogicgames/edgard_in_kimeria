@@ -333,8 +333,8 @@ stages and its use while carrying/on ladders remain open. A route designed aroun
 this skill must not treat it as an arbitrary optional purchase. Decide acquisition
 before authoring dependent routes.
 
-**Implementation correction:** wall-clamber/jump already exists in `Player` and
-is used by forest replay tests. Earlier discussion incorrectly assumed it still
+**Implementation correction (superseded: the wall jump was removed, D121):** wall-clamber/jump existed in `Player` and
+was used by forest replay tests. Earlier discussion incorrectly assumed it still
 needed adding. Its role in the full campaign remains open: retain its behavior,
 and how should it combine with ladders, wind and double jump? Do not describe it
 as absent or remove it silently; changes need a separate decision and route checks.
@@ -947,7 +947,7 @@ Further discussion must specify:
 
 1. Forest, Swamp and Fortress mechanics, plus concrete Steppe wind rules.
 2. Validation of five levels × five rooms per stage, pacing, bosses and fragment acquisition.
-3. Double-jump acquisition (including on ladders) and the existing wall jump's campaign role; #95 dispatch and #99 ladders are implemented.
+3. Double-jump acquisition (including on ladders) (the wall jump was removed, D121); #95 dispatch and #99 ladders are implemented.
 4. Ranged stock, rare refills and restoration after Continue.
 5. Elixir/fireball prices, coin income, recipes, purchase limits and collection/return boundaries.
 6. Persistent tablet progress and the story's conclusion.

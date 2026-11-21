@@ -132,7 +132,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     private final Rectangle heroScratch = new Rectangle(), boxScratch = new Rectangle(), nearScratch = new Rectangle(), moverScratch = new Rectangle(),
         sightScratch = new Rectangle(), jawScratch = new Rectangle(), commitScratch = new Rectangle();
     private Level level;
-    private boolean clambering, inQuickSand;
+    private boolean inQuickSand;
     private Escalator currentEscalator;
     private float stateClock, frameClock, senseClock, bayClock, coolClock, breathDue, warningTotal, speed, gallopClock, dustDue, flameDue,
         deadClock, twitchClock = TWITCH_SECONDS;
@@ -789,8 +789,6 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     }
 
     @Override public Hitbox hitbox() { return hitbox; }
-    @Override public boolean isClambering() { return clambering; }
-    @Override public void setClambering(boolean value) { clambering = value; }
     @Override public boolean isInQuickSand() { return inQuickSand; }
     @Override public void setInQuickSand(boolean value) { inQuickSand = value; }
     @Override public Escalator currentEscalator() { return currentEscalator; }

@@ -69,7 +69,7 @@ What counts as an element is what changes what the player does. A Tiled type map
 map to the same element when only the look differs (a **reskin**, not novelty under D72). Keys are the object's
 `type`, then `:` and the `Actionable` `type`, the `Decor` `kind`, a non-default `skin`, `lever`/`running` for an
 `Escalator` (`running` = false or not), or the `Collectable` name; `Collisions:` prefixes a collision type.
-Skills are what the geometry asks for; their first sighting is declared on the cards only. Their `Geometry:` keys are not Tiled types: `RoomCardsTest` derives them for D105 beats only, `Geometry:wall` from a free-standing `Collisions:Wall` (not from the map's top) at least 96 px tall, `Geometry:branch` from any object with `skin=branch`.
+Skills are what the geometry asks for; their first sighting is declared on the cards only. Their `Geometry:` keys are not Tiled types: `RoomCardsTest` derives them for D105 beats only, `Geometry:branch` from any object with `skin=branch` (the `Geometry:wall` key went with the wall jump, D121).
 How each trap looks and warns is its own card in [TRAPS.md](TRAPS.md) (D71); this registry only groups traps by
 what the player does about them.
 
@@ -115,11 +115,10 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | fireball-refill | `FireballRefill` | picks up a ranged-attack charge | pickup |
 | coin | `Collectable:Coin` | collects coins, often off the required route | pickup |
 | ingredient | `Collectable:Bat`, `Collectable:Mushroom` | collects a healer ingredient | pickup |
-| wall-jump | `Geometry:wall` (skill) | wall-jumps a wall the route cannot pass otherwise | skill |
 | branch-climb | `Geometry:branch` (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) | skill |
 
 Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:crown`, `HangingVine`, `Torch`
-(decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (clamberable room walls), `Collisions:Platform`
+(decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (solid room walls, never grabbed since D121), `Collisions:Platform`
 (one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints`.
 
 ## forest-0 (tutorial, play order 1)
@@ -255,7 +254,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | Beats | redmob@3776, falling-branch@3984, touch-explosive@4112 |
 | Beat time | 6.75 (`RoomReplayTest`) |
 | First meeting | redmob: beat 1, pocket at x 3716, on the floor behind the log inside its range (x 3712-3872), where it notices him, runs at him and is stopped by the log (x 3728-3760), its whip short of him, 112 px from the branch column (`FirstMeetingPocketTest.forest1MobTheRedMob`, acting `RUN`) |
-| D26 | no lever, support or one-shot state; the log is plain geometry the mob cannot climb (no clamber on a non-wall block), so the hero can always step back behind it; the sword or a stomp needs no charge, and the stump is jumped or outrun |
+| D26 | no lever, support or one-shot state; the log is plain geometry the mob cannot climb, so the hero can always step back behind it; the sword or a stomp needs no charge, and the stump is jumped or outrun |
 | Hints | none (forest-1 has none, D33) |
 | Status | new, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (cards approved by the author 2026-11-17); `Forest1MobTest` checks the mob and the refill are met one at a time. Role `variation`, not `lesson`: lesson rooms follow the tutorial rules D33-D40 and D48 (hint zones, one lesson element plus at most one trap), and this room has two elements, neither a trap, and no hints (forest-1 has none, D33); it is held to the two-introduction cap instead, which it meets |
 | Decisions | D85, D72, D105 |
@@ -689,12 +688,12 @@ own floor.
 | Develops | branch-climb: the climb is no longer the goal (the crown of `forest-1-tree`) but the run-up for a leap: from the top branch a run jump crosses the first wall and lands on the second wall's 16 px top |
 | Combines | - |
 | Repeats | yellowmob, redmob |
-| Mastered route | 5.55 s required (climb the three branches, leap on to the second wall and take the Bat, walk off on to the YellowMob and the RedMob: two stomps; no wall grab), 5.43 s on a collection return with its mobs already beaten, Bat included (`RoomReplayTest`, three identical attempts; `ForestWallsTest` asserts the route, the Bat and that the hero never grabs a wall); target about 20 s |
+| Mastered route | 5.55 s required (climb the three branches, leap on to the second wall and take the Bat, walk off on to the YellowMob and the RedMob: two stomps), 5.43 s on a collection return with its mobs already beaten, Bat included (`RoomReplayTest`, three identical attempts; `ForestWallsTest` asserts the route and the Bat); target about 20 s |
 | First learning | not measured (#135) |
 | Retry cost | the whole room, at most 5.55 s (the required route; the RedMob is reached 4.75 s in, `ForestWallsTest`); the cheapest death is a late leap (take-off from x 909 on) that overshoots the second wall into the YellowMob's range: 3.73 s from the entrance, 2.3 s of climbing and 1.3 s from the take-off to the bite (`ForestWallsTest.aLateLeapOvershootsTheSecondWallAndIsBittenByTheYellowMobWithinFourSeconds`) |
 | Beats | branch-climb@880, yellowmob@1040, redmob@1136 |
 | Beat time | 5.55 (`RoomReplayTest`) |
-| First meeting | none: `branch-climb` was introduced in `forest-1-tree`, the yellowmob in `forest-entry` and the redmob in `forest-1`; the ingredient is a pickup, never a beat. The wall-jump pocket (`FirstMeetingPocketTest.forestWallsTheWallJump`) is removed, not replaced |
+| First meeting | none: `branch-climb` was introduced in `forest-1-tree`, the yellowmob in `forest-entry` and the redmob in `forest-1`; the ingredient is a pickup, never a beat. The wall-jump pocket (`FirstMeetingPocketTest.forestWallsTheWallJump`) is removed, not replaced, and the wall jump itself is gone (D121) |
 | Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), unchanged: the mastered leap lands on it, 27 px of the top branch's take-offs do (x 882-908), the second tree reaches it from the gap; moved here from `forest-entry` by #417 |
 | D26 | no one-shot object: the branches are sound one-way platforms and never break; the floor is gapless (no pit). Every fall lands on the floor or a branch: a hero who drops left of the first wall climbs tree A again, one who walks off the top branch lands on branch B1 in the gap (x 975, `ForestWallsTest`), one who drops into the gap climbs out by B1 to the second wall's top in 1.27 s (`ForestWallsTest.aHeroWhoDropsIntoTheGapClimbsOutByTheSecondTreeToTheTopOfTheSecondWall`); a hero who overshoots the second wall lands in the YellowMob's range and is retried. The Bat stays reachable from every state until taken; the RedMob's range (x 1104-1216) does not meet the YellowMob's (x 1040-1056) |
 | Hints | none (forest-2 has none, D33) |

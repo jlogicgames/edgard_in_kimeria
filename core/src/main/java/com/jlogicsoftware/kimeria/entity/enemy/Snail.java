@@ -125,7 +125,7 @@ public class Snail extends Enemy<Snail.State> implements CollideBody, Remains, B
     private final Rectangle heroScratch = new Rectangle(), boxScratch = new Rectangle(), nearScratch = new Rectangle(), moverScratch = new Rectangle(),
         lineScratch = new Rectangle(), gobScratch = new Rectangle();
     private Level level;
-    private boolean clambering, inQuickSand;
+    private boolean inQuickSand;
     private Escalator currentEscalator;
     private final RemainsSwing swing = new RemainsSwing();
     private float flameDue, deadClock;
@@ -721,8 +721,6 @@ public class Snail extends Enemy<Snail.State> implements CollideBody, Remains, B
     }
 
     @Override public Hitbox hitbox() { return hitbox; }
-    @Override public boolean isClambering() { return clambering; }
-    @Override public void setClambering(boolean value) { clambering = value; }
     @Override public boolean isInQuickSand() { return inQuickSand; }
     @Override public void setInQuickSand(boolean value) { inQuickSand = value; }
     @Override public Escalator currentEscalator() { return currentEscalator; }

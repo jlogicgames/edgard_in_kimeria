@@ -32,7 +32,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     private final BossFeedback feedback = new BossFeedback();
     private float elapsed;
     private boolean awakened, completedStrike, abandoned, strikeHeard;
-    private boolean clambering, quickSand;
+    private boolean quickSand;
     private Escalator escalator;
 
     public Boss(Assets assets, GameContext game, Level level, float x, float y) {
@@ -269,8 +269,6 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
     }
 
     @Override public Hitbox hitbox() { return hitbox; }
-    @Override public boolean isClambering() { return clambering; }
-    @Override public void setClambering(boolean value) { clambering = value; }
     @Override public boolean isInQuickSand() { return quickSand; }
     @Override public void setInQuickSand(boolean value) { quickSand = value; }
     @Override public Escalator currentEscalator() { return escalator; }

@@ -13,9 +13,9 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * #215: the side walls of a room are clamberable and wall-jumpable, so a room without a ceiling let the
- * hero climb out over the top and fall out of the level. Every room of every level must keep the hero
- * inside, whichever side wall he climbs and however long he keeps jumping. Rule: D38.
+ * #215, D38: a room without a ceiling let the hero climb a side wall and leave over the top. Walls can no
+ * longer be grabbed (D121), but every room of every level must still keep the hero inside, however long he keeps
+ * jumping against a side wall (the ceiling is now a guard, not the answer to a climb).
  */
 class RoomCeilingTest {
     private static final float STEP = 1f / 60f;
@@ -81,7 +81,7 @@ class RoomCeilingTest {
         }
     }
 
-    @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeClimbs() { assertCannotLeave("forest-0", 6); }
+    @Test void forest0RoomsKeepTheHeroInsideWhateverWallHeJumpsAgainst() { assertCannotLeave("forest-0", 6); }
     @Test void forest1KeepsTheHeroInside() { assertCannotLeave("forest-1", 12); }
 
     /** The route room's exit ledge (top y 144, against the right wall) is a 176 px head start up that wall. */
@@ -98,7 +98,7 @@ class RoomCeilingTest {
         highestPointReached(roomOf("forest-1", 10), false, 60 * 20, 112);
     }
 
-    /** Entry, walls, fissure, glade and canopy; the boss room (index 5) is enclosed by plain, non-climbable blocks and has no side walls to stand against. */
+    /** Entry, walls, fissure, glade and canopy; the boss room (index 5) is enclosed by plain blocks and has no side walls to stand against. */
     @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 5); }
 
     /** The fissure room's exit ledge (top y 224, against the right wall, #366) is a 96 px head start up that wall. */

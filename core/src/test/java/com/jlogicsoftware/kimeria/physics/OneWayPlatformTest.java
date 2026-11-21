@@ -21,8 +21,6 @@ class OneWayPlatformTest {
         public void setOnGround(boolean value) { }
         public Hitbox hitbox() { return hitbox; }
         public float facingAwareOffsetX() { return hitbox.offsetX; }
-        public boolean isClambering() { return false; }
-        public void setClambering(boolean value) { }
         public boolean isInQuickSand() { return false; }
         public void setInQuickSand(boolean value) { }
         public Escalator currentEscalator() { return null; }

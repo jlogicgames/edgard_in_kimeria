@@ -498,10 +498,6 @@ class RoomReplayTest {
                         }
                     }
                 }
-                // Fresh wall-jump presses climb the two tall walls; release between presses.
-                if (player.isClambering() && frame % 16 == 0 && frame - lastJumpFrame > 1) {
-                    held.add(Input.Keys.J); lastJumpFrame = frame;
-                }
                 boolean mechanism = player.canInteract();
                 boolean action = mechanism;
                 // The sword bursts a beetle on the hero (D100): in the fissure room the shared route answers it, by the lure (#327).
@@ -519,7 +515,6 @@ class RoomReplayTest {
             }
             // Match KimeriaGame.render: scale the world step, but keep keyboard buffering on real time.
             level.update(REAL_STEP * timeScale);
-            assertFalse(wallsRoute != null && player.isClambering(), "the wall room is crossed with no wall grab (#546)");
             assertFalse(player.isGotHit(), route + " died at frame " + frame + " at " + player.position + " phase " + phase);
             // Stop this pickup exercise before Checkpoint secures it, so retries test rollback.
             if (artifactsRoute && route.startsWith("forest-1") && level.rangedStock.count() == 3)

@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JumpBufferTest {
     @Test
-    void earlyReleasedPressFiresWhenLandingOrClamberingBecomesPossible() {
+    void earlyReleasedPressFiresWhenLandingBecomesPossible() {
         for (int source = 0; source < 3; source++) {
             JumpBuffer buffer = new JumpBuffer();
             buffer.update(0f, source == 0, source == 1, source == 2);

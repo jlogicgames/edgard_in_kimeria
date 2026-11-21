@@ -164,7 +164,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         nearScratch = new Rectangle(), moverScratch = new Rectangle(), dropScratch = new Rectangle(), selfScratch = new Rectangle();
     private final RemainsSwing swing = new RemainsSwing();
     private Level level;
-    private boolean clambering, inQuickSand;
+    private boolean inQuickSand;
     private Escalator currentEscalator;
     private float stateClock, frameClock, outOfReach, silkDue, warningTotal, flameDue, deadClock;
     /** The leap: from here to there, on the floor line it took off from; the fangs' x last frame (the swept bite). */
@@ -1273,8 +1273,6 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     }
 
     @Override public Hitbox hitbox() { return hitbox; }
-    @Override public boolean isClambering() { return clambering; }
-    @Override public void setClambering(boolean value) { clambering = value; }
     @Override public boolean isInQuickSand() { return inQuickSand; }
     @Override public void setInQuickSand(boolean value) { inQuickSand = value; }
     @Override public Escalator currentEscalator() { return currentEscalator; }

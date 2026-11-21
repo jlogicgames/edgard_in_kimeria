@@ -24,10 +24,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * sheet, and a ladder plays a separate up, down and hold clip. Every check here reads the shipped PNGs.
  */
 class HeroFrameTest {
-    /** Rows of hero-right/left.png: idle, run, jump, fall, attack, clamber, hit, appear, disappear, then the second set: carry idle, carry run, throw, land, pull. */
-    private static final int[] FACING_FRAMES = {4, 6, 2, 2, 7, 1, 2, 4, 4, 4, 6, 3, 1, 3};
-    private static final int JUMP_ROW = 2, FALL_ROW = 3, CLAMBER_ROW = 5;
-    private static final int CARRY_IDLE_ROW = 9, CARRY_RUN_ROW = 10, THROW_ROW = 11, LAND_ROW = 12, PULL_ROW = 13;
+    /** Rows of hero-right/left.png: idle, run, jump, fall, attack, hit, appear, disappear, then the second set: carry idle, carry run, throw, land, pull. */
+    private static final int[] FACING_FRAMES = {4, 6, 2, 2, 7, 2, 4, 4, 4, 6, 3, 1, 3};
+    private static final int JUMP_ROW = 2, FALL_ROW = 3;
+    private static final int CARRY_IDLE_ROW = 8, CARRY_RUN_ROW = 9, THROW_ROW = 10, LAND_ROW = 11, PULL_ROW = 12;
     private static final int[] LABEL_POSE_ROWS = {0, 1, CARRY_IDLE_ROW, CARRY_RUN_ROW}; // the label can show over these
     private static final int[] LADDER_FRAMES = {4, 4, 1};        // up, down, hold
     private static final int LADDER_UP_ROW = 0, LADDER_DOWN_ROW = 1, LADDER_HOLD_ROW = 2;
@@ -56,7 +56,7 @@ class HeroFrameTest {
                 for (int column = 0; column < FACING_FRAMES[row]; column++) {
                     String where = sheet.path() + " row " + row + " column " + column;
                     assertTrue(HeroArt.top(sheet, column, row) >= 0, where + " is empty");
-                    boolean airborne = row == JUMP_ROW || row == FALL_ROW || row == CLAMBER_ROW || (row == PULL_ROW && column == Player.PULL_LIFT);
+                    boolean airborne = row == JUMP_ROW || row == FALL_ROW || (row == PULL_ROW && column == Player.PULL_LIFT);
                     if (!airborne)
                         assertEquals(LAST_ROW, HeroArt.bottom(sheet, column, row), where + ": the feet must be on the frame's last row");
                 }
