@@ -256,8 +256,8 @@ and four tiles of headroom over its reach). Where it is met: `forest-glade`, for
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
 on its back, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
-walks past. The sword, a thrown stone or landing on one crumbles it (landing bounces him as on a monster), and a
-fireball or a thrown torch burns it up. No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
+or a monster walks past. The sword or landing on one crumbles it (landing bounces him as on a monster), and a
+fireball or a thrown torch burns it up and flies on; a thrown stone flies straight through it (D119). No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
 until Edgard leaves the room. A death resets the room with the monster alive again, and a passed room shows neither the
 monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle,
 the spider, the snail and the wolf leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).

@@ -30,8 +30,8 @@ import java.util.Map;
  *
  * <p>Killed quietly (a fireball or a stone), it leaves its body (D101, {@link Remains}): the {@code dead} frame flips over, then
  * cross-fades into the body sheet, the same frame in the same live palette since D117 ({@link SpriteSheets#MONSTER_BEETLE_BODY}). The body rocks on its shell
- * when the hero comes near (a damped swing of the same frame about the bottom of the shell); a stomp bounces the hero off and
- * crumbles it, as the sword and a stone do; a fireball or a torch burns it. A burst leaves nothing. The body is told from the
+ * when anyone comes near (a damped swing of the same frame about the bottom of the shell); a stomp bounces the hero off and
+ * crumbles it, as the sword does; a fireball or a thrown torch burns it and flies on; a stone flies through it (D119). A burst leaves nothing. The body is told from the
  * live beetle by its pose: it lies on its back (D101).
  */
 public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains {
@@ -106,13 +106,13 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     private Level level;
     private boolean clambering, inQuickSand;
     private Escalator currentEscalator;
-    private final Rectangle nearScratch = new Rectangle();
+    private final Rectangle nearScratch = new Rectangle(), moverScratch = new Rectangle();
     /** The body's swing (D101); flames due while it burns. */
     private final RemainsSwing swing = new RemainsSwing();
     private float flameDue;
     /** Seconds since the kill: the flip, the poof and the cross-fade run on it, through a burn too. */
     private float deadClock;
-    private boolean heroNear, poofDone;
+    private boolean heroNear, moverNear, poofDone;
     private float stateClock, frameClock, outOfBand, blinkClock, speckDue, warningTotal;
     private boolean brightFrame, crawlFrame;
     private int noticeStep;
@@ -223,14 +223,23 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         boolean near = heroPresent() && heroNear();
         if (near && !heroNear) push();
         heroNear = near;
+        // D119: anyone moving through the body rocks it, not only the hero (monsters, the boss).
+        Enemy<?> mover = Remains.moverNear(level, this, grownBox(), moverScratch);
+        if (mover != null && !moverNear) swing.push(Math.signum(mover.velocity.x));
+        moverNear = mover != null;
         swing.update(dt);
+    }
+
+    /** The body's box grown {@link #NEAR_REACH} left and right, in {@code nearScratch}. */
+    private Rectangle grownBox() {
+        Rectangle body = hitboxBoundsInto(nearScratch);
+        body.set(body.x - NEAR_REACH, body.y, body.width + SIDES * NEAR_REACH, body.height);
+        return body;
     }
 
     /** True when the hero's body touches the body grown {@link #NEAR_REACH} left and right. */
     private boolean heroNear() {
-        Rectangle body = hitboxBoundsInto(nearScratch);
-        body.set(body.x - NEAR_REACH, body.y, body.width + SIDES * NEAR_REACH, body.height);
-        return body.overlaps(player.hitboxBoundsInto(heroScratch));
+        return grownBox().overlaps(player.hitboxBoundsInto(heroScratch));
     }
 
     /**
@@ -423,7 +432,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     private void die() {
         enter(State.DEAD);
         pendingRemoval = true;
-        poofDone = heroNear = false;
+        poofDone = heroNear = moverNear = false;
         swing.reset();
         deadClock = 0;
         velocity.setZero();

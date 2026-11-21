@@ -50,9 +50,9 @@ does, a burst or blast does not. Then:
 2. **Look.** The body is the monster's `dead` frame in its live palette, ink and moon rim, with no recolour, tint or halo
    (D117): a second grid (`art/objects/monster/<name>-body.grid`, pixel for pixel the `dead` frame, its sheet in `RIM_SHEETS`
    of `tools/forest_trap_sprites.py`), added to `BODY_SWEEP` in `tools/check_contrast.py` and measured as active.
-3. **Behaviour.** Implement `Remains`: stay in the level as a defeated enemy; react when the hero comes near (the beetle and
-   the spider rock with the shared `RemainsSwing`, a big body twitches); `crumble()` for the sword, a stone and a stomp (the stomp bounces the hero), `burnUp()` for a fireball
-   or a torch; weapons fly on. The `Player`, `Carryable` and `Fireball` loops already call these (the swing that killed a
+3. **Behaviour.** Implement `Remains`: stay in the level as a defeated enemy; react when any actor moves through it (`Remains.moverNear`) (the beetle and
+   the spider rock with the shared `RemainsSwing`, a big body twitches); `crumble()` for the sword and a stomp (the stomp bounces the hero), `burnUp()` for a fireball or a thrown torch
+   (both fly on, unspent); a stone and other thrown objects pass straight through a body, which they neither crumble nor burn (D119). The `Player`, `Carryable` and `Fireball` loops already call these (the swing that killed a
    monster skips its body); do not add a hurtbox.
 4. **Effects and sound.** Crumble and burn go through the shared `effects.RemainsFx` (`Level.remainsFx()`), with the monster's
    own live chip colours as a static palette (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`, `SnailFx.SNAIL_CHIPS`, `WolfFx.WOLF_CHIPS`); re-measure its pools in

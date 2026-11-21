@@ -168,12 +168,10 @@ public final class Carryable extends Entity {
                     break;
                 }
             }
-            // D101: a thrown stone crumbles a monster's body, a thrown torch burns it; either flies on (a body stops nothing).
-            if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
-                if (level.objects.get(o) instanceof Remains body && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds())) {
-                    if (kind == Kind.STONE) body.crumble();
-                    else body.burnUp();
-                }
+            // D119: a thrown stone flies through a monster's body (Remains), which it does not crumble; a thrown torch burns it
+            // and flies on (the author accepted that, 2026-11-21).
+            if (thrown && kind == Kind.TORCH && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof Remains body && body.isRemains() && body.remainsInto(trapBox).overlaps(bounds())) body.burnUp();
             }
             // D47: a thrown stone that reaches an intact explosive trap lights it from afar, then drops like after any hit
             // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.

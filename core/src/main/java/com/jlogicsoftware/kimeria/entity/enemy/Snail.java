@@ -36,8 +36,8 @@ import java.util.Map;
  * killed during its wind-up fires nothing.
  *
  * <p>The sword, a fireball, a thrown stone or torch and a stomp kill the snail in any state; it leaves its body (D101,
- * {@link Remains}): the empty shell on its back, which keeps its live palette (D117), rocks when the hero passes, is
- * crumbled by the sword, a stone or a stomp and burnt by a fireball or a torch. The shell blocks nothing. Its effects are
+ * {@link Remains}): the empty shell on its back, which keeps its live palette (D117), rocks when anyone passes, is
+ * crumbled by the sword or a stomp and burnt by a fireball or a torch; a stone flies through it (D119). The shell blocks nothing. Its effects are
  * {@link com.jlogicsoftware.kimeria.effects.SnailFx}; its sprite is one strip ({@link SpriteSheets#MONSTER_SNAIL}). World Y grows
  * downward: the floor line is the body's bottom edge, and the gob flies {@link #GOB_HEIGHT} px above it (a smaller Y).
  */
@@ -122,14 +122,14 @@ public class Snail extends Enemy<Snail.State> implements CollideBody, Remains, B
     private final TextureRegion[] gobFrames = new TextureRegion[GOB_FRAMES];
     private final TextureRegion bodyFrame;
     private final float spawnX, spawnY;
-    private final Rectangle heroScratch = new Rectangle(), boxScratch = new Rectangle(), nearScratch = new Rectangle(),
+    private final Rectangle heroScratch = new Rectangle(), boxScratch = new Rectangle(), nearScratch = new Rectangle(), moverScratch = new Rectangle(),
         lineScratch = new Rectangle(), gobScratch = new Rectangle();
     private Level level;
     private boolean clambering, inQuickSand;
     private Escalator currentEscalator;
     private final RemainsSwing swing = new RemainsSwing();
     private float flameDue, deadClock;
-    private boolean heroNear, poofDone, gone;
+    private boolean heroNear, moverNear, poofDone, gone;
     private float stateClock, frameClock, lostClock, behindClock, reloadLeft, speckDue, swellDue, warningTotal;
     private boolean crawlFrame;
     private int noticeStep;
@@ -486,13 +486,22 @@ public class Snail extends Enemy<Snail.State> implements CollideBody, Remains, B
         boolean near = heroPresent() && heroNear();
         if (near && !heroNear) push();
         heroNear = near;
+        // D119: anyone moving through the body rocks it, not only the hero (monsters, the boss).
+        Enemy<?> mover = Remains.moverNear(level, this, grownBox(), moverScratch);
+        if (mover != null && !moverNear) swing.push(Math.signum(mover.velocity.x));
+        moverNear = mover != null;
         swing.update(dt);
     }
 
-    private boolean heroNear() {
+    /** The body's box grown {@link #NEAR_REACH} left and right, in {@code nearScratch}. */
+    private Rectangle grownBox() {
         Rectangle body = hitboxBoundsInto(nearScratch);
         body.set(body.x - NEAR_REACH, body.y, body.width + SIDES * NEAR_REACH, body.height);
-        return body.overlaps(player.hitboxBoundsInto(heroScratch));
+        return body;
+    }
+
+    private boolean heroNear() {
+        return grownBox().overlaps(player.hitboxBoundsInto(heroScratch));
     }
 
     private boolean stompedOn() {
@@ -564,7 +573,7 @@ public class Snail extends Enemy<Snail.State> implements CollideBody, Remains, B
         }
         enter(State.DEAD);
         pendingRemoval = true;
-        poofDone = heroNear = false;
+        poofDone = heroNear = moverNear = false;
         swing.reset();
         deadClock = 0;
         velocity.setZero();

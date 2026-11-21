@@ -57,6 +57,18 @@ class DecorTest {
         assertThrows(IllegalArgumentException.class, () -> Decor.fromMap(harness.assets(), flat, "x"));
     }
 
+    /** D119: a bush sways for every actor moving through it, not only the hero (here a crawling beetle, hero far away). */
+    @Test void aMonsterWalkingThroughABushMakesItSway() {
+        harness.playSounds = false;
+        Level level = harness.roomOf("beetle-test", 0);
+        Decor bush = new Decor(harness.assets(), "bush", 280, 296, 32, 24, false);
+        level.decor.add(bush);
+        level.player.position.set(32, level.player.position.y);
+        boolean swayed = false;
+        for (int f = 0; f < 60 * 8 && !swayed; f++) { level.update(STEP); harness.pressed.clear(); swayed = bush.playing(); }
+        assertTrue(swayed, "the beetle patrolling through the bush brushed it");
+    }
+
     @Test void aWalkingHeroStartsTheBrushOnceAndItRestartsOnlyWhenFinished() {
         Decor d = bush();
         assertEquals(0, d.frameIndex());

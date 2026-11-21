@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>Fixture beetle-test.tmx: room 640 wide, floor y 320, hero enters at x 32 (body x 50..61); the beetle spawns at x 320
  * (body x 321..343, centre 332) with offNeg 4 and offPos 4, so its {@code position.x} stays in 256..384 (body from 257 at
  * the left end, centre 268, trigger box from 249, blast box 228..308 there); a resting stone at x 96. Since D101 a beetle killed
- * quietly leaves its body, which rocks when the hero comes near and is crumbled by the sword or a stone, burnt by a fireball.
+ * quietly leaves its body, which rocks when the hero comes near and is crumbled by the sword or a stomp and burnt by a fireball or a thrown torch, which fly on; a stone passes
+ * through it (D119).
  */
 class BeetleTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
@@ -347,7 +348,7 @@ class BeetleTest {
         level.player.velocity().setZero();
         boolean bounced = false;
         for (int f = 0; f < 60 && !b.isRemoved(); f++) { frame(level); bounced |= level.player.velocity.y < 0; }
-        assertTrue(b.isRemoved(), "a stomp crumbles the body, as the sword and a stone do");
+        assertTrue(b.isRemoved(), "a stomp crumbles the body, as the sword does");
         assertTrue(bounced, "the normal stomp bounce");
         assertTrue(kinds(level.remainsFx().hard(), KimeriaParticleSystem.KIND_GRIT) >= 10, "brown chips fall");
         assertTrue(harness.sounds.contains(Beetle.CRUMBLE_SOUND));
@@ -368,9 +369,11 @@ class BeetleTest {
         assertEquals(0, level.bloodParticles().count(), "no blood");
     }
 
-    @Test void aThrownStoneCrumblesTheBodyAndFliesOn() {
+    /** D119: a thrown stone flies through the body; the body stays whole and the stone is not stopped. */
+    @Test void aThrownStonePassesThroughTheBodyAndLeavesItIntact() {
         Level level = level();
         Beetle b = body(level);
+        harness.sounds.clear();
         place(level, 108);
         harness.held.add(Input.Keys.W); frame(level);
         harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level);
@@ -378,27 +381,78 @@ class BeetleTest {
         var stone = level.player.carriedObject();
         assertNotNull(stone, "picked up the stone");
         place(level, 200);
-        level.player.position.x = 200 - 29;
         settle(level, 5);
         harness.held.add(Input.Keys.L); harness.pressed.add(Input.Keys.L); frame(level); harness.held.clear();
-        until(level, b::isRemoved, 120);
-        assertTrue(stone.snapshot().velocityX() != 0, "a body stops nothing: the stone flies on");
-        assertTrue(harness.sounds.contains(Beetle.CRUMBLE_SOUND));
+        float bodyRight = b.hitboxBounds().x + b.hitboxBounds().width;
+        float vx = stone.snapshot().velocityX();
+        assertTrue(vx > 0, "the stone is thrown toward the body");
+        boolean passed = false;
+        for (int f = 0; f < 120 && !passed; f++) {
+            frame(level);
+            passed = stone.getX() > bodyRight;
+            assertTrue(b.isRemains() && !b.isRemoved(), "the stone leaves the body whole (frame " + f + ")");
+            assertEquals(vx, stone.snapshot().velocityX(), 0f, "the body neither stops nor slows the stone (frame " + f + ")");
+        }
+        assertTrue(passed, "the stone flew past the body, not stopped by it");
+        assertFalse(harness.sounds.contains(Beetle.CRUMBLE_SOUND));
     }
 
-    @Test void aFireballBurnsTheBodyAndFliesOn() {
+    /** D119 (D101 kept): a fireball burns the body and flies on at the same speed, never stopped or spent. */
+    @Test void aFireballBurnsTheBodyAndFliesOnUnslowed() {
         Level level = level();
         Beetle b = body(level);
         harness.sounds.clear();
         harness.held.add(Input.Keys.L); harness.pressed.add(Input.Keys.L); frame(level); harness.held.clear();
-        until(level, () -> b.getState() == Beetle.State.BURN, 60);
-        assertTrue(fireballFlying(level), "the ball is not spent on a body");
+        float bodyRight = b.hitboxBounds().x + b.hitboxBounds().width;
+        com.jlogicsoftware.kimeria.entity.items.Fireball ball = null;
+        float lastX = Float.NaN, step = Float.NaN;
+        boolean burnt = false;
+        int maxFlames = 0;
+        for (int f = 0; f < 90; f++) {
+            frame(level);
+            for (int i = 0; i < level.objects.size(); i++)
+                if (level.objects.get(i) instanceof com.jlogicsoftware.kimeria.entity.items.Fireball fb && !fb.isRemoved()) ball = fb;
+            if (b.getState() == Beetle.State.BURN) {
+                burnt = true;
+                assertFalse(b.isRemains(), "a burning body is out of reach (frame " + f + ")");
+                maxFlames = Math.max(maxFlames, flames(level.remainsFx().hard()));
+            }
+            if (ball != null) {
+                assertFalse(ball.isRemoved(), "the ball is not spent on the body (frame " + f + ")");
+                if (!Float.isNaN(lastX)) {
+                    float dx = ball.getX() - lastX;
+                    if (Float.isNaN(step)) step = dx;
+                    assertEquals(step, dx, 1e-3f, "the body neither stops nor slows the ball (frame " + f + ")");
+                }
+                lastX = ball.getX();
+                if (ball.getX() > bodyRight + 8) break;
+            }
+        }
+        assertNotNull(ball, "the ball is flying");
+        assertTrue(step > 0, "the ball flies toward the body");
+        assertTrue(ball.getX() > bodyRight, "the ball got past the body, unspent");
+        assertTrue(burnt, "the body burns");
         assertTrue(harness.sounds.contains(Beetle.BURN_SOUND));
-        settle(level, 3);
-        assertTrue(flames(level.remainsFx().hard()) > 0, "flames in the fireball's ramp");
-        assertFalse(b.isRemains(), "a burning body is out of reach");
+        for (int f = 0; f < 3 && !b.isRemoved(); f++) { frame(level); maxFlames = Math.max(maxFlames, flames(level.remainsFx().hard())); }
+        assertTrue(maxFlames > 0, "flames in the fireball's ramp");
         until(level, b::isRemoved, (int) Math.ceil(Beetle.BURN_SECONDS / STEP) + 2);
         assertTrue(alive(level));
+    }
+
+    /** D119: a monster moving through the body rocks it, as the hero does. */
+    @Test void aMonsterWalkingThroughTheBodyRocksIt() {
+        Level level = level();
+        Beetle dead = body(level);
+        assertEquals(0, dead.rockAngle(), 0);
+        Rectangle box = dead.hitboxBounds();
+        Beetle walker = new Beetle(harness.assets(), harness.game(), box.x + 60, box.y - 2, 24, 16, 60, 0);
+        walker.setPlayer(level.player);
+        walker.setLevel(level);
+        level.objects.add(walker);
+        place(level, 32 + 29);
+        float max = 0;
+        for (int f = 0; f < 240 && max == 0; f++) { frame(level); max = Math.max(max, Math.abs(dead.rockAngle())); }
+        assertTrue(max > 0, "the walking beetle rocked the body");
     }
 
     @Test void aThrownTorchBurnsTheBodyAndFliesOn() {
