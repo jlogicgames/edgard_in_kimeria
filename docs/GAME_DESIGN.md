@@ -665,7 +665,7 @@ wings; its sheet grew from 80x72 to 80x80 so the four death frames, read 16 px t
 row 8). Grids: `art/objects/enemy/red-mob.grid`, `art/objects/enemy/bat.grid`; export and checks: `tools/enemy_sprites.py`,
 `tools/test_enemy_sprites.py`.
 
-Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D115, built and placed in no room yet, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D115, built and placed in `forest-glade`, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
@@ -856,11 +856,12 @@ fixed reach and timings, so the same dodge works on every retry (D7); the assist
 
 It stays on its floor; leaping up steps and over gaps on an authored route is a later develop of the element `wolf`, as
 the climb and the silk drop developed `spider` ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). Its first
-meeting is a refuge pocket in a forest-2 room: a ledge or block top at least 32 px above its floor at the near end of its range,
-out of its reach but in its sight, from which the hero watches it trot, notice him, sprint, bay, give up and trot back (D105);
-the room card is written with the `kimeria-room-design` skill before it is placed (#331). The ledge of that pocket must be a one-way
-platform or a hero within 64 px: a solid block's face cuts its sight at eye height, so a hero standing on a block beyond its face is
-not seen. Sounds (seeds 7301 to 7311, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)): its own call `wolf_notice` (a sharp dog-like bark),
+meeting is a refuge pocket in `forest-glade`, forest-2's fourth room ([ROOM_CARDS.md](ROOM_CARDS.md#forest-glade); the author approved
+the card on 2026-11-21): a one-way branch 32 px above its floor, at the near end of its range, out of its reach but in its sight, from
+which the hero watches it trot, notice him, sprint under him, bay, give up and trot back (D105). The ledge of that pocket is a one-way
+platform: a solid block's face cuts its sight at eye height, so a hero standing on a block beyond its face is not seen (the room's
+fallen trunk hides a hero on its top for exactly that reason). The mastered answer there is a step off the branch's end on to its back
+while it bays (a stomp); a jump, a swing and the assist's run all work on its floor (`ForestGladeTest`). Sounds (seeds 7301 to 7311, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)): its own call `wolf_notice` (a sharp dog-like bark),
 `wolf_run` (a soft paw patter once a gallop cycle while it sprints, in view only), `wolf_windup` (`_long`), `wolf_lunge`, `wolf_bite`,
 `wolf_bay` (a double bark); its death plays the shared `bounce`. Art: a crimson pelt in the danger family (#236), the largest Forest
 monster ([ART_DIRECTION.md](ART_DIRECTION.md)). Effects are particles on `KimeriaParticleSystem` (`effects.WolfFx`, one per level; the
@@ -869,7 +870,7 @@ body. Code: `entity/enemy/Wolf.java`; tests: `WolfTest` (the fairness pins: a ru
 window of take-offs that clear the jaws, a hero 24 px up never committed to, the refuge, the bay, the give-up and the cool-down, the
 lunge stopping at a gap and at a wall, every weapon in every state, both same-frame ties, the load checks), `WolfFxTest`, `RemainsTest`,
 `AllocationBudgetTest.wolfThroughTheRealLevel` (0.2 to 0.6 B/frame before the floor re-check, 0.0 in one run after it), `check_contrast.py` (the wolf and its body, once placed),
-`FirstMeetingPocketTest` and `RoomCardsTest` (with the placement, #331).
+`FirstMeetingPocketTest.forestGladeTheWolf`, `ForestGladeTest` and `RoomCardsTest` (the placement, #331).
 
 ## Rooms, dangers and skill development
 

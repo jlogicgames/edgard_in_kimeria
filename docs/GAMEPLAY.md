@@ -14,7 +14,7 @@ Flutter/Flame version (with reference to its separate Rust/Bevy version for feat
 full menu system, localization, gamepad support, dev hotkeys).
 
 The MVP has three playable levels: the tutorial **forest-0** (six empty rooms), **forest-1**
-(seven rooms: the first RedMob behind a log with a falling branch and an exploding stump, a trip-line deadfall with a falling stone and a RedMob, the trap course, a lever lesson room where one lever works a lift and a ladder, a route room with a lever, a ladder and a lift, a guard room with a RedMob in a tunnel under a spore cloud and a lever-lowered roof route with a refill, and a tree to climb), then **forest-2** (four rooms, healer and boss). The Forest order is
+(seven rooms: the first RedMob behind a log with a falling branch and an exploding stump, a trip-line deadfall with a falling stone and a RedMob, the trap course, a lever lesson room where one lever works a lift and a ladder, a route room with a lever, a ladder and a lift, a guard room with a RedMob in a tunnel under a spore cloud and a lever-lowered roof route with a refill, and a tree to climb), then **forest-2** (six rooms, healer and boss). The Forest order is
 `forest-0` → `forest-1` → `forest-2` (boss) ([D32](DECISIONS.md#d32-forest-level-order-and-identity)). After the last level, an ending screen in the opening's page style ([D77](DECISIONS.md#d77-story-screens-are-static-pages-playtest-f2-336-2026-11-16)) uses the opening
 music, celebrates the kingdom's liberation and returns to the menu with the run save
 removed. Future mechanics will expand these same levels. See [MVP](MVP.md).
@@ -106,8 +106,9 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest-2` contains four rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
-with two wall jumps (split from the entry by #376), a forest course with an ascending
+`forest-2` contains six rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
+with two wall jumps (split from the entry by #376), the fissure room (two ember fissures and a ledge beetle), the glade (the forest wolf,
+met from a one-way branch, #331), a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -251,7 +252,7 @@ for half a second, harmless, and chases again with a new crouch. It never goes o
 it: the sword, a fireball, a stone or a torch, or landing on it. It leaves its body lying flat on its side, which twitches when he
 comes near. There is no hint about it: it is met in play. Authoring: `Wolf` (48×24) in `SpawnPoints` with `offNeg`/`offPos` like the
 mobs, checked at load (a range of at least ten tiles on floor without gaps, nothing of the entrance, exit or checkpoints in its sight,
-and four tiles of headroom over its reach). Where it is met: a forest-2 room, with its room card first ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)).
+and four tiles of headroom over its reach). Where it is met: `forest-glade`, forest-2's fourth room, from a one-way branch ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)).
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
 on its back, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard

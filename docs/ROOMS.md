@@ -12,9 +12,9 @@ author acceptance must not be read as evidence for a later map layout.
 
 The Forest levels are the tutorial `forest-0`, then `forest-1`, then the boss level `forest-2`
 (intended Forest order: `forest-0` → `forest-1` → `forest-2`, [D32](DECISIONS.md#d32-forest-level-order-and-identity)). A level is one TMX map
-containing an ordered chain of rooms. `forest-2` has five
+containing an ordered chain of rooms. `forest-2` has six
 rooms in play order: `forest-entry` (736 px), `forest-walls` (544 px, split off it by #376), `forest-fissure` (640 px, the
-ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-canopy`
+ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-glade` (832 px, the forest wolf's first room, #331, appended at the map's end after it, see "forest-2 glade room" below), `forest-canopy`
 (1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
@@ -1238,6 +1238,39 @@ Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-fissure); trap card: [TRAPS.md](
   0.349, tip 0.398; the beetle on the ledge outline 0.334 to 0.519, body at most 0.591 (as at its forest-1 spawns).
 - D26: no lever, support or one-shot state on the route; the clock restarts with the room; the beetle needs no charge and
   a retry rebuilds it at its spawn.
+
+## forest-2 glade room (#331, D115)
+
+`forest-glade`, x 3648-4480 (832 px, 1.3 camera views), floor top y 320, a left wall at x 3648-3664 and a right wall at x 4464-4480
+(down to the floor). It is appended at the map's end (forest-2 grew from 228 to 280 tiles) and listed after
+`forest-fissure` in `Rooms`, so it is played between the fissure room and the canopy. The `Deadline` is unchanged: the room has no
+pit. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-glade); monster card: [GAME_DESIGN.md](GAME_DESIGN.md#wolf-card-built-d115-331).
+
+- RoomStart (3680, 272); RoomExit (4448, 272, 16 x 48) on the floor against the right wall (16 px wide: a 32 px exit at x 4432 would lie inside the wolf's sense box, x 3727-4447, and fail its load check).
+- `ThornRoot` x 3808, `zone` 64 (map y 312: the SpawnPoints layer is drawn 16 px up), the only other beat before the wolf, and a second `ThornRoot` x 4360, `zone` 64, past the wolf's reach (x 4351 at most), as the third beat. D116 removed the wall jump, so the room's first design (a 96 px wall-jump block before the exit) was replaced by it.
+- A 32 x 32 solid trunk x 3920-3952, y 288-320 (ground tiles, `tools/parallax_game.py` gives it its faces), and a 64 x 16 one-way
+  `Collisions:Platform` branch x 3952-4016, y 288, flush with the trunk top.
+- `Wolf` x 4144 (map y 312), `offNeg` 10, `offPos` 0: it trots x 3984-4144, the 160 px minimum. Its load checks pass with the
+  entrance's body 18 px outside its sense box (x 3727-4447) and the exit on the floor 1 px right of it (x 4448). Moving the wolf right or widening its range puts the exit inside its sense box and fails `Wolf.problem` at load.
+- **The pocket:** the one-way branch. A solid block's face cuts the wolf's sight at eye height, a platform does not, so the
+  hero on the branch is seen from its floor, 32 px up, out of its 24 px lunge box. The trunk hides a hero on its top and on the
+  floor before it (`ForestGladeTest.theTrunkHidesAHeroOnItsTopAndOnTheFloorBeforeItFromTheWolfForAWholePatrol`).
+- **Recipe (the mastered route):** jump the thorn root, jump on to the trunk, walk out on the branch and wait until the wolf bays
+  under it, then walk to the branch's end and step off on to its back (a stomp, with the bounce), then run to the second thorn root (x 4360) and jump it, and walk to the exit.
+  Without the wait the stomp still lands when the wolf is under the branch's end, as a hurrying hero reaches it
+  (`ForestGladeTest.aHeroWhoHurriesOverTheBranchStompsItAsItSprintsUnderHim`).
+- Answers on its floor (`ForestGladeTest`): a jump a quarter second after the commit clears the lunge from every commit gap of 1 to 72 px
+  with and without the assist; a hero who stays put is bitten; a runner is bitten without the assist and missed with it, and then
+  climbs the trunk, a refuge; a swing 0.2 s after the commit kills it; the branch, the trunk top and the floor from x 4264
+  on are never committed to.
+- Measured (`RoomReplayTest`, `ForestGladeTest`, 2026-11-21, scripted hero): the mastered route 8.85 s (three identical attempts,
+  with and without the assist; 2.95 s per beat), 7.42 s on a collection return with the wolf gone (pinned in `RoomReplayTest`); the most
+  expensive death is the second thorn root after the wolf, 8.15 s from the entrance (the whole room replayed; D105's 6 s limit is for a first meeting that is not
+  among the first two beats, which the wolf, beat 2, is not, and 8.15 s is under D105's 15 s split rule); the wolf's own bite on the mastered pace is a hop down
+  in front of it, 4.27 s; the first thorn root kills a hero who walks straight on at 1.17 s. Contrast of the placed wolf over its range (`check_contrast.py`): live frames, outline 0.411 to 0.542 (floor 0.28), body
+  (decor) 0.152 to 0.197 (ceiling 0.20). Evidence limit: a scripted hero, no novice playtest ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
+- D26: no lever, support or one-shot state on the route; the wolf gives up after 1.5 s of bay and cannot hold a place; a retry rebuilds
+  it calm at its spawn.
 
 ## forest-1 lever room (#418, D86)
 

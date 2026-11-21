@@ -3849,8 +3849,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Accepted and built (author, 2026-11-20: "the wolf must be faster and more dangerous than the other enemies";
   2026-11-21: the card and every recommendation of the proposal, the danger-family crimson, the first meeting in forest-2, the art
-  with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in no room yet: the forest-2 room card
-  comes first ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)). The lunge is **160 px in 0.25 s**
+  with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in `forest-glade`, forest-2's fourth room (the author approved
+  its card on 2026-11-21: [ROOM_CARDS.md](ROOM_CARDS.md#forest-glade), [#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)). The lunge is **160 px in 0.25 s**
   (author, 2026-11-21: "Yes, 160"; see Why). Card:
   [GAME_DESIGN.md, "Wolf card"](GAME_DESIGN.md#wolf-card-built-d115-331).
 - **Decision:**
@@ -3896,8 +3896,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Room rules:** D3/D6 as for every enemy. Load checks (`Wolf.problem`): its range inside the room on gapless floor and at
     least 160 px long; no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside its sight box (256 px, which
     includes its reach);
-    at least 64 px of headroom over its whole reach. Met in play (D100): its first meeting is a refuge pocket in a forest-2
-    room, from which the hero sees it notice, sprint and bay (D105).
+    at least 64 px of headroom over its whole reach. Met in play (D100): its first meeting is a refuge pocket in `forest-glade`,
+    a one-way branch 32 px above its floor, from which the hero sees it notice, sprint and bay (D105).
   - **Assist:** only the wind-up is longer (0.75 s); notice, speeds, skid, recovery and give-up are not scaled.
 - **Why:** every other Forest monster loses a foot race, so walking away answers all of them; the author asked for one that
   does not. The wolf keeps fair by what it cannot do: it warns twice (the notice, then the wind-up with its whole line drawn),
@@ -3918,7 +3918,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Gates:** `WolfTest` (37 tests: the fairness pins above, each its own test; every weapon in every state; the refuge; the
   gap and the wall; a floor that vanishes during the wind-up, `wolf-split.tmx`; the failing load fixtures), `WolfFxTest`, `RemainsTest` (the wolf's case), `AllocationBudgetTest.wolfThroughTheRealLevel`,
   `check_contrast.py` (the wolf and its body, measured from the first placement, with its own `test_check_contrast.py` case),
-  `tools/test_generate_sounds.py`, `SoundPreloadTest`; `FirstMeetingPocketTest` and `RoomCardsTest` with the placement (#331).
+  `tools/test_generate_sounds.py`, `SoundPreloadTest`; `FirstMeetingPocketTest.forestGladeTheWolf`, `ForestGladeTest` and `RoomCardsTest` with the placement (#331).
+
 ## D116. Second external playtest: findings and direction (#563, 2026-11-21)
 
 - **Status:** Accepted by the author where marked, 2026-11-21; the other rows of the record are proposals until the author
