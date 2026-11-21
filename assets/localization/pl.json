@@ -31,6 +31,8 @@
   "SHOOT": "Dystans",
   "LEFT_HANDED_LABEL": "Dla leworęcznych",
   "ROTATE_HINT": "Obróć telefon, by obraz był większy",
+  "INTRO_SKIP_KEYBOARD": "Esc: pomiń",
+  "INTRO_SKIP_GAMEPAD": "Start: pomiń",
   "ASSIST": "Ułatwienia",
   "LONGER_TRAP_WARNINGS": "Dłuższe ostrzeżenia pułapek",
   "SCREEN_SHAKE": "Drżenie ekranu",

@@ -74,6 +74,7 @@ the render loop.
 | `NEW_GAME_CONFIRMATION` | Starting over replaces the saved run; Cancel preserves it. |
 | `HEALER`, `HEALER_*` | The healer is an old man, the recurring narrator/guide. Preserve the agreed story; do not introduce quests or places. |
 | `INTRO_STORY` | The healer narrates Rufardus, L'Kardina's expulsion/curse and Edgard's departure. No ingredient tutorial here. |
+| `INTRO_SKIP_KEYBOARD`, `INTRO_SKIP_GAMEPAD` | The small skip hint on the intro and the ending: the key (Esc) or the pad button (Start) that leaves the story, then the verb. Touch shows its icon only. |
 | `ENDING_STORY` | The implemented test campaign's ending, not a new story branch. Told by the healer (#372): three paragraphs in every language, the second one (and only it) brings back the sun and the light, the third is the closing line in capitals (THE END, КІНЕЦЬ, KONIEC, ENDE, КАНЕЦ). Keep this structure: the ending page lights the arms with the light paragraph (#416). |
 | `BAT`, `MUSHROOM` | Ingredient/item labels on the healer's checklist. `BAT` reads "Bat wing" (the jar item, not the enemy; #345). The coins are named by `FOREST_COINS_COUNT`; earlier-level coins do not satisfy this payment. |
 | `FOREST_COINS_COUNT` | Checklist label with secured/authored forest coin counts. |

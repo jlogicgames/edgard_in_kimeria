@@ -491,6 +491,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     /** Opening and ending share the same static pages (#336), fade, music and fresh-input rules; the ending adds the arms (#416). */
     private void openStory(Msg message, UiState state) {
         intro = IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null);
+        float hintRight = LOGICAL_W - IntroScreen.SKIP_HINT_MARGIN;
+        intro.setSkipHints(overlay.hintBlock(Msg.INTRO_SKIP_KEYBOARD.t(language), hintRight, IntroScreen.SKIP_HINT_TOP),
+            overlay.hintBlock(Msg.INTRO_SKIP_GAMEPAD.t(language), hintRight, IntroScreen.SKIP_HINT_TOP));
         introInput.reset(Gdx.input);
         uiState = state;
     }
@@ -498,6 +501,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void updateStory(float dt) {
         // Escape, the system Back key or the pad's Back/Start leaves the story; any other fresh press turns the page.
         boolean pressed = introInput.skipPressed(Gdx.input);
+        // Touch names no key (its skip button is the hint); a connected pad names Start; otherwise the keyboard's Esc.
+        boolean touch = touchControls.isAvailable();
+        intro.skipHint(IntroScreen.skipHintFor(touch, !touch && gamepad.isConnected())); // a touch device never polls the pad here
         touchControls.updateSkip(); // a tap on the skip button leaves; it never also turns a page
         if (touchControls.skipPressed() || introInput.keyPressed(Input.Keys.ESCAPE) || introInput.keyPressed(Input.Keys.BACK) || gamepad.back() || gamepad.pausePressed()) intro.skip();
         else if (pressed || gamepad.anyButtonPressed()) intro.turn();

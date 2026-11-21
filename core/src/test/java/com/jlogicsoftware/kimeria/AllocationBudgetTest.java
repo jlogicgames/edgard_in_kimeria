@@ -1882,6 +1882,9 @@ class AllocationBudgetTest {
             Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
             IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
             assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
+            // The skip hint (D117): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
+            intro.setSkipHints(overlay.hintBlock("Esc: skip", 628f, IntroScreen.SKIP_HINT_TOP), overlay.hintBlock("Start: skip", 628f, IntroScreen.SKIP_HINT_TOP));
+            intro.skipHint(IntroScreen.SkipHint.KEYBOARD);
             // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
             TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
             int[] turned = new int[1];

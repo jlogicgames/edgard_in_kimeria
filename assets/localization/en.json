@@ -31,6 +31,8 @@
   "SHOOT": "Ranged",
   "LEFT_HANDED_LABEL": "Left-handed",
   "ROTATE_HINT": "Rotate the phone for a bigger picture",
+  "INTRO_SKIP_KEYBOARD": "Esc: skip",
+  "INTRO_SKIP_GAMEPAD": "Start: skip",
   "ASSIST": "Assist",
   "LONGER_TRAP_WARNINGS": "Longer trap warnings",
   "SCREEN_SHAKE": "Screen shake",

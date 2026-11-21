@@ -55,6 +55,7 @@ public class Overlay {
     private static final Color SELECTED_BORDER = new Color(1f, 0.82f, 0.3f, 1f);
     private static final Color IDLE_TEXT = new Color(0.78f, 0.78f, 0.82f, 1f);
     private static final Color HOVER_TEXT = Color.WHITE;
+    private static final Color HINT_GREY = new Color(0.8f, 0.8f, 0.8f, 1f);
     private static final Color SELECTED_TEXT = new Color(1f, 0.82f, 0.3f, 1f);
 
     private final BitmapFont titleFont;
@@ -179,6 +180,17 @@ public class Overlay {
         if (glyphs <= 0) return;
         blockQueue.add(block);
         blockGlyphs.add(glyphs);
+    }
+
+    /**
+     * Lays {@code text} out once in the small label font, grey and right-aligned at {@code rightX}, into a cache for
+     * {@link #queueBlock(BitmapFontCache, float)} (the intro's skip hint, D117). {@code yFromTop} is the top of the line.
+     */
+    public BitmapFontCache hintBlock(String text, float rightX, float yFromTop) {
+        GlyphLayout layout = new GlyphLayout(hintFont, text, HINT_GREY, 0f, Align.right, false);
+        BitmapFontCache block = new BitmapFontCache(hintFont, hintFont.usesIntegerPositions());
+        block.setText(layout, rightX, toTextY(yFromTop));
+        return block;
     }
 
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */

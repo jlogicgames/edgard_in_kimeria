@@ -29,6 +29,12 @@ public final class IntroScreen {
     /** Input is ignored this long after a page starts and after it is fully shown, so a held button cannot skip pages. */
     public static final float INPUT_LOCK_SECONDS = 0.6f;
     private static final float CUE_TOP = 330f;
+    /** The skip hint sits in the bottom right corner, under the page area ({@link IntroPages#PAGE_BOTTOM}) and clear of the cue. */
+    public static final float SKIP_HINT_MARGIN = 12f, SKIP_HINT_TOP = 338f;
+    /** The skip hint stays quiet: this fraction of full brightness (times the story's fade). */
+    public static final float SKIP_HINT_ALPHA = 0.55f;
+    /** Which skip hint is shown: the key of the input mode in use; touch shows none (its button is the hint, D77). */
+    public enum SkipHint { NONE, KEYBOARD, GAMEPAD }
     /** The page-turn cue sprite (art/hud/touch/cue.grid): a white triangle pointing down, this many px square. */
     public static final int CUE_SIZE = 8;
     private static final float CUE_PULSE_SPEED = 4f, CUE_ALPHA_BASE = 0.55f, CUE_ALPHA_SWING = 0.45f;
@@ -63,6 +69,8 @@ public final class IntroScreen {
     private float visibility;
     private float fadeOutStart;
     private float fadeElapsed;
+    private BitmapFontCache keyboardHint, gamepadHint;
+    private SkipHint skipHint = SkipHint.NONE;
 
     /** For tests and headless flows; {@code blocks} may be null when nothing is drawn. The cue sits at {@code screenWidth / 2}, like the text. */
     public IntroScreen(String text, IntroPages pages, BitmapFontCache[] blocks, boolean instant, float screenWidth, TextureRegion cue) {
@@ -128,6 +136,21 @@ public final class IntroScreen {
             letter |= Character.isLetter(c);
         }
         return letter;
+    }
+
+    /** The two cached skip hints, built once at load ({@link Overlay#hintBlock}); either may be null (tests). */
+    public void setSkipHints(BitmapFontCache keyboard, BitmapFontCache gamepad) {
+        keyboardHint = keyboard;
+        gamepadHint = gamepad;
+    }
+
+    /** Chooses the hint for the input mode in use; call each frame, it only stores a value. */
+    public void skipHint(SkipHint hint) { skipHint = hint; }
+    public SkipHint skipHint() { return skipHint; }
+
+    /** The mode order: touch (its button is the hint, no text) before a connected pad before the keyboard. */
+    public static SkipHint skipHintFor(boolean touch, boolean padConnected) {
+        return touch ? SkipHint.NONE : padConnected ? SkipHint.GAMEPAD : SkipHint.KEYBOARD;
     }
 
     /** Fades everything out now (Escape, Back): the one way to leave the story before its last page. */
@@ -231,6 +254,8 @@ public final class IntroScreen {
         if (blocks == null) return;
         for (int i = pages.first(page); i < pages.end(page); i++) overlay.queueBlock(blocks[i], paragraphAlpha(i));
         if (state == State.READING && phase == Phase.WAIT && lock <= 0f) drawCue(batch);
+        BitmapFontCache hint = skipHint == SkipHint.KEYBOARD ? keyboardHint : skipHint == SkipHint.GAMEPAD ? gamepadHint : null;
+        if (hint != null && state != State.DONE) overlay.queueBlock(hint, SKIP_HINT_ALPHA * visibility);
     }
 
     /** The cue sprite, pulsing: the page is complete and waits for the button (no words, so no catalog string). */

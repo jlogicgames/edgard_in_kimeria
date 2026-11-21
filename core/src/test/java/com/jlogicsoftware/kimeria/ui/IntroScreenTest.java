@@ -18,6 +18,14 @@ class IntroScreenTest {
 
     private static void waitOutTheLock(IntroScreen intro) { intro.update(IntroScreen.INPUT_LOCK_SECONDS); }
 
+    @Test void skipHintDefaultsToNoneAndHoldsTheChosenMode() {
+        IntroScreen intro = reading(false);
+        assertEquals(IntroScreen.SkipHint.NONE, intro.skipHint());
+        intro.skipHint(IntroScreen.SkipHint.GAMEPAD);
+        assertEquals(IntroScreen.SkipHint.GAMEPAD, intro.skipHint());
+        assertTrue(IntroScreen.SKIP_HINT_TOP > IntroPages.PAGE_BOTTOM, "the hint sits under the page area");
+    }
+
     @Test void fadesInFromBlackAndShowsNoTextUntilThePagesStart() {
         IntroScreen intro = story(false);
         assertEquals(1f, intro.alpha());
