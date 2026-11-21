@@ -48,6 +48,13 @@ combine the original item identity with a clean remastered finish. Record each a
 category, native dimensions, palette, alpha and filter. Inspect the actual exported
 pixels and the in-game result, not just the high-resolution source.
 
+## Branches grow from trunks (D122)
+
+A sprite drawn as a branch or a bough leaves its root open at the frame's edge, where it lies over a `Decor` trunk's bark. A branch
+that stays swells into a dark bark collar at the root; mark the root column with the grid key `J` and add the sheet to `RIM_KEEP`
+in `tools/forest_trap_sprites.py`, or the moon rim draws a pale cut across the joint. A branch that breaks off keeps its break at
+the trunk. See `docs/ART_DIRECTION.md`, "A branch always grows from a trunk (D122)".
+
 ## Viewpoint of interactive objects
 
 The author specified on 2026-10-23 that actionable world objects are seen on the

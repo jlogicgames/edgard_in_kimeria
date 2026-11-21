@@ -115,7 +115,8 @@ SPRITES = {
     'Decor:bush': ('decor', 'objects/decor-bush.png', (0, 0, 32, 24), 4, 'floor', FULL),  # brush frames are seen too (D64)
     'Decor:lookalike': ('decor', 'objects/decor-lookalike.png', (0, 0, 24, 16), 1, 'floor', FULL),
     'HangingVine': ('decor', 'objects/decor-vine.png', (0, 0, 8, 40), 1, 'top', FULL),
-    'Decor:trunk': ('decor', 'objects/decor-trunk.png', (0, 0, 16, 288), 1, 'floor', FULL),  # #349: behind the branches
+    'Decor:trunk': ('decor', 'objects/decor-trunk.png', (0, 0, 28, 288), 1, 'floor', FULL),  # #349: behind the branches
+    'Decor:snag': ('decor', 'objects/decor-snag.png', (0, 0, 28, 200), 1, 'floor', FULL),  # D122: the snapped trunk
     'Decor:crown': ('decor', 'objects/decor-crown.png', (0, 0, 96, 40), 1, 'top', FULL),  # #421: hung over a trunk
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),

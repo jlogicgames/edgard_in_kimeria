@@ -52,6 +52,12 @@ properties there rather than assuming libGDX's standard tiled loader behavior.
   `y = floor - 24` (add 16 in a layer offset by -16, as forest-2's SpawnPoints is); `tools/check_tiled_links.py`
   rejects an unknown kind or a bush not standing on a block. `kind` = `lookalike` (24x16, `y = floor - 16`) is the static pale look-alike
   tuft of the honey fungus pair (#299): at most two per map, after an active mushroom, never on an active mushroom's zone, a hint zone or a trap/pickup.
+- A branch always grows from a trunk (D122): a `Platform`/`FallingPlatform` with `skin=branch`, a `FallingBranch`, a `HangingHive`
+  or a `Deadfall` needs a `Decor` `trunk` (16x288 object, `y = floor - 288`; its 28 px sprite is centred, bark from x - 3 to x + 19)
+  or `snag` (16x200, a snapped dead tree for one that must stay below the moon) whose bark lies at least 3 px under the root:
+  a branch box starting at x takes the trunk object at x - 16; a `mirror` branch box starting at x takes it at x + 32.
+  `check_tiled_links.py` (`check_branch_roots`) names a floating branch. A trunk that crosses the moon breaks the decor ceiling
+  (`check_contrast.py`): use a snag there.
 - `HangingVine` (SpawnPoints, 8x40, no properties) is cosmetic scenery that sways when a falling stone lands within 160 px:
   place it with `y` = the room's top (add 16 in forest-2's offset SpawnPoints layer) and a `FallingStone` in the same room
   within reach; `tools/check_tiled_links.py` rejects a vine that hangs from nothing or that no stone can move. A map without a stone gets no vine.

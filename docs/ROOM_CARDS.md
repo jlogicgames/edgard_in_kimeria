@@ -117,7 +117,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | ingredient | `Collectable:Bat`, `Collectable:Mushroom` | collects a healer ingredient | pickup |
 | branch-climb | `Geometry:branch` (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) | skill |
 
-Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:crown`, `HangingVine`, `Torch`
+Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:snag` (D122), `Decor:crown`, `HangingVine`, `Torch`
 (decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (solid room walls, never grabbed since D121), `Collisions:Platform`
 (one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints`.
 

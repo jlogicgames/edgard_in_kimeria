@@ -89,7 +89,8 @@ DECOR_SHEETS = {
     'bush': ((32, 24), ('idle', 'brush1', 'brush2', 'settle')),
     'vine': ((8, 40), ('hang',)),  # #239 step 5: the stone-linked HangingVine
     'lookalike': ((24, 16), ('static',)),  # #299: the static look-alike, one frame, never animated
-    'trunk': ((16, 288), ('trunk',)),  # #349 (D80): the tree trunk behind the branches, one frame
+    'trunk': ((28, 288), ('trunk',)),  # #349 (D80): the tree trunk behind the branches, one frame; 28 wide since D122
+    'snag': ((28, 200), ('snag',)),  # D122: a dead tree's snapped trunk, for a branch whose tree must stop below the moon
     'crown': ((96, 40), ('crown',)),  # #421: the leaf crown hung over a trunk, one frame
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})

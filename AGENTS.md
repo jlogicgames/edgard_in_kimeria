@@ -148,6 +148,14 @@ palette with real hues (leaf green, bark brown, moss; not black, not grey ghosts
 depth; the sky, the moon and the gameplay objects keep theirs. Draw code stays
 allocation free (`AllocationBudgetTest`). Status: proposed, awaiting the author ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
 
+## Branches grow from trunks (D122)
+
+Every object drawn as a branch or hanging from a bough (sound and rotten branches, `FallingBranch`, the hive's and the deadfall's
+boughs) lays its root at least 3 px over the bark of a `Decor` trunk or snag on its root's side; `check_tiled_links.py`
+(`check_branch_roots`) fails a map where one floats. A branch that stays shows a bark collar at the joint, never a moon-rimmed cut end;
+a trunk stays decor (bark palette, not solid, drawn behind the play tiles). Placing or moving a branch means placing its tree: see
+`docs/ART_DIRECTION.md`, "A branch always grows from a trunk (D122)".
+
 ## Hints
 
 `Hud` draws two separate channels: the map-authored zone message (anchor at 45% down the zone,

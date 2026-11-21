@@ -4095,3 +4095,30 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **D38 (the ceiling):** the slab was added because climbed walls led out of the room. It stays, unchanged: it still closes every room from above for a jump, a thrown stone and a ledge's head start, and `RoomCeilingTest` keeps every assertion, now naming the reason as a guard.
 - **Tests:** assertions that existed only to prove "the hero never grabs a wall" are removed (`ForestWallsTest` its grab checks, `RoomReplayTest` the grab assertion and its jump-on-grab driver step, the `grabbed` flag of the leap scan); the routes and their measured times are unchanged. `JumpBufferTest`, `OneWayPlatformTest`, `Forest1CombatTest`, `TrapsLessonTest` and `RoomCeilingTest` lose the climbing words only; their sweeps (jumping against walls, the pit's lip, the tunnel block) are kept as they are. No threshold or tolerance changed. `WallContactTest` pins the new behaviour: a hero in the air pressing into forest-walls' first wall, with two jump presses, falls exactly as a hero with no input (same speed and height every frame, never pushed up).
 - **Not verified:** the feel of jumping beside a wall in the running game, desktop and web ([#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546) keeps that box open).
+
+## D122. A branch always grows from a trunk ([#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555), 2026-11-21)
+
+- **Status:** Accepted direction (author feedback, 2026-11-21: "All branches on all trees are not attached to the trunk. All branches,
+  not only the hive."); the redrawn trunk, snag and collars await the author's review in the running game.
+- **Context:** the play layer's trunk (`decor-trunk`, D80) was a 16 px frame with about 10 px of bark, while every branch box was
+  placed at the trunk's x - 32 or x + 16, so each sound branch, rotten branch and hive bough hung 1 to 3 px clear of the bark, and the
+  moon rim (D92) drew a pale line across the root at the frame's edge, which read as a cut end. Two falling branches (forest-1 x 3984
+  and x 6000) had no tree at all (#555).
+- **Rule:** every object drawn as a branch or hanging from a bough (`Platform` and `FallingPlatform` with `skin=branch`, `FallingBranch`,
+  `HangingHive`, `Deadfall`) lays its root at least 3 px over the bark of a trunk kind on the root's side, below the trunk's cap. A
+  trunk kind is a `Decor` kind drawn behind the play tiles (`behindTiles`): `trunk` and `snag`. A branch that stays shows a joint (a
+  dark bark collar, its root column kept out of the moon rim); a branch that breaks off keeps its break at the trunk (the falling
+  branch's cracked joint, its D71 cue; the rotten branch's end). Trunks are decor in the D120 bark palette, never solid, and are drawn
+  before the play tiles, so a ledge in front of a tree hides it. Gameplay boxes, triggers and timing are not changed by this rule.
+- **As built:** `decor-trunk` 28×288 (bark 23 px, x - 3 to x + 19 of its 16 px object); a new kind `snag` (28×200, a dead tree snapped
+  off 200 px up) for forest-1-mob, where a full trunk crossed the moon disc at the room's first camera (decor body 0.211, over the 0.20
+  ceiling); new trunks: a snag at forest-1 x 3968 and a trunk at x 5984 under a crown; forest-0's trunk and crown moved 8 px left (x 1728,
+  1688). Collars on `trap-perch`, `trap-hive` (rest to bare) and `trap-deadfall-bough` (its end grain removed); `RIM_KEEP` `J` for them.
+- **Gate:** `tools/check_tiled_links.py` `check_branch_roots` (`BranchRootLinksTest`, shipped maps included; the root columns and the
+  trunk's bark columns are typed in the tool from the grids).
+- **Measured (2026-11-21, `check_contrast.py`):** passes, no threshold changed. Root over bark: 3 to 9 px for all 21 branch objects (was
+  -9 to +3 px gap, two with no trunk). Active outlines at worst, before / after: hive 0.432 / 0.395, deadfall bough 0.452 / 0.430,
+  sound branch 0.410 / 0.388 (left copy 0.454 / 0.413), rotten branch 0.290 (unchanged sprite). Decor: trunk outline 0.076 to 0.144,
+  body at most 0.140 (was 0.074 to 0.133 / 0.142); snag outline 0.087 to 0.119, body at most 0.103; crown 0.026 to 0.165.
+- **References:** [ART_DIRECTION.md](ART_DIRECTION.md) "A branch always grows from a trunk (D122)"; [TRAPS.md](TRAPS.md) falling branch,
+  rotten branch, deadfall and hive cards.

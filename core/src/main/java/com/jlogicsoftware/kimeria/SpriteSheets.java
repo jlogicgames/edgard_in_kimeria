@@ -53,8 +53,11 @@ public final class SpriteSheets {
     public static final Sheet DECOR_VINE = new Sheet("images/objects/decor-vine.png", 8, 40);
     // Static look-alike mushroom scenery (#299): one frame, never animated; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_LOOKALIKE = new Sheet("images/objects/decor-lookalike.png", 24, 16);
-    // Tree trunk behind the branches (#349, D80): one frame; tools/sprite_layouts.py DECOR_SHEETS.
-    public static final Sheet DECOR_TRUNK = new Sheet("images/objects/decor-trunk.png", 16, 288);
+    // Tree trunk behind the branches (#349, D80): one frame; tools/sprite_layouts.py DECOR_SHEETS. 28 wide since D122 (the
+    // branches' roots lie over its bark), centred on its 16 px object.
+    public static final Sheet DECOR_TRUNK = new Sheet("images/objects/decor-trunk.png", 28, 288);
+    // A dead tree's snapped trunk (D122): one frame, 200 px tall, for a branch whose tree must stop below the moon.
+    public static final Sheet DECOR_SNAG = new Sheet("images/objects/decor-snag.png", 28, 200);
     // Leaf crown hung over a trunk (#421): one frame; tools/sprite_layouts.py DECOR_SHEETS.
     public static final Sheet DECOR_CROWN = new Sheet("images/objects/decor-crown.png", 96, 40);
     // The hero (#343, D79): 64x64 cells, one clip per row; tools/sprite_layouts.py HERO_SHEETS, drawn from art/hero/hero.grid.

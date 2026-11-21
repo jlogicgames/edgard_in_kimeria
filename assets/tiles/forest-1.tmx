@@ -483,6 +483,21 @@
   </object>
   <object id="137" name="Hive Ladder" type="Ladder" x="6608" y="208" width="16" height="112"/>
   <object id="138" name="Stone" type="Stone" x="6336" y="308" width="12" height="12"/>
+  <object id="2" name="Snag" type="Decor" x="3968" y="120" width="16" height="200">
+   <properties>
+    <property name="kind" value="snag"/>
+   </properties>
+  </object>
+  <object id="9" name="Trunk" type="Decor" x="5984" y="32" width="16" height="288">
+   <properties>
+    <property name="kind" value="trunk"/>
+   </properties>
+  </object>
+  <object id="12" name="Crown" type="Decor" x="5944" y="0" width="96" height="40">
+   <properties>
+    <property name="kind" value="crown"/>
+   </properties>
+  </object>
   <object id="139" name="Trunk" type="Decor" x="6424" y="32" width="16" height="288">
    <properties>
     <property name="kind" value="trunk"/>

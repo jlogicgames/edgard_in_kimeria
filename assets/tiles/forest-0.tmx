@@ -416,12 +416,12 @@
     <property name="kind" value="bush"/>
    </properties>
   </object>
-  <object id="102" name="Trunk" type="Decor" x="1736" y="32" width="16" height="288">
+  <object id="102" name="Trunk" type="Decor" x="1728" y="32" width="16" height="288">
    <properties>
     <property name="kind" value="trunk"/>
    </properties>
   </object>
-  <object id="103" name="Crown" type="Decor" x="1696" y="0" width="96" height="40">
+  <object id="103" name="Crown" type="Decor" x="1688" y="0" width="96" height="40">
    <properties>
     <property name="kind" value="crown"/>
    </properties>

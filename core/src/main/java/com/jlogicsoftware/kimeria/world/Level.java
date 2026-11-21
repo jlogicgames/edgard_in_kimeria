@@ -1801,8 +1801,10 @@ public class Level implements WorldObject {
 
     public void render(Batch batch, Rectangle visibleWorldRect) {
         if (!parallax.isEmpty()) parallax.renderBack(batch, visibleWorldRect, ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height));
+        // D122: a trunk is drawn behind the play tiles, so a tree whose branch hangs under a ledge passes behind that ledge.
+        for (int i = 0; i < decor.size(); i++) if (decor.get(i).behindTiles()) decor.get(i).render(batch);
         renderBackground(batch, visibleWorldRect);
-        for (int i = 0; i < decor.size(); i++) decor.get(i).render(batch);
+        for (int i = 0; i < decor.size(); i++) if (!decor.get(i).behindTiles()) decor.get(i).render(batch);
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
         fairy.renderBehind(batch); // the target glows: light behind the objects, the objects stay crisp (D82)
         for (int i = 0; i < staticPlatforms.size(); i++) staticPlatforms.get(i).render(batch);

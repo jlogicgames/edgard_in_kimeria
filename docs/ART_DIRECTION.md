@@ -734,7 +734,7 @@ depends on it.
   allocated in `render`, no pool needed. The sheet adds to the web download only by its size (one strip
   of 128×24 px).
 - **Status: built (step 4).** `entity/objects/Decor.java`; `Level.decor` (a list apart from `objects`, cleared
-  with the room, updated in `updateWorld`, drawn right after `renderBackground`); the sheet is exported from
+  with the room, updated in `updateWorld`, drawn right after `renderBackground`; a trunk kind just before it, D122); the sheet is exported from
   the hand-authored `art/objects/decor/bush.grid` by `tools/forest_trap_sprites.py decor:bush` (layout
   `DECOR_SHEETS` in `tools/sprite_layouts.py`, contract in `validateSpriteArt`). `kind` is checked at load and
   by `tools/check_tiled_links.py`, which also requires the bush's bottom edge (`y + height`) to equal the top of
@@ -749,6 +749,25 @@ depends on it.
   on the same grid measures outline 0.157, inside the 0.20 decor ceiling by 0.043; the lighter greens keep the crown, the
   largest decor sprite and hung in open sky, about halfway under it. A hanging kind (`hangs` in `Decor.KINDS`): its top edge is on the
   room's top or a solid's underside, not its bottom edge on a solid. First placed in forest-0-wall over the falling branch.
+- **A branch always grows from a trunk ([D122](DECISIONS.md#d122-a-branch-always-grows-from-a-trunk-555-2026-11-21)).** Every
+  object drawn as a branch or hanging from a bough (the sound and rotten branches, `Platform` and `FallingPlatform` with
+  `skin=branch`; `FallingBranch`; the `HangingHive`'s bough; the `Deadfall`'s bough) lays its root at least 3 px over the bark of
+  a trunk kind, on the root's side and below the trunk's cap; `tools/check_tiled_links.py` (`check_branch_roots`, tested by
+  `BranchRootLinksTest`, shipped maps included) fails a map where one does not. A trunk is a `Decor` kind drawn behind the play
+  tiles (`behindTiles` in `Decor.KINDS`): `trunk`, and `snag`, a dead tree snapped off 200 px up (`decor-snag` 28×200,
+  `art/objects/decor/snag.grid`: a typed snapped top over the trunk's rows 94-287 copied as typed) for a tree that must stop below
+  the moon. Trunks are drawn before the play tiles, so a ledge in front of a tree hides it (forest-1-bramble). `decor-trunk` is
+  28×288 since D122 (was 16 px): its bark is 23 px (frame columns 3 to 25, from the object's x - 3 to x + 19), so a branch whose
+  box starts at the trunk's x + 16, or ends at its x - 1, lays 3 to 4 px of root over the bark; the middle bark columns were
+  copied from the 16 px drawing, the top five rows and the roots retyped. A branch that stays (the sound branch, the hive's and
+  the deadfall's boughs) shows a joint where it meets the trunk: its root swells a row up and down into a dark bark collar
+  (`4a2e1c`), and its root column (grid `J`) is kept out of the moon rim (`RIM_KEEP` in `tools/forest_trap_sprites.py`), which
+  otherwise drew a pale cut across the joint at the frame's edge. A branch that breaks off keeps its break at the trunk: the
+  falling branch's cracked joint (#361, its D71 cue) and the rotten branch's rimmed end lie on the bark. Decor tier over the
+  shipped layers: trunk outline 0.076 to 0.144, body at most 0.140; snag outline 0.087 to 0.119, body at most 0.103. A full trunk
+  at forest-1-mob x 3968 crossed the moon disc at the room's first camera (body 0.211, over the 0.20 ceiling), so that tree is a snag.
+  Previews: `docs/references/forest-traps/decor-trunk-preview.png`, `decor-snag-preview.png`, `perch-preview.png`, `hive-preview.png`,
+  `deadfall-bough-preview.png`. Status: built; the look awaits the author's review.
 - **Placement (all levels, by hand, standing on the ground floor away from traps, pickups, checkpoints and exits):**
 
 | Map | Bushes | World x (left edge) |
@@ -1480,7 +1499,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-stone` | 16×16 | stone, cracked | boulder and impact frame |
 | `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 8, forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
 | `trap-deadfall` | 32×16 | tied, strain, slip, swing, caught | the trip-line deadfall's log (#363, D88): a 24×10 bark log seen broadside with its end grain (`e8c890`/`9c6a34`) on the left; tied/strain/slip carry the bone lashing (`efe6c4`/`b8ad9c`) up to the bough, strain adds frayed fibres, slip draws the log one row lower; swing has three bone speed streaks on its trailing side; caught has a frayed cord stub. Rope eyes at x 8 and 23, row 4. Active tier, worst outline 0.410 tied (forest-1-deadfall; the same over the old sky and the D92 background) |
-| `trap-deadfall-bough` | 112×24 | bough | the bough the deadfall hangs from: the sound branch's bark (`4a2e1c`/`8a5a30`/`c08a4c`), two bone rope knots at x 40 and 55, a bare snag from its underside to (8, 17) where the log ends, a leaf tuft at the thin end, end grain at the thick end that meets a `Decor:trunk`; mirrored for `swing=right`. Outline 0.464 |
+| `trap-deadfall-bough` | 112×24 | bough | the bough the deadfall hangs from: the sound branch's bark (`4a2e1c`/`8a5a30`/`c08a4c`), two bone rope knots at x 40 and 55, a bare snag from its underside to (8, 17) where the log ends, a leaf tuft at the thin end; its thick end grows from a `Decor:trunk` (D122): no end grain since 2026-11-21 (a sawn end read as cut), it swells a row up and down into a dark bark collar open at the frame's edge (`J`, never moon-rimmed), 7 px over the bark; mirrored for `swing=right`. Outline 0.464 when drawn, 0.452 over the D120 layers before the collar, 0.430 after |
 | `trap-deadfall-vine` | 24×8 | taut, tugged, cut | the trip vine: bone (`efe6c4`/`b8ad9c`) between two dark pegs, 4 px over the floor; tugged into a V during the warning, cut in two after the release. Outline 0.323 taut |
 | `trap-deadfall-rope` | 1×8 | rope | a twisted bone cord strip the game stretches and rotates from a knot to a log eye (as the silver thread's strand) |
 | `trap-shadow` | 24×8 | small, medium, large | near-black ground shadow (growing warning); the renderer may tint or scale |
@@ -1489,7 +1508,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-vine` | 24×40 | hang, swing-left, swing-right | anchored top centre; pendulum by swing frames or rotation |
 | `trap-log` | 32×16 | intact, crumble1, crumble2 | rotten log bridge, same footprint as `platform.png` |
 | `trap-honey-fungus` | 24×16 | idle1, idle2, idle3, swell1, swell2, spent | harmless honey fungus: three honey-brown caps, bone stems **with rings** (#295, D63; drawn by `HoneyFungus`, the sprites still await the author's review) |
-| `trap-hive` | 24×32 | rest, shake1, shake2, release, bare, falling, fallen | hanging hive (#365, D90): a paper wasp hive in the danger family (rose and crimson, never the walk cue's straw) on a bough drawn into the top 5 rows, the bough the frame's top edge; `shake2` and `release` show stinger tips; `bare`, `falling` and `fallen` are the knock-down; specks are `KIND_GRIT` particles |
+| `trap-hive` | 24×32 | rest, shake1, shake2, release, bare, falling, fallen | hanging hive (#365, D90): a paper wasp hive in the danger family (rose and crimson, never the walk cue's straw) on a bough drawn into the top 5 rows, the bough the frame's top edge; the bough's root (column 0) swells into a 2 px collar over rows 0-5 that lies 4 px over a `Decor:trunk`'s bark (D122; the root column `J` is never moon-rimmed, so no pale cut crosses the joint; outline 0.432 before, 0.395 after, at worst); `shake2` and `release` show stinger tips; `bare`, `falling` and `fallen` are the knock-down; specks are `KIND_GRIT` particles |
 | `trap-stingers` | 8×16 | fall1, fall2 | the hive's lethal band, drawn a row at a time from the mouth to the solid, the pattern moving down with the stream: rose `c87896` shafts with ink `0b0814` tips (the tips are what read on the mid-blue sky: 0.401) |
 | `trap-fissure` | 16×12 | rest1, rest2, warn1, warn2, vent, spent | ember fissure (#366, D91): an ash crust on the floor line (top = floor − 4) with a pale `d8d6e8` sky-facing rim and a glowing slit; the frames step the slit through the ember palette (dull red at rest, pulsing every 0.5 s; orange, then yellow with the lips lifted in the warning; white-hot `vent` during the jet; sooted `spent` for 0.4 s after); the rising and falling sparks are `KIND_GLOW` particles. Drawn for the night of D92: the light rim and the ink crack against the floor carry the outline, not ink against the sky |
 | `trap-ember-jet` | 8×16 | jet1, jet2, top1, top2 | the fissure's lethal column, drawn a row at a time up from the floor line (`jet1`/`jet2` swapped every 0.05 s so the flame climbs) under the 8 px tip (`top1`/`top2`, the upper half of the frame): orange `f07a1a` and yellow `ffd23a` edges around a white-hot `fff4b0` core, a red-orange `d8461c` fleck inside |
