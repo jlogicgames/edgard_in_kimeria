@@ -1,0 +1,99 @@
+# The escalator, a lift bar that rides back and forth (Escalator.java): native 32x8 frames, hand-typed (#236, replacing the
+# inherited grey bar with no source). Exported by tools/export_object_sprites.py (export_escalators): frame off is
+# assets/images/objects/GreyOff.png, frames on1..on8 are GreyOn.png (one row), both with the moon rim (D92).
+# Active family (ART_DIRECTION colour by meaning, "Mechanisms"): the top row, the part you stand on, is the walk cue straw
+# `e1cfa5` in both states. Stopped (off): a dull steel body with four bolts and the hub's blade upright in steel. Running
+# (on1..on8): the body is a dark belt with straw-shade `c4b07e` chevrons (period 8 px) that move 1 px per frame toward the
+# way the bar travels (Escalator mirrors the frame with its direction), and the hub's blade, in straw, turns an eighth of
+# a turn per frame round its lit boss: a single frame reads as running at play scale. Row 2 is the bar's top, rows 3-5
+# its body, row 6 its ink underside, row 7 the axle bracket.
+size 32 8
+color k 211f30
+color S e1cfa5
+color s c4b07e
+color m 858d99
+color g 62677a
+color a afbbc3
+color d 48475b
+color H 35334a
+frame off
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHggHkSSSSSSSSSSSS.
+kmmmmmmmmmmmmkHggHkmmmmmmmmmmmmk
+kgggaggggagggkHggHkgggaggggagggk
+kddddddddddddkHggHkddddddddddddk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on1
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHSSHkSSSSSSSSSSSS.
+ksHHHHHHssHHHkHSSHkHHHHHssHHHHHk
+kssHHHHHHssHHkHSSHkHHHHHHssHHHHk
+ksHHHHHHssHHHkHSSHkHHHHHssHHHHHk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on2
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHHHSkSSSSSSSSSSSS.
+kssHHHHHHssHHkHSSHkHHHHHHssHHHHk
+kHssHHHHHHssHkHSSHksHHHHHHssHHHk
+kssHHHHHHssHHkSHHHkHHHHHHssHHHHk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on3
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHHHHkSSSSSSSSSSSS.
+kHssHHHHHHssHkSSSSksHHHHHHssHHHk
+kHHssHHHHHHsskSSSSkssHHHHHHssHHk
+kHssHHHHHHssHkHHHHksHHHHHHssHHHk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on4
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkSHHHkSSSSSSSSSSSS.
+kHHssHHHHHHsskHSSHkssHHHHHHssHHk
+kHHHssHHHHHHskHSSHkHssHHHHHHssHk
+kHHssHHHHHHsskHHHSkssHHHHHHssHHk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on5
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHSSHkSSSSSSSSSSSS.
+kHHHssHHHHHHskHSSHkHssHHHHHHssHk
+kHHHHssHHHHHHkHSSHkHHssHHHHHHssk
+kHHHssHHHHHHskHSSHkHssHHHHHHssHk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on6
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHHHSkSSSSSSSSSSSS.
+kHHHHssHHHHHHkHSSHkHHssHHHHHHssk
+kHHHHHssHHHHHkHSSHkHHHssHHHHHHsk
+kHHHHssHHHHHHkSHHHkHHssHHHHHHssk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on7
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkHHHHkSSSSSSSSSSSS.
+kHHHHHssHHHHHkSSSSkHHHssHHHHHHsk
+kHHHHHHssHHHHkSSSSkHHHHssHHHHHHk
+kHHHHHssHHHHHkHHHHkHHHssHHHHHHsk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............
+frame on8
+................................
+..............kkkk..............
+.SSSSSSSSSSSSkSHHHkSSSSSSSSSSSS.
+kHHHHHHssHHHHkHSSHkHHHHssHHHHHHk
+ksHHHHHHssHHHkHSSHkHHHHHssHHHHHk
+kHHHHHHssHHHHkHHHSkHHHHssHHHHHHk
+.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.
+..............kddk..............

@@ -2723,7 +2723,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     `GLOW_MIN` 0.80);
   - the inherited sheets get the rim through the CLI as an interim, every frame (cell in brackets): `enemy/Bat.png`
     (16×16, `--pad`: its last row is 8 px), `enemy/Mobs.png`, `enemy/yellow_mob.png` (48×32), `objects/GreyOff.png`
-    and `objects/GreyOn.png` (32×8), and the author's `enemy/Boss.png` (48×32). They have no source to re-export from, so
+    and `objects/GreyOn.png` (32×8; since 2026-11-21 drawn in `art/objects/escalator.grid` and rimmed by
+    `export_object_sprites.export_escalators`, #236), and the author's `enemy/Boss.png` (48×32). They have no source to re-export from, so
     the rim is in the shipped PNG; the redraws of [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)
     follow this rule instead;
   - where it is on: the hero (all three sheets); the traps `bomb`, `bramble`, `branch`, `deadfall`, `deadfall-bough`,

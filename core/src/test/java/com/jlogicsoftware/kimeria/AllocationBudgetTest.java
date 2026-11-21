@@ -1359,7 +1359,7 @@ class AllocationBudgetTest {
             () -> hero, () -> true, kill);
     }
 
-    /** Ten plain falling platforms at rest (#362): the fan animation with the cracked slab (the D71 cue), {@code update} and {@code render}, each frame. */
+    /** Ten plain falling platforms at rest (#362): the rope sway of the split plank (the D71 cue, #236), {@code update} and {@code render}, each frame. */
     @Test void fallingPlatformCrackAtRest() {
         FallingPlatform[] platforms = new FallingPlatform[FUNGUS_CYCLES];
         for (int i = 0; i < platforms.length; i++)
@@ -1505,7 +1505,7 @@ class AllocationBudgetTest {
     private static final float HIVE_TOP = 232, HIVE_PHASE_STEP = 1f;
     /** The hero's left edge this far right of a thorn root's left edge: inside its zone, clear of the 6 px column (5 to 11). */
     private static final float THORN_BESIDE = 12;
-    /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17): ten plain falling platforms at rest, the fan animation with the cracked slab, update and render; the same 8 B ceiling as the other isolated paths. */
+    /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17): ten plain falling platforms at rest, the animation of the split plank (then the fan and the cracked slab), update and render; the same 8 B ceiling as the other isolated paths. */
     static final double FALLING_PLATFORM_REST_CEILING = 8;
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, FALLING_STONE_CUE_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
