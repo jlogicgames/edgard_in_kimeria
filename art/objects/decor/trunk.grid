@@ -8,14 +8,15 @@
 # The mean lightness stays at the old pole's (OKLab L about 0.23) so it stays quiet on forest-1's near-black play band
 # and forest-0's night blue alike (check_contrast.py, decor tier); values in docs/ART_DIRECTION.md.
 size 16 288
-color f 101116
-color d 16171d
-color m 1b1c23
-color r 24262f
-color l 2f3340
-color h 3a4258
-color g 1a2322
-color k 0b0c10
+# Depth palette (D120, 2026-11-21): the same lightness per key in bark brown (hue 62, C 0.026), moss g, lit edge h a lichen grey.
+color f 1a0f06
+color d 20150b
+color m 251a10
+color r 302419
+color l 3d3126
+color h 454339
+color g 1b2416
+color k 140a03
 frame trunk
 ................
 .....fdmrl......

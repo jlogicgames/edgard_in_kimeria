@@ -2,34 +2,35 @@
 # A piece is <wtiles> x <htiles> tiles; its rows are wtiles*tile characters wide.
 # grove-a, b, c in this order form one seamless 768 px strip from tile row 5 down to row 23 (19 rows: the view ends at room y 368, plus one row for the shake).
 tile 16
-color 0 000002
-color 1 000003
-color 2 000004
-color 3 000005
-color 4 000006
-color 5 000007
-color 6 010009
-color 7 01010b
-color 8 01010c
-color 9 01010e
-color a 020210
-color b 020312
-color c 020314
-color d 030416
-color e 040518
-color f 04061a
-color g 05071c
-color h 06091e
-color i 070a20
-color j 080c22
-color k 090d24
-color l 0a0f26
-color m 0b1028
-color n 0d122a
-color o 0e142c
-color p 0f152e
-color q 111730
-color r 121832
+# Depth palette (D120, 2026-11-21): every key is L x1.80 + 0.055, C 0.030, hue 257: lighter and greyer than mid.
+color 0 020612
+color 1 020814
+color 2 030a16
+color 3 040b17
+color 4 050c19
+color 5 050d1a
+color 6 09121f
+color 7 0e1825
+color 8 0f1826
+color 9 101a27
+color a 151f2d
+color b 192331
+color c 1a2432
+color d 1e2836
+color e 212b3a
+color f 242e3c
+color g 273140
+color h 2b3544
+color i 2d3847
+color j 313c4b
+color k 343e4e
+color l 374252
+color m 3a4554
+color n 3e4958
+color o 424d5c
+color p 444f5f
+color q 485363
+color r 4a5666
 
 # Bleed (vertical parallax 0.25): every piece runs 3 tile rows past the room bottom (y 368 to 416), the foot dither.
 piece grove-a 16 19

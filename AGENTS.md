@@ -143,7 +143,9 @@ and `./gradlew :core:test` must pass. Never add an allowlist entry for new text:
 The forest maps draw scenery layers (a tile layer with `parallaxx`/`parallaxy` or the property `scenery=true`) behind the play layer and a
 `foreground-<room>` object group in front of the world (`world.ParallaxRenderer`; maths and card: `docs/ART_DIRECTION.md`, "Forest look and
 parallax layers"). A change to a layer or a foreground piece goes through `tools/parallax_game.py`, then `python3 tools/parallax_mock.py --check
---game` (`validateParallax`) must pass: the foreground never covers a protected object (rule B) and never hides the hero. Draw code stays
+--game` (`validateParallax`) must pass: the foreground never covers a protected object (rule B) and never hides the hero. Colours follow depth (D120): the foreground and the decor tier take a neutral dark
+palette with real hues (leaf green, bark brown, moss; not black, not grey ghosts), and mid, grove and far turn bluer, lighter and greyer with
+depth; the sky, the moon and the gameplay objects keep theirs. Draw code stays
 allocation free (`AllocationBudgetTest`). Status: proposed, awaiting the author ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
 
 ## Hints

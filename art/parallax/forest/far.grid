@@ -2,40 +2,41 @@
 # A piece is <wtiles> x <htiles> tiles; its rows are wtiles*tile characters wide.
 # ridge-a, b, c, d in this order form one seamless 512 px strip from tile row 7 down to row 23 (17 rows: the view ends at room y 368, plus one row for the shake).
 tile 16
-color 0 000003
-color 1 000004
-color 2 000005
-color 3 000007
-color 4 010008
-color 5 01010a
-color 6 01010c
-color 7 01010d
-color 8 01020f
-color 9 020211
-color a 020313
-color b 030415
-color c 030517
-color d 040619
-color e 05071b
-color f 05081c
-color g 06091e
-color h 070b20
-color i 080c22
-color j 090e24
-color k 0b0f26
-color l 0c1128
-color m 0d122a
-color n 0e142c
-color o 10162f
-color p 111731
-color q 121933
-color r 141a35
-color s 151c37
-color t 161e39
-color u 181f3b
-color v 19213d
-color w 1a2340
-color x 1c2442
+# Depth palette (D120, 2026-11-21): every key is L x1.30 + 0.040, C 0.026, hue 263: the palest, greyest layer.
+color 0 01030a
+color 1 01030c
+color 2 02040d
+color 3 02050e
+color 4 030711
+color 5 050a15
+color 6 060b16
+color 7 060c17
+color 8 090e1a
+color 9 0a101c
+color a 0c121e
+color b 0f1521
+color c 111723
+color d 131925
+color e 151b28
+color f 161d29
+color g 181e2b
+color h 1a212e
+color i 1c232f
+color j 1f2532
+color k 202734
+color l 232a37
+color m 252b39
+color n 272e3b
+color o 2a313e
+color p 2c3340
+color q 2e3543
+color r 303745
+color s 323a47
+color t 353c4a
+color u 373e4c
+color v 39414f
+color w 3c4351
+color x 3e4553
 
 # Bleed (vertical parallax 0.15): every piece runs 2 tile rows past the room bottom (y 368 to 400), the foot colour.
 piece ridge-a 8 17

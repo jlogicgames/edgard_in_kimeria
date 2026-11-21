@@ -1788,6 +1788,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - [D64](#d64-feel-fixes-for-the-239-environment-effects-landing-dust-bush-trigger-looping-wall-rumble-2026-11-13):
     the bush trigger and frames are unchanged.
 - **Not sufficient alone:** contrast does not make a trap read as a trap; D71's silhouette and cue rules still apply.
+- **Update 2026-11-21 ([D120](#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21)):** the decor tier is drawn in a neutral dark palette with real hues (leaf green,
+  bark brown, moss), not slate, teal or grey; the limits above are unchanged and every decor sprite passes them over the new layers.
 - **Enforcement:** `tools/check_contrast.py` (test `tools/test_check_contrast.py`, Gradle `testContrastGate`, run
   before the gate), Gradle `validateContrast` in `:core:check`, the desktop jar and the web release build. It fails an
   active sprite under the floor (the lever in both frames), a decor sprite over a ceiling or under the body floor, and any object type in
@@ -3701,6 +3703,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Update ([#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571), 2026-11-21, [D117](#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)):** the monster bodies are no longer held in the decor band
   (outline 0.08 to 0.20): they keep their live palette and are measured as active at every spot of `BODY_SWEEP`.
 
+- **Update 2026-11-21 ([D120](#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21)): the depth palette.** The foreground's one neutral near-black palette (`030303` with a blue moon rim) gives way to dark real colours (leaf green, a bark brown on
+  the wood pieces, a grey-green moon rim), and mid, grove and far are no longer one near-black blue: each is lighter, bluer and greyer than the
+  layer in front of it. Targets and measurements in D120; the maths, the draw order and the gates are unchanged.
+
 ## D109. A skill's first meeting has a pocket in view and calm, and the false honey fungus has a trip-and-stand pocket (#500, #499)
 
 - **Status:** Accepted (author, 2026-11-20: decisions 1 and 2 of the batch-4 design). Gate built (`FirstMeetingPocketTest.skillPocket`, new
@@ -4026,3 +4032,53 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   stopped and the body whole), `aFireballBurnsTheBodyAndFliesOnUnslowed` (the ball's step is unchanged on every frame across the body),
   `aMonsterWalkingThroughTheBodyRocksIt`, `DecorTest.aMonsterWalkingThroughABushMakesItSway`. `SpiderTest` and the torch test keep the
   burn. No tolerance changed.
+
+## D120. Depth palette: the near layers take dark real colours, the scenery turns bluer, lighter and greyer with depth ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-21)
+
+- **Status:** Accepted (author, 2026-11-21: "I approve the direction"). Amends [D108](#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236)
+  (the foreground's one neutral near-black palette and the layers' near-black blue) and
+  [D76](#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16) (what colour the decor tier is drawn in); every
+  threshold is unchanged.
+- **Context:** the author, 2026-11-21, after approving the monster bodies in their live colours (D117): "Do the same for the bushes, trees
+  and other things in the foreground: don't filter them and darken them to zero. Draw them in a neutral dark palette with dark colours, so
+  they don't distract but don't look like ghosts either. The second and third layers and beyond are dark blue." Before, the foreground was
+  near black (`030303`, L 0.097) with a blue moon rim (L 0.64), the decor a grey slate or teal, and mid, grove and far all one near-black
+  blue (L 0.03 to 0.27, hue 272), so the layers did not separate by depth.
+- **Rule:**
+  - **Near layers** (the foreground pieces of `fg.grid` and the near pieces, D113; the decor tier in the play layer: the `Decor` kinds,
+    `HangingVine`, the canopy clump and the floor tufts and props of the terrain sheet) take a **neutral dark palette with real hues**:
+    leaves a dark leaf green (hue 135 to 145), wood a bark brown (hue 55 to 65), moss a moss green, low in value (L 0.13 to 0.38) and in
+    chroma (C 0.015 to 0.036). They are colours, not near-black silhouettes and not grey ghosts; they read as plants and wood and stay quiet.
+    The foreground's moon rim is a moonlit grey-green (L 0.52, C 0.03), not the blue `7d8db0`.
+  - **Scenery layers** turn **bluer, lighter and less saturated with depth** (atmospheric perspective toward the night sky): every key of
+    a layer's ramp keeps its order, so the shapes, mist bands and darkening toward the foot stay as drawn.
+  - **Unchanged:** the sky, stars, moon and clouds; the play layer's gameplay objects (terrain, traps, monsters, hero, pickups, mechanisms).
+- **Targets (OKLab L / C / hue):**
+
+  | Layer | Before | After |
+  |---|---|---|
+  | Foreground leaves (`a b k l m`) | L 0.07 to 0.32, C 0 to 0.04, neutral or blue | L 0.13 to 0.29, C 0.024 to 0.036, hue 130 to 150 |
+  | Foreground wood (`trunk-near`, `roots-curtain`, `rise-trunk`: keys `A B K L M`, `G H I` fringe) | the leaf palette | L 0.13 to 0.29, C 0.020 to 0.030, hue 62 to 72 |
+  | Foreground rim (`d e f`, `j`) | L 0.64 / 0.40 / 0.26, hue 267 | L 0.52 / 0.37 / 0.27, C 0.03, hue 155 to 167 |
+  | Decor bush, crown, canopy clump | L 0.15 to 0.31, slate (hue 248) or teal (hue 169 to 196) | the same L, C 0.03, hue 145 |
+  | Decor vine | L 0.30 to 0.35, teal-olive | the same L, C 0.03, hue 136; contour bark |
+  | Decor trunk | L 0.16 to 0.38, slate (hue 275) | the same L, C 0.026, hue 62; moss hue 135; lit edge a lichen grey (C 0.016, hue 95) |
+  | Look-alike mushroom | L 0.15 to 0.24, violet-grey | one step lighter, L 0.20 to 0.29: caps a mushroom grey-brown (hue 60), stems grey-beige (hue 85) |
+  | Terrain-sheet props (#189) | contour `222034` (violet), sign ochre L 0.43 to 0.70, tufts teal-moss L 0.36 to 0.51 | contour bark L 0.275, sign a dark wood ramp L 0.25 to 0.41 (hue 64), tufts moss L 0.28 to 0.36 |
+  | Mid (0.4) | L 0.03 to 0.20, C 0.04, hue 274 | L = 1.75 L + 0.045: 0.10 to 0.39, C 0.034, hue 250 |
+  | Grove (0.25) | L 0.04 to 0.22, C 0.05, hue 275 | L = 1.80 L + 0.055: 0.12 to 0.45, C 0.030, hue 257 |
+  | Far (0.15) | L 0.04 to 0.27, C 0.05, hue 272 | L = 1.30 L + 0.040: 0.10 to 0.39, C 0.026, hue 263 |
+
+  At their tops the trunks and spruces now step mid 0.19, grove 0.24, far 0.26 (were 0.085, 0.10, 0.165): lighter with depth.
+- **How it was made:** palette lines only, typed into the grids (`art/parallax/forest/{fg,mid,grove,far}.grid`,
+  `art/objects/decor/*.grid`, the keys `u v w A B D E F H I J K` of `art/terrain/forest/terrain.grid`); the wood pieces of `fg.grid` swap
+  their keys for the bark keys. No pixel, frame or size changed; exported with `tools/parallax_sprites.py`, `tools/terrain_sprites.py`,
+  `tools/forest_trap_sprites.py` and installed with `tools/parallax_game.py`.
+- **Measured (2026-11-21, `check_contrast.py`, every placement over the new layers):** passes. The lighter layers lower every active
+  outline; the thinnest margins over the 0.28 floor: `Spider:body` 0.284 (0.285 before), `FallingPlatform:branch` 0.290 (unchanged),
+  `ThornVine` 0.300 (was 0.346), `FallingStone` 0.302 (was 0.315). Decor: bush outline 0.120 to 0.135, trunk 0.077 to 0.133, crown 0.025
+  to 0.168, hanging vine 0.099 to 0.100, look-alike 0.129 to 0.130 (body 0.130; it measured 0.076, under the 0.08 floor, over the new
+  layers until it was lifted). Tile props, report only: sign outline 0.150, tile bush 0.197, dead tree 0.164 (body 0.183), all under the
+  decor ceilings now (the sign was 0.223 body before). `parallax_mock.py --check --game`: passes, the same output as before (the cover
+  rules read alpha, not colour).
+- **Not changed:** no threshold or tolerance; the drawings and the foreground placements; the sky, the moon and the clouds.

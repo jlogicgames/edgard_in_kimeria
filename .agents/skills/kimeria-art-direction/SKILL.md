@@ -13,7 +13,8 @@ How art fits the rest of the game's style (readable before lethal, a hazard warn
 (D76 and the "Contrast tiers" section of ART_DIRECTION.md; gate `python3 tools/check_contrast.py`, `validateContrast`).
 Open levels are at night (`2c3f66`, D92): measure over it, and where an ink contour falls under the floor give the sheet
 the moon rim through its exporter flag (`tools/moon_rim.py`), never by hand; keep a trap's ink cue out of it (`RIM_KEEP`);
-decor takes a night palette instead (35 % toward the background);
+decor and the foreground take the depth palette instead (D120: a neutral dark palette with real hues, leaf green, bark brown,
+moss; never near black, never grey or slate), and the scenery layers turn bluer, lighter and greyer with depth;
 use [kimeria-trap-design](../kimeria-trap-design/SKILL.md) for anything that can kill.
 The author clarified the scope on 2026-10-22 after seeing detailed icons used in
 world gameplay. Choose the asset's destination BEFORE choosing a style or reference.

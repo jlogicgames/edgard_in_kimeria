@@ -7,11 +7,12 @@
 # no violet (violet is the FallingBranch's bud accent). Not solid, never moves.
 # Layered-forest recolour (#236, D112): OKLab L x0.55, hue kept, over the new layers outline 0.036 to 0.184, body 0.144 to 0.190.
 size 96 40
-color k 162929
-color d 1b2e29
-color m 1f322b
-color l 23362d
-color n 2d3022
+# Depth palette (D120, 2026-11-21): the same lightness per key in a dark leaf green (hue 145, C 0.03), olive tips n.
+color k 1b291b
+color d 202e20
+color m 233223
+color l 273627
+color n 2f301e
 frame crown
 ..kmmmlmmmdmmmmlmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdmmmmlnlmmmmdmmmmnlmmmdmmmmmlmmmdlmmmmdmmmlnlmk..
 ..kmmlnlmmddmmlndmmlnllmmmddmmmlllmmddmmmmlnlmmddmmlnllmmmddmmmlllmmddmmmmlnlmmdnlmmmddmmlnllk..
