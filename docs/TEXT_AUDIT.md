@@ -51,7 +51,7 @@ through the sleeping kingdom."
 | `ABOUT_BODY`, `ABOUT_BODY_LEFT_HANDED`, `ABOUT_GAMEPAD`, `ABOUT_GAMEPAD_LEFT_HANDED` | About, Controls tab (layout picked by the left-handed setting) | Occasional | Plain, key list (396 chars, de 418) |
 | `LOADING` | Between levels | Each level load | Label |
 | `ROTATE_HINT` | Touch build held in portrait | Phones only | Plain imperative |
-| `INTRO_SKIP_KEYBOARD`, `INTRO_SKIP_GAMEPAD` | Intro and ending, bottom right corner (keyboard: Esc; pad: Start; touch has its icon, no string) | Every story screen | Plain, "key: verb" (D117) |
+| `INTRO_SKIP_KEYBOARD`, `INTRO_SKIP_GAMEPAD` | Intro and ending, bottom right corner (keyboard: Esc; pad: Start; touch has its icon, no string) | Every story screen | Plain, "key: verb" (D118) |
 
 ### 1.3 The healer's tales around the tutorial (once per run)
 

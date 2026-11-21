@@ -47,14 +47,15 @@ does, a burst or blast does not. Then:
 
 1. **Pose.** The body frame's pose differs from every live frame, both ways round (`RemainsTest` measures the silhouette: at
    least 25 % of the pixels either covers must differ). A recoloured live frame is not a body.
-2. **Tier.** Draw the kill in the monster's active `dead` frame, then cross-fade into the same frame in a decor palette: a
-   second grid (`art/objects/monster/<name>-body.grid`, no ink, no rim), added to `BODY_SWEEP` in `tools/check_contrast.py`.
+2. **Look.** The body is the monster's `dead` frame in its live palette, ink and moon rim, with no recolour, tint or halo
+   (D117): a second grid (`art/objects/monster/<name>-body.grid`, pixel for pixel the `dead` frame, its sheet in `RIM_SHEETS`
+   of `tools/forest_trap_sprites.py`), added to `BODY_SWEEP` in `tools/check_contrast.py` and measured as active.
 3. **Behaviour.** Implement `Remains`: stay in the level as a defeated enemy; react when the hero comes near (the beetle and
    the spider rock with the shared `RemainsSwing`, a big body twitches); `crumble()` for the sword, a stone and a stomp (the stomp bounces the hero), `burnUp()` for a fireball
    or a torch; weapons fly on. The `Player`, `Carryable` and `Fireball` loops already call these (the swing that killed a
    monster skips its body); do not add a hurtbox.
 4. **Effects and sound.** Crumble and burn go through the shared `effects.RemainsFx` (`Level.remainsFx()`), with the monster's
-   own chip colours as a static palette (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`, `SnailFx.SNAIL_CHIPS`); re-measure its pools in
+   own live chip colours as a static palette (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`, `SnailFx.SNAIL_CHIPS`, `WolfFx.WOLF_CHIPS`); re-measure its pools in
    `RemainsFxTest` if a body adds more particles. The shared sounds `remains_crumble` and `remains_burn`; the reaction is silent.
 5. **Gate.** Add a `Case` to `RemainsTest` (with its reaction); extend the monster's `AllocationBudgetTest` scenario with the body; run
    `./gradlew :core:check`.

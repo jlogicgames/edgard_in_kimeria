@@ -479,9 +479,9 @@ class RhythmTrapsTest {
         assertEquals(TrapWarnings.FALLING_PLATFORM_SECONDS, firstMove * STEP, 3 * STEP, "falls after the shared 1 s warning");
     }
 
-    /** Rhythmic trap types and the log skin each shipped level may use; #260 (D58) allows the one puffball and the rotten log in forest-1; #261 (D59) the one thorn vine in forest-2. */
+    /** Rhythmic trap types and the log skin each shipped level may use; #260 (D58) allows the one puffball and the rotten log in forest-1; #261 (D59) the one thorn vine in forest-2; #545 (D116) the `skin` of forest-2's four sound one-way branches (`Platform` `skin=branch`, never a log: the check below still demands every falling platform of forest-2 be the plain one). */
     private static final java.util.Map<String, Set<String>> SHIPPED_ALLOWANCE = java.util.Map.of(
-        "forest-0", Set.of(), "forest-1", Set.of("Puffball", "skin"), "forest-2", Set.of("ThornVine"));
+        "forest-0", Set.of(), "forest-1", Set.of("Puffball", "skin"), "forest-2", Set.of("ThornVine", "skin"));
 
     @Test void shippedLevelsUseOnlyAllowedRhythmTrapsAndEveryTrapTheyUseLoadsValidated() {
         for (String name : new String[]{"forest-0", "forest-1", "forest-2"}) {
@@ -493,7 +493,7 @@ class RhythmTrapsTest {
             assertTrue(SHIPPED_ALLOWANCE.get(name).containsAll(used), name + " uses " + used + ", allowed " + SHIPPED_ALLOWANCE.get(name));
             // Loading runs the strict validation of every trap in the map (rhythm, room, entrance, exit, checkpoints).
             Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, Rectangle::new);
-            if (!used.contains("skin")) assertTrue(level.fallingPlatforms.stream().allMatch(f -> f.skin() == FallingPlatform.Skin.PLATFORM), name);
+            if (!used.contains("skin") || name.equals("forest-2")) assertTrue(level.fallingPlatforms.stream().allMatch(f -> f.skin() == FallingPlatform.Skin.PLATFORM), name);
         }
     }
 

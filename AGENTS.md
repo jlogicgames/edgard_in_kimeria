@@ -124,7 +124,7 @@ on a route checked at load and strikes only along a line its wind-up has drawn; 
 ## Monster bodies (D101)
 
 A monster killed without bursting leaves its body (`Remains`): its pose must differ from every live frame (the readability
-rule, not the palette), and it is drawn in the decor tier (D76) after the kill frame. It is harmless, blocks nothing and counts
+rule, not the palette), and it keeps its live palette, ink and moon rim (D117): no recolour, tint or halo, measured as active. It is harmless, blocks nothing and counts
 as defeated; it rocks when the hero passes; the sword, a stone or a stomp (with the normal bounce) crumble it, a fireball or a
 torch burn it, and no weapon is spent or stopped by it. A burst or blast leaves nothing; a reset or a passed room leaves no
 body; the swing that kills a monster does not crumble its body. Crumble and burn go through the shared `RemainsFx`. Add every

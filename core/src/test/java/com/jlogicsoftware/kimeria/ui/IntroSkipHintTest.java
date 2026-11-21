@@ -14,7 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** D117: which skip hint the story queues for each mode, and the touch > pad > keyboard order. */
+/** D118: which skip hint the story queues for each mode, and the touch > pad > keyboard order. */
 class IntroSkipHintTest {
     private static class MetricsFont extends BitmapFont {
         MetricsFont(int size) {

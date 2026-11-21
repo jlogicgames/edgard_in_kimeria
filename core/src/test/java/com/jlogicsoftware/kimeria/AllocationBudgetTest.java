@@ -798,8 +798,8 @@ class AllocationBudgetTest {
      * Beetles in turn through the real {@code Level} of beetle-test.tmx (#327, D100): each crawls a few frames, then hears the hero, notices (0.5 s), finds
      * him touching and commits, winds up with its specks; the hero steps out of the box at frame {@value #BEETLE_ESCAPE_FRAME}
      * of the cycle; even beetles burst, odd ones are killed at frame {@value #BEETLE_KILL_FRAME} as a fireball would (the poof)
-     * and leave their body (D101): the hero walks up to it at frame {@value #BEETLE_PUSH_FRAME} (it rocks, fading into the decor
-     * body), and at frame {@value #BEETLE_FINISH_FRAME} it crumbles or, one beetle in four, burns.
+     * and leave their body (D101): the hero walks up to it at frame {@value #BEETLE_PUSH_FRAME} (it rocks, fading into the body
+     * sheet), and at frame {@value #BEETLE_FINISH_FRAME} it crumbles or, one beetle in four, burns.
      * {@code update} and {@code render} of the beetle and {@code Level.beetleFx()} every frame. Beetles are built before the probe.
      */
     @Test void beetleThroughTheRealLevel() {
@@ -1882,7 +1882,7 @@ class AllocationBudgetTest {
             Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
             IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
             assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
-            // The skip hint (D117): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
+            // The skip hint (D118): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
             intro.setSkipHints(overlay.hintBlock("Esc: skip", 628f, IntroScreen.SKIP_HINT_TOP), overlay.hintBlock("Start: skip", 628f, IntroScreen.SKIP_HINT_TOP));
             intro.skipHint(IntroScreen.SkipHint.KEYBOARD);
             // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.

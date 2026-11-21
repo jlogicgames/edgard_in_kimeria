@@ -43,7 +43,7 @@ class LocalizationLayoutTest {
         return new GlyphLayout(font, text, Color.WHITE, width, Align.center, true).runs.size;
     }
 
-    /** D117: the skip hint's rect (Y down, as on screen) with the real font, in every language and both modes. */
+    /** D118: the skip hint's rect (Y down, as on screen) with the real font, in every language and both modes. */
     @Test void skipHintSitsInTheCornerClearOfThePageAndTheCue() {
         var previous = Gdx.files;
         Gdx.files = new HeadlessFiles();

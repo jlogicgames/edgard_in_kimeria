@@ -36,7 +36,7 @@ import java.util.Map;
  * killed during its wind-up fires nothing.
  *
  * <p>The sword, a fireball, a thrown stone or torch and a stomp kill the snail in any state; it leaves its body (D101,
- * {@link Remains}): the empty shell on its back, which cross-fades into a decor-tier palette, rocks when the hero passes, is
+ * {@link Remains}): the empty shell on its back, which keeps its live palette (D117), rocks when the hero passes, is
  * crumbled by the sword, a stone or a stomp and burnt by a fireball or a torch. The shell blocks nothing. Its effects are
  * {@link com.jlogicsoftware.kimeria.effects.SnailFx}; its sprite is one strip ({@link SpriteSheets#MONSTER_SNAIL}). World Y grows
  * downward: the floor line is the body's bottom edge, and the gob flies {@link #GOB_HEIGHT} px above it (a smaller Y).
@@ -103,7 +103,7 @@ public class Snail extends Enemy<Snail.State> implements CollideBody, Remains, B
     /** The death: the poof starts this long after the hit; the empty shell rolls over in a hop this high and long. */
     public static final float POOF_DELAY = .08f;
     private static final float FLIP_LIFT = 3, FLIP_SECONDS = .2f;
-    /** The active {@code dead} frame holds this long, then cross-fades into the decor body over the second (D76, D101). */
+    /** The active {@code dead} frame holds this long, then cross-fades into the body sheet over the second (D101; the same live palette since D117). */
     public static final float BODY_FADE_DELAY = .3f, BODY_FADE_SECONDS = .6f;
     /** The body rocks when the hero's body enters its box grown this many px left and right (D101). */
     public static final float NEAR_REACH = 6;

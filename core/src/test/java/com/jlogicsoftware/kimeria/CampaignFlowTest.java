@@ -332,7 +332,7 @@ class CampaignFlowTest {
     @Test void touchShowsNoSkipHintText() throws Exception {
         call("newGame");
         update(2);
-        assertEquals(IntroScreen.SkipHint.NONE, ((IntroScreen) get("intro")).skipHint(), "a touch device names no key (D117)");
+        assertEquals(IntroScreen.SkipHint.NONE, ((IntroScreen) get("intro")).skipHint(), "a touch device names no key (D118)");
     }
 
     @Test void aTapAwayFromTheSkipButtonStillTurnsThePage() throws Exception {

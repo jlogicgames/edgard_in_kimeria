@@ -15,7 +15,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * <p>The breath streaks run along the floor line from the wolf's jaws to where its lunge will end, so the reach is read before it
  * happens (D7, D115), as the spider's silk glints show its bite. Colours: white, the pale and grey of the smoke ({@code d8d6e8},
  * {@code 9a97ad}), a dust brown, the wolf's crimson {@code 86101f} and dusty-rose leg {@code b07c8c} for the death's fur flecks
- * (the danger family, #236), and its body's muted palette for the body's crumble ({@link #WOLF_CHIPS}). No reserved hue.
+ * (the danger family, #236), and its body's live palette for the body's crumble (D117) ({@link #WOLF_CHIPS}). No reserved hue.
  * Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a smaller Y. Particles advance only in
  * {@link #update}, so pause freezes them.
  */
@@ -32,8 +32,8 @@ public final class WolfFx {
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};
     private static final float[] PALE = {.847f, .839f, .910f}, GREY = {.604f, .592f, .678f}, DUST = {.420f, .353f, .227f};
     private static final float[] CRIMSON = {.525f, .063f, .122f}, LEG = {.690f, .486f, .549f};
-    private static final float[] BODY_COAT = {.176f, .063f, .004f}, BODY_FLANK = {.184f, .071f, .008f};
-    private static final float[] BODY_BELLY = {.204f, .106f, .047f}, BODY_SHADE = {.145f, .039f, .000f};
+    private static final float[] BODY_COAT = {.525f, .063f, .122f}, BODY_FLANK = {.612f, .125f, .314f};
+    private static final float[] BODY_BELLY = {.722f, .353f, .502f}, BODY_SHADE = {.290f, .047f, .133f};
     /** The wolf body's crumble chips (D101, {@link RemainsFx#crumble}): wolf-body.grid's coat, flank, belly and shade. */
     public static final float[][] WOLF_CHIPS = {BODY_COAT, BODY_BELLY, BODY_FLANK, BODY_SHADE};
 

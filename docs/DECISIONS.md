@@ -1800,6 +1800,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 - **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** trees and bushes are drawn opaque and clear in another palette, a little paler or darker than the active elements, and the glows are replaced by softer pixelfx effects, so the tier numbers are re-measured; this decision will be revised by issues [#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555), [#544](https://github.com/jlogicgames/edgard_in_kimeria/issues/544).
 
+- **Update ([#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571), 2026-11-21, [D117](#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)):** monster bodies (D101) leave the decor tier: a body keeps its live
+  palette, ink and moon rim and is measured as active (outline at least 0.28 at every spot where it can lie).
+
 ## D77. Story screens are static pages (playtest F2, #336, 2026-11-16)
 
 - **Status:** Accepted by the author, 2026-11-16 (the plan of 2026-11-15 and this draft).
@@ -1814,7 +1817,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   and on (ceiling 8), with the touch skip button's `updateSkip` and `renderSkipButton` in the measured loop. The harness's
   proxied `Gdx.input` allocates 120 B/frame by itself (24 B for each of the 5 polled pointers; measured alone, and the
   JIT sometimes removes it), so the scenario subtracts that baseline: 0.0 B/frame left in 3 runs.
-- **No new string:** a pulsing triangle marks a page that waits for the button. (Amended by [D117](#d117-the-intro-names-its-skip-key-534-2026-11-21): the skip hint is a string.)
+- **No new string:** a pulsing triangle marks a page that waits for the button. (Amended by [D118](#d118-the-intro-names-its-skip-key-534-2026-11-21): the skip hint is a string.)
 - **Touch skip button (author-approved, 2026-11-16; "good enough for now, polish later"):** on touch devices only, an
   icon-only button (skip to end, a play triangle and a bar, no string) sits top right of the picture at (606, 22),
   radius 13, hit radius 26 like the pause button. Paging is single-finger: a tap while another finger is already down turns no page (libGDX reports `justTouched` without a pointer index; `IntroInputTest` pins it); the button polls every pointer on its own, so any finger skips. A tap calls the same `IntroScreen.skip()` as Escape and Back, also
@@ -1826,7 +1829,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Verified (playtest 2, 2026-11-21, web build, Ukrainian; [PLAYTEST_2.md](PLAYTEST_2.md)):** the opening pages in Ukrainian on the web build; the testers raised nothing about reading them, which the author accepted as the check.
 - **Not verified:** the ending page, the de and be pages, the look on desktop and the button on a real touch device
   ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
-- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the intro shows a small skip hint, reversing "no new string" (author decision); [D117](#d117-the-intro-names-its-skip-key-534-2026-11-21) (issue [#534](https://github.com/jlogicgames/edgard_in_kimeria/issues/534)) revises it. Proposed, not yet approved: the intro retold in tale formulae over several pages ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535)) on an open book ([#536](https://github.com/jlogicgames/edgard_in_kimeria/issues/536)).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the intro shows a small skip hint, reversing "no new string" (author decision); [D118](#d118-the-intro-names-its-skip-key-534-2026-11-21) (issue [#534](https://github.com/jlogicgames/edgard_in_kimeria/issues/534)) revises it. Proposed, not yet approved: the intro retold in tale formulae over several pages ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535)) on an open book ([#536](https://github.com/jlogicgames/edgard_in_kimeria/issues/536)).
 
 ## D78. The dialogue is a codec-style storybook screen (playtest F3/F10, #337, 2026-11-16)
 
@@ -3139,6 +3142,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (`Player`), so the blade does not crumble what it has just killed. `RemainsTest` lists the beetle and the spider; each case
   names how its body reacts to the hero passing. `BODY_SWEEP` in `check_contrast.py` measures both bodies.
 
+- **Update ([#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571), 2026-11-21, [D117](#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)): the body keeps the live palette.** The "Contrast tier (D76): decor"
+  bullet above is superseded: a body is the `dead` frame in the monster's live palette, ink and moon rim, with no recolour,
+  tint or halo, and is measured as active. The pose stays the readability rule; the behaviour (harmless, rocks, crumbles, burns) is unchanged.
+
 ## D102. The forest spider: it hears, notices, and pounces at where the hero stood; make it miss, then strike (#328, #240, #398)
 
 - **Status:** Accepted (author, 2026-11-19: the card, the eight recommendations, the art with eight legs and the five sounds).
@@ -3691,6 +3698,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   with no measured body fails; a map with more than one non-scenery tile layer fails (the game overwrites layer by layer, last wins); the 128 px body camera step
   is enough because a 4 px sweep gave identical results for every kind and map (measured).
 
+- **Update ([#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571), 2026-11-21, [D117](#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)):** the monster bodies are no longer held in the decor band
+  (outline 0.08 to 0.20): they keep their live palette and are measured as active at every spot of `BODY_SWEEP`.
+
 ## D109. A skill's first meeting has a pocket in view and calm, and the false honey fungus has a trip-and-stand pocket (#500, #499)
 
 - **Status:** Accepted (author, 2026-11-20: decisions 1 and 2 of the batch-4 design). Gate built (`FirstMeetingPocketTest.skillPocket`, new
@@ -3955,7 +3965,31 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   ([#556](https://github.com/jlogicgames/edgard_in_kimeria/issues/556)); the pickup flight ([#557](https://github.com/jlogicgames/edgard_in_kimeria/issues/557)); the beetle blast ([#559](https://github.com/jlogicgames/edgard_in_kimeria/issues/559)).
 - **Not changed:** no threshold, tolerance or test was changed by this record.
 
-## D117. The intro names its skip key (#534, 2026-11-21)
+## D117. A monster body keeps its live palette, ink and moon rim; the pose is the cue (#571, 2026-11-21)
+
+- **Status:** Accepted (author, 2026-11-21, [#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571)). Amends D101 (contrast tier), D108 (the decor band for
+  bodies) and D76 (bodies leave the decor tier).
+- **Context:** in the author's playtest of 2026-11-21 the bodies were "almost invisible": since PR 517 all four sat on one dried umber
+  (OKLab L 0.09 to 0.25, outline 0.04 to 0.20), a dark shape on forest-1's near-black ground. Three recolours were tried on the real
+  ground (ash with a light contour, a muted crimson with a light contour, a lifted umber over a dust halo; outline 0.15 to 0.31 at the
+  death spots): within the decor-to-active gap none read much brighter than the umber, and the halo could read as a pickup glow.
+- **Decision (author):** "Let's keep the sprite with no filters at all. That is how other games do it, and nobody will confuse fallen bodies
+  with real dangerous enemies." Each body (`art/objects/monster/{beetle,spider,snail,wolf}-body.grid`) is its monster's `dead` frame,
+  pixel for pixel, in the live palette with the ink contour and the moon rim (the wolf's from above only, as the live wolf), exported by
+  `tools/forest_trap_sprites.py` (the body sheets are in `RIM_SHEETS`): no darkening, no tint, no decor recolour, no halo. The crumble chips
+  (`BeetleFx.SHELL_CHIPS`, `SpiderFx.SPIDER_CHIPS`, `SnailFx.SNAIL_CHIPS`, `WolfFx.WOLF_CHIPS`, passed to `RemainsFx`) take the same live
+  colours. The kill's cross-fade into the body sheet stays in the code and now fades between two identical frames.
+- **What still tells a body from a monster:** the pose (D101's readability rule, `RemainsTest`: the closest live frame differs in at least
+  25 % of the silhouette), the stillness and the behaviour (harmless, blocks nothing, rocks or twitches when the hero passes, crumbles or burns).
+- **Gate:** `check_contrast.py` measures the four bodies as **active** at every spot of `BODY_SWEEP`: outline at least 0.28 (stricter
+  than before; nothing loosened). Measured 2026-11-21: beetle 0.501 at worst (forest-2 x 3508), spider 0.285 (forest-1-climb x 8406, its
+  worst spot, 0.285 to 0.294 over x 8382 to 8406, where the body lies over the soil), snail 0.513, wolf 0.433.
+- **Test changed:** `WolfFxTest.theChipsOfTheBodyAreFourPaletteColours` held every wolf body chip channel at most 0.25 (the dried umber);
+  it is replaced by `theChipsOfTheBodyAreFourLivePaletteColours`, which requires each chip to be a colour of the live wolf's palette, a
+  stricter pin of the same intent.
+- **Not changed:** no threshold or tolerance; the pose, the rocking, the crumble and the burn.
+
+## D118. The intro names its skip key (#534, 2026-11-21)
 
 - **Status:** wording approved by the author, 2026-11-21 (one form in every language: "Esc: skip", "Start: skip" and their translations); amends [D77](#d77-story-screens-are-static-pages-playtest-f2-336-2026-11-16) "No new string". Playtest 2 F10 ([PLAYTEST_2.md](PLAYTEST_2.md), [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)): a tester wanted to skip and did not know how.
 - **Decision:** the opening and the ending show a small grey hint in the bottom right corner (right edge 12 px from the screen edge, top 338 px, label font, 55 % brightness times the story's fade), under the page area (ends at 304 px) and clear of the page-turn cue. It names the key of the input mode in use: keyboard `INTRO_SKIP_KEYBOARD` ("Esc: skip"), a connected pad `INTRO_SKIP_GAMEPAD` ("Start: skip"); a touch device shows no text, its skip button is the hint. On a pad, B (back) and Start both call `IntroScreen.skip()` (`KimeriaGame.updateStory`); the hint names Start, as the issue says, the word the pad hints (`ABOUT_GAMEPAD`) already use. Esc, the system Back key, B and Start all skip.

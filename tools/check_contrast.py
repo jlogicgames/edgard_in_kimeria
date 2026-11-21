@@ -164,10 +164,11 @@ SPRITES = {
     'YellowMob': ('active', 'enemy/yellow_mob.png', (0, 160, 48, 32), 4, 'floor', FULL),  # every IDLE frame (art/objects/enemy/yellow-mob.grid)
     'Beetle': ('active', 'objects/monster-beetle.png', (0, 0, 24, 16), 10, 'floor', FULL),  # #327 (D100): every frame, the wind-up's white too
     # D101: the body a killed beetle leaves. It has no placement of its own: it lies wherever a beetle dies, so it is measured
-    # by BODY_SWEEP on every floor top of every shipped map (body_sweep), as decor: harmless, it must not read as a live beetle.
-    'Beetle:body': ('decor', 'objects/monster-beetle-body.png', (0, 0, 24, 16), 1, 'floor', FULL),
+    # by BODY_SWEEP at every spot where a beetle can die (body_sweep). D117 (#571): a body keeps its live palette and rim, so it is
+    # active like the monster (outline >= ACTIVE_OUTLINE_MIN at every spot); its pose, not its palette, says it is dead.
+    'Beetle:body': ('active', 'objects/monster-beetle-body.png', (0, 0, 24, 16), 1, 'floor', FULL),
     'Spider': ('active', 'objects/monster-spider.png', (0, 0, 32, 16), 9, 'floor', FULL),  # #328 (D102): every frame
-    'Spider:body': ('decor', 'objects/monster-spider-body.png', (0, 0, 32, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
+    'Spider:body': ('active', 'objects/monster-spider-body.png', (0, 0, 32, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP; D117
     # #483 (D103): a spider authored as a polyline route is measured along it (spider_parts): its floor frames every 16 px of
     # each floor, its wall frames (wall1, wall2, walltap) every 16 px up each wall, head up and head down (`-down`, flipped), on
     # the wall's side (`-left` mirrored for a solid on its left); on a thread its hanging frames every 8 px down the column and
@@ -179,11 +180,11 @@ SPRITES = {
     # every firing line where the snail draws it (the gob's cell is the strip's ninth, its two 8x8 frames at the cell's top-left).
     'Snail': ('active', 'objects/monster-snail.png', (0, 0, 24, 16), 8, 'floor', FULL),
     'Snail:gob': ('active', 'objects/monster-snail.png', (192, 0, 8, 8), 2, 'top', FULL),
-    'Snail:body': ('decor', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
+    'Snail:body': ('active', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP; D117
     # #331 (D115): every frame of the wolf, and its body (D101); measured over its range in forest-glade (#331): live frames
-    # outline 0.411 to 0.542, body 0.152 to 0.197 (the art pass of 2026-11-21 measured it at the monster spawns of the three maps).
+    # outline 0.411 to 0.542; its body, active since D117, 0.433 at worst (2026-11-21).
     'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
-    'Wolf:body': ('decor', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
+    'Wolf:body': ('active', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 4, 'floor', FULL),  # every THRONE frame, its rest state (art/objects/enemy/boss.grid)
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the

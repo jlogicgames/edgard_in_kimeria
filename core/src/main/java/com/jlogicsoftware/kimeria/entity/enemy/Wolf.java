@@ -38,7 +38,7 @@ import java.util.Map;
  * jaws run low and the load check keeps {@link #HEADROOM} px of headroom over its reach).
  *
  * <p>Every weapon kills it in any state; it leaves its body (D101, {@link Remains}): lying on its side along the floor, which
- * cross-fades into a decor-tier palette, twitches (a big body does not rock) when the hero comes near, is crumbled by the sword,
+ * keeps its live palette (D117), twitches (a big body does not rock) when the hero comes near, is crumbled by the sword,
  * a stone or a stomp and burnt by a fireball or a torch. Killed in its lunge, the body slides on to the lunge's end. A bite that
  * reaches the hero lands at the start of the wolf's next frame, so a hit that kills it on the same frame wins (as the spider's).
  * Its effects are {@link WolfFx}; its sprite is one strip ({@link SpriteSheets#MONSTER_WOLF}). World Y grows downward: the floor
@@ -112,7 +112,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     /** The death: the poof starts this long after the hit; the body drops in a hop this high and long. */
     public static final float POOF_DELAY = .08f;
     private static final float FLIP_LIFT = 3, FLIP_SECONDS = .2f;
-    /** The active {@code dead} frame holds this long, then cross-fades into the decor body over the second (D76, D101). */
+    /** The active {@code dead} frame holds this long, then cross-fades into the body sheet over the second (D101; the same live palette since D117). */
     public static final float BODY_FADE_DELAY = .3f, BODY_FADE_SECONDS = .6f;
     /** The body twitches when the hero's body enters its box grown this many px left and right (D101): a 1 px shudder for this long. */
     public static final float NEAR_REACH = 6, TWITCH_SECONDS = .3f;
@@ -706,7 +706,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         };
     }
 
-    /** How far the body has faded from the active {@code dead} frame into the decor body: 0 at the kill, 1 once settled. */
+    /** How far the body has faded from the active {@code dead} frame into the body sheet: 0 at the kill, 1 once settled. */
     public float bodyFade() {
         if (current != State.DEAD && current != State.BURN) return 0;
         return Math.min(1f, Math.max(0f, (deadClock - BODY_FADE_DELAY) / BODY_FADE_SECONDS));
@@ -722,7 +722,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         else batch.draw(frame, x + SIDES * PIVOT_X, y, -FRAME_WIDTH, FRAME_HEIGHT);
     }
 
-    /** The body: the drop, the cross-fade into the decor body, the twitch, and while burning a darkening tint. */
+    /** The body: the drop, the cross-fade into the body sheet, the twitch, and while burning a darkening tint. */
     private void renderBody(Batch batch) {
         float lift = deadClock < FLIP_SECONDS ? FLIP_LIFT * MathUtils.sin(MathUtils.PI * deadClock / FLIP_SECONDS) : 0;
         float shift = twitch(), y = position.y - lift;

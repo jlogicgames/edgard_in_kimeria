@@ -133,7 +133,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
     private static final float FLIP_LIFT = 4, FLIP_SECONDS = .2f;
     /** The poof's middle: this far above the floor line. */
     private static final float BODY_CENTRE_ABOVE_FLOOR = 7;
-    /** The active {@code dead} frame holds this long, then cross-fades into the decor body over the second (D76, D101). */
+    /** The active {@code dead} frame holds this long, then cross-fades into the body sheet over the second (D101; the same live palette since D117). */
     public static final float BODY_FADE_DELAY = .3f, BODY_FADE_SECONDS = .6f;
     /** The body rocks when the hero's body enters its box grown this many px left and right (D101). */
     public static final float NEAR_REACH = 6;
@@ -936,7 +936,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         };
     }
 
-    /** How far the body has faded from the active {@code dead} frame into the decor body: 0 at the kill, 1 once settled. */
+    /** How far the body has faded from the active {@code dead} frame into the body sheet: 0 at the kill, 1 once settled. */
     public float bodyFade() {
         if (current != State.DEAD && current != State.BURN) return 0;
         return Math.min(1f, Math.max(0f, (deadClock - BODY_FADE_DELAY) / BODY_FADE_SECONDS));
@@ -990,7 +990,7 @@ public class Spider extends Enemy<Spider.State> implements CollideBody, Remains 
         batch.setPackedColor(saved);
     }
 
-    /** The body: the flip, the cross-fade into the decor body, the swing about the belly, and while burning a darkening tint. */
+    /** The body: the flip, the cross-fade into the body sheet, the swing about the belly, and while burning a darkening tint. */
     private void renderBody(Batch batch) {
         float lift = deadClock < FLIP_SECONDS ? FLIP_LIFT * MathUtils.sin(MathUtils.PI * deadClock / FLIP_SECONDS) : 0;
         float drawX = facingRight ? position.x : position.x + SIDES * (pivotX() - PIVOT_X), y = position.y - lift;

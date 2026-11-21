@@ -184,7 +184,7 @@ public class Overlay {
 
     /**
      * Lays {@code text} out once in the small label font, grey and right-aligned at {@code rightX}, into a cache for
-     * {@link #queueBlock(BitmapFontCache, float)} (the intro's skip hint, D117). {@code yFromTop} is the top of the line.
+     * {@link #queueBlock(BitmapFontCache, float)} (the intro's skip hint, D118). {@code yFromTop} is the top of the line.
      */
     public BitmapFontCache hintBlock(String text, float rightX, float yFromTop) {
         GlyphLayout layout = new GlyphLayout(hintFont, text, HINT_GREY, 0f, Align.right, false);

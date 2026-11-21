@@ -296,7 +296,7 @@ class BeetleTest {
         return false;
     }
 
-    @Test void aQuietKillFlipsItThenTheBodyFadesIntoTheDecorPaletteAndThePoofComesAMomentLater() {
+    @Test void aQuietKillFlipsItThenTheBodyFadesIntoTheBodySheetAndThePoofComesAMomentLater() {
         Level level = level();
         Beetle b = beetle(level);
         place(level, 200);
@@ -309,7 +309,7 @@ class BeetleTest {
         settle(level, (int) Math.ceil(Beetle.POOF_DELAY / STEP) + 1);
         assertTrue(kinds(level.beetleFx().soft(), KimeriaParticleSystem.KIND_SMOKE) > smokeAtKill, "the poof follows");
         settle(level, (int) Math.ceil((Beetle.BODY_FADE_DELAY + Beetle.BODY_FADE_SECONDS) / STEP));
-        assertEquals(1, b.bodyFade(), 0, "settled into the decor body");
+        assertEquals(1, b.bodyFade(), 0, "settled into the body sheet");
         assertTrue(b.isDefeated(), "counted as defeated for the room (D6)");
     }
 
