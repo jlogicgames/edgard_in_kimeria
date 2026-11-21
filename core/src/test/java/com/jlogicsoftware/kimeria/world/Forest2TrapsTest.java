@@ -237,7 +237,7 @@ class Forest2TrapsTest {
         assertEquals(2560, l.currentRoomBounds().x, .01f);
         assertEquals(448, l.currentRoomBounds().width, .01f);
         assertEquals(2640, l.player.position.x, .01f);
-        assertEquals(304, l.player.position.y, .01f);
+        assertEquals(272, l.player.position.y, .01f); // #572: the entrance stands on the 320 floor line (it was authored at 304, 32 px inside the floor)
     }
 
     // ---- the mastered route (zero ammunition, D26) ----
