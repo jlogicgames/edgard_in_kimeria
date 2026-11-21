@@ -84,7 +84,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
 1. **Room.** Fill the existing `forest-0-<lesson>` room (the lever room is 576 px, the ladder room 896 px, the wall room 784 px, the platform room 800 px, the stone room 736 px and the traps room 720 px; about 500–720 px suits one object, a trap and its hint leads add 140–210 px (D48); every extra empty stretch is walking time with nothing to learn; floor strip y=320, side walls, RoomStart,
    RoomExit; no enemies, and hazards only in the traps lesson (D40), where the last room ends at the level's `Checkpoint` instead of a RoomExit). Add only that lesson's objects/collisions. One new element per room, except the four middle rooms of `forest-0`, which also hold one forest trap each after the lever (author decision D42, [D48](DECISIONS.md#d48-traps-in-the-tutorial-rooms-one-new-trap-per-lesson-room)): put the trap first (entrance, trap, lever, object): its hint covers the whole crossing, the next text starts beyond the trap's column, each text has at least about 160 px from its zone start to what it warns about (~0.9 s of full text, `HintLeadTest`), and the lesson's object stays within 316 px of the lever's reach (the lesson tests assert one screen), which only the trap-first order allows.
    **Ceiling:** do not author one. `Level` closes every room from above with an invisible 64 px slab whose underside is the
-   room's top edge (y=0), so the clamberable side walls cannot be wall-jumped over the top ([D38](DECISIONS.md#d38-every-room-has-an-invisible-ceiling), #215).
+   room's top edge (y=0), which was first made so the side walls could not be wall-jumped over the top ([D38](DECISIONS.md#d38-every-room-has-an-invisible-ceiling), #215); walls cannot be grabbed since [D121](DECISIONS.md#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21), and the slab stays as a guard (it still closes the room from above).
    Keep the side walls and any ledge walls inside the room (`RoomCeilingTest` checks every room of forest-0, forest-1 and forest-2).
 2. **Object + link.** Put the mechanism in `SpawnPoints` as type `Actionable` with property `type` = `Torch` or
    `Wall` (`check_tiled_links.py` rejects anything else; a moving platform is instead a SpawnPoints `Escalator` with `isVertical`, `offNeg`/`offPos` in 32 px units and `running`=false, linked the same way; a Torch starts dark with `Intensity` = 0, lit with a
@@ -278,8 +278,8 @@ Rule: [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-fi
 - **A beat** is one placed instance of a registry element the **required route** makes the player read and answer. The
   registry's **Beat kind** says what counts: a `hazard` and a `monster` once per instance; a `mechanism` once per lever the
   route pulls or hits, with everything it drives; a `platform` once per running platform the route boards or must pass
-  while it moves; a `skill` once per obstacle, posed by map geometry (a free-standing `Collisions:Wall` at least 96 px
-  tall for a wall jump, an object with `skin=branch` for a branch climb). A `pickup`, a `harmless` element and plain
+  while it moves; a `skill` once per obstacle, posed by map geometry (an object with `skin=branch` for a branch climb; the wall
+  jump is gone, [D121](DECISIONS.md#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21)). A `pickup`, a `harmless` element and plain
   geometry never count. Two instances of one element whose spans (box, polyline, horizontal patrol) lie within 96 px of
   each other are one beat. Beats are listed in route order, read as rising map x.
 - **The band.** With the zero-charge mastered time `T` and `N` beats: at least **3 beats** of at least **2 distinct
@@ -291,10 +291,10 @@ Rule: [D105](DECISIONS.md#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-fi
   replays at most 6 s; not combined on first sight. For a monster (met in play, D100) the danger zone is its whole reach,
   hearing included. `FirstMeetingPocketTest` pins the pocket: the hero stands at its x in the real camera view, is never
   hit, and sees the element act.
-- **A skill's pocket ([D109](DECISIONS.md#d109-a-skills-first-meeting-has-a-pocket-in-view-and-calm-and-the-false-honey-fungus-has-a-trip-and-stand-pocket-500-499)).** A wall jump never acts, so "seen acting" does not apply to a skill: its pocket is a
+- **A skill's pocket ([D109](DECISIONS.md#d109-a-skills-first-meeting-has-a-pocket-in-view-and-calm-and-the-false-honey-fungus-has-a-trip-and-stand-pocket-500-499)).** A skill (a branch climb is the shipped one) never acts, so "seen acting" does not apply to a skill: its pocket is a
   spot where the **whole first obstacle is in the camera view** and **no enemy of the room stirs** during the wait
   (`FirstMeetingPocketTest.skillPocket(map, room, element, pocketX, geometryX)`: the hero stands 12 s, is never hit, the
-  climbable `Wall` block at `geometryX` lies inside the view every frame, and no enemy, hazard or trap of the room stirs: enemies, lethal hazards, deadfalls, fungus, falling, exploding and thorn traps and puffballs keep their position, state and
+  collision block (a wall or a one-way branch) at `geometryX` lies inside the view every frame, and no enemy, hazard or trap of the room stirs: enemies, lethal hazards, deadfalls, fungus, falling, exploding and thorn traps and puffballs keep their position, state and
   phase). The view check is trivial in a room narrower than the view; `aSkillPocketTooFarFromTheWallFails` shows it and the stirring check can fail.
 - **Clearance counts what can kill ([D107](DECISIONS.md#d107-the-first-meeting-clearance-counts-what-can-kill-a-crumble-support-over-a-floor-is-not-a-lethal-neighbour-500-499)).**
   A crumble support (`FallingPlatform`, any skin) is a lethal neighbour only when what lies under it is lethal (no solid
@@ -501,7 +501,7 @@ uncompleted human check; see
 [Teaching order and walkthrough (#73/#75)](#teaching-order-and-walkthrough-7375).
 
 The required routes run forward, jumping obstacles and hazards, using normal
-sword attacks near grounded enemies and wall jumps at tall walls. In `forest-1`,
+sword attacks near grounded enemies and wall jumps at tall walls (the wall jump was removed later, [D121](DECISIONS.md#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21)). In `forest-1`,
 K activates the wall trigger before reaching the level exit. The forest-entry
 collection route waits 40 frames (0.67 s, included in its time), takes the coin
 behind the entrance, follows the raised route to the upper coin, then returns
@@ -806,8 +806,8 @@ checked against the TMX files. No conflict markers remain. The focused
 Required/coin-route and collection-return timings above were reproduced.
 
 The existing wall-clamber/jump in `Player` and fresh wall-jump presses in the replay
-driver confirm that the wall-jump references in the route descriptions are current
-behavior. Its future role in the campaign is a design question, not a missing feature.
+driver confirmed, at that review, that the wall-jump references in the route descriptions were current
+behavior. The wall jump was removed afterwards ([D121](DECISIONS.md#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21)).
 This review changed documentation only. It did not rerun the full core suite or
 perform a new visual/human playtest; it does not close the deferred release checks.
 

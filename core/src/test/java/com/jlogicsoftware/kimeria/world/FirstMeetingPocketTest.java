@@ -140,7 +140,7 @@ class FirstMeetingPocketTest {
 
     /**
      * The pocket of a skill (D109): it never acts, so the hero stands at {@code pocketX} for {@link #POCKET_SECONDS} and, every
-     * frame, is never hit, has the whole first obstacle (the room's climbable {@code Wall} block at {@code geometryX}) inside the
+     * frame, is never hit, has the whole first obstacle (the room's collision block, a wall or a one-way branch, at {@code geometryX}) inside the
      * camera's view, and sees nothing lethal stir: no enemy, hazard or trap of the room (enemies, lethal hazards, deadfalls, fungus, falling,
      * exploding and thorn traps, puffballs) changes position, state or phase. The view check is trivial in a room narrower than the view (the whole room is in view from anywhere); it bites in a wide
      * room, as {@link #aSkillPocketTooFarFromTheWallFails} shows.
@@ -151,8 +151,8 @@ class FirstMeetingPocketTest {
         Rectangle bounds = level.currentRoomBounds();
         CollisionBlock wall = null;
         for (CollisionBlock b : level.collisionBlocks)
-            if (b.isWallClimbable() && b.getX() == geometryX && b.getX() >= bounds.x && b.getX() < bounds.x + bounds.width) wall = b;
-        assertNotNull(wall, room + " holds no climbable wall at x " + geometryX + " (" + element + ")");
+            if ((b.isWall() || b.isPlatform()) && b.getX() == geometryX && b.getX() >= bounds.x && b.getX() < bounds.x + bounds.width) wall = b;
+        assertNotNull(wall, room + " holds no wall or branch at x " + geometryX + " (" + element + ")");
         level.player.position.x = pocketX - level.player.getWidth() / 2;
         assertEquals(pocketX, level.player.centerX(), 0.01f);
         java.util.List<Entity> watched = new java.util.ArrayList<>();
@@ -166,7 +166,7 @@ class FirstMeetingPocketTest {
             view.set(camera.x, camera.y, resolution.x, resolution.y);
             level.update(STEP);
             assertFalse(level.player.isGotHit(), room + ": the hero in the pocket at x " + pocketX + " was hit at " + f * STEP + " s");
-            assertTrue(view.contains(box.set(wall.getX(), wall.getY(), wall.getWidth(), wall.getHeight())), room + ": the whole " + element + " wall is not in the camera's view at " + f * STEP + " s");
+            assertTrue(view.contains(box.set(wall.getX(), wall.getY(), wall.getWidth(), wall.getHeight())), room + ": the whole " + element + " obstacle is not in the camera's view at " + f * STEP + " s");
             for (int i = 0; i < watched.size(); i++)
                 assertEquals(rest.get(i), stir(watched.get(i)), room + ": " + watched.get(i).getClass().getSimpleName() + " stirred at " + f * STEP + " s while the " + element + " pocket stood");
         }
@@ -174,8 +174,8 @@ class FirstMeetingPocketTest {
 
     /** The two ways a skill pocket fails: the wall out of the view in a wide room, and a lethal object that stirs. */
     @Test void aSkillPocketTooFarFromTheWallFails() {
-        assertThrows(AssertionError.class, () -> skillPocket("forest-2", "forest-walls", "wall-jump", 880, 1264), "the room's right wall (x 1264) is beyond the view from x 880");
-        assertThrows(AssertionError.class, () -> skillPocket("forest-2", "forest-walls", "wall-jump", 1110, 992), "the RedMob wakes for a hero at x 1110");
+        assertThrows(AssertionError.class, () -> skillPocket("forest-2", "forest-walls", "skill", 880, 1264), "the room's right wall (x 1264) is beyond the view from x 880");
+        assertThrows(AssertionError.class, () -> skillPocket("forest-2", "forest-walls", "skill", 1110, 992), "the RedMob wakes for a hero at x 1110");
     }
 
     /** A hero's body width, the margin a trip-and-stand pocket needs (D109). */

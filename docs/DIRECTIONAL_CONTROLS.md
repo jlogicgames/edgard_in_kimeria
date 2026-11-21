@@ -24,7 +24,7 @@ This covers the mirrored gamepad item. Touch in both layouts is unchecked and it
 
 | Command | Target result |
 | --- | --- |
-| Action without Up/Down | Grounded sword attack, including while holding an object. Recovery, wall-clamber and jump-buffer restrictions remain. |
+| Action without Up/Down | Grounded sword attack, including while holding an object. Recovery and jump-buffer restrictions remain. |
 | Up + Action, empty hand | Pick up the nearest eligible stone/portable torch or activate the nearest eligible mechanism. |
 | Up + Action, carrying | Activate the nearest eligible mechanism; if none is selected, do nothing. |
 | Down + Action | Place/drop the held object. With an empty hand, do nothing. |

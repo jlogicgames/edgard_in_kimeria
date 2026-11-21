@@ -205,9 +205,8 @@ appearance alone does not count as a new mechanic.
 - [ ] [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) Pick Steppe effects: readable wind and gusts, double-jump puff, arrow impacts.
 
 **Output:** wind changes decisions; double jump becomes part of Steppe and later
-Fortress authoring. Wall jump already exists and is not scheduled for redundant
-implementation here. Discuss its campaign role/changes separately; preserve current
-routes until an explicit change is accepted.
+Fortress authoring. The wall jump existed when this was written; it was removed on 2026-11-21
+([D121](DECISIONS.md#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21)), so no Fortress route may rely on a wall grab.
 
 ### 1.5. Fortress
 

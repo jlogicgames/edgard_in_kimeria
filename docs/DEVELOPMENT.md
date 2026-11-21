@@ -152,7 +152,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 
 ## Feature parity
 
-- [x] Player movement, jump, gravity, coyote time, quicksand slowdown, wall clamber/jump
+- [x] Player movement, jump, gravity, coyote time, quicksand slowdown (the wall clamber/jump was removed, D121)
 - [x] Tile collision — solid, one-way platform, wall, quicksand
 - [x] Tilemap rendering from the unmodified `.tmx`/`.tsx`, with viewport culling
 - [x] Bat, Yellow mob, Red mob — patrol/chase/attack, without proximity slow motion

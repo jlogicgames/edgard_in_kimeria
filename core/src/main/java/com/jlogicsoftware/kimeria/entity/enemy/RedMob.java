@@ -27,7 +27,7 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     private float targetDirection = -1;
     private boolean isAttacking = false, whipHeard;
     private float attackElapsed = 0f;
-    private boolean clambering, inQuickSand;
+    private boolean inQuickSand;
     private Escalator currentEscalator;
 
     public RedMob(Assets assets, GameContext game, float x, float y, float w, float h,
@@ -140,16 +140,6 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     @Override
     public Hitbox hitbox() {
         return hitbox;
-    }
-
-    @Override
-    public boolean isClambering() {
-        return clambering;
-    }
-
-    @Override
-    public void setClambering(boolean value) {
-        clambering = value;
     }
 
     @Override

@@ -179,7 +179,7 @@ ARMS_IMAGE_SIZE = (ARMS_FRAME_SIZE[0] * len(ARMS_FRAMES), ARMS_FRAME_SIZE[1])
 # The hero (#343, D79): hand-drawn grids in art/hero/hero.grid -> three sheets of 64x64 cells, one clip per row.
 # Facing sheets share one layout; the sword stays in Edgard's right hand, so the left sheet is drawn, not flipped at runtime.
 HERO_FRAME_SIZE = 64
-HERO_CLIPS = (('idle', 4), ('run', 6), ('jump', 2), ('fall', 2), ('attack', 7), ('clamber', 1),
+HERO_CLIPS = (('idle', 4), ('run', 6), ('jump', 2), ('fall', 2), ('attack', 7),
               ('hit', 2), ('appear', 4), ('disappear', 4),
               # the second set (#343 part 2): drawn over the states by Player; pull is #341's tug, lift, land
               ('carry_idle', 4), ('carry_run', 6), ('throw', 3), ('land', 1), ('pull', 3))

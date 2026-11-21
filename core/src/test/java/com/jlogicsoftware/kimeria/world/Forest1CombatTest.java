@@ -555,7 +555,7 @@ class Forest1CombatTest {
         assertTrue(cloud.x >= ROOF_LEFT && cloud.x + cloud.width <= ROOF_RIGHT, "the cloud lies wholly under the roof");
     }
 
-    @Test void theRoofIsUnreachableWithoutTheLeverWhateverIsJumpedWallJumpedOrClamberedAgainstTheTunnelBlockOrTheLadder() {
+    @Test void theRoofIsUnreachableWithoutTheLeverWhateverIsJumpedAgainstTheTunnelBlockOrTheLadder() {
         long seed = 12345;
         float highest = Float.MAX_VALUE;
         for (int run = 0; run < 40; run++) {
@@ -570,7 +570,7 @@ class Forest1CombatTest {
                 held.clear();
                 if ((key & 1) != 0) held.add(Input.Keys.D); else if ((key & 2) != 0) held.add(Input.Keys.A);
                 if ((key & 4) != 0 || i % 8 == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
-                if (key == 3 || key == 7) held.add(Input.Keys.W);          // Up against the ladder or a wall
+                if (key == 3 || key == 7) held.add(Input.Keys.W);          // Up against the ladder or a wall (a wall is no grip, D121)
                 frame(level);
                 highest = Math.min(highest, feet(level));
                 assertFalse(level.player.onLadder(), "a raised ladder cannot be taken: " + level.player.position);
@@ -578,7 +578,7 @@ class Forest1CombatTest {
                     "the hero reached the roof without the lever: " + level.player.position + " run " + run + " frame " + i);
             }
         }
-        System.out.println("forest-1 guard room, 40 fuzzed 6 s runs of jumps, wall-jumps and clambers with the ladder raised: the highest the feet ever got was y " + highest);
+        System.out.println("forest-1 guard room, 40 fuzzed 6 s runs of jumps with the ladder raised: the highest the feet ever got was y " + highest);
         assertTrue(highest > DECK + 2, "the roof level (y 208) is never reached: " + highest);
         Level base = room(0);
         putHero(base, ROOF_LEFT - 8, 272);                                  // pressed against the tunnel block's left face, jumping on the spot

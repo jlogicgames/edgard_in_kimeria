@@ -104,7 +104,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     private final float spawnX, spawnY;
     private final Rectangle triggerScratch = new Rectangle(), blastScratch = new Rectangle(), heroScratch = new Rectangle();
     private Level level;
-    private boolean clambering, inQuickSand;
+    private boolean inQuickSand;
     private Escalator currentEscalator;
     private final Rectangle nearScratch = new Rectangle(), moverScratch = new Rectangle();
     /** The body's swing (D101); flames due while it burns. */
@@ -524,8 +524,6 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     }
 
     @Override public Hitbox hitbox() { return hitbox; }
-    @Override public boolean isClambering() { return clambering; }
-    @Override public void setClambering(boolean value) { clambering = value; }
     @Override public boolean isInQuickSand() { return inQuickSand; }
     @Override public void setInQuickSand(boolean value) { inQuickSand = value; }
     @Override public Escalator currentEscalator() { return currentEscalator; }

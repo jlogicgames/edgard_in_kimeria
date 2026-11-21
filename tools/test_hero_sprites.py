@@ -35,7 +35,7 @@ class HeroSpritesTest(unittest.TestCase):
     def test_a_flip_mirrors_about_the_body_axis(self):
         # Column c of a 64 px frame mirrors to 63 - c, so the axis x 31.5 (the hitbox centre) stays put.
         _, frames = hero.parse()
-        right, left = frames['r.clamber1'], frames['l.clamber1']
+        right, left = frames['r.hit1'], frames['l.hit1']
         self.assertEqual([row[::-1] for row in right], left)
 
 

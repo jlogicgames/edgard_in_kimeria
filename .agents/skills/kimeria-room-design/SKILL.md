@@ -45,7 +45,7 @@ Work from the repository root. The substance is in the docs; this skill is the o
    a body width, past the band and the pocket stands at least that clear of it (`FirstMeetingPocketTest.tripAndStand`). The deadfall's vine
    (D88) and the false honey fungus's zone (D63) use it today, and the thorn root and tuft meet it too; the exploding stump and root and the
    Bomb, whose trigger lies inside their blast, do not and are met among known beats. Such a trap has a trip-and-stand pocket on the trigger, the hero tripping it and standing short of the band,
-   acting signal `SWING` (deadfall) or `BURST` (fungus, D109). A skill (a wall jump) never acts: its pocket shows the whole
+   acting signal `SWING` (deadfall) or `BURST` (fungus, D109). A skill (a branch climb) never acts: its pocket shows the whole
    first obstacle in the camera view while no enemy, lethal hazard or trap of the room changes state, pinned by `skillPocket` (D109).
    Clearance counts what can kill (D107): a crumble support over a floor is not a lethal neighbour, only one over a pit
    is, and an object of the first-met skill's own geometry is not its own neighbour.

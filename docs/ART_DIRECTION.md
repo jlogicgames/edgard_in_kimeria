@@ -153,7 +153,7 @@ Maintain the same handling of faces, contours, light and color across the new wo
 
 Edgard in the world is an original pixel drawing, `art/hero/hero.grid`, exported exactly by
 `tools/hero_sprites.py` to three sheets of 64×64 cells, one clip per row (`tools/sprite_layouts.py HERO_SHEETS`):
-`hero-right.png` and `hero-left.png` (idle 4, run 6, jump 2, fall 2, attack 7, clamber 1, hit 2, appear 4,
+`hero-right.png` and `hero-left.png` (idle 4, run 6, jump 2, fall 2, attack 7, hit 2, appear 4,
 disappear 4; then carry idle 4, carry run 6, throw 3, land 1, pull 3) and `hero-ladder.png` (up 4, down 4, hold 1; a
 back view used by both facings).
 
@@ -635,7 +635,7 @@ depends on it.
 | --- | --- | --- | --- | --- | --- |
 | **Vines sway; shake with a falling stone** | `ThornVine` (D46) already swings as a lethal pendulum (`angle()` feeds `lethalAt`, forest-2 only). No scenery vine exists. `FallingStone` has `landed()` (a protected no-op in `FallingTrap`). | New Tiled type `HangingVine` (non-lethal scenery, `Level.spawn` switch next to `ThornVine`). `FallingStone` gets `onImpact(Runnable)` set by `Level.spawnFallingTrap`, which calls `fx.groundShake(x, strength)`; each `HangingVine` within reach adds a decaying sway. The lethal `ThornVine` is **not** shaken (its drawn pose must equal its hitbox). | Movement only: rotation about the top centre, as `ThornVine.render` does. | `decor-vine` 8×40, 1 frame, vine `8a8a2a / 4a4a18`, leaves `3b2a5c / 7a5ab0`, contour `0b0814`. Not `trap-vine` (its thorn ball is trap art). | 1 draw per vine, no allocation. |
 | **Bush (decor) reacts when the player walks past** | No decor object exists. Bushes are part of the `Background` tile layer (`Level.renderBackground`), which stays as it is. | New Tiled type `Decor` (section 4): an animated sprite placed by hand, plays a brush-past animation when the hero walks past. | Sprite animation. | The decor sheets in section 4. | 1 draw per decor object, no pool needed. |
-| **Dust under the player on a jump** (**built**, step 2) | `Player.playerJump(dt)` is the single jump entry (ground jump, ladder hop and wall jump branches). | After the ordinary ground branch only: `fx.dustPuff(feetX, feetY)` with `feetY = position.y + hitbox.offsetY + hitbox.height`. Y grows downward, so particles start at `feetY` and rise (negative vy). | **Particles**, `Torch` model. | **None.** | Section 3. |
+| **Dust under the player on a jump** (**built**, step 2) | `Player.playerJump(dt)` is the single jump entry (ground jump and ladder hop branches; the wall jump branch went in D121). | After the ordinary ground branch only: `fx.dustPuff(feetX, feetY)` with `feetY = position.y + hitbox.offsetY + hitbox.height`. Y grows downward, so particles start at `feetY` and rise (negative vy). | **Particles**, `Torch` model. | **None.** | Section 3. |
 | **Lever lowers a wall: screen shake, optional ceiling dust** (**built**, steps 1 and 3) | `Level.activateTrigger` calls `performAction()` on each linked `Actionable`; `Wall` moves over `moveDurationSeconds` (private, no getter). `Level.shakeRemaining` and `cameraShakeOffset` already exist (boss feedback). | In `activateTrigger`, if an activated `Actionable` is a `Wall` with `movesVertically()`, call `fx.shake(...)` for the wall's move duration (add a `Wall` getter) and `fx.ceilingGrit(wallCenterX, roomTop)`. | Shake is a camera offset. Grit is **particles**. | **None.** | Section 3. |
 
 #### 3. Dust puff and ceiling grit as particles
@@ -649,7 +649,7 @@ depends on it.
   with 4 puffs instead of 6. `Player.update` fires it when the hero goes from airborne to grounded in the vertical
   collision pass with a downward speed of at least `Player.LANDING_MIN_FALL_SPEED` = 140 px/s (gravity adds 9.8 per step,
   so about 14 frames of falling, a 16 px drop); not in quicksand. Walking off a ledge keeps the coyote flag until the
-  speed passes 147, a wall slide divides the speed by 10, a ladder step-off bypasses the pass, so none of them puffs.
+  speed passes 147, nothing slows a fall (the wall slide is gone, D121), a ladder step-off bypasses the pass, so none of them puffs.
   The `dust_puff` sound plays with it at 0.6 of the sound volume (`GameContext.playSound(name, volumeScale)`).
 - **Dust puff fits `KIND_SMOKE`.** 6 `spawn` calls from the feet: start X ±8 px around the hero centre,
   start Y `feetY`, end Y `feetY - (10 to 22 px/s * life)`, end X start X `± 25 px/s * life` away from the

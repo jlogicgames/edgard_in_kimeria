@@ -21,10 +21,6 @@ public interface CollideBody extends GravityBody {
 
     float facingAwareOffsetX();
 
-    boolean isClambering();
-
-    void setClambering(boolean value);
-
     boolean isInQuickSand();
 
     void setInQuickSand(boolean value);
@@ -53,26 +49,8 @@ public interface CollideBody extends GravityBody {
                 // landing (it even adds a catch-up margin at rest, e.g. at a jump's apex), so using
                 // it sideways snapped actors across the platform to its far edge.
                 continue;
-            } else if (block.isWall()) {
-                if (CollisionUtils.checkCollision(this, block)) {
-                    boolean canClamber = block.isWallClimbable() && !isOnGround();
-                    if (!canClamber) setClambering(false);
-                    if (velocity().x > 0) {
-                        velocity().x = 0;
-                        position().x = block.getX() - facingAwareOffsetX() - hitbox().width;
-                        if (canClamber) setClambering(true);
-                        break;
-                    }
-                    if (velocity().x < 0) {
-                        velocity().x = 0;
-                        position().x = block.getX() + block.getWidth() - facingAwareOffsetX();
-                        if (canClamber) setClambering(true);
-                        break;
-                    }
-                } else {
-                    setClambering(false);
-                }
             } else {
+                // Walls and plain blocks alike: solid from the side, never grabbed (D121).
                 if (CollisionUtils.checkCollision(this, block)) {
                     if (velocity().x > 0) {
                         velocity().x = 0;

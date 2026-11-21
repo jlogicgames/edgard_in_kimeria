@@ -28,7 +28,6 @@ public class Wall extends CollisionBlock implements Actionable {
         super(x, y, w, h);
         setWall(true);
         this.verticalMovement = verticalMovement;
-        if (verticalMovement) setWallClimbable(false);
         this.targetId = targetId;
         this.lowerY = y;
         this.raisedY = y - h;
