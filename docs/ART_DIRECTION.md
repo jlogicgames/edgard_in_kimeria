@@ -89,15 +89,16 @@ Unrelated single-frame world objects keep their own assets. HUD illustrations us
 separate textures and filtering from world sprites; their selected detailed masters,
 including the fireball, live under `art/hud/`.
 
-The moving brick wall uses `assets/images/objects/wall-brick.png` as one 48×96
-world-sprite frame. Its selected generated source is `art/objects/wall-brick-master.png`;
-the repeatable exporter trims transparent source margins, preserves the silhouette with
-nearest resizing, and anchors the flat center of the base to the frame's lower edge. The
-lower corners are rounded with crisp pixel steps, avoiding a cut-off rectangular base.
-The sprite has a distinct top course and visible masonry edges on both sides, matching the
-forest's modular block style. The runtime PNG is indexed with at most 16 palette entries,
-uses binary transparency outside the masonry, and is sampled with nearest filtering. This
-art follows the vertical collision object during motion.
+The lever-driven wall (an `Actionable` Wall with `movement=vertical`: forest-0 x 2096, forest-1 x 480) is a wooden gate,
+`assets/images/objects/wall-gate.png`, one 48×96 world-sprite frame drawn at the Wall's rect, which follows the collision
+object as it rises. Its source is the hand-typed grid `art/objects/wall-gate.grid`, exported exactly by
+`tools/export_object_sprites.py` (`export_gate_wall`, then the moon rim: `RIM_OBJECTS`). A mechanism, so the active
+family in the lift's colours (author, 2026-11-21: wood, like the lifts, not stone): the escalator's palette (`GreyOff.png`,
+`GreyOn.png`: ink `211f30`, `48475b`, `62677a`, `858d99`, lit `afbbc3`) as weathered grey planks, and its lit top edge (a
+`d8e1e4` row under the moon rim); five heavy vertical planks with grain and knots, each lit on its right edge (the moon is up
+and to the right, D114), dark seams, and three darker iron bands (`141320`, `2e2d3c`) with an `afbbc3` rivet on every plank, so it reads apart from the terrain rock and the block faces.
+Outline 0.685 to 0.718, body 0.415 at most (2026-11-21, the #236 art review; it replaced the generated orange brick pillar
+`wall-brick.png`, 0.695 / 0.419, which belonged to no forest family).
 
 Retain selected sources and exact prompts needed to reproduce current runtime art.
 Remove rejected iterations, unused masters, redundant previews and screenshots of
@@ -1342,7 +1343,7 @@ notes below are the drawings' history:
 |---|---|---|
 | `decor-bush` | `4d6151`→`415558`, `597059`→`495f5e`, `677d62`→`526763`, `758b6a`→`5b7069`, `858358`→`666b5d`, `676547`→`525852` | 0.106 / 0.151 |
 | `decor-lookalike` | `6d6154`→`56555a`, `aa9c8a`→`7e7b7d`, `998b7a`→`737073`, `897b6a`→`686669`, `796c60`→`5e5c62`, `a7a194`→`7c7f84`, `958e82`→`707278`, `b4ada0`→`84868c` | 0.106 / 0.157 |
-| `decor-trunk` | `6d665e`→`565861`, `8b8379`→`6a6b72`, `9a9288`→`74757c`, `7a736a`→`5f6169`; layered forest ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20): →`2a2e38`, `2b2f3a`, `2d303b`, `2b2e39` (OKLab L 0.301 to 0.312, just above the ink floor) | 0.095 / 0.160; over forest-1's layers and forest-0's `2c3f66`: 0.069 to 0.197 / 0.084 to 0.194 |
+| `decor-trunk` | `6d665e`→`565861`, `8b8379`→`6a6b72`, `9a9288`→`74757c`, `7a736a`→`5f6169`; layered forest ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20): →`2a2e38`, `2b2f3a`, `2d303b`, `2b2e39` (OKLab L 0.301 to 0.312, just above the ink floor); bark redraw (#236 art review, 2026-11-21, the flat pole read as a lamp post): a cool slate trunk in a grid of its own, shadow side and furrows `101116`, bark `16171d` / `1b1c23`, lit ridges `24262f` / `2f3340`, a broken moon rim `3a4258` on the right edge, a knot `0b0c10`, a snapped stub on the shadow side, roots flaring to 16 px with moss `1a2322`; the mean lightness kept at the pole's (OKLab L about 0.23) | 0.095 / 0.160; over forest-1's layers and forest-0's `2c3f66`: 0.069 to 0.197 / 0.084 to 0.194; after the redraw, over the shipped layers: outline 0.118 to 0.175, body 0.097 to 0.184 (the flat pole: outline up to 0.170, body up to 0.189) |
 | `decor-vine` | `757a67`→`5b6567`, `9d9f7b`→`757d74`, `8a8c6d`→`69716b`, `88a083`→`687e79`, `738b73`→`5a706e` | 0.130 / 0.173 |
 | `decor-crown` | `607660`→`4e6362`, `6e8466`→`576c66`, `7b9170`→`5f746c`, `889e79`→`687d72`, `948f62`→`707363` | 0.111 / 0.180 |
 

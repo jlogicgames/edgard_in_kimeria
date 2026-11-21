@@ -33,7 +33,7 @@ WORLD_FRAMES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
 SILVER_THREAD_SIZE = (6, 5)
 WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE),
                 'ladder': (LADDER_FRAME_SIZE * LADDER_FRAME_COUNT, LADDER_FRAME_SIZE),
-                'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
+                'wall-gate': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
                 'GreyOff': ESCALATOR_FRAME_SIZE, 'GreyOn': (ESCALATOR_FRAME_SIZE[0] * ESCALATOR_ON_FRAMES, ESCALATOR_FRAME_SIZE[1]),
                 **{name: ITEM_STRIP_SIZE for name in ITEM_STRIPS}}
 # World objects retain transparent surroundings; alpha remains binary after export.
