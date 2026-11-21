@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The inherited enemy sheets (RedMob, Bat) from hand-drawn pixel grids -> native indexed PNG sheets.
+"""The inherited enemy sheets (RedMob, Bat, Boss, YellowMob) from hand-drawn pixel grids -> native indexed PNG sheets.
 
 Each `art/objects/enemy/<name>.grid` is a hand-authored drawing in the grid format of `forest_trap_sprites` (one character
 per pixel, `frame <name>` blocks). This module parses it, places every frame in the cells `sprite_layouts.ENEMY_SHEETS`
@@ -39,7 +39,9 @@ def sheet_image(name):
     size, colors, frames = parse(GRID_DIR / f'{name}.grid')
     if size != frame_size or [f for f, _ in frames] != list(cells):
         raise ValueError(f'{name}: grid size/frames differ from sprite_layouts.ENEMY_SHEETS')
-    if len(colors) > WORLD_PALETTE_SIZE - 1:  # `.` plus the opaque colours, and the rim takes one more entry
+    # Two grid characters may share a colour (the boss's axe ink `a` is the ink `k`, so tests can tell the weapon from the
+    # body); the palette counts colours, and the rim takes one more entry besides transparency.
+    if len({c for c in colors.values() if c}) > WORLD_PALETTE_SIZE - RESERVED_ENTRIES:
         raise ValueError(f'{name}: more than {WORLD_PALETTE_SIZE - RESERVED_ENTRIES} opaque colours')
     sheet = Image.new('RGBA', sheet_size)
     for frame, rows in frames:

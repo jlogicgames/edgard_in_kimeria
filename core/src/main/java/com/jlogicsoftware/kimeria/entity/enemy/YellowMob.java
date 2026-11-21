@@ -23,7 +23,7 @@ public class YellowMob extends Enemy<YellowMob.State> implements CollideBody {
     public YellowMob(Assets assets, GameContext game, float x, float y, float w, float h,
                       float offNeg, float offPos) {
         super(assets, game, "yellow_mob", x, y, w, h, offNeg, offPos, State.class);
-        // Art body is x 7..25, y 5..32; the hitbox is a pixel larger on each open side (D10).
+        // Every live frame is drawn within x 7..25, y 5..32 (yellow-mob.grid); the hitbox is a pixel larger on each open side (D10).
         hitbox = Hitbox.rect(6, 4, 20, 28);
         hurtbox = Hitbox.rect(10, 6, 14, 26); // what kills on touch stays inside the art
 
