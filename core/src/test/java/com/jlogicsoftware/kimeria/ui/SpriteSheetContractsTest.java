@@ -44,7 +44,7 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.TRAP_SPORES, 3, 1);
         matches(SpriteSheets.TRAP_VINE, 3, 1);
         matches(SpriteSheets.TRAP_LOG, 3, 1);
-        matches(SpriteSheets.TRAP_FALLING_PLATFORM, 4, 1); // #362: fan1..fan4, the cracked slab in each
+        matches(SpriteSheets.TRAP_FALLING_PLATFORM, 4, 1); // #362, #236: fan1..fan4 (the rope sway), the split plank in each
         matches(SpriteSheets.TRAP_PERCH, 2, 1); // #349: perch, perch-left
         matches(SpriteSheets.TRAP_ROTTEN_PERCH, 6, 1); // #349: intact, crumble1, crumble2 and their -left copies
         matches(SpriteSheets.TRAP_HONEY_FUNGUS, 6, 1); // #295 phase 1: idle1..3, swell1, swell2, spent
@@ -57,7 +57,7 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.DECOR_CROWN, 1, 1); // #421: the leaf crown over a trunk
     }
 
-    /** #362 (D71): the plain falling platform's at-rest cue, the hairline crack, is in every fan frame, so a re-export without it fails. */
+    /** #362 (D71): the plain falling platform's at-rest cue, the split through its plank (#236), is in every frame, so a re-export without it fails. */
     @Test void everyFallingPlatformFrameCarriesTheCrack() throws Exception {
         var sheet = SpriteSheets.TRAP_FALLING_PLATFORM;
         java.awt.image.BufferedImage png;

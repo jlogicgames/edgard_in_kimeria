@@ -41,7 +41,7 @@ FIRST_LINE = 1
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
                         'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'monster:spider-wall', 'monster:snail', 'monster:wolf', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
                         'thorn-root', 'thorn-tuft', 'fairy:body', 'fairy:glint'})
-# Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack), and the
+# Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's split), and the
 # small glint's side points (`K`, the ink), so its rim is the top point alone and half its contour stays dark.
 RIM_KEEP = {'falling-platform': 'c', 'fairy:glint': 'K'}
 # The fairy (#338, D82, #236) is no moon-rimmed trap: she carries her own light. Her contour is lit from above in her lantern

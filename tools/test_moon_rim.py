@@ -31,7 +31,7 @@ NIGHT = (0x2c, 0x3f, 0x66, 255)  # D92's approved night colour
 NIGHT_SIZE = 64
 EXTRA = (0x12, 0x34, 0x56)  # a 16th opaque colour, for the refusal test
 AT = 24  # where a trap frame is measured on the night patch
-CRACKED = 'falling-platform'  # #362: its crack is a D71 cue on the top edge
+CRACKED = 'falling-platform'  # #362: its split (#236) is a D71 cue through the top edge
 CRACK_INK = (0x21, 0x1f, 0x30, 255)
 TRIED_SHEET = 'thorn-tuft'  # an active trap whose ink contour fails on the night (0.189, w6-430 rim notes)
 

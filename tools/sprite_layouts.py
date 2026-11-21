@@ -15,6 +15,9 @@ LADDER_FRAME_SIZE = 16
 LADDER_FRAME_COUNT = 2
 WALL_FRAME_SIZE = (48, 96)
 PLATFORM_SIZE = (32, 16)
+# The escalator bar (#236): art/objects/escalator.grid, frame off -> GreyOff.png, on1..on8 -> GreyOn.png (one row).
+ESCALATOR_FRAME_SIZE = (32, 8)
+ESCALATOR_ON_FRAMES = 8
 ITEM_FRAME_SIZE = 16
 ITEM_FRAME_COUNT = 2
 ITEM_STRIP_SIZE = (ITEM_FRAME_SIZE * ITEM_FRAME_COUNT, ITEM_FRAME_SIZE)
@@ -31,6 +34,7 @@ SILVER_THREAD_SIZE = (6, 5)
 WORLD_IMAGES = {**WORLD_FRAMES, 'lever': (LEVER_FRAME_SIZE * LEVER_FRAME_COUNT, LEVER_FRAME_SIZE),
                 'ladder': (LADDER_FRAME_SIZE * LADDER_FRAME_COUNT, LADDER_FRAME_SIZE),
                 'wall-brick': WALL_FRAME_SIZE, 'platform': PLATFORM_SIZE,
+                'GreyOff': ESCALATOR_FRAME_SIZE, 'GreyOn': (ESCALATOR_FRAME_SIZE[0] * ESCALATOR_ON_FRAMES, ESCALATOR_FRAME_SIZE[1]),
                 **{name: ITEM_STRIP_SIZE for name in ITEM_STRIPS}}
 # World objects retain transparent surroundings; alpha remains binary after export.
 OPAQUE_WORLD_IMAGES = set()
@@ -52,7 +56,8 @@ FOREST_TRAP_SHEETS = {
     'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
-    # #362: the plain falling platform, its fan spinning in every state; the slab carries the hairline crack (D71 cue).
+    # #362: the plain falling platform; since #236 a lashed plank whose slack rope sways through the frames (named fan1..fan4
+    # from the old fan) and whose split is the D71 cue.
     'falling-platform': ((32, 10), ('fan1', 'fan2', 'fan3', 'fan4')),
     # #349 (D80): the branch skins. perch = the sound branch (a one-way Platform), rotten-perch = the rotten branch
     # (a FallingPlatform, frames as the log's); each with its copy for the left side of a trunk.

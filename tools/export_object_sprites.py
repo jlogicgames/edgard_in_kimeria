@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 from sprite_layouts import (WORLD_FRAMES, WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE,
     WORLD_PALETTE_BITS, HUD_PALETTE_BITS, ALPHA_THRESHOLD, OPAQUE_ALPHA,
     LEVER_FRAME_SIZE, LEVER_FRAME_COUNT, LADDER_FRAME_SIZE, LADDER_FRAME_COUNT,
-    WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE,
+    WALL_FRAME_SIZE, PLATFORM_SIZE, HUD_ICON_SIZE, ESCALATOR_FRAME_SIZE, ESCALATOR_ON_FRAMES,
     ITEM_FRAME_SIZE, ITEM_STRIP_SIZE, ITEM_STRIPS, HUD_ICONS, RGB_CHANNELS)
 import forest_trap_sprites as grids
 from dialogue_frame_sprites import indexed
@@ -50,6 +50,27 @@ def export_levers():
         if written.convert('RGBA').tobytes() != strip.tobytes():
             raise ValueError('lever: the export changed pixels')
     print(target.relative_to(ROOT))
+
+
+def export_escalators():
+    # The escalator bar (#236) is hand-drawn in art/objects/escalator.grid: frame off -> GreyOff.png, frames on1..on8 ->
+    # GreyOn.png in one row (Escalator.java's order). Exact export with the moon rim (D92); nothing merged.
+    size, colors, frames = grids.parse(ROOT / 'art/objects/escalator.grid')
+    on = tuple(f'on{n}' for n in range(1, ESCALATOR_ON_FRAMES + 1))
+    if size != ESCALATOR_FRAME_SIZE or tuple(name for name, _ in frames) != ('off', *on):
+        raise ValueError(f'escalator.grid must hold {ESCALATOR_FRAME_SIZE} frames: off, ' + ', '.join(on))
+    rows = dict(frames)
+    clear = bytes(RGB_CHANNELS + 1)  # one transparent RGBA pixel
+    for stem, names in (('GreyOff', ('off',)), ('GreyOn', on)):
+        data = b''.join(bytes(colors[char] + (OPAQUE_ALPHA,)) if colors[char] else clear
+                        for y in range(size[1]) for name in names for char in rows[name][y])
+        strip = moon_rim.rim(Image.frombytes('RGBA', (size[0] * len(names), size[1]), data), size)
+        target = ROOT / 'assets/images/objects' / f'{stem}.png'
+        indexed(strip, False).save(target, bits=WORLD_PALETTE_BITS, transparency=0)
+        with Image.open(target) as written:
+            if written.convert('RGBA').tobytes() != strip.tobytes():
+                raise ValueError(f'{stem}: the export changed pixels')
+        print(target.relative_to(ROOT), 'moon rim')
 
 
 def export_ladders():
@@ -142,6 +163,7 @@ if __name__ == '__main__':
         export(ROOT / 'art/objects' / f'{name}-pixel.png',
             ROOT / 'assets/images/objects' / f'{name}.png', size, True)
     export_levers()
+    export_escalators()
     export_ladders()
     export_item_strips()
     export_brick_wall()
