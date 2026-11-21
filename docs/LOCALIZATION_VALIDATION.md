@@ -34,7 +34,7 @@
 A temporary hidden-window LWJGL harness rendered 70 frames through the actual
 game at 640x360 logical resolution, using isolated temporary preferences and
 disabled audio. For each of EN/UK/PL/DE/BE it captured the main menu, Options,
-Assist, new-game confirmation, both keyboard/controller help layouts, rules,
+Accessibility, new-game confirmation, both keyboard/controller help layouts, rules,
 missing-recipe offer, ready/paid healer lines, post-boss acknowledgement,
 opening, ending and on-screen controls. Contact sheets were visually inspected:
 text was upright and fit the tested regions without replacement glyphs or
@@ -92,8 +92,8 @@ The #338 fairy strings (`HEALER_TALE_FAIRY`, and the fairy words changed in `HEA
 review ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)). `HealerDialogueTest` fits every line in the D78 text box in all five languages.
 The #370 tutorial-tale rewrite (`HEALER_TALE_ROAD`, `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT`, `HEALER_TALE_WITCH`,
 `EDGARD_TALE_READY`, `HEALER_TALE_BLESSING`) is likewise a machine-quality draft in uk, pl, de and be and joins that review.
-The #239 `SCREEN_SHAKE` label (Options -> Assist, "Screen shake") is likewise a machine-quality draft in
-uk, be, de and pl and belongs to that review; "<label>: Off" fits the 440 px Assist menu in all five
+The #239 `SCREEN_SHAKE` label (Options -> Accessibility, "Screen shake") is likewise a machine-quality draft in
+uk, be, de and pl and belongs to that review; "<label>: Off" fits the 440 px Accessibility menu in all five
 languages (`LocalizationLayoutTest`).
 The checks above do not claim literary approval or testing on physical touch
 devices/gamepads, Safari/Firefox or Windows/Linux graphics backends. Existing

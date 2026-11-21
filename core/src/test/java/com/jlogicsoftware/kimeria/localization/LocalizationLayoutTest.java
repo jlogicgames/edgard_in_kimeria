@@ -76,7 +76,7 @@ class LocalizationLayoutTest {
                 for (Msg message : new Msg[]{Msg.TITLE, Msg.NEW_GAME, Msg.OPTIONS, Msg.ASSIST, Msg.ABOUT, Msg.PAUSE_MENU, Msg.LOADING})
                     assertTrue(new GlyphLayout(title, message.t(language)).width <= 608, prefix + message);
                 for (Msg message : new Msg[]{Msg.PLAY, Msg.CONTINUE, Msg.NEW_GAME, Msg.CONFIRM, Msg.CANCEL,
-                    Msg.ABOUT, Msg.OPTIONS, Msg.EXIT, Msg.BACK, Msg.RESUME, Msg.RESTART_LEVEL, Msg.EXIT_TO_MENU, Msg.RULES, Msg.CONTROLS})
+                    Msg.ABOUT, Msg.OPTIONS, Msg.ASSIST, Msg.EXIT, Msg.BACK, Msg.RESUME, Msg.RESTART_LEVEL, Msg.EXIT_TO_MENU, Msg.RULES, Msg.CONTROLS})
                     assertTrue(new GlyphLayout(button, message.t(language)).width <= 544, prefix + message);
                 assertTrue(height(body, Msg.NEW_GAME_CONFIRMATION.t(language), 290) <= 80, prefix + "confirmation");
                 assertTrue(height(body, Msg.ABOUT_RULES.t(language), 580) <= 140, prefix + "rules");
@@ -121,7 +121,7 @@ class LocalizationLayoutTest {
                     assertTrue(new GlyphLayout(button, label).width <= overlay.buttonsWidth(menu) - 48, prefix + label);
                     assertTrue(overlay.buttonsWidth(menu) <= Overlay.MAX_BUTTONS_W, prefix + label);
                 }
-                // The Assist menu is a fixed 440 px column (D62): the longest On/Off label must fit it.
+                // The Accessibility menu is a fixed 440 px column (D62): the longest On/Off label must fit it.
                 for (String label : List.of(Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),
                     Msg.INSTANT_TEXT.t(language) + ": " + Msg.ON.t(language))) {
                     float width = new GlyphLayout(button, label).width;
