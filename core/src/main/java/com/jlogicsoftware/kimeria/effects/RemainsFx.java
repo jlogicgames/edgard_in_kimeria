@@ -10,8 +10,8 @@ import com.badlogic.gdx.math.RandomXS128;
  * ({@code KIND_GLOW}, additive) and the burnt body's wisp ({@code KIND_SMOKE}), drawn with {@link SoftDot}; {@link #hard()}
  * holds the chips ({@code KIND_GRIT}) and the flames ({@code KIND_FLAME}), drawn with {@link Shaders#whiteQuad()}.
  *
- * <p>Colours: the chips are the monster's own, passed in by the body (the beetle's dusky indigos, the spider's and the
- * snail's dried umbers); the dust is a brown and the smoke greys {@code 9a97ad}, {@code 5b5870}; the flames use the
+ * <p>Colours: the chips are the monster's own, passed in by the body: its live palette, as the body keeps it (D117, #571);
+ * the dust is a brown and the smoke greys {@code 9a97ad}, {@code 5b5870}; the flames use the
  * fireball's own ramp ({@link FireballFx#ramp}), the one fire palette. No reserved hue. Cosmetic: nothing reads it back. World
  * Y grows downward: a rising particle ends at a smaller Y. Particles advance only in {@link #update}, so pause freezes them.
  */

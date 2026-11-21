@@ -798,8 +798,8 @@ class AllocationBudgetTest {
      * Beetles in turn through the real {@code Level} of beetle-test.tmx (#327, D100): each crawls a few frames, then hears the hero, notices (0.5 s), finds
      * him touching and commits, winds up with its specks; the hero steps out of the box at frame {@value #BEETLE_ESCAPE_FRAME}
      * of the cycle; even beetles burst, odd ones are killed at frame {@value #BEETLE_KILL_FRAME} as a fireball would (the poof)
-     * and leave their body (D101): the hero walks up to it at frame {@value #BEETLE_PUSH_FRAME} (it rocks, fading into the decor
-     * body), and at frame {@value #BEETLE_FINISH_FRAME} it crumbles or, one beetle in four, burns.
+     * and leave their body (D101): the hero walks up to it at frame {@value #BEETLE_PUSH_FRAME} (it rocks, fading into the body
+     * sheet), and at frame {@value #BEETLE_FINISH_FRAME} it crumbles or, one beetle in four, burns.
      * {@code update} and {@code render} of the beetle and {@code Level.beetleFx()} every frame. Beetles are built before the probe.
      */
     @Test void beetleThroughTheRealLevel() {

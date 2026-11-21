@@ -1,19 +1,19 @@
-# The forest wolf's body (#331, D101, D115): the `dead` frame of wolf.grid, pixel for pixel, in a decor-tier palette (D76):
-# hand-set tone roles (contour k, belly light m, flank b/c, shade a/d, legs l/L, fang f) on one dark dried umber, as the
-# spider's and the snail's bodies; no ink 0b0814, no moon rim, so a harmless body never reads as a live wolf.
-# Keep it in step with wolf.grid.
+# The forest wolf's body (#331, D101, D115): the `dead` frame of wolf.grid, pixel for pixel, on its side. Since #571 (D117,
+# the author, 2026-11-21) it keeps the live wolf's palette, ink contour and moon rim (from above, as the wolf), exactly as the
+# `dead` frame: no decor recolour, no tint, no halo. The pose on its side is the cue that it is dead (RemainsTest).
+# Keep it in step with wolf.grid: same keys, same colours.
 size 48 24
-color k 1e0600
-color d 220800
-color a 250a00
-color b 2d1001
-color c 2f1202
-color m 341b0c
-color p 341b0c
-color l 2a1103
-color L 2f1608
-color e 2f1202
-color f 341b0c
+color k 0b0814
+color d 2a0612
+color a 4a0c22
+color b 86101f
+color c 9c2050
+color m b85a80
+color p c87896
+color l 9a6070
+color L b07c8c
+color e ff6b57
+color f e8e0cc
 frame body
 ................................................
 ................................................

@@ -110,16 +110,16 @@ WORLD_IMAGES.update({f'fairy-{name}': (size[0] * len(frames), size[1]) for name,
 # Forest monsters (#327, D100): runtime export `monster-<name>.png`, one horizontal strip; the order is the entity's.
 MONSTER_SHEETS = {
     'beetle': ((24, 16), ('crawl1', 'crawl2', 'look', 'wiggle', 'crouch', 'air', 'brace', 'bright', 'white', 'dead')),
-    'beetle-body': ((24, 16), ('body',)),  # D101: the dead frame in a decor-tier palette, the body that stays
+    'beetle-body': ((24, 16), ('body',)),  # D101: the dead frame, the body that stays; live palette and rim (D117)
     'spider': ((32, 16), ('crawl1', 'crawl2', 'rise', 'tap', 'crouch', 'leap', 'bite', 'recover', 'dead', 'hang', 'hangwind',
                        'silk')),  # #328 (D102); hang, hangwind and the thread tile silk #483 (D103)
     'spider-wall': ((16, 32), ('wall1', 'wall2', 'walltap')),  # #483 (D103): on a wall, head up, the wall on the right
-    'spider-body': ((32, 16), ('body',)),  # D101: the spider's dead frame in a decor-tier palette
+    'spider-body': ((32, 16), ('body',)),  # D101: the spider's dead frame; live palette and rim (D117)
     'snail': ((24, 16), ('crawl1', 'crawl2', 'look', 'blink', 'draw', 'spit', 'rest', 'dead', 'gob')),  # #329 (D106); gob: two 8x8 frames
-    'snail-body': ((24, 16), ('body',)),  # D101: the snail's dead frame, the empty shell, in a decor-tier palette
+    'snail-body': ((24, 16), ('body',)),  # D101: the snail's dead frame, the empty shell; live palette and rim (D117)
     'wolf': ((48, 24), ('stand', 'trot1', 'trot2', 'alert', 'hackle', 'scrape', 'run1', 'run2', 'run3', 'run4', 'skid', 'crouch',
                      'lunge', 'bite', 'shake', 'bay', 'dead')),  # #331 (D115)
-    'wolf-body': ((48, 24), ('body',)),  # D101: the wolf's dead frame, on its side, in a decor-tier palette
+    'wolf-body': ((48, 24), ('body',)),  # D101: the wolf's dead frame, on its side; live palette and rim (D117)
 }
 WORLD_IMAGES.update({f'monster-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in MONSTER_SHEETS.items()})
 # The inherited enemy sheets, redrawn as grids (2026-11-21): art/objects/enemy/<name>.grid -> assets/images/enemy/<sheet>.png,
