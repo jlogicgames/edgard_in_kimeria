@@ -8,7 +8,7 @@ What it does, idempotently (a second run changes nothing):
   `assets/tiles/parallax/` (image paths rewritten); the terrain sketch (`art/terrain/forest/out/ForestTerrain.png`, 140 tiles at the tile
   ids of the retired third-party sheet) becomes `assets/images/Tileset/ForestTerrain.png` with its own `ForestTerrain.tsx`, the play
   tileset of every forest map;
-- retiles each map's play layer (`retile`: no seam where two rooms' floors meet, no rope over the room-edge walls);
+- retiles each map's play layer (`retile`: no seam where two rooms' floors meet, no rope over the room-edge walls, block faces, D114);
 - writes into each forest map the map-wide scenery layers (sky, stars, moon, clouds, far, grove, mid, each as wide as its
   parallax factor needs: the camera reaches x = map width - 640, a layer of factor f is seen up to f * that + 640), `play-above` (1 row,
   `offsety` -16) and `play-below` (the deep soil, 1 row, `offsety` = the room height; the bleed is what the camera top's 0 to 8 px range and the shake need, D111), turns the Background's bottom ground row into its
@@ -33,12 +33,22 @@ TERRAIN_FROM = ROOT / 'art/terrain/forest/out/ForestTerrain.png'
 TERRAIN_TO = ROOT / 'assets/images/Tileset/ForestTerrain.png'
 TERRAIN_TSX = TILES / 'ForestTerrain.tsx'   # the play tileset of every forest map: the terrain sketch
 FOREST_FIRST_GID, FOREST_TILES = 1, 140          # ForestTerrain.tsx: the play tileset, the first of the map
+SHEET_COLUMNS = 20                                # tiles per row of ForestTerrain.png (320 px)
 # the ground tiles of the play tileset: (left, middle, right) of its top, body, bottom and buried bottom rows (D111)
 GROUND = ((22, 23, 24), (42, 43, 44), (62, 63, 64), (71, 72, 73))
 # the boulder (33-35 over 53-55) and the slope (36-38 over 56-58) -> their back-rock variants (terrain.grid `back-*`): the same rock
 # with no straw lip and no moss, for the rock that is scenery, not ground (forest-2's ruin and mounds)
 BACK_ROCK = dict(zip((33, 34, 35, 53, 54, 55, 36, 37, 38, 56, 57, 58), (82, 83, 84, 85, 86, 87, 74, 75, 76, 77, 78, 67)))
 SLAB = (26, 27, 28)                               # the floating slab (left, middle, right): its underside is open
+# Block faces (D114, terrain.grid `Block faces`): the ground piece's left and right columns are the faces (left in shadow, right lit by the
+# moon, up and to the right) and its bottom row the underside; these are the extra tiles `retile` picks from the drawn ground around a cell
+BODY_VARIANTS = (43, 5, 9, 12)                    # the soil body and three variants that break its 16 px repeat
+FACES = ((42, 15), (44, 16))                      # (left face, its variant), (right face, its variant)
+INNER_UL, INNER_UR, INNER_ULR = 17, 18, 19        # a body cell under a wall foot: moss against the face above, up-left, up-right or both
+PILLAR_TOP, PILLAR_BODY = 25, 29                  # a ground column one tile wide: both faces
+KIND = {gid: k for k, kind in enumerate(GROUND) for gid in kind}   # tile -> its row: 0 top, 1 body, 2 underside, 3 buried
+KIND.update({gid: 1 for gid in BODY_VARIANTS + FACES[0] + FACES[1] + (INNER_UL, INNER_UR, INNER_ULR, PILLAR_BODY)})
+KIND[PILLAR_TOP] = 0
 ROPE = (79, 99, 105, 119, 139)                    # the rope column and its bracket (third-party layout, drawn over the room-edge walls)
 TERRAIN_TSX_TEXT = ('<?xml version="1.0" encoding="UTF-8"?>\n<tileset version="1.10" tiledversion="1.11.2" name="ForestTerrain" '
                     'tilewidth="16" tileheight="16" tilecount="140" columns="20">\n'
@@ -116,23 +126,33 @@ def background_rows(text):
     return match, rows
 
 
+def variant(r, c, count):
+    """A variant index fixed by the cell's place (D114): the same map always gets the same tiles, so a reinstall changes nothing."""
+    x = (r * 0x9E3779B1 + c * 0x85EBCA77) & 0xffffffff   # an integer hash (murmur3's finaliser): neighbours look unrelated
+    x = (x ^ x >> 16) * 0x85EBCA6B & 0xffffffff
+    x = (x ^ x >> 13) * 0xC2B2AE35 & 0xffffffff
+    return (x ^ x >> 16) % count
+
+
 def retile(rows, solid=frozenset()):
-    """The play rows with the room-edge seams and the ropes gone (#236), every cell's emptiness unchanged (collision and
-    `CollisionVisibilityTest` read it): a ground tile takes its left, middle or right column by its horizontal neighbours, keeping
-    its authored row (top, body, bottom), so two blocks that meet at a room edge read as one floor; a rope cell (the third-party
-    rope column drawn over a `Wall`: the grab cue's straw where no rope is) becomes soil like the other walls, its top cell the lit
-    walk edge where open air is above it (a short wall's top can be stood on), the rest the soil body; a slab tile set into a floor
-    (ground tops on both sides) becomes the floor's top. The lit walk edge is the "stand here" cue, so a drawn cell that is not in
-    `solid` ((row, column) cells of the map's solid collision blocks) never carries it: a ground top there shows the soil body, a
-    boulder or slope cell its back-rock variant (D112)."""
+    """The play rows with the room-edge seams and the ropes gone (#236) and the blocks given faces (D114), every cell's emptiness
+    unchanged (collision and `CollisionVisibilityTest` read it). A rope cell (the third-party rope column drawn over a `Wall`: the grab
+    cue's straw where no rope is) becomes soil like the other walls, its top cell the lit walk edge where open air is above it (a short
+    wall's top can be stood on); a slab tile set into a floor (ground tops on both sides) becomes the floor's top. The lit walk edge is
+    the "stand here" cue, so a drawn cell that is not in `solid` ((row, column) cells of the map's solid collision blocks) never carries
+    it: a ground top there shows the soil body, a boulder or slope cell its back-rock variant (D112).
+    Then every ground cell takes its tile from the drawn ground around it (past the map's sides and bottom is ground, above it air): a top with ground above it
+    (a wall's foot) is soil, so the walk edge ends at the wall; a body cell with air below is the underside; a cell with air on its left
+    shows the left face (shadow), on its right the right face (lit), on both the pillar; a body cell under a wall foot whose top-left or
+    top-right neighbour is air carries the inner corner; the faces take a variant from `variant`, and
+    other body cells a soil body by `variant` among those unlike their left and upper neighbours."""
     rows = [list(r) for r in rows]
-    width = len(rows[0])
-    tops = GROUND[0]
+    height, width = len(rows), len(rows[0])
     for r, row in enumerate(rows):
         for c, gid in enumerate(row):
             if gid in ROPE:
                 row[c] = GROUND[0 if r and not rows[r - 1][c] else 1][1]
-            elif gid in SLAB and 0 < c < width - 1 and row[c - 1] in tops and row[c + 1] in tops:
+            elif gid in SLAB and 0 < c < width - 1 and KIND.get(row[c - 1]) == 0 and KIND.get(row[c + 1]) == 0:
                 row[c] = GROUND[0][1]   # a floating slab's tile set into a floor (forest-2, x 1520): the floor's own top
     if solid:
         for r, row in enumerate(rows):
@@ -141,16 +161,37 @@ def retile(rows, solid=frozenset()):
                     continue
                 if gid in BACK_ROCK:
                     row[c] = BACK_ROCK[gid]
-                elif gid in tops:
-                    row[c] = GROUND[1][tops.index(gid)]
-    for row in rows:
-        family = [next((k for k, kind in enumerate(GROUND) if gid in kind), None) for gid in row]
-        for c, kind in enumerate(family):
+                elif KIND.get(gid) == 0:
+                    row[c] = GROUND[1][1]
+    kinds = [[KIND.get(gid) for gid in row] for row in rows]
+
+    def ground(r, c):   # past the map's sides and bottom the soil goes on; above its top is open air
+        return r >= 0 and (not (r < height and 0 <= c < width) or kinds[r][c] is not None)
+
+    for r, row in enumerate(rows):
+        for c, kind in enumerate(kinds[r]):
             if kind is None:
                 continue
-            left = c == 0 or family[c - 1] is not None
-            right = c == width - 1 or family[c + 1] is not None
-            row[c] = GROUND[kind][1 if left and right else 0 if right else 2 if left else 1]
+            if kind == 0 and ground(r - 1, c):
+                kind = 1
+            if kind == 1 and not ground(r + 1, c):
+                kind = 2
+            left, right = not ground(r, c - 1), not ground(r, c + 1)
+            if kind == 0:
+                row[c] = PILLAR_TOP if left and right else GROUND[0][0 if left else 2 if right else 1]
+            elif kind == 1 and left and right:
+                row[c] = PILLAR_BODY
+            elif kind == 1 and (left or right):
+                row[c] = FACES[0 if left else 1][variant(r, c, 2)]
+            elif kind == 1:
+                above = ground(r - 1, c)
+                inner_l, inner_r = above and not ground(r - 1, c - 1), above and not ground(r - 1, c + 1)
+                # a soil body unlike the cell on its left and the one above (both already final), so no two alike touch
+                bodies = [v for v in BODY_VARIANTS if v != (row[c - 1] if c else 0) and v != (rows[r - 1][c] if r else 0)]
+                row[c] = (INNER_ULR if inner_l and inner_r else INNER_UL if inner_l else INNER_UR if inner_r
+                          else bodies[variant(r, c, len(bodies))])
+            else:
+                row[c] = GROUND[kind][1 if left == right else 0 if left else 2]
     return rows
 
 

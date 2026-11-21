@@ -3057,7 +3057,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Snail (#329): yes, built ([D106](#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398)).** Its empty shell stays, rolled onto its back with its mouth open upward, and rocks like the others.
   - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
-  - **Wolf (#331): yes, with its own reaction ([D114](#d114-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
+  - **Wolf (#331): yes, with its own reaction ([D115](#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
     frame) when the hero passes. It crumbles and burns like the others.
   - **Bat (existing): yes.** It falls when killed. Over a pit it leaves nothing.
   - **RedMob and YellowMob (existing): the author decides per mob in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).** Both are in rooms the author has played,
@@ -3759,6 +3759,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   432, 768 to 816, 1800 to 1808), body at most 0.198. No threshold changed. Rule B: 0 covered objects in 14 rooms, the hero hidden 0.00 s.
 - **Gate:** `validateContrast`, `validateParallax` (`--check --game`, now 14 rooms), `tools/test_parallax_game.py` (every map is what the
   installer writes, every forest-0 and forest-2 room has a foreground, `retile` and the narrow-room camera), `TiledMapParallaxTest`.
+- **Since D114:** `retile` also gives the blocks faces, an underside, inner corners at a wall's foot and soil variants; a top under a wall
+  is no longer drawn with the straw (it shows the wall foot), the rest of this decision is unchanged.
 
 ## D113. The foreground takes big near pieces, drawn by hand ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
@@ -3800,14 +3802,42 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   68 158 bytes (+13 448).
 - **Gate:** `validateParallax`, `tools/test_parallax_game.py`, `TiledMapParallaxTest`, `validateContrast`.
 
-## D114. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
+## D114. Terrain blocks get faces, an underside and soil variants ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+
+- **Status:** Proposed, 2026-11-21, with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waits for
+  the author like the rest of the card.
+- **Problem:** the art review of the forest maps found the raised blocks flat: no side light, no underside, no bottom edge under an overhang
+  (`forest-1-guard`, the block at x 192 to 448; `forest-1-lever`), and the soil body repeating one motif every 16 px.
+- **Decision:** (1) new tiles drawn by hand in `art/terrain/forest/terrain.grid` (one character per pixel, exported by
+  `tools/terrain_sprites.py`): the ground piece's left and right columns become the faces (the moon of D92 is up and to the right, so the
+  right face is lit, `5c412c` with a `765639` rim, and the left face falls to `150e0a` at the edge), its bottom row the underside (the soil
+  darkens, a lit lip, a near-black underside with root tips), the buried corners carry the faces into the deep soil; under `Block faces`: a
+  second left and right face, three soil bodies (strata and flecks in other places, no round clod: a first clod read as a dot grid), the
+  inner corners (moss against the face, no straw) and a one-tile pillar (its top and body are halves of the caps and faces, copied);
+  (2) `tools/parallax_game.py` `retile` picks them from the drawn ground around each cell, after its D112 steps (ropes, slabs set into a
+  floor, no straw off solid ground): a top with ground above it (a wall's foot) is soil; a body cell with air below is the underside; air on
+  the left shows the left face, on the right the right face, on both the pillar; a body cell under a wall whose top-left or top-right cell is
+  air carries the inner corner; a face takes one of its two drawings and a soil body one of four by a hash of the cell's row and column
+  (`variant`), the body never the same as its left or upper neighbour. Past the map's sides and bottom is ground, above its top air. It only
+  changes which tile a drawn cell shows, never whether it is drawn, and touches no collision or object; a second install changes nothing.
+  The neighbourhood is the drawn ground, not the collision: the faces show the shape the eye sees (forest-2's scenery blocks have no
+  collision and still get faces); the straw keeps following the collision (D112). A slab stays a slab (its open underside is already an
+  overhang); a slab lip over a block keeps its caps.
+- **Measured:** forest-0, forest-1, forest-2: 950 face cells, 46 underside cells, 59 inner corners, 54 pillar cells, 1 774 soil bodies
+  (451, 457, 433, 433 per drawing); no cell's emptiness changed (`test_retile_never_changes_which_cells_are_drawn`). `check_contrast.py`
+  passes (no threshold changed); `parallax_mock.py --check --game`: 0 covered objects, the hero hidden 0.00 s.
+- **Gate:** `tools/test_parallax_game.py` (the underside under a block with air below, the left and right faces, the wall foot's inner
+  corner and no straw on it, no straw on any face, body or corner tile, the variants fixed by place and never alike side by side, the
+  maps' drawn cells unchanged, every map what the installer writes), `validateParallax`, `validateContrast`, `CollisionVisibilityTest`.
+
+## D115. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
 
 - **Status:** Accepted and built (author, 2026-11-20: "the wolf must be faster and more dangerous than the other enemies";
   2026-11-21: the card and every recommendation of the proposal, the danger-family crimson, the first meeting in forest-2, the art
   with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in no room yet: the forest-2 room card
   comes first ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)). The lunge is **160 px in 0.25 s**
   (author, 2026-11-21: "Yes, 160"; see Why). Card:
-  [GAME_DESIGN.md, "Wolf card"](GAME_DESIGN.md#wolf-card-built-d114-331).
+  [GAME_DESIGN.md, "Wolf card"](GAME_DESIGN.md#wolf-card-built-d115-331).
 - **Decision:**
   - **The fastest and most dangerous Forest monster.** It is the first monster faster than the hero, it senses the furthest,
     commits from the furthest and strikes the furthest of the monsters that close in, and it gives the shortest window after a

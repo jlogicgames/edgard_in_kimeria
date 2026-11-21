@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The forest wolf (#331, D114): the fastest and most dangerous Forest monster, and the first one that cannot be outrun. It trots
+ * The forest wolf (#331, D115): the fastest and most dangerous Forest monster, and the first one that cannot be outrun. It trots
  * inside its authored range, sniffing at each end. It sees far ahead ({@link #SIGHT_RANGE}, a band cut by solids) and hears a
  * close circle ({@link #HEAR_RADIUS}); noticed, it stops, pricks its ears, bristles and scrapes a paw (0.5 s, not scaled by the
  * assist) and calls, then sprints at {@link #CHASE_SPEED}, faster than the hero runs, bound to its range. When the hero's body
@@ -54,7 +54,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     private static final float BODY_X = 6, BODY_Y = 6, BODY_WIDTH = 34, BODY_HEIGHT = 18;
     /** The jaw box, inside the drawn muzzle (7x7, 8 to 15 px above the floor line): lethal during the lunge and the bite. */
     private static final Hitbox JAWS = Hitbox.rect(40, 9, 7, 7);
-    /** The jaw box's front edge in the frame facing right: the muzzle, the reference of every reach (D114). */
+    /** The jaw box's front edge in the frame facing right: the muzzle, the reference of every reach (D115). */
     private static final float MUZZLE_X = 47;
     public static final float JAW_ABOVE_FLOOR_LOW = 8, JAW_ABOVE_FLOOR_HIGH = 15;
     private static final float PIVOT_X = BODY_X + BODY_WIDTH / 2f;
@@ -88,7 +88,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     /**
      * The lunge: this far along its floor in this long (a hero who runs from the commit gains {@code 100 * (wind-up + lunge)} px
      * on it, so without the assist the jaws at {@link #LUNGE_REACH} must outreach {@link #COMMIT_REACH} + 75, and with the assist
-     * {@code COMMIT_REACH + 100} must outreach them: D114).
+     * {@code COMMIT_REACH + 100} must outreach them: D115).
      */
     public static final float LUNGE_REACH = 160, LUNGE_SECONDS = .25f;
     public static final float LUNGE_SPEED = LUNGE_REACH / LUNGE_SECONDS;
@@ -452,7 +452,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         return !player.isGotHit() && commitBoxInto(commitScratch).overlaps(player.hitboxBoundsInto(heroScratch));
     }
 
-    // ---- the lunge (D114) --------------------------------------------------------------------------------------------
+    // ---- the lunge (D115) --------------------------------------------------------------------------------------------
 
     /**
      * It commits where it stands and locks its direction: the line the jaws will cover is traced now over the floor under it, a
@@ -576,7 +576,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     public void collidedWithActor(boolean gotHit) {
         if (isDefeated()) return;
         if (gotHit) { die(); return; }
-        if (!stompedByPlayer()) return; // touch is harmless: only the jaws kill (D114)
+        if (!stompedByPlayer()) return; // touch is harmless: only the jaws kill (D115)
         player.velocity.y = -BOUNCE_HEIGHT;
         die();
     }
@@ -742,10 +742,10 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         batch.setPackedColor(saved);
     }
 
-    // ---- load-time checks (D114) ---------------------------------------------------------------------------------------
+    // ---- load-time checks (D115) ---------------------------------------------------------------------------------------
 
     /**
-     * The load-time checks (D114), on the 48x24 wolf whatever the Tiled object's size ({@code y} is the frame's top): a range at
+     * The load-time checks (D115), on the 48x24 wolf whatever the Tiled object's size ({@code y} is the frame's top): a range at
      * least {@link #MIN_RANGE} px long inside the room, on floor without gaps under its whole range; no standing place (the
      * entrance body, the room exit, a checkpoint) inside its sight or its reach at any point of the range, facing either way; and
      * {@link #HEADROOM} px of headroom above its floor over its whole reach (no {@code solids} box hangs into that strip). Null

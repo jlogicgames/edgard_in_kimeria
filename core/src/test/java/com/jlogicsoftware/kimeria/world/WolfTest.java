@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The forest wolf (#331, D114), driven headlessly through real Level updates with ordinary keyboard controls.
+ * The forest wolf (#331, D115), driven headlessly through real Level updates with ordinary keyboard controls.
  *
  * <p>Fixture wolf-test.tmx: room 1280 wide, floor y 320, hero enters at x 32; the wolf spawns at x 640 facing left (frame
  * x 640..688, body x 646..680, muzzle at x 639), offNeg 6 and offPos 6, so its {@code position.x} stays in 544..736. Facing
@@ -387,7 +387,7 @@ class WolfTest {
 
     @Test void aJumpTimedUpToHalfASecondAfterTheCommitClearsTheJaws() throws Exception {
         int edge = clearingWindow(false, AT_BOX_EDGE)[1], muzzle = clearingWindow(false, 1)[1];
-        // On paper (D114): the jaws reach a hero G px away G/640 s into the lunge and pass him 18 px later; the feet stay above the
+        // On paper (D115): the jaws reach a hero G px away G/640 s into the lunge and pass him 18 px later; the feet stay above the
         // jaws (15 px) from 0.064 s to 0.84 s after take-off: the latest take-off is 0.55 s after the commit at 71 px, 0.44 s at the muzzle.
         assertEquals(.55f, edge * STEP, .08f, "at the edge of its box the latest clearing take-off is about 0.55 s after the commit: " + edge);
         assertEquals(.44f, muzzle * STEP, .08f, "at its muzzle it is about 0.44 s: " + muzzle);
@@ -733,7 +733,7 @@ class WolfTest {
         assertFalse(harness.sounds.contains("wolf_run"), "off screen it is silent");
     }
 
-    // ---- load-time checks (D114) ------------------------------------------------------------------------------------------
+    // ---- load-time checks (D115) ------------------------------------------------------------------------------------------
 
     @Test void theLoadChecksRejectAWolfThatCouldCatchTheHeroAtTheEntranceOrCannotBeJumped() {
         IllegalArgumentException entrance = assertThrows(IllegalArgumentException.class, () -> harness.roomOf("wolf-entrance", 0));

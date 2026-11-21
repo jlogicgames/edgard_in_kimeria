@@ -654,7 +654,7 @@ below when the hero enters their awareness area (the hearing range).
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
-| Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D114). |
+| Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D115). |
 
 The inherited RedMob and Bat keep their behaviour, frames, timing and boxes and were redrawn on 2026-11-21 in the danger
 family with a red of their own, apart from the bugs' crimson and rose (colours: [ART_DIRECTION.md](ART_DIRECTION.md), section 1,
@@ -665,7 +665,7 @@ wings; its sheet grew from 80x72 to 80x80 so the four death frames, read 16 px t
 row 8). Grids: `art/objects/enemy/red-mob.grid`, `art/objects/enemy/bat.grid`; export and checks: `tools/enemy_sprites.py`,
 `tools/test_enemy_sprites.py`.
 
-Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D114, built and placed in no room yet, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D115, built and placed in no room yet, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
@@ -797,7 +797,7 @@ its decor body. The gate measures a placed `Snail` along its range and its gob a
 Code: `entity/enemy/Snail.java`, `entity/enemy/Breakable.java`; tests: `SnailTest`, `SnailFxTest`, `RemainsTest`,
 `AllocationBudgetTest.snailThroughTheRealLevel`. Placement: with the spider rooms' rework under D105 ([#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)).
 
-### Wolf card (built, [D114](DECISIONS.md#d114-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398), [#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331))
+### Wolf card (built, [D115](DECISIONS.md#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398), [#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331))
 
 The beetle says "get clear", the spider "make it miss, then strike", the snail "cross in the reload". Every one of them loses a
 foot race, so walking away always answers them. **The wolf is the first monster you cannot outrun**, and the author asked for it
@@ -805,7 +805,7 @@ to be the fastest and most dangerous in the Forest (2026-11-20). Its question is
 once?** Its bite is a long, low, straight lunge along a locked line: jump over it (the first monster beaten by going *over* its
 attack, where the spider's dodge is *out of* a spot), turn and strike its back in its short recovery, go up out of its reach, or
 meet it with a live sword, a fireball or a stone. Like every new monster it is met in play, with no teaching room and no hint
-text. Numbers are the built values (D114; the author approved the card on 2026-11-21 with every recommendation, and the
+text. Numbers are the built values (D115; the author approved the card on 2026-11-21 with every recommendation, and the
 lunge at 160 px in 0.25 s on 2026-11-21, see the running row). The hero's are measured from the code (run 100 px/s, hitbox 11×22, drawn at most 31 px tall; a jump lifts the feet
 about 60 px and keeps them above 14 px for about 0.79 s, from 0.06 s after take-off; sword box 17 px past the hitbox front, live
 for the whole 0.7 s swing, the hero stopped while swinging).

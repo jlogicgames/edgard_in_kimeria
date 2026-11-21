@@ -285,7 +285,7 @@ clicks or `hive_buzz`. Constants: `SNAIL_*` in `tools/audio/generate_sounds.py`;
 Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble` and `remains_burn`; the crawl and the reload are
 silent. There is no "ready" sound when the reload ends: the stalks shooting up are the cue, and the wind-up has its own sound.
 
-### Forest wolf (#331, seeds 7301-7311, [D114](DECISIONS.md#d114-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398))
+### Forest wolf (#331, seeds 7301-7311, [D115](DECISIONS.md#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398))
 
 Seven voice-synth sounds for the wolf, generated 2026-11-21 from the names and roles the author approved with the card; the author
 auditioned them from the files and asked for two retunes (below). An animal, never a person: the first set used the hero's own recipe

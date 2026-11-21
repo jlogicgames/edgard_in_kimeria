@@ -180,7 +180,7 @@ SPRITES = {
     'Snail': ('active', 'objects/monster-snail.png', (0, 0, 24, 16), 8, 'floor', FULL),
     'Snail:gob': ('active', 'objects/monster-snail.png', (192, 0, 8, 8), 2, 'top', FULL),
     'Snail:body': ('decor', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
-    # #331 (D114): every frame of the wolf, and its body (D101); measured once the wolf is placed, until then at the monster
+    # #331 (D115): every frame of the wolf, and its body (D101); measured once the wolf is placed, until then at the monster
     # spawns of the three maps (the art pass of 2026-11-21).
     'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
     'Wolf:body': ('decor', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
@@ -1009,7 +1009,7 @@ def tile_report(roots):
 # is covered with no edit here):
 # - beetle and snail: every position.x of the authored range, on the range's floor (the load checks keep the whole range on
 #   floor without gaps; the beetle's notice hop and the body's flip hop land on the same floor);
-# - wolf (#331, D114): every position.x of its range, widened by Wolf.LUNGE_REACH while authored floor stays under the whole body at
+# - wolf (#331, D115): every position.x of its range, widened by Wolf.LUNGE_REACH while authored floor stays under the whole body at
 #   its floor line (the body of a wolf killed in its lunge slides on to the line's end, over floor only);
 # - spider: every position.x of each floor leg, widened by Spider.POUNCE_REACH while authored floor stays under the whole
 #   body at that floor line (#497: the leap never leaves that floor); every wall pose and every thread pose, set on the open

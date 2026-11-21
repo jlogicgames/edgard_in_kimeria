@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Pool sizes of {@link WolfFx} (#331, D114): the worst case the game can make is a few wolves winding up at once at the assist's
+ * Pool sizes of {@link WolfFx} (#331, D115): the worst case the game can make is a few wolves winding up at once at the assist's
  * longest bite warning, lunging their whole reach and biting together, while others skid and die. The peak over many seeds and
  * frame rates must leave at least 25 % headroom, since a full pool silently drops the oldest particle. The test also pins that the
  * breath streaks gather on the end of the line and stay on the floor line.
