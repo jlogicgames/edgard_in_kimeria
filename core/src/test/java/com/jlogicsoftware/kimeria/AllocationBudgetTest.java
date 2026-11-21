@@ -26,6 +26,7 @@ import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
+import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.ThornTrap;
@@ -191,6 +192,8 @@ class AllocationBudgetTest {
     static final double SPIDER_ROUTE_CEILING = 8;
     /** Measured in 3 runs (2026-11-19, #329, D106; the same 8 B ceiling as the other monsters; the harness does not play sounds): snails crawling, noticing, winding up with their specks and swelling gob, spitting, their gobs flying with drips and ending (dropping and splatting past their range, cut by the blade or burnt), reloading, or killed with their gob still in the air and leaving a body that rocks, crumbles and burns, through the real {@code Level} of snail-test.tmx, update and render every frame; the numbers are in D106. */
     static final double SNAIL_CEILING = 8;
+    /** Measured 0.2, 0.6 and 0.6 B/frame in 3 runs before the floor re-check, and 0.0 in the one run after it (2026-11-21, #331, D113; the same 8 B ceiling as the other monsters; the harness does not play sounds): wolves trotting, sniffing, noticing, sprinting, skidding on a turn, winding up with their breath streaks, lunging, biting, recovering and baying under a hero out of reach, or killed in the lunge and leaving a body that twitches, crumbles and burns, through the real {@code Level} of wolf-test.tmx, update and render every frame; the numbers are in D113. */
+    static final double WOLF_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
@@ -946,6 +949,78 @@ class AllocationBudgetTest {
         assertFalse(level.player.isGotHit(), "every gob passed under the hero or was broken");
         assertTrue(maxRock[0] > 0, "an odd snail's body must rock when the hero walks up to it");
         assertWithinBudget("snail notice, wind-up, spit, gob, reload, death and body", SNAIL_CEILING, bytes);
+    }
+
+    private static final int WOLF_CYCLE_FRAMES = 420, WOLF_SEEN_FRAME = 10, WOLF_PUSH_AFTER_KILL = 30, WOLF_FINISH_AFTER_KILL = 90;
+    private static final int WOLF_KINDS = 4, WOLF_BURNT = 3;
+    private static final float WOLF_X = 640, WOLF_Y = 296, WOLF_W = 48, WOLF_H = 24, WOLF_OFF = 6, WOLF_LIFT = 40;
+    /** Hero positions (x of the 64 px frame): 150 px ahead of the muzzle, in its sight; far, out of sight and hearing. */
+    private static final float WOLF_HERO_AHEAD_X = 489 - 29, WOLF_HERO_FAR_X = 3;
+
+    /**
+     * Wolves in turn through the real {@code Level} of wolf-test.tmx (#331, D113). Each cycle the hero appears 150 px ahead (frame
+     * {@value #WOLF_SEEN_FRAME}; every even wolf spawns at its range's left end, so it sniffs there first); the wolf notices
+     * (0.5 s) and sprints; the hero jumps behind it as it runs, so it skids and turns; it commits, winds up with its breath streaks
+     * and lunges, and the hero is gone when the jaws leave (a miss). Even wolves bite, recover, chase a hero lifted 40 px (out of
+     * reach: it runs to its range end and bays), give up and trot on. Odd wolves are killed in the lunge (the body slides on),
+     * lie, are walked up to ({@value #WOLF_PUSH_AFTER_KILL} frames later: they twitch) and crumble or, one in {@value #WOLF_KINDS}, burn.
+     * {@code update} and {@code render} of the wolf, {@code Level.wolfFx()} and {@code Level.remainsFx()} every frame. Wolves are
+     * built before the probe.
+     */
+    @Test void wolfThroughTheRealLevel() {
+        Level level = harness.roomOf("wolf-test", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / WOLF_CYCLE_FRAMES + 1;
+        Wolf[] wolves = new Wolf[cycles];
+        for (int k = 0; k < cycles; k++) {
+            // Even wolves spawn at the left end of the same range (x 544..736), so they sniff there before the hero comes into view.
+            wolves[k] = k % 2 == 0 ? new Wolf(harness.assets(), harness.game(), WOLF_X - WOLF_OFF * 16, WOLF_Y, WOLF_W, WOLF_H, 0, 2 * WOLF_OFF)
+                : new Wolf(harness.assets(), harness.game(), WOLF_X, WOLF_Y, WOLF_W, WOLF_H, WOLF_OFF, WOLF_OFF);
+            wolves[k].setPlayer(level.player);
+            wolves[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Wolf.State.values().length];
+        boolean[] turned = new boolean[cycles], missed = new boolean[cycles], recovered = new boolean[cycles], lifted = new boolean[cycles], done = new boolean[cycles];
+        int[] killedAt = new int[cycles], peak = new int[1];
+        float[] maxTwitch = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / WOLF_CYCLE_FRAMES, f = i % WOLF_CYCLE_FRAMES;
+            Wolf wolf = wolves[k];
+            if (f == 0) level.player.position.set(WOLF_HERO_FAR_X, HERO_Y);
+            if (f == WOLF_SEEN_FRAME) level.player.position.set(WOLF_HERO_AHEAD_X, HERO_Y);
+            Wolf.State st = wolf.state();
+            if (st == Wolf.State.CHASE && !turned[k] && wolf.speed() > 100) {   // he jumps behind it as it runs: it must skid and turn
+                level.player.position.set(wolf.position.x + 148 - 29, HERO_Y);
+                turned[k] = true;
+            }
+            if (st == Wolf.State.LUNGE && !missed[k]) {
+                level.player.position.set(WOLF_HERO_FAR_X, HERO_Y);   // gone as the jaws leave: a miss
+                missed[k] = true;
+                if (k % 2 == 1) { wolf.collidedWithActor(true); killedAt[k] = f; }   // odd wolves are killed in the lunge
+            }
+            if (st == Wolf.State.RECOVER) recovered[k] = true;
+            if (recovered[k] && st == Wolf.State.CHASE && !lifted[k]) lifted[k] = true;   // then he stands 40 px up, out of its reach
+            if (lifted[k] && !done[k]) {
+                if (wolf.state() == Wolf.State.TROT) { done[k] = true; level.player.position.set(WOLF_HERO_FAR_X, HERO_Y); }
+                else { level.player.position.set(WOLF_HERO_AHEAD_X, HERO_Y - WOLF_LIFT); level.player.velocity().setZero(); }
+            }
+            if (killedAt[k] > 0 && f == killedAt[k] + WOLF_PUSH_AFTER_KILL) level.player.position.set(wolf.position.x + 8 - 29, HERO_Y);
+            if (killedAt[k] > 0 && f == killedAt[k] + WOLF_FINISH_AFTER_KILL) { if (k % WOLF_KINDS == WOLF_BURNT) wolf.burnUp(); else wolf.crumble(); }
+            if (!wolf.isRemoved()) {
+                wolf.update(STEP); wolf.render(batch); seen[wolf.state().ordinal()] = true;
+                maxTwitch[0] = Math.max(maxTwitch[0], Math.abs(wolf.twitch()));
+            }
+            level.wolfFx().update(STEP);
+            level.wolfFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+            peak[0] = Math.max(peak[0], level.wolfFx().soft().count() + level.wolfFx().hard().count());
+        });
+        for (Wolf.State state : Wolf.State.values()) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(peak[0] > 0, "the wolves must actually throw particles");
+        assertFalse(level.player.isGotHit(), "the hero was gone before every bite");
+        assertTrue(maxTwitch[0] > 0, "an odd wolf's body must twitch when the hero walks up to it");
+        assertWithinBudget("wolf notice, sprint, skid, wind-up, lunge, bite, recovery, bay, death and body", WOLF_CEILING, bytes);
     }
 
     /** The floor spider's states (D102); the climb and the drop (D103) have their own scenarios below. */

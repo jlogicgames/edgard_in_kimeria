@@ -285,6 +285,39 @@ clicks or `hive_buzz`. Constants: `SNAIL_*` in `tools/audio/generate_sounds.py`;
 Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble` and `remains_burn`; the crawl and the reload are
 silent. There is no "ready" sound when the reload ends: the stalks shooting up are the cue, and the wind-up has its own sound.
 
+### Forest wolf (#331, seeds 7301-7311, [D113](DECISIONS.md#d113-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398))
+
+Seven voice-synth sounds for the wolf, generated 2026-11-21 from the names and roles the author approved with the card; the author
+auditioned them from the files and asked for two retunes (below). An animal, never a person: the first set used the hero's own recipe
+(a glottal tone through human vowels) at 80 to 220 Hz, inside the hero's range, and "sounded like the hero". The hero's voice set
+(`jump`, `hit`, `bounce`, `collect`, `disappear`) glides between 120 and 470 Hz through human vowels (first formant 300 to 800 Hz,
+spectral centroid 484 to 679 Hz, 86 to 97 % of its energy at 300 to 900 Hz). The wolf's voiced sounds go through a **snout resonance**
+(first formant 950 to 1150 Hz, above every human vowel; `WOLF_SNOUT`, `WOLF_SNOUT_GROWL`). Its first barks were then too high ("a little
+puppy": 400 to 680 Hz), so they were lowered to a big dog's 230 to 380 Hz, where the pitch alone no longer parts it from the hero: the
+snout, the roughness and the breath through the nose do. Constants: `WOLF_*` in `tools/audio/generate_sounds.py`; previews:
+`art/audio/previews/wolf_*.png`.
+
+- `wolf_notice` (0.22 s, RMS -19.0 dBFS, centroid 914 Hz): its own call (D100: no shared alert sound), one sharp dog-like bark: a 35 ms
+  yip rising 300 to 380 Hz, then a rough bark falling 380 to 250 Hz through the snout, and a breath huffed out through the nose
+  (noise around 2.2 kHz) after it.
+- `wolf_windup` (0.50 s) and `wolf_windup_long` (0.75 s, the longer-warnings assist), RMS -19.4 dBFS, centroid 984 and 1006 Hz: a rising
+  snarl: a fully rough growl climbing 240 to 330 Hz through the bared snout, chopped into growl pulses that quicken from 28 to 40 a
+  second, under a hiss through the teeth (2.4 to 4.2 kHz) that grows as the square of the time, closing on a 60 ms held catch.
+  Exactly the bite warning, so the sound ends with the lunge. A one-shot: it plays to its end even when the wolf is killed during it.
+- `wolf_lunge` (0.18 s, RMS -21.0 dBFS, an environment-level sound like `spider_leap`): at take-off, four claw ticks around 1.9 kHz,
+  25 ms apart, then a breath falling 1.6 kHz to 900 Hz, under a tanh drive.
+- `wolf_bite` (0.18 s, RMS -18.1 dBFS, centroid 880 Hz): hit or miss (D93): a heavy jaw clack, two clicks (1.6 kHz then 1.3 kHz,
+  40 ms apart) over a short rough thud through the snout, 190 to 150 Hz.
+- `wolf_bay` (0.40 s, RMS -22.0 dBFS, environment level, centroid 837 Hz): at a refuge or its range end, harmless: a frustrated double
+  bark through the snout, 340 to 260 Hz then a shorter, lower 300 to 230 Hz; quieter than the notice, once per stop.
+- `wolf_run` (0.12 s, RMS -30.0 dBFS, ambient tier): once per gallop cycle while it sprints, only while it is in the camera view
+  (`Level.inCameraView`, D89, D90): a soft paw patter, a muffled double thud around 110 Hz with a faint breath. The quietest sound of
+  the set, under every warning.
+
+Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble` and `remains_burn`; the trot, the sniff, the skid, the
+twitch and the recovery are silent. The 50 sounds that existed before stay byte-identical (md5 before and after). Not verified: how the
+set sounds beside the forest-2 music and ambience, which waits for a room that places it (#331).
+
 ### Spore puff (#445, seeds 7201-7202, D93)
 
 One voice-synth sound, generated 2026-11-20, for the puffball's release and for the burst of the harmless `HoneyFungus` and the

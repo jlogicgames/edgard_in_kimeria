@@ -4,6 +4,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
+import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -42,8 +43,8 @@ class RemainsTest {
      * either covers. The beetle on its back differs from its closest live frames (look and wiggle, mirrored) in 30.5 % of them,
      * measured 2026-11-18; the spider on its back, legs curled up, from its closest (recover) in 48.3 %, measured 2026-11-19 (its
      * hanging frames of D103 are live frames too; its wall frames are 16x32 and upright, never lying on a floor); the snail's
-     * empty shell on its back from its closest (draw) in 49.3 %, measured 2026-11-19 (#329); a recoloured live frame would
-     * differ in 0 %.
+     * empty shell on its back from its closest (draw) in 49.3 %, measured 2026-11-19 (#329); the wolf lying on its side from its
+     * closest (bay) in 52.5 %, measured 2026-11-21 (#331); a recoloured live frame would differ in 0 %.
      */
     private static final float POSE_DIFFERENCE = .25f;
 
@@ -61,7 +62,11 @@ class RemainsTest {
             new int[]{0, 1, 2, 3, 4, 5, 6, 7, 9, 10}, 8, "assets/images/objects/monster-spider-body.png", b -> ((Spider) b).rockAngle()),
         // The snail's cell 8 is its gob's two 8x8 frames, not a pose of the body: its live frames are 0 to 6.
         "Snail", new Case("snail-test", RemainsTest::snail, "assets/images/objects/monster-snail.png", 24, 16,
-            new int[]{0, 1, 2, 3, 4, 5, 6}, 7, "assets/images/objects/monster-snail-body.png", b -> ((Snail) b).rockAngle()));
+            new int[]{0, 1, 2, 3, 4, 5, 6}, 7, "assets/images/objects/monster-snail-body.png", b -> ((Snail) b).rockAngle()),
+        // The wolf's body lies on its side along the floor (frame 16, after its 16 live poses, 0 to 15): a big body twitches, 1 px, and never rocks.
+        "Wolf", new Case("wolf-test", RemainsTest::wolf, "assets/images/objects/monster-wolf.png", 48, 24,
+            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, 16, "assets/images/objects/monster-wolf-body.png",
+            b -> ((Wolf) b).twitch()));
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -70,6 +75,11 @@ class RemainsTest {
 
     private static Enemy<?> beetle(Level level) {
         for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Beetle b) return b;
+        return null;
+    }
+
+    private static Enemy<?> wolf(Level level) {
+        for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Wolf w) return w;
         return null;
     }
 

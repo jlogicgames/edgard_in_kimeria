@@ -180,6 +180,10 @@ SPRITES = {
     'Snail': ('active', 'objects/monster-snail.png', (0, 0, 24, 16), 8, 'floor', FULL),
     'Snail:gob': ('active', 'objects/monster-snail.png', (192, 0, 8, 8), 2, 'top', FULL),
     'Snail:body': ('decor', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP
+    # #331 (D113): every frame of the wolf, and its body (D101); measured once the wolf is placed, until then at the monster
+    # spawns of the three maps (the art pass of 2026-11-21).
+    'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
+    'Wolf:body': ('decor', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 1, 'floor', FULL),  # THRONE, its rest state
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
@@ -1005,11 +1009,13 @@ def tile_report(roots):
 # is covered with no edit here):
 # - beetle and snail: every position.x of the authored range, on the range's floor (the load checks keep the whole range on
 #   floor without gaps; the beetle's notice hop and the body's flip hop land on the same floor);
+# - wolf (#331, D113): every position.x of its range, widened by Wolf.LUNGE_REACH while authored floor stays under the whole body at
+#   its floor line (the body of a wolf killed in its lunge slides on to the line's end, over floor only);
 # - spider: every position.x of each floor leg, widened by Spider.POUNCE_REACH while authored floor stays under the whole
 #   body at that floor line (#497: the leap never leaves that floor); every wall pose and every thread pose, set on the open
 #   side as Spider.die does and dropped to the floor below.
 # Floor tops elsewhere (other rooms, ledges no monster of that kind reaches) carry nothing for this gate: no body can lie there.
-BODY_SWEEP = ('Beetle:body', 'Spider:body', 'Snail:body')
+BODY_SWEEP = ('Beetle:body', 'Spider:body', 'Snail:body', 'Wolf:body')
 BODY_STEP = 8  # px between measured body positions along a range or a route
 LANDING_TYPES = (None, 'Wall', 'Platform')  # every collision box a falling body settles on (not quicksand)
 SPIDER_POUNCE_REACH = java_number(SPIDER_JAVA, 'POUNCE_REACH')
@@ -1137,6 +1143,29 @@ def spider_body_spots(root, boxes, x, y, props, polyline, blocks=(), name='map')
     return out
 
 
+WOLF_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/Wolf.java'
+WOLF_BODY_X = java_number(WOLF_JAVA, 'BODY_X')
+WOLF_BODY_WIDTH = java_number(WOLF_JAVA, 'BODY_WIDTH')
+WOLF_FRAME_HEIGHT = java_number(WOLF_JAVA, 'FRAME_HEIGHT')  # the floor line is the frame's bottom: Wolf.problem's y + FRAME_HEIGHT
+WOLF_LUNGE_REACH = java_number(WOLF_JAVA, 'LUNGE_REACH')
+WOLF_REACH_STEP = java_number(WOLF_JAVA, 'REACH_STEP')
+
+
+def wolf_body_spots(boxes, x, y, props, blocks=(), name='map'):
+    """(position.x, floor line) of every place a wolf's body can lie: its range, widened by the lunge's reach over floor."""
+    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
+    line = y + WOLF_FRAME_HEIGHT
+    band = [b for b in blocks if b[0] != 'QuickSand']
+    check_static_column(band, name, 'Wolf', low - WOLF_LUNGE_REACH, high + WOLF_LUNGE_REACH + WOLF_BODY_X + WOLF_BODY_WIDTH, line, line)
+    fits = lambda left: floor_under(boxes, left + WOLF_BODY_X, left + WOLF_BODY_X + WOLF_BODY_WIDTH, line)
+    lo, hi = low, high
+    while lo - WOLF_REACH_STEP >= low - WOLF_LUNGE_REACH and fits(lo - WOLF_REACH_STEP):
+        lo -= WOLF_REACH_STEP
+    while hi + WOLF_REACH_STEP <= high + WOLF_LUNGE_REACH and fits(hi + WOLF_REACH_STEP):
+        hi += WOLF_REACH_STEP
+    return {(left, line) for left in _steps(lo, hi)}
+
+
 def placed_body_placements(roots):
     """(BODY_SWEEP key, map, object index) of every monster placed in `roots`: each must yield a measured body."""
     return {(obj.get('type') + ':body', name, index) for name, root in roots.items() for group in root.findall('objectgroup')
@@ -1159,7 +1188,7 @@ def body_spot_placements(roots):
             offset_y = float(group.get('offsety', '0'))
             for index, obj in enumerate(group.findall('object')):
                 kind = obj.get('type')
-                if kind not in ('Beetle', 'Spider', 'Snail'):
+                if kind not in ('Beetle', 'Spider', 'Snail', 'Wolf'):
                     continue
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
                 x, y = float(obj.get('x')), float(obj.get('y')) + offset_y
@@ -1167,6 +1196,8 @@ def body_spot_placements(roots):
                 if kind == 'Spider':
                     polyline = obj.find('polyline')
                     spots = spider_body_spots(root, boxes, x, y, props, None if polyline is None else polyline.get('points', ''), blocks, name)
+                elif kind == 'Wolf':
+                    spots = wolf_body_spots(boxes, x, y, props, blocks, name)
                 else:
                     low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
                     spots = {(left, y + h) for left in _steps(low, high)}

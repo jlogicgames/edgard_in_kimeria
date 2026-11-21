@@ -24,7 +24,7 @@ PICKUP_PREFIX = 'pickup:'  # the shared pickup cue (#345): 'pickup:glow' -> pick
 FAIRY_GRID_DIR = ROOT / 'art/objects/fairy'
 FAIRY_PREFIX = 'fairy:'  # the fairy helper (#338): 'fairy:body' -> fairy-body.png from art/objects/fairy/body.grid
 MONSTER_GRID_DIR = ROOT / 'art/objects/monster'
-MONSTER_PREFIX = 'monster:'  # Forest monsters (#327, #328, #329): 'monster:beetle' -> monster-beetle.png from art/objects/monster/beetle.grid
+MONSTER_PREFIX = 'monster:'  # Forest monsters (#327, #328, #329, #331): 'monster:beetle' -> monster-beetle.png from art/objects/monster/beetle.grid
 PREVIEW_DIR = ROOT / 'docs/references/forest-traps'
 RGBA_CHANNELS = 4
 PREVIEW_SCALE = 6
@@ -39,7 +39,7 @@ FIRST_LINE = 1
 # Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name: the active sheets whose ink contour falls
 # under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'falling-platform', 'false-honey-fungus',
-                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'monster:spider-wall', 'monster:snail', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
+                        'hive', 'honey-fungus', 'log', 'monster:beetle', 'monster:spider', 'monster:spider-wall', 'monster:snail', 'monster:wolf', 'perch', 'puffball', 'root', 'rotten-perch', 'stone-lip', 'stump',
                         'thorn-root', 'thorn-tuft', 'fairy:body', 'fairy:glint'})
 # Grid chars the rim never repaints, per sheet: a cue drawn in ink on a lit edge (#362: the falling platform's crack), and the
 # small glint's side points (`K`, the ink), so its rim is the top point alone and half its contour stays dark.
@@ -48,7 +48,10 @@ RIM_KEEP = {'falling-platform': 'c', 'fairy:glint': 'K'}
 # white `f2fff4` (already in her palette, so no new entry), and only from above, so her sides and underside keep the ink:
 # half light, half dark reads both on the near-black play band (lifted by her own glow) and over the moon and the clouds.
 FAIRY_RIM = (0xf2, 0xff, 0xf4)
-RIM_STYLE = {'fairy:body': (FAIRY_RIM, moon_rim.UP_SIDE), 'fairy:glint': (FAIRY_RIM, moon_rim.UP_SIDE)}
+# The wolf (#331, D113) is lit from above only: its long back and head take the rim, its sides keep their ink. A full rim on a
+# 38 px body measured outline 0.52 to 0.74, far louder than the other danger-family monsters (0.30 to 0.34); from above only
+# it measures 0.32 to 0.37 at the monster spawns (2026-11-21), the family's loudness.
+RIM_STYLE = {'fairy:body': (FAIRY_RIM, moon_rim.UP_SIDE), 'fairy:glint': (FAIRY_RIM, moon_rim.UP_SIDE), 'monster:wolf': (moon_rim.RIM, moon_rim.UP_SIDE)}
 BACKGROUNDS = ((0x0c, 0x0a, 0x1e), (0x3a, 0x12, 0x4e), (0x16, 0x3c, 0x44))  # night, canopy, trunk
 
 

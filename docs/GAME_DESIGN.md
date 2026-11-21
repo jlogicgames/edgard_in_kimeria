@@ -654,9 +654,9 @@ below when the hero enters their awareness area (the hearing range).
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
 | Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
-| Wolf (or a similar animal) | Fast runner. | Bites and kills, like the dog in Broforce. |
+| Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D113). |
 
-Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D113, built and placed in no room yet, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 the hero passes, and the sword, a stone or a stomp crumbles it while a fireball burns it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
@@ -787,6 +787,80 @@ Effects are particles on `KimeriaParticleSystem` (`effects.SnailFx`, one per lev
 its decor body. The gate measures a placed `Snail` along its range and its gob along every firing line (`check_contrast.py`).
 Code: `entity/enemy/Snail.java`, `entity/enemy/Breakable.java`; tests: `SnailTest`, `SnailFxTest`, `RemainsTest`,
 `AllocationBudgetTest.snailThroughTheRealLevel`. Placement: with the spider rooms' rework under D105 ([#499](https://github.com/jlogicgames/edgard_in_kimeria/issues/499)).
+
+### Wolf card (built, [D113](DECISIONS.md#d113-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398), [#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331))
+
+The beetle says "get clear", the spider "make it miss, then strike", the snail "cross in the reload". Every one of them loses a
+foot race, so walking away always answers them. **The wolf is the first monster you cannot outrun**, and the author asked for it
+to be the fastest and most dangerous in the Forest (2026-11-20). Its question is: **where do you meet it, and do you act at
+once?** Its bite is a long, low, straight lunge along a locked line: jump over it (the first monster beaten by going *over* its
+attack, where the spider's dodge is *out of* a spot), turn and strike its back in its short recovery, go up out of its reach, or
+meet it with a live sword, a fireball or a stone. Like every new monster it is met in play, with no teaching room and no hint
+text. Numbers are the built values (D113; the author approved the card on 2026-11-21 with every recommendation, and the
+lunge at 160 px in 0.25 s on 2026-11-21, see the running row). The hero's are measured from the code (run 100 px/s, hitbox 11×22, drawn at most 31 px tall; a jump lifts the feet
+about 60 px and keeps them above 14 px for about 0.79 s, from 0.06 s after take-off; sword box 17 px past the hitbox front, live
+for the whole 0.7 s swing, the hero stopped while swinging).
+
+| Item | Built | Why |
+| --- | --- | --- |
+| Size and look | **48×24 frames**, seventeen in one strip (`stand`, `trot1`, `trot2`, `alert`, `hackle`, `scrape`, `run1` to `run4`, `skid`, `crouch`, `lunge`, `bite`, `shake`, `bay`, `dead`); 11 colours, 12 with the moon rim lit from above only (a full rim made it outline 0.52 to 0.74, far louder than the other monsters); drawn about 20 px tall from paws to ear tips and about 38 px long, two thirds of the hero's 31 px, the largest Forest monster. Lean and low-slung, long muzzle, pricked ears, brush tail. Body hitbox `rect(6, 6, 34, 18)` (a pixel past the drawn body on each open side, D10), feet on the floor line (row 23) | big enough to read as the dangerous animal at a glance, low enough that a jump clears it; four long legs and a muzzle are unlike every other sprite |
+| Contact | **Harmless**: no hurtbox. Only the jaws kill, during the lunge and the bite | every death comes from the wind-up the player watched (D5, D7) |
+| Patrol | **trots at 40 px/s** inside its authored range (Tiled `offNeg`/`offPos`), with a **0.6 s** sniff at each end (`trot1`, head down) before it turns; it never leaves the range on foot | its territory is authored, so every refuge and the exit are placed by the author (D7, D26); the sniff is the window to slip past behind it |
+| Sight | **ahead**: a box from its muzzle to **256 px** ahead, from its floor line to **48 px** above it, **cut at the first solid** at eye height, 16 px above its floor (`Level.blocksObject`) | the furthest sense of any monster, yet only 40 % of the view, so the player always sees it first; cover counts, as for the snail |
+| Hearing | a **64 px circle** around its body's centre, in its room, through anything | a hero cannot linger near its back; sneaking past further away still works |
+| Notice beat (#240, D100) | **body language, no mark**: it stops dead, its head snaps up and its ears prick (`alert`, 0.15 s); it drops its front with its hackles raised (`hackle`, 0.15 s); it scrapes a forepaw once (`scrape` 0.1 s, `hackle` 0.1 s), then bursts into the run. **0.5 s**, **not scaled by the assist**. Heard: `wolf_notice`, a short chesty "wuff" | D100's shared pattern; the scrape points the way it will run |
+| Chase | sprints at **160 px/s**, reaching it in **0.25 s** (640 px/s²); a four-frame gallop. It chases to a target (under the hero, or its range's end) and stops on it. **Turning costs time**: when the hero gets behind it, it skids to a stop (1280 px/s², 0.125 s, about 10 px, `skid`, floor dust), then starts the other way from standing | it closes 60 px every second on a running hero; the skid rewards going over it |
+| Commit | the hero's hitbox touches the **lunge box**: from its muzzle to **72 px** ahead, from its floor line to **24 px** above it. The **direction is locked** (its facing); the jaws travel the full lunge, they do not aim at a spot | the longest commit of any monster (spider 48 px); the box starts at the jaws' back edge, 7 px behind the muzzle (the jaw box's front edge, the reference of every reach), so a hero in front of the jaws is bitten and one beside its flank is not; one collider authored once (D10); a locked direction makes the jump the same every retry (D7) |
+| Wind-up (D7 warning) | `TrapWarnings.duration(BITE_WARNING_SECONDS)`, sampled once: **0.5 s, 0.75 s with the assist**; nothing the hero does changes it. Seen: `crouch` (front low, ears flat, jaws open, drawn 1 px back from the hero); pale **breath streaks** run along its floor line from the jaws to the lunge's end, 60 a second, so the whole 160 px is read (the line is traced at the commit over the floor under it and the lunge flies exactly that line). Heard: `wolf_windup` (`_long`), a rising snarl | the shortest warning in the game, but the jump needs no distance, only timing; at the shared 0.8 s a runner would escape (177 px against 160) |
+| Lunge and bite | a **0.25 s** lunge of **160 px** along its floor (640 px/s; the body moves, `lunge` frame, drawn low), `wolf_lunge`; then `bite` for 0.1 s, jaw glints and floor dust, `wolf_bite`, **hit or miss (D93)**. The **jaw box** (about 7×7, 8 to 15 px above the floor line, inside the drawn muzzle) is lethal during the lunge and the bite and **swept every frame**. The lunge stops against a solid face (it bites there) and at the end of its floor (2 px floor probes, the spider's #497 rule); it may leave its range by up to its reach, over floor only. A bite that reaches the hero lands at the start of the wolf's next frame | outreaches any run: a hero who runs from the commit is 147 px off when the jaws end at 160. Low, so a jump clears it. The next-frame landing gives a killing hit the same-frame tie (#503, #505). Every lunge frame re-checks the floor and solids: a floor that goes during the wind-up (a lever-driven wall set inactive) stops the lunge at the last good place, its body never over air, and the bite is still seen and heard |
+| Recovery | **0.5 s** in `shake` (it shakes its head, flat-footed), harmless, **not scaled by the assist**; then a standing turn if the hero is behind it, and the chase again. Each new lunge needs a full wind-up | a shorter punish window than the spider's 0.6 s, and it is open only to a hero who turns and swings at once; hesitate and a new wind-up begins |
+| Refuge and give-up | when the hero is **out of its reach** (more than its 72 px commit box beyond the range end, so a hero 73 px or more past the muzzle at the range end is safe even though a lunge would cover 160, or on anything whose top is more than 24 px above its floor) it runs to the nearest point it can reach, stops facing him and **bays** (`bay`, head up, `wolf_bay`; harmless). After **1.5 s** of the hero out of reach, or **1.5 s** out of both sight and hearing, it **gives up** and trots back to patrol; it will not notice that hero again until he has been out of its sight for **1.0 s** | the chase always ends; the cool-down stops a loop of notice and bay under a ledge (D26) |
+| Running away | it commits when the gap closes to 72 px and stops where it is. A hero who runs from the commit gains 100 px/s through the wind-up and the lunge, so his hitbox's near edge is 72 + 75 = 147 px from the muzzle when the jaws end at 160: **bitten** by 13 px. With the assist (0.75 s) he is at 172: **missed by 12 px**. Measured (`WolfTest`): bitten at every commit gap from 40 to 72 px without the assist; with it, missed from about a 60 px gap up. A hero who survives a lunge by running (assist only) is struck again about 2 s after it began: the 0.5 s recovery leaves him 72 px ahead, it closes the last pixel and winds up for 0.75 s (measured 1.97 s). The reach is 160 px (approved by the author 2026-11-21) because a hero who keeps running gains 25 px during the 0.25 s lunge: at 160 he is bitten by 13 px without the assist and missed by 12 px with it | outrunning is not an answer without the assist |
+| Standing, stepping back | a hero who stands is bitten whatever the assist; one who steps back is the runner above | hesitation is punished: only a jump, a swing or a shot works without the assist |
+| Jumping | the jaws reach a hero G px from the muzzle G/640 s into the lunge and pass him 18 px later; the feet stay above the jaws (15 px) from 0.06 s to 0.84 s after take-off, so a take-off up to **0.55 s** after the commit clears them at the edge of its box (71 px) and up to **0.45 s** at its muzzle; with the assist up to **0.82 s** and **0.72 s**, and a jump made at the very commit has then landed before the jaws arrive (the first clearing take-off is 0.07 s after it): the jump is timed, not spammed (measured, `WolfTest`). A hero more than 24 px up is never committed to: a jump during its sprint makes it run underneath, and it stops under him (it skids only if he lands behind it) | the one answer that always works, and the wolf's lesson |
+| Sword | kills it in any state, with the light spray of D65, and leaves its body. Its body reaches the sword box (17 px past the hero's hitbox) about 0.6 s after the commit, as the jaws arrive: a swing started anywhere from just before the commit to about 0.6 s after it is live then (`WolfTest` pins one started 0.2 s after). A swing started early, while it is still noticing or sprinting in, ends before the lunge: a bite. After a jumped lunge, the 0.5 s recovery is a kill from behind for a hero who turns and swings at once (its haunches end about 15 px away) | timed melee, harder than the spider's because the punish window is shorter and needs a turn first |
+| Stomp | kills it in any state with the normal bounce and leaves its body; its use is dropping on it from a refuge while it bays | the reward for going up |
+| Fireball, stone, torch | kill it in any state, the lunge included, and leave its body; no blood (D99). One cast or thrown on the frame the jaws arrive wins the tie | the safe answer costs a charge or a carried stone, and the hero must stand and face it to aim |
+| Killed mid-act | killed during the wind-up it never lunges; killed in the lunge the body slides on to the lunge's end over the floor | what the player read still holds |
+| Body (D101) | `dead`: **lying flat on its side along the floor, forelegs stretched forward under its flat head, hind legs back, tail limp** (the author's edit: a wolf's paws never stick up). The active frame holds 0.3 s, then cross-fades over 0.6 s into `monster-wolf-body.png` (decor palette, no ink, no rim). **It does not rock; it twitches**, a 1 px shudder of the same frame for about 0.3 s, when the hero comes within 6 px (as D101 lists for the wolf). The sword, a stone or a stomp crumble it into fur tufts and dark chips; a fireball or a torch burns it (`RemainsFx`); weapons fly on; the swing that killed it does not crumble it | every live frame stands on four paws, so lying on its side is far from all of them (well over the 25 % floor of `RemainsTest`) |
+| Traps, other monsters | the bite hurts only the hero; traps do not hurt it; it passes through other monsters and bodies; a snail's gob passes through it | one new element at a time (D72) |
+| Rollback (D3, D6) | a death or a revisit brings it back calm at its spawn, facing its authored way; killed, it stays gone with its body in a passed room; one left mid-chase or mid-lunge comes back calm | the enemy rules as they are |
+| Authoring checks (`Wolf.problem`) | on the 48×24 wolf whatever the Tiled object's size: its range inside the room on gapless floor; no standing place (the entrance body, the `RoomExit`, a `Checkpoint`) inside its **sight box or its reach** (its range plus the 256 px sight, which includes the 160 px lunge and the jaw box, facing either way) at any point of the range; **at least 64 px of headroom** above its floor over its whole reach; the range at least **160 px** long | the hero never arrives caught; the jump is always possible; a short range would waste the sprint |
+| Assist | only the lethal wind-up is longer, **0.75 s**, which makes running and stepping back work again for a hero who runs from a commit gap of about 60 px up (measured; 12 px of margin at the usual 72). Notice, speeds, skid, recovery and give-up are not scaled (`TrapWarnings`: movement is not scaled) | the same rule as every monster |
+
+Against the other monsters (built values; D100, D102, D103, D106):
+
+| | YellowMob, RedMob | Beetle | Spider | Snail | **Wolf** |
+| --- | --- | --- | --- | --- | --- |
+| Chase speed (hero 100 px/s) | 80 px/s | 70 px/s | 85 px/s | none | **160 px/s**, full speed in 0.25 s |
+| Senses | its range, at body height | hears 96 px either side | feels a 144 px circle | sees 176 px ahead | **sees 256 px ahead and hears a 64 px circle** |
+| Commits at | contact or whip reach | body + 8 px | 48 px pounce box | its 176 px firing line | **72 px lunge box** |
+| Lethal reach | contact, whip | 40 px either side | 48 px leap to a spot | a gob at 120 px/s | **a 160 px lunge in 0.25 s** along a locked line |
+| Wind-up (`TrapWarnings`) | none | 0.8 s (1.2) | 0.5 s (0.75) | 0.8 s (1.2) | **0.5 s (0.75)** |
+| Running hero escapes the strike | yes | yes | yes | no: jump, cut or cover | **no**; with the assist, by 12 px |
+| Punish window after a miss | none | none | 0.6 s | 2.4 s reload | **0.5 s**, after a turn |
+
+What keeps it fair: two warnings (the 0.5 s notice in its own body, then the wind-up with the whole 160 px line drawn); a jump
+always works (low jaws and 64 px of headroom checked at load); contact is harmless; it never strikes over a gap, off a lip or
+through a wall; the chase ends at its range and at any refuge more than 24 px up, with a 1.0 s cool-down; locked direction,
+fixed reach and timings, so the same dodge works on every retry (D7); the assist makes running work again.
+
+It stays on its floor; leaping up steps and over gaps on an authored route is a later develop of the element `wolf`, as
+the climb and the silk drop developed `spider` ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). Its first
+meeting is a refuge pocket in a forest-2 room: a ledge or block top at least 32 px above its floor at the near end of its range,
+out of its reach but in its sight, from which the hero watches it trot, notice him, sprint, bay, give up and trot back (D105);
+the room card is written with the `kimeria-room-design` skill before it is placed (#331). The ledge of that pocket must be a one-way
+platform or a hero within 64 px: a solid block's face cuts its sight at eye height, so a hero standing on a block beyond its face is
+not seen. Sounds (seeds 7301 to 7311, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)): its own call `wolf_notice` (a sharp dog-like bark),
+`wolf_run` (a soft paw patter once a gallop cycle while it sprints, in view only), `wolf_windup` (`_long`), `wolf_lunge`, `wolf_bite`,
+`wolf_bay` (a double bark); its death plays the shared `bounce`. Art: a crimson pelt in the danger family (#236), the largest Forest
+monster ([ART_DIRECTION.md](ART_DIRECTION.md)). Effects are particles on `KimeriaParticleSystem` (`effects.WolfFx`, one per level; the
+body's crumble and burn in `effects.RemainsFx`); the only sprites are its sheet (`assets/images/objects/monster-wolf.png`) and its decor
+body. Code: `entity/enemy/Wolf.java`; tests: `WolfTest` (the fairness pins: a runner bitten without the assist and missed with it, the
+window of take-offs that clear the jaws, a hero 24 px up never committed to, the refuge, the bay, the give-up and the cool-down, the
+lunge stopping at a gap and at a wall, every weapon in every state, both same-frame ties, the load checks), `WolfFxTest`, `RemainsTest`,
+`AllocationBudgetTest.wolfThroughTheRealLevel` (0.2 to 0.6 B/frame before the floor re-check, 0.0 in one run after it), `check_contrast.py` (the wolf and its body, once placed),
+`FirstMeetingPocketTest` and `RoomCardsTest` (with the placement, #331).
 
 ## Rooms, dangers and skill development
 
