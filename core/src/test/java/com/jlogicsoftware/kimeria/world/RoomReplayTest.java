@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.effects.RoomRippleFx;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
@@ -39,6 +40,17 @@ class RoomReplayTest {
     private static final float FUNGUS_JUMP = 1600;
     private static final float REQUIRED_LIMIT = 20f;
     private static final float COLLECTION_LIMIT = 30f;
+    /**
+     * #553, D123: the pause before a room change (the leaving ripple plays in it) is part of the replay of a room, so every route is
+     * measured to the exit plus this. It is the same constant the game uses, so a longer pause fails here first.
+     */
+    private static final float PAUSE = RoomRippleFx.LEAVE_HOLD_SECONDS;
+
+    /** Records the measured time (printed as {@code REPLAY}, copied into D123) and asserts it with the pause added against the budget. */
+    private static void within(String route, float seconds, float limit) {
+        System.out.printf(java.util.Locale.ROOT, "REPLAY %s: %.2f s to the exit, %.2f s with the ripple pause, limit %.0f s%n", route, seconds, seconds + PAUSE, limit);
+        assertTrue(seconds + PAUSE <= limit, route + " replay budget exceeded with the ripple pause");
+    }
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private float timeScale = 1f;
@@ -162,28 +174,28 @@ class RoomReplayTest {
             level.returnForCollection(player());
             held.clear(); pressed.clear(); timeScale = 1;
             float entry = replay(level, "forest-entry", false, 0, ENTRY_JUMPS, true);
-            assertTrue(entry <= COLLECTION_LIMIT);
+            within("entry", entry, COLLECTION_LIMIT);
             assertTrue(level.objects.stream().noneMatch(o -> o instanceof Collectable c && c.type() == ItemType.BAT),
                 "#417: the Bat ingredient is no longer in the entry room (the inventory may hold it from an earlier trip)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             float walls = replay(level, "forest-walls", false, 0, WALLS_JUMPS, true);
-            assertTrue(walls <= COLLECTION_LIMIT);
+            within("walls", walls, COLLECTION_LIMIT);
             assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.BAT), "#417: the Bat is on the second wall's top");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Beetle),
                 "#327: the beetle killed on the first pass stays gone on a collection return, body included (D101)");
             float fissure = replay(level, "forest-fissure", false, 0, new float[]{}, true);
-            assertTrue(fissure <= COLLECTION_LIMIT);
+            within("fissure", fissure, COLLECTION_LIMIT);
             assertEquals(FISSURE_RETURN_S, fissure, 0.1f, "#327: the collection return walks the empty ledge (pinned, D68)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             float glade = replay(level, "forest-glade", false, 0, new float[]{}, true);
-            assertTrue(glade <= COLLECTION_LIMIT);
+            within("glade", glade, COLLECTION_LIMIT);
             assertEquals(GLADE_RETURN_S, glade, 0.1f, "#331: the collection return walks past the wolf's body (pinned, D68)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
             float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
             float canopy = replay(level, "forest-canopy", false, 0, jumps, true);
-            assertTrue(canopy <= COLLECTION_LIMIT);
+            within("canopy", canopy, COLLECTION_LIMIT);
             assertTrue(artifacts.items().stream().anyMatch(p -> p.type() == ItemType.MUSHROOM));
             level.prepareHealer();
             assertEquals(6, coins);
@@ -213,7 +225,7 @@ class RoomReplayTest {
         secureCombatAndCoins(level);
 
         float firstPass = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, 1555});
-        assertTrue(firstPass <= COLLECTION_LIMIT);
+        within("firstPass", firstPass, COLLECTION_LIMIT);
         assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
             "The first route intentionally misses the Mushroom");
         var firstPlatform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 115);
@@ -227,16 +239,16 @@ class RoomReplayTest {
         level.returnForCollection(player());
 
         float entry = replay(level, "forest-entry", false, 0, ENTRY_JUMPS);
-        assertTrue(entry <= REQUIRED_LIMIT);
+        within("entry", entry, REQUIRED_LIMIT);
         level.enterNextRoom(player());
         float walls = replay(level, "forest-walls", false, 0, WALLS_JUMPS);
-        assertTrue(walls <= REQUIRED_LIMIT);
+        within("walls", walls, REQUIRED_LIMIT);
         level.enterNextRoom(player());
         float fissure = replay(level, "forest-fissure", false, 0, new float[]{});
-        assertTrue(fissure <= REQUIRED_LIMIT);
+        within("fissure", fissure, REQUIRED_LIMIT);
         level.enterNextRoom(player());
         float glade = replay(level, "forest-glade", false, 0, new float[]{});
-        assertTrue(glade <= REQUIRED_LIMIT);
+        within("glade", glade, REQUIRED_LIMIT);
         level.enterNextRoom(player());
         var platform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 115);
         assertNotSame(firstPlatform, platform);
@@ -244,7 +256,7 @@ class RoomReplayTest {
         assertTrue(level.fallingPlatforms.isEmpty(), "Removed platform must be pruned from live collision/update lists");
 
         float secondPass = replay(level, "forest-canopy", false, 0, new float[]{1400, 1460, FUNGUS_JUMP});
-        assertTrue(secondPass <= COLLECTION_LIMIT);
+        within("secondPass", secondPass, COLLECTION_LIMIT);
         assertFalse(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
             "The optional Mushroom may be missed when its one-shot route support remains collapsed");
         level.enterNextRoom(player());
@@ -263,7 +275,7 @@ class RoomReplayTest {
         assertFalse(authoredPlatform.isFalling(), "A fresh Level restores the authored one-shot support");
         float freshMushroomRoute = replay(freshLevel, "forest-canopy", false, 0,
             new float[]{1400, 1460, 1555, 1640}, true);
-        assertTrue(freshMushroomRoute <= COLLECTION_LIMIT);
+        within("freshMushroomRoute", freshMushroomRoute, COLLECTION_LIMIT);
         assertTrue(artifacts.items().stream().anyMatch(item -> item.type() == ItemType.MUSHROOM),
             "The fresh-level full artifact route can still collect the optional Mushroom");
     }
@@ -384,7 +396,7 @@ class RoomReplayTest {
             float seconds = replay(level, "forest-1-mob", false, 0, new float[]{3680, 4050}, true);
             assertEquals(3, level.rangedStock.count());
             assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.FireballRefill && !o.isRemoved()));
-            assertTrue(seconds <= REQUIRED_LIMIT);
+            within("second-level required route", seconds, REQUIRED_LIMIT);
             System.out.printf(java.util.Locale.ROOT, "forest-1 refill attempt %d: %.2f s%n", attempt + 1, seconds);
         }
     }
@@ -405,7 +417,7 @@ class RoomReplayTest {
             float seconds = replay(level, route, collect, delayFrames, jumps);
             assertTrue(level.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.items.Fireball.class::isInstance),
                 "Required and coin routes never fire a projectile");
-            assertTrue(seconds <= (collect ? COLLECTION_LIMIT : REQUIRED_LIMIT), route + " replay budget exceeded");
+            within(route, seconds, collect ? COLLECTION_LIMIT : REQUIRED_LIMIT);
             if (collect) assertEquals(3, coins, "The collection route must pick up every coin in its room");
             if (attempt == 0) firstTime = seconds;
             else assertEquals(firstTime, seconds, REAL_STEP, "A reset must reproduce the same route time");

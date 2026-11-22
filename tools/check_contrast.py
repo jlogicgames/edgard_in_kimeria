@@ -16,8 +16,8 @@ layer alone. Metrics (OKLab):
 - chroma: 90th percentile of the sprite's OKLab chroma.
 
 Rules (the worst placement counts; glowing sprites at full and dimmest glow; the bush, the lever and the stump and root idle loops in every frame;
-collectables with their pickup halo (#345), at rest with the dimmest halo and at the top of the bob with the brightest; the coin has no
-halo, NO_HALO):
+collectables with their soft pickup light (#345, #544), at rest and at the top of the bob, each with the light's dimmest and brightest bound;
+the coin has no light, NO_HALO):
 - active (hero, traps, enemies, collectables, mechanisms): outline >= ACTIVE_OUTLINE_MIN;
 - decor (`Decor` kinds, `HangingVine`): outline <= DECOR_OUTLINE_MAX, DECOR_BODY_MIN <= body <= DECOR_BODY_MAX,
   chroma <= DECOR_CHROMA_MAX. D108: there is no absolute ink floor; decor is measured relative to the composited background.
@@ -32,6 +32,7 @@ from collections import namedtuple
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import numpy as np
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,30 +76,76 @@ def java_int(path, name):
 
 
 GLOW_MIN = java_float('core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/FungusTrap.java', 'GLOW_MIN')
-# The pickup cue every Collectable draws (#345): an additive halo behind it, alpha pulsing with a 2 px bob.
+# The pickup cue every Collectable draws (#345, #544): a soft animated light (effects.SoftGlowFx, additive, so it only brightens)
+# round the item, bobbing 2 px. The effect is a stream of particles, so the gate measures its bounds, built from the Java constants:
+# the DIM layer is the breathing pool at its least (POOL_DIM) and the BRIGHT layer the pool at its most (POOL_BRIGHT) with every rim
+# dot on at once. Both are an upper and a lower bound of what the particles can add at any moment (SoftGlowFxTest pins the two
+# pool factors against the real particle alphas), so a pass here holds at any moment of the effect, its first frame included (a light that appears is primed inside the bounds at once).
 COLLECTABLE_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/items/Collectable.java'
-HALO_SHEET = 'objects/pickup-glow.png'
-HALO_STATES = ((0, java_float(COLLECTABLE_JAVA, 'HALO_ALPHA_MIN')),  # (lift in px, halo alpha): at rest, dimmest
-               (java_int(COLLECTABLE_JAVA, 'BOB_HEIGHT'), java_float(COLLECTABLE_JAVA, 'HALO_ALPHA_MAX')))  # bob top, brightest
-HALO_MARGIN = 8  # px of background around the halo kept when compositing it
-# Collectables drawn without the halo (Collectable.hasHalo): the coin's white rim washes out against added light
-# (outline 0.123 against the 0.28 floor at forest-2 x 336). They are still measured at rest and at the bob top.
+GLOW_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/effects/SoftGlowFx.java'
+POOL_DIM, POOL_BRIGHT = java_float(GLOW_JAVA, 'POOL_DIM'), java_float(GLOW_JAVA, 'POOL_BRIGHT')
+LOOK_FIELDS = ('red', 'green', 'blue', 'pool_light', 'rim_light', 'pool_scale', 'rim_size', 'life', 'rim_dots', 'speck_rate')
+Look = namedtuple('Look', LOOK_FIELDS)
+BOB_HEIGHT = java_int(COLLECTABLE_JAVA, 'BOB_HEIGHT')
+GLOW_RADIUS = java_float(COLLECTABLE_JAVA, 'GLOW_RADIUS')
+GLOW_LEVELS = ('dim', 'bright')
+HALO_MARGIN = 8  # px of background around the light kept when compositing it
+PIXEL_CENTRE = 0.5  # a pixel's centre, in pixels
+DIAMETER_TO_RADIUS = 2  # a SoftDot's size is its diameter
+SOFT_DOT_POWER = 2  # SoftDot's falloff: alpha = (1 - d)^2
+FULL_TURN = 2 * math.pi
+COLOUR_AXIS = 2  # the channel axis of an (h, w, channel) array
+
+
+def java_look(name):
+    """The numbers of `public static final Look NAME = new Look(...)` in SoftGlowFx."""
+    text = (ROOT / GLOW_JAVA).read_text(encoding='utf-8')
+    args = re.search(rf'\b{name}\s*=\s*new Look\(([^)]*)\)', text).group(1)
+    return Look(*(float(a.strip().rstrip('f')) for a in args.split(',')))
+
+
+def add_dot(canvas, cx, cy, size, light):
+    """One SoftDot added to `canvas` (a float RGB array): alpha = min(1, (1 - d)^2) over its radius, `light` an RGB of 0..1 per channel."""
+    radius = size / DIAMETER_TO_RADIUS
+    for j in range(max(0, int(cy - radius)), min(canvas.shape[0], math.ceil(cy + radius) + 1)):
+        for i in range(max(0, int(cx - radius)), min(canvas.shape[1], math.ceil(cx + radius) + 1)):
+            d = math.hypot(i + PIXEL_CENTRE - cx, j + PIXEL_CENTRE - cy) / radius
+            a = min(1.0, max(0.0, 1 - d) ** SOFT_DOT_POWER)
+            canvas[j, i] += a * light
+
+
+def glow_layer(look, rx, ry, level, canvas_size=None):
+    """RGBA image of the light a SoftGlowFx of `look` on an oval of radii rx, ry adds at its centre: DIM or BRIGHT (see above)."""
+    pool = look.pool_scale * max(rx, ry)
+    size = canvas_size or DIAMETER_TO_RADIUS * (math.ceil(max(pool / DIAMETER_TO_RADIUS, max(rx, ry) + look.rim_size / DIAMETER_TO_RADIUS)) + HALO_MARGIN)
+    canvas = np.zeros((size, size, RGB))
+    base = np.array((look.red, look.green, look.blue))
+    c = size / DIAMETER_TO_RADIUS
+    add_dot(canvas, c, c, pool, base * look.pool_light * (POOL_DIM if level == 'dim' else POOL_BRIGHT))
+    if level == 'bright' and look.rim_dots:
+        for n in range(int(look.rim_dots)):
+            turn = FULL_TURN * n / look.rim_dots
+            add_dot(canvas, c + math.cos(turn) * rx, c + math.sin(turn) * ry, look.rim_size, base * look.rim_light)
+    rgb = (np.clip(canvas, 0, 1) * CHANNEL_MAX_F + PIXEL_CENTRE).astype(np.uint8)
+    alpha = np.full((size, size, 1), CHANNEL_MAX, dtype=np.uint8)
+    return Image.fromarray(np.concatenate([rgb, alpha], axis=COLOUR_AXIS), 'RGBA')
+
+
 NO_HALO = {'Collectable:Coin'}
 FULL = (1.0,)
 # The fairy helper (#338, D82) has no map placement: she flies with the hero. Every body frame is measured over her own
-# light at its dimmest, and the glints over the selected glow of a 16 px target, at a fixed sweep of every map.
+# light at its dimmest, and the glints over the selected target light at its brightest, at a fixed sweep of every map.
 FAIRY_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/ui/FairyGuide.java'
 FAIRY_FRAME = java_int(FAIRY_JAVA, 'FRAME')
 FAIRY_BODY_FRAMES = java_int(FAIRY_JAVA, 'BODY_FRAMES')
-FAIRY_LIGHT_SIZE = java_int(FAIRY_JAVA, 'LIGHT_SIZE')
-FAIRY_LIGHT_ALPHA = java_float(FAIRY_JAVA, 'LIGHT_ALPHA_MIN')
-FAIRY_GLOW_SIZE, FAIRY_GLOW_BORDER = java_int(FAIRY_JAVA, 'GLOW_SIZE'), java_int(FAIRY_JAVA, 'GLOW_BORDER')
+FAIRY_SELF_RADIUS = java_float(FAIRY_JAVA, 'SELF_RADIUS')
 FAIRY_GLOW_PAD, FAIRY_GLINT_GROW = java_float(FAIRY_JAVA, 'GLOW_PAD'), java_float(FAIRY_JAVA, 'GLINT_GROW')
 FAIRY_GLINT_SIZE = java_int(FAIRY_JAVA, 'GLINT_SIZE')
 FAIRY_SWEEP = (64, 40, 328, 48)  # x step, y from, y to, y step: one in every 4 x 3 tiles of every map
 FAIRY_TARGET = 16  # the glints are measured on a lever-sized target's corners
 RGB = 3  # colour channels of a pixel, without alpha
 CHANNEL_MAX = 255
+CHANNEL_MAX_F = 255.0
 ALPHA = 3  # index of the alpha channel in an RGBA pixel
 ROW_OUTLINE = 2  # (map, x, outline, body): the indices of a result row
 ROW_BODY = 3
@@ -871,18 +918,6 @@ def check_sprite(key, results):
     return errors
 
 
-def nine_slice(glow, w, h, border):
-    """The glow sheet drawn as FairyGuide.nineSlice does: corners fixed, edges and middle stretched (nearest)."""
-    out = Image.new('RGBA', (w, h))
-    s = glow.width
-    spans = lambda size: ((0, border, 0, border), (border, s - border, border, size - border), (s - border, s, size - border, size))
-    for sx0, sx1, dx0, dx1 in spans(w):
-        for sy0, sy1, dy0, dy1 in spans(h):
-            if dx1 > dx0 and dy1 > dy0:
-                out.paste(glow.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.NEAREST), (dx0, dy0))
-    return out
-
-
 def edge_pairs(sprite, light, lx, ly, alpha):
     """(sprite L, dx, dy, added RGB) for every outline pair of `sprite`; the light's top-left sits at (lx, ly) in sprite space."""
     pairs = []
@@ -918,21 +953,23 @@ def swept_outline(pairs, background, step_x, y_from, y_to, step_y, size, xs=None
 
 
 def fairy_cases():
-    """(name, sprite, light, light x, light y, alpha) for every fairy body frame and both glints."""
+    """(name, sprite, light, light x, light y, alpha) for every fairy body frame and both glints. Her body is lit by her own light at its
+    DIM bound (her ink contour needs it); a glint sits on the light of a 16 px target at its BRIGHT bound (light behind a pale glint hurts)."""
     body = Image.open(ROOT / 'assets/images/objects/fairy-body.png').convert('RGBA')
-    glow = Image.open(ROOT / 'assets/images/objects/fairy-glow.png').convert('RGBA')
     glint = Image.open(ROOT / 'assets/images/objects/fairy-glint.png').convert('RGBA')
-    light = nine_slice(glow, FAIRY_LIGHT_SIZE, FAIRY_LIGHT_SIZE, FAIRY_GLOW_BORDER)
-    offset = (FAIRY_FRAME - FAIRY_LIGHT_SIZE) // 2
-    cases = [(f'Fairy frame {n}', body.crop((n * FAIRY_FRAME, 0, (n + 1) * FAIRY_FRAME, FAIRY_FRAME)), light, offset, offset,
-              FAIRY_LIGHT_ALPHA) for n in range(FAIRY_BODY_FRAMES)]
+    self_look, target_look = java_look('FAIRY_SELF'), java_look('FAIRY_TARGET')
+    light = glow_layer(self_look, FAIRY_SELF_RADIUS, FAIRY_SELF_RADIUS, 'dim')
+    offset = (FAIRY_FRAME - light.width) // 2
+    cases = [(f'Fairy frame {n}', body.crop((n * FAIRY_FRAME, 0, (n + 1) * FAIRY_FRAME, FAIRY_FRAME)), light, offset, offset, 1.0)
+             for n in range(FAIRY_BODY_FRAMES)]
     pad = int(FAIRY_GLOW_PAD)
-    target_glow = nine_slice(glow, FAIRY_TARGET + 2 * pad, FAIRY_TARGET + 2 * pad, FAIRY_GLOW_BORDER)
-    # The top-left glint: centred on the target's corner grown by GLINT_GROW; the glow box starts GLOW_PAD out.
-    gx = gy = round(-FAIRY_GLINT_GROW - FAIRY_GLINT_SIZE / 2) + pad
+    radius = FAIRY_TARGET / 2 + pad
+    target_glow = glow_layer(target_look, radius, radius, 'bright')
+    # The top-left glint: centred on the target's corner grown by GLINT_GROW; the light's centre is the target's centre.
+    gx = gy = round(-FAIRY_GLINT_GROW - FAIRY_GLINT_SIZE / 2) + FAIRY_TARGET // 2
     for n, name in enumerate(('big', 'small')):
         sprite = glint.crop((n * FAIRY_GLINT_SIZE, 0, (n + 1) * FAIRY_GLINT_SIZE, FAIRY_GLINT_SIZE))
-        cases.append((f'Fairy glint {name}', sprite, target_glow, -gx, -gy, 1.0))
+        cases.append((f'Fairy glint {name}', sprite, target_glow, -gx - (target_glow.width // 2 - FAIRY_TARGET // 2), -gy - (target_glow.height // 2 - FAIRY_TARGET // 2), 1.0))
     return cases
 
 
@@ -1233,16 +1270,16 @@ def sprite_spots(key, x, y, w, h, root):
     return spots
 
 
-def measure_placement(scene, root, key, x, y, w, h, halo):
+def measure_placement(scene, root, key, x, y, w, h, halos):
     """[(outline, body, camera)] of every frame, glow level and halo state of one placement over every background the game draws
     behind it (every steady camera at which it is on screen, every drift phase)."""
     spots, glows = sprite_spots(key, x, y, w, h, root), SPRITES[key][SPRITE_GLOWS]
     collectable = key.startswith('Collectable:')
     rects = [(left, top, left + frame.width, top + frame.height) for frame, left, top in spots]
-    reach = halo.width // 2 + HALO_MARGIN
+    reach = halos['bright'].width // 2 + HALO_MARGIN
     cx, cy = int(x + w / 2), int(y + h / 2)
     if collectable:   # the halo's box at rest and at the bob's top, as the game draws it behind the bobbing item
-        rects += [(cx - reach, cy - lift - reach, cx + reach, cy - lift + reach) for lift, _ in HALO_STATES]
+        rects += [(cx - reach, cy - lift - reach, cx + reach, cy - lift + reach) for lift in (0, BOB_HEIGHT)]
     lefts, tops, rights, bottoms = zip(*rects)
     box = (min(lefts) - 1, min(tops) - 1, max(rights) + 1, max(bottoms) + 1)
     rows = []
@@ -1252,12 +1289,12 @@ def measure_placement(scene, root, key, x, y, w, h, halo):
                 if not collectable:
                     rows.append((*measure(frame, window, left - ox, top - oy, glow), cam))
                     continue
-                for lift, alpha in HALO_STATES:
+                for lift, level in ((lift, level) for lift in (0, BOB_HEIGHT) for level in GLOW_LEVELS):
                     area = (max(0, cx - reach), max(0, cy - lift - reach), min(scene.size[0], cx + reach), min(scene.size[1], cy - lift + reach))
                     area_left, area_top, area_right, area_bottom = area
                     local = window.crop((area_left - ox, area_top - oy, area_right - ox, area_bottom - oy))   # never past the map
                     if key not in NO_HALO:
-                        local = with_halo(local, halo, cx - area_left, cy - lift - area_top, alpha)
+                        local = with_halo(local, halos[level], cx - area_left, cy - lift - area_top, 1.0)
                     rows.append((*measure(frame, local, left - area_left, top - lift - area_top, glow), cam))
     return rows
 
@@ -1267,9 +1304,9 @@ def run():
     roots = map_roots()
     scenes = {name: Scene(name, root) for name, root in roots.items()}
     results = {}
-    halo = Image.open(ROOT / 'assets/images' / HALO_SHEET).convert('RGBA')
+    halos = {level: glow_layer(java_look('PICKUP'), GLOW_RADIUS, GLOW_RADIUS, level) for level in GLOW_LEVELS}
     for name, key, x, y, w, h in placements(errors, roots):
-        for outline, body, cam in measure_placement(scenes[name], roots[name], key, x, y, w, h, halo):
+        for outline, body, cam in measure_placement(scenes[name], roots[name], key, x, y, w, h, halos):
             results.setdefault(key, []).append((name, x, outline, body, cam))
     measured = set()
     for key, name, x, outline, body, cam, index in body_sweep(roots, scenes):

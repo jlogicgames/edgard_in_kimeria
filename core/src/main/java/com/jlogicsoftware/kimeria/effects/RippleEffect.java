@@ -31,6 +31,13 @@ public class RippleEffect extends Entity {
         this.decay = decay;
     }
 
+    /** Starts the ripple again from ({@code centerX}, {@code centerY}): an owner that plays one ripple after another reuses this object (#553). */
+    public void restart(float centerX, float centerY) {
+        position.set(centerX, centerY);
+        elapsed = 0f;
+        removed = false;
+    }
+
     @Override
     public void update(float dt) {
         elapsed += dt;

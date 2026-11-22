@@ -4,6 +4,11 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.effects.Shaders;
+import com.jlogicsoftware.kimeria.effects.SoftDot;
+import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
@@ -13,6 +18,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CollectableTest {
+    /** The soft light builds the shared dot texture on its first draw, so the renders below need the stubbed GL of the room tests. */
+    private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
+    @BeforeEach void setUp() { harness.setUp(); }
+    @AfterEach void tearDown() { Shaders.dispose(); SoftDot.dispose(); harness.restoreGlobals(); }
+
     @Test void eachItemUsesItsOwnFramesAndLoopsAtTheCoinCadence() {
         for (ItemType type : ItemType.values()) {
             List<String> origins = new ArrayList<>();
@@ -74,8 +84,11 @@ class CollectableTest {
         }
     }
 
-    /** #345: a warm halo is drawn additively BEFORE the item, centred on it, pulsing with the bob; the blend is restored. Not on the coin. */
-    @Test void theHaloPulsesBehindTheItemAndTheBlendIsRestored() {
+    /**
+     * #345, #544: every collectable but the coin carries a soft animated light ({@code SoftGlowFx.PICKUP}) placed on the item's centre, rising
+     * with its bob; the light draws only what it has spawned, so a fresh item draws just itself and leaves the blend alone.
+     */
+    @Test void theSoftLightFollowsTheBobAndTheCoinHasNone() {
         List<String> calls = new ArrayList<>();
         Assets assets = new Assets() {
             @Override public TextureRegion region(String path, float x, float y, float w, float h) {
@@ -93,17 +106,21 @@ class CollectableTest {
                 }
                 return null;
             });
-        item.render(batch);  // t = 0: at rest
-        assertEquals(List.of("blend 770,1", "alpha 0.5", "pickup-glow.png 36.0,196.0 24.0", "white", "blend 770,771", "mushroom.png 40.0,200.0 16.0"),
-            calls, "at rest: halo at its dimmest, centred on the item, then the item in normal blending");
-        calls.clear();
-        item.update(0.6f); item.render(batch);  // 0.6 s: the top of the bob
-        assertEquals("alpha 0.9", calls.get(1), "the halo is brightest at the top of the bob");
-        assertEquals("pickup-glow.png 36.0,194.0 24.0", calls.get(2), "the halo rises with the item");
-        calls.clear();
+        assertTrue(item.glow().placed(), "the light is placed at construction: it is there on the item's first draw");
+        assertTrue(item.glow().light().count() > 0, "and primed at once, so a new room's fade-in and the dark phase after a death show it lit");
+        item.render(batch);
+        assertTrue(calls.size() > 1 && calls.get(calls.size() - 1).startsWith("mushroom.png 40.0,200.0"), "the first draw has the light, then the item: " + calls);
+        item.update(0.01f);
+        assertEquals(48f, item.glow().centreX(), "the light is centred on the item horizontally");
+        assertEquals(208f, item.glow().centreY(), "at rest, on its centre");
+        item.update(0.59f);  // 0.6 s: the top of the bob
+        assertEquals(208f - Collectable.BOB_HEIGHT, item.glow().centreY(), "the light rises with the item");
+        assertTrue(item.glow().light().count() > 0, "the light has spawned");
         Collectable coin = new Collectable(assets, null, "Coin", 40, 200, 16, 16);
+        coin.update(0.5f);  // near the top of the bob: 2 px up
+        calls.clear();
         coin.render(batch);
-        assertEquals(List.of("coin.png 40.0,200.0 16.0"), calls, "the coin draws no halo and leaves the blend alone: its white rim washes out against one (D76)");
+        assertEquals(List.of("coin.png 40.0,198.0 16.0"), calls, "the coin has no light and leaves the blend alone: its white rim washes out against one (D76)");
         assertTrue(Collectable.hasHalo(ItemType.BAT) && Collectable.hasHalo(ItemType.MUSHROOM) && !Collectable.hasHalo(ItemType.COIN));
     }
 
