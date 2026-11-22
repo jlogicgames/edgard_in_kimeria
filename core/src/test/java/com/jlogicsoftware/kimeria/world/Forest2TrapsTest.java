@@ -165,7 +165,7 @@ class Forest2TrapsTest {
             if (plan.jumpRoot && r >= plan.rootJumpRight && r < plan.rootJumpRight + 6 && p.isOnGround() && f - lastJump > 1) doJump = true;
             if (right) held.add(Input.Keys.D);
             if (doJump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); lastJump = f; }
-            boolean mechanism = p.canInteract(), action = mechanism;
+            boolean mechanism = p.canInteract(), action = false; // D126: Up alone operates
             if (mobAhead(l)) { action = true; mechanism = false; }
             if (mechanism) held.add(Input.Keys.W);
             if (action && (!actionWasDown || wasMechanism != mechanism)) pressed.add(Input.Keys.K);

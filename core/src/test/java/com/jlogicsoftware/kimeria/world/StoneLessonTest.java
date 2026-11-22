@@ -165,10 +165,9 @@ class StoneLessonTest {
         return frames;
     }
 
-    /** Up + Action, as the hint teaches. */
+    /** A fresh Up, as the hint teaches (D126). */
     private int upAction(Level level) {
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         return 3;
     }
@@ -521,7 +520,7 @@ class StoneLessonTest {
             float stand = Math.min(stop + 8, FAR - 1);
             giveStoneAt(level, stand + 11);
             if (stop > LIP) { level.player.position.set(stop + 8 - 18, 272); settle(level, 2); }
-            held.clear(); held.add(Input.Keys.S); frame(level); held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level); held.clear();
+            held.clear(); frame(level); held.add(Input.Keys.S); frame(level); held.clear(); // Down alone puts down (D126)
             rest(level);
             String where = "stop " + stop + " running " + running;
             assertTrue(stone(level).available(), where);
@@ -539,7 +538,7 @@ class StoneLessonTest {
         walkLeftTo(level, () -> level.player.canInteract());
         boolean running = platform(level).isRunning();
         upAction(level);
-        assertEquals(!running, platform(level).isRunning(), "Up + Action toggles the platform from the lever's side");
+        assertEquals(!running, platform(level).isRunning(), "Up toggles the platform from the lever's side");
         upAction(level);
         assertEquals(running, platform(level).isRunning());
     }
@@ -593,8 +592,7 @@ class StoneLessonTest {
     @Test void aPlacedStoneAndAThrowAtAnOrdinaryLeverDoNotOperateIt() {
         Level level = freshRoom();
         giveStoneAt(level, THROW_FROM);
-        held.clear(); held.add(Input.Keys.S); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level); held.clear();   // Down + Action puts it down
+        held.clear(); frame(level); held.add(Input.Keys.S); frame(level); held.clear();   // Down alone puts it down (D126)
         rest(level);
         assertFalse(lever(level).isUp(), "Putting a stone down is not a throw");
         Level plain = freshRoom();
@@ -620,7 +618,7 @@ class StoneLessonTest {
                         settle(level, 1);
                         upAction(level);
                     } else if (!carrying && level.player.carriedObject() != null) {
-                        held.clear(); held.add(Input.Keys.S); frame(level); held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level); held.clear();
+                        held.clear(); frame(level); held.add(Input.Keys.S); frame(level); held.clear(); // Down alone puts down (D126)
                         stone(level).restore(new Carryable.Snapshot(STONE_X, STONE_Y, 0, 0, false, false));
                     }
                     place(level, x);

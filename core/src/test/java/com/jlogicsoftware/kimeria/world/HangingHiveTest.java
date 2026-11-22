@@ -351,8 +351,7 @@ class HangingHiveTest {
         level.player.position.set(108 - 29, 272);
         level.player.velocity().setZero();
         level.player.facingRight = true;
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         assertSame(stone(level), level.player.carriedObject(), "picked up the stone");
         int f = 0;

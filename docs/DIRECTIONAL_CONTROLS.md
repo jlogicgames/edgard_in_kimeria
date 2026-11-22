@@ -1,4 +1,4 @@
-# Directional actions (#95, #175)
+# Directional actions (#95, #175, #548)
 
 Implemented 2026-10-22, with the author's final tutorial/carrying clarifications
 on 2026-10-23. This replaces the proximity-based Attack/Interact priority from #22.
@@ -6,7 +6,8 @@ Desktop and web share the same dispatcher. Accepted choices and their rationale
 are retained in [D23](DECISIONS.md#d23-one-visible-carried-object-with-no-separate-pocket)
 and [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying).
 This document describes the current behavior, including the interaction revision
-implemented for [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
+implemented for [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175),
+**which [D126](DECISIONS.md#d126-up-and-down-interact-no-two-button-chords-548-2026-11-22) (#548, 2026-11-22) replaced: Up and Down interact on their own and no command needs two buttons.**
 Superseded artwork and intermediate UI captures have been removed.
 
 ## Author-reported device checks (2026-10-27)
@@ -20,41 +21,50 @@ Update (2026-11-06, author-reported): the desktop version was checked with keybo
 gamepad in both the right-handed and left-handed layouts (build and rooms not stated).
 This covers the mirrored gamepad item. Touch in both layouts is unchecked and its check is **Cancelled (D61)**.
 
-## Interaction controls (#175)
+## Interaction controls (D126, #548)
 
-| Command | Target result |
+| Command | Result |
 | --- | --- |
-| Action without Up/Down | Grounded sword attack, including while holding an object. Recovery and jump-buffer restrictions remain. |
-| Up + Action, empty hand | Pick up the nearest eligible stone/portable torch or activate the nearest eligible mechanism. |
-| Up + Action, carrying | Activate the nearest eligible mechanism; if none is selected, do nothing. |
-| Down + Action | Place/drop the held object. With an empty hand, do nothing. |
-| Up + Down + Action | Consume the press without an action. Release Action before trying again. |
+| Action | Grounded sword attack, including while holding an object. Never picks up or uses anything. Recovery and jump-buffer restrictions remain. |
+| Up, fresh press, empty hand | Pick up the nearest eligible stone/portable torch or activate the nearest eligible mechanism. |
+| Up, fresh press, carrying | Activate the nearest eligible mechanism; if none is selected, do nothing. |
+| Down, fresh press | Place/drop the held object. With an empty hand, do nothing. |
+| Up or Down held | Climb a ladder in reach (unchanged), unless that press was spent on an interaction. |
+| Up and Down together | No interaction. |
 | Ranged, holding an object | Keep throwing that object without spending ammunition or firing a fireball. |
 | Ranged, empty-handed | Keep spending one available charge on one fireball. With zero stock, show Empty. |
 
 When a pickup and mechanism are both eligible with an empty hand, compare their
 centres to the player's body centre and choose the nearer one; the smaller Tiled
-object ID breaks an equal-distance tie across both types. The visible outline and
-contextual hint identify that same selection. A mechanism selection dispatches once
+object ID breaks an equal-distance tie across both types. The hover label and the fairy
+identify that same selection. A mechanism selection dispatches once
 through its Trigger, which may operate several linked objects. While carrying, only
-mechanisms are Up + Action targets. Preserve pickup reach, placement validation,
+mechanisms are Up targets. Preserve pickup reach, placement validation,
 one-slot carrying and trigger behavior.
 
-Directions must be held when Action is pressed. Changing direction while holding
-Action never produces another action. Each device needs release/repress independently;
-keyboard repeats do not repeat interactions. Menu/loading/room entry, resume,
-death arrival and layout changes suppress held action/ranged input. Jump keeps its
-existing separate buffer and coyote-time implementation.
+**Fresh press, per device.** Interaction needs Up or Down to be newly pressed on that device (keyboard, gamepad
+and touch latch independently, as Action does); holding a key never repeats an interaction, and menu/loading/room
+entry, resume, death arrival and layout changes suppress a held key. Climbing is on hold. A press that picked up,
+used or put down is **spent**: the same held key does not also grab or climb a ladder until it is released and pressed
+again. Interaction never happens on a ladder.
 
-Keyboard, gamepad and touch share this behavior in both handedness layouts. The
-direction held with Action is consumed until that direction is released; it cannot
-also grab/climb a ladder or trigger another action. Touch reports
-“No action” for Up + Action with no target and Down + Action with an empty hand.
+**Touch stick.** The stick climbs at any upward or downward lean past its dead zone, but it counts as an interaction
+press only when it is more than about 60 degrees from horizontal (tan 60 = 1.732), so a diagonal climb or a run with a
+little lean never picks anything up. The touch Action button always reads Sword.
+
+**Ladder overlap.** A stone or torch lying in a ladder's reach: a fresh Up picks it up first, the next fresh Up
+climbs. Down while carrying puts the object down on the floor; at a ladder top Down descends with the object (the
+ladder wins).
+
+**Placement rule.** No hand-operated object (a lever the hero pulls, a stone, a carryable torch) stands within 32 px
+of a ladder zone in either ladder state, so one key never means two things; a lever that is only thrown at
+(`throwActivated`) is exempt. Enforced at load by `Level.validateLadderClearance` and by
+`tools/check_tiled_links.py` (`check_ladder_clearance`).
 
 ## Standing look up/down (removed)
 
 Removed (2026-11-20, [D111](DECISIONS.md#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513)): there is no standing look. Holding Up or Down while standing still does
-nothing by itself; Up and Down keep every other use (ladders, Up/Down + Action pick up and put down, the touch stick, menus). The
+nothing by itself; Up and Down keep every other use (ladders, Up picks up and uses, Down puts down, the touch stick, menus). The
 camera follows the hero and the room clamp only.
 
 ## Bindings and feedback
@@ -66,8 +76,8 @@ camera follows the hero and the room clamp only.
 | Touch | Two-axis left stick, right action buttons | Two-axis right stick, left action buttons |
 
 The mirrored action D-pad is never also a movement direction. Start/Esc and menu
-bindings are unchanged. Touch labels distinguish sword, pickup, placement, blocked
-placement, no action, mechanism, throw, fireball and empty stock. All contextual teaching uses
+bindings are unchanged. The touch Action button reads Sword; the hover labels distinguish pickup, placement, blocked
+placement, mechanism, throw, fireball and empty stock. All contextual teaching uses
 the map's `controls` hint zone (today the entire first `forest-2` room, to move into `forest-0`'s
 lesson rooms; [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)), at every position and height,
 including retries and collection returns. These labels are shown together with the zone's own `message`, never instead of it (D33, #211). Other rooms/levels omit teaching labels. The full-ammunition pickup message is
@@ -76,7 +86,7 @@ The earlier 320×144 rectangle, one-time and 50 px limits are superseded by
 [D24](DECISIONS.md#d24-the-whole-first-room-teaches-including-mechanisms-while-carrying).
 Carrying shows Put down and Throw at the pickup anchor until the camera begins
 scrolling, once per pickup. If a mechanism is
-usable while carrying, show its Up + Action instruction first, followed by Put down
+usable while carrying, show its Up instruction first, followed by Put down
 and Throw while that reminder is active, anchored by the visible mechanism.
 After it expires, continue showing the mechanism instruction by itself.
 Turn on/Turn off tracks the lever state;
@@ -92,18 +102,18 @@ The fairy guide marks the selected object itself ([D82](DECISIONS.md#d82-the-fai
 brackets): an aqua glow behind it and four fairy-dust glints at its corners from the frame it is selected, while the
 fairy flies beside it and points. In-reach targets that are not selected, and the mechanisms a selected lever drives,
 get the same glow dimmed. After a pull the pulled lever's mechanisms glow clearly for 1.5 s, and one outside the view sends the
-fairy to the screen edge to twinkle, and with several outside the view she visits each in turn ([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), #434). For Up + Action, a visible
+fairy to the screen edge to twinkle, and with several outside the view she visits each in turn ([D87](DECISIONS.md#d87-the-fairy-points-at-a-linked-mechanism-that-is-off-screen-and-the-pulled-levers-mechanisms-stay-marked-419-2026-11-17), #434). For Up, a visible
 lever is marked at its trigger zone and named Lever, with Turn on/Turn off matching
-the linked torch. Other mechanisms mark the nearest visible linked object rather
+its linked mechanism. Other mechanisms mark the nearest visible linked object rather
 than the invisible trigger volume; a linked torch is named Torch. Usable torches have a solid
-handle and cup, including when unlit. Up + Action marks a selected pickup at its actual
-position. Down + Action has no target mark because it places the carried object.
+handle and cup, including when unlit. Up marks a selected pickup at its actual
+position. Down has no target mark because it places the carried object.
 There is no floating selection dot above the hero or a trigger zone. Strings are typed `Msg`
 keys translated in EN/UK/PL/DE/BE; the shipped fonts already contain every glyph.
 
 Mechanisms are eligible only inside their trigger volume. Carryables are eligible
 only in contact with the player's body or within a 3 px tolerance on either axis.
-An Up + Action with no eligible target does nothing and shows no target marker or
+An Up press with no eligible target does nothing and shows no target marker or
 hint; it never turns into a sword attack. Enemies never change the selected action.
 While carrying, the pickup selection is disabled and the nearest eligible mechanism
 remains available. Placement inside solid terrain or beyond the current room is
@@ -148,8 +158,8 @@ The persistent save still contains only a level index.
 ## Carrying acceptance (#97)
 
 All four criteria in [#97](https://github.com/jlogicgames/edgard_in_kimeria/issues/97)
-are implemented: one visible hand slot with sword use retained; Up + Action pickup
-and Down + Action placement; Ranged throw without a fireball; and documented room ownership/rollback.
+are implemented (since D126 with Up pickup and Down placement, no Action chord): one visible hand slot with sword use retained; Up pickup
+and Down placement; Ranged throw without a fireball; and documented room ownership/rollback.
 The mechanics and entrance practice objects shipped in
 [PR #154](https://github.com/jlogicgames/edgard_in_kimeria/pull/154), closing #95;
 secured mutable-object restoration followed in
@@ -216,9 +226,8 @@ The merge does not by itself establish deployment or manual acceptance.
 ## Explicit dependencies
 
 - [#99](https://github.com/jlogicgames/edgard_in_kimeria/issues/99) is implemented:
-  see [Ladders](#ladders-99). `Player.verticalMovement()` still returns zero
-  throughout a held directional Action, and the ladder consumes it so one chord cannot
-  climb and activate. Only simulated-device tests are claimed; no physical ladder playtest.
+  see [Ladders](#ladders-99). Since D126 `GameplayInput.verticalMovement()` is the plain
+  Up/Down hold, and a press spent on an interaction cannot also climb. Only simulated-device tests are claimed; no physical ladder playtest.
 - [#97](https://github.com/jlogicgames/edgard_in_kimeria/issues/97) meets its carrying
   criteria; [evidence above](#carrying-acceptance-97). Authored environmental puzzles
   remain #103–#104 (Forest) and #112–#115 (Fortress).
@@ -236,7 +245,7 @@ The author's revised trigger (object 118, x=128/y=320/w=16/h=16 before the -16 l
 offset) now has `appearance=Lever`. The coordinates and object IDs are preserved.
 After its linked Torch is spawned, Level creates a native 16×16 Lever sprite at the
 trigger's bottom centre. This is a visible control, not a second actionable target:
-Up + Action still dispatches once through the selected Trigger to the linked torch.
+Up (D126; an Action chord before) still dispatches once through the selected Trigger to the linked torch.
 The lever's up/down state reads Torch.isBurning directly, so it cannot drift from
 the actual light state. Handle right = on; handle left = off (#413). The prompt/button explicitly says
 Turn on/Turn off and names the Lever in all five languages.
@@ -320,18 +329,19 @@ Rules and rationale: [D28](DECISIONS.md#d28-vertical-ladders). Implemented 2026-
 | Grounded on an intermediate platform at least one third down the ladder | Up or Down takes hold (climb); hint shows separate `Up: Climb` and `Down: Climb down` lines | Sword as usual | As usual | As usual |
 | On the top surface | Down takes hold (descend); Up does nothing | Sword as usual | As usual | As usual |
 | Attached | Up/Down climb at 70 px/s; Left/Right releases the ladder and moves normally; both ends step off | Does not swing; no pick up/put down | Throws a held object or spends a fireball; keeps the grip | Lets go with a 0.7× hop |
-| Up/Down + Action, anywhere | Not climbing: Action owns the direction | Up selects a pickup or mechanism; Down places a held object and otherwise does nothing | | |
+| Fresh Up/Down, anywhere off a ladder | An interaction (D126): Up picks up or uses, Down places a held object; a spent press does not climb | Sword as usual | As usual | As usual |
 
-The direction held with an Action press stays spent until it is released, on the ground
-and on the ladder, so a chord can climb or operate, never both, and releasing Action while
-still holding Up does not climb. Up and Down together climb nothing. Keyboard (both
+The direction pressed for an interaction stays spent until it is released, so one press can
+climb or operate, never both, and holding Up after a pick-up does not climb. A stone lying on a ladder: a
+fresh Up picks it up, the next fresh Up climbs; at a ladder top a fresh Down descends even while carrying.
+Up and Down together climb nothing. Keyboard (both
 handedness layouts), gamepad movement stick/D-pad and the touch stick feed the same
 input; the lesson text names the device's own label (`W`, `Left stick up`, `Stick up`).
 
 Tests (`DirectionalActionsTest`, production Player/Level, simulated devices): climb to the
-top and step onto the ledge, descend and step off, no regrab at the top, chord on the ground
-and on the ladder with no climb after release, sword/pick up unavailable and ranged working
-while attached, jump-off with direction, gamepad stick, touch stick with an Action touch,
+top and step onto the ledge, descend and step off, no regrab at the top, fresh-press interaction on the ground
+and the spent press that does not climb, sword/pick up unavailable and ranged working
+while attached, jump-off with direction, gamepad stick, touch stick (the 60 degree rule),
 and the first-room hint present only in the first Forest room. Not checked: a physical
 controller, a physical multitouch phone (**Cancelled, D61**), and novice comprehension.
 

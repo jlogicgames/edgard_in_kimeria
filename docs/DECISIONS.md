@@ -475,6 +475,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   [#95](https://github.com/jlogicgames/edgard_in_kimeria/issues/95), implemented 2026-10-22;
   [original contract and dependencies](DIRECTIONAL_CONTROLS.md). The author-requested
   directional revision is recorded in D30 and tracked by #175.
+  **D126 (2026-11-22) reverses the Action chords above:** Up picks up and uses a mechanism, Down puts down, Action is the sword only.
 - **Movement progression:** Double jump becomes available starting with the Steppe.
   Design subsequent rooms around that ability rather than an arbitrary optional
   upgrade purchase. The unlock event and exact movement rules still need design;
@@ -847,7 +848,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
   [gameplay controls](GAMEPLAY.md#controls), and [#175](https://github.com/jlogicgames/edgard_in_kimeria/issues/175).
 - **Note, D82 (#338):** "the outline" in this decision is now the fairy guide (glow, glints, fairy); it identifies
   the same nearest target with the same tie-break.
-- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the one direction for pickup and mechanism interaction becomes the Up key alone (no Action chord); a placement rule keeps interactive objects away from ladders. This decision will be reversed in part by issue [#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the one direction for pickup and mechanism interaction becomes the Up key alone (no Action chord); a placement rule keeps interactive objects away from ladders. Reversed by [D126](#d126-up-and-down-interact-no-two-button-chords-548-2026-11-22) (#548, implemented 2026-11-22).
 
 ## D31. Forest uses linked route reconfiguration
 
@@ -949,7 +950,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Why:** a reversible, route-independent first lesson lets a novice experiment safely and read cause and effect
   before ladders, walls and platforms (which reconfigure the route) arrive in later rooms.
 - **Not verified:** no novice playtest (#129–#131); the mastered route (walk, operate, exit) was measured headlessly.
-- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the forest-0 lever stops driving the decorative torch and drives another visible mechanism, still with no gating; this decision will be revised by issue [#549](https://github.com/jlogicgames/edgard_in_kimeria/issues/549).
+- **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** the forest-0 lever stops driving the decorative torch and drives another visible mechanism, still with no gating; amended by [D127](#d127-the-tutorial-lever-drives-a-lift-not-the-torch-amends-d34-549-2026-11-22) (#549, implemented 2026-11-22).
 
 ## D35. The tutorial ladder lesson rule
 
@@ -4133,3 +4134,48 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   body at most 0.140 (was 0.074 to 0.133 / 0.142); snag outline 0.087 to 0.119, body at most 0.103; crown 0.026 to 0.165.
 - **References:** [ART_DIRECTION.md](ART_DIRECTION.md) "A branch always grows from a trunk (D122)"; [TRAPS.md](TRAPS.md) falling branch,
   rotten branch, deadfall and hive cards.
+
+## D126. Up and Down interact, no two-button chords ([#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548), 2026-11-22)
+
+- **Status:** Accepted (author, 2026-11-21, the author's own rule, playtest 2 finding F15, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)); implemented. Reverses [D30](#d30-one-direction-for-pickup-and-mechanism-interaction) and the Action chords of [D18](#d18-directional-controls-steppe-double-jump-and-replay-target).
+- **Decision:** Action is the sword and nothing else. **Up** picks up the nearest eligible carryable or uses the nearest eligible mechanism (D30's nearest-first selection and smaller-id tie-break are unchanged; while carrying, Up still reaches mechanisms). **Down** puts the carried object down (no effect empty-handed). Up and Down still climb ladders. No control needs two buttons.
+- **Fresh press and hold:** interaction needs a fresh press, per device, latched like Action (`GameplayInput.upPressed()/downPressed()`; entry, resume and layout changes suppress a held key). Climbing stays on hold. A press that did something is spent: that held key does not also grab or climb a ladder until it is released and pressed again. Up and Down held together interact with nothing.
+- **Touch stick:** the stick climbs as before, but counts as an interaction only past about 60 degrees from horizontal (`TouchControls.interactUpHeld()/interactDownHeld()`, tan 60 = 1.732), so a diagonal climb never picks anything up. The touch Action button always reads Sword.
+- **Ladder overlap:** a stone or torch lying on a ladder: a fresh Up picks it up first and the next Up climbs. Down while carrying puts down on the floor, and at a ladder top it descends with the object (the ladder wins). Interaction does nothing while on a ladder.
+- **Placement rule (every room, at load):** no hand-operated object (a `Trigger` not marked `throwActivated`, a `Stone`, a `CarryableTorch`) stands within 32 px (`Level.LADDER_CLEARANCE`) of a ladder zone, the union of its raised and lowered spans, so one Up never means two things. `Level.validateLadderClearance` throws at load; `tools/check_tiled_links.py` (`check_ladder_clearance`) fails the map; the test fixture `practice-test.tmx` moved its lever from x 448 to x 480.
+- **Audit (2026-11-21, a script over the shipped maps):** `forest-0-ladder` (lever 120 px from the ladder zone), `forest-1-route` (80 px) and `forest-1-lever` (192 px) comply. `forest-1-guard`'s lever (id 63, x 2256) stood 16 px from the "Bridge" ladder (x 2288): moved to x 2240 (32 px, the floor lever's reach now x 2230.5-2265.5).
+- **Text:** `ABOUT_BODY`, `ABOUT_BODY_LEFT_HANDED`, `ABOUT_GAMEPAD` and `ABOUT_GAMEPAD_LEFT_HANDED` (en approved by the author, translated for uk, pl, de, be; native review under #369) no longer name Action chords; the labels above the hero read "W: Pick up - Stone", "W: Turn on - Lever", "S: Put down - Stone". `NO_ACTION` and `DIRECTION_CONFLICT` are removed from the five catalogs and `Msg`; `ATTACK` stays (the touch button).
+- **Measured (2026-11-22, headless, scripted hero):** the replays no longer swing the sword to pull a lever, and the D19 times are unchanged: `forest-1-escalators` 5.48 s (`RoomReplayTest`), `forest-1-traps` 6.00 s; the `forest-1-guard` roof route is 7.33 s with the lever 16 px farther left (7.4 s pinned, within the 0.1 s tolerance), melee 6.50 s, fireball 5.82 s, lure 4.53 s. Tests that hold Up now press it fresh after a released frame, and one fuzz test (`Forest1CombatTest` roof) no longer presses Up beside the lever, where a fresh Up pulls it.
+- **Allocation (2026-11-22, `AllocationBudgetTest`, whole class, two runs each, B/frame; no ceiling changed):** the scenes are noisy and bimodal between runs (JIT), so the table gives both runs. A first version of the input code read `Gdx.input` more often per frame and the test's proxy input allocates per call (about 24 B), which showed as +48 B in every scene; the keys are now read once and the per-frame arrays are fields, so no scene is above origin/main.
+
+| Scene | origin/main | this change | ceiling |
+| --- | --- | --- | --- |
+| forest-1 lever room riding the lift | 512 / 512 | 367 / 377 | 620 |
+| forest-1 guard room | 520 / 520 | 232 / 232 | 1280 |
+| forest-1 hive room | 512 / 512 | 251 / 247 | 590 |
+| forest-1 escalators room | 512 / 512 | 320 / 320 | 620 |
+| forest-1 route room | 512 / 512 | 320 / 320 | 1130 |
+| forest-1 bramble room | 512 / 512 | 440 / 440 | 620 |
+| forest-1 deadfall room | 512 / 512 | 320 / 440 | 620 |
+| forest-1 mob room | 470 / 464 | 440 / 328 | 620 |
+| forest-1 tree room | 448 / 448 | 448 / 328 | 990 |
+| forest-1 lever room | 448 / 448 | 448 / 328 | 620 |
+| forest-1 route room riding the lift | 448 / 448 | 448 / 448 | 1130 |
+| forest-2 room 0 with fireflies | 480 / 496 | 472 / 360 | 625 |
+| forest-2 fissure room | 448 / 448 | 448 / 448 | 590 |
+| forest-2 room 2 with mob kill blood | 576 / 576 | 288 / 288 | 1250 |
+
+- **Stone-throw scene** (`AllocationBudgetTest`, median of throw minus no-throw pairs, ceiling 16 B/frame, unchanged): 3.5 / 3.5 on origin/main, 4.7 / 4.7 here (an earlier origin/main run read 2.4). The difference is about 1 B/frame, from the two extra `isKeyJustPressed` reads per frame that the test's proxy input boxes and allocates (D126 reads them for the sub-frame tap rule); the game code allocates nothing new, and the scene stays far under its ceiling.
+- **Not verified:** the checks in the running game, kept open on [#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548) for the author's play-through (pick up, use, put down and climb with Up and Down only, on keyboard in both layouts, gamepad and touch; a stone on a ladder); the feel of the 60 degree line and the pad and touch hysteresis (press at 60 degrees or a 0.4 pad axis, release below 55 degrees or 0.3) on real devices.
+- **Hysteresis and taps:** an interaction edge needs a press at the line and a release below a lower one (touch 60 to 55 degrees, pad stick 0.4 to 0.3), so a resting finger cannot chatter a lever; a key tap shorter than a frame (the web) counts through `isKeyJustPressed`, like Action. Down at a ladder top descends even inside the short regrab pause after a step-off.
+- **Gates:** `DirectionalActionsTest` (rewritten: fresh press, spent press, the ladder-overlap order, the touch angle, the placement rule), `LadderLessonTest`, `LeverLessonTest`, `StoneLessonTest`, `TrapsLessonTest`, `Forest1LeverLessonTest`, `Forest1RouteTest`, `FairyOffscreenTest`, `SideBarTouchLayoutTest`, `RoomReplayTest`, `AllocationBudgetTest`, `test_check_tiled_links.py`, `validateTextStyle`.
+- **References:** [DIRECTIONAL_CONTROLS.md](DIRECTIONAL_CONTROLS.md), [GAMEPLAY.md](GAMEPLAY.md#controls), `.agents/skills/kimeria-input-flows/SKILL.md`, [PLAYTEST_2.md](PLAYTEST_2.md) F15.
+
+## D127. The tutorial lever drives a lift, not the torch (amends D34; [#549](https://github.com/jlogicgames/edgard_in_kimeria/issues/549), 2026-11-22)
+
+- **Status:** Accepted (author, 2026-11-21, playtest 2 finding F14); implemented. Amends [D34](#d34-the-tutorial-lever-lesson-rule).
+- **Decision:** in `forest-0-lever` the lever (id 41, x 376) starts and stops a lift (`Escalator` id 40, x 432, y 256, 32 x 16, vertical, `offNeg` 3, `running` false) instead of lighting a torch. The lift hangs above the walking line (its deck bottom is y 272, the hero's top), so it rests, runs or stops part-way without ever touching the floor route: the exit (x 512) is never gated, after death, Restart Level and in every lift state (D26). A one-way step (id 142, x 400, y 304) and a two-piece ledge (ids 143, 144, x 472-536, y 160) give the curious player a ride: jump on the step, step onto the lift at its rest, ride to the ledge. The ledge carries nothing.
+- **Cards:** `forest-0-lever` introduces lever, lever-platform and honey-fungus (tutorial rooms are exempt from the two-element cap, D72); `forest-0-platform` develops lever-platform and keeps falling-stone as its new element.
+- **Text:** `HINT_LEVER_TORCH` "Use the lever to start the lift or stop it" and `HINT_LEVER_EXIT` "Lift moving or still, the way is open. Head for the exit" (D97 formula); the key names are kept. `HEALER_TALE_FAIRIES` still names the torch handle and waits for #539.
+- **Measured (2026-11-22, `LeverLessonTest`, scripted hero):** walk, pull, walk to the exit 4.25 s (about 4.3 s before; the lift sits above the floor route, so it adds no time). Not a novice playtest.
+- **Not verified:** whether a new player sees the lift move and understands the ledge (the stopped-lift cue is the weakest, #418/#419); the check in the running game (a pull, the lift moving, the hint, desktop and web) stays open on [#549](https://github.com/jlogicgames/edgard_in_kimeria/issues/549) for the author's play-through.

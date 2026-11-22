@@ -88,7 +88,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    Keep the side walls and any ledge walls inside the room (`RoomCeilingTest` checks every room of forest-0, forest-1 and forest-2).
 2. **Object + link.** Put the mechanism in `SpawnPoints` as type `Actionable` with property `type` = `Torch` or
    `Wall` (`check_tiled_links.py` rejects anything else; a moving platform is instead a SpawnPoints `Escalator` with `isVertical`, `offNeg`/`offPos` in 32 px units and `running`=false, linked the same way; a Torch starts dark with `Intensity` = 0, lit with a
-   positive value; a Trigger that a *thrown* carryable should operate, not the hero's Up + Action, gets the bool property `throwActivated` = true, see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule), and must stand where the hero cannot overlap it; a Stone with the bool `respawn` = true returns to where it was authored when it falls out of the room or hits such a lever). Add a `Trigger` with property `target` (type *object*) = the mechanism's id. Names are written by
+   positive value; a Trigger that a *thrown* carryable should operate, not the hero's Up, gets the bool property `throwActivated` = true, see [D39](DECISIONS.md#d39-the-tutorial-thrown-stone-lesson-rule), and must stand where the hero cannot overlap it; a Stone with the bool `respawn` = true returns to where it was authored when it falls out of the room or hits such a lever). Add a `Trigger` with property `target` (type *object*) = the mechanism's id. Names are written by
    the Tiled extension `tools/tiled-extensions/link-names.js` as `Torch [40] ← 41` (own id, then the id of each
    trigger pointing at it) and `Lever [41 → 40]` (own id, then its target); do not hand-craft other formats. Both
    objects stay in the room, the effect is visible within one screen of the trigger, and `nextobjectid` is
@@ -96,7 +96,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    unless the lesson needs height. Run `python3 tools/check_tiled_links.py`.
 3. **Hint zones** (layer `Hints`, full room height 0–368, inside the room). Horizontally, a room's usable range is
    between its side walls (x 16–560 for the 576 px lever room; add the room's x offset for later rooms).
-   One `controls` zone over that whole range gives the live "Up + Action: Turn on - Lever" label near the lever; and
+   One `controls` zone over that whole range gives the live "W: Turn on - Lever" label (D126) near the lever; and
    `message` zones tile the range so every standing position belongs to a hint zone (the text appears after the 0.35 s dwell, not instantly; the first message of a room needs the dwell plus a 0.45 s fade-in, so about 0.8 s). **Place each lesson zone so a continuous walk gives its message about 1 s fully visible before the object is in reach** (`HintLeadTest`; at 100 px/s that is roughly 180 px between the zone start, or the room start for the first message, and the object's reach, so lengthen the approach rather than the rest of the room), because the text needs the dwell and fade-in to be readable, and the HUD keeps it up for 2.5 s after the hero leaves and at least 0.7 s before another message replaces it (D33); a zone that starts at the object is read only after the hero has passed it. **Message zones are position-only:
    they know nothing about object state or whether the player already acted, so every lesson text must be true in every
    state** (lever off, on, never touched). Do not write "the torch is dark" or "works both ways" on a position-only
@@ -849,7 +849,7 @@ room exit. The decision adds no cross-room transport,
 extra inventory snapshot or persistent save field. Both stone and torch now render
 in the animated front hand; the stone's old hidden treatment was never a second slot.
 
-The production-input replay now chooses Up + Action for mechanisms and plain
+The production-input replay now chooses a fresh Up for mechanisms (D126; an Up + Action chord before) and plain
 Action for sword combat. With live hazards and no fireball spending, three identical
 attempts each remain: entry 16.27 s required / 20.00 s all coins; canopy 5.00 s /
 5.00 s; forest-1 5.32 s required. Collection returns: entry 14.78 / 14.25 / 14.25 s,
@@ -1299,7 +1299,7 @@ y320        ========================================   floor under the whole roo
 | Room 3, `forest-1-lever` | `Room` (id 112), `RoomStart` (id 113) | 4320 | 0 | 640 x 368; start 4352, 272 | none | one screen wide (the camera shows 640 x 360), so the whole room is in view wherever the hero stands; safe entrance, floor under it, nothing in reach |
 | Lift | `Escalator` `Lesson` (id 106) | 4416 | 240 | 32 x 16 | `isVertical`, `offNeg` 0, `offPos` 2 | starts running at its top (y 240), descending, 50 px/s between y 240 and y 304 (2.56 s a cycle); the only way up to the slab; boardable from the floor while it is at y 248.2 or lower |
 | Slab | collision (id 110) | 4448 | 208 | 112 x 16 | plain collision, floating | the lever's ledge, 112 px above the floor (a hop is about 58 px, a boarding reach 71.8 px): out of reach from the floor; 32 px above the lift's top (a hop); the floor passes under it |
-| Lever | `Trigger` `Lesson` (id 104) | 4528 | 192 | 16 x 16 | none (legacy name link) | on the slab; pulled with Up + Action, only standing on the slab (swept); 80 px from the lift, 192 px from the ladder (nearest edges) |
+| Lever | `Trigger` `Lesson` (id 104) | 4528 | 192 | 16 x 16 | none (legacy name link) | on the slab; pulled with Up, only standing on the slab (swept); 80 px from the lift, 192 px from the ladder (nearest edges) |
 | Ladder | `Ladder` `Lesson` (id 105) | 4736 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor and 176 px from the slab's end; lowered y 208-320, its top rung level with the exit ledge; the only way on |
 | Exit ledge | collision (id 111) | 4752 | 208 | 192 x 112 | plain collision, not a `Wall` | 112 px high, against the ladder's right side and the right wall: reachable only by the ladder |
 | Room exit | `RoomExit` (id 114), room `forest-1-lever` | 4864 | 176 | 48 x 32 | none | on the ledge top, 112 px from the ladder, 32 px before the right wall; leads to the route room |
@@ -1356,7 +1356,7 @@ y320        ====================================================
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Room 2 (room 1 before #375), `forest-1-traps` | `Room`, `RoomStart` (32, 272), `RoomExit` | 0 | 0 | 1280 x 368; exit 1216, 272, 32 x 48 | none | the trap course; the exit replaces its checkpoint. Since #500 batch 3 (D110) it is x 640-1280 (start 656) and the escalators are `forest-1-escalators`, x 0-640 |
 | Room 3 (room 2 before #375), `forest-1-route` | `Room` (id 46), `RoomStart` (id 47) | 1280 | 0 | 832 x 368; start 1344, 272 | none | third room since #375; safe entrance, floor under it, nothing in reach; ends at the `RoomExit` below |
-| Lever | `Trigger` `Route` (id 48) | 1440 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor |
+| Lever | `Trigger` `Route` (id 48) | 1440 | 304 | 16 x 16 | none (legacy name link) | pulled with Up, only on the floor |
 | Ladder | `Ladder` `Route` (id 49) | 1536 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; optional route |
 | Slab | collision (id 53) | 1552 | 208 | 80 x 16 | plain collision, floating | landing and waiting place; the floor passes under it, so the lever stays in walking reach |
 | One-shot step | `FallingPlatform` (id 58) | 1648 | 168 | 32 x 16 | none (default look) | 40 px above the slab, 40 px below the pad; falls once, 1 s after it is stood on (1.5 s assisted) |
@@ -1426,7 +1426,7 @@ y320        ================================================   floor; end walls 
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Room 2 exit | `RoomExit` (id 75), room `forest-1-route` | 2048 | 112 | 48 x 32 | none | the route room's checkpoint became this exit (D67 times unchanged) |
 | Room 3, `forest-1-guard` | `Room` (id 60), `RoomStart` (id 61) | 2112 | 0 | 768 x 368; start 2208, 272 (2176 before #500, D110) | none | third room; safe entrance, floor under it, nothing in reach; the start point is the top-left of the hero's 48 x 48 square |
-| Lever | `Trigger` `Bridge` (id 63) | 2256 | 304 | 16 x 16 | none (legacy name link) | pulled with Up + Action, only on the floor; reach x 2246.5-2281.5 (x 2224 before #500, D110) |
+| Lever | `Trigger` `Bridge` (id 63) | 2240 | 304 | 16 x 16 | none (legacy name link) | pulled with Up, only on the floor; reach x 2230.5-2265.5 (x 2256 before D126, which keeps the hand-operated lever 32 px from the ladder at x 2288; x 2224 before #500, D110) |
 | Ladder | `Ladder` `Bridge` (id 64) | 2288 | 96 | 16 x 112 | `dropDistance` 112 | starts raised, foot 112 px above the floor; lowered y 208-320; leads to the roof |
 | Slab (roof) | collision (id 73) | 2304 | 208 | 400 x 16 | plain collision, one piece | the roof route: up from the ladder, 112 px above the floor, over the tunnel, ends at x 2704 |
 | Roof block | collision (id 78) | 2304 | 224 | 256 x 64 | plain collision | closes the tunnel from above: ceiling y 288, so the opening is 32 px high (x 2304-2560): no hop over the guard, no stomp |
@@ -1628,3 +1628,7 @@ Option A (no geometry change, one puffball in the 128 px slot at x 1616-1744) wa
 ### Author's answers recorded
 
 Lengthen the canopy by 448 px; three traps; both new families (vine and root); no enemy on the new stretch; no Bomb companion; no hints; no extra stone pickup. Open for the running game (tracked by #261): the look of the vine, root and stone in this map, the earth blocks that hold the vine and the stone, and how the 9.5 s retry loop feels.
+
+### The lever lesson drives a lift (D127, #549, 2026-11-22)
+
+`forest-0-lever` no longer lights a torch: the lever (id 41, x 376) starts and stops a lift (`Escalator` id 40, x 432, y 256, 32 x 16, vertical, `offNeg` 3, at rest until pulled), a one-way step (id 142, x 400, y 304) and a two-piece ledge (ids 143, 144, x 472-536, y 160) let the curious ride it. The lift's deck bottom is y 272 at rest, so no lift state touches the floor route: the exit stays ungated (D26, D34 amended). The recipe above still holds with `Escalator` as the mechanism: a platform lever is a plain `Trigger` with `target`; the tutorial recipe's "`Actionable` `Torch` or `Wall`" is the list of `Actionable` types only. Hints: `HINT_LEVER_TORCH` ("Use the lever to start the lift or stop it") and `HINT_LEVER_EXIT` keep their key names. Hand-operated objects stay 32 px from ladder zones in every room (D126, `check_ladder_clearance`); `forest-1-guard`'s lever moved from x 2256 to x 2240 for it.

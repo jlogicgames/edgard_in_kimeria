@@ -322,6 +322,31 @@ public class Level implements WorldObject {
     private final EnvironmentFx fx;
     private final LeafFx leafFx = new LeafFx();
     public LeafFx leafFx() { return leafFx; }
+    /** D126: nothing the hero picks up or operates stands within this gap of a ladder zone (px), so Up never means two things. */
+    public static final float LADDER_CLEARANCE = 32f;
+
+    /**
+     * Up picks up and uses, and also climbs (D126), so no hand-operated object (a lever that is not thrown at, a stone
+     * or a carried torch) may stand within {@link #LADDER_CLEARANCE} of a ladder's zone, the union of its raised and
+     * lowered spans. Mirrors {@code check_ladder_clearance} in {@code tools/check_tiled_links.py}.
+     */
+    private void validateLadderClearance() {
+        for (TiledObject ladder : map.layer("SpawnPoints")) {
+            if (!"Ladder".equals(ladder.type)) continue;
+            float bottom = ladder.y + ladder.height + ladder.propFloat("dropDistance", 0);
+            for (TiledObject o : map.layer("SpawnPoints")) {
+                boolean hand = "Stone".equals(o.type) || "CarryableTorch".equals(o.type)
+                    || "Trigger".equals(o.type) && !o.propBool("throwActivated", false);
+                if (!hand) continue;
+                float gapX = Math.max(Math.max(ladder.x - (o.x + o.width), o.x - (ladder.x + ladder.width)), 0);
+                float gapY = Math.max(Math.max(ladder.y - (o.y + o.height), o.y - bottom), 0);
+                if (Math.hypot(gapX, gapY) < LADDER_CLEARANCE)
+                    throw new IllegalArgumentException(o.type + " " + describe(o) + " stands within " + (int) LADDER_CLEARANCE
+                        + " px of ladder " + describe(ladder) + " (D126)");
+            }
+        }
+    }
+
     /** Objects whose column or cloud must stay clear of falling leaves (#473): the traps. Package-private: {@code LeafRoomsTest} checks it covers every trap of the catalogue (docs/TRAPS.md). */
     static final java.util.Set<String> LEAF_AVOIDED = java.util.Set.of("FallingBranch", "FallingStone", "Deadfall",
         "HangingHive", "ThornVine", "Bramble", "EmberFissure", "ThornRoot", "ThornTuft", "ExplosiveStump", "ExplosiveRoot",
@@ -342,7 +367,7 @@ public class Level implements WorldObject {
     /** The environment effects of this level (screen shake, jump dust, ceiling grit). */
     public EnvironmentFx fx() { return fx; }
 
-    /** The fairy helper (D82): shows the interaction target the hero's Up + Action will affect. */
+    /** The fairy helper (D82): shows the interaction target the hero's Up will affect. */
     public FairyGuide fairy() { return fairy; }
 
     /** True only after the death presentation and the completed automatic exit. */
@@ -629,6 +654,7 @@ public class Level implements WorldObject {
             }
         }
         if (deadlines.isEmpty()) throw new IllegalArgumentException("Level needs a Deadline SpawnPoint");
+        validateLadderClearance(); // D126: every room, at load.
         loadHintZones();
         for (TiledObject o : map.layer("Collisions")) roomLayout.owner(o);
         for (TiledObject o : map.layer("SpawnPoints")) {

@@ -499,7 +499,7 @@ class RoomReplayTest {
                     }
                 }
                 boolean mechanism = player.canInteract();
-                boolean action = mechanism;
+                boolean action = false; // Up alone operates a mechanism (D126); the sword is for monsters only
                 // The sword bursts a beetle on the hero (D100): in the fissure room the shared route answers it, by the lure (#327).
                 for (var object : level.objects) if (object instanceof Enemy<?> enemy
                     && !(fissureRoute != null && enemy instanceof com.jlogicsoftware.kimeria.entity.enemy.Beetle)

@@ -15,7 +15,7 @@ import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
-import com.jlogicsoftware.kimeria.effects.Torch;
+import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
@@ -97,8 +97,9 @@ class LeverLessonTest {
         pressed.clear();
     }
 
-    private Torch torch(Level level) {
-        return level.objects.stream().filter(Torch.class::isInstance).map(Torch.class::cast).findFirst().orElseThrow();
+    /** D127: the lever drives a lift (an Escalator) beside it, not the torch of D34. */
+    private Escalator lift(Level level) {
+        return level.escalators.get(0);
     }
 
     private Lever lever(Level level) {
@@ -117,10 +118,9 @@ class LeverLessonTest {
         return frames;
     }
 
-    /** Up + Action, as the hint teaches: Action is a fresh press while Up is held. */
+    /** Up alone, as the hint teaches (D126): a fresh press on the frame after nothing was held. */
     private int operate(Level level) {
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         return 3;
     }
@@ -138,49 +138,57 @@ class LeverLessonTest {
         return frames;
     }
 
-    @Test void theRoomOffersOneLeverAndOneDarkTorchAndNothingElse() {
+    @Test void theRoomOffersOneLeverAndOneStoppedLiftAndNothingElse() {
         Level level = freshLevel();
         assertEquals(1, level.objects.stream().filter(Lever.class::isInstance).count());
-        assertEquals(1, level.objects.stream().filter(Torch.class::isInstance).count());
+        assertEquals(1, level.escalators.size());
         assertEquals(1, level.triggers.size());
-        assertFalse(torch(level).isBurning(), "The effect starts off, so pressing visibly changes it");
+        assertFalse(lift(level).isRunning(), "The effect starts off, so pulling visibly changes it");
         assertFalse(lever(level).isUp());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>));
-        Rectangle torchBounds = new Rectangle(torch(level).getX(), torch(level).getY(), 16, 16);
-        assertTrue(Math.abs(torchBounds.x - lever(level).getX()) < 160, "Torch is in the lever's view");
+        assertTrue(Math.abs(lift(level).getX() - lever(level).getX()) < 160, "The lift is in the lever's view");
+        assertEquals(0, level.ladders.size(), "no ladder: Up here only interacts");
     }
 
-    @Test void walkingToTheLeverAndPressingUpActionTogglesTheTorchBothWays() {
+    @Test void walkingToTheLeverAndPressingUpStartsAndStopsTheLiftBothWays() {
         Level level = freshLevel();
         walkToLever(level);
-        Torch torch = torch(level);
+        Escalator lift = lift(level);
         Lever lever = lever(level);
-        assertFalse(torch.isBurning());
+        assertFalse(lift.isRunning());
         operate(level);
-        assertTrue(torch.isBurning()); assertTrue(lever.isUp());
-        // The effect is observable from the lever's position: the torch is on the same screen.
-        assertTrue(Math.abs(torch.centerX() - level.player.centerX()) < 320);
+        assertTrue(lift.isRunning()); assertTrue(lever.isUp());
+        // The effect is observable from the lever's position: the lift is on the same screen.
+        assertTrue(Math.abs(lift.centerX() - level.player.centerX()) < 320);
+        for (int i = 0; i < 60; i++) frame(level);
+        assertTrue(lift.getY() < 256, "a running lift visibly rises from its rest at y 256: " + lift.getY());
         operate(level);
-        assertFalse(torch.isBurning()); assertFalse(lever.isUp());
+        assertFalse(lift.isRunning()); assertFalse(lever.isUp());
         operate(level);
-        assertTrue(torch.isBurning(), "The lever toggles; it never fires once and locks");
+        assertTrue(lift.isRunning(), "The lever toggles; it never fires once and locks");
     }
 
-    @Test void exitIsReachableWithTheLeverOffOnAndAfterRetryAndRestart() {
+    @Test void exitIsReachableWithTheLiftStoppedRunningStoppedMidAirAndAfterRetryAndRestart() {
         Level off = freshLevel();
         walkToExit(off);
 
         Level on = freshLevel();
         walkToLever(on); operate(on);
-        assertTrue(torch(on).isBurning());
+        assertTrue(lift(on).isRunning());
         walkToExit(on);
+        // Stopped part-way up: it hangs above the walking line and never bars the floor (D26, D127).
+        Level mid = freshLevel();
+        walkToLever(mid); operate(mid);
+        for (int i = 0; i < 100; i++) frame(mid);
+        operate(mid);
+        walkToExit(mid);
 
         // Death / room retry: the room is not yet secured, so it returns to its authored (dark) state.
         Level retry = freshLevel();
         walkToLever(retry); operate(retry);
-        assertTrue(torch(retry).isBurning());
+        assertTrue(lift(retry).isRunning());
         retry.resetCurrentRoom(new Player(assets, game, 0, 0));
-        assertFalse(torch(retry).isBurning(), "Retry restores the authored state");
+        assertFalse(lift(retry).isRunning(), "Retry restores the authored state");
         assertFalse(lever(retry).isUp());
         walkToExit(retry);
         retry.resetCurrentRoom(new Player(assets, game, 0, 0));
@@ -189,17 +197,17 @@ class LeverLessonTest {
 
         // Restart Level rebuilds the whole level from the map.
         Level restarted = freshLevel();
-        assertFalse(torch(restarted).isBurning());
+        assertFalse(lift(restarted).isRunning());
         walkToExit(restarted);
     }
 
-    @Test void lessonHintsCoverEveryStandingPositionInBothTorchStatesAndSurviveRetry() {
+    @Test void lessonHintsCoverEveryStandingPositionInBothLiftStatesAndSurviveRetry() {
         Level level = freshLevel();
         Set<String> messages = new HashSet<>();
         for (int pass = 0; pass < 2; pass++) {
             for (boolean lit : new boolean[]{false, true}) {
                 for (float x = 24; x < 544; x += 8) {
-                    torch(level).toggleFire(lit);
+                    if (lift(level).isRunning() != lit) level.activateTrigger(level.triggers.get(0));
                     level.player.position.set(x, 272);
                     for (int i = 0; i < 3; i++) frame(level);
                     String hint = level.player.contextHint(), zone = level.player.zoneHint();
@@ -233,7 +241,7 @@ class LeverLessonTest {
         float zoneFullSince = -1, firstZoneTop = -1, t = 0;
         int guard = 0, interacting = 0;
         while (interacting < 90) {
-            if (interacting == 30 && !torch(level).isBurning()) operate(level); // toggling must not disturb the message
+            if (interacting == 30 && !lift(level).isRunning()) operate(level); // toggling must not disturb the message
             else { held.clear(); if (!level.player.canInteract()) held.add(Input.Keys.D); frame(level); }
             t += STEP;
             String z = level.player.zoneHint(), c = level.player.contextHint();
@@ -315,7 +323,7 @@ class LeverLessonTest {
         walkToLever(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_ON.t(Language.ENGLISH)), level.player.contextHint());
         assertFalse(level.player.zoneHint().isEmpty(), "The lever label never hides the zone message (#211)");
-        assertTrue(level.player.contextHint().contains("W + K") || level.player.contextHint().contains("Up"), level.player.contextHint());
+        assertTrue(level.player.contextHint().startsWith("W: "), "Up alone, no chord (D126): " + level.player.contextHint());
         operate(level);
         assertTrue(level.player.contextHint().contains(Msg.TURN_OFF.t(Language.ENGLISH)), level.player.contextHint());
     }

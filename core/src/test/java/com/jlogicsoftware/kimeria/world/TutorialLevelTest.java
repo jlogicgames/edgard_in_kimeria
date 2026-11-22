@@ -138,10 +138,12 @@ class TutorialLevelTest {
         assertEquals(java.util.List.of(0, 2), fungi, "one harmless honey fungus in the lever room and one in the wall room, none elsewhere (D63)");
         var room0 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 0).toList();
         assertEquals(1, room0.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
-        var actionables = room0.stream().filter(o -> "Actionable".equals(o.type)).toList();
-        assertEquals(1, actionables.size(), "exactly one linked object");
-        assertEquals("Torch", actionables.get(0).prop("type", ""));
-        assertEquals(0, actionables.get(0).propFloat("Intensity", -1), "The torch starts dark");
+        var lifts = room0.stream().filter(o -> "Escalator".equals(o.type)).toList();
+        assertEquals(1, lifts.size(), "exactly one linked object: the lift the lever starts and stops (D127)");
+        assertFalse(lifts.get(0).propBool("running", true), "The lift starts at rest");
+        assertTrue(room0.stream().noneMatch(o -> "Actionable".equals(o.type)), "no torch or wall in the lever room");
+        assertTrue(lifts.get(0).y + lifts.get(0).height <= 272, "the lift's deck never reaches the hero's head, so it cannot bar the floor (D26)");
+        assertTrue(lifts.get(0).y - lifts.get(0).propFloat("offNeg", 0) * 32 >= 0, "and its travel stays inside the room");
         assertTrue(room0.stream().noneMatch(o -> "Ladder".equals(o.type)), "Room 0 has no ladder");
         var room1 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 1).toList();
         assertEquals(1, room1.stream().filter(o -> "Trigger".equals(o.type)).count(), "exactly one lever");
@@ -195,7 +197,7 @@ class TutorialLevelTest {
         for (int i = 0; i < layout.rooms.size(); i++) {
             int room = i;
             long inRoom = map.layer("Collisions").stream().filter(o -> layout.owner(o) == room).count();
-            assertEquals(i == 1 || i == 3 ? 4 : i == 4 ? 5 : i == 5 ? 4 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : i == 4 ? " is two floors around a chasm plus the overhang" : i == 5 ? " is two floors around a pit" : " is an empty corridor"));
+            assertEquals(i == 1 || i == 3 ? 4 : i == 4 ? 5 : i == 5 ? 4 : i == 0 ? 6 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : i == 0 ? " is a corridor plus the lift's step and two ledge pieces (D127)" : i == 4 ? " is two floors around a chasm plus the overhang" : i == 5 ? " is two floors around a pit" : " is an empty corridor"));
             var exit = layout.rooms.get(i).exit();
             if (exit != null) assertEquals(i == 1 || i == 3 ? 208 : 320, exit.y + exit.height, i == 1 || i == 3 ? "Exit stands on the room's ledge" : "Exit stands on the floor line");
         }

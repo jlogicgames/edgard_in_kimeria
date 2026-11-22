@@ -404,8 +404,7 @@ class ExplosiveTrapsTest {
     /** Picks up the stone, walks to {@code from} (body right edge) and throws it; returns once everything has come to rest. */
     private void throwStoneFrom(Level level, float from) {
         place(level, 108);
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         assertSame(stone(level), level.player.carriedObject(), "picked up the stone");
         int f = 0;

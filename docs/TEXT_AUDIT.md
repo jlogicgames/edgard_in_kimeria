@@ -140,15 +140,15 @@ them in one formula ([D97](DECISIONS.md#d97-zone-messages-follow-one-formula-the
 
 ### 1.7 The label above the hero (continuous, inside `controls` zones)
 
-Composed at runtime by `Player.contextHint()` / `actionPrompt()` as `<binding>: <action> - <target>`,
+Composed at runtime by `Player.contextHint()` as `<binding>: <action> - <target>`,
 13 px font, 200 px wide, up to three lines. Active in every `forest-0` room (`controls = true` zones); `forest-2`'s
 `forest-entry` zone was removed with its practice objects (#376, 2026-11-17).
 
 | Keys | Role |
 | --- | --- |
-| `PICK_UP`, `PUT_DOWN`, `THROW`, `CLIMB`, `CLIMB_DOWN`, `TURN_ON`, `TURN_OFF`, `INTERACT` ("Use"), `NO_ACTION` | Action verbs |
+| `PICK_UP`, `PUT_DOWN`, `THROW`, `CLIMB`, `CLIMB_DOWN`, `TURN_ON`, `TURN_OFF`, `INTERACT` ("Use") | Action verbs |
 | `STONE`, `TORCH`, `LEVER`, `MECHANISM` | Targets |
-| `PLACE_BLOCKED` ("Blocked"), `DIRECTION_CONFLICT` ("Conflict") | States |
+| `PLACE_BLOCKED` ("Blocked") | States |
 | `UP`, `DOWN`, `STICK`, `LEFT_STICK`, `RIGHT_STICK`, `DPAD_UP`, `DPAD_ACTION` | Binding names for pad and touch (keyboard uses key letters) |
 | `FIREBALL_STOCK_FULL` | At a fireball refill while the stock is full (shown everywhere, not only in controls zones) |
 

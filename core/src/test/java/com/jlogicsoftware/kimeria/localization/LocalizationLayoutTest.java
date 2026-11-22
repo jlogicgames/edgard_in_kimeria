@@ -122,7 +122,7 @@ class LocalizationLayoutTest {
                     assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= 512, prefix + message);
                 // D55: the light button art leaves ~5 px of rim, so labels wrap at the cream width (50 / 40.4 px) and may
                 // take two lines; every word must still fit that width on its own.
-                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED, Msg.DIRECTION_CONFLICT, Msg.NO_ACTION}) {
+                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED}) {
                     float width = message == Msg.SHOOT || message == Msg.THROW || message == Msg.FIREBALL || message == Msg.NO_AMMO
                         ? TouchControls.RANGED_LABEL_WIDTH : TouchControls.ACTION_LABEL_WIDTH;
                     for (String word : message.t(language).split(" "))
@@ -203,9 +203,9 @@ class LocalizationLayoutTest {
                     {Msg.LEFT_STICK.t(language) + " " + up, Msg.LEFT_STICK.t(language) + " " + down, "X/B", "Y"},
                     {Msg.RIGHT_STICK.t(language) + " " + up, Msg.RIGHT_STICK.t(language) + " " + down, Msg.DPAD_ACTION.t(language), Msg.DPAD_UP.t(language)},
                     {Msg.STICK.t(language) + " " + up, Msg.STICK.t(language) + " " + down, Msg.ACTION.t(language), Msg.SHOOT.t(language)}}) {
-                    String lever = device[0] + " + " + device[2] + ": " + Msg.TURN_OFF.t(language) + " - " + Msg.LEVER.t(language);
-                    String pickup = device[0] + " + " + device[2] + ": " + Msg.PICK_UP.t(language) + " - " + Msg.STONE.t(language);
-                    String place = device[1] + " + " + device[2] + ": " + Msg.PUT_DOWN.t(language) + " - " + Msg.PLACE_BLOCKED.t(language);
+                    String lever = device[0] + ": " + Msg.TURN_OFF.t(language) + " - " + Msg.LEVER.t(language);
+                    String pickup = device[0] + ": " + Msg.PICK_UP.t(language) + " - " + Msg.STONE.t(language);
+                    String place = device[1] + ": " + Msg.PUT_DOWN.t(language) + " - " + Msg.PLACE_BLOCKED.t(language);
                     String ranged = device[3] + ": " + Msg.THROW.t(language);
                     String ladder = device[0] + ": " + Msg.CLIMB.t(language) + "\n" + device[1] + ": " + Msg.CLIMB_DOWN.t(language);
                     for (String context : new String[]{lever, pickup, ladder, Msg.FIREBALL_STOCK_FULL.t(language),

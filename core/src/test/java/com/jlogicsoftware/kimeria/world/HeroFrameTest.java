@@ -127,8 +127,7 @@ class HeroFrameTest {
         Carryable stone = new Carryable(level, STONE_ID, Carryable.Kind.STONE, hero.hitboxBounds().x, FLOOR - STONE_DROP);
         level.objects.add(stone);
         for (int i = 0; i < 5; i++) frame(level);
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         assertSame(stone, hero.carriedObject(), "picked up");
         return stone;

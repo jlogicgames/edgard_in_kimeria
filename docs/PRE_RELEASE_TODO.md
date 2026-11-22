@@ -261,7 +261,7 @@ Sources: [MVP](MVP.md), [post-boss validation](POST_BOSS_VALIDATION.md).
 - [ ] Check entrance practice hints/target marker at gameplay scale and after resize/
   letterboxing, in all five languages. Automated font layout and simulated devices
   are recorded in [directional controls](DIRECTIONAL_CONTROLS.md), not physical checks.
-- [ ] Check ladder entry, climbing, jump-off and Up/Down + Action ownership with a
+- [ ] Check ladder entry, climbing, jump-off and spent-press (Up/Down interaction, D126) ownership with a
   physical gamepad and a physical multitouch device (the multitouch part is **Cancelled (D61)**) in both layouts. Simulated-device
   tests are in [directional controls](DIRECTIONAL_CONTROLS.md#ladders-99); they are not physical checks.
 

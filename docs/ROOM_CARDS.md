@@ -83,7 +83,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 
 | Element id | Tiled keys | What the player does | Beat kind |
 | --- | --- | --- | --- |
-| lever | `Trigger`, `Actionable:Torch` | operates a lever and reads its linked effect | mechanism |
+| lever | `Trigger` | operates a lever and reads its linked effect (a lift in `forest-0-lever`, D127) | mechanism |
 | ladder | `Ladder` | lowers a ladder by lever and climbs it | mechanism |
 | lever-wall | `Actionable:Wall` | raises and lowers a wall that blocks the way | mechanism |
 | lever-platform | `Escalator:lever` | starts and stops a platform and rides it | mechanism |
@@ -129,17 +129,17 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | --- | --- |
 | Level | forest-0, play order 1, room 1 of 6 |
 | Role | lesson |
-| Purpose | Cause and effect, safely: a lever lights and darkens a torch. |
-| Introduces | lever, honey-fungus |
+| Purpose | Cause and effect, safely: a lever starts and stops a lift beside it, which hangs above the walking line and never bars the exit (D127). |
+| Introduces | lever, lever-platform, honey-fungus |
 | Develops | - |
 | Combines | - |
 | Mastered route | about 4.3 s (`LeverLessonTest`); target about 20 s (D19) |
 | First learning | not measured (#135) |
 | Retry cost | none: the room has no hazard |
-| D26 | the exit is reachable with the torch on, off or never touched (D34) |
+| D26 | the exit is reachable with the lift stopped, running or stopped mid-air, or the lever never touched (D34, D127) |
 | Hints | walk, lever, exit, live controls label |
 | Status | D72 audit 2026-11-16: keep |
-| Decisions | D33, D34, D63 |
+| Decisions | D33, D34, D63, D127 |
 
 ### forest-0-ladder
 
@@ -186,8 +186,8 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | Level | forest-0, play order 1, room 4 of 6 |
 | Role | lesson |
 | Purpose | Ride a platform the lever starts and stops, up to the exit ledge. |
-| Introduces | lever-platform, falling-stone |
-| Develops | - |
+| Introduces | falling-stone |
+| Develops | lever-platform: met as the lift of `forest-0-lever` (D127), now the only way up to the exit ledge |
 | Combines | - |
 | Repeats | lever |
 | Mastered route | 11.85 s (`PlatformLessonTest`); target about 20 s |
@@ -559,7 +559,7 @@ x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         
 | Develops | redmob: a guard in a 32 px tunnel that cannot be jumped or stomped, so it must be beaten or avoided by the roof |
 | Combines | redmob + puffball: the cloud covers every place the sword reaches from, so the melee needs the calm; ladder + fireball-refill: the lever-lowered ladder leads to a roof route that pays one charge |
 | Repeats | lever |
-| Mastered route | 6.50 s timed melee, 5.82 s with a fireball, 7.40 s by the roof, each 0.3 s shorter than before #500 (the start, the lever and the puffball's clock moved together, D68), none changed by the beetle: the floor routes run past it and it bursts behind the hero, and the roof run drops past it without triggering it and reaches the exit alive (`Forest1CombatTest`); from the tunnel's mouth to the exit, 3.65 s killing the beetle with a fireball, 4.53 s luring it (step out, step back into the tunnel, let it burst); target about 20 s |
+| Mastered route | 6.50 s timed melee, 5.82 s with a fireball, 7.33 s by the roof (7.40 s before D126 moved the lever 16 px left), the other two and the roof each 0.3 s shorter than before #500 (the start, the lever and the puffball's clock moved together, D68), none changed by the beetle: the floor routes run past it and it bursts behind the hero, and the roof run drops past it without triggering it and reaches the exit alive (`Forest1CombatTest`); from the tunnel's mouth to the exit, 3.65 s killing the beetle with a fireball, 4.53 s luring it (step out, step back into the tunnel, let it burst); target about 20 s |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)); a straight run from the entrance dies once by design (D68) |
 | Retry cost | about 1.4 s for the first walk-in death (the cloud); 5.82 s for a death in the beetle's burst: the mastered melee from the entrance (x 2208), then a stop beside the beetle when it commits (`Forest1CombatTest`) |
 | Beats | puffball@2375, redmob@2394, beetle@2632 |

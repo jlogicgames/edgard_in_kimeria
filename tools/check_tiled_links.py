@@ -708,7 +708,31 @@ def check_map(path):
     errors += check_still_decor(spawn, groups.get('Hints', []))
     errors += check_hanging_vines(root, spawn, collisions)
     errors += check_branches(root, spawn, collisions)
+    errors += check_ladder_clearance(spawn)
     return [f"{path.name}: {e}" for e in errors]
+
+
+# D126: Up picks up, uses and climbs, so nothing the hero operates by hand stands near a ladder. Mirrors
+# Level.validateLadderClearance; the ladder zone is the union of its raised and lowered spans.
+LADDER_CLEARANCE = 32
+
+
+def is_hand_operated(o):
+    return kind(o) in ('Stone', 'CarryableTorch') or (kind(o) == 'Trigger' and prop(o, 'throwActivated') != 'true')
+
+
+def check_ladder_clearance(spawn):
+    errors = []
+    for ladder in (o for o in spawn if kind(o) == 'Ladder'):
+        x, y, w, h = (float(ladder.get(k) or 0) for k in ('x', 'y', 'width', 'height'))
+        bottom = y + h + float(prop(ladder, 'dropDistance') or 0)
+        for o in (o for o in spawn if is_hand_operated(o)):
+            ox, oy, ow, oh = (float(o.get(k) or 0) for k in ('x', 'y', 'width', 'height'))
+            gap = math.hypot(max(x - (ox + ow), ox - (x + w), 0), max(y - (oy + oh), oy - bottom, 0))
+            if gap < LADDER_CLEARANCE:
+                errors.append(f"{describe(o)}: stands {gap:g} px from ladder {describe(ladder)}; "
+                              f"keep hand-operated objects {LADDER_CLEARANCE} px away (D126)")
+    return errors
 
 
 # FallingBranch / FallingStone (D45, #232): mirrors core/.../world/FallingTrapLayout.java for maps.

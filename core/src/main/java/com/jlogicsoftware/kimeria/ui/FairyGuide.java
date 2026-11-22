@@ -14,7 +14,7 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import java.util.function.Supplier;
 
 /**
- * The fairy helper (D82, #338): the healer's gift shows the target Up + Action will affect, in place of the corner
+ * The fairy helper (D82, #338): the healer's gift shows the target Up will affect, in place of the corner
  * brackets of D29/D30. She only reads the hero's selection ({@link Player#interactionFeedbackTarget()}) and passive
  * set ({@link Player#collectPassiveTargets}); eligibility, the single target and look suppression stay in Player.
  * The selection reads on the frame it happens: the glow and the glints do not wait for her flight.
@@ -139,7 +139,7 @@ public final class FairyGuide {
     /**
      * Call order (D82): after {@link Player#update} and the level's own objects, from {@code Level.finishUpdate}. The
      * selection is asked again here on purpose: {@code Player.update} reads it before it moves the hero (for look
-     * suppression), so its copy can be one step stale; the label and the next Up + Action see the target of the hero's
+     * suppression), so its copy can be one step stale; the label and the next Up sees the target of the hero's
      * new position, and so does she, as the corner brackets did at render time. {@code DirectionalActionsTest} pins it
      * (the hero walks into reach with Up held). The passive set is computed only here.
      */

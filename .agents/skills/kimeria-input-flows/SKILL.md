@@ -33,13 +33,17 @@ a consumer. A menu mapping and a gameplay mapping may intentionally differ.
 - Movement is held; jump requires a fresh press with a short buffer and coyote
   time. Holding through landing never auto-jumps. Preserve reset/suppression when
   starting or resuming gameplay rather than clearing input on every frame.
-- Action alone is sword; Up + Action picks up the nearest eligible carryable or
-  activates the nearest eligible mechanism, using distance then Tiled ID across
-  both target types. While carrying, Up + Action remains available for mechanisms.
-  Down + Action only places/drops a held object and does nothing empty-handed.
+- Action is the sword and nothing else (D126: no two-button chords). A fresh Up press picks up the
+  nearest eligible carryable or activates the nearest eligible mechanism, using distance then Tiled ID
+  across both target types; while carrying it remains available for mechanisms. A fresh Down press
+  only places/drops a held object. `GameplayInput.upPressed()/downPressed()` are per-device edges
+  (latched like Action); the touch stick counts as an interaction only past about 60 degrees
+  (`TouchControls.interactUpHeld()`), climbing keeps the plain hold. A press spent on an interaction
+  does not climb until the key is released and pressed again; at a ladder top Down descends (the
+  ladder wins over put-down). Hand-operated objects stay 32 px from ladder zones (`Level`,
+  `check_tiled_links.py`).
   Ranged throws the held object or spends one fireball when empty-handed.
-  Follow [directional controls](../../../docs/DIRECTIONAL_CONTROLS.md); proximity must
-  never turn a sword press into interaction. Standing Up/Down alone does nothing (the look was removed, D111).
+  Follow [directional controls](../../../docs/DIRECTIONAL_CONTROLS.md). Standing Up/Down alone does nothing unless a target is in reach (the look was removed, D111).
   Action, Ranged, horizontal movement, jump and climbing keep their own inputs. Preserve release suppression at UI boundaries.
 - Default and left-handed gameplay mappings are disjoint. Use KeyBindings and
   generic controller mappings rather than scattering raw keys/button indices.
