@@ -139,6 +139,7 @@ public final class HeadlessLevelHarness {
             if (!level.hasNextRoom()) throw new AssertionError(map + " has no room named " + room);
             level.enterNextRoom(new Player(assets, game, 0, 0));
         }
+        level.roomRipple().clear(); // the harness walks past the game's room change: the entrance ripple (#553) is not part of the room under test
         return level;
     }
 
@@ -146,6 +147,7 @@ public final class HeadlessLevelHarness {
     public Level roomOf(String name, int index, java.util.function.Supplier<Rectangle> view) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, view);
         for (int i = 0; i < index; i++) level.enterNextRoom(new Player(assets, game, 0, 0));
+        level.roomRipple().clear(); // as in room(): the entrance ripple (#553) is not part of the room under test
         return level;
     }
 }

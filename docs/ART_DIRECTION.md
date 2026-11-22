@@ -45,9 +45,9 @@ multi-frame sheet are different measurements.
   bat read as an enemy): a corked glass jar tied with twine, one dried bat wing inside; frame 2 moves the glint.
   A pickup must never share a silhouette with an enemy.
 - **Pickup cue (#345):** every `Collectable`, and nothing else, bobs 2 px up and back every 1.2 s in whole pixels
-  (only the drawing moves, the pickup box stays), glows and sparkles, so the cue says "pick me up". The glow is
-  `art/objects/pickup/glow.grid`, a 24×24 warm-white halo drawn additively behind the item, alpha 0.5 at rest
-  to 0.9 at the top of the bob, never gold or ember (those are reserved). **The coin has no halo:** its white rim
+  (only the drawing moves, the pickup box stays), glows and sparkles, so the cue says "pick me up". Since D124 (#544) the glow is
+  a soft animated warm-white light (`SoftGlowFx.PICKUP`, pixelfx's orb light ported to `KimeriaParticleSystem`): a pool about 22 px across that breathes, five dots on the
+  item's oval and a few specks drifting round it, additive and never gold or ember (those are reserved); the old 24×24 `pickup-glow.png` is gone. **The coin has no light:** its white rim
   washes out against added light (outline 0.123 against the D76 floor of 0.28 at forest-2 x 336), and the rim
   already does a halo's job; it keeps the bob and the sparkle (`Collectable.hasHalo`, `check_contrast.NO_HALO`). The sparkle is `pickup/sparkle.grid`, a 5×5 glint of three 0.1 s
   frames every 2.4 s, 3 px right of the item's centre and 2 px above it, started later per tile of x.
@@ -207,8 +207,8 @@ Every death with a visible cause shows the silver thread of #228 pulling Edgard 
 
 ## The fairy helper (D82, playtest F4, F14, [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338))
 
-The healer's fairy is an original pixel drawing in three sheets, from grids in `art/objects/fairy/`
-(`tools/forest_trap_sprites.py fairy:body fairy:glow fairy:glint`; layouts in `tools/sprite_layouts.py FAIRY_SHEETS`).
+The healer's fairy is an original pixel drawing in two sheets, from grids in `art/objects/fairy/`
+(`tools/forest_trap_sprites.py fairy:body fairy:glint`; layouts in `tools/sprite_layouts.py FAIRY_SHEETS`).
 
 - **Identity:** a tiny maid, not a winged ball of light. She has copper hair, a teal dress with a pale edge, a
   lantern skirt glowing pale aqua-white (the firefly), and pale blue dragonfly wings with blue veins. Ink contour
@@ -222,15 +222,15 @@ The healer's fairy is an original pixel drawing in three sheets, from grids in `
   - the three point frames flipped (grid `flip`, never at runtime);
   - appear ×2, 0.2 s each: the one-time twinkle after the start tale, looped for the twinkle at the screen edge toward an off-screen linked mechanism (D87).
   - Idle and fly are symmetric (grid `mirror`), so they need no facing.
-- **`fairy-glow.png`, 24×24:** three stepped aqua rings (`123432`, `286a66`, `3c9c92`), drawn additively as a
-  nine-slice with 8 px corners. It is the target glow (selected 1.0, passive 0.3) and, at 20×20 with alpha 0.6 to 0.9,
-  her own light. Aqua is used by nothing else: the pickup halo is warm white (#345).
+- **Her light and the target marks (D124, #544; replaced `fairy-glow.png`):** soft animated aqua lights, `SoftGlowFx.FAIRY_SELF` under her frame (a pool 28 px across at 0.6, no rim dots, no specks) and
+  `SoftGlowFx.FAIRY_TARGET` on each marked target (a pool, eight rim dots hugging the target's oval grown by 6 px, and specks); the strengths of D82 stay (selected 1.0, passive 0.3, changed
+  0.8 fading). Additive, on `KimeriaParticleSystem`'s `KIND_ORBIT`, not a sprite; aqua is used by nothing else: the pickup light is warm white (#345).
 - **`fairy-glint.png`, 5×5 ×2:** an aqua-white star with an ink edge lit on top, big and small, at the selected target's
   corners; the small star's side points stay ink (`K`, `RIM_KEEP`).
   It is not the pickup sparkle (warm yellow, one per item, every 2.4 s).
 - **Contrast (D76):** active. `check_contrast.py` sweeps every map, since she has no placement, over what the game draws
-  (forest-1's scenery layers too): her frames over her light at its dimmest, 0.314 to 0.376; the glints over the selected
-  glow, 0.323 (big) and 0.377 (small). Over the layered forest-1 the plain ink contour had fallen to 0.136 to 0.269 (her
+  (forest-1's scenery layers too): her frames over her light at its dimmest, 0.292 to 0.346 (D124; 0.308 to 0.360 with the old
+  glow sheet); the glints over the selected target light at its brightest, 0.322 (big) and 0.420 (small). Over the layered forest-1 the plain ink contour had fallen to 0.136 to 0.269 (her
   light lifts the near-black play band toward her ink) and a full moon rim to 0.035 (over the moon and the clouds); lit
   from above only she clears both. Without her light three frames still fail (0.269 to 0.278); `test_check_contrast.py`
   pins that.
@@ -1014,8 +1014,8 @@ The author approved the plan with these answers:
 
 ## Effects from pixelfx (plan, 2026-11-16, [#396](https://github.com/jlogicgames/edgard_in_kimeria/issues/396))
 
-A plan agreed with the author; only the fireball is built (below). [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) is a library of
-244 procedural pixel art effects (MIT; credit Patch and Hugo Duprez in a notice file when the first effect lands).
+A plan agreed with the author; the built effects are listed below. [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) is a library of
+244 procedural pixel art effects (MIT; the notice file is `THIRD_PARTY_NOTICES.md`, started by the portal, D123: add every new effect to it).
 
 - **Category.** Only time-varying VFX come from it (blasts, smoke, dust, sparks, splashes, slashes, flashes, shock
   waves, transitions), the same category as the torch particles in the section below. Anything that depicts a thing
@@ -1032,7 +1032,16 @@ A plan agreed with the author; only the fireball is built (below). [patch-gg/pix
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
-| All worlds | [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402) | pickup sparks and ring: **done** (see Pickup cue). The other items of #402 are not applicable or belong elsewhere: lost heart, no hearts exist (D2/D6); respawn beam, the silver thread already covers respawn (D81); level and room transitions belong to [#126](https://github.com/jlogicgames/edgard_in_kimeria/issues/126) (D3) |
+| All worlds | [#402](https://github.com/jlogicgames/edgard_in_kimeria/issues/402) | pickup sparks and ring: **done** (see Pickup cue). The other items of #402 are not applicable or belong elsewhere: lost heart, no hearts exist (D2/D6); respawn beam, the silver thread already covers respawn (D81); the room-change ripple: **built** (D123, see Portal and ripple); level transitions belong to [#126](https://github.com/jlogicgames/edgard_in_kimeria/issues/126) (D3) |
+
+**Portal, ripple and soft lights, built (#552, #553, #544; D123, D124; approved by the author 2026-11-22).** Three effects whose *behaviour* comes from pixelfx
+(`arcane/portal`, `water/ripples`, the orb and halo lights), rebuilt on `KimeriaParticleSystem` with this game's numbers and no copied source; the licence and the Sprite Fusion
+credit are in `THIRD_PARTY_NOTICES.md`. `KimeriaParticleSystem` gained `KIND_ORBIT` (a point riding an ellipse: centre, radii, start turn, sweep, radius factor from and to; additive; alpha ramps in and out over a quarter of its life each) and a render overload that scales every alpha.
+- **Portal (`PortalFx`):** a violet oval on every `RoomExit` (pixelfx's arcane ramp `481c88 6b2cc0 9a48ec c684ff ecc8ff`): a sparking rim, three arms of motes winding in, motes pulled in, a soft light on the rim and a hot spot running round with the
+  spin. **Light only**, drawn behind every object and the hero, so it never hides anything and darkens nothing; the exit trigger is unchanged. 256 motes and 48 lights at most; 0.0 B/frame.
+- **Room ripple (`RoomRippleFx`):** three violet rings one after another (`shockwave.frag` through `RingPool`), motes pulled into the hero on leaving and sent out on entering, and the existing `RippleEffect` screen distortion; a 0.20 s clear pause before the fade (D123).
+- **Soft lights (`SoftGlowFx`):** the pickup's warm light and the fairy's aqua light and target marks (D124); the PNG glows are removed.
+- **Review frames:** `docs/references/pixelfx/` (`portals-forest-1.png`, `room-ripple-strip.png`, `glows-old-vs-new.png`), composed from the real effect states over the real forest backgrounds and sprites by a throwaway script (CPU approximation, not kept in the repo), uncaptioned: portals are bramble, edge, climb, ground across and two moments down; the ripple is leave over enter; the glows are old, new, new 0.4 s later across.
 
 **Forest audit (#397, author's decision 2026-11-18).** The Forest effects that already exist are kept, not replaced by pixelfx
 versions: the bomb's explosion shader (`BombExplosionEffect`), the stump and root blast sheet (`ExplosiveTrap`), the falling stone's

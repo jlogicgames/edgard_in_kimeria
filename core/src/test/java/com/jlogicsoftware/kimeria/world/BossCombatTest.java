@@ -120,6 +120,7 @@ class BossCombatTest {
     private void encounter() {
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
         for (int room = 0; room < 5; room++) level.enterNextRoom(player());
+        level.roomRipple().clear(); // the test walks past the game's room change: the entrance ripple (#553) is not part of the fight
         boss = level.objects.stream().filter(Boss.class::isInstance).map(Boss.class::cast).findFirst().orElseThrow();
         frames(20);
         assertEquals(Boss.State.THRONE, boss.getState());

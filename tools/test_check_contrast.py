@@ -30,17 +30,18 @@ HALO_TEST_ALPHA = 0.5
 HALO_ADDED = 50  # 100 * 0.5 added to each channel
 LIT_PIXEL = (19, 19)
 UNLIT_PIXEL = (18, 18)
-FOREST_LIT = tuple(min(255, c + HALO_ADDED) for c in FOREST_BLUE[:3]) + FOREST_BLUE[3:]
+FOREST_LIT = tuple(min(255, c + HALO_ADDED) for c in FOREST_BLUE[:gate.RGB]) + FOREST_BLUE[3:]
 OUTLINE = 2  # index of the outline in a gate.run() result row
 WHITE_RIM = (250, 250, 250, 255)
 WARM_HALO = (110, 100, 72, 255)
 BIG_HALO_SIZE = 16
 RIM_AT = 16
 BRIGHTEST = 0.9
-# The fairy (#338, D82): FairyGuide's LIGHT_SIZE, LIGHT_ALPHA_MIN and BODY_FRAMES; an ink edge on a dark ground is
-# nearly invisible until her light lifts it.
-FAIRY_LIGHT_SIZE = 20
-FAIRY_LIGHT_ALPHA = 0.6
+POOL_BOUNDS = (1.0, 2.0)  # SoftGlowFx.POOL_DIM and POOL_BRIGHT
+# The fairy (#338, D82, D124): FairyGuide's SELF_RADIUS, GLOW_PAD and BODY_FRAMES, typed here independently of the Java; an ink edge on a
+# dark ground is nearly invisible until her light lifts it.
+FAIRY_SELF_RADIUS = 4.0
+FAIRY_GLOW_PAD = 6.0
 FAIRY_BODY_FRAMES = 14
 FAIRY_GLINTS = 2  # big and small, each a row of the fairy report
 INK_ON_DARK_MAX = 0.1
@@ -126,9 +127,17 @@ class MetricTest(unittest.TestCase):
     def test_the_glow_floor_is_read_from_the_java_constant(self):
         self.assertEqual(gate.GLOW_MIN, NIGHT_GLOW_MIN)
 
-    def test_the_pickup_halo_states_are_read_from_the_java_constants(self):
-        # #345: at rest with the dimmest halo, at the top of the 2 px bob with the brightest
-        self.assertEqual(gate.HALO_STATES, ((0, HALO_TEST_ALPHA), (gate.java_int(gate.COLLECTABLE_JAVA, 'BOB_HEIGHT'), BRIGHTEST)))
+    def test_the_pickup_light_bounds_are_read_from_the_java_constants(self):
+        # #345, #544: measured at rest and at the top of the 2 px bob, each with the soft light's dimmest and brightest bound
+        self.assertEqual(gate.GLOW_LEVELS, ('dim', 'bright'))
+        self.assertEqual(gate.BOB_HEIGHT, gate.java_int(gate.COLLECTABLE_JAVA, 'BOB_HEIGHT'))
+        self.assertEqual((gate.POOL_DIM, gate.POOL_BRIGHT), POOL_BOUNDS)
+        look = gate.java_look('PICKUP')
+        self.assertEqual(len(look), len(gate.LOOK_FIELDS))
+        dim, bright = (gate.glow_layer(look, gate.GLOW_RADIUS, gate.GLOW_RADIUS, level) for level in gate.GLOW_LEVELS)
+        self.assertEqual(dim.size, bright.size)
+        centre = dim.width // 2
+        self.assertGreater(sum(bright.getpixel((centre, centre))[:gate.RGB]), sum(dim.getpixel((centre, centre))[:gate.RGB]), 'the bright bound is brighter at the centre')
 
     def test_only_the_coin_goes_without_the_halo_as_in_the_java(self):
         self.assertEqual(gate.NO_HALO, {'Collectable:Coin'})
@@ -504,8 +513,8 @@ class ShippedArtTest(unittest.TestCase):
 class FairyTest(unittest.TestCase):
     """#338 (D82): the fairy has no placement; her frames and glints are swept over every map."""
     def test_the_fairy_constants_are_read_from_the_java(self):
-        self.assertEqual(gate.FAIRY_LIGHT_SIZE, FAIRY_LIGHT_SIZE)
-        self.assertEqual(gate.FAIRY_LIGHT_ALPHA, FAIRY_LIGHT_ALPHA)
+        self.assertEqual(gate.FAIRY_SELF_RADIUS, FAIRY_SELF_RADIUS)
+        self.assertEqual(gate.FAIRY_GLOW_PAD, FAIRY_GLOW_PAD)
         self.assertEqual(gate.FAIRY_BODY_FRAMES, FAIRY_BODY_FRAMES)
 
     def test_added_light_lifts_an_ink_edge_on_a_dark_ground(self):
@@ -525,7 +534,7 @@ class FairyTest(unittest.TestCase):
         errors, report = gate.check_fairy(images)
         self.assertEqual(errors, [])
         self.assertEqual(len(report), gate.FAIRY_BODY_FRAMES + FAIRY_GLINTS)
-        with mock.patch.object(gate, 'FAIRY_LIGHT_ALPHA', 0.0):
+        with mock.patch.object(gate, 'POOL_DIM', 0.0):  # her own light switched off
             errors, _ = gate.check_fairy(images)
         self.assertTrue(any('Fairy frame' in e for e in errors), 'her ink contour needs her light on dark tiles')
 

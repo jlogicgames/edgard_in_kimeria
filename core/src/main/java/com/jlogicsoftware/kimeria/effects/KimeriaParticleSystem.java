@@ -39,6 +39,16 @@ public final class KimeriaParticleSystem {
      */
     public static final byte KIND_LEAF = 4;
 
+    /**
+     * Additive, constant size: a point riding an ellipse (pixelfx portal, ported; see THIRD_PARTY_NOTICES.md). It sits at
+     * {@code centre + (cos a * rx * rho, sin a * ry * rho)} with the angle {@code a} turning from its start by its sweep over its
+     * life and the radius factor {@code rho} running from its start to its end value. Alpha ramps in and out over the first and last
+     * {@code ORBIT_EDGE} of its life and is full between, so a stream of overlapping orbits reads as steady light. A sweep of 0 and
+     * equal rho values make a light that only breathes in place. Spawn it with {@link #spawnOrbit}; fixed storage, no allocation.
+     */
+    public static final byte KIND_ORBIT = 5;
+
+    private static final float ORBIT_EDGE = 0.25f;
     private static final float LEAF_EDGE = 0.12f, LEAF_PEAK_ALPHA = 0.85f;
     private static final float LEAF_SWAY_SECONDS = 3.4f, LEAF_TUMBLE_SECONDS = 2.2f, LEAF_FLAT_RATIO = 0.4f, LEAF_EDGE_ON = 0.15f;
     private static final float LEAF_TILT_DEG = 50f, LEAF_TILT_LAG = 0.25f;
@@ -49,9 +59,11 @@ public final class KimeriaParticleSystem {
 
     private final int capacity;
     private final RandomXS128 random;
-    private final float[] x, y, fromX, fromY, toX, toY, life, maxLife, size, r, g, b, swayAmp, swayPhase;
+    private final float[] x, y, fromX, fromY, toX, toY, life, maxLife, size, r, g, b, swayAmp, swayPhase, rhoFrom, rhoTo;
     private final byte[] kind;
     private int count;
+    /** The alpha multiplier of the render in progress; {@link #FULL} outside {@link #render}. */
+    private float scale = FULL;
 
     public KimeriaParticleSystem(int capacity, long seed) {
         if (capacity < 1) throw new IllegalArgumentException("capacity must be at least 1");
@@ -63,6 +75,7 @@ public final class KimeriaParticleSystem {
         life = new float[capacity]; maxLife = new float[capacity]; size = new float[capacity];
         r = new float[capacity]; g = new float[capacity]; b = new float[capacity];
         swayAmp = new float[capacity]; swayPhase = new float[capacity];
+        rhoFrom = new float[capacity]; rhoTo = new float[capacity];
         kind = new byte[capacity];
     }
 
@@ -98,6 +111,35 @@ public final class KimeriaParticleSystem {
         swayPhase[count - 1] = phase;
     }
 
+    /**
+     * Adds a {@link #KIND_ORBIT}: centred on ({@code centreX}, {@code centreY}) with radii {@code radiusX} and {@code radiusY} at
+     * {@code rho} 1, starting at {@code startTurn} (0 to 1 of a full turn, 0 pointing right, turning towards larger Y) and turning
+     * {@code sweepTurns} over its life while {@code rho} runs from {@code rhoStart} to {@code rhoEnd}. {@code size} is its side.
+     */
+    public void spawnOrbit(float centreX, float centreY, float radiusX, float radiusY, float startTurn, float sweepTurns,
+                           float rhoStart, float rhoEnd, float lifeSeconds, float baseSize, float red, float green, float blue) {
+        spawn(KIND_ORBIT, centreX, centreY, radiusX, radiusY, lifeSeconds, baseSize, red, green, blue);
+        int i = count - 1;
+        swayPhase[i] = startTurn; swayAmp[i] = sweepTurns; rhoFrom[i] = rhoStart; rhoTo[i] = rhoEnd;
+        placeOrbit(i, 0f);
+    }
+
+    /** Moves the particle just spawned {@code seconds} into its life (less than its life), so an effect that starts mid-stream shows its first frame already running. */
+    public void ageLast(float seconds) {
+        int i = count - 1;
+        life[i] = Math.max(life[i] - seconds, 0f);
+        float t = FULL - life[i] / maxLife[i];
+        if (kind[i] == KIND_ORBIT) placeOrbit(i, t);
+    }
+
+    private void placeOrbit(int i, float t) {
+        float turn = swayPhase[i] + swayAmp[i] * t, rho = rhoFrom[i] + (rhoTo[i] - rhoFrom[i]) * t;
+        x[i] = fromX[i] + MathUtils.cosDeg(DEGREES * turn) * toX[i] * rho;
+        y[i] = fromY[i] + MathUtils.sinDeg(DEGREES * turn) * toY[i] * rho;
+    }
+
+    private static boolean additive(byte k) { return k == KIND_GLOW || k == KIND_ORBIT; }
+
     private void removeOldest() {
         for (int i = 1; i < count; i++) copy(i, i - 1);
         count--;
@@ -110,6 +152,7 @@ public final class KimeriaParticleSystem {
         life[to] = life[from]; maxLife[to] = maxLife[from]; size[to] = size[from];
         r[to] = r[from]; g[to] = g[from]; b[to] = b[from];
         swayAmp[to] = swayAmp[from]; swayPhase[to] = swayPhase[from];
+        rhoFrom[to] = rhoFrom[from]; rhoTo[to] = rhoTo[from];
         kind[to] = kind[from];
     }
 
@@ -124,6 +167,7 @@ public final class KimeriaParticleSystem {
             float t = FULL - remaining / maxLife[live];
             // Vector2.lerp's form, kept so positions match the pre-migration torch to the float.
             float rest = FULL - t;
+            if (kind[live] == KIND_ORBIT) { placeOrbit(live, t); live++; continue; }
             x[live] = fromX[live] * rest + toX[live] * t;
             y[live] = fromY[live] * rest + toY[live] * t;
             if (kind[live] == KIND_LEAF) x[live] += swayAmp[live] * MathUtils.sinDeg(DEGREES * swayCycle(live, t));
@@ -164,13 +208,14 @@ public final class KimeriaParticleSystem {
     }
     public float drawSize(int i) {
         float t = FULL - life[i] / maxLife[i];
-        if (kind[i] == KIND_GRIT || kind[i] == KIND_LEAF) return size[i];
+        if (kind[i] == KIND_GRIT || kind[i] == KIND_LEAF || kind[i] == KIND_ORBIT) return size[i];
         if (kind[i] == KIND_FLAME) return size[i] * (FULL - t);
         return size[i] * (kind[i] == KIND_SMOKE ? (FULL + SMOKE_GROWTH * t) : (FULL - GLOW_SHRINK * t));
     }
     public float alpha(int i) {
         if (kind[i] == KIND_FLAME) return FULL;
         float t = FULL - life[i] / maxLife[i];
+        if (kind[i] == KIND_ORBIT) return Math.min(FULL, Math.min(t, FULL - t) / ORBIT_EDGE);
         if (kind[i] == KIND_LEAF) return LEAF_PEAK_ALPHA * Math.min(FULL, Math.min(t, FULL - t) / LEAF_EDGE);
         return (kind[i] == KIND_GLOW ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
@@ -179,10 +224,15 @@ public final class KimeriaParticleSystem {
      * Draws the normal-blended particles (smoke, grit and flame, behind), then the additive ones, and restores white and normal blending.
      * One blend switch per pass, and none for a pass with nothing to draw.
      */
-    public void render(Batch batch, TextureRegion region) {
-        if (count == 0) return;
+    public void render(Batch batch, TextureRegion region) { render(batch, region, FULL); }
+
+    /** As {@link #render(Batch, TextureRegion)} with every alpha multiplied by {@code intensity} (0 to 1): a whole effect dims or brightens at once, with no respawn. */
+    public void render(Batch batch, TextureRegion region, float intensity) {
+        if (count == 0 || intensity <= 0f) return;
+        scale = intensity;
         draw(batch, region, true);
         draw(batch, region, false);
+        scale = FULL;
         batch.setColor(FULL, FULL, FULL, FULL);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
@@ -190,12 +240,12 @@ public final class KimeriaParticleSystem {
     private void draw(Batch batch, TextureRegion region, boolean normalPass) {
         boolean switched = false;
         for (int i = 0; i < count; i++) {
-            if ((kind[i] != KIND_GLOW) != normalPass) continue;
+            if (additive(kind[i]) == normalPass) continue;
             if (!switched) {
                 batch.setBlendFunction(GL20.GL_SRC_ALPHA, normalPass ? GL20.GL_ONE_MINUS_SRC_ALPHA : GL20.GL_ONE);
                 switched = true;
             }
-            batch.setColor(r[i], g[i], b[i], alpha(i));
+            batch.setColor(r[i], g[i], b[i], alpha(i) * scale);
             if (kind[i] == KIND_LEAF) {
                 float w = drawWidth(i), h = drawHeight(i);
                 batch.draw(region, x[i] - w / 2f, y[i] - h / 2f, w / 2f, h / 2f, w, h, FULL, FULL, tilt(i));

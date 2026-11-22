@@ -20,6 +20,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
+import com.jlogicsoftware.kimeria.effects.RoomRippleFx;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.effects.ShockwaveEffect;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
@@ -604,6 +605,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void enterNextRoom() {
         if (level.healerAhead()) {
             roomFade.cancel();
+            level.cancelLeaving();
             level.prepareHealer();
             roomStartCoins = coinsCollected;
             openHealer(false, level.beginPreBossHealerMeeting());
@@ -852,14 +854,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 if (gameStarted) deathFade.update(dt, rebuildUnderBlack);
             } else if (roomFade.active()) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || gamepad.pausePressed() || touchControls.pausePressed()) togglePause();
-                else roomFade.update(dt, this::enterNextRoom);
+                else {
+                    level.updateRoomChange(dt); // the portal and the ripple play while the rest of the world is held (#553)
+                    roomFade.update(dt, this::enterNextRoom);
+                }
             } else {
                 level.update(dt * timeScale);
                 if (gameStarted) advanceCameraPan(dt);
                 if (gameStarted && !roomResetPending && level.atRoomExit()) {
                     player.resetJumpInput();
                     level.clearCameraEffects();
-                    roomFade.start();
+                    level.beginLeaving();
+                    roomFade.start(RoomRippleFx.LEAVE_HOLD_SECONDS); // a clear pause so the ripple can play; input is ignored, held keys are kept
                 }
             }
         }
