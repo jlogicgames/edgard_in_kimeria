@@ -187,7 +187,7 @@ class Forest1TrapsTest {
             if (right) held.add(Input.Keys.D);
             if (doJump) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); lastJump = f; }
             boolean mechanism = p.canInteract();
-            boolean action = mechanism || (plan.killMob && mobAhead(l));
+            boolean action = plan.killMob && mobAhead(l); // D126: Up alone operates a mechanism
             if (plan.killMob && mobAhead(l)) mechanism = false;
             if (mechanism) held.add(Input.Keys.W);
             if (action && (!actionWasDown || wasMechanism != mechanism)) pressed.add(Input.Keys.K);

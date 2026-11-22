@@ -506,7 +506,7 @@ class AllocationBudgetTest {
         assertWithinBudget("forest-1 lever room riding the lift", FOREST_1_LEVER_CEILING, bytes);
     }
 
-    /** The lever room with the hero on the slab pulling the lever (Up + Action) every {@value #PULL_CYCLE_FRAMES} frames: the ladder moves, the lift starts and stops, the lever animates. */
+    /** The lever room with the hero on the slab pulling the lever (a fresh Up) every {@value #PULL_CYCLE_FRAMES} frames: the ladder moves, the lift starts and stops, the lever animates. */
     @Test void forest1LeverRoomPullingTheLever() {
         Level level = harness.roomOf("forest-1", 4);
         Rectangle view = new Rectangle(level.currentRoomBounds());
@@ -1614,7 +1614,7 @@ class AllocationBudgetTest {
     /** The throw's extra over the same room with no throw, B/frame (#505): pick up, throw, fly, first step on the release frame. Measured 3.5 B/frame (median of 9 paired windows, 100 cycles, all threw; 2026-11-20); 16 leaves headroom for JIT variation, as for the fireball cast. The 3.5 B includes the harness's own {@code snapshot()} record (the scene's proof that it threw); the cost inside {@code stepNewThrows} (an index loop and a flag test) is the same with or without a throw, so it cancels in the pair and is guarded by {@code HOT_METHODS}. */
     static final double STONE_THROW_EXTRA_CEILING = 16;
     private static final int STONE_THROW_PAIRS = 9, STONE_THROW_WINDOW_FRAMES = 600;
-    private static final String HINT_TEXT = "Up + Action: turn the lever on", ZONE_TEXT = "Light the torch with the lever to open the way forward";
+    private static final String HINT_TEXT = "W: turn the lever on", ZONE_TEXT = "Light the torch with the lever to open the way forward";
     private static final float HINT_X = 200, HINT_Y = 220, ZONE_X = 320, ZONE_Y = 120;
     private static final int FPS_SHOWN = 60, FPS_CHANGE_FRAMES = 30;
     private static final float LEVER_ROOM_FIRST_X = 24, LEVER_ROOM_LAST_X = 544, LEVER_ROOM_STEP_X = 8, LEVER_ROOM_FLOOR_Y = 272;
@@ -1640,7 +1640,7 @@ class AllocationBudgetTest {
     }
 
     /**
-     * A real throw through {@code Level.update} (#505): the hero beside the stone picks it up (Up + Action) and throws it (the cast key) every
+     * A real throw through {@code Level.update} (#505): the hero beside the stone picks it up (a fresh Up) and throws it (the cast key) every
      * {@link #BURST_CYCLE_FRAMES} frames, so {@code Carryable.release}, {@code stepNewThrows} (the first step on the release frame) and the flight
      * run, against the same room with no input (a paired probe, as {@link #fireballCastWithTheRealKeyPress}). The scene proves it threw: every
      * cycle's throw is seen as a stone in flight after its release frame, with the hero's hands empty.

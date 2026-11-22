@@ -276,8 +276,7 @@ class SpiderTest {
     /** Picks the resting stone up at x 96 (the hero stands beside it), as in SnailTest, and leaves it carried. */
     private void carryTheStone(Level level) {
         place(level, 108);
-        harness.held.add(Input.Keys.W); frame(level);
-        harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level);
+        harness.held.clear(); frame(level); harness.held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         harness.held.clear(); frame(level);
         assertNotNull(level.player.carriedObject(), "picked up the stone");
     }

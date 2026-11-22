@@ -59,7 +59,7 @@ class TiledLinksTest(unittest.TestCase):
 
     def test_legacy_name_link_still_works_and_ambiguity_fails(self):
         trigger = '<object id="1" name="a" type="Trigger" x="0" y="0"/>'
-        torch = '<object id="2" name="a" type="Ladder" x="0" y="0"/>'
+        torch = '<object id="2" name="a" type="Ladder" x="200" y="0"/>'  # a ladder 200 px away (D126 keeps levers clear)
         self.assertEqual([], check(tmx(trigger + torch)))
         self.assertIn('0 mechanisms', check(tmx(trigger))[0])
         self.assertIn('2 mechanisms', check(tmx(trigger + torch + torch.replace('id="2"', 'id="3"')))[0])
@@ -593,6 +593,37 @@ class BranchPlacementTest(unittest.TestCase):
         self.assertIn('D69', self.problems(300, 80 + 200)[0])
         self.assertEqual([], self.problems(300, 80 + 201))
         self.assertEqual([], self.problems(300, 80))
+
+
+class LadderClearanceTest(unittest.TestCase):
+    """D126: nothing the hero operates by hand stands within 32 px of a ladder zone, raised or lowered."""
+    LADDER = ('<object id="9" name="Ladder" type="Ladder" x="100" y="96" width="16" height="112"><properties>'
+              '<property name="dropDistance" type="float" value="112"/></properties></object>')
+
+    def lever_at(self, x, y=304, extra=''):
+        return (f'<object id="7" name="Lever" type="Trigger" x="{x}" y="{y}" width="16" height="16">'
+                f'<properties>{extra}</properties></object>')
+
+    def errors(self, spawn):
+        return [e for e in check(tmx(spawn)) if 'D126' in e]
+
+    def test_a_lever_32_px_from_the_ladder_passes_and_16_px_fails(self):
+        self.assertEqual([], self.errors(self.LADDER + self.lever_at(52)))     # gap 32
+        self.assertEqual(1, len(self.errors(self.LADDER + self.lever_at(68)))) # gap 16
+
+    def test_the_lowered_span_counts_too(self):
+        # The raised ladder spans y 96-208 and the lowered one y 208-320: a lever at the foot is near only when lowered.
+        self.assertEqual(1, len(self.errors(self.LADDER + self.lever_at(84, y=304))))
+
+    def test_a_stone_counts_and_a_thrown_at_lever_does_not(self):
+        stone = '<object id="8" name="Stone" type="Stone" x="108" y="308" width="12" height="12"/>'
+        self.assertEqual(1, len(self.errors(self.LADDER + stone)))
+        thrown = self.lever_at(108, extra='<property name="throwActivated" type="bool" value="true"/>')
+        self.assertEqual([], self.errors(self.LADDER + thrown))
+
+    def test_the_shipped_maps_pass(self):
+        for m in sorted(links.MAPS.glob('*.tmx')):
+            self.assertEqual([], [e for e in links.check_map(m) if 'D126' in e], m.name)
 
 
 if __name__ == '__main__':

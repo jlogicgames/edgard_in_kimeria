@@ -120,21 +120,24 @@ class FairyOffscreenTest {
     private Escalator lift(Level level) { return level.escalators.get(0); }
     private float centerX(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width / 2; }
 
-    private void walkToLever(Level level) {
+    private void walkToLever(Level level) { walkToLever(level, false); }
+
+    /** {@code holdUp}: Up is held all the way, so arriving at the lever is not a fresh press and pulls nothing (D126). */
+    private void walkToLever(Level level, boolean holdUp) {
         int frames = 0;
         while (!level.player.canInteract()) {
             held.clear(); held.add(centerX(level) > LEVER_X + 8 ? Input.Keys.A : Input.Keys.D);
+            if (holdUp) held.add(Input.Keys.W);
             frame(level);
             assertTrue(++frames < 60 * 30, "lever never came into reach at " + level.player.position);
         }
-        held.clear();
+        if (holdUp) { held.clear(); held.add(Input.Keys.W); } else held.clear();
         settle(level, 10);
     }
 
-    /** Up + Action; with {@code keepUp} the hero keeps holding Up after the pull (the lever stays selected). */
+    /** A fresh Up (D126); with {@code keepUp} the hero keeps holding Up after the pull (the lever stays selected). */
     private void pull(Level level, boolean keepUp) {
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear();
         if (keepUp) held.add(Input.Keys.W);
     }
@@ -567,10 +570,9 @@ class FairyOffscreenTest {
 
     @Test void releasingUpMidCycleEndsTheCueAndTheNextHoldStartsAtTheNearest() {
         Level level = route();
-        walkToLever(level);
+        walkToLever(level, true); // Up held on arrival: the cue previews the lever without pulling it
         followCamera = false;
         view.set(0, 0, VIEW_W, VIEW_H); // ladder (nearer) and lift off screen
-        held.add(Input.Keys.W);
         var fairy = level.fairy();
         waitForTwinkleAt(level, ladder(level));
         int guard = 0;

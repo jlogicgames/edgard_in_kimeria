@@ -146,10 +146,9 @@ class LadderLessonTest {
         return frames;
     }
 
-    /** Up + Action, as the hint teaches: Action is a fresh press while Up is held. */
+    /** A fresh Up, as the hint teaches (D126). */
     private int operate(Level level) {
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         return 3;
     }

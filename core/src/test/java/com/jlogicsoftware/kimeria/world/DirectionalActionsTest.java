@@ -177,15 +177,25 @@ class DirectionalActionsTest {
         frames(2);
     }
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void upPlusActionOnALeverInReachActivatesItOnce(boolean left) {
+    void aFreshUpOnALeverInReachActivatesItOnceAndActionNeverDoes(boolean left) {
         scene(left); frames(10);
         var stones = level.objects.stream()
             .filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance).toList();
         level.objects.removeAll(stones); frames(2);
-        held.add(up()); frames(2);
         held.add(action()); frames(2);
+        assertEquals(0, first.count, "Action alone is the sword and never interacts");
+        held.remove(action()); frames(2);
+        held.add(up()); frames(2);
         assertEquals(1, first.count);
-        frames(90); assertEquals(1, first.count);
+        frames(90); assertEquals(1, first.count, "Holding Up never repeats the interaction");
+        held.add(action()); frames(2); assertEquals(1, first.count);
+    }
+
+    /** Presses Up with the hero lifted out of reach, then returns him: Up is held but not fresh, so nothing interacts. */
+    private void holdUpIntoReach() {
+        var p = level.player; float y = p.position.y;
+        p.position.y = y - 100; held.add(up()); frames(2);
+        p.position.y = y; p.velocity.setZero(); frames(1);
     }
 
     /** D82: the fairy shows exactly the target the old outline framed, every frame. */
@@ -200,7 +210,8 @@ class DirectionalActionsTest {
         assertEquals(com.jlogicsoftware.kimeria.ui.FairyGuide.Mode.IDLE, fairy.mode());
         assertNull(fairy.selected());
         assertEquals(2, fairy.passiveTargets().size, "both carryables in reach are marked passive while nothing is selected");
-        held.add(up()); frames(1);
+        // A fresh Up would pick the stone up at once; press it out of reach, then step into reach with Up held.
+        holdUpIntoReach();
         var target = level.player.interactionFeedbackTarget();
         assertNotNull(target); assertFairyShows();
         // The selection reads on its first frame: full glow while she is still on her way (D82).
@@ -230,7 +241,7 @@ class DirectionalActionsTest {
 
     @Test void theFairyMarksTheTargetOnTheFrameTheHeroWalksIntoReach() {
         // Pins D82's call order: she is updated after the hero moves, so on the step he comes into reach with Up held
-        // she already shows what the label and his next Up + Action see (Player.update read the selection before moving).
+        // she already shows what the label and his next Up press see (Player.update read the selection before moving).
         scene(false); level.triggers.clear(); frames(30);
         var stone = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
             && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE).findFirst().orElseThrow();
@@ -310,10 +321,10 @@ class DirectionalActionsTest {
         var mechanisms = new ArrayList<com.jlogicsoftware.kimeria.entity.items.Trigger>();
         for (var trigger : level.triggers) mechanisms.add(trigger);
         level.triggers.clear();
-        held.add(up()); tap(action()); held.remove(up());
+        tap(up());
         for (var trigger : mechanisms) level.triggers.add(trigger);
     }
-    private void putDown() { held.add(down()); tap(action()); held.remove(down()); }
+    private void putDown() { tap(down()); }
 
     private void standByEntranceStone() {
         var stone = level.objects.stream()
@@ -382,7 +393,7 @@ class DirectionalActionsTest {
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void keyboardSelectsSwordSingleTargetPickupPlaceAndConflicts(boolean left) {
+    void keyboardSelectsSwordSingleTargetPickupPlaceAndUpDownTogether(boolean left) {
         scene(left);
         assertEquals(7, level.player.selectedMechanism().id);
         assertEquals(20, level.player.selectedCarryable().id);
@@ -391,22 +402,24 @@ class DirectionalActionsTest {
         assertEquals(0, first.count); assertNull(level.player.carriedObject());
         frames(50);
         // The stone and the lever are both in reach; the nearer one, the stone, takes this press.
-        held.add(up()); tap(action()); held.remove(up());
+        tap(up());
         assertEquals(20, level.player.carriedObject().id);
         assertEquals(0, first.count); assertEquals(0, second.count);
-        // Carrying, only mechanisms are Up + Action targets.
-        held.add(up()); tap(action()); held.remove(up());
+        // Carrying, only mechanisms are Up targets.
+        tap(up());
         assertEquals(1, first.count); assertEquals(0, second.count);
         assertEquals(20, level.player.carriedObject().id);
-        held.add(up()); held.add(down()); tap(action()); held.clear();
+        // Up and Down pressed together interact with nothing: no lever, no put down.
+        held.add(up()); held.add(down()); frames(2); held.clear(); frames(1);
         assertEquals(1, first.count); assertEquals(20, level.player.carriedObject().id);
+        held.add(up()); frames(1); assertEquals(2, first.count);
         frames(60); // Holding never repeats an interaction.
-        assertEquals(20, level.player.carriedObject().id);
+        assertEquals(2, first.count); assertEquals(20, level.player.carriedObject().id);
         held.clear(); frames(1);
         tap(action()); assertEquals(Player.State.ATTACKING, level.player.getState());
-        assertNotNull(level.player.carriedObject());
+        assertNotNull(level.player.carriedObject()); assertEquals(2, first.count, "Action never interacts");
         frames(50);
-        held.add(down()); tap(action()); held.clear();
+        tap(down());
         assertNull(level.player.carriedObject());
         assertEquals(3, level.player.ammunition());
     }
@@ -446,7 +459,7 @@ class DirectionalActionsTest {
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void heldEntryResumeDeathAndLayoutChangesRequireRelease(boolean left) {
         leftHanded = left;
-        held.add(action()); held.add(ranged()); held.add(down());
+        held.add(action()); held.add(ranged()); held.add(down()); held.add(up());
         scene(left); frames(3);
         assertNull(level.player.carriedObject()); assertEquals(3, level.player.ammunition());
         held.clear(); frames(1); pickup(); assertNotNull(level.player.carriedObject());
@@ -468,17 +481,14 @@ class DirectionalActionsTest {
         int verticalAxis = left ? mapping.axisRightY : mapping.axisLeftY;
         axes[verticalAxis] = 1;
         frames(1); assertEquals(1, level.player.verticalMovement());
-        buttons[actionButton] = true; frames(1);
-        assertNull(level.player.carriedObject(), "Down + Action with an empty hand does nothing");
-        buttons[actionButton] = false; axes[verticalAxis] = 0; frames(1);
+        assertNull(level.player.carriedObject(), "Down with an empty hand does nothing");
+        axes[verticalAxis] = 0; frames(1);
         axes[verticalAxis] = -1;
-        frames(1); assertEquals(-1, level.player.verticalMovement());
+        frames(1); assertEquals(-1, level.player.verticalMovement(), "Up is still the climb direction");
+        assertNotNull(level.player.carriedObject(), "A fresh stick up takes hold of the nearest carryable");
+        axes[verticalAxis] = 0; frames(1);
         buttons[actionButton] = true; frames(1);
-        assertNotNull(level.player.carriedObject()); assertEquals(0, level.player.verticalMovement());
-        assertTrue(level.player.actionPrompt().contains(left ? "D-pad" : "X/B"));
-        buttons[actionButton] = false; axes[verticalAxis] = 0; frames(1);
-        buttons[actionButton] = true; frames(1);
-        assertEquals(Player.State.ATTACKING, level.player.getState());
+        assertEquals(Player.State.ATTACKING, level.player.getState(), "Action alone swings the sword");
         assertNotNull(level.player.carriedObject());
         buttons[actionButton] = false; frames(50);
         buttons[rangedButton] = true; frames(1);
@@ -489,7 +499,7 @@ class DirectionalActionsTest {
         buttons[rangedButton] = false; frames(1);
         // With a stone or torch in reach those are nearer than the lever, so leave only the mechanism.
         level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
-        axes[verticalAxis] = -1; buttons[actionButton] = true; frames(1);
+        axes[verticalAxis] = -1; frames(1);
         assertEquals(1, first.count); assertEquals(0, second.count);
     }
 
@@ -504,8 +514,25 @@ class DirectionalActionsTest {
             .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
         standByCarryable(stone);
         finger(0, mirrored(80), 245); frames(1);
+        assertNotNull(level.player.carriedObject(), "A steep stick up takes hold at once");
         finger(1, mirrored(520), 318); frames(2);
-        assertNotNull(level.player.carriedObject());
+        assertNotNull(level.player.carriedObject(), "The Action button is the sword and does not drop it");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void touchStickInteractsOnlyWhenSteeplyUpAndALeaningStickJustClimbs(boolean left) {
+        scene(left); frames(10);
+        var stone = level.objects.stream()
+            .filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 20)
+            .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
+        standByCarryable(stone);
+        finger(0, mirrored(120), 255); frames(1); // 40 px sideways, 25 px up: about 32 degrees
+        assertEquals(-1, level.player.verticalMovement(), "A leaning stick still counts as Up for a ladder");
+        assertFalse(touch.interactUpHeld()); assertNull(level.player.carriedObject());
+        fingers[0] = false; standByCarryable(stone); finger(0, mirrored(120), 255); frames(1);
+        pointerX[0] = (int) mirrored(90); pointerY[0] = 245; frames(1); // 10 px sideways, 35 px up: about 74 degrees
+        assertTrue(touch.interactUpHeld());
+        assertNotNull(level.player.carriedObject(), "Steepening the stick without lifting the finger is a fresh press");
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
@@ -518,14 +545,15 @@ class DirectionalActionsTest {
         finger(0, mirrored(80), 245); frames(1);
         assertEquals(-1, level.player.verticalMovement());
         finger(1, mirrored(520), 318); frames(1);
-        assertNotNull(level.player.carriedObject());
-        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.INTERACT, level.player.actionLabel());
-        frames(30); assertNotNull(level.player.carriedObject());
-        fingers[1] = false; frames(1);
-        pointerY[0] = 245; // Keep Up selected while the carried mechanism remains available.
+        assertNotNull(level.player.carriedObject(), "The stick up took hold of the stone");
         finger(1, mirrored(520), 318); frames(1);
+        assertNotNull(level.player.carriedObject()); assertEquals(0, first.count, "The Action button never interacts");
+        frames(30); assertNotNull(level.player.carriedObject());
+        fingers[1] = false; frames(50);
+        fingers[0] = false; frames(1);
+        finger(0, mirrored(80), 245); frames(1); // a fresh steep push, the stone in hand: the lever
         assertEquals(1, first.count); assertEquals(0, second.count);
-        assertEquals(0, level.player.verticalMovement());
+        assertEquals(-1, level.player.verticalMovement());
         java.util.Arrays.fill(fingers, false); frames(1);
         finger(1, mirrored(536), 244); frames(1);
         assertNull(level.player.carriedObject()); assertEquals(3, level.player.ammunition());
@@ -539,12 +567,34 @@ class DirectionalActionsTest {
 
     @Test void blockedPlacementKeepsTheObjectAndNeverSpendsACharge() {
         scene(false); pickup();
-        level.collisionBlocks.add(com.jlogicsoftware.kimeria.entity.environment.CollisionBlock.plain(63, 300, 16, 20));
-        held.add(down()); tap(action());
-        assertNotNull(level.player.carriedObject());
-        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.PLACE_BLOCKED, level.player.actionLabel());
+        var block = com.jlogicsoftware.kimeria.entity.environment.CollisionBlock.plain(63, 300, 16, 20);
+        level.collisionBlocks.add(block);
+        tap(down());
+        assertNotNull(level.player.carriedObject(), "A blocked put down keeps the object");
+        assertEquals(3, level.player.ammunition());
+        level.collisionBlocks.remove(block);
+        tap(down());
+        assertNull(level.player.carriedObject(), "With the way clear a fresh Down puts it down");
         assertEquals(3, level.player.ammunition());
     }
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aBlockedPlacementSaysBlockedOnTheDownLine(boolean left) {
+        scene(left);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
+        level.triggers.clear();
+        standByEntranceStone();
+        pickup(); frames(1);
+        assertNotNull(level.player.carriedObject());
+        assertTrue(level.player.contextHint().contains(Input.Keys.toString(down()) + ": Put down"));
+        assertFalse(level.player.contextHint().contains("Blocked"), "clear ground: no Blocked");
+        var body = level.player.hitboxBounds();
+        level.collisionBlocks.add(com.jlogicsoftware.kimeria.entity.environment.CollisionBlock.plain(body.x - 40, body.y, body.width + 80, body.height));
+        frames(1);
+        assertTrue(level.player.contextHint().contains(Input.Keys.toString(down()) + ": Put down - Blocked"), level.player.contextHint());
+        tap(down());
+        assertNotNull(level.player.carriedObject(), "a blocked Down keeps the object");
+    }
+
     @Test void torchThrowAlsoKeepsAmmoAndTheEmptyHandDoesNotFire() {
         scene(false);
         level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 20);
@@ -723,10 +773,9 @@ class DirectionalActionsTest {
         level.player.position.set(trigger.centerX() - level.player.hitbox.offsetX - level.player.hitbox.width / 2,
             trigger.centerY() - level.player.hitbox.offsetY - level.player.hitbox.height / 2);
         frames(2);
-        held.add(up()); frames(1);
-        var mechanism = level.player.interactionFeedbackTarget();
-        assertFairyShows();
-        var lever = assertInstanceOf(com.jlogicsoftware.kimeria.entity.items.Lever.class, mechanism);
+        assertSame(trigger, level.player.selectedMechanism());
+        assertNull(level.player.interactionFeedbackTarget(), "Nothing glows until Up is held");
+        var lever = assertInstanceOf(com.jlogicsoftware.kimeria.entity.items.Lever.class, level.mechanismFeedbackTarget(trigger));
         assertSame(trigger, lever.trigger);
         assertEquals(trigger.centerX(), lever.centerX(), .001);
         assertEquals(trigger.getY() + trigger.getHeight(), lever.getY() + lever.getHeight(), .001);
@@ -735,10 +784,8 @@ class DirectionalActionsTest {
             && t.getTargetId().equals("practice-light"))
             .map(com.jlogicsoftware.kimeria.effects.Torch.class::cast).findFirst().orElseThrow();
         assertFalse(torch.isBurning()); assertFalse(lever.isUp());
-        assertEquals(1, level.fairy().glowAlpha(lever), "the selected lever glows at full strength (D82)");
-        assertTrue(level.fairy().passiveTargets().contains(torch, true), "the torch the lever drives is marked passive");
-        assertTrue(level.player.actionPrompt().contains("Turn on"));
-        assertTrue(level.player.actionPrompt().endsWith("Lever"));
+        assertTrue(level.player.contextHint().contains("Turn on"));
+        assertTrue(level.player.contextHint().endsWith("Lever"));
         List<Object> drawn = new ArrayList<>();
         var batch = (com.badlogic.gdx.graphics.g2d.Batch) Proxy.newProxyInstance(
             com.badlogic.gdx.graphics.g2d.Batch.class.getClassLoader(),
@@ -746,12 +793,16 @@ class DirectionalActionsTest {
                 if (method.getName().equals("draw")) drawn.add(args[0]); return null;
             });
         lever.render(batch);
-        held.add(action()); frames(1);
+        held.add(up()); frames(1); // the fresh press switches it
         assertTrue(torch.isBurning()); assertTrue(lever.isUp());
-        assertTrue(level.player.actionPrompt().contains("Turn off"));
+        assertSame(lever, level.player.interactionFeedbackTarget());
+        assertFairyShows();
+        assertEquals(1, level.fairy().glowAlpha(lever), "the selected lever glows at full strength (D82)");
+        assertTrue(level.fairy().passiveTargets().contains(torch, true), "the torch the lever drives is marked passive");
+        assertTrue(level.player.contextHint().contains("Turn off"));
         lever.render(batch); assertNotSame(drawn.get(0), drawn.get(1));
-        frames(30); assertTrue(lever.isUp(), "A held action must not repeatedly toggle the lever");
-        held.remove(action()); frames(1); tap(action());
+        frames(30); assertTrue(lever.isUp(), "A held Up must not repeatedly toggle the lever");
+        held.remove(up()); frames(1); tap(up());
         assertFalse(torch.isBurning()); assertFalse(lever.isUp());
         lever.render(batch); assertSame(drawn.get(0), drawn.get(2));
         torch.toggleFire(true); assertTrue(lever.isUp(), "The torch remains the source of truth");
@@ -766,7 +817,7 @@ class DirectionalActionsTest {
                 && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.TORCH)
             .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
         standByCarryable(portableTorch);
-        held.add(up()); frames(1);
+        holdUpIntoReach();
         var pickup = level.player.interactionFeedbackTarget();
         assertFairyShows();
         assertSame(level.player.selectedCarryable(), pickup);
@@ -786,17 +837,17 @@ class DirectionalActionsTest {
         level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c && c.id == 21);
         Rectangle body = level.player.hitboxBounds();
         stone.position.set(body.x + body.width + 12, 308);
-        held.add(down()); frames(1);
+        held.add(up()); frames(1);
         assertNull(level.player.selectedCarryable());
         assertEquals("", level.player.contextHint());
         assertNull(level.player.interactionFeedbackTarget());
         assertFairyShows();
-        tap(action()); assertNull(level.player.carriedObject());
-        assertNotEquals(Player.State.ATTACKING, level.player.getState());
-        held.clear();
+        assertNull(level.player.carriedObject(), "A fresh Up out of reach takes nothing");
+        held.clear(); frames(1);
         held.add(left ? Input.Keys.RIGHT : Input.Keys.D); frames(6); held.clear(); frames(1);
         assertSame(stone, level.player.selectedCarryable());
         assertEquals("", level.player.contextHint());
+        tap(action()); assertNull(level.player.carriedObject(), "Action never picks up"); frames(50);
         pickup(); frames(1); assertSame(stone, level.player.carriedObject());
         assertEquals("", level.player.contextHint());
     }
@@ -808,11 +859,11 @@ class DirectionalActionsTest {
         // Isolate carrying reminders here; the combined lever lesson/anchor has its own regression below.
         level.triggers.clear();
         standByEntranceStone();
-        assertTrue(level.player.contextHint().contains(left ? "Up + X" : "W + K"));
+        assertTrue(level.player.contextHint().contains(Input.Keys.toString(up()) + ": Pick up"));
         pickup(); frames(1);
         assertNotNull(level.player.carriedObject());
         assertTrue(level.player.contextHint().contains(left ? "C: Throw" : "L: Throw"));
-        assertTrue(level.player.contextHint().contains(left ? "Down + X: Put down" : "S + K: Put down"));
+        assertTrue(level.player.contextHint().contains(Input.Keys.toString(down()) + ": Put down"));
         Vector2 anchor = new Vector2(); level.player.contextHintPosition(anchor);
         frames(120);
         held.add(left ? Input.Keys.RIGHT : Input.Keys.D); frames(35); held.clear();
@@ -820,7 +871,7 @@ class DirectionalActionsTest {
         assertTrue(level.player.contextHint().contains("Throw"));
         Vector2 movedAnchor = new Vector2(); level.player.contextHintPosition(movedAnchor);
         assertEquals(anchor, movedAnchor);
-        held.add(down()); tap(action()); held.clear(); frames(1);
+        tap(down()); frames(1);
         assertNull(level.player.carriedObject());
         assertTrue(level.player.contextHint().contains("Pick up"));
         pickup(); frames(1);
@@ -883,16 +934,16 @@ class DirectionalActionsTest {
         frames(2);
         assertSame(trigger, level.player.selectedMechanism());
         String hint = level.player.contextHint();
-        assertTrue(hint.startsWith(left ? "Up + X: Turn on - Lever" : "W + K: Turn on - Lever"));
+        assertTrue(hint.startsWith(Input.Keys.toString(up()) + ": Turn on - Lever"));
         assertTrue(hint.contains("Put down")); assertTrue(hint.contains("Throw"));
         assertEquals(3, hint.lines().count());
         Vector2 mechanismAnchor = new Vector2(); level.player.contextHintPosition(mechanismAnchor);
         assertEquals(level.mechanismFeedbackTarget(trigger).centerX(), mechanismAnchor.x, .001);
         assertNotEquals(pickupAnchor, mechanismAnchor, "The mechanism lesson belongs by the lever, not the old pickup");
-        held.add(up()); tap(action()); held.clear(); frames(1);
+        tap(up()); frames(1);
         assertSame(item, level.player.carriedObject(), "Operating the lever must not place or consume the held item");
         assertTrue(level.player.contextHint().contains("Turn off - Lever"));
-        held.add(up()); tap(action()); held.clear(); frames(1);
+        tap(up()); frames(1);
         assertTrue(level.player.contextHint().contains("Turn on - Lever"));
         level.player.position.x = level.currentRoomBounds().x + 700;
         frames(1);
@@ -959,7 +1010,7 @@ class DirectionalActionsTest {
     }
     private float feet() { Rectangle b = level.player.hitboxBounds(); return b.y + b.height; }
     private float bodyCentre() { Rectangle b = level.player.hitboxBounds(); return b.x + b.width / 2; }
-    /** A mechanism zone covering the whole ladder column, so Up + Action has a real target everywhere on it. */
+    /** A mechanism zone covering the whole ladder column, so a fresh Up has a real target everywhere on it. */
     private void mechanismAlongLadder() {
         level.triggers.add(new com.jlogicsoftware.kimeria.entity.items.Trigger(5, 96, 240, 16, 80, "first"));
     }
@@ -1007,33 +1058,125 @@ class DirectionalActionsTest {
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void upPlusActionOperatesTheMechanismAndNeverClimbsEvenAfterActionIsReleased(boolean left) {
+    void aFreshUpOnAMechanismOperatesItAndDoesNotClimbUntilReleasedAndPressedAgain(boolean left) {
         ladderScene(left); mechanismAlongLadder(); standAt(LADDER_X - 6, FLOOR_Y);
-        held.add(up()); held.add(action()); pressed.add(action()); frames(1);
-        pressed.clear(); frames(20);
+        held.add(up()); frames(20);
         assertEquals(1, first.count);
         assertFalse(level.player.onLadder());
         assertEquals(FLOOR_Y, feet(), .05);
-        held.remove(action()); frames(30);
-        assertFalse(level.player.onLadder(), "Up already belonged to the action; it must be pressed again to climb");
-        held.clear(); frames(2); held.add(up()); frames(2);
+        frames(30);
+        assertFalse(level.player.onLadder(), "That Up press was spent on the lever; it must be pressed again to climb");
+        assertEquals(1, first.count, "Holding Up never repeats the interaction");
+        level.triggers.clear(); held.clear(); frames(2); held.add(up()); frames(2);
         assertTrue(level.player.onLadder());
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void actionOnTheLadderOperatesWithoutMovingAndClimbingResumesOnlyAfterANewPress(boolean left) {
-        ladderScene(left); mechanismAlongLadder(); standAt(LADDER_X - 6, FLOOR_Y);
+    void upOnTheLadderNeverInteractsAndKeepsClimbing(boolean left) {
+        ladderScene(left); standAt(LADDER_X - 6, FLOOR_Y);
         held.add(up()); frames(30);
         assertTrue(level.player.onLadder());
+        mechanismAlongLadder(); held.clear(); frames(2);
         float height = feet();
-        held.add(action()); pressed.add(action()); frames(1); pressed.clear(); frames(20);
-        assertEquals(1, first.count, "Up + Action operates the mechanism once");
-        assertEquals(height, feet(), 1.5, "It must not also keep climbing");
-        float stopped = feet();
-        held.remove(action()); frames(20);
-        assertEquals(stopped, feet(), .001, "Releasing Action keeps the spent Up from climbing");
-        held.clear(); frames(2); held.add(up()); frames(10);
-        assertTrue(feet() < stopped);
+        held.add(up()); frames(10); // a fresh press, on the rungs, with a lever in reach
+        assertEquals(0, first.count, "Interaction does nothing while on a ladder");
+        assertTrue(level.player.onLadder()); assertTrue(feet() < height, "The press climbs instead");
+        held.add(action()); pressed.add(action()); frames(1); pressed.clear(); frames(10);
+        assertEquals(0, first.count, "Action never interacts");
+        assertNotEquals(Player.State.ATTACKING, level.player.getState());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aStoneLyingOnTheLadderIsPickedUpFirstAndTheNextFreshUpClimbsWithIt(boolean left) {
+        ladderScene(left); standAt(LADDER_X - 6, FLOOR_Y);
+        level.objects.add(new com.jlogicsoftware.kimeria.entity.items.Carryable(level, 40,
+            com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE, bodyCentre() - 4, feet() - 8));
+        frames(1);
+        held.add(up()); frames(15);
+        assertNotNull(level.player.carriedObject(), "The first fresh Up takes the stone");
+        assertFalse(level.player.onLadder(), "and that press is spent: it does not also climb");
+        held.clear(); frames(2); held.add(up()); frames(5);
+        assertTrue(level.player.onLadder(), "The next fresh Up climbs");
+        assertNotNull(level.player.carriedObject(), "carrying the stone");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void atTheLadderTopAFreshDownDescendsKeepingTheObjectAndTheLadderWinsOverPutDown(boolean left) {
+        ladderScene(left); standAt(LADDER_X, LEDGE_Y);
+        level.objects.add(new com.jlogicsoftware.kimeria.entity.items.Carryable(level, 41,
+            com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE, bodyCentre() - 4, feet() - 8));
+        frames(1); tap(up());
+        assertNotNull(level.player.carriedObject());
+        assertFalse(level.player.onLadder());
+        held.add(down()); frames(3);
+        assertTrue(level.player.onLadder(), "Down at the top climbs down");
+        assertNotNull(level.player.carriedObject(), "and the object is kept, not put down");
+    }
+
+    @Test void aKeyTapShorterThanAFrameStillInteracts() {
+        scene(false); level.triggers.clear(); frames(5);
+        pressed.add(up()); frames(1); // the web delivers a press and release between two frames: only "just pressed" is seen
+        assertNotNull(level.player.carriedObject(), "a sub-frame Up tap picks up");
+        pressed.add(down()); frames(1);
+        assertNull(level.player.carriedObject(), "and a sub-frame Down tap puts down");
+    }
+
+    /** A finger resting on the 60 degree line must not flip between interaction and climb (each flip would be a fresh press). */
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aTouchStickRestingOnTheAngleLineDoesNotChatter(boolean left) {
+        scene(left); frames(10);
+        int[] around = {36, 33, 36, 33, 35, 32}; // dy above the 60 degree line (34.6 for dx 20) and just under it, above the 55 degree release (28.6)
+        finger(0, mirrored(100), 280 - 36); frames(1);
+        assertTrue(touch.interactUpHeld(), "past the line it interacts");
+        for (int dy : around) { finger(0, mirrored(100), 280 - dy); frames(1); assertTrue(touch.interactUpHeld(), "still held at dy " + dy); }
+        finger(0, mirrored(100), 280 - 27); frames(1);
+        assertFalse(touch.interactUpHeld(), "below the release angle it lets go");
+        for (int dy : around) { finger(0, mirrored(100), 280 - Math.min(dy, 34)); frames(1); assertFalse(touch.interactUpHeld(), "and does not re-enter until the line: dy " + dy); }
+        assertEquals(-1, level.player.verticalMovement(), "it keeps climbing throughout");
+    }
+
+    /** The pad twin of the touch test: a stick resting between the 0.3 release and the 0.4 press must not toggle the lever again and again. */
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aPadStickRestingBetweenThePressAndReleaseLevelsDoesNotChatter(boolean left) {
+        scene(left);
+        level.objects.removeAll(level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Carryable.class::isInstance).toList());
+        frames(10);
+        int verticalAxis = left ? mapping.axisRightY : mapping.axisLeftY;
+        axes[verticalAxis] = -0.45f; frames(1);
+        assertEquals(1, first.count, "past 0.4 the stick is one fresh Up");
+        for (int i = 0; i < 20; i++) { axes[verticalAxis] = i % 2 == 0 ? -0.35f : -0.45f; frames(1); }
+        assertEquals(1, first.count, "wobbling between 0.35 and 0.45 never presses again");
+        assertEquals(-1, level.player.verticalMovement(), "and still climbs");
+        axes[verticalAxis] = -0.25f; frames(2);
+        assertEquals(0, level.player.verticalMovement(), "below 0.3 it lets go");
+        for (int i = 0; i < 20; i++) { axes[verticalAxis] = i % 2 == 0 ? -0.35f : -0.25f; frames(1); }
+        assertEquals(1, first.count, "and stays released until it passes 0.4 again");
+        axes[verticalAxis] = -0.5f; frames(1);
+        assertEquals(2, first.count, "a real new push is a new press");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aFreshDownRightAfterSteppingOffALadderTopStillKeepsTheObject(boolean left) {
+        ladderScene(left); standAt(LADDER_X, LEDGE_Y);
+        level.objects.add(new com.jlogicsoftware.kimeria.entity.items.Carryable(level, 41,
+            com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE, bodyCentre() - 4, feet() - 8));
+        frames(1); tap(up());
+        assertNotNull(level.player.carriedObject());
+        held.add(down()); frames(3); held.clear(); frames(1);
+        assertTrue(level.player.onLadder());
+        held.add(up()); for (int i = 0; i < 400 && level.player.onLadder(); i++) frames(1);
+        held.clear();
+        assertFalse(level.player.onLadder(), "stepped off at the top");
+        tap(down()); // inside the short regrab pause: the ladder still wins over put-down
+        assertNotNull(level.player.carriedObject(), "the object is not put down at the ladder top");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void upAndDownTogetherNeverInteractNorClimb(boolean left) {
+        ladderScene(left); mechanismAlongLadder(); standAt(LADDER_X - 6, FLOOR_Y);
+        held.add(up()); held.add(down()); frames(20);
+        assertEquals(0, first.count); assertFalse(level.player.onLadder());
+        assertEquals(0, level.player.verticalMovement());
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
@@ -1047,8 +1190,8 @@ class DirectionalActionsTest {
         float height = feet();
         tap(action());
         assertNotEquals(Player.State.ATTACKING, level.player.getState(), "The sword needs footing");
-        held.add(up()); tap(action()); held.remove(up());
-        assertNull(level.player.carriedObject(), "Pick up and put down need footing too");
+        tap(up());
+        assertNull(level.player.carriedObject(), "Pick up needs footing too");
         assertTrue(level.player.onLadder());
         assertEquals(height, feet(), 1.5);
         held.clear(); frames(30);
@@ -1088,15 +1231,55 @@ class DirectionalActionsTest {
     }
 
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void touchStickClimbsAndAnActionTouchDoesNotClimbAndOperate(boolean left) {
-        ladderScene(left); mechanismAlongLadder(); standAt(LADDER_X - 6, FLOOR_Y);
+    void touchStickClimbsAndAnActionTouchNeitherOperatesNorStopsIt(boolean left) {
+        ladderScene(left); standAt(LADDER_X - 6, FLOOR_Y);
         finger(0, mirrored(80), 245); frames(2);
         assertTrue(level.player.onLadder(), "Dragging the stick up takes hold");
         frames(5);
+        float height = feet();
         finger(1, mirrored(520), 318); frames(1);
-        assertEquals(1, first.count);
-        float height = feet(); frames(20);
-        assertEquals(height, feet(), .001);
+        assertNotEquals(Player.State.ATTACKING, level.player.getState(), "The sword needs footing");
+        frames(20);
+        assertTrue(feet() < height - 5, "The Action touch does not stop the climb");
+        java.util.Arrays.fill(fingers, false); frames(1);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aLeaningTouchStickClimbsPastAMechanismAndASteepOneOperatesIt(boolean left) {
+        ladderScene(left); mechanismAlongLadder(); standAt(LADDER_X, FLOOR_Y);
+        finger(0, mirrored(92), 264); frames(2); // 12 px sideways (inside the dead zone), 16 up: about 53 degrees, climbs but is too shallow to interact
+        assertTrue(level.player.onLadder());
+        assertEquals(0, first.count);
+        java.util.Arrays.fill(fingers, false); frames(1);
+        ladderScene(left); mechanismAlongLadder(); standAt(LADDER_X, FLOOR_Y);
+        finger(0, mirrored(80), 245); frames(3); // straight up
+        assertEquals(1, first.count); assertFalse(level.player.onLadder(), "A steep push operates the lever and is spent");
+        java.util.Arrays.fill(fingers, false); frames(1);
+    }
+
+    /** D126: hand-operated objects (a Trigger, a Stone) may not stand within 32 px of a ladder; a thrown-only trigger may. */
+    @Test void aHandOperatedObjectNearALadderIsRejectedAtLoadButAThrowActivatedTriggerIsNot() {
+        var trigger = assertThrows(IllegalArgumentException.class, () -> new Level(assets, game, player(), "ladder-near-trigger", Rectangle::new));
+        assertTrue(trigger.getMessage().contains("Trigger") && trigger.getMessage().contains("D126"), trigger.getMessage());
+        var stone = assertThrows(IllegalArgumentException.class, () -> new Level(assets, game, player(), "ladder-near-stone", Rectangle::new));
+        assertTrue(stone.getMessage().contains("Stone") && stone.getMessage().contains("D126"), stone.getMessage());
+        assertDoesNotThrow(() -> new Level(assets, game, player(), "ladder-near-throw", Rectangle::new));
+        assertDoesNotThrow(() -> new Level(assets, game, player(), "ladder-far-trigger", Rectangle::new));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void hintsNameTheStickOfTheDeviceInUseForUpAndDown(boolean left) {
+        scene(left);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
+        level.triggers.clear();
+        standByEntranceStone();
+        int axis = left ? mapping.axisRightY : mapping.axisLeftY;
+        axes[axis] = 1; frames(1); // Down on the stick: nothing to put down, so only the device changes
+        assertNull(level.player.carriedObject());
+        assertTrue(level.player.contextHint().contains((left ? "Right stick" : "Left stick") + " up: Pick up"), level.player.contextHint());
+        axes[axis] = 0; frames(2);
+        finger(0, mirrored(80), 315); frames(1); // stick down on the touch pad
+        assertTrue(level.player.contextHint().contains("Stick up: Pick up"), level.player.contextHint());
         java.util.Arrays.fill(fingers, false); frames(1);
     }
 
@@ -1182,7 +1365,7 @@ class DirectionalActionsTest {
         assertEquals("Walk right to find the way out", level.player.zoneHint(), "Still shown at jump height");
         level.player.position.y += 120; frames(30);
         standAt(zone.bounds().x + zone.bounds().width + 64);
-        assertEquals("Use the lever to light the torch or put it out", level.player.zoneHint(), "The next zone speaks next");
+        assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HINT_LEVER_TORCH.t(game.language()), level.player.zoneHint(), "The next zone speaks next");
         level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); frames(2);
         assertEquals("A cracked platform falls soon after you land. Cross quickly", level.player.zoneHint(), "Hints belong to their room's zones, not the whole level: the traps room speaks its own");
         level.resetCurrentRoom(player()); level.reloadAt(new Vector2(inside, 272)); frames(2);

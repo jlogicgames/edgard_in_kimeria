@@ -47,6 +47,9 @@ public enum KeyBindings {
 
     public boolean upHeld() { return Gdx.input.isKeyPressed(up); }
     public boolean downHeld() { return Gdx.input.isKeyPressed(down); }
+    /** Like Action, a tap shorter than a frame (a web key event) still counts as a press. */
+    public boolean upJustPressed() { return Gdx.input.isKeyJustPressed(up); }
+    public boolean downJustPressed() { return Gdx.input.isKeyJustPressed(down); }
     public boolean actionHeld() { return Gdx.input.isKeyPressed(action); }
     public boolean shootHeld() { return Gdx.input.isKeyPressed(shoot); }
     public String actionName() { return Keys.toString(action); }

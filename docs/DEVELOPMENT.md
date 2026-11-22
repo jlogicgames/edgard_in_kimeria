@@ -167,7 +167,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Honey fungus and false honey fungus (#295, D63) — Tiled types `HoneyFungus` (harmless, 16 golden `KimeriaParticleSystem` spores, no hitbox) and `FalseHoneyFungus` (lethal lime spore cloud, 1 s, hitbox = drawn 24x24; first the `trap-spores` sprite, now `SporeCloud` particles, #296), one base class `FungusTrap` (idle, zone-triggered swell over the shared `TrapWarnings` duration, one burst, then spent; no re-arming); optional properties `zone`, `zoneLeft`, `zoneRight` (px, default 64); load-time placement rules in `Level.validateFungus` mirrored by `tools/check_tiled_links.py`; placed in forest-0 (x 150, 1804) and forest-2 canopy (x 1672)
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs with two authored +1 refills, capacity three, full-stock hints and a three-icon HUD; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
-- [x] Trigger → actionable wall removal and torch toggle via Up + Action
+- [x] Trigger → actionable wall removal and torch toggle via Up (D126; Up + Action when it shipped)
 - [x] Checkpoint → next level or ending; death in slow motion, the silver thread's pull under a death fade, then a room reset and respawn (no lives; D81)
 - [x] Torch and firefly ambience; fog only in menus; a flat per-level background colour (map property `background`, D92)
 - [x] Shockwave/ripple/bomb-explosion shaders (ported to GLSL, see Assets below)

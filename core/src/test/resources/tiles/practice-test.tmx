@@ -29,7 +29,7 @@
     <property name="dropDistance" type="float" value="32"/>
    </properties>
   </object>
-  <object id="124" name="first-ladder" type="Trigger" x="448" y="320" width="16" height="16"/>
+  <object id="124" name="first-ladder" type="Trigger" x="480" y="320" width="16" height="16"/>
   <object id="200" name="Boss" type="Boss" x="1824" y="304" width="32" height="32"/>
   <object id="201" name="Deadline" type="Deadline" x="-608" y="384" width="3200" height="16"/>
  </objectgroup>

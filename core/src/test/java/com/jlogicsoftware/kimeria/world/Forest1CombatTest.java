@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1CombatTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float ROOM_X = 2112, ROOM_END = 2880, START_X = 2208, FLOOR = 320, DECK = 208, TUNNEL_CEILING = 288;
-    private static final float LEVER_X = 2256, LADDER_X = 2288, LADDER_CENTRE = 2296, CHECKPOINT_X = 2800, REFILL_X = 2640, SLAB_END = 2704;
+    private static final float LEVER_X = 2240, LADDER_X = 2288, LADDER_CENTRE = 2296, CHECKPOINT_X = 2800, REFILL_X = 2640, SLAB_END = 2704;
     private static final float ROOF_LEFT = 2304, ROOF_RIGHT = 2560;
     /** The guard's art x (its body is x + 6 .. x + 26); it never moves (range 0). The puffball (16 x 16 at x 2375) casts a cloud x 2373-2393. */
     private static final float GUARD_X = 2394, PUFF_X = 2375, CLOUD_LEFT = 2373, CLOUD_RIGHT = 2393;
@@ -48,7 +48,7 @@ class Forest1CombatTest {
     private static final float BUDGET = 20f;
     /** Pinned measurements (D68): scripted hero, 60 frames per second. A route may differ from these by at most this much (6 frames). */
     private static final float PIN_MARGIN = 0.1f;
-    private static final float MELEE_S = 6.50f, SHOT_S = 5.82f, ROOF_S = 7.40f;
+    private static final float MELEE_S = 6.50f, SHOT_S = 5.82f, ROOF_S = 7.33f;
     private static final int IMPATIENT_OK = 30;
     private static final int RUNS = 216;
 
@@ -109,10 +109,9 @@ class Forest1CombatTest {
             && en.y < me.y + me.height && en.y + en.height > me.y;
     }
 
-    /** Up + Action, as the lesson rooms teach. */
+    /** A fresh Up, as the hint teaches (D126). */
     private int operate(Level level) {
-        held.clear(); held.add(Input.Keys.W); frame(level);
-        held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level);
+        held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
         held.clear(); frame(level);
         return 3;
     }
@@ -570,7 +569,8 @@ class Forest1CombatTest {
                 held.clear();
                 if ((key & 1) != 0) held.add(Input.Keys.D); else if ((key & 2) != 0) held.add(Input.Keys.A);
                 if ((key & 4) != 0 || i % 8 == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
-                if (key == 3 || key == 7) held.add(Input.Keys.W);          // Up against the ladder or a wall (a wall is no grip, D121)
+                // Up against the ladder or a wall (a wall is no grip, D121); not beside the lever, where a fresh Up pulls it (D126).
+                if ((key == 3 || key == 7) && !level.player.canInteract()) held.add(Input.Keys.W);
                 frame(level);
                 highest = Math.min(highest, feet(level));
                 assertFalse(level.player.onLadder(), "a raised ladder cannot be taken: " + level.player.position);

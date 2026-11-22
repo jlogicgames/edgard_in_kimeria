@@ -27,12 +27,11 @@ public interface GameContext {
     /** True when the Screen shake option is off: every camera shake is then zero. Inverted so a default of false keeps the shake. */
     boolean screenShakeDisabled();
 
-    /** True while a mechanism can be selected by Up + Action. */
+    /** True while a mechanism can be selected by Up (D126). */
     boolean interactAvailable();
 
     default com.jlogicsoftware.kimeria.localization.Msg actionLabel() { return com.jlogicsoftware.kimeria.localization.Msg.ATTACK; }
     default com.jlogicsoftware.kimeria.localization.Msg rangedLabel() { return com.jlogicsoftware.kimeria.localization.Msg.FIREBALL; }
-    default String actionPrompt() { return ""; }
     default String rangedPrompt() { return ""; }
 
     /** Debug aid (F2): ignores lethal damage so a level can be walked end to end. */

@@ -393,7 +393,7 @@
     <property name="offPos" type="float" value="3"/>
    </properties>
   </object>
-  <object id="63" name="Bridge" type="Trigger" x="2256" y="304" width="16" height="16"/>
+  <object id="63" name="Bridge" type="Trigger" x="2240" y="304" width="16" height="16"/>
   <object id="64" name="Bridge" type="Ladder" x="2288" y="96" width="16" height="112">
    <properties>
     <property name="dropDistance" type="float" value="112"/>

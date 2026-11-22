@@ -52,6 +52,10 @@ public class TouchControls {
     private static final float STICK_X = 80, STICK_Y = 280, STICK_RADIUS = 44, STICK_GRAB = 76;
     private static final float KNOB_SIZE = 32;
     private static final float STICK_DEADZONE = 0.3f;
+    /** Interaction needs the stick more than about 60 degrees above or below horizontal (tan 60 = 1.732). */
+    private static final float INTERACT_ANGLE_TAN = 1.732f;
+    /** Once past the line the stick stays an interaction until it falls below about 55 degrees, so a finger resting on the line cannot chatter. */
+    private static final float INTERACT_RELEASE_TAN = 1.428f;
 
     private static final float BUTTON_HIT_SCALE = 1.2f, SHOOT_BUTTON_SCALE = 0.85f;
     /** Light, near-opaque art (D55) so it reads on the dark bars and over the level background and ground; the pressed art is amber. */
@@ -124,6 +128,8 @@ public class TouchControls {
     private final Vector2 touch = new Vector2();
 
     private float horizontal, vertical;
+    /** Stick up/down past {@link #INTERACT_ANGLE_TAN}: the vertical that may also interact (D126). */
+    private float steepVertical;
     private boolean jumpHeld, shootHeld, actionHeld;
     private boolean prevShoot, prevAction, prevPause, pauseHeld, pauseEdge;
     private boolean shootEdge, actionEdge;
@@ -275,6 +281,8 @@ public class TouchControls {
         float axis = stick ? dx / STICK_RADIUS : 0f;
         horizontal = Math.abs(axis) > STICK_DEADZONE ? Math.signum(axis) : 0f;
         vertical = stick && Math.abs(dy / STICK_RADIUS) > STICK_DEADZONE ? Math.signum(dy) : 0;
+        float steepTan = steepVertical == vertical ? INTERACT_RELEASE_TAN : INTERACT_ANGLE_TAN;
+        steepVertical = vertical != 0 && Math.abs(dy) >= steepTan * Math.abs(dx) ? vertical : 0f;
         knobDx = stick ? dx : 0f;
         knobDy = stick ? dy : 0f;
         jumpHeld = jump;
@@ -354,6 +362,9 @@ public class TouchControls {
     }
 
     public boolean upHeld() { return vertical < 0; }
+    /** Up steeply enough to count as an interaction press (about 60 degrees); climbing uses {@link #upHeld()}. */
+    public boolean interactUpHeld() { return steepVertical < 0; }
+    public boolean interactDownHeld() { return steepVertical > 0; }
     public boolean isAvailable() { return available; }
     public boolean downHeld() { return vertical > 0; }
     public boolean actionHeld() { return actionHeld; }

@@ -7,7 +7,7 @@ import com.badlogic.gdx.controllers.Controllers;
 /**
  * Generic gamepad polling, matching the Rust version's README: left
  * stick/D-pad move, South (A) jump, West/East (X/B) Action, North (Y) shoot, Start pause.
- * Up + Action selects a pickup or mechanism; Down + Action places a held object.
+ * Up picks up or uses a mechanism; Down puts down (D126).
  * Up/Down/Left/Right or the stick navigate menus,
  * A confirms, B goes back. Uses {@link ControllerMapping}'s generic
  * Xbox-style button indices, which gdx-controllers resolves per-OS/per-pad,
@@ -23,6 +23,9 @@ import com.badlogic.gdx.controllers.Controllers;
  */
 public class GamepadInput {
     private static final float AXIS_DEADZONE = 0.4f;
+    /** A held stick direction lets go only below this, so a stick resting near the line never flips every frame (each flip would be a fresh press). */
+    private static final float AXIS_RELEASE = 0.3f;
+    private boolean stickUp, stickDown;
     private static final float AXIS_MENU_DEADZONE = 0.6f;
 
     private boolean prevConfirm, prevBack, prevPause, prevAction, prevShoot;
@@ -103,8 +106,10 @@ public class GamepadInput {
         actionHeld = action;
         shootHeld = shoot;
         float moveY = leftHanded && c != null ? safeAxis(c, m.axisRightY) : axisY;
-        gameplayUp = (!leftHanded && dpadUp) || moveY < -AXIS_DEADZONE;
-        gameplayDown = (!leftHanded && dpadDown) || moveY > AXIS_DEADZONE;
+        stickUp = moveY < (stickUp ? -AXIS_RELEASE : -AXIS_DEADZONE);
+        stickDown = moveY > (stickDown ? AXIS_RELEASE : AXIS_DEADZONE);
+        gameplayUp = (!leftHanded && dpadUp) || stickUp;
+        gameplayDown = (!leftHanded && dpadDown) || stickDown;
 
         boolean up = dpadUp || axisY < -AXIS_MENU_DEADZONE;
         boolean down = dpadDown || axisY > AXIS_MENU_DEADZONE;

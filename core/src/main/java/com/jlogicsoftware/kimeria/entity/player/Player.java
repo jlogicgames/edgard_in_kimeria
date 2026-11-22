@@ -151,7 +151,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final float LADDER_BIDIRECTIONAL_ENTRY_FRACTION = 1f / 3f;
     private record LadderEntry(Ladder ladder, boolean canClimbUp, boolean canClimbDown) { }
     /**
-     * The one target Up + Action would affect. One reused instance ({@link #interaction}), because {@code selectedInteraction()} runs
+     * The one target Up would affect. One reused instance ({@link #interaction}), because {@code selectedInteraction()} runs
      * every frame a target is selected (the fairy guide, D87): callers read it at once, none keeps it past the next call.
      */
     private static final class InteractionTarget {
@@ -173,7 +173,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private Ladder ladder;
     private float ladderRegrabTimer = 0f;
     /** Up/Down that joined an Action press belongs to that action until released: it cannot grab or climb a ladder. */
-    private boolean verticalSpentOnAction;
+    private boolean spentUp, spentDown;
 
     public float horizontalMovement = 0f;
     private final JumpBuffer jumpBuffer = new JumpBuffer();
@@ -418,14 +418,17 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     public boolean onLadder() { return ladder != null; }
 
-    /** -1 up, +1 down, 0 while Action or its spent chord owns the vertical input. */
-    private float ladderDirection() { return verticalSpentOnAction ? 0 : gameplayInput.verticalMovement(); }
+    /** -1 up, +1 down, 0 when neither is held or the held key was spent on an interaction (D126). */
+    private float ladderDirection() {
+        float v = gameplayInput.verticalMovement();
+        return v < 0 && spentUp || v > 0 && spentDown ? 0 : v;
+    }
 
     private void updateLadderCooldown(float dt) {
         ladderRegrabTimer = Math.max(0f, ladderRegrabTimer - dt);
-        // A direction held with Action is spent on that action; releasing Action must not then climb.
-        if (!gameplayInput.verticalHeld()) verticalSpentOnAction = false;
-        else if (gameplayInput.verticalMovement() == 0) verticalSpentOnAction = true;
+        // A press spent on an interaction does not climb: the key must be released and pressed again.
+        if (!gameplayInput.up()) spentUp = false;
+        if (!gameplayInput.down()) spentDown = false;
     }
 
     /** Which vertical directions can take hold at the player's current ladder entry point. */
@@ -450,9 +453,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return null;
     }
 
-    /** Held Up/Down takes hold, unless an Action chord still owns that direction. */
+    /** Held Up/Down takes hold, unless the press was spent on an interaction (D126). */
     private void tryGrabLadder() {
-        if (ladderRegrabTimer > 0 || verticalSpentOnAction || isAttacking || !canFight()) return;
+        if (ladderRegrabTimer > 0 || isAttacking || !canFight()) return;
         float vertical = ladderDirection();
         LadderEntry entry = ladderEntry();
         if (entry == null || vertical == 0 || (vertical < 0 && !entry.canClimbUp())
@@ -569,16 +572,20 @@ public class Player extends Actor<Player.State> implements CollideBody {
         jumpBuffer.update(Gdx.graphics.getDeltaTime(), keys.jumpHeld(), gamepad.jumpHeld(), touch.jumpHeld());
 
         gameplayInput.update(game.leftHanded(), gamepad, touch);
-        if (gameplayInput.actionPressed()) {
-            // Conflicting directions consume the press without attacking or interacting.
-            if (gameplayInput.up() && gameplayInput.down()) { /* wait for an unambiguous press */ }
-            else if (gameplayInput.down()) putDownCarried();
-            else if (gameplayInput.up()) {
-                InteractionTarget target = selectedInteraction();
-                if (target != null && target.carryable() != null) pickUp(target.carryable());
-                else if (target != null) level.activateTrigger(target.mechanism());
-            } else if (!isAttacking && onGround && ladder == null && !jumpBuffer.pending()) isAttacking = true;
+        // D126: Up and Down interact on a fresh press, so a press that did something is spent until the key is released.
+        if (gameplayInput.upPressed() && !gameplayInput.down() && ladder == null) {
+            InteractionTarget target = selectedInteraction();
+            if (target != null) {
+                if (target.carryable() != null) pickUp(target.carryable());
+                else level.activateTrigger(target.mechanism());
+                spentUp = true;
+            }
         }
+        // At a ladder top the ladder wins: Down then climbs down (with the object) instead of putting it down.
+        if (gameplayInput.downPressed() && !gameplayInput.up() && carried != null && !ladderTopEntryDown()) {
+            if (putDownCarried()) spentDown = true;
+        }
+        if (gameplayInput.actionPressed() && !isAttacking && onGround && ladder == null && !jumpBuffer.pending()) isAttacking = true;
         if (gameplayInput.rangedPressed()) shoot();
     }
 
@@ -793,7 +800,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return best;
     }
 
-    /** Picks the one target Up + Action will affect, using distance then Tiled ID across both types. */
+    /** Picks the one target Up will affect, using distance then Tiled ID across both types. */
     private InteractionTarget selectedInteraction() {
         if (level == null || !canFight()) return null;
         Trigger mechanism = selectedMechanism();
@@ -819,12 +826,19 @@ public class Player extends Actor<Player.State> implements CollideBody {
             body.y + body.height - Carryable.BODY_SIZE, Carryable.BODY_SIZE, Carryable.BODY_SIZE);
     }
 
-    private void putDownCarried() {
-        if (!canFight() || carried == null || isAttacking || ladder != null) return;
+    private boolean putDownCarried() {
+        if (!canFight() || carried == null || isAttacking || ladder != null) return false;
         Rectangle place = placementBounds();
-        if (level.blocksObject(place, true)) return;
+        if (level.blocksObject(place, true)) return false;
         carried.release(place.x, place.y, false, facingRight);
         carried = null;
+        return true;
+    }
+
+    /** True when the hero stands at a ladder's top and Down would climb down it. */
+    private boolean ladderTopEntryDown() {
+        LadderEntry entry = ladderEntry();
+        return entry != null && entry.canClimbDown(); // also inside the regrab pause after a step-off: the ladder still wins
     }
 
     private void pickUp(Carryable target) {
@@ -850,16 +864,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
         }
     }
 
-    public Msg actionLabel() {
-        if (gameplayInput.up() && gameplayInput.down()) return Msg.DIRECTION_CONFLICT;
-        if (gameplayInput.down()) return carried == null ? Msg.NO_ACTION :
-            level.blocksObject(placementBounds(), true) ? Msg.PLACE_BLOCKED : Msg.PUT_DOWN;
-        if (!gameplayInput.up()) return Msg.ATTACK;
-        InteractionTarget target = selectedInteraction();
-        if (target == null) return Msg.NO_ACTION;
-        return target.carryable() != null ? Msg.PICK_UP : mechanismAction(target.mechanism());
-    }
-
     private Msg mechanismAction(Trigger trigger) {
         return level != null && level.mechanismFeedbackTarget(trigger) instanceof Lever lever
             ? lever.isUp() ? Msg.TURN_OFF : Msg.TURN_ON : Msg.INTERACT;
@@ -871,25 +875,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
     public Msg rangedLabel() { return carried != null ? Msg.THROW : ammunition() > 0 ? Msg.FIREBALL : Msg.NO_AMMO; }
 
-    public String actionPrompt() {
-        String target = "";
-        Msg action = actionLabel();
-        InteractionTarget selection = gameplayInput.up() && !gameplayInput.down() ? selectedInteraction() : null;
-        if (action == Msg.PICK_UP && selection != null && selection.carryable() != null)
-            target = " - " + selection.carryable().label().t(game.language());
-        if (action == Msg.PUT_DOWN || action == Msg.PLACE_BLOCKED) target = " - " + carried.label().t(game.language());
-        if ((action == Msg.INTERACT || action == Msg.TURN_ON || action == Msg.TURN_OFF)
-            && selection != null && selection.mechanism() != null)
-            target = " - " + mechanismLabel(selection.mechanism()).t(game.language());
-        return actionBinding(false) + ": " + action.t(game.language()) + target;
-    }
     public String rangedPrompt() {
         return actionBinding(true) + ": " + rangedLabel().t(game.language());
     }
-    private String actionBinding(boolean ranged) {
-        return actionBinding(ranged, gameplayInput.up(), gameplayInput.down());
-    }
-
     /**
      * The contextual (interaction) label: the fireball-stock status message, or inside a map {@code controls}
      * zone the pickup/lever/ladder instructions (also while carrying). Immediate, and independent of the
@@ -897,8 +885,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
      */
     public String contextHint() {
         if (fullFireballRefill() != null) return Msg.FIREBALL_STOCK_FULL.t(game.language());
-        if (level == null || !canFight() || isAttacking
-            || (gameplayInput.up() && gameplayInput.down())) return "";
+        if (level == null || !canFight() || isAttacking) return "";
         return controlHint();
     }
 
@@ -917,7 +904,6 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private String controlHint() {
         if (level == null || !level.controlHintsActive()) return "";
         String interaction = interactionHint();
-        if (gameplayInput.actionHeld() && gameplayInput.verticalHeld()) return interaction;
         return interaction.isEmpty() ? ladderHint() : interaction;
     }
 
@@ -937,23 +923,21 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (carried != null) {
             Trigger mechanism = selectedMechanism();
             if (!carryHintVisible) return mechanism == null ? "" : mechanismHint(mechanism);
-            String place = actionBinding(false, false, true) + ": " + Msg.PUT_DOWN.t(game.language());
+            String place = directionBinding(false, true) + ": " + Msg.PUT_DOWN.t(game.language());
             if (level.blocksObject(placementBounds(), true)) place += " - " + Msg.PLACE_BLOCKED.t(game.language());
             String carrying = place + "\n" + rangedPrompt();
             return mechanism == null ? carrying : mechanismHint(mechanism) + "\n" + carrying;
         }
-        if (gameplayInput.down()) return "";
         InteractionTarget target = selectedInteraction();
         if (target == null) return "";
-        if (gameplayInput.up()) return actionPrompt();
         if (target.carryable() != null)
-            return actionBinding(false, true, false) + ": " + Msg.PICK_UP.t(game.language())
+            return directionBinding(true, false) + ": " + Msg.PICK_UP.t(game.language())
                 + " - " + target.carryable().label().t(game.language());
         return mechanismHint(target.mechanism());
     }
 
     private String mechanismHint(Trigger mechanism) {
-        return actionBinding(false, true, false) + ": " + mechanismAction(mechanism).t(game.language())
+        return directionBinding(true, false) + ": " + mechanismAction(mechanism).t(game.language())
             + " - " + mechanismLabel(mechanism).t(game.language());
     }
 
@@ -991,20 +975,18 @@ public class Player extends Actor<Player.State> implements CollideBody {
         };
     }
 
-    private String actionBinding(boolean ranged, boolean up, boolean down) {
+    private String actionBinding(boolean ranged) {
         var keys = KeyBindings.of(game.leftHanded());
         var lang = game.language();
-        String direction = !ranged && (up || down) ? directionBinding(up, down) : "";
-        String button = switch (gameplayInput.device()) {
+        return switch (gameplayInput.device()) {
             case KEYBOARD -> ranged ? keys.rangedName() : keys.actionName();
             case GAMEPAD -> game.leftHanded() ? (ranged ? Msg.DPAD_UP : Msg.DPAD_ACTION).t(lang) : ranged ? "Y" : "X/B";
             case TOUCH -> (ranged ? Msg.SHOOT : Msg.ACTION).t(lang);
         };
-        return direction.isEmpty() ? button : direction + " + " + button;
     }
 
     public Entity interactionFeedbackTarget() {
-        if (!canFight() || !gameplayInput.up() || gameplayInput.down()) return null;
+        if (!canFight() || !gameplayInput.up()) return null;
         return interactionFeedbackTarget(selectedInteraction());
     }
 

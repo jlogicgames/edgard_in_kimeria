@@ -1217,13 +1217,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
-    public Msg actionLabel() { return player == null ? Msg.ATTACK : player.actionLabel(); }
-
-    @Override
     public Msg rangedLabel() { return player == null || level == null ? Msg.FIREBALL : player.rangedLabel(); }
-
-    @Override
-    public String actionPrompt() { return player == null || level == null ? "" : player.actionPrompt(); }
 
     @Override
     public String rangedPrompt() { return player == null || level == null ? "" : player.rangedPrompt(); }

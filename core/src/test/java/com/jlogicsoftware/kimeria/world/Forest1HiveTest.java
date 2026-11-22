@@ -212,8 +212,8 @@ class Forest1HiveTest {
             level.player.velocity().setZero();
             level.player.facingRight = true;
             settle(level, 10);
-            held.clear(); held.add(Input.Keys.W); frame(level);
-            held.add(Input.Keys.K); pressed.add(Input.Keys.K); frame(level); held.clear(); frame(level);
+            held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
+            held.clear(); frame(level);
             assertSame(stone, level.player.carriedObject(), "picked up the stone");
             int f = 0;
             while (body(level).x + body(level).width < from && f++ < 600) { held.clear(); held.add(Input.Keys.D); frame(level); }

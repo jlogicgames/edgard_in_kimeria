@@ -25,12 +25,14 @@ release acceptance checks are deferred until those mechanics are added and colle
 ## Controls
 
 Three action buttons are **Jump**, **Action** and **Ranged**. Plain Action always
-selects the grounded sword, including while carrying. **Up + Action** picks up the
+selects the grounded sword, including while carrying. **Up** (a fresh press, no
+Action needed, [D126](DECISIONS.md#d126-up-and-down-interact-no-two-button-chords-548-2026-11-22)) picks up the
 nearest eligible stone/portable torch or activates the nearest eligible mechanism;
 the smaller Tiled object ID breaks equal-distance ties across both types. While
-carrying, Up + Action remains available for mechanisms. **Down + Action** puts down
-the held object and does nothing with an empty hand. Conflicting Up+Down consumes
-Action without doing anything. Holding Action never repeats an interaction. Ranged
+carrying, Up remains available for mechanisms. **Down** (a fresh press) puts down
+the held object and does nothing with an empty hand. Up and Down still climb ladders
+on hold, and a press spent on an interaction does not also climb. On the touch stick
+a vertical counts as an interaction only past about 60 degrees. Ranged
 throws the held object without spending ammunition; with an empty hand it spends one
 fireball, if available.
 
@@ -54,7 +56,7 @@ with Action never climbs ([D28](DECISIONS.md#d28-vertical-ladders)).
 | Touch | Two-axis stick left, three buttons right | Stick right, buttons left |
 
 Removed (2026-11-20, [D111](DECISIONS.md#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513)): there is no standing look. Holding Up or Down while standing still does
-nothing by itself; Up and Down keep every other use (ladders, Up/Down + Action pick up and put down, the touch stick, menus). The
+nothing by itself; Up and Down keep every other use (ladders, Up picks up and uses, Down puts down, the touch stick, menus). The
 camera follows the hero and the room clamp only.
 
 **Esc/Start** pauses. Menus: arrows/Tab navigate, Enter/Space/A confirm, Esc/B back;
@@ -66,7 +68,7 @@ controls. The entire first Forest room is the teaching room: contextual pickup,
 placement, throw and mechanism labels are available at every position/height,
 including retries and collection returns. Later rooms/levels show no such teaching
 labels. This replaces the earlier 320×144 rectangle, one-time and 50 px rules.
-While holding a stone or torch near a usable lever, show its Up + Action instruction
+While holding a stone or torch near a usable lever, show its Up instruction
 together with any active Put down/Throw reminder; carrying must never hide the mechanism lesson.
 This combined label stays near the lever, with Turn on/Turn off reflecting its state.
 Each new pickup arms a fixed-position Put down/Throw reminder. It fades out when
