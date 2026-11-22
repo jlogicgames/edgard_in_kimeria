@@ -55,6 +55,8 @@ class RoomTest {
      * (ids 116, 117, 119, same positions) in a first room, then a hall and a boss room so the healer return works. The
      * shipped map dropped them in #376.
      */
+    /** Test resource {@code tiles/bomb-rooms-test.tmx}: the Bomb (id 54) and a coin in a first room, then a hall and a boss room; the Bomb left the forest for the Fortress (D128). */
+    private Level bombRooms() { map("bomb-rooms-test"); return new Level(assets, game, player(), "bomb-rooms-test", Rectangle::new); }
     private Level practice() { map("practice-test"); return new Level(assets, game, player(), "practice-test", Rectangle::new); }
 
     private com.jlogicsoftware.kimeria.entity.items.FireballRefill refill(Level level) {
@@ -175,7 +177,7 @@ class RoomTest {
         assertThrows(IllegalArgumentException.class, () -> new RoomLayout(overlapping));
     }
     @Test void deathRestoresActiveObjectsAndDiscardsUnkeptPickupsAndEffects() {
-        Level level = forest();
+        Level level = bombRooms();
         Collectable coin = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).findFirst().orElseThrow();
         coin.collideWithPlayer();
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
@@ -193,7 +195,7 @@ class RoomTest {
         assertEquals(new Vector2(64, 272), level.player.position);
     }
     @Test void bombDamagesThePlayerOnlyAtDetonationAndRetryDiscardsItsPendingEffect() {
-        Level level = forest();
+        Level level = bombRooms();
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         Rectangle playerBounds = level.player.hitboxBounds();
         level.player.position.add(bomb.centerX() - playerBounds.x, bomb.centerY() - playerBounds.y);
@@ -655,9 +657,7 @@ class RoomTest {
         var surviving = enemies.get(1);
         surviving.position.x += 8;
         float survivorX = surviving.getX();
-        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
-        bomb.collideWithPlayer(); bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 1.01f);
-        collect(level, ItemType.COIN); // Deliberately miss Bat.
+        collect(level, ItemType.COIN); // Deliberately miss Bat. (The forest no longer holds a Bomb, D128: its secured state is tested on bomb-rooms-test.)
         level.enterNextRoom(player()); // forest-walls: the Bat on the second wall, missed on purpose (#417).
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
         level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
@@ -675,11 +675,9 @@ class RoomTest {
                 assertTrue(level.objects.contains(surviving));
                 assertEquals(survivorX, surviving.getX());
             }
-            assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
             assertFalse(level.objects.stream().anyMatch(o -> o instanceof Collectable c && c.type() == ItemType.COIN));
             level.resetCurrentRoom(player()); // Old coins and kills are secured; nothing here is provisional.
             assertEquals(2, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.enemy.Enemy.class::isInstance).count());
-            assertFalse(level.objects.stream().anyMatch(Bomb.class::isInstance));
             level.enterNextRoom(player()); // forest-walls holds the Bat (#417)
             collect(level, ItemType.BAT);
             assertEquals(1, artifacts.items().size());
@@ -745,11 +743,27 @@ class RoomTest {
         assertFalse(restarted.beginPreBossHealerMeeting(), "A fresh Level starts a new encounter");
     }
 
+    /** The spent-trap half of the collection trips the forest no longer has (D128: its Bomb became a leg-hold, which keeps no state): a detonated Bomb stays spent on every return. */
+    @Test void aDetonatedBombStaysSpentAcrossCollectionTrips() {
+        Level level = bombRooms();
+        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        bomb.collideWithPlayer(); bomb.update(TrapWarnings.DEFAULT_WARNING_SECONDS * 1.01f);
+        assertTrue(bomb.isRemoved());
+        level.enterNextRoom(player()); level.prepareHealer();
+        for (int trip = 0; trip < 3; trip++) {
+            level.returnForCollection(player());
+            assertTrue(level.objects.stream().noneMatch(o -> o instanceof Bomb && !o.isRemoved()), "trip " + trip + ": a spent Bomb is not rebuilt");
+            level.resetCurrentRoom(player());
+            assertTrue(level.objects.stream().noneMatch(o -> o instanceof Bomb && !o.isRemoved()), "trip " + trip + ": nor by a retry");
+            level.enterNextRoom(player()); level.prepareHealer();
+        }
+    }
+
     @Test void warnedTrapResumesItsSavedCountdownOnReturnAndRestoresItAfterRoomDeath() {
-        Level level = forest();
+        Level level = bombRooms();
         Bomb trap = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         trap.collideWithPlayer(); trap.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .4f);
-        level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
+        level.enterNextRoom(player()); level.prepareHealer(); level.returnForCollection(player());
         Bomb revisited = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         assertEquals(trap.snapshot(), revisited.snapshot());
         revisited.update(TrapWarnings.DEFAULT_WARNING_SECONDS * .2f);

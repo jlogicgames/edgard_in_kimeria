@@ -820,3 +820,54 @@ class EmberFissureLinksTest(unittest.TestCase):
     def test_the_java_fixture_passes_the_mirror(self):
         fixture = Path(__file__).resolve().parents[1] / 'core/src/test/resources/tiles/fissure-test.tmx'
         self.assertEqual([], check(fixture.read_text(encoding='utf-8')))
+
+
+class LegHoldLinksTest(unittest.TestCase):
+    """#561 (D128): mirror of LegHold.fromMap / validate / problem and Level.legHoldFor."""
+    FLOOR = HangingHiveLinksTest.FLOOR
+    ROOM = HoneyFungusLinksTest.ROOM
+
+    @staticmethod
+    def hold(x=288, y=304, props='', w=32, h=16):
+        body = f'<properties>{props}</properties>' if props else ''
+        return f'<object id="3" type="LegHold" x="{x}" y="{y}" width="{w}" height="{h}">{body}</object>'
+
+    def run_map(self, trap, spawn='', collisions=FLOOR, rooms=ROOM):
+        return check(tmx(trap + spawn, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_a_leghold_on_open_floor_passes(self):
+        self.assertEqual([], self.run_map(self.hold()))
+
+    def test_properties_size_and_ranges(self):
+        self.assertIn("unknown property 'zon'", self.run_map(self.hold(props='<property name="zon" value="24"/>'))[0])
+        self.assertIn('not a number', self.run_map(self.hold(props='<property name="zone" value="2,4"/>'))[0])
+        self.assertIn('must be 32x16', self.run_map(self.hold(w=16))[0])
+        self.assertIn('zone 8.0', self.run_map(self.hold(props='<property name="zone" value="8"/>'))[0])
+        self.assertIn('window 0.5', self.run_map(self.hold(props='<property name="window" value="0.5"/>'))[0])
+        self.assertEqual([], self.run_map(self.hold(props='<property name="zone" value="16"/><property name="window" value="3"/>')))
+
+    def test_floor_headroom_and_platforms(self):
+        self.assertIn('needs a floor', self.run_map(self.hold(y=290))[0])
+        half = '<object id="9" x="0" y="320" width="300" height="48"/>'
+        self.assertIn('needs a floor', self.run_map(self.hold(), collisions=half)[0])
+        platform = '<object id="9" type="Platform" x="256" y="320" width="96" height="16"/>'
+        self.assertEqual([], self.run_map(self.hold(), collisions=platform))  # a one-way platform is a floor
+        roof = self.FLOOR + '<object id="12" x="280" y="250" width="64" height="16"/>'
+        self.assertIn('free height', self.run_map(self.hold(), collisions=roof)[0])
+        overhead = self.FLOOR + '<object id="12" type="Platform" x="280" y="240" width="64" height="16"/>'
+        self.assertEqual([], self.run_map(self.hold(), collisions=overhead))  # forest-entry's ledge is overhead
+
+    def test_never_over_a_standing_place(self):
+        self.assertIn('covers the room entrance', self.run_map(self.hold(x=40))[0])
+        self.assertIn('covers the room exit', self.run_map(self.hold(x=590))[0])
+
+    def test_the_lance_root_has_the_fissures_rules(self):
+        root = '<object id="3" type="LanceRoot" x="288" y="316" width="16" height="12"/>'
+        self.assertEqual([], self.run_map(root))
+        bad = '<object id="3" type="LanceRoot" x="288" y="316" width="24" height="12"/>'
+        self.assertIn('LanceRoot', self.run_map(bad)[0])
+
+    def test_the_java_fixtures_pass_the_mirror(self):
+        for name in ('leghold-test.tmx', 'lance-test.tmx'):
+            fixture = Path(__file__).resolve().parents[1] / 'core/src/test/resources/tiles' / name
+            self.assertEqual([], check(fixture.read_text(encoding='utf-8')), name)

@@ -75,6 +75,11 @@ FOREST_TRAP_SHEETS = {
     # under a tip (top1/top2 use the upper 8 rows).
     'fissure': ((16, 12), ('rest1', 'rest2', 'warn1', 'warn2', 'vent', 'spent')),
     'ember-jet': ((8, 16), ('jet1', 'jet2', 'top1', 'top2')),
+    # #561 (D128): the leg-hold trap, open at rest; the warning rattle, the snap, the shut jaws and the jaws lifting again.
+    'leghold': ((32, 16), ('open', 'rattle1', 'rattle2', 'snap', 'shut', 'rearm')),
+    # #562 (D129): the lance root (a burl on the floor line) and its shaft, a tile repeated up the column under a tip (top1/top2 use the upper 8 rows).
+    'lance-root': ((16, 12), ('rest1', 'rest2', 'warn1', 'warn2', 'vent', 'spent')),
+    'lance-shaft': ((8, 16), ('shaft1', 'shaft2', 'top1', 'top2')),
 }
 FOREST_TRAP_FRAME_COUNTS = {name: len(frames) for name, (_, frames) in FOREST_TRAP_SHEETS.items()}
 # Runtime exports are `assets/images/objects/trap-<name>.png`, one horizontal strip each.

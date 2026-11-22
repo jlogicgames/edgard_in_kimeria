@@ -199,8 +199,11 @@ def check_rhythm_traps(root, spawn):
         if kind(o) == 'HangingHive':
             errors.extend(f"HangingHive {describe(o)}: {e}" for e in hive_problems(root, spawn, o))
             continue
-        if kind(o) == 'EmberFissure':
-            errors.extend(f"EmberFissure {describe(o)}: {e}" for e in fissure_problems(root, spawn, o))
+        if kind(o) in ('EmberFissure', 'LanceRoot'):  # D129: the lance root has the fissure's clock, column and rules
+            errors.extend(f"{kind(o)} {describe(o)}: {e}" for e in fissure_problems(root, spawn, o))
+            continue
+        if kind(o) == 'LegHold':
+            errors.extend(f"LegHold {describe(o)}: {e}" for e in leghold_problems(root, spawn, o))
             continue
         if kind(o) == 'Puffball':
             period, cloud = rhythm_number(o, 'period', 4.0, errors), rhythm_number(o, 'cloud', 1.0, errors)
@@ -329,6 +332,48 @@ def fissure_problems(root, spawn, o):
                                  and room[1] <= column[1] and floor <= room[1] + room[3]):
         return ["its danger area leaves the room"]
     return [f"its danger area covers the room {name}" for name, area in hive_standing(root, spawn, o) if overlaps(column, area)]
+
+
+def leghold_problems(root, spawn, o):
+    """The leg-hold's load checks (LegHold.fromMap / validate / problem, Level.legHoldFor): properties, size, zone and window
+    ranges, the floor under its width, the headroom, and its snapped arch inside the room and clear of the entrance, exit and checkpoints."""
+    errors = []
+    unknown = sorted(k for k in props_of(o) if k not in LEGHOLD_PROPERTIES)
+    if unknown:
+        return [f"unknown property '{unknown[0]}' (a leg-hold reads {sorted(LEGHOLD_PROPERTIES)})"]
+    zone, window = rhythm_number(o, 'zone', LEGHOLD_DEFAULT_ZONE, errors), rhythm_number(o, 'window', LEGHOLD_DEFAULT_WINDOW, errors)
+    if errors:
+        return [e.split(': ', 1)[1] for e in errors]
+    x, y, w, h = box(o)
+    if abs(w - LEGHOLD_SIZE[0]) > LEGHOLD_TOLERANCE or abs(h - LEGHOLD_SIZE[1]) > LEGHOLD_TOLERANCE:
+        return [f"must be {int(LEGHOLD_SIZE[0])}x{int(LEGHOLD_SIZE[1])} (the sprite's frame)"]
+    if not LEGHOLD_ZONE_RANGE[0] <= zone <= LEGHOLD_ZONE_RANGE[1]:
+        return [f"zone {zone} is outside {int(LEGHOLD_ZONE_RANGE[0])}-{int(LEGHOLD_ZONE_RANGE[1])} px"]
+    if not LEGHOLD_WINDOW_RANGE[0] <= window <= LEGHOLD_WINDOW_RANGE[1]:
+        return [f"window {window} is outside {LEGHOLD_WINDOW_RANGE[0]}-{LEGHOLD_WINDOW_RANGE[1]} s"]
+    room = thorn_room(root, o)
+    floor = y + LEGHOLD_SIZE[1]
+    collisions = [c for c in layers(root).get('Collisions', [])
+                  if room is None or not (box(c)[0] + box(c)[2] <= room[0] or box(c)[0] >= room[0] + room[2])]
+    floors = [box(c) for c in collisions if kind(c) != 'QuickSand']
+    covered, progress = x, True
+    while covered < x + LEGHOLD_SIZE[0] - LEGHOLD_TOLERANCE and progress:
+        progress = False
+        for sx, sy, sw, sh in floors:
+            if abs(sy - floor) <= LEGHOLD_TOLERANCE and sx <= covered + LEGHOLD_TOLERANCE and sx + sw > covered + LEGHOLD_TOLERANCE:
+                covered, progress = sx + sw, True
+    if covered < x + LEGHOLD_SIZE[0] - LEGHOLD_TOLERANCE:
+        return [f"needs a floor whose top is its bottom edge under all of its {int(LEGHOLD_SIZE[0])} px"]
+    for c in collisions:
+        cx, cy, cw, ch = box(c)
+        if kind(c) not in ('Platform', 'QuickSand') and cx < x + LEGHOLD_SIZE[0] and cx + cw > x \
+                and cy < floor - LEGHOLD_TOLERANCE and cy + ch > floor - LEGHOLD_HEADROOM:
+            return [f"needs {int(LEGHOLD_HEADROOM)} px of free height over its jaws (a solid block stands in it)"]
+    arch = (x + LEGHOLD_INSET, floor - LEGHOLD_SNAP_HEIGHT, LEGHOLD_OPEN_WIDTH, LEGHOLD_SNAP_HEIGHT)
+    if room is not None and not (room[0] <= arch[0] and arch[0] + arch[2] <= room[0] + room[2]
+                                 and room[1] <= arch[1] and floor <= room[1] + room[3]):
+        return ["its danger area leaves the room"]
+    return [f"its danger area covers the room {name}" for name, area in hive_standing(root, spawn, o) if overlaps(arch, area)]
 
 
 def hive_standing(root, spawn, o):
@@ -559,6 +604,16 @@ FISSURE_HEIGHT_STEP, FISSURE_MIN_COLUMN = java_constant(FISSURE_JAVA, 'HEIGHT_ST
 FISSURE_MIN_CALM, FISSURE_TOLERANCE = java_constant(FISSURE_JAVA, 'MIN_CALM_SECONDS'), java_constant(FISSURE_JAVA, 'SIZE_TOLERANCE')
 FISSURE_PROPERTIES = tuple(re.findall(r'"(\w+)"', re.search(r'PROPERTIES = Set\.of\(([^)]*)\)',
                                                              FISSURE_JAVA.read_text(encoding='utf-8')).group(1)))  # EmberFissure.PROPERTIES
+# Leg-hold trap (#561, D128): mirror of LegHold.fromMap / validate / problem and Level.legHoldFor, its numbers read from LegHold.java.
+LEGHOLD_JAVA = OBJECTS_JAVA / 'LegHold.java'
+LEGHOLD_SIZE = (java_constant(LEGHOLD_JAVA, 'WIDTH'), java_constant(LEGHOLD_JAVA, 'HEIGHT'))
+LEGHOLD_INSET, LEGHOLD_OPEN_WIDTH = java_constant(LEGHOLD_JAVA, 'OPEN_INSET'), java_constant(LEGHOLD_JAVA, 'OPEN_WIDTH')
+LEGHOLD_SNAP_HEIGHT, LEGHOLD_HEADROOM = java_constant(LEGHOLD_JAVA, 'SNAP_HEIGHT'), java_constant(LEGHOLD_JAVA, 'HEADROOM')
+LEGHOLD_DEFAULT_ZONE, LEGHOLD_DEFAULT_WINDOW = java_constant(LEGHOLD_JAVA, 'DEFAULT_ZONE'), java_constant(LEGHOLD_JAVA, 'DEFAULT_WINDOW_SECONDS')
+LEGHOLD_ZONE_RANGE = (java_constant(LEGHOLD_JAVA, 'MIN_ZONE'), java_constant(LEGHOLD_JAVA, 'MAX_ZONE'))
+LEGHOLD_WINDOW_RANGE = (java_constant(LEGHOLD_JAVA, 'MIN_WINDOW_SECONDS'), java_constant(LEGHOLD_JAVA, 'MAX_WINDOW_SECONDS'))
+LEGHOLD_TOLERANCE = java_constant(LEGHOLD_JAVA, 'SIZE_TOLERANCE')
+LEGHOLD_PROPERTIES = tuple(re.findall(r'"(\w+)"', re.search(r'PROPERTIES = Set\.of\(([^)]*)\)', LEGHOLD_JAVA.read_text(encoding='utf-8')).group(1)))
 BRAMBLE_HEIGHT = java_constant(BRAMBLE_JAVA, 'HEIGHT')
 BRAMBLE_REACH = (java_constant(BRAMBLE_JAVA, 'MIN_REACH'), java_constant(BRAMBLE_JAVA, 'MAX_REACH'))
 BRAMBLE_BAND_TOP = java_constant(BRAMBLE_JAVA, 'BAND_TOP')

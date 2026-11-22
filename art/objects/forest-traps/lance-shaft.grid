@@ -1,0 +1,79 @@
+# Lance root shaft (#562, D129), native 8x16: shaft1, shaft2 (the column tile: a pale bleached wood edge round crimson heartwood,
+# dark bark rings; swapped every 0.05 s so the rings climb), top1, top2 (the 8 px bone tip in the upper 8 rows; the lower 8 stay empty).
+# The outline is pale, not ink: ink vanishes on the night (D92), the pale wood and bone carry the contrast (D76).
+size 8 16
+color k 0b0814
+color b 4a2e1c
+color c 86101f
+color C 4a0c22
+color r c87896
+color t efe6c4
+color T b8ad9c
+frame shaft1
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.TbbbbT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.TbbbbT.
+.tcrcCT.
+.tcrcCT.
+frame shaft2
+.tcrcCT.
+.TbbbbT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.TbbbbT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+.tcrcCT.
+frame top1
+...tT...
+..ttTT..
+..ttTT..
+.tttTTT.
+.tttTTT.
+.ttrcTT.
+.tcrccT.
+.tcrcCT.
+........
+........
+........
+........
+........
+........
+........
+........
+frame top2
+....tT..
+...ttTT.
+..ttTT..
+.tttTTT.
+.ttttTT.
+.ttrcTT.
+.tcrccT.
+.tcrcCT.
+........
+........
+........
+........
+........
+........
+........
+........

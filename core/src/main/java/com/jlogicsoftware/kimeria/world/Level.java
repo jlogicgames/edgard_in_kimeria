@@ -67,6 +67,8 @@ import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
+import com.jlogicsoftware.kimeria.entity.objects.LanceRoot;
+import com.jlogicsoftware.kimeria.entity.objects.LegHold;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
@@ -331,6 +333,10 @@ public class Level implements WorldObject {
     private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
     /** The ember fissure's sounds (#366): the warning rumble and the jet's roar. */
     static final String FISSURE_RUMBLE_SOUND = "fissure_rumble", EMBER_JET_SOUND = "ember_jet";
+    /** The lance root's sounds (#562, D129): the warning creak and the thrust. */
+    static final String ROOT_CREAK_SOUND = "root_creak", ROOT_THRUST_SOUND = "root_thrust";
+    /** The leg-hold's sounds (#561, D128): the warning rattle and the snap. */
+    static final String LEGHOLD_RATTLE_SOUND = "leghold_rattle", LEGHOLD_SNAP_SOUND = "leghold_snap";
     /** The fireball going out on terrain or at the end of its life (#397); the burn-out plays it quieter. */
     static final String FIREBALL_FIZZLE_SOUND = "fireball_fizzle";
     private static final float BURN_OUT_VOLUME = .6f;
@@ -364,7 +370,7 @@ public class Level implements WorldObject {
 
     /** Objects whose column or cloud must stay clear of falling leaves (#473): the traps. Package-private: {@code LeafRoomsTest} checks it covers every trap of the catalogue (docs/TRAPS.md). */
     static final java.util.Set<String> LEAF_AVOIDED = java.util.Set.of("FallingBranch", "FallingStone", "Deadfall",
-        "HangingHive", "ThornVine", "Bramble", "EmberFissure", "ThornRoot", "ThornTuft", "ExplosiveStump", "ExplosiveRoot",
+        "HangingHive", "ThornVine", "Bramble", "EmberFissure", "LanceRoot", "LegHold", "ThornRoot", "ThornTuft", "ExplosiveStump", "ExplosiveRoot",
         "FalseHoneyFungus", "HoneyFungus", "FallingPlatform", "Puffball", "Bomb");
     private static final float LEAF_AVOID_MARGIN_PX = 24;
     private void startLeaves() {
@@ -688,7 +694,8 @@ public class Level implements WorldObject {
             if ("Deadfall".equals(o.type)) validateDeadfall(o, owner); // D88: every room, at load.
             if ("Bramble".equals(o.type)) validateBramble(o, owner); // D89: every room, at load.
             if ("HangingHive".equals(o.type)) hiveFor(o, owner); // D90: every room, at load.
-            if ("EmberFissure".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91: every room, at load.
+            if ("EmberFissure".equals(o.type) || "LanceRoot".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91, D129: every room, at load.
+            if ("LegHold".equals(o.type)) legHoldFor(o, owner); // D128: every room, at load.
             if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
             if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
             if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
@@ -1048,7 +1055,13 @@ public class Level implements WorldObject {
                     objects.add(bramble);
                 }
                 case "HangingHive" -> spawnHive(o);
-                case "EmberFissure" -> spawnFissure(o);
+                case "EmberFissure", "LanceRoot" -> spawnFissure(o);
+                case "LegHold" -> {
+                    LegHold legHold = legHoldFor(o, currentRoom);
+                    legHold.onWarning(() -> legHoldSound(legHold, LEGHOLD_RATTLE_SOUND));
+                    legHold.onSnap(() -> legHoldSound(legHold, LEGHOLD_SNAP_SOUND));
+                    objects.add(legHold);
+                }
                 case "HoneyFungus" -> {
                     HoneyFungus fungus = HoneyFungus.fromMap(assets, game.trapWarnings(), o, this::fungusHero);
                     fungus.onBurst(this::sporePuff);
@@ -1233,13 +1246,14 @@ public class Level implements WorldObject {
             collisions.add(c);
             if (!"QuickSand".equals(c.type) && !"Platform".equals(c.type)) floors.add(new Rectangle(c.x, c.y, c.width, c.height));
         }
-        EmberFissure fissure = EmberFissure.fromMap(assets, o, game.trapWarnings(), collisions, describe(o));
+        EmberFissure fissure = "LanceRoot".equals(o.type) ? LanceRoot.fromMap(assets, o, game.trapWarnings(), collisions, describe(o))
+            : EmberFissure.fromMap(assets, o, game.trapWarnings(), collisions, describe(o));
         String problem = EmberFissure.floorProblem(o, floors);
         if (problem == null) problem = EmberFissure.movingSolidProblem(o, map.layer("SpawnPoints"), fissure.columnHeight());
-        if (problem != null) throw new IllegalArgumentException("EmberFissure " + describe(o) + ": " + problem);
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + ": " + problem);
         Rectangle column = fissure.columnInto(new Rectangle());
         if (column.x < room.x || column.x + column.width > room.x + room.width || column.y < room.y || column.y + column.height > room.y + room.height)
-            throw new IllegalArgumentException("EmberFissure " + describe(o) + ": its danger area leaves the room");
+            throw new IllegalArgumentException(o.type + " " + describe(o) + ": its danger area leaves the room");
         requireSafeSetting(o, fissure, column, owner);
         return fissure;
     }
@@ -1247,11 +1261,34 @@ public class Level implements WorldObject {
     private void spawnFissure(TiledObject o) {
         EmberFissure checked = checkedFissures.get(o.id);
         if (checked == null) { checked = fissureFor(o, currentRoom); checkedFissures.put(o.id, checked); } // added to the map after load (tests)
-        EmberFissure fissure = new EmberFissure(assets, o.x, o.y, game.trapWarnings(), checked.period(), checked.phase(),
-            checked.jetSeconds(), checked.columnHeight());
-        fissure.onWarning(() -> fissureSound(fissure, FISSURE_RUMBLE_SOUND));
-        fissure.onJet(() -> fissureSound(fissure, EMBER_JET_SOUND));
+        boolean root = "LanceRoot".equals(o.type);
+        EmberFissure fissure = root ? new LanceRoot(assets, o.x, o.y, game.trapWarnings(), checked.period(), checked.phase(), checked.jetSeconds(), checked.columnHeight())
+            : new EmberFissure(assets, o.x, o.y, game.trapWarnings(), checked.period(), checked.phase(), checked.jetSeconds(), checked.columnHeight());
+        fissure.onWarning(() -> fissureSound(fissure, root ? ROOT_CREAK_SOUND : FISSURE_RUMBLE_SOUND));
+        fissure.onJet(() -> fissureSound(fissure, root ? ROOT_THRUST_SOUND : EMBER_JET_SOUND));
         objects.add(fissure);
+    }
+
+    /**
+     * The leg-hold (#561, D128), built and checked for the room {@code owner}: the floor and headroom of {@link LegHold#problem},
+     * its snapped arch inside the room and never over the entrance, the exit or a checkpoint. Called for every room at load and
+     * again at each spawn (it has no state to keep: the hero supplier is the live one).
+     */
+    private LegHold legHoldFor(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        List<TiledObject> collisions = new ArrayList<>();
+        for (TiledObject c : map.layer("Collisions")) if (c.x + c.width > room.x && c.x < room.x + room.width) collisions.add(c);
+        LegHold legHold = LegHold.fromMap(assets, game.trapWarnings(), o, () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, describe(o));
+        String problem = LegHold.problem(o, collisions);
+        if (problem != null) throw new IllegalArgumentException("LegHold " + describe(o) + ": " + problem);
+        requireSafeSetting(o, legHold, legHold.snapBoxInto(new Rectangle()), owner);
+        return legHold;
+    }
+
+    /** The leg-hold's sounds are heard only while its frame or its specks' reach is inside the camera view (D93). */
+    private void legHoldSound(LegHold legHold, String sound) {
+        Rectangle view = visibleWorldRect.get();
+        if (game.playSounds() && view != null && view.width > 0 && view.height > 0 && legHold.extentInto(fissureViewScratch).overlaps(view)) game.playSound(sound);
     }
 
     /** A fissure's sound is heard only while its frame or column is inside the camera view: a clocked trap off screen is silent. */

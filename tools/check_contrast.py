@@ -185,6 +185,15 @@ SPRITES = {
     'EmberFissure': ('active', 'objects/trap-fissure.png', (0, 0, 16, 12), 6, 'top', FULL),
     'EmberFissure:jet': ('active', 'objects/trap-ember-jet.png', (0, 0, 8, 16), 2, 'top', FULL),
     'EmberFissure:tip': ('active', 'objects/trap-ember-jet.png', (16, 0, 8, 8), 2, 'top', FULL),
+    # #562 (D129): the lance root, the fissure's clock and column in the forest's own look: same frames, same parts (fissure_parts).
+    'LanceRoot': ('active', 'objects/trap-lance-root.png', (0, 0, 16, 12), 6, 'top', FULL),
+    'LanceRoot:jet': ('active', 'objects/trap-lance-shaft.png', (0, 0, 8, 16), 2, 'top', FULL),
+    'LanceRoot:tip': ('active', 'objects/trap-lance-shaft.png', (16, 0, 8, 8), 2, 'top', FULL),
+    # #561 (D128): every frame of the leg-hold (open, rattle1, rattle2, snap, shut, rearm), bottom on the object's bottom edge.
+    'LegHold': ('active', 'objects/trap-leghold.png', (0, 0, 32, 16), 6, 'floor', FULL),
+    # D128: the leg-hold's cue on its own: each bone tooth tip with the litter's top row under it (rows 6-11 of columns 9-11 and 20-22) in the rest frame, placed at the object's top + 6.
+    'LegHold:tip': ('active', 'objects/trap-leghold.png', (9, 6, 3, 6), 1, 'top', FULL),
+    'LegHold:tip2': ('active', 'objects/trap-leghold.png', (20, 6, 3, 6), 1, 'top', FULL),
     'HangingHive:fallen': ('active', 'objects/trap-hive.png', (144, 0, 24, 32), 1, 'top', FULL),
     'HangingHive:stingers': ('active', 'objects/trap-stingers.png', (0, 0, 8, 16), 2, 'top', FULL),
     'HoneyFungus': ('active', 'objects/trap-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
@@ -547,7 +556,17 @@ def hive_parts(root, x, y):
 FISSURE_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/EmberFissure.java'
 
 
-def fissure_parts(root, obj, x, y):
+LEGHOLD_FRAME = (32, 16)         # LegHold.WIDTH, LegHold.HEIGHT: the sprite's frame, drawn at the object
+LEGHOLD_TIP_BOX = (3, 6)         # width and height of the crop of one bone tooth tip with the litter's top row under it
+LEGHOLD_TIPS = (('LegHold:tip', 9, 6), ('LegHold:tip2', 20, 6))   # key, column and row of each tip's crop in the frame
+
+
+def leghold_parts(x, y):
+    """(key, left, top, width, height) of the leg-hold's frame at the object and of each cue tip where the rest frame draws it."""
+    return [('LegHold', x, y, *LEGHOLD_FRAME)] + [(key, x + dx, y + dy, *LEGHOLD_TIP_BOX) for key, dx, dy in LEGHOLD_TIPS]
+
+
+def fissure_parts(root, obj, x, y, key='EmberFissure'):
     """(key, left, top, width, height) of what EmberFissure.render draws for a fissure at (x, y): its frames at the object,
     and the full jet (the tip on top, every whole 16 px tile up from the floor line), cut by a solid above as
     EmberFissure.ceilingAbove cuts it (a one-way Platform and quicksand do not)."""
@@ -564,14 +583,14 @@ def fissure_parts(root, obj, x, y):
                 continue
             if floor - height < cy + ch <= floor - n('SIZE_TOLERANCE'):
                 height = floor - (cy + ch)
-    parts = [('EmberFissure', x, y, width, n('HEIGHT'))]
-    _, _, (_, _, _, tile), *_ = SPRITES['EmberFissure:jet']
-    _, _, (_, _, _, tip), *_ = SPRITES['EmberFissure:tip']
+    parts = [(key, x, y, width, n('HEIGHT'))]
+    _, _, (_, _, _, tile), *_ = SPRITES[f'{key}:jet']
+    _, _, (_, _, _, tip), *_ = SPRITES[f'{key}:tip']
     top = floor - height
-    parts.append(('EmberFissure:tip', left, top, jet_width, tip))
+    parts.append((f'{key}:tip', left, top, jet_width, tip))
     row = floor - tile  # the tile rows are anchored on the floor line (render: floorMod(y - floor, 16)); a partial top row is left out
     while row >= top + tip:
-        parts.append(('EmberFissure:jet', left, row, jet_width, tile))
+        parts.append((f'{key}:jet', left, row, jet_width, tile))
         row -= tile
     return parts
 
@@ -837,8 +856,12 @@ def placements(errors, roots=None):
             offset_y = float(group.get('offsety', '0'))
             for obj in group.findall('object'):
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
-                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'EmberFissure':
-                    yield from ((name, *part) for part in fissure_parts(root, obj, float(obj.get('x')), float(obj.get('y')) + offset_y))
+                if group.get('name') == 'SpawnPoints' and obj.get('type') in ('EmberFissure', 'LanceRoot'):
+                    yield from ((name, *part) for part in fissure_parts(root, obj, float(obj.get('x')), float(obj.get('y')) + offset_y, obj.get('type')))
+                    continue
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'LegHold':
+                    lx, ly = float(obj.get('x')), float(obj.get('y')) + offset_y
+                    yield from ((name, *part) for part in leghold_parts(lx, ly))
                     continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'HangingHive':
                     yield from ((name, *part) for part in hive_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y))

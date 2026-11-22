@@ -389,7 +389,7 @@ text. Times are the zero-charge mastered routes of the room tests, pinned within
 
 | Room | Beats (id@x) | Time | s/beat | What changed |
 | --- | --- | ---: | ---: | --- |
-| `forest-entry` | yellowmob@192, bat-enemy@352, bat-enemy@512, touch-explosive@656 | 6.83 s | 1.71 | the step (Collisions id 6) became a 32 px cover at x 112-144, drawn with the step's end caps (tiles 26, 28, row 19, cols 7-8); the YellowMob (id 50) stands on the floor (Tiled y 304), `offNeg` 6, `offPos` 0 (it wakes for a hero centre in x 96-192, stops against the cover); Bat 41 moved from x 272 to x 352; the twig moved from the old step to col 14, on the floor at pit 1's lip |
+| `forest-entry` | yellowmob@192, bat-enemy@352, leg-hold@496, bat-enemy@672 | 8.37 s (6.83 s with the Bomb, before D128) | 2.09 | the step (Collisions id 6) became a 32 px cover at x 112-144, drawn with the step's end caps (tiles 26, 28, row 19, cols 7-8); the YellowMob (id 50) stands on the floor (Tiled y 304), `offNeg` 6, `offPos` 0 (it wakes for a hero centre in x 96-192, stops against the cover); Bat 41 moved from x 272 to x 352; the twig moved from the old step to col 14, on the floor at pit 1's lip |
 | `forest-walls` | branch-climb@880, yellowmob@1040, redmob@1136 (until #545: wall-jump@912 in the first place, 7.45 s, 2.48 s per beat) | 5.55 s | 1.85 | YellowMob 16 moved from x 832 to x 1040 (`offNeg` 0, `offPos` 1); RedMob 60 `offNeg` 5 to 2 (wakes from x 1104); bush 132 moved from x 1040 to x 944 |
 | `forest-canopy` | redmob@1472, false-honey-fungus@1672, thorn-vine@1896, touch-explosive@2064, falling-stone@2224 | 9.48 s | 1.90 | Bat 65 (x 1760) removed; the vine's `phase` 0 to 2.77 s |
 
@@ -398,7 +398,7 @@ text. Times are the zero-charge mastered routes of the room tests, pinned within
   trigger zone, acting `BURST`, D109) and `forestCanopyTheThornVine` (x 1848, acting `SWING_LEFT`).
 - `forest-entry`'s mastered route jumps the cover and stomps the YellowMob, which stands about 40 px short of the cover when the hero is
   airborne (it stops chasing a hero who is not at its height); the pocket test shows the mob charging a hero who stays behind the cover.
-  The all-coins route (12.05 s, was 10.40 s) waits on the ground while Bat 41 is within 40 px (`RoomReplayTest.batClose`): the coins at
+  The all-coins route (12.02 s since D128; 12.05 s before it, 10.40 s before that) waits on the ground while Bat 41 is within 40 px (`RoomReplayTest.batClose`): the coins at
   x 336 (floor) and x 368 (platform 3) lie under and beside the Bat's column: a hero who wants them waits under the Bat, a risk-and-reward choice.
 - `forest-walls`' route swords the YellowMob rather than stomping it from wall 45 (7.45 s against the estimate of about 8.8 s). Since #545 (D116) the wall jump is gone: the route climbs a tree, leaps on to the second wall and stomps both mobs (5.55 s, `ForestWallsRoute`; `ForestWallsTest` asserts that both die to the stomp and bounce, never the sword), and the room has no first-meeting pocket.
 - **The thorn vine's retry (phase retimed).** The vine is now beat 3, so D105 asks a retry of at most 6 s. With `phase` 0 the cheapest death
@@ -410,6 +410,17 @@ text. Times are the zero-charge mastered routes of the room tests, pinned within
   **4.90 s** before the mastered hero's body reaches its swept area, more than its 4.5 s period, swinging both ways to its full amplitude
   (`Forest2TrapsTest.theVineIsSeenSwingingForAFullPeriodBeforeTheMasteredHeroCanReachIt`); its whole sweep is in view for 2.27 s of that. The mastered route stays 9.48 s (1.90 s per beat); the
   fungus pocket and every other pin are unchanged. `forest-canopy` left `FIRST_MEETING_GRANDFATHERED`, which is now empty (ceiling 0, with batch 3).
+
+## Leg-hold and lance root: the two replacements (#561, #562, D128, D129)
+
+`forest-entry`: the Bomb (id 54) became a `LegHold` (same id 54) on the floor at x 496-528, where the stair's jump lands (the ledge x 416-480
+is not on the required route, which walks the floor under it). Bat 43 moved from x 512 to x 672 (`offNeg` 1, `offPos` 0: patrol x 656-688)
+so that the leg-hold's first meeting has 96 px of clearance. The mastered route stands at x 478 (hero centre, 16 px short of the teeth)
+until the jaws snap empty, then walks over them shut: **8.37 s** required (6.83 s before, `RoomReplayTest`, three identical attempts), 4 beats
+at 2.09 s per beat, 12.02 s all coins. The leg-hold is beat 3, reached at about 4.6 s (pinned by `RoomReplayTest.theLegHoldRetryIsAboutFourSeconds`) (the retry of a death at its teeth); its pocket is pinned by
+`FirstMeetingPocketTest.forestEntryTheLegHold`. The `Bomb` is gone from the map; its two gameplay tests run on `bomb-test.tmx`.
+`forest-fissure`: both `EmberFissure` objects (ids 151, 152) became `LanceRoot` with the same properties, so every number of the room is unchanged
+(`ForestFissureTest`, `RoomReplayTest` 9.30 s). Cards: [ROOM_CARDS.md](ROOM_CARDS.md), [TRAPS.md](TRAPS.md).
 
 ## forest-entry split (#376, D72)
 

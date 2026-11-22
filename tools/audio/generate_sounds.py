@@ -1657,6 +1657,94 @@ def thorn_spring() -> list[float]:
     return finish_rms(lowpass(out, THORN_SPRING_LOWPASS_HZ), THORN_SPRING_RMS_DB, THORN_SPRING_PEAK_DB)
 
 
+# ---------------------------------------------------------------- leg-hold trap and lance root (#561, #562, D129)
+# Seeds 7401 to 7404. Wood and soil, never metal or fire, so none of them sounds like the stump's explosion or the fissure's roar.
+# Warning (leghold_rattle): a dry, chattering "t-t-t-t-t" of ten wooden ticks at about 18 Hz that swell and rise a little,
+# 0.6 s so it ends before the base 0.8 s snap; a background level, as bramble_rustle, so it never masks another warning.
+LEGHOLD_RATTLE_SEED = 7401
+LEGHOLD_RATTLE_DURATION = 0.60
+LEGHOLD_RATTLE_TICKS = 10
+LEGHOLD_RATTLE_FIRST = 0.02          # s, the first tick
+LEGHOLD_RATTLE_GAP = 0.055           # s between ticks (about 18 Hz)
+LEGHOLD_RATTLE_TICK_LEN = 0.02
+LEGHOLD_RATTLE_BAND = (1500.0, 2200.0, 900.0, 1400.0)   # centre and bandwidth of the first and of the last tick, Hz
+LEGHOLD_RATTLE_GAIN = (0.6, 1.0)    # the ticks swell
+LEGHOLD_RATTLE_RMS_DB = -27.0       # bramble_rustle's background level, the other dry warning of the set
+LEGHOLD_RATTLE_PEAK_DB = -9.0        # the environment cap; the ticks are sparse, so level-set by the peak
+# Consequence (leghold_snap): one hard "KLAK": a noise crack through a closed band and a dull wooden "tok" body at 220 Hz.
+LEGHOLD_SNAP_SEED = 7402
+LEGHOLD_SNAP_DURATION = 0.25
+LEGHOLD_TOK_HZ = 220.0
+LEGHOLD_TOK_ATTACK = 0.006
+LEGHOLD_TOK_TAU = 0.09
+LEGHOLD_SNAP_CRACK_LEN = 0.03
+LEGHOLD_SNAP_CRACK_BAND = (2600.0, 3000.0)
+LEGHOLD_SNAP_CRACK_GAIN = 0.7        # relative to the body's peak
+LEGHOLD_SNAP_RMS_DB = -22.0
+LEGHOLD_SNAP_PEAK_DB = -9.0           # the environment cap
+LEGHOLD_SNAP_CRACK_DELAY = 0.004      # s, the body rises first: no click at the start
+# Warning (root_creak): a low groan "oooorr" over crackling soil, 0.7 s so it ends before the base 0.8 s thrust; lower and slower
+# than fissure_rumble (a different vibrato and vowel), quiet end of the voice set.
+ROOT_CREAK_VOICE = Voice(7403, 0.70, (65.0, 95.0), FORMANTS_O, FORMANTS_U, -19.4, asp_len=0.040, asp_level=0.3,
+                         attack=0.200, tau=0.600, release=0.100, jitter=0.10, rough=1.0, rough_start=0.0,
+                         vibrato=(7.0, 0.12), lowpass=1200.0)
+# Consequence (root_thrust): a fast rising "fwoo" (noise through a band-pass climbing 400 -> 2400 Hz) ending in a woody "THOK" at 170 Hz.
+ROOT_THRUST_SEED = 7404
+ROOT_THRUST_DURATION = 0.35
+ROOT_THRUST_SWEEP = (400.0, 2400.0)
+ROOT_THRUST_BANDWIDTH = 1100.0
+ROOT_THRUST_ATTACK = 0.02
+ROOT_THRUST_TAU = 0.12
+ROOT_THRUST_DRIVE = 1.8
+ROOT_THRUST_SWEEP_LEN = 0.22         # s, the rising part; the knock starts where it ends
+ROOT_KNOCK_HZ = 170.0
+ROOT_KNOCK_ATTACK = 0.002
+ROOT_KNOCK_TAU = 0.05
+ROOT_KNOCK_GAIN = 1.3                # relative to the sweep's peak
+ROOT_THRUST_RMS_DB = -21.6
+ROOT_THRUST_PEAK_DB = -9.0
+ROOT_THRUST_LOWPASS_HZ = 5000.0
+
+
+def leghold_rattle() -> list[float]:
+    rng = random.Random(LEGHOLD_RATTLE_SEED)
+    out = [0.0] * n_samples(LEGHOLD_RATTLE_DURATION)
+    (c0, w0, c1, w1) = LEGHOLD_RATTLE_BAND
+    for k in range(LEGHOLD_RATTLE_TICKS):
+        f = k / (LEGHOLD_RATTLE_TICKS - 1)
+        gain = LEGHOLD_RATTLE_GAIN[0] + (LEGHOLD_RATTLE_GAIN[1] - LEGHOLD_RATTLE_GAIN[0]) * f
+        _add_tick(rng, out, n_samples(LEGHOLD_RATTLE_FIRST + k * LEGHOLD_RATTLE_GAP), n_samples(LEGHOLD_RATTLE_TICK_LEN),
+                  (c0 + (c1 - c0) * f, w0 + (w1 - w0) * f), gain)
+    return finish_rms(out, LEGHOLD_RATTLE_RMS_DB, LEGHOLD_RATTLE_PEAK_DB)
+
+
+def leghold_snap() -> list[float]:
+    rng = random.Random(LEGHOLD_SNAP_SEED)
+    n = n_samples(LEGHOLD_SNAP_DURATION)
+    env = envelope(n, LEGHOLD_TOK_ATTACK, LEGHOLD_TOK_TAU)
+    out = [math.sin(2 * math.pi * LEGHOLD_TOK_HZ * i / SAMPLE_RATE) * e for i, e in enumerate(env)]
+    _add_tick(rng, out, n_samples(LEGHOLD_SNAP_CRACK_DELAY), n_samples(LEGHOLD_SNAP_CRACK_LEN), LEGHOLD_SNAP_CRACK_BAND, LEGHOLD_SNAP_CRACK_GAIN)
+    return finish_rms(out, LEGHOLD_SNAP_RMS_DB, LEGHOLD_SNAP_PEAK_DB)
+
+
+def root_creak() -> list[float]:
+    return finish_rms(render_voice(ROOT_CREAK_VOICE), ROOT_CREAK_VOICE.rms_db)
+
+
+def root_thrust() -> list[float]:
+    rng = random.Random(ROOT_THRUST_SEED)
+    n, ns = n_samples(ROOT_THRUST_DURATION), n_samples(ROOT_THRUST_SWEEP_LEN)
+    lo, hi = ROOT_THRUST_SWEEP
+    swept = bandpass(noise(rng, ns), lambda t: lo + (hi - lo) * t, ROOT_THRUST_BANDWIDTH)
+    peak = max(abs(v) for v in swept) or 1.0
+    env = envelope(ns, ROOT_THRUST_ATTACK, ROOT_THRUST_TAU)
+    out = [math.tanh(ROOT_THRUST_DRIVE * v / peak) * e for v, e in zip(swept, env)] + [0.0] * (n - ns)
+    knock = envelope(n - ns, ROOT_KNOCK_ATTACK, ROOT_KNOCK_TAU)
+    for i, e in enumerate(knock):
+        out[ns + i] += ROOT_KNOCK_GAIN * math.sin(2 * math.pi * ROOT_KNOCK_HZ * i / SAMPLE_RATE) * e
+    return finish_rms(lowpass(out, ROOT_THRUST_LOWPASS_HZ), ROOT_THRUST_RMS_DB, ROOT_THRUST_PEAK_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -1666,6 +1754,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "thorn_spring.wav": thorn_spring,
                "hive_buzz.wav": hive_buzz, "stinger_rain.wav": stinger_rain, "hive_fall.wav": hive_fall,
                "fissure_rumble.wav": fissure_rumble, "ember_jet.wav": ember_jet,
+               "leghold_rattle.wav": leghold_rattle, "leghold_snap.wav": leghold_snap, "root_creak.wav": root_creak,
+               "root_thrust.wav": root_thrust,
                "fireball_fizzle.wav": fireball_fizzle, "beetle_notice.wav": beetle_notice,
                "beetle_windup.wav": beetle_windup, "beetle_windup_long.wav": beetle_windup_long, "beetle_pop.wav": beetle_pop,
                "remains_crumble.wav": remains_crumble, "remains_burn.wav": remains_burn,

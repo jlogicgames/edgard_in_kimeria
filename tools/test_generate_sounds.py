@@ -24,6 +24,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "thorn_spring.wav": (0.18, 0.26),
           "hive_buzz.wav": (0.6, 0.8), "stinger_rain.wav": (0.9, 1.1), "hive_fall.wav": (0.35, 0.5),
           "fissure_rumble.wav": (0.5, 0.7), "ember_jet.wav": (0.7, 0.9),
+          "leghold_rattle.wav": (0.5, 0.7), "leghold_snap.wav": (0.2, 0.3), "root_creak.wav": (0.6, 0.8), "root_thrust.wav": (0.3, 0.4),
           "fireball_fizzle.wav": (0.3, 0.4), "beetle_notice.wav": (0.18, 0.26), "beetle_windup.wav": (0.75, 0.85),
           "beetle_windup_long.wav": (1.15, 1.25), "beetle_pop.wav": (0.3, 0.42),
           "remains_crumble.wav": (0.24, 0.32), "remains_burn.wav": (0.35, 0.45),
@@ -41,7 +42,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
                 "boss_hit.wav": -16.5, "boss_restore.wav": -19.0, "button_click.wav": -19.4,
                 "stone_impact.wav": -16.5, "thread.wav": -19.0, "deadfall_creak.wav": -18.5, "deadfall_knock.wav": -17.0,
-                "hive_buzz.wav": -19.4, "hive_fall.wav": -19.0, "fissure_rumble.wav": -19.4,
+                "hive_buzz.wav": -19.4, "hive_fall.wav": -19.0, "fissure_rumble.wav": -19.4, "root_creak.wav": -19.4,
                 "beetle_notice.wav": -19.0, "beetle_windup.wav": -19.4, "beetle_windup_long.wav": -19.4, "beetle_pop.wav": -18.0,
                 "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
                 "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
@@ -53,7 +54,7 @@ EXPLOSION_RMS_DB = {"explosion.wav": -15.0}
 # Environment sounds (batch 3): quiet backgrounds, below every voice effect; same tolerance.
 AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rustle.wav": -27.0, "bramble_lash.wav": -21.0,
                   "thorn_spring.wav": -26.0,
-                  "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0,
+                  "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0, "leghold_rattle.wav": -27.0, "leghold_snap.wav": -22.0, "root_thrust.wav": -21.6,
                   "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
                   "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0,
                   "spore_puff.wav": -27.1, "puffball_burst.wav": -21.5, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0}
@@ -195,7 +196,7 @@ class GenerateSoundsTest(unittest.TestCase):
     def test_voice_effects_start_and_end_softly(self) -> None:
         """No click: the first 2 ms stay well under the peak (breath or vowel ramps in, as for the jump)."""
         for name in list(VOICE_RMS_DB) + list(EXPLOSION_RMS_DB) + ["grit_fall.wav", "bramble_rustle.wav", "bramble_lash.wav",
-                                                                    "thorn_spring.wav", "stinger_rain.wav", "ember_jet.wav",
+                                                                    "thorn_spring.wav", "stinger_rain.wav", "ember_jet.wav", "leghold_rattle.wav", "leghold_snap.wav", "root_thrust.wav",
                                                                     "fireball_fizzle.wav", "remains_crumble.wav", "remains_burn.wav",
                                                                     "spider_leap.wav", "spider_drop.wav", "spider_reel.wav",
                                                                     "spider_snap.wav", "wolf_lunge.wav", "wolf_bay.wav",
