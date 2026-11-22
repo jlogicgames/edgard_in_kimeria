@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="280" height="23" tilewidth="16" tileheight="16" infinite="0" parallaxoriginx="320" parallaxoriginy="188" nextlayerid="20" nextobjectid="268">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="280" height="23" tilewidth="16" tileheight="16" infinite="0" parallaxoriginx="320" parallaxoriginy="188" nextlayerid="20" nextobjectid="301">
  <properties>
   <property name="background" type="color" value="#ff2c3f66"/>
   <property name="fireflies" type="int" value="24"/>
@@ -352,13 +352,18 @@
    </properties>
   </object>
   <object id="114" name="Boss" type="Boss" x="2912" y="304" width="32" height="32"/>
-  <object id="115" name="FallingPlatform" type="FallingPlatform" x="1568" y="256" width="32" height="16"/>
+  <object id="115" name="Rotten Log" type="FallingPlatform" x="1568" y="256" width="32" height="16">
+   <properties>
+    <property name="skin" value="log"/>
+   </properties>
+  </object>
   <object id="121" name="Fireball" type="FireballRefill" x="1696" y="144" width="16" height="16"/>
   <object id="127" name="Thorn Vine" type="ThornVine" x="1896" y="272" width="24" height="40">
    <properties>
     <property name="amplitude" type="float" value="50"/>
     <property name="period" type="float" value="4.5"/>
     <property name="phase" type="float" value="2.77"/>
+    <property name="tether" type="float" value="16"/>
    </properties>
   </object>
   <object id="128" name="Exploding Root" type="ExplosiveRoot" x="2064" y="312" width="16" height="24"/>
@@ -389,6 +394,11 @@
   <object id="132" name="Bush" type="Decor" x="944" y="312" width="32" height="24">
    <properties>
     <property name="kind" value="bush"/>
+   </properties>
+  </object>
+  <object id="268" name="Snag" type="Decor" x="1856" y="136" width="16" height="200">
+   <properties>
+    <property name="kind" value="snag"/>
    </properties>
   </object>
   <object id="230" name="Trunk" type="Decor" x="864" y="48" width="16" height="288">
@@ -572,52 +582,52 @@
  </objectgroup>
  <objectgroup id="14" name="foreground-forest-entry" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="0"/></properties>
-  <object id="236" name="near-canopy" gid="3255" x="-88" y="112" width="224" height="112"/>
-  <object id="237" name="near-canopy-top" gid="3256" x="-120" y="8" width="288" height="32"/>
-  <object id="238" name="near-fern" gid="3257" x="692" y="128" width="224" height="128"/>
-  <object id="239" name="near-fern-top" gid="3258" x="660" y="8" width="288" height="32"/>
-  <object id="240" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
-  <object id="241" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
+  <object id="269" name="near-canopy" gid="3255" x="-88" y="112" width="224" height="112"/>
+  <object id="270" name="near-canopy-top" gid="3256" x="-120" y="8" width="288" height="32"/>
+  <object id="271" name="near-fern" gid="3257" x="692" y="128" width="224" height="128"/>
+  <object id="272" name="near-fern-top" gid="3258" x="660" y="8" width="288" height="32"/>
+  <object id="273" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
+  <object id="274" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
  </objectgroup>
  <objectgroup id="15" name="foreground-forest-walls" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="736"/></properties>
-  <object id="242" name="near-fern" gid="3257" x="-128" y="128" width="224" height="128"/>
-  <object id="243" name="near-fern-top" gid="3258" x="-160" y="8" width="288" height="32"/>
-  <object id="244" name="near-canopy" gid="3255" x="452" y="112" width="224" height="112"/>
-  <object id="245" name="near-canopy-top" gid="3256" x="420" y="8" width="288" height="32"/>
-  <object id="246" name="roots-curtain" gid="3239" x="290" y="304" width="240" height="304"/>
-  <object id="247" name="roots-curtain-top" gid="3251" x="258" y="8" width="304" height="32"/>
+  <object id="275" name="near-fern" gid="3257" x="-128" y="128" width="224" height="128"/>
+  <object id="276" name="near-fern-top" gid="3258" x="-160" y="8" width="288" height="32"/>
+  <object id="277" name="near-canopy" gid="3255" x="452" y="112" width="224" height="112"/>
+  <object id="278" name="near-canopy-top" gid="3256" x="420" y="8" width="288" height="32"/>
+  <object id="279" name="roots-curtain" gid="3239" x="290" y="304" width="240" height="304"/>
+  <object id="280" name="roots-curtain-top" gid="3251" x="258" y="8" width="304" height="32"/>
  </objectgroup>
  <objectgroup id="16" name="foreground-forest-fissure" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="3008"/></properties>
-  <object id="248" name="near-canopy" gid="3255" x="-88" y="112" width="224" height="112"/>
-  <object id="249" name="near-canopy-top" gid="3256" x="-120" y="8" width="288" height="32"/>
-  <object id="250" name="near-fern" gid="3257" x="540" y="128" width="224" height="128"/>
-  <object id="251" name="near-fern-top" gid="3258" x="508" y="8" width="288" height="32"/>
-  <object id="252" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
-  <object id="253" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
+  <object id="281" name="near-canopy" gid="3255" x="-88" y="112" width="224" height="112"/>
+  <object id="282" name="near-canopy-top" gid="3256" x="-120" y="8" width="288" height="32"/>
+  <object id="283" name="near-fern" gid="3257" x="540" y="128" width="224" height="128"/>
+  <object id="284" name="near-fern-top" gid="3258" x="508" y="8" width="288" height="32"/>
+  <object id="285" name="vine-curtain" gid="3238" x="76" y="208" width="288" height="208"/>
+  <object id="286" name="vine-curtain-top" gid="3250" x="44" y="8" width="352" height="32"/>
  </objectgroup>
  <objectgroup id="17" name="foreground-forest-glade" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="3648"/></properties>
-  <object id="254" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
-  <object id="255" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
-  <object id="256" name="near-canopy" gid="3255" x="732" y="112" width="224" height="112"/>
-  <object id="257" name="near-canopy-top" gid="3256" x="700" y="8" width="288" height="32"/>
-  <object id="258" name="roots-curtain" gid="3239" x="60" y="304" width="240" height="304"/>
-  <object id="259" name="roots-curtain-top" gid="3251" x="28" y="8" width="304" height="32"/>
+  <object id="287" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
+  <object id="288" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
+  <object id="289" name="near-canopy" gid="3255" x="732" y="112" width="224" height="112"/>
+  <object id="290" name="near-canopy-top" gid="3256" x="700" y="8" width="288" height="32"/>
+  <object id="291" name="roots-curtain" gid="3239" x="60" y="304" width="240" height="304"/>
+  <object id="292" name="roots-curtain-top" gid="3251" x="28" y="8" width="304" height="32"/>
  </objectgroup>
  <objectgroup id="18" name="foreground-forest-canopy" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="1280"/></properties>
-  <object id="260" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
-  <object id="261" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
-  <object id="262" name="near-sprig" gid="3259" x="1308" y="112" width="128" height="112"/>
-  <object id="263" name="near-sprig-top" gid="3260" x="1276" y="8" width="192" height="32"/>
-  <object id="264" name="rise-fern" gid="3240" x="1268" y="368" width="320" height="240"/>
-  <object id="265" name="rise-fern-foot" gid="3252" x="1236" y="384" width="384" height="16"/>
+  <object id="293" name="near-fern" gid="3257" x="-88" y="128" width="224" height="128"/>
+  <object id="294" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
+  <object id="295" name="near-sprig" gid="3259" x="1308" y="112" width="128" height="112"/>
+  <object id="296" name="near-sprig-top" gid="3260" x="1276" y="8" width="192" height="32"/>
+  <object id="297" name="rise-fern" gid="3240" x="1268" y="368" width="320" height="240"/>
+  <object id="298" name="rise-fern-foot" gid="3252" x="1236" y="384" width="384" height="16"/>
  </objectgroup>
  <objectgroup id="19" name="foreground-forest-boss" parallaxx="1.6" parallaxy="1.6">
   <properties><property name="roomx" type="float" value="2560"/></properties>
-  <object id="266" name="rise-reeds" gid="3242" x="426" y="368" width="96" height="224"/>
-  <object id="267" name="rise-reeds-foot" gid="3254" x="394" y="384" width="160" height="16"/>
+  <object id="299" name="rise-reeds" gid="3242" x="426" y="368" width="96" height="224"/>
+  <object id="300" name="rise-reeds-foot" gid="3254" x="394" y="384" width="160" height="16"/>
  </objectgroup>
 </map>

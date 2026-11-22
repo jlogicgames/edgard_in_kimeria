@@ -312,7 +312,7 @@ class Forest1RouteTest {
         assertFalse(step(level).isFalling());
         assertEquals(STEP_X, step(level).getX(), 0.01f);
         assertEquals(STEP_TOP, step(level).getY(), 0.01f);
-        assertEquals(FallingPlatform.Skin.PLATFORM, step(level).skin(), "the same look as the four falling platforms of room 1");
+        assertEquals(FallingPlatform.Skin.LOG, step(level).skin(), "the same look as every falling platform: the rotten log");
         assertEquals(208, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor");
         FireballRefill refill = level.objects.stream().filter(FireballRefill.class::isInstance).map(FireballRefill.class::cast).findFirst().orElseThrow();
         assertEquals(REFILL_X, refill.getX(), 0.01f);

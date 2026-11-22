@@ -94,7 +94,7 @@ class TutorialLevelTest {
         assertTrue(object.apply("Stone Room Stump") - start.apply("forest-0-stone-stump") >= 160, "stump message leads the stone-room stump");
         butt.accept("forest-0-stone-exit", "forest-0-stone-across"); // the last one starts at the far lip, where the platform text stops being true
         assertEquals(object.apply("Lever [65"), start.apply("forest-0-stone-across"), "at the lever");
-        assertTrue(object.apply("FallingPlatform") - start.apply("forest-0-traps-platform") >= 200, "platform-trap message leads the pit");
+        assertTrue(object.apply("Rotten Log") - start.apply("forest-0-traps-platform") >= 200, "platform-trap message leads the pit");
         assertTrue(object.apply("Exploding Stump") - start.apply("forest-0-traps-stump") >= 190, "stump message leads the stump");
         assertEquals(start.apply("forest-0-traps-platform") + hints.stream().filter(o -> "forest-0-traps-platform".equals(o.name)).findFirst().orElseThrow().width,
             start.apply("forest-0-traps-stump"), "The traps room's message zones butt against each other");
