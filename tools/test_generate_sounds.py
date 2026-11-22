@@ -33,7 +33,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "snail_notice.wav": (0.26, 0.34), "snail_windup.wav": (0.75, 0.85), "snail_windup_long.wav": (1.15, 1.25),
           "snail_spit.wav": (0.13, 0.19), "snail_splat.wav": (0.16, 0.24),
           "whip_crack.wav": (0.14, 0.18), "boss_sweep.wav": (0.27, 0.33), "boss_sweep_counter.wav": (0.37, 0.43),
-          "spore_puff.wav": (0.26, 0.34),
+          "spore_puff.wav": (0.26, 0.34), "puffball_burst.wav": (0.40, 0.50),
           "wolf_notice.wav": (0.18, 0.26), "wolf_windup.wav": (0.45, 0.55), "wolf_windup_long.wav": (0.70, 0.80),
           "wolf_lunge.wav": (0.14, 0.22), "wolf_bite.wav": (0.14, 0.22), "wolf_bay.wav": (0.34, 0.46), "wolf_run.wav": (0.10, 0.14)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
@@ -56,7 +56,7 @@ AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rus
                   "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0,
                   "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
                   "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0,
-                  "spore_puff.wav": -27.1, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0}
+                  "spore_puff.wav": -27.1, "puffball_burst.wav": -21.5, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0}
 AMBIENT_MAX_RMS_DB = -20.0
 VOICE_RMS_TOLERANCE_DB = 0.5
 MIN_EFFECT_SECONDS = 0.10     # shorter than this is not a usable effect on a waking output

@@ -56,7 +56,8 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `whip_crack.wav` | synth, swept noise + driven crack (#447) | 0.16 s | -3.1 / -18.0 | the RedMob's whip starts its strike frame, hit or miss (D93, `RedMob`) | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `boss_sweep.wav` | synth, swept noise (#447) | 0.30 s | -7.1 / -18.0 | the boss's normal sweep starts its active frame, hit or miss (`Boss`) | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `boss_sweep_counter.wav` | synth, swept noise + thud (#447) | 0.40 s | -5.7 / -18.0 | the boss's counter sweep starts, hit or miss; the author may drop it and let `boss_sweep` serve both | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
-| `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), and a honey fungus bursts, the same for the harmless and the false one (`Level`) | not heard yet ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
+| `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | a honey fungus bursts, the same for the harmless and the false one (`Level`) | not heard yet ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
+| `puffball_burst.wav` | synth, jet noise + rough thump and wheeze (#558) | 0.45 s | -11.2 / -21.5 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), once per cloud (`Level.puffballSound`) | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -318,18 +319,32 @@ Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble
 twitch and the recovery are silent. The 50 sounds that existed before stay byte-identical (md5 before and after). Not verified: how the
 set sounds beside the forest-2 music and ambience, which waits for a room that places it (#331).
 
+### Puffball burst (#558, seeds 7401-7403, D93, D125)
+
+One voice-synth sound, generated 2026-11-22, for the spore puffball's release only: it is no look-alike of the honey fungi, so it no longer
+shares `spore_puff`, and it is harsher because it is a lethal act. Constants: `PUFFBALL_*` in `tools/audio/generate_sounds.py`; preview:
+`art/audio/previews/puffball_burst.png`. The 56 generated sounds that existed before stay byte-identical (md5 before and after).
+
+- `puffball_burst` (0.45 s, RMS -21.5 dBFS, peak -11.2 dBFS, ambient tier like `bramble_lash`, centroid about 1.6 kHz): a wet "p-KHHHH". The
+  sac tears with a short low pop (a rough /u/ falling 150 to 90 Hz), the spores jet out as a hiss whose band sweeps up 0.9 to 3.4 kHz and
+  widens, chopped by a 34 Hz flutter so it rattles like a grainy spray, over a low wheezing exhale (a rough /a/ to /u/, 95 to 62 Hz) for the
+  sac emptying. A final tanh lowers the crest factor so the RMS is not peak-limited.
+- Where it plays: once at the start of each cloud (never at the swell, never when a room opens inside a cloud), only while the puffball's sac or
+  cloud is in the camera view (`Level.puffballInView`).
+
+Not verified: how it sounds and sits in the mix in the running game (author's audition, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)).
+
 ### Spore puff (#445, seeds 7201-7202, D93)
 
-One voice-synth sound, generated 2026-11-20, for the puffball's release and for the burst of the harmless `HoneyFungus` and the
-`FalseHoneyFungus`. The three share it on purpose (D63: the ear must not tell which fungus kills). Constants: `SPORE_*` in
+One voice-synth sound, generated 2026-11-20, for the burst of the harmless `HoneyFungus` and the `FalseHoneyFungus` (it first also served the
+puffball, until #558 gave that its own `puffball_burst`). The two share it on purpose (D63: the ear must not tell which fungus kills). Constants: `SPORE_*` in
 `tools/audio/generate_sounds.py`; preview: `art/audio/previews/spore_puff.png`. The author auditions it with this change.
 
 - `spore_puff` (0.30 s, RMS -27.1 dBFS, peak -9.0 dBFS, ambient tier): a soft "fwuff": noise through a dull band (500 Hz) with a
   12 ms onset, then a brighter band (1.8 kHz) swelling in over 50 ms as the cloud spreads, both dying away, over a muffled
   rough /uh/ thump (110 to 70 Hz) for the cap giving way. Centroid about 2.5 kHz. Quieter and airier than `dust_puff`, so it never
   reads as the hero landing, and without the wet low gurgle of the snail.
-- Where it plays: the puffball once at the start of each cloud (never at the swell, never when a room opens inside a cloud), only
-  while the puffball's cap or cloud is in the camera view (`Level.puffballInView`); each honey fungus once when its swell ends.
+- Where it plays: each honey fungus once when its swell ends.
 
 Not verified: how it sits in the mix next to the puffball's neighbours in the running game (author's audition, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)).
 

@@ -127,7 +127,7 @@ SPRITES = {
     'ExplosiveStump': ('active', 'objects/trap-stump.png', (0, 0, 16, 16), 4, 'floor', FULL),  # the idle tell loop (#346)
     'ExplosiveRoot': ('active', 'objects/trap-root.png', (0, 0, 16, 24), 4, 'floor', FULL),  # the idle tell loop (#346)
     'Bomb': ('active', 'objects/trap-bomb.png', (0, 0, 16, 16), 1, 'floor', FULL),
-    'Puffball': ('active', 'objects/trap-puffball.png', (0, 0, 16, 16), 1, 'floor', FULL),
+    'Puffball': ('active', 'objects/trap-puffball.png', (0, 0, 16, 16), 2, 'floor', FULL),  # the two breaths: the frames it rests in
     'ThornVine': ('active', 'objects/trap-vine.png', (0, 0, 24, 40), 1, 'top', FULL),
     # #365 (D90): every frame the hive can show, each placed by hive_parts where HangingHive.render draws it: rest, shake1,
     # shake2, release and bare at the object; falling halfway down its drop; fallen on the solid; the stinger tile down the band.
