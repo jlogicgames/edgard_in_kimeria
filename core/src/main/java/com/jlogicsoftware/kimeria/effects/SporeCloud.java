@@ -16,7 +16,7 @@ import com.badlogic.gdx.math.RandomXS128;
  * </ol>
  * Every particle's start and end are kept {@code drawSize / 2} (at its largest) inside the rectangle, and positions are a straight
  * lerp between them, so no particle quad ever leaves the rectangle (D5: what is drawn is no wider than what kills). The palette is
- * the {@code trap-spores} one, so the cloud stays clearly lime next to the golden {@link KimeriaParticleSystem#KIND_GLOW} burst of the
+ * the lethal lime (the puffball's {@link PuffballFx} uses it too), so the cloud stays clearly lime next to the golden {@link KimeriaParticleSystem#KIND_GLOW} burst of the
  * harmless fungus. World Y grows downward: the haze rises, so its end Y is smaller than its start Y.
  * <p>
  * Nothing allocates after construction. {@link #update} only runs while the game runs (pause freezes it); the caller clears it with
@@ -30,7 +30,7 @@ public final class SporeCloud {
     public static final String SHADER = "spore_cloud.frag";
     /** The longest particle outlives the cloud by this much so the pool is never empty while the hitbox is live; it is cleared with it. */
     public static final float LIFE_MARGIN = 0.05f;
-    /** Palette of {@code trap-spores}: a6e04a, 5fa02a, e6f26a. */
+    /** The lethal lime: a6e04a, 5fa02a, e6f26a (the former {@code trap-spores} palette). */
     private static final float DARK_R = 0.373f, DARK_G = 0.627f, DARK_B = 0.165f;
     private static final float MID_R = 0.651f, MID_G = 0.878f, MID_B = 0.290f;
     private static final float LIGHT_R = 0.902f, LIGHT_G = 0.949f, LIGHT_B = 0.416f;

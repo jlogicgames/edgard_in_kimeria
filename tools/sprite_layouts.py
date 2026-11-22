@@ -52,8 +52,7 @@ FOREST_TRAP_SHEETS = {
     'stone': ((16, 16), ('stone', 'cracked')),
     'shadow': ((24, 8), ('small', 'medium', 'large')),
     'stone-lip': ((24, 8), ('loose', 'broken')),  # #360: the stone's at-rest cue, the loose overhang over its start point
-    'puffball': ((16, 16), ('idle', 'swell1', 'swell2', 'burst')),
-    'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
+    'puffball': ((16, 16), ('idle1', 'idle2', 'swell1', 'swell2', 'burst', 'spent')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
     # #362: the plain falling platform; since #236 a lashed plank whose slack rope sways through the frames (named fan1..fan4

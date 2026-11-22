@@ -4133,3 +4133,31 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   body at most 0.140 (was 0.074 to 0.133 / 0.142); snag outline 0.087 to 0.119, body at most 0.103; crown 0.026 to 0.165.
 - **References:** [ART_DIRECTION.md](ART_DIRECTION.md) "A branch always grows from a trunk (D122)"; [TRAPS.md](TRAPS.md) falling branch,
   rotten branch, deadfall and hive cards.
+
+## D125. The spore puffball is redrawn as a crimson sac with particle spores and its own sound ([#558](https://github.com/jlogicgames/edgard_in_kimeria/issues/558), 2026-11-22)
+
+- **Status:** Accepted by the author, 2026-11-22 (every recommendation of the proposal), from playtest F19 ([PLAYTEST_2.md](PLAYTEST_2.md)).
+  Built; the look and the sound await the author's eye and ear in the running game.
+- **Context:** in the second external playtest the "killer mushroom" did not read as dangerous. The author described a white cap with a yellow
+  ooze that keeps pouring out and drawing back: the shipped puffball (a pale cap on a stem, drawn like the harmless fungi) and its three-frame
+  sprite cloud that grew and shrank every 0.25 s. D71 asks a trap to be visible before it acts, D93 that its act is seen and heard.
+- **Decision (gameplay unchanged):** the clock, the shared warning (`TrapWarnings`: 0.8 s, 1.2 s with the assist), the 20x20 lethal rectangle, the
+  4 s period and every placement and phase (D58, D110) stay as they are. Only the look and the sound change:
+  - **Look:** a crimson, pear-shaped sac of the danger family with a lime mouth and veins (the lethal hue shows at rest). 6 frames: two breaths
+    (0.6 s each), two swell steps, the torn `burst` (first 0.25 s of the cloud), the empty `spent` (rest of the cloud and the first 0.4 s of the calm).
+  - **Spores as particles:** `effects.PuffballFx`, two `KimeriaParticleSystem`s (96 and 24 slots, from the measured peaks of 71 spores and 14 puffs in 40 seeds at 30, 60 and 144 fps over 20 s each; no new kind): crisp `KIND_GRIT` squares and a
+    `KIND_SMOKE` haze plus a `KIND_GLOW` flash. A leak of specks in the second half of the swell; at the release a flash, a jet from the chimney,
+    40 spores over the whole rectangle and 8 puffs; spores and puffs kept up while lethal; all cleared the frame the hitbox ends. Every quad stays
+    inside the lethal rectangle (D5). A room that opens inside a cloud shows it at once (no sound). The sprite sheet `trap-spores` is removed.
+  - **Sound:** a new `puffball_burst` (0.45 s, RMS -21.5 dBFS): a tear, a rattling spray and a wheeze. `spore_puff` stays the honey fungi's shared
+    sound (D63). The puffball is no look-alike, so it no longer shares it.
+  - **Apart from the false honey fungus:** shape (a sac against a tuft), colour (crimson against sulphur), rest (breathes on a clock against waits),
+    cloud (crisp pixel spores against a swirling shader haze) and sound.
+- **Measured (2026-11-22):** `check_contrast.py` passes, no threshold changed: outline 0.655 to 0.686 (was 0.625 to 0.653). `AllocationBudgetTest`
+  `puffballsLeakReleaseAndCloud`: 0.0, 0.3 and 0.3 B/frame in 3 isolated runs (ceiling 8); `Puffball.lethalTo` no longer builds a `Rectangle` per frame
+  of a cloud (the box is built once). the 56 other generated sounds byte-identical.
+- **Tests:** `PuffballFxTest` (containment on every frame at 30, 60 and 144 fps, the whole rectangle speckled on the first lethal frame, nothing
+  outliving the hitbox, the leak only in the swell's second half, pool headroom, determinism, pause), `SporePuffSoundTest` (the puffball plays
+  `puffball_burst`, never `spore_puff`), `SpriteSheetContractsTest` (6 frames).
+- **Not verified:** the sprites, the spores and the sound in the running game, desktop and web; the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)).
+- **References:** [TRAPS.md](TRAPS.md) (the card), [ART_DIRECTION.md](ART_DIRECTION.md), [SOUND_DIRECTION.md](SOUND_DIRECTION.md).
