@@ -55,9 +55,6 @@ FOREST_TRAP_SHEETS = {
     'puffball': ((16, 16), ('idle1', 'idle2', 'swell1', 'swell2', 'burst', 'spent')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
-    # #362: the plain falling platform; since #236 a lashed plank whose slack rope sways through the frames (named fan1..fan4
-    # from the old fan) and whose split is the D71 cue.
-    'falling-platform': ((32, 10), ('fan1', 'fan2', 'fan3', 'fan4')),
     # #349 (D80): the branch skins. perch = the sound branch (a one-way Platform), rotten-perch = the rotten branch
     # (a FallingPlatform, frames as the log's); each with its copy for the left side of a trunk.
     'perch': ((32, 16), ('perch', 'perch-left')),

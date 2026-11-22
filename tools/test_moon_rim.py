@@ -31,8 +31,6 @@ NIGHT = (0x2c, 0x3f, 0x66, 255)  # D92's approved night colour
 NIGHT_SIZE = 64
 EXTRA = (0x12, 0x34, 0x56)  # a 16th opaque colour, for the refusal test
 AT = 24  # where a trap frame is measured on the night patch
-CRACKED = 'falling-platform'  # #362: its split (#236) is a D71 cue through the top edge
-CRACK_INK = (0x21, 0x1f, 0x30, 255)
 TRIED_SHEET = 'thorn-tuft'  # an active trap whose ink contour fails on the night (0.189, w6-430 rim notes)
 
 
@@ -88,16 +86,6 @@ class RimTest(unittest.TestCase):
         out = moon_rim.rim(ink_square(), keep={(MIDDLE, TOP)})
         self.assertEqual(out.getpixel((MIDDLE, TOP)), INK)
         self.assertEqual(out.getpixel((MIDDLE + 1, TOP)), RIM)
-
-    def test_the_falling_platform_keeps_its_crack_in_ink(self):
-        sheet, _ = traps.sheet_image(CRACKED)
-        _, _, rows = traps.parse(traps.layout(CRACKED)[0])
-        frame_w = cell_of(CRACKED)[0]
-        for index, (_, frame) in enumerate(rows):
-            for y, row in enumerate(frame):
-                for x, char in enumerate(row):
-                    if char == traps.RIM_KEEP[CRACKED]:
-                        self.assertEqual(sheet.getpixel((index * frame_w + x, y)), CRACK_INK, (index, x, y))
 
     def test_a_sheet_must_be_whole_cells(self):
         with self.assertRaises(ValueError):

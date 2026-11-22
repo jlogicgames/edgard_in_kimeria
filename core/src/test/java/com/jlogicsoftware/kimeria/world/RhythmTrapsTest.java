@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Rhythmic forest traps (D46, #234): spore puffball, swinging thorn vine and the rotten-log skin, on the
- * test-resource map {@code rhythm-test.tmx} (room 0 puffball, room 1 vine, room 2 log and plank). A scripted hero
+ * test-resource map {@code rhythm-test.tmx} (room 0 puffball, room 1 vine, room 2 log). A scripted hero
  * with ordinary controls (hold right, standing still while the trap runs) measures the safe windows; waiting
  * before the walk is exactly a phase offset. Recipe: docs/ROOMS.md.
  */
@@ -175,7 +175,6 @@ class RhythmTrapsTest {
         assertEquals(Puffball.Phase.CALM, p.currentPhase());
         assertEquals(4.5f, vine(room(VINE)).period(), 0f);
         assertEquals(1, room(LOG).fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).count());
-        assertEquals(1, room(LOG).fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count());
     }
 
     @Test void theSwellTellIsTheSharedWarningAndTheAssistLengthensIt() {
@@ -451,37 +450,27 @@ class RhythmTrapsTest {
         return level.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).findFirst().orElseThrow();
     }
 
-    private FallingPlatform plank(Level level) {
-        return level.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).findFirst().orElseThrow();
-    }
-
-    @Test void theRottenLogFallsExactlyLikeThePlatformAndDefaultsStayThePlatformSkin() {
-        assertEquals(FallingPlatform.Skin.PLATFORM, FallingPlatform.Skin.fromMap(""));
+    @Test void theRottenLogIsTheOnlyFallingPlatformLookAndFallsAfterTheSharedWarning() {
+        assertEquals(FallingPlatform.Skin.LOG, FallingPlatform.Skin.fromMap(""));
         assertEquals(FallingPlatform.Skin.LOG, FallingPlatform.Skin.fromMap("log"));
         assertThrows(IllegalArgumentException.class, () -> FallingPlatform.Skin.fromMap("oak"));
         Level level = room(LOG);
-        FallingPlatform log = log(level), plank = plank(level);
+        FallingPlatform log = log(level);
         assertFalse(log.isFalling());
-        log.collideWithActor(); plank.collideWithActor();
-        float logY = log.getY(), plankY = plank.getY();
+        log.collideWithActor();
+        float logY = log.getY();
         int firstMove = -1;
-        for (int i = 0; i < 60 * 4; i++) {
+        for (int i = 0; i < 60 * 4 && !log.isRemoved(); i++) {
             frame(level);
-            assertEquals(log.isFalling(), plank.isFalling());
-            if (firstMove < 0 && log.getY() > logY) {
-                firstMove = i;
-                assertTrue(plank.getY() > plankY, "the plank moves on the very same frame");
-            }
-            if (log.isRemoved()) { assertTrue(plank.isRemoved(), "gone together"); break; }
-            assertEquals(log.getY() - logY, plank.getY() - plankY, 1e-4f, "same fall");
+            if (firstMove < 0 && log.getY() > logY) firstMove = i;
         }
         assertTrue(log.isRemoved());
         assertEquals(TrapWarnings.FALLING_PLATFORM_SECONDS, firstMove * STEP, 3 * STEP, "falls after the shared 1 s warning");
     }
 
-    /** Rhythmic trap types and the log skin each shipped level may use; #260 (D58) allows the one puffball and the rotten log in forest-1; #261 (D59) the one thorn vine in forest-2; #545 (D116) the `skin` of forest-2's four sound one-way branches (`Platform` `skin=branch`, never a log: the check below still demands every falling platform of forest-2 be the plain one). */
+    /** Rhythmic trap types and the log skin each shipped level may use; #260 (D58) allows the one puffball and the rotten log in forest-1; #261 (D59) the one thorn vine in forest-2; #545 (D116) the `skin` of forest-2's four sound one-way branches (`Platform` `skin=branch`, never a log: the check below still demands every falling platform of forest-0 and forest-2 be the rotten log). */
     private static final java.util.Map<String, Set<String>> SHIPPED_ALLOWANCE = java.util.Map.of(
-        "forest-0", Set.of(), "forest-1", Set.of("Puffball", "skin"), "forest-2", Set.of("ThornVine", "skin"));
+        "forest-0", Set.of("skin"), "forest-1", Set.of("Puffball", "skin"), "forest-2", Set.of("ThornVine", "skin"));
 
     @Test void shippedLevelsUseOnlyAllowedRhythmTrapsAndEveryTrapTheyUseLoadsValidated() {
         for (String name : new String[]{"forest-0", "forest-1", "forest-2"}) {
@@ -493,7 +482,7 @@ class RhythmTrapsTest {
             assertTrue(SHIPPED_ALLOWANCE.get(name).containsAll(used), name + " uses " + used + ", allowed " + SHIPPED_ALLOWANCE.get(name));
             // Loading runs the strict validation of every trap in the map (rhythm, room, entrance, exit, checkpoints).
             Level level = new Level(assets, game, new Player(assets, game, 0, 0), name, Rectangle::new);
-            if (!used.contains("skin") || name.equals("forest-2")) assertTrue(level.fallingPlatforms.stream().allMatch(f -> f.skin() == FallingPlatform.Skin.PLATFORM), name);
+            if (!name.equals("forest-1")) assertTrue(level.fallingPlatforms.stream().allMatch(f -> f.skin() == FallingPlatform.Skin.LOG), name);
         }
     }
 

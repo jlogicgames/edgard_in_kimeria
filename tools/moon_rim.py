@@ -39,7 +39,7 @@ UP_SIDE = ((0, -1),)  # up only: a sprite lit from above, its sides and undersid
 def rim(image, cell=None, colour=RIM, keep=frozenset(), sides=LIT_SIDES):
     """A copy of `image` with the moon rim; `cell` (w, h) is the frame size of a strip or grid sheet, default the image.
 
-    `keep` holds (x, y) pixels never repainted: a trap's at-rest cue drawn in ink on a lit edge (the falling platform's crack).
+    `keep` holds (x, y) pixels never repainted: a trap's at-rest cue drawn in ink on a lit edge.
     `sides` are the lit sides, default up, left and right; the fairy (#338, #236) is lit from above only (UP_SIDE), so half her
     contour keeps its ink and she reads on both the near-black play band and the moon.
     """
