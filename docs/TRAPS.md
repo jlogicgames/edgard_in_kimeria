@@ -95,7 +95,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `FallingStone` | position | HIDDEN | loose overhang: a cracked rock lip with the stone's crown wedged in it, grit trickling every 1.5 s | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
 | `ExplosiveStump` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
 | `ExplosiveRoot` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's idle tell and wind-up language) | D47, D59 |
-| `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-entry` (`forest-2`) | D7, D51, D60 |
+| `Bomb` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump teaches the explosive language; no Forest room places the Bomb since D128, it is kept for the Fortress, #116) | D7, D51, D60, D128 |
 | `Puffball` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-traps`, seen clouding from the entrance | D46, D58, D110 |
 | `ThornVine` | rhythm | VISIBLE | none needed | the motion is the warning | `forest-canopy` (`forest-2`), seen swinging from afar | D46, D59 |
 | `HoneyFungus` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-lever`, harmless demonstration | D63 |
@@ -104,7 +104,9 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | `Deadfall` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-deadfall`, on open floor among a falling stone and a RedMob (D105, #500), its pocket on the trip vine | D88 |
 | `Bramble` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s inside the period | `forest-1-bramble`, seen cycling from the floor before the climb | D46, D89 |
 | `HangingHive` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-hive`, seen raining from the entrance over open floor, then over the ladder | D90 |
-| `EmberFissure` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-fissure`, seen jetting from the entrance over open floor, then under a branch it pierces | D91 |
+| `LegHold` | touch | DISGUISED | leaf litter over flat jaws, always drawn: two bone tooth tips, a sinew-wrapped hinge at each end, a peg with its cord | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-entry`, met at its pocket on the floor after the stair, among known beats | D128 |
+| `LanceRoot` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-fissure`, seen lancing from the entrance over open floor, then under a branch it pierces | D91, D129 |
+| `EmberFissure` | rhythm | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-fissure` (the clocked column's room; no Forest room places the fissure since D129, it is kept for the Swamp geyser, #105, #399) | D91, D129 |
 <!-- trap-catalogue:end -->
 
 `FallingPlatform` with `skin=log` (the rotten log, D46; also the look of an object with no `skin`) or `skin=branch` (the rotten tree branch, D80) is the same type
@@ -258,6 +260,8 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 
 ### Bomb (`Bomb`)
 
+**Kept for the Fortress ([D128](DECISIONS.md#d128-the-leg-hold-trap-replaces-the-forest-bomb-561-2026-11-22)).** No Forest map places it any more (the Bomb of `forest-entry` became the leg-hold); its code, art and tests stay for the castle ([#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116)).
+
 | Field | Value |
 | --- | --- |
 | Family | touch |
@@ -271,7 +275,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Lethal part | one 64×64 square check at detonation |
 | Counter | clear the square during the fuse |
 | Reset | saved trap state on a healer revisit (D7), otherwise room rebuild |
-| Taught in | `forest-entry` (`forest-2`; the explosive language is taught by the stump) |
+| Taught in | `forest-0-stone` (the explosive language is taught by the stump; `forest-entry` placed the Bomb until D128) |
 | Load checks | none of its own |
 | Tests | `BombTest` |
 | Art and sound | bomb sprite (D60), shader blast `BombExplosionEffect`, `explosion` sound; no screen shake at the blast, a decision not taken yet ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448)). Consequence (D93): `explosion` |
@@ -435,6 +439,8 @@ Approved by the author on 2026-11-17 ([#364](https://github.com/jlogicgames/edga
 
 ### Ember fissure (`EmberFissure`)
 
+**Kept for the Swamp ([D129](DECISIONS.md#d129-the-lance-root-replaces-the-forests-ember-fissure-562-2026-11-22)).** `forest-fissure` places the lance root now (same clock, column and rules, one shared element); the fire jet returns as a Swamp geyser ([#105](https://github.com/jlogicgames/edgard_in_kimeria/issues/105), [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399)). Its code, art, sounds and tests stay.
+
 Approved by the author on 2026-11-17 ([#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366),
 [D91](DECISIONS.md#d91-the-ember-fissure-a-clocked-fire-jet-from-a-floor-crack-taught-in-forest-2-366-2026-11-17)).
 
@@ -457,6 +463,56 @@ Approved by the author on 2026-11-17 ([#366](https://github.com/jlogicgames/edga
 | Tests | `EmberFissureTest` (`fissure-test.tmx`: open floor, then the branch step): the warning equals the shared warning (0.8 and 1.2 s); every phase boundary; the column's rise, hold and sink as a rectangle against the floor line; lethal only inside the 8 px column, never the crust; no unannounced jet at the room start; the sounds once per cycle and only in the camera view; the falling sparks and the spent frame after every jet; a walker who goes when a jet ends passes at every 0.05 s offset with and without the assist (a blind walker dies at 23 of 71 offsets); a climber who goes when a jet ends crosses the branch to the ledge at every offset with and without the assist (3.75 to 6.73 s after the start delay); waiting on the branch beside the column is safe; retry and Restart Level; pause; determinism and the spark pool; the load rules. `AllocationBudgetTest.emberFissuresCycle` 1.1 B/frame (ceiling 8). `test_check_tiled_links.EmberFissureLinksTest` |
 | Art and sound | `trap-fissure` 16×12 × 6 (`rest1`, `rest2`, `warn1`, `warn2`, `vent`, `spent`; grid `art/objects/forest-traps/fissure.grid`) and `trap-ember-jet` 8×16 × 4 (`jet1`, `jet2`: the column tile, drawn a row at a time up from the floor line and swapped every 0.05 s so the flame climbs; `top1`, `top2`: the 8 px tip; `ember-jet.grid`), authored sprites; the sparks are particles. Palette: ink `0b0814`, ash `d8d6e8`/`9a97ad`/`5b5870`, ember `7a1a14`/`b3201a`/`d8461c`/`f07a1a`/`ffd23a`/`fff4b0` (the stump's family: dull red at rest, orange and yellow only in the warning and the jet); no new hue. Active tier over the night `2c3f66` (D92), measured by `check_contrast.py` at the two fissures of `forest-fissure`: fissure 0.377 at worst, jet tile 0.349, tip 0.398 (floor 0.28), with no moon rim: the pale ash rim and the flame already read on the night. Sounds `fissure_rumble` (warning) and `ember_jet` (the jet), heard only while the fissure or its column is in the camera view (SOUND_DIRECTION). Every jet, hit or miss, also leaves seven sparks falling from the upper column as it sinks and the sooted `spent` frame for 0.4 s. Consequence (D93): `ember_jet`. The author played the room and heard both sounds in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)) |
 | Decision | D46 (rhythm rules), D91 |
+
+### Leg-hold trap (`LegHold`)
+
+Card, hidden look, floor placement, Bat 43 and the 6/14 px boxes approved by the author on 2026-11-22 (relayed; see D128) ([#561](https://github.com/jlogicgames/edgard_in_kimeria/issues/561),
+[D128](DECISIONS.md#d128-the-leg-hold-trap-replaces-the-forest-bomb-561-2026-11-22)). A hunter's trap of forest materials, so it
+is no plant (D42, D71 reject one); it lies flat under leaves. World Y grows downward: the box's bottom is the floor.
+
+| Field | Value |
+| --- | --- |
+| Family | touch |
+| Visibility (D71) | **DISGUISED** (the first card was VISIBLE with open jaws; the author rejected it on 2026-11-22: a real leg-hold lies on the ground, under leaves) |
+| At rest | frame `open` of `trap-leghold` (32×16, bottom on the floor line): a 5 px mound of leaf litter (olive, brown and dark leaf colours, 24 px wide) over the flat jaws. It looks like the litter the forest floor shows; the leaves are the disguise |
+| At-rest cue | always drawn, the same on every instance, all four together found nowhere else: **two bone tooth tips** (2 px, `efe6c4`) through the top of the litter, a **crimson sinew wrap** (`86101f`) at the hinge on each end, a **wooden peg** (`4a2e1c`, 9 px) at the right end and the **pale cord** (`b8ad9c`) running from it into the litter. Subtle but always there and readable once known; the first meeting shows it (below) |
+| Reads from | the cue from ~320 px (outline 0.412 at worst, the tips 0.601 and above, active tier); the danger itself from the trigger zone |
+| Trigger | two. **Zone:** the hero's body box (11×22) overlaps the litter's box widened by `zone` px (default 24, 16 to 64) each side and 32 px up: starts the warning. **Contact:** the body box overlaps the litter's box (24×6 px, x + 4 to x + 28, on the floor line) while the jaws are open, also during the warning: the leg is caught at once. A **thrown stone** that lands on the litter snaps the jaws at once, empty (kept, drops). A **fireball cannot snap it**: it flies at floor−19..floor−9 with no gravity and passes over the 6 px litter (pinned by `LegHoldProjectilesTest`) |
+| Telegraph (D7) | `rattle1` and `rattle2` alternate every 0.1 s: the leaves shiver (a third of the pixels shift by 1 px, gaps open, two leaves lift) and the tips bob; soil specks (`KIND_GRIT`) hop from the hinges every 0.1 s; `leghold_rattle`. The litter moving is the tell, so a player who missed the cue still sees it before the snap |
+| Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s, sampled once when the hero enters the zone; staying or leaving does not restart or cancel it |
+| Lethal part | open (OPEN and WARNING): the litter's box, **24×6 px** (floor−6..floor, the litter and its two tips as drawn); for the snap's 0.1 s (`snap`): the **24×14 px** arch of the sprung jaws (floor−14..floor, as drawn), so a hero over the litter within 14 px of the floor is caught at that instant; shut and re-arming jaws never hurt |
+| Cycle | OPEN, WARNING, SNAP (0.1 s), SHUT for `window` s (default 2.0, 1.0 to 3.0; past the window it stays shut while the hero's body is over the litter's box, so the jaws never lift under a foot), REARM (0.3 s, the leaves settle back), OPEN again; if the hero still stands in the zone the next warning begins at once |
+| Counter | free (D26): stand in the zone short of the litter, let it snap empty and walk over it shut (24 px and an 11 px body are 0.35 s of walking, the window is 2.0 s); or jump the litter (6 px high); or walk back out. Optional: a thrown stone from afar (free, D39). No answer needs ammunition; the fireball does not work on it, by its geometry, and that costs nothing (D26) |
+| Reset | retry, Restart Level and room re-entry rebuild it open with no warning started |
+| Taught in | `forest-entry` (`forest-2`): the first meeting is a trip-and-stand pocket (D109) at x 478 on the floor where the stair's jump lands, beat 3 among known beats (D105). The room card introduces `leg-hold` (the D71 teaching-room check, `TrapTeachingRoomTest`). **How the cue is learned there:** from x 478 (in the zone, 16.5 px clear of the litter) the cue, the tell and the act play on one object, hit or miss, before any lethal choice: the tips, wraps and peg at rest, the same litter shivering when he enters the zone, then after 0.8 s the leaves burst and the jaws spring up to 14 px and snap empty, stay shut 2.0 s and the leaves settle back; the cycle repeats while he stands in the zone |
+| Load checks | `LegHold.fromMap` (properties `zone` and `window` only, finite, in range; 32×16) and `LegHold.problem` (a floor, a block or a one-way platform, under all 32 px, merged within 0.5 px; 96 px of free height over the jaws, a one-way platform is no solid), `Level.legHoldFor` for every room at load (the snapped arch inside the room, never over the entrance, the exit or a checkpoint); mirrored in `check_tiled_links.py` (`leghold_problems`) |
+| Tests | `LegHoldTest` (the warning equals the shared warning at both assist values; contact while open catches at once and a hop over the 6 px litter is safe; the snap catches only its 14 px arch; shut jaws are harmless; the cycle, the jaws staying shut under a foot; retry, Restart Level, re-entry; the load rules), `LegHoldProjectilesTest` (a thrown stone landing on the litter snaps it and is not consumed; a fireball flies over it and never snaps it), `FirstMeetingPocketTest.forestEntryTheLegHold` (the pocket and the trip-and-stand condition), `RoomReplayTest` (the route, the retry, `theExitIsReachedSafelyPastBat43AtEveryBatPhase`), `test_check_tiled_links.LegHoldLinksTest`, `AllocationBudgetTest.legHoldsRattleAndSnap` |
+| Art and sound | `trap-leghold` 32×16 × 6 (`open`, `rattle1`, `rattle2`, `snap`, `shut`, `rearm`; grid `art/objects/forest-traps/leghold.grid`), moon rim (`RIM_SHEETS`); palette: ink `0b0814`, bark `4a2e1c`/`8a5a30`, bone `efe6c4`/`b8ad9c`, sinew `86101f`/`4a0c22`, leaf `5b4a22`/`7b6a30`/`33301a`/`4a5a22` (the litter only). Active tier, 0.412 outline at worst over the night at the placed trap, and 0.608 / 0.601 for the two bone tooth tips on their own (`LegHold:tip`, `LegHold:tip2`; D76, `check_contrast.py`; the whole frame was 0.537 for the earlier open-jaw art). Specks and chips are particles (`KIND_GRIT`). Sounds `leghold_rattle` (warning) and `leghold_snap` (the act), heard only while the trap is in the camera view; the author has not heard them yet ([#561](https://github.com/jlogicgames/edgard_in_kimeria/issues/561) stays open for the audition). Every snap, hit or miss, bursts the leaves and throws five bone and bark chips up. Consequence (D93): `leghold_snap` |
+| Decision | D128 (amends D51) |
+
+### Lance root (`LanceRoot`)
+
+Approved by the author on 2026-11-22 (relayed) ([#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562),
+[D129](DECISIONS.md#d129-the-lance-root-replaces-the-forests-ember-fissure-562-2026-11-22)). It has the ember fissure's clock,
+column and rules (D91, the [card](#ember-fissure-emberfissure)): only the look, the particles and the sounds differ, so the two are
+one element (`clocked-column`), a reskin by the registry's rule.
+
+| Field | Value |
+| --- | --- |
+| Family | rhythm |
+| Visibility (D71) | VISIBLE |
+| At rest | frames `rest1`/`rest2` of `trap-lance-root` (16×12, top = floor line − 4): a burl of bark (`4a2e1c`/`8a5a30`) on the floor with a dark hollow and wet crimson heartwood (`86101f`, `c87896`) pulsing every 0.5 s, ink contour and the moon rim. It moves, sits on the floor line and carries the danger family's crimson (D76) |
+| At-rest cue | none needed |
+| Reads from | ~320 px: the pulse and the burl; the lance itself is seen across the screen |
+| Trigger | the level clock, `(elapsed + phase) mod period`, as the ember fissure (D91): calm, warning, then the thrust for the last `jet` s; no dependence on the hero |
+| Telegraph (D7) | `warn1` (the bark lips lift and a bone tip shows) for the first half of the warning, `warn2` (the tip up 2 px, wobbling) for the second; soil specks hop from the lips every 0.06 s (`KIND_GRIT` of the object's own system); `root_creak` |
+| Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s, taken from the calm; the thrust starts at the same point of every cycle, assist or not |
+| Rhythm, lethal part, counter, reset | exactly the ember fissure's (D91): period 3.5 s, jet 1.0 s (up in 0.1 s, held, down in 0.2 s), height 96 px; the 8 px column from the floor line up to the tip, lethal exactly where drawn, through a one-way branch and cut by a solid above; free counters only (wait beside the column, cross between thrusts; a stone or a fireball does nothing); rebuilt at the authored phase on every retry, Restart Level and room re-entry; pause freezes it |
+| Taught in | `forest-fissure` (`forest-2`): seen lancing from the entrance over open floor, then under the one-way branch it pierces; `ForestFissureTest` |
+| Load checks | the ember fissure's, through the shared base (`EmberFissure.fromMap`, `Level.fissureFor`), the type named in the errors; mirrored in `check_tiled_links.py` (`fissure_problems`) |
+| Tests | `LanceRootTest` (step for step the ember fissure's phases, frames and column at both assist values; the warning equals the shared one; the chips; the sounds once per cycle and only in view; the load on `lance-test.tmx`), `ForestFissureTest` (the room: a walker who goes when a thrust ends passes at every offset), `FirstMeetingPocketTest.forestFissureTheFirstFissure`, `RoomReplayTest`, `AllocationBudgetTest.lanceRootsCycle` |
+| Art and sound | `trap-lance-root` 16×12 × 6 (`rest1`, `rest2`, `warn1`, `warn2`, `vent`, `spent`; `lance-root.grid`; moon rim) and `trap-lance-shaft` 8×16 × 4 (`shaft1`, `shaft2`: the column tile, swapped every 0.05 s so the bark rings climb; `top1`, `top2`: the 8 px bone tip; `lance-shaft.grid`; no rim, a repeating tile). The column is pale bleached wood round crimson heartwood with dark rings and the tip is bone: an ink outline vanishes on the night (D92), the pale edge carries the contrast. Active tier over the night at the placed roots: burl 0.449, shaft 0.529, tip 0.482 at worst (D76). Sounds `root_creak` (warning) and `root_thrust` (the thrust), heard only while the root or its column is in the camera view; the author has not heard them yet ([#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562) stays open for the audition). Every thrust, hit or miss, drops six bark chips from the upper column as it sinks and shows the `spent` frame for 0.4 s. Consequence (D93): `root_thrust` |
+| Decision | D91 (the clock and column), D129 (amends D91) |
 
 ## Proposed traps (D71, not built)
 

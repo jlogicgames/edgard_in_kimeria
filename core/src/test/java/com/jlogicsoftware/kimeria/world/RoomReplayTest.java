@@ -121,6 +121,38 @@ class RoomReplayTest {
     @Test void forestOneMobRoomRequiredRouteFitsTwentySeconds() {
         assertEquals(MOB_S, measure("forest-1-mob", 0, false, 0, new float[]{3680, 4050}), PIN_MARGIN, "the card's beat time (D105)");
     }
+    /** D128: the leg-hold is beat 3 and a death at its teeth replays about 4.6 s, well inside D105's 6 s for a first meeting that is not among the first two beats. */
+    @Test void theLegHoldRetryIsAboutFourSeconds() {
+        legHoldArrival = -1;
+        measure("forest-entry", 0, false, 0, ENTRY_JUMPS);
+        assertEquals(4.63f, legHoldArrival, 0.1f, "the card's retry (first reached at " + legHoldArrival + " s)");
+    }
+
+    /**
+     * D128: Bat 43 patrols x 656-688 after the pit-2 landing, 16 px short of the exit. Its whole patrol stays clear of the exit, and the
+     * mastered route, started late by 0 to 4 s (0.2 s steps) so it meets the Bat at every point of its patrol, is never hit at the landing
+     * or on the way to the exit and reaches it ({@code replay} fails on a hit and when the exit is not reached).
+     */
+    @Test void theExitIsReachedSafelyPastBat43AtEveryBatPhase() {
+        Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        Rectangle exit = level.roomLayout.rooms.get(0).exit();
+        var bat = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Bat).map(o -> (com.jlogicsoftware.kimeria.entity.enemy.Bat) o)
+            .max(java.util.Comparator.comparingDouble(b -> b.hitboxBounds().x)).orElseThrow();
+        assertEquals(672f, bat.getX(), 0.5f, "Bat 43");
+        for (int frame = 0; frame < 60 * 40; frame++) {
+            level.update(REAL_STEP);
+            Rectangle b = bat.hitboxBounds();
+            assertTrue(b.x + b.width <= exit.x - 8f, "the Bat's patrol reaches x " + (b.x + b.width) + ", the exit starts at " + exit.x);
+            assertTrue(b.x >= 656f - 1f, "and it never patrols short of x 656 (its patrol is x 656-688)");
+        }
+        StringBuilder deaths = new StringBuilder();
+        for (int delay = 0; delay <= 240; delay += 12) {
+            try { measure("forest-entry", 0, false, delay, ENTRY_JUMPS); }
+            catch (AssertionError e) { deaths.append(delay / 60f).append(" s: ").append(e.getMessage()).append('\n'); }
+        }
+        assertEquals("", deaths.toString(), "the mastered route, started late, died at the pit-2 landing or before the exit");
+    }
+
     @Test void forestEntryRequiredRouteFitsTwentySeconds() {
         assertEquals(ENTRY_S, measure("forest-entry", 0, false, 0, ENTRY_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }
@@ -146,9 +178,15 @@ class RoomReplayTest {
         measure("forest-canopy", 4, true, 0, new float[]{1400, 1460, 1555});
     }
 
+    /** The mastered hero stops this far short of the leg-hold's teeth when they are not shut (D128). */
+    private static final float LEGHOLD_WAIT_PX = 16;
+    /** The wait is for a hero on the floor: one on the ledge above (feet at y 240) cannot be seen by the trap and walks on, off the ledge's end. */
+    private static final float LEGHOLD_FLOOR_BELOW = 300;
+    /** Seconds from the room's start at which the mastered route first stands short of the leg-hold's open teeth: the soonest a death at them can replay from (D105's retry), -1 before it. */
+    private float legHoldArrival = -1;
     private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 6.83f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -326,22 +364,24 @@ class RoomReplayTest {
     }
 
     /** The teaching order of #73: each mechanic first appears alone, and the room-one threats do not overlap. */
-    @Test void forestIntroducesStompBombAndFallingPlatformOneAtATime() {
+    @Test void forestIntroducesStompTheLegHoldAndFallingPlatformOneAtATime() {
         Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
+        assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "the Bomb left the forest for the Fortress (D128)");
         var mobs = level.objects.stream().filter(o -> o instanceof Enemy<?> e && !e.getClass().getSimpleName().equals("Bat"))
             .map(o -> (Enemy<?>) o).sorted(java.util.Comparator.comparingDouble(e -> e.hitboxBounds().x)).toList();
         assertFalse(mobs.isEmpty());
         assertEquals("YellowMob", mobs.get(0).getClass().getSimpleName(), "stomp is the first mechanic met");
-        assertTrue(mobs.get(0).hitboxBounds().x < bomb.centerX(), "the first mob comes before the bomb");
+        var legHold = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.LegHold.class::isInstance)
+            .map(com.jlogicsoftware.kimeria.entity.objects.LegHold.class::cast).findFirst().orElseThrow();
+        assertTrue(mobs.get(0).hitboxBounds().x < legHold.getX(), "the first mob comes before the leg-hold");
         for (Enemy<?> mob : mobs) {
-            float gap = Math.abs(mob.hitboxBounds().x + mob.hitboxBounds().width / 2f - bomb.centerX());
-            assertTrue(gap >= 150f, "a walking enemy starts too close to the bomb: " + gap + " px");
+            float gap = Math.abs(mob.hitboxBounds().x + mob.hitboxBounds().width / 2f - legHold.centerX());
+            assertTrue(gap >= 150f, "a walking enemy starts too close to the leg-hold: " + gap + " px");
         }
         assertTrue(level.fallingPlatforms.isEmpty(), "falling platforms are not introduced in the entry room");
         level.enterNextRoom(player());
         assertTrue(level.fallingPlatforms.isEmpty(), "nor in the wall room");
-        assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "the bomb stays in the entry room (#376)");
+        assertTrue(level.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.objects.LegHold.class::isInstance), "the leg-hold stays in the entry room");
         level.enterNextRoom(player());
         assertTrue(level.fallingPlatforms.isEmpty(), "nor in the fissure room (#366)");
         level.enterNextRoom(player());
@@ -355,8 +395,9 @@ class RoomReplayTest {
             && Math.abs(e.hitboxBounds().x - platformX) < 64f), "no walking enemy right at the falling platform");
     }
 
+    /** The Bomb is kept for the Fortress (D128); these two tests run on the one-room fixture {@code bomb-test.tmx}. */
     @Test void touchingABombThroughGameplayStartsAWarningInsteadOfImmediateDeath() {
-        Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        Level level = new Level(assets, game, player(), "bomb-test", Rectangle::new);
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
         level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
@@ -370,7 +411,7 @@ class RoomReplayTest {
     }
 
     @Test void playerCanEscapeAnActivatedBombAndReturnDuringItsCosmeticEffect() {
-        Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
+        Level level = new Level(assets, game, player(), "bomb-test", Rectangle::new);
         Bomb bomb = level.objects.stream().filter(Bomb.class::isInstance).map(Bomb.class::cast).findFirst().orElseThrow();
         Rectangle hitbox = level.player.hitboxBounds();
         level.player.position.add(bomb.centerX() - hitbox.x, bomb.centerY() - hitbox.y);
@@ -467,6 +508,16 @@ class RoomReplayTest {
                 else if (gladeRoute != null) gladeRoute.drive(level, held, pressed);
                 else if (wallsRoute != null) wallsRoute.drive(level, held, pressed);
                 else held.add(phase == 0 || phase == 2 ? Input.Keys.A : Input.Keys.D);
+                // D128: the leg-hold's mastered answer needs no jump: stand short of the open jaws, let them snap empty, walk over them shut.
+                if (route.equals("forest-entry") && held.contains(Input.Keys.D)) {
+                    com.jlogicsoftware.kimeria.entity.objects.LegHold legHold = level.objects.stream()
+                        .filter(com.jlogicsoftware.kimeria.entity.objects.LegHold.class::isInstance)
+                        .map(com.jlogicsoftware.kimeria.entity.objects.LegHold.class::cast).findFirst().orElse(null);
+                    Rectangle me = player.hitboxBounds();
+                    float teeth = legHold == null ? 0 : legHold.openBoxInto(new Rectangle()).x, right = me.x + me.width;
+                    if (legHold != null && me.y + me.height > LEGHOLD_FLOOR_BELOW && right < teeth && right > teeth - LEGHOLD_WAIT_PX && legHold.phase() != com.jlogicsoftware.kimeria.entity.objects.LegHold.Phase.SHUT)
+                    { held.remove(Input.Keys.D); if (legHoldArrival < 0) legHoldArrival = frame * REAL_STEP; }
+                }
                 // #500 (D105): Bat 41 hangs in the stair's gap at x 352; the collection route (coins under and past it) waits on the ground while the Bat is within 40 px of him.
                 boolean batWait = collect && route.equals("forest-entry") && player.isOnGround() && batClose(level, player);
                 if (batWait) { held.remove(Input.Keys.D); held.remove(Input.Keys.A); }

@@ -94,12 +94,13 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | proximity-thorn | `ThornRoot`, `ThornTuft` | jumps thorns that rise when the hero comes near | hazard |
 | falling-branch | `FallingBranch` | keeps walking under a branch that falls behind him | hazard |
 | falling-stone | `FallingStone` | reads the shadow and does not stand under it | hazard |
-| touch-explosive | `ExplosiveStump`, `ExplosiveRoot`, `Bomb` | jumps it, walks clear of the wind-up, or sets it off from afar | hazard |
+| touch-explosive | `ExplosiveStump`, `ExplosiveRoot`, `Bomb` | jumps it, walks clear of the wind-up, or sets it off from afar; no Forest room places the `Bomb` since D128 (it is kept for the Fortress, [#116](https://github.com/jlogicgames/edgard_in_kimeria/issues/116)) | hazard |
+| leg-hold | `LegHold` | stands short of open jaws, lets them snap empty and walks over them shut within their window, or jumps them (D128) | hazard |
 | puffball | `Puffball` | crosses a rhythmic spore cloud in its calm | hazard |
 | thorn-vine | `ThornVine` | passes a swinging vine by watching its rhythm | hazard |
 | bramble | `Bramble` | waits out a thorn arm that grows across a lane on a clock and passes in its open window (D89) | hazard |
 | hanging-hive | `HangingHive` | passes under, or climbs through, a falling curtain of stingers in its calm; may knock the hive down | hazard |
-| ember-fissure | `EmberFissure` | waits beside a floor crack for its jet of fire to sink and passes in the calm (D91) | hazard |
+| clocked-column | `LanceRoot`, `EmberFissure` | waits beside a burl on the floor for its lance of root to sink and passes in the calm (D91, D129); the `EmberFissure` (a fire jet) is a reskin kept for the Swamp ([#105](https://github.com/jlogicgames/edgard_in_kimeria/issues/105), [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399)) | hazard |
 | honey-fungus | `HoneyFungus` | sees a harmless mushroom swell and burst | harmless |
 | false-honey-fungus | `FalseHoneyFungus` | tells the lethal twin apart and jumps or waits out its cloud | hazard |
 | deadfall | `Deadfall` | jumps a trip vine, or trips it, stops and lets the log swing past | hazard |
@@ -642,33 +643,32 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 | --- | --- |
 | Level | forest-2, play order 3, room 1 of 6 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
-| Purpose | New ground and a new enemy before any climbing: a YellowMob charges, is stopped by a low earth block and is stomped from it; then cross two plain pits (a fall is a retry) past two Bats and jump the Bomb, and see the coins. The only new thing is the YellowMob. |
-| Introduces | yellowmob |
-| Develops | touch-explosive: the Bomb (a reskin of the stump) stands 48 px past the second pit (x 560-608), so the hero lands from that jump straight into the Bomb's range, and backing away from its wind-up leaves only a 24 px pocket (x 608-632) at the pit's edge, between the pit and the blast |
+| Purpose | New ground, a new enemy and a new, hidden trap before any climbing: a YellowMob charges, is stopped by a low earth block and is stomped from it; climb the stair over the first pit past a Bat; on the floor after it a leg-hold trap lies under leaves (two tooth tips, sinew wraps and a peg show): stand short of it, let it snap empty and walk over it shut (or jump it); then cross the second pit past a second Bat to the exit, and see the coins. |
+| Introduces | yellowmob, leg-hold |
+| Develops | - |
 | Combines | - |
 | Repeats | bat-enemy, coin |
-| Mastered route | 6.83 s required (jump the cover onto the YellowMob, the stomp, up the stair past Bat 41, over pit 2 past Bat 43, jump the Bomb), 12.05 s all coins (the route waits on the ground while Bat 41 is within 40 px, which the coins at x 336 and 368 under and beside its column need) and 6.15 s on a collection return (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
+| Mastered route | 8.37 s required (jump the cover onto the YellowMob, the stomp, up the stair past Bat 41, down to the floor, stand short of the leg-hold until it snaps empty and walk over it shut, over pit 2, the second Bat at the exit), 12.02 s all coins (the route waits on the ground while Bat 41 is within 40 px, which the coins at x 336 and 368 under and beside its column need) and 7.00 s on a collection return (`RoomReplayTest`, three identical attempts); target about 20 s, coins about 30 s |
 | First learning | not measured (#135) |
-| Retry cost | the whole room, about 7 s (the required route, 6.83 s, `RoomReplayTest`), for a death at the Bomb at its end or a fall into pit 2; (was about 16 s for the undivided room) |
-| Beats | yellowmob@192, bat-enemy@352, bat-enemy@512, touch-explosive@656 |
-| Beat time | 6.83 (`RoomReplayTest`) |
-| First meeting | yellowmob: beat 1, pocket at x 100, on the floor behind the 32 px cover (x 112-144) inside its range (hero centre x 96-192): it wakes, runs at him and is stopped by the cover, 112 px from Bat 41's column (x 352). Both Bats are known (met since forest-1-route) and in view from the pocket (the room is barely wider than a screen), neither can reach it (`FirstMeetingPocketTest.forestEntryTheYellowMob`, acting `RUN`) |
-| Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the coins at x 336 (floor) and x 368 (platform 3) lie under and beside Bat 41's column, so taking them means waiting under the Bat (all coins 12.05 s, `RoomReplayTest`); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
-| D26 | no one-shot support; the coins near Bat 41 cost a wait under the Bat but no coin is required; the Bomb is the only one-shot object and the exit stays reachable after it blows; a fall into a pit (the level's Deadline, y 384) is a retry into the room, never a soft-lock; the required route crosses the pits by the stair and by a 48 px jump (`RoomReplayTest`, which fails if the route falls) |
+| Retry cost | the whole room, about 8.4 s (the required route, 8.37 s, `RoomReplayTest`), for a death at the second Bat at its end or a fall into pit 2; the leg-hold, beat 3, about 4.6 s (the stair's landing, the soonest the hero can touch its teeth) |
+| Beats | yellowmob@192, bat-enemy@352, leg-hold@496, bat-enemy@672 |
+| Beat time | 8.37 (`RoomReplayTest`) |
+| First meeting | yellowmob: beat 1, pocket at x 100, on the floor behind the 32 px cover (x 112-144) inside its range (hero centre x 96-192): it wakes, runs at him and is stopped by the cover, 112 px from Bat 41's column (x 352). Both Bats are known (met since forest-1-route) and in view from the pocket (the room is barely wider than a screen), neither can reach it (`FirstMeetingPocketTest.forestEntryTheYellowMob`, acting `RUN`); leg-hold: beat 3, retry 4.6 s, pocket at x 478, on the floor where the stair's jump lands, inside the trap's 24 px zone (from x 476) and 16.5 px clear of its litter (the body's edge to x 500): the cue (two tooth tips, sinew wraps, a peg and its cord) is in view, then the leaves shiver, burst and the jaws spring up to 14 px and snap empty, shut and settle back, and the cycle repeats while he stands there, and he is never caught. Bat 41 is 128 px away and Bat 43 (from x 656) 128 px from the jaws (`FirstMeetingPocketTest.forestEntryTheLegHold`, acting `SNAP`) |
+| Optional | three coins (x 32, 336, 368; the first coin was met in `forest-1-tree`, #417); the coins at x 336 (floor) and x 368 (platform 3) lie under and beside Bat 41's column, so taking them means waiting under the Bat (all coins 12.02 s since D128, `RoomReplayTest`); the Bat ingredient that stood on the ledge at x 416-480 moved to `forest-walls` (#417) |
+| D26 | no one-shot support or object: the leg-hold re-arms after its shut window and never blocks, it is crossed shut or jumped; the coins near Bat 41 cost a wait under the Bat but no coin is required; a fall into a pit (the level's Deadline, y 384) is a retry into the room, never a soft-lock; the required route crosses the pits by the stair and by a 48 px jump (`RoomReplayTest`, which fails if the route falls) |
 | Hints | none (the D24 controls zone is removed by #376: forest-0 teaches the controls) |
 | Landmark | the stair of three platforms (x 240-400) over the first pit, climbing to the coin at its top |
-| Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736. Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (batch 4, 2026-11-20): the step became a 32 px cover (x 112-144), the mob came down behind it, Bat 41 moved 80 px right, the twig moved to the pit lip |
-| Decisions | D72, D96, D105 |
+| Status | D72 audit 2026-11-16: change, done by [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376): the practice stone, carryable torch, practice light and ladder (objects 116-119, 123, 124) are removed and the room is split at x 736. Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (batch 4, 2026-11-20): the step became a 32 px cover (x 112-144), the mob came down behind it, Bat 41 moved 80 px right, the twig moved to the pit lip. D116 (playtest 2, F27, [#561](https://github.com/jlogicgames/edgard_in_kimeria/issues/561), approved by the author 2026-11-21): the Bomb (id 54) became a leg-hold (D128); Bat 43 moved from x 512 to x 672, `offNeg` 1 (patrol x 656-688, `RoomReplayTest.theExitIsReachedSafelyPastBat43AtEveryBatPhase` passes at every start offset) for the 96 px clearance of the leg-hold's first meeting and a clear pit-2 landing. The approved proposal put the leg-hold on the ledge; the ledge is not on the required route (the route walks the floor under it), so it stands on the floor at x 496-528, which is where the stair's jump lands |
+| Decisions | D72, D96, D105, D128 |
 
 Quicksand leaves the Forest ([#486](https://github.com/jlogicgames/edgard_in_kimeria/issues/486)). Each former pool becomes a
 plain pit, as in `forest-0`: the floor block stops and restarts (x 0-240, x 320-560, x 608-736) and the level's `Deadline`
-(id 125, y 384) kills a fall. Pit 1 is x 240-320 (80 px) under the stair; pit 2 is x 560-608 (48 px) under the end of the
-second Bat's floor-level patrol. A hero's run jump covers about 86 px, so pit 1 leaves 17 px of margin and pit 2 49 px
+(id 125, y 384) kills a fall. Pit 1 is x 240-320 (80 px) under the stair; pit 2 is x 560-608 (48 px) (since D128 the second Bat patrols
+past it, x 656-688, and the leg-hold stands before it). A hero's run jump covers about 86 px, so pit 1 leaves 17 px of margin and pit 2 49 px
 (the hitbox is 11 px wide). The first YellowMob chases only while the hero's centre is within x 96-192 (since #500), so its hitbox ends
-never travels right of its spawn (`offPos` 0), so its hitbox (x 198-218 at rest) ends at x 218, 22 px short of pit 1's edge (x 240). The Bat patrols, the Bomb, the YellowMob and the
-coins keep their places. No new element: a pit is plain `Collisions` plus the `Deadline`, both outside the registry.
+never travels right of its spawn (`offPos` 0), so its hitbox (x 198-218 at rest) ends at x 218, 22 px short of pit 1's edge (x 240). The YellowMob and the coins keep their places; Bat 43 (patrol x 656-688) and the leg-hold are described above (D128). No new element: a pit is plain `Collisions` plus the `Deadline`, both outside the registry.
 
-Split detail ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376)). The free floor between the
+Split detail ([#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); history, the Bomb was removed by D128). The free floor between the
 Bomb's blast (x 632-696) and the second YellowMob (x 832, left patrol end x 752, hitbox from x 758) is 56 px, too
 narrow for this room's exit and right wall plus the next room's left wall and a 48 px safe entrance. The split is at
 **x 736**: `forest-entry` ends with its exit at x 704-720 (8 px clear of the blast) and a wall at x 720-736;
@@ -730,22 +730,22 @@ y 320  ==================================
 | --- | --- |
 | Level | forest-2, play order 3, room 3 of 6 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
 | Role | variation |
-| Purpose | A floor crack jets fire on a clock: watch the first one alone on open floor and pass between jets, then climb through the branch the second one pierces, starting right after a jet; on the ledge a beetle guards the exit: shoot it from the lip, lure it to commit and step back, or walk on past it. |
-| Introduces | ember-fissure |
+| Purpose | A burl on the floor lances a root up on a clock: watch the first one alone on open floor and pass between thrusts, then climb through the branch the second one pierces, starting right after a thrust; on the ledge a beetle guards the exit: shoot it from the lip, lure it to commit and step back, or walk on past it. |
+| Introduces | clocked-column |
 | Develops | - |
 | Combines | - |
 | Repeats | beetle |
 | Mastered route | 9.30 s from the entrance by the lure, the answer that needs no charge (`RoomReplayTest`, three identical attempts; `ForestFissureTest`), 8.60 s with one fireball from the ledge's lip, 8.25 s on every collection return (the beetle stays gone; `RoomReplayTest`); 6.40 to 10.27 s over start offsets of 0 to 3.5 s (0.05 s steps), with and without the longer-warnings assist, for a hero who waits short of each column until a jet ends and lures the beetle (`ForestFissureTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
 | Retry cost | the most expensive death is a stop beside the beetle when it commits, after the mastered climb: 8.35 s from the entrance at start offset 0, and 8.75 s at worst over start offsets of 0 to 3.5 s counted from the end of the wait (the old card's basis and that of the offset times above; 11.70 s from entering with the wait included) (`ForestFissureTest`); a careless walker dies at the floor fissure at 23 of 71 start offsets, at most 3.5 s after entering |
-| Beats | ember-fissure@3232, ember-fissure@3360, beetle@3508 |
+| Beats | clocked-column@3232, clocked-column@3360, beetle@3508 |
 | Beat time | 9.30 (`RoomReplayTest`) |
-| First meeting | ember-fissure: beat 1, pocket at x 3200, just short of the first column on open floor, where it is seen jetting, 112 px from the second (`FirstMeetingPocketTest.forestFissureTheFirstFissure`) |
+| First meeting | clocked-column: beat 1, pocket at x 3200, just short of the first column on open floor, where it is seen lancing, 112 px from the second (`FirstMeetingPocketTest.forestFissureTheFirstFissure`) |
 | D26 | no lever, support or one-shot state on the route: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room. The beetle never blocks the exit: its blast (x 3480-3592 at most, y 192-224) reaches neither the ledge's lip (x 3424-3480), nor the branch below it (a hero on it has his top at y 250), nor the exit (x 3600); it needs no charge: the lure, or walking straight past it, which reaches the exit at every crawl phase with and without the assist (it bursts behind him). A retry rebuilds it at its spawn |
 | Hints | none (forest-2 has none, D33; no hint for the beetle: new monsters are met in play, D100) |
-| Landmark | the column of fire through the branch, seen across the screen from the entrance |
-| Status | new, [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) (card, art, sound and placement approved by the author 2026-11-17). D84 check: one screen, so both fissures are in view and jetting from the entrance; the first is met alone on open floor; the danger is lethal exactly where drawn; the waiting places (either side of each column, the floor under the branch) are obvious; the sounds play only while a fissure is in view. The author played the room and heard `fissure_rumble` and `ember_jet` in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)). [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's third room and forest-2's only one. It crawls the exit ledge, in view from the entrance, and hears the hero only once he is on the ledge (never on the floor or the branch). The approved card counted it as a develop ("walking into it kills: the exit is 1 s away"); measured, a hero who keeps walking always clears the blast (80 px in the 0.8 s wind-up, its whole width), as in forest-1, so the card records it as a repeat. Built and tested with a scripted hero |
-| Decisions | D91, D72, D100, D101 |
+| Landmark | the root lancing up through the branch, seen across the screen from the entrance |
+| Status | new, [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) (card, art, sound and placement approved by the author 2026-11-17). D84 check: one screen, so both fissures are in view and jetting from the entrance; the first is met alone on open floor; the danger is lethal exactly where drawn; the waiting places (either side of each column, the floor under the branch) are obvious; the sounds play only while a fissure is in view. The author played the room and heard `fissure_rumble` and `ember_jet` in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)). [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's third room and forest-2's only one. It crawls the exit ledge, in view from the entrance, and hears the hero only once he is on the ledge (never on the floor or the branch). The approved card counted it as a develop ("walking into it kills: the exit is 1 s away"); measured, a hero who keeps walking always clears the blast (80 px in the 0.8 s wind-up, its whole width), as in forest-1, so the card records it as a repeat. Built and tested with a scripted hero. D116 (playtest 2, F28, [#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562), approved by the author 2026-11-21): both `EmberFissure` objects (ids 151, 152) became `LanceRoot` (D129), with the same clock, phases, column and beats; the ember fissure returns as a Swamp geyser |
+| Decisions | D91, D129, D72, D100, D101 |
 
 Sketch (Y grows downward, floor top y 320, ledge top y 224; walls x 3008-3024 and 3632-3648):
 
@@ -756,9 +756,9 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 =====+===================================================================================+========  floor y 320
 ```
 
-- `EmberFissure` A (id 151) x 3232, y 332 in the map (the SpawnPoints layer is drawn 16 px up: top y 316, 4 px above the
+- `LanceRoot` A (id 151, an `EmberFissure` until D129) x 3232, y 332 in the map (the SpawnPoints layer is drawn 16 px up: top y 316, 4 px above the
   floor line), period 3.5 s, jet 1.0 s, height 96, phase 0.
-- One-way `Collisions:Platform` branch (ids 155, 156) x 3328-3392, y 272; `EmberFissure` B (id 152) x 3360, y 332, phase
+- One-way `Collisions:Platform` branch (ids 155, 156) x 3328-3392, y 272; `LanceRoot` B (id 152) x 3360, y 332, phase
   1.75 (half a period out of step with A): its column passes through the branch (embers pass one-way platforms).
 - Ledge (id 157) x 3424-3648, y 224-320, tiled with the ground-edge tiles; `RoomStart` (id 149) (3040, 272); `RoomExit`
   (id 150) x 3600-3632, y 176-224, on the ledge against the wall (moved 16 px right by #327, from x 3584).

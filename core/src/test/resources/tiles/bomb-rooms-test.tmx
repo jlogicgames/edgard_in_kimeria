@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="120" height="23" tilewidth="16" tileheight="16">
+ <!-- The Bomb is kept for the Fortress (D128: the forest's bomb became a leg-hold trap). RoomTest keeps its secured-state tests on this
+      fixture: a first room with the Bomb at x 656 and a coin, a hall and a boss room so the healer return works (as practice-test.tmx). -->
+ <properties>
+  <property name="healerBeforeBoss" type="bool" value="true"/>
+ </properties>
+ <objectgroup name="Rooms">
+  <object name="bombs" type="Room" x="0" y="0" width="1280" height="368"/>
+  <object name="bombs" type="RoomStart" x="64" y="272"><point/></object>
+  <object name="bombs" type="RoomExit" x="1216" y="272" width="32" height="48"/>
+  <object name="hall" type="Room" x="1280" y="0" width="320" height="368"/>
+  <object name="hall" type="RoomStart" x="1312" y="272"><point/></object>
+  <object name="hall" type="RoomExit" x="1536" y="272" width="32" height="48"/>
+  <object name="boss" type="Room" x="1600" y="0" width="320" height="368"/>
+  <object name="boss" type="RoomStart" x="1632" y="272"><point/></object>
+ </objectgroup>
+ <objectgroup name="SpawnPoints" offsetx="0" offsety="-16">
+  <object id="3" name="Player" type="Player" x="64" y="288" width="48" height="48"/>
+  <object id="54" name="Bomb" type="Bomb" x="656" y="320" width="16" height="16"/>
+  <object id="57" name="Coin" type="Collectable" x="32" y="320" width="16" height="16"/>
+  <object id="200" name="Boss" type="Boss" x="1824" y="304" width="32" height="32"/>
+  <object id="201" name="Deadline" type="Deadline" x="-608" y="384" width="3200" height="16"/>
+ </objectgroup>
+ <objectgroup name="Collisions">
+  <object id="4" name="Wall" type="Wall" x="0" y="0" width="16" height="320"/>
+  <object id="34" x="0" y="320" width="1280" height="48"/>
+  <object id="12" name="Wall" type="Wall" x="1264" y="0" width="16" height="320"/>
+  <object id="74" name="Wall" type="Wall" x="1280" y="0" width="16" height="320"/>
+  <object id="202" x="1280" y="320" width="320" height="48"/>
+  <object id="203" name="Wall" type="Wall" x="1584" y="0" width="16" height="320"/>
+  <object id="204" x="1600" y="320" width="320" height="48"/>
+  <object id="205" x="1600" y="80" width="16" height="240"/>
+  <object id="206" x="1904" y="80" width="16" height="240"/>
+ </objectgroup>
+</map>

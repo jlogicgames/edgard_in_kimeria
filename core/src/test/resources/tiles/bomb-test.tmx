@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map width="60" height="23" tilewidth="16" tileheight="16">
+ <!-- The Bomb is kept for the Fortress (D128: the forest's bomb became a leg-hold). One room, one Bomb at x 656 on open floor. -->
+ <objectgroup name="SpawnPoints">
+  <object id="1" type="Player" x="32" y="272" width="48" height="48"/>
+  <object id="2" name="Bomb" type="Bomb" x="656" y="320" width="16" height="16"/>
+  <object id="9" name="Deadline" type="Deadline" x="-1000" y="368" width="4000" height="16"/>
+ </objectgroup>
+ <objectgroup name="Collisions">
+  <object id="10" x="0" y="320" width="960" height="48"/>
+  <object id="15" type="Wall" x="0" y="0" width="16" height="320"/>
+  <object id="16" type="Wall" x="944" y="0" width="16" height="320"/>
+ </objectgroup>
+</map>

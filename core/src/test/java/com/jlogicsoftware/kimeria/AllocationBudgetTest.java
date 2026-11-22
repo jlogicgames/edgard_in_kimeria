@@ -19,6 +19,8 @@ import com.jlogicsoftware.kimeria.testsupport.MetricsFont;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
+import com.jlogicsoftware.kimeria.entity.objects.LanceRoot;
+import com.jlogicsoftware.kimeria.entity.objects.LegHold;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
@@ -1492,6 +1494,40 @@ class AllocationBudgetTest {
         });
         assertTrue(lethal[0], "the jet must actually reach the hero over the crack in this scenario");
         assertWithinBudget("ember fissures", EMBER_FISSURE_CEILING, bytes);
+    }
+
+    /**
+     * The lance root (#562, D129) and the leg-hold (#561, D128) cycle: four lance roots a half period apart thrust and sink under the
+     * hero's crack, and four leg-holds, the hero standing in the first one's zone so it rattles, snaps, shuts and re-arms over and over.
+     * The ceiling is the ember fissure's ({@link #EMBER_FISSURE_CEILING}), unchanged; the measurements are in the report of D128 and D129.
+     */
+    @Test void lanceRootsCycle() {
+        LanceRoot[] roots = new LanceRoot[FISSURE_COUNT];
+        for (int k = 0; k < roots.length; k++)
+            roots[k] = new LanceRoot(harness.assets(), k * FUNGUS_SPACING, FUNGUS_FLOOR - EmberFissure.FLOOR_OFFSET, harness.game().trapWarnings(),
+                EmberFissure.DEFAULT_PERIOD_SECONDS, k * FISSURE_PHASE_STEP, EmberFissure.DEFAULT_JET_SECONDS, EmberFissure.DEFAULT_HEIGHT);
+        Rectangle hero = new Rectangle(roots[0].centerX() - HERO_WIDTH / 2f, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        boolean[] lethal = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            for (LanceRoot f : roots) { f.update(STEP); f.render(batch); lethal[0] |= f.lethalTo(hero); }
+        });
+        assertTrue(lethal[0], "the lance must actually reach the hero over the burl in this scenario");
+        assertWithinBudget("lance roots", EMBER_FISSURE_CEILING, bytes);
+    }
+
+    @Test void legHoldsRattleAndSnap() {
+        LegHold[] holds = new LegHold[FISSURE_COUNT];
+        Rectangle[] hero = {new Rectangle()};
+        for (int k = 0; k < holds.length; k++)
+            holds[k] = new LegHold(harness.assets(), harness.game().trapWarnings(), k * FUNGUS_SPACING, FUNGUS_FLOOR - LegHold.HEIGHT, LegHold.DEFAULT_ZONE,
+                LegHold.DEFAULT_WINDOW_SECONDS, () -> hero[0]);
+        hero[0].set(holds[0].getX() + LegHold.OPEN_INSET - HERO_WIDTH - 4f, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT); // in the zone, clear of the teeth
+        boolean[] seen = new boolean[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            for (LegHold h : holds) { h.update(STEP); h.render(batch); seen[0] |= h.phase() == LegHold.Phase.SNAP; }
+        });
+        assertTrue(seen[0], "the leg-hold must actually snap in this scenario");
+        assertWithinBudget("leg-holds", EMBER_FISSURE_CEILING, bytes);
     }
 
     /**

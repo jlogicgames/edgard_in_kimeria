@@ -67,13 +67,24 @@ public class EmberFissure extends Entity implements LethalHazard {
     private final TextureRegion[][] jetRows = new TextureRegion[JET_FRAMES][JET_ROWS], tipRows = new TextureRegion[JET_FRAMES][TIP_ROWS];
     private final KimeriaParticleSystem sparks;
     private final Rectangle jetScratch = new Rectangle();
-    private float elapsed, riseClock, top;
+    protected float riseClock;
+    private float elapsed, top;
     private boolean wasWarning, wasJet, wasSinking, jetOn;
     private int emitted;
     private Runnable onWarning = () -> { }, onJet = () -> { };
 
     /** @param height the column's full height, already cut by a solid above (see {@link #columnHeight}) */
     public EmberFissure(Assets assets, float x, float y, TrapWarnings warnings, float period, float phase, float jet, float height) {
+        this(assets, x, y, warnings, period, phase, jet, height, SpriteSheets.TRAP_FISSURE, SpriteSheets.TRAP_EMBER_JET);
+    }
+
+    /**
+     * The same clock, column and load rules with another look (D129): {@link LanceRoot} passes its own base and column sheets,
+     * which keep this class's frame order (rest1, rest2, warn1, warn2, vent, spent; jet1, jet2, top1, top2), and overrides
+     * the two spark hooks.
+     */
+    protected EmberFissure(Assets assets, float x, float y, TrapWarnings warnings, float period, float phase, float jet, float height,
+                           SpriteSheets.Sheet base, SpriteSheets.Sheet column) {
         super(x, y, WIDTH, HEIGHT);
         this.warnings = warnings;
         this.period = period;
@@ -81,8 +92,8 @@ public class EmberFissure extends Entity implements LethalHazard {
         this.jet = jet;
         this.height = height;
         this.floor = y + FLOOR_OFFSET;
-        for (int i = 0; i < FRAMES; i++) frames[i] = SpriteSheets.TRAP_FISSURE.frame(assets, i, 0);
-        SpriteSheets.Sheet sheet = SpriteSheets.TRAP_EMBER_JET;
+        for (int i = 0; i < FRAMES; i++) frames[i] = base.frame(assets, i, 0);
+        SpriteSheets.Sheet sheet = column;
         for (int f = 0; f < JET_FRAMES; f++) {
             for (int r = 0; r < JET_ROWS; r++) jetRows[f][r] = assets.region(sheet.path(), f * sheet.width(), r, sheet.width(), 1);
             for (int r = 0; r < TIP_ROWS; r++) tipRows[f][r] = assets.region(sheet.path(), (TIP_FIRST_FRAME + f) * sheet.width(), r, sheet.width(), 1);
@@ -91,8 +102,20 @@ public class EmberFissure extends Entity implements LethalHazard {
         top = floor;
     }
 
+    /** Builds the object once the map's numbers are read and checked. */
+    @FunctionalInterface
+    public interface Builder<T extends EmberFissure> {
+        T build(float period, float phase, float jet, float columnHeight);
+    }
+
     /** Reads and checks the map properties strictly; {@code collisions} (the room's blocks) may cut the column ({@link #ceilingAbove}). */
     public static EmberFissure fromMap(Assets assets, TiledObject o, TrapWarnings warnings, Iterable<TiledObject> collisions, String label) {
+        return fromMap("EmberFissure", o, collisions, label,
+            (period, phase, jet, height) -> new EmberFissure(assets, o.x, o.y, warnings, period, phase, jet, height));
+    }
+
+    /** {@link #fromMap(Assets, TiledObject, TrapWarnings, Iterable, String)} for any look of the clocked column: {@code type} names it in errors. */
+    public static <T extends EmberFissure> T fromMap(String type, TiledObject o, Iterable<TiledObject> collisions, String label, Builder<T> builder) {
         float period, phase, jet, height;
         try {
             for (String key : o.properties.keySet())
@@ -102,15 +125,15 @@ public class EmberFissure extends Entity implements LethalHazard {
             jet = RhythmProps.number(o, "jet", DEFAULT_JET_SECONDS);
             height = RhythmProps.number(o, "height", DEFAULT_HEIGHT);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("EmberFissure " + label + ": " + e.getMessage());
+            throw new IllegalArgumentException(type + " " + label + ": " + e.getMessage());
         }
         if (Math.abs(o.width - WIDTH) > SIZE_TOLERANCE || Math.abs(o.height - HEIGHT) > SIZE_TOLERANCE)
-            throw new IllegalArgumentException("EmberFissure " + label + ": must be " + (int) WIDTH + "x" + (int) HEIGHT + " (the sprite's frame)");
+            throw new IllegalArgumentException(type + " " + label + ": must be " + (int) WIDTH + "x" + (int) HEIGHT + " (the sprite's frame)");
         String problem = validate(period, phase, jet, height);
         float ceiling = problem == null ? ceilingAbove(o, height, collisions) : Float.NaN;
         if (problem == null) problem = columnProblem(o, height, ceiling);
-        if (problem != null) throw new IllegalArgumentException("EmberFissure " + label + ": " + problem);
-        return new EmberFissure(assets, o.x, o.y, warnings, period, phase, jet, columnHeight(o, height, ceiling));
+        if (problem != null) throw new IllegalArgumentException(type + " " + label + ": " + problem);
+        return builder.build(period, phase, jet, columnHeight(o, height, ceiling));
     }
 
     /** The authoring rule: {@code period >= jet + assisted warning + MIN_CALM_SECONDS}; jet and height in their ranges. */
@@ -272,7 +295,8 @@ public class EmberFissure extends Entity implements LethalHazard {
         sparks.update(dt);
     }
 
-    private void riseSparks(float dt) {
+    /** The warning's rising sparks; {@link LanceRoot} overrides it with soil specks. */
+    protected void riseSparks(float dt) {
         RandomXS128 random = sparks.random();
         float cx = centerX(), slit = floor - 1f;
         riseClock += dt;
@@ -284,7 +308,7 @@ public class EmberFissure extends Entity implements LethalHazard {
     }
 
     /** D93's visible consequence of every jet, hit or miss: sparks fall from the upper column and drift aside. */
-    private void fallSparks() {
+    protected void fallSparks() {
         RandomXS128 random = sparks.random();
         float cx = centerX();
         for (int i = 0; i < FALL_SPARKS; i++) {
@@ -293,7 +317,8 @@ public class EmberFissure extends Entity implements LethalHazard {
         }
     }
 
-    private void emit(float x0, float y0, float x1, float y1, float life) {
+    /** One spark (the ember palette, {@code KIND_GLOW}). */
+    protected void emit(float x0, float y0, float x1, float y1, float life) {
         int c = emitted++ % SPARK_R.length;
         sparks.spawn(KimeriaParticleSystem.KIND_GLOW, x0, y0, x1, y1, life, SPARK_PX, SPARK_R[c], SPARK_G[c], SPARK_B[c]);
     }

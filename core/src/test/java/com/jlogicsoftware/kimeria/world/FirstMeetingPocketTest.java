@@ -24,6 +24,7 @@ import com.jlogicsoftware.kimeria.entity.objects.ThornVine;
 import com.jlogicsoftware.kimeria.entity.objects.Bramble;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.EmberFissure;
+import com.jlogicsoftware.kimeria.entity.objects.LegHold;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
 import com.jlogicsoftware.kimeria.entity.objects.Puffball;
@@ -71,6 +72,7 @@ class FirstMeetingPocketTest {
         if (e instanceof Puffball b) out.add(String.valueOf(b.currentPhase())); // the puffball neither moves nor acts: its phase is the signal
         if (e instanceof DeadfallTrap b) out.add(b.phase().name());
         if (e instanceof EmberFissure b) out.add(String.valueOf(b.currentPhase()));
+        if (e instanceof LegHold b) out.add(b.phase().name());
         if (e instanceof FungusTrap b) out.add(b.state().name());
         if (e instanceof ThornTrap b) out.add(b.phase().name());
         if (e instanceof ExplosiveTrap b) out.add(b.phase().name());
@@ -128,7 +130,7 @@ class FirstMeetingPocketTest {
     /** Anything in the room that can kill the hero: an enemy, a lethal hazard, or a trap with a trigger (D109). */
     private static boolean lethal(Object o) {
         return o instanceof Enemy<?> || o instanceof LethalHazard || o instanceof DeadfallTrap || o instanceof FungusTrap
-            || o instanceof FallingTrap || o instanceof ExplosiveTrap || o instanceof ThornTrap;
+            || o instanceof FallingTrap || o instanceof ExplosiveTrap || o instanceof ThornTrap || o instanceof LegHold;
     }
 
     /** A lethal object's position and everything it shows ({@link #signals}): the sum of what could stir. */
@@ -200,6 +202,9 @@ class FirstMeetingPocketTest {
         } else if (trap instanceof ThornTrap th) {
             Rectangle zone = th.triggerZone(), band = th.lethalBounds();
             triggerLeft = zone.x; triggerRight = zone.x + zone.width; bandLeft = band.x; bandRight = band.x + band.width;
+        } else if (trap instanceof LegHold l) { // D128: the open teeth and the snapped arch share one 24 px span; the zone reaches 24 px past it
+            Rectangle zone = l.zoneInto(new Rectangle()), band = l.snapBoxInto(new Rectangle());
+            triggerLeft = zone.x; triggerRight = zone.x + zone.width; bandLeft = band.x; bandRight = band.x + band.width;
         } else if (trap instanceof Bomb b) { // the Bomb's blast is a 64 px square centred on it (Bomb.BLAST_SIZE, private)
             Rectangle trigger = b.hitboxBounds();
             triggerLeft = trigger.x; triggerRight = trigger.x + trigger.width;
@@ -239,9 +244,9 @@ class FirstMeetingPocketTest {
         }
     }
 
-    /** The Bomb's trigger box (10 x 13) lies inside its 64 px blast, so it fails the condition too: no pocket (D109). */
+    /** The Bomb's trigger box (10 x 13) lies inside its 64 px blast, so it fails the condition too: no pocket (D109). Measured on {@code bomb-test.tmx}: no forest map places it since D128. */
     @Test void aBombFailsTheTripAndStandCondition() {
-        Level level = h.room("forest-2", "forest-entry", Rectangle::new);
+        Level level = new Level(h.assets(), h.game(), new com.jlogicsoftware.kimeria.entity.player.Player(h.assets(), h.game(), 0, 0), "bomb-test", Rectangle::new);
         Bomb bomb = (Bomb) firstOf(level, Bomb.class);
         float[] m = tripAndStandMeasure(level, bomb, bomb.getX() - 40);
         assertTrue(m[0] < BODY, "the Bomb's trigger reaches " + m[0] + " px past its blast");
@@ -285,11 +290,13 @@ class FirstMeetingPocketTest {
     @Test void forest1HiveTheFloorHive() { pocket("forest-1", "forest-1-hive", "hanging-hive", HangingHive.class, 6420, "RELEASE"); }
     /** Behind the cover (x 112-144) inside the YellowMob's range: it wakes, runs at him and is stopped by the cover (D105). */
     @Test void forestEntryTheYellowMob() { pocket("forest-2", "forest-entry", "yellowmob", YellowMob.class, 100, "RUN"); }
+    /** D128: the leg-hold's pocket is on the floor after the stair, in the zone and 16 px clear of the teeth; it rattles, snaps empty and shuts (#561). */
+    @Test void forestEntryTheLegHold() { tripAndStand("forest-2", "forest-entry", LegHold.class, 478); pocket("forest-2", "forest-entry", "leg-hold", LegHold.class, 478, "SNAP"); }
     /** In the trigger zone (from x 1608), 26 px short of the cloud: it swells and bursts in front of him and is spent (D105). */
     @Test void forestCanopyTheFalseFungus() { tripAndStand("forest-2", "forest-canopy", FalseHoneyFungus.class, 1640); pocket("forest-2", "forest-canopy", "false-honey-fungus", FalseHoneyFungus.class, 1640, "BURST"); }
     /** 20 px short of the tip's sweep: the vine is seen swinging at him and back, never reaching (D46). */
     @Test void forestCanopyTheThornVine() { pocket("forest-2", "forest-canopy", "thorn-vine", ThornVine.class, 1848, "SWING_LEFT"); }
-    @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "ember-fissure", EmberFissure.class, 3200, "JET"); }
+    @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "clocked-column", EmberFissure.class, 3200, "JET"); }
     /**
      * On the one-way branch (x 3952-4016, 32 px above the wolf's floor), where the trunk's face does not cut its sight (a platform is not a
      * solid): it notices him, sprints under him, bays at its range end and gives up, and he is never committed to (D115, #331).

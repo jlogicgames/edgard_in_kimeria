@@ -31,6 +31,10 @@ public final class SpriteSheets {
     // The ember fissure (#366, D91): rest1, rest2, warn1, warn2, vent, spent; its jet column tile (jet1, jet2) and tip (top1, top2).
     public static final Sheet TRAP_FISSURE = new Sheet("images/objects/trap-fissure.png", 16, 12);
     public static final Sheet TRAP_EMBER_JET = new Sheet("images/objects/trap-ember-jet.png", 8, 16);
+    // The leg-hold trap (#561, D128): open, rattle1, rattle2, snap, shut, rearm. The lance root (#562, D129): the fissure's frames, its shaft tile and tip.
+    public static final Sheet TRAP_LEGHOLD = new Sheet("images/objects/trap-leghold.png", 32, 16);
+    public static final Sheet TRAP_LANCE_ROOT = new Sheet("images/objects/trap-lance-root.png", 16, 12);
+    public static final Sheet TRAP_LANCE_SHAFT = new Sheet("images/objects/trap-lance-shaft.png", 8, 16);
     public static final Sheet TRAP_VINE = new Sheet("images/objects/trap-vine.png", 24, 40);
     public static final Sheet TRAP_LOG = new Sheet("images/objects/trap-log.png", 32, 16);
     // Tree branches (#349, D80): perch, perch-left (the sound branch); intact, crumble1, crumble2 and their -left copies (the rotten branch).

@@ -14,6 +14,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.Breakable;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HangingHive;
+import com.jlogicsoftware.kimeria.entity.objects.LegHold;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.world.Level;
@@ -177,6 +178,13 @@ public final class Carryable extends Entity {
             // (it is not consumed and can be picked up again). A torch does not: only the stone is ammunition for this.
             if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
                 if (level.objects.get(o) instanceof ExplosiveTrap trap && trap.triggerBoxInto(trapBox).overlaps(bounds()) && trap.igniteFromAfar()) {
+                    velocity.x = 0; thrown = false;
+                    break;
+                }
+            }
+            // #561 (D128): a thrown stone that reaches open leg-hold jaws snaps them empty, then drops (not consumed), as above. A fireball cannot: it flies over the 6 px litter.
+            if (thrown && kind == Kind.STONE && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
+                if (level.objects.get(o) instanceof LegHold legHold && legHold.openBoxInto(trapBox).overlaps(bounds()) && legHold.snapFromAfar()) {
                     velocity.x = 0; thrown = false;
                     break;
                 }

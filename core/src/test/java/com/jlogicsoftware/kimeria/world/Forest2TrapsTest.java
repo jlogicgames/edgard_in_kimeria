@@ -207,8 +207,8 @@ class Forest2TrapsTest {
         assertEquals(320, stone(l).landingBottom(), .01f);
         assertTrue(l.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.items.Bomb.class::isInstance), "no Bomb shares the canopy");
         String text = Gdx.files.internal("tiles/forest-2.tmx").readString();
-        assertEquals(1, text.split("type=\"Bomb\"", -1).length - 1, "the one Bomb stays, in the entry room");
-        assertTrue(text.contains("<object id=\"54\" name=\"Bomb\" type=\"Bomb\" x=\"656\" y=\"320\""), "unmoved");
+        assertEquals(0, text.split("type=\"Bomb\"", -1).length - 1, "the Bomb left the forest for the Fortress (D128); its code and art stay");
+        assertTrue(text.contains("<object id=\"54\" name=\"Leg-hold\" type=\"LegHold\" x=\"496\" y=\"320\""), "the leg-hold on the entry room's floor");
         assertEquals(0, l.objects.stream().filter(FallingTrap.class::isInstance).filter(o -> !(o instanceof FallingStone)).count());
         Rectangle room = l.currentRoomBounds();
         assertEquals(1280, room.x); assertEquals(1120, room.width, "the canopy grew by 448 px");
