@@ -733,6 +733,33 @@
       }
     },
     {
+      "concept": "platform (lever-driven, moving)",
+      "forms": {
+        "en": "platform",
+        "uk": "платформа",
+        "pl": "platforma",
+        "de": "Plattform",
+        "be": "платформа"
+      },
+      "stems": {
+        "en": [
+          "platform"
+        ],
+        "uk": [
+          "платформ"
+        ],
+        "pl": [
+          "platform"
+        ],
+        "de": [
+          "plattform"
+        ],
+        "be": [
+          "платформ"
+        ]
+      }
+    },
+    {
       "concept": "accessibility menu",
       "forms": {
         "en": "Accessibility",

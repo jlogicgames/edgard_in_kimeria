@@ -85,6 +85,7 @@ in the English source is named in each translation (T1).
 | Healer ingredient (the bat) | Bat wing | крило кажана | skrzydło nietoperza | Fledermausflügel | крыло кажана | bare "Bat" for the ingredient: it is the name of the enemy (playtest F19, [#345](https://github.com/jlogicgames/edgard_in_kimeria/issues/345)) |
 | Fairy | fairy | фея | wróżka | Fee | фея | confirmed by [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) (D82): one fairy, the healer's gift |
 | Lever in the tale | old handle | руків'я | rękojeść | Griff | ручка | 'lever' in spoken lines |
+| platform (lever-driven, moving: the platform a lever starts and stops, D127) | platform | платформа | platforma | Plattform | платформа | "lift", "winda", "Aufzug", "підйомник", "пад'ёмнік" (the #589 lift wording, reverted). Falling supports (`FallingPlatform`, the cracked platform of `HINT_TRAP_PLATFORM`) share the English word; no row names them apart, so this row does not decide them |
 | Accessibility menu (Options entry and title, #533, D116) | Accessibility | Доступність | Dostępność | Barrierefreiheit | Даступнасць | "Assist", "Допомога", "Ułatwienia", "Spielhilfen", "Дапамога" (the old label) |
 
 The other ingredient and coin labels (`MUSHROOM`, `FOREST_COINS_COUNT`) keep their catalog forms; a later
