@@ -321,8 +321,10 @@ public class Level implements WorldObject {
     private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
     /** The bramble's warning rustle and its grow lash (#364, D89). */
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
-    /** The spore puff (#445): the puffball's release and both honey fungi's burst. */
+    /** The spore puff (#445): both honey fungi's burst (D63: one sound for the pair). */
     private static final String SPORE_PUFF_SOUND = "spore_puff";
+    /** The puffball's release (#558): its own, harsher sound; it is no look-alike of the honey fungi. */
+    static final String PUFFBALL_BURST_SOUND = "puffball_burst";
     /** The thorn root's and tuft's spring (#446): one sound for the family. */
     private static final String THORN_SPRING_SOUND = "thorn_spring";
     /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
@@ -1064,7 +1066,7 @@ public class Level implements WorldObject {
 
     /** The puffball's clocked release is heard only while the puffball is inside the camera view (#445): off screen it must not puff every period. */
     private void puffballSound(Puffball puffball) {
-        if (game.playSounds() && puffballInView(puffball)) game.playSound(SPORE_PUFF_SOUND);
+        if (game.playSounds() && puffballInView(puffball)) game.playSound(PUFFBALL_BURST_SOUND);
     }
 
     /** True when {@code box} is within the camera's visible world rect: a cue that is heard only while it is on screen (D89, D90). */

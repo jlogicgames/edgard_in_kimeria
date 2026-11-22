@@ -11,6 +11,7 @@ import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
+import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -220,6 +221,8 @@ class AllocationBudgetTest {
     static final double HONEY_FUNGUS_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. #296: the same scenario now draws the {@code SporeCloud} (30 particles each); the measurement is in the report. Headless there is no GL context, so the shader layer is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles alone. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
+    /** Spore puffballs (#558, puffballsLeakReleaseAndCloud): measured 0.0, 0.3 and 0.3 B/frame in 3 isolated runs (2026-11-22): ten puffballs swelling, releasing and tested against a hero every frame, update and render. The same 8 B ceiling as the other isolated trap paths. */
+    static final double PUFFBALL_CEILING = 8;
     /** Measured 0.0 B/frame (#343, D79): the hero's draw path, every state in both facings, the three ladder clips and #341's three pull frames with the wrist, with the held-object grip, through the batch. */
     static final double HERO_DRAW_CEILING = 8;
     /**
@@ -1512,6 +1515,33 @@ class AllocationBudgetTest {
             empty, difference, FISSURE_PAIRS);
         assertTrue(lethal[0], "the jet must actually reach the hero over the crack in this scenario");
         assertWithinBudget("ember fissures (minus an empty frame)", EMBER_FISSURE_CEILING, difference);
+    }
+
+    /**
+     * Ten spore puffballs on their clocks (#558): the swell with its leak, the release (flash, jet, 40 spores, haze), the live cloud kept up
+     * and tested against a hero standing in it every frame, the sac and every particle drawn through the batch, then the clearing. Every cycle
+     * is 4 s, so the 25 s of warm-up and measure hold several releases of each.
+     */
+    @Test void puffballsLeakReleaseAndCloud() {
+        Puffball[] balls = new Puffball[FUNGUS_CYCLES];
+        Rectangle hero = new Rectangle(0, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        for (int k = 0; k < balls.length; k++)
+            balls[k] = new Puffball(harness.assets(), k * FUNGUS_SPACING, FUNGUS_FLOOR - FUNGUS_HEIGHT, 16, 16, harness.game().trapWarnings(),
+                Puffball.DEFAULT_PERIOD_SECONDS, k * 0.37f, Puffball.DEFAULT_CLOUD_SECONDS);
+        boolean[] lethal = new boolean[1];
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            hero.x = balls[i % balls.length].getX() + 2;
+            for (Puffball b : balls) {
+                b.update(STEP);
+                b.render(batch);
+                lethal[0] |= b.lethalTo(hero);
+                peak[0] = Math.max(peak[0], b.fx().count());
+            }
+        });
+        assertTrue(lethal[0], "a cloud must actually be lethal to the standing hero in this scenario");
+        assertTrue(peak[0] >= com.jlogicsoftware.kimeria.effects.PuffballFx.SPORE_BURST, "the spores must actually release: " + peak[0]);
+        assertWithinBudget("puffballs", PUFFBALL_CEILING, bytes);
     }
 
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */

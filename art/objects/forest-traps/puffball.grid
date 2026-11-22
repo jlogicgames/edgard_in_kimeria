@@ -1,76 +1,115 @@
-# Spore puffball mushroom, native 16x16 frames (left halves, mirrored): idle, two swells, burst.
+# Spore puffball (#558 proposal), native 16x16 frames (left halves, mirrored): two rest breaths, two swells, the burst
+# and the spent sac. A crimson warty sac of the danger family with a lime-lit mouth (lime = lethal spores, D63).
 size 16 16
 color k 0b0814
-color b efe6c4
-color B a89c78
-color p a6e04a
+color D 2a0612
+color S 4a0c22
+color R 86101f
+color L b85a80
+color W c87896
+color m 140c14
 color P 5fa02a
+color p a6e04a
 color u e6f26a
-frame idle mirror
+frame idle1 mirror
+........
+........
+........
+.....kkk
+.....kpu
+....kLkk
+...kLLLL
+..kLLRLL
+..kLRRRP
+.kLRRPRR
+.kRRPRRR
+.kRRRPRR
+.kSRRRRR
+..kSSRRR
+...kDSSS
+...kkkkk
+frame idle2 mirror
+........
+........
+........
+........
+.....kkk
+....kkPp
+...kLLkk
+..kLLRLL
+..kLRRRP
+.kLRRPRR
+.kRRPRRR
+.kRRRPRR
+.kSRRRRR
+..kSSRRR
+...kDSSS
+...kkkkk
+frame swell1 mirror
+........
+........
+.....kkk
+.....kuu
+....kLkp
+...kLLLk
+..kLLLLL
+.kLLRLLp
+.kLRRRpR
+kLRRRpRR
+kRRRpRRR
+kRRRRpRR
+kSRRRRRR
+.kSSRRRR
+..kDSSSS
+...kkkkk
+frame swell2 mirror
+........
+....kkkk
+....kuuu
+...kLkuu
+..kLLLku
+.kLLLLLp
+.kLLLLpu
+kLLRLLpL
+kLRRRpuR
+kLRRpuRR
+kRRRpRRR
+kRRRRpRR
+kSRRRRpR
+kSSRRRRR
+.kDSSSSS
+..kkkkkk
+frame burst mirror
+........
+........
+........
+........
+..k.....
+..kL..k.
+...kL.kL
+...kLkLu
+..kLLkuu
+.kLRRpuu
+.kRRRpRu
+kRRRpRRR
+kSRRRpRR
+kSSRRRRR
+.kDSSSSS
+..kkkkkk
+frame spent mirror
+........
+........
+........
+........
+........
 ........
 ........
 ........
 ........
 ........
 .....kkk
-...kkbbb
-..kbbbpb
-..kbbbbb
-..kbpbbB
-..kkBBBB
-.....kbB
-.....kbB
-.....kbB
-....kbbB
-...kkkkk
-frame swell1 mirror
-........
-........
-........
-........
-....kkkk
-..kkbbbb
-.kbbbppb
-.kbbbbbb
-.kbppbbb
-.kbbbbbB
-.kkBBBBB
-.....kbB
-.....kbB
-.....kbB
-....kbbB
-...kkkkk
-frame swell2 mirror
-........
-........
-........
-...kkkkk
-.kkbbuuu
-kbbuuupu
-kbbuuuuu
-kbuupuuu
-kbbuuuuu
-kbbuuuuB
-kkBBBBBB
-.....kbB
-.....kbB
-.....kbB
-....kbbB
-...kkkkk
-frame burst mirror
-........
-........
-........
-........
-........
-........
-........
-...kkkk.
-..kbbbbb
-.kBpbbpB
-kkBBkBBB
-.kkkkkbB
-....kbbB
-....kbbB
-....kbbB
-...kkkkk
+...kkLkm
+..kLRRkm
+.kSRRRRk
+.kDSSSSS
+..kkkkkk

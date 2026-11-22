@@ -1573,6 +1573,55 @@ def spore_puff() -> list[float]:
     return finish_rms(out, SPORE_PUFF_RMS_DB, SPORE_PUFF_PEAK_DB)
 
 
+# Puffball burst (puffball_burst): the spore puffball's release (#558), its own sound now; spore_puff stays the honey fungi's (D63
+# pair). A wet "p-KHHHH": the sac tears with a short low pop, the spores jet out of the chimney as a hiss that rises and
+# rattles (noise through a band sweeping up, chopped by a slow flutter so it is a grainy spray, not a clean wind), over a low,
+# rough wheeze for the sac emptying. Louder and harsher than spore_puff: it is a lethal act, in the bramble lash's tier.
+PUFFBALL_BURST_SEED = 7401
+PUFFBALL_BURST_DURATION = 0.45
+PUFFBALL_POP_VOICE = Voice(7402, 0.07, (150.0, 90.0), FORMANTS_U, FORMANTS_UH, -18.0, asp_len=0.006, asp_level=0.4,
+                           attack=0.003, tau=0.025, release=0.012, jitter=0.08, rough=0.6, rough_start=0.2, lowpass=900.0)
+PUFFBALL_POP_GAIN = 0.6
+PUFFBALL_JET_START = 0.012                    # s, the jet starts as the pop tears
+PUFFBALL_JET_SWEEP = (900.0, 3400.0)          # Hz, band centre from, to: the spray rising out of the chimney
+PUFFBALL_JET_BW = (700.0, 1800.0)             # Hz, bandwidth from, to: it widens as it spreads
+PUFFBALL_JET_ATTACK = 0.015                   # s
+PUFFBALL_JET_TAU = 0.13                       # s
+PUFFBALL_JET_FLUTTER_HZ = 34.0                # the rattle of the spores
+PUFFBALL_JET_FLUTTER_DEPTH = 0.55             # 0 = no rattle, 1 = fully gated
+PUFFBALL_JET_DRIVE = 2.2
+PUFFBALL_JET_GAIN = 1.0
+PUFFBALL_WHEEZE_VOICE = Voice(7403, 0.30, (95.0, 62.0), FORMANTS_AA, FORMANTS_U, -18.0, asp_len=0.05, asp_level=1.2,
+                              attack=0.04, tau=0.12, release=0.05, jitter=0.07, rough=0.9, rough_start=0.0, lowpass=1400.0)
+PUFFBALL_WHEEZE_START = 0.05                  # s
+PUFFBALL_WHEEZE_GAIN = 0.25
+PUFFBALL_BURST_LOWPASS_HZ = 6000.0
+PUFFBALL_BURST_DRIVE = 2.0                    # a final tanh: lowers the crest factor so the RMS is not peak-limited
+PUFFBALL_BURST_RMS_DB = -21.5
+PUFFBALL_BURST_PEAK_DB = -9.0                 # the environment cap (test_ambient_levels)
+
+
+def puffball_burst() -> list[float]:
+    rng = random.Random(PUFFBALL_BURST_SEED)
+    n = n_samples(PUFFBALL_BURST_DURATION)
+    out = [0.0] * n
+    nj = n - n_samples(PUFFBALL_JET_START)
+    (f0, f1), (b0, b1) = PUFFBALL_JET_SWEEP, PUFFBALL_JET_BW
+    jet = bandpass(noise(rng, nj), lambda t: f0 + (f1 - f0) * t, lambda t: b0 + (b1 - b0) * t)
+    peak = max(abs(v) for v in jet) or 1.0
+    env = envelope(nj, PUFFBALL_JET_ATTACK, PUFFBALL_JET_TAU)
+    for i in range(nj):
+        gate = 1.0 - PUFFBALL_JET_FLUTTER_DEPTH * (0.5 + 0.5 * math.sin(2 * math.pi * PUFFBALL_JET_FLUTTER_HZ * i / SAMPLE_RATE))
+        jet[i] = math.tanh(PUFFBALL_JET_DRIVE * jet[i] / peak * gate) * env[i] * PUFFBALL_JET_GAIN
+    _add_at(out, n_samples(PUFFBALL_JET_START), jet, 1.0)
+    _add_at(out, 0, render_voice(PUFFBALL_POP_VOICE), PUFFBALL_POP_GAIN)
+    _add_at(out, n_samples(PUFFBALL_WHEEZE_START), render_voice(PUFFBALL_WHEEZE_VOICE), PUFFBALL_WHEEZE_GAIN)
+    out = lowpass(out, PUFFBALL_BURST_LOWPASS_HZ)
+    peak = max(abs(v) for v in out) or 1.0
+    out = [math.tanh(PUFFBALL_BURST_DRIVE * v / peak) for v in out]
+    return finish_rms(out, PUFFBALL_BURST_RMS_DB, PUFFBALL_BURST_PEAK_DB)
+
+
 # ---------------------------------------------------------------- thorn root and tuft (#446, D75 principle 4)
 # Spring (thorn_spring): the thorns turn lethal. A dull dirt "thk" under a rough rasp: noise through a band-pass, chopped by a
 # fast pulse (a rasping buzz, the roughness) so it is a hard dry scrape, not bramble_lash's smooth rising "shk". One sound
@@ -1626,7 +1675,7 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "snail_notice.wav": snail_notice, "snail_windup.wav": snail_windup, "snail_windup_long.wav": snail_windup_long,
                "snail_spit.wav": snail_spit, "snail_splat.wav": snail_splat,
                "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter,
-               "spore_puff.wav": spore_puff,
+               "spore_puff.wav": spore_puff, "puffball_burst.wav": puffball_burst,
                "wolf_notice.wav": wolf_notice, "wolf_windup.wav": wolf_windup, "wolf_windup_long.wav": wolf_windup_long,
                "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run}
 
