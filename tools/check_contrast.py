@@ -189,7 +189,6 @@ SPRITES = {
     'HangingHive:stingers': ('active', 'objects/trap-stingers.png', (0, 0, 8, 16), 2, 'top', FULL),
     'HoneyFungus': ('active', 'objects/trap-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
     'FalseHoneyFungus': ('active', 'objects/trap-false-honey-fungus.png', (0, 0, 24, 16), 1, 'floor', GLOWS),
-    'FallingPlatform': ('active', 'objects/trap-falling-platform.png', (0, 0, 32, 10), 4, 'top', FULL),  # #362: every fan frame
     'FallingPlatform:log': ('active', 'objects/trap-log.png', (0, 0, 32, 16), 1, 'top', FULL),
     'Platform': ('active', 'objects/platform.png', (0, 0, 32, 16), 1, 'top', FULL),
     # #349 (D80): the branch skins; `-left` is the copy drawn on the left of a trunk (`mirror`), a later frame of the strip.
@@ -816,7 +815,7 @@ def key_of(group, obj, props):
         return 'Collectable:' + (props.get('item') or obj.get('name') or 'Coin').title(), kind
     if kind == 'Bramble':
         return ('Bramble-right' if props.get('root') == 'right' else 'Bramble'), kind  # -right: drawn mirrored (Bramble.java)
-    if kind == 'FallingPlatform' and props.get('skin') == 'log':
+    if kind == 'FallingPlatform' and props.get('skin', 'log') == 'log':
         return 'FallingPlatform:log', kind
     if kind == 'FallingPlatform' and props.get('skin') == 'branch':
         return 'FallingPlatform:branch' + side, kind

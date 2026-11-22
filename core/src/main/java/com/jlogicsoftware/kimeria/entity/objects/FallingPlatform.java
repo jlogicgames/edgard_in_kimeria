@@ -1,6 +1,5 @@
 package com.jlogicsoftware.kimeria.entity.objects;
 
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
@@ -23,31 +22,20 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
     public enum State {IDLE, FALLING}
 
     /**
-     * Look only; behaviour is identical. LOG is the rotten forest log (D46), chosen by the map property {@code skin=log};
-     * BRANCH is the rotten tree branch (#349, D80), {@code skin=branch}, drawn on the left of its trunk with {@code mirror}.
+     * Look only; behaviour is identical. LOG is the rotten forest log (D46), the falling platform's look, chosen by the map
+     * property {@code skin=log} or by none; BRANCH is the rotten tree branch (#349, D80), {@code skin=branch}, drawn on the left of its trunk with {@code mirror}.
      */
     public enum Skin {
-        PLATFORM, LOG, BRANCH;
+        LOG, BRANCH;
 
         public static Skin fromMap(String value) {
             return switch (value) {
-                case "" -> PLATFORM;
-                case "log" -> LOG;
+                case "", "log" -> LOG;
                 case "branch" -> BRANCH;
                 default -> throw new IllegalArgumentException("Unknown FallingPlatform skin '" + value + "' (expected log or branch)");
             };
         }
     }
-
-    /** Native sprite height ({@link SpriteSheets#TRAP_FALLING_PLATFORM} is 32x10 per frame) -- see Escalator's VISUAL_HEIGHT for why. */
-    private static final float VISUAL_HEIGHT = 10f;
-    /**
-     * The plain skin's rope frames (named fan1..fan4 in the sheet: centre, right, centre, left) and their frame time at rest
-     * and while falling, in seconds: one sway is four frames, 1.6 s (0.63 Hz) at rest and 1.4 s (0.71 Hz) falling, a calm
-     * swing (#236; was 0.1 s, 2.5 Hz). Look only: the warning and the fall take their timing from TrapWarnings and FALL_DURATION.
-     */
-    private static final int ROPE_FRAMES = 4;
-    private static final float ROPE_IDLE_SECONDS = 0.4f, ROPE_FALLING_SECONDS = 0.35f;
 
     private final TrapWarnings warnings;
     private boolean falling = false;
@@ -66,7 +54,7 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
 
     public FallingPlatform(Assets assets, float x, float y, float w, float h, Consumer<WorldObject> spawner,
                            TrapWarnings warnings) {
-        this(assets, x, y, w, h, spawner, warnings, Skin.PLATFORM);
+        this(assets, x, y, w, h, spawner, warnings, Skin.LOG);
     }
 
     public FallingPlatform(Assets assets, float x, float y, float w, float h, Consumer<WorldObject> spawner,
@@ -81,18 +69,9 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
         this.warnings = warnings;
         this.skin = skin;
         if (mirror && skin != Skin.BRANCH) throw new IllegalArgumentException("mirror applies to the branch skin only");
-        if (skin != Skin.PLATFORM) {
-            SpriteSheets.Sheet sheet = skin == Skin.LOG ? SpriteSheets.TRAP_LOG : SpriteSheets.TRAP_ROTTEN_PERCH;
-            int first = mirror ? CRUMBLE_FRAME_COUNT : 0;
-            for (int i = 0; i < crumbleFrames.length; i++) crumbleFrames[i] = sheet.frame(assets, first + i, 0);
-            setState(State.IDLE);
-            return;
-        }
-        // Four 32x10 frames (grid art/objects/forest-traps/falling-platform.grid): the lashed plank, its slack rope swaying;
-        // the plank's split is the D71 at-rest cue (#362), drawn in every frame.
-        SpriteSheets.Sheet sheet = SpriteSheets.TRAP_FALLING_PLATFORM;
-        putAnimation(State.IDLE, assets.animation(sheet.path(), ROPE_FRAMES, ROPE_IDLE_SECONDS, sheet.width(), sheet.height(), 0, 0, ROPE_FRAMES), true);
-        putAnimation(State.FALLING, assets.animation(sheet.path(), ROPE_FRAMES, ROPE_FALLING_SECONDS, sheet.width(), sheet.height(), 0, 0, ROPE_FRAMES), true);
+        SpriteSheets.Sheet sheet = skin == Skin.LOG ? SpriteSheets.TRAP_LOG : SpriteSheets.TRAP_ROTTEN_PERCH;
+        int first = mirror ? CRUMBLE_FRAME_COUNT : 0;
+        for (int i = 0; i < crumbleFrames.length; i++) crumbleFrames[i] = sheet.frame(assets, first + i, 0);
         setState(State.IDLE);
     }
 
@@ -139,17 +118,7 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
 
     @Override
     public void render(Batch batch) {
-        if (skin != Skin.PLATFORM) {
-            batch.draw(crumbleFrames[crumbleFrame()], position.x, position.y, size.x, size.y);
-            return;
-        }
-        Animation<TextureRegion> anim = animations.get(current);
-        if (anim == null) return;
-        TextureRegion frame = anim.getKeyFrame(stateTime);
-        float drawY = position.y + (size.y - VISUAL_HEIGHT) / 2f;
-        float w = facingRight ? size.x : -size.x;
-        float x = facingRight ? position.x : position.x + size.x;
-        batch.draw(frame, x, drawY, w, VISUAL_HEIGHT);
+        batch.draw(crumbleFrames[crumbleFrame()], position.x, position.y, size.x, size.y);
     }
 
     public void collideWithActor() {

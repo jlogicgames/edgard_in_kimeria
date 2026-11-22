@@ -27,32 +27,39 @@ public class ThornVine extends Entity implements LethalHazard {
     public static final float LETHAL_HALF_WIDTH = 4f;
 
     private static final int SLAB_SIDES = 4;
+    /** The stem's columns and the plain rows of it (below the pale top) that the tether stretches (art/objects/forest-traps/vine.grid). */
+    private static final int STEM_X = 10, STEM_Y = 6, STEM_WIDTH = 4, STEM_ROWS = 3;
     private static final float SWEEP_STEP = (float) Math.toRadians(0.5);
     private final float period, phase, amplitudeRadians;
     private float elapsed;
-    private final TextureRegion hang;
+    private final TextureRegion hang, stem;
+    /** Look only: px of fixed stem drawn above the pivot, up to the bough the vine hangs from (the box and the swing are not changed). */
+    private final float tether;
 
-    public ThornVine(Assets assets, float x, float y, float w, float h, float period, float phase, float amplitudeDegrees) {
+    public ThornVine(Assets assets, float x, float y, float w, float h, float period, float phase, float amplitudeDegrees, float tether) {
         super(x, y, w, h);
         this.period = period;
         this.phase = phase;
         this.amplitudeRadians = (float) Math.toRadians(amplitudeDegrees);
         hang = SpriteSheets.TRAP_VINE.frame(assets, 0, 0);
+        this.tether = tether;
+        stem = assets.region(SpriteSheets.TRAP_VINE.path(), STEM_X, STEM_Y, STEM_WIDTH, STEM_ROWS);
     }
 
     /** Reads and checks the map properties strictly; the message is prefixed with {@code label}. */
     public static ThornVine fromMap(Assets assets, TiledObject o, String label) {
-        float period, amplitude, phase;
+        float period, amplitude, phase, tether;
         try {
             period = RhythmProps.number(o, "period", DEFAULT_PERIOD_SECONDS);
             amplitude = RhythmProps.number(o, "amplitude", DEFAULT_AMPLITUDE_DEGREES);
             phase = RhythmProps.number(o, "phase", 0f);
+            tether = RhythmProps.number(o, "tether", 0f);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("ThornVine " + label + ": " + e.getMessage());
         }
         String problem = validate(period, amplitude, phase);
         if (problem != null) throw new IllegalArgumentException("ThornVine " + label + ": " + problem);
-        return new ThornVine(assets, o.x, o.y, o.width, o.height, period, phase, amplitude);
+        return new ThornVine(assets, o.x, o.y, o.width, o.height, period, phase, amplitude, tether);
     }
 
     public static String validate(float period, float amplitudeDegrees, float phase) {
@@ -123,6 +130,7 @@ public class ThornVine extends Entity implements LethalHazard {
 
     @Override
     public void render(Batch batch) {
+        if (tether > 0f) batch.draw(stem, anchorX() - STEM_WIDTH / 2f, position.y - tether, STEM_WIDTH, tether);
         // Pivot at the top centre of the object; rotation is clockwise for a rightward swing in this Y-down world.
         float degrees = (float) Math.toDegrees(angle());
         batch.draw(hang, position.x, position.y, size.x / 2f, 0f, size.x, size.y, 1f, 1f, -degrees);

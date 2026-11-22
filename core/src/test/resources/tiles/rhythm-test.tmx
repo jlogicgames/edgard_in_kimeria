@@ -17,7 +17,6 @@
   <object id="4" type="FallingPlatform" name="log" x="1100" y="320" width="32" height="16">
    <properties><property name="skin" value="log"/></properties>
   </object>
-  <object id="5" type="FallingPlatform" name="plank" x="1180" y="320" width="32" height="16"/>
   <object id="9" name="Deadline" type="Deadline" x="-1000" y="368" width="3000" height="16"/>
  </objectgroup>
  <objectgroup name="Collisions">

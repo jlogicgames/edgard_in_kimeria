@@ -210,7 +210,6 @@ class Forest1TrapsTest {
         assertEquals(320, puff(l).getY() + puff(l).getHeight(), .01f);
         assertEquals(PUFF_X, puff(l).getX(), .01f);
         assertEquals(1, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).count(), "one log");
-        assertEquals(0, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count(), "the four platforms are in the escalator room now");
         assertEquals(0, l.escalators.size(), "the escalators and their lever are in the escalator room");
         assertEquals(LOG_X, log(l).getX(), .01f);
         assertEquals(320, log(l).getY(), .01f, "flush with the floor");
@@ -229,8 +228,8 @@ class Forest1TrapsTest {
         l.enterNextRoom(player());
         assertEquals("forest-1-escalators", l.currentRoomName());
         assertEquals(new Rectangle(0, 0, 640, 368), l.currentRoomBounds());
-        assertEquals(4, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.PLATFORM).count(), "the four falling platforms");
-        assertEquals(4, l.fallingPlatforms.size(), "and no log");
+        assertEquals(4, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).count(), "the four falling platforms, rotten logs");
+        assertEquals(4, l.fallingPlatforms.size(), "and nothing else that falls");
         assertEquals(2, l.escalators.size(), "two escalators: lever 33 and its overhead escalator 34 are gone");
         assertEquals(1, l.escalators.stream().filter(e -> e.isVertical).count());
         assertEquals(1, l.escalators.stream().filter(e -> !e.isVertical).count());

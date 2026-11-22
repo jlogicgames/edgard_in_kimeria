@@ -3,7 +3,6 @@ package com.jlogicsoftware.kimeria.entity.objects;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.Settings;
@@ -86,12 +85,11 @@ class TrapWarningsTest {
     }
 
     private FallingPlatform platform(TrapWarnings warnings) {
-        // Animation frames without textures let the real platform update run without OpenGL.
+        // Frame regions without textures let the real platform update run without OpenGL.
         Assets assets = new Assets() {
             @Override
-            public Animation<TextureRegion> animation(String path, int amount, float stepTime,
-                    float frameW, float frameH, float originX, float originY, int amountPerRow) {
-                return new Animation<>(stepTime, new TextureRegion());
+            public TextureRegion region(String path, float x, float y, float w, float h) {
+                return new TextureRegion();
             }
         };
         FallingPlatform platform = new FallingPlatform(assets, 0f, 100f, 32f, 10f,
