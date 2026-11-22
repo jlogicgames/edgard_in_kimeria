@@ -25,7 +25,6 @@ public final class SpriteSheets {
     public static final Sheet TRAP_STONE_LIP = new Sheet("images/objects/trap-stone-lip.png", 24, 8);
     public static final Sheet TRAP_BRAMBLE = new Sheet("images/objects/trap-bramble.png", 16, 24);
     public static final Sheet TRAP_PUFFBALL = new Sheet("images/objects/trap-puffball.png", 16, 16);
-    public static final Sheet TRAP_SPORES = new Sheet("images/objects/trap-spores.png", 24, 24);
     // The hanging hive (#365, D90): rest, shake1, shake2, release, bare, falling, fallen; its stinger curtain tile (fall1, fall2).
     public static final Sheet TRAP_HIVE = new Sheet("images/objects/trap-hive.png", 24, 32);
     public static final Sheet TRAP_STINGERS = new Sheet("images/objects/trap-stingers.png", 8, 16);

@@ -283,20 +283,20 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | --- | --- |
 | Family | rhythm |
 | Visibility (D71) | VISIBLE |
-| At rest | a pale round cap that swells and bursts on a period, so it moves |
+| At rest | a crimson, pear-shaped spore sac of the danger family with a chimney mouth that glows lime and dark lime veins; it breathes (two frames, 0.6 s each) |
 | At-rest cue | none needed |
 | Reads from | ~320 px |
 | Trigger | the level clock: `(elapsed + phase) mod period` (default period 4 s) |
-| Telegraph (D7) | cap swells in two steps |
+| Telegraph (D7) | the sac swells in two steps, its veins and mouth brighten to lime; in the second step lime specks leak out of the chimney |
 | Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s inside the period |
-| Lethal part | the 24×24 cloud for `cloud` s (default 1 s) |
+| Lethal part | the 20x20 rectangle (`Puffball.cloudBounds`: the 24x24 square minus 2 px a side) for `cloud` s (default 1 s); the spores fill exactly it, from the first lethal frame to the last |
 | Counter | cross in the calm window |
-| Reset | the clock restarts at the authored phase on room rebuild |
+| Reset | the clock restarts at the authored phase on room rebuild; a rebuild starts with no particle |
 | Taught in | `forest-1-traps`, seen clouding from the entrance: the cloud is out at the entry, sinks, then swells before the next one (D110) |
 | Load checks | `Level.requireSafeSetting` (entrance, exit, checkpoint) |
-| Tests | `RhythmTrapsTest`, `Forest1TrapsTest` |
-| Art and sound | `trap-puffball`, `trap-spores`; Consequence (D93): `spore_puff`, at the release, only while the puffball is inside the camera view (`Level.puffballInView`, the bramble and hive rule), once per cloud, never at the swell. Pinned by `SporePuffSoundTest` |
-| Decision | D46, D58 |
+| Tests | `RhythmTrapsTest`, `Forest1TrapsTest`, `PuffballFxTest` (containment, pool capacity, determinism, pause), `AllocationBudgetTest` |
+| Art and sound | `trap-puffball` (6 frames: `idle1`, `idle2` breathing every 0.6 s, `swell1`, `swell2`, `burst` for the first 0.25 s of the cloud, `spent` for the rest of it and the first 0.4 s of the calm); the spores are particles (`effects.PuffballFx`, D125). Consequence (D93): `puffball_burst`, at the release, only while the puffball is inside the camera view (`Level.puffballInView`, the bramble and hive rule), once per cloud, never at the swell. Pinned by `SporePuffSoundTest` |
+| Decision | D46, D58, D125 |
 
 ### Swinging thorn vine (`ThornVine`)
 

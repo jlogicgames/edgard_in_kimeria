@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.effects.SoftGlowFx;
 import com.jlogicsoftware.kimeria.entity.Entity;
 
 /**
@@ -16,6 +17,7 @@ import com.jlogicsoftware.kimeria.entity.Entity;
  * coin has no halo ({@link #hasHalo}).
  */
 public class Collectable extends Entity {
+    private static final int GLOW_SEED_X = 31;
     private static final float STEP_TIME = 0.3f;
     private static final int FRAME_COUNT = 2;
     private static final int FRAME_SIZE = 16;
@@ -23,15 +25,14 @@ public class Collectable extends Entity {
     static final int BOB_HEIGHT = 2;
     /** Seconds per bob, rest to top and back to rest. */
     static final float BOB_PERIOD = 1.2f;
-    /** Halo alpha at rest and at the top of the bob; the halo is drawn additively, so it only brightens (D76: checked by check_contrast.py). */
-    static final float HALO_ALPHA_MIN = 0.5f, HALO_ALPHA_MAX = 0.9f;
-    static final int HALO_SIZE = 24;
+    /** The pickup's light (#544, D124 amending D76): a {@link SoftGlowFx} on the item's oval of this radius; additive, so it only brightens (checked by check_contrast.py). */
+    static final float GLOW_RADIUS = 8f;
     /** One sparkle (three frames) every period; items start it at different times, by their x. */
     static final float SPARKLE_PERIOD = 2.4f, SPARKLE_FRAME_TIME = 0.1f, SPARKLE_STAGGER_PER_TILE = 0.4f;
     static final int SPARKLE_SIZE = 5, SPARKLE_FRAMES = 3;
     /** The sparkle's top-left from the item's horizontal centre and drawn top edge: right of centre, 2 px above. */
     static final float SPARKLE_DX = 3, SPARKLE_DY = -2;
-    private static final String HALO_SHEET = "images/objects/pickup-glow.png", SPARKLE_SHEET = "images/objects/pickup-sparkle.png";
+    private static final String SPARKLE_SHEET = "images/objects/pickup-sparkle.png";
 
     private final ItemType type;
     private final GameContext game;
@@ -39,7 +40,8 @@ public class Collectable extends Entity {
     private float stateTime = 0f;
     private boolean collected = false;
     private final Runnable onPickup;
-    private final TextureRegion halo;
+    /** The soft light; null for the coin ({@link #hasHalo}). */
+    private final SoftGlowFx glow;
     private final TextureRegion[] sparkle = new TextureRegion[SPARKLE_FRAMES];
     private final float sparkleOffset;
 
@@ -54,7 +56,8 @@ public class Collectable extends Entity {
         this.game = game;
         animation = assets.animation(type.sheet, FRAME_COUNT, STEP_TIME, FRAME_SIZE, FRAME_SIZE, type.spriteX, type.spriteY);
         animation.setPlayMode(Animation.PlayMode.LOOP);
-        halo = hasHalo(type) ? assets.region(HALO_SHEET, 0, 0, HALO_SIZE, HALO_SIZE) : null;
+        glow = hasHalo(type) ? new SoftGlowFx(SoftGlowFx.PICKUP, (long) (x * GLOW_SEED_X + y)) : null;
+        if (glow != null) glow.place(position.x + size.x / 2f, position.y + size.y / 2f, GLOW_RADIUS, GLOW_RADIUS); // lit from its first draw, through a room's fade-in too
         for (int n = 0; n < SPARKLE_FRAMES; n++) sparkle[n] = assets.region(SPARKLE_SHEET, n * SPARKLE_SIZE, 0, SPARKLE_SIZE, SPARKLE_SIZE);
         sparkleOffset = (x / FRAME_SIZE * SPARKLE_STAGGER_PER_TILE) % SPARKLE_PERIOD;
     }
@@ -64,6 +67,9 @@ public class Collectable extends Entity {
     }
 
     public ItemType type() { return type; }
+
+    /** The soft light, for tests; null on the coin. */
+    SoftGlowFx glow() { return glow; }
 
     public void collideWithPlayer() {
         if (collected) return;
@@ -80,6 +86,10 @@ public class Collectable extends Entity {
     @Override
     public void update(float dt) {
         stateTime += dt;
+        if (glow != null) {
+            glow.place(position.x + size.x / 2f, position.y - bobLift(stateTime) + size.y / 2f, GLOW_RADIUS, GLOW_RADIUS);
+            glow.update(dt);
+        }
     }
 
     /**
@@ -112,13 +122,7 @@ public class Collectable extends Entity {
         float phase = bobPhase(stateTime);
         float top = position.y - bobLift(stateTime);
         float centerX = position.x + size.x / 2f, centerY = top + size.y / 2f;
-        if (halo != null) {
-            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-            batch.setColor(1f, 1f, 1f, HALO_ALPHA_MIN + (HALO_ALPHA_MAX - HALO_ALPHA_MIN) * phase);
-            batch.draw(halo, centerX - HALO_SIZE / 2f, centerY - HALO_SIZE / 2f, HALO_SIZE, HALO_SIZE);
-            batch.setColor(Color.WHITE);
-            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        }
+        if (glow != null) glow.render(batch, 1f);
         batch.draw(animation.getKeyFrame(stateTime), position.x, top, size.x, size.y);
         int spark = sparkleFrame(stateTime + sparkleOffset);
         if (spark >= 0) batch.draw(sparkle[spark], centerX + SPARKLE_DX, top + SPARKLE_DY, SPARKLE_SIZE, SPARKLE_SIZE);

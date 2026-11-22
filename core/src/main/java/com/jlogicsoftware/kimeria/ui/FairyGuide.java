@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.effects.SoftGlowFx;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import java.util.function.Supplier;
 
@@ -26,15 +27,13 @@ import java.util.function.Supplier;
 public final class FairyGuide {
     public enum Mode { HIDDEN, APPEAR, IDLE, FLY, POINT, TWINKLE }
 
-    private static final String BODY_SHEET = "images/objects/fairy-body.png", GLOW_SHEET = "images/objects/fairy-glow.png",
-        GLINT_SHEET = "images/objects/fairy-glint.png";
+    private static final String BODY_SHEET = "images/objects/fairy-body.png", GLINT_SHEET = "images/objects/fairy-glint.png";
     /** Frame layout of fairy-body.png (tools/sprite_layouts.py FAIRY_SHEETS). */
     static final int FRAME = 16, IDLE_FIRST = 0, IDLE_FRAMES = 4, FLY_FIRST = 4, FLY_FRAMES = 2, POINT_FIRST = 6,
         POINT_LEFT_FIRST = 9, POINT_FRAMES = 3, APPEAR_FIRST = 12, APPEAR_FRAMES = 2, BODY_FRAMES = 14;
     static final float IDLE_FRAME_SECONDS = .12f, FLY_FRAME_SECONDS = .06f, POINT_FRAME_SECONDS = .1f,
         APPEAR_FRAME_SECONDS = .2f, GLINT_FRAME_SECONDS = .25f, FADE_SECONDS = .1f;
-    /** The glow sheet: a 24 px square drawn as a nine-slice with 8 px corners, so its rings keep their width. */
-    static final int GLOW_SIZE = 24, GLOW_BORDER = 8, GLINT_SIZE = 5, GLINT_FRAMES = 2, CORNERS = 4;
+    static final int GLINT_SIZE = 5, GLINT_FRAMES = 2, CORNERS = 4;
     /** The selected glow covers the target grown by this much on each side; the glints sit on its corners grown by 2. */
     static final float GLOW_PAD = 6f, GLINT_GROW = 2f;
     /** Passive targets get the same glow, dimmer; the selected one is drawn at full strength. */
@@ -49,9 +48,14 @@ public final class FairyGuide {
      * of flight for each target besides the dwell, and never less than {@link #CHANGED_SECONDS}.
      */
     public static final float DWELL_SECONDS = APPEAR_FRAME_SECONDS * APPEAR_FRAMES * 2, HOP_FLIGHT_SECONDS = .4f, HOP_MAX_SECONDS = 2f;
-    /** Her own light (D76: without it her ink contour falls to 0.187 on dark tiles): the glow at 20 px, breathing. */
-    static final int LIGHT_SIZE = 20;
-    static final float LIGHT_ALPHA_MIN = .6f, LIGHT_ALPHA_MAX = .9f;
+    /**
+     * Her own light and the target marks are soft animated lights ({@link SoftGlowFx}, #544, D124 amending D82): hers is {@link SoftGlowFx#FAIRY_SELF}
+     * (D76: without it her ink contour falls below the floor on dark tiles), at {@link #SELF_RADIUS} px; each marked target takes one of {@link #MARKS}
+     * slots, an oval hugging it grown by {@link #GLOW_PAD}. More marks than slots are not lit (the glints still show them).
+     */
+    static final float SELF_RADIUS = 4f;
+    private static final long SELF_SEED = 0xFA1121L;
+    static final int MARKS = 12;
     /** Idle: frame centre beside his face, on the side away from where he faces, bobbing. */
     static final float IDLE_SIDE = 14, IDLE_DROP = 16, BOB = 1.5f, BOB_PERIOD = 1.6f;
     /** Smoothing rates (1/s): following the hero, flying to a target. Within ARRIVED px she points or idles. */
@@ -59,15 +63,17 @@ public final class FairyGuide {
     /** The wand tip in a right-pointing frame (the left frames are flipped): 2 px off the target's upper corner. */
     static final int TIP_X = 15, TIP_Y = 13;
     static final float TIP_GAP = 2;
-    /** The glow sheet is cut into a SLICES x SLICES grid: corners, edges and the middle. */
-    private static final int SLICES = 3, MIDDLE = 1;
     /** Room for the passive marks of one frame; more grow the array once (an event, not a frame cost). */
     private static final int PASSIVE_CAPACITY = 8;
     /** The glint corners clockwise from the top left: which of them sit on the right and on the bottom edge. */
     private static final boolean[] CORNER_RIGHT = {false, true, true, false}, CORNER_BOTTOM = {false, false, true, true};
 
     private final TextureRegion[] body = new TextureRegion[BODY_FRAMES];
-    private final TextureRegion[] glow = new TextureRegion[SLICES * SLICES];
+    private final SoftGlowFx[] marks = new SoftGlowFx[MARKS];
+    private final Entity[] markTarget = new Entity[MARKS];
+    private final float[] markStrength = new float[MARKS];
+    private final boolean[] markSeen = new boolean[MARKS];
+    private final SoftGlowFx self = new SoftGlowFx(SoftGlowFx.FAIRY_SELF, SELF_SEED);
     private final TextureRegion[] glint = new TextureRegion[GLINT_FRAMES];
     private final Array<Entity> passive = new Array<>(false, PASSIVE_CAPACITY);
     /** The mechanisms of the lever just pulled (filled by {@code Level.activateTrigger}) and those of the selected lever. */
@@ -101,9 +107,7 @@ public final class FairyGuide {
 
     public FairyGuide(Assets assets) {
         for (int i = 0; i < BODY_FRAMES; i++) body[i] = assets.region(BODY_SHEET, i * FRAME, 0, FRAME, FRAME);
-        int[] cuts = {0, GLOW_BORDER, GLOW_SIZE - GLOW_BORDER, GLOW_SIZE};
-        for (int row = 0; row < SLICES; row++) for (int col = 0; col < SLICES; col++)
-            glow[row * SLICES + col] = assets.region(GLOW_SHEET, cuts[col], cuts[row], cuts[col + 1] - cuts[col], cuts[row + 1] - cuts[row]);
+        for (int i = 0; i < MARKS; i++) marks[i] = new SoftGlowFx(SoftGlowFx.FAIRY_TARGET, SELF_SEED + 1 + i);
         for (int i = 0; i < GLINT_FRAMES; i++) glint[i] = assets.region(GLINT_SHEET, i * GLINT_SIZE, 0, GLINT_SIZE, GLINT_SIZE);
     }
 
@@ -144,6 +148,39 @@ public final class FairyGuide {
      * (the hero walks into reach with Up held). The passive set is computed only here.
      */
     public void update(float dt, Player hero) {
+        step(dt, hero);
+        refreshMarks(dt);
+    }
+
+    /** Places the lights on this frame's targets and advances them; a mark that is gone is cleared at once, as the old glow vanished. Index loops, no allocation. */
+    private void refreshMarks(float dt) {
+        java.util.Arrays.fill(markSeen, false);
+        for (int i = 0; i < passive.size; i++) mark(passive.get(i), Math.max(PASSIVE_ALPHA, changedStrength(passive.get(i))));
+        for (int i = 0; i < changed.size; i++) {
+            Entity e = changed.get(i);
+            if (e != selected && !e.isRemoved() && !passive.contains(e, true)) mark(e, changedStrength(e));
+        }
+        if (selected != null) mark(selected, SELECTED_ALPHA);
+        for (int i = 0; i < MARKS; i++) {
+            if (!markSeen[i]) { markTarget[i] = null; marks[i].clear(); } else marks[i].update(dt);
+        }
+        if (mode == Mode.HIDDEN || alpha == 0) self.clear();
+        else { self.place(x, y, SELF_RADIUS, SELF_RADIUS); self.update(dt); }
+    }
+
+    private void mark(Entity target, float strength) {
+        if (strength <= 0) return;
+        int slot = -1;
+        for (int i = 0; i < MARKS && slot < 0; i++) if (markTarget[i] == target) slot = i;
+        for (int i = 0; i < MARKS && slot < 0; i++) if (markTarget[i] == null) slot = i;
+        if (slot < 0) return;
+        markTarget[slot] = target;
+        markStrength[slot] = strength;
+        markSeen[slot] = true;
+        marks[slot].place(target.centerX(), target.centerY(), target.getWidth() / 2 + GLOW_PAD, target.getHeight() / 2 + GLOW_PAD);
+    }
+
+    private void step(float dt, Player hero) {
         time += dt;
         modeTime += dt;
         boolean present = hero != null && !hero.isRemoved() && hero.canFight();
@@ -332,18 +369,9 @@ public final class FairyGuide {
         goalY = tipY - TIP_Y + FRAME / 2f;
     }
 
-    /** The target glows, drawn behind the objects: the selected one at full strength from its first frame, the passive ones dim. */
+    /** The target lights, drawn behind the objects: the selected one at full strength from its first frame, the passive ones dim. */
     public void renderBehind(Batch batch) {
-        if (selected == null && passive.size == 0 && changed.size == 0) return;
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-        for (int i = 0; i < passive.size; i++) drawGlow(batch, passive.get(i), Math.max(PASSIVE_ALPHA, changedStrength(passive.get(i))));
-        for (int i = 0; i < changed.size; i++) {
-            Entity e = changed.get(i);
-            if (e != selected && !e.isRemoved() && !passive.contains(e, true)) drawGlow(batch, e, changedStrength(e));
-        }
-        if (selected != null) drawGlow(batch, selected, SELECTED_ALPHA);
-        batch.setColor(Color.WHITE);
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        for (int i = 0; i < MARKS; i++) if (markSeen[i]) marks[i].render(batch, markStrength[i]);
     }
 
     /** The glints on the selected target, then her light and the fairy herself, drawn over the hero. */
@@ -355,11 +383,7 @@ public final class FairyGuide {
         }
         if (mode == Mode.HIDDEN || alpha == 0) return;
         float left = MathUtils.round(x - FRAME / 2f), top = MathUtils.round(y - FRAME / 2f);
-        float breath = (1 - MathUtils.cos(MathUtils.PI2 * time / BOB_PERIOD)) / 2; // her light, under every frame (D76)
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-        batch.setColor(1, 1, 1, alpha * (LIGHT_ALPHA_MIN + (LIGHT_ALPHA_MAX - LIGHT_ALPHA_MIN) * breath));
-        nineSlice(batch, left + FRAME / 2f - LIGHT_SIZE / 2f, top + FRAME / 2f - LIGHT_SIZE / 2f, LIGHT_SIZE, LIGHT_SIZE);
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        self.render(batch, alpha); // her light, under every frame (D76)
         batch.setColor(1, 1, 1, alpha);
         batch.draw(body[frame()], left, top, FRAME, FRAME);
         batch.setColor(Color.WHITE);
@@ -383,12 +407,6 @@ public final class FairyGuide {
         };
     }
 
-    private void drawGlow(Batch batch, Entity target, float strength) {
-        batch.setColor(1, 1, 1, strength);
-        nineSlice(batch, target.getX() - GLOW_PAD, target.getY() - GLOW_PAD,
-            target.getWidth() + GLOW_PAD * 2, target.getHeight() + GLOW_PAD * 2);
-    }
-
     /** Big glints on one diagonal, small on the other, swapping every {@link #GLINT_FRAME_SECONDS}. */
     private void drawGlints(Batch batch, Entity target) { drawGlints(batch, target.getX(), target.getY(), target.getWidth(), target.getHeight()); }
 
@@ -403,19 +421,12 @@ public final class FairyGuide {
         }
     }
 
-    private void nineSlice(Batch batch, float left, float top, float w, float h) {
-        float middleW = Math.max(0, w - GLOW_BORDER * 2), middleH = Math.max(0, h - GLOW_BORDER * 2);
-        for (int row = 0; row < SLICES; row++) {
-            float rowY = row < MIDDLE ? top : row == MIDDLE ? top + GLOW_BORDER : top + GLOW_BORDER + middleH;
-            float rowH = row == MIDDLE ? middleH : GLOW_BORDER;
-            for (int col = 0; col < SLICES; col++) {
-                float colX = col < MIDDLE ? left : col == MIDDLE ? left + GLOW_BORDER : left + GLOW_BORDER + middleW;
-                float colW = col == MIDDLE ? middleW : GLOW_BORDER;
-                if (rowH > 0 && colW > 0) batch.draw(glow[row * SLICES + col], colX, rowY, colW, rowH);
-            }
-        }
+    /** How many target marks are lit this frame (for tests). */
+    public int marksLit() {
+        int n = 0;
+        for (int i = 0; i < MARKS; i++) if (markSeen[i]) n++;
+        return n;
     }
-
     /** The target the selection glow and her flight show; always the hero's {@code interactionFeedbackTarget()}. */
     public Entity selected() { return selected; }
     /** The passive marks of this frame (read only). */

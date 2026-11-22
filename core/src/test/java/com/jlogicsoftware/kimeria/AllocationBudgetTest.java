@@ -11,6 +11,7 @@ import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
+import com.jlogicsoftware.kimeria.entity.objects.Puffball;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
 import com.jlogicsoftware.kimeria.entity.objects.FallingPlatform;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -198,6 +199,12 @@ class AllocationBudgetTest {
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
 
+    /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-22, #552, D123; the same 8 B ceiling as the other isolated effects): the portal of forest-1's bramble room, its rim, arm, infall and light streams spawning and drawing 256 motes and 48 lights at most, update and render every frame. */
+    static final double PORTAL_CEILING = 8;
+    /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-22, #553, D123; 3.2 to 3.5 while each change still created its own {@code RippleEffect}, which {@code RoomRippleFx} now reuses): the ripple of a room change, a leave and an enter every 60 frames, its rings, motes and screen ripple, update and render every frame. */
+    static final double ROOM_CHANGE_CEILING = 8;
+    private static final int PORTAL_ROOM = 6;
+
     /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
     static final double BOSS_HUD_CEILING = 8;
 
@@ -206,7 +213,7 @@ class AllocationBudgetTest {
 
     /** Measured 0.0 B/frame in 3 runs (#239 step 4): one {@code batch.draw} per bush, frame regions held in the object. */
     static final double DECOR_BRUSH_CEILING = 8;
-    /** Measured 0.0 B/frame in 3 runs (#345): a coin, a Bat wing and a Mushroom with the whole pickup cue (frame animation, the 2 px bob, the additive halo with its blend switches, the sparkle), update and render through the batch. */
+    /** Measured 0.0 B/frame in 3 runs (#345); 0.0, 0.1 and 0.1 after the soft light replaced the halo (2026-11-22, #544, D124): a coin, a Bat wing and a Mushroom with the whole pickup cue (frame animation, the 2 px bob, the soft light, the sparkle), update and render through the batch. */
     static final double COLLECTABLE_CUE_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#239 step 5): one rotated {@code batch.draw} per vine, the frame region held in the object. */
     static final double HANGING_VINE_CEILING = 8;
@@ -214,6 +221,8 @@ class AllocationBudgetTest {
     static final double HONEY_FUNGUS_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. #296: the same scenario now draws the {@code SporeCloud} (30 particles each); the measurement is in the report. Headless there is no GL context, so the shader layer is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles alone. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
+    /** Spore puffballs (#558, puffballsLeakReleaseAndCloud): measured 0.0, 0.3 and 0.3 B/frame in 3 isolated runs (2026-11-22): ten puffballs swelling, releasing and tested against a hero every frame, update and render. The same 8 B ceiling as the other isolated trap paths. */
+    static final double PUFFBALL_CEILING = 8;
     /** Measured 0.0 B/frame (#343, D79): the hero's draw path, every state in both facings, the three ladder clips and #341's three pull frames with the wrist, with the held-object grip, through the batch. */
     static final double HERO_DRAW_CEILING = 8;
     /**
@@ -519,6 +528,33 @@ class AllocationBudgetTest {
         assertWithinBudget("forest-1 lever room, pulling the lever", FOREST_1_LEVER_CEILING, bytes);
     }
     private static final int PULL_CYCLE_FRAMES = 60;
+
+    /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-22, #544, D124; the same 8 B ceiling as the other isolated effects): the fairy's own soft light and the lever's selected mark with its passive marks, {@code FairyGuide.update} and both render passes every frame. */
+    static final double FAIRY_MARKS_CEILING = 8;
+
+    /**
+     * The fairy (#544, D124) isolated: her own soft light, the lever's selected mark and the passive marks (SoftGlowFx slots), updated and drawn each frame with the
+     * hero on the lever slab holding Up, as the whole room's scenario above does; the hero's own update is not in the number, only {@code FairyGuide}'s.
+     */
+    @Test void fairyLightAndTargetMarksThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-1", 4);
+        level.player.position.set(4528 + 8 - HERO_CENTRE_OFFSET_X, 208 - HERO_FRAME_SIZE);
+        level.fairy().arrive();
+        for (int i = 0; i < 5; i++) level.update(STEP);
+        harness.held.add(com.badlogic.gdx.Input.Keys.W);
+        level.update(STEP);
+        assertTrue(level.fairy().selected() != null, "the lever must be the fairy's selected target");
+        int[] live = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            level.fairy().update(STEP, level.player);
+            level.fairy().renderBehind(batch);
+            level.fairy().renderFront(batch);
+            live[0] = Math.max(live[0], level.fairy().marksLit());
+        });
+        harness.held.clear();
+        assertTrue(live[0] > 0, "the marks must be lit in this scenario");
+        assertWithinBudget("fairy light and target marks", FAIRY_MARKS_CEILING, bytes);
+    }
 
     /**
      * The rider path alone: {@code Player.update} costs about 560 B/frame in this harness whatever it stands on (D83: the stubbed input and graphics
@@ -1139,6 +1175,36 @@ class AllocationBudgetTest {
         assertWithinBudget("pickup sparks", PICKUP_SPARKS_CEILING, bytes);
     }
 
+    /** The portal on the exit of forest-1's bramble room (#552): its streams spawn, update and draw every frame, placed on the map's own exit by the real {@code Level}; the isolated number, as for the other effects (the whole room, portal included, is {@link #FOREST_1_BRAMBLE_CEILING}'s scenario). */
+    @Test void portalThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-1", PORTAL_ROOM);
+        int[] peak = new int[2];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            level.portal().update(STEP);
+            level.portal().render(batch);
+            peak[0] = Math.max(peak[0], level.portal().motes().count());
+            peak[1] = Math.max(peak[1], level.portal().light().count());
+        });
+        assertTrue(level.portal().placed() && peak[0] > 0 && peak[1] > 0, "the portal must be live in this scenario");
+        assertWithinBudget("forest-1 bramble room with its portal", PORTAL_CEILING, bytes);
+    }
+
+    /** The room change (#553) through the real {@code Level}: every 60 frames the hero leaves, 30 frames later the next room's ripple plays (the room switch itself is a load-time event, not measured); the portal and the whole room are drawn each frame. The two {@code RippleEffect}s a change creates are an event cost and are counted. */
+    @Test void roomChangeThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-1", PORTAL_ROOM);
+        Rectangle view = new Rectangle(level.currentRoomBounds());
+        int[] peak = new int[2];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.beginLeaving();
+            if (i % BURST_CYCLE_FRAMES == BURST_CYCLE_FRAMES / 2) level.roomRipple().enter(100, 200);
+            level.updateRoomChange(STEP); level.render(batch, view);
+            peak[0] = Math.max(peak[0], level.roomRipple().ringCount());
+            peak[1] = Math.max(peak[1], level.roomRipple().motes().count());
+        });
+        assertTrue(peak[0] > 0 && peak[1] > 0, "the ripple must act in this scenario");
+        assertWithinBudget("room change ripple and portal", ROOM_CHANGE_CEILING, bytes);
+    }
+
     /** The leaves of a Forest room (#473) through the real {@code Level}: the room's ten leaves come from its map, so the scenario is the game's own. */
     @Test void fallingLeavesThroughTheRealLevel() {
         Level whole = harness.roomOf("forest-1", LEAF_ROOM);
@@ -1449,6 +1515,33 @@ class AllocationBudgetTest {
             empty, difference, FISSURE_PAIRS);
         assertTrue(lethal[0], "the jet must actually reach the hero over the crack in this scenario");
         assertWithinBudget("ember fissures (minus an empty frame)", EMBER_FISSURE_CEILING, difference);
+    }
+
+    /**
+     * Ten spore puffballs on their clocks (#558): the swell with its leak, the release (flash, jet, 40 spores, haze), the live cloud kept up
+     * and tested against a hero standing in it every frame, the sac and every particle drawn through the batch, then the clearing. Every cycle
+     * is 4 s, so the 25 s of warm-up and measure hold several releases of each.
+     */
+    @Test void puffballsLeakReleaseAndCloud() {
+        Puffball[] balls = new Puffball[FUNGUS_CYCLES];
+        Rectangle hero = new Rectangle(0, FUNGUS_FLOOR - HERO_HEIGHT, HERO_WIDTH, HERO_HEIGHT);
+        for (int k = 0; k < balls.length; k++)
+            balls[k] = new Puffball(harness.assets(), k * FUNGUS_SPACING, FUNGUS_FLOOR - FUNGUS_HEIGHT, 16, 16, harness.game().trapWarnings(),
+                Puffball.DEFAULT_PERIOD_SECONDS, k * 0.37f, Puffball.DEFAULT_CLOUD_SECONDS);
+        boolean[] lethal = new boolean[1];
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            hero.x = balls[i % balls.length].getX() + 2;
+            for (Puffball b : balls) {
+                b.update(STEP);
+                b.render(batch);
+                lethal[0] |= b.lethalTo(hero);
+                peak[0] = Math.max(peak[0], b.fx().count());
+            }
+        });
+        assertTrue(lethal[0], "a cloud must actually be lethal to the standing hero in this scenario");
+        assertTrue(peak[0] >= com.jlogicsoftware.kimeria.effects.PuffballFx.SPORE_BURST, "the spores must actually release: " + peak[0]);
+        assertWithinBudget("puffballs", PUFFBALL_CEILING, bytes);
     }
 
     /** The same cycle for the false honey fungus: swell, the live cloud's {@code lethalTo} against the hero every frame, the cloud draw, spent. */

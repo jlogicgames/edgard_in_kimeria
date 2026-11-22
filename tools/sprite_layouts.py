@@ -52,8 +52,7 @@ FOREST_TRAP_SHEETS = {
     'stone': ((16, 16), ('stone', 'cracked')),
     'shadow': ((24, 8), ('small', 'medium', 'large')),
     'stone-lip': ((24, 8), ('loose', 'broken')),  # #360: the stone's at-rest cue, the loose overhang over its start point
-    'puffball': ((16, 16), ('idle', 'swell1', 'swell2', 'burst')),
-    'spores': ((24, 24), ('cloud1', 'cloud2', 'cloud3')),
+    'puffball': ((16, 16), ('idle1', 'idle2', 'swell1', 'swell2', 'burst', 'spent')),
     'vine': ((24, 40), ('hang', 'swing-left', 'swing-right')),
     'log': ((32, 16), ('intact', 'crumble1', 'crumble2')),
     # #362: the plain falling platform; since #236 a lashed plank whose slack rope sways through the frames (named fan1..fan4
@@ -94,9 +93,8 @@ DECOR_SHEETS = {
     'crown': ((96, 40), ('crown',)),  # #421: the leaf crown hung over a trunk, one frame
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})
-# The shared pickup cue (#345): drawn by every Collectable; runtime export `pickup-<name>.png`, one horizontal strip.
+# The shared pickup cue (#345): drawn by every Collectable (its light is the SoftGlowFx effect since #544, not a sheet); runtime export `pickup-<name>.png`, one horizontal strip.
 PICKUP_SHEETS = {
-    'glow': ((24, 24), ('halo',)),  # additive halo behind the item, alpha pulsing with the bob
     'sparkle': ((5, 5), ('grow', 'star', 'fade')),
 }
 WORLD_IMAGES.update({f'pickup-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in PICKUP_SHEETS.items()})
@@ -104,7 +102,6 @@ WORLD_IMAGES.update({f'pickup-{name}': (size[0] * len(frames), size[1]) for name
 FAIRY_SHEETS = {
     'body': ((16, 16), ('idle1', 'idle2', 'idle3', 'idle4', 'fly1', 'fly2', 'point1', 'point2', 'point3',
                         'point1-left', 'point2-left', 'point3-left', 'appear1', 'appear2')),
-    'glow': ((24, 24), ('glow',)),  # additive light, drawn as a nine-slice: the target glow and the fairy's own light
     'glint': ((5, 5), ('big', 'small')),  # fairy dust at the selected target's corners
 }
 WORLD_IMAGES.update({f'fairy-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in FAIRY_SHEETS.items()})

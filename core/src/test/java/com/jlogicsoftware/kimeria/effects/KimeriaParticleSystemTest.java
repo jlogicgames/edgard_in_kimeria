@@ -178,4 +178,35 @@ class KimeriaParticleSystemTest {
         while (p.count() > 0 && p.life(0) > .2f) p.update(.01f);
         assertTrue(p.alpha(0) < .85f, "fades out");
     }
+
+    /** #552: {@code KIND_ORBIT} rides an ellipse: position at t = 0, 0.5 and 1, constant size, alpha ramped in and out, additive. */
+    @Test void anOrbitRidesItsEllipseAndRampsItsAlpha() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        // centre (100, 50), radii 20 by 10, start at 0 turns (pointing right), half a turn over its life, rho 1 to 0.5
+        s.spawnOrbit(100, 50, 20, 10, 0f, 0.5f, 1f, 0.5f, 1f, 3f, 1f, 1f, 1f);
+        assertEquals(120f, s.x(0), 1e-3f, "t = 0: on the right of the oval");
+        assertEquals(50f, s.y(0), 1e-3f);
+        assertEquals(0f, s.alpha(0), 0f, "alpha ramps in from nothing");
+        for (int i = 0; i < 30; i++) s.update(STEP); // t = 0.5: a quarter turn (towards larger Y), rho 0.75
+        assertEquals(100f, s.x(0), 1e-2f);
+        assertEquals(50f + 10f * 0.75f, s.y(0), 1e-2f, "a quarter turn lands below the centre: world Y grows downward");
+        assertEquals(1f, s.alpha(0), 1e-3f, "full in the middle of its life");
+        assertEquals(3f, s.drawSize(0), 0f, "constant size");
+        for (int i = 0; i < 29; i++) s.update(STEP);
+        assertTrue(s.count() == 1 && s.alpha(0) < 0.25f, "ramping out at the end");
+        s.update(STEP * 2);
+        assertEquals(0, s.count());
+    }
+
+    @Test void anOrbitSurvivesTheOldestBeingDroppedAndCompaction() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(2, 1);
+        s.spawnOrbit(0, 0, 10, 10, 0f, 0f, 1f, 1f, 0.05f, 1f, 1f, 1f, 1f);
+        s.spawnOrbit(0, 0, 10, 10, 0.25f, 0f, 1f, 1f, 1f, 1f, 1f, 1f, 1f);
+        s.spawnOrbit(0, 0, 10, 10, 0.5f, 0f, 1f, 1f, 1f, 1f, 1f, 1f, 1f); // drops the first
+        assertEquals(2, s.count());
+        assertEquals(10f, s.y(0), 1e-3f, "the 0.25 turn orbit moved to index 0 with its own radii");
+        s.update(STEP);
+        assertEquals(10f, s.y(0), 1e-2f);
+        assertEquals(-10f, s.x(1), 1e-2f, "the half turn orbit sits on the left");
+    }
 }

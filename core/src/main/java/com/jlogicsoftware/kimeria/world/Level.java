@@ -23,6 +23,8 @@ import com.jlogicsoftware.kimeria.effects.SpiderFx;
 import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
 import com.jlogicsoftware.kimeria.effects.FireballFx;
 import com.jlogicsoftware.kimeria.effects.PickupSparksFx;
+import com.jlogicsoftware.kimeria.effects.PortalFx;
+import com.jlogicsoftware.kimeria.effects.RoomRippleFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
@@ -174,6 +176,17 @@ public class Level implements WorldObject {
     private static final long PICKUP_SPARKS_SEED_MIX = 0xD6E8FEB86659FD93L;
     /** The spark burst of every pickup (#402): one for the level. Cleared with the room, so a pickup that returns after a death replays nothing. */
     private final PickupSparksFx pickupSparks = new PickupSparksFx(TimeUtils.nanoTime() ^ PICKUP_SPARKS_SEED_MIX);
+    /** The portal on the current room's exit (#552) and the ripple of a room change (#553): cosmetic, owned here like the other effects. */
+    private final PortalFx portal = new PortalFx();
+    private final RoomRippleFx roomRipple = new RoomRippleFx();
+    /**
+     * A room change that {@link #beginLeaving} started is under way, and how long it has run; only that sets {@link #heroLeft}, so the fade-in of the
+     * next room, a boss fight's fade and the debug fade, which never begin a leave, cannot hide the hero.
+     */
+    private boolean leaving;
+    private float leaveClock;
+    /** True from the middle of the leaving pause until the next room starts: the hero has gone into the portal (drawing only). */
+    private boolean heroLeft;
     private static final long BEETLE_FX_SEED_MIX = 0xBF58476D1CE4E5B9L;
     /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
     private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
@@ -308,8 +321,10 @@ public class Level implements WorldObject {
     private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
     /** The bramble's warning rustle and its grow lash (#364, D89). */
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
-    /** The spore puff (#445): the puffball's release and both honey fungi's burst. */
+    /** The spore puff (#445): both honey fungi's burst (D63: one sound for the pair). */
     private static final String SPORE_PUFF_SOUND = "spore_puff";
+    /** The puffball's release (#558): its own, harsher sound; it is no look-alike of the honey fungi. */
+    static final String PUFFBALL_BURST_SOUND = "puffball_burst";
     /** The thorn root's and tuft's spring (#446): one sound for the family. */
     private static final String THORN_SPRING_SOUND = "thorn_spring";
     /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
@@ -507,6 +522,7 @@ public class Level implements WorldObject {
         secureVisit();
         currentRoom++;
         activateRoom(nextPlayer, true);
+        roomRipple.enter(player.centerX(), player.centerY());
     }
 
     /** Dev-only map reload: keep a valid position and activate its room without a transition. */
@@ -543,12 +559,48 @@ public class Level implements WorldObject {
         clearCameraEffects();
         fairy.reset(); // the marks belong to the room that was left (D87)
         player = nextPlayer;
+        heroLeft = leaving = false;
+        leaveClock = 0;
+        roomRipple.clear();
         spawnObjects();
         addCollisions();
         restoreRoomObjects();
         placePlayer();
+        placePortal();
         if (boss != null && retryBossEnergy >= 0) boss.showRestoration(retryBossEnergy);
         retryBossEnergy = -1;
+    }
+
+    private void placePortal() {
+        Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
+        if (exit == null) portal.clear();
+        else portal.place(exit.x, exit.y, exit.width, exit.height);
+    }
+
+    /** The portal of the current room, for tests; not placed in the last room, which has no exit. */
+    public PortalFx portal() { return portal; }
+    public RoomRippleFx roomRipple() { return roomRipple; }
+    public boolean heroLeft() { return heroLeft; }
+
+    /** The hero reaches the exit: the ripple plays where he stands and he goes into the portal when the pause has half run (see {@link #updateRoomChange}). */
+    public void beginLeaving() {
+        roomRipple.leave(player.centerX(), player.centerY());
+        leaving = true;
+        heroLeft = false;
+        leaveClock = 0;
+    }
+
+    /** The room change was cancelled (the healer meeting): the hero is back and the ripple ends. */
+    public void cancelLeaving() { heroLeft = leaving = false; leaveClock = 0; roomRipple.clear(); }
+
+    /** Advances only the effects of a room change while the rest of the world is held: the portal and the ripple, and, in a leave, the moment the hero is gone. */
+    public void updateRoomChange(float dt) {
+        if (leaving) {
+            leaveClock += dt;
+            if (leaveClock >= RoomRippleFx.LEAVE_HOLD_SECONDS / 2f) heroLeft = true;
+        }
+        portal.update(dt);
+        roomRipple.update(dt);
     }
 
     private void placePlayer() {
@@ -678,6 +730,7 @@ public class Level implements WorldObject {
         parseBackground(map.prop("background", DEFAULT_BACKGROUND), background);
 
         placePlayer();
+        placePortal();
     }
 
     /** The flat colour behind the world as RGB in 0..1 (D92); the level's own array, read every frame, never modified. */
@@ -1039,7 +1092,7 @@ public class Level implements WorldObject {
 
     /** The puffball's clocked release is heard only while the puffball is inside the camera view (#445): off screen it must not puff every period. */
     private void puffballSound(Puffball puffball) {
-        if (game.playSounds() && puffballInView(puffball)) game.playSound(SPORE_PUFF_SOUND);
+        if (game.playSounds() && puffballInView(puffball)) game.playSound(PUFFBALL_BURST_SOUND);
     }
 
     /** True when {@code box} is within the camera's visible world rect: a cue that is heard only while it is on screen (D89, D90). */
@@ -1681,6 +1734,8 @@ public class Level implements WorldObject {
      * one is drawn at a time, so a second coin collected mid-ripple takes over from the first.
      */
     public RippleEffect activeRipple() {
+        RippleEffect change = roomRipple.distortion();
+        if (change != null) return change;
         for (int i = objects.size() - 1; i >= 0; i--) {
             if (objects.get(i) instanceof RippleEffect ripple && !ripple.isRemoved()) return ripple;
         }
@@ -1756,6 +1811,8 @@ public class Level implements WorldObject {
         blood.update(dt);
         fireballFx.update(dt);
         pickupSparks.update(dt);
+        portal.update(dt);
+        roomRipple.update(dt);
         beetleFx.update(dt);
         spiderFx.update(dt);
         snailFx.update(dt);
@@ -1833,6 +1890,7 @@ public class Level implements WorldObject {
         for (int i = 0; i < decor.size(); i++) if (!decor.get(i).behindTiles()) decor.get(i).render(batch);
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
         fairy.renderBehind(batch); // the target glows: light behind the objects, the objects stay crisp (D82)
+        portal.render(batch); // behind every object and the hero: it marks the exit and never covers anything (#552)
         for (int i = 0; i < staticPlatforms.size(); i++) staticPlatforms.get(i).render(batch);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).render(batch);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).render(batch);
@@ -1853,7 +1911,8 @@ public class Level implements WorldObject {
             for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         }
-        if (!player.isRemoved()) player.render(batch);
+        if (!player.isRemoved() && !heroLeft) player.render(batch);
+        roomRipple.render(batch);
         pickupSparks.render(batch); // over the hero: the item is at his hand when he takes it, and behind him the burst stays hidden until it leaves his outline
         fairy.renderFront(batch);
         if (!parallax.isEmpty()) parallax.renderFront(batch, visibleWorldRect, currentRoomBounds(), ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height));
