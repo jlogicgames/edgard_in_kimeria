@@ -30,8 +30,8 @@ The author accepted these open check boxes on the basis that the testers played 
 | Issue | Box accepted | What stays open |
 | --- | --- | --- |
 | [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368) | Ukrainian text fit at 16 and 18 px; the boss HUD label at its size; the healer dialogue with three choices at 18 px; stone impact dust on forest-0 tiles; the Ukrainian opening pages on the web; the thread-pull visual on the web | German and Belarusian fit; the ending page, the de and be opening pages and desktop for the static pages; the thread pull on desktop and the pluck sound; all other boxes (touch labels, desktop build, trap cues, decor) |
-| [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428) | forest-2 seam play | the docs/ROOMS.md update box |
-| [#422](https://github.com/jlogicgames/edgard_in_kimeria/issues/422) | forest-1 seams and the first RedMob | the docs/DECISIONS.md update box |
+| [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428) | forest-2 seam play | nothing (closed 2026-11-24) |
+| [#422](https://github.com/jlogicgames/edgard_in_kimeria/issues/422) | forest-1 seams and the first RedMob | nothing (closed 2026-11-24) |
 | [#138](https://github.com/jlogicgames/edgard_in_kimeria/issues/138) | the boss attacks read, the escape and the retry | roles, the elixir and unempowered victory paths, fight timing |
 | [#128](https://github.com/jlogicgames/edgard_in_kimeria/issues/128) | a playable build for someone who has not seen the solutions | the five-room mechanic, the optional path, entrances, exits and retry state |
 

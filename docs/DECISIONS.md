@@ -2329,8 +2329,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `FOREST_1_MOB_CEILING` **620** (561.8, 561.8, 345.8 B/frame); `FOREST_1_CEILING` (the trap course) lowered from 1450 to
   **665** (601.8, 602.3, 290.3 B/frame; the old ceiling was set when the room held the torch, 1,322 B/frame). Both tighten
   the gate. No threshold or tolerance was relaxed.
-- **Not verified:** the new room in the running game (camera, wall tiles, the refill's place by eye), tracked by
-  [#422](https://github.com/jlogicgames/edgard_in_kimeria/issues/422); novice playtests (#135).
+- **Checked in the running game** (camera, wall tiles, the refill's place by eye) by playtest 2 and the author, 2026-11-24
+  ([#422](https://github.com/jlogicgames/edgard_in_kimeria/issues/422)). Not verified: novice playtests (#135).
 
 ## D86. forest-1 gets a lever lesson room: one lever, a ladder and a lift in opposite states (#418, 2026-11-17)
 
