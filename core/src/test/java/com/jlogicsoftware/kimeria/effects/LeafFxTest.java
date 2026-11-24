@@ -84,4 +84,41 @@ class LeafFxTest {
         assertEquals(0, fx.particles().count(), "no leaf is seeded over a trap");
         for (int f = 0; f < FRAMES; f++) { fx.update(STEP); assertEquals(0, fx.particles().count()); }
     }
+
+    /**
+     * D120 (#236): the leaves fly just in front of the play layer, so they take the near palette's dark real leaf greens, not grey
+     * or teal ghosts. Every colour a leaf is given lies in OKLab L 0.30 to 0.36, C 0.024 to 0.036, hue 130 to 150; the band was
+     * measured over the composited sky, far, grove and mid layers of every leaf room (mean distance 0.090 to 0.172, decor body
+     * 0.08 to 0.20, ART_DIRECTION.md "Falling leaves").
+     */
+    @Test void leafColoursAreDarkRealLeafGreens() {
+        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        for (long seed = 0; seed < SEEDS; seed++) {
+            LeafFx fx = new LeafFx(seed);
+            fx.start(ROOM, LEAVES);
+            KimeriaParticleSystem p = fx.particles();
+            for (int i = 0; i < p.count(); i++) {
+                float r = p.red(i), g = p.green(i), b = p.blue(i);
+                double[] lab = oklab(r, g, b);
+                double chroma = Math.hypot(lab[1], lab[2]), hue = (Math.toDegrees(Math.atan2(lab[2], lab[1])) + 360) % 360;
+                String at = String.format("leaf (%.3f, %.3f, %.3f): L %.3f C %.4f hue %.1f", r, g, b, lab[0], chroma, hue);
+                assertTrue(lab[0] >= .30 && lab[0] <= .36, at);
+                assertTrue(chroma >= .024 && chroma <= .036, at);
+                assertTrue(hue >= 130 && hue <= 150, at);
+                seen.add(Math.round(r * 1000) * 1_000_000 + Math.round(g * 1000) * 1000 + Math.round(b * 1000));
+            }
+        }
+        assertEquals(3, seen.size(), "three leaf greens are in use");
+    }
+
+    private static double[] oklab(float red, float green, float blue) {
+        double r = linear(red), g = linear(green), b = linear(blue);
+        double l = Math.cbrt(.4122214708 * r + .5363325363 * g + .0514459929 * b);
+        double m = Math.cbrt(.2119034982 * r + .6806995451 * g + .1073969566 * b);
+        double s = Math.cbrt(.0883024619 * r + .2817188376 * g + .6299787005 * b);
+        return new double[]{.2104542553 * l + .7936177850 * m - .0040720468 * s,
+            1.9779984951 * l - 2.4285922050 * m + .4505937099 * s, .0259040371 * l + .7827717662 * m - .8086757660 * s};
+    }
+
+    private static double linear(double c) { return c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }
 }
