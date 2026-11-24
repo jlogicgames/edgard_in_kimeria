@@ -1544,7 +1544,7 @@ decoration. It is native pixel art in the boss's own materials, hand-drawn in `a
   `tools/test_boss_hud_sprites.py`.
 - **Rejected:** variant B, a bone frame with ember flame segments: bolder, but the flame reads as the fireball HUD icon and fire is the hazards' colour.
 - The contact sheet `docs/references/boss-hud/boss-hud-art.png` (made by the exporter) shows the full and the empty bar at 3x on the night colour.
-  Not checked in the running game: the look on desktop and a phone stays open on #543.
+  Checked in the running game by the author, 2026-11-24 ([#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543)): the look on desktop and a phone.
 
 ## Kingdom arms (#350, playtest F12)
 
