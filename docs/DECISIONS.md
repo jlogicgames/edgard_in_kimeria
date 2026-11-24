@@ -4373,3 +4373,11 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   sound branch 0.388 / 0.391 (left 0.413 / 0.380), deadfall bough 0.430 / 0.411. No threshold changed.
 - **Not verified:** the look in the running game, desktop and web: trees and bushes solid and calm, important objects brighter, the
   branch and the log not hung in the air (#555).
+
+## D134. The portrait band is even on all four sides; the pre-boss and victory lines get the tale voice (amends D78, D74; [#537](https://github.com/jlogicgames/edgard_in_kimeria/issues/537), [#538](https://github.com/jlogicgames/edgard_in_kimeria/issues/538), 2026-11-24)
+
+- **Status:** Accepted by the author, 2026-11-24 (both proposals as drafted, every line), from playtest 2 F7 and F8 ([D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)). Tested with scripted checks; the look and the text in the running game, and a native-speaker review of the uk, pl, de and be lines ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)), stay open boxes on #537 and #538.
+- **Band:** the window's right and bottom sides carried 3 px of near-black that merged with the page, so the visible band measured 7, 7, 5, 5 px (left, top, right, bottom). The outer 2 px inside the outline of those sides are now shadow walnut `523420` (dim `291a10`); the band is 7 px on every side, the bevel and the contrast tiers are unchanged. Same outer size, opening and insets. The test counts the visible band on all four sides (equal within 1 px).
+  A plain mirror (a light rim on all sides) was rejected: it also measures 7 px but flattens the bevel.
+- **Text:** the fourteen lines of the pre-boss meetings (greeting, return, what is missing, the offer, ready, paid, lock) and the victory scene are rewritten in tale voice in all five languages ("my price" for the pay, "the wood still hides", "where this forest begins", "the old wood breathes again", "your tale is not over"). Each keeps its job and its glossary forms; each fits two lines of the 18 px box.
+  No allowlist entry. The choice buttons and `HEALER_FIGHT` ("Enter the boss fight") are unchanged; whether it should name the forest guardian like the HUD label (#542) is open.

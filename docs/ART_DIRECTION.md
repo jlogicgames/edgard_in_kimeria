@@ -1468,7 +1468,7 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 | Silver thread | `thread`, 284 × 32, drawn at (178, 154): knot on Edgard's wrist, 16 px sag, end in the healer's hand | draws in over the opening |
 | Glint | `glint`, 5 × 5 star, runs from the speaker to the listener as a line starts | |
 
-- **Palette:** walnut `1d120c` `3a2416` `5a3a22` `7d5534`; gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
+- **Palette:** walnut `1d120c` `3a2416` `523420` `5a3a22` `7d5534` (`523420` is the window's shadow sides, D134); gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
   `ffd23a` or honey `e2b25a`); ink `0b0d18`; silver `5d6577` `9aa3b6` `d8dee9`; at most 16 colours per sheet.
 - **Portraits:** 158 px in the 160 px opening, linear filtering; the speaker lifts 1 px for half of every 1.2 s, the
   listener is multiplied by (0.55, 0.58, 0.70). The opening is dusk blue, not navy: on the first navy the portraits' dark
@@ -1480,8 +1480,12 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
   border and the text box border (0.17 to 0.18). The dim sheets are the lit colours × 0.5, except the two brightest gilts,
   capped at `44361e` and `3e3728`: at plain half brightness their rosette highlights measured 0.32. The dimmed portraits
   keep an outline of 0.21 and 0.20 against the opening (at least 0.15).
+- **Even band (D134, playtest F7, [#537](https://github.com/jlogicgames/edgard_in_kimeria/issues/537)):** the window's visible band is 7 px on all four sides, lit and dim. The shadow sides (right, bottom) used to end in 3 px of near-black (`1d120c`, 0.022 from the page), which
+  vanished into the page and left 5 px against 7 on the left and top. Now their outer 2 px inside the 1 px outline are shadow walnut `523420` (dim `291a10`), 0.183 and 0.061 from the page, still darker than the lit rim `7d5534` (0.313). A band pixel counts as visible at 0.05 or more
+  from the page; `test_the_band_reads_the_same_on_all_four_sides` counts it along the middle of each side and fails when the sides differ by more than 1 px. The tiers above are unchanged (speaker band 0.64, listener band 0.17).
 - **Production:** edit a grid, run `python3 tools/dialogue_frame_sprites.py` (exports and the contact sheet
   [dialogue-frame-art.png](references/dialogue-frame-art.png)); the tool test fails when an export is stale.
+  The D134 band check is shown in [before and after frames](references/dialogue/band-before-edgard-speaks.png) ([after](references/dialogue/band-after-edgard-speaks.png), [healer speaking: before](references/dialogue/band-before-healer-speaks.png), [after](references/dialogue/band-after-healer-speaks.png)) and the [corners at 4x](references/dialogue/band-corners-x4.png), top row before, bottom row after.
 - **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
   that would move his staff to the other hand.
 
