@@ -9,6 +9,7 @@ import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
+import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -53,6 +54,8 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     public static final float HEAR_RADIUS = 96, HEAR_BAND = 48;
     /** It loses the hero beyond this distance, or after this long out of the band. */
     public static final float LOSE_RADIUS = 144, LOSE_SECONDS = 1f;
+    /** The burst shakes the camera only for a hero this close (body centre to hero centre) who survives it (#559, D136). */
+    public static final float SHAKE_RANGE = 160;
     /** The notice in body language: look, wiggle, look, wiggle, crouch, the hop, landing (0.5 s, not scaled by the assist). */
     private static final int[] NOTICE_FRAMES = {LOOK, WIGGLE, LOOK, WIGGLE, CROUCH, AIR, CROUCH};
     private static final float[] NOTICE_SECONDS = {.1f, .1f, .1f, .1f, .06f, .1f, .04f};
@@ -407,8 +410,17 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         if (player != null && blastBoxInto(blastScratch).overlaps(player.hitboxBoundsInto(heroScratch))) player.collidedWithActor(false);
         if (level != null) level.beetleFx().burst(cx, floor);
         if (game.playSounds()) game.playSound(POP_SOUND);
+        if (level != null && player != null && !player.isGotHit() && feelsBurst())
+            level.fx().shake().start(ScreenShake.BURST_AMPLITUDE_PX, ScreenShake.BURST_SECONDS);
         pendingRemoval = true;
         removeFromParent();
+    }
+
+    /** The hero's centre is within {@link #SHAKE_RANGE} of the body's centre (both axes). */
+    private boolean feelsBurst() {
+        player.hitboxBoundsInto(heroScratch);
+        float dx = heroScratch.x + heroScratch.width / 2f - centreX(), dy = heroScratch.y + heroScratch.height / 2f - (floorY() - BeetleFx.BODY_CENTRE_ABOVE_FLOOR);
+        return dx * dx + dy * dy <= SHAKE_RANGE * SHAKE_RANGE;
     }
 
     /** A fireball or a thrown stone ({@code gotHit}) kills it without a burst; body contact is a stomp or nothing (harmless). */

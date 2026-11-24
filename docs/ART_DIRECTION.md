@@ -1133,9 +1133,12 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   specks (`KIND_FLAME`; a third `ffffff`, most of the rest `d8d6e8`, a few `9a97ad`) born on the 80×32 blast box's sides and top and
   drawn in to the body over 0.3 to 0.4 s, 50 a second rising to 150: the reach is read on them (denser and brighter after the look
   check of 2026-11-18, which found 30 to 90 too sparse at game scale).
-- **Burst:** a white additive flash (`SoftDot`, 40 px, 0.1 s), 26 white and pale droplets 1 to 3 px (`KIND_FLAME`) whose end points
-  stay inside the box (tested every frame), 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising 8 to
-  16 px over 0.35 to 0.55 s. No fire colour, no ring, no shader, no shake: the only cold, flat burst among the Forest's blasts.
+- **Burst** ([D136](DECISIONS.md#d136-the-beetles-burst-is-seen-felt-and-heard-559-2026-11-24), #559): a white additive flash (`SoftDot`, 44 px, 0.12 s) with a 20 px core (0.07 s); a **halo** of 32 dots (`KIND_FLAME`, 4 px, white and pale) that
+  run from the body to the rim of the half-ellipse inscribed in the box (rx 40, ry 32 on the floor line) in 0.16 s, so it touches the box at the floor edges and the top and
+  never leaves it (a circular ring would not fit the 80×32 box); 26 white and pale droplets 1 to 3 px (`KIND_FLAME`); 14 embers (`KIND_FLAME`, 2 px, `ff6b57`, one in three white)
+  and 8 shell chips (`KIND_GRIT`, `86101f` and `9c2050`, 2 to 3 px) flung to the floor; 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising 8 to
+  16 px over 0.40 to 0.60 s. Every end point stays inside the box (tested). A 1.5 px, 0.15 s shake through `ScreenShake` only for a hero within 160 px who survives (off with the
+  Screen shake option). No shader, no `RingPool`; no new hue.
 - **Death** (a fireball or a stone): it flips onto its back (`dead`, a 4 px hop over 0.2 s) and stays as a body (D101). 0.08 s after
   the hit, once the fireball's flash is spent, 12 puffs in a ring (two pale `d8d6e8` to one grey `9a97ad`, 5 to 8 px, 0.4 to
   0.55 s) and five shell chips (`KIND_GRIT`, `9c2050` and `86101f`) knocked out to the floor. The look check of 2026-11-18 found the old
@@ -1153,7 +1156,7 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
     indigos `16142e`, `0f0d23`, `1a1832` and `1e1c34` (plums, and browns and green-bronze before #236), and 5 dust puffs.
   - **Burn** (a fireball or a torch): one warm glow (`FireballFx.HALO`, 28 px), 70 flames a second in the fireball's own ramp
     (`FireballFx.RAMP`) rising 6 to 14 px, the body darkening to 15 % over 0.3 s, and a dark wisp of 4 puffs at the end.
-- **Cost:** `BeetleFx` pools of 84 and 240 from measured peaks of 67 and 192 (`BeetleFxTest`; 108 and 296 while the body's crumble
+- **Cost:** `BeetleFx` pools of 92 and 400 from measured peaks of 69 and 318 (`BeetleFxTest`; 84 and 240 from 67 and 192 before #559; 108 and 296 while the body's crumble
   and burn lived here); the body's end is the shared `RemainsFx` (pools 57 and 218 from peaks of 45 and 174, `RemainsFxTest`);
   0.1 B/frame through the real level.
 
