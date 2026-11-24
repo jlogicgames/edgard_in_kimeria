@@ -58,6 +58,7 @@ multi-frame sheet are different measurements.
   the main read). Drawn after the hero, because the item is at his hand when he takes it. It goes with the `collect` sound and the cue
   above; there is no screen ripple on a pickup (the lens hid the burst); `RippleEffect` is used only by the F3 debug hotkey and is reserved for picking up a tablet fragment, tracked by [#136](https://github.com/jlogicgames/edgard_in_kimeria/issues/136): that pickup plays only the ripple wave, without sparks or a ring. No sprite,
   shader edit, shake or flash.
+  **Pickup flight (D132, #557):** after the burst the item's own sprite pops 6 px and flies (`effects.FlightFx`, 0.40 s, ease-in, an arc 24 px up, 20 to 10 px, fading over the last 35%, a warm spark trail) to its HUD slot, landing with a four-spark twinkle; cosmetic only.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
   Bat wing jar, mushroom (D43), the gold coin with the Kimeria sun (#350) and fireball. These appear
@@ -796,7 +797,7 @@ depends on it.
   `docs/references/forest-traps/decor-vine-preview.png`, layout `DECOR_SHEETS['vine']`). `entity/objects/HangingVine.java`, kept in
   `Level.vines` (cleared with the room, updated in `updateWorld`, drawn right after the decor, so behind platforms, objects and the hero).
   No collision, not an `Actionable`, not saved; the room rebuild recreates it at rest. World Y grows downward: `y` is the **top**
-  (anchor) edge and must be the room's ceiling line (or the bottom of a solid block); the vine hangs to `y + 40`.
+  (anchor) edge and must be the room's ceiling line or the bottom of a solid block (`forest-0` hangs its vines at y 80 under two slabs, #550, D131); the vine hangs to `y + 40`.
 - **The stone link.** `FallingStone.onImpact(Runnable)` is called once from `landed()`; `Level.spawnFallingTrap` sets it to
   `Level.groundShake(x, strength)`, which calls `HangingVine.shake(x, strength)` on every vine of the room. The vine sways only if
   its anchor is within `HangingVine.REACH` = 160 px of the stone's centre; there is no explicit id property, the link is
@@ -812,11 +813,11 @@ depends on it.
 
 | Map | Vines | World x (left edge), y = room top (file y 16 in forest-2's SpawnPoints layer, offset -16) |
 | --- | --- | --- |
-| `forest-0` | 3 (stone room, stone at x 2544) | 2476, 2616, 2680 |
+| `forest-0` | 3 (stone room, stone at x 2544) | 2476, 2614, 2658, at y 80 (under the collision slabs x 2448-2528 and x 2592-2720, D131) |
 | `forest-1` | 0 (no falling stone in this map) | none |
 | `forest-2` | 3 (canopy room, stone at x 2224) | 2146, 2286, 2346 |
 
-  Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line.
+  Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line or the underside of a solid block.
 - **Cost.** One rotated `batch.draw` per vine; the sheet is 8×40 px. `AllocationBudgetTest.hangingVinesSwayingThroughTheRealLevel` measures the allocation.
 - The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
 - **Colour (decor tier, D76, recoloured 2026-11-16).** Pale dull olive stem `9d9f7b / 8a8c6d`, grey-green leaves `88a083 / 738b73`,
@@ -1452,7 +1453,34 @@ near-black contour and measures 0.51 in both frames. Over forest-1's layered nea
 went to the walk-cue straw and the sheet got the moon rim (2026-11-20, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)): 0.439. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
 at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
+## Story book (D133, playtest F5/F6, #535, #536)
+
+The opening is read on an open book ([D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)); the ending stays on black with the arms (D95). The look is the dialogue screen's
+storybook (D78): walnut leather and muted gilt corner plates, parchment leaves, and the healer's silver thread as the bookmark.
+
+| Piece | Art (`art/ui/intro-book/*.grid`, composed by `tools/intro_book_sprites.py`) | Notes |
+|---|---|---|
+| Cover | `cover`, 24 px nine-patch (insets 10), mirrored | walnut `1d120c` `3a2416` `5a3a22` `7d5534`, gilt `6e5226` `a8844a` `d8c08a`; (16, 10) to (624, 326) |
+| Leaf | `leaf` (`left`; `right` is its flip), 24 px nine-patch (insets 8) | parchment `b8a47c` with stacked page edges on the outer side and the bottom and a darker band toward the spine; 290 x 298 at y 20 |
+| Paper fibres | `fibres`, a 48 px tile laid over each leaf's middle | two quiet tones, `c3af86` `ad9870` |
+| Gutter | `gutter`, the leaves dip at the spine top and bottom | the cover leather shows through |
+| Fleuron | `fleuron`, a small ink vine in each leaf's bottom margin | |
+| Bookmark | `ribbon`, 7 x 40, at (60, 312) | silver `5d6577` `9aa3b6` `d8dee9` as the dialogue thread; clear of the cue and the skip hint |
+
+- **Exports:** `assets/images/ui/intro-book.png` (640 x 360, the book on black, both leaves blank) and `intro-leaves.png` (the two leaves
+  side by side, for the leaf in flight); opaque, at most 256 palette entries (`validateSpriteArt`); drawn with the nearest filter. The
+  script only places, tiles, nine-patches and mirrors the authored grids. `python3 tools/intro_book_sprites.py` also writes the 2x preview
+  `docs/references/intro-book.png`; `docs/references/intro-book/spread-*.png` are hand-made references (the exported book with the real text and the font's own glyphs laid over it by a one-off script, not by this tool or the game): they show the fit in en, uk, de and pl, not the running game.
+- **Text:** 20 px, dark ink `2a1a10`, left-aligned in a 236 px column at x 56 and 348, first line 40 px from the screen top, nothing under 304 px.
+  Ink on every colour a column can sit on is at least 4.5:1 (`tools/test_intro_book_sprites.py`). Geometry lives in `ui.IntroBook`; the test
+  reads it back against `sprite_layouts.INTRO_BOOK_*`.
+- **The turn:** the text of both leaves fades (0.4 s), then the right leaf narrows to the spine and the left one widens from it (0.4 s, shaded to
+  80 % at the middle). Instant text has neither.
+- **Skip:** the hint (D118) sits under the book at the right; the touch button (D77) lies over the cover's top-right corner and keeps its white outline.
+
 ## Dialogue screen (D78, playtest F3/F10, #337)
+
+**Flights on this screen (D132, #539, #540, #541):** the checklist rows carry the HUD icons at 20 px; on payment the icons fly to the healer's portrait and the elixir to Edgard's; on the start tale's fairy line the fairy (`fairy-body.png` at 2x, with her soft light) flies from the healer's window to Edgard's and hovers beside his head, never within 8 px of the thread. All of it is the shared `effects.FlightFx`; frame strips of the flights are in [references/flights/](references/flights/) and the numbers in [D132](DECISIONS.md#d132-things-fly-to-where-they-go-one-flight-helper-for-the-pickup-the-hand-over-the-elixir-and-the-fairy-539-540-541-557-2026-11-24).
 
 Every healer conversation is one storybook screen: two portrait windows face each other in a carved walnut frame and the
 silver thread (#228) hangs between them. Rule and measurements:
@@ -1471,7 +1499,7 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 | Silver thread | `thread`, 284 × 32, drawn at (178, 154): knot on Edgard's wrist, 16 px sag, end in the healer's hand | draws in over the opening |
 | Glint | `glint`, 5 × 5 star, runs from the speaker to the listener as a line starts | |
 
-- **Palette:** walnut `1d120c` `3a2416` `5a3a22` `7d5534`; gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
+- **Palette:** walnut `1d120c` `3a2416` `523420` `5a3a22` `7d5534` (`523420` is the window's shadow sides, D134); gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
   `ffd23a` or honey `e2b25a`); ink `0b0d18`; silver `5d6577` `9aa3b6` `d8dee9`; at most 16 colours per sheet.
 - **Portraits:** 158 px in the 160 px opening, linear filtering; the speaker lifts 1 px for half of every 1.2 s, the
   listener is multiplied by (0.55, 0.58, 0.70). The opening is dusk blue, not navy: on the first navy the portraits' dark
@@ -1483,10 +1511,40 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
   border and the text box border (0.17 to 0.18). The dim sheets are the lit colours × 0.5, except the two brightest gilts,
   capped at `44361e` and `3e3728`: at plain half brightness their rosette highlights measured 0.32. The dimmed portraits
   keep an outline of 0.21 and 0.20 against the opening (at least 0.15).
+- **Even band (D134, playtest F7, [#537](https://github.com/jlogicgames/edgard_in_kimeria/issues/537)):** the window's visible band is 7 px on all four sides, lit and dim. The shadow sides (right, bottom) used to end in 3 px of near-black (`1d120c`, 0.022 from the page), which
+  vanished into the page and left 5 px against 7 on the left and top. Now their outer 2 px inside the 1 px outline are shadow walnut `523420` (dim `291a10`), 0.183 and 0.061 from the page, still darker than the lit rim `7d5534` (0.313). A band pixel counts as visible at 0.05 or more
+  from the page; `test_the_band_reads_the_same_on_all_four_sides` counts it along the middle of each side and fails when the sides differ by more than 1 px. The tiers above are unchanged (speaker band 0.64, listener band 0.17).
 - **Production:** edit a grid, run `python3 tools/dialogue_frame_sprites.py` (exports and the contact sheet
   [dialogue-frame-art.png](references/dialogue-frame-art.png)); the tool test fails when an export is stale.
+  The D134 band check is shown in [before and after frames](references/dialogue/band-before-edgard-speaks.png) ([after](references/dialogue/band-after-edgard-speaks.png), [healer speaking: before](references/dialogue/band-before-healer-speaks.png), [after](references/dialogue/band-after-healer-speaks.png)) and the [corners at 4x](references/dialogue/band-corners-x4.png), top row before, bottom row after.
 - **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
   that would move his staff to the other hand.
+
+## Boss health bar (playtest 2 F31, [#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543))
+
+Author approved variant A, 2026-11-24 (an iron plate with ruby segments). The bar was a hair-line frame with two flat slabs and read as ceiling
+decoration. It is native pixel art in the boss's own materials, hand-drawn in `art/ui/boss/*.grid` and exported exactly by
+`tools/boss_hud_sprites.py` (sizes in `sprite_layouts.BOSS_HUD_SHEETS`, so `BossHud`, `ELIXIR_OFFSET` and the label fit test are unchanged):
+
+- **Frame** (`frame.png`, 224 x 26): blackened iron (`1e1c2a`, `44425c`, `5c5a7a`, lit edge `9a98ba`) in a 1 px **bone rim** (`d8cab0`, the horn bone), a riveted rim, a brace between
+  segment pairs, a mulberry gem (`6e1460`, `b03a8c`) in each end cap and a bone-horn crest (`c8b8a0`) with one ember eye (`ff6b57`) at the top centre.
+  The frame is opaque: its well (x 10..213, y 4..21) is the dark backing the twelve segments sit in, so an empty socket and a half segment read
+  against one colour whatever scenery is behind (the old frame had a transparent interior).
+- **Segments** (`segment-filled.png`, `segment-empty.png`, 14 x 16): a faceted ruby (`c41a3a`, `e02a4c`, glint `ffd2d6`) in an iron-dark setting, light from the top
+  left; the empty one is the same silhouette as a hollow socket with a ghost of the facets and a lit lower lip, so the fill hides it exactly. Red stays
+  health; nothing here is the orange of the fireball icon, so the two counters never read as one. A lost segment's glow and the restore glow are code
+  (`BossHud`), tinted additive over these same sprites.
+- **Contract:** at most 15 opaque colours each, binary alpha, no dithering, nearest filtering; `validateSpriteArt` checks the sizes and palettes
+  (`BOSS_HUD_SHEETS`, the frame in `OPAQUE_BOSS_HUD_IMAGES`).
+- **Contrast** (`check_boss_hud` in `tools/check_contrast.py`, row `BossHud:frame`, active tier, outline at least 0.28): the frame is fixed on screen over the boss room, so it is
+  measured at every steady camera x of `forest-boss` and at the room's highest and lowest camera y, over the scenery as the game draws it (background lightness
+  0.16 to 0.62: the dark sky above and the pale tree band below). The first drawing, with an ink outline (L 0.146), measured **0.101**: the ink sank into the sky. A lit
+  iron rim measured 0.178 and still failed; the bone rim measures **0.376** at worst. The fix is in the art (the rim colour), not in the tier. The segments'
+  own contrast is a lit gem against a dark socket inside the well: mean OKLab L 0.462 against 0.245, a gap of 0.216 (the pair it replaced, 0.205), pinned at 0.2 by
+  `tools/test_boss_hud_sprites.py`.
+- **Rejected:** variant B, a bone frame with ember flame segments: bolder, but the flame reads as the fireball HUD icon and fire is the hazards' colour.
+- The contact sheet `docs/references/boss-hud/boss-hud-art.png` (made by the exporter) shows the full and the empty bar at 3x on the night colour.
+  Not checked in the running game: the look on desktop and a phone stays open on #543.
 
 ## Kingdom arms (#350, playtest F12)
 
@@ -1536,7 +1594,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-bramble` | 16×24 | rest, rustle1, rustle2, cane1, cane2, tip | creeping bramble (#364, D89): a clump of the tuft's magenta canes rooted in a face on the left, bone tips always showing (rest), shifting and poking a first then a second tip (the warning); the arm is `cane1`/`cane2` alternating behind `tip` at the current extent; drawn mirrored for `root=right`; active tier, outline in `forest-1-bramble` (`check_contrast.py`, all six frames): rest 0.419, worst 0.414 (`cane1`, `cane2`) |
 | `trap-branch` | 32×16 | resting, rustle, sag, falling | resting and rustle carry the at-rest cue (#361): a pale raw-wood band round the joint, cut by an ink zig-zag, and a chip under it; rustle = leaves shake, sag = drooping with a split at the trunk |
 | `trap-stone` | 16×16 | stone, cracked | boulder and impact frame |
-| `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 8, forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
+| `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 128 under a soil block, #550, D131; forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
 | `trap-deadfall` | 32×16 | tied, strain, slip, swing, caught | the trip-line deadfall's log (#363, D88): a 24×10 bark log seen broadside with its end grain (`e8c890`/`9c6a34`) on the left; tied/strain/slip carry the bone lashing (`efe6c4`/`b8ad9c`) up to the bough, strain adds frayed fibres, slip draws the log one row lower; swing has three bone speed streaks on its trailing side; caught has a frayed cord stub. Rope eyes at x 8 and 23, row 4. Active tier, worst outline 0.410 tied (forest-1-deadfall; the same over the old sky and the D92 background) |
 | `trap-deadfall-bough` | 112×24 | bough | the bough the deadfall hangs from: the sound branch's bark (`4a2e1c`/`8a5a30`/`c08a4c`), two bone rope knots at x 40 and 55, a bare snag from its underside to (8, 17) where the log ends, a leaf tuft at the thin end; its thick end grows from a `Decor:trunk` (D122): no end grain since 2026-11-21 (a sawn end read as cut), it swells a row up and down into a dark bark collar open at the frame's edge (`J`, never moon-rimmed), 7 px over the bark; mirrored for `swing=right`. Outline 0.464 when drawn, 0.452 over the D120 layers before the collar, 0.430 after |
 | `trap-deadfall-vine` | 24×8 | taut, tugged, cut | the trip vine: bone (`efe6c4`/`b8ad9c`) between two dark pegs, 4 px over the floor; tugged into a V during the warning, cut in two after the release. Outline 0.323 taut |

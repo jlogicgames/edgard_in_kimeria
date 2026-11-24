@@ -57,6 +57,42 @@ public final class IntroPages {
         return new IntroPages(parts, tops, heights, java.util.Arrays.copyOf(firsts, pages + 1));
     }
 
+    /**
+     * The intro book (D133): one page per leaf, each leaf a text of paragraphs ({@code \n\n}); the breaks are the author's, never the
+     * font's. Paragraphs are {@code gap} apart from the first line at {@code top}; a leaf taller than {@link #PAGE_BOTTOM} allows is
+     * an error, never a silent overflow.
+     */
+    public static IntroPages ofLeaves(String[] leaves, Measure measure, float top, float gap) {
+        float room = PAGE_BOTTOM - top;
+        java.util.ArrayList<String> parts = new java.util.ArrayList<>();
+        int[] firsts = new int[leaves.length + 1];
+        for (int leaf = 0; leaf < leaves.length; leaf++) {
+            firsts[leaf] = parts.size();
+            parts.addAll(java.util.Arrays.asList(leaves[leaf].split("\n\n")));
+        }
+        firsts[leaves.length] = parts.size();
+        String[] paragraphs = parts.toArray(new String[0]);
+        float[] heights = new float[paragraphs.length], tops = new float[paragraphs.length];
+        for (int leaf = 0; leaf < leaves.length; leaf++) {
+            float used = 0f;
+            for (int i = firsts[leaf]; i < firsts[leaf + 1]; i++) {
+                heights[i] = measure.height(paragraphs[i]);
+                tops[i] = top + used;
+                used += heights[i] + gap;
+            }
+            float bottom = used - gap;
+            if (bottom > room) throw new IllegalStateException("Leaf " + (leaf + 1) + " is " + bottom + " px high, a leaf holds " + room + ": " + leaves[leaf]);
+        }
+        return new IntroPages(paragraphs, tops, heights, firsts);
+    }
+
+    /** The page that holds {@code paragraph}. */
+    public int pageOf(int paragraph) {
+        int page = 0;
+        while (end(page) <= paragraph) page++;
+        return page;
+    }
+
     public int pageCount() { return firsts.length - 1; }
     public int paragraphCount() { return paragraphs.length; }
     public int first(int page) { return firsts[page]; }

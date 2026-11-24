@@ -28,13 +28,14 @@ terms), **plain** (instruction, imperative or description), **label** (a word or
 
 | Key | Trigger | Seen | Voice | Notes |
 | --- | --- | --- | --- | --- |
-| `INTRO_STORY` | New Game, after the confirmation; `openStory(INTRO_STORY, INTRO)` | Once per New Game; never on Continue | Tale, first person (the healer) | 790 chars (de 877), six paragraphs, one static page in every language since [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336). |
+| `INTRO_LEAF_1` to `INTRO_LEAF_6` | New Game, after the confirmation; `IntroScreen.openBook` | Once per New Game; never on Continue | Tale, first person (the healer) | Since [#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535) / [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24): six leaves of two paragraphs, 1334 EN characters (de 1551), on an open book; the longest leaf is under 300 EN characters. |
 
-Story beats in order: the healer introduces himself; Rufardus the Wise; L'Kardina arrives, banished
-from a neighbouring land; Kimeria tries to drive her out; her fury becomes a curse; the sun stops
-shining, eternal night, "sleeping lands"; word reaches the wandering warrior Edgard; he sets out; he
-meets the healer, who gives counsel and ties the silver thread; "Here begins Edgard's journey
-through the sleeping kingdom."
+Story beats in order: the healer opens his tale ("Hear my tale of Kimeria"); "once upon a time", Rufardus the Wise;
+L'Kardina arrives, banished from a neighbouring land; Kimeria tries to drive her out; her fury becomes a curse;
+the sun stops shining, eternal night over the sleeping kingdom; word reaches the wandering warrior Edgard (no
+king, no prince); he sets out; he meets the healer, who gives counsel and three gifts (the silver thread, the
+spark of his fire, a fairy); the formula "a tale is soon told, but a deed is not soon done"; "Edgard's road
+through the sleeping kingdom begins here."
 
 ### 1.2 Menus and system screens (every visit)
 
@@ -46,9 +47,11 @@ through the sleeping kingdom."
 | `RESUME`, `RESTART_LEVEL`, `EXIT_TO_MENU`, `PAUSE_MENU`, `BACK` | Pause menu (Esc, Start) | Each pause | Label |
 | `LANGUAGE_LABEL`, `DISPLAY_LABEL`, `FULLSCREEN`, `WINDOWED`, `LEFT_HANDED_LABEL`, `ASSIST`, `LONGER_TRAP_WARNINGS`, `SCREEN_SHAKE`, `ON`, `OFF` | Options and Accessibility | Occasional | Label |
 | `MENU_HINT` | Bottom line of every menu (`overlay.hint`) | Every menu screen | Plain, key list |
-| `RULES`, `CONTROLS` | About tabs | Occasional | Label |
-| `ABOUT_RULES` | About, Rules tab | Occasional | Plain, terse |
-| `ABOUT_BODY`, `ABOUT_BODY_LEFT_HANDED`, `ABOUT_GAMEPAD`, `ABOUT_GAMEPAD_LEFT_HANDED` | About, Controls tab (layout picked by the left-handed setting) | Occasional | Plain, key list (396 chars, de 418) |
+| `RULES`, `ABOUT_GAME` | About page button | Occasional | Label |
+| `CONTROLS` | Options entry and Controls title | Occasional | Label |
+| `ABOUT_RULES`, `ABOUT_RULES_CARRY` | About, rules page | Occasional | Plain, terse |
+| `ABOUT_GAME_STORY`, `ABOUT_GAME_PLAY`, `ABOUT_GAME_MORE` | About, game page (D135) | Occasional | Plain, store description; names allowed |
+| `RIGHT_HAND`, `LEFT_HAND`, `MOVE`, `JUMP`, `PAUSE`, `PICK_UP_USE`, `THROW_FIREBALL`, `KEY_ARROWS`, `KEY_UP`, `KEY_DOWN`, `PAD_DPAD`, `STICK_HINT` | Options > Controls (D135) | Occasional | Label, key table |
 | `LOADING` | Between levels | Each level load | Label |
 | `ROTATE_HINT` | Touch build held in portrait | Phones only | Plain imperative |
 | `INTRO_SKIP_KEYBOARD`, `INTRO_SKIP_GAMEPAD` | Intro and ending, bottom right corner (keyboard: Esc; pad: Start; touch has its icon, no string) | Every story screen | Plain, "key: verb" (D118) |
@@ -81,17 +84,17 @@ again after each collection return. Lines are chosen by state (`HealerDialogue` 
 
 | Key | Speaker | When | Voice |
 | --- | --- | --- | --- |
-| `HEALER_GREETING` | Healer | First meeting | Tale, but "won't affect magical items" is a rule statement |
-| `EDGARD_REPLY` | Edgard | First meeting | Tale |
-| `HEALER_RETURN_GREETING` | Healer | Meeting after a collection return | Tale |
-| `HEALER_RETURN_CHECK` | Healer | Meeting after a collection return | Mixed |
-| `HEALER_INGREDIENTS` | Healer | Missing Bat or Mushroom, coins complete | Plain inside tale ("Check the list") |
-| `HEALER_PAYMENT` | Healer | Ingredients complete, coins missing | Plain inside tale |
-| `HEALER_BOTH` | Healer | Both missing | Plain inside tale ("The list shows...") |
-| `HEALER_OFFER` | Healer | Something missing, before the choice | Mixed |
-| `HEALER_READY` | Healer | Everything collected | Mixed ("ten times stronger", "this boss") |
-| `HEALER_PAID` | Healer (but narrates the player: "You drink the elixir") | After Pay | System narration in the healer's frame |
-| `HEALER_LOCK` | Healer | After Pay | Plain ("its retries") |
+| `HEALER_GREETING` | Healer | First meeting | Tale since #371; reworded by #538 (D134): "beyond this glade the forest guardian keeps the road", the elixir makes the sword "bite deep", "it will not touch my fire" |
+| `EDGARD_REPLY` | Edgard | First meeting | Tale; #538 (D134): "Then brew it, old man. What does your pot ask for?" |
+| `HEALER_RETURN_GREETING` | Healer | Meeting after a collection return | Tale; #538 (D134): "So the road has brought you back, Edgard. Good." |
+| `HEALER_RETURN_CHECK` | Healer | Meeting after a collection return | Tale since #371; #538 (D134): the three things are "my price", then "show me what the forest has given you" |
+| `HEALER_INGREDIENTS` | Healer | Missing Bat or Mushroom, coins complete | Tale (the list is gone since #371; tale-voice pass #538, D134) |
+| `HEALER_PAYMENT` | Healer | Ingredients complete, coins missing | Tale (#538, D134: "my price") |
+| `HEALER_BOTH` | Healer | Both missing | Tale (the list is gone since #371; tale-voice pass #538, D134) |
+| `HEALER_OFFER` | Healer | Something missing, before the choice | Tale since #371; #538 (D134): "where this forest begins", "no road leads back" |
+| `HEALER_READY` | Healer | Everything collected | Tale since #371 ("ten times harder", the guardian); #538 (D134): "All is gathered" |
+| `HEALER_PAID` | Healer | After Pay | Tale since #371 (no narration of the player); #538 (D134): "my price is paid and my elixir runs in your veins" |
+| `HEALER_LOCK` | Healer | After Pay | Tale since #371; #538 (D134): the silver thread named in full, the elixir stays "until the guardian falls" |
 | `HEALER_RETURN`, `HEALER_BREW`, `HEALER_FIGHT` | Choice buttons | Choice step | Label, imperative |
 | `BAT`, `MUSHROOM`, `FOREST_COINS_COUNT`, `PAID` | Checklist beside the portraits | Every pre-boss meeting | Label |
 | `COINS` | **Unused**: no code read it (the checklist uses `FOREST_COINS_COUNT`). **Deleted (#374)** from `Msg` and all five catalogs | Never | Label |
@@ -100,15 +103,15 @@ again after each collection return. Lines are chosen by state (`HealerDialogue` 
 
 | Key | Speaker | Trigger |
 | --- | --- | --- |
-| `HEALER_VICTORY` | Healer | Boss dead and the victory exit walked (`afterVictory()` from `loadNextLevel`) |
-| `EDGARD_DARKNESS` | Edgard | |
-| `HEALER_GUIDE` | Healer | "I will be your guide. Go on: we will meet again." In the current build the ending follows at once. |
+| `HEALER_VICTORY` | Healer | Boss dead and the victory exit walked (`afterVictory()` from `loadNextLevel`); tale-voice pass #538 (D134) for it, `EDGARD_DARKNESS` and `HEALER_GUIDE` |
+| `EDGARD_DARKNESS` | Edgard | "Yet darkness still lies over all Kimeria, old man." (#538, D134) |
+| `HEALER_GUIDE` | Healer | "Then your tale is not over, Edgard, and I will be your guide in it. Go on: we will meet again." (#538, D134.) In the current build the ending follows at once. |
 
 ### 1.6 Zone messages (map-authored, every attempt)
 
 Drawn by `Hud` in the 20 px zone font, 400 px wide, at most two lines in every language
 (D33, D49, D50, `LocalizationLayoutTest`). Shown while the hero stands in the `Hint` zone and can
-act; cleared on death, so every retry shows them again. All in `forest-0`; `forest-1` has no hints
+act; cleared on death, so every retry shows them again. All in `forest-0` except one in `forest-1`'s lever room (D131); `forest-1` has no other hints
 and `forest-2` has only a controls zone.
 
 | Key | Room / zone (x range) | EN chars | Longest translation (lang) | Lesson |
@@ -132,6 +135,7 @@ and `forest-2` has only a controls zone.
 | `HINT_STONE_ACROSS` | stone room, 3712-3776 | 22 | 31 (de) | Exit ahead |
 | `HINT_TRAP_PLATFORM` | trap room, 3808-4144 | 73 | 91 (de) | Falling platform |
 | `HINT_TRAP_STUMP` | trap room, 4144-4496 | 64 | 80 (de) | Exploding stump |
+| `HINT_LEVER_BOTH` | forest-1 lever room, 4320-4960 (whole room) | 49 | 59 (de) | Lever, ladder and platform |
 
 Observations: three "exit ahead" lines (`HINT_LEVER_EXIT`, `HINT_LADDER_EXIT`, `HINT_STONE_ACROSS`)
 say the same thing in three ways; trap lines are the longest and run to two sentences; all are plain
@@ -199,17 +203,17 @@ functions acted out by seven roles. The table maps what the game says today. "Wh
 
 | # | Function (Propp's sign) | In the game today | Where |
 | --- | --- | --- | --- |
-| α | Initial situation | Kimeria under Rufardus the Wise | `INTRO_STORY` ¶2 |
-| 1 β | Absentation | Absent as such; the sun "ceases", which is told as the lack (8a) | `INTRO_STORY` ¶3 |
-| 2-3 γ δ | Interdiction, violation | Absent. A candidate: Kimeria's attempt to drive out the witch is the violation that brings the curse | `INTRO_STORY` ¶2 |
+| α | Initial situation | Kimeria under Rufardus the Wise | `INTRO_LEAF_1` |
+| 1 β | Absentation | Absent as such; the sun "ceases", which is told as the lack (8a) | `INTRO_LEAF_3` |
+| 2-3 γ δ | Interdiction, violation | Absent. A candidate: Kimeria's attempt to drive out the witch is the violation that brings the curse | `INTRO_LEAF_2` |
 | 4-7 ε ζ η θ | Reconnaissance, delivery, trickery, complicity | Absent; "the witch smiles sweetest" hints at trickery, never acted | `HEALER_TALE_BLESSING` |
-| 8 A / a | Villainy / lack | L'Kardina's curse: the sun is gone, eternal night | `INTRO_STORY` ¶2-3 |
-| 9 B | Mediation, the call | "Word of Kimeria's misfortune reached... Edgard": no dispatcher, a rumour | `INTRO_STORY` ¶4 |
-| 10 C | Beginning counteraction | "He set out... to overthrow the witch" | `INTRO_STORY` ¶4 |
-| 11 ↑ | Departure | Same sentence | `INTRO_STORY` ¶4 |
+| 8 A / a | Villainy / lack | L'Kardina's curse: the sun is gone, eternal night | `INTRO_LEAF_2`, `INTRO_LEAF_3` |
+| 9 B | Mediation, the call | "Word of Kimeria's misfortune reached... Edgard": no dispatcher, a rumour | `INTRO_LEAF_4` |
+| 10 C | Beginning counteraction | "He set out... to overthrow the witch" | `INTRO_LEAF_4` |
+| 11 ↑ | Departure | Same sentence | `INTRO_LEAF_4` |
 | 12 D | First function of the donor (test) | Healer's tale "hear it before you walk it"; the tutorial rooms are the "riddles". Pre-boss: the recipe is a task | `HEALER_TALE_ROAD`, `HEALER_GREETING` |
 | 13 E | Hero's reaction | Negative first ("no time for stories"), then passes the riddles; pre-boss: collects or refuses | `EDGARD_TALE_NO_TIME`, `HEALER_TALE_PRAISE` |
-| 14 F | Receipt of a magical agent | The silver thread (told twice); the blessing; the elixir (optional, paid). **The fire (fireball) has no receipt** | `INTRO_STORY` ¶5, `HEALER_TALE_THREAD`, `HEALER_TALE_BLESSING`, `HEALER_PAID` |
+| 14 F | Receipt of a magical agent | The silver thread (told twice); the blessing; the elixir (optional, paid). **The fire (fireball) has no receipt** | `INTRO_LEAF_5`, `HEALER_TALE_THREAD`, `HEALER_TALE_BLESSING`, `HEALER_PAID` |
 | 15 G | Guidance, spatial transference | "I will be your guide"; the levels themselves | `HEALER_GUIDE` |
 | 16 H | Struggle | With the forest guardian (a guardian of the way, not the villain) | `HEALER_GREETING`, `BOSS` |
 | 17 J | Branding | Absent. The thread on the wrist could serve as the mark | — |
@@ -229,7 +233,7 @@ in the ending's wording, not in the plot.
 
 | Role | In the game | Status |
 | --- | --- | --- |
-| Villain | L'Kardina | Named once (`INTRO_STORY`), then only "the wicked witch" (`HEALER_TALE_WITCH`) and "witches" (`HEALER_TALE_BLESSING`). Never seen, never faced, absent from the ending. |
+| Villain | L'Kardina | Named once (`INTRO_LEAF_*`), then only "the wicked witch" (`HEALER_TALE_WITCH`) and "witches" (`HEALER_TALE_BLESSING`). Never seen, never faced, absent from the ending. |
 | Donor | The healer | Strong: narrates, tests, gives the thread, blessing, elixir. Unnamed by design (STORY.md). |
 | Magical helper | The fairy (told and shown, D82), the silver thread (told and shown, D81) | The fairy is seen since [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338); the thread is shown on every death since [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341). |
 | Princess / sought-for person | The sun, the light | An object, not a person; acceptable in the tradition (the stolen sun is a known tale type). |
@@ -248,25 +252,25 @@ item may stay in this document as an untracked gap once committed: each needs it
 | # | Finding | Keys | Owner |
 | --- | --- | --- | --- |
 | G1 | Fairies are named three times (torch, far-off fairy, blessing) and never seen. **Resolved (#338, D82):** the fairy is the healer's third gift (`HEALER_TALE_FAIRY`), visible in play; the torch and stone images no longer name a fairy, and the blessing names "your fairy". | `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT`, `HEALER_TALE_BLESSING` | [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) |
-| G2 | The fireball has no origin (no F function). The healer's "won't affect magical items" points at an unnamed magic. | `FIREBALL`, `HEALER_GREETING`, `HEALER_PAID` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340), done: `HEALER_TALE_FIREGIFT` and one `INTRO_STORY` sentence (merged after this audit) |
+| G2 | The fireball has no origin (no F function). The healer's "won't affect magical items" points at an unnamed magic. | `FIREBALL`, `HEALER_GREETING`, `HEALER_PAID` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340), done: `HEALER_TALE_FIREGIFT` and one `INTRO_LEAF_*` sentence (merged after this audit) |
 | G3 | One action, four names: EN "Fireball" and "Ranged" (`SHOOT`), pad "ranged" in About, "throw/fireball" in About; uk/pl/de/be call it "Fire" (Вогонь, Ogień, Feuer, Агонь) but be `FIREBALL_STOCK_FULL` says "fireballs" (вогненных шароў). | `FIREBALL`, `SHOOT`, `ABOUT_*`, `FIREBALL_STOCK_FULL` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340) kept the labels; reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
-| G4 | The thread is only words; death shows nothing. | `HEALER_TALE_THREAD`, `INTRO_STORY` | [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341) |
+| G4 | The thread is only words; death shows nothing. | `HEALER_TALE_THREAD`, `INTRO_LEAF_*` | [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341) |
 | G5 | `HEALER_TALE_WITCH`'s "berry that bursts" was written for the bomb; D40 replaced the bomb with an exploding stump. The image no longer matches the room. **Resolved (#370):** "stumps that burst". | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) (tutorial tales rewrite) |
 | G6 | `forest-0` teaches five traps (thorn root, falling branch, falling stone, falling platform, stump); the witch line names two. **Resolved (#370):** the line names all five in three groups (rise, fall, burst). | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
 | G7 | "Do not be afraid to ask": ask whom? No asking exists in the game. **Resolved (#370):** the sentence is removed. | `HEALER_TALE_LIFT` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370); may resolve with the fairy helper ([#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338)) |
 | G8 | The villain is named once and never again; the ending does not mention her; the light returns with no cause (K without H against the villain). STORY.md keeps L'Kardina's fate out of the MVP by decision, so this is a wording problem: the ending overclaims ("every enemy", "free of monsters") after one guardian. **Resolved (#372):** the ending keeps STORY.md's outcome but places it at the end of "a long road" from the forest, so it no longer follows one guardian. | `ENDING_STORY`, `HEALER_TALE_WITCH` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) (ending in the healer's voice, within STORY.md's MVP decision) |
-| G9 | The opening is the healer's voice; the ending is an anonymous narrator. The frame opens and does not close. **Resolved (#372):** the healer tells the ending; the frame closes. | `INTRO_STORY`, `ENDING_STORY` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
+| G9 | The opening is the healer's voice; the ending is an anonymous narrator. The frame opens and does not close. **Resolved (#372):** the healer tells the ending; the frame closes. | `INTRO_LEAF_*`, `ENDING_STORY` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G10 | `HEALER_GUIDE` promises "we will meet again"; in the three-level build the ending follows at once. **Resolved (#372):** the ending says the healer guided Edgard "as I had promised". | `HEALER_GUIDE`, `ENDING_STORY` | [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) (or accept as a campaign hook) |
 | G11 | Game jargon in the healer's mouth: "boss" (`HEALER_READY`, `HEALER_PAID`, `HEALER_LOCK` in uk/pl/de/be), "retries" (`HEALER_LOCK`), "damage" (`HEALER_PAID`), "the list" (`HEALER_INGREDIENTS`, `HEALER_BOTH`). The tutorial tales are already guarded against this by `HealerDialogueTest`; the pre-boss lines are not. **Resolved (#371):** the pre-boss and victory lines are rewritten in tale voice in all five languages; their 32 allowlist entries are removed. | listed | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) (rewrite); the gate tracks it |
 | G12 | `HEALER_PAID` is spoken by the healer but narrates the player's action in second person ("You drink the elixir"): a system message in the healer's frame. **Resolved (#371):** `HEALER_PAID` is spoken by the healer as himself ("my pay is taken and my elixir is in you"). | `HEALER_PAID` | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371) |
 | G13 | Two names for the boss: "forest guardian" (tale) and "boss" (`BOSS` HUD, `HEALER_FIGHT` button, healer lines). The HUD label is fine as a label; the healer should say "guardian". **Resolved (#371):** the healer says "the guardian" in every line; `BOSS` is now the tale name as a label ([#542](https://github.com/jlogicgames/edgard_in_kimeria/issues/542)); `HEALER_FIGHT` stays a label. | `BOSS`, `HEALER_*` | [#371](https://github.com/jlogicgames/edgard_in_kimeria/issues/371); glossary row "Boss in the tale" |
-| G14 | Polish names the witch "wiedźma" in the opening and "czarownica" in the tales. **Resolved (#370):** the rewritten Polish tales say "wiedźma"; their allowlist entries are removed. | pl `INTRO_STORY`, `HEALER_TALE_WITCH`, `HEALER_TALE_BLESSING` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) (translation pass) |
-| G15 | "Sleeping lands", "sleeping kingdom": sleep is never explained (the curse is night, not sleep). Either a deliberate image (the land sleeps under the night) or drift. **Resolved (#372):** a deliberate image; the ending wakes the sleeping kingdom with the light. | `INTRO_STORY` | Author's call, settled with the frame in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
+| G14 | Polish names the witch "wiedźma" in the opening and "czarownica" in the tales. **Resolved (#370):** the rewritten Polish tales say "wiedźma"; their allowlist entries are removed. | pl `INTRO_LEAF_*`, `HEALER_TALE_WITCH`, `HEALER_TALE_BLESSING` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) (translation pass) |
+| G15 | "Sleeping lands", "sleeping kingdom": sleep is never explained (the curse is night, not sleep). Either a deliberate image (the land sleeps under the night) or drift. **Resolved (#372):** a deliberate image; the ending wakes the sleeping kingdom with the light. | `INTRO_LEAF_*` | Author's call, settled with the frame in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. **Resolved (#370, the author's choice):** `EDGARD_TALE_READY` opens with "Forgive my haste, healer." | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
 | G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. **Resolved (#373, D97):** one formula (the cue, then what to do), one exit wording, every message at most 59 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
 | G18 | `COINS` is in all five catalogs and read by no code. **Resolved (#374):** the key is deleted from `Msg` and all five catalogs, with its allowlist entry. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
-| G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. **Ending (#372):** two paragraphs and THE END, 265 EN characters of text, within the per-page budget; the opening keeps its D77-measured single page. | `INTRO_STORY` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
-| G20 | The apostrophe in L'Kardina: STORY.md writes the Ukrainian form with a typographic ’ (Л’Кардина); all catalogs use ASCII '. Fix one form per language in the glossary. | `INTRO_STORY` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369); glossary row "Villain" |
+| G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. **Ending (#372):** two paragraphs and THE END, 265 EN characters of text, within the per-page budget; the opening was cut into six book leaves of at most 300 EN characters ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535), [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)). | `INTRO_LEAF_*` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
+| G20 | The apostrophe in L'Kardina: STORY.md writes the Ukrainian form with a typographic ’ (Л’Кардина); all catalogs use ASCII '. Fix one form per language in the glossary. | `INTRO_LEAF_*` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369); glossary row "Villain" |
 
 ## 4. Draft style system (not approved)
 
@@ -277,7 +281,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 
 | Voice | Who and where | Rules |
 | --- | --- | --- |
-| **Tale** | `INTRO_STORY`, `ENDING_STORY`, every `HEALER_*` / `EDGARD_*` spoken line | Story words only: no control, key, button or mechanic name, no game jargon (boss, retry, checkpoint, damage, list, level, HUD). Past tense for narration, present for speech. The healer addresses Edgard by name at the start of a scene. Numbers only when the tale itself counts ("ten times", "three gifts"). |
+| **Tale** | `INTRO_LEAF_*`, `ENDING_STORY`, every `HEALER_*` / `EDGARD_*` spoken line | Story words only: no control, key, button or mechanic name, no game jargon (boss, retry, checkpoint, damage, list, level, HUD). Past tense for narration, present for speech. The healer addresses Edgard by name at the start of a scene. Numbers only when the tale itself counts ("ten times", "three gifts"). |
 | **Plain** | `HINT_*` zone messages, `MENU_HINT`, `ABOUT_*`, `ROTATE_HINT`, confirmation texts | Imperative or a short statement of what happens. One idea per string; at most two short sentences. No tale imagery, no names of characters. No key names in zone messages (the label above the hero supplies the binding). |
 | **Label** | Buttons, menu items, the label above the hero, HUD | One to three words, verb first for actions ("Pick up", "Put down"), noun for targets. The same thing has one label everywhere (see the glossary). |
 
@@ -362,7 +366,7 @@ go in a Python tool with its own test, data in one JSON file.
 | Check | Rule | Would flag today |
 | --- | --- | --- |
 | T1 glossary consistency | If the EN string contains a concept's EN stem, each translation contains that concept's stem in its language | pl `HEALER_TALE_WITCH`, pl `HEALER_TALE_BLESSING` (czarownica); be `FIREBALL_STOCK_FULL` (вогненных шароў vs Агонь) |
-| T2 tale register | Tale-voice keys (`INTRO_STORY`, `ENDING_STORY`, spoken `HEALER_*`, `EDGARD_*`) contain no control or jargon word (word-boundary stems in five languages, extending the list in `HealerDialogueTest`) | `HEALER_READY` (boss), `HEALER_PAID` (boss, damage), `HEALER_LOCK` (retries, boss), `HEALER_INGREDIENTS` and `HEALER_BOTH` (list), in all five languages where the word appears: 24 hits in the dry run (all rewritten by #371) (a naive substring check also hit "Listen" in `INTRO_STORY`, so T2 must match word stems at word boundaries) |
+| T2 tale register | Tale-voice keys (`INTRO_LEAF_*`, `ENDING_STORY`, spoken `HEALER_*`, `EDGARD_*`) contain no control or jargon word (word-boundary stems in five languages, extending the list in `HealerDialogueTest`) | `HEALER_READY` (boss), `HEALER_PAID` (boss, damage), `HEALER_LOCK` (retries, boss), `HEALER_INGREDIENTS` and `HEALER_BOTH` (list), in all five languages where the word appears: 24 hits in the dry run (all rewritten by #371) (a naive substring check also hit "Listen" in `INTRO_LEAF_*`, so T2 must match word stems at word boundaries) |
 | T3 zone message budget | EN `HINT_*` at most 60 characters and at most two sentences | `HINT_STONE_THROW` 65, `HINT_TRAP_STUMP` 64, `HINT_TRAP_PLATFORM` 73, `HINT_PLATFORM_STONE` 75, `HINT_STONE_STUMP` 77 (all rewritten within 60 by #373) |
 | T4 no key names in zone messages | No binding token (J, K, L, W, A, S, D, Z, X, C, Esc, Tab, Enter, Space) followed by `+` or `:` or standing as a key list | none (the naive single-letter check falsely flags the English article "A" four times; the tool must match the binding pattern, not any capital letter) |
 | T5 unused keys | Every catalog key is referenced by `Msg` and by code or a map | `COINS` (deleted by #374) |

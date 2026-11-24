@@ -10,9 +10,11 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.ui.BossHud;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
 import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
@@ -54,6 +56,7 @@ class LocalizationLayoutTest {
             }, 640, 360, null);
             float right = 640f - com.jlogicsoftware.kimeria.ui.IntroScreen.SKIP_HINT_MARGIN, top = com.jlogicsoftware.kimeria.ui.IntroScreen.SKIP_HINT_TOP;
             float cueRight = 320f + com.jlogicsoftware.kimeria.ui.IntroScreen.CUE_SIZE / 2f;
+            assertTrue(com.jlogicsoftware.kimeria.ui.IntroScreen.CUE_TOP > com.jlogicsoftware.kimeria.ui.IntroBook.COVER_BOTTOM, "the page-turn cue sits below the book's bottom edge (D133)");
             for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.INTRO_SKIP_KEYBOARD, Msg.INTRO_SKIP_GAMEPAD}) {
                 var layout = overlay.hintBlock(message.t(language), right, top).getLayouts().first();
                 float left = right + layout.runs.first().x, bottom = top + layout.height;
@@ -61,6 +64,7 @@ class LocalizationLayoutTest {
                 assertTrue(left > cueRight, "right of the page cue: " + where);
                 assertTrue(bottom <= 360f, "inside the screen: " + where);
                 assertTrue(top > com.jlogicsoftware.kimeria.ui.IntroPages.PAGE_BOTTOM, "below the page area: " + where);
+                assertTrue(top > com.jlogicsoftware.kimeria.ui.IntroBook.COVER_BOTTOM, "below the book's bottom edge, on the black (D133): " + where);
             }
         } finally {
             Gdx.files = previous;
@@ -130,12 +134,20 @@ class LocalizationLayoutTest {
                     assertTrue(lines(touch, message.t(language), width) <= 2, prefix + message);
                     assertTrue(height(touch, message.t(language), width) <= 32, prefix + message);
                 }
-                for (boolean left : new boolean[]{false, true}) {
-                    String help = (left ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language) + "\n\n"
-                        + (left ? Msg.ABOUT_GAMEPAD_LEFT_HANDED : Msg.ABOUT_GAMEPAD).t(language);
-                    // Existing About layout: title, body margin, two buttons, surrounding margins.
-                    assertTrue(44 + height(body, help, 580) + 20 + 88 + 40 <= 332, prefix + "controller help left=" + left);
-                }
+                // About pages (D135): the blurb and the rules each sit in the 610 px panel between the title and two buttons.
+                for (String page : List.of(
+                    Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language),
+                    Msg.ABOUT_RULES.t(language) + "\n\n" + Msg.ABOUT_RULES_CARRY.t(language)))
+                    assertTrue(44 + height(body, page, 580) + 20 + 88 + 40 <= 332, prefix + "about page " + page.substring(0, 12));
+                assertTrue(new GlyphLayout(button, Msg.ABOUT_GAME.t(language)).width <= 544, prefix + "page button");
+                // Controls screen (D135), body font as drawn: hand headers in one 162 px line, the touch preview's button
+                // labels in 96 px and its stick label in 80 px; rows and cells are measured in ControlsViewTest.
+                for (Msg message : new Msg[]{Msg.RIGHT_HAND, Msg.LEFT_HAND})
+                    assertTrue(lines(body, message.t(language), ControlsView.HEADER_W) <= 1, prefix + message);
+                for (Msg message : new Msg[]{Msg.ATTACK, Msg.FIREBALL, Msg.JUMP})
+                    assertTrue(lines(body, message.t(language), ControlsView.BUTTON_LABEL_W) <= 1, prefix + message);
+                assertTrue(lines(body, Msg.STICK.t(language), ControlsView.STICK_LABEL_W) <= 1, prefix + "stick label");
+                // The Controls table itself is measured in ControlsViewTest (rows, columns, touch line).
                 for (String label : List.of(Msg.LONGER_TRAP_WARNINGS.t(language) + ": " + Msg.OFF.t(language),
                     Msg.SCREEN_SHAKE.t(language) + ": " + Msg.OFF.t(language),
                     Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),
@@ -156,7 +168,7 @@ class LocalizationLayoutTest {
     }
 
     /**
-     * D70, D78: the 18 px ingredient checklist (the middle column between the portrait windows, from y 20) ends above the
+     * D70, D78: the 18 px ingredient checklist (the middle column between the portrait windows, from y 16, an icon beside each row, #540) ends above the
      * first choice, and every choice label with its two markers fits the middle column, in every language and state.
      */
     @Test void ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize() {
@@ -170,13 +182,28 @@ class LocalizationLayoutTest {
             });
             float column = HealerDialogueView.MIDDLE_W;
             float top = HealerDialogueView.CHECKLIST_Y, choices = HealerDialogueView.CHOICE_Y;
+            float widestRow = 0;
             float markers = 2 * (HealerDialogueView.MARKER_INSET + new GlyphLayout(dialogue, ">").width + 4);
             for (Language language : Language.values()) for (boolean paid : new boolean[]{false, true}) for (boolean done : new boolean[]{false, true}) {
-                String text = view.checklistText(language, paid, done, !done, done, done ? 3 : 0, 3);
-                GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, column, Align.center, true);
-                assertTrue(layout.width <= column + 1, language.code() + " checklist width");
-                assertTrue(top + layout.height <= choices - 4, language.code() + " checklist stays above the choices: " + layout.height);
+                if (paid) {
+                    GlyphLayout layout = new GlyphLayout(dialogue, view.checklistText(language, true, done, !done, done, done ? 3 : 0, 3), Color.WHITE, HealerDialogueView.PAID_TEXT_W, Align.center, true);
+                    assertTrue(layout.width <= HealerDialogueView.PAID_TEXT_W + 1, language.code() + " paid message width");
+                    assertTrue(top + layout.height <= choices - 4, language.code() + " paid message stays above the choices: " + layout.height);
+                    continue;
+                }
+                // #540 (D132): each row is an icon, a gap and one line of text; the longest must fit beside its icon, and three rows stay above the choices.
+                for (int row = 0; row < HealerDialogueView.ROWS; row++) {
+                    String text = HealerDialogueView.rowText(row, language, done, !done, done, done ? 3 : 0, 3);
+                    GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, column, Align.left, false);
+                    widestRow = Math.max(widestRow, layout.width);
+                    float beside = column - HealerDialogueView.ROW_ICON - HealerDialogueView.ROW_GAP;
+                    assertTrue(layout.width <= beside, language.code() + " row " + row + " fits beside its icon: " + layout.width + " of " + beside);
+                    assertTrue(layout.height <= HealerDialogueView.ROW_ICON, language.code() + " one line per row");
+                }
+                float rowsBottom = top + (HealerDialogueView.ROWS - 1) * HealerDialogueView.ROW_STEP + HealerDialogueView.ROW_ICON;
+                assertTrue(rowsBottom <= choices - 4, "three rows stay above the choices: " + rowsBottom);
             }
+            System.out.printf("LAYOUT widest checklist row over five languages: %.1f px of %.1f beside the icon%n", widestRow, column - HealerDialogueView.ROW_ICON - HealerDialogueView.ROW_GAP);
             for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                 assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= column - markers,
                     language.code() + " " + message + " in the " + column + " px choice button");

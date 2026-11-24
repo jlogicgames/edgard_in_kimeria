@@ -1772,6 +1772,34 @@ def root_thrust() -> list[float]:
     return finish_rms(lowpass(out, ROOT_THRUST_LOWPASS_HZ), ROOT_THRUST_RMS_DB, ROOT_THRUST_PEAK_DB)
 
 
+# ---------------------------------------------------------------- hand-over and elixir (#541, D132)
+# The healer's checklist items arrive in his hands (three times per payment, so it is short and quiet): a small glassy "tink", a
+# high /i/ with a hard attack and a short ring, like the silver thread's pluck but higher and shorter.
+HANDOVER_VOICE = Voice(4801, 0.12, (720.0, 690.0), FORMANTS_I, FORMANTS_I, -19.4, asp_len=0.004, asp_level=0.2,
+                       attack=0.008, tau=0.045, release=0.020, jitter=0.01, lowpass=4200.0)
+# The elixir reaches Edgard (once): a low swallowed "glug", /o/ falling, then a short rising chime /i/ 0.22 s in.
+ELIXIR_VOICES = (Voice(4901, 0.24, (150.0, 95.0), FORMANTS_O, FORMANTS_O, -19.0, asp_len=0.020, asp_level=0.3,
+                       attack=0.020, tau=0.110, release=0.030, jitter=0.06, rough=0.4, rough_start=0.5, lowpass=2600.0),
+                 Voice(4902, 0.36, (520.0, 700.0), FORMANTS_I, FORMANTS_I, -19.0, asp_len=0.006, asp_level=0.2,
+                       attack=0.012, tau=0.160, release=0.050, jitter=0.01, vibrato=(7.0, 0.02), lowpass=4200.0))
+ELIXIR_SECOND_OFFSET = 0.22  # s, start of the chime
+ELIXIR_RMS_DB = -19.0
+
+
+def handover() -> list[float]:
+    return finish_rms(render_voice(HANDOVER_VOICE), HANDOVER_VOICE.rms_db)
+
+
+def elixir() -> list[float]:
+    first, second = (render_voice(v) for v in ELIXIR_VOICES)
+    out = [0.0] * (n_samples(ELIXIR_SECOND_OFFSET) + len(second))
+    for i, a in enumerate(first):
+        out[i] += a
+    for i, a in enumerate(second):
+        out[n_samples(ELIXIR_SECOND_OFFSET) + i] += a
+    return finish_rms(out, ELIXIR_RMS_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -1794,7 +1822,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter,
                "spore_puff.wav": spore_puff, "puffball_burst.wav": puffball_burst,
                "wolf_notice.wav": wolf_notice, "wolf_windup.wav": wolf_windup, "wolf_windup_long.wav": wolf_windup_long,
-               "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run}
+               "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run,
+               "handover.wav": handover, "elixir.wav": elixir}
 
 
 def generate(out_dir: Path) -> list[Path]:

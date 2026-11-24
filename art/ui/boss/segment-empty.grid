@@ -1,0 +1,25 @@
+# Boss HUD empty segment (#543): 14x16, the same silhouette as a hollow socket, a ghost of the facets and a lit lower lip; it is drawn under every filled segment.
+size 14 16
+color k 0e0a14
+color u 15101f
+color U 211a2e
+color g 342a46
+color v 5a4c70
+color c 6a5c84
+frame a-segment-empty
+..kkkkkkkkkk..
+.kuuuuuuuuuuk.
+kuuUUUUUUUUUvk
+kuUUUUUUUUUUvk
+kuUggggggggUvk
+kuUgUUUUUUgUvk
+kuUgUUUUUUgUvk
+kuUgUUUUUUgUvk
+kuUgUUUUUUgUvk
+kuUgUUUUUUgUvk
+kuUgUUUUUUgUvk
+kuUggggggggUvk
+kUUUUUUUUUUUvk
+kUUUUUUUUUUvvk
+.kvvvvvvvvvvk.
+..kkkkkkkkkk..

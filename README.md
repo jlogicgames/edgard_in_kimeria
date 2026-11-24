@@ -57,17 +57,16 @@ F7 restarts the hosted game, not the dev launcher/host.
 
 | Action | Keyboard | Gamepad |
 | --- | --- | --- |
-| Move / vertical direction | A / D, W / S | Left stick / D-pad |
-| Look while standing (hold) | W / S | Movement stick up / down |
-| Jump | J | South button |
-| Sword | K | West / East button |
-| Pick up / mechanism | W + K | Up + West / East |
-| Put down held object | S + K | Down + West / East |
-| Throw held object / fireball | L | North button |
+| Move / climb | A / D, W / S | Left stick / D-pad |
+| Jump | J | A (south button) |
+| Sword | K | X / B (west / east button) |
+| Pick up or use (press Up) | W | Stick up / D-pad up |
+| Put down (press Down) | S | Stick down / D-pad down |
+| Throw held object / fireball | L | Y (north button) |
 | Pause | Esc | Start |
 
-Touch devices show on-screen controls. Language and left-handed controls are available
-in Options. Empty-handed ranged attacks spend one fireball; object throws spend none.
+Touch devices show on-screen controls. Language is set in Options; the Controls screen there shows both hand layouts and holds
+the Left-handed switch. Empty-handed ranged attacks spend one fireball; object throws spend none.
 Carry at most three charges. Two authored pickups restore one each on contact;
 a full stock leaves the pickup available and displays a local hint.
 See [directional controls](docs/DIRECTIONAL_CONTROLS.md) for both layouts and recovery rules.

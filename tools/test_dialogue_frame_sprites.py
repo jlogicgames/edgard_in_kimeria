@@ -10,6 +10,8 @@ checked here, on the exported art (OKLab lightness L):
 - decor (the ornament: page border, text box border, and the listener's window, crest and plate): at most
   `check_contrast.DECOR_OUTLINE_MAX` (0.20) against every ground it touches;
 - the thread: its outline (D76's measure) against the composed screen it crosses, either speaker lit, active;
+- the band (D134): its visible width, counted from the outer edge to the opening along the middle of each side of the window
+  stretched to its drawn size, is the same on all four sides (within 1 px), lit and dim, so no side looks thinner;
 - the dimmed listener portrait: an outline of at least 0.15 against its opening, and visibly darker than when lit.
 
 The layout (positions and sizes) is read from `HealerDialogueView.java`, so a layout change there is measured here.
@@ -35,6 +37,9 @@ VIEW = ROOT / 'core/src/main/java/com/jlogicsoftware/kimeria/ui/HealerDialogueVi
 ACTIVE_MIN = contrast.ACTIVE_OUTLINE_MIN
 DECOR_MAX = contrast.DECOR_OUTLINE_MAX
 LISTENER_OUTLINE_MIN = 0.15  # the dimmed portrait's silhouette against its opening
+BAND_VISIBLE = 0.05  # |L| from the page fill at which a band pixel counts as visible (the near-black outline sits at 0.022)
+BAND_EVEN = 1  # px the four sides may differ by
+BAND_MIN = 6  # px the thinnest side must still show (the band is 7 today)
 LISTENER_DROP_MIN = 0.10  # the dimmed portrait is visibly darker than the lit one (mean L)
 OPENING = (16, 16)  # a pixel of the window's opening
 BEAD = (6, 16)  # the bright bead pixel on the window's left band
@@ -188,6 +193,25 @@ class DialogueFrameTest(unittest.TestCase):
                  ('text box border, on its ink', loudest(frame('box', 0), ink)))
         for what, value in cases:
             self.assertLessEqual(value, DECOR_MAX, what)
+
+    def test_the_band_reads_the_same_on_all_four_sides(self):
+        page, size = pixel('page', 0, FILL), at('WINDOW')
+        middle = size // 2
+        for index, name in ((LIT, 'lit'), (DIM, 'dim')):
+            opening = pixel('window', index, OPENING)
+            window = nine_patch(frame('window', index), size, size, at('WINDOW_INSET')).convert('RGB')
+            sides = {'left': [(i, middle) for i in range(size)], 'top': [(middle, i) for i in range(size)],
+                     'right': [(size - 1 - i, middle) for i in range(size)], 'bottom': [(middle, size - 1 - i) for i in range(size)]}
+            widths = {}
+            for side, points in sides.items():
+                count = 0
+                for point in points[:at('WINDOW_INSET')]:  # the band and its inner edge only, never the opening or beyond
+                    if window.getpixel(point) == opening:
+                        break
+                    count += abs(lightness(window.getpixel(point)) - lightness(page)) >= BAND_VISIBLE
+                widths[side] = count
+            self.assertLessEqual(max(widths.values()) - min(widths.values()), BAND_EVEN, f'{name} window band: {widths}')
+            self.assertGreaterEqual(min(widths.values()), BAND_MIN, f'{name} window band: {widths}')
 
     def test_the_thread_is_loud_on_the_screen_it_crosses(self):
         """The thread over what is drawn behind it: the page, both window bands and both portraits, either speaker lit."""

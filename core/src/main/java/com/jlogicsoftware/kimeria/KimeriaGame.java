@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
@@ -19,6 +20,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.jlogicsoftware.kimeria.effects.FlightFx;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.effects.RoomRippleFx;
 import com.jlogicsoftware.kimeria.effects.Shaders;
@@ -27,6 +29,7 @@ import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.input.IntroInput;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.ui.KimeriaArms;
@@ -48,6 +51,7 @@ import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.world.RoomFade;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,9 +70,11 @@ import java.util.Set;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, CONTROLS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
+    /** Controls screen (D135): title, then {@link ControlsView} from y 52 to 228, then the two buttons. */
+    private static final float CONTROLS_TITLE_Y = 10f, CONTROLS_BUTTONS_Y = 236f;
     /**
      * Sprites the batch holds before it flushes: the most libGDX allows (4 vertices each, vertex indices are shorts, so at most 32767 / 4 = 8191).
      * The parallax layers draw about 4 200 tile regions a frame (#236), which a 1000-sprite batch flushed five times.
@@ -130,6 +136,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private Hud hud;
+    /** Pickup flights to the HUD slots (D132, #557): screen space, cosmetic; cleared with every rollback, room change and level load. */
+    private static final long FLIGHT_SEED = 0xF11641FL;
+    private final FlightFx flights = new FlightFx(FLIGHT_SEED);
+    private final EnumMap<ItemType, TextureRegion> flightSprites = new EnumMap<>(ItemType.class);
+    private final Vector2 flightSlot = new Vector2();
+    private static final float POP_SECONDS = .12f, POP_RISE = 6, POP_FROM = 16, ITEM_ART = 16, PICKUP_FLIGHT_SLOTS = 2,  POP_TO = 20, PICKUP_FLIGHT_SECONDS = .40f, PICKUP_ARC = 24,
+        PICKUP_END_SIZE = 10, PICKUP_FADE = .65f, PICKUP_TRAIL_R = 1f, PICKUP_TRAIL_G = .957f, PICKUP_TRAIL_B = .667f;
     private TouchControls touchControls;
     private final TouchLayout touchLayout = new TouchLayout(LOGICAL_W, LOGICAL_H);
     private Overlay overlay;
@@ -224,7 +237,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private boolean menuMusicPlaying = false;
 
     private boolean aboutRules;
-    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, assistMenu, pauseMenu, confirmNewGameMenu;
+    private ControlsView controlsView;
+    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, controlsMenu, assistMenu, pauseMenu, confirmNewGameMenu;
 
     /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
     private FrameBuffer sceneBuffer;
@@ -251,6 +265,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         touchControls.setLayout(touchLayout);
         arms = new KimeriaArms(assets);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H, arms);
+        controlsView = new ControlsView(assets, overlay);
         healerView = new HealerDialogueView(assets);
         menuBackdrop = new MenuBackdrop();
 
@@ -295,7 +310,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         List<MenuItem> mainItems = new ArrayList<>(List.of(
             new MenuItem(() -> Msg.CONTINUE.t(language), this::continueGame, savedProgress::exists),
             new MenuItem(() -> Msg.NEW_GAME.t(language), this::requestNewGame),
-            new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
+            new MenuItem(() -> Msg.ABOUT.t(language), () -> { aboutRules = false; uiState = UiState.ABOUT; }),
             new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS)
         ));
         if (!isWeb()) {
@@ -312,7 +327,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             ), this::backToMainMenu);
 
         aboutMenu = new Menu(() -> Msg.ABOUT.t(language), null, List.of(
-            new MenuItem(() -> (aboutRules ? Msg.CONTROLS : Msg.RULES).t(language), () -> aboutRules = !aboutRules),
+            new MenuItem(() -> (aboutRules ? Msg.ABOUT_GAME : Msg.RULES).t(language), () -> aboutRules = !aboutRules),
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
         ), this::backToMainMenu);
 
@@ -333,12 +348,21 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                     + (pageFullscreen.active() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
                 pageFullscreen::toggle));
         }
-        optionItems.add(new MenuItem(
-            () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
-            this::toggleLeftHanded));
+        optionItems.add(new MenuItem(() -> Msg.CONTROLS.t(language), () -> {
+            controlsMenu.selected = 0;
+            uiState = UiState.CONTROLS;
+        }));
         optionItems.add(new MenuItem(() -> Msg.ASSIST.t(language), () -> uiState = UiState.ASSIST));
         optionItems.add(new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu));
         optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu);
+
+        // D135: Left-handed lives on the Controls screen, which shows both hands so the switch explains itself.
+        controlsMenu = new Menu(() -> Msg.CONTROLS.t(language), null, List.of(
+            new MenuItem(
+                () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
+                this::toggleLeftHanded),
+            new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
+        ), () -> uiState = UiState.OPTIONS);
 
         assistMenu = new Menu(() -> Msg.ASSIST.t(language), null, List.of(
             new MenuItem(
@@ -430,6 +454,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      * rebuilt level and the coin count from when the level began. The save is not touched.
      */
     private void restartLevel() {
+        flights.clear();
         artifacts.restartLevel();
         rangedStock.restartLevel();
         // A farewell cut off by Restart Level is replayed when the tutorial is finished again.
@@ -447,6 +472,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     /** Drops the level and player so nothing stays alive behind the menus. */
     private void releaseGame() {
+        flights.clear();
         healer = null;
         tutorialIntroPending = tutorialOutroShown = false;
         pausedHealer = false;
@@ -484,14 +510,24 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void newGame() {
         savedProgress.clear();
-        openStory(Msg.INTRO_STORY, UiState.INTRO);
+        startStory(IntroScreen.openBook(introLeaves(), overlay, assets, LOGICAL_W, instantText()), UiState.INTRO);
     }
 
     private boolean storyScreenActive() { return uiState == UiState.INTRO || uiState == UiState.ENDING; }
 
-    /** Opening and ending share the same static pages (#336), fade, music and fresh-input rules; the ending adds the arms (#416). */
+    /** The ending on black pages (#336) with the arms (#416, D95); the opening is {@link #startStory} on its book (D133). Both share the fade, music and fresh-input rules. */
     private void openStory(Msg message, UiState state) {
-        intro = IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null);
+        startStory(IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null), state);
+    }
+
+    /** The six leaves of the opening on its book (#535, #536, D133), in the player's language. */
+    private String[] introLeaves() {
+        return new String[] {Msg.INTRO_LEAF_1.t(language), Msg.INTRO_LEAF_2.t(language), Msg.INTRO_LEAF_3.t(language),
+            Msg.INTRO_LEAF_4.t(language), Msg.INTRO_LEAF_5.t(language), Msg.INTRO_LEAF_6.t(language)};
+    }
+
+    private void startStory(IntroScreen screen, UiState state) {
+        intro = screen;
         float hintRight = LOGICAL_W - IntroScreen.SKIP_HINT_MARGIN;
         intro.setSkipHints(overlay.hintBlock(Msg.INTRO_SKIP_KEYBOARD.t(language), hintRight, IntroScreen.SKIP_HINT_TOP),
             overlay.hintBlock(Msg.INTRO_SKIP_GAMEPAD.t(language), hintRight, IntroScreen.SKIP_HINT_TOP));
@@ -535,6 +571,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void startLoadingLevel() {
+        flights.clear();
         healer = null;
         pausedHealer = false;
         level = null; // the previous level is released while the loading screen shows
@@ -583,6 +620,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      * The first death of a run then opens the healer's line.
      */
     private void rebuildRoom(boolean underBlack) {
+        flights.clear();
         roomResetPending = false;
         coinsCollected = roomStartCoins;
         timeScale = 1f;
@@ -603,6 +641,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void enterNextRoom() {
+        flights.clear();
         if (level.healerAhead()) {
             roomFade.cancel();
             level.cancelLeaving();
@@ -805,6 +844,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible) {
             hud.render(batch, level != null ? level.boss() : null,
                 level != null && artifacts.bossWeaponDamageMultiplier(level.name) > 1f, player, fpsText);
+            flights.render(batch); // over the HUD, under the hint and the touch controls
             if (uiState == UiState.PLAYING && !roomFade.active() && !deathFade.active() && player != null) hud.renderInteractionHint(batch, player, camera, dt);
             if (uiState == UiState.PLAYING) touchControls.render(batch);
         }
@@ -860,11 +900,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                 }
             } else {
                 level.update(dt * timeScale);
+                flights.update(dt); // real time, not the assist's time scale; a paused game never reaches this line
                 if (gameStarted) advanceCameraPan(dt);
                 if (gameStarted && !roomResetPending && level.atRoomExit()) {
                     player.resetJumpInput();
                     level.clearCameraEffects();
                     level.beginLeaving();
+                    flights.clear();
                     roomFade.start(RoomRippleFx.LEAVE_HOLD_SECONDS); // a clear pause so the ripple can play; input is ignored, held keys are kept
                 }
             }
@@ -890,6 +932,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
         healer.setInstantText(instantText);
         healer.update(dt);
+        healerView.update(dt, healer); // the flights of this screen (D132): cosmetic, real time, frozen with the pause
+        String flightSound = healerView.takeSound();
+        if (flightSound != null && playSounds) playSound(flightSound);
         boolean up = dialogueInput.keyPressed(Input.Keys.UP) || dialogueInput.keyPressed(Input.Keys.W)
             || dialogueInput.keyPressed(Input.Keys.A) || dialogueInput.keyPressed(Input.Keys.LEFT)
             || gamepad.menuUp() || gamepad.menuLeft();
@@ -1117,6 +1162,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case CONFIRM_NEW_GAME -> confirmNewGameMenu;
             case ABOUT -> aboutMenu;
             case OPTIONS -> optionsMenu;
+            case CONTROLS -> controlsMenu;
             case ASSIST -> assistMenu;
             case PAUSED -> pauseMenu;
             case INTRO, ENDING, LOADING, PLAYING, HEALER -> null;
@@ -1150,9 +1196,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             // Centre the button list in the space between the title and the hint line.
             float startY = titleBottom + (hintTop - titleBottom - Overlay.buttonsHeight(menu)) / 2f;
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
+        } else if (uiState == UiState.CONTROLS) {
+            overlay.title(batch, menu.titleText(), cx, CONTROLS_TITLE_Y);
+            controlsView.draw(batch, ControlsView.modeFor(touchControls.isAvailable(), gamepad.isConnected()), language, leftHanded);
+            overlay.buttons(batch, menu, cx, CONTROLS_BUTTONS_Y, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
             float panelW = uiState == UiState.ABOUT ? 610f : 320f;
-            String aboutBody = uiState == UiState.ABOUT ? (aboutRules ? Msg.ABOUT_RULES.t(language) : aboutText()) : menu.bodyText();
+            String aboutBody = uiState == UiState.ABOUT ? aboutText() : menu.bodyText();
             float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
@@ -1174,11 +1224,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - 12);
     }
 
-    /** About text for the current handedness; the gamepad line appears only while a controller is connected. */
+    /** The About page shown: the game blurb (three paragraphs, D135) or the rules. */
     private String aboutText() {
-        String body = (leftHanded ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language);
-        if (!gamepad.isConnected()) return body;
-        return body + "\n\n" + (leftHanded ? Msg.ABOUT_GAMEPAD_LEFT_HANDED : Msg.ABOUT_GAMEPAD).t(language);
+        if (aboutRules) return Msg.ABOUT_RULES.t(language) + "\n\n" + Msg.ABOUT_RULES_CARRY.t(language);
+        return Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language);
     }
 
     @Override
@@ -1379,12 +1428,29 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
+    public void startPickupFlight(ItemType type, float worldX, float worldY) {
+        if (hud == null || flights.freeSlots() < PICKUP_FLIGHT_SLOTS || !hud.slotCenter(type, flightSlot)) return; // the pop and the flight both fit, or neither starts
+        TextureRegion sprite = flightSprites.get(type);
+        if (sprite == null) {
+            sprite = assets.region(type.sheet, type.spriteX, type.spriteY, ITEM_ART, ITEM_ART);
+            flightSprites.put(type, sprite);
+        }
+        // World and screen share one 640x360 frame; the world camera's centre is its position (Y down), so its top left is half a frame back.
+        float x = worldX - (camera.position.x - LOGICAL_W / 2f), y = worldY - (camera.position.y - LOGICAL_H / 2f);
+        flights.start(sprite, x, y, x, y - POP_RISE, 0, POP_FROM, POP_TO, 0, POP_SECONDS, FlightFx.EASE_OUT, 1f,
+            PICKUP_TRAIL_R, PICKUP_TRAIL_G, PICKUP_TRAIL_B, false, false);
+        flights.start(sprite, x, y - POP_RISE, flightSlot.x, flightSlot.y, PICKUP_ARC, POP_TO, PICKUP_END_SIZE, POP_SECONDS,
+            PICKUP_FLIGHT_SECONDS, FlightFx.EASE_IN, PICKUP_FADE, PICKUP_TRAIL_R, PICKUP_TRAIL_G, PICKUP_TRAIL_B, true, true);
+    }
+
+    @Override
     public void resetRoom() {
         roomResetPending = true;
     }
 
     @Override
     public void beginDeathFade() {
+        flights.clear(); // a flight in the air is dropped cleanly: the room rolls the pickup back (#557)
         deathFade.start();
     }
 

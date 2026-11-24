@@ -399,7 +399,7 @@ x  656    768   896-1008    1024-1168       1216
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)); the author played the room on 2026-11-17 (D86) |
 | Retry cost | none: the room has no enemy, trap or pit; a wrong pull costs the pull that undoes it (about 0.1 s) |
 | D26 | the lever is a reversible toggle; the floor runs under the lever ledge, so from the floor the hero either rides the running lift to the lever or, with the ladder down, climbs it to the exit; 312 lever-timing, pull-count and drop runs and every floor start in both lever states reach the exit without Restart Level (`Forest1LeverLessonTest`) |
-| Hints | none: forest-1 shows none (D33) |
+| Hints | lever (`HINT_LEVER_BOTH`, #554, D131: one message-only zone over the whole room; the one D33 exception in forest-1) |
 | Landmark | the lift beside the lever, the ladder hanging above the gap, the ledge it will reach |
 | Status | New (#418, D86, after the D84 playtest). D84 check: (1) taught before gating: the combination is met here, with nothing at stake, before the route room gates progress with it; (2) the effects land on screen: the room is one screen wide (640 px = the camera's view), the lift is 80 px and the ladder 192 px from the lever; (3) a stuck player always sees something untried: the lever, the running lift or the hanging ladder; (4) the challenge is only boarding a moving lift. The room is built and tested with a scripted hero; the author played it on 2026-11-17, and no novice has played it yet (#129-#131). |
 | Decisions | D84, D86, D67 |

@@ -50,7 +50,7 @@ public class TouchControls {
     private static final int MAX_POINTERS = 5;
 
     private static final float STICK_X = 80, STICK_Y = 280, STICK_RADIUS = 44, STICK_GRAB = 76;
-    private static final float KNOB_SIZE = 32;
+    static final float KNOB_SIZE = 32;
     private static final float STICK_DEADZONE = 0.3f;
     /** Interaction needs the stick more than about 60 degrees above or below horizontal (tan 60 = 1.732). */
     private static final float INTERACT_ANGLE_TAN = 1.732f;
@@ -67,7 +67,7 @@ public class TouchControls {
 
     private static final String ART = "images/HUD/touch/";
 
-    private static final int BUTTON_ART_SIZE = 64;
+    static final int BUTTON_ART_SIZE = 64;
     private static final float BUTTON_RADIUS = 32;
     /**
      * Labels wrap inside the cream area of the light button art (D55): the dark outline and white ring take about 5 px

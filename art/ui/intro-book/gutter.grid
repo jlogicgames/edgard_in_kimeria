@@ -1,0 +1,17 @@
+# Intro book (#536, D133): the leaves dip into the gutter at the top and the bottom, so the spread reads as bound
+# paper, not a board. Laid over the leaves at the gutter; the cover leather shows through the dip.
+size 32 5
+color k 2a1d12
+color b 3a2416
+frame top mirror
+......bbbbbbbbbb
+......kkkkkbbbbb
+...........kkkbb
+..............kb
+...............k
+frame bottom mirror
+...............k
+..............kb
+...........kkkbb
+......kkkkkbbbbb
+......bbbbbbbbbb

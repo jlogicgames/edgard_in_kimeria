@@ -36,7 +36,8 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "whip_crack.wav": (0.14, 0.18), "boss_sweep.wav": (0.27, 0.33), "boss_sweep_counter.wav": (0.37, 0.43),
           "spore_puff.wav": (0.26, 0.34), "puffball_burst.wav": (0.40, 0.50),
           "wolf_notice.wav": (0.18, 0.26), "wolf_windup.wav": (0.45, 0.55), "wolf_windup_long.wav": (0.70, 0.80),
-          "wolf_lunge.wav": (0.14, 0.22), "wolf_bite.wav": (0.14, 0.22), "wolf_bay.wav": (0.34, 0.46), "wolf_run.wav": (0.10, 0.14)}
+          "wolf_lunge.wav": (0.14, 0.22), "wolf_bite.wav": (0.14, 0.22), "wolf_bay.wav": (0.34, 0.46), "wolf_run.wav": (0.10, 0.14),
+          "handover.wav": (0.10, 0.16), "elixir.wav": (0.54, 0.64)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
@@ -47,7 +48,8 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
                 "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
                 "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0,
-                "wolf_notice.wav": -19.0, "wolf_windup.wav": -19.4, "wolf_windup_long.wav": -19.4, "wolf_bite.wav": -18.0}
+                "wolf_notice.wav": -19.0, "wolf_windup.wav": -19.4, "wolf_windup_long.wav": -19.4, "wolf_bite.wav": -18.0,
+                "handover.wav": -19.4, "elixir.wav": -19.0}
 # #324: deliberately fuller than the voice set (a rare event), so it is outside the set's spread; it must stay within the
 # same spread of the jump instead.
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}

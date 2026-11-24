@@ -1,16 +1,17 @@
-# Dialogue portrait window (#337, D78): carved walnut band 8 px, gilt bead on its inner side, gilt rosettes in the
+# Dialogue portrait window (#337, D78, D134): carved walnut band 8 px, gilt bead on its inner side, gilt rosettes in the
 # corners; nine-patch, insets 12 px. Frame "lit" is the speaker, "dim" the listener: every colour x0.5, the two bright gilts capped (D78).
+# The shadow sides (right, bottom) carry 2 px of shadow walnut (b; i when dim) inside the 1 px outline, so the band shows 7 px on all four sides (D134).
 # The opening is a dusk blue (3d4a68), light enough that the portraits' dark contours read against it (D76 by analogy).
 size 32 32
 color a 1d120c
-color b 3a2416
+color b 523420
 color c 5a3a22
 color d 7d5534
 color e 6e5226
 color f a8844a
 color g d8c08a
 color h 0e0906
-color i 1d120b
+color i 291a10
 color j 2d1d11
 color k 3e2a1a
 color l 372913
@@ -25,30 +26,30 @@ cfggcfccccccccccccccccccccfggcfc
 ccececcccccccccccccccccccccececc
 cccfccccccccccccccccccccccccfccc
 acccccaggggggggggggggggggaccccca
-addcccgeeeeeeeeeeeeeeeeeegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeVVVVVVVVVVVVVVVVegcccaaa
-addcccgeeeeeeeeeeeeeeeeeegcccaaa
+addcccgeeeeeeeeeeeeeeeeeegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeVVVVVVVVVVVVVVVVegcccbba
+addcccgeeeeeeeeeeeeeeeeeegcccbba
 acccccaggggggggggggggggggaccccca
 cccfccccccccccccccccccccccccfccc
 ccegeccccccccccccccccccccccegecc
 cfggcfccccccccccccccccccccfggcfc
-ccececcaaaaaaaaaaaaaaaaaaccececc
-cccfcccaaaaaaaaaaaaaaaaaacccfccc
+ccececcbbbbbbbbbbbbbbbbbbccececc
+cccfcccbbbbbbbbbbbbbbbbbbcccfccc
 acccccaaaaaaaaaaaaaaaaaaaaccccca
 frame dim
 hjjjjjhhhhhhhhhhhhhhhhhhhhjjjjjh
@@ -58,28 +59,28 @@ jmnnjmjjjjjjjjjjjjjjjjjjjjmnnjmj
 jjljljjjjjjjjjjjjjjjjjjjjjjljljj
 jjjmjjjjjjjjjjjjjjjjjjjjjjjjmjjj
 hjjjjjhmmmmmmmmmmmmmmmmmmhjjjjjh
-hkkjjjmllllllllllllllllllmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmlVVVVVVVVVVVVVVVVlmjjjhhh
-hkkjjjmllllllllllllllllllmjjjhhh
+hkkjjjmllllllllllllllllllmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmlVVVVVVVVVVVVVVVVlmjjjiih
+hkkjjjmllllllllllllllllllmjjjiih
 hjjjjjhmmmmmmmmmmmmmmmmmmhjjjjjh
 jjjmjjjjjjjjjjjjjjjjjjjjjjjjmjjj
 jjlnljjjjjjjjjjjjjjjjjjjjjjlnljj
 jmnnjmjjjjjjjjjjjjjjjjjjjjmnnjmj
-jjljljjhhhhhhhhhhhhhhhhhhjjljljj
-jjjmjjjhhhhhhhhhhhhhhhhhhjjjmjjj
+jjljljjiiiiiiiiiiiiiiiiiijjljljj
+jjjmjjjiiiiiiiiiiiiiiiiiijjjmjjj
 hjjjjjhhhhhhhhhhhhhhhhhhhhjjjjjh

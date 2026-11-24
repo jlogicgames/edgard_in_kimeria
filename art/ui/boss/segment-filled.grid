@@ -1,0 +1,26 @@
+# Boss HUD filled segment (#543): 14x16, a faceted ruby in an iron setting, light from the top left. Code fades its alpha with the boss energy and draws it additive for a lost segment.
+size 14 16
+color k 24060f
+color d 5a0a1c
+color r 9c1430
+color R c41a3a
+color m e02a4c
+color h ff6070
+color w ffd2d6
+frame a-segment-filled
+..kkkkkkkkkk..
+.khhhhhhhhhhk.
+khwwhRRRRRRRrk
+khwhRRRRRRRRrk
+khRhhhhhhhhRrk
+khRhmmmmmmdRrk
+khRhmmmmmmdRrk
+khRhmmmmmmdRrk
+khRhmmmmmmdRrk
+khRhmmmmmmdRrk
+khRhmmmmmmdRrk
+khRddddddddRrk
+kRRRRRRRRRRrrk
+kdrRRRRRRrrrdk
+.kddddddddddk.
+..kkkkkkkkkk..

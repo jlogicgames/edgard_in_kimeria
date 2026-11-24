@@ -46,6 +46,8 @@ for its hit halos, and draws its impact ring through the existing `shockwave.fra
 per hit); it is the model for a weapon or projectile effect. Rings come from the shared `effects.RingPool` (fixed slots, per-pool colour, size and
 life); the pickup's `effects.PickupSparksFx` (#402) is a small second user: sparks on `KIND_FLAME` plus a faint ring.
 
+`effects.FlightFx` (D132) is the project's sprite-flight helper (a cached sprite from A to B in screen space, a `KIND_FLAME` trail, a landing twinkle): the pickup flying to the HUD, the healer hand-over, the elixir. Use it, not a new pool, for any "something flies to where it goes" picture; it is cosmetic and cleared with the room.
+
 The false honey fungus's `effects.SporeCloud` (#296) is a composition of these kinds (SMOKE haze, GLOW specks) plus a shader layer; it adds no kind.
 
 `render` draws the normal-blend pass (smoke and grit) first, then the additive pass, then restores white and normal blending.
