@@ -259,7 +259,7 @@ not automatically approve its remaster or every future image.
 ## Forest look and parallax layers (draft for approval, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
 Draft card, 2026-11-19, from the author's decisions of the same day; the answers given that day are recorded in section 6. **Nothing here is binding until the author approves it
-and it gets a D-number ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), proposed).
+and it gets a D-number ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), accepted 2026-11-24).
 Built so far: the game reads and draws these layers in forest-1 (2026-11-19, code and layers below) and in forest-0 and forest-2
 (2026-11-20, [D112](DECISIONS.md#d112-forest-0-and-forest-2-take-the-forest-look-and-the-third-party-terrain-sheet-is-retired-236); approval:
 [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
