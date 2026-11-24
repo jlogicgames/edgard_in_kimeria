@@ -411,6 +411,7 @@ public class Level implements WorldObject {
         clearCameraEffects();
         game.artifacts().endBossElixir(name);
         victory = true;
+        placeVictoryPortal();
         player.beginVictoryWalk();
         game.setNormalTime();
     }
@@ -577,10 +578,22 @@ public class Level implements WorldObject {
         retryBossEnergy = -1;
     }
 
+    private static final float VICTORY_PORTAL_WIDTH = 24, VICTORY_PORTAL_HEIGHT = 48, VICTORY_PORTAL_MARGIN = 16;
+
     private void placePortal() {
         Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
-        if (exit == null) portal.clear();
-        else portal.place(exit.x, exit.y, exit.width, exit.height);
+        if (exit != null) { portal.place(exit.x, exit.y, exit.width, exit.height); return; }
+        portal.clear();
+        // The last room of a level without a boss ends it on its Checkpoint: the amber portal marks it (#605). A boss level shows it when the boss is dead.
+        for (int i = 0; i < objects.size(); i++)
+            if (objects.get(i) instanceof Checkpoint cp) { portal.placeLevelEnd(cp.position.x, cp.position.y, cp.size.x, cp.size.y); return; }
+    }
+
+    /** The boss is dead: the amber portal opens at the right end of the room, where the victory walk leaves, on the hero's floor line (#605). */
+    private void placeVictoryPortal() {
+        Rectangle room = currentRoomBounds();
+        float floor = player.position.y + player.size.y; // the bottom edge of the hero's box (world Y grows downward), so the portal stands on it
+        portal.placeLevelEnd(room.x + room.width - VICTORY_PORTAL_WIDTH - VICTORY_PORTAL_MARGIN, floor - VICTORY_PORTAL_HEIGHT, VICTORY_PORTAL_WIDTH, VICTORY_PORTAL_HEIGHT);
     }
 
     /** The portal of the current room, for tests; not placed in the last room, which has no exit. */

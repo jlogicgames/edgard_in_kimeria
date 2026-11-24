@@ -28,7 +28,7 @@ class PortalPerExitTest {
             Level level = harness.roomOf(map, 0);
             do {
                 boolean hasExit = level.hasNextRoom();
-                assertEquals(hasExit, level.portal().placed(), map + " room " + level.currentRoomName() + ": a portal exactly where there is an exit");
+                assertEquals(hasExit, level.portal().placed() && !level.portal().levelEnd(), map + " room " + level.currentRoomName() + ": a violet portal exactly where there is an exit");
                 if (hasExit) {
                     exits++;
                     // The hero standing on the portal's centre is at the exit: the portal is on the RoomExit trigger.
@@ -38,10 +38,41 @@ class PortalPerExitTest {
                     assertTrue(level.atRoomExit(), map + " " + level.currentRoomName() + ": the portal's centre is inside the exit rectangle");
                     level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
                 }
-            } while (level.portal().placed() || level.hasNextRoom());
-            assertTrue(!level.portal().placed(), map + ": the last room has no exit and no portal");
+            } while (level.hasNextRoom());
+            assertTrue(!level.portal().placed() || level.portal().levelEnd(), map + ": the last room has no room-exit portal");
         }
         assertEquals(5 + 11 + 5, exits, "21 exits in the shipped maps (6 + 12 + 6 rooms); a new room must bring its portal");
+    }
+
+    /** #605: the last room of a level without a boss shows the amber level-end portal on its Checkpoint; the room portals stay violet. */
+    @Test void theLevelEndOfABosslessLevelHasAnAmberPortalOnItsCheckpoint() {
+        for (String map : new String[]{"forest-0", "forest-1"}) {
+            Level level = harness.roomOf(map, 0);
+            while (level.hasNextRoom()) {
+                assertTrue(!level.portal().levelEnd(), map + ": a room exit is violet");
+                level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
+            }
+            assertTrue(level.portal().placed() && level.portal().levelEnd(), map + ": the final room has the level-end portal");
+            var cp = (com.jlogicsoftware.kimeria.entity.environment.Checkpoint) level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.environment.Checkpoint).findFirst().orElseThrow();
+            assertEquals(cp.position.x + cp.size.x / 2, level.portal().centreX(), 0.01f, map + ": on the Checkpoint");
+            assertEquals(cp.position.y + cp.size.y / 2, level.portal().centreY(), 0.01f);
+            level.resetCurrentRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
+            assertTrue(level.portal().levelEnd(), map + ": a retry keeps it");
+        }
+    }
+
+    /** #605: the boss level shows the portal only once the boss is dead, at the right end of the room, on the hero's floor line. */
+    @Test void theBossLevelOpensItsAmberPortalWhenTheBossIsDead() {
+        Level level = harness.roomOf("forest-2", 0);
+        while (level.hasNextRoom()) level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
+        assertTrue(!level.portal().placed(), "no portal while the boss lives");
+        level.bossDefeated();
+        assertTrue(level.portal().placed() && level.portal().levelEnd());
+        var room = level.currentRoomBounds();
+        assertTrue(level.portal().centreX() > room.x + room.width - 64 && level.portal().centreX() < room.x + room.width);
+        assertEquals(level.player.position.y + level.player.size.y, level.portal().centreY() + 24, 0.01f, "it stands on the hero's floor line");
+        level.resetCurrentRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
+        assertTrue(!level.portal().placed(), "a retry of the boss room clears it");
     }
 
     /** One room change of forest-1, with or without the effects, then a retry and a restart: what the player keeps must be identical. */

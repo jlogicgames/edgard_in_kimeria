@@ -28,6 +28,8 @@ public final class PortalFx {
 
     /** pixelfx's arcane ramp ({@code 481c88 6b2cc0 9a48ec c684ff ecc8ff}) as floats, index 0 to 4: deep, mid, bright, pale, near white; the deep step is not used. */
     private static final float[] VIOLET = {.282f, .110f, .533f, .420f, .173f, .753f, .604f, .282f, .925f, .776f, .518f, 1f, .925f, .784f, 1f};
+    /** The level-end ramp (#605): deep amber, leaning orange and redder than the honey fungus and the gold of fire, ending near white; same steps as {@link #VIOLET}. */
+    private static final float[] AMBER = {.478f, .227f, .063f, .722f, .380f, .110f, .910f, .537f, .180f, 1f, .761f, .467f, 1f, .941f, .839f};
     private static final int MID = 1, BRIGHT = 2, PALE = 3, WHITE = 4, STRIDE = 3, GREEN = 1, BLUE = 2;
 
     /** Streams: spawns per second, life range, ring of the oval (rho) it runs between, turns it sweeps, and its size. */
@@ -50,13 +52,16 @@ public final class PortalFx {
     private float cx, cy, rx, ry, clock;
     private float rimDue, armDue, infallDue, haloDue, poolDue, hotDue;
     private float haloTurn;
-    private boolean placed;
+    private boolean placed, levelEnd;
+    private float[] ramp = VIOLET;
 
     /** The soft light, for tests and the preview. */
     public KimeriaParticleSystem light() { return light; }
     /** The motes, for tests and the preview. */
     public KimeriaParticleSystem motes() { return motes; }
     public boolean placed() { return placed; }
+    /** True when the portal marks the end of the level (amber) and not a room exit (violet). */
+    public boolean levelEnd() { return levelEnd; }
     public float centreX() { return cx; }
     public float centreY() { return cy; }
     public float radiusX() { return rx; }
@@ -66,8 +71,15 @@ public final class PortalFx {
     public static float halfHeight(float h) { return Math.max(MIN_HALF_HEIGHT, Math.min(MAX_HALF_HEIGHT, h / 2f)); }
 
     /** Puts the portal on the exit rectangle (x, y its top left, w by h) and drops what the last room left. */
-    public void place(float x, float y, float w, float h) {
+    public void place(float x, float y, float w, float h) { place(x, y, w, h, false); }
+
+    /** Puts the amber portal that marks where the level ends (#605): the same door as a room exit with another colour; cosmetic. */
+    public void placeLevelEnd(float x, float y, float w, float h) { place(x, y, w, h, true); }
+
+    private void place(float x, float y, float w, float h, boolean end) {
         clear();
+        levelEnd = end;
+        ramp = end ? AMBER : VIOLET;
         cx = x + w / 2f;
         ry = halfHeight(h);
         rx = ry * WIDTH_RATIO;
@@ -79,7 +91,8 @@ public final class PortalFx {
         light.clear();
         motes.clear();
         clock = rimDue = armDue = infallDue = haloDue = poolDue = hotDue = haloTurn = 0;
-        placed = false;
+        placed = levelEnd = false;
+        ramp = VIOLET;
     }
 
     public void update(float dt) {
@@ -113,12 +126,12 @@ public final class PortalFx {
 
     private void orbit(RandomXS128 random, float startTurn, float sweep, float rhoFrom, float rhoTo, float life, int colour, float size) {
         motes.spawnOrbit(cx, cy, rx, ry, startTurn, sweep, rhoFrom, rhoTo, life, size,
-            VIOLET[colour * STRIDE], VIOLET[colour * STRIDE + GREEN], VIOLET[colour * STRIDE + BLUE]);
+            ramp[colour * STRIDE], ramp[colour * STRIDE + GREEN], ramp[colour * STRIDE + BLUE]);
     }
 
     private void glow(float size, float startTurn, float sweep, float rhoFrom, float rhoTo, float life, int colour, float strength) {
         light.spawnOrbit(cx, cy, rx, ry, startTurn, sweep, rhoFrom, rhoTo, life, size,
-            VIOLET[colour * STRIDE] * strength, VIOLET[colour * STRIDE + GREEN] * strength, VIOLET[colour * STRIDE + BLUE] * strength);
+            ramp[colour * STRIDE] * strength, ramp[colour * STRIDE + GREEN] * strength, ramp[colour * STRIDE + BLUE] * strength);
     }
 
     /** Soft light first, then the sparks over it; each pool restores white and normal blending. */

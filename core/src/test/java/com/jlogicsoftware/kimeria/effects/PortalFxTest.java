@@ -59,4 +59,23 @@ class PortalFxTest {
         assertEquals(a.motes().count(), b.motes().count());
         for (int i = 0; i < a.motes().count(); i++) assertEquals(a.motes().x(i), b.motes().x(i), 0f);
     }
+
+    /** #605: the level-end ramp is amber (red above green above blue), the room ramp stays violet (blue above red), and clear goes back to violet. */
+    @Test void theLevelEndRampIsAmberAndTheRoomRampStaysViolet() {
+        PortalFx p = new PortalFx();
+        p.placeLevelEnd(0, 0, 16, 32);
+        assertTrue(p.levelEnd());
+        for (int i = 0; i < 180; i++) p.update(STEP);
+        assertTrue(p.motes().count() > 0 && p.light().count() > 0);
+        for (int i = 0; i < p.motes().count(); i++)
+            assertTrue(p.motes().red(i) >= p.motes().green(i) && p.motes().green(i) > p.motes().blue(i), "an amber mote: red, then green, then blue");
+        for (int i = 0; i < p.light().count(); i++) assertTrue(p.light().red(i) > p.light().blue(i), "amber light");
+        p.place(0, 0, 32, 48);
+        assertTrue(!p.levelEnd());
+        for (int i = 0; i < 180; i++) p.update(STEP);
+        for (int i = 0; i < p.motes().count(); i++) assertTrue(p.motes().blue(i) > p.motes().green(i), "a violet mote: blue above green");
+        p.placeLevelEnd(0, 0, 16, 32);
+        p.clear();
+        assertTrue(!p.levelEnd());
+    }
 }
