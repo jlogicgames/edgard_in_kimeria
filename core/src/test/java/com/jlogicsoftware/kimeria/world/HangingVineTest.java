@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * The stone-linked scenery vine (#239 step 5, docs/ART_DIRECTION.md section 2): the Tiled type, the swing a falling
  * stone's impact starts, the Screen shake option, pause, and the placement of the vines in the shipped maps.
  *
- * <p>Y grows downward: a vine's {@code y} is its top (anchor) edge, which must be the room's ceiling line, and it hangs to
+ * <p>Y grows downward: a vine's {@code y} is its top (anchor) edge, which must be the room's ceiling line or the underside of a solid block (#550), and it hangs to
  * {@code y + height}.
  */
 class HangingVineTest {
@@ -159,7 +159,10 @@ class HangingVineTest {
                     Rectangle rect = new Rectangle(v.getX(), v.getY(), v.getWidth(), v.getHeight());
                     String label = map + " vine at " + rect;
                     Rectangle bounds = level.currentRoomBounds();
-                    assertEquals(bounds.y, rect.y, label + ": the top edge is the room's ceiling line (world Y grows downward)");
+                    // #550: the room's ceiling line, or the underside of a collision block over the vine (the rule of check_tiled_links.py).
+                    boolean underBlock = level.collisionBlocks.stream().anyMatch(b -> b.isActive() && !b.isQuickSand()
+                        && b.getY() + b.getHeight() == rect.y && rect.x < b.getX() + b.getWidth() && rect.x + rect.width > b.getX());
+                    assertTrue(rect.y == bounds.y || underBlock, label + ": the top edge is the room's ceiling line or the underside of a solid block (world Y grows downward)");
                     // Rectangle.contains is strict at the edges, and the vine touches the top edge by design.
                     assertTrue(rect.x >= bounds.x && rect.y >= bounds.y && rect.x + rect.width <= bounds.x + bounds.width
                         && rect.y + rect.height <= bounds.y + bounds.height, label + " must lie inside its room");
