@@ -171,6 +171,16 @@ DIALOGUE_SHEETS = {
 DIALOGUE_IMAGES = {name: (size[0] * len(frames), size[1]) for name, (size, frames) in DIALOGUE_SHEETS.items()}
 # Frames with no transparent pixel (bands with an opaque fill); the rest keep binary alpha.
 OPAQUE_DIALOGUE_IMAGES = {'window', 'plate', 'box', 'page', 'choice'}
+# The boss health bar (#543): hand-drawn grids in art/ui/boss -> assets/images/ui/boss/<name>.png, one frame each; name -> size.
+# BossHud draws the frame at (0, 0) and twelve segments in its well; the sizes are its FRAME_* and SEGMENT_* constants.
+BOSS_HUD_SHEETS = {'frame': (224, 26), 'segment-filled': (14, 16), 'segment-empty': (14, 16)}
+# The frame is a plate with an opaque well (no transparent pixel); the segments keep binary alpha.
+OPAQUE_BOSS_HUD_IMAGES = {'frame'}
+# The bar's layout, BossHud's SEGMENT_*, INSET_* and Boss.MAX_ENERGY: twelve slots at INSET + i * PITCH (width 14 + gap 3).
+BOSS_HUD_SLOTS, BOSS_HUD_INSET, BOSS_HUD_PITCH = 12, (12, 5), 17
+BOSS_HUD_WELL_MARGIN = 10  # the well starts this far from each side of the frame, past the end cap
+# The tolerated gap in mean OKLab L between a filled and an empty segment; the pair it replaced measured 0.205.
+BOSS_HUD_FILL_GAP_MIN = 0.2
 # The Kimeria arms (#350, #416, D95): hand-drawn grid art/ui/arms/arms.grid -> assets/images/ui/kimeria-arms.png, one strip.
 # Frame `lit` is the reference drawing art/heraldry/kimeria-arms.png; the others are the sun lighting up on the ending page.
 ARMS_FRAME_SIZE = (24, 36)

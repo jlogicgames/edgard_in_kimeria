@@ -1078,6 +1078,41 @@ def check_fairy(images):
     return errors, report
 
 
+BOSS_HUD_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/ui/BossHud.java'
+BOSS_HUD_FRAME = 'assets/images/ui/boss/frame.png'
+BOSS_HUD_NAME = 'BossHud:frame'
+
+
+def check_boss_hud(scenes, roots):
+    """Errors for the boss health bar's frame (#543, active tier) and its worst outline for the report. The bar is drawn at a fixed
+    screen place (x centred, y BossHud.TOP) over the boss room, so the frame is measured over the background the game draws there at
+    every steady camera x of that room and at the room's highest and lowest camera y; the segments' own contrast is the test of
+    tools/test_boss_hud_sprites.py (a lit gem against a dark socket inside the frame's well)."""
+    name = next((n for n, root in roots.items() if any(o.get('type') == 'Boss' for o in root.iter('object'))), None)
+    if name is None:
+        return [f'{BOSS_HUD_NAME}: no map places a Boss, so the frame was never measured'], {}
+    root, scene = roots[name], scenes[name]
+    boss = next(o for o in root.iter('object') if o.get('type') == 'Boss')
+    room_x, room_y, room_w, room_h = room_of(root, float(boss.get('x')), float(boss.get('y')))
+    frame = Image.open(ROOT / BOSS_HUD_FRAME).convert('RGBA')
+    hud_x, hud_y = (VIEW_WIDTH - frame.width) // 2, int(float(re.search(r'\bTOP\s*=\s*([0-9.]+)', (ROOT / BOSS_HUD_JAVA).read_text(encoding='utf-8')).group(1)))
+    worst = (1.0, None, None)
+    for cam in scene.cameras(room_x + 1, room_y + 1, 1, SCENERY_CAMERA_STEP):
+        left = (0 if cam is None else cam) + hud_x
+        for top in sorted({int(room_y), int(room_y + max(room_h - VIEW_HEIGHT, 0))}):
+            box = scene.clamp((left - 1, top + hud_y - 1, left + frame.width + 1, top + hud_y + frame.height + 1))
+            for image in scene.backgrounds(box, cam):
+                outline, _ = measure(frame, image, left - box[0], top + hud_y - box[1])
+                if outline is not None and outline < worst[0]:
+                    worst = (outline, cam, top)
+    outline, cam, top = worst
+    if cam is None and outline == 1.0:
+        return [f'{BOSS_HUD_NAME}: the frame was never measured'], {}
+    errors = [f'{BOSS_HUD_NAME} (active): outline {outline:.3f} < {ACTIVE_OUTLINE_MIN} in {name} at camera x {cam} y {top}'] \
+        if outline < ACTIVE_OUTLINE_MIN else []
+    return errors, {BOSS_HUD_NAME: outline}
+
+
 def tile_report(roots):
     """Report only (#189): mean outline and body of the tile scenery against each map's background colour. The categories are tile
     ids of the props in the play sheet (TILESET), so only the maps that draw that sheet are reported; the others are returned in `skipped`
@@ -1386,6 +1421,10 @@ def run():
         errors.append(f'{key}: no body was measured for the monster placed in {name} (object {index}; no spot, or never on screen)')
     fairy_errors, fairy = check_fairy(scenes)
     errors.extend(fairy_errors)
+    hud_errors, hud = check_boss_hud(scenes, roots)
+    errors.extend(hud_errors)
+    for name, outline in hud.items():
+        results[name] = [('boss room', 0, outline, 0.0, None)]
     for name, outline in fairy.items():
         results[name] = [('sweep', 0, outline, 0.0, None)]
     trunk_errors, _ = check_trunk_soil()

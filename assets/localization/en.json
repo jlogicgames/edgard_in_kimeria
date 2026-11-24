@@ -77,6 +77,7 @@
   "HINT_TUTORIAL_WALK": "Walk right to find the way out",
   "HINT_LEVER_TORCH": "Use the lever to start the platform or stop it",
   "HINT_LEVER_EXIT": "Platform moving or still, the way is open. Head for the exit",
+  "HINT_LEVER_BOTH": "Use the lever to move the ladder and the platform",
   "HINT_LADDER_LEVER": "Use the lever to lower the ladder or raise it",
   "HINT_LADDER_CLIMB": "Climb the ladder when it is down",
   "HINT_LADDER_EXIT": "Head for the exit ahead",
