@@ -146,7 +146,7 @@ parallax layers"). A change to a layer or a foreground piece goes through `tools
 --game` (`validateParallax`) must pass: the foreground never covers a protected object (rule B) and never hides the hero. Colours follow depth (D120): the foreground and the decor tier take a neutral dark
 palette with real hues (leaf green, bark brown, moss; not black, not grey ghosts), and mid, grove and far turn bluer, lighter and greyer with
 depth; the sky, the moon and the gameplay objects keep theirs. Draw code stays
-allocation free (`AllocationBudgetTest`). Status: proposed, awaiting the author ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+allocation free (`AllocationBudgetTest`). Status: accepted by the author, 2026-11-24 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
 
 ## Branches grow from trunks (D122)
 

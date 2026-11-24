@@ -3653,8 +3653,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D108. The Forest parallax layers are read and drawn by the game: scenery apart from the play layer, a foreground per room ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
-- **Status:** Proposed. Built in forest-1 (2026-11-19) from the card "Forest look and parallax layers" in
-  [ART_DIRECTION.md](ART_DIRECTION.md); the card and this number wait for the author's approval ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); nothing below is final until then.
+- **Status:** Accepted (author, 2026-11-24). Built in forest-1 (2026-11-19) from the card "Forest look and parallax layers" in
+  [ART_DIRECTION.md](ART_DIRECTION.md); the card and this number waited for the author's approval ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)), given on 2026-11-24.
 - **Problem:** `TiledMapData` merged every tile layer into one play grid and had no notion of parallax, offsets, opacity or a second tileset,
   so a layered night forest could not exist in the game.
 - **Decision:** (1) a tile layer is *scenery* when it has a `parallaxx` or `parallaxy` attribute or the layer property `scenery=true`; scenery
@@ -3768,8 +3768,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D112. forest-0 and forest-2 take the Forest look, and the third-party terrain sheet is retired ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
-- **Status:** Proposed, 2026-11-20, with D108 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the canopy clumps and the recolours below
-  wait for the author's look like the rest of the card.
+- **Status:** Accepted (author, 2026-11-24); proposed 2026-11-20 with D108 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the canopy clumps and the recolours below
+  waited for the author's look like the rest of the card.
 - **Problem:** forest-0 (6 rooms) and forest-2 (5 rooms) still drew the flat `2c3f66` and the third-party `Tileset.png`: two games side by
   side, a seam through the ground at every room edge (the blocks' outlined ends met there) and a straw rope, the grab cue's colour, over
   every room-edge wall.
@@ -3810,7 +3810,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D113. The foreground takes big near pieces, drawn by hand ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
-- **Status:** Proposed, 2026-11-21, with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waits for
+- **Status:** Accepted (author, 2026-11-24); proposed 2026-11-21 with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waited for
   the author like the rest of the card; the author accepted the copy-only `stamp.py` on 2026-11-21 (below).
 - **Problem:** the author asked for a foreground that reads as right in front of the camera: big, dark shapes (Hollow Knight, Dead Cells),
   not the thin strands and small clumps of `fg.grid`. The earlier big pieces (`trunk-near`, `rise-trunk`) read as flat black slabs. Two
@@ -3850,7 +3850,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D114. Terrain blocks get faces, an underside and soil variants ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
-- **Status:** Proposed, 2026-11-21, with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waits for
+- **Status:** Accepted (author, 2026-11-24); proposed 2026-11-21 with D108 and D112 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); the look waited for
   the author like the rest of the card.
 - **Problem:** the art review of the forest maps found the raised blocks flat: no side light, no underside, no bottom edge under an overhang
   (`forest-1-guard`, the block at x 192 to 448; `forest-1-lever`), and the soil body repeating one motif every 16 px.
