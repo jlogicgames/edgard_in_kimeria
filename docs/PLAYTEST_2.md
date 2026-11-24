@@ -70,7 +70,7 @@ The feedback arrived in Ukrainian; it is translated here (AGENTS.md: docs are En
 | # | Feedback | Analysis | Decision | Issue |
 | --- | --- | --- | --- | --- |
 | F30 | Give the boss a name instead of the word "Boss". | `BossHud` shows `Msg.BOSS` ("Boss", "Бос"). STORY.md calls it the forest guardian (uk "лісовий вартовий", pl "strażnik lasu", de "Waldwächter", be "лясны вартавы"); no personal name exists. | Author, 2026-11-21: the label is "Forest Guardian", the tale name, in all five languages. | [#542](https://github.com/jlogicgames/edgard_in_kimeria/issues/542) |
-| F31 | The boss room's health elements look like ceiling decoration; make them more detailed, like the fireball icon. | `BossHud` draws a 224x26 frame with 12 filled or empty 14x16 segments at the top; the PNGs can be replaced at the same size (`images/ui/boss/README`). The fireball HUD icon is a detailed 128 px drawing. | Proposal (not yet approved): redraw the frame and the segments with that detail, same sizes, no code change. | [#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543) |
+| F31 | The boss room's health elements look like ceiling decoration; make them more detailed, like the fireball icon. | `BossHud` draws a 224x26 frame with 12 filled or empty 14x16 segments at the top; the PNGs can be replaced at the same size (`images/ui/boss/README`). The fireball HUD icon is a detailed 128 px drawing. | Author, 2026-11-24: variant A, an iron plate with ruby segments ([art direction](ART_DIRECTION.md#boss-health-bar-playtest-2-f31-543)); same sizes, no code change. | [#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543) |
 
 ### Mechanics and controls
 
