@@ -1050,6 +1050,7 @@ A plan agreed with the author; the built effects are listed below. [patch-gg/pix
 credit are in `THIRD_PARTY_NOTICES.md`. `KimeriaParticleSystem` gained `KIND_ORBIT` (a point riding an ellipse: centre, radii, start turn, sweep, radius factor from and to; additive; alpha ramps in and out over a quarter of its life each) and a render overload that scales every alpha.
 - **Portal (`PortalFx`):** a violet oval on every `RoomExit` (pixelfx's arcane ramp `481c88 6b2cc0 9a48ec c684ff ecc8ff`): a sparking rim, three arms of motes winding in, motes pulled in, a soft light on the rim and a hot spot running round with the
   spin. **Light only**, drawn behind every object and the hero, so it never hides anything and darkens nothing; the exit trigger is unchanged. 256 motes and 48 lights at most; 0.0 B/frame.
+- **Level-end portal (#605, D123 extended):** the same `PortalFx` with a deep amber ramp (`7a3a10 b8611c e8892e ffc277 fff0d6`) on the final `Checkpoint` of a level without a boss; in the boss level it opens at the right end of the boss room, on the hero's floor line, when the boss dies, where the victory walk leaves. Violet means the next room, amber the end of the level. Cosmetic: `Checkpoint` and the victory walk are unchanged.
 - **Room ripple (`RoomRippleFx`):** three violet rings one after another (`shockwave.frag` through `RingPool`), motes pulled into the hero on leaving and sent out on entering, and the existing `RippleEffect` screen distortion; a 0.20 s clear pause before the fade (D123).
 - **Soft lights (`SoftGlowFx`):** the pickup's warm light and the fairy's aqua light and target marks (D124); the PNG glows are removed.
 - **Review frames:** `docs/references/pixelfx/` (`portals-forest-1.png`, `room-ripple-strip.png`, `glows-old-vs-new.png`), composed from the real effect states over the real forest backgrounds and sprites by a throwaway script (CPU approximation, not kept in the repo), uncaptioned: portals are bramble, edge, climb, ground across and two moments down; the ripple is leave over enter; the glows are old, new, new 0.4 s later across.
@@ -1428,7 +1429,8 @@ Reserved accent hues (active only):
 - lime (spores);
 - ember and gold (`ffd23a`, fire, coin);
 - the honey (`e2b25a`) and sulphur (`dcdc50`) of the fungi;
-- the violet of the Bat and Mushroom pickups.
+- the violet of the Bat and Mushroom pickups and of the room portal;
+- the deep amber of the level-end portal (`7a3a10 b8611c e8892e ffc277 fff0d6`, #605): more orange and redder than the honey and the gold, a slow swirl with no flicker (the torch and the fireball flicker).
 
 In short: **ink and accent colour mean "interact with me"; scenery gets neither.** Contrast is necessary, not
 sufficient. The stump measured 0.39 and still read as scenery by shape and colour (F18), so D71's silhouette and
