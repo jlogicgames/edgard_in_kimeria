@@ -1,0 +1,37 @@
+# Intro book (#536, D133): the left leaf; the right leaf is its mirror. Outer side (left) and bottom show the stacked
+# page edges; the right side darkens into the gutter. Nine-patch, insets 8 px; the middle is plain parchment.
+size 24 24
+color k 2a1d12
+color E d2c39c
+color F 8f7b56
+color q c6b38b
+color p b8a47c
+color r a69168
+color s 8f7b56
+color t 6a5839
+frame left
+kkkkkkkkkkkkkkkkkkkkkkkk
+kEFqqqqqqqqqqqqqqqqqqrst
+kEFEqqqqqqqqqqqqqqqqprst
+kEFEFppppppppppppppprrst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrppppppppppppprrsst
+kEFEFrrrrrrrrrrrrrrrrsst
+kEFEFFFFFFFFFFFFFFFFFFst
+kEFEEEEEEEEEEEEEEEEEEEst
+kEFFFFFFFFFFFFFFFFFFFFFt
+kEEEEEEEEEEEEEEEEEEEEEEt
+kFFFFFFFFFFFFFFFFFFFFFFk
+kkkkkkkkkkkkkkkkkkkkkkkk
+frame right flip left

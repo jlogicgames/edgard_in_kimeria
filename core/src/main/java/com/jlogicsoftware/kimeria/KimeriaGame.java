@@ -484,14 +484,24 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void newGame() {
         savedProgress.clear();
-        openStory(Msg.INTRO_STORY, UiState.INTRO);
+        startStory(IntroScreen.openBook(introLeaves(), overlay, assets, LOGICAL_W, instantText()), UiState.INTRO);
     }
 
     private boolean storyScreenActive() { return uiState == UiState.INTRO || uiState == UiState.ENDING; }
 
-    /** Opening and ending share the same static pages (#336), fade, music and fresh-input rules; the ending adds the arms (#416). */
+    /** The ending on black pages (#336) with the arms (#416, D95); the opening is {@link #startStory} on its book (D133). Both share the fade, music and fresh-input rules. */
     private void openStory(Msg message, UiState state) {
-        intro = IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null);
+        startStory(IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null), state);
+    }
+
+    /** The six leaves of the opening on its book (#535, #536, D133), in the player's language. */
+    private String[] introLeaves() {
+        return new String[] {Msg.INTRO_LEAF_1.t(language), Msg.INTRO_LEAF_2.t(language), Msg.INTRO_LEAF_3.t(language),
+            Msg.INTRO_LEAF_4.t(language), Msg.INTRO_LEAF_5.t(language), Msg.INTRO_LEAF_6.t(language)};
+    }
+
+    private void startStory(IntroScreen screen, UiState state) {
+        intro = screen;
         float hintRight = LOGICAL_W - IntroScreen.SKIP_HINT_MARGIN;
         intro.setSkipHints(overlay.hintBlock(Msg.INTRO_SKIP_KEYBOARD.t(language), hintRight, IntroScreen.SKIP_HINT_TOP),
             overlay.hintBlock(Msg.INTRO_SKIP_GAMEPAD.t(language), hintRight, IntroScreen.SKIP_HINT_TOP));

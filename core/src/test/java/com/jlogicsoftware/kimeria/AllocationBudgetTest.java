@@ -1603,7 +1603,7 @@ class AllocationBudgetTest {
     /** The dialogue screen (D78, #337): measured in the tale (instant text off and on) and the pre-boss cases; see healerDialogueScreen. */
     static final double DIALOGUE_SCREEN_CEILING = 8;
     static final int DIALOGUE_SELECT_FRAMES = 60;
-    static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
+    static final int PAGED_INTRO_COPIES = 100, INTRO_BOOK_COPIES = 40, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     /** Enough endings for the warm-up and the measured window (25 s): one lasts about 7 s (today's ending lights with its third paragraph), or 3 s with instant text (#416). */
     static final int ENDING_COPIES = 12;
     /** Thorn roots at rest, warning, rising and up inside the measured window (#359, thornRootsRiseInTurn): measured 0.0 B/frame in 2 full-suite runs and 1.5 in 2 isolated runs (2026-11-17). Before #359: 64.0 B/frame (a new {@code Rectangle} per zone or column test). */
@@ -1996,42 +1996,64 @@ class AllocationBudgetTest {
         }
     }
 
+    /** The story on black, packed greedily: the ending's path (D77), measured over many copies so pages keep turning. */
     @Test void pagedIntro() {
         harness.font = new MetricsFont(FontSizes.BODY);
         String opening = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
-            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("INTRO_STORY");
-        String story = String.join("\n\n", java.util.Collections.nCopies(PAGED_INTRO_COPIES, opening));
+            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("ENDING_STORY");
+        String story = String.join("\n\n", java.util.Collections.nCopies(2 * PAGED_INTRO_COPIES, opening));
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+            IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
+            assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
+            measurePagedStory("paged intro", overlay, intro, instant);
+        }
+    }
+
+    /** The opening on its book (D133): leaves, spreads, the leaf in flight, in the story font; the same budget as the pages on black. */
+    @Test void introBook() {
+        harness.font = new MetricsFont(FontSizes.STORY);
+        java.util.Map<String, String> english = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
+            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8"));
+        String[] leaves = new String[INTRO_BOOK_COPIES * 6];
+        for (int i = 0; i < leaves.length; i++) leaves[i] = english.get("INTRO_LEAF_" + (i % 6 + 1));
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+            IntroScreen intro = IntroScreen.openBook(leaves, overlay, harness.assets(), 640, instant);
+            assertEquals(leaves.length, intro.pages().pageCount(), "one page per leaf");
+            measurePagedStory("intro book", overlay, intro, instant);
+        }
+    }
+
+    private void measurePagedStory(String name, Overlay overlay, IntroScreen intro, boolean instant) {
         // The harness's proxied Gdx.input allocates an argument array on every call (24 B), and the skip button polls
         // TOUCH_POINTERS pointers a frame; that is the harness, not the button, so it is measured alone and subtracted.
         double harnessInput = AllocationProbe.bytesPerFrame(i -> {
             for (int pointer = 0; pointer < TOUCH_POINTERS; pointer++) com.badlogic.gdx.Gdx.input.isTouched(pointer);
         });
         System.out.printf("ALLOCATION harness input polling alone: %.1f B/frame%n", harnessInput);
-        for (boolean instant : new boolean[]{false, true}) {
-            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
-            IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
-            assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
-            // The skip hint (D118): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
-            intro.setSkipHints(overlay.hintBlock("Esc: skip", 628f, IntroScreen.SKIP_HINT_TOP), overlay.hintBlock("Start: skip", 628f, IntroScreen.SKIP_HINT_TOP));
-            intro.skipHint(IntroScreen.SkipHint.KEYBOARD);
-            // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
-            TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
-            int[] turned = new int[1];
-            double bytes = AllocationProbe.bytesPerFrame(i -> {
-                touch.updateSkip();
-                touch.renderSkipButton(batch);
-                intro.update(STEP);
-                if (intro.turn()) turned[0]++;
-                overlay.beginFrame();
-                intro.render(batch, overlay);
-                overlay.flushText(batch);
-            });
-            assertTrue(turned[0] > 10, "pages must keep turning during the measurement: " + turned[0]);
-            assertTrue(intro.state() != IntroScreen.State.DONE, "the story must still be running at the end");
-            System.out.printf("ALLOCATION paged intro with the skip button, instant text %s: %.1f B/frame in all, %.1f of it the harness's input proxy%n",
-                instant ? "on" : "off", bytes, harnessInput);
-            assertWithinBudget("paged intro, instant text " + (instant ? "on" : "off") + ", without the harness input proxy", PAGED_INTRO_CEILING, Math.max(0, bytes - harnessInput));
-        }
+        // The skip hint (D118): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
+        intro.setSkipHints(overlay.hintBlock("Esc: skip", 628f, IntroScreen.SKIP_HINT_TOP), overlay.hintBlock("Start: skip", 628f, IntroScreen.SKIP_HINT_TOP));
+        intro.skipHint(IntroScreen.SkipHint.KEYBOARD);
+        // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
+        TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
+        int[] turned = new int[1];
+        float[] flown = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            touch.updateSkip();
+            touch.renderSkipButton(batch);
+            intro.update(STEP);
+            if (intro.turn()) turned[0]++;
+            if (intro.flight() > 0f) flown[0]++;
+            overlay.beginFrame();
+            intro.render(batch, overlay);
+            overlay.flushText(batch);
+        });
+        assertTrue(turned[0] > 10, "pages must keep turning during the measurement: " + turned[0]);
+        assertTrue(intro.state() != IntroScreen.State.DONE, "the story must still be running at the end");
+        System.out.printf("ALLOCATION %s with the skip button, instant text %s: %.1f B/frame in all, %.1f of it the harness's input proxy, %d frames with a leaf in flight%n",
+            name, instant ? "on" : "off", bytes, harnessInput, (int) flown[0]);
+        assertWithinBudget(name + ", instant text " + (instant ? "on" : "off") + ", without the harness input proxy", PAGED_INTRO_CEILING, Math.max(0, bytes - harnessInput));
     }
 
     /** The debug FPS text asked for every frame while the rate changes every {@value #FPS_CHANGE_FRAMES} frames. */
