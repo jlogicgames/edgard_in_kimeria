@@ -78,15 +78,15 @@ packaged in releases; no retained screenshot artifact is claimed.
 ## Remaining human/device review
 
 New Polish, German and Belarusian wording should receive native-speaker review.
-The #228 silver-thread strings (`HEALER_TALE_THREAD` and the added sentence in `INTRO_STORY`) are
+The #228 silver-thread strings (`HEALER_TALE_THREAD` and the added sentence in the old `INTRO_STORY`, now `INTRO_LEAF_5`) are
 machine-quality drafts in all four non-English catalogs and belong to that review (UK and BE
 included). Metrics: the new line wraps to 3 lines / 37 px in all five languages (limit 72 px).
-The #340 fire-gift strings (`HEALER_TALE_FIREGIFT` and the added sentence in `INTRO_STORY`) are
+The #340 fire-gift strings (`HEALER_TALE_FIREGIFT` and the added sentence in the old `INTRO_STORY`) are
 machine-quality drafts in uk, be, de and pl and join that review, tracked in
 [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369). Metrics (QuestSquare-18, 370.67 px
 region, limit 72 px): 4 lines in all five languages, widest line EN 363, UK 365, PL 367, DE 365, BE 356 px
-(about 66 px high by font metrics; `HealerDialogueTest` asserts the 72 px limit). The added `INTRO_STORY`
-sentence only lengthens the scrolling opening text.
+(about 66 px high by font metrics; `HealerDialogueTest` asserts the 72 px limit). The added sentence of the old `INTRO_STORY`
+only lengthened the opening text; the opening is now six leaves ([D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)), measured in `IntroPagesTest`.
 The #338 fairy strings (`HEALER_TALE_FAIRY`, and the fairy words changed in `HEALER_TALE_FAIRIES`,
 `HEALER_TALE_LIFT` and `HEALER_TALE_BLESSING`) are machine-quality drafts in uk, pl, de and be and join the same
 review ([#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)). `HealerDialogueTest` fits every line in the D78 text box in all five languages.

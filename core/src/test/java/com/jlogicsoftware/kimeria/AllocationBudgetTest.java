@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.jlogicsoftware.kimeria.effects.FlightFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.Shaders;
 import com.jlogicsoftware.kimeria.effects.SoftDot;
@@ -1177,6 +1179,74 @@ class AllocationBudgetTest {
         assertWithinBudget("pickup sparks", PICKUP_SPARKS_CEILING, bytes);
     }
 
+    /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-24, D132, #557; the same 8 B ceiling as the other isolated effects): the HUD's {@code FlightFx}, a pickup's pop and flight started every 6 frames (faster than any coin row; six to eight flights live at once), their trails and landing twinkles, update and render every frame. */
+    static final double PICKUP_FLIGHT_CEILING = 8;
+    /** Measured 0.4, 0.4 and 0.4 B/frame in 3 runs (2026-11-24, D132, #539; 0.0 in a reviewer's run; the same 8 B ceiling): the tale at the fairy's line, her light and her hover, update and render every frame through the real view. */
+    static final double DIALOGUE_FLIGHT_CEILING = 8;
+
+    @Test void pickupFlights() {
+        FlightFx fx = new FlightFx(1);
+        TextureRegion sprite = new TextureRegion();
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % 6 == 0) {
+                fx.start(sprite, 300, 200, 300, 194, 0, 16, 20, 0, .12f, FlightFx.EASE_OUT, 1f, 1, .957f, .667f, false, false);
+                fx.start(sprite, 300, 194, 26, 26, 24, 20, 10, .12f, .40f, FlightFx.EASE_IN, .65f, 1, .957f, .667f, true, true);
+            }
+            fx.update(STEP);
+            fx.render(batch);
+            peak[0] = Math.max(peak[0], fx.count());
+        });
+        assertTrue(peak[0] >= 6, "the scenario must keep several flights live: " + peak[0]);
+        assertWithinBudget("pickup flights", PICKUP_FLIGHT_CEILING, bytes);
+    }
+
+    @Test void dialogueFlightsAndTheFairy() {
+        harness.font = new MetricsFont(FontSizes.DIALOGUE);
+        Level level = harness.roomOf("forest-1", 3);
+        ArtifactInventory inventory = new ArtifactInventory();
+        Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+        HealerDialogueView view = new HealerDialogueView(harness.assets());
+        HealerDialogue tale = HealerDialogue.tutorialStart();
+        tale.setInstantText(true);
+        while (tale.currentLine() != Msg.HEALER_TALE_FAIRY) tale.advance(Language.ENGLISH);
+        tale.setInstantText(false);
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            tale.update(STEP);
+            view.update(STEP, tale);
+            overlay.beginFrame();
+            view.render(batch, overlay, tale, Language.ENGLISH, level, inventory);
+            overlay.flushText(batch);
+        });
+        assertTrue(view.fairyShown(), "the fairy must be on screen");
+        assertWithinBudget("dialogue fairy", DIALOGUE_FLIGHT_CEILING, bytes);
+    }
+
+    /** The paid screen's hand-over through a real paid {@code HealerDialogue}: its four flights, trails, twinkles, the arrival glint and the elixir's light; a new paid dialogue every {@value #PAID_CYCLE_FRAMES} frames, so the event (a new dialogue and its text blocks) is in the number. */
+    @Test void paidScreenHandOver() {
+        harness.font = new MetricsFont(FontSizes.DIALOGUE);
+        Level level = harness.roomOf("forest-1", 3);
+        ArtifactInventory inventory = new ArtifactInventory();
+        Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+        HealerDialogueView view = new HealerDialogueView(harness.assets());
+        HealerDialogue[] paid = {null};
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % PAID_CYCLE_FRAMES == 0) paid[0] = new HealerDialogue(false, false, false, false, true);
+            paid[0].update(STEP);
+            view.update(STEP, paid[0]);
+            overlay.beginFrame();
+            view.render(batch, overlay, paid[0], Language.ENGLISH, level, inventory);
+            overlay.flushText(batch);
+            peak[0] = Math.max(peak[0], view.flights().count());
+        });
+        assertEquals(4, peak[0], "three items and the elixir");
+        assertWithinBudget("paid screen hand-over, a new dialogue every " + PAID_CYCLE_FRAMES + " frames", PAID_HANDOVER_CEILING, bytes);
+    }
+    static final int PAID_CYCLE_FRAMES = 300;
+    /** Measured 2.7, 2.5 and 2.5 B/frame in 3 runs (2026-11-24, D132, #541), the new dialogue and its text blocks every 300 frames included; the same 8 B ceiling. */
+    static final double PAID_HANDOVER_CEILING = 8;
+
     /** The portal on the exit of forest-1's bramble room (#552): its streams spawn, update and draw every frame, placed on the map's own exit by the real {@code Level}; the isolated number, as for the other effects (the whole room, portal included, is {@link #FOREST_1_BRAMBLE_CEILING}'s scenario). */
     @Test void portalThroughTheRealLevel() {
         Level level = harness.roomOf("forest-1", PORTAL_ROOM);
@@ -1603,7 +1673,7 @@ class AllocationBudgetTest {
     /** The dialogue screen (D78, #337): measured in the tale (instant text off and on) and the pre-boss cases; see healerDialogueScreen. */
     static final double DIALOGUE_SCREEN_CEILING = 8;
     static final int DIALOGUE_SELECT_FRAMES = 60;
-    static final int PAGED_INTRO_COPIES = 100, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
+    static final int PAGED_INTRO_COPIES = 100, INTRO_BOOK_COPIES = 40, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     /** Enough endings for the warm-up and the measured window (25 s): one lasts about 7 s (today's ending lights with its third paragraph), or 3 s with instant text (#416). */
     static final int ENDING_COPIES = 12;
     /** Thorn roots at rest, warning, rising and up inside the measured window (#359, thornRootsRiseInTurn): measured 0.0 B/frame in 2 full-suite runs and 1.5 in 2 isolated runs (2026-11-17). Before #359: 64.0 B/frame (a new {@code Rectangle} per zone or column test). */
@@ -1996,42 +2066,64 @@ class AllocationBudgetTest {
         }
     }
 
+    /** The story on black, packed greedily: the ending's path (D77), measured over many copies so pages keep turning. */
     @Test void pagedIntro() {
         harness.font = new MetricsFont(FontSizes.BODY);
         String opening = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
-            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("INTRO_STORY");
-        String story = String.join("\n\n", java.util.Collections.nCopies(PAGED_INTRO_COPIES, opening));
+            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8")).get("ENDING_STORY");
+        String story = String.join("\n\n", java.util.Collections.nCopies(2 * PAGED_INTRO_COPIES, opening));
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+            IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
+            assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
+            measurePagedStory("paged intro", overlay, intro, instant);
+        }
+    }
+
+    /** The opening on its book (D133): leaves, spreads, the leaf in flight, in the story font; the same budget as the pages on black. */
+    @Test void introBook() {
+        harness.font = new MetricsFont(FontSizes.STORY);
+        java.util.Map<String, String> english = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
+            new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8"));
+        String[] leaves = new String[INTRO_BOOK_COPIES * 6];
+        for (int i = 0; i < leaves.length; i++) leaves[i] = english.get("INTRO_LEAF_" + (i % 6 + 1));
+        for (boolean instant : new boolean[]{false, true}) {
+            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+            IntroScreen intro = IntroScreen.openBook(leaves, overlay, harness.assets(), 640, instant);
+            assertEquals(leaves.length, intro.pages().pageCount(), "one page per leaf");
+            measurePagedStory("intro book", overlay, intro, instant);
+        }
+    }
+
+    private void measurePagedStory(String name, Overlay overlay, IntroScreen intro, boolean instant) {
         // The harness's proxied Gdx.input allocates an argument array on every call (24 B), and the skip button polls
         // TOUCH_POINTERS pointers a frame; that is the harness, not the button, so it is measured alone and subtracted.
         double harnessInput = AllocationProbe.bytesPerFrame(i -> {
             for (int pointer = 0; pointer < TOUCH_POINTERS; pointer++) com.badlogic.gdx.Gdx.input.isTouched(pointer);
         });
         System.out.printf("ALLOCATION harness input polling alone: %.1f B/frame%n", harnessInput);
-        for (boolean instant : new boolean[]{false, true}) {
-            Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
-            IntroScreen intro = IntroScreen.open(story, overlay, harness.assets(), 640, instant);
-            assertTrue(intro.pages().pageCount() >= 50, "the scenario needs many pages");
-            // The skip hint (D118): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
-            intro.setSkipHints(overlay.hintBlock("Esc: skip", 628f, IntroScreen.SKIP_HINT_TOP), overlay.hintBlock("Start: skip", 628f, IntroScreen.SKIP_HINT_TOP));
-            intro.skipHint(IntroScreen.SkipHint.KEYBOARD);
-            // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
-            TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
-            int[] turned = new int[1];
-            double bytes = AllocationProbe.bytesPerFrame(i -> {
-                touch.updateSkip();
-                touch.renderSkipButton(batch);
-                intro.update(STEP);
-                if (intro.turn()) turned[0]++;
-                overlay.beginFrame();
-                intro.render(batch, overlay);
-                overlay.flushText(batch);
-            });
-            assertTrue(turned[0] > 10, "pages must keep turning during the measurement: " + turned[0]);
-            assertTrue(intro.state() != IntroScreen.State.DONE, "the story must still be running at the end");
-            System.out.printf("ALLOCATION paged intro with the skip button, instant text %s: %.1f B/frame in all, %.1f of it the harness's input proxy%n",
-                instant ? "on" : "off", bytes, harnessInput);
-            assertWithinBudget("paged intro, instant text " + (instant ? "on" : "off") + ", without the harness input proxy", PAGED_INTRO_CEILING, Math.max(0, bytes - harnessInput));
-        }
+        // The skip hint (D118): both layouts cached at load and the mode set once here; render queues the keyboard block every frame.
+        intro.setSkipHints(overlay.hintBlock("Esc: skip", 628f, IntroScreen.SKIP_HINT_TOP), overlay.hintBlock("Start: skip", 628f, IntroScreen.SKIP_HINT_TOP));
+        intro.skipHint(IntroScreen.SkipHint.KEYBOARD);
+        // The touch skip button runs every story frame on a touch device: its pointer poll and its draw.
+        TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
+        int[] turned = new int[1];
+        float[] flown = new float[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            touch.updateSkip();
+            touch.renderSkipButton(batch);
+            intro.update(STEP);
+            if (intro.turn()) turned[0]++;
+            if (intro.flight() > 0f) flown[0]++;
+            overlay.beginFrame();
+            intro.render(batch, overlay);
+            overlay.flushText(batch);
+        });
+        assertTrue(turned[0] > 10, "pages must keep turning during the measurement: " + turned[0]);
+        assertTrue(intro.state() != IntroScreen.State.DONE, "the story must still be running at the end");
+        System.out.printf("ALLOCATION %s with the skip button, instant text %s: %.1f B/frame in all, %.1f of it the harness's input proxy, %d frames with a leaf in flight%n",
+            name, instant ? "on" : "off", bytes, harnessInput, (int) flown[0]);
+        assertWithinBudget(name + ", instant text " + (instant ? "on" : "off") + ", without the harness input proxy", PAGED_INTRO_CEILING, Math.max(0, bytes - harnessInput));
     }
 
     /** The debug FPS text asked for every frame while the rate changes every {@value #FPS_CHANGE_FRAMES} frames. */

@@ -14,7 +14,7 @@ Related: [STORY.md](STORY.md) (world facts and the healer's role), [LOCALIZATION
 
 | Voice | Keys | Rules |
 | --- | --- | --- |
-| **Tale** | `INTRO_STORY`, `ENDING_STORY`, every spoken `HEALER_*` / `EDGARD_*` line (not the buttons `HEALER_RETURN`, `HEALER_BREW`, `HEALER_FIGHT`, `HEALER_HINT`) | Story words only: no control, key, button or mechanic name and no game jargon (boss, retry, checkpoint, lives, damage, list, level, HUD). Past tense for narration, present for speech. The healer addresses Edgard by name at the start of a scene. Numbers only where the tale itself counts ("ten times", "three gifts"). The healer speaks as himself; he never narrates the player's action as a system message ("You drink the elixir"). |
+| **Tale** | `INTRO_LEAF_1` to `INTRO_LEAF_6`, `ENDING_STORY`, every spoken `HEALER_*` / `EDGARD_*` line (not the buttons `HEALER_RETURN`, `HEALER_BREW`, `HEALER_FIGHT`, `HEALER_HINT`) | Story words only: no control, key, button or mechanic name and no game jargon (boss, retry, checkpoint, lives, damage, list, level, HUD). Past tense for narration, present for speech. The healer addresses Edgard by name at the start of a scene. Numbers only where the tale itself counts ("ten times", "three gifts"). The healer speaks as himself; he never narrates the player's action as a system message ("You drink the elixir"). |
 | **Plain** | `HINT_*` zone messages, `MENU_HINT`, `ABOUT_*`, `ROTATE_HINT`, `NEW_GAME_CONFIRMATION` | Imperative or a short statement of what happens. One idea per string, at most two short sentences. No tale imagery and no character names. Zone messages name no key or button: the label above the hero supplies the live binding. Zone messages follow one formula (section 1.1, [D97](DECISIONS.md#d97-zone-messages-follow-one-formula-the-cue-then-what-to-do-373-2026-11-17)). |
 | **Label** | Menu items, buttons, the label above the hero, HUD words | One to three words. Verb first for actions ("Pick up", "Put down"), a noun for targets ("Lever", "Torch"). One concept has one label everywhere (glossary below). |
 
@@ -40,7 +40,7 @@ checked by T3; the shape is a review rule.
   ([#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370)) and the first-death line (#341): opening UK
   "Слухай, Едгарде", PL "Słuchaj, Edgardzie", DE "Höre, Edgard", BE "Слухай, Эдгардзе"; closing UK "Рушай",
   PL "Ruszaj", DE "Geh weiter", BE "Рушай". The ending ([#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372))
-  is the healer's tale too: it opens "Hear how my tale ends" and closes with the tale's own ending formula, EN "So ends my
+  is the healer's tale too, and so is the opening ([D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)): it opens "Hear my tale of Kimeria, and hear it to the end" (UK "Послухай мою казку про Кімерію, і дослухай її до кінця", PL "Posłuchaj mojej opowieści o Kimerii i wysłuchaj jej do końca", DE "Höre meine Geschichte von Kimeria, und höre sie bis zum Ende", BE "Паслухай маю казку пра Кімерыю і даслухай яе да канца"), begins the tale with the tradition's own "once upon a time" (UK "Жило-було колись", PL "Dawno, dawno temu", DE "Es war einmal", BE "Жыло-было калісьці") and closes "a tale is soon told, but a deed is not soon done" (UK "Швидко казка мовиться, та не швидко діло робиться", PL "Prędko się bajka opowiada, ale nie prędko się czyn dokonuje", DE "Schnell ist ein Märchen erzählt, doch nicht so schnell eine Tat getan", BE "Хутка казка кажацца, ды не хутка справа робіцца"). The ending ([#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372)) opens "Hear how my tale ends" and closes with the tale's own ending formula, EN "So ends my
   tale of Kimeria", UK "Тут і казці про Кімерію кінець", PL "I tak kończy się moja opowieść o Kimerii", DE "So endet meine
   Geschichte von Kimeria", BE "Тут і казцы пра Кімерыю канец", followed by the closing line (THE END) in capitals.
 - **Three where it fits.** Three gifts, three warnings, three images in a list; the third is the
@@ -62,7 +62,7 @@ checked by T3; the shape is a review rule.
 | Zone message source | EN at most 60 characters and at most two sentences, leaving room for translations (German runs about 25 % longer); the formula of section 1.1 (D97) | `tools/check_text_style.py` (T3); the formula in review |
 | Label above the hero | 16 px font (D70), 200 px wide (D50); each label at most three words | `LocalizationLayoutTest`; review |
 | Dialogue line | 18 px font (D70); fits the speaker region and frame height; EN at most 160 characters, one image or one instruction per line | `HealerDialogueTest`; review |
-| Opening and ending | Per page (paged screens, [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336)): at most three paragraphs, EN at most 300 characters | Review |
+| Opening and ending | Per page (paged screens, [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336)): at most three paragraphs, EN at most 300 characters. The opening's page is a leaf of the book ([D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)): two paragraphs, 20 px font, a 236 px column, text between 40 and 304 px from the screen top, in every language | `IntroPagesTest`; review |
 
 ## 4. Glossary
 

@@ -276,4 +276,88 @@ class IntroScreenTest {
         assertEquals(IntroScreen.ENDING_TEXT_TOP, IntroScreen.split(STORY, p -> 100f, true).top(0));
         assertEquals(168f, IntroScreen.ENDING_TEXT_TOP, "arms 40..148, then 20 px to the text (D95)");
     }
+
+    // ---- the opening on its book (#535, #536, D133): a page is a leaf, two leaves a spread ----
+
+    /** Four leaves of two paragraphs each (paragraphs 0-1, 2-3, 4-5, 6-7), no art. */
+    private static IntroScreen book(boolean instant) {
+        String[] leaves = {"a\n\nb", "c\n\nd", "e\n\nf", "g\n\nh"};
+        IntroScreen intro = new IntroScreen(String.join("\n\n", leaves), IntroPages.ofLeaves(leaves, p -> 20f, IntroPages.TEXT_TOP, IntroBook.PARAGRAPH_GAP),
+            null, instant, 640f, null, null, null, true);
+        intro.update(IntroScreen.FADE_IN_SECONDS);
+        return intro;
+    }
+
+    private static void revealWhole(IntroScreen intro) { intro.update(30f); }
+
+    @Test void aPressOnTheLeftLeafMovesToTheRightLeafAndTheLeftTextStays() {
+        IntroScreen intro = book(false);
+        revealWhole(intro);
+        assertEquals(IntroScreen.Phase.WAIT, intro.phase());
+        waitOutTheLock(intro);
+        assertTrue(intro.turn());
+        assertEquals(1, intro.pageIndex(), "the right leaf of the same spread");
+        assertEquals(IntroScreen.Phase.REVEAL, intro.phase(), "no fade and no flight between the leaves of a spread");
+        assertEquals(1f, intro.paragraphAlpha(0), "the left leaf stays");
+        assertEquals(1f, intro.paragraphAlpha(1));
+        assertEquals(0f, intro.paragraphAlpha(2), "the right leaf starts from nothing");
+        assertEquals(-1f, intro.flight());
+        assertTrue(intro.locked(), "the input lock holds a held button from skipping the leaf");
+        assertFalse(intro.turn());
+    }
+
+    @Test void aPressOnTheRightLeafFadesBothLeavesThenTheLeafFliesAndTheNextSpreadStarts() {
+        IntroScreen intro = book(false);
+        revealWhole(intro); waitOutTheLock(intro); intro.turn();
+        revealWhole(intro); waitOutTheLock(intro);
+        assertEquals(IntroScreen.Phase.WAIT, intro.phase());
+        assertTrue(intro.turn());
+        assertEquals(IntroScreen.Phase.TURN, intro.phase());
+        assertEquals(1, intro.pageIndex());
+        intro.update(IntroScreen.PAGE_TURN_SECONDS / 2f);
+        assertEquals(0.5f, intro.paragraphAlpha(2), 0.001f, "the right leaf fades");
+        assertEquals(0.5f, intro.paragraphAlpha(0), 0.001f, "and the left leaf with it");
+        assertEquals(-1f, intro.flight(), "the leaf flies only after the text has gone");
+        assertFalse(intro.turn(), "no press during the turn");
+        intro.update(IntroScreen.PAGE_TURN_SECONDS / 2f + IntroScreen.FLIP_SECONDS / 2f);
+        assertEquals(0.5f, intro.flight(), 0.001f);
+        assertEquals(0f, intro.paragraphAlpha(0), 0.001f);
+        intro.update(IntroScreen.FLIP_SECONDS / 2f);
+        assertEquals(2, intro.pageIndex(), "the next spread's left leaf");
+        assertEquals(IntroScreen.Phase.REVEAL, intro.phase());
+        assertEquals(-1f, intro.flight());
+        assertEquals(0f, intro.paragraphAlpha(0), "the old spread is gone");
+    }
+
+    @Test void instantTextTurnsEveryLeafAtOnceWithNoFadeAndNoFlight() {
+        IntroScreen intro = book(true);
+        assertEquals(IntroScreen.Phase.WAIT, intro.phase());
+        for (int leaf = 1; leaf < 4; leaf++) {
+            waitOutTheLock(intro);
+            assertTrue(intro.turn());
+            assertEquals(leaf, intro.pageIndex());
+            assertEquals(IntroScreen.Phase.WAIT, intro.phase());
+            assertEquals(-1f, intro.flight());
+        }
+    }
+
+    @Test void theLastLeafEndsTheStoryWithAFadeNotAFlightAndEscapeLeavesAtAnyTime() {
+        IntroScreen intro = book(true);
+        for (int leaf = 1; leaf < 4; leaf++) { waitOutTheLock(intro); intro.turn(); }
+        waitOutTheLock(intro);
+        assertTrue(intro.turn());
+        assertEquals(IntroScreen.State.FADE_OUT, intro.state());
+        IntroScreen early = book(false);
+        early.skip();
+        assertEquals(IntroScreen.State.FADE_OUT, early.state());
+    }
+
+    @Test void aStoryOnBlackHasNoLeavesAndNoFlight() {
+        IntroScreen intro = reading(false);
+        assertEquals(-1f, intro.flight());
+        revealWhole(intro); waitOutTheLock(intro); intro.turn();
+        assertEquals(IntroScreen.Phase.TURN, intro.phase());
+        intro.update(IntroScreen.PAGE_TURN_SECONDS);
+        assertEquals(1, intro.pageIndex(), "on black the turn is the fade alone, as D77 has it");
+    }
 }

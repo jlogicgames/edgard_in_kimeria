@@ -65,7 +65,7 @@ The pause glitch processes the frozen dialogue (portraits, current text and choi
 pause menu is drawn crisply above it. The underlying gameplay room is never shown.
 
 The checklist names Bat, Mushroom and current-forest unique coins, with `[+]`/`[-]` markers
-and a collected/total count. Refusal text distinguishes missing ingredients, insufficient
+and a collected/total count; since D132 (#540) each row has the item's HUD icon beside it (20 px, dimmed to a quarter brightness when the item is missing), rows 21 px apart from y 16. Refusal text distinguishes missing ingredients, insufficient
 payment and both. If the recipe is incomplete, offer return or an unempowered fight;
 return is the initial selection. On the first meeting, both recipe branches start with the
 healer's account of the guardian blocking the path and Edgard's question. If the full recipe is secured, the healer then
@@ -101,7 +101,7 @@ state is written to the level-only save.
   prior-level currency cannot replace a missing forest coin. Empty authored coin sets never
   qualify. Each pickup identity is counted once, including after repeated visits/deaths.
 - Consume Bat, Mushroom and exactly this forest's coin total once; keep prior-level currency.
-  Remove the two inventory icons, immediately drink the elixir and acknowledge payment.
+  Remove the two inventory icons, immediately drink the elixir and acknowledge payment. The state is settled before the paid screen opens; D132 (#541) only adds the picture: the three checklist icons, waiting in a column left of the "Paid" message, take off in turn and fly to the healer's portrait (0.5, 0.7, 0.9 s, 0.6 s each, a `handover` sound at each arrival), then the elixir flies from the healer to Edgard (1.7 s, 0.8 s, a soft green light, an `elixir` sound). Nothing waits for it, the pause freezes it, and with instant text there is no flight (one `elixir` sound). On the start tale's fairy line (`HEALER_TALE_FAIRY`) the fairy twinkles in by the healer's portrait, flies to Edgard's and hovers beside his head until the tale closes (D132, #539).
   Spent artifact identities and the unique coin completion record remain separate from
   remaining inventory/currency. No duplicate brewing or new persistent save fields exist.
 - The elixir strengthens physical sword strikes tenfold against this boss only; starting/max

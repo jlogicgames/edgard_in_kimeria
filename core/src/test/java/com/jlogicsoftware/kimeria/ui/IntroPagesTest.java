@@ -19,7 +19,7 @@ class IntroPagesTest {
 
     @BeforeAll static void natives() { GdxNativesLoader.load(); }
 
-    private static final String[] STORIES = {"INTRO_STORY", "ENDING_STORY"};
+    private static final String[] STORIES = {"ENDING_STORY"};
 
     /** The shipped catalog text, read straight from the file so the process-wide localization cache cannot hide a bad load. */
     private static String story(String key, Language language) {
@@ -198,5 +198,59 @@ class IntroPagesTest {
         assertEquals(3, pages.end(1));
         assertEquals(IntroPages.TEXT_TOP, pages.top(2));
         assertEquals(IntroPages.TEXT_TOP + IntroPages.MAX_HEIGHT, pages.bottom(0), 0.001f);
+    }
+
+    // ---- the opening on its book (#535, #536, D133): one page per leaf, measured in the story font ----
+
+    private static final String[] LEAF_KEYS = {"INTRO_LEAF_1", "INTRO_LEAF_2", "INTRO_LEAF_3", "INTRO_LEAF_4", "INTRO_LEAF_5", "INTRO_LEAF_6"};
+
+    private static Overlay storyOverlay() {
+        Assets assets = new Assets() { @Override public BitmapFont font(int size) { return new MetricsFont(size); } };
+        return new Overlay(assets, 640, 360, null);
+    }
+
+    private static String[] leaves(Language language) {
+        String[] leaves = new String[LEAF_KEYS.length];
+        for (int i = 0; i < leaves.length; i++) leaves[i] = story(LEAF_KEYS[i], language);
+        return leaves;
+    }
+
+    @Test void everyLeafFitsItsPageInEveryLanguageAndKeepsTheTaleLimits() {
+        Overlay overlay = storyOverlay();
+        for (Language language : Language.values()) {
+            String[] leaves = leaves(language);
+            IntroPages pages = IntroPages.ofLeaves(leaves, p -> overlay.storyHeight(p, IntroBook.COLUMN_WIDTH), IntroPages.TEXT_TOP, IntroBook.PARAGRAPH_GAP);
+            assertEquals(6, pages.pageCount(), language.code() + ": six leaves, three spreads");
+            for (int leaf = 0; leaf < leaves.length; leaf++) {
+                String where = language.code() + " leaf " + (leaf + 1);
+                assertEquals(2, pages.end(leaf) - pages.first(leaf), where + ": two paragraphs");
+                assertEquals(IntroPages.TEXT_TOP, pages.top(pages.first(leaf)), where);
+                assertTrue(pages.bottom(leaf) <= IntroPages.PAGE_BOTTOM, where + " ends at " + pages.bottom(leaf));
+                assertEquals(String.join("\n\n", pages.paragraph(pages.first(leaf)), pages.paragraph(pages.first(leaf) + 1)), leaves[leaf], where);
+                System.out.printf("LEAF %s: %d chars, bottom %.1f of %.1f%n", where, leaves[leaf].length(), pages.bottom(leaf), IntroPages.PAGE_BOTTOM);
+            }
+        }
+        for (String leaf : leaves(Language.ENGLISH)) assertTrue(leaf.length() <= 300, "EN at most 300 characters a page (TEXT_STYLE section 3): " + leaf.length());
+    }
+
+    @Test void theColumnsSitInsideTheirLeaves() {
+        assertTrue(IntroBook.COLUMN_LEFT > IntroBook.SPINE_X - IntroBook.LEAF_WIDTH + 8, "the left column is clear of the leaf's edge");
+        assertTrue(IntroBook.COLUMN_LEFT + IntroBook.COLUMN_WIDTH < IntroBook.SPINE_X - 8, "and of the spine");
+        assertTrue(IntroBook.COLUMN_RIGHT > IntroBook.SPINE_X + 8);
+        assertTrue(IntroBook.COLUMN_RIGHT + IntroBook.COLUMN_WIDTH < IntroBook.SPINE_X + IntroBook.LEAF_WIDTH - 8);
+        assertEquals(IntroBook.COLUMN_LEFT, IntroBook.columnLeft(0));
+        assertEquals(IntroBook.COLUMN_RIGHT, IntroBook.columnLeft(1));
+        assertEquals(IntroBook.COLUMN_LEFT, IntroBook.columnLeft(2));
+    }
+
+    @Test void aLeafTallerThanThePageIsAnErrorAndPagesOfParagraphsKnowTheirLeaf() {
+        assertThrows(IllegalStateException.class, () -> IntroPages.ofLeaves(new String[]{"a\n\nb"}, p -> 130f, IntroPages.TEXT_TOP, 20f));
+        IntroPages pages = IntroPages.ofLeaves(new String[]{"a\n\nb", "c", "d\n\ne"}, p -> 10f, IntroPages.TEXT_TOP, 20f);
+        assertEquals(3, pages.pageCount());
+        assertEquals(0, pages.pageOf(1));
+        assertEquals(1, pages.pageOf(2));
+        assertEquals(2, pages.pageOf(4));
+        assertEquals(IntroPages.TEXT_TOP + 30f, pages.top(1), 0.001f);
+        assertEquals(IntroPages.TEXT_TOP, pages.top(2), 0.001f);
     }
 }
