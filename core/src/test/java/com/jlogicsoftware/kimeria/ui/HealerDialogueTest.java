@@ -385,6 +385,26 @@ class HealerDialogueTest {
     }
 
     /**
+     * D134 (#538): the fourteen pre-boss, checklist and victory lines of the tale-voice pass take at most two of the text
+     * box's four lines in every language, at the 18 px baked font in the 556 px box.
+     */
+    @Test void theTalePassLinesTakeAtMostTwoLinesInEveryLanguage() {
+        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
+        var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
+        Msg[] passLines = {Msg.HEALER_GREETING, Msg.EDGARD_REPLY, Msg.HEALER_RETURN_GREETING, Msg.HEALER_RETURN_CHECK,
+            Msg.HEALER_INGREDIENTS, Msg.HEALER_BOTH, Msg.HEALER_PAYMENT, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
+            Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE};
+        assertEquals(14, passLines.length);
+        for (Language language : Language.values()) {
+            for (Msg message : passLines) {
+                int lines = assertLineFits(font, message.t(language), language, message);
+                assertTrue(lines <= 2, () -> language + " " + message + " takes " + lines + " lines, D134 says at most two");
+            }
+        }
+        font.dispose();
+    }
+
+    /**
      * D81 (#341): the healer's first-death line takes exactly two of the text box's four lines in every language, at the
      * 18 px baked font in the 556 px box, right-aligned as the healer's lines are. Measured 2026-11-16: two in all five.
      */

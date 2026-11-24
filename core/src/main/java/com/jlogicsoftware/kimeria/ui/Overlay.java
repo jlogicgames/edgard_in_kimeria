@@ -62,6 +62,9 @@ public class Overlay {
     private final BitmapFont bodyFont;
     private final BitmapFont buttonFont;
     private final BitmapFont hintFont;
+    /** The story font of the intro book (D133) and its dark ink on the parchment leaves. */
+    private final BitmapFont storyFont;
+    private static final Color STORY_INK = new Color(0x2a / 255f, 0x1a / 255f, 0x10 / 255f, 1f);
     /** The arms beside the selected button (#415): frame {@link KimeriaArms#LIT} at scale 1; the game's one shared instance. */
     private final KimeriaArms arms;
     private final Matrix4 textProjection;
@@ -89,6 +92,7 @@ public class Overlay {
         bodyFont = assets.font(FontSizes.BODY);
         buttonFont = assets.font(FontSizes.BUTTON);
         hintFont = assets.font(FontSizes.LABEL);
+        storyFont = assets.font(FontSizes.STORY);
         this.arms = arms;
         this.logicalHeight = logicalHeight;
 
@@ -208,6 +212,22 @@ public class Overlay {
         BitmapFontCache block = new BitmapFontCache(hintFont, hintFont.usesIntegerPositions());
         block.setText(layout, rightX, toTextY(yFromTop));
         return block;
+    }
+
+    /**
+     * As {@link #bodyBlock} for the intro book (D133): the story font, dark ink and left-aligned lines, the column's left edge
+     * at {@code leftX}. Draw it with {@link #queueBlock(BitmapFontCache, float)}.
+     */
+    public BitmapFontCache storyBlock(String text, float leftX, float yFromTop, float wrapWidth) {
+        GlyphLayout layout = new GlyphLayout(storyFont, text, STORY_INK, wrapWidth, Align.left, true);
+        BitmapFontCache block = new BitmapFontCache(storyFont, storyFont.usesIntegerPositions());
+        block.setText(layout, leftX, toTextY(yFromTop));
+        return block;
+    }
+
+    /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the story font, for the book's layout math. */
+    public float storyHeight(String text, float wrapWidth) {
+        return new GlyphLayout(storyFont, text, Color.WHITE, wrapWidth, Align.left, true).height;
     }
 
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */

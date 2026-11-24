@@ -84,6 +84,22 @@ public class Hud {
         bossHud = new BossHud(assets, game, textProjection, logicalWidth, logicalHeight);
     }
 
+    /**
+     * Where the HUD draws the slot a pickup of {@code type} lands in (D132, #557): the coin icon's centre, or the newest inventory
+     * icon of that type, from the same layout {@link #render} uses; false when the type has no slot (an ingredient not in the inventory).
+     */
+    public boolean slotCenter(ItemType type, Vector2 out) {
+        float half = ICON_SIZE / 2f;
+        if (type == ItemType.COIN) { out.set(ICON_X + half, ICON_Y + half); return true; }
+        var pickups = game.artifacts().items();
+        int slot = -1;
+        for (int i = 0; i < pickups.size(); i++) if (pickups.get(i).type() == type) slot = i;
+        if (slot < 0) return false;
+        float first = ICON_X + ICON_SIZE + ICON_TEXT_GAP + coinLayout.width + INVENTORY_SECTION_GAP;
+        out.set(first + slot * (ICON_SIZE + INVENTORY_GAP) + half, ICON_Y + half);
+        return true;
+    }
+
     public void render(Batch batch, Boss boss, boolean empowered, Player player, String fpsText) {
         batch.draw(coinIcon, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         float rightEdge = logicalWidth - ICON_X;

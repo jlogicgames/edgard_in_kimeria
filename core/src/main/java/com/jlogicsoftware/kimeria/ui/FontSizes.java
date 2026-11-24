@@ -16,6 +16,8 @@ public final class FontSizes {
     /** Map-authored zone message (D50), menu buttons, coin count. */
     public static final int ZONE = 20, BUTTON = 20, COUNT = 20;
     public static final int TITLE = 30;
+    /** The story on the book's leaves (D133): the zone size, an already baked one; the 16 px body filled half a leaf. */
+    public static final int STORY = 20;
 
     private FontSizes() { }
 }

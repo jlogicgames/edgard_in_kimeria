@@ -197,7 +197,7 @@ class TutorialLevelTest {
         for (int i = 0; i < layout.rooms.size(); i++) {
             int room = i;
             long inRoom = map.layer("Collisions").stream().filter(o -> layout.owner(o) == room).count();
-            assertEquals(i == 1 || i == 3 ? 4 : i == 4 ? 5 : i == 5 ? 4 : i == 0 ? 6 : 3, inRoom, "Room " + i + (i == 1 || i == 3 ? " is a corridor plus its ledge" : i == 0 ? " is a corridor plus the lift's step and two ledge pieces (D127)" : i == 4 ? " is two floors around a chasm plus the overhang" : i == 5 ? " is two floors around a pit" : " is an empty corridor"));
+            assertEquals(i == 3 ? 6 : i == 1 ? 4 : i == 4 ? 5 : i == 5 ? 4 : i == 0 ? 6 : 3, inRoom, "Room " + i + (i == 3 ? " is a corridor plus its ledge and the two canopy slabs the vines hang from (#550)" : i == 1 ? " is a corridor plus its ledge" : i == 0 ? " is a corridor plus the lift's step and two ledge pieces (D127)" : i == 4 ? " is two floors around a chasm plus the overhang" : i == 5 ? " is two floors around a pit" : " is an empty corridor"));
             var exit = layout.rooms.get(i).exit();
             if (exit != null) assertEquals(i == 1 || i == 3 ? 208 : 320, exit.y + exit.height, i == 1 || i == 3 ? "Exit stands on the room's ledge" : "Exit stands on the floor line");
         }
@@ -206,8 +206,10 @@ class TutorialLevelTest {
             .filter(o -> "Checkpoint".equals(o.type)).findFirst().orElseThrow()));
     }
 
-    @Test void onlyForestZeroAuthorsHints() {
-        assertTrue(map("forest-1").layer("Hints").isEmpty(), "forest-1 shows no tutorial hints");
+    @Test void onlyForestZeroAndTheForest1LeverRoomAuthorHints() {
+        var lever = map("forest-1").layer("Hints");
+        assertEquals(1, lever.size(), "forest-1 authors one hint: the lever room's (#554, D131)");
+        assertEquals("HINT_LEVER_BOTH", lever.get(0).properties.get("message"));
         assertTrue(map("forest-1").properties.get("tutorialRoom") == null);
         TiledMapData two = map("forest-2");
         assertNull(two.properties.get("tutorialRoom"), "The hardcoded room property is gone");

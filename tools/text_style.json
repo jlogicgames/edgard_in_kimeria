@@ -11,10 +11,10 @@
   "voices": {
     "tale": {
       "keys": [
-        "INTRO_STORY",
         "ENDING_STORY"
       ],
       "prefixes": [
+        "INTRO_LEAF_",
         "HEALER_",
         "EDGARD_"
       ],

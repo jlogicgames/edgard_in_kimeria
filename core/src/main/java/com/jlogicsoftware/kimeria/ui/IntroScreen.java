@@ -13,6 +13,9 @@ import com.badlogic.gdx.math.MathUtils;
  * and the last turn fades to black. With instant text (#342) a page appears whole and turns at once.
  * <p>The ending (#416, D95) draws the Kimeria arms above its text: dark for a short hold, the sun lights up on it, and only then
  * does the text appear (D95, #573); it is lit whenever the page is shown whole (instant text, a press).
+ * <p>The opening is read on an open book (#535, #536, D133): a page is a leaf, two leaves make a spread. The left leaf reads, a
+ * press moves on to the right leaf (the left one stays), and the next press turns the spread: both leaves' text fades, the
+ * right leaf flies over the spine and the next spread's left leaf starts. Instant text skips the fade and the flight.
  */
 public final class IntroScreen {
     public enum State { FADE_IN, READING, FADE_OUT, DONE }
@@ -26,9 +29,11 @@ public final class IntroScreen {
     public static final float PARAGRAPH_FADE_SECONDS = 0.9f, PARAGRAPH_STAGGER_SECONDS = 1.6f;
     /** The page fades out this long before the next one starts. */
     public static final float PAGE_TURN_SECONDS = 0.4f;
+    /** On the book the turned leaf then flies over the spine for this long (D133). */
+    public static final float FLIP_SECONDS = 0.4f;
     /** Input is ignored this long after a page starts and after it is fully shown, so a held button cannot skip pages. */
     public static final float INPUT_LOCK_SECONDS = 0.6f;
-    private static final float CUE_TOP = 330f;
+    public static final float CUE_TOP = 330f;
     /** The skip hint sits in the bottom right corner, under the page area ({@link IntroPages#PAGE_BOTTOM}) and clear of the cue. */
     public static final float SKIP_HINT_MARGIN = 12f, SKIP_HINT_TOP = 338f;
     /** The skip hint stays quiet: this fraction of full brightness (times the story's fade). */
@@ -59,6 +64,10 @@ public final class IntroScreen {
     private final String text;
     private final IntroPages pages;
     private final BitmapFontCache[] blocks;
+    /** The open book behind the pages (the opening); null for a story on black (the ending, tests). */
+    private final IntroBook book;
+    /** True when the pages are the leaves of a book, even when no art is drawn (tests, headless). */
+    private final boolean leaves;
     private final boolean instant;
     private final float cueCenterX;
     private final TextureRegion cue;
@@ -86,6 +95,14 @@ public final class IntroScreen {
     /** As above, with the Kimeria arms drawn over the text when {@code arms} is not null (the ending). */
     public IntroScreen(String text, IntroPages pages, BitmapFontCache[] blocks, boolean instant, float screenWidth, TextureRegion cue,
                        KimeriaArms arms) {
+        this(text, pages, blocks, instant, screenWidth, cue, arms, null, false);
+    }
+
+    /** As above for a book's leaves: {@code leaves} says the pages are leaves, {@code book} (may be null when nothing is drawn) the art. */
+    public IntroScreen(String text, IntroPages pages, BitmapFontCache[] blocks, boolean instant, float screenWidth, TextureRegion cue,
+                       KimeriaArms arms, IntroBook book, boolean leaves) {
+        this.book = book;
+        this.leaves = leaves;
         this.cue = cue;
         this.arms = arms;
         this.sun = arms != null || pages.top(0) == ENDING_TEXT_TOP;
@@ -112,6 +129,19 @@ public final class IntroScreen {
         BitmapFontCache[] blocks = new BitmapFontCache[pages.paragraphCount()];
         for (int i = 0; i < blocks.length; i++) blocks[i] = overlay.bodyBlock(pages.paragraph(i), screenWidth / 2f, pages.top(i), wrap);
         return new IntroScreen(text, pages, blocks, instant, screenWidth, assets.region(CUE_ART, 0, 0, CUE_SIZE, CUE_SIZE), arms);
+    }
+
+    /**
+     * The opening on its book (#535, #536, D133): one page per leaf, each leaf measured in the story font at the leaf's column, the text
+     * blocks built once at load, left-aligned in dark ink at the column of their leaf.
+     */
+    public static IntroScreen openBook(String[] leaves, Overlay overlay, Assets assets, float screenWidth, boolean instant) {
+        IntroPages pages = IntroPages.ofLeaves(leaves, p -> overlay.storyHeight(p, IntroBook.COLUMN_WIDTH), IntroPages.TEXT_TOP, IntroBook.PARAGRAPH_GAP);
+        BitmapFontCache[] blocks = new BitmapFontCache[pages.paragraphCount()];
+        for (int i = 0; i < blocks.length; i++)
+            blocks[i] = overlay.storyBlock(pages.paragraph(i), IntroBook.columnLeft(pages.pageOf(i)), pages.top(i), IntroBook.COLUMN_WIDTH);
+        return new IntroScreen(String.join("\n\n", leaves), pages, blocks, instant, screenWidth,
+            assets.region(CUE_ART, 0, 0, CUE_SIZE, CUE_SIZE), null, new IntroBook(assets), true);
     }
 
     /** The page split {@link #open} uses: under the arms ({@link #ENDING_TEXT_TOP}) or at the usual text top. */
@@ -182,7 +212,7 @@ public final class IntroScreen {
             }
             case WAIT -> {
                 if (page == pages.pageCount() - 1) skip();
-                else if (instant) startPage(page + 1);
+                else if (instant || leaving()) startPage(page + 1);
                 else { phase = Phase.TURN; phaseTime = 0f; }
             }
             case TURN -> { return false; }
@@ -202,7 +232,7 @@ public final class IntroScreen {
                 cueTime += dt;
                 phaseTime += dt;
                 if (phase == Phase.REVEAL && phaseTime >= revealSeconds()) showWholePage();
-                else if (phase == Phase.TURN && phaseTime >= PAGE_TURN_SECONDS) startPage(page + 1);
+                else if (phase == Phase.TURN && phaseTime >= turnSeconds()) startPage(page + 1);
             }
             case FADE_OUT -> {
                 fadeElapsed = Math.min(FADE_OUT_SECONDS, fadeElapsed + dt);
@@ -211,6 +241,21 @@ public final class IntroScreen {
             }
             case DONE -> { }
         }
+    }
+
+    /** On a book a press on a left leaf only moves the reading to the right leaf of its spread: no fade, no flight. */
+    private boolean leaving() { return leaves && !IntroBook.isRight(page); }
+
+    /** A turn fades the text, then on a book the leaf flies over the spine. */
+    private float turnSeconds() { return PAGE_TURN_SECONDS + (leaves ? FLIP_SECONDS : 0f); }
+
+    /** The fade of the text while the page turns: 1 at its start, 0 once it has gone. */
+    private float turnFade() { return 1f - Math.min(1f, phaseTime / PAGE_TURN_SECONDS); }
+
+    /** How far the leaf in flight has gone (0 to 1) while the spread turns; -1 when no leaf is in the air. */
+    public float flight() {
+        if (!leaves || state != State.READING || phase != Phase.TURN || phaseTime < PAGE_TURN_SECONDS) return -1f;
+        return Math.min(1f, (phaseTime - PAGE_TURN_SECONDS) / FLIP_SECONDS);
     }
 
     private void startPage(int index) {
@@ -238,10 +283,12 @@ public final class IntroScreen {
     /** Opacity (0 to 1) of paragraph {@code index}: zero outside the current page and before its turn to appear. */
     public float paragraphAlpha(int index) {
         if (state == State.FADE_IN || state == State.DONE) return 0f;
+        if (leaves && IntroBook.isRight(page) && index >= pages.first(page - 1) && index < pages.end(page - 1))
+            return phase == Phase.TURN ? turnFade() : 1f; // the left leaf stays while the right one is read, then goes with it
         if (index < pages.first(page) || index >= pages.end(page)) return 0f;
         return switch (phase) {
             case WAIT -> 1f;
-            case TURN -> 1f - Math.min(1f, phaseTime / PAGE_TURN_SECONDS);
+            case TURN -> turnFade();
             case REVEAL -> MathUtils.clamp((phaseTime - textStart() - (index - pages.first(page)) * PARAGRAPH_STAGGER_SECONDS) / PARAGRAPH_FADE_SECONDS, 0f, 1f);
         };
     }
@@ -264,9 +311,10 @@ public final class IntroScreen {
 
     /** Queues the visible paragraphs (text, Y-up pass) and draws the arms and the page-turn cue (Y-down screen projection). */
     public void render(Batch batch, Overlay overlay) {
+        if (book != null) book.draw(batch, flight());
         if (arms != null) arms.draw(batch, armsFrame(), cueCenterX, ARMS_TOP, ARMS_SCALE);
         if (blocks == null) return;
-        for (int i = pages.first(page); i < pages.end(page); i++) overlay.queueBlock(blocks[i], paragraphAlpha(i));
+        for (int i = pages.first(leaves && IntroBook.isRight(page) ? page - 1 : page); i < pages.end(page); i++) overlay.queueBlock(blocks[i], paragraphAlpha(i));
         if (state == State.READING && phase == Phase.WAIT && lock <= 0f) drawCue(batch);
         BitmapFontCache hint = skipHint == SkipHint.KEYBOARD ? keyboardHint : skipHint == SkipHint.GAMEPAD ? gamepadHint : null;
         if (hint != null && state != State.DONE) overlay.queueBlock(hint, SKIP_HINT_ALPHA * visibility);

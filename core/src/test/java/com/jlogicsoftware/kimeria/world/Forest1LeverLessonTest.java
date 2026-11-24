@@ -12,6 +12,7 @@ import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.entity.objects.LethalHazard;
 import com.jlogicsoftware.kimeria.entity.player.Player;
+import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -209,7 +210,7 @@ class Forest1LeverLessonTest {
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof Enemy<?> || o instanceof LethalHazard || o instanceof Collectable
             || o instanceof FireballRefill || o instanceof Checkpoint || o instanceof com.jlogicsoftware.kimeria.entity.items.Wall),
             "no enemy, no hazard, no pickup: the lever is the only new thing (D72) and a wrong pull is free");
-        assertEquals("", level.player.zoneHint(), "no hints: forest-1 shows none (D33)");
+        assertEquals("Use the lever to move the ladder and the platform", level.player.zoneHint(), "the one hint of forest-1 (#554, D131)");
         // Authored state: the ladder is raised, the lift runs from its top, the lever shows "down" (the route room's own start state).
         assertFalse(ladder(level).isLowered());
         assertTrue(lift(level).isRunning());
@@ -241,6 +242,23 @@ class Forest1LeverLessonTest {
         assertEquals(TOP, ladder(level).topY(), 0.01f);
         assertEquals(FLOOR, ladder(level).bottomY(), 0.01f);
         assertEquals(LADDER_X + 16, E_X, 0.01f, "the ladder stands against the exit ledge's left face");
+    }
+
+    /** #554: one message-only zone over the whole room says the lever works the ladder and the platform; no contextual labels turn on. */
+    @Test void aZoneMessageOverTheWholeRoomSaysTheLeverMovesTheLadderAndThePlatform() {
+        Level level = room();
+        var zones = level.hintZones();
+        assertEquals(1, zones.size(), "one zone in the room");
+        var zone = zones.get(0);
+        assertEquals(Msg.HINT_LEVER_BOTH, zone.message());
+        assertFalse(zone.controls(), "message only: the contextual labels stay as they were");
+        assertEquals(ROOM_X, zone.bounds().x, 0.01f);
+        assertEquals(640, zone.bounds().width, 0.01f);
+        settle(level, 30);
+        assertEquals(zone.message(), level.messageHint().message(), "the hero stands in it on arrival");
+        level.player.position.set(LEVER_X - 6, TOP - 31);
+        settle(level, 5);
+        assertNotNull(level.messageHint(), "and still at the lever");
     }
 
     @Test void theLeverTheLadderAndTheLiftAreInOneCameraViewAtTheMomentOfThePull() {

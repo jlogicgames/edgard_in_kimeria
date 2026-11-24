@@ -232,6 +232,8 @@ smaller drops with shorter streaks, from the near edge of the body away from the
 spray nothing.
 The star texture has been removed.
 Planned extra effects for the boss ground strike, empowered hit, counter and death (not built): [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474).
+The bar is a blackened-iron plate with a riveted rim, mulberry end gems and a bone-horn crest with an ember eye (the boss's own materials),
+holding twelve faceted rubies; an empty slot is the same silhouette as a hollow socket ([art direction](ART_DIRECTION.md#boss-health-bar-playtest-2-f31-543); drawn in `art/ui/boss/`, exported by `tools/boss_hud_sprites.py`).
 The frame and filled/empty slots are independent PNGs in
 [`assets/images/ui/boss`](../assets/images/ui/boss/README.md). Dimensions and gaps are grouped
 in `BossHud`; equivalent-sized art replacements require no code change. The short impact
