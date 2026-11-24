@@ -108,7 +108,7 @@ again after each collection return. Lines are chosen by state (`HealerDialogue` 
 
 Drawn by `Hud` in the 20 px zone font, 400 px wide, at most two lines in every language
 (D33, D49, D50, `LocalizationLayoutTest`). Shown while the hero stands in the `Hint` zone and can
-act; cleared on death, so every retry shows them again. All in `forest-0`; `forest-1` has no hints
+act; cleared on death, so every retry shows them again. All in `forest-0` except one in `forest-1`'s lever room (D131); `forest-1` has no other hints
 and `forest-2` has only a controls zone.
 
 | Key | Room / zone (x range) | EN chars | Longest translation (lang) | Lesson |
@@ -132,6 +132,7 @@ and `forest-2` has only a controls zone.
 | `HINT_STONE_ACROSS` | stone room, 3712-3776 | 22 | 31 (de) | Exit ahead |
 | `HINT_TRAP_PLATFORM` | trap room, 3808-4144 | 73 | 91 (de) | Falling platform |
 | `HINT_TRAP_STUMP` | trap room, 4144-4496 | 64 | 80 (de) | Exploding stump |
+| `HINT_LEVER_BOTH` | forest-1 lever room, 4320-4960 (whole room) | 49 | 59 (de) | Lever, ladder and platform |
 
 Observations: three "exit ahead" lines (`HINT_LEVER_EXIT`, `HINT_LADDER_EXIT`, `HINT_STONE_ACROSS`)
 say the same thing in three ways; trap lines are the longest and run to two sentences; all are plain

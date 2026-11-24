@@ -796,7 +796,7 @@ depends on it.
   `docs/references/forest-traps/decor-vine-preview.png`, layout `DECOR_SHEETS['vine']`). `entity/objects/HangingVine.java`, kept in
   `Level.vines` (cleared with the room, updated in `updateWorld`, drawn right after the decor, so behind platforms, objects and the hero).
   No collision, not an `Actionable`, not saved; the room rebuild recreates it at rest. World Y grows downward: `y` is the **top**
-  (anchor) edge and must be the room's ceiling line (or the bottom of a solid block); the vine hangs to `y + 40`.
+  (anchor) edge and must be the room's ceiling line or the bottom of a solid block (`forest-0` hangs its vines at y 80 under two slabs, #550, D131); the vine hangs to `y + 40`.
 - **The stone link.** `FallingStone.onImpact(Runnable)` is called once from `landed()`; `Level.spawnFallingTrap` sets it to
   `Level.groundShake(x, strength)`, which calls `HangingVine.shake(x, strength)` on every vine of the room. The vine sways only if
   its anchor is within `HangingVine.REACH` = 160 px of the stone's centre; there is no explicit id property, the link is
@@ -812,11 +812,11 @@ depends on it.
 
 | Map | Vines | World x (left edge), y = room top (file y 16 in forest-2's SpawnPoints layer, offset -16) |
 | --- | --- | --- |
-| `forest-0` | 3 (stone room, stone at x 2544) | 2476, 2616, 2680 |
+| `forest-0` | 3 (stone room, stone at x 2544) | 2476, 2614, 2658, at y 80 (under the collision slabs x 2448-2528 and x 2592-2720, D131) |
 | `forest-1` | 0 (no falling stone in this map) | none |
 | `forest-2` | 3 (canopy room, stone at x 2224) | 2146, 2286, 2346 |
 
-  Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line.
+  Later levels place a vine when they place a falling stone. `HangingVineTest` pins the counts and measures every vine against the ceiling line or the underside of a solid block.
 - **Cost.** One rotated `batch.draw` per vine; the sheet is 8×40 px. `AllocationBudgetTest.hangingVinesSwayingThroughTheRealLevel` measures the allocation.
 - The grit leaves are small (2 px) on purpose: the vine is a thin background accent; the author reviews the sprite before merge.
 - **Colour (decor tier, D76, recoloured 2026-11-16).** Pale dull olive stem `9d9f7b / 8a8c6d`, grey-green leaves `88a083 / 738b73`,
@@ -1559,7 +1559,7 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-bramble` | 16×24 | rest, rustle1, rustle2, cane1, cane2, tip | creeping bramble (#364, D89): a clump of the tuft's magenta canes rooted in a face on the left, bone tips always showing (rest), shifting and poking a first then a second tip (the warning); the arm is `cane1`/`cane2` alternating behind `tip` at the current extent; drawn mirrored for `root=right`; active tier, outline in `forest-1-bramble` (`check_contrast.py`, all six frames): rest 0.419, worst 0.414 (`cane1`, `cane2`) |
 | `trap-branch` | 32×16 | resting, rustle, sag, falling | resting and rustle carry the at-rest cue (#361): a pale raw-wood band round the joint, cut by an ink zig-zag, and a chip under it; rustle = leaves shake, sag = drooping with a split at the trunk |
 | `trap-stone` | 16×16 | stone, cracked | boulder and impact frame |
-| `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 8, forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
+| `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 128 under a soil block, #550, D131; forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
 | `trap-deadfall` | 32×16 | tied, strain, slip, swing, caught | the trip-line deadfall's log (#363, D88): a 24×10 bark log seen broadside with its end grain (`e8c890`/`9c6a34`) on the left; tied/strain/slip carry the bone lashing (`efe6c4`/`b8ad9c`) up to the bough, strain adds frayed fibres, slip draws the log one row lower; swing has three bone speed streaks on its trailing side; caught has a frayed cord stub. Rope eyes at x 8 and 23, row 4. Active tier, worst outline 0.410 tied (forest-1-deadfall; the same over the old sky and the D92 background) |
 | `trap-deadfall-bough` | 112×24 | bough | the bough the deadfall hangs from: the sound branch's bark (`4a2e1c`/`8a5a30`/`c08a4c`), two bone rope knots at x 40 and 55, a bare snag from its underside to (8, 17) where the log ends, a leaf tuft at the thin end; its thick end grows from a `Decor:trunk` (D122): no end grain since 2026-11-21 (a sawn end read as cut), it swells a row up and down into a dark bark collar open at the frame's edge (`J`, never moon-rimmed), 7 px over the bark; mirrored for `swing=right`. Outline 0.464 when drawn, 0.452 over the D120 layers before the collar, 0.430 after |
 | `trap-deadfall-vine` | 24×8 | taut, tugged, cut | the trip vine: bone (`efe6c4`/`b8ad9c`) between two dark pegs, 4 px over the floor; tugged into a V during the warning, cut in two after the release. Outline 0.323 taut |
