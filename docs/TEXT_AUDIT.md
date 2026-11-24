@@ -82,17 +82,17 @@ again after each collection return. Lines are chosen by state (`HealerDialogue` 
 
 | Key | Speaker | When | Voice |
 | --- | --- | --- | --- |
-| `HEALER_GREETING` | Healer | First meeting | Tale, but "won't affect magical items" is a rule statement |
-| `EDGARD_REPLY` | Edgard | First meeting | Tale |
-| `HEALER_RETURN_GREETING` | Healer | Meeting after a collection return | Tale |
-| `HEALER_RETURN_CHECK` | Healer | Meeting after a collection return | Mixed |
-| `HEALER_INGREDIENTS` | Healer | Missing Bat or Mushroom, coins complete | Plain inside tale ("Check the list") |
-| `HEALER_PAYMENT` | Healer | Ingredients complete, coins missing | Plain inside tale |
-| `HEALER_BOTH` | Healer | Both missing | Plain inside tale ("The list shows...") |
-| `HEALER_OFFER` | Healer | Something missing, before the choice | Mixed |
-| `HEALER_READY` | Healer | Everything collected | Mixed ("ten times stronger", "this boss") |
-| `HEALER_PAID` | Healer (but narrates the player: "You drink the elixir") | After Pay | System narration in the healer's frame |
-| `HEALER_LOCK` | Healer | After Pay | Plain ("its retries") |
+| `HEALER_GREETING` | Healer | First meeting | Tale since #371; reworded by #538 (D134): "beyond this glade the forest guardian keeps the road", the elixir makes the sword "bite deep", "it will not touch my fire" |
+| `EDGARD_REPLY` | Edgard | First meeting | Tale; #538 (D134): "Then brew it, old man. What does your pot ask for?" |
+| `HEALER_RETURN_GREETING` | Healer | Meeting after a collection return | Tale; #538 (D134): "So the road has brought you back, Edgard. Good." |
+| `HEALER_RETURN_CHECK` | Healer | Meeting after a collection return | Tale since #371; #538 (D134): the three things are "my price", then "show me what the forest has given you" |
+| `HEALER_INGREDIENTS` | Healer | Missing Bat or Mushroom, coins complete | Tale (the list is gone since #371; tale-voice pass #538, D134) |
+| `HEALER_PAYMENT` | Healer | Ingredients complete, coins missing | Tale (#538, D134: "my price") |
+| `HEALER_BOTH` | Healer | Both missing | Tale (the list is gone since #371; tale-voice pass #538, D134) |
+| `HEALER_OFFER` | Healer | Something missing, before the choice | Tale since #371; #538 (D134): "where this forest begins", "no road leads back" |
+| `HEALER_READY` | Healer | Everything collected | Tale since #371 ("ten times harder", the guardian); #538 (D134): "All is gathered" |
+| `HEALER_PAID` | Healer | After Pay | Tale since #371 (no narration of the player); #538 (D134): "my price is paid and my elixir runs in your veins" |
+| `HEALER_LOCK` | Healer | After Pay | Tale since #371; #538 (D134): the silver thread named in full, the elixir stays "until the guardian falls" |
 | `HEALER_RETURN`, `HEALER_BREW`, `HEALER_FIGHT` | Choice buttons | Choice step | Label, imperative |
 | `BAT`, `MUSHROOM`, `FOREST_COINS_COUNT`, `PAID` | Checklist beside the portraits | Every pre-boss meeting | Label |
 | `COINS` | **Unused**: no code read it (the checklist uses `FOREST_COINS_COUNT`). **Deleted (#374)** from `Msg` and all five catalogs | Never | Label |
@@ -101,9 +101,9 @@ again after each collection return. Lines are chosen by state (`HealerDialogue` 
 
 | Key | Speaker | Trigger |
 | --- | --- | --- |
-| `HEALER_VICTORY` | Healer | Boss dead and the victory exit walked (`afterVictory()` from `loadNextLevel`) |
-| `EDGARD_DARKNESS` | Edgard | |
-| `HEALER_GUIDE` | Healer | "I will be your guide. Go on: we will meet again." In the current build the ending follows at once. |
+| `HEALER_VICTORY` | Healer | Boss dead and the victory exit walked (`afterVictory()` from `loadNextLevel`); tale-voice pass #538 (D134) for it, `EDGARD_DARKNESS` and `HEALER_GUIDE` |
+| `EDGARD_DARKNESS` | Edgard | "Yet darkness still lies over all Kimeria, old man." (#538, D134) |
+| `HEALER_GUIDE` | Healer | "Then your tale is not over, Edgard, and I will be your guide in it. Go on: we will meet again." (#538, D134.) In the current build the ending follows at once. |
 
 ### 1.6 Zone messages (map-authored, every attempt)
 
