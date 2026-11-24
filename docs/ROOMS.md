@@ -438,7 +438,7 @@ Measured (`RoomReplayTest`, real input, hazards on, three identical attempts): `
 6.12 / 6.12 s (it was 6.72 / 6.12 / 6.12 s while the Bat stood on the entry ledge; the Bat left in #417), walls 7.32 s on every trip (the Bat is now taken there, on the way), canopy 9.62 / 9.48 / 9.48 s. The worst retry in the Forest drops from about 16 s to
 about 9 s. `forest-2.tmx` SHA-256 after #417 (Bat moved, nothing else): `52391071515f322a082b41a9cc72610736d28e0407a790b4b0136f06047c59ea`. The carry, lever and
 ladder hint tests that used the removed objects run on `core/src/test/resources/tiles/practice-test.tmx`,
-a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Not checked in the running game (camera at the seam, tile look): [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428).
+a small fixture with the removed practice objects (116-119), the ladder (123/124) and a `controls` zone in its first room. Checked in the running game (camera at the seam, tile look) by playtest 2 and the author, 2026-11-24: [#428](https://github.com/jlogicgames/edgard_in_kimeria/issues/428).
 
 ## Replay budget (#70)
 
