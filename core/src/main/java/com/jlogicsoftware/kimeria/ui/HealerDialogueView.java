@@ -7,16 +7,21 @@ import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.IntArray;
 import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
+import com.jlogicsoftware.kimeria.effects.FlightFx;
+import com.jlogicsoftware.kimeria.effects.SoftGlowFx;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.world.Level;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,12 +50,41 @@ public final class HealerDialogueView {
     static final float PAGE_INSET = 10f;
     /** The middle column between the windows: the checklist and the choices of the pre-boss stop. */
     public static final float MIDDLE_X = EDGARD_WINDOW_X + WINDOW + 8f, MIDDLE_W = HEALER_WINDOW_X - MIDDLE_X - 8f;
-    public static final float CHECKLIST_Y = 20f, CHOICE_Y = 84f, MARKER_INSET = 8f;
+    public static final float CHECKLIST_Y = 16f, CHOICE_Y = 84f, MARKER_INSET = 8f;
+    /**
+     * #540 (D132): each checklist row is {@code [icon][gap][mark and name]}: the item's HUD icon at 20 px, rows 21 px apart from
+     * {@link #CHECKLIST_Y}, so three rows end at y 79, 5 px above the choices. The block is centred in the column from the widest row.
+     */
+    public static final float ROW_ICON = 20f, ROW_GAP = 6f, ROW_STEP = 21f, ROW_X_DEFAULT = MIDDLE_X + 28f, MISSING_BRIGHTNESS = .25f;
+    public static final int ROWS = 3;
+    /** The paid screen (D132): the icons wait in a column at the left of the column, the message wraps to their right, so neither covers the other in any language. */
+    public static final float PAID_ICON_X = MIDDLE_X + 6f, PAID_TEXT_X = PAID_ICON_X + ROW_ICON + ROW_GAP, PAID_TEXT_W = MIDDLE_X + MIDDLE_W - 6f - PAID_TEXT_X;
     static final float CHOICE_H = 26f, CHOICE_STEP = 28f, CHOICE_INSET = 4f;
     /** The thread art's top-left, and the curve of its span (art/ui/dialogue/thread.grid is drawn on the same curve). */
     static final float THREAD_X = 178f, THREAD_Y = 154f, THREAD_W = 284f, THREAD_H = 32f;
     static final float THREAD_X0 = 196f, THREAD_Y0 = 168f, THREAD_X1 = 444f, THREAD_Y1 = 164f, THREAD_SAG = 16f;
     static final float GLINT = 5f, GLINT_SECONDS = 0.8f;
+    /**
+     * #541 (D132): on the paid screen the three icons wait at their rows and take off at these dialogue times (bat, mushroom, one coin
+     * for the coins), each flying {@code HANDOVER_SECONDS} to the healer's portrait; the elixir follows from the healer to Edgard.
+     */
+    static final float[] HANDOVER_START = {.5f, .7f, .9f};
+    static final float HANDOVER_SECONDS = .6f, HANDOVER_ARC = 18f, HANDOVER_END_SIZE = 12f, HANDOVER_FADE = .75f, ARRIVAL_GLINT_SECONDS = .15f;
+    static final float ELIXIR_START = 1.7f, ELIXIR_SECONDS = .8f, ELIXIR_ARC = 30f, ELIXIR_FROM = 32f, ELIXIR_TO = 20f, ELIXIR_FADE = .85f,
+        ELIXIR_GLOW_SECONDS = .6f, ELIXIR_GLOW_RADIUS = 28f;
+    static final float HEALER_CENTRE_X = HEALER_WINDOW_X + WINDOW / 2f, EDGARD_CENTRE_X = EDGARD_WINDOW_X + WINDOW / 2f,
+        HEALER_CENTRE_Y = 102f, EDGARD_CENTRE_Y = 112f;
+    /** #539 (D132): the fairy twinkles in beside the healer's portrait, flies to Edgard's and hovers beside his head (2x, whole pixels). */
+    static final float FAIRY_APPEAR = .4f, FAIRY_FLIGHT = .9f, FAIRY_ARC = 24f, FAIRY_START_X = 470f, FAIRY_START_Y = 48f,
+        FAIRY_HOVER_X = 176f, FAIRY_HOVER_Y = 40f, FAIRY_BOB = 1.5f, FAIRY_BOB_PERIOD = 1.6f, FAIRY_SIZE = 32f, FAIRY_GLOW_RADIUS = 8f;
+    /** The thread's keep-out: its art's rectangle grown by this much (the fairy never crosses it). */
+    static final float THREAD_KEEP_OUT = 8f;
+    private static final float WARM_R = 1f, WARM_G = .957f, WARM_B = .667f, GREEN_R = .59f, GREEN_G = 1f, GREEN_B = .7f;
+    private static final SoftGlowFx.Look ELIXIR_LIGHT = new SoftGlowFx.Look(GREEN_R, GREEN_G, GREEN_B, .6f, 0f, 2f, 0, 1.6f, 0, 0);
+    private static final long FLIGHT_SEED = 0x7E41E7L, FAIRY_SEED = FLIGHT_SEED + 1, ELIXIR_SEED = FLIGHT_SEED + 2;
+    /** The elixir's art is the boss HUD's 16 px flask. */
+    private static final int ELIXIR_ART = 16, ROW_BAT = 0, ROW_MUSHROOM = 1, ROW_COINS = 2;
+    private static final float MAX_STEP = 1f / 20f;
     /** t(1-t) peaks at 1/4: this factor makes the sag the drop at the middle of the span. */
     private static final float PARABOLA_PEAK = 4f;
     /** The speaker lifts 1 px for the second half of every period. */
@@ -79,6 +113,20 @@ public final class HealerDialogueView {
     private Patch windowLit, windowDim, plateLit, plateDim, box, page, choiceIdle, choiceSelected;
     private TextureRegion crestLit, crestDim, notch, thread, glint;
     private BitmapFont font;
+    // D132: the flights of this screen (created with the art, on the first render).
+    private FlightFx flights;
+    private SoftGlowFx fairyLight, elixirLight;
+    private final TextureRegion[] fairyBody = new TextureRegion[FairyGuide.BODY_FRAMES];
+    private final TextureRegion[] itemIcon = new TextureRegion[ROWS];
+    private TextureRegion elixirArt;
+    private final int[] handoverSlot = {-1, -1, -1};
+    private int elixirSlot = -1;
+    private HealerDialogue flightsFor;
+    private float fairyStart = -1f, elixirGlow, arrivalGlint;
+    private String pendingSound;
+    private float rowX = ROW_X_DEFAULT;
+    private final float[] rowWidth = new float[ROWS];
+    private BitmapFontCache[] rowBlocks;
     private final GlyphLayout layout = new GlyphLayout();
     private BitmapFontCache lineBlock, edgardName, healerName, checklistBlock, hintBlock, markerLeft, markerRight;
     private final BitmapFontCache[] choiceBlocks = new BitmapFontCache[MAX_CHOICES];
@@ -137,6 +185,7 @@ public final class HealerDialogueView {
     public void render(Batch batch, Overlay overlay, HealerDialogue dialogue, Language lang,
                        Level level, ArtifactInventory inventory) {
         load();
+        if (dialogue != flightsFor) beginDialogue(dialogue); // update runs only while a dialogue is live: a new one must not draw the last one's fairy or icons for its first frame
         boolean edgardSpeaking = dialogue.edgardSpeaking();
         float open = Math.min(1f, dialogue.openProgress());
         batch.setColor(Color.WHITE);
@@ -175,7 +224,21 @@ public final class HealerDialogueView {
             overlay.queueBlock(healerName, 1f);
         }
         overlay.queueBlock(lineBlock, glyphsFor(dialogue.visibleCharacters(lang)));
-        if (dialogue.showsChecklist()) overlay.queueBlock(checklistBlock, 1f);
+        if (dialogue.showsChecklist()) {
+            if (dialogue.paid()) {
+                overlay.queueBlock(checklistBlock, 1f);
+                for (int i = 0; i < ROWS; i++) if (flights.waiting(handoverSlot[i]))
+                    batch.draw(itemIcon[i], PAID_ICON_X, CHECKLIST_Y + i * ROW_STEP, ROW_ICON, ROW_ICON);
+            } else {
+                for (int i = 0; i < ROWS; i++) {
+                    float b = held(i) ? 1f : MISSING_BRIGHTNESS;
+                    batch.setColor(b, b, b, 1f);
+                    batch.draw(itemIcon[i], rowX, CHECKLIST_Y + i * ROW_STEP, ROW_ICON, ROW_ICON);
+                    overlay.queueBlock(rowBlocks[i], 1f);
+                }
+                batch.setColor(Color.WHITE);
+            }
+        }
         if (dialogue.choosing()) {
             List<HealerDialogue.Choice> choices = dialogue.choices();
             for (int i = 0; i < choices.size(); i++) {
@@ -190,6 +253,115 @@ public final class HealerDialogueView {
         } else if (dialogue.fullyRevealed(lang)) {
             overlay.queueBlock(hintBlock, 1f);
         }
+        renderFlights(batch, dialogue);
+    }
+
+    /** Whether row {@code i} (bat, mushroom, coins) is held, for the icon's brightness. */
+    private boolean held(int row) { return row == 0 ? hasBat : row == 1 ? hasMushroom : allCoins; }
+
+    /** Flights, the arrival glint, the elixir's light and the fairy (D132): drawn after the screen, before the text pass. */
+    private void renderFlights(Batch batch, HealerDialogue dialogue) {
+        if (elixirGlow > 0f) elixirLight.render(batch, elixirGlow / ELIXIR_GLOW_SECONDS);
+        flights.render(batch);
+        if (arrivalGlint > 0f)
+            batch.draw(glint, Math.round(HEALER_CENTRE_X - GLINT / 2f), Math.round(HEALER_CENTRE_Y - GLINT / 2f), GLINT, GLINT);
+        if (fairyStart >= 0f) {
+            float lt = dialogue.instantText() ? FAIRY_APPEAR + FAIRY_FLIGHT : dialogue.time() - fairyStart;
+            fairyPosition(lt, fairyPoint);
+            fairyLight.place(fairyPoint.x, fairyPoint.y, FAIRY_GLOW_RADIUS, FAIRY_GLOW_RADIUS);
+            fairyLight.render(batch, 1f);
+            TextureRegion frame = fairyBody[fairyFrame(lt)];
+            float x = Math.round(fairyPoint.x - FAIRY_SIZE / 2f), y = Math.round(fairyPoint.y - FAIRY_SIZE / 2f);
+            if (fairyFlipped(lt)) batch.draw(frame, x + FAIRY_SIZE, y, -FAIRY_SIZE, FAIRY_SIZE);
+            else batch.draw(frame, x, y, FAIRY_SIZE, FAIRY_SIZE);
+        }
+    }
+
+    private final Vector2 fairyPoint = new Vector2();
+
+    /** Where the fairy's centre is {@code lt} seconds into her line: waiting at the healer's, flying (eased, bowed up), then hovering with a bob. */
+    static void fairyPosition(float lt, Vector2 out) {
+        if (lt < FAIRY_APPEAR) { out.set(FAIRY_START_X, FAIRY_START_Y); return; }
+        float t = (lt - FAIRY_APPEAR) / FAIRY_FLIGHT;
+        if (t >= 1f) {
+            float bob = FAIRY_BOB * MathUtils.sin(MathUtils.PI2 * (lt - FAIRY_APPEAR - FAIRY_FLIGHT) / FAIRY_BOB_PERIOD);
+            out.set(FAIRY_HOVER_X, FAIRY_HOVER_Y + bob);
+            return;
+        }
+        float e = Interpolation.smooth.apply(t), u = 1f - e;
+        float cx = (FAIRY_START_X + FAIRY_HOVER_X) / 2f, cy = (FAIRY_START_Y + FAIRY_HOVER_Y) / 2f - FAIRY_ARC; // Y down: the bow subtracts
+        out.set(u * u * FAIRY_START_X + 2 * u * e * cx + e * e * FAIRY_HOVER_X, u * u * FAIRY_START_Y + 2 * u * e * cy + e * e * FAIRY_HOVER_Y);
+    }
+
+    /** The fairy's frame: twinkle in (0.2 s a frame), fly (0.06 s), idle (0.12 s), the clips of {@link FairyGuide}. */
+    static int fairyFrame(float lt) {
+        if (lt < FAIRY_APPEAR) return FairyGuide.APPEAR_FIRST + (int) (lt / FairyGuide.APPEAR_FRAME_SECONDS) % FairyGuide.APPEAR_FRAMES;
+        float flying = lt - FAIRY_APPEAR;
+        if (flying < FAIRY_FLIGHT) return FairyGuide.FLY_FIRST + (int) (flying / FairyGuide.FLY_FRAME_SECONDS) % FairyGuide.FLY_FRAMES;
+        return FairyGuide.IDLE_FIRST + (int) ((flying - FAIRY_FLIGHT) / FairyGuide.IDLE_FRAME_SECONDS) % FairyGuide.IDLE_FRAMES;
+    }
+
+    /** She faces left while she flies from the healer to Edgard (the art faces right). */
+    static boolean fairyFlipped(float lt) { return lt >= FAIRY_APPEAR && lt < FAIRY_APPEAR + FAIRY_FLIGHT; }
+
+    /** The line that gives the fairy (D132; the tester's quoted line is about the handles, this one introduces her). */
+    static boolean fairyLine(HealerDialogue dialogue) {
+        return dialogue.kind() == HealerDialogue.Kind.TUTORIAL_START && dialogue.currentLine() == Msg.HEALER_TALE_FAIRY;
+    }
+
+    /**
+     * Advances this screen's flights and light by {@code dt}; called by the host once a frame while the dialogue runs (never while
+     * paused), after {@link HealerDialogue#update}. Cosmetic: nothing here reads or changes the inventory, the coins or the dialogue.
+     * The paid screen's hand-over and the elixir start when it is first seen (after the settled payment, not before); the fairy
+     * starts on her line and stays for the rest of the dialogue.
+     */
+    public void update(float dt, HealerDialogue dialogue) {
+        if (flights == null) return; // the art is fetched by the first render
+        float step = Math.min(Math.max(dt, 0f), MAX_STEP);
+        if (dialogue != flightsFor) beginDialogue(dialogue);
+        flights.update(step);
+        for (int i = 0; i < ROWS; i++) if (flights.landed(handoverSlot[i])) { pendingSound = HANDOVER_SOUND; arrivalGlint = ARRIVAL_GLINT_SECONDS; }
+        if (flights.landed(elixirSlot)) { pendingSound = ELIXIR_SOUND; elixirGlow = ELIXIR_GLOW_SECONDS; }
+        arrivalGlint = Math.max(0f, arrivalGlint - step);
+        if (elixirGlow > 0f) {
+            elixirGlow = Math.max(0f, elixirGlow - step);
+            elixirLight.place(EDGARD_CENTRE_X, EDGARD_CENTRE_Y, ELIXIR_GLOW_RADIUS, ELIXIR_GLOW_RADIUS);
+            elixirLight.update(step);
+        }
+        if (fairyStart < 0f && fairyLine(dialogue)) fairyStart = dialogue.time();
+        if (fairyStart >= 0f) fairyLight.update(step);
+    }
+
+    static final String HANDOVER_SOUND = "handover", ELIXIR_SOUND = "elixir";
+
+    /** This screen's flights, for tests; null until the first render. */
+    public FlightFx flights() { return flights; }
+
+    /** Whether the fairy is on screen, for tests. */
+    public boolean fairyShown() { return fairyStart >= 0f; }
+
+    /** The sound a flight just earned (an arrival), once; null when none. The host plays it. */
+    public String takeSound() {
+        String sound = pendingSound;
+        pendingSound = null;
+        return sound;
+    }
+
+    private void beginDialogue(HealerDialogue dialogue) {
+        flightsFor = dialogue;
+        flights.clear();
+        elixirLight.clear(); fairyLight.clear();
+        Arrays.fill(handoverSlot, -1);
+        elixirSlot = -1; fairyStart = -1f; elixirGlow = 0f; arrivalGlint = 0f;
+        if (!dialogue.paid() || !dialogue.showsChecklist()) return;
+        if (dialogue.instantText()) { pendingSound = ELIXIR_SOUND; return; } // no motion with instant text; the state is the same
+        float now = dialogue.time();
+        for (int i = 0; i < ROWS; i++)
+            handoverSlot[i] = flights.start(itemIcon[i], PAID_ICON_X + ROW_ICON / 2f, CHECKLIST_Y + i * ROW_STEP + ROW_ICON / 2f,
+                HEALER_CENTRE_X, HEALER_CENTRE_Y, HANDOVER_ARC, ROW_ICON, HANDOVER_END_SIZE, Math.max(0f, HANDOVER_START[i] - now),
+                HANDOVER_SECONDS, FlightFx.EASE_IN, HANDOVER_FADE, WARM_R, WARM_G, WARM_B, true, false);
+        elixirSlot = flights.start(elixirArt, HEALER_CENTRE_X, HEALER_CENTRE_Y, EDGARD_CENTRE_X, EDGARD_CENTRE_Y, ELIXIR_ARC, ELIXIR_FROM, ELIXIR_TO,
+            Math.max(0f, ELIXIR_START - now), ELIXIR_SECONDS, FlightFx.EASE_IN_OUT, ELIXIR_FADE, GREEN_R, GREEN_G, GREEN_B, true, false);
     }
 
     private void thread(Batch batch, float open, HealerDialogue dialogue, boolean edgardSpeaking) {
@@ -270,12 +442,38 @@ public final class HealerDialogueView {
         if (dialogue.showsChecklist()) {
             String checklist = checklistText(lang, dialogue.paid(), hasBat, hasMushroom, allCoins, coinsSecured, coinsTotal);
             if (checklist != blockChecklist) {
-                layout.setText(font, checklist, CHECKLIST, MIDDLE_W, Align.center, true);
-                checklistBlock.setText(layout, MIDDLE_X, overlay.textY(CHECKLIST_Y));
+                if (dialogue.paid()) {
+                    layout.setText(font, checklist, CHECKLIST, PAID_TEXT_W, Align.center, true);
+                    checklistBlock.setText(layout, PAID_TEXT_X, overlay.textY(CHECKLIST_Y));
+                } else buildRows(overlay, lang);
                 blockChecklist = checklist;
             }
         }
         blockLanguage = lang;
+    }
+
+    /** The three rows (#540): measured first so the block centres in the column, then each set at its icon's side; an event, not a frame. */
+    private void buildRows(Overlay overlay, Language lang) {
+        float widest = 0;
+        for (int i = 0; i < ROWS; i++) {
+            layout.setText(font, rowText(i, lang, hasBat, hasMushroom, allCoins, coinsSecured, coinsTotal), CHECKLIST, MIDDLE_W, Align.left, false);
+            rowWidth[i] = layout.width;
+            widest = Math.max(widest, layout.width);
+        }
+        rowX = Math.round(MIDDLE_X + (MIDDLE_W - (ROW_ICON + ROW_GAP + widest)) / 2f);
+        for (int i = 0; i < ROWS; i++) {
+            layout.setText(font, rowText(i, lang, hasBat, hasMushroom, allCoins, coinsSecured, coinsTotal), CHECKLIST, MIDDLE_W, Align.left, false);
+            rowBlocks[i].setText(layout, rowX + ROW_ICON + ROW_GAP, overlay.textY(CHECKLIST_Y + i * ROW_STEP + (ROW_ICON - layout.height) / 2f));
+        }
+    }
+
+    /** One checklist row's text: the state mark and the name (the coin row carries the count); its width is what must fit beside the icon. */
+    public static String rowText(int row, Language lang, boolean bat, boolean mushroom, boolean coinsDone, int secured, int total) {
+        return switch (row) {
+            case ROW_BAT -> mark(bat) + Msg.BAT.t(lang);
+            case ROW_MUSHROOM -> mark(mushroom) + Msg.MUSHROOM.t(lang);
+            default -> mark(coinsDone) + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(secured), "total", Integer.toString(total));
+        };
     }
 
     private void centred(BitmapFontCache block, Overlay overlay, String text, float x, float yFromTop, float width, Color color) {
@@ -349,12 +547,22 @@ public final class HealerDialogueView {
         notch = assets.region(UI + "notch.png", 0, 0, NOTCH_W, NOTCH_H);
         thread = assets.region(UI + "thread.png", 0, 0, THREAD_W, THREAD_H);
         glint = assets.region(UI + "glint.png", 0, 0, GLINT, GLINT);
+        flights = new FlightFx(FLIGHT_SEED);
+        fairyLight = new SoftGlowFx(SoftGlowFx.FAIRY_SELF, FAIRY_SEED);
+        elixirLight = new SoftGlowFx(ELIXIR_LIGHT, ELIXIR_SEED);
+        for (int i = 0; i < FairyGuide.BODY_FRAMES; i++)
+            fairyBody[i] = assets.region("images/objects/fairy-body.png", i * FairyGuide.FRAME, 0, FairyGuide.FRAME, FairyGuide.FRAME);
+        ItemType[] rowTypes = {ItemType.BAT, ItemType.MUSHROOM, ItemType.COIN};
+        for (int i = 0; i < ROWS; i++) itemIcon[i] = assets.region("images/HUD/" + (rowTypes[i] == ItemType.COIN ? "coin" : rowTypes[i].iconName()) + ".png", Texture.TextureFilter.Linear);
+        elixirArt = assets.region("images/ui/boss/elixir.png", 0, 0, ELIXIR_ART, ELIXIR_ART);
         font = assets.font(FontSizes.DIALOGUE);
         boolean integer = font.usesIntegerPositions();
         lineBlock = new BitmapFontCache(font, integer);
         edgardName = new BitmapFontCache(font, integer);
         healerName = new BitmapFontCache(font, integer);
         checklistBlock = new BitmapFontCache(font, integer);
+        rowBlocks = new BitmapFontCache[ROWS];
+        for (int i = 0; i < ROWS; i++) rowBlocks[i] = new BitmapFontCache(font, integer);
         hintBlock = new BitmapFontCache(font, integer);
         markerLeft = new BitmapFontCache(font, integer);
         markerRight = new BitmapFontCache(font, integer);
@@ -376,8 +584,8 @@ public final class HealerDialogueView {
         checklistLanguage = lang; checklistPaid = paid; checklistBat = bat; checklistMushroom = mushroom;
         checklistCoinsDone = coinsDone; checklistSecured = secured; checklistTotal = total;
         checklist = paid ? Msg.PAID.t(lang)
-            : mark(bat) + Msg.BAT.t(lang) + "\n" + mark(mushroom) + Msg.MUSHROOM.t(lang) + "\n" + mark(coinsDone)
-                + Msg.FOREST_COINS_COUNT.format(lang, "count", Integer.toString(secured), "total", Integer.toString(total));
+            : rowText(ROW_BAT, lang, bat, mushroom, coinsDone, secured, total) + "\n" + rowText(ROW_MUSHROOM, lang, bat, mushroom, coinsDone, secured, total)
+                + "\n" + rowText(ROW_COINS, lang, bat, mushroom, coinsDone, secured, total);
         return checklist;
     }
     private static String mark(boolean present) { return present ? "[+] " : "[-] "; }

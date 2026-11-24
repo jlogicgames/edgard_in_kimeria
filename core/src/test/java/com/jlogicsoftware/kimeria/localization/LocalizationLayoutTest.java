@@ -156,7 +156,7 @@ class LocalizationLayoutTest {
     }
 
     /**
-     * D70, D78: the 18 px ingredient checklist (the middle column between the portrait windows, from y 20) ends above the
+     * D70, D78: the 18 px ingredient checklist (the middle column between the portrait windows, from y 16, an icon beside each row, #540) ends above the
      * first choice, and every choice label with its two markers fits the middle column, in every language and state.
      */
     @Test void ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize() {
@@ -170,13 +170,28 @@ class LocalizationLayoutTest {
             });
             float column = HealerDialogueView.MIDDLE_W;
             float top = HealerDialogueView.CHECKLIST_Y, choices = HealerDialogueView.CHOICE_Y;
+            float widestRow = 0;
             float markers = 2 * (HealerDialogueView.MARKER_INSET + new GlyphLayout(dialogue, ">").width + 4);
             for (Language language : Language.values()) for (boolean paid : new boolean[]{false, true}) for (boolean done : new boolean[]{false, true}) {
-                String text = view.checklistText(language, paid, done, !done, done, done ? 3 : 0, 3);
-                GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, column, Align.center, true);
-                assertTrue(layout.width <= column + 1, language.code() + " checklist width");
-                assertTrue(top + layout.height <= choices - 4, language.code() + " checklist stays above the choices: " + layout.height);
+                if (paid) {
+                    GlyphLayout layout = new GlyphLayout(dialogue, view.checklistText(language, true, done, !done, done, done ? 3 : 0, 3), Color.WHITE, HealerDialogueView.PAID_TEXT_W, Align.center, true);
+                    assertTrue(layout.width <= HealerDialogueView.PAID_TEXT_W + 1, language.code() + " paid message width");
+                    assertTrue(top + layout.height <= choices - 4, language.code() + " paid message stays above the choices: " + layout.height);
+                    continue;
+                }
+                // #540 (D132): each row is an icon, a gap and one line of text; the longest must fit beside its icon, and three rows stay above the choices.
+                for (int row = 0; row < HealerDialogueView.ROWS; row++) {
+                    String text = HealerDialogueView.rowText(row, language, done, !done, done, done ? 3 : 0, 3);
+                    GlyphLayout layout = new GlyphLayout(dialogue, text, Color.WHITE, column, Align.left, false);
+                    widestRow = Math.max(widestRow, layout.width);
+                    float beside = column - HealerDialogueView.ROW_ICON - HealerDialogueView.ROW_GAP;
+                    assertTrue(layout.width <= beside, language.code() + " row " + row + " fits beside its icon: " + layout.width + " of " + beside);
+                    assertTrue(layout.height <= HealerDialogueView.ROW_ICON, language.code() + " one line per row");
+                }
+                float rowsBottom = top + (HealerDialogueView.ROWS - 1) * HealerDialogueView.ROW_STEP + HealerDialogueView.ROW_ICON;
+                assertTrue(rowsBottom <= choices - 4, "three rows stay above the choices: " + rowsBottom);
             }
+            System.out.printf("LAYOUT widest checklist row over five languages: %.1f px of %.1f beside the icon%n", widestRow, column - HealerDialogueView.ROW_ICON - HealerDialogueView.ROW_GAP);
             for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                 assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= column - markers,
                     language.code() + " " + message + " in the " + column + " px choice button");
