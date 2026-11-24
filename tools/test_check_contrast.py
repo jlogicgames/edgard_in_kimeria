@@ -384,6 +384,22 @@ class ClassificationTest(unittest.TestCase):
             _, errors, _ = gate.run()
         self.assertTrue(any(e.startswith('Beetle:body') and 'no body was measured' in e for e in errors), errors)
 
+    def test_the_boss_bar_frame_is_measured_over_the_boss_room_and_an_ink_frame_fails(self):
+        """#543: the frame sits on the sky and the tree band alike; a near-black outline sank into the sky (0.101), the bone rim does not."""
+        import tempfile
+        from pathlib import Path
+        roots = gate.map_roots()
+        scenes = {name: gate.Scene(name, root) for name, root in roots.items() if name == 'forest-2'}
+        errors, report = gate.check_boss_hud(scenes, roots)
+        self.assertEqual([], errors)
+        self.assertGreaterEqual(report[gate.BOSS_HUD_NAME], gate.ACTIVE_OUTLINE_MIN)
+        with tempfile.TemporaryDirectory() as folder:
+            ink = Path(folder) / 'frame.png'
+            Image.new('RGBA', Image.open(gate.ROOT / gate.BOSS_HUD_FRAME).size, 'black').save(ink)
+            with mock.patch.object(gate, 'BOSS_HUD_FRAME', str(ink)):
+                errors, _ = gate.check_boss_hud(scenes, roots)
+        self.assertTrue(any(e.startswith(gate.BOSS_HUD_NAME) and '(active)' in e for e in errors), errors)
+
     def test_a_map_with_two_non_scenery_tile_layers_fails_loudly(self):
         """The game overwrites every non-scenery layer into the play grid, last wins; the gate composites only Background."""
         layer = '<layer name="{}" width="1" height="1"{}><data encoding="csv">0</data></layer>'
