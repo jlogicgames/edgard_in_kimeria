@@ -16,8 +16,12 @@ public final class LeafFx {
     private static final float FALL_MIN = 12, FALL_MAX = 20, DRIFT_MAX = 8, SWAY_MIN = 4, SWAY_MAX = 9;
     private static final float LIFE_MIN = 9, LIFE_MAX = 14, SIZE_MIN = 5, SIZE_MAX = 6, TOP_BAND = 48, SPAWN_MARGIN = 8;
     private static final float MEAN_LIFE = (LIFE_MIN + LIFE_MAX) / 2f;
-    /** Decor-tier leaves (D76): Oklab distance 0.14 to 0.17 from the Forest background `2c3f66`: grey-green `526666`, pale grey-green `5b6f70`, dull olive `616764`. */
-    private static final float[] COLORS = {.322f, .400f, .400f, .357f, .435f, .439f, .380f, .404f, .392f};
+    /**
+     * Decor-tier leaves in D120's near palette (dark real leaf greens, OKLab L 0.32 to 0.34, C 0.034 to 0.036, hue 132 to 148):
+     * leaf green `2c3a28`, cool leaf green `2c3d2e`, olive leaf green `2c3724`. Over the sky, far, grove and mid layers their mean
+     * Oklab distance is 0.090 to 0.172, inside the decor body band 0.08 to 0.20 (D76; ART_DIRECTION.md, "Falling leaves").
+     */
+    private static final float[] COLORS = {.173f, .227f, .157f, .173f, .239f, .180f, .173f, .216f, .141f};
     private static final int COLOR_STRIDE = 3, GREEN = 1, BLUE = 2;
 
     private final KimeriaParticleSystem leaves;

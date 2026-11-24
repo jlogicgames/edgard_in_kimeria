@@ -508,8 +508,10 @@ Rooms with high play must still be measured over the real layers before `RIM_SHE
 - **D101 bodies and `RemainsFx`:** the chip colours (`SHELL_CHIPS`, `SPIDER_CHIPS`, `SNAIL_CHIPS`, `WOLF_CHIPS`) take the live monsters'
   colours with the bodies ([D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21), [#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571)).
 - **#451 (moon and clouds)** folds into the shared moon and cloud layers; close it with this work, its checklist moves to #236.
-- **Falling leaves (#236):** `526666`, `5b6f70`, `616764` were set 0.14 to 0.17 from `2c3f66`; re-measure over far and mid (0.250 to
-  0.371). They stay in front of the mid layer, not in the foreground.
+- **Falling leaves (#236, re-measured 2026-11-24):** the old `526666`, `5b6f70`, `616764` (L 0.49 to 0.53, hue 165 to 200) read as pale
+  grey-teal ghosts over the new layers, lighter than all of them and over the decor ceiling (mean distance 0.22 to 0.33, mid 0.30 to
+  0.33). They take D120's near leaf greens `2c3a28`, `2c3d2e`, `2c3724`: 0.090 to 0.172 (see Falling leaves). They stay in front of the
+  mid layer, not in the foreground.
 - **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`, deleted with D112. Its props (the village
   sign, the bare trees, the floor tufts, recoloured dark moss `3a5a50`/`2a443f`/`4c7064` because the ochre was the honey fungus's reserved hue) are copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in
   `terrain.grid`) and stay reported, not gated, until they are redrawn ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)).
@@ -1089,12 +1091,17 @@ choice after a capture: a tiny authored leaf stays the fallback). `effects.LeafF
   must never hide a D7 warning or a D71 at-rest cue: judge in play.
 - **Look.** 5 to 6 px on the long side, 2 to 2.4 px thick, a thin plate that flips about its long axis (width runs from edge-on to full
   every 2.2 s) and swings ±50° with its sway; falls 12 to 20 px/s with up to 8 px/s drift and a ±4 to 9 px sine sway (3.4 s); lives 9 to
-  14 s, fades in and out over the first and last 12 %. Colours `526666`, `5b6f70`, `616764`: muted grey-greens and a dull olive pulled toward the background, so
-  every one is inside the decor tier's body distance of 0.08 to 0.20 (D76) from the Forest background `2c3f66`: Oklab 0.14, 0.17 and 0.16
-  (first look, 2026-11-18, was `6e8466`, `889e79`, `948f62` at 0.24 to 0.32, as loud as the falling stone's grit `9a97ad` at 0.32 and the
-  deadfall's bark `c08a4c` at 0.35, so the author had it dimmed). `tools/check_contrast.py` has no particle tier, so the number is computed
-  with its `oklab`. **Provisional:** the final value is revisited once the Forest background and its parallax layers are designed
-  ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)); leaves drawn over a lighter or layered background need a new check.
+  14 s, fades in and out over the first and last 12 %. Colours (D120 near palette, 2026-11-24) `2c3a28` leaf green (OKLab L 0.33, C 0.036, hue 139), `2c3d2e` cool leaf green (0.34, 0.034,
+  148) and `2c3724` olive leaf green (0.32, 0.036, 132): dark real leaf colours, not grey or teal ghosts, a step lighter than the decor
+  bushes (L 0.15 to 0.31) so a leaf still reads over the dark mid band. Measured with `tools/check_contrast.py`'s `oklab` and `Scene`
+  (no particle tier there): each colour blended at the leaf's 0.85 alpha over every 2 px of air in the composited frame of all nine leaf
+  rooms of the three maps, at the room's camera range in quarters (five positions, one for a room no wider than the view), grouped by
+  the topmost layer. Mean distance: sky 0.132 to 0.137, far 0.090 to 0.100, grove 0.093 to 0.102, mid 0.159 to 0.172, all inside the
+  decor body band 0.08 to 0.20 (D76); mean L step +0.02 to +0.16 (lighter than every layer behind, a quiet outline). The colours they
+  replace, `526666`, `5b6f70`, `616764` (set 2026-11-18 at 0.14 to 0.17 from the flat `2c3f66`), measured 0.219 to 0.241 over sky, far and
+  grove and 0.299 to 0.326 over mid, over the decor ceiling: grey ghosts lighter than the whole scenery (first look, 2026-11-18, was
+  `6e8466`, `889e79`, `948f62`, dimmed by the author). `LeafFxTest.leafColoursAreDarkRealLeafGreens` pins every leaf colour to L 0.30 to
+  0.36, C 0.024 to 0.036, hue 130 to 150.
   What tells a leaf from those cues: grit is grey-violet, 1 to 2 px, 70 to 110 px/s for 0.5 to 0.9 s from a trap lip; bark chips are brown,
   1 to 2 px, about 60 px/s for 0.35 to 0.6 s; leaves are green, 5 to 6 px, 12 to 20 px/s for 9 to 14 s, from the room's top.
 - **Cost.** 24 slots, 0.0 B/frame (`AllocationBudgetTest.fallingLeavesThroughTheRealLevel`); tests `LeafFxTest`, `LeafRoomsTest`.
