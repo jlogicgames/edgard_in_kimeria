@@ -58,6 +58,7 @@ multi-frame sheet are different measurements.
   the main read). Drawn after the hero, because the item is at his hand when he takes it. It goes with the `collect` sound and the cue
   above; there is no screen ripple on a pickup (the lens hid the burst); `RippleEffect` is used only by the F3 debug hotkey and is reserved for picking up a tablet fragment, tracked by [#136](https://github.com/jlogicgames/edgard_in_kimeria/issues/136): that pickup plays only the ripple wave, without sparks or a ring. No sprite,
   shader edit, shake or flash.
+  **Pickup flight (D132, #557):** after the burst the item's own sprite pops 6 px and flies (`effects.FlightFx`, 0.40 s, ease-in, an arc 24 px up, 20 to 10 px, fading over the last 35%, a warm spark trail) to its HUD slot, landing with a four-spark twinkle; cosmetic only.
 - **HUD:** separate 128×128 indexed PNGs, up to 256 entries including transparency,
   detailed clean illustration and linear filtering. Preserve the same identity:
   Bat wing jar, mushroom (D43), the gold coin with the Kimeria sun (#350) and fireball. These appear
@@ -1450,6 +1451,8 @@ went to the walk-cue straw and the sheet got the moon rim (2026-11-20, [#236](ht
 at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
 ## Dialogue screen (D78, playtest F3/F10, #337)
+
+**Flights on this screen (D132, #539, #540, #541):** the checklist rows carry the HUD icons at 20 px; on payment the icons fly to the healer's portrait and the elixir to Edgard's; on the start tale's fairy line the fairy (`fairy-body.png` at 2x, with her soft light) flies from the healer's window to Edgard's and hovers beside his head, never within 8 px of the thread. All of it is the shared `effects.FlightFx`; frame strips of the flights are in [references/flights/](references/flights/) and the numbers in [D132](DECISIONS.md#d132-things-fly-to-where-they-go-one-flight-helper-for-the-pickup-the-hand-over-the-elixir-and-the-fairy-539-540-541-557-2026-11-24).
 
 Every healer conversation is one storybook screen: two portrait windows face each other in a carved walnut frame and the
 silver thread (#228) hangs between them. Rule and measurements:

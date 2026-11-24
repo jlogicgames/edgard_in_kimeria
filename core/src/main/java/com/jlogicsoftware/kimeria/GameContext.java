@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria;
 
 import com.badlogic.gdx.math.Vector2;
+import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
@@ -63,6 +64,12 @@ public interface GameContext {
     boolean isGameStarted();
 
     void setGameStarted(boolean started);
+
+    /**
+     * A pickup of {@code type} at world point ({@code worldX}, {@code worldY}) flies to its HUD slot (D132, #557). Cosmetic: the
+     * pickup's state has already changed when this is called, and nothing waits for the flight. The default draws nothing.
+     */
+    default void startPickupFlight(ItemType type, float worldX, float worldY) { }
 
     void addCoin();
 

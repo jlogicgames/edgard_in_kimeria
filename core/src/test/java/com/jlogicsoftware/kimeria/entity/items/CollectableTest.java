@@ -178,8 +178,9 @@ class CollectableTest {
             Collectable item = new Collectable(assets, game, type.name(),
                 0, 0, 16, 16, () -> events.add("pickup"));
             item.collideWithPlayer(); item.collideWithPlayer();
-            assertEquals(type == ItemType.COIN ? List.of("pickup", "playSound", "addCoin")
-                : List.of("pickup", "playSound"), events);
+            // The flight (D132, #557) is the last call: every state change and the sound come first and none reads the flight.
+            assertEquals(type == ItemType.COIN ? List.of("pickup", "playSound", "addCoin", "startPickupFlight")
+                : List.of("pickup", "playSound", "startPickupFlight"), events);
             assertTrue(item.isRemoved());
         }
     }

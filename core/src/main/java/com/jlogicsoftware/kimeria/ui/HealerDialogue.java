@@ -103,6 +103,7 @@ public final class HealerDialogue {
     /** The line on screen now. */
     public Msg currentLine() { return lines.get(line); }
     public void setInstantText(boolean instant) { instantText = instant; }
+    public boolean instantText() { return instantText; }
     /** How many letters of the line show now; the per-frame renderer asks this instead of {@link #text}, which builds a substring. */
     public int visibleCharacters(Language language) {
         int length = completeText(language).length();

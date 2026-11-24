@@ -506,6 +506,9 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | A fireball flying through the real level, halo and trail drawn, a new ball every 60 frames (#397) | 8 | 0.0 to 2.8 (the 2.8 is a one-time ~3.4 KB in a fresh JVM's first measurement, 0.0 on repeats; its source is not identified: JIT warm-up or a one-time lazy initialisation) |
 | A fireball burst every 60 frames through `Level.fireballFx()` (light, heavy, burn-out in turn), with the ring slots | 8 | 0.0 to 0.3 (headless: the ring's shader draw is skipped) |
 | A pickup burst (12 sparks and a ring) every 60 frames through `Level.pickupSparks()` (#402) | 8 | 0.0 (headless: the ring's shader draw is skipped) |
+| `FlightFx` with a pickup pop and flight every 6 frames, six to eight live (D132, #557) | 8 | 0.0, 0.0, 0.0 |
+| The dialogue screen's fairy hovering with her light (D132, #539) | 8 | 0.4, 0.4, 0.4 |
+| The paid screen's hand-over through a real paid `HealerDialogue`, a new one every 300 frames (D132, #541) | 8 | 2.7, 2.5, 2.5 |
 | Ten falling leaves of forest-1's deadfall room through `Level.leafFx()`, update and render (#473) | 8 | 0.0 (the whole room is the existing deadfall room row, 320.0 to 536.0 of 620) |
 | Beetles crawling, noticing, committing, winding up with specks, bursting or dying, their bodies rocking, crumbling and burning (D101), with `Level.beetleFx()`, through beetle-test.tmx (#327) | 8 | 0.1 in 3 runs (0.2 before the body; headless: no sound is played). The placed beetles (#327) are in the whole-room scenes: guard room 544.5, tree room 224.0 B/frame in 3 runs, each beetle crawling; this row covers their other states, which run the same `Beetle` and `BeetleFx` code (and, since #328, `Level.remainsFx()` for the body's end) |
 | Spiders skittering, noticing, chasing, winding up with their silk, leaping, biting and recovering, or killed and leaving a body that rocks, crumbles and burns, with `Level.spiderFx()` and `Level.remainsFx()`, through spider-test.tmx (#328, D102) | 8 | 0.0 in 3 runs (headless: no sound is played); 0.1 in 3 runs after #483 |
@@ -565,6 +568,7 @@ Owners:
   callback, so it is the same for the coin, the Bat and the Mushroom. Drawn after the hero (the item is at his hand when taken). Cleared
   with the room, so a pickup that returns after a death replays nothing. `RingPool` holds the ring slots, the eased progress and the
   `shockwave.frag` draw for it and `FireballFx`; per-pool values only (colour, size, life).
+- **`effects.FlightFx`** (D132, #557, #541, #539) flies a cached sprite from A to B in screen space: a Bezier bowed up, `EASE_IN`/`EASE_OUT`/`EASE_IN_OUT`, whole pixels, a fade, a `KIND_FLAME` trail and an optional four-spark landing twinkle; 12 slots and 48 sparks, a full pool drops the new request. Two instances, the HUD's (`KimeriaGame`, started by `GameContext.startPickupFlight` after a pickup's state change) and the dialogue view's. A pause freezes it (it ages only in `update`), it uses real dt clamped to 1/20 s, and it is cleared on death, retry, level load and room change. `PickupSparksFx` is unchanged and plays first.
 - `SoftDot.region()`, `SoftDot.glowRegion()` and `Shaders.whiteQuad()` each return one cached `TextureRegion`; callers must not mutate it.
 
 `ParticleGoldenTest` pins the torch and blood numerically (positions, sizes, alphas at chosen frames of a fixed seed); it passed
