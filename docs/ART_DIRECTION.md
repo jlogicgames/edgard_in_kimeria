@@ -1485,6 +1485,32 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 - **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
   that would move his staff to the other hand.
 
+## Boss health bar (playtest 2 F31, [#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543))
+
+Author approved variant A, 2026-11-24 (an iron plate with ruby segments). The bar was a hair-line frame with two flat slabs and read as ceiling
+decoration. It is native pixel art in the boss's own materials, hand-drawn in `art/ui/boss/*.grid` and exported exactly by
+`tools/boss_hud_sprites.py` (sizes in `sprite_layouts.BOSS_HUD_SHEETS`, so `BossHud`, `ELIXIR_OFFSET` and the label fit test are unchanged):
+
+- **Frame** (`frame.png`, 224 x 26): blackened iron (`1e1c2a`, `44425c`, `5c5a7a`, lit edge `9a98ba`) in a 1 px **bone rim** (`d8cab0`, the horn bone), a riveted rim, a brace between
+  segment pairs, a mulberry gem (`6e1460`, `b03a8c`) in each end cap and a bone-horn crest (`c8b8a0`) with one ember eye (`ff6b57`) at the top centre.
+  The frame is opaque: its well (x 10..213, y 4..21) is the dark backing the twelve segments sit in, so an empty socket and a half segment read
+  against one colour whatever scenery is behind (the old frame had a transparent interior).
+- **Segments** (`segment-filled.png`, `segment-empty.png`, 14 x 16): a faceted ruby (`c41a3a`, `e02a4c`, glint `ffd2d6`) in an iron-dark setting, light from the top
+  left; the empty one is the same silhouette as a hollow socket with a ghost of the facets and a lit lower lip, so the fill hides it exactly. Red stays
+  health; nothing here is the orange of the fireball icon, so the two counters never read as one. A lost segment's glow and the restore glow are code
+  (`BossHud`), tinted additive over these same sprites.
+- **Contract:** at most 15 opaque colours each, binary alpha, no dithering, nearest filtering; `validateSpriteArt` checks the sizes and palettes
+  (`BOSS_HUD_SHEETS`, the frame in `OPAQUE_BOSS_HUD_IMAGES`).
+- **Contrast** (`check_boss_hud` in `tools/check_contrast.py`, row `BossHud:frame`, active tier, outline at least 0.28): the frame is fixed on screen over the boss room, so it is
+  measured at every steady camera x of `forest-boss` and at the room's highest and lowest camera y, over the scenery as the game draws it (background lightness
+  0.16 to 0.62: the dark sky above and the pale tree band below). The first drawing, with an ink outline (L 0.146), measured **0.101**: the ink sank into the sky. A lit
+  iron rim measured 0.178 and still failed; the bone rim measures **0.376** at worst. The fix is in the art (the rim colour), not in the tier. The segments'
+  own contrast is a lit gem against a dark socket inside the well: mean OKLab L 0.462 against 0.245, a gap of 0.216 (the pair it replaced, 0.205), pinned at 0.2 by
+  `tools/test_boss_hud_sprites.py`.
+- **Rejected:** variant B, a bone frame with ember flame segments: bolder, but the flame reads as the fireball HUD icon and fire is the hazards' colour.
+- The contact sheet `docs/references/boss-hud/boss-hud-art.png` (made by the exporter) shows the full and the empty bar at 3x on the night colour.
+  Not checked in the running game: the look on desktop and a phone stays open on #543.
+
 ## Kingdom arms (#350, playtest F12)
 
 The arms of Kimeria, the arms of King Rufardus ([STORY.md, "Kingdom heraldry"](STORY.md#kingdom-heraldry--accepted-2026-11-16-350-playtest-f12)):
