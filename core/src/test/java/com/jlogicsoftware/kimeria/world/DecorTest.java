@@ -2,6 +2,7 @@ package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.entity.Collidable;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
@@ -265,5 +266,45 @@ class DecorTest {
     @Test void aStaticLookAlikeIsNeverAnActiveMushroomObject() {
         assertFalse(FungusTrap.class.isAssignableFrom(Decor.class) || HoneyFungus.class.isAssignableFrom(Decor.class),
             "the static look-alike is a picture, not an object with logic");
+    }
+
+    /**
+     * #555, D130 (playtest 2 F17: "pale, see-through trees and bushes"): every frame of the tree and bush sheets is solid. Its alpha is
+     * 0 or 255, nothing in between, and no transparent pixel is enclosed by the drawing (each one reaches the frame's edge through
+     * transparent 4-neighbours), so the background never shows through a trunk, a crown or a bush.
+     */
+    @Test void theTreesAndBushesAreSolidWithNoTranslucentPixelAndNoHole() throws Exception {
+        SpriteSheets.Sheet[] sheets = {SpriteSheets.DECOR_TRUNK, SpriteSheets.DECOR_SNAG, SpriteSheets.DECOR_CROWN, SpriteSheets.DECOR_BUSH};
+        int[] frames = {1, 1, 1, Decor.FRAMES};
+        for (int s = 0; s < sheets.length; s++) {
+            java.awt.image.BufferedImage png;
+            try (var input = getClass().getClassLoader().getResourceAsStream(sheets[s].path())) {
+                assertNotNull(input, sheets[s].path());
+                png = javax.imageio.ImageIO.read(input);
+            }
+            int w = sheets[s].width(), h = sheets[s].height();
+            for (int f = 0; f < frames[s]; f++) {
+                boolean[][] outside = new boolean[w][h];
+                java.util.ArrayDeque<int[]> open = new java.util.ArrayDeque<>();
+                for (int x = 0; x < w; x++) for (int y = 0; y < h; y++) {
+                    int alpha = png.getRGB(f * w + x, y) >>> 24;
+                    assertTrue(alpha == 0 || alpha == 255, sheets[s].path() + " frame " + f + " (" + x + "," + y + ") alpha " + alpha);
+                    if (alpha == 0 && (x == 0 || y == 0 || x == w - 1 || y == h - 1)) { outside[x][y] = true; open.add(new int[] {x, y}); }
+                }
+                while (!open.isEmpty()) {
+                    int[] p = open.poll();
+                    int[][] next = {{p[0] + 1, p[1]}, {p[0] - 1, p[1]}, {p[0], p[1] + 1}, {p[0], p[1] - 1}};
+                    for (int[] n : next) {
+                        if (n[0] < 0 || n[1] < 0 || n[0] >= w || n[1] >= h || outside[n[0]][n[1]]) continue;
+                        if ((png.getRGB(f * w + n[0], n[1]) >>> 24) != 0) continue;
+                        outside[n[0]][n[1]] = true;
+                        open.add(n);
+                    }
+                }
+                for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
+                    assertFalse((png.getRGB(f * w + x, y) >>> 24) == 0 && !outside[x][y],
+                        sheets[s].path() + " frame " + f + ": a hole at (" + x + "," + y + ") shows the background through the drawing");
+            }
+        }
     }
 }

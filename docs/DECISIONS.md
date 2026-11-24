@@ -4121,7 +4121,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `HangingHive`, `Deadfall`) lays its root at least 3 px over the bark of a trunk kind on the root's side, below the trunk's cap. A
   trunk kind is a `Decor` kind drawn behind the play tiles (`behindTiles`): `trunk` and `snag`. A branch that stays shows a joint (a
   dark bark collar, its root column kept out of the moon rim); a branch that breaks off keeps its break at the trunk (the falling
-  branch's cracked joint, its D71 cue; the rotten branch's end). Trunks are decor in the D120 bark palette, never solid, and are drawn
+  branch's cracked joint, its D71 cue; the rotten branch's end). *Revised by D130 (2026-11-24): a branch's root blends into the trunk
+  bark, with no cut at the joint.* Trunks are decor in the D120 bark palette, never solid, and are drawn
   before the play tiles, so a ledge in front of a tree hides it. Gameplay boxes, triggers and timing are not changed by this rule.
 - **As built:** `decor-trunk` 28×288 (bark 23 px, x - 3 to x + 19 of its 16 px object); a new kind `snag` (28×200, a dead tree snapped
   off 200 px up) for forest-1-mob, where a full trunk crossed the moon disc at the room's first camera (decor body 0.211, over the 0.20
@@ -4318,3 +4319,57 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (0.069), and the pale edge carries it. Contrast at the placed roots: burl 0.449, shaft 0.529, tip 0.482 at worst (the burl has the moon rim; the repeating tile has none).
   Particles: soil specks hop from the lips in the warning, six bark chips fall as the root sinks (`KIND_GRIT`), every thrust, hit or miss (D93). Sounds: `root_creak` (warning), `root_thrust` (the thrust), voice-synth, seeds 7403 and 7404.
 - **Allocation (`AllocationBudgetTest.lanceRootsCycle`, four roots, 3 isolated runs):** 1.1, 1.1 and 1.2 B/frame against the ceiling 8, unchanged (the ember fissure's own figure is 1.1).
+
+## D130. Decor trees and bushes are solid and calm, and a trunk is apart from the ground (amends D76 and D120, [#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555), 2026-11-24)
+
+- **Related:** [#596](https://github.com/jlogicgames/edgard_in_kimeria/issues/596) covers the same trunk and soil gap.
+
+- **Status:** Accepted direction (author, 2026-11-21, playtest 2 F17: "trees and bushes are drawn properly, opaque and clear, a bit
+  darker than the active elements; everything important is bright"); the red-brown bark and the measured bounds await the author's
+  review in the running game (#555 keeps that box open). Amends [D76](#d76-three-contrast-tiers-background-decor-active-344-playtest-f15-2026-11-16)
+  (one new decor limit, every old limit unchanged) and [D120](#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21)
+  (the play layer's trunk hue).
+- **What was already done by D120 and D122:** the decor sheets are opaque (binary alpha, no enclosed hole in `decor-trunk`,
+  `decor-snag`, `decor-crown`, `decor-bush`) and drawn in dark real colours, not grey ghosts (D120); every branch, falling branch,
+  hive and deadfall bough grows from a brown trunk or snag (D122, `check_branch_roots`, 3 to 9 px of root over the bark). Those trunks
+  are the "brown copies of the background trees" the issue asked for: a tree in the play plane, brown, under each branch. Literal
+  copies of the parallax trees were not made: D120 keeps the scenery bluer with depth, and a second brown tree kind would only repeat
+  the trunk. The falling platforms are all the rotten log since PR 590 (the author: "replace all flying logs with the rotten log over
+  the pit, with its behaviour"); the log has no tree by that choice, and no support is added for it.
+- **Decision:** the D76 decor limits stay (outline at most 0.20, body 0.08 to 0.20, p90 chroma at most 0.10): measured on
+  `forest-1-tree` and every other placement they keep the decor a step under every active sprite (active at least 0.28). One limit is
+  added: a **trunk kind** (a `Decor` kind drawn behind the play tiles, D122: trunk, snag) keeps a mean OKLab distance of at least
+  **0.02** (one just-noticeable step, the unit of D76's reasons) from the nearest terrain colour (every colour of
+  `art/terrain/forest/terrain.grid` but its decor-tier keys `A B D E F H I J K u v w`).
+- **Why:** the D120 bark used the soil's own browns (bark `302419` against soil `2f2117`, `251a10` against `22180f`): mean 0.012 from the
+  nearest terrain colour, so a trunk standing on the floor read as a pillar of earth, and the terrain sheet does have one-tile pillars
+  and rock walls (#547). A lighter or darker bark alone cannot leave the soil, whose ramp covers L 0.12 to 0.48; a hue step can.
+- **Recolour (palette lines of `art/objects/decor/trunk.grid` and `snag.grid` only; every pixel, frame and size unchanged):** the
+  bark keys `k f d m r l` become a red-brown pine bark, hue 35 (was 62), C 0.036 (was 0.026), each key 0.01 lighter: `1c0805`,
+  `220e09`, `28130e`, `2e1813`, `39231d`, `47302a` (were `140a03`, `1a0f06`, `20150b`, `251a10`, `302419`, `3d3126`). The moss `g` and the
+  lichen lit edge `h` are unchanged. It stays brown and in D120's chroma band, and it sits nearer the active branches' collar
+  (`4a2e1c`, hue 53) than the soil does. The other decor (bush, crown, vine, look-alike) is not a column and is not changed.
+- **Measured (2026-11-24, `check_contrast.py`, worst placement; before / after):** from the terrain colours, trunk 0.012 / 0.026,
+  snag 0.012 / 0.026. Trunk outline 0.076-0.144 / 0.074-0.142, body at most 0.140 / 0.142; snag outline 0.079-0.119 / 0.080-0.120,
+  body at most 0.103 / 0.114. Bush 0.120 to 0.135 (body 0.134), crown 0.026 to 0.165 (body 0.159), vine 0.099 to 0.100, look-alike
+  0.129 to 0.130, unchanged. Report only (not trunk kinds): vine 0.015 and look-alike 0.014 from the terrain colours, bush 0.033,
+  crown 0.033.
+- **Gate:** `tools/check_contrast.py` `check_trunk_soil` (in `validateContrast`; the trunk kinds are read from `Decor.java` through
+  `check_tiled_links.decor_trunk_kinds`), `tools/test_check_contrast.py` `TrunkSoilTest` (the old bark fails, the new bark passes,
+  the shipped trunks pass); `DecorTest.theTreesAndBushesAreSolidWithNoTranslucentPixelAndNoHole` pins the opaque trunk, snag, crown
+  and bush (alpha 0 or 255, no enclosed hole, every bush frame). No threshold or tolerance was loosened.
+- **A branch's root blends into the trunk bark (revises D122's joint; the author, 2026-11-24, on the rotten branch: "a completely
+  different colour and an obvious cut. Make the colour near the edge change gradually into the trunk's colour"):** on every branch
+  that hangs on a trunk, the last 5 to 8 px at the root ramp row by row, with staggered steps, from the branch's own colours through
+  a half step (an OKLab midpoint typed per colour) into the trunk's bark (`47302a`, `2e1813`, `28130e`, `220e09`), and flare a row up
+  and down into a bark collar; the outermost column is the trunk's furrow `220e09`, the pixel the trunk draws under it. Hand-typed in
+  `rotten-perch.grid` (intact, crumble1, crumble2; columns 0-6), `branch.grid` (resting, rustle, sag; columns 0-5, the D71 crack
+  band at 6-11 untouched; `falling` keeps its broken end), `perch.grid`, `hive.grid` (rest to bare) and `deadfall-bough.grid`
+  (columns 104-111); the `-left` frames are flips and the deadfall is mirrored in code, so both sides match. The old collar key `J`
+  (`4a2e1c`) is gone; `RIM_KEEP` keeps the ramp keys. The rotten branch keeps its rot and split along its length, none at the joint.
+  Boxes, triggers and timing are unchanged; `check_branch_roots` passes as before (3 to 9 px over the bark). Active outline at worst,
+  before / after: rotten branch 0.290 / 0.281 (its rimmed end at the frame's edge was its brightest edge; the furrow-coloured edge
+  column is what keeps it over the 0.28 floor, a lighter bark edge measured 0.265), falling branch 0.492 / 0.375, hive 0.395 / 0.324,
+  sound branch 0.388 / 0.391 (left 0.413 / 0.380), deadfall bough 0.430 / 0.411. No threshold changed.
+- **Not verified:** the look in the running game, desktop and web: trees and bushes solid and calm, important objects brighter, the
+  branch and the log not hung in the air (#555).

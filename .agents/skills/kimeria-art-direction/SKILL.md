@@ -14,7 +14,8 @@ How art fits the rest of the game's style (readable before lethal, a hazard warn
 Open levels are at night (`2c3f66`, D92): measure over it, and where an ink contour falls under the floor give the sheet
 the moon rim through its exporter flag (`tools/moon_rim.py`), never by hand; keep a trap's ink cue out of it (`RIM_KEEP`);
 decor and the foreground take the depth palette instead (D120: a neutral dark palette with real hues, leaf green, bark brown,
-moss; never near black, never grey or slate), and the scenery layers turn bluer, lighter and greyer with depth;
+moss; never near black, never grey or slate; a trunk kind keeps 0.02 from the terrain colours, D130, so a tree never reads as ground),
+and the scenery layers turn bluer, lighter and greyer with depth;
 use [kimeria-trap-design](../kimeria-trap-design/SKILL.md) for anything that can kill.
 The author clarified the scope on 2026-10-22 after seeing detailed icons used in
 world gameplay. Choose the asset's destination BEFORE choosing a style or reference.
@@ -51,9 +52,9 @@ pixels and the in-game result, not just the high-resolution source.
 ## Branches grow from trunks (D122)
 
 A sprite drawn as a branch or a bough leaves its root open at the frame's edge, where it lies over a `Decor` trunk's bark. A branch
-that stays swells into a dark bark collar at the root; mark the root column with the grid key `J` and add the sheet to `RIM_KEEP`
-in `tools/forest_trap_sprites.py`, or the moon rim draws a pale cut across the joint. A branch that breaks off keeps its break at
-the trunk. See `docs/ART_DIRECTION.md`, "A branch always grows from a trunk (D122)".
+on a trunk blends into the bark at its root (D130): its last 5 to 8 px ramp through a half step into the trunk's red-brown bark
+and flare into a collar, the outermost column the trunk's furrow `220e09`; put the ramp keys in `RIM_KEEP` in
+`tools/forest_trap_sprites.py`, or the moon rim draws a pale cut across the joint. Rot, cracks and break cues stay off the joint. See `docs/ART_DIRECTION.md`, "A branch always grows from a trunk (D122)".
 
 ## Viewpoint of interactive objects
 

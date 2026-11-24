@@ -3,15 +3,16 @@
 # disc at the room's first camera and breaks the decor ceiling, check_contrast.py). Not solid, never moves; drawn behind the
 # play tiles like the trunk. The snapped top (rows 0-5, splinters with a lit edge) is typed; rows 6-199 are the trunk's rows
 # 94-287 copied as typed (trunk.grid), so its bark, stub and roots match the trunk's.
+# Bark palette as trunk.grid (D130, #555, 2026-11-24: a red-brown pine bark apart from the soil's browns).
 size 28 200
-color f 1a0f06
-color d 20150b
-color m 251a10
-color r 302419
-color l 3d3126
+color f 220e09
+color d 28130e
+color m 2e1813
+color r 39231d
+color l 47302a
 color h 454339
 color g 1b2416
-color k 140a03
+color k 1c0805
 frame snag
 ............................
 ......f.....m......l........

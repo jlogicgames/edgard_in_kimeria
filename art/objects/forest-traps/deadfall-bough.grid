@@ -1,6 +1,8 @@
 # Deadfall bough (#363, D88), native 112x24, one frame. Rope knots at x 40 and 55 (the pivot between them, 48, 9);
 # the bare snag on the left ends at (8, 17); the thick right end goes into a Decor trunk: no end grain (a sawn end reads as
 # cut, not grown), it swells by a row up and down into a dark bark collar open at the frame's edge (D122). Mirrored for swing=right.
+# Joint (D130, 2026-11-24): the collar at the right edge is the trunk's red-brown bark (1 2 4) and the root (columns 104-111)
+# ramps into it through w and a half step 6; keys 1, 2, 4, 6 are kept out of the moon rim.
 size 112 24
 color k 0b0814
 color W 4a2e1c
@@ -12,20 +14,23 @@ color c e8c890
 color r 9c6a34
 color b efe6c4
 color s b8ad9c
-color J 4a2e1c
+color 1 47302a
+color 2 2e1813
+color 4 220e09
+color 6 5a3722
 frame bough
-................................................................................................................
-......................................................................................kk..........kk..........kJ
-............................................................kkkkkkkkkkkkkkkkkkkkkkkkkkllkkkkkkkkkkllkkkkkkkkkkWJ
-..................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkllllllllllllllllllllllllllllllllllllllllllllllllllwJ
-...kk...........kkllllllllllllllllllllllllllllllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwJ
-..kGgk.......kkklwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwWWwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwWwwJ
-.kGgGkkkkkkkklllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwJ
-.kgGgklllllllwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwJ
-..kgkkWWwwwwwwWWwwwwWwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWJ
-...k...kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkbkkkkkkkkkkkkkkbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkWJ
-....................kWWk................s..............s......................................................kJ
-..................kWwk..........................................................................................
+...............................................................................................................4
+......................................................................................kk..........kk..........44
+............................................................kkkkkkkkkkkkkkkkkkkkkkkkkkllkkkkkkkkkkllkkkkkkkk4114
+..................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkklllllllllllllllllllllllllllllllllllllllllllllllww614
+...kk...........kkllllllllllllllllllllllllllllllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwww6624
+..kGgk.......kkklwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwWWwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwW6224
+.kGgGkkkkkkkklllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwww66224
+.kgGgklllllllwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwww6624
+..kgkkWWwwwwwwWWwwwwWwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwWwwwwwwwwwwwwwwwwwwwwwwwwww66224
+...k...kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkbkkkkkkkkkkkkkkbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk4224
+....................kWWk................s..............s.....................................................444
+..................kWwk........................................................................................44
 ................kWwk............................................................................................
 ..............kWwk..............................................................................................
 ............kWwk................................................................................................
