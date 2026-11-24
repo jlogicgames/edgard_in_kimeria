@@ -21,6 +21,9 @@ the coin has no light, NO_HALO):
 - active (hero, traps, enemies, collectables, mechanisms): outline >= ACTIVE_OUTLINE_MIN;
 - decor (`Decor` kinds, `HangingVine`): outline <= DECOR_OUTLINE_MAX, DECOR_BODY_MIN <= body <= DECOR_BODY_MAX,
   chroma <= DECOR_CHROMA_MAX. D108: there is no absolute ink floor; decor is measured relative to the composited background.
+- trunk kinds (D130, the `Decor` kinds drawn behind the play tiles: trunk, snag): their mean OKLab distance from the nearest
+  terrain colour (every colour of the terrain sheet but its decor-tier props) is at least TRUNK_SOIL_MIN, so a tree never reads
+  as a pillar of ground.
 Every object type in SpawnPoints and Collisions must be classified here as a sprite or as drawing nothing of its own;
 an unknown type fails, so a new sprite cannot skip the check. Tile-layer scenery is reported, not gated: it is the
 third-party props (#189) that the terrain sheet still carries at their old tile ids; the report is made for the maps that draw that
@@ -34,6 +37,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageChops
+from check_tiled_links import decor_trunk_kinds
 
 ROOT = Path(__file__).resolve().parents[1]
 MAPS = ('forest-0', 'forest-1', 'forest-2')
@@ -41,6 +45,14 @@ ACTIVE_OUTLINE_MIN = 0.28
 DECOR_OUTLINE_MAX = 0.20
 DECOR_BODY_MIN, DECOR_BODY_MAX = 0.08, 0.20
 DECOR_CHROMA_MAX = 0.10
+# D130 (#555): a trunk stays one just-noticeable OKLab step (0.02, D76's step) from the ground's colours on average; the bark in
+# the soil's own browns measured 0.012 and read as a pillar of ground, the red-brown bark measures 0.026.
+TRUNK_SOIL_MIN = 0.02
+TERRAIN_GRID = 'art/terrain/forest/terrain.grid'
+COLOR_LINE = 3  # `color <key> <RRGGBB>`: the word count of a palette line
+COLOR_KEY = 1  # the word of a palette line that holds its key
+COLOR_HEX = 2  # the word of a palette line that holds its RRGGBB
+TERRAIN_DECOR_KEYS = frozenset('ABDEFHIJKuvw')  # D120: the props' contour and sign, the tufts and the canopy clump are decor, not ground
 CHROMA_PERCENTILE = 0.9
 ALPHA_MIN = 128
 VIEW_HEIGHT = 360  # KimeriaGame.LOGICAL_H
@@ -913,6 +925,39 @@ def lip_top(root, x, y):
     return max(y, floor_camera_top(root, x, y))
 
 
+def terrain_colours():
+    """The OKLab colours of the ground: every `color` line of the terrain grid but its decor-tier keys (TERRAIN_DECOR_KEYS)."""
+    colours = []
+    for line in (ROOT / TERRAIN_GRID).read_text().splitlines():
+        parts = line.split()
+        if len(parts) >= COLOR_LINE and parts[0] == 'color' and parts[COLOR_KEY] not in TERRAIN_DECOR_KEYS:
+            colours.append(oklab(tuple(int(parts[COLOR_HEX][i:i + HEX_PAIR], HEX_BASE) for i in range(0, HEX_RGB, HEX_PAIR))))
+    return colours
+
+
+def soil_distance(sprite, ground):
+    """Mean, over the opaque pixels of `sprite`, of the OKLab distance to the nearest colour of `ground`."""
+    rgb = np.asarray(sprite.convert('RGBA'), dtype=np.float64)
+    opaque = rgb[rgb[..., ALPHA] >= ALPHA_MIN]
+    distances = [min(math.dist(oklab(tuple(px[:RGB])), g) for g in ground) for px in opaque]
+    return sum(distances) / len(distances)
+
+
+def check_trunk_soil(ground=None):
+    """(errors, {key: distance}) for every trunk kind (D130): a tree's bark stays TRUNK_SOIL_MIN from the ground's colours."""
+    ground = terrain_colours() if ground is None else ground
+    errors, distances = [], {}
+    for kind in decor_trunk_kinds():
+        key = f'Decor:{kind}'
+        if key not in SPRITES:
+            errors.append(f'{key}: a trunk kind (Decor.behindTiles) with no SPRITES row')
+            continue
+        distances[key] = min(soil_distance(frame, ground) for frame in frames(key))
+        if distances[key] < TRUNK_SOIL_MIN:
+            errors.append(f'{key} (decor trunk): {distances[key]:.3f} from the terrain colours < {TRUNK_SOIL_MIN}: it reads as ground')
+    return errors, distances
+
+
 def at(row):
     """Where a result row was measured: map, x, and the steady camera x when scenery moved behind it."""
     camera = row[ROW_CAMERA] if len(row) > ROW_CAMERA and row[ROW_CAMERA] is not None else None
@@ -1343,6 +1388,8 @@ def run():
     errors.extend(fairy_errors)
     for name, outline in fairy.items():
         results[name] = [('sweep', 0, outline, 0.0, None)]
+    trunk_errors, _ = check_trunk_soil()
+    errors.extend(trunk_errors)
     return results, errors, tile_report(roots)
 
 
@@ -1353,6 +1400,8 @@ def main():
         tier = SPRITES[key][0] if key in SPRITES else 'active'  # the fairy rows (#338) are active
         print(f'{key:24} {tier:7} {min(r[ROW_OUTLINE] for r in rows):11.3f} {max(r[ROW_OUTLINE] for r in rows):11.3f} '
               f'{max(r[ROW_BODY] for r in rows):8.3f}')
+    for key, distance in check_trunk_soil()[1].items():
+        print(f'{key:24} trunk   from the terrain colours {distance:.3f} (min {TRUNK_SOIL_MIN})')
     print('tile scenery, report only (#189, background tier ceiling = decor ceiling):')
     for category, (outline, body) in tiles.items():
         print(f'  {category:16} outline {outline:.3f} body {body:.3f}')

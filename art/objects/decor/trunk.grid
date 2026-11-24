@@ -14,14 +14,16 @@
 # The roots now flare to the full 28 px. Drawn behind the play tiles, so a trunk passes behind a ledge (Decor.behindTiles).
 size 28 288
 # Depth palette (D120, 2026-11-21): the same lightness per key in bark brown (hue 62, C 0.026), moss g, lit edge h a lichen grey.
-color f 1a0f06
-color d 20150b
-color m 251a10
-color r 302419
-color l 3d3126
+# Apart from the soil (D130, #555, 2026-11-24): the bark keys k f d m r l were the soil's own browns (mean 0.012 from the nearest
+# terrain soil colour, so a trunk read as a pillar of ground); now a red-brown pine bark, hue 35, C 0.036, each key 0.01 lighter.
+color f 220e09
+color d 28130e
+color m 2e1813
+color r 39231d
+color l 47302a
 color h 454339
 color g 1b2416
-color k 140a03
+color k 1c0805
 frame trunk
 ............................
 ..........fdmmrrl...........

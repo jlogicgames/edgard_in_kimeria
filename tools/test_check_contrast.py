@@ -32,6 +32,10 @@ LIT_PIXEL = (19, 19)
 UNLIT_PIXEL = (18, 18)
 FOREST_LIT = tuple(min(255, c + HALO_ADDED) for c in FOREST_BLUE[:gate.RGB]) + FOREST_BLUE[3:]
 OUTLINE = 2  # index of the outline in a gate.run() result row
+SOIL_BROWN = (0x22, 0x18, 0x0f, 255)  # terrain.grid key 2, the soil body
+OLD_BARK = (0x25, 0x1a, 0x10, 255)  # the trunk's bark key m before D130: the soil's own brown
+RED_BARK = (0x2e, 0x18, 0x13, 255)  # the bark key m since D130
+PROP_CONTOUR = (0x2d, 0x26, 0x21)  # terrain.grid key A, the props' bark contour: decor tier (D120), not ground
 WHITE_RIM = (250, 250, 250, 255)
 WARM_HALO = (110, 100, 72, 255)
 BIG_HALO_SIZE = 16
@@ -508,6 +512,33 @@ class ShippedArtTest(unittest.TestCase):
         self.assertEqual([e for e in errors if 'Collectable' in e], [])
         for key in ('Collectable:Coin', 'Collectable:Bat', 'Collectable:Mushroom'):
             self.assertGreaterEqual(min(r[OUTLINE] for r in results[key]), gate.ACTIVE_OUTLINE_MIN)
+
+
+class TrunkSoilTest(unittest.TestCase):
+    """D130 (#555): a trunk kind stays TRUNK_SOIL_MIN from the ground's colours, so a tree never reads as a pillar of ground."""
+    GROUND = [gate.oklab(SOIL_BROWN)]
+
+    def test_bark_in_the_soils_own_brown_fails(self):
+        self.assertLess(gate.soil_distance(square(OLD_BARK), self.GROUND), gate.TRUNK_SOIL_MIN)
+        with mock.patch.object(gate, 'frames', return_value=[square(OLD_BARK)]):
+            errors, _ = gate.check_trunk_soil(self.GROUND)
+        self.assertTrue(errors and all('reads as ground' in e for e in errors), errors)
+
+    def test_red_brown_bark_passes(self):
+        with mock.patch.object(gate, 'frames', return_value=[square(RED_BARK)]):
+            errors, distances = gate.check_trunk_soil(self.GROUND)
+        self.assertEqual(errors, [])
+        self.assertTrue(all(d >= gate.TRUNK_SOIL_MIN for d in distances.values()))
+
+    def test_the_ground_leaves_out_the_decor_tier_props(self):
+        ground = gate.terrain_colours()
+        self.assertIn(gate.oklab(SOIL_BROWN[:gate.RGB]), ground)
+        self.assertNotIn(gate.oklab(PROP_CONTOUR), ground)
+
+    def test_shipped_trunks_are_apart_from_the_ground(self):
+        errors, distances = gate.check_trunk_soil()
+        self.assertEqual(errors, [])
+        self.assertEqual(set(distances), {'Decor:trunk', 'Decor:snag'})
 
 
 class FairyTest(unittest.TestCase):

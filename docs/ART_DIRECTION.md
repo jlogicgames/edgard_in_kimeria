@@ -765,7 +765,15 @@ depends on it.
   the deadfall's boughs) shows a joint where it meets the trunk: its root swells a row up and down into a dark bark collar
   (`4a2e1c`), and its root column (grid `J`) is kept out of the moon rim (`RIM_KEEP` in `tools/forest_trap_sprites.py`), which
   otherwise drew a pale cut across the joint at the frame's edge. A branch that breaks off keeps its break at the trunk: the
-  falling branch's cracked joint (#361, its D71 cue) and the rotten branch's rimmed end lie on the bark. Decor tier over the
+  falling branch's cracked joint (#361, its D71 cue) and the rotten branch's rimmed end lie on the bark.
+  *Since [D130](DECISIONS.md#d130-decor-trees-and-bushes-are-solid-and-calm-and-a-trunk-is-apart-from-the-ground-amends-d76-and-d120-555-2026-11-24) (2026-11-24, the author: "the left branch is a completely different colour and has an obvious cut"):* **a branch's
+  root blends into the trunk bark.** On every branch that hangs on a trunk (sound, rotten and falling branch, hive and deadfall
+  boughs) the last 5 to 8 px at the root ramp, row by row with staggered steps, from the branch's own colours through a half step
+  into the trunk's red-brown bark (`47302a`, `2e1813`, `28130e`, `220e09`), and the root flares a row up and down into a bark collar.
+  The outermost column is the trunk's furrow colour `220e09`, the pixel the trunk draws under it, so no line shows at the joint. The
+  ramp keys (`1` to `7` in each grid) are in `RIM_KEEP`. The rotten branch keeps its rot and split along its length, none at the
+  joint; the falling branch keeps its raw-wood crack band (the D71 cue) just beside the collar, and its `falling` frame its broken
+  end. Decor tier over the
   shipped layers: trunk outline 0.076 to 0.144, body at most 0.140; snag outline 0.087 to 0.119, body at most 0.103. A full trunk
   at forest-1-mob x 3968 crossed the moon disc at the room's first camera (body 0.211, over the 0.20 ceiling), so that tree is a snag.
   Previews: `docs/references/forest-traps/decor-trunk-preview.png`, `decor-snag-preview.png`, `perch-preview.png`, `hive-preview.png`,
@@ -1357,7 +1365,7 @@ sprite belongs to one of three tiers. It is measured against what the game draws
 | Tier | Belongs | Check (OKLab, worst placement) | Drawing language |
 |---|---|---|---|
 | Active | hero, traps and their at-rest cues (D71), enemies and their bodies (D101, [D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)), collectables, mechanisms, terrain | outline at least 0.28 | ink contour `0b0814` (or the sheet's own near-black); the accent hues are reserved here |
-| Decor | `Decor` kinds, `HangingVine`, later shrubs, flowers, ferns (#189) | outline at most 0.20, body 0.08 to 0.20, p90 chroma at most 0.10, no ink pixel | contour in its own darker hue, no ink, no accent hue, no idle animation (it may react to the hero or the world) |
+| Decor | `Decor` kinds, `HangingVine`, later shrubs, flowers, ferns (#189) | outline at most 0.20, body 0.08 to 0.20, p90 chroma at most 0.10, no ink pixel; a trunk kind (trunk, snag) at least 0.02 from the terrain colours (D130) | contour in its own darker hue, no ink, no accent hue, no idle animation (it may react to the hero or the world) |
 | Background | the level's flat `background` colour (D92), tile scenery, later clouds and moon (#451) and parallax layers (#236) | no louder than decor | desaturated, static |
 
 - **Outline** is the mean lightness difference between each silhouette pixel and the background pixel just outside it.
@@ -1388,7 +1396,7 @@ measured value: D92.
 **Decor at night (D92).** The decor keeps its own-hue contour and quiet tier; every decor colour is mixed 35 % toward
 `2c3f66` in its grid, so the body stays at most 0.20 over the night (it was 0.215 to 0.273). The day values in the sheet
 notes below are the drawings' history. Superseded for every decor sheet by the depth palette ([D120](DECISIONS.md#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21), 2026-11-21): the trunk is a bark
-brown (`140a03` to `3d3126`, hue 62, moss `1b2416`, a lichen-grey lit edge `454339`), the bush, crown, vine and look-alike as in their
+brown (`140a03` to `3d3126`, hue 62, moss `1b2416`, a lichen-grey lit edge `454339`; since D130 a red-brown bark `1c0805` to `47302a`, hue 35, apart from the soil), the bush, crown, vine and look-alike as in their
 notes; the table below is history:
 
 | Sheet | Day → night (contour first) | Outline / body over `2c3f66` |
@@ -1398,6 +1406,18 @@ notes; the table below is history:
 | `decor-trunk` | `6d665e`→`565861`, `8b8379`→`6a6b72`, `9a9288`→`74757c`, `7a736a`→`5f6169`; layered forest ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20): →`2a2e38`, `2b2f3a`, `2d303b`, `2b2e39` (OKLab L 0.301 to 0.312, just above the ink floor); bark redraw (#236 art review, 2026-11-21, the flat pole read as a lamp post): a cool slate trunk in a grid of its own, shadow side and furrows `101116`, bark `16171d` / `1b1c23`, lit ridges `24262f` / `2f3340`, a broken moon rim `3a4258` on the right edge, a knot `0b0c10`, a snapped stub on the shadow side, roots flaring to 16 px with moss `1a2322`; the mean lightness kept at the pole's (OKLab L about 0.23) | 0.095 / 0.160; over forest-1's layers and forest-0's `2c3f66`: 0.069 to 0.197 / 0.084 to 0.194; after the redraw, over the shipped layers: outline 0.118 to 0.175, body 0.097 to 0.184 (the flat pole: outline up to 0.170, body up to 0.189) |
 | `decor-vine` | `757a67`→`5b6567`, `9d9f7b`→`757d74`, `8a8c6d`→`69716b`, `88a083`→`687e79`, `738b73`→`5a706e` | 0.130 / 0.173 |
 | `decor-crown` | `607660`→`4e6362`, `6e8466`→`576c66`, `7b9170`→`5f746c`, `889e79`→`687d72`, `948f62`→`707363` | 0.111 / 0.180 |
+
+**Decor is solid, calm and apart from the ground ([D130](DECISIONS.md#d130-decor-trees-and-bushes-are-solid-and-calm-and-a-trunk-is-apart-from-the-ground-amends-d76-and-d120-555-2026-11-24), [#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555)).** Playtest 2 F17 saw
+pale, see-through trees and bushes with the branch trap and the log hung in the air. The decor sheets are opaque (binary alpha,
+no enclosed hole in the trunk, snag, crown or bush), drawn in D120's dark real colours, every branch grows from a trunk (D122), and
+the D76 limits stay as they are: they keep the decor a step quieter than every active sprite (active at least 0.28, decor outline
+at most 0.20). A trunk kind must also not read as ground: its bark was the soil's own browns (mean 0.012 from the nearest terrain
+colour, `2f2117` against the bark's `302419`) and a tree looked like a pillar of earth (the terrain sheet has one-tile pillars and
+rock walls). It is now a red-brown pine bark (hue 35, C 0.036, each key 0.01 lighter: `1c0805` to `47302a`; moss and lit edge
+unchanged), 0.026 from the terrain colours, and `check_contrast.py` holds every trunk kind at least 0.02 from them (one
+just-noticeable step, the step D76 counts in). Measured (2026-11-24, worst placement): trunk outline 0.074 to 0.142, body at most
+0.142 (was 0.076 to 0.144 / 0.140); snag 0.080 to 0.120 / 0.114 (was 0.079 to 0.119 / 0.103); bush 0.120 to 0.135, crown 0.026
+to 0.165, unchanged.
 
 Reserved accent hues (active only):
 - magenta (thorn tuft);

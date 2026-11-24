@@ -44,8 +44,10 @@ RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough
                         'thorn-root', 'thorn-tuft', 'fairy:body', 'fairy:glint'})
 # Grid chars the rim never repaints, per sheet: the
 # small glint's side points (`K`, the ink), so its rim is the top point alone and half its contour stays dark. D122: a branch's
-# root edge (`J`, bark), which lies on a trunk's bark at the frame's edge: a rim there would draw a pale cut across the joint.
-RIM_KEEP = {'fairy:glint': 'K', 'perch': 'J', 'hive': 'J', 'deadfall-bough': 'J'}
+# root edge, which lies on a trunk's bark at the frame's edge: a rim there would draw a pale cut across the joint. D130: the root's
+# ramp into the trunk's bark (keys `1` to `7`, typed in each grid) is kept whole, so the joint shows no pale line.
+RIM_KEEP = {'fairy:glint': 'K', 'perch': '1234567', 'hive': '123467', 'deadfall-bough': '1246', 'rotten-perch': '1234567',
+            'branch': '1234567'}
 # The fairy (#338, D82, #236) is no moon-rimmed trap: she carries her own light. Her contour is lit from above in her lantern
 # white `f2fff4` (already in her palette, so no new entry), and only from above, so her sides and underside keep the ink:
 # half light, half dark reads both on the near-black play band (lifted by her own glow) and over the moon and the clouds.
