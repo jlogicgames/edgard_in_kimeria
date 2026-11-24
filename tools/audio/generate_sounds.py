@@ -823,17 +823,29 @@ BEETLE_INTAKE_LEN = 0.07                  # s, the breath in at the very end
 BEETLE_INTAKE_BAND = (1800.0, 1600.0)
 BEETLE_INTAKE_GAIN = 0.5
 BEETLE_WINDUP_RMS_DB = -19.4
-# Burst (beetle_pop): a voiced plosive "pok!" and a short steam hiss after it; smaller than the explosion (no sub, no boom).
+# Burst (beetle_pop, #559): a voiced plosive "pok!" kept from #327, now a blast: a dry crack on the hit, a short low thump under
+# it and a longer steam hiss after, driven so it is louder and denser than the old pop and still smaller than `explosion`
+# (-15.0 dBFS, 0.45 s, 85 -> 38 Hz sub): the beetle is a small creature. Level -16.5, the stone impact and the hit (the voice set spreads 3 dB at most, so the -16.0 of the audition could not stand).
 BEETLE_POP_SEED = 6805
-BEETLE_POP_DURATION = 0.36
+BEETLE_POP_DURATION = 0.40
 BEETLE_POP_VOICE = Voice(6806, 0.12, (300.0, 170.0), FORMANTS_O, FORMANTS_UH, -18.0, asp_len=0.006, asp_level=0.9,
                          attack=0.003, tau=0.040, release=0.020, jitter=0.05, rough=0.5, rough_start=0.3, lowpass=2400.0)
+BEETLE_CRACK_BAND = (2200.0, 2600.0)      # centre, bandwidth: the shell splitting
+BEETLE_CRACK_ATTACK = 0.005
+BEETLE_CRACK_TAU = 0.022
+BEETLE_CRACK_GAIN = 0.9                   # relative to the pop's peak
+BEETLE_THUMP_HZ = (120.0, 55.0)           # falling sine under the pop
+BEETLE_THUMP_DELAY = 0.004
+BEETLE_THUMP_ATTACK = 0.006
+BEETLE_THUMP_TAU = 0.075
+BEETLE_THUMP_GAIN = 0.8                   # relative to the pop's peak
 BEETLE_HISS_START = 0.03                  # s
 BEETLE_HISS_BAND = (4200.0, 3000.0)       # steam
 BEETLE_HISS_ATTACK = 0.012
-BEETLE_HISS_TAU = 0.10
-BEETLE_HISS_GAIN = 0.45                   # relative to the pop's peak
-BEETLE_POP_RMS_DB = -18.0
+BEETLE_HISS_TAU = 0.13
+BEETLE_HISS_GAIN = 0.55                   # relative to the pop's peak
+BEETLE_POP_DRIVE = 2.2                    # soft saturation (tanh), as the explosion's
+BEETLE_POP_RMS_DB = -16.5
 
 
 def _add_tick(rng, out, start, length, band, level):
@@ -886,15 +898,30 @@ def beetle_pop() -> list[float]:
     rng = random.Random(BEETLE_POP_SEED)
     out = [0.0] * n_samples(BEETLE_POP_DURATION)
     pop = render_voice(BEETLE_POP_VOICE)
+    pp = max(abs(v) for v in pop) or 1.0
     for i, v in enumerate(pop[:len(out)]):
         out[i] += v
+    nc = n_samples(BEETLE_CRACK_TAU * 8)
+    crack = bandpass(noise(rng, nc), *BEETLE_CRACK_BAND)
+    cp = max(abs(v) for v in crack) or 1.0
+    env = envelope(nc, BEETLE_CRACK_ATTACK, BEETLE_CRACK_TAU)
+    for j in range(nc):
+        out[j] += BEETLE_CRACK_GAIN * pp * crack[j] / cp * env[j]
+    nd = n_samples(BEETLE_THUMP_DELAY)
+    nt = len(out) - nd
+    env, phase = envelope(nt, BEETLE_THUMP_ATTACK, BEETLE_THUMP_TAU), 0.0
+    for j in range(nt):
+        phase += lerp(BEETLE_THUMP_HZ[0], BEETLE_THUMP_HZ[1], j / nt) / SAMPLE_RATE
+        out[nd + j] += BEETLE_THUMP_GAIN * pp * math.sin(2.0 * math.pi * phase) * env[j]
     start = n_samples(BEETLE_HISS_START)
     nh = len(out) - start
     hiss = bandpass(noise(rng, nh), *BEETLE_HISS_BAND)
     hp = max(abs(v) for v in hiss) or 1.0
     env = envelope(nh, BEETLE_HISS_ATTACK, BEETLE_HISS_TAU)
     for j in range(nh):
-        out[start + j] += BEETLE_HISS_GAIN * hiss[j] / hp * env[j]
+        out[start + j] += BEETLE_HISS_GAIN * pp * hiss[j] / hp * env[j]
+    mp = max(abs(v) for v in out) or 1.0
+    out = [math.tanh(BEETLE_POP_DRIVE * v / mp) for v in out]
     return finish_rms(out, BEETLE_POP_RMS_DB)
 
 

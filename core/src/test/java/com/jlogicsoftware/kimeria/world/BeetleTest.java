@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
+import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.KimeriaParticleSystem;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -575,6 +576,75 @@ class BeetleTest {
         assertEquals(Beetle.State.CRAWL, b.getState());
         assertEquals(SPAWN_X, b.position.x, .01f);
         assertEquals(0, b.warningRemaining(), 0);
+    }
+
+    /** The burst's shake (#559, D136): only a near hero who survives, only with the option on. */
+    private static final Rectangle ROOM = new Rectangle(0, 0, 4000, 4000), VIEW = new Rectangle(100, 100, 640, 360);
+
+    @Test void aNearMissShakesTheCameraByTheBurstNumbers() {
+        Level level = level();
+        Beetle b = committed(level);
+        harness.held.add(Input.Keys.A);
+        until(level, b::isRemoved, 120);
+        harness.held.clear();
+        assertTrue(alive(level));
+        assertTrue(level.fx().shake().running(), "a survivor within range feels the burst");
+        assertEquals(ScreenShake.BURST_AMPLITUDE_PX, level.fx().shake().currentAmplitude(), .1f, "the burst's amplitude, at most a frame decayed");
+        boolean moved = false;
+        for (int f = 0; f < 4; f++) { frame(level); moved |= level.fx().shake().offset(ROOM, VIEW).len() > 0; }
+        assertTrue(moved, "the camera is displaced while it runs");
+    }
+
+    @Test void aLethalBurstStartsNoShake() {
+        Level level = level();
+        Beetle b = committed(level);
+        until(level, b::isRemoved, 120);
+        assertFalse(alive(level));
+        assertFalse(level.fx().shake().running(), "the death beat is the feedback");
+    }
+
+    @Test void aFarHeroFeelsNoShake() {
+        Level level = level();
+        Beetle b = beetle(level);
+        level.player.position.set(b.centreX() + Beetle.SHAKE_RANGE + 200, FLOOR - 48);
+        Rectangle hero = level.player.hitboxBounds();
+        assertTrue(Math.abs(hero.x + hero.width / 2f - b.centreX()) > Beetle.SHAKE_RANGE, "the hero is out of range");
+        b.burst();
+        assertFalse(level.fx().shake().running());
+    }
+
+    @Test void theShakeIsZeroWithTheAssistOptionOff() {
+        for (boolean off : new boolean[]{false, true}) {
+            harness.screenShakeDisabled = off;
+            Level level = level();
+            Beetle b = committed(level);
+            harness.held.add(Input.Keys.A);
+            until(level, b::isRemoved, 120);
+            harness.held.clear();
+            assertTrue(alive(level));
+            assertTrue(level.fx().shake().running(), "the shake starts either way; the option only zeroes its offset");
+            boolean moved = false;
+            for (int f = 0; f < 4; f++) { frame(level); moved |= level.fx().shake().offset(ROOM, VIEW).len() > 0; }
+            assertEquals(!off, moved, off ? "option off: no offset" : "option on: an offset");
+        }
+        harness.screenShakeDisabled = false;
+    }
+
+    @Test void theHaloReachesTheBoxEdgesAndTopAndStaysInsideIt() {
+        BeetleFx fx = new BeetleFx(5);
+        float cx = 100, floor = 200, left = 1e9f, right = -1e9f, top = 1e9f;
+        fx.burst(cx, floor);
+        for (int f = 0; f < 150; f++) {   // 0.15 s of 1 ms steps: the 32 halo dots (the first hard particles) reach their rim at 0.16 s
+            fx.update(.001f);
+            for (int i = 0; i < 32; i++) {
+                left = Math.min(left, fx.hard().x(i)); right = Math.max(right, fx.hard().x(i)); top = Math.min(top, fx.hard().y(i));
+                assertTrue(fx.hard().y(i) <= floor + .01f, "never below the floor line");
+            }
+        }
+        assertEquals(cx - 40, left, 3f);
+        assertEquals(cx + 40, right, 3f);
+        assertEquals(floor - 32, top, 3f);
+        assertTrue(left >= cx - 40 && right <= cx + 40 && top >= floor - 32, "inside the blast box");
     }
 
     @Test void theSprayStaysInsideTheBlastBox() {

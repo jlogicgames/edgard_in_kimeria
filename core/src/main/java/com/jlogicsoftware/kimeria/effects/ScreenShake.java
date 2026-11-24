@@ -19,6 +19,8 @@ public final class ScreenShake {
     public static final float LEVER_AMPLITUDE_PX = 1.5f;
     /** A falling stone landing: a short, small jolt. */
     public static final float STONE_AMPLITUDE_PX = 1.5f, STONE_SECONDS = .15f;
+    /** The beetle's burst, when the hero is near and survives it (#559, D136): the stone's jolt, lighter than a bomb's. */
+    public static final float BURST_AMPLITUDE_PX = 1.5f, BURST_SECONDS = .15f;
     private static final float FREQUENCY_X = 110, FREQUENCY_Y = 137;
 
     private final BooleanSupplier enabled;

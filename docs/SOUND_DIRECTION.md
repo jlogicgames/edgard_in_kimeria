@@ -240,8 +240,7 @@ Four voice-synth sounds for the beetle, generated; heard and approved by the aut
   `hive_buzz` so the two warnings never sound alike; one dry tick per blink of the beetle (the period shrinks from 0.2 to
   0.05 s as `Beetle` draws it) and a short breath in over the last 70 ms. A one-shot like the other warnings: it plays to
   its end even when the beetle is killed during it.
-- `beetle_pop` (0.36 s, RMS -18.0 dBFS): the burst, a voiced plosive "pok!" (300 -> 170 Hz, /o/ to /uh/, 3 ms attack) and
-  a steam hiss tail (noise around 4.2 kHz, 0.10 s decay); smaller than `explosion` (no sub, no boom). Centroid 2.0 kHz.
+- `beetle_pop` (0.40 s, RMS -16.5 dBFS since #559, D136; was 0.36 s, -18.0): the burst, a voiced plosive "pok!" (300 -> 170 Hz, /o/ to /uh/) kept from #327 with a dry crack (noise band 2.2 kHz, 22 ms), a short low thump (120 -> 55 Hz, 75 ms) and a longer steam hiss (4.2 kHz, 0.13 s decay), driven through `tanh`; smaller than `explosion` (no deep sub). Centroid 1.2 kHz. The author chose it by ear (2026-11-24) from the -18 dB original, this version and a heavier -15 dB alternative (deleted); it was auditioned at -16.0 dBFS and sits at -16.5 because the voice set's 3 dB spread test (`test_voice_set_levels_are_balanced`) would not allow -16.0 beside the -19.4 wind-ups. Seed 6805 (voice 6806).
 
 The beetle's death under a fireball or a stone plays the existing kill sound `bounce`. Previews:
 `art/audio/previews/beetle_*.png`. Constants: `BEETLE_*` in `tools/audio/generate_sounds.py`.

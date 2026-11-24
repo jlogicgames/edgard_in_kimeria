@@ -22,10 +22,10 @@ import com.badlogic.gdx.math.RandomXS128;
 public final class BeetleFx {
     /**
      * Measured peaks (BeetleFxTest: three beetles winding up 0.1 s apart at the assist's 1.2 s warning and bursting while three
-     * others die, 40 seeds, 30/60/144 fps): 67 soft, 192 hard, with at least 25 % headroom (108 and 296 while the bodies'
-     * crumble and burn lived here; they are {@link RemainsFx} since #328). A full pool only drops the oldest.
+     * others die, 40 seeds, 30/60/144 fps): 69 soft, 318 hard since the burst of #559 (the halo, embers and chips; 67 and 192 before), with at least
+     * 25 % headroom (108 and 296 while the bodies' crumble and burn lived here; they are {@link RemainsFx} since #328). A full pool only drops the oldest.
      */
-    public static final int SOFT_CAPACITY = 84, HARD_CAPACITY = 240;
+    public static final int SOFT_CAPACITY = 92, HARD_CAPACITY = 400;
     private static final long HARD_SEED_MIX = 0x632BE59BD9B4E019L;
 
     /** The blast box the specks outline and the spray fills: 80 wide, 32 tall, standing on the floor line (D100). */
@@ -50,13 +50,28 @@ public final class BeetleFx {
     // since the look check of 2026-11-18: a third white, most of the rest pale, few grey.
     private static final float SPECK_SIZE = 2, SPECK_LIFE_MIN = .3f, SPECK_LIFE_MAX = .4f, SPECK_WHITE_CHANCE = .35f, SPECK_PALE_CHANCE = .85f;
 
-    // Burst: a white flash, a flat spray inside the box, grey steam rising.
-    private static final float FLASH_SIZE = 40, FLASH_LIFE = .1f;
+    // Burst (#559): a white flash with a small hot core, a halo, a flat spray and embers inside the box, shell chips, grey steam rising.
+    private static final float FLASH_SIZE = 44, FLASH_LIFE = .12f, CORE_SIZE = 20, CORE_LIFE = .07f;
     private static final int SPRAY = 26, STEAM = 10;
+    /**
+     * The halo: dots fly from the body to the rim of the half-ellipse inscribed in the blast box (rx half its width, ry its height, centred on the floor
+     * line), so it touches the box at the floor edges and the top and never leaves it (D5: what kills is what is seen). A ring would not fit
+     * the 80x32 box. All dots spawn at the instant: no emitter.
+     */
+    private static final int DOME_DOTS = 32;
+    private static final float DOME_LIFE = .16f, DOME_SIZE = 4, DOME_RX = BLAST_WIDTH * HALF, DOME_RY = BLAST_HEIGHT;
+    /** Embers in the eyes' colour (two in three, the third white), thrown wide and high inside the box. */
+    private static final int SPARKS = 14, SPARK_EYE_EVERY = 3, CHIPS_BURST = 8;
+    private static final float SPARK_LIFE_MIN = .22f, SPARK_LIFE_MAX = .34f, SPARK_SIZE = 2, SPARK_START_JITTER = 3;
+    private static final float SPARK_REACH_MIN = 14, SPARK_REACH_MAX = 39, SPARK_LOW = 10, SPARK_HIGH = 31;
+    private static final float[] EYE = {1f, .42f, .341f};
+    /** Its own shell flung out and down to the floor: the burst's debris, gone by the end (D101: a burst leaves no body). */
+    private static final float BURST_CHIP_REACH_MIN = 12, BURST_CHIP_REACH_MAX = 36, BURST_CHIP_START_JITTER = 4;
+    private static final float BURST_CHIP_LIFE_MIN = .30f, BURST_CHIP_LIFE_MAX = .42f, BURST_CHIP_SIZE_MIN = 2, BURST_CHIP_SIZE_MAX = 3;
     private static final float SPRAY_START_JITTER = 4, SPRAY_REACH_MIN = 10, SPRAY_REACH_MAX = 38, SPRAY_LOW = 2, SPRAY_HIGH = 30;
     private static final float SPRAY_LIFE_MIN = .16f, SPRAY_LIFE_MAX = .28f, SPRAY_SIZE_MIN = 1, SPRAY_SIZE_MAX = 3, SPRAY_WHITE_CHANCE = .4f;
     private static final float STEAM_HALF_WIDTH = 30, STEAM_LOW = 4, STEAM_HIGH = 24, STEAM_RISE_MIN = 8, STEAM_RISE_MAX = 16;
-    private static final float STEAM_LIFE_MIN = .35f, STEAM_LIFE_MAX = .55f, STEAM_SIZE_MIN = 4, STEAM_SIZE_MAX = 7;
+    private static final float STEAM_LIFE_MIN = .40f, STEAM_LIFE_MAX = .60f, STEAM_SIZE_MIN = 4, STEAM_SIZE_MAX = 7;
     private static final float STEAM_PALE = .4f, STEAM_GREY = .8f;
 
     // Death (a fireball or a stone): a pale poof in a ring, larger and longer since the look check of 2026-11-18 so it outlasts the
@@ -99,11 +114,18 @@ public final class BeetleFx {
             range(random, SPECK_LIFE_MIN, SPECK_LIFE_MAX), SPECK_SIZE, c[RED], c[GREEN], c[BLUE]);
     }
 
-    /** The burst of a beetle centred on {@code centreX}, standing on {@code floorY}: the flash, the spray and the steam. */
+    /** The burst of a beetle centred on {@code centreX}, standing on {@code floorY}: the flash, halo, spray, embers, shell chips and steam. */
     public void burst(float centreX, float floorY) {
         float cy = floorY - BODY_CENTRE_ABOVE_FLOOR;
         soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, cy, centreX, cy, FLASH_LIFE, FLASH_SIZE, WHITE, WHITE, WHITE);
+        soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, cy, centreX, cy, CORE_LIFE, CORE_SIZE, WHITE, WHITE, WHITE);
         RandomXS128 random = hard.random();
+        for (int i = 0; i < DOME_DOTS; i++) {
+            float angle = MathUtils.PI * (i + HALF) / DOME_DOTS;
+            float[] c = (i & 1) == 0 ? WHITE_RGB : PALE;
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX, cy, centreX + MathUtils.cos(angle) * DOME_RX,
+                floorY - MathUtils.sin(angle) * DOME_RY, DOME_LIFE, DOME_SIZE, c[RED], c[GREEN], c[BLUE]);
+        }
         for (int i = 0; i < SPRAY; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float startX = centreX + range(random, -SPRAY_START_JITTER, SPRAY_START_JITTER);
@@ -113,6 +135,21 @@ public final class BeetleFx {
             float r = white ? WHITE : PALE[RED], g = white ? WHITE : PALE[GREEN], b = white ? WHITE : PALE[BLUE];
             hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, cy, endX, endY, range(random, SPRAY_LIFE_MIN, SPRAY_LIFE_MAX),
                 range(random, SPRAY_SIZE_MIN, SPRAY_SIZE_MAX), r, g, b);
+        }
+        for (int i = 0; i < SPARKS; i++) {
+            float side = (i & 1) == 0 ? 1 : -1;
+            float[] c = i % SPARK_EYE_EVERY != 0 ? EYE : WHITE_RGB;
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER), cy,
+                centreX + side * range(random, SPARK_REACH_MIN, SPARK_REACH_MAX), floorY - range(random, SPARK_LOW, SPARK_HIGH),
+                range(random, SPARK_LIFE_MIN, SPARK_LIFE_MAX), SPARK_SIZE, c[RED], c[GREEN], c[BLUE]);
+        }
+        for (int i = 0; i < CHIPS_BURST; i++) {
+            float side = (i & 1) == 0 ? 1 : -1;
+            float[] c = (i & 1) == 0 ? SHELL : SHELL_LIT;
+            hard.spawn(KimeriaParticleSystem.KIND_GRIT, centreX + range(random, -BURST_CHIP_START_JITTER, BURST_CHIP_START_JITTER), cy,
+                centreX + side * range(random, BURST_CHIP_REACH_MIN, BURST_CHIP_REACH_MAX), floorY - BURST_CHIP_SIZE_MAX / 2f,
+                range(random, BURST_CHIP_LIFE_MIN, BURST_CHIP_LIFE_MAX), range(random, BURST_CHIP_SIZE_MIN, BURST_CHIP_SIZE_MAX),
+                c[RED], c[GREEN], c[BLUE]);
         }
         RandomXS128 steamRandom = soft.random();
         for (int i = 0; i < STEAM; i++) {

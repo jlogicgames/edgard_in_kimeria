@@ -26,7 +26,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "fissure_rumble.wav": (0.5, 0.7), "ember_jet.wav": (0.7, 0.9),
           "leghold_rattle.wav": (0.5, 0.7), "leghold_snap.wav": (0.2, 0.3), "root_creak.wav": (0.6, 0.8), "root_thrust.wav": (0.3, 0.4),
           "fireball_fizzle.wav": (0.3, 0.4), "beetle_notice.wav": (0.18, 0.26), "beetle_windup.wav": (0.75, 0.85),
-          "beetle_windup_long.wav": (1.15, 1.25), "beetle_pop.wav": (0.3, 0.42),
+          "beetle_windup_long.wav": (1.15, 1.25), "beetle_pop.wav": (0.34, 0.46),  # re-centred on the 0.40 s of #559 (D136); was 0.3 to 0.42 for 0.36 s
           "remains_crumble.wav": (0.24, 0.32), "remains_burn.wav": (0.35, 0.45),
           "spider_notice.wav": (0.22, 0.30), "spider_windup.wav": (0.45, 0.55), "spider_windup_long.wav": (0.70, 0.80),
           "spider_leap.wav": (0.12, 0.20), "spider_bite.wav": (0.16, 0.24),
@@ -44,7 +44,7 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "boss_hit.wav": -16.5, "boss_restore.wav": -19.0, "button_click.wav": -19.4,
                 "stone_impact.wav": -16.5, "thread.wav": -19.0, "deadfall_creak.wav": -18.5, "deadfall_knock.wav": -17.0,
                 "hive_buzz.wav": -19.4, "hive_fall.wav": -19.0, "fissure_rumble.wav": -19.4, "root_creak.wav": -19.4,
-                "beetle_notice.wav": -19.0, "beetle_windup.wav": -19.4, "beetle_windup_long.wav": -19.4, "beetle_pop.wav": -18.0,
+                "beetle_notice.wav": -19.0, "beetle_windup.wav": -19.4, "beetle_windup_long.wav": -19.4, "beetle_pop.wav": -16.5,
                 "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
                 "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
                 "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0,
