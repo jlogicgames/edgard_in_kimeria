@@ -164,6 +164,23 @@ public class Overlay {
         return block;
     }
 
+    /**
+     * Lays {@code text} out once in the body font, wrapped at {@code wrapWidth} and aligned {@code align} ({@link Align}) in
+     * {@code color}, into a cache for {@link #queueBlock(BitmapFontCache, float)}. {@code leftX} is the left edge of the
+     * wrap box and {@code yFromTop} the top of the first line (the Controls table, D135).
+     */
+    public BitmapFontCache textBlock(String text, float leftX, float yFromTop, float wrapWidth, int align, Color color) {
+        GlyphLayout layout = new GlyphLayout(bodyFont, text, color, wrapWidth, align, true);
+        BitmapFontCache block = new BitmapFontCache(bodyFont, bodyFont.usesIntegerPositions());
+        block.setText(layout, leftX, toTextY(yFromTop));
+        return block;
+    }
+
+    /** Number of lines {@code text} wraps to at {@code wrapWidth} in the body font, for layout math. */
+    public int bodyLines(String text, float wrapWidth) {
+        return new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.left, true).runs.size;
+    }
+
     /** Queues a {@link #bodyBlock} at {@code alpha}; allocation free, nothing is drawn for an alpha of zero. */
     public void queueBlock(BitmapFontCache block, float alpha) {
         if (alpha <= 0f) return;

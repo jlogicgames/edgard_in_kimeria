@@ -77,6 +77,7 @@ ALLOWED = {
     ('effects/KimeriaBloodSystem.java', 'render', 'quad'): 'simulated impact particles',
     ('ui/Overlay.java', 'panel', 'quad'): 'UI panel/fade geometry',
     ('ui/Overlay.java', 'buttons', 'quad'): 'menu focus/button geometry',
+    ('ui/ControlsView.java', 'quad', 'quad'): 'Controls screen hand-panel and phone-frame geometry: menu chrome behind text, the same category as Overlay.panel (the stick and buttons inside use the authored touch art)',
 }
 NON_CODE = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 METHOD = re.compile(r'\b(?:public|private|protected)\s+(?:(?:static|final|synchronized|abstract)\s+)*(?:[\w<>?\[\],.]+\s+)?(\w+)\s*\([^;{}]*\)\s*(?:throws\s+[\w.,\s]+)?\{')

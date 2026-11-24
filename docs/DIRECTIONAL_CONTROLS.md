@@ -75,6 +75,8 @@ camera follows the hero and the room clamp only.
 | Gamepad | Left stick or D-pad horizontal/vertical; A jump, X/B Action, Y Ranged | Right stick horizontal/vertical; D-pad Down jump, Left/Right Action, Up Ranged |
 | Touch | Two-axis left stick, right action buttons | Two-axis right stick, left action buttons |
 
+The same table is shown in the game on Options > Controls (D135, `ui.ControlsView`), both hands side by side for the input mode in use (touch, then a connected pad, else the keyboard), and Left-handed is switched there; `ControlsViewTest` checks the keyboard rows against `KeyBindings`. About no longer lists bindings.
+
 The mirrored action D-pad is never also a movement direction. Start/Esc and menu
 bindings are unchanged. The touch Action button reads Sword; the hover labels distinguish pickup, placement, blocked
 placement, mechanism, throw, fireball and empty stock. All contextual teaching uses
