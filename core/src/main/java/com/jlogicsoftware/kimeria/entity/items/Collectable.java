@@ -80,6 +80,8 @@ public class Collectable extends Entity {
         if (type == ItemType.COIN) {
             game.addCoin();
         }
+        // The picture of it arriving (D132, #557): after every state change above, which no flight reads or waits for.
+        game.startPickupFlight(type, position.x + size.x / 2f, position.y - bobLift(stateTime) + size.y / 2f);
         removeFromParent();
     }
 

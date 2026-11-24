@@ -82,6 +82,7 @@
   "HINT_TUTORIAL_WALK": "Idź w prawo, aby znaleźć wyjście",
   "HINT_LEVER_TORCH": "Użyj dźwigni, aby uruchomić lub zatrzymać platformę",
   "HINT_LEVER_EXIT": "Platforma jedzie czy stoi, droga jest otwarta. Idź do wyjścia",
+  "HINT_LEVER_BOTH": "Użyj dźwigni, aby poruszać drabiną i platformą",
   "HINT_LADDER_LEVER": "Użyj dźwigni, aby opuścić lub podnieść drabinę",
   "HINT_LADDER_CLIMB": "Wejdź po drabinie, gdy jest opuszczona",
   "HINT_LADDER_EXIT": "Idź do wyjścia przed tobą",

@@ -15,7 +15,7 @@ import struct
 import sys
 from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
-    ARMS_IMAGE_SIZE, INTRO_BOOK_IMAGES)
+    ARMS_IMAGE_SIZE, BOSS_HUD_SHEETS, OPAQUE_BOSS_HUD_IMAGES, INTRO_BOOK_IMAGES)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -55,6 +55,7 @@ ALLOWED = {
     ('effects/WolfFx.java', 'render', 'quad'): "the wolf's wind-up breath streaks and death fur flecks as 1 px squares (#331, D115, particle category, like the spider's glints): live at most 0.45 s, depict no object; the wolf is the authored monster-wolf sprite",
     ('effects/RemainsFx.java', 'render', 'particle'): "a monster body's crumble dust, burn glow and burnt wisp (D101, #478, particle category): soft additive and smoke dots that live at most 0.7 s, depict no object; the body is the monster's authored decor sprite",
     ('effects/RemainsFx.java', 'render', 'quad'): "a monster body's crumble chips and burn flames as 1 to 3 px squares (D101, #478, particle category, like the fireball sparks): live at most 0.6 s, depict no object; the body is the monster's authored decor sprite",
+    ('effects/FlightFx.java', 'render', 'quad'): 'the 2.5 to 3 px trail and landing sparks behind a flying sprite (D132, the same approved particle category as the pickup sparks): live at most 0.2 s, depict no object; the thing that flies is always an authored sprite region passed to start()',
     ('effects/PickupSparksFx.java', 'render', 'quad'): 'the pickup spark burst as 1 to 3 px squares that shrink out (#402, approved particle category, like the fireball sparks): live at most 0.6 s, depict no object; the item is the authored sprite',
     ('effects/PortalFx.java', 'render', 'particle'): 'the soft violet light of the room-exit portal (#552, D123, approved particle category, behaviour of the pixelfx portal): additive dots that live at most 2.4 s round the exit rectangle, depict no object the hero meets or collects; the exit itself is a Tiled trigger with no sprite',
     ('effects/PortalFx.java', 'render', 'quad'): 'the rim sparks, spiral arms and pulled-in motes of the room-exit portal (#552, D123, approved particle category, like the fireball sparks): 1 to 2 px additive squares that live at most 1.3 s, depict no object',
@@ -173,6 +174,9 @@ def image_contracts(root):
     # The dialogue screen frame (#337, D78): native pixel art on the world-art palette limit.
     contracts += [(f'assets/images/ui/dialogue-{name}.png', size, WORLD_PALETTE_SIZE,
                    'opaque' if name in OPAQUE_DIALOGUE_IMAGES else 'binary') for name, size in DIALOGUE_IMAGES.items()]
+    # The boss health bar (#543): native pixel art on the world-art palette limit; the frame plate is opaque, the segments binary.
+    contracts += [(f'assets/images/ui/boss/{name}.png', size, WORLD_PALETTE_SIZE,
+                   'opaque' if name in OPAQUE_BOSS_HUD_IMAGES else 'binary') for name, size in BOSS_HUD_SHEETS.items()]
     # The Kimeria arms (#350, #416): the menu mark and the ending's sun, native pixel art, binary alpha.
     contracts.append(('assets/images/ui/kimeria-arms.png', ARMS_IMAGE_SIZE, WORLD_PALETTE_SIZE, 'binary'))
     # The intro book (#536, D133): opaque indexed UI art composed from authored grids, on the HUD palette limit.
