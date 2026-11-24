@@ -1,0 +1,36 @@
+# Intro book (#536, D133): the cover rim around the page block, walnut leather with muted gilt corner plates.
+# Nine-patch, insets 10 px; the page block covers the middle. Palette: the walnut and gilt of the dialogue screen (D78).
+size 24 24
+color o 0b0705
+color a 1d120c
+color b 3a2416
+color c 5a3a22
+color d 7d5534
+color g 6e5226
+color G a8844a
+color H d8c08a
+frame cover mirror
+oooooooooooo
+oHHHHHGgdddd
+oHGGGGgccccc
+oHGGgcbbbbbb
+oHGgcbbbbbbb
+oHgcbbbbbbbb
+oGcbbbbbbbbb
+ogcbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ocbbbbbbbbbb
+ogbbbbbbbbbb
+oGgbbbbbbbbb
+oHGgbbbbbbbb
+oHGGgbbbbbbb
+oHGGGgaaaaaa
+oHGGGGgaaaaa
+oGgggggaaaaa
+oooooooooooo

@@ -205,7 +205,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       the top of a 304 px page area). The layouts are cached per paragraph (`Overlay.bodyBlock`); `AllocationBudgetTest.pagedIntro`
       measures 0.0 B/frame. Paging by touch is single-finger (a tap while another finger is held turns no page). On touch devices an icon-only skip button (top right, D77) leaves the story and never also turns a page; the Ukrainian opening pages on the web were accepted by the author after playtest 2 raised nothing (2026-11-21, [PLAYTEST_2.md](PLAYTEST_2.md)); the ending page, de and be, and desktop: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
       `assets/audio/intro.wav` is an original synthesized placeholder; replace it and
-      `Msg.INTRO_STORY` when revising the healer-narrated account of Kimeria and L'Kardina.
+      `Msg.INTRO_LEAF_1` to `INTRO_LEAF_6` when revising the healer-narrated account of Kimeria and L'Kardina.
 - [x] Optional forest healer: dialogue in all five supported languages, recipe checklist, paid elixir and
       repeated collection returns; D26 requires retained world state and passable mandatory routes (runtime work tracked in #158; see [authoring contract](ROOMS.md#puzzle-platformer-authoring-contract-d26))
 - [x] Dev hotkeys (F1–F6, see [Controls](GAMEPLAY.md#controls))

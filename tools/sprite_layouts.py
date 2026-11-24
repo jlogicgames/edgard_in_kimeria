@@ -198,3 +198,16 @@ HERO_SHEETS = {'right': HERO_CLIPS, 'left': HERO_CLIPS, 'ladder': HERO_LADDER_CL
 HERO_FRAME_PREFIX = {'right': 'r', 'left': 'l', 'ladder': 'ladder'}  # frame names in the grid: r.idle1, l.run3, ladder.up2
 HERO_IMAGES = {name: (HERO_FRAME_SIZE * max(count for _, count in clips), HERO_FRAME_SIZE * len(clips))
                for name, clips in HERO_SHEETS.items()}
+# The intro book (#536, D133): hand-drawn grids in art/ui/intro-book composed (placed, tiled, nine-patched, mirrored: no drawing)
+# by tools/intro_book_sprites.py into two opaque indexed images: the whole book on black, and the two leaves side by side
+# (the leaf in flight). Geometry in screen pixels, Y down; `ui.IntroBook` repeats it.
+INTRO_BOOK_SCREEN = (640, 360)
+INTRO_BOOK_COVER = (16, 10, 624, 326)  # x0, y0, x1, y1
+INTRO_BOOK_LEAF_LEFT = (30, 20, 320, 318)
+INTRO_BOOK_LEAF_RIGHT = (320, 20, 610, 318)
+INTRO_BOOK_LEAF_SIZE = (INTRO_BOOK_LEAF_LEFT[2] - INTRO_BOOK_LEAF_LEFT[0], INTRO_BOOK_LEAF_LEFT[3] - INTRO_BOOK_LEAF_LEFT[1])
+INTRO_BOOK_LEAF_ORIGIN_LEFT = INTRO_BOOK_LEAF_LEFT[:2]
+INTRO_BOOK_LEAF_ORIGIN_RIGHT = INTRO_BOOK_LEAF_RIGHT[:2]
+INTRO_BOOK_LEAF_CENTER_X = (INTRO_BOOK_LEAF_LEFT[0] + INTRO_BOOK_LEAF_LEFT[2]) // 2, (INTRO_BOOK_LEAF_RIGHT[0] + INTRO_BOOK_LEAF_RIGHT[2]) // 2
+INTRO_BOOK_IMAGES = {'intro-book': INTRO_BOOK_SCREEN,
+                     'intro-leaves': (INTRO_BOOK_LEAF_SIZE[0] * 2, INTRO_BOOK_LEAF_SIZE[1])}

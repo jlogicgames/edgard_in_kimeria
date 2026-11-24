@@ -106,6 +106,8 @@ class CampaignFlowTest {
             640, 360, true));
         set("overlay", new Overlay(assets, 640, 360, null) {
             @Override public float bodyHeight(String text, float width) { return 120; }
+            @Override public float storyHeight(String text, float width) { return 100; }
+            @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache storyBlock(String text, float x, float y, float width) { return null; }
             @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache bodyBlock(String text, float x, float y, float width) { return null; }
             @Override public com.badlogic.gdx.graphics.g2d.BitmapFontCache hintBlock(String text, float rightX, float y) { return null; }
         });
@@ -372,7 +374,8 @@ class CampaignFlowTest {
         assertFalse(progress.exists());
         held.clear();
         ((Menu) get("mainMenu")).confirmSelected();
-        assertEquals("INTRO", state()); assertEquals(Msg.INTRO_STORY.t(Language.ENGLISH), ((IntroScreen) get("intro")).text());
+        assertEquals("INTRO", state()); assertEquals(String.join("\n\n", Msg.INTRO_LEAF_1.t(Language.ENGLISH), Msg.INTRO_LEAF_2.t(Language.ENGLISH), Msg.INTRO_LEAF_3.t(Language.ENGLISH),
+            Msg.INTRO_LEAF_4.t(Language.ENGLISH), Msg.INTRO_LEAF_5.t(Language.ENGLISH), Msg.INTRO_LEAF_6.t(Language.ENGLISH)), ((IntroScreen) get("intro")).text());
         finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
         assertFalse(progress.exists());

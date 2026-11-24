@@ -15,7 +15,7 @@ import struct
 import sys
 from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
-    ARMS_IMAGE_SIZE, BOSS_HUD_SHEETS, OPAQUE_BOSS_HUD_IMAGES)
+    ARMS_IMAGE_SIZE, BOSS_HUD_SHEETS, OPAQUE_BOSS_HUD_IMAGES, INTRO_BOOK_IMAGES)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -179,6 +179,8 @@ def image_contracts(root):
                    'opaque' if name in OPAQUE_BOSS_HUD_IMAGES else 'binary') for name, size in BOSS_HUD_SHEETS.items()]
     # The Kimeria arms (#350, #416): the menu mark and the ending's sun, native pixel art, binary alpha.
     contracts.append(('assets/images/ui/kimeria-arms.png', ARMS_IMAGE_SIZE, WORLD_PALETTE_SIZE, 'binary'))
+    # The intro book (#536, D133): opaque indexed UI art composed from authored grids, on the HUD palette limit.
+    contracts += [(f'assets/images/ui/{name}.png', size, HUD_PALETTE_SIZE, 'opaque') for name, size in INTRO_BOOK_IMAGES.items()]
     # The hero (#343, D79): world pixel art, 16 palette entries including transparency, binary alpha.
     contracts += [(f'assets/images/hero/hero-{name}.png', size, WORLD_PALETTE_SIZE, 'binary') for name, size in HERO_IMAGES.items()]
     # The redrawn enemy sheets (2026-11-21): RedMob and Bat from art/objects/enemy grids, world pixel art, binary alpha.

@@ -51,7 +51,7 @@ The opening retains the healer's narrative voice without turning into a tutorial
 **Presentation (#336, playtest F2, [D77](DECISIONS.md#d77-story-screens-are-static-pages-playtest-f2-336-2026-11-16)):** the opening is shown as static pages, not a scroll. The paragraphs appear one
 after another from the top and stay; the player turns the page with any fresh key, button or tap, and Escape (or the
 pad's Back/Start) leaves it. With the Instant text option (D11) a page appears whole. The text is cut at paragraph
-breaks only, so wording is never changed to fit; today the whole opening is one page in all five languages.
+breaks only, so wording is never changed to fit. **Since [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24) ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535), [#536](https://github.com/jlogicgames/edgard_in_kimeria/issues/536))** the opening is a tale on an open book: six leaves (three spreads) of two paragraphs, one key each (`INTRO_LEAF_1` to `INTRO_LEAF_6`), in the healer's tale formulae, naming the fairy as the third gift after the thread and the spark. The ending stays on black with the arms.
 
 The original also describes a spell tablet broken into four pieces, four regions, and a
 seven-component remedy. Preserve these in [Original DOS references](ORIGINAL_DOS.md).
@@ -228,7 +228,7 @@ Approved texts (EN source; the five catalogs hold the translations):
 - **Forest-0 start tale, one new healer line** after the witch line, key `HEALER_TALE_THREAD`:
   "Edgard, I tied a silver thread about your wrist, and I hold the other end. When the
   night swallows you, I draw the thread, and you will rise again at the path's edge."
-- **Opening narration**, one sentence in the paragraph where he meets the healer (`INTRO_STORY`):
+- **Opening narration**, one sentence in the paragraph where he meets the healer (`INTRO_STORY`, since [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24) `INTRO_LEAF_5`):
   "I gave him my counsel. I tied a silver thread about his wrist and kept the other end in my
   hand, and he ventured onward."
 - **#340 (2026-11-16), the healer's second gift: the fireball.** Author-approved (variant A).

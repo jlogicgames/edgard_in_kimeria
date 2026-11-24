@@ -54,6 +54,7 @@ class LocalizationLayoutTest {
             }, 640, 360, null);
             float right = 640f - com.jlogicsoftware.kimeria.ui.IntroScreen.SKIP_HINT_MARGIN, top = com.jlogicsoftware.kimeria.ui.IntroScreen.SKIP_HINT_TOP;
             float cueRight = 320f + com.jlogicsoftware.kimeria.ui.IntroScreen.CUE_SIZE / 2f;
+            assertTrue(com.jlogicsoftware.kimeria.ui.IntroScreen.CUE_TOP > com.jlogicsoftware.kimeria.ui.IntroBook.COVER_BOTTOM, "the page-turn cue sits below the book's bottom edge (D133)");
             for (Language language : Language.values()) for (Msg message : new Msg[]{Msg.INTRO_SKIP_KEYBOARD, Msg.INTRO_SKIP_GAMEPAD}) {
                 var layout = overlay.hintBlock(message.t(language), right, top).getLayouts().first();
                 float left = right + layout.runs.first().x, bottom = top + layout.height;
@@ -61,6 +62,7 @@ class LocalizationLayoutTest {
                 assertTrue(left > cueRight, "right of the page cue: " + where);
                 assertTrue(bottom <= 360f, "inside the screen: " + where);
                 assertTrue(top > com.jlogicsoftware.kimeria.ui.IntroPages.PAGE_BOTTOM, "below the page area: " + where);
+                assertTrue(top > com.jlogicsoftware.kimeria.ui.IntroBook.COVER_BOTTOM, "below the book's bottom edge, on the black (D133): " + where);
             }
         } finally {
             Gdx.files = previous;

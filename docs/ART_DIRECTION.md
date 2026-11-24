@@ -1450,6 +1450,31 @@ near-black contour and measures 0.51 in both frames. Over forest-1's layered nea
 went to the walk-cue straw and the sheet got the moon rim (2026-11-20, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)): 0.439. It was the one active sprite under the floor: 0.25 in front of the rubble tiles
 at forest-2 x 128 (up frame), 0.27 for the pulled frame. How it looks in the running game: [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 
+## Story book (D133, playtest F5/F6, #535, #536)
+
+The opening is read on an open book ([D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)); the ending stays on black with the arms (D95). The look is the dialogue screen's
+storybook (D78): walnut leather and muted gilt corner plates, parchment leaves, and the healer's silver thread as the bookmark.
+
+| Piece | Art (`art/ui/intro-book/*.grid`, composed by `tools/intro_book_sprites.py`) | Notes |
+|---|---|---|
+| Cover | `cover`, 24 px nine-patch (insets 10), mirrored | walnut `1d120c` `3a2416` `5a3a22` `7d5534`, gilt `6e5226` `a8844a` `d8c08a`; (16, 10) to (624, 326) |
+| Leaf | `leaf` (`left`; `right` is its flip), 24 px nine-patch (insets 8) | parchment `b8a47c` with stacked page edges on the outer side and the bottom and a darker band toward the spine; 290 x 298 at y 20 |
+| Paper fibres | `fibres`, a 48 px tile laid over each leaf's middle | two quiet tones, `c3af86` `ad9870` |
+| Gutter | `gutter`, the leaves dip at the spine top and bottom | the cover leather shows through |
+| Fleuron | `fleuron`, a small ink vine in each leaf's bottom margin | |
+| Bookmark | `ribbon`, 7 x 40, at (60, 312) | silver `5d6577` `9aa3b6` `d8dee9` as the dialogue thread; clear of the cue and the skip hint |
+
+- **Exports:** `assets/images/ui/intro-book.png` (640 x 360, the book on black, both leaves blank) and `intro-leaves.png` (the two leaves
+  side by side, for the leaf in flight); opaque, at most 256 palette entries (`validateSpriteArt`); drawn with the nearest filter. The
+  script only places, tiles, nine-patches and mirrors the authored grids. `python3 tools/intro_book_sprites.py` also writes the 2x preview
+  `docs/references/intro-book.png`; `docs/references/intro-book/spread-*.png` are hand-made references (the exported book with the real text and the font's own glyphs laid over it by a one-off script, not by this tool or the game): they show the fit in en, uk, de and pl, not the running game.
+- **Text:** 20 px, dark ink `2a1a10`, left-aligned in a 236 px column at x 56 and 348, first line 40 px from the screen top, nothing under 304 px.
+  Ink on every colour a column can sit on is at least 4.5:1 (`tools/test_intro_book_sprites.py`). Geometry lives in `ui.IntroBook`; the test
+  reads it back against `sprite_layouts.INTRO_BOOK_*`.
+- **The turn:** the text of both leaves fades (0.4 s), then the right leaf narrows to the spine and the left one widens from it (0.4 s, shaded to
+  80 % at the middle). Instant text has neither.
+- **Skip:** the hint (D118) sits under the book at the right; the touch button (D77) lies over the cover's top-right corner and keeps its white outline.
+
 ## Dialogue screen (D78, playtest F3/F10, #337)
 
 **Flights on this screen (D132, #539, #540, #541):** the checklist rows carry the HUD icons at 20 px; on payment the icons fly to the healer's portrait and the elixir to Edgard's; on the start tale's fairy line the fairy (`fairy-body.png` at 2x, with her soft light) flies from the healer's window to Edgard's and hovers beside his head, never within 8 px of the thread. All of it is the shared `effects.FlightFx`; frame strips of the flights are in [references/flights/](references/flights/) and the numbers in [D132](DECISIONS.md#d132-things-fly-to-where-they-go-one-flight-helper-for-the-pickup-the-hand-over-the-elixir-and-the-fairy-539-540-541-557-2026-11-24).
