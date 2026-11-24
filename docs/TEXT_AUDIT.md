@@ -47,9 +47,11 @@ through the sleeping kingdom begins here."
 | `RESUME`, `RESTART_LEVEL`, `EXIT_TO_MENU`, `PAUSE_MENU`, `BACK` | Pause menu (Esc, Start) | Each pause | Label |
 | `LANGUAGE_LABEL`, `DISPLAY_LABEL`, `FULLSCREEN`, `WINDOWED`, `LEFT_HANDED_LABEL`, `ASSIST`, `LONGER_TRAP_WARNINGS`, `SCREEN_SHAKE`, `ON`, `OFF` | Options and Accessibility | Occasional | Label |
 | `MENU_HINT` | Bottom line of every menu (`overlay.hint`) | Every menu screen | Plain, key list |
-| `RULES`, `CONTROLS` | About tabs | Occasional | Label |
-| `ABOUT_RULES` | About, Rules tab | Occasional | Plain, terse |
-| `ABOUT_BODY`, `ABOUT_BODY_LEFT_HANDED`, `ABOUT_GAMEPAD`, `ABOUT_GAMEPAD_LEFT_HANDED` | About, Controls tab (layout picked by the left-handed setting) | Occasional | Plain, key list (396 chars, de 418) |
+| `RULES`, `ABOUT_GAME` | About page button | Occasional | Label |
+| `CONTROLS` | Options entry and Controls title | Occasional | Label |
+| `ABOUT_RULES`, `ABOUT_RULES_CARRY` | About, rules page | Occasional | Plain, terse |
+| `ABOUT_GAME_STORY`, `ABOUT_GAME_PLAY`, `ABOUT_GAME_MORE` | About, game page (D135) | Occasional | Plain, store description; names allowed |
+| `RIGHT_HAND`, `LEFT_HAND`, `MOVE`, `JUMP`, `PAUSE`, `PICK_UP_USE`, `THROW_FIREBALL`, `KEY_ARROWS`, `KEY_UP`, `KEY_DOWN`, `PAD_DPAD`, `STICK_HINT` | Options > Controls (D135) | Occasional | Label, key table |
 | `LOADING` | Between levels | Each level load | Label |
 | `ROTATE_HINT` | Touch build held in portrait | Phones only | Plain imperative |
 | `INTRO_SKIP_KEYBOARD`, `INTRO_SKIP_GAMEPAD` | Intro and ending, bottom right corner (keyboard: Esc; pad: Start; touch has its icon, no string) | Every story screen | Plain, "key: verb" (D118) |

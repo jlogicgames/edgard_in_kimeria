@@ -29,6 +29,7 @@ import com.jlogicsoftware.kimeria.effects.SoftDot;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.input.IntroInput;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.ui.KimeriaArms;
@@ -69,9 +70,11 @@ import java.util.Set;
  * flipping signs throughout.
  */
 public class KimeriaGame extends ApplicationAdapter implements GameContext {
-    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
+    private enum UiState {WEB_START, MAIN_MENU, CONFIRM_NEW_GAME, INTRO, ENDING, ABOUT, OPTIONS, CONTROLS, ASSIST, LOADING, PLAYING, HEALER, PAUSED}
 
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
+    /** Controls screen (D135): title, then {@link ControlsView} from y 52 to 228, then the two buttons. */
+    private static final float CONTROLS_TITLE_Y = 10f, CONTROLS_BUTTONS_Y = 236f;
     /**
      * Sprites the batch holds before it flushes: the most libGDX allows (4 vertices each, vertex indices are shorts, so at most 32767 / 4 = 8191).
      * The parallax layers draw about 4 200 tile regions a frame (#236), which a 1000-sprite batch flushed five times.
@@ -234,7 +237,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private boolean menuMusicPlaying = false;
 
     private boolean aboutRules;
-    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, assistMenu, pauseMenu, confirmNewGameMenu;
+    private ControlsView controlsView;
+    private Menu webStartMenu, mainMenu, aboutMenu, optionsMenu, controlsMenu, assistMenu, pauseMenu, confirmNewGameMenu;
 
     /** Offscreen copy of the world, filled only while a post effect (pause glitch, coin ripple) is live. */
     private FrameBuffer sceneBuffer;
@@ -261,6 +265,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         touchControls.setLayout(touchLayout);
         arms = new KimeriaArms(assets);
         overlay = new Overlay(assets, LOGICAL_W, LOGICAL_H, arms);
+        controlsView = new ControlsView(assets, overlay);
         healerView = new HealerDialogueView(assets);
         menuBackdrop = new MenuBackdrop();
 
@@ -305,7 +310,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         List<MenuItem> mainItems = new ArrayList<>(List.of(
             new MenuItem(() -> Msg.CONTINUE.t(language), this::continueGame, savedProgress::exists),
             new MenuItem(() -> Msg.NEW_GAME.t(language), this::requestNewGame),
-            new MenuItem(() -> Msg.ABOUT.t(language), () -> uiState = UiState.ABOUT),
+            new MenuItem(() -> Msg.ABOUT.t(language), () -> { aboutRules = false; uiState = UiState.ABOUT; }),
             new MenuItem(() -> Msg.OPTIONS.t(language), () -> uiState = UiState.OPTIONS)
         ));
         if (!isWeb()) {
@@ -322,7 +327,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             ), this::backToMainMenu);
 
         aboutMenu = new Menu(() -> Msg.ABOUT.t(language), null, List.of(
-            new MenuItem(() -> (aboutRules ? Msg.CONTROLS : Msg.RULES).t(language), () -> aboutRules = !aboutRules),
+            new MenuItem(() -> (aboutRules ? Msg.ABOUT_GAME : Msg.RULES).t(language), () -> aboutRules = !aboutRules),
             new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu)
         ), this::backToMainMenu);
 
@@ -343,12 +348,21 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                     + (pageFullscreen.active() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
                 pageFullscreen::toggle));
         }
-        optionItems.add(new MenuItem(
-            () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
-            this::toggleLeftHanded));
+        optionItems.add(new MenuItem(() -> Msg.CONTROLS.t(language), () -> {
+            controlsMenu.selected = 0;
+            uiState = UiState.CONTROLS;
+        }));
         optionItems.add(new MenuItem(() -> Msg.ASSIST.t(language), () -> uiState = UiState.ASSIST));
         optionItems.add(new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu));
         optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu);
+
+        // D135: Left-handed lives on the Controls screen, which shows both hands so the switch explains itself.
+        controlsMenu = new Menu(() -> Msg.CONTROLS.t(language), null, List.of(
+            new MenuItem(
+                () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
+                this::toggleLeftHanded),
+            new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
+        ), () -> uiState = UiState.OPTIONS);
 
         assistMenu = new Menu(() -> Msg.ASSIST.t(language), null, List.of(
             new MenuItem(
@@ -1148,6 +1162,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             case CONFIRM_NEW_GAME -> confirmNewGameMenu;
             case ABOUT -> aboutMenu;
             case OPTIONS -> optionsMenu;
+            case CONTROLS -> controlsMenu;
             case ASSIST -> assistMenu;
             case PAUSED -> pauseMenu;
             case INTRO, ENDING, LOADING, PLAYING, HEALER -> null;
@@ -1181,9 +1196,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             // Centre the button list in the space between the title and the hint line.
             float startY = titleBottom + (hintTop - titleBottom - Overlay.buttonsHeight(menu)) / 2f;
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
+        } else if (uiState == UiState.CONTROLS) {
+            overlay.title(batch, menu.titleText(), cx, CONTROLS_TITLE_Y);
+            controlsView.draw(batch, ControlsView.modeFor(touchControls.isAvailable(), gamepad.isConnected()), language, leftHanded);
+            overlay.buttons(batch, menu, cx, CONTROLS_BUTTONS_Y, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
             float panelW = uiState == UiState.ABOUT ? 610f : 320f;
-            String aboutBody = uiState == UiState.ABOUT ? (aboutRules ? Msg.ABOUT_RULES.t(language) : aboutText()) : menu.bodyText();
+            String aboutBody = uiState == UiState.ABOUT ? aboutText() : menu.bodyText();
             float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
@@ -1205,11 +1224,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - 12);
     }
 
-    /** About text for the current handedness; the gamepad line appears only while a controller is connected. */
+    /** The About page shown: the game blurb (three paragraphs, D135) or the rules. */
     private String aboutText() {
-        String body = (leftHanded ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language);
-        if (!gamepad.isConnected()) return body;
-        return body + "\n\n" + (leftHanded ? Msg.ABOUT_GAMEPAD_LEFT_HANDED : Msg.ABOUT_GAMEPAD).t(language);
+        if (aboutRules) return Msg.ABOUT_RULES.t(language) + "\n\n" + Msg.ABOUT_RULES_CARRY.t(language);
+        return Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language);
     }
 
     @Override

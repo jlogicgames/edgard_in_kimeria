@@ -10,9 +10,11 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.ui.BossHud;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
 import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.HintLayout;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
@@ -132,12 +134,20 @@ class LocalizationLayoutTest {
                     assertTrue(lines(touch, message.t(language), width) <= 2, prefix + message);
                     assertTrue(height(touch, message.t(language), width) <= 32, prefix + message);
                 }
-                for (boolean left : new boolean[]{false, true}) {
-                    String help = (left ? Msg.ABOUT_BODY_LEFT_HANDED : Msg.ABOUT_BODY).t(language) + "\n\n"
-                        + (left ? Msg.ABOUT_GAMEPAD_LEFT_HANDED : Msg.ABOUT_GAMEPAD).t(language);
-                    // Existing About layout: title, body margin, two buttons, surrounding margins.
-                    assertTrue(44 + height(body, help, 580) + 20 + 88 + 40 <= 332, prefix + "controller help left=" + left);
-                }
+                // About pages (D135): the blurb and the rules each sit in the 610 px panel between the title and two buttons.
+                for (String page : List.of(
+                    Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language),
+                    Msg.ABOUT_RULES.t(language) + "\n\n" + Msg.ABOUT_RULES_CARRY.t(language)))
+                    assertTrue(44 + height(body, page, 580) + 20 + 88 + 40 <= 332, prefix + "about page " + page.substring(0, 12));
+                assertTrue(new GlyphLayout(button, Msg.ABOUT_GAME.t(language)).width <= 544, prefix + "page button");
+                // Controls screen (D135), body font as drawn: hand headers in one 162 px line, the touch preview's button
+                // labels in 96 px and its stick label in 80 px; rows and cells are measured in ControlsViewTest.
+                for (Msg message : new Msg[]{Msg.RIGHT_HAND, Msg.LEFT_HAND})
+                    assertTrue(lines(body, message.t(language), ControlsView.HEADER_W) <= 1, prefix + message);
+                for (Msg message : new Msg[]{Msg.ATTACK, Msg.FIREBALL, Msg.JUMP})
+                    assertTrue(lines(body, message.t(language), ControlsView.BUTTON_LABEL_W) <= 1, prefix + message);
+                assertTrue(lines(body, Msg.STICK.t(language), ControlsView.STICK_LABEL_W) <= 1, prefix + "stick label");
+                // The Controls table itself is measured in ControlsViewTest (rows, columns, touch line).
                 for (String label : List.of(Msg.LONGER_TRAP_WARNINGS.t(language) + ": " + Msg.OFF.t(language),
                     Msg.SCREEN_SHAKE.t(language) + ": " + Msg.OFF.t(language),
                     Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),
