@@ -223,7 +223,12 @@ Sources: [skill audit limits](SKILL_VALIDATION.md#limits-and-cleanup), [MVP](MVP
   warning remains visible, original plume rises above ground, fades cleanly, no lingering
   damage/effects. Shader-only captures do not establish in-world appearance.
 - [ ] Listen to menu/opening/ending music, dialogue transitions, boss hit/restoration and
-  elixir feedback. Review subjective quality, volume, sound-off behavior and fades.
+  elixir feedback. Review subjective quality, volume and fades.
+- [ ] Listen with the Options Sound and Music switches off and on, each alone and both, on desktop
+  and in the web build, a phone browser included
+  ([D141](DECISIONS.md#d141-options-has-a-sound-switch-and-a-music-switch-494-2026-11-25), [#144](https://github.com/jlogicgames/edgard_in_kimeria/issues/144)):
+  a switched-off channel is silent, it stays silent after a relaunch, and browser audio still starts
+  when a channel is switched on after both were off.
 - [ ] Check release-browser audio after the required user gesture, including mobile:
   startup/unlock, music transitions, mute/volume and restart/reload (the mobile part is **Cancelled (D61)**). Desktop `isPlaying`
   and headless spies do not establish browser autoplay behavior.

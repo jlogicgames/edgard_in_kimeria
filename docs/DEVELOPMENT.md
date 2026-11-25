@@ -185,14 +185,16 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       ending appears whole and turns at once.
 - [x] Keyboard, mouse and gamepad menu navigation
 - [x] English/Ukrainian/Polish/German/Belarusian localization, switchable from Options and remembered across launches
-- [x] Shared local settings for language, display mode, left-handed controls and trap-warning
-      assist; missing or invalid values use defaults (English on first launch, regardless of
-      system locale). Settings use desktop preferences / browser local storage and keep
+- [x] Shared local settings for language, display mode, sound, music, left-handed controls and
+      trap-warning assist; missing or invalid values use defaults (English on first launch, regardless
+      of system locale). Settings use desktop preferences / browser local storage and keep
       level-only saves in the same file without overwriting them.
 - [x] Desktop build starts fullscreen; Options has a Display toggle to opt into a windowed
       1280x720 window; the mode is remembered across launches (`~/.prefs/edgard-in-kimeria`).
       Window size and position are not persisted.
 - [x] Main-menu music with fade in/out, button click/hover sounds, gameplay SFX
+- [x] Options → Sound and Music (D141, #494): two persisted On/Off switches, on by default. Sound silences every effect,
+      loops included; Music silences the menu and story tracks ([SOUND_DIRECTION.md](SOUND_DIRECTION.md)).
 - [x] NES-style story intro on every new game (#336, playtest F2): static pages in all five supported languages,
       black fades and a separate placeholder music loop. The text is cut into pages of whole paragraphs at load
       (`IntroPages`, measured with the body font; a paragraph taller than a page fails loudly instead of overflowing).

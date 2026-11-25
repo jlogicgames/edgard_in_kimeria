@@ -57,7 +57,8 @@ the second level. New Game still clears an existing run before its opening.
 The ending releases the live level, hero, encounter effects and room fade; it cannot
 resume gameplay or respond to level-skip callbacks by loading another map. Its input,
 pages and music follow the opening. The ordinary menu track returns afterward.
-Music still respects the existing sound option and volume.
+Both tracks follow the Options Music switch, independently of Sound
+([D141](DECISIONS.md#d141-options-has-a-sound-switch-and-a-music-switch-494-2026-11-25)).
 
 ## Validation
 
