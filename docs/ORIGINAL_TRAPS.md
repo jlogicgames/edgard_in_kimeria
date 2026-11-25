@@ -5,8 +5,9 @@ This is the **evidence-documentation phase** of
 1994 DOS game (Company MOTO, see [ORIGINAL_DOS.md](ORIGINAL_DOS.md)) shows and what the
 author reports about it. The remake's trap set that followed from it is decided in
 [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan) and
-summarised below; nothing is implemented or tested yet, and implementation is tracked by
-#230-#235.
+summarised below. That set was built (#230-#235, D44-D48), placed in the Forest maps and played in
+[PLAYTEST_1.md](PLAYTEST_1.md) and [PLAYTEST_2.md](PLAYTEST_2.md); four new traps followed (#363-#366). The
+current traps, one card each, are in [TRAPS.md](TRAPS.md). #188 is closed.
 
 **Framing (author, 2026-11-05).** These traps come from a 1990s game (1994). The remake is
 a retro-styled **new work for the 2020s**. Only the **successful finds** are carried over,
@@ -317,8 +318,9 @@ knowledge of modern retro-styled platformers; I did not look anything up.
 On 2026-11-05 the author accepted a forest trap set, an explosive-trap rule and a tutorial
 plan, recorded in
 [D42](DECISIONS.md#d42-forest-trap-set-explosive-trap-choice-and-tutorial-plan). **The #188
-brainstorm phase is done by that decision; implementation is tracked by the tickets below.**
-Nothing is implemented or playtested yet. Summary (D42 is the owner of the rules):
+brainstorm phase is done by that decision; the tickets below built it.** Every trap of this set
+is built, placed and played (TRAPS.md has the current cards; some looks and names changed since). Summary
+of the decision as accepted (D42 is the owner of the rules):
 
 - **Spirit:** simple, lethal, organic hazards on the ground and overhead; variety by trigger
   family; more traps are welcome. All traps are lethal (or a moving block), each with a
@@ -332,8 +334,8 @@ Nothing is implemented or playtested yet. Summary (D42 is the owner of the rules
   glass-bottle bomb.
 - **Rhythm:** spore puffball mushroom and swinging thorn vine.
 - **Crumble:** rotten log bridge, the existing falling platform in a forest skin.
-- **Castle (later):** blade cutters and blue sparks / lightning; the falling stone may also
-  appear there.
+- **Castle (later):** blade cutters ([#641](https://github.com/jlogicgames/edgard_in_kimeria/issues/641)) and blue sparks / lightning
+  ([#642](https://github.com/jlogicgames/edgard_in_kimeria/issues/642)); the falling stone may also appear there.
 - **Explosive-trap rule:** on a required path, detonate it from afar (fireball or thrown
   stone) or take a riskier bypass; the bypass is mandatory because the route never needs
   ammunition (D26).
@@ -358,24 +360,22 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
 - [#230](https://github.com/jlogicgames/edgard_in_kimeria/issues/230): art (forest trap
   sprites, bomb replacement), in the remake's style per ART_DIRECTION.md without the 1990s
   palette, resolution or flat-colour limits; only the original's silhouettes and readability
-  ideas are kept (author, 2026-11-05). **State (2026-11-05):** first-pass sprite sets for every
-  forest trap are drawn and exported (see "Forest trap sprites (#230)" in ART_DIRECTION.md); no
-  code uses them yet and several are rough placeholders for a human artist to redo.
+  ideas are kept (author, 2026-11-05). **Done:** every forest trap has its sprite set in the game
+  (see "Forest trap sprites (#230)" in ART_DIRECTION.md and each card in TRAPS.md).
 - [#231](https://github.com/jlogicgames/edgard_in_kimeria/issues/231): code A, proximity
   traps (thorn root/stake, thorn tuft). **Implemented, see D44** (object types `ThornRoot`,
-  `ThornTuft`; the root is placed in the ladder room by #235/D48, the tuft nowhere).
+  `ThornTuft`; the root is taught in the ladder room by #235/D48, the tuft in `forest-1-spider`).
 - [#232](https://github.com/jlogicgames/edgard_in_kimeria/issues/232): code B, falling traps
-  (branch, stone). **Implemented, see D45** (tested headlessly in test-resource maps, not
-  placed in any shipped level, not yet seen in the running game).
+  (branch, stone). **Implemented, see D45** (placed in `forest-0`, `forest-1` and `forest-2`).
 - [#233](https://github.com/jlogicgames/edgard_in_kimeria/issues/233): code C, explosive
   stump/root replacing the bomb. **Implemented, see D47** (types `ExplosiveStump`,
   `ExplosiveRoot`; touch or a fireball / thrown stone from afar lights them; every one needs a
   floor bypass at load; the `forest-0-traps` bomb is replaced by a stump; the old `Bomb` type
-  stays and `forest-2` still has one).
+  stays for the Fortress, and the leg-hold trap replaced the last forest bomb, D128).
 - [#234](https://github.com/jlogicgames/edgard_in_kimeria/issues/234): code D, rhythm traps
   (puffball, vine) and the rotten-log skin. **Implemented, see D46** (types `Puffball`,
-  `ThornVine`, property `skin=log`; not placed in any shipped level, #235 does that).
-- [#235](https://github.com/jlogicgames/edgard_in_kimeria/issues/235): tutorial integration. **Implemented, see D48**: thorn root (ladder room), falling branch (wall), falling stone (platform), exploding stump (stone room, next to the stump of the traps room); the rhythm traps stay unplaced.
+  `ThornVine`, property `skin=log`; placed in `forest-1` and `forest-2` by #260 and #261).
+- [#235](https://github.com/jlogicgames/edgard_in_kimeria/issues/235): tutorial integration. **Implemented, see D48**: thorn root (ladder room), falling branch (wall), falling stone (platform), exploding stump (stone room, next to the stump of the traps room); the rhythm traps were placed later (#260, #261).
 - Backlog added 2026-11-05 (author requests and ideas, not implemented rules):
   - [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236): parallax layers
     (see ART_DIRECTION.md).
