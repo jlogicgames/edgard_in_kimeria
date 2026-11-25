@@ -41,6 +41,12 @@ coordinates, including any layer offset. In that layer:
   `Checkpoint` in `SpawnPoints` there to finish a level without a boss. A boss level
   completes only after its victory walk; Checkpoint contact and F5 are blocked throughout it.
 
+The game draws a portal on both kinds of way out; the map authors none ([D123](DECISIONS.md#d123-a-portal-marks-every-room-exit-and-a-ripple-marks-the-room-change-552-553-2026-11-22)).
+A violet one is centred on every `RoomExit`. An amber one marks the level end ([#605](https://github.com/jlogicgames/edgard_in_kimeria/issues/605)): in a level without
+a boss it is centred on the final `Checkpoint`, so moving that object moves the portal. The oval is 40 to 56 px tall and reaches 4 px past each end of a 32 px
+rectangle, so a `Checkpoint` at the room's top edge loses the top of the oval (forest-1's does, accepted by the author). A boss level has no `Checkpoint`: its amber
+portal opens after the kill at the right end of the boss room, on the floor.
+
 Bounds must be positive, inside the map, and must not overlap. Entrances and
 exit rectangles must fit inside their room. Duplicate, missing, orphaned, and
 unknown room markers fail loading with a diagnostic instead of changing gameplay
