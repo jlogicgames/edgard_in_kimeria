@@ -156,6 +156,8 @@ class LocalizationLayoutTest {
                     Msg.SCREEN_SHAKE.t(language) + ": " + Msg.OFF.t(language),
                     Msg.INSTANT_TEXT.t(language) + ": " + Msg.OFF.t(language),
                     Msg.LEFT_HANDED_LABEL.t(language) + ": " + Msg.ON.t(language),
+                    Msg.SOUND_LABEL.t(language) + ": " + Msg.OFF.t(language),
+                    Msg.MUSIC_LABEL.t(language) + ": " + Msg.OFF.t(language),
                     Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), Msg.RESTART_LEVEL.t(language))) {
                     Menu menu = new Menu(null, null, List.of(new MenuItem(label, () -> {})), null);
                     assertTrue(new GlyphLayout(button, label).width <= overlay.buttonsWidth(menu) - 48, prefix + label);

@@ -63,6 +63,26 @@ class SettingsTest {
     }
 
     @Test
+    void soundAndMusicAreOnByDefaultAndRoundTripIndependently() {
+        assertEquals("sound", Settings.KEY_SOUND_ENABLED);
+        assertEquals("music", Settings.KEY_MUSIC);
+        Settings settings = new Settings(preferences());
+        assertTrue(settings.get(Settings.SOUND));
+        assertTrue(settings.get(Settings.MUSIC));
+        settings.set(Settings.SOUND, false);
+        assertFalse(preferences().getBoolean(Settings.KEY_SOUND_ENABLED, true));
+        assertFalse(Settings.load(this::preferences).get(Settings.SOUND));
+        assertTrue(Settings.load(this::preferences).get(Settings.MUSIC), "Sound does not switch Music");
+        settings.set(Settings.MUSIC, false);
+        settings.set(Settings.SOUND, true);
+        assertTrue(Settings.load(this::preferences).get(Settings.SOUND));
+        assertFalse(Settings.load(this::preferences).get(Settings.MUSIC));
+        Preferences broken = preferences();
+        broken.putString(Settings.KEY_MUSIC, "maybe");
+        assertTrue(new Settings(broken).get(Settings.MUSIC), "an unreadable value falls back to on");
+    }
+
+    @Test
     void allOptionsSurviveRelaunchAndKeepProgress() {
         Preferences prefs = preferences();
         new SavedProgress(prefs, 2).save(1);

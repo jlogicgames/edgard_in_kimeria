@@ -51,6 +51,7 @@ public interface GameContext {
 
     void setDebugDraw(boolean value);
 
+    /** The Options "Sound" switch (#494): false when sound effects are off. Music has its own switch and is not read here. */
     boolean playSounds();
 
     float soundVolume();

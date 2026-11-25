@@ -18,6 +18,8 @@
   "DISPLAY_LABEL": "Display",
   "FULLSCREEN": "Fullscreen",
   "WINDOWED": "Windowed",
+  "SOUND_LABEL": "Sound",
+  "MUSIC_LABEL": "Music",
   "MENU_HINT": "Arrows/Tab to move - Enter/Space/A to confirm - Esc/B to go back",
   "LOADING": "Loading...",
   "INTRO_LEAF_1": "Hear my tale of Kimeria, and hear it to the end.\n\nOnce upon a time, beyond the dark woods and the deep rivers, there lay the kingdom of Kimeria.",
