@@ -3,17 +3,19 @@ package com.jlogicsoftware.kimeria.world;
 /** Real-time fade. Crossing black invokes the room switch exactly once. */
 public final class RoomFade {
     public static final float HALF_SECONDS = 0.25f;
-    private float elapsed, hold;
+    private float elapsed, hold, tail;
     private boolean active, switched;
     public boolean active() { return active; }
-    /** True from the black midpoint (the switch has run) until the fade-in ends. */
+    /** True from the black midpoint (the switch has run) until the fade ends, a hold after the fade-in included. */
     public boolean dark() { return active && switched; }
     public void start() { start(0); }
     /** Starts with a clear screen held for {@code holdSeconds} first (#553: the leaving ripple plays in it), then the fade as before. */
-    public void start(float holdSeconds) { if (!active) { active = true; switched = false; elapsed = 0; hold = holdSeconds; } }
+    public void start(float holdSeconds) { if (!active) { active = true; switched = false; elapsed = 0; hold = holdSeconds; tail = 0; } }
     /** True while the screen is held clear before the fade-out begins. */
     public boolean holding() { return active && hold > 0; }
-    public void cancel() { active = false; elapsed = 0; switched = false; hold = 0; }
+    /** Asked for by the room switch: the fade stays active, the screen clear, for {@code holdSeconds} after the fade-in (#606: the entering ripple plays in it). */
+    public void holdAfter(float holdSeconds) { if (active && switched) tail = holdSeconds; }
+    public void cancel() { active = false; elapsed = 0; switched = false; hold = 0; tail = 0; }
     public void update(float dt, Runnable switchRoom) {
         if (!active) return;
         if (hold > 0) { hold = Math.max(0, hold - dt); return; }
@@ -25,7 +27,7 @@ public final class RoomFade {
             return;
         }
         elapsed += dt;
-        if (elapsed >= HALF_SECONDS * 2) active = false;
+        if (elapsed >= HALF_SECONDS * 2 + tail) active = false;
     }
     public float alpha() {
         if (!active) return 0;

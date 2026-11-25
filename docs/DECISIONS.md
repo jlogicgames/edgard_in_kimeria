@@ -81,6 +81,9 @@ verification of subsequent implementation changes still apply.
     position, and camera switch only at full black; at least one black frame is
     shown. The hero has no disappearance/appearance animation for this transition.
     Death retains the separate respawn animation and eased camera return above.
+    **Amended by [D123](#d123-a-portal-marks-every-room-exit-and-a-ripple-marks-the-room-change-552-553-2026-11-22)**
+    (#553, #606): a clear pause comes before and after the fade, the hero goes into the exit's portal on leaving
+    and appears out of a ripple on entering; the fade itself is unchanged.
   - Rooms are traversed forward through explicit exit zones. Passed rooms are
     frozen with their state retained. The camera is bounded by the current room;
     a room smaller than the viewport is centred on that axis.
@@ -4165,7 +4168,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D123. A portal marks every room exit and a ripple marks the room change ([#552](https://github.com/jlogicgames/edgard_in_kimeria/issues/552), [#553](https://github.com/jlogicgames/edgard_in_kimeria/issues/553), 2026-11-22)
 
-- **Status:** Accepted (author, 2026-11-21 and 2026-11-22: portal light only and drawn behind the hero; ripple pause 0.20 s). Playtest 2 (D116) finding F21:
+- **Status:** Accepted (author, 2026-11-21 and 2026-11-22: portal light only and drawn behind the hero; ripple pause 0.20 s; 2026-11-25, [#606](https://github.com/jlogicgames/edgard_in_kimeria/issues/606): the entering ripple waits for a clear screen, holds the world, brings the hero in and is stronger). Playtest 2 (D116) finding F21:
   in a room whose exit is not at the screen edge it was unclear how to leave, because the `RoomExit` trigger drew nothing.
 - **Portal:** every `RoomExit` carries one (`PortalFx`, one per `Level`, placed in `activateRoom` and in the constructor, so it is there on the room's first frame, with its streams filling in over about a second (rim and arms are full after one life of a mote, 0.6 to 1.3 s); the last
   room, which has no exit, has no violet one; it marks the level end instead, see "Level end" below). A violet upright oval (half height the exit's half height, kept between 20 and 28 px; half width 0.6 of it) whose rim sparkles, with
@@ -4174,29 +4177,36 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the portal never darkens anything. It is drawn after the decor and before every object and the hero, so it never covers the hero, an enemy, a trap or a pickup; it is
   additive and carries no collision or timing (the exit stays the invisible `RoomExit` trigger, `Level.atRoomExit` unchanged). It never touches the parallax foreground, so
   `validateParallax` rule B is unaffected. D76: the portal draws no sprite and is measured by nothing in `check_contrast.py`; it is light on the active tier's side.
-- **Ripple and pause:** when the hero reaches the exit the world holds for **0.20 s** (`RoomRippleFx.LEAVE_HOLD_SECONDS`, `RoomFade.start(hold)`), clear, with three violet rings
+- **Ripple and pauses:** when the hero reaches the exit the world holds for **0.20 s** (`RoomRippleFx.LEAVE_HOLD_SECONDS`, `RoomFade.start(hold)`), clear, with three violet rings
   one after another (the existing `shockwave.frag` through `RingPool`), 16 motes pulled into the hero and the existing `RippleEffect` screen distortion (0.6 s). The hero
-  goes into the portal at the middle of the pause (`Level.heroLeft`, drawing only). Then the fade as before (0.25 s to black, the room switch, 0.25 s back), and in the new
-  room the same ripple plays at the entrance with motes flying out. The pause ignores input as the fade always did; the hero's keys are polled state, so a direction held
-  through the pause is still held when the new room starts (the game still calls `suppressJumpUntilRelease` on entry). Pause freezes it; a cancelled change (the healer meeting) clears it.
-- **Relation to D3:** D3 makes *death* and retry instant and that is untouched: a retry, a restart and a reset play no ripple and no pause (`PortalPerExitTest`). The pause is
-  on the *forward* room change only, a transition D3 never timed. It adds **0.20 s per forward room change** to the existing 0.50 s fade: 0.70 s in all, about 2.2 s over the
-  11 exits of forest-1, 1.0 s over the 5 of forest-0 or forest-2.
-- **Measured against D19 (`RoomReplayTest`, 2026-11-22, route to the exit, then plus the pause):** required routes 5.43 to 9.30 s, 5.63 to 9.50 s with the pause
-  (forest-1 escalators 5.48 / 5.68, mob 6.75 / 6.95, traps 6.00 / 6.20; entry 6.83 / 7.03, walls 5.55 / 5.75, fissure 9.30 / 9.50, glade 8.85 / 9.05, canopy 9.48 / 9.68) against the 20 s budget;
-  collection routes up to 12.05 s, 12.25 s with the pause (entry), against 30 s. Every route is now asserted with the pause added (`RoomReplayTest.within`, which prints the
-  numbers); no limit was changed. The pause is not part of the 20 s of a room's replay on a retry (retry stays at the room start), it is the cost of leaving.
+  goes into the portal at the middle of the pause (`Level.heroLeft`, drawing only). Then the fade as before (0.25 s to black, the room switch, 0.25 s back). The new
+  room fades in **without the hero**; when the screen is clear (`ENTER_DELAY_SECONDS`, the whole 0.25 s fade-in) the same ripple plays at the entrance with motes flying out,
+  he is drawn 0.15 s into it (`REVEAL_SECONDS`, `RoomRippleFx.heroUnseen`, drawing only), and the world stays held for **0.35 s** after the fade-in
+  (`ARRIVE_HOLD_SECONDS`, `RoomFade.holdAfter`, asked for by `KimeriaGame.enterNextRoom`, so the boss room after the healer's Fight gets it too). The rest of the ripple
+  plays on after control returns. The pauses ignore input as the fade always did; the hero's keys are polled state, so a direction held
+  through them is still held when the new room starts (the game still calls `suppressJumpUntilRelease` on entry). Pause freezes them; a cancelled change (the healer meeting) clears them.
+- **Strength (#606):** playtest 3 did not see the entering ripple. It started at full black under the fade panel, nothing held the world after the fade, and it was faint
+  (`shockwave.frag`'s ring peaks near a quarter of its colour). For both ends the ring colour is 1.7 times the first build's (`1.87, 0.94, 3.23`), the ring 3 px wide (was 2) and the motes 2 px
+  (were 1). The screen distortion keeps strength 6: it is centred on the hero, so it swells him while it is young; at 12 (and visibly at 8) real frames showed an
+  enlarged head. The reveal at 0.15 s, not earlier, is for the same reason. Fireball and pickup rings are unchanged.
+- **Relation to D3:** D3 makes *death* and retry instant and that is untouched: a retry, a restart and a reset play no ripple and no pause (`PortalPerExitTest`). The pauses are
+  on the *forward* room change only, a transition D3 never timed. They add **0.55 s per forward room change** (0.20 before the fade, 0.35 after it) to the 0.50 s fade: 1.05 s in all, about 6.1 s of pauses over the
+  11 exits of forest-1, 2.8 s over the 5 of forest-0 or forest-2. `KimeriaGameDeathTimingTest` pins the order on the real game at 60 Hz: ripple 0.25 s after the switch, hero 0.40 s, control after 0.60 s.
+- **Measured against D19 (`RoomReplayTest`, 2026-11-25, route to the exit, then plus both pauses):** required routes 5.43 to 11.08 s, 5.98 to 11.63 s with the pauses
+  (forest-1 escalators 5.48 / 6.03, mob 6.75 / 7.30, traps 6.00 / 6.55; walls 5.55 / 6.10, fissure 9.30 / 9.85, glade 8.85 / 9.40, canopy 9.48 / 10.03; the slowest is the entry room's sweep of start times, up to 11.08 / 11.63) against the 20 s budget;
+  collection routes up to 12.02 s, 12.57 s with the pauses (entry), against 30 s. Every route is asserted with the pauses added (`RoomReplayTest.within`, which prints the
+  numbers); no limit was changed. The pauses are not part of the 20 s of a room's replay on a retry (retry stays at the room start), they are the cost of leaving.
 - **Measured:** `AllocationBudgetTest`: the portal 0.0, 0.0, 0.0 B/frame (3 runs), the room-change ripple 0.0, 0.0, 0.0 (one `RippleEffect` reused by `RoomRippleFx`, restarted at each leave and enter; 3.2 to 3.5 while each change created its own), ceilings 8; the
   forest rooms with their portal still pass their own ceilings unchanged. Pool peaks (`PortalFxTest`, 30 to 144 fps): 184 of 256 motes and 27 of 48 lights.
 - **Level end (#605, 2026-11-24, extends D123):** playtest 3 found no marker for the end of a level. The same `PortalFx` takes a second, deep amber ramp (`7a3a10 b8611c e8892e ffc277 fff0d6`, redder than the honey `e2b25a` and the gold `ffd23a`; slow swirl, no flicker) and is placed on the final `Checkpoint` of a level without a boss (forest-0, forest-1) and, in the boss level, at the right end of the boss room on the floor there once the boss is dead (`Level.placeVictoryPortal`). The portal is cosmetic and `Checkpoint` is unchanged; still light only and behind the hero. A kill that lands in mid-air first left the portal and the walk at the height of the jump (found 2026-11-25: 50 px above the floor), so the hero now comes down to that floor, through any one-way platform, before and during the victory walk (`Player.settleVictory`). Tests: `PortalFxTest`, `PortalPerExitTest`, `BossCombatTest`. The author approved the amber colour on 2026-11-25.
 - **Level end, accepted as built (author, 2026-11-25, #605):** forest-1's final `Checkpoint` is at y 0 on the tree's crown, so the oval reaches 4 px above the room: its top is cut off
   by the screen edge and the top branch covers part of it. The author chose to leave it there. The author also accepted the running-game check on web frames of forest-0 and forest-1;
   it rests on that acceptance alone: no run with a new player and no desktop run is recorded, and the boss level's portal was not captured.
-- **State and input (`PortalPerExitTest`):** a real room change (leave, fade, switch, fade-in), a retry and a restart end in the same room, kept pickups, inventory and hero with the effects as without; the hero is
-  hidden only by a leave (`Level.leaving`, set by `beginLeaving` alone, reset by every room start), so the fade-in, a boss fight's fade and the debug fade leave him drawn; a direction held through the pause carries him on when
+- **State and input (`PortalPerExitTest`):** a real room change (leave, fade, switch, fade-in), a retry and a restart end in the same room, kept pickups, inventory and hero with the effects as without; the hero goes
+  into the portal only on a leave (`Level.leaving`, set by `beginLeaving` alone, reset by every room start) and is held back only on a forward entry (`heroUnseen`; a retry, a restart and a collection return draw him at once); a direction held through the pause carries him on when
   the room starts, and a jump key held through it needs a fresh press (the exit reset). Coins are counted by `KimeriaGame` (`GameContext.coinsCollected`, a game-level counter the harness does not keep), not reachable from `Level`, so they are not in that comparison; the room change code does not touch them.
 - **Licence:** `THIRD_PARTY_NOTICES.md` holds the pixelfx MIT licence and the Sprite Fusion credit; no pixelfx source is copied.
-- **Not verified:** how the pause and the ripple feel and read in the running game, desktop and web; a new player finding the exits of `forest-1-bramble` and `forest-1-climb` without help;
+- **Not verified:** how the pauses and the ripple feel to a player (the #606 build was checked frame by frame, two room changes on desktop and two on web, not played); a new player finding the exits of `forest-1-bramble` and `forest-1-climb` without help;
   the frame rate with a portal on the web build ([#552](https://github.com/jlogicgames/edgard_in_kimeria/issues/552) and [#553](https://github.com/jlogicgames/edgard_in_kimeria/issues/553) keep those boxes open).
 - **References:** [ART_DIRECTION.md](ART_DIRECTION.md) "Effects from pixelfx", D3, D19, D76, D116; review frames `docs/references/pixelfx/`.
 

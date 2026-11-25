@@ -1996,7 +1996,7 @@ public class Level implements WorldObject {
             for (int i = 0; i < ambience.size(); i++) ambience.get(i).render(batch);
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         }
-        if (!player.isRemoved() && !heroLeft) player.render(batch);
+        if (!player.isRemoved() && !heroLeft && !roomRipple.heroUnseen()) player.render(batch);
         roomRipple.render(batch);
         pickupSparks.render(batch); // over the hero: the item is at his hand when he takes it, and behind him the burst stays hidden until it leaves his outline
         fairy.renderFront(batch);

@@ -156,15 +156,21 @@ player reaches the exit trigger rather than walking into an inactive room.
 The camera stays inside the current room; if the room is smaller than the
 viewport, it is centred on that axis.
 
-Entering RoomExit freezes the world, hero animation, and movement input.
-The entire scene fades to black over **0.25 seconds**, then the next room and a
-fresh idle hero are placed at its entrance and the camera relocates while the
-screen is fully black. A fully black frame is always rendered, even after a
-long frame. The scene fades in over **0.25 seconds**, then play resumes. There
-is no hero disappearance/appearance animation, inter-room camera pan, loading
-screen, or level-save write. Timing uses real time, independent of death slow motion.
-Pause freezes the fade; Resume continues it. Restart Level and leaving gameplay
-cancel the transition.
+Entering RoomExit freezes the world, hero animation, and movement input. The change then runs
+in four steps ([D123](DECISIONS.md#d123-a-portal-marks-every-room-exit-and-a-ripple-marks-the-room-change-552-553-2026-11-22)):
+
+1. A **0.20 s** pause on a clear screen: the leaving ripple plays, and halfway through it the hero is gone into the portal.
+2. The entire scene fades to black over **0.25 seconds**, then the next room and a fresh idle hero are
+   placed at its entrance and the camera relocates while the screen is fully black. A fully black frame is
+   always rendered, even after a long frame.
+3. The scene fades in over **0.25 seconds** without the hero.
+4. A **0.35 s** pause on the clear screen: the entering ripple starts as the fade ends and the hero appears
+   **0.15 s** into it. Then play resumes, 1.05 s after the exit was reached, while the rest of the ripple plays out.
+
+Entering the boss room after the healer's Fight choice has no leaving pause; steps 2 to 4 are the same.
+There is no inter-room camera pan, loading screen, or level-save write. Timing uses real time,
+independent of death slow motion. Pause freezes the change; Resume continues it. Restart Level and
+leaving gameplay cancel it.
 
 Death keeps its slow motion; after a death with a visible cause the silver thread pulls
 Edgard back under a death fade and the camera snaps at black, after a pit the fast eased

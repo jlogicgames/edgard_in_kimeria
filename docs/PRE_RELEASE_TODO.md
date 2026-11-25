@@ -106,8 +106,10 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
 
   Start New Game and reach `forest-2` (the first level) through the opening, with
   invulnerability off. Walk through the original room to its far-right
-  exit and verify fade out, a black midpoint, and fade in at the second entrance,
-  with an idle hero and no camera travel. Walk the ascending platforms in room two
+  exit and verify the ripple with the hero going into the portal, fade out, a black
+  midpoint, fade in at the second entrance without the hero, then on the clear screen
+  the ripple there with an idle hero appearing out of it, control only after that, and
+  no camera travel. Walk the ascending platforms in room two
   and check its optional coins. Collect a coin and die: the hero must
   return to room two, provisional pickups must roll back, and mutable mechanisms/platforms
   must match the room-entry baseline (authored on first visit, latest secured on revisit);
@@ -116,7 +118,7 @@ Sources: [rooms](ROOMS.md), [healer state policy](HEALER.md).
   required exit/boss route, and its consequence must be readable before commitment. Verify
   Restart Level restores authored state. Repeat a death, meet the healer, choose to enter the third room, defeat the boss, and watch the
   automatic victory walk. Also pause
-  mid-fade, Resume, Restart Level, and play all the `forest-1` rooms (since #363 the deadfall room: check that the tied log and the trip vine read as a trap before the trip and that the creak warns before the swing, without any hint; the trap course, since #418 the lever lesson room: check that one pull lowers the ladder and stops the lift in the same view, without any hint; since #187 the route room: check the lever, the ladder, the lift and the refill without any hint, and since #104 the guard room: check the lever, the ladder, the roof, the RedMob in its tunnel and the spore puffball's swell before its cloud, again without any hint).
+  mid-fade and in the clear pause before and after it, Resume, Restart Level, and play all the `forest-1` rooms (since #363 the deadfall room: check that the tied log and the trip vine read as a trap before the trip and that the creak warns before the swing, without any hint; the trap course, since #418 the lever lesson room: check that one pull lowers the ladder and stops the lift in the same view, without any hint; since #187 the route room: check the lever, the ladder, the lift and the refill without any hint, and since #104 the guard room: check the lever, the ladder, the roof, the RedMob in its tunnel and the spore puffball's swell before its cloud, again without any hint).
 
 - [ ] Perform a fresh all-artifact/all-coin route and repeated collection returns with
   missed pickups, surviving/defeated enemies, warning/exploded traps and restored linked

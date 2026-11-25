@@ -178,11 +178,13 @@ class PortalPerExitTest {
     @Test void enteringARoomPlaysTheRippleAndRetryDoesNot() {
         Level level = harness.roomOf("forest-1", 0);
         level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
-        for (int i = 0; i < 3; i++) level.updateRoomChange(STEP);
+        assertTrue(level.roomRipple().heroUnseen(), "the hero is not drawn before the ripple brings him (#606)");
+        for (int i = 0; i < Math.round(RoomRippleFx.ENTER_DELAY_SECONDS / STEP) + 2; i++) level.updateRoomChange(STEP);
         assertTrue(level.roomRipple().ringCount() > 0 || level.roomRipple().motes().count() > 0, "the ripple plays where the hero appears");
         level.resetCurrentRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
         assertEquals(0, level.roomRipple().ringCount() + level.roomRipple().motes().count(), "a retry after death is instant (D3): no ripple, nothing left over");
         assertNull(level.activeRipple());
+        assertTrue(!level.roomRipple().heroUnseen(), "the retried hero is drawn at once");
         assertEquals(0.20f, RoomRippleFx.LEAVE_HOLD_SECONDS, 0f);
     }
 }
