@@ -1,7 +1,9 @@
-"""Unit tests of tools/parallax_game.py and the game-map mode of tools/parallax_mock.py (#236)."""
+"""Unit tests of tools/parallax_game.py and of both check modes of tools/parallax_mock.py, game maps and sketches (#236)."""
 import contextlib
 import io
 import itertools
+import subprocess
+import sys
 import unittest
 import xml.etree.ElementTree as ET
 import parallax_game as game
@@ -134,6 +136,20 @@ class InstalledMapTest(unittest.TestCase):
 
     def test_rounding_is_half_up_as_javas_math_round(self):
         self.assertEqual([1, 0, 3, -1], [pm.jround(v) for v in (0.5, -0.5, 2.5, -1.5)])
+
+
+class SketchCheckTest(unittest.TestCase):
+    def test_the_check_of_the_sketches_exits_0(self):
+        """`--check` without `--game` reads mock.tmx and mock-calm.tmx against their rooms in the game map (#599)."""
+        run = subprocess.run([sys.executable, pm.__file__, '--check'], capture_output=True, text=True, check=False)
+        self.assertEqual(0, run.returncode, run.stdout + run.stderr)
+        for scene in pm.SCENES.values():
+            self.assertIn(f'{scene.mock.name} foreground: 0 covered objects', run.stdout)
+
+    def test_the_terrain_sketch_is_mock_tmx_over_the_terrain_tileset(self):
+        """mock-terrain.tmx is generated from mock.tmx and no check reads it, so a hand edit of one must reach the other."""
+        self.assertEqual(pm.terrain_text(pm.MOCK.read_text(encoding='utf-8')), pm.TERRAIN_MOCK.read_text(encoding='utf-8'),
+                         'run python3 tools/parallax_mock.py --terrain: mock-terrain.tmx differs from mock.tmx')
 
 
 class PackedSheetTest(unittest.TestCase):

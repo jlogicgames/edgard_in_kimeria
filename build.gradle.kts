@@ -133,7 +133,7 @@ project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.c
 
 val testParallaxGate = tasks.register<Exec>("testParallaxGate") {
     group = "verification"
-    description = "Runs the unit tests of tools/parallax_game.py and the game-map mode of tools/parallax_mock.py, so a broken gate fails the build."
+    description = "Runs the unit tests of tools/parallax_game.py and tools/parallax_mock.py (game maps and sketches), so a broken gate fails the build."
     workingDir = rootDir.resolve("tools")
     commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
         "-m", "unittest", "test_parallax_game")
