@@ -523,7 +523,9 @@
  <objectgroup id="5" name="Hints">
   <object id="39" name="forest-0-walk" type="Hint" x="16" y="0" width="144" height="368">
    <properties>
+    <property name="coach" value="stick-drag"/>
     <property name="message" value="HINT_TUTORIAL_WALK"/>
+    <property name="touchMessage" value="HINT_TUTORIAL_WALK_TOUCH"/>
    </properties>
   </object>
   <object id="42" name="forest-0-lever-torch" type="Hint" x="160" y="0" width="280" height="368">
@@ -538,6 +540,7 @@
   </object>
   <object id="44" name="forest-0-lever-controls" type="Hint" x="16" y="0" width="544" height="368">
    <properties>
+    <property name="coach" value="stick-up"/>
     <property name="controls" type="bool" value="true"/>
    </properties>
   </object>
@@ -638,6 +641,7 @@
   </object>
   <object id="68" name="forest-0-stone-controls" type="Hint" x="3072" y="0" width="704" height="368">
    <properties>
+    <property name="coach" value="ranged"/>
     <property name="controls" type="bool" value="true"/>
    </properties>
   </object>

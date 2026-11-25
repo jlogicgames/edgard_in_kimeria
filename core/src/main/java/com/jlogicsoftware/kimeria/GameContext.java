@@ -4,7 +4,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.entity.items.ItemType;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
+import com.jlogicsoftware.kimeria.ui.TouchCoach;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.ui.TouchGlyph;
 
 /**
  * Everything an entity needs from the running game, mirroring what Dart
@@ -31,9 +33,13 @@ public interface GameContext {
     /** True while a mechanism can be selected by Up (D126). */
     boolean interactAvailable();
 
-    default com.jlogicsoftware.kimeria.localization.Msg actionLabel() { return com.jlogicsoftware.kimeria.localization.Msg.ATTACK; }
-    default com.jlogicsoftware.kimeria.localization.Msg rangedLabel() { return com.jlogicsoftware.kimeria.localization.Msg.FIREBALL; }
+    /** The pictogram on the touch Action button (#492, D138): always the sword. */
+    default TouchGlyph actionGlyph() { return TouchGlyph.SWORD; }
+    /** The pictogram on the touch Ranged button (#492, D138): throw, fireball or empty. */
+    default TouchGlyph rangedGlyph() { return TouchGlyph.FIREBALL; }
     default String rangedPrompt() { return ""; }
+    /** Fills the touch tutorial's signals from the hero and the room (D139); the default (no level) leaves them cleared. */
+    default void coachSignals(TouchCoach.Signals out) { }
 
     /** Debug aid (F2): ignores lethal damage so a level can be walked end to end. */
     boolean invulnerable();

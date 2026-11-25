@@ -49,7 +49,9 @@ import com.jlogicsoftware.kimeria.ui.HealerDialogueView;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.ui.KimeriaArms;
 import com.jlogicsoftware.kimeria.ui.Overlay;
+import com.jlogicsoftware.kimeria.ui.TouchCoach;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.ui.TouchGlyph;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
@@ -1673,6 +1675,13 @@ class AllocationBudgetTest {
     /** The dialogue screen (D78, #337): measured in the tale (instant text off and on) and the pre-boss cases; see healerDialogueScreen. */
     static final double DIALOGUE_SCREEN_CEILING = 8;
     static final int DIALOGUE_SELECT_FRAMES = 60;
+    /** #492 (D138): the touch cluster with a pictogram on each of its two buttons; the measurement is in the report. */
+    static final double TOUCH_BUTTONS_CEILING = 8;
+    static final int GLYPH_FRAMES = 20;
+    /** #496 (D139): the touch tutorial's three steps, fed and drawn each frame, each for {@value #COACH_STEP_FRAMES} frames; the measurement is in the report. */
+    static final double TOUCH_COACH_CEILING = 8;
+    static final int COACH_STEP_FRAMES = 300;
+    static final float COACH_HERO_X = 64;
     static final int PAGED_INTRO_COPIES = 100, INTRO_BOOK_COPIES = 40, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     /** Enough endings for the warm-up and the measured window (25 s): one lasts about 7 s (today's ending lights with its third paragraph), or 3 s with instant text (#416). */
     static final int ENDING_COPIES = 12;
@@ -2124,6 +2133,55 @@ class AllocationBudgetTest {
         System.out.printf("ALLOCATION %s with the skip button, instant text %s: %.1f B/frame in all, %.1f of it the harness's input proxy, %d frames with a leaf in flight%n",
             name, instant ? "on" : "off", bytes, harnessInput, (int) flown[0]);
         assertWithinBudget(name + ", instant text " + (instant ? "on" : "off") + ", without the harness input proxy", PAGED_INTRO_CEILING, Math.max(0, bytes - harnessInput));
+    }
+
+    /**
+     * #492 (D138): the touch cluster drawn every frame with a pictogram on the Action and the Ranged button, the Ranged one cycling
+     * through its three states (and pressed and idle art) every {@value #GLYPH_FRAMES} frames. No text is built or drawn for the buttons any more
+     * (the label's GlyphLayout was a new object per button per frame). The game is the harness's proxy, which returns the glyph without allocating.
+     */
+    @Test void touchButtonsWithPictograms() {
+        TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
+        TouchGlyph[] ranged = {TouchGlyph.THROW, TouchGlyph.FIREBALL, TouchGlyph.EMPTY};
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            harness.rangedGlyph = ranged[i / GLYPH_FRAMES % ranged.length];
+            touch.render(batch);
+        });
+        assertWithinBudget("TouchControls.render with pictograms", TOUCH_BUTTONS_CEILING, bytes);
+    }
+
+    /**
+     * #496 (D139): the touch tutorial fed and drawn every frame, through its three steps in turn (the stick hand dragging right, the hand pushing up, the pulsing ring),
+     * with the cluster itself. The harness's proxies allocate on every call (the argument arrays of {@code isTouched} and {@code coachSignals}, the boxed delta time),
+     * so those calls are measured alone and subtracted, as the story skip button's poll is.
+     */
+    @Test void touchCoachFedAndDrawnEveryFrame() {
+        TouchControls touch = new TouchControls(harness.assets(), harness.game(), new Viewport() { }, 640, 360, true);
+        TouchCoach.Signals scratch = new TouchCoach.Signals();
+        int[] frame = new int[1], shown = new int[3];
+        harness.coachSignals = out -> {
+            int step = frame[0] / COACH_STEP_FRAMES % TouchCoach.Step.values().length;
+            out.zone(TouchCoach.Step.values()[step]);
+            out.heroX = COACH_HERO_X;
+            out.leverInReach = step == TouchCoach.Step.STICK_UP.ordinal();
+            out.carrying = step == TouchCoach.Step.RANGED.ordinal();
+        };
+        double harnessCalls = AllocationProbe.bytesPerFrame(i -> {
+            for (int pointer = 0; pointer < TOUCH_POINTERS; pointer++) com.badlogic.gdx.Gdx.input.isTouched(pointer);
+            com.badlogic.gdx.Gdx.graphics.getDeltaTime();
+            harness.game().coachSignals(scratch);
+            harness.game().leftHanded();
+        });
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            frame[0] = i;
+            touch.update(true);
+            touch.render(batch);
+            TouchCoach.Step step = touch.coach().step();
+            if (step != null) shown[step.ordinal()]++;
+        });
+        for (TouchCoach.Step step : TouchCoach.Step.values()) assertTrue(shown[step.ordinal()] > COACH_STEP_FRAMES / 4, step + " must be on screen during the measurement: " + shown[step.ordinal()]);
+        System.out.printf("ALLOCATION TouchCoach fed and drawn: %.1f B/frame in all, %.1f of it the harness's proxies, frames shown %s%n", bytes, harnessCalls, java.util.Arrays.toString(shown));
+        assertWithinBudget("TouchControls.update and render with the touch coach, without the harness proxies", TOUCH_COACH_CEILING, Math.max(0, bytes - harnessCalls));
     }
 
     /** The debug FPS text asked for every frame while the rate changes every {@value #FPS_CHANGE_FRAMES} frames. */

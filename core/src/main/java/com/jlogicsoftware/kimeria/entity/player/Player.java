@@ -24,6 +24,8 @@ import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.input.KeyBindings;
 import com.jlogicsoftware.kimeria.input.GameplayInput;
+import com.jlogicsoftware.kimeria.ui.TouchCoach;
+import com.jlogicsoftware.kimeria.ui.TouchGlyph;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.items.FireballRefill;
@@ -873,10 +875,23 @@ public class Player extends Actor<Player.State> implements CollideBody {
         Entity target = level.mechanismFeedbackTarget(trigger);
         return target instanceof Lever ? Msg.LEVER : target instanceof Torch ? Msg.TORCH : Msg.MECHANISM;
     }
+    /** The Ranged button's name: what the keyboard and gamepad prompts say (the touch button draws {@link #rangedGlyph()}). */
     public Msg rangedLabel() { return carried != null ? Msg.THROW : ammunition() > 0 ? Msg.FIREBALL : Msg.NO_AMMO; }
 
+    /** The pictogram on the touch Ranged button (#492, D138), one per {@link #rangedLabel()} state. */
+    public TouchGlyph rangedGlyph() { return carried != null ? TouchGlyph.THROW : ammunition() > 0 ? TouchGlyph.FIREBALL : TouchGlyph.EMPTY; }
+
     public String rangedPrompt() {
-        return actionBinding(true) + ": " + rangedLabel().t(game.language());
+        return prompt(actionBinding(true), rangedLabel().t(game.language()));
+    }
+
+    /**
+     * A label above the hero: "{@code binding}: {@code text}". On touch the binding is dropped (D138, #492): the stick and the
+     * buttons carry no key to name, and the buttons show pictograms, so the label says only what happens. The device is the one
+     * the player used last ({@link GameplayInput#device()}), so a touch laptop's keyboard player still sees the key names.
+     */
+    private String prompt(String binding, String text) {
+        return gameplayInput.device() == GameplayInput.Device.TOUCH ? text : binding + ": " + text;
     }
     /**
      * The contextual (interaction) label: the fireball-stock status message, or inside a map {@code controls}
@@ -898,7 +913,26 @@ public class Player extends Actor<Player.State> implements CollideBody {
     public String zoneHint() {
         if (level == null || !canFight()) return "";
         var zone = level.messageHint();
-        return zone == null ? "" : zone.message().t(game.language());
+        if (zone == null) return "";
+        // A zone with a touch variant (D139) says it while the touch tutorial guides the player; a keyboard or a pad that moved the hero ends that.
+        boolean touchText = zone.touchMessage() != null && game.touch() != null && game.touch().touchGuided();
+        return (touchText ? zone.touchMessage() : zone.message()).t(game.language());
+    }
+
+    /**
+     * Fills what the touch tutorial needs from the hero and the room (D139, {@link TouchCoach}): the coach zones holding the hero, his x, whether a
+     * keyboard or a pad moved him, a hand-operated object in reach, something carried, and a throw or an interaction this frame.
+     */
+    public void coachSignals(TouchCoach.Signals out) {
+        if (level == null) return;
+        level.coachZones(out);
+        out.heroX = centerX();
+        out.nonTouchMoved = gameplayInput.nonTouchMoved();
+        out.leverInReach = selectedMechanism() != null;
+        out.carrying = carried != null;
+        out.respawning = respawnPhase != RespawnPhase.NONE;
+        out.threw = gameplayInput.rangedPressed();
+        out.interacted = gameplayInput.upPressed();
     }
 
     private String controlHint() {
@@ -912,18 +946,18 @@ public class Player extends Actor<Player.State> implements CollideBody {
         LadderEntry entry = ladderEntry();
         if (entry == null) return "";
         if (entry.canClimbUp() && entry.canClimbDown())
-            return directionBinding(true, false) + ": " + Msg.CLIMB.t(game.language()) + "\n"
-                + directionBinding(false, true) + ": " + Msg.CLIMB_DOWN.t(game.language());
+            return prompt(directionBinding(true, false), Msg.CLIMB.t(game.language())) + "\n"
+                + prompt(directionBinding(false, true), Msg.CLIMB_DOWN.t(game.language()));
         String directions = directionBinding(entry.canClimbUp(), entry.canClimbDown());
         Msg action = entry.canClimbDown() && !entry.canClimbUp() ? Msg.CLIMB_DOWN : Msg.CLIMB;
-        return directions + ": " + action.t(game.language());
+        return prompt(directions, action.t(game.language()));
     }
 
     private String interactionHint() {
         if (carried != null) {
             Trigger mechanism = selectedMechanism();
             if (!carryHintVisible) return mechanism == null ? "" : mechanismHint(mechanism);
-            String place = directionBinding(false, true) + ": " + Msg.PUT_DOWN.t(game.language());
+            String place = prompt(directionBinding(false, true), Msg.PUT_DOWN.t(game.language()));
             if (level.blocksObject(placementBounds(), true)) place += " - " + Msg.PLACE_BLOCKED.t(game.language());
             String carrying = place + "\n" + rangedPrompt();
             return mechanism == null ? carrying : mechanismHint(mechanism) + "\n" + carrying;
@@ -931,14 +965,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
         InteractionTarget target = selectedInteraction();
         if (target == null) return "";
         if (target.carryable() != null)
-            return directionBinding(true, false) + ": " + Msg.PICK_UP.t(game.language())
-                + " - " + target.carryable().label().t(game.language());
+            return prompt(directionBinding(true, false), Msg.PICK_UP.t(game.language()) + " - " + target.carryable().label().t(game.language()));
         return mechanismHint(target.mechanism());
     }
 
     private String mechanismHint(Trigger mechanism) {
-        return directionBinding(true, false) + ": " + mechanismAction(mechanism).t(game.language())
-            + " - " + mechanismLabel(mechanism).t(game.language());
+        return prompt(directionBinding(true, false), mechanismAction(mechanism).t(game.language()) + " - " + mechanismLabel(mechanism).t(game.language()));
     }
 
     /** Mechanisms keep their local anchor even when the hero already carries another object. */
@@ -971,7 +1003,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return switch (gameplayInput.device()) {
             case KEYBOARD -> up && down ? keys.upName() + "/" + keys.downName() : up ? keys.upName() : keys.downName();
             case GAMEPAD -> (game.leftHanded() ? Msg.RIGHT_STICK : Msg.LEFT_STICK).t(lang) + " " + (up ? Msg.UP : Msg.DOWN).t(lang);
-            case TOUCH -> Msg.STICK.t(lang) + " " + (up ? Msg.UP : Msg.DOWN).t(lang);
+            case TOUCH -> ""; // never shown: prompt() drops the binding on touch (D138)
         };
     }
 
@@ -981,7 +1013,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         return switch (gameplayInput.device()) {
             case KEYBOARD -> ranged ? keys.rangedName() : keys.actionName();
             case GAMEPAD -> game.leftHanded() ? (ranged ? Msg.DPAD_UP : Msg.DPAD_ACTION).t(lang) : ranged ? "Y" : "X/B";
-            case TOUCH -> (ranged ? Msg.SHOOT : Msg.ACTION).t(lang);
+            case TOUCH -> ""; // never shown: prompt() drops the binding on touch (D138)
         };
     }
 

@@ -78,6 +78,18 @@ public final class TouchLayout {
     /** Backbuffer pixels per CSS pixel; a "24 px" finger target is {@code 24 * pixelRatio()} backbuffer pixels. */
     public float pixelRatio() { return pixelRatio; }
 
+    /**
+     * CSS pixels the picture is drawn at per picture unit in this layout (D137): the window width over the picture's width in the
+     * portrait strip layout, {@link #pictureScale()} in the side-bar layout, the plain fit (height or width, whichever is smaller)
+     * otherwise, each divided by {@link #pixelRatio()}. This is what the text size rule multiplies a baked font size by.
+     */
+    public float cssPerUnit() {
+        if (screenWidth <= 0 || screenHeight <= 0) return 1f;
+        float perUnit = portrait ? screenWidth / gameWidth : sideBars ? pictureScale
+            : Math.min(screenWidth / gameWidth, screenHeight / gameHeight);
+        return perUnit / pixelRatio;
+    }
+
     /** True when the stick and buttons go into the left and right bars beside the picture (landscape). */
     public boolean sideBars() { return sideBars; }
 

@@ -15,7 +15,7 @@ public final class GameplayInput {
     private final boolean[] ups = new boolean[DEVICES], downs = new boolean[DEVICES];
     private boolean layout;
     private Device device = Device.KEYBOARD;
-    private boolean up, down, actionHeld, rangedHeld, action, ranged, upPress, downPress;
+    private boolean up, down, actionHeld, rangedHeld, action, ranged, upPress, downPress, nonTouchMove;
 
     public void reset() {
         java.util.Arrays.fill(actionWasHeld, true);
@@ -45,9 +45,11 @@ public final class GameplayInput {
             rangedWasHeld[i] = ranges[i];
         }
         // Movement also chooses the prompt device, without idle connected pads stealing it.
-        if (keys.moveLeftHeld() || keys.moveRightHeld() || keyUp || keyDown || keys.jumpHeld())
-            device = Device.KEYBOARD;
-        if (pad.horizontal() != 0 || pad.upHeld() || pad.downHeld() || pad.jumpHeld()) device = Device.GAMEPAD;
+        boolean keyMove = keys.moveLeftHeld() || keys.moveRightHeld() || keyUp || keyDown || keys.jumpHeld();
+        boolean padMove = pad.horizontal() != 0 || pad.upHeld() || pad.downHeld() || pad.jumpHeld();
+        nonTouchMove = keyMove || padMove;
+        if (keyMove) device = Device.KEYBOARD;
+        if (padMove) device = Device.GAMEPAD;
         if (touch.horizontal() != 0 || touch.upHeld() || touch.downHeld() || touch.jumpHeld()) device = Device.TOUCH;
         if (edgeDevice != null) device = edgeDevice;
         // Interaction (D126) is a fresh press per device; the touch stick counts only when steeply up or down.
@@ -70,6 +72,8 @@ public final class GameplayInput {
     public boolean actionPressed() { return action; }
     public boolean rangedPressed() { return ranged; }
     public Device device() { return device; }
+    /** A keyboard or a gamepad is moving the hero this frame: the touch tutorial ends for good (D139). */
+    public boolean nonTouchMoved() { return nonTouchMove; }
     /** A fresh Up (or a steep touch-stick up) this frame: pick up or use a mechanism (D126). */
     public boolean upPressed() { return upPress; }
     /** A fresh Down this frame: put down (D126). */

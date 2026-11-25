@@ -21,6 +21,7 @@ import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.ui.TouchGlyph;
 
 import java.lang.reflect.Proxy;
 import java.util.HashSet;
@@ -45,6 +46,10 @@ public final class HeadlessLevelHarness {
         @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
         @Override public BitmapFont font(int size) { return font; }
     };
+    /** Returned by {@code GameContext.rangedGlyph}, the pictogram on the touch Ranged button (#492): the flame unless a test sets another. */
+    public TouchGlyph rangedGlyph = TouchGlyph.FIREBALL;
+    /** Fills {@code GameContext.coachSignals}, what the touch tutorial reads from the hero (D139); null leaves the signals cleared. */
+    public java.util.function.Consumer<com.jlogicsoftware.kimeria.ui.TouchCoach.Signals> coachSignals;
     /** Returned by {@code Assets.font}; null unless a test sets it before building the object that asks for a font. */
     public BitmapFont font;
     /** Returned by {@code GameContext.invulnerable}, the developer cheat (F2): off unless a test turns it on. */
@@ -61,6 +66,9 @@ public final class HeadlessLevelHarness {
             case "touch" -> touch;
             case "language" -> Language.ENGLISH;
             case "isGameStarted" -> true;
+            case "actionGlyph" -> TouchGlyph.SWORD;
+            case "rangedGlyph" -> rangedGlyph;
+            case "coachSignals" -> { if (coachSignals != null) coachSignals.accept((com.jlogicsoftware.kimeria.ui.TouchCoach.Signals) args[0]); yield null; }
             case "screenShakeDisabled" -> screenShakeDisabled;
             case "artifacts" -> artifacts;
             case "playSounds" -> playSounds;
@@ -117,6 +125,15 @@ public final class HeadlessLevelHarness {
     public void restoreGlobals() {
         Gdx.app = previousApp; Gdx.graphics = previousGraphics; Gdx.input = previousInput; Gdx.files = previousFiles;
         Gdx.gl = previousGl; Gdx.gl20 = previousGl20;
+    }
+
+    /**
+     * Turns the harness's touch controls into a touch device's (D139): available, so the touch tutorial and the touch variants of zone
+     * messages treat the player as guided by touch. Call after {@link #setUp()}, before building a level.
+     */
+    public TouchControls touchDevice() {
+        touch = new TouchControls(assets, game, null, 640, 360, true);
+        return touch;
     }
 
     public Assets assets() { return assets; }

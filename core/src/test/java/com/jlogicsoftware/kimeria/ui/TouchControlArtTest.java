@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TouchControlArtTest {
     private static final int DARK_BAR = 0x10101c, BACKGROUND = 0x2c3f66, GROUND = 0x7a4e2c; // BACKGROUND: the forest maps' night (D92)
-    private static final double BAR_CONTRAST = 7.0, LABEL_CONTRAST = 7.0, PRESSED_DIFFERENCE = 1.4, EDGE_CONTRAST = 3.0;
+    private static final double BAR_CONTRAST = 7.0, PRESSED_DIFFERENCE = 1.4, EDGE_CONTRAST = 3.0;
     private static final int RING_OFFSET = 2, ICON_SIDE_X = 12;
 
     @Test void buttonStickAndKnobFillsAreLightAndStandOutFromTheDarkBars() throws Exception {
@@ -44,12 +44,6 @@ class TouchControlArtTest {
             assertTrue(Math.abs(idle - down) > 0.05 || contrast(idle, down) >= PRESSED_DIFFERENCE, name + " pressed differs");
         }
         assertTrue(TouchControls.CONTROL_ALPHA >= 0.9f, "idle controls must be near-opaque");
-    }
-
-    @Test void buttonLabelsAreReadableOnIdleAndPressedButtons() throws Exception {
-        double label = luminance(com.badlogic.gdx.graphics.Color.rgb888(TouchControls.LABEL_COLOR));
-        assertTrue(contrast(luminance(centre("disc")), label) >= LABEL_CONTRAST, "label on idle button");
-        assertTrue(contrast(luminance(centre("disc-down")), label) >= LABEL_CONTRAST, "label on pressed button");
     }
 
     /**

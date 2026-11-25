@@ -50,7 +50,7 @@ again. Interaction never happens on a ladder.
 
 **Touch stick.** The stick climbs at any upward or downward lean past its dead zone, but it counts as an interaction
 press only when it is more than about 60 degrees from horizontal (tan 60 = 1.732), so a diagonal climb or a run with a
-little lean never picks anything up. The touch Action button always reads Sword.
+little lean never picks anything up. The touch Action button always shows the sword pictogram (D138).
 
 **Ladder overlap.** A stone or torch lying in a ladder's reach: a fresh Up picks it up first, the next fresh Up
 climbs. Down while carrying puts the object down on the floor; at a ladder top Down descends with the object (the
@@ -78,7 +78,7 @@ camera follows the hero and the room clamp only.
 The same table is shown in the game on Options > Controls (D135, `ui.ControlsView`), both hands side by side for the input mode in use (touch, then a connected pad, else the keyboard), and Left-handed is switched there; `ControlsViewTest` checks the keyboard rows against `KeyBindings`. About no longer lists bindings.
 
 The mirrored action D-pad is never also a movement direction. Start/Esc and menu
-bindings are unchanged. The touch Action button reads Sword; the hover labels distinguish pickup, placement, blocked
+bindings are unchanged. The touch Action button shows the sword pictogram; the hover labels distinguish pickup, placement, blocked
 placement, mechanism, throw, fireball and empty stock. All contextual teaching uses
 the map's `controls` hint zone (today the entire first `forest-2` room, to move into `forest-0`'s
 lesson rooms; [D33](DECISIONS.md#d33-the-forest-0-tutorial-level-and-map-authored-hints)), at every position and height,
@@ -98,7 +98,7 @@ All labels ease in over 0.18 s while rising 12 logical UI pixels from below to t
 normal local position; they ease out over 0.25 s while continuing 12 pixels upward.
 The outgoing text keeps its world anchor until invisible, then replacement content
 starts below its own anchor. Interrupted entry/re-entry preserves the current slide
-position and opacity, avoiding jumps. Touch button labels, target marks and the
+position and opacity, avoiding jumps. The touch button pictograms, target marks and the
 ammunition icons remain available throughout gameplay; there is no opaque banner.
 The fairy guide marks the selected object itself ([D82](DECISIONS.md#d82-the-fairy-helper-shows-the-interaction-target-instead-of-the-corner-brackets-playtest-f4-f14-338-2026-11-16), replacing the gold corner
 brackets): an aqua glow behind it and four fairy-dust glints at its corners from the frame it is selected, while the
@@ -338,7 +338,9 @@ climb or operate, never both, and holding Up after a pick-up does not climb. A s
 fresh Up picks it up, the next fresh Up climbs; at a ladder top a fresh Down descends even while carrying.
 Up and Down together climb nothing. Keyboard (both
 handedness layouts), gamepad movement stick/D-pad and the touch stick feed the same
-input; the lesson text names the device's own label (`W`, `Left stick up`, `Stick up`).
+input; the lesson text names the device's own label (`W`, `Left stick up`); on touch the label names no stick or button and says only what happens (`Pick up`, `Put down`, `Climb`, `Throw`, D138).
+
+**Touch tutorial (D139, #496).** `forest-0`'s first room teaches the stick and the Ranged button on screen, because a touch player has no key to read: a hand drags the knob to the screen's right (after 0.35 s standing still, until the real stick is touched or the hero has walked 96 px), pushes it up while a lever is in reach (an interaction is the stick past about 60 degrees up, so the hand shows the push), and a ring pulses round the Ranged button while a stone is carried in the stone room (until a throw or the room's end). The drag is always to the screen's right, in both handedness modes. The tutorial is for a touch player only: a keyboard or a gamepad moving the hero ends it for good (`GameplayInput.nonTouchMoved()`), which also puts the key-neutral walk message back. Card, timings and tests: D139.
 
 Tests (`DirectionalActionsTest`, production Player/Level, simulated devices): climb to the
 top and step onto the ledge, descend and step off, no regrab at the top, fresh-press interaction on the ground

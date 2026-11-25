@@ -23,10 +23,15 @@ ITEM_FRAME_COUNT = 2
 ITEM_STRIP_SIZE = (ITEM_FRAME_SIZE * ITEM_FRAME_COUNT, ITEM_FRAME_SIZE)
 ITEM_STRIPS = ('coin', 'bat', 'mushroom')  # the coin (#350) and the healer ingredients: two registered 16x16 frames each
 HUD_ICONS = ('coin', 'bat', 'mushroom', 'fireball')
+TOUCH_GLYPHS = ('sword', 'fireball', 'throw', 'empty')
 # Light high-contrast touch controls (#226, D55): hand-drawn grids in art/hud/touch -> assets/images/HUD/touch.
 TOUCH_CONTROL_SIZES = {'disc': (64, 64), 'disc-down': (64, 64), 'base': (64, 64), 'knob': (32, 32), 'knob-down': (32, 32),
                        'jump': (64, 64), 'jump-down': (64, 64), 'pause': (64, 64), 'pause-down': (64, 64),
-                       'skip': (64, 64), 'skip-down': (64, 64), 'cue': (8, 8)}
+                       'skip': (64, 64), 'skip-down': (64, 64), 'cue': (8, 8),
+                       # Action and Ranged button pictograms (#492, D138): full-width 64x64 faces, one pair per TouchGlyph.
+                       **{f'{glyph}{suffix}': (64, 64) for glyph in TOUCH_GLYPHS for suffix in ('', '-down')},
+                       # Touch tutorial art (#496, D139): the hand (idle and pressed), the amber chevron and the amber ring.
+                       'hand': (32, 32), 'hand-down': (32, 32), 'chevron': (16, 16), 'ring': (64, 64)}
 WORLD_FRAMES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
 # The silver thread on death (#341, D81): art/objects/silver-thread.grid -> assets/images/objects/silver-thread.png,
 # the 1x2 strand at (0, 0) and the 5x5 glint at (1, 0); exported exactly by tools/silver_thread_sprites.py.
