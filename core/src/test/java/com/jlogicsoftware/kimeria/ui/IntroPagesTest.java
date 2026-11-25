@@ -233,6 +233,16 @@ class IntroPagesTest {
         for (String leaf : leaves(Language.ENGLISH)) assertTrue(leaf.length() <= 300, "EN at most 300 characters a page (TEXT_STYLE section 3): " + leaf.length());
     }
 
+    /** D133 (#615): the story is struck twice, the second layout one pixel to the right, and that pixel stays inside the column's margin. */
+    @Test void theStoryIsDoubleStruckInsideItsColumn() {
+        Overlay overlay = storyOverlay();
+        com.badlogic.gdx.graphics.g2d.BitmapFontCache block = overlay.storyBlock(story(LEAF_KEYS[0], Language.ENGLISH), IntroBook.COLUMN_LEFT, IntroPages.TEXT_TOP, IntroBook.COLUMN_WIDTH);
+        assertEquals(2, block.getLayouts().size, "one layout for each strike");
+        assertEquals(1f, Overlay.STORY_STRIKE, "a one pixel offset: the strokes are one pixel wide");
+        assertTrue(IntroBook.COLUMN_RIGHT + IntroBook.COLUMN_WIDTH + Overlay.STORY_STRIKE < IntroBook.SPINE_X + IntroBook.LEAF_WIDTH - 8, "the strike is clear of the leaf's edge");
+        assertTrue(IntroBook.COLUMN_LEFT + IntroBook.COLUMN_WIDTH + Overlay.STORY_STRIKE < IntroBook.SPINE_X - 8, "and of the spine");
+    }
+
     @Test void theColumnsSitInsideTheirLeaves() {
         assertTrue(IntroBook.COLUMN_LEFT > IntroBook.SPINE_X - IntroBook.LEAF_WIDTH + 8, "the left column is clear of the leaf's edge");
         assertTrue(IntroBook.COLUMN_LEFT + IntroBook.COLUMN_WIDTH < IntroBook.SPINE_X - 8, "and of the spine");

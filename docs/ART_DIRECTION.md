@@ -1473,7 +1473,7 @@ storybook (D78): walnut leather and muted gilt corner plates, parchment leaves, 
   side by side, for the leaf in flight); opaque, at most 256 palette entries (`validateSpriteArt`); drawn with the nearest filter. The
   script only places, tiles, nine-patches and mirrors the authored grids. `python3 tools/intro_book_sprites.py` also writes the 2x preview
   `docs/references/intro-book.png`; `docs/references/intro-book/spread-*.png` are hand-made references (the exported book with the real text and the font's own glyphs laid over it by a one-off script, not by this tool or the game): they show the fit in en, uk, de and pl, not the running game.
-- **Text:** 20 px, dark ink `2a1a10`, left-aligned in a 236 px column at x 56 and 348, first line 40 px from the screen top, nothing under 304 px.
+- **Text:** 20 px, dark ink `2a1a10`, left-aligned in a 236 px column at x 56 and 348, first line 40 px from the screen top, nothing under 304 px. Heavier since #615: the text is struck twice, the second layout 1 px to the right, with 1 px extra between glyphs (`Overlay.STORY_STRIKE`, `STORY_SPACING`; a plain double strike ran the letters together). The `docs/references/intro-book/spread-*.png` mock-ups predate it and show the single strike.
   Ink on every colour a column can sit on is at least 4.5:1 (`tools/test_intro_book_sprites.py`). Geometry lives in `ui.IntroBook`; the test
   reads it back against `sprite_layouts.INTRO_BOOK_*`.
 - **The turn:** the text of both leaves fades (0.4 s), then the right leaf narrows to the spine and the left one widens from it (0.4 s, shaded to
