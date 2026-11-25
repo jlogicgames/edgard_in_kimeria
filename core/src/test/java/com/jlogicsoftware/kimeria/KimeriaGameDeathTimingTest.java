@@ -5,6 +5,7 @@ import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
+import com.jlogicsoftware.kimeria.effects.RoomRippleFx;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.ui.FairyGuide;
@@ -30,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Death-to-control time and the first-death line (#341, D81), on the real game: a real KimeriaGame, Level and Player,
  * stepped through {@code KimeriaGame.updatePlay}, the gameplay half of every rendered frame. The hero is killed on frame
  * 0 while Right is held; control is the first frame his X moves again.
+ *
+ * It also pins the control timing of a forward room change (#606).
  *
  * Before #341 (measured the same way, 2026-11-16, origin/main ba1410b): a hit took 67 frames at 60 Hz (1.117 s: 0.70 s
  * slow motion, then the 0.40 s appear clip under a 0.35 s camera pan), a pit 25 frames (0.417 s). D81 pins the hit at
@@ -249,6 +252,39 @@ class KimeriaGameDeathTimingTest {
         assertTrue(progress.firstDeathTold());
         start(false);
         assertNull(dieAndRebuild(true));
+    }
+
+    /**
+     * #606: a forward room change on the real game loop. The entering ripple starts on a clear screen, the hero is drawn out of it, and
+     * the world (and so control) waits for the hold after the fade-in.
+     */
+    @Test void aRoomChangeShowsTheEnteringRippleOnAClearScreenBeforeControl() throws Exception {
+        build(HZ); start(false);
+        Level level = (Level) get("level");
+        RoomFade fade = (RoomFade) get("roomFade");
+        Player leaver = player();
+        leaver.position.set(level.portal().centreX() - leaver.size.x / 2, level.portal().centreY() - leaver.size.y / 2);
+        harness.held.add(Input.Keys.RIGHT); harness.held.add(Input.Keys.D);
+        for (int f = 0; f < MAX_SECONDS * HZ && player() == leaver; f++) frame();
+        assertNotSame(leaver, player(), "the room changed");
+        Player hero = player();
+        float startX = hero.position.x;
+        int started = -1, seen = -1, control = -1;
+        for (int f = 1; f <= MAX_SECONDS * HZ && control < 0; f++) {
+            frame();
+            if (started < 0 && level.roomRipple().motes().count() > 0) {
+                started = f;
+                assertTrue(fade.alpha() <= .001f, "clear screen, alpha " + fade.alpha());
+                assertTrue(level.roomRipple().heroUnseen(), "the ripple starts before the hero is drawn");
+            }
+            if (seen < 0 && !level.roomRipple().heroUnseen()) seen = f;
+            if (hero.position.x != startX) control = f;
+        }
+        harness.held.clear();
+        assertEquals(RoomRippleFx.ENTER_DELAY_SECONDS * HZ, started, 1, "the ripple starts as the fade-in ends");
+        assertEquals((RoomRippleFx.ENTER_DELAY_SECONDS + RoomRippleFx.REVEAL_SECONDS) * HZ, seen, 1, "the hero appears out of it");
+        assertEquals((RoomFade.HALF_SECONDS + RoomRippleFx.ARRIVE_HOLD_SECONDS) * HZ + 1, control, 1, "control returns after the hold");
+        assertFalse(fade.active());
     }
 
     /** The fairy's modes over {@code seconds} of play: whether she played her arrival twinkle, and the last mode. */

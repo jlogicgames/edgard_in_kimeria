@@ -690,6 +690,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         timeScale = 1f;
         player = new Player(assets, this, 0, 0);
         level.enterNextRoom(player);
+        roomFade.holdAfter(RoomRippleFx.ARRIVE_HOLD_SECONDS); // the world waits while the hero appears out of the ripple (#606)
         cameraTarget.set(player.roomCameraTarget());
         cameraPanning = false;
         gamepad.suppressJumpUntilRelease();

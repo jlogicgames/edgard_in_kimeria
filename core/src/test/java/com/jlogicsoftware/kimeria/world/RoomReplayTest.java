@@ -41,15 +41,16 @@ class RoomReplayTest {
     private static final float REQUIRED_LIMIT = 20f;
     private static final float COLLECTION_LIMIT = 30f;
     /**
-     * #553, D123: the pause before a room change (the leaving ripple plays in it) is part of the replay of a room, so every route is
-     * measured to the exit plus this. It is the same constant the game uses, so a longer pause fails here first.
+     * #553, #606, D123: the pauses of a room change (before the fade, where the leaving ripple plays, and after it, where the entering one
+     * does) are part of the replay of a room, so every route is measured to the exit plus both. They are the constants the game uses, so a
+     * longer pause fails here first.
      */
-    private static final float PAUSE = RoomRippleFx.LEAVE_HOLD_SECONDS;
+    private static final float PAUSE = RoomRippleFx.LEAVE_HOLD_SECONDS + RoomRippleFx.ARRIVE_HOLD_SECONDS;
 
     /** Records the measured time (printed as {@code REPLAY}, copied into D123) and asserts it with the pause added against the budget. */
     private static void within(String route, float seconds, float limit) {
-        System.out.printf(java.util.Locale.ROOT, "REPLAY %s: %.2f s to the exit, %.2f s with the ripple pause, limit %.0f s%n", route, seconds, seconds + PAUSE, limit);
-        assertTrue(seconds + PAUSE <= limit, route + " replay budget exceeded with the ripple pause");
+        System.out.printf(java.util.Locale.ROOT, "REPLAY %s: %.2f s to the exit, %.2f s with the ripple pauses, limit %.0f s%n", route, seconds, seconds + PAUSE, limit);
+        assertTrue(seconds + PAUSE <= limit, route + " replay budget exceeded with the ripple pauses");
     }
 
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
