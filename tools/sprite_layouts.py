@@ -31,7 +31,9 @@ TOUCH_CONTROL_SIZES = {'disc': (64, 64), 'disc-down': (64, 64), 'base': (64, 64)
                        # Action and Ranged button pictograms (#492, D138): full-width 64x64 faces, one pair per TouchGlyph.
                        **{f'{glyph}{suffix}': (64, 64) for glyph in TOUCH_GLYPHS for suffix in ('', '-down')},
                        # Touch tutorial art (#496, D139): the hand (idle and pressed), the amber chevron and the amber ring.
-                       'hand': (32, 32), 'hand-down': (32, 32), 'chevron': (16, 16), 'ring': (64, 64)}
+                       'hand': (32, 32), 'hand-down': (32, 32), 'chevron': (16, 16), 'ring': (64, 64),
+                       # Rotate-the-phone prompt (#493, D140): the portrait phone code turns, and the amber curved arrow beside it.
+                       'rotate-phone': (64, 64), 'rotate-arrow': (64, 64)}
 WORLD_FRAMES = {'torch': (8, 16), 'stone': (8, 8), 'fireball': (16, 16)}
 # The silver thread on death (#341, D81): art/objects/silver-thread.grid -> assets/images/objects/silver-thread.png,
 # the 1x2 strand at (0, 0) and the 5x5 glint at (1, 0); exported exactly by tools/silver_thread_sprites.py.

@@ -1522,7 +1522,7 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 - **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
   that would move his staff to the other hand.
 
-## HUD touch art (D55, D138, D139)
+## HUD touch art (D55, D138, D139, D140)
 
 The touch controls are HUD art (separate 64x64 and 32x32 baked sprites, linear filter, never a world sprite). Source grids live in
 `art/hud/touch/`, are exported by `tools/touch_control_sprites.py` to `assets/images/HUD/touch/`, and are registered in
@@ -1548,6 +1548,8 @@ The touch controls are HUD art (separate 64x64 and 32x32 baked sprites, linear f
   outer radius 31, so it clears the Ranged button and the pictogram shows through). The same eight colours as the buttons (cream and shade, amber and
   shade, navy). The hand is the only art that is flipped in code, for the left-handed layout; the drag it shows is always to the screen's right. Each
   reads on the dark bar, the night background and the ground at 3:1 by its fill or its outline (`TouchCoachArtTest`). Timing and conditions: D139.
+
+- **Rotate-the-phone prompt art (D140, [#493](https://github.com/jlogicgames/edgard_in_kimeria/issues/493)):** two more HUD sprites in the same pipeline and the same eight colours, registered in `TOUCH_CONTROL_SIZES`: `rotate-phone` (64x64, a portrait phone of 20x32 px with its white ring, cream body and navy outline, a slate screen showing an amber sun and a navy hill so it reads as "the picture", a speaker slot and a home bar; centred, so it turns about its middle) and `rotate-arrow` (64x64, an amber arc over the upper right with a navy outline and an arrowhead pointing down; the code draws it mirrored on the phone's way back). Drawn by `TouchControls.drawRotatePrompt` into the portrait strip at 72 units, the phone turned 0 to 90 degrees by `batch.draw` with a rotation (`RotatePrompt.angle`, 2 s loop). Both are light on the dark strip. Rule: the arrow must not touch the phone at any angle of its turn, mirrored or not (`RotatePromptArtTest`), so the phone is not drawn larger than the arc leaves room for. Looked at on the dark bar at 3x and at the drawn size at 0, 30, 60 and 90 degrees; the contact sheet shows both.
 
 ## Boss health bar (playtest 2 F31, [#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543))
 

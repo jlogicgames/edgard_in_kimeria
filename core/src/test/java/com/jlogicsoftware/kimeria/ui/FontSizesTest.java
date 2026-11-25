@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** D70 (#335): every size the views use is baked, no baked size is unused, and the floor is not lowered silently. */
 class FontSizesTest {
-    private static final int[] USED = {FontSizes.LABEL, FontSizes.BODY, FontSizes.DIALOGUE, FontSizes.ROTATE_HINT,
+    private static final int[] USED = {FontSizes.LABEL, FontSizes.BODY, FontSizes.DIALOGUE, FontSizes.ROTATE_PROMPT,
         FontSizes.ZONE, FontSizes.BUTTON, FontSizes.COUNT, FontSizes.TITLE, FontSizes.STORY,
         FontSizes.LABEL_LARGE, FontSizes.BODY_LARGE, FontSizes.DIALOGUE_LARGE};
 
@@ -18,9 +18,12 @@ class FontSizesTest {
         for (int size : FontCharacters.SIZES) assertTrue(Arrays.stream(USED).anyMatch(s -> s == size), "baked but unused: " + size);
     }
 
-    @Test void readableTextIsAtLeastSixteenAndOnlyTheRotateHintIsSmaller() {
+    /** D140: the rotate prompt was the one size under 16 (13 px); it is a large size now, so no baked size is under 16. */
+    @Test void readableTextIsAtLeastSixteen() {
         assertTrue(FontSizes.LABEL >= 16 && FontSizes.BODY >= 16 && FontSizes.DIALOGUE >= 18);
-        for (int size : USED) if (size < 16) assertEquals(FontSizes.ROTATE_HINT, size);
+        for (int size : USED) assertTrue(size >= 16, "size " + size);
+        for (int size : FontCharacters.SIZES) assertTrue(size >= 16, "baked size " + size);
+        assertTrue(FontSizes.ROTATE_PROMPT >= FontSizes.TITLE, "the prompt is as large as the title: it has to be impossible to miss");
     }
 
     /** D137: the large tier of a role is never smaller than its nominal size and no larger than the biggest the layouts hold (20). */

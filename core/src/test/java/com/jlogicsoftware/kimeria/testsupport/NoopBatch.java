@@ -21,6 +21,21 @@ public final class NoopBatch implements Batch {
     private TextureRegion[] drawnRegions;
     private float[] drawnX, drawnY;
     private int drawnCount;
+    /** Counts of the rotated region draws (the nine-argument form) and of the text vertex draws, and the last rotated draw's region, size, scale X and rotation; free, no log. */
+    private int rotatedCount, vertexCount;
+    private TextureRegion lastRotatedRegion;
+    private float lastRotatedWidth, lastRotatedScaleX, lastRotatedRotation;
+    private final float[] rotations = new float[8];
+    public float rotationOf(int i) { return rotations[i]; }
+
+    public int rotatedCount() { return rotatedCount; }
+    public int vertexDrawCount() { return vertexCount; }
+    public TextureRegion lastRotatedRegion() { return lastRotatedRegion; }
+    public float lastRotatedWidth() { return lastRotatedWidth; }
+    public float lastRotatedScaleX() { return lastRotatedScaleX; }
+    public float lastRotatedRotation() { return lastRotatedRotation; }
+    /** Zeroes the rotated and vertex draw counts. */
+    public void resetCounts() { rotatedCount = 0; vertexCount = 0; }
 
     /** Starts logging up to {@code capacity} region draws (the five-argument form the tile layers use); clears an earlier log. */
     public void record(int capacity) { drawnRegions = new TextureRegion[capacity]; drawnX = new float[capacity]; drawnY = new float[capacity]; drawnCount = 0; }
@@ -44,13 +59,16 @@ public final class NoopBatch implements Batch {
     @Override public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) { }
     @Override public void draw(Texture texture, float x, float y) { }
     @Override public void draw(Texture texture, float x, float y, float width, float height) { }
-    @Override public void draw(Texture texture, float[] spriteVertices, int offset, int count) { }
+    @Override public void draw(Texture texture, float[] spriteVertices, int offset, int count) { vertexCount++; }
     @Override public void draw(TextureRegion region, float x, float y) { }
     @Override public void draw(TextureRegion region, float x, float y, float width, float height) {
         if (drawnRegions != null && drawnCount < drawnRegions.length) { drawnRegions[drawnCount] = region; drawnX[drawnCount] = x; drawnY[drawnCount++] = y; }
     }
     @Override public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
-        float scaleX, float scaleY, float rotation) { }
+        float scaleX, float scaleY, float rotation) {
+        if (rotatedCount < rotations.length) rotations[rotatedCount] = rotation;
+        rotatedCount++; lastRotatedRegion = region; lastRotatedWidth = width; lastRotatedScaleX = scaleX; lastRotatedRotation = rotation;
+    }
     @Override public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
         float scaleX, float scaleY, float rotation, boolean clockwise) { }
     @Override public void draw(TextureRegion region, float width, float height, Affine2 transform) { }
