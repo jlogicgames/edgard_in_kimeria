@@ -28,7 +28,7 @@ terms), **plain** (instruction, imperative or description), **label** (a word or
 
 | Key | Trigger | Seen | Voice | Notes |
 | --- | --- | --- | --- | --- |
-| `INTRO_LEAF_1` to `INTRO_LEAF_6` | New Game, after the confirmation; `IntroScreen.openBook` | Once per New Game; never on Continue | Tale, first person (the healer) | Since [#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535) / [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24): six leaves of two paragraphs, 1334 EN characters (de 1551), on an open book; the longest leaf is under 300 EN characters. |
+| `INTRO_LEAF_1` to `INTRO_LEAF_6` | New Game, after the confirmation; `IntroScreen.openBook` | Once per New Game; never on Continue | Tale, first person (the healer) | Since [#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535) / [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24): twelve leaves of one or two paragraphs (six before #615, which set the story at the title's 30 px), 1334 EN characters (de 1551), on an open book; the longest EN leaf is under 200 characters. |
 
 Story beats in order: the healer opens his tale ("Hear my tale of Kimeria"); "once upon a time", Rufardus the Wise;
 L'Kardina arrives, banished from a neighbouring land; Kimeria tries to drive her out; her fury becomes a curse;
@@ -205,16 +205,16 @@ functions acted out by seven roles. The table maps what the game says today. "Wh
 | # | Function (Propp's sign) | In the game today | Where |
 | --- | --- | --- | --- |
 | α | Initial situation | Kimeria under Rufardus the Wise | `INTRO_LEAF_1` |
-| 1 β | Absentation | Absent as such; the sun "ceases", which is told as the lack (8a) | `INTRO_LEAF_3` |
-| 2-3 γ δ | Interdiction, violation | Absent. A candidate: Kimeria's attempt to drive out the witch is the violation that brings the curse | `INTRO_LEAF_2` |
+| 1 β | Absentation | Absent as such; the sun "ceases", which is told as the lack (8a) | `INTRO_LEAF_5` |
+| 2-3 γ δ | Interdiction, violation | Absent. A candidate: Kimeria's attempt to drive out the witch is the violation that brings the curse | `INTRO_LEAF_4` |
 | 4-7 ε ζ η θ | Reconnaissance, delivery, trickery, complicity | Absent; "the witch smiles sweetest" hints at trickery, never acted | `HEALER_TALE_BLESSING` |
-| 8 A / a | Villainy / lack | L'Kardina's curse: the sun is gone, eternal night | `INTRO_LEAF_2`, `INTRO_LEAF_3` |
-| 9 B | Mediation, the call | "Word of Kimeria's misfortune reached... Edgard": no dispatcher, a rumour | `INTRO_LEAF_4` |
-| 10 C | Beginning counteraction | "He set out... to overthrow the witch" | `INTRO_LEAF_4` |
-| 11 ↑ | Departure | Same sentence | `INTRO_LEAF_4` |
+| 8 A / a | Villainy / lack | L'Kardina's curse: the sun is gone, eternal night | `INTRO_LEAF_4` to `INTRO_LEAF_6` |
+| 9 B | Mediation, the call | "Word of Kimeria's misfortune reached... Edgard": no dispatcher, a rumour | `INTRO_LEAF_7` |
+| 10 C | Beginning counteraction | "He set out... to overthrow the witch" | `INTRO_LEAF_8` |
+| 11 ↑ | Departure | Same sentence | `INTRO_LEAF_8` |
 | 12 D | First function of the donor (test) | Healer's tale "hear it before you walk it"; the tutorial rooms are the "riddles". Pre-boss: the recipe is a task | `HEALER_TALE_ROAD`, `HEALER_GREETING` |
 | 13 E | Hero's reaction | Negative first ("no time for stories"), then passes the riddles; pre-boss: collects or refuses | `EDGARD_TALE_NO_TIME`, `HEALER_TALE_PRAISE` |
-| 14 F | Receipt of a magical agent | The silver thread (told twice); the blessing; the elixir (optional, paid). **The fire (fireball) has no receipt** | `INTRO_LEAF_5`, `HEALER_TALE_THREAD`, `HEALER_TALE_BLESSING`, `HEALER_PAID` |
+| 14 F | Receipt of a magical agent | The silver thread (told twice); the blessing; the elixir (optional, paid). **The fire (fireball) has no receipt** | `INTRO_LEAF_9`, `INTRO_LEAF_10`, `HEALER_TALE_THREAD`, `HEALER_TALE_BLESSING`, `HEALER_PAID` |
 | 15 G | Guidance, spatial transference | "I will be your guide"; the levels themselves | `HEALER_GUIDE` |
 | 16 H | Struggle | With the forest guardian (a guardian of the way, not the villain) | `HEALER_GREETING`, `BOSS` |
 | 17 J | Branding | Absent. The thread on the wrist could serve as the mark | — |
@@ -270,7 +270,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | G16 | Edgard's rude reaction to the donor (`EDGARD_TALE_NO_TIME`) is never paid off. In the tradition a rude hero fails the test; here the praise (`HEALER_TALE_PRAISE`) quietly turns it into a passed test. Can stay (it is charming) but could be closed by one word of Edgard's at the end. **Resolved (#370, the author's choice):** `EDGARD_TALE_READY` opens with "Forgive my haste, healer." | `EDGARD_TALE_NO_TIME`, `EDGARD_TALE_READY` | Author's call, settled with the tales in [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |
 | G17 | Three "exit ahead" zone messages worded differently; two trap messages run to two sentences and over 70 EN chars. **Resolved (#373, D97):** one formula (the cue, then what to do), one exit wording, every message at most 59 EN chars. | `HINT_*_EXIT`, `HINT_STONE_ACROSS`, `HINT_TRAP_PLATFORM`, `HINT_PLATFORM_STONE`, `HINT_STONE_STUMP` | [#373](https://github.com/jlogicgames/edgard_in_kimeria/issues/373) (hint rewrite within D49/D50) |
 | G18 | `COINS` is in all five catalogs and read by no code. **Resolved (#374):** the key is deleted from `Msg` and all five catalogs, with its allowlist entry. | `COINS` | [#374](https://github.com/jlogicgames/edgard_in_kimeria/issues/374) |
-| G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. **Ending (#372):** two paragraphs and THE END, 265 EN characters of text, within the per-page budget; the opening was cut into six book leaves of at most 300 EN characters ([#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535), [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)). | `INTRO_LEAF_*` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
+| G19 | The opening is long (790 to 877 chars) for one screen. #336 made it static (one page, the player turns it), so it can be read at the player's pace; a rule of three paragraphs per page or a word budget would keep it shorter. **Ending (#372):** two paragraphs and THE END, 265 EN characters of text, within the per-page budget; the opening was cut into six book leaves of at most 300 EN characters, then into twelve of at most 200 at the title's 30 px ([#615](https://github.com/jlogicgames/edgard_in_kimeria/issues/615); [#535](https://github.com/jlogicgames/edgard_in_kimeria/issues/535), [D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)). | `INTRO_LEAF_*` | [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336) for layout; text in [#372](https://github.com/jlogicgames/edgard_in_kimeria/issues/372) |
 | G20 | The apostrophe in L'Kardina: STORY.md writes the Ukrainian form with a typographic ’ (Л’Кардина); all catalogs use ASCII '. Fix one form per language in the glossary. | `INTRO_LEAF_*` | [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369); glossary row "Villain" |
 
 ## 4. Draft style system (not approved)

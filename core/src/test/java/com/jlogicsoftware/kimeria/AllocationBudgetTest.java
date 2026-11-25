@@ -2096,8 +2096,8 @@ class AllocationBudgetTest {
         harness.font = new MetricsFont(FontSizes.STORY);
         java.util.Map<String, String> english = com.jlogicsoftware.kimeria.localization.Catalog.parse("en",
             new com.badlogic.gdx.backends.headless.HeadlessFiles().internal("localization/en.json").readString("UTF-8"));
-        String[] leaves = new String[INTRO_BOOK_COPIES * 6];
-        for (int i = 0; i < leaves.length; i++) leaves[i] = english.get("INTRO_LEAF_" + (i % 6 + 1));
+        String[] leaves = new String[INTRO_BOOK_COPIES * 12];
+        for (int i = 0; i < leaves.length; i++) leaves[i] = english.get("INTRO_LEAF_" + (i % 12 + 1));
         for (boolean instant : new boolean[]{false, true}) {
             Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
             IntroScreen intro = IntroScreen.openBook(leaves, overlay, harness.assets(), 640, instant);

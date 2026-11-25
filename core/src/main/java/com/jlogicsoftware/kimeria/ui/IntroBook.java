@@ -17,7 +17,7 @@ public final class IntroBook {
     /** The cover's bottom edge: the page-turn cue and the skip hint sit below it, on the black. */
     public static final int COVER_BOTTOM = 326;
     public static final int LEAF_WIDTH = 290, LEAF_HEIGHT = 298, LEAF_TOP = 20, SPINE_X = 320;
-    /** The text columns: left edge on each leaf and the wrap width (the 20 px story font, {@link FontSizes#STORY}). */
+    /** The text columns: left edge on each leaf and the wrap width (the 30 px story font, {@link FontSizes#STORY}). */
     public static final float COLUMN_LEFT = 56f, COLUMN_RIGHT = 348f, COLUMN_WIDTH = 236f;
     /** Blank between paragraphs: one line of the story font. */
     public static final float PARAGRAPH_GAP = FontSizes.STORY;
