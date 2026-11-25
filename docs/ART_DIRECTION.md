@@ -189,7 +189,8 @@ Every death with a visible cause shows the silver thread of #228 pulling Edgard 
 ([D81](DECISIONS.md#d81-the-silver-thread-pulls-edgard-back-on-every-death-the-healer-speaks-on-the-first-playtest-f7-f9-341-2026-11-16)).
 
 - **Art:** `art/objects/silver-thread.grid` -> `assets/images/objects/silver-thread.png` (6 x 5, exported exactly by
-  `tools/silver_thread_sprites.py`): the 1 x 2 strand, silver `d8dee9` over ink `0b0d18`, and the D78 glint star. The
+  `tools/silver_thread_sprites.py`): the 1 x 2 strand, silver `d8dee9` over ink `0b0d18`, and a 5 px glint star (the
+  one D78 first drew; the dialogue screen's grew to 13 px in #495). The
   game stamps the strand one pixel step at a time along a chord with a parabolic sag between the wrist and the start
   (`effects.SilverThread`); only that curve is computed, the colours are authored (D81's argued exception to principle 6:
   a line between two moving points, not an object sprite).
@@ -1485,7 +1486,7 @@ storybook (D78): walnut leather and muted gilt corner plates, parchment leaves, 
 **Flights on this screen (D132, #539, #540, #541):** the checklist rows carry the HUD icons at 20 px; on payment the icons fly to the healer's portrait and the elixir to Edgard's; on the start tale's fairy line the fairy (`fairy-body.png` at 2x, with her soft light) flies from the healer's window to Edgard's and hovers beside his head, never within 8 px of the thread. All of it is the shared `effects.FlightFx`; frame strips of the flights are in [references/flights/](references/flights/) and the numbers in [D132](DECISIONS.md#d132-things-fly-to-where-they-go-one-flight-helper-for-the-pickup-the-hand-over-the-elixir-and-the-fairy-539-540-541-557-2026-11-24).
 
 Every healer conversation is one storybook screen: two portrait windows face each other in a carved walnut frame and the
-silver thread (#228) hangs between them. Rule and measurements:
+silver thread (#228), once the healer has tied it (#495), hangs between them. Rule and measurements:
 [D78](DECISIONS.md#d78-the-dialogue-is-a-codec-style-storybook-screen-playtest-f3f10-337-2026-11-16). Accepted design:
 style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 

@@ -8,7 +8,7 @@ import com.jlogicsoftware.kimeria.SpriteSheets;
 /**
  * The silver thread on death (#341, D81; the image of #228): a line between two moving points, Edgard's wrist and
  * the room start. Its colours are authored ({@code art/objects/silver-thread.grid}: a 1x2 strand, silver over ink, and
- * the D78 glint star); only the curve is computed, because its length changes with every death. The strand is stamped
+ * a 5 px glint star of its own); only the curve is computed, because its length changes with every death. The strand is stamped
  * once per step along a chord with a parabolic sag, so the thread stays pixel art at any slope and nothing allocates.
  * World Y grows down: a positive sag hangs the middle lower on screen.
  */
