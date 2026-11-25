@@ -136,7 +136,9 @@ Boss death immediately stops control and damaging interactions. At the end of th
 death animation, remove the boss from the room objects and stop drawing it. Keep only its
 completion state so the hero begins and finishes the protected victory walk. The camera stays fixed; the hero walks beyond the
 right viewport edge (also when the room is narrower than the viewport). Terrain, traps,
-input, contact and falling cannot block or kill this scripted walk. Completion
+input, contact and falling cannot block or kill this scripted walk. A hero whose kill landed
+in mid-air first comes down, through any one-way platform, to the floor at the room's right end,
+where the amber level-end portal stands (#605). Completion
 is latched before calling the existing `loadNextLevel`, which retains the existing level-only
 save format. Checkpoint contact and F5 are blocked throughout a map containing a boss,
 including before entering its chamber. The separate F4 developer level-skip remains a

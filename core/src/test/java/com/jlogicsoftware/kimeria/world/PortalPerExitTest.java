@@ -61,7 +61,7 @@ class PortalPerExitTest {
         }
     }
 
-    /** #605: the boss level shows the portal only once the boss is dead, at the right end of the room, on the hero's floor line. */
+    /** #605: the boss level shows the portal only once the boss is dead, at the right end of the room, on the floor. */
     @Test void theBossLevelOpensItsAmberPortalWhenTheBossIsDead() {
         Level level = harness.roomOf("forest-2", 0);
         while (level.hasNextRoom()) level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
@@ -70,7 +70,7 @@ class PortalPerExitTest {
         assertTrue(level.portal().placed() && level.portal().levelEnd());
         var room = level.currentRoomBounds();
         assertTrue(level.portal().centreX() > room.x + room.width - 64 && level.portal().centreX() < room.x + room.width);
-        assertEquals(level.player.position.y + level.player.size.y, level.portal().centreY() + 24, 0.01f, "it stands on the hero's floor line");
+        assertEquals(level.player.position.y + level.player.size.y, level.portal().centreY() + 24, 0.01f, "it stands on the floor the hero stands on");
         level.resetCurrentRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
         assertTrue(!level.portal().placed(), "a retry of the boss room clears it");
     }

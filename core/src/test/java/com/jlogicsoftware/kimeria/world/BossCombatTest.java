@@ -975,6 +975,53 @@ class BossCombatTest {
         assertEquals(0, resets);
     }
 
+    /** #605: a kill that lands while the hero is airborne still ends on the floor: he comes down, and the portal stands where he walks out. */
+    @Test void aKillInMidAirBringsTheHeroDownOntoTheFloorOfTheLevelEndPortal() {
+        encounter();
+        outsideSwing();
+        for (int hit = 0; hit < 5; hit++) { vulnerableAgain(); fireball(true); }
+        vulnerableAgain();
+        outsideSwing(); frames(30);
+        float floor = level.player.previousFeetY();
+        held.add(Input.Keys.J); pressed.add(Input.Keys.J);
+        frames(15);
+        float airborne = level.player.position.y;
+        fireball(true);
+        assertTrue(boss.isDefeated());
+        assertTrue(floor - level.player.hitboxBounds().y - level.player.hitbox.height > 16, "the hero is well above the floor at the kill");
+        float portalBottom = level.portal().centreY() + 24;
+        assertEquals(floor, portalBottom, .5f, "the portal stands on the floor, not at the height of the jump");
+        float x = level.player.getX();
+        frames(40);
+        assertTrue(level.player.position.y > airborne, "the hero comes down during the boss's death");
+        frames(40);
+        Rectangle body = level.player.hitboxBounds();
+        assertEquals(floor, body.y + body.height, .5f, "he walks out on the floor");
+        assertTrue(level.player.getX() > x, "and the victory walk still leaves");
+    }
+
+    /** #605: a kill from one of the chamber's one-way platforms comes down through it to the same floor. */
+    @Test void aKillFromAPlatformBringsTheHeroDownToTheFloorToo() {
+        encounter();
+        outsideSwing();
+        for (int hit = 0; hit < 5; hit++) { vulnerableAgain(); fireball(true); }
+        vulnerableAgain();
+        outsideSwing(); frames(30);
+        float floor = level.player.previousFeetY();
+        Rectangle body = level.player.hitboxBounds();
+        level.player.position.x += 2704 - (body.x + body.width / 2);
+        level.player.position.y -= floor - 256; // standing on the platform at y 256
+        level.player.setOnGround(true);
+        frames(2);
+        assertEquals(256, level.player.previousFeetY(), 1f, "on the platform before the kill");
+        fireball(true);
+        assertTrue(boss.isDefeated());
+        assertEquals(floor, level.portal().centreY() + 24, .5f);
+        frames(80);
+        body = level.player.hitboxBounds();
+        assertEquals(floor, body.y + body.height, .5f);
+    }
+
     @Test void vulnerableLethalHitAfterCounterRecoveryCompletesOnce() {
         encounter(); artifacts.drinkBossElixir("forest-2");
         startNormal(); sword(); outsideSwing(); frames(83);
