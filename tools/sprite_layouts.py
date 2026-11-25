@@ -171,7 +171,6 @@ DIALOGUE_SHEETS = {
     'box': ((24, 24), ('box',)),
     'page': ((24, 24), ('page',)),
     'choice': ((16, 26), ('idle', 'selected')),
-    'notch': ((13, 8), ('notch',)),
     'thread': ((284, 32), ('thread',)),
     'glint': ((13, 13), ('glint',)),
 }

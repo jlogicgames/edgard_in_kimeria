@@ -43,13 +43,14 @@ reload supports same-size texture changes; restart it after changing dimensions.
 ## Rendering and lifecycle
 
 **Dialogue screen (D78, #337, 2026-11-16).** The renderer fits the full canvas proportionally
-in a **158 × 158 logical-pixel** slot inside each 176 px portrait window (64 × 64 in 88 px
-frames before); Edgard is on the left, the healer on the right, both facing the viewer
+in the **160 × 160 logical-pixel** opening of each 176 px portrait window (158 × 158 until
+[D142](DECISIONS.md#d142-the-dialogue-screen-stands-still-centred-names-an-even-text-box-a-darker-listener-616-amends-d78-d134-2026-11-25);
+64 × 64 in 88 px frames before D78); Edgard is on the left, the healer on the right, both facing the viewer
 (the healer is never mirrored: his staff stays in his right hand). At a 1280 × 720 window
-a portrait occupies 316 × 316 physical pixels from the 256 px source. The window opening is
-a dusk blue (`3d4a68`) so the portraits' dark contours read against it. The speaker is drawn
-as is and lifts 1 px for half of every 1.2 s; the listener is multiplied by (0.55, 0.58, 0.70)
-and keeps an outline of 0.21 (Edgard) and 0.20 (healer) against the opening, held by
+a portrait occupies 320 × 320 physical pixels from the 256 px source. The window opening is
+a dusk blue (`3d4a68`) so the portraits' dark contours read against it. Both stand still: the speaker is drawn
+as is, the listener is multiplied by (0.46, 0.49, 0.60)
+and keeps an outline of 0.21 (Edgard) and 0.22 (healer) against the opening, held by
 `tools/test_dialogue_frame_sprites.py`. The frame art, the thread and the layout are in
 [ART_DIRECTION.md](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337). Review a new
 portrait both as a master and in this screen, lit and dimmed.

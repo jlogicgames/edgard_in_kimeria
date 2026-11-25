@@ -2001,7 +2001,7 @@ class AllocationBudgetTest {
     /**
      * The dialogue screen (D78, #337) frame after frame through a no-op batch with the real 18 px font metrics:
      * {@code HealerDialogue.update}, {@code HealerDialogueView.render} and {@code Overlay.flushText}. The tale case runs
-     * the longest line (the fire gift) from its first letter to whole, with the glint, the speaker's bob and the
+     * the longest line (the fire gift) from its first letter to whole, with the glint and the
      * continue prompt, instant text off and on; the pre-boss case shows the checklist and both choices with the selection
      * moving every {@value #DIALOGUE_SELECT_FRAMES} frames. A new line rebuilds its text block, an event measured apart.
      */

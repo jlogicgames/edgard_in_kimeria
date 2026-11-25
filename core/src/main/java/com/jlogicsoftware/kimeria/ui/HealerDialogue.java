@@ -116,7 +116,7 @@ public final class HealerDialogue {
     }
     /** Seconds since the thread glint of the current line set off: {@link #lineTime}, but after the draw-in on the tying line (negative until then). */
     public float glintTime() { return line == threadLine && !instantText ? lineTime - THREAD_TIE_SECONDS : lineTime; }
-    /** Seconds the dialogue has run, paused time excluded (drives the speaker's bob). */
+    /** Seconds the dialogue has run, paused time excluded (drives the fairy's flight and hover and the paid hand-over). */
     public float time() { return time; }
     /** The line on screen now. */
     public Msg currentLine() { return lines.get(line); }

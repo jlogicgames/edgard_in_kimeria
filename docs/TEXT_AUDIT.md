@@ -304,7 +304,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | --- | --- | --- |
 | Zone message | 20 px font, 400 px, two lines (D50, `LocalizationLayoutTest`) | EN source at most 60 characters and at most two sentences, so translations (de runs about 25 % longer) keep their margin |
 | Label above the hero | 13 px font, 200 px (D50) | Each label word list stays at most three words |
-| Dialogue line | Text box: 556 px, at most three of four lines, one spare (D78, `HealerDialogueTest`) | EN at most 160 characters per line, one image or one instruction per line |
+| Dialogue line | 402 px, at most four lines, the four-line cases pinned (D142, `HealerDialogueTest`; 556 px and three lines before) | EN at most 160 characters per line, one image or one instruction per line |
 | Opening and ending | None | Per page of #336: at most three paragraphs, EN at most 300 characters per page |
 
 ### 4.4 Glossary (draft)
