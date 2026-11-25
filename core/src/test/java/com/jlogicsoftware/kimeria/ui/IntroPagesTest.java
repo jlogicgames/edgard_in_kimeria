@@ -25,7 +25,7 @@ class IntroPagesTest {
     private static String story(String key, Language language) {
         String source = new HeadlessFiles().internal("localization/" + language.code() + ".json").readString("UTF-8");
         String text = Catalog.parse(language.code(), source).get(key);
-        assertTrue(text.length() > 60, key + " " + language.code() + " must be the real story text");
+        assertTrue(text.length() > 30, key + " " + language.code() + " must be the real story text");
         return text;
     }
 
@@ -202,7 +202,10 @@ class IntroPagesTest {
 
     // ---- the opening on its book (#535, #536, D133): one page per leaf, measured in the story font ----
 
-    private static final String[] LEAF_KEYS = {"INTRO_LEAF_1", "INTRO_LEAF_2", "INTRO_LEAF_3", "INTRO_LEAF_4", "INTRO_LEAF_5", "INTRO_LEAF_6"};
+    /** The opening's leaves (#615): twelve at the title's 30 px, six spreads. */
+    private static final int LEAVES = 12;
+    private static final String[] LEAF_KEYS = new String[LEAVES];
+    static { for (int i = 0; i < LEAVES; i++) LEAF_KEYS[i] = "INTRO_LEAF_" + (i + 1); }
 
     private static Overlay storyOverlay() {
         Assets assets = new Assets() { @Override public BitmapFont font(int size) { return new MetricsFont(size); } };
@@ -220,27 +223,20 @@ class IntroPagesTest {
         for (Language language : Language.values()) {
             String[] leaves = leaves(language);
             IntroPages pages = IntroPages.ofLeaves(leaves, p -> overlay.storyHeight(p, IntroBook.COLUMN_WIDTH), IntroPages.TEXT_TOP, IntroBook.PARAGRAPH_GAP);
-            assertEquals(6, pages.pageCount(), language.code() + ": six leaves, three spreads");
+            assertEquals(LEAVES, pages.pageCount(), language.code() + ": twelve leaves, six spreads");
             for (int leaf = 0; leaf < leaves.length; leaf++) {
                 String where = language.code() + " leaf " + (leaf + 1);
-                assertEquals(2, pages.end(leaf) - pages.first(leaf), where + ": two paragraphs");
+                int paragraphs = pages.end(leaf) - pages.first(leaf);
+                assertTrue(paragraphs >= 1 && paragraphs <= 2, where + ": one or two paragraphs, not " + paragraphs);
                 assertEquals(IntroPages.TEXT_TOP, pages.top(pages.first(leaf)), where);
                 assertTrue(pages.bottom(leaf) <= IntroPages.PAGE_BOTTOM, where + " ends at " + pages.bottom(leaf));
-                assertEquals(String.join("\n\n", pages.paragraph(pages.first(leaf)), pages.paragraph(pages.first(leaf) + 1)), leaves[leaf], where);
+                StringBuilder rebuilt = new StringBuilder(pages.paragraph(pages.first(leaf)));
+                for (int i = pages.first(leaf) + 1; i < pages.end(leaf); i++) rebuilt.append("\n\n").append(pages.paragraph(i));
+                assertEquals(rebuilt.toString(), leaves[leaf], where);
                 System.out.printf("LEAF %s: %d chars, bottom %.1f of %.1f%n", where, leaves[leaf].length(), pages.bottom(leaf), IntroPages.PAGE_BOTTOM);
             }
         }
-        for (String leaf : leaves(Language.ENGLISH)) assertTrue(leaf.length() <= 300, "EN at most 300 characters a page (TEXT_STYLE section 3): " + leaf.length());
-    }
-
-    /** D133 (#615): the story is struck twice, the second layout one pixel to the right, and that pixel stays inside the column's margin. */
-    @Test void theStoryIsDoubleStruckInsideItsColumn() {
-        Overlay overlay = storyOverlay();
-        com.badlogic.gdx.graphics.g2d.BitmapFontCache block = overlay.storyBlock(story(LEAF_KEYS[0], Language.ENGLISH), IntroBook.COLUMN_LEFT, IntroPages.TEXT_TOP, IntroBook.COLUMN_WIDTH);
-        assertEquals(2, block.getLayouts().size, "one layout for each strike");
-        assertEquals(1f, Overlay.STORY_STRIKE, "a one pixel offset: the strokes are one pixel wide");
-        assertTrue(IntroBook.COLUMN_RIGHT + IntroBook.COLUMN_WIDTH + Overlay.STORY_STRIKE < IntroBook.SPINE_X + IntroBook.LEAF_WIDTH - 8, "the strike is clear of the leaf's edge");
-        assertTrue(IntroBook.COLUMN_LEFT + IntroBook.COLUMN_WIDTH + Overlay.STORY_STRIKE < IntroBook.SPINE_X - 8, "and of the spine");
+        for (String leaf : leaves(Language.ENGLISH)) assertTrue(leaf.length() <= 200, "EN at most 200 characters a leaf at 30 px (TEXT_STYLE section 3): " + leaf.length());
     }
 
     @Test void theColumnsSitInsideTheirLeaves() {

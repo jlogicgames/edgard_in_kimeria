@@ -20,7 +20,7 @@ class LocalizationTest {
             var catalog = Catalog.parse(language.code(), source(language));
             assertEquals(Msg.values().length, catalog.size(), language.code());
             assertEquals(java.util.List.of(), CatalogValidation.errors(language, english, catalog), language.code());
-            for (int leaf = 1; leaf <= 6; leaf++) assertTrue(catalog.get("INTRO_LEAF_" + leaf).contains("\n\n"), language.code() + " leaf " + leaf);
+            for (int leaf = 1; leaf <= 12; leaf++) assertFalse(catalog.get("INTRO_LEAF_" + leaf).isBlank(), language.code() + " leaf " + leaf);
         }
     }
 

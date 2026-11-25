@@ -375,7 +375,9 @@ class CampaignFlowTest {
         held.clear();
         ((Menu) get("mainMenu")).confirmSelected();
         assertEquals("INTRO", state()); assertEquals(String.join("\n\n", Msg.INTRO_LEAF_1.t(Language.ENGLISH), Msg.INTRO_LEAF_2.t(Language.ENGLISH), Msg.INTRO_LEAF_3.t(Language.ENGLISH),
-            Msg.INTRO_LEAF_4.t(Language.ENGLISH), Msg.INTRO_LEAF_5.t(Language.ENGLISH), Msg.INTRO_LEAF_6.t(Language.ENGLISH)), ((IntroScreen) get("intro")).text());
+            Msg.INTRO_LEAF_4.t(Language.ENGLISH), Msg.INTRO_LEAF_5.t(Language.ENGLISH), Msg.INTRO_LEAF_6.t(Language.ENGLISH), Msg.INTRO_LEAF_7.t(Language.ENGLISH),
+            Msg.INTRO_LEAF_8.t(Language.ENGLISH), Msg.INTRO_LEAF_9.t(Language.ENGLISH), Msg.INTRO_LEAF_10.t(Language.ENGLISH), Msg.INTRO_LEAF_11.t(Language.ENGLISH),
+            Msg.INTRO_LEAF_12.t(Language.ENGLISH)), ((IntroScreen) get("intro")).text());
         finishStory();
         assertEquals("LOADING", state()); assertEquals(0, get("currentLevelIndex"));
         assertFalse(progress.exists());

@@ -523,10 +523,12 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         startStory(IntroScreen.open(message.t(language), overlay, assets, LOGICAL_W, instantText(), state == UiState.ENDING ? arms : null), state);
     }
 
-    /** The six leaves of the opening on its book (#535, #536, D133), in the player's language. */
+    /** The twelve leaves of the opening on its book (#535, #536, #615, D133), in the player's language. */
     private String[] introLeaves() {
         return new String[] {Msg.INTRO_LEAF_1.t(language), Msg.INTRO_LEAF_2.t(language), Msg.INTRO_LEAF_3.t(language),
-            Msg.INTRO_LEAF_4.t(language), Msg.INTRO_LEAF_5.t(language), Msg.INTRO_LEAF_6.t(language)};
+            Msg.INTRO_LEAF_4.t(language), Msg.INTRO_LEAF_5.t(language), Msg.INTRO_LEAF_6.t(language), Msg.INTRO_LEAF_7.t(language),
+            Msg.INTRO_LEAF_8.t(language), Msg.INTRO_LEAF_9.t(language), Msg.INTRO_LEAF_10.t(language), Msg.INTRO_LEAF_11.t(language),
+            Msg.INTRO_LEAF_12.t(language)};
     }
 
     private void startStory(IntroScreen screen, UiState state) {

@@ -36,8 +36,11 @@ public final class FontSizes {
     /** Map-authored zone message (D50), menu buttons, coin count. */
     public static final int ZONE = 20, BUTTON = 20, COUNT = 20;
     public static final int TITLE = 30;
-    /** The story on the book's leaves (D133): the zone size, an already baked one; the 16 px body filled half a leaf. */
-    public static final int STORY = 20;
+    /**
+     * The story on the book's leaves (D133, #615): the title's size, an already baked one, so no rebake. Its strokes are two pixels
+     * wide, which the parchment shows; the 20 px face (one pixel strokes) faded into it. Twelve leaves carry the tale at this size.
+     */
+    public static final int STORY = 30;
 
     /**
      * D137: the picture is drawn below this many CSS pixels per picture unit, and the large tier is used. 1 is the scale the layouts
