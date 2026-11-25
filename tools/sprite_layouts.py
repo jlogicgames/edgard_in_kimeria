@@ -173,7 +173,7 @@ DIALOGUE_SHEETS = {
     'choice': ((16, 26), ('idle', 'selected')),
     'notch': ((13, 8), ('notch',)),
     'thread': ((284, 32), ('thread',)),
-    'glint': ((5, 5), ('glint',)),
+    'glint': ((13, 13), ('glint',)),
 }
 DIALOGUE_IMAGES = {name: (size[0] * len(frames), size[1]) for name, (size, frames) in DIALOGUE_SHEETS.items()}
 # Frames with no transparent pixel (bands with an opaque fill); the rest keep binary alpha.

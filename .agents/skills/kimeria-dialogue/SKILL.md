@@ -12,7 +12,8 @@ Paths below are relative to the repository root.
 
 Reuse `ui/HealerDialogue.java` and `ui/HealerDialogueView.java`: one storybook screen (D78,
 [art direction, "Dialogue screen"](../../../docs/ART_DIRECTION.md)) serves every conversation: two portrait
-windows facing each other, the silver thread between them, the speaker lit and bobbing 1 px, the listener
+windows facing each other, the silver thread between them once tied (none in the start tale before
+`HEALER_TALE_THREAD`, #495: `HealerDialogue.threadTied`, `HealerThreadTest`), the speaker lit and bobbing 1 px, the listener
 dimmed, one text box whose fourth line stays spare (`HealerDialogueTest`). Frame art is grids in
 `art/ui/dialogue/` exported by `tools/dialogue_frame_sprites.py`; text is drawn from prebuilt blocks, so a
 frame allocates nothing (`AllocationBudgetTest.healerDialogueScreen`).

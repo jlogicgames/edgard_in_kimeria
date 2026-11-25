@@ -1972,6 +1972,33 @@ class AllocationBudgetTest {
     }
 
     /**
+     * The silver thread being tied (#495): the start tale's thread line, with the frames' time step shortened so the whole
+     * warm-up and measured window stay in the draw-in (the cropped thread and the glint on its end).
+     */
+    @Test void healerDialogueThreadTying() {
+        harness.font = new MetricsFont(FontSizes.DIALOGUE);
+        Level level = harness.roomOf("forest-1", 3);
+        ArtifactInventory inventory = new ArtifactInventory();
+        Overlay overlay = new Overlay(harness.assets(), 640, 360, null);
+        HealerDialogueView view = new HealerDialogueView(harness.assets());
+        HealerDialogue tale = HealerDialogue.tutorialStart();
+        tale.update(HealerDialogue.OPEN_SECONDS);
+        tale.setInstantText(true);
+        while (tale.currentLine() != Msg.HEALER_TALE_THREAD) tale.advance(Language.ENGLISH);
+        tale.setInstantText(false);
+        float step = HealerDialogue.THREAD_TIE_SECONDS / (2f * (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES));
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            tale.update(step);
+            overlay.beginFrame();
+            view.render(batch, overlay, tale, Language.ENGLISH, level, inventory);
+            overlay.flushText(batch);
+        });
+        assertTrue(tale.threadTied() > 0f && tale.threadTied() < 1f, "the whole run must be the draw-in: " + tale.threadTied());
+        System.out.printf("ALLOCATION dialogue screen, the thread being tied: %.1f B/frame%n", bytes);
+        assertWithinBudget("dialogue screen, the thread being tied", DIALOGUE_SCREEN_CEILING, bytes);
+    }
+
+    /**
      * The dialogue screen (D78, #337) frame after frame through a no-op batch with the real 18 px font metrics:
      * {@code HealerDialogue.update}, {@code HealerDialogueView.render} and {@code Overlay.flushText}. The tale case runs
      * the longest line (the fire gift) from its first letter to whole, with the glint, the speaker's bob and the

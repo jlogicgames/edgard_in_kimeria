@@ -1498,9 +1498,11 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 | Speech notch | `notch`, 13 × 8, on the box's top edge under the speaker's plate | moves to the speaker |
 | Page | `page`, 24 px nine-patch: the whole screen, dim walnut border | one look |
 | Choice | `choice`, 16 × 26 three-patch: ink with a dark gilt rule | `idle` / `selected` (double bright rule) |
-| Silver thread | `thread`, 284 × 32, drawn at (178, 154): knot on Edgard's wrist, 16 px sag, end in the healer's hand | draws in over the opening |
-| Glint | `glint`, 5 × 5 star, runs from the speaker to the listener as a line starts | |
+| Silver thread | `thread`, 284 × 32, drawn at (178, 154): knot on Edgard's wrist, 16 px sag, end in the healer's hand | not there until it is tied (below); once tied, draws in over each opening |
+| Glint | `glint`, 13 × 13 star, runs from the speaker to the listener as a line starts (1.4 s) and rides the thread's end while it is tied | |
 
+- **The thread is tied on screen ([#495](https://github.com/jlogicgames/edgard_in_kimeria/issues/495), playtest 2026-11-19: "the line between them is unclear"):** the forest-0 start tale opens with no thread. On `HEALER_TALE_THREAD` it draws in from Edgard's wrist to the healer over 1.2 s (`HealerDialogue.THREAD_TIE_SECONDS`) with the glint on its leading end, then the glint runs back from the healer, who is speaking, to Edgard. It stays for the rest of that tale, and every later conversation has it from the opening. Leaving the line early leaves the thread whole; with instant text it is whole on the line's first frame; a pause freezes the draw-in.
+- **The glint on a phone (#495):** the 5 px star was 3.0 CSS px on a 390 px portrait phone (0.61 CSS px per unit, D137) and went unnoticed. It is now 13 px, 7.9 CSS px there (12.9 in the 844 × 390 landscape side-bar layout), with a white core, and crosses in 1.4 s (was 0.8 s). On the thread it spans y 162 to 189 at most, under the two choices (end y 138) and above the plates (y 192). The paid screen's arrival flash (D132) is the same sprite and grew with it. `HealerThreadTest` holds the size, the time and the clearances.
 - **Palette:** walnut `1d120c` `3a2416` `523420` `5a3a22` `7d5534` (`523420` is the window's shadow sides, D134); gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
   `ffd23a` or honey `e2b25a`); ink `0b0d18`; silver `5d6577` `9aa3b6` `d8dee9`; at most 16 colours per sheet.
 - **Portraits:** 158 px in the 160 px opening, linear filtering; the speaker lifts 1 px for half of every 1.2 s, the

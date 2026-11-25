@@ -1,10 +1,19 @@
-# Thread glint (#337, D78): a 5 px star that runs along the thread from the speaker to the listener as a line starts.
-size 5 5
+# Thread glint (#337, D78; enlarged by #495 so it shows on a phone): a 13 px star that runs along the thread from the
+# speaker to the listener as a line starts, and rides the thread's end while the healer ties it.
+size 13 13
 color C d8dee9
 color W ffffff
 frame glint
-..C..
-.CWC.
-CWWWC
-.CWC.
-..C..
+......C......
+.....CWC.....
+.....CWC.....
+..C..CWC..C..
+.....WWW.....
+.CCCWWWWWCCC.
+CWWWWWWWWWWWC
+.CCCWWWWWCCC.
+.....WWW.....
+..C..CWC..C..
+.....CWC.....
+.....CWC.....
+......C......
