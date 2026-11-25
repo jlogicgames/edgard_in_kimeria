@@ -1802,6 +1802,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Known gap:** the third-party tile scenery is louder than the background ceiling (rocks 0.29, signs, dead trees
   and tile bushes 0.36 to 0.37). The gate reports it without gating; replacing the tileset is
   [#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189) (its checklist carries the D76 background ceiling).
+- **Update ([#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595), 2026-11-25):** the village sign is removed from the tileset and from forest-2, so the gate no longer reports it.
 - **Not verified:** the recoloured decor in the running game, by the author's eye (desktop and web): tracked in
   [#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368).
 - **Update (playtest 2, [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563), 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21)):** trees and bushes are drawn opaque and clear in another palette, a little paler or darker than the active elements, and the glows are replaced by softer pixelfx effects, so the tier numbers are re-measured; this decision will be revised by issues [#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555), [#544](https://github.com/jlogicgames/edgard_in_kimeria/issues/544).
@@ -4114,6 +4115,11 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   decor ceilings now (the sign was 0.223 body before). `parallax_mock.py --check --game`: passes, the same output as before (the cover
   rules read alpha, not colour).
 - **Not changed:** no threshold or tolerance; the drawings and the foreground placements; the sky, the moon and the clouds.
+- **Update (author, 2026-11-25, [#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595)):** the village sign is removed instead of
+  redrawn: tile ids 29, 30, 49 and 50 are empty in `terrain.grid` (its wood ramp keys `B D E F H` went with them) and its three placements
+  in forest-2 are gone. It came from the first mock images, the game has no village, and its lettering could not be read over these
+  layers. The sign figures above record the state before.
+
 ## D121. The wall jump is removed: walls are solid and cannot be grabbed (#546, 2026-11-21)
 
 - **Status:** Accepted (author, 2026-11-21, [D116](#d116-second-external-playtest-findings-and-direction-563-2026-11-21) direction, playtest 2 F12). Settles [D18](#d18-directional-controls-steppe-double-jump-and-replay-target)'s open question
