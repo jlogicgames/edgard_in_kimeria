@@ -1887,6 +1887,20 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   for the first-death line (#341) and the fairy (#338). Headroom was chosen over a failing check: libGDX `Array.clear`
   keeps its storage, so an overflow would cost one growth, not one per frame.
 - **No new string.**
+- **Update (playtest, [#495](https://github.com/jlogicgames/edgard_in_kimeria/issues/495), author decision 2026-11-19; supersedes "joined by the silver thread" for the start tale and the 0.8 s glint):** the thread appears
+  only when the healer explains it, and stays from then on. The start tale has none before `HEALER_TALE_THREAD`; that
+  line draws it from Edgard's wrist to the healer over 1.2 s (`HealerDialogue.THREAD_TIE_SECONDS`), the glint on its
+  leading end, then the speaker-to-listener glint runs. Every later conversation has it from the opening. Instant text
+  shows it whole on that line's first frame (no motion, as D132's flights). Nothing is saved: the tale plays once per run
+  and every other conversation comes after it. The glint is 13 px for 1.4 s (was 5 px for 0.8 s): 7.9 CSS px on a
+  390 px portrait phone (was 3.0); D132's arrival flash uses the same sprite and grew with it.
+  `AllocationBudgetTest.healerDialogueThreadTying` covers the draw-in. Measurements and rule:
+  [ART_DIRECTION.md](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337).
+  Checked by the agent, 2026-11-25: the web release build in headless Chromium, English, the forest-0 start tale, with a
+  stepped clock. At 390 × 844 (3×, portrait): no thread on lines 1 to 5, the draw-in on line 6 with the glint on its end,
+  then the glint back from the healer; the glint measured 7.3 to 8.0 CSS px. At 844 × 390 (landscape): the thread there
+  from the start of line 7 with its glint. Not seen in a running game: the later conversations (unit tests only), and a
+  real phone.
 - **Checked (2026-11-16, agent):** the web release build in headless Chromium at 1280 × 720, English, the forest-0 start
   tale: the healer's first line, Edgard's answer (the lit side, notch and name colours swap) and the fire gift (three
   lines, one spare). Those captures predate the dim-gilt cap above (only the listener's rosette highlights changed). Playtest 2 (2026-11-21, web build, Ukrainian; [PLAYTEST_2.md](PLAYTEST_2.md)) played the dialogue and raised no fit problem; the author accepted that as the check. **Not verified:** the desktop build, the other languages and the pre-boss stop in a running game

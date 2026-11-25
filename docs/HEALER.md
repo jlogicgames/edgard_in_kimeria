@@ -10,17 +10,19 @@ opens at the black midpoint of the canopy exit fade, before entering the boss ro
 The world, player input and gameplay effects stop. The dialogue screen
 ([D78](DECISIONS.md#d78-the-dialogue-is-a-codec-style-storybook-screen-playtest-f3f10-337-2026-11-16),
 #337, playtest F3/F10) is a storybook page: two carved walnut portrait windows face each other, Edgard
-left and the healer right, joined by the silver thread, with a name plate under each. See
+left and the healer right, joined by the silver thread once the healer has tied it, with a name plate under each. See
 [portrait assets and replacement instructions](PORTRAITS.md) and the
 [frame art](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337). The speaker's window, crest and plate
 are lit and the portrait bobs 1 px; the listener's are dimmed. A glint runs along the thread from the
-speaker to the listener as each line starts. All five supported languages use the shared baked pixel font.
+speaker to the listener as each line starts. In the forest-0 start tale there is no thread until the line that
+explains it (`HEALER_TALE_THREAD`), which draws it from Edgard's wrist to the healer; every later conversation
+has it from the opening ([#495](https://github.com/jlogicgames/edgard_in_kimeria/issues/495)). All five supported languages use the shared baked pixel font.
 Edgard's name and dialogue are white, with his lines aligned left; the healer's are green, aligned right.
 Every line is shown in one text box under the windows, 556 px wide and four lines tall; a notch on its top
 edge points at the speaker. Every current line fits in three lines in all five languages, so one line stays
 spare; the first-death line ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)) takes two. At
 the pre-boss stop the recipe checklist and the choices sit in the column between the windows. The screen
-opens in 0.3 s (the windows unfold, the box opens, the thread draws in) before the first letter.
+opens in 0.3 s (the windows unfold, the box opens, a tied thread draws in) before the first letter.
 Complete-line layout stays fixed while letters reveal. A right-aligned, translated `Next >` prompt appears
 below the box only after the line is fully revealed; it hides during typing and when choices are displayed.
 This applies to first and repeat meetings, brewing/payment lines, the post-victory guide scene and the

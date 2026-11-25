@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * The dialogue screen (D78, #337, playtest F3/F10): two portrait windows face each other in a carved walnut frame, joined
- * by the silver thread; the speaker is lit and bobs 1 px, the listener is dimmed; one text box holds every line. Logical
+ * by the silver thread once the healer has tied it (#495); the speaker is lit and bobs 1 px, the listener is dimmed; one text box holds every line. Logical
  * 640x360, Y down (the batch's camera). Text goes through {@link Overlay}'s Y-up pass as prebuilt blocks, rebuilt only when
  * a line, the language, a label or the checklist changes, so a frame allocates nothing. Portrait textures are owned by the
  * game's Assets cache; the frame art and the font are fetched on the first render.
@@ -69,7 +69,8 @@ public final class HealerDialogueView {
     /** The thread art's top-left, and the curve of its span (art/ui/dialogue/thread.grid is drawn on the same curve). */
     static final float THREAD_X = 178f, THREAD_Y = 154f, THREAD_W = 284f, THREAD_H = 32f;
     static final float THREAD_X0 = 196f, THREAD_Y0 = 168f, THREAD_X1 = 444f, THREAD_Y1 = 164f, THREAD_SAG = 16f;
-    static final float GLINT = 5f, GLINT_SECONDS = 0.8f;
+    /** The glint (#495, was 5 px for 0.8 s): 13 units are 7.9 CSS px on a 390 px portrait phone, and it takes 1.4 s to cross. */
+    static final float GLINT = 13f, GLINT_SECONDS = 1.4f;
     /**
      * #541 (D132): on the paid screen the three icons wait at their rows and take off at these dialogue times (bat, mushroom, one coin
      * for the coins), each flying {@code HANDOVER_SECONDS} to the healer's portrait; the elixir follows from the healer to Edgard.
@@ -97,7 +98,7 @@ public final class HealerDialogueView {
     static final float BOB_PERIOD = 1.2f;
     /** The listener's portrait multiplier: dim and moonlit, its outline still reads on the dusk window (test_dialogue_frame_sprites.py). */
     static final Color LISTENER = new Color(.55f, .58f, .70f, 1f);
-    /** Opening, in fractions of {@link HealerDialogue#OPEN_SECONDS}: the windows unfold, the box opens, the thread draws in last. */
+    /** Opening, in fractions of {@link HealerDialogue#OPEN_SECONDS}: the windows unfold, the box opens, a tied thread draws in last. */
     static final float WINDOWS_OPEN = .5f, BOX_OPEN = .66f, THREAD_START = .33f;
 
     private static final Color HEALER_GREEN = new Color(.42f, .88f, .48f, 1f);
@@ -374,21 +375,30 @@ public final class HealerDialogueView {
             Math.max(0f, ELIXIR_START - now), ELIXIR_SECONDS, FlightFx.EASE_IN_OUT, ELIXIR_FADE, GREEN_R, GREEN_G, GREEN_B, true, false);
     }
 
+    /**
+     * The silver thread, as far as the opening and the tale have drawn it (#495). While the healer's line ties it, the glint
+     * rides its leading end from Edgard's wrist; once it is whole, the glint runs from the speaker to the listener.
+     */
     private void thread(Batch batch, float open, HealerDialogue dialogue, boolean edgardSpeaking) {
-        float drawn = Math.max(0f, Math.min(1f, (open - THREAD_START) / (1f - THREAD_START)));
+        float opening = Math.max(0f, Math.min(1f, (open - THREAD_START) / (1f - THREAD_START)));
+        float drawn = Math.min(opening, dialogue.threadTied());
         if (drawn <= 0f) return;
-        if (drawn >= 1f) {
-            batch.draw(thread, THREAD_X, THREAD_Y, THREAD_W, THREAD_H);
-        } else { // the thread draws in from Edgard's wrist towards the healer: the left part of the art, same UVs as draw(region)
+        if (drawn < 1f) { // the thread draws in from Edgard's wrist towards the healer: the left part of the art, same UVs as draw(region)
             float width = Math.max(1f, Math.round(THREAD_W * drawn));
             float u2 = thread.getU() + (thread.getU2() - thread.getU()) * width / THREAD_W;
             batch.draw(thread.getTexture(), THREAD_X, THREAD_Y, width, THREAD_H, thread.getU(), thread.getV2(), u2, thread.getV());
+            if (opening >= 1f) glint(batch, MathUtils.clamp(THREAD_X + width, THREAD_X0, THREAD_X1)); // tying, not opening
             return;
         }
-        float run = dialogue.lineTime() / GLINT_SECONDS;
-        if (run >= 1f) return;
+        batch.draw(thread, THREAD_X, THREAD_Y, THREAD_W, THREAD_H);
+        float run = dialogue.glintTime() / GLINT_SECONDS;
+        if (run < 0f || run >= 1f) return;
         float t = edgardSpeaking ? run : 1f - run; // from the speaker to the listener
-        float x = THREAD_X0 + (THREAD_X1 - THREAD_X0) * t;
+        glint(batch, THREAD_X0 + (THREAD_X1 - THREAD_X0) * t);
+    }
+
+    /** The glint centred on the thread at screen x, on whole pixels. */
+    private void glint(Batch batch, float x) {
         batch.draw(glint, Math.round(x - GLINT / 2f), Math.round(threadY(x) - GLINT / 2f), GLINT, GLINT);
     }
 

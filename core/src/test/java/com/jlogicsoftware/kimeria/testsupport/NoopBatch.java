@@ -26,6 +26,12 @@ public final class NoopBatch implements Batch {
     private TextureRegion lastRotatedRegion;
     private float lastRotatedWidth, lastRotatedScaleX, lastRotatedRotation;
     private final float[] rotations = new float[8];
+    /** Count and last width of the UV texture draws (the nine-argument texture form, a cropped region: the thread drawing in, #495). */
+    private int croppedCount;
+    private float lastCroppedWidth;
+
+    public int croppedCount() { return croppedCount; }
+    public float lastCroppedWidth() { return lastCroppedWidth; }
     public float rotationOf(int i) { return rotations[i]; }
 
     public int rotatedCount() { return rotatedCount; }
@@ -34,8 +40,8 @@ public final class NoopBatch implements Batch {
     public float lastRotatedWidth() { return lastRotatedWidth; }
     public float lastRotatedScaleX() { return lastRotatedScaleX; }
     public float lastRotatedRotation() { return lastRotatedRotation; }
-    /** Zeroes the rotated and vertex draw counts. */
-    public void resetCounts() { rotatedCount = 0; vertexCount = 0; }
+    /** Zeroes the rotated, vertex and cropped draw counts. */
+    public void resetCounts() { rotatedCount = 0; vertexCount = 0; croppedCount = 0; }
 
     /** Starts logging up to {@code capacity} region draws (the five-argument form the tile layers use); clears an earlier log. */
     public void record(int capacity) { drawnRegions = new TextureRegion[capacity]; drawnX = new float[capacity]; drawnY = new float[capacity]; drawnCount = 0; }
@@ -56,7 +62,9 @@ public final class NoopBatch implements Batch {
     @Override public void draw(Texture texture, float x, float y, float width, float height, int srcX, int srcY,
         int srcWidth, int srcHeight, boolean flipX, boolean flipY) { }
     @Override public void draw(Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) { }
-    @Override public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) { }
+    @Override public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) {
+        croppedCount++; lastCroppedWidth = width;
+    }
     @Override public void draw(Texture texture, float x, float y) { }
     @Override public void draw(Texture texture, float x, float y, float width, float height) { }
     @Override public void draw(Texture texture, float[] spriteVertices, int offset, int count) { vertexCount++; }

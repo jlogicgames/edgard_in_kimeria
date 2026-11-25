@@ -9,12 +9,16 @@ public final class HealerDialogue {
     public enum Choice { RETURN, BREW, FIGHT, CONTINUE }
     /** The screen's opening (D78): the frame unfolds and the thread draws in; letters start after it, gameplay waits as before. */
     public static final float OPEN_SECONDS = 0.3f;
+    /** The line that ties the silver thread (#495) draws it from Edgard's wrist to the healer over this long. */
+    public static final float THREAD_TIE_SECONDS = 1.2f;
     private static final float LETTERS_PER_SECOND = 38f;
     // Constant lists: the view asks for the choices every frame.
     private static final List<Choice> NO_CHOICES = List.of(), FIGHT_ONLY = List.of(Choice.FIGHT),
         RETURN_OR_FIGHT = List.of(Choice.RETURN, Choice.FIGHT);
     private final List<Msg> lines;
     private final boolean eligible, paid;
+    /** The index of the line that ties the thread (the start tale only), or -1: the thread is there from the opening. */
+    private final int threadLine;
     private int line, selected;
     private float characters;
     /** Seconds since the dialogue opened (capped at the opening) and since the current line's letters began; paused time does not count. */
@@ -34,6 +38,7 @@ public final class HealerDialogue {
         this.kind = kind;
         postVictory = kind == Kind.VICTORY;
         this.lines = lines;
+        threadLine = lines.indexOf(Msg.HEALER_TALE_THREAD);
     }
 
     public static HealerDialogue afterVictory() {
@@ -81,6 +86,7 @@ public final class HealerDialogue {
         else lines = List.of(greeting, response,
             !bat || !mushroom ? (allCoins ? Msg.HEALER_INGREDIENTS : Msg.HEALER_BOTH) : !allCoins ? Msg.HEALER_PAYMENT : Msg.HEALER_READY,
             Msg.HEALER_OFFER);
+        threadLine = -1; // met after the tale: the thread is already tied
     }
 
     public void update(float dt) {
@@ -96,8 +102,20 @@ public final class HealerDialogue {
     }
     /** 0 when the screen opens, 1 once the frame, the thread and the box are whole (after {@link #OPEN_SECONDS}). */
     public float openProgress() { return opened / OPEN_SECONDS; }
-    /** Seconds the current line has been on screen after the opening (drives the thread glint). */
+    /** Seconds the current line has been on screen after the opening. */
     public float lineTime() { return lineTime; }
+    /**
+     * How much of the silver thread is tied, 0 to 1 from Edgard's wrist (#495): in the start tale there is none before
+     * {@code HEALER_TALE_THREAD}, that line draws it over {@link #THREAD_TIE_SECONDS} (at once with instant text) and it
+     * stays; every other conversation has it whole.
+     */
+    public float threadTied() {
+        if (line > threadLine) return 1f;
+        if (line < threadLine) return 0f;
+        return instantText ? 1f : Math.min(1f, lineTime / THREAD_TIE_SECONDS);
+    }
+    /** Seconds since the thread glint of the current line set off: {@link #lineTime}, but after the draw-in on the tying line (negative until then). */
+    public float glintTime() { return line == threadLine && !instantText ? lineTime - THREAD_TIE_SECONDS : lineTime; }
     /** Seconds the dialogue has run, paused time excluded (drives the speaker's bob). */
     public float time() { return time; }
     /** The line on screen now. */
