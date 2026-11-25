@@ -683,7 +683,7 @@ Their warning, attack and death effects (the beetle's built, D100, the spider's,
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 anyone passes (D119), the sword or a stomp crumbles it, a fireball or a thrown torch burns it and flies on, and a stone flies through it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
-which monsters and how: the list in D101). The beetle's, the spider's and the snail's bodies are built; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+which monsters and how: the list in D101). The beetle's, the spider's, the snail's and the wolf's bodies are built; the flying beetle, the Bat and possibly the RedMob and YellowMob follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 ### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 
