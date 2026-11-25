@@ -28,9 +28,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link TouchLayout} at the three reference touch windows (CSS pixels, device pixel ratio 3 as on a phone), the fonts the views
  * ask for come from the real views, and every size they ask for, times that scale, must reach {@link FontSizes#MIN_CSS_PX}.
  *
- * <p>Measured apart: the portrait strip's rotate hint ({@link FontSizes#ROTATE_HINT}), the only text of {@code TouchControls} since the
- * buttons show pictograms (D138, #492). It is drawn in the strip's own units, not the picture's, so {@link #theRotateHintIsReadableInTheStripAtEveryPortraitWindow}
- * measures it there; the screens built here never ask for that size, and the test fails if one does.
+ * <p>Measured apart: the portrait strip's rotate prompt ({@link FontSizes#ROTATE_PROMPT}, D140, #493), the only text of {@code TouchControls} since the
+ * buttons show pictograms (D138, #492). It is drawn in the strip's own units, not the picture's, so {@link #theRotatePromptIsLargeInTheStripAtEveryPortraitWindow}
+ * measures it there. The screens built here may ask for the same baked size (the title's, 30), which is why the test below also measures it at the picture's
+ * scale; it is the prompt's own scale that counts for the prompt.
  */
 class TextMinimumSizeTest {
     /** A window in CSS pixels, with its device pixel ratio and whether it has a touch screen. */
@@ -137,21 +138,27 @@ class TextMinimumSizeTest {
         assets.setLargeText(large);
         new Screens(assets).frame();
         assertEquals(expectedSizes(large), assets.sizes, window.name() + ": the screens ask for these fonts and no others");
-        assertFalse(assets.sizes.contains(FontSizes.ROTATE_HINT), "the rotate hint belongs to TouchControls and is measured in its strip");
         for (int size : assets.sizes)
             assertTrue(FontSizes.meetsMinimum(size, css), window.name() + ": " + size + " px text is " + FontSizes.onScreen(size, css)
                 + " CSS px at " + css + " per unit, below " + FontSizes.MIN_CSS_PX);
     }
 
-    /** The hint is as wide as the window in 360 units, so its on-screen size is the baked size times the window width over 360. */
-    @Test void theRotateHintIsReadableInTheStripAtEveryPortraitWindow() {
-        for (Window window : new Window[]{REFERENCE[0], OTHERS[0]}) {
+    /**
+     * D140 (#493): the prompt is drawn in the strip's units, as wide as the window in 360 units, so its on-screen size is the baked size times the window
+     * width over 360. The minimum of D137 holds (it was 13.9 CSS px at 13 baked, now 30 or more), and the prompt is large: at least twice the minimum
+     * and at least the title's size on a 640 px picture, so it cannot be missed. The width is that of the narrowest portrait window the strip exists in
+     * (the strip is as wide as the window, so the prompt never gets smaller than the 30 px it is baked at, to whole CSS pixels).
+     */
+    @Test void theRotatePromptIsLargeInTheStripAtEveryPortraitWindow() {
+        for (Window window : new Window[]{REFERENCE[0], OTHERS[0], new Window("360x800 phone", 360, 800, 3, true), new Window("412x915 phone", 412, 915, 3, true)}) {
             TouchLayout layout = new TouchLayout(640, 360);
             layout.setPixelRatio(window.ratio());
             layout.update(window.width() * window.ratio(), window.height() * window.ratio(), true);
             assertTrue(layout.portrait(), window.name());
-            float css = FontSizes.ROTATE_HINT * window.width() / TouchLayout.SPACE_WIDTH;
-            assertTrue(Math.round(css) >= FontSizes.MIN_CSS_PX, window.name() + ": the rotate hint is " + css + " CSS px");
+            float css = FontSizes.ROTATE_PROMPT * window.width() / TouchLayout.SPACE_WIDTH;
+            assertTrue(Math.round(css) >= FontSizes.MIN_CSS_PX, window.name() + ": the rotate prompt is " + css + " CSS px");
+            assertTrue(css >= 2 * FontSizes.MIN_CSS_PX, window.name() + ": the rotate prompt is large: " + css + " CSS px");
+            assertTrue(css >= FontSizes.TITLE * 0.99f, window.name() + ": at least the title's size on a 640 px picture: " + css);
         }
     }
 

@@ -113,8 +113,8 @@ class PortraitTouchLayoutTest {
             assertTrue(cy + c[1] - grab >= 0 && cy + c[1] + grab <= layout.spaceHeight(), "inside the strip, with the grab radius, at dy " + c[1]);
             assertTrue(c[0] - grab >= 0 && c[0] + grab <= TouchLayout.SPACE_WIDTH, "inside the width at x " + c[0]);
         }
-        // Rotate hint line sits above the highest control.
-        assertTrue(TouchControls.PORTRAIT_HINT_Y + 14 < cy + TouchControls.PORTRAIT_SHOOT_DY - 32);
+        // The rotate prompt (D140) is above the highest control: RotatePromptTest measures its geometry; here the reach it keeps clear covers the Ranged button.
+        assertTrue(RotatePrompt.CLUSTER_REACH >= -TouchControls.PORTRAIT_SHOOT_DY + 32);
     }
 
     @Test void theStickAndTheButtonsWorkFromTheStripMirroredForLeftHandedPlay() {

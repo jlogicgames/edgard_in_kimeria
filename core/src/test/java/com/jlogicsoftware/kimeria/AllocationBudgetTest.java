@@ -1681,6 +1681,8 @@ class AllocationBudgetTest {
     /** #496 (D139): the touch tutorial's three steps, fed and drawn each frame, each for {@value #COACH_STEP_FRAMES} frames; the measurement is in the report. */
     static final double TOUCH_COACH_CEILING = 8;
     static final int COACH_STEP_FRAMES = 300;
+    /** #493 (D140): the portrait rotate prompt (pictogram turning, text) drawn every frame, in the menu pass and in play; the measurement is in the report. */
+    static final double ROTATE_PROMPT_CEILING = 8;
     static final float COACH_HERO_X = 64;
     static final int PAGED_INTRO_COPIES = 100, INTRO_BOOK_COPIES = 40, TOUCH_POINTERS = 5; // TouchControls.MAX_POINTERS
     /** Enough endings for the warm-up and the measured window (25 s): one lasts about 7 s (today's ending lights with its third paragraph), or 3 s with instant text (#416). */
@@ -2182,6 +2184,41 @@ class AllocationBudgetTest {
         for (TouchCoach.Step step : TouchCoach.Step.values()) assertTrue(shown[step.ordinal()] > COACH_STEP_FRAMES / 4, step + " must be on screen during the measurement: " + shown[step.ordinal()]);
         System.out.printf("ALLOCATION TouchCoach fed and drawn: %.1f B/frame in all, %.1f of it the harness's proxies, frames shown %s%n", bytes, harnessCalls, java.util.Arrays.toString(shown));
         assertWithinBudget("TouchControls.update and render with the touch coach, without the harness proxies", TOUCH_COACH_CEILING, Math.max(0, bytes - harnessCalls));
+    }
+
+    /**
+     * #493 (D140): the portrait rotate prompt drawn every frame, alternating the menu pass ({@code renderStrip}) and play ({@code render}, with the cluster), with the
+     * loop clock swept through the whole turn (phone rotated, arrow mirrored on the way back). The two viewport applications each pass makes go through the harness's GL and
+     * graphics proxies, which allocate on every call (argument arrays, boxed ints), so those calls are measured alone and subtracted, as the coach test does.
+     */
+    @Test void rotatePromptDrawnEveryFrame() {
+        Assets stub = new Assets() {
+            @Override public BitmapFont font(int size) { return new MetricsFont(size); }
+            @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+        };
+        com.jlogicsoftware.kimeria.ui.TouchLayout layout = new com.jlogicsoftware.kimeria.ui.TouchLayout(640, 360);
+        layout.update(390, 844, true);
+        assertTrue(layout.portrait());
+        com.badlogic.gdx.utils.viewport.ScreenViewport view = new com.badlogic.gdx.utils.viewport.ScreenViewport();
+        TouchControls touch = new TouchControls(stub, harness.game(), view, 640, 360, true);
+        touch.setLayout(layout);
+        double harnessCalls = AllocationProbe.bytesPerFrame(i -> {
+            layout.controlsViewport().apply();
+            view.apply();
+            harness.game().language();
+            harness.game().leftHanded();
+        });
+        int[] drawn = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            touch.setPromptClock(i / 60f % com.jlogicsoftware.kimeria.ui.RotatePrompt.CYCLE);
+            if (i % 2 == 0) touch.renderStrip(batch, false); else touch.render(batch);
+            if (batch.rotatedCount() >= 2) drawn[0]++;
+            batch.resetCounts();
+        });
+        System.out.printf("ALLOCATION rotate prompt drawn: %.1f B/frame in all, %.1f of it the harness's proxies, drawn in %d of %d frames%n", bytes, harnessCalls, drawn[0],
+            AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES);
+        assertEquals(AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES, drawn[0], "the pictogram's two parts are drawn in every frame");
+        assertWithinBudget("TouchControls.renderStrip and render with the rotate prompt, without the harness proxies", ROTATE_PROMPT_CEILING, Math.max(0, bytes - harnessCalls));
     }
 
     /** The debug FPS text asked for every frame while the rate changes every {@value #FPS_CHANGE_FRAMES} frames. */

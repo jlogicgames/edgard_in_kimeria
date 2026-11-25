@@ -856,7 +856,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (menuBackdropActive) {
             menuBackdrop.render(batch);
         }
-        // Portrait phones: the strip under the picture always carries the rotate hint (the controls come with play).
+        // Portrait phones: the strip under the picture always carries the large rotate prompt (D140; in play TouchControls.render draws it with the controls).
         if (touchLayout.portrait() && !(levelVisible && uiState == UiState.PLAYING)) touchControls.renderStrip(batch, false);
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         if (levelVisible && deathFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, deathFade.alpha());

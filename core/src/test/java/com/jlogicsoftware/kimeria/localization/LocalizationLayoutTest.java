@@ -19,6 +19,7 @@ import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
+import com.jlogicsoftware.kimeria.ui.RotatePrompt;
 import com.jlogicsoftware.kimeria.ui.TouchLayout;
 import org.junit.jupiter.api.Test;
 
@@ -102,7 +103,7 @@ class LocalizationLayoutTest {
         GdxNativesLoader.load();
         try {
             BitmapFont body = new MetricsFont(FontSizes.body(large)), dialogue = new MetricsFont(FontSizes.dialogue(large)), button = new MetricsFont(FontSizes.BUTTON),
-                hint = new MetricsFont(FontSizes.label(large)), rotate = new MetricsFont(FontSizes.ROTATE_HINT), title = new MetricsFont(FontSizes.TITLE),
+                hint = new MetricsFont(FontSizes.label(large)), rotate = new MetricsFont(FontSizes.ROTATE_PROMPT), title = new MetricsFont(FontSizes.TITLE),
                 zone = new MetricsFont(FontSizes.ZONE), context = new MetricsFont(FontSizes.label(large));
             Assets assets = new Assets() {
                 @Override public BitmapFont font(int size) { return new MetricsFont(size); }
@@ -134,9 +135,9 @@ class LocalizationLayoutTest {
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                     assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= 512, prefix + message);
-                // D138 (#492): the touch buttons carry pictograms, so the only touch text is the portrait strip's rotate hint:
-                // one line in the strip's 360 units minus the side margins, at the hint's own size.
-                assertTrue(lines(rotate, Msg.ROTATE_HINT.t(language), TouchLayout.SPACE_WIDTH - 48f) <= 1, prefix + "rotate hint");
+                // D138 (#492): the touch buttons carry pictograms, so the only touch text is the portrait strip's rotate prompt (D140, #493):
+                // at most two lines in the strip's 360 units minus the side margins, at the prompt's own large size.
+                assertTrue(lines(rotate, Msg.ROTATE_HINT.t(language), RotatePrompt.TEXT_WIDTH) <= 2, prefix + "rotate prompt");
                 // About pages (D135): the blurb and the rules each sit in the 610 px panel between the title and two buttons.
                 for (String page : List.of(
                     Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language),

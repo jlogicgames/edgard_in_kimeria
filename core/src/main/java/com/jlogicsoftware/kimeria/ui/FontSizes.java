@@ -28,11 +28,11 @@ public final class FontSizes {
     /** The large tier of {@link #DIALOGUE}: four lines of it fill the text box, which grows to {@link HealerDialogueView#BOX_H_LARGE}. */
     public static final int DIALOGUE_LARGE = 20;
     /**
-     * The portrait strip's "rotate the phone" hint, the one text left in the touch controls (D138, #492: the buttons show pictograms).
-     * It is drawn in the strip's own units, 360 per window width (1.08 CSS px per unit on a 390 px phone), so 13 is 14 CSS px there
-     * and 13.9 at the narrowest portrait window; the strip is as wide as the window, so the hint never gets smaller than that.
+     * The portrait strip's "rotate the phone" prompt (D140, #493), the one text left in the touch controls (D138, #492: the buttons show pictograms).
+     * It is the title's baked size and is drawn in the strip's own units, 360 per window width: 1.08 CSS px per unit on a 390 px phone, so 32.5 CSS px
+     * there, and 30 at the narrowest window the strip exists in, far over {@link #MIN_CSS_PX}. Two lines in all five languages.
      */
-    public static final int ROTATE_HINT = 13;
+    public static final int ROTATE_PROMPT = 30;
     /** Map-authored zone message (D50), menu buttons, coin count. */
     public static final int ZONE = 20, BUTTON = 20, COUNT = 20;
     public static final int TITLE = 30;
@@ -46,7 +46,7 @@ public final class FontSizes {
     public static final float LARGE_BELOW_CSS_PER_UNIT = 1f;
     /**
      * D137: the minimum on-screen text size, in CSS pixels (the baked size times the picture's CSS pixels per unit), for all text but
-     * the rotate hint (which is measured by its own strip scale, {@code TextMinimumSizeTest}), at every window whose picture is at least {@link #MIN_RULE_FROM_CSS_PER_UNIT} wide per unit.
+     * the rotate prompt (which is measured by its own strip scale, {@code TextMinimumSizeTest}), at every window whose picture is at least {@link #MIN_RULE_FROM_CSS_PER_UNIT} wide per unit.
      * 11 is the smallest text size of iOS (HIG) and of Material 3 (Label Small, 11 sp); the About page and the Controls table cap the
      * body at 18, which on a 390 px portrait phone is 10.97.
      */

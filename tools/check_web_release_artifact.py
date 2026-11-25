@@ -23,8 +23,6 @@ REQUIRED_RUNTIME_FILES = (
     "assets/audio/main_menu.mp3",
     "assets/fonts/generated/QuestSquare-20.fnt",
     "assets/fonts/generated/QuestSquare-20.png",
-    "assets/fonts/generated/QuestSquare-13.fnt",
-    "assets/fonts/generated/QuestSquare-13.png",
     "assets/fonts/generated/QuestSquare-16.fnt",
     "assets/fonts/generated/QuestSquare-16.png",
     "assets/fonts/generated/QuestSquare-18.fnt",

@@ -52,7 +52,7 @@ Sources: [MVP](MVP.md#validation), [post-boss validation](POST_BOSS_VALIDATION.m
 - [-] **Cancelled (D61): will not be implemented.** (original text kept below)
   Touch control art (D55, [#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226)): **light controls accepted on a real iPhone (author, 2026-11-07).** Still to check on a real Android phone ([#277](https://github.com/jlogicgames/edgard_in_kimeria/issues/277)): stick, Fireball,
   Sword/Action, Jump and pause button are easy to see on the dark strip / side bars and over the picture
-  (16:9, 4:3), labels (13 px, dark on cream; long German / Belarusian ones wrap to two lines) readable, pressed state (amber) obvious, in daylight and in a dark room.
+  (16:9, 4:3), button pictograms (D138: sword, flame, stone, jump arrow; no text on the buttons) readable, pressed state (amber) obvious, in daylight and in a dark room.
 - [-] **Cancelled (D61): will not be implemented.** (original text kept below)
   Mobile browser layout and wake lock ([#226](https://github.com/jlogicgames/edgard_in_kimeria/issues/226), D53): **real iPhone, Safari tab: portrait and landscape layouts OK and the screen stays on during play (author, 2026-11-07).**
   Fullscreen and the Add to Home Screen app are **not needed (author decision, 2026-11-07)**, so their checks (home-screen

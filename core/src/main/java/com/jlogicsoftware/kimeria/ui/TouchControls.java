@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
@@ -34,7 +35,8 @@ import com.jlogicsoftware.kimeria.localization.Msg;
  *
  * <p><b>Portrait</b> ({@link TouchLayout}, #226): with a {@link TouchLayout} set and the window tall enough, the
  * stick and the three buttons move out of the picture into the strip below it, laid out in that strip's own
- * 360-unit-wide space (still mirrored in left-handed mode); a one-line "rotate the phone" hint is drawn above them.
+ * 360-unit-wide space (still mirrored in left-handed mode); the large "rotate the phone" prompt ({@link RotatePrompt}, #493) fills the strip above
+ * them: a pictogram of a phone that turns to landscape and back, and the hint in a large font, in every screen including play.
  * The pause button stays in the game view at logical (320, 19), but its hit circle grows so it stays a thumb-sized
  * target at the small portrait scale.
  *
@@ -60,9 +62,10 @@ public class TouchControls {
     private static final float BUTTON_HIT_SCALE = 1.2f, SHOOT_BUTTON_SCALE = 0.85f;
     /** Light, near-opaque art (D55) so it reads on the dark bars and over the level background and ground; the pressed art is amber. */
     static final float CONTROL_ALPHA = 0.94f;
-    private static final float HINT_SIDE_MARGIN = 24f;
     private static final float PRESSED_SCALE = 0.92f;
     private static final String ART = "images/HUD/touch/";
+    private static final float MILLIS_PER_SECOND = 1000f;
+    private static final long PROMPT_LOOP_MILLIS = (long) (RotatePrompt.CYCLE * MILLIS_PER_SECOND);
 
     static final int BUTTON_ART_SIZE = 64;
     private static final float BUTTON_RADIUS = 32;
@@ -84,7 +87,6 @@ public class TouchControls {
     /** Portrait strip layout (controls space units): cluster centre offset from the strip middle, and each control's place. */
     static final float PORTRAIT_STICK_X = 80, PORTRAIT_JUMP_X = 310, PORTRAIT_ACTION_X = 240, PORTRAIT_SHOOT_X = 256;
     static final float PORTRAIT_JUMP_DY = 10, PORTRAIT_ACTION_DY = 38, PORTRAIT_SHOOT_DY = -36, PORTRAIT_CLUSTER_DY = 8;
-    static final float PORTRAIT_HINT_Y = 14;
 
     /**
      * Landscape side-bar layout (D54, controls space units = picture units, X from the window's left edge): the stick
@@ -112,14 +114,18 @@ public class TouchControls {
     /** The touch tutorial (#496, D139): lives as long as the game, so a step that ended never returns in the session. */
     private final TouchCoach coach = new TouchCoach();
     private final TouchCoach.Signals coachSignals = new TouchCoach.Signals();
+    /** The rotate prompt's art (#493, D140): the portrait phone code turns, and the amber arrow bent the way it turns. */
+    private final TextureRegion rotatePhone, rotateArrow;
     private final TextureRegion base, jumpIcon, jumpDown, knob, knobDown, pauseIcon, pauseDown, skipIcon, skipDown;
     /** Idle and pressed art of every {@link TouchGlyph}, by ordinal; loaded here so a missing PNG fails at load, never mid-play (#492). */
     private final TextureRegion[] glyphs = new TextureRegion[TouchGlyph.values().length], glyphsDown = new TextureRegion[TouchGlyph.values().length];
-    /** Only the portrait rotate hint is text; its layout is rebuilt when the language or the width changes, never per frame. */
+    /** Only the portrait rotate prompt is text; its layout is rebuilt when the language changes, never per frame. */
     private final BitmapFont font;
     private GlyphLayout hintLayout;
     private Language hintLanguage;
-    private float hintWidth = -1;
+    private final RotatePrompt prompt = new RotatePrompt();
+    /** Test hook: when not negative, the prompt's loop clock in seconds instead of the real one. */
+    private float promptClock = -1f;
     private final float logicalWidth, logicalHeight;
     private final boolean available;
     private boolean previousLayout;
@@ -174,7 +180,9 @@ public class TouchControls {
         this.handPressed = assets.region(ART + "hand-down.png", 0, 0, (int) HAND_SIZE, (int) HAND_SIZE);
         this.chevron = assets.region(ART + "chevron.png", 0, 0, (int) CHEVRON_SIZE, (int) CHEVRON_SIZE);
         this.ring = assets.region(ART + "ring.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
-        this.font = assets.font(FontSizes.ROTATE_HINT);
+        this.rotatePhone = assets.region(ART + "rotate-phone.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        this.rotateArrow = assets.region(ART + "rotate-arrow.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        this.font = assets.font(FontSizes.ROTATE_PROMPT);
 
         Application.ApplicationType type = Gdx.app.getType();
         available = platformTouch || type == Application.ApplicationType.Android
@@ -203,7 +211,7 @@ public class TouchControls {
         if (portrait()) {
             spaceWidth = TouchLayout.SPACE_WIDTH;
             spaceHeight = layout.spaceHeight();
-            float cy = spaceHeight / 2f + PORTRAIT_CLUSTER_DY;
+            float cy = portraitClusterY(spaceHeight);
             stickX = mirror(PORTRAIT_STICK_X); stickY = cy;
             jumpX = mirror(PORTRAIT_JUMP_X); jumpY = cy + PORTRAIT_JUMP_DY;
             actionX = mirror(PORTRAIT_ACTION_X); actionY = cy + PORTRAIT_ACTION_DY;
@@ -226,6 +234,20 @@ public class TouchControls {
             actionX = x(ACTION_X); actionY = ACTION_Y;
             shootX = x(SHOOT_X); shootY = SHOOT_Y;
         }
+    }
+
+    /** Centre Y of the portrait cluster (the stick), in strip units: a little below the strip's middle. */
+    static float portraitClusterY(float spaceHeight) { return spaceHeight / 2f + PORTRAIT_CLUSTER_DY; }
+
+    /**
+     * How far above the portrait cluster's centre anything the controls can show or take reaches (#493): the stick's grab circle, the Ranged button's
+     * hit circle and its tutorial ring at full pulse, the stick-up tutorial's two chevrons and its ghost knob. {@link RotatePrompt#CLUSTER_REACH} must
+     * be at least this, so the prompt never overlaps a control, a touch area or the tutorial.
+     */
+    static float clusterReach() {
+        float shoot = -PORTRAIT_SHOOT_DY;
+        return Math.max(Math.max(STICK_GRAB, shoot + BUTTON_RADIUS * BUTTON_HIT_SCALE), Math.max(shoot + BUTTON_RADIUS * SHOOT_BUTTON_SCALE * RING_SCALE_MAX,
+            Math.max(CHEVRON_FAR + CHEVRON_SIZE / 2, TouchCoach.SLIDE_UNITS + KNOB_SIZE / 2)));
     }
 
     private float mirror(float rightHandedX) {
@@ -436,7 +458,7 @@ public class TouchControls {
     }
 
     /**
-     * Portrait only: draws the "rotate the phone" hint (in every screen, so a menu-bound player sees it too) and, when
+     * Portrait only: draws the "rotate the phone" prompt (in every screen, so a menu-bound player sees it too) and, when
      * {@code controls} is true, the stick and buttons, into the strip below the picture. Must be called between
      * {@code batch.begin()} and {@code end()}; leaves the batch and GL viewport as the game view had them.
      */
@@ -452,18 +474,32 @@ public class TouchControls {
         layout.controlsViewport().apply();
         batch.setProjectionMatrix(layout.controlsViewport().getCamera().combined);
         batch.begin();
+        if (hint) drawRotatePrompt(batch, controls);
         if (controls) {
             drawCluster(batch);
         }
-        if (hint) drawRotateHint(batch);
         batch.end();
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
     }
 
-    /** The portrait "rotate the phone" hint: the one text left in the touch controls, white on the dark strip. */
-    private void drawRotateHint(Batch batch) {
+    /**
+     * The portrait "rotate the phone" prompt (#493, D140), drawn before the cluster so the tutorial's hand and ring stay on top: the pictogram,
+     * a phone that turns from portrait to landscape and back with the amber arrow bent the way it turns, and the hint under it in the large
+     * font, white on the dark strip. Nothing here allocates: the regions are drawn rotated, the loop is read from the clock, and the text was laid
+     * out when the language changed.
+     */
+    private void drawRotatePrompt(Batch batch, boolean controls) {
+        layOutRotateHint(game.language());
+        prompt.fit(spaceHeight, portraitClusterY(spaceHeight), controls, hintLayout.height);
+        if (!prompt.shown) return;
+        batch.setColor(Color.WHITE);
+        if (prompt.icon) {
+            float size = prompt.iconSize, x = spaceWidth / 2f - size / 2f, seconds = promptSeconds();
+            batch.draw(rotatePhone, x, prompt.iconY, size / 2f, size / 2f, size, size, 1f, 1f, RotatePrompt.angle(seconds));
+            batch.draw(rotateArrow, x, prompt.iconY, size / 2f, size / 2f, size, size, RotatePrompt.returning(seconds) ? -1f : 1f, 1f, 0f);
+        }
         if (portraitTextHeight != spaceHeight || portraitTextWidth != spaceWidth) {
             portraitTextHeight = spaceHeight;
             portraitTextWidth = spaceWidth;
@@ -472,18 +508,27 @@ public class TouchControls {
             portraitTextProjection.set(portraitTextCamera.combined);
         }
         batch.setProjectionMatrix(portraitTextProjection);
-        float width = spaceWidth - HINT_SIDE_MARGIN * 2f;
-        layOutRotateHint(game.language(), width);
         font.setColor(Color.WHITE);
-        font.draw(batch, hintLayout, spaceWidth / 2f - width / 2f, spaceHeight - PORTRAIT_HINT_Y + hintLayout.height / 2f);
+        font.draw(batch, hintLayout, spaceWidth / 2f - RotatePrompt.TEXT_WIDTH / 2f, spaceHeight - prompt.textTop);
+        batch.setProjectionMatrix(layout.controlsViewport().getCamera().combined);
     }
 
-    /** Lays the hint out again only when the language or the strip's width changed (a state change, never a frame). */
-    private void layOutRotateHint(Language lang, float width) {
-        if (hintLayout != null && hintLanguage == lang && hintWidth == width) return;
+    /** The loop clock of the pictogram: the real time, or the test hook's. {@code TimeUtils} reads the clock without allocating. */
+    private float promptSeconds() {
+        return promptClock >= 0f ? promptClock : TimeUtils.millis() % PROMPT_LOOP_MILLIS / MILLIS_PER_SECOND;
+    }
+
+    /** Fixes the prompt's loop clock (seconds into the loop) for a test; a negative value gives the real clock back. */
+    public void setPromptClock(float seconds) { promptClock = seconds; }
+
+    /** Where the last prompt drawn sits and whether it was drawn: for tests. */
+    RotatePrompt prompt() { return prompt; }
+
+    /** Lays the hint out again only when the language changed (a state change, never a frame); the width is fixed, so the layout is too. */
+    private void layOutRotateHint(Language lang) {
+        if (hintLayout != null && hintLanguage == lang) return;
         hintLanguage = lang;
-        hintWidth = width;
-        hintLayout = new GlyphLayout(font, Msg.ROTATE_HINT.t(lang), Color.WHITE, width, Align.center, true);
+        hintLayout = new GlyphLayout(font, Msg.ROTATE_HINT.t(lang), Color.WHITE, RotatePrompt.TEXT_WIDTH, Align.center, true);
     }
 
     /** The stick and the three buttons, at the positions {@link #place()} chose. */
