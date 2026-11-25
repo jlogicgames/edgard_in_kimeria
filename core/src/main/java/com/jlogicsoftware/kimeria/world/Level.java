@@ -429,8 +429,8 @@ public class Level implements WorldObject {
         clearCameraEffects();
         game.artifacts().endBossElixir(name);
         victory = true;
-        placeVictoryPortal();
         player.beginVictoryWalk();
+        placeVictoryPortal();
         game.setNormalTime();
     }
 
@@ -597,6 +597,8 @@ public class Level implements WorldObject {
     }
 
     private static final float VICTORY_PORTAL_WIDTH = 24, VICTORY_PORTAL_HEIGHT = 48, VICTORY_PORTAL_MARGIN = 16;
+    /** How far above the hero's feet a block's top may sit and still be the floor under him: rounding only. */
+    private static final float VICTORY_FLOOR_SLACK = .5f;
 
     private void placePortal() {
         Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
@@ -607,14 +609,28 @@ public class Level implements WorldObject {
             if (objects.get(i) instanceof Checkpoint cp) { portal.placeLevelEnd(cp.position.x, cp.position.y, cp.size.x, cp.size.y); return; }
     }
 
-    /** The boss is dead: the amber portal opens at the right end of the room, where the victory walk leaves, on the hero's floor line (#605). */
+    /** The boss is dead: the amber portal opens at the right end of the room, where the victory walk leaves, on the floor there (#605). */
     private void placeVictoryPortal() {
         Rectangle room = currentRoomBounds();
-        float floor = player.position.y + player.size.y; // the bottom edge of the hero's box (world Y grows downward), so the portal stands on it
-        portal.placeLevelEnd(room.x + room.width - VICTORY_PORTAL_WIDTH - VICTORY_PORTAL_MARGIN, floor - VICTORY_PORTAL_HEIGHT, VICTORY_PORTAL_WIDTH, VICTORY_PORTAL_HEIGHT);
+        float x = room.x + room.width - VICTORY_PORTAL_WIDTH - VICTORY_PORTAL_MARGIN;
+        float floor = floorBelow(x, VICTORY_PORTAL_WIDTH, player.position.y + player.hitbox.offsetY + player.hitbox.height);
+        player.setVictoryFloor(floor);
+        portal.placeLevelEnd(x, floor - VICTORY_PORTAL_HEIGHT, VICTORY_PORTAL_WIDTH, VICTORY_PORTAL_HEIGHT);
     }
 
-    /** The portal of the current room, for tests; not placed in the last room, which has no exit. */
+    /** The top of the highest solid block under the span {@code x} to {@code x + width} at or below {@code from} (larger Y is lower); {@code from} if there is none. */
+    private float floorBelow(float x, float width, float from) {
+        float floor = Float.MAX_VALUE;
+        for (int i = 0; i < collisionBlocks.size(); i++) {
+            CollisionBlock block = collisionBlocks.get(i);
+            if (!block.isActive() || block.isPlatform() || block.isQuickSand()) continue;
+            if (block.getX() >= x + width || block.getX() + block.getWidth() <= x) continue;
+            if (block.getY() >= from - VICTORY_FLOOR_SLACK) floor = Math.min(floor, block.getY());
+        }
+        return floor == Float.MAX_VALUE ? from : floor;
+    }
+
+    /** The portal of the current room, for tests: violet on a room exit, amber where the level ends (a boss level shows it only after the kill). */
     public PortalFx portal() { return portal; }
     public RoomRippleFx roomRipple() { return roomRipple; }
     public boolean heroLeft() { return heroLeft; }
@@ -1819,6 +1835,7 @@ public class Level implements WorldObject {
             dt = Math.min(dt, .05f);
             updateWorld(dt);
             finishUpdate(dt);
+            if (!completionSent) player.settleVictory(dt);
             if (boss.deathFinished() && !completionSent) {
                 player.advanceVictoryWalk(dt);
                 // A room narrower than the screen is centred: walk beyond the VIEW edge too.

@@ -190,6 +190,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Reused by the per-frame pickup-reach code (see {@link #pickupReachBounds}): never allocated per frame. */
     private final Rectangle reachScratch = new Rectangle();
     private boolean victoryWalk;
+    /** World Y of the floor the victory exit takes place on; larger is lower (#605). */
+    private float victoryFloor;
     private boolean isAttacking = false;
     private boolean attackHitboxAdded = false;
     private float attackElapsed = 0f;
@@ -316,12 +318,29 @@ public class Player extends Actor<Player.State> implements CollideBody {
         collideWithTriggerId = "";
         resetJumpInput();
         facingRight = true;
+        victoryFloor = feetY();
         setState(State.IDLE);
+    }
+
+    private float feetY() { return position.y + hitbox.offsetY + hitbox.height; }
+
+    /** The floor the victory exit ends on: a hero above it (a kill landed in mid-air) comes down to it (#605). */
+    public void setVictoryFloor(float y) { victoryFloor = y; }
+
+    /** The exit's only fall (#605): gravity down to the victory floor, through anything between, as the walk ignores terrain. */
+    public void settleVictory(float dt) {
+        if (feetY() >= victoryFloor) return;
+        applyGravity(dt);
+        if (feetY() >= victoryFloor) {
+            position.y = victoryFloor - hitbox.offsetY - hitbox.height;
+            velocity.y = 0;
+        }
+        setState(velocity.y > 0 ? State.FALLING : State.IDLE);
     }
 
     /** Scripted exit ignores terrain, hazards and camera chasing. */
     public void advanceVictoryWalk(float dt) {
-        setState(State.RUNNING);
+        setState(velocity.y > 0 ? State.FALLING : State.RUNNING);
         position.x += MOVE_SPEED * dt;
         tickAnimation(dt);
     }
