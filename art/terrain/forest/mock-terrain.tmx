@@ -252,8 +252,8 @@
   <object id="15" name="clump-fern-foot" gid="3385" x="0" y="384" width="240" height="16"/>
   <object id="16" name="tuft" gid="3369" x="112" y="376" width="112" height="64"/>
   <object id="17" name="tuft-foot" gid="3383" x="80" y="392" width="176" height="16"/>
-  <object id="18" name="clump-leaves" gid="3370" x="320" y="368" width="192" height="48"/>
-  <object id="19" name="clump-leaves-foot" gid="3384" x="288" y="384" width="256" height="16"/>
+  <object id="18" name="clump-leaves" gid="3370" x="272" y="368" width="192" height="48"/>
+  <object id="19" name="clump-leaves-foot" gid="3384" x="240" y="384" width="256" height="16"/>
   <object id="20" name="vine-curtain" gid="3378" x="600" y="208" width="288" height="208"/>
   <object id="21" name="vine-curtain-top" gid="3390" x="568" y="8" width="352" height="32"/>
   <object id="22" name="clump-grass" gid="3372" x="608" y="368" width="144" height="48"/>

@@ -337,7 +337,7 @@ def play_above(rows):
 # room's end (deepest, there the camera never carries it over an object), leaves and a bough in the top-left corner. Low clumps
 # lie on the floor line with open ground between them.
 FOREGROUND = (('hang-leaves-l', -80, 0), ('trunk-near', -48, 0), ('clump-fern', 32, 320), ('tuft', 112, 312),
-              ('clump-leaves', 320, 320), ('vine-curtain', 600, 0), ('clump-grass', 608, 320), ('clump-mixed', 832, 320),
+              ('clump-leaves', 272, 320), ('vine-curtain', 600, 0), ('clump-grass', 608, 320), ('clump-mixed', 832, 320),
               ('roots-curtain', 1208, 0), ('edge-leaves', 1568, 327), ('edge-fern', 1600, 327))
 
 
@@ -991,16 +991,21 @@ TERRAIN_MOCK = TERRAIN_DIR / 'mock-terrain.tmx'
 SNIPPET = (ROOT / 'assets/tiles/forest-2.tmx', (0, 1120))   # forest-2 and the left edges of its snippets: the rock wall, the slope
 
 
-def terrain():
-    """mock.tmx with the play tileset swapped to the terrain sketch, its previews and a forest-2 snippet over the scene."""
-    text = MOCK.read_text(encoding='utf-8')
+def terrain_text(text):
+    """The text of mock-terrain.tmx for the text of mock.tmx: the play tileset swapped to the terrain sketch, the other
+    tileset paths rebased on its directory."""
     def source(match):
         path = match.group(1)
         if path == PLAY_TSX:
             return 'source="Forest-new.tsx"'
-        return f'source="{Path("../../parallax/forest") / path}"' if not path.startswith('..') else \
+        return f'source="{(Path("../../parallax/forest") / path).as_posix()}"' if not path.startswith('..') else \
             f'source="../../parallax/{path.removeprefix("../")}"'
-    TERRAIN_MOCK.write_text(re.sub(r'source="([^"]+)"', source, text), encoding='utf-8')
+    return re.sub(r'source="([^"]+)"', source, text)
+
+
+def terrain():
+    """mock-terrain.tmx (mock.tmx over the terrain sketch), its previews and a forest-2 snippet over the scene."""
+    TERRAIN_MOCK.write_text(terrain_text(MOCK.read_text(encoding='utf-8')), encoding='utf-8')
     print(TERRAIN_MOCK.relative_to(ROOT))
     preview(FOREST_1, mock=TERRAIN_MOCK, out=TERRAIN_DIR)
     root, sets, _ = tile_images(TERRAIN_MOCK)
