@@ -163,7 +163,7 @@ the new mechanic creates new situations for using them.
 | Stage | Material for further design | Status |
 | --- | --- | --- |
 | Forest | Reconfigure the route through visible linked mechanisms: levers change traversal supports such as ladders, bridges, platforms and obstacles. | Accepted direction. The lever introduction is built in `forest-0` (#186); the optional-route variation is built as a second room of `forest-1` (#187, [D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15): one lever lowers a ladder and stops the lift that is the mandatory way, and a one-shot falling step guards a fireball refill; automated tests, played by the author on 2026-11-17); the combination with an enemy is built as a third room (#104, [D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15): a RedMob in a tunnel under a spore cloud, and a roof route with a refill; automated tests, played by the author on 2026-11-17). |
-| Swamp | Quicksand, unreliable footing, bridges, moving and falling platforms. | Ideas from the notes; distinguish its problems from forest switches. |
+| Swamp | Quicksand, unreliable footing, bridges, moving and falling platforms. The Forest's mosquito swarm returns, developed on Swamp ground (planned, [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646)). | Ideas from the notes; distinguish its problems from forest switches. |
 | Steppe | Wind as a spatial property: gusts, shelter, effects on movement and objects. | Wind accepted; directions, strength, cycles and interactions need design. |
 | Fortress | Carrying, placing and throwing a torch; light affects visibility and creatures. | Preferred prototype direction; complete rules not approved. |
 
@@ -652,8 +652,9 @@ below when the hero enters their awareness area (the hearing range).
 | Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. Built: the card below (D100). |
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
-| Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. |
+| Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. Not built yet: [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330). |
 | Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D115). |
+| Mosquito swarm (author's request, 2026-11-25) | A cloud of mosquitoes. Flies like the Bat: straight to and fro along an authored horizontal or vertical trajectory; it does not react to the hero. | Touching it kills, and so does landing on it (a stomp kills the hero, not the swarm). The sword only scatters it a little and it gathers back; only a thrown stone or a fireball kills it. Jump over it or go around it. Not built yet: [#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645); it returns in the Swamp, [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646). |
 
 The inherited RedMob and Bat keep their behaviour, frames, timing and boxes and were redrawn on 2026-11-21 in the danger
 family with a red of their own, apart from the bugs' crimson and rose (colours: [ART_DIRECTION.md](ART_DIRECTION.md), section 1,

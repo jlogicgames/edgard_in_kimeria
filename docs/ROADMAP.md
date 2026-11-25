@@ -188,6 +188,7 @@ material for testing and development without requiring immediate total rebuildin
 - [ ] [#107](https://github.com/jlogicgames/edgard_in_kimeria/issues/107) Check retries after falls, disappearing supports and linked-object
   changes: the puzzle must always become solvable again.
 - [ ] [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) Pick Swamp effects (quicksand, water, gas) once #105 chooses the mechanic.
+- [ ] [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646) Develop the Forest's mosquito swarm ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) in Swamp rooms once #105 chooses the mechanic.
 
 **Output:** Swamp has its own kind of solution. Changing forest art and switch
 appearance alone does not count as a new mechanic.
