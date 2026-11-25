@@ -101,6 +101,22 @@ class MenuSelectionArmsRenderTest {
         assertEquals(0, menu.selected, "wrapped back to the first row");
     }
 
+    /** The tighter rows of the Options list (#494): the arms stay centred in their own 36 px row at every selection. */
+    @Test void theArmsStayInsideTheRowsOfACompactMenu() {
+        Menu menu = new Menu(null, null, List.of(new MenuItem("Language", () -> { }), new MenuItem("Sound", () -> { }),
+            new MenuItem("Music", () -> { })), null, Overlay.BUTTON_W, Overlay.COMPACT_BUTTON_H, Overlay.COMPACT_BUTTON_GAP);
+        assertTrue(Overlay.COMPACT_BUTTON_H >= Overlay.SELECTION_ARMS_H);
+        assertEquals(3 * 36f + 2 * 5f, Overlay.buttonsHeight(menu));
+        float startY = 48f;
+        for (int selected = 0; selected < 3; selected++) {
+            frame(menu, startY);
+            float by = startY + selected * (Overlay.COMPACT_BUTTON_H + Overlay.COMPACT_BUTTON_GAP);
+            assertEquals(2, armsDraws.size(), "row " + selected);
+            for (float[] arm : armsDraws) assertTrue(arm[1] >= by && arm[1] + arm[3] <= by + Overlay.COMPACT_BUTTON_H, "row " + selected);
+            menu.moveSelection(1);
+        }
+    }
+
     @Test void noSelectionDrawsNoArms() {
         Menu menu = new Menu(null, null, List.of(new MenuItem(() -> "Hidden", () -> { }, () -> false)), null);
         frame(menu, 79f);

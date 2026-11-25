@@ -78,6 +78,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private static final float LOGICAL_W = 640f, LOGICAL_H = 360f;
     /** Controls screen (D135): title, then {@link ControlsView} from y 52 to 228, then the two buttons. */
     private static final float CONTROLS_TITLE_Y = 10f, CONTROLS_BUTTONS_Y = 236f;
+    /** Options (#494): the title's top, and the band between the title and the menu hint that its button list is centred in. */
+    static final float OPTIONS_TITLE_Y = 14f;
+    static final float OPTIONS_BAND_TOP = 46f, OPTIONS_BAND_BOTTOM = 332f;
     /**
      * Sprites the batch holds before it flushes: the most libGDX allows (4 vertices each, vertex indices are shorts, so at most 32767 / 4 = 8191).
      * The parallax layers draw about 4 200 tile regions a frame (#236), which a 1000-sprite batch flushed five times.
@@ -202,7 +205,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final Vector2 panFrom = new Vector2(), panTo = new Vector2();
     private float panDuration = 0f, panElapsed = 0f;
     private boolean cameraPanning = false;
-    private boolean playSounds = true;
+    /** The Options switches (#494): sound effects and music, loaded in {@link #create} and applied at once. */
+    private boolean playSounds = Settings.DEFAULT_SOUND, playMusic = Settings.DEFAULT_MUSIC;
     /** Name of the near-silent loop that keeps the audio output awake (#316); see {@link #updateAudioKeepAlive}. */
     static final String KEEPALIVE_SOUND = "keepalive";
     private static final String KEEPALIVE_PATH = "audio/keepalive.wav";
@@ -287,6 +291,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         trapWarnings.load(settings);
         screenShake = settings.get(Settings.SCREEN_SHAKE, !prefersReducedMotion);
         instantText = settings.get(Settings.INSTANT_TEXT);
+        loadAudioSwitches();
         savedProgress = new SavedProgress(settings.preferences(), LEVEL_NAMES.size());
         buildMenus();
         // Browsers block audio until the page gets a user gesture, so the web build opens on a
@@ -351,13 +356,20 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
                     + (pageFullscreen.active() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
                 pageFullscreen::toggle));
         }
+        optionItems.add(new MenuItem(
+            () -> Msg.SOUND_LABEL.t(language) + ": " + (playSounds ? Msg.ON : Msg.OFF).t(language),
+            this::toggleSound));
+        optionItems.add(new MenuItem(
+            () -> Msg.MUSIC_LABEL.t(language) + ": " + (playMusic ? Msg.ON : Msg.OFF).t(language),
+            this::toggleMusic));
         optionItems.add(new MenuItem(() -> Msg.CONTROLS.t(language), () -> {
             controlsMenu.selected = 0;
             uiState = UiState.CONTROLS;
         }));
         optionItems.add(new MenuItem(() -> Msg.ASSIST.t(language), () -> uiState = UiState.ASSIST));
         optionItems.add(new MenuItem(() -> Msg.BACK.t(language), this::backToMainMenu));
-        optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu);
+        optionsMenu = new Menu(() -> Msg.OPTIONS.t(language), null, optionItems, this::backToMainMenu,
+            Overlay.BUTTON_W, Overlay.COMPACT_BUTTON_H, Overlay.COMPACT_BUTTON_GAP);
 
         // D135: Left-handed lives on the Controls screen, which shows both hands so the switch explains itself.
         controlsMenu = new Menu(() -> Msg.CONTROLS.t(language), null, List.of(
@@ -411,6 +423,25 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void toggleLanguage() {
         language = language.next();
         settings.set(Settings.LANGUAGE, language);
+    }
+
+    /** The saved Sound and Music switches (#494), applied before anything plays. */
+    private void loadAudioSwitches() {
+        playSounds = settings.get(Settings.SOUND);
+        playMusic = settings.get(Settings.MUSIC);
+    }
+
+    /** Switches the sound effects and remembers the choice (#494). Off also ends every running loop. */
+    private void toggleSound() {
+        playSounds = !playSounds;
+        settings.set(Settings.SOUND, playSounds);
+        if (!playSounds) while (!loops.isEmpty()) stopSound(loops.keySet().iterator().next());
+    }
+
+    /** Switches the music and remembers the choice (#494); the next {@link #updateMenuMusic} stops or starts the track. */
+    private void toggleMusic() {
+        playMusic = !playMusic;
+        settings.set(Settings.MUSIC, playMusic);
     }
 
     /** Flips left-handed mode and remembers the choice; touch layout and key bindings read it live. */
@@ -1059,7 +1090,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void updateIntroMusic() {
-        float volume = playSounds ? soundVolume * intro.volume() : 0f;
+        float volume = playMusic ? soundVolume * intro.volume() : 0f;
         introMusic.setVolume(volume);
         if (volume > 0f && !introMusicPlaying) {
             introMusic.play();
@@ -1071,7 +1102,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     private void updateMenuMusic(float dt, boolean want) {
-        musicVolumeTarget = (want && playSounds) ? soundVolume : 0f;
+        musicVolumeTarget = (want && playMusic) ? soundVolume : 0f;
+        if (!playMusic) musicVolume = 0f; // a switched-off channel is silent at once, with no fade (#494)
         if (musicVolume < musicVolumeTarget) {
             musicVolume = Math.min(musicVolumeTarget, musicVolume + (1f / MUSIC_FADE_IN) * dt);
         } else if (musicVolume > musicVolumeTarget) {
@@ -1203,6 +1235,10 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             // Centre the button list in the space between the title and the hint line.
             float startY = titleBottom + (hintTop - titleBottom - Overlay.buttonsHeight(menu)) / 2f;
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
+        } else if (uiState == UiState.OPTIONS) {
+            // Seven rows (#494) leave no room for the panel layout below: the list takes the whole band between title and hint.
+            overlay.title(batch, menu.titleText(), cx, OPTIONS_TITLE_Y);
+            overlay.buttons(batch, menu, cx, optionsButtonsY(menu), mouse, clicked, confirm, back, onHover, onActivate);
         } else if (uiState == UiState.CONTROLS) {
             overlay.title(batch, menu.titleText(), cx, CONTROLS_TITLE_Y);
             controlsView.draw(batch, ControlsView.modeFor(touchControls.isAvailable(), gamepad.isConnected()), language, leftHanded);
@@ -1229,6 +1265,11 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
 
         overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - Overlay.HINT_BOTTOM_MARGIN);
+    }
+
+    /** Top of the Options list: centred in the band between the title and the menu hint. */
+    static float optionsButtonsY(Menu menu) {
+        return OPTIONS_BAND_TOP + (OPTIONS_BAND_BOTTOM - OPTIONS_BAND_TOP - Overlay.buttonsHeight(menu)) / 2f;
     }
 
     /** The About page shown: the game blurb (three paragraphs, D135) or the rules. */

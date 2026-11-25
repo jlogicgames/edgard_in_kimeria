@@ -39,12 +39,16 @@ import java.util.List;
  */
 public class Overlay {
     public static final float BUTTON_W = 220f, BUTTON_H = 40f, BUTTON_GAP = 8f;
+    /** The tighter rows of a long list (Options, #494): as tall as the selection arms, so these still sit inside the row. */
+    public static final float COMPACT_BUTTON_H = 36f, COMPACT_BUTTON_GAP = 5f;
     /**
      * #415: the selected button is marked by the Kimeria arms (24x36, native), one on each side, outside the gold frame
      * (3 px) with a 6 px gap, centred on the button's row. {@link #MAX_BUTTONS_W} keeps both inside the 640 px screen with an
      * 8 px margin: 640 - 2 * (8 + 3 + 6 + 24) = 558.
      */
     public static final float SELECTED_FRAME = 3f, SELECTION_ARMS_GAP = 6f;
+    /** The thin border of an unselected button. */
+    private static final float IDLE_FRAME = 1f;
     public static final float SELECTION_ARMS_W = KimeriaArms.WIDTH, SELECTION_ARMS_H = KimeriaArms.HEIGHT;
     public static final float SCREEN_MARGIN = 8f;
     public static final float MAX_BUTTONS_W = 640f - 2f * (SCREEN_MARGIN + SELECTED_FRAME + SELECTION_ARMS_GAP + SELECTION_ARMS_W);
@@ -311,9 +315,14 @@ public class Overlay {
         return buttonX + buttonW + SELECTED_FRAME + SELECTION_ARMS_GAP;
     }
 
-    /** Top edge (Y-down) of both arms beside a selected button whose top edge is {@code buttonY}: centred on its row. */
+    /** Top edge (Y-down) of both arms beside a selected button of the default height whose top edge is {@code buttonY}. */
     public static float selectionArmsTop(float buttonY) {
-        return buttonY + (BUTTON_H - SELECTION_ARMS_H) / 2f;
+        return selectionArmsTop(buttonY, BUTTON_H);
+    }
+
+    /** As above for a row {@code buttonH} tall: the arms are centred on it. */
+    public static float selectionArmsTop(float buttonY, float buttonH) {
+        return buttonY + (buttonH - SELECTION_ARMS_H) / 2f;
     }
 
     /**
@@ -321,7 +330,12 @@ public class Overlay {
      * draws allocate nothing; the rest of the menu frame still does (#464).
      */
     public void drawSelectionArms(Batch batch, float buttonX, float buttonY, float buttonW) {
-        float top = selectionArmsTop(buttonY), half = SELECTION_ARMS_W / 2f;
+        drawSelectionArms(batch, buttonX, buttonY, buttonW, BUTTON_H);
+    }
+
+    /** As above beside a row {@code buttonH} tall. */
+    public void drawSelectionArms(Batch batch, float buttonX, float buttonY, float buttonW, float buttonH) {
+        float top = selectionArmsTop(buttonY, buttonH), half = SELECTION_ARMS_W / 2f;
         arms.draw(batch, KimeriaArms.LIT, selectionArmsLeftX(buttonX) + half, top, 1);
         arms.draw(batch, KimeriaArms.LIT, selectionArmsRightX(buttonX, buttonW) + half, top, 1);
     }
@@ -329,7 +343,7 @@ public class Overlay {
     /** Height a button list for {@code menu} will occupy, for callers laying out a screen around it. */
     public static float buttonsHeight(Menu menu) {
         int n = menu.visibleCount();
-        return n * BUTTON_H + Math.max(0, n - 1) * BUTTON_GAP;
+        return n * menu.buttonHeight + Math.max(0, n - 1) * menu.buttonGap;
     }
 
     /**
@@ -365,7 +379,7 @@ public class Overlay {
                          Runnable onHover, Runnable onActivate) {
         int n = menu.items.size();
         menu.ensureVisibleSelection();
-        float buttonW = buttonsWidth(menu);
+        float buttonW = buttonsWidth(menu), buttonH = menu.buttonHeight;
         float bx = centerX - buttonW / 2f;
 
         // Only a real mouse move may pull the selection onto the button under the cursor. A cursor
@@ -377,10 +391,10 @@ public class Overlay {
         int row = 0;
         for (int i = 0; i < n; i++) {
             if (!menu.items.get(i).visible.getAsBoolean()) continue;
-            float by = startY + row++ * (BUTTON_H + BUTTON_GAP);
+            float by = startY + row++ * (buttonH + menu.buttonGap);
             boolean hovered = mouseLogical != null
                 && mouseLogical.x >= bx && mouseLogical.x <= bx + buttonW
-                && mouseLogical.y >= by && mouseLogical.y <= by + BUTTON_H;
+                && mouseLogical.y >= by && mouseLogical.y <= by + buttonH;
             if (hovered && mouseMoved && menu.selected != i) {
                 menu.selected = i;
                 onHover.run();
@@ -392,19 +406,19 @@ public class Overlay {
             // frame, gold label and the Kimeria arms outside it, #415). Hovered + selected stack.
             if (selected) {
                 batch.setColor(SELECTED_BORDER);
-                batch.draw(Shaders.whiteQuad(), bx - 3, by - 3, buttonW + 6, BUTTON_H + 6);
+                batch.draw(Shaders.whiteQuad(), bx - SELECTED_FRAME, by - SELECTED_FRAME, buttonW + 2 * SELECTED_FRAME, buttonH + 2 * SELECTED_FRAME);
             } else {
                 batch.setColor(IDLE_BORDER);
-                batch.draw(Shaders.whiteQuad(), bx - 1, by - 1, buttonW + 2, BUTTON_H + 2);
+                batch.draw(Shaders.whiteQuad(), bx - IDLE_FRAME, by - IDLE_FRAME, buttonW + 2 * IDLE_FRAME, buttonH + 2 * IDLE_FRAME);
             }
             batch.setColor(hovered ? HOVER_FILL : IDLE_FILL);
-            batch.draw(Shaders.whiteQuad(), bx, by, buttonW, BUTTON_H);
+            batch.draw(Shaders.whiteQuad(), bx, by, buttonW, buttonH);
             batch.setColor(Color.WHITE);
-            if (selected) drawSelectionArms(batch, bx, by, buttonW);
+            if (selected) drawSelectionArms(batch, bx, by, buttonW, buttonH);
 
             Color textColor = selected ? SELECTED_TEXT : hovered ? HOVER_TEXT : IDLE_TEXT;
             buttonLabel(batch, buttonFont, menu.items.get(i).label.get(), bx, by,
-                buttonW, BUTTON_H, textColor);
+                buttonW, buttonH, textColor);
 
             if (hovered && mouseClicked) {
                 onActivate.run();

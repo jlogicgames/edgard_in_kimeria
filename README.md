@@ -65,8 +65,8 @@ F7 restarts the hosted game, not the dev launcher/host.
 | Throw held object / fireball | L | Y (north button) |
 | Pause | Esc | Start |
 
-Touch devices show on-screen controls. Language is set in Options; the Controls screen there shows both hand layouts and holds
-the Left-handed switch. Empty-handed ranged attacks spend one fireball; object throws spend none.
+Touch devices show on-screen controls. Options sets the language and switches sound effects and music on or off, each saved
+separately; the Controls screen there shows both hand layouts and holds the Left-handed switch. Empty-handed ranged attacks spend one fireball; object throws spend none.
 Carry at most three charges. Two authored pickups restore one each on contact;
 a full stock leaves the pickup available and displays a local hint.
 See [directional controls](docs/DIRECTIONAL_CONTROLS.md) for both layouts and recovery rules.

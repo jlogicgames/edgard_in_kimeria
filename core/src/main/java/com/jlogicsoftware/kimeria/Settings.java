@@ -53,6 +53,17 @@ public final class Settings {
     public static final String KEY_INSTANT_TEXT = "instant-text";
     public static final boolean DEFAULT_INSTANT_TEXT = false;
 
+    /**
+     * Sound effects (Options, #494): every {@code Sound} the game plays, one-shot or looped. On by default. Not named
+     * {@code KEY_SOUND}: {@code SoundPreloadTest} reads every {@code *_SOUND} string constant as an effect's file name.
+     */
+    public static final String KEY_SOUND_ENABLED = "sound";
+    public static final boolean DEFAULT_SOUND = true;
+
+    /** Music (Options, #494): the menu track and the story track. On by default, independent of the sound effects. */
+    public static final String KEY_MUSIC = "music";
+    public static final boolean DEFAULT_MUSIC = true;
+
     /** Size of the window when the player opts out of fullscreen. */
     public static final int WINDOWED_WIDTH = 1280, WINDOWED_HEIGHT = 720;
 
@@ -68,6 +79,8 @@ public final class Settings {
         bool(KEY_LONGER_TRAP_WARNINGS, DEFAULT_LONGER_TRAP_WARNINGS);
     public static final Option<Boolean> SCREEN_SHAKE = bool(KEY_SCREEN_SHAKE, DEFAULT_SCREEN_SHAKE);
     public static final Option<Boolean> INSTANT_TEXT = bool(KEY_INSTANT_TEXT, DEFAULT_INSTANT_TEXT);
+    public static final Option<Boolean> SOUND = bool(KEY_SOUND_ENABLED, DEFAULT_SOUND);
+    public static final Option<Boolean> MUSIC = bool(KEY_MUSIC, DEFAULT_MUSIC);
 
     /** A typed key and its default/decoder; new options need no load/save wiring. */
     public static final class Option<T> {

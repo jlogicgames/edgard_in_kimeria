@@ -457,6 +457,19 @@ well above the 16-bit quantisation step. If it is audible on the author's device
 device still sleeps, raise it. **Not verified on hardware:** nobody has listened on macOS with the affected output (#316,
 open). It is never played by gameplay code and does not count as a sound effect in tests.
 
+## The Sound and Music switches ([D141](DECISIONS.md#d141-options-has-a-sound-switch-and-a-music-switch-494-2026-11-25), #494)
+
+Options has two independent switches, both on by default and saved in the player's preferences.
+
+| Switch | Silences | Where it is read |
+| --- | --- | --- |
+| **Sound** | every `.wav` effect played as a libGDX `Sound`: one-shots, loops (`wall_rumble`), the menu hover and click, the desktop keep-alive loop | `KimeriaGame.playSounds()` and the play methods behind it |
+| **Music** | the streamed `Music` tracks: `main_menu.mp3` and the story track `intro.wav` | `updateMenuMusic`, `updateIntroMusic` |
+
+Switching applies at once: Sound off also ends the running loops, Music off stops the track with no fade. A one-shot already
+playing (the click of the press that switched Sound off) ends by itself. A new effect goes through `KimeriaGame.playSound`
+or `loopSound`; a new music track reads the Music switch.
+
 ## Making a new sound
 
 1. In `tools/audio/generate_sounds.py` add a function with all parameters as named constants (with a comment)

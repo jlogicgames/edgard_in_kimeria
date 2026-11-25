@@ -18,7 +18,7 @@ public class Menu {
     public final Supplier<String> body;
     public final List<MenuItem> items;
     public final Runnable onBack;
-    public final float buttonWidth;
+    public final float buttonWidth, buttonHeight, buttonGap;
     public int selected = 0;
 
     public Menu(Supplier<String> title, Supplier<String> body, List<MenuItem> items, Runnable onBack) {
@@ -27,7 +27,15 @@ public class Menu {
 
     public Menu(Supplier<String> title, Supplier<String> body, List<MenuItem> items, Runnable onBack,
                 float buttonWidth) {
+        this(title, body, items, onBack, buttonWidth, Overlay.BUTTON_H, Overlay.BUTTON_GAP);
+    }
+
+    /** As above with its own row height (at least {@link Overlay#SELECTION_ARMS_H}) and gap, for a long list (Options, #494). */
+    public Menu(Supplier<String> title, Supplier<String> body, List<MenuItem> items, Runnable onBack,
+                float buttonWidth, float buttonHeight, float buttonGap) {
         this.buttonWidth = buttonWidth;
+        this.buttonHeight = buttonHeight;
+        this.buttonGap = buttonGap;
         this.title = title;
         this.body = body;
         this.items = items;
