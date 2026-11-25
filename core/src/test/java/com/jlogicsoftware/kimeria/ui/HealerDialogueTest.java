@@ -419,6 +419,56 @@ class HealerDialogueTest {
         font.dispose();
     }
 
+    private static BitmapFont dialogueFont(int size) {
+        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + size + ".fnt"), false);
+        return new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
+    }
+
+    /**
+     * D137 (#491): on a small picture the dialogue is the 20 px baked font. Every spoken line in five languages still fits the 556 px
+     * box in at most three of its four lines (one stays spare, as at 18 px; measured 2026-11-24: the longest line takes three), and
+     * four lines of 20 px (80) sit inside the taller box ({@code BOX_H_LARGE} 90, ink to y 313 of 316).
+     */
+    @Test void atTheLargeSizeEveryLocalizedLineStillFitsTheTextBoxWithOneLineSpare() {
+        assertEquals(4 * 20f, HealerDialogueView.TEXT_H_LARGE, .001f);
+        var font = dialogueFont(FontSizes.DIALOGUE_LARGE);
+        int mostLines = 0;
+        for (Language language : Language.values()) for (Msg message : Msg.values()) {
+            if (!isSpokenDialogueLine(message)) continue;
+            mostLines = Math.max(mostLines, assertLineFits(font, message.t(language), language, message));
+        }
+        assertEquals(3, mostLines, "the longest line wraps to three lines at 20 px too");
+        assertTrue(HealerDialogueView.TEXT_Y + HealerDialogueView.TEXT_H_LARGE <= HealerDialogueView.BOX_Y + HealerDialogueView.BOX_H_LARGE - 2f, "four 20 px lines inside the ink");
+        assertTrue(HealerDialogueView.HINT_Y_LARGE + FontSizes.DIALOGUE_LARGE <= HealerDialogueView.SCREEN_H - 6f, "the prompt clears the page border");
+        assertTrue(HealerDialogueView.BOX_Y + HealerDialogueView.BOX_H_LARGE + HealerDialogueView.BOX_BAND_OUT < HealerDialogueView.HINT_Y_LARGE, "the prompt sits under the box");
+        font.dispose();
+    }
+
+    /**
+     * D134 at the large size: the fourteen tale-pass lines take at most two lines at 18 px; at 20 px one of them, the German offer,
+     * takes three (still one of four lines spare). The exception is pinned, so no other line can grow into it unseen.
+     */
+    @Test void atTheLargeSizeOnlyTheGermanOfferOfTheTalePassTakesThreeLines() {
+        var font = dialogueFont(FontSizes.DIALOGUE_LARGE);
+        Msg[] passLines = {Msg.HEALER_GREETING, Msg.EDGARD_REPLY, Msg.HEALER_RETURN_GREETING, Msg.HEALER_RETURN_CHECK,
+            Msg.HEALER_INGREDIENTS, Msg.HEALER_BOTH, Msg.HEALER_PAYMENT, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
+            Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE};
+        for (Language language : Language.values()) for (Msg message : passLines) {
+            int lines = assertLineFits(font, message.t(language), language, message);
+            boolean exception = language == Language.GERMAN && message == Msg.HEALER_OFFER;
+            assertEquals(exception ? 3 : 2, Math.max(lines, 2) , language + " " + message + " takes " + lines + " lines at 20 px");
+        }
+        font.dispose();
+    }
+
+    /** D81 at the large size: the first-death line still takes two of the four lines in every language (measured 2026-11-24). */
+    @Test void atTheLargeSizeTheFirstDeathLineStillTakesTwoLines() {
+        var font = dialogueFont(FontSizes.DIALOGUE_LARGE);
+        for (Language language : Language.values())
+            assertEquals(2, assertLineFits(font, Msg.HEALER_FIRST_DEATH.t(language), language, Msg.HEALER_FIRST_DEATH), language + " HEALER_FIRST_DEATH");
+        font.dispose();
+    }
+
     /**
      * The typewriter's glyph map covers every glyph of every spoken line in all five languages, laid out as the view lays it
      * out: the whole line reveals at its last letter, none shows before the first. Its starting room is above the longest

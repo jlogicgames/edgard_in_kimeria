@@ -138,6 +138,14 @@ Write EN first and get the author's approval before translating; then all five c
 change. `python3 tools/check_text_style.py` (also `./gradlew validateTextStyle`, part of `:core:check`)
 and `./gradlew :core:test` must pass. Never add an allowlist entry for new text: fix the text.
 
+## Text has a minimum size on the screen (D137)
+
+The picture shrinks on a phone (0.61 CSS px per unit in portrait), so text is sized from the picture's scale, never from the
+device: below 1 CSS px per unit the label and body take their 18 px fonts and the dialogue its 20 px one (`ui.FontSizes`,
+`Assets.setLargeText`, `TouchLayout.cssPerUnit`), at least 11 CSS px on a 390 px portrait phone. A view that keeps a font or laid-out
+text compares `Assets.textGeneration()` and rebuilds when it moves; a new text box must fit both tiers (`LocalizationLayoutTest`
+runs both) and `TextMinimumSizeTest` must stay green. The touch buttons carry pictograms, not text (D138, `ui.TouchGlyph`); the portrait rotate hint is the one touch text left, measured in its own strip.
+
 ## Parallax layers (D108)
 
 The forest maps draw scenery layers (a tile layer with `parallaxx`/`parallaxy` or the property `scenery=true`) behind the play layer and a

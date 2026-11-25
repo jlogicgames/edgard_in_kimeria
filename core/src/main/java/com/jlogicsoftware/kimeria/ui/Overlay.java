@@ -58,10 +58,19 @@ public class Overlay {
     private static final Color HINT_GREY = new Color(0.8f, 0.8f, 0.8f, 1f);
     private static final Color SELECTED_TEXT = new Color(1f, 0.82f, 0.3f, 1f);
 
+    /**
+     * D137 (#491): the bottom of the menu hint's text stays this far above the screen's bottom edge (it was 6 units, hard against it: 3.7 CSS
+     * pixels on a 390 px portrait phone). 12 units is 7 CSS pixels there and 12 at one pixel per unit; the About page's buttons end
+     * 9 units above the hint's top, so it cannot go much higher.
+     */
+    public static final float HINT_BOTTOM_MARGIN = 12f;
+
+    private final Assets assets;
     private final BitmapFont titleFont;
-    private final BitmapFont bodyFont;
+    /** The body and label fonts follow the text tier (D137): refreshed by {@link #syncFonts} when {@link Assets#textGeneration()} moves. */
+    private BitmapFont bodyFont, hintFont;
+    private int fontsGeneration = -1;
     private final BitmapFont buttonFont;
-    private final BitmapFont hintFont;
     /** The story font of the intro book (D133) and its dark ink on the parchment leaves. */
     private final BitmapFont storyFont;
     private static final Color STORY_INK = new Color(0x2a / 255f, 0x1a / 255f, 0x10 / 255f, 1f);
@@ -88,11 +97,11 @@ public class Overlay {
      *             that never draws a button list may pass null.
      */
     public Overlay(Assets assets, float logicalWidth, float logicalHeight, KimeriaArms arms) {
+        this.assets = assets;
         titleFont = assets.font(FontSizes.TITLE);
-        bodyFont = assets.font(FontSizes.BODY);
         buttonFont = assets.font(FontSizes.BUTTON);
-        hintFont = assets.font(FontSizes.LABEL);
         storyFont = assets.font(FontSizes.STORY);
+        syncFonts();
         this.arms = arms;
         this.logicalHeight = logicalHeight;
 
@@ -100,6 +109,16 @@ public class Overlay {
         textCamera.setToOrtho(false, logicalWidth, logicalHeight); // standard Y-up
         textCamera.update();
         textProjection = textCamera.combined.cpy();
+    }
+
+    /** Takes the body and label fonts of the current text tier (D137); an int compare unless the tier changed, so it is called freely. */
+    private void syncFonts() {
+        int generation = assets.textGeneration();
+        if (generation == fontsGeneration) return;
+        fontsGeneration = generation;
+        boolean large = assets.largeText();
+        bodyFont = assets.font(FontSizes.body(large));
+        hintFont = assets.font(FontSizes.label(large));
     }
 
     /** Converts "distance from the top" (this class's convention) to the Y-up text camera's y. */
@@ -114,6 +133,7 @@ public class Overlay {
 
     /** Call once before any other method each frame the overlay is drawn. */
     public void beginFrame() {
+        syncFonts();
         textQueue.clear();
         blockQueue.clear();
         blockGlyphs.clear();
@@ -152,6 +172,7 @@ public class Overlay {
     }
 
     public void body(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth, Color color) {
+        syncFonts();
         GlyphLayout layout = new GlyphLayout(bodyFont, text, color, wrapWidth, Align.center, true);
         textQueue.add(() -> bodyFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
     }
@@ -162,6 +183,7 @@ public class Overlay {
      * {@code yFromTop} is the top of the first line, as for {@link #body}. Draw it with {@link #queueBlock}.
      */
     public BitmapFontCache bodyBlock(String text, float centerX, float yFromTop, float wrapWidth) {
+        syncFonts();
         GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.center, true);
         BitmapFontCache block = new BitmapFontCache(bodyFont, bodyFont.usesIntegerPositions());
         block.setText(layout, centerX - wrapWidth / 2f, toTextY(yFromTop));
@@ -174,6 +196,7 @@ public class Overlay {
      * wrap box and {@code yFromTop} the top of the first line (the Controls table, D135).
      */
     public BitmapFontCache textBlock(String text, float leftX, float yFromTop, float wrapWidth, int align, Color color) {
+        syncFonts();
         GlyphLayout layout = new GlyphLayout(bodyFont, text, color, wrapWidth, align, true);
         BitmapFontCache block = new BitmapFontCache(bodyFont, bodyFont.usesIntegerPositions());
         block.setText(layout, leftX, toTextY(yFromTop));
@@ -182,6 +205,7 @@ public class Overlay {
 
     /** Number of lines {@code text} wraps to at {@code wrapWidth} in the body font, for layout math. */
     public int bodyLines(String text, float wrapWidth) {
+        syncFonts();
         return new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.left, true).runs.size;
     }
 
@@ -208,6 +232,7 @@ public class Overlay {
      * {@link #queueBlock(BitmapFontCache, float)} (the intro's skip hint, D118). {@code yFromTop} is the top of the line.
      */
     public BitmapFontCache hintBlock(String text, float rightX, float yFromTop) {
+        syncFonts();
         GlyphLayout layout = new GlyphLayout(hintFont, text, HINT_GREY, 0f, Align.right, false);
         BitmapFontCache block = new BitmapFontCache(hintFont, hintFont.usesIntegerPositions());
         block.setText(layout, rightX, toTextY(yFromTop));
@@ -232,14 +257,16 @@ public class Overlay {
 
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */
     public float bodyHeight(String text, float wrapWidth) {
+        syncFonts();
         GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.center, true);
         return layout.height;
     }
 
     public void hint(SpriteBatch batch, String text, float centerX, float yFromTop) {
+        syncFonts();
         float width = centerX * 2f - 32f;
         GlyphLayout layout = new GlyphLayout(hintFont, text, Color.WHITE, width, Align.center, true);
-        float top = Math.min(yFromTop, logicalHeight - 6f - layout.height);
+        float top = hintTop(yFromTop, layout.height, logicalHeight);
         textQueue.add(() -> {
             hintFont.setColor(0.8f, 0.8f, 0.8f, 1f);
             hintFont.draw(batch, layout, centerX - width / 2f, toTextY(top));
@@ -247,8 +274,14 @@ public class Overlay {
         });
     }
 
+    /** Where the hint's first line starts: {@code requestedTop}, but never so low that the bottom of its text is nearer than {@link #HINT_BOTTOM_MARGIN} to the bottom edge. */
+    public static float hintTop(float requestedTop, float textHeight, float screenHeight) {
+        return Math.min(requestedTop, screenHeight - HINT_BOTTOM_MARGIN - textHeight);
+    }
+
     /** Right-aligned so a growing/shrinking string (a live FPS counter) doesn't drift across the screen. */
     public void topRight(SpriteBatch batch, String text, float rightX, float yFromTop) {
+        syncFonts();
         GlyphLayout layout = new GlyphLayout(hintFont, text);
         textQueue.add(() -> {
             hintFont.setColor(0.8f, 0.8f, 0.8f, 1f);

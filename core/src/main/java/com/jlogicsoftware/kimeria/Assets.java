@@ -23,6 +23,8 @@ public class Assets implements Disposable {
     private final Map<String, Texture> textures = new HashMap<>();
     private final Map<String, Sound> sounds = new HashMap<>();
     private final Map<String, BitmapFont> fonts = new HashMap<>();
+    private boolean largeText;
+    private int textGeneration;
 
     public Texture texture(String path) {
         return textures.computeIfAbsent(path, p -> {
@@ -134,6 +136,22 @@ public class Assets implements Disposable {
             return font;
         });
     }
+
+    /**
+     * D137 (#491): whether text is drawn in the large tier ({@link com.jlogicsoftware.kimeria.ui.FontSizes}), set by the game from the picture's
+     * scale each time the window changes. A view that keeps fonts or laid-out text compares {@link #textGeneration()} each frame and
+     * rebuilds when it moved.
+     */
+    public void setLargeText(boolean large) {
+        if (large == largeText) return;
+        largeText = large;
+        textGeneration++;
+    }
+
+    public boolean largeText() { return largeText; }
+
+    /** Counts the changes of {@link #largeText()}; an int compare, so a view can poll it every frame without allocating. */
+    public int textGeneration() { return textGeneration; }
 
     @Override
     public void dispose() {

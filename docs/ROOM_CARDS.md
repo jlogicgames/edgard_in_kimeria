@@ -120,7 +120,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 
 Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:snag` (D122), `Decor:crown`, `HangingVine`, `Torch`
 (decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (solid room walls, never grabbed since D121), `Collisions:Platform`
-(one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints`.
+(one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints` (a `Hint`'s `coach` property, D139, arms a step of the touch tutorial; it is not an element and needs no registry row).
 
 ## forest-0 (tutorial, play order 1)
 
@@ -138,7 +138,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | First learning | not measured (#135) |
 | Retry cost | none: the room has no hazard |
 | D26 | the exit is reachable with the lift stopped, running or stopped mid-air, or the lever never touched (D34, D127) |
-| Hints | walk, lever, exit, live controls label |
+| Hints | walk (`coach` stick-drag, touch text `HINT_TUTORIAL_WALK_TOUCH`, D139), lever, exit, live controls label (`coach` stick-up, D139) |
 | Status | D72 audit 2026-11-16: keep |
 | Decisions | D33, D34, D63, D127 |
 
@@ -214,7 +214,7 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | First learning | not measured (#135) |
 | Retry cost | about 7 s at worst |
 | D26 | the stone comes home when it falls or hits the lever (D39); the stump has a floor bypass (D47) |
-| Hints | throw, stump, exit, across |
+| Hints | throw, stump, exit, across, live controls label (`coach` ranged, D139) |
 | Status | D72 audit 2026-11-16: keep |
 | Decisions | D39, D47, D48 |
 

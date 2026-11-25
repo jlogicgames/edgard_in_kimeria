@@ -45,8 +45,14 @@ public final class HealerDialogueView {
     static final float TEXT_X = BOX_X + 18f, TEXT_W = BOX_W - 36f, TEXT_Y = BOX_Y + 7f;
     static final int TEXT_LINES = 4;
     static final float TEXT_H = TEXT_LINES * FontSizes.DIALOGUE;
+    /**
+     * D137 (#491): the large text tier draws the dialogue at 20 px, so four lines are 80 px, not 72, and the box grows by the 4 px
+     * more it needs (ink 7 + 80 + 2 = 89, drawn 90); the prompt under it moves down with it and still clears the page border.
+     */
+    static final float BOX_H_LARGE = 90f, TEXT_H_LARGE = TEXT_LINES * FontSizes.DIALOGUE_LARGE;
     static final float NOTCH_W = 13f, NOTCH_H = 8f, NOTCH_Y = BOX_Y - BOX_BAND_OUT - NOTCH_H + 1f;
-    static final float HINT_Y = BOX_Y + BOX_H + BOX_BAND_OUT + 4f;
+    static final float HINT_GAP = BOX_BAND_OUT + 4f;
+    static final float HINT_Y = BOX_Y + BOX_H + HINT_GAP, HINT_Y_LARGE = BOX_Y + BOX_H_LARGE + HINT_GAP;
     static final float PAGE_INSET = 10f;
     /** The middle column between the windows: the checklist and the choices of the pre-boss stop. */
     public static final float MIDDLE_X = EDGARD_WINDOW_X + WINDOW + 8f, MIDDLE_W = HEALER_WINDOW_X - MIDDLE_X - 8f;
@@ -113,6 +119,9 @@ public final class HealerDialogueView {
     private Patch windowLit, windowDim, plateLit, plateDim, box, page, choiceIdle, choiceSelected;
     private TextureRegion crestLit, crestDim, notch, thread, glint;
     private BitmapFont font;
+    /** The text tier (D137) the font and the blocks were built for, and the box and prompt geometry that goes with it. */
+    private int fontGeneration = -1;
+    private float boxH = BOX_H, hintY = HINT_Y;
     // D132: the flights of this screen (created with the art, on the first render).
     private FlightFx flights;
     private SoftGlowFx fairyLight, elixirLight;
@@ -185,6 +194,7 @@ public final class HealerDialogueView {
     public void render(Batch batch, Overlay overlay, HealerDialogue dialogue, Language lang,
                        Level level, ArtifactInventory inventory) {
         load();
+        syncText();
         if (dialogue != flightsFor) beginDialogue(dialogue); // update runs only while a dialogue is live: a new one must not draw the last one's fairy or icons for its first frame
         boolean edgardSpeaking = dialogue.edgardSpeaking();
         float open = Math.min(1f, dialogue.openProgress());
@@ -212,9 +222,9 @@ public final class HealerDialogueView {
         }
 
         float boxOpen = Math.min(1f, open / BOX_OPEN);
-        float boxH = Math.max(BOX_INSET * 2f, (BOX_H + BOX_BAND_OUT * 2f) * boxOpen);
-        float boxY = BOX_Y - BOX_BAND_OUT + (BOX_H + BOX_BAND_OUT * 2f - boxH) / 2f;
-        box.draw(batch, BOX_X - BOX_BAND_OUT, boxY, BOX_W + BOX_BAND_OUT * 2f, boxH);
+        float drawnH = Math.max(BOX_INSET * 2f, (boxH + BOX_BAND_OUT * 2f) * boxOpen);
+        float boxY = BOX_Y - BOX_BAND_OUT + (boxH + BOX_BAND_OUT * 2f - drawnH) / 2f;
+        box.draw(batch, BOX_X - BOX_BAND_OUT, boxY, BOX_W + BOX_BAND_OUT * 2f, drawnH);
         if (boxOpen >= 1f) batch.draw(notch, Math.round(speakerCentreX(edgardSpeaking) - NOTCH_W / 2f), NOTCH_Y, NOTCH_W, NOTCH_H);
 
         if (open < 1f) return; // text, choices and the checklist come once the frame is whole
@@ -400,7 +410,7 @@ public final class HealerDialogueView {
             centred(healerName, overlay, Msg.HEALER.t(lang), HEALER_WINDOW_X + (WINDOW - PLATE_W) / 2f, NAME_Y, PLATE_W, HEALER_GREEN);
             String hint = Msg.HEALER_HINT.t(lang);
             layout.setText(font, hint, HINT, TEXT_W, Align.right, false);
-            hintBlock.setText(layout, TEXT_X, overlay.textY(HINT_Y));
+            hintBlock.setText(layout, TEXT_X, overlay.textY(hintY));
             List<HealerDialogue.Choice> choices = dialogue.choices();
             for (int i = 0; i < choices.size(); i++) {
                 String label = choiceLabel(choices.get(i)).t(lang);
@@ -555,7 +565,24 @@ public final class HealerDialogueView {
         ItemType[] rowTypes = {ItemType.BAT, ItemType.MUSHROOM, ItemType.COIN};
         for (int i = 0; i < ROWS; i++) itemIcon[i] = assets.region("images/HUD/" + (rowTypes[i] == ItemType.COIN ? "coin" : rowTypes[i].iconName()) + ".png", Texture.TextureFilter.Linear);
         elixirArt = assets.region("images/ui/boss/elixir.png", 0, 0, ELIXIR_ART, ELIXIR_ART);
-        font = assets.font(FontSizes.DIALOGUE);
+        syncText();
+    }
+
+    /**
+     * Takes the dialogue font of the current text tier (D137) and builds the text blocks for it; a no-op while the tier is the one
+     * they were built for. A tier change (a window resized across the scale limit, a tablet turned) empties the block memory, so the
+     * next {@link #rebuildBlocks} lays every line, name, choice and the checklist out again. An event, never per frame.
+     */
+    private void syncText() {
+        int generation = assets.textGeneration();
+        if (generation == fontGeneration) return;
+        fontGeneration = generation;
+        boolean large = assets.largeText();
+        font = assets.font(FontSizes.dialogue(large));
+        boxH = large ? BOX_H_LARGE : BOX_H;
+        hintY = large ? HINT_Y_LARGE : HINT_Y;
+        blockLanguage = null; blockDialogue = null; blockChecklist = null; blockLine = null;
+        choicesSelected = -1; namesLit = -1;
         boolean integer = font.usesIntegerPositions();
         lineBlock = new BitmapFontCache(font, integer);
         edgardName = new BitmapFontCache(font, integer);

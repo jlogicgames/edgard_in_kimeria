@@ -90,8 +90,9 @@ fireballs use three fixed icons without a number, with spent charges darkened.
 Fireball stock is at the top right in release launches. Development launches
 reserve the far-right column for FPS and shift stock left to avoid overlap.
 Pickup requires contact within a 3 px tolerance;
-touch labels also distinguish sword, pickup, put-down, no action, mechanism, throw
-and fireball.
+the touch buttons show a pictogram for the sword and, on the Ranged button, for throw,
+fireball and empty (D138); the labels above the hero distinguish pickup, put-down, mechanism and climb.
+On a touch screen the first rooms of the forest tutorial also show a hand dragging the stick, a hand pushing it up at the lever and a ring round the Ranged button while a stone is carried (D139); a keyboard or gamepad player never sees them.
 A new/continued run starts with three charges, the maximum held at once. Stock
 persists between the two Forest levels and restores to room
 entry stock on death. Sword and fireballs can damage the boss. Full behavior, target

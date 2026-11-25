@@ -23,12 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class ControlsViewTest {
     private static final double DRAW_CEILING_BYTES_PER_FRAME = 0.5;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
+    private Assets assets;
     private Overlay overlay;
     private ControlsView view;
 
     @BeforeEach void setUp() {
         harness.setUp();
-        Assets assets = new Assets() {
+        assets = new Assets() {
             @Override public BitmapFont font(int size) { return new MetricsFont(size); }
             @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
         };
@@ -82,25 +83,33 @@ class ControlsViewTest {
         assertEquals("Start", rows[7][1]);
     }
 
+    /** Both text tiers (D137): the nominal 16 px body and the large 18 px one a small picture uses must fit. */
     @Test void everyModeFitsBetweenTheTitleAndTheButtonsInEveryLanguage() {
-        for (Language language : Language.values())
-            for (ControlsView.Mode mode : ControlsView.Mode.values()) {
-                float bottom = view.tableBottom(mode, language);
-                if (mode == ControlsView.Mode.TOUCH) bottom = ControlsView.TOP + ControlsView.HEADER_H + ControlsView.PHONE_H + 8f
-                    + overlay.bodyLines(Msg.STICK_HINT.t(language), ControlsView.HINT_W) * ControlsView.LINE_H;
-                assertTrue(bottom <= ControlsView.MAX_BOTTOM, language.code() + " " + mode + " ends at " + bottom);
-            }
+        for (boolean large : new boolean[]{false, true}) {
+            assets.setLargeText(large);
+            for (Language language : Language.values())
+                for (ControlsView.Mode mode : ControlsView.Mode.values()) {
+                    float bottom = view.tableBottom(mode, language);
+                    if (mode == ControlsView.Mode.TOUCH) bottom = ControlsView.TOP + ControlsView.HEADER_H + ControlsView.PHONE_H + 8f
+                        + overlay.bodyLines(Msg.STICK_HINT.t(language), ControlsView.HINT_W) * ControlsView.LINE_H;
+                    assertTrue(bottom <= ControlsView.MAX_BOTTOM, (large ? "large " : "") + language.code() + " " + mode + " ends at " + bottom);
+                }
+        }
     }
 
     @Test void everyCellFitsItsColumnOnOneOrTwoLines() {
-        float cell = ControlsView.CELL_W;
-        for (Language language : Language.values())
-            for (ControlsView.Mode mode : new ControlsView.Mode[]{ControlsView.Mode.KEYBOARD, ControlsView.Mode.GAMEPAD})
-                for (String[] row : ControlsView.rows(mode, language)) {
-                    assertTrue(overlay.bodyLines(row[0], ControlsView.LABEL_W) <= ControlsView.MAX_CELL_LINES, language.code() + " " + row[0]);
-                    assertTrue(overlay.bodyLines(row[1], cell) <= ControlsView.MAX_CELL_LINES, language.code() + " " + row[1]);
-                    assertTrue(overlay.bodyLines(row[2], cell) <= ControlsView.MAX_CELL_LINES, language.code() + " " + row[2]);
-                }
+        for (boolean large : new boolean[]{false, true}) {
+            assets.setLargeText(large);
+            float cell = view.cellWidth();
+            for (Language language : Language.values())
+                for (ControlsView.Mode mode : new ControlsView.Mode[]{ControlsView.Mode.KEYBOARD, ControlsView.Mode.GAMEPAD})
+                    for (String[] row : ControlsView.rows(mode, language)) {
+                        String tier = large ? "large " : "";
+                        assertTrue(overlay.bodyLines(row[0], view.labelWidth()) <= ControlsView.MAX_CELL_LINES, tier + language.code() + " " + row[0]);
+                        assertTrue(overlay.bodyLines(row[1], cell) <= ControlsView.MAX_CELL_LINES, tier + language.code() + " " + row[1]);
+                        assertTrue(overlay.bodyLines(row[2], cell) <= ControlsView.MAX_CELL_LINES, tier + language.code() + " " + row[2]);
+                    }
+        }
     }
 
     @Test void drawingEveryModeAndHandAllocatesNothingPerFrame() {

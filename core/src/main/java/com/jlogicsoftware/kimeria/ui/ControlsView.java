@@ -33,7 +33,8 @@ public final class ControlsView {
     private static final float STICK_INSET = 44f, KNOB_DRAW = 22f, STICK_LIFT = 8f, STICK_LABEL_LIFT = 22f;
     public static final float BUTTON_LABEL_W = 96f;
     private static final float BUTTON_INSET = 34f, BUTTON_TOP = 20f, BUTTON_STEP = 36f, BUTTON_LABEL_GAP = 24f, BUTTON_LABEL_LIFT = 9f;
-    private static final int BLOCK_CAPACITY = 64, HANDS = 2, LABEL_COLUMN = 0, RIGHT_COLUMN = 1, LEFT_COLUMN = 2, BUTTON_COUNT = 3, HINT_LINES = 2;
+    private static final int BLOCK_CAPACITY = 64, HANDS = 2, LABEL_COLUMN = 0, RIGHT_COLUMN = 1, LEFT_COLUMN = 2, BUTTON_COUNT = 3, HINT_LINES = 2,
+        ACTION_BUTTON = 0, RANGED_BUTTON = 1, JUMP_BUTTON = 2;
     private static final float HINT_X = 40f, HINT_GAP = 8f;
     /** Source size of the touch art cut for the preview (the same files {@code TouchControls} cuts). */
     private static final int BASE_ART = TouchControls.BUTTON_ART_SIZE, KNOB_ART = (int) TouchControls.KNOB_SIZE;
@@ -42,6 +43,12 @@ public final class ControlsView {
     /** Wrap width of a hand header (the column minus one pad). */
     public static final float HEADER_W = 162f;
     private static final float BORDER = 1f, BORDER_BOTH = 2f, PANEL_TOP_PAD = 4f;
+    /**
+     * D137 (#491): the table's columns with the large 18 px body (a small picture): the wider hand cells keep "Left stick / D-pad up" on one
+     * line in uk, pl, de and be (179 px of 182), so the eight rows still end above the buttons. Same order as the nominal constants above.
+     */
+    public static final float LABEL_X_LARGE = 16f, LABEL_W_LARGE = 176f, RIGHT_X_LARGE = 208f, LEFT_X_LARGE = 414f, COLUMN_W_LARGE = 198f,
+        CELL_W_LARGE = COLUMN_W_LARGE - 2f * CELL_PAD, HEADER_W_LARGE = COLUMN_W_LARGE - CELL_PAD;
     /** Longest text cell or label, in lines, the table accepts ({@code ControlsViewTest}). */
     public static final int MAX_CELL_LINES = 2;
 
@@ -51,20 +58,49 @@ public final class ControlsView {
     private static final Color DIM_BORDER = new Color(0.24f, 0.24f, 0.28f, 1f);
     private static final Color DIMMED_ART = new Color(1f, 1f, 1f, 0.4f);
 
+    private final Assets assets;
     private final Overlay overlay;
-    private final TextureRegion stickBase, stickKnob, disc;
+    /** The three preview buttons top to bottom, drawn with the same pictograms the phone shows (D138): Action, Ranged, Jump. */
+    private final TextureRegion stickBase, stickKnob;
+    private final TextureRegion[] buttons = new TextureRegion[BUTTON_COUNT];
     private final Array<BitmapFontCache> blocks = new Array<>(false, BLOCK_CAPACITY);
     private Mode builtMode;
     private Language builtLanguage;
     private boolean builtLeft, built;
+    /** The text tier (D137) the blocks were laid out for; a change lays them out again. */
+    private int builtTextGeneration;
     private float tableBottom;
+    /** The columns for the current text tier, set by {@link #fit}. */
+    private float labelX = LABEL_X, labelW = LABEL_W, rightX = RIGHT_X, leftX = LEFT_X, columnW = COLUMN_W, cellW = CELL_W, headerW = HEADER_W;
 
     public ControlsView(Assets assets, Overlay overlay) {
+        this.assets = assets;
         this.overlay = overlay;
         stickBase = assets.region(ART + "base.png", 0, 0, BASE_ART, BASE_ART);
         stickKnob = assets.region(ART + "knob.png", 0, 0, KNOB_ART, KNOB_ART);
-        disc = assets.region(ART + "disc.png", 0, 0, BASE_ART, BASE_ART);
+        buttons[ACTION_BUTTON] = assets.region(ART + TouchGlyph.SWORD.artName() + ".png", 0, 0, BASE_ART, BASE_ART);
+        buttons[RANGED_BUTTON] = assets.region(ART + TouchGlyph.FIREBALL.artName() + ".png", 0, 0, BASE_ART, BASE_ART);
+        buttons[JUMP_BUTTON] = assets.region(ART + "jump.png", 0, 0, BASE_ART, BASE_ART);
     }
+
+    /** Takes the columns of the current text tier (D137); plain assignments, so it costs nothing per frame. */
+    private void fit() {
+        boolean large = assets.largeText();
+        labelX = large ? LABEL_X_LARGE : LABEL_X;
+        labelW = large ? LABEL_W_LARGE : LABEL_W;
+        rightX = large ? RIGHT_X_LARGE : RIGHT_X;
+        leftX = large ? LEFT_X_LARGE : LEFT_X;
+        columnW = large ? COLUMN_W_LARGE : COLUMN_W;
+        cellW = large ? CELL_W_LARGE : CELL_W;
+        headerW = large ? HEADER_W_LARGE : HEADER_W;
+    }
+
+    /** The width of a hand cell and of a row's label in the current text tier, for the tests that measure them. */
+    public float cellWidth() { fit(); return cellW; }
+
+    public float labelWidth() { fit(); return labelW; }
+
+    public float headerWidth() { fit(); return headerW; }
 
     /** Touch first, then a connected pad, else the keyboard (the intro's skip hint picks its device the same way, D118). */
     public static Mode modeFor(boolean touch, boolean padConnected) {
@@ -99,31 +135,33 @@ public final class ControlsView {
 
     /** Bottom edge of the table in screen pixels for the rows' wrapped height; a test keeps it at or above {@link #MAX_BOTTOM}. */
     public float tableBottom(Mode mode, Language l) {
+        fit();
         float y = TOP + HEADER_H;
         for (String[] row : rows(mode, l)) y += rowLines(row) * LINE_H;
         return y;
     }
 
     private int rowLines(String[] row) {
-        int lines = Math.max(1, overlay.bodyLines(row[LABEL_COLUMN], LABEL_W));
-        lines = Math.max(lines, overlay.bodyLines(row[RIGHT_COLUMN], CELL_W));
-        return Math.max(lines, overlay.bodyLines(row[LEFT_COLUMN], CELL_W));
+        int lines = Math.max(1, overlay.bodyLines(row[LABEL_COLUMN], labelW));
+        lines = Math.max(lines, overlay.bodyLines(row[RIGHT_COLUMN], cellW));
+        return Math.max(lines, overlay.bodyLines(row[LEFT_COLUMN], cellW));
     }
 
     private void rebuild(Mode mode, Language l, boolean left) {
+        fit();
         blocks.clear();
         Color rightColor = left ? DIM : ACTIVE, leftColor = left ? ACTIVE : DIM;
-        blocks.add(overlay.textBlock(Msg.RIGHT_HAND.t(l), RIGHT_X, TOP, HEADER_W, Align.left, left ? DIM : GOLD));
-        blocks.add(overlay.textBlock(Msg.LEFT_HAND.t(l), LEFT_X, TOP, HEADER_W, Align.left, left ? GOLD : DIM));
+        blocks.add(overlay.textBlock(Msg.RIGHT_HAND.t(l), rightX, TOP, headerW, Align.left, left ? DIM : GOLD));
+        blocks.add(overlay.textBlock(Msg.LEFT_HAND.t(l), leftX, TOP, headerW, Align.left, left ? GOLD : DIM));
         if (mode == Mode.TOUCH) {
             buildTouch(l, left);
             return;
         }
         float y = TOP + HEADER_H;
         for (String[] row : rows(mode, l)) {
-            blocks.add(overlay.textBlock(row[LABEL_COLUMN], LABEL_X, y, LABEL_W, Align.left, LABEL));
-            blocks.add(overlay.textBlock(row[RIGHT_COLUMN], RIGHT_X, y, CELL_W, Align.left, rightColor));
-            blocks.add(overlay.textBlock(row[LEFT_COLUMN], LEFT_X, y, CELL_W, Align.left, leftColor));
+            blocks.add(overlay.textBlock(row[LABEL_COLUMN], labelX, y, labelW, Align.left, LABEL));
+            blocks.add(overlay.textBlock(row[RIGHT_COLUMN], rightX, y, cellW, Align.left, rightColor));
+            blocks.add(overlay.textBlock(row[LEFT_COLUMN], leftX, y, cellW, Align.left, leftColor));
             y += rowLines(row) * LINE_H;
         }
         tableBottom = y;
@@ -151,23 +189,24 @@ public final class ControlsView {
     public float bottom() { return tableBottom; }
 
     public void draw(Batch batch, Mode mode, Language language, boolean leftHanded) {
-        if (!built || mode != builtMode || language != builtLanguage || leftHanded != builtLeft) {
+        if (!built || mode != builtMode || language != builtLanguage || leftHanded != builtLeft || assets.textGeneration() != builtTextGeneration) {
             rebuild(mode, language, leftHanded);
             built = true;
+            builtTextGeneration = assets.textGeneration();
             builtMode = mode;
             builtLanguage = language;
             builtLeft = leftHanded;
         }
         if (mode == Mode.TOUCH) drawPhones(batch, leftHanded);
         else {
-            panel(batch, RIGHT_X - CELL_PAD, !leftHanded, tableBottom);
-            panel(batch, LEFT_X - CELL_PAD, leftHanded, tableBottom);
+            panel(batch, rightX - CELL_PAD, !leftHanded, tableBottom);
+            panel(batch, leftX - CELL_PAD, leftHanded, tableBottom);
         }
         for (int i = 0; i < blocks.size; i++) overlay.queueBlock(blocks.get(i), 1f);
     }
 
     private void panel(Batch batch, float x, boolean active, float bottom) {
-        quad(batch, x, TOP - PANEL_TOP_PAD, COLUMN_W, bottom - TOP + PANEL_TOP_PAD, active ? GOLD : DIM_BORDER, active ? LIT_FILL : DIM_FILL);
+        quad(batch, x, TOP - PANEL_TOP_PAD, columnW, bottom - TOP + PANEL_TOP_PAD, active ? GOLD : DIM_BORDER, active ? LIT_FILL : DIM_FILL);
     }
 
     private static void quad(Batch batch, float x, float y, float w, float h, Color border, Color fill) {
@@ -188,7 +227,7 @@ public final class ControlsView {
             batch.draw(stickBase, stickX - STICK / 2f, stickY - STICK / 2f, STICK, STICK);
             batch.draw(stickKnob, stickX - KNOB_DRAW / 2f, stickY - KNOB_DRAW / 2f, KNOB_DRAW, KNOB_DRAW);
             float buttonX = stickLeft ? x + PHONE_W - BUTTON_INSET : x + BUTTON_INSET;
-            for (int i = 0; i < BUTTON_COUNT; i++) batch.draw(disc, buttonX - BUTTON / 2f, y + BUTTON_TOP + i * BUTTON_STEP - BUTTON / 2f, BUTTON, BUTTON);
+            for (int i = 0; i < BUTTON_COUNT; i++) batch.draw(buttons[i], buttonX - BUTTON / 2f, y + BUTTON_TOP + i * BUTTON_STEP - BUTTON / 2f, BUTTON, BUTTON);
             batch.setColor(Color.WHITE);
         }
     }

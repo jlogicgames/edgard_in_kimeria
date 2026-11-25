@@ -23,7 +23,10 @@ public final class BossHud {
     /** How far the elixir icon sits above the label row (Y-down: subtracted from LABEL_TOP, so it is drawn higher). */
     private static final float ELIXIR_RISE = 2;
     private final TextureRegion frame, filled, empty, elixir;
-    private final BitmapFont font;
+    private final Assets assets;
+    /** The label font of the current text tier (D137); refreshed by {@link #syncFonts} when {@link Assets#textGeneration()} moves. */
+    private BitmapFont font;
+    private int fontsGeneration = -1;
     private final GameContext game;
     private final Matrix4 textProjection;
     /** The batch's projection while the label uses {@link #textProjection}; a field so no frame copies a matrix. */
@@ -31,6 +34,7 @@ public final class BossHud {
     private final float logicalWidth, logicalHeight;
 
     public BossHud(Assets assets, GameContext game, Matrix4 textProjection, float width, float height) {
+        this.assets = assets;
         this.game = game;
         this.textProjection = textProjection;
         logicalWidth = width;
@@ -39,7 +43,15 @@ public final class BossHud {
         filled = assets.region(ART + "segment-filled.png", 0, 0, SEGMENT_WIDTH, SEGMENT_HEIGHT);
         empty = assets.region(ART + "segment-empty.png", 0, 0, SEGMENT_WIDTH, SEGMENT_HEIGHT);
         elixir = assets.region(ART + "elixir.png", 0, 0, (int) ELIXIR_SIZE, (int) ELIXIR_SIZE);
-        font = assets.font(FontSizes.LABEL);
+        syncFonts();
+    }
+
+    /** Takes the label font of the current text tier (D137); an int compare unless the tier changed. */
+    private void syncFonts() {
+        int generation = assets.textGeneration();
+        if (generation == fontsGeneration) return;
+        fontsGeneration = generation;
+        font = assets.font(FontSizes.label(assets.largeText()));
     }
 
     private static void glow(Batch batch, TextureRegion art, float x, float y, float width, float height) {
@@ -52,6 +64,7 @@ public final class BossHud {
 
     public void render(Batch batch, Boss boss, boolean empowered) {
         if (boss == null) return;
+        syncFonts();
         Color tint = batch.getColor();
         float beforeR = tint.r, beforeG = tint.g, beforeB = tint.b, beforeA = tint.a;
         float x = (logicalWidth - FRAME_WIDTH) / 2f;

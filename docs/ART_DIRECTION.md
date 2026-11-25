@@ -1522,6 +1522,33 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 - **Portrait facing:** both portraits face the viewer for now (author, 2026-11-16); the healer is never mirrored, since
   that would move his staff to the other hand.
 
+## HUD touch art (D55, D138, D139)
+
+The touch controls are HUD art (separate 64x64 and 32x32 baked sprites, linear filter, never a world sprite). Source grids live in
+`art/hud/touch/`, are exported by `tools/touch_control_sprites.py` to `assets/images/HUD/touch/`, and are registered in
+`tools/sprite_layouts.py` (`TOUCH_CONTROL_SIZES`); the contact sheet is `docs/references/touch-controls-art.png`.
+
+- **Style (D55):** a cream disc (`fdf3d0`, shade `d2bf84`) inside a 2 px white ring and a dark navy outline (`14122b`), 94% opaque, so it reads on the dark
+  strip, the night sky and the ground; the pressed disc is amber (`ffc83a`, shade `c98a10`) and drawn 8% smaller. Glyphs are dark navy; slate
+  `3f4670` is the one allowed accent. No new colour.
+- **Pictograms on the Action and Ranged buttons (D138, [#492](https://github.com/jlogicgames/edgard_in_kimeria/issues/492)):** the buttons carry no text. One glyph per state
+  (`ui.TouchGlyph`): the sword (Action, always), the solid flame with two speed ticks (Ranged, fireball), the stone on a dotted arc with an arrowhead
+  (Ranged, carrying), the hollow dashed flame outline in slate (Ranged, empty). Each is a 64x64 disc face with the glyph centred, idle and `-down`, drawn as
+  a full-width grid frame (never a mirrored half: the glyphs are asymmetric and are not mirrored in left-handed mode).
+- **Rules for a new glyph:** keep it inside 36x36 art px (the cream face is 54 px wide), every stroke, dot and tick at least 4 px (the Ranged button is
+  drawn at 0.85 and a 640x360 touch picture at 0.755, so 4 px is 2.6 px at the smallest), contrast against its face at least 7:1 on cream and amber
+  (slate on amber is 5.9:1, so a slate glyph turns navy when pressed), and a **shape** that no other glyph shares, so no state relies on colour
+  alone. A new state needs its two PNGs, its grids and a `TouchGlyph` constant; `TouchGlyphArtTest` fails without them.
+- **Look at it:** open the contact sheet and the exported PNGs at 1x, at 0.85 and at 0.755 before asking for approval; a glyph that needs the 3x
+  zoom to be understood is redrawn.
+- **Touch tutorial art (D139, [#496](https://github.com/jlogicgames/edgard_in_kimeria/issues/496)):** four more HUD sprites in the same pipeline, registered in
+  `TOUCH_CONTROL_SIZES`, drawn by `TouchControls.drawCoach` over the cluster: `hand` and `hand-down` (32x32; a cream pointing hand, navy outline, amber cuff;
+  the pressed hand has the finger bent shorter and three amber press rays; the fingertip hotspot is at (13, 2) idle and (13, 5) pressed, the constants
+  `HAND_TIP_*` of `TouchControls`), `chevron` (16x16, amber with a navy outline, pointing right; code rotates it for up), `ring` (64x64, amber and hollow,
+  outer radius 31, so it clears the Ranged button and the pictogram shows through). The same eight colours as the buttons (cream and shade, amber and
+  shade, navy). The hand is the only art that is flipped in code, for the left-handed layout; the drag it shows is always to the screen's right. Each
+  reads on the dark bar, the night background and the ground at 3:1 by its fill or its outline (`TouchCoachArtTest`). Timing and conditions: D139.
+
 ## Boss health bar (playtest 2 F31, [#543](https://github.com/jlogicgames/edgard_in_kimeria/issues/543))
 
 Author approved variant A, 2026-11-24 (an iron plate with ruby segments). The bar was a hair-line frame with two flat slabs and read as ceiling

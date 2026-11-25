@@ -30,6 +30,7 @@ import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.input.GamepadInput;
 import com.jlogicsoftware.kimeria.input.IntroInput;
 import com.jlogicsoftware.kimeria.ui.ControlsView;
+import com.jlogicsoftware.kimeria.ui.FontSizes;
 import com.jlogicsoftware.kimeria.ui.FpsLabel;
 import com.jlogicsoftware.kimeria.ui.IntroScreen;
 import com.jlogicsoftware.kimeria.ui.KimeriaArms;
@@ -41,7 +42,9 @@ import com.jlogicsoftware.kimeria.localization.Localization;
 import com.jlogicsoftware.kimeria.localization.Msg;
 import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.PlayfieldViewport;
+import com.jlogicsoftware.kimeria.ui.TouchCoach;
 import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.ui.TouchGlyph;
 import com.jlogicsoftware.kimeria.ui.TouchLayout;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
@@ -727,6 +730,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Portrait phones: picture pinned to the top, the strip below it belongs to the touch controls (#226).
         touchLayout.setPixelRatio(pageFullscreen != null ? pageFullscreen.pixelRatio() : 1f);
         touchLayout.update(width, height, touchControls != null && touchControls.isAvailable());
+        // D137 (#491): text takes its large tier whenever the picture is shown smaller than it was drawn for, phone or not.
+        if (assets != null) assets.setLargeText(FontSizes.large(touchLayout.cssPerUnit()));
         for (Viewport v : new Viewport[]{viewport, uiViewport}) {
             ((PlayfieldViewport) v).setTopAligned(touchLayout.portrait());
             ((PlayfieldViewport) v).setMaxScale(touchLayout.pictureScale());
@@ -1221,7 +1226,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
             overlay.buttons(batch, menu, cx, y, mouse, clicked, confirm, back, onHover, onActivate);
         }
 
-        overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - 12);
+        overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - Overlay.HINT_BOTTOM_MARGIN);
     }
 
     /** The About page shown: the game blurb (three paragraphs, D135) or the rules. */
@@ -1266,10 +1271,13 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     @Override
-    public Msg rangedLabel() { return player == null || level == null ? Msg.FIREBALL : player.rangedLabel(); }
+    public TouchGlyph rangedGlyph() { return player == null || level == null ? TouchGlyph.FIREBALL : player.rangedGlyph(); }
 
     @Override
     public String rangedPrompt() { return player == null || level == null ? "" : player.rangedPrompt(); }
+
+    @Override
+    public void coachSignals(TouchCoach.Signals out) { if (player != null && level != null) player.coachSignals(out); }
 
     @Override
     public boolean interactAvailable() {

@@ -35,6 +35,7 @@ import com.jlogicsoftware.kimeria.effects.Torch;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
 import com.jlogicsoftware.kimeria.ui.FairyGuide;
+import com.jlogicsoftware.kimeria.ui.TouchCoach;
 import com.jlogicsoftware.kimeria.physics.CollisionUtils;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
@@ -223,8 +224,12 @@ public class Level implements WorldObject {
      * inside the zone shows {@code message} (a {@link Msg} name) and/or, when {@code controls} is
      * set, the contextual pickup/lever/ladder instructions. Zones are stateless: they apply again
      * on every retry and return. A level without zones never shows tutorial hints.
+     *
+     * <p>{@code touchMessage} (a {@link Msg} name, optional) replaces {@code message} while the player is guided by touch
+     * ({@code TouchControls.touchGuided}, D139); {@code coach} (optional) names the touch tutorial step this zone arms
+     * ({@link TouchCoach.Step}, D139). Both default to null.
      */
-    public record HintZone(String id, Rectangle bounds, Msg message, boolean controls) { }
+    public record HintZone(String id, Rectangle bounds, Msg message, boolean controls, Msg touchMessage, TouchCoach.Step coach) { }
     private final List<HintZone> hintZones = new ArrayList<>();
     public List<HintZone> hintZones() { return List.copyOf(hintZones); }
 
@@ -249,6 +254,15 @@ public class Level implements WorldObject {
         return null;
     }
 
+    /** Sets the bit of every touch coach step whose zone holds the hero (D139); allocation free, so the touch controls can ask every frame. */
+    public void coachZones(TouchCoach.Signals out) {
+        Rectangle body = player.hitboxBoundsInto(hintBodyScratch);
+        for (int i = 0; i < hintZones.size(); i++) {
+            HintZone zone = hintZones.get(i);
+            if (zone.coach != null && insideZone(zone, body)) out.zone(zone.coach);
+        }
+    }
+
     private void loadHintZones() {
         Set<String> ids = new HashSet<>();
         for (TiledObject o : map.layer("Hints")) {
@@ -262,10 +276,14 @@ public class Level implements WorldObject {
                 throw new IllegalArgumentException("Hint crosses a room boundary: " + describe(o));
             String message = o.prop("message", "");
             boolean controls = o.propBool("controls", false);
-            if (message.isEmpty() && !controls)
-                throw new IllegalArgumentException("Hint needs a message or controls: " + describe(o));
+            String coach = o.prop("coach", ""), touchMessage = o.prop("touchMessage", "");
+            if (message.isEmpty() && !controls && coach.isEmpty())
+                throw new IllegalArgumentException("Hint needs a message, controls or a coach step: " + describe(o));
+            if (!touchMessage.isEmpty() && message.isEmpty())
+                throw new IllegalArgumentException("Hint touchMessage needs a message to replace: " + describe(o));
             Msg msg = message.isEmpty() ? null : Msg.valueOf(message); // A mistyped key fails loudly.
-            hintZones.add(new HintZone(o.name, zone, msg, controls));
+            Msg touchMsg = touchMessage.isEmpty() ? null : Msg.valueOf(touchMessage);
+            hintZones.add(new HintZone(o.name, zone, msg, controls, touchMsg, coach.isEmpty() ? null : TouchCoach.Step.parse(coach)));
         }
     }
 

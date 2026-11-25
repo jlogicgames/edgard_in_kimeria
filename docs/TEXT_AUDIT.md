@@ -117,6 +117,7 @@ and `forest-2` has only a controls zone.
 | Key | Room / zone (x range) | EN chars | Longest translation (lang) | Lesson |
 | --- | --- | --- | --- | --- |
 | `HINT_TUTORIAL_WALK` | lever room, 16-160 | 30 | 41 (de) | Walk right |
+| `HINT_TUTORIAL_WALK_TOUCH` | lever room, 16-160, touch only (D139) | 40 | 52 (de) | Drag the stick right |
 | `HINT_LEVER_TORCH` | lever room, 160-440 | 43 | 48 (de) | Lever and torch |
 | `HINT_LEVER_EXIT` | lever room, 440-560 | 43 | 46 (de) | Exit ahead |
 | `HINT_LADDER_ROOT` | ladder room, 592-912 | 44 | 56 (de) | Thorn root trap |
@@ -153,14 +154,14 @@ Composed at runtime by `Player.contextHint()` as `<binding>: <action> - <target>
 | `PICK_UP`, `PUT_DOWN`, `THROW`, `CLIMB`, `CLIMB_DOWN`, `TURN_ON`, `TURN_OFF`, `INTERACT` ("Use") | Action verbs |
 | `STONE`, `TORCH`, `LEVER`, `MECHANISM` | Targets |
 | `PLACE_BLOCKED` ("Blocked") | States |
-| `UP`, `DOWN`, `STICK`, `LEFT_STICK`, `RIGHT_STICK`, `DPAD_UP`, `DPAD_ACTION` | Binding names for pad and touch (keyboard uses key letters) |
+| `UP`, `DOWN`, `STICK`, `LEFT_STICK`, `RIGHT_STICK`, `DPAD_UP`, `DPAD_ACTION` | Binding names for the pad and the Controls screen (keyboard uses key letters; the touch labels above the hero name no binding, D138) |
 | `FIREBALL_STOCK_FULL` | At a fireball refill while the stock is full (shown everywhere, not only in controls zones) |
 
 ### 1.8 HUD and touch buttons (always on screen)
 
 | Keys | Where |
 | --- | --- |
-| `ATTACK` ("Sword"), `ACTION`, `SHOOT` ("Ranged"), `FIREBALL`, `NO_AMMO` ("Empty"), `THROW` | Touch buttons and the ranged label; `rangedLabel()` switches Throw / Fireball / Empty |
+| `ATTACK` ("Sword"), `FIREBALL`, `NO_AMMO` ("Empty"), `THROW` | The keyboard and gamepad prompts and the Controls screen; `rangedLabel()` switches Throw / Fireball / Empty. The touch buttons show pictograms (D138), so `ACTION` and `SHOOT` (the touch prefixes) are removed |
 | `BOSS` | Boss health bar label in `forest-2` |
 | `BAT`, `MUSHROOM` | Not drawn in the HUD (it shows icons only); the words appear in the pre-boss checklist (1.4) |
 
@@ -253,7 +254,7 @@ item may stay in this document as an untracked gap once committed: each needs it
 | --- | --- | --- | --- |
 | G1 | Fairies are named three times (torch, far-off fairy, blessing) and never seen. **Resolved (#338, D82):** the fairy is the healer's third gift (`HEALER_TALE_FAIRY`), visible in play; the torch and stone images no longer name a fairy, and the blessing names "your fairy". | `HEALER_TALE_FAIRIES`, `HEALER_TALE_LIFT`, `HEALER_TALE_BLESSING` | [#338](https://github.com/jlogicgames/edgard_in_kimeria/issues/338) |
 | G2 | The fireball has no origin (no F function). The healer's "won't affect magical items" points at an unnamed magic. | `FIREBALL`, `HEALER_GREETING`, `HEALER_PAID` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340), done: `HEALER_TALE_FIREGIFT` and one `INTRO_LEAF_*` sentence (merged after this audit) |
-| G3 | One action, four names: EN "Fireball" and "Ranged" (`SHOOT`), pad "ranged" in About, "throw/fireball" in About; uk/pl/de/be call it "Fire" (Вогонь, Ogień, Feuer, Агонь) but be `FIREBALL_STOCK_FULL` says "fireballs" (вогненных шароў). | `FIREBALL`, `SHOOT`, `ABOUT_*`, `FIREBALL_STOCK_FULL` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340) kept the labels; reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
+| G3 | One action, four names: EN "Fireball" and "Ranged" (`SHOOT`, removed with the touch prefixes in D138), pad "ranged" in About, "throw/fireball" in About; uk/pl/de/be call it "Fire" (Вогонь, Ogień, Feuer, Агонь) but be `FIREBALL_STOCK_FULL` says "fireballs" (вогненных шароў). | `FIREBALL`, `SHOOT`, `ABOUT_*`, `FIREBALL_STOCK_FULL` | [#340](https://github.com/jlogicgames/edgard_in_kimeria/issues/340) kept the labels; reconciled in [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369) |
 | G4 | The thread is only words; death shows nothing. | `HEALER_TALE_THREAD`, `INTRO_LEAF_*` | [#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341) |
 | G5 | `HEALER_TALE_WITCH`'s "berry that bursts" was written for the bomb; D40 replaced the bomb with an exploding stump. The image no longer matches the room. **Resolved (#370):** "stumps that burst". | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) (tutorial tales rewrite) |
 | G6 | `forest-0` teaches five traps (thorn root, falling branch, falling stone, falling platform, stump); the witch line names two. **Resolved (#370):** the line names all five in three groups (rise, fall, burst). | `HEALER_TALE_WITCH` | [#370](https://github.com/jlogicgames/edgard_in_kimeria/issues/370) |

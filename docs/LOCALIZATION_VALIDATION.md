@@ -108,8 +108,8 @@ not available in this session. This is not a claim of a passed external scan.
 
 ## D70 font-size check (#335, 2026-11-16)
 
-Sizes are now named in `ui/FontSizes` (label and body 16, dialogue 18, touch label 13, zone/button/coin 20, title 30);
-`FontCharacters.SIZES` is {13, 16, 18, 20, 30} and `FontSizesTest` keeps the two in step.
+Sizes are now named in `ui/FontSizes` (label and body 16, dialogue 18, rotate hint 13 (was the touch label until D138), zone/button/coin 20, title 30);
+`FontCharacters.SIZES` is {13, 16, 18, 20, 30} and `FontSizesTest` keeps the two in step. D137 adds a large tier of the same baked files (label and body 18, dialogue 20) for a picture drawn below 1 CSS px per unit; `LocalizationLayoutTest` measures both tiers.
 `./gradlew :core:test :lwjgl3:validateLocalization` passes: 5 languages, 121 keys, 192 glyphs at every shipped size.
 Measured with the real baked metrics (all five languages): the longest healer/Edgard line takes 4 lines, 62 px of the
 72 px dialogue box; the controller-help About panel is 327 px of 360 (the existing 332 limit is unchanged); the hero label

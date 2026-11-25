@@ -19,7 +19,7 @@ import com.jlogicsoftware.kimeria.ui.Hud;
 import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
-import com.jlogicsoftware.kimeria.ui.TouchControls;
+import com.jlogicsoftware.kimeria.ui.TouchLayout;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -77,30 +77,40 @@ class LocalizationLayoutTest {
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont label = new MetricsFont(FontSizes.LABEL);
-            for (Language language : Language.values()) {
-                String text = Msg.BOSS.t(language);
-                float width = new GlyphLayout(label, text).width;
-                assertTrue(width <= BossHud.ELIXIR_OFFSET, language.code() + " boss label \"" + text + "\" is " + width + " px; the elixir icon starts at " + BossHud.ELIXIR_OFFSET + " px");
+            for (boolean large : new boolean[]{false, true}) {
+                BitmapFont label = new MetricsFont(FontSizes.label(large));
+                for (Language language : Language.values()) {
+                    String text = Msg.BOSS.t(language);
+                    float width = new GlyphLayout(label, text).width;
+                    assertTrue(width <= BossHud.ELIXIR_OFFSET, (large ? "large " : "") + language.code() + " boss label \"" + text + "\" is " + width + " px; the elixir icon starts at " + BossHud.ELIXIR_OFFSET + " px");
+                }
             }
         } finally {
             Gdx.files = previous;
         }
     }
 
+    /** Both text tiers (D137): the nominal sizes and the large ones a small picture uses must fit every box in five languages. */
     @Test void localizedTextFitsActualMenusDialogueHelpAndTouchBounds() {
+        textFitsAtTier(false);
+        textFitsAtTier(true);
+    }
+
+    private void textFitsAtTier(boolean large) {
         var previous = Gdx.files;
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont body = new MetricsFont(FontSizes.BODY), dialogue = new MetricsFont(FontSizes.DIALOGUE), button = new MetricsFont(FontSizes.BUTTON),
-                hint = new MetricsFont(FontSizes.LABEL), touch = new MetricsFont(FontSizes.TOUCH_LABEL), title = new MetricsFont(FontSizes.TITLE),
-                zone = new MetricsFont(FontSizes.ZONE), context = new MetricsFont(FontSizes.LABEL);
-            Overlay overlay = new Overlay(new Assets() {
+            BitmapFont body = new MetricsFont(FontSizes.body(large)), dialogue = new MetricsFont(FontSizes.dialogue(large)), button = new MetricsFont(FontSizes.BUTTON),
+                hint = new MetricsFont(FontSizes.label(large)), rotate = new MetricsFont(FontSizes.ROTATE_HINT), title = new MetricsFont(FontSizes.TITLE),
+                zone = new MetricsFont(FontSizes.ZONE), context = new MetricsFont(FontSizes.label(large));
+            Assets assets = new Assets() {
                 @Override public BitmapFont font(int size) { return new MetricsFont(size); }
-            }, 640, 360, null);
+            };
+            assets.setLargeText(large);
+            Overlay overlay = new Overlay(assets, 640, 360, null);
             for (Language language : Language.values()) {
-                String prefix = language.code() + " ";
+                String prefix = (large ? "large " : "") + language.code() + " ";
                 for (Msg message : new Msg[]{Msg.TITLE, Msg.NEW_GAME, Msg.OPTIONS, Msg.ASSIST, Msg.ABOUT, Msg.PAUSE_MENU, Msg.LOADING})
                     assertTrue(new GlyphLayout(title, message.t(language)).width <= 608, prefix + message);
                 for (Msg message : new Msg[]{Msg.PLAY, Msg.CONTINUE, Msg.NEW_GAME, Msg.CONFIRM, Msg.CANCEL,
@@ -113,7 +123,7 @@ class LocalizationLayoutTest {
                 assertTrue(height(hint, Msg.MENU_HINT.t(language), 608) <= 26, prefix + "menu hint");
                 assertTrue(lines(context, Msg.FIREBALL_STOCK_FULL.t(language), Hud.CONTEXT_WIDTH) <= 2, prefix + "full ammunition hint");
                 // Map-authored tutorial hints (#249: 39 px, 608 px wide) must stay within two lines.
-                for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
+                for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_TUTORIAL_WALK_TOUCH, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
                     Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT,
                     Msg.HINT_WALL_LEVER, Msg.HINT_WALL_PASS, Msg.HINT_PLATFORM_LEVER, Msg.HINT_PLATFORM_RIDE,
                     Msg.HINT_STONE_THROW, Msg.HINT_STONE_EXIT, Msg.HINT_STONE_ACROSS,
@@ -124,16 +134,9 @@ class LocalizationLayoutTest {
                 // and frame-derived height in HealerDialogueTest, including every typed dialogue key.
                 for (Msg message : new Msg[]{Msg.HEALER_RETURN, Msg.HEALER_BREW, Msg.HEALER_FIGHT})
                     assertTrue(new GlyphLayout(dialogue, message.t(language)).width <= 512, prefix + message);
-                // D55: the light button art leaves ~5 px of rim, so labels wrap at the cream width (50 / 40.4 px) and may
-                // take two lines; every word must still fit that width on its own.
-                for (Msg message : new Msg[]{Msg.ATTACK, Msg.INTERACT, Msg.TURN_ON, Msg.TURN_OFF, Msg.SHOOT, Msg.PICK_UP, Msg.PUT_DOWN, Msg.THROW, Msg.FIREBALL, Msg.NO_AMMO, Msg.PLACE_BLOCKED}) {
-                    float width = message == Msg.SHOOT || message == Msg.THROW || message == Msg.FIREBALL || message == Msg.NO_AMMO
-                        ? TouchControls.RANGED_LABEL_WIDTH : TouchControls.ACTION_LABEL_WIDTH;
-                    for (String word : message.t(language).split(" "))
-                        assertTrue(new GlyphLayout(touch, word).width <= width, prefix + message + " word " + word);
-                    assertTrue(lines(touch, message.t(language), width) <= 2, prefix + message);
-                    assertTrue(height(touch, message.t(language), width) <= 32, prefix + message);
-                }
+                // D138 (#492): the touch buttons carry pictograms, so the only touch text is the portrait strip's rotate hint:
+                // one line in the strip's 360 units minus the side margins, at the hint's own size.
+                assertTrue(lines(rotate, Msg.ROTATE_HINT.t(language), TouchLayout.SPACE_WIDTH - 48f) <= 1, prefix + "rotate hint");
                 // About pages (D135): the blurb and the rules each sit in the 610 px panel between the title and two buttons.
                 for (String page : List.of(
                     Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language),
@@ -143,7 +146,7 @@ class LocalizationLayoutTest {
                 // Controls screen (D135), body font as drawn: hand headers in one 162 px line, the touch preview's button
                 // labels in 96 px and its stick label in 80 px; rows and cells are measured in ControlsViewTest.
                 for (Msg message : new Msg[]{Msg.RIGHT_HAND, Msg.LEFT_HAND})
-                    assertTrue(lines(body, message.t(language), ControlsView.HEADER_W) <= 1, prefix + message);
+                    assertTrue(lines(body, message.t(language), large ? ControlsView.HEADER_W_LARGE : ControlsView.HEADER_W) <= 1, prefix + message);
                 for (Msg message : new Msg[]{Msg.ATTACK, Msg.FIREBALL, Msg.JUMP})
                     assertTrue(lines(body, message.t(language), ControlsView.BUTTON_LABEL_W) <= 1, prefix + message);
                 assertTrue(lines(body, Msg.STICK.t(language), ControlsView.STICK_LABEL_W) <= 1, prefix + "stick label");
@@ -172,11 +175,16 @@ class LocalizationLayoutTest {
      * first choice, and every choice label with its two markers fits the middle column, in every language and state.
      */
     @Test void ingredientChecklistAndChoiceButtonsFitAtTheDialogueSize() {
+        ingredientChecklistAndChoicesFit(false);
+        ingredientChecklistAndChoicesFit(true);
+    }
+
+    private void ingredientChecklistAndChoicesFit(boolean large) {
         var previous = Gdx.files;
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont dialogue = new MetricsFont(FontSizes.DIALOGUE);
+            BitmapFont dialogue = new MetricsFont(FontSizes.dialogue(large));
             var view = new HealerDialogueView(new Assets() {
                 @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
             });
@@ -217,11 +225,16 @@ class LocalizationLayoutTest {
      * the head, camera 0 and 8 px down. The placed label must clear the message by the gap as rectangles.
      */
     @Test void zoneMessageAndTheWidestContextualLabelNeverOverlapInAnyLanguageOrDevice() {
+        labelsNeverOverlap(false);
+        labelsNeverOverlap(true); // the label above the hero is 20 px on a small picture (D137)
+    }
+
+    private void labelsNeverOverlap(boolean large) {
         var previous = Gdx.files;
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
         try {
-            BitmapFont zone = new MetricsFont(FontSizes.ZONE), contextFont = new MetricsFont(FontSizes.LABEL);
+            BitmapFont zone = new MetricsFont(FontSizes.ZONE), contextFont = new MetricsFont(FontSizes.label(large));
             float cap = contextFont.getCapHeight(), zoneCap = zone.getCapHeight(), zoneWorldY = 368 * .3f;
             for (Language language : Language.values()) {
                 String up = Msg.UP.t(language), down = Msg.DOWN.t(language);
@@ -229,15 +242,17 @@ class LocalizationLayoutTest {
                     {"W", "S", "K", "L"}, {"Up", "Down", "X", "C"}, // keyboard, default / left-handed
                     {Msg.LEFT_STICK.t(language) + " " + up, Msg.LEFT_STICK.t(language) + " " + down, "X/B", "Y"},
                     {Msg.RIGHT_STICK.t(language) + " " + up, Msg.RIGHT_STICK.t(language) + " " + down, Msg.DPAD_ACTION.t(language), Msg.DPAD_UP.t(language)},
-                    {Msg.STICK.t(language) + " " + up, Msg.STICK.t(language) + " " + down, Msg.ACTION.t(language), Msg.SHOOT.t(language)}}) {
-                    String lever = device[0] + ": " + Msg.TURN_OFF.t(language) + " - " + Msg.LEVER.t(language);
-                    String pickup = device[0] + ": " + Msg.PICK_UP.t(language) + " - " + Msg.STONE.t(language);
-                    String place = device[1] + ": " + Msg.PUT_DOWN.t(language) + " - " + Msg.PLACE_BLOCKED.t(language);
-                    String ranged = device[3] + ": " + Msg.THROW.t(language);
-                    String ladder = device[0] + ": " + Msg.CLIMB.t(language) + "\n" + device[1] + ": " + Msg.CLIMB_DOWN.t(language);
+                    {"", "", "", ""}}) { // touch (D138): no binding, the label says only what happens
+                    String[] binding = new String[4];
+                    for (int i = 0; i < binding.length; i++) binding[i] = device[i].isEmpty() ? "" : device[i] + ": ";
+                    String lever = binding[0] + Msg.TURN_OFF.t(language) + " - " + Msg.LEVER.t(language);
+                    String pickup = binding[0] + Msg.PICK_UP.t(language) + " - " + Msg.STONE.t(language);
+                    String place = binding[1] + Msg.PUT_DOWN.t(language) + " - " + Msg.PLACE_BLOCKED.t(language);
+                    String ranged = binding[3] + Msg.THROW.t(language);
+                    String ladder = binding[0] + Msg.CLIMB.t(language) + "\n" + binding[1] + Msg.CLIMB_DOWN.t(language);
                     for (String context : new String[]{lever, pickup, ladder, Msg.FIREBALL_STOCK_FULL.t(language),
                         lever + "\n" + place + "\n" + ranged}) {
-                        for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
+                        for (Msg message : new Msg[]{Msg.HINT_TUTORIAL_WALK, Msg.HINT_TUTORIAL_WALK_TOUCH, Msg.HINT_LEVER_TORCH, Msg.HINT_LEVER_EXIT,
                             Msg.HINT_LADDER_LEVER, Msg.HINT_LADDER_CLIMB, Msg.HINT_LADDER_EXIT,
                             Msg.HINT_WALL_LEVER, Msg.HINT_WALL_PASS, Msg.HINT_PLATFORM_LEVER, Msg.HINT_PLATFORM_RIDE,
                             Msg.HINT_STONE_THROW, Msg.HINT_STONE_EXIT, Msg.HINT_STONE_ACROSS,

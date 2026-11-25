@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -16,12 +15,13 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
 
 /**
  * On-screen controls for touch devices: a movement stick on the left and the three action
- * buttons on the right -- Jump, Ranged, and directional Action. Labels follow the selected
- * command, with vertical movement on the stick. In left-handed mode
+ * buttons on the right -- Jump, Ranged, and Action. The Action and Ranged buttons carry a pictogram
+ * ({@link TouchGlyph}, D138) that follows the situation and no text; vertical movement is on the stick. In left-handed mode
  * ({@link GameContext#leftHanded()}) the whole layout is mirrored horizontally -- stick right,
  * buttons left -- for both drawing and hit areas. Drawn and hit-tested in fixed logical
  * (640x360) space. Does nothing on devices without a touch screen.
@@ -62,21 +62,10 @@ public class TouchControls {
     static final float CONTROL_ALPHA = 0.94f;
     private static final float HINT_SIDE_MARGIN = 24f;
     private static final float PRESSED_SCALE = 0.92f;
-    /** Button labels sit on the cream button art, so they are dark navy (matches the art outline); the hint stays white. */
-    static final Color LABEL_COLOR = new Color(0x14122bff);
-
     private static final String ART = "images/HUD/touch/";
 
     static final int BUTTON_ART_SIZE = 64;
     private static final float BUTTON_RADIUS = 32;
-    /**
-     * Labels wrap inside the cream area of the light button art (D55): the dark outline and white ring take about 5 px
-     * on every side, so the wrap width is the drawn diameter minus 14. Long words (be "Няма дзеяння" is 59 px on one line)
-     * wrap to two lines instead of running onto the ring.
-     */
-    private static final float BUTTON_LABEL_PADDING = 14f;
-    public static final float ACTION_LABEL_WIDTH = BUTTON_RADIUS * 2f - BUTTON_LABEL_PADDING;
-    public static final float RANGED_LABEL_WIDTH = BUTTON_RADIUS * 2f * SHOOT_BUTTON_SCALE - BUTTON_LABEL_PADDING;
     private static final float JUMP_X = 590, JUMP_Y = 290;
     private static final float ACTION_X = 520, ACTION_Y = 318;
     private static final float SHOOT_X = 536, SHOOT_Y = 244;
@@ -105,13 +94,32 @@ public class TouchControls {
     static final float SIDE_EDGE_MARGIN = 8, SIDE_STICK_GRAB = 60, SIDE_STICK_Y = 270;
     static final float SIDE_JUMP_Y = 272, SIDE_SHOOT_Y = 190, SIDE_ACTION_Y = 108;
 
+    /**
+     * The touch tutorial's art (#496, D139), in controls units: the hand (32 px, its fingertip at {@link #HAND_TIP_X} and {@link #HAND_TIP_Y}
+     * in the idle art, {@link #HAND_TIP_DOWN_Y} in the pressed one), the amber chevrons ahead of the drag, and the ring round the Ranged
+     * button, which grows from {@link #RING_SCALE_MIN} to {@link #RING_SCALE_MAX} times the button as it pulses.
+     */
+    static final float HAND_SIZE = 32, HAND_TIP_X = 13, HAND_TIP_Y = 2, HAND_TIP_DOWN_Y = 5, CHEVRON_SIZE = 16;
+    private static final float CHEVRON_NEAR = 52, CHEVRON_FAR = 64, GHOST_ALPHA = 0.6f, RING_SCALE_MIN = 1.2f, RING_SCALE_MAX = 1.5f;
+    /** Libgdx's rotation of the right-pointing chevron that makes it point up in the Y-down controls space. */
+    private static final float CHEVRON_UP_DEGREES = -90f;
+
     private enum Control { NONE, STICK, JUMP, SHOOT, ACTION, PAUSE }
 
     private final GameContext game;
     private final Viewport viewport;
-    private final TextureRegion disc, discDown, base, jumpIcon, jumpDown, knob, knobDown, pauseIcon, pauseDown, skipIcon, skipDown;
+    private final TextureRegion handIdle, handPressed, chevron, ring;
+    /** The touch tutorial (#496, D139): lives as long as the game, so a step that ended never returns in the session. */
+    private final TouchCoach coach = new TouchCoach();
+    private final TouchCoach.Signals coachSignals = new TouchCoach.Signals();
+    private final TextureRegion base, jumpIcon, jumpDown, knob, knobDown, pauseIcon, pauseDown, skipIcon, skipDown;
+    /** Idle and pressed art of every {@link TouchGlyph}, by ordinal; loaded here so a missing PNG fails at load, never mid-play (#492). */
+    private final TextureRegion[] glyphs = new TextureRegion[TouchGlyph.values().length], glyphsDown = new TextureRegion[TouchGlyph.values().length];
+    /** Only the portrait rotate hint is text; its layout is rebuilt when the language or the width changes, never per frame. */
     private final BitmapFont font;
-    private final Matrix4 textProjection;
+    private GlyphLayout hintLayout;
+    private Language hintLanguage;
+    private float hintWidth = -1;
     private final float logicalWidth, logicalHeight;
     private final boolean available;
     private boolean previousLayout;
@@ -149,8 +157,10 @@ public class TouchControls {
         this.logicalWidth = logicalWidth;
         this.logicalHeight = logicalHeight;
         // D55: light touch-only art (art/hud/touch).
-        this.disc = assets.region(ART + "disc.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
-        this.discDown = assets.region(ART + "disc-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        for (TouchGlyph glyph : TouchGlyph.values()) {
+            glyphs[glyph.ordinal()] = assets.region(ART + glyph.artName() + ".png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+            glyphsDown[glyph.ordinal()] = assets.region(ART + glyph.artName() + "-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        }
         this.base = assets.region(ART + "base.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.jumpIcon = assets.region(ART + "jump.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.jumpDown = assets.region(ART + "jump-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
@@ -160,12 +170,11 @@ public class TouchControls {
         this.skipDown = assets.region(ART + "skip-down.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
         this.knob = assets.region(ART + "knob.png", 0, 0, (int) KNOB_SIZE, (int) KNOB_SIZE);
         this.knobDown = assets.region(ART + "knob-down.png", 0, 0, (int) KNOB_SIZE, (int) KNOB_SIZE);
-        this.font = assets.font(FontSizes.TOUCH_LABEL);
-
-        OrthographicCamera textCamera = new OrthographicCamera();
-        textCamera.setToOrtho(false, logicalWidth, logicalHeight);
-        textCamera.update();
-        textProjection = textCamera.combined.cpy();
+        this.handIdle = assets.region(ART + "hand.png", 0, 0, (int) HAND_SIZE, (int) HAND_SIZE);
+        this.handPressed = assets.region(ART + "hand-down.png", 0, 0, (int) HAND_SIZE, (int) HAND_SIZE);
+        this.chevron = assets.region(ART + "chevron.png", 0, 0, (int) CHEVRON_SIZE, (int) CHEVRON_SIZE);
+        this.ring = assets.region(ART + "ring.png", 0, 0, BUTTON_ART_SIZE, BUTTON_ART_SIZE);
+        this.font = assets.font(FontSizes.ROTATE_HINT);
 
         Application.ApplicationType type = Gdx.app.getType();
         available = platformTouch || type == Application.ApplicationType.Android
@@ -290,6 +299,12 @@ public class TouchControls {
         actionHeld = action;
         shootEdge = shoot && !prevShoot;
         actionEdge = action && !prevAction;
+        if (available && active) {
+            coachSignals.clear();
+            game.coachSignals(coachSignals);
+            // No coach zone holds the hero: nothing is timed, so the frame time is not even read.
+            coach.update(coachSignals.zones == 0 ? 0f : Gdx.graphics.getDeltaTime(), true, stick, coachSignals);
+        }
         pauseHeld = pause;
         pauseEdge = pause && !prevPause;
         prevPause = pause;
@@ -366,6 +381,10 @@ public class TouchControls {
     public boolean interactUpHeld() { return steepVertical < 0; }
     public boolean interactDownHeld() { return steepVertical > 0; }
     public boolean isAvailable() { return available; }
+    /** The touch tutorial and the touch variants of zone messages (D139): a touch device whose hero no keyboard or gamepad has moved yet. */
+    public boolean touchGuided() { return available && !coach.nonTouchSeen(); }
+    /** The touch tutorial (D139): which step shows now and where it is in its loop. */
+    public TouchCoach coach() { return coach; }
     public boolean downHeld() { return vertical > 0; }
     public boolean actionHeld() { return actionHeld; }
     public boolean shootHeld() { return shootHeld; }
@@ -390,14 +409,14 @@ public class TouchControls {
     }
 
     /** Draws only the pause button, for screens that show no stick (healer dialogue). */
-    public void renderPauseButton(SpriteBatch batch) {
+    public void renderPauseButton(Batch batch) {
         if (!available) return;
         float cx = x(PAUSE_X);
         drawButton(batch, pauseIcon, pauseDown, cx, PAUSE_Y, PAUSE_RADIUS, pauseHeld);
         batch.setColor(Color.WHITE);
     }
 
-    public void render(SpriteBatch batch) {
+    public void render(Batch batch) {
         if (!available) return;
         place();
         if (portrait()) {
@@ -414,15 +433,6 @@ public class TouchControls {
 
         drawCluster(batch);
         renderPauseButton(batch);
-
-        var lang = game.language();
-        // A copy: setProjectionMatrix() overwrites the batch's own matrix in place, so a bare reference
-        // would already hold the text projection when it is "restored" below.
-        Matrix4 previous = batch.getProjectionMatrix().cpy();
-        batch.setProjectionMatrix(textProjection);
-        label(batch, game.actionLabel().t(lang), actionX, actionY, ACTION_LABEL_WIDTH, logicalHeight, LABEL_COLOR);
-        label(batch, game.rangedLabel().t(lang), shootX, shootY, RANGED_LABEL_WIDTH, logicalHeight, LABEL_COLOR);
-        batch.setProjectionMatrix(previous);
     }
 
     /**
@@ -430,14 +440,14 @@ public class TouchControls {
      * {@code controls} is true, the stick and buttons, into the strip below the picture. Must be called between
      * {@code batch.begin()} and {@code end()}; leaves the batch and GL viewport as the game view had them.
      */
-    public void renderStrip(SpriteBatch batch, boolean controls) {
+    public void renderStrip(Batch batch, boolean controls) {
         if (!available || !portrait()) return;
         place();
         renderInControlsSpace(batch, controls, true);
     }
 
     /** Draws into the layout's controls viewport (strip or whole window) and restores the game view afterwards. */
-    private void renderInControlsSpace(SpriteBatch batch, boolean controls, boolean hint) {
+    private void renderInControlsSpace(Batch batch, boolean controls, boolean hint) {
         batch.end();
         layout.controlsViewport().apply();
         batch.setProjectionMatrix(layout.controlsViewport().getCamera().combined);
@@ -445,6 +455,15 @@ public class TouchControls {
         if (controls) {
             drawCluster(batch);
         }
+        if (hint) drawRotateHint(batch);
+        batch.end();
+        viewport.apply();
+        batch.setProjectionMatrix(viewport.getCamera().combined);
+        batch.begin();
+    }
+
+    /** The portrait "rotate the phone" hint: the one text left in the touch controls, white on the dark strip. */
+    private void drawRotateHint(Batch batch) {
         if (portraitTextHeight != spaceHeight || portraitTextWidth != spaceWidth) {
             portraitTextHeight = spaceHeight;
             portraitTextWidth = spaceWidth;
@@ -453,40 +472,84 @@ public class TouchControls {
             portraitTextProjection.set(portraitTextCamera.combined);
         }
         batch.setProjectionMatrix(portraitTextProjection);
-        var lang = game.language();
-        if (hint) label(batch, Msg.ROTATE_HINT.t(lang), spaceWidth / 2f, PORTRAIT_HINT_Y, spaceWidth - HINT_SIDE_MARGIN * 2f, spaceHeight, Color.WHITE);
-        if (controls) {
-            label(batch, game.actionLabel().t(lang), actionX, actionY, ACTION_LABEL_WIDTH, spaceHeight, LABEL_COLOR);
-            label(batch, game.rangedLabel().t(lang), shootX, shootY, RANGED_LABEL_WIDTH, spaceHeight, LABEL_COLOR);
-        }
-        batch.end();
-        viewport.apply();
-        batch.setProjectionMatrix(viewport.getCamera().combined);
-        batch.begin();
+        float width = spaceWidth - HINT_SIDE_MARGIN * 2f;
+        layOutRotateHint(game.language(), width);
+        font.setColor(Color.WHITE);
+        font.draw(batch, hintLayout, spaceWidth / 2f - width / 2f, spaceHeight - PORTRAIT_HINT_Y + hintLayout.height / 2f);
+    }
+
+    /** Lays the hint out again only when the language or the strip's width changed (a state change, never a frame). */
+    private void layOutRotateHint(Language lang, float width) {
+        if (hintLayout != null && hintLanguage == lang && hintWidth == width) return;
+        hintLanguage = lang;
+        hintWidth = width;
+        hintLayout = new GlyphLayout(font, Msg.ROTATE_HINT.t(lang), Color.WHITE, width, Align.center, true);
     }
 
     /** The stick and the three buttons, at the positions {@link #place()} chose. */
-    private void drawCluster(SpriteBatch batch) {
+    private void drawCluster(Batch batch) {
         batch.setColor(1f, 1f, 1f, CONTROL_ALPHA);
         batch.draw(base, stickX - STICK_RADIUS, stickY - STICK_RADIUS, STICK_RADIUS * 2, STICK_RADIUS * 2);
         boolean stickHeld = knobDx != 0f || knobDy != 0f;
         batch.draw(stickHeld ? knobDown : knob, stickX + knobDx - KNOB_SIZE / 2, stickY + knobDy - KNOB_SIZE / 2, KNOB_SIZE, KNOB_SIZE);
         drawButton(batch, jumpIcon, jumpDown, jumpX, jumpY, BUTTON_RADIUS, jumpHeld);
-        drawButton(batch, disc, discDown, actionX, actionY, BUTTON_RADIUS, actionHeld);
-        drawButton(batch, disc, discDown, shootX, shootY, BUTTON_RADIUS * SHOOT_BUTTON_SCALE, shootHeld);
+        int action = game.actionGlyph().ordinal(), ranged = game.rangedGlyph().ordinal();
+        drawButton(batch, glyphs[action], glyphsDown[action], actionX, actionY, BUTTON_RADIUS, actionHeld);
+        drawButton(batch, glyphs[ranged], glyphsDown[ranged], shootX, shootY, BUTTON_RADIUS * SHOOT_BUTTON_SCALE, shootHeld);
+        drawCoach(batch);
         batch.setColor(Color.WHITE);
+    }
+
+    /**
+     * The touch tutorial (#496, D139) over the cluster: the hand presses the knob and drags a ghost knob to the screen right (always right,
+     * whatever the handedness: the stick's horizontal is the same in both) or up, with amber chevrons ahead of it; or a ring pulses round the Ranged
+     * button. Only the hand's art is flipped for the left-handed layout, so the finger points away from the screen's edge.
+     */
+    private void drawCoach(Batch batch) {
+        TouchCoach.Step step = coach.step();
+        if (step == null) return;
+        if (step == TouchCoach.Step.RANGED) {
+            float half = BUTTON_RADIUS * SHOOT_BUTTON_SCALE * (RING_SCALE_MIN + (RING_SCALE_MAX - RING_SCALE_MIN) * coach.pulse());
+            batch.setColor(1f, 1f, 1f, coach.ringAlpha());
+            batch.draw(ring, shootX - half, shootY - half, half * 2, half * 2);
+            return;
+        }
+        boolean up = step == TouchCoach.Step.STICK_UP;
+        float dirX = up ? 0f : 1f, dirY = up ? -1f : 0f, alpha = coach.handAlpha(), slide = coach.slide() * TouchCoach.SLIDE_UNITS;
+        float chevrons = coach.chevronAlpha();
+        if (chevrons > 0f) {
+            batch.setColor(1f, 1f, 1f, chevrons);
+            float nearX = up ? stickX : chevronX(stickX, spaceWidth, CHEVRON_NEAR), farX = up ? stickX : chevronX(stickX, spaceWidth, CHEVRON_FAR);
+            drawChevron(batch, nearX, stickY + dirY * CHEVRON_NEAR, up);
+            drawChevron(batch, farX, stickY + dirY * CHEVRON_FAR, up);
+        }
+        float kx = stickX + dirX * slide, ky = stickY + dirY * slide;
+        boolean pressed = coach.pressed();
+        batch.setColor(1f, 1f, 1f, GHOST_ALPHA * alpha);
+        batch.draw(pressed ? knobDown : knob, kx - KNOB_SIZE / 2, ky - KNOB_SIZE / 2, KNOB_SIZE, KNOB_SIZE);
+        batch.setColor(1f, 1f, 1f, alpha);
+        float tipY = pressed ? HAND_TIP_DOWN_Y : HAND_TIP_Y;
+        if (game.leftHanded()) batch.draw(pressed ? handPressed : handIdle, kx + HAND_TIP_X, ky - tipY, -HAND_SIZE, HAND_SIZE);
+        else batch.draw(pressed ? handPressed : handIdle, kx - HAND_TIP_X, ky - tipY, HAND_SIZE, HAND_SIZE);
+    }
+
+    /**
+     * Where a chevron ahead of a right-drag sits: {@code distance} to the screen right of the stick, but shifted left (the pair together, so their
+     * spacing holds) as far as it takes to keep the far one on screen. Left-handed in a narrow side bar the stick is within {@value #CHEVRON_FAR} units
+     * of the right edge; where the pair already fits this is {@code stickX + distance}.
+     */
+    static float chevronX(float stickX, float spaceWidth, float distance) {
+        return Math.min(stickX + distance, spaceWidth - CHEVRON_SIZE / 2 - (CHEVRON_FAR - distance));
+    }
+
+    private void drawChevron(Batch batch, float cx, float cy, boolean up) {
+        float half = CHEVRON_SIZE / 2;
+        batch.draw(chevron, cx - half, cy - half, half, half, CHEVRON_SIZE, CHEVRON_SIZE, 1f, 1f, up ? CHEVRON_UP_DEGREES : 0f);
     }
 
     private void drawButton(Batch batch, TextureRegion idle, TextureRegion pressed, float cx, float cy, float r, boolean down) {
         batch.setColor(1f, 1f, 1f, down ? 1f : CONTROL_ALPHA);
         float s = down ? r * PRESSED_SCALE : r;
         batch.draw(down ? pressed : idle, cx - s, cy - s, s * 2, s * 2);
-    }
-
-    /** Centered label; {@code yFromTop} is converted to the Y-up text projection, as in {@link Hud}. */
-    private void label(SpriteBatch batch, String text, float cx, float yFromTop, float width, float height, Color color) {
-        GlyphLayout glyphs = new GlyphLayout(font, text, color, width, Align.center, true);
-        font.setColor(color);
-        font.draw(batch, glyphs, cx - width / 2f, height - yFromTop + glyphs.height / 2f);
     }
 }

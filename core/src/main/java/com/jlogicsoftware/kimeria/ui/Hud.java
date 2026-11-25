@@ -43,7 +43,11 @@ public class Hud {
     private final TextureRegion coinIcon;
     private final TextureRegion fireballIcon;
     private final Map<ItemType, TextureRegion> artifactIcons = new EnumMap<>(ItemType.class);
-    private final BitmapFont font, hintFont, zoneFont, contextFont;
+    private final Assets assets;
+    private final BitmapFont font, zoneFont;
+    /** The FPS counter and the label above the hero take the text tier's label font (D137); refreshed when {@link Assets#textGeneration()} moves. */
+    private BitmapFont hintFont, contextFont;
+    private int fontsGeneration = -1;
     private final Matrix4 textProjection;
     private final float logicalWidth, logicalHeight;
     private final Vector2 hintPosition = new Vector2();
@@ -63,6 +67,7 @@ public class Hud {
     private int shownCoins = -1;
 
     public Hud(Assets assets, GameContext game, float logicalWidth, float logicalHeight) {
+        this.assets = assets;
         this.game = game;
         this.logicalWidth = logicalWidth;
         this.logicalHeight = logicalHeight;
@@ -73,15 +78,23 @@ public class Hud {
                 com.badlogic.gdx.graphics.Texture.TextureFilter.Linear));
         }
         this.font = assets.font(FontSizes.COUNT);
-        this.hintFont = assets.font(FontSizes.LABEL);
         this.zoneFont = assets.font(FontSizes.ZONE);
-        this.contextFont = assets.font(FontSizes.LABEL);
+        syncFonts();
 
         OrthographicCamera textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, logicalWidth, logicalHeight);
         textCamera.update();
         textProjection = textCamera.combined.cpy();
         bossHud = new BossHud(assets, game, textProjection, logicalWidth, logicalHeight);
+    }
+
+    /** Takes the label font of the current text tier (D137); an int compare unless the tier changed. The FPS width sample is measured again with it. */
+    private void syncFonts() {
+        int generation = assets.textGeneration();
+        if (generation == fontsGeneration) return;
+        fontsGeneration = generation;
+        hintFont = contextFont = assets.font(FontSizes.label(assets.largeText()));
+        fpsSampleWidth = Float.NaN;
     }
 
     /**
@@ -101,6 +114,7 @@ public class Hud {
     }
 
     public void render(Batch batch, Boss boss, boolean empowered, Player player, String fpsText) {
+        syncFonts();
         batch.draw(coinIcon, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         float rightEdge = logicalWidth - ICON_X;
         if (!fpsText.isEmpty()) {
@@ -153,6 +167,7 @@ public class Hud {
      * hides, replaces or resets the other; {@link HintLayout} keeps them apart.
      */
     public void renderInteractionHint(Batch batch, Player player, OrthographicCamera camera, float dt) {
+        syncFonts();
         if (hintOwner != player) { hintTransition.clear(); zoneTransition.clear(); hintOwner = player; }
         if (!player.canFight()) { // Death, checkpoint and victory end a lingering tutorial message.
             hintTransition.clear(); zoneTransition.clear();

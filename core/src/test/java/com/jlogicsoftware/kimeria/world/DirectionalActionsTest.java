@@ -428,8 +428,10 @@ class DirectionalActionsTest {
     void throwingConsumesOnlyRangedPressAndFireballsConsumeOneCharge(boolean left) {
         scene(left); pickup();
         assertNotNull(level.player.carriedObject());
+        assertEquals(com.jlogicsoftware.kimeria.ui.TouchGlyph.THROW, level.player.rangedGlyph(), "carrying: the stone on its arc");
         held.add(ranged()); frames(1);
         assertNull(level.player.carriedObject());
+        assertEquals(com.jlogicsoftware.kimeria.ui.TouchGlyph.FIREBALL, level.player.rangedGlyph(), "empty-handed with ammunition: the flame");
         assertEquals(3, level.player.ammunition());
         frames(30); assertEquals(3, level.player.ammunition());
         assertFalse(level.objects.stream().anyMatch(com.jlogicsoftware.kimeria.entity.items.Fireball.class::isInstance));
@@ -439,6 +441,34 @@ class DirectionalActionsTest {
         tap(ranged()); tap(ranged()); tap(ranged());
         assertEquals(0, level.player.ammunition());
         assertEquals(com.jlogicsoftware.kimeria.localization.Msg.NO_AMMO, level.player.rangedLabel());
+        assertEquals(com.jlogicsoftware.kimeria.ui.TouchGlyph.EMPTY, level.player.rangedGlyph(), "empty-handed, no ammunition: the hollow flame");
+    }
+
+    /** #492 (D138): every state of the Ranged label has its own pictogram, and the three states are three different ones. */
+    @Test void everyRangedStateHasItsOwnPictogram() {
+        scene(false); pickup();
+        var seen = java.util.EnumSet.noneOf(com.jlogicsoftware.kimeria.ui.TouchGlyph.class);
+        seen.add(level.player.rangedGlyph());
+        held.add(ranged()); frames(1); held.clear(); frames(1); // throw it
+        seen.add(level.player.rangedGlyph());
+        tap(ranged()); tap(ranged()); tap(ranged());
+        seen.add(level.player.rangedGlyph());
+        assertEquals(java.util.EnumSet.of(com.jlogicsoftware.kimeria.ui.TouchGlyph.THROW, com.jlogicsoftware.kimeria.ui.TouchGlyph.FIREBALL,
+            com.jlogicsoftware.kimeria.ui.TouchGlyph.EMPTY), seen);
+    }
+
+    /** #492 (D138): on touch the carried-stone label drops its binding ("Throw"); on the keyboard it keeps it ("L: Throw"). */
+    @Test void theRangedPromptNamesNoButtonOnTouchAndTheKeyOnTheKeyboard() {
+        scene(false);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
+        level.triggers.clear();
+        standByEntranceStone();
+        pickup(); frames(1);
+        assertNotNull(level.player.carriedObject());
+        assertTrue(level.player.contextHint().contains("S: Put down\nL: Throw"), level.player.contextHint());
+        finger(0, 80, 262); frames(1); // the stick pushed up: touch becomes the device in use
+        assertEquals("Put down\nThrow", level.player.contextHint());
+        java.util.Arrays.fill(fingers, false); frames(1);
     }
 
     @Test void roomRetryRestoresAmmoObjectsAndClearsQueuedProjectilesButExitSecuresSpend() {
@@ -1279,7 +1309,9 @@ class DirectionalActionsTest {
         assertTrue(level.player.contextHint().contains((left ? "Right stick" : "Left stick") + " up: Pick up"), level.player.contextHint());
         axes[axis] = 0; frames(2);
         finger(0, mirrored(80), 315); frames(1); // stick down on the touch pad
-        assertTrue(level.player.contextHint().contains("Stick up: Pick up"), level.player.contextHint());
+        // D138 (#492): on touch the label names no stick, it says only what happens.
+        assertTrue(level.player.contextHint().startsWith("Pick up"), level.player.contextHint());
+        assertFalse(level.player.contextHint().contains("Stick"), level.player.contextHint());
         java.util.Arrays.fill(fingers, false); frames(1);
     }
 
@@ -1348,7 +1380,8 @@ class DirectionalActionsTest {
         var zone = level.hintZones().get(0);
         float inside = zone.bounds().x + zone.bounds().width / 2;
         standAt(inside);
-        assertEquals("Walk right to find the way out", level.player.zoneHint());
+        // This scene is a touch device whose hero no key has moved yet: the first room says its touch variant all through (D139, #496).
+        assertEquals("Drag the stick right to find the way out", level.player.zoneHint());
         assertEquals("", level.player.contextHint(), "Zone messages are their own channel (#211)");
         Vector2 anchor = new Vector2(); level.player.zoneHintPosition(anchor);
         assertEquals(zone.bounds().x + zone.bounds().width / 2, anchor.x, .001);
@@ -1362,7 +1395,7 @@ class DirectionalActionsTest {
         var room = level.currentRoomBounds();
         assertEquals(room.y, zone.bounds().y, .001); assertEquals(room.height, zone.bounds().height, .001);
         level.player.position.y -= 120; frames(1);
-        assertEquals("Walk right to find the way out", level.player.zoneHint(), "Still shown at jump height");
+        assertEquals("Drag the stick right to find the way out", level.player.zoneHint(), "Still shown at jump height");
         level.player.position.y += 120; frames(30);
         standAt(zone.bounds().x + zone.bounds().width + 64);
         assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HINT_LEVER_TORCH.t(game.language()), level.player.zoneHint(), "The next zone speaks next");
@@ -1372,10 +1405,10 @@ class DirectionalActionsTest {
         // Retry after death, restart, and a return to the room all rebuild the same authored hint.
         level.resetCurrentRoom(player()); frames(2);
         standAt(inside);
-        assertEquals("Walk right to find the way out", level.player.zoneHint());
+        assertEquals("Drag the stick right to find the way out", level.player.zoneHint());
         Level restarted = new Level(assets, game, player(), "forest-0", Rectangle::new);
         level = restarted; frames(2); standAt(inside);
-        assertEquals("Walk right to find the way out", level.player.zoneHint());
+        assertEquals("Drag the stick right to find the way out", level.player.zoneHint());
     }
 
     @Test void onlyTheForestZeroLessonRoomsTeachControls() {
