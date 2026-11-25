@@ -1899,8 +1899,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   Checked by the agent, 2026-11-25: the web release build in headless Chromium, English, the forest-0 start tale, with a
   stepped clock. At 390 × 844 (3×, portrait): no thread on lines 1 to 5, the draw-in on line 6 with the glint on its end,
   then the glint back from the healer; the glint measured 7.3 to 8.0 CSS px. At 844 × 390 (landscape): the thread there
-  from the start of line 7 with its glint. Not seen in a running game: the later conversations (unit tests only), and a
-  real phone.
+  from the start of line 7 with its glint. That run did not reach the later conversations or a real phone; the author
+  saw all the dialogues on a phone the same day (no device or capture recorded), and
+  [#495](https://github.com/jlogicgames/edgard_in_kimeria/issues/495) was closed.
 - **Checked (2026-11-16, agent):** the web release build in headless Chromium at 1280 × 720, English, the forest-0 start
   tale: the healer's first line, Edgard's answer (the lit side, notch and name colours swap) and the fire gift (three
   lines, one spare). Those captures predate the dim-gilt cap above (only the listener's rosette highlights changed). Playtest 2 (2026-11-21, web build, Ukrainian; [PLAYTEST_2.md](PLAYTEST_2.md)) played the dialogue and raised no fit problem; the author accepted that as the check. **Not verified:** the desktop build, the other languages and the pre-boss stop in a running game
@@ -2080,7 +2081,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     a pit **25 frames, 0.417 s**. Both are pinned; neither may grow without a new decision (D3 fast retry).
   - **Trade-off, accepted:** the cause of death is fully visible for 0.45 s instead of 0.70 s; the fade dims it to black
     by 0.70 s (readable to about 0.55 s).
-  - **The look (D76 active tier):** 2 px, silver `d8dee9` over ink `0b0d18`, and the D78 glint star, authored in
+  - **The look (D76 active tier):** 2 px, silver `d8dee9` over ink `0b0d18`, and the 5 px glint star D78 first drew
+    (the dialogue screen's grew to 13 px in #495; this one did not), authored in
     `art/objects/silver-thread.grid` and exported exactly by `tools/silver_thread_sprites.py`. The D78 dialogue silvers
     (`9aa3b6` over `5d6577`) measured 0.104 on the forest sky, and `d8dee9` over `5d6577` 0.196; with the ink, the worst
     outline over every RoomStart of forest-0, -1 and -2, four thread shapes (taut and slack, level and sloped) and eight
