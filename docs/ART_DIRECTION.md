@@ -509,7 +509,8 @@ Rooms with high play must still be measured over the real layers before `RIM_SHE
   D92's rule wins for sprites until the rim is re-measured over the layers ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
 - **D101 bodies and `RemainsFx`:** the chip colours (`SHELL_CHIPS`, `SPIDER_CHIPS`, `SNAIL_CHIPS`, `WOLF_CHIPS`) take the live monsters'
   colours with the bodies ([D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21), [#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571)).
-- **#451 (moon and clouds)** folds into the shared moon and cloud layers; close it with this work, its checklist moves to #236.
+- **#451 (moon and clouds)** is built as the shared moon and cloud layers of this card
+  ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), PR 508).
 - **Falling leaves (#236, re-measured 2026-11-24):** the old `526666`, `5b6f70`, `616764` (L 0.49 to 0.53, hue 165 to 200) read as pale
   grey-teal ghosts over the new layers, lighter than all of them and over the decor ceiling (mean distance 0.22 to 0.33, mid 0.30 to
   0.33). They take D120's near leaf greens `2c3a28`, `2c3d2e`, `2c3724`: 0.090 to 0.172 (see Falling leaves). They stay in front of the
@@ -1375,7 +1376,7 @@ sprite belongs to one of three tiers. It is measured against what the game draws
 |---|---|---|---|
 | Active | hero, traps and their at-rest cues (D71), enemies and their bodies (D101, [D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)), collectables, mechanisms, terrain | outline at least 0.28 | ink contour `0b0814` (or the sheet's own near-black); the accent hues are reserved here |
 | Decor | `Decor` kinds, `HangingVine`, later shrubs, flowers, ferns (#189) | outline at most 0.20, body 0.08 to 0.20, p90 chroma at most 0.10, no ink pixel; a trunk kind (trunk, snag) at least 0.02 from the terrain colours (D130) | contour in its own darker hue, no ink, no accent hue, no idle animation (it may react to the hero or the world) |
-| Background | the level's flat `background` colour (D92), tile scenery, later clouds and moon (#451) and parallax layers (#236) | no louder than decor | desaturated, static |
+| Background | the level's flat `background` colour (D92), tile scenery, and the parallax layers with the sky, stars, moon and clouds (D108) | no louder than decor; the moon, the cloud edges and the stars are brighter by design (D108) | desaturated; moves only as the layers allow (parallax, clouds, ambient lights) |
 
 - **Outline** is the mean lightness difference between each silhouette pixel and the background pixel just outside it.
 - **Body** is the mean colour distance between each opaque pixel and the background under it.
@@ -1386,11 +1387,14 @@ with no recolour, tint or halo; its pose, not its palette, tells it from a live 
 as active at every spot where it can lie (`BODY_SWEEP`): outline at least 0.28, worst 0.285 (the spider over the soil in forest-1-climb).
 
 **What is behind the world ([D92](DECISIONS.md#d92-the-world-is-drawn-over-a-flat-per-level-background-the-forest-rain-and-sky-are-gone-430-2026-11-17)).** Each map sets a flat colour in its map property `background` (a Tiled colour); the
-game clears to it, and the gate composites every sprite over that colour plus the map's tile layer, one sample per
-placement. Every shipped map must set it. Open levels are at night: the forest maps use `2c3f66`; the night sky with its
-moon and clouds is still to be drawn ([#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451)), and the gate is re-run over it then. Glowing sprites are
-measured at their dimmest glow, and the bush in every frame. Collectables are measured over their pickup halo (#345), at rest
-with the dimmest halo and at the top of the bob with the brightest (the coin, which has none, at both positions).
+game clears to it. Every shipped map must set it. Open levels are at night: the forest maps use `2c3f66` and draw the sky,
+the stars, a screen-fixed moon and drifting clouds over it as scenery layers, with the forest layers in front
+([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236);
+card: "Forest look and parallax layers"). The gate composites every sprite over that colour, the scenery layers and the play
+layer, at the steady cameras where the placement is on screen and, where the clouds can show through, at 8 phases of their
+drift. Glowing sprites are measured at their dimmest glow, and the bush in every frame. Collectables are measured over
+their pickup halo (#345), at rest with the dimmest halo and at the top of the bob with the brightest (the coin, which has
+none, at both positions).
 
 **At night (D92): the moon rim.** The ink contour reads against a light sky, not against `2c3f66`. An active sprite
 whose outline does not reach 0.28 on its level's background carries the moon rim: its outermost contour pixels darker than

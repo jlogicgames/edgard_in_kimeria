@@ -1750,7 +1750,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   look-alike mushroom and the hanging vine, and the lever outline, approved and built the same day. Playtest F15 in [PLAYTEST_1.md](PLAYTEST_1.md).
   Section and measured inventory: [ART_DIRECTION.md, "Contrast tiers"](ART_DIRECTION.md#contrast-tiers-d76-playtest-f15-344).
   *Update 2026-11-17 (D92):* the background is now each map's flat `background` colour, one sample per placement; the
-  sky and its offsets below are history.
+  sky and its offsets below are history. Since D108 the gate samples the map's scenery layers over that colour.
 - **Rule:** every sprite belongs to one tier. It is measured against what the game draws behind it (the screen-fixed
   sky at several horizontal offsets plus the tile layer) at every placement, in its rest frame (glowing sprites at full
   and dimmest glow, the bush in every frame); the worst placement counts.
@@ -2720,12 +2720,14 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   author on 2026-11-17: (1) the removal, the map property and the gate switch (PR 455); (2) the moon rim tool, every flag
   off (PR 456); (3) **the night**: every forest map's `background` is `2c3f66`, with the moon rim, the decor night
   palettes and the honey fungus breath (`FungusTrap.GLOW_MIN` 0.55 to 0.80, a change to D63) in the same change, because
-  the gate cannot pass on night with day sprites, nor on day with rimmed ones. Clouds and a moon:
-  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451). Swamp weather: part 2 of #430, parked.
-- **Backgrounds still to be drawn.** Open levels show a night sky (the castle shows night through its windows; author,
-  2026-11-17). The night sky with its moon and clouds is still to be drawn in
-  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451); the contrast gate is re-run over that real background
-  then, and any sprite it fails is fixed then.
+  the gate cannot pass on night with day sprites, nor on day with rimmed ones. Swamp weather: part 2 of #430, parked.
+- **Night sky (update, [D108](#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236),
+  [#451](https://github.com/jlogicgames/edgard_in_kimeria/issues/451)).** Open levels show a night sky (the castle shows night
+  through its windows; author, 2026-11-17). The flat night is no longer all there is behind the forest: its maps draw the
+  sky, the stars, a screen-fixed moon and drifting clouds as scenery layers, with the forest layers in front (PR 508; the
+  fractional cloud drift: PR 510). `2c3f66` stays as the clear colour, the fallback and the horizon. The contrast gate now
+  composites every sprite over the real layers (the flat colour, the scenery layers at the steady cameras and 8 cloud drift
+  phases, the play layer), which supersedes the one flat sample per placement described below, and it passes.
 - **Moon rim (rule).** On the night background the near-black ink contour
   of D71/D76 no longer separates a sprite from the sky (below about OKLab L 0.40; over `2c3f66` 31 active sprites fall
   under 0.28). An active sprite whose outline does not reach the active floor on its level's background carries the moon
