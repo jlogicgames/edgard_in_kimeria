@@ -26,31 +26,36 @@ import java.util.List;
 
 /**
  * The dialogue screen (D78, #337, playtest F3/F10): two portrait windows face each other in a carved walnut frame, joined
- * by the silver thread once the healer has tied it (#495); the speaker is lit and bobs 1 px, the listener is dimmed; one text box holds every line. Logical
+ * by the silver thread once the healer has tied it (#495); both portraits are still, the speaker is lit and the listener dimmed, which alone says who
+ * speaks (D142); one text box holds every line. Logical
  * 640x360, Y down (the batch's camera). Text goes through {@link Overlay}'s Y-up pass as prebuilt blocks, rebuilt only when
  * a line, the language, a label or the checklist changes, so a frame allocates nothing. Portrait textures are owned by the
  * game's Assets cache; the frame art and the font are fetched on the first render.
  */
 public final class HealerDialogueView {
     static final float SCREEN_W = 640f, SCREEN_H = 360f;
-    /** Portrait windows: an 8 px band around a 160 px opening; the portrait is 158 px with 1 px of air for the bob. */
-    static final float WINDOW = 176f, BAND = 8f, PORTRAIT = 158f, PORTRAIT_INSET = BAND + 1f;
+    /** Portrait windows: an 8 px band around a 160 px opening, which the still portrait fills (D142). */
+    static final float WINDOW = 176f, BAND = 8f, PORTRAIT = WINDOW - BAND * 2f, PORTRAIT_INSET = BAND;
     static final float EDGARD_WINDOW_X = 20f, HEALER_WINDOW_X = SCREEN_W - 20f - WINDOW, WINDOW_Y = 14f;
     static final float WINDOW_INSET = 12f;
     /** The crest sits on the window's top edge, centred on the 176 px window (79 px from its left). */
     static final float CREST_W = 17f, CREST_H = 7f, CREST_Y = WINDOW_Y - 6f, CREST_OFFSET = 79f;
-    static final float PLATE_W = 128f, PLATE_H = 22f, PLATE_Y = 192f, PLATE_INSET = 6f, NAME_Y = PLATE_Y + 3f;
-    /** The text box (its ink inside the band): 556 px of text, four lines of the 18 px dialogue font, one of them spare. */
+    static final float PLATE_W = 128f, PLATE_H = 22f, PLATE_Y = 192f, PLATE_INSET = 6f;
+    /** The text box (its ink inside the band): 556 px between its margins, four lines of the 18 px dialogue font. */
     static final float BOX_X = 24f, BOX_Y = 226f, BOX_W = 592f, BOX_H = 86f, BOX_BAND_OUT = 4f, BOX_INSET = 10f;
     static final float TEXT_X = BOX_X + 18f, TEXT_W = BOX_W - 36f, TEXT_Y = BOX_Y + 7f;
     static final int TEXT_LINES = 4;
+    /**
+     * A spoken line stops short of the other speaker's picture (D142): Edgard's starts at the box's left margin and wraps at the
+     * healer's window, the healer's ends at the right margin and wraps at Edgard's window. Mirrored, so both are 402 px wide.
+     */
+    static final float LINE_W = HEALER_WINDOW_X - TEXT_X, HEALER_LINE_X = EDGARD_WINDOW_X + WINDOW;
     static final float TEXT_H = TEXT_LINES * FontSizes.DIALOGUE;
     /**
      * D137 (#491): the large text tier draws the dialogue at 20 px, so four lines are 80 px, not 72, and the box grows by the 4 px
      * more it needs (ink 7 + 80 + 2 = 89, drawn 90); the prompt under it moves down with it and still clears the page border.
      */
     static final float BOX_H_LARGE = 90f, TEXT_H_LARGE = TEXT_LINES * FontSizes.DIALOGUE_LARGE;
-    static final float NOTCH_W = 13f, NOTCH_H = 8f, NOTCH_Y = BOX_Y - BOX_BAND_OUT - NOTCH_H + 1f;
     static final float HINT_GAP = BOX_BAND_OUT + 4f;
     static final float HINT_Y = BOX_Y + BOX_H + HINT_GAP, HINT_Y_LARGE = BOX_Y + BOX_H_LARGE + HINT_GAP;
     static final float PAGE_INSET = 10f;
@@ -94,16 +99,14 @@ public final class HealerDialogueView {
     private static final float MAX_STEP = 1f / 20f;
     /** t(1-t) peaks at 1/4: this factor makes the sag the drop at the middle of the span. */
     private static final float PARABOLA_PEAK = 4f;
-    /** The speaker lifts 1 px for the second half of every period. */
-    static final float BOB_PERIOD = 1.2f;
     /** The listener's portrait multiplier: dim and moonlit, its outline still reads on the dusk window (test_dialogue_frame_sprites.py). */
-    static final Color LISTENER = new Color(.55f, .58f, .70f, 1f);
+    static final Color LISTENER = new Color(.46f, .49f, .60f, 1f);
     /** Opening, in fractions of {@link HealerDialogue#OPEN_SECONDS}: the windows unfold, the box opens, a tied thread draws in last. */
     static final float WINDOWS_OPEN = .5f, BOX_OPEN = .66f, THREAD_START = .33f;
 
     private static final Color HEALER_GREEN = new Color(.42f, .88f, .48f, 1f);
-    /** The listener's name: dimmed, still at least 4.5:1 on the dimmed plate (healer green 5.0:1, white 7.9:1). */
-    private static final float NAME_DIM = .65f;
+    /** The listener's name: dimmed, still at least 4.5:1 on the dimmed plate (healer green 4.6:1, white 7.2:1). */
+    private static final float NAME_DIM = .62f;
     private static final Color EDGARD_NAME_DIM = new Color(NAME_DIM, NAME_DIM, NAME_DIM, 1f);
     private static final Color HEALER_NAME_DIM = new Color(HEALER_GREEN.r * NAME_DIM, HEALER_GREEN.g * NAME_DIM, HEALER_GREEN.b * NAME_DIM, 1f);
     private static final Color CHECKLIST = new Color(.88f, .89f, .93f, 1f);
@@ -118,7 +121,7 @@ public final class HealerDialogueView {
     private final TextureRegion edgard, healer;
     // Fetched on the first render (tests build the view with stub assets for its layout and checklist).
     private Patch windowLit, windowDim, plateLit, plateDim, box, page, choiceIdle, choiceSelected;
-    private TextureRegion crestLit, crestDim, notch, thread, glint;
+    private TextureRegion crestLit, crestDim, thread, glint;
     private BitmapFont font;
     /** The text tier (D137) the font and the blocks were built for, and the box and prompt geometry that goes with it. */
     private int fontGeneration = -1;
@@ -176,16 +179,6 @@ public final class HealerDialogueView {
         return -1;
     }
 
-    /** Where the notch sits: the centre of the speaker's window. */
-    static float speakerCentreX(boolean edgardSpeaking) {
-        return (edgardSpeaking ? EDGARD_WINDOW_X : HEALER_WINDOW_X) + WINDOW / 2f;
-    }
-
-    /** 1 when the speaker is lifted this frame, else 0. */
-    static int bobLift(float time) {
-        return time % BOB_PERIOD >= BOB_PERIOD / 2f ? 1 : 0;
-    }
-
     /** The thread's centre line at screen x on its span (the glint rides it). */
     static float threadY(float x) {
         float t = (x - THREAD_X0) / (THREAD_X1 - THREAD_X0);
@@ -210,9 +203,8 @@ public final class HealerDialogueView {
         (edgardSpeaking ? windowDim : windowLit).draw(batch, HEALER_WINDOW_X, windowY, WINDOW, windowH);
         boolean framed = unfold >= 1f;
         if (framed) {
-            int lift = bobLift(dialogue.time());
-            portrait(batch, edgard, EDGARD_WINDOW_X, edgardSpeaking, edgardSpeaking ? lift : 0);
-            portrait(batch, healer, HEALER_WINDOW_X, !edgardSpeaking, edgardSpeaking ? 0 : lift);
+            portrait(batch, edgard, EDGARD_WINDOW_X, edgardSpeaking);
+            portrait(batch, healer, HEALER_WINDOW_X, !edgardSpeaking);
             float crestOffset = CREST_OFFSET;
             batch.draw(edgardSpeaking ? crestLit : crestDim, EDGARD_WINDOW_X + crestOffset, CREST_Y, CREST_W, CREST_H);
             batch.draw(edgardSpeaking ? crestDim : crestLit, HEALER_WINDOW_X + crestOffset, CREST_Y, CREST_W, CREST_H);
@@ -226,7 +218,6 @@ public final class HealerDialogueView {
         float drawnH = Math.max(BOX_INSET * 2f, (boxH + BOX_BAND_OUT * 2f) * boxOpen);
         float boxY = BOX_Y - BOX_BAND_OUT + (boxH + BOX_BAND_OUT * 2f - drawnH) / 2f;
         box.draw(batch, BOX_X - BOX_BAND_OUT, boxY, BOX_W + BOX_BAND_OUT * 2f, drawnH);
-        if (boxOpen >= 1f) batch.draw(notch, Math.round(speakerCentreX(edgardSpeaking) - NOTCH_W / 2f), NOTCH_Y, NOTCH_W, NOTCH_H);
 
         if (open < 1f) return; // text, choices and the checklist come once the frame is whole
         rebuildBlocks(overlay, dialogue, lang, level, inventory);
@@ -402,13 +393,13 @@ public final class HealerDialogueView {
         batch.draw(glint, Math.round(x - GLINT / 2f), Math.round(threadY(x) - GLINT / 2f), GLINT, GLINT);
     }
 
-    private void portrait(Batch batch, TextureRegion image, float windowX, boolean lit, int lift) {
+    private void portrait(Batch batch, TextureRegion image, float windowX, boolean lit) {
         batch.setColor(lit ? Color.WHITE : LISTENER);
-        // Fit the whole canvas, including non-square replacements; Y down, so the lift subtracts.
+        // Fit the whole canvas, including non-square replacements.
         float scale = Math.min(PORTRAIT / image.getRegionWidth(), PORTRAIT / image.getRegionHeight());
         float width = image.getRegionWidth() * scale, height = image.getRegionHeight() * scale;
         batch.draw(image, windowX + PORTRAIT_INSET + (PORTRAIT - width) / 2f,
-            WINDOW_Y + PORTRAIT_INSET + (PORTRAIT - height) / 2f - lift, width, height);
+            WINDOW_Y + PORTRAIT_INSET + (PORTRAIT - height) / 2f, width, height);
         batch.setColor(Color.WHITE);
     }
 
@@ -416,8 +407,8 @@ public final class HealerDialogueView {
     private void rebuildBlocks(Overlay overlay, HealerDialogue dialogue, Language lang, Level level, ArtifactInventory inventory) {
         boolean languageChanged = lang != blockLanguage;
         if (languageChanged || dialogue != blockDialogue) {
-            centred(edgardName, overlay, Msg.EDGARD.t(lang), EDGARD_WINDOW_X + (WINDOW - PLATE_W) / 2f, NAME_Y, PLATE_W, Color.WHITE);
-            centred(healerName, overlay, Msg.HEALER.t(lang), HEALER_WINDOW_X + (WINDOW - PLATE_W) / 2f, NAME_Y, PLATE_W, HEALER_GREEN);
+            name(edgardName, overlay, Msg.EDGARD.t(lang), EDGARD_WINDOW_X + (WINDOW - PLATE_W) / 2f, Color.WHITE);
+            name(healerName, overlay, Msg.HEALER.t(lang), HEALER_WINDOW_X + (WINDOW - PLATE_W) / 2f, HEALER_GREEN);
             String hint = Msg.HEALER_HINT.t(lang);
             layout.setText(font, hint, HINT, TEXT_W, Align.right, false);
             hintBlock.setText(layout, TEXT_X, overlay.textY(hintY));
@@ -448,8 +439,8 @@ public final class HealerDialogueView {
         if (languageChanged || dialogue.currentLine() != blockLine) {
             boolean edgardSpeaking = dialogue.edgardSpeaking();
             String text = dialogue.completeText(lang);
-            layout.setText(font, text, edgardSpeaking ? Color.WHITE : HEALER_GREEN, TEXT_W, edgardSpeaking ? Align.left : Align.right, true);
-            lineBlock.setText(layout, TEXT_X, overlay.textY(TEXT_Y));
+            layout.setText(font, text, edgardSpeaking ? Color.WHITE : HEALER_GREEN, LINE_W, edgardSpeaking ? Align.left : Align.right, true);
+            lineBlock.setText(layout, edgardSpeaking ? TEXT_X : HEALER_LINE_X, overlay.textY(TEXT_Y));
             mapGlyphs(layout, text, lineGlyphSource);
             blockLine = dialogue.currentLine();
         }
@@ -496,10 +487,38 @@ public final class HealerDialogueView {
         };
     }
 
-    private void centred(BitmapFontCache block, Overlay overlay, String text, float x, float yFromTop, float width, Color color) {
-        layout.setText(font, text, color, width, Align.center, false);
-        block.setText(layout, x, overlay.textY(yFromTop));
+    /** A name centred in its plate, both ways: vertically by the pixels its own glyphs cover, not by the line height (D142). */
+    private void name(BitmapFontCache block, Overlay overlay, String text, float x, Color color) {
+        layout.setText(font, text, color, PLATE_W, Align.center, false);
+        block.setText(layout, x, overlay.textY(centredTop(font.getData(), layout, PLATE_Y, PLATE_H)));
     }
+
+    /**
+     * Where (Y down) the top of a one-line {@code layout} goes so that its visible glyphs, from the highest (an ascender, a
+     * capital's upturn) to the lowest (a descender), sit in the middle of the span starting at {@code top}, on a whole pixel.
+     * A Y-up glyph's quad runs from {@code ascent + yoffset} to {@code height} above that, relative to the layout's top.
+     */
+    static float centredTop(BitmapFont.BitmapFontData data, GlyphLayout layout, float top, float height) {
+        float highest = -Float.MAX_VALUE, lowest = Float.MAX_VALUE; // Y up, from the layout's top
+        for (int r = 0; r < layout.runs.size; r++) {
+            GlyphLayout.GlyphRun run = layout.runs.get(r);
+            for (int g = 0; g < run.glyphs.size; g++) {
+                BitmapFont.Glyph glyph = run.glyphs.get(g);
+                if (glyph.height == 0) continue; // a space covers nothing
+                float bottom = run.y + data.ascent + glyph.yoffset * data.scaleY;
+                lowest = Math.min(lowest, bottom);
+                highest = Math.max(highest, bottom + glyph.height * data.scaleY);
+            }
+        }
+        if (highest < lowest) return top;
+        return Math.round(top + (height - (highest - lowest)) / 2f + highest);
+    }
+
+    /** A name's prebuilt block, for tests. */
+    BitmapFontCache nameBlock(boolean edgardName) { return edgardName ? this.edgardName : healerName; }
+
+    /** The spoken line's prebuilt block, for tests. */
+    BitmapFontCache lineBlock() { return lineBlock; }
 
     private void selectChoice(Overlay overlay, int selected, int count) {
         for (int i = 0; i < count; i++) choiceBlocks[i].setColors(i == selected ? CHOICE_SELECTED : CHOICE_IDLE);
@@ -564,7 +583,6 @@ public final class HealerDialogueView {
         choiceSelected = new Patch(assets, UI + "choice.png", CHOICE_ART_W, CHOICE_ART_W, CHOICE_H, CHOICE_INSET, CHOICE_H / 2f);
         crestLit = assets.region(UI + "crest.png", 0, 0, CREST_W, CREST_H);
         crestDim = assets.region(UI + "crest.png", CREST_W, 0, CREST_W, CREST_H);
-        notch = assets.region(UI + "notch.png", 0, 0, NOTCH_W, NOTCH_H);
         thread = assets.region(UI + "thread.png", 0, 0, THREAD_W, THREAD_H);
         glint = assets.region(UI + "glint.png", 0, 0, GLINT, GLINT);
         flights = new FlightFx(FLIGHT_SEED);

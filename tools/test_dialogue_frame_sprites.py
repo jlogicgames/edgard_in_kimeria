@@ -10,9 +10,11 @@ checked here, on the exported art (OKLab lightness L):
 - decor (the ornament: page border, text box border, and the listener's window, crest and plate): at most
   `check_contrast.DECOR_OUTLINE_MAX` (0.20) against every ground it touches;
 - the thread: its outline (D76's measure) against the composed screen it crosses, either speaker lit, active;
-- the band (D134): its visible width, counted from the outer edge to the opening along the middle of each side of the window
-  stretched to its drawn size, is the same on all four sides (within 1 px), lit and dim, so no side looks thinner;
-- the dimmed listener portrait: an outline of at least 0.15 against its opening, and visibly darker than when lit.
+- the bands (D134, D142): the visible width, counted from the outer edge to the opening (the ink, for the text box) along the
+  middle of each side of the frame stretched to its drawn size, is the same on all four sides (within 1 px), for the portrait
+  window lit and dim and for the text box at both its heights, so no side looks thinner;
+- the dimmed listener (D142): the portrait keeps an outline of at least 0.15 against its opening and is clearly darker than
+  when lit; the listener's name stays at least 4.5:1 (WCAG) on the dimmed plate.
 
 The layout (positions and sizes) is read from `HealerDialogueView.java`, so a layout change there is measured here.
 Values measured 2026-11-16 are in docs/ART_DIRECTION.md, "Dialogue screen".
@@ -39,8 +41,13 @@ DECOR_MAX = contrast.DECOR_OUTLINE_MAX
 LISTENER_OUTLINE_MIN = 0.15  # the dimmed portrait's silhouette against its opening
 BAND_VISIBLE = 0.05  # |L| from the page fill at which a band pixel counts as visible (the near-black outline sits at 0.022)
 BAND_EVEN = 1  # px the four sides may differ by
-BAND_MIN = 6  # px the thinnest side must still show (the band is 7 today)
-LISTENER_DROP_MIN = 0.10  # the dimmed portrait is visibly darker than the lit one (mean L)
+BAND_MIN = 6  # px the thinnest side must still show (the window band is 7 today)
+BOX_BAND_MIN = 5  # px the text box's thinnest side must still show (its 6 px band less the near-black outline)
+LISTENER_DROP_MIN = 0.15  # the dimmed portrait is clearly darker than the lit one (mean L); 0.10 before D142
+NAME_RATIO_MIN = 4.5  # WCAG contrast of the dimmed name on the dimmed plate
+LUMA_WEIGHTS = (0.2126, 0.7152, 0.0722)  # WCAG relative luminance of linear red, green and blue
+FLARE = 0.05  # WCAG's ambient term in the contrast ratio
+CHANNEL_MAX = 255
 OPENING = (16, 16)  # a pixel of the window's opening
 BEAD = (6, 16)  # the bright bead pixel on the window's left band
 FILL = (12, 12)  # a pixel inside the page and the text box
@@ -115,6 +122,38 @@ def listener():
     return tuple(float(v) for v in values)
 
 
+def view_numbers(pattern):
+    """The float literals `pattern` captures in HealerDialogueView."""
+    return tuple(float(v) for v in re.search(pattern, VIEW.read_text(encoding='utf-8')).groups())
+
+
+def luminance(rgb):
+    """WCAG relative luminance."""
+    return sum(weight * contrast.linear(channel) for weight, channel in zip(LUMA_WEIGHTS, rgb))
+
+
+def ratio(one, other):
+    high, low = sorted((luminance(one), luminance(other)), reverse=True)
+    return (high + FLARE) / (low + FLARE)
+
+
+def visible_band(image, inset, inner, page):
+    """The visible px of each side of a stretched frame: from the outer edge towards `inner`, along the side's middle."""
+    width, height = image.size
+    sides = {'left': [(i, height // 2) for i in range(inset)], 'top': [(width // 2, i) for i in range(inset)],
+             'right': [(width - 1 - i, height // 2) for i in range(inset)],
+             'bottom': [(width // 2, height - 1 - i) for i in range(inset)]}
+    widths = {}
+    for side, points in sides.items():  # the band and its inner edge only (the inset), never the opening or beyond
+        count = 0
+        for point in points:
+            if image.getpixel(point) == inner:
+                break
+            count += abs(lightness(image.getpixel(point)) - lightness(page)) >= BAND_VISIBLE
+        widths[side] = count
+    return widths
+
+
 def scaled(image, factors):
     bands = image.split()
     return Image.merge('RGBA', [band.point(lambda v, m=m: int(v * m)) for band, m in zip(bands, factors + (1.0,))])
@@ -173,7 +212,6 @@ class DialogueFrameTest(unittest.TestCase):
                  ('speaker crest, on the page', loudest(frame('crest', LIT), page)),
                  ('speaker plate, on the page', loudest(frame('plate', LIT), page)),
                  ('speaker plate rule, on its fill', loudest(frame('plate', LIT), pixel('plate', LIT, PLATE_FILL))),
-                 ('notch, on the page', loudest(frame('notch', 0), page)),
                  ('idle choice, on the page', loudest(frame('choice', IDLE), page)),
                  ('idle choice rule, on its ink', loudest(frame('choice', IDLE), ink)),
                  ('selected choice, on its ink', loudest(frame('choice', SELECTED), ink)))
@@ -194,24 +232,31 @@ class DialogueFrameTest(unittest.TestCase):
         for what, value in cases:
             self.assertLessEqual(value, DECOR_MAX, what)
 
+    def assert_even(self, widths, minimum, what):
+        self.assertLessEqual(max(widths.values()) - min(widths.values()), BAND_EVEN, f'{what} band: {widths}')
+        self.assertGreaterEqual(min(widths.values()), minimum, f'{what} band: {widths}')
+
     def test_the_band_reads_the_same_on_all_four_sides(self):
         page, size = pixel('page', 0, FILL), at('WINDOW')
-        middle = size // 2
         for index, name in ((LIT, 'lit'), (DIM, 'dim')):
-            opening = pixel('window', index, OPENING)
             window = nine_patch(frame('window', index), size, size, at('WINDOW_INSET')).convert('RGB')
-            sides = {'left': [(i, middle) for i in range(size)], 'top': [(middle, i) for i in range(size)],
-                     'right': [(size - 1 - i, middle) for i in range(size)], 'bottom': [(middle, size - 1 - i) for i in range(size)]}
-            widths = {}
-            for side, points in sides.items():
-                count = 0
-                for point in points[:at('WINDOW_INSET')]:  # the band and its inner edge only, never the opening or beyond
-                    if window.getpixel(point) == opening:
-                        break
-                    count += abs(lightness(window.getpixel(point)) - lightness(page)) >= BAND_VISIBLE
-                widths[side] = count
-            self.assertLessEqual(max(widths.values()) - min(widths.values()), BAND_EVEN, f'{name} window band: {widths}')
-            self.assertGreaterEqual(min(widths.values()), BAND_MIN, f'{name} window band: {widths}')
+            widths = visible_band(window, at('WINDOW_INSET'), pixel('window', index, OPENING), page)
+            self.assert_even(widths, BAND_MIN, f'{name} window')
+
+    def test_the_text_box_band_reads_the_same_on_all_four_sides(self):
+        page, ink = pixel('page', 0, FILL), pixel('box', 0, FILL)
+        out = at('BOX_BAND_OUT')
+        for height in (at('BOX_H'), at('BOX_H_LARGE')):  # both text tiers (D137)
+            box = nine_patch(frame('box', 0), at('BOX_W') + out * 2, height + out * 2, at('BOX_INSET')).convert('RGB')
+            self.assert_even(visible_band(box, at('BOX_INSET'), ink, page), BOX_BAND_MIN, f'text box {height} high')
+
+    def test_the_dimmed_name_still_reads_on_its_plate(self):
+        plate = pixel('plate', DIM, PLATE_FILL)
+        (dim,) = view_numbers(r'NAME_DIM = ([.\d]+)f')
+        green = view_numbers(r'HEALER_GREEN = new Color\(([.\d]+)f, ([.\d]+)f, ([.\d]+)f')
+        for name, colour in (('Edgard', (1.0, 1.0, 1.0)), ('healer', green)):
+            drawn = tuple(int(channel * dim * CHANNEL_MAX) for channel in colour)
+            self.assertGreaterEqual(ratio(drawn, plate), NAME_RATIO_MIN, f'{name} listener name')
 
     def test_the_thread_is_loud_on_the_screen_it_crosses(self):
         """The thread over what is drawn behind it: the page, both window bands and both portraits, either speaker lit."""

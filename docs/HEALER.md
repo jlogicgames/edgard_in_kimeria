@@ -12,15 +12,17 @@ The world, player input and gameplay effects stop. The dialogue screen
 #337, playtest F3/F10) is a storybook page: two carved walnut portrait windows face each other, Edgard
 left and the healer right, joined by the silver thread once the healer has tied it, with a name plate under each. See
 [portrait assets and replacement instructions](PORTRAITS.md) and the
-[frame art](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337). The speaker's window, crest and plate
-are lit and the portrait bobs 1 px; the listener's are dimmed. A glint runs along the thread from the
+[frame art](ART_DIRECTION.md#dialogue-screen-d78-playtest-f3f10-337). The speaker's window, crest, plate
+and portrait are lit and the listener's are dimmed; both portraits stand still and nothing else marks the speaker
+([D142](DECISIONS.md#d142-the-dialogue-screen-stands-still-centred-names-an-even-text-box-a-darker-listener-616-amends-d78-d134-2026-11-25)). A glint runs along the thread from the
 speaker to the listener as each line starts. In the forest-0 start tale there is no thread until the line that
 explains it (`HEALER_TALE_THREAD`), which draws it from Edgard's wrist to the healer; every later conversation
 has it from the opening ([#495](https://github.com/jlogicgames/edgard_in_kimeria/issues/495)). All five supported languages use the shared baked pixel font.
 Edgard's name and dialogue are white, with his lines aligned left; the healer's are green, aligned right.
-Every line is shown in one text box under the windows, 556 px wide and four lines tall; a notch on its top
-edge points at the speaker. Every current line fits in three lines in all five languages, so one line stays
-spare; the first-death line ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)) takes two. At
+Every line is shown in one text box under the windows, four lines tall. A line stops short of the other speaker's picture:
+Edgard's starts at the box's left margin and wraps at the healer's window, the healer's ends at the right margin and wraps at
+Edgard's window, 402 px wide either way ([D142](DECISIONS.md#d142-the-dialogue-screen-stands-still-centred-names-an-even-text-box-a-darker-listener-616-amends-d78-d134-2026-11-25)). Every current line fits the four lines in all five languages (the longest
+ones fill them, `HealerDialogueTest` pins which); the first-death line ([#341](https://github.com/jlogicgames/edgard_in_kimeria/issues/341)) takes two. At
 the pre-boss stop the recipe checklist and the choices sit in the column between the windows. The screen
 opens in 0.3 s (the windows unfold, the box opens, a tied thread draws in) before the first letter.
 Complete-line layout stays fixed while letters reveal. A right-aligned, translated `Next >` prompt appears
@@ -85,7 +87,7 @@ boss; the elixir makes the sword "strike ten times harder" and does not touch "m
 encounter lock is told with the silver thread (the elixir stays when the night swallows Edgard and fades when the guardian
 falls); he names what is missing himself instead of pointing at the checklist; the paid line no longer narrates the
 player drinking. A returning visit opens with Edgard's name, and the lock line closes with the sending-off "Go on". The
-mechanics above are unchanged. Every line is at most 152 EN characters and fits three of the box's four lines.
+mechanics above are unchanged. Every line is at most 152 EN characters and fits three of the box's four lines at its 402 px width ([D142](DECISIONS.md#d142-the-dialogue-screen-stands-still-centred-names-an-even-text-box-a-darker-listener-616-amends-d78-d134-2026-11-25)).
 
 The first unpaid pre-boss meeting uses the introduction above. After Edgard returns from a
 collection trip, the healer greets him as a returning visitor and restates the existing Bat,
@@ -240,6 +242,7 @@ available inside the frame. The general localization layout test no longer repea
 full-width measurement.
 **Superseded 2026-11-16 by D78 (#337):** the speaker regions are gone; every line is measured against the one
 556 px text box and must take at most three of its four lines (`HealerDialogueTest`).
+**Revised 2026-11-25 by [D142](DECISIONS.md#d142-the-dialogue-screen-stands-still-centred-names-an-even-text-box-a-darker-listener-616-amends-d78-d134-2026-11-25):** a line is 402 px wide and may fill all four lines; the cases that do are pinned.
 
 A temporary LWJGL preview used the shared `KimeriaGame` renderer, `HealerDialogueView` and
 shipped baked font to capture 55 desktop frames at 1280×720 for the five catalogs. Each set

@@ -240,7 +240,7 @@ The healer's fairy is an original pixel drawing in two sheets, from grids in `ar
 ## Production and continuity
 
 Current portraits have a **256 × 256 px** runtime canvas, at most **256 palette entries
-including transparency**, and are displayed at 158 × 158 logical pixels in the dialogue
+including transparency**, and are displayed at 160 × 160 logical pixels in the dialogue
 screen's portrait windows ([D78](DECISIONS.md#d78-the-dialogue-is-a-codec-style-storybook-screen-playtest-f3f10-337-2026-11-16); 64 × 64 before #337). Keep higher-resolution transparent masters under `art/portraits/` so future work
 has a detailed style reference rather than an enlarged thumbnail. Runtime exports use
 smooth resizing, palette quantization without dithering, and linear texture filtering.
@@ -1501,9 +1501,8 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 |---|---|---|
 | Portrait window | `window`, 32 px nine-patch (insets 12): walnut band 8 px, gilt bead, corner rosettes; opening dusk blue `3d4a68` | `lit` / `dim` (every colour × 0.5, the two brightest gilts capped) |
 | Crest | `crest`, 17 × 7, a carved gable with a rosette on each window | `lit` / `dim` |
-| Name plate | `plate`, 16 × 22 three-patch: gilt rule, dark walnut, two nail heads | `lit` / `dim` |
+| Name plate | `plate`, 16 × 22 three-patch: gilt rule, dark walnut, two nail heads; the name centred in it (D142) | `lit` / `dim` |
 | Text box | `box`, 24 px nine-patch (insets 10): walnut band 6 px, ink inside | one look |
-| Speech notch | `notch`, 13 × 8, on the box's top edge under the speaker's plate | moves to the speaker |
 | Page | `page`, 24 px nine-patch: the whole screen, dim walnut border | one look |
 | Choice | `choice`, 16 × 26 three-patch: ink with a dark gilt rule | `idle` / `selected` (double bright rule) |
 | Silver thread | `thread`, 284 × 32, drawn at (178, 154): knot on Edgard's wrist, 16 px sag, end in the healer's hand | not there until it is tied (below); once tied, draws in over each opening |
@@ -1511,21 +1510,37 @@ style A "walnut and gilt" of the Phase A mock-up (2026-11-16).
 
 - **The thread is tied on screen ([#495](https://github.com/jlogicgames/edgard_in_kimeria/issues/495), playtest 2026-11-19: "the line between them is unclear"):** the forest-0 start tale opens with no thread. On `HEALER_TALE_THREAD` it draws in from Edgard's wrist to the healer over 1.2 s (`HealerDialogue.THREAD_TIE_SECONDS`) with the glint on its leading end, then the glint runs back from the healer, who is speaking, to Edgard. It stays for the rest of that tale, and every later conversation has it from the opening. Leaving the line early leaves the thread whole; with instant text it is whole on the line's first frame; a pause freezes the draw-in.
 - **The glint on a phone (#495):** the 5 px star was 3.0 CSS px on a 390 px portrait phone (0.61 CSS px per unit, D137) and went unnoticed. It is now 13 px, 7.9 CSS px there (12.9 in the 844 × 390 landscape side-bar layout), with a white core, and crosses in 1.4 s (was 0.8 s). On the thread it spans y 162 to 189 at most, under the two choices (end y 138) and above the plates (y 192). The paid screen's arrival flash (D132) is the same sprite and grew with it. `HealerThreadTest` holds the size, the time and the clearances.
-- **Palette:** walnut `1d120c` `3a2416` `523420` `5a3a22` `7d5534` (`523420` is the window's shadow sides, D134); gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
+- **Palette:** walnut `1d120c` `3a2416` `523420` `5a3a22` `7d5534` (`523420` is the window's shadow sides, D134; the text box uses its own `0e0906` `2d1d11` `3e2a1a` `372913`); gilt `6e5226` `a8844a` `d8c08a`, dim gilt caps `44361e` `3e3728` (muted, never the reserved gold
   `ffd23a` or honey `e2b25a`); ink `0b0d18`; silver `5d6577` `9aa3b6` `d8dee9`; at most 16 colours per sheet.
-- **Portraits:** 158 px in the 160 px opening, linear filtering; the speaker lifts 1 px for half of every 1.2 s, the
-  listener is multiplied by (0.55, 0.58, 0.70). The opening is dusk blue, not navy: on the first navy the portraits' dark
-  contours vanished (dimmed healer outline 0.05).
+- **Portraits:** 160 px, filling the opening, linear filtering, still; the listener is multiplied by (0.46, 0.49, 0.60).
+  The opening is dusk blue, not navy: on the first navy the portraits' dark contours vanished (dimmed healer outline 0.05).
+- **Who speaks (D142, [#616](https://github.com/jlogicgames/edgard_in_kimeria/issues/616)):** the highlight alone. The speaker's window, crest, plate, name and portrait are lit, the listener's are dim; nothing
+  moves with the speaker and nothing points at them (the 1 px bob and the notch on the text box are gone). The listener's
+  name is multiplied by 0.62: 4.6:1 (healer green) and 7.2:1 (white) on the dim plate, at least 4.5:1
+  (`test_the_dimmed_name_still_reads_on_its_plate`).
+- **Names (D142):** each name is centred in its 22 px plate by the pixels its own glyphs cover, from the highest to the
+  lowest, not by the line height (`HealerDialogueView.centredTop`, both text tiers; `HealerDialogueViewTest`: as much plate
+  above as below, within 1 px, in five languages). A name with a descender (Edgard) therefore starts 1 px higher than one
+  without (Healer).
 - **Tiers (D76 by analogy, `tools/test_dialogue_frame_sprites.py`, layout read from `HealerDialogueView`):** an element's
   loudness is its loudest colour against the ground it sits on. Active (at least 0.28): everything that names the speaker
-  (bead 0.40 on the opening; window band, crest, plate and notch 0.64 on the page) and the choices (idle 0.29, selected
+  (bead 0.40 on the opening; window band, crest and plate 0.64 on the page) and the choices (idle 0.29, selected
   0.65), and the thread's outline (0.43 to 0.44). Decor (at most 0.20): the listener's window band, crest and plate, the page
   border and the text box border (0.17 to 0.18). The dim sheets are the lit colours × 0.5, except the two brightest gilts,
   capped at `44361e` and `3e3728`: at plain half brightness their rosette highlights measured 0.32. The dimmed portraits
-  keep an outline of 0.21 and 0.20 against the opening (at least 0.15).
+  keep an outline of 0.21 and 0.22 against the opening (at least 0.15) and are 0.16 and 0.19 darker in mean L than when lit
+  (at least 0.15).
 - **Even band (D134, playtest F7, [#537](https://github.com/jlogicgames/edgard_in_kimeria/issues/537)):** the window's visible band is 7 px on all four sides, lit and dim. The shadow sides (right, bottom) used to end in 3 px of near-black (`1d120c`, 0.022 from the page), which
   vanished into the page and left 5 px against 7 on the left and top. Now their outer 2 px inside the 1 px outline are shadow walnut `523420` (dim `291a10`), 0.183 and 0.061 from the page, still darker than the lit rim `7d5534` (0.313). A band pixel counts as visible at 0.05 or more
   from the page; `test_the_band_reads_the_same_on_all_four_sides` counts it along the middle of each side and fails when the sides differ by more than 1 px. The tiers above are unchanged (speaker band 0.64, listener band 0.17).
+- **Line width (D142):** a spoken line stops short of the other speaker's picture. Edgard's starts at the box's left margin
+  (x 42) and wraps at the healer's window (x 444); the healer's is right-aligned, ends at the right margin (x 598) and wraps at
+  Edgard's window (x 196): 402 px either way, was 556. The box, the fonts and the prompt are unchanged.
+- **Even text box (D142):** the box had the same fault as the window: 3 px of near-black (`0e0906`, 0.027 from the page)
+  closed its right and bottom sides, so the visible band measured 5, 5, 3, 3 px (left, top, right, bottom). Their outer 2 px
+  inside the 1 px outline are now shadow walnut `2d1d11` (0.075 from the page, darker than the lit rim `3e2a1a`, 0.132):
+  5 px on all four sides at both box heights (`test_the_text_box_band_reads_the_same_on_all_four_sides`). Same outer size,
+  ink and insets; the box stays decor.
 - **Production:** edit a grid, run `python3 tools/dialogue_frame_sprites.py` (exports and the contact sheet
   [dialogue-frame-art.png](references/dialogue-frame-art.png)); the tool test fails when an export is stale.
   The D134 band check is shown in [before and after frames](references/dialogue/band-before-edgard-speaks.png) ([after](references/dialogue/band-after-edgard-speaks.png), [healer speaking: before](references/dialogue/band-before-healer-speaks.png), [after](references/dialogue/band-after-healer-speaks.png)) and the [corners at 4x](references/dialogue/band-corners-x4.png), top row before, bottom row after.

@@ -1,5 +1,7 @@
 # Dialogue text box (#337, D78): walnut band 6 px with a gilt bead and corner rosettes, ink inside; nine-patch, insets 10 px.
-# Always at rest colours: the box belongs to neither speaker, the notch points at the speaker.
+# Always at rest colours: the box belongs to neither speaker.
+# The shadow sides (right, bottom) carry 2 px of shadow walnut (j) inside the 1 px outline, so the band shows 5 px on all four
+# sides, as the portrait window's does (D134, D142).
 size 24 24
 color h 0e0906
 color i 1d120b
@@ -17,20 +19,20 @@ jmnnjmjjjjjjjjjjjjmnnjmj
 jjljljjnnnnnnnnnnjjljljj
 jjjmjjjlllllllllljjjmjjj
 hjjjjjhIIIIIIIIIIhjjjjjh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
-hkkjnlIIIIIIIIIIIIlnjhhh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
+hkkjnlIIIIIIIIIIIIlnjjjh
 hjjjjjhIIIIIIIIIIhjjjjjh
 jjjmjjjlllllllllljjjmjjj
 jjlnljjnnnnnnnnnnjjlnljj
 jmnnjmjjjjjjjjjjjjmnnjmj
-jjljljjhhhhhhhhhhjjljljj
-jjjmjjjhhhhhhhhhhjjjmjjj
+jjljljjjjjjjjjjjjjjljljj
+jjjmjjjjjjjjjjjjjjjjmjjj
 hjjjjjhhhhhhhhhhhhjjjjjh

@@ -2,6 +2,8 @@ package com.jlogicsoftware.kimeria.ui;
 
 import com.jlogicsoftware.kimeria.localization.Language;
 import com.jlogicsoftware.kimeria.localization.Msg;
+import java.util.Set;
+import java.util.TreeSet;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -363,50 +365,57 @@ class HealerDialogueTest {
     }
 
     /**
-     * D78: every spoken line, in all five languages, fits the 556 px text box at the 18 px baked font in at most three
-     * lines, so one of the box's four lines stays spare for the first-death line (#341).
+     * D78, D142: every spoken line, in all five languages, fits the text box's four lines at the 18 px baked font, 402 px wide.
+     * The lines that fill all four are pinned (measured 2026-11-25), so no other line can grow into the fourth line unseen.
      */
-    @Test void everyLocalizedLineFitsTheTextBoxWithOneLineSpare() {
+    @Test void everyLocalizedLineFitsTheTextBox() {
         assertEquals(556f, HealerDialogueView.TEXT_W, .001f);
+        assertEquals(402f, HealerDialogueView.LINE_W, .001f);
         assertEquals(4 * 18f, HealerDialogueView.TEXT_H, .001f);
-        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
-        var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
-        int spokenLineCount = 0, mostLines = 0;
-        for (Language language : Language.values()) {
-            for (Msg message : Msg.values()) {
-                if (!isSpokenDialogueLine(message)) continue;
-                spokenLineCount++;
-                mostLines = Math.max(mostLines, assertLineFits(font, message.t(language), language, message));
-            }
-        }
-        assertTrue(spokenLineCount > 0, "Typed healer/player dialogue keys must be covered");
-        assertEquals(3, mostLines, "the longest line (de HEALER_TALE_FIREGIFT) wraps to three lines");
+        var font = dialogueFont(FontSizes.DIALOGUE);
+        assertEquals(Set.of("en HEALER_TALE_FIREGIFT", "uk HEALER_TALE_FIREGIFT", "pl HEALER_TALE_FIREGIFT",
+            "de HEALER_TALE_FIREGIFT", "be HEALER_TALE_FIREGIFT", "de HEALER_TALE_THREAD"), fourLineCases(font));
         font.dispose();
     }
 
+    /** The spoken lines that fill all four lines of the box; every line must fit it. */
+    private static Set<String> fourLineCases(BitmapFont font) {
+        Set<String> full = new TreeSet<>();
+        int spokenLineCount = 0;
+        for (Language language : Language.values()) for (Msg message : Msg.values()) {
+            if (!isSpokenDialogueLine(message)) continue;
+            spokenLineCount++;
+            if (assertLineFits(font, message.t(language), language, message) == HealerDialogueView.TEXT_LINES)
+                full.add(language.code() + " " + message);
+        }
+        assertTrue(spokenLineCount > 0, "Typed healer/player dialogue keys must be covered");
+        return full;
+    }
+
     /**
-     * D134 (#538): the fourteen pre-boss, checklist and victory lines of the tale-voice pass take at most two of the text
-     * box's four lines in every language, at the 18 px baked font in the 556 px box.
+     * D134 (#538), D142: the fourteen pre-boss, checklist and victory lines of the tale-voice pass take at most three of the
+     * text box's four lines in every language at both text tiers, 402 px wide (two lines in the 556 px of before D142).
      */
-    @Test void theTalePassLinesTakeAtMostTwoLinesInEveryLanguage() {
-        var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
-        var font = new BitmapFont(fontData, new TextureRegion(new MetricsTexture()), false);
+    @Test void theTalePassLinesLeaveALineSpareInEveryLanguage() {
         Msg[] passLines = {Msg.HEALER_GREETING, Msg.EDGARD_REPLY, Msg.HEALER_RETURN_GREETING, Msg.HEALER_RETURN_CHECK,
             Msg.HEALER_INGREDIENTS, Msg.HEALER_BOTH, Msg.HEALER_PAYMENT, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
             Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE};
         assertEquals(14, passLines.length);
-        for (Language language : Language.values()) {
-            for (Msg message : passLines) {
-                int lines = assertLineFits(font, message.t(language), language, message);
-                assertTrue(lines <= 2, () -> language + " " + message + " takes " + lines + " lines, D134 says at most two");
+        for (int size : new int[]{FontSizes.DIALOGUE, FontSizes.DIALOGUE_LARGE}) {
+            var font = dialogueFont(size);
+            for (Language language : Language.values()) {
+                for (Msg message : passLines) {
+                    int lines = assertLineFits(font, message.t(language), language, message);
+                    assertTrue(lines <= 3, () -> language + " " + message + " takes " + lines + " lines at " + size + " px, D142 says at most three");
+                }
             }
+            font.dispose();
         }
-        font.dispose();
     }
 
     /**
      * D81 (#341): the healer's first-death line takes exactly two of the text box's four lines in every language, at the
-     * 18 px baked font in the 556 px box, right-aligned as the healer's lines are. Measured 2026-11-16: two in all five.
+     * 18 px baked font, 402 px wide (D142), right-aligned as the healer's lines are. Measured 2026-11-25: two in all five.
      */
     @Test void theFirstDeathLineTakesTwoOfTheFourLinesInEveryLanguage() {
         var fontData = new BitmapFont.BitmapFontData(Gdx.files.internal("fonts/generated/QuestSquare-" + FontSizes.DIALOGUE + ".fnt"), false);
@@ -425,39 +434,19 @@ class HealerDialogueTest {
     }
 
     /**
-     * D137 (#491): on a small picture the dialogue is the 20 px baked font. Every spoken line in five languages still fits the 556 px
-     * box in at most three of its four lines (one stays spare, as at 18 px; measured 2026-11-24: the longest line takes three), and
-     * four lines of 20 px (80) sit inside the taller box ({@code BOX_H_LARGE} 90, ink to y 313 of 316).
+     * D137 (#491), D142: on a small picture the dialogue is the 20 px baked font. Every spoken line in five languages fits the
+     * four lines, 402 px wide (the ones that fill all four are pinned, measured 2026-11-25), and four lines of 20 px (80) sit
+     * inside the taller box ({@code BOX_H_LARGE} 90, ink to y 313 of 316).
      */
-    @Test void atTheLargeSizeEveryLocalizedLineStillFitsTheTextBoxWithOneLineSpare() {
+    @Test void atTheLargeSizeEveryLocalizedLineStillFitsTheTextBox() {
         assertEquals(4 * 20f, HealerDialogueView.TEXT_H_LARGE, .001f);
         var font = dialogueFont(FontSizes.DIALOGUE_LARGE);
-        int mostLines = 0;
-        for (Language language : Language.values()) for (Msg message : Msg.values()) {
-            if (!isSpokenDialogueLine(message)) continue;
-            mostLines = Math.max(mostLines, assertLineFits(font, message.t(language), language, message));
-        }
-        assertEquals(3, mostLines, "the longest line wraps to three lines at 20 px too");
+        assertEquals(Set.of("en HEALER_TALE_FIREGIFT", "uk HEALER_TALE_FIREGIFT", "pl HEALER_TALE_FIREGIFT",
+            "de HEALER_TALE_FIREGIFT", "be HEALER_TALE_FIREGIFT", "de HEALER_TALE_THREAD", "uk HEALER_TALE_BLESSING",
+            "pl HEALER_TALE_BLESSING", "de HEALER_TALE_BLESSING", "be HEALER_TALE_BLESSING"), fourLineCases(font));
         assertTrue(HealerDialogueView.TEXT_Y + HealerDialogueView.TEXT_H_LARGE <= HealerDialogueView.BOX_Y + HealerDialogueView.BOX_H_LARGE - 2f, "four 20 px lines inside the ink");
         assertTrue(HealerDialogueView.HINT_Y_LARGE + FontSizes.DIALOGUE_LARGE <= HealerDialogueView.SCREEN_H - 6f, "the prompt clears the page border");
         assertTrue(HealerDialogueView.BOX_Y + HealerDialogueView.BOX_H_LARGE + HealerDialogueView.BOX_BAND_OUT < HealerDialogueView.HINT_Y_LARGE, "the prompt sits under the box");
-        font.dispose();
-    }
-
-    /**
-     * D134 at the large size: the fourteen tale-pass lines take at most two lines at 18 px; at 20 px one of them, the German offer,
-     * takes three (still one of four lines spare). The exception is pinned, so no other line can grow into it unseen.
-     */
-    @Test void atTheLargeSizeOnlyTheGermanOfferOfTheTalePassTakesThreeLines() {
-        var font = dialogueFont(FontSizes.DIALOGUE_LARGE);
-        Msg[] passLines = {Msg.HEALER_GREETING, Msg.EDGARD_REPLY, Msg.HEALER_RETURN_GREETING, Msg.HEALER_RETURN_CHECK,
-            Msg.HEALER_INGREDIENTS, Msg.HEALER_BOTH, Msg.HEALER_PAYMENT, Msg.HEALER_READY, Msg.HEALER_OFFER, Msg.HEALER_PAID,
-            Msg.HEALER_LOCK, Msg.HEALER_VICTORY, Msg.EDGARD_DARKNESS, Msg.HEALER_GUIDE};
-        for (Language language : Language.values()) for (Msg message : passLines) {
-            int lines = assertLineFits(font, message.t(language), language, message);
-            boolean exception = language == Language.GERMAN && message == Msg.HEALER_OFFER;
-            assertEquals(exception ? 3 : 2, Math.max(lines, 2) , language + " " + message + " takes " + lines + " lines at 20 px");
-        }
         font.dispose();
     }
 
@@ -483,7 +472,7 @@ class HealerDialogueTest {
             if (!isSpokenDialogueLine(message)) continue;
             String text = message.t(language);
             boolean edgard = message.name().startsWith("EDGARD_");
-            GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, HealerDialogueView.TEXT_W, edgard ? Align.left : Align.right, true);
+            GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, HealerDialogueView.LINE_W, edgard ? Align.left : Align.right, true);
             HealerDialogueView.mapGlyphs(layout, text, map);
             int glyphs = 0;
             for (int r = 0; r < layout.runs.size; r++) glyphs += layout.runs.get(r).glyphs.size;
@@ -500,7 +489,7 @@ class HealerDialogueTest {
         font.dispose();
     }
 
-    /** The speaker follows the script line by line: the lit window, the notch and the text side all name the same speaker. */
+    /** The speaker follows the script line by line: the lit window and the text side name the same speaker. */
     @Test void theSpeakerFollowsEveryScript() {
         assertSpeakers(HealerDialogue.tutorialStart(), "HEHHHHHHE"); // #338: the fairy gift is the healer's
         assertSpeakers(HealerDialogue.tutorialEnd(), "HEHH");
@@ -518,9 +507,6 @@ class HealerDialogueTest {
             boolean edgard = expected.charAt(i) == 'E';
             assertEquals(edgard, dialogue.edgardSpeaking(), "line " + i + " " + dialogue.currentLine());
             assertEquals(edgard, dialogue.currentLine().name().startsWith("EDGARD_"), "line " + i + " key");
-            float notch = HealerDialogueView.speakerCentreX(dialogue.edgardSpeaking());
-            float window = edgard ? HealerDialogueView.EDGARD_WINDOW_X : HealerDialogueView.HEALER_WINDOW_X;
-            assertTrue(notch > window && notch < window + HealerDialogueView.WINDOW, "the notch points at the speaker, line " + i);
             if (i + 1 < expected.length()) dialogue.advance(language);
         }
         Msg last = dialogue.currentLine();
@@ -582,25 +568,13 @@ class HealerDialogueTest {
         }
     }
 
-    /** The speaker's bob is 1 px at most and goes up (Y down: a lift is subtracted). */
-    @Test void theSpeakerBobsOnePixel() {
-        int lifted = 0;
-        for (int i = 0; i < 240; i++) {
-            int lift = HealerDialogueView.bobLift(i / 60f);
-            assertTrue(lift == 0 || lift == 1);
-            lifted += lift;
-        }
-        assertTrue(lifted > 60 && lifted < 180, "lifted about half the time: " + lifted);
-        assertTrue(HealerDialogueView.PORTRAIT_INSET - HealerDialogueView.BAND >= 1f, "1 px of air above the portrait for the lift");
-    }
-
     /** The screen's parts stay on screen and apart (logical px, Y down). */
     @Test void theScreenPartsDoNotOverlap() {
         float choicesBottom = HealerDialogueView.CHOICE_Y + 2 * HealerDialogueView.CHOICE_STEP - (HealerDialogueView.CHOICE_STEP - HealerDialogueView.CHOICE_H);
         assertTrue(choicesBottom < HealerDialogueView.THREAD_Y, "the choices clear the thread art");
         assertTrue(HealerDialogueView.WINDOW_Y + HealerDialogueView.WINDOW < HealerDialogueView.PLATE_Y, "plates under the windows");
         assertTrue(HealerDialogueView.THREAD_Y + HealerDialogueView.THREAD_H <= HealerDialogueView.PLATE_Y, "the thread hangs above the plates");
-        assertTrue(HealerDialogueView.PLATE_Y + HealerDialogueView.PLATE_H <= HealerDialogueView.NOTCH_Y, "the notch sits under the plate");
+        assertTrue(HealerDialogueView.PLATE_Y + HealerDialogueView.PLATE_H <= HealerDialogueView.BOX_Y - HealerDialogueView.BOX_BAND_OUT, "the plates clear the text box");
         assertTrue(HealerDialogueView.TEXT_Y + HealerDialogueView.TEXT_H <= HealerDialogueView.BOX_Y + HealerDialogueView.BOX_H - 2f, "four lines inside the ink");
         assertTrue(HealerDialogueView.HINT_Y + FontSizes.DIALOGUE <= HealerDialogueView.SCREEN_H - 6f, "the prompt clears the page border");
         assertTrue(HealerDialogueView.CREST_Y >= 6f, "crests clear the page border");
@@ -618,15 +592,15 @@ class HealerDialogueTest {
 
     private static int assertLineFits(BitmapFont font, String text, Language language, Msg message) {
         int alignment = message.name().startsWith("EDGARD_") ? Align.left : Align.right;
-        float width = HealerDialogueView.TEXT_W;
+        float width = HealerDialogueView.LINE_W;
         GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, width, alignment, true);
         assertTrue(layout.width <= width + 1f,
             () -> language + " " + message + " exceeds the text box: " + layout.width + " > " + width);
         int lines = layout.runs.size == 0 ? 0 : 1;
         for (int i = 1; i < layout.runs.size; i++) if (layout.runs.get(i).y != layout.runs.get(i - 1).y) lines++;
         int count = lines;
-        assertTrue(count <= HealerDialogueView.TEXT_LINES - 1,
-            () -> language + " " + message + " takes " + count + " lines; one of the " + HealerDialogueView.TEXT_LINES + " stays spare for #341");
+        assertTrue(count <= HealerDialogueView.TEXT_LINES,
+            () -> language + " " + message + " takes " + count + " lines; the box holds " + HealerDialogueView.TEXT_LINES);
         return count;
     }
 

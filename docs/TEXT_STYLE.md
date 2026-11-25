@@ -62,7 +62,7 @@ checked by T3; the shape is a review rule.
 | Zone message (`HINT_*`) | 20 px font, 400 px wide, at most two lines in every language (D50, sizes in `ui.FontSizes`, D70) | `LocalizationLayoutTest` |
 | Zone message source | EN at most 60 characters and at most two sentences, leaving room for translations (German runs about 25 % longer); the formula of section 1.1 (D97) | `tools/check_text_style.py` (T3); the formula in review |
 | Label above the hero | 16 px font (D70; 18 px when the picture is drawn below 1 CSS px per unit, D137), 200 px wide (D50); each label at most three words | `LocalizationLayoutTest`; review |
-| Dialogue line | 18 px font (D70; 20 px when the picture is drawn below 1 CSS px per unit, D137: the box is 90 px tall and the German offer takes three lines); fits the speaker region and frame height; EN at most 160 characters, one image or one instruction per line | `HealerDialogueTest`; review |
+| Dialogue line | 18 px font (D70; 20 px when the picture is drawn below 1 CSS px per unit, D137: the box is 90 px tall); 402 px wide, up to the other speaker's picture, at most four lines (D142; a new line takes at most three); EN at most 160 characters, one image or one instruction per line | `HealerDialogueTest`; review |
 | Opening and ending | Per page (paged screens, [#336](https://github.com/jlogicgames/edgard_in_kimeria/issues/336)): at most three paragraphs, EN at most 300 characters. The opening's page is a leaf of the book ([D133](DECISIONS.md#d133-the-opening-is-a-tale-on-an-open-book-535-536-amends-d77-2026-11-24)): one or two paragraphs, EN at most 200 characters, 30 px font (the title's, #615), a 236 px column, text between 40 and 304 px from the screen top, in every language | `IntroPagesTest`; review |
 
 ## 4. Glossary

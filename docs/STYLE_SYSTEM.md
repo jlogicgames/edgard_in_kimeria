@@ -65,8 +65,8 @@ skill that is the order of work, and one paragraph in AGENTS.md.**
   while it is in the camera view (D89, D90).
 - **Dialogue screen, art and text (D78).** The frame keeps the contrast tiers by analogy: what names the speaker or can be
   chosen is loud, the ornament and the listener quiet, every element measured (`test_dialogue_frame_sprites.py`, layout
-  read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box in three of its four lines in five languages, one spare
-  (the first-death line, D81, takes two; `HealerDialogueTest`).
+  read from the view, since `check_contrast.py` measures world sprites only); no input is taken while the screen opens; every line fits the text box's four lines at 402 px, short of the other speaker's picture
+  (D142), in five languages; the four-line cases are pinned and the first-death line (D81) takes two (`HealerDialogueTest`).
 - **Text in rooms.** Zone messages are authored in the map (`Hint` objects, D33) and written under TEXT_STYLE's plain
   voice in one formula, the cue then what to do (D97, TEXT_STYLE §1.1); a hint is never a trap's at-rest cue (D71).
 - **Text size and text style.** Pixel limits live in the layout tests (D50, D70); character budgets and voice in
