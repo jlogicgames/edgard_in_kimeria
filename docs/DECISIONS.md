@@ -1115,7 +1115,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 
 ## D42. Forest trap set, explosive-trap choice and tutorial plan
 
-- **Status:** Accepted by the author, 2026-11-05 ([#188](https://github.com/jlogicgames/edgard_in_kimeria/issues/188)); design only, nothing is implemented. Evidence: [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md). It adds traps on top of D7 and keeps D7's rules.
+- **Status:** Accepted by the author, 2026-11-05 ([#188](https://github.com/jlogicgames/edgard_in_kimeria/issues/188), closed 2026-11-25); built by #230-#235 (D44-D48) and placed in the Forest maps; the current cards are in [TRAPS.md](TRAPS.md). Evidence: [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md). It adds traps on top of D7 and keeps D7's rules.
 - **Framing:** the 1994 original's traps are history; the remake is a retro-styled new work for the 2020s. The spirit is simple organic hazards on the ground and overhead, with variety by **trigger family**; more traps are welcome. **All traps are lethal** (or a moving block); each kill is preceded by a readable telegraph (D7) and recovers by room retry (D3, D26).
 - **Forest trap set:**
 
@@ -1138,7 +1138,7 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Rejected by the author:** a carnivorous flower (does not grow in this forest), a rolling log (no slopes), a non-lethal burnable bramble (all traps are lethal), and the camouflaged root as such (the original root's colour already differed from the scenery, so it was never truly hidden).
 - **Not decided here:** the tablet (its gate and use) lives in [#136](https://github.com/jlogicgames/edgard_in_kimeria/issues/136) and [#139](https://github.com/jlogicgames/edgard_in_kimeria/issues/139), where the original's gate stays an option. The original's video-only facts (blast delay and size, zero lives, stake retract, tall roots on approach, S14 castle versus fortress) are not needed for the remake; answer only if an original behaviour is wanted one-to-one (author, 2026-11-05). **No other decision is open in D42.**
 - **Tickets:** #230 art (forest trap sprites, bomb replacement), #231 code A proximity (thorn root/stake, thorn tuft), #232 code B falling (branch, stone), #233 code C explosive stump/root replacing the bomb, #234 code D rhythm (puffball, vine), #235 tutorial integration; also #224 impaled-death sprite, #225 decompose screens, #229 Bat and Mushroom replace Chicken and Key.
-- **Not verified:** none of this is built or playtested.
+- **Verified:** built and placed in `forest-0` to `forest-2`, played in [PLAYTEST_1.md](PLAYTEST_1.md) (F17, F18, F22) and [PLAYTEST_2.md](PLAYTEST_2.md); the fixes landed in #346-#348 and #359-#362. The castle/fortress cutters and lightning are tracked in #641 and #642.
 
 ## D43. Bat and Mushroom replace Chicken and Key as the healer ingredients
 
