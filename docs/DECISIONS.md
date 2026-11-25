@@ -3711,7 +3711,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the play layer by name (and fails without it) and the sheet and column count of each map's first tileset, and now composites what the
   game draws behind each sprite: the flat colour, the scenery layers at every steady camera x where the placement is on screen (4 px apart,
   clouds at 8 drift phases where they can show) and the play layer; every sprite now passes the tiers over that real background (D108 update).
-- **Not done (all [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)):** a shared skill
+- **Not done (all [#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)):** a shared skill
   (`.agents/skills`) and the STYLE_SYSTEM rows beyond the one added here; the draw-call budget measured on a phone; approval by the author.
 
 - **Update 2026-11-20, author decision: the decor tier is relative to the composited background (D76 amended).** The absolute ink floor of D76
