@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.IntArray;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.effects.Shaders;
@@ -74,6 +75,8 @@ public class Overlay {
     /** The story font of the intro book (D133) and its dark ink on the parchment leaves. */
     private final BitmapFont storyFont;
     private static final Color STORY_INK = new Color(0x2a / 255f, 0x1a / 255f, 0x10 / 255f, 1f);
+    /** The second strike of the story text sits this many px to the right of the first, and each glyph is this many px further from the last (D133, #615). */
+    public static final float STORY_STRIKE = 1f, STORY_SPACING = 1f;
     /** The arms beside the selected button (#415): frame {@link KimeriaArms#LIT} at scale 1; the game's one shared instance. */
     private final KimeriaArms arms;
     private final Matrix4 textProjection;
@@ -242,17 +245,49 @@ public class Overlay {
     /**
      * As {@link #bodyBlock} for the intro book (D133): the story font, dark ink and left-aligned lines, the column's left edge
      * at {@code leftX}. Draw it with {@link #queueBlock(BitmapFontCache, float)}.
+     *
+     * <p>D133 (#615): the story is heavier. The font's strokes are one pixel wide and fade into the parchment, so the layout is
+     * added twice, the second {@link #STORY_STRIKE} px to the right, in the same ink (the verticals double), and every glyph is
+     * set {@link #STORY_SPACING} px further from the last, so the doubled strokes keep their gaps (a plain double strike ran the
+     * letters together). The lines are broken here with that spacing counted ({@link #storyLines}); the block is one cache built
+     * at load, so a frame draws it as it did before.
      */
     public BitmapFontCache storyBlock(String text, float leftX, float yFromTop, float wrapWidth) {
-        GlyphLayout layout = new GlyphLayout(storyFont, text, STORY_INK, wrapWidth, Align.left, true);
+        GlyphLayout layout = new GlyphLayout(storyFont, storyLines(text, wrapWidth), STORY_INK, 0f, Align.left, false);
+        for (int r = 0; r < layout.runs.size; r++) {
+            FloatArray advances = layout.runs.get(r).xAdvances;
+            for (int i = 1; i < advances.size; i++) advances.incr(i, STORY_SPACING);
+        }
         BitmapFontCache block = new BitmapFontCache(storyFont, storyFont.usesIntegerPositions());
-        block.setText(layout, leftX, toTextY(yFromTop));
+        float top = toTextY(yFromTop);
+        block.setText(layout, leftX, top);
+        block.addText(layout, leftX + STORY_STRIKE, top);
         return block;
     }
 
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the story font, for the book's layout math. */
     public float storyHeight(String text, float wrapWidth) {
-        return new GlyphLayout(storyFont, text, Color.WHITE, wrapWidth, Align.left, true).height;
+        return new GlyphLayout(storyFont, storyLines(text, wrapWidth), Color.WHITE, 0f, Align.left, false).height;
+    }
+
+    /**
+     * {@code text} broken at spaces into lines of at most {@code wrapWidth} px in the story font with {@link #STORY_SPACING} between
+     * glyphs, joined by newlines (a word wider than the column stands alone on its line, as in a {@link GlyphLayout}). Load-time only.
+     */
+    private String storyLines(String text, float wrapWidth) {
+        GlyphLayout probe = new GlyphLayout();
+        StringBuilder lines = new StringBuilder();
+        for (String paragraph : text.split("\n", -1)) {
+            String line = "";
+            for (String word : paragraph.split(" ", -1)) {
+                String trial = line.isEmpty() ? word : line + " " + word;
+                probe.setText(storyFont, trial);
+                if (line.isEmpty() || probe.width + STORY_SPACING * (trial.length() - 1) <= wrapWidth) line = trial;
+                else { lines.append(line).append('\n'); line = word; }
+            }
+            lines.append(line).append('\n');
+        }
+        return lines.substring(0, lines.length() - 1);
     }
 
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */
