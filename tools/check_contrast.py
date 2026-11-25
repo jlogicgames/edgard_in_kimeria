@@ -52,7 +52,7 @@ TERRAIN_GRID = 'art/terrain/forest/terrain.grid'
 COLOR_LINE = 3  # `color <key> <RRGGBB>`: the word count of a palette line
 COLOR_KEY = 1  # the word of a palette line that holds its key
 COLOR_HEX = 2  # the word of a palette line that holds its RRGGBB
-TERRAIN_DECOR_KEYS = frozenset('ABDEFHIJKuvw')  # D120: the props' contour and sign, the tufts and the canopy clump are decor, not ground
+TERRAIN_DECOR_KEYS = frozenset('AIJKuvw')  # D120: the props' contour, the tufts and the canopy clump are decor, not ground
 CHROMA_PERCENTILE = 0.9
 ALPHA_MIN = 128
 VIEW_HEIGHT = 360  # KimeriaGame.LOGICAL_H
@@ -279,8 +279,7 @@ NO_SPRITE = {
 }
 SPRITE_GROUPS = ('SpawnPoints', 'Collisions')
 # Tile-layer scenery reported against the map background (report only, #189): (row range, column range) in the tileset.
-TILE_SCENERY = {'sign': ((1, 2), (9, 10)),
-                'tile bush': ((4, 6), (6, 8)), 'dead tree': ((4, 6), (9, 16))}
+TILE_SCENERY = {'tile bush': ((4, 6), (6, 8)), 'dead tree': ((4, 6), (9, 16))}
 
 
 def linear(c):

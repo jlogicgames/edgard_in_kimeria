@@ -514,12 +514,15 @@ Rooms with high play must still be measured over the real layers before `RIM_SHE
   grey-teal ghosts over the new layers, lighter than all of them and over the decor ceiling (mean distance 0.22 to 0.33, mid 0.30 to
   0.33). They take D120's near leaf greens `2c3a28`, `2c3d2e`, `2c3724`: 0.090 to 0.172 (see Falling leaves). They stay in front of the
   mid layer, not in the foreground.
-- **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`, deleted with D112. Its props (the village
-  sign, the bare trees, the floor tufts, recoloured dark moss `3a5a50`/`2a443f`/`4c7064` because the ochre was the honey fungus's reserved hue) are copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in
-  `terrain.grid`) and stay reported, not gated, until they are redrawn ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)).
-  Since [D120](DECISIONS.md#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21) their colours are in the depth palette: the violet contour `222034` is bark `2d2621`, the sign a dark wood ramp
-  `2d1f13` to `554638` (was ochre `634921` to `b59a73`), the tufts moss `222c1d / 2c3627 / 38412f`; measured outline 0.150 (sign),
-  0.197 (tufts), 0.164 (dead trees), all inside the decor ceilings.
+- **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`, deleted with D112. Its props (the bare
+  trees, the floor tufts, recoloured dark moss `3a5a50`/`2a443f`/`4c7064` because the ochre was the honey fungus's reserved hue) are
+  copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in `terrain.grid`) and stay reported, not gated, until
+  they are redrawn ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)).
+  Since [D120](DECISIONS.md#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21) their colours are in the depth palette: the violet contour `222034` is bark `2d2621`, the tufts moss
+  `222c1d / 2c3627 / 38412f`; measured outline 0.199 (tufts), 0.164 (dead trees), both inside the decor ceilings.
+  The sheet's village sign (tile ids 29, 30, 49, 50) is removed with its three placements in forest-2
+  ([#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595), 2026-11-25): it came from the first mock images, the game has no
+  village, and its lettering could not be read over the depth palette.
 
 ### 6. Author answers (2026-11-19)
 
@@ -1446,7 +1449,7 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.44 (the escalator's straw top, 2026-11-21, #236; was 0.37), stone 0.30 |
 | Active: enemies and hero | hero 0.35 (D79, both facings; the old 48 px hero was 0.46), RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 (2026-11-21, on the forest layers with the moon rim: hero 0.56, the redrawn RedMob 0.70 over its four idle frames with body 0.45, below the hero's 0.56, and the redrawn Bat 0.59 over its four flap frames; the redrawn Boss 0.72 over its four THRONE frames with body 0.47 and the redrawn YellowMob 0.56 over its four IDLE frames with body 0.45, both bodies below the hero's 0.56) |
 | Decor (after the recolour) | bush 0.12 to 0.18 (was 0.31 to 0.39), look-alike 0.16 (was 0.45), hanging vine 0.06 to 0.16 (was 0.47 to 0.57) |
-| Background (tile layer) | rocks 0.29, signs 0.37, dead trees 0.37, tile bushes 0.36: louder than the ceiling. This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
+| Background (tile layer) | rocks 0.29, dead trees 0.37, tile bushes 0.36: louder than the ceiling (the village sign, 0.37, is gone, [#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595)). This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
 
 The decor recolour changed only the palette lines of `art/objects/decor/{bush,lookalike,vine}.grid`; the drawings, frames
 and the D64 brush trigger are unchanged. The lever (then the author's wall-mounted 3/4 drawing, `art/objects/lever-pixel.png`) gained a 1 px
