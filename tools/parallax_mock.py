@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Forest parallax mock (sketch, #236): writes `art/parallax/forest/mock.tmx`, renders previews and checks the foreground.
+"""Forest parallax mock and foreground gate (D108): writes `art/parallax/forest/mock.tmx`, renders previews and checks the foreground.
 
 The mock copies the first room of `assets/tiles/forest-1.tmx` (its `Background` layer, 80 tile columns) as the play layer
 and assembles the sketch tilesets: the forest strips (far, grove, mid, each a seamless strip repeated), hand-placed

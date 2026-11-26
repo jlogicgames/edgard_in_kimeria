@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parallax tilesets (sketch, #236): hand-authored pixel grids -> tileset PNGs and Tiled `.tsx` files.
+"""Parallax tilesets (D108): hand-authored pixel grids -> tileset PNGs and Tiled `.tsx` files.
 
 `art/parallax/<set>/<tileset>.grid` is one tileset (`forest`: sky, far, grove, mid and the foreground fg (pixel
 defocus, exported as a Tiled collection of images: every piece a sub-rectangle of one packed sheet, so the game binds one texture, placed as tile objects); `shared`: stars, moon and clouds, used by every world): pieces (modular stamps) of

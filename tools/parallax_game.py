@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Installs the Forest parallax sketch into the game (#236): assets and the layers of `assets/tiles/forest-{0,1,2}.tmx`.
+"""Installs the Forest parallax layers into the game (D108): assets and the layers of `assets/tiles/forest-{0,1,2}.tmx`.
 
     python3 tools/parallax_game.py            # copy the assets and (re)write the parallax layers of every forest map
 
