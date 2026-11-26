@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1MobTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float ROOM_X = 3520, ROOM_END = 4320, START_X = 3552, MOB_X = 3776, REFILL_X = 4208, EXIT_X = 4256, FLOOR = 320;
+    private static final float ROOM_X = 3520, ROOM_END = 4320, START_X = 3552, MOB_X = 3776, REFILL_X = 4208, EXIT_X = 4256, FLOOR = 304;
     /** The hero's centre wakes the mob in x 3728-3824 (offNeg/offPos 3 tiles around 3776). */
     private static final float WAKE_LEFT = 3728, WAKE_RIGHT = 3824, VIEW_W = 640;
 

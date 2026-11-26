@@ -94,7 +94,7 @@ class PlatformLessonTest {
         pressed.clear();
     }
 
-    private static final float ROOM_X = 2256, PLATFORM_X = 2880, PLATFORM_RIGHT = 2912, BOTTOM = 304, TOP = 176, LEDGE_TOP = 208, LEDGE_X = 2912, ROOM_END = 3056;
+    private static final float ROOM_X = 2256, PLATFORM_X = 2880, PLATFORM_RIGHT = 2912, BOTTOM = 288, TOP = 160, LEDGE_TOP = 192, LEDGE_X = 2912, ROOM_END = 3056;
     /** The falling stone (D48): column x 2544-2560, trigger zone x 2512-2560. */
     private static final float STONE_COLUMN_X = 2544, STONE_ZONE_X = 2512;
 
@@ -164,8 +164,8 @@ class PlatformLessonTest {
         while (!level.atRoomExit()) {
             held.clear(); held.add(Input.Keys.D);
             boolean overPlatform = centerX(level) >= PLATFORM_X + 4;
-            if (!riding(level) && feet(level) > 300 && overPlatform && platform(level).getY() >= 292) jump(level);
-            if (!riding(level) && feet(level) > 300 && !overPlatform) held.add(Input.Keys.D);
+            if (!riding(level) && feet(level) > 284 && overPlatform && platform(level).getY() >= 276) jump(level);
+            if (!riding(level) && feet(level) > 284 && !overPlatform) held.add(Input.Keys.D);
             frame(level); checkAlive(level);
             assertTrue(++frames < 60 * 40, "exit unreachable from " + level.player.position + " platformY=" + platform(level).getY());
         }
@@ -228,7 +228,7 @@ class PlatformLessonTest {
         for (float x = ROOM_X + 24; x <= LEDGE_X - 8; x += 8) {
             Level level = freshRoom();
         withoutTheStone(level);
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             for (int i = 0; i < 60 * 3; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
                 if (i % 30 == 0) jump(level);
@@ -253,12 +253,12 @@ class PlatformLessonTest {
         float last = -1;
         for (int i = 0; i < 60 * 40 && !(carriedUp && carriedDown); i++) {
             held.clear();
-            if (!riding(level)) { held.add(Input.Keys.D); if (centerX(level) >= PLATFORM_X + 4 && platform(level).getY() >= 292) jump(level); }
+            if (!riding(level)) { held.add(Input.Keys.D); if (centerX(level) >= PLATFORM_X + 4 && platform(level).getY() >= 276) jump(level); }
             frame(level); checkAlive(level);
             if (riding(level)) {
                 float y = platform(level).getY();
                 if (last >= 0 && y < last) carriedUp = true;
-                if (last >= 0 && y > last && y < BOTTOM - 8 && feet(level) < 300) carriedDown = true;
+                if (last >= 0 && y > last && y < BOTTOM - 8 && feet(level) < 284) carriedDown = true;
                 assertEquals(y, feet(level), 2f, "The hero stands on the platform while it moves");
                 last = y;
             }
@@ -274,7 +274,7 @@ class PlatformLessonTest {
             // board and ride until the platform passes stopAt, then stop it by the same toggle the lever performs
             for (int i = 0; i < 60 * 40 && !(riding(level) && platform(level).getY() <= stopAt); i++) {
                 held.clear();
-                if (!riding(level)) { held.add(Input.Keys.D); if (centerX(level) >= PLATFORM_X + 4 && platform(level).getY() >= 292) jump(level); }
+                if (!riding(level)) { held.add(Input.Keys.D); if (centerX(level) >= PLATFORM_X + 4 && platform(level).getY() >= 276) jump(level); }
                 frame(level); checkAlive(level);
             }
             held.clear();
@@ -339,7 +339,7 @@ class PlatformLessonTest {
         walkToLever(riding); operate(riding);
         for (int i = 0; i < 60 * 40 && !(riding(riding) && platform(riding).getY() < 260); i++) {
             held.clear();
-            if (!riding(riding)) { held.add(Input.Keys.D); if (centerX(riding) >= PLATFORM_X + 4 && platform(riding).getY() >= 292) jump(riding); }
+            if (!riding(riding)) { held.add(Input.Keys.D); if (centerX(riding) >= PLATFORM_X + 4 && platform(riding).getY() >= 276) jump(riding); }
             frame(riding);
         }
         held.clear();
@@ -388,7 +388,7 @@ class PlatformLessonTest {
         int both = 0;
         for (boolean running : new boolean[]{false, true}) {
             if (platform(level).isRunning() != running) platform(level).performAction();
-            for (float standY : new float[]{272, 272 - 58})
+            for (float standY : new float[]{256, 256 - 58})
                 for (float x = ROOM_X + 24; x <= PLATFORM_X - 8; x += 4) {
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
@@ -414,7 +414,7 @@ class PlatformLessonTest {
                 for (float x = ROOM_X + 24; x < ROOM_END - 16; x += 8) {
                     if (platform(level).isRunning() != running) platform(level).performAction();
                     boolean onLedge = x > LEDGE_X + 8;
-                    level.player.position.set(x - 24, onLedge ? LEDGE_TOP - 48 : 272);
+                    level.player.position.set(x - 24, onLedge ? LEDGE_TOP - 48 : 256);
                     for (int i = 0; i < 3; i++) frame(level);
                     String hint = level.player.contextHint(), zone = level.player.zoneHint();
                     String where = "x=" + x + " running=" + running + ": " + hint + " / " + zone;
@@ -466,7 +466,7 @@ class PlatformLessonTest {
     }
 
     private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
-    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 272); settle(level, 2); }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 256); settle(level, 2); }
 
     private Level otherRoom(int index) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
@@ -480,7 +480,7 @@ class PlatformLessonTest {
         assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingTrap.class::isInstance).count());
         assertEquals(level.currentRoomBounds().y, stone.bodyBounds().y, .01f, "starts at the room top");
         assertEquals(STONE_COLUMN_X, stone.bodyBounds().x, .01f);
-        assertEquals(320, stone.landingBottom(), .01f, "lands on the flat floor");
+        assertEquals(304, stone.landingBottom(), .01f, "lands on the flat floor");
         assertTrue(2728 - (stone.bodyBounds().x + 16) >= 128, "well clear of the lever (x 2728), and before it");
         assertTrue(PLATFORM_X - (stone.bodyBounds().x + 16) >= 96, "and of the platform's boarding spot");
         assertFalse(stone.shadowVisible(), "no shadow before the trigger");

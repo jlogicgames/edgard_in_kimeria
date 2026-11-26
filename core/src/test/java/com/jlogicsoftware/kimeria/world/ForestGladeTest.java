@@ -13,14 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * The wolf's first room, {@code forest-glade} (#331, D115), through the real map and real Level updates with ordinary controls.
- * World Y grows downward: the floor top is y 320, the trunk (x 3920-3952) and the one-way branch (x 3952-4016) tops y 288, the
+ * World Y grows downward: the floor top is y 304, the trunk (x 3920-3952) and the one-way branch (x 3952-4016) tops y 272, the
  * exit (x 4448-4464) stands on the floor against the right wall. The wolf spawns at x 4144 (the right end of its range x 3984-4144) facing left; its
  * muzzle is at x 4143 and the hero stands to its left unless a test says otherwise. Hero positions are the frame's x (the 11 px
  * body starts 18 px right of it).
  */
 class ForestGladeTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float FLOOR = 320, BRANCH_TOP = 288, TRUNK_LEFT = 3920, TRUNK_RIGHT = 3952;
+    private static final float FLOOR = 304, BRANCH_TOP = 272, TRUNK_LEFT = 3920, TRUNK_RIGHT = 3952;
     private static final int SECOND = 60;
     /** Measured, pinned within 0.1 s: the death at the second thorn root on the mastered pace (the card's retry cost). */
     private static final float SECOND_ROOT_DEATH_S = 8.15f;

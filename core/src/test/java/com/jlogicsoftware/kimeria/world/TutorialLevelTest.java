@@ -142,7 +142,7 @@ class TutorialLevelTest {
         assertEquals(1, lifts.size(), "exactly one linked object: the lift the lever starts and stops (D127)");
         assertFalse(lifts.get(0).propBool("running", true), "The lift starts at rest");
         assertTrue(room0.stream().noneMatch(o -> "Actionable".equals(o.type)), "no torch or wall in the lever room");
-        assertTrue(lifts.get(0).y + lifts.get(0).height <= 272, "the lift's deck never reaches the hero's head, so it cannot bar the floor (D26)");
+        assertTrue(lifts.get(0).y + lifts.get(0).height <= 256, "the lift's deck never reaches the hero's head, so it cannot bar the floor (D26)");
         assertTrue(lifts.get(0).y - lifts.get(0).propFloat("offNeg", 0) * 32 >= 0, "and its travel stays inside the room");
         assertTrue(room0.stream().noneMatch(o -> "Ladder".equals(o.type)), "Room 0 has no ladder");
         var room1 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 1).toList();
@@ -158,7 +158,7 @@ class TutorialLevelTest {
         assertEquals(1, walls.size(), "exactly one linked object");
         assertEquals("Wall", walls.get(0).prop("type", ""));
         assertEquals("vertical", walls.get(0).prop("movement", ""), "The wall is raised and lowered, never removed");
-        assertEquals(320, walls.get(0).y + walls.get(0).height, "The wall starts lowered, standing on the floor");
+        assertEquals(304, walls.get(0).y + walls.get(0).height, "The wall starts lowered, standing on the floor");
         assertTrue(walls.get(0).height >= 96, "and is taller than a jump");
         var room3 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 3).toList();
         assertEquals(3, room3.size(), "the platform room holds only its lever, platform and falling stone");
@@ -168,8 +168,8 @@ class TutorialLevelTest {
         assertEquals(1, platforms.size(), "exactly one linked moving platform");
         assertTrue(platforms.get(0).propBool("isVertical", false), "The platform rises and falls");
         assertFalse(platforms.get(0).propBool("running", true), "The platform starts stopped");
-        assertEquals(304, platforms.get(0).y, "and waits at the bottom, 16 px above the floor");
-        assertEquals(208 - 32, platforms.get(0).y - platforms.get(0).propFloat("offNeg", 0) * 32, "and rises 32 px above the ledge top so the hero can step off");
+        assertEquals(288, platforms.get(0).y, "and waits at the bottom, 16 px above the floor");
+        assertEquals(192 - 32, platforms.get(0).y - platforms.get(0).propFloat("offNeg", 0) * 32, "and rises 32 px above the ledge top so the hero can step off");
         assertTrue(platforms.get(0).propFloat("offNeg", 0) * 32 > 58, "further than a jump");
         var room4 = map.layer("SpawnPoints").stream().filter(o -> !COSMETIC.contains(o.type) && layout.owner(o) == 4).toList();
         assertEquals(4, room4.size(), "the stone room holds only its stone, lever, platform and exploding stump");
@@ -183,7 +183,7 @@ class TutorialLevelTest {
         assertEquals(1, stonePlatforms.size(), "exactly one linked moving platform, the one already taught");
         assertFalse(stonePlatforms.get(0).propBool("isVertical", true), "it crosses the chasm sideways");
         assertFalse(stonePlatforms.get(0).propBool("running", true), "and starts stopped");
-        assertEquals(320, stonePlatforms.get(0).y, "flush with both lips");
+        assertEquals(304, stonePlatforms.get(0).y, "flush with both lips");
         float lipNear = stonePlatforms.get(0).x, lipFar = lipNear + stonePlatforms.get(0).propFloat("offPos", 0) * 32 + stonePlatforms.get(0).width;
         assertEquals(stoneLevers.get(0).x, lipFar, "the lever stands at the far lip, where the platform ends");
         assertEquals(96, stoneLevers.get(0).x - lipNear, "a 96 px chasm");
@@ -199,7 +199,7 @@ class TutorialLevelTest {
             long inRoom = map.layer("Collisions").stream().filter(o -> layout.owner(o) == room).count();
             assertEquals(i == 3 ? 6 : i == 1 ? 4 : i == 4 ? 5 : i == 5 ? 4 : i == 0 ? 6 : 3, inRoom, "Room " + i + (i == 3 ? " is a corridor plus its ledge and the two canopy slabs the vines hang from (#550)" : i == 1 ? " is a corridor plus its ledge" : i == 0 ? " is a corridor plus the lift's step and two ledge pieces (D127)" : i == 4 ? " is two floors around a chasm plus the overhang" : i == 5 ? " is two floors around a pit" : " is an empty corridor"));
             var exit = layout.rooms.get(i).exit();
-            if (exit != null) assertEquals(i == 1 || i == 3 ? 208 : 320, exit.y + exit.height, i == 1 || i == 3 ? "Exit stands on the room's ledge" : "Exit stands on the floor line");
+            if (exit != null) assertEquals(i == 1 || i == 3 ? 192 : 304, exit.y + exit.height, i == 1 || i == 3 ? "Exit stands on the room's ledge" : "Exit stands on the floor line");
         }
         assertEquals(1, map.layer("SpawnPoints").stream().filter(o -> "Checkpoint".equals(o.type)).count());
         assertEquals(layout.rooms.size() - 1, layout.owner(map.layer("SpawnPoints").stream()

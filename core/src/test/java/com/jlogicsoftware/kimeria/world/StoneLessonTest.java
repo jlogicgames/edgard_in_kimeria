@@ -99,7 +99,7 @@ class StoneLessonTest {
     private static final float ROOM_X = 3056, LIP = 3616, FAR = 3712, PLATFORM_END = 3680, ROOM_RIGHT = 3792;
     /** The exploding stump (D48): x 3488-3504 on the near floor; its blast square is x 3464-3528. */
     private static final float STUMP_X = 3488, THROW_ZONE_END = 3322, STUMP_ZONE_END = 3576;
-    private static final float STONE_X = 3328, STONE_Y = 308;
+    private static final float STONE_X = 3328, STONE_Y = 292;
     /** The route throws with the body's right edge here, standing on the parked platform. */
     private static final float THROW_FROM = 3644;
 
@@ -135,10 +135,10 @@ class StoneLessonTest {
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private boolean alive(Level level) { return !level.touchesDeadline(level.player.hitboxBounds()) && !level.player.isGotHit(); }
     /** Stands the hero with the body's right edge at x. */
-    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - 11 - 18, 272); settle(level, 2); }
+    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - 11 - 18, 256); settle(level, 2); }
 
     private void parkPlatformAt(Level level, float x, boolean running) {
-        platform(level).restore(new Escalator.Snapshot(x, 320, 1, true, running ? Escalator.State.RUN : Escalator.State.IDLE, true, 0, false));
+        platform(level).restore(new Escalator.Snapshot(x, 304, 1, true, running ? Escalator.State.RUN : Escalator.State.IDLE, true, 0, false));
     }
 
     private int walkRightTo(Level level, java.util.function.BooleanSupplier arrived) {
@@ -255,7 +255,7 @@ class StoneLessonTest {
         Carryable stone = stone(level);
         assertTrue(stone.available(), where);
         assertTrue(level.currentRoomBounds().contains(stone.bounds()), where);
-        assertTrue(atHome(level) || (stone.getX() + 12 <= FAR && stone.getY() + 12 == 320),
+        assertTrue(atHome(level) || (stone.getX() + 12 <= FAR && stone.getY() + 12 == 304),
             where + ": neither home nor on the entrance side floor or platform: " + stone.getX() + "," + stone.getY());
     }
 
@@ -281,14 +281,14 @@ class StoneLessonTest {
         assertFalse(platform(level).isVertical, "The platform crosses the chasm sideways");
         assertFalse(platform(level).isRunning(), "and starts stopped");
         assertEquals(LIP, platform(level).getX(), .01f);
-        assertEquals(320, platform(level).getY(), .01f);
+        assertEquals(304, platform(level).getY(), .01f);
         assertTrue(level.ladders.isEmpty()); assertTrue(level.fallingPlatforms.isEmpty());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>));
         assertFalse(lever(level).isUp());
         assertEquals(STONE_X, stone(level).getX(), .01f); assertEquals(STONE_Y, stone(level).getY(), .01f);
         assertTrue(stone(level).getX() - level.player.getX() >= 160, "The stone lies well ahead of the entrance so its hint can be read first");
         // The chasm has no floor at all between the two lips.
-        Rectangle chasm = new Rectangle(LIP + 1, 320, FAR - LIP - 2, 48);
+        Rectangle chasm = new Rectangle(LIP + 1, 304, FAR - LIP - 2, 48);
         for (var block : level.collisionBlocks) if (!block.isEscalator())
             assertFalse(chasm.overlaps(new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight())), "a floor in the chasm");
     }
@@ -298,7 +298,7 @@ class StoneLessonTest {
             for (float x = ROOM_X + 508; x <= (stop == LIP ? LIP + 32 - 4 : LIP + 4); x += 6) {
                 Level level = freshRoom();
                 parkPlatformAt(level, stop, false);
-                level.player.position.set(x - 18, 272);
+                level.player.position.set(x - 18, 256);
                 settle(level, 3);
                 if (!alive(level)) continue;
                 for (int i = 0; i < 60 * 4 && alive(level); i++) {
@@ -317,7 +317,7 @@ class StoneLessonTest {
         for (float stop = LIP; stop <= PLATFORM_END; stop += 8) for (float onPlatform : new float[]{stop + 2, stop + 21}) {
             Level level = freshRoom();
             parkPlatformAt(level, stop, false);
-            level.player.position.set(onPlatform - 18, 272);
+            level.player.position.set(onPlatform - 18, 256);
             settle(level, 20);
             if (!alive(level)) continue;
             boolean right = (FAR - (stop + 32)) < (stop - LIP);
@@ -371,7 +371,7 @@ class StoneLessonTest {
             String where = (left ? "left" : "right") + " wall, gap " + gap + ": " + stone.getX() + "," + stone.getY();
             assertTrue(stone.available(), where);
             assertTrue(level.currentRoomBounds().contains(stone.bounds()), where);
-            assertTrue(atHome(level) || Math.abs(stone.getY() + 12 - 320) < .01f, where);
+            assertTrue(atHome(level) || Math.abs(stone.getY() + 12 - 304) < .01f, where);
         }
     }
 
@@ -381,7 +381,7 @@ class StoneLessonTest {
             giveStoneAt(level, at);
             throwNow(level); rest(level);
             assertTrue(stone(level).available());
-            assertTrue(atHome(level) || (stone(level).getX() >= FAR && Math.abs(stone(level).getY() + 12 - 320) < .01f), "far-side throw from " + at + ": " + stone(level).getX());
+            assertTrue(atHome(level) || (stone(level).getX() >= FAR && Math.abs(stone(level).getY() + 12 - 304) < .01f), "far-side throw from " + at + ": " + stone(level).getX());
         }
     }
 
@@ -404,7 +404,7 @@ class StoneLessonTest {
             assertTrue(++frames < 60 * 20, "never fell");
         }
         held.clear();
-        assertTrue(level.player.position.y > 272 + 20 || level.touchesDeadline(level.player.hitboxBounds()), "fell into the chasm");
+        assertTrue(level.player.position.y > 256 + 20 || level.touchesDeadline(level.player.hitboxBounds()), "fell into the chasm");
         level.resetCurrentRoom(new Player(assets, game, 0, 0));
         assertFalse(platform(level).isRunning()); assertEquals(LIP, platform(level).getX(), .01f);
         assertFalse(lever(level).isUp());
@@ -473,7 +473,7 @@ class StoneLessonTest {
                 String where = "left=" + left + " running=" + running + " from " + from;
                 Carryable stone = stone(level);
                 assertTrue(stone.available(), where);
-                assertTrue(atHome(level) || (stone.getX() + 12 <= FAR && stone.getY() + 12 == 320), where + ": " + stone.getX() + "," + stone.getY());
+                assertTrue(atHome(level) || (stone.getX() + 12 <= FAR && stone.getY() + 12 == 304), where + ": " + stone.getX() + "," + stone.getY());
             }
         assertTrue(throwsDone > 150, "swept " + throwsDone + " throws");
     }
@@ -483,7 +483,7 @@ class StoneLessonTest {
         Level level = freshRoom();
         walkToStone(level); upAction(level);
         walkRightTo(level, () -> bodyRight(level) >= LIP - 2);       // the floor edge, not the platform
-        assertTrue(level.player.position.y == 272 && bodyRight(level) < LIP + 6);
+        assertTrue(level.player.position.y == 256 && bodyRight(level) < LIP + 6);
         throwNow(level); waitForPlatform(level, true);
         assertTrue(atHome(level) || stone(level).available());
         settle(level, 70);                                           // the platform is out over the chasm
@@ -519,7 +519,7 @@ class StoneLessonTest {
             parkPlatformAt(level, stop, running);
             float stand = Math.min(stop + 8, FAR - 1);
             giveStoneAt(level, stand + 11);
-            if (stop > LIP) { level.player.position.set(stop + 8 - 18, 272); settle(level, 2); }
+            if (stop > LIP) { level.player.position.set(stop + 8 - 18, 256); settle(level, 2); }
             held.clear(); frame(level); held.add(Input.Keys.S); frame(level); held.clear(); // Down alone puts down (D126)
             rest(level);
             String where = "stop " + stop + " running " + running;
@@ -668,7 +668,7 @@ class StoneLessonTest {
         HintGeometry geometry = new HintGeometry();
         Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
         int both = 0;
-        for (float standY : new float[]{272, 272 - 26}) for (boolean carrying : new boolean[]{false, true})
+        for (float standY : new float[]{256, 256 - 26}) for (boolean carrying : new boolean[]{false, true})
             for (float x = ROOM_X + 40; x <= ROOM_X + 728; x += 4) {
                 if (x > LIP + 36 && x < FAR - 4) continue;
                 parkPlatformAt(level, LIP, false);
@@ -734,13 +734,13 @@ class StoneLessonTest {
         var stump = stump(level);
         assertEquals(1, level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap.class::isInstance).count());
         assertEquals(STUMP_X, stump.getX(), .01f);
-        assertEquals(320, stump.getY() + stump.getHeight(), .01f, "on the floor");
+        assertEquals(304, stump.getY() + stump.getHeight(), .01f, "on the floor");
         assertTrue(STONE_X + 12 < stump.getX() - 100, "the stone lies well before the stump, so the stone can be thrown at it");
         assertTrue(LIP - (stump.getX() + 16) >= 100, "and the chasm lies well beyond it");
         var blast = stump.blastBox();
         assertFalse(blast.overlaps(level.player.hitboxBounds()), "the blast never reaches the entrance");
         assertFalse(blast.overlaps(stone(level).bounds()), "nor the stone's home");
-        assertFalse(blast.overlaps(new Rectangle(LIP - 4, 272, 40, 48)), "nor the lip or the throwing spot");
+        assertFalse(blast.overlaps(new Rectangle(LIP - 4, 256, 40, 48)), "nor the lip or the throwing spot");
         assertFalse(blast.overlaps(level.roomLayout.rooms.get(4).exit()), "nor the exit");
         assertEquals(IDLE, stump.phase());
         // A bypass exists by construction (open floor 64 px either side, 96 px of headroom): the loader refuses otherwise.
@@ -782,7 +782,7 @@ class StoneLessonTest {
         assertFalse(level.player.isGotHit(), "the thrower was safe");
         // The stone lies near the stump on the near floor: retrievable and not leaking to the far side.
         Carryable stone = stone(level);
-        assertTrue(stone.getX() + 12 < LIP && stone.getY() + 12 == 320, "lies on the near floor: " + stone.getX() + "," + stone.getY());
+        assertTrue(stone.getX() + 12 < LIP && stone.getY() + 12 == 304, "lies on the near floor: " + stone.getX() + "," + stone.getY());
         fetchStone(level);
         assertSame(stone, level.player.carriedObject());
         int frames = goAndThrow(level);

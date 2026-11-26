@@ -33,8 +33,8 @@ class RoomStartOnFloorTest {
 
     private void assertFeetOnFloor(Level level, String when) {
         Rectangle hero = level.player.hitboxBounds(), boss = level.boss().hitboxBounds();
-        assertEquals(320f, hero.y + hero.height, 0.01f, when + ": hero feet " + hero);
-        assertEquals(320f, boss.y + boss.height, 0.01f, when + ": boss feet " + boss);
+        assertEquals(304f, hero.y + hero.height, 0.01f, when + ": hero feet " + hero);
+        assertEquals(304f, boss.y + boss.height, 0.01f, when + ": boss feet " + boss);
     }
 
     /** The hero's box at each RoomStart (position plus the Player hitbox) must not sit inside any solid collision rectangle. */

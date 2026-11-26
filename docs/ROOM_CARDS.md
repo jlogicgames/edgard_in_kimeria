@@ -260,13 +260,13 @@ Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`
 | Status | new, [#375](https://github.com/jlogicgames/edgard_in_kimeria/issues/375) (cards approved by the author 2026-11-17); `Forest1MobTest` checks the mob and the refill are met one at a time. Role `variation`, not `lesson`: lesson rooms follow the tutorial rules D33-D40 and D48 (hint zones, one lesson element plus at most one trap), and this room has two elements, neither a trap, and no hints (forest-1 has none, D33); it is held to the two-introduction cap instead, which it meets |
 | Decisions | D85, D72, D105 |
 
-Sketch (Y grows downward, floor top y 320; walls x 3520-3536 and 4304-4320):
+Sketch (Y grows downward, floor top y 304; walls x 3520-3536 and 4304-4320):
 
 ```
 x    3520 3552      3728   3776  3824            4208   4256    4320
      |wall|start    [ hero-centre range ]           R     exit  |wall|
      |    |  @       .......  M  .......            o      [ ]  |    |
-=====+==========================================================+=====  floor y 320
+=====+==========================================================+=====  floor y 304
 ```
 
 Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): a fallen log, a loose branch and an exploding stump were added, and the mob's range grew one tile to the left.
@@ -274,20 +274,20 @@ Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/50
 ```
 x    3520 3552     3712 3728-3760 3776    3872     3984     4112   4208 4256    4320
      |wall|start    :   [ log ]    M        :        |b       s      R   exit   |wall|
-=====+==================================================================+=====  floor y 320
+=====+==================================================================+=====  floor y 304
 ```
 
-- RoomStart (3552, 272). RedMob, the old id 11 moved here, at x 3776, y 288, `offNeg` 4, `offPos` 3 tiles (wakes for a
+- RoomStart (3552, 256). RedMob, the old id 11 moved here, at x 3776, y 272, `offNeg` 4, `offPos` 3 tiles (wakes for a
   hero centre in x 3712-3824, span x 3712-3872).
-- New solid log (plain `Collisions`, id 176) x 3728-3760, y 304-320, two tiles wide: the sword reaches 17 px past the body, so
+- New solid log (plain `Collisions`, id 176) x 3728-3760, y 288-304, two tiles wide: the sword reaches 17 px past the body, so
   across a 16 px stump it would kill the mob from cover and its whip would never be read; across 32 px the hero must step onto
   the log, inside the whip's reach. The mob blocked at the log's right face cannot reach the pocket at x 3716.
-- New `FallingBranch` (id 177) x 3984, y 208 (zone x 3976-4024, y 208-320), 112 px past the mob's span.
-- New `ExplosiveStump` (id 178) x 4112, y 304, jumped or outrun; clear of the refill (x 4208) and the exit (x 4256).
-- FireballRefill, the old id 25 moved here (identity kept), at x 4208, y 288 (one tile over the floor), picked up by walking.
+- New `FallingBranch` (id 177) x 3984, y 192 (zone x 3976-4024, y 192-304), 112 px past the mob's span.
+- New `ExplosiveStump` (id 178) x 4112, y 288, jumped or outrun; clear of the refill (x 4208) and the exit (x 4256).
+- FireballRefill, the old id 25 moved here (identity kept), at x 4208, y 272 (one tile over the floor), picked up by walking.
   With the camera clamped to the room, it is off screen while the hero stands in the mob's range (screen right edge
   4160 until the hero's centre passes about 3840), so the refill is seen only after the mob.
-- RoomExit (4256, 272, 32 x 48).
+- RoomExit (4256, 256, 32 x 48).
 
 ### forest-1-deadfall
 
@@ -312,20 +312,20 @@ x    3520 3552     3712 3728-3760 3776    3872     3984     4112   4208 4256    
 | Status | new, [#363](https://github.com/jlogicgames/edgard_in_kimeria/issues/363) (card, art and placement approved by the author 2026-11-17). Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): the deadfall moved 64 px left (box x 5184-5296, trunk x 5292), a falling stone (id 179, x 5392, zone x 5376-5424) and a RedMob (id 180, x 5472, `offNeg` 3, `offPos` 0) before the exit. The trap is in view from the entrance with the exit (D84) |
 | Decisions | D88, D72, D105 |
 
-Sketch (Y grows downward, floor top y 320; walls x 4960-4976 and 5584-5600; P is the rope knot, x 5232, y 252; since #500 the
+Sketch (Y grows downward, floor top y 304; walls x 4960-4976 and 5584-5600; P is the rope knot, x 5232, y 236; since #500 the
 trap is 64 px left of where D88 first placed it, to make room for the stone and the mob):
 
 ```
 x    4960 4992  5112-5128   5182 --- 5282  5292   5392    5472   5536    5600
      |wall|start  vine       [ swing band ]  trunk   o      M    exit   |wall|
      |    |  @     =      bough====P====log| |      (lip)          [ ]  |    |
-=====+==========================================================+=====  floor y 320
+=====+==========================================================+=====  floor y 304
 ```
 
-- RoomStart (4992, 272). Deadfall (the bough, 112 x 24) at (5184, 243), `swing` left: the log is tied on the right
+- RoomStart (4992, 256). Deadfall (the bough, 112 x 24) at (5184, 227), `swing` left: the log is tied on the right
   and swings left, at a hero coming from the entrance. A `Decor:trunk` at x 5292 holds the bough's thick end.
-- `FallingStone` (id 179) x 5392, zone x 5376-5424, y 288-320; `RedMob` (id 180) x 5472, `offNeg` 3, `offPos` 0.
-- RoomExit (5536, 272, 32 x 48).
+- `FallingStone` (id 179) x 5392, zone x 5376-5424, y 272-304; `RedMob` (id 180) x 5472, `offNeg` 3, `offPos` 0.
+- RoomExit (5536, 256, 32 x 48).
 
 ### forest-1-escalators
 
@@ -362,7 +362,7 @@ x    4960 4992  5112-5128   5182 --- 5282  5292   5392    5472   5536    5600
 | Repeats | redmob |
 | Mastered route | 6.00 s to the room exit with no wait at the puffball (`Forest1TrapsTest`, `RoomReplayTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | 6.47 s for a death at the log, standing on it until it drops (`Forest1TrapsTest`; 12.73 s before the split) |
+| Retry cost | 6.58 s for a death at the log, standing on it until it drops (`Forest1TrapsTest`; 12.73 s before the split) |
 | Beats | puffball@768, redmob@928, crumble-support@1088 |
 | Beat time | 6.00 (`RoomReplayTest`) |
 | First meeting | puffball: beat 1, pocket at x 744, between the entrance and the cloud (x 766-786), 152 px short of the RedMob's span and far from its wake range (x 896-960), the cloud seen out at the entry and sinking (`FirstMeetingPocketTest.forest1TrapsThePuffball`, acting `CLOUD`) |
@@ -420,28 +420,28 @@ x  656    768   896-1008    1024-1168       1216
 | Retry cost | 11.23 s at worst: a hero who answers the spider and the snail and stops in the stone's column is struck 11.23 s after the entrance; walking into the bristled tuft 11.08 s; walking into the gob without a jump 8.18 s; stopping in the spider's reach 2.32 s (`Forest1SpiderTest`) |
 | Beats | spider@7184, snail@7600, falling-stone@7744, proximity-thorn@7872 |
 | Beat time | 11.53 (`Forest1SpiderTest`) |
-| First meeting | spider: beat 1, retry 2.32 s, pocket at x 7030 (the hero's centre), inside its hearing, where it notices him and chases to its range's end without reaching him, with the snail off screen (the camera ends at x 7520 while the spider is met) (`FirstMeetingPocketTest.forest1SpiderTheSpider`); snail: beat 2, pocket at x 7456 on a one-way step (x 7440-7472, top y 288), inside its sight and above its firing line, where it notices him and watches without spitting (D106), out of the spider's hearing (`FirstMeetingPocketTest.forest1SpiderTheSnail`) |
+| First meeting | spider: beat 1, retry 2.32 s, pocket at x 7030 (the hero's centre), inside its hearing, where it notices him and chases to its range's end without reaching him, with the snail off screen (the camera ends at x 7520 while the spider is met) (`FirstMeetingPocketTest.forest1SpiderTheSpider`); snail: beat 2, pocket at x 7456 on a one-way step (x 7440-7472, top y 272), inside its sight and above its firing line, where it notices him and watches without spitting (D106), out of the spider's hearing (`FirstMeetingPocketTest.forest1SpiderTheSnail`) |
 | D26 | no lever, no support, no one-shot state; the sword or a stomp answers both monsters, the stone and the tuft need no ammunition, and a retry rebuilds everything calm |
 | Hints | none (no hint for a monster: new monsters are met in play, D100) |
 | Landmark | the snail turning its stalks up at the hero on the log step |
 | Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19); reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) (card approved by the author 2026-11-19): the room grew from 640 to 1120 px so the snail is off screen while the spider is met (one unknown at a time, D72), and `forest-1-climb` moved 480 px right. Built and tested with a scripted hero |
 | Decisions | D72, D100, D101, D102, D105, D106 |
 
-Sketch (Y grows downward, floor top y 320; walls x 6880-6896 and 7984-8000; `^` the one-way step x 7440-7472, top y 288):
+Sketch (Y grows downward, floor top y 304; walls x 6880-6896 and 7984-8000; `^` the one-way step x 7440-7472, top y 272):
 
 ```
 x    6880 6912     7136  7184  7232   7440-7472  7584 7600 7616  7744       7872   7920    8000
      |wall|start   [ spider range ]     ^step     [ snail range ]  stone      tuft   exit  |wall|
      |    | @         <  S  >                       <  n  >        (lip)       *     [ ]   |    |
-=====+==================================================================================+=====  floor y 320
+=====+==================================================================================+=====  floor y 304
 ```
 
-- `Spider` (id 148) x 7184, y 304, 32 x 16, `offNeg` 3, `offPos` 3: `position.x` 7136-7232, its fang reach x 7089-7303 at most.
-- One-way `Collisions:Platform` (id 169) x 7440-7472, y 288-304, drawn as the plain platform.
-- `Snail` (id 168) x 7600, y 304, `offNeg` 1, `offPos` 1 (range 7584-7616): its lines end on the floor at x 7396-7428 (left)
+- `Spider` (id 148) x 7184, y 288, 32 x 16, `offNeg` 3, `offPos` 3: `position.x` 7136-7232, its fang reach x 7089-7303 at most.
+- One-way `Collisions:Platform` (id 169) x 7440-7472, y 272-288, drawn as the plain platform.
+- `Snail` (id 168) x 7600, y 288, `offNeg` 1, `offPos` 1 (range 7584-7616): its lines end on the floor at x 7396-7428 (left)
   and x 7794-7826 (right), clear of the entrance and the exit; from the step the hero is in its sight and 23 px above its line.
-- `FallingStone` (id 170) column x 7744 (zone x 7728-7776, y 288-320); `ThornTuft` (id 171) x 7872, zone 80.
-- `RoomStart` (id 161) (6912, 272); `RoomExit` (id 162) x 7920-7952, y 272-320. Floor (id 151) x 6880-8000; walls ids 152, 153.
+- `FallingStone` (id 170) column x 7744 (zone x 7728-7776, y 272-304); `ThornTuft` (id 171) x 7872, zone 80.
+- `RoomStart` (id 161) (6912, 256); `RoomExit` (id 162) x 7920-7952, y 256-304. Floor (id 151) x 6880-8000; walls ids 152, 153.
 
 ### forest-1-bramble
 
@@ -463,24 +463,24 @@ x    6880 6912     7136  7184  7232   7440-7472  7584 7600 7616  7744       7872
 | D26 | no lever, no support, no one-shot state the route needs: the ladder is always down and the arm comes back every 4 s, so waiting on the ladder always gives another window; the band never reaches the floor, so the walk to the ladder is safe; the root is jumped and the branch falls behind a walker (`Forest1BrambleTest`) |
 | Hints | none (forest-1 has none, D33) |
 | Landmark | the thorn arm sweeping over the ladder top under the shelf's end |
-| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): `RoomStart` x 5632 to 5760 (the route comes back left along the shelf, so every added beat lies left of the bramble; the nearer entrance cuts the blind-climb death from 6.70 s to 5.42 s), `Bramble` `phase` 1.28 (a fresh start meets the clock as before), a thorn root (id 181, x 5872, `zone` 64) and a loose branch (id 182, x 6000, y 224, under the shelf). Originally: new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
+| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): `RoomStart` x 5632 to 5760 (the route comes back left along the shelf, so every added beat lies left of the bramble; the nearer entrance cuts the blind-climb death from 6.70 s to 5.42 s), `Bramble` `phase` 1.28 (a fresh start meets the clock as before), a thorn root (id 181, x 5872, `zone` 64) and a loose branch (id 182, x 6000, y 208, under the shelf). Originally: new, [#364](https://github.com/jlogicgames/edgard_in_kimeria/issues/364) (card, art and placement approved by the author 2026-11-17). D84 check: the bramble is the room's only hazard and is in view, cycling, from the entrance; the hero walks the whole floor under it out of reach before the climb, so its rhythm is shown before it gates progress. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
 | Decisions | D89, D72, D105 |
 
-Sketch (Y grows downward, floor top y 320, shelf top y 208; walls x 5600-5616 and 6224-6240):
+Sketch (Y grows downward, floor top y 304, shelf top y 192; walls x 5600-5616 and 6224-6240):
 
 ```
 x    5600 5760              5904 5920                    6160     6192 6208 6224 6240
-     |wall|start             [ shelf 5904-6192, y 208-224 ]  B~~~~~~~~~~~~~~~~|wall|
-     |    | @                 E (exit 5920-5952, y 176-208)          | L  |    |    |
-=====+=====================================================================+====+====  floor y 320
+     |wall|start             [ shelf 5904-6192, y 192-208 ]  B~~~~~~~~~~~~~~~~|wall|
+     |    | @                 E (exit 5920-5952, y 160-192)          | L  |    |    |
+=====+=====================================================================+====+====  floor y 304
 ```
 
-- `Bramble` (id 127) x 6160, y 184, 64 x 24, `root=right`: rooted in the right wall's face at x 6224, the band y 190-206,
+- `Bramble` (id 127) x 6160, y 168, 64 x 24, `root=right`: rooted in the right wall's face at x 6224, the band y 174-190,
   the grown arm over x 6160-6224, the always-lethal clump x 6212-6224.
-- Static `Ladder` (id 126) x 6192-6208, y 208-320, no lever: one tile off the wall, so its top is clear of the clump (D89).
-- `RoomExit` (id 125) x 5920-5952, y 176-208, on the shelf's left end. `RoomStart` (5760, 272).
-- `ThornRoot` (id 181) x 5872, y 296, `zone` 64 (a root's zone is at least 64 px a side): jumped on the walk, 83 px from the entrance body.
-  `FallingBranch` (id 182) x 6000, y 224, hanging under the shelf, zone x 5992-6040, y 224-320: it falls behind a walker.
+- Static `Ladder` (id 126) x 6192-6208, y 192-304, no lever: one tile off the wall, so its top is clear of the clump (D89).
+- `RoomExit` (id 125) x 5920-5952, y 160-192, on the shelf's left end. `RoomStart` (5760, 256).
+- `ThornRoot` (id 181) x 5872, y 280, `zone` 64 (a root's zone is at least 64 px a side): jumped on the walk, 83 px from the entrance body.
+  `FallingBranch` (id 182) x 6000, y 208, hanging under the shelf, zone x 5992-6040, y 208-304: it falls behind a walker.
 
 ### forest-1-climb
 
@@ -504,27 +504,27 @@ x    5600 5760              5904 5920                    6160     6192 6208 6224
 | Status | new, [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19; the layout reworked to the author's Option A after review, 2026-11-19: the first layout, a ledge climbed beside its face, let the jump onto the ledge stomp the spider as it came over the lip in 1,700 of 1,736 measured runs). Reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) and a falling stone (card approved by the author 2026-11-19); the mastered route finishes the snail before the spider hears the hero, so the climb is still first seen alone. The whole room is in view from the entrance. Built and tested with a scripted hero |
 | Decisions | D72, D103, D105, D106 |
 
-Sketch (Y grows downward, floor top y 320, block top y 208, shelf top y 96; walls x 8000-8016 and 8624-8640):
+Sketch (Y grows downward, floor top y 304, block top y 192, shelf top y 80; walls x 8000-8016 and 8624-8640):
 
 ```
 x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         8640
-     |wall|start  :              [shelf 8288-8384, y 96]   L                    |wall|
-     |    |       :             [ block 8288-8432, y 208 ]|<- face             |    |
+     |wall|start  :              [shelf 8288-8384, y 80]   L                    |wall|
+     |    |       :             [ block 8288-8432, y 192 ]|<- face             |    |
      |    |       :   s2 (240)  [     n                    ]|                   |    |
      |    | @     o  s1 (272)   [                          ]|  ~~~~S~~~~        |    |
-=====+=========================+==========================+===================+=====  floor y 320
+=====+=========================+==========================+===================+=====  floor y 304
 ```
 
-- `FallingStone` (id 172) column x 8112 (zone x 8096-8144, y 288-320), over the approach before the first step.
-- `Snail` (id 173) on the block top x 8336, y 192, `offNeg` 0, `offPos` 1 (range 8336-8352), left of the lift: its left line runs
+- `FallingStone` (id 172) column x 8112 (zone x 8096-8144, y 272-304), over the approach before the first step.
+- `Snail` (id 173) on the block top x 8336, y 176, `offNeg` 0, `offPos` 1 (range 8336-8352), left of the lift: its left line runs
   off the block's left edge and its gob falls onto the floor at x 8088-8104, past the entrance body; its right line lands at x
   8606-8620.
-- `Spider` (id 149) polyline from (8512, 320): `0,0 -80,0 -80,-112 -160,-112`: the floor right of the block (x 8432-8512), up its
+- `Spider` (id 149) polyline from (8512, 304): `0,0 -80,0 -80,-112 -160,-112`: the floor right of the block (x 8432-8512), up its
   right face (x 8432, 112 px, the block on its left) and along its top (x 8352-8432). Its pounce on the top reaches x 8304 at
   most, so the block's left 16 px are out of its reach; a hero there is out of its hearing too, and it waits on the face.
-- `Escalator` (id 167) x 8384-8416, vertical, running, its top between y 96 and 160 (its underside at most y 176). Block (id 157)
-  x 8288-8432, y 208-320; shelf (id 166) x 8288-8384, y 96-112. One-way `Platform` steps (ids 158, 159) x 8176 y 272 and x 8240 y 240.
-- `RoomStart` (id 164) (8032, 272); `RoomExit` (id 165) x 8304-8336, y 64-96 on the shelf.
+- `Escalator` (id 167) x 8384-8416, vertical, running, its top between y 80 and 144 (its underside at most y 160). Block (id 157)
+  x 8288-8432, y 192-304; shelf (id 166) x 8288-8384, y 80-112. One-way `Platform` steps (ids 158, 159) x 8176 y 256 and x 8240 y 240.
+- `RoomStart` (id 164) (8032, 256); `RoomExit` (id 165) x 8304-8336, y 48-80 on the shelf.
 
 ### forest-1-route
 
@@ -546,7 +546,7 @@ x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         
 | Optional | the fireball refill on the pad over the one-shot step |
 | D26 | every state reached by supported actions reaches the exit without Restart Level (D67); the snail and its stump never block the lift, the ladder's foot or the exit: the stump is a 16 px hop, and the snail, finished or passed, never fires to the right of it; the spider never blocks the lift or the exit: its slab is on the optional ladder route only, its thread lands 298 px short of the lift, and a retry rebuilds it calm on its slab. The detour meets it (`Forest1RouteTest`'s teleporting pad checks remove the spider, the bat and the snail, as they are about geometry, #497): it holds at the slab's end while the hero climbs (its leap may leave the slab's range only over authored floor, and a ladder's top step is not floor to it, so its bite cannot reach the ladder's top and it does not wind up, #497), and a hero who walks on along the slab makes it wind up and is past when it lands (asserted: at least one wind-up, never a bite); the drop off the pad's left end then stomps it, with and without the assist (it was left on its slab without it), at every skitter phase (`Forest1RouteTest`) |
 | Hints | none (no hint for a monster, D100) |
-| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19): the silk drop's first room. `Spider` (id 150), a polyline from (1632, 320): `0,0 0,-112 -80,-112`, a 112 px thread from the slab's right lip (it hangs at x 1638, drop box x 1635-1643) and the slab (x 1552-1632, top y 208); it starts at the lip. The drop is on the mandatory floor 218 px before the bat's beat; a walker sets it off and is past the column when it falls, so the first drop is seen and heard missing behind him, at every skitter phase with and without the assist (`Forest1ShelfSpiderTest`). Reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) (card approved by the author 2026-11-19): `Snail` (id 174) x 1576, y 304, no patrol (it holds still facing the entrance), under the slab right of the lowered ladder's foot; its line ends on the floor at x 1388, clear of the entrance body; a solid 16 x 16 stump (id 175, x 1600-1616, y 304-320) ends its line and its sight to the right, so it never fires at the drop column, the bat's pocket or a hero who passed it, and the drop column keeps floor 16 px past it on each side (x 1619-1659, D103). The snail is met and answered before the drop, which is still seen alone. The bat stays the room's only new element. Built and tested with a scripted hero |
+| Status | D72 audit 2026-11-16: keep. Since #418 (D86) the two-mechanism lever is taught in forest-1-lever first, so this room uses it as a choice, not as a new rule. [#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484) (cards approved by the author 2026-11-19): the silk drop's first room. `Spider` (id 150), a polyline from (1632, 304): `0,0 0,-112 -80,-112`, a 112 px thread from the slab's right lip (it hangs at x 1638, drop box x 1635-1643) and the slab (x 1552-1632, top y 192); it starts at the lip. The drop is on the mandatory floor 218 px before the bat's beat; a walker sets it off and is past the column when it falls, so the first drop is seen and heard missing behind him, at every skitter phase with and without the assist (`Forest1ShelfSpiderTest`). Reworked under D105 by [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) with the snail (#329) (card approved by the author 2026-11-19): `Snail` (id 174) x 1576, y 288, no patrol (it holds still facing the entrance), under the slab right of the lowered ladder's foot; its line ends on the floor at x 1388, clear of the entrance body; a solid 16 x 16 stump (id 175, x 1600-1616, y 288-304) ends its line and its sight to the right, so it never fires at the drop column, the bat's pocket or a hero who passed it, and the drop column keeps floor 16 px past it on each side (x 1619-1659, D103). The snail is met and answered before the drop, which is still seen alone. The bat stays the room's only new element. Built and tested with a scripted hero |
 | Decisions | D67, D86, D103, D105, D106 |
 
 ### forest-1-guard
@@ -594,25 +594,25 @@ x    8000 8032  8112   8176  8240  8288 8336 8384-8416 8432        8512         
 | D26 | no lever, support or one-shot state on the route: both hives are passed by timing alone, from every start offset, and the spider's reach (x 6697-6823) never covers the ladder, the ladder hive's band or the exit; a hero on the strip x 6624-6697 is outside it; the sword answers it with no charge; a knock-down only removes a danger, and a retry rebuilds everything calm (`Forest1HiveTest`) |
 | Hints | none (forest-1 has none, D33; no spider hint, D100) |
 | Landmark | the ladder with the hive hanging over it, its curtain running down the rungs |
-| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): a spider (id 183) on the exit ledge, x 6736, y 192, `offNeg` 0, `offPos` 1 (range x 6736-6784, pounce reach x 6697-6823: the load check keeps it 9 px short of the exit, x 6832). Originally: new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
+| Status | Reworked under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) for D105 (2026-11-19): a spider (id 183) on the exit ledge, x 6736, y 176, `offNeg` 0, `offPos` 1 (range x 6736-6784, pounce reach x 6697-6823: the load check keeps it 9 px short of the exit, x 6832). Originally: new, [#365](https://github.com/jlogicgames/edgard_in_kimeria/issues/365) (card, art, sound and placement approved by the author 2026-11-17). D84 check: the room is one screen, so both hives are in view and raining from the entrance; the floor hive is met first, alone, over open floor (the ladder is known); the danger falls where it is drawn; the waiting places (beside each band, the ladder's foot) are obvious; the ladder hive's sounds play only while it is in view. Built and tested with a scripted hero; played by the author 2026-11-17, approved |
 | Decisions | D90, D72, D102, D105 |
 
-Sketch (Y grows downward, floor top y 320, ledge top y 208; walls x 6240-6256 and 6864-6880):
+Sketch (Y grows downward, floor top y 304, ledge top y 192; walls x 6240-6256 and 6864-6880):
 
 ```
 x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624            6832  6864 6880
-     |wall|start  s          T   [hive A]           T   [hive B]   [ ledge 6624-6864, y 208 ]E |wall|
+     |wall|start  s          T   [hive A]           T   [hive B]   [ ledge 6624-6864, y 192 ]E |wall|
      |    | @     o          T     ||| band 6448-56 T     |||L     |                          |    |
-=====+============================================================+===========================+====  floor y 320
+=====+============================================================+===========================+====  floor y 304
 ```
 
-- `HangingHive` (id 135) x 6440, y 232 (mouth y 258, band x 6448-6456, 62 px to the floor), period 4 s, phase 0; its bough
-  meets a `Decor:trunk` (id 139) at x 6424. Its body (y 239-257) is reached by a jump-throw or a jump-fire.
-- `HangingHive` (id 136) x 6604, y 96 (mouth y 122, band x 6612-6620, 198 px down the ladder to the floor), period 4.5 s,
+- `HangingHive` (id 135) x 6440, y 216 (mouth y 242, band x 6448-6456, 62 px to the floor), period 4 s, phase 0; its bough
+  meets a `Decor:trunk` (id 139) at x 6424. Its body (y 223-241) is reached by a jump-throw or a jump-fire.
+- `HangingHive` (id 136) x 6604, y 96 (mouth y 122, band x 6612-6620, 182 px down the ladder to the floor), period 4.5 s,
   phase 2 (out of step with the first); its bough meets a `Decor:trunk` (id 140) at x 6588.
-- Static `Ladder` (id 137) x 6608-6624, y 208-320, no lever, against the ledge (id 144, x 6624-6864, y 208-320).
-- `Stone` (id 138) x 6336, y 308. `RoomStart` (id 133) (6272, 272); `RoomExit` (id 134) x 6832-6864, y 160-208, on the ledge.
-- `Spider` (id 183) x 6736, y 192, 32 x 16, on the ledge (floor top y 208), `offNeg` 0, `offPos` 1: the strip x 6624-6697 between the
+- Static `Ladder` (id 137) x 6608-6624, y 192-304, no lever, against the ledge (id 144, x 6624-6864, y 192-304).
+- `Stone` (id 138) x 6336, y 292. `RoomStart` (id 133) (6272, 256); `RoomExit` (id 134) x 6832-6864, y 144-192, on the ledge.
+- `Spider` (id 183) x 6736, y 176, 32 x 16, on the ledge (floor top y 192), `offNeg` 0, `offPos` 1: the strip x 6624-6697 between the
   ladder hive's band (x 6612-6620) and its reach is the safe place to bait it from.
 
 ### forest-1-tree
@@ -694,35 +694,35 @@ own floor.
 | Beats | branch-climb@880, yellowmob@1040, redmob@1136 |
 | Beat time | 5.55 (`RoomReplayTest`) |
 | First meeting | none: `branch-climb` was introduced in `forest-1-tree`, the yellowmob in `forest-entry` and the redmob in `forest-1`; the ingredient is a pickup, never a beat. The wall-jump pocket (`FirstMeetingPocketTest.forestWallsTheWallJump`) is removed, not replaced, and the wall jump itself is gone (D121) |
-| Optional | the Bat ingredient (id 94, x 992, y 224 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 224) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), unchanged: the mastered leap lands on it, 27 px of the top branch's take-offs do (x 882-908), the second tree reaches it from the gap; moved here from `forest-entry` by #417 |
+| Optional | the Bat ingredient (id 94, x 992, y 208 in the map: the SpawnPoints layer is drawn 16 px up, so the item's bottom edge is the wall's top edge y 208) on top of the second wall (`RoomReplayTest.theBatRestsOnTopOfTheSecondWall`), unchanged: the mastered leap lands on it, 27 px of the top branch's take-offs do (x 882-908), the second tree reaches it from the gap; moved here from `forest-entry` by #417 |
 | D26 | no one-shot object: the branches are sound one-way platforms and never break; the floor is gapless (no pit). Every fall lands on the floor or a branch: a hero who drops left of the first wall climbs tree A again, one who walks off the top branch lands on branch B1 in the gap (x 975, `ForestWallsTest`), one who drops into the gap climbs out by B1 to the second wall's top in 1.27 s (`ForestWallsTest.aHeroWhoDropsIntoTheGapClimbsOutByTheSecondTreeToTheTopOfTheSecondWall`); a hero who overshoots the second wall lands in the YellowMob's range and is retried. The Bat stays reachable from every state until taken; the RedMob's range (x 1104-1216) does not meet the YellowMob's (x 1040-1056) |
 | Hints | none (forest-2 has none, D33) |
 | Landmark | the tree in front of the two walls, and the leap from its top on to the Bat |
 | Status | redesigned, [#545](https://github.com/jlogicgames/edgard_in_kimeria/issues/545) (card approved by the author 2026-11-21: branches, a second tree with one branch in the gap, the stomp as the mastered answer, role `variation`, no crowns, the shipped branch and trunk sprites), after D116 removed the wall jump ([#546](https://github.com/jlogicgames/edgard_in_kimeria/issues/546)). Earlier: new room from the D72 split of `forest-entry`, [#376](https://github.com/jlogicgames/edgard_in_kimeria/issues/376); took the Bat from `forest-entry`, [#417](https://github.com/jlogicgames/edgard_in_kimeria/issues/417); the YellowMob moved to the second wall's foot under [#500](https://github.com/jlogicgames/edgard_in_kimeria/issues/500) (batch 4). D84 check: the whole room is in view from the entrance; the tree and its branches are the only thing to try in front of the wall; every mistake is a slower way, never a death except the overshoot into the YellowMob. Built and tested with a scripted hero (`ForestWallsTest`: the route, the leap strip, the walker, the late leap, the gap) |
 | Decisions | D72, D80, D96, D105, D116 |
 
-Sketch (Y grows downward, floor top y 320; one character is 16 px, column 0 is x 736; `T` trunks, `=` branches, `W` the two walls, `B` the Bat, `Y` YellowMob, `R` RedMob, `E` the exit, `@` the entrance):
+Sketch (Y grows downward, floor top y 304; one character is 16 px, column 0 is x 736; `T` trunks, `=` branches, `W` the two walls, `B` the Bat, `Y` YellowMob, `R` RedMob, `E` the exit, `@` the entrance):
 
 ```
        0000000000111111111122222222223333
        0123456789012345678901234567890123
-y 160  |       T      T                 |
-y 176  |       T==    T                 |    A3 x 880-912
-y 192  |       T      T                 |
-y 208  |       T  W   TB                |    wall 1 top y 208; the Bat on wall 2
-y 224  |     ==T  W   TW                |    A2 x 832-864 (mirror); wall 2 top y 224
+y 144  |       T      T                 |
+y 160  |       T==    T                 |    A3 x 880-912
+y 176  |       T      T                 |
+y 192  |       T  W   TB                |    wall 1 top y 192; the Bat on wall 2
+y 208  |     ==T  W   TW                |    A2 x 832-864 (mirror); wall 2 top y 208
+y 224  |       T  W   TW                |
 y 240  |       T  W   TW                |
-y 256  |       T  W   TW                |
-y 272  |       T==W ==TW             EE |    A1 x 880-912; B1 x 944-976 (mirror)
+y 256  |       T==W ==TW             EE |    A1 x 880-912; B1 x 944-976 (mirror)
+y 272  |@      T  W   TW  YY    RR   EE |
 y 288  |@      T  W   TW  YY    RR   EE |
-y 304  |@      T  W   TW  YY    RR   EE |
-y 320  ==================================
+y 304  ==================================
 ```
 
-- Walls (ids 44, 45) x 912-928 y 208-320 and x 992-1008 y 224-320, the Bat (id 94), both mobs, the bushes, the entrance and the exit are unchanged.
-- Tree A: `Decor` trunk (id 230) x 864 and `Collisions:Platform` branches `skin=branch` A1 (id 232) x 880-912 y 272, A2 (id 233, `mirror`) x 832-864 y 224, A3 (id 234) x 880-912 y 176: three 48 px steps. Tree B: trunk (id 231) x 976 and B1 (id 235, `mirror`) x 944-976 y 272, 48 px above the gap's floor and 48 px below the second wall's top. The trunks are map y 48 (the SpawnPoints layer is drawn 16 px up), 288 tall, as in `forest-1-tree`.
+- Walls (ids 44, 45) x 912-928 y 192-304 and x 992-1008 y 208-304, the Bat (id 94), both mobs, the bushes, the entrance and the exit are unchanged.
+- Tree A: `Decor` trunk (id 230) x 864 and `Collisions:Platform` branches `skin=branch` A1 (id 232) x 880-912 y 256, A2 (id 233, `mirror`) x 832-864 y 208, A3 (id 234) x 880-912 y 160: three 48 px steps. Tree B: trunk (id 231) x 976 and B1 (id 235, `mirror`) x 944-976 y 256, 48 px above the gap's floor and 48 px below the second wall's top. The trunks are map y 32 (the SpawnPoints layer is drawn 16 px up), 288 tall, as in `forest-1-tree`.
 - The leap, measured by the body's centre x at the take-off from A3 (`ForestWallsTest.theLeapFromTheTopBranchLandsOnTheSecondWallFromA27PxStripOfTheBranch`): 882 to 908 lands on the second wall's top (centre x 987-1013), 881 and less meets its face, 909 and more overshoots it into the YellowMob. The mastered take-off is x 896.
-- A walker off the end of A3 lands on B1 (centre x 975, feet y 272), not on the first wall's top: the 96 px fall takes about 0.57 s and carries him about 57 px, far past the 16 px wall.
+- A walker off the end of A3 lands on B1 (centre x 975, feet y 256), not on the first wall's top: the 96 px fall takes about 0.57 s and carries him about 57 px, far past the 16 px wall.
 
 ### forest-fissure
 
@@ -741,29 +741,29 @@ y 320  ==================================
 | Beats | clocked-column@3232, clocked-column@3360, beetle@3508 |
 | Beat time | 9.30 (`RoomReplayTest`) |
 | First meeting | clocked-column: beat 1, pocket at x 3200, just short of the first column on open floor, where it is seen lancing, 112 px from the second (`FirstMeetingPocketTest.forestFissureTheFirstFissure`) |
-| D26 | no lever, support or one-shot state on the route: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room. The beetle never blocks the exit: its blast (x 3480-3592 at most, y 192-224) reaches neither the ledge's lip (x 3424-3480), nor the branch below it (a hero on it has his top at y 250), nor the exit (x 3600); it needs no charge: the lure, or walking straight past it, which reaches the exit at every crawl phase with and without the assist (it bursts behind him). A retry rebuilds it at its spawn |
+| D26 | no lever, support or one-shot state on the route: both fissures are passed by timing alone from every start offset (`ForestFissureTest`), and the clock restarts with the room. The beetle never blocks the exit: its blast (x 3480-3592 at most, y 176-208) reaches neither the ledge's lip (x 3424-3480), nor the branch below it (a hero on it has his top at y 234), nor the exit (x 3600); it needs no charge: the lure, or walking straight past it, which reaches the exit at every crawl phase with and without the assist (it bursts behind him). A retry rebuilds it at its spawn |
 | Hints | none (forest-2 has none, D33; no hint for the beetle: new monsters are met in play, D100) |
 | Landmark | the root lancing up through the branch, seen across the screen from the entrance |
 | Status | new, [#366](https://github.com/jlogicgames/edgard_in_kimeria/issues/366) (card, art, sound and placement approved by the author 2026-11-17). D84 check: one screen, so both fissures are in view and jetting from the entrance; the first is met alone on open floor; the danger is lethal exactly where drawn; the waiting places (either side of each column, the floor under the branch) are obvious; the sounds play only while a fissure is in view. The author played the room and heard `fissure_rumble` and `ember_jet` in play on 2026-11-18 ([#463](https://github.com/jlogicgames/edgard_in_kimeria/issues/463)). [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327) (card approved by the author 2026-11-18): the beetle's third room and forest-2's only one. It crawls the exit ledge, in view from the entrance, and hears the hero only once he is on the ledge (never on the floor or the branch). The approved card counted it as a develop ("walking into it kills: the exit is 1 s away"); measured, a hero who keeps walking always clears the blast (80 px in the 0.8 s wind-up, its whole width), as in forest-1, so the card records it as a repeat. Built and tested with a scripted hero. D116 (playtest 2, F28, [#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562), approved by the author 2026-11-21): both `EmberFissure` objects (ids 151, 152) became `LanceRoot` (D129), with the same clock, phases, column and beats; the ember fissure returns as a Swamp geyser |
 | Decisions | D91, D129, D72, D100, D101 |
 
-Sketch (Y grows downward, floor top y 320, ledge top y 224; walls x 3008-3024 and 3632-3648):
+Sketch (Y grows downward, floor top y 304, ledge top y 208; walls x 3008-3024 and 3632-3648):
 
 ```
 x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-3564          3600-3632 3648
-     |wall|start        A              [ branch 3328-3392 ]   [ ledge 3424-3648, y 224 ]  b  >>  E |wall|
+     |wall|start        A              [ branch 3328-3392 ]   [ ledge 3424-3648, y 208 ]  b  >>  E |wall|
      |    | @           |||                      |||B         |                               |
-=====+===================================================================================+========  floor y 320
+=====+===================================================================================+========  floor y 304
 ```
 
-- `LanceRoot` A (id 151, an `EmberFissure` until D129) x 3232, y 332 in the map (the SpawnPoints layer is drawn 16 px up: top y 316, 4 px above the
+- `LanceRoot` A (id 151, an `EmberFissure` until D129) x 3232, y 316 in the map (the SpawnPoints layer is drawn 16 px up: top y 300, 4 px above the
   floor line), period 3.5 s, jet 1.0 s, height 96, phase 0.
-- One-way `Collisions:Platform` branch (ids 155, 156) x 3328-3392, y 272; `LanceRoot` B (id 152) x 3360, y 332, phase
+- One-way `Collisions:Platform` branch (ids 155, 156) x 3328-3392, y 256; `LanceRoot` B (id 152) x 3360, y 316, phase
   1.75 (half a period out of step with A): its column passes through the branch (embers pass one-way platforms).
-- Ledge (id 157) x 3424-3648, y 224-320, tiled with the ground-edge tiles; `RoomStart` (id 149) (3040, 272); `RoomExit`
-  (id 150) x 3600-3632, y 176-224, on the ledge against the wall (moved 16 px right by #327, from x 3584).
-- `Beetle` (id 159) map x 3508, map y 224 (top y 208, floor line 224, on the ledge), `offNeg` 0, `offPos` 2: its centre crawls
-  x 3520-3552, its blast covers at most x 3480-3592, y 192-224. The lip x 3424-3480 is outside every blast and its trigger
+- Ledge (id 157) x 3424-3648, y 208-304, tiled with the ground-edge tiles; `RoomStart` (id 149) (3040, 256); `RoomExit`
+  (id 150) x 3600-3632, y 160-208, on the ledge against the wall (moved 16 px right by #327, from x 3584).
+- `Beetle` (id 159) map x 3508, map y 208 (top y 192, floor line 208, on the ledge), `offNeg` 0, `offPos` 2: its centre crawls
+  x 3520-3552, its blast covers at most x 3480-3592, y 176-208. The lip x 3424-3480 is outside every blast and its trigger
   (from x 3501), so a hero there is heard and waited for, never reached.
 
 ### forest-glade
@@ -782,7 +782,7 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 | Retry cost | the most expensive death is the second thorn root after the wolf: hit at 8.15 s from the entrance for a hero who walks straight into it after the mastered route (`ForestGladeTest.aHeroWhoWalksStraightIntoTheSecondThornRootAfterTheWolfIsHit`), the whole room replayed. D105's 6 s limit is for a first meeting that is not among the first two beats: the wolf is beat 2 and the root is a known element, so neither is held to it, and 8.15 s is under the 15 s at which D105 asks for a split. The wolf's own bite on the mastered pace is a hop down off the trunk or the branch's near end in front of it: 4.27 s (hops at x 3930 to 3960, `ForestGladeTest.aHeroWhoHopsDownInFrontOfTheWolfIsBittenWithinSixSeconds`, from x 3966 on the same hop lands on it or beyond). The first thorn root at the soonest 1.17 s (a hero who walks straight on) |
 | Beats | proximity-thorn@3808, wolf@4144, proximity-thorn@4360 |
 | Beat time | 8.85 (`RoomReplayTest`) |
-| First meeting | wolf: beat 2, pocket at x 3976, standing on the one-way branch (top y 288, 32 px above the wolf's floor), which does not cut its sight as the trunk's face does: it notices him, sprints under him, bays at its range end, gives up and trots on its patrol, and he is never committed to (a hero more than 24 px up is out of its reach). The thorn root (x 3808-3824) is 160 px from the wolf's span (x 3984-4192), 152 px from the pocket (`FirstMeetingPocketTest.forestGladeTheWolf`, raised pocket at y 288, acting `BAY`) |
+| First meeting | wolf: beat 2, pocket at x 3976, standing on the one-way branch (top y 272, 32 px above the wolf's floor), which does not cut its sight as the trunk's face does: it notices him, sprints under him, bays at its range end, gives up and trots on its patrol, and he is never committed to (a hero more than 24 px up is out of its reach). The thorn root (x 3808-3824) is 160 px from the wolf's span (x 3984-4192), 152 px from the pocket (`FirstMeetingPocketTest.forestGladeTheWolf`, raised pocket at y 272, acting `BAY`) |
 | Optional | none |
 | D26 | the exit is always reachable: the wolf can never hold a place. It bays for at most 1.5 s, gives up and does not notice that hero again until he has been out of its sight for 1.0 s. Every answer on its floor works (a jump, a swing, a stomp, running with the assist) and the trunk top and the branch are refuges. The floor from x 4264 on is out of its reach, and the second thorn root (x 4360) and the exit (x 4448) stand on it. The first root (x 3808) is off the wolf's floor because the trunk stands between them, the second lies beyond x 4351, the end of its reach. Both stay up in their own columns and are jumped (`ForestGladeTest`) |
 | Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
@@ -790,25 +790,25 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 | Status | new, [#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331) (card approved by the author 2026-11-21: a new room, fourth in forest-2, the stomp from the branch as the mastered answer, the wall jump as the third beat, replaced on 2026-11-21 by a second thorn root after D116 removed the wall jump, #545 #546). D84 check: one screen and a third; the wolf is in view from the branch, the danger is what the wolf card draws (the breath line, the crouch), the waiting places (the branch, the trunk top) are obvious, nothing hides the wolf from a hero on the branch. Built and tested with a scripted hero (`ForestGladeTest`: the route, the stomp, the hop bite, the root, a jump from every commit gap with and without the assist, a runner with and without it, a swing, the refuges and the reach, a wait for the give-up) |
 | Decisions | D72, D100, D105, D115 |
 
-Sketch (Y grows downward, floor top y 320, trunk and branch tops y 288; one character is 16 px, column 0 is x 3648; the sky above y 272 is empty):
+Sketch (Y grows downward, floor top y 304, trunk and branch tops y 272; one character is 16 px, column 0 is x 3648; the sky above y 256 is empty):
 
 ```
 col   0         1         2         3         4         5
       0123456789012345678901234567890123456789012345678901
-y 272 |                                                 E|
-y 288 |                TT====                           E|
-y 304 |  @      ^      TT  <ww       <ww          ^     E|
-y 320 ====================================================
+y 256 |                                                 E|
+y 272 |                TT====                           E|
+y 288 |  @      ^      TT  <ww       <ww          ^     E|
+y 304 ====================================================
 ```
 
-- `RoomStart` (id 195) (3680, 272): the hero's body x 3698-3709, 18 px outside the wolf's sense box (x 3727-4447).
-- `ThornRoot` (id 192) x 3808, y 312 in the map (the SpawnPoints layer is drawn 16 px up: top y 296, standing on the floor line), `zone` 64.
-- Left wall `Wall` (id 186) x 3648-3664; floor (id 187) x 3648-4480, y 320-368 (one gapless block, the wolf's range must have none under it).
-- Trunk (untyped solid, id 188) x 3920-3952, y 288-320: its right face cuts the wolf's sight at the eye height of 16 px and the lunge stops against it; its top is a refuge 32 px up, out of the sight band's reach on the left, so a hero on it is not seen.
-- One-way `Platform` branch (id 189, no skin: it is not a branch-climb beat) x 3952-4016, y 288: flush with the trunk top, so he walks out on to it. A platform is not a solid for sight, so a hero on it is seen from the wolf's floor.
-- `Wolf` (id 193) x 4144, y 312 in the map (48x24: top y 296, floor line y 320), `offNeg` 10, `offPos` 0: its body trots x 3984-4144, the minimum range of 160 px; sight x 3727-4447, its lunge box at the range end x 4184-4263.
-- Second `ThornRoot` (id 197) x 4360, y 312 in the map, `zone` 64: its column x 4360-4376 and its trigger zone x 4296-4440 lie past the wolf's reach (x 4351 at most), 168 px from its span (x 3984-4192).
-- Right wall `Wall` (id 191) x 4464-4480, y 0-320; `RoomExit` (id 196) x 4448-4464, y 272-320, on the floor against the wall: 16 px wide so it lies outside the wolf's sense box (x 3727-4447). `Room` (id 194), `leaves` 10.
+- `RoomStart` (id 195) (3680, 256): the hero's body x 3698-3709, 18 px outside the wolf's sense box (x 3727-4447).
+- `ThornRoot` (id 192) x 3808, y 296 in the map (the SpawnPoints layer is drawn 16 px up: top y 280, standing on the floor line), `zone` 64.
+- Left wall `Wall` (id 186) x 3648-3664; floor (id 187) x 3648-4480, y 304-368 (one gapless block, the wolf's range must have none under it).
+- Trunk (untyped solid, id 188) x 3920-3952, y 272-304: its right face cuts the wolf's sight at the eye height of 16 px and the lunge stops against it; its top is a refuge 32 px up, out of the sight band's reach on the left, so a hero on it is not seen.
+- One-way `Platform` branch (id 189, no skin: it is not a branch-climb beat) x 3952-4016, y 272: flush with the trunk top, so he walks out on to it. A platform is not a solid for sight, so a hero on it is seen from the wolf's floor.
+- `Wolf` (id 193) x 4144, y 296 in the map (48x24: top y 280, floor line y 304), `offNeg` 10, `offPos` 0: its body trots x 3984-4144, the minimum range of 160 px; sight x 3727-4447, its lunge box at the range end x 4184-4263.
+- Second `ThornRoot` (id 197) x 4360, y 296 in the map, `zone` 64: its column x 4360-4376 and its trigger zone x 4296-4440 lie past the wolf's reach (x 4351 at most), 168 px from its span (x 3984-4192).
+- Right wall `Wall` (id 191) x 4464-4480, y 0-304; `RoomExit` (id 196) x 4448-4464, y 256-304, on the floor against the wall: 16 px wide so it lies outside the wolf's sense box (x 3727-4447). `Room` (id 194), `leaves` 10.
 
 ### forest-canopy
 

@@ -119,7 +119,7 @@ class TrapsLessonTest {
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private boolean alive(Level level) { return !level.touchesDeadline(level.player.hitboxBounds()) && !level.player.isGotHit(); }
     private boolean atEnd(Level level) { return alive(level) && !level.player.canLeaveRoom(); }
-    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - 11 - 18, 272); settle(level, 2); }
+    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - 11 - 18, 256); settle(level, 2); }
 
     private void retry(Level level) { level.resetCurrentRoom(new Player(assets, game, 0, 0)); settle(level, 2); }
 
@@ -175,11 +175,11 @@ class TrapsLessonTest {
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>), "no monsters");
         assertFalse(platform(level).isFalling());
         assertEquals(PLAT_X, platform(level).getX(), .01f);
-        assertEquals(320, platform(level).getY(), .01f, "flush with the floor");
+        assertEquals(304, platform(level).getY(), .01f, "flush with the floor");
         assertEquals(STUMP_X, stump(level).getX(), .01f);
         assertTrue(stump(level).getX() - level.player.getX() >= 400, "The stump lies well past the pit");
         // The pit has no floor at all between the two lips.
-        Rectangle pit = new Rectangle(LIP + 1, 320, PIT_END - LIP - 2, 48);
+        Rectangle pit = new Rectangle(LIP + 1, 304, PIT_END - LIP - 2, 48);
         for (var block : level.collisionBlocks) if (!block.isEscalator())
             assertFalse(pit.overlaps(new Rectangle(block.getX(), block.getY(), block.getWidth(), block.getHeight())), "a floor in the pit");
         assertEquals(720, level.currentRoomBounds().width, "the room is 720 px");
@@ -208,7 +208,7 @@ class TrapsLessonTest {
     @Test void thePlatformLightsUpOnLandingWarnsForTheSharedDelayAndOnlyThenFalls() {
         Level level = freshRoom();
         place(level, PLAT_X + 20);
-        level.player.position.set(PLAT_X + 8, 272);
+        level.player.position.set(PLAT_X + 8, 256);
         int landed = -1;
         for (int i = 0; i < 60 * 5 && landed < 0; i++) { step(level, false, false); if (platform(level).isFalling()) landed = i; }
         assertTrue(landed >= 0, "landing on the platform starts it");
@@ -224,7 +224,7 @@ class TrapsLessonTest {
         int longest = -1;
         for (int dwell = 0; dwell <= 150; dwell += 3) {
             Level level = freshRoom();
-            level.player.position.set(PLAT_X + 8, 272);
+            level.player.position.set(PLAT_X + 8, 256);
             int f = 0;
             while (!platform(level).isFalling() && f++ < 120) step(level, false, false);
             settle(level, dwell);
@@ -241,15 +241,15 @@ class TrapsLessonTest {
 
     @Test void standingOnThePlatformUntilItFallsCostsOneRetryAndTheRetryRestoresIt() {
         Level level = freshRoom();
-        level.player.position.set(PLAT_X + 8, 272);
+        level.player.position.set(PLAT_X + 8, 256);
         int f = 0;
         while (alive(level) && f++ < 60 * 8) step(level, false, false);
         assertFalse(alive(level), "a hero who never leaves the platform ends in the pit");
-        assertTrue(level.fallingPlatforms.isEmpty() || platform(level).getY() > 320, "the platform fell");
+        assertTrue(level.fallingPlatforms.isEmpty() || platform(level).getY() > 304, "the platform fell");
         retry(level);
         assertEquals(1, level.fallingPlatforms.size(), "the retry rebuilt the platform");
         assertFalse(platform(level).isFalling());
-        assertEquals(PLAT_X, platform(level).getX(), .01f); assertEquals(320, platform(level).getY(), .01f);
+        assertEquals(PLAT_X, platform(level).getX(), .01f); assertEquals(304, platform(level).getY(), .01f);
         assertFalse(stumpGone(level));
         assertTrue(alive(level));
         solve(level, false); // and the retried room is passable
@@ -258,7 +258,7 @@ class TrapsLessonTest {
     @Test void theGapIsTooWideToJumpWithoutThePlatformAndEachHalfIsJumpable() {
         for (float x = LIP - 40; x <= LIP; x += 4) {
             Level level = freshRoom();
-            platform(level).restore(new FallingPlatform.Snapshot(PLAT_X, 320, false, -1f, 0f, true, 0f, true)); // spent
+            platform(level).restore(new FallingPlatform.Snapshot(PLAT_X, 304, false, -1f, 0f, true, 0f, true)); // spent
             level.fallingPlatforms.clear();
             place(level, x);
             boolean crossed = false;
@@ -272,7 +272,7 @@ class TrapsLessonTest {
 
     @Test void aHeroWhoStepsBackAfterLightingThePlatformIsNotStrandedForeverAndTheRetryRestoresTheRoute() {
         Level level = freshRoom();
-        level.player.position.set(PLAT_X + 8, 272);
+        level.player.position.set(PLAT_X + 8, 256);
         int f = 0;
         while (!platform(level).isFalling() && f++ < 120) step(level, false, false);
         // Back onto the entrance floor within the warning.
@@ -359,7 +359,7 @@ class TrapsLessonTest {
 
     /** Timing of one trap: frames from the trigger until the first visible effect. */
     private int platformFramesToFall(Level level) {
-        level.player.position.set(PLAT_X + 8, 272);
+        level.player.position.set(PLAT_X + 8, 256);
         int f = 0;
         while (!platform(level).isFalling() && f++ < 120) step(level, false, false);
         float y0 = platform(level).getY();
@@ -410,7 +410,7 @@ class TrapsLessonTest {
                 held.clear(); held.add(Input.Keys.A);
                 if (i % period == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
                 frame(level);
-                if (level.player.isOnGround() && level.player.position.y > 300 && bodyRight(level) < LIP + 20) jumpedOut = true;
+                if (level.player.isOnGround() && level.player.position.y > 284 && bodyRight(level) < LIP + 20) jumpedOut = true;
             }
             assertFalse(alive(level) && bodyLeft(level) > LIP, "never reached the far floor");
         }

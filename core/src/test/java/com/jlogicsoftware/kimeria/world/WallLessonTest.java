@@ -192,7 +192,7 @@ class WallLessonTest {
         assertFalse(lever(level).isUp());
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>));
         assertEquals("forest-0-wall", level.currentRoomName());
-        assertEquals(320, wall(level).getY() + wall(level).getHeight(), 0.01f, "The lowered wall stands on the floor");
+        assertEquals(304, wall(level).getY() + wall(level).getHeight(), 0.01f, "The lowered wall stands on the floor");
         assertTrue(wall(level).getHeight() >= 96, "Taller than a jump");
     }
 
@@ -205,7 +205,7 @@ class WallLessonTest {
             assertTrue(wall(level).isRaised()); assertTrue(lever(level).isUp());
             settle(level, 120);
             assertEquals(lowerY - wall(level).getHeight(), wall(level).getY(), 0.01f, "Raised, it clears a full body height");
-            assertTrue(wall(level).getY() + wall(level).getHeight() <= 320 - 90, "Gap of at least 90 px under the raised wall");
+            assertTrue(wall(level).getY() + wall(level).getHeight() <= 304 - 90, "Gap of at least 90 px under the raised wall");
             operate(level);
             assertFalse(wall(level).isRaised()); assertFalse(lever(level).isUp());
             settle(level, 120);
@@ -218,7 +218,7 @@ class WallLessonTest {
         for (float x = ROOM_X + 32; x <= WALL_X - 20; x += 12) {
             Level level = freshRoom();
             withoutTheBranch(level);
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             for (int i = 0; i < 60 * 4; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
                 if (i % 30 == 0) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
@@ -243,7 +243,7 @@ class WallLessonTest {
             if (wall(level).isRaised() != raised) wall(level).performAction();
             settle(level, 120);
             for (float x = ROOM_X + 40; x <= ROOM_X + 744; x += 4) {
-                level.player.position.set(x - 24, 272);
+                level.player.position.set(x - 24, 256);
                 settle(level, 1);
                 if (level.player.canInteract())
                     assertTrue(x < WALL_X - 120, "The lever can only be pulled well clear of the wall (x=" + x + ")");
@@ -279,7 +279,7 @@ class WallLessonTest {
         assertTrue(bodyRight(under) > WALL_X, "The hero is under the wall");
         under.resetCurrentRoom(new Player(assets, game, 0, 0));
         assertFalse(wall(under).isRaised(), "Retry restores the authored lowered wall");
-        assertEquals(224, wall(under).getY(), 0.01f);
+        assertEquals(208, wall(under).getY(), 0.01f);
         assertFalse(lever(under).isUp());
         assertTrue(under.player.position.x < WALL_X - 100, "and the hero starts on the entrance side");
         solve(under);
@@ -288,7 +288,7 @@ class WallLessonTest {
         Level mid = freshRoom();
         walkToLever(mid); operate(mid); settle(mid, 20);
         mid.resetCurrentRoom(new Player(assets, game, 0, 0));
-        assertFalse(wall(mid).isRaised()); assertEquals(224, wall(mid).getY(), 0.01f);
+        assertFalse(wall(mid).isRaised()); assertEquals(208, wall(mid).getY(), 0.01f);
         solve(mid);
 
         // Restart Level rebuilds the whole level from the map.
@@ -322,7 +322,7 @@ class WallLessonTest {
         for (boolean raised : new boolean[]{false, true}) {
             if (wall(level).isRaised() != raised) wall(level).performAction();
             settle(level, 120);
-            for (float standY : new float[]{272, 272 - 58})
+            for (float standY : new float[]{256, 256 - 58})
                 for (float x = ROOM_X + 24; x <= ROOM_X + 754; x += 4) {
                     if (!raised && x > WALL_X && x < WALL_RIGHT + 24) continue;
                     level.player.position.set(x - 24, standY);
@@ -350,7 +350,7 @@ class WallLessonTest {
                     if (wall(level).isRaised() != raised) wall(level).performAction();
                     settle(level, 120);
                     if (!raised && x > WALL_X - 24 && x < WALL_RIGHT + 24) continue; // inside the lowered wall
-                    level.player.position.set(x - 24, 272);
+                    level.player.position.set(x - 24, 256);
                     for (int i = 0; i < 3; i++) frame(level);
                     String hint = level.player.contextHint(), zone = level.player.zoneHint();
                     String where = "x=" + x + " raised=" + raised + ": " + hint + " / " + zone;
@@ -397,7 +397,7 @@ class WallLessonTest {
     }
 
     private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
-    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 272); settle(level, 2); }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 256); settle(level, 2); }
 
     private Level otherRoom(int index) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);
@@ -413,8 +413,8 @@ class WallLessonTest {
         assertEquals(BRANCH_X, branch.bodyBounds().x, .01f);
         assertTrue(lever(level).getX() - (branch.bodyBounds().x + branch.bodyBounds().width) >= 128, "well clear of the lever (the branch cannot drop onto it) and before it");
         assertTrue(WALL_X - branch.bodyBounds().x - branch.bodyBounds().width >= 96, "and well clear of the wall");
-        assertTrue(320 - (branch.bodyBounds().y + branch.bodyBounds().height) >= 48, "hangs at least 48 px above the floor, readable");
-        assertEquals(320, branch.landingBottom(), .01f, "it falls to the floor");
+        assertTrue(304 - (branch.bodyBounds().y + branch.bodyBounds().height) >= 48, "hangs at least 48 px above the floor, readable");
+        assertEquals(304, branch.landingBottom(), .01f, "it falls to the floor");
         assertEquals(BRANCH_ZONE_X, branch.zone().x, .01f);
         assertTrue(otherRoom(1).objects.stream().noneMatch(FallingBranch.class::isInstance), "no leak into the ladder room");
         assertTrue(otherRoom(3).objects.stream().noneMatch(FallingBranch.class::isInstance), "nor into the platform room");

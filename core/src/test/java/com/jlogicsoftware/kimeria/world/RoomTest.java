@@ -70,7 +70,7 @@ class RoomTest {
         level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player()); level.enterNextRoom(player());
         var first = refill(level);
         assertEquals(1696, first.getX());
-        assertEquals(128, first.getY(), "SpawnPoints layer offset applies to the refill too");
+        assertEquals(112, first.getY(), "SpawnPoints layer offset applies to the refill too");
         first.collideWithPlayer(); first.collideWithPlayer();
         assertEquals(2, level.rangedStock.count(), "One authored refill grants exactly one charge");
         assertTrue(artifacts.items().isEmpty(), "Ammunition is not a recipe ingredient");
@@ -233,12 +233,12 @@ class RoomTest {
         assertTrue(coin.isCollected());
         assertTrue(enemy.isRemoved());
         assertFalse(level.objects.contains(enemy));
-        assertEquals(new Vector2(752, 272), level.player.position, "forest-walls entrance (#376)");
+        assertEquals(new Vector2(752, 256), level.player.position, "forest-walls entrance (#376)");
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
         level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
-        assertEquals(new Vector2(3680, 272), level.player.position, "forest-glade entrance (#331)");
+        assertEquals(new Vector2(3680, 256), level.player.position, "forest-glade entrance (#331)");
         level.enterNextRoom(player());
-        assertEquals(new Vector2(1344, 272), level.player.position);
+        assertEquals(new Vector2(1344, 256), level.player.position);
         var secondCoin = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).findFirst().orElseThrow();
         secondCoin.collideWithPlayer();
         level.resetCurrentRoom(player());
@@ -250,11 +250,11 @@ class RoomTest {
     }
     @Test void hotReloadInSecondRoomKeepsPositionAndCorrectRespawnEntrance() {
         Level level = forest();
-        level.reloadAt(new Vector2(1500, 272));
-        assertEquals(new Vector2(1500, 272), level.player.position);
+        level.reloadAt(new Vector2(1500, 256));
+        assertEquals(new Vector2(1500, 256), level.player.position);
         assertEquals(1280, level.currentRoomBounds().x);
         level.resetCurrentRoom(player());
-        assertEquals(new Vector2(1344, 272), level.player.position);
+        assertEquals(new Vector2(1344, 256), level.player.position);
         assertEquals(Player.State.IDLE, level.player.getState());
         assertEquals(1280, level.player.roomCameraTarget().x);
     }
@@ -668,7 +668,7 @@ class RoomTest {
         assertEquals(6, level.forestCoinsSecured());
         for (int trip = 0; trip < 3; trip++) {
             level.returnForCollection(player());
-            assertEquals(new Vector2(64, 272), level.player.position);
+            assertEquals(new Vector2(64, 256), level.player.position);
             assertEquals(6, coins.get());
             assertFalse(level.objects.contains(killed));
             if (trip == 0) {

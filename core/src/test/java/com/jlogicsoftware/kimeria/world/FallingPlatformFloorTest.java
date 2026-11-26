@@ -196,7 +196,7 @@ class FallingPlatformFloorTest {
         }
     }
 
-    private static final float FLOOR1 = 320, STEP1 = 304;
+    private static final float FLOOR1 = 304, STEP1 = 288;
     private static final float[] DX = {-8, 0, 8};
     private static final float[] ALL_FLOOR = {FLOOR1, FLOOR1, FLOOR1}, ALL_STEP = {STEP1, STEP1, STEP1};
     // Measured at mount: 96 is clear of the step block; 128 reaches it with the body at +8; 160 is over it; 192 leaves it behind from +0.
@@ -208,17 +208,17 @@ class FallingPlatformFloorTest {
         for (int i = 0; i < DX.length; i++) ride(name + " mounted at +" + DX[i], make, px, py, DX[i], key, floors[i]);
     }
 
-        @Test void forest1_96_Right() { rideAll("forest-1 (96,272)", this::forest1, 96, 272, ALL_FLOOR, RIGHT); }
-    @Test void forest1_96_Left() { rideAll("forest-1 (96,272)", this::forest1, 96, 272, ALL_FLOOR, LEFT); }
-    @Test void forest1_128_Right() { rideAll("forest-1 (128,272)", this::forest1, 128, 272, X128, RIGHT); }
-    @Test void forest1_128_Left() { rideAll("forest-1 (128,272)", this::forest1, 128, 272, X128, LEFT); }
-    @Test void forest1_128_NoInput() { rideAll("forest-1 (128,272)", this::forest1, 128, 272, X128, NONE); }
-    @Test void forest1_160_Right() { rideAll("forest-1 (160,272)", this::forest1, 160, 272, X160, RIGHT); }
-    @Test void forest1_160_Left() { rideAll("forest-1 (160,272)", this::forest1, 160, 272, X160, LEFT); }
-    @Test void forest1_192_Right() { rideAll("forest-1 (192,256)", this::forest1, 192, 256, X192, RIGHT); }
-    @Test void forest1_192_Left() { rideAll("forest-1 (192,256)", this::forest1, 192, 256, X192, LEFT); }
-    @Test void forest2_Right() { rideAll("forest-2 (1568,240)", this::forest2, 1568, 240, ALL_FLOOR, RIGHT); }
-    @Test void forest2_Left() { rideAll("forest-2 (1568,240)", this::forest2, 1568, 240, ALL_FLOOR, LEFT); }
+        @Test void forest1_96_Right() { rideAll("forest-1 (96,256)", this::forest1, 96, 256, ALL_FLOOR, RIGHT); }
+    @Test void forest1_96_Left() { rideAll("forest-1 (96,256)", this::forest1, 96, 256, ALL_FLOOR, LEFT); }
+    @Test void forest1_128_Right() { rideAll("forest-1 (128,256)", this::forest1, 128, 256, X128, RIGHT); }
+    @Test void forest1_128_Left() { rideAll("forest-1 (128,256)", this::forest1, 128, 256, X128, LEFT); }
+    @Test void forest1_128_NoInput() { rideAll("forest-1 (128,256)", this::forest1, 128, 256, X128, NONE); }
+    @Test void forest1_160_Right() { rideAll("forest-1 (160,256)", this::forest1, 160, 256, X160, RIGHT); }
+    @Test void forest1_160_Left() { rideAll("forest-1 (160,256)", this::forest1, 160, 256, X160, LEFT); }
+    @Test void forest1_192_Right() { rideAll("forest-1 (192,240)", this::forest1, 192, 240, X192, RIGHT); }
+    @Test void forest1_192_Left() { rideAll("forest-1 (192,240)", this::forest1, 192, 240, X192, LEFT); }
+    @Test void forest2_Right() { rideAll("forest-2 (1568,224)", this::forest2, 1568, 224, ALL_FLOOR, RIGHT); }
+    @Test void forest2_Left() { rideAll("forest-2 (1568,224)", this::forest2, 1568, 224, ALL_FLOOR, LEFT); }
 
     /** Over a pit nothing solid is beneath: the hero is carried with the platform exactly as before, until he leaves the room. */
     private void carriedDown(Level l, FallingPlatform p) {
@@ -234,11 +234,11 @@ class FallingPlatformFloorTest {
 
     @Test void theRottenLogOverThePitStillCarriesTheHeroDown() {
         Level l = forest1Traps();
-        carriedDown(l, platformAt(l, 1088, 320));
+        carriedDown(l, platformAt(l, 1088, 304));
     }
 
     @Test void theForest0TrapsRoomPlatformOverThePitStillCarriesTheHeroDown() {
         Level l = forest0Traps();
-        carriedDown(l, platformAt(l, 4096, 320));
+        carriedDown(l, platformAt(l, 4096, 304));
     }
 }

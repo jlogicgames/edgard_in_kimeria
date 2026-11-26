@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1TrapsTest {
     private static final float STEP = 1f / 60f;
     /** Pinned measurements (D105, #500): scripted hero, 60 frames per second, within 0.1 s. */
-    private static final float PIN_MARGIN = 0.1f, COURSE_S = 6.00f, RETRY_AT_LOG_S = 6.47f;
+    private static final float PIN_MARGIN = 0.1f, COURSE_S = 6.00f, RETRY_AT_LOG_S = 6.58f;
     // Authored geometry (docs/ROOMS.md, "forest-1 trap placement plan").
     static final float START_X = 656, MOB_X = 928, PUFF_X = 768, LIP = 1024, PIT_END = 1168, LOG_X = 1088, LOG_END = 1120;
     static final float CHECKPOINT_X = 1216; // x of the room exit (the old checkpoint spot, D67)
@@ -138,7 +138,7 @@ class Forest1TrapsTest {
     private boolean won(Level l) { return l.atRoomExit(); }
     private void settle(Level l, int frames) { for (int i = 0; i < frames; i++) frame(l); }
     /** Body right edge at {@code right}, standing on the floor, hero facing right. */
-    private void place(Level l, float right) { l.player.position.set(right - 29, 272); settle(l, 3); }
+    private void place(Level l, float right) { l.player.position.set(right - 29, 256); settle(l, 3); }
     private void retry(Level l) { l.resetCurrentRoom(player()); settle(l, 2); }
 
     /** What the scripted hero does about the traps; the early lever, block and wall part is the same for all. */
@@ -207,16 +207,16 @@ class Forest1TrapsTest {
         assertEquals(new Rectangle(640, 0, 640, 368), l.currentRoomBounds(), "exactly one 640 px screen: the whole course is in view at once (D84)");
         assertEquals(0, l.objects.stream().filter(ThornTrap.class::isInstance).count(), "the thorn tuft left with the split (#500, D110)");
         assertEquals(1, l.objects.stream().filter(Puffball.class::isInstance).count(), "one puffball");
-        assertEquals(320, puff(l).getY() + puff(l).getHeight(), .01f);
+        assertEquals(304, puff(l).getY() + puff(l).getHeight(), .01f);
         assertEquals(PUFF_X, puff(l).getX(), .01f);
         assertEquals(1, l.fallingPlatforms.stream().filter(f -> f.skin() == FallingPlatform.Skin.LOG).count(), "one log");
         assertEquals(0, l.escalators.size(), "the escalators and their lever are in the escalator room");
         assertEquals(LOG_X, log(l).getX(), .01f);
-        assertEquals(320, log(l).getY(), .01f, "flush with the floor");
+        assertEquals(304, log(l).getY(), .01f, "flush with the floor");
         assertEquals(1, l.objects.stream().filter(RedMob.class::isInstance).count(), "only the trap-course RedMob: the first one is in forest-1-mob (#375)");
         assertEquals(0, l.objects.stream().filter(o -> o.getClass().getSimpleName().matches("FallingBranch|FallingStone|ExplosiveTrap|ThornVine")).count());
         // The pit has no floor between the lips.
-        Rectangle pit = new Rectangle(LIP + 1, 320, PIT_END - LIP - 2, 48);
+        Rectangle pit = new Rectangle(LIP + 1, 304, PIT_END - LIP - 2, 48);
         for (var b : l.collisionBlocks) if (!b.isEscalator())
             assertFalse(pit.overlaps(new Rectangle(b.getX(), b.getY(), b.getWidth(), b.getHeight())), "a floor in the pit");
     }
@@ -237,7 +237,7 @@ class Forest1TrapsTest {
         assertEquals(1, l.objects.stream().filter(com.jlogicsoftware.kimeria.entity.items.Actionable.class::isInstance).count(), "and the wall it opens");
         assertEquals(0, l.objects.stream().filter(o -> o instanceof Puffball || o instanceof RedMob || o instanceof ThornTrap).count(), "nothing that kills");
         assertEquals(32, l.player.position.x, .01f);
-        assertEquals(272, l.player.position.y, .01f);
+        assertEquals(256, l.player.position.y, .01f);
     }
 
     /** The course's own walls (#500): the seam walls at x 624 and 640 and the floor from x 640 stand where the card and the drawn seam say. */
@@ -246,9 +246,9 @@ class Forest1TrapsTest {
         Rectangle left = null;
         for (var b : l.collisionBlocks) if (b.getX() == 640 && b.getWidth() == 16 && b.getY() == 0) left = new Rectangle(b.getX(), b.getY(), b.getWidth(), b.getHeight());
         assertNotNull(left, "the course's left wall (640, 0, 16 x 320)");
-        assertEquals(320, left.height, .01f);
+        assertEquals(304, left.height, .01f);
         assertEquals(START_X, l.player.position.x, .01f);
-        assertEquals(272, l.player.position.y, .01f);
+        assertEquals(256, l.player.position.y, .01f);
         assertFalse(l.player.canInteract());
         Puffball p = puff(l);
         float cloudLeft = p.getX() + p.getWidth() / 2f - 12;
@@ -259,9 +259,9 @@ class Forest1TrapsTest {
     @Test void nothingSharesAnEnvelopeOrATelegraphWithAnythingElse() {
         Level l = level();
         Rectangle mobWorst = mobReach(l);
-        Rectangle cloud = new Rectangle(puff(l).getX() + puff(l).getWidth() / 2f - 12, 288, 24, 32);
-        Rectangle pit = new Rectangle(LIP, 300, PIT_END - LIP, 80);
-        Rectangle checkpoint = new Rectangle(CHECKPOINT_X, 272, 32, 48); // the RoomExit
+        Rectangle cloud = new Rectangle(puff(l).getX() + puff(l).getWidth() / 2f - 12, 272, 24, 32);
+        Rectangle pit = new Rectangle(LIP, 284, PIT_END - LIP, 80);
+        Rectangle checkpoint = new Rectangle(CHECKPOINT_X, 256, 32, 48); // the RoomExit
         Rectangle[] areas = {cloud, mobWorst, pit};
         for (int i = 0; i < areas.length; i++) for (int j = i + 1; j < areas.length; j++)
             assertFalse(areas[i].overlaps(areas[j]), "areas " + i + " and " + j + " overlap: " + areas[i] + " " + areas[j]);
@@ -270,7 +270,7 @@ class Forest1TrapsTest {
         assertTrue(checkpoint.x - (pit.x + pit.width) >= 48, "D44-D47: the room exit is 48 px clear of the pit");
         // The entrance is far away from everything (the loader also enforces this).
         assertTrue(cloud.x - (START_X + 48) >= 48);
-        assertFalse(new Rectangle(CHECKPOINT_X - 48, 272, 112, 48).overlaps(cloud));
+        assertFalse(new Rectangle(CHECKPOINT_X - 48, 256, 112, 48).overlaps(cloud));
     }
 
     /** The mob's worst-case reach: where its body and the whip can be while it chases inside its patrol range. */
@@ -278,7 +278,7 @@ class Forest1TrapsTest {
         // offNeg 2 / offPos 2 tiles around x 928: the hero's centre must be in x 896-960; the body centre follows it,
         // the body is 20 px wide and the whip reaches 6 px past the body.
         float left = 896 - 10 - 6, right = 960 + 10 + 6;
-        return new Rectangle(left, 288, right - left, 32);
+        return new Rectangle(left, 272, right - left, 32);
     }
 
     // ---- the mastered route ----

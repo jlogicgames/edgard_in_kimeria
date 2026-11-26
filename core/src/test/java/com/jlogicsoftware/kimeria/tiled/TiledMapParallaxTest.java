@@ -42,7 +42,8 @@ class TiledMapParallaxTest {
     @Test void factorsOffsetsAndCloudDriftAreRead() {
         assertEquals(0.0, layer("sky").parallaxX); assertEquals(0.0, layer("moon").parallaxY);
         assertEquals(0.15, layer("far").parallaxX, "a double, as the mock's 0.15, not the float 0.15000000596"); assertEquals(0.25, layer("grove").parallaxY);
-        assertEquals(0.4, layer("mid").parallaxX); assertEquals(-16f, layer("mid").offsetY);
+        assertEquals(0.4, layer("mid").parallaxX); assertEquals(-32f, layer("mid").offsetY);
+        assertEquals(-16f, layer("far").offsetY); assertEquals(-16f, layer("grove").offsetY);
         assertEquals(1.0, layer("play-above").parallaxX); assertEquals(-16f, layer("play-above").offsetY);
         assertEquals(map.heightPx(), layer("play-below").offsetY); assertEquals(1, layer("play-below").rows);
         assertEquals(3f, layer("clouds").driftX); assertEquals(1024f, layer("clouds").wrapX);

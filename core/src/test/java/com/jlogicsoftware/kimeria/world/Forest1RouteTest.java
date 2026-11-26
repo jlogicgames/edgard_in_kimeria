@@ -34,11 +34,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1RouteTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float ROOM_X = 1280, ROOM_END = 2112, START_X = 1344, FLOOR = 320;
-    private static final float LEVER_X = 1440, LADDER_X = 1536, SLAB_X = 1552, SLAB_END = 1632, SLAB_TOP = 208;
+    private static final float ROOM_X = 1280, ROOM_END = 2112, START_X = 1344, FLOOR = 304;
+    private static final float LEVER_X = 1440, LADDER_X = 1536, SLAB_X = 1552, SLAB_END = 1632, SLAB_TOP = 192;
     /** The one-shot step (a falling platform, y 168) and the refill pad above it (x 1696-1744, top y 128, refill at x 1712). */
-    private static final float STEP_X = 1648, STEP_END = 1680, STEP_TOP = 168, PAD_X = 1696, PAD_END = 1744, PAD_TOP = 128, REFILL_X = 1712;
-    private static final float LIFT_X = 1936, LIFT_RIGHT = 1968, BOTTOM = 304, TOP = 176, LEDGE_X = 1968, LEDGE_TOP = 144, CHECKPOINT_X = 2048;
+    private static final float STEP_X = 1648, STEP_END = 1680, STEP_TOP = 152, PAD_X = 1696, PAD_END = 1744, PAD_TOP = 112, REFILL_X = 1712;
+    private static final float LIFT_X = 1936, LIFT_RIGHT = 1968, BOTTOM = 288, TOP = 160, LEDGE_X = 1968, LEDGE_TOP = 128, CHECKPOINT_X = 2048;
     /** The bat's beat (x of the body; the part that hurts is x + 3 .. x + 13): 1856 to 1904. */
     private static final float BAT_X = 1856, BAT_END = 1904;
     /** The snail under the slab and the stump that ends its line to the right (#500). */
@@ -50,7 +50,7 @@ class Forest1RouteTest {
     /** #484: a hero who climbs to the slab and stops in its middle is bitten by its spider this long after the entrance. */
     private static final float MID_SLAB_DEATH_S = 5.77f;
     /** The scripted rider hops onto the exit ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
-    private static final float RIDE_JUMP_Y = 195;
+    private static final float RIDE_JUMP_Y = 179;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     private final Set<Integer> held = h.held, pressed = h.pressed;
@@ -176,7 +176,7 @@ class Forest1RouteTest {
             if (melee && !actionWasDown) pressed.add(Input.Keys.K);
             actionWasDown = melee;
             boolean overLift = centerX(level) >= LIFT_X + 4;
-            if (!riding(level) && feet(level) > 300 && overLift && lift(level).getY() >= 292) jump();
+            if (!riding(level) && feet(level) > 284 && overLift && lift(level).getY() >= 276) jump();
             if (riding(level) && lift(level).getY() <= RIDE_JUMP_Y && level.player.isOnGround()) jump(); // up onto the ledge, 16 px above the lift's top
             frame(level); alive(level);
             assertTrue(++frames < 60 * 40, "checkpoint unreachable from " + level.player.position + " lift y=" + lift(level).getY());
@@ -308,12 +308,12 @@ class Forest1RouteTest {
         assertEquals(LIFT_X, lift(level).getX(), 0.01f);
         assertFalse(lever(level).isUp());
         assertEquals(LADDER_X, ladder(level).getX(), 0.01f);
-        assertEquals(96, ladder(level).topY(), 0.01f);
+        assertEquals(80, ladder(level).topY(), 0.01f);
         assertFalse(step(level).isFalling());
         assertEquals(STEP_X, step(level).getX(), 0.01f);
         assertEquals(STEP_TOP, step(level).getY(), 0.01f);
         assertEquals(FallingPlatform.Skin.LOG, step(level).skin(), "the same look as every falling platform: the rotten log");
-        assertEquals(208, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor");
+        assertEquals(192, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor");
         FireballRefill refill = level.objects.stream().filter(FireballRefill.class::isInstance).map(FireballRefill.class::cast).findFirst().orElseThrow();
         assertEquals(REFILL_X, refill.getX(), 0.01f);
         assertEquals(PAD_TOP, refill.getY() + refill.getHeight(), 0.01f, "the refill sits on the pad");
@@ -358,7 +358,7 @@ class Forest1RouteTest {
             if (lowered) { walkToLever(level); operate(level); settle(level, 60); }
             assertEquals(lowered, ladder(level).isLowered());
             for (float x = ROOM_X + 24; x < CHECKPOINT_X - 24; x += 4) {
-                for (float y : new float[]{272, SLAB_TOP - 48, LEDGE_TOP - 48}) {
+                for (float y : new float[]{256, SLAB_TOP - 48, LEDGE_TOP - 48}) {
                     level.player.position.set(x - 24, y);
                     settle(level, 2);
                     if (level.player.canInteract()) {
@@ -375,7 +375,7 @@ class Forest1RouteTest {
     @Test void withTheLadderRaisedNeitherWalkingNorJumpingNorTheLiftReachesTheRefillLedge() {
         Level level = roomWithoutTheBat();
         for (float x = ROOM_X + 24; x <= ROOM_END - 32; x += 8) {
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             for (int i = 0; i < 60 * 2; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
                 if (i % 30 == 0) jump();
@@ -419,7 +419,7 @@ class Forest1RouteTest {
             float stopped = lift(level).getY();
             assertTrue(stopped >= TOP - 1 && stopped <= BOTTOM + 1);
             for (float x = ROOM_X + 24; x <= LEDGE_X - 8; x += 12) {
-                level.player.position.set(x - 24, 272);
+                level.player.position.set(x - 24, 256);
                 for (int i = 0; i < 60 * 2; i++) {
                     held.clear(); held.add(Input.Keys.D);
                     if (i % 30 == 0) jump();
@@ -584,7 +584,7 @@ class Forest1RouteTest {
     @Test void theHeroNeverCanBeOnTheLiftOrTheLadderWhenTheLeverIsPulled() {
         // The lever's reach never includes any support the lever moves, so neither can be taken from under the hero.
         Level level = roomWithoutTheBat();
-        for (float y = 96; y <= 288; y += 16)
+        for (float y = 96; y <= 272; y += 16)
             for (float x = LADDER_X - 8; x <= LADDER_X + 8; x += 8) {
                 level.player.position.set(x - 8, y);
                 settle(level, 2);
@@ -609,7 +609,7 @@ class Forest1RouteTest {
         for (int i = 0; i < 60 * 40 && !(riding(level) && lift(level).getY() < 250); i++) {
             held.clear(); held.add(Input.Keys.D);
             boolean overLift = centerX(level) >= LIFT_X + 4;
-            if (!riding(level) && feet(level) > 300 && overLift && lift(level).getY() >= 292) jump();
+            if (!riding(level) && feet(level) > 284 && overLift && lift(level).getY() >= 276) jump();
             frame(level);
         }
         held.clear();
@@ -677,13 +677,13 @@ class Forest1RouteTest {
         level.resetCurrentRoom(player());
         assertEquals("forest-1-route", level.currentRoomName());
         assertEquals(START_X, level.player.position.x, 0.01f);
-        assertEquals(272, level.player.position.y, 0.01f);
+        assertEquals(256, level.player.position.y, 0.01f);
     }
 
     @Test void theEntranceIsSafeAndFarFromEverythingTheLeverMovesAndFromTheCheckpoint() {
         Level level = room();
         // A safe 48 x 48 area with floor under it, nothing to hurt and nothing in reach to trip over.
-        assertEquals(272, level.player.position.y, 0.01f);
+        assertEquals(256, level.player.position.y, 0.01f);
         assertFalse(level.player.canInteract());
         assertTrue(LEVER_X - (START_X + 48) >= 40);
         assertTrue(LADDER_X - LEVER_X >= 90, "the lever is well clear of the ladder");
@@ -817,7 +817,7 @@ class Forest1RouteTest {
         assertPadClosed(level);
         // ... and the step is not walkable from the ladder foot or the floor either (the pad is 192 px up).
         for (float x = ROOM_X + 24; x < LIFT_X - 8; x += 8) {
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             for (int i = 0; i < 60; i++) {
                 held.clear(); held.add(Input.Keys.D);
                 if (i % 20 == 0) jump();
@@ -912,7 +912,7 @@ class Forest1RouteTest {
         Bat bat = bat(level);
         assertFalse(bat.isVertical);
         assertEquals(BAT_X, bat.getX(), 0.01f);
-        assertEquals(296, bat.getY(), 0.01f, "it hangs at the hero's own height, over the floor");
+        assertEquals(280, bat.getY(), 0.01f, "it hangs at the hero's own height, over the floor");
         float min = Float.MAX_VALUE, max = -Float.MAX_VALUE;
         for (int i = 0; i < 60 * 30; i++) { frame(level); min = Math.min(min, bat.getX()); max = Math.max(max, bat.getX()); }
         assertEquals(BAT_X, min, 1.2f); assertEquals(BAT_END, max, 1.2f);
@@ -949,7 +949,7 @@ class Forest1RouteTest {
                 held.clear(); held.add(Input.Keys.D);
                 if (enemyAhead(hop, gap) && hop.player.isOnGround()) jump();
                 boolean overLift = centerX(hop) >= LIFT_X + 4;
-                if (!riding(hop) && feet(hop) > 300 && overLift && lift(hop).getY() >= 292) jump();
+                if (!riding(hop) && feet(hop) > 284 && overLift && lift(hop).getY() >= 276) jump();
                 if (riding(hop) && lift(hop).getY() <= RIDE_JUMP_Y && hop.player.isOnGround()) jump();
                 frame(hop);
                 dead = hop.player.isGotHit();
@@ -1077,7 +1077,7 @@ class Forest1RouteTest {
             settle(level, 60);
             for (float x = BAT_X - 40; x <= LEDGE_X - 8; x += 12) {
                 if (bat(level).isDefeated()) break;
-                level.player.position.set(x - 24, 272);
+                level.player.position.set(x - 24, 256);
                 for (int i = 0; i < 60 * 2; i++) {
                     held.clear(); held.add(Input.Keys.D);
                     if (i % 25 == 0) jump();

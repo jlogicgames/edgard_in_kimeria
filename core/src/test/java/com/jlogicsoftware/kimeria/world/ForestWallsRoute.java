@@ -7,10 +7,10 @@ import java.util.Set;
 
 /**
  * The mastered route of {@code forest-walls} (#545, D116) with the ordinary controls, one frame at a time and no wall jump: climb the
- * three branches of the tree in front of the first wall (A1 x 880-912 y 272, A2 x 832-864 y 224, A3 x 880-912 y 176), then leap from
- * A3's top branch across the first wall (x 912-928) on to the second wall's top (x 992-1008, y 224), where the Bat lies; walk off its
+ * three branches of the tree in front of the first wall (A1 x 880-912 y 256, A2 x 832-864 y 208, A3 x 880-912 y 160), then leap from
+ * A3's top branch across the first wall (x 912-928) on to the second wall's top (x 992-1008, y 208), where the Bat lies; walk off its
  * end on to the YellowMob (a stomp) and on to the RedMob and the exit. A second route climbs out of the gap between the walls by tree B
- * (branch B1 x 944-976 y 272). Shared by {@code ForestWallsTest} and {@code RoomReplayTest}. World Y grows downward; positions are
+ * (branch B1 x 944-976 y 256). Shared by {@code ForestWallsTest} and {@code RoomReplayTest}. World Y grows downward; positions are
  * the body's centre x and its feet y (the body is 11 x 22 px).
  */
 final class ForestWallsRoute {
@@ -19,7 +19,7 @@ final class ForestWallsRoute {
     /** Where he steers to in the air for A1, A2, A3 (body centre x). */
     static final float A1_LAND = 896f, A2_LAND = 848f, A3_LAND = 896f;
     /** The platform tops: A1, A2, A3, wall 2, and B1. */
-    static final float A1_TOP = 272f, A2_TOP = 224f, A3_TOP = 176f, WALL2_TOP = 224f, B1_TOP = 272f;
+    static final float A1_TOP = 256f, A2_TOP = 208f, A3_TOP = 160f, WALL2_TOP = 208f, B1_TOP = 256f;
     private static final float SLACK = 0.5f;
 
     private final boolean fromGap;

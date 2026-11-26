@@ -151,7 +151,9 @@ SHAKE = 1.5                             # px, the largest camera shake (ScreenSh
 BLEED_ROWS = 1                          # play layer rows past the room bottom (16 px of deep soil)
 MAP_ROWS = ROWS + BLEED_ROWS            # the rows of every layer that starts at the room top
 PLAY_ABOVE = 1                          # rows of the `play-above` layer (16 px over the room top)
-MID_ABOVE = 1                           # rows the `mid` strip starts above the room top (layer offsety -16)
+MID_ABOVE = 1                           # rows the `mid` strip starts above the room top
+FLOOR_RAISE = TILE                      # px the forest floor lies over the art's first floor line (#648): the far, grove and mid
+RAISE_ROWS = FLOOR_RAISE // TILE        # layers rise with it (offsety) and carry this many extra rows so they still reach the bottom
 FG_TOP = 32                             # foreground canvas: room y -32 to 416
 FG_HEIGHT = 448
 CANOPY_TOP = {1, 61, 80, 20}           # the canopy clump's top-row gids (terrain.grid: canopy-l, -m1, -m2, -r), firstgid 1
@@ -160,8 +162,8 @@ BURIED = {61: 70, 62: 71, 63: 72}      # the ground's bottom row (left, middle, 
 # (layer name, tileset key, parallaxx, parallaxy, extra properties, offsety)
 LAYERS = (('sky', 'forest/sky', 0, 0, {}, 0), ('stars', 'shared/stars', 0, 0, {}, 0), ('moon', 'shared/moon', 0, 0, {}, 0),
           ('clouds', 'shared/clouds', 0, 0, {'driftx': CLOUD_DRIFT, 'wrapx': CLOUD_WRAP}, 0),
-          ('far', 'forest/far', 0.15, 0.15, {}, 0), ('grove', 'forest/grove', 0.25, 0.25, {}, 0),
-          ('mid', 'forest/mid', 0.4, 0.4, {}, -MID_ABOVE * TILE), ('play-above', 'play-above', 1, 1, {}, -PLAY_ABOVE * TILE),
+          ('far', 'forest/far', 0.15, 0.15, {}, -FLOOR_RAISE), ('grove', 'forest/grove', 0.25, 0.25, {}, -FLOOR_RAISE),
+          ('mid', 'forest/mid', 0.4, 0.4, {}, -MID_ABOVE * TILE - FLOOR_RAISE), ('play-above', 'play-above', 1, 1, {}, -PLAY_ABOVE * TILE),
           ('Background', None, 1, 1, {}, 0), ('foreground', 'forest/fg', FG_FACTOR, FG_FACTOR, {'roomx': ROOM_X}, 0))
 MOON_AT = (480, 64)   # screen centre of the moon (the 128 px piece snaps to whole tiles: this is its exact centre); the same in every world
 
@@ -226,9 +228,13 @@ def play_rows(scene):
     return [row[c0:c1] + [row[c1 - 1]] * PAD_COLUMNS for row in rows]
 
 
+RAISED = ('forest/far', 'forest/grove', 'forest/mid')   # the strips that rise with the floor
+
+
 def layer_rows(key):
-    """Rows of a scenery layer: MAP_ROWS from its top, the mid strip also its rows above the room."""
-    return MAP_ROWS + (MID_ABOVE if key == 'forest/mid' else 0)
+    """Rows of a scenery layer: MAP_ROWS from its top, a raised strip also the rows its offset lifts it by, the mid strip its
+    rows above the room too."""
+    return MAP_ROWS + (RAISE_ROWS if key in RAISED else 0) + (MID_ABOVE if key == 'forest/mid' else 0)
 
 
 class Layer:
@@ -251,6 +257,12 @@ class Layer:
             self.stamp(pieces[k % len(pieces)], col, row)
             col += self.spots[pieces[k % len(pieces)]][SPOT_W]
             k += 1
+
+    def run_on(self):
+        """The strip's last RAISE_ROWS rows, empty after the stamps, repeat the row over them: the soil dark runs on."""
+        for r in range(len(self.rows) - RAISE_ROWS, len(self.rows)):
+            if not any(self.rows[r]):
+                self.rows[r] = list(self.rows[r - 1])
 
 
 def sky(layer):
@@ -286,14 +298,17 @@ def clouds(layer):
 
 def far(layer):
     layer.strip(['ridge-a', 'ridge-b', 'ridge-c', 'ridge-d'], FAR_ROW)
+    layer.run_on()
 
 
 def grove(layer):
     layer.strip(['grove-a', 'grove-b', 'grove-c'], GROVE_ROW)
+    layer.run_on()
 
 
 def mid(layer):
-    layer.strip(['mid-a', 'mid-b', 'mid-c', 'mid-d'], 0)   # layer offsety -16: the pieces start 16 px over the room top
+    layer.strip(['mid-a', 'mid-b', 'mid-c', 'mid-d'], 0)   # layer offsety -32: the pieces start 32 px over the room top
+    layer.run_on()
 
 
 GRADED = ('deep-1',)                    # the soil rows graded under a floor's bottom row, then deep-3 (one row now, D111)
@@ -349,9 +364,9 @@ def play_above(rows):
 # from the bottom past the floor line; the big shapes hang from the top: the vine curtain over the middle, the root curtain at the
 # room's end (deepest, there the camera never carries it over an object), leaves and a bough in the top-left corner. Low clumps
 # lie on the floor line with open ground between them.
-FOREGROUND = (('hang-leaves-l', -80, 0), ('trunk-near', -48, 0), ('clump-fern', 32, 320), ('tuft', 112, 312),
-              ('clump-leaves', 272, 320), ('vine-curtain', 600, 0), ('clump-grass', 608, 320), ('clump-mixed', 832, 320),
-              ('roots-curtain', 1208, 0), ('edge-leaves', 1568, 327), ('edge-fern', 1600, 327))
+FOREGROUND = (('hang-leaves-l', -80, 0), ('trunk-near', -48, 0), ('clump-fern', 32, 304), ('tuft', 112, 296),
+              ('clump-leaves', 272, 304), ('vine-curtain', 600, 0), ('clump-grass', 608, 304), ('clump-mixed', 832, 304),
+              ('roots-curtain', 1208, 0), ('edge-leaves', 1568, 311), ('edge-fern', 1600, 311))
 
 
 
@@ -360,8 +375,8 @@ FOREGROUND = (('hang-leaves-l', -80, 0), ('trunk-near', -48, 0), ('clump-fern', 
 # put the tall pieces in is protected now, so only two tall pieces still fit where no camera carries them over an object: the
 # reeds at the left end and the fern fan at the right end; the vine curtain hangs over the left third, a leaf bough enters at
 # the top-left, low clumps sit on the floor line (the near trunk found no x: every column crosses a protected rect).
-CALM_FOREGROUND = (('hang-leaves-l', -80, 0), ('vine-curtain', 120, 0), ('rise-reeds', -50, 144), ('clump-grass', 288, 320),
-                   ('rise-fern', 780, 128), ('clump-mixed', 744, 320), ('clump-fern', 832, 320))
+CALM_FOREGROUND = (('hang-leaves-l', -80, 0), ('vine-curtain', 120, 0), ('rise-reeds', -50, 128), ('clump-grass', 288, 304),
+                   ('rise-fern', 780, 112), ('clump-mixed', 744, 304), ('clump-fern', 832, 304))
 
 
 TOP_OVERLAP = 8                         # a `-top` piece's last row is the piece's y 7: it reaches 8 px into the piece

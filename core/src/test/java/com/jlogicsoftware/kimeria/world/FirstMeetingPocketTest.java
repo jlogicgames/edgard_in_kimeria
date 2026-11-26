@@ -265,7 +265,7 @@ class FirstMeetingPocketTest {
 
     /** The snail sees him on the one-way step (inside its sight, above its firing line): it notices and watches, never spits (D106). */
     @Test void forest1SpiderTheSnail() {
-        Set<String> seen = pocket("forest-1", "forest-1-spider", "snail", Snail.class, 7456, 288, "NOTICE");
+        Set<String> seen = pocket("forest-1", "forest-1-spider", "snail", Snail.class, 7456, 272, "NOTICE");
         for (Snail.State never : new Snail.State[]{Snail.State.WINDUP, Snail.State.SPIT, Snail.State.RELOAD})
             assertFalse(seen.contains(never.name()), "the snail never spits at the hero on the step: it showed " + seen);
         assertTrue(seen.contains(Snail.State.WATCH.name()), "it watches him after the notice: " + seen);
@@ -302,7 +302,7 @@ class FirstMeetingPocketTest {
      * solid): it notices him, sprints under him, bays at its range end and gives up, and he is never committed to (D115, #331).
      */
     @Test void forestGladeTheWolf() {
-        Set<String> seen = pocket("forest-2", "forest-glade", "wolf", Wolf.class, 3976, 288, "BAY");
+        Set<String> seen = pocket("forest-2", "forest-glade", "wolf", Wolf.class, 3976, 272, "BAY");
         for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE})
             assertFalse(seen.contains(never.name()), "the wolf never commits to a hero 32 px up: it showed " + seen);
         for (Wolf.State shown : new Wolf.State[]{Wolf.State.NOTICE, Wolf.State.CHASE, Wolf.State.TROT})

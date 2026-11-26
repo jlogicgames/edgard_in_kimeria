@@ -182,7 +182,7 @@ class RoomReplayTest {
     /** The mastered hero stops this far short of the leg-hold's teeth when they are not shut (D128). */
     private static final float LEGHOLD_WAIT_PX = 16;
     /** The wait is for a hero on the floor: one on the ledge above (feet at y 240) cannot be seen by the trap and walks on, off the ledge's end. */
-    private static final float LEGHOLD_FLOOR_BELOW = 300;
+    private static final float LEGHOLD_FLOOR_BELOW = 284;
     /** Seconds from the room's start at which the mastered route first stands short of the leg-hold's open teeth: the soonest a death at them can replay from (D105's retry), -1 before it. */
     private float legHoldArrival = -1;
     private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {};
@@ -497,7 +497,7 @@ class RoomReplayTest {
         int phase = collect && route.equals("forest-entry") ? 0 : 1;
         for (int frame = 0; frame < 60 * COLLECTION_LIMIT; frame++) {
             // #486: forest-entry has two pits (x 240-320 and x 560-608); every route crosses them, none falls (the floor is y 320).
-            if (route.equals("forest-entry")) assertTrue(player.position.y < 300, "the route fell into a pit at x " + player.position.x);
+            if (route.equals("forest-entry")) assertTrue(player.position.y < 284, "the route fell into a pit at x " + player.position.x);
             held.clear(); pressed.clear();
             if (frame >= delayFrames) {
                 if (collect && route.equals("forest-entry")) {
@@ -530,7 +530,7 @@ class RoomReplayTest {
                     // At normal speed the upper coin needs a ground jump beside its one-way platform.
                     var upperCoin = level.objects.stream().filter(Collectable.class::isInstance)
                         .map(Collectable.class::cast).filter(c -> c.type() == ItemType.COIN
-                            && !c.isCollected() && c.getY() < 300).findFirst().orElse(null);
+                            && !c.isCollected() && c.getY() < 284).findFirst().orElse(null);
                     if (upperCoin != null) {
                         float stop = upperCoin.getX() - player.hitbox.offsetX;
                         if (player.position.x >= stop && player.position.x < stop + 12) {
