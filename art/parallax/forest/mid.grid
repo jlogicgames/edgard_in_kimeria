@@ -32,7 +32,8 @@ color o 364555
 color p 384858
 
 # Bleed (vertical parallax 0.4): the camera top moves 0 to 8 px (D111), so a piece starts 1 tile row above the room top
-# (layer offsety -16: the layer trails the camera by up to 3.2 px, plus the shake) and runs 1 row past the room bottom, 25 rows
+# (layer offsety -32 since the floor raise, #648, with one more repeated row at the bottom; the layer trails the camera by
+# up to 3.2 px, plus the shake) and runs 1 row past the room bottom, 25 rows
 # in all. The row above is drawn, not mirrored: each canopy mass the room top cut gets its own lumpy rounded crown (its lit
 # band moved to the new top), a lone trunk carries on along its slope.
 piece mid-a 16 25
