@@ -115,6 +115,7 @@ skills; the gates reach it through Gradle.
 | A trap: new, changed look, trigger or placement | kimeria-trap-design |
 | Any player-facing string | kimeria-game-text (kimeria-dialogue for the dialogue mechanics) |
 | A sprite, icon, portrait | kimeria-art-direction |
+| A parallax layer or foreground piece | kimeria-parallax (art through kimeria-art-direction) |
 | A sound | kimeria-sound |
 | Dust, sparks, blood, any particle | kimeria-particles |
 | An enemy, the boss, hitboxes | kimeria-combat |
