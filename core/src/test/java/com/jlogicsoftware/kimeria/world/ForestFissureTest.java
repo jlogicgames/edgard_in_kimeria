@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ForestFissureTest {
     private static final float STEP = 1f / 60f;
     private static final int FISSURE_ROOM = 2;
-    private static final float FLOOR = 320f, OFFSET_STEP = 0.05f, CYCLE = 3.5f;
+    private static final float FLOOR = 304f, OFFSET_STEP = 0.05f, CYCLE = 3.5f;
     private static final int ROUTE_LIMIT_FRAMES = 60 * 30;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();

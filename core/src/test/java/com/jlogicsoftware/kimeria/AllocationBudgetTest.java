@@ -580,7 +580,7 @@ class AllocationBudgetTest {
             org.junit.jupiter.api.Assertions.assertSame(escalator, level.player.currentEscalator(), "the hero rides");
         };
         Runnable stand = () -> {
-            level.player.position.set(570, 272); // plain floor, no escalator
+            level.player.position.set(570, 256); // plain floor, no escalator
             for (int i = 0; i < 5; i++) { escalator.update(STEP); level.player.update(STEP); }
             org.junit.jupiter.api.Assertions.assertNull(level.player.currentEscalator(), "the baseline stands on the floor");
         };

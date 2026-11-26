@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class HoneyFungusTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
+    /** The floor line of the synthetic maps this class builds. */
     private static final float FLOOR = 320, FUNGUS_W = 24, FUNGUS_H = 16, CLOUD = 24;
     private static final float HONEY_X = 288, FALSE_X = 480, ZONE = 64, CLOUD_LEFT = FALSE_X, CLOUD_RIGHT = FALSE_X + CLOUD, CLOUD_TOP = FLOOR - CLOUD;
     /** The hero's body box as the game defines it: offset 18 in a 48 px frame, 11 wide, 22 tall, so the body's bottom is the frame's. */
@@ -336,18 +337,21 @@ class HoneyFungusTest {
 
     // -- the shipped maps --
 
+    /** The floor line of the shipped forest rooms (D144). */
+    private static final float SHIPPED_FLOOR = 304;
+
     @Test void forest0HasTheHarmlessOnesInTheLeverRoomAndTheWallRoomAndNoLethalOne() {
         Level lever = room("forest-0", 0);
         HoneyFungus first = honey(lever);
         assertEquals(1, count(lever, HoneyFungus.class));
         assertEquals(0, count(lever, FalseHoneyFungus.class));
-        assertEquals(new Rectangle(LEVER_X, FLOOR - FUNGUS_H, FUNGUS_W, FUNGUS_H), new Rectangle(first.getX(), first.getY(), first.getWidth(), first.getHeight()));
+        assertEquals(new Rectangle(LEVER_X, SHIPPED_FLOOR - FUNGUS_H, FUNGUS_W, FUNGUS_H), new Rectangle(first.getX(), first.getY(), first.getWidth(), first.getHeight()));
         assertEquals(LEVER_X - LEVER_ZONE, first.triggerZone().x, 0f);
         Level wall = room("forest-0", 2);
         assertEquals("forest-0-wall", wall.currentRoomName());
         HoneyFungus second = honey(wall);
         assertEquals(WALL_X, second.getX(), 0f);
-        assertEquals(FLOOR, second.getY() + second.getHeight(), 0f);
+        assertEquals(SHIPPED_FLOOR, second.getY() + second.getHeight(), 0f);
         assertEquals(WALL_X - WALL_ZONE_LEFT, second.triggerZone().x, 0f);
         assertEquals(WALL_ZONE_LEFT + FUNGUS_W + WALL_ZONE_RIGHT, second.triggerZone().width, 0f);
         assertTrue(second.triggerZone().x > BRANCH_ZONE_RIGHT, "its zone does not share the falling branch's, so the two never fire together");
@@ -372,12 +376,12 @@ class HoneyFungusTest {
         assertEquals("forest-canopy", level.currentRoomName());
         FalseHoneyFungus f = fake(level);
         assertEquals(0, count(level, HoneyFungus.class));
-        assertEquals(new Rectangle(CANOPY_X, FLOOR - FUNGUS_H, FUNGUS_W, FUNGUS_H), new Rectangle(f.getX(), f.getY(), f.getWidth(), f.getHeight()));
+        assertEquals(new Rectangle(CANOPY_X, SHIPPED_FLOOR - FUNGUS_H, FUNGUS_W, FUNGUS_H), new Rectangle(f.getX(), f.getY(), f.getWidth(), f.getHeight()));
         Rectangle cloud = f.cloudBounds();
-        assertEquals(FLOOR, cloud.y + cloud.height, 0f);
+        assertEquals(SHIPPED_FLOOR, cloud.y + cloud.height, 0f);
         assertTrue(cloud.x - CANOPY_MOB_PATROL_RIGHT >= FungusTrap.CLEARANCE, "the RedMob's patrol is 48 px or more from the cloud");
         assertTrue(CANOPY_VINE_X - (cloud.x + cloud.width) >= FungusTrap.CLEARANCE, "so is the D59 stretch, which starts at the vine");
-        Rectangle entrance = new Rectangle(CANOPY_ENTRANCE_X + 18, 272 + 26, BODY_W, BODY_H);
+        Rectangle entrance = new Rectangle(CANOPY_ENTRANCE_X + 18, 256 + 26, BODY_W, BODY_H);
         assertTrue(cloud.x - (entrance.x + entrance.width) >= FungusTrap.CLEARANCE);
         assertTrue(f.triggerZone().x > CANOPY_MOB_PATROL_RIGHT, "the zone does not reach the RedMob's patrol");
     }

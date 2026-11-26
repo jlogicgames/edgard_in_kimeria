@@ -38,7 +38,7 @@ class HeroFrameTest {
     private static final int LABEL_POSE_TOP_ROW = 24;
     private static final int STONE_ID = 9001, SKIN = 0xc27a45;
     private static final float STONE_DROP = 12, DROP = 80;
-    private static final float FLOOR = 320, LADDER_X = 1216, LADDER_CENTRE = LADDER_X + 8, STEP_X = 2;
+    private static final float FLOOR = 304, LADDER_X = 1216, LADDER_CENTRE = LADDER_X + 8, STEP_X = 2;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final Set<Integer> held = harness.held, pressed = harness.pressed;

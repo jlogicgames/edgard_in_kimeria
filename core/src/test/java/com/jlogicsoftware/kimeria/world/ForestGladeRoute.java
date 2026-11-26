@@ -19,7 +19,7 @@ final class ForestGladeRoute {
     /** Where the second thorn root (x 4360-4376) is jumped (hero frame x: the body's right edge 29 px on is 7 to 63 px short of the column). */
     static final float ROOT2_JUMP = 4290f;
     /** The tops of the trunk and the branch, and the slack a body on them is measured with. */
-    static final float BRANCH_TOP = 288f;
+    static final float BRANCH_TOP = 272f;
     private static final float GROUND_SLACK = 0.5f, BRANCH_FROM = 3952f;
 
     private final Wolf wolf;

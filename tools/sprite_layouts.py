@@ -225,5 +225,5 @@ PARALLAX_IMAGE_DIR = 'assets/images/parallax'
 PARALLAX_LAYER_SHEETS = {'forest-sky': (256, 32), 'forest-far': (256, 544), 'forest-grove': (256, 912), 'forest-mid': (256, 1600),
                          'shared-stars': (256, 624), 'shared-clouds': (256, 192)}
 # Depth of field and light, not objects: 8-bit RGBA with partial alpha (the foreground's fringe and blurred leaves, the moon's glow).
-PARALLAX_SOFT_SHEETS = {'forest-fg': (896, 1600), 'shared-moon': (256, 128)}
+PARALLAX_SOFT_SHEETS = {'forest-fg': (896, 1632), 'shared-moon': (256, 128)}
 PARALLAX_MAX_SIDE = 2048  # a texture the web build can hold

@@ -14,11 +14,11 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * {@code forest-walls} after the wall jump (#545, D116), through the real map and real Level updates with ordinary controls: the
  * way over the two walls is the tree in front of the first wall and a leap from its top branch, and the way out of the gap
- * between the walls is the second tree. World Y grows downward: the floor top is y 320, wall 1 (x 912-928) top y 208, wall 2
- * (x 992-1008) top y 224. Positions are the body's centre x and feet y (the body is 11 x 22 px).
+ * between the walls is the second tree. World Y grows downward: the floor top is y 304, wall 1 (x 912-928) top y 192, wall 2
+ * (x 992-1008) top y 208. Positions are the body's centre x and feet y (the body is 11 x 22 px).
  */
 class ForestWallsTest {
-    private static final float STEP = HeadlessLevelHarness.STEP, FLOOR = 320, WALL2_TOP = 224, A3_TOP = 176;
+    private static final float STEP = HeadlessLevelHarness.STEP, FLOOR = 304, WALL2_TOP = 208, A3_TOP = 160;
     /** The strip of A3's top (body centre x) from which the leap lands on the second wall's top, measured (the card). */
     private static final float LEAP_FROM_MIN = 882, LEAP_FROM_MAX = 908;
     private float redMobAt;
@@ -125,9 +125,9 @@ class ForestWallsTest {
         Level level = level();
         place(level, 905, A3_TOP);
         for (int f = 0; f < 10; f++) level.update(STEP);
-        for (int f = 0; f < 150; f++) { h.held.clear(); h.held.add(Input.Keys.D); level.update(STEP); if (feet(level) > 200 && level.player.isOnGround()) break; }
+        for (int f = 0; f < 150; f++) { h.held.clear(); h.held.add(Input.Keys.D); level.update(STEP); if (feet(level) > 184 && level.player.isOnGround()) break; }
         System.out.printf("walk off A3 at 905: lands x %.1f feet %.1f%n", cx(level), feet(level));
-        assertEquals(272f, feet(level), 0.6f, "on B1, 48 px above the gap's floor");
+        assertEquals(256f, feet(level), 0.6f, "on B1, 48 px above the gap's floor");
         assertTrue(cx(level) >= 944 && cx(level) <= 976, "on B1's span");
         assertEquals("hit", leap(912), "a leap from the end of the branch overshoots the wall into the YellowMob's range");
     }

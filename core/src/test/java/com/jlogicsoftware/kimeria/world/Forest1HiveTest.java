@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1HiveTest {
     private static final float STEP = 1f / 60f;
     private static final String HIVE_ROOM = "forest-1-hive";
-    private static final float LEDGE_TOP = 208f;
+    private static final float LEDGE_TOP = 192f;
     /** The climber's cue: start up the ladder right after a curtain, while the cycle is still this young. */
     private static final float CLIMB_CUE_SECONDS = 1.2f;
 
@@ -71,10 +71,10 @@ class Forest1HiveTest {
         List<HangingHive> hives = hives(level);
         assertEquals(2, hives.size());
         HangingHive floor = hives.get(0), ladder = hives.get(1);
-        assertEquals(320f, floor.floorY(), 0.01f);
+        assertEquals(304f, floor.floorY(), 0.01f);
         assertEquals(62f, floor.floorY() - floor.mouthY(), 0.01f, "the floor hive's band");
-        assertEquals(320f, ladder.floorY(), 0.01f, "a ladder is not solid: the band runs down it to the floor");
-        assertEquals(198f, ladder.floorY() - ladder.mouthY(), 0.01f);
+        assertEquals(304f, ladder.floorY(), 0.01f, "a ladder is not solid: the band runs down it to the floor");
+        assertEquals(182f, ladder.floorY() - ladder.mouthY(), 0.01f, "the ladder hive keeps its bough and the floor rose 16 px (D144)");
         Ladder l = level.objects.stream().filter(Ladder.class::isInstance).map(Ladder.class::cast).findFirst().orElseThrow();
         Rectangle band = ladder.columnInto(new Rectangle());
         assertTrue(band.x >= l.getX() && band.x + band.width <= l.getX() + l.getWidth(), "the band runs down the ladder");
@@ -208,7 +208,7 @@ class Forest1HiveTest {
             Level level = room();
             HangingHive floor = hives(level).get(0);
             Carryable stone = level.objects.stream().filter(Carryable.class::isInstance).map(Carryable.class::cast).findFirst().orElseThrow();
-            level.player.position.set(stone.getX() - 18, 272);
+            level.player.position.set(stone.getX() - 18, 256);
             level.player.velocity().setZero();
             level.player.facingRight = true;
             settle(level, 10);
@@ -235,7 +235,7 @@ class Forest1HiveTest {
         for (int lead = 6; lead <= 30; lead += 2) {
             Level level = room();
             HangingHive floor = hives(level).get(0);
-            level.player.position.set(6360 - 29, 272);
+            level.player.position.set(6360 - 29, 256);
             level.player.velocity().setZero();
             level.player.facingRight = true;
             settle(level, 20);

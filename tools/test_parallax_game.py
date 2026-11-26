@@ -215,7 +215,7 @@ class GameCheckTest(unittest.TestCase):
         broken = self.copy(groups)
         leaf = next(o for o in broken[-1].findall('object') if o.get('name') == 'edge-giant-low-a')
         leaf.set('x', str(pit_x))
-        leaf.set('y', '416')
+        leaf.set('y', '400')
         self.assertFalse(pm.check_giant(scene, broken, pieces, silent))
         self.assertFalse(pm.check_giant(scene, groups[:-1], pieces, silent), 'a room without its near group')
 
@@ -236,7 +236,7 @@ class GameCheckTest(unittest.TestCase):
         broken = self.copy(groups)
         leaf = next(o for o in broken[-1].findall('object') if o.get('name') == 'edge-giant-low-a')
         leaf.set('x', clump.get('x'))
-        leaf.set('y', '416')
+        leaf.set('y', '400')
         self.assertFalse(pm.check_share(scene, broken, pieces, silent))
         hidden = {(s.piece, s.x): s.pooled for s in pm.hidden_shares(scene, broken, pieces)}
         self.assertGreater(hidden[clump.get('name'), int(clump.get('x'))], pm.SHARE_POOLED)

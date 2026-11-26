@@ -4,13 +4,15 @@
 # Night palette (D92, #430): every colour mixed 35 % toward the night background 2c3f66; the day values are in docs/ART_DIRECTION.md.
 # Layered-forest recolour (#236, D112): OKLab L x0.6, in front of the canopy clump the vines hang from (terrain.grid `canopy-*`):
 # outline 0.120, body 0.139.
+# Floor raise (#648): the trees behind the vines rose 16 px, so every colour is x1.1 to keep the D76 decor body over 0.08
+# (0.084 to 0.180 over every placement, from 0.079 before the lift).
 size 8 40
 # Depth palette (D120, 2026-11-21): the same lightness per key in moss green (hue 136, C 0.03), contour k bark.
-color k 352b23
-color n 333d2e
-color N 2d3828
-color l 333d2d
-color d 2b3526
+color k 3a2f26
+color n 384333
+color N 323e2c
+color l 384332
+color d 2f3a2a
 frame hang
 ..knNk..
 ..knNk..

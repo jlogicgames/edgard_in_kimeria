@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1ClimbTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     static final String ROOM = "forest-1-climb";
-    private static final float ROOM_X = 8000, ROOM_END = 8640, START_X = 8032, FACE_X = 8432, BLOCK_X = 8288, BLOCK_TOP = 208, FLOOR = 320;
-    private static final float VIEW_W = 640, SHELF_TOP = 96, LIFT_X = 8384, LIFT_BOTTOM = 160, EXIT_X = 8304, STONE_X = 8112, SNAIL_X = 8336;
+    private static final float ROOM_X = 8000, ROOM_END = 8640, START_X = 8032, FACE_X = 8432, BLOCK_X = 8288, BLOCK_TOP = 192, FLOOR = 304;
+    private static final float VIEW_W = 640, SHELF_TOP = 80, LIFT_X = 8384, LIFT_BOTTOM = 144, EXIT_X = 8304, STONE_X = 8112, SNAIL_X = 8336;
     /** Where the scripted hero waits on the block: under the lift, at the block's left end (out of its reach), and in its reach to bait it. */
     private static final float UNDER_LIFT = 8392, LEFT_END = 8289, BAIT_SPOT = 8320;
     /** Pinned (scripted, 60 fps, pause 0 on the top step). */

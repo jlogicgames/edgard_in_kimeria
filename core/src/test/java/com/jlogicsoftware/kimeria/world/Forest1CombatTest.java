@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class Forest1CombatTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float ROOM_X = 2112, ROOM_END = 2880, START_X = 2208, FLOOR = 320, DECK = 208, TUNNEL_CEILING = 288;
+    private static final float ROOM_X = 2112, ROOM_END = 2880, START_X = 2208, FLOOR = 304, DECK = 192, TUNNEL_CEILING = 272;
     private static final float LEVER_X = 2240, LADDER_X = 2288, LADDER_CENTRE = 2296, CHECKPOINT_X = 2800, REFILL_X = 2640, SLAB_END = 2704;
     private static final float ROOF_LEFT = 2304, ROOF_RIGHT = 2560;
     /** The guard's art x (its body is x + 6 .. x + 26); it never moves (range 0). The puffball (16 x 16 at x 2375) casts a cloud x 2373-2393. */
@@ -251,7 +251,7 @@ class Forest1CombatTest {
         Rectangle cloud = puff.cloudBounds();
         assertEquals(CLOUD_LEFT, cloud.x, 0.01f);
         assertEquals(CLOUD_RIGHT, cloud.x + cloud.width, 0.01f);
-        var roof = level.collisionBlocks.stream().filter(b -> b.getX() == ROOF_LEFT && b.getY() == 224).findFirst().orElseThrow();
+        var roof = level.collisionBlocks.stream().filter(b -> b.getX() == ROOF_LEFT && b.getY() == 208).findFirst().orElseThrow();
         assertEquals(TUNNEL_CEILING, roof.getY() + roof.getHeight(), 0.01f);
         assertEquals(ROOF_RIGHT, roof.getX() + roof.getWidth(), 0.01f);
         FireballRefill refill = refill(level);
@@ -266,7 +266,7 @@ class Forest1CombatTest {
 
     @Test void theEntranceIsSafeAndFarFromTheTrapsAndTheExitIsClearOfTheRightWallAndTheDrop() {
         Level level = room(0);
-        assertEquals(272, level.player.position.y, 0.01f);
+        assertEquals(256, level.player.position.y, 0.01f);
         assertFalse(level.player.canInteract());
         settle(level, 60 * 9);   // two and a bit puffball cycles
         alive(level);
@@ -279,13 +279,13 @@ class Forest1CombatTest {
 
     @Test void theGuardNeverMovesAndOnlyStrikesAHeroWhoComesWithin6PxOfIt() {
         Level level = room(0);
-        putHero(level, 2352, 272);                       // outside the cloud, 40 px short of the guard's body: stands for 10 s (2.5 cycles)
+        putHero(level, 2352, 256);                       // outside the cloud, 40 px short of the guard's body: stands for 10 s (2.5 cycles)
         for (int i = 0; i < 600; i++) { frame(level); alive(level); assertTrue(guardUntouched()); }
         // A hero at 7-17 px (the sword's reach beyond the whip's) is never touched by the whip: only by the cloud, which is what the room is about.
         float guardLeft = theMob.hitboxBounds().x;
         for (int gap = 7; gap <= 17; gap++) {
             Level l = room(0);
-            putHero(l, guardLeft - gap - 5.5f, 272);
+            putHero(l, guardLeft - gap - 5.5f, 256);
             for (int i = 0; i < 40; i++) { frame(l); assertTrue(!l.player.isGotHit() || puff(l).currentPhase() == Puffball.Phase.CLOUD, "gap " + gap); }
             assertTrue(guardUntouched(), "gap " + gap);
         }
@@ -332,7 +332,7 @@ class Forest1CombatTest {
         for (boolean inCloud : new boolean[]{true, false}) {
             Level l = room(0);
             while ((puff(l).currentPhase() == Puffball.Phase.CLOUD) != inCloud) frame(l);
-            putHero(l, guard.x - 12 - 5.5f, 272);
+            putHero(l, guard.x - 12 - 5.5f, 256);
             frame(l); frame(l);
             assertEquals(inCloud, dead(l), "standing in the band, cloud out: " + inCloud);
         }
@@ -346,7 +346,7 @@ class Forest1CombatTest {
     private Attempt meleeAfter(int idle, boolean patient) {
         Level level = room(0);
         settle(level, idle);
-        putHero(level, 2330, 272);
+        putHero(level, 2330, 256);
         settle(level, 1);
         int frames = floorRoute(level, patient);
         return new Attempt(!dead(level), theMob.isDefeated(), frames);
@@ -419,7 +419,7 @@ class Forest1CombatTest {
     @Test void aMistimedMeleeDiesInTheCloudAndRetryRestoresTheAuthoredRoomAndPhase() {
         Level level = room(0);
         settle(level, 10);                               // the swell is about to start (cycle time 2.2 s when he reaches the wait spot; the clock starts at phase 2.52, D68)
-        putHero(level, 2330, 272);
+        putHero(level, 2330, 256);
         floorRoute(level, false);
         assertTrue(dead(level), "an impatient hero who steps into the band while the swell runs out is killed by the cloud");
         level.resetCurrentRoom(player());
@@ -451,7 +451,7 @@ class Forest1CombatTest {
         for (int idle = 0; idle < 240; idle += 8) {
             Level l = room(1);
             settle(l, idle);
-            putHero(l, 2280, 272);
+            putHero(l, 2280, 256);
             settle(l, 1);
             shotRoute(l, 2290);
             tried++;
@@ -523,7 +523,7 @@ class Forest1CombatTest {
         Level probe = room(0);
         Rectangle reach = null;
         for (float x = ROOM_X + 24; x < ROOM_END - 24; x += 2) {
-            for (float y = 272 - 60; y <= 272; y += 4) {                 // standing, and every height of a jump over the lever
+            for (float y = 256 - 60; y <= 256; y += 4) {                 // standing, and every height of a jump over the lever
                 putHero(probe, x, y);
                 settle(probe, 2);
                 if (probe.player.canInteract()) {
@@ -559,7 +559,7 @@ class Forest1CombatTest {
         float highest = Float.MAX_VALUE;
         for (int run = 0; run < 40; run++) {
             Level level = room(0);
-            putHero(level, ROOM_X + 24 + (run * 17) % 200, 272);          // x 2136-2336 on the floor, left of the tunnel and under the raised ladder
+            putHero(level, ROOM_X + 24 + (run * 17) % 200, 256);          // x 2136-2336 on the floor, left of the tunnel and under the raised ladder
             int key = 0;
             for (int i = 0; i < 60 * 6 && !dead(level); i++) {
                 if (i % 8 == 0) {
@@ -581,7 +581,7 @@ class Forest1CombatTest {
         System.out.println("forest-1 guard room, 40 fuzzed 6 s runs of jumps with the ladder raised: the highest the feet ever got was y " + highest);
         assertTrue(highest > DECK + 2, "the roof level (y 208) is never reached: " + highest);
         Level base = room(0);
-        putHero(base, ROOF_LEFT - 8, 272);                                  // pressed against the tunnel block's left face, jumping on the spot
+        putHero(base, ROOF_LEFT - 8, 256);                                  // pressed against the tunnel block's left face, jumping on the spot
         for (int i = 0; i < 120; i++) {
             held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.J); pressed.add(Input.Keys.J); held.add(Input.Keys.W);
             frame(base);
@@ -634,7 +634,7 @@ class Forest1CombatTest {
                             int initial = stock.count();
                             if (taken) refill(level).collideWithPlayer();
                             settle(level, phase);
-                            float[][] at = {{START_X + 23.5f, 272}, {LADDER_CENTRE, 272}, {2330, 272}, {LADDER_CENTRE, DECK - 48 - 1}, {2450, DECK - 48 - 1}, {2600, DECK - 48 - 1}, {2480, 272}};
+                            float[][] at = {{START_X + 23.5f, 256}, {LADDER_CENTRE, 256}, {2330, 256}, {LADDER_CENTRE, DECK - 48 - 1}, {2450, DECK - 48 - 1}, {2600, DECK - 48 - 1}, {2480, 256}};
                             putHero(level, at[where][0], at[where][1]);
                             settle(level, 2);
                             try { recover(level); } catch (AssertionError e) { throw new AssertionError(ctx + ": " + e.getMessage(), e); }
@@ -735,7 +735,7 @@ class Forest1CombatTest {
         level.resetCurrentRoom(player());
         assertEquals("forest-1-guard", level.currentRoomName());
         assertEquals(START_X, level.player.position.x, 0.01f);
-        assertEquals(272, level.player.position.y, 0.01f);
+        assertEquals(256, level.player.position.y, 0.01f);
     }
 
     @Test void theLeverIsOnlyEverInReachOnTheFloorAndNeverFromTheLadderOrTheRoof() {
@@ -766,9 +766,9 @@ class Forest1CombatTest {
 
     /** Puts the hero in the tunnel's mouth facing right, standing. */
     private void toMouth(Level level) {
-        putHero(level, MOUTH_CENTRE - 2, 272);
+        putHero(level, MOUTH_CENTRE - 2, 256);
         held.clear(); held.add(Input.Keys.D); frame(level); held.clear();
-        putHero(level, MOUTH_CENTRE, 272);
+        putHero(level, MOUTH_CENTRE, 256);
         settle(level, 2);
     }
 

@@ -95,7 +95,7 @@ class LadderLessonTest {
         pressed.clear();
     }
 
-    private static final float LEDGE_TOP = 208, LADDER_X = 1216, LEDGE_X = 1232;
+    private static final float LEDGE_TOP = 192, LADDER_X = 1216, LEDGE_X = 1232;
     /** The thorn root (D48, first thing in the room, before the lever at 1080): footprint x 896-912, zone 64 px each side. */
     private static final float ROOT_X = 896, ROOT_RIGHT = 912, ROOT_ZONE_LEFT = 832;
 
@@ -214,7 +214,7 @@ class LadderLessonTest {
         assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.Enemy<?>));
         assertEquals("forest-0-ladder", level.currentRoomName());
         assertTrue(ladder(level).bottomY() <= 208, "The retracted ladder hangs a full jump above the floor");
-        assertEquals(LEDGE_TOP, ladder(level).bottomY() + 0, "Retracted bottom sits at the ledge's top");
+        assertEquals(LEDGE_TOP + 16, ladder(level).bottomY(), "Retracted foot hangs 16 px past the ledge top: this ladder keeps its place and drops 96 px (D144)");
     }
 
     @Test void theLeverToggleLowersAndRaisesTheLadderAndTheLeverShowsIt() {
@@ -223,7 +223,7 @@ class LadderLessonTest {
         operate(level);
         assertTrue(ladder(level).isLowered()); assertTrue(lever(level).isUp());
         settle(level, 60);
-        assertEquals(320, ladder(level).bottomY(), 0.01f, "Lowered, it reaches the floor");
+        assertEquals(304, ladder(level).bottomY(), 0.01f, "Lowered, it reaches the floor");
         assertEquals(LEDGE_TOP, ladder(level).topY(), 0.01f, "and its top meets the ledge");
         operate(level);
         assertFalse(ladder(level).isLowered()); assertFalse(lever(level).isUp());
@@ -238,7 +238,7 @@ class LadderLessonTest {
         for (float x = 608; x <= LADDER_X + 10; x += 6) {
             Level level = freshRoom();
             withoutTheThorns(level);
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             float minFeet = 1000;
             for (int i = 0; i < 60 * 4; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
@@ -248,7 +248,7 @@ class LadderLessonTest {
                 assertFalse(level.player.onLadder(), "A retracted ladder cannot be grabbed from x=" + x);
                 assertFalse(level.atRoomExit(), "x=" + x);
             }
-            assertTrue(minFeet < 320 - 30, "The hero really jumped (feet " + minFeet + ") from x=" + x);
+            assertTrue(minFeet < 304 - 30, "The hero really jumped (feet " + minFeet + ") from x=" + x);
             assertTrue(minFeet > LEDGE_TOP + 40, "Jumping cannot clear the ledge from x=" + x + " (feet " + minFeet + ")");
         }
     }
@@ -266,7 +266,7 @@ class LadderLessonTest {
         walkToLever(level); operate(level);
         walkToLadder(level); climb(level);
         assertFalse(level.player.canInteract(), "The lever cannot be pulled from the ledge or ladder");
-        while (!(level.player.isOnGround() && feet(level) > 300)) {
+        while (!(level.player.isOnGround() && feet(level) > 284)) {
             held.clear(); held.add(Input.Keys.A);
             frame(level);
             assertFalse(level.player.isGotHit(), "died at " + level.player.position);
@@ -325,7 +325,7 @@ class LadderLessonTest {
                 if (level.player.onLadder() || onLadderTop(level)) regrabs++;
             }
             int guard = 0;
-            while (!(level.player.isOnGround() && !level.player.onLadder() && feet(level) > 300)) {
+            while (!(level.player.isOnGround() && !level.player.onLadder() && feet(level) > 284)) {
                 held.clear();
                 // Climb down from the rungs or the ladder's top (alternating with a step off the side).
                 if (level.player.onLadder() || (onLadderTop(level) && guard % 120 < 60)) held.add(Input.Keys.S); else held.add(Input.Keys.A);
@@ -375,7 +375,7 @@ class LadderLessonTest {
         for (boolean lowered : new boolean[]{false, true}) {
             if (ladder(level).isLowered() != lowered) ladder(level).performAction();
             settle(level, 60);
-            for (float standY : new float[]{272, 272 - 58, 160, 160 - 58, 130})
+            for (float standY : new float[]{256, 256 - 58, 160, 160 - 58, 130})
                 for (float x = 600; x <= 1432; x += 4) {
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
@@ -394,7 +394,7 @@ class LadderLessonTest {
                     Rectangle hero = level.player.hitboxBounds();
                     for (float cameraY : new float[]{0, 8}) {
                         float over = geometry.heroOverlap(contextAnchor, context, zoneAnchor, zone, cameraY, hero.x, hero.x + hero.width, hero.y, hero.y + hero.height);
-                        assertTrue(over <= (standY == 272 ? 0 : 8), "label crosses the hero by " + over + " at x=" + x + " y=" + standY + " " + context.replace('\n', '|'));
+                        assertTrue(over <= (standY == 256 ? 0 : 8), "label crosses the hero by " + over + " at x=" + x + " y=" + standY + " " + context.replace('\n', '|'));
                     }
                 }
         }
@@ -417,7 +417,7 @@ class LadderLessonTest {
         for (boolean lowered : new boolean[]{false, true}) {
             if (ladder(level).isLowered() != lowered) ladder(level).performAction();
             settle(level, 60);
-            for (float standY : new float[]{272, 272 - 58, 160, 160 - 58, 130})
+            for (float standY : new float[]{256, 256 - 58, 160, 160 - 58, 130})
                 for (float x = 600; x <= 1432; x += 4) {
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
@@ -432,8 +432,8 @@ class LadderLessonTest {
                             : geometry.heroOverlap(contextAnchor, context, zoneAnchor, zone, cameraY, hero.x, hero.x + hero.width, top, bottom);
                         if (over == Float.NEGATIVE_INFINITY) continue;
                         measured++;
-                        if (standY == 272) worstFloor = Math.max(worstFloor, over); else worstAir = Math.max(worstAir, over);
-                        if (standY == 272) assertTrue(over <= 0, "label crosses the drawn hero on the floor by " + over + " at x=" + x
+                        if (standY == 256) worstFloor = Math.max(worstFloor, over); else worstAir = Math.max(worstAir, over);
+                        if (standY == 256) assertTrue(over <= 0, "label crosses the drawn hero on the floor by " + over + " at x=" + x
                             + " cell " + level.player.getState() + " " + context.replace('\n', '|'));
                     }
                 }
@@ -447,12 +447,12 @@ class LadderLessonTest {
         Level level = freshRoom();
         withoutTheThorns(level);
         Ladder ladder = ladder(level);
-        for (float standY : new float[]{272, 160, 100}) // floor, ledge, climbing height
+        for (float standY : new float[]{256, 160, 100}) // floor, ledge, climbing height
             for (float x = 600; x <= 1432; x += 4) {
                 level.player.position.set(x - 24, standY);
                 settle(level, 1);
                 if (level.player.canInteract()) {
-                    assertEquals(272, standY, "Only reachable standing on the floor, x=" + x);
+                    assertEquals(256, standY, "Only reachable standing on the floor, x=" + x);
                     assertTrue(Math.abs(ladder.centerX() - level.player.centerX()) > 120,
                         "Lever is well clear of the ladder column, x=" + x);
                 }
@@ -470,7 +470,7 @@ class LadderLessonTest {
                     settle(level, 60);
                     if (x > LADDER_X && x < LEDGE_X + 8) continue; // inside the ledge block: not a standing position
                     boolean onLedge = x >= LEDGE_X + 8;
-                    level.player.position.set(x - 24, onLedge ? 160 : 272);
+                    level.player.position.set(x - 24, onLedge ? 160 : 256);
                     for (int i = 0; i < 3; i++) frame(level);
                     String hint = level.player.contextHint(), zone = level.player.zoneHint();
                     String where = "x=" + x + " lowered=" + lowered + ": " + hint + " / " + zone;
@@ -528,7 +528,7 @@ class LadderLessonTest {
         frame(level);
     }
 
-    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 272); settle(level, 2); }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 256); settle(level, 2); }
 
     /** The hero stands with the body's right edge at {@code takeOff}, presses Right + Jump at once and runs on; returns true when alive well past the root. */
     private boolean jumpFrom(float takeOff, boolean waitForTheThornsFirst) {
@@ -550,7 +550,7 @@ class LadderLessonTest {
         assertEquals(1, level.objects.stream().filter(ThornTrap.class::isInstance).count(), "exactly one thorn trap");
         assertEquals(ThornTrap.Kind.ROOT, root.kind());
         assertEquals(ROOT_X, root.getX(), .01f);
-        assertEquals(320, root.getY() + root.getHeight(), .01f, "standing on the floor");
+        assertEquals(304, root.getY() + root.getHeight(), .01f, "standing on the floor");
         assertTrue(root.getX() - (level.player.position.x + 48) >= 150, "well after the entrance: the hero can see it");
         assertTrue(lever(level).getX() - (root.getX() + root.getWidth() + 64) >= 64, "the lever is clear of the root's zone");
         assertTrue(ladder(level).getX() - (root.getX() + root.getWidth()) >= 64, "64 px of floor beyond the root, jumpable");
@@ -640,7 +640,7 @@ class LadderLessonTest {
                 if (landed && jumpAfterLanding && level.player.isOnGround()) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
                 frame(level);
                 assertFalse(level.player.isGotHit(), "hit at " + level.player.position + " after " + frames + " frames");
-                if (level.player.isOnGround() && feet(level) > 300) landed = true;
+                if (level.player.isOnGround() && feet(level) > 284) landed = true;
                 if (landed && bodyLeft(level) < LADDER_X - 90) break;
             }
             assertTrue(landed && bodyLeft(level) < LADDER_X - 90, "walked on to the left");

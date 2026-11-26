@@ -25,6 +25,12 @@ For the future stage → levels → rooms hierarchy, see the
 [full campaign design](GAME_DESIGN.md#campaign-structure). This document describes
 current map authoring and retry behavior.
 
+**Floor line (D144, [#648](https://github.com/jlogicgames/edgard_in_kimeria/issues/648), 2026-11-26).** The floor line of every forest room is now
+**y 304**, over 64 px of soil. The dated placement plans, tables and measurements below were written for a floor at y 320: read a
+floor-measured y in them as 16 px higher (`y - 16`). What hangs from the ceiling kept its y, with the hand-reviewed exceptions in
+[D144](DECISIONS.md#d144-the-forest-floor-is-one-tile-higher-64-px-of-soil-under-it-648-2026-11-26). The current coordinates are in
+[ROOM_CARDS.md](ROOM_CARDS.md) and the maps.
+
 ## Authoring
 
 Add an object layer named `Rooms`. Coordinates are Tiled's top-left, Y-down
@@ -98,7 +104,7 @@ The lever room is the sample. Later lessons (#196–#200; all five are built) co
    the Tiled extension `tools/tiled-extensions/link-names.js` as `Torch [40] ← 41` (own id, then the id of each
    trigger pointing at it) and `Lever [41 → 40]` (own id, then its target); do not hand-craft other formats. Both
    objects stay in the room, the effect is visible within one screen of the trigger, and `nextobjectid` is
-   advanced. Stand mechanisms on the floor like the lever (torch y = 304 for a 16 px object over the y=320 floor)
+   advanced. Stand mechanisms on the floor like the lever (torch y = 288 for a 16 px object over the y=304 floor)
    unless the lesson needs height. Run `python3 tools/check_tiled_links.py`.
 3. **Hint zones** (layer `Hints`, full room height 0–368, inside the room). Horizontally, a room's usable range is
    between its side walls (x 16–560 for the 576 px lever room; add the room's x offset for later rooms).
@@ -390,7 +396,7 @@ pinned within 0.1 s.
 - First meetings pinned in `FirstMeetingPocketTest`: `forest1EscalatorsTheEscalator` (x 240; was `forest1TrapsTheEscalator`),
   `forest1TrapsThePuffball` (x 744, acting `CLOUD`: the puffball does not move or act, so `signals()` reports its phase) and
   `forest1GuardTheBeetle` (x 2550, the tunnel's mouth, acting `NOTICE`).
-- Deaths (retry cost): the trap course 6.47 s at the log (12.73 s before the split); the guard room 1.37 s in the cloud on the
+- Deaths (retry cost): the trap course 6.58 s at the log (12.73 s before the split); the guard room 1.37 s in the cloud on the
   first walk-in and 5.82 s in the beetle's burst after the mastered melee.
 - Changed assertion: the guard room's entrance-to-cloud clearance, 140 to 117 px (D68, Update; the rule it stands for holds).
 

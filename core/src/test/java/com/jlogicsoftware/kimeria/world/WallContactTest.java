@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /** D121: a wall is solid and nothing more. In the air, pressing into it does not slow the fall and a jump press does nothing. */
 class WallContactTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    /** forest-walls' first wall (x 912-928, top y 208, floor y 320): the hero's body centre just left of its face, feet at y 230. */
-    private static final float BODY_CENTRE_X = 906, FEET_Y = 230;
+    /** forest-walls' first wall (x 912-928, top y 192, floor y 304): the hero's body centre just left of its face, feet at y 214. */
+    private static final float BODY_CENTRE_X = 906, FEET_Y = 214;
     private static final int FRAMES = 18;
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
 

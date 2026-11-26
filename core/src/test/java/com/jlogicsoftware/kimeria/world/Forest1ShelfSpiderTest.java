@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1ShelfSpiderTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     static final String ROOM = "forest-1-route";
-    private static final float SLAB_X = 1552, LIP_X = 1632, SLAB_TOP = 208, FLOOR = 320, THREAD_X = 1638, THREAD_END = FLOOR - 4 - 16;
+    private static final float SLAB_X = 1552, LIP_X = 1632, SLAB_TOP = 192, FLOOR = 304, THREAD_X = 1638, THREAD_END = FLOOR - 4 - 16;
     /** The drop box: 8 px of fang column under the thread (D103). */
     private static final float BOX_LEFT = 1635, BOX_RIGHT = 1643;
     /** Pinned (scripted, 60 fps): a hero who stops under the lip is bitten this long after the entrance; the room's other deaths are Forest1RouteTest's. */

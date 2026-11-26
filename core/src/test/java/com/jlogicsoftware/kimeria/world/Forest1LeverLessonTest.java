@@ -36,14 +36,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1LeverLessonTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     /** The room is authored after the end of the map (x 4320-4960), like forest-1-mob (#375); the Rooms list puts it between the trap course and the route room. */
-    private static final float ROOM_X = 4320, ROOM_END = ROOM_X + 640, START_X = ROOM_X + 32, FLOOR = 320;
-    private static final float LIFT_X = ROOM_X + 96, LIFT_RIGHT = ROOM_X + 128, LIFT_TOP = 240, LIFT_BOTTOM = 304;
-    private static final float A_X = ROOM_X + 128, A_END = ROOM_X + 240, TOP = 208;
+    private static final float ROOM_X = 4320, ROOM_END = ROOM_X + 640, START_X = ROOM_X + 32, FLOOR = 304;
+    private static final float LIFT_X = ROOM_X + 96, LIFT_RIGHT = ROOM_X + 128, LIFT_TOP = 224, LIFT_BOTTOM = 288;
+    private static final float A_X = ROOM_X + 128, A_END = ROOM_X + 240, TOP = 192;
     private static final float LEVER_X = ROOM_X + 208, LADDER_X = ROOM_X + 416, E_X = ROOM_X + 432, EXIT_X = ROOM_X + 544;
     /** The budget for a mastered route (D19, ROOMS.md "Replay budget"): about 20 s. */
     private static final float BUDGET = 20f;
     /** The scripted rider hops onto the lever ledge once the lift is this high (the ledge is 32 px above its top, a hop is about 58 px). */
-    private static final float RIDE_JUMP_Y = 246;
+    private static final float RIDE_JUMP_Y = 230;
     /** The camera shows 640 x 360 world px (KimeriaGame.LOGICAL_W / LOGICAL_H). */
     private static final float VIEW_W = 640, VIEW_H = 360;
 
@@ -99,7 +99,7 @@ class Forest1LeverLessonTest {
         held.clear();
         if (centerX(level) < LIFT_X + 4) held.add(Input.Keys.D);
         else if (centerX(level) > LIFT_RIGHT - 4) held.add(Input.Keys.A); // under the lever ledge: back to the lift's side
-        else if (level.player.isOnGround() && !riding(level) && feet(level) > 300 && lift(level).getY() >= 280) jump();
+        else if (level.player.isOnGround() && !riding(level) && feet(level) > 284 && lift(level).getY() >= 280) jump();
         frame(level); alive(level);
     }
 
@@ -219,10 +219,10 @@ class Forest1LeverLessonTest {
         assertEquals(LIFT_X, lift(level).getX(), 0.01f);
         assertFalse(lever(level).isUp());
         assertEquals(LADDER_X, ladder(level).getX(), 0.01f);
-        assertEquals(96, ladder(level).topY(), 0.01f);
+        assertEquals(80, ladder(level).topY(), 0.01f);
         assertEquals(TOP, ladder(level).bottomY(), 0.01f, "raised: its foot hangs 112 px above the floor, level with the ledges' tops");
         assertEquals(START_X, level.player.position.x, 0.01f);
-        assertEquals(272, level.player.position.y, 0.01f);
+        assertEquals(256, level.player.position.y, 0.01f);
     }
 
     @Test void oneLeverDrivesTheLadderAndTheLiftInOppositeStatesAndShowsIt() {
@@ -279,7 +279,7 @@ class Forest1LeverLessonTest {
         assertTrue(LADDER_X - (LEVER_X + 16) <= 200, "the ladder is " + (LADDER_X - (LEVER_X + 16)) + " px from the lever");
         // Wherever the hero stands in the room the same whole-room view holds (the horizontal target never moves).
         for (float x = ROOM_X + 24; x < ROOM_END - 24; x += 40) {
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             settle(level, 2);
             assertEquals(ROOM_X, level.player.roomCameraTarget().x, 0.01f, "x=" + x);
             assertTrue(level.player.roomCameraTarget().y <= 8 && level.player.roomCameraTarget().y >= 0, "the 368 px room leaves at most 8 px of vertical play");
@@ -292,7 +292,7 @@ class Forest1LeverLessonTest {
             if (lowered) { rideToTheLedge(level); walkToLever(level); operate(level); settle(level, 60); }
             assertEquals(lowered, ladder(level).isLowered());
             for (float x = ROOM_X + 24; x < ROOM_END - 24; x += 4) {
-                for (float y : new float[]{272, TOP - 48, 96, 160}) {
+                for (float y : new float[]{256, TOP - 48, 96, 160}) {
                     level.player.position.set(x - 24, y);
                     settle(level, 2);
                     if (level.player.canInteract()) {
@@ -308,7 +308,7 @@ class Forest1LeverLessonTest {
     @Test void theHeroIsNeverOnTheLadderOrTheLiftWhenTheLeverIsInReach() {
         // The lever's reach never includes a support the lever moves, so neither can be taken from under the hero.
         Level level = room();
-        for (float y = 96; y <= 288; y += 16)
+        for (float y = 96; y <= 272; y += 16)
             for (float x = LADDER_X - 8; x <= LADDER_X + 8; x += 8) {
                 level.player.position.set(x - 8, y);
                 settle(level, 2);
@@ -329,7 +329,7 @@ class Forest1LeverLessonTest {
         level.escalators.clear(); // the lift out of the way: nothing else may raise the hero
         level.objects.removeIf(Escalator.class::isInstance);
         for (float x = ROOM_X + 24; x <= ROOM_END - 32; x += 4) {
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             for (int i = 0; i < 60 * 2; i++) {
                 held.clear(); held.add(Input.Keys.D); held.add(Input.Keys.W);
                 if (i % 30 == 0) jump();
@@ -371,7 +371,7 @@ class Forest1LeverLessonTest {
         level.escalators.clear();
         level.objects.removeIf(Escalator.class::isInstance);
         for (float x = LADDER_X - 40; x <= LADDER_X + 16; x += 4) {
-            level.player.position.set(x - 24, 272);
+            level.player.position.set(x - 24, 256);
             for (int i = 0; i < 90; i++) {
                 held.clear(); held.add(Input.Keys.W); held.add(Input.Keys.D);
                 if (i % 20 == 0) jump();
@@ -457,7 +457,7 @@ class Forest1LeverLessonTest {
             for (float x = ROOM_X + 24; x <= E_X - 16; x += 16) { // the floor, left of the exit ledge's face
                 Level level = room();
                 if (lowered) { rideToTheLedge(level); walkToLever(level); operate(level); settle(level, 90); }
-                level.player.position.set(x - 24, 272);
+                level.player.position.set(x - 24, 256);
                 level.player.velocity.setZero();
                 settle(level, 3);
                 solve(level);
@@ -550,7 +550,7 @@ class Forest1LeverLessonTest {
         level.enterNextRoom(player()); // the trap course's exit leads to the lever room, which lies after the map's old end
         assertEquals("forest-1-lever", level.currentRoomName());
         assertEquals(START_X, level.player.position.x, 0.01f, "the lever room's RoomStart");
-        assertEquals(272, level.player.position.y, 0.01f);
+        assertEquals(256, level.player.position.y, 0.01f);
         Rectangle room = level.currentRoomBounds();
         assertEquals(new Rectangle(ROOM_X, 0, 640, 368), room);
         Vector2 cam = level.player.roomCameraTarget();

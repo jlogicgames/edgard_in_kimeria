@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Forest1BrambleTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final String ROOM_NAME = "forest-1-bramble";
-    private static final float ROOM_X = 5600, START_X = 5760, SHELF_TOP = 208, FLOOR = 320, LADDER_X = 6192, VIEW_W = 640, VIEW_H = 360;
+    private static final float ROOM_X = 5600, START_X = 5760, SHELF_TOP = 192, FLOOR = 304, LADDER_X = 6192, VIEW_W = 640, VIEW_H = 360;
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     @TempDir Path directory;
 

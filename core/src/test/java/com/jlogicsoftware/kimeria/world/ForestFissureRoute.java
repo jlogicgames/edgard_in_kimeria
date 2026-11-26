@@ -21,7 +21,7 @@ import java.util.Set;
 final class ForestFissureRoute {
     /** The waiting places, in map x of the hero's body front (right edge), and the jump points (the fixture's recipe + 3008 - 640). */
     static final float FLOOR_WAIT_GAP = 12f, BRANCH_WAIT = 3300f, BRANCH_JUMP = 3310f, LEDGE_JUMP = 3380f;
-    static final float BRANCH_TOP = 272f, LEDGE_TOP = 224f;
+    static final float BRANCH_TOP = 256f, LEDGE_TOP = 208f;
     /** Go when the cycle is this young: a jet has just ended. */
     static final float FLOOR_CUE = 1f, BRANCH_CUE = 0.5f;
     private static final float GROUND_SLACK = 0.5f;

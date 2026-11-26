@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * frame, so the web jump on a 120 Hz display was about half as high and the forest-1-lever ledge could not be reached.
  */
 class JumpFrameRateTest {
-    private static final float ROOM_X = 4320, START_X = ROOM_X + 32, FLOOR = 320, LIFT_X = ROOM_X + 96, LIFT_RIGHT = ROOM_X + 128;
-    private static final float A_X = ROOM_X + 128, A_END = ROOM_X + 240, LEDGE_TOP = 208;
+    private static final float ROOM_X = 4320, START_X = ROOM_X + 32, FLOOR = 304, LIFT_X = ROOM_X + 96, LIFT_RIGHT = ROOM_X + 128;
+    private static final float A_X = ROOM_X + 128, A_END = ROOM_X + 240, LEDGE_TOP = 192;
     /** The apex of a standing jump at 60 Hz, measured before and after D98: feet rise this many px. */
     private static final float DESIGNED_APEX = 59.67f;
     /** The air time of that jump at 60 Hz, from the press to the landing frame (54 frames). */
@@ -185,7 +185,7 @@ class JumpFrameRateTest {
                     if (hopping) held.add(Input.Keys.D);
                 } else if (centerX(level) < LIFT_X + 4) held.add(Input.Keys.D);
                 else if (centerX(level) > LIFT_RIGHT - 4) held.add(Input.Keys.A);
-                else if (feet(level) > 300 && lift.getY() >= 280) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
+                else if (feet(level) > 284 && lift.getY() >= 280) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); }
                 step(level, rate);
                 if (level.player.isOnGround() && level.player.currentEscalator() != lift) hopping = false;
                 assertTrue(++frames < 144 * 30, rate.name() + ": lever ledge unreachable, hero at " + level.player.position

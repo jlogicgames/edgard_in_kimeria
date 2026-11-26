@@ -39,10 +39,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TreeClimbTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float ROOM_X = 2880, ROOM_W = 640, START_X = 2912, FLOOR = 320;
+    private static final float ROOM_X = 2880, ROOM_W = 640, START_X = 2912, FLOOR = 304;
     /** The rotten column (right of trunk 3168) and the sound tree (trunk 3264): left branches x 3232, right ones x 3280. */
     private static final float ROTTEN_X = 3184, SOUND_LEFT_X = 3232, SOUND_RIGHT_X = 3280, BRANCH_W = 32;
-    private static final float[] TOPS = {272, 224, 176, 128, 80};
+    private static final float[] TOPS = {256, 208, 160, 112, 64};
     /** The crown: the sound tree's top branch (left of its trunk), reached from the rotten column's top or the zig-zag's; the checkpoint stands on it. */
     private static final float CROWN_X = 3232, CROWN = 32, CHECKPOINT_X = 3240;
     /** D19: about 20 s for a mastered route. */
@@ -365,10 +365,13 @@ class TreeClimbTest {
     private static final Rectangle ROOM = new Rectangle(0, 0, 640, 368);
     private static final List<Rectangle> TOP_GOAL = List.of(new Rectangle(200, 48, 16, 32));
 
+    /** The synthetic tree of the load rule tests, over its own floor at y 320 (not a shipped room). */
+    private static final float[] FIXTURE_TOPS = {272, 224, 176, 128, 80};
+
     private static List<TiledObject> floorAndSoundTree() {
         List<TiledObject> c = new ArrayList<>();
         c.add(object(1, "", 0, 320, 640, 48, null));
-        for (int i = 0; i < TOPS.length; i++) c.add(object(10 + i, "Platform", i % 2 == 0 ? 192 : 240, TOPS[i], 32, 16, "branch"));
+        for (int i = 0; i < FIXTURE_TOPS.length; i++) c.add(object(10 + i, "Platform", i % 2 == 0 ? 192 : 240, FIXTURE_TOPS[i], 32, 16, "branch"));
         return c;
     }
 
@@ -413,7 +416,7 @@ class TreeClimbTest {
 
     @Test void aRottenBranchThatIsTheOnlyWayUpFailsTheLoad() {
         List<TiledObject> c = floorAndSoundTree();
-        c.removeIf(o -> o.y == TOPS[2]); // the sound tree's middle branch is missing: from 224 the next sound top is 128, 96 px up
+        c.removeIf(o -> o.y == FIXTURE_TOPS[2]); // the sound tree's middle branch is missing: from 224 the next sound top is 128, 96 px up
         TiledObject bridge = object(99, "FallingPlatform", 128, 176, 32, 16, "branch");
         String problem = FallingPlatform.branchProblem(bridge, c, ROOM, 32, 272, TOP_GOAL);
         assertNotNull(problem);

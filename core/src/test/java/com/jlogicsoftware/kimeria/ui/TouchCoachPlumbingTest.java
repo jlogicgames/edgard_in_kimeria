@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * touch tutorial guides the player.
  */
 class TouchCoachPlumbingTest {
-    private static final float STEP = HeadlessLevelHarness.STEP, FLOOR_Y = 272, WALK_ZONE_X = 64, LEVER_X = 376, STONE_ZONE_X = 3100, STONE_X = 3328, STONE_REACH = 24;
+    private static final float STEP = HeadlessLevelHarness.STEP, FLOOR_Y = 256, WALK_ZONE_X = 64, LEVER_X = 376, STONE_ZONE_X = 3100, STONE_X = 3328, STONE_REACH = 24;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
     @BeforeEach void setUp() { harness.setUp(); }

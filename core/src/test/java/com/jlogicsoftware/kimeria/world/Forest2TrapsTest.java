@@ -127,7 +127,7 @@ class Forest2TrapsTest {
     private boolean dead(Level l) { return l.touchesDeadline(l.player.hitboxBounds()) || l.player.isGotHit(); }
     private void settle(Level l, int frames) { for (int i = 0; i < frames; i++) frame(l); }
     /** Body right edge at {@code right}, standing on the floor, hero facing right. */
-    private void place(Level l, float right) { l.player.position.set(right - 29, 272); settle(l, 3); }
+    private void place(Level l, float right) { l.player.position.set(right - 29, 256); settle(l, 3); }
     private void retry(Level l) { l.resetCurrentRoom(player()); settle(l, 2); }
 
     private boolean mobAhead(Level l) {
@@ -194,21 +194,21 @@ class Forest2TrapsTest {
         Level l = level();
         assertEquals(1, l.objects.stream().filter(ThornVine.class::isInstance).count());
         assertEquals(VINE_X, vine(l).getX(), .01f);
-        assertEquals(256, vine(l).anchorY(), .01f, "the top edge is the anchor (y grows downward)");
-        assertEquals(320, vine(l).anchorY() + 64, .01f, "the floor is 64 px below the anchor, the D46 recipe");
+        assertEquals(240, vine(l).anchorY(), .01f, "the top edge is the anchor (y grows downward)");
+        assertEquals(304, vine(l).anchorY() + 64, .01f, "the floor is 64 px below the anchor, the D46 recipe");
         assertEquals(ThornVine.DEFAULT_PERIOD_SECONDS, vine(l).period(), .001f);
         assertEquals(1, l.objects.stream().filter(ExplosiveTrap.class::isInstance).count());
         assertEquals(ExplosiveTrap.Kind.ROOT, root(l).kind());
         assertEquals(ROOT_X, root(l).getX(), .01f);
-        assertEquals(320, root(l).getY() + root(l).getHeight(), .01f, "stands on the floor top");
+        assertEquals(304, root(l).getY() + root(l).getHeight(), .01f, "stands on the floor top");
         assertEquals(1, l.objects.stream().filter(FallingStone.class::isInstance).count());
         assertEquals(STONE_X, stone(l).getX(), .01f);
         assertEquals(0, stone(l).bodyBounds().y, .01f, "starts flush with the room top");
-        assertEquals(320, stone(l).landingBottom(), .01f);
+        assertEquals(304, stone(l).landingBottom(), .01f);
         assertTrue(l.objects.stream().noneMatch(com.jlogicsoftware.kimeria.entity.items.Bomb.class::isInstance), "no Bomb shares the canopy");
         String text = Gdx.files.internal("tiles/forest-2.tmx").readString();
         assertEquals(0, text.split("type=\"Bomb\"", -1).length - 1, "the Bomb left the forest for the Fortress (D128); its code and art stay");
-        assertTrue(text.contains("<object id=\"54\" name=\"Leg-hold\" type=\"LegHold\" x=\"496\" y=\"320\""), "the leg-hold on the entry room's floor");
+        assertTrue(text.contains("<object id=\"54\" name=\"Leg-hold\" type=\"LegHold\" x=\"496\" y=\"304\""), "the leg-hold on the entry room's floor");
         assertEquals(0, l.objects.stream().filter(FallingTrap.class::isInstance).filter(o -> !(o instanceof FallingStone)).count());
         Rectangle room = l.currentRoomBounds();
         assertEquals(1280, room.x); assertEquals(1120, room.width, "the canopy grew by 448 px");
@@ -237,7 +237,7 @@ class Forest2TrapsTest {
         assertEquals(2560, l.currentRoomBounds().x, .01f);
         assertEquals(448, l.currentRoomBounds().width, .01f);
         assertEquals(2640, l.player.position.x, .01f);
-        assertEquals(272, l.player.position.y, .01f); // #572: the entrance stands on the 320 floor line (it was authored at 304, 32 px inside the floor)
+        assertEquals(256, l.player.position.y, .01f); // #572: the entrance stands on the 320 floor line (it was authored at 304, 32 px inside the floor)
     }
 
     // ---- the mastered route (zero ammunition, D26) ----
@@ -435,7 +435,7 @@ class Forest2TrapsTest {
             int frames = 0;
             while (!dead(k) && frames < 60 * 4) { held.clear(); frame(k); frames++; }
             assertTrue(dead(k), "standing under the shadow dies, longer=" + longer);
-            assertEquals(ExpectedWarnings.standard(longer) + FallingTrap.flightSeconds(320), frames * STEP, 0.15f);
+            assertEquals(ExpectedWarnings.standard(longer) + FallingTrap.flightSeconds(304), frames * STEP, 0.15f);
         }
     }
 

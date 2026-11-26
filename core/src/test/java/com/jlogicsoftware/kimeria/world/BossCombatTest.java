@@ -135,10 +135,10 @@ class BossCombatTest {
         assertEquals(state, boss.getState(), "Boss failed to reach " + state);
     }
 
-    private void outsideSwing() { level.player.position.set(boss.getX() - 90, 272); }
+    private void outsideSwing() { level.player.position.set(boss.getX() - 90, 256); }
     // Facing left boss: body at x+7..25, mirrored weapon x-8..8. Sword hits from safe spacing.
     private void inSwordRange() {
-        level.player.position.set(boss.getX() - 36, 272);
+        level.player.position.set(boss.getX() - 36, 256);
         level.player.facingRight = true;
         level.player.setOnGround(true);
     }
@@ -220,7 +220,7 @@ class BossCombatTest {
             try { enter.invoke(running); } catch (Exception e) { throw new RuntimeException(e); }
         });
         assertEquals(2560, level.currentRoomBounds().x); // #261 (D59): the boss room moved +448 px, nothing in it changed
-        assertEquals(new Vector2(2640, 272), level.player.position);
+        assertEquals(new Vector2(2640, 256), level.player.position);
         assertNotNull(level.boss());
         assertFalse(level.healerAhead());
         hotkeys.invoke(running);
@@ -360,7 +360,7 @@ class BossCombatTest {
         running.artifacts().drinkBossElixir("forest-2");
         Boss retryBoss = world.boss();
         retryBoss.collidedWithActor(true);
-        retry.position.set(retryBoss.getX() - 90, 272);
+        retry.position.set(retryBoss.getX() - 90, 256);
         for (int i = 0; i < 140; i++) world.update(REAL_STEP);
         retryBoss.collidedWithActor(true);
         for (int i = 0; i < 30; i++) world.update(REAL_STEP);
@@ -411,7 +411,7 @@ class BossCombatTest {
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertNotNull(level.boss());
-        assertEquals(new Vector2(2640, 272), level.player.position);
+        assertEquals(new Vector2(2640, 256), level.player.position);
         assertFalse(level.hasNextRoom());
         assertEquals(0, completions, "Room skipping must not write level completion");
     }
@@ -494,7 +494,7 @@ class BossCombatTest {
         level.resetCurrentRoom(player());
         Boss retry = (Boss) level.objects.stream().filter(Boss.class::isInstance).findFirst().orElseThrow();
         assertEquals(12, retry.energy()); assertEquals(Boss.State.THRONE, retry.getState());
-        assertEquals(new Vector2(2640, 272), level.player.position);
+        assertEquals(new Vector2(2640, 256), level.player.position);
         assertEquals(10f, artifacts.bossWeaponDamageMultiplier("forest-2"));
         level.player.arriveAfterReset(); frames(30);
         assertEquals(Boss.State.THRONE, retry.getState());
@@ -675,7 +675,7 @@ class BossCombatTest {
         // The sword reaches slightly farther than the boss's attack trigger. The hit lands
         // during WALK; on the following frame the old AI starts NORMAL inside the same
         // already-counted player swing, so no second collision can cancel that strike.
-        level.player.position.set(boss.getX() - 38, 272);
+        level.player.position.set(boss.getX() - 38, 256);
         level.player.facingRight = true;
         level.player.setOnGround(true);
         sword();
@@ -839,7 +839,7 @@ class BossCombatTest {
         frames(1);
         assertTrue(level.player.velocity.y < 0); assertEquals(12, boss.energy());
         assertFalse(level.player.isGotHit());
-        level.player.position.set(boss.getX() - 9, 272);
+        level.player.position.set(boss.getX() - 9, 256);
         level.player.setOnGround(true); sword();
         assertFalse(level.player.isGotHit());
         assertFalse(boss.hitboxOverlaps(level.player.hitboxBounds()));
@@ -853,7 +853,7 @@ class BossCombatTest {
             frames(1);
             Rectangle body = boss.hitboxBounds();
             level.player.position.set((fromLeft ? body.x - level.player.hitbox.width - 1 : body.x + body.width + 1)
-                - level.player.hitbox.offsetX, 272);
+                - level.player.hitbox.offsetX, 256);
             level.player.velocity.setZero();
             level.player.setOnGround(true);
             held.add(fromLeft ? Input.Keys.D : Input.Keys.A);
@@ -951,12 +951,12 @@ class BossCombatTest {
         timer.setAccessible(true);
         float before = timer.getFloat(firefly);
         int[] fireUpdates = {0};
-        level.objects.add(new com.jlogicsoftware.kimeria.effects.Torch(2100, 300, 16, 16, 300, "") {
+        level.objects.add(new com.jlogicsoftware.kimeria.effects.Torch(2100, 284, 16, 16, 284, "") {
             @Override public void update(float dt) { fireUpdates[0]++; super.update(dt); }
         });
         Bomb bomb = new Bomb(assets, game, level::queueSpawn, blast -> {
             if (blast.overlaps(level.player.hitboxBounds())) level.player.collidedWithActor(false);
-        }, level.player.getX() + 16, 288, 16, 16);
+        }, level.player.getX() + 16, 272, 16, 16);
         level.objects.add(bomb); bomb.collideWithPlayer();
         float start = level.player.getX();
         frames(30);
