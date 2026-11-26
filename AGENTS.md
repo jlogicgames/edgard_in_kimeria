@@ -157,6 +157,7 @@ depth; the sky, the moon and the gameplay objects keep theirs. The giant `edge-g
 export, nothing else is blurred), lie in the faster group `foreground-near-<room>` (2.2), stay clear of open pits and never hide more
 than 35 % of a sharp piece (50 % at a room's first or last camera); the HUD is drawn over every layer, so it needs no clearance. Draw code stays
 allocation free (`AllocationBudgetTest`). Status: accepted by the author, 2026-11-24 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+Procedure: the `kimeria-parallax` skill (`.agents/skills/`).
 
 ## Branches grow from trunks (D122)
 

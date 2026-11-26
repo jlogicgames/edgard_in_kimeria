@@ -258,13 +258,13 @@ frame, in addition to viewing the master. Record author review for each artwork 
 separately from renderer checks. Earlier approval of the coarse portrait version does
 not automatically approve its remaster or every future image.
 
-## Forest look and parallax layers (draft for approval, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
+## Forest look and parallax layers (accepted, D108)
 
-Draft card, 2026-11-19, from the author's decisions of the same day; the answers given that day are recorded in section 6. **Nothing here is binding until the author approves it
-and it gets a D-number ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), accepted 2026-11-24).
+Card of 2026-11-19, from the author's decisions of that day; the answers given that day are recorded in section 6. **Accepted by the author on 2026-11-24
+([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236)).** The order of work for a change is the
+[kimeria-parallax](../.agents/skills/kimeria-parallax/SKILL.md) skill.
 Built so far: the game reads and draws these layers in forest-1 (2026-11-19, code and layers below) and in forest-0 and forest-2
-(2026-11-20, [D112](DECISIONS.md#d112-forest-0-and-forest-2-take-the-forest-look-and-the-third-party-terrain-sheet-is-retired-236); approval:
-[#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).** **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
+(2026-11-20, [D112](DECISIONS.md#d112-forest-0-and-forest-2-take-the-forest-look-and-the-third-party-terrain-sheet-is-retired-236)). **Goal (author, 2026-11-19, second pass): as beautiful as Hollow Knight or Dead Cells.** This is a remaster:
 no palette size, alpha, banding or value-band limit applies to the background or the foreground; only the readability rules of section 3
 do. Mood: a blue night forest under a big moon (references: a silhouette forest with hazy blue depth and ground mist; a moonlit
 deciduous forest with dark framing trees; Replaced and Magnet for a lit walk edge, red enemies with glowing eyes and a little bloom).
@@ -292,7 +292,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 | Terrain body | brown | soil `4a3424` 0.346 (topsoil `5c412c` 0.400, darker toward the bottom to `150e0a`); rock `3c3731` (0.340) down to `2b2724` (0.276) and the ink `272320`, never lighter than the soil (the boulder interior tiles 53 and 54 are low-contrast speckle, no per-tile feature, so the wall shows no repeat; an interior tile used as a top shows no lit cue: accepted) | Active (terrain) | replaces `Tileset.png` (#189), sketch `art/terrain/forest/` (`python3 tools/parallax_mock.py --terrain` renders it over the layers); the walk edge is a lit lip: blade tips, a 2 px straw line, a moss band and moss hanging over a shadow line. Blocks have faces ([D114](DECISIONS.md#d114-terrain-blocks-get-faces-an-underside-and-soil-variants-236)): the moon is up and to the right, so a block's right side is lit (2 px `5c412c` and a 2 px `765639` rim) and its left side in shadow (`150e0a`, `22180f`, `2f2117`, `3c2a1d` from the edge in); a block with air below ends in an underside (the soil darkens to `2f2117`, a lit lip `4a3424`, then a near-black underside `22180f`/`150e0a` with root tips); a wall's foot is soil with moss in the corner (no straw: the walk edge ends at the wall); a one-tile column shows both faces; the soil body has three variants so it shows no 16 px repeat. `retile` picks them from the drawn ground around each cell. **Rock edges ([#547](https://github.com/jlogicgames/edgard_in_kimeria/issues/547), playtest 2 F9, author approved the sample 2026-11-21, `docs/references/rock-edge-sample.png`):** the room end walls (the first and last column of every Room, a collision column 16 px wide) are drawn as natural rock instead of built soil pillars, since the wall jump is gone ([D121](DECISIONS.md#d121-the-wall-jump-is-removed-walls-are-solid-and-cannot-be-grabbed-546-2026-11-21)) and nothing climbs them. Grey-brown rock in the boulder's tones (body `39332e`, light patches `463e37` (L 0.370, a touch lighter than the soil's 0.346, the lit facets), dark patches `2a2522`, the dark ramp of a left face `241f1c` and `1c1815`, cracks `0e0a07`, the lit rim `574d43` (0.43); the soil's brown stays the warmer, ground-coloured one), three variants for a face with air on its right (`rock-r-*`, lit rim on the moon side) and three for air on its left (`rock-l-*`, a dark ramp), and a foot each where the wall meets the floor. They reuse the unused sheet ids 1-3, 5-7 and 9-10 (gids 2-4 right, 6-8 left, 10 and 11 the feet; the old ground-top, ground-body and ground-bottom variants there were deleted). The outer edge wobbles up to 3 px inward inside the 16 px collision column and never passes it; the top and bottom rows of each variant are plain, so any variant stacks on any other, and the inner columns are plain, so the two columns of a room join show no seam. `retile` (`edge_columns`, from the Room rectangles, so an edge made by an untyped collision such as the boss room's counts too) replaces the soil faces and the one-tile pillar cells (forest-2's walls with air on both sides) in those columns, facing the room, from the top down to the last row above the floor (the first row whose inner neighbour is ground), the last one a foot; the floor rows below keep the soil faces, and a wall that ends in open air (forest-canopy's last column, forest-boss's first) keeps its foot on the room's floor row and the soil faces below it, the variant chosen by place (`variant`, never the one above), so a reinstall gives the same maps; collisions and tile emptiness are unchanged. A 32 px join is still a column: a boulder-shaped mass would need wider collisions |
 | Walk and grab cue | pale straw | `e1cfa5` 0.859 | Active | 1 px lit top edge, and a 1 px lit side where a wall is grabbable (the Replaced/Magnet edge). Approved by the author, 2026-11-19. Not the draft's `e0b869`: that is the honey fungus's reserved `e2b25a` (OKLab distance 0.017) |
 | Foreground | dark real colours ([D120](DECISIONS.md#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21), 2026-11-21; was one neutral near-black palette) | leaves: body `061206` 0.17, `020903` 0.13 toward the foot of a standing piece, midribs `1a0d03` 0.17, the near pieces' steps `0f1b0c` 0.21, `192413` 0.24, `252f1c` 0.29 (hue 130 to 150, C 0.024 to 0.036); the wood pieces (`trunk-near`, `roots-curtain`, `rise-trunk`) the same steps in bark (`170d04`, `0d0602`, `201409`, `2a1e10`, `35291b`, hue 62 to 72, keys `A B K L M`, fringe `G H I`); the moon rim a moonlit grey-green: the solid 1 px line `596f65` (0.52) on the edges facing the moon with `324538` (0.37) behind it, dithered with `192b21` (0.27) toward the foot. Before D120: body `030303` 0.097, rim `7d8db0` 0.643, `3c4865` 0.404. The alpha steps of the edge (0.75, 0.50, 0.28, the last dithered) and the lit fringe are unchanged. The foreground reads nearer than the layers by its scale, its local colour (green and brown against the blue layers) and its rim; its body (0.13 to 0.17) is darker than the mid trunks (0.19 at their tops) | Foreground (new, below) | open, lacy shapes: separate stems, fronds, blades and leaves with gaps the play shows through; a few clumps with open ground between them, not a continuous band. No Gaussian blur, except the giant leaves of [D143](DECISIONS.md#d143-giant-out-of-focus-leaves-frame-the-forest-rooms-597-2026-11-25) (below, "Giant leaves"). The near pieces (`near-*`, [D113](DECISIONS.md#d113-the-foreground-takes-big-near-pieces-drawn-by-hand-236)) add three body steps between the body and the rim: `0f1b0c`, `192413` and `252f1c` (before D120 `0d0e14`, `1a1e2c`, `2a3248`), the turn of a leaf toward the moon; their edges are two or three typed outer steps with dither (`h`, `g`, a dithered `i` away from the moon; `m`, `e`, a dithered `j` toward it), not a dark outline |
-| Ambient lights, by stage | Forest and Swamp: fireflies, the #472 lime `b8f23a` (`Firefly.smallGlow`); Steppe and Castle: pale spirit lights, hue to be chosen with those stages ([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)) | Forest and Swamp: Active (play layer, #472); spirit lights: Background | The fireflies replace the draft's periwinkle distant lights (author, 2026-11-19, section 6). Spirit lights: tiny, drifting; hue bans in 3 |
+| Ambient lights, by stage | Forest and Swamp: fireflies, the #472 lime `b8f23a` (`Firefly.smallGlow`); Steppe and Castle: pale spirit lights, hue to be chosen with those stages (Steppe [#651](https://github.com/jlogicgames/edgard_in_kimeria/issues/651), Castle [#652](https://github.com/jlogicgames/edgard_in_kimeria/issues/652)) | Forest and Swamp: Active (play layer, #472); spirit lights: Background | The fireflies replace the draft's periwinkle distant lights (author, 2026-11-19, section 6). Spirit lights: tiny, drifting; hue bans in 3 |
 | Hero | D79, unchanged | ink `0b0814` 0.146, hair `241a26` 0.235, skin `e6a86c` 0.777 / `c27a45` 0.645, breeches `2f4a8a` 0.423, headband `c22a24`, rim `c4cfe8` | Active | the moon rim carries the outline (D92) |
 | Danger | red | enemy body `86101f` 0.400, eyes and glow `ff6b57` 0.708 | Active | dark body, glowing eyes; never the hero's headband `c22a24` (0.14 apart). Traps may keep their own hue (bark, stone, spore lime). The beetle, the spider and the snail are in this family since 2026-11-20 (section 6, answer 1): dark crimson `86101f` with shade `4a0c22`, `2a0612`, rose lights `9c2050`, `b85a80`, `c87896` (each at least 0.095 from the headband, which is orange-red), `ff6b57` eyes, dusty-rose legs `9a6070`, `b07c8c` (off the hero's copper and tan); their bodies (D101) keep the live palette, ink and moon rim ([D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21), [#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571); before, a dusky indigo or a dark dried umber, too dark on the night ground) The red mob and the bat (2026-11-21, redrawn from teal and grey as grids in `art/objects/enemy/`, exported by `tools/enemy_sprites.py`) take their own red so they stay apart from the crimson-and-rose bugs: dark wine `6c0014` with folds `3a0010` and scarlet lights `f80440` (OKLab L 0.62, 0.11 from the headband, 0.25 from `86101f`), `ff6b57` eyes in a shadow face `1a1016`; the red mob adds charcoal trousers `2c2430`/`4a4048`, leather `5c3a2a`/`7a4a30` and a bone whip `b8a898`/`d0c4b8` (its wind-up flares the eyes white), the bat a sooty body `2a1418`/`4c2a30` with scarlet finger bones on wine membranes and pale fangs `f0e0c8`. The boss and the yellow mob (2026-11-21, redrawn from violet and olive as grids in `art/objects/enemy/`, same exporter) take the two corners of the family nobody holds: the boss is blackened iron `1e1c2a`/`38364a`/`646280` under a mulberry tabard and cape `3c1036`/`6e1460` with magenta lights `b03a8c` (OKLab hue -25; the mulberry 0.113 and the magenta 0.077 from the nearest bug or mob colour), bone horns `c8b8a0`, `ff6b57` eyes in the visor and a long-hafted bearded axe in steel `8a92a0` with a crescent edge `dde3ea` and a lit bevel `b8c2d0` on an ash haft `9c7656` (light enough to keep out of the rim); the yellow mob is a hunched charger in oxblood hide `2e1a16`/`5e2218` with rust lights `8e3420`, leather wraps `3a2a24`/`6a5040` and a yellowed bone skull mask `74684a`/`b0a474`/`d4ccaa` with `ff6b57` eyes in sockets `140c14`. Neither shows skin, so copper and tan stay the hero's; the boss's counter wind-up and the yellow mob's death hit flare the eyes white `ffffff` (the boss's normal wind-up keeps them red, so the two attacks read apart) |
 | Mechanisms | active family | the walk cue `e1cfa5` on the part you use (lift top, lever handle), steel or wood body, ink and rim. The lever's knob is the walk cue `e1cfa5` shaded `c4b07e` (was red `e82026`), the sheet has the moon rim: outline 0.439 at its worst, forest-1 (was 0.077 over the near-black play band; 2026-11-20, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The escalator bar (`GreyOff.png`, `GreyOn.png`, 32x8, hand-typed in `art/objects/escalator.grid`, exported by `export_object_sprites.export_escalators` with the moon rim; 2026-11-21, #236): a straw `e1cfa5` top row in both states; stopped, a dull steel body with four bolts and the hub's blade upright in steel `62677a`; running, a dark belt with straw-shade `c4b07e` chevrons that move 1 px per frame the way the bar travels and the hub's blade turning in straw, so even a single frame reads as running at play scale (the author asked for a more noticeable escalator); outline 0.44. The falling platform is not a mechanism: since 2026-11-21 it is always the rotten log, a VISIBLE trap ([TRAPS.md](TRAPS.md)) | Active | no reserved accent: gold `ffd23a` is fire and the coin, honey `e2b25a` the fungus traps |
@@ -370,9 +370,11 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   by hand in the grid as flat stepped tones and an ordered-dither fringe (no Gaussian blur: the author found blurred smudges clash with
   the pixel art, third pass; the one exception since 2026-11-25 is the giant leaves, [D143](DECISIONS.md#d143-giant-out-of-focus-leaves-frame-the-forest-rooms-597-2026-11-25): the author asked for them out of
   focus, so the exporter blurs those pieces into the sheet), never computed at run time (no shader, no render target). The background strips carry gradients and mist and may use as
-  many colours as the dither needs. This needs registered categories in `tools/sprite_layouts.py` that `check_sprite_art.py` accepts
-  ([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)).
-- **Open items ([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)):** `check_contrast.py` now composites what the game draws behind a sprite (the flat colour, the scenery layers at every steady camera x
+  many colours as the dither needs. `tools/sprite_layouts.py` registers the two categories and `check_sprite_art.py` (`validateSpriteArt`)
+  checks every PNG in `assets/images/parallax/`: `PARALLAX_LAYER_SHEETS` (sky, far, grove, mid, stars, clouds: indexed, binary alpha, native
+  size) and `PARALLAX_SOFT_SHEETS` (`forest-fg` and the moon: 8-bit RGBA, native size, alpha not limited; the gate reads the PNG header, not
+  the pixels). A PNG there that is in neither fails.
+- **Open items:** still open is the spirit-light hue of the Steppe and Castle stages (section 3; Steppe [#651](https://github.com/jlogicgames/edgard_in_kimeria/issues/651), Castle [#652](https://github.com/jlogicgames/edgard_in_kimeria/issues/652)). Built: `check_contrast.py` now composites what the game draws behind a sprite (the flat colour, the scenery layers at every steady camera x
   where the placement is on screen, drift phases of the clouds, then the play layer), and over that real background every sprite now passes the
   tiers; the decor rule is now relative to the composited background (D108, author decision 2026-11-20: no absolute ink floor). A monster
   body is measured only where it can lie (D108: along its monster's range or route, dropped to the floor below); since [D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21) a body keeps its live
@@ -383,7 +385,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)) moved from x 1040 to 1060 (outline 0.156, body 0.147; D108). The trunk, the lever and the fairy were recoloured on 2026-11-20 (trunk
   outline 0.351 to 0.197, body 0.160 to 0.407 to 0.084 to 0.194; lever 0.077 to 0.439;
   fairy 0.136 to 0.269 to 0.314 to 0.376, glints 0.179 and 0.215 to 0.323 and 0.377);
-  the draw-call and fill budget on mobile
+  **Cancelled (D61): will not be implemented** (original text kept): the draw-call and fill budget on mobile
   web, measured on a phone (through `NoopBatch`, the layers and the foreground of a `forest-1-mob` frame are 3 187 region draws and 9 texture
   switches at 640 px and 3 698 and 9 at 800 px, after 4 198 and 15, and 4 866 and 21); swaying trees (deferred from #239; no sway since 2026-11-25, wind gusts of light instead: [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593)). Built: the
   parser, the renderer (`ParallaxRendererTest`, `TiledMapParallaxTest`), `AllocationBudgetTest.forest1ParallaxLayersAndForeground` (0.0 B/frame)
@@ -431,7 +433,7 @@ These are the only limits on the layers.
   and leap range); the hero's start and exit boxes keep only the waist rule above. The sketch check is `python3 tools/parallax_mock.py --check` (objects of the room, every 1 px of camera; it
   checks what is on screen at each offset and exits 1 on any cover, on the hero above the waist at RoomStart or RoomExit, or on a
   cover time over 0.5 s, and prints the longest cover time of each mock; all at the steady camera); the game
-  gate is [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236). The excluded rects decide where the big pieces go: in the
+  gate is `python3 tools/parallax_mock.py --check --game` (`validateParallax`). The excluded rects decide where the big pieces go: in the
   busy mock room every column crosses a floor trap or a mechanism at some camera, so the big shapes hang from the top (each strand
   as deep as its place allows) and the low clumps stay on the floor line.
 - **Giant leaves ([D143](DECISIONS.md#d143-giant-out-of-focus-leaves-frame-the-forest-rooms-597-2026-11-25), author 2026-11-25).** The nearest layer: very large dark leaves on thick stems, **out of focus**, so
@@ -487,7 +489,7 @@ These are the only limits on the layers.
 - **Ambient lights, by stage (author, 2026-11-19).** Forest and Swamp use fireflies: the #472 lime fireflies in the play layer, under
   their own rules (the Fireflies (#472) paragraph below). The draft's periwinkle distant lights are withdrawn. Steppe and Castle use pale
   spirit lights instead: 1 to 2 px, at most 12 on screen, alpha at most 0.6, drawn in the mid pass so they never lie over the play layer.
-  Their hue is to be chosen with those stages ([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)). Banned hues for
+  Their hue is to be chosen with those stages (Steppe [#651](https://github.com/jlogicgames/edgard_in_kimeria/issues/651), Castle [#652](https://github.com/jlogicgames/edgard_in_kimeria/issues/652)). Banned hues for
   spirit lights: lime and sulphur (spores, fungi), yellow, gold and ember (fire), magenta, red (danger), violet (pickups), aqua and teal
   (the fairy, D82). A spirit light drifts at most 8 px/s and breathes on a 3 to 5 s irregular period, never on the fungus's 2.5 s or the
   fissure's 0.5 s beat. No trails.
@@ -514,10 +516,24 @@ In the play band (ground and trunk feet) every bright part clears the D76 floor 
 ground and a trunk), the breeches and the enemy body separate by value too; the lit lip carries the terrain's outline. The ink and the hair sink into the dark, so **every active outline comes from the rim, the cue,
 the glow or a bright body**, as D92 already requires at night. The night sky helps high play: against the mist wisps every listed colour but
 the ink, the hair, the enemy body (0.185, fourth pass: the mist is lighter) and the terrain body (0.131) clears 0.20, and against the sky top only the enemy body, the breeches and the terrain body fall under 0.20.
-Rooms with high play must still be measured over the real layers before `RIM_SHEETS` changes
-([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)).
+**D92's rim rule is final (author, 2026-11-26):** no further measurement of high play is asked for and `RIM_SHEETS` is unchanged; the
+positions listed as not covered below are accepted unmeasured.
 
-### 5. Supersedes when approved
+What `tools/check_contrast.py` (`validateContrast`) measures over the real layers today (recorded 2026-11-26):
+
+- **Covered:** every sprite placed in `forest-0`, `forest-1` and `forest-2` (`SpawnPoints` and `Collisions`), at the poses the gate derives
+  from the placement (a spider's route, a snail's range and its gob lines, the fissure and lance columns, the hive's drop, the deadfall and
+  leg-hold parts), over the flat colour, the scenery layers at every steady camera x where it is on screen (4 px apart; clouds at 8 drift
+  phases) and the play layer. So a sprite placed high is measured over the sky, moon and cloud layers behind it. Also over the layers:
+  monster bodies wherever they can lie, the fairy and her glints on a grid of x and y over every map, and the boss health bar's frame
+  (these sweeps step the camera 128 px, the bar 4 px).
+- **Not covered:** the hero away from the one `Player` object of each map (no other room, no jump, ledge or ladder height; only the idle
+  and carry-idle frames); a beetle, wolf, bat, red mob, yellow mob or routeless spider away from its authored x (their patrol, flight and attack positions);
+  lifts, falling, carried and thrown objects away from their authored place; frames a `SPRITES` row does not list; the camera top's
+  0 to 8 px vertical shift (the steady camera only); the foreground groups, which are not composited (`validateParallax` limits what they
+  cover, not how a sprite reads next to them); particles and effects.
+
+### 5. Supersedes
 
 - **D76:** "Background ... static" becomes "no louder than decor, and moving only as the layers allow" (parallax, clouds, ambient lights).
   "Decor ... no idle animation" stays for play-layer decor. The gate composites the layers at several camera offsets; `foreground` gets
@@ -527,7 +543,7 @@ Rooms with high play must still be measured over the real layers before `RIM_SHE
 - **D76, moon and clouds:** the Background tier rule "no louder than decor" is superseded for the moon, the cloud edges and the stars: the
   moon (0.985) is the brightest thing in the frame and the cloud edge (0.93) and stars (0.88) are brighter than decor by design.
 - **D92 rim:** D92 lights a sprite's up, left and right edges; this card's rim faces the moon (up and right) on clouds and on the foreground.
-  D92's rule wins for sprites until the rim is re-measured over the layers ([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)).
+  D92's rule wins for sprites, and is final (author, 2026-11-26; section 4).
 - **D101 bodies and `RemainsFx`:** the chip colours (`SHELL_CHIPS`, `SPIDER_CHIPS`, `SNAIL_CHIPS`, `WOLF_CHIPS`) take the live monsters'
   colours with the bodies ([D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21), [#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571)).
 - **#451 (moon and clouds)** is built as the shared moon and cloud layers of this card
@@ -552,14 +568,14 @@ Recorded here; sections 1 to 5 carry them. Nothing is still open except what the
 
 1. **Recolour to the families.** The beetle and the spider go to the danger family: dark crimson body, glowing `ff6b57` eyes. The lever's
    red knob `e82026` goes to the active family: the walk cue `e1cfa5` on its handle, no red. The recolour is made after the layers exist,
-   and the contrast gate measures over them ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)). The lever's landed on
+   and the contrast gate measures over them (built). The lever's landed on
    2026-11-20 (the knob in straw, section 1). The beetle, the spider and the snail
    landed on 2026-11-20 (section 1, Danger, and their sections).
 2. **Walk-edge cue.** Pale straw `e1cfa5` approved (section 1).
 3. **Foreground cover.** Superseded by rule B (answer 8): the waist limit holds only at RoomStart and RoomExit. It never covers a
    floor trap or the other objects listed in section 3. Hanging traps are excluded too (answer 5).
 4. **Ambient lights by stage.** Forest and Swamp use fireflies (#472), and the periwinkle distant lights are withdrawn. Steppe and Castle
-   use pale spirit lights; their hue is to be chosen with those stages ([#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)).
+   use pale spirit lights; their hue is to be chosen with those stages (Steppe [#651](https://github.com/jlogicgames/edgard_in_kimeria/issues/651), Castle [#652](https://github.com/jlogicgames/edgard_in_kimeria/issues/652)).
 5. **Second pass (same day).** Beauty first (Hollow Knight, Dead Cells): the palette, alpha, value-band and banding limits are dropped,
    only the readability rules stay. Values inverted: black at the ground, lighter going up. More depth between mid and far (the grove
    layer and mist bands). A much bigger moon, fixed on screen and shared by every world; clouds that read as cumulus, drifting over time
@@ -571,7 +587,7 @@ Recorded here; sections 1 to 5 carry them. Nothing is still open except what the
    thing. The moon becomes a big pixel moon: a hard stepped edge, a near-white disc with pale ice-blue maria in flat tones, no smooth
    halo; the clouds take periwinkle bodies with white edges toward the moon. The blurred foreground looked like another game: no
    Gaussian blur; two pixel-consistent variants (A crisp silhouettes with a moonlit rim, B a hand-drawn pixel defocus), larger, for the
-   author to pick (section 1, Foreground; [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+   author to pick (section 1, Foreground).
 7. **Fourth pass (same day).** The foreground question is answered: **variant B, the pixel defocus**; variant A (crisp) is
    removed. B no longer melts into a dark band: a cool blue-violet body a step lighter than the ground (since answer 9 the neutral
    near-black palette of section 1), a stepped moonlit rim

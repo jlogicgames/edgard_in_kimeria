@@ -79,6 +79,32 @@ class SpriteArtGuardTest(unittest.TestCase):
                                             (128, 128), 256, 'soft'))
         self.assertTrue(guard.png_contract('torch.png', metadata((8, 16), mode=6), (8, 16), 16, 'binary'))
 
+    def test_parallax_sheets_are_registered_and_keep_their_category(self):
+        def header(size, depth, mode):
+            # Metadata-only fixture, not an artwork generator.
+            ihdr = struct.pack('>IIBBBBB', *size, depth, mode, 0, 0, 0)
+            return b'\x89PNG\r\n\x1a\n' + struct.pack('>I', len(ihdr)) + b'IHDR' + ihdr + b'\x00' * 4
+        shipped = Path(guard.ROOT) / guard.PARALLAX_IMAGE_DIR
+        names = {*guard.PARALLAX_LAYER_SHEETS, *guard.PARALLAX_SOFT_SHEETS}
+        self.assertEqual(names, {path.stem for path in shipped.glob('*.png')})
+        self.assertEqual([], guard.parallax_contracts(guard.ROOT))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / guard.PARALLAX_IMAGE_DIR
+            target.mkdir(parents=True)
+            for name in names:
+                (target / f'{name}.png').write_bytes((shipped / f'{name}.png').read_bytes())
+            self.assertEqual([], guard.parallax_contracts(root))
+            (target / 'forest-new.png').write_bytes(header((16, 16), 8, 6))
+            (target / 'forest-fg.png').write_bytes(header((896, 1584), 8, 6))       # resized
+            (target / 'shared-moon.png').write_bytes(header((256, 128), 8, 3))      # a soft sheet without its alpha
+            (target / 'forest-far.png').write_bytes(header((256, 544), 8, 6))       # a layer sheet that is not indexed
+            (target / 'forest-sky.png').unlink()
+            issues = guard.parallax_contracts(root)
+            for name, words in (('forest-new', 'unregistered'), ('forest-fg', 'expected native'), ('shared-moon', 'RGBA'),
+                                ('forest-far', 'indexed'), ('forest-sky', 'missing')):
+                self.assertTrue(any(f'{name}.png' in issue and words in issue for issue in issues), (name, issues))
+
     def test_rejects_original_holder_and_renamed_or_relocated_art(self):
         for path in ['entity/items/Carryable.java', 'effects/Torch.java', 'ui/NewTorch.java']:
             for name in ['renderHolder', 'render', 'paintThing']:
