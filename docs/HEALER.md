@@ -160,7 +160,7 @@ A held carryable is released onto clear static collision support near its owning
 authored entrance before securing. This removes the old hero reference while keeping the
 tool available in that room after a transition.
 
-The shipped forest has falling platform 115 at x=1568, y=256 and Mushroom 95 at x=1728, y=208.
+The shipped forest has falling platform 115 at x=1568, y=240 and Mushroom 95 at x=1728, y=192 (map values, before the `SpawnPoints` -16 offset).
 The real-input replay intentionally misses Mushroom 95, collapses 115, returns from the healer,
 and confirms the mandatory canopy exit remains reachable while the Mushroom stays uncollected.
 A fresh Level restores the authored platform and the existing full-artifact route can then

@@ -320,7 +320,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   line of every forest room is **y 304**, so **64 px** of soil (four tile rows, y 304 to 368) show under it for the bottom foreground
   detail. Everything measured from the floor sits 16 px higher than before; the ceiling, sky, moon and clouds stay. The `far`,
   `grove` and `mid` layers rose by the same 16 px (`offsety`), so the grass stands on the floor line and the spruces show as deep as
-  before; every standing foreground piece rose with them.
+  before; every standing foreground piece rose with them. The y positions in the colour and value tables of this section are the
+  layers' art rows and measurements from before the raise: `far`, `grove` and `mid` are now drawn 16 px higher.
 - **Sketch files.** `art/parallax/forest/*.grid` and `art/parallax/shared/*.grid` (one char per pixel, colours `RRGGBB` or `RRGGBBAA`)
   are the drawing; soft edges are drawn there as flat colours with alpha, the exporter applies no filter; `tools/parallax_sprites.py` exports the sheets and `.tsx` files; `tools/parallax_game.py` installs them into the game (assets and forest-1's layers); `tools/parallax_mock.py` builds
   `mock.tmx` over the first room of forest-1, renders previews at cameras 0, 320 and 640 and checks the
@@ -347,7 +348,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   0.15, grove 0.25, mid 0.4, play 1, foreground 1.6), measured from the floor camera, so the steady frame is the authored one:
   `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
   for a 368 px room and the 360 px view) and camTop the camera's top edge (whole pixels). The hero no longer looks up or down
-  (D111): the camera top lies between the room top (0, with the hero standing high, above y 256) and 8 (on the floor), and moves during
+  (D111): the camera top lies between the room top (0, with the top of the hero's box at y 200 or higher) and 8 (at y 208 or lower, so on the floor), and moves during
   a room change, so a layer of factor f is seen at most 8 f px off its authored place (12.8 px at the foreground's 1.6), and the screen
   shake (at most `ScreenShake.LEVER_AMPLITUDE_PX` and `STONE_AMPLITUDE_PX`, 1.5 px, clamped to the room so it never carries the view
   past the room's top or bottom) would add up to 1.5 (1 + f) px: the margin counts it anyway, conservatively. The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
@@ -355,7 +356,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   becomes its buried variant, tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the
   deep soil), the sky 24 rows. Over a hanging piece its `-top` (2 tile rows, room y -24 to 7) draws what it hangs from, open; under a
   standing piece its `-foot` (2 tile rows since the floor raise, D144) carries the same stems and blades straight on down (author, answer 10); the two `edge-*`
-  pieces are 4 rows tall (to room y 391) and need no foot; the piece's own rows 0 to 7 are empty. Bleed art lies outside the steady
+  pieces are 4 rows tall (to room y 375 since D144) and need no foot; the piece's own rows 0 to 7 are empty. Bleed art lies outside the steady
   frame (y 8 to 368), so the steady previews are unchanged by it; only the buried bottom row (room y 352 to 368) and `rise-trunk`'s shell
   show there. Trimming it changed no pixel of any room's frame at camera tops 0 to 8 (63 frames of the three game rooms, before and after).
   Tiled: the layers' `parallaxy` equals their `parallaxx` and the map's `parallaxoriginy` is 188 (8 + half the view): Tiled has one
@@ -476,7 +477,7 @@ These are the only limits on the layers.
   `forest-1-mob` (800 px, one red mob at room x 256, one fireball refill at x 688) has the longest clear stretch of all 22 rooms
   (304 px), 5.0 rects per 1000 px (each object counted once, with the hero's start and exit boxes; the first room, `forest-1-traps`:
   14.8, longest gap 96 px, widest tall run 16 px) and, among the rooms whose camera moves 160 px, the widest clear run for a tall piece
-  (230 px, x 464 to 694), best once the tutorial rooms are set aside (`forest-0-platform` has 279 px). Only the stems cross the floor band (y 272 to 320); fronds, boughs and blades spread above it and the
+  (230 px, x 464 to 694), best once the tutorial rooms are set aside (`forest-0-platform` has 279 px). Only the stems cross the floor band (y 256 to 304 since D144); fronds, boughs and blades spread above it and the
   stems run straight on below the floor line, where nothing is protected. Its foreground: `rise-trunk` (a near trunk about 34 px wide where the hero passes, a
   rounded snapped top with no spiky crown, bark furrows, a bough with a few broad rounded leaves on short stalks and gaps between
   them, its bark shell running straight on into the soil, no roots: answer 10) and `rise-fern` (four separate arching fronds on thin stems from a loose base, pairs of small rounded

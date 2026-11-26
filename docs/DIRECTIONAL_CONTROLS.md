@@ -202,10 +202,10 @@ separate illustrated HUD texture and native 16×16 world sprite are reused.
 
 | Map / owner | Authored refill | Position | Purpose |
 | --- | --- | --- | --- |
-| `forest-2` / `forest-canopy` | 121 | TMX (1824, 320), world (1824, 304) after layer offset | Before the exit to the healer/boss chamber |
-| `forest-1` / `forest-1-mob` (room 1, #375, [D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17)) | 25 | (4208, 288) | On the walk to the exit, after the first RedMob: it gives back a charge spent on the mob (moved from (312, 176) in `forest-1-traps`) |
-| `forest-1` / `forest-1-route` (room 3) | 51 | (1712, 112) | Optional pad above a one-shot falling step, reached by lowering a ladder with the lever (which also stops the lift that is the mandatory way); spending the step loses it until Restart Level ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)) |
-| `forest-1` / `forest-1-guard` (room 4, #104) | 76 | (2640, 192) | Optional, on the far part of the roof above a tunnel with a RedMob and a spore puffball (the roof is lowered by the lever and nothing threatens it); a hero below a full stock wins a charge, one at a full stock gains nothing ([D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)) |
+| `forest-2` / `forest-canopy` | 121 | TMX (1696, 128), world (1696, 112) after layer offset | Before the exit to the healer/boss chamber |
+| `forest-1` / `forest-1-mob` (room 1, #375, [D85](DECISIONS.md#d85-forest-1-opens-with-the-first-redmob-alone-in-a-room-of-its-own-375-2026-11-17)) | 25 | (4208, 272) | On the walk to the exit, after the first RedMob: it gives back a charge spent on the mob (moved from (312, 176) in `forest-1-traps`) |
+| `forest-1` / `forest-1-route` (room 3) | 51 | (1712, 96) | Optional pad above a one-shot falling step, reached by lowering a ladder with the lever (which also stops the lift that is the mandatory way); spending the step loses it until Restart Level ([D67](DECISIONS.md#d67-forest-1-grows-a-route-room-one-lever-two-supports-in-opposite-states-and-a-one-shot-step-to-the-refill-187-2026-11-15)) |
+| `forest-1` / `forest-1-guard` (room 4, #104) | 76 | (2640, 176) | Optional, on the far part of the roof above a tunnel with a RedMob and a spore puffball (the roof is lowered by the lever and nothing threatens it); a hero below a full stock wins a charge, one at a full stock gains nothing ([D68](DECISIONS.md#d68-forest-1-grows-a-guard-room-a-redmob-in-a-low-tunnel-under-a-spore-cloud-and-a-roof-route-with-a-refill-104-2026-11-15)) |
 
 `Level.pendingPickups` / `keptPickups` track the authored map IDs, separately from
 recipe artifacts. Full-stock contact records nothing. Death restores room-entry stock

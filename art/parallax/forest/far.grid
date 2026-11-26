@@ -39,6 +39,7 @@ color w 3c4351
 color x 3e4553
 
 # Bleed (vertical parallax 0.15): every piece runs 2 tile rows past the room bottom (y 368 to 400), the foot colour.
+# Since the floor raise (#648) the layer is drawn 16 px higher (offsety -16) and tools/parallax_mock.py repeats its last row once.
 piece ridge-a 8 17
 ................................................................................................................................
 ................................................................................................................................

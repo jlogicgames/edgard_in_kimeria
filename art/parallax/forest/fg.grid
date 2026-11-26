@@ -2137,7 +2137,7 @@ piece rise-reeds 6 14
 # black (author, 2026-11-19: no roots or clods, roots are never seen through earth). `<piece>-top` (2 tile rows, room
 # y -24 to 7) sits over a hanging piece, 32 px left of it: what the piece hangs from, open (limbs, a side branch
 # and leaf clusters with sky between them); the piece's own rows 0 to 7, above the steady frame, are empty. The two `edge-*`
-# pieces stand at room y 327 and are 4 tile rows tall (to y 391), so they need no foot.
+# pieces stand at room y 311 (since the floor raise, #648) and are 4 tile rows tall (to y 375), so they need no foot.
 piece tuft-foot 11 2
 ...............................................................ihggbbbbbbbbbbbbbcbbdgh...hggbbbbbbbbbbbbbbdggggghi..............................................................
 ...............................................................ihggbbbbbbbbbbbbbcbbdgh...hggbbbbbbbbbbbbbbdggggghi..............................................................
