@@ -138,7 +138,8 @@ completion state so the hero begins and finishes the protected victory walk. The
 right viewport edge (also when the room is narrower than the viewport). Terrain, traps,
 input, contact and falling cannot block or kill this scripted walk. A hero whose kill landed
 in mid-air first comes down, through any one-way platform, to the floor at the room's right end,
-where the amber level-end portal stands (#605). Completion
+where the amber level-end portal stands (#605). The author asked on 2026-11-26 for the walk to end in that portal instead of
+leaving the room; that change is not yet built ([#658](https://github.com/jlogicgames/edgard_in_kimeria/issues/658)). Completion
 is latched before calling the existing `loadNextLevel`, which retains the existing level-only
 save format. Checkpoint contact and F5 are blocked throughout a map containing a boss,
 including before entering its chamber. The separate F4 developer level-skip remains a
