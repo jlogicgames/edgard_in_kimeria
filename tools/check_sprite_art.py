@@ -15,7 +15,8 @@ import struct
 import sys
 from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
-    ARMS_IMAGE_SIZE, BOSS_HUD_SHEETS, OPAQUE_BOSS_HUD_IMAGES, INTRO_BOOK_IMAGES)
+    ARMS_IMAGE_SIZE, BOSS_HUD_SHEETS, OPAQUE_BOSS_HUD_IMAGES, INTRO_BOOK_IMAGES, PARALLAX_IMAGE_DIR, PARALLAX_LAYER_SHEETS,
+    PARALLAX_SOFT_SHEETS)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -44,7 +45,7 @@ ALLOWED = {
     ('effects/FireballFx.java', 'render', 'quad'): 'fireball trail flame and sparks as 1 to 3 px squares that shrink out (#397, approved particle category): live at most 0.38 s, depict no object; the ball is the authored fireball sprite',
     ('effects/RingPool.java', 'render', 'quad'): 'the fireball impact ring (#397) and the pickup ring (#402) through the existing shockwave.frag, like ShockwaveEffect: a time-varying shader ring that lives at most 0.5 s, depicts no object',
     ('effects/FireballFx.java', 'drawBallHalo', 'particle'): 'the warm light around the flying fireball (#397), like the torch glow: one additive light quad under the authored fireball sprite, depicts no object',
-    ('effects/LeafFx.java', 'render', 'quad'): 'falling leaf ambience (#473, particles approved by the author on 2026-11-18; colours dimmed to the decor tier pending #236): 5 to 6 px thin plates that sway and flip, live 9 to 14 s, drift down a Forest room as scenery and depict no object the hero meets, hits or collects (the trees, branches and traps are authored sprites)',
+    ('effects/LeafFx.java', 'render', 'quad'): 'falling leaf ambience (#473, particles approved by the author on 2026-11-18; colours in the near leaf greens of D120, #602): 5 to 6 px thin plates that sway and flip, live 9 to 14 s, drift down a Forest room as scenery and depict no object the hero meets, hits or collects (the trees, branches and traps are authored sprites)',
     ('effects/BeetleFx.java', 'render', 'particle'): "the beetle's burst flash, steam and death poof (#327, D100, particle category): soft additive and smoke dots that live at most 0.55 s, depict no object; the beetle is the authored monster-beetle sprite",
     ('effects/BeetleFx.java', 'render', 'quad'): "the beetle's wind-up specks, burst spray and death shell chips as 1 to 3 px squares (#327, D100, particle category, like the fireball sparks): live at most 0.4 s, depict no object; the beetle is the authored monster-beetle sprite",
     ('effects/SpiderFx.java', 'render', 'particle'): "the spider's fang glints, bite dust and death poof (#328, D102, particle category): soft additive and smoke dots that live at most 0.55 s, depict no object; the spider is the authored monster-spider sprite",
@@ -163,6 +164,37 @@ def png_contract(path, data, size, colors, alpha_mode):
     return issues
 
 
+def rgba_contract(path, data, size):
+    """A soft parallax sheet: 8-bit RGBA at its native size. Its alpha is deliberately free (pixel defocus, glow)."""
+    if data[:8] != b'\x89PNG\r\n\x1a\n' or data[12:16] != b'IHDR' or len(data) < 26:
+        return [f'{path}: not a PNG']
+    width, height, depth, mode = struct.unpack('>IIBB', data[16:26])
+    issues = []
+    if (width, height) != size:
+        issues.append(f'{path}: expected native {size}, found {(width, height)}')
+    if (depth, mode) != (8, 6):
+        issues.append(f'{path}: expected an 8-bit RGBA PNG (soft parallax sheet)')
+    return issues
+
+
+def parallax_contracts(root):
+    """The scenery and foreground sheets: each registered one meets its category, and no unregistered PNG lies beside them."""
+    issues = []
+    for name, size in {**PARALLAX_LAYER_SHEETS, **PARALLAX_SOFT_SHEETS}.items():
+        relative = f'{PARALLAX_IMAGE_DIR}/{name}.png'
+        path = root / relative
+        if not path.is_file():
+            issues.append(f'{relative}: missing authored image')
+        elif name in PARALLAX_SOFT_SHEETS:
+            issues.extend(rgba_contract(relative, path.read_bytes(), size))
+        else:
+            issues.extend(png_contract(relative, path.read_bytes(), size, HUD_PALETTE_SIZE, 'binary'))
+    for path in sorted((root / PARALLAX_IMAGE_DIR).glob('*.png')):
+        if path.stem not in PARALLAX_LAYER_SHEETS and path.stem not in PARALLAX_SOFT_SHEETS:
+            issues.append(f'{PARALLAX_IMAGE_DIR}/{path.name}: unregistered parallax sheet; add it to tools/sprite_layouts.py')
+    return issues
+
+
 def image_contracts(root):
     issues = []
     contracts = [(f'assets/images/objects/{name}.png', size, WORLD_PALETTE_SIZE,
@@ -194,7 +226,7 @@ def image_contracts(root):
             issues.append(f'{relative}: missing authored image')
         else:
             issues.extend(png_contract(relative, path.read_bytes(), size, colors, alpha_mode))
-    return issues
+    return issues + parallax_contracts(root)
 
 
 def check(root):

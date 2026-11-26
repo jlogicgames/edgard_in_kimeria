@@ -2810,6 +2810,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   builds the shared `SoftDot` and `Shaders.whiteQuad` textures. New: `LevelBackgroundTest` (parsing; a sign such as
   `#-4a92b` is rejected digit by digit) and `ShippedBackgroundTest` (every shipped map sets `background`, even if the Python
   gate is skipped). No threshold changed.
+- **Update 2026-11-26 (author): the moon rim rule is final over the forest layers.** The parallax card no longer asks for a re-measurement of
+  the rim in rooms with high play; what `check_contrast.py` does and does not measure over the layers is recorded in ART_DIRECTION.md,
+  "Forest look and parallax layers", section 4. `RIM_SHEETS` is unchanged.
 
 ## D93. Principle 4 measured: a hazard's own act is seen and heard, hit or miss (#388, 2026-11-17)
 
@@ -3713,6 +3716,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   clouds at 8 drift phases where they can show) and the play layer; every sprite now passes the tiers over that real background (D108 update).
 - **Not done (all [#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640)):** a shared skill
   (`.agents/skills`) and the STYLE_SYSTEM rows beyond the one added here; the draw-call budget measured on a phone; approval by the author.
+  **Update 2026-11-26:** the skill is `kimeria-parallax`, named in the STYLE_SYSTEM "Parallax layers" row, and the parallax sheets have
+  checked categories in `tools/sprite_layouts.py`; the author approved the card and this number on 2026-11-24; the draw-call budget measured
+  on a phone is **Cancelled (D61): will not be implemented** (author, 2026-11-25).
 
 - **Update 2026-11-20, author decision: the decor tier is relative to the composited background (D76 amended).** The absolute ink floor of D76
   (no decor pixel under OKLab L 0.30, `INK_L_MAX`) is dropped from `check_contrast.py`. It carried one thing: keeping decor off black ink

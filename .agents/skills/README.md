@@ -23,6 +23,7 @@ in `docs/`, and [docs/STYLE_SYSTEM.md](../../docs/STYLE_SYSTEM.md) says how the 
 | [kimeria-trap-design](kimeria-trap-design/SKILL.md) | A trap from idea to placement: the card before the code | D71, [TRAPS.md](../../docs/TRAPS.md) |
 | [kimeria-game-text](kimeria-game-text/SKILL.md) | Any player-facing string, in all five languages | D74, [TEXT_STYLE.md](../../docs/TEXT_STYLE.md) |
 | [kimeria-art-direction](kimeria-art-direction/SKILL.md) | Sprites, HUD icons, portraits, illustrations | D21, D76, [ART_DIRECTION.md](../../docs/ART_DIRECTION.md) |
+| [kimeria-parallax](kimeria-parallax/SKILL.md) | Parallax layers and the foreground: installer, rules and gate | D108, D120, D143, [ART_DIRECTION.md](../../docs/ART_DIRECTION.md#forest-look-and-parallax-layers-accepted-d108) |
 | [kimeria-sound](kimeria-sound/SKILL.md) | Generating, wiring and auditioning a sound effect | D73, [SOUND_DIRECTION.md](../../docs/SOUND_DIRECTION.md) |
 | [kimeria-particles](kimeria-particles/SKILL.md) | Dust, sparks, smoke, blood, grit: the project's particle classes | D73, [DEVELOPMENT.md](../../docs/DEVELOPMENT.md#particles-and-the-allocation-guard) |
 | [kimeria-level-authoring](kimeria-level-authoring/SKILL.md) | Tiled maps: geometry, spawn points, links, measured routes | D26, [ROOMS.md](../../docs/ROOMS.md) |

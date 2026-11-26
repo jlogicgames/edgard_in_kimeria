@@ -13,8 +13,8 @@ Grid format: `tile N`, `color <char> <RRGGBB[AA]>` lines (`.` is transparent; AA
 `piece <name> <wtiles> <htiles>` followed by htiles*N rows of wtiles*N characters.
 
 Outputs (next to the grid): `out/<set>-<name>.png` and `<set>-<name>.tsx`. A tileset with only opaque colours is an exact
-indexed PNG (transparent index 0 when needed); one with partial alpha is RGBA. Not registered in
-`sprite_layouts` yet (sketch).
+indexed PNG (transparent index 0 when needed); one with partial alpha is RGBA. The installed sheets are registered in
+`sprite_layouts` (`PARALLAX_LAYER_SHEETS`, `PARALLAX_SOFT_SHEETS`) and checked by `check_sprite_art.py`.
 """
 from pathlib import Path
 from PIL import Image, ImageFilter
