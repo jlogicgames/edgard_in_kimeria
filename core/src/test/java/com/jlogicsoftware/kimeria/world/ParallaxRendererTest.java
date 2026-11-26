@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /** The parallax maths (docs/ART_DIRECTION.md, "Forest look and parallax layers") and the draw order of a real forest-1 frame (#236). */
 class ParallaxRendererTest {
     private static final float VIEW_W = 640, VIEW_H = 360, FLOOR_CAMERA_TOP = 8, MOB_X = 3520;
-    private static final double FOREGROUND = 1.6, MID = 0.4, FAR = 0.15, GROVE = 0.25;
+    private static final double FOREGROUND = 1.6, NEAR = 2.2, MID = 0.4, FAR = 0.15, GROVE = 0.25;
     private static final int DRAW_LOG = 200_000;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
@@ -147,6 +147,36 @@ class ParallaxRendererTest {
         assertEquals(27 * 16f, screen[0], "the first drawn tile of the moon on screen, the same in every world (the piece's corner tile at column 26 is transparent: no cell, no draw)");
     }
 
+    private static ForegroundGroup nearGroupOf(TiledMapData map, ForegroundGroup sharp) {
+        for (ForegroundGroup g : map.foregroundGroups) if (g.name.equals(sharp.name.replace("foreground-", "foreground-near-"))) return g;
+        throw new AssertionError("no near group for " + sharp.name);
+    }
+
+    @Test void theNearGroupMovesFasterThanTheSharpForeground() {
+        TiledMapData map = forest1();
+        ParallaxRenderer renderer = new ParallaxRenderer(map);
+        ForegroundGroup sharp = map.foregroundGroups.get(2), near = nearGroupOf(map, sharp);
+        Rectangle room = new Rectangle(MOB_X, 0, 800, 368);
+        int camera = 100;
+        // a piece of each group that stays on screen at both cameras, drawn at the group's own factor: screenX = x - round(f * (camX - roomX))
+        for (ForegroundGroup group : new ForegroundGroup[]{sharp, near}) {
+            double factor = group == near ? NEAR : FOREGROUND;
+            Set<TextureRegion> first = Collections.newSetFromMap(new IdentityHashMap<>());
+            int piece = onScreenPiece(group);
+            first.add(group.regions[piece]);
+            draw(renderer, new Rectangle(MOB_X, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H), room);
+            assertEquals(group.x[piece], firstX(first) - MOB_X, 1e-3f, group.name + " at the room's first camera");
+            draw(renderer, new Rectangle(MOB_X + camera, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H), room);
+            assertEquals(group.x[piece] - Math.round(factor * camera), firstX(first) - (MOB_X + camera), 1e-3f, group.name + " " + camera + " px along");
+        }
+    }
+
+    /** The first piece standing 250 to 500 px into the room: on screen at the room's first camera and 100 px along. */
+    private static int onScreenPiece(ForegroundGroup group) {
+        for (int i = 0; i < group.count; i++) if (group.x[i] >= 250 && group.x[i] <= 500) return i;
+        throw new AssertionError("no piece of " + group.name + " in the middle of the room");
+    }
+
     private static int indexOfLayer(TiledMapData map, String name) { return map.sceneryLayers.indexOf(layer(map, name)); }
 
     /** The smallest on-screen x (from the camera) of any draw of {@code regions}, NaN when none. */
@@ -194,12 +224,20 @@ class ParallaxRendererTest {
         Set<TextureRegion> sky = regionsOf(layer(map, "sky")), mid = regionsOf(layer(map, "mid"));
         assertTrue(sky.contains(batch.drawnRegion(0)), "the first thing drawn is the sky");
         ForegroundGroup mob = map.foregroundGroups.get(2), escalators = map.foregroundGroups.get(0), traps = map.foregroundGroups.get(1); // the old traps group was split in two (#500, D110)
-        Set<TextureRegion> front = Collections.newSetFromMap(new IdentityHashMap<>());
+        ForegroundGroup near = nearGroupOf(map, mob);
+        Set<TextureRegion> front = Collections.newSetFromMap(new IdentityHashMap<>()), giants = Collections.newSetFromMap(new IdentityHashMap<>());
         for (int i = 0; i < mob.count; i++) front.add(mob.regions[i]);
+        for (int i = 0; i < near.count; i++) { front.add(near.regions[i]); giants.add(near.regions[i]); }
         Set<TextureRegion> other = Collections.newSetFromMap(new IdentityHashMap<>());
         for (int i = 0; i < traps.count; i++) if (!front.contains(traps.regions[i])) other.add(traps.regions[i]);
         for (int i = 0; i < escalators.count; i++) if (!front.contains(escalators.regions[i])) other.add(escalators.regions[i]);
-        assertTrue(front.contains(batch.drawnRegion(count - 1)), "the last thing drawn is a piece of this room's foreground");
+        assertTrue(giants.contains(batch.drawnRegion(count - 1)), "the last thing drawn is a giant leaf of this room's near group");
+        int lastSharp = -1, firstGiant = count;
+        for (int i = 0; i < count; i++) {
+            if (giants.contains(batch.drawnRegion(i))) firstGiant = Math.min(firstGiant, i);
+            else if (front.contains(batch.drawnRegion(i))) lastSharp = i;
+        }
+        assertTrue(lastSharp >= 0 && lastSharp < firstGiant, "the sharp pieces first, the giant leaves over them: " + lastSharp + " / " + firstGiant);
         int lastMid = -1, firstPlay = count, firstFront = count;
         TextureRegion terrain = map.tile(map.backgroundGrid[map.heightTiles - 1][(int) (MOB_X / 16) + 1]);
         for (int i = 0; i < count; i++) {

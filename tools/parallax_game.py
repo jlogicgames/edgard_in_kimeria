@@ -80,7 +80,10 @@ FOREST_1 = {
 }
 FOREST_0 = {
     'forest-0-lever': (('near-canopy', -128, 0), ('near-fern', 488, 0), ('clump-leaves', 440, 320), ('vine-curtain', 76, 0)),
-    'forest-0-ladder': (('near-fern', -88, 0), ('near-canopy', 948, 0), ('roots-curtain', 172, 0)),
+    # the #597 sample room: more stems and clumps than the others, so the giant leaves are not the only shapes
+    'forest-0-ladder': (('near-fern', -88, 0), ('near-canopy', 948, 0), ('roots-curtain', 172, 0), ('rise-reeds', -32, 144),
+                        ('rise-reeds', 208, 144), ('rise-fern', 952, 128), ('clump-grass', 96, 308), ('clump-fern', 376, 320),
+                        ('clump-mixed', 624, 320), ('tuft', 560, 312), ('tuft', 150, 312)),
     'forest-0-wall': (('near-canopy', -88, 0), ('near-fern', 772, 0), ('vine-curtain', 76, 0)),
     'forest-0-platform': (('near-fern', -88, 0), ('near-sprig', 796, 0), ('rise-reeds', -50, 144)),
     'forest-0-stone': (('near-fern', -88, 0), ('near-sprig', 692, 0), ('vine-curtain', 76, 0)),
@@ -94,7 +97,124 @@ FOREST_2 = {
     'forest-canopy': (('near-fern', -88, 0), ('near-sprig', 1308, 0), ('rise-fern', 1268, 128)),
     'forest-boss': (('rise-reeds', 426, 144),),
 }
-MAPS = {'forest-0': FOREST_0, 'forest-1': FOREST_1, 'forest-2': FOREST_2}   # every forest map and its rooms' foreground
+# The giant near leaves of every room (#597, D143): blurred, in the room's own nearer group `foreground-near-<room>` at
+# `parallax_mock.NEAR_FACTOR`. `edge-giant-left` and `-right` are tall masses on the screen's side edges at the first and the last
+# camera; `edge-giant-low-*` are clumps under the floor line. A room takes a side mass only where it passes rule B, the cover time,
+# the pit rule and the hidden share.
+# Since the author asked for more of them (2026-11-25), some `edge-giant-low-*` stand with their tips on the floor line (top y 288 or
+# 296 instead of 320); a few sharp low pieces in the lists above and below are raised the same way (y 308 to 312, tufts 300).
+NEAR = {
+    'forest-1-escalators': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 160, 320),
+                            ('edge-giant-low-c', 376, 304), ('edge-giant-low-d', 576, 288)),
+    'forest-1-traps': (('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 244, 320), ('edge-giant-low-a', 64, 320),
+                       ('edge-giant-low-d', 566, 288)),
+    'forest-1-mob': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -56, 320), ('edge-giant-low-b', 170, 320),
+                     ('edge-giant-low-c', 420, 304), ('edge-giant-low-d', 694, 320), ('edge-giant-low-a', 784, 320),
+                     ('edge-giant-low-a', 934, 296)),
+    'forest-1-lever': (('edge-giant-left', -128, 64), ('edge-giant-right', 416, 192), ('edge-giant-low-a', -80, 296),
+                       ('edge-giant-low-b', 160, 320), ('edge-giant-low-c', 376, 288)),
+    'forest-1-spider': (('edge-giant-left', -128, 64), ('edge-giant-right', 1568, 192), ('edge-giant-low-a', -56, 320),
+                        ('edge-giant-low-b', 204, 320), ('edge-giant-low-c', 352, 320), ('edge-giant-low-d', 772, 320),
+                        ('edge-giant-low-a', 1056, 320), ('edge-giant-low-b', 1340, 320), ('edge-giant-low-a', 48, 320),
+                        ('edge-giant-low-a', 502, 320), ('edge-giant-low-a', 652, 320), ('edge-giant-low-a', 866, 320),
+                        ('edge-giant-low-c', 1536, 288)),
+    'forest-1-bramble': (('edge-giant-left', -112, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 160, 320),
+                         ('edge-giant-low-c', 352, 288)),
+    'forest-1-climb': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 96, 320),
+                       ('edge-giant-low-d', 576, 288)),
+    'forest-1-route': (('edge-giant-left', -112, 64), ('edge-giant-right', 902, 128), ('edge-giant-low-a', -80, 296),
+                       ('edge-giant-low-b', 612, 320), ('edge-giant-low-c', 873, 288), ('edge-giant-low-a', 64, 320)),
+    'forest-1-guard': (('edge-giant-left', -112, 64), ('edge-giant-right', 794, 192), ('edge-giant-low-a', -80, 296),
+                       ('edge-giant-low-b', 176, 320), ('edge-giant-low-c', 409, 304), ('edge-giant-low-d', 737, 288),
+                       ('edge-giant-low-a', 64, 320), ('edge-giant-low-a', 822, 296)),
+    'forest-1-hive': (('edge-giant-left', -128, 64), ('edge-giant-right', 400, 224), ('edge-giant-low-a', -80, 296),
+                      ('edge-giant-low-b', 160, 320), ('edge-giant-low-c', 376, 288)),
+    'forest-1-tree': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 160, 320),
+                      ('edge-giant-low-c', 376, 304), ('edge-giant-low-d', 272, 288), ('edge-giant-low-d', 582, 288)),
+    'forest-1-deadfall': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 160, 320),
+                          ('edge-giant-low-c', 376, 304), ('edge-giant-low-d', 272, 288), ('edge-giant-low-d', 582, 288)),
+    'forest-0-lever': (('edge-giant-left', -179, 64), ('edge-giant-right', 426, 384), ('edge-giant-low-a', -128, 296),
+                       ('edge-giant-low-b', 136, 320), ('edge-giant-low-c', 353, 304), ('edge-giant-low-d', 272, 288)),
+    'forest-0-ladder': (('edge-giant-left', -128, 64), ('edge-giant-right', 1049, 128), ('edge-giant-low-a', 40, 296),
+                        ('edge-giant-low-b', 222, 320), ('edge-giant-low-c', 368, 320), ('edge-giant-low-d', 852, 288),
+                        ('edge-giant-low-a', 512, 320), ('edge-giant-low-a', 662, 320), ('edge-giant-low-d', 1020, 288)),
+    'forest-0-wall': (('edge-giant-left', -112, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 161, 320),
+                      ('edge-giant-low-c', 402, 304), ('edge-giant-low-d', 667, 320), ('edge-giant-low-a', 752, 320),
+                      ('edge-giant-low-a', 902, 296)),
+    'forest-0-platform': (('edge-giant-left', -144, 64), ('edge-giant-right', 808, 192), ('edge-giant-low-a', -56, 320),
+                          ('edge-giant-low-b', 170, 320), ('edge-giant-low-c', 420, 304), ('edge-giant-low-d', 694, 320),
+                          ('edge-giant-low-d', 336, 288), ('edge-giant-low-a', 774, 320), ('edge-giant-low-d', 924, 288)),
+    'forest-0-stone': (('edge-giant-left', -112, 64), ('edge-giant-low-a', -80, 296), ('edge-giant-low-b', 349, 320),
+                       ('edge-giant-low-a', 64, 320)),
+    'forest-0-traps': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -56, 320), ('edge-giant-low-b', 476, 320),
+                       ('edge-giant-low-a', 112, 320), ('edge-giant-low-a', 582, 320), ('edge-giant-low-b', 752, 288)),
+    'forest-entry': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -56, 320), ('edge-giant-low-b', 421, 320),
+                     ('edge-giant-low-a', 112, 320), ('edge-giant-low-a', 742, 320)),
+    'forest-walls': (('edge-giant-left', -205, 64), ('edge-giant-right', 406, 192), ('edge-giant-low-a', -152, 296),
+                     ('edge-giant-low-b', 191, 320), ('edge-giant-low-a', 0, 320), ('edge-giant-low-a', 438, 320)),
+    'forest-fissure': (('edge-giant-left', -128, 64), ('edge-giant-right', 456, 224), ('edge-giant-low-a', -80, 296),
+                       ('edge-giant-low-b', 160, 320), ('edge-giant-low-c', 376, 288), ('edge-giant-low-b', 512, 288)),
+    'forest-glade': (('edge-giant-left', -128, 64), ('edge-giant-low-a', -56, 320), ('edge-giant-low-b', 187, 320),
+                     ('edge-giant-low-c', 455, 304), ('edge-giant-low-d', 722, 320), ('edge-giant-low-a', 48, 320),
+                     ('edge-giant-low-a', 326, 320), ('edge-giant-low-a', 812, 320), ('edge-giant-low-d', 992, 288)),
+    'forest-canopy': (('edge-giant-left', -112, 64), ('edge-giant-right', 1568, 192), ('edge-giant-low-a', -80, 296),
+                      ('edge-giant-low-b', 204, 320), ('edge-giant-low-c', 488, 304), ('edge-giant-low-d', 772, 320),
+                      ('edge-giant-low-a', 1056, 320), ('edge-giant-low-b', 1340, 320), ('edge-giant-low-a', 64, 320),
+                      ('edge-giant-low-a', 310, 320), ('edge-giant-low-a', 860, 320), ('edge-giant-low-a', 1186, 320)),
+    'forest-boss': (('edge-giant-left', -323, 64), ('edge-giant-right', 269, 384), ('edge-giant-low-a', -80, 320),
+                    ('edge-giant-low-b', 138, 320), ('edge-giant-low-d', 368, 288)),
+}
+# More low pieces in every room (#597, D143, author 2026-11-25: "add more of the bottom pieces that were there before, then they
+# will be visible"): sharp reeds, ferns and clumps in the gaps between and beside the giant leaves, on top of the rooms' lists above.
+MORE_BOTTOM = {
+    'forest-1-escalators': (('rise-fern', 552, 128), ('clump-mixed', -96, 320), ('clump-fern', 80, 312), ('tuft', 229, 312),
+                            ('tuft', 324, 312), ('clump-mixed', 443, 320)),
+    'forest-1-traps': (('rise-reeds', 168, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 312), ('tuft', 229, 312),
+                       ('clump-mixed', 516, 320)),
+    'forest-1-mob': (('rise-reeds', 864, 144), ('clump-fern', -96, 320), ('clump-leaves', 53, 320), ('tuft', 216, 312),
+                     ('clump-mixed', 455, 308), ('clump-fern', 631, 320), ('tuft', 780, 312)),
+    'forest-1-lever': (('rise-reeds', 240, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 312), ('tuft', 229, 312),
+                       ('tuft', 324, 312), ('clump-grass', 539, 320)),
+    'forest-1-spider': (('rise-reeds', 144, 144), ('rise-fern', 1272, 128), ('clump-fern', -96, 320),
+                        ('clump-leaves', 53, 308), ('clump-grass', 216, 320), ('clump-mixed', 338, 320),
+                        ('clump-fern', 1162, 320)),
+    'forest-1-bramble': (('rise-reeds', 72, 144), ('clump-fern', -48, 320), ('clump-leaves', 101, 308), ('tuft', 264, 312),
+                         ('clump-mixed', 431, 320)),
+    'forest-1-climb': (('rise-reeds', 576, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 312), ('tuft', 229, 312),
+                       ('clump-mixed', 540, 320)),
+    'forest-1-route': (('rise-fern', 816, 128), ('clump-mixed', -96, 320), ('clump-mixed', 512, 320), ('clump-fern', 688, 320)),
+    'forest-1-guard': (('rise-reeds', 0, 144), ('rise-fern', 696, 128), ('clump-mixed', -96, 320), ('clump-fern', 80, 320),
+                       ('tuft', 229, 312), ('clump-fern', 444, 320), ('clump-leaves', 593, 320)),
+    'forest-1-hive': (('rise-fern', 552, 128), ('clump-mixed', -96, 320), ('clump-fern', 80, 320), ('tuft', 229, 300),
+                      ('tuft', 324, 312), ('clump-mixed', 539, 320)),
+    'forest-1-tree': (('rise-reeds', 192, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 320), ('tuft', 229, 300),
+                      ('tuft', 324, 312), ('clump-mixed', 443, 320)),
+    'forest-1-deadfall': (('rise-reeds', 360, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 320), ('tuft', 229, 300),
+                          ('tuft', 324, 312), ('clump-mixed', 443, 320)),
+    'forest-0-lever': (('rise-reeds', 192, 144), ('clump-fern', -48, 320), ('clump-leaves', 101, 320), ('tuft', 264, 300)),
+    'forest-0-ladder': (('clump-fern', -96, 320), ('clump-leaves', 221, 320), ('clump-mixed', 768, 320)),
+    'forest-0-wall': (('rise-reeds', 168, 144), ('rise-reeds', 840, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 312),
+                      ('tuft', 229, 312), ('clump-fern', 444, 320), ('clump-leaves', 593, 320), ('tuft', 756, 300)),
+    'forest-0-platform': (('rise-reeds', 168, 144), ('rise-reeds', 384, 144), ('clump-fern', -96, 320),
+                          ('clump-leaves', 53, 308), ('tuft', 216, 312), ('clump-mixed', 455, 320), ('clump-fern', 631, 320)),
+    'forest-0-stone': (('rise-reeds', 360, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 312), ('tuft', 229, 312),
+                       ('clump-fern', 324, 320), ('clump-leaves', 713, 308)),
+    'forest-0-traps': (('rise-reeds', 168, 144), ('clump-fern', -96, 320), ('tuft', 53, 300), ('clump-mixed', 412, 320),
+                       ('clump-fern', 588, 320)),
+    'forest-entry': (('rise-fern', 696, 128), ('clump-fern', -96, 320), ('tuft', 53, 312), ('clump-mixed', 652, 320)),
+    'forest-walls': (('rise-fern', 408, 128), ('clump-fern', -48, 320), ('clump-leaves', 101, 308), ('clump-grass', 264, 320),
+                     ('clump-fern', 386, 320)),
+    'forest-fissure': (('rise-reeds', 120, 144), ('clump-mixed', -96, 320), ('tuft', 80, 300), ('clump-fern', 175, 320),
+                       ('tuft', 324, 312)),
+    'forest-glade': (('rise-reeds', 672, 144), ('rise-fern', 840, 128), ('clump-fern', -96, 320), ('clump-leaves', 53, 320),
+                     ('clump-grass', 216, 320), ('clump-mixed', 530, 320), ('clump-fern', 706, 320), ('tuft', 855, 300)),
+    'forest-canopy': (('rise-reeds', 1104, 144), ('clump-mixed', -96, 320), ('clump-fern', 80, 320), ('clump-fern', 229, 320),
+                      ('clump-fern', 450, 320), ('tuft', 599, 312), ('clump-fern', 694, 312), ('clump-leaves', 843, 320),
+                      ('tuft', 1006, 312), ('clump-grass', 1101, 308), ('clump-mixed', 1223, 320)),
+    'forest-boss': (('clump-fern', -96, 320), ('clump-leaves', 53, 320), ('clump-mixed', 216, 320), ('clump-fern', 392, 312)),
+}
+MAPS = {name: {room: pieces + MORE_BOTTOM[room] for room, pieces in rooms.items()}   # every forest map and its rooms' sharp foreground
+        for name, rooms in (('forest-0', FOREST_0), ('forest-1', FOREST_1), ('forest-2', FOREST_2))}
 GAME_FOREGROUND = {room: pieces for rooms in MAPS.values() for room, pieces in rooms.items()}
 
 
@@ -284,13 +404,16 @@ def build(text, map_name='forest-1'):
     text = text[:match.start(2)] + pm.csv(rows) + '\n' + text[match.end(2):]
     first_info = info['forest/fg']
     groups = []
-    for room, pieces in MAPS[map_name].items():
-        room_x = int(float(re.search(r'name="%s" type="Room" x="(\d+)"' % room, text).group(1)))
-        objects, after = pm.foreground_xml(SimpleNamespace(foreground=pieces), first_info, next_object)
-        next_object = after
-        groups.append(f' <objectgroup id="{next_layer}" name="foreground-{room}" parallaxx="{pm.FG_FACTOR}" parallaxy="{pm.FG_FACTOR}">\n'
-                      f'  <properties><property name="roomx" type="float" value="{room_x}"/></properties>\n{objects}\n </objectgroup>\n')
-        next_layer += 1
+    rooms = MAPS[map_name]
+    # every room's sharp group first, then every room's near group: the game draws a room's groups in file order
+    for prefix, factor, placed in (('foreground-', pm.FG_FACTOR, rooms), (pm.NEAR_PREFIX, pm.NEAR_FACTOR, {r: NEAR[r] for r in rooms})):
+        for room, pieces in placed.items():
+            room_x = int(float(re.search(r'name="%s" type="Room" x="(\d+)"' % room, text).group(1)))
+            objects, after = pm.foreground_xml(SimpleNamespace(foreground=pieces), first_info, next_object)
+            next_object = after
+            groups.append(f' <objectgroup id="{next_layer}" name="{prefix}{room}" parallaxx="{factor}" parallaxy="{factor}">\n'
+                          f'  <properties><property name="roomx" type="float" value="{room_x}"/></properties>\n{objects}\n </objectgroup>\n')
+            next_layer += 1
     anchor = '<tileset firstgid="1" source="ForestTerrain.tsx"/>\n'
     text = text.replace(anchor, anchor + ''.join(sets))
     here = text.index(' <layer id="', text.index(anchor))

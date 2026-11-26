@@ -4,8 +4,10 @@
 `art/parallax/<set>/<tileset>.grid` is one tileset (`forest`: sky, far, grove, mid and the foreground fg (pixel
 defocus, exported as a Tiled collection of images: every piece a sub-rectangle of one packed sheet, so the game binds one texture, placed as tile objects); `shared`: stars, moon and clouds, used by every world): pieces (modular stamps) of
 whole 16 px tiles, one character per pixel (the drawing itself, like an artist's file). This module only parses, packs the
-pieces into a sheet and writes files; it contains no drawing logic, no filter and no ImageDraw/putpixel calls. Soft edges
-(the defocused foreground, the moon's glow) are drawn in the grid as flat colours with a straight alpha, never computed.
+pieces into a sheet and writes files; it contains no drawing logic and no ImageDraw/putpixel calls. Soft edges (the
+foreground's, the moon's glow) are drawn in the grid as flat colours with a straight alpha, never computed. One filter exists,
+asked for per piece in the grid: `blur=R` on a piece line is the out-of-focus Gaussian blur of the giant near leaves (D143,
+#597), baked here into the sheet; the game does nothing at run time.
 
 Grid format: `tile N`, `color <char> <RRGGBB[AA]>` lines (`.` is transparent; AA is a straight alpha), then for each piece
 `piece <name> <wtiles> <htiles>` followed by htiles*N rows of wtiles*N characters.
@@ -15,7 +17,7 @@ indexed PNG (transparent index 0 when needed); one with partial alpha is RGBA. N
 `sprite_layouts` yet (sketch).
 """
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 PARALLAX = ROOT / 'art/parallax'
@@ -35,6 +37,7 @@ PIECE_W = 1
 PIECE_H = 2
 PIECE_OPTIONS = 3
 PIECE_ROWS = 4
+BLUR = 'blur='       # the one piece option: the Gaussian radius in px
 
 
 def parse(path):
@@ -92,9 +95,15 @@ def piece_image(tile, colors, piece):
     for row in rows:
         for char in row:
             data += bytes(colors[char]) if colors[char] else bytes(RGBA)
-    if options:
-        raise ValueError(f'piece {name}: unknown options {options} (soft edges are drawn in the grid, not filtered)')
-    return Image.frombytes('RGBA', (w * tile, h * tile), bytes(data))
+    if len(options) > 1 or options and not options[0].startswith(BLUR):
+        raise ValueError(f'piece {name}: unknown options {options} (only {BLUR}R; other soft edges are drawn in the grid)')
+    image = Image.frombytes('RGBA', (w * tile, h * tile), bytes(data))
+    return defocus(image, float(options[0][len(BLUR):])) if options else image
+
+
+def defocus(image, radius):
+    """`image` out of focus: a Gaussian blur on premultiplied alpha, so transparent pixels bring no colour into the edge."""
+    return image.convert('RGBa').filter(ImageFilter.GaussianBlur(radius)).convert('RGBA')
 
 
 def split(key):

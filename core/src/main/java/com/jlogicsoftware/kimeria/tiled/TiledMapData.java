@@ -55,6 +55,8 @@ public class TiledMapData {
     /** The foreground tile-object groups, one per room (object group names starting with {@value #FOREGROUND_PREFIX}). */
     public final List<ForegroundGroup> foregroundGroups = new ArrayList<>();
     public static final String FOREGROUND_PREFIX = "foreground";
+    /** What precedes {@code -<room name>} in the name of a room's second, nearer foreground group (D143). */
+    public static final String NEAR_FOREGROUND_PREFIX = FOREGROUND_PREFIX + "-near";
     /** Tiled keeps the flip flags in the top bits of a gid. */
     private static final long FLIP_H = 0x80000000L, FLIP_V = 0x40000000L, FLIP_D = 0x20000000L, FLIP_ROT = 0x10000000L;
     private static final int GID_MASK = 0x0FFFFFFF;
@@ -235,8 +237,9 @@ public class TiledMapData {
     }
 
     /**
-     * Every foreground group must belong to a room: it is named {@code foreground-<room name>} and its {@code roomx} is the x of a
-     * {@code Room} object of that name, so a moved or renamed room cannot silently leave its foreground drawing against the wrong origin.
+     * Every foreground group must belong to a room: it is named {@code foreground-<room name>} (or {@code foreground-near-<room name>},
+     * the room's nearer group) and its {@code roomx} is the x of a {@code Room} object of that name, so a moved or renamed room cannot
+     * silently leave its foreground drawing against the wrong origin.
      */
     private void validateForegrounds() {
         List<TiledObject> rooms = objectGroups.get("Rooms");
@@ -244,7 +247,8 @@ public class TiledMapData {
             boolean found = false;
             if (rooms != null) {
                 for (TiledObject room : rooms) {
-                    if (!"Room".equals(room.type) || !group.name.equals(FOREGROUND_PREFIX + "-" + room.name)) continue;
+                    if (!"Room".equals(room.type) || !(group.name.equals(FOREGROUND_PREFIX + "-" + room.name)
+                        || group.name.equals(NEAR_FOREGROUND_PREFIX + "-" + room.name))) continue;
                     if (Math.abs(room.x - group.roomX) > SAME_ROOM_X) {
                         throw new IllegalArgumentException("foreground group " + group.name + ": roomx " + group.roomX + " is not the x of room " + room.name + " (" + room.x + ")");
                     }

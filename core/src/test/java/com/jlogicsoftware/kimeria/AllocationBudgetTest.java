@@ -345,6 +345,7 @@ class AllocationBudgetTest {
     @Test void forest1ParallaxLayersAndForeground() {
         Rectangle view = new Rectangle(0, 0, 640, 360);
         Level level = harness.room("forest-1", "forest-1-mob", () -> view);
+        assertTrue(level.map.foregroundGroups.stream().anyMatch(g -> g.name.equals("foreground-near-forest-1-mob")), "the measured room draws its near group too (D143)");
         Rectangle room = new Rectangle(level.currentRoomBounds());
         com.jlogicsoftware.kimeria.world.ParallaxRenderer parallax = new com.jlogicsoftware.kimeria.world.ParallaxRenderer(level.map);
         float originY = com.jlogicsoftware.kimeria.world.ParallaxRenderer.originY(room, view.height);
