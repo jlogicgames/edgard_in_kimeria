@@ -1,0 +1,89 @@
+5. 1h 1g 1d
+4. 1h 1g 1b 2c 1k 1l 1e 1d 1j
+3. 1h 1g 3b 2c 1a 4k 1l 1e 1d 1j
+3. 1h 1g 4b 2c 5a 4k 1l 1e 1d 1j
+2. 1h 1g 6b 2c 9a 4k 1l 1e 1d 1j
+2. 1h 1g 8b 2c 11a 4k 1l 1e 1d 1j
+2. 1h 1g 9b 2c 14a 4k 1l 1e 1d 1j
+2. 1h 1g 10b 2c 16a 4k 1l 1e 1d 1j
+3. 1h 1g 11b 2c 17a 4k 1l 1e 1d 1j
+3. 1h 1g 12b 2c 19a 4k 1l 1e 1d 1j
+3. 1h 1g 13b 2c 20a 4k 1l 1e 1d 1j
+4. 1h 1g 14b 2c 21a 4k 1l 1e 1d 1j
+4. 1h 1g 15b 2c 22a 4k 1l 1e 1d 1j
+5. 1h 1g 15b 2c 23a 4k 1l 1e 1d 1j
+5. 1h 1g 17b 2c 23a 4k 1l 1e 1d 1j
+6. 1h 1g 17b 2c 24a 4k 1l 1e 1d 1j
+7. 1h 1g 17b 2c 25a 4k 1l 1e 1d 1j
+7. 1h 1g 19b 2c 25a 4k 1l 1e 1d 1j
+8. 1h 1g 19b 2c 25a 4k 1l 1e 1d 1j
+9. 1h 1g 19b 2c 26a 4k 1l 1e 1d 1j
+10. 1h 1g 20b 2c 25a 4k 1l 1e 1d 1j
+11. 1h 1g 20b 2c 26a 4k 1l 1e 1d 1j
+12. 1h 1g 20b 2c 26a 4k 1l 1e 1d 1j
+13. 1h 1g 21b 2c 25a 4k 1l 1e 1d 1j
+14. 1h 1g 21b 2c 25a 4k 1l 1e 1d 1j
+15. 1h 1g 21b 2c 25a 4k 1l 1e 1d 1j
+16. 1h 1g 22b 2c 24a 4k 1l 1e 1d 1j
+17. 1h 1g 22b 2c 24a 4k 1l 1e 1d 1j
+18. 1h 1g 22b 2c 24a 4k 1l 1e 1d 1j
+20. 1h 1g 21b 2c 24a 4k 1l 1e 1d 1j
+21. 1h 1g 22b 2c 23a 4k 1l 1e 1d 1j
+22. 1h 1g 22b 2c 23a 4k 1l 1e 1d 1j
+23. 1h 1g 22b 2c 22a 4k 1l 1e 1d 1j
+25. 1h 1g 21b 2c 22a 4k 1l 1e 1d 1j
+26. 1h 1g 21b 2c 21a 4k 1l 1e 1d 1j
+27. 1h 1g 21b 2c 21a 4k 1l 1e 1d 1j
+29. 1h 1g 21b 2c 19a 4k 1l 1e 1d 1j
+30. 1h 1g 21b 2c 19a 4k 1l 1e 1d 1j
+32. 1h 1g 20b 2c 18a 4k 1l 1e 1d 1j
+33. 1h 1g 20b 2c 17a 4k 1l 1e 1d 1j
+35. 1h 1g 19b 2c 17a 4k 1l 1e 1d 1j
+36. 1h 1g 19b 2c 16a 4k 1l 1e 1d 1j
+38. 1h 1g 18b 2c 15a 4k 1l 1e 1d 1j
+39. 1h 1g 18b 2c 14a 4k 1l 1e 1d 1j
+41. 1h 1g 17b 2c 13a 4k 1l 1e 1d 1j
+42. 1h 1g 17b 2c 12a 4k 1l 1e 1d 1j
+44. 1h 1g 16b 2c 11a 4k 1l 1e 1d 1j
+45. 1h 1g 16b 2c 10a 4k 1l 1e 1d 1j
+47. 1h 1g 15b 2c 9a 4k 1l 1e 1d 1j
+48. 1h 1g 14b 2c 9a 4k 1l 1e 1d 1j
+50. 1h 1g 13b 2c 8a 4k 1l 1e 1d 1j
+51. 1h 1g 13b 2c 7a 4k 1l 1e 1d 1j
+52. 1h 1g 12b 2c 6a 4k 1l 1e 1d 1j
+54. 1h 1g 11b 2c 5a 4k 1l 1e 1d 1j
+55. 1h 1g 11b 2c 4a 4k 1l 1e 1d 1j
+56. 1h 1g 10b 2c 4a 4k 1l 1e 1d 1j
+57. 1h 1g 10b 2c 3a 4k 1l 1e 1d 1j
+58. 1h 1g 9b 2c 2a 4k 1l 1e 1d 1j
+59. 1h 1g 9b 2c 1a 4k 1l 1e 1d 1j
+60. 1h 1g 8b 2c 1a 4k 1l 1e 1d 1j
+61. 1h 1g 8b 2c 4k 1l 1e 1d 1j
+62. 1h 1g 7b 2c 4k 1l 1e 1d 1j
+63. 1h 1g 7b 2c 2k 1l 1e 1d 1j
+64. 1h 1g 6b 2c 2k 1l 1e 1d 1j
+65. 1h 1g 6b 2c 1k 1l 1e 1d 1j
+66. 1h 1g 5b 2c 1k 1l 1e 1d 1j
+67. 1h 1g 4b 2c 1k 1l 1e 1d 1j
+67. 1h 1g 5b 2c 1l 1e 1d 1j
+68. 1h 1g 4b 2c 1l 1e 1d 1j
+68. 1h 1g 4b 2c 1l 1e 1d 1j
+69. 1h 1g 4b 2c 1e 1d 1j
+69. 1h 1g 4b 2c 1l 1e 1d 1j
+70. 1h 1g 3b 2c 1l 1e 1d 1j
+70. 1h 1g 4b 2c 1e 1d 1j
+71. 1h 1g 3b 2c 1l 1e 1d 1j
+71. 1h 1g 4b 2c 1e 1d 1j
+72. 1h 1g 3b 2c 1l 1e 1d 1j
+72. 1h 1g 4b 2c 1e 1d 1j
+73. 1h 1g 3b 2c 1l 1e 1d 1j
+73. 1h 1g 4b 2c 1e 1d 1j
+74. 1h 1g 3b 2c 1l 1e 1d 1j
+74. 1h 1g 4b 2c 1l 1e 1d 1j
+75. 1h 1g 3b 2c 1l 1e 1d 1j
+75. 1h 1g 4b 2c 1e 1d 1j
+76. 1h 1g 3b 2c 1l 1e 1d 1j
+76. 1h 1g 4b 2c 1e 1d 1j
+76. 1h 1g 4b 2c 1e 1d 1j
+77. 1h 1g 3b 2c 1l 1e 1d 1j
+77. 1h 1g 4b 2c 1e 1d 1j

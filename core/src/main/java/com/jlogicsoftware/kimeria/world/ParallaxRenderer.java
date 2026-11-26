@@ -129,7 +129,7 @@ public final class ParallaxRenderer {
         }
     }
 
-    /** The foreground group of the room whose left edge is {@code room.x}, over the world; none when the room has no foreground. */
+    /** The foreground groups of the room whose left edge is {@code room.x}, over the world in file order, each at its own factor. */
     public void renderFront(Batch batch, Rectangle view, Rectangle room, float originY) {
         int camX = snap(view.x), camTop = snap(view.y);
         float cullX = CULL_TILES * map.tileWidth, cullY = CULL_TILES * map.tileHeight;

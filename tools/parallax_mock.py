@@ -104,8 +104,20 @@ HIDDEN_FRACTION = 0.85
 HIDDEN_MAX = 0.5
 HERO_LIFTS = (0, 60)                    # his feet on the floor line and at a jump's apex (59.67 px, JumpFrameRateTest)
 MARGIN = 16
+# The giant near leaves (D143, #597) lie in their own nearer group per room, `foreground-near-<room>`, drawn after
+# `foreground-<room>` at NEAR_FACTOR. On top of rule B they have two rules of their own: they never come within MARGIN of an open
+# pit from MARGIN above the floor line down (a pit has no collision, so rule B does not see it), and they never hide too much of a
+# sharp foreground piece: of the piece's opaque on-screen pixels at most SHARE_POOLED over all cameras of the room together, and at
+# most SHARE_RESTING at the first and at the last camera (where the view rests), judged where at least REST_SEEN of the piece is on
+# screen. The HUD needs no rule: it is drawn after the world, over every layer (author, 2026-11-25).
+GIANT = 'edge-giant-'
+NEAR_PREFIX = 'foreground-near-'
+NEAR_FACTOR = 2.2
+SHARE_POOLED = 0.35
+SHARE_RESTING = 0.5
+REST_SEEN = 0.25
 FG_FACTOR = 1.6
-FG_PAD = 160                            # px of canvas left of x 0 for foreground objects at negative x
+FG_PAD = 640                            # px of canvas left of x 0 for foreground objects at negative x (a narrow room's camera is negative)
 # Everything the active tier of the contrast gate draws is excluded (SPRITES); the hero's start and exit boxes have their own
 # rule (above the waist, check_layer). The names the review required are asserted so a change in the gate cannot drop one silently.
 EXCLUDED_TYPES = {key.split(':')[0] for key, row in contrast.SPRITES.items() if row[0] == 'active'}
@@ -200,7 +212,8 @@ def game_scenes():
         root = ET.parse(path).getroot()
         rooms = {int(float(o.get('x'))): o.get('name') for o in root.iter('object') if o.get('type') == 'Room'}
         for group in root.findall('objectgroup'):
-            if group.get('name', '').startswith('foreground'):
+            name = group.get('name', '')
+            if name.startswith('foreground') and not name.startswith(NEAR_PREFIX):   # one scene per room, not per group
                 scenes.append(GameScene(path, rooms[int(prop(group, 'roomx'))]))
     return scenes
 
@@ -478,8 +491,10 @@ def render_layer(layer, sets):
 
 def render_objects(group, pieces, columns, top=0, height=ROWS * TILE):
     """The tile objects of a group on a canvas FG_PAD px wider to the left: canvas x = room-relative x + FG_PAD, canvas
-    y = room y + `top` (the steady checks use the room, 0 to 368; the previews FG_TOP and FG_HEIGHT)."""
-    image = Image.new('RGBA', (columns * TILE + FG_PAD, height))
+    y = room y + `top` (the steady checks use the room, 0 to 368; the previews FG_TOP and FG_HEIGHT). The canvas reaches the
+    group's rightmost object: a faster layer carries pieces from further right onto the screen."""
+    right = max((int(float(o.get('x'))) + pieces[int(o.get('gid')) & GID_MASK].width for o in group.findall('object')), default=0)
+    image = Image.new('RGBA', (max(columns * TILE, right) + FG_PAD, height))
     for obj in group.findall('object'):
         piece = pieces[int(obj.get('gid')) & GID_MASK]
         y = int(float(obj.get('y'))) - piece.height + top   # Tiled's y is the bottom edge of a tile object
@@ -832,10 +847,18 @@ def check(scene):
     ORIGIN_Y only, as the hero walks and stands) and the bleed at every camera top (check_bleed)."""
     root, _, pieces = tile_images(scene.mock)
     ok = check_bleed(scene)
-    for group in root.findall('objectgroup'):
-        if group.get('name').startswith('foreground') and (not scene.game or prop(group, 'roomx') == scene.origin):
-            ok &= check_layer(scene, group, pieces)
+    groups = room_groups(scene, root)
+    ok &= check_layer(scene, groups, pieces)
+    if scene.game:
+        ok &= check_giant(scene, groups, pieces)
+        ok &= check_share(scene, groups, pieces)
     return ok
+
+
+def room_groups(scene, root):
+    """The foreground groups of the scene's room, in draw order."""
+    return [g for g in root.findall('objectgroup')
+            if g.get('name').startswith('foreground') and (not scene.game or prop(g, 'roomx') == scene.origin)]
 
 
 def protected(scene, unique=False):
@@ -848,44 +871,160 @@ def protected(scene, unique=False):
     return rects
 
 
-def check_layer(scene, group, pieces, out=print):
-    """Rule B and the hero's cover time of one foreground group; the report goes to `out` (a test passes a silent one)."""
-    factor = float(group.get('parallaxx'))
-    room_x = prop(group, 'roomx') - scene.origin   # the checks run on the room-relative camera
-    alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] > COVER_ALPHA
-    height = alpha.shape[0]
-    failures = set()
+def check_layer(scene, groups, pieces, out=print):
+    """Rule B for each foreground group of one room, and the hero's cover time under all of them together (each at its own
+    factor); `groups` is one group or a list. The report goes to `out` (a test passes a silent one)."""
+    groups = groups if isinstance(groups, list) else [groups]
+    name = f'{scene.mock.name} {groups[0].get("name")}'
     rects = protected(scene)
-    for cam in scene.cameras:
-        # a foreground pixel at room-relative x lands on screen at x - factor * cam; canvas column = x + FG_PAD
-        base = jround(factor * (cam - room_x)) + FG_PAD
-        for name, x0, y0, x1, y1, margin, below in rects:
-            s0, s1 = max(int(x0 - margin - cam), 0), min(int(x1 + margin - cam), VIEW[0])   # only what is on screen
-            if s1 <= s0:
-                continue
-            r0, r1 = int(y0 - margin), int(y1 + (margin if below else 0))   # no margin under what stands on the floor
-            if alpha[max(r0, 0):min(r1, height), max(s0 + base, 0):max(s1 + base, 0)].any():
-                failures.add(f'{name} at x {x0:.0f}')
-    name = f'{scene.mock.name} {group.get("name")}'
+    failures = set()
+    for group in groups:
+        factor = float(group.get('parallaxx'))
+        room_x = prop(group, 'roomx') - scene.origin   # the checks run on the room-relative camera
+        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] > COVER_ALPHA
+        height = alpha.shape[0]
+        for cam in scene.cameras:
+            # a foreground pixel at room-relative x lands on screen at x - factor * cam; canvas column = x + FG_PAD
+            base = jround(factor * (cam - room_x)) + FG_PAD
+            for rect, x0, y0, x1, y1, margin, below in rects:
+                s0, s1 = max(int(x0 - margin - cam), 0), min(int(x1 + margin - cam), VIEW[0])   # only what is on screen
+                if s1 <= s0:
+                    continue
+                r0, r1 = int(y0 - margin), int(y1 + (margin if below else 0))   # no margin under what stands on the floor
+                if alpha[max(r0, 0):min(r1, height), max(s0 + base, 0):max(s1 + base, 0)].any():
+                    failures.add(f'{rect} at x {x0:.0f}')
     for failure in sorted(failures):
         out(f'{name} covers', failure)
     out(f'{name}: {len(failures)} covered objects (rule B: the hero and the walk edge may be covered elsewhere; '
           f'above the waist, {HERO_H - WAIST} px, he stays clear at RoomStart and RoomExit)')
-    hidden_ok = True
-    standing = hero_standing(scene, group, pieces)
-    hidden_ok &= not standing
+    layers = hero_layers(scene, groups, pieces)
+    standing = hero_standing(scene, layers)
+    hidden_ok = not standing
     spots = ', '.join(f'{x0}..{x1}' if x1 > x0 else f'{x0}' for x0, x1 in
                       [(x, x + n - 1) for x, n in runs(standing)])
     out(f'{name}: hero standing hidden ({HIDDEN_FRACTION:.0%} of his figure under alpha {HIDDEN_ALPHA}) at '
           f'{len(standing)} of {len(hero_route(scene))} box x' + (f' ({spots}): FAIL' if standing else ': ok'))
     for lift in HERO_LIFTS:
-        hidden, at = hero_hidden(scene, group, pieces, lift=lift)
+        hidden, at = hero_hidden(scene, layers, lift=lift)
         where = 'on the floor' if not lift else f'{lift} px up (jump apex)'
         verdict = 'FAIL' if hidden > HIDDEN_MAX else 'ok'
         hidden_ok &= hidden <= HIDDEN_MAX
         out(f'{name}: hero {where} hidden ({HIDDEN_FRACTION:.0%} of his figure under alpha {HIDDEN_ALPHA}) at most '
               f'{hidden:.2f} s in a row, from room x {at:.0f} (limit {HIDDEN_MAX} s): {verdict}')
     return not failures and hidden_ok
+
+
+def pits(scene):
+    """(x, width) of every open pit of the room: columns where no collision covers the line just under the floor."""
+    blocks = [(float(o.get('x')) - scene.x, float(o.get('y')), float(o.get('width', 0)), float(o.get('height', 0)))
+              for g in scene.root.findall('objectgroup') if g.get('name') == 'Collisions' for o in g.findall('object')]
+    under = scene.floor + 1
+    return runs([x for x in range(TILE, scene.width - TILE)   # the end walls' columns are never a pit
+                 if not any(bx <= x < bx + w and by <= under < by + h for bx, by, w, h in blocks)])
+
+
+def check_giant(scene, groups, pieces, out=print):
+    """The giant near leaves of one room (D143): there is at least one, so no rule here can pass on nothing; they lie only in the
+    near group at NEAR_FACTOR, which holds nothing else and is drawn after the sharp pieces; and they clear every pit at every
+    camera x."""
+    name = f'{scene.mock.name} {groups[0].get("name")}'
+    failures = set()
+    near = [g for g in groups if g.get('name').startswith(NEAR_PREFIX)]
+    if not any(o.get('name', '').startswith(GIANT) for g in near for o in g.findall('object')):
+        failures.add(f'no {GIANT}* piece in a near group')
+    for group in groups:
+        names = [o.get('name', '') for o in group.findall('object')]
+        if group in near:
+            if float(group.get('parallaxx')) != NEAR_FACTOR or float(group.get('parallaxy')) != NEAR_FACTOR:
+                failures.add(f'{group.get("name")}: its factor is not {NEAR_FACTOR}')
+            if not all(n.startswith(GIANT) for n in names):
+                failures.add(f'{group.get("name")}: a piece that is no {GIANT}*')
+        elif any(n.startswith(GIANT) for n in names):
+            failures.add(f'{group.get("name")}: a {GIANT}* piece outside the near group')
+    if near and groups.index(near[0]) != len(groups) - len(near):
+        failures.add('the near group is not drawn last')
+    holes = pits(scene)
+    for group in near:
+        factor = float(group.get('parallaxx'))
+        room_x = prop(group, 'roomx') - scene.origin
+        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] > COVER_ALPHA
+        for cam in scene.cameras:
+            base = jround(factor * (cam - room_x)) + FG_PAD
+            for x, width in holes:
+                s0, s1 = max(x - MARGIN - cam, 0), min(x + width + MARGIN - cam, VIEW[0])
+                if s1 > s0 and alpha[int(scene.floor) - MARGIN:, max(s0 + base, 0):max(s1 + base, 0)].any():
+                    failures.add(f'giant leaves over the pit at x {x}')
+    for failure in sorted(failures):
+        out(f'{name} near layer:', failure)
+    out(f'{name}: near layer, {len(failures)} faults' + (': FAIL' if failures else ': ok'))
+    return not failures
+
+
+# one sharp piece: its name and room x, and the share of its opaque pixels the giant leaves hide (all cameras, first, last)
+Share = namedtuple('Share', 'piece x pooled first last')
+
+
+def hidden_shares(scene, groups, pieces):
+    """A Share for every sharp foreground piece (not a bleed
+    piece): how much of its opaque on-screen pixels the giant leaves in front of it hide at the steady camera. A resting share is
+    0 where less than REST_SEEN of the piece is on screen there."""
+    near = [(float(g.get('parallaxx')), prop(g, 'roomx') - scene.origin,
+             numpy.asarray(render_objects(g, pieces, scene.columns))[..., ALPHA] >= HIDDEN_ALPHA)
+            for g in groups if g.get('name').startswith(NEAR_PREFIX)]
+    top, bottom = CAMERA_TOP, ROOM_H   # the rows of the room the steady view shows
+    result = []
+    for group in groups:
+        if group.get('name').startswith(NEAR_PREFIX):
+            continue
+        factor = float(group.get('parallaxx'))
+        room_x = prop(group, 'roomx') - scene.origin
+        for obj in group.findall('object'):
+            piece_name = obj.get('name', '')
+            if piece_name.endswith(('-top', '-foot')):
+                continue
+            image = pieces[int(obj.get('gid')) & GID_MASK]
+            x, y = int(float(obj.get('x'))), int(float(obj.get('y'))) - image.height
+            opaque = numpy.asarray(image)[..., ALPHA] >= HIDDEN_ALPHA
+            rows = slice(max(top - y, 0), max(min(bottom - y, image.height), 0))
+            seen = covered = 0
+            resting = {}
+            for cam in scene.cameras:
+                left = x - jround(factor * (cam - room_x))          # the piece's left edge on screen
+                s0, s1 = max(left, 0), min(left + image.width, VIEW[0])
+                if s1 <= s0 or rows.stop <= rows.start:
+                    continue
+                shown_px = opaque[rows, s0 - left:s1 - left]
+                total = int(shown_px.sum())
+                if not total:
+                    continue
+                cover = numpy.zeros_like(shown_px)
+                for near_factor, near_room, alpha in near:
+                    base = jround(near_factor * (cam - near_room)) + FG_PAD
+                    part = alpha[y + rows.start:y + rows.stop, max(s0 + base, 0):max(s1 + base, 0)]
+                    cover[:part.shape[0], :part.shape[1]] |= part
+                hidden = int((shown_px & cover).sum())
+                seen += total
+                covered += hidden
+                if total >= REST_SEEN * opaque.sum():
+                    resting[cam] = hidden / total
+            result.append(Share(piece_name, x, covered / seen if seen else 0.0,
+                                resting.get(scene.cameras[0], 0.0), resting.get(scene.cameras[-1], 0.0)))
+    return result
+
+
+def check_share(scene, groups, pieces, out=print):
+    """No giant leaf hides more of a sharp foreground piece than SHARE_POOLED over the room's cameras, or than SHARE_RESTING at
+    the first or last camera (D143)."""
+    name = f'{scene.mock.name} {groups[0].get("name")}'
+    shares = hidden_shares(scene, groups, pieces)
+    bad = [s for s in shares if s.pooled > SHARE_POOLED or max(s.first, s.last) > SHARE_RESTING]
+    for piece, x, pooled, first, last in bad:
+        out(f'{name}: giant leaves hide {piece} at x {x}: {pooled:.0%} over all cameras, {first:.0%} at the first, {last:.0%} at the last')
+    worst = max((s.pooled for s in shares), default=0.0)
+    worst_rest = max((max(s.first, s.last) for s in shares), default=0.0)
+    out(f'{name}: sharp pieces hidden by giant leaves at most {worst:.0%} over all cameras (limit {SHARE_POOLED:.0%}) and '
+        f'{worst_rest:.0%} at a resting camera (limit {SHARE_RESTING:.0%}): ' + ('FAIL' if bad else 'ok'))
+    return not bad
 
 
 def hero_route(scene):
@@ -902,31 +1041,37 @@ def hero_camera(scene, x):
     return max(0, min(scene.width - VIEW[0], x + HERO_CAMERA_DX - VIEW[0] // 2))
 
 
-def hero_cover(scene, group, alpha, x, lift=0, factor=None):
-    """Fraction of the hero's figure (box at room x, feet `lift` px above the floor line, steady camera) under `alpha`."""
-    factor = float(group.get('parallaxx')) if factor is None else factor
+def hero_layers(scene, groups, pieces, threshold=HIDDEN_ALPHA):
+    """[(opaque canvas, factor, room x)] of the groups, what the hero cover rules read."""
+    return [(numpy.asarray(render_objects(g, pieces, scene.columns))[..., ALPHA] >= threshold,
+             float(g.get('parallaxx')), prop(g, 'roomx') - scene.origin) for g in groups]
+
+
+def hero_cover(scene, layers, x, lift=0):
+    """Fraction of the hero's figure (box at room x, feet `lift` px above the floor line, steady camera) under the opaque
+    pixels of any of the `layers` (hero_layers)."""
     cam = hero_camera(scene, x)
-    left = x + HERO_FIGURE_DX - cam + jround(factor * (cam - (prop(group, 'roomx') - scene.origin))) + FG_PAD   # canvas column of his left edge
     y1 = int(scene.floor) - lift
-    return alpha[y1 - HERO_H:y1, max(left, 0):max(left + HERO_FIGURE_W, 0)].sum() / (HERO_FIGURE_W * HERO_H)
+    figure = numpy.zeros((HERO_H, HERO_FIGURE_W), bool)
+    for alpha, factor, room_x in layers:
+        left = x + HERO_FIGURE_DX - cam + jround(factor * (cam - room_x)) + FG_PAD   # canvas column of his left edge
+        part = alpha[y1 - HERO_H:y1, max(left, 0):max(left + HERO_FIGURE_W, 0)]
+        figure[:part.shape[0], :part.shape[1]] |= part
+    return figure.sum() / (HERO_FIGURE_W * HERO_H)
 
 
-def hero_standing(scene, group, pieces, alpha=None):
+def hero_standing(scene, layers):
     """Box x of the route where the hero standing on the floor, under the steady camera, is hidden."""
-    if alpha is None:
-        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] >= HIDDEN_ALPHA
-    return [x for x in hero_route(scene) if hero_cover(scene, group, alpha, x) >= HIDDEN_FRACTION]
+    return [x for x in hero_route(scene) if hero_cover(scene, layers, x) >= HIDDEN_FRACTION]
 
 
-def hero_hidden(scene, group, pieces, factor=None, alpha=None, lift=0):
+def hero_hidden(scene, layers, lift=0):
     """(longest run in s, its start x) in which the hero's figure, `lift` px above the floor line, is at least
     HIDDEN_FRACTION covered by foreground pixels of alpha HIDDEN_ALPHA or more, walking the route at MOVE_SPEED with the
     game's camera (the camera's y is the floor framing at any lift: at that steady camera top every layer is as authored)."""
-    if alpha is None:
-        alpha = numpy.asarray(render_objects(group, pieces, scene.columns))[..., ALPHA] >= HIDDEN_ALPHA
     best, best_at, run, run_at = 0, 0, 0, 0
     for x in hero_route(scene):
-        if hero_cover(scene, group, alpha, x, lift, factor) >= HIDDEN_FRACTION:
+        if hero_cover(scene, layers, x, lift) >= HIDDEN_FRACTION:
             run_at = x if run == 0 else run_at
             run += 1
             if run > best:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Near foreground pieces (D113): copy-only stamping of hand-typed rows, like pasting a drawn tile with transparency.
 
-The drawing is in the typed files next to this script: the glyphs (`leaf-*.txt`, `pinna.txt`, `rachis.txt`, every row typed by
-hand) and the placement lists (`*.spec`, every position typed by hand). This script only copies: each listed glyph's characters
+The drawing is in the typed files next to this script: the glyphs (`leaf-*.txt`, `pinna.txt`, `rachis.txt`, `stem.txt`, every row
+typed by hand) and the placement lists (`*.spec`, every position typed by hand). This script only copies: each listed glyph's characters
 go onto a canvas at the listed x, y, '.' leaves what is under it and a later entry lies in front. One rule keeps layering clean:
 a soft (partial-alpha) edge character that lands on an opaque shape becomes that shape's dark edge `a` (g, h) or leaves it as it
 is (i, j) instead of punching a see-through hole in it. Then the canvas is sliced into the piece and its `-top` / `-foot` (D111).
@@ -15,7 +15,8 @@ SPEC lines (file names relative to the spec):
     glyph NAME FILE [BLOCK]     the typed rows of FILE (only those under '# BLOCK' when given)
     recolour NAME FROM OLD NEW  NAME is glyph FROM with the characters OLD swapped for NEW (a palette swap)
     put NAME X Y                copy glyph NAME with its top-left at piece x X, y Y
-    piece NAME WT HT KIND       the piece, WT x HT tiles; KIND hang (with a -top), stand (with a -foot) or both
+    piece NAME WT HT KIND [OPT] the piece, WT x HT tiles; KIND hang (with a -top), stand (with a -foot), both or plain (neither:
+                                the art runs off the piece's bottom itself); OPT is passed to the grid's piece line (blur=R)
 """
 import sys
 from pathlib import Path
@@ -45,7 +46,7 @@ def read_spec(spec):
         elif kind == 'put':
             puts.append((args[0], int(args[1]), int(args[2])))
         elif kind == 'piece':
-            piece = (args[0], int(args[1]), int(args[2]), args[3])
+            piece = (args[0], int(args[1]), int(args[2]), args[3], args[4:])
         else:
             raise ValueError(f'{spec}: unknown line {line!r}')
     return canvas, glyphs, puts, piece
@@ -58,12 +59,20 @@ def typed_rows(path, block):
             current = row[1:].strip()
             blocks[current] = []
         elif row:
-            (blocks[current] if current else rows).append(row)
+            (blocks[current] if current else rows).append(unpack(row))
     return blocks[block] if block else rows
 
 
+def unpack(row):
+    """A typed row as characters. A row that starts with a digit is typed as runs, `<count><char>` separated by spaces
+    (`12. 1h 1g 20b`): a shorthand for the same hand-typed pixels, nothing is added."""
+    if not row[0].isdigit():
+        return row
+    return ''.join(run[-1] * int(run[:-1]) for run in row.split())
+
+
 def stamp(spec):
-    (width, height, x0, y0), glyphs, puts, (name, wtiles, htiles, kind) = read_spec(spec)
+    (width, height, x0, y0), glyphs, puts, (name, wtiles, htiles, kind, options) = read_spec(spec)
     canvas = [['.'] * width for _ in range(height)]
     for glyph, x, y in puts:
         for dy, row in enumerate(glyphs[glyph]):
@@ -80,7 +89,7 @@ def stamp(spec):
     body = [row[px:px + w] for row in rows[py:py + h]]
     if kind in ('hang', 'both'):
         body = ['.' * w if i < EMPTY_TOP else row for i, row in enumerate(body)]
-    out = [f'piece {name} {wtiles} {htiles}'] + body
+    out = [' '.join(['piece', name, str(wtiles), str(htiles), *options])] + body
     wide = lambda r: r[px - BLEED_X:px + w + BLEED_X]
     if kind in ('hang', 'both'):
         out += [f'piece {name}-top {wtiles + 4} 2'] + [wide(r) for r in rows[py - TOP_ROWS:py + EMPTY_TOP]]

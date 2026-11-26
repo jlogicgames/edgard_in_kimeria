@@ -16,6 +16,8 @@ the moon rim through its exporter flag (`tools/moon_rim.py`), never by hand; kee
 decor and the foreground take the depth palette instead (D120: a neutral dark palette with real hues, leaf green, bark brown,
 moss; never near black, never grey or slate; a trunk kind keeps 0.02 from the terrain colours, D130, so a tree never reads as ground),
 and the scenery layers turn bluer, lighter and greyer with depth;
+the giant `edge-giant-*` foreground leaves are the only blurred art (D143: `blur=` in the grid, baked at export), in `foreground-near-<room>` at factor 2.2, clear of open pits, hiding at most 35 % of a sharp piece (50 % at a
+resting camera); the HUD draws over every layer and needs no clearance;
 use [kimeria-trap-design](../kimeria-trap-design/SKILL.md) for anything that can kill.
 The author clarified the scope on 2026-10-22 after seeing detailed icons used in
 world gameplay. Choose the asset's destination BEFORE choosing a style or reference.

@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TiledMapParallaxTest {
     private static final int FOREST_TILE_COUNT = 140;
     private static final int BURIED_GIDS_FIRST = 71, BURIED_GIDS_LAST = 73;
-    private static final double FOREGROUND_FACTOR = 1.6;
+    private static final double FOREGROUND_FACTOR = 1.6, NEAR_FACTOR = 2.2;
     private static final float MOB_ROOM_X = 3520;
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private TiledMapData map;
@@ -69,7 +69,7 @@ class TiledMapParallaxTest {
     }
 
     @Test void oneForegroundGroupPerRoomWithTopEdgesAndSizes() {
-        assertEquals(12, map.foregroundGroups.size(), "every room of forest-1: the escalators, the traps (split from the old course, #500, D110) and the mob room first, then the other nine (#236)");
+        assertEquals(24, map.foregroundGroups.size(), "every room of forest-1 has a sharp group and a near one (D143): all twelve sharp groups first, the escalators, the traps (split from the old course, #500, D110) and the mob room first (#236)");
         ForegroundGroup escalators = map.foregroundGroups.get(0), traps = map.foregroundGroups.get(1), mob = map.foregroundGroups.get(2);
         assertEquals(0f, escalators.roomX); assertEquals(640f, traps.roomX); assertEquals(MOB_ROOM_X, mob.roomX);
         assertEquals(FOREGROUND_FACTOR, mob.factorX); assertEquals(FOREGROUND_FACTOR, mob.factorY);
@@ -82,6 +82,20 @@ class TiledMapParallaxTest {
         assertTrue(indexOf(mob, "vine-curtain") >= 0);
         assertEquals(-1, indexOf(escalators, "vine-curtain"), "the pieces of one room are not in another's group");
         for (int i = 0; i < mob.count; i++) assertNotNull(mob.regions[i], mob.names[i]);
+    }
+
+    @Test void everyRoomHasANearerGroupOfGiantLeavesAfterItsSharpOne() {
+        int rooms = map.foregroundGroups.size() / 2;
+        for (int i = 0; i < rooms; i++) {
+            ForegroundGroup sharp = map.foregroundGroups.get(i), near = map.foregroundGroups.get(rooms + i);
+            assertEquals(sharp.name.replace("foreground-", "foreground-near-"), near.name, "drawn after every sharp group, so over its room's");
+            assertEquals(sharp.roomX, near.roomX);
+            assertEquals(NEAR_FACTOR, near.factorX); assertEquals(NEAR_FACTOR, near.factorY);
+            assertTrue(near.factorX > sharp.factorX, "the blurred leaves are the nearest layer");
+            assertTrue(near.count > 0, near.name);
+            for (int p = 0; p < near.count; p++) assertTrue(near.names[p].startsWith("edge-giant-"), near.names[p]);
+            for (int p = 0; p < sharp.count; p++) assertFalse(sharp.names[p].startsWith("edge-giant-"), sharp.names[p]);
+        }
     }
 
     private static int indexOf(ForegroundGroup group, String name) {
@@ -104,6 +118,8 @@ class TiledMapParallaxTest {
 
     @Test void aForegroundGroupNeedsItsRoomxAndItsRoom() {
         assertEquals(1, TiledMapData.load("tiles/fg-ok.tmx", harness.assets()).foregroundGroups.size());
+        assertEquals(2, TiledMapData.load("tiles/fg-near-ok.tmx", harness.assets()).foregroundGroups.size(), "foreground-near-<room> belongs to <room>");
+        assertTrue(loadFailure("fg-near-wrong-room").contains("no Room object is named"), "a near group needs its room too");
         assertTrue(loadFailure("fg-no-roomx").contains("roomx"));
         assertTrue(loadFailure("fg-wrong-room").contains("no Room object is named two"), "the group name is foreground-<room name>");
         assertTrue(loadFailure("fg-wrong-x").contains("is not the x of room one"), "roomx must be the room's x");
@@ -112,7 +128,7 @@ class TiledMapParallaxTest {
     @Test void everyShippedForegroundGroupIsNamedAfterItsRoom() {
         for (ForegroundGroup g : map.foregroundGroups) {
             boolean found = false;
-            for (TiledObject room : map.objectGroups.get("Rooms")) found |= "Room".equals(room.type) && g.name.equals("foreground-" + room.name) && room.x == g.roomX;
+            for (TiledObject room : map.objectGroups.get("Rooms")) found |= "Room".equals(room.type) && (g.name.equals("foreground-" + room.name) || g.name.equals("foreground-near-" + room.name)) && room.x == g.roomX;
             assertTrue(found, g.name);
         }
     }

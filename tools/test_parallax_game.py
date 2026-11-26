@@ -6,6 +6,7 @@ import subprocess
 import sys
 import unittest
 import xml.etree.ElementTree as ET
+import numpy
 import parallax_game as game
 import parallax_mock as pm
 import parallax_sprites as sprites
@@ -195,6 +196,65 @@ class GameCheckTest(unittest.TestCase):
         canopy.set('x', '150')
         canopy.set('y', '330')
         self.assertFalse(pm.check_layer(scene, broken, pieces, silent))
+
+    @staticmethod
+    def scene_groups(room):
+        scene = next(s for s in pm.game_scenes() if s.room == room)
+        root, _, pieces = pm.tile_images(scene.mock)
+        return scene, pm.room_groups(scene, root), pieces
+
+    @staticmethod
+    def copy(groups):
+        return [pm.ET.fromstring(pm.ET.tostring(g)) for g in groups]
+
+    def test_a_giant_leaf_over_a_pit_or_a_room_without_one_fails_the_check(self):
+        scene, groups, pieces = self.scene_groups('forest-0-traps')
+        self.assertTrue(pm.check_giant(scene, groups, pieces, silent))
+        pit_x, _ = pm.pits(scene)[0]
+        # a floor clump slid over the pit, as the camera there carries it
+        broken = self.copy(groups)
+        leaf = next(o for o in broken[-1].findall('object') if o.get('name') == 'edge-giant-low-a')
+        leaf.set('x', str(pit_x))
+        leaf.set('y', '416')
+        self.assertFalse(pm.check_giant(scene, broken, pieces, silent))
+        self.assertFalse(pm.check_giant(scene, groups[:-1], pieces, silent), 'a room without its near group')
+
+    def test_the_near_group_keeps_its_factor_its_pieces_and_its_place_in_the_draw_order(self):
+        scene, groups, pieces = self.scene_groups('forest-0-traps')
+        slow = self.copy(groups)
+        slow[-1].set('parallaxx', str(pm.FG_FACTOR))
+        self.assertFalse(pm.check_giant(scene, slow, pieces, silent))
+        self.assertFalse(pm.check_giant(scene, groups[::-1], pieces, silent), 'drawn under the sharp pieces')
+        mixed = self.copy(groups)
+        mixed[0].append(mixed[-1].find('object'))
+        self.assertFalse(pm.check_giant(scene, mixed, pieces, silent), 'a giant leaf among the sharp pieces')
+
+    def test_a_giant_leaf_that_hides_a_sharp_piece_fails_the_check(self):
+        scene, groups, pieces = self.scene_groups('forest-1-traps')   # one camera: both layers stand where they are authored
+        self.assertTrue(pm.check_share(scene, groups, pieces, silent))
+        clump = next(o for o in groups[0].findall('object') if o.get('name').startswith('clump-') and 0 <= int(o.get('x')) < 400)
+        broken = self.copy(groups)
+        leaf = next(o for o in broken[-1].findall('object') if o.get('name') == 'edge-giant-low-a')
+        leaf.set('x', clump.get('x'))
+        leaf.set('y', '416')
+        self.assertFalse(pm.check_share(scene, broken, pieces, silent))
+        hidden = {(s.piece, s.x): s.pooled for s in pm.hidden_shares(scene, broken, pieces)}
+        self.assertGreater(hidden[clump.get('name'), int(clump.get('x'))], pm.SHARE_POOLED)
+
+    def test_the_hero_cover_counts_both_layers_together(self):
+        scene, groups, pieces = self.scene_groups('forest-1-traps')
+        both = pm.hero_layers(scene, groups, pieces)
+        x = pm.hero_route(scene)[0]
+        for layer in both:
+            self.assertLessEqual(pm.hero_cover(scene, [layer], x), pm.hero_cover(scene, both, x))
+        solid = numpy.zeros_like(both[0][0])
+        left, right = solid.copy(), solid.copy()
+        column = x + pm.HERO_FIGURE_DX - pm.hero_camera(scene, x) + pm.FG_PAD
+        floor = int(scene.floor)
+        left[floor - pm.HERO_H:floor, column:column + 6] = True
+        right[floor - pm.HERO_H:floor, column + 6:column + pm.HERO_FIGURE_W] = True
+        split = [(left, 1.0, 0), (right, 1.0, 0)]
+        self.assertEqual(1.0, pm.hero_cover(scene, split, x), 'two layers each hiding half hide the whole figure')
 
 
 if __name__ == '__main__':
