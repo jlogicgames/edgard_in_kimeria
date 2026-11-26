@@ -26,7 +26,7 @@ foreground authored relative to its room, because a factor of 1.6 cannot be auth
 about 10.6k px of it). Game formula: `screenX = (x - roomX) - f * (camX - roomX)`, with f = 1.6, x the object's x relative
 to the map, roomX the left edge of the room being shown and camX the camera's left edge. Tiled draws a parallax group with one
 origin (`parallaxoriginx`), so it shows the foreground correctly only for one room origin (this mock: roomX 0), the property
-`roomx` of the group; #236 tracks the game's per-room parser.
+`roomx` of the group; the game reads each room's group at that origin (D108).
 
 The check reads the room's objects from its map (everything the active tier of `check_contrast.SPRITES` draws, the patrol range
 of a red mob, the travel of a lift, the route of a spider and the parts the game draws for the hive, the deadfall and the fissure)

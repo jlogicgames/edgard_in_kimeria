@@ -217,3 +217,13 @@ INTRO_BOOK_LEAF_ORIGIN_RIGHT = INTRO_BOOK_LEAF_RIGHT[:2]
 INTRO_BOOK_LEAF_CENTER_X = (INTRO_BOOK_LEAF_LEFT[0] + INTRO_BOOK_LEAF_LEFT[2]) // 2, (INTRO_BOOK_LEAF_RIGHT[0] + INTRO_BOOK_LEAF_RIGHT[2]) // 2
 INTRO_BOOK_IMAGES = {'intro-book': INTRO_BOOK_SCREEN,
                      'intro-leaves': (INTRO_BOOK_LEAF_SIZE[0] * 2, INTRO_BOOK_LEAF_SIZE[1])}
+# The Forest scenery and foreground sheets (D108, D120, D143): grids in art/parallax/<set>, exported by tools/parallax_sprites.py,
+# installed by tools/parallax_game.py -> assets/images/parallax/<set>-<name>.png; name -> sheet size. Every PNG in that folder is
+# in one of two categories (docs/ART_DIRECTION.md, "Pixel defocus is a new category"). Neither takes the world palette limit.
+PARALLAX_IMAGE_DIR = 'assets/images/parallax'
+# Scenery layers: indexed, binary alpha; the dithered gradients use as many colours as they need.
+PARALLAX_LAYER_SHEETS = {'forest-sky': (256, 32), 'forest-far': (256, 544), 'forest-grove': (256, 912), 'forest-mid': (256, 1600),
+                         'shared-stars': (256, 624), 'shared-clouds': (256, 192)}
+# Depth of field and light, not objects: 8-bit RGBA with partial alpha (the foreground's fringe and blurred leaves, the moon's glow).
+PARALLAX_SOFT_SHEETS = {'forest-fg': (896, 1632), 'shared-moon': (256, 128)}
+PARALLAX_MAX_SIDE = 2048  # a texture the web build can hold
