@@ -16,7 +16,7 @@ import sys
 from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HERO_IMAGES, HUD_ICON_SIZE, SILVER_THREAD_SIZE,
     WORLD_PALETTE_SIZE, HUD_PALETTE_SIZE, HUD_ICONS, TOUCH_CONTROL_SIZES, DIALOGUE_IMAGES, OPAQUE_DIALOGUE_IMAGES,
     ARMS_IMAGE_SIZE, BOSS_HUD_SHEETS, OPAQUE_BOSS_HUD_IMAGES, INTRO_BOOK_IMAGES, PARALLAX_IMAGE_DIR, PARALLAX_LAYER_SHEETS,
-    PARALLAX_SOFT_SHEETS)
+    PARALLAX_SOFT_SHEETS, PARALLAX_MAX_SIDE)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
@@ -183,6 +183,8 @@ def parallax_contracts(root):
     for name, size in {**PARALLAX_LAYER_SHEETS, **PARALLAX_SOFT_SHEETS}.items():
         relative = f'{PARALLAX_IMAGE_DIR}/{name}.png'
         path = root / relative
+        if max(size) > PARALLAX_MAX_SIDE:
+            issues.append(f'{relative}: registered size {size} exceeds the {PARALLAX_MAX_SIDE} px texture side limit')
         if not path.is_file():
             issues.append(f'{relative}: missing authored image')
         elif name in PARALLAX_SOFT_SHEETS:

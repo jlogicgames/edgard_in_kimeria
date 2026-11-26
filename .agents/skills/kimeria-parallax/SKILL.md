@@ -45,10 +45,12 @@ equals its horizontal one. World Y grows downward.
 
 ## Order of work
 
-1. **Art:** edit the grid (`art/parallax/forest/*.grid`, `art/parallax/shared/*.grid`; the near pieces through
-   `art/parallax/forest/near/` and its copy-only `stamp.py`, D113), then export: `python3 tools/parallax_sprites.py`.
-   A new or resized sheet updates its entry in `tools/sprite_layouts.py` (`PARALLAX_LAYER_SHEETS`, `PARALLAX_SOFT_SHEETS`).
-2. **Placement:** the room lists in `tools/parallax_game.py` (`GIANT`, `MORE_BOTTOM` and the per-forest lists). Never edit the
+1. **Art:** edit the grid (`art/parallax/forest/*.grid`, `art/parallax/shared/*.grid`), then export:
+   `python3 tools/parallax_sprites.py`. The near and giant pieces (D113, D143) are typed in `art/parallax/forest/near/`: its
+   copy-only `stamp.py SPEC` prints grid text, which replaces that piece at the end of `art/parallax/forest/fg.grid` before the
+   export. A new or resized sheet updates its entry in `tools/sprite_layouts.py` (`PARALLAX_LAYER_SHEETS`,
+   `PARALLAX_SOFT_SHEETS`).
+2. **Placement:** the room lists in `tools/parallax_game.py` (`NEAR`, `MORE_BOTTOM` and the per-forest lists). Never edit the
    installed layers or groups in a `.tmx` by hand: `tools/test_parallax_game.py` fails a map that differs from the installer.
 3. **Install:** `python3 tools/parallax_game.py`.
 4. **Check:** `python3 tools/parallax_mock.py --check --game` (`validateParallax`: rule B, cover time, the giant-leaf rules,

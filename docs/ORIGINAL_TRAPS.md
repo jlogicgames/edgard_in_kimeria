@@ -378,7 +378,7 @@ slopes), non-lethal burnable bramble (all traps are lethal), and the camouflaged
 - [#235](https://github.com/jlogicgames/edgard_in_kimeria/issues/235): tutorial integration. **Implemented, see D48**: thorn root (ladder room), falling branch (wall), falling stone (platform), exploding stump (stone room, next to the stump of the traps room); the rhythm traps were placed later (#260, #261).
 - Backlog added 2026-11-05 (author requests and ideas, not implemented rules):
   - [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236): parallax layers
-    (see ART_DIRECTION.md). **Done:** accepted 2026-11-24 (D108); the leftovers are [#640](https://github.com/jlogicgames/edgard_in_kimeria/issues/640).
+    (see ART_DIRECTION.md). **Done:** accepted 2026-11-24 (D108); still open are the later stages' spirit-light hues, [#651](https://github.com/jlogicgames/edgard_in_kimeria/issues/651) (Steppe) and [#652](https://github.com/jlogicgames/edgard_in_kimeria/issues/652) (Castle).
   - [#237](https://github.com/jlogicgames/edgard_in_kimeria/issues/237): castle floor
     pressure plate that opens a door like a lever (see the later ideas below).
   - [#238](https://github.com/jlogicgames/edgard_in_kimeria/issues/238): arrow shot from the

@@ -534,6 +534,8 @@ What `tools/check_contrast.py` (`validateContrast`) measures over the real layer
   (these sweeps step the camera 128 px, the bar 4 px).
 - **Not covered:** the hero away from the one `Player` object of each map (no other room, no jump, ledge or ladder height; only the idle
   and carry-idle frames); a beetle, wolf, bat, red mob, yellow mob or routeless spider away from its authored x (their patrol, flight and attack positions);
+  the Boss away from its authored throne spot (accepted by the author, 2026-11-26: a one-off sweep of its throne frames along the
+  `forest-boss` floor that day, not part of the gate, gave outline 0.461 at worst against the 0.28 limit; jump heights were not swept);
   lifts, falling, carried and thrown objects away from their authored place; frames a `SPRITES` row does not list; the camera top's
   0 to 8 px vertical shift (the steady camera only); the foreground groups, which are not composited (`validateParallax` limits what they
   cover, not how a sprite reads next to them); particles and effects.

@@ -104,6 +104,11 @@ class SpriteArtGuardTest(unittest.TestCase):
             for name, words in (('forest-new', 'unregistered'), ('forest-fg', 'expected native'), ('shared-moon', 'RGBA'),
                                 ('forest-far', 'indexed'), ('forest-sky', 'missing')):
                 self.assertTrue(any(f'{name}.png' in issue and words in issue for issue in issues), (name, issues))
+            too_tall = (256, guard.PARALLAX_MAX_SIDE + 16)   # registered and exported alike, still too big a texture
+            (target / 'forest-mid.png').write_bytes(header(too_tall, 8, 3))
+            with mock.patch.dict(guard.PARALLAX_LAYER_SHEETS, {'forest-mid': too_tall}):
+                issues = guard.parallax_contracts(root)
+            self.assertTrue(any('forest-mid.png' in issue and 'texture side limit' in issue for issue in issues), issues)
 
     def test_rejects_original_holder_and_renamed_or_relocated_art(self):
         for path in ['entity/items/Carryable.java', 'effects/Torch.java', 'ui/NewTorch.java']:
