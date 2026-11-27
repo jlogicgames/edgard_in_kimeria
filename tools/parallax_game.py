@@ -38,7 +38,7 @@ SHEET_COLUMNS = 20                                # tiles per row of ForestTerra
 # the ground tiles of the play tileset: (left, middle, right) of its top, body, bottom and buried bottom rows (D111)
 GROUND = ((22, 23, 24), (42, 43, 44), (62, 63, 64), (71, 72, 73))
 # the boulder (33-35 over 53-55) and the slope (36-38 over 56-58) -> their back-rock variants (terrain.grid `back-*`): the same rock
-# with no straw lip and no moss, for the rock that is scenery, not ground (forest-2's ruin and mounds)
+# with no straw lip and no moss, for the rock that is scenery, not ground (forest-2's ruin and mounds; the boulder's corners slope, #607)
 BACK_ROCK = dict(zip((33, 34, 35, 53, 54, 55, 36, 37, 38, 56, 57, 58), (82, 83, 84, 85, 86, 87, 74, 75, 76, 77, 78, 67)))
 SLAB = (26, 27, 28)                               # the floating slab (left, middle, right): its underside is open
 # Block faces (D114, terrain.grid `Block faces`): the ground piece's left and right columns are the faces (left in shadow, right lit by the

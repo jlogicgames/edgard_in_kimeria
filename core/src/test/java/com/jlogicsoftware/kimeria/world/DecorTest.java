@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DecorTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     /** Bushes authored per shipped map (docs/ART_DIRECTION.md, placement table). */
-    private static final Map<String, Integer> BUSHES = Map.of("forest-0", 12, "forest-1", 3, "forest-2", 7);
+    private static final Map<String, Integer> BUSHES = Map.of("forest-0", 12, "forest-1", 4, "forest-2", 11);
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
     @BeforeEach void setUp() { harness.setUp(); }

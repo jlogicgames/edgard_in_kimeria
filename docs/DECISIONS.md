@@ -3878,6 +3878,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   installer writes, every forest-0 and forest-2 room has a foreground, `retile` and the narrow-room camera), `TiledMapParallaxTest`.
 - **Since D114:** `retile` also gives the blocks faces, an underside, inner corners at a wall's foot and soil variants; a top under a wall
   is no longer drawn with the straw (it shows the wall foot), the rest of this decision is unchanged.
+- **Update 2026-11-27 ([#607](https://github.com/jlogicgames/edgard_in_kimeria/issues/607), playtest 3):** a scenery shape ends in no
+  vertical edge. The back boulder is a mound with sloping sides, the entry ruin slopes down to the floor (new `ruin-*` tiles), and the
+  third-party wide tile bush is replaced by the `Decor` bush ([ART_DIRECTION](ART_DIRECTION.md), "Forest look and parallax layers").
+  The back rock now fills 101 cells (91 above), the ruin over columns 1 to 12.
 
 ## D113. The foreground takes big near pieces, drawn by hand ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
