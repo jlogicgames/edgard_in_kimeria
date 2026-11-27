@@ -4166,7 +4166,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   trunk kind is a `Decor` kind drawn behind the play tiles (`behindTiles`): `trunk` and `snag`. A branch that stays shows a joint (a
   dark bark collar, its root column kept out of the moon rim); a branch that breaks off keeps its break at the trunk (the falling
   branch's cracked joint, its D71 cue; the rotten branch's end). *Revised by D130 (2026-11-24): a branch's root blends into the trunk
-  bark, with no cut at the joint.* Trunks are decor in the D120 bark palette, never solid, and are drawn
+  bark, with no cut at the joint.* *Revised by
+  [D150](#d150-the-branches-are-redrawn-and-the-falling-branchs-split-stays-on-the-trunk-556-2026-11-27) (2026-11-27):
+  the falling branch's cue is a split with a leaf bunch, and its trunk side stays on the trunk as a stub when the branch falls.*
+  Trunks are decor in the D120 bark palette, never solid, and are drawn
   before the play tiles, so a ledge in front of a tree hides it. Gameplay boxes, triggers and timing are not changed by this rule.
 - **As built:** `decor-trunk` 28×288 (bark 23 px, x - 3 to x + 19 of its 16 px object); a new kind `snag` (28×200, a dead tree snapped
   off 200 px up) for forest-1-mob, where a full trunk crossed the moon disc at the room's first camera (decor body 0.211, over the 0.20
@@ -4422,6 +4425,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   band at 6-11 untouched; `falling` keeps its broken end), `perch.grid`, `hive.grid` (rest to bare) and `deadfall-bough.grid`
   (columns 104-111); the `-left` frames are flips and the deadfall is mirrored in code, so both sides match. The old collar key `J`
   (`4a2e1c`) is gone; `RIM_KEEP` keeps the ramp keys. The rotten branch keeps its rot and split along its length, none at the joint.
+  *Redrawn by [D150](#d150-the-branches-are-redrawn-and-the-falling-branchs-split-stays-on-the-trunk-556-2026-11-27) (2026-11-27):
+  the ramp at the root stays; the crack band at columns 6-11 and the falling frame's broken end are replaced, and the three
+  branches' outlines have new measured values there.*
   Boxes, triggers and timing are unchanged; `check_branch_roots` passes as before (3 to 9 px over the bark). Active outline at worst,
   before / after: rotten branch 0.290 / 0.281 (its rimmed end at the frame's edge was its brightest edge; the furrow-coloured edge
   column is what keeps it over the 0.28 floor, a lighter bark edge measured 0.265), falling branch 0.492 / 0.375, hive 0.395 / 0.324,
