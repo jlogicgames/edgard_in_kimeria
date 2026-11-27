@@ -27,6 +27,8 @@ HOT_NAME = re.compile(r'^(?:update|render|draw)')
 HOT_METHODS = {
     ('physics/CollideBody.java', 'overlapsSolidAt'): 'called from checkVerticalCollisions for every falling platform the body touches, every frame',
     ('physics/CollideBody.java', 'checkVerticalCollisions'): 'called from every actor update',
+    ('physics/CollideBody.java', 'leaveSolid'): 'called from checkVerticalCollisions for every solid block the body overlaps, every frame (#600)',
+    ('physics/CollideBody.java', 'overlapsSolid'): 'called from overlapsSolidAt, and from leaveSolid for a body deeper in a block than one step explains (#600)',
     ('effects/Torch.java', 'spawnCore'): 'called from update every 0.04 to 0.16 s',
     ('effects/Torch.java', 'spawnEmbers'): 'called from update every 0.15 to 0.35 s',
     ('effects/Torch.java', 'spawnSparkles'): 'called from update every 0.08 to 0.26 s',

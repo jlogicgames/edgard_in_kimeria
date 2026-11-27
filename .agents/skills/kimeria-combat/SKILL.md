@@ -109,7 +109,8 @@ For the existing forest boss preserve, unless the request revises the design:
 Tests are under `core/src/test/java/com/jlogicsoftware/kimeria/`. Select suites
 for changed behavior: `world/BossCombatTest.java`, `entity/enemy/StompTest.java`,
 `entity/enemy/EnemyTurnTest.java`, `entity/HitboxBoundsTest.java`,
-`physics/ShapeOverlapTest.java` and `physics/OneWayPlatformTest.java`.
+`physics/ShapeOverlapTest.java`, `physics/OneWayPlatformTest.java` and `physics/SolidBlockVerticalTest.java`
+(which face a body leaves a solid block by, D10).
 For example, for a boss edit:
 ```sh
 ./gradlew :core:test --tests '*BossCombatTest' --tests '*ArtifactInventoryTest'

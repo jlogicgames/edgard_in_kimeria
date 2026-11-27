@@ -16,6 +16,8 @@ import java.util.List;
 public interface CollideBody extends GravityBody {
     /** How fast a body resting in quicksand sinks, px/s: the 9.8 px per second the 60 Hz build always had (D98). */
     static final float QUICKSAND_SINK_SPEED = 9.8f;
+    /** Float rounding allowed on top of a step's own travel when judging how deep a fresh contact can be, px (#600). */
+    static final float CONTACT_SLACK = .5f;
 
     Hitbox hitbox();
 
@@ -70,44 +72,7 @@ public interface CollideBody extends GravityBody {
     default void checkVerticalCollisions(Level level, float dt) {
         setCurrentEscalator(null);
 
-        for (int b = 0; b < level.collisionBlocks.size(); b++) {
-            CollisionBlock block = level.collisionBlocks.get(b);
-            if (!block.isActive()) continue;
-            if (block.isPlatform()) {
-                if (CollisionUtils.checkCollision(this, block)) {
-                    if (velocity().y > 0) {
-                        velocity().y = 0;
-                        position().y = block.getY() - hitbox().height - hitbox().offsetY;
-                        setOnGround(true);
-                        break;
-                    }
-                }
-            } else if (block.isQuickSand()) {
-                if (CollisionUtils.checkCollision(this, block)) {
-                    if (velocity().y > 0) {
-                        // Quicksand holds the body without a snap: it sinks at QUICKSAND_SINK_SPEED at any frame rate (D98).
-                        // The correction is zero at 60 Hz, where the resting gravity step already moves exactly that far.
-                        if (fellFromRest(dt)) position().y += QUICKSAND_SINK_SPEED * dt - restingFallStep(dt);
-                        velocity().y = 0;
-                        setOnGround(true);
-                        break;
-                    }
-                }
-            } else {
-                if (CollisionUtils.checkCollision(this, block)) {
-                    if (velocity().y > 0) {
-                        velocity().y = 0;
-                        position().y = block.getY() - hitbox().height - hitbox().offsetY;
-                        setOnGround(true);
-                        break;
-                    }
-                    if (velocity().y < 0) {
-                        velocity().y = 0;
-                        position().y = block.getY() + block.getHeight() - hitbox().offsetY;
-                    }
-                }
-            }
-        }
+        checkVerticalCollisions(level.collisionBlocks, dt);
 
         for (int e = 0; e < level.escalators.size(); e++) {
             Escalator escalator = level.escalators.get(e);
@@ -145,14 +110,91 @@ public interface CollideBody extends GravityBody {
         }
     }
 
+    /** The collision-block part of the vertical pass: platforms, quicksand and solid blocks. */
+    default void checkVerticalCollisions(List<CollisionBlock> blocks, float dt) {
+        for (int b = 0; b < blocks.size(); b++) {
+            CollisionBlock block = blocks.get(b);
+            if (!block.isActive()) continue;
+            if (block.isPlatform()) {
+                if (CollisionUtils.checkCollision(this, block)) {
+                    if (velocity().y > 0) {
+                        velocity().y = 0;
+                        position().y = block.getY() - hitbox().height - hitbox().offsetY;
+                        setOnGround(true);
+                        break;
+                    }
+                }
+            } else if (block.isQuickSand()) {
+                if (CollisionUtils.checkCollision(this, block)) {
+                    if (velocity().y > 0) {
+                        // Quicksand holds the body without a snap: it sinks at QUICKSAND_SINK_SPEED at any frame rate (D98).
+                        // The correction is zero at 60 Hz, where the resting gravity step already moves exactly that far.
+                        if (fellFromRest(dt)) position().y += QUICKSAND_SINK_SPEED * dt - restingFallStep(dt);
+                        velocity().y = 0;
+                        setOnGround(true);
+                        break;
+                    }
+                }
+            } else {
+                if (velocity().y != 0 && CollisionUtils.checkCollision(this, block) && leaveSolid(blocks, block, dt)) break;
+            }
+        }
+    }
+
+    /**
+     * Moves a body that overlaps a solid block out of it, up or down; true when it lands on the top face (#600). A contact
+     * no deeper than this step's travel is fresh: a fall lands on the top face and a rise hits the underside, however thin
+     * the block or long the frame. A deeper one means the body was already inside, so it leaves by the nearer of the two
+     * faces; the underside counts only when it leads clear of the other solid blocks, else the body leaves by the top.
+     * A rising body that only clips such a block from the side is not moved by it: its top may be far above. Velocity
+     * stops only when it points into the face the body leaves by. Sideways overlap is the horizontal pass's business.
+     */
+    default boolean leaveSolid(List<CollisionBlock> blocks, CollisionBlock block, float dt) {
+        float vy = velocity().y;
+        float top = position().y + hitbox().offsetY;
+        float up = top + hitbox().height - block.getY(), down = block.getY() + block.getHeight() - top;
+        float bottomExit = block.getY() + block.getHeight() - hitbox().offsetY;
+        // The most the body can have moved this step: velocity times dt plus applyGravity's frame-rate term (D98),
+        // and, rising, the launch frame's own lift of a jump.
+        float reach = Math.abs(vy) * dt + gravityPerSecond() * dt * Math.abs(dt - REFERENCE_STEP) / 2f + CONTACT_SLACK;
+        if (vy < 0) reach += jumpForce() * REFERENCE_STEP;
+        boolean byTop = vy > 0;
+        if ((byTop ? up : down) > reach) {
+            // On a tie the face the body is moving into wins: the top for a fall, the underside for a rise.
+            byTop = up < down || up == down && vy > 0;
+            if (!byTop && overlapsSolid(blocks, block, bottomExit)) {
+                float left = position().x + facingAwareOffsetX();
+                boolean clipsSide = left < block.getX() || left + hitbox().width > block.getX() + block.getWidth();
+                if (vy < 0 && clipsSide) return false;
+                byTop = true;
+            }
+        }
+        if (!byTop) {
+            position().y = bottomExit;
+            if (vy < 0) velocity().y = 0;
+            return false;
+        }
+        position().y = block.getY() - hitbox().height - hitbox().offsetY;
+        if (vy < 0) return false; // already on its way out
+        velocity().y = 0;
+        setOnGround(true);
+        return true;
+    }
+
     /** True when the body, moved to {@code y}, would overlap a solid block (not a one-way platform or quicksand). No allocation: an index loop and no boxing, checked by `tools/check_allocations.py` (HOT_METHODS), not by a budget scene. */
     default boolean overlapsSolidAt(Level level, float y) {
+        return overlapsSolid(level.collisionBlocks, null, y);
+    }
+
+    /** {@link #overlapsSolidAt} over a list of blocks, leaving out {@code except} (may be null). */
+    default boolean overlapsSolid(List<CollisionBlock> blocks, CollisionBlock except, float y) {
         float original = position().y;
         position().y = y;
         boolean overlaps = false;
-        for (int i = 0; i < level.collisionBlocks.size() && !overlaps; i++) {
-            CollisionBlock block = level.collisionBlocks.get(i);
-            overlaps = block.isActive() && !block.isPlatform() && !block.isQuickSand() && CollisionUtils.checkCollision(this, block);
+        for (int i = 0; i < blocks.size() && !overlaps; i++) {
+            CollisionBlock block = blocks.get(i);
+            overlaps = block != except && block.isActive() && !block.isPlatform() && !block.isQuickSand()
+                && CollisionUtils.checkCollision(this, block);
         }
         position().y = original;
         return overlaps;
