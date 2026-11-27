@@ -4775,6 +4775,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the beetle, knowing the aim reads a little less; a half dome where it bursts, with nothing flying into the ground). Built;
   the author accepted it the same day from screenshots of the gathering and the burst
   ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+- **Amended** by [D148](#d148-the-flying-beetles-blast-kills-in-the-shape-it-is-seen-in-330-amends-d145-d147) (2026-11-27): the kill shape, which this left a box.
 - **Decision:**
   - **Wind-up:** the specks are born on a ring 28 to 32 px round the body's middle and drawn in to it (`BeetleFx.gather`).
     Nothing is drawn round the target any more. The dive line's specks stay: they show where it will go (D103).
@@ -4786,3 +4787,21 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Why:** the gathering belongs where the blast is stored, and a blast off the ground should not go into it.
 - **Known difference:** the reach is no longer drawn before the burst, and the half dome (rx 40, ry 32) does not fill the upper
   corners of the 80×32 box, which still kill.
+
+## D148. The flying beetle's blast kills in the shape it is seen in (#330, amends D145, D147)
+
+- **Status:** Accepted (author, 2026-11-27: "the kill zone is still a rectangle, make it a half-circle"). Built; not yet played by
+  the author ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+- **Decision:**
+  - **Off a surface** (the end of a dive, or any burst a surface cuts): the half ellipse standing on it, **40 px** out to
+    either side and **32 px** up, the one D147 draws. It is as wide and as high as the old 80×32 box, without its upper
+    corners. Nothing under the surface is reached.
+  - **In the open air:** the ellipse round the body's middle, 40 px out and 24 px up and down.
+  - **Melee stays punished (D145):** a hero whose sword or stomp bursts it is always caught, also at the tip of his reach,
+    where the shape would just miss him.
+  - **Particles** of the flying burst (halo, spray, embers, chips) stay inside the shape; the steam may drift above it.
+  - **Load checks** still test the box round the shape, which is at least as large, so no placement became legal by this.
+  - The ground beetle is unchanged; its dome is [#618](https://github.com/jlogicgames/edgard_in_kimeria/issues/618).
+- **Why:** what kills is what is seen (D5).
+- **Measured (2026-11-27, scripted hero):** a standing hero is reached as far out as before (40 px, so 45.5 px from the
+  target clears it), and the pinned times of `forest-roost` are unchanged.

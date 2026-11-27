@@ -1394,7 +1394,7 @@ the ground beetle (`effects.BeetleFx`).
 - **Palette** (15 entries with transparency, 16 with the rim): the ground beetle's colours plus one new one, the wing membrane
   `bc98a8`, veined in the legs' `9a6070`, with pale glints in its `f4d4de`. The photos are brown; the danger family keeps it crimson. No reserved hue.
 - **Wind-up:** the ground beetle's shake, blink and white frame; 2 px specks run down the dive line (60 a second) and others
-  are drawn in to the body from a ring 28 to 32 px round it ([D147](DECISIONS.md(#d147-the-flying-beetle-gathers-its-blast-round-itself-and-bursts-up-off-the-ground-330-amends-d145))).
+  are drawn in to the body from a ring 28 to 32 px round it ([D147](DECISIONS.md#d147-the-flying-beetle-gathers-its-blast-round-itself-and-bursts-up-off-the-ground-330-amends-d145)).
 - **Burst:** `BeetleFx.burstAt`: where a surface cuts the box, a half dome lying on it (half-glow flash and core, `KIND_DOME`,
   the half-ellipse halo rx 40, ry 32; spray, embers, chips and steam all flying up from it); in the air the flash and a whole
   oval halo (rx 40, ry 24).

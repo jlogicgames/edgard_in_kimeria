@@ -46,6 +46,8 @@ public final class BeetleFx {
     private static final float CUT_MARGIN = .5f;
     /** The flying beetle's wind-up specks are born this far from its body's middle, just outside its wings (D147). */
     public static final float GATHER_RADIUS_MIN = 28, GATHER_RADIUS_MAX = 32;
+    /** The flying beetle's particles end this far inside its blast's edge, so what kills is what is seen (D5, D148). */
+    private static final float SHAPE_INSET = 2;
     // The half dome off a surface (D147): everything starts this far above it and flies up; chips are thrown this high.
     private static final float DOME_LIFT = 2, DOME_CHIP_LOW = 8, DOME_CHIP_HIGH = 28, DOME_STEAM_LOW = 8;
     // The dive line's specks (D145): born on the first part of the line, flying on to its end.
@@ -210,7 +212,7 @@ public final class BeetleFx {
      * shell chips and steam, kept above the box's lower edge, so what kills is what is seen (D5).
      */
     public void burstAt(float centreX, float centreY, float bottom) {
-        if (bottom - centreY < BLAST_AIR_HALF_HEIGHT - CUT_MARGIN) { domeBurst(centreX, bottom); return; }
+        if (onSurface(centreY, bottom)) { domeBurst(centreX, bottom); return; }
         float high = centreY - BLAST_AIR_HALF_HEIGHT + AIR_INSET, low = bottom - AIR_INSET;
         soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, centreY, centreX, centreY, FLASH_LIFE, FLASH_SIZE, WHITE, WHITE, WHITE);
         soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, centreY, centreX, centreY, CORE_LIFE, CORE_SIZE, WHITE, WHITE, WHITE);
@@ -224,24 +226,30 @@ public final class BeetleFx {
         for (int i = 0; i < SPRAY; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float startX = centreX + range(random, -SPRAY_START_JITTER, SPRAY_START_JITTER);
-            float endX = centreX + side * range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX);
+            float reach = range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX), endX = centreX + side * reach;
             boolean white = random.nextFloat() < SPRAY_WHITE_CHANCE;
             float r = white ? WHITE : PALE[RED], g = white ? WHITE : PALE[GREEN], b = white ? WHITE : PALE[BLUE];
-            hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, centreY, endX, range(random, high, low),
+            float half = inside(reach, BLAST_AIR_HALF_HEIGHT);
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, centreY, endX,
+                MathUtils.clamp(range(random, high, low), centreY - half, centreY + half),
                 range(random, SPRAY_LIFE_MIN, SPRAY_LIFE_MAX), range(random, SPRAY_SIZE_MIN, SPRAY_SIZE_MAX), r, g, b);
         }
         for (int i = 0; i < SPARKS; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float[] c = i % SPARK_EYE_EVERY != 0 ? EYE : WHITE_RGB;
-            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER), centreY,
-                centreX + side * range(random, SPARK_REACH_MIN, SPARK_REACH_MAX), range(random, high, low),
+            float startX = centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER);
+            float reach = range(random, SPARK_REACH_MIN, SPARK_REACH_MAX), half = inside(reach, BLAST_AIR_HALF_HEIGHT);
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, centreY, centreX + side * reach,
+                MathUtils.clamp(range(random, high, low), centreY - half, centreY + half),
                 range(random, SPARK_LIFE_MIN, SPARK_LIFE_MAX), SPARK_SIZE, c[RED], c[GREEN], c[BLUE]);
         }
         for (int i = 0; i < CHIPS_BURST; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float[] c = (i & 1) == 0 ? SHELL : SHELL_LIT;
-            hard.spawn(KimeriaParticleSystem.KIND_GRIT, centreX + range(random, -BURST_CHIP_START_JITTER, BURST_CHIP_START_JITTER), centreY,
-                centreX + side * range(random, BURST_CHIP_REACH_MIN, BURST_CHIP_REACH_MAX), bottom - BURST_CHIP_SIZE_MAX / 2f,
+            float startX = centreX + range(random, -BURST_CHIP_START_JITTER, BURST_CHIP_START_JITTER);
+            float reach = range(random, BURST_CHIP_REACH_MIN, BURST_CHIP_REACH_MAX);
+            hard.spawn(KimeriaParticleSystem.KIND_GRIT, startX, centreY, centreX + side * reach,
+                Math.min(bottom - BURST_CHIP_SIZE_MAX / 2f, centreY + inside(reach, BLAST_AIR_HALF_HEIGHT)),
                 range(random, BURST_CHIP_LIFE_MIN, BURST_CHIP_LIFE_MAX), range(random, BURST_CHIP_SIZE_MIN, BURST_CHIP_SIZE_MAX),
                 c[RED], c[GREEN], c[BLUE]);
         }
@@ -275,8 +283,8 @@ public final class BeetleFx {
         for (int i = 0; i < SPRAY; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float startX = centreX + range(random, -SPRAY_START_JITTER, SPRAY_START_JITTER);
-            float endX = centreX + side * range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX);
-            float endY = floorY - range(random, SPRAY_LOW, SPRAY_HIGH);
+            float reach = range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX), endX = centreX + side * reach;
+            float endY = Math.min(from, floorY - Math.min(range(random, SPRAY_LOW, SPRAY_HIGH), inside(reach, DOME_RY)));
             boolean white = random.nextFloat() < SPRAY_WHITE_CHANCE;
             float r = white ? WHITE : PALE[RED], g = white ? WHITE : PALE[GREEN], b = white ? WHITE : PALE[BLUE];
             hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, from, endX, endY, range(random, SPRAY_LIFE_MIN, SPRAY_LIFE_MAX),
@@ -285,15 +293,19 @@ public final class BeetleFx {
         for (int i = 0; i < SPARKS; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float[] c = i % SPARK_EYE_EVERY != 0 ? EYE : WHITE_RGB;
-            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER), from,
-                centreX + side * range(random, SPARK_REACH_MIN, SPARK_REACH_MAX), floorY - range(random, SPARK_LOW, SPARK_HIGH),
+            float startX = centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER);
+            float reach = range(random, SPARK_REACH_MIN, SPARK_REACH_MAX);
+            float endY = Math.min(from, floorY - Math.min(range(random, SPARK_LOW, SPARK_HIGH), inside(reach, DOME_RY)));
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, from, centreX + side * reach, endY,
                 range(random, SPARK_LIFE_MIN, SPARK_LIFE_MAX), SPARK_SIZE, c[RED], c[GREEN], c[BLUE]);
         }
         for (int i = 0; i < CHIPS_BURST; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float[] c = (i & 1) == 0 ? SHELL : SHELL_LIT;
-            hard.spawn(KimeriaParticleSystem.KIND_GRIT, centreX + range(random, -BURST_CHIP_START_JITTER, BURST_CHIP_START_JITTER), from,
-                centreX + side * range(random, BURST_CHIP_REACH_MIN, BURST_CHIP_REACH_MAX), floorY - range(random, DOME_CHIP_LOW, DOME_CHIP_HIGH),
+            float startX = centreX + range(random, -BURST_CHIP_START_JITTER, BURST_CHIP_START_JITTER);
+            float reach = range(random, BURST_CHIP_REACH_MIN, BURST_CHIP_REACH_MAX);
+            float endY = Math.min(from, floorY - Math.min(range(random, DOME_CHIP_LOW, DOME_CHIP_HIGH), inside(reach, DOME_RY)));
+            hard.spawn(KimeriaParticleSystem.KIND_GRIT, startX, from, centreX + side * reach, endY,
                 range(random, BURST_CHIP_LIFE_MIN, BURST_CHIP_LIFE_MAX), range(random, BURST_CHIP_SIZE_MIN, BURST_CHIP_SIZE_MAX),
                 c[RED], c[GREEN], c[BLUE]);
         }
@@ -306,6 +318,18 @@ public final class BeetleFx {
             soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, y, x, y - range(steamRandom, STEAM_RISE_MIN, STEAM_RISE_MAX),
                 range(steamRandom, STEAM_LIFE_MIN, STEAM_LIFE_MAX), range(steamRandom, STEAM_SIZE_MIN, STEAM_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
         }
+    }
+
+    /**
+     * Whether a surface at {@code bottom} cuts the burst of a flying beetle whose middle is at {@code centreY}: it is then a
+     * half dome off that surface (D147), and so is what it kills (D148); else it is a whole oval in the air.
+     */
+    public static boolean onSurface(float centreY, float bottom) { return bottom - centreY < BLAST_AIR_HALF_HEIGHT - CUT_MARGIN; }
+
+    /** How far from its origin a particle may end up or down, {@code across} px beside it, in a shape {@code radius} high. */
+    private static float inside(float across, float radius) {
+        float share = across / DOME_RX;
+        return Math.max(0, radius * (float) Math.sqrt(Math.max(0, 1 - share * share)) - SHAPE_INSET);
     }
 
     /** The death of a beetle centred on ({@code centreX}, {@code centreY}) standing on {@code floorY}: a grey poof and chips. */
