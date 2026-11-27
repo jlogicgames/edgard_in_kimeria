@@ -66,7 +66,7 @@ public class Menu {
 
     public int visibleCount() {
         int count = 0;
-        for (MenuItem item : items) if (item.visible.getAsBoolean()) count++;
+        for (int i = 0; i < items.size(); i++) if (items.get(i).visible.getAsBoolean()) count++;
         return count;
     }
 

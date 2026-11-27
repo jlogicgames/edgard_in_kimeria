@@ -61,6 +61,17 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.ControllerMapping;
 import com.jlogicsoftware.kimeria.world.Level;
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.headless.mock.graphics.MockGraphics;
+import com.badlogic.gdx.backends.headless.mock.input.MockInput;
+import com.badlogic.gdx.utils.IntMap;
+import com.jlogicsoftware.kimeria.ui.ControlsView;
+import com.jlogicsoftware.kimeria.ui.Menu;
+import com.jlogicsoftware.kimeria.ui.PlayfieldViewport;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1844,10 +1855,16 @@ class AllocationBudgetTest {
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     /**
      * #415: the arms beside the selected menu button, the selection stepping down the main menu's five rows; measured 0.0 B/frame
-     * in 3 runs (2026-11-17). The same 8 B ceiling as the other isolated paths. This is the selection arms only: the rest of the menu
-     * frame ({@code Overlay.buttons} labels, layouts, mouse copy) still allocates, tracked in #464.
+     * in 3 runs (2026-11-17). The same 8 B ceiling as the other isolated paths.
      */
     static final double MENU_SELECTION_ARMS_CEILING = 8;
+    /**
+     * A whole menu frame (#464, {@code menuFrame}): measured 0.0 to 1.0 B/frame per screen in 3 runs (2026-11-27); the same scene on the
+     * code before #464 measured 872 (loading) to 20,464 (About) B/frame. The same 8 B ceiling as the other isolated paths.
+     */
+    static final double MENU_FRAME_CEILING = 8;
+    /** The menu scene's cursor: down the middle of the screen over every button row, a new row each frame. */
+    private static final int MENU_CURSOR_X = 320, MENU_CURSOR_TOP = 40, MENU_CURSOR_STEP = 41, MENU_CURSOR_STEPS = 7;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
     private static final int STONE_ROOM = 4, THROW_CYCLES = 30;
     private static final float REACH_SCAN = 40, REACH_SCAN_STEP = 2;
@@ -2429,8 +2446,7 @@ class AllocationBudgetTest {
 
     /**
      * The selection arms (#415) as {@code Overlay.buttons} draws them every menu frame: both arms beside the selected button
-     * of the main menu (220 px buttons from y 79, 48 px apart), the selection moving to the next row every frame. The selection
-     * arms: 0.0 B/frame; the rest of the menu frame: #464.
+     * of the main menu (220 px buttons from y 79, 48 px apart), the selection moving to the next row every frame.
      */
     @Test void menuSelectionArms() {
         harness.font = new MetricsFont(FontSizes.BUTTON);
@@ -2438,5 +2454,105 @@ class AllocationBudgetTest {
         double bytes = AllocationProbe.bytesPerFrame(i ->
             overlay.drawSelectionArms(batch, 210f, 79f + (i % 5) * (Overlay.BUTTON_H + Overlay.BUTTON_GAP), Overlay.BUTTON_W));
         assertWithinBudget("menu selection arms", MENU_SELECTION_ARMS_CEILING, bytes);
+    }
+
+    /**
+     * A whole menu frame (#464) as {@code KimeriaGame.render} makes it on every screen drawn by {@code Overlay}: the real
+     * menus of a desktop build, {@code beginFrame}, {@code renderOverlay} (input read, mouse unprojected through a real
+     * viewport, title, body, buttons with the selection arms, hint, the Controls table), the FPS counter and
+     * {@code flushText} with the shipped font metrics. The cursor moves to another row and the selection steps down every
+     * frame. The first frame of a screen lays its text out (an event, in the warm-up). The fog and the fireflies are not in
+     * the number: {@link #menuBackdropUpdate} measures the fireflies' update; the fog needs a GPU shader.
+     */
+    @Test void menuFrame() throws Exception {
+        MenuCursor cursor = new MenuCursor();
+        Gdx.input = cursor;
+        Gdx.graphics = new MockGraphics() { // the camera flips the cursor's y about the window height; the mock's own is 0
+            @Override public int getWidth() { return 640; }
+            @Override public int getHeight() { return 360; }
+        };
+        Gdx.app = (Application) Proxy.newProxyInstance(Application.class.getClassLoader(), new Class<?>[]{Application.class},
+            (proxy, method, args) -> method.getName().equals("getType") ? Application.ApplicationType.Desktop : null);
+        KimeriaGame game = new KimeriaGame();
+        Assets assets = new Assets() {
+            private final IntMap<BitmapFont> fonts = new IntMap<>();
+            @Override public BitmapFont font(int size) {
+                if (!fonts.containsKey(size)) fonts.put(size, new MetricsFont(size));
+                return fonts.get(size);
+            }
+            @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+        };
+        OrthographicCamera camera = new OrthographicCamera();
+        camera.setToOrtho(true, 640, 360);
+        PlayfieldViewport viewport = new PlayfieldViewport(640, 360, camera);
+        viewport.setScreenBounds(0, 0, 640, 360);
+        Overlay overlay = new Overlay(assets, 640, 360, new KimeriaArms(assets));
+        SavedProgress progress = new SavedProgress(null, 3);
+        progress.save(1); // Continue is shown
+        set(game, "assets", assets);
+        set(game, "uiViewport", viewport);
+        set(game, "touchControls", new TouchControls(assets, game, viewport, 640, 360, false));
+        set(game, "overlay", overlay);
+        set(game, "controlsView", new ControlsView(assets, overlay));
+        set(game, "gamepad", new GamepadInput() {
+            @Override protected Controller controller() { return null; }
+        });
+        set(game, "settings", new Settings(null));
+        set(game, "savedProgress", progress);
+        set(game, "playSounds", false);
+        set(game, "language", Language.UKRAINIAN);
+        Method build = KimeriaGame.class.getDeclaredMethod("buildMenus");
+        build.setAccessible(true);
+        build.invoke(game);
+        int[] hovers = {0};
+        set(game, "hoverSound", (Runnable) () -> hovers[0]++); // counts the cursor pulling the selection onto a button
+        Vector2 unprojected = new Vector2();
+        Field state = KimeriaGame.class.getDeclaredField("uiState");
+        state.setAccessible(true);
+
+        String[][] screens = {{"WEB_START", "webStartMenu"}, {"MAIN_MENU", "mainMenu"}, {"CONFIRM_NEW_GAME", "confirmNewGameMenu"},
+            {"ABOUT", "aboutMenu"}, {"OPTIONS", "optionsMenu"}, {"CONTROLS", "controlsMenu"}, {"ASSIST", "assistMenu"},
+            {"PAUSED", "pauseMenu"}, {"LOADING", null}};
+        for (boolean rules : new boolean[]{false, true}) {
+            set(game, "aboutRules", rules);
+            for (String[] screen : screens) {
+                if (rules && !screen[0].equals("ABOUT")) continue;
+                for (Object value : state.getType().getEnumConstants()) if (value.toString().equals(screen[0])) state.set(game, value);
+                Menu menu = null;
+                if (screen[1] != null) {
+                    Field field = KimeriaGame.class.getDeclaredField(screen[1]);
+                    field.setAccessible(true);
+                    menu = (Menu) field.get(game);
+                }
+                Menu shown = menu;
+                String name = "menu frame " + screen[0] + (rules ? ", the rules page" : "");
+                hovers[0] = 0;
+                double bytes = AllocationProbe.bytesPerFrame(i -> {
+                    cursor.y = MENU_CURSOR_TOP + (i % MENU_CURSOR_STEPS) * MENU_CURSOR_STEP;
+                    if (shown != null) shown.moveSelection(1);
+                    overlay.beginFrame();
+                    game.renderOverlay(batch, true);
+                    overlay.topRight("60 FPS", 630, 4);
+                    overlay.flushText(batch);
+                });
+                assertWithinBudget(name, MENU_FRAME_CEILING, bytes);
+                // The web start screen has one button and no hover blip; loading has no buttons.
+                if (shown != null && !screen[0].equals("WEB_START")) assertTrue(hovers[0] > 0, name + ": the cursor never reached a button");
+                assertEquals(cursor.y, viewport.unproject(unprojected.set(cursor.getX(), cursor.getY())).y, 0.5f, name + ": cursor mapping");
+            }
+        }
+    }
+
+    /** A mouse resting at the middle of the screen at height {@link #y}; every other input is idle. Allocates nothing. */
+    private static final class MenuCursor extends MockInput {
+        int y;
+        @Override public int getX() { return MENU_CURSOR_X; }
+        @Override public int getY() { return y; }
+    }
+
+    private static void set(KimeriaGame game, String name, Object value) throws Exception {
+        Field field = KimeriaGame.class.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(game, value);
     }
 }
