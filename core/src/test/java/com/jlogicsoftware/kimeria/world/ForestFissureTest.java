@@ -200,10 +200,10 @@ class ForestFissureTest {
         RoomLayout.Room room = level.roomLayout.rooms.get(FISSURE_ROOM);
         Rectangle exit = room.exit();
         assertEquals(EXIT_X, exit.x, 0.01f, "the exit moved 16 px right, against the wall (#327)");
-        // Every blast position, from the range and the burst's real size: the leftmost and rightmost boxes and their sweep.
+        // Every blast position, from the range and the burst's real size: the leftmost and rightmost blast bounds and their sweep.
         Rectangle left = new Rectangle(), right = new Rectangle();
-        b.position.x = b.rangeNeg(); b.blastBoxInto(left);
-        b.position.x = b.rangePos(); b.blastBoxInto(right);
+        b.position.x = b.rangeNeg(); b.blastBoundsInto(left);
+        b.position.x = b.rangePos(); b.blastBoundsInto(right);
         b.position.x = BEETLE_X;
         assertEquals(BeetleFx.BLAST_WIDTH, left.width, 0.01f);
         assertEquals(BeetleFx.BLAST_HEIGHT, left.height, 0.01f);

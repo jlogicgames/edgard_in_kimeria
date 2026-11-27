@@ -259,7 +259,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
 
     /**
      * Where the burst ends downwards: after a dive that reached its spot, the surface it locked on, even if that
-     * has gone since (D5); else the surface under the body's middle now, or the box's own lower edge over open air.
+     * has gone since (D5); else the surface under the body's middle now, or the blast's own lower edge over open air.
      */
     private float burstFloor(float cx, float cy) {
         if (arrived) return diveSurface;

@@ -183,8 +183,8 @@ never leaves it. Touching it is harmless. When Edgard comes within about six til
 raises its head, wiggles its antennae and hops (half a second, with a dry double click), then scuttles at him, slower than
 he runs. When it reaches his feet it commits where it stands: it shakes, blinks brighter and brighter, turns white and
 bursts after the shared trap warning (0.8 s, 1.2 s with the longer-warnings assist), whatever he does. Pale specks drawn in
-from the edges of the burst show how far it reaches: a low, wide box, five tiles across and two high. Outside it, or above
-it in a jump, Edgard is safe. A fireball or a thrown stone kills it at any moment, even while it winds up: it flips onto
+from the edge of the burst show how far it reaches: a low half dome off the ground, five tiles across and two high in the
+middle, and only what the dome covers is caught. Outside it, or above it in a jump, Edgard is safe. A fireball or a thrown stone kills it at any moment, even while it winds up: it flips onto
 its back under a pale puff instead of bursting, and its body stays. The sword, or landing on it before it commits, makes
 it burst at once, under him; landing on one that is already winding up bounces him off. There is no hint about it: it is
 met in play, first on the open floor past the guard room's tunnel (`forest-1-guard`; it also crawled at the sound tree's foot in `forest-1-tree` until #500 made that a reward room), then on the exit ledge of the fissure room in forest-2 (`forest-fissure`) (#327); authoring: `Beetle` in `SpawnPoints` with `offNeg`/`offPos` like the mobs, checked at load.

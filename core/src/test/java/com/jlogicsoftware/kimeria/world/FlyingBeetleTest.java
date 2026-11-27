@@ -207,7 +207,7 @@ class FlyingBeetleTest {
             int dive = until(level, () -> { if (!b.isRemoved()) b.blastBoundsInto(last); return b.isRemoved(); }, 60);
             assertEquals(FlyingBeetle.DIVE_SECONDS + STEP, dive * STEP, STEP * 1.5f, "a 0.25 s dive, the burst a frame later");
             assertEquals(BeetleFx.BLAST_WIDTH, last.width, .01f);
-            assertEquals(BeetleFx.BLAST_HEIGHT, last.height, .01f, "the ground beetle's box");
+            assertEquals(BeetleFx.BLAST_HEIGHT, last.height, .01f, "as high as the ground beetle's dome");
             assertEquals(FLOOR, last.y + last.height, .01f);
             assertEquals(UNDER, last.x + last.width / 2, .01f, "where it was drawn");
             assertFalse(alive(level), "a hero who stays is killed");
@@ -226,14 +226,14 @@ class FlyingBeetleTest {
                 harness.held.add(key);
                 until(level, b::isRemoved, LONG_LIMIT);
                 harness.held.clear();
-                assertTrue(alive(level), "out of the box at the burst (key " + key + ", assist " + longer + ")");
+                assertTrue(alive(level), "out of the blast at the burst (key " + key + ", assist " + longer + ")");
             }
         }
         setLonger(false);
     }
 
     @Test void theRunHasHalfASecondToSpare() {
-        // Escape: from the locked spot the hero must run 45.5 px (half the box and half his body); he still escapes when he
+        // Escape: from the locked spot the hero must run 45.5 px (half the blast's width and half his body); he still escapes when he
         // starts half a second after the commit.
         Level level = level();
         FlyingBeetle b = committed(level);
@@ -251,7 +251,7 @@ class FlyingBeetleTest {
         press(Input.Keys.J);
         until(level, b::isRemoved, 60);
         harness.held.clear();
-        assertTrue(alive(level), "the feet are above the box at the instant");
+        assertTrue(alive(level), "the feet are above the blast at the instant");
     }
 
     @Test void aPlatformBetweenThemStopsTheCommit() {
@@ -463,7 +463,7 @@ class FlyingBeetleTest {
         until(level, () -> b.warningRemaining() <= .2f, LONG_LIMIT);
         tap(level, Input.Keys.K);
         until(level, b::isRemoved, 60);
-        assertFalse(alive(level), "the box reaches whoever cuts it");
+        assertFalse(alive(level), "the blast reaches whoever cuts it");
         assertTrue(harness.sounds.contains("beetle_pop"));
         assertEquals(0, level.bloodParticles().count(), "no blood");
     }
@@ -578,8 +578,8 @@ class FlyingBeetleTest {
         }
     }
 
-    /** D5: the burst at the end of a dive is the box the wind-up drew, even when the surface under it has gone since. */
-    @Test void theBurstStaysTheDrawnBoxWhenItsSurfaceGoes() {
+    /** D5: the burst at the end of a dive stays on the surface it locked on, even when that surface has gone since. */
+    @Test void theBurstStaysOnItsLockedSurfaceWhenItGoes() {
         Level level = level();
         FlyingBeetle b = committed(level);
         framesToArrive(level, b);

@@ -68,7 +68,7 @@ final class ForestFissureRoute {
             if (fire) {
                 if (!fired) { pressed.add(Input.Keys.L); fired = true; } // facing right from the jump: the ball flies at it
             } else if (beetle.isCommitted()) {
-                if (front >= beetle.blastBoxInto(blast).x) held.add(Input.Keys.A); // back out of its blast, on to the lip
+                if (front >= beetle.blastBoundsInto(blast).x) held.add(Input.Keys.A); // back out of its blast, on to the lip
             } else {
                 held.add(Input.Keys.D); // walk at it: it hears, comes to its range end and commits when it reaches him
             }

@@ -3,7 +3,11 @@
 KimeriaParticleSystem (lerp from start to end, per-kind size and alpha) at game resolution (1 px = 1 world px), with Python's
 random instead of RandomXS128, so the shapes are right and the exact pixels are not. Run from the repository root:
     python3 docs/references/beetle-burst/make_strip.py
-Writes beetle-burst-strip.png (1x, the game's pixels) and beetle-burst-strip-x3.png (the same, nearest-neighbour x4)."""
+Writes beetle-burst-strip.png (1x, the game's pixels) and beetle-burst-strip-x3.png (the same, nearest-neighbour x3).
+
+A record of the #559 proposal (D136), drawn before D149 (#618): the burst now kills in the half ellipse inscribed in the
+80x32 box drawn here, its flash and core are half glows lying on the floor, and its steam stays inside that dome. The mock
+is not updated; the game's burst is BeetleFx.burst."""
 import math, random
 from pathlib import Path
 from PIL import Image
@@ -36,7 +40,7 @@ def old_burst(r):
     return ps
 
 
-# ---- the proposal (numbers are the proposal's named constants; see docs/proposals/559-beetle-burst.md)
+# ---- the proposal (numbers are the proposal's named constants; see D136 in docs/DECISIONS.md)
 DOME_DOTS, DOME_RX, DOME_RY, DOME_LIFE, DOME_SIZE = 32, 40, 32, .16, 4
 FLASH_SIZE, FLASH_LIFE, CORE_SIZE, CORE_LIFE = 44, .12, 20, .07
 SPARKS, CHIPS = 14, 8
