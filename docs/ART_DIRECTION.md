@@ -552,7 +552,8 @@ What `tools/check_contrast.py` (`validateContrast`) measures over the real layer
   moon (0.985) is the brightest thing in the frame and the cloud edge (0.93) and stars (0.88) are brighter than decor by design.
 - **D92 rim:** D92 lights a sprite's up, left and right edges; this card's rim faces the moon (up and right) on clouds and on the foreground.
   D92's rule wins for sprites, and is final (author, 2026-11-26; section 4).
-- **D101 bodies and `RemainsFx`:** the chip colours (`SHELL_CHIPS`, `SPIDER_CHIPS`, `SNAIL_CHIPS`, `WOLF_CHIPS`) take the live monsters'
+- **D101 bodies and `RemainsFx`:** the chip colours (`SHELL_CHIPS`, `SPIDER_CHIPS`, `SNAIL_CHIPS`, `WOLF_CHIPS`, and the `CHIPS`
+  of `Bat`, `RedMob` and `YellowMob`) take the live monsters'
   colours with the bodies ([D117](DECISIONS.md#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21), [#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571)).
 - **#451 (moon and clouds)** is built as the shared moon and cloud layers of this card
   ([D108](DECISIONS.md#d108-the-forest-parallax-layers-are-read-and-drawn-by-the-game-scenery-apart-from-the-play-layer-a-foreground-per-room-236), PR 508).
@@ -1488,6 +1489,9 @@ with no recolour, tint or halo; its pose, not its palette, tells it from a live 
 as active at every spot where it can lie (`BODY_SWEEP`; a solid stops the pounce and the lunge, so no spot is inside or past a
 wall, #594): outline at least 0.28, worst 0.331 (the flying beetle); the spider 0.374 (the 0.284 measured before #594 was a spot
 inside a block).
+The bat, the red mob and the yellow mob keep their bodies in their own sheets, not in a body strip: the bat's `dead` frame (lying
+on its side, one wing flat, floor on row 14) and each mob's last death frame (`down`, on row 31); worst outlines 0.538, 0.508 and
+0.487 (2026-11-27, facing right; a one-off check of the mirrored mobs gave 0.518 and 0.474).
 
 **What is behind the world ([D92](DECISIONS.md#d92-the-world-is-drawn-over-a-flat-per-level-background-the-forest-rain-and-sky-are-gone-430-2026-11-17)).** Each map sets a flat colour in its map property `background` (a Tiled colour); the
 game clears to it. Every shipped map must set it. Open levels are at night: the forest maps use `2c3f66` and draw the sky,

@@ -16,7 +16,7 @@ FRAMES = 2
 # The cells each entity reads (RedMob.java, Bat.java through Assets.animation: four frames a row, a fifth on the next row).
 READ_CELLS = {
     'red-mob': {(c, r) for r in (1, 2, 4, 5) for c in range(4)},
-    'bat': {(c, r) for r in (0, 2) for c in range(4)} | {(0, 1), (0, 3)} | {(c, 4) for c in range(4)},
+    'bat': {(c, r) for r in (0, 2) for c in range(4)} | {(0, 1), (0, 3)} | {(c, 4) for c in range(5)},  # (4, 4): the bat's body (D101)
     'boss': {(c, r) for r in range(1, 8) for c in range(4)},  # Boss.java: rows 1 to 7; row 0 (an unused walk), 8 and 9 never
     'yellow-mob': {(c, r) for r in (1, 4, 5) for c in range(4)},
 }
@@ -87,8 +87,7 @@ class EnemySpritesTest(unittest.TestCase):
         for frame, placed in cells.items():
             art = cell(image, size, *placed[0])
             with self.subTest(frame=frame):
-                if frame != 'down':
-                    self.assertEqual(size[1] - 1, opaque_rows(art)[-1], 'feet on the floor line (row 31)')
+                self.assertEqual(size[1] - 1, opaque_rows(art)[-1], 'feet, or the lying body, on the floor line (row 31)')
                 body = art.crop((0, 0, ATTACK_BOX_LEFT, size[1]))  # left of the whip's attack box (x 26..32), the body hitbox x 6..26
                 self.assertTrue(opaque_rows(body))
 

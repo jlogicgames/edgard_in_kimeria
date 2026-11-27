@@ -3,7 +3,7 @@ package com.jlogicsoftware.kimeria.entity.enemy;
 import com.badlogic.gdx.math.MathUtils;
 
 /**
- * The rocking of a small monster's body when the hero passes (D101), shared by the beetle and the spider: a damped swing of the
+ * The rocking of a small monster's body when the hero passes (D101), shared by every small monster's body: a damped swing of the
  * same frame about the bottom of the body. A push starts it the way the hero moves; it settles on its own. Reactive, not an idle
  * animation (D76), and silent. Plain fields, no allocation.
  */

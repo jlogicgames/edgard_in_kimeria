@@ -186,7 +186,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private boolean carryHintVisible;
     private final Set<Boss> bossesHit = new HashSet<>();
     /** The monster this swing killed (D101, D102): its body is not crumbled by the same swing, so a sword kill leaves a body. */
-    private Object swordKill;
+    private final Array<Object> swordKills = new Array<>();
     /** Reused by the per-frame pickup-reach code (see {@link #pickupReachBounds}): never allocated per frame. */
     private final Rectangle reachScratch = new Rectangle();
     private boolean victoryWalk;
@@ -1283,7 +1283,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
             attackElapsed = 0f;
             swingNumber++;
             bossesHit.clear();
-            swordKill = null;
+            swordKills.clear();
         }
         boundsInto(SWORD_HITBOX, attackHitbox);
 
@@ -1305,13 +1305,13 @@ public class Player extends Actor<Player.State> implements CollideBody {
             var obj = level.objects.get(i);
             // D101: the swing crumbles a monster's body and goes on, so a body never shields a live monster behind it.
             if (obj instanceof Remains body && body.isRemains()) {
-                if (obj != swordKill && body.remainsInto(remainsScratch).overlaps(attackHitbox)) body.crumble();
+                if (!swordKills.contains(obj, true) && body.remainsInto(remainsScratch).overlaps(attackHitbox)) body.crumble();
                 continue;
             }
             if (obj instanceof Enemy<?> enemy) {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
                     if (enemy instanceof Boss boss) { if (bossesHit.add(boss)) boss.collidedWithActor(true); }
-                    else { enemy.hitBySword(level); if (enemy.isDefeated()) swordKill = enemy; }
+                    else { enemy.hitBySword(level); if (enemy.isDefeated()) swordKills.add(enemy); }
                     if (enemy.stopsSword()) break;
                 }
             }

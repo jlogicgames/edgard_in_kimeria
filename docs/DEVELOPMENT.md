@@ -303,7 +303,7 @@ it also retiles each play layer: no seam where two rooms' floors meet, soil inst
 
 Package layout:
 
-- `entity.player.Player`, `entity.enemy.{Enemy,Bat,YellowMob,RedMob}` — actors
+- `entity.player.Player`, `entity.enemy.{Enemy,FallenEnemy,Bat,YellowMob,RedMob}` — actors
 - `entity.items.*`, `entity.environment.*`, `entity.objects.*` — level objects
 - `physics.{GravityBody,CollideBody,CollisionUtils}` — gravity and AABB collision (which face a body leaves a solid block by: [D10](DECISIONS.md))
 - `effects.*` — particle/shader effects
@@ -533,6 +533,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | Mosquito swarms flying, their fourteen mosquitoes circling and flickering, tested against the hero and the camera view, scattered by the sword and gathering, killed by a stone or by fire, their mosquitoes dropping and fading, through mosquito-run.tmx (#645, D151) | 8 | 0.6, 0.6 and 0.1 in 3 runs (2026-11-27; headless: no sound is played) |
 | Snails crawling and pausing, noticing, winding up with their specks and swelling gob, spitting, their gobs flying with drips and ending (past their range, cut or burnt), reloading, or killed with their gob in the air and leaving a body that rocks, crumbles and burns, with `Level.snailFx()` and `Level.remainsFx()`, through snail-test.tmx (#329, D106) | 8 | 0.2, 0.2 and 0.1 in 3 runs (headless: no sound is played) |
 | A whole menu frame (#464): `KimeriaGame.renderOverlay`, the FPS counter and `Overlay.flushText` on each screen it draws (web start, main, New Game confirmation, About on both pages, Options, Controls, Assist, pause, loading), the cursor passing over the buttons and the selection moving every frame. The scene is a desktop build at the nominal text size with the keyboard Controls table (the touch and gamepad tables have `ControlsViewTest`); the touch controls are not part of it; the fog and fireflies are not in it (the fireflies' update is its own 8 B scenario, the fog needs a GPU shader) | 8 | 0.0 to 1.0 per screen in 3 runs (2026-11-27); before #464, 872 to 20,464 B/frame with the same scene |
+| The bat, the red mob and the yellow mob alive, killed, falling, their bodies rocking or twitching, crumbling and burning, with `Level.remainsFx()`, through bat-test.tmx (#478, D101) | 8 | 0.2 in 3 runs (headless: no sound is played) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the
 particles (those read 0.0). The room figures are the harness, entities and level code; the particle objects contribute almost nothing.

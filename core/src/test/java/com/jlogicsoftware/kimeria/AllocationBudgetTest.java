@@ -30,6 +30,10 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
+import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
+import com.jlogicsoftware.kimeria.entity.enemy.FallenEnemy;
+import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.entity.enemy.MosquitoSwarm;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
@@ -218,6 +222,8 @@ class AllocationBudgetTest {
     static final double SNAIL_CEILING = 8;
     /** Measured 0.2, 0.6 and 0.6 B/frame in 3 runs before the floor re-check, and 0.0 in the one run after it (2026-11-21, #331, D115; the same 8 B ceiling as the other monsters; the harness does not play sounds): wolves trotting, sniffing, noticing, sprinting, skidding on a turn, winding up with their breath streaks, lunging, biting, recovering and baying under a hero out of reach, or killed in the lunge and leaving a body that twitches, crumbles and burns, through the real {@code Level} of wolf-test.tmx, update and render every frame; the numbers are in D115. */
     static final double WOLF_CEILING = 8;
+    /** Measured 0.2, 0.2 and 0.2 B/frame in 3 runs (2026-11-27, #478, D101; the same 8 B ceiling as the other monsters; the harness does not play sounds): the bat, the red mob and the yellow mob alive, killed, falling, their bodies rocking or twitching, crumbling and burning; see {@link #inheritedMonsterBodiesThroughTheRealLevel}. */
+    static final double INHERITED_BODIES_CEILING = 8;
     /** The leaves' own cost, {@code leafFx().update} and {@code render} of forest-1's deadfall room (its `leaves` property and trap columns are the game's own): measured 0.0 B/frame in 3 runs (2026-11-18, #473); the whole level in that room, leaves running, is {@link #FOREST_1_DEADFALL_CEILING}'s scenario: 320.0 and 536.0 B/frame in two runs (the harness and level code dominate, as the existing deadfall room row says), so only the isolated number can show the leaves are free. */
     static final double FALLING_LEAVES_CEILING = 8;
     private static final int LEAF_ROOM = 1;
@@ -896,6 +902,80 @@ class AllocationBudgetTest {
         assertFalse(level.player.isGotHit(), "the hero stepped clear of every burst");
         assertTrue(maxRock[0] > 0, "an odd beetle's body must rock when the hero walks up to it");
         assertWithinBudget("beetle notice, wind-up, burst, death and body", BEETLE_CEILING, bytes);
+    }
+
+    private static final int BODY_PASS_FRAME = 60;
+    private static final float PASSER_AWAY_X = 900, PASSER_SPEED = 50;
+    private static final int BODY_CYCLE_FRAMES = 130, BODY_KILL_FRAME = 20, BODY_PUSH_FRAME = 90, BODY_FINISH_FRAME = 108, BODY_MONSTERS = 3;
+    /** Where the three monsters of #478 start (the bat in the air over the floor), and the hero beside the place their bodies come to lie. */
+    private static final float BODY_X_PLACE = 400, BAT_Y_PLACE = 240, MOB_Y_PLACE = 288, HERO_BESIDE_OFFSET = 27;
+
+    /**
+     * The three inherited monsters in turn through the real {@code Level} of bat-test.tmx (#478, D101): the bat, the red mob and
+     * the yellow mob, each alive for a moment, killed as a fireball would at frame {@value #BODY_KILL_FRAME}, falling while the
+     * death clip plays, lying; the hero walks up to the body at frame {@value #BODY_PUSH_FRAME} (the bat rocks, a mob twitches),
+     * and at frame {@value #BODY_FINISH_FRAME} it crumbles or, every other round, burns. Update and render of the monster and
+     * {@code Level.remainsFx()} every frame. All are built before the probe.
+     */
+    @Test void inheritedMonsterBodiesThroughTheRealLevel() {
+        Level level = harness.roomOf("bat-test", 0);
+        level.objects.clear();
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / BODY_CYCLE_FRAMES + 1;
+        FallenEnemy<?>[] monsters = new FallenEnemy<?>[cycles];
+        for (int k = 0; k < cycles; k++) {
+            monsters[k] = switch (k % BODY_MONSTERS) {
+                case 0 -> new Bat(harness.assets(), harness.game(), BODY_X_PLACE, BAT_Y_PLACE, 16, 16, false, 1, 1);
+                case 1 -> new RedMob(harness.assets(), harness.game(), BODY_X_PLACE, MOB_Y_PLACE, 48, 32, 1, 1);
+                default -> new YellowMob(harness.assets(), harness.game(), BODY_X_PLACE, MOB_Y_PLACE, 48, 32, 1, 1);
+            };
+            monsters[k].setPlayer(level.player);
+            monsters[k].setLevel(level);
+        }
+        // A bat that passes each lying body once, so the search for another mover finds one (D119).
+        Bat passer = new Bat(harness.assets(), harness.game(), BODY_X_PLACE, MOB_Y_PLACE, 16, 16, false, 1, 1);
+        level.objects.add(passer);
+        Rectangle box = new Rectangle();
+        boolean[] reacted = new boolean[BODY_MONSTERS], passed = new boolean[BODY_MONSTERS], finished = new boolean[2];
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / BODY_CYCLE_FRAMES, f = i % BODY_CYCLE_FRAMES;
+            FallenEnemy<?> m = monsters[k];
+            if (f == 0) { level.player.position.set(HERO_FAR_X, HERO_Y); passer.position.set(PASSER_AWAY_X, MOB_Y_PLACE); }
+            if (f == BODY_KILL_FRAME) m.collidedWithActor(true);
+            if (f == BODY_PASS_FRAME) {
+                m.remainsInto(box);
+                passer.position.set(box.x, box.y + box.height - 16);
+                passer.velocity.x = PASSER_SPEED;
+            }
+            if (f == BODY_PUSH_FRAME) {
+                passer.position.set(PASSER_AWAY_X, MOB_Y_PLACE);
+                level.player.position.set(m.remainsInto(box).x - HERO_BESIDE_OFFSET, HERO_Y);
+            }
+            if (f == BODY_FINISH_FRAME && m.isRemains()) {
+                int burnt = k / BODY_MONSTERS % 2;
+                finished[burnt] = true;
+                if (burnt == 1) m.burnUp(); else m.crumble();
+            }
+            if (!m.isRemoved()) {
+                m.update(STEP);
+                m.render(batch);
+                boolean moved = m.rockAngle() != 0 || m.twitch() != 0;
+                if (f < BODY_PUSH_FRAME) passed[k % BODY_MONSTERS] |= moved;
+                else reacted[k % BODY_MONSTERS] |= moved;
+            }
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+            peak[0] = Math.max(peak[0], level.remainsFx().soft().count() + level.remainsFx().hard().count());
+        });
+        for (int n = 0; n < BODY_MONSTERS; n++) {
+            assertTrue(passed[n], "monster " + n + "'s body must react to the bat passing");
+            assertTrue(reacted[n], "monster " + n + "'s body must react to the hero walking up");
+        }
+        assertTrue(finished[0] && finished[1], "bodies must both crumble and burn");
+        assertTrue(peak[0] > 0, "the bodies must actually throw particles");
+        assertFalse(level.player.isGotHit(), "nothing here hurts the hero");
+        assertWithinBudget("bat, red mob and yellow mob death and body", INHERITED_BODIES_CEILING, bytes);
     }
 
     private static final int FLYING_CYCLE_FRAMES = 200, FLYING_HEARD_FRAME = 5, FLYING_OUT_FRAME = 90, FLYING_ESCAPE_FRAME = 120,

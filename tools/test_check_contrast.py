@@ -71,6 +71,11 @@ CLIFF_WIDTH = 48
 # The snail fixture (#329, D106): floor top y 320, a block at x 180..196, the snail's range x 272..384 (frame tops 304).
 SNAIL_FLOOR = 320
 WOLF_FLOOR_BEYOND = 12  # px of floor past the wolf's authored range end: its lunge widens the body spots by that much and no more
+MOB_X = 320  # a bat's or a mob's authored x in the #478 body tests, over a floor from 0 to MOB_FLOOR_END
+MOB_OFF = 4  # tiles of range either side
+MOB_FLOOR_END = 352  # the floor ends inside the range: a pit beyond
+MOB_WALL_X = 272  # a wall's left face left of the mob, inside its range
+FLOOR_DEPTH = 48.0  # how deep the test floor is
 SNAIL_FRAME_TOP = 304
 SNAIL_LEFT_END = 272
 SNAIL_RIGHT_END = 384
@@ -531,6 +536,43 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(min(tops.values()), y - climb)
         spots = gate.flying_beetle_body_spots(gate.landings(root), x, y, props)
         self.assertIn(line, {floor for _, floor in spots}, 'a body over the ledge lies on it')
+
+    def test_a_bat_body_is_dropped_from_its_line_and_none_lies_over_a_pit(self):
+        """#478: a bat falls from any point of its line, across or up and down; the body rests a pixel above its frame's bottom."""
+        boxes = [(0.0, float(BODY_FLOOR), float(MOB_FLOOR_END), FLOOR_DEPTH)]
+        x, y, reach = MOB_X, BODY_LEDGE, MOB_OFF * gate.TILE
+        spots = gate.bat_body_spots(boxes, x, y, {'offNeg': str(MOB_OFF), 'offPos': str(MOB_OFF)})
+        self.assertEqual({line for _, line in spots}, {BODY_FLOOR + gate.BAT_FRAME - gate.BAT_FLOOR_IN_FRAME})
+        lefts = [left for left, _ in spots]
+        self.assertEqual(min(lefts), x - reach)
+        self.assertLess(max(lefts), MOB_FLOOR_END, 'nothing lies over the pit')
+        self.assertGreater(max(lefts) + gate.BAT_FRAME, MOB_FLOOR_END - gate.BODY_STEP)
+        upright = gate.bat_body_spots(boxes, x, y, {'offPos': str(MOB_OFF), 'isVertical': 'true'})
+        self.assertEqual({left for left, _ in upright}, {x}, 'a bat flying up and down falls in one column')
+        step = boxes + [(float(x), float(y + gate.TILE // 2), float(gate.TILE), float(gate.TILE))]
+        raised = gate.bat_body_spots(step, x, y, {}, solids=step)
+        self.assertEqual({line for _, line in raised}, {y + gate.TILE // 2 + gate.BAT_FRAME - gate.BAT_FLOOR_IN_FRAME},
+                         'a solid it overlaps as it dies, top face nearer, takes the body on its top')
+        above = boxes + [(float(x), float(y - gate.TILE // 2), float(gate.TILE), float(gate.TILE))]
+        under = gate.bat_body_spots(above, x, y, {}, solids=above)
+        self.assertEqual({line for _, line in under}, {BODY_FLOOR + gate.BAT_FRAME - gate.BAT_FLOOR_IN_FRAME},
+                         'underside nearer: it leaves below and falls on')
+
+    def test_a_mob_body_lies_where_it_can_walk_up_to_a_wall(self):
+        """#478: a mob runs until its middle is at the hero's, inside the range, and stops at a solid."""
+        body_x, _, width, height = gate.hitbox_of('RedMob')
+        body_y = gate.hitbox_of('RedMob')[1]
+        y = BODY_FLOOR - body_y - height
+        root = lambda wall: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="640" height="48"/>{wall}'
+                                          f'</objectgroup><objectgroup name="SpawnPoints"><object type="RedMob" x="{MOB_X}" y="{y}" width="48" height="32">'
+                                          f'<properties><property name="offNeg" value="{MOB_OFF}"/><property name="offPos" value="{MOB_OFF}"/>'
+                                          '</properties></object></objectgroup></map>')
+        spots = [(key, x, line) for key, _, x, line in gate.body_spots({'forest-9': root('')})]
+        self.assertEqual({(key, line) for key, _, line in spots}, {('RedMob:body', BODY_FLOOR)})
+        middle, reach = body_x + width / 2, MOB_OFF * gate.TILE
+        self.assertEqual((min(x for _, x, _ in spots), max(x for _, x, _ in spots)), (MOB_X - reach - middle, MOB_X + reach - middle))
+        walled = [x for _, _, x, _ in gate.body_spots({'forest-9': root(f'<object type="Wall" x="{MOB_WALL_X}" y="{BODY_LEDGE}" width="16" height="96"/>')})]
+        self.assertGreaterEqual(min(walled) + body_x, MOB_WALL_X + gate.TILE, 'it stops at the wall')
 
     def test_a_dynamic_block_continuing_a_spiders_floor_in_the_pounce_band_fails(self):
         root = lambda kind: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{WIDE_FLOOR}" height="48"/>'
