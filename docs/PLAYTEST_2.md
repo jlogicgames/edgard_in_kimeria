@@ -1,6 +1,8 @@
 # Second external playtest: feedback, analysis and decisions
 
-**Status: done.** The second external playtest has run and its feedback reached the author on 2026-11-21. This document records that feedback, its analysis against the current build, the author's decisions of the same day and the GitHub issue that tracks each change. Everything it started is tracked under the umbrella issue [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563); it also records which open check boxes the author accepted on the strength of this round (see [what this playtest verified](#what-this-playtest-verified)).
+**Status: historical** (2026-11-27). Every change this round started has landed and the umbrella issue is closed, so the rows below record what was found and decided, not the current build.
+
+The second external playtest has run and its feedback reached the author on 2026-11-21. This document records that feedback, its analysis against the current build, the author's decisions of the same day and the GitHub issue that tracks each change. Everything it started is tracked under the umbrella issue [#563](https://github.com/jlogicgames/edgard_in_kimeria/issues/563); it also records which open check boxes the author accepted on the strength of this round (see [what this playtest verified](#what-this-playtest-verified)).
 
 ## Session
 
