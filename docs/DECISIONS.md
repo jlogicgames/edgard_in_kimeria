@@ -319,6 +319,15 @@ only in the menu backdrop.
   - **One-way platforms** (`Platform`, `FallingPlatform`, `Escalator`) support only from
     above. They are ignored by horizontal collision; their landing test (feet-based, with a
     catch-up margin at rest) is only valid vertically.
+  - **A body inside a solid block leaves by the nearer face, up or down** (#600, 2026-11-27). In the vertical pass
+    (`CollideBody.leaveSolid`) a contact no deeper than the body's travel this step is a fresh one: a fall lands on
+    the top face and a rise hits the underside, at any frame time and block thickness (the frame time of most enemies
+    is not clamped, so a pure least-overlap rule would drop one through a 16 px floor after a stall). A deeper contact leaves
+    by the face it overlaps least, whatever the sign of the vertical velocity; the underside counts only when it leads
+    clear of every other solid block. Otherwise the body leaves by the top, except a rising one that only clips the
+    block from the side: that block does not move it. A falling one leaves by the top as before #600, even where a side
+    clip puts that top far above. A rise's fresh depth includes a jump's launch lift. Velocity stops only when it points
+    into the face left by. The vertical pass never moves a body sideways, and one with zero vertical velocity stays put.
 - **Why:** Instant death is only acceptable when every death is understandable (D5), and the
   deaths players reported all came from geometry that did not match what was drawn.
 - **Known gap:** collision resolution only pushes an actor out of a wall while it is moving
@@ -3125,9 +3134,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
   - **Wolf (#331): yes, with its own reaction ([D115](#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
     frame) when the hero passes. It crumbles and burns like the others.
-  - **Bat (existing): yes.** It falls when killed. Over a pit it leaves nothing.
-  - **RedMob and YellowMob (existing): the author decides per mob in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).** Both are in rooms the author has played,
-    and their death animation and the sword's blood (D65) would change.
+  - **Bat (existing): yes, built ([#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478), see the update below).** It falls when killed. Over a pit it leaves nothing.
+  - **RedMob: yes, built; YellowMob: yes, built (author, 2026-11-27, [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478)).** Their death clips and the sword's blood (D65) stay;
+    the clip's last frame now stays as the body.
   - **Boss: no.** Its defeat is a scripted scene with the healer.
   - **Traps** (stump, root, bomb, hive): **no.** They are not monsters, and their spent states are already authored.
 - **Why:** the body is the clearest record of what the hero did. It keeps a quiet kill readable after the hit's flash,
@@ -3153,7 +3162,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Tests and budgets.** Behaviour in `BeetleTest`. `BeetleFxTest` sizes the pools at 108 and 296 from peaks of 85 and
     236, including three bodies crumbling and three burning at once. `AllocationBudgetTest.beetleThroughTheRealLevel`
     measured 0.1 B/frame in 3 runs.
-  - **The other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).**
+  - **The other monsters have followed** (see the updates below).
 - **Update (#503, 2026-11-19): a fireball wins the same-frame tie too.** The hero updates after the monsters, and a cast ball used
   to join the object list a frame late, so on the frame a bite (or the snail's gob, D106) became due the ball had not moved, and on
   the next one the monster landed its hit first and the ball met a hero who could no longer fight. Now a ball cast this frame flies
@@ -3194,6 +3203,30 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Update ([#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571), 2026-11-21, [D117](#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)): the body keeps the live palette.** The "Contrast tier (D76): decor"
   bullet above is superseded: a body is the `dead` frame in the monster's live palette, ink and moon rim, with no recolour,
   tint or halo, and is measured as active. The pose stays the readability rule; the behaviour (harmless, rocks, crumbles, burns) is unchanged.
+- **Update ([#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478), 2026-11-27): the bat, the red mob and the yellow mob.** The author decided that both mobs leave a body.
+  - **Code.** `entity/enemy/FallenEnemy.java` is the base of the three: the death clip plays while the monster falls
+    (`CollideBody`, gone below the room over a pit), then it lies as a `Remains` with the shared crumble, burn and `RemainsFx`.
+    No poof and no cross-fade: the sword's blood (D65) and the death clip already show the kill.
+  - **Pose and art.** The bat gains one frame, `dead` in `bat.grid` (cell (4, 4) of `Bat.png`): lying on its side, one wing
+    spread flat, eyes shut. A mob's body is its death clip's last frame (`down`); the red mob's moved 1 px down, so it rests
+    on the floor line instead of a pixel above it. Closest live frames: bat 84.0 %, red mob and yellow mob 84.5 %.
+  - **Reaction.** The bat is small and rocks (`RemainsSwing`); the two mobs are big and twitch like the wolf, 1 px for 0.3 s.
+  - **Reach.** A body's box is its drawing, not the standing hitbox: bat 16x6, red mob 26x7, yellow mob 26x9, mirrored with
+    the facing. A mob falls with its standing box, so a body near a wall lands as the live mob stood.
+  - **A red mob killed mid-whip** drops its attack at once.
+  - **Contrast** (`BODY_SWEEP`, active): outline at worst bat 0.538, red mob 0.508, yellow mob 0.487 (floor 0.28). The gate
+    measures a body facing right; a one-off check of the mirrored mobs in review gave red 0.518 and yellow 0.474.
+  - **Found in review and fixed with this:** a swing that killed two monsters on following frames crumbled the first one's
+    body (the hero now remembers every kill of the swing); a flying bat set no velocity, so it moved no body or bush (D119);
+    a body no longer reacts before its death clip is over. A bat that starts its fall overlapping a solid leaves it by the
+    nearer face (#600), and the contrast gate models that.
+  - **Allocation:** `AllocationBudgetTest.inheritedMonsterBodiesThroughTheRealLevel` 0.2 B/frame in 3 runs (ceiling 8).
+  - **Tests changed, none loosened.** `RemainsTest` now lists the `Remains` classes from the compiled classes (its regex would miss
+    a subclass), reads frames from any row of a sheet, and checks the three bodies' cell, box, floor line, pit fall, stomp and
+    the dropped whip. `test_enemy_sprites` no longer exempts the red mob's `down` frame from the floor line, and `Bat.png`
+    has one more read cell. The test harness's empty sprite regions remember their sheet and cell. `RoomReplayTest`'s bot
+    waits only for a live bat: a body left beside it held the `forest-entry` collection route for ever. Every pinned room
+    time is unchanged (that route: 12.70 s of 30).
 
 ## D102. The forest spider: it hears, notices, and pounces at where the hero stood; make it miss, then strike (#328, #240, #398)
 
@@ -3887,6 +3920,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Gate:** `validateParallax`, `tools/test_parallax_game.py`, `TiledMapParallaxTest`, `validateContrast`.
 - **Update 2026-11-25 ([D143](#d143-giant-out-of-focus-leaves-frame-the-forest-rooms-597-2026-11-25), [#597](https://github.com/jlogicgames/edgard_in_kimeria/issues/597)):** a nearer depth in front of these pieces, giant blurred leaves in their own faster group. The near
   pieces stay as built, sharp; D143 allows a Gaussian blur for the giant leaves only. `forest-fg.png` is now 896x1600 px.
+- **Update 2026-11-27 ([D153](#d153-the-middle-of-a-long-forest-room-is-not-left-empty-spread-hanging-pieces-and-rising-stems-664-2026-11-27-amends-d113), [#664](https://github.com/jlogicgames/edgard_in_kimeria/issues/664)):** long rooms take pieces between their ends too, and the rule that a
+  room with a stone takes no canopy is now gated.
 
 ## D114. Terrain blocks get faces, an underside and soil variants ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
@@ -4508,7 +4543,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **About:** two pages switched by one button. **The game** opens first: three short paragraphs (`ABOUT_GAME_STORY`, `ABOUT_GAME_PLAY`, `ABOUT_GAME_MORE`), the store-style description the tester expected (what the game is, who Edgard is, what the player does). **Game rules** shows `ABOUT_RULES` and `ABOUT_RULES_CARRY` (the carry and throw rule, moved from the retired control text). The button is `Game rules` / `The game` (`ABOUT_GAME`); About opens on the game page each time. `ABOUT_BODY`, `ABOUT_BODY_LEFT_HANDED`, `ABOUT_GAMEPAD` and `ABOUT_GAMEPAD_LEFT_HANDED` are removed from the five catalogs.
 - **Names in the blurb:** the Plain voice forbids character names ([TEXT_STYLE.md](TEXT_STYLE.md) section 1); `ABOUT_GAME_*` alone may name Edgard, Kimeria and L'Kardina, because a store description cannot say who the hero is without them. The gate does not check Plain strings for names, so no gate changed. The blurb says "throw fire": the glossary lists "fireballs" under Avoid for the ranged magic, whose label is Fireball.
 - **Controls:** Options > Controls (between Display and Accessibility). The screen has the title, a table and two buttons, `Left-handed: Off|On` (selected on open) and `Back`; **the Left-handed switch moved here from Options**, so Options has no second switch for one setting. The table has an action column and two hand columns, **Right hand** and **Left hand**, always both visible: the active hand is gold on a lit panel and the other grey, so toggling swaps the highlight (F4). The device follows touch first, then a connected pad, else the keyboard (`ControlsView.modeFor`, as the intro's skip hint, D118). Keyboard and pad show eight rows (Move, Climb, Pick up / use, Put down, Jump, Sword, Throw / Fireball, Pause), the D126 bindings, with the pad's mirrored layout of D9 (right hand: Pick up / use and Put down on the left stick or D-pad up and down, as the code reads them); touch shows two mini screens (stick left and three buttons right, and the mirror) and one line about the stick. The touch preview is **schematic**: it shows the layout order (Sword, Fireball, Jump from top to bottom; the stick on the other side for the left hand) with the jump disc and the live ranged label, not the real button art or positions, and no Pause button (the pause button is not a layout choice). Letters, `Esc` and `Start` are not translated; the words around them are.
-- **Code:** `ui.ControlsView` (rows, layout, drawing) and `Overlay.textBlock` / `bodyLines`; `KimeriaGame` state `CONTROLS`. The text is laid out once per mode, language and hand into cached blocks, so a frame allocates next to nothing in the view. Measured with `AllocationProbe` (ThreadMXBean, 1200 frames after 300 warm-up, `NoopBatch`, view draw plus text flush): 0.00 to 0.27 B/frame across keyboard, pad and touch in both hands; `ControlsViewTest` fails above 0.5 B/frame (about twice the worst reading). The menu frame around it still allocates (#464).
+- **Code:** `ui.ControlsView` (rows, layout, drawing) and `Overlay.textBlock` / `bodyLines`; `KimeriaGame` state `CONTROLS`. The text is laid out once per mode, language and hand into cached blocks, so a frame allocates next to nothing in the view. Measured with `AllocationProbe` (ThreadMXBean, 1200 frames after 300 warm-up, `NoopBatch`, view draw plus text flush): 0.00 to 0.27 B/frame across keyboard, pad and touch in both hands; `ControlsViewTest` fails above 0.5 B/frame (about twice the worst reading). The menu frame around it allocated at the time; #464 made it allocation free (`AllocationBudgetTest.menuFrame`).
 - **Tests:** `ControlsViewTest` (device choice, rows against `KeyBindings`, every cell and the table's bottom in five languages and three modes, allocation); `LocalizationLayoutTest` (both About pages and the new labels). Navigation, toggle and Back reuse the generic `Menu` and `toggleLeftHanded` (persisted by `Settings.LEFT_HANDED`, `SettingsTest`).
 - **New strings** (uk, pl, de and be are drafts for native review, [#369](https://github.com/jlogicgames/edgard_in_kimeria/issues/369)): `ABOUT_GAME_STORY`, `ABOUT_GAME_PLAY`, `ABOUT_GAME_MORE`, `ABOUT_GAME`, `ABOUT_RULES_CARRY`, `RIGHT_HAND`, `LEFT_HAND`, `MOVE`, `JUMP`, `PAUSE`, `PICK_UP_USE`, `THROW_FIREBALL`, `KEY_ARROWS`, `KEY_UP`, `KEY_DOWN`, `PAD_DPAD`, `STICK_HINT`.
 
@@ -4553,7 +4588,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - Menu hint: its baseline keeps **12 units** from the bottom edge (`Overlay.HINT_BOTTOM_MARGIN`, was 6): 7.3 CSS px on the 390 px phone (was 3.7), 12 at one px per unit. The About buttons end 11 units above its top.
 - **Tolerances:** none raised. The ladder bound stays 8; the D134 two-line rule stays for 18 px with the one pinned exception above (until D142 made it three lines at both tiers); `FontSizesTest` keeps its floors and lists the large sizes; the box, the Controls columns and the hint margin are new geometry for the large tier, not looser checks on the nominal one.
 - **Excluded from the minimum:** the Action and Ranged button labels of `TouchControls` (`TOUCH_LABEL`, 13 px: 7.9 CSS px in portrait, 12.9 and 11.9 in landscape). [#492](https://github.com/jlogicgames/edgard_in_kimeria/issues/492) replaces them with pictograms ([D138](#d138-the-touch-action-and-ranged-buttons-show-pictograms-not-text-492-2026-11-24) did: the buttons carry no text, `TOUCH_LABEL` is now `ROTATE_HINT`, and the exclusion is the rotate hint alone, measured in its own strip by `TextMinimumSizeTest`); `TextMinimumSizeTest` builds no `TouchControls`; the 13 px font no longer exists (removed by [D140](#d140-the-portrait-strip-shows-a-large-rotate-the-phone-prompt-493-2026-11-25)). The portrait strip's rotate hint is drawn in the strip's own units (1.08 CSS px per unit at 390 px), 14 CSS px. **Revised by [D140](#d140-the-portrait-strip-shows-a-large-rotate-the-phone-prompt-493-2026-11-25):** the hint became a large prompt, 30 px baked: 32.5 CSS px on a 390 px phone and 30 at 360 px, over the minimum by its own strip scale, which `TextMinimumSizeTest` measures.
-- **Tests:** `TextMinimumSizeTest` (the scales at the three reference windows; every font the HUD, the Overlay, the Controls table and both dialogue screens ask for, at the three windows and five others, reaches 11 CSS px; the set of fonts is exactly the expected one; a tier change reaches views already built and back; the hint margin; allocation: the median paired difference of a frame at the two tiers is 0.00 B/frame, the composite frame itself costs 704 B/frame, the existing menu and HUD cost of [#464](https://github.com/jlogicgames/edgard_in_kimeria/issues/464)), `LocalizationLayoutTest` (every box in five languages at both tiers), `HealerDialogueTest` (large-tier lines, box, prompt), `ControlsViewTest` (both tiers), `FontSizesTest`.
+- **Tests:** `TextMinimumSizeTest` (the scales at the three reference windows; every font the HUD, the Overlay, the Controls table and both dialogue screens ask for, at the three windows and five others, reaches 11 CSS px; the set of fonts is exactly the expected one; a tier change reaches views already built and back; the hint margin; allocation: the median paired difference of a frame at the two tiers is 0.00 B/frame, the composite frame itself cost 704 B/frame at the time, the menu and HUD cost of [#464](https://github.com/jlogicgames/edgard_in_kimeria/issues/464), whose menu part is fixed since), `LocalizationLayoutTest` (every box in five languages at both tiers), `HealerDialogueTest` (large-tier lines, box, prompt), `ControlsViewTest` (both tiers), `FontSizesTest`.
 - **Story screens are laid out when they open.** An intro or ending already open keeps the tier it opened with; a phone only crosses the scale limit on a tablet turned over, and the next story opens at the new tier.
 - **Real-phone check (closed 2026-11-25):** the real-phone box of [#491](https://github.com/jlogicgames/edgard_in_kimeria/issues/491) was accepted by the author on 2026-11-25 without a recorded real-phone capture. The only recorded evidence is an emulator run: an Android emulator (Pixel 9 AVD, Chrome 133), portrait and landscape, 2026-11-25. It showed the portrait menu, the intro, a dialogue with its "Next >" prompt and the landscape side-bar layout at the sizes above. It does not show how the text reads on a real phone in daylight at arm's length. The 360 px wide portrait phone draws the body at 10.1 CSS px; that is the limit of the rule stated above, not a case it covers.
 
@@ -4983,3 +5018,47 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   and heard at the lethal moment).
 - **Measured (2026-11-27):** `AllocationBudgetTest.falseHoneyFungusCloudsInTurn` 0.0 B/frame (ceiling 8, unchanged;
   headless there is no GL context, so the ring's shader draw is skipped). No test threshold changed.
+
+## D153. The middle of a long forest room is not left empty: spread hanging pieces and rising stems (#664, 2026-11-27, amends D113)
+
+- **Status:** Accepted (author, 2026-11-27: sample A of `forest-1-spider`, a vine curtain and a sprig, chosen over two sprigs;
+  the limits below were proposed with the samples and taken unchanged). Built. Still frames of six of the rooms in the web build
+  showed the pieces clear of the hero, monsters and traps in view (agent, 2026-11-27, some room starts moved in a served copy);
+  the check on desktop and web by walking the rooms is on [#664](https://github.com/jlogicgames/edgard_in_kimeria/issues/664).
+- **Problem:** the near pieces sit at the room ends (D113) with at most one curtain between them, so a long flat room looks empty in
+  the middle: before this change up to 1172 foreground px with no hanging piece and 1104 px with no tall rising one
+  (`forest-canopy`).
+- **Decision:** a forest room 736 px wide or wider (its camera travels 96 px or more) takes occasional pieces between its ends, and
+  `parallax_mock.check_middle` (`validateParallax`) holds every room, today's and later ones, to these limits, in foreground px:
+  - **Hanging** (`near-canopy`, `near-fern`, `near-sprig`, `vine-curtain`, `roots-curtain`): no stretch over **320 px** without one.
+  - **Open sky:** in every camera's view the hanging pieces leave at least **96 px** open: never a continuous band.
+  - **Rising** (`rise-fern`, `rise-reeds`; `rise-trunk` counts too): no stretch over **480 px** without one.
+  - **A longer stretch passes only where no piece fits it.** The gate itself tries every listed piece at every x of the stretch
+    and fails naming the piece and x if one fits: the most central x that passes rule B, the hero's cover time, the giant leaves'
+    hidden share and, for a hanging piece, the open sky. A piece fits only at a top y its table allows, **64 px** clear of a piece
+    at an end of the stretch; at an end of the room's foreground it may overhang, with at least **0.3** of its width in view (D113's
+    measure for an end piece). There is no list of excused rooms. `rise-trunk` counts but is never asked for: the near tier's
+    trunks belong to [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635). A hanging or rising piece at a top y its
+    table does not allow fails the room and counts for nothing.
+  - **A room with a falling or thrown stone takes no `near-canopy`** (D113's rule, now gated, in rooms of any width). It had
+    slipped: `forest-hollow` (D151, a thrown stone) stood with one at its start, now a `near-fern`.
+- **Pieces added** (`MIDDLE` in `tools/parallax_game.py`; no new art and no change to rule B, the cover time or D143): a hanging
+  piece in `forest-0-ladder`, `-wall`, `-platform`, `-stone`, `forest-1-mob`, `-route`, `forest-entry`, `-glade`, `-roost` and
+  `forest-hollow`, two in `forest-1-spider` and `forest-canopy`. A rising stem in the middle of `forest-1-guard` and
+  `forest-hollow`; where none fits further in, one partly out of view at the room's start (`forest-1-mob`, `-route`,
+  `forest-entry`, `-glade`, `-roost`, `-hollow`, `-canopy`) and one at the end of `forest-roost`. The giant leaves of that side
+  stand in front of the start stems, so they add little to the eye. By a falling stone and its swaying `HangingVine` objects
+  (`forest-0-platform`, `forest-canopy`) the middle piece is a fern: no leaf blobs that read as stones, no vines in front of the
+  vines that answer the stone.
+- **Measured:** longest stretch without a hanging piece, before to after: `forest-canopy` 1172 to 316, `forest-1-spider` 972 to
+  292, `forest-1-route` 712 to 312, `forest-0-platform` 660 to 280, `forest-0-ladder` 536 to 280, `forest-roost` 494 to 136.
+  Stretches over 480 px without a rising stem where none fits remain in `forest-0-ladder` (648), `forest-0-wall` (576),
+  `forest-1-mob` (811), `-spider` (1032), `-route` (729), `forest-entry` (640), `-glade` (617), `-roost` (575) and `-canopy`
+  (1017): at factor 1.6 a stem is carried over a wide stretch of the room, across its traps. `validateParallax`: 0 covered
+  objects, hero standing hidden at 0 box x. No existing test threshold changed.
+- **Review (2026-11-27):** the first build did not try pieces overhanging a room end, so seven rooms passed although a stem fitted
+  there; the search, the top-y rule and the tests of the limits and of each fit condition came out of that review.
+- **Tests:** `test_parallax_game.MiddleCheckTest` (the limits and one px past them, a removed hanging piece, middle stem and end
+  stem fail, a stretch where nothing fits passes, a suggested piece passes the other rules and each of them can refuse it, a
+  continuous band, a wrong top y and a canopy in a stone room fail, a new hanging or rising variant must join a table); every room
+  of every forest map must now have a foreground, `forest-1` included, so a new room cannot stay outside the gate.

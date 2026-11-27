@@ -248,7 +248,13 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - **Fullscreen:** desktop windows via Options (LWJGL), browsers that have the Fullscreen API via
   `DisplayControl` (web launcher). There is no native mobile app, so no native mobile fullscreen ([D61](DECISIONS.md#d61-no-native-mobile-version-release-is-desktop-and-web), [#266](https://github.com/jlogicgames/edgard_in_kimeria/issues/266)).
 - **Menus are hand-drawn immediate-mode UI**, not Scene2D, to avoid pulling in a full
-  Scene2D skin for a handful of simple screens.
+  Scene2D skin for a handful of simple screens. A menu frame allocates nothing ([#464](https://github.com/jlogicgames/edgard_in_kimeria/issues/464)):
+  `ui.Overlay` lays a string out the first time it is shown and keeps the `GlyphLayout` (the body and hint ones are dropped
+  when the text tier changes, D137), queues text draws in reused arrays and keeps the mouse position in fields. The kept
+  layouts assume a **fixed set of strings** (the catalogs and what is built from them): a new "Label: value" button uses
+  `ui.ValueLabel`, which joins the two only when one changes, and a string that changes freely needs a layout of its own,
+  as the FPS counter has in `Overlay.topRight`. A `GlyphLayout` is drawn in the colour it was laid out with:
+  `BitmapFont.setColor` at draw time does not tint it.
 
 ## Architecture
 
@@ -293,13 +299,14 @@ resolved at load; `AllocationBudgetTest.forest1ParallaxLayersAndForeground`).
 `tools/parallax_game.py` installs the exported layers into `assets/` and the three forest maps (idempotent, tested by `test_parallax_game.py`;
 it also retiles each play layer: no seam where two rooms' floors meet, soil instead of the old rope over the room-edge walls, D112);
 `python3 tools/parallax_mock.py --check --game` checks the foreground of every room that has one against the map's objects
-(`validateParallax`). Every forest map has the layers; every room of the three forest maps has a foreground.
+(`validateParallax`), and the middle of every long room (D153). Every forest map has the layers; every room of the three forest maps
+has a foreground.
 
 Package layout:
 
-- `entity.player.Player`, `entity.enemy.{Enemy,Bat,YellowMob,RedMob}` — actors
+- `entity.player.Player`, `entity.enemy.{Enemy,FallenEnemy,Bat,YellowMob,RedMob}` — actors
 - `entity.items.*`, `entity.environment.*`, `entity.objects.*` — level objects
-- `physics.{GravityBody,CollideBody,CollisionUtils}` — gravity and AABB collision
+- `physics.{GravityBody,CollideBody,CollisionUtils}` — gravity and AABB collision (which face a body leaves a solid block by: [D10](DECISIONS.md))
 - `effects.*` — particle/shader effects
 - `world.Level` — loads a `.tmx`, spawns everything, owns the per-frame update/render pass; `world.ParallaxRenderer` — its scenery layers and foreground
 - `ui.*` — HUD, menus, keyboard/gamepad/mouse navigation
@@ -526,6 +533,8 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | Flying beetles flying, noticing, chasing under a platform that blocks their line, committing with specks gathering into them and down their dive lines, diving, bursting or killed in the dive, falling and leaving a body that rocks, crumbles and burns, with `Level.beetleFx()` and `Level.remainsFx()`, through flying-beetle-roof.tmx (#330, D145), with a ledge its route is lifted over (D146) | 8 | 0.1, 0.1 and 0.1 in 3 runs; 0.0 with the ledge (2026-11-27) (headless: no sound is played) |
 | Mosquito swarms flying, their twenty-eight mosquitoes wandering and flickering, tested against the hero, scattered by the sword and gathering, killed by a stone or by fire, their mosquitoes dropping and fading, through mosquito-run.tmx (#645, D151) | 8 | 0.0, 0.0 and 0.0 in 3 runs (2026-11-27; headless: no sound is played) |
 | Snails crawling and pausing, noticing, winding up with their specks and swelling gob, spitting, their gobs flying with drips and ending (past their range, cut or burnt), reloading, or killed with their gob in the air and leaving a body that rocks, crumbles and burns, with `Level.snailFx()` and `Level.remainsFx()`, through snail-test.tmx (#329, D106) | 8 | 0.2, 0.2 and 0.1 in 3 runs (headless: no sound is played) |
+| A whole menu frame (#464): `KimeriaGame.renderOverlay`, the FPS counter and `Overlay.flushText` on each screen it draws (web start, main, New Game confirmation, About on both pages, Options, Controls, Assist, pause, loading), the cursor passing over the buttons and the selection moving every frame. The scene is a desktop build at the nominal text size with the keyboard Controls table (the touch and gamepad tables have `ControlsViewTest`); the touch controls are not part of it; the fog and fireflies are not in it (the fireflies' update is its own 8 B scenario, the fog needs a GPU shader) | 8 | 0.0 to 1.0 per screen in 3 runs (2026-11-27); before #464, 872 to 20,464 B/frame with the same scene |
+| The bat, the red mob and the yellow mob alive, killed, falling, their bodies rocking or twitching, crumbling and burning, with `Level.remainsFx()`, through bat-test.tmx (#478, D101) | 8 | 0.2 in 3 runs (headless: no sound is played) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the
 particles (those read 0.0). The room figures are the harness, entities and level code; the particle objects contribute almost nothing.

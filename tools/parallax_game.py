@@ -16,7 +16,8 @@ What it does, idempotently (a second run changes nothing):
   Layers with a `parallaxx`/`parallaxy` attribute or the property `scenery` are scenery to the game parser (it keeps them out of the
   play layer and of collision); the foreground is every object group whose name starts with `foreground`.
 The game draws them with `world/ParallaxRenderer`; `python3 tools/parallax_mock.py --check --game` checks the foreground of every
-room that has one against the map's objects (rule B, cover time). The pieces of each room are the lists below.
+room that has one against the map's objects (rule B, cover time, the middle of long rooms). The pieces of each room are the lists
+below.
 """
 import re
 import shutil
@@ -95,7 +96,7 @@ FOREST_2 = {
     'forest-fissure': (('near-canopy', -88, 0), ('near-fern', 540, 0), ('vine-curtain', 76, 0)),
     'forest-glade': (('near-fern', -88, 0), ('near-canopy', 732, 0), ('roots-curtain', 60, -16)),
     'forest-roost': (('near-fern', -88, 0), ('near-sprig', 694, 0), ('roots-curtain', -40, -16)),
-    'forest-hollow': (('near-canopy', -88, 0), ('near-fern', 692, 0), ('vine-curtain', 76, 0)),
+    'forest-hollow': (('near-fern', -88, 0), ('near-fern', 692, 0), ('vine-curtain', 76, 0)),   # a stone: no canopy (D113)
     'forest-canopy': (('near-fern', -88, 0), ('near-sprig', 1308, 0), ('rise-fern', 1268, 112)),
     'forest-boss': (('rise-reeds', 426, 128),),
 }
@@ -223,7 +224,27 @@ MORE_BOTTOM = {
                       ('tuft', 1014, 296), ('clump-grass', 1101, 292), ('clump-mixed', 1223, 304)),
     'forest-boss': (('clump-fern', -96, 304), ('clump-leaves', 53, 304), ('clump-mixed', 216, 304), ('clump-fern', 392, 296)),
 }
-MAPS = {name: {room: pieces + MORE_BOTTOM[room] for room, pieces in rooms.items()}   # every forest map and its rooms' sharp foreground
+# The middle of the long rooms (#664, D153, author 2026-11-27: sample A of forest-1-spider): now and then a hanging piece between
+# the ones at the ends, spread along the room with open sky between them, and a tall stem rising from the bottom where one fits.
+# Where no stem fits further in, one stands partly out of view at an end of the room.
+# `parallax_mock.check_middle` (validateParallax) sets the limits for every room: a long room added later gets its pieces here.
+MIDDLE = {
+    'forest-0-ladder': (('near-sprig', 540, 0),),
+    'forest-0-wall': (('near-sprig', 504, 0),),
+    'forest-0-platform': (('near-fern', 416, 0),),   # fronds, not leaf blobs or vines, by the falling stone and its swaying vines
+    'forest-0-stone': (('near-sprig', 464, 0),),
+    'forest-1-mob': (('near-sprig', 536, 0), ('rise-reeds', -43, 128)),
+    'forest-1-spider': (('vine-curtain', 500, -16), ('near-sprig', 888, 0)),
+    'forest-1-route': (('near-canopy', 448, 0), ('rise-reeds', -9, 128)),
+    'forest-1-guard': (('rise-reeds', 408, 128),),
+    'forest-entry': (('near-sprig', 464, 0), ('rise-reeds', -40, 128)),
+    'forest-glade': (('near-sprig', 452, 0), ('rise-reeds', -41, 128)),
+    'forest-roost': (('near-fern', 336, 0), ('rise-fern', -210, 112), ('rise-fern', 685, 112)),
+    'forest-hollow': (('near-sprig', 464, 0), ('rise-reeds', 516, 128), ('rise-fern', -210, 112)),
+    'forest-canopy': (('near-sprig', 360, 0), ('near-fern', 768, 0), ('rise-reeds', -9, 128)),   # a fern by the swaying hanging vines
+}
+# every forest map and its rooms' sharp foreground
+MAPS = {name: {room: pieces + MIDDLE.get(room, ()) + MORE_BOTTOM[room] for room, pieces in rooms.items()}
         for name, rooms in (('forest-0', FOREST_0), ('forest-1', FOREST_1), ('forest-2', FOREST_2))}
 GAME_FOREGROUND = {room: pieces for rooms in MAPS.values() for room, pieces in rooms.items()}
 

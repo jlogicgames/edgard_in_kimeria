@@ -669,6 +669,11 @@ wings; its sheet grew from 80x72 to 80x80 so the four death frames, read 16 px t
 row 8). Grids: `art/objects/enemy/red-mob.grid`, `art/objects/enemy/bat.grid`; export and checks: `tools/enemy_sprites.py`,
 `tools/test_enemy_sprites.py`.
 
+**Their bodies (D101).** A bat killed in the air falls while its death frames play and lies on the floor below, on its side with
+one wing spread flat and its eyes shut; over a pit nothing stays. It is small, so it rocks. A red mob ends its death clip as a
+low heap in its hood and tunic and stays so; it is big, so it twitches (1 px for 0.3 s) instead of rocking. Both are harmless,
+crumble under the sword or a stomp and burn under a fireball or a thrown torch, like every body.
+
 The forest boss and the YellowMob were redrawn the same way on 2026-11-21 (colours: [ART_DIRECTION.md](ART_DIRECTION.md),
 section 1, Danger), with the same frames, timing and boxes. The boss is a horned warlord in blackened iron and a mulberry tabard
 with a long-hafted bearded axe (crescent edge with a lit bevel, a beard hooking down, the eye round the haft, a back spike).
@@ -683,12 +688,15 @@ skull-masked charger in oxblood hide with a yellowed bone mask; its idle frames 
 above it), and it falls face down with the whole mask, horns along the ground. Both bodies lie a pixel inside their body hitboxes on every live frame, the YellowMob's drawing covers every row and
 column of its hurtbox, and the boss's axe reaches each edge of its attack box on the active frames and leaves the body box on no
 other frame that hurts (D10, `tools/test_enemy_sprites.py`). Grids: `art/objects/enemy/boss.grid`, `art/objects/enemy/yellow-mob.grid`.
+A killed YellowMob stays face down on that last frame as its body (D101): it twitches, crumbles and burns like the red mob's.
+The boss leaves none.
 
 Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, the snail's, D106, and the flying beetle's, D145; the wolf's, D115, built and placed in `forest-glade`, #331) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 anyone passes (D119), the sword or a stomp crumbles it, a fireball or a thrown torch burns it and flies on, and a stone flies through it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
-which monsters and how: the list in D101). The beetle's, the flying beetle's, the spider's, the snail's and the wolf's bodies are built; the mosquito swarm leaves none (D151); the Bat and possibly the RedMob and YellowMob follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+which monsters and how: the list in D101). The bodies are built for the beetle, the flying beetle, the spider, the snail, the
+wolf, the Bat, the RedMob and the YellowMob; the mosquito swarm and the boss leave none.
 
 ### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 

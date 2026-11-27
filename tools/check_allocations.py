@@ -25,8 +25,23 @@ SOURCE_PATHS = ('core/src/main/java',)
 HOT_NAME = re.compile(r'^(?:update|render|draw)')
 # Helpers called from a hot method that the name rule cannot find: (file, method) -> why it is per-frame.
 HOT_METHODS = {
+    ('entity/enemy/FallenEnemy.java', 'fall'): 'called from FallenEnemy.update every frame once killed (D101, #478)',
+    ('entity/enemy/FallenEnemy.java', 'lie'): 'called from FallenEnemy.update every frame the body lies',
+    ('entity/enemy/FallenEnemy.java', 'react'): 'called from FallenEnemy.lie when an actor comes near',
+    ('entity/enemy/FallenEnemy.java', 'heroDirection'): 'called from FallenEnemy.lie when the hero comes near',
+    ('entity/enemy/FallenEnemy.java', 'grownBox'): 'called from FallenEnemy.lie every frame',
+    ('entity/enemy/FallenEnemy.java', 'stompedOn'): 'called from FallenEnemy.lie every frame',
+    ('entity/enemy/FallenEnemy.java', 'centreX'): 'called from the crumble and the burn inside the per-frame updates',
+    ('entity/enemy/FallenEnemy.java', 'floorY'): 'called from the crumble and the burn inside the per-frame updates',
+    ('entity/enemy/FallenEnemy.java', 'burn'): 'called from FallenEnemy.update every frame the body burns',
+    ('entity/enemy/FallenEnemy.java', 'crumble'): 'called from the Player, Fireball and Carryable updates when a weapon reaches the body',
+    ('entity/enemy/FallenEnemy.java', 'burnUp'): 'called from the Fireball and Carryable updates when a fire reaches the body',
+    ('entity/enemy/FallenEnemy.java', 'twitch'): 'called from FallenEnemy.render every frame the body is drawn',
+    ('entity/enemy/FallenEnemy.java', 'bodyFrame'): 'called from FallenEnemy.render every frame the body is drawn',
     ('physics/CollideBody.java', 'overlapsSolidAt'): 'called from checkVerticalCollisions for every falling platform the body touches, every frame',
     ('physics/CollideBody.java', 'checkVerticalCollisions'): 'called from every actor update',
+    ('physics/CollideBody.java', 'leaveSolid'): 'called from checkVerticalCollisions for every solid block the body overlaps, every frame (#600)',
+    ('physics/CollideBody.java', 'overlapsSolid'): 'called from overlapsSolidAt, and from leaveSolid for a body deeper in a block than one step explains (#600)',
     ('effects/Torch.java', 'spawnCore'): 'called from update every 0.04 to 0.16 s',
     ('effects/Torch.java', 'spawnEmbers'): 'called from update every 0.15 to 0.35 s',
     ('effects/Torch.java', 'spawnSparkles'): 'called from update every 0.08 to 0.26 s',
@@ -122,10 +137,10 @@ HOT_METHODS = {
     ('effects/BeetleFx.java', 'speck'): 'called from Beetle.windup 50 to 150 times a second (#327)',
     ('effects/BeetleFx.java', 'burst'): 'called from Beetle.burst, inside the per-frame updates',
     ('effects/BeetleFx.java', 'poof'): 'called from Beetle.poof, inside the per-frame updates',
-    ('effects/RemainsFx.java', 'crumble'): 'called from Beetle.crumble and Spider.crumble, inside the per-frame updates (D101, #478)',
-    ('effects/RemainsFx.java', 'burnGlow'): 'called from Beetle.burnUp and Spider.burnUp, inside the per-frame updates',
-    ('effects/RemainsFx.java', 'burnFlame'): 'called from Beetle.burn and Spider.burn 70 times a second',
-    ('effects/RemainsFx.java', 'burnOut'): 'called from Beetle.burn and Spider.burn at the end of the burn',
+    ('effects/RemainsFx.java', 'crumble'): 'called from the crumble of every body, inside the per-frame updates (D101, #478)',
+    ('effects/RemainsFx.java', 'burnGlow'): 'called from the burnUp of every body, inside the per-frame updates',
+    ('effects/RemainsFx.java', 'burnFlame'): 'called from every burning body 70 times a second',
+    ('effects/RemainsFx.java', 'burnOut'): 'called from every body at the end of its burn',
     ('entity/enemy/RemainsSwing.java', 'push'): 'called from Beetle.push and Spider.push when the hero comes near a body (D101)',
     ('effects/SpiderFx.java', 'silk'): 'called from Spider.windup 60 times a second (#328)',
     ('effects/SpiderFx.java', 'line'): 'called from Spider.leap once per 2 px flown',
@@ -343,12 +358,40 @@ HOT_METHODS = {
     ('ui/FairyGuide.java', 'changedStrength'): 'called from FairyGuide.renderBehind and renderFront for every marked mechanism',
     ('entity/player/Player.java', 'collectLinkedTargets'): 'called from FairyGuide.update every frame (D87)',
     ('entity/player/Player.java', 'selectedInteraction'): 'called every frame a target is selected, by the fairy guide and the hint text (D87: now a reused instance)',
+    ('ui/Overlay.java', 'title'): 'called from KimeriaGame.renderOverlay every menu frame (#464)',
+    ('ui/Overlay.java', 'body'): 'called from KimeriaGame.renderOverlay every frame of a screen with body text (#464)',
+    ('ui/Overlay.java', 'bodyHeight'): 'called from KimeriaGame.renderOverlay every frame of a screen with body text (#464)',
+    ('ui/Overlay.java', 'hint'): 'called from KimeriaGame.renderOverlay every menu frame (#464)',
+    ('ui/Overlay.java', 'topRight'): 'called from KimeriaGame.render every frame of the debug FPS counter (#464)',
+    ('ui/Overlay.java', 'buttons'): 'called from KimeriaGame.renderOverlay every menu frame (#464)',
+    ('ui/Overlay.java', 'buttonLabel'): 'called from Overlay.buttons for every button, every menu frame',
+    ('ui/Overlay.java', 'buttonsWidth'): 'called from Overlay.buttons every menu frame',
+    ('ui/Overlay.java', 'buttonsHeight'): 'called from KimeriaGame.renderOverlay every menu frame',
+    ('ui/Overlay.java', 'wrapped'): 'called from Overlay.body, bodyHeight and hint every menu frame (#464)',
+    ('ui/Overlay.java', 'line'): 'called from Overlay.title, buttonLabel and buttonsWidth every menu frame (#464)',
+    ('KimeriaGame.java', 'aboutText'): 'called from renderOverlay every frame of the About screen (#464)',
+    ('ui/Overlay.java', 'queueText'): 'called for every queued text, every menu frame',
+    ('ui/Overlay.java', 'clearText'): 'called from Overlay.beginFrame and flushText every frame',
+    ('ui/Overlay.java', 'beginFrame'): 'called from KimeriaGame.render every frame',
+    ('ui/Overlay.java', 'flushText'): 'called from KimeriaGame.render every frame',
+    ('ui/Menu.java', 'visibleCount'): 'called from Overlay.buttonsHeight every menu frame',
+    ('ui/Menu.java', 'ensureVisibleSelection'): 'called from Overlay.buttons every menu frame',
+    ('ui/ValueLabel.java', 'get'): 'called for every "Label: value" button, every menu frame (#464)',
+    ('KimeriaGame.java', 'mouseLogical'): 'called from renderOverlay and updateHealer every frame',
 }
 # (file, method, kind) -> what the excluded code carries and why fixing it would lose that.
 # Existing hot-path allocations are NOT listed: the check only looks at changed lines, so touching one means fixing it.
 ALLOWED = {
     ('world/Level.java', 'renderDebug', 'iterator'):
         'F1 collider/hitbox gizmos, drawn only while the debug flag is on: a measurement overlay, not a gameplay frame',
+    ('ui/Overlay.java', 'wrapped', 'new'):
+        'the kept layout itself, built the first time a string is shown or when its width or colour changes (AllocationBudgetTest.menuFrame)',
+    ('ui/Overlay.java', 'line', 'new'):
+        'the kept layout itself, built the first time a string is shown (AllocationBudgetTest.menuFrame)',
+    ('KimeriaGame.java', 'aboutText', 'string'):
+        'the About page text itself, joined only when the page or the language changes (AllocationBudgetTest.menuFrame)',
+    ('ui/ValueLabel.java', 'get', 'string'):
+        'the label itself, joined only when the language or the value changes (a menu event); an unchanged frame returns the kept string (AllocationBudgetTest.menuFrame)',
 }
 
 RULES = {

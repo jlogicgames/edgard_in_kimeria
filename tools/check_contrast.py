@@ -260,6 +260,11 @@ SPRITES = {
     # outline 0.411 to 0.542; its body, active since D117, 0.460 at worst (2026-11-27, #594).
     'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
     'Wolf:body': ('active', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
+    # #478 (D101, D117): the bodies of the three inherited monsters, cells of their own sheets, measured by BODY_SWEEP: the
+    # bat's cell (4, 4), and the last death frame (row 4, column 3) of each mob.
+    'Bat:body': ('active', 'enemy/Bat.png', (64, 64, 16, 16), 1, 'floor', FULL),
+    'RedMob:body': ('active', 'enemy/Mobs.png', (144, 128, 48, 32), 1, 'floor', FULL),
+    'YellowMob:body': ('active', 'enemy/yellow_mob.png', (144, 128, 48, 32), 1, 'floor', FULL),
     'Boss': ('active', 'enemy/Boss.png', (0, 224, 48, 32), 4, 'floor', FULL),  # every THRONE frame, its rest state (art/objects/enemy/boss.grid)
     'Player': ('active', 'hero/hero-right.png', (0, 0, 64, 64), 4, 'floor', FULL),  # idle facing right (#343, D79)
     # #363 (D88): the deadfall draws three parts at rest, each placed by deadfall_parts as the game draws it: the bough on the
@@ -1298,9 +1303,13 @@ def tile_report(roots):
 #   floor only and never into a wall);
 # - spider: every position.x of each floor leg, widened by Spider.POUNCE_REACH while authored floor stays under the whole
 #   body at that floor line and no solid is in the body's way (#497: the leap never leaves that floor and a solid stops it,
-#   #594); every wall pose and every thread pose, set on the open side as Spider.die does and dropped to the floor below.
+#   #594); every wall pose and every thread pose, set on the open side as Spider.die does and dropped to the floor below;
+# - bat (#478): every position of its line (across, or up and down), dropped to the surface below; none over a pit;
+# - red and yellow mob (#478): every position.x it can walk to, from its authored place and over its range (it runs until its
+#   middle is at the hero's, who is inside the range), up to a solid in its way, dropped from its floor line.
 # Floor tops elsewhere (other rooms, ledges no monster of that kind reaches) carry nothing for this gate: no body can lie there.
-BODY_SWEEP = ('Beetle:body', 'FlyingBeetle:body', 'Spider:body', 'Snail:body', 'Wolf:body')
+BODY_SWEEP = ('Beetle:body', 'FlyingBeetle:body', 'Spider:body', 'Snail:body', 'Wolf:body', 'Bat:body', 'RedMob:body',
+              'YellowMob:body')
 BODY_STEP = 8  # px between measured body positions along a range or a route
 LANDING_TYPES = (None, 'Wall', 'Platform')  # every collision box a falling body settles on (not quicksand)
 SPIDER_POUNCE_REACH = java_number(SPIDER_JAVA, 'POUNCE_REACH')
@@ -1485,6 +1494,69 @@ def flying_beetle_body_spots(boxes, x, y, props, blocks=(), name='map'):
     return spots
 
 
+BAT_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/Bat.java'
+BAT_FRAME = java_number(BAT_JAVA, 'FRAME_SIZE')
+BAT_FLOOR_IN_FRAME = java_number(BAT_JAVA, 'BODY_Y') + java_number(BAT_JAVA, 'BODY_HEIGHT')  # the lying body's floor line
+
+
+HITBOX = r'\bhitbox = Hitbox\.rect\((\d+), (\d+), (\d+), (\d+)\)'
+
+
+def hitbox_of(kind):
+    """(x, y, width, height) of a monster's live body box, read from its Java source."""
+    text = (ROOT / f'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/{kind}.java').read_text(encoding='utf-8')
+    return tuple(int(v) for v in re.search(HITBOX, text).groups())
+
+
+def bat_body_spots(boxes, x, y, props, blocks=(), name='map', solids=()):
+    """(position.x, frame bottom) of every place a bat's body can lie: dropped from every point of its line, across or up and
+    down; none over a pit. The body rests on row BAT_FLOOR_IN_FRAME - 1, so the frame's bottom is below its floor line."""
+    low, high = -float(props.get('offNeg', 0)) * TILE, float(props.get('offPos', 0)) * TILE
+    vertical = props.get('isVertical') == 'true'
+    lefts = [int(x)] if vertical else _steps(x + low, x + high)
+    tops = _steps(y + low, y + high) if vertical else [y]
+    spots = set()
+    body_top = hitbox_of('Bat')[1]
+    for left in lefts:
+        for top in tops:
+            feet = top + BAT_FLOOR_IN_FRAME
+            # A box the bat overlaps as it dies sets the body on its top; a solid only when its top is the nearer face, else the
+            # body leaves underneath and falls on (CollideBody.checkVerticalCollisions, leaveSolid, #600).
+            overlapped = [by for bx, by, bw, bh in boxes if bx < left + BAT_FRAME and left < bx + bw and by < feet and by + bh > top + body_top
+                          and ((bx, by, bw, bh) not in solids or feet - by <= by + bh - (top + body_top))]
+            line = min(overlapped) if overlapped else drop(boxes, left, left + BAT_FRAME, feet)
+            check_static_column(blocks, name, 'Bat', left, left + BAT_FRAME, top, line)
+            if line is not None:
+                spots.add((left, line + BAT_FRAME - BAT_FLOOR_IN_FRAME))
+    return spots
+
+
+def mob_body_spots(root, boxes, kind, x, y, props, blocks=(), name='map'):
+    """(position.x, floor line) of every place a red or yellow mob's body can lie: it runs until its middle is at the hero's,
+    who is inside the authored range, up to a solid in its way, and falls from its floor line."""
+    body_x, body_y, width, height = hitbox_of(kind)
+    middle = body_x + width * HALF
+    low, high = x - float(props.get('offNeg', 0)) * TILE - middle, x + float(props.get('offPos', 0)) * TILE - middle
+    low, high = min(low, x), max(high, x)
+    walls, feet = spider_solids(root), y + body_y + height
+
+    def blocked(left):
+        return solid_in_way(walls, left + body_x, left + body_x + width, feet, height)
+
+    lo, hi = x, x
+    while lo > low and not blocked(max(low, lo - BODY_STEP)):
+        lo = max(low, lo - BODY_STEP)
+    while hi < high and not blocked(min(high, hi + BODY_STEP)):
+        hi = min(high, hi + BODY_STEP)
+    spots = set()
+    for left in _steps(lo, hi):
+        line = drop(boxes, left + body_x, left + body_x + width, feet)
+        check_static_column(blocks, name, kind, left + body_x, left + body_x + width, y + body_y, line)
+        if line is not None:
+            spots.add((left, line))
+    return spots
+
+
 def placed_body_placements(roots):
     """(BODY_SWEEP key, map, object index) of every monster placed in `roots`: each must yield a measured body."""
     return {(obj.get('type') + ':body', name, index) for name, root in roots.items() for group in root.findall('objectgroup')
@@ -1507,7 +1579,7 @@ def body_spot_placements(roots):
             offset_y = float(group.get('offsety', '0'))
             for index, obj in enumerate(group.findall('object')):
                 kind = obj.get('type')
-                if kind not in ('Beetle', 'FlyingBeetle', 'Spider', 'Snail', 'Wolf'):
+                if kind + ':body' not in BODY_SWEEP:
                     continue
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
                 x, y = float(obj.get('x')), float(obj.get('y')) + offset_y
@@ -1519,6 +1591,10 @@ def body_spot_placements(roots):
                     spots = wolf_body_spots(boxes, spider_solids(root), x, y, props, blocks, name)
                 elif kind == 'FlyingBeetle':
                     spots = flying_beetle_body_spots(boxes, x, y, props, blocks, name)
+                elif kind == 'Bat':
+                    spots = bat_body_spots(boxes, x, y, props, blocks, name, spider_solids(root))
+                elif kind in ('RedMob', 'YellowMob'):
+                    spots = mob_body_spots(root, boxes, kind, x, y, props, blocks, name)
                 else:
                     low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
                     spots = {(left, y + h) for left in _steps(low, high)}

@@ -506,10 +506,10 @@ class RoomReplayTest {
         return firstTime;
     }
 
-    /** Whether a Bat's hitbox is within 40 px of the hero's, both ways (the collection route's wait under the stair's Bat, #500). */
+    /** Whether a live Bat's hitbox is within 40 px of the hero's, both ways (the collection route's wait under the stair's Bat, #500); a killed one's body (D101) is no threat. */
     private static boolean batClose(Level level, Player player) {
         Rectangle me = player.hitboxBounds();
-        for (var object : level.objects) if (object instanceof com.jlogicsoftware.kimeria.entity.enemy.Bat bat) {
+        for (var object : level.objects) if (object instanceof com.jlogicsoftware.kimeria.entity.enemy.Bat bat && !bat.isDefeated()) {
             Rectangle b = bat.hitboxBounds();
             if (b.x - (me.x + me.width) < 40 && me.x - (b.x + b.width) < 40 && b.y - (me.y + me.height) < 40 && me.y - (b.y + b.height) < 40) return true;
         }

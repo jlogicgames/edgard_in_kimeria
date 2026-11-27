@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Pool sizes of {@link RemainsFx} (D101, #478): the worst case the game can make is several bodies finished at once, three
  * crumbled and three burnt together, then as many again 0.2 s later (a sword swing, a stomp and fireballs through a room of
- * bodies), beetles' and spiders' alike. The peak over many seeds and frame rates must leave at least 25 % headroom, since a
+ * bodies), every monster's alike. The peak over many seeds and frame rates must leave at least 25 % headroom, since a
  * full pool silently drops the oldest particle.
  */
 class RemainsFxTest {

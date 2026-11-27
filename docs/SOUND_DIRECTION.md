@@ -402,8 +402,8 @@ Two environment sounds shared by every monster's body (D101). They are quiet, un
 -9 dBFS like `fireball_fizzle`. The body's rocking is silent: it plays on every pass and would nag.
 
 - `remains_crumble` (0.28 s, RMS -27.0 dBFS, peak-limited): a dry crunch, 11 low-mid ticks (7 ms band-passed noise around
-  1.7 kHz) that thin out over 0.16 s, over a short gritty rustle around 900 Hz. It plays when the sword, a stone or a stomp
-  crumbles a body.
+  1.7 kHz) that thin out over 0.16 s, over a short gritty rustle around 900 Hz. It plays when the sword or a stomp
+  crumbles a body (a thrown stone flies through it, D119).
 - `remains_burn` (0.40 s, RMS -25.0 dBFS): the fizzle's family, warmer and lower, a hiss sweeping 1.9 kHz -> 700 Hz that
   flares in 30 ms and dies over 0.16 s, with 9 ember crackles. It plays when a fireball or a torch burns a body.
 

@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
@@ -50,6 +51,7 @@ import com.jlogicsoftware.kimeria.ui.Menu;
 import com.jlogicsoftware.kimeria.ui.MenuBackdrop;
 import com.jlogicsoftware.kimeria.ui.MenuItem;
 import com.jlogicsoftware.kimeria.ui.Overlay;
+import com.jlogicsoftware.kimeria.ui.ValueLabel;
 import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.world.RoomFade;
 
@@ -186,7 +188,18 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final Runnable hoverSound = this::playHoverSound, clickSound = () -> playSound("button_click");
     private static final Runnable NO_ACTION = () -> { };
     private final FpsLabel fpsLabel = new FpsLabel();
-    private static final float WEB_START_BUTTONS_Y = 170f;
+    private final Vector2 mouse = new Vector2();
+    /** The About page's text and what it was joined for ({@link #aboutText}). */
+    private String aboutText;
+    private Language aboutTextLanguage;
+    private boolean aboutTextRules;
+    private static final float WEB_START_TITLE_Y = 90f, WEB_START_BUTTONS_Y = 170f;
+    /** The Loading title sits this far above the screen's middle. */
+    private static final float LOADING_TITLE_LIFT = 15f;
+    /** A panel screen's body text wraps this much narrower than its panel. */
+    private static final float PANEL_TEXT_ROOM = 30f;
+    /** The gap between a panel screen's body text and its buttons. */
+    private static final float PANEL_BODY_GAP = 20f;
     private final ArtifactInventory artifacts = new ArtifactInventory();
     private final RangedStock rangedStock = new RangedStock();
     /** Coin count when the level began; Restart Level goes back to it. */
@@ -342,25 +355,25 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Only the desktop window can be switched; the web canvas and mobile screens
         // don't offer a windowed mode to opt into.
         List<MenuItem> optionItems = new ArrayList<>();
-        optionItems.add(new MenuItem(() -> Msg.LANGUAGE_LABEL.t(language) + ": " + language.nativeName(), this::toggleLanguage));
+        optionItems.add(new MenuItem(new ValueLabel(() -> Msg.LANGUAGE_LABEL.t(language), () -> language.nativeName()), this::toggleLanguage));
         if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
             optionItems.add(new MenuItem(
-                () -> Msg.DISPLAY_LABEL.t(language) + ": "
-                    + (Gdx.graphics.isFullscreen() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
+                new ValueLabel(() -> Msg.DISPLAY_LABEL.t(language),
+                    () -> (Gdx.graphics.isFullscreen() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language)),
                 this::toggleFullscreen));
         }
         if (pageFullscreen != null && pageFullscreen.available()) {
             // Runs inside the click that selects the item: browsers only allow fullscreen from a user gesture.
             optionItems.add(new MenuItem(
-                () -> Msg.DISPLAY_LABEL.t(language) + ": "
-                    + (pageFullscreen.active() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language),
+                new ValueLabel(() -> Msg.DISPLAY_LABEL.t(language),
+                    () -> (pageFullscreen.active() ? Msg.FULLSCREEN : Msg.WINDOWED).t(language)),
                 pageFullscreen::toggle));
         }
         optionItems.add(new MenuItem(
-            () -> Msg.SOUND_LABEL.t(language) + ": " + (playSounds ? Msg.ON : Msg.OFF).t(language),
+            new ValueLabel(() -> Msg.SOUND_LABEL.t(language), () -> (playSounds ? Msg.ON : Msg.OFF).t(language)),
             this::toggleSound));
         optionItems.add(new MenuItem(
-            () -> Msg.MUSIC_LABEL.t(language) + ": " + (playMusic ? Msg.ON : Msg.OFF).t(language),
+            new ValueLabel(() -> Msg.MUSIC_LABEL.t(language), () -> (playMusic ? Msg.ON : Msg.OFF).t(language)),
             this::toggleMusic));
         optionItems.add(new MenuItem(() -> Msg.CONTROLS.t(language), () -> {
             controlsMenu.selected = 0;
@@ -374,21 +387,20 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // D135: Left-handed lives on the Controls screen, which shows both hands so the switch explains itself.
         controlsMenu = new Menu(() -> Msg.CONTROLS.t(language), null, List.of(
             new MenuItem(
-                () -> Msg.LEFT_HANDED_LABEL.t(language) + ": " + (leftHanded ? Msg.ON : Msg.OFF).t(language),
+                new ValueLabel(() -> Msg.LEFT_HANDED_LABEL.t(language), () -> (leftHanded ? Msg.ON : Msg.OFF).t(language)),
                 this::toggleLeftHanded),
             new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
         ), () -> uiState = UiState.OPTIONS);
 
         assistMenu = new Menu(() -> Msg.ASSIST.t(language), null, List.of(
             new MenuItem(
-                () -> Msg.LONGER_TRAP_WARNINGS.t(language) + ": "
-                    + (trapWarnings.longer() ? Msg.ON : Msg.OFF).t(language),
+                new ValueLabel(() -> Msg.LONGER_TRAP_WARNINGS.t(language), () -> (trapWarnings.longer() ? Msg.ON : Msg.OFF).t(language)),
                 () -> trapWarnings.toggle(settings)),
             new MenuItem(
-                () -> Msg.SCREEN_SHAKE.t(language) + ": " + (screenShake ? Msg.ON : Msg.OFF).t(language),
+                new ValueLabel(() -> Msg.SCREEN_SHAKE.t(language), () -> (screenShake ? Msg.ON : Msg.OFF).t(language)),
                 () -> { screenShake = !screenShake; settings.set(Settings.SCREEN_SHAKE, screenShake); }),
             new MenuItem(
-                () -> Msg.INSTANT_TEXT.t(language) + ": " + (instantText ? Msg.ON : Msg.OFF).t(language),
+                new ValueLabel(() -> Msg.INSTANT_TEXT.t(language), () -> (instantText ? Msg.ON : Msg.OFF).t(language)),
                 () -> { instantText = !instantText; settings.set(Settings.INSTANT_TEXT, instantText); }),
             new MenuItem(() -> Msg.BACK.t(language), () -> uiState = UiState.OPTIONS)
         ), () -> uiState = UiState.OPTIONS, 440f);
@@ -901,8 +913,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         if (levelVisible && roomFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, roomFade.alpha());
         if (levelVisible && deathFade.active()) overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, deathFade.alpha());
         overlay.beginFrame();
-        renderOverlay(uiState == stateAtFrameStart);
-        if (!fpsText.isEmpty()) overlay.topRight(batch, fpsText, LOGICAL_W - Hud.FPS_RIGHT_MARGIN, Hud.FPS_TOP_MARGIN);
+        renderOverlay(batch, uiState == stateAtFrameStart);
+        if (!fpsText.isEmpty()) overlay.topRight(fpsText, LOGICAL_W - Hud.FPS_RIGHT_MARGIN, Hud.FPS_TOP_MARGIN);
         overlay.flushText(batch);
         // The healer panel is opaque, so its pause button is drawn on top of it (the world HUD draws its own).
         if (uiState == UiState.HEALER) touchControls.renderPauseButton(batch);
@@ -1152,18 +1164,22 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         }
     }
 
+    /** The mouse in logical screen space, in a reused vector: read it at once, never keep it. */
     private Vector2 mouseLogical() {
-        Vector2 v = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-        uiViewport.unproject(v);
-        return v;
+        mouse.set(Gdx.input.getX(), Gdx.input.getY());
+        uiViewport.unproject(mouse);
+        return mouse;
     }
 
     /**
+     * One frame of the screens drawn over the world, as {@link #render} runs it between {@code Overlay.beginFrame} and
+     * {@code flushText}; separate so the budget test measures this very code (#464). A menu frame allocates nothing.
+     *
      * @param acceptActions false on the frame the UI state changed under us (e.g. Esc paused
      *                      the game in {@code Player}), so that same keypress can't also
      *                      activate the pause menu's Back/Resume
      */
-    private void renderOverlay(boolean acceptActions) {
+    void renderOverlay(Batch batch, boolean acceptActions) {
         if (uiState == UiState.HEALER) {
             healerView.render(batch, overlay, healer, language, level, artifacts);
             return;
@@ -1215,7 +1231,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         };
         if (uiState == UiState.LOADING) {
             overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
-            overlay.title(batch, Msg.LOADING.t(language), LOGICAL_W / 2f, LOGICAL_H / 2f - 15f);
+            overlay.title(Msg.LOADING.t(language), LOGICAL_W / 2f, LOGICAL_H / 2f - LOADING_TITLE_LIFT);
             return;
         }
         if (menu == null) return;
@@ -1231,29 +1247,29 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         // Every menu screen shares this full-screen tint over the fog/firefly backdrop -- no solid card.
         overlay.panel(batch, 0, 0, LOGICAL_W, LOGICAL_H, MENU_TINT_ALPHA);
         if (webStart) {
-            overlay.title(batch, Msg.TITLE.t(language), cx, 90);
+            overlay.title(Msg.TITLE.t(language), cx, WEB_START_TITLE_Y);
             overlay.buttons(batch, menu, cx, WEB_START_BUTTONS_Y, mouse, clicked, confirm, back, NO_ACTION, onActivate);
             return; // no menu hint: it mentions gamepad/Esc controls that do nothing here
         }
         if (uiState == UiState.MAIN_MENU) {
             float titleY = 14f, titleBottom = 54f, hintTop = LOGICAL_H - 24f;
-            overlay.title(batch, Msg.TITLE.t(language), cx, titleY);
+            overlay.title(Msg.TITLE.t(language), cx, titleY);
 
             // Centre the button list in the space between the title and the hint line.
             float startY = titleBottom + (hintTop - titleBottom - Overlay.buttonsHeight(menu)) / 2f;
             overlay.buttons(batch, menu, cx, startY, mouse, clicked, confirm, back, onHover, onActivate);
         } else if (uiState == UiState.OPTIONS) {
             // Seven rows (#494) leave no room for the panel layout below: the list takes the whole band between title and hint.
-            overlay.title(batch, menu.titleText(), cx, OPTIONS_TITLE_Y);
+            overlay.title(menu.titleText(), cx, OPTIONS_TITLE_Y);
             overlay.buttons(batch, menu, cx, optionsButtonsY(menu), mouse, clicked, confirm, back, onHover, onActivate);
         } else if (uiState == UiState.CONTROLS) {
-            overlay.title(batch, menu.titleText(), cx, CONTROLS_TITLE_Y);
+            overlay.title(menu.titleText(), cx, CONTROLS_TITLE_Y);
             controlsView.draw(batch, ControlsView.modeFor(touchControls.isAvailable(), gamepad.isConnected()), language, leftHanded);
             overlay.buttons(batch, menu, cx, CONTROLS_BUTTONS_Y, mouse, clicked, confirm, back, onHover, onActivate);
         } else {
             float panelW = uiState == UiState.ABOUT ? 610f : 320f;
             String aboutBody = uiState == UiState.ABOUT ? aboutText() : menu.bodyText();
-            float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - 30f) + 20f : 0f;
+            float bodyH = aboutBody != null ? overlay.bodyHeight(aboutBody, panelW - PANEL_TEXT_ROOM) + PANEL_BODY_GAP : 0f;
             float contentH = (menu.titleText() != null ? 44f : 10f) + bodyH + Overlay.buttonsHeight(menu) + 40f;
             float panelH = Math.max(160f, contentH);
             float panelX = cx - panelW / 2f;
@@ -1261,17 +1277,17 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
             float y = panelY + 30f;
             if (menu.titleText() != null) {
-                overlay.title(batch, menu.titleText(), cx, y);
+                overlay.title(menu.titleText(), cx, y);
                 y += 40f;
             }
             if (aboutBody != null) {
-                overlay.body(batch, aboutBody, cx, y, panelW - 30f);
+                overlay.body(aboutBody, cx, y, panelW - PANEL_TEXT_ROOM);
                 y += bodyH;
             }
             overlay.buttons(batch, menu, cx, y, mouse, clicked, confirm, back, onHover, onActivate);
         }
 
-        overlay.hint(batch, Msg.MENU_HINT.t(language), cx, LOGICAL_H - Overlay.HINT_BOTTOM_MARGIN);
+        overlay.hint(Msg.MENU_HINT.t(language), cx, LOGICAL_H - Overlay.HINT_BOTTOM_MARGIN);
     }
 
     /** Top of the Options list: centred in the band between the title and the menu hint. */
@@ -1279,10 +1295,15 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         return OPTIONS_BAND_TOP + (OPTIONS_BAND_BOTTOM - OPTIONS_BAND_TOP - Overlay.buttonsHeight(menu)) / 2f;
     }
 
-    /** The About page shown: the game blurb (three paragraphs, D135) or the rules. */
+    /** The About page shown: the game blurb (three paragraphs, D135) or the rules; joined when the page or language changes. */
     private String aboutText() {
-        if (aboutRules) return Msg.ABOUT_RULES.t(language) + "\n\n" + Msg.ABOUT_RULES_CARRY.t(language);
-        return Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language);
+        if (aboutText == null || aboutTextLanguage != language || aboutTextRules != aboutRules) {
+            aboutTextLanguage = language;
+            aboutTextRules = aboutRules;
+            aboutText = aboutRules ? Msg.ABOUT_RULES.t(language) + "\n\n" + Msg.ABOUT_RULES_CARRY.t(language)
+                : Msg.ABOUT_GAME_STORY.t(language) + "\n\n" + Msg.ABOUT_GAME_PLAY.t(language) + "\n\n" + Msg.ABOUT_GAME_MORE.t(language);
+        }
+        return aboutText;
     }
 
     @Override

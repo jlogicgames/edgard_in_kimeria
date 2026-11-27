@@ -261,7 +261,10 @@ new view or reward.
 **Workflow.** Write the room's card in [ROOM_CARDS.md](ROOM_CARDS.md) **before** building the map: role, purpose,
 what it introduces, develops or combines (element ids from the card file's registry), the mastered-route and
 first-learning targets of D19, the retry cost and the D26 notes. Then build the map with the recipes in this
-document, measure, and fill the measured times in. The skill `kimeria-room-design` (`.agents/skills/`) is the
+document, measure, and fill the measured times in. A forest room also gets its foreground
+([kimeria-parallax](../.agents/skills/kimeria-parallax/SKILL.md), the lists in `tools/parallax_game.py`) and passes
+`validateParallax`: from 736 px wide it is not left empty in the middle
+([D153](DECISIONS.md#d153-the-middle-of-a-long-forest-room-is-not-left-empty-spread-hanging-pieces-and-rising-stems-664-2026-11-27-amends-d113)). The skill `kimeria-room-design` (`.agents/skills/`) is the
 checklist. A new Tiled object type gets a registry row in the same change.
 
 **Gate.** `RoomCardsTest` (`:core:test`; the Gradle test task declares the card file as an input, so a card edit
@@ -1322,7 +1325,9 @@ Object positions are on the room card.
   showed only half at the top edge beside the HUD's fireball icons, and at `lipTop` 48 the drifting cloud lay behind its cue
   once the camera scrolled (D146). Its body still starts at the room top.
 - Foreground: `tools/parallax_game.py` (`forest-roost` entries); one standing piece of the usual set (`rise-reeds`) is left out
-  and the root curtain stands left of the entrance, because both would cover the beetle or the ledge (rule B).
+  and the root curtain stands left of the entrance, because both would cover the beetle or the ledge (rule B). In the middle a
+  `near-fern` hangs at x 336, and a `rise-fern` stands partly out of view at each end (x -210 and 685, D153, #664); no tall stem fits
+  further in.
 - Widening (D146): 6 tile columns copied from the plain floor left of x 4688; every object right of it moved 96 px.
 - Measured (`RoomReplayTest`, `ForestRoostTest`, `FirstMeetingPocketTest`, 2026-11-27, scripted hero, forest-2.tmx SHA-256
   `9b7e0d72f1594f2be8674716820664ffbf555dae81061b22c58b161f54d87191`): the mastered route 6.43 s (three identical attempts, with and
@@ -1347,7 +1352,9 @@ Object positions are on the room card.
   x 5450 and 5420), walk on, jump the thorn root (take-off at frame x 5574), wait short of the second swarm and walk under it
   while it rises with its top at y 262 or higher (`ForestHollowRoute`).
 - Foreground: `tools/parallax_game.py` (`forest-hollow` entries): fewer low pieces than the other rooms, and the last giant clump
-  stands further right, because they would cover a swarm's line (rule B).
+  stands further right, because they would cover a swarm's line (rule B). The start corner takes a `near-fern` instead of the
+  canopy (a thrown stone, D113), the middle a sprig at x 464 with reeds at x 516, and a `rise-fern` stands partly out of view at the
+  start (x -210, D153, #664).
 - Measured (`RoomReplayTest`, `ForestHollowTest`, `FirstMeetingPocketTest`, 2026-11-27, scripted hero, forest-2.tmx SHA-256
   `6c3ec8568e4b45046f134e128b27ce8d4d78555fd8132e04c0e61f87515fbe74`): the mastered route 10.08 s (three identical attempts, 3.36 s per beat), 6.43 to 13.35 s over start delays of 5 frames
   at a time through 12 s, with and without the assist, 6.43 s on a collection return. Evidence limit: a scripted hero, no novice

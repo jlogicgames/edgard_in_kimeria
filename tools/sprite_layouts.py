@@ -144,10 +144,10 @@ ENEMY_SHEETS = {
         'windup1': ((0, 2),), 'windup2': ((1, 2),), 'strike': ((2, 2),), 'recover': ((3, 2),),
         'hit': ((0, 4),), 'flash': ((1, 4),), 'fall': ((2, 4),), 'down': ((3, 4),)}),
     # Bat: IDLE five frames from (0, 0), RUN five from (0, 32) (the same flap), HIT four from (0, 64). The fifth frame of a
-    # five-frame clip wraps to column 0 of the next row; column 4 is never read.
+    # five-frame clip wraps to column 0 of the next row; column 4 is read only for `dead` (4, 4), the body (D101).
     'bat': ('Bat', (16, 16), (80, 80), {
         'up': ((0, 0), (0, 2)), 'mid': ((1, 0), (1, 2)), 'level': ((2, 0), (0, 1), (2, 2), (0, 3)), 'down': ((3, 0), (3, 2)),
-        'flash': ((0, 4),), 'fold': ((1, 4),), 'tumble': ((2, 4),), 'drop': ((3, 4),)}),
+        'flash': ((0, 4),), 'fold': ((1, 4),), 'tumble': ((2, 4),), 'drop': ((3, 4),), 'dead': ((4, 4),)}),
     # Boss (docs/BOSS.md, "Sheet inspection"): WALK row 1, WARNING (2, 0)-(2, 1), COUNTER (2, 2)-(2, 3) with (2, 3) held through
     # COUNTER_RECOVERY, HURT row 3, DEAD row 4, IDLE and RECOVERY row 5, NORMAL row 6, THRONE row 7. Rows 0, 8 and 9 are never read.
     'boss': ('Boss', (48, 32), (192, 320), {
