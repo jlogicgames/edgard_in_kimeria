@@ -29,8 +29,9 @@ import java.util.Map;
  * down), follows along its line and, once the hero is close under it with a clear straight line
  * down, hangs there for the shared D7 warning ({@link TrapWarnings}, longer with the assist) while specks gather into it from
  * all round (D147) and others run down the line to the spot where he stood; then it dives along that line and bursts. Its body never hurts: only
- * the burst kills, one box {@value BeetleFx#BLAST_WIDTH} px wide and {@value BeetleFx#BLAST_AIR_HALF_HEIGHT} px above and
- * below its middle, cut at the surface under it (at the end of a dive, the ground beetle's 80x32), tested once. A burst due at the
+ * the burst kills, in the shape it is seen in (D148): off the surface at the end of a dive a half ellipse
+ * {@value BeetleFx#BLAST_WIDTH} px wide and {@value BeetleFx#BLAST_HEIGHT} px high, in the air an ellipse
+ * {@value BeetleFx#BLAST_AIR_HALF_HEIGHT} px up and down from its middle, cut at the surface under it; tested once. A burst due at the
  * end of a dive resolves on the next frame, so a hit of that frame wins. A fireball, a thrown stone or a torch kills it in any
  * state without a burst: it falls and leaves its body ({@link Remains}; over a pit, nothing). The sword in any state, and a
  * stomp before it commits, burst it at once; a stomp on a committed one bounces the hero off. No blood.
@@ -132,7 +133,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     private final float spawnX, spawnY;
     /** What its line crosses and it flies over (D146); set once at load, empty on a clear line. */
     private Rectangle[] climbed = NOTHING;
-    private final Rectangle blastScratch = new Rectangle(), heroScratch = new Rectangle(), nearScratch = new Rectangle(),
+    private final Rectangle heroScratch = new Rectangle(), nearScratch = new Rectangle(),
         moverScratch = new Rectangle(), probeScratch = new Rectangle();
     private Level level;
     private boolean inQuickSand;
@@ -230,18 +231,34 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     public float centreX() { return hitboxBoundsInto(bodyScratch).x + hitbox.width * HALF; }
     public float centreY() { return position.y + hitbox.offsetY + hitbox.height * HALF; }
 
-    /**
-     * The burst's box where the monster is now: {@link BeetleFx#BLAST_WIDTH} wide, {@link BeetleFx#BLAST_AIR_HALF_HEIGHT} above
-     * and below the body's middle, cut at the surface under it.
-     */
-    public Rectangle blastBoxInto(Rectangle out) {
-        float cx = centreX(), cy = centreY(), top = cy - BeetleFx.BLAST_AIR_HALF_HEIGHT;
-        float bottom = burstFloor(cx, cy);
+    /** The bounds of the burst's shape ({@link #reaches}) where the monster is now. */
+    public Rectangle blastBoundsInto(Rectangle out) {
+        float cx = centreX(), cy = centreY(), bottom = burstFloor(cx, cy);
+        float top = BeetleFx.onSurface(cy, bottom) ? bottom - BeetleFx.BLAST_HEIGHT : cy - BeetleFx.BLAST_AIR_HALF_HEIGHT;
         return out.set(cx - BeetleFx.BLAST_WIDTH * HALF, top, BeetleFx.BLAST_WIDTH, bottom - top);
     }
 
     /**
-     * Where the burst ends downwards: after a dive that reached its spot, the surface the wind-up drew the box on, even if that
+     * Whether a burst of a body with its middle at ({@code centreX}, {@code centreY}), ending downwards at {@code bottom},
+     * reaches {@code body} (D148): the shape it is seen in. Off a surface that cuts it ({@link BeetleFx#onSurface}) the half
+     * ellipse standing on that surface, half {@link BeetleFx#BLAST_WIDTH} out and {@link BeetleFx#BLAST_HEIGHT} up; in the
+     * air the ellipse round the middle, {@link BeetleFx#BLAST_AIR_HALF_HEIGHT} up and down. Nothing under {@code bottom} is
+     * reached; touching the edge is not. No allocation.
+     */
+    public static boolean reaches(Rectangle body, float centreX, float centreY, float bottom) {
+        float lowest = Math.min(body.y + body.height, bottom);
+        if (body.y >= lowest) return false;
+        boolean dome = BeetleFx.onSurface(centreY, bottom);
+        float originY = dome ? bottom : centreY;
+        // The body's nearest point to the origin, each axis scaled by its radius: inside the unit circle is inside the shape.
+        float across = (MathUtils.clamp(centreX, body.x, body.x + body.width) - centreX) / (BeetleFx.BLAST_WIDTH * HALF);
+        float up = (MathUtils.clamp(originY, body.y, lowest) - originY)
+            / (dome ? BeetleFx.BLAST_HEIGHT : BeetleFx.BLAST_AIR_HALF_HEIGHT);
+        return across * across + up * up < 1;
+    }
+
+    /**
+     * Where the burst ends downwards: after a dive that reached its spot, the surface it locked on, even if that
      * has gone since (D5); else the surface under the body's middle now, or the box's own lower edge over open air.
      */
     private float burstFloor(float cx, float cy) {
@@ -436,13 +453,15 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     }
 
     /**
-     * The burst: the hero's body is tested once against the blast box and killed through {@code collidedWithActor(false)}, as
-     * the explosive traps do (D47); then it is gone (counted as defeated for the room's revisits).
+     * The burst: the hero's body is tested once against the blast's shape ({@link #reaches}) and killed through
+     * {@code collidedWithActor(false)}, as the explosive traps do (D47); then it is gone (counted as defeated for the room's revisits).
      */
-    public void burst() {
+    public void burst() { burst(false); }
+
+    private void burst(boolean heroOnIt) {
         if (isDefeated()) return;
         float cx = centreX(), cy = centreY(), floor = burstFloor(cx, cy);
-        if (player != null && blastBoxInto(blastScratch).overlaps(player.hitboxBoundsInto(heroScratch))) player.collidedWithActor(false);
+        if (player != null && (heroOnIt || reaches(player.hitboxBoundsInto(heroScratch), cx, cy, floor))) player.collidedWithActor(false);
         if (level != null) level.beetleFx().burstAt(cx, cy, floor);
         if (game.playSounds()) game.playSound(Beetle.POP_SOUND);
         if (level != null && player != null && !player.isGotHit() && feelsBurst(cx, cy))
@@ -465,14 +484,18 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         if (gotHit) { die(); return; }
         if (!stompedByPlayer()) return; // touch is harmless
         if (isCommitted()) player.velocity.y = -BOUNCE_HEIGHT; // the hero bounces off, no kill
-        else burst();
+        else burst(true); // landing on it is melee too: the hero on it is always caught (D145, D148)
     }
 
-    /** The sword bursts it at once in every state (D145); on the body, it crumbles it (D101). */
+    /**
+     * The sword bursts it at once in every state, and the swinging hero is always caught, also at the tip of his reach where
+     * the blast's shape would just miss him (D145, D148); on the body, it crumbles it (D101). A stomp that bursts it catches
+     * its hero the same way.
+     */
     @Override
     public void hitBySword(Level level) {
         if (isRemains()) crumble();
-        else burst();
+        else burst(true);
     }
 
     /** Killed quietly: it turns over and falls, to lie as a body (D101); the poof follows a moment later ({@link #POOF_DELAY}). */

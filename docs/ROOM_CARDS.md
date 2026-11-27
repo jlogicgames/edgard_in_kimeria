@@ -109,7 +109,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | yellowmob | `YellowMob` | stomps a walking enemy | monster |
 | bat-enemy | `Bat` | passes or beats a flying enemy | monster |
 | beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) | monster |
-| flying-beetle | `FlyingBeetle` | runs out of the box a flying beetle draws before it dives, puts a platform between them, or jumps to shoot it (D145) | monster |
+| flying-beetle | `FlyingBeetle` | gets away from where a flying beetle's dive points, puts a platform between them, or jumps to shoot it (D145) | monster |
 | snail | `Snail` | crosses a snail's line during its reload, jumps or cuts its gob, comes up behind it or hides behind cover, or shoots it (D106) | monster |
 | spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) | monster |
 | wolf | `Wolf` | jumps a wolf's low lunge, timed on its drawn line; strikes it as it comes or in its recovery; goes up out of its reach and watches it bay; or shoots it (D115); it cannot be outrun without the longer-warnings assist | monster |
@@ -833,7 +833,7 @@ y 304 ====================================================
 | Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
 | Landmark | the low ledge the beetle flies over |
 | Status | new, [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330) (card approved by the author 2026-11-26: a new room, fifth in forest-2). D84 check: the beetle is in view from the entrance, what it does is shown before it acts (the gathering and the line), the answer on the floor is to keep running. Built and tested with a scripted hero (`ForestRoostTest`, `FirstMeetingPocketTest`, `RoomReplayTest`) |
-| Decisions | D72, D100, D105, D145, D146, D147 |
+| Decisions | D72, D100, D105, D145, D146, D147, D148 |
 
 Sketch (Y grows downward, floor top y 304, ledge top y 256; one character is 16 px, column 0 is x 4480; `@` the entrance, `^` the thorn root, `====` the ledge, `<..ww` the beetle on its line, `.<<<<<<.` its way over the ledge, `####` the soil overhang with the stone's lip `v` under it, some rows left out, `E` the exit):
 

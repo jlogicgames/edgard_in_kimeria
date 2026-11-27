@@ -77,6 +77,28 @@ class BeetleFxTest {
         return new int[]{soft, hard};
     }
 
+    /** D148: no flying particle ends or travels outside the shape that kills. */
+    @Test void everyParticleOfTheFlyingBurstStaysInsideTheShapeThatKills() {
+        float centreX = 200, centreY = 150;
+        for (float below : new float[]{BeetleFx.BODY_CENTRE_ABOVE_FLOOR, 14, BeetleFx.BLAST_AIR_HALF_HEIGHT}) {
+            float bottom = centreY + below;
+            boolean dome = BeetleFx.onSurface(centreY, bottom);
+            float origin = dome ? bottom : centreY, high = dome ? BeetleFx.BLAST_HEIGHT : BeetleFx.BLAST_AIR_HALF_HEIGHT;
+            for (long seed = 1; seed <= SEEDS; seed++) {
+                BeetleFx fx = new BeetleFx(seed);
+                fx.burstAt(centreX, centreY, bottom);
+                for (int f = 0; f < 60; f++) {
+                    KimeriaParticleSystem hard = fx.hard();
+                    for (int i = 0; i < hard.count(); i++) {
+                        float across = (hard.x(i) - centreX) / (BeetleFx.BLAST_WIDTH / 2), up = (hard.y(i) - origin) / high;
+                        assertTrue(across * across + up * up <= 1.001f, "outside the shape under " + below + ": " + hard.x(i) + ", " + hard.y(i));
+                    }
+                    fx.update(1 / 60f);
+                }
+            }
+        }
+    }
+
     @Test void theBurstInTheAirStaysInsideItsBox() {
         float centreX = 200, centreY = 150;
         for (float below : new float[]{BeetleFx.BLAST_AIR_HALF_HEIGHT, 14, BeetleFx.BODY_CENTRE_ABOVE_FLOOR}) {   // over open air, and cut by a surface

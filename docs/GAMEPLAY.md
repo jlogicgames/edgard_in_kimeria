@@ -197,8 +197,8 @@ head, rising over a ledge or a low rock in its way and sinking behind it. Touchi
 them and tips its head down (half a second, with a high double chirr), then follows along its line, slower than he runs. Once it
 is within three tiles over him with a clear way down, it hangs where it is, shaking and blinking, while pale specks gather into it
 from all round and others run down a line to the spot where he stands (0.8 s, 1.2 s with the longer-warnings assist). Then it
-dives along that line in a quarter of a second and bursts in a half dome off the ground; it reaches as far as the ground
-beetle's burst, a low, wide box. Run out of it, jump
+dives along that line in a quarter of a second and bursts in a half dome off the ground, and only what the dome
+covers is caught: five tiles across and two high in the middle. Run out of it, jump
 as it bursts, or stand under a ledge, which it cannot dive through. A fireball or a thrown stone or torch kills it at any
 moment without a burst, and its body falls to the floor; while it flies level, Edgard must jump to hit it. His sword cannot
 reach it up there; if it meets the blade as it comes down, or he lands on it before it commits, it bursts on him; landing on it

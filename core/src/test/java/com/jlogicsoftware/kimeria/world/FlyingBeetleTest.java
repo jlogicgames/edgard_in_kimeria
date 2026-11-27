@@ -194,10 +194,10 @@ class FlyingBeetleTest {
             assertEquals(ExpectedWarnings.standard(longer), hang * STEP, STEP * 1.5f, "hangs for the warning");
             assertEquals(x, b.position.x, .01f, "committed on the spot");
             assertEquals(y, b.position.y, .01f);
-            assertTrue(level.beetleFx().hard().count() > 0, "the line and the box are drawn");
+            assertTrue(level.beetleFx().hard().count() > 0, "the gathering and the line are drawn");
             assertTrue(harness.sounds.contains("flying_beetle_dive"));
             Rectangle last = new Rectangle();
-            int dive = until(level, () -> { if (!b.isRemoved()) b.blastBoxInto(last); return b.isRemoved(); }, 60);
+            int dive = until(level, () -> { if (!b.isRemoved()) b.blastBoundsInto(last); return b.isRemoved(); }, 60);
             assertEquals(FlyingBeetle.DIVE_SECONDS + STEP, dive * STEP, STEP * 1.5f, "a 0.25 s dive, the burst a frame later");
             assertEquals(BeetleFx.BLAST_WIDTH, last.width, .01f);
             assertEquals(BeetleFx.BLAST_HEIGHT, last.height, .01f, "the ground beetle's box");
@@ -480,7 +480,7 @@ class FlyingBeetleTest {
         FlyingBeetle b = committed(level);
         framesToArrive(level, b);
         level.collisionBlocks.clear();
-        Rectangle box = b.blastBoxInto(new Rectangle());
+        Rectangle box = b.blastBoundsInto(new Rectangle());
         assertEquals(b.targetSurface(), box.y + box.height, .001f);
         assertEquals(BeetleFx.BLAST_HEIGHT, box.height, .01f);
     }
@@ -557,6 +557,44 @@ class FlyingBeetleTest {
         int n = 0;
         for (int i = 0; i < system.count(); i++) if (system.kind(i) == kind) n++;
         return n;
+    }
+
+    /** D148: what kills is the shape that is seen: off a surface a half ellipse, in the air an ellipse round the middle. */
+    @Test void theBlastKillsInTheShapeItIsSeenIn() {
+        float x = 200, floor = 320, low = floor - BeetleFx.BODY_CENTRE_ABOVE_FLOOR;
+        assertTrue(reaches(x + 39, floor - 22, 22, x, low, floor), "a standing hero 39 px out");
+        assertFalse(reaches(x + 41, floor - 22, 22, x, low, floor), "41 px out");
+        assertTrue(reaches(x - 5.5f, floor - 40, 9, x, low, floor), "31 px up over the middle");
+        assertFalse(reaches(x - 5.5f, floor - 44, 11, x, low, floor), "33 px up");
+        assertFalse(reaches(x + 30, floor - 40, 12, x, low, floor), "the old box's upper corner, ahead");
+        assertFalse(reaches(x - 41, floor - 40, 12, x, low, floor), "and behind");
+        assertTrue(reaches(x - 36, floor - 24, 12, x, low, floor), "inside the curve on the other side");
+        assertFalse(reaches(x - 5.5f, floor, 22, x, low, floor), "nothing under the surface");
+        float middle = 200, open = middle + BeetleFx.BLAST_AIR_HALF_HEIGHT;
+        assertTrue(reaches(x + 39, middle - 5, 10, x, middle, open), "in the air, 39 px out");
+        assertFalse(reaches(x + 41, middle - 5, 10, x, middle, open));
+        assertTrue(reaches(x - 5.5f, middle - 33, 10, x, middle, open), "23 px over the middle");
+        assertFalse(reaches(x - 5.5f, middle - 35, 10, x, middle, open), "25 px over it");
+        assertTrue(reaches(x - 5.5f, middle + 23, 10, x, middle, open), "23 px under it");
+        assertFalse(reaches(x + 30, middle - 30, 12, x, middle, open), "the old box's corner in the air");
+    }
+
+    /** Whether the blast reaches a hero-wide rect with its left edge at {@code left}. */
+    private static boolean reaches(float left, float top, float height, float x, float middle, float bottom) {
+        return FlyingBeetle.reaches(new Rectangle(left, top, 11, height), x, middle, bottom);
+    }
+
+    @Test void theSwordCatchesItsOwnerEvenWhereTheShapeJustMisses() {
+        Level level = level();
+        FlyingBeetle b = beetle(level);
+        // Its body 36 px over the floor, the hero's near side 28 px from its middle: the tip of a sword's reach.
+        place(level, b.centreX() - 28 - 5.5f);
+        b.position.y += FLOOR - 36 - b.floorY();
+        Rectangle hero = level.player.hitboxBoundsInto(new Rectangle());
+        assertFalse(FlyingBeetle.reaches(hero, b.centreX(), b.centreY(), b.centreY() + BeetleFx.BLAST_AIR_HALF_HEIGHT),
+            "outside the oval: " + hero + " from " + b.centreX() + ", " + b.centreY());
+        b.hitBySword(level);
+        assertFalse(alive(level), "melee is punished (D145)");
     }
 
     /** flying-beetle-climb.tmx: a one-way ledge across a line 10 tiles long to the left; the line's body bottom is y 280. */
