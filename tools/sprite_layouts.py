@@ -129,6 +129,7 @@ MONSTER_SHEETS = {
     'wolf': ((48, 24), ('stand', 'trot1', 'trot2', 'alert', 'hackle', 'scrape', 'run1', 'run2', 'run3', 'run4', 'skid', 'crouch',
                      'lunge', 'bite', 'shake', 'bay', 'dead')),  # #331 (D115)
     'wolf-body': ((48, 24), ('body',)),  # D101: the wolf's dead frame, on its side; live palette and rim (D117)
+    'mosquito': ((5, 4), ('dark1', 'dark2', 'fed1', 'fed2', 'dead', 'ember')),  # #645 (D151): one mosquito of the swarm
 }
 WORLD_IMAGES.update({f'monster-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in MONSTER_SHEETS.items()})
 # The inherited enemy sheets, redrawn as grids (2026-11-21): art/objects/enemy/<name>.grid -> assets/images/enemy/<sheet>.png,

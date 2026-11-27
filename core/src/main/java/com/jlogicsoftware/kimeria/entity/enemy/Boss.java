@@ -94,6 +94,8 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         velocity.setZero();
     }
 
+    @Override public boolean touchesDuringSwing() { return true; }
+
     @Override public void update(float dt) {
         if (!game.isGameStarted() || abandoned || isRemoved()) return;
         dt = Math.min(dt, .05f);

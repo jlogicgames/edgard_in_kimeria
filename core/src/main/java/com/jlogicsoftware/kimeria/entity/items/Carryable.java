@@ -164,7 +164,9 @@ public final class Carryable extends Entity {
             }
             if (thrown && level.player.canFight()) for (int o = 0; o < level.objects.size(); o++) {
                 if (level.objects.get(o) instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds())) {
-                    if (!(enemy instanceof Boss)) enemy.collidedWithActor(true);
+                    if (!(enemy instanceof Boss)) {
+                        if (kind == Kind.STONE) enemy.collidedWithActor(true); else enemy.hitByFire();
+                    }
                     velocity.x = 0; thrown = false;
                     break;
                 }

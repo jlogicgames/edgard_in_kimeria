@@ -12,6 +12,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
+import com.jlogicsoftware.kimeria.entity.enemy.MosquitoSwarm;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
@@ -307,6 +308,11 @@ class FirstMeetingPocketTest {
             assertFalse(seen.contains(never.name()), "the beetle never commits to a hero under the ledge: it showed " + seen);
         assertTrue(seen.contains(FlyingBeetle.State.CHASE.name()), "the pocket shows it coming over the ledge: " + seen);
     }
+    /**
+     * On open floor just short of the low swarm's sweep (x 5396), the stone beside him: the swarm flies to and fro in front of him
+     * and cannot reach him; the second swarm is out of view (#645, D151; {@code ForestHollowTest.theSecondSwarmIsOutOfViewFromThePocket}).
+     */
+    @Test void forestHollowTheSwarm() { pocket("forest-2", "forest-hollow", "mosquito-swarm", MosquitoSwarm.class, 5350, MOVES); }
     @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "clocked-column", EmberFissure.class, 3200, "JET"); }
     /**
      * On the one-way branch (x 3952-4016, 32 px above the wolf's floor), where the trunk's face does not cut its sight (a platform is not a

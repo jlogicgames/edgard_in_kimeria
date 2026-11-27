@@ -822,6 +822,48 @@ class EmberFissureLinksTest(unittest.TestCase):
         self.assertEqual([], check(fixture.read_text(encoding='utf-8')))
 
 
+class MosquitoSwarmLinksTest(unittest.TestCase):
+    """#645 (D151): mirror of MosquitoSwarm.problem and Level.validateSwarm."""
+    FLOOR = HangingHiveLinksTest.FLOOR
+    ROOM = HoneyFungusLinksTest.ROOM
+
+    @staticmethod
+    def swarm(x=309, y=298, neg=4, pos=4, vertical=False):
+        v = '<property name="isVertical" type="bool" value="true"/>' if vertical else ''
+        return (f'<object id="3" type="MosquitoSwarm" x="{x}" y="{y}" width="22" height="18"><properties>{v}'
+                f'<property name="offNeg" value="{neg}"/><property name="offPos" value="{pos}"/></properties></object>')
+
+    def run_map(self, swarm, collisions=FLOOR, rooms=ROOM):
+        return check(tmx(swarm, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
+
+    def test_low_high_and_vertical_lines_pass(self):
+        for swarm in (self.swarm(), self.swarm(y=302), self.swarm(y=278), self.swarm(y=298, neg=3, pos=0, vertical=True)):
+            self.assertEqual([], self.run_map(swarm), swarm)
+
+    def test_no_free_way_past(self):
+        self.assertIn('no way past', self.run_map(self.swarm(y=284))[0])
+        ceiling = self.FLOOR + '<object id="12" x="200" y="220" width="240" height="24"/>'
+        self.assertIn('no way past', self.run_map(self.swarm(), collisions=ceiling)[0])
+        self.assertEqual([], self.run_map(self.swarm(y=270), collisions=ceiling))
+        self.assertIn('no way past open', self.run_map(self.swarm(y=274, neg=0, pos=0.625, vertical=True))[0])
+
+    def test_numbers_room_solids_standing_places_and_floor(self):
+        self.assertIn('offNeg', self.run_map(self.swarm(neg=-1))[0])
+        self.assertIn('leaving the room', self.run_map(self.swarm(x=20, pos=0))[0])
+        self.assertIn('camera', self.run_map(self.swarm(y=4, neg=0, pos=0))[0])
+        post = self.FLOOR + '<object id="12" x="390" y="290" width="16" height="30"/>'
+        self.assertIn('solid', self.run_map(self.swarm(), collisions=post)[0])
+        self.assertIn('entrance', self.run_map(self.swarm(x=72, neg=0))[0])
+        broken = '<object id="9" x="0" y="320" width="300" height="48"/><object id="10" x="340" y="320" width="300" height="48"/>'
+        self.assertIn('needs a floor', self.run_map(self.swarm(), collisions=broken)[0])
+
+    def test_the_java_fixtures_pass_or_fail_as_in_the_game(self):
+        tiles = Path(__file__).resolve().parents[1] / 'core/src/test/resources/tiles'
+        for name in ('mosquito-test', 'mosquito-still', 'mosquito-run', 'mosquito-high', 'mosquito-vertical'):
+            self.assertEqual([], check((tiles / f'{name}.tmx').read_text(encoding='utf-8')), name)
+        self.assertIn('entrance', check((tiles / 'mosquito-entrance.tmx').read_text(encoding='utf-8'))[0])
+
+
 class LegHoldLinksTest(unittest.TestCase):
     """#561 (D128): mirror of LegHold.fromMap / validate / problem and Level.legHoldFor."""
     FLOOR = HangingHiveLinksTest.FLOOR

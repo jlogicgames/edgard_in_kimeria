@@ -239,6 +239,9 @@ SPRITES = {
     # every frame; its body, lying wherever it can be killed, by BODY_SWEEP (D101, D117).
     'FlyingBeetle': ('active', 'objects/monster-flying-beetle.png', (0, 0, 40, 32), 10, 'top', FULL),
     'FlyingBeetle:body': ('active', 'objects/monster-flying-beetle-body.png', (0, 0, 40, 32), 1, 'floor', FULL),
+    # #645 (D151): the swarm is measured as it is seen, fourteen mosquitoes composed where MosquitoSwarm draws them when
+    # gathered, both wing frames (swarm_frames), along its line (swarm_parts).
+    'MosquitoSwarm': ('active', 'objects/monster-mosquito.png', (0, 0, 22, 18), 2, 'top', FULL),
     'Spider': ('active', 'objects/monster-spider.png', (0, 0, 32, 16), 9, 'floor', FULL),  # #328 (D102): every frame
     'Spider:body': ('active', 'objects/monster-spider-body.png', (0, 0, 32, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP; D117
     # #483 (D103): a spider authored as a polyline route is measured along it (spider_parts): its floor frames every 16 px of
@@ -342,6 +345,8 @@ BRAMBLE_CLUMP = 16  # the clump frame's width: it is drawn at the root end of th
 
 
 def frames(key):
+    if key == 'MosquitoSwarm':
+        return swarm_frames()
     _, sheet, box, count, _, _ = SPRITES[key]
     result = []
     for sheet, (x, y, w, h), count in ((sheet, box, count), *EXTRA_FRAMES.get(key, ())):
@@ -509,6 +514,46 @@ def flying_beetle_parts(root, x, y, props):
         floor = drop(boxes, left + middle, left + middle + 1, route(min(max(left, low), high)))
         if floor is not None and floor <= deepest:
             yield 'FlyingBeetle', left, floor - fh, fw, fh
+
+
+# The mosquito swarm (#645, D151), as MosquitoSwarm draws it gathered: its mosquitoes at their home places, along its line.
+SWARM_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/MosquitoSwarm.java'
+SWARM_STEP = 8  # px between measured positions along the line
+SWARM_MIRRORED_EVERY = 2  # MosquitoSwarm.render draws every second mosquito mirrored
+
+
+def swarm_numbers(name):
+    """An int array of MosquitoSwarm.java, e.g. HOME_X."""
+    text = (ROOT / SWARM_JAVA).read_text(encoding='utf-8')
+    return [int(v) for v in re.search(rf'int\[\] {name} = \{{([^}}]*)\}}', text).group(1).split(',')]
+
+
+def swarm_frames():
+    """The gathered cloud at both wing frames: mosquito i is fed every FED_EVERY-th, mirrored when i is odd (render)."""
+    _, sheet, (_, _, width, height), count, _, _ = SPRITES['MosquitoSwarm']
+    image = Image.open(ROOT / 'assets/images' / sheet).convert('RGBA')
+    w, h, wings, fed = (java_int(SWARM_JAVA, n) for n in ('MOSQUITO_WIDTH', 'MOSQUITO_HEIGHT', 'WING_FRAMES', 'FED_EVERY'))
+    result = []
+    for phase in range(count):
+        cloud = Image.new('RGBA', (width, height))
+        for i, (x, y) in enumerate(zip(swarm_numbers('HOME_X'), swarm_numbers('HOME_Y'))):
+            cell = (wings if i % fed == 0 else 0) + (phase + i) % wings
+            mosquito = image.crop((cell * w, 0, cell * w + w, h))
+            if i % SWARM_MIRRORED_EVERY:
+                mosquito = mosquito.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+            cloud.alpha_composite(mosquito, (x, y))
+        result.append(cloud)
+    return result
+
+
+def swarm_parts(x, y, props):
+    """(key, left, top, w, h) every SWARM_STEP along the swarm's line, both ends included."""
+    _, _, (_, _, w, h), _, _, _ = SPRITES['MosquitoSwarm']
+    vertical = props.get('isVertical') == 'true'
+    at = y if vertical else x
+    low, high = at - float(props.get('offNeg', 0)) * TILE, at + float(props.get('offPos', 0)) * TILE
+    for step in _steps_every(low, high, SWARM_STEP):
+        yield ('MosquitoSwarm', x, step, w, h) if vertical else ('MosquitoSwarm', step, y, w, h)
 
 
 def _steps_every(lo, hi, step):
@@ -922,6 +967,9 @@ def placements(errors, roots=None):
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'FlyingBeetle':
                     for part in flying_beetle_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y, props):
                         yield (name, *part)
+                    continue
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'MosquitoSwarm':
+                    yield from ((name, *part) for part in swarm_parts(float(obj.get('x')), float(obj.get('y')) + offset_y, props))
                     continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') in ('EmberFissure', 'LanceRoot'):
                     yield from ((name, *part) for part in fissure_parts(root, obj, float(obj.get('x')), float(obj.get('y')) + offset_y, obj.get('type')))

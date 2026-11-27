@@ -1405,6 +1405,23 @@ the ground beetle (`effects.BeetleFx`).
   by `check_contrast.py`: live outline 0.319 to 0.827, body outline 0.331 to 0.514 (active floor 0.28; before the room was built,
   trial placements in all 24 other forest rooms gave a live outline of 0.295 to 0.834).
 
+**Forest mosquito swarm, built (#645, [D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240); the card approved by the author
+2026-11-27, the drawing not yet judged by the author, #645).**
+
+- **Sheet** `assets/images/objects/monster-mosquito.png`, six 5×4 frames (`dark1`, `dark2`, `fed1`, `fed2`: wings up and flat,
+  a dark or a crimson belly; `dead`, curled; `ember`, burning), drawn in `art/objects/monster/mosquito.grid` and exported by
+  `tools/forest_trap_sprites.py monster:mosquito`; no moon rim (its wings are the light edge).
+- **The cloud** is fourteen of them in a 22×18 oval, half of them mirrored, wings flickering 20 times a second, each circling
+  one or two px on its own path; the rim ones move along the rim, so the lethal edge is what is seen. Scattered, the oval
+  stretches 12 px away from the sword. It reads apart from the `Bat` (one solid shape) and the hive's stingers (a straight
+  falling column) as many small things moving every way, the sky between them.
+- **Palette** (11 entries with transparency): ink `0b0814`, crimson `9c2050`, rose `c87896`, pale rose wings `f0d0dc` and
+  `d09cac`, the eye `ff6b57`, and for the ember the fireball's own ramp `fdfaa0`, `fde902`, `fc5601`, `c50e10`.
+- **Death:** no body and no particles: each mosquito drops 6 to 17 px (never under the floor), drifting up to 4 px, drawn
+  `dead` and fading, gone within 0.8 s; a fire kill draws it `ember` for the first 0.25 s.
+- **Contrast** (the gathered cloud along its line, `check_contrast.py`): outline 0.306 to 0.372 in `forest-hollow`, active
+  floor 0.28.
+
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 
 The author explicitly requires sprites for world artwork, including prototypes.
