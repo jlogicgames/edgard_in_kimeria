@@ -522,27 +522,65 @@ SWARM_STEP = 8  # px between measured positions along the line
 SWARM_MIRRORED_EVERY = 2  # MosquitoSwarm.render draws every second mosquito mirrored
 
 
-def swarm_numbers(name):
-    """An int array of MosquitoSwarm.java, e.g. HOME_X."""
+SWARM_CLOCKS = (0.0, 3.7)  # seconds of the swarm's own clock sampled: two shapes of the cloud
+
+
+def swarm_steps():
+    """MosquitoSwarm.STEPS, the irrational steps each mosquito's constants come from."""
     text = (ROOT / SWARM_JAVA).read_text(encoding='utf-8')
-    return [int(v) for v in re.search(rf'int\[\] {name} = \{{([^}}]*)\}}', text).group(1).split(',')]
+    return [float(v.strip().rstrip('f')) for v in re.search(r'float\[\] STEPS = \{([^}]*)\}', text).group(1).split(',')]
+
+
+def swarm_place(i, clock):
+    """Mirror of MosquitoSwarm.mosquitoX/Y gathered: the top-left of mosquito i in the cloud's box at `clock`."""
+    def number(name):
+        text = (ROOT / SWARM_JAVA).read_text(encoding='utf-8')
+        return float(re.search(rf'\b{name} = ([0-9.]+)f?\b', text).group(1))
+    steps = swarm_steps()
+
+    def share(k):
+        turns = (i + 1) * steps[k]
+        return turns - int(turns)
+
+    reach, slow_rate, quick_rate, slow_phase, quick_phase, axis_steps = (
+        java_int(SWARM_JAVA, n) for n in ('REACH', 'SLOW', 'QUICK', 'SLOW_PHASE', 'QUICK_PHASE', 'AXIS_STEPS'))
+
+    def swing(base, name, rate, phase):
+        turns = clock * (number(f'{name}_RATE') + number(f'{name}_SPREAD') * share(base + rate)) + share(base + phase)
+        return math.sin(turns * FULL_TURN)
+
+    def stray(axis):
+        base = axis * axis_steps
+        slow_share = number('SLOW_SHARE')
+        swings = slow_share * swing(base, 'SLOW', slow_rate, slow_phase) + (1 - slow_share) * swing(base, 'QUICK', quick_rate, quick_phase)
+        return (number('REACH_MIN') + number('REACH_SPREAD') * share(base + reach)) * swings
+
+    u, v = stray(0), stray(1)
+    width, height = number('WIDTH'), java_int(SWARM_JAVA, 'HEIGHT')
+    middle_x = width / 2 + u * math.sqrt(1 - v * v / 2) * number('PATH_X')
+    middle_y = height / 2 + v * math.sqrt(1 - u * u / 2) * number('PATH_Y')
+    left = middle_x - number('MOSQUITO_WIDTH') / 2
+    left = math.floor(left) if middle_x > width / 2 else math.ceil(left)
+    return int(left), math.floor(middle_y - number('MOSQUITO_HEIGHT') / 2 + HALF_UP)
 
 
 def swarm_frames():
-    """The gathered cloud at both wing frames: mosquito i is fed every FED_EVERY-th, mirrored when i is odd (render)."""
+    """The gathered cloud at both wing frames and two moments: mosquito i is fed every FED_EVERY-th, mirrored when i is odd."""
     _, sheet, (_, _, width, height), count, _, _ = SPRITES['MosquitoSwarm']
     image = Image.open(ROOT / 'assets/images' / sheet).convert('RGBA')
-    w, h, wings, fed = (java_int(SWARM_JAVA, n) for n in ('MOSQUITO_WIDTH', 'MOSQUITO_HEIGHT', 'WING_FRAMES', 'FED_EVERY'))
+    w, h, wings, fed, mosquitoes = (java_int(SWARM_JAVA, n)
+                                    for n in ('MOSQUITO_WIDTH', 'MOSQUITO_HEIGHT', 'WING_FRAMES', 'FED_EVERY', 'COUNT'))
     result = []
-    for phase in range(count):
-        cloud = Image.new('RGBA', (width, height))
-        for i, (x, y) in enumerate(zip(swarm_numbers('HOME_X'), swarm_numbers('HOME_Y'))):
-            cell = (wings if i % fed == 0 else 0) + (phase + i) % wings
-            mosquito = image.crop((cell * w, 0, cell * w + w, h))
-            if i % SWARM_MIRRORED_EVERY:
-                mosquito = mosquito.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-            cloud.alpha_composite(mosquito, (x, y))
-        result.append(cloud)
+    for clock in SWARM_CLOCKS:
+        for phase in range(count):
+            cloud = Image.new('RGBA', (width, height))
+            for i in range(mosquitoes):
+                cell = (wings if i % fed == 0 else 0) + (phase + i) % wings
+                mosquito = image.crop((cell * w, 0, cell * w + w, h))
+                if i % SWARM_MIRRORED_EVERY:
+                    mosquito = mosquito.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+                cloud.alpha_composite(mosquito, swarm_place(i, clock))
+            result.append(cloud)
     return result
 
 

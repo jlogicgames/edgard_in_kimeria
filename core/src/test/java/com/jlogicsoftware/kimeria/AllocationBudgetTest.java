@@ -965,7 +965,7 @@ class AllocationBudgetTest {
 
     /**
      * Mosquito swarms in turn through the real {@code Level} of mosquito-run.tmx (#645, D151): each flies, its twenty-eight
-     * mosquitoes circling and flickering, tested against the hero's body every frame; the
+     * mosquitoes wandering and flickering, tested against the hero's body every frame; the
      * blade reaches it at frame {@value #SWARM_SWING_FRAME} of the cycle, so it scatters and gathers; at frame
      * {@value #SWARM_KILL_FRAME} it is killed, odd ones by fire, and its mosquitoes drop and fade. {@code update} and
      * {@code render} of the swarm every frame. Swarms are built before the probe.

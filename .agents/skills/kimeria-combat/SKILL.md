@@ -46,7 +46,7 @@ A monster that answers weapons differently follows the mosquito swarm of D151 th
 `touchesDuringSwing` (true makes contact count while the hero swings; the boss uses it too) and `hitByFire` (a fireball or
 a thrown torch; a stone still calls `collidedWithActor(true)`).
 The defaults are the ordinary monster. The swarm never reacts to the hero, its contact lands on its next frame (so a ball
-cast or a stone thrown that frame wins), it flies in silence, its lethal shape is the oval it is drawn in (`hitboxOverlaps` overridden), and
+cast or a stone thrown that frame wins), it flies in silence, its lethal shape is the oval core inside the cloud it is drawn as (`hitboxOverlaps` overridden), and
 its load check keeps a free way past along its whole line (`MosquitoSwarm.problem`).
 
 ## A monster's body (D101)

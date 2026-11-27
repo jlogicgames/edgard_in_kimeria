@@ -194,7 +194,7 @@ class RoomReplayTest {
     private float legHoldArrival = -1;
     private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {}, ROOST_JUMPS = {4550};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 6.43f, HOLLOW_S = 7.30f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 6.43f, HOLLOW_S = 10.08f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;

@@ -278,12 +278,13 @@ and four tiles of headroom over its reach). Where it is met: `forest-glade`, for
 
 ## Mosquito swarm
 
-A loose cloud of mosquitoes, pale and rose dots (D151, #645), a little narrower than Edgard is tall, flies to and fro along a straight
-line, level or up and down, as a bat does. It never notices him. Touching it kills, from any side, even while he swings, and
-landing on it kills him too. His sword cannot kill it: a swing blows the mosquitoes a little further from him, and in under a
+A loose cloud of mosquitoes, pale and rose dots (D151, #645), a little narrower than Edgard is tall, drifts to and fro
+along a straight line, level or up and down, like a bat but half as fast. It never notices him. Touching its thick middle
+kills, from any side, even while he swings, and landing on it kills him too; the strays at its edge are harmless. His sword
+cannot kill it: a swing blows the mosquitoes a little further from him, and in under a
 second they gather again; the blade passes on to whatever is behind. A thrown stone or torch or a fireball kills the whole
 swarm at once; its mosquitoes fall and fade, the stone drops there and can be picked up again. Without a shot, pass it by
-jumping over a low one as it comes towards him (jumping after it rarely clears it) or walking under a high one. It flies
+jumping over a low one as it comes towards him (jumping after it is harder, and a jump on the spot never clears it) or walking under a high one. It flies
 in silence; a thin, quiet whine is heard when it darts out of the sword's way, and a few when it dies. There is no hint about it: it is met in play, in `forest-hollow`, forest-2's sixth
 room, first with a stone beside him ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)). Authoring:
 `MosquitoSwarm` (22×18) in `SpawnPoints` with `offNeg`/`offPos` and `isVertical`, checked at load (a free way past, floor

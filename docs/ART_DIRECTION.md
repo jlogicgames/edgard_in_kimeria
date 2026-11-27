@@ -1412,16 +1412,17 @@ the ground beetle (`effects.BeetleFx`).
   ink body), `dark2` (the wing alone), `fed1` and `fed2` (the same with a rose body), `dead` (one dim pixel), `ember` (two
   burning pixels); drawn in `art/objects/monster/mosquito.grid` and exported by `tools/forest_trap_sprites.py monster:mosquito`;
   no moon rim (the pale pixels carry the contrast).
-- **The cloud** is twenty-eight of them in a 22×18 oval, half of them mirrored, flickering 20 times a second. Eighteen sit
-  round the rim (some stir a px along it), so the lethal edge is drawn all round: gathered, no point of the rim is further
-  than 1.62 px from a drawn pixel (14 dots left over 5 px; the author chose 28, 2026-11-27). Ten circle inside, one or two px
-  on their own paths. Scattered, the oval stretches 12 px away from the sword and the rim opens with it. It speaks the plain pixels of the hive's stingers and reads apart from them (a straight falling
-  column of upright streaks) and from the `Bat` (one solid shape) as separate dots moving every way, the sky between them.
+- **The cloud** is twenty-eight of them in a 22×18 oval, half of them mirrored, flickering 20 times a second, each flying
+  freely over the whole cloud on its own slow path, about 6 px/s. No dot keeps to the rim: the author's playtest (2026-11-27)
+  read a rim of dots as a drawn circle. What kills is the 18×14 core, where they are thickest; the strays outside it are
+  harmless. Scattered, the cloud and its core stretch 12 px away from the sword. It speaks the plain pixels of the hive's
+  stingers and reads apart from them (a straight falling column of upright streaks) and from the `Bat` (one solid shape) as
+  separate dots drifting every way, the sky between them.
 - **Palette** (7 entries with transparency): ink `0b0814`, rose `c87896`, pale rose `f0d0dc` and `d09cac`, and for the ember
   two of the fireball's own ramp, `fde902` and `fc5601`.
 - **Death:** no body and no particles: each mosquito drops 6 to 17 px (never under the floor), drifting up to 4 px, drawn
   `dead` and fading, gone within 0.8 s; a fire kill draws it `ember` for the first 0.25 s.
-- **Contrast** (the gathered cloud along its line, `check_contrast.py`): outline 0.383 to 0.574 in `forest-hollow`, active
+- **Contrast** (the gathered cloud along its line, `check_contrast.py`): outline 0.354 to 0.605 in `forest-hollow`, active
   floor 0.28 (the 5×4 sprites measured 0.306 to 0.372).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)

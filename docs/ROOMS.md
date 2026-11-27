@@ -1344,12 +1344,12 @@ Object positions are on the room card.
 - **The pocket:** on open floor at x 5350, 40 px short of the low swarm's sweep (its line with the 12 px of scatter), the stone at
   his side. The second swarm stands far enough right that the camera does not show it from there.
 - **Recipe (the mastered route):** wait with the body's right edge near x 5386, jump when the swarm comes (its left edge between
-  x 5470 and 5430), walk on, jump the thorn root (take-off at frame x 5574), wait short of the second swarm and walk under it
+  x 5450 and 5420), walk on, jump the thorn root (take-off at frame x 5574), wait short of the second swarm and walk under it
   while it rises with its top at y 262 or higher (`ForestHollowRoute`).
 - Foreground: `tools/parallax_game.py` (`forest-hollow` entries): fewer low pieces than the other rooms, and the last giant clump
   stands further right, because they would cover a swarm's line (rule B).
 - Measured (`RoomReplayTest`, `ForestHollowTest`, `FirstMeetingPocketTest`, 2026-11-27, scripted hero, forest-2.tmx SHA-256
-  `6c3ec8568e4b45046f134e128b27ce8d4d78555fd8132e04c0e61f87515fbe74`): the mastered route 7.30 s (three identical attempts, 2.43 s per beat), 6.43 to 9.68 s over start delays of 5 frames
+  `6c3ec8568e4b45046f134e128b27ce8d4d78555fd8132e04c0e61f87515fbe74`): the mastered route 10.08 s (three identical attempts, 3.36 s per beat), 6.43 to 13.35 s over start delays of 5 frames
   at a time through 12 s, with and without the assist, 6.43 s on a collection return. Evidence limit: a scripted hero, no novice
   playtest ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
 - D26: no lever, support or one-shot object on the route; both swarms are passed by timing; the stone and charges are optional;
