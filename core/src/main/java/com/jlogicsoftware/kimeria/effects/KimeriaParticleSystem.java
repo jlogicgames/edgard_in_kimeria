@@ -48,6 +48,12 @@ public final class KimeriaParticleSystem {
      */
     public static final byte KIND_ORBIT = 5;
 
+    /**
+     * Additive, the upper half of a glow: its flat edge lies on the particle's y, so a flash on a floor never reaches under it
+     * (D147). Size and alpha as {@link #KIND_GLOW}; as tall as half its width.
+     */
+    public static final byte KIND_DOME = 6;
+
     private static final float ORBIT_EDGE = 0.25f;
     private static final float LEAF_EDGE = 0.12f, LEAF_PEAK_ALPHA = 0.85f;
     private static final float LEAF_SWAY_SECONDS = 3.4f, LEAF_TUMBLE_SECONDS = 2.2f, LEAF_FLAT_RATIO = 0.4f, LEAF_EDGE_ON = 0.15f;
@@ -55,7 +61,7 @@ public final class KimeriaParticleSystem {
     private static final float PEAK_ALPHA = 0.7f;
     private static final float GLOW_SHRINK = 0.4f;
     private static final float SMOKE_GROWTH = 1f;
-    private static final float FULL = 1f, DEGREES = 360f;
+    private static final float FULL = 1f, DEGREES = 360f, HALF = .5f;
 
     private final int capacity;
     private final RandomXS128 random;
@@ -138,7 +144,7 @@ public final class KimeriaParticleSystem {
         y[i] = fromY[i] + MathUtils.sinDeg(DEGREES * turn) * toY[i] * rho;
     }
 
-    private static boolean additive(byte k) { return k == KIND_GLOW || k == KIND_ORBIT; }
+    private static boolean additive(byte k) { return k == KIND_GLOW || k == KIND_ORBIT || k == KIND_DOME; }
 
     private void removeOldest() {
         for (int i = 1; i < count; i++) copy(i, i - 1);
@@ -198,8 +204,11 @@ public final class KimeriaParticleSystem {
         float flip = Math.abs(MathUtils.cosDeg(DEGREES * (swayPhase[i] + t * maxLife[i] / LEAF_TUMBLE_SECONDS)));
         return Math.max(1f, size[i] * (LEAF_EDGE_ON + (FULL - LEAF_EDGE_ON) * flip));
     }
-    /** Height of the drawn rectangle: a leaf's short side, constant; the width for the rest. */
-    public float drawHeight(int i) { return kind[i] == KIND_LEAF ? size[i] * LEAF_FLAT_RATIO : drawSize(i); }
+    /** Height of the drawn rectangle: a leaf's short side, constant; half the width for a dome; the width for the rest. */
+    public float drawHeight(int i) {
+        if (kind[i] == KIND_LEAF) return size[i] * LEAF_FLAT_RATIO;
+        return kind[i] == KIND_DOME ? drawSize(i) * HALF : drawSize(i);
+    }
     /** Rotation in degrees of a leaf's rectangle: it swings like a pendulum with its sway; 0 for the rest. */
     public float tilt(int i) {
         if (kind[i] != KIND_LEAF) return 0;
@@ -217,7 +226,7 @@ public final class KimeriaParticleSystem {
         float t = FULL - life[i] / maxLife[i];
         if (kind[i] == KIND_ORBIT) return Math.min(FULL, Math.min(t, FULL - t) / ORBIT_EDGE);
         if (kind[i] == KIND_LEAF) return LEAF_PEAK_ALPHA * Math.min(FULL, Math.min(t, FULL - t) / LEAF_EDGE);
-        return (kind[i] == KIND_GLOW ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
+        return (kind[i] == KIND_GLOW || kind[i] == KIND_DOME ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
 
     /**
@@ -249,6 +258,10 @@ public final class KimeriaParticleSystem {
             if (kind[i] == KIND_LEAF) {
                 float w = drawWidth(i), h = drawHeight(i);
                 batch.draw(region, x[i] - w / 2f, y[i] - h / 2f, w / 2f, h / 2f, w, h, FULL, FULL, tilt(i));
+            } else if (kind[i] == KIND_DOME) {
+                // The region's upper half of V: its dense middle row falls on the rectangle's lower edge, the particle's y.
+                float s = drawSize(i), middle = (region.getV() + region.getV2()) * HALF;
+                batch.draw(region.getTexture(), x[i] - s * HALF, y[i] - s * HALF, s, s * HALF, region.getU(), region.getV(), region.getU2(), middle);
             } else { // the other kinds do not rotate: the plain draw, as before #473
                 float s = drawSize(i);
                 batch.draw(region, x[i] - s / 2f, y[i] - s / 2f, s, s);

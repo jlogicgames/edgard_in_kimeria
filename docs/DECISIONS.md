@@ -4685,6 +4685,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 - **Status:** Accepted (author, 2026-11-26: the card as proposed). Built; the author approved the redrawn sprites and the room, `forest-roost`,
   on 2026-11-26. The sounds and the timing are not yet checked by the author in play ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+- **Amended** by [D146](#d146-the-flying-beetle-flies-over-what-stands-in-its-line-330-amends-d145) (2026-11-27): the beetle flies over what stands in its line, dive depth is
+  measured under the level line, and `forest-roost` was widened; the flight, commit, load-check and placement figures below
+  that D146 names are replaced there.
+- **Amended** by [D147](#d147-the-flying-beetle-gathers-its-blast-round-itself-and-bursts-up-off-the-ground-330-amends-d145) (2026-11-27): its wind-up and burst effects.
 - **Decision:**
   - **Look.** Ten 40×32 frames after the author's photos of a beetle in flight (2026-11-26; a first drawing with bat-like
     wings on a domed shell was rejected): two crimson wing covers lifted apart, a long veined clear hindwing, a segmented belly,
@@ -4737,3 +4741,48 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   5.48 s with and without the assist, safe at every start delay through a whole patrol; contrast along its line 0.315 to 0.826.
 - **Applies to:** the ground beetle shares its effects; D101's flying-beetle line is built as written there.
 
+## D146. The flying beetle flies over what stands in its line (#330, amends D145)
+
+- **Status:** Accepted (author, 2026-11-27, after playing `forest-roost`: the beetle stopped head first against the ledge and
+  hung there; the proposal to fly over it was approved). Built; the author played it the same day with no remarks on the flight
+  and changed the effects ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330), D147).
+- **Decision:**
+  - **Route.** The authored level line, lifted over a **static** solid or one-way platform the body's sweep reaches into,
+    whose top is not below the line (the body's bottom) and is cleared by a rise of at most **96 px** (`MAX_CLIMB`): the body's
+    bottom **48 px** (`CLIMB_HEIGHT`) above that top. Beside it the beetle rises and sinks **1 px for each px** along the
+    line, in patrol and chase. Anything taller, and anything that moves or hangs, still bars the line (a load error).
+  - **Dive depth** is measured under the **level line** (64 px, `MAX_HEIGHT`), from any height: from over a platform it
+    reaches the floor beside it (96 px in the same 0.25 s, at most about 430 px/s). The straight-line test stays: under a
+    platform the line is cut, so a roof is still the shelter. It now steps every 2 px (was 3), and the commit tests a wider
+    square (4 px) than the dive (2 px), so a committed dive never stops short on a corner.
+  - **Load checks** walk the route: the body inside the room and the camera's view and clear of every blocker; no surface
+    closer than 40 px under it; surfaces under the level line, the flown-over ones aside, at most 64 px below it; no burst on
+    the route, and none along any dive from it on to a surface as deep as the line allows, over a standing place.
+  - **Room.** `forest-roost` grew from 640 to **736 px**, because the first meeting's pocket needs 96 px between the beetle's
+    reach and the thorn root ([D105](#d105-rooms-are-dense-one-beat-about-every-3-s-and-a-first-meeting-gets-a-safe-pocket-not-a-room-of-its-own-499)): the ledge is at x 4800, the line (x 4726-4950) crosses it and goes on
+    behind it, the stone is at x 5096 under a deeper soil overhang (`lipTop` 96). At 48, once the camera scrolls, the drifting
+    cloud lay behind its cue (outline 0.214, floor 0.28); now 0.322.
+- **Why:** a flier stopped by a waist-high ledge reads as broken. The route still comes from the map alone, so every retry is
+  the same (D7), and it is checked at load (D103). The wind-up, the line, the box and the time to escape are unchanged.
+- **Measured (2026-11-27, scripted hero):** the route 6.43 s with and without the assist; it commits on the mastered route
+  and the hero clears it at every start delay, 5 frames at a time through 12 s; under the ledge a hero's centre at x 4800 to
+  4848 is never committed to; beside it and on it he is dived at and can leave the box either way. Contrast along the route:
+  live outline 0.319 to 0.827, body 0.331 to 0.514. Allocation with a route over a ledge: 0.0 B/frame (ceiling 8).
+
+## D147. The flying beetle gathers its blast round itself and bursts up off the ground (#330, amends D145)
+
+- **Status:** Accepted (author, 2026-11-27, after playing it: no rectangle on the ground; the energy gathers as a sphere round
+  the beetle, knowing the aim reads a little less; a half dome where it bursts, with nothing flying into the ground). Built;
+  the author accepted it the same day from screenshots of the gathering and the burst
+  ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+- **Decision:**
+  - **Wind-up:** the specks are born on a ring 28 to 32 px round the body's middle and drawn in to it (`BeetleFx.gather`).
+    Nothing is drawn round the target any more. The dive line's specks stay: they show where it will go (D103).
+  - **Burst on a surface** (any burst whose box a surface cuts, the end of a dive above all): the flash and its core are half
+    glows lying on the surface (`KimeriaParticleSystem.KIND_DOME`), with the half-ellipse halo; every particle starts just
+    above the surface and flies up and away, and none is drawn under it. A burst in the open air stays a whole oval.
+  - **Unchanged:** the kill box (80×32 on the surface at the end of a dive), the timings, the sounds, and the ground beetle's
+    effects, which still outline its box.
+- **Why:** the gathering belongs where the blast is stored, and a blast off the ground should not go into it.
+- **Known difference:** the reach is no longer drawn before the burst, and the half dome (rx 40, ry 32) does not fill the upper
+  corners of the 80×32 box, which still kill.

@@ -24,10 +24,11 @@ import java.util.Map;
 
 /**
  * The forest flying beetle (#330, D145): a kamikaze that brings its burst down from the air. It flies to and fro along an
- * authored level line, hears the hero below, notices in body language (it stops, claps its wing covers and drops, opens them,
- * claps again and tips its head down), follows along its line and, once the hero is close under it with a clear straight line
- * down, hangs there for the shared D7 warning ({@link TrapWarnings}, longer with the assist) while specks run down the line to
- * the spot where he stood and outline the burst there; then it dives along that line and bursts. Its body never hurts: only
+ * authored level line, rising over a solid or a one-way platform in its way and sinking behind it (D146). It hears the hero
+ * below, notices in body language (it stops, claps its wing covers and drops, opens them, claps again and tips its head
+ * down), follows along its line and, once the hero is close under it with a clear straight line
+ * down, hangs there for the shared D7 warning ({@link TrapWarnings}, longer with the assist) while specks gather into it from
+ * all round (D147) and others run down the line to the spot where he stood; then it dives along that line and bursts. Its body never hurts: only
  * the burst kills, one box {@value BeetleFx#BLAST_WIDTH} px wide and {@value BeetleFx#BLAST_AIR_HALF_HEIGHT} px above and
  * below its middle, cut at the surface under it (at the end of a dive, the ground beetle's 80x32), tested once. A burst due at the
  * end of a dive resolves on the next frame, so a hit of that frame wins. A fireball, a thrown stone or a torch kills it in any
@@ -64,13 +65,25 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     public static final float COMMIT_REACH = 48;
     /**
      * The flight line: the body's bottom this far above every surface under the range, at least (a standing hero walks under
-     * it and his sword cannot reach it) and at most (a jumping shot can). The furthest surface a dive may go down to.
+     * it and his sword cannot reach it) and at most (a jumping shot can). A dive goes down at most this far under the level
+     * line, also when it starts higher, over something the line crosses (D146).
      */
     public static final float MIN_HEIGHT = 40, MAX_HEIGHT = 64;
-    /** The line to the target is tested in steps this long, with a square this wide. */
-    private static final float LINE_STEP = 3, LINE_PROBE = 2;
+    /**
+     * Over a solid or a one-way platform in its way (D146) the body's bottom stays this far above the top; it rises at most
+     * {@link #MAX_CLIMB} px from its line, so anything taller bars the line.
+     */
+    public static final float CLIMB_HEIGHT = 48, MAX_CLIMB = 96;
+    private static final Rectangle[] NOTHING = new Rectangle[0];
+    /**
+     * The line to the target is tested in steps this long: the dive with a square this wide, the commit with a wider one that
+     * covers every square the dive can test, so a committed dive never stops short on a corner.
+     */
+    private static final float LINE_STEP = 2, DIVE_PROBE = 2, COMMIT_PROBE = DIVE_PROBE + LINE_STEP;
     /** The load check samples dive targets, starts and moving tops this far apart, and each dive line in this many shares. */
     private static final float CHECK_STEP = 4;
+    /** The load check walks the body along the route this far at a time. */
+    private static final float CHECK_ROUTE_STEP = 1;
     private static final int CHECK_DIVE_SHARES = 16;
     /** Feet this far above a surface still count as standing on it. */
     private static final float STANDING_TOLERANCE = .5f;
@@ -91,9 +104,9 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     public static final float WHITE_SECONDS = .12f;
     /** The shake: the sprite drawn this many px left and right of its place, alternating every step (the hitbox stays). */
     private static final float SHAKE_PX = 1, SHAKE_STEP = .04f;
-    /** Wind-up specks per second on the burst box at the target, at the start and at the end; and along the dive line. */
+    /** Wind-up specks per second drawn in to the monster, at the start and at the end (D147); and along the dive line. */
     public static final float SPECKS_START = 50, SPECKS_END = 150, LINE_SPECKS = 60;
-    /** The dive takes this long whatever its length (at most about 320 px/s). */
+    /** The dive takes this long whatever its length (at most about 430 px/s, from over a platform to the floor). */
     public static final float DIVE_SECONDS = .25f;
     /** The death's poof starts this long after the hit, once the fireball's own flash is spent (as the ground beetle's). */
     public static final float POOF_DELAY = Beetle.POOF_DELAY;
@@ -117,6 +130,8 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     private final TextureRegion[] frames = new TextureRegion[FRAMES];
     private final TextureRegion bodyFrame;
     private final float spawnX, spawnY;
+    /** What its line crosses and it flies over (D146); set once at load, empty on a clear line. */
+    private Rectangle[] climbed = NOTHING;
     private final Rectangle blastScratch = new Rectangle(), heroScratch = new Rectangle(), nearScratch = new Rectangle(),
         moverScratch = new Rectangle(), probeScratch = new Rectangle();
     private Level level;
@@ -150,6 +165,48 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     }
 
     public void setLevel(Level level) { this.level = level; }
+
+    /** Picks what it will fly over out of the room's static solids and one-way platforms, and takes its place on that route. */
+    public void flyOver(List<Rectangle> floors) {
+        climbed = climbed(floors, spawnX, spawnY, rangeNeg, rangePos);
+        followRoute();
+    }
+
+    /** The body's bottom edge on the route when {@code position.x} is {@code x}. */
+    public float routeBottom(float x) { return routeBottom(x, bottomAt(spawnY), climbed); }
+
+    /** Takes the height the route has where it is now (outside a dive). */
+    private void followRoute() { position.y = routeBottom(position.x) - BODY_Y - BODY_HEIGHT; }
+
+    /** The body's bottom edge when the frame's top is at {@code y}. */
+    private static float bottomAt(float y) { return y + BODY_Y + BODY_HEIGHT; }
+
+    /**
+     * The route (D146): the level line, lifted so that over each climbed box the body's bottom is {@link #CLIMB_HEIGHT} px
+     * above its top. Beside a box it rises and sinks one px for each px along the line. No allocation.
+     */
+    private static float routeBottom(float x, float line, Rectangle[] climbed) {
+        float bottom = line;
+        for (int i = 0; i < climbed.length; i++) {
+            Rectangle box = climbed[i];
+            float gap = Math.max(0, Math.max(box.x - (x + BODY_X + BODY_WIDTH), x + BODY_X - (box.x + box.width)));
+            bottom = Math.min(bottom, box.y - CLIMB_HEIGHT + gap);
+        }
+        return bottom;
+    }
+
+    /**
+     * What the line from {@code left} to {@code right} flies over (D146): a box the body's sweep reaches into, whose top is not
+     * below the body's bottom and which a rise of at most {@link #MAX_CLIMB} px clears. A floor below the line is not in its way.
+     */
+    private static Rectangle[] climbed(List<Rectangle> floors, float x, float y, float left, float right) {
+        float line = bottomAt(y);
+        List<Rectangle> found = new ArrayList<>();
+        for (Rectangle f : floors)
+            if (f.x < right + BODY_X + BODY_WIDTH && f.x + f.width > left + BODY_X && f.y <= line && f.y + f.height > line - BODY_HEIGHT
+                && line - (f.y - CLIMB_HEIGHT) <= MAX_CLIMB) found.add(f);
+        return found.toArray(NOTHING);
+    }
 
     /** Left and right ends of the flight line {@code position.x} stays in outside a dive, for the load checks and tests. */
     public float rangeNeg() { return rangeNeg; }
@@ -203,6 +260,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         velocity.setZero();
         moveDirection = -1;
         facingRight = false;
+        followRoute();
         enter(State.PATROL);
     }
 
@@ -255,6 +313,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         facingRight = moveDirection > 0;
         velocity.x = moveDirection * PATROL_SPEED;
         position.x = MathUtils.clamp(position.x + velocity.x * dt, rangeNeg, rangePos);
+        followRoute();
         beatWings(dt, PATROL_BEAT_SECONDS);
     }
 
@@ -279,6 +338,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         float step = MathUtils.clamp(over - position.x, -CHASE_SPEED * dt, CHASE_SPEED * dt);
         if (dt > 0) velocity.x = step / dt;
         position.x += step;
+        followRoute();
     }
 
     private void beatWings(float dt, float beatSeconds) {
@@ -306,8 +366,8 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
 
     /**
      * Commits when the hero's middle is within {@link #COMMIT_REACH} either side, the first surface under him lies below the
-     * body and at most {@link #MAX_HEIGHT} px under it, and the straight line to the spot over it is clear. The spot is locked
-     * there; the shared warning is sampled once.
+     * body and at most {@link #MAX_HEIGHT} px under the level line, and the straight line to the spot over it is clear. The
+     * spot is locked there; the shared warning is sampled once.
      */
     private boolean tryCommit() {
         if (level == null) return false;
@@ -315,10 +375,10 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         float heroX = hero.x + hero.width * HALF, heroFeet = hero.y + hero.height;
         float cx = centreX(), cy = centreY(), bottom = floorY();
         if (Math.abs(heroX - cx) > COMMIT_REACH) return false;
-        float surface = level.surfaceUnder(heroX, heroFeet - STANDING_TOLERANCE, bottom + MAX_HEIGHT);
+        float surface = level.surfaceUnder(heroX, heroFeet - STANDING_TOLERANCE, bottomAt(spawnY) + MAX_HEIGHT);
         if (Float.isNaN(surface) || surface < bottom) return false;
         float endY = surface - BeetleFx.BODY_CENTRE_ABOVE_FLOOR;
-        if (clearShare(cx, cy, heroX, endY) < 1) return false;
+        if (clearShare(cx, cy, heroX, endY, COMMIT_PROBE) < 1) return false;
         enter(State.WINDUP);
         diveFromX = cx; diveFromY = cy; diveToX = heroX; diveToY = endY; diveSurface = surface;
         if (Math.abs(heroX - cx) >= 1) facingRight = heroX > cx;
@@ -330,14 +390,15 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
 
     /**
      * How much of the straight line from ({@code x0}, {@code y0}) to ({@code x1}, {@code y1}) is free of solids, one-way
-     * platforms and moving objects: 1 when all of it is, else the share up to the last free step.
+     * platforms and moving objects, for a square {@code probe} px wide: 1 when all of it is, else the share up to the last
+     * free step.
      */
-    private float clearShare(float x0, float y0, float x1, float y1) {
+    private float clearShare(float x0, float y0, float x1, float y1, float probe) {
         float dx = x1 - x0, dy = y1 - y0, length = (float) Math.sqrt(dx * dx + dy * dy);
         int steps = Math.max(1, MathUtils.ceil(length / LINE_STEP));
         for (int i = 1; i <= steps; i++) {
             float t = i / (float) steps;
-            probeScratch.set(x0 + dx * t - LINE_PROBE * HALF, y0 + dy * t - LINE_PROBE * HALF, LINE_PROBE, LINE_PROBE);
+            probeScratch.set(x0 + dx * t - probe * HALF, y0 + dy * t - probe * HALF, probe, probe);
             if (level.blocksObject(probeScratch, true)) return (i - 1) / (float) steps;
         }
         return 1;
@@ -349,7 +410,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         float period = BLINK_START + (BLINK_END - BLINK_START) * progress;
         while (blinkClock >= period) { blinkClock -= period; brightFrame = !brightFrame; }
         speckDue += (SPECKS_START + (SPECKS_END - SPECKS_START) * progress) * dt;
-        while (speckDue >= 1) { speckDue -= 1; if (level != null) level.beetleFx().speck(diveToX, diveSurface); }
+        while (speckDue >= 1) { speckDue -= 1; if (level != null) level.beetleFx().gather(diveFromX, diveFromY); }
         lineDue += LINE_SPECKS * dt;
         while (lineDue >= 1) { lineDue -= 1; if (level != null) level.beetleFx().lineSpeck(diveFromX, diveFromY, diveToX, diveToY); }
         if (stateClock >= warningTotal) {
@@ -367,7 +428,7 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         float t = Math.min(1f, stateClock / DIVE_SECONDS);
         float cx = centreX(), cy = centreY();
         float nextX = diveFromX + (diveToX - diveFromX) * t, nextY = diveFromY + (diveToY - diveFromY) * t;
-        float share = level == null ? 1 : clearShare(cx, cy, nextX, nextY);
+        float share = level == null ? 1 : clearShare(cx, cy, nextX, nextY, DIVE_PROBE);
         position.x += (nextX - cx) * share;
         position.y += (nextY - cy) * share;
         arrived = share >= 1 && t >= 1;
@@ -610,12 +671,12 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
     }
 
     /**
-     * The load checks (D145), on the 40x32 monster whatever the object's size: its range inside the room; the body's whole sweep
-     * inside the camera's view and clear of {@code blockers} (solids, platforms, hanging objects and everything a moving object
-     * passes through); the highest static surface under any point of the range {@link #MIN_HEIGHT} to {@link #MAX_HEIGHT} px
-     * below the body (gaps allowed), and nothing that moves ({@code movers}, each the whole area it passes through) closer than
-     * the minimum; and no burst, on the line or anywhere along any dive it could make, over a standing place. Null when it is
-     * fine, else what is wrong.
+     * The load checks (D145, D146), on the 40x32 monster whatever the object's size, all along its route: its range inside the
+     * room; the body inside the room and the camera's view and clear of {@code blockers} (solids, platforms, hanging objects
+     * and everything a moving object passes through); the highest static surface under any point of the level line, what it
+     * flies over aside, {@link #MIN_HEIGHT} to {@link #MAX_HEIGHT} px below the line (gaps allowed), and no surface, moving
+     * or not ({@code movers}, each the whole area it passes through), closer than the minimum under the body; and no burst,
+     * on the route or anywhere along any dive it could make, over a standing place. Null when it is fine, else what is wrong.
      */
     public static String problem(float x, float y, float w, float h, float offNeg, float offPos, List<Rectangle> floors,
                                  List<Rectangle> movers, List<Rectangle> blockers, Rectangle room, float cameraTop,
@@ -623,52 +684,76 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         if (!(w > 0) || !(h > 0)) return "needs positive bounds";
         if (!Float.isFinite(offNeg) || !Float.isFinite(offPos) || offNeg < 0 || offPos < 0) return "needs finite, non-negative offNeg and offPos";
         float left = x - offNeg * TILE_SIZE, right = x + offPos * TILE_SIZE;
-        float top = y + BODY_Y, bottom = top + BODY_HEIGHT, middleY = top + BODY_HEIGHT * HALF;
-        Rectangle sweep = new Rectangle(left + BODY_X, top, right - left + BODY_WIDTH, BODY_HEIGHT);
-        if (left < room.x || right + FRAME_WIDTH > room.x + room.width || sweep.y < room.y || bottom > room.y + room.height)
-            return "has its range leaving the room";
-        if (y < cameraTop) return "flies above the camera's view of its room";
-        for (Rectangle blocker : blockers) if (sweep.overlaps(blocker)) return "has something solid, one-way or moving on its flight line";
-        // Sampled strictly inside the sweep: a floor or platform that only touches one of its ends does not lie under the line.
-        for (float step = 0; step < sweep.width + LINE_STEP; step += LINE_STEP) {
-            float at = sweep.x + Math.min(sweep.width - HALF, step + HALF);
-            float surface = surfaceAt(floors, at, bottom);
-            if (Math.min(surface, surfaceAt(movers, at, bottom)) - bottom < MIN_HEIGHT)
-                return "flies less than " + (int) MIN_HEIGHT + " px above the surface under x " + (int) at;
-            if (surface != Float.MAX_VALUE && surface - bottom > MAX_HEIGHT)
-                return "flies more than " + (int) MAX_HEIGHT + " px above the surface under x " + (int) at;
+        if (left < room.x || right + FRAME_WIDTH > room.x + room.width) return "has its range leaving the room";
+        Rectangle[] climbed = climbed(floors, x, y, left, right);
+        float line = bottomAt(y);
+        Rectangle body = new Rectangle();
+        for (float step = 0; step < right - left + CHECK_ROUTE_STEP; step += CHECK_ROUTE_STEP) {
+            float at = Math.min(right, left + step), bottom = routeBottom(at, line, climbed);
+            body.set(at + BODY_X, bottom - BODY_HEIGHT, BODY_WIDTH, BODY_HEIGHT);
+            if (body.y < room.y || bottom > room.y + room.height) return "has its range leaving the room";
+            if (bottom - BODY_HEIGHT - BODY_Y < cameraTop) return "flies above the camera's view of its room";
+            for (Rectangle blocker : blockers) if (body.overlaps(blocker)) return "has something solid, one-way or moving on its flight line";
         }
-        float middleLeft = left + BODY_X + BODY_WIDTH * HALF, middleRight = right + BODY_X + BODY_WIDTH * HALF;
+        List<Rectangle> unclimbed = new ArrayList<>(floors);
+        for (Rectangle box : climbed) unclimbed.remove(box);
+        // Sampled strictly inside the sweep: a floor or platform that only touches one of its ends does not lie under the line.
+        float sweepLeft = left + BODY_X, sweepWidth = right - left + BODY_WIDTH;
+        for (float step = 0; step < sweepWidth + LINE_STEP; step += LINE_STEP) {
+            float column = sweepLeft + Math.min(sweepWidth - HALF, step + HALF);
+            // The lowest the body's bottom gets over this column: where the route is nearest to what lies under it.
+            float lowest = lowestRouteOver(column, left, right, line, climbed);
+            if (Math.min(surfaceAt(floors, column, lowest), surfaceAt(movers, column, lowest)) - lowest < MIN_HEIGHT)
+                return "flies less than " + (int) MIN_HEIGHT + " px above the surface under x " + (int) column;
+            float surface = surfaceAt(unclimbed, column, line);
+            if (surface != Float.MAX_VALUE && surface - line > MAX_HEIGHT)
+                return "flies more than " + (int) MAX_HEIGHT + " px above the surface under x " + (int) column;
+        }
+        float middle = BODY_X + BODY_WIDTH * HALF;
         float half = BeetleFx.BLAST_WIDTH * HALF;
-        Rectangle inFlight = new Rectangle(middleLeft - half, middleY - BeetleFx.BLAST_AIR_HALF_HEIGHT,
-            middleRight - middleLeft + BeetleFx.BLAST_WIDTH, BeetleFx.BLAST_AIR_HALF_HEIGHT * SIDES);
-        for (Map.Entry<String, Rectangle> place : standing.entrySet())
-            if (inFlight.overlaps(place.getValue())) return "can burst over the room " + place.getKey();
-        return diveProblem(middleLeft, middleRight, middleY, bottom, floors, movers, standing);
+        Rectangle inFlight = new Rectangle();
+        for (float step = 0; step < right - left + CHECK_STEP; step += CHECK_STEP) {
+            float at = Math.min(right, left + step), middleY = routeBottom(at, line, climbed) - BODY_HEIGHT * HALF;
+            inFlight.set(at + middle - half, middleY - BeetleFx.BLAST_AIR_HALF_HEIGHT, BeetleFx.BLAST_WIDTH,
+                BeetleFx.BLAST_AIR_HALF_HEIGHT * SIDES);
+            for (Map.Entry<String, Rectangle> place : standing.entrySet())
+                if (inFlight.overlaps(place.getValue())) return "can burst over the room " + place.getKey();
+        }
+        return diveProblem(left + middle, right + middle, line, climbed, floors, movers, standing);
+    }
+
+    /** The largest route bottom among the places on the line from which the body covers {@code column}. */
+    private static float lowestRouteOver(float column, float left, float right, float line, Rectangle[] climbed) {
+        float from = MathUtils.clamp(column - BODY_X - BODY_WIDTH + HALF, left, right);
+        float to = MathUtils.clamp(column - BODY_X - HALF, left, right);
+        float lowest = routeBottom(to, line, climbed);
+        for (float at = from; at < to; at += CHECK_ROUTE_STEP) lowest = Math.max(lowest, routeBottom(at, line, climbed));
+        return lowest;
     }
 
     /**
-     * No dive reaches a standing place: for every spot a dive could lock on, on every surface that could lie there, from every
-     * point of the line within its commit reach, the burst box anywhere along the straight line (a sword or something moving in
-     * can set it off mid-dive) and at its end.
+     * No dive reaches a standing place: for every spot a dive could lock on, from every point of the route within its commit
+     * reach, on every surface under it that dive could go down to, the burst box anywhere along the straight line (a sword or
+     * something moving in can set it off mid-dive) and at its end.
      */
-    private static String diveProblem(float middleLeft, float middleRight, float middleY, float bottom, List<Rectangle> floors,
+    private static String diveProblem(float middleLeft, float middleRight, float line, Rectangle[] climbed, List<Rectangle> floors,
                                       List<Rectangle> movers, Map<String, Rectangle> standing) {
         Rectangle box = new Rectangle();
         List<Float> surfaces = new ArrayList<>();
         float firstTarget = middleLeft - COMMIT_REACH, lastTarget = middleRight + COMMIT_REACH;
         for (float step = 0; step < lastTarget - firstTarget + CHECK_STEP; step += CHECK_STEP) {
             float target = Math.min(lastTarget, firstTarget + step);
-            surfaces.clear();
-            for (Rectangle f : floors) if (spans(f, target) && f.y >= bottom - 1 && f.y <= bottom + MAX_HEIGHT) surfaces.add(f.y);
-            // A moving object's top can be anywhere in the area it passes through.
-            for (Rectangle m : movers)
-                if (spans(m, target)) for (float top = Math.max(m.y, bottom); top <= Math.min(m.y + m.height, bottom + MAX_HEIGHT); top += CHECK_STEP)
-                    surfaces.add(top);
             float from = Math.max(middleLeft, target - COMMIT_REACH), to = Math.min(middleRight, target + COMMIT_REACH);
-            for (float surface : surfaces) {
-                for (float along = 0; along < to - from + CHECK_STEP; along += CHECK_STEP) {
-                    float start = Math.min(to, from + along);
+            for (float along = 0; along < to - from + CHECK_STEP; along += CHECK_STEP) {
+                float start = Math.min(to, from + along);
+                float bottom = routeBottom(start - BODY_X - BODY_WIDTH * HALF, line, climbed), middleY = bottom - BODY_HEIGHT * HALF;
+                surfaces.clear();
+                for (Rectangle f : floors) if (spans(f, target) && f.y >= bottom - 1 && f.y <= line + MAX_HEIGHT) surfaces.add(f.y);
+                // A moving object's top can be anywhere in the area it passes through.
+                for (Rectangle m : movers)
+                    if (spans(m, target)) for (float top = Math.max(m.y, bottom); top <= Math.min(m.y + m.height, line + MAX_HEIGHT); top += CHECK_STEP)
+                        surfaces.add(top);
+                for (float surface : surfaces) {
                     for (int i = 0; i <= CHECK_DIVE_SHARES; i++) {
                         float share = i / (float) CHECK_DIVE_SHARES;
                         float cx = start + (target - start) * share;

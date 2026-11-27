@@ -986,6 +986,7 @@ public class Level implements WorldObject {
                         o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
                     beetle.setPlayer(player);
                     beetle.setLevel(this);
+                    beetle.flyOver(monsterFloors());
                     objects.add(beetle);
                     roomEnemies.put(o.id, beetle);
                 }
@@ -1435,9 +1436,9 @@ public class Level implements WorldObject {
     }
 
     /**
-     * The flying beetle (D145) fails at load when its flight line leaves the room or the camera's view, meets a solid, a platform,
-     * a hanging object or anything a moving one passes through, runs lower or higher than its allowed height over a surface, or
-     * lets a burst or a dive reach a standing place.
+     * The flying beetle (D145, D146) fails at load when its route leaves the room or the camera's view, meets a platform or a
+     * solid too tall to fly over, a hanging object or anything a moving one passes through, runs lower or higher than its
+     * allowed height over a surface, or lets a burst or a dive reach a standing place.
      */
     private void validateFlyingBeetle(TiledObject o, int owner) {
         Rectangle room = roomLayout.rooms.get(owner).bounds();

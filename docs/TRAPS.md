@@ -134,7 +134,7 @@ and row: their rotten look is the cue. The plank skin (a lashed oak plank, forme
 | `RedMob` | enemy | Enemy, as above. |
 | `YellowMob` | enemy | Enemy, as above. |
 | `Beetle` | enemy | Enemy (D100): its burst's warning is the shared `TrapWarnings` wind-up on its own body, recorded in D100 and the beetle card of GAME_DESIGN.md, not a trap card. |
-| `FlyingBeetle` | enemy | Enemy (D145): its blast's warning is the shared `TrapWarnings` wind-up on its own body with specks along the dive line and round the box where it will burst, recorded in D145 and the flying beetle card of GAME_DESIGN.md, not a trap card. |
+| `FlyingBeetle` | enemy | Enemy (D145): its blast's warning is the shared `TrapWarnings` wind-up on its own body with specks gathering into it and running along the dive line, recorded in D145, D147 and the flying beetle card of GAME_DESIGN.md, not a trap card. |
 | `Snail` | enemy | Enemy (D106): its spit's warning is the shared `TrapWarnings` wind-up on its own body with specks drawn in along its firing line, recorded in D106 and the snail card of GAME_DESIGN.md, not a trap card. |
 | `Spider` | enemy | Enemy (D102, D103): its bite's warning is the shared `TrapWarnings` bite wind-up on its own body with silk glints to the landing spot (on a floor) or down the drop column (at a lip, before the silk drop), recorded in D102, D103 and the spider card of GAME_DESIGN.md, not a trap card. |
 | `Wolf` | enemy | Enemy (D115): its bite's warning is the shared `TrapWarnings` bite wind-up on its own body with pale breath streaks along the whole line its lunge will cover, recorded in D115 and the wolf card of GAME_DESIGN.md, not a trap card. |

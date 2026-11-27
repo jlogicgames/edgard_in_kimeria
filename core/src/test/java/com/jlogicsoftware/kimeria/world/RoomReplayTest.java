@@ -169,7 +169,7 @@ class RoomReplayTest {
     @Test void forestGladeRequiredRouteFitsTwentySeconds() {
         assertEquals(GLADE_S, measure("forest-glade", 3, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
-    /** #330: jump the thorn root, walk under the ledge and out of the flying beetle's drawn box, past the falling stone. */
+    /** #330: jump the thorn root, walk under the ledge the flying beetle flies over and out of its drawn box, past the falling stone. */
     @Test void forestRoostRequiredRouteFitsTwentySeconds() {
         assertEquals(ROOST_S, measure("forest-roost", 4, false, 0, ROOST_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }
@@ -191,7 +191,7 @@ class RoomReplayTest {
     private float legHoldArrival = -1;
     private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {}, ROOST_JUMPS = {4550};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 5.48f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 6.43f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;

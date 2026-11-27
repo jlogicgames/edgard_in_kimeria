@@ -1102,7 +1102,7 @@ A plan agreed with the author; the built effects are listed below. [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; wolf: **built** (see Forest wolf, D115), its breath streaks, skid and bite dust, jaw glints and death poof; flying beetle: **built** (see Forest flying beetle, D145), its dive line, box specks and burst on `BeetleFx`; the notice is body language in each monster's own frames, no "!" pop (D100) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; wolf: **built** (see Forest wolf, D115), its breath streaks, skid and bite dust, jaw glints and death poof; flying beetle: **built** (see Forest flying beetle, D145), its dive line, gathering ring and burst on `BeetleFx`; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -1393,13 +1393,14 @@ the ground beetle (`effects.BeetleFx`).
   view of two wings) by the covers, the antennae and the legs.
 - **Palette** (15 entries with transparency, 16 with the rim): the ground beetle's colours plus one new one, the wing membrane
   `bc98a8`, veined in the legs' `9a6070`, with pale glints in its `f4d4de`. The photos are brown; the danger family keeps it crimson. No reserved hue.
-- **Wind-up:** the ground beetle's shake, blink and white frame; 2 px specks run down the dive line (60 a second) and are drawn
-  in from the edges of the 80×32 box at the target.
-- **Burst:** `BeetleFx.burstAt`: on a surface the ground beetle's burst; in the air the same with a whole oval halo (rx 40,
-  ry 24), cut at the surface below.
+- **Wind-up:** the ground beetle's shake, blink and white frame; 2 px specks run down the dive line (60 a second) and others
+  are drawn in to the body from a ring 28 to 32 px round it ([D147](DECISIONS.md(#d147-the-flying-beetle-gathers-its-blast-round-itself-and-bursts-up-off-the-ground-330-amends-d145))).
+- **Burst:** `BeetleFx.burstAt`: where a surface cuts the box, a half dome lying on it (half-glow flash and core, `KIND_DOME`,
+  the half-ellipse halo rx 40, ry 32; spray, embers, chips and steam all flying up from it); in the air the flash and a whole
+  oval halo (rx 40, ry 24).
 - **Body (D101):** on its back, belly up, legs in the air, one wing spread flat along the floor (`monster-flying-beetle-body.png`, the live
-  palette, D117). Placed in `forest-roost` and measured along its line and dive ends
-  by `check_contrast.py`: live outline 0.315 to 0.826, body outline 0.324 to 0.514 (active floor 0.28; before the room was built,
+  palette, D117). Placed in `forest-roost` and measured along its route and dive ends
+  by `check_contrast.py`: live outline 0.319 to 0.827, body outline 0.331 to 0.514 (active floor 0.28; before the room was built,
   trial placements in all 24 other forest rooms gave a live outline of 0.295 to 0.834).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)

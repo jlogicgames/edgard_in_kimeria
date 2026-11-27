@@ -38,6 +38,7 @@ D93: seen and heard when the hazard acts, hit or miss); its sound is
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` |
 | `KIND_FLAME` | normal | `size * (1 - t)` (shrinks out) | `1` (opaque, no fade) |
 | `KIND_ORBIT` | additive | constant `size` | rides an ellipse (`spawnOrbit`: centre, radii, start turn, sweep, rho from and to); ramps in and out over a quarter of its life each, full between; `render(batch, region, intensity)` scales every alpha (#552: `PortalFx`, `SoftGlowFx`, `RoomRippleFx`, D123, D124) |
+| `KIND_DOME` | additive | as `KIND_GLOW`, half as tall | as `KIND_GLOW` | the upper half of a glow with its flat edge on y: a flash lying on a floor (`effects.BeetleFx`, D147) |
 | `KIND_LEAF` | normal | long side `size`, width flips edge-on to full; sways and tilts | `0.85`, ramped in and out (`spawnLeaf`; `effects.LeafFx`, #473) |
 
 `KIND_FLAME` (#397) is for warm pixels over the sky: a fading warm colour mixes with the blue into olive or magenta, a shrinking

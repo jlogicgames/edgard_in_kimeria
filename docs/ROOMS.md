@@ -14,7 +14,7 @@ The Forest levels are the tutorial `forest-0`, then `forest-1`, then the boss le
 (intended Forest order: `forest-0` → `forest-1` → `forest-2`, [D32](DECISIONS.md#d32-forest-level-order-and-identity)). A level is one TMX map
 containing an ordered chain of rooms. `forest-2` has seven
 rooms in play order: `forest-entry` (736 px), `forest-walls` (544 px, split off it by #376), `forest-fissure` (640 px, the
-ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-glade` (832 px, the forest wolf's first room, #331, appended at the map's end after it, see "forest-2 glade room" below), `forest-roost` (640 px, the forest flying beetle's first room, #330, appended at the map's end after it, see "forest-2 roost room" below), `forest-canopy`
+ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-glade` (832 px, the forest wolf's first room, #331, appended at the map's end after it, see "forest-2 glade room" below), `forest-roost` (736 px, the forest flying beetle's first room, #330, appended at the map's end after it, see "forest-2 roost room" below), `forest-canopy`
 (1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
@@ -1305,31 +1305,33 @@ pit. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-glade); monster card: [GAME
 - D26: no lever, support or one-shot state on the route; the wolf gives up after 1.5 s of bay and cannot hold a place; a retry rebuilds
   it calm at its spawn.
 
-## forest-2 roost room (#330, D145)
+## forest-2 roost room (#330, D145, D146)
 
-`forest-roost`, x 4480-5120 (640 px, one camera view), floor top y 304, side walls at x 4480-4496 and x 5104-5120 (down to the
-floor). It is appended at the map's end (forest-2 grew from 280 to 320 tiles) and listed after `forest-glade` in `Rooms`, so it is
+`forest-roost`, x 4480-5216 (736 px, 1.15 screens), floor top y 304, side walls at x 4480-4496 and x 5200-5216 (down to the
+floor). It is appended at the map's end (forest-2 grew from 280 to 326 tiles) and listed after `forest-glade` in `Rooms`, so it is
 played between the glade and the canopy. The `Deadline` is unchanged: the room has no pit. Room card:
 [ROOM_CARDS.md](ROOM_CARDS.md#forest-roost); monster card: [GAME_DESIGN.md](GAME_DESIGN.md#flying-beetle-card-built-d145-330).
 Object positions are on the room card.
 
-- **The pocket:** on the floor under the one-way ledge (x 4704-4768, top y 256). The beetle's line starts beside the ledge's right
-  end, its body's bottom level with the ledge top; a one-way platform cuts the line of its dive, so it waits at its range end.
-  A hero's centre at x 4704 to 4744 is never committed to, from x 4746 on he is. On the ledge, a centre up to x 4730 is out of its
-  reach; further right he is dived at level and can run off (`ForestRoostTest`).
+- **The pocket:** on the floor under the one-way ledge (x 4800-4864, top y 256). The beetle's line crosses the ledge: it flies
+  over it, 48 px above its top, and a one-way platform cuts the line of its dive. A hero's centre at x 4800 to 4848 is never
+  committed to; beside the ledge on either side, and on it, he is dived at and can leave the blast's reach (`ForestRoostTest`).
 - **Recipe (the mastered route):** jump the thorn root (take-off at frame x 4550) and walk right to the exit: the beetle commits
   behind him and the stone falls behind him.
-- The stone hangs under a drawn soil overhang (x 4976-5040, y 0-48, no collision) with `lipTop` 48, as the canopy's does: on the
-  default line it showed only half at the top edge beside the HUD's fireball icons. Its body still starts at the room top.
+- The stone hangs under a drawn soil overhang (x 5072-5136, y 0-96, no collision) with `lipTop` 96: on the default line it
+  showed only half at the top edge beside the HUD's fireball icons, and at `lipTop` 48 the drifting cloud lay behind its cue
+  once the camera scrolled (D146). Its body still starts at the room top.
 - Foreground: `tools/parallax_game.py` (`forest-roost` entries); one standing piece of the usual set (`rise-reeds`) is left out
   and the root curtain stands left of the entrance, because both would cover the beetle or the ledge (rule B).
-- Measured (`RoomReplayTest`, `ForestRoostTest`, `FirstMeetingPocketTest`, 2026-11-26, scripted hero, forest-2.tmx SHA-256
-  `7f50a99a11c323397ad85d786bfca90fb4e1354f7e73aae3bc0b29c45d00c41f`): the mastered route 5.48 s (three identical attempts, with and
-  without the assist, 1.83 s per beat, the same on a collection return); every start delayed 5 frames at a time through 6 s reaches
-  the exit; stopping under the beetle dies at 3.35 s, under the stone at 6.02 s from the entrance. Evidence limit: a scripted hero,
-  no novice playtest ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
+- Widening (D146): 6 tile columns copied from the plain floor left of x 4688; every object right of it moved 96 px.
+- Measured (`RoomReplayTest`, `ForestRoostTest`, `FirstMeetingPocketTest`, 2026-11-27, scripted hero, forest-2.tmx SHA-256
+  `9b7e0d72f1594f2be8674716820664ffbf555dae81061b22c58b161f54d87191`): the mastered route 6.43 s (three identical attempts, with and
+  without the assist, 2.14 s per beat, the same on a collection return); every start delayed 5 frames at a time through 12 s
+  reaches the exit with the beetle committing on the way; stopping under the beetle dies at 4.42 s, under the stone at 7.0 s from
+  the entrance. Evidence limit: a scripted hero, no novice playtest
+  ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
 - D26: no lever or support in the room; the stone is the one one-shot object and blocks nothing; a retry rebuilds the beetle calm on
-  its line.
+  its route.
 
 ## forest-1 lever room (#418, D86)
 

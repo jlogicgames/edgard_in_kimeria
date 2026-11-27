@@ -179,6 +179,35 @@ class KimeriaParticleSystemTest {
         assertTrue(p.alpha(0) < .85f, "fades out");
     }
 
+    /** D147: {@code KIND_DOME} is the upper half of a glow: its curves, additive, half as tall, drawn above its y. */
+    @Test void aDomeIsTheUpperHalfOfAGlowStandingOnItsY() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_DOME, 50, 100, 50, 100, 1f, 20f, 1f, 1f, 1f);
+        assertEquals(20f, s.drawWidth(0), 1e-6f);
+        assertEquals(10f, s.drawHeight(0), 1e-6f);
+        assertEquals(0.7f, s.alpha(0), 1e-6f);
+        s.update(0.5f);
+        assertEquals(20f * 0.8f, s.drawSize(0), 1e-5f, "shrinks as a glow");
+        assertEquals(0.7f * 0.25f, s.alpha(0), 1e-6f);
+        java.util.ArrayList<float[]> rects = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> blends = new java.util.ArrayList<>();
+        com.badlogic.gdx.graphics.g2d.Batch batch = (com.badlogic.gdx.graphics.g2d.Batch) java.lang.reflect.Proxy.newProxyInstance(
+            getClass().getClassLoader(), new Class<?>[]{com.badlogic.gdx.graphics.g2d.Batch.class}, (proxy, method, args) -> {
+                if (method.getName().equals("setBlendFunction")) blends.add((Integer) args[1]);
+                if (method.getName().equals("draw")) rects.add(new float[]{(Float) args[1], (Float) args[2], (Float) args[3], (Float) args[4],
+                    (Float) args[6], (Float) args[8]});
+                return null;
+            });
+        com.badlogic.gdx.graphics.g2d.TextureRegion region = new com.badlogic.gdx.graphics.g2d.TextureRegion() { // a whole texture, no GL
+            @Override public float getU2() { return 1f; }
+            @Override public float getV2() { return 1f; }
+        };
+        s.render(batch, region);
+        assertArrayEquals(new float[]{50 - 8, 100 - 8, 16, 8, 0f, .5f}, rects.get(0), 1e-4f,
+            "x, y, width, height above its y, and the region's half from its top edge to its middle");
+        assertEquals(com.badlogic.gdx.graphics.GL20.GL_ONE, blends.get(0), "additive");
+    }
+
     /** #552: {@code KIND_ORBIT} rides an ellipse: position at t = 0, 0.5 and 1, constant size, alpha ramped in and out, additive. */
     @Test void anOrbitRidesItsEllipseAndRampsItsAlpha() {
         KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
