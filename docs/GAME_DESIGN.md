@@ -652,7 +652,7 @@ below when the hero enters their awareness area (the hearing range).
 | Beetle | About half the hero's height. Crawls to and fro along its path. | Hears the hero in its awareness area, reacts and runs at the hero; explodes when it gets close. Built: the card below (D100). |
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
-| Flying beetle | Looks like a bat. Flies around on its own. | Explodes near the hero. Not built yet: [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330). |
+| Flying beetle | A beetle in flight that flies to and fro along a straight level line (asked for as "looks like a bat, flies around on its own"; its card sets the look and the flight). | Explodes near the hero. Built: the card below (D145), met in `forest-roost` ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). |
 | Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D115). |
 | Mosquito swarm (author's request, 2026-11-25) | A cloud of mosquitoes. Flies like the Bat: straight to and fro along an authored horizontal or vertical trajectory; it does not react to the hero. | Touching it kills, and so does landing on it (a stomp kills the hero, not the swarm). The sword only scatters it a little and it gathers back; only a thrown stone or a fireball kills it. Jump over it or go around it. Not built yet: [#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645); it returns in the Swamp, [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646). |
 
@@ -680,11 +680,11 @@ above it), and it falls face down with the whole mask, horns along the ground. B
 column of its hurtbox, and the boss's axe reaches each edge of its attack box on the active frames and leaves the body box on no
 other frame that hurts (D10, `tools/test_enemy_sprites.py`). Grids: `art/objects/enemy/boss.grid`, `art/objects/enemy/yellow-mob.grid`.
 
-Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, and the snail's, D106; the wolf's, D115, built and placed in `forest-glade`, #331; the others planned) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
+Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, the snail's, D106, and the flying beetle's, D145; the wolf's, D115, built and placed in `forest-glade`, #331) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 anyone passes (D119), the sword or a stomp crumbles it, a fireball or a thrown torch burns it and flies on, and a stone flies through it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
-which monsters and how: the list in D101). The beetle's, the spider's, the snail's and the wolf's bodies are built; the flying beetle, the Bat and possibly the RedMob and YellowMob follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+which monsters and how: the list in D101). The beetle's, the flying beetle's, the spider's, the snail's and the wolf's bodies are built; the Bat and possibly the RedMob and YellowMob follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 ### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 
@@ -886,6 +886,53 @@ window of take-offs that clear the jaws, a hero 24 px up never committed to, the
 lunge stopping at a gap and at a wall, every weapon in every state, both same-frame ties, the load checks), `WolfFxTest`, `RemainsTest`,
 `AllocationBudgetTest.wolfThroughTheRealLevel` (0.2 to 0.6 B/frame before the floor re-check, 0.0 in one run after it), `check_contrast.py` (the wolf and its body, once placed),
 `FirstMeetingPocketTest.forestGladeTheWolf`, `ForestGladeTest` and `RoomCardsTest` (the placement, #331).
+
+### Flying beetle card (built, [D145](DECISIONS.md#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398), [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330))
+
+The ground beetle says "get clear of where it **is**". The flying beetle says "get clear of where it **will be**": the first
+monster that brings its blast down from the air. It hovers over the floor, hears the hero below, hangs still while it draws
+a line to the spot where the hero stood, dives along it and bursts there. Walk out of the drawn box, put a roof between you,
+or jump and shoot it. Like every new monster it is met in play, with no teaching room and no hint text.
+
+The author approved the card on 2026-11-26. Numbers are the built values (D145); the hero's are computed from the code: run 100 px/s, hitbox 11×22 (head 22 px
+above the floor), jump launch 260 px/s under 588 px/s² (feet rise 57.5 px, 0.88 s in the air); the sword box runs from the
+floor to **36 px** above it, 17 px past the hitbox front, grounded only; a fireball flies level, **9 to 19 px** above the feet it
+was cast from; a stone thrown standing leaves 12 to 24 px above the floor and its top peaks at **34 px**.
+
+| Item | Built | Why |
+| --- | --- | --- |
+| Size and look | **40×32 frames**, ten in one strip (`fly1`, `fly2`, `fly3`, `clap`, `tip`, `brace`, `bright`, `white`, `dive`, `dead`), side view, drawn after the author's photos of a beetle in flight (2026-11-26): the two crimson wing covers lifted apart, one upright and one along the back, a long clear hindwing with dark veins beating from under them, a segmented dark belly, a glossy thorax, a near-black head with a glowing `ff6b57` eye, clubbed antennae and jointed legs (the danger family, #236). Body hitbox `rect(10, 17, 22, 15)` on thorax, belly, head and legs, the wings, covers and antennae outside it (D10) | it must read as a beetle in flight, not a bat: the lifted covers, the veined wing and the antennae are unlike the `Bat`'s flat front view |
+| Contact | **harmless**: no hurtbox | only the blast kills, as the ground beetle (D5, D100) |
+| Flight (D103) | a **straight level line** authored in Tiled (`offNeg`/`offPos`), the body's bottom **40 to 64 px** above every surface under it; **40 px/s** to and fro, with a 1 px drawn bob. It never leaves the line except to dive | the author places it as the Bat; no free flight, so every retry is the same (D7). A standing hero (22 px) walks under it, and the standing sword (36 px) cannot reach it |
+| Awareness ("hearing") | the hero's centre within **96 px** either side, in a band from the body's top to **96 px** below it, in its room; lost beyond 144 px or after 1.0 s out of the band | the ground beetle's ears, turned downwards; a hero above it on a ledge does not pull it |
+| Notice beat (#240, D100) | **body language, no mark**: it stops dead in the air, claps its wing covers shut and drops 3 px, opens them and climbs back, claps again and tips its head down: **0.5 s**, not scaled by the assist. Heard: `flying_beetle_notice`, a high double chirr | the creature's own reaction and voice |
+| Chase | **70 px/s** along its line toward the point over the hero; at its range end it waits, facing the hero | slower than the hero: running away always works |
+| Commit | the hero's centre within **48 px** either side, a surface under that centre no more than 64 px below the body's bottom, and a **clear straight line** from the body to it: no solid, one-way platform or moving platform (escalators, falling platforms and lever walls included). The target is **locked** there: the hero's centre, on that surface | a roof stops it, and it never bursts over a pit; a locked spot makes the escape the same every time (D7) |
+| Wind-up (D7 warning) | it hangs on the spot for `TrapWarnings.duration(DEFAULT_WARNING_SECONDS)`, sampled once: **0.8 s, 1.2 s with the assist**. Seen: a 1 px shake and the ground beetle's quickening blink, white for the last 0.12 s; pale specks run down the **dive line** to the target, and specks born on the edges of the **blast box at the target** are drawn in to it. Heard: `flying_beetle_windup` (`_long`) | the line and the reach are both drawn before it moves (D103: it strikes only along a drawn line) |
+| Dive | **0.25 s** straight down the drawn line (at most about 320 px/s), wings folded back, `flying_beetle_dive`. Contact stays harmless. If something moves into the line, it bursts where it meets it | the act is seen and heard (D93) |
+| Burst | one box **80 px wide, 24 px above and below the body's middle, cut at the surface under it**; at the end of a dive that is the ground beetle's **80×32 on the floor**, on the surface the wind-up drew it on even if that has gone since. Tested **once**; a burst due at the end of a dive resolves on its next frame, so a hit cast or thrown that frame wins (#503, #505). `BeetleFx`'s burst (the halo fills an ellipse in the air), `beetle_pop`, the same near-survivor shake (D136) | one blast to learn for both beetles; what is drawn is what kills (D5) |
+| Escape | run either way: 45.5 px from the target, **0.46 s** of the 1.05 s from commit to burst, **0.59 s** spare (0.99 s with the assist). A jump timed to the burst keeps the feet above 32 px for 0.59 s. A one-way platform or a solid overhead stops the commit | more time to react than the ground beetle's 0.51 s, since the target can be a surprise from above |
+| Fireball, thrown stone, torch | **the only quiet kill**, in any state, the dive included: no burst; it falls and leaves its body (D101). At patrol height a **jump** is needed (cast with the feet 21 to 46 px up at a body 40 px up, or throw while jumping); in the last part of a dive it is down at standing height (about 0.1 s for a fireball, 0.2 s for a stone) | the right tool costs a charge or a stone, and aiming at a flyer is the new skill |
+| Sword, stomp | the sword in any state, and a stomp before it commits, **burst it at once** with no wind-up; the box always reaches the swinging or stomping hero (a sword-reachable body's box comes down to 19.5 px or lower). A stomp on a winding-up or diving one bounces the hero off, no kill. A jump's peak can come down on a body 40 px up, so jumping right under it is a risk. No blood | the ground beetle's rule: melee is punished |
+| Body (D101) | killed quietly, it falls (gravity, harmless; moved sideways first off a step or ledge its body overlaps), turns over and lies on the solid or platform below: on its back, belly up, **one wing spread flat along the floor** and legs in the air, a pose no live frame has; live palette (D117); rocks (`RemainsSwing`), crumbles, burns (`RemainsFx`); stones fly through it (D119). Over a pit it is gone. Its own burst leaves nothing | D101's "partly", as already listed there |
+| Traps, other monsters | the burst hurts only the hero; it passes through monsters | one new element at a time (D72) |
+| Rollback (D3, D6) | a death or a revisit brings it back calm on its line; killed or burst, it stays gone in a passed room | the enemy rules as they are |
+| Load checks (`FlyingBeetle.problem`) | its range inside the room; the body's whole sweep inside the camera's view and clear of solids, platforms, hanging objects and everything a moving one passes through (escalators, falling platforms, lever walls, ladders); the highest static surface under any point of the range 40 to 64 px below it (gaps allowed) and nothing that moves closer than 40 px; no blast over the entrance body, the `RoomExit` or a `Checkpoint`, on the line or anywhere along any dive on to any surface, whether or not its line would be clear | no standing place in its reach; always out of the standing sword, always within a jumping shot |
+
+Effects are particles on `KimeriaParticleSystem`, shared with the ground beetle (`effects.BeetleFx` gains the dive line and the
+burst in the air); the sounds are its notice, its wind-up and its dive, with `beetle_pop` and the death's `bounce` shared.
+
+Code: `entity/enemy/FlyingBeetle.java`, `Level.surfaceUnder`; tests: `FlyingBeetleTest`, `BeetleFxTest`, `RemainsTest`,
+`AllocationBudgetTest.flyingBeetleThroughTheRealLevel`. The gate measures a placed one along its line and at its dive ends, and its
+body wherever it can fall (`check_contrast.py`).
+
+**Placement (built, [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).** `forest-roost`, forest-2's fifth room,
+between `forest-glade` and `forest-canopy`, among known beats as the wolf's room was: a thorn root, the beetle, a falling stone.
+The first meeting's pocket is under a one-way ledge **beside the end of its line, at its height** (the load checks keep every
+surface under the line 40 px or more below it, so a roof cannot lie under the line itself): the hero stands there while it
+hears him, waits at its line's end beside him and cannot commit. The ledge's right end is level with the beetle and within its
+commit reach: a hero there is dived at along the ledge and can run off it. The author approved the room on 2026-11-26. Card,
+sketch and measured times: [ROOM_CARDS.md](ROOM_CARDS.md#forest-roost).
 
 ## Rooms, dangers and skill development
 

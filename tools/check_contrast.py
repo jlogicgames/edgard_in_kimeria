@@ -235,6 +235,10 @@ SPRITES = {
     # by BODY_SWEEP at every spot where a beetle can die (body_sweep). D117 (#571): a body keeps its live palette and rim, so it is
     # active like the monster (outline >= ACTIVE_OUTLINE_MIN at every spot); its pose, not its palette, says it is dead.
     'Beetle:body': ('active', 'objects/monster-beetle-body.png', (0, 0, 24, 16), 1, 'floor', FULL),
+    # #330 (D145): the flying beetle is measured along its flight line and at the ends of its dives (flying_beetle_parts), in
+    # every frame; its body, lying wherever it can be killed, by BODY_SWEEP (D101, D117).
+    'FlyingBeetle': ('active', 'objects/monster-flying-beetle.png', (0, 0, 40, 32), 10, 'top', FULL),
+    'FlyingBeetle:body': ('active', 'objects/monster-flying-beetle-body.png', (0, 0, 40, 32), 1, 'floor', FULL),
     'Spider': ('active', 'objects/monster-spider.png', (0, 0, 32, 16), 9, 'floor', FULL),  # #328 (D102): every frame
     'Spider:body': ('active', 'objects/monster-spider-body.png', (0, 0, 32, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP; D117
     # #483 (D103): a spider authored as a polyline route is measured along it (spider_parts): its floor frames every 16 px of
@@ -464,6 +468,36 @@ def spider_parts(root, x, y, text):
             yield 'Spider:hang', thread_x - SPIDER_HANG_THREAD_X, cell_top, fw, fh
         for silk_top in range(int(lip_y), int(end), SPIDER_SILK_TILE):
             yield 'Spider:silk', thread_x, silk_top, 1, SPIDER_SILK_TILE
+
+
+# The flying beetle (#330, D145), as FlyingBeetle draws it: along its flight line, and where its dives end, on the floor
+# within its commit reach past either end of the line.
+FLYING_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/enemy/FlyingBeetle.java'
+FLYING_FRAME = (40, 32)
+FLYING_STEP = 16        # px between measured positions
+
+
+def flying_beetle_parts(root, x, y, props):
+    """(key, left, top, w, h) every FLYING_STEP along the flight line, and at every dive end that has a floor under it."""
+    fw, fh = FLYING_FRAME
+    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
+    for left in _steps_every(low, high, FLYING_STEP):
+        yield 'FlyingBeetle', left, y, fw, fh
+    reach, bottom = java_number(FLYING_JAVA, 'COMMIT_REACH'), y + java_number(FLYING_JAVA, 'BODY_Y') + java_number(FLYING_JAVA, 'BODY_HEIGHT')
+    middle = java_number(FLYING_JAVA, 'BODY_X') + java_number(FLYING_JAVA, 'BODY_WIDTH') / 2
+    furthest = java_number(FLYING_JAVA, 'MAX_HEIGHT')
+    boxes = landings(root)
+    for left in _steps_every(low - reach, high + reach, FLYING_STEP):
+        floor = drop(boxes, left + middle, left + middle + 1, bottom)
+        if floor is not None and floor - bottom <= furthest:
+            yield 'FlyingBeetle', left, floor - fh, fw, fh
+
+
+def _steps_every(lo, hi, step):
+    lefts = list(range(int(lo), int(hi) + 1, step))
+    if not lefts or lefts[-1] != int(hi):
+        lefts.append(int(hi))
+    return lefts
 
 
 # The snail (#329, D106), as Snail draws it: its frame along its range, and its gob along every firing line.
@@ -867,6 +901,10 @@ def placements(errors, roots=None):
             offset_y = float(group.get('offsety', '0'))
             for obj in group.findall('object'):
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'FlyingBeetle':
+                    for part in flying_beetle_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y, props):
+                        yield (name, *part)
+                    continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') in ('EmberFissure', 'LanceRoot'):
                     yield from ((name, *part) for part in fissure_parts(root, obj, float(obj.get('x')), float(obj.get('y')) + offset_y, obj.get('type')))
                     continue
@@ -1147,6 +1185,8 @@ def tile_report(roots):
 # straight down to the first floor under it (velocity.x = 0 in Beetle/Spider/Snail.fall; one that falls out of the room is
 # gone), so each body is measured at those spots, derived from the monster's placements in the shipped maps (a new placement
 # is covered with no edit here):
+# - flying beetle (#330, D145): every position.x of its line, widened by FlyingBeetle.COMMIT_REACH (a kill in a dive), on
+#   the floor under it;
 # - beetle and snail: every position.x of the authored range, on the range's floor (the load checks keep the whole range on
 #   floor without gaps; the beetle's notice hop and the body's flip hop land on the same floor);
 # - wolf (#331, D115): every position.x of its range, widened by Wolf.LUNGE_REACH while authored floor stays under the whole body at
@@ -1155,7 +1195,7 @@ def tile_report(roots):
 #   body at that floor line (#497: the leap never leaves that floor); every wall pose and every thread pose, set on the open
 #   side as Spider.die does and dropped to the floor below.
 # Floor tops elsewhere (other rooms, ledges no monster of that kind reaches) carry nothing for this gate: no body can lie there.
-BODY_SWEEP = ('Beetle:body', 'Spider:body', 'Snail:body', 'Wolf:body')
+BODY_SWEEP = ('Beetle:body', 'FlyingBeetle:body', 'Spider:body', 'Snail:body', 'Wolf:body')
 BODY_STEP = 8  # px between measured body positions along a range or a route
 LANDING_TYPES = (None, 'Wall', 'Platform')  # every collision box a falling body settles on (not quicksand)
 SPIDER_POUNCE_REACH = java_number(SPIDER_JAVA, 'POUNCE_REACH')
@@ -1306,6 +1346,22 @@ def wolf_body_spots(boxes, x, y, props, blocks=(), name='map'):
     return {(left, line) for left in _steps(lo, hi)}
 
 
+def flying_beetle_body_spots(boxes, x, y, props, blocks=(), name='map'):
+    """(position.x, floor line) of every place a flying beetle's body can lie: dropped from its flight line, or from a dive
+    that reaches its commit reach past either end; none over a pit."""
+    reach = java_number(FLYING_JAVA, 'COMMIT_REACH')
+    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
+    body_x, width = java_number(FLYING_JAVA, 'BODY_X'), java_number(FLYING_JAVA, 'BODY_WIDTH')
+    bottom = y + java_number(FLYING_JAVA, 'BODY_Y') + java_number(FLYING_JAVA, 'BODY_HEIGHT')
+    spots = set()
+    for left in _steps(low - reach, high + reach):
+        line = drop(boxes, left + body_x, left + body_x + width, bottom)
+        check_static_column(blocks, name, 'FlyingBeetle', left + body_x, left + body_x + width, y, line)
+        if line is not None:
+            spots.add((left, line))
+    return spots
+
+
 def placed_body_placements(roots):
     """(BODY_SWEEP key, map, object index) of every monster placed in `roots`: each must yield a measured body."""
     return {(obj.get('type') + ':body', name, index) for name, root in roots.items() for group in root.findall('objectgroup')
@@ -1328,7 +1384,7 @@ def body_spot_placements(roots):
             offset_y = float(group.get('offsety', '0'))
             for index, obj in enumerate(group.findall('object')):
                 kind = obj.get('type')
-                if kind not in ('Beetle', 'Spider', 'Snail', 'Wolf'):
+                if kind not in ('Beetle', 'FlyingBeetle', 'Spider', 'Snail', 'Wolf'):
                     continue
                 props = {p.get('name'): p.get('value') for p in obj.findall('properties/property')}
                 x, y = float(obj.get('x')), float(obj.get('y')) + offset_y
@@ -1338,6 +1394,8 @@ def body_spot_placements(roots):
                     spots = spider_body_spots(root, boxes, x, y, props, None if polyline is None else polyline.get('points', ''), blocks, name)
                 elif kind == 'Wolf':
                     spots = wolf_body_spots(boxes, x, y, props, blocks, name)
+                elif kind == 'FlyingBeetle':
+                    spots = flying_beetle_body_spots(boxes, x, y, props, blocks, name)
                 else:
                     low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
                     spots = {(left, y + h) for left in _steps(low, high)}

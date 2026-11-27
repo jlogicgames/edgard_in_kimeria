@@ -41,7 +41,7 @@ class PortalPerExitTest {
             } while (level.hasNextRoom());
             assertTrue(!level.portal().placed() || level.portal().levelEnd(), map + ": the last room has no room-exit portal");
         }
-        assertEquals(5 + 11 + 5, exits, "21 exits in the shipped maps (6 + 12 + 6 rooms); a new room must bring its portal");
+        assertEquals(5 + 11 + 6, exits, "22 exits in the shipped maps (6 + 12 + 7 rooms); a new room must bring its portal");
     }
 
     /** #605: the last room of a level without a boss shows the amber level-end portal on its Checkpoint; the room portals stay violet. */

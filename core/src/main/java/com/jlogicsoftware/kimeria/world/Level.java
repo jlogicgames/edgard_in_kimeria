@@ -41,6 +41,7 @@ import com.jlogicsoftware.kimeria.entity.Hitbox;
 import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
@@ -747,6 +748,7 @@ public class Level implements WorldObject {
             if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
             if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
             if ("Wolf".equals(o.type)) validateWolf(o, owner); // D115: every room, at load.
+            if ("FlyingBeetle".equals(o.type)) validateFlyingBeetle(o, owner); // D145: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -973,6 +975,14 @@ public class Level implements WorldObject {
                 case "Checkpoint" -> objects.add(new Checkpoint(o.x, o.y, o.width, o.height));
                 case "Beetle" -> {
                     Beetle beetle = new Beetle(assets, game, o.x, o.y, o.width, o.height,
+                        o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    beetle.setPlayer(player);
+                    beetle.setLevel(this);
+                    objects.add(beetle);
+                    roomEnemies.put(o.id, beetle);
+                }
+                case "FlyingBeetle" -> {
+                    FlyingBeetle beetle = new FlyingBeetle(assets, game, o.x, o.y, o.width, o.height,
                         o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
                     beetle.setPlayer(player);
                     beetle.setLevel(this);
@@ -1425,6 +1435,23 @@ public class Level implements WorldObject {
     }
 
     /**
+     * The flying beetle (D145) fails at load when its flight line leaves the room or the camera's view, meets a solid, a platform,
+     * a hanging object or anything a moving one passes through, runs lower or higher than its allowed height over a surface, or
+     * lets a burst or a dive reach a standing place.
+     */
+    private void validateFlyingBeetle(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        List<Rectangle> blockers = monsterFloors();
+        blockers.addAll(spiderBlockers());
+        List<Rectangle> movers = movingAreas();
+        blockers.addAll(movers);
+        String problem = FlyingBeetle.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0),
+            monsterFloors(), movers, blockers, room, FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y),
+            standingPlaces(owner));
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /**
      * The spider (D102) fails at load when its range leaves the room, its floor has a gap, or its reach could cover a standing
      * place. A spider on a traced route (a Tiled polyline, D103) also fails when a piece is not a floor, a wall or a thread, when it
      * leaves the camera's view, or when a drop could not be stepped out of or could fall on a standing place.
@@ -1475,6 +1502,28 @@ public class Level implements WorldObject {
         for (TiledObject c : map.layer("Collisions"))
             if (c.type.isEmpty() || "Wall".equals(c.type)) solids.add(new Rectangle(c.x, c.y, c.width, c.height));
         return solids;
+    }
+
+    /**
+     * The whole area each solid or supporting object that moves passes through: escalators along their range, falling platforms
+     * down their fall, vertical walls to their raised stop and ladders down their drop (D145).
+     */
+    private List<Rectangle> movingAreas() {
+        List<Rectangle> areas = new ArrayList<>();
+        for (TiledObject s : map.layer("SpawnPoints")) {
+            switch (s.type) {
+                case "Escalator" -> areas.add(Escalator.travel(s.x, s.y, s.width, s.height, s.propBool("isVertical", false),
+                    s.propFloat("offNeg", 0), s.propFloat("offPos", 0)));
+                case "FallingPlatform" -> areas.add(new Rectangle(s.x, s.y, s.width, s.height + FallingPlatform.FALL_DISTANCE));
+                case "Actionable" -> {
+                    if ("Wall".equals(s.prop("type", "")) && "vertical".equals(s.prop("movement", "")))
+                        areas.add(new Rectangle(s.x, s.y - s.height, s.width, s.height + s.height));
+                }
+                case "Ladder" -> areas.add(new Rectangle(s.x, s.y, s.width, s.height + s.propFloat("dropDistance", 0)));
+                default -> { }
+            }
+        }
+        return areas;
     }
 
     /** What a spider's thread must not pass through besides solids: one-way platforms and objects that move or hang (D103). */
@@ -1676,6 +1725,28 @@ public class Level implements WorldObject {
         for (int i = 0; i < escalators.size(); i++) if (overlapsBox(bounds, escalators.get(i))) return true;
         for (int i = 0; i < fallingPlatforms.size(); i++) if (overlapsBox(bounds, fallingPlatforms.get(i))) return true;
         return false;
+    }
+
+    /**
+     * The top of the highest solid, one-way platform or moving platform at {@code x} whose top lies between {@code fromY} and
+     * {@code toY} (larger is lower), or {@code NaN} when there is none: what a flying beetle (D145) dives on and falls to. No
+     * allocation.
+     */
+    public float surfaceUnder(float x, float fromY, float toY) {
+        float surface = Float.NaN;
+        for (int i = 0; i < collisionBlocks.size(); i++) {
+            CollisionBlock block = collisionBlocks.get(i);
+            if (block.isActive() && !block.isQuickSand()) surface = higherTop(block, x, fromY, toY, surface);
+        }
+        for (int i = 0; i < escalators.size(); i++) surface = higherTop(escalators.get(i), x, fromY, toY, surface);
+        for (int i = 0; i < fallingPlatforms.size(); i++) surface = higherTop(fallingPlatforms.get(i), x, fromY, toY, surface);
+        return surface;
+    }
+
+    private static float higherTop(Entity box, float x, float fromY, float toY, float best) {
+        float top = box.getY();
+        if (x < box.getX() || x > box.getX() + box.getWidth() || top < fromY || top > toY) return best;
+        return Float.isNaN(best) || top < best ? top : best;
     }
 
     /**

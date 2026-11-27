@@ -72,6 +72,10 @@ public final class SpriteSheets {
     public static final Sheet MONSTER_BEETLE = new Sheet("images/objects/monster-beetle.png", 24, 16);
     /** D101: the beetle's body, its dead frame in its live palette and rim (D117; art/objects/monster/beetle-body.grid). */
     public static final Sheet MONSTER_BEETLE_BODY = new Sheet("images/objects/monster-beetle-body.png", 24, 16);
+    // The forest flying beetle (#330, D145): ten 40x32 frames, one strip; art/objects/monster/flying-beetle.grid.
+    public static final Sheet MONSTER_FLYING_BEETLE = new Sheet("images/objects/monster-flying-beetle.png", 40, 32);
+    /** D101: the flying beetle's body, its dead frame in its live palette and rim (D117). */
+    public static final Sheet MONSTER_FLYING_BEETLE_BODY = new Sheet("images/objects/monster-flying-beetle-body.png", 40, 32);
     // The forest spider (#328, D102): nine 32x16 frames, one strip; tools/sprite_layouts.py MONSTER_SHEETS, art/objects/monster/spider.grid.
     public static final Sheet MONSTER_SPIDER = new Sheet("images/objects/monster-spider.png", 32, 16);
     /** D101: the spider's body, its dead frame in its live palette and rim (D117; art/objects/monster/spider-body.grid). */

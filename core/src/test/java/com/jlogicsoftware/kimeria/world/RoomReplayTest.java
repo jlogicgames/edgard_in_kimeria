@@ -169,14 +169,18 @@ class RoomReplayTest {
     @Test void forestGladeRequiredRouteFitsTwentySeconds() {
         assertEquals(GLADE_S, measure("forest-glade", 3, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
+    /** #330: jump the thorn root, walk under the ledge and out of the flying beetle's drawn box, past the falling stone. */
+    @Test void forestRoostRequiredRouteFitsTwentySeconds() {
+        assertEquals(ROOST_S, measure("forest-roost", 4, false, 0, ROOST_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
+    }
     @Test void forestCanopyRequiredRouteFitsTwentySeconds() {
-        assertEquals(CANOPY_S, measure("forest-canopy", 4, false, 0, new float[]{1400, FUNGUS_JUMP}), PIN_MARGIN, "the card's beat time (D105)");
+        assertEquals(CANOPY_S, measure("forest-canopy", 5, false, 0, new float[]{1400, FUNGUS_JUMP}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestEntryAllCollectablesFitThirtySeconds() {
         measure("forest-entry", 0, true, 40, new float[]{80, 140, 300, 535});
     }
     @Test void forestCanopyAllCollectablesFitThirtySeconds() {
-        measure("forest-canopy", 4, true, 0, new float[]{1400, 1460, 1555});
+        measure("forest-canopy", 5, true, 0, new float[]{1400, 1460, 1555});
     }
 
     /** The mastered hero stops this far short of the leg-hold's teeth when they are not shut (D128). */
@@ -185,9 +189,9 @@ class RoomReplayTest {
     private static final float LEGHOLD_FLOOR_BELOW = 284;
     /** Seconds from the room's start at which the mastered route first stands short of the leg-hold's open teeth: the soonest a death at them can replay from (D105's retry), -1 before it. */
     private float legHoldArrival = -1;
-    private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {};
+    private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {}, ROOST_JUMPS = {4550};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 5.48f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -198,13 +202,13 @@ class RoomReplayTest {
 
     @Test void repeatedCollectionReturnsReachMissedArtifactsWithRealMovementAndCannotFarm() {
         Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        for (int room = 0; room < 5; room++) {
+        for (int room = 0; room < 6; room++) {
             for (var o : new java.util.ArrayList<>(level.objects)) {
                 if (o instanceof Enemy<?> enemy) enemy.collidedWithActor(true);
                 if (o instanceof Collectable c && c.type() == ItemType.COIN) c.collideWithPlayer();
                 if (o instanceof Bomb bomb) { bomb.collideWithPlayer(); bomb.update(.81f); }
             }
-            if (room < 4) level.enterNextRoom(player());
+            if (room < 5) level.enterNextRoom(player());
         }
         level.prepareHealer();
         assertEquals(6, coins);
@@ -231,6 +235,12 @@ class RoomReplayTest {
             within("glade", glade, COLLECTION_LIMIT);
             assertEquals(GLADE_RETURN_S, glade, 0.1f, "#331: the collection return walks past the wolf's body (pinned, D68)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
+            assertTrue(level.objects.stream().noneMatch(o -> o instanceof com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle),
+                "#330: the flying beetle killed on the first pass stays gone on a collection return, body included (D101)");
+            float roost = replay(level, "forest-roost", false, 0, ROOST_JUMPS, true);
+            within("roost", roost, COLLECTION_LIMIT);
+            assertEquals(ROOST_S, roost, 0.1f, "#330: the mastered route never meets the beetle, so a return takes as long (D68)");
+            level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
             float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
             float canopy = replay(level, "forest-canopy", false, 0, jumps, true);
@@ -242,8 +252,8 @@ class RoomReplayTest {
             assertEquals(2, artifacts.items().size());
             assertTrue(level.canBrew());
             assertFalse(level.objects.stream().anyMatch(o -> o instanceof Enemy<?> || o instanceof Collectable));
-            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, walls %.2f s, fissure %.2f s, glade %.2f s, canopy %.2f s%n",
-                trip + 1, entry, walls, fissure, glade, canopy);
+            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, walls %.2f s, fissure %.2f s, glade %.2f s, roost %.2f s, canopy %.2f s%n",
+                trip + 1, entry, walls, fissure, glade, roost, canopy);
         }
         assertTrue(level.brewElixir());
         assertEquals(0, coins);
@@ -259,6 +269,8 @@ class RoomReplayTest {
         secureCombatAndCoins(level);
         level.enterNextRoom(player()); // forest-fissure (#366): nothing to secure
         level.enterNextRoom(player()); // forest-glade (#331): its wolf is secured with the rest
+        secureCombatAndCoins(level);
+        level.enterNextRoom(player()); // forest-roost (#330): so is its flying beetle
         secureCombatAndCoins(level);
         level.enterNextRoom(player());
         secureCombatAndCoins(level);
@@ -289,6 +301,9 @@ class RoomReplayTest {
         float glade = replay(level, "forest-glade", false, 0, new float[]{});
         within("glade", glade, REQUIRED_LIMIT);
         level.enterNextRoom(player());
+        float roost = replay(level, "forest-roost", false, 0, ROOST_JUMPS);
+        within("roost", roost, REQUIRED_LIMIT);
+        level.enterNextRoom(player());
         var platform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 115);
         assertNotSame(firstPlatform, platform);
         assertTrue(platform.isRemoved(), "Collection return preserves the secured collapsed platform state");
@@ -305,6 +320,7 @@ class RoomReplayTest {
         secureCombatAndCoins(freshLevel);
         freshLevel.enterNextRoom(player());
         secureCombatAndCoins(freshLevel);
+        freshLevel.enterNextRoom(player());
         freshLevel.enterNextRoom(player());
         freshLevel.enterNextRoom(player());
         freshLevel.enterNextRoom(player());
@@ -387,6 +403,8 @@ class RoomReplayTest {
         assertTrue(level.fallingPlatforms.isEmpty(), "nor in the fissure room (#366)");
         level.enterNextRoom(player());
         assertTrue(level.fallingPlatforms.isEmpty(), "nor in the glade room (#331)");
+        level.enterNextRoom(player());
+        assertTrue(level.fallingPlatforms.isEmpty(), "nor in the roost (#330)");
         level.enterNextRoom(player());
         assertEquals(1, level.fallingPlatforms.size(), "one optional falling platform in the canopy");
         assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "no bomb shares the canopy room");

@@ -119,7 +119,7 @@ class BossCombatTest {
 
     private void encounter() {
         level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        for (int room = 0; room < 5; room++) level.enterNextRoom(player());
+        for (int room = 0; room < 6; room++) level.enterNextRoom(player());
         level.roomRipple().clear(); // the test walks past the game's room change: the entrance ripple (#553) is not part of the fight
         boss = level.objects.stream().filter(Boss.class::isInstance).map(Boss.class::cast).findFirst().orElseThrow();
         frames(20);
@@ -200,7 +200,7 @@ class BossCombatTest {
         gameState(running, "PAUSED"); hotkeys.invoke(running);
         assertFalse(fade.active(), "Pause must ignore the shortcut");
         gameState(running, "PLAYING");
-        for (int room = 1; room <= 5; room++) { // walls, fissure, glade, canopy, then the healer before the boss
+        for (int room = 1; room <= 6; room++) { // walls, fissure, glade, roost, canopy, then the healer before the boss
             hotkeys.invoke(running); assertTrue(fade.active());
             hotkeys.invoke(running); // The same/held event must not restart an active transition.
             for (int frame = 0; frame < 4; frame++) fade.update(.25f, () -> {
@@ -349,7 +349,7 @@ class BossCombatTest {
         var load = KimeriaGame.class.getDeclaredMethod("loadLevel"); load.setAccessible(true); load.invoke(running);
         var field = KimeriaGame.class.getDeclaredField("level"); field.setAccessible(true);
         Level world = (Level) field.get(running);
-        for (int room = 0; room < 5; room++) world.enterNextRoom(new Player(assets, running, 0, 0));
+        for (int room = 0; room < 6; room++) world.enterNextRoom(new Player(assets, running, 0, 0));
         gameField(running, "player", world.player);
         running.setGameStarted(true); gameState(running, "PLAYING");
         assertFalse(world.victoryExitComplete());
@@ -408,6 +408,8 @@ class BossCombatTest {
         level.enterNextRoom(player()); // forest-walls -> forest-fissure (#366)
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player()); // forest-fissure -> forest-glade (#331)
+        assertTrue(level.hasNextRoom());
+        level.enterNextRoom(player()); // forest-glade -> forest-roost (#330)
         assertTrue(level.hasNextRoom());
         level.enterNextRoom(player());
         assertNotNull(level.boss());
@@ -1101,6 +1103,7 @@ class BossCombatTest {
             .filter(c -> c.type() == ItemType.BAT).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); // forest-fissure (#366) holds no collectable
         enter.invoke(running); // forest-glade (#331) holds none either: its wolf is not secured by a pickup
+        enter.invoke(running); // forest-roost (#330) holds none either
         enter.invoke(running);
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
         enter.invoke(running); // Healer secures the canopy before opening.
@@ -1116,7 +1119,7 @@ class BossCombatTest {
         assertEquals(2, world.objects.stream().filter(Collectable.class::isInstance).count());
         assertTrue(running.artifacts().hasFullSet("forest-2"));
         world.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).forEach(Collectable::collideWithPlayer);
-        enter.invoke(running); enter.invoke(running); enter.invoke(running); enter.invoke(running); enter.invoke(running); // walls, fissure, glade, canopy, the healer
+        enter.invoke(running); enter.invoke(running); enter.invoke(running); enter.invoke(running); enter.invoke(running); enter.invoke(running); // walls, fissure, glade, roost, canopy, the healer
         var returningMeeting = (com.jlogicsoftware.kimeria.ui.HealerDialogue) healerField.get(running);
         var language = com.jlogicsoftware.kimeria.localization.Language.ENGLISH;
         assertEquals(com.jlogicsoftware.kimeria.localization.Msg.HEALER_RETURN_GREETING.t(language), returningMeeting.completeText(language));

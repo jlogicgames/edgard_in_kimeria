@@ -1800,6 +1800,82 @@ def elixir() -> list[float]:
     return finish_rms(out, ELIXIR_RMS_DB)
 
 
+# ---------------------------------------------------------------- forest flying beetle (#330, D145)
+# The ground beetle's voice taken into the air: higher and fluttering, so the two never sound alike. Its blast is beetle_pop.
+# Notice (flying_beetle_notice): its own call (D100), a high double chirr: two short rough /i/ buzzes, the second higher.
+FLYING_NOTICE_VOICES = (Voice(7501, 0.11, (520.0, 640.0), FORMANTS_I, FORMANTS_I, -19.0, asp_len=0.006, asp_level=0.3,
+                              attack=0.008, tau=0.070, release=0.025, jitter=0.04, rough=0.5, rough_start=0.0,
+                              vibrato=(34.0, 0.16), lowpass=4200.0),
+                        Voice(7502, 0.13, (640.0, 820.0), FORMANTS_E, FORMANTS_I, -19.0, asp_len=0.006, asp_level=0.3,
+                              attack=0.008, tau=0.080, release=0.030, jitter=0.04, rough=0.5, rough_start=0.0,
+                              vibrato=(34.0, 0.16), lowpass=4200.0))
+FLYING_NOTICE_SECOND = 0.15               # s, the second chirr
+FLYING_NOTICE_RMS_DB = -19.0
+# Wind-up (flying_beetle_windup 0.8 s, _long 1.2 s with the assist): a wing drone that climbs and is beaten faster and faster,
+# with the blink (0.2 s down to 0.05 s, as the monster draws it). A one-shot, as long as the wind-up.
+FLYING_WINDUP_VOICES = {0.8: Voice(7503, 0.80, (170.0, 520.0), FORMANTS_U, FORMANTS_E, -19.4, asp_len=0.020, asp_level=0.2,
+                                   attack=0.100, tau=3.0, release=0.030, jitter=0.04, rough=0.5, rough_start=0.0,
+                                   vibrato=(27.0, 0.12), lowpass=3400.0),
+                        1.2: Voice(7504, 1.20, (170.0, 520.0), FORMANTS_U, FORMANTS_E, -19.4, asp_len=0.020, asp_level=0.2,
+                                   attack=0.130, tau=4.5, release=0.030, jitter=0.04, rough=0.5, rough_start=0.0,
+                                   vibrato=(27.0, 0.12), lowpass=3400.0)}
+FLYING_BEAT_DEPTH = 0.65                  # how far each wing beat dips the drone
+FLYING_WINDUP_RMS_DB = -19.4
+# Dive (flying_beetle_dive): the fall along the drawn line, a short whistle sliding down over a rush of air, as long as the dive.
+FLYING_DIVE_SEED = 7505
+FLYING_DIVE_DURATION = 0.25
+FLYING_DIVE_HZ = (1700.0, 620.0)          # the whistle, falling
+FLYING_DIVE_AIR_HZ = (3600.0, 1200.0)     # the rush of air under it
+FLYING_DIVE_AIR_BANDWIDTH = 1400.0
+FLYING_DIVE_AIR_GAIN = 0.7
+FLYING_DIVE_ATTACK = 0.020
+FLYING_DIVE_TAU = 0.16
+FLYING_DIVE_RMS_DB = -21.0
+
+
+def flying_beetle_notice() -> list[float]:
+    first, second = (render_voice(v) for v in FLYING_NOTICE_VOICES)
+    out = [0.0] * (n_samples(FLYING_NOTICE_SECOND) + len(second))
+    for i, a in enumerate(first):
+        out[i] += a
+    for i, a in enumerate(second):
+        out[n_samples(FLYING_NOTICE_SECOND) + i] += a
+    return finish_rms(out, FLYING_NOTICE_RMS_DB)
+
+
+def _flying_beetle_windup(seconds: float) -> list[float]:
+    drone = render_voice(FLYING_WINDUP_VOICES[seconds])
+    slow, fast = BEETLE_BLINK
+    beat = 0.0
+    for i in range(len(drone)):   # one wing beat per blink, the period shrinking with the wind-up
+        t = i / SAMPLE_RATE
+        period = slow + (fast - slow) * min(t / seconds, 1.0)
+        beat = (beat + 1.0 / (period * SAMPLE_RATE)) % 1.0
+        drone[i] *= 1.0 - FLYING_BEAT_DEPTH * (0.5 - 0.5 * math.cos(2.0 * math.pi * beat))
+    return finish_rms(drone, FLYING_WINDUP_RMS_DB)
+
+
+def flying_beetle_windup() -> list[float]:
+    return _flying_beetle_windup(0.8)
+
+
+def flying_beetle_windup_long() -> list[float]:
+    return _flying_beetle_windup(1.2)
+
+
+def flying_beetle_dive() -> list[float]:
+    rng = random.Random(FLYING_DIVE_SEED)
+    n = n_samples(FLYING_DIVE_DURATION)
+    air = bandpass(noise(rng, n), lambda t: lerp(*FLYING_DIVE_AIR_HZ, t), FLYING_DIVE_AIR_BANDWIDTH)
+    ap = max(abs(v) for v in air) or 1.0
+    env = envelope(n, FLYING_DIVE_ATTACK, FLYING_DIVE_TAU)
+    out, phase = [0.0] * n, 0.0
+    for i in range(n):
+        phase += lerp(*FLYING_DIVE_HZ, i / (n - 1)) / SAMPLE_RATE
+        out[i] = (math.sin(2.0 * math.pi * phase) + FLYING_DIVE_AIR_GAIN * air[i] / ap) * env[i]
+    return finish_rms(out, FLYING_DIVE_RMS_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -1823,7 +1899,9 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "spore_puff.wav": spore_puff, "puffball_burst.wav": puffball_burst,
                "wolf_notice.wav": wolf_notice, "wolf_windup.wav": wolf_windup, "wolf_windup_long.wav": wolf_windup_long,
                "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run,
-               "handover.wav": handover, "elixir.wav": elixir}
+               "handover.wav": handover, "elixir.wav": elixir,
+               "flying_beetle_notice.wav": flying_beetle_notice, "flying_beetle_windup.wav": flying_beetle_windup,
+               "flying_beetle_windup_long.wav": flying_beetle_windup_long, "flying_beetle_dive.wav": flying_beetle_dive}
 
 
 def generate(out_dir: Path) -> list[Path]:

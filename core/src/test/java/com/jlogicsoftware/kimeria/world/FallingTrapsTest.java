@@ -498,10 +498,10 @@ class FallingTrapsTest {
         String one = Gdx.files.internal("tiles/forest-1.tmx").readString();
         assertEquals(2, one.split("type=\"FallingBranch\"", -1).length - 1, "forest-1: two branches (#500)");
         assertEquals(3, one.split("type=\"FallingStone\"", -1).length - 1, "forest-1: three stones (#500)");
-        // #261 (D59): forest-2 has no branch and exactly one stone, at the end of forest-canopy.
+        // #261 (D59): forest-2 has no branch; its stones are at the end of forest-canopy and, since #330, at the end of forest-roost.
         String two = Gdx.files.internal("tiles/forest-2.tmx").readString();
         assertFalse(two.contains("FallingBranch"), "forest-2 has no branch");
-        assertEquals(1, two.split("type=\"FallingStone\"", -1).length - 1, "forest-2: one stone");
+        assertEquals(2, two.split("type=\"FallingStone\"", -1).length - 1, "forest-2: two stones (#330)");
         String text = Gdx.files.internal("tiles/forest-0.tmx").readString();
         assertEquals(1, text.split("type=\"FallingBranch\"", -1).length - 1, "D48: one branch");
         assertEquals(1, text.split("type=\"FallingStone\"", -1).length - 1, "D48: one stone");

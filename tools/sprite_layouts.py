@@ -124,6 +124,8 @@ MONSTER_SHEETS = {
     'spider-body': ((32, 16), ('body',)),  # D101: the spider's dead frame; live palette and rim (D117)
     'snail': ((24, 16), ('crawl1', 'crawl2', 'look', 'blink', 'draw', 'spit', 'rest', 'dead', 'gob')),  # #329 (D106); gob: two 8x8 frames
     'snail-body': ((24, 16), ('body',)),  # D101: the snail's dead frame, the empty shell; live palette and rim (D117)
+    'flying-beetle': ((40, 32), ('fly1', 'fly2', 'fly3', 'clap', 'tip', 'brace', 'bright', 'white', 'dive', 'dead')),  # #330 (D145)
+    'flying-beetle-body': ((40, 32), ('body',)),  # D101: the flying beetle's dead frame; live palette and rim (D117)
     'wolf': ((48, 24), ('stand', 'trot1', 'trot2', 'alert', 'hackle', 'scrape', 'run1', 'run2', 'run3', 'run4', 'skid', 'crouch',
                      'lunge', 'bite', 'shake', 'bay', 'dead')),  # #331 (D115)
     'wolf-body': ((48, 24), ('body',)),  # D101: the wolf's dead frame, on its side; live palette and rim (D117)

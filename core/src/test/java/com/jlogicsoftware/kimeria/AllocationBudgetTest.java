@@ -30,6 +30,7 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
@@ -193,6 +194,8 @@ class AllocationBudgetTest {
     static final double PICKUP_SPARKS_CEILING = 8;
     /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-18, #327 and D101; 0.2 before the body; the same 8 B ceiling as the other isolated paths; the harness does not play sounds, so {@code playSound} is not reached): beetles crawling, noticing, committing, winding up with specks, bursting or dying under a kill, their bodies rocking, crumbling and burning, through the real {@code Level} of beetle-test.tmx, update and render every frame. */
     static final double BEETLE_CEILING = 8;
+    /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-26, #330, D145, the chase included; the same 8 B ceiling as the ground beetle's; the harness does not play sounds): see {@link #flyingBeetleThroughTheRealLevel}. */
+    static final double FLYING_BEETLE_CEILING = 8;
     /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-19, #328, D102; the same 8 B ceiling as the beetle's; the harness does not play sounds): spiders skittering, noticing, chasing, winding up with their silk, leaping, biting and recovering, or killed and leaving a body that rocks, crumbles and burns, through the real {@code Level} of spider-test.tmx, update and render every frame. */
     static final double SPIDER_CEILING = 8;
     /** Measured in 3 runs (2026-11-19, #483, D103; the same 8 B ceiling as the floor spider's): see {@code spiderDropThroughTheRealLevel} and {@code spiderClimbThroughTheRealLevel}; the numbers are in D103. */
@@ -312,7 +315,7 @@ class AllocationBudgetTest {
 
     /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
     @Test void forest2Room3WithBlood() {
-        Level level = harness.roomOf("forest-2", 4);
+        Level level = harness.roomOf("forest-2", 5);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.blood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, true);
@@ -323,7 +326,7 @@ class AllocationBudgetTest {
 
     /** A sword kill sprays a light burst through {@code Level.mobBlood} every {@link #BURST_CYCLE_FRAMES} frames in the boss room (the level path of #319). */
     @Test void forest2Room3WithMobKillBlood() {
-        Level level = harness.roomOf("forest-2", 4);
+        Level level = harness.roomOf("forest-2", 5);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.mobBlood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
@@ -664,7 +667,7 @@ class AllocationBudgetTest {
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
     @Test void cameraShakeQuery() {
-        Level level = harness.roomOf("forest-2", 4);
+        Level level = harness.roomOf("forest-2", 5);
         Rectangle view = new Rectangle();
         Rectangle room = level.currentRoomBounds();
         float[] sum = new float[1];
@@ -879,6 +882,69 @@ class AllocationBudgetTest {
         assertFalse(level.player.isGotHit(), "the hero stepped clear of every burst");
         assertTrue(maxRock[0] > 0, "an odd beetle's body must rock when the hero walks up to it");
         assertWithinBudget("beetle notice, wind-up, burst, death and body", BEETLE_CEILING, bytes);
+    }
+
+    private static final int FLYING_CYCLE_FRAMES = 200, FLYING_HEARD_FRAME = 5, FLYING_OUT_FRAME = 90, FLYING_ESCAPE_FRAME = 120,
+        FLYING_KILL_FRAME = 145;
+    private static final int FLYING_PUSH_FRAME = 175, FLYING_FINISH_FRAME = 190, FLYING_MIN_CHASE_FRAMES = 40;
+    /** Built 48 px along its line, so it travels in the chase: x 300, 3 tiles back and 5 on. */
+    private static final float FLYING_X = 300, FLYING_Y = 248, FLYING_W = 40, FLYING_H = 32, FLYING_BACK_TILES = 3, FLYING_ON_TILES = 5;
+    /** Hero positions (entity x): under the platform beside the line's end, in the open beside it, far to the left of its blast. */
+    private static final float HERO_UNDER_ROOF_X = 230 - 23.5f, HERO_IN_THE_OPEN_X = 300 - 23.5f, HERO_LEFT_X = 80 - 23.5f,
+        HERO_FROM_BODY = 26;
+
+    /**
+     * Flying beetles in turn through the real {@code Level} of flying-beetle-roof.tmx (#330, D145): each flies a few frames,
+     * then hears the hero under the platform, notices (0.5 s) and follows along its line, its beat quickening, trying every
+     * frame to commit and finding the platform in the line (the surface search and the line test, its dearest path), until the
+     * hero steps out at frame {@value #FLYING_OUT_FRAME} of the cycle; then it commits, winds up with its specks along the line
+     * and round the box, and dives; the hero steps away at frame {@value #FLYING_ESCAPE_FRAME}; even ones burst, odd ones are
+     * killed at frame {@value #FLYING_KILL_FRAME}, in the dive, as a fireball would, fall and leave their body: the hero walks up
+     * to it at frame {@value #FLYING_PUSH_FRAME} (it rocks) and at frame {@value #FLYING_FINISH_FRAME} it crumbles or, one in four,
+     * burns. {@code update} and {@code render} of the monster, {@code Level.beetleFx()} and {@code Level.remainsFx()} every frame.
+     * Monsters are built before the probe.
+     */
+    @Test void flyingBeetleThroughTheRealLevel() {
+        Level level = harness.roomOf("flying-beetle-roof", 0);
+        for (int i = level.objects.size() - 1; i >= 0; i--) if (level.objects.get(i) instanceof FlyingBeetle) level.objects.remove(i);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / FLYING_CYCLE_FRAMES + 1;
+        FlyingBeetle[] flyers = new FlyingBeetle[cycles];
+        for (int k = 0; k < cycles; k++) {
+            flyers[k] = new FlyingBeetle(harness.assets(), harness.game(), FLYING_X, FLYING_Y, FLYING_W, FLYING_H, FLYING_BACK_TILES,
+                FLYING_ON_TILES);
+            flyers[k].setPlayer(level.player);
+            flyers[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[FlyingBeetle.State.values().length];
+        int[] peak = new int[1], chased = new int[1], bodies = new int[1];
+        float[] maxRock = new float[1];
+        Rectangle body = new Rectangle();
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / FLYING_CYCLE_FRAMES, f = i % FLYING_CYCLE_FRAMES;
+            FlyingBeetle b = flyers[k];
+            if (f == 0) level.player.position.set(HERO_FAR_X, HERO_Y);
+            if (f == FLYING_HEARD_FRAME) level.player.position.set(HERO_UNDER_ROOF_X, HERO_Y);
+            if (f == FLYING_OUT_FRAME) level.player.position.set(HERO_IN_THE_OPEN_X, HERO_Y);
+            if (f == FLYING_ESCAPE_FRAME) level.player.position.set(HERO_LEFT_X, HERO_Y);
+            if (f == FLYING_KILL_FRAME && k % 2 == 1) b.collidedWithActor(true);
+            if (f == FLYING_PUSH_FRAME && k % 2 == 1) level.player.position.set(b.remainsInto(body).x - HERO_FROM_BODY, HERO_Y);
+            if (f == FLYING_FINISH_FRAME && k % 2 == 1) { if (b.isRemains()) bodies[0]++; if (k % BEETLE_KINDS == BEETLE_BURNT) b.burnUp(); else b.crumble(); }
+            if (!b.isRemoved()) { b.update(STEP); b.render(batch); seen[b.getState().ordinal()] = true; maxRock[0] = Math.max(maxRock[0], Math.abs(b.rockAngle())); }
+            if (b.getState() == FlyingBeetle.State.CHASE) chased[0]++;
+            level.beetleFx().update(STEP);
+            level.beetleFx().render(batch);
+            level.remainsFx().update(STEP);
+            level.remainsFx().render(batch);
+            peak[0] = Math.max(peak[0], level.beetleFx().soft().count() + level.beetleFx().hard().count());
+        });
+        for (FlyingBeetle.State state : FlyingBeetle.State.values()) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(chased[0] >= (cycles - 1) * FLYING_MIN_CHASE_FRAMES, "the chase must be measured: " + chased[0] + " frames");
+        assertTrue(bodies[0] > 0, "odd ones must leave a body");
+        assertTrue(peak[0] > 0, "they must actually throw particles");
+        assertFalse(level.player.isGotHit(), "the hero stepped clear of every burst");
+        assertTrue(maxRock[0] > 0, "a body must rock when the hero walks up to it");
+        assertWithinBudget("flying beetle notice, chase, wind-up, dive, burst, death and body", FLYING_BEETLE_CEILING, bytes);
     }
 
     private static final int SPIDER_CYCLE_FRAMES = 150, SPIDER_HEARD_FRAME = 5, SPIDER_ESCAPE_FRAME = 50, SPIDER_KILL_FRAME = 110;
@@ -1351,7 +1417,7 @@ class AllocationBudgetTest {
         };
         harness.font = font;
         BossHud hud = new BossHud(harness.assets(), harness.game(), new Matrix4(), 640, 360);
-        Level level = harness.roomOf("forest-2", 4);
+        Level level = harness.roomOf("forest-2", 5);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
         font.dispose();
         assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
@@ -1915,7 +1981,7 @@ class AllocationBudgetTest {
     /** The coin count, the FPS counter and the fireball stock of {@code Hud.render} with the boss bar, each frame. */
     @Test void hudCoinCountAndFps() {
         Hud hud = hudWithMetricsFont();
-        Level level = harness.roomOf("forest-2", 4);
+        Level level = harness.roomOf("forest-2", 5);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true, level.player, "60 FPS"));
         assertWithinBudget("Hud.render", HUD_CEILING, bytes);
     }

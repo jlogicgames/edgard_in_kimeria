@@ -3118,7 +3118,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     burst it (D100) and leave nothing.
   - **Spider (#328): yes, built (D102).** Its body lies on its back with its eight legs curled up, and rocks like the beetle's.
   - **Snail (#329): yes, built ([D106](#d106-the-forest-snail-it-looks-ahead-holds-a-line-and-spits-a-slow-gob-cross-its-ground-in-the-reload-329-240-398)).** Its empty shell stays, rolled onto its back with its mouth open upward, and rocks like the others.
-  - **Flying beetle (#330): partly.** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
+  - **Flying beetle (#330): partly, built ([D145](#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398)).** Its own blast leaves nothing. Killed in the air by a fireball or a stone, it falls
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
   - **Wolf (#331): yes, with its own reaction ([D115](#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
     frame) when the hero passes. It crumbles and burns like the others.
@@ -4680,3 +4680,60 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Foreground sheet:** every `-foot` bleed piece is 2 tile rows (the last pixel row repeated), so a standing piece moved up 16 px still ends below the screen; `forest-fg.png` grows from 896x1600 to 896x1632 px.
 - **Test geometry moved with the maps:** Y constants in the room tests, the three scripted routes and the parallax tests' offsets and leaf fixture moved by 16 px; the load-rule tests' synthetic maps keep their own floor at y 320. No tolerance changed. `LadderLessonTest` now expects `forest-0`'s retracted ladder foot 16 px past the ledge top.
 - **Gate:** `validateParallax`, `validateContrast`, `check_tiled_links.py`, `:core:check`.
+
+## D145. The forest flying beetle: it hovers, hears, draws its dive and bursts on the spot where the hero stood (#330, #240, #398)
+
+- **Status:** Accepted (author, 2026-11-26: the card as proposed). Built; the author approved the redrawn sprites and the room, `forest-roost`,
+  on 2026-11-26. The sounds and the timing are not yet checked by the author in play ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+- **Decision:**
+  - **Look.** Ten 40×32 frames after the author's photos of a beetle in flight (2026-11-26; a first drawing with bat-like
+    wings on a domed shell was rejected): two crimson wing covers lifted apart, a long veined clear hindwing, a segmented belly,
+    jointed legs, clubbed antennae and a glowing eye, in the danger family. Body hitbox `rect(10, 17, 22, 15)`; wings, covers
+    and antennae outside it. **Contact is harmless.**
+  - **Flight (the D103 rule for a flier).** A straight level line authored with `offNeg`/`offPos`, 40 px/s, the body's bottom
+    **40 to 64 px** above every surface under it. No free flight: it leaves the line only to dive, once, along a straight line
+    its wind-up has drawn.
+  - **Hearing** 96 px either side, in a band from the body's top 96 px down; lost beyond 144 px or after 1.0 s out of the band.
+  - **Notice (body language, D100):** claps its wing covers and drops 3 px, opens them, claps, tips its head down: 0.5 s, not
+    scaled; `flying_beetle_notice`.
+  - **Chase** 70 px/s along its line.
+  - **Commit:** the hero's middle within 48 px either side, the first surface under him below the body and at most 64 px under
+    it, and a clear straight line from the body's middle to 8 px over that spot (no solid, one-way platform or moving
+    platform). The spot is locked.
+  - **Wind-up:** `TrapWarnings.duration(DEFAULT_WARNING_SECONDS)`, 0.8 s, 1.2 s with the assist: shake and blink, specks down
+    the dive line and round the 80×32 box at the target; `flying_beetle_windup`(`_long`).
+  - **Dive** 0.25 s along the line, `flying_beetle_dive`; something moving into the line stops it there.
+  - **Burst:** a box 80 px wide, 24 px above and below the body's middle, cut at the surface under it, tested once: at the end
+    of a dive it is the ground beetle's 80×32, cut at the drawn surface even if that has gone since (a collapsed platform, a
+    lift moved away). A burst due at the end of a dive resolves on the next frame, so a fireball cast
+    or a stone thrown that frame wins (#503, #505). The ground beetle's effects (an oval halo in the air), `beetle_pop` and
+    near-survivor shake.
+  - **Answers.** Fireball, stone, torch: a quiet kill in any state. The sword in any state and a stomp before it commits burst
+    it at once; the box always reaches that hero. A stomp on a committed one bounces him off. No blood.
+  - **Body (D101):** it falls and lies on the surface below, on its back with one wing flat; over a pit, nothing. A burst leaves
+    nothing.
+  - **Load checks** (`FlyingBeetle.problem`): the line inside the room and the camera's view, clear of solids, platforms,
+    hanging objects and the whole area each moving one passes through; the highest static surface under it 40 to 64 px below,
+    nothing that moves closer than 40 px; no burst over the entrance body, the `RoomExit` or a `Checkpoint`, on the line or
+    anywhere along any dive on to any surface (conservative: a dive whose line a solid would block counts too).
+- **Why:** the first monster that brings its blast to a spot from above: the answer is to leave where it **will** be, to use a
+  roof, or to jump and shoot. The level line keeps every retry the same (D7), the drawn line and box keep what kills seen
+  beforehand (D5, D103), and the shared box, effects and sound make one blast to learn for both beetles.
+- **Measured (2026-11-26):** from the locked spot the hero needs 45.5 px (0.46 s), leaving 0.59 s of the 1.05 s from commit to
+  burst (0.99 s with the assist). A body 40 px up: a standing fireball (9 to 19 px) and a standing throw (top 34 px) fly under
+  it, and a jumping one hits over at least 8 cast frames (`FlyingBeetleTest`). Pose: the body differs from its closest live frame
+  (`clap`) in 76.8 % of the silhouette (floor 25 %). Contrast at trial placements in all 24 forest rooms
+  (`check_contrast.py` metrics, floor line y 304, 40 px up): live outline 0.295 to 0.834, above the active 0.28. `BeetleFx`
+  peaks with three of them: 69 soft, 347 hard, so the hard pool grew from 400 to **440** (25 % headroom; no threshold changed).
+  Allocation, the failing commit of a chase under a platform included: 0.1, 0.1 and 0.1 B/frame in 3 runs (ceiling 8).
+- **Review (2026-11-26, a separate session):** eight findings, fixed the same day: a body killed overlapping a step was lifted
+  on to it (now moved off sideways); the load checks missed moving objects' travel and dives on to a floor under a ledge; the
+  burst followed a surface that had gone; tests, the allocation scene and the contrast mirror did not cover what they named.
+  The thin line probe stays: a diving sprite can overlap a corner by a few px, which changes no kill.
+- **Placement (2026-11-26):** `forest-roost`, forest-2's fifth room (640 px, appended at the map's end, listed after
+  `forest-glade`): a thorn root, the beetle, a falling stone; the first meeting is under a one-way ledge beside the end of its
+  line, at its height ([ROOM_CARDS.md](ROOM_CARDS.md#forest-roost)). The ledge's right end is within its commit reach and level
+  with it: a hero there is dived at along the ledge, and running off it clears the box. Measured with a scripted hero: the route
+  5.48 s with and without the assist, safe at every start delay through a whole patrol; contrast along its line 0.315 to 0.826.
+- **Applies to:** the ground beetle shares its effects; D101's flying-beetle line is built as written there.
+

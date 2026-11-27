@@ -2,6 +2,7 @@ package com.jlogicsoftware.kimeria.world;
 
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
@@ -44,7 +45,8 @@ class RemainsTest {
      * measured 2026-11-18; the spider on its back, legs curled up, from its closest (recover) in 48.3 %, measured 2026-11-19 (its
      * hanging frames of D103 are live frames too; its wall frames are 16x32 and upright, never lying on a floor); the snail's
      * empty shell on its back from its closest (draw) in 49.3 %, measured 2026-11-19 (#329); the wolf lying on its side from its
-     * closest (bay) in 52.5 %, measured 2026-11-21 (#331); a recoloured live frame would differ in 0 %.
+     * closest (bay) in 52.5 %, measured 2026-11-21 (#331); the flying beetle on its back, a wing flat, from its closest (clap) in
+     * 76.8 %, measured 2026-11-26 (#330); a recoloured live frame would differ in 0 %.
      */
     private static final float POSE_DIFFERENCE = .25f;
 
@@ -56,6 +58,9 @@ class RemainsTest {
                         int[] liveFrames, int bodyFrame, String bodySheet, ToDoubleFunction<Remains> reaction) { }
 
     private static final Map<String, Case> CASES = Map.of(
+        // D145: killed in the air it falls to the floor and lies on its back, one wing spread flat.
+        "FlyingBeetle", new Case("flying-beetle-test", RemainsTest::flyingBeetle, "assets/images/objects/monster-flying-beetle.png", 40, 32,
+            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, 9, "assets/images/objects/monster-flying-beetle-body.png", b -> ((FlyingBeetle) b).rockAngle()),
         "Beetle", new Case("beetle-test", RemainsTest::beetle, "assets/images/objects/monster-beetle.png", 24, 16,
             new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, 9, "assets/images/objects/monster-beetle-body.png", b -> ((Beetle) b).rockAngle()),
         "Spider", new Case("spider-test", RemainsTest::spider, "assets/images/objects/monster-spider.png", 32, 16,
@@ -75,6 +80,11 @@ class RemainsTest {
 
     private static Enemy<?> beetle(Level level) {
         for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof Beetle b) return b;
+        return null;
+    }
+
+    private static Enemy<?> flyingBeetle(Level level) {
+        for (int i = 0; i < level.objects.size(); i++) if (level.objects.get(i) instanceof FlyingBeetle b) return b;
         return null;
     }
 

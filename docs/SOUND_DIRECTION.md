@@ -334,6 +334,21 @@ Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble
 twitch and the recovery are silent. The 50 sounds that existed before stay byte-identical (md5 before and after). Not verified: how the
 set sounds beside the forest-2 music and ambience, which waits for a room that places it (#331).
 
+### Forest flying beetle (#330, seeds 7501-7505, [D145](DECISIONS.md#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398))
+
+Four voice-synth sounds, generated 2026-11-26; not yet heard by the author in the game ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). The ground beetle's voice taken
+into the air, higher and fluttering.
+
+- `flying_beetle_notice` (0.28 s, RMS -19.0 dBFS): its own call (D100): a high double chirr, two short rough buzzes with a 34 Hz
+  flutter, `render_voice` 520 -> 640 Hz on /i/, then 640 -> 820 Hz, /e/ to /i/, 0.15 s apart.
+- `flying_beetle_windup` (0.80 s) and `flying_beetle_windup_long` (1.20 s, the assist), RMS -19.4 dBFS: a wing drone climbing
+  170 -> 520 Hz, /u/ to /e/, beaten once per blink (the period shrinks from 0.2 to 0.05 s as the monster blinks). A one-shot.
+- `flying_beetle_dive` (0.25 s, RMS -21.0 dBFS, an environment level): as it leaves its line: a sine falling 1700 -> 620 Hz over
+  a rush of air (noise swept 3.6 -> 1.2 kHz).
+
+Its burst plays `beetle_pop` (one blast for both beetles), its death the shared `bounce`, its body `remains_crumble` and
+`remains_burn`. Constants: `FLYING_*` in `tools/audio/generate_sounds.py`.
+
 ### Puffball burst (#558, seeds 7401-7403, D93, D125)
 
 One voice-synth sound, generated 2026-11-22, for the spore puffball's release only: it is no look-alike of the honey fungi, so it no longer

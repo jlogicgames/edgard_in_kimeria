@@ -45,12 +45,12 @@ class HangingVineTest {
         return level.objects.stream().filter(FallingStone.class::isInstance).map(FallingStone.class::cast).findFirst().orElseThrow();
     }
 
-    /** The room of {@code map} that holds its falling stone (the maps have one each). */
+    /** The first room of {@code map} with a falling stone and vines to sway; forest-roost (#330) has a stone and no vine. */
     private Level stoneRoom(String map) {
         for (int room = 0; ; room++) {
             Level level = harness.roomOf(map, room);
-            if (level.objects.stream().anyMatch(FallingStone.class::isInstance)) return level;
-            assertTrue(level.hasNextRoom(), map + " has a falling stone");
+            if (!level.vines.isEmpty() && level.objects.stream().anyMatch(FallingStone.class::isInstance)) return level;
+            assertTrue(level.hasNextRoom(), map + " has a falling stone in a room with vines");
         }
     }
 

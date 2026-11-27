@@ -98,8 +98,8 @@ class RoomCeilingTest {
         highestPointReached(roomOf("forest-1", 10), false, 60 * 20, 112);
     }
 
-    /** Entry, walls, fissure, glade and canopy; the boss room (index 5) is enclosed by plain blocks and has no side walls to stand against. */
-    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 5); }
+    /** Entry, walls, fissure, glade, roost and canopy; the boss room (index 6) is enclosed by plain blocks and has no side walls to stand against. */
+    @Test void forest2KeepsTheHeroInside() { assertCannotLeave("forest-2", 6); }
 
     /** The fissure room's exit ledge (top y 224, against the right wall, #366) is a 96 px head start up that wall. */
     @Test void theFissureRoomLedgeDoesNotLetTheHeroOverTheTop() {
@@ -146,11 +146,11 @@ class RoomCeilingTest {
 
     /**
      * #360 (D71): the stone's lip must be on screen while the hero stands on the floor. Rooms are 8 px taller than the view and the
-     * camera then shows the bottom of the room: forest-0 hangs it at y 128, a third of the view down (#550, under a soil block under the canopy), forest-2 hangs it under the dirt block over
-     * the stone with {@code lipTop} 48. Checked against the hero's own camera target, standing on the floor, in both rooms with a stone.
+     * camera then shows the bottom of the room: forest-0 hangs it at y 128, a third of the view down (#550, under a soil block under the canopy), forest-canopy and forest-roost (#330) hang it under the dirt block over
+     * the stone with {@code lipTop} 48. Checked against the hero's own camera target, standing on the floor, in every room with a stone here.
      */
     @Test void theStoneLipIsInsideTheCameraViewWhileTheHeroStandsOnTheFloor() {
-        String[][] rooms = {{"forest-0", "3", "128"}, {"forest-2", "4", "48"}};
+        String[][] rooms = {{"forest-0", "3", "128"}, {"forest-2", "4", "48"}, {"forest-2", "5", "48"}};
         for (String[] r : rooms) {
             Level level = roomOf(r[0], Integer.parseInt(r[1]));
             var stone = level.objects.stream().filter(com.jlogicsoftware.kimeria.entity.objects.FallingStone.class::isInstance)
