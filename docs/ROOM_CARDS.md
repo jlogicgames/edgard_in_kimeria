@@ -110,6 +110,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | bat-enemy | `Bat` | passes or beats a flying enemy | monster |
 | beetle | `Beetle` | outruns a beetle that commits and bursts, or kills it from afar with a fireball or a stone (D100) | monster |
 | flying-beetle | `FlyingBeetle` | gets away from where a flying beetle's dive points, puts a platform between them, or jumps to shoot it (D145) | monster |
+| mosquito-swarm | `MosquitoSwarm` | passes over or under a swarm the sword cannot kill and a stomp makes deadly, or kills it with a stone, a fireball or a torch (D151) | monster |
 | snail | `Snail` | crosses a snail's line during its reload, jumps or cuts its gob, comes up behind it or hides behind cover, or shoots it (D106) | monster |
 | spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) | monster |
 | wolf | `Wolf` | jumps a wolf's low lunge, timed on its drawn line; strikes it as it comes or in its recovery; goes up out of its reach and watches it bay; or shoots it (D115); it cannot be outrun without the longer-warnings assist | monster |
@@ -642,7 +643,7 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 1 of 7 (x 0-736, 736 px, 1.15 screens) |
+| Level | forest-2, play order 3, room 1 of 8 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
 | Purpose | New ground, a new enemy and a new, hidden trap before any climbing: a YellowMob charges, is stopped by a low earth block and is stomped from it; climb the stair over the first pit past a Bat; on the floor after it a leg-hold trap lies under leaves (two tooth tips, sinew wraps and a peg show): stand short of it, let it snap empty and walk over it shut (or jump it); then cross the second pit past a second Bat to the exit, and see the coins. |
 | Introduces | yellowmob, leg-hold |
@@ -682,7 +683,7 @@ own floor.
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 2 of 7 (x 736-1280, 544 px, 0.85 screen) |
+| Level | forest-2, play order 3, room 2 of 8 (x 736-1280, 544 px, 0.85 screen) |
 | Role | variation |
 | Purpose | The two tall walls cannot be climbed: climb the tree in front of them and leap from its top branch across the first wall on to the second, where the Bat ingredient lies; drop from it on to the YellowMob, then the RedMob guards the exit. |
 | Introduces | ingredient |
@@ -729,7 +730,7 @@ y 304  ==================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 3 of 7 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 3 of 8 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A burl on the floor lances a root up on a clock: watch the first one alone on open floor and pass between thrusts, then climb through the branch the second one pierces, starting right after a thrust; on the ledge a beetle guards the exit: shoot it from the lip, lure it to commit and step back, or walk on past it. |
 | Introduces | clocked-column |
@@ -771,7 +772,7 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 4 of 7 (832 px, 1.3 screens, x 3648-4480: appended at the map's end, listed after `forest-fissure` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 4 of 8 (832 px, 1.3 screens, x 3648-4480: appended at the map's end, listed after `forest-fissure` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | Meet the wolf from a branch it cannot reach: jump a thorn root, hop on to a fallen trunk that hides you from the wolf, step out on the one-way branch, watch it notice you, sprint under you and bay, then step off on to its back; jump a second thorn root on the way to the exit. |
 | Introduces | wolf |
@@ -815,7 +816,7 @@ y 304 ====================================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 5 of 7 (736 px, 1.15 screens, x 4480-5216: appended at the map's end, listed after `forest-glade` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 5 of 8 (736 px, 1.15 screens, x 4480-5216: appended at the map's end, listed after `forest-glade` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | Meet the flying beetle from under a low ledge it cannot dive through, watch it hear the hero, fly up over the ledge and hang above him, then get away from where its dive points; a thorn root before it and a falling stone after it. |
 | Introduces | flying-beetle |
@@ -858,11 +859,55 @@ y 304 ================================================
 - `FlyingBeetle` (id 419) x 4950, y 240 in the map (40x32: top y 224, the body's bottom y 256, 48 px above the floor), `offNeg` 14, `offPos` 0: its frame flies x 4726-4990, rising to a body bottom of y 208 over the ledge.
 - `FallingStone` (id 420) x 5096, y 16 in the map (top y 0), trigger zone x 5080-5112, y 272-304 (`zoneX` 5080, `zoneY` 272, 32x32), `lipTop` 96: it hangs under a drawn soil overhang x 5072-5136, y 0-96 (Background tiles, no collision). On the default line it showed only half at the screen's top edge beside the fireball icons (seen in the web build, D71), and at `lipTop` 48 the drifting cloud lay behind it once the camera scrolled (D146).
 
+### forest-hollow
+
+| Field | Value |
+| --- | --- |
+| Level | forest-2, play order 3, room 6 of 8 (736 px, 1.15 screens, x 5216-5952: appended at the map's end, listed after `forest-roost` in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | Meet the mosquito swarm on open floor with a stone beside the hero, find that the sword cannot kill it, then jump a low swarm head on, jump a thorn root and walk under a rising swarm while it is high. |
+| Introduces | mosquito-swarm |
+| Develops | - |
+| Combines | - |
+| Repeats | proximity-thorn |
+| Mastered route | 7.30 s from the entrance (`RoomReplayTest`, three identical attempts), with no charge and the stone left lying: wait short of the low swarm until it comes, jump it, jump the thorn root, wait for the second swarm to rise and walk under it; 6.43 to 9.68 s over every start delay through 12 s, the same with and without the longer-warnings assist (`ForestHollowTest`); 6.43 s on a collection return, the swarms gone if killed (`RoomReplayTest`); target about 20 s (D19) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | the whole room, at most about 10 s: walking blind into the low swarm costs 1.97 s, into the thorn root 3.73 s, under the second swarm 5.98 s (`ForestHollowTest.carelessWalksDieAtTheCardsTimes`) |
+| Beats | mosquito-swarm@5440, proximity-thorn@5632, mosquito-swarm@5876 |
+| Beat time | 7.30 (`RoomReplayTest`) |
+| First meeting | mosquito-swarm: beat 1, pocket at x 5350, on open floor 40 px short of the swarm's sweep (x 5396), the stone beside him: the swarm flies to and fro in front of him and cannot reach him, and the second swarm is out of the camera's view (`FirstMeetingPocketTest.forestHollowTheSwarm`) |
+| Optional | kill a swarm with the stone in the pocket (23 of 32 throws sampled over its period reach the low one) or with a fireball (every sampled cast); a missed stone can be picked up again |
+| D26 | the exit is always reachable: nothing in the room is one-shot, both swarms have a free way past at every phase (checked at load and swept in `ForestHollowTest`), no ammunition or stone is needed |
+| Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
+| Landmark | the cloud rising and sinking before the exit |
+| Status | new, [#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645) (card and room approved by the author 2026-11-27). The jump over the low swarm in the room: taken standing 18 px short of its line it clears from 75 of the 192 frames of the swarm's period, 36 px short from 33 (it turns at the ends of its 80 px line). D84 check: the first swarm is in view from the entrance; its danger is exactly what is drawn; the stone lies where he first watches it. Built and tested with a scripted hero; not yet played by the author ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
+| Decisions | D72, D100, D105, D151 |
+
+Sketch (Y grows downward, floor top y 304; one character is 16 px, column 0 is x 5216; `@` the entrance, `o` the stone, `m` a swarm on its line, `^` the thorn root, `E` the exit):
+
+```
+col   0         1         2         3         4
+      0123456789012345678901234567890123456789012345
+y 224 |                                         :    |
+y 240 |                                         :    |
+y 256 |                                         :    |
+y 272 |                                         :  E |
+y 288 |  @   o     <mm..m>       ^              m  E |
+y 304 ===============================================
+```
+
+- `Room` (`leaves` 10), `RoomStart` (5248, 256), `RoomExit` x 5920-5936, y 256-304, on the floor against the right wall.
+- Walls x 5216-5232 and x 5936-5952, y 0-304; floor x 5216-5952, y 304-368, gapless.
+- `MosquitoSwarm` (id 596) x 5408, y 298 in the map (the SpawnPoints layer is drawn 16 px up: top y 282, its bottom 4 px over the floor), `offPos` 5: it flies x 5408-5488.
+- `ThornRoot` (id 597) x 5632, y 296 in the map, `zone` 64.
+- `MosquitoSwarm` (id 598) x 5872, y 298 in the map, `isVertical`, `offNeg` 3: its bottom 4 to 52 px over the floor.
+- `Stone` (id 599) x 5316, y 308 in the map (resting on the floor).
+
 ### forest-canopy
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 6 of 7 |
+| Level | forest-2, play order 3, room 7 of 8 |
 | Role | approach |
 | Purpose | The forest's trap families one at a time before the boss. |
 | Introduces | thorn-vine, false-honey-fungus |
@@ -885,7 +930,7 @@ y 304 ================================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 7 of 7 |
+| Level | forest-2, play order 3, room 8 of 8 |
 | Role | boss |
 | Purpose | The Forest boss. |
 | Introduces | boss |

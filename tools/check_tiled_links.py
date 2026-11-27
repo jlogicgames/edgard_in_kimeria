@@ -681,6 +681,88 @@ def deadfall_problems(o, collisions, spawn, room, standing):
     return []
 
 
+SWARM_JAVA = OBJECTS_JAVA.parent / 'enemy' / 'MosquitoSwarm.java'
+SWARM_SIZE = (java_constant(SWARM_JAVA, 'WIDTH'), java_constant(SWARM_JAVA, 'HEIGHT'))
+SWARM_SPEED, SWARM_REACH = java_constant(SWARM_JAVA, 'SPEED'), java_constant(SWARM_JAVA, 'SCATTER_REACH')
+SWARM_UNDER, SWARM_OVER = java_constant(SWARM_JAVA, 'UNDER_CLEARANCE'), java_constant(SWARM_JAVA, 'OVER_TOP')
+SWARM_HEADROOM, SWARM_MIN_OPEN = java_constant(SWARM_JAVA, 'OVER_HEADROOM'), java_constant(SWARM_JAVA, 'MIN_OPEN_SECONDS')
+SWARM_TILE = 16.0  # Enemy.TILE_SIZE
+FALL_DISTANCE = java_constant(OBJECTS_JAVA / 'FallingPlatform.java', 'FALL_DISTANCE')
+# Level.SPIDER_BLOCKER_TYPES: hanging and moving objects a swarm may not meet, as they are placed.
+SWARM_BLOCKER_TYPES = tuple(re.findall(r'"(\w+)"', re.search(r'SPIDER_BLOCKER_TYPES = Set\.of\(([^)]*)\)',
+                                                             (OBJECTS_JAVA.parent.parent / 'world' / 'Level.java').read_text(encoding='utf-8')).group(1)))
+
+
+def swarm_blockers(spawn, collisions):
+    """Level.validateSwarm's blockers: solids and platforms, hanging objects, and everything a moving one passes through."""
+    blockers = [box(c) for c in collisions if kind(c) != 'QuickSand']
+    for o in spawn:
+        x, y, w, h = box(o)
+        t = kind(o)
+        if t in SWARM_BLOCKER_TYPES:
+            blockers.append((x, y, w, h))
+        if t == 'FallingPlatform':
+            blockers.append((x, y, w, h + FALL_DISTANCE))
+        elif t in ('Escalator', 'Ladder'):
+            blockers.append(tuple(swept(o)))
+        elif t == 'Actionable' and prop(o, 'type') == 'Wall' and prop(o, 'movement') == 'vertical':
+            blockers.append((x, y - h, w, 2 * h))
+    return blockers
+
+
+def swarm_open_long_enough(start, end, highest, lowest):
+    if start > end:
+        return False
+    return (start <= highest and end >= lowest) or 2 * (end - start) / SWARM_SPEED >= SWARM_MIN_OPEN
+
+
+def swarm_problems(o, collisions, spawn, room, standing, view):
+    """Mirror of MosquitoSwarm.problem (D151). `room` is the (x, y, w, h) of the owning room."""
+    x, y, w, h = box(o)
+    if w <= 0 or h <= 0:
+        return ['needs positive bounds']
+    errors = []
+    neg, pos = rhythm_number(o, 'offNeg', 0.0, errors), rhythm_number(o, 'offPos', 0.0, errors)
+    if errors:
+        return ['needs finite, non-negative offNeg and offPos']
+    if neg < 0 or pos < 0:
+        return ['needs finite, non-negative offNeg and offPos']
+    vertical = prop(o, 'isVertical').lower() == 'true'
+    width, height = SWARM_SIZE
+    left = x - (0 if vertical else neg * SWARM_TILE) - SWARM_REACH
+    right = x + (0 if vertical else pos * SWARM_TILE) + width + SWARM_REACH
+    highest, lowest = y - (neg * SWARM_TILE if vertical else 0), y + (pos * SWARM_TILE if vertical else 0)
+    sweep = (left, highest, right - left, lowest + height - highest)
+    if room and (left < room[0] or right > room[0] + room[2] or highest < room[1] or lowest + height > room[1] + room[3]):
+        return ['has its sweep leaving the room']
+    if room and highest < floor_camera_top(room, view):
+        return ["flies above the camera's view of its room"]
+    blockers = swarm_blockers(spawn, collisions)
+    if any(overlaps(sweep, b) for b in blockers):
+        return ['has something solid, one-way or moving on its line']
+    for name, area in standing:
+        if overlaps(sweep, area):
+            return [f'flies over the room {name}']
+    floors = [box(c) for c in collisions if kind(c) != 'QuickSand']
+    near, far = math.inf, -math.inf
+    column = left + 0.5
+    while column < right:
+        surface = min((f[1] for f in floors if f[0] <= column <= f[0] + f[2] and f[1] >= lowest + height), default=None)
+        if surface is None:
+            return [f'needs a floor under x {int(column)}']
+        near, far = min(near, surface), max(far, surface)
+        column += 1.0
+    headroom = not any(overlaps((left, near - SWARM_HEADROOM, right - left, SWARM_HEADROOM), b) for b in blockers)
+    if not vertical:
+        if y + height <= near - SWARM_UNDER or (headroom and y >= far - SWARM_OVER):
+            return []
+        return [f'leaves no way past: pass at least {int(SWARM_UNDER)} px above the floor, or at most {int(SWARM_OVER)} px high '
+                f'with {int(SWARM_HEADROOM)} px of clear height']
+    under = swarm_open_long_enough(highest, min(lowest, near - SWARM_UNDER - height), highest, lowest)
+    over = headroom and swarm_open_long_enough(max(highest, far - SWARM_OVER), lowest, highest, lowest)
+    return [] if under or over else [f'leaves no way past open for {SWARM_MIN_OPEN} s of a cycle']
+
+
 def thorn_room(root, o):
     """The (x, y, w, h) of the room holding the object's centre, or the whole map, or None when the map has no size."""
     cx, cy = float(o.get('x', 0)) + float(o.get('width', 0)) / 2, float(o.get('y', 0)) + float(o.get('height', 0)) / 2
@@ -741,6 +823,12 @@ def check_map(path):
     for o in (o for o in spawn if kind(o) == 'Deadfall'):
         errors.extend(f"Deadfall {describe(o)} {e}"
                       for e in deadfall_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o)))
+    for o in collisions:
+        if kind(o) == 'MosquitoSwarm':
+            errors.append(f"{describe(o)}: MosquitoSwarm is in the Collisions layer; monsters must be in SpawnPoints")
+    for o in (o for o in spawn if kind(o) == 'MosquitoSwarm'):
+        errors.extend(f"MosquitoSwarm {describe(o)} {e}" for e in
+                      swarm_problems(o, collisions, spawn, thorn_room(root, o), standing_places(root, spawn, o), view_height()))
     for trigger in (o for o in spawn if kind(o) == 'Trigger'):
         target = prop(trigger, 'target').strip()
         if target:

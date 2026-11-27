@@ -137,6 +137,15 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
             direction, bloodFloorY(body));
     }
 
+    /** A fireball or a thrown torch reaches this enemy. Like any ranged hit, unless it burns differently (the mosquito swarm). */
+    public void hitByFire() { collidedWithActor(true); }
+
+    /** False for an enemy the blade passes through (the mosquito swarm): the same swing goes on to what lies behind it. */
+    public boolean stopsSword() { return true; }
+
+    /** True for an enemy whose contact counts while the hero swings (the boss, the mosquito swarm); others are held off by the swing. */
+    public boolean touchesDuringSwing() { return false; }
+
     /** Where this enemy's drops land: the bottom of its body, the floor line of something standing on the ground. */
     protected float bloodFloorY(Rectangle body) { return body.y + body.height; }
 

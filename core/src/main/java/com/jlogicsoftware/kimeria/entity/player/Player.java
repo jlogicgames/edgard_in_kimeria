@@ -195,6 +195,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private boolean isAttacking = false;
     private boolean attackHitboxAdded = false;
     private float attackElapsed = 0f;
+    /** Counts the swings as they start, so a target the blade stays on reacts once to each ({@link #swingNumber}). */
+    private int swingNumber;
     private final Rectangle attackHitbox = new Rectangle(), remainsScratch = new Rectangle();
     /** The sword's reach, authored for the right-facing sprite: 17px past the body in front, 9px behind it. */
     private static final Hitbox SWORD_HITBOX = Hitbox.rect(9, 12, 37, 36);
@@ -307,6 +309,9 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     /** Camera relocation happens under the room transition's fully black frame. */
     public Vector2 roomCameraTarget() { return cameraTarget(centerX(), position.y); }
+
+    /** The number of the swing in progress, or of the last one. */
+    public int swingNumber() { return swingNumber; }
 
     public boolean canFight() { return respawnPhase == RespawnPhase.NONE && !isReachedCheckpoint && !victoryWalk; }
 
@@ -1276,6 +1281,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (!attackHitboxAdded) {
             attackHitboxAdded = true;
             attackElapsed = 0f;
+            swingNumber++;
             bossesHit.clear();
             swordKill = null;
         }
@@ -1306,7 +1312,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
                     if (enemy instanceof Boss boss) { if (bossesHit.add(boss)) boss.collidedWithActor(true); }
                     else { enemy.hitBySword(level); if (enemy.isDefeated()) swordKill = enemy; }
-                    break;
+                    if (enemy.stopsSword()) break;
                 }
             }
         }
@@ -1336,7 +1342,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 refill.collideWithPlayer();
             } else if (obj instanceof Collectable c && overlapsEntity(c)) {
                 c.collideWithPlayer();
-            } else if (obj instanceof Enemy<?> enemy && (!isAttacking || enemy instanceof Boss) && enemy.hitboxOverlaps(hitboxBoundsInto(bodyScratch))) {
+            } else if (obj instanceof Enemy<?> enemy && (!isAttacking || enemy.touchesDuringSwing()) && enemy.hitboxOverlaps(hitboxBoundsInto(bodyScratch))) {
                 enemy.collidedWithActor(false);
             } else if (obj instanceof Checkpoint cp && overlapsEntity(cp)) {
                 reachedCheckpoint();

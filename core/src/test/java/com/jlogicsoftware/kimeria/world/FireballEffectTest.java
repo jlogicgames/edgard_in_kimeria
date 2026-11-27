@@ -157,7 +157,7 @@ class FireballEffectTest {
         assertEquals(0, mobRoom.bloodParticles().count(), "a fireball hit sprays no blood");
         nothingMoreAfter(mobRoom);
 
-        Level bossRoom = harness.roomOf("forest-2", 6);
+        Level bossRoom = harness.roomOf("forest-2", 7);
         int heavy = burstAgainst(bossRoom, bossRoom.boss().hitboxBounds());
         assertEquals(0, bossRoom.bloodParticles().count(), "a fireball hit on the boss sprays no blood either");
         assertEquals(1, bossRoom.fireballFx().ringCount(), "one ring per stop");

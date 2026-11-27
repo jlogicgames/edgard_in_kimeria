@@ -42,6 +42,7 @@ import com.jlogicsoftware.kimeria.entity.WorldObject;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
+import com.jlogicsoftware.kimeria.entity.enemy.MosquitoSwarm;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
@@ -194,6 +195,9 @@ public class Level implements WorldObject {
     private static final long BEETLE_FX_SEED_MIX = 0xBF58476D1CE4E5B9L;
     /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
     private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
+    /** A swarm's box, tested against the camera view for its whine; reused, never allocated per frame. */
+    private final Rectangle swarmViewScratch = new Rectangle();
+    private boolean whining;
     private static final long SPIDER_FX_SEED_MIX = 0x94D049BB133111EBL, REMAINS_FX_SEED_MIX = 0x2545F4914F6CDD1DL;
     /** Objects that move or hang, which a spider's thread must not pass through (D103 load check). */
     private static final Set<String> SPIDER_BLOCKER_TYPES = Set.of("Actionable", "Escalator", "FallingPlatform", "FallingBranch",
@@ -437,7 +441,34 @@ public class Level implements WorldObject {
 
     public void shakeAfterBossAttack() { if (!victory) fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
     public void shakeAfterEmpoweredHit() { fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
-    public void clearCameraEffects() { fx.clear(); stopRumble(); }
+    public void clearCameraEffects() { fx.clear(); stopRumble(); stopWhine(); }
+
+    /**
+     * The swarm's whine (#645, D151): one loop however many swarms, only while a live one is inside the camera view and the
+     * hero can still be hurt. Pause, death and a room change stop it through {@link #clearCameraEffects}; the Sound switch
+     * ends every loop in the game itself, so the flag only forgets it.
+     */
+    private void updateSwarmWhine() {
+        if (!game.playSounds()) { whining = false; return; }
+        boolean heard = player.canFight() && swarmInView();
+        if (heard == whining) return;
+        if (heard) game.loopSound(MosquitoSwarm.WHINE_SOUND);
+        else game.stopSound(MosquitoSwarm.WHINE_SOUND);
+        whining = heard;
+    }
+
+    private boolean swarmInView() {
+        for (int i = 0; i < objects.size(); i++)
+            if (objects.get(i) instanceof MosquitoSwarm swarm && !swarm.isDefeated() && inCameraView(swarm.shapeInto(swarmViewScratch)))
+                return true;
+        return false;
+    }
+
+    private void stopWhine() {
+        if (!whining) return;
+        whining = false;
+        game.stopSound(MosquitoSwarm.WHINE_SOUND);
+    }
 
     private void stopRumble() {
         if (!rumbling) return;
@@ -749,6 +780,7 @@ public class Level implements WorldObject {
             if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
             if ("Wolf".equals(o.type)) validateWolf(o, owner); // D115: every room, at load.
             if ("FlyingBeetle".equals(o.type)) validateFlyingBeetle(o, owner); // D145: every room, at load.
+            if ("MosquitoSwarm".equals(o.type)) validateSwarm(o, owner); // D151: every room, at load.
             if ("Trigger".equals(o.type) && !o.prop("target", "").isEmpty()) {
                 TiledObject target = findMechanism(o);
                 referencedMechanisms.add(target.id);
@@ -989,6 +1021,14 @@ public class Level implements WorldObject {
                     beetle.flyOver(monsterFloors());
                     objects.add(beetle);
                     roomEnemies.put(o.id, beetle);
+                }
+                case "MosquitoSwarm" -> {
+                    MosquitoSwarm swarm = new MosquitoSwarm(assets, game, o.x, o.y, o.propBool("isVertical", false),
+                        o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    swarm.setPlayer(player);
+                    swarm.setLevel(this);
+                    objects.add(swarm);
+                    roomEnemies.put(o.id, swarm);
                 }
                 case "Spider" -> {
                     Spider spider = o.polyline != null ? new Spider(assets, game, Spider.Route.trace(o.polyline, spiderSolids()))
@@ -1449,6 +1489,21 @@ public class Level implements WorldObject {
         String problem = FlyingBeetle.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0),
             monsterFloors(), movers, blockers, room, FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y),
             standingPlaces(owner));
+        if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
+    }
+
+    /**
+     * The mosquito swarm (D151) fails at load when its line, with the scatter's reach, leaves the room or the camera's view,
+     * meets anything solid, one-way, hanging or moving, flies over a standing place or open air, or leaves no free way past.
+     */
+    private void validateSwarm(TiledObject o, int owner) {
+        Rectangle room = roomLayout.rooms.get(owner).bounds();
+        List<Rectangle> blockers = monsterFloors();
+        blockers.addAll(spiderBlockers());
+        blockers.addAll(movingAreas());
+        String problem = MosquitoSwarm.problem(o.x, o.y, o.width, o.height, o.propBool("isVertical", false), o.propFloat("offNeg", 0),
+            o.propFloat("offPos", 0), monsterFloors(), blockers, room,
+            FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y), standingPlaces(owner));
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 
@@ -1928,6 +1983,7 @@ public class Level implements WorldObject {
         killOnLethalHazards();
         for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
+        updateSwarmWhine();
 
         finishUpdate(dt);
     }

@@ -109,9 +109,9 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest-2` contains seven rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
+`forest-2` contains eight rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
 with a tree to climb and a leap over two walls (split from the entry by #376, redesigned by #545), the fissure room (two ember fissures and a ledge beetle), the glade (the forest wolf,
-met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), a forest course with an ascending
+met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), the hollow (two mosquito swarms around a thorn root, #645), a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -273,6 +273,19 @@ it: the sword, a fireball, a stone or a torch, or landing on it. It leaves its b
 comes near. There is no hint about it: it is met in play. Authoring: `Wolf` (48×24) in `SpawnPoints` with `offNeg`/`offPos` like the
 mobs, checked at load (a range of at least ten tiles on floor without gaps, nothing of the entrance, exit or checkpoints in its sight,
 and four tiles of headroom over its reach). Where it is met: `forest-glade`, forest-2's fourth room, from a one-way branch ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)).
+
+## Mosquito swarm
+
+A loose cloud of rose-winged mosquitoes (D151, #645), a little narrower than Edgard is tall, flies to and fro along a straight
+line, level or up and down, as a bat does. It never notices him. Touching it kills, from any side, even while he swings, and
+landing on it kills him too. His sword cannot kill it: a swing blows the mosquitoes a little further from him, and in under a
+second they gather again; the blade passes on to whatever is behind. A thrown stone or torch or a fireball kills the whole
+swarm at once; its mosquitoes fall as motes, the stone drops there and can be picked up again. Without them, pass it by
+jumping over a low one as it comes towards him (jumping after it rarely clears it) or walking under a high one. Its thin
+whine is heard while one is on screen. There is no hint about it: it is met in play, in `forest-hollow`, forest-2's sixth
+room, first with a stone beside him ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)). Authoring:
+`MosquitoSwarm` (22×18) in `SpawnPoints` with `offNeg`/`offPos` and `isVertical`, checked at load (a free way past, floor
+under it, and nothing solid, nor the room's entrance, exit or checkpoints, within its line).
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
 on its back, the flying beetle on its back with one wing flat, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard

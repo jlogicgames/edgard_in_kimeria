@@ -58,6 +58,8 @@ public final class HeadlessLevelHarness {
     public boolean playSounds;
     /** Every name passed to {@code GameContext.playSound}, in order. */
     public final java.util.List<String> sounds = new java.util.ArrayList<>();
+    /** The names looping now: added by {@code GameContext.loopSound}, taken out by {@code stopSound}. */
+    public final Set<String> loops = new HashSet<>();
     private final GameContext game = (GameContext) Proxy.newProxyInstance(
         GameContext.class.getClassLoader(), new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
             case "logicalResolution" -> new Vector2(640, 360);
@@ -74,6 +76,8 @@ public final class HeadlessLevelHarness {
             case "playSounds" -> playSounds;
             case "invulnerable" -> invulnerable;
             case "playSound" -> { sounds.add((String) args[0]); yield null; }
+            case "loopSound" -> { loops.add((String) args[0]); yield null; }
+            case "stopSound" -> { loops.remove((String) args[0]); yield null; }
             default -> method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
         });
 

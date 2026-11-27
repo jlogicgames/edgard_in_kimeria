@@ -1,0 +1,45 @@
+# Forest mosquito swarm (#645, D151): one mosquito of the cloud, native 5x4 frames, facing right; the game draws fourteen.
+# dark1, dark2: wings up and flat (the 20 per second flicker), a dark belly; fed1, fed2: the same with a swollen crimson belly.
+# dead: curled, wings down, as it drops when the swarm dies; ember: the same burning, in the fireball's ramp (P, Y, O, R).
+# Danger family (#236): ink 0b0814, crimson 9c2050, rose c87896, pale rose wings f0d0dc / d09cac, the glowing eye ff6b57.
+size 5 4
+color k 0b0814
+color c 9c2050
+color r c87896
+color L f0d0dc
+color l d09cac
+color e ff6b57
+color P fdfaa0
+color Y fde902
+color O fc5601
+color R c50e10
+frame dark1
+.L...
+.LL..
+krrek
+.k.k.
+frame dark2
+.....
+LLl..
+krrek
+k.k..
+frame fed1
+.L...
+.LL..
+ccrek
+cc.k.
+frame fed2
+.....
+LLl..
+ccrek
+cck..
+frame dead
+.....
+k.k..
+.ckk.
+..l..
+frame ember
+..Y..
+Y.PO.
+.OYR.
+..R..

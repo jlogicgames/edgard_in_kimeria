@@ -31,6 +31,7 @@ import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
+import com.jlogicsoftware.kimeria.entity.enemy.MosquitoSwarm;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
@@ -196,6 +197,8 @@ class AllocationBudgetTest {
     static final double BEETLE_CEILING = 8;
     /** Measured 0.1, 0.1 and 0.1 B/frame in 3 runs (2026-11-26, #330, D145, the chase included; the same 8 B ceiling as the ground beetle's; the harness does not play sounds): see {@link #flyingBeetleThroughTheRealLevel}. */
     static final double FLYING_BEETLE_CEILING = 8;
+    /** Measured in 3 runs (#645, D151; the same 8 B ceiling as the other monsters; the harness does not play sounds): see {@link #mosquitoSwarmThroughTheRealLevel}; the numbers are in D151. */
+    static final double MOSQUITO_SWARM_CEILING = 8;
     /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-19, #328, D102; the same 8 B ceiling as the beetle's; the harness does not play sounds): spiders skittering, noticing, chasing, winding up with their silk, leaping, biting and recovering, or killed and leaving a body that rocks, crumbles and burns, through the real {@code Level} of spider-test.tmx, update and render every frame. */
     static final double SPIDER_CEILING = 8;
     /** Measured in 3 runs (2026-11-19, #483, D103; the same 8 B ceiling as the floor spider's): see {@code spiderDropThroughTheRealLevel} and {@code spiderClimbThroughTheRealLevel}; the numbers are in D103. */
@@ -315,7 +318,7 @@ class AllocationBudgetTest {
 
     /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
     @Test void forest2Room3WithBlood() {
-        Level level = harness.roomOf("forest-2", 5);
+        Level level = harness.roomOf("forest-2", 6);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.blood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, true);
@@ -326,7 +329,7 @@ class AllocationBudgetTest {
 
     /** A sword kill sprays a light burst through {@code Level.mobBlood} every {@link #BURST_CYCLE_FRAMES} frames in the boss room (the level path of #319). */
     @Test void forest2Room3WithMobKillBlood() {
-        Level level = harness.roomOf("forest-2", 5);
+        Level level = harness.roomOf("forest-2", 6);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.mobBlood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
@@ -667,7 +670,7 @@ class AllocationBudgetTest {
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
     @Test void cameraShakeQuery() {
-        Level level = harness.roomOf("forest-2", 5);
+        Level level = harness.roomOf("forest-2", 6);
         Rectangle view = new Rectangle();
         Rectangle room = level.currentRoomBounds();
         float[] sum = new float[1];
@@ -948,6 +951,51 @@ class AllocationBudgetTest {
         assertFalse(level.player.isGotHit(), "the hero stepped clear of every burst");
         assertTrue(maxRock[0] > 0, "a body must rock when the hero walks up to it");
         assertWithinBudget("flying beetle notice, chase, wind-up, dive, burst, death and body", FLYING_BEETLE_CEILING, bytes);
+    }
+
+    private static final int SWARM_CYCLE_FRAMES = 120, SWARM_SWING_FRAME = 20, SWARM_KILL_FRAME = 75;
+    private static final float SWARM_X = 309, SWARM_Y = 298, SWARM_BACK_TILES = 12, SWARM_ON_TILES = 12;
+
+    /**
+     * Mosquito swarms in turn through the real {@code Level} of mosquito-run.tmx (#645, D151): each flies, its fourteen
+     * mosquitoes circling and flickering, tested against the hero's body and the camera view (the whine's test) every frame; the
+     * blade reaches it at frame {@value #SWARM_SWING_FRAME} of the cycle, so it scatters and gathers; at frame
+     * {@value #SWARM_KILL_FRAME} it is killed, odd ones by fire, and its mosquitoes drop and fade. {@code update} and
+     * {@code render} of the swarm every frame. Swarms are built before the probe.
+     */
+    @Test void mosquitoSwarmThroughTheRealLevel() {
+        Rectangle view = new Rectangle(0, 0, 640, 360);
+        Level level = harness.roomOf("mosquito-run", 0, () -> view);
+        for (int i = level.objects.size() - 1; i >= 0; i--) if (level.objects.get(i) instanceof MosquitoSwarm) level.objects.remove(i);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / SWARM_CYCLE_FRAMES + 1;
+        MosquitoSwarm[] swarms = new MosquitoSwarm[cycles];
+        for (int k = 0; k < cycles; k++) {
+            swarms[k] = new MosquitoSwarm(harness.assets(), harness.game(), SWARM_X, SWARM_Y, k % 4 == 3, SWARM_BACK_TILES, SWARM_ON_TILES);
+            swarms[k].setPlayer(level.player);
+            swarms[k].setLevel(level);
+        }
+        Rectangle hero = new Rectangle(), shape = new Rectangle();
+        int[] scattered = new int[1], seen = new int[1], falling = new int[1], touched = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / SWARM_CYCLE_FRAMES, f = i % SWARM_CYCLE_FRAMES;
+            MosquitoSwarm s = swarms[k];
+            if (f == SWARM_SWING_FRAME) s.hitBySword(level);
+            if (f == SWARM_KILL_FRAME) { if (k % 2 == 1) s.hitByFire(); else s.collidedWithActor(true); }
+            if (!s.isRemoved()) {
+                s.update(STEP);
+                s.render(batch);
+                if (s.hitboxOverlaps(level.player.hitboxBoundsInto(hero))) touched[0]++;
+                if (level.inCameraView(s.shapeInto(shape))) seen[0]++;
+                if (s.scatterAmount() > 0) scattered[0]++;
+                if (s.deadSeconds() > 0) falling[0]++;
+            }
+        });
+        assertTrue(scattered[0] > cycles * 20, "the scatter and the gather must be measured: " + scattered[0] + " frames");
+        assertTrue(seen[0] > 0, "the view test must be measured");
+        assertTrue(falling[0] > cycles * 20, "the death must be measured: " + falling[0] + " frames");
+        assertFalse(level.player.isGotHit(), "the hero stands clear");
+        assertWithinBudget("mosquito swarm flight, scatter, gather and death", MOSQUITO_SWARM_CEILING, bytes);
     }
 
     private static final int SPIDER_CYCLE_FRAMES = 150, SPIDER_HEARD_FRAME = 5, SPIDER_ESCAPE_FRAME = 50, SPIDER_KILL_FRAME = 110;
@@ -1420,7 +1468,7 @@ class AllocationBudgetTest {
         };
         harness.font = font;
         BossHud hud = new BossHud(harness.assets(), harness.game(), new Matrix4(), 640, 360);
-        Level level = harness.roomOf("forest-2", 5);
+        Level level = harness.roomOf("forest-2", 6);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
         font.dispose();
         assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
@@ -1984,7 +2032,7 @@ class AllocationBudgetTest {
     /** The coin count, the FPS counter and the fireball stock of {@code Hud.render} with the boss bar, each frame. */
     @Test void hudCoinCountAndFps() {
         Hud hud = hudWithMetricsFont();
-        Level level = harness.roomOf("forest-2", 5);
+        Level level = harness.roomOf("forest-2", 6);
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true, level.player, "60 FPS"));
         assertWithinBudget("Hud.render", HUD_CEILING, bytes);
     }

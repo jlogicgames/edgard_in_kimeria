@@ -1876,6 +1876,115 @@ def flying_beetle_dive() -> list[float]:
     return finish_rms(out, FLYING_DIVE_RMS_DB)
 
 
+# ---------------------------------------------------------------- forest mosquito swarm (#645, D151)
+# Whine (mosquito_whine): a seamless one-second loop, heard while a swarm is in view: a few thin, detuned sawtooth voices
+# around the pitch of a mosquito, each wavering on its own, through a narrow /i/-like pair of formants. Every pitch and
+# waver is a whole number of cycles per loop and the filters run over three copies, so the wrap is as smooth as the rest.
+WHINE_SEED = 7601
+WHINE_DURATION = 1.0
+WHINE_VOICES = ((523, 5, 9, 1.0), (587, 7, 12, 0.7), (659, 4, 7, 0.55))   # (Hz, waver Hz, waver depth Hz, gain)
+WHINE_SWELLS = (2, 3, 5)                  # whole swells per loop, one per voice: the cloud comes nearer and goes
+WHINE_SWELL_DEPTH = 0.45
+WHINE_FORMANTS = ((1150.0, 320.0, 1.0), (2600.0, 450.0, 0.6))
+WHINE_RAW_GAIN = 0.35                     # how much of the unfiltered buzz is kept: thin but rough
+WHINE_LOWPASS_HZ = 4800.0
+WHINE_RMS_DB = -29.0                      # quiet: it lasts as long as the swarm is on screen
+WHINE_PEAK_CAP_DB = -12.0
+# Scatter (mosquito_scatter): the sword goes through them: an angry buzz that jumps up and shakes, once per swing.
+SCATTER_SEED = 7602
+SCATTER_DURATION = 0.30
+SCATTER_HZ = (430.0, 860.0)               # the buzz, rising
+SCATTER_DETUNE = 1.07                     # the second voice, a rough beat against the first
+SCATTER_SHAKE_HZ = 38.0
+SCATTER_SHAKE_DEPTH = 0.6
+SCATTER_AIR_HZ, SCATTER_AIR_BANDWIDTH, SCATTER_AIR_GAIN = 2800.0, 1800.0, 0.35   # the stir of air
+SCATTER_ATTACK = 0.015
+SCATTER_TAU = 0.14
+SCATTER_LOWPASS_HZ = 5000.0
+SCATTER_RMS_DB = -22.0
+MOSQUITO_PEAK_CAP_DB = -9.0               # the ambient ceiling
+MOSQUITO_DRIVE = 3.0                      # soft saturation (tanh): the crest factor falls, so the level fits under the ceiling
+# Death (mosquito_die): the whine drops away under a crackle of small dry ticks.
+DIE_SEED = 7603
+DIE_DURATION = 0.40
+DIE_HZ = (760.0, 150.0)                   # the whine, falling
+DIE_TICKS = 14
+DIE_TICK_LEN = 0.012
+DIE_TICK_BAND = (2400.0, 1400.0)
+DIE_TICK_GAIN = 0.9
+DIE_TICK_SPAN = 0.30                      # s, the ticks fall inside this, thinning out
+DIE_WHINE_TAU = 0.15
+DIE_ATTACK = 0.006
+DIE_RMS_DB = -21.0
+DIE_LOWPASS_HZ = 5000.0
+
+
+def _saw(phase: float) -> float:
+    return 2.0 * (phase % 1.0) - 1.0
+
+
+def _saturate(x: list[float]) -> list[float]:
+    peak = max(abs(v) for v in x) or 1.0
+    return [math.tanh(MOSQUITO_DRIVE * v / peak) for v in x]
+
+
+def mosquito_whine() -> list[float]:
+    rng = random.Random(WHINE_SEED)
+    n = n_samples(WHINE_DURATION)
+    buzz = [0.0] * n
+    for (hz, waver, depth, gain), swells in zip(WHINE_VOICES, WHINE_SWELLS):
+        start, offset = rng.random(), rng.random()
+        for i in range(n):
+            t = i / n   # the loop is one second long, so cycles per loop are cycles per second
+            phase = start + hz * t + depth / (2.0 * math.pi * waver) * math.sin(2.0 * math.pi * waver * t)
+            swell = 1.0 - WHINE_SWELL_DEPTH * (0.5 - 0.5 * math.cos(2.0 * math.pi * (swells * t + offset)))
+            buzz[i] += gain * swell * _saw(phase)
+
+    def circular(f, x):
+        return f(x * 3)[n:2 * n]
+    voice = [WHINE_RAW_GAIN * v for v in buzz]
+    for fc, bw, gain in WHINE_FORMANTS:
+        voice = [v + gain * b for v, b in zip(voice, circular(lambda y, fc=fc, bw=bw: bandpass(y, fc, bw), buzz))]
+    out = circular(lambda y: lowpass(y, WHINE_LOWPASS_HZ), voice)
+    mean = sum(out) / n
+    out = [v - mean for v in out]
+    rms = math.sqrt(sum(v * v for v in out) / n) or 1.0
+    peak = max(abs(v) for v in out) or 1.0
+    k = min(10.0 ** (WHINE_RMS_DB / 20.0) / rms, 10.0 ** (WHINE_PEAK_CAP_DB / 20.0) / peak)
+    return [v * k for v in out]
+
+
+def mosquito_scatter() -> list[float]:
+    rng = random.Random(SCATTER_SEED)
+    n = n_samples(SCATTER_DURATION)
+    air = bandpass(noise(rng, n), SCATTER_AIR_HZ, SCATTER_AIR_BANDWIDTH)
+    ap = max(abs(v) for v in air) or 1.0
+    env = envelope(n, SCATTER_ATTACK, SCATTER_TAU)
+    out, first, second = [0.0] * n, 0.0, 0.0
+    for i in range(n):
+        hz = lerp(*SCATTER_HZ, i / (n - 1))
+        first += hz / SAMPLE_RATE
+        second += hz * SCATTER_DETUNE / SAMPLE_RATE
+        shake = 1.0 - SCATTER_SHAKE_DEPTH * (0.5 - 0.5 * math.cos(2.0 * math.pi * SCATTER_SHAKE_HZ * i / SAMPLE_RATE))
+        out[i] = (0.5 * (_saw(first) + _saw(second)) * shake + SCATTER_AIR_GAIN * air[i] / ap) * env[i]
+    return finish_rms(lowpass(_saturate(out), SCATTER_LOWPASS_HZ), SCATTER_RMS_DB, MOSQUITO_PEAK_CAP_DB)
+
+
+def mosquito_die() -> list[float]:
+    rng = random.Random(DIE_SEED)
+    n = n_samples(DIE_DURATION)
+    env = envelope(n, DIE_ATTACK, DIE_WHINE_TAU)
+    out, phase = [0.0] * n, 0.0
+    for i in range(n):
+        phase += lerp(*DIE_HZ, i / (n - 1)) / SAMPLE_RATE
+        out[i] = _saw(phase) * env[i]
+    for k in range(DIE_TICKS):
+        share = (k + rng.random()) / DIE_TICKS
+        start = n_samples(DIE_TICK_SPAN * share * share)   # close together at first, then thinning
+        _add_tick(rng, out, start, n_samples(DIE_TICK_LEN), DIE_TICK_BAND, DIE_TICK_GAIN * (1.0 - 0.7 * share))
+    return finish_rms(lowpass(_saturate(out), DIE_LOWPASS_HZ), DIE_RMS_DB, MOSQUITO_PEAK_CAP_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -1901,7 +2010,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run,
                "handover.wav": handover, "elixir.wav": elixir,
                "flying_beetle_notice.wav": flying_beetle_notice, "flying_beetle_windup.wav": flying_beetle_windup,
-               "flying_beetle_windup_long.wav": flying_beetle_windup_long, "flying_beetle_dive.wav": flying_beetle_dive}
+               "flying_beetle_windup_long.wav": flying_beetle_windup_long, "flying_beetle_dive.wav": flying_beetle_dive,
+               "mosquito_whine.wav": mosquito_whine, "mosquito_scatter.wav": mosquito_scatter, "mosquito_die.wav": mosquito_die}
 
 
 def generate(out_dir: Path) -> list[Path]:

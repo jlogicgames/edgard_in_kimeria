@@ -66,7 +66,7 @@ public final class Fireball extends Entity {
                 // wall or a mob. Read before the hit, since a landed hit itself starts that sequence.
                 boolean heavy = enemy instanceof Boss boss && !boss.isCounterSequence() && !boss.isAbandoned();
                 if (enemy instanceof Boss boss) boss.hitByFireball();
-                else enemy.collidedWithActor(true);
+                else enemy.hitByFire();
                 burst(direction, heavy, getX());
                 break;
             }
