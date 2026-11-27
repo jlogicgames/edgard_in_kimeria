@@ -319,6 +319,15 @@ only in the menu backdrop.
   - **One-way platforms** (`Platform`, `FallingPlatform`, `Escalator`) support only from
     above. They are ignored by horizontal collision; their landing test (feet-based, with a
     catch-up margin at rest) is only valid vertically.
+  - **A body inside a solid block leaves by the nearer face, up or down** (#600, 2026-11-27). In the vertical pass
+    (`CollideBody.leaveSolid`) a contact no deeper than the body's travel this step is a fresh one: a fall lands on
+    the top face and a rise hits the underside, at any frame time and block thickness (the frame time of most enemies
+    is not clamped, so a pure least-overlap rule would drop one through a 16 px floor after a stall). A deeper contact leaves
+    by the face it overlaps least, whatever the sign of the vertical velocity; the underside counts only when it leads
+    clear of every other solid block. Otherwise the body leaves by the top, except a rising one that only clips the
+    block from the side: that block does not move it. A falling one leaves by the top as before #600, even where a side
+    clip puts that top far above. A rise's fresh depth includes a jump's launch lift. Velocity stops only when it points
+    into the face left by. The vertical pass never moves a body sideways, and one with zero vertical velocity stays put.
 - **Why:** Instant death is only acceptable when every death is understandable (D5), and the
   deaths players reported all came from geometry that did not match what was drawn.
 - **Known gap:** collision resolution only pushes an actor out of a wall while it is moving

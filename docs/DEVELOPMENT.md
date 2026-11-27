@@ -305,7 +305,7 @@ Package layout:
 
 - `entity.player.Player`, `entity.enemy.{Enemy,Bat,YellowMob,RedMob}` — actors
 - `entity.items.*`, `entity.environment.*`, `entity.objects.*` — level objects
-- `physics.{GravityBody,CollideBody,CollisionUtils}` — gravity and AABB collision
+- `physics.{GravityBody,CollideBody,CollisionUtils}` — gravity and AABB collision (which face a body leaves a solid block by: [D10](DECISIONS.md))
 - `effects.*` — particle/shader effects
 - `world.Level` — loads a `.tmx`, spawns everything, owns the per-frame update/render pass; `world.ParallaxRenderer` — its scenery layers and foreground
 - `ui.*` — HUD, menus, keyboard/gamepad/mouse navigation
