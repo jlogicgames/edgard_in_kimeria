@@ -3737,7 +3737,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   (D101) exists only where its monster is killed, and `fall` drops it straight down (`velocity.x = 0`) to the first floor under it or removes
   it below the room. So `check_contrast.py` (`body_spots`) now derives the spots from the placements: a beetle or a snail along its authored
   range on the range's floor (the load checks keep that range on floor without gaps; the notice hop and the flip land there); a spider along
-  each floor leg widened by `Spider.POUNCE_REACH` while authored floor stays under its whole body (#497), and from every wall pose and every
+  each floor leg widened by `Spider.POUNCE_REACH` while authored floor stays under its whole body (#497) and, since #594 (D120's
+  update), no solid is in its way, and from every wall pose and every
   thread pose, set on the open side as `Spider.die` does and dropped to the first collision box below. The positions removed carry nothing
   for the gate: no body can lie there. A new placement is swept with no edit (`test_check_contrast.py`, a newly placed monster's route).
   The remains were then repainted by tone role (not a uniform multiply): the beetle a dusky indigo (L 0.176 to 0.242), the spider and
@@ -4042,7 +4043,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   25 % of the silhouette), the stillness and the behaviour (harmless, blocks nothing, rocks or twitches when the hero passes, crumbles or burns).
 - **Gate:** `check_contrast.py` measures the four bodies as **active** at every spot of `BODY_SWEEP`: outline at least 0.28 (stricter
   than before; nothing loosened). Measured 2026-11-21: beetle 0.501 at worst (forest-2 x 3508), spider 0.285 (forest-1-climb x 8406, its
-  worst spot, 0.285 to 0.294 over x 8382 to 8406, where the body lies over the soil), snail 0.513, wolf 0.433.
+  worst spot, 0.285 to 0.294 over x 8382 to 8406, where the body lies over the soil), snail 0.513, wolf 0.433. (Those spider spots
+  were inside a block, where no body can lie: see D120's #594 update.)
 - **Test changed:** `WolfFxTest.theChipsOfTheBodyAreFourPaletteColours` held every wolf body chip channel at most 0.25 (the dried umber);
   it is replaced by `theChipsOfTheBodyAreFourLivePaletteColours`, which requires each chip to be a colour of the live wolf's palette, a
   stricter pin of the same intent.
@@ -4139,6 +4141,25 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   redrawn: tile ids 29, 30, 49 and 50 are empty in `terrain.grid` (its wood ramp keys `B D E F H` went with them) and its three placements
   in forest-2 are gone. It came from the first mock images, the game has no village, and its lettering could not be read over these
   layers. The sign figures above record the state before.
+- **Update ([#594](https://github.com/jlogicgames/edgard_in_kimeria/issues/594), author, 2026-11-27): the thin margins lifted; no
+  threshold changed.** The author chose each variant from a before / after sheet on its worst background. Worst outline, before /
+  after (floor 0.28):
+  - **Thorn vine** 0.300 / 0.350: the left contour pixel of the stem and knot is the vine's dim olive `4a4a18` in every row, not
+    ink (a lit edge; the thorns stay bone). `swing-right` mirrors it; the game draws only `hang`.
+  - **Rotten branch** 0.299 / 0.330: the dry leaf is a pale tan `d9a688`, was `9c6a34`. The first choice `e0a860` measured the same
+    but stood 0.029 (OKLab) from the fungi's reserved honey `e2b25a`; the tan stands 0.070 from it.
+  - **Sound branch** 0.299 / 0.318 (left copy 0.340 / 0.388), added to the issue: D150's redraw left it as thin. Darker leaves
+    (`G` `3a5e22`, was `5f8f3a`) with pale moonlit tips `c4e89a` on top; more would take redrawing the D130 joint. The darker `G`
+    now falls under the moon rim's lightness limit (D92), so the export rims its five lit-edge pixels a frame in `c4cfe8`, as in
+    the approved sheet; they carry part of the gain (0.310 without them).
+  - **Spider body** 0.284 / 0.374, no art change. The 0.284 was measured inside a block: `BODY_SWEEP` widened the pounce over any
+    floor, while the game stops the leap against a solid (`Spider.reachableLanding`, `Wolf.reachableEnd`). The sweep now stops at
+    the first solid for both (`solid_in_way`, pinned in `tools/test_check_contrast.py`; a one-way platform does not stop it). Six
+    spider spots left the sweep, all inside a block of forest-1; the wolf lost its spots past a block in forest-2 that its lunge
+    cannot pass (its body's worst is now 0.460). Nothing that can be seen in play stopped being measured.
+  - **Still under 0.33:** `MosquitoSwarm` 0.306, `Ladder` 0.309, the sound branch 0.318, `FlyingBeetle` 0.319, `FallingStone`
+    0.322, `HangingHive` 0.323, `Spider:hang` 0.326. The fairy's body frames, measured by their own sweep, stay at 0.286 at worst
+    (frame 12).
 
 ## D121. The wall jump is removed: walls are solid and cannot be grabbed (#546, 2026-11-21)
 
@@ -4869,6 +4890,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   branch at rest 0.375 / 0.374, sound branch 0.354 / 0.299 (left copy 0.380 / 0.340), rotten branch 0.308 / 0.299. The two
   walkable branches have less margin than before: their taper and plain underside give the outline less to read by.
   Keeping the underside ink out of the moon rim measured 0.240 and 0.267, so the rim stays.
+- **Update ([#594](https://github.com/jlogicgames/edgard_in_kimeria/issues/594), 2026-11-27):** both walkable branches are lifted
+  by leaf colours (sound 0.318, rotten 0.330); the figures above record the state before. Details in D120's #594 update.
 - **Amends:** D80 (how the rotten branch reads apart from the falling one: violet leaves, not buds) and D122 (the break at the
   trunk is now the stub that stays there).
 - **References:** [TRAPS.md](TRAPS.md) falling branch and falling platform cards; [ART_DIRECTION.md](ART_DIRECTION.md)

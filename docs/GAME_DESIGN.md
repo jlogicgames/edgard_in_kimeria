@@ -763,8 +763,9 @@ Effects are particles on `KimeriaParticleSystem` (`effects.SpiderFx`, one per le
 `effects.RemainsFx`); the only sprites are the spider's sheet (`assets/images/objects/monster-spider.png`, with the hanging
 frames and the thread's 1×4 tile since D103), its wall sheet (`monster-spider-wall.png`) and its body (live palette, D117).
 Contrast of the nine frames (`tools/check_contrast.py` metrics at the seven RedMob and YellowMob spawns and the three beetle
-spawns): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; the gate measures every placed `Spider`, and
-`BODY_SWEEP` the body where a spider can die (active since D117: outline 0.285 to 0.572). Code: `entity/enemy/Spider.java`; tests:
+spawns, 2026-11-21): outline 0.300 (`recover`) to 0.331 (`crouch`), above the active 0.28; the gate measures every placed `Spider`
+(over every placement and the forest layers: 0.363 to 0.513, 2026-11-27), and
+`BODY_SWEEP` the body where a spider can die (active since D117: outline 0.374 to 0.500, #594). Code: `entity/enemy/Spider.java`; tests:
 `SpiderTest`, `SpiderFxTest`, `RemainsTest`, `AllocationBudgetTest.spiderThroughTheRealLevel` (and, for D103,
 `spiderDropThroughTheRealLevel` and `spiderClimbThroughTheRealLevel`). Placed on room cards ([#484](https://github.com/jlogicgames/edgard_in_kimeria/issues/484)), as the beetle's were, in
 the order floor, wall, thread: `forest-1-spider` (on open ground, before the snail; reworked under D105 by #500), `forest-1-climb`
