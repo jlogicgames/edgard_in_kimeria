@@ -141,8 +141,9 @@ gentle way while idle: one fixed frame whose brightness (not hue) breathes smoot
 it swells for the shared trap warning (0.8 s, 1.2 s with the longer-warnings assist; the value comes from `TrapWarnings`)
 and bursts once; afterwards it stays deflated for the rest of the room. Leaving the zone does not stop the swell.
 The **honey fungus** (honey-brown caps, **rings** on the stems) is harmless: its burst is a puff of golden spores.
-The **false honey fungus** (yellow to orange caps with a green tinge, no rings) is poisonous: its burst is a lime
-spore cloud, 24x24 px standing on the floor, that kills on touch for one second (a death resets the room as usual).
+The **false honey fungus** (yellow to orange caps with a green tinge, no rings) is poisonous: its burst is a spray of
+lime spore sparks and a ring, filling a 24x24 px square standing on the floor that kills on touch for one second (a death
+resets the room as usual).
 Jump over the live cloud, or step back and wait for it to pass. It fires once and never re-arms.
 `forest-0` shows the harmless one twice (the lever room and the wall room); the false one waits in the `forest-2`
 canopy at x 1672. Authoring: [Rooms in Tiled](ROOMS.md) and the level-authoring skill.

@@ -96,7 +96,6 @@ public abstract class FungusTrap extends Entity {
     public float clock() { return clock; }
     /** Seconds spent in the current state. */
     public float stateTime() { return stateTime; }
-    protected float burstElapsed() { return state == State.BURST ? stateTime : 0f; }
 
     /** The area that starts the swell: the footprint widened by the zone, from {@value #ZONE_ABOVE} px above it to its floor. */
     public Rectangle triggerZone() { return ThornTrap.zoneOf(position.x, position.y, size.x, size.y, zoneLeft, zoneRight); }

@@ -227,6 +227,61 @@ class KimeriaParticleSystemTest {
         assertEquals(0, s.count());
     }
 
+    /** D152: {@code KIND_SPARK} brakes along its line, drags a shrinking streak and is still seen as its life ends: t = 0, 0.5 and near 1. */
+    @Test void aSparkBrakesDragsAStreakAndDimsLate() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_SPARK, 100, 50, 116, 50, 1f, 2f, 1f, 1f, 1f);
+        assertEquals(100f, s.x(0), 0f);
+        assertEquals(2f, s.drawSize(0), 1e-6f);
+        assertEquals(1f, s.alpha(0), 0f);
+        assertEquals(0f, s.tailLength(0), 0f, "no streak longer than the way already flown");
+        s.update(0.1f); // 1 - 0.9^4 = 0.3439 of the way
+        assertEquals(100f + 16f * 0.3439f, s.x(0), 1e-3f);
+        assertEquals(5f * 0.729f, s.tailLength(0), 1e-3f, "5 px times (1 - t)^3");
+        s.update(0.4f); // t = 0.5: 15/16 of the way
+        assertEquals(115f, s.x(0), 1e-3f, "braking: almost there at half its life");
+        assertEquals(50f, s.y(0), 0f);
+        assertEquals(1.6f, s.drawSize(0), 1e-5f);
+        assertEquals(1.6f * 0.7f, s.tailWidth(0), 1e-5f);
+        assertEquals(5f / 8f, s.tailLength(0), 1e-4f);
+        assertEquals(0f, s.tilt(0), 1e-3f, "flying right");
+        assertEquals(1f, s.alpha(0), 0f);
+        s.update(0.35f); // t = 0.85: half way down the fade
+        assertEquals(1f - 0.55f * 0.5f, s.alpha(0), 1e-4f);
+        s.update(0.149f);
+        assertEquals(0.45f, s.alpha(0), 1e-2f, "dim, not gone");
+    }
+
+    @Test void aSparkIsAStreakAndAHeadInTheNormalPassPointingBackAlongItsFlight() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawn(KimeriaParticleSystem.KIND_SPARK, 0, 0, 0, 10, 1f, 2f, 1f, 1f, 1f); // downward: world Y grows down
+        s.update(0.1f);
+        assertEquals(90f, s.tilt(0), 1e-3f);
+        NoopBatch batch = new NoopBatch();
+        s.render(batch, null);
+        assertEquals(1, batch.rotatedCount(), "the streak");
+        assertEquals(s.tailLength(0), batch.lastRotatedWidth(), 0f);
+        assertEquals(90f, batch.lastRotatedRotation(), 1e-3f);
+        QuadRecorder quads = new QuadRecorder();
+        s.render(quads.batch, null);
+        assertEquals(2, quads.quads.size(), "streak and head");
+        float[] streak = quads.quads.get(0);
+        float head = s.y(0), tail = s.tailLength(0), half = s.tailWidth(0) / 2f;
+        // Flying down: the streak lies above its head, from the head's centre back towards the start.
+        for (int corner = 0; corner < 4; corner++) {
+            assertEquals(half, Math.abs(QuadRecorder.cornerX(streak, corner)), 1e-3f, "half the width either side of the line");
+            float y = QuadRecorder.cornerY(streak, corner);
+            assertTrue(Math.abs(y - head) < 1e-3f || Math.abs(y - (head - tail)) < 1e-3f, "ends at the head and behind it: " + y);
+        }
+        assertTrue(QuadRecorder.cornerY(streak, 0) < head, "behind, not ahead");
+        float size = s.drawSize(0);
+        assertArrayEquals(new float[]{-size / 2f, head - size / 2f, size, size}, quads.quads.get(1), 1e-4f, "the head on the spark");
+        Recording only = new Recording();
+        s.render(only.batch, null);
+        assertEquals(java.util.List.of(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA),
+            only.blends, "one normal switch for the pass, then the restore; no additive switch");
+    }
+
     @Test void anOrbitSurvivesTheOldestBeingDroppedAndCompaction() {
         KimeriaParticleSystem s = new KimeriaParticleSystem(2, 1);
         s.spawnOrbit(0, 0, 10, 10, 0f, 0f, 1f, 1f, 0.05f, 1f, 1f, 1f, 1f);

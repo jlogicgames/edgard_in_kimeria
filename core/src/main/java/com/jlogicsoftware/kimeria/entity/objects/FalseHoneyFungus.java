@@ -12,8 +12,8 @@ import java.util.function.Supplier;
 
 /**
  * The false honey fungus (D63, #295, D3): the look-alike whose burst is a lethal spore cloud. Tiled type
- * {@code FalseHoneyFungus}. For {@link #CLOUD_SECONDS} after the swell a {@link SporeCloud} (lime particles plus an optional soft
- * shader, #296) is drawn inside {@link #cloudBounds()}, and the hero's body box overlapping that rectangle is instant death, the same
+ * {@code FalseHoneyFungus}. For {@link #CLOUD_SECONDS} after the swell a {@link SporeCloud} (lime sparks and one ring, D152) is
+ * drawn inside {@link #cloudBounds()}, and the hero's body box overlapping that rectangle is instant death, the same
  * entry as the bomb blast and the puffball ({@code Level.killOnLethalHazards}). Only while the cloud is live and only inside its
  * rectangle: nothing is drawn outside the hitbox (D5). It fires once and is spent afterwards (D26): no ammunition, no re-arming.
  * <p>
@@ -24,7 +24,6 @@ public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
     public static final float CLOUD_SECONDS = 1f;
     /** Side of the lethal square (D63, D5): 24 px, defined here and independent of any sprite; the {@link SporeCloud} is drawn inside it. */
     public static final float CLOUD_SIZE = 24f;
-    private static final float TUFT_FROM_TOP_PX = 4f;
     private static final long SEED_MIX = 0x9E3779B97F4A7C15L;
 
     private final Rectangle cloudBounds;
@@ -34,7 +33,7 @@ public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
                             float zoneLeft, float zoneRight, Supplier<Rectangle> heroBody) {
         super(assets, SpriteSheets.TRAP_FALSE_HONEY_FUNGUS, warnings, x, y, w, h, zoneLeft, zoneRight, heroBody);
         cloudBounds = cloudOf(x, y, w, h);
-        particleCloud = new SporeCloud(cloudBounds.x, cloudBounds.y, CLOUD_SIZE, y + TUFT_FROM_TOP_PX, CLOUD_SECONDS,
+        particleCloud = new SporeCloud(cloudBounds.x, cloudBounds.y, CLOUD_SIZE, CLOUD_SECONDS,
             (Float.floatToIntBits(x) * SEED_MIX) ^ Float.floatToIntBits(y));
     }
 
@@ -81,6 +80,6 @@ public final class FalseHoneyFungus extends FungusTrap implements LethalHazard {
     @Override
     protected void renderBurst(Batch batch) {
         if (!cloudLive()) return;
-        particleCloud.render(batch, burstElapsed());
+        particleCloud.render(batch);
     }
 }
