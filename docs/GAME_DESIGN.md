@@ -366,7 +366,9 @@ Keyboard, gamepad, touch and left-handed bindings are in
 Currently the sword cannot be used in the air; ordinary enemies can be killed
 by stomping from above. Preserve [D4](DECISIONS.md#d4-stomp-is-allowed-from-above-only)
 until a separate change is accepted. Future throwing/fireball descriptions do not
-implicitly change these existing rules.
+implicitly change these existing rules. The one accepted exception among monsters is the
+mosquito swarm: the sword never kills it, and landing on it kills the hero
+([D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240)).
 
 **Accepted carrying and throwing rules:**
 
@@ -642,7 +644,9 @@ Requests, not accepted rules. Numbers (speeds, ranges, cooldowns) are chosen whe
 built and then recorded in `DECISIONS.md`. Every monster follows the warning rule of
 [D7](DECISIONS.md#d7-traps-are-deterministic-puzzle-elements) and the readability request
 [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240): a visible reaction before
-the attack, so the player can run away or act first.
+the attack, so the player can run away or act first. The mosquito swarm has no attack and no reaction: its drawn cloud in
+motion is the whole warning
+([D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240)).
 
 All ground monsters patrol back and forth along their own path, and switch to the reaction
 below when the hero enters their awareness area (the hearing range).
@@ -654,7 +658,7 @@ below when the hero enters their awareness area (the hearing range).
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
 | Flying beetle | A beetle in flight that flies to and fro along a level line, rising over a ledge or a low rock in its way (asked for as "looks like a bat, flies around on its own"; its card sets the look and the flight). | Explodes near the hero. Built: the card below (D145), met in `forest-roost` ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). |
 | Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D115). |
-| Mosquito swarm (author's request, 2026-11-25) | A cloud of mosquitoes. Flies like the Bat: straight to and fro along an authored horizontal or vertical trajectory; it does not react to the hero. | Touching it kills, and so does landing on it (a stomp kills the hero, not the swarm). The sword only scatters it a little and it gathers back; only a thrown stone or a fireball kills it. Jump over it or go around it. Built: the card below (D151), met in `forest-hollow` ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)); it returns in the Swamp, [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646). |
+| Mosquito swarm (author's request, 2026-11-25) | A cloud of mosquitoes. Flies like the Bat: straight to and fro along an authored horizontal or vertical trajectory; it does not react to the hero. | Touching it kills, and so does landing on it (a stomp kills the hero, not the swarm). The sword only scatters it a little and it gathers back; only a thrown stone, a thrown torch (added with the card's approval) or a fireball kills it. Jump over it or go around it. Built: the card below (D151), met in `forest-hollow` ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)); it returns in the Swamp, [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646). |
 
 The inherited RedMob and Bat keep their behaviour, frames, timing and boxes and were redrawn on 2026-11-21 in the danger
 family with a red of their own, apart from the bugs' crimson and rose (colours: [ART_DIRECTION.md](ART_DIRECTION.md), section 1,
@@ -684,7 +688,7 @@ Their warning, attack and death effects (the beetle's built, D100, the spider's,
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when
 anyone passes (D119), the sword or a stomp crumbles it, a fireball or a thrown torch burns it and flies on, and a stone flies through it
 ([D101](DECISIONS.md#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398);
-which monsters and how: the list in D101). The beetle's, the flying beetle's, the spider's, the snail's and the wolf's bodies are built; the Bat and possibly the RedMob and YellowMob follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+which monsters and how: the list in D101). The beetle's, the flying beetle's, the spider's, the snail's and the wolf's bodies are built; the mosquito swarm leaves none (D151); the Bat and possibly the RedMob and YellowMob follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 ### Beetle card (built, [D100](DECISIONS.md#d100-the-forest-beetle-a-kamikaze-that-hears-commits-and-bursts-monsters-notice-in-body-language-and-are-met-in-play-327-240-398), [#327](https://github.com/jlogicgames/edgard_in_kimeria/issues/327))
 
@@ -951,7 +955,7 @@ covers about 100 px and rises to 34 px.
 
 | Item | Built | Why |
 | --- | --- | --- |
-| Size and look | a loose oval cloud **22×18** px, about 14 separate mosquitoes of at most 5×4 px (ink legs and snout, a rose body with a glowing eye, pale rose wings on two flicker frames, every fourth with a crimson belly; the danger family, #236). Each circles on its own small path, a fixed function of time; the outer ones stay on the rim of the oval, so its edge is seen. Gaps show the background between them | the `Bat` is one solid 16×16 shape with red eyes and flapping wings; the hive's stingers are a straight 8 px column of darts falling together. The swarm is the only danger made of many small things moving every way at once |
+| Size and look | a loose oval cloud **22×18** px of 28 mosquitoes, **each a dot of 1 or 2 px** (a pale wing beside an ink or rose body, flickering to the wing or the body alone; the danger family, #236), in the plain pixels of the hive's stingers (the author's playtest, 2026-11-27: the first 5×4 sprites read badly). Eighteen sit round the rim, flickering and some stirring a px, so the lethal edge is drawn all round (the author's choice of 2026-11-27 over 14 dots: no stretch of rim is further than 1.62 px from a dot, against over 5 px); ten circle inside on their own small paths, a fixed function of time. Most of the cloud is the background between them | the `Bat` is one solid 16×16 shape with red eyes and flapping wings; the hive's stingers are a straight 8 px column of upright streaks falling together. The swarm is separate dots moving every way at once |
 | Lethal shape (D10) | the **oval the mosquitoes fill** (22×18, and its stretched form while scattered), not a rectangle: all of them are inside it, the outer ones touch it | what kills is what is drawn (D5, as D148) |
 | Movement | the `Bat`'s: a straight line, horizontal or vertical, **50 px/s** to and fro inside Tiled `offNeg`/`offPos`; it never reacts to the hero | the author's decision; fixed motion gives the same crossing on every retry (D7) |
 | Contact | **lethal on any side**, also during a swing (other monsters' contact is ignored while the hero swings). The death lands on the swarm's next frame, so a fireball or stone released on that frame wins the tie (#503, #505) | the sword must not protect |
@@ -961,19 +965,19 @@ covers about 100 px and rises to 34 px.
 | Fireball | **kills the whole swarm at once**; the ball is spent in its burst, as on any live monster | one rule for live monsters (bodies and gobs let shots fly on) |
 | Thrown stone | **kills the whole swarm at once**; the stone stops there and drops, to be picked up again (D39) | the free ranged kill; the same rule as on any live monster |
 | Thrown torch | **kills it, as a fireball does** (added to the author's stone and fireball with the card's approval) | it is fire, and it kills every other monster |
-| Death, body (D101) | **no body.** The swarm is dead at once; its mosquitoes drop where they were, curled and dark (never under the floor), and fade, all gone within 0.8 s; killed by a fireball or torch they burn as embers in its fire colours for the first 0.25 s. Drawn as their own sprite frames, not particles. Nothing stays, nothing to crumble or burn, `RemainsTest` unchanged. D101's applies-to list gains "Mosquito swarm: no" | a heap of insects would not read at this size, and has no pose that differs from the living cloud |
-| Sounds | `mosquito_whine`, a thin wavering whine looping **only while a live swarm is in the camera view** (one loop however many; off on pause, death, room change and the Sound switch); `mosquito_scatter`, an angry rising buzz once per scattering swing; `mosquito_die`, a crackling fizz as the whine drops away (instead of the shared `bounce`). All crude synthesis | D93: seen and heard, hit or miss; the whine says "a swarm is near" without words |
+| Death, body (D101) | **no body.** The swarm is dead at once; its mosquitoes drop where they were, each one dim pixel (never under the floor), and fade, all gone within 0.8 s; killed by a fireball or torch they burn as 2 px embers in its fire colours for the first 0.25 s. Drawn as their own sprite frames, not particles. Nothing stays, nothing to crumble or burn, `RemainsTest` unchanged. D101's applies-to list gains "Mosquito swarm: no" | a heap of insects would not read at this size, and has no pose that differs from the living cloud |
+| Sounds | **none while it flies** (the author's playtest, 2026-11-27: the loop heard while it was in view is removed). Two quiet, thin whines: `mosquito_scatter`, one mosquito darting out of the way, once per swing that scatters it; `mosquito_die`, several whining and falling silent one by one (instead of the shared `bounce`). Synthesized, -31 dBFS RMS | D93: its act (evading, dying) is heard; the flight is seen, and mosquitoes are quiet |
 | Jumping over | with the cloud 4 to 22 px above the floor, a running jump **towards** it clears it from a take-off window of **0.55 s** (centres 24 to 106 px apart). Jumping after a swarm that flies away, or over it from standing, leaves only 0.14 s: wait for it to come. On a short line it turns mid-jump: in `forest-hollow` the window is on its room card (measured, `MosquitoSwarmTest`) | the free answer, generous when met head on |
 | Going under | a cloud whose bottom is **24 px** or more above the floor passes over the standing hero (22 px) | the other free answer |
 | Shooting it | at 4 to 22 px a standing fireball or throw hits it; higher up it takes a jump | the paid or carried answer, never required (D26) |
-| Load checks (`MosquitoSwarm.problem`, mirrored in `check_tiled_links.py`) | along the whole line, with the 12 px of scatter either side: inside the room and the camera's view, clear of every solid, platform and moving object; no entrance body, `RoomExit` or `Checkpoint` inside it. A horizontal line has gapless floor under it and a free way past: bottom at least 24 px up (under), or top at most 32 px up with 80 px of clear height (over). A vertical line has, in every cycle, at least **0.75 s** with one of those two ways open. A way **around** (over a ledge) is not judged by the check: such a placement would need the check extended | a free way past every swarm, checked at load (D7, D26) |
+| Load checks (`MosquitoSwarm.problem`, mirrored in `check_tiled_links.py`) | along the whole line, with the 12 px of scatter either side: inside the room and the camera's view, clear of every solid, platform, hanging and moving object and of the whole fall of a falling branch or stone; no entrance body, `RoomExit` or `Checkpoint` inside it. A horizontal line has gapless floor under it and a free way past: bottom at least 24 px up (under), or top at most 32 px up with 80 px of clear height (over). A vertical line has, in every cycle, at least **0.75 s** with one of those two ways open. A way **around** (over a ledge) is not judged by the check: such a placement would need the check extended | a free way past every swarm, checked at load (D7, D26) |
 | Rollback (D3, D6) | a death or a revisit brings it back whole at its spawn; killed, it stays gone in a passed room | the enemy rules as they are |
 | Assist | nothing is scaled | no warning or wind-up to lengthen; movement is never scaled (`TrapWarnings`) |
 | Introduces (D72) | element `mosquito-swarm`, a `monster`: **the first the sword cannot kill, the first that a stomp makes deadly to the hero**; answered by passing over or under, or by a ranged kill. Same flight as `bat-enemy`, a different answer | new in what the player does, not in how it moves |
 
-There are no particles: the one sprite sheet holds the mosquito's six frames, the dead and the burning one included
+There are no particles: the one sprite sheet holds the dot's six 2×1 frames, the dead and the burning one included
 (`assets/images/objects/monster-mosquito.png`). The gate measures the gathered cloud along its line
-wherever it is placed (`check_contrast.py`): outline 0.306 to 0.372 in `forest-hollow`, above the active 0.28. Code:
+wherever it is placed (`check_contrast.py`): outline 0.383 to 0.574 in `forest-hollow`, above the active 0.28. Code:
 `entity/enemy/MosquitoSwarm.java`; tests: `MosquitoSwarmTest`, `ForestHollowTest`,
 `FirstMeetingPocketTest.forestHollowTheSwarm`, `AllocationBudgetTest.mosquitoSwarmThroughTheRealLevel`.
 

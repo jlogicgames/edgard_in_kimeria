@@ -88,8 +88,8 @@ public final class SpriteSheets {
     public static final Sheet MONSTER_WOLF = new Sheet("images/objects/monster-wolf.png", 48, 24);
     /** D101: the wolf's body, its dead frame (lying on its side) in its live palette and rim (D117; art/objects/monster/wolf-body.grid). */
     public static final Sheet MONSTER_WOLF_BODY = new Sheet("images/objects/monster-wolf-body.png", 48, 24);
-    // The forest mosquito swarm (#645, D151): one mosquito, 5x4, two wing frames dark and two fed, a dead and a burning one; art/objects/monster/mosquito.grid.
-    public static final Sheet MONSTER_MOSQUITO = new Sheet("images/objects/monster-mosquito.png", 5, 4);
+    // The forest mosquito swarm (#645, D151): one mosquito, a 1-2 px dot in 2x1, two wing frames dark and two fed, a dead and a burning one; art/objects/monster/mosquito.grid.
+    public static final Sheet MONSTER_MOSQUITO = new Sheet("images/objects/monster-mosquito.png", 2, 1);
     public static final Sheet MONSTER_SPIDER_BODY = new Sheet("images/objects/monster-spider-body.png", 32, 16);
     /** D103 (#483): the spider on a wall, three 16x32 frames (wall1, wall2, walltap), head up, the wall on the right (spider-wall.grid). */
     public static final Sheet MONSTER_SPIDER_WALL = new Sheet("images/objects/monster-spider-wall.png", 16, 32);

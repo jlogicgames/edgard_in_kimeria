@@ -140,7 +140,7 @@ public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements Gravi
     /** A fireball or a thrown torch reaches this enemy. Like any ranged hit, unless it burns differently (the mosquito swarm). */
     public void hitByFire() { collidedWithActor(true); }
 
-    /** False for an enemy the blade passes through (the mosquito swarm): the same swing goes on to what lies behind it. */
+    /** False for an enemy the blade passes through (the mosquito swarm): it reacts apart from the others and never takes the swing. */
     public boolean stopsSword() { return true; }
 
     /** True for an enemy whose contact counts while the hero swings (the boss, the mosquito swarm); others are held off by the swing. */

@@ -60,9 +60,8 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `boss_sweep_counter.wav` | synth, swept noise + thud (#447) | 0.40 s | -5.7 / -18.0 | the boss's counter sweep starts, hit or miss; the author may drop it and let `boss_sweep` serve both | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | a honey fungus bursts, the same for the harmless and the false one (`Level`) | not heard yet ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `puffball_burst.wav` | synth, jet noise + rough thump and wheeze (#558) | 0.45 s | -11.2 / -21.5 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), once per cloud (`Level.puffballSound`) | awaiting the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
-| `mosquito_whine.wav` | synth, sawtooth cloud loop (#645) | 1.0 s | -16.9 / -29.0 | looped while any live swarm is in the camera view and the hero can be hurt (`Level.updateSwarmWhine`) | not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
-| `mosquito_scatter.wav` | synth, shaken sawtooths + air (#645) | 0.30 s | -12.9 / -22.0 | a sword swing scatters a swarm, once per swing (`MosquitoSwarm.hitBySword`) | not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
-| `mosquito_die.wav` | synth, falling sawtooth + ticks (#645) | 0.40 s | -12.0 / -21.0 | a swarm is killed by a stone, a fireball or a torch | not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
+| `mosquito_scatter.wav` | synth, one wavering wing tone (#645) | 0.45 s | -23.8 / -31.0 | a sword swing scatters a swarm, once per swing (`MosquitoSwarm.hitBySword`) | second version, not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
+| `mosquito_die.wav` | synth, five sinking wing tones (#645) | 0.70 s | -18.1 / -31.0 | a swarm is killed by a stone, a fireball or a torch | second version, not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -352,19 +351,21 @@ into the air, higher and fluttering.
 Its burst plays `beetle_pop` (one blast for both beetles), its death the shared `bounce`, its body `remains_crumble` and
 `remains_burn`. Constants: `FLYING_*` in `tools/audio/generate_sounds.py`.
 
-### Forest mosquito swarm (#645, seeds 7601-7603, [D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240))
+### Forest mosquito swarm (#645, seeds 7602 and 7603, [D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240))
 
-Three synthesized sounds, generated 2026-11-27, not yet heard by the author ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)); the other generated files stay
-byte-identical. Previews: `art/audio/previews/mosquito_*.png`. Constants: `WHINE_*`, `SCATTER_*`, `DIE_*` in
-`tools/audio/generate_sounds.py`.
+Second version, 2026-11-27, not yet heard by the author ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)); the other generated files stay byte-identical.
+The author's playtest of the first three sounds: far too loud and unlike mosquitoes, which whine very quietly. The loop
+heard while a swarm was in view (`mosquito_whine`, seed 7601) is removed, so a swarm flies in silence. Previews:
+`art/audio/previews/mosquito_*.png`. Constants: `MOSQUITO_*`, `SCATTER_*`, `DIE_*` in `tools/audio/generate_sounds.py`.
 
-- `mosquito_whine` (a seamless 1.0 s loop, RMS -29.0 dBFS, peak -16.9): the warning heard while a swarm is on screen: three
-  detuned sawtooth voices (523, 587, 659 Hz), each with its own waver and swell, whole cycles per loop, through two narrow
-  formants (1150 and 2600 Hz).
-- `mosquito_scatter` (0.30 s, RMS -22.0 dBFS, an environment level): a sword through them: two rough sawtooths rising
-  430 -> 860 Hz, shaken at 38 Hz, over a stir of air; once per scattering swing.
-- `mosquito_die` (0.40 s, RMS -21.0 dBFS): a sawtooth falling 760 -> 150 Hz under 14 dry ticks, instead of the shared
-  `bounce`.
+- **Voice** (both): one wing tone, a sine with weaker 2nd to 4th harmonics (1.0, 0.5, 0.28, 0.12), trembling at 9 to 15 Hz
+  over a slow 3 Hz wander, with a smooth swell and fade.
+- `mosquito_scatter` (0.45 s, RMS -31.0 dBFS, peak -23.8): **one** mosquito darting out of the sword's way: 610 up to 790 Hz
+  and settling at 680; once per scattering swing.
+- `mosquito_die` (0.70 s, RMS -31.0 dBFS, peak -18.1): **five** of them (520 to 815 Hz), each sinking to 72 % of its pitch and
+  falling silent on its own, instead of the shared `bounce`.
+- **Level:** 14 dB under the jump (the first versions were 4 and 5 dB under it). The evasion can hardly go lower: the test of
+  every shipped effect needs a peak above -24 dBFS (`MIN_EFFECT_PEAK_DB`), and this one peaks at -23.8.
 
 ### Puffball burst (#558, seeds 7401-7403, D93, D125)
 

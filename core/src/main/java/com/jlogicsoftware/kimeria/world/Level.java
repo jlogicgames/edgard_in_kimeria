@@ -195,9 +195,6 @@ public class Level implements WorldObject {
     private static final long BEETLE_FX_SEED_MIX = 0xBF58476D1CE4E5B9L;
     /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
     private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
-    /** A swarm's box, tested against the camera view for its whine; reused, never allocated per frame. */
-    private final Rectangle swarmViewScratch = new Rectangle();
-    private boolean whining;
     private static final long SPIDER_FX_SEED_MIX = 0x94D049BB133111EBL, REMAINS_FX_SEED_MIX = 0x2545F4914F6CDD1DL;
     /** Objects that move or hang, which a spider's thread must not pass through (D103 load check). */
     private static final Set<String> SPIDER_BLOCKER_TYPES = Set.of("Actionable", "Escalator", "FallingPlatform", "FallingBranch",
@@ -441,34 +438,7 @@ public class Level implements WorldObject {
 
     public void shakeAfterBossAttack() { if (!victory) fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
     public void shakeAfterEmpoweredHit() { fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
-    public void clearCameraEffects() { fx.clear(); stopRumble(); stopWhine(); }
-
-    /**
-     * The swarm's whine (#645, D151): one loop however many swarms, only while a live one is inside the camera view and the
-     * hero can still be hurt. Pause, death and a room change stop it through {@link #clearCameraEffects}; the Sound switch
-     * ends every loop in the game itself, so the flag only forgets it.
-     */
-    private void updateSwarmWhine() {
-        if (!game.playSounds()) { whining = false; return; }
-        boolean heard = player.canFight() && swarmInView();
-        if (heard == whining) return;
-        if (heard) game.loopSound(MosquitoSwarm.WHINE_SOUND);
-        else game.stopSound(MosquitoSwarm.WHINE_SOUND);
-        whining = heard;
-    }
-
-    private boolean swarmInView() {
-        for (int i = 0; i < objects.size(); i++)
-            if (objects.get(i) instanceof MosquitoSwarm swarm && !swarm.isDefeated() && inCameraView(swarm.shapeInto(swarmViewScratch)))
-                return true;
-        return false;
-    }
-
-    private void stopWhine() {
-        if (!whining) return;
-        whining = false;
-        game.stopSound(MosquitoSwarm.WHINE_SOUND);
-    }
+    public void clearCameraEffects() { fx.clear(); stopRumble(); }
 
     private void stopRumble() {
         if (!rumbling) return;
@@ -1494,13 +1464,15 @@ public class Level implements WorldObject {
 
     /**
      * The mosquito swarm (D151) fails at load when its line, with the scatter's reach, leaves the room or the camera's view,
-     * meets anything solid, one-way, hanging or moving, flies over a standing place or open air, or leaves no free way past.
+     * meets anything solid, one-way, hanging or moving or the fall of a branch or stone, flies over a standing place or open air,
+     * or leaves no free way past.
      */
     private void validateSwarm(TiledObject o, int owner) {
         Rectangle room = roomLayout.rooms.get(owner).bounds();
         List<Rectangle> blockers = monsterFloors();
         blockers.addAll(spiderBlockers());
         blockers.addAll(movingAreas());
+        blockers.addAll(fallColumns(owner));
         String problem = MosquitoSwarm.problem(o.x, o.y, o.width, o.height, o.propBool("isVertical", false), o.propFloat("offNeg", 0),
             o.propFloat("offPos", 0), monsterFloors(), blockers, room,
             FallingTrapLayout.floorCameraTop(room, game.logicalResolution().y), standingPlaces(owner));
@@ -1580,6 +1552,17 @@ public class Level implements WorldObject {
             }
         }
         return areas;
+    }
+
+    /** The columns the falling branches and stones of room {@code owner} drop through, from where each hangs to where it lands. */
+    private List<Rectangle> fallColumns(int owner) {
+        List<Rectangle> columns = new ArrayList<>();
+        for (TiledObject s : map.layer("SpawnPoints")) {
+            if (!FallingTrapLayout.isFallingTrap(s.type) || roomLayout.owner(s) != owner) continue;
+            FallingTrapLayout.Spec spec = FallingTrapLayout.validate(s, roomLayout, owner, map, game.logicalResolution().y);
+            columns.add(new Rectangle(spec.body().x, spec.body().y, spec.body().width, spec.landing() - spec.body().y));
+        }
+        return columns;
     }
 
     /** What a spider's thread must not pass through besides solids: one-way platforms and objects that move or hang (D103). */
@@ -1983,7 +1966,6 @@ public class Level implements WorldObject {
         killOnLethalHazards();
         for (int i = 0; i < objects.size(); i++) if (objects.get(i) instanceof Carryable c) c.followHolder();
         if (boss != null) boss.resolveCombat();
-        updateSwarmWhine();
 
         finishUpdate(dt);
     }

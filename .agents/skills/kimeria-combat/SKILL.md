@@ -10,7 +10,8 @@ source paths and commands below are relative to the repository root.
 
 ## Read rules before tuning
 
-Read D2, D4, D5, D7 and D10 in [design decisions](../../../docs/DECISIONS.md).
+Read D2, D4, D5, D7 and D10 in [design decisions](../../../docs/DECISIONS.md), and D151 (the mosquito swarm, the
+exception to the sword and stomp rules).
 For the forest boss, also read D13 and [boss states and validation](../../../docs/BOSS.md).
 Read [healer](../../../docs/HEALER.md) only when changing recipe/elixir integration.
 Use current docs and code for timing values and sprite rows; historical examples
@@ -18,7 +19,7 @@ are not a balance specification for every future enemy. Explicitly requested
 mechanic changes may revise these rules and their documentation.
 
 Implementation is under `core/src/main/java/com/jlogicsoftware/kimeria/`:
-`entity/Actor.java`, `entity/Hitbox.java`, `entity/enemy/{Enemy,RedMob,Bat,Boss}.java`,
+`entity/Actor.java`, `entity/Hitbox.java`, `entity/enemy/{Enemy,RedMob,Bat,MosquitoSwarm,Boss}.java`,
 `entity/player/Player.java`, `physics/{CollideBody,CollisionUtils}.java` and
 `world/Level.java`. Combat ordering lives across Player, enemy and Level updates.
 
@@ -40,10 +41,18 @@ fields, swept every frame, its hit landing on the monster's next frame) and lets
 `Breakable` (the sword, a stone, a fireball and a torch loops call it); its load check traces every line from every point of
 its range, both ways, to a solid or a floor inside the room and off every standing place (`Snail.problem`).
 
+A monster that answers weapons differently follows the mosquito swarm of D151 through `Enemy`'s three hooks: `stopsSword`
+(false: it reacts to the blade in a pass of its own, whatever the list order, and the swing goes on to the others),
+`touchesDuringSwing` (true makes contact count while the hero swings; the boss uses it too) and `hitByFire` (a fireball or
+a thrown torch; a stone still calls `collidedWithActor(true)`).
+The defaults are the ordinary monster. The swarm never reacts to the hero, its contact lands on its next frame (so a ball
+cast or a stone thrown that frame wins), it flies in silence, its lethal shape is the oval it is drawn in (`hitboxOverlaps` overridden), and
+its load check keeps a free way past along its whole line (`MosquitoSwarm.problem`).
+
 ## A monster's body (D101)
 
 Decide on the card whether the monster leaves a body (the applies-to list in [D101](../../../docs/DECISIONS.md)): a quiet kill
-does, a burst or blast does not. Then:
+does, a burst or blast does not (the mosquito swarm is the accepted exception: killed quietly, it leaves none, D151). Then:
 
 1. **Pose.** The body frame's pose differs from every live frame, both ways round (`RemainsTest` measures the silhouette: at
    least 25 % of the pixels either covers must differ). A recoloured live frame is not a body.
@@ -74,7 +83,8 @@ does, a burst or blast does not. Then:
   attack is grounded-only; do not assume it is an airborne escape option when
   evaluating fairness. Dying enemies are harmless.
   The forest boss is an explicit exception: solid harmless body, safe top bounce,
-  sword/fireball energy damage, lethal axe only during active strike frames.
+  sword/fireball energy damage, lethal axe only during active strike frames. The
+  mosquito swarm is another (D151): no stomp and no sword kill.
 - One-way platforms resolve landing vertically and never push actors sideways.
   Verify combat near walls/platforms as well as in open space.
 

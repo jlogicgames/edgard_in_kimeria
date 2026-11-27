@@ -176,6 +176,7 @@ Restart Level, transition, New Game, Continue and leaving the run clear the effe
 Every monster dies from one hit. A monster killed by the sword also sprays a light burst of 12 crimson blood
 droplets away from the hero (#319); one killed by a fireball, a thrown stone or a stomp dies without any spray.
 The forest beetle is the exception (below): the sword and a stomp set it off instead of killing it, and it never bleeds.
+The mosquito swarm is another (below): the sword never kills it, landing on it kills Edgard, and it never bleeds.
 
 ## Forest beetle
 
@@ -277,16 +278,17 @@ and four tiles of headroom over its reach). Where it is met: `forest-glade`, for
 
 ## Mosquito swarm
 
-A loose cloud of rose-winged mosquitoes (D151, #645), a little narrower than Edgard is tall, flies to and fro along a straight
+A loose cloud of mosquitoes, pale and rose dots (D151, #645), a little narrower than Edgard is tall, flies to and fro along a straight
 line, level or up and down, as a bat does. It never notices him. Touching it kills, from any side, even while he swings, and
 landing on it kills him too. His sword cannot kill it: a swing blows the mosquitoes a little further from him, and in under a
 second they gather again; the blade passes on to whatever is behind. A thrown stone or torch or a fireball kills the whole
-swarm at once; its mosquitoes fall as motes, the stone drops there and can be picked up again. Without them, pass it by
-jumping over a low one as it comes towards him (jumping after it rarely clears it) or walking under a high one. Its thin
-whine is heard while one is on screen. There is no hint about it: it is met in play, in `forest-hollow`, forest-2's sixth
+swarm at once; its mosquitoes fall and fade, the stone drops there and can be picked up again. Without a shot, pass it by
+jumping over a low one as it comes towards him (jumping after it rarely clears it) or walking under a high one. It flies
+in silence; a thin, quiet whine is heard when it darts out of the sword's way, and a few when it dies. There is no hint about it: it is met in play, in `forest-hollow`, forest-2's sixth
 room, first with a stone beside him ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)). Authoring:
 `MosquitoSwarm` (22×18) in `SpawnPoints` with `offNeg`/`offPos` and `isVertical`, checked at load (a free way past, floor
-under it, and nothing solid, nor the room's entrance, exit or checkpoints, within its line).
+under it, and nothing solid, no falling branch or stone dropping through, nor the room's entrance, exit or checkpoints,
+within its line).
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
 on its back, the flying beetle on its back with one wing flat, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
@@ -294,7 +296,8 @@ or a monster walks past. The sword or landing on one crumbles it (landing bounce
 fireball or a thrown torch burns it up and flies on; a thrown stone flies straight through it (D119). No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
 until Edgard leaves the room. A death resets the room with the monster alive again, and a passed room shows neither the
 monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle,
-the flying beetle, the spider, the snail and the wolf leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+the flying beetle, the spider, the snail and the wolf leave bodies; the mosquito swarm leaves none (D151); the other
+monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 Options -> Accessibility has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
 letter by letter, and one press moves to the next line.

@@ -693,9 +693,26 @@ SWARM_BLOCKER_TYPES = tuple(re.findall(r'"(\w+)"', re.search(r'SPIDER_BLOCKER_TY
                                                              (OBJECTS_JAVA.parent.parent / 'world' / 'Level.java').read_text(encoding='utf-8')).group(1)))
 
 
-def swarm_blockers(spawn, collisions):
-    """Level.validateSwarm's blockers: solids and platforms, hanging objects, and everything a moving one passes through."""
-    blockers = [box(c) for c in collisions if kind(c) != 'QuickSand']
+def fall_columns(spawn, collisions, room):
+    """Level.fallColumns: the columns the room's falling branches and stones drop through, to the first solid below each."""
+    def in_room(o):
+        x, y, w, h = box(o)
+        return room is None or (room[0] <= x + w / 2 < room[0] + room[2] and room[1] <= y + h / 2 < room[1] + room[3])
+    columns = []
+    for o in spawn:
+        if kind(o) not in ('FallingBranch', 'FallingStone') or not in_room(o):
+            continue
+        x, y, w, h = box(o)
+        floors = [box(c)[1] for c in collisions if kind(c) != 'QuickSand' and in_room(c)
+                  and box(c)[0] < x + w and box(c)[0] + box(c)[2] > x and box(c)[1] >= y + h]
+        if floors:  # a trap with no floor below fails in check_falling_traps
+            columns.append((x, y, w, min(floors) - y))
+    return columns
+
+
+def swarm_blockers(spawn, collisions, room):
+    """Level.validateSwarm's blockers: solids and platforms, hanging objects, everything a moving one passes through or falls through."""
+    blockers = [box(c) for c in collisions if kind(c) != 'QuickSand'] + fall_columns(spawn, collisions, room)
     for o in spawn:
         x, y, w, h = box(o)
         t = kind(o)
@@ -737,7 +754,7 @@ def swarm_problems(o, collisions, spawn, room, standing, view):
         return ['has its sweep leaving the room']
     if room and highest < floor_camera_top(room, view):
         return ["flies above the camera's view of its room"]
-    blockers = swarm_blockers(spawn, collisions)
+    blockers = swarm_blockers(spawn, collisions, room)
     if any(overlaps(sweep, b) for b in blockers):
         return ['has something solid, one-way or moving on its line']
     for name, area in standing:

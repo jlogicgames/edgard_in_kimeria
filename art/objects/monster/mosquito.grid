@@ -1,45 +1,24 @@
-# Forest mosquito swarm (#645, D151): one mosquito of the cloud, native 5x4 frames, facing right; the game draws fourteen.
-# dark1, dark2: wings up and flat (the 20 per second flicker), a dark belly; fed1, fed2: the same with a swollen crimson belly.
-# dead: curled, wings down, as it drops when the swarm dies; ember: the same burning, in the fireball's ramp (P, Y, O, R).
-# Danger family (#236): ink 0b0814, crimson 9c2050, rose c87896, pale rose wings f0d0dc / d09cac, the glowing eye ff6b57.
-size 5 4
+# Forest mosquito swarm (#645, D151): one mosquito of the cloud, a dot of 1 or 2 px (the author's playtest, 2026-11-27: the
+# 5x4 sprites read badly; the hive's stingers are drawn in plain pixels, and so are these). The game draws twenty-eight.
+# dark1, dark2: a pale wing and an ink body, then the wing alone (the 20 per second flicker); fed1, fed2: the same with a
+# rose body; dead: one dim pixel as it drops; ember: two pixels burning, in the fireball's ramp (Y, O).
+# Danger family (#236): ink 0b0814, rose c87896, pale rose wings f0d0dc / d09cac.
+size 2 1
 color k 0b0814
-color c 9c2050
 color r c87896
 color L f0d0dc
 color l d09cac
-color e ff6b57
-color P fdfaa0
 color Y fde902
 color O fc5601
-color R c50e10
 frame dark1
-.L...
-.LL..
-krrek
-.k.k.
+Lk
 frame dark2
-.....
-LLl..
-krrek
-k.k..
+l.
 frame fed1
-.L...
-.LL..
-ccrek
-cc.k.
+Lr
 frame fed2
-.....
-LLl..
-ccrek
-cck..
+r.
 frame dead
-.....
-k.k..
-.ckk.
-..l..
+l.
 frame ember
-..Y..
-Y.PO.
-.OYR.
-..R..
+YO

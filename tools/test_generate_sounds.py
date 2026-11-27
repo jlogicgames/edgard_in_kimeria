@@ -12,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent / "audio"))
 import generate_sounds as gs  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-# Played with Sound.loop (the wall rumble lasts as long as the wall moves, the whine while a swarm is in view): periodic, no edge fade.
-LOOPED = {"wall_rumble.wav", "keepalive.wav", "mosquito_whine.wav"}
+# Played with Sound.loop (the wall rumble lasts as long as the wall moves): periodic, no edge fade.
+LOOPED = {"wall_rumble.wav", "keepalive.wav"}
 # name -> (min seconds, max seconds)
 BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17, 0.26), "collect.wav": (0.16, 0.26),
           "disappear.wav": (0.45, 0.65), "boss_hit.wav": (0.19, 0.30), "boss_restore.wav": (0.32, 0.48), "button_click.wav": (0.10, 0.16),
@@ -40,7 +40,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "handover.wav": (0.10, 0.16), "elixir.wav": (0.54, 0.64),
           "flying_beetle_notice.wav": (0.24, 0.32), "flying_beetle_windup.wav": (0.75, 0.85),
           "flying_beetle_windup_long.wav": (1.15, 1.25), "flying_beetle_dive.wav": (0.21, 0.29),
-          "mosquito_whine.wav": (0.9, 1.1), "mosquito_scatter.wav": (0.26, 0.34), "mosquito_die.wav": (0.36, 0.44)}
+          "mosquito_scatter.wav": (0.4, 0.5), "mosquito_die.wav": (0.65, 0.75)}
 # Voice-synth effects (#313): target RMS in dBFS. Converted sounds must stay balanced against the jump (-17.0 dBFS);
 # a sound joins this table when its replacement is generated. Whispered dust_puff is level-set by peak and is excluded.
 VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "collect.wav": -19.0, "disappear.wav": -18.0,
@@ -64,7 +64,7 @@ AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rus
                   "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
                   "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0,
                   "flying_beetle_dive.wav": -21.0, "spore_puff.wav": -27.1, "puffball_burst.wav": -21.5, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0,
-                  "mosquito_whine.wav": -29.0, "mosquito_scatter.wav": -22.0, "mosquito_die.wav": -21.0}
+                  "mosquito_scatter.wav": -31.0, "mosquito_die.wav": -31.0}
 AMBIENT_MAX_RMS_DB = -20.0
 VOICE_RMS_TOLERANCE_DB = 0.5
 MIN_EFFECT_SECONDS = 0.10     # shorter than this is not a usable effect on a waking output

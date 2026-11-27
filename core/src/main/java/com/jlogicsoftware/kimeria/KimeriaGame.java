@@ -516,7 +516,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         deathFade.cancel();
         gameStarted = false;
         levelLoadDelay = -1f;
-        level = null;
+        dropLevel();
         player = null;
         coinsCollected = 0;
         currentLevelIndex = 0;
@@ -606,11 +606,17 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         startLoadingLevel();
     }
 
+    /** Releases the level, ending the loop it may have started (a wall's rumble) with it, whoever drops it. */
+    private void dropLevel() {
+        if (level != null) level.clearCameraEffects();
+        level = null;
+    }
+
     private void startLoadingLevel() {
         flights.clear();
         healer = null;
         pausedHealer = false;
-        level = null; // the previous level is released while the loading screen shows
+        dropLevel(); // the previous level is released while the loading screen shows
         gameStarted = false;
         // Death's slow motion must not leak into the next level, and a
         // reset still waiting for its frame (a death just before Restart or Exit) is moot now.

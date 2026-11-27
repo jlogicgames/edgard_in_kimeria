@@ -39,24 +39,25 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     public static final float SCATTER_OUT = .1f, SCATTER_HOLD = .2f, SCATTER_GATHER = .4f;
     public static final float SCATTER_SECONDS = SCATTER_OUT + SCATTER_HOLD + SCATTER_GATHER;
 
-    /** How many mosquitoes are drawn, and the size of each one's sprite. */
-    public static final int COUNT = 14;
-    public static final int MOSQUITO_WIDTH = 5, MOSQUITO_HEIGHT = 4;
+    /** How many mosquitoes are drawn, and the size of each one's sprite: a dot of 1 or 2 px. */
+    public static final int COUNT = 28;
+    public static final int MOSQUITO_WIDTH = 2, MOSQUITO_HEIGHT = 1;
     /**
-     * Each mosquito's top-left in the gathered box, and how far it circles from there on each axis. The ones on the rim
-     * (left, right, top, bottom) circle along it only, so the oval's edge stays drawn; every drawn pixel stays inside the oval.
+     * Each mosquito's top-left in the gathered box, and how far it circles from there on each axis. The first eighteen sit
+     * round the rim, so the lethal edge is drawn all round (they only flicker, or stir a px along it); the rest circle inside.
+     * Every drawn pixel stays inside the oval.
      */
-    private static final int[] HOME_X = {0, 17, 8, 9, 3, 14, 3, 13, 5, 12, 8, 6, 12, 9};
-    private static final int[] HOME_Y = {7, 7, 0, 14, 3, 3, 11, 11, 6, 7, 4, 9, 4, 10};
-    private static final int[] REACH_X = {0, 0, 2, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    private static final int[] REACH_Y = {1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    private static final int[] HOME_X = {20, 20, 18, 15, 12, 8, 5, 2, 0, 0, 0, 2, 5, 8, 12, 15, 18, 20, 4, 15, 4, 14, 6, 13, 9, 7, 13, 10};
+    private static final int[] HOME_Y = {8, 11, 14, 16, 17, 17, 16, 14, 11, 9, 6, 3, 1, 0, 0, 1, 3, 6, 4, 4, 13, 13, 8, 9, 5, 11, 5, 12};
+    private static final int[] REACH_X = {0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2};
+    private static final int[] REACH_Y = {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2};
     /** Turns of its small path per second: base plus a per-mosquito step, so no two move together. */
     private static final float CIRCLE_RATE = 1.3f, CIRCLE_RATE_STEP = .17f, PHASE_STEP = .37f, VERTICAL_RATE_RATIO = 1.31f;
     private static final int RATE_STEPS = 7;
     /** Wing frames per second, and the sheet's layout: two wing frames for a dark mosquito, two for a fed one, then the dead and the burning one. */
     private static final float WING_RATE = 20;
     private static final int WING_FRAMES = 2, DEAD_FRAME = 4, EMBER_FRAME = 5, FRAMES = 6;
-    /** Every this many mosquitoes one has a crimson belly. */
+    /** Every this many mosquitoes one has a rose body (the fed frames). */
     private static final int FED_EVERY = 4;
     private static final int NO_SWING = -1;
 
@@ -75,12 +76,11 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
      */
     public static final float DEATH_SECONDS = .8f, EMBER_SECONDS = .25f;
     private static final float FADE_FROM = .35f;
-    private static final int[] DRIFT = {-3, 4, 1, -2, 2, -4, 3, 0, -1, 3, -3, 1, 4, -2};
-    private static final int[] FALL = {12, 8, 16, 6, 14, 10, 7, 15, 9, 13, 17, 11, 8, 14};
+    private static final int[] DRIFT = {-3, 4, 1, -2, 2, -4, 3, 0, -1, 3, -3, 1, 4, -2, 2, -1, 3, -4, 0, 4, -3, 1, -2, 2, -4, 3, -1, 0};
+    private static final int[] FALL = {12, 8, 16, 6, 14, 10, 7, 15, 9, 13, 17, 11, 8, 14, 7, 12, 9, 16, 13, 6, 15, 10, 17, 8, 11, 14, 9, 12};
 
+    /** The only two sounds, quiet whines: one mosquito darting out of the sword's way, several dying. No loop while it flies. */
     static final String SCATTER_SOUND = "mosquito_scatter", DIE_SOUND = "mosquito_die";
-    /** The loop heard while a live swarm is in view ({@code Level.updateSwarmWhine}). */
-    public static final String WHINE_SOUND = "mosquito_whine";
 
     public final boolean isVertical;
     private final TextureRegion[] frames = new TextureRegion[FRAMES];
@@ -257,14 +257,18 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     public float rangeNeg() { return rangeNeg; }
     public float rangePos() { return rangePos; }
 
-    /** The left edge of mosquito {@code i}'s sprite now: whole px from the box, spread with the oval while scattered. */
+    /**
+     * The left edge of mosquito {@code i}'s sprite now: whole px from the box, spread with the oval while scattered, and then
+     * rounded towards the box's middle, so a dot on the rim never leaves the lethal oval.
+     */
     public float mosquitoX(int i) {
         if (current == State.DEAD) return deadX[i] + MathUtils.round(DRIFT[i] * deadShare());
         float home = HOME_X[i] + circle(i, REACH_X[i], 1);
         float stretch = 1 + scatterAmount() * SCATTER_REACH / WIDTH;
         float centre = home + MOSQUITO_WIDTH * HALF;
         float spread = blow > 0 ? centre * stretch : WIDTH - (WIDTH - centre) * stretch;
-        return position.x + MathUtils.round(spread - MOSQUITO_WIDTH * HALF);
+        float left = spread - MOSQUITO_WIDTH * HALF;
+        return position.x + (centre > WIDTH * HALF ? MathUtils.floor(left) : MathUtils.ceil(left));
     }
 
     /** The top edge of mosquito {@code i}'s sprite now. */
@@ -311,10 +315,10 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     /**
      * The load checks (D151), on the {@value #WIDTH} by {@value #HEIGHT} swarm whatever the object's size. Along the whole
      * line, with the scatter's reach either side: inside the room and the camera's view, clear of {@code blockers} (solids,
-     * platforms, hanging and moving objects), and over no standing place. A floor lies under every column of that sweep. A free
-     * way past is open (D26): a horizontal line passes either high enough to walk under or low enough to jump over with clear
-     * height; a vertical line leaves one of the two open at least {@value #MIN_OPEN_SECONDS} s in every cycle. A way round is
-     * not judged. Null when it is fine, else what is wrong.
+     * platforms, hanging and moving objects, the falls of branches and stones), and over no standing place. A floor lies under
+     * every column of that sweep. A free way past is open (D26): a horizontal line passes either high enough to walk under or
+     * low enough to jump over with clear height; a vertical line leaves one of the two open at least
+     * {@value #MIN_OPEN_SECONDS} s in every cycle. A way round is not judged. Null when it is fine, else what is wrong.
      */
     public static String problem(float x, float y, float w, float h, boolean vertical, float offNeg, float offPos,
                                  List<Rectangle> floors, List<Rectangle> blockers, Rectangle room, float cameraTop,

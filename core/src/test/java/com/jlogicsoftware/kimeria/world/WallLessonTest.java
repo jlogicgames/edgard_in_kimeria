@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
+import com.jlogicsoftware.kimeria.KimeriaGame;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.items.Wall;
 import com.jlogicsoftware.kimeria.entity.items.Lever;
@@ -692,6 +693,25 @@ class WallLessonTest {
         level.clearCameraEffects();
         settle(level, 120);
         assertEquals(2, loops.size(), "no second stop, and the paused rumble is not resumed");
+    }
+
+    /** The next level, Restart Level, the ending and the menu all drop the level; no pause comes before the developer's F4. */
+    @Test void droppingTheLevelStopsTheRumble() throws Exception {
+        for (String drop : new String[]{"startLoadingLevel", "releaseGame"}) {
+            Level level = freshRoom();
+            walkToLever(level);
+            loops.clear();
+            operate(level);
+            KimeriaGame running = new KimeriaGame();
+            var field = KimeriaGame.class.getDeclaredField("level");
+            field.setAccessible(true);
+            field.set(running, level);
+            var method = KimeriaGame.class.getDeclaredMethod(drop);
+            method.setAccessible(true);
+            method.invoke(running);
+            assertNull(field.get(running), drop);
+            assertEquals(java.util.List.of("loop:wall_rumble", "stop:wall_rumble"), loops, drop);
+        }
     }
 
     @Test void withSoundOffNoRumbleLoopStarts() {

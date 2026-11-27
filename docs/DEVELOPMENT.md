@@ -506,10 +506,10 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | Jump dust through `Level.fx()` | 8 | 0.0 |
 | Lever shake through `Level.activateTrigger` | 16 | 4.5 |
 | Lever grit burst through `Level.activateTrigger` | 16 | 4.6 |
-| `BossHud.render` with an empowered boss | 104 | 96.0 |
+| `BossHud.render` with an empowered boss | 8 | 0.0 in 3 runs (2026-11-27, in the boss room; was 96.0) |
 | forest-1 trap course (room 2) | 665 | 328.0 to 544.3 (the same before and after #430 removed the rain and sky, D92) |
 | forest-2 room 0 / room 1 / room 2 | 9,720 / 2,360 / 2,120 | 8,920.6 to 9,000.0 / 2,184.0 / 1,960.0 to 1,960.6 |
-| forest-2 room 2 with an empowered spray every 60 frames through `Level.blood` | 2,120 | 1,991.9 to 1,992.6 |
+| forest-2 boss room with an empowered spray every 60 frames through `Level.blood` | 1,250 | 464.0 to 464.1 in 3 runs (2026-11-27; was 1,991.9 to 1,992.6) |
 | A fireball flying through the real level, halo and trail drawn, a new ball every 60 frames (#397) | 8 | 0.0 to 2.8 (the 2.8 is a one-time ~3.4 KB in a fresh JVM's first measurement, 0.0 on repeats; its source is not identified: JIT warm-up or a one-time lazy initialisation) |
 | A fireball burst every 60 frames through `Level.fireballFx()` (light, heavy, burn-out in turn), with the ring slots | 8 | 0.0 to 0.3 (headless: the ring's shader draw is skipped) |
 | A pickup burst (12 sparks and a ring) every 60 frames through `Level.pickupSparks()` (#402) | 8 | 0.0 (headless: the ring's shader draw is skipped) |
@@ -524,7 +524,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | Spiders climbing a wall head up to the hero on the ledge and coming down head first, or killed on the wall and their bodies falling to its foot, through spider-climb.tmx (#483, D103) | 8 | 0.1, 1.1 and 1.1 in 3 runs, 0.0 in the full check; 0.5, 0.6 and 0.6 with the measured frames doubled to 2400, so the 1.1 is about 1.3 KB once per run, not per frame (the shared particle textures are built at level load, so kill order does not matter) |
 | Wolves trotting and sniffing, noticing, sprinting, skidding on a turn, winding up with their breath streaks, lunging, biting, recovering, baying under a hero out of reach, or killed in the lunge and leaving a body that twitches, crumbles and burns, with `Level.wolfFx()` and `Level.remainsFx()`, through wolf-test.tmx (#331, D115) | 8 | 0.2, 0.6 and 0.6 in 3 runs before the floor re-check, 0.0 in the one run after it (headless: no sound is played) |
 | Flying beetles flying, noticing, chasing under a platform that blocks their line, committing with specks gathering into them and down their dive lines, diving, bursting or killed in the dive, falling and leaving a body that rocks, crumbles and burns, with `Level.beetleFx()` and `Level.remainsFx()`, through flying-beetle-roof.tmx (#330, D145), with a ledge its route is lifted over (D146) | 8 | 0.1, 0.1 and 0.1 in 3 runs; 0.0 with the ledge (2026-11-27) (headless: no sound is played) |
-| Mosquito swarms flying, their fourteen mosquitoes circling and flickering, tested against the hero and the camera view, scattered by the sword and gathering, killed by a stone or by fire, their mosquitoes dropping and fading, through mosquito-run.tmx (#645, D151) | 8 | 0.6, 0.6 and 0.1 in 3 runs (2026-11-27; headless: no sound is played) |
+| Mosquito swarms flying, their twenty-eight mosquitoes circling and flickering, tested against the hero, scattered by the sword and gathering, killed by a stone or by fire, their mosquitoes dropping and fading, through mosquito-run.tmx (#645, D151) | 8 | 0.7, 0.6 and 0.6 in 3 runs (2026-11-27; headless: no sound is played) |
 | Snails crawling and pausing, noticing, winding up with their specks and swelling gob, spitting, their gobs flying with drips and ending (past their range, cut or burnt), reloading, or killed with their gob in the air and leaving a body that rocks, crumbles and burns, with `Level.snailFx()` and `Level.remainsFx()`, through snail-test.tmx (#329, D106) | 8 | 0.2, 0.2 and 0.1 in 3 runs (headless: no sound is played) |
 
 The lever scenarios' 4.5 and 4.6 B are the `HashSet` that `Level.activateTrigger` creates once per lever pull, not the shake or the

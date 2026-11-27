@@ -239,7 +239,7 @@ SPRITES = {
     # every frame; its body, lying wherever it can be killed, by BODY_SWEEP (D101, D117).
     'FlyingBeetle': ('active', 'objects/monster-flying-beetle.png', (0, 0, 40, 32), 10, 'top', FULL),
     'FlyingBeetle:body': ('active', 'objects/monster-flying-beetle-body.png', (0, 0, 40, 32), 1, 'floor', FULL),
-    # #645 (D151): the swarm is measured as it is seen, fourteen mosquitoes composed where MosquitoSwarm draws them when
+    # #645 (D151): the swarm is measured as it is seen, its mosquitoes composed where MosquitoSwarm draws them when
     # gathered, both wing frames (swarm_frames), along its line (swarm_parts).
     'MosquitoSwarm': ('active', 'objects/monster-mosquito.png', (0, 0, 22, 18), 2, 'top', FULL),
     'Spider': ('active', 'objects/monster-spider.png', (0, 0, 32, 16), 9, 'floor', FULL),  # #328 (D102): every frame
