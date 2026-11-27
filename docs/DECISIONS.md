@@ -4684,11 +4684,12 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D145. The forest flying beetle: it hovers, hears, draws its dive and bursts on the spot where the hero stood (#330, #240, #398)
 
 - **Status:** Accepted (author, 2026-11-26: the card as proposed). Built; the author approved the redrawn sprites and the room, `forest-roost`,
-  on 2026-11-26. The sounds and the timing are not yet checked by the author in play ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+  on 2026-11-26 and played the monster, its sounds and its timing by 2026-11-27 ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
 - **Amended** by [D146](#d146-the-flying-beetle-flies-over-what-stands-in-its-line-330-amends-d145) (2026-11-27): the beetle flies over what stands in its line, dive depth is
   measured under the level line, and `forest-roost` was widened; the flight, commit, load-check and placement figures below
   that D146 names are replaced there.
 - **Amended** by [D147](#d147-the-flying-beetle-gathers-its-blast-round-itself-and-bursts-up-off-the-ground-330-amends-d145) (2026-11-27): its wind-up and burst effects.
+- **Amended** by [D148](#d148-the-flying-beetles-blast-kills-in-the-shape-it-is-seen-in-330-amends-d145-d147) (2026-11-27): the lethal shape of its blast.
 - **Decision:**
   - **Look.** Ten 40×32 frames after the author's photos of a beetle in flight (2026-11-26; a first drawing with bat-like
     wings on a domed shell was rejected): two crimson wing covers lifted apart, a long veined clear hindwing, a segmented belly,
@@ -4790,8 +4791,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D148. The flying beetle's blast kills in the shape it is seen in (#330, amends D145, D147)
 
-- **Status:** Accepted (author, 2026-11-27: "the kill zone is still a rectangle, make it a half-circle"). Built; not yet played by
-  the author ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
+- **Status:** Accepted (author, 2026-11-27: "the kill zone is still a rectangle, make it a half-circle"). Built; the author played it the
+  same day ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).
 - **Decision:**
   - **Off a surface** (the end of a dive, or any burst a surface cuts): the half ellipse standing on it, **40 px** out to
     either side and **32 px** up, the one D147 draws. It is as wide and as high as the old 80×32 box, without its upper

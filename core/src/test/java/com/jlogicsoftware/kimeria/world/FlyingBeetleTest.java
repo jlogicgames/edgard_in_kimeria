@@ -7,6 +7,7 @@ import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaParticleSystem;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
+import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -37,6 +38,12 @@ class FlyingBeetleTest {
     private static final float HERO_MIDDLE = 23.5f, HERO_FEET = 48;
     /** Frames from the commit to the burst: the warning, the dive and the one frame the burst is due. */
     private static final int LONG_LIMIT = 60 * 8;
+
+    private static final FlyingBeetle.State[] LIVE_STATES = {FlyingBeetle.State.PATROL, FlyingBeetle.State.NOTICE,
+        FlyingBeetle.State.CHASE, FlyingBeetle.State.WINDUP, FlyingBeetle.State.DIVE};
+    /** The fixtures' stone, and the torch the torch tests lay beside it. */
+    private static final float STONE_X = 96, TORCH_X = 150, CARRY_SIZE = 12;
+    private static final int TORCH_ID = 9001;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -310,17 +317,35 @@ class FlyingBeetleTest {
         assertTrue(kills >= 8, "a jumping throw hits it over a usable window: " + kills + " throw frames");
     }
 
-    private void pickUpStone(Level level) {
-        place(level, 108 - 29 + HERO_MIDDLE);
+    private void pickUpStone(Level level) { pickUp(level, STONE_X); }
+
+    /** The fixtures hold no torch: one is laid on the floor beside the stone and picked up the same way. */
+    private void pickUpTorch(Level level) {
+        level.objects.add(new Carryable(level, TORCH_ID, Carryable.Kind.TORCH, TORCH_X, FLOOR - CARRY_SIZE));
+        pickUp(level, TORCH_X);
+        assertEquals(Carryable.Kind.TORCH.name(), level.player.carriedObject().label().name(), "the torch, not the stone");
+    }
+
+    private void pickUp(Level level, float objectX) {
+        place(level, objectX + CARRY_SIZE - 29 + HERO_MIDDLE);
         frame(level);
         press(Input.Keys.W); frame(level); // Up alone interacts (D126)
         harness.held.clear(); frame(level);
-        assertNotNull(level.player.carriedObject(), "picked up the stone");
+        assertNotNull(level.player.carriedObject(), "picked it up");
     }
 
-    private boolean killedByStone(boolean jump, int delay) {
+    @Test void aJumpingTorchKillsItAndAStandingOneFliesUnderIt() {
+        assertFalse(killedByThrow(true, false, 0), "a standing throw flies under the line");
+        int kills = 0;
+        for (int delay = 1; delay <= 55; delay++) if (killedByThrow(true, true, delay)) kills++;
+        assertTrue(kills >= 8, "a jumping torch hits it over a usable window: " + kills + " throw frames");
+    }
+
+    private boolean killedByStone(boolean jump, int delay) { return killedByThrow(false, jump, delay); }
+
+    private boolean killedByThrow(boolean torch, boolean jump, int delay) {
         Level level = level();
-        pickUpStone(level);
+        if (torch) pickUpTorch(level); else pickUpStone(level);
         FlyingBeetle b = waiting(level);
         place(level, SHOOTER);
         settle(level, 3);
@@ -332,13 +357,10 @@ class FlyingBeetleTest {
     }
 
     @Test void aHitKillsItQuietlyInEveryState() {
-        for (FlyingBeetle.State state : new FlyingBeetle.State[]{FlyingBeetle.State.PATROL, FlyingBeetle.State.NOTICE,
-            FlyingBeetle.State.CHASE, FlyingBeetle.State.WINDUP, FlyingBeetle.State.DIVE}) {
+        for (FlyingBeetle.State state : LIVE_STATES) {
             harness.sounds.clear();
             Level level = level();
-            FlyingBeetle b = beetle(level);
-            if (state != FlyingBeetle.State.PATROL) place(level, UNDER);
-            until(level, () -> b.state() == state, LONG_LIMIT);
+            FlyingBeetle b = reached(level, state);
             b.collidedWithActor(true);
             assertEquals(FlyingBeetle.State.DEAD, b.state(), state.toString());
             place(level, 80);
@@ -349,6 +371,70 @@ class FlyingBeetleTest {
             assertTrue(harness.sounds.contains("bounce"));
             assertFalse(harness.sounds.contains("beetle_pop"), "no burst");
             assertEquals(0, level.bloodParticles().count(), "no blood");
+        }
+    }
+
+    @Test void aThrownTorchKillsItQuietlyInEveryState() {
+        for (FlyingBeetle.State state : LIVE_STATES) {
+            harness.sounds.clear();
+            Level level = level();
+            FlyingBeetle b = reached(level, state);
+            Rectangle body = b.hitboxBounds();
+            Carryable torch = new Carryable(level, TORCH_ID, Carryable.Kind.TORCH, body.x, body.y);
+            level.objects.add(torch);
+            torch.release(body.x - 2, body.y + 2, true, true);
+            frame(level);
+            assertEquals(FlyingBeetle.State.DEAD, b.state(), state.toString());
+            place(level, 80);
+            settle(level, 60 * 2);
+            assertTrue(alive(level), state.toString());
+            assertTrue(b.isRemains(), "its body stays (D101): " + state);
+            assertFalse(harness.sounds.contains("beetle_pop"), "no burst: " + state);
+        }
+    }
+
+    /** A fresh level's monster brought into {@code state}: calm with the hero at the entrance, else with him at {@code UNDER}. */
+    private FlyingBeetle reached(Level level, FlyingBeetle.State state) {
+        FlyingBeetle b = beetle(level);
+        if (state != FlyingBeetle.State.PATROL) place(level, UNDER);
+        until(level, () -> b.state() == state, LONG_LIMIT);
+        return b;
+    }
+
+    /** D145, D148: the sword bursts a live one in every state, and its owner is caught. */
+    @Test void theSwordBurstsItOnItsOwnerInEveryState() {
+        for (FlyingBeetle.State state : LIVE_STATES) {
+            harness.sounds.clear();
+            Level level = level();
+            FlyingBeetle b = reached(level, state);
+            b.hitBySword(level);
+            assertTrue(b.isRemoved(), state.toString());
+            assertFalse(b.isRemains(), "a burst leaves nothing: " + state);
+            assertFalse(alive(level), state.toString());
+            assertTrue(harness.sounds.contains("beetle_pop"), state.toString());
+            assertEquals(0, level.bloodParticles().count(), "no blood: " + state);
+        }
+    }
+
+    /**
+     * A real swing at a monster on its line, while it notices and while it hangs in its wind-up. The sword is swung from the
+     * ground only, so the hero stands on a floor 16 px higher.
+     */
+    @Test void aSwordSwungFromAStepBurstsItOnItsLine() {
+        for (FlyingBeetle.State state : new FlyingBeetle.State[]{FlyingBeetle.State.NOTICE, FlyingBeetle.State.WINDUP}) {
+            harness.sounds.clear();
+            Level level = level();
+            FlyingBeetle b = reached(level, state);
+            level.collisionBlocks.add(CollisionBlock.wall(160, FLOOR - 16, 256, 16));
+            place(level, b.centreX() - 28);
+            level.player.position.y -= 16;
+            frame(level); // he stands on the step
+            assertEquals(state, b.state());
+            tap(level, Input.Keys.K);
+            until(level, b::isRemoved, 20);
+            assertFalse(alive(level), "melee is punished (D145): " + state);
+            assertFalse(b.isRemains(), "a burst, not a quiet kill: " + state);
+            assertTrue(harness.sounds.contains("beetle_pop"), state.toString());
         }
     }
 
@@ -454,6 +540,24 @@ class FlyingBeetleTest {
         assertEquals(FlyingBeetle.State.DEAD, b.state(), "hit on the arrival frame");
         settle(level, 30);
         assertTrue(alive(level), "the stone wins the tie");
+        assertFalse(harness.sounds.contains("beetle_pop"));
+    }
+
+    /** And a torch thrown on that frame. */
+    @Test void aTorchThrownOnTheFrameTheDiveArrivesWins() {
+        Level probe = level();
+        pickUpTorch(probe);
+        int arrival = framesToArrive(probe, committed(probe));
+        harness.sounds.clear();
+        Level level = level();
+        pickUpTorch(level);
+        FlyingBeetle b = committed(level);
+        settle(level, arrival - 1);
+        assertFalse(arrived(b), "one frame short");
+        tap(level, Input.Keys.L);
+        assertEquals(FlyingBeetle.State.DEAD, b.state(), "hit on the arrival frame");
+        settle(level, 30);
+        assertTrue(alive(level), "the torch wins the tie");
         assertFalse(harness.sounds.contains("beetle_pop"));
     }
 
