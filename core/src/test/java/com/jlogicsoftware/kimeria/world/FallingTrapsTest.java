@@ -16,6 +16,7 @@ import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.testsupport.ExpectedWarnings;
+import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.objects.FallingBranch;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
@@ -46,6 +47,8 @@ class FallingTrapsTest {
     private static final float ZONE_BRANCH_LEFT = 144, ZONE_STONE_LEFT = 352;
 
     private final java.util.List<String> sounds = new java.util.ArrayList<>();
+    /** What each region the traps asked for was cut from. */
+    private final java.util.Map<TextureRegion, String> crops = new java.util.IdentityHashMap<>();
     private boolean shakeDisabled;
     private final Set<Integer> held = new HashSet<>(), pressed = new HashSet<>();
     private TouchControls touch;
@@ -53,7 +56,11 @@ class FallingTrapsTest {
     private final TrapWarnings warnings = new TrapWarnings();
     private final ArtifactInventory artifacts = new ArtifactInventory();
     private final Assets assets = new Assets() {
-        @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+        @Override public TextureRegion region(String path, float x, float y, float w, float h) {
+            TextureRegion region = new TextureRegion();
+            crops.put(region, path + " " + x + " " + y + " " + w + " " + h);
+            return region;
+        }
         @Override public BitmapFont font(int size) { return null; }
     };
     private final GameContext game = (GameContext) Proxy.newProxyInstance(
@@ -238,6 +245,34 @@ class FallingTrapsTest {
         assertEquals(expected / STEP, flight, 3, "80 px drop under 900 px/s^2");
         assertEquals(320f, b.bodyBounds().y + b.bodyBounds().height, 0.001f);
         assertFalse(dead(l), "hero left of the column is not hit");
+    }
+
+    @Test void theTrunkSideOfTheSplitStaysWhereTheBranchHungWhileTheRestFalls() {
+        Level l = level();
+        FallingBranch b = branch(l);
+        NoopBatch batch = new NoopBatch();
+        float hungY = b.bodyBounds().y;
+        place(l, 148);
+        while (b.state() == FallingTrap.State.WARNING) {
+            batch.record(2);
+            b.render(batch);
+            assertEquals(1, batch.drawnCount(), "while it hangs the branch is one frame");
+            frame(l);
+        }
+        for (FallingTrap.State state : new FallingTrap.State[]{FallingTrap.State.FALLING, FallingTrap.State.SPENT}) {
+            framesUntil(l, b, state, 300);
+            frame(l);
+            batch.record(3);
+            b.render(batch);
+            assertEquals(2, batch.drawnCount(), state + ": the stub and the fallen piece");
+            assertEquals("images/objects/trap-branch.png 0.0 0.0 11.0 16.0", crops.get(batch.drawnRegion(0)),
+                "the trunk side of the resting frame");
+            assertEquals(BRANCH_LEFT, batch.drawnX(0), 0.001f);
+            assertEquals(hungY, batch.drawnY(0), 0.001f);
+            assertEquals(FallingBranch.STUB_WIDTH, batch.drawnWidth(0), 0.001f);
+            assertEquals(b.bodyBounds().y, batch.drawnY(1), 0.001f);
+            assertTrue(batch.drawnY(1) > hungY, "the piece is lower on screen than the stub");
+        }
     }
 
     @Test void aHeroWhoRunsAwayInTimeSurvivesAndOneWhoStandsStillDies() {

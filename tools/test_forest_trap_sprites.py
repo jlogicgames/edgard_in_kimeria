@@ -3,6 +3,7 @@ import unittest
 from PIL import Image
 
 import forest_trap_sprites as traps
+from check_contrast import java_int
 from sprite_layouts import FOREST_TRAP_SHEETS, DECOR_SHEETS, PICKUP_SHEETS, FAIRY_SHEETS, MONSTER_SHEETS, WORLD_IMAGES, WORLD_PALETTE_SIZE, OPAQUE_ALPHA
 
 BBOX_BOTTOM = 3  # (left, top, right, bottom)
@@ -15,6 +16,8 @@ VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceili
 CROWN_SIZE = (96, 40)  # decor-crown (#421)
 CROWN_TRUNK_COLUMNS = range(37, 57)  # a trunk at crown x + 40, its 28 px frame drawn from x - 6 (D122): its cap rows' columns 3-22
 CROWN_CAP_ROWS = (32, 37)  # the trunk's top (y 32 in forest-0) and its rounded cap rows 1-4, in crown rows
+BRANCH_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/FallingBranch.java'
+BUNCH_TOP = 12  # trap-branch: the rows under the limb where only the cue's leaf bunch hangs in the two rest frames
 
 
 class ForestTrapSpritesTest(unittest.TestCase):
@@ -129,6 +132,19 @@ class ForestTrapSpritesTest(unittest.TestCase):
             if a == OPAQUE_ALPHA:
                 self.assertLessEqual(max(red, green, blue) - min(red, green, blue), DULL_SPREAD,
                                      'pale and dull only: no golden glow, no honey brown, no lime (those mark the active mushrooms)')
+
+    def test_the_falling_branchs_cue_is_on_the_stub_that_stays_and_not_on_the_piece_that_falls(self):
+        # #556: FallingBranch leaves the leftmost STUB_WIDTH columns of the resting frame on the trunk.
+        _, _, frames = traps.parse(traps.GRID_DIR / 'branch.grid')
+        rows = dict(frames)
+        stub = java_int(BRANCH_JAVA, 'STUB_WIDTH')
+        for name in ('resting', 'rustle'):
+            with self.subTest(frame=name):
+                self.assertTrue(any('h' in row[:stub] for row in rows[name]), 'the pale split is on the trunk side')
+                bunch = [x for row in rows[name][BUNCH_TOP:] for x, char in enumerate(row) if char != '.']
+                self.assertTrue(bunch, 'leaves hang under the joint')
+                self.assertLess(max(bunch), stub, 'the whole bunch stays with the stub')
+        self.assertFalse(any('h' in row for row in rows['falling']), 'no pale break falls with the branch')
 
     def test_every_frame_has_artwork_and_binary_alpha(self):
         for name, (size, frames) in FOREST_TRAP_SHEETS.items():
