@@ -49,7 +49,8 @@ equals its horizontal one. World Y grows downward.
    `python3 tools/parallax_sprites.py`. The near and giant pieces (D113, D143) are typed in `art/parallax/forest/near/`: its
    copy-only `stamp.py SPEC` prints grid text, which replaces that piece at the end of `art/parallax/forest/fg.grid` before the
    export. A new or resized sheet updates its entry in `tools/sprite_layouts.py` (`PARALLAX_LAYER_SHEETS`,
-   `PARALLAX_SOFT_SHEETS`).
+   `PARALLAX_SOFT_SHEETS`). A script under `art/` is held to `validateSpriteArt` (it copies, never paints) and
+   `validateNamedParameters` (no unnamed geometry).
 2. **Placement:** the room lists in `tools/parallax_game.py` (`NEAR`, `MORE_BOTTOM` and the per-forest lists). Never edit the
    installed layers or groups in a `.tmx` by hand: `tools/test_parallax_game.py` fails a map that differs from the installer.
 3. **Install:** `python3 tools/parallax_game.py`.

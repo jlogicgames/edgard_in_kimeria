@@ -19,6 +19,7 @@ from sprite_layouts import (ENEMY_IMAGES, WORLD_IMAGES, OPAQUE_WORLD_IMAGES, HER
     PARALLAX_SOFT_SHEETS, PARALLAX_MAX_SIDE)
 
 ROOT = Path(__file__).resolve().parents[1]
+EXPORT_DIRS = ('tools', 'art')  # offline art sources: they may copy and resize authored artwork, never paint it
 BASE = 'core/src/main/java/com/jlogicsoftware/kimeria/'
 RULES = {
     'quad': re.compile(r'\b(?:Shaders\s*\.\s*)?whiteQuad\s*\('),
@@ -238,12 +239,13 @@ def check(root):
     issues = []
     for path in sorted(directory.rglob('*.java')):
         issues.extend(violations(path.relative_to(directory).as_posix(), path.read_text(encoding='utf-8')))
-    for path in sorted((root / 'tools').rglob('*.py')):
-        issues.extend(python_art_violations(path.relative_to(root).as_posix(), path.read_text(encoding='utf-8')))
-    for path in sorted((root / 'tools').rglob('*.java')):
-        code = code_only(path.read_text(encoding='utf-8'))
-        for match in re.finditer(r'\.\s*(?:fillRect|fillOval|fillPolygon|drawLine|drawOval|drawPolygon|setRGB)\s*\(', code):
-            issues.append(f'{path.relative_to(root)}:{code.count(chr(10), 0, match.start()) + 1}: shape painting is not an authored sprite export')
+    for name in EXPORT_DIRS:
+        for path in sorted((root / name).rglob('*.py')):
+            issues.extend(python_art_violations(path.relative_to(root).as_posix(), path.read_text(encoding='utf-8')))
+        for path in sorted((root / name).rglob('*.java')):
+            code = code_only(path.read_text(encoding='utf-8'))
+            for match in re.finditer(r'\.\s*(?:fillRect|fillOval|fillPolygon|drawLine|drawOval|drawPolygon|setRGB)\s*\(', code):
+                issues.append(f'{path.relative_to(root).as_posix()}:{code.count(chr(10), 0, match.start()) + 1}: shape painting is not an authored sprite export')
     if (root / 'assets').is_dir():
         issues.extend(image_contracts(root))
     return issues

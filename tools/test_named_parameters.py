@@ -49,6 +49,47 @@ class NamedParametersTest(unittest.TestCase):
             "from PIL import Image\nFRAME_SIZE = (96, 48)\nimage = Image.new('RGBA', FRAME_SIZE)"))
         self.assertFalse(guard.python_violations('tools/parser.py', 'HEADER_BYTES = 13'))
 
+    def test_every_art_script_is_a_generator_even_without_an_imaging_library(self):
+        source = 'rows = grid[4:]\n'
+        self.assertTrue(guard.python_violations('art/parallax/stamp.py', source))
+        self.assertFalse(guard.python_violations('tools/parser.py', source))
+        self.assertFalse(guard.python_violations('art/parallax/stamp.py', 'BLEED_ROWS = 4\nrows = grid[BLEED_ROWS:]\n'))
+
+    def test_hook_rejects_real_art_script_and_recovers_after_fix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(['git', 'init', '-q', directory], check=True)
+            source = root / 'art/parallax/stamp.py'
+            source.parent.mkdir(parents=True)
+            source.write_text('width = piece + 48\n')
+            command = [sys.executable, guard.__file__, '--root', directory, '--hook']
+            for staged in (False, True):
+                if staged:
+                    subprocess.run(['git', '-C', directory, 'add', '--', str(source)], check=True)
+                result = subprocess.run(command, input='{}', text=True, capture_output=True)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn('art/parallax/stamp.py:1', result.stderr)
+            source.write_text('BLEED = 48\nwidth = piece + BLEED\n')
+            result = subprocess.run(command, input='{}', text=True, capture_output=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_branch_changes_to_a_committed_art_script_are_checked(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                subprocess.run(['git', '-C', directory, '-c', 'user.name=t', '-c', 'user.email=t@example.test',
+                                '-c', 'commit.gpgsign=false', *args], check=True, capture_output=True)
+            git('init', '-q')
+            source = root / 'art/stamp.py'
+            source.parent.mkdir()
+            source.write_text('old = piece + 77\n')
+            git('add', '--', 'art/stamp.py')
+            git('commit', '-q', '--no-verify', '-m', 'legacy')
+            source.write_text('old = piece + 77\nadded = piece + 48\n')
+            issues = guard.check(root, 'HEAD')
+            self.assertEqual(1, len(issues), issues)
+            self.assertIn('art/stamp.py:2', issues[0])
+
     def test_hook_rejects_real_untracked_and_staged_source_and_recovers_after_fix(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

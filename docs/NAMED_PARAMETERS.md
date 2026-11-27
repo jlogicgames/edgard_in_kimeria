@@ -51,7 +51,11 @@ renaming an anonymous value to `VALUE_280` does not.
 
 `tools/check_named_parameters.py` checks added/modified Java production lines in
 core, desktop (including dev sources), web and Java developer tools. It also checks Python artwork
-exporters identified by their PIL imports. New/untracked source files are included.
+generators: every script under `art/` (by its place, with or without an imaging library, since
+`art/parallax/forest/near/stamp.py` slices rows with none) and the scripts under `tools/` identified by
+their PIL imports. Java under `art/` is checked like Java elsewhere. New/untracked source files are included.
+The scan covers no other Python: the one script elsewhere, `docs/references/beetle-burst/make_strip.py`, is the
+record of a proposal (D136) that exports no shipped art and is kept as it was drawn.
 Named Java final constants and Python uppercase assignments are explicit data.
 Unchanged legacy lines, independent expected values in tests, and technical parser/
 checker byte formats are different categories from new gameplay/export parameters.

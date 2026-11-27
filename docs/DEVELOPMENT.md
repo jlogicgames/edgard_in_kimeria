@@ -436,6 +436,8 @@ backend instead of its `sun.misc.Unsafe` one. Two cases remain, both outside our
 ## Sprite artwork guard
 
 `./gradlew validateSpriteArt` runs the source-art policy and new world/HUD PNG contract checks.
+The source policy reads the core Java sources and the offline art sources in `tools/` and `art/`: Python there
+may not use `ImageDraw` or `putpixel`, and Java there may not paint shapes.
 The latter inspect PNG metadata with the Python standard library: world native
 dimensions, indexed palette up to 16 entries and binary alpha; HUD 128×128 indexed
 exports up to 256 entries; the touch-control PNGs in `assets/images/HUD/touch/` (D55) are 64x64 / 32x32 indexed, up to 16 entries, binary alpha; the dialogue screen PNGs in `assets/images/ui/dialogue-*.png` (D78) are indexed, up to 16 entries, opaque or binary alpha (`sprite_layouts.DIALOGUE_SHEETS`). Legacy multi-frame sheets remain separate authored assets. Core `check`, the
@@ -454,7 +456,9 @@ before automatic session enforcement; see
 
 Follow [parameter ownership](NAMED_PARAMETERS.md) for map cells, sprite frames,
 collision bodies, projectile timing and UI geometry. `validateNamedParameters`
-runs on core check and release packaging alongside the sprite-art check.
+runs on core check and release packaging alongside the sprite-art check. It covers the production Java sources,
+`tools/` (Python there only when it imports PIL) and `art/` (every script); see
+[the exact scope](NAMED_PARAMETERS.md#automated-check-and-its-exact-scope).
 By default it judges the whole branch (the merge-base with `origin/main`, plus uncommitted edits; HEAD with a note
 when `origin/main` is absent), so a clean pull-request checkout is checked too; `-PnamedParameterBase=HEAD` checks
 uncommitted edits only.

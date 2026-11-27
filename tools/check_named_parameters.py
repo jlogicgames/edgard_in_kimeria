@@ -14,7 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 NON_CODE = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 NUMBER = re.compile(r'(?<![\w.])(?:0[xX][\da-fA-F_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.[\d_]+)(?:[eE][+-]?\d+)?)[fFdDlL]?(?![\w.])')
 CONSTANT = re.compile(r'\b(?:static\s+final|final\s+static|final)\s+[\w.<>,?\[\]]+\s+[A-Z][A-Z_\d]*\s*=[^;]*;')
-SOURCE_PATHS = ('core/src/main/java', 'lwjgl3/src/main/java', 'lwjgl3/src/dev/java', 'web/src/main/java', 'tools')
+SOURCE_PATHS = ('core/src/main/java', 'lwjgl3/src/main/java', 'lwjgl3/src/dev/java', 'web/src/main/java', 'tools', 'art')
+ART_PREFIX = 'art/'  # every script there generates artwork, with or without an imaging library
 
 
 def java_violations(path, source, added=None):
@@ -42,7 +43,7 @@ def java_violations(path, source, added=None):
 def python_violations(path, source, added=None):
     tree = ast.parse(source, filename=path)
     # This rule owns artwork/export geometry, not parser byte formats or checker internals.
-    if not any(isinstance(n, ast.ImportFrom) and (n.module or '').split('.')[0] == 'PIL'
+    if not path.startswith(ART_PREFIX) and not any(isinstance(n, ast.ImportFrom) and (n.module or '').split('.')[0] == 'PIL'
                or isinstance(n, ast.Import) and any(a.name.split('.')[0] == 'PIL' for a in n.names)
                for n in ast.walk(tree)):
         return []
