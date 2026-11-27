@@ -829,15 +829,15 @@ depends on it.
   the deadfall's boughs) shows a joint where it meets the trunk: its root swells a row up and down into a dark bark collar
   (`4a2e1c`), and its root column (grid `J`) is kept out of the moon rim (`RIM_KEEP` in `tools/forest_trap_sprites.py`), which
   otherwise drew a pale cut across the joint at the frame's edge. A branch that breaks off keeps its break at the trunk: the
-  falling branch's cracked joint (#361, its D71 cue) and the rotten branch's rimmed end lie on the bark.
+  falling branch's split joint (#361, its D71 cue; its trunk side stays there as a stub, D150) and the rotten branch's rimmed end lie on the bark.
   *Since [D130](DECISIONS.md#d130-decor-trees-and-bushes-are-solid-and-calm-and-a-trunk-is-apart-from-the-ground-amends-d76-and-d120-555-2026-11-24) (2026-11-24, the author: "the left branch is a completely different colour and has an obvious cut"):* **a branch's
   root blends into the trunk bark.** On every branch that hangs on a trunk (sound, rotten and falling branch, hive and deadfall
   boughs) the last 5 to 8 px at the root ramp, row by row with staggered steps, from the branch's own colours through a half step
   into the trunk's red-brown bark (`47302a`, `2e1813`, `28130e`, `220e09`), and the root flares a row up and down into a bark collar.
   The outermost column is the trunk's furrow colour `220e09`, the pixel the trunk draws under it, so no line shows at the joint. The
   ramp keys (`1` to `7` in each grid) are in `RIM_KEEP`. The rotten branch keeps its rot and split along its length, none at the
-  joint; the falling branch keeps its raw-wood crack band (the D71 cue) just beside the collar, and its `falling` frame its broken
-  end. Decor tier over the
+  joint; the falling branch keeps its pale split (the D71 cue) just beside the collar, and its
+  `falling` frame a torn end with no pale wood ([D150](DECISIONS.md#d150-the-branches-are-redrawn-and-the-falling-branchs-split-stays-on-the-trunk-556-2026-11-27)). Decor tier over the
   shipped layers: trunk outline 0.076 to 0.144, body at most 0.140; snag outline 0.087 to 0.119, body at most 0.103. A full trunk
   at forest-1-mob x 3968 crossed the moon disc at the room's first camera (body 0.211, over the 0.20 ceiling), so that tree is a snag.
   Previews: `docs/references/forest-traps/decor-trunk-preview.png`, `decor-snag-preview.png`, `perch-preview.png`, `hive-preview.png`,
@@ -1732,7 +1732,9 @@ by `validateSpriteArt`). Frame order is the order in the table.
 | `trap-thorn-root` | 16×24 | hidden, peek1, peek2, rising, up | bone-coloured stake; peek1/peek2 is the wobble |
 | `trap-thorn-tuft` | 16×16 | calm, bristle, spiked | crimson-magenta stems with bone tips, deliberately not green like the bushes |
 | `trap-bramble` | 16×24 | rest, rustle1, rustle2, cane1, cane2, tip | creeping bramble (#364, D89): a clump of the tuft's magenta canes rooted in a face on the left, bone tips always showing (rest), shifting and poking a first then a second tip (the warning); the arm is `cane1`/`cane2` alternating behind `tip` at the current extent; drawn mirrored for `root=right`; active tier, outline in `forest-1-bramble` (`check_contrast.py`, all six frames): rest 0.419, worst 0.414 (`cane1`, `cane2`) |
-| `trap-branch` | 32×16 | resting, rustle, sag, falling | resting and rustle carry the at-rest cue (#361): a pale raw-wood band round the joint, cut by an ink zig-zag, and a chip under it; rustle = leaves shake, sag = drooping with a split at the trunk |
+| `trap-branch` | 32×16 | resting, rustle, sag, falling | a crooked tan limb with forked twigs and violet leaves (#556, D150). resting and rustle carry the at-rest cue (#361): a pale raw-wood wedge opening into an ink crack at the joint and a leaf bunch under its trunk side; rustle = leaves shift, sag = the limb hinges down and the split gapes; falling = the torn-off piece, no pale wood. The leftmost 11 columns of resting are the stub left on the trunk (`FallingBranch.STUB_WIDTH`, pinned by `tools/test_forest_trap_sprites.py`); grid `branch.grid` |
+| `trap-perch` | 32×16 | perch, perch-left | the sound branch (#349, D80): living bark in lengthwise streaks with a knot, a pale walkable top line, tapering to a green leaf tuft at its tip; nothing hangs under its middle (#556); outline 0.299 at worst; grid `perch.grid` |
+| `trap-rotten-perch` | 32×16 | intact, crumble1, crumble2, and their copies for the left of a trunk | the rotten branch (D80): dead grey wood tapering to a broken tip, a mid-top split with a pale splinter, one dry leaf under the tip; outline 0.299 at worst; grid `rotten-perch.grid` |
 | `trap-stone` | 16×16 | stone, cracked | boulder and impact frame |
 | `trap-stone-lip` | 24×8 | loose, broken | the falling stone's at-rest cue (#360): a cracked rock lip with the stone's crown wedged in it, then the empty socket; centred on the stone's column at its `lipTop` (on screen with the hero on the floor; forest-0 y 128 under a soil block, #550, D131; forest-2 y 48 under the dirt block); stone palette; with a grit trickle (`KIND_GRIT`, dark `34314a` and light `d8d6e8` specks) while armed |
 | `trap-deadfall` | 32×16 | tied, strain, slip, swing, caught | the trip-line deadfall's log (#363, D88): a 24×10 bark log seen broadside with its end grain (`e8c890`/`9c6a34`) on the left; tied/strain/slip carry the bone lashing (`efe6c4`/`b8ad9c`) up to the bough, strain adds frayed fibres, slip draws the log one row lower; swing has three bone speed streaks on its trailing side; caught has a frayed cord stub. Rope eyes at x 8 and 23, row 4. Active tier, worst outline 0.410 tied (forest-1-deadfall; the same over the old sky and the D92 background) |
@@ -1792,8 +1794,7 @@ checks grid, layout and shipped PNG agree.
 integrate and playtest: stump and thorn root (the stump's third wind-up frame is now bright
 cracks and heavy smoke on an intact stump, so the blast frames carry the explosion; the root's
 wind-up follows the same rule), thorn tuft, stone, puffball. Acceptable but rough, to be
-redrawn by a human artist: root (reads as a spike), branch (contrast was raised with a lighter
-wood and leaf palette, still thin on dark ground), blast (redrawn in #250 after the author disliked the first one: 12 frames, fire mushroom and brown smoke saucer in the spirit of an author-supplied reference, nothing copied; **the blast is 32×32
+redrawn by a human artist: root (reads as a spike), blast (redrawn in #250 after the author disliked the first one: 12 frames, fire mushroom and brown smoke saucer in the spirit of an author-supplied reference, nothing copied; **the blast is 32×32
 and needs 2× nearest scaling to cover the 64×64 gameplay blast area**), spore clouds (cloud3 is
 now an irregular puff), shadow (a k/d checker standing in for translucency, readable on night,
 canopy and trunk backgrounds but unproven on the real floor), vine (thin stem, small thorns,

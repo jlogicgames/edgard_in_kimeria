@@ -91,7 +91,7 @@ order shows the type; and for a DISGUISED or HIDDEN trap that room's card introd
 | --- | --- | --- | --- | --- | --- | --- |
 | `ThornRoot` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-ladder`, hint `HINT_LADDER_ROOT` | D44, D48 |
 | `ThornTuft` | proximity | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-1-spider`, on open floor (D110) | D44, D58, D110 |
-| `FallingBranch` | position | DISGUISED | cracked joint (#361) | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
+| `FallingBranch` | position | DISGUISED | split joint and leaf bunch (#361, #556) | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-wall`, hint `HINT_WALL_BRANCH` | D45, D48 |
 | `FallingStone` | position | HIDDEN | loose overhang: a cracked rock lip with the stone's crown wedged in it, grit trickling every 1.5 s | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-platform`, hint `HINT_PLATFORM_STONE` | D45, D48, D59 |
 | `ExplosiveStump` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone`, hint `HINT_STONE_STUMP` | D47, D48 |
 | `ExplosiveRoot` | touch | VISIBLE | none needed | `DEFAULT_WARNING_SECONDS` 0.8 / 1.2 s | `forest-0-stone` (the stump's idle tell and wind-up language) | D47, D59 |
@@ -194,20 +194,20 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | --- | --- |
 | Family | position |
 | Visibility (D71) | DISGUISED |
-| At rest | a tan branch with violet buds hanging overhead, its joint cracked; it grows from a tree in the decor tier, its cracked joint 3 px over the bark ([D122](DECISIONS.md#d122-a-branch-always-grows-from-a-trunk-555-2026-11-21)): a `Decor:trunk` under a `Decor:crown` in `forest-0-wall` (#421, D48; trunk x 1728) and `forest-1-bramble` (trunk x 5984, passing behind the ledge over it), a `Decor:snag` (a dead tree snapped off below the moon) in `forest-1-mob` (x 3968), so the pale cracked joint stays the only bright, warm mark |
-| At-rest cue | a cracked joint at the bough, drawn on every instance in the resting and rustle frames ([#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361)): a pale raw-wood band (`fff4b0`) round the joint, 2 px right of the knob and through the whole depth of the bough, cut by an ink zig-zag, with one loose chip of light wood 3 px under it. It reads apart from the rotten branch (D80) by place (overhead, not underfoot), colour (tan, not dead grey) and crack (a pale band across the joint, not a 1 px split mid-top) |
+| At rest | a crooked tan limb with forked twigs and violet leaves hanging overhead, its bark split near the trunk; it grows from a tree in the decor tier, its root 3 px over the bark ([D122](DECISIONS.md#d122-a-branch-always-grows-from-a-trunk-555-2026-11-21)): a `Decor:trunk` under a `Decor:crown` in `forest-0-wall` (#421, D48; trunk x 1728) and `forest-1-bramble` (trunk x 5984, passing behind the ledge over it), a `Decor:snag` (a dead tree snapped off below the moon) in `forest-1-mob` (x 3968), so the pale split stays the only bright, warm mark |
+| At-rest cue | a split bark joint with a bunch of violet leaves under it, drawn on every instance in the resting and rustle frames ([#361](https://github.com/jlogicgames/edgard_in_kimeria/issues/361), redrawn by [D150](DECISIONS.md#d150-the-branches-are-redrawn-and-the-falling-branchs-split-stays-on-the-trunk-556-2026-11-27)): a pale raw-wood wedge (`fff4b0`) opening from the top of the joint, narrowing into an ink crack, and a leaf bunch hanging under its trunk side. That side and the bunch (the leftmost 11 columns of the resting frame) stay on the trunk when the branch falls; the falling piece shows no pale wood. It reads apart from the rotten branch (D80) by place (overhead, not underfoot), colour (tan with violet leaves, not dead grey) and crack (a pale wedge by the trunk, not a 1 px split mid-top) |
 | Reads from | its zone (`forest-0-wall`: x 1728-1776, the column itself) |
 | Trigger | the hero body box overlaps the authored zone (`zoneX`, `zoneY`, `zoneWidth`, `zoneHeight`) |
 | Telegraph (D7) | rustles in the first half of the warning, sags in the second |
 | Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s |
 | Lethal part | the swept box during the fall for a hero on the ground, the landed box at impact |
 | Counter | run on or jump; do not stand under it; step back out of the column |
-| Reset | room rebuild; the landed branch stays as harmless scenery until then |
+| Reset | room rebuild; the landed branch and the stub on the trunk stay as harmless scenery until then |
 | Taught in | `forest-0-wall` with `HINT_WALL_BRANCH` |
 | Load checks | `FallingTrapLayout.validate`; mirrored in `check_tiled_links.py` |
-| Tests | `FallingTrapsTest`, `WallLessonTest` |
-| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier, outline 0.463 at rest in `forest-0-wall` (D76; 0.483 before the cue), rustle 0.429. No impact feedback when it lands (no dust, sound or shake, unlike the stone's D73). Consequence (D93): none yet ([#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443)) |
-| Decision | D45, D48 |
+| Tests | `FallingTrapsTest` (with the stub, D150), `WallLessonTest`, `tools/test_forest_trap_sprites.py` (the cue lies on the stub) |
+| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier (D76); worst outline over its three placements: resting 0.374, rustle 0.378, sag 0.393, falling 0.443 (`check_contrast.py`, 2026-11-27, D150). No impact feedback when it lands (no dust, sound or shake, unlike the stone's D73). Consequence (D93): none yet ([#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443)) |
+| Decision | D45, D48, D150 |
 
 ### Falling stone (`FallingStone`)
 
@@ -351,7 +351,7 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | --- | --- |
 | Family | crumble |
 | Visibility (D71) | VISIBLE: the rot of the log and the branch is the cue, drawn on every instance |
-| At rest | log (the falling platform): a rotten log; branch: a grey, dead branch on a trunk (its root end 4 px over the bark, D122), a split with a pale splinter in the middle of its top and one dry leaf under its tip, no green (unlike the sound branch, a one-way `Platform` with `skin=branch`: brown bark, a pale top line, green leaves) |
+| At rest | log (the falling platform): a rotten log; branch: a grey, dead branch on a trunk (its root end 4 px over the bark, D122) tapering to a broken tip, a split with a pale splinter in the middle of its top and one dry leaf under the tip, no green (unlike the sound branch, a one-way `Platform` with `skin=branch`: brown bark, a pale top line, a green leaf tuft at its tip) |
 | At-rest cue | none needed (VISIBLE): the rotten look of the log and the branch is drawn on every instance (no extra crack; the branch's mid-top split is part of its look) |
 | Reads from | ~320 px for the log and the branch, if their rot reads (not verified, #368) |
 | Trigger | the hero lands on it (feet onto its top while falling); rising through it from below triggers nothing (one-way) |
@@ -363,8 +363,8 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Taught in | `forest-0-traps` (D40); the branch skin is first met in `forest-1-tree`, on the lowest branch of its rotten column, whose fall lands on the floor 48 px down |
 | Load checks | `FallingPlatform.Skin.fromMap` (unknown skin fails); branch: `FallingPlatform.branchProblem` (no one-way platform under its fall, D69; the room's goal reachable with every rotten branch gone, D26), mirrored in `check_tiled_links.py` |
 | Tests | `TrapsLessonTest`, `RhythmTrapsTest` (log), `Forest1TrapsTest`, `FallingPlatformFloorTest` (D69), `TreeClimbTest` (branch) |
-| Art and sound | `trap-log` 32×16 × 3 (intact, crumble1, crumble2; grid `art/objects/forest-traps/log.grid`; the falling platform's only look since 2026-11-21, the plank art `trap-falling-platform`, its grid and its rope sway constants are deleted); `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.427 at its worst placement (D76; the sound branch `trap-perch` 0.458, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet buds) and crack (mid-top, not #361's joint). No sound of its own and no particles when it gives way, in any skin. Consequence (D93): none yet ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444)) |
-| Decision | D7, D40, D46, D69, D80 |
+| Art and sound | `trap-log` 32×16 × 3 (intact, crumble1, crumble2; grid `art/objects/forest-traps/log.grid`; the falling platform's only look since 2026-11-21, the plank art `trap-falling-platform`, its grid and its rope sway constants are deleted); `trap-rotten-perch` 32×16 × 6 (intact, crumble1, crumble2 and their copies for the left of a trunk; grid `art/objects/forest-traps/rotten-perch.grid`), active tier, outline 0.299 at its worst placement (D76, 2026-11-27, D150; the sound branch `trap-perch` 0.299, the trunk `decor-trunk` decor tier 0.121 to 0.170, body 0.146 at most). Palette: grey wood `4a4048`/`7a6e6c`, pale top `b8ad9c`, the log's splinter `efe6c4`, dry leaf `9c6a34`, ink `0b0814`; no accent hue. It reads apart from the falling branch hazard by place (underfoot, not overhead), colour (dead grey, not tan with violet leaves) and crack (mid-top, not #361's joint). No sound of its own and no particles when it gives way, in any skin. Consequence (D93): none yet ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444)) |
+| Decision | D7, D40, D46, D69, D80, D150 |
 
 ### Trip-line deadfall (`Deadfall`)
 

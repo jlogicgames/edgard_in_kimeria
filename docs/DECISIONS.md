@@ -2027,6 +2027,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Reads apart from `FallingBranch`:** underfoot versus overhead, dead grey versus tan with violet buds, a mid-top split
   versus the pale cracked band at the joint (#361). From the plain falling platform (a striped slab) and the log (brown, intact
   until landed on): by material; the crumble frames are shared on purpose, because it is the same element.
+  *Redrawn by D150 (2026-11-27): the falling branch carries violet leaves and a split by the trunk.*
 - **Room:** `forest-1-tree` (forest-1's fourth and last room; the guard room's checkpoint became its `RoomExit` at the
   same x, so D68's times are unchanged). Two trees: a column of five rotten branches next to the entrance (the fast line)
   and a zig-zag of five sound branches that starts on the far side (the sure line), meeting at a crown branch (y 32) that
@@ -4841,3 +4842,26 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   floor and the height; the trigger inside the dome; the sword at the tip of its reach from both sides and several heights; the
   load check's corners), `BeetleFxTest` (every speck born on the rim and drawn in; every burst particle inside the dome, over
   the floor line).
+
+## D150. The branches are redrawn and the falling branch's split stays on the trunk (#556, 2026-11-27)
+
+- **Status:** Accepted (author, 2026-11-27, from drafts of all frames, native-size room samples and the stub mock).
+- **Context:** playtest 2: the falling branch had a drawn break point that fell with it (F16), and the three branch sprites
+  looked like dogs (F26): a dark head-like end, a pale collar-like band, a flat body and parts hanging under it like legs.
+- **Decision:**
+  - **Shapes.** Falling branch: a crooked limb with forked twigs and violet leaves. Sound branch: bark in lengthwise streaks
+    with a knot, tapering to a leaf tuft at its tip. Rotten branch: dead grey wood tapering to a broken tip, one dry leaf
+    under the tip. Nothing hangs under the middle of a walkable branch.
+  - **Cue (replaces #361's band).** A pale raw-wood wedge opening from the top of the joint into an ink crack, with a bunch
+    of leaves under its trunk side, in the resting and rustle frames.
+  - **Stub.** From the moment the branch falls, the leftmost 11 columns of the resting frame are drawn where it hung
+    (`FallingBranch.STUB_WIDTH`); the falling frame has no pale wood. The stub is harmless and goes with the room rebuild.
+  - **Unchanged:** frame sizes and counts, hitboxes, zones, timing, routes, and the joint's ramp into the trunk (D130).
+- **Measured (2026-11-27, `check_contrast.py`, floor 0.28, no threshold changed):** worst outline, before / after: falling
+  branch at rest 0.375 / 0.374, sound branch 0.354 / 0.299 (left copy 0.380 / 0.340), rotten branch 0.308 / 0.299. The two
+  walkable branches have less margin than before: their taper and plain underside give the outline less to read by.
+  Keeping the underside ink out of the moon rim measured 0.240 and 0.267, so the rim stays.
+- **Amends:** D80 (how the rotten branch reads apart from the falling one: violet leaves, not buds) and D122 (the break at the
+  trunk is now the stub that stays there).
+- **References:** [TRAPS.md](TRAPS.md) falling branch and falling platform cards; [ART_DIRECTION.md](ART_DIRECTION.md)
+  "Forest trap sprites".

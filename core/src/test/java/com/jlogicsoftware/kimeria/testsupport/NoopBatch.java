@@ -19,7 +19,7 @@ public final class NoopBatch implements Batch {
     private boolean blending = true, drawing;
     /** Optional log of the {@code draw(region, x, y, width, height)} calls, in order: set by {@link #record(int)}, null (and free) otherwise. */
     private TextureRegion[] drawnRegions;
-    private float[] drawnX, drawnY;
+    private float[] drawnX, drawnY, drawnWidth;
     private int drawnCount;
     /** Counts of the rotated region draws (the nine-argument form) and of the text vertex draws, and the last rotated draw's region, size, scale X and rotation; free, no log. */
     private int rotatedCount, vertexCount;
@@ -44,11 +44,12 @@ public final class NoopBatch implements Batch {
     public void resetCounts() { rotatedCount = 0; vertexCount = 0; croppedCount = 0; }
 
     /** Starts logging up to {@code capacity} region draws (the five-argument form the tile layers use); clears an earlier log. */
-    public void record(int capacity) { drawnRegions = new TextureRegion[capacity]; drawnX = new float[capacity]; drawnY = new float[capacity]; drawnCount = 0; }
+    public void record(int capacity) { drawnRegions = new TextureRegion[capacity]; drawnX = new float[capacity]; drawnY = new float[capacity]; drawnWidth = new float[capacity]; drawnCount = 0; }
     public int drawnCount() { return drawnCount; }
     public TextureRegion drawnRegion(int i) { return drawnRegions[i]; }
     public float drawnX(int i) { return drawnX[i]; }
     public float drawnY(int i) { return drawnY[i]; }
+    public float drawnWidth(int i) { return drawnWidth[i]; }
 
     @Override public void begin() { drawing = true; }
     @Override public void end() { drawing = false; }
@@ -70,7 +71,7 @@ public final class NoopBatch implements Batch {
     @Override public void draw(Texture texture, float[] spriteVertices, int offset, int count) { vertexCount++; }
     @Override public void draw(TextureRegion region, float x, float y) { }
     @Override public void draw(TextureRegion region, float x, float y, float width, float height) {
-        if (drawnRegions != null && drawnCount < drawnRegions.length) { drawnRegions[drawnCount] = region; drawnX[drawnCount] = x; drawnY[drawnCount++] = y; }
+        if (drawnRegions != null && drawnCount < drawnRegions.length) { drawnRegions[drawnCount] = region; drawnX[drawnCount] = x; drawnWidth[drawnCount] = width; drawnY[drawnCount++] = y; }
     }
     @Override public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
         float scaleX, float scaleY, float rotation) {
