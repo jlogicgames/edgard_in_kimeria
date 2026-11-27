@@ -574,12 +574,21 @@ What `tools/check_contrast.py` (`validateContrast`) measures over the real layer
   grey-teal ghosts over the new layers, lighter than all of them and over the decor ceiling (mean distance 0.22 to 0.33, mid 0.30 to
   0.33). They take D120's near leaf greens `2c3a28`, `2c3d2e`, `2c3724`: 0.090 to 0.172 (see Falling leaves). They stay in front of the
   mid layer, not in the foreground.
+- **No scenery ends in a vertical edge ([#607](https://github.com/jlogicgames/edgard_in_kimeria/issues/607), playtest 3, 2026-11-27):**
+  the author saw "a bush cut off vertically". Two shapes read so, both on the play layer. The wide tile bush (gids 127 to 129, four
+  places in `forest-2`, one in `forest-1`) is gone; a `Decor` bush stands at each place, moved off the false honey fungus (x 1632) and
+  beside the bush already there (x 392 and 776 in `forest-2`, mirrored). The back rock ([D112](DECISIONS.md#d112-forest-0-and-forest-2-draw-the-same-world-and-the-play-layer-is-retiled-236))
+  stood on straight sides: the mounds are now mounds with sloping sides (the four `back-boulder` corner pieces in `terrain.grid`), and the
+  ruin at the entry keeps its dome shoulders (`ruin-cap-l`, `ruin-cap-r`) and slopes down to the floor in two flank tiles
+  (`ruin-flank-a` over `ruin-flank-b`, one column out every two rows), with three joint tiles where two slopes meet (`ruin-joint`,
+  `ruin-top-a` over `ruin-top-b`). Same palette, no collision changed.
 - **Third-party tile scenery (#189):** `forest-terrain` and the new layers replace `Tileset.png`, deleted with D112. Its props (the bare
   trees, the floor tufts, recoloured dark moss `3a5a50`/`2a443f`/`4c7064` because the ochre was the honey fungus's reserved hue) are
   copied pixel for pixel into the terrain sheet at their old tile ids (`prop-<id>` in `terrain.grid`) and stay reported, not gated, until
   they are redrawn ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)).
   Since [D120](DECISIONS.md#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21) their colours are in the depth palette: the violet contour `222034` is bark `2d2621`, the tufts moss
-  `222c1d / 2c3627 / 38412f`; measured outline 0.199 (tufts), 0.164 (dead trees), both inside the decor ceilings.
+  `222c1d / 2c3627 / 38412f`; measured outline 0.199 (the wide tuft, the tile bush), 0.164 (dead trees), both inside the decor ceilings. With #607 (2026-11-27) the
+  wide tuft left the sheet, and the report now measures the small one (gid 138, `forest-2`): outline 0.185, body 0.148.
   The sheet's village sign (tile ids 29, 30, 49, 50) is removed with its three placements in forest-2
   ([#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595), 2026-11-25): it came from the first mock images, the game has no
   village, and its lettering could not be read over the depth palette.
@@ -861,8 +870,8 @@ depends on it.
 | Map | Bushes | World x (left edge) |
 | --- | --- | --- |
 | `forest-0` | 12 (two per room) | 200, 300, 700, 1140, 1560, 1860, 2340, 2620, 3140, 3420, 3860, 4230 |
-| `forest-1` | 3 | 240, 600, 780 |
-| `forest-2` | 7 | 400, 768, 1060, 1380, 1580, 1800, 2700 |
+| `forest-1` | 4 | 240, 392, 560, 832 |
+| `forest-2` | 11 | 392, 432, 776, 816, 944, 1380, 1580, 1632, 1808, 2700, 3064 |
 
   `DecorTest` pins these counts and measures every bush against the floor line. The brush trigger is the visible
   body (`Decor.BODY_INSET_LEFT/RIGHT/TOP`), pinned by `DecorTest`.
@@ -1573,7 +1582,7 @@ Measured 2026-11-16 (outline, worst placement; `python3 tools/check_contrast.py`
 | Active: mechanisms | lever 0.47 (both frames; was 0.25 to 0.32, below the floor in front of the forest-2 rubble), ladder 0.43, vertical wall 0.42, carried torch 0.39, platform 0.37, lift 0.44 (the escalator's straw top, 2026-11-21, #236; was 0.37), stone 0.30 |
 | Active: enemies and hero | hero 0.35 (D79, both facings; the old 48 px hero was 0.46), RedMob 0.32, Boss 0.30, Bat 0.29, YellowMob 0.28 (2026-11-21, on the forest layers with the moon rim: hero 0.56, the redrawn RedMob 0.70 over its four idle frames with body 0.45, below the hero's 0.56, and the redrawn Bat 0.59 over its four flap frames; the redrawn Boss 0.72 over its four THRONE frames with body 0.47 and the redrawn YellowMob 0.56 over its four IDLE frames with body 0.45, both bodies below the hero's 0.56) |
 | Decor (after the recolour) | bush 0.12 to 0.18 (was 0.31 to 0.39), look-alike 0.16 (was 0.45), hanging vine 0.06 to 0.16 (was 0.47 to 0.57) |
-| Background (tile layer) | rocks 0.29, dead trees 0.37, tile bushes 0.36: louder than the ceiling (the village sign, 0.37, is gone, [#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595)). This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
+| Background (tile layer) | rocks 0.29, dead trees 0.37: louder than the ceiling (the village sign, 0.37, is gone, [#595](https://github.com/jlogicgames/edgard_in_kimeria/issues/595); the tile bushes, 0.36, are gone, [#607](https://github.com/jlogicgames/edgard_in_kimeria/issues/607)). This is third-party art, reported and not gated until it is replaced ([#189](https://github.com/jlogicgames/edgard_in_kimeria/issues/189)). |
 
 The decor recolour changed only the palette lines of `art/objects/decor/{bush,lookalike,vine}.grid`; the drawings, frames
 and the D64 brush trigger are unchanged. The lever (then the author's wall-mounted 3/4 drawing, `art/objects/lever-pixel.png`) gained a 1 px

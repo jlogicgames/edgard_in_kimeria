@@ -291,7 +291,7 @@ NO_SPRITE = {
 }
 SPRITE_GROUPS = ('SpawnPoints', 'Collisions')
 # Tile-layer scenery reported against the map background (report only, #189): (row range, column range) in the tileset.
-TILE_SCENERY = {'tile bush': ((4, 6), (6, 8)), 'dead tree': ((4, 6), (9, 16))}
+TILE_SCENERY = {'tuft': ((6, 6), (17, 17)), 'dead tree': ((4, 6), (9, 16))}
 
 
 def linear(c):
