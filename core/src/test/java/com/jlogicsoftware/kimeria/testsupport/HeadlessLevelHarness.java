@@ -72,14 +72,20 @@ public final class HeadlessLevelHarness {
     public final java.util.List<String> sounds = new java.util.ArrayList<>();
     /** The names looping now: added by {@code GameContext.loopSound}, taken out by {@code stopSound}. */
     public final Set<String> loops = new HashSet<>();
+    /** The last camera position the game was given, by {@code moveCameraTo} or {@code panCameraTo}. */
+    public final Vector2 camera = new Vector2();
+    /** Returned by {@code GameContext.isCameraPanning}: off unless a test turns it on. */
+    public boolean cameraPanning;
     private final GameContext game = (GameContext) Proxy.newProxyInstance(
         GameContext.class.getClassLoader(), new Class<?>[]{GameContext.class}, (proxy, method, args) -> switch (method.getName()) {
             case "logicalResolution" -> new Vector2(640, 360);
+            case "moveCameraTo", "panCameraTo" -> { camera.set((Vector2) args[0]); yield null; }
             case "trapWarnings" -> warnings;
             case "gamepad" -> pad;
             case "touch" -> touch;
             case "language" -> Language.ENGLISH;
             case "isGameStarted" -> true;
+            case "isCameraPanning" -> cameraPanning;
             case "actionGlyph" -> TouchGlyph.SWORD;
             case "rangedGlyph" -> rangedGlyph;
             case "coachSignals" -> { if (coachSignals != null) coachSignals.accept((com.jlogicsoftware.kimeria.ui.TouchCoach.Signals) args[0]); yield null; }

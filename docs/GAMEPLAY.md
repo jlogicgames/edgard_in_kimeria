@@ -57,7 +57,8 @@ with Action never climbs ([D28](DECISIONS.md#d28-vertical-ladders)).
 
 Removed (2026-11-20, [D111](DECISIONS.md#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513)): there is no standing look. Holding Up or Down while standing still does
 nothing by itself; Up and Down keep every other use (ladders, Up picks up and uses, Down puts down, the touch stick, menus). The
-camera follows the hero and the room clamp only.
+camera follows the hero and the room clamp only: sideways with a dead zone, up and down with a slack above the hero and an
+ease, so a jump from the floor does not scroll ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)).
 
 **Esc/Start** pauses. Menus: arrows/Tab navigate, Enter/Space/A confirm, Esc/B back;
 Esc/B/Start resumes the pause menu. Debug keys F1 colliders, F2 invulnerability,
@@ -72,7 +73,7 @@ While holding a stone or torch near a usable lever, show its Up instruction
 together with any active Put down/Throw reminder; carrying must never hide the mechanism lesson.
 This combined label stays near the lever, with Turn on/Turn off reflecting its state.
 Each new pickup arms a fixed-position Put down/Throw reminder. It fades out when
-the camera begins scrolling after the hero leaves its dead zone, and stays hidden
+the camera begins scrolling (either way) after the hero leaves its dead zone, and stays hidden
 for the rest of that pickup. Stopping/returning does not revive it; picking up an
 object again in the first room does. A room-edge camera clamp does not dismiss it
 merely because the hero walked, and shake/respawn pans do not count. Mechanism

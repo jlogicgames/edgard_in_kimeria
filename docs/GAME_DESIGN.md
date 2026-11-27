@@ -435,7 +435,7 @@ instructions on retries and returns. The former 320×144 region is removed. A he
 stone/torch does not suppress a nearby usable mechanism's lesson: show its activation
 alongside any active placement/throwing reminder, near the mechanism. Each new pickup
 in the teaching room arms its own fixed-position reminder; the first camera scroll
-after leaving the dead zone dismisses it until the next pickup. Stopping or returning
+after leaving the dead zone (either axis, [D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)) dismisses it until the next pickup. Stopping or returning
 does not revive it. Mechanism lessons remain repeatable independently of that
 reminder, so the text cannot linger at a screen edge after travelling. Later rooms/levels omit these
 control lessons. This is presentation scope, not a change to one-slot/input rules.

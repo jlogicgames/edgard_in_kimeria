@@ -676,6 +676,8 @@ Authored checkpoints cannot bypass boss defeat or its victory walk. See [BOSS.md
 - **Tracked in:** [#131](https://github.com/jlogicgames/edgard_in_kimeria/issues/131),
   [author clarification and playtest checks](https://github.com/jlogicgames/edgard_in_kimeria/issues/131#issuecomment-6360805528),
   [directional actions](DIRECTIONAL_CONTROLS.md), [room authoring](ROOMS.md).
+- **Amended by [D154](#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111) (2026-11-27):** the carrying reminder still ends when the camera starts to scroll, and vertically that is now
+  later: a jump from the floor no longer scrolls.
 
 ## D25. Standing look with delayed vertical inspection
 
@@ -3831,6 +3833,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D111. Look up and down are removed: the camera no longer pans for a look (D25, D29 superseded) ([#513](https://github.com/jlogicgames/edgard_in_kimeria/issues/513))
 
 - **Status:** Decided by the author, 2026-11-20. Supersedes D25 (standing look) and D29 (the outline yields to the look); their text stays as the record.
+  Amended by [D154](#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111) (2026-11-27): the follow camera has an upward slack and an ease; its range is unchanged.
 - **Decision:** Holding Up or Down while standing still no longer shows a head pose or pans the camera (100 px up, 150 px down, after 0.3 s or 1 s by a target). `LookAround`, the `LOOK_UP` and `LOOK_DOWN` states and clips, `GameplayInput.lookDirection` and the look sentence of `ABOUT_BODY` and `ABOUT_BODY_LEFT_HANDED` (all five catalogs, a pure deletion) are gone. Up and Down keep every other use: ladders, Up/Down + Action to pick up and put down, the touch stick, menus. The camera is the ordinary follow camera clamped to the room (`Player.cameraTarget`).
 - **Why:** No puzzle, hint or room needs the look. The Forest parallax (D108) is built for the floor camera, and a 100 to 150 px pan moved every layer far past the art and the `parallax_mock.py` check; the author chose to drop the feature rather than keep fixing its interaction with the parallax.
 - **Hero frames:** the clips `LOOK_UP` and `LOOK_DOWN` (D79, 1 frame each) are removed from `Player`. The look frames (`r.look1`, `r.look2` and the left pair, sheet row 5) were first left in the grid and the sheets; a follow-up change removed them: the `look` clip left `HERO_CLIPS` (`tools/sprite_layouts.py`), the hero sheets went from 15 to 14 rows (960 to 896 px), and every later row moved up by one (clamber 6 to 5, hit 7 to 6, appear 8 to 7, disappear 9 to 8, carry idle 10 to 9, carry run 11 to 10, throw 12 to 11, land 13 to 12, pull 14 to 13) in `Player`, `HeroFrameTest`, `SpriteSheetContractsTest` and the contrast gate's carry-idle crop.
@@ -5042,3 +5045,40 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   stem fail, a stretch where nothing fits passes, a suggested piece passes the other rules and each of them can refuse it, a
   continuous band, a wrong top y and a canopy in a stone room fail, a new hanging or rising variant must join a table); every room
   of every forest map must now have a foreground, `forest-1` included, so a new room cannot stay outside the gate.
+
+## D154. The camera eases up and down, with slack above the hero (#678, 2026-11-27, amends D24, D111)
+
+- **Status:** Decided by the author, 2026-11-27: the camera follows the hero smoothly on the vertical axis, as it does sideways.
+  The slack and the stiffness are first values, to be tuned by feel.
+- **Problem:** the camera top was `position.y - 200` clamped to the room, with no slack and no limit that mattered (1400 px/s).
+  A shipped room (368 px, view 360) leaves 8 px of vertical travel, and the camera stood still, then covered all 8 px in step
+  with the hero while the top of his box crossed y 200 to 208, at jump or fall speed (as little as about 0.03 s). Every full
+  jump from the floor (about 58 px; the threshold was 48 px up) made it jolt up and back, and the foreground layers (1.6 and
+  2.2) moved about 13 and 18 px with it.
+- **Decision:** `Player` keeps a vertical focus and `VerticalCameraFollow` eases the camera to it.
+  - *Slack, upward only:* the focus stays while the hero's box top is 0 to `RISE_SLACK` 24 px above it and is pushed beyond
+    that. Downward it has none: a hero who comes down takes it at once, so on a floor of a shipped room the camera rests at
+    its authored top, 8. A jump from the floor does not scroll; the camera starts when the hero is more than 72 px above it.
+  - *Ease:* a critically damped spring (`STIFFNESS` 8 per second) toward `focus - 200`, solved exactly per step, so it does
+    not depend on the frame rate (D98). An 8 px move peaks at 23.5 px/s (under 0.4 px a frame at 60 Hz), is 90 % done after
+    about 0.5 s and at rest after about 0.9 s, when it snaps to the target. Starting at rest it never leaves the range of the
+    targets it has had, so the room clamp on the target keeps the camera in the room.
+  - *Unchanged:* the sideways dead zone and its 1400 px/s chase, the room clamp, the room change cut and the respawn pan (D3).
+    A pan owns the camera: the ease waits for it. A dev map reload settles both focuses where the hero was left. `Player.roomCameraTarget` (cuts, tests, load checks) has no slack and no ease.
+  - *Carry reminder (D24):* it ends when the follow target starts to scroll, on either axis. The target includes the vertical
+    slack, so a jump from the floor, which no longer scrolls, no longer ends it.
+- **Rejected:** a symmetric vertical dead zone (after a climb and a landing the camera would rest below 8, off the frame the
+  rooms, the parallax gates and the load checks assume); an ease with no slack (every jump from the floor would bob the view);
+  a speed limit alone (it starts and stops abruptly, and a tall room could leave the hero behind).
+- **Parallax and gates:** the camera top still lies between 0 and 8, so `check_bleed` and the steady camera of rule B hold; the
+  jump apex that rule B measures at camera top 8 is now what a jump from the floor shows.
+- **Allocation:** the follow writes into one reused vector and the view height is cached (before: two `Vector2` made per frame).
+- **Tests:** `VerticalCameraFollowTest` (slack, ease without overshoot, 60 against 144 Hz, the range of the targets),
+  `VerticalCameraTest` (in `forest-1-escalators`: room entry, a jump from the floor does not scroll, a pan holds the ease, a
+  map reload does not jump; a rise and a fall move at most 0.4 px a frame and rest at 0 and 8).
+  `DirectionalActionsTest.aJumpFromTheFloorKeepsTheCarryingReminder`.
+  `DirectionalActionsTest.carryingReminderEndsOnCameraScrollAndRearmsOnEachPickup` now holds the hero in the air for 90 frames
+  after its teleport, so the camera is at rest before it measures; its assertions are unchanged.
+- **Web run (2026-11-28, release build, a test ladder added to the served `forest-0` only, frames stepped by script):** a jump
+  from the floor moved the picture by 0 px; climbing and falling moved it the full 8 px over many frames, at most 1 px between two
+  frames. Not checked: desktop, a lift, and how it looks to a person.

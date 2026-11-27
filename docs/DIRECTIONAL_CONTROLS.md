@@ -65,7 +65,7 @@ of a ladder zone in either ladder state, so one key never means two things; a le
 
 Removed (2026-11-20, [D111](DECISIONS.md#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513)): there is no standing look. Holding Up or Down while standing still does
 nothing by itself; Up and Down keep every other use (ladders, Up picks up and uses, Down puts down, the touch stick, menus). The
-camera follows the hero and the room clamp only.
+camera follows the hero and the room clamp only ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)).
 
 ## Bindings and feedback
 
