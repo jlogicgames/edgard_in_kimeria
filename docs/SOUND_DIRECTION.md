@@ -336,7 +336,7 @@ set sounds beside the forest-2 music and ambience, which waits for a room that p
 
 ### Forest flying beetle (#330, seeds 7501-7505, [D145](DECISIONS.md#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398))
 
-Four voice-synth sounds, generated 2026-11-26; not yet heard by the author in the game ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). The ground beetle's voice taken
+Four voice-synth sounds, generated 2026-11-26; the author heard them in the game by 2026-11-27 ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). The ground beetle's voice taken
 into the air, higher and fluttering.
 
 - `flying_beetle_notice` (0.28 s, RMS -19.0 dBFS): its own call (D100): a high double chirr, two short rough buzzes with a 34 Hz
