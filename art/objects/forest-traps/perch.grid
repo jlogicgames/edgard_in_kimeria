@@ -3,6 +3,9 @@
 # perch-left is the same branch on the left of a trunk. Active tier (D76): ink contour, living bark in lengthwise streaks
 # with a knot, a pale walkable top line (the log's "stand here" line), tapering to a green leaf tuft at its tip; nothing
 # hangs under its middle (#556: that read as an animal's leg). No crack, no grey: those mean a rotten branch.
+# Leaf tuft (#594, 2026-11-27): dark leaves with pale moonlit tips `T` on top, so the tuft keeps a clear contrast margin
+# against both the moon and the dark sky. `G` is darker than the moon rim's SOURCE_L, so the export also rims the `G` pixels on
+# a lit edge in `c4cfe8` (five a frame), as in the sheet the author approved.
 # Joint (D130, 2026-11-24): the collar is the trunk's red-brown bark (1 2 3 4) and the root (columns 0-6) ramps into it through a
 # half step (5 6 7); keys 1-7 are kept out of the moon rim.
 size 32 16
@@ -11,7 +14,8 @@ color W 4a2e1c
 color w 8a5a30
 color l c08a4c
 color g 2f5a2c
-color G 5f8f3a
+color G 3a5e22
+color T c4e89a
 color 1 47302a
 color 2 2e1813
 color 3 28130e
@@ -21,12 +25,12 @@ color 6 5a3722
 color 7 392015
 frame perch
 ................................
-44......................GG......
-414kkkkkkkkkkkkkkkkkkkkGGGkGGk..
-4155llllllllllllllllllllllGGGGGk
-42276wwwwwwwwwwwlwwwwwwlwwwgGGGG
+44......................TT......
+414kkkkkkkkkkkkkkkkkkkkGGGkTTk..
+4155llllllllllllllllllllllTGGTTk
+42276wwwwwwwwwwwlwwwwwwlwwwgGGGT
 4226wwWWWWwwwwwkkWwwwWWwwwkkGgGG
-42267wwwwwwWWwkWWkwwwwwkkk.GGgG.
+42267wwwwwwWWwkWWkwwwwwkkk.TGgG.
 42266wWWwwwwwwwkkwwkkkkk...GgGGk
 43366wwwwWWwwwkkkkk.........GGk.
 43477Wwwkkkkkk...............k..

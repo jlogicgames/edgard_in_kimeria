@@ -2,6 +2,8 @@
 # tapering to a broken tip, a split with a pale splinter mid-top, one dry leaf under the tip; #556); crumble1 and crumble2
 # are the D7 telegraph, as the log's. The -left frames are the same branch on the left of a trunk. Not the FallingBranch
 # (tan, violet leaves, overhead).
+# The dry leaf is a pale tan (#594, 2026-11-27, was 9c6a34): it keeps a clear contrast margin against the moon, and its
+# hue stays away from the fungi's reserved honey `e2b25a`.
 # Joint (D122, D130, 2026-11-24, the author: "the left branch is a completely different colour and has an obvious cut"): the root
 # (columns 0-6) ramps from the grey wood through a half step (5 6 7) into the trunk's red-brown bark (1 2 3 4) and flares a row up
 # and down into a collar; the rot and the split stay along the length, none at the joint. Keys 1-7 are kept out of the moon rim.
@@ -11,7 +13,7 @@ color r 4a4048
 color R 7a6e6c
 color p b8ad9c
 color b efe6c4
-color o 9c6a34
+color o d9a688
 color 1 47302a
 color 2 2e1813
 color 3 28130e

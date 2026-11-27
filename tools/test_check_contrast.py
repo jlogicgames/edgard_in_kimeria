@@ -106,6 +106,7 @@ SPIDER_OFF_POS = 3
 BAND_BLOCK_INSET = 8  # a block starting this far inside the pounce band
 TWO_PLACEMENTS = 2
 SHORT_FLOOR_WIDTH = 400  # a floor ending 10 px past the authored body
+WALL_BEYOND = 8  # a wall face this far past the authored body's left edge, inside the pounce and lunge reach
 SHELF_LEFT = 96  # the shelf a spider walks, its lip at the right end
 SHELF_RIGHT = 160
 SHELF_TOP = 208
@@ -448,6 +449,24 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(max(short), authored_hi, 'floor ends under the authored body: no widening to the right')
         partial = xs(legs(SHORT_FLOOR_WIDTH))
         self.assertEqual(max(partial), SHORT_FLOOR_WIDTH - body_end, 'the pounce stops where the body would leave the floor')
+
+    def test_a_solid_stops_the_pounce_and_lunge_widening_but_a_one_way_platform_does_not(self):
+        """#594: Spider.solidAt and Wolf.solidAt stop the leap against a solid, so no body is measured inside or past a wall."""
+        authored_lo = SPIDER_RANGE_X - SPIDER_OFF_NEG * gate.TILE
+        body_x = {'Spider': gate.SPIDER_BODY_X, 'Wolf': gate.WOLF_BODY_X}
+        frame_y = {'Spider': BODY_FLOOR - gate.SPIDER_BODY_FLOOR, 'Wolf': BODY_FLOOR - gate.WOLF_FRAME_HEIGHT}
+        reach = {'Spider': gate.SPIDER_POUNCE_REACH, 'Wolf': gate.WOLF_LUNGE_REACH}
+        for kind in body_x:
+            wall_face = authored_lo + body_x[kind] - WALL_BEYOND  # the right face of a block standing on the floor, left of the range
+
+            def lefts(block_type):
+                root = ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{WIDE_FLOOR}" height="48"/>'
+                                     f'<object{block_type} x="{wall_face - gate.TILE}" y="{BODY_FLOOR - gate.TILE}" width="{gate.TILE}" height="{gate.TILE}"/>'
+                                     f'</objectgroup><objectgroup name="SpawnPoints"><object type="{kind}" x="{SPIDER_RANGE_X}" y="{frame_y[kind]}">'
+                                     f'<properties><property name="offNeg" value="{SPIDER_OFF_NEG}"/></properties></object></objectgroup></map>')
+                return [x for _, _, x, _ in gate.body_spots({'forest-9': root})]
+            self.assertEqual(min(lefts('')) + body_x[kind], wall_face, f'{kind}: the body stops against the wall')
+            self.assertEqual(min(lefts(' type="Platform"')), authored_lo - reach[kind], f'{kind}: a one-way platform is not in the way')
 
     def test_a_wolfs_body_is_swept_along_its_range_widened_by_the_lunge_reach_while_floor_lasts(self):
         """#331 (D115): a wolf killed in its lunge slides on to the line's end over floor, so its body is measured out to the reach."""
