@@ -5,16 +5,17 @@ import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
 import com.jlogicsoftware.kimeria.entity.Hitbox;
-import com.jlogicsoftware.kimeria.entity.objects.Escalator;
-import com.jlogicsoftware.kimeria.physics.CollideBody;
-import com.jlogicsoftware.kimeria.world.Level;
 
 /** Port of Dart's {@code RedMob}: like {@link YellowMob} but attacks in melee range instead of just charging. */
-public class RedMob extends Enemy<RedMob.State> implements CollideBody {
+public class RedMob extends FallenEnemy<RedMob.State> {
     public enum State {IDLE, RUN, HIT, ATTACK}
 
     private static final float STEP_TIME = 0.1f;
     private static final float RUN_SPEED = 80f;
+    /** The lying body in the 48x32 frame, the death clip's last (D101): what a weapon or a stomp reaches. */
+    private static final Hitbox BODY = Hitbox.rect(3, 25, 26, 7);
+    /** The body's crumble chips, its live palette (D117): wine tunic, scarlet lights, its folds and the bone whip. */
+    private static final float[][] CHIPS = {{.424f, 0, .078f}, {.973f, .016f, .251f}, {.227f, 0, .063f}, {.722f, .659f, .596f}};
     // The attack animation has 4 frames of STEP_TIME * 2 each: two wind-up frames (raised arm),
     // one strike frame (whip out) and one recovery frame. Only the strike frame is dangerous.
     private static final float ATTACK_FRAME_TIME = STEP_TIME * 2;
@@ -23,16 +24,13 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
     private static final String WHIP_SOUND = "whip_crack";
 
     private final Hitbox attackHitbox;
-    private Level level;
     private float targetDirection = -1;
     private boolean isAttacking = false, whipHeard;
     private float attackElapsed = 0f;
-    private boolean inQuickSand;
-    private Escalator currentEscalator;
 
     public RedMob(Assets assets, GameContext game, float x, float y, float w, float h,
                   float offNeg, float offPos) {
-        super(assets, game, "Mobs", x, y, w, h, offNeg, offPos, State.class);
+        super(assets, game, "Mobs", x, y, w, h, offNeg, offPos, State.class, State.HIT, BODY, CHIPS, true);
         // The art body is x 5..25, y 3..32 of the 48x32 frame (red-mob.grid; the run's back foot reaches
         // x 2). The hitbox (bottom on the feet) keeps enemies easy to hit and stomp (D10).
         hitbox = Hitbox.rect(6, 4, 20, 28);
@@ -49,10 +47,6 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
 
         rangeNeg = x - offNeg * TILE_SIZE;
         rangePos = x + offPos * TILE_SIZE;
-    }
-
-    public void setLevel(Level level) {
-        this.level = level;
     }
 
     @Override
@@ -134,31 +128,7 @@ public class RedMob extends Enemy<RedMob.State> implements CollideBody {
 
     @Override
     protected void setDefeated() {
-        setState(State.HIT);
-    }
-
-    @Override
-    public Hitbox hitbox() {
-        return hitbox;
-    }
-
-    @Override
-    public boolean isInQuickSand() {
-        return inQuickSand;
-    }
-
-    @Override
-    public void setInQuickSand(boolean value) {
-        inQuickSand = value;
-    }
-
-    @Override
-    public Escalator currentEscalator() {
-        return currentEscalator;
-    }
-
-    @Override
-    public void setCurrentEscalator(Escalator escalator) {
-        currentEscalator = escalator;
+        super.setDefeated();
+        isAttacking = false; // a mob killed mid-whip leaves no live attack behind
     }
 }

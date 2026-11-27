@@ -41,8 +41,20 @@ public final class HeadlessLevelHarness {
     private final GamepadInput pad = new GamepadInput();
     private final TrapWarnings warnings = new TrapWarnings();
     private final ArtifactInventory artifacts = new ArtifactInventory();
+    /** The empty region the stub assets give, which remembers the sheet and the cell it was cut from. */
+    public static final class CellRegion extends TextureRegion {
+        public final String path;
+        public final float sheetX, sheetY;
+
+        private CellRegion(String path, float sheetX, float sheetY) {
+            this.path = path;
+            this.sheetX = sheetX;
+            this.sheetY = sheetY;
+        }
+    }
+
     private final Assets assets = new Assets() {
-        @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new TextureRegion(); }
+        @Override public TextureRegion region(String path, float x, float y, float w, float h) { return new CellRegion(path, x, y); }
         @Override public TextureRegion region(String path, com.badlogic.gdx.graphics.Texture.TextureFilter filter) { return new TextureRegion(); }
         @Override public BitmapFont font(int size) { return font; }
     };

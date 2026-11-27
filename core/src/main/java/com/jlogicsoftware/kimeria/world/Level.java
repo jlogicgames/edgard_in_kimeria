@@ -49,6 +49,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
+import com.jlogicsoftware.kimeria.entity.enemy.Remains;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.environment.Checkpoint;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
@@ -1001,6 +1002,7 @@ public class Level implements WorldObject {
                     Bat bat = new Bat(assets, game, o.x, o.y, o.width, o.height, vertical,
                         o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
                     bat.setPlayer(player);
+                    bat.setLevel(this);
                     objects.add(bat);
                     roomEnemies.put(o.id, bat);
                 }
@@ -2131,6 +2133,8 @@ public class Level implements WorldObject {
         if (!parallax.isEmpty()) parallax.renderFront(batch, visibleWorldRect, currentRoomBounds(), ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height));
     }
 
+    private final Rectangle debugBodyScratch = new Rectangle();
+
     /** F1 debug gizmos: collision blocks in green, Deadlines in orange, actor hitboxes in red. */
     public void renderDebug(ShapeRenderer sr) {
         sr.setColor(0.2f, 0.9f, 0.4f, 1f);
@@ -2152,7 +2156,11 @@ public class Level implements WorldObject {
         sr.setColor(0.9f, 0.3f, 0.3f, 1f);
         drawHitbox(sr, player);
         for (WorldObject o : objects) {
-            if (o instanceof Actor<?> actor) {
+            if (o instanceof Remains body && body.isRemains()) {
+                // A body (D101) is reached by its own box, not by the one it stood in.
+                Rectangle r = body.remainsInto(debugBodyScratch);
+                sr.rect(r.x, r.y, r.width, r.height);
+            } else if (o instanceof Actor<?> actor) {
                 drawHitbox(sr, actor);
             }
         }
@@ -2160,7 +2168,7 @@ public class Level implements WorldObject {
         // What kills on touch, where it differs from the body box.
         sr.setColor(1f, 0.55f, 0.1f, 1f);
         for (WorldObject o : objects) {
-            if (o instanceof Enemy<?> enemy && enemy.hasSeparateHurtbox()) {
+            if (o instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.hasSeparateHurtbox()) {
                 Rectangle r = enemy.hurtBounds();
                 sr.rect(r.x, r.y, r.width, r.height);
             }
@@ -2168,7 +2176,7 @@ public class Level implements WorldObject {
 
         // Melee attack colliders: yellow while winding up, magenta on the frames that hurt.
         for (WorldObject o : objects) {
-            if (o instanceof Enemy<?> enemy && enemy.attackBounds() != null) {
+            if (o instanceof Enemy<?> enemy && !enemy.isDefeated() && enemy.attackBounds() != null) {
                 Rectangle r = enemy.attackBounds();
                 if (enemy.isAttackActive()) sr.setColor(1f, 0.2f, 1f, 1f);
                 else sr.setColor(1f, 0.9f, 0.2f, 1f);

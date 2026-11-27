@@ -3134,9 +3134,9 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     and its body lies on the floor below. Over a pit it falls out and leaves nothing.
   - **Wolf (#331): yes, with its own reaction ([D115](#d115-the-forest-wolf-it-sees-far-outruns-the-hero-and-lunges-along-a-line-jump-it-then-strike-331-240-398)).** A large body does not rock. It twitches (a 1 px shudder of the same
     frame) when the hero passes. It crumbles and burns like the others.
-  - **Bat (existing): yes.** It falls when killed. Over a pit it leaves nothing.
-  - **RedMob and YellowMob (existing): the author decides per mob in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).** Both are in rooms the author has played,
-    and their death animation and the sword's blood (D65) would change.
+  - **Bat (existing): yes, built ([#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478), see the update below).** It falls when killed. Over a pit it leaves nothing.
+  - **RedMob: yes, built; YellowMob: yes, built (author, 2026-11-27, [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478)).** Their death clips and the sword's blood (D65) stay;
+    the clip's last frame now stays as the body.
   - **Boss: no.** Its defeat is a scripted scene with the healer.
   - **Traps** (stump, root, bomb, hive): **no.** They are not monsters, and their spent states are already authored.
 - **Why:** the body is the clearest record of what the hero did. It keeps a quiet kill readable after the hit's flash,
@@ -3162,7 +3162,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - **Tests and budgets.** Behaviour in `BeetleTest`. `BeetleFxTest` sizes the pools at 108 and 296 from peaks of 85 and
     236, including three bodies crumbling and three burning at once. `AllocationBudgetTest.beetleThroughTheRealLevel`
     measured 0.1 B/frame in 3 runs.
-  - **The other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).**
+  - **The other monsters have followed** (see the updates below).
 - **Update (#503, 2026-11-19): a fireball wins the same-frame tie too.** The hero updates after the monsters, and a cast ball used
   to join the object list a frame late, so on the frame a bite (or the snail's gob, D106) became due the ball had not moved, and on
   the next one the monster landed its hit first and the ball met a hero who could no longer fight. Now a ball cast this frame flies
@@ -3203,6 +3203,30 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Update ([#571](https://github.com/jlogicgames/edgard_in_kimeria/issues/571), 2026-11-21, [D117](#d117-a-monster-body-keeps-its-live-palette-ink-and-moon-rim-the-pose-is-the-cue-571-2026-11-21)): the body keeps the live palette.** The "Contrast tier (D76): decor"
   bullet above is superseded: a body is the `dead` frame in the monster's live palette, ink and moon rim, with no recolour,
   tint or halo, and is measured as active. The pose stays the readability rule; the behaviour (harmless, rocks, crumbles, burns) is unchanged.
+- **Update ([#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478), 2026-11-27): the bat, the red mob and the yellow mob.** The author decided that both mobs leave a body.
+  - **Code.** `entity/enemy/FallenEnemy.java` is the base of the three: the death clip plays while the monster falls
+    (`CollideBody`, gone below the room over a pit), then it lies as a `Remains` with the shared crumble, burn and `RemainsFx`.
+    No poof and no cross-fade: the sword's blood (D65) and the death clip already show the kill.
+  - **Pose and art.** The bat gains one frame, `dead` in `bat.grid` (cell (4, 4) of `Bat.png`): lying on its side, one wing
+    spread flat, eyes shut. A mob's body is its death clip's last frame (`down`); the red mob's moved 1 px down, so it rests
+    on the floor line instead of a pixel above it. Closest live frames: bat 84.0 %, red mob and yellow mob 84.5 %.
+  - **Reaction.** The bat is small and rocks (`RemainsSwing`); the two mobs are big and twitch like the wolf, 1 px for 0.3 s.
+  - **Reach.** A body's box is its drawing, not the standing hitbox: bat 16x6, red mob 26x7, yellow mob 26x9, mirrored with
+    the facing. A mob falls with its standing box, so a body near a wall lands as the live mob stood.
+  - **A red mob killed mid-whip** drops its attack at once.
+  - **Contrast** (`BODY_SWEEP`, active): outline at worst bat 0.538, red mob 0.508, yellow mob 0.487 (floor 0.28). The gate
+    measures a body facing right; a one-off check of the mirrored mobs in review gave red 0.518 and yellow 0.474.
+  - **Found in review and fixed with this:** a swing that killed two monsters on following frames crumbled the first one's
+    body (the hero now remembers every kill of the swing); a flying bat set no velocity, so it moved no body or bush (D119);
+    a body no longer reacts before its death clip is over. A bat that starts its fall overlapping a solid leaves it by the
+    nearer face (#600), and the contrast gate models that.
+  - **Allocation:** `AllocationBudgetTest.inheritedMonsterBodiesThroughTheRealLevel` 0.2 B/frame in 3 runs (ceiling 8).
+  - **Tests changed, none loosened.** `RemainsTest` now lists the `Remains` classes from the compiled classes (its regex would miss
+    a subclass), reads frames from any row of a sheet, and checks the three bodies' cell, box, floor line, pit fall, stomp and
+    the dropped whip. `test_enemy_sprites` no longer exempts the red mob's `down` frame from the floor line, and `Bat.png`
+    has one more read cell. The test harness's empty sprite regions remember their sheet and cell. `RoomReplayTest`'s bot
+    waits only for a live bat: a body left beside it held the `forest-entry` collection route for ever. Every pinned room
+    time is unchanged (that route: 12.70 s of 30).
 
 ## D102. The forest spider: it hears, notices, and pounces at where the hero stood; make it miss, then strike (#328, #240, #398)
 
