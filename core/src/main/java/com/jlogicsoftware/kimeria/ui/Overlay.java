@@ -6,24 +6,27 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.IntArray;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.effects.Shaders;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Immediate-mode UI for the menu/pause/game-over screens (Dart drew these as
  * Flutter widgets via Flame's overlay system, Rust as a {@code bevy_ui} node
  * tree; here they're plain draws + hit-tests, to avoid a Scene2D skin for a
  * handful of simple screens).
+ *
+ * <p>A menu frame allocates nothing (#464): a string is laid out the first time it is shown and the layout is kept, and the
+ * queued draws live in reused arrays. The kept layouts assume the menu's strings come from a fixed set (the catalogs and
+ * the labels built from them, and the story paragraphs {@link #bodyHeight} measures); the one changing string, the FPS
+ * counter, has a single layout of its own.
  *
  * <p>Panels/buttons are solid-colour quads, drawn immediately through the
  * shared Y-down screen projection. Text is different: a {@link BitmapFont}'s
@@ -57,10 +60,11 @@ public class Overlay {
     private static final Color IDLE_FILL = new Color(0.10f, 0.10f, 0.14f, 0.92f);
     private static final Color HOVER_FILL = new Color(0.27f, 0.27f, 0.36f, 0.96f);
     private static final Color SELECTED_BORDER = new Color(1f, 0.82f, 0.3f, 1f);
-    private static final Color IDLE_TEXT = new Color(0.78f, 0.78f, 0.82f, 1f);
-    private static final Color HOVER_TEXT = Color.WHITE;
     private static final Color HINT_GREY = new Color(0.8f, 0.8f, 0.8f, 1f);
-    private static final Color SELECTED_TEXT = new Color(1f, 0.82f, 0.3f, 1f);
+    /** Space the menu hint leaves at the two sides of the screen together. */
+    private static final float HINT_SIDE_ROOM = 32f;
+    /** Padding of the widest label inside its button, both sides together. */
+    private static final float LABEL_PADDING = 48f;
 
     /**
      * D137 (#491): the bottom of the menu hint's text stays this far above the screen's bottom edge (it was 6 units, hard against it: 3.7 CSS
@@ -82,7 +86,19 @@ public class Overlay {
     private final KimeriaArms arms;
     private final Matrix4 textProjection;
     private final float logicalHeight;
-    private final List<Runnable> textQueue = new ArrayList<>();
+    /** Text draws queued in one frame without the arrays growing: a title, a body, eight buttons, the hint and the counter. */
+    private static final int TEXT_QUEUE_CAPACITY = 16;
+    /** The queued text draws, as parallel arrays: the font, its layout and the Y-up position (x, y pairs). */
+    private final Array<BitmapFont> textFonts = new Array<>(TEXT_QUEUE_CAPACITY);
+    private final Array<GlyphLayout> textLayouts = new Array<>(TEXT_QUEUE_CAPACITY);
+    private final FloatArray textPositions = new FloatArray(2 * TEXT_QUEUE_CAPACITY);
+    /** Kept one-line layouts by string, per font; white, as {@code BitmapFont.draw} takes the colour baked into a layout. */
+    private final ObjectMap<String, GlyphLayout> titleLayouts = new ObjectMap<>(), buttonLayouts = new ObjectMap<>();
+    /** Kept wrapped, centred layouts by string; dropped when the text tier changes the two fonts. */
+    private final ObjectMap<String, Wrapped> bodyLayouts = new ObjectMap<>(), hintLayouts = new ObjectMap<>();
+    /** The one layout of {@link #topRight}, laid out again only when its string or the font changes. */
+    private final GlyphLayout topRightLayout = new GlyphLayout();
+    private String topRightText;
     /**
      * Text blocks queued in one frame without the array growing. The dialogue screen queues 8 at most (two names, the line,
      * the checklist, two choices, two markers); 16 leaves room for #341's line and #338's fairy without an allocation (D78).
@@ -94,7 +110,8 @@ public class Overlay {
     private final IntArray blockGlyphs = new IntArray(false, BLOCK_QUEUE_CAPACITY);
     private static final int ALL_GLYPHS = -1;
     private final Matrix4 savedProjection = new Matrix4();
-    private Vector2 lastMouse;
+    private final Vector2 lastMouse = new Vector2();
+    private boolean hasLastMouse;
 
     /**
      * @param arms the game's shared {@link KimeriaArms} (cut once at load), drawn beside the selected menu button. A test
@@ -123,6 +140,40 @@ public class Overlay {
         boolean large = assets.largeText();
         bodyFont = assets.font(FontSizes.body(large));
         hintFont = assets.font(FontSizes.label(large));
+        bodyLayouts.clear();
+        hintLayouts.clear();
+        topRightText = null;
+    }
+
+    /** A wrapped layout with what it was laid out for, so a caller asking for another width or colour gets a new one. */
+    private static final class Wrapped {
+        final GlyphLayout layout;
+        final float width;
+        final int color;
+
+        Wrapped(BitmapFont font, String text, Color color, float width) {
+            layout = new GlyphLayout(font, text, color, width, Align.center, true);
+            this.width = width;
+            this.color = color.toIntBits();
+        }
+    }
+
+    private static GlyphLayout wrapped(ObjectMap<String, Wrapped> kept, BitmapFont font, String text, Color color, float width) {
+        Wrapped entry = kept.get(text);
+        if (entry == null || entry.width != width || entry.color != color.toIntBits()) {
+            entry = new Wrapped(font, text, color, width);
+            kept.put(text, entry);
+        }
+        return entry.layout;
+    }
+
+    private static GlyphLayout line(ObjectMap<String, GlyphLayout> kept, BitmapFont font, String text) {
+        GlyphLayout layout = kept.get(text);
+        if (layout == null) {
+            layout = new GlyphLayout(font, text, Color.WHITE, 0f, Align.left, false);
+            kept.put(text, layout);
+        }
+        return layout;
     }
 
     /** Converts "distance from the top" (this class's convention) to the Y-up text camera's y. */
@@ -138,47 +189,61 @@ public class Overlay {
     /** Call once before any other method each frame the overlay is drawn. */
     public void beginFrame() {
         syncFonts();
-        textQueue.clear();
+        clearText();
         blockQueue.clear();
         blockGlyphs.clear();
     }
 
     /** Call once, after every other call this frame, to actually draw the queued text. */
     public void flushText(Batch batch) {
-        if (textQueue.isEmpty() && blockQueue.size == 0) return;
+        if (textLayouts.size == 0 && blockQueue.size == 0) return;
         savedProjection.set(batch.getProjectionMatrix());
         batch.setProjectionMatrix(textProjection);
-        for (int i = 0; i < textQueue.size(); i++) textQueue.get(i).run();
+        for (int i = 0; i < textLayouts.size; i++) {
+            textFonts.get(i).draw(batch, textLayouts.get(i), textPositions.get(2 * i), textPositions.get(2 * i + 1));
+        }
         for (int i = 0; i < blockQueue.size; i++) {
             int glyphs = blockGlyphs.get(i);
             if (glyphs == ALL_GLYPHS) blockQueue.get(i).draw(batch);
             else blockQueue.get(i).draw(batch, 0, glyphs);
         }
         batch.setProjectionMatrix(savedProjection);
-        textQueue.clear();
+        clearText();
         blockQueue.clear();
         blockGlyphs.clear();
     }
 
-    public void panel(SpriteBatch batch, float x, float y, float w, float h, float alpha) {
+    private void clearText() {
+        textFonts.clear();
+        textLayouts.clear();
+        textPositions.clear();
+    }
+
+    /** Queues one text draw with its left edge at {@code x} and its first line's top {@code fromTop} px below the screen's. */
+    private void queueText(BitmapFont font, GlyphLayout layout, float x, float fromTop) {
+        textFonts.add(font);
+        textLayouts.add(layout);
+        textPositions.add(x, toTextY(fromTop));
+    }
+
+    public void panel(Batch batch, float x, float y, float w, float h, float alpha) {
         batch.setColor(0f, 0f, 0f, alpha);
         batch.draw(Shaders.whiteQuad(), x, y, w, h);
         batch.setColor(Color.WHITE);
     }
 
-    public void title(SpriteBatch batch, String text, float centerX, float yFromTop) {
-        GlyphLayout layout = new GlyphLayout(titleFont, text);
-        textQueue.add(() -> titleFont.draw(batch, layout, centerX - layout.width / 2f, toTextY(yFromTop)));
+    public void title(String text, float centerX, float yFromTop) {
+        GlyphLayout layout = line(titleLayouts, titleFont, text);
+        queueText(titleFont, layout, centerX - layout.width / 2f, yFromTop);
     }
 
-    public void body(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth) {
-        body(batch, text, centerX, yFromTop, wrapWidth, Color.WHITE);
+    public void body(String text, float centerX, float yFromTop, float wrapWidth) {
+        body(text, centerX, yFromTop, wrapWidth, Color.WHITE);
     }
 
-    public void body(SpriteBatch batch, String text, float centerX, float yFromTop, float wrapWidth, Color color) {
+    public void body(String text, float centerX, float yFromTop, float wrapWidth, Color color) {
         syncFonts();
-        GlyphLayout layout = new GlyphLayout(bodyFont, text, color, wrapWidth, Align.center, true);
-        textQueue.add(() -> bodyFont.draw(batch, layout, centerX - wrapWidth / 2f, toTextY(yFromTop)));
+        queueText(bodyFont, wrapped(bodyLayouts, bodyFont, text, color, wrapWidth), centerX - wrapWidth / 2f, yFromTop);
     }
 
     /**
@@ -262,20 +327,14 @@ public class Overlay {
     /** Height (px) that {@code text} will wrap to at {@code wrapWidth} in the body font, for layout math. */
     public float bodyHeight(String text, float wrapWidth) {
         syncFonts();
-        GlyphLayout layout = new GlyphLayout(bodyFont, text, Color.WHITE, wrapWidth, Align.center, true);
-        return layout.height;
+        return wrapped(bodyLayouts, bodyFont, text, Color.WHITE, wrapWidth).height;
     }
 
-    public void hint(SpriteBatch batch, String text, float centerX, float yFromTop) {
+    public void hint(String text, float centerX, float yFromTop) {
         syncFonts();
-        float width = centerX * 2f - 32f;
-        GlyphLayout layout = new GlyphLayout(hintFont, text, Color.WHITE, width, Align.center, true);
-        float top = hintTop(yFromTop, layout.height, logicalHeight);
-        textQueue.add(() -> {
-            hintFont.setColor(0.8f, 0.8f, 0.8f, 1f);
-            hintFont.draw(batch, layout, centerX - width / 2f, toTextY(top));
-            hintFont.setColor(Color.WHITE);
-        });
+        float width = centerX * 2f - HINT_SIDE_ROOM;
+        GlyphLayout layout = wrapped(hintLayouts, hintFont, text, Color.WHITE, width);
+        queueText(hintFont, layout, centerX - width / 2f, hintTop(yFromTop, layout.height, logicalHeight));
     }
 
     /** Where the hint's first line starts: {@code requestedTop}, but never so low that the bottom of its text is nearer than {@link #HINT_BOTTOM_MARGIN} to the bottom edge. */
@@ -283,26 +342,22 @@ public class Overlay {
         return Math.min(requestedTop, screenHeight - HINT_BOTTOM_MARGIN - textHeight);
     }
 
-    /** Right-aligned so a growing/shrinking string (a live FPS counter) doesn't drift across the screen. */
-    public void topRight(SpriteBatch batch, String text, float rightX, float yFromTop) {
+    /**
+     * Right-aligned so a growing/shrinking string (a live FPS counter) doesn't drift across the screen. One string a frame:
+     * all calls share one layout.
+     */
+    public void topRight(String text, float rightX, float yFromTop) {
         syncFonts();
-        GlyphLayout layout = new GlyphLayout(hintFont, text);
-        textQueue.add(() -> {
-            hintFont.setColor(0.8f, 0.8f, 0.8f, 1f);
-            hintFont.draw(batch, layout, rightX - layout.width, toTextY(yFromTop));
-            hintFont.setColor(Color.WHITE);
-        });
+        if (!text.equals(topRightText)) {
+            topRightText = text;
+            topRightLayout.setText(hintFont, text, Color.WHITE, 0f, Align.left, false);
+        }
+        queueText(hintFont, topRightLayout, rightX - topRightLayout.width, yFromTop);
     }
 
-    private void buttonLabel(Batch batch, BitmapFont font, String label, float x, float y,
-                             float width, float height, Color color) {
-        GlyphLayout layout = new GlyphLayout(font, label);
-        float labelY = y + (height - layout.height) / 2f;
-        textQueue.add(() -> {
-            font.setColor(color);
-            font.draw(batch, layout, x + (width - layout.width) / 2f, toTextY(labelY));
-            font.setColor(Color.WHITE);
-        });
+    private void buttonLabel(String label, float x, float y, float width, float height) {
+        GlyphLayout layout = line(buttonLayouts, buttonFont, label);
+        queueText(buttonFont, layout, x + (width - layout.width) / 2f, y + (height - layout.height) / 2f);
     }
 
     /** Left edge of the arms left of a selected button whose left edge is {@code buttonX} (#415). */
@@ -326,8 +381,7 @@ public class Overlay {
     }
 
     /**
-     * The arms on both sides of the selected button at ({@code buttonX}, {@code buttonY}), {@code buttonW} wide (#415). These two
-     * draws allocate nothing; the rest of the menu frame still does (#464).
+     * The arms on both sides of the selected button at ({@code buttonX}, {@code buttonY}), {@code buttonW} wide (#415).
      */
     public void drawSelectionArms(Batch batch, float buttonX, float buttonY, float buttonW) {
         drawSelectionArms(batch, buttonX, buttonY, buttonW, BUTTON_H);
@@ -352,8 +406,10 @@ public class Overlay {
      */
     public float buttonsWidth(Menu menu) {
         float width = menu.buttonWidth;
-        for (MenuItem item : menu.items) if (item.visible.getAsBoolean())
-            width = Math.max(width, new GlyphLayout(buttonFont, item.label.get()).width + 48f);
+        for (int i = 0; i < menu.items.size(); i++) {
+            MenuItem item = menu.items.get(i);
+            if (item.visible.getAsBoolean()) width = Math.max(width, line(buttonLayouts, buttonFont, item.label.get()).width + LABEL_PADDING);
+        }
         return Math.min(MAX_BUTTONS_W, width);
     }
 
@@ -385,8 +441,9 @@ public class Overlay {
         // Only a real mouse move may pull the selection onto the button under the cursor. A cursor
         // that merely rests over a button must not undo keyboard/gamepad navigation every frame.
         boolean mouseMoved = mouseLogical != null
-            && (lastMouse == null || lastMouse.x != mouseLogical.x || lastMouse.y != mouseLogical.y);
-        lastMouse = mouseLogical == null ? null : new Vector2(mouseLogical);
+            && (!hasLastMouse || lastMouse.x != mouseLogical.x || lastMouse.y != mouseLogical.y);
+        hasLastMouse = mouseLogical != null;
+        if (hasLastMouse) lastMouse.set(mouseLogical);
 
         int row = 0;
         for (int i = 0; i < n; i++) {
@@ -403,7 +460,7 @@ public class Overlay {
             boolean selected = menu.selected == i;
 
             // Three distinct looks: idle (dark, quiet), hovered (lighter fill), selected (gold
-            // frame, gold label and the Kimeria arms outside it, #415). Hovered + selected stack.
+            // frame and the Kimeria arms outside it, #415). Hovered + selected stack. Every label is white.
             if (selected) {
                 batch.setColor(SELECTED_BORDER);
                 batch.draw(Shaders.whiteQuad(), bx - SELECTED_FRAME, by - SELECTED_FRAME, buttonW + 2 * SELECTED_FRAME, buttonH + 2 * SELECTED_FRAME);
@@ -416,9 +473,7 @@ public class Overlay {
             batch.setColor(Color.WHITE);
             if (selected) drawSelectionArms(batch, bx, by, buttonW, buttonH);
 
-            Color textColor = selected ? SELECTED_TEXT : hovered ? HOVER_TEXT : IDLE_TEXT;
-            buttonLabel(batch, buttonFont, menu.items.get(i).label.get(), bx, by,
-                buttonW, buttonH, textColor);
+            buttonLabel(menu.items.get(i).label.get(), bx, by, buttonW, buttonH);
 
             if (hovered && mouseClicked) {
                 onActivate.run();

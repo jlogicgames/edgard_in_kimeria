@@ -343,12 +343,40 @@ HOT_METHODS = {
     ('ui/FairyGuide.java', 'changedStrength'): 'called from FairyGuide.renderBehind and renderFront for every marked mechanism',
     ('entity/player/Player.java', 'collectLinkedTargets'): 'called from FairyGuide.update every frame (D87)',
     ('entity/player/Player.java', 'selectedInteraction'): 'called every frame a target is selected, by the fairy guide and the hint text (D87: now a reused instance)',
+    ('ui/Overlay.java', 'title'): 'called from KimeriaGame.renderOverlay every menu frame (#464)',
+    ('ui/Overlay.java', 'body'): 'called from KimeriaGame.renderOverlay every frame of a screen with body text (#464)',
+    ('ui/Overlay.java', 'bodyHeight'): 'called from KimeriaGame.renderOverlay every frame of a screen with body text (#464)',
+    ('ui/Overlay.java', 'hint'): 'called from KimeriaGame.renderOverlay every menu frame (#464)',
+    ('ui/Overlay.java', 'topRight'): 'called from KimeriaGame.render every frame of the debug FPS counter (#464)',
+    ('ui/Overlay.java', 'buttons'): 'called from KimeriaGame.renderOverlay every menu frame (#464)',
+    ('ui/Overlay.java', 'buttonLabel'): 'called from Overlay.buttons for every button, every menu frame',
+    ('ui/Overlay.java', 'buttonsWidth'): 'called from Overlay.buttons every menu frame',
+    ('ui/Overlay.java', 'buttonsHeight'): 'called from KimeriaGame.renderOverlay every menu frame',
+    ('ui/Overlay.java', 'wrapped'): 'called from Overlay.body, bodyHeight and hint every menu frame (#464)',
+    ('ui/Overlay.java', 'line'): 'called from Overlay.title, buttonLabel and buttonsWidth every menu frame (#464)',
+    ('KimeriaGame.java', 'aboutText'): 'called from renderOverlay every frame of the About screen (#464)',
+    ('ui/Overlay.java', 'queueText'): 'called for every queued text, every menu frame',
+    ('ui/Overlay.java', 'clearText'): 'called from Overlay.beginFrame and flushText every frame',
+    ('ui/Overlay.java', 'beginFrame'): 'called from KimeriaGame.render every frame',
+    ('ui/Overlay.java', 'flushText'): 'called from KimeriaGame.render every frame',
+    ('ui/Menu.java', 'visibleCount'): 'called from Overlay.buttonsHeight every menu frame',
+    ('ui/Menu.java', 'ensureVisibleSelection'): 'called from Overlay.buttons every menu frame',
+    ('ui/ValueLabel.java', 'get'): 'called for every "Label: value" button, every menu frame (#464)',
+    ('KimeriaGame.java', 'mouseLogical'): 'called from renderOverlay and updateHealer every frame',
 }
 # (file, method, kind) -> what the excluded code carries and why fixing it would lose that.
 # Existing hot-path allocations are NOT listed: the check only looks at changed lines, so touching one means fixing it.
 ALLOWED = {
     ('world/Level.java', 'renderDebug', 'iterator'):
         'F1 collider/hitbox gizmos, drawn only while the debug flag is on: a measurement overlay, not a gameplay frame',
+    ('ui/Overlay.java', 'wrapped', 'new'):
+        'the kept layout itself, built the first time a string is shown or when its width or colour changes (AllocationBudgetTest.menuFrame)',
+    ('ui/Overlay.java', 'line', 'new'):
+        'the kept layout itself, built the first time a string is shown (AllocationBudgetTest.menuFrame)',
+    ('KimeriaGame.java', 'aboutText', 'string'):
+        'the About page text itself, joined only when the page or the language changes (AllocationBudgetTest.menuFrame)',
+    ('ui/ValueLabel.java', 'get', 'string'):
+        'the label itself, joined only when the language or the value changes (a menu event); an unchanged frame returns the kept string (AllocationBudgetTest.menuFrame)',
 }
 
 RULES = {
