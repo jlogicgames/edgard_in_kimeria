@@ -240,6 +240,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         this.game = game;
         startingPosition.set(x, y);
         viewHalfWidth = game.logicalResolution().x / 2f;
+        viewHeight = game.logicalResolution().y;
         hitbox = Hitbox.rect(18, 26, 11, 22);
         loadAnimations(assets);
         thread = new SilverThread(assets);
@@ -308,7 +309,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     }
 
     /** Camera relocation happens under the room transition's fully black frame. */
-    public Vector2 roomCameraTarget() { return cameraTarget(centerX(), position.y); }
+    public Vector2 roomCameraTarget() { return cameraTarget(centerX(), position.y, new Vector2()); }
 
     /** The number of the swing in progress, or of the last one. */
     public int swingNumber() { return swingNumber; }
@@ -429,7 +430,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (wasOnLadder && ladder == null) updatePlayerState();
         checkGameplayOverlaps();
 
-        updateCameraPosition();
+        updateCameraPosition(stepDt);
         // The climbing pose holds still while the hero does.
         if (ladder == null || ladderDirection() != 0) tickAnimation(dt);
         tickOverlays(dt);
@@ -523,7 +524,8 @@ public class Player extends Actor<Player.State> implements CollideBody {
     // around the player: the focus stays put while the player moves within
     // the zone and is only pushed along once the player reaches a border.
     // Turning around changes nothing until the opposite border is reached.
-    // Vertically there is no slack; the camera tracks the player's Y.
+    // Vertically the slack is upward only and the camera eases to its target
+    // (VerticalCameraFollow, D154).
     private static final float CAMERA_CHASE_SPEED = 1400f;
     /** Respawn pan: fixed length whatever the distance, never a hard cut (D3). */
     private static final float CAMERA_PAN_SECONDS = 0.35f;
@@ -532,34 +534,41 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     /** World X the camera is centred on; only moves when the player leaves the dead zone. */
     private float cameraFocusX;
-    private float viewHalfWidth;
+    private float viewHalfWidth, viewHeight;
+    private final VerticalCameraFollow verticalFollow = new VerticalCameraFollow();
+    /** Reused by the per-frame follow; the game copies what it is given. */
+    private final Vector2 cameraAim = new Vector2();
 
-    private void updateCameraPosition() {
+    private void updateCameraPosition(float dt) {
         // centerX() ignores facing, unlike the hitbox, so turning in place can't nudge the zone.
         cameraFocusX = clampToZone(cameraFocusX, centerX(), hitbox.width * DEAD_ZONE_WIDTH_FACTOR);
-        Vector2 target = cameraTarget(cameraFocusX, position.y);
+        Vector2 target = cameraTarget(cameraFocusX, verticalFollow.focus(position.y), cameraAim);
         // Compare the room-clamped camera target, not distance walked or screen shake.
         // Crossing a dead-zone edge at a room boundary does not scroll the view.
         if (carried != null && carryHintVisible && !game.isCameraPanning()
             && !target.epsilonEquals(carryHintCameraAnchor, CAMERA_TARGET_TOLERANCE)) carryHintVisible = false;
+        // A pan owns the camera: the ease waits for it.
+        target.y = verticalFollow.ease(target.y, game.isCameraPanning() ? 0 : dt);
         game.moveCameraTo(target, CAMERA_CHASE_SPEED);
     }
 
-    /** Re-centres the dead zone on the player and pans the camera there (level start, respawn). */
-    private void resetCamera() {
+    /** Re-centres both focuses on the player and pans the camera there (level start, respawn, dev map reload). */
+    public void resetCamera() {
         cameraFocusX = centerX();
-        game.panCameraTo(cameraTarget(cameraFocusX, startingPosition.y), CAMERA_PAN_SECONDS);
+        Vector2 target = cameraTarget(cameraFocusX, position.y, cameraAim);
+        verticalFollow.settle(position.y, target.y);
+        game.panCameraTo(target, CAMERA_PAN_SECONDS);
     }
 
-    private Vector2 cameraTarget(float focusX, float playerY) {
+    /** Writes into {@code out} the camera's top-left corner for the two focus coordinates, clamped to the room. */
+    private Vector2 cameraTarget(float focusX, float focusY, Vector2 out) {
         Rectangle room = level.currentRoomBounds();
         float viewWidth = viewHalfWidth * 2;
-        float viewHeight = game.logicalResolution().y;
         float x = room.width <= viewWidth ? room.x + (room.width - viewWidth) / 2
             : Math.max(room.x, Math.min(room.x + room.width - viewWidth, focusX - viewHalfWidth));
         float y = room.height <= viewHeight ? room.y + (room.height - viewHeight) / 2
-            : Math.max(room.y, Math.min(room.y + room.height - viewHeight, playerY - UP_FOLLOW));
-        return new Vector2(x, y);
+            : Math.max(room.y, Math.min(room.y + room.height - viewHeight, focusY - UP_FOLLOW));
+        return out.set(x, y);
     }
 
     /** Returns {@code focus} moved the least distance needed to lie within {@code zoneWidth} centred on {@code playerX}. */
@@ -871,7 +880,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         if (!canFight() || target == null || isAttacking || ladder != null) return;
         carried = target;
         carryHintAnchor.set(centerX(), getY() + HINT_PLAYER_OFFSET_Y);
-        carryHintCameraAnchor.set(cameraTarget(cameraFocusX, position.y));
+        cameraTarget(cameraFocusX, verticalFollow.focus(position.y), carryHintCameraAnchor);
         carryHintVisible = true;
         carried.pickUp(this);
     }

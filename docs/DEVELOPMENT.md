@@ -275,6 +275,10 @@ instead of libGDX's `gdx-tiled` extension, specifically to avoid that extension'
 row-flipping (which assumes the same Y-up convention) and keep tile/object coordinates
 identical to the source file.
 
+The follow camera (`Player.updateCameraPosition`) is clamped to the current room. Sideways its focus has a dead zone three hitbox
+widths wide. Vertically the focus has slack upward only, and the camera eases to it (`VerticalCameraFollow`, [D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)).
+Room changes cut under black; a respawn pans (D3).
+
 ### Scenery layers and the foreground (parallax, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
 `TiledMapData` keeps three things apart. The **play layer** is every tile layer that is not scenery: it fills `backgroundGrid`, nothing

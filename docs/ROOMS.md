@@ -856,7 +856,7 @@ no 320×144 subregion or fixed travel-distance limit. New practice
 objects anywhere in this room receive the same teaching; other rooms/levels do not.
 Holding a stone or torch near a usable lever shows its activation instruction
 together with any active placement/throwing reminder, anchored at the lever.
-Each pickup re-arms the carrying reminder; scrolling the camera after exiting its
+Each pickup re-arms the carrying reminder; scrolling the camera (either way) after exiting its
 dead zone consumes that reminder until a new pickup. It must fade out rather than
 stick to the viewport edge. Mechanism lessons remain repeatable after it expires.
 Retry/collection return
@@ -914,7 +914,7 @@ comes from the torch: handle right/on, handle left/off. No new object IDs or col
 introduced. A first visit or fresh Level uses authored state; a room retry or collection
 return restores the secured torch state, from which the lever is rebuilt.
 
-Standing inspection (D25) was removed (D111): the camera is the ordinary room-clamped one.
+Standing inspection (D25) was removed (D111): the camera is the ordinary room-clamped one, eased up and down ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)).
 
 
 ### Fireball refill revision (#98, 2026-10-25)

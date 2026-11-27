@@ -348,7 +348,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   0.15, grove 0.25, mid 0.4, play 1, foreground 1.6), measured from the floor camera, so the steady frame is the authored one:
   `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
   for a 368 px room and the 360 px view) and camTop the camera's top edge (whole pixels). The hero no longer looks up or down
-  (D111): the camera top lies between the room top (0, with the top of the hero's box at y 200 or higher) and 8 (at y 208 or lower, so on the floor), and moves during
+  (D111): the camera top lies between the room top (0, with the follow focus at y 200 or higher) and 8 (at y 208 or lower, so on the floor). The focus is the top of the
+  hero's box with 24 px of slack upward, and the camera eases to it ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)), so a jump from the floor leaves the top at 8. The top also moves during
   a room change, so a layer of factor f is seen at most 8 f px off its authored place (12.8 px at the foreground's 1.6), and the screen
   shake (at most `ScreenShake.LEVER_AMPLITUDE_PX` and `STONE_AMPLITUDE_PX`, 1.5 px, clamped to the room so it never carries the view
   past the room's top or bottom) would add up to 1.5 (1 + f) px: the margin counts it anyway, conservatively. The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
@@ -418,7 +419,7 @@ These are the only limits on the layers.
   - *Walking:* walking that route at 100 px/s (`Player.MOVE_SPEED`), on the floor and at a jump's apex (60 px up), the longest
     hidden run is at most 0.5 s.
 
-  The game's camera follows a focus kept in a dead zone 33 px wide (`Player.DEAD_ZONE_WIDTH_FACTOR` 3 x the 11 px hitbox) around
+  Sideways, the game's camera follows a focus kept in a dead zone 33 px wide (`Player.DEAD_ZONE_WIDTH_FACTOR` 3 x the 11 px hitbox) around
   the box centre, so while he walks it lags him by up to 16.5 px; replaying the walk with the dead zone and the camera's chase
   changed the longest hidden run by at most 0.01 s, so the check uses the centred camera. Measured on the mocks after the review
   pass: standing hidden at 0 of 665 box x in the calm room (39 before: by the reeds at x 138 to 159 and the trunk at x 411 to 427)

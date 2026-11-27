@@ -989,6 +989,8 @@ class DirectionalActionsTest {
         assertEquals("", level.player.contextHint());
     }
 
+    private static final int CAMERA_SETTLE_FRAMES = 90;
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void carryingReminderEndsOnCameraScrollAndRearmsOnEachPickup(boolean left) {
@@ -999,7 +1001,8 @@ class DirectionalActionsTest {
             && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE)
             .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
         // Clear sky inside the teaching room avoids terrain/enemies changing this camera-only setup.
-        level.player.position.set(700, 40); frames(1);
+        // Held there until the camera has eased up to its resting height (D154), so only the horizontal move below can scroll.
+        for (int i = 0; i < CAMERA_SETTLE_FRAMES; i++) { level.player.position.set(700, 40); level.player.velocity.setZero(); frames(1); }
         Rectangle body = level.player.hitboxBounds();
         stone.position.set(body.x + body.width / 2 - 6, body.y + body.height / 2 - 6);
         pickup();
@@ -1019,6 +1022,27 @@ class DirectionalActionsTest {
         putDown(); assertNull(level.player.carriedObject());
         pickup(); assertSame(stone, level.player.carriedObject());
         assertTrue(level.player.contextHint().contains("Put down"), "Every new pickup in the first room teaches again");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void aJumpFromTheFloorKeepsTheCarryingReminder(boolean left) {
+        scene(left);
+        level = new Level(assets, game, player(), PRACTICE_MAP, Rectangle::new);
+        level.triggers.clear();
+        var stone = level.objects.stream().filter(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable c
+            && c.kind == com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.STONE)
+            .map(com.jlogicsoftware.kimeria.entity.items.Carryable.class::cast).findFirst().orElseThrow();
+        frames(CAMERA_SETTLE_FRAMES);
+        Rectangle body = level.player.hitboxBounds();
+        stone.position.set(body.x + body.width / 2 - 6, body.y + body.height - 12);
+        pickup();
+        assertSame(stone, level.player.carriedObject());
+        float floor = level.player.position.y, highest = floor;
+        tap(jump());
+        for (int i = 0; i < CAMERA_SETTLE_FRAMES; i++) { frames(1); highest = Math.min(highest, level.player.position.y); }
+        assertTrue(highest < floor - 48, "high enough to have scrolled without the slack (D154): " + highest);
+        assertTrue(level.player.contextHint().contains("Put down"), "no scroll, so the reminder stays");
     }
 
     // -- Vertical ladders (#99) --

@@ -591,7 +591,7 @@ public class Level implements WorldObject {
                 currentRoom = i;
                 resetCurrentRoom(player);
                 player.position.set(savedPosition);
-                game.panCameraTo(player.roomCameraTarget(), 0.35f);
+                player.resetCamera();
                 return;
             }
         }
