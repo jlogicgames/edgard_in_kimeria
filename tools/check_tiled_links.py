@@ -1292,7 +1292,7 @@ def decor_trunk_kinds():
 def branch_root(o):
     """(root x, joint y, side of the trunk) of a branch object, or None for any other object. World Y grows downward."""
     x, y, t, mirror = _num(o, 'x'), _num(o, 'y'), kind(o), prop(o, 'mirror') == 'true'
-    if t == 'FallingBranch':  # branch.grid: the cracked joint's contour at column 1, rows 3-11
+    if t == 'FallingBranch':  # branch.grid: the root's collar at column 1, rows 2-12
         return x + 1, y + 7, 'left'
     if t == 'HangingHive':  # hive.grid: the bough's collar at column 0, rows 0-5
         return x, y + 2, 'left'
