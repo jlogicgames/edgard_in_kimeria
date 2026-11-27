@@ -19,8 +19,9 @@ import com.badlogic.gdx.math.RandomXS128;
  * what kills is what is seen (D5). Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a
  * smaller Y. Particles advance only in {@link #update}, so pause freezes them.
  *
- * <p>The flying beetle shares them: {@link #speck} outlines the burst where its dive will end, {@link #lineSpeck} runs down its
- * dive line, and {@link #burstAt} is the ground burst at the end of a dive and an oval one in the air.
+ * <p>The flying beetle shares the pools (D147): {@link #gather} draws specks in to it from a ring round its body,
+ * {@link #lineSpeck} runs down its dive line, and {@link #burstAt} is a half dome off the surface that cuts its box, every
+ * particle flying up and away from it, or an oval one in the air.
  */
 public final class BeetleFx {
     /**
@@ -41,8 +42,12 @@ public final class BeetleFx {
     public static final float BODY_CENTRE_ABOVE_FLOOR = 8;
     /** The flying beetle's box (D145): this far above and below the body's middle, cut at the surface under it. */
     public static final float BLAST_AIR_HALF_HEIGHT = 24;
-    /** A burst this close over its surface (the middle of the body, plus a rounding margin) is the ground burst. */
-    private static final float GROUND_MARGIN = .5f;
+    /** A surface this far (a rounding margin) inside the box's lower edge cuts the burst: it is then the half dome off it. */
+    private static final float CUT_MARGIN = .5f;
+    /** The flying beetle's wind-up specks are born this far from its body's middle, just outside its wings (D147). */
+    public static final float GATHER_RADIUS_MIN = 28, GATHER_RADIUS_MAX = 32;
+    // The half dome off a surface (D147): everything starts this far above it and flies up; chips are thrown this high.
+    private static final float DOME_LIFT = 2, DOME_CHIP_LOW = 8, DOME_CHIP_HIGH = 28, DOME_STEAM_LOW = 8;
     // The dive line's specks (D145): born on the first part of the line, flying on to its end.
     private static final float LINE_START_SHARE = .6f, LINE_LIFE_MIN = .22f, LINE_LIFE_MAX = .3f, LINE_JITTER = 1;
     /** An oval burst keeps its particles this far inside the box's upper and lower edges. */
@@ -126,6 +131,19 @@ public final class BeetleFx {
             range(random, SPECK_LIFE_MIN, SPECK_LIFE_MAX), SPECK_SIZE, c[RED], c[GREEN], c[BLUE]);
     }
 
+    /**
+     * One wind-up speck of the flying beetle (D147), its body's middle at ({@code centreX}, {@code centreY}): born on a ring
+     * round it and drawn in to that middle.
+     */
+    public void gather(float centreX, float centreY) {
+        RandomXS128 random = hard.random();
+        float angle = random.nextFloat() * MathUtils.PI2, radius = range(random, GATHER_RADIUS_MIN, GATHER_RADIUS_MAX);
+        float shade = random.nextFloat();
+        float[] c = shade < SPECK_WHITE_CHANCE ? WHITE_RGB : shade < SPECK_PALE_CHANCE ? PALE : GREY;
+        hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX + MathUtils.cos(angle) * radius, centreY + MathUtils.sin(angle) * radius,
+            centreX, centreY, range(random, SPECK_LIFE_MIN, SPECK_LIFE_MAX), SPECK_SIZE, c[RED], c[GREEN], c[BLUE]);
+    }
+
     /** The burst of a beetle centred on {@code centreX}, standing on {@code floorY}: the flash, halo, spray, embers, shell chips and steam. */
     public void burst(float centreX, float floorY) {
         float cy = floorY - BODY_CENTRE_ABOVE_FLOOR;
@@ -186,13 +204,13 @@ public final class BeetleFx {
     }
 
     /**
-     * The flying beetle's burst (D145), its body's middle at ({@code centreX}, {@code centreY}) over a surface or the box's
-     * lower edge at {@code bottom}: on its surface it is the ground {@link #burst}; in the air, the same flash, a whole oval
-     * halo (rx half the box's width, ry {@link #BLAST_AIR_HALF_HEIGHT}), the spray, embers, shell chips and steam, all cut at
-     * {@code bottom}, so what kills is what is seen (D5).
+     * The flying beetle's burst (D145, D147), its body's middle at ({@code centreX}, {@code centreY}) over a surface or the
+     * box's lower edge at {@code bottom}. Where a surface cuts the box (the end of a dive), a half dome off that surface; in
+     * the air, the flash, a whole oval halo (rx half the box's width, ry {@link #BLAST_AIR_HALF_HEIGHT}), the spray, embers,
+     * shell chips and steam, kept above the box's lower edge, so what kills is what is seen (D5).
      */
     public void burstAt(float centreX, float centreY, float bottom) {
-        if (bottom - centreY <= BODY_CENTRE_ABOVE_FLOOR + GROUND_MARGIN) { burst(centreX, bottom); return; }
+        if (bottom - centreY < BLAST_AIR_HALF_HEIGHT - CUT_MARGIN) { domeBurst(centreX, bottom); return; }
         float high = centreY - BLAST_AIR_HALF_HEIGHT + AIR_INSET, low = bottom - AIR_INSET;
         soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, centreY, centreX, centreY, FLASH_LIFE, FLASH_SIZE, WHITE, WHITE, WHITE);
         soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, centreY, centreX, centreY, CORE_LIFE, CORE_SIZE, WHITE, WHITE, WHITE);
@@ -234,6 +252,58 @@ public final class BeetleFx {
             float pick = steamRandom.nextFloat();
             float[] c = pick < STEAM_PALE ? PALE : pick < STEAM_GREY ? GREY : DARK;
             soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, y, x, Math.max(high, y - range(steamRandom, STEAM_RISE_MIN, STEAM_RISE_MAX)),
+                range(steamRandom, STEAM_LIFE_MIN, STEAM_LIFE_MAX), range(steamRandom, STEAM_SIZE_MIN, STEAM_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
+        }
+    }
+
+    /**
+     * A burst on the surface at {@code floorY} (D147): the flash and its core as half glows lying on it, the half-ellipse halo,
+     * the spray, embers, shell chips and steam. Every particle starts just above the surface and flies up and away from it:
+     * none ends lower than it began, and none is drawn under the surface.
+     */
+    private void domeBurst(float centreX, float floorY) {
+        float from = floorY - DOME_LIFT;
+        soft.spawn(KimeriaParticleSystem.KIND_DOME, centreX, floorY, centreX, floorY, FLASH_LIFE, FLASH_SIZE, WHITE, WHITE, WHITE);
+        soft.spawn(KimeriaParticleSystem.KIND_DOME, centreX, floorY, centreX, floorY, CORE_LIFE, CORE_SIZE, WHITE, WHITE, WHITE);
+        RandomXS128 random = hard.random();
+        for (int i = 0; i < DOME_DOTS; i++) {
+            float angle = MathUtils.PI * (i + HALF) / DOME_DOTS;
+            float[] c = (i & 1) == 0 ? WHITE_RGB : PALE;
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX, from, centreX + MathUtils.cos(angle) * DOME_RX,
+                Math.min(from, floorY - MathUtils.sin(angle) * DOME_RY), DOME_LIFE, DOME_SIZE, c[RED], c[GREEN], c[BLUE]);
+        }
+        for (int i = 0; i < SPRAY; i++) {
+            float side = (i & 1) == 0 ? 1 : -1;
+            float startX = centreX + range(random, -SPRAY_START_JITTER, SPRAY_START_JITTER);
+            float endX = centreX + side * range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX);
+            float endY = floorY - range(random, SPRAY_LOW, SPRAY_HIGH);
+            boolean white = random.nextFloat() < SPRAY_WHITE_CHANCE;
+            float r = white ? WHITE : PALE[RED], g = white ? WHITE : PALE[GREEN], b = white ? WHITE : PALE[BLUE];
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, from, endX, endY, range(random, SPRAY_LIFE_MIN, SPRAY_LIFE_MAX),
+                range(random, SPRAY_SIZE_MIN, SPRAY_SIZE_MAX), r, g, b);
+        }
+        for (int i = 0; i < SPARKS; i++) {
+            float side = (i & 1) == 0 ? 1 : -1;
+            float[] c = i % SPARK_EYE_EVERY != 0 ? EYE : WHITE_RGB;
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER), from,
+                centreX + side * range(random, SPARK_REACH_MIN, SPARK_REACH_MAX), floorY - range(random, SPARK_LOW, SPARK_HIGH),
+                range(random, SPARK_LIFE_MIN, SPARK_LIFE_MAX), SPARK_SIZE, c[RED], c[GREEN], c[BLUE]);
+        }
+        for (int i = 0; i < CHIPS_BURST; i++) {
+            float side = (i & 1) == 0 ? 1 : -1;
+            float[] c = (i & 1) == 0 ? SHELL : SHELL_LIT;
+            hard.spawn(KimeriaParticleSystem.KIND_GRIT, centreX + range(random, -BURST_CHIP_START_JITTER, BURST_CHIP_START_JITTER), from,
+                centreX + side * range(random, BURST_CHIP_REACH_MIN, BURST_CHIP_REACH_MAX), floorY - range(random, DOME_CHIP_LOW, DOME_CHIP_HIGH),
+                range(random, BURST_CHIP_LIFE_MIN, BURST_CHIP_LIFE_MAX), range(random, BURST_CHIP_SIZE_MIN, BURST_CHIP_SIZE_MAX),
+                c[RED], c[GREEN], c[BLUE]);
+        }
+        RandomXS128 steamRandom = soft.random();
+        for (int i = 0; i < STEAM; i++) {
+            float x = centreX + range(steamRandom, -STEAM_HALF_WIDTH, STEAM_HALF_WIDTH);
+            float y = floorY - range(steamRandom, DOME_STEAM_LOW, STEAM_HIGH);
+            float pick = steamRandom.nextFloat();
+            float[] c = pick < STEAM_PALE ? PALE : pick < STEAM_GREY ? GREY : DARK;
+            soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, y, x, y - range(steamRandom, STEAM_RISE_MIN, STEAM_RISE_MAX),
                 range(steamRandom, STEAM_LIFE_MIN, STEAM_LIFE_MAX), range(steamRandom, STEAM_SIZE_MIN, STEAM_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
         }
     }

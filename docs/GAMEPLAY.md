@@ -193,18 +193,19 @@ There is no violence or blood option in Settings.
 ## Forest flying beetle
 
 A crimson beetle in flight, its two wing covers lifted over long clear wings (D145, #330), flies to and fro along a straight level line a little over Edgard's
-head. Touching it is harmless. It hears him below, up to six tiles to either side: it claps its wing covers and drops, opens
+head, rising over a ledge or a low rock in its way and sinking behind it. Touching it is harmless. It hears him below, up to six tiles to either side: it claps its wing covers and drops, opens
 them and tips its head down (half a second, with a high double chirr), then follows along its line, slower than he runs. Once it
-is within three tiles over him with a clear way down, it hangs where it is, shaking and blinking, while pale specks run down a
-line to the spot where he stands and draw the edges of the burst there (0.8 s, 1.2 s with the longer-warnings assist). Then it
-dives along that line in a quarter of a second and bursts: the same low, wide box as the ground beetle's. Run out of it, jump
+is within three tiles over him with a clear way down, it hangs where it is, shaking and blinking, while pale specks gather into it
+from all round and others run down a line to the spot where he stands (0.8 s, 1.2 s with the longer-warnings assist). Then it
+dives along that line in a quarter of a second and bursts in a half dome off the ground; it reaches as far as the ground
+beetle's burst, a low, wide box. Run out of it, jump
 as it bursts, or stand under a ledge, which it cannot dive through. A fireball or a thrown stone or torch kills it at any
 moment without a burst, and its body falls to the floor; while it flies level, Edgard must jump to hit it. His sword cannot
 reach it up there; if it meets the blade as it comes down, or he lands on it before it commits, it bursts on him; landing on it
 once it has committed bounces him off. It never dives over a pit. There is no hint about it: it is met in play, in
-`forest-roost`, forest-2's fifth room, first from under a low ledge beside its line
+`forest-roost`, forest-2's fifth room, first from under a low ledge it flies over
 ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). Authoring: `FlyingBeetle` (40×32) in `SpawnPoints` with `offNeg`/`offPos`, checked at load
-(its line clear, 40 to 64 px over every surface under it, and no burst or dive over the room's entrance, exit or checkpoints).
+(its route clear, its line 40 to 64 px over the surfaces under it, and no burst or dive over the room's entrance, exit or checkpoints).
 
 ## Forest spider
 

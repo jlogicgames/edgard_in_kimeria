@@ -525,29 +525,30 @@ class FlyingBeetleTest {
         assertEquals(SPAWN_X, fresh.position.x, 0);
     }
 
-    @Test void theSpecksStayOnTheLineAndTheBox() {
+    /** D147: the wind-up draws specks in to the monster from all round and runs others down the dive line; nothing at the target. */
+    @Test void theSpecksGatherIntoItAndRunDownTheLine() {
         Level level = level();
         FlyingBeetle b = committed(level);
-        float fromX = b.centreX(), fromY = b.centreY(), toX = b.targetX(), toY = b.targetY(), surface = b.targetSurface();
+        float fromX = b.centreX(), fromY = b.centreY(), toX = b.targetX(), toY = b.targetY();
         KimeriaParticleSystem specks = level.beetleFx().hard();
-        int onLine = 0, onBox = 0;
+        int onLine = 0, round = 0;
         for (int f = 0; f < 40; f++) {
             frame(level);
             for (int i = 0; i < specks.count(); i++) {
                 float x = specks.x(i), y = specks.y(i);
-                boolean inBox = Math.abs(x - toX) <= BeetleFx.BLAST_WIDTH / 2 + .01f && y >= surface - BeetleFx.BLAST_HEIGHT - .01f
-                    && y <= surface + .01f;
+                float fromMiddle = (float) Math.hypot(x - fromX, y - fromY);
+                boolean near = fromMiddle <= BeetleFx.GATHER_RADIUS_MAX + .01f;
                 float along = Math.max(0, Math.min(1, ((x - fromX) * (toX - fromX) + (y - fromY) * (toY - fromY))
                     / ((toX - fromX) * (toX - fromX) + (toY - fromY) * (toY - fromY))));
                 float dx = x - fromX - along * (toX - fromX), dy = y - fromY - along * (toY - fromY);
                 boolean nearLine = dx * dx + dy * dy <= 2.5f * 2.5f;
-                assertTrue(inBox || nearLine, "a speck off the box and the line at " + x + ", " + y);
-                if (nearLine && !inBox) onLine++;
-                if (inBox && !nearLine && Math.abs(x - toX) > BeetleFx.BLAST_WIDTH / 4) onBox++;
+                assertTrue(near || nearLine, "a speck neither round it nor on the line at " + x + ", " + y);
+                if (nearLine && !near) onLine++;
+                if (!nearLine && y < fromY - 12) round++;
             }
         }
-        assertTrue(onLine > 0, "specks run down the line above the box");
-        assertTrue(onBox > 0, "and outline the box away from the line");
+        assertTrue(onLine > 0, "specks run down the line to the target");
+        assertTrue(round > 0, "and gather into it from all round, above it too");
         assertEquals(0, level.beetleFx().soft().count(), "no flash before the burst");
         assertEquals(specks.count(), kinds(specks, KimeriaParticleSystem.KIND_FLAME));
     }
@@ -556,6 +557,80 @@ class FlyingBeetleTest {
         int n = 0;
         for (int i = 0; i < system.count(); i++) if (system.kind(i) == kind) n++;
         return n;
+    }
+
+    /** flying-beetle-climb.tmx: a one-way ledge across a line 10 tiles long to the left; the line's body bottom is y 280. */
+    private static final float LEDGE_LEFT = 308, LEDGE_TOP = 272, LEDGE_WIDTH = 64, LINE_BOTTOM = 280;
+    private static final float OVER_LEDGE = LEDGE_TOP - FlyingBeetle.CLIMB_HEIGHT;
+    private static final float BESIDE_LEDGE = 280, ON_LEDGE = 340;
+
+    @Test void fliesOverALedgeInItsLineAndSinksBehindIt() {
+        Level level = harness.roomOf("flying-beetle-climb", 0);
+        FlyingBeetle b = beetle(level);
+        assertEquals(OVER_LEDGE, b.floorY(), .01f, "placed over the ledge, it starts on the route");
+        Rectangle ledge = new Rectangle(LEDGE_LEFT, LEDGE_TOP, LEDGE_WIDTH, 16), body = new Rectangle();
+        boolean over = false, behind = false;
+        float lastX = b.position.x, lastY = b.position.y;
+        for (int f = 0; f < 60 * 14; f++) {
+            frame(level);
+            b.hitboxBoundsInto(body);
+            assertFalse(body.overlaps(ledge), "never through the ledge: " + body);
+            assertTrue(Math.abs(b.position.y - lastY) <= Math.abs(b.position.x - lastX) + .01f, "rises and sinks no steeper than it flies");
+            lastX = b.position.x; lastY = b.position.y;
+            if (body.x < ledge.x + ledge.width && body.x + body.width > ledge.x) { assertEquals(OVER_LEDGE, b.floorY(), .01f); over = true; }
+            if (Math.abs(b.position.x - b.rangeNeg()) < .01f) { assertEquals(LINE_BOTTOM, b.floorY(), .01f, "back on its line"); behind = true; }
+        }
+        assertTrue(over && behind, "the patrol passes over the ledge and behind it");
+    }
+
+    @Test void underALedgeItHangsOverTheHeroAndCannotCommit() {
+        Level level = harness.roomOf("flying-beetle-climb", 0);
+        FlyingBeetle b = beetle(level);
+        place(level, ON_LEDGE);
+        for (int f = 0; f < LONG_LIMIT; f++) {
+            frame(level);
+            assertFalse(b.isCommitted(), "the ledge cuts every dive on to him");
+        }
+        assertEquals(FlyingBeetle.State.CHASE, b.state());
+        assertEquals(OVER_LEDGE, b.floorY(), .01f);
+        assertEquals(ON_LEDGE, b.centreX(), 1f, "right over him");
+    }
+
+    @Test void fromOverALedgeItDivesDownToTheFloorBesideIt() {
+        Level level = harness.roomOf("flying-beetle-climb", 0);
+        FlyingBeetle b = beetle(level);
+        place(level, BESIDE_LEDGE);
+        until(level, b::isCommitted, LONG_LIMIT);
+        assertTrue(b.floorY() < LINE_BOTTOM, "still raised by the ledge: " + b.floorY());
+        assertEquals(FLOOR, b.targetSurface(), .01f);
+        until(level, b::isRemoved, LONG_LIMIT);
+        assertFalse(alive(level), "the burst reaches the hero who stays");
+    }
+
+    @Test void itDivesOnToAHeroOnTheLedgeFromAbove() {
+        Level level = harness.roomOf("flying-beetle-climb", 0);
+        FlyingBeetle b = beetle(level);
+        place(level, ON_LEDGE);
+        level.player.position.y = LEDGE_TOP - HERO_FEET;
+        until(level, b::isCommitted, LONG_LIMIT);
+        assertEquals(LEDGE_TOP, b.targetSurface(), .01f);
+        until(level, b::isRemoved, LONG_LIMIT);
+        assertFalse(alive(level));
+    }
+
+    @Test void leftBehindOverALedgeItReturnsToItsRoute() {
+        Level level = harness.roomOf("flying-beetle-climb", 0);
+        FlyingBeetle b = beetle(level);
+        float x = b.position.x, y = b.position.y;
+        until(level, () -> b.position.x <= b.rangeNeg() + .01f, LONG_LIMIT);
+        b.revisit(level.player);
+        assertEquals(x, b.position.x, .01f);
+        assertEquals(y, b.position.y, .01f);
+    }
+
+    @Test void theLoadChecksFollowADeepDiveFromOverALedge() {
+        // The line runs wholly over a ledge: only a dive from up there, down past the ledge's end, covers the checkpoint.
+        assertRejected("flying-beetle-over-ledge", "can dive on the room checkpoint");
     }
 
     @Test void theLoadChecksRejectABadPlacement() {

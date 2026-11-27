@@ -477,19 +477,37 @@ FLYING_FRAME = (40, 32)
 FLYING_STEP = 16        # px between measured positions
 
 
+def flying_route(boxes, x, y, props):
+    """FlyingBeetle.routeBottom (D146) for a monster authored at (x, y) over the static `boxes`: left -> the body's bottom
+    there, lifted over what the line crosses."""
+    n = lambda name: java_number(FLYING_JAVA, name)
+    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
+    body_x, width, height, climb = n('BODY_X'), n('BODY_WIDTH'), n('BODY_HEIGHT'), n('CLIMB_HEIGHT')
+    line = y + n('BODY_Y') + height
+    climbed = [(bx, by, bw) for bx, by, bw, bh in boxes
+               if bx < high + body_x + width and bx + bw > low + body_x and by <= line and by + bh > line - height
+               and line - (by - climb) <= n('MAX_CLIMB')]
+
+    def bottom(left):
+        return min([line] + [by - climb + max(0, bx - (left + body_x + width), left + body_x - (bx + bw)) for bx, by, bw in climbed])
+    return bottom
+
+
 def flying_beetle_parts(root, x, y, props):
-    """(key, left, top, w, h) every FLYING_STEP along the flight line, and at every dive end that has a floor under it."""
+    """(key, left, top, w, h) every FLYING_STEP along the flight route, and at every dive end that has a floor under it."""
     fw, fh = FLYING_FRAME
     low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
-    for left in _steps_every(low, high, FLYING_STEP):
-        yield 'FlyingBeetle', left, y, fw, fh
-    reach, bottom = java_number(FLYING_JAVA, 'COMMIT_REACH'), y + java_number(FLYING_JAVA, 'BODY_Y') + java_number(FLYING_JAVA, 'BODY_HEIGHT')
-    middle = java_number(FLYING_JAVA, 'BODY_X') + java_number(FLYING_JAVA, 'BODY_WIDTH') / 2
-    furthest = java_number(FLYING_JAVA, 'MAX_HEIGHT')
     boxes = landings(root)
+    route = flying_route(boxes, x, y, props)
+    line = y + java_number(FLYING_JAVA, 'BODY_Y') + java_number(FLYING_JAVA, 'BODY_HEIGHT')
+    for left in _steps_every(low, high, FLYING_STEP):
+        yield 'FlyingBeetle', left, y + route(left) - line, fw, fh
+    reach = java_number(FLYING_JAVA, 'COMMIT_REACH')
+    middle = java_number(FLYING_JAVA, 'BODY_X') + java_number(FLYING_JAVA, 'BODY_WIDTH') / 2
+    deepest = line + java_number(FLYING_JAVA, 'MAX_HEIGHT')   # a dive goes this far under the level line, from any height
     for left in _steps_every(low - reach, high + reach, FLYING_STEP):
-        floor = drop(boxes, left + middle, left + middle + 1, bottom)
-        if floor is not None and floor - bottom <= furthest:
+        floor = drop(boxes, left + middle, left + middle + 1, route(min(max(left, low), high)))
+        if floor is not None and floor <= deepest:
             yield 'FlyingBeetle', left, floor - fh, fw, fh
 
 
@@ -1347,16 +1365,18 @@ def wolf_body_spots(boxes, x, y, props, blocks=(), name='map'):
 
 
 def flying_beetle_body_spots(boxes, x, y, props, blocks=(), name='map'):
-    """(position.x, floor line) of every place a flying beetle's body can lie: dropped from its flight line, or from a dive
+    """(position.x, floor line) of every place a flying beetle's body can lie: dropped from its flight route, or from a dive
     that reaches its commit reach past either end; none over a pit."""
     reach = java_number(FLYING_JAVA, 'COMMIT_REACH')
     low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
     body_x, width = java_number(FLYING_JAVA, 'BODY_X'), java_number(FLYING_JAVA, 'BODY_WIDTH')
-    bottom = y + java_number(FLYING_JAVA, 'BODY_Y') + java_number(FLYING_JAVA, 'BODY_HEIGHT')
+    flat = y + java_number(FLYING_JAVA, 'BODY_Y') + java_number(FLYING_JAVA, 'BODY_HEIGHT')
+    route = flying_route(boxes, x, y, props)
     spots = set()
     for left in _steps(low - reach, high + reach):
+        bottom = route(min(max(left, low), high))
         line = drop(boxes, left + body_x, left + body_x + width, bottom)
-        check_static_column(blocks, name, 'FlyingBeetle', left + body_x, left + body_x + width, y, line)
+        check_static_column(blocks, name, 'FlyingBeetle', left + body_x, left + body_x + width, y + bottom - flat, line)
         if line is not None:
             spots.add((left, line))
     return spots

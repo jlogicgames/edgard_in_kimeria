@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -14,23 +15,29 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The flying beetle's first room, {@code forest-roost} (#330, D145), through the real map and real Level updates with ordinary
- * controls. World Y grows downward: the floor top is y 304, the one-way ledge (x 4704-4768) top y 256, level with the bottom of
- * the beetle's body, whose line lies beside the ledge's right end. The thorn root stands at x 4608, the falling stone at x 5000,
- * the exit at x 5088. Hero positions are the frame's x unless a test says "centre".
+ * The flying beetle's first room, {@code forest-roost} (#330, D145, D146), through the real map and real Level updates with
+ * ordinary controls. World Y grows downward: the floor top is y 304, the one-way ledge (x 4800-4864) top y 256, level with the
+ * bottom of the beetle's body on its line, which crosses the ledge: the beetle flies over it, 48 px above its top. The thorn
+ * root stands at x 4608, the falling stone at x 5096, the exit at x 5184. Hero positions are the frame's x unless a test says
+ * "centre".
  */
 class ForestRoostTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float FLOOR = 304, LEDGE_TOP = 256, HERO_HEIGHT = 48;
+    private static final float LEDGE_LEFT = 4800, LEDGE_WIDTH = 64, LEDGE_HEIGHT = 16;
+    /** The hero's centres under the ledge that no dive reaches (measured). */
+    private static final float SAFE_LEFT = 4800, SAFE_RIGHT = 4848;
+    /** A hero leaving a blast's reach runs this far from where he stood. */
+    private static final float CLEAR_RUN = 90;
     private static final int SECOND = 60;
     /** The take-off for the thorn root (the hero's frame x), as in {@code RoomReplayTest.ROOST_JUMPS}. */
     private static final float ROOT_JUMP = 4550;
     /** Where a hero on the mastered pace who stops walking dies: in the beetle's box, and under the stone. */
-    private static final float STOP_AT_BEETLE = 4750, STOP_AT_STONE = 4980;
+    private static final float STOP_AT_BEETLE = 4870, STOP_AT_STONE = 5076;
     /** Measured, pinned within 0.1 s: the mastered route and the two deaths (the card's times). */
-    private static final float ROUTE_S = 5.48f, BEETLE_DEATH_S = 3.35f, STONE_DEATH_S = 6.02f;
-    /** Past one whole patrol to and fro (96 px at 40 px/s each way, 4.8 s), so a start delayed this long meets every phase. */
-    private static final int ALL_PHASES = 6 * SECOND;
+    private static final float ROUTE_S = 6.43f, BEETLE_DEATH_S = 4.42f, STONE_DEATH_S = 7.0f;
+    /** Past one whole patrol to and fro (224 px at 40 px/s each way, 11.2 s), so a start delayed this long meets every phase. */
+    private static final int ALL_PHASES = 12 * SECOND;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
 
@@ -78,20 +85,22 @@ class ForestRoostTest {
         }
     }
 
-    @Test void theBeetleCommitsOnTheMasteredRouteSoTheBoxIsSeen() {
-        Level level = level();
-        FlyingBeetle b = beetle(level);
-        Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
-        boolean jumped = false;
-        for (int f = 0; f < SECOND * 8 && !level.atRoomExit(); f++) {
-            h.held.clear(); h.pressed.clear();
-            h.held.add(Input.Keys.D);
-            if (!jumped && level.player.position.x >= ROOT_JUMP && level.player.isOnGround()) { h.held.add(Input.Keys.J); h.pressed.add(Input.Keys.J); jumped = true; }
-            level.update(STEP);
-            seen.add(b.state());
+    @Test void theBeetleCommitsOnTheMasteredRouteAtEveryPhaseSoTheBoxIsSeen() {
+        for (int delay = 0; delay <= ALL_PHASES; delay += 5) {
+            Level level = level();
+            FlyingBeetle b = beetle(level);
+            Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
+            boolean jumped = false;
+            for (int f = 0; f < SECOND * 20 && !level.atRoomExit(); f++) {
+                h.held.clear(); h.pressed.clear();
+                if (f >= delay) h.held.add(Input.Keys.D);
+                if (!jumped && level.player.position.x >= ROOT_JUMP && level.player.isOnGround()) { h.held.add(Input.Keys.J); h.pressed.add(Input.Keys.J); jumped = true; }
+                level.update(STEP);
+                seen.add(b.state());
+            }
+            assertTrue(seen.containsAll(EnumSet.of(FlyingBeetle.State.NOTICE, FlyingBeetle.State.WINDUP, FlyingBeetle.State.DIVE)),
+                "the beetle is a beat of the route: it notices, draws its dive and dives behind him, started " + delay + " frames late: " + seen);
         }
-        assertTrue(seen.containsAll(EnumSet.of(FlyingBeetle.State.NOTICE, FlyingBeetle.State.WINDUP, FlyingBeetle.State.DIVE)),
-            "the beetle is a beat of the route: it notices, draws its dive and dives behind him, " + seen);
     }
 
     @Test void stoppingInTheBoxOrUnderTheStoneDiesAtTheCardsTimes() {
@@ -99,17 +108,17 @@ class ForestRoostTest {
         assertEquals(-STONE_DEATH_S, run(0, STOP_AT_STONE), .1f, "stopped under the stone");
     }
 
-    /** Stands the hero with his frame at ({@code x}, feet on {@code surface}) and updates; with {@code leaves} he runs left once it winds up. */
-    private boolean survivesAt(float x, float surface, boolean leaves, Set<FlyingBeetle.State> seen) {
+    /** Stands the hero with his centre at {@code centre} on {@code surface} and updates; with {@code leaves} he runs once it winds up. */
+    private boolean survivesAt(float centre, float surface, int leaves, Set<FlyingBeetle.State> seen) {
         Level level = level();
         FlyingBeetle b = beetle(level);
-        level.player.position.set(x, surface - HERO_HEIGHT);
+        level.player.position.set(centre - level.player.getWidth() / 2, surface - HERO_HEIGHT);
         level.player.velocity().setZero();
         boolean leaving = false;
-        for (int f = 0; f < SECOND * 12; f++) {
+        for (int f = 0; f < SECOND * 14; f++) {
             h.held.clear();
-            leaving |= leaves && b.state() == FlyingBeetle.State.WINDUP;
-            if (leaving && level.player.position.x > 4660) h.held.add(Input.Keys.A);
+            leaving |= leaves != 0 && b.state() == FlyingBeetle.State.WINDUP;
+            if (leaving && Math.abs(level.player.centerX() - centre) < CLEAR_RUN) h.held.add(leaves < 0 ? Input.Keys.A : Input.Keys.D);
             level.update(STEP);
             seen.add(b.state());
             if (level.player.isGotHit()) return false;
@@ -117,21 +126,55 @@ class ForestRoostTest {
         return true;
     }
 
-    @Test void theFloorUnderTheLedgeIsSafeAndTheFloorBesideItIsNot() {
-        // The hero's centre is 23.5 px right of the frame's x: 4704 to 4744 under the ledge, 4746 and on in reach of a dive.
-        for (float centre = 4704; centre <= 4744; centre += 8) {
-            Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
-            assertTrue(survivesAt(centre - 23.5f, FLOOR, false, seen), "safe under the ledge at centre " + centre);
-            assertFalse(seen.contains(FlyingBeetle.State.WINDUP), "never committed to at centre " + centre);
+    @Test void itFliesOverTheLedgeAndSinksBehindIt() {
+        Level level = level();
+        FlyingBeetle b = beetle(level);
+        float line = b.floorY(), highest = line, left = b.position.x;
+        for (int f = 0; f < SECOND * 12; f++) {
+            level.update(STEP);
+            highest = Math.min(highest, b.floorY());
+            left = Math.min(left, b.position.x);
+            Rectangle body = b.hitboxBoundsInto(new Rectangle());
+            assertFalse(body.overlaps(new Rectangle(LEDGE_LEFT, LEDGE_TOP, LEDGE_WIDTH, LEDGE_HEIGHT)), "never through the ledge: " + body);
+            if (body.x < LEDGE_LEFT + LEDGE_WIDTH && body.x + body.width > LEDGE_LEFT)
+                assertEquals(LEDGE_TOP - FlyingBeetle.CLIMB_HEIGHT, b.floorY(), .01f, "this high over the ledge");
         }
-        assertFalse(survivesAt(4748 - 23.5f, FLOOR, false, EnumSet.noneOf(FlyingBeetle.State.class)), "past the ledge's end it dives at him");
+        assertEquals(LEDGE_TOP - FlyingBeetle.CLIMB_HEIGHT, highest, .01f);
+        assertEquals(b.rangeNeg(), left, 1f, "past the ledge to its range end");
+        assertTrue(b.routeBottom(left) > highest, "and down again behind it");
     }
 
-    @Test void theLedgesLeftPartIsOutOfReachAndItsRightEndIsDivedAtLevelAndCanBeLeft() {
-        Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
-        assertTrue(survivesAt(4728 - 23.5f, LEDGE_TOP, false, seen), "out of its 48 px commit reach");
-        assertFalse(seen.contains(FlyingBeetle.State.WINDUP), "never committed to: " + seen);
-        assertFalse(survivesAt(4752 - 23.5f, LEDGE_TOP, false, EnumSet.noneOf(FlyingBeetle.State.class)), "level with it and in reach: it dives along the ledge");
-        assertTrue(survivesAt(4752 - 23.5f, LEDGE_TOP, true, EnumSet.noneOf(FlyingBeetle.State.class)), "the drawn box can be left by running off the ledge's other end");
+    @Test void theFloorUnderTheLedgeIsSafeAndTheFloorOnEitherSideIsNot() {
+        for (float centre = SAFE_LEFT; centre <= SAFE_RIGHT; centre += 8) {
+            Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
+            assertTrue(survivesAt(centre, FLOOR, 0, seen), "safe under the ledge at centre " + centre);
+            assertFalse(seen.contains(FlyingBeetle.State.WINDUP), "never committed to at centre " + centre);
+        }
+        for (float centre : new float[]{4704, 4736, 4772, 4792, 4856, 4888})
+            assertFalse(survivesAt(centre, FLOOR, 0, EnumSet.noneOf(FlyingBeetle.State.class)), "beside the ledge it dives at him, centre " + centre);
+    }
+
+    @Test void noDiveItCommitsToStopsShortOnTheLedgesCorners() {
+        for (float centre = SAFE_LEFT - 32; centre <= SAFE_RIGHT + 32; centre++) {
+            Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
+            boolean safe = survivesAt(centre, FLOOR, 0, seen);
+            assertFalse(safe && seen.contains(FlyingBeetle.State.WINDUP), "a committed dive reaches a hero who stays, centre " + centre);
+        }
+    }
+
+    @Test void aBlastBesideTheLedgeCanBeLeft() {
+        for (float centre : new float[]{4750, 4790, 4880})
+            for (int way : new int[]{-1, 1})
+                assertTrue(survivesAt(centre, FLOOR, way, EnumSet.noneOf(FlyingBeetle.State.class)), "left from centre " + centre + ", way " + way);
+    }
+
+    @Test void onTheLedgeItDivesFromAboveAndTheBoxCanBeLeft() {
+        for (float centre = LEDGE_LEFT + 4; centre < LEDGE_LEFT + LEDGE_WIDTH; centre += 8) {
+            Set<FlyingBeetle.State> seen = EnumSet.noneOf(FlyingBeetle.State.class);
+            assertFalse(survivesAt(centre, LEDGE_TOP, 0, seen), "dived at on the ledge, centre " + centre);
+            assertTrue(seen.contains(FlyingBeetle.State.DIVE), "by a dive: " + seen);
+            for (int way : new int[]{-1, 1})
+                assertTrue(survivesAt(centre, LEDGE_TOP, way, EnumSet.noneOf(FlyingBeetle.State.class)), "left from centre " + centre + ", way " + way);
+        }
     }
 }

@@ -889,6 +889,8 @@ class AllocationBudgetTest {
     private static final int FLYING_PUSH_FRAME = 175, FLYING_FINISH_FRAME = 190, FLYING_MIN_CHASE_FRAMES = 40;
     /** Built 48 px along its line, so it travels in the chase: x 300, 3 tiles back and 5 on. */
     private static final float FLYING_X = 300, FLYING_Y = 248, FLYING_W = 40, FLYING_H = 32, FLYING_BACK_TILES = 3, FLYING_ON_TILES = 5;
+    /** A ledge past the places this scene flies to, so every frame reads a route with something to fly over (D146). */
+    private static final float FLYING_LEDGE_X = 400, FLYING_LEDGE_W = 16;
     /** Hero positions (entity x): under the platform beside the line's end, in the open beside it, far to the left of its blast. */
     private static final float HERO_UNDER_ROOF_X = 230 - 23.5f, HERO_IN_THE_OPEN_X = 300 - 23.5f, HERO_LEFT_X = 80 - 23.5f,
         HERO_FROM_BODY = 26;
@@ -915,6 +917,7 @@ class AllocationBudgetTest {
                 FLYING_ON_TILES);
             flyers[k].setPlayer(level.player);
             flyers[k].setLevel(level);
+            flyers[k].flyOver(java.util.List.of(new Rectangle(FLYING_LEDGE_X, FLYING_Y + FLYING_H, FLYING_LEDGE_W, FLYING_LEDGE_W)));
         }
         boolean[] seen = new boolean[FlyingBeetle.State.values().length];
         int[] peak = new int[1], chased = new int[1], bodies = new int[1];

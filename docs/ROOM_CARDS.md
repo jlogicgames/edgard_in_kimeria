@@ -815,47 +815,48 @@ y 304 ====================================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 5 of 7 (640 px, one screen, x 4480-5120: appended at the map's end, listed after `forest-glade` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 5 of 7 (736 px, 1.15 screens, x 4480-5216: appended at the map's end, listed after `forest-glade` in the `Rooms` list, which sets the play order) |
 | Role | variation |
-| Purpose | Meet the flying beetle from under a low ledge it cannot dive through, watch it hear the hero and wait beside him, then walk out of the box it draws; a thorn root before it and a falling stone after it. |
+| Purpose | Meet the flying beetle from under a low ledge it cannot dive through, watch it hear the hero, fly up over the ledge and hang above him, then get away from where its dive points; a thorn root before it and a falling stone after it. |
 | Introduces | flying-beetle |
 | Develops | - |
 | Combines | - |
 | Repeats | proximity-thorn, falling-stone |
-| Mastered route | 5.48 s from the entrance (`RoomReplayTest`, three identical attempts, `ForestRoostTest` asserts it with and without the assist and with starts delayed through a whole patrol): jump the thorn root and walk on: the beetle notices him, comes after him, draws its dive and bursts behind him, then walk past the falling stone to the exit; 5.48 s on a collection return too (the route never meets the beetle, `RoomReplayTest`); target about 20 s (D19) |
+| Mastered route | 6.43 s from the entrance (`RoomReplayTest`, three identical attempts, `ForestRoostTest` asserts it with and without the assist and with starts delayed through a whole patrol): jump the thorn root and walk on: the beetle notices him, comes after him, draws its dive and bursts behind him, then walk past the falling stone to the exit; 6.43 s on a collection return too (the route never meets the beetle, `RoomReplayTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | the whole room: the most expensive death on the mastered pace is under the falling stone, 6.02 s from the entrance for a hero who stops there, the beetle's burst 3.35 s for one who stops under it (`ForestRoostTest.stoppingInTheBoxOrUnderTheStoneDiesAtTheCardsTimes`). The beetle is beat 2, so its first meeting has no retry limit |
-| Beats | proximity-thorn@4608, flying-beetle@4854, falling-stone@5000 |
-| Beat time | 5.48 (`RoomReplayTest`) |
-| First meeting | flying-beetle: beat 2, pocket at x 4728, on the floor under the one-way ledge (x 4704-4768, top y 256, 48 px up) beside the end of the beetle's line, at the height of its body: it hears him, notices, comes to its range end and waits beside him, and cannot commit because the ledge cuts the line of its dive. A hero whose centre is at x 4704 to 4744 is never committed to, from x 4746 on he is. The thorn root (x 4608-4624) is 104 px from the pocket (`FirstMeetingPocketTest.forestRoostTheFlyingBeetle`, acting `NOTICE`) |
-| Optional | the ledge: a hero on its left part is out of the beetle's commit reach, one on its right end is dived at along the ledge and can run off it (`ForestRoostTest`). Killing the beetle with a thrown or cast shot takes a jump (D145) and is never needed |
+| Retry cost | the whole room: the most expensive death on the mastered pace is under the falling stone, 7.0 s from the entrance for a hero who stops there, the beetle's burst 4.42 s for one who stops in its reach (`ForestRoostTest.stoppingInTheBoxOrUnderTheStoneDiesAtTheCardsTimes`). The beetle is beat 2, so its first meeting has no retry limit |
+| Beats | proximity-thorn@4608, flying-beetle@4950, falling-stone@5096 |
+| Beat time | 6.43 (`RoomReplayTest`) |
+| First meeting | flying-beetle: beat 2, pocket at x 4824, on the floor under the one-way ledge (x 4800-4864, top y 256, 48 px up) the beetle's line crosses: it hears him, notices, flies up over the ledge and hangs above him, and cannot commit because the ledge cuts the line of its dive. A hero whose centre is at x 4800 to 4848 is never committed to, beside the ledge on either side he is. The thorn root (x 4608-4624) is 200 px from the pocket (`FirstMeetingPocketTest.forestRoostTheFlyingBeetle`, acting `NOTICE`) |
+| Optional | the ledge: a hero on it is dived at from above and can leave the blast's reach either way (`ForestRoostTest`). Killing the beetle with a thrown or cast shot takes a jump (D145) and is never needed |
 | D26 | the exit is always reachable: nothing on the route is one-shot but the stone, which closes nothing, the ledge is not needed for the exit, and the beetle can never hold a place (running on always leaves its box) |
 | Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
-| Landmark | the low ledge with the beetle hanging beside it |
-| Status | new, [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330) (card approved by the author 2026-11-26: a new room, fifth in forest-2). D84 check: one screen, the beetle is in view from the entrance, what it does is drawn before it acts (the line and the box), the answer on the floor is to keep running. Built and tested with a scripted hero (`ForestRoostTest`, `FirstMeetingPocketTest`, `RoomReplayTest`) |
-| Decisions | D72, D100, D105, D145 |
+| Landmark | the low ledge the beetle flies over |
+| Status | new, [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330) (card approved by the author 2026-11-26: a new room, fifth in forest-2). D84 check: the beetle is in view from the entrance, what it does is shown before it acts (the gathering and the line), the answer on the floor is to keep running. Built and tested with a scripted hero (`ForestRoostTest`, `FirstMeetingPocketTest`, `RoomReplayTest`) |
+| Decisions | D72, D100, D105, D145, D146, D147 |
 
-Sketch (Y grows downward, floor top y 304, ledge top y 256; one character is 16 px, column 0 is x 4480; `@` the entrance, `^` the thorn root, `====` the ledge, `<..<ww` the beetle flying its line from the right, `####` the soil overhang with the stone `v` hanging under it, the rows between y 48 and 224 left out, `E` the exit):
+Sketch (Y grows downward, floor top y 304, ledge top y 256; one character is 16 px, column 0 is x 4480; `@` the entrance, `^` the thorn root, `====` the ledge, `<..ww` the beetle on its line, `.<<<<<<.` its way over the ledge, `####` the soil overhang with the stone's lip `v` under it, some rows left out, `E` the exit):
 
 ```
-col   0         1         2         3
-      0123456789012345678901234567890123456789
-y  32 |                               ####     |
-y  48 |                                v       |
-y 224 |                                        |
-y 240 |                  <..<ww                |
-y 256 |              ====                      |
-y 272 |                                        |
-y 288 |  @     ^                             E |
-y 304 ==========================================
+col   0         1         2         3         4
+      0123456789012345678901234567890123456789012345
+y  32 |                                     ####     |
+y  80 |                                     ####     |
+y  96 |                                      v       |
+y 192 |                   .<<<<<<.                   |
+y 240 |               <..         <..ww              |
+y 256 |                    ====                      |
+y 272 |                                              |
+y 288 |  @     ^                                   E |
+y 304 ================================================
 ```
 
-- `Room` (id 425, `leaves` 10), `RoomStart` (id 426) (4512, 256), `RoomExit` (id 427) x 5088-5104, y 256-304, on the floor against the right wall.
-- Left wall `Wall` (id 421) x 4480-4496; floor (id 422) x 4480-5120, y 304-368, gapless; right wall `Wall` (id 424) x 5104-5120, y 0-304.
-- One-way `Platform` ledge (id 423, no skin: it is not a branch-climb beat) x 4704-4768, y 256.
+- `Room` (id 425, `leaves` 10), `RoomStart` (id 426) (4512, 256), `RoomExit` (id 427) x 5184-5200, y 256-304, on the floor against the right wall.
+- Left wall `Wall` (id 421) x 4480-4496; floor (id 422) x 4480-5216, y 304-368, gapless; right wall `Wall` (id 424) x 5200-5216, y 0-304.
+- One-way `Platform` ledge (id 423, no skin: it is not a branch-climb beat) x 4800-4864, y 256.
 - `ThornRoot` (id 418) x 4608, y 296 in the map (the SpawnPoints layer is drawn 16 px up: top y 280, standing on the floor line), `zone` 64.
-- `FlyingBeetle` (id 419) x 4854, y 240 in the map (40x32: top y 224, the body's bottom y 256, 48 px above the floor), `offNeg` 6, `offPos` 0: its frame flies x 4758-4894.
-- `FallingStone` (id 420) x 5000, y 16 in the map (top y 0), trigger zone x 4984-5016, y 272-304 (`zoneX` 4984, `zoneY` 272, 32x32), `lipTop` 48: it hangs under a drawn soil overhang x 4976-5040, y 0-48 (Background tiles, no collision, the canopy's recipe), because on the default line it showed only half at the screen's top edge beside the fireball icons (seen in the web build, D71).
+- `FlyingBeetle` (id 419) x 4950, y 240 in the map (40x32: top y 224, the body's bottom y 256, 48 px above the floor), `offNeg` 14, `offPos` 0: its frame flies x 4726-4990, rising to a body bottom of y 208 over the ledge.
+- `FallingStone` (id 420) x 5096, y 16 in the map (top y 0), trigger zone x 5080-5112, y 272-304 (`zoneX` 5080, `zoneY` 272, 32x32), `lipTop` 96: it hangs under a drawn soil overhang x 5072-5136, y 0-96 (Background tiles, no collision). On the default line it showed only half at the screen's top edge beside the fireball icons (seen in the web build, D71), and at `lipTop` 48 the drifting cloud lay behind it once the camera scrolled (D146).
 
 ### forest-canopy
 

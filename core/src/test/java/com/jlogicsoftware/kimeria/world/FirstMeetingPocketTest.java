@@ -298,14 +298,14 @@ class FirstMeetingPocketTest {
     /** 20 px short of the tip's sweep: the vine is seen swinging at him and back, never reaching (D46). */
     @Test void forestCanopyTheThornVine() { pocket("forest-2", "forest-canopy", "thorn-vine", ThornVine.class, 1848, "SWING_LEFT"); }
     /**
-     * Under the one-way ledge (x 4704-4768) beside the end of the beetle's line, at its height: it hears him, notices, comes to its
-     * range end and waits there, and cannot commit, because the ledge cuts the line of its dive (D145, #330).
+     * Under the one-way ledge (x 4800-4864) the beetle's line crosses: it hears him, notices, flies up over the ledge and hangs
+     * above him, and cannot commit, because the ledge cuts the line of its dive (D145, D146, #330).
      */
     @Test void forestRoostTheFlyingBeetle() {
-        Set<String> seen = pocket("forest-2", "forest-roost", "flying-beetle", FlyingBeetle.class, 4728, "NOTICE");
+        Set<String> seen = pocket("forest-2", "forest-roost", "flying-beetle", FlyingBeetle.class, 4824, "NOTICE");
         for (FlyingBeetle.State never : new FlyingBeetle.State[]{FlyingBeetle.State.WINDUP, FlyingBeetle.State.DIVE})
             assertFalse(seen.contains(never.name()), "the beetle never commits to a hero under the ledge: it showed " + seen);
-        assertTrue(seen.contains(FlyingBeetle.State.CHASE.name()), "the pocket shows it coming to its range end: " + seen);
+        assertTrue(seen.contains(FlyingBeetle.State.CHASE.name()), "the pocket shows it coming over the ledge: " + seen);
     }
     @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "clocked-column", EmberFissure.class, 3200, "JET"); }
     /**
