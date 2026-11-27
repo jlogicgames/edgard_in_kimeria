@@ -109,9 +109,9 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest-2` contains six rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
+`forest-2` contains seven rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
 with a tree to climb and a leap over two walls (split from the entry by #376, redesigned by #545), the fissure room (two ember fissures and a ledge beetle), the glade (the forest wolf,
-met from a one-way branch, #331), a forest course with an ascending
+met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -190,6 +190,22 @@ it burst at once, under him; landing on one that is already winding up bounces h
 met in play, first on the open floor past the guard room's tunnel (`forest-1-guard`; it also crawled at the sound tree's foot in `forest-1-tree` until #500 made that a reward room), then on the exit ledge of the fissure room in forest-2 (`forest-fissure`) (#327); authoring: `Beetle` in `SpawnPoints` with `offNeg`/`offPos` like the mobs, checked at load.
 There is no violence or blood option in Settings.
 
+## Forest flying beetle
+
+A crimson beetle in flight, its two wing covers lifted over long clear wings (D145, #330), flies to and fro along a straight level line a little over Edgard's
+head. Touching it is harmless. It hears him below, up to six tiles to either side: it claps its wing covers and drops, opens
+them and tips its head down (half a second, with a high double chirr), then follows along its line, slower than he runs. Once it
+is within three tiles over him with a clear way down, it hangs where it is, shaking and blinking, while pale specks run down a
+line to the spot where he stands and draw the edges of the burst there (0.8 s, 1.2 s with the longer-warnings assist). Then it
+dives along that line in a quarter of a second and bursts: the same low, wide box as the ground beetle's. Run out of it, jump
+as it bursts, or stand under a ledge, which it cannot dive through. A fireball or a thrown stone or torch kills it at any
+moment without a burst, and its body falls to the floor; while it flies level, Edgard must jump to hit it. His sword cannot
+reach it up there; if it meets the blade as it comes down, or he lands on it before it commits, it bursts on him; landing on it
+once it has committed bounces him off. It never dives over a pit. There is no hint about it: it is met in play, in
+`forest-roost`, forest-2's fifth room, first from under a low ledge beside its line
+([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). Authoring: `FlyingBeetle` (40×32) in `SpawnPoints` with `offNeg`/`offPos`, checked at load
+(its line clear, 40 to 64 px over every surface under it, and no burst or dive over the room's entrance, exit or checkpoints).
+
 ## Forest spider
 
 A plum-black spider with an ochre chevron and eight high-kneed legs (D102, #328), about half Edgard's height, skitters to
@@ -258,12 +274,12 @@ mobs, checked at load (a range of at least ten tiles on floor without gaps, noth
 and four tiles of headroom over its reach). Where it is met: `forest-glade`, forest-2's fourth room, from a one-way branch ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)).
 
 **Monster bodies (D101).** A monster killed without bursting leaves its body, in a pose no living one takes (the beetle
-on its back, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
+on its back, the flying beetle on its back with one wing flat, the spider on its back with its legs curled up, the snail's empty shell rolled over, its mouth open upward, the wolf lying flat on its side), so it never looks like a monster at rest. Bodies are harmless and in nobody's way. They rock when Edgard
 or a monster walks past. The sword or landing on one crumbles it (landing bounces him as on a monster), and a
 fireball or a thrown torch burns it up and flies on; a thrown stone flies straight through it (D119). No weapon is used up or stopped by a body. A burst leaves no body. Bodies last
 until Edgard leaves the room. A death resets the room with the monster alive again, and a passed room shows neither the
 monster nor its body. A sword kill leaves the body too: the swing that killed the monster does not crumble it. The beetle,
-the spider, the snail and the wolf leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
+the flying beetle, the spider, the snail and the wolf leave bodies; the other monsters follow in [#478](https://github.com/jlogicgames/edgard_in_kimeria/issues/478).
 
 Options -> Accessibility has an **Instant text** toggle (off by default): healer dialogue lines then appear whole instead of
 letter by letter, and one press moves to the next line.

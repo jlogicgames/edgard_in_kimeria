@@ -1102,7 +1102,7 @@ A plan agreed with the author; the built effects are listed below. [patch-gg/pix
 | Area | Issue | Main candidates |
 | --- | --- | --- |
 | Forest, existing objects | [#397](https://github.com/jlogicgames/edgard_in_kimeria/issues/397) | fireball done; bomb, stump and root blasts, stone and branch landing, spores kept as they are; falling leaves: **built** (see Falling leaves); boss strike, counter and death → [#474](https://github.com/jlogicgames/edgard_in_kimeria/issues/474) |
-| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; wolf: **built** (see Forest wolf, D115), its breath streaks, skid and bite dust, jaw glints and death poof; flying beetle blast; the notice is body language in each monster's own frames, no "!" pop (D100) |
+| Forest monsters | [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398) | beetle: **built** (see Forest beetle, D100), with its body's crumble and burn (D101); spider: **built** (see Forest spider, D102), its bite and silk, and its climb and silk drop (D103); snail: **built** (see Forest snail, D106), its specks, gob and splat; wolf: **built** (see Forest wolf, D115), its breath streaks, skid and bite dust, jaw glints and death poof; flying beetle: **built** (see Forest flying beetle, D145), its dive line, box specks and burst on `BeetleFx`; the notice is body language in each monster's own frames, no "!" pop (D100) |
 | Swamp | [#399](https://github.com/jlogicgames/edgard_in_kimeria/issues/399) | quicksand surface and bubbles, splashes and ripples, swamp gas |
 | Steppe | [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400) | wind and gust streaks, double-jump puff, arrow impact and deflection, lightning |
 | Fortress | [#401](https://github.com/jlogicgames/edgard_in_kimeria/issues/401) | torch flame and light shafts, plate dust, cutters, incendiary fire |
@@ -1378,6 +1378,29 @@ not game art); the exporter's contact sheets are `monster-wolf-preview.png` and 
 - **Cost:** `WolfFx` pools of 64 and 72 from measured peaks of 50 and 55 (`WolfFxTest`: three wolves braking and winding up at the
   assist's 0.75 s, then biting, while three others die); 0.2 to 0.6 B/frame through the real level before the floor re-check, 0.0 in one run after it
   (`AllocationBudgetTest.wolfThroughTheRealLevel`).
+
+**Forest flying beetle, built (#330, #398, [D145](DECISIONS.md#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398); the card and the redrawn sprites approved by the author 2026-11-26; placed in `forest-roost`, [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)).** The body is an authored sprite; every effect is a particle on `KimeriaParticleSystem`, shared with
+the ground beetle (`effects.BeetleFx`).
+
+- **Reference** (the author, 2026-11-26): photos of beetles in flight; the side view with one cover raised upright and the
+  hindwing swept up behind it, and the spread views for the covers, the veins and the segmented underside. A first drawing with
+  scalloped bat-like wings on a domed shell was rejected.
+- **Sheet** `assets/images/objects/monster-flying-beetle.png`, ten 40×32 frames, drawn in `art/objects/monster/flying-beetle.grid`
+  and exported by `tools/forest_trap_sprites.py monster:flying-beetle` with the moon rim: `fly1`, `fly2`, `fly3` (hindwing up,
+  level, down; played 1 2 3 2), `clap`, `tip` (the notice), `brace`, `bright`, `white` (the wind-up), `dive`, `dead`. Side view,
+  facing right: two wing covers lifted apart (one upright, one along the back), a long hindwing with veins, a segmented belly, a
+  glossy thorax, the head with a glowing eye, clubbed antennae and jointed legs. It reads apart from the `Bat` (a flat front
+  view of two wings) by the covers, the antennae and the legs.
+- **Palette** (15 entries with transparency, 16 with the rim): the ground beetle's colours plus one new one, the wing membrane
+  `bc98a8`, veined in the legs' `9a6070`, with pale glints in its `f4d4de`. The photos are brown; the danger family keeps it crimson. No reserved hue.
+- **Wind-up:** the ground beetle's shake, blink and white frame; 2 px specks run down the dive line (60 a second) and are drawn
+  in from the edges of the 80×32 box at the target.
+- **Burst:** `BeetleFx.burstAt`: on a surface the ground beetle's burst; in the air the same with a whole oval halo (rx 40,
+  ry 24), cut at the surface below.
+- **Body (D101):** on its back, belly up, legs in the air, one wing spread flat along the floor (`monster-flying-beetle-body.png`, the live
+  palette, D117). Placed in `forest-roost` and measured along its line and dive ends
+  by `check_contrast.py`: live outline 0.315 to 0.826, body outline 0.324 to 0.514 (active floor 0.28; before the room was built,
+  trial placements in all 24 other forest rooms gave a live outline of 0.295 to 0.834).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

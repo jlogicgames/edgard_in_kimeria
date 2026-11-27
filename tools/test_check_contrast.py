@@ -109,6 +109,9 @@ SHORT_FLOOR_WIDTH = 400  # a floor ending 10 px past the authored body
 SHELF_LEFT = 96  # the shelf a spider walks, its lip at the right end
 SHELF_RIGHT = 160
 SHELF_TOP = 208
+FLYING_X = 320  # a flying beetle's frame x
+FLYING_OFF = 4  # its range either side, in tiles
+FLYING_HEIGHT = 48  # its body bottom this far over the floor
 
 
 class MetricTest(unittest.TestCase):
@@ -460,6 +463,34 @@ class ClassificationTest(unittest.TestCase):
         body_end = gate.WOLF_BODY_X + gate.WOLF_BODY_WIDTH
         authored_hi = SPIDER_RANGE_X + SPIDER_OFF_POS * gate.TILE
         self.assertEqual(max(x for _, x, _ in spots(legs(authored_hi + body_end + WOLF_FLOOR_BEYOND))), authored_hi + WOLF_FLOOR_BEYOND, 'the lunge stops where the body would leave the floor')
+
+    def test_a_flying_beetle_is_measured_along_its_line_and_where_it_dives_and_falls(self):
+        """#330 (D145): the live frames every step of the line and at every dive end with floor under it; the body wherever it
+        can be dropped, out to the commit reach past either end, never over a pit. No shipped map places one yet."""
+        fw, fh = gate.FLYING_FRAME
+        bottom_in_frame = gate.java_number(gate.FLYING_JAVA, 'BODY_Y') + gate.java_number(gate.FLYING_JAVA, 'BODY_HEIGHT')
+        reach = gate.java_number(gate.FLYING_JAVA, 'COMMIT_REACH')
+        x, y = FLYING_X, BODY_FLOOR - FLYING_HEIGHT - bottom_in_frame
+        root = lambda width: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{width}" height="48"/>'
+                                           f'</objectgroup><objectgroup name="SpawnPoints"><object type="FlyingBeetle" x="{x}" y="{y}" '
+                                           f'width="{fw}" height="{fh}"><properties><property name="offNeg" value="{FLYING_OFF}"/>'
+                                           f'<property name="offPos" value="{FLYING_OFF}"/></properties></object></objectgroup></map>')
+        low, high = x - FLYING_OFF * gate.TILE, x + FLYING_OFF * gate.TILE
+        props = {'offNeg': str(FLYING_OFF), 'offPos': str(FLYING_OFF)}
+        parts = list(gate.flying_beetle_parts(root(WIDE_FLOOR), x, y, props))
+        self.assertEqual({(w, h) for _, _, _, w, h in parts}, {(fw, fh)})
+        line = [left for _, left, top, _, _ in parts if top == y]
+        self.assertEqual((min(line), max(line)), (low, high))
+        dives = [left for _, left, top, _, _ in parts if top == BODY_FLOOR - fh]
+        self.assertEqual((min(dives), max(dives)), (low - reach, high + reach))
+        spots = [(key, left, floor) for key, _, left, floor in gate.body_spots({'forest-9': root(WIDE_FLOOR)})]
+        self.assertEqual({key for key, _, _ in spots}, {'FlyingBeetle:body'})
+        self.assertEqual({floor for _, _, floor in spots}, {BODY_FLOOR})
+        lefts = [left for _, left, _ in spots]
+        self.assertEqual((min(lefts), max(lefts)), (low - reach, high + reach))
+        over_pit = [left for _, _, left, _ in gate.body_spots({'forest-9': root(low)})]
+        body_x = gate.java_number(gate.FLYING_JAVA, 'BODY_X')
+        self.assertTrue(over_pit and all(left + body_x < low for left in over_pit), 'nothing lies where there is no floor')
 
     def test_a_dynamic_block_continuing_a_spiders_floor_in_the_pounce_band_fails(self):
         root = lambda kind: ET.fromstring(f'<map><objectgroup name="Collisions"><object x="0" y="{BODY_FLOOR}" width="{WIDE_FLOOR}" height="48"/>'

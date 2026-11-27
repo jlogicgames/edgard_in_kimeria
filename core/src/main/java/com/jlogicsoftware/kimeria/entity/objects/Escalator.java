@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.entity.objects;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.entity.Actor;
@@ -60,6 +61,12 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
         putAnimation(State.IDLE, assets.animation(offImage, 1, 0.05f, 32, 8, 0, 0, 1), true);
         putAnimation(State.RUN, assets.animation(onImage, 8, 0.05f, 32, 8, 0, 0, 8), true);
         setState(running ? State.RUN : State.IDLE);
+    }
+
+    /** The whole area an escalator authored at these bounds passes through, for load-time checks (D145). */
+    public static Rectangle travel(float x, float y, float w, float h, boolean vertical, float offNeg, float offPos) {
+        float back = offNeg * TILE_SIZE, length = back + offPos * TILE_SIZE;
+        return vertical ? new Rectangle(x, y - back, w, h + length) : new Rectangle(x - back, y, w + length, h);
     }
 
     public boolean isRunning() {

@@ -11,6 +11,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
+import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.environment.CollisionBlock;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
@@ -296,6 +297,16 @@ class FirstMeetingPocketTest {
     @Test void forestCanopyTheFalseFungus() { tripAndStand("forest-2", "forest-canopy", FalseHoneyFungus.class, 1640); pocket("forest-2", "forest-canopy", "false-honey-fungus", FalseHoneyFungus.class, 1640, "BURST"); }
     /** 20 px short of the tip's sweep: the vine is seen swinging at him and back, never reaching (D46). */
     @Test void forestCanopyTheThornVine() { pocket("forest-2", "forest-canopy", "thorn-vine", ThornVine.class, 1848, "SWING_LEFT"); }
+    /**
+     * Under the one-way ledge (x 4704-4768) beside the end of the beetle's line, at its height: it hears him, notices, comes to its
+     * range end and waits there, and cannot commit, because the ledge cuts the line of its dive (D145, #330).
+     */
+    @Test void forestRoostTheFlyingBeetle() {
+        Set<String> seen = pocket("forest-2", "forest-roost", "flying-beetle", FlyingBeetle.class, 4728, "NOTICE");
+        for (FlyingBeetle.State never : new FlyingBeetle.State[]{FlyingBeetle.State.WINDUP, FlyingBeetle.State.DIVE})
+            assertFalse(seen.contains(never.name()), "the beetle never commits to a hero under the ledge: it showed " + seen);
+        assertTrue(seen.contains(FlyingBeetle.State.CHASE.name()), "the pocket shows it coming to its range end: " + seen);
+    }
     @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "clocked-column", EmberFissure.class, 3200, "JET"); }
     /**
      * On the one-way branch (x 3952-4016, 32 px above the wolf's floor), where the trunk's face does not cut its sight (a platform is not a
