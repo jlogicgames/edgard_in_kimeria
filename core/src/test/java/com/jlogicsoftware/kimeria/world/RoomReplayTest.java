@@ -169,7 +169,7 @@ class RoomReplayTest {
     @Test void forestGladeRequiredRouteFitsTwentySeconds() {
         assertEquals(GLADE_S, measure("forest-glade", 3, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
-    /** #330: jump the thorn root, walk under the ledge the flying beetle flies over and out of its drawn box, past the falling stone. */
+    /** #330: jump the thorn root, walk under the ledge the flying beetle flies over and out of its blast's reach, past the falling stone. */
     @Test void forestRoostRequiredRouteFitsTwentySeconds() {
         assertEquals(ROOST_S, measure("forest-roost", 4, false, 0, ROOST_JUMPS), PIN_MARGIN, "the card's beat time (D105)");
     }

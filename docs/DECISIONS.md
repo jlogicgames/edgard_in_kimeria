@@ -2996,7 +2996,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D100. The forest beetle: a kamikaze that hears, commits and bursts; monsters notice in body language and are met in play (#327, #240, #398)
 
-- **Status:** Accepted (author, 2026-11-18).
+- **Status:** Accepted (author, 2026-11-18). *Amended by [D149](#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136): the burst kills in the half ellipse inscribed in the 80×32 box, and the wind-up specks are born on its rim.*
 - **Decision:**
   - **Body.** One strip of ten 24×16 frames (`crawl1`, `crawl2`, `look`, `wiggle`, `crouch`, `air`, `brace`, `bright`,
     `white`, `dead`), 15 colours with the moon rim; drawn about 14 px tall, half the hero; a dark green-bronze shell, no
@@ -4487,6 +4487,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D136. The beetle's burst is seen, felt and heard ([#559](https://github.com/jlogicgames/edgard_in_kimeria/issues/559), 2026-11-24)
 
 - **Status:** Accepted (author, 2026-11-24, every recommendation of the proposal; sound A). The author accepted sound A at **-16.5 dBFS** (confirmed 2026-11-24): lowered 0.5 dB from the auditioned -16.0 because the voice-set balance test caps the spread at 3 dB (see below). Amends D100's "No shake". Built; the look, the feel and the sound checked in the running game by the author, 2026-11-24, desktop and web.
+- **Amended** by [D149](#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136) (2026-11-27): the lethal shape, the flash, and where the burst's particles go. The test `theSprayStaysInsideTheBlastBox` named below is replaced by `everyParticleOfTheGroundBurstStaysInsideTheDome` (`BeetleFxTest`).
 - **Why:** playtest 2, F23 (D116): the burst "is not visible at all". D93 asks for an act to be seen and heard; D5 that what kills is what is seen.
 - **Decision (the lethal timing, the 80x32 box and the order of `Beetle.burst` are unchanged; everything is cosmetic):**
   - **Halo, not a ring.** 32 `KIND_FLAME` dots (4 px, white and pale) fly from the body to the rim of the half-ellipse inscribed in the box (rx 40, ry 32, centred on the floor line) in 0.16 s. A circle (`RingPool`, the shockwave shader) would overstate the reach upward or understate it sideways by 8 px. All dots spawn at the instant: no emitter, no new kind, no shader.
@@ -4784,7 +4785,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     glows lying on the surface (`KimeriaParticleSystem.KIND_DOME`), with the half-ellipse halo; every particle starts just
     above the surface and flies up and away, and none is drawn under it. A burst in the open air stays a whole oval.
   - **Unchanged:** the kill box (80×32 on the surface at the end of a dive), the timings, the sounds, and the ground beetle's
-    effects, which still outline its box.
+    effects, which outlined its box until [D149](#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136)
+    gave it the dome (#618).
 - **Why:** the gathering belongs where the blast is stored, and a blast off the ground should not go into it.
 - **Known difference:** the reach is no longer drawn before the burst, and the half dome (rx 40, ry 32) does not fill the upper
   corners of the 80×32 box, which still kill.
@@ -4802,7 +4804,40 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     where the shape would just miss him.
   - **Particles** of the flying burst (halo, spray, embers, chips) stay inside the shape; the steam may drift above it.
   - **Load checks** still test the box round the shape, which is at least as large, so no placement became legal by this.
-  - The ground beetle is unchanged; its dome is [#618](https://github.com/jlogicgames/edgard_in_kimeria/issues/618).
+  - The ground beetle was left unchanged here; its dome is built since, in
+    [D149](#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136)
+    ([#618](https://github.com/jlogicgames/edgard_in_kimeria/issues/618)).
 - **Why:** what kills is what is seen (D5).
 - **Measured (2026-11-27, scripted hero):** a standing hero is reached as far out as before (40 px, so 45.5 px from the
   target clears it), and the pinned times of `forest-roost` are unchanged.
+
+## D149. The ground beetle's burst kills in the dome it is seen in (#618, amends D100, D136)
+
+- **Status:** Accepted (the shape: author, 2026-11-24, [#618](https://github.com/jlogicgames/edgard_in_kimeria/issues/618)). Built. Checked in the running game, 2026-11-27: the look accepted by the author after playing the desktop build; the web build checked by screenshots when it was built.
+- **Why:** the burst and above all its wind-up read as a rectangle. What kills is what is seen (D5).
+- **Decision:**
+  - **Lethal shape:** the half ellipse inscribed in the old 80×32 box, standing on the beetle's floor line: **40 px** out to
+    either side and **32 px** up. Nothing under the floor line is reached; touching the edge is not. The reach along the floor
+    and the height are as before; only the upper corners stop killing. It is the shape of a flying beetle's burst off a
+    surface (D148), and both use one test (`FlyingBeetle.reaches`, through `Beetle.reaches`).
+  - **Wind-up:** the specks are born on the dome's rim (the curve, not the floor line) and drawn in to the body.
+  - **Burst:** the flash and its core are half glows lying on the floor (`KIND_DOME`, 44 and 20 px; round before). The halo is
+    unchanged. The spray and embers are cut at 2 px inside the rim and the steam starts and rises no higher than that; the
+    shell chips already flew inside it. Every particle is born and ends inside the dome. The soft steam puffs and the halo's
+    dots, as they arrive on the rim, may be drawn a few px past it. The chips still fall to the floor (D136); the upward-only
+    burst of D147 stays the flying beetle's.
+  - **Load check:** the swept blast is the swept dome, so a standing place in a corner past a range end no longer rejects a
+    map. The check that the range plus 40 px stays inside the room is unchanged.
+  - **Melee stays punished (D100) with no special case:** the sword reaches the beetle from at most 28 px off its middle (11 px
+    of body, 17 px of blade) and a stomp stands on it, while the dome reaches 40 px along the floor and 36 px at the height of
+    the beetle's top. The flying beetle needs its rule of D148 because its shape is in the air or below it; this one does not. As before,
+    only a hero whose whole body is under the floor line survives a swing that sets it off.
+  - **Unchanged:** the trigger (still inside the dome), the timings, the sounds, the shake and the flying beetle.
+- **Measured (2026-11-27):** a standing hero touches the floor line, so his escape distances of D100 are unchanged; a jump
+  that clears 32 px still clears it from any place, and off its middle less height is enough (27.7 px at 20 px to a side).
+  Every time the tests print, the pocket and beat times of the beetle's rooms among them, equals the run before the change.
+  `BeetleFx` peaks are unchanged (69 soft, 318 hard; pools 92 and 440); allocation of the beetle scene 0.0 B/frame (ceiling 8).
+- **Tests:** `BeetleTest` (a hero in a corner outside the dome survives and inside it dies, from both sides; the reach along the
+  floor and the height; the trigger inside the dome; the sword at the tip of its reach from both sides and several heights; the
+  load check's corners), `BeetleFxTest` (every speck born on the rim and drawn in; every burst particle inside the dome, over
+  the floor line).

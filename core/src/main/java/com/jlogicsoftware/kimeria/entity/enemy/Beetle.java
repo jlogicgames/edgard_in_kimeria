@@ -24,7 +24,8 @@ import java.util.Map;
  * The forest beetle (#327, D100): a kamikaze. It crawls inside its authored range, hears the hero, notices in body language
  * (head up, antennae wiggle, a hop), chases, and once the hero is close it commits on the spot and bursts after the shared
  * D7 warning ({@link TrapWarnings}, longer with the assist), whatever the hero does. Its body never hurts: only the burst
- * kills, one 80x32 box tested once at the instant. A fireball or a thrown stone kills it in any state without a burst; the
+ * kills, in the shape it is seen in (D149): a half ellipse on its floor line, {@value BeetleFx#BLAST_WIDTH} px wide and
+ * {@value BeetleFx#BLAST_HEIGHT} px high, tested once at the instant. A fireball or a thrown stone kills it in any state without a burst; the
  * sword in any state, and a stomp before it commits, burst it at once; a stomp on a committed beetle bounces the hero off.
  * No blood (D65 does not apply). Its effects are {@link BeetleFx}; its sprite is one strip of ten frames
  * ({@link SpriteSheets#MONSTER_BEETLE}). World Y grows downward: the floor line is the body's bottom edge.
@@ -105,7 +106,7 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     private final TextureRegion[] frames = new TextureRegion[FRAMES];
     private final TextureRegion bodyFrame;
     private final float spawnX, spawnY;
-    private final Rectangle triggerScratch = new Rectangle(), blastScratch = new Rectangle(), heroScratch = new Rectangle();
+    private final Rectangle triggerScratch = new Rectangle(), heroScratch = new Rectangle();
     private Level level;
     private boolean inQuickSand;
     private Escalator currentEscalator;
@@ -153,8 +154,18 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     /** The middle of the body, horizontally. */
     public float centreX() { return hitboxBoundsInto(bodyScratch).x + hitbox.width / 2f; }
 
-    /** The burst's box: {@link BeetleFx#BLAST_WIDTH} by {@link BeetleFx#BLAST_HEIGHT}, centred on the body, on its floor line. */
-    public Rectangle blastBoxInto(Rectangle out) {
+    /**
+     * Whether the burst of a beetle with its middle at {@code centreX}, standing on {@code floorY}, reaches {@code body}
+     * (D149): the dome it is seen in, the half ellipse on that floor line, half {@link BeetleFx#BLAST_WIDTH} out and
+     * {@link BeetleFx#BLAST_HEIGHT} up. It is the shape of a flying beetle's burst off a surface ({@link FlyingBeetle#reaches},
+     * D148). Nothing under the floor line is reached; touching the edge is not. No allocation.
+     */
+    public static boolean reaches(Rectangle body, float centreX, float floorY) {
+        return FlyingBeetle.reaches(body, centreX, floorY - BeetleFx.BODY_CENTRE_ABOVE_FLOOR, floorY);
+    }
+
+    /** The bounds of the burst's shape ({@link #reaches}) where the beetle is now. */
+    public Rectangle blastBoundsInto(Rectangle out) {
         float floor = floorY();
         return out.set(centreX() - BeetleFx.BLAST_WIDTH / 2f, floor - BeetleFx.BLAST_HEIGHT, BeetleFx.BLAST_WIDTH, BeetleFx.BLAST_HEIGHT);
     }
@@ -401,13 +412,14 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
     }
 
     /**
-     * The burst: the hero's body is tested once against the blast box and killed through {@code collidedWithActor(false)},
-     * as the explosive traps do (D47); then the beetle is gone (counted as defeated for the room's revisits).
+     * The burst: the hero's body is tested once against the blast's shape ({@link #reaches}) and killed through
+     * {@code collidedWithActor(false)}, as the explosive traps do (D47); then the beetle is gone (counted as defeated for the
+     * room's revisits). The sword and a stomp that set it off always find their hero inside it (D100, D149).
      */
     public void burst() {
         if (isDefeated()) return;
         float cx = centreX(), floor = floorY();
-        if (player != null && blastBoxInto(blastScratch).overlaps(player.hitboxBoundsInto(heroScratch))) player.collidedWithActor(false);
+        if (player != null && reaches(player.hitboxBoundsInto(heroScratch), cx, floor)) player.collidedWithActor(false);
         if (level != null) level.beetleFx().burst(cx, floor);
         if (game.playSounds()) game.playSound(POP_SOUND);
         if (level != null && player != null && !player.isGotHit() && feelsBurst())
@@ -511,8 +523,8 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
 
     /**
      * The load-time checks (D100): the range plus 40 px either side inside the room, on a floor without gaps under the body's
-     * whole sweep, and no blast position over the entrance body, the room exit or a checkpoint. Null when the beetle is
-     * fine, else what is wrong.
+     * whole sweep, and no blast position whose shape ({@link #reaches}, D149) reaches the entrance body, the room exit or a
+     * checkpoint. Null when the beetle is fine, else what is wrong.
      */
     public static String problem(float x, float y, float w, float h, float offNeg, float offPos, List<Rectangle> floors,
                                  Rectangle room, Map<String, Rectangle> standing) {
@@ -530,8 +542,12 @@ public class Beetle extends Enemy<Beetle.State> implements CollideBody, Remains 
         spans.sort((a, b) -> Float.compare(a.x, b.x));
         for (Rectangle f : spans) if (f.x <= covered + 1f) covered = Math.max(covered, f.x + f.width);
         if (covered < right) return "must crawl on floor without gaps under its whole range";
-        for (Map.Entry<String, Rectangle> place : standing.entrySet())
-            if (swept.overlaps(place.getValue())) return "can burst over the room " + place.getKey();
+        for (Map.Entry<String, Rectangle> place : standing.entrySet()) {
+            Rectangle area = place.getValue();
+            // Of all its blast positions the nearest to a place is under the place's middle, or at the range end towards it.
+            float nearest = MathUtils.clamp(area.x + area.width / SIDES, centreLeft, centreRight);
+            if (reaches(area, nearest, floor)) return "can burst over the room " + place.getKey();
+        }
         return null;
     }
 

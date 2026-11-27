@@ -32,7 +32,7 @@ class ForestRoostTest {
     private static final int SECOND = 60;
     /** The take-off for the thorn root (the hero's frame x), as in {@code RoomReplayTest.ROOST_JUMPS}. */
     private static final float ROOT_JUMP = 4550;
-    /** Where a hero on the mastered pace who stops walking dies: in the beetle's box, and under the stone. */
+    /** Where a hero on the mastered pace who stops walking dies: in the beetle's reach, and under the stone. */
     private static final float STOP_AT_BEETLE = 4870, STOP_AT_STONE = 5076;
     /** Measured, pinned within 0.1 s: the mastered route and the two deaths (the card's times). */
     private static final float ROUTE_S = 6.43f, BEETLE_DEATH_S = 4.42f, STONE_DEATH_S = 7.0f;
@@ -81,11 +81,11 @@ class ForestRoostTest {
             setLonger(longer);
             assertEquals(ROUTE_S, run(0, Float.NaN), .1f, "the card's mastered time (assist " + longer + ")");
             for (int delay = 5; delay <= ALL_PHASES; delay += 5)
-                assertEquals(ROUTE_S + delay * STEP, run(delay, Float.NaN), .1f, "walked out of every box, started " + delay + " frames late, assist " + longer);
+                assertEquals(ROUTE_S + delay * STEP, run(delay, Float.NaN), .1f, "walked out of every blast, started " + delay + " frames late, assist " + longer);
         }
     }
 
-    @Test void theBeetleCommitsOnTheMasteredRouteAtEveryPhaseSoTheBoxIsSeen() {
+    @Test void theBeetleCommitsOnTheMasteredRouteAtEveryPhaseSoItsDiveIsSeen() {
         for (int delay = 0; delay <= ALL_PHASES; delay += 5) {
             Level level = level();
             FlyingBeetle b = beetle(level);
@@ -103,7 +103,7 @@ class ForestRoostTest {
         }
     }
 
-    @Test void stoppingInTheBoxOrUnderTheStoneDiesAtTheCardsTimes() {
+    @Test void stoppingUnderTheBeetleOrTheStoneDiesAtTheCardsTimes() {
         assertEquals(-BEETLE_DEATH_S, run(0, STOP_AT_BEETLE), .1f, "stopped under the beetle");
         assertEquals(-STONE_DEATH_S, run(0, STOP_AT_STONE), .1f, "stopped under the stone");
     }

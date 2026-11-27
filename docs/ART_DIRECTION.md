@@ -1195,14 +1195,16 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   recolour (0.334 before; active floor 0.28); `check_contrast.py` measures every placed `Beetle` in all ten frames.
 - **Notice:** frames only, no mark over the head and no particles (D100: the "!" was rejected as not belonging in the tale).
 - **Wind-up** (the shared D7 warning): a 1 px shake, `brace`/`bright` blinking from 0.2 s to 0.05 s, `white` for the last 0.12 s; 2 px
-  specks (`KIND_FLAME`; a third `ffffff`, most of the rest `d8d6e8`, a few `9a97ad`) born on the 80×32 blast box's sides and top and
+  specks (`KIND_FLAME`; a third `ffffff`, most of the rest `d8d6e8`, a few `9a97ad`) born on the rim of the burst's dome (the curve of the
+  half ellipse, rx 40, ry 32 on the floor line; [D149](DECISIONS.md#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136), the 80×32 box's sides and top before) and
   drawn in to the body over 0.3 to 0.4 s, 50 a second rising to 150: the reach is read on them (denser and brighter after the look
   check of 2026-11-18, which found 30 to 90 too sparse at game scale).
-- **Burst** ([D136](DECISIONS.md#d136-the-beetles-burst-is-seen-felt-and-heard-559-2026-11-24), #559): a white additive flash (`SoftDot`, 44 px, 0.12 s) with a 20 px core (0.07 s); a **halo** of 32 dots (`KIND_FLAME`, 4 px, white and pale) that
-  run from the body to the rim of the half-ellipse inscribed in the box (rx 40, ry 32 on the floor line) in 0.16 s, so it touches the box at the floor edges and the top and
-  never leaves it (a circular ring would not fit the 80×32 box); 26 white and pale droplets 1 to 3 px (`KIND_FLAME`); 14 embers (`KIND_FLAME`, 2 px, `ff6b57`, one in three white)
-  and 8 shell chips (`KIND_GRIT`, `86101f` and `9c2050`, 2 to 3 px) flung to the floor; 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising 8 to
-  16 px over 0.40 to 0.60 s. Every end point stays inside the box (tested). A 1.5 px, 0.15 s shake through `ScreenShake` only for a hero within 160 px who survives (off with the
+- **Burst** ([D136](DECISIONS.md#d136-the-beetles-burst-is-seen-felt-and-heard-559-2026-11-24), #559; [D149](DECISIONS.md#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136), #618): a white additive flash lying on the floor as a half glow (`KIND_DOME`, 44 px, 0.12 s) with a 20 px core (0.07 s); a **halo** of 32 dots (`KIND_FLAME`, 4 px, white and pale) that
+  run from the body to the rim of the dome that kills (rx 40, ry 32 on the floor line) in 0.16 s (a circular ring would not fit
+  it); 26 white and pale droplets 1 to 3 px (`KIND_FLAME`); 14 embers (`KIND_FLAME`, 2 px, `ff6b57`, one in three white)
+  and 8 shell chips (`KIND_GRIT`, `86101f` and `9c2050`, 2 to 3 px) flung to the floor; 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising up to
+  16 px over 0.40 to 0.60 s. Every particle is born and ends inside the dome, the droplets, embers and steam cut 2 px inside its
+  rim, so its upper corners stay empty (tested). A 1.5 px, 0.15 s shake through `ScreenShake` only for a hero within 160 px who survives (off with the
   Screen shake option). No shader, no `RingPool`; no new hue.
 - **Death** (a fireball or a stone): it flips onto its back (`dead`, a 4 px hop over 0.2 s) and stays as a body (D101). 0.08 s after
   the hit, once the fireball's flash is spent, 12 puffs in a ring (two pale `d8d6e8` to one grey `9a97ad`, 5 to 8 px, 0.4 to
@@ -1395,7 +1397,7 @@ the ground beetle (`effects.BeetleFx`).
   `bc98a8`, veined in the legs' `9a6070`, with pale glints in its `f4d4de`. The photos are brown; the danger family keeps it crimson. No reserved hue.
 - **Wind-up:** the ground beetle's shake, blink and white frame; 2 px specks run down the dive line (60 a second) and others
   are drawn in to the body from a ring 28 to 32 px round it ([D147](DECISIONS.md#d147-the-flying-beetle-gathers-its-blast-round-itself-and-bursts-up-off-the-ground-330-amends-d145)).
-- **Burst:** `BeetleFx.burstAt`: where a surface cuts the box, a half dome lying on it (half-glow flash and core, `KIND_DOME`,
+- **Burst:** `BeetleFx.burstAt`: where a surface cuts the blast, a half dome lying on it (half-glow flash and core, `KIND_DOME`,
   the half-ellipse halo rx 40, ry 32; spray, embers, chips and steam all flying up from it); in the air the flash and a whole
   oval halo (rx 40, ry 24).
 - **Body (D101):** on its back, belly up, legs in the air, one wing spread flat along the floor (`monster-flying-beetle-body.png`, the live

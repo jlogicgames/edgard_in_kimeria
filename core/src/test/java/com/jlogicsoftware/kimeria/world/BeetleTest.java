@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Fixture beetle-test.tmx: room 640 wide, floor y 320, hero enters at x 32 (body x 50..61); the beetle spawns at x 320
  * (body x 321..343, centre 332) with offNeg 4 and offPos 4, so its {@code position.x} stays in 256..384 (body from 257 at
- * the left end, centre 268, trigger box from 249, blast box 228..308 there); a resting stone at x 96. Since D101 a beetle killed
+ * the left end, centre 268, trigger box from 249, blast dome 228..308 wide and 32 high there); a resting stone at x 96. Since D101 a beetle killed
  * quietly leaves its body, which rocks when the hero comes near and is crumbled by the sword or a stomp and burnt by a fireball or a thrown torch, which fly on; a stone passes
  * through it (D119).
  */
@@ -134,11 +134,11 @@ class BeetleTest {
             assertEquals(ExpectedWarnings.standard(longer), b.warningTotal(), 1e-6f);
             assertTrue(harness.sounds.contains(longer ? "beetle_windup_long" : "beetle_windup"), harness.sounds.toString());
             float x = b.position.x;
-            place(level, TOUCHING - 3);  // the hero steps back a little, still inside the blast box: it stays where it is
+            place(level, TOUCHING - 3);  // the hero steps back a little, still inside the blast: it stays where it is
             int frames = until(level, b::isRemoved, 120);
             assertEquals(ExpectedWarnings.standard(longer), frames * STEP, STEP * 1.5f, "bursts when the warning ends");
             assertEquals(x, b.position.x, .01f, "committed on the spot");
-            assertFalse(alive(level), "a hero inside the box at the instant dies");
+            assertFalse(alive(level), "a hero inside the dome at the instant dies");
             assertTrue(harness.sounds.contains("beetle_pop"));
             assertTrue(b.isDefeated(), "a burst beetle counts as defeated");
         }
@@ -151,7 +151,7 @@ class BeetleTest {
         harness.held.add(Input.Keys.A);   // run left with ordinary controls
         until(level, b::isRemoved, 120);
         harness.held.clear();
-        assertTrue(alive(level), "out of the 80x32 box at the instant");
+        assertTrue(alive(level), "out of the blast at the instant");
         Rectangle blast = new Rectangle(LEFT_END_CENTRE - BeetleFx.BLAST_WIDTH / 2, FLOOR - BeetleFx.BLAST_HEIGHT,
             BeetleFx.BLAST_WIDTH, BeetleFx.BLAST_HEIGHT);
         assertFalse(blast.overlaps(level.player.hitboxBounds()));
@@ -164,7 +164,63 @@ class BeetleTest {
         harness.held.add(Input.Keys.J); harness.pressed.add(Input.Keys.J);
         until(level, b::isRemoved, 120);
         harness.held.clear();
-        assertTrue(alive(level), "the feet are above the 32 px box at the instant");
+        assertTrue(alive(level), "the feet are above the 32 px dome at the instant");
+    }
+
+    /** The hero's body 11 px wide, its near edge {@code out} px to a side of the beetle's middle, its feet {@code up} px over the floor. */
+    private boolean survivesABurst(float side, float out, float up) {
+        Level level = level();
+        Beetle b = beetle(level);
+        Rectangle hero = level.player.hitboxBounds();
+        float left = side > 0 ? b.centreX() + out : b.centreX() - out - hero.width;
+        level.player.position.add(left - hero.x, FLOOR - up - (hero.y + hero.height));
+        b.burst();
+        return alive(level);
+    }
+
+    /** D149: what kills is the dome that is drawn, 40 px out along the floor and 32 px up; the corners of its bounds are safe. */
+    @Test void aHeroInACornerOutsideTheDomeSurvivesAndInsideItDies() {
+        float up = 20, rim = 40 * (float) Math.sqrt(1 - (up / 32) * (up / 32));  // 31.2 px out at 20 px up
+        for (float side : new float[]{-1, 1}) {
+            assertTrue(survivesABurst(side, rim + 1, up), "in the corner, outside the dome (side " + side + ")");
+            assertTrue(survivesABurst(side, 39, up), "deep in the corner (side " + side + ")");
+            assertFalse(survivesABurst(side, rim - 1, up), "inside the dome (side " + side + ")");
+            assertFalse(survivesABurst(side, 39.5f, 0), "on the floor the reach is still 40 px (side " + side + ")");
+            assertTrue(survivesABurst(side, 40, 0), "touching the edge is not inside (side " + side + ")");
+        }
+        assertFalse(survivesABurst(1, -5, 31.5f), "over its middle the dome is still 32 px high");
+        assertTrue(survivesABurst(1, -5, 32), "feet at its top are clear (Y grows downward: up is a smaller y)");
+    }
+
+    /** D100 kept: the trigger is an inner part of the blast, so a hero who has just set it off is within reach. */
+    @Test void theTriggerBoxLiesInsideTheDome() {
+        Beetle b = beetle(level());
+        Rectangle trigger = b.triggerBoxInto(new Rectangle()), corner = new Rectangle(0, trigger.y, .1f, .1f);
+        for (float x : new float[]{trigger.x, trigger.x + trigger.width - corner.width})
+            assertTrue(Beetle.reaches(corner.setX(x), b.centreX(), b.floorY()), "the trigger's top corner at " + x);
+    }
+
+    /**
+     * D100, D149: melee stays punished with no special case. The sword reaches the beetle from at most 28 px off its middle,
+     * well inside the dome: at the very tip of its reach, from either side, from a step up to the beetle's body height and from
+     * as far below as the old box caught, the swinging hero dies.
+     */
+    @Test void theSwordAtTheTipOfItsReachStillCatchesItsHero() {
+        float bodyLeft = LEFT_END_CENTRE - 11, bodyRight = LEFT_END_CENTRE + 11, reach = 17, inside = .1f;
+        for (boolean fromLeft : new boolean[]{true, false}) for (float up : new float[]{0, 7, 13.9f, -10, -21.9f}) {
+            Level level = level();
+            Beetle b = beetle(level);
+            place(level, HEARD);
+            until(level, () -> b.position.x <= LEFT_END + .01f && b.getState() == Beetle.State.CHASE, 60 * 5);
+            place(level, fromLeft ? bodyLeft - reach + inside : bodyRight + reach - inside + 11);
+            level.player.facingRight = fromLeft;
+            settle(level, 2);
+            assertFalse(b.isRemoved(), "waiting at its range end");
+            level.player.position.y -= up;
+            harness.held.add(Input.Keys.K); harness.pressed.add(Input.Keys.K); frame(level); harness.held.clear();
+            assertTrue(b.isRemoved(), "the tip of the sword reaches it (from left " + fromLeft + ", " + up + " px up)");
+            assertFalse(alive(level), "and its dome reaches the hero (from left " + fromLeft + ", " + up + " px up)");
+        }
     }
 
     @Test void aFireballKillsItWithoutABurstEvenWhileItWindsUp() {
@@ -178,7 +234,7 @@ class BeetleTest {
             harness.held.clear(); harness.held.add(Input.Keys.L); harness.pressed.add(Input.Keys.L); frame(level); harness.held.clear();
             until(level, b::isDefeated, 60);
             assertEquals(Beetle.State.DEAD, b.getState(), "killed, not burst");
-            assertEquals(0, kinds(level.beetleFx().soft(), KimeriaParticleSystem.KIND_GLOW), "no burst flash (specks of the wind-up may still be fading)");
+            assertEquals(0, kinds(level.beetleFx().soft(), KimeriaParticleSystem.KIND_DOME), "no burst flash (specks of the wind-up may still be fading)");
             assertTrue(harness.sounds.contains("bounce"), "the kill sound");
             assertFalse(harness.sounds.contains("beetle_pop"), "no burst sound");
             settle(level, 60 * 2);
@@ -234,7 +290,7 @@ class BeetleTest {
             settle(level, 20);
             assertTrue(b.isRemoved(), "burst at once (windingUp " + windingUp + ")");
             assertTrue(flames(level.beetleFx().hard()) > 0 || level.beetleFx().soft().count() > 0, "the burst's effects");
-            assertFalse(alive(level), "the swordsman is inside the box");
+            assertFalse(alive(level), "the swordsman is inside the dome");
             assertEquals(0, level.bloodParticles().count(), "no blood from the beetle");
         }
     }
@@ -630,7 +686,7 @@ class BeetleTest {
         harness.screenShakeDisabled = false;
     }
 
-    @Test void theHaloReachesTheBoxEdgesAndTopAndStaysInsideIt() {
+    @Test void theHaloReachesTheDomesFloorEndsAndTopAndStaysInsideItsBounds() {
         BeetleFx fx = new BeetleFx(5);
         float cx = 100, floor = 200, left = 1e9f, right = -1e9f, top = 1e9f;
         fx.burst(cx, floor);
@@ -644,37 +700,7 @@ class BeetleTest {
         assertEquals(cx - 40, left, 3f);
         assertEquals(cx + 40, right, 3f);
         assertEquals(floor - 32, top, 3f);
-        assertTrue(left >= cx - 40 && right <= cx + 40 && top >= floor - 32, "inside the blast box");
-    }
-
-    @Test void theSprayStaysInsideTheBlastBox() {
-        BeetleFx fx = new BeetleFx(7);
-        float cx = 100, floor = 200;
-        fx.burst(cx, floor);
-        KimeriaParticleSystem hard = fx.hard();
-        for (int f = 0; f < 30; f++) {
-            for (int i = 0; i < hard.count(); i++) {
-                float half = hard.drawSize(i) / 2;
-                assertTrue(hard.x(i) - half >= cx - BeetleFx.BLAST_WIDTH / 2 && hard.x(i) + half <= cx + BeetleFx.BLAST_WIDTH / 2, "x " + hard.x(i));
-                assertTrue(hard.y(i) - half >= floor - BeetleFx.BLAST_HEIGHT && hard.y(i) + half <= floor, "y " + hard.y(i));
-            }
-            fx.update(STEP);
-        }
-    }
-
-    @Test void theSpecksAreBornOnTheBlastBoxEdgeAndGoToTheBody() {
-        BeetleFx fx = new BeetleFx(11);
-        float cx = 100, floor = 200;
-        for (int i = 0; i < 200; i++) fx.speck(cx, floor);
-        KimeriaParticleSystem hard = fx.hard();
-        for (int i = 0; i < hard.count(); i++) {
-            float x = hard.x(i), y = hard.y(i);
-            boolean side = Math.abs(Math.abs(x - cx) - BeetleFx.BLAST_WIDTH / 2) < .01f && y >= floor - BeetleFx.BLAST_HEIGHT - .01f && y <= floor + .01f;
-            boolean top = Math.abs(y - (floor - BeetleFx.BLAST_HEIGHT)) < .01f && Math.abs(x - cx) <= BeetleFx.BLAST_WIDTH / 2 + .01f;
-            assertTrue(side || top, "on the edge: " + x + ", " + y);
-        }
-        fx.update(1f);
-        assertEquals(0, hard.count(), "they die out within their life");
+        assertTrue(left >= cx - 40 && right <= cx + 40 && top >= floor - 32, "inside the blast's bounds");
     }
 
     @Test void loadTimeChecksNameTheProblem() {
@@ -687,6 +713,16 @@ class BeetleTest {
         assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, java.util.List.of(new Rectangle(0, 320, 300, 48),
             new Rectangle(316, 320, 324, 48)), room, Map.of()), "a gap in its floor");
         assertNotNull(Beetle.problem(320, 304, 24, 16, Float.NaN, 4, floor, room, Map.of()), "a broken range");
+        // D149: the sweep is the dome's, centres 268..396. At 20 px up it reaches 31.2 px past an end, not the box's 40.
+        for (float[] x : new float[][]{{268 - 32 - 11, 268 - 30 - 11}, {396 + 32, 396 + 30}}) {
+            assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(x[0], 278, 11, 22))),
+                "a place in a corner of the swept bounds is clear of every dome: x " + x[0]);
+            assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(x[1], 278, 11, 22))),
+                "a place inside the last dome: x " + x[1]);
+        }
+        assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(330, 267, 11, 22))),
+            "between the range ends the sweep is 32 px high");
+        assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(330, 266, 11, 22))));
         IllegalArgumentException entrance = assertThrows(IllegalArgumentException.class, () -> harness.roomOf("beetle-entrance", 0));
         assertTrue(entrance.getMessage().contains("entrance"), entrance.getMessage());
         IllegalArgumentException gap = assertThrows(IllegalArgumentException.class, () -> harness.roomOf("beetle-gap", 0));

@@ -842,7 +842,7 @@ class AllocationBudgetTest {
 
     /**
      * Beetles in turn through the real {@code Level} of beetle-test.tmx (#327, D100): each crawls a few frames, then hears the hero, notices (0.5 s), finds
-     * him touching and commits, winds up with its specks; the hero steps out of the box at frame {@value #BEETLE_ESCAPE_FRAME}
+     * him touching and commits, winds up with its specks; the hero steps out of its reach at frame {@value #BEETLE_ESCAPE_FRAME}
      * of the cycle; even beetles burst, odd ones are killed at frame {@value #BEETLE_KILL_FRAME} as a fireball would (the poof)
      * and leave their body (D101): the hero walks up to it at frame {@value #BEETLE_PUSH_FRAME} (it rocks, fading into the body
      * sheet), and at frame {@value #BEETLE_FINISH_FRAME} it crumbles or, one beetle in four, burns.
@@ -899,8 +899,8 @@ class AllocationBudgetTest {
      * Flying beetles in turn through the real {@code Level} of flying-beetle-roof.tmx (#330, D145): each flies a few frames,
      * then hears the hero under the platform, notices (0.5 s) and follows along its line, its beat quickening, trying every
      * frame to commit and finding the platform in the line (the surface search and the line test, its dearest path), until the
-     * hero steps out at frame {@value #FLYING_OUT_FRAME} of the cycle; then it commits, winds up with its specks along the line
-     * and round the box, and dives; the hero steps away at frame {@value #FLYING_ESCAPE_FRAME}; even ones burst, odd ones are
+     * hero steps out at frame {@value #FLYING_OUT_FRAME} of the cycle; then it commits, winds up with specks gathering into it
+     * and running down the dive line, and dives; the hero steps away at frame {@value #FLYING_ESCAPE_FRAME}; even ones burst, odd ones are
      * killed at frame {@value #FLYING_KILL_FRAME}, in the dive, as a fireball would, fall and leave their body: the hero walks up
      * to it at frame {@value #FLYING_PUSH_FRAME} (it rocks) and at frame {@value #FLYING_FINISH_FRAME} it crumbles or, one in four,
      * burns. {@code update} and {@code render} of the monster, {@code Level.beetleFx()} and {@code Level.remainsFx()} every frame.

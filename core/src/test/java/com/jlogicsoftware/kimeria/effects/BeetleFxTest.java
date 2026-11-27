@@ -77,6 +77,77 @@ class BeetleFxTest {
         return new int[]{soft, hard};
     }
 
+    private static final float RIM_TOLERANCE = .005f;
+
+    /** How far out of the ground beetle's dome a point is: 1 on its rim, less inside (D149). */
+    private static float dome(float x, float y, float centreX, float floor) {
+        float across = (x - centreX) / (BeetleFx.BLAST_WIDTH / 2), up = (floor - y) / BeetleFx.BLAST_HEIGHT;
+        return across * across + up * up;
+    }
+
+    /** D149: every wind-up speck is born on the dome's rim, over the floor line (Y grows downward), and drawn in to the body. */
+    @Test void everySpeckIsBornOnTheDomesRimAndDrawnInToTheBody() {
+        float centreX = 200, floor = 150, bodyY = floor - BeetleFx.BODY_CENTRE_ABOVE_FLOOR;
+        boolean top = false, leftFoot = false, rightFoot = false;
+        for (long seed = 1; seed <= SEEDS; seed++) {
+            BeetleFx fx = new BeetleFx(seed);
+            for (int n = 0; n < 100; n++) {
+                fx.clear();
+                fx.speck(centreX, floor);
+                KimeriaParticleSystem hard = fx.hard();
+                float x = hard.x(0), y = hard.y(0);
+                assertEquals(1, dome(x, y, centreX, floor), RIM_TOLERANCE, "on the rim: " + x + ", " + y);
+                assertTrue(y <= floor + .01f, "over the floor line: " + y);
+                top |= y < floor - BeetleFx.BLAST_HEIGHT + 1;
+                leftFoot |= x < centreX - 30 && y > floor - 10;
+                rightFoot |= x > centreX + 30 && y > floor - 10;
+                float life = hard.life(0);
+                for (int f = 0; f < 19; f++) {
+                    hard.update(life / 20);
+                    assertTrue(dome(hard.x(0), hard.y(0), centreX, floor) <= 1 + RIM_TOLERANCE, "flies inwards");
+                }
+                hard.update(life / 20 * .99f);
+                assertEquals(centreX, hard.x(0), 1, "to the middle of the body");
+                assertEquals(bodyY, hard.y(0), 1);
+            }
+            fx.clear();
+            for (int n = 0; n < 100; n++) fx.speck(centreX, floor);
+            fx.update(1f);
+            assertEquals(0, fx.hard().count(), "they die out within their life");
+        }
+        assertTrue(top && leftFoot && rightFoot, "along the whole rim");
+    }
+
+    /** D149: every particle of the ground beetle's burst stays inside the dome that kills, over the floor line, all its life. */
+    @Test void everyParticleOfTheGroundBurstStaysInsideTheDome() {
+        float centreX = 200, floor = 150, halfWidth = BeetleFx.BLAST_WIDTH / 2;
+        for (long seed = 1; seed <= SEEDS; seed++) {
+            BeetleFx fx = new BeetleFx(seed);
+            fx.burst(centreX, floor);
+            assertEquals(2, count(fx.soft(), KimeriaParticleSystem.KIND_DOME), "the flash and its core lie on the floor");
+            assertEquals(0, count(fx.soft(), KimeriaParticleSystem.KIND_GLOW), "no round flash reaching under it");
+            while (fx.soft().count() + fx.hard().count() > 0) {
+                for (KimeriaParticleSystem system : new KimeriaParticleSystem[]{fx.soft(), fx.hard()})
+                    for (int i = 0; i < system.count(); i++) {
+                        float x = system.x(i), y = system.y(i);
+                        assertTrue(dome(x, y, centreX, floor) <= 1 + RIM_TOLERANCE && y <= floor + .01f,
+                            "kind " + system.kind(i) + " outside the dome: " + x + ", " + y);
+                        float half = system.drawSize(i) / 2;
+                        if (system.kind(i) == KimeriaParticleSystem.KIND_DOME) {
+                            assertEquals(floor, y, .01f, "flat edge on the floor");
+                            // Drawn from y up, half a size to either side: its upper corners are the farthest out.
+                            assertTrue(dome(x - half, y - half, centreX, floor) <= 1 && dome(x + half, y - half, centreX, floor) <= 1,
+                                "the half glow is drawn inside the dome: " + half);
+                        } else if (system == fx.hard()) {   // the steam is a soft puff round its centre; the squares are drawn whole
+                            assertTrue(x - half >= centreX - halfWidth && x + half <= centreX + halfWidth, "x " + x);
+                            assertTrue(y - half >= floor - BeetleFx.BLAST_HEIGHT && y + half <= floor + .01f, "y " + y);
+                        }
+                    }
+                fx.update(1 / 240f);
+            }
+        }
+    }
+
     /** D148: no flying particle ends or travels outside the shape that kills. */
     @Test void everyParticleOfTheFlyingBurstStaysInsideTheShapeThatKills() {
         float centreX = 200, centreY = 150;

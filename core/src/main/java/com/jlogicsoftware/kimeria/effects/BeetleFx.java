@@ -14,13 +14,13 @@ import com.badlogic.gdx.math.RandomXS128;
  *
  * <p>Colours: white, the smoke greys {@code d8d6e8}, {@code 9a97ad}, {@code 5b5870} and, for the death's chips, the live shell's
  * crimson {@code 86101f} and its lit {@code 9c2050} (the danger family, #236); the body's crumble uses the body's live palette (D117)
- * ({@link #SHELL_CHIPS}). No reserved hue. The specks are born on the edge of the 80x32 blast box
- * and drawn in to the body, so the burst's reach is read before it happens; the spray's end points stay inside the box, so
- * what kills is what is seen (D5). Cosmetic: nothing reads it back. World Y grows downward: a rising particle ends at a
- * smaller Y. Particles advance only in {@link #update}, so pause freezes them.
+ * ({@link #SHELL_CHIPS}). No reserved hue. The ground beetle's wind-up specks are born on the rim
+ * of its blast's dome (D149) and drawn in to the body, so the burst's reach is read before it happens; every particle of its
+ * burst is born and ends inside the dome, so what kills is what is seen (D5). Cosmetic: nothing reads it back. World Y
+ * grows downward: a rising particle ends at a smaller Y. Particles advance only in {@link #update}, so pause freezes them.
  *
  * <p>The flying beetle shares the pools (D147): {@link #gather} draws specks in to it from a ring round its body,
- * {@link #lineSpeck} runs down its dive line, and {@link #burstAt} is a half dome off the surface that cuts its box, every
+ * {@link #lineSpeck} runs down its dive line, and {@link #burstAt} is a half dome off the surface that cuts its blast, every
  * particle flying up and away from it, or an oval one in the air.
  */
 public final class BeetleFx {
@@ -33,26 +33,24 @@ public final class BeetleFx {
     public static final int SOFT_CAPACITY = 92, HARD_CAPACITY = 440;
     private static final long HARD_SEED_MIX = 0x632BE59BD9B4E019L;
 
-    /** The blast box the specks outline and the spray fills: 80 wide, 32 tall, standing on the floor line (D100). */
+    /** The bounds of a blast on a surface: the half ellipse inscribed in them is what kills, 80 wide and 32 tall (D148, D149). */
     public static final float BLAST_WIDTH = 80, BLAST_HEIGHT = 32;
     private static final float HALF = .5f;
-    /** The blast box's two side edges, counted into the perimeter the specks are born on. */
-    private static final int SIDES = 2;
     /** Where the specks gather and the burst starts: this far above the floor line, the middle of the body. */
     public static final float BODY_CENTRE_ABOVE_FLOOR = 8;
-    /** The flying beetle's box (D145): this far above and below the body's middle, cut at the surface under it. */
+    /** The flying beetle's blast in the air (D145, D148): this far above and below the body's middle, cut at the surface under it. */
     public static final float BLAST_AIR_HALF_HEIGHT = 24;
-    /** A surface this far (a rounding margin) inside the box's lower edge cuts the burst: it is then the half dome off it. */
+    /** A surface this far (a rounding margin) inside the air blast's lower edge cuts the burst: it is then the half dome off it. */
     private static final float CUT_MARGIN = .5f;
     /** The flying beetle's wind-up specks are born this far from its body's middle, just outside its wings (D147). */
     public static final float GATHER_RADIUS_MIN = 28, GATHER_RADIUS_MAX = 32;
-    /** The flying beetle's particles end this far inside its blast's edge, so what kills is what is seen (D5, D148). */
+    /** Clamped particles end this far inside their blast's edge, so what kills is what is seen (D5, D148, D149). */
     private static final float SHAPE_INSET = 2;
     // The half dome off a surface (D147): everything starts this far above it and flies up; chips are thrown this high.
     private static final float DOME_LIFT = 2, DOME_CHIP_LOW = 8, DOME_CHIP_HIGH = 28, DOME_STEAM_LOW = 8;
     // The dive line's specks (D145): born on the first part of the line, flying on to its end.
     private static final float LINE_START_SHARE = .6f, LINE_LIFE_MIN = .22f, LINE_LIFE_MAX = .3f, LINE_JITTER = 1;
-    /** An oval burst keeps its particles this far inside the box's upper and lower edges. */
+    /** An oval burst keeps its particles this far inside the blast's upper and lower edges. */
     private static final float AIR_INSET = 2;
 
     private static final float WHITE = 1f;
@@ -65,21 +63,21 @@ public final class BeetleFx {
     public static final float[][] SHELL_CHIPS = {BODY_SHELL, BODY_EDGE, BODY_LIT, BODY_GLINT};
     private static final float[] WHITE_RGB = {WHITE, WHITE, WHITE};
 
-    // Wind-up specks: 2 px squares born on the blast box's edges (the two sides and the top), drawn in to the body. Brighter
+    // Wind-up specks: 2 px squares, the ground beetle's born on the rim of its dome (D149), drawn in to the body. Brighter
     // since the look check of 2026-11-18: a third white, most of the rest pale, few grey.
     private static final float SPECK_SIZE = 2, SPECK_LIFE_MIN = .3f, SPECK_LIFE_MAX = .4f, SPECK_WHITE_CHANCE = .35f, SPECK_PALE_CHANCE = .85f;
 
-    // Burst (#559): a white flash with a small hot core, a halo, a flat spray and embers inside the box, shell chips, grey steam rising.
+    // Burst (#559): a white flash with a small hot core, a halo, a flat spray and embers, shell chips, grey steam rising.
     private static final float FLASH_SIZE = 44, FLASH_LIFE = .12f, CORE_SIZE = 20, CORE_LIFE = .07f;
     private static final int SPRAY = 26, STEAM = 10;
     /**
-     * The halo: dots fly from the body to the rim of the half-ellipse inscribed in the blast box (rx half its width, ry its height, centred on the floor
-     * line), so it touches the box at the floor edges and the top and never leaves it (D5: what kills is what is seen). A ring would not fit
-     * the 80x32 box. All dots spawn at the instant: no emitter.
+     * The halo: dots fly from the body to the rim of the dome, the half-ellipse inscribed in the blast's bounds (rx half their
+     * width, ry their height, centred on the floor line), so it draws the edge of what kills and never leaves it (D5, D149). A
+     * ring would not fit those bounds. All dots spawn at the instant: no emitter.
      */
     private static final int DOME_DOTS = 32;
     private static final float DOME_LIFE = .16f, DOME_SIZE = 4, DOME_RX = BLAST_WIDTH * HALF, DOME_RY = BLAST_HEIGHT;
-    /** Embers in the eyes' colour (two in three, the third white), thrown wide and high inside the box. */
+    /** Embers in the eyes' colour (two in three, the third white), thrown wide and high inside the blast's shape. */
     private static final int SPARKS = 14, SPARK_EYE_EVERY = 3, CHIPS_BURST = 8;
     private static final float SPARK_LIFE_MIN = .22f, SPARK_LIFE_MAX = .34f, SPARK_SIZE = 2, SPARK_START_JITTER = 3;
     private static final float SPARK_REACH_MIN = 14, SPARK_REACH_MAX = 39, SPARK_LOW = 10, SPARK_HIGH = 31;
@@ -117,16 +115,13 @@ public final class BeetleFx {
     private static float range(RandomXS128 random, float min, float max) { return min + random.nextFloat() * (max - min); }
 
     /**
-     * One wind-up speck for a beetle whose body is centred on {@code centreX} and stands on {@code floorY}: born on the blast
-     * box's edge (a side or the top, chosen by length) and drawn in to the middle of the body.
+     * One wind-up speck for a beetle whose body is centred on {@code centreX} and stands on {@code floorY}: born on the rim of
+     * its blast's dome (D149), the curve over the floor line, and drawn in to the middle of the body.
      */
     public void speck(float centreX, float floorY) {
         RandomXS128 random = hard.random();
-        float half = BLAST_WIDTH * HALF, perimeter = BLAST_WIDTH + SIDES * BLAST_HEIGHT, pick = random.nextFloat() * perimeter;
-        float x, y;
-        if (pick < BLAST_WIDTH) { x = centreX - half + pick; y = floorY - BLAST_HEIGHT; }
-        else if (pick < BLAST_WIDTH + BLAST_HEIGHT) { x = centreX - half; y = floorY - (pick - BLAST_WIDTH); }
-        else { x = centreX + half; y = floorY - (pick - BLAST_WIDTH - BLAST_HEIGHT); }
+        float angle = random.nextFloat() * MathUtils.PI;
+        float x = centreX + MathUtils.cos(angle) * DOME_RX, y = floorY - MathUtils.sin(angle) * DOME_RY;
         float shade = random.nextFloat();
         float[] c = shade < SPECK_WHITE_CHANCE ? WHITE_RGB : shade < SPECK_PALE_CHANCE ? PALE : GREY;
         hard.spawn(KimeriaParticleSystem.KIND_FLAME, x, y, centreX, floorY - BODY_CENTRE_ABOVE_FLOOR,
@@ -146,11 +141,14 @@ public final class BeetleFx {
             centreX, centreY, range(random, SPECK_LIFE_MIN, SPECK_LIFE_MAX), SPECK_SIZE, c[RED], c[GREEN], c[BLUE]);
     }
 
-    /** The burst of a beetle centred on {@code centreX}, standing on {@code floorY}: the flash, halo, spray, embers, shell chips and steam. */
+    /**
+     * The ground beetle's burst, its body centred on {@code centreX} and standing on {@code floorY}: the flash and its core as
+     * half glows lying on the floor, the halo, spray, embers, shell chips and steam, all inside the dome that kills (D149).
+     */
     public void burst(float centreX, float floorY) {
         float cy = floorY - BODY_CENTRE_ABOVE_FLOOR;
-        soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, cy, centreX, cy, FLASH_LIFE, FLASH_SIZE, WHITE, WHITE, WHITE);
-        soft.spawn(KimeriaParticleSystem.KIND_GLOW, centreX, cy, centreX, cy, CORE_LIFE, CORE_SIZE, WHITE, WHITE, WHITE);
+        soft.spawn(KimeriaParticleSystem.KIND_DOME, centreX, floorY, centreX, floorY, FLASH_LIFE, FLASH_SIZE, WHITE, WHITE, WHITE);
+        soft.spawn(KimeriaParticleSystem.KIND_DOME, centreX, floorY, centreX, floorY, CORE_LIFE, CORE_SIZE, WHITE, WHITE, WHITE);
         RandomXS128 random = hard.random();
         for (int i = 0; i < DOME_DOTS; i++) {
             float angle = MathUtils.PI * (i + HALF) / DOME_DOTS;
@@ -161,8 +159,8 @@ public final class BeetleFx {
         for (int i = 0; i < SPRAY; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float startX = centreX + range(random, -SPRAY_START_JITTER, SPRAY_START_JITTER);
-            float endX = centreX + side * range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX);
-            float endY = floorY - range(random, SPRAY_LOW, SPRAY_HIGH);
+            float reach = range(random, SPRAY_REACH_MIN, SPRAY_REACH_MAX), endX = centreX + side * reach;
+            float endY = floorY - Math.min(range(random, SPRAY_LOW, SPRAY_HIGH), inside(reach, DOME_RY));
             boolean white = random.nextFloat() < SPRAY_WHITE_CHANCE;
             float r = white ? WHITE : PALE[RED], g = white ? WHITE : PALE[GREEN], b = white ? WHITE : PALE[BLUE];
             hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, cy, endX, endY, range(random, SPRAY_LIFE_MIN, SPRAY_LIFE_MAX),
@@ -171,8 +169,10 @@ public final class BeetleFx {
         for (int i = 0; i < SPARKS; i++) {
             float side = (i & 1) == 0 ? 1 : -1;
             float[] c = i % SPARK_EYE_EVERY != 0 ? EYE : WHITE_RGB;
-            hard.spawn(KimeriaParticleSystem.KIND_FLAME, centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER), cy,
-                centreX + side * range(random, SPARK_REACH_MIN, SPARK_REACH_MAX), floorY - range(random, SPARK_LOW, SPARK_HIGH),
+            float startX = centreX + range(random, -SPARK_START_JITTER, SPARK_START_JITTER);
+            float reach = range(random, SPARK_REACH_MIN, SPARK_REACH_MAX);
+            float endY = floorY - Math.min(range(random, SPARK_LOW, SPARK_HIGH), inside(reach, DOME_RY));
+            hard.spawn(KimeriaParticleSystem.KIND_FLAME, startX, cy, centreX + side * reach, endY,
                 range(random, SPARK_LIFE_MIN, SPARK_LIFE_MAX), SPARK_SIZE, c[RED], c[GREEN], c[BLUE]);
         }
         for (int i = 0; i < CHIPS_BURST; i++) {
@@ -185,11 +185,12 @@ public final class BeetleFx {
         }
         RandomXS128 steamRandom = soft.random();
         for (int i = 0; i < STEAM; i++) {
-            float x = centreX + range(steamRandom, -STEAM_HALF_WIDTH, STEAM_HALF_WIDTH);
-            float y = floorY - range(steamRandom, STEAM_LOW, STEAM_HIGH);
+            float across = range(steamRandom, -STEAM_HALF_WIDTH, STEAM_HALF_WIDTH), x = centreX + across;
+            float top = inside(across, DOME_RY), up = Math.min(range(steamRandom, STEAM_LOW, STEAM_HIGH), top);
             float pick = steamRandom.nextFloat();
             float[] c = pick < STEAM_PALE ? PALE : pick < STEAM_GREY ? GREY : DARK;
-            soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, y, x, y - range(steamRandom, STEAM_RISE_MIN, STEAM_RISE_MAX),
+            float risen = Math.min(up + range(steamRandom, STEAM_RISE_MIN, STEAM_RISE_MAX), top);
+            soft.spawn(KimeriaParticleSystem.KIND_SMOKE, x, floorY - up, x, floorY - risen,
                 range(steamRandom, STEAM_LIFE_MIN, STEAM_LIFE_MAX), range(steamRandom, STEAM_SIZE_MIN, STEAM_SIZE_MAX), c[RED], c[GREEN], c[BLUE]);
         }
     }
@@ -207,9 +208,9 @@ public final class BeetleFx {
 
     /**
      * The flying beetle's burst (D145, D147), its body's middle at ({@code centreX}, {@code centreY}) over a surface or the
-     * box's lower edge at {@code bottom}. Where a surface cuts the box (the end of a dive), a half dome off that surface; in
-     * the air, the flash, a whole oval halo (rx half the box's width, ry {@link #BLAST_AIR_HALF_HEIGHT}), the spray, embers,
-     * shell chips and steam, kept above the box's lower edge, so what kills is what is seen (D5).
+     * blast's lower edge at {@code bottom}. Where a surface cuts the blast (the end of a dive), a half dome off that surface;
+     * in the air, the flash, a whole oval halo (rx half {@link #BLAST_WIDTH}, ry {@link #BLAST_AIR_HALF_HEIGHT}), the spray,
+     * embers, shell chips and steam, kept above that lower edge, so what kills is what is seen (D5).
      */
     public void burstAt(float centreX, float centreY, float bottom) {
         if (onSurface(centreY, bottom)) { domeBurst(centreX, bottom); return; }
@@ -326,7 +327,7 @@ public final class BeetleFx {
      */
     public static boolean onSurface(float centreY, float bottom) { return bottom - centreY < BLAST_AIR_HALF_HEIGHT - CUT_MARGIN; }
 
-    /** How far from its origin a particle may end up or down, {@code across} px beside it, in a shape {@code radius} high. */
+    /** How far above or below its origin a particle may be, {@code across} px beside it, in a shape {@code radius} high. */
     private static float inside(float across, float radius) {
         float share = across / DOME_RX;
         return Math.max(0, radius * (float) Math.sqrt(Math.max(0, 1 - share * share)) - SHAPE_INSET);
