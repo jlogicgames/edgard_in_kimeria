@@ -28,6 +28,9 @@ BLEED_X = 32           # a -top or -foot is 2 x 32 px wider than its piece (para
 TOP_ROWS = 24          # a -top covers piece y -24 .. 7; the hanging piece leaves its rows 0 .. 7 empty
 EMPTY_TOP = 8
 FOOT_ROWS = 16
+BLEED_TILES = 2 * BLEED_X // TILE                # the extra width of a -top or -foot, in tiles
+TOP_TILES = (TOP_ROWS + EMPTY_TOP) // TILE       # their heights, in tiles
+FOOT_TILES = FOOT_ROWS // TILE
 
 
 def read_spec(spec):
@@ -40,13 +43,17 @@ def read_spec(spec):
         if kind == 'canvas':
             canvas = tuple(int(v) for v in args)
         elif kind == 'glyph':
-            glyphs[args[0]] = typed_rows(here / args[1], args[2] if len(args) > 2 else None)
+            name, file, *block = args
+            glyphs[name] = typed_rows(here / file, block[0] if block else None)
         elif kind == 'recolour':
-            glyphs[args[0]] = [row.translate(str.maketrans(args[2], args[3])) for row in glyphs[args[1]]]
+            name, source, old, new = args
+            glyphs[name] = [row.translate(str.maketrans(old, new)) for row in glyphs[source]]
         elif kind == 'put':
-            puts.append((args[0], int(args[1]), int(args[2])))
+            name, x, y = args
+            puts.append((name, int(x), int(y)))
         elif kind == 'piece':
-            piece = (args[0], int(args[1]), int(args[2]), args[3], args[4:])
+            name, wtiles, htiles, shape, *options = args
+            piece = (name, int(wtiles), int(htiles), shape, options)
         else:
             raise ValueError(f'{spec}: unknown line {line!r}')
     return canvas, glyphs, puts, piece
@@ -92,9 +99,9 @@ def stamp(spec):
     out = [' '.join(['piece', name, str(wtiles), str(htiles), *options])] + body
     wide = lambda r: r[px - BLEED_X:px + w + BLEED_X]
     if kind in ('hang', 'both'):
-        out += [f'piece {name}-top {wtiles + 4} 2'] + [wide(r) for r in rows[py - TOP_ROWS:py + EMPTY_TOP]]
+        out += [f'piece {name}-top {wtiles + BLEED_TILES} {TOP_TILES}'] + [wide(r) for r in rows[py - TOP_ROWS:py + EMPTY_TOP]]
     if kind in ('stand', 'both'):
-        out += [f'piece {name}-foot {wtiles + 4} 1'] + [wide(r) for r in rows[py + h:py + h + FOOT_ROWS]]
+        out += [f'piece {name}-foot {wtiles + BLEED_TILES} {FOOT_TILES}'] + [wide(r) for r in rows[py + h:py + h + FOOT_ROWS]]
     return '\n'.join(out)
 
 

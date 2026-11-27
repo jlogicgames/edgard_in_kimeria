@@ -1443,8 +1443,8 @@ A static glowing dot is not made into a stone by calling it an effect.
 [the project hook](../.codex/hooks.json), and is also a mandatory release/check
 dependency (`validateSpriteArt`). Permissions name an exact method AND primitive
 kind, with a reason. New/renamed object helpers, procedural substitutes in different
-Java packages, ImageDraw/pixel painting in Python export tools and Java2D shape
-painting in Java export tools are rejected. This is a source guardrail against
+Java packages, ImageDraw/pixel painting in Python and Java2D shape painting in Java
+export sources (`tools/` and `art/`) are rejected. This is a source guardrail against
 known primitive paths, not a semantic proof about arbitrary programs. Skills and
 art review remain required; do not weaken the scanner to pass an object placeholder.
 

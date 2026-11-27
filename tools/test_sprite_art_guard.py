@@ -145,6 +145,22 @@ class SpriteArtGuardTest(unittest.TestCase):
         self.assertTrue(guard.python_art_violations('tools/torch.py', "from PIL import ImageDraw as D\nD.Draw(canvas).rectangle((0,0,4,8))"))
         self.assertTrue(guard.python_art_violations('tools/torch.py', "im.putpixel((0,0), (255,0,0))"))
 
+    def test_art_sources_may_not_paint_either(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / guard.BASE).mkdir(parents=True)
+            source = root / 'art/parallax/near/stamp.py'
+            source.parent.mkdir(parents=True)
+            source.write_text('canvas = [row for row in rows]\n')
+            self.assertEqual([], guard.check(root))
+            source.write_text('canvas.putpixel((0, 0), colour)\n')
+            (source.parent / 'Paint.java').write_text('class Paint { void run() { g.fillRect(0, 0, 4, 8); } }')
+            result = subprocess.run([sys.executable, guard.__file__, '--root', directory, '--hook'],
+                input='{}', text=True, capture_output=True)
+            self.assertEqual(2, result.returncode, result.stderr)
+            self.assertIn('art/parallax/near/stamp.py:1', result.stderr)
+            self.assertIn('art/parallax/near/Paint.java:1', result.stderr)
+
     def test_hook_checks_real_files_written_by_any_tool_and_blocks_finish(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / guard.BASE / 'entity/items/Bad.java'

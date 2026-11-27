@@ -111,7 +111,8 @@ sprite, and calling an object an "effect" does not change the category.
 
 Run `python3 tools/check_sprite_art.py` (or `./gradlew validateSpriteArt`). The
 project's PostToolUse/Stop hook and release-build gate reject primitive object-art
-sources, including newly named helpers, and validates the new world/HUD PNG contracts. Do not weaken the gate to make an item pass;
+sources, including newly named helpers, and validates the new world/HUD PNG contracts. Art sources in `tools/` and
+`art/` may copy and resize authored artwork, never paint it (`ImageDraw`, `putpixel`, Java shape painting). Do not weaken the gate to make an item pass;
 replace the item drawing with artwork. New legitimate UI/VFX permissions must name
 the exact method and primitive kind and explain what non-art state they carry.
 
@@ -149,4 +150,4 @@ Use `SpriteSheets` for runtime frame geometry and `tools/sprite_layouts.py` for
 exports/PNG contracts. Keep frame dimensions separate from TMX cells and collision
 bodies; retain measured palm/head/clip tables as named authored data. Follow
 [parameter ownership](../../../docs/NAMED_PARAMETERS.md), run the named-parameter
-check, and compare exported pixels after a format refactor.
+check (it reads every script under `art/`, with or without PIL), and compare exported pixels after a format refactor.

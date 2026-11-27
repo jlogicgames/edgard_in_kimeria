@@ -64,7 +64,8 @@ docs, it does not repeat them. libGDX is 1.14.2; targets are desktop and web (Te
 
 - Never weaken a threshold or tolerance silently: say so in the report and record it in
   `docs/DECISIONS.md` with the measured value and why (AGENTS.md).
-- Tuning and geometry literals are named constants (`tools/check_named_parameters.py`).
+- Tuning and geometry literals are named constants (`tools/check_named_parameters.py`: production Java, `tools/`
+  and every script under `art/`).
 - Everything in the repo is English (docs, comments, commits, issues); player-facing strings live in the
   localization bundles.
 - A "not yet" or "gap" line in a design document needs an open issue in the same change (AGENTS.md).
