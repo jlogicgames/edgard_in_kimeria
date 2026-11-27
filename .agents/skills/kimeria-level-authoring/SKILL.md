@@ -58,6 +58,9 @@ properties there rather than assuming libGDX's standard tiled loader behavior.
   a branch box starting at x takes the trunk object at x - 16; a `mirror` branch box starting at x takes it at x + 32.
   `check_tiled_links.py` (`check_branch_roots`) names a floating branch. A trunk that crosses the moon breaks the decor ceiling
   (`check_contrast.py`): use a snag there.
+- Every forest room has a foreground ([kimeria-parallax](../kimeria-parallax/SKILL.md)): a new, widened or rearranged room
+  updates its lists in `tools/parallax_game.py` and runs `validateParallax`. From 736 px wide it also needs pieces in its middle
+  (D153), and a room with a falling or thrown stone takes no canopy (D113).
 - `HangingVine` (SpawnPoints, 8x40, no properties) is cosmetic scenery that sways when a falling stone lands within 160 px:
   place it with `y` = the room's top (add 16 in forest-2's offset SpawnPoints layer) and a `FallingStone` in the same room
   within reach; `tools/check_tiled_links.py` rejects a vine that hangs from nothing or that no stone can move. A map without a stone gets no vine.

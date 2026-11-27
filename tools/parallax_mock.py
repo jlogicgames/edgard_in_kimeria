@@ -37,6 +37,8 @@ author 2026-11-19), but never hide him where he stands nor for long (cover time,
 counts as hidden when 85 % or more of it lies under foreground pixels of alpha 128 or more; standing at any x of his route from the
 start to the exit, with the game's steady camera, he is never hidden, and walking that route at 100 px/s (on the floor and at a
 jump's apex) he is hidden at most 0.5 s in a row; the check prints the hidden standing spots and the longest run of each mock. Hints are drawn by the HUD after the world, so the foreground never covers them and the check ignores them.
+With `--game` the check also holds each room of the game maps to the giant-leaf rules (D143) and to the middle of long rooms
+(`check_middle`, D153).
 The previews use the game's framing: a forest room is 368 px tall and the camera top while the hero stands on the floor is
 `FallingTrapLayout.floorCameraTop` (room y + 368 - 360 = 8), so a preview shows rows 8 to 368 and a bottom-rising piece must end
 at the room's bottom edge (y 368) to reach the screen bottom. These rules are checked at that steady camera only.
@@ -118,6 +120,21 @@ SHARE_RESTING = 0.5
 REST_SEEN = 0.25
 FG_FACTOR = 1.6
 FG_PAD = 640                            # px of canvas left of x 0 for foreground objects at negative x (a narrow room's camera is negative)
+# The middle of a long room (#664, D153): a room LONG_ROOM px wide or wider (its camera travels 96 px or more) is not left empty
+# between the pieces at its ends. Bare lengths are foreground px (x as authored), between sheet rectangles of the sharp pieces.
+LONG_ROOM = VIEW[0] + 6 * TILE
+# piece: the top y it may hang at. A suggestion names the first that fits, so the lighter pieces come first.
+HANGING = {'near-sprig': (0,), 'near-fern': (0,), 'near-canopy': (0,), 'vine-curtain': (0, -TILE), 'roots-curtain': (0, -TILE)}
+RISING = {'rise-reeds': (128,), 'rise-fern': (112,)}   # the tall pieces standing on the bottom, and their top y
+RISING_UNASKED = {'rise-trunk': (112,)}   # counts as a tall rising piece but is never asked for: the near tier's trunks are #635's
+SKETCH_ONLY = ('hang-leaves-l', 'trunk-near')   # drawn for a sketch's top-left corner (cut at its side): not counted, not asked for
+HANG_BARE_MAX = 320                     # the longest stretch with no hanging piece, where one would fit
+RISE_BARE_MAX = 480                     # the longest stretch with no tall rising piece, where one would fit
+SKY_MIN = 96                            # open sky between hanging pieces in every camera's view: never a continuous band
+FIT_CLEAR = 64                          # px a piece that would break a bare stretch keeps from the pieces at its two ends
+END_SEEN = 0.3                          # a piece at an end of the span may overhang it, this share of its width staying in view (D113's 0.3)
+STONE_TYPES = ('FallingStone', 'Stone')   # a room with one takes none of STONE_BARRED (D113)
+STONE_BARRED = ('near-canopy',)         # its hanging leaves could read as stones
 # Everything the active tier of the contrast gate draws is excluded (SPRITES); the hero's start and exit boxes have their own
 # rule (above the waist, check_layer). The names the review required are asserted so a change in the gate cannot drop one silently.
 EXCLUDED_TYPES = {key.split(':')[0] for key, row in contrast.SPRITES.items() if row[0] == 'active'}
@@ -867,6 +884,7 @@ def check(scene):
     if scene.game:
         ok &= check_giant(scene, groups, pieces)
         ok &= check_share(scene, groups, pieces)
+        ok &= check_middle(scene, groups, pieces)
     return ok
 
 
@@ -1040,6 +1058,185 @@ def check_share(scene, groups, pieces, out=print):
     out(f'{name}: sharp pieces hidden by giant leaves at most {worst:.0%} over all cameras (limit {SHARE_POOLED:.0%}) and '
         f'{worst_rest:.0%} at a resting camera (limit {SHARE_RESTING:.0%}): ' + ('FAIL' if bad else 'ok'))
     return not bad
+
+
+def fg_span(scene):
+    """The foreground x the room's cameras show: from 0 to the view's right edge at the last camera."""
+    return VIEW[0] + jround(FG_FACTOR * scene.cameras[-1])
+
+
+def covered(span, extents):
+    """Which of the columns 0 .. span the (x0, x1) extents cover."""
+    cover = numpy.zeros(span, bool)
+    for x0, x1 in extents:
+        cover[max(x0, 0):max(x1, 0)] = True
+    return cover
+
+
+def bare_stretches(span, extents):
+    """[(start, length)] of the stretches of 0 .. span that none of the (x0, x1) extents covers."""
+    return runs([int(x) for x in numpy.flatnonzero(~covered(span, extents))])
+
+
+def open_sky(scene, extents):
+    """(px, camera) of the camera whose view has the least open sky: the widest stretch of its view that no (x0, x1) extent of a
+    hanging piece covers, at the camera where that stretch is narrowest."""
+    cover = covered(fg_span(scene), extents)
+    worst = (VIEW[0], scene.cameras[0])
+    for cam in scene.cameras:
+        left = max(jround(FG_FACTOR * cam), 0)
+        edges = numpy.flatnonzero(numpy.concatenate(([True], cover[left:left + VIEW[0]], [True])))
+        worst = min(worst, (int(numpy.diff(edges).max()) - 1, cam))
+    return worst
+
+
+def sharp_pieces(groups, pieces):
+    """(name, x, top y, width) of every piece of the groups' sharp foreground."""
+    for group in groups:
+        if group.get('name').startswith(NEAR_PREFIX):
+            continue
+        for obj in group.findall('object'):
+            image = pieces[int(obj.get('gid')) & GID_MASK]
+            yield obj.get('name'), int(float(obj.get('x'))), int(float(obj.get('y'))) - image.height, image.width
+
+
+def piece_extents(groups, pieces, placements):
+    """[(x0, x1)] of the sharp foreground pieces that stand as `placements` ({piece: top ys}) allows."""
+    return [(x, x + width) for name, x, top, width in sharp_pieces(groups, pieces) if top in placements.get(name, ())]
+
+
+def keep_clear(scene):
+    """The room's foreground canvas (render_objects, 0 to ROOM_H) with every pixel set that rule B bars to a sharp piece at some
+    camera: check_layer's rects, carried to where each camera shows them."""
+    mask = numpy.zeros((ROOM_H, fg_span(scene) + FG_PAD), bool)   # past it nothing is ever on screen
+    rects = protected(scene)
+    for cam in scene.cameras:
+        base = jround(FG_FACTOR * cam) + FG_PAD
+        for _, x0, y0, x1, y1, margin, below in rects:
+            s0, s1 = max(int(x0 - margin - cam), 0), min(int(x1 + margin - cam), VIEW[0])
+            if s1 > s0:
+                r0, r1 = int(y0 - margin), int(y1 + (margin if below else 0))
+                mask[max(r0, 0):max(r1, 0), max(s0 + base, 0):max(s1 + base, 0)] = True
+    return mask
+
+
+def clears(mask, image, x, y):
+    """Whether the piece `image` at foreground (x, y) touches no barred pixel of keep_clear's mask."""
+    alpha = numpy.asarray(image)[..., ALPHA] > COVER_ALPHA
+    left = x + FG_PAD
+    r0, r1 = max(y, 0), min(y + alpha.shape[0], mask.shape[0])
+    c0, c1 = max(left, 0), min(left + alpha.shape[1], mask.shape[1])
+    return r1 <= r0 or c1 <= c0 or not (alpha[r0 - y:r1 - y, c0 - left:c1 - left] & mask[r0:r1, c0:c1]).any()
+
+
+def foreground_gids(root):
+    """{piece name: its gid in this map} and {piece name: its sheet spot} of the foreground collection."""
+    first = next(int(t.get('firstgid')) for t in root.findall('tileset') if t.get('source').endswith('forest-fg.tsx'))
+    spots = sprites.layout('forest/fg')[0]
+    return {name: first + spot[0] for name, spot in spots.items()}, spots
+
+
+def placed_group(group, root, placed):
+    """A copy of the foreground `group` holding only the pieces `placed` ((piece, x, top y)), each with its bleed pieces."""
+    gids, spots = foreground_gids(root)
+    copy_of = ET.fromstring(ET.tostring(group))
+    for old in copy_of.findall('object'):
+        copy_of.remove(old)
+    for piece, x, top in with_bleed(placed, spots):
+        w, h = spots[piece][SPOT_W] * TILE, spots[piece][SPOT_H] * TILE
+        ET.SubElement(copy_of, 'object', name=piece, gid=str(gids[piece]), x=str(x), y=str(top + h), width=str(w), height=str(h))
+    return copy_of
+
+
+def candidate_xs(span, stretch, width):
+    """The x a piece `width` px wide may take to break the bare `stretch` (start, length) of 0 .. `span`, the most central first:
+    FIT_CLEAR from a piece at an end of the stretch; at an end of the span it may overhang, END_SEEN of its width staying in view."""
+    start, length = stretch
+    end = start + length
+    seen = math.ceil(width * END_SEEN)
+    low = start + FIT_CLEAR if start > 0 else seen - width
+    high = end - FIT_CLEAR - width if end < span else span - seen
+    return sorted(range(low, high + 1), key=lambda x: (abs(2 * x + width - start - end), x))
+
+
+def fitting_piece(scene, groups, pieces, candidates, stretch, mask, hanging):
+    """The first (piece, x, top y) of `candidates` ({piece: top ys}) that would break the bare `stretch` (start, length) and pass
+    the room's foreground rules there: an x of candidate_xs that passes rule B, leaves the hero's cover time and the giant leaves'
+    hidden share within their limits and, if `hanging`, leaves SKY_MIN of open sky. None where no piece fits at any such x, the
+    only reason a longer stretch is accepted."""
+    root = scene.root
+    gids, spots = foreground_gids(root)
+    sharp = next(g for g in groups if not g.get('name').startswith(NEAR_PREFIX))
+    near = [g for g in groups if g.get('name').startswith(NEAR_PREFIX)]
+    base = None
+    for name, tops in candidates.items():
+        xs = candidate_xs(fg_span(scene), stretch, spots[name][SPOT_W] * TILE)
+        for top in tops:
+            parts = with_bleed([(name, 0, top)], spots)
+            for x in xs:
+                if not all(clears(mask, pieces[gids[part]], x + dx, y) for part, dx, y in parts):
+                    continue
+                added = placed_group(sharp, root, [(name, x, top)])
+                base = base if base is not None else hero_layers(scene, groups, pieces)
+                layers = base + hero_layers(scene, [added], pieces)
+                if hero_standing(scene, layers) or any(hero_hidden(scene, layers, lift)[0] > HIDDEN_MAX for lift in HERO_LIFTS):
+                    continue
+                if any(s.pooled > SHARE_POOLED or max(s.first, s.last) > SHARE_RESTING
+                       for s in hidden_shares(scene, [added] + near, pieces)):
+                    continue
+                if hanging and open_sky(scene, piece_extents(groups + [added], pieces, HANGING))[0] < SKY_MIN:
+                    continue
+                return name, x, top
+    return None
+
+
+def check_middle(scene, groups, pieces, out=print):
+    """The middle of one room (D153): a room with a stone takes no STONE_BARRED piece (D113); every hanging or tall rising piece
+    stands at a top y its table allows; a long room (LONG_ROOM) has no stretch over HANG_BARE_MAX without a hanging piece, nor
+    over RISE_BARE_MAX without a tall rising one, unless no such piece fits it (fitting_piece), and every camera's view keeps
+    SKY_MIN of open sky between its hanging pieces."""
+    name = f'{scene.mock.name} {groups[0].get("name")}'
+    failures = []
+    stone = any(kind in STONE_TYPES and 0 <= x < scene.width for kind, _, x, *_ in room_objects(scene))
+    if stone and any(piece in STONE_BARRED for piece, *_ in sharp_pieces(groups, pieces)):
+        failures.append(f'{", ".join(STONE_BARRED)} in a room with a stone (D113)')
+    rising = {**RISING, **RISING_UNASKED}
+    placements = {**HANGING, **rising}
+    for piece, x, top, _ in sharp_pieces(groups, pieces):
+        if piece in placements and top not in placements[piece]:
+            failures.append(f'{piece} at x {x} has its top at y {top}, not at {" or ".join(str(t) for t in placements[piece])}')
+    if scene.width < LONG_ROOM:
+        report = f'a room under {LONG_ROOM} px, no limit on its bare stretches'
+    else:
+        span = fg_span(scene)
+        mask = None
+        report = []
+        for what, counted, limit, candidates in (('hanging', HANGING, HANG_BARE_MAX, HANGING),
+                                                 ('tall rising', rising, RISE_BARE_MAX, RISING)):
+            allowed = {k: v for k, v in candidates.items() if not (stone and k in STONE_BARRED)}
+            stretches = bare_stretches(span, piece_extents(groups, pieces, counted))
+            full = 0
+            for start, length in stretches:
+                if length <= limit:
+                    continue
+                mask = mask if mask is not None else keep_clear(scene)
+                fit = fitting_piece(scene, groups, pieces, allowed, (start, length), mask, candidates is HANGING)
+                if fit:
+                    piece, x, top = fit
+                    failures.append(f'{length} px from x {start} without a {what} piece (limit {limit}): {piece} fits at x {x}, y {top}')
+                else:
+                    full += 1
+            longest = max((n for _, n in stretches), default=0)
+            report.append(f'{longest} px at most without a {what} piece (limit {limit}'
+                          + (f', no piece fits in {full} longer' if full else '') + ')')
+        sky, cam = open_sky(scene, piece_extents(groups, pieces, HANGING))
+        if sky < SKY_MIN:
+            failures.append(f'a continuous band: {sky} px of open sky at camera {cam} (at least {SKY_MIN})')
+        report = ', '.join(report) + f', open sky at least {sky} px (limit {SKY_MIN})'
+    for failure in failures:
+        out(f'{name} middle:', failure)
+    out(f'{name}: middle of the room, {report}' + (': FAIL' if failures else ': ok'))
+    return not failures
 
 
 def hero_route(scene):

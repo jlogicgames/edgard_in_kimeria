@@ -7,7 +7,7 @@ description: Adds, changes or reviews an Edgard in Kimeria parallax layer or for
 
 Project-owned, a thin order of work. The rules and every measured number live in
 [ART_DIRECTION.md](../../../docs/ART_DIRECTION.md), "Forest look and parallax layers" (the card),
-[DECISIONS.md](../../../docs/DECISIONS.md) (D108, D111 to D114, D120, D143) and
+[DECISIONS.md](../../../docs/DECISIONS.md) (D108, D111 to D114, D120, D143, D153) and
 [DEVELOPMENT.md](../../../docs/DEVELOPMENT.md#scenery-layers-and-the-foreground-parallax-236) (the parser and the renderer).
 Draw art with [kimeria-art-direction](../kimeria-art-direction/SKILL.md); move gameplay objects with
 [kimeria-level-authoring](../kimeria-level-authoring/SKILL.md). Work from the repository root.
@@ -40,6 +40,13 @@ equals its horizontal one. World Y grows downward.
 - **Giant leaves (D143):** `edge-giant-*` are the only blurred art (`blur=` on the grid's piece line, baked at export, nothing
   at run time). They lie only in `foreground-near-<room>`, every forest room has at least one, they stay clear of open pits,
   and they hide at most 35 % of a sharp piece over the room's cameras (50 % at the first or last camera).
+- **The middle of a long room (D153):** a room 736 px wide or wider has no stretch of foreground over 320 px without a hanging
+  piece, nor over 480 px without a tall rising one, and every view keeps 96 px of open sky between hanging pieces: occasional
+  pieces, never a band. A longer stretch passes only where the gate finds no piece that fits it, a stem partly out of view at a
+  room end included (0.3 of its width in view); there is no list of excused rooms. Put these pieces in `MIDDLE`, each at a top y
+  its table allows; prefer light ones and leave room for the trunks and crowns (#635).
+- **Stones (D113):** a room with a falling or thrown stone takes no `near-canopy`; by swaying `HangingVine` objects take a fern,
+  not a vine curtain.
 - **HUD:** drawn after the world, over every layer. A piece under it is fine; move nothing for it.
 - **Bleed:** no cut layer edge at any camera top 0 to 8 (D111): keep each piece's `-top` or `-foot` partner with it.
 
@@ -51,11 +58,15 @@ equals its horizontal one. World Y grows downward.
    export. A new or resized sheet updates its entry in `tools/sprite_layouts.py` (`PARALLAX_LAYER_SHEETS`,
    `PARALLAX_SOFT_SHEETS`). A script under `art/` is held to `validateSpriteArt` (it copies, never paints) and
    `validateNamedParameters` (no unnamed geometry).
-2. **Placement:** the room lists in `tools/parallax_game.py` (`NEAR`, `MORE_BOTTOM` and the per-forest lists). Never edit the
-   installed layers or groups in a `.tmx` by hand: `tools/test_parallax_game.py` fails a map that differs from the installer.
+2. **Placement:** the room lists in `tools/parallax_game.py` (`NEAR`, `MIDDLE`, `MORE_BOTTOM` and the per-forest lists). Never
+   edit the installed layers or groups in a `.tmx` by hand: `tools/test_parallax_game.py` fails a map that differs from the
+   installer. A new, widened or re-trapped room: add its lists, install, run the check and take the pieces it names for the
+   middle (D153), spread evenly and varied from its neighbours; look at them, since the gate judges cover and spacing, not
+   whether a piece reads well. A new hanging or rising variant joins `HANGING` or `RISING` in `parallax_mock.py` and needs the
+   author's approval (kimeria-art-direction); draw one only when the existing pieces read as a repeat.
 3. **Install:** `python3 tools/parallax_game.py`.
 4. **Check:** `python3 tools/parallax_mock.py --check --game` (`validateParallax`: rule B, cover time, the giant-leaf rules,
-   bleed, in every room with a foreground). A failing room is fixed by moving the piece or the object, never by widening a limit.
+   the middle of long rooms, bleed, in every room with a foreground). A failing room is fixed by moving the piece or the object, never by widening a limit.
 5. **Colours changed:** `python3 tools/check_contrast.py` (`validateContrast`). It composites the scenery and play layers
    behind placed sprites, not the foreground; its coverage is listed in the card, section 4.
 6. **Tests:** `./gradlew :core:check validateSpriteArt`, `python3 -m unittest discover -s tools -p 'test_*.py'`; draw code stays

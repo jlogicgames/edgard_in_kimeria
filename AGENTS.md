@@ -157,6 +157,10 @@ depth; the sky, the moon and the gameplay objects keep theirs. The giant `edge-g
 export, nothing else is blurred), lie in the faster group `foreground-near-<room>` (2.2), stay clear of open pits and never hide more
 than 35 % of a sharp piece (50 % at a room's first or last camera); the HUD is drawn over every layer, so it needs no clearance. Draw code stays
 allocation free (`AllocationBudgetTest`). Status: accepted by the author, 2026-11-24 ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236)).
+Every forest room has a foreground, and a long one (736 px or wider) is not left empty in the middle (D153): no stretch over 320 px
+without a hanging piece or over 480 px without a rising stem unless none fits, 96 px of open sky between hanging pieces in every
+view (`MIDDLE` in `tools/parallax_game.py`); a room with a falling or thrown stone takes no canopy (D113). A new or changed room
+passes `validateParallax` before it is done.
 Procedure: the `kimeria-parallax` skill (`.agents/skills/`).
 
 ## Branches grow from trunks (D122)
