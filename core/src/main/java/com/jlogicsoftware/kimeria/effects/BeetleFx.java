@@ -8,7 +8,8 @@ import com.badlogic.gdx.math.RandomXS128;
  * The forest beetles' effects (#327, D100; the flying beetle's, #330, D145): the specks of a wind-up, the burst and the death. The end of the body it leaves
  * (D101: crumbled or burnt) is shared by every monster and lives in {@link RemainsFx} (#478). One per {@code Level}, like
  * {@link FireballFx}; two {@link KimeriaParticleSystem}s with their own seeded streams. {@link #soft()} holds the burst's
- * white flash ({@code KIND_GLOW}, additive) and the grey steam and death poof ({@code KIND_SMOKE}), drawn with
+ * white flash (additive: a half glow on a surface, {@code KIND_DOME}; a round one in the air, {@code KIND_GLOW}) and the grey
+ * steam and death poof ({@code KIND_SMOKE}), drawn with
  * {@link SoftDot}; {@link #hard()} holds the wind-up specks and the burst's spray ({@code KIND_FLAME}, opaque squares that
  * shrink out) and the death's shell chips ({@code KIND_GRIT}), drawn with {@link Shaders#whiteQuad()}.
  *
