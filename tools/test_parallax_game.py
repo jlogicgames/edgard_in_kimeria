@@ -35,8 +35,8 @@ class InstalledMapTest(unittest.TestCase):
         for name in game.MAPS:
             root = ET.parse(game.TILES / f'{name}.tmx').getroot()
             rooms = {o.get('name') for o in root.iter('object') if o.get('type') == 'Room'}
-            if name != 'forest-1':   # forest-1 keeps the three rooms of the first pass (#236)
-                self.assertEqual(rooms, set(game.MAPS[name]), name)
+            self.assertEqual(rooms, set(game.MAPS[name]), name)
+        self.assertEqual({path.stem for path in game.TILES.glob('forest-*.tmx')}, set(game.MAPS), 'a new forest map joins the installer')
 
     def test_retile_closes_the_seam_where_two_floors_meet_and_drops_the_ropes(self):
         rows = [[105, 0, 0, 79], [99, 0, 0, 99], [23, 24, 22, 23], [43, 44, 42, 43]]
@@ -255,6 +255,147 @@ class GameCheckTest(unittest.TestCase):
         right[floor - pm.HERO_H:floor, column + 6:column + pm.HERO_FIGURE_W] = True
         split = [(left, 1.0, 0), (right, 1.0, 0)]
         self.assertEqual(1.0, pm.hero_cover(scene, split, x), 'two layers each hiding half hide the whole figure')
+
+
+class MiddleCheckTest(unittest.TestCase):
+    """D153: `check_middle` passes the shipped rooms (validateParallax) and fails a room whose middle breaks a rule (not vacuous)."""
+
+    @staticmethod
+    def middle(room, drop=(), add=()):
+        """(passed, report) of `check_middle` for `room` without the sharp pieces `drop` ((piece, x)) and with `add`
+        ((piece, x, top y)) among them."""
+        scene, groups, pieces = GameCheckTest.scene_groups(room)
+        groups = GameCheckTest.copy(groups)
+        for obj in list(groups[0].findall('object')):
+            if (obj.get('name'), int(obj.get('x'))) in drop:
+                groups[0].remove(obj)
+        for obj in pm.placed_group(groups[0], scene.root, add).findall('object'):
+            groups[0].append(obj)
+        lines = []
+        passed = pm.check_middle(scene, groups, pieces, lambda *parts: lines.append(' '.join(str(p) for p in parts)))
+        return passed, '\n'.join(lines)
+
+    def test_every_hanging_and_rising_piece_of_the_sheet_is_counted_or_set_aside(self):
+        """A new variant must join a list, or the gate would not see it."""
+        spots = sprites.layout('forest/fg')[0]
+        own = [n for n in spots if not n.endswith(('-top', '-foot')) and not n.startswith(pm.GIANT)]
+        self.assertEqual({n for n in own if f'{n}-top' in spots}, set(pm.HANGING) | set(pm.SKETCH_ONLY))
+        self.assertEqual({n for n in own if n.startswith('rise-')}, set(pm.RISING) | set(pm.RISING_UNASKED))
+
+    def test_middle_pieces_stand_only_in_long_rooms_and_a_filled_room_passes(self):
+        scenes = {scene.room: scene for scene in pm.game_scenes()}
+        for room in game.MIDDLE:
+            with self.subTest(room=room):
+                self.assertGreaterEqual(scenes[room].width, pm.LONG_ROOM)
+        passed, report = self.middle('forest-1-spider')   # validateParallax holds every other room to the same check
+        self.assertTrue(passed, report)
+
+    def test_the_limits_are_those_of_the_decision(self):
+        """D153: a changed limit is a changed decision, never a quiet way to make a room pass."""
+        self.assertEqual((736, 320, 480, 96, 64, 0.3),
+                         (pm.LONG_ROOM, pm.HANG_BARE_MAX, pm.RISE_BARE_MAX, pm.SKY_MIN, pm.FIT_CLEAR, pm.END_SEEN))
+
+    def test_a_stretch_of_the_limit_passes_and_one_pixel_more_fails(self):
+        for room, piece, x, edge, limit, top in (('forest-1-spider', 'near-sprig', 888, 788, pm.HANG_BARE_MAX, 0),
+                                                 ('forest-1-guard', 'rise-reeds', 408, 96, pm.RISE_BARE_MAX, 128)):
+            with self.subTest(room=room):
+                passed, report = self.middle(room, drop=((piece, x),), add=((piece, edge + limit, top),))
+                self.assertTrue(passed, report)
+                passed, report = self.middle(room, drop=((piece, x),), add=((piece, edge + limit + 1, top),))
+                self.assertFalse(passed)
+                self.assertIn(f'{limit + 1} px from x {edge} without', report)
+
+    def test_a_piece_keeps_clear_of_its_neighbours_and_may_overhang_only_an_end_of_the_span(self):
+        for stretch, low, high in (((100, 400), 164, 308), ((0, 500), -89, 308), ((500, 400), 564, 861)):
+            with self.subTest(stretch=stretch):
+                xs = pm.candidate_xs(900, stretch, 128)
+                self.assertEqual((low, high), (min(xs), max(xs)))
+                self.assertLessEqual(abs(2 * xs[0] + 128 - 2 * stretch[0] - stretch[1]), 1, 'the most central x comes first')
+
+    def test_a_stem_partly_out_of_view_at_a_room_end_is_asked_for(self):
+        passed, report = self.middle('forest-hollow', drop=(('rise-fern', -210),))
+        self.assertFalse(passed)
+        self.assertIn('516 px from x 0 without a tall rising piece (limit 480): rise-fern fits at x -210', report)
+
+    def test_a_suggested_piece_passes_the_other_rules_and_each_of_them_can_refuse_it(self):
+        scene, groups, pieces = GameCheckTest.scene_groups('forest-1-spider')
+        groups = GameCheckTest.copy(groups)
+        for obj in list(groups[0].findall('object')):
+            if (obj.get('name'), int(obj.get('x'))) in (('vine-curtain', 500), ('near-sprig', 888)):
+                groups[0].remove(obj)
+        mask = pm.keep_clear(scene)
+        found = pm.fitting_piece(scene, groups, pieces, pm.HANGING, (336, 972), mask, True)
+        self.assertIsNotNone(found)
+        piece, x, top = found
+        width = pm.foreground_gids(scene.root)[1][piece][pm.SPOT_W] * pm.TILE
+        only = {piece: (top,)}, (x - pm.FIT_CLEAR, width + 2 * pm.FIT_CLEAR)   # a stretch with room for that one x
+
+        def fit():
+            return pm.fitting_piece(scene, groups, pieces, *only, mask, True)
+
+        self.assertEqual(found, fit())
+        added = groups[:1] + [pm.placed_group(groups[0], scene.root, [found])] + groups[1:]
+        self.assertTrue(pm.check_layer(scene, added, pieces, silent), found)
+        self.assertTrue(pm.check_share(scene, added, pieces, silent), found)
+        for name, refuse in (('hero_standing', lambda *_: [0]), ('hero_hidden', lambda *_, **__: (pm.HIDDEN_MAX + 1, 0)),
+                             ('hidden_shares', lambda *_: [pm.Share('piece', 0, 1.0, 1.0, 1.0)]),
+                             ('open_sky', lambda *_: (pm.SKY_MIN - 1, 0))):
+            with self.subTest(refused_by=name):
+                original = getattr(pm, name)
+                setattr(pm, name, refuse)
+                try:
+                    self.assertIsNone(fit())
+                finally:
+                    setattr(pm, name, original)
+
+    def test_a_piece_at_a_top_its_table_does_not_allow_fails_and_does_not_count(self):
+        passed, report = self.middle('forest-1-spider', drop=(('near-sprig', 888),), add=(('near-sprig', 888, -300),))
+        self.assertFalse(passed)
+        self.assertIn('near-sprig at x 888 has its top at y -300, not at 0', report)
+        self.assertIn('without a hanging piece', report)
+        passed, report = self.middle('forest-1-guard', drop=(('rise-reeds', 408),), add=(('rise-reeds', 408, 380),))
+        self.assertFalse(passed)
+        self.assertIn('rise-reeds at x 408 has its top at y 380, not at 128', report)
+        self.assertIn('without a tall rising piece', report)
+
+    def test_a_long_room_without_its_middle_hanging_pieces_fails_where_one_fits(self):
+        passed, report = self.middle('forest-1-spider', drop=(('vine-curtain', 500), ('near-sprig', 888)))
+        self.assertFalse(passed)
+        self.assertIn('972 px from x 336 without a hanging piece', report)
+        self.assertIn('fits at x', report)
+        self.assertNotIn('near-canopy fits', report, 'a room with a falling stone is never asked for a canopy')
+
+    def test_a_missing_rising_stem_fails_where_one_fits(self):
+        passed, report = self.middle('forest-1-guard', drop=(('rise-reeds', 408),))
+        self.assertFalse(passed)
+        self.assertIn('without a tall rising piece (limit 480): rise-reeds fits', report)
+
+    def test_a_long_stretch_where_nothing_fits_passes_and_says_so(self):
+        passed, report = self.middle('forest-roost')   # its traps leave a tall stem no x in the middle
+        self.assertTrue(passed, report)
+        self.assertIn('no piece fits in 1 longer', report)
+
+    def test_a_continuous_band_of_hanging_pieces_fails(self):
+        passed, report = self.middle('forest-glade', add=tuple(('near-sprig', x, 0) for x in range(130, 750, 128)))
+        self.assertFalse(passed)
+        self.assertIn('a continuous band', report)
+
+    def test_a_canopy_in_a_room_with_a_stone_fails_long_or_short(self):
+        for room in ('forest-hollow', 'forest-1-climb'):   # a thrown stone in a long room, a falling one in a short room
+            with self.subTest(room=room):
+                passed, report = self.middle(room, add=(('near-canopy', 300, 0),))
+                self.assertFalse(passed)
+                self.assertIn('in a room with a stone (D113)', report)
+
+    def test_a_short_room_has_no_limit_on_its_bare_stretches(self):
+        passed, report = self.middle('forest-1-traps', drop=(('near-fern', -88), ('near-canopy', 540)))
+        self.assertTrue(passed, report)
+
+    def test_open_sky_is_the_widest_gap_of_the_worst_view(self):
+        scene = next(s for s in pm.game_scenes() if s.room == 'forest-1-spider')
+        self.assertEqual((pm.VIEW[0], 0), pm.open_sky(scene, []))
+        self.assertEqual(0, pm.open_sky(scene, [(0, pm.fg_span(scene))])[0])
+        self.assertEqual([(0, 10), (20, 5)], pm.bare_stretches(25, [(10, 20)]))
 
 
 if __name__ == '__main__':

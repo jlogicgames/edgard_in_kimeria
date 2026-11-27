@@ -3896,6 +3896,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Gate:** `validateParallax`, `tools/test_parallax_game.py`, `TiledMapParallaxTest`, `validateContrast`.
 - **Update 2026-11-25 ([D143](#d143-giant-out-of-focus-leaves-frame-the-forest-rooms-597-2026-11-25), [#597](https://github.com/jlogicgames/edgard_in_kimeria/issues/597)):** a nearer depth in front of these pieces, giant blurred leaves in their own faster group. The near
   pieces stay as built, sharp; D143 allows a Gaussian blur for the giant leaves only. `forest-fg.png` is now 896x1600 px.
+- **Update 2026-11-27 ([D153](#d153-the-middle-of-a-long-forest-room-is-not-left-empty-spread-hanging-pieces-and-rising-stems-664-2026-11-27-amends-d113), [#664](https://github.com/jlogicgames/edgard_in_kimeria/issues/664)):** long rooms take pieces between their ends too, and the rule that a
+  room with a stone takes no canopy is now gated.
 
 ## D114. Terrain blocks get faces, an underside and soil variants ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))
 
@@ -4968,3 +4970,47 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   and heard at the lethal moment).
 - **Measured (2026-11-27):** `AllocationBudgetTest.falseHoneyFungusCloudsInTurn` 0.0 B/frame (ceiling 8, unchanged;
   headless there is no GL context, so the ring's shader draw is skipped). No test threshold changed.
+
+## D153. The middle of a long forest room is not left empty: spread hanging pieces and rising stems (#664, 2026-11-27, amends D113)
+
+- **Status:** Accepted (author, 2026-11-27: sample A of `forest-1-spider`, a vine curtain and a sprig, chosen over two sprigs;
+  the limits below were proposed with the samples and taken unchanged). Built. Still frames of six of the rooms in the web build
+  showed the pieces clear of the hero, monsters and traps in view (agent, 2026-11-27, some room starts moved in a served copy);
+  the check on desktop and web by walking the rooms is on [#664](https://github.com/jlogicgames/edgard_in_kimeria/issues/664).
+- **Problem:** the near pieces sit at the room ends (D113) with at most one curtain between them, so a long flat room looks empty in
+  the middle: before this change up to 1172 foreground px with no hanging piece and 1104 px with no tall rising one
+  (`forest-canopy`).
+- **Decision:** a forest room 736 px wide or wider (its camera travels 96 px or more) takes occasional pieces between its ends, and
+  `parallax_mock.check_middle` (`validateParallax`) holds every room, today's and later ones, to these limits, in foreground px:
+  - **Hanging** (`near-canopy`, `near-fern`, `near-sprig`, `vine-curtain`, `roots-curtain`): no stretch over **320 px** without one.
+  - **Open sky:** in every camera's view the hanging pieces leave at least **96 px** open: never a continuous band.
+  - **Rising** (`rise-fern`, `rise-reeds`; `rise-trunk` counts too): no stretch over **480 px** without one.
+  - **A longer stretch passes only where no piece fits it.** The gate itself tries every listed piece at every x of the stretch
+    and fails naming the piece and x if one fits: the most central x that passes rule B, the hero's cover time, the giant leaves'
+    hidden share and, for a hanging piece, the open sky. A piece fits only at a top y its table allows, **64 px** clear of a piece
+    at an end of the stretch; at an end of the room's foreground it may overhang, with at least **0.3** of its width in view (D113's
+    measure for an end piece). There is no list of excused rooms. `rise-trunk` counts but is never asked for: the near tier's
+    trunks belong to [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635). A hanging or rising piece at a top y its
+    table does not allow fails the room and counts for nothing.
+  - **A room with a falling or thrown stone takes no `near-canopy`** (D113's rule, now gated, in rooms of any width). It had
+    slipped: `forest-hollow` (D151, a thrown stone) stood with one at its start, now a `near-fern`.
+- **Pieces added** (`MIDDLE` in `tools/parallax_game.py`; no new art and no change to rule B, the cover time or D143): a hanging
+  piece in `forest-0-ladder`, `-wall`, `-platform`, `-stone`, `forest-1-mob`, `-route`, `forest-entry`, `-glade`, `-roost` and
+  `forest-hollow`, two in `forest-1-spider` and `forest-canopy`. A rising stem in the middle of `forest-1-guard` and
+  `forest-hollow`; where none fits further in, one partly out of view at the room's start (`forest-1-mob`, `-route`,
+  `forest-entry`, `-glade`, `-roost`, `-hollow`, `-canopy`) and one at the end of `forest-roost`. The giant leaves of that side
+  stand in front of the start stems, so they add little to the eye. By a falling stone and its swaying `HangingVine` objects
+  (`forest-0-platform`, `forest-canopy`) the middle piece is a fern: no leaf blobs that read as stones, no vines in front of the
+  vines that answer the stone.
+- **Measured:** longest stretch without a hanging piece, before to after: `forest-canopy` 1172 to 316, `forest-1-spider` 972 to
+  292, `forest-1-route` 712 to 312, `forest-0-platform` 660 to 280, `forest-0-ladder` 536 to 280, `forest-roost` 494 to 136.
+  Stretches over 480 px without a rising stem where none fits remain in `forest-0-ladder` (648), `forest-0-wall` (576),
+  `forest-1-mob` (811), `-spider` (1032), `-route` (729), `forest-entry` (640), `-glade` (617), `-roost` (575) and `-canopy`
+  (1017): at factor 1.6 a stem is carried over a wide stretch of the room, across its traps. `validateParallax`: 0 covered
+  objects, hero standing hidden at 0 box x. No existing test threshold changed.
+- **Review (2026-11-27):** the first build did not try pieces overhanging a room end, so seven rooms passed although a stem fitted
+  there; the search, the top-y rule and the tests of the limits and of each fit condition came out of that review.
+- **Tests:** `test_parallax_game.MiddleCheckTest` (the limits and one px past them, a removed hanging piece, middle stem and end
+  stem fail, a stretch where nothing fits passes, a suggested piece passes the other rules and each of them can refuse it, a
+  continuous band, a wrong top y and a canopy in a stone room fail, a new hanging or rising variant must join a table); every room
+  of every forest map must now have a foreground, `forest-1` included, so a new room cannot stay outside the gate.
