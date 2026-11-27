@@ -359,7 +359,8 @@ Temporary assets and balance may still require refinement.
   Recheck their readability in the final campaign/device presentation.
   Select decorative reserve ideas by their benefit to finished situations.
   Includes the polish of the false honey fungus's spore cloud (done, approved by the author after playing the desktop build and checking the shader in a browser:
-  `SporeCloud` particles plus `spore_cloud.frag`, the only path; the sprite path is gone, [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296);
+  `SporeCloud` particles plus `spore_cloud.frag`, the only path then; the sprite path is gone, [#296](https://github.com/jlogicgames/edgard_in_kimeria/issues/296);
+  since replaced by sparks and a ring, D152;
   the trap itself is [#295](https://github.com/jlogicgames/edgard_in_kimeria/issues/295), its static scenery
   look-alikes [#299](https://github.com/jlogicgames/edgard_in_kimeria/issues/299), see
   [ORIGINAL_TRAPS.md](ORIGINAL_TRAPS.md)). Trap warning times are tuned by playtest in

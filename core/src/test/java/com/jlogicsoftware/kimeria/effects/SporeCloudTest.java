@@ -7,9 +7,6 @@ import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import com.jlogicsoftware.kimeria.world.Level;
 import com.jlogicsoftware.kimeria.entity.player.Player;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,15 +14,17 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The particle spore cloud of the false honey fungus (#296, D63, D5): it lives exactly as long as the hitbox, every particle quad stays
- * inside the lethal rectangle (world Y grows downward: the rectangle is y 296..320 for a mushroom standing on y 320), the same seed gives
- * the same cloud, a paused game freezes it and a retry starts with none.
+ * The spore burst of the false honey fungus (D152, #608, D63, D5): sparks and one ring out of the cap tuft. The sparks live exactly as
+ * long as the hitbox, every quad (heads and streaks) and the ring stay inside the lethal rectangle (world Y grows downward: the
+ * rectangle is y 296..320 for a mushroom standing on y 320), the same seed gives the same burst, a paused game freezes it and a retry
+ * starts with none.
  */
 class SporeCloudTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float FLOOR = 320, WIDTH = 24, HEIGHT = 16, ZONE = 64, HERO_W = 11, HERO_H = 22, EDGE_EPS = 1e-3f;
     private static final float FALSE_X = 480;
-    private static final int FRAMES_LIMIT = 600;
+    private static final int FRAMES_LIMIT = 600, MUSHROOMS = 40;
+    private static final float[][] LIMES = {{0.373f, 0.627f, 0.165f}, {0.651f, 0.878f, 0.290f}, {0.902f, 0.949f, 0.416f}};
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private final NoopBatch batch = new NoopBatch();
@@ -47,68 +46,117 @@ class SporeCloudTest {
         assertTrue(f.cloudLive(), "the swell must end in a burst");
     }
 
-    @Test void theShaderLayerStartsAtZeroEndsAtZeroAndNeverExceedsItsPeak() {
-        assertEquals(0f, SporeCloud.strength(0f), 0f);
-        assertEquals(0f, SporeCloud.strength(1f), 0f, "gone exactly when the hitbox ends");
-        float peak = 0;
-        for (int i = 0; i <= 100; i++) peak = Math.max(peak, SporeCloud.strength(i / 100f));
-        assertTrue(peak > 0.3f && peak < 1f, "visible but translucent: " + peak);
-        assertTrue(SporeCloud.strength(0.5f) > 0.1f, "still clearly there mid-life, so the danger stays readable");
-        assertEquals(0f, SporeCloud.swell(0f), 0f);
-        assertEquals(1f, SporeCloud.swell(1f), 0f);
-    }
-
-    @Test void particlesLiveExactlyAsLongAsTheHitbox() {
+    @Test void theSparksAndTheRingComeWithTheLethalMomentAndEndWithTheHitbox() {
         FalseHoneyFungus f = fungus(FALSE_X);
-        KimeriaParticleSystem p = f.sporeCloud().particles();
+        SporeCloud cloud = f.sporeCloud();
+        KimeriaParticleSystem p = cloud.particles();
         assertEquals(0, p.count(), "none before the burst");
+        assertEquals(0, cloud.ringCount());
         toBurst(f);
-        assertEquals(SporeCloud.HAZE_COUNT + SporeCloud.SPECK_COUNT, p.count(), "the whole cloud is released at once");
-        int liveFrames = 0;
+        assertEquals(SporeCloud.SPARK_COUNT, p.count(), "the whole burst is released at once");
+        assertEquals(1, cloud.ringCount(), "one ring marks the lethal moment (D93)");
+        int liveFrames = 0, ringFrames = 0;
         while (f.cloudLive()) {
-            assertTrue(p.count() > 0, "particles while the hitbox is live, frame " + liveFrames);
+            assertEquals(SporeCloud.SPARK_COUNT, p.count(), "every spark while the hitbox is live, frame " + liveFrames);
+            for (int i = 0; i < p.count(); i++) assertTrue(p.alpha(i) >= 0.45f, "still seen, frame " + liveFrames);
+            if (cloud.ringCount() > 0) ringFrames++;
             step(f);
             liveFrames++;
         }
         assertEquals(FungusTrap.State.SPENT, f.state());
-        assertEquals(0, p.count(), "no particle outlives the hitbox");
+        assertEquals(0, p.count(), "no spark outlives the hitbox");
+        assertEquals(0, cloud.ringCount(), "and no ring");
         assertEquals(FalseHoneyFungus.CLOUD_SECONDS / STEP, liveFrames, 2);
+        assertEquals(SporeCloud.RING_SECONDS / STEP, ringFrames, 2, "the ring is a quick one, over long before the hitbox");
     }
 
-    @Test void everyParticleQuadStaysInsideTheLethalRectangleEveryFrame() {
-        FalseHoneyFungus f = fungus(FALSE_X);
+    @Test void everyDrawnSparkQuadStaysInsideTheLethalRectangleEveryFrame() {
+        int[] drawn = new int[2]; // heads, streaks
+        // Each position seeds its own burst; a map object may be taller or lower than the 16 px sprite, the square keeps its place.
+        for (int n = 0; n < MUSHROOMS; n++) assertDrawnInside(fungus(FALSE_X + n * WIDTH), drawn);
+        for (float height : new float[]{2, 4, 28, 32, 48})
+            assertDrawnInside(new FalseHoneyFungus(harness.assets(), harness.game().trapWarnings(), FALSE_X, FLOOR - height, WIDTH, height,
+                ZONE, ZONE, () -> hero), drawn);
+        assertTrue(drawn[0] > SporeCloud.SPARK_COUNT * MUSHROOMS, "the check really looked at heads over many frames: " + drawn[0]);
+        assertTrue(drawn[1] > 0, "streaks were checked too");
+    }
+
+    private void assertDrawnInside(FalseHoneyFungus f, int[] drawn) {
+        hero.x = f.position.x;
         Rectangle lethal = f.cloudBounds();
-        KimeriaParticleSystem p = f.sporeCloud().particles();
         toBurst(f);
-        int checked = 0;
+        QuadRecorder quads = new QuadRecorder();
         while (f.cloudLive()) {
-            for (int i = 0; i < p.count(); i++) {
-                float half = p.drawSize(i) / 2f;
-                assertTrue(p.x(i) - half >= lethal.x - EDGE_EPS, "left edge, particle " + i);
-                assertTrue(p.x(i) + half <= lethal.x + lethal.width + EDGE_EPS, "right edge, particle " + i);
-                assertTrue(p.y(i) - half >= lethal.y - EDGE_EPS, "top edge (smaller Y is higher), particle " + i);
-                assertTrue(p.y(i) + half <= lethal.y + lethal.height + EDGE_EPS, "bottom edge is the floor line, particle " + i);
-                checked++;
+            quads.clear();
+            f.sporeCloud().render(quads.batch); // the cloud alone: the mushroom's own sprite is not part of the burst
+            for (float[] q : quads.quads) {
+                for (int corner = 0; corner < 4; corner++) assertInside(lethal, QuadRecorder.cornerX(q, corner), QuadRecorder.cornerY(q, corner));
+                drawn[q.length == QuadRecorder.PLAIN ? 0 : 1]++;
             }
             step(f);
         }
-        assertTrue(checked > SporeCloud.HAZE_COUNT, "the check really looked at particles over many frames: " + checked);
     }
 
-    @Test void theCloudIsLimeHazeAndSpecksNotTheGoldenKind() {
+    private static void assertInside(Rectangle lethal, float x, float y) {
+        assertTrue(x >= lethal.x - EDGE_EPS && x <= lethal.x + lethal.width + EDGE_EPS, "x " + x + " in " + lethal);
+        // top edge is the smaller Y; the bottom edge is the floor line
+        assertTrue(y >= lethal.y - EDGE_EPS && y <= lethal.y + lethal.height + EDGE_EPS, "y " + y + " in " + lethal);
+    }
+
+    @Test void theRingIsCentredOnTheTuftAndFitsTheRectangle() {
+        FalseHoneyFungus f = fungus(FALSE_X);
+        Rectangle lethal = f.cloudBounds();
+        toBurst(f);
+        SporeCloud cloud = f.sporeCloud();
+        // The ring's quad is centre +- radius, so with these three it is the lethal square itself (D5).
+        assertEquals(lethal.x + lethal.width / 2f, cloud.ringX(), 0f);
+        assertEquals(lethal.y + lethal.height / 2f, cloud.ringY(), 0f);
+        assertEquals(FalseHoneyFungus.CLOUD_SIZE / 2f, cloud.ringRadius(), 0f);
+    }
+
+    @Test void theSparksFlyOutOfTheTuftAllRoundAndReachTheEdges() {
+        FalseHoneyFungus f = fungus(FALSE_X);
+        Rectangle lethal = f.cloudBounds();
+        float tuftX = lethal.x + lethal.width / 2f, tuftY = lethal.y + lethal.height / 2f;
+        toBurst(f);
+        KimeriaParticleSystem p = f.sporeCloud().particles();
+        for (int i = 0; i < p.count(); i++) {
+            assertEquals(KimeriaParticleSystem.KIND_SPARK, p.kind(i));
+            assertEquals(tuftX, p.fromX(i), 1e-4f, "every spark starts at the tuft");
+            assertLime(p.red(i), p.green(i), p.blue(i));
+        }
+        while (f.cloudLive() && p.life(0) > STEP + SporeCloud.LIFE_MARGIN) step(f);
+        boolean[] quadrant = new boolean[4];
+        float left = Float.MAX_VALUE, right = -Float.MAX_VALUE, top = Float.MAX_VALUE, bottom = -Float.MAX_VALUE;
+        for (int i = 0; i < p.count(); i++) {
+            quadrant[(p.x(i) < tuftX ? 0 : 1) + (p.y(i) < tuftY ? 0 : 2)] = true;
+            left = Math.min(left, p.x(i)); right = Math.max(right, p.x(i));
+            top = Math.min(top, p.y(i)); bottom = Math.max(bottom, p.y(i));
+        }
+        for (boolean q : quadrant) assertTrue(q, "radial: sparks in every quadrant, not an upward jet");
+        float reach = 4f; // the drawn burst covers the lethal square to within this of each side
+        assertTrue(left - lethal.x < reach && lethal.x + lethal.width - right < reach, "sides: " + left + " .. " + right);
+        assertTrue(top - lethal.y < reach && lethal.y + lethal.height - bottom < reach, "top and floor: " + top + " .. " + bottom);
+    }
+
+    private static void assertLime(float r, float g, float b) {
+        for (float[] lime : LIMES) if (lime[0] == r && lime[1] == g && lime[2] == b) return;
+        fail("not one of the lethal limes: " + r + ", " + g + ", " + b);
+    }
+
+    @Test void theSparksFlyFastThenBrake() {
         FalseHoneyFungus f = fungus(FALSE_X);
         toBurst(f);
         KimeriaParticleSystem p = f.sporeCloud().particles();
-        int haze = 0, specks = 0;
-        for (int i = 0; i < p.count(); i++) {
-            if (p.kind(i) == KimeriaParticleSystem.KIND_SMOKE) haze++;
-            if (p.kind(i) == KimeriaParticleSystem.KIND_GLOW) specks++;
-        }
-        assertEquals(SporeCloud.HAZE_COUNT, haze);
-        assertEquals(SporeCloud.SPECK_COUNT, specks);
+        float[] early = new float[p.count()];
+        while (p.life(0) > p.maxLife(0) * 0.75f) step(f); // a quarter of the life
+        for (int i = 0; i < p.count(); i++) early[i] = p.x(i) - p.fromX(i);
+        while (p.life(0) > STEP + SporeCloud.LIFE_MARGIN) step(f);
+        for (int i = 0; i < p.count(); i++)
+            assertTrue(Math.abs(early[i]) >= Math.abs(p.x(i) - p.fromX(i)) * 0.6f, "most of the way in the first quarter, spark " + i);
     }
 
-    @Test void theSameSeedGivesTheSameCloudAndAnotherSeedAnother() {
+    @Test void theSameSeedGivesTheSameBurstAndAnotherSeedAnother() {
         FalseHoneyFungus a = fungus(FALSE_X), b = fungus(FALSE_X), c = fungus(FALSE_X + WIDTH * 2);
         toBurst(a); toBurst(b); toBurst(c);
         KimeriaParticleSystem pa = a.sporeCloud().particles(), pb = b.sporeCloud().particles(), pc = c.sporeCloud().particles();
@@ -116,13 +164,13 @@ class SporeCloudTest {
         for (int i = 0; i < pa.count(); i++) {
             assertEquals(pa.x(i), pb.x(i), 0f);
             assertEquals(pa.y(i), pb.y(i), 0f);
-            assertEquals(pa.life(i), pb.life(i), 0f);
-            if (pa.life(i) != pc.life(i)) differs = true;
+            assertEquals(pa.drawSize(i), pb.drawSize(i), 0f);
+            if (pa.drawSize(i) != pc.drawSize(i)) differs = true;
         }
-        assertTrue(differs, "a different mushroom gets a different cloud");
+        assertTrue(differs, "a different mushroom gets a different burst");
     }
 
-    @Test void aPausedGameFreezesTheCloud() {
+    @Test void aPausedGameFreezesTheBurst() {
         FalseHoneyFungus f = fungus(FALSE_X);
         toBurst(f);
         for (int i = 0; i < 10; i++) step(f);
@@ -134,6 +182,7 @@ class SporeCloudTest {
         assertEquals(y, p.y(0), 0f);
         assertEquals(life, p.life(0), 0f);
         assertEquals(stateTime, f.stateTime(), 0f);
+        assertEquals(1, f.sporeCloud().ringCount());
         assertTrue(f.cloudLive());
     }
 
@@ -147,39 +196,14 @@ class SporeCloudTest {
         assertNotSame(before, after);
         assertEquals(FungusTrap.State.IDLE, after.state());
         assertEquals(0, after.sporeCloud().particles().count());
+        assertEquals(0, after.sporeCloud().ringCount());
     }
 
-    @Test void withoutAShaderTheParticlesStillDrawAndNothingThrows() {
+    @Test void withoutAShaderTheSparksStillDrawAndNothingThrows() {
         FalseHoneyFungus f = fungus(FALSE_X);
         toBurst(f);
-        for (int i = 0; i < 5; i++) f.render(batch);
-        assertNull(Shaders.tryLoad(SporeCloud.SHADER), "the headless GL stub cannot build it; the fallback is particles only");
-    }
-
-    private static String shader(String name) throws IOException {
-        Path p = Path.of("").toAbsolutePath();
-        while (p != null && !Files.isDirectory(p.resolve("assets/shaders"))) p = p.getParent();
-        assertNotNull(p, "assets/shaders not found");
-        return Files.readString(p.resolve("assets/shaders/" + name));
-    }
-
-    /**
-     * Source conventions shared with the shaders that work on macOS desktop (GLSL 1.20 through libGDX's own header, no {@code #version})
-     * and on the web (GLSL ES 1.0): same precision guard, the varyings {@code quad.vert} writes, every uniform {@link SporeCloud} sets.
-     * Compiled for real against macOS GL 2.1 / GLSL 1.20 once by a scratch probe (2026-11-13); a headless test cannot compile GLSL.
-     */
-    @Test void theShaderFollowsTheConventionsOfTheShadersThatWork() throws IOException {
-        String frag = shader(SporeCloud.SHADER), shockwave = shader("shockwave.frag"), vert = shader("quad.vert");
-        String guard = "#ifdef GL_ES\nprecision mediump float;\n#endif";
-        assertTrue(shockwave.contains(guard) && frag.contains(guard), "the same precision guard as shockwave.frag");
-        assertFalse(frag.contains("#version"), "libGDX adds the header; no shader here declares a version");
-        for (String varying : new String[]{"v_texCoords", "v_color"}) {
-            assertTrue(vert.contains("varying") && vert.contains(varying), "quad.vert writes " + varying);
-            assertTrue(frag.contains("varying") && frag.contains(varying), "the fragment reads " + varying);
-        }
-        for (String uniform : new String[]{"uTime", "uSwell", "uAlpha", "uOrigin"})
-            assertTrue(frag.contains("uniform") && frag.contains(uniform), "declares " + uniform);
-        for (String banned : new String[]{"texture2D", "for (", "while (", "discard", "dFdx"})
-            assertFalse(frag.contains(banned), "not in the ES 1.0 subset used here: " + banned);
+        batch.resetCounts();
+        f.render(batch);
+        assertEquals(SporeCloud.SPARK_COUNT, batch.rotatedCount(), "one streak per spark early in its flight");
     }
 }

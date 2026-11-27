@@ -38,7 +38,8 @@ D93: seen and heard when the hazard acts, hit or miss); its sound is
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` |
 | `KIND_FLAME` | normal | `size * (1 - t)` (shrinks out) | `1` (opaque, no fade) |
 | `KIND_ORBIT` | additive | constant `size` | rides an ellipse (`spawnOrbit`: centre, radii, start turn, sweep, rho from and to); ramps in and out over a quarter of its life each, full between; `render(batch, region, intensity)` scales every alpha (#552: `PortalFx`, `SoftGlowFx`, `RoomRippleFx`, D123, D124) |
-| `KIND_DOME` | additive | as `KIND_GLOW`, half as tall | as `KIND_GLOW` | the upper half of a glow with its flat edge on y: a flash lying on a floor (`effects.BeetleFx`, D147) |
+| `KIND_DOME` | additive | as `KIND_GLOW`, half as tall | as `KIND_GLOW`; the upper half of a glow with its flat edge on y: a flash lying on a floor (`effects.BeetleFx`, D147) |
+| `KIND_SPARK` | normal | head `size * (1 - 0.4 t)` and a streak up to 5 px back along its flight, closing as `(1 - t)^3` | `1` until `t = 0.7`, then down to `0.45`; brakes along its line (`1 - (1 - t)^4`): the false honey fungus burst (D152, `effects.SporeCloud`) |
 | `KIND_LEAF` | normal | long side `size`, width flips edge-on to full; sways and tilts | `0.85`, ramped in and out (`spawnLeaf`; `effects.LeafFx`, #473) |
 
 `KIND_FLAME` (#397) is for warm pixels over the sky: a fading warm colour mixes with the blue into olive or magenta, a shrinking
@@ -49,9 +50,9 @@ life); the pickup's `effects.PickupSparksFx` (#402) is a small second user: spar
 
 `effects.FlightFx` (D132) is the project's sprite-flight helper (a cached sprite from A to B in screen space, a `KIND_FLAME` trail, a landing twinkle): the pickup flying to the HUD, the healer hand-over, the elixir. Use it, not a new pool, for any "something flies to where it goes" picture; it is cosmetic and cleared with the room.
 
-The false honey fungus's `effects.SporeCloud` (#296) is a composition of these kinds (SMOKE haze, GLOW specks) plus a shader layer; it adds no kind.
+The false honey fungus's `effects.SporeCloud` (D152) is `KIND_SPARK` sparks plus one `RingPool` ring.
 
-`render` draws the normal-blend pass (smoke and grit) first, then the additive pass, then restores white and normal blending.
+`render` draws the normal-blend pass (smoke, grit, flame, leaves and sparks) first, then the additive pass, then restores white and normal blending.
 
 ## Recipe for a new emitter
 
@@ -73,7 +74,7 @@ The false honey fungus's `effects.SporeCloud` (#296) is a composition of these k
 
 ## Adding a new kind
 
-`KIND_GRIT` (the ceiling grit of #239, owned by `effects.EnvironmentFx` with the dust) is the newest kind and the
+`KIND_GRIT` (the ceiling grit of #239, owned by `effects.EnvironmentFx` with the dust) is the
 model for the next (`EnvironmentFxTest` holds its capacity tests): it added a constant, a branch in `drawSize`, the blend choice in `draw`, cases in
 `KimeriaParticleSystemTest` and an `AllocationBudgetTest` scenario. To add any kind to `KimeriaParticleSystem`:
 

@@ -12,7 +12,8 @@ import com.badlogic.gdx.math.RandomXS128;
  * oldest particle, so nothing allocates after the constructor. Only arrays and float maths are used, so the TeaVM web
  * build needs nothing special.
  *
- * <p>Every particle flies in a straight line from its start to its end over its life ({@code lerp}), with a size and
+ * <p>Every particle flies in a straight line from its start to its end over its life ({@code lerp}; {@link #KIND_SPARK} eases it
+ * out), with a size and
  * alpha curve picked by its kind: {@link #KIND_GLOW} fades with the square of its remaining life, shrinks and is drawn
  * additively; {@link #KIND_SMOKE} fades linearly, grows and is drawn with normal blending; {@link #KIND_GRIT} fades
  * linearly, keeps its size and is drawn with normal blending; {@link #KIND_FLAME} stays opaque, shrinks to nothing and is
@@ -53,6 +54,17 @@ public final class KimeriaParticleSystem {
      * (D147). Size and alpha as {@link #KIND_GLOW}; as tall as half its width.
      */
     public static final byte KIND_DOME = 6;
+
+    /**
+     * Normal blending, a spark that flies out and brakes (D152): its place on the line is {@code 1 - (1 - t)^4}, so it covers
+     * most of the way early and then almost hangs. A square head of size {@code size * (1 - 0.4 t)} drags a streak back towards
+     * its start, {@code SPARK_TAIL_PX * (1 - t)^3} long and never longer than the way already flown, so it shrinks into a dot.
+     * Opaque until {@code SPARK_FADE_FROM}, then it dims to {@code SPARK_END_ALPHA} and is still seen when its life ends.
+     */
+    public static final byte KIND_SPARK = 7;
+
+    private static final float SPARK_SHRINK = 0.4f, SPARK_TAIL_PX = 5f, SPARK_TAIL_WIDTH = 0.7f;
+    private static final float SPARK_FADE_FROM = 0.7f, SPARK_END_ALPHA = 0.45f;
 
     private static final float ORBIT_EDGE = 0.25f;
     private static final float LEAF_EDGE = 0.12f, LEAF_PEAK_ALPHA = 0.85f;
@@ -171,15 +183,22 @@ public final class KimeriaParticleSystem {
             if (live != i) copy(i, live);
             life[live] = remaining;
             float t = FULL - remaining / maxLife[live];
+            if (kind[live] == KIND_ORBIT) { placeOrbit(live, t); live++; continue; }
+            if (kind[live] == KIND_SPARK) t = brake(t);
             // Vector2.lerp's form, kept so positions match the pre-migration torch to the float.
             float rest = FULL - t;
-            if (kind[live] == KIND_ORBIT) { placeOrbit(live, t); live++; continue; }
             x[live] = fromX[live] * rest + toX[live] * t;
             y[live] = fromY[live] * rest + toY[live] * t;
             if (kind[live] == KIND_LEAF) x[live] += swayAmp[live] * MathUtils.sinDeg(DEGREES * swayCycle(live, t));
             live++;
         }
         count = live;
+    }
+
+    /** Quartic ease-out: 0 at 0, 1 at 1, fastest at the start. */
+    private static float brake(float t) {
+        float rest = FULL - t;
+        return FULL - rest * rest * rest * rest;
     }
 
     private float swayCycle(int i, float t) { return swayPhase[i] + t * maxLife[i] / LEAF_SWAY_SECONDS; }
@@ -209,8 +228,21 @@ public final class KimeriaParticleSystem {
         if (kind[i] == KIND_LEAF) return size[i] * LEAF_FLAT_RATIO;
         return kind[i] == KIND_DOME ? drawSize(i) * HALF : drawSize(i);
     }
-    /** Rotation in degrees of a leaf's rectangle: it swings like a pendulum with its sway; 0 for the rest. */
+    /** Length of a spark's streak behind its head, towards its start; 0 for the rest. */
+    public float tailLength(int i) {
+        if (kind[i] != KIND_SPARK) return 0;
+        float rest = life[i] / maxLife[i];
+        float dx = x[i] - fromX[i], dy = y[i] - fromY[i];
+        return Math.min((float) Math.sqrt(dx * dx + dy * dy), SPARK_TAIL_PX * rest * rest * rest);
+    }
+    /** Width of a spark's streak; 0 for the rest. */
+    public float tailWidth(int i) { return kind[i] == KIND_SPARK ? drawSize(i) * SPARK_TAIL_WIDTH : 0; }
+    /**
+     * Rotation in degrees: a leaf's rectangle swings like a pendulum with its sway; a spark's streak lies along its line of
+     * flight (0 pointing right, turning towards larger Y); 0 for the rest.
+     */
     public float tilt(int i) {
+        if (kind[i] == KIND_SPARK) return MathUtils.atan2Deg(toY[i] - fromY[i], toX[i] - fromX[i]);
         if (kind[i] != KIND_LEAF) return 0;
         float t = FULL - life[i] / maxLife[i];
         return LEAF_TILT_DEG * MathUtils.sinDeg(DEGREES * (swayCycle(i, t) + LEAF_TILT_LAG));
@@ -219,18 +251,21 @@ public final class KimeriaParticleSystem {
         float t = FULL - life[i] / maxLife[i];
         if (kind[i] == KIND_GRIT || kind[i] == KIND_LEAF || kind[i] == KIND_ORBIT) return size[i];
         if (kind[i] == KIND_FLAME) return size[i] * (FULL - t);
+        if (kind[i] == KIND_SPARK) return size[i] * (FULL - SPARK_SHRINK * t);
         return size[i] * (kind[i] == KIND_SMOKE ? (FULL + SMOKE_GROWTH * t) : (FULL - GLOW_SHRINK * t));
     }
     public float alpha(int i) {
         if (kind[i] == KIND_FLAME) return FULL;
         float t = FULL - life[i] / maxLife[i];
+        if (kind[i] == KIND_SPARK)
+            return FULL - (FULL - SPARK_END_ALPHA) * Math.max(0f, t - SPARK_FADE_FROM) / (FULL - SPARK_FADE_FROM);
         if (kind[i] == KIND_ORBIT) return Math.min(FULL, Math.min(t, FULL - t) / ORBIT_EDGE);
         if (kind[i] == KIND_LEAF) return LEAF_PEAK_ALPHA * Math.min(FULL, Math.min(t, FULL - t) / LEAF_EDGE);
         return (kind[i] == KIND_GLOW || kind[i] == KIND_DOME ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
 
     /**
-     * Draws the normal-blended particles (smoke, grit and flame, behind), then the additive ones, and restores white and normal blending.
+     * Draws the normal-blended particles (smoke, grit, flame, leaves and sparks, behind), then the additive ones, and restores white and normal blending.
      * One blend switch per pass, and none for a pass with nothing to draw.
      */
     public void render(Batch batch, TextureRegion region) { render(batch, region, FULL); }
@@ -262,6 +297,11 @@ public final class KimeriaParticleSystem {
                 // The region's upper half of V: its dense middle row falls on the rectangle's lower edge, the particle's y.
                 float s = drawSize(i), middle = (region.getV() + region.getV2()) * HALF;
                 batch.draw(region.getTexture(), x[i] - s * HALF, y[i] - s * HALF, s, s * HALF, region.getU(), region.getV(), region.getU2(), middle);
+            } else if (kind[i] == KIND_SPARK) {
+                float s = drawSize(i), tail = tailLength(i), w = tailWidth(i);
+                // The streak ends in the head's centre and turns about it, so it points back along the line of flight.
+                if (tail > 0) batch.draw(region, x[i] - tail, y[i] - w * HALF, tail, w * HALF, tail, w, FULL, FULL, tilt(i));
+                batch.draw(region, x[i] - s * HALF, y[i] - s * HALF, s, s);
             } else { // the other kinds do not rotate: the plain draw, as before #473
                 float s = drawSize(i);
                 batch.draw(region, x[i] - s / 2f, y[i] - s / 2f, s, s);

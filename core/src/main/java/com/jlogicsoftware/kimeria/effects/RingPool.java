@@ -7,7 +7,8 @@ import com.badlogic.gdx.math.MathUtils;
 
 /**
  * A fixed pool of expanding rings through the existing {@code shockwave.frag} (the uniforms {@link ShockwaveEffect} sets), shared
- * by {@link FireballFx} (impact rings) and {@link PickupSparksFx} (the pickup ring): nothing is created per ring, there is no
+ * by {@link FireballFx} (impact rings), {@link PickupSparksFx} (the pickup ring) and {@link SporeCloud} (the false honey fungus's
+ * burst, D152): nothing is created per ring, there is no
  * screen distortion and no shader was edited. Each slot is live until its own ring's life ends; a new ring takes the first free slot
  * and only when every slot is live does it reuse the oldest one. World Y grows downward; the ring is centred on its point.
  */
@@ -43,14 +44,20 @@ final class RingPool {
     public int count() { return count; }
 
     /** The radius the {@code i}-th live ring grows to, oldest first ({@code i} below {@link #count}). */
-    public float radius(int i) {
+    public float radius(int i) { return radius[slot(i)]; }
+    /** The centre of the {@code i}-th live ring, oldest first. */
+    public float centreX(int i) { return x[slot(i)]; }
+    public float centreY(int i) { return y[slot(i)]; }
+
+    /** The slot of the {@code i}-th live ring, oldest first; for the accessors, which only tests read. */
+    private int slot(int i) {
         long after = Long.MIN_VALUE;
         for (int n = 0; n <= i; n++) {
             int found = -1;
             for (int s = 0; s < capacity; s++)
                 if (live[s] && started[s] > after && (found < 0 || started[s] < started[found])) found = s;
             if (found < 0) throw new IndexOutOfBoundsException("ring " + i);
-            if (n == i) return radius[found];
+            if (n == i) return found;
             after = started[found];
         }
         throw new IndexOutOfBoundsException("ring " + i);
@@ -84,7 +91,7 @@ final class RingPool {
     /** Each live ring through {@code shockwave.frag}, added; the shader and normal blending are restored. */
     public void render(Batch batch) {
         if (count == 0) return;
-        // Decorative: a GPU (or the headless tests) that cannot build the shader simply shows no ring, like SporeCloud's haze.
+        // Decorative: a GPU (or the headless tests) that cannot build the shader simply shows no ring.
         ShaderProgram shader = Shaders.tryLoad(SHADER);
         if (shader == null) return;
         ShaderProgram previous = batch.getShader();

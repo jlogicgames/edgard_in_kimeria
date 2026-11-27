@@ -337,14 +337,14 @@ down the root and a smoke wisp from its tip, `idle1`..`idle4` looped once per se
 | Trigger | the hero body box enters the zone (default 64 px per side, 32 px above) |
 | Telegraph (D7) | the cap swells (two frames) |
 | Warning | `TrapWarnings.DEFAULT_WARNING_SECONDS`: 0.8 s / 1.2 s |
-| Lethal part | false one only: the 24×24 spore cloud for 1.0 s; the harmless one has no hitbox |
+| Lethal part | false one only: the 24×24 spore burst (sparks and a ring, D152) for 1.0 s; the harmless one has no hitbox |
 | Counter | trigger it and step back, or pass the cloud |
 | Reset | room rebuild |
 | Taught in | the false one in `forest-canopy` (`forest-2`), after the harmless one in `forest-0-lever` and `forest-0-wall` |
 | Load checks | `Level.validateFungus`, `Level.requireSafeSetting` (false one) |
-| Tests | `HoneyFungusTest` |
-| Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud`; Consequence (D93): `spore_puff`, the same for both bursts (D63: the sound does not tell which kills), once at the burst after the swell. Pinned by `SporePuffSoundTest` |
-| Decision | D63 |
+| Tests | `HoneyFungusTest`, `SporeCloudTest` |
+| Art and sound | `trap-honey-fungus`, `trap-false-honey-fungus`, `SporeCloud` (lime sparks and one ring, D152); Consequence (D93): `spore_puff`, the same for both bursts (D63: the sound does not tell which kills), once at the burst after the swell. Pinned by `SporePuffSoundTest` |
+| Decision | D63, D152 |
 
 ### Falling platform, rotten log and rotten branch (`FallingPlatform`)
 

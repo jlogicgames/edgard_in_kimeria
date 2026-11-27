@@ -164,7 +164,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
 - [x] Falling branch and falling stone (#232, D45) — zone-triggered, shared D7 warning, lethal while falling; not yet in a shipped level
 - [x] Decor bush (#239 step 4) — cosmetic `Decor` object (`kind` = `bush`), brushes when the hero walks past; no collision; see [ART_DIRECTION.md](ART_DIRECTION.md) section 4
 - [x] Hanging vine (#239 step 5) — cosmetic `HangingVine` object (no properties), sways when a falling stone lands within 160 px (off with the Screen shake option); needs a falling stone in its room (`tools/check_tiled_links.py`); see [ART_DIRECTION.md](ART_DIRECTION.md) section 4
-- [x] Honey fungus and false honey fungus (#295, D63) — Tiled types `HoneyFungus` (harmless, 16 golden `KimeriaParticleSystem` spores, no hitbox) and `FalseHoneyFungus` (lethal lime spore cloud, 1 s, hitbox = drawn 24x24; first the `trap-spores` sprite, now `SporeCloud` particles, #296), one base class `FungusTrap` (idle, zone-triggered swell over the shared `TrapWarnings` duration, one burst, then spent; no re-arming); optional properties `zone`, `zoneLeft`, `zoneRight` (px, default 64); load-time placement rules in `Level.validateFungus` mirrored by `tools/check_tiled_links.py`; placed in forest-0 (x 150, 1804) and forest-2 canopy (x 1672)
+- [x] Honey fungus and false honey fungus (#295, D63) — Tiled types `HoneyFungus` (harmless, 16 golden `KimeriaParticleSystem` spores, no hitbox) and `FalseHoneyFungus` (lethal lime spore cloud, 1 s, hitbox = drawn 24x24; first the `trap-spores` sprite, now `SporeCloud` sparks and a ring, D152), one base class `FungusTrap` (idle, zone-triggered swell over the shared `TrapWarnings` duration, one burst, then spent; no re-arming); optional properties `zone`, `zoneLeft`, `zoneRight` (px, default 64); load-time placement rules in `Level.validateFungus` mirrored by `tools/check_tiled_links.py`; placed in forest-0 (x 150, 1804) and forest-2 canopy (x 1672)
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
 - [x] Directional actions (#95), one carried stone/portable torch, deliberate throwing and consumable fireballs with two authored +1 refills, capacity three, full-stock hints and a three-icon HUD; see [contract and dependencies](DIRECTIONAL_CONTROLS.md)
 - [x] Trigger → actionable wall removal and torch toggle via Up (D126; Up + Action when it shipped)
@@ -488,7 +488,7 @@ enforce it, for different reasons, and neither replaces the other:
   lines** against `--base` (`auto` by default: the merge-base with `origin/main` when it exists, else HEAD; `HEAD` with `--hook`;
   `-PallocationBase=<ref>` for another) inside methods named `update*`, `render*`,
   `draw*` and the helpers listed in its `HOT_METHODS` table (the torch spawners, `EnvironmentFx.emitGrit`, `dustPuff`, `ceilingGrit`,
-  the `FireballFx` spawners, `RingPool.start`).
+  the `FireballFx` spawners, `RingPool.start`, `SporeCloud.sparks`).
   It flags `new`, `String.format`/`valueOf`/concatenation, stream and collection-factory calls, for-each over a declared collection, and
   lambdas; it does not follow calls and has no types, so varargs and boxing are invisible to it. Existing code needs no baseline: touching
   an allocating line means fixing it. An `ALLOWED` entry must say what the excluded code carries (today one: the F1 debug overlay in
@@ -516,6 +516,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | `FlightFx` with a pickup pop and flight every 6 frames, six to eight live (D132, #557) | 8 | 0.0, 0.0, 0.0 |
 | The dialogue screen's fairy hovering with her light (D132, #539) | 8 | 0.4, 0.4, 0.4 |
 | The paid screen's hand-over through a real paid `HealerDialogue`, a new one every 300 frames (D132, #541) | 8 | 2.7, 2.5, 2.5 |
+| Ten false honey fungi swelling and bursting in turn, the live cloud tested against the hero every frame and drawn (#295; sparks and a ring since #608) | 8 | 0.0 (2026-11-27; headless: the ring's shader draw is skipped) |
 | Ten falling leaves of forest-1's deadfall room through `Level.leafFx()`, update and render (#473) | 8 | 0.0 (the whole room is the existing deadfall room row, 320.0 to 536.0 of 620) |
 | Beetles crawling, noticing, committing, winding up with specks, bursting or dying, their bodies rocking, crumbling and burning (D101), with `Level.beetleFx()`, through beetle-test.tmx (#327) | 8 | 0.1 in 3 runs (0.2 before the body; headless: no sound is played). The placed beetles (#327) are in the whole-room scenes: guard room 544.5, tree room 224.0 B/frame in 3 runs, each beetle crawling; this row covers their other states, which run the same `Beetle` and `BeetleFx` code (and, since #328, `Level.remainsFx()` for the body's end); with the dome (#618, 2026-11-27) 0.0, 0.1 and 0.3 in 3 full-suite runs |
 | Spiders skittering, noticing, chasing, winding up with their silk, leaping, biting and recovering, or killed and leaving a body that rocks, crumbles and burns, with `Level.spiderFx()` and `Level.remainsFx()`, through spider-test.tmx (#328, D102) | 8 | 0.0 in 3 runs (headless: no sound is played); 0.1 in 3 runs after #483 |
@@ -536,12 +537,12 @@ Fixed struct-of-arrays storage allocated in the constructor (`float[] x, y, from
 `byte[] kind`). `spawn(kind, startX, startY, endX, endY, life, size, r, g, b)` writes the next free slot; a full pool drops the **oldest**
 particle, so nothing allocates after construction and an undersized capacity is invisible except as a thinner effect. Every particle
 flies in a straight line from start to end over its life (`Vector2.lerp`'s form, kept so positions match the pre-migration torch to the
-float). `update(dt)` ages, moves and removes the dead, keeping spawn order; `clear()` empties it; `render(batch, region)` draws the
+float; `KIND_SPARK` eases it out). `update(dt)` ages, moves and removes the dead, keeping spawn order; `clear()` empties it; `render(batch, region)` draws the
 normal-blend particles first, then the additive ones, with one blend switch per pass (none for an empty pass), and restores white and
 normal blending. Each system owns one `RandomXS128` (`random()`, the algorithm behind `MathUtils.random`), seeded in the constructor, so
 a seed reproduces a run. World Y grows downward: a rising particle has an end Y smaller than its start Y.
 
-Five kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
+Eight kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
 
 | Kind | Blend | Size | Alpha | Used by |
 | --- | --- | --- | --- | --- |
@@ -550,7 +551,9 @@ Five kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed 
 | `KIND_GRIT` | normal | `size` (constant) | `0.7 * (1 - t)` | ceiling grit (#239) |
 | `KIND_FLAME` | normal | `size * (1 - t)` | `1` (opaque) | the fireball's trail, splash and sparks (#397): it shrinks out instead of fading, because a fading warm colour over the blue sky turns olive or magenta |
 | `KIND_LEAF` | normal | long side `size`, width flips edge-on to full | `0.85`, ramped in and out over the first and last 12 % of life | the falling leaves (#473): a sine sway and a rotation by phase, spawned with `spawnLeaf` |
+| `KIND_ORBIT` | additive | `size` (constant) | ramped in and out over the first and last 25 % of life, full between | the portal, the soft lights and the room ripple (#552, D123, D124): rides an ellipse, spawned with `spawnOrbit` |
 | `KIND_DOME` | additive | as `KIND_GLOW`, half as tall | as `KIND_GLOW` | the flash of a burst on a surface (D147): the upper half of the dot, its flat edge on the particle's y |
+| `KIND_SPARK` | normal | head `size * (1 - 0.4 t)` and a streak up to 5 px back along its flight, closing as `(1 - t)^3` | `1` until `t = 0.7`, then down to `0.45` | the false honey fungus burst (#608, D152): it brakes along its line, `1 - (1 - t)^4` |
 
 Owners:
 
@@ -577,7 +580,10 @@ Owners:
   `effects.RingPool`, 16 px radius, 2 px wide, 0.2 s, colour intensity 1.7, 1.3, 0.4), fired from `Level.spawnCollectable`'s pickup
   callback, so it is the same for the coin, the Bat and the Mushroom. Drawn after the hero (the item is at his hand when taken). Cleared
   with the room, so a pickup that returns after a death replays nothing. `RingPool` holds the ring slots, the eased progress and the
-  `shockwave.frag` draw for it and `FireballFx`; per-pool values only (colour, size, life).
+  `shockwave.frag` draw for it, `FireballFx` and `SporeCloud` (and the room ripple); per-pool values only (colour, size, life).
+- **`effects.SporeCloud`** (#608, D152, one per false honey fungus) is the lethal burst: 36 `KIND_SPARK` on a system of 36 slots (one
+  burst per mushroom, so that is its peak) drawn with `Shaders.whiteQuad()`, and one slot of `effects.RingPool` (12 px radius, 3 px
+  wide, 0.4 s). `FalseHoneyFungus` updates it only while the cloud is live and clears it with the hitbox.
 - **`effects.FlightFx`** (D132, #557, #541, #539) flies a cached sprite from A to B in screen space: a Bezier bowed up, `EASE_IN`/`EASE_OUT`/`EASE_IN_OUT`, whole pixels, a fade, a `KIND_FLAME` trail and an optional four-spark landing twinkle; 12 slots and 48 sparks, a full pool drops the new request. Two instances, the HUD's (`KimeriaGame`, started by `GameContext.startPickupFlight` after a pickup's state change) and the dialogue view's. A pause freezes it (it ages only in `update`), it uses real dt clamped to 1/20 s, and it is cleared on death, retry, level load and room change. `PickupSparksFx` is unchanged and plays first.
 - `SoftDot.region()`, `SoftDot.glowRegion()` and `Shaders.whiteQuad()` each return one cached `TextureRegion`; callers must not mutate it.
 

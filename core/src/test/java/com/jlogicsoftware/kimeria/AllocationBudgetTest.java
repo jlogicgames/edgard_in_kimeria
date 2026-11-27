@@ -231,7 +231,7 @@ class AllocationBudgetTest {
     static final double HANGING_VINE_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi idling, swelling and bursting 16 golden spores on a {@code KimeriaParticleSystem}, update and render through the batch. */
     static final double HONEY_FUNGUS_CEILING = 8;
-    /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. #296: the same scenario now draws the {@code SporeCloud} (30 particles each); the measurement is in the report. Headless there is no GL context, so the shader layer is skipped ({@code Shaders.tryLoad} returns null) and the number is the particles alone. */
+    /** Measured 0.0 B/frame in 3 runs (#295 phase 2): ten fungi swelling, the live cloud tested against the hero every frame and drawn. D152 (#608): the same scenario now draws the {@code SporeCloud} (36 sparks and a ring each), 0.0 B/frame (2026-11-27). Headless there is no GL context, so the ring's shader draw is skipped ({@code Shaders.tryLoad} returns null) and the number is the sparks and the ring slot. */
     static final double FALSE_HONEY_FUNGUS_CEILING = 8;
     /** Spore puffballs (#558, puffballsLeakReleaseAndCloud): measured 0.0, 0.3 and 0.3 B/frame in 3 isolated runs (2026-11-22): ten puffballs swelling, releasing and tested against a hero every frame, update and render. The same 8 B ceiling as the other isolated trap paths. */
     static final double PUFFBALL_CEILING = 8;
@@ -1778,12 +1778,17 @@ class AllocationBudgetTest {
             fungi[k] = new FalseHoneyFungus(harness.assets(), harness.game().trapWarnings(), k * FUNGUS_SPACING, FUNGUS_FLOOR - FUNGUS_HEIGHT,
                 FUNGUS_WIDTH, FUNGUS_HEIGHT, FUNGUS_ZONE, FUNGUS_ZONE, () -> hero);
         boolean[] lethal = new boolean[1];
+        int[] peak = new int[1];
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             int k = Math.min(i / FUNGUS_CYCLE_FRAMES, fungi.length - 1);
             hero.x = i % FUNGUS_CYCLE_FRAMES < FUNGUS_ENTER_FRAME ? -FUNGUS_SPACING / 2f : k * FUNGUS_SPACING;
-            for (FalseHoneyFungus f : fungi) { f.update(STEP); f.render(batch); lethal[0] |= f.lethalTo(hero); }
+            for (FalseHoneyFungus f : fungi) {
+                f.update(STEP); f.render(batch); lethal[0] |= f.lethalTo(hero);
+                peak[0] = Math.max(peak[0], f.sporeCloud().particles().count());
+            }
         });
         assertTrue(lethal[0], "the cloud must actually be lethal to the standing hero in this scenario");
+        assertEquals(com.jlogicsoftware.kimeria.effects.SporeCloud.SPARK_COUNT, peak[0], "the sparks must actually burst");
         assertWithinBudget("false honey fungus clouds", FALSE_HONEY_FUNGUS_CEILING, bytes);
     }
 
