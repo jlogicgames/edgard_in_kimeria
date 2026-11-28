@@ -995,7 +995,7 @@ horizontal line** (jump it head on), **a thorn root** (known), **a swarm on a ve
 under it while it is high, 2.6 s of each 3.8 s). The first meeting's pocket is on open floor just short of the first swarm's
 line, with a **stone** beside the hero: the swarm is seen flying and cannot reach him, it can be thrown at from safety or
 jumped, and the second swarm is still off screen. A fireball works too; the route needs neither. Mastered route 10.08 s
-(scripted hero). The author has not played it yet (#645). Card, sketch and measured times:
+(scripted hero). The author checked it in the game and accepted it (2026-11-28, #645). Card, sketch and measured times:
 [ROOM_CARDS.md](ROOM_CARDS.md#forest-hollow).
 
 ## Rooms, dangers and skill development
