@@ -245,7 +245,7 @@ class RoomTest {
         level.enterNextRoom(player()); // forest-roost -> forest-hollow (#645)
         assertEquals(new Vector2(5248, 256), level.player.position, "forest-hollow entrance (#645)");
         level.enterNextRoom(player()); // forest-hollow -> forest-ridge (#525)
-        assertEquals(new Vector2(5984, 256), level.player.position, "forest-ridge entrance (#525)");
+        assertEquals(new Vector2(5968, 256), level.player.position, "forest-ridge entrance (#525)");
         level.enterNextRoom(player());
         assertEquals(new Vector2(1344, 256), level.player.position);
         var secondCoin = level.objects.stream().filter(Collectable.class::isInstance).map(Collectable.class::cast).findFirst().orElseThrow();

@@ -1557,14 +1557,17 @@ not game art); the exporter's contact sheets are `monster-wolf-preview.png` and 
   flat on its side along the floor, forelegs stretched forward under its flat head, hind legs back, tail limp: the author said a wolf
   does not lie with its paws up, as the first drawing did and read as a beetle or a log). Drawn about 20 px tall and 38 px long; feet on
   row 23, facing right, mirrored about the body centre (x 23). Every harmful moment has its own silhouette (`crouch`, `lunge`, `bite`);
-  the harmless pauses turn the head away (`shake`) or point the muzzle at the sky (`bay`).
-- **The develop's frames** (D158, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525), 2026-11-28; composed from the approved frames, **not yet seen in play by the author**,
-  [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)): `read` (standing hindquarters, head and muzzle raised after a jumping hero, jaws shut), `coil` (haunches dropped, chest
-  and head up: the jump bite's and the leap's tell, and the flinch), `leap` (the lunge's stretched body tipped up toward the jaws:
-  the jump bite and the leap). A bite in the air keeps the `leap` frame: the shut-jawed `bite` measured outline 0.258 against the sky
-  64 px up (active floor 0.28). `check_contrast.py` measures the wolf along its range or legs, and `leap` and `shake` off the floor
-  (`Wolf` 0.331, `Wolf:leap` 0.306, `Wolf:shake` 0.308 at worst over the shipped maps). Effects: pale 2 px marks where a read jump
-  will land, 1 px glints along a jump bite's arc, two jaw glints for a bite in the air.
+  the harmless pauses turn the head away (`shake`) or point the muzzle at the sky (`bay`). A bayed wolf stepping to keep its distance
+  from a perch (D165) shows `trot1` and `trot2`.
+- **The develop's frames** (D158, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525), 2026-11-28; composed from
+  the approved frames; the author approved them on 2026-11-28 from an enlarged frame sheet and ruled that enough, without a
+  separate look in play, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)): `read` (standing hindquarters,
+  head and muzzle raised after a jumping hero, jaws shut), `coil` (haunches dropped, chest and head up: the jump bite's and the
+  leap's tell, and the flinch), `leap` (the lunge's stretched body tipped up toward the jaws: the jump bite and the leap). A
+  bite in the air keeps the `leap` frame: the shut-jawed `bite` measured outline 0.258 against the sky 64 px up (active floor
+  0.28). `check_contrast.py` measures the wolf along its range or legs, and `leap` and `shake` off the floor (`Wolf` 0.331,
+  `Wolf:leap` 0.308, `Wolf:shake` 0.308 at worst over the shipped maps). Effects: pale 2 px marks where a read jump will land, 1
+  px glints along a jump bite's arc, two jaw glints for a bite in the air.
 - **Palette** (11 colours, 12 with the rim; the danger family, #236): ink `0b0814`; pelt `2a0612`, `4a0c22`, `86101f`; rose lights
   `9c2050`, `b85a80`, `c87896`; legs `9a6070`, `b07c8c`; eyes `ff6b57`; fangs `e8e0cc`. A grey or brown wolf would sink into the blue
   night forest or read as decor.

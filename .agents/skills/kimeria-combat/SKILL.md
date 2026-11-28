@@ -51,7 +51,10 @@ its load check keeps a free way past along its whole line (`MosquitoSwarm.proble
 
 The wolf's develop (D158, `Wolf`) is the template for a monster that answers the hero's habits: a fixed rule per habit (never a
 roll), each with its own tell in `TrapWarnings`, started only from named states, once per jump, never through a solid or off its
-floor, and off with the longer-warnings assist. A stomp that must not kill asks the state (`Wolf.stompKills`) and still bounces.
+floor, and off with the longer-warnings assist. A stomp that must not kill asks the state (`Wolf.stompKills`: only the recovery,
+D165) and still bounces. A monster with a perch answer (D165) keeps off the perch (a stand-off, not under it), remembers the
+height the hero stood at and strikes only once his feet come below it, so staying or jumping on the perch is safe; its room test
+runs a careless walk-forward hero over every pause and start and pins how many are bitten, so a free kill or a free pass shows.
 A monster that leaps between floors takes a polyline of floor legs (`Wolf.Route`, checked by `Wolf.routeProblem`).
 
 ## A monster's body (D101)
@@ -90,7 +93,8 @@ does, a burst or blast does not (the mosquito swarm is the accepted exception: k
   evaluating fairness. Dying enemies are harmless.
   The forest boss is an explicit exception: solid harmless body, safe top bounce,
   sword/fireball energy damage, lethal axe only during active strike frames. The
-  mosquito swarm is another (D151): no stomp and no sword kill.
+  mosquito swarm is another (D151): no stomp and no sword kill. The forest wolf too (D165): a stomp kills it only while
+  it recovers, and bounces the hero otherwise.
 - One-way platforms resolve landing vertically and never push actors sideways.
   Verify combat near walls/platforms as well as in open space.
 

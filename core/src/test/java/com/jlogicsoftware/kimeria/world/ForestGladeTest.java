@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The wolf's first room, {@code forest-glade} (#331, D115, D158), through the real map and real Level updates with ordinary controls.
+ * The wolf's first room, {@code forest-glade} (#331, D115, D158, D165), through the real map and real Level updates with ordinary controls.
  * World Y grows downward: the floor top is y 304, the trunk (x 3920-3952) and the one-way branch (x 3952-4016) tops y 272, the
  * exit (x 4448-4464) stands on the floor against the right wall. The wolf spawns at x 4144 (the right end of its range x 3984-4144) facing left; its
  * muzzle is at x 4143 and the hero stands to its left unless a test says otherwise. Hero positions are the frame's x (the 11 px
@@ -23,9 +23,11 @@ class ForestGladeTest {
     private static final float FLOOR = 304, BRANCH_TOP = 272, TRUNK_LEFT = 3920, TRUNK_RIGHT = 3952;
     private static final int SECOND = 60;
     /** Measured, pinned within 0.1 s: the death at the second thorn root on the mastered pace (the card's retry cost). */
-    private static final float SECOND_ROOT_DEATH_S = 8.15f;
-    /** Measured, pinned: the bite on a hop down in front of the wolf, and on a hurried walk over the branch (D158). */
-    private static final float HOP_DEATH_S = 4.62f, HURRIED_DEATH_S = 5.92f;
+    private static final float SECOND_ROOT_DEATH_S = 8.63f;
+    /** Measured, pinned: the bite on a hop down in front of the wolf (D158). */
+    private static final float HOP_DEATH_S = 4.62f;
+    /** Measured, pinned (D165): the mastered route without and with the assist, and the slowest of its start moments. */
+    private static final float MASTERED_S = 9.33f, ASSIST_MASTERED_S = 9.03f, SLOWEST_START_S = 14.2f;
     /** Commit gaps (px, muzzle to the hero's near edge): at the muzzle and at the edge of its box. */
     private static final float AT_MUZZLE = 1, AT_BOX_EDGE = 71;
 
@@ -77,80 +79,106 @@ class ForestGladeTest {
 
     // ---- the route -------------------------------------------------------------------------------------------------------
 
-    /**
-     * Drives the route; returns the seconds to the exit, or the negative seconds to the hit when the hero was hit. {@code hopAt}: a
-     * careless extra jump from the trunk or the branch once the hero's frame x passes it (NaN: none), which lands him on the floor in
-     * front of the wolf.
-     */
-    private float drive(boolean patient, float hopAt) { return drive(patient, hopAt, true); }
+    /** The seconds from the start to the exit, or the negative seconds to the hit. */
+    private static float signed(WolfRoomRuns.Run run) { return run.out() ? run.seconds() : -run.seconds(); }
 
-    private float drive(boolean patient, float hopAt, boolean secondRoot) {
-        Level level = level();
-        ForestGladeRoute route = new ForestGladeRoute(level, patient, secondRoot);
-        boolean hopped = false;
-        for (int f = 0; f < SECOND * 30; f++) {
-            h.held.clear(); h.pressed.clear();
-            route.drive(level, h.held, h.pressed);
-            float x = level.player.position.x;
-            if (!hopped && x >= hopAt && x > 3925 && level.player.isOnGround() && level.player.position.y + 48 <= BRANCH_TOP + 1) {
-                h.held.add(Input.Keys.J); h.pressed.add(Input.Keys.J); hopped = true;
-            }
-            level.update(STEP);
-            if (!alive(level)) return -(f + 1) * STEP;
-            if (level.atRoomExit()) return (f + 1) * STEP;
-        }
-        fail("the route never reached the exit");
-        return 0;
+    private WolfRoomRuns.Run run(ForestGladeRoute route, Level level, int delay, int afterBay) {
+        return WolfRoomRuns.run(h, level, route, delay, afterBay);
     }
 
-    @Test void theMasteredRouteStepsOffTheBranchOnToTheBayingWolfAndReachesTheExitWithinTwentySeconds() throws Exception {
+    private static final int START_STEP = 6, LAST_START = 720;
+
+    @Test void theMasteredRouteDodgesTheBayedWolfsBiteAndReachesTheExitWithinTwentySeconds() throws Exception {
         for (boolean longer : new boolean[]{false, true}) {
             setLonger(longer);
-            float seconds = drive(true, Float.NaN);
-            assertTrue(seconds > 0 && seconds <= 20, "reached the exit alive in D19's 20 s (assist " + longer + "): " + seconds);
-            assertEquals(8.85f, seconds, .1f, "the card's mastered time, with and without the assist (only the wind-up is longer, and the route meets none)");
+            Level level = level();
+            WolfRoomRuns.Run run = run(new ForestGladeRoute(level), level, 0, -1);
+            assertTrue(run.out() && run.seconds() <= 20, "reached the exit alive in D19's 20 s (assist " + longer + "): " + run);
+            assertEquals(longer ? ASSIST_MASTERED_S : MASTERED_S, run.seconds(), .1f, "the card's mastered time (assist " + longer + ")");
+            assertEquals(!longer, run.pounced(), "without the assist it leaps at him as he comes down; with it, never");
+            assertEquals(longer ? Wolf.State.LUNGE : Wolf.State.RECOVER, run.killedIn(),
+                "the sword: in the recovery from the missed bite, or, with the assist, as the lunge comes");
         }
     }
 
-    @Test void theStompKillsItWithTheBounceAndLeavesItsBody() {
+    @Test void theMasteredRoutePassesFromEveryStartMomentThroughTwoPatrolsWithAndWithoutTheAssist() throws Exception {
+        for (boolean longer : new boolean[]{false, true}) {
+            setLonger(longer);
+            for (int delay = 0; delay <= LAST_START; delay += START_STEP) {
+                Level level = level();
+                WolfRoomRuns.Run run = run(new ForestGladeRoute(level), level, delay, -1);
+                assertTrue(run.out() && run.seconds() <= SLOWEST_START_S, "safe whenever he starts: " + delay / 60f + " s, assist " + longer + ": " + run);
+                assertNotNull(run.killedIn(), "he finishes it");
+            }
+        }
+    }
+
+    @Test void everyOpenTopOfItsSolidsIsDrawnWithAGroundTopTile() {
+        WolfRoomRuns.assertOpenGroundHasTopTiles(h, "forest-glade", 40);
+    }
+
+    @Test void theRoutesSwordLeavesItsBody() {
         Level level = level();
         Wolf w = wolf(level);
-        ForestGladeRoute route = new ForestGladeRoute(level);
-        boolean bounced = false;
-        for (int f = 0; f < SECOND * 12 && !w.isDefeated(); f++) {
-            h.held.clear(); h.pressed.clear();
-            route.drive(level, h.held, h.pressed);
-            level.update(STEP);
-            assertTrue(alive(level), "never hit before the stomp");
-        }
-        assertTrue(w.isDefeated(), "the stomp killed it");
+        run(new ForestGladeRoute(level), level, 0, -1);
         assertEquals(Wolf.State.DEAD, w.state());
-        for (int f = 0; f < 3; f++) { level.update(STEP); bounced |= level.player.velocity().y < 0; }
-        assertTrue(bounced, "with the normal bounce");
+        assertTrue(w.isRemains());
     }
 
     /**
-     * A wolf death on the mastered pace (the second thorn root after it costs more, 8.15 s): a hero who hops down off the trunk or the
-     * branch's near end has his jump read (D158), lands on the floor in front of the wolf and is bitten at 4.6 s.
+     * A hero who only walks forward and stops on the branch for 0 to 8 s (D165: before it, 17 of the 41 pauses up to 4 s stomped
+     * the wolf for free). Without the assist 22 of those 41 and 23 of the 40 longer ones are bitten; with it 7 and 13.
+     */
+    @Test void aHeroWhoWalksForwardAndPausesOnTheBranchStompsItOnlyInItsRecoveryAndIsBittenAsMeasured() throws Exception {
+        int[][] pins = {{22, 19, 23, 17}, {7, 34, 13, 27}};   // {bitten, out} up to 4 s, then {bitten, out} past it: without the assist, with it
+        for (int assist = 0; assist < 2; assist++) {
+            setLonger(assist == 1);
+            assertArrayEquals(pins[assist], WolfRoomRuns.sweepWaits(h, "forest-glade", ForestGladeRoute::careless, -1), "assist " + (assist == 1));
+        }
+    }
+
+    /** The scene D165 answers: he watches until it bays, then walks on within a second. Without the assist he is always bitten. */
+    @Test void aHeroWhoWalksOnAsSoonAsItBaysIsBittenWithoutTheAssistAndPassesWithIt() throws Exception {
+        for (boolean longer : new boolean[]{false, true}) {
+            setLonger(longer);
+            for (int delay = 0; delay <= LAST_START; delay += 48)
+                for (int after = 0; after < 60; after += 6) {
+                    Level level = level();
+                    WolfRoomRuns.Run run = run(ForestGladeRoute.careless(level, 0), level, delay, after);
+                    assertEquals(longer, run.out(), "start " + delay + ", walks on " + after + " frames after the bay: " + run);
+                    assertNull(run.killedIn(), "walking forward never kills it");
+                }
+        }
+    }
+
+    @Test void aHeroWhoJumpsOnTheBranchAndLandsBackOnItIsNeverBitten() {
+        WolfRoomRuns.assertAJumpingPerchedHeroIsNeverBitten(h, "forest-glade", 3952, 4016, BRANCH_TOP);
+    }
+
+    /**
+     * A wolf death on a careless pace: a hero who hops down off the trunk or the branch's near end has his jump answered (D158),
+     * lands on the floor in front of the wolf and is bitten at 4.6 s.
      */
     @Test void aHeroWhoHopsDownInFrontOfTheWolfIsBittenWithinSixSeconds() {
         for (float hopAt : new float[]{3930, 3948, 3960}) {
-            float seconds = drive(false, hopAt);
-            assertTrue(seconds < 0, "he is bitten (hop at x " + hopAt + ")");
-            assertEquals(HOP_DEATH_S, -seconds, .15f, "the retry costs the walk to the trunk and the bite (hop at x " + hopAt + ")");
-            assertTrue(-seconds <= 6f, "D105: a first meeting's retry is at most 6 s");
+            Level level = level();
+            ForestGladeRoute route = ForestGladeRoute.careless(level, 0);
+            boolean hopped = false;
+            float seconds = 0;
+            for (int f = 0; f < SECOND * 30 && seconds == 0; f++) {
+                h.held.clear(); h.pressed.clear();
+                route.drive(level, h.held, h.pressed);
+                float x = level.player.position.x;
+                if (!hopped && x >= hopAt && level.player.isOnGround() && level.player.position.y + 48 <= BRANCH_TOP + 1) {
+                    h.held.add(Input.Keys.J); h.pressed.add(Input.Keys.J); hopped = true;
+                }
+                level.update(STEP);
+                if (!alive(level)) seconds = (f + 1) * STEP;
+                assertFalse(level.atRoomExit(), "he is bitten (hop at x " + hopAt + ")");
+            }
+            assertEquals(HOP_DEATH_S, seconds, .15f, "the retry costs the walk to the trunk and the bite (hop at x " + hopAt + ")");
+            assertTrue(seconds <= 6f, "D105: a first meeting's retry is at most 6 s");
         }
-    }
-
-    /**
-     * A hero who hurries over the branch without waiting steps off its end on to a wolf that is still chasing: since D158 that is no
-     * kill, and walking on he is bitten. Waiting for the bay is the route.
-     */
-    @Test void aHeroWhoHurriesOverTheBranchNoLongerStompsTheSprintingWolfAndIsBitten() {
-        float seconds = drive(false, Float.NaN);
-        assertTrue(seconds < 0, "no free stomp on a sprinting wolf");
-        assertEquals(HURRIED_DEATH_S, -seconds, .1f);
-        assertTrue(-seconds <= 6f, "D105: a first meeting's retry is at most 6 s");
     }
 
     @Test void aHeroWhoWalksStraightIntoTheFirstThornRootIsHitAtTheSoonestWithinSixSeconds() {
@@ -170,7 +198,8 @@ class ForestGladeTest {
 
     /** The most expensive death of the room: the mastered route past the wolf, then straight into the second thorn root. */
     @Test void aHeroWhoWalksStraightIntoTheSecondThornRootAfterTheWolfIsHit() {
-        float seconds = drive(true, Float.NaN, false);
+        Level level = level();
+        float seconds = signed(run(new ForestGladeRoute(level, false), level, 0, -1));
         assertTrue(seconds < 0, "he is hit by the root");
         assertEquals(SECOND_ROOT_DEATH_S, -seconds, .1f, "the retry costs the whole mastered route up to the second root");
         // D105 asks at most 6 s of a first meeting that is not among the first two beats; the wolf is beat 2, so its pocket needs no retry
@@ -330,6 +359,6 @@ class ForestGladeTest {
             gaveUp |= bayed && w.state() == Wolf.State.TROT;
             assertTrue(alive(level));
         }
-        assertTrue(bayed && gaveUp, "it bays under him, gives up and trots off; he may drop to the floor whenever he likes");
+        assertTrue(bayed && gaveUp, "it stands back and bays, gives up and trots off; he may drop to the floor whenever he likes");
     }
 }

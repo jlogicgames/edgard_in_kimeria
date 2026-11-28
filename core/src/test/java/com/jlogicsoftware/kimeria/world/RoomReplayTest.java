@@ -165,7 +165,7 @@ class RoomReplayTest {
     @Test void forestFissureRequiredRouteFitsTwentySeconds() {
         assertEquals(FISSURE_S, measure("forest-fissure", 2, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
-    /** #331 (D115): jump the thorn root and the trunk, wait on the branch while the wolf sprints under it and bays, step off on to it (a stomp), jump the second thorn root to the exit. */
+    /** #331 (D115, D165): jump the thorn root and the trunk, wait on the branch until the wolf bays, step off, dodge its bite, strike it, jump the second thorn root to the exit. */
     @Test void forestGladeRequiredRouteFitsTwentySeconds() {
         assertEquals(GLADE_S, measure("forest-glade", 3, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
@@ -176,7 +176,7 @@ class RoomReplayTest {
     @Test void forestHollowRequiredRouteFitsTwentySeconds() {
         assertEquals(HOLLOW_S, measure("forest-hollow", 5, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
-    /** #525 (D158): watch the wolf leap its mounds from the high ledge, step off on to it as it bays, cross the mounds and both thorns. */
+    /** #525 (D158, D165): watch the wolf leap its mounds from the ledge, step off as it bays, dodge and strike it, cross the mounds and both thorns. */
     @Test void forestRidgeRequiredRouteFitsTwentySeconds() {
         assertEquals(RIDGE_S, measure("forest-ridge", 6, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
@@ -198,7 +198,7 @@ class RoomReplayTest {
     private float legHoldArrival = -1;
     private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {}, ROOST_JUMPS = {4550};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 6.43f, HOLLOW_S = 10.08f, RIDGE_S = 12.55f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 9.33f, ROOST_S = 6.43f, HOLLOW_S = 10.08f, RIDGE_S = 10.68f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -207,7 +207,7 @@ class RoomReplayTest {
     /** #645: the hollow on a collection return, its swarms gone. */
     private static final float HOLLOW_RETURN_S = 6.43f;
     /** #525: the ridge on a collection return, the wolf gone with its body. */
-    private static final float RIDGE_RETURN_S = 7.78f;
+    private static final float RIDGE_RETURN_S = 7.95f;
 
 
 
@@ -544,13 +544,13 @@ class RoomReplayTest {
         boolean actionWasDown = false, wasMechanism = false;
         // #366: the fissure room is passed by timing, not at fixed x: the shared route waits for each jet to end.
         ForestFissureRoute fissureRoute = route.equals("forest-fissure") ? new ForestFissureRoute(level) : null;
-        // #331: the glade is passed by watching the wolf: wait on the branch until it bays, then step off on to its back.
+        // #331, D165: the glade is passed by watching the wolf: wait on the branch until it bays, step off, dodge its bite, strike it.
         ForestGladeRoute gladeRoute = route.equals("forest-glade") ? new ForestGladeRoute(level) : null;
         // #545: the wall room is passed by the tree in front of the first wall and a leap from its top branch, never by a wall jump.
         ForestWallsRoute wallsRoute = route.equals("forest-walls") ? new ForestWallsRoute(false) : null;
         // #645: the hollow is passed by watching the swarms: jump the low one head on, walk under the high one.
         ForestHollowRoute hollowRoute = route.equals("forest-hollow") ? new ForestHollowRoute(level) : null;
-        // #525: the ridge is passed by watching the wolf leap, waiting on its ledge until it bays, then stepping off on to it.
+        // #525, D165: the ridge is passed by watching the wolf leap, waiting on its ledge until it bays, stepping off, dodging and striking.
         ForestRidgeRoute ridgeRoute = route.equals("forest-ridge") ? new ForestRidgeRoute(level) : null;
         // Entry collection route: get the coin behind the entrance, then return once for the ground coin.
         int phase = collect && route.equals("forest-entry") ? 0 : 1;
@@ -628,7 +628,7 @@ class RoomReplayTest {
                 // The sword bursts a beetle on the hero (D100): in the fissure room the shared route answers it, by the lure (#327).
                 for (var object : level.objects) if (object instanceof Enemy<?> enemy
                     && !(fissureRoute != null && enemy instanceof com.jlogicsoftware.kimeria.entity.enemy.Beetle)
-                    && !(gladeRoute != null && enemy instanceof com.jlogicsoftware.kimeria.entity.enemy.Wolf)
+                    && !((gladeRoute != null || ridgeRoute != null) && enemy instanceof com.jlogicsoftware.kimeria.entity.enemy.Wolf)
                     && !(enemy instanceof com.jlogicsoftware.kimeria.entity.enemy.MosquitoSwarm)) { // the sword cannot kill it (D151)
                     Rectangle e = enemy.hitboxBounds(), me = player.hitboxBounds();
                     if (player.isOnGround() && e.x >= me.x && e.x - (me.x + me.width) < 18

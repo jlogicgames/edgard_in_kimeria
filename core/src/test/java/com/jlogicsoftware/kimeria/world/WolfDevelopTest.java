@@ -16,12 +16,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The wolf's develop (#525, D158): the stomp rule, the landing read, the jump bite, the jump back and the held lunge, the assist,
- * the leaps on a route and their load checks, through real Level updates.
+ * The wolf's develop (#525, D158, D165): the stomp rule, the bay and its bite off the perch, the landing read, the jump bite, the
+ * jump back and the held lunge, the assist, the leaps on a route and their load checks, through real Level updates.
  *
  * <p>wolf-long.tmx: floor y 320, the wolf spawns at x 640 facing left with a range of x 480..896. wolf-route.tmx: three floor legs,
  * x 400..640 and (over a 32 px gap) x 672..880 at y 320, then a 16 px step up to x 880..1104 at y 304; the wolf starts on the
- * left. World Y grows downward. An airborne hero is placed by hand with a velocity, as a jump would leave him.
+ * left. wolf-perch.tmx, wolf-steps.tmx and wolf-bay-block.tmx are the bay's fixtures. World Y grows downward. An airborne hero is placed by hand with a velocity, as a jump would leave him.
  */
 class WolfDevelopTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
@@ -133,46 +133,281 @@ class WolfDevelopTest {
         }
     }
 
-    @Test void aStompKillsItInItsWindUpLungeBiteAndRecovery() {
-        for (Wolf.State state : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE, Wolf.State.RECOVER}) {
+    /** A wolf in {@code state} of its lunge: it committed to a hero 60 px ahead, who then got far out of the way. */
+    private Wolf lunging(Level level, Wolf.State state) {
+        Wolf w = wolf(level);
+        stand(level, w.jawFrontX() - 60, FLOOR);
+        until(level, () -> w.state() == Wolf.State.WINDUP, SECOND * 3);
+        if (state != Wolf.State.WINDUP) {
+            stand(level, 100, FLOOR);
+            until(level, () -> w.state() == state, SECOND * 2);
+        }
+        return w;
+    }
+
+    /** D165: the wind-up, the lunge and the bite are no longer open to a stomp. */
+    @Test void aStompOnItsWindUpLungeOrBiteBouncesTheHeroOffWithNoKill() {
+        for (Wolf.State state : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE}) {
             Level level = open();
-            Wolf w = wolf(level);
-            stand(level, w.jawFrontX() - 60, FLOOR);
-            until(level, () -> w.state() == Wolf.State.WINDUP, SECOND * 3);
-            if (state != Wolf.State.WINDUP) {
-                stand(level, 100, FLOOR);
-                until(level, () -> w.state() == state, SECOND * 2);
-            }
-            assertTrue(w.stompKills(), state.toString());
-            assertTrue(stomp(level, w), "killed in " + state);
+            Wolf w = lunging(level, state);
+            assertFalse(w.stompKills(), state.toString());
+            assertFalse(stomp(level, w), "no kill in " + state);
         }
     }
 
+    @Test void aStompKillsItWhileItRecovers() {
+        Level level = open();
+        Wolf w = lunging(level, Wolf.State.RECOVER);
+        assertTrue(w.stompKills());
+        assertTrue(stomp(level, w));
+    }
+
+    // ---- the bay and its bite (D165) --------------------------------------------------------------------------------------
+
     /** wolf-perch.tmx: a 32 px one-way ledge at x 544..736, y 288, inside the wolf's range. */
-    private Wolf bayedUnder(Level level, float x) {
+    private static final float PERCH = 288, PERCH_RIGHT = 736;
+    /** A hero near the perch's right end, and where he is once past it, clear of the one-way ledge. */
+    private static final float NEAR_END = 728, PAST_END = 744;
+    /** The right face of wolf-bay-block's low solid. */
+    private static final float BLOCK_RIGHT = 752;
+
+    private Wolf bayedUnder(Level level, float x) { return bayedUnder(level, x, PERCH); }
+
+    private Wolf bayedUnder(Level level, float x, float perch) {
         Wolf w = wolf(level);
-        stand(level, x, 288);
+        stand(level, x, perch);
         until(level, () -> w.state() == Wolf.State.BAY, SECOND * 6);
         return w;
     }
 
-    @Test void aBayedWolfStaysBayedWhileItStepsUnderThePerchedHeroAndAStompKillsIt() {
-        Level level = harness.roomOf("wolf-perch", 0);
-        Wolf w = bayedUnder(level, 640);
-        stand(level, 680, 288);   // he walks along the ledge: it follows
-        until(level, () -> w.state() == Wolf.State.CHASE, SECOND);
-        assertTrue(w.stompKills(), "bayed still, in its small steps");
-        assertTrue(stomp(level, w));
+    /** The horizontal gap from its muzzle to the hero's near edge, positive when it faces him from that far. */
+    private static float standOff(Level level, Wolf w) {
+        Rectangle hero = level.player.hitboxBounds();
+        return w.facingRight ? hero.x - w.jawFrontX() : w.jawFrontX() - (hero.x + hero.width);
     }
 
-    @Test void aBayedWolfStartsNothingAtAHeroWhoJumpsOnItsPerch() {
+    @Test void aBayedWolfStandsFortyPixelsBackFromThePerchedHeroFacingHim() {
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = bayedUnder(level, 620);
+        assertEquals(Wolf.BAY_STAND_OFF, standOff(level, w), 1f, "stood back, not under him: " + w.position.x);
+        assertTrue(harness.sounds.contains("wolf_bay"));
+    }
+
+    @Test void itStepsAfterHimAlongThePerchKeepingItsDistanceStillBayedAndAStompDoesNotKillIt() {
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = bayedUnder(level, 620);
+        float from = w.position.x, side = w.facingRight ? -1 : 1;
+        for (int i = 1; i <= 20; i++) {
+            stand(level, 620 + side * i, PERCH);   // he walks toward it along the ledge: it backs off
+            frame(level);
+            assertEquals(Wolf.State.BAY, w.state());
+            assertEquals(Wolf.BAY_STAND_OFF, standOff(level, w), 2f, "step " + i);
+        }
+        assertNotEquals(from, w.position.x);
+        assertFalse(w.stompKills());
+        assertFalse(stomp(level, w), "a bounce off a bayed wolf");
+    }
+
+    /** Along its range's end it cannot back further: it holds there, facing him. */
+    @Test void atItsRangesEndItKeepsToItsRange() {
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = bayedUnder(level, 620);
+        for (float x = 620; x <= PERCH_RIGHT - 8; x += 1.5f) {
+            stand(level, x, PERCH);
+            frame(level);
+            assertTrue(w.position.x >= w.rangeNeg() - .01f && w.position.x <= w.rangePos() + .01f, "in its range: " + w.position.x);
+        }
+    }
+
+    @Test void aHeroWhoJumpsOnThePerchAndLandsBackOnItIsNotLeaptAt() {
         Level level = harness.roomOf("wolf-perch", 0);
         Wolf w = bayedUnder(level, 640);
         press(level, Input.Keys.J);
-        for (int f = 0; f < SECOND / 2; f++) {
+        for (int f = 0; f < SECOND; f++) {
             frame(level);
             assertEquals(Wolf.State.BAY, w.state());
         }
+        assertTrue(alive(level));
+    }
+
+    /** Back and forth along the perch, jumping again and again: he stays above it, so nothing is started at him. */
+    @Test void aHeroWhoWalksAndJumpsAlongThePerchIsNeverLeaptAt() {
+        for (int every = 54; every <= 90; every += 6) {
+            Level level = harness.roomOf("wolf-perch", 0);
+            Wolf w = bayedUnder(level, 640);
+            float way = 1, travelled = 0, last = heroCentre(level);
+            int airborne = 0;
+            for (int f = 0; f < SECOND * 8; f++) {
+                if (heroCentre(level) > 700) way = -1;
+                else if (heroCentre(level) < 580) way = 1;
+                steer(way);
+                if (f % every == 0) { harness.held.add(Input.Keys.J); harness.pressed.add(Input.Keys.J); }
+                frame(level);
+                harness.held.remove(Input.Keys.J);
+                travelled += Math.abs(heroCentre(level) - last);
+                last = heroCentre(level);
+                if (!level.player.isOnGround()) airborne++;
+                Rectangle hero = level.player.hitboxBounds();
+                assertTrue(hero.y + hero.height <= PERCH + .5f, "he stays on the perch: " + (hero.y + hero.height));
+                assertTrue(w.state() != Wolf.State.POUNCE_COIL && w.state() != Wolf.State.POUNCE, "jump every " + every + ", frame " + f);
+                assertTrue(alive(level));
+            }
+            assertTrue(travelled > 400 && airborne > SECOND, "he did walk and jump: " + travelled + " px, " + airborne + " frames");
+        }
+    }
+
+    /** wolf-steps.tmx: a high one-way ledge (x 544..640, y 208) beside a lower one (x 640..800, y 288), 32 px above the floor. */
+    private static final float HIGH_PERCH = 208;
+
+    /**
+     * Down from a high perch on to a lower refuge: the bayed wolf may gather as he drops, but its jaws never take him once he
+     * stands there. A bite that met him in the air lands one frame later, so the first two frames on the ledge are not counted.
+     */
+    @Test void aHeroWhoComesDownFromAHighPerchOnToALowerRefugeIsNeverBittenStandingThere() {
+        int gathered = 0;
+        for (float from = 590; from <= 634; from += 4)
+            for (int jump : new int[]{-1, 0, 10, 20}) {
+                Level level = harness.roomOf("wolf-steps", 0);
+                Wolf w = bayedUnder(level, 780, PERCH);   // on the lower ledge, where it hears and sees him
+                stand(level, from, HIGH_PERCH);
+                settle(level, SECOND / 2);
+                assertEquals(Wolf.State.BAY, w.state(), "from " + from);
+                steer(100);
+                int standing = 0;
+                boolean pounced = false;
+                for (int f = 0; f < SECOND * 4; f++) {
+                    if (f == jump) { harness.held.add(Input.Keys.J); harness.pressed.add(Input.Keys.J); }
+                    frame(level);
+                    harness.held.remove(Input.Keys.J);
+                    Rectangle hero = level.player.hitboxBounds();
+                    boolean there = level.player.isOnGround() && Math.abs(hero.y + hero.height - PERCH) < 1;
+                    standing = there ? standing + 1 : 0;
+                    if (there) steer(0);
+                    pounced |= w.state() == Wolf.State.POUNCE_COIL;
+                    if (!alive(level)) {
+                        assertTrue(standing <= 2, "bitten on the lower ledge: from " + from + ", jump " + jump + ", frame " + f + ", " + w.state());
+                        break;
+                    }
+                }
+                if (pounced) gathered++;
+            }
+        assertTrue(gathered > 0, "the drop does set it off");
+    }
+
+    /**
+     * The senses clock does not take a perched hero from the bay: high above and far to the side he is neither seen nor heard,
+     * and while he walks his ledge (it steps after him, so the 1.5 s bay does not run) it stays; once he stands still it gives up.
+     */
+    @Test void aBayedWolfDoesNotLoseAPerchedHeroItNeitherSeesNorHearsAndStillGivesUp() {
+        Level level = harness.roomOf("wolf-steps", 0);
+        Wolf w = bayedUnder(level, 780, PERCH);
+        stand(level, 620, HIGH_PERCH);
+        settle(level, SECOND / 2);
+        float way = -1;
+        for (int f = 0; f < SECOND * 3; f++) {
+            if (heroCentre(level) < 580) way = 1;
+            else if (heroCentre(level) > 630) way = -1;
+            stand(level, heroCentre(level) + way * 1.5f, HIGH_PERCH);
+            frame(level);
+            assertEquals(Wolf.State.BAY, w.state(), "frame " + f);
+        }
+        int held = until(level, () -> w.state() == Wolf.State.TROT, SECOND * 3);
+        assertTrue(held * STEP <= Wolf.BAY_SECONDS + .5f, "it gives up after holding still: " + held + " frames");
+    }
+
+    /**
+     * wolf-bay-block.tmx: wolf-perch with a low solid (x 736..752) standing on the floor in its range. It bays right of it; he walks
+     * on along the ledge, so the place it should stand lies past the solid: the steps that get it nowhere count, and it gives up.
+     */
+    @Test void aBayedWolfWhoseStandPlaceIsBehindASolidStillGivesUp() {
+        Level level = harness.roomOf("wolf-bay-block", 0);
+        Wolf w = bayedUnder(level, 720);
+        assertTrue(w.hitboxBounds().x >= BLOCK_RIGHT, "it bays on the near side of the solid: " + w.hitboxBounds().x);
+        stand(level, 620, PERCH);
+        int held = until(level, () -> w.state() != Wolf.State.BAY, SECOND * 6);
+        assertEquals(Wolf.State.TROT, w.state());
+        assertEquals(BLOCK_RIGHT, w.hitboxBounds().x, 1f, "it was stopped by the solid");
+        assertTrue(held * STEP <= Wolf.BAY_SECONDS + .5f, "it gives up after its bay's time: " + held + " frames");
+        assertTrue(alive(level));
+    }
+
+    /** The side it bays from is chosen afresh at each notice: after a give-up it keeps to the side it comes from. */
+    @Test void afterAGiveUpItBaysFromTheSideItComesFrom() {
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = bayedUnder(level, 640);
+        assertTrue(w.centreX() > heroCentre(level), "first from his right");
+        until(level, () -> w.state() == Wolf.State.TROT, SECOND * 4);
+        for (int f = 0; f < SECOND * 2; f++) { leapHero(level, 640, 200, 0, 0); frame(level); }   // out of its senses, never standing
+        w.position.x = w.rangeNeg();
+        w.facingRight = true;
+        stand(level, 640, PERCH);
+        until(level, () -> w.state() == Wolf.State.BAY, SECOND * 4);
+        assertTrue(w.centreX() < heroCentre(level), "now from his left");
+        assertEquals(Wolf.BAY_STAND_OFF, standOff(level, w), 1f);
+    }
+
+    /** The bayed wolf of wolf-perch, and the hero off his perch's end toward it at {@code vx} px/s, his feet a few px below it. */
+    private Wolf leapingFromTheBay(Level level, float vx) {
+        Wolf w = bayedUnder(level, NEAR_END);
+        assertFalse(w.facingRight, "it stands past the perch's end, facing him");
+        leapHero(level, PAST_END, FLOOR - PERCH - 4, vx, 50);
+        frame(level);
+        return w;
+    }
+
+    @Test void itLeapsAtAHeroComingDownOffThePerchAfterTheJumpBitesTellSeenAndHeardAndBitesOneWhoGoesOn() {
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = leapingFromTheBay(level, 100);
+        assertEquals(Wolf.State.POUNCE_COIL, w.state());
+        assertTrue(harness.sounds.contains("wolf_pounce"), "heard");
+        int tell = 0;
+        while (w.state() == Wolf.State.POUNCE_COIL) { frame(level); tell++; assertTrue(alive(level), "the tell is harmless"); }
+        assertEquals(TrapWarnings.WOLF_POUNCE_SECONDS, tell * STEP, STEP * 1.5f);
+        assertTrue(level.wolfFx().hard().count() > 0, "seen: the glints along its arc");
+        settle(level, SECOND / 3);
+        assertFalse(alive(level), "a hero who goes on is bitten");
+    }
+
+    @Test void notBeforeHisFeetComeBelowWhereHeStood() {
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = bayedUnder(level, NEAR_END);
+        for (float up : new float[]{60, 40, 33}) {
+            leapHero(level, 620, up, 0, 50);
+            frame(level);
+            assertEquals(Wolf.State.BAY, w.state(), "feet " + up + " px above the floor, still above the perch");
+        }
+        leapHero(level, PAST_END, FLOOR - PERCH - Wolf.PERCH_DROP - 1, 0, 50);
+        frame(level);
+        assertEquals(Wolf.State.POUNCE_COIL, w.state());
+    }
+
+    /** The deterministic safe answer: stop, or turn back in the air. Its recovery is then open to a stomp. */
+    @Test void aHeroWhoStopsOrTurnsBackInTheAirEscapesTheBaysBiteAndAStompInItsRecoveryKillsIt() {
+        for (float after : new float[]{0, -100}) {
+            Level level = harness.roomOf("wolf-perch", 0);
+            Wolf w = leapingFromTheBay(level, 100);
+            assertEquals(Wolf.State.POUNCE_COIL, w.state());
+            steer(after);
+            until(level, () -> w.state() == Wolf.State.RECOVER, SECOND * 2);
+            assertTrue(alive(level), "he steers " + after);
+            assertTrue(stomp(level, w), "the counter");
+        }
+    }
+
+    @Test void theAssistTurnsTheBaysBiteOffAndKeepsTheStandOffAndTheStompRule() throws Exception {
+        setLonger(true);
+        Level level = harness.roomOf("wolf-perch", 0);
+        Wolf w = bayedUnder(level, NEAR_END);
+        assertEquals(Wolf.BAY_STAND_OFF, standOff(level, w), 1f);
+        assertFalse(w.stompKills());
+        leapHero(level, PAST_END, FLOOR - PERCH - 4, 100, 50);
+        int landed = 0;
+        for (int f = 0; f < SECOND * 2 && landed < SECOND / 4; f++) {
+            frame(level);
+            assertTrue(w.state() != Wolf.State.POUNCE_COIL && w.state() != Wolf.State.POUNCE, "frame " + f + ": " + w.state());
+            if (level.player.isOnGround()) { steer(0); landed++; }
+        }
+        assertEquals(SECOND / 4, landed, "the whole drop and its landing were watched");
     }
 
     @Test void itNeverBaysUnderAHeroInTheAir() {
@@ -278,18 +513,66 @@ class WolfDevelopTest {
         }
     }
 
-    @Test void aStompOnTheJumpBiteBouncesHimUnharmedAndNothingElseStartsUntilHeStands() {
-        Level level = open();
+    /** The gathering wolf of {@link #pouncing}, then the hero dropping on to its back at {@code vx} px/s: he bounces off. */
+    private Wolf bouncedOffTheGatheringWolf(Level level, float vx) {
         Wolf w = pouncing(level, 0);
         assertFalse(w.stompKills());
-        assertFalse(stomp(level, w), "a bounce");
-        for (int f = 0; f < SECOND * 2 && w.state() != Wolf.State.RECOVER; f++) {
-            frame(level);
-            assertNotEquals(Wolf.State.READ, w.state(), "the bounce was this jump's answer");
-            assertTrue(alive(level), "the leap it had begun does not reach him");
-        }
-        assertEquals(Wolf.State.RECOVER, w.state());
+        Rectangle body = w.hitboxBounds();
+        level.player.position.set(body.x + body.width / 2 - BODY_LEFT - HERO_WIDTH / 2, body.y - 1 - HERO_FRAME);
+        level.player.velocity().set(vx, 200);
+        level.player.setOnGround(false);
+        steer(vx);
+        frame(level);
+        assertTrue(level.player.velocity().y < 0, "a bounce");
         assertTrue(alive(level));
+        assertEquals(Wolf.State.POUNCE_COIL, w.state(), "still gathered");
+        float side = heroCentre(level) - w.centreX();
+        if (Math.abs(side) >= 1) assertEquals(side > 0, w.facingRight, "it locks the new spot still facing him: " + vx);
+        return w;
+    }
+
+    /** D165: a bounce off its gathered back no longer sends the leap under him: it stays gathered and meets him as he comes down. */
+    @Test void afterABounceOffTheGatheringWolfItsJawsMeetAHeroWhoGoesOnAsHeComesDown() {
+        for (float vx : new float[]{-100, -60, 60, 100}) {
+            Level level = open();
+            Wolf w = bouncedOffTheGatheringWolf(level, vx);
+            int held = 0;
+            while (w.state() == Wolf.State.POUNCE_COIL) { frame(level); held++; assertTrue(alive(level)); assertTrue(held < SECOND * 2); }
+            assertTrue(held * STEP > TrapWarnings.WOLF_POUNCE_SECONDS, "it waits for him: " + held + " frames");
+            for (int f = 0; f < SECOND && alive(level); f++) {
+                frame(level);
+                assertNotEquals(Wolf.State.READ, w.state(), "the bounce was part of this jump's answer");
+            }
+            assertFalse(alive(level), "a hero who goes on at " + vx + " comes down into its jaws");
+        }
+    }
+
+    @Test void aHeroWhoTurnsBackOrStopsAfterTheBounceEscapesIt() {
+        for (float[] move : new float[][]{{100, -100}, {-100, 100}, {0, 0}}) {
+            Level level = open();
+            Wolf w = bouncedOffTheGatheringWolf(level, move[0]);
+            for (int f = 0; f < SECOND / 6; f++) frame(level);   // it has locked the spot where he would come down
+            steer(move[1]);
+            until(level, () -> w.state() == Wolf.State.RECOVER, SECOND * 2);
+            assertTrue(alive(level), "from " + move[0] + " he steers " + move[1]);
+        }
+    }
+
+    /** It never turns its back on him: for a spot behind it, it springs back still facing him. */
+    @Test void itFacesTheSideHeIsOnWhenItGathersForAJumpBite() {
+        int pounced = 0;
+        for (float dx = -44; dx <= 44; dx += 4)
+            for (float vx : new float[]{-100, 100}) {
+                Level level = open();
+                Wolf w = chasing(level);
+                leapHero(level, w.centreX() + dx, 30, vx, -150);
+                frame(level);
+                float side = heroCentre(level) - w.centreX();
+                if (w.state() != Wolf.State.POUNCE_COIL || Math.abs(side) < 4) continue;
+                pounced++;
+                assertEquals(side > 0, w.facingRight, "dx " + dx + ", vx " + vx);
+            }
+        assertTrue(pounced > 10);
     }
 
     /** A chasing wolf moved to {@code wolfX}, the hero in the air at {@code heroX}; two seconds on, with him gone. */

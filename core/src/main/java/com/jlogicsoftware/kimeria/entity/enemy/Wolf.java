@@ -32,30 +32,34 @@ import java.util.Map;
  * each lunge after a full new wind-up.
  *
  * <p>It never leaves its floor: the lunge stops at the end of the floor under it and against a solid, and may pass its range end
- * only over floor. Anything whose top is more than {@link #COMMIT_HEIGHT} px above its floor is out of its reach: it runs to the
- * nearest point it can reach, stops facing the hero and bays; after {@link #BAY_SECONDS} of that it gives up and trots back, and will
- * not notice that hero again until he has been out of its sight for {@link #COOL_SECONDS}. A jump always answers the lunge (its
- * jaws run low and the load check keeps {@link #HEADROOM} px of headroom over its reach).
+ * only over floor. Anything whose top is more than {@link #COMMIT_HEIGHT} px above its floor is out of its reach: it runs to a point
+ * {@link #BAY_STAND_OFF} px (muzzle to hero) back from such a perch, inside its range, stops facing the hero and bays, stepping to
+ * keep that distance (D165); a hero out of reach on its floor it bays at from the nearest point it can reach. After
+ * {@link #BAY_SECONDS} of holding still (a step that gets it nowhere, against a solid, counts as holding still) it gives up and
+ * trots back, and will not notice that hero again until he has been out of its sight for {@link #COOL_SECONDS}. A jump always
+ * answers the lunge (its jaws run low and the load check keeps {@link #HEADROOM} px of headroom over its reach).
  *
- * <p>Every weapon kills it in any state; it leaves its body (D101, {@link Remains}): lying on its side along the floor, which
- * keeps its live palette (D117), twitches (a big body does not rock) when anyone comes near, is crumbled by the sword
+ * <p>The sword, a fireball, a stone or a torch kill it in any state; it leaves its body (D101, {@link Remains}): lying on its
+ * side along the floor, which keeps its live palette (D117), twitches (a big body does not rock) when anyone comes near, is crumbled by the sword
  * or a stomp and burnt by a fireball or a torch; a stone flies through it (D119). Killed in its lunge, the body slides on to the lunge's end. A bite that
  * reaches the hero lands at the start of the wolf's next frame, so a hit that kills it on the same frame wins (as the spider's).
  * Its effects are {@link WolfFx}; its sprite is one strip ({@link SpriteSheets#MONSTER_WOLF}). World Y grows downward: the floor
  * line is the body's bottom edge, the jaws run {@link #JAW_ABOVE_FLOOR_LOW} to {@link #JAW_ABOVE_FLOOR_HIGH} px above it (a
  * smaller Y).
  *
- * <p>The develop (#525, D158) gives it one deterministic answer per habit. A stomp kills only a committed wolf (wind-up, lunge,
- * bite, recovery, or bayed under a perched hero); any other stomp bounces the hero off. From its chase it reads a jump (a
+ * <p>The develop (#525, D158, D165) gives it one deterministic answer per habit. A stomp kills it only while it recovers (after a
+ * bite or the jump back, so after the hero dodged); any other stomp bounces him off. Bayed, it bites in the air a hero who drops or
+ * jumps off his perch (the jump bite's tell and leap, once his feet come below the height he stood at); a hero standing on a perch,
+ * that one or a lower one, is never bitten. From its chase it reads a jump (a
  * {@link State#READ} tell, then it runs to where he will land) or, when the airborne hero is in its pounce box, bites him in the air
  * ({@link State#POUNCE_COIL}, {@link State#POUNCE}), one answer per jump. A swing at its wind-up makes it hop back
  * ({@link State#FLINCH}, {@link State#HOP}); the next such swing it waits out ({@link State#HOLD}) and winds up again; and so on in
- * turn. The longer-warnings assist turns those three off. On a route (a Tiled polyline, {@link Route}) it leaps steps and gaps
+ * turn. The longer-warnings assist turns the read, both jump bites, the jump back and the wait off. On a route (a Tiled polyline, {@link Route}) it leaps steps and gaps
  * between its floor legs ({@link State#LEAP_COIL}, {@link State#LEAP}); it never strikes across one.
  */
 public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     /**
-     * {@code SNIFF}: at a range end before it turns; {@code BAY}: stopped at the nearest point it can reach, hero out of reach;
+     * {@code SNIFF}: at a range end before it turns; {@code BAY}: standing back from a hero out of its reach, facing him;
      * {@code READ}: reading a jump; {@code POUNCE_COIL}, {@code POUNCE}: the jump bite; {@code FLINCH}, {@code HOP}: the jump back
      * from a swing; {@code HOLD}: waiting a swing out; {@code LEAP_COIL}, {@code LEAP}: a leap between the legs of its route.
      */
@@ -108,7 +112,10 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     public static final float LUNGE_SPEED = LUNGE_REACH / LUNGE_SECONDS;
     /** The bite frame holds this long; the recovery that follows is harmless and not scaled by the assist. */
     public static final float BITE_SECONDS = .1f, RECOVER_SECONDS = .5f;
-    /** A hero out of its reach for this long, or out of sight and hearing for {@link #LOSE_SECONDS}, is given up on. */
+    /**
+     * It gives the hero up after holding still at its bay this long, or after {@link #LOSE_SECONDS} out of sight and hearing
+     * (that clock does not run while it bays a perched hero).
+     */
     public static final float BAY_SECONDS = 1.5f, LOSE_SECONDS = 1.5f;
     /** After giving up it ignores that hero until he has been out of its sight this long. */
     public static final float COOL_SECONDS = 1f;
@@ -116,6 +123,13 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     public static final float HEADROOM = 64, MIN_RANGE = 160;
     /** A breath streak is born this many times a second along the wind-up's line. */
     public static final float BREATH_PER_SECOND = 60;
+    /**
+     * Bayed under a perch (D165) it stands with its muzzle this far (px, horizontally) from the hero's near edge and steps after
+     * him at {@link #BAY_STEP_SPEED} px/s (faster than he walks) to keep it, as far as its range allows.
+     */
+    public static final float BAY_STAND_OFF = 40, BAY_STEP_SPEED = 120;
+    /** His feet this far below where he stood on the perch (a larger Y): he is coming down, and a bayed wolf leaps (D165). */
+    public static final float PERCH_DROP = 2;
     /** Landing read (D158): it runs until its muzzle is this far short of where the hero will land. */
     public static final float READ_STAND_OFF = 36;
     /** The jump bite's box: this far either side of its body's centre, up to {@link #POUNCE_HIGH} above its floor (its low edge is the lunge box's top). */
@@ -135,6 +149,8 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     private static final float JAW_CENTRE_X = 43.5f, JAW_CENTRE_Y = 12.5f;
     private static final float SKID_DUST_SECONDS = .04f, DRAW_BACK = 1;
     private static final float ARRIVE = .5f, TURN_DEAD_ZONE = 2, STOPPED_SPEED = 20;
+    /** A step that moves it no further than this (float slack, px) got nowhere. */
+    private static final float STALL_SLACK = .001f;
     /** The lunge's reach is traced over floor in steps this long. */
     private static final float REACH_STEP = 2, FLOOR_PROBE = 4;
     /** The jaws are tested at places at most this far apart along their path in a frame (less than the jaw box is wide). */
@@ -177,7 +193,11 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     private float lungeFromX, lungeToX, lastJawX, lastJawY, slideLeft;
     // The develop (D158): the leg it stands on and the hero stood by, what this jump and this engagement have already had answered.
     private int leg, heroLeg, swingSeen, swingCount;
-    private boolean atBay, airAnswered, readPending, leapChasing;
+    private boolean airAnswered, readPending, leapChasing;
+    // The bay (D165): whether the hero last stood out of its reach and at what height, the side of him it stands back on (0: not chosen).
+    private boolean perched, bayStepping;
+    private float perchFeet;
+    private int baySide;
     private float recoverFor = RECOVER_SECONDS, tellTotal, markDue, arcDue, readX, readSpotX;
     private float fromX, fromY, toX, toY;
     private int leapStep;
@@ -223,14 +243,8 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     public float warningRemaining() { return current == State.WINDUP ? Math.max(0, warningTotal - stateClock) : 0; }
     /** True from the commit to the end of the bite: the jaws are coming or here. */
     public boolean isCommitted() { return current == State.WINDUP || current == State.LUNGE || current == State.BITE; }
-    /** True when a stomp kills it (D158): committed, recovering, or bayed (its steps under a perched hero included). */
-    public boolean stompKills() {
-        return switch (current) {
-            case WINDUP, LUNGE, BITE, RECOVER, BAY -> true;
-            case CHASE, SKID -> atBay;
-            default -> false;
-        };
-    }
+    /** True when a stomp kills it (D165): only while it recovers, after its bite or its jump back. */
+    public boolean stompKills() { return current == State.RECOVER; }
     /** The route leg it stands on, from the left (0 on a wolf without a route). */
     public int leg() { return leg; }
     /** Where a read jump sends it (its {@code position.x}), while it runs there and waits. */
@@ -272,7 +286,9 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         velocity.setZero();
         facingRight = !route.single() && !route.startsAtRight();
         moveDirection = facingRight ? 1 : -1;
-        bitePending = bitThisLunge = cooling = heroNear = poofDone = trotFrame = atBay = airAnswered = readPending = false;
+        bitePending = bitThisLunge = cooling = heroNear = poofDone = trotFrame = airAnswered = readPending = perched = bayStepping = false;
+        baySide = 0;
+        perchFeet = 0;
         speed = slideLeft = gallopClock = deadClock = senseClock = bayClock = coolClock = lungeFromX = lungeToX = lastJawX = lastJawY = 0;
         lastGallopFrame = swingCount = 0;
         heroLeg = leg;
@@ -338,7 +354,25 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         position.x += velocity.x * dt;
         clampToRange(was);
         checkHorizontalCollisions(level);
+        // A bay step a solid stops is holding still: a stand point it cannot reach must not keep it stepping forever.
+        if (current == State.BAY && bayStepping && Math.abs(position.x - was) <= STALL_SLACK) bayClock += dt;
+        settle(dt);
+    }
+
+    /**
+     * Gravity, and the floor under it. In the air above the floor of its leg (after a jump bite, or killed in one or in a leap)
+     * nothing catches it: it passes down through a perch and lands on its own floor line, so it never comes to rest on one (D165).
+     * With that floor gone it falls on by the ordinary collisions.
+     */
+    private void settle(float dt) {
+        float line = route.floorY(leg);
+        boolean above = floorY() < line - FLOOR_TOUCH;
         applyGravity(dt);
+        if (above) {
+            if (floorY() < line) return;
+            position.y = line - FRAME_HEIGHT;
+            if (floorAt(position.x)) { velocity.y = 0; return; }
+        }
         checkVerticalCollisions(level, dt);
     }
 
@@ -392,8 +426,8 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         enter(State.NOTICE);
         speed = 0;
         senseClock = bayClock = 0;
-        bayed = atBay = airAnswered = readPending = false;
-        swingCount = 0;
+        bayed = airAnswered = readPending = false;
+        swingCount = baySide = 0;
         if (game.playSounds()) game.playSound(NOTICE_SOUND);
     }
 
@@ -412,9 +446,9 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     // ---- the chase -------------------------------------------------------------------------------------------------
 
     /**
-     * It runs to a target inside its range, under the hero where it can and else the range end, and commits when the hero's body
-     * touches the lunge box on the way. At the target, with the hero out of its reach, it stops facing him and bays. Turning costs
-     * a skid: it brakes to a stop before it starts the other way.
+     * It runs to a target inside its range ({@link #targetX}: back from a perched hero, else under him where it can and else the
+     * range end), and commits when the hero's body touches the lunge box on the way. At the target, with the hero out of its reach,
+     * it stops facing him and bays. Turning costs a skid: it brakes to a stop before it starts the other way.
      */
     private void chase(float dt) {
         if (!heroPresent()) { giveUp(); return; }
@@ -453,25 +487,66 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         if (inCommitBox() && commit()) return;
         if (readPending || heroAirborne()) return;
         enter(State.BAY);
-        atBay = true;
+        bayStepping = false;
         if (!bayed) { if (game.playSounds()) game.playSound(BAY_SOUND); bayed = true; }   // once per stop, not each time it follows him along a ledge
     }
 
-    /** Bayed: it holds facing the hero; he steps into its reach and it commits, he moves along and it follows, or it gives up. */
+    /**
+     * Bayed: it faces the hero and keeps its distance from his perch; he comes down off it and it leaps at him (D165), he steps into
+     * its reach and it commits, he goes to another floor or stands past its range and it runs after him, or, after holding still
+     * long enough, it gives up. A hero it bays under a perch is not lost by the senses clock (it need not see or hear him).
+     */
     private void bay(float dt) {
         if (!heroPresent()) { giveUp(); return; }
-        senseClock = senses() ? 0 : senseClock + dt;
-        bayClock += dt;
+        senseClock = perched || senses() ? 0 : senseClock + dt;
         if (senseClock >= LOSE_SECONDS || bayClock >= BAY_SECONDS) { giveUp(); return; }
+        if (leapsAsHeComesDown()) return;
         faceHero();
         if (inCommitBox() && commit()) return;
-        if (heroLeg != leg || Math.abs(targetX() - position.x) > ARRIVE + TURN_DEAD_ZONE) enter(State.CHASE);
+        if (heroLeg != leg) { enter(State.CHASE); return; }
+        float dx = targetX() - position.x;
+        bayStepping = Math.abs(dx) > (perched ? ARRIVE : ARRIVE + TURN_DEAD_ZONE);
+        if (!bayStepping) { bayClock += dt; return; }
+        if (!perched) { enter(State.CHASE); return; }
+        velocity.x = MathUtils.clamp(dx / dt, -BAY_STEP_SPEED, BAY_STEP_SPEED);
+        frameClock += dt;
+        while (frameClock >= TROT_FRAME_SECONDS) { frameClock -= TROT_FRAME_SECONDS; trotFrame = !trotFrame; }
     }
 
-    /** Where it wants its body: its x under the hero's centre, kept inside its range. */
+    /**
+     * The bayed wolf's bite (D165): the hero stood out of its reach, and now, dropping or jumping, his feet are below where he stood.
+     * A hero who stays on the perch, or jumps and lands back on it, never gets there. The longer-warnings assist turns it off.
+     */
+    private boolean leapsAsHeComesDown() {
+        if (!perched || airAnswered || player.isGotHit() || heroStanding() || !movesOn()) return false;
+        Rectangle hero = player.hitboxBoundsInto(heroScratch);
+        if (hero.y + hero.height <= perchFeet + PERCH_DROP) return false;
+        startPounce(hero);
+        return current == State.POUNCE_COIL;
+    }
+
+    /**
+     * Where it wants its body, kept inside its range: under the hero's centre, or, when he stands on a perch out of its reach, its
+     * muzzle {@link #BAY_STAND_OFF} px back from him on the side it is already on (the other side when only that one has the room).
+     */
     private float targetX() {
         Rectangle hero = player.hitboxBoundsInto(heroScratch);
-        return MathUtils.clamp(hero.x + hero.width / 2f - PIVOT_X, rangeNeg, rangePos);
+        float centre = hero.x + hero.width / 2f;
+        if (!perched) return MathUtils.clamp(centre - PIVOT_X, rangeNeg, rangePos);
+        if (baySide == 0) baySide = centreX() >= centre ? 1 : -1;
+        if (!standFits(hero, baySide) && standFits(hero, -baySide)) baySide = -baySide;
+        return MathUtils.clamp(standX(hero, baySide), rangeNeg, rangePos);
+    }
+
+    /** The body's x with its muzzle {@link #BAY_STAND_OFF} px from the hero, on his right ({@code side} 1) or his left, facing him. */
+    private static float standX(Rectangle hero, int side) {
+        float muzzleRight = MUZZLE_X, muzzleLeft = SIDES * PIVOT_X - MUZZLE_X;
+        return side > 0 ? hero.x + hero.width + BAY_STAND_OFF - muzzleLeft : hero.x - BAY_STAND_OFF - muzzleRight;
+    }
+
+    private boolean standFits(Rectangle hero, int side) {
+        float x = standX(hero, side);
+        return x >= rangeNeg && x <= rangePos;
     }
 
     /** It still has the hero: it sees him ahead or behind, or hears him. */
@@ -502,8 +577,8 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         cooling = true;
         coolClock = 0;
         speed = 0;
-        atBay = readPending = false;
-        swingCount = 0;
+        readPending = false;
+        swingCount = baySide = 0;
         moveDirection = position.x > (route.lo[0] + route.hi[route.legs - 1]) / 2f ? -1 : 1;
         facingRight = moveDirection > 0;
         enter(State.TROT);
@@ -562,7 +637,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
      */
     private boolean commit() {
         speed = 0;
-        atBay = readPending = false;
+        readPending = false;
         swingSeen = player.swingNumber();
         lungeFromX = position.x;
         lungeToX = reachableEnd();
@@ -682,9 +757,10 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     /**
      * The jaws reach the hero: the bite lands at the start of the next frame unless the wolf is killed first (the hit wins a
      * same-frame tie, as the spider's). The jaw box is swept from its last place along its path, so a fast frame cannot skip over the hero.
+     * A hero standing on a refuge ({@link #heroOnRefuge}) is never bitten, by a leap gathered for him in the air neither (D165).
      */
     private void checkBite() {
-        if (!heroPresent() || bitThisLunge || player.isGotHit()) return;
+        if (!heroPresent() || bitThisLunge || player.isGotHit() || heroOnRefuge()) return;
         Rectangle jaws = jawBoxInto(jawScratch), hero = player.hitboxBoundsInto(heroScratch);
         float toX = jaws.x, toY = jaws.y, dx = toX - lastJawX, dy = toY - lastJawY;
         int steps = Math.max(1, MathUtils.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / SWEEP_STEP));
@@ -698,26 +774,33 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     // ---- the answers to the hero's habits (D158) ----------------------------------------------------------------------
 
-    /** The longer-warnings assist turns the landing read, the jump bite, the jump back and the held lunge off. */
+    /** The longer-warnings assist turns the landing read, both jump bites, the jump back and the held lunge off. */
     private boolean movesOn() {
         TrapWarnings warnings = game.trapWarnings();
         return warnings == null || !warnings.longer();
     }
 
     private boolean heroStanding() { return player.onLadder() || player.isOnGround() && player.velocity.y <= STANDING_FALL; }
+
+    /** He stands with his feet {@link #COMMIT_HEIGHT} px or more above the floor it is on: no jaws reach him there. */
+    private boolean heroOnRefuge() {
+        if (!heroStanding()) return false;
+        Rectangle hero = player.hitboxBoundsInto(heroScratch);
+        return hero.y + hero.height <= route.floorY(leg) - COMMIT_HEIGHT + FLOOR_TOUCH;
+    }
+
     private boolean heroAirborne() { return heroPresent() && !player.isOnGround() && !player.onLadder(); }
 
-    /** What a standing hero settles: the leg he is on, a new jump to answer, a read jump over, and a bay ended in its reach. */
+    /** What a standing hero settles: the leg he is on, a new jump to answer, a read jump over, and whether he is on a perch. */
     private void trackHero() {
         if (!heroPresent() || !heroStanding()) return;
         airAnswered = readPending = false;
         Rectangle hero = player.hitboxBoundsInto(heroScratch);
         float feet = hero.y + hero.height;
         if (!route.single()) heroLeg = legFor(hero.x + hero.width / 2f, feet);
-        if (atBay && feet > route.floorY(heroLeg) - COMMIT_HEIGHT && heroLeg == leg) {
-            float cx = hero.x + hero.width / 2f;
-            if (cx >= rangeNeg - COMMIT_REACH && cx <= rangePos + FRAME_WIDTH + COMMIT_REACH) atBay = false;
-        }
+        perched = feet <= route.floorY(heroLeg) - COMMIT_HEIGHT;
+        if (perched) perchFeet = feet;
+        else baySide = 0;
     }
 
     /** The leg a hero standing at ({@code x}, {@code feet}) is on or nearest to; the last one wins a near tie. */
@@ -738,10 +821,10 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     /**
      * From the chase or its skid, once per jump: an airborne hero with his feet above the lunge box is bitten in the air when he is
-     * in the pounce box, else his landing is read. A bayed wolf starts nothing.
+     * in the pounce box, else his landing is read. A bayed wolf answers only a hero coming off his perch ({@link #leapsAsHeComesDown}).
      */
     private void tryAirMoves() {
-        if (atBay || airAnswered || !heroAirborne() || player.isGotHit() || !movesOn()) return;
+        if (airAnswered || !heroAirborne() || player.isGotHit() || !movesOn()) return;
         Rectangle hero = player.hitboxBoundsInto(heroScratch);
         float floor = floorY(), feetAbove = floor - (hero.y + hero.height);
         if (feetAbove < COMMIT_HEIGHT || floor < route.floorY(leg) - LANDING_TOLERANCE) return;
@@ -752,8 +835,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     /** The landing read: where his feet come back to its floor at this speed, and where it wants its body for that. */
     private void startRead(Rectangle hero, float feetAbove) {
-        float g = gravityPerSecond(), vy = player.velocity.y;
-        float t = (-vy + (float) Math.sqrt(vy * vy + SIDES * g * feetAbove)) / g;
+        float t = fallSeconds(player.velocity.y, feetAbove);
         readSpotX = hero.x + hero.width / 2f + player.velocity.x * t;
         float way = readSpotX >= centreX() ? 1 : -1;
         float muzzle = readSpotX - way * (hero.width / 2f + READ_STAND_OFF);
@@ -786,14 +868,15 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     /**
      * The jump bite: the spot is locked now, where his body will be when the leap arrives; it is not started when the arc would
-     * meet a solid, land off its floor or leave its range by more than its reach.
+     * meet a solid, land off its floor or leave its range by more than its reach. It faces the side he is on now (D165), so its
+     * jaws, never its back, are toward him: for a spot behind it, it springs back to it still facing him.
      */
     private void startPounce(Rectangle hero) {
         float total = tell(TrapWarnings.WOLF_POUNCE_SECONDS), t = total + POUNCE_SECONDS, g = gravityPerSecond(), floor = floorY();
         float x = hero.x + hero.width / 2f + player.velocity.x * t;
         float feet = Math.min(floor, hero.y + hero.height + player.velocity.y * t + g * t * t / SIDES);
         float aim = MathUtils.clamp(feet - hero.height / 2f, floor - POUNCE_HIGH, floor - (FRAME_HEIGHT - JAW_CENTRE_Y));
-        boolean right = x >= centreX();
+        boolean right = hero.x + hero.width / 2f >= centreX();
         float jawOffset = right ? JAW_CENTRE_X : SIDES * PIVOT_X - JAW_CENTRE_X;
         float endX = x - jawOffset, endY = Math.min(position.y, aim - JAW_CENTRE_Y);
         if (!clearPath(endX, endY)) return;
@@ -804,6 +887,8 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         toX = endX;
         toY = endY;
         airAnswered = true;
+        bayed = false;
+        bayClock = 0;
         tellTotal = total;
         enter(State.POUNCE_COIL);
         if (game.playSounds()) game.playSound(POUNCE_SOUND);
@@ -825,6 +910,31 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     /** The pounce's rise: fast off the ground, slowing into the spot. */
     private static float rise(float s) { return 1 - (1 - s) * (1 - s); }
+
+    /**
+     * He bounced off it while it gathered for the jump bite (D165): the arc locked before would pass under him. It stays gathered,
+     * locks the spot where the bounce brings his feet back to its floor, and holds until the leap will arrive as he does, its glints
+     * on the new arc; stopping or turning back in the air still escapes. A spot it cannot reach leaves the old arc.
+     */
+    private void aimAtHisFall() {
+        Rectangle hero = player.hitboxBoundsInto(heroScratch);
+        float t = fallSeconds(player.velocity.y, Math.max(0, floorY() - (hero.y + hero.height)));
+        float x = hero.x + hero.width / 2f + player.velocity.x * t;
+        boolean right = hero.x + hero.width / 2f >= centreX(); // its jaws stay toward him, as at every gathering
+        float endX = x - (right ? JAW_CENTRE_X : SIDES * PIVOT_X - JAW_CENTRE_X);
+        if (t <= POUNCE_SECONDS || !clearPath(endX, position.y)) return;
+        facingRight = right;
+        toX = endX;
+        toY = position.y;
+        tellTotal = t - POUNCE_SECONDS;
+        stateClock = 0;
+    }
+
+    /** Seconds until feet {@code up} px above a floor, moving at {@code vy} px/s (downward positive), come down to it. */
+    private float fallSeconds(float vy, float up) {
+        float g = gravityPerSecond();
+        return (-vy + (float) Math.sqrt(vy * vy + SIDES * g * up)) / g;
+    }
 
     private void pounceCoil(float dt) {
         arcDue += ARC_PER_SECOND * dt;
@@ -953,7 +1063,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     /**
      * A fireball, a thrown stone or torch ({@code gotHit}) kills it in any state. A stomp always bounces the hero, and kills only a
-     * committed or bayed wolf ({@link #stompKills}, D158); the bounce counts as that jump's answer. Touch is harmless.
+     * recovering wolf ({@link #stompKills}, D165); the bounce counts as that jump's answer. Touch is harmless.
      */
     @Override
     public void collidedWithActor(boolean gotHit) {
@@ -963,6 +1073,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
         player.velocity.y = -BOUNCE_HEIGHT;
         if (stompKills()) { die(); return; }
         airAnswered = true;
+        if (current == State.POUNCE_COIL) aimAtHisFall();
         if (game.playSounds()) game.playSound(DEATH_SOUND);
     }
 
@@ -976,8 +1087,9 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     /** Killed: it drops onto its side and stays as a body (D101); killed in the lunge, the body slides on to the line's end. */
     private void die() {
         slideLeft = current == State.LUNGE ? Math.abs(lungeToX - position.x) : 0;
+        if (current == State.LEAP) takeLegBelow();
         enter(State.DEAD);
-        atBay = readPending = false;
+        readPending = false;
         velocity.y = 0;
         pendingRemoval = true;
         bitePending = false;
@@ -991,6 +1103,19 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     @Override
     protected void setDefeated() { die(); }
+
+    /**
+     * Killed in a leap: its body comes down on the higher of the link's two floors when some of it is over that one and not yet
+     * below it, else on the lower, so it never ends inside a step's face.
+     */
+    private void takeLegBelow() {
+        int to = leg + leapStep;
+        int high = route.floorY(to) < route.floorY(leg) ? to : leg, low = high == to ? leg : to;
+        Rectangle body = hitboxBoundsInto(boxScratch);
+        boolean overHigh = body.x < route.hi[high] + BODY_X + BODY_WIDTH && body.x + body.width > route.lo[high] + BODY_X
+            && floorY() <= route.floorY(high) + FLOOR_TOUCH;
+        setLeg(overHigh ? high : low);
+    }
 
     private void poof() {
         poofDone = true;
@@ -1011,8 +1136,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     private boolean fall(float dt) {
         if (level == null) return false;
         velocity.x = 0;
-        applyGravity(dt);
-        checkVerticalCollisions(level, dt);
+        settle(dt);
         Rectangle room = level.currentRoomBounds();
         if (position.y <= room.y + room.height) return false;
         removeFromParent();
@@ -1099,7 +1223,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
             // glints and the sound show the bite.
             case BITE -> floorY() < route.floorY(leg) - LANDING_TOLERANCE ? LEAP_FRAME : BITE_FRAME;
             case RECOVER -> SHAKE;
-            case BAY -> BAY_FRAME;
+            case BAY -> !bayStepping ? BAY_FRAME : trotFrame ? TROT2 : TROT1;
             case READ -> speed > STOPPED_SPEED ? SKID_FRAME : READ_FRAME;
             case POUNCE_COIL, FLINCH, LEAP_COIL -> COIL_FRAME;
             case POUNCE, LEAP -> LEAP_FRAME;
