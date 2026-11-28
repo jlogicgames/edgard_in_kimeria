@@ -5,6 +5,9 @@ import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration;
 import com.jlogicsoftware.kimeria.DisplayControl;
 import com.jlogicsoftware.kimeria.KimeriaGame;
 import org.teavm.jso.JSBody;
+import org.teavm.jso.browser.Window;
+import org.teavm.jso.dom.events.Event;
+import org.teavm.jso.dom.events.EventListener;
 
 public class WebLauncher {
     public static void main(String[] args) {
@@ -22,7 +25,25 @@ public class WebLauncher {
         config.usePhysicalPixels = true;
         prepareMobilePage();
         keepAudioAwake();
-        new WebApplication(new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen(), prefersReducedMotion()), config);
+        KimeriaGame game = new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen(), prefersReducedMotion());
+        new WebApplication(game, config);
+        // D161: a page that stays visible but loses focus pauses too; the backend only reports a hidden page.
+        // Not in a debug run, where developer tools take the focus beside the game.
+        if (!debugMode) pauseOnFocusLoss(game);
+    }
+
+    /**
+     * A key or a pointer inside the page also counts as a return, in capture so it runs before the backend reads it:
+     * an embedding frame that never reports focus again must not leave the pause menu deaf.
+     */
+    private static void pauseOnFocusLoss(KimeriaGame game) {
+        Window window = Window.current();
+        window.addEventListener("blur", event -> game.pause());
+        EventListener<Event> back = event -> game.resume();
+        window.addEventListener("focus", back);
+        window.addEventListener("keydown", back, true);
+        window.addEventListener("pointerdown", back, true);
+        window.addEventListener("touchstart", back, true);
     }
 
     /**

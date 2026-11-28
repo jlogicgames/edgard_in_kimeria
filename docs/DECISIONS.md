@@ -5293,3 +5293,31 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   play now runs in slow motion together; before, only the hero (and the boss, projectiles and flights) did. At 20 fps and above
   nothing changes (D98).
 - **Gate:** `KimeriaGameLongFrameTest`.
+
+## D161. Leaving the game pauses a running level (2026-11-28)
+
+- **Status:** Accepted by the author, 2026-11-28.
+- **Failure** (measured on origin/main 21888d74): the game did not override `ApplicationListener.pause()`. A minimized desktop
+  window kept playing at 60 fps, and a level still loading started there; a hidden browser tab stopped the frames and play went
+  on the moment the player came back; a browser window that only lost focus played on.
+- **Leaving** is a hidden browser tab, a minimized window, or a window that loses focus while still visible. The desktop launcher
+  sets `setPauseWhenLostFocus`; the web launcher listens for `blur` (the backend reports only a hidden page). Debug runs
+  (`./gradlew run`, `runDev`, the web debug launcher) do not pause on focus loss, so code can be edited beside the game; they
+  still pause when minimized or hidden.
+- **A running level** (a death, a room change, the checkpoint and the boss victory walk included) opens the pause menu with
+  **Resume** selected, whatever row an earlier pause left. A level that becomes ready while the player is away starts paused,
+  and so does one a background gamepad press would start from a dialogue.
+- **Every other screen is unchanged:** the healer, the intro and the ending already wait for a press; menus and an open pause
+  menu stay as they are.
+- **Coming back** never starts play: the player chooses Resume. The pause menu takes no input while the player is away, and the
+  first frame back acts on nothing in the pause menu, the healer dialogue or a story page, so the click that focuses the window
+  cannot choose Restart Level or turn a page. A cursor resting on a button takes the selection only after it moves. Jump, sword
+  and ranged need a new press; held movement works, as after an Esc pause (D12).
+- **Never a toggle:** the backends report one departure more than once and also call `pause()` on exit, so
+  `KimeriaGame.pause()` is separate from `togglePause()` (the earlier override that toggled replaced the main menu with an empty
+  level, [#38](https://github.com/jlogicgames/edgard_in_kimeria/issues/38)).
+- **Pinned by** `KimeriaGamePauseOnLeaveTest`: every `UiState`, so a new one fails it until it is given a rule.
+- **Checked in the running game** (2026-11-28): a windowed desktop probe with the focus-loss setting on (minimize, another
+  application taking focus, a level loading while minimized) and the web release in Chrome (hidden tab, a second window taking
+  focus, the click that returns on Restart Level). Each ended on the pause menu with Resume selected.
+- **Evidence limit:** macOS fullscreen, a phone browser and a physical gamepad were not run.
