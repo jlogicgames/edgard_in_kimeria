@@ -64,7 +64,7 @@ public final class Fireball extends Entity {
                 && !enemy.isDefeated() && enemy.hitboxOverlaps(bounds)) {
                 // A boss in its orange counter sequence (or abandoned) rejects the hit: the ball still bursts, lightly, as on a
                 // wall or a mob. Read before the hit, since a landed hit itself starts that sequence.
-                boolean heavy = enemy instanceof Boss boss && !boss.isCounterSequence() && !boss.isAbandoned();
+                boolean heavy = enemy instanceof Boss boss && !boss.rejectsHits() && !boss.isAbandoned();
                 if (enemy instanceof Boss boss) boss.hitByFireball();
                 else enemy.hitByFire();
                 burst(direction, heavy, getX());

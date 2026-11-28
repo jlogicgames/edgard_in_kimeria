@@ -30,6 +30,7 @@ import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.entity.objects.DeadfallTrap;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
+import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.YellowMob;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.FallenEnemy;
@@ -238,6 +239,67 @@ class AllocationBudgetTest {
 
     /** Measured 0.0 B/frame in 3 runs (#303: the projection copy is a held {@code Matrix4}; before: 96.0 from {@code getProjectionMatrix().cpy()}, step 4: 160.0 with two {@code Color} copies). */
     static final double BOSS_HUD_CEILING = 8;
+
+    /** Measured 0.0, 0.0 and 0.0 B/frame in 3 runs (2026-11-28, #625, D157; the same 8 B ceiling as the monsters; the harness does not play sounds): see {@link #bossSpecialsThroughTheRealLevel}. */
+    static final double BOSS_SPECIALS_CEILING = 8;
+    private static final int BOSS_CYCLE_FRAMES = 240, BOSS_KINDS = 3;
+    /** The boss's body centre and the hero's, per kind of special, so that rocks, roots and the blow come in turn. */
+    private static final float BOSS_PLACE_X = 2884, BOSS_HERO_Y = 256;
+    private static final float[] BOSS_HERO_X = {2650, 2770, 2830};
+
+    /**
+     * The boss's three special attacks in turn through the real {@code Level} (#625): every {@value #BOSS_CYCLE_FRAMES} frames
+     * the boss is put back, the special made ready and the hero placed so the next kind is chosen. Update, combat and render of
+     * the boss with {@code Level.bossFx()} and the level's grit every frame.
+     */
+    @Test void bossSpecialsThroughTheRealLevel() throws Exception {
+        harness.invulnerable = true;
+        Level level = bossRoom();
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);   // the hero finishes appearing
+        Boss boss = level.boss();
+        var clock = Boss.class.getDeclaredField("specialClock");
+        var awakened = Boss.class.getDeclaredField("awakened");
+        var change = Boss.class.getDeclaredMethod("change", Boss.State.class);
+        clock.setAccessible(true);
+        awakened.setAccessible(true);
+        change.setAccessible(true);
+        awakened.setBoolean(boss, true);
+        boolean[] seen = new boolean[Boss.State.values().length];
+        int[] peak = new int[1];
+        Runnable[] rearm = new Runnable[BOSS_KINDS];
+        for (int k = 0; k < BOSS_KINDS; k++) {
+            float heroX = BOSS_HERO_X[k];
+            rearm[k] = () -> {
+                try {
+                    change.invoke(boss, Boss.State.WALK);
+                    clock.setFloat(boss, Boss.SPECIAL_COOLDOWN);
+                } catch (ReflectiveOperationException e) { throw new AssertionError(e); }
+                boss.position.x = BOSS_PLACE_X;
+                level.player.position.set(heroX, BOSS_HERO_Y);
+                level.player.setOnGround(true);
+            };
+        }
+        // The reflective re-arm allocates, so it runs on its own frame outside the measured paths' cost: its bytes are measured and taken off.
+        double rearmBytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BOSS_CYCLE_FRAMES == 0) rearm[i / BOSS_CYCLE_FRAMES % BOSS_KINDS].run();
+        });
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BOSS_CYCLE_FRAMES == 0) rearm[i / BOSS_CYCLE_FRAMES % BOSS_KINDS].run();
+            boss.update(STEP);
+            boss.resolveCombat();
+            boss.render(batch);
+            level.bossFx().update(STEP);
+            level.bossFx().render(batch);
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            seen[boss.getState().ordinal()] = true;
+            peak[0] = Math.max(peak[0], level.bossFx().hard().count());
+        });
+        for (Boss.State state : new Boss.State[]{Boss.State.ROCKS, Boss.State.ROOTS, Boss.State.BLOW})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(peak[0] > 0, "the specials must throw particles");
+        assertWithinBudget("boss rocks, roots and blow", BOSS_SPECIALS_CEILING, bytes - rearmBytes);
+    }
 
     /** Escapes the deliberate allocation of {@link #theProbeCanReadAllocatedBytes()} so escape analysis keeps it. */
     private static volatile byte[] sink;

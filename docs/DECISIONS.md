@@ -370,6 +370,9 @@ only in the menu backdrop.
 
 ## D13. Forest boss (#82/#83)
 
+*Amended by [D157](#d157-the-forest-boss-gains-rocks-roots-a-blow-and-poise-625-amends-d13-2026-11-28) (2026-11-28): three
+special attacks also kill, and a landed hit no longer interrupts the committed part of the sweep or a special.*
+
 The boss wakes once per attempt, pursues on the ground and attacks at visible axe range.
 Its solid body blocks passage without contact damage; top contact bounces. Only active
 axe strikes kill. Sword hits emit a conspicuous crimson particle spray, including lethal hits.
@@ -5152,3 +5155,34 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   burst), `AllocationBudgetTest.blastShakeThroughTheRealLevel` (0.0 B/frame, ceiling 8).
   **Changed test, by the decision:** `BeetleTest.aFarHeroFeelsNoShake` is now `aFarHeroFeelsTheShakeToo` (it asserted the 160 px
   range). No tolerance changed.
+
+## D157. The forest boss gains rocks, roots, a blow and poise (#625, amends D13, 2026-11-28)
+
+- **Status:** Card approved by the author, 2026-11-28 (numbers, choice by place, poise, existing frames). Built. Checked by
+  automated tests and by an agent's screenshots of the web build (BOSS.md, "Web run"); not yet played by a person, seen on
+  desktop or heard ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
+- **Why:** the author, 2026-11-25: the boss was very easy to win. It had one attack, walked to where the hero was, and every
+  landed sword hit cancelled the sweep, so swinging was a safe trade (the wolf had the same root cause, #525).
+- **Decision** (full card: [BOSS.md](BOSS.md#special-attacks-and-poise-625-d157)):
+  - **Three special attacks**, each a Forest element the player knows, thrown by the boss: falling rocks (three, aimed at the
+    hero one after another), five 48 px roots round the hero, and a blow in the beetle's 80x32 dome (D149) with
+    yellow-green `b8bc00` particles.
+  - **Deterministic choice (D7):** a special is ready every 3 s of fight; the hero's place decides (platform or beyond
+    160 px: rocks; within 48 px: blow; else roots). No chance anywhere.
+  - **Warnings** of their own in `TrapWarnings` (1.0, 0.7, 0.9 s; 1.5 times with the assist), each with a safe answer: keep
+    moving; a gap, the outer side or a platform; distance or height.
+  - **Poise:** from the sweep's crouch to the end of its strike (0.1556-0.4667 s), and through every special, a landed hit
+    takes its energy but causes no recoil or counter; one such hit per attack.
+  - **Fairness (D5, D59):** no special's lethal area overlaps the hero's spawn frame or the exit portal's place; a respawned
+    hero meets a sleeping boss; the load fails on an arena that cannot hold the attacks. A hero standing in a protected span
+    faces the axe alone, a refuge the rule costs.
+- **Unchanged:** energy 12, elixir and fireball damage, the stomp bounce (D4), the orange counter, the death reset.
+- **Retry-cost check:** a death replays the whole fight from the entrance. The scripted reading hero needs 28.18 s
+  unempowered, 3.78 s with the elixir, 11.18 s with six fireballs (`BossFightRouteTest`). A player's mastered times are not
+  recorded ([#384](https://github.com/jlogicgames/edgard_in_kimeria/issues/384)).
+- **Test changes, stated plainly (no tolerance relaxed):** `BossCombatTest`'s interruption test no longer interrupts on the
+  strike frame (that frame is now poised and tested in `BossSpecialsTest`) and is renamed
+  `interruptionOnWindupAndCompletionFrameCancelsOldDamageAndShake`; `everyLaterNormalAttackCanBeInterrupted...` restarts the
+  special cooldown between rounds so the sweep it tests still comes.
+- **Gates and measures:** `AllocationBudgetTest.bossSpecialsThroughTheRealLevel` 0.0 B/frame in 3 runs (ceiling 8);
+  `BossFx` pools 8 and 160 for peaks of 2 and 123; `./gradlew :core:check`.

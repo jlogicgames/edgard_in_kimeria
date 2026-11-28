@@ -35,6 +35,8 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "snail_notice.wav": (0.26, 0.34), "snail_windup.wav": (0.75, 0.85), "snail_windup_long.wav": (1.15, 1.25),
           "snail_spit.wav": (0.13, 0.19), "snail_splat.wav": (0.16, 0.24),
           "whip_crack.wav": (0.14, 0.18), "boss_sweep.wav": (0.27, 0.33), "boss_sweep_counter.wav": (0.37, 0.43),
+          "boss_call.wav": (0.55, 0.65), "boss_blow_charge.wav": (0.85, 0.95), "boss_blow_charge_long.wav": (1.30, 1.40),
+          "boss_blow.wav": (0.40, 0.50),
           "spore_puff.wav": (0.26, 0.34), "puffball_burst.wav": (0.40, 0.50),
           "wolf_notice.wav": (0.18, 0.26), "wolf_windup.wav": (0.45, 0.55), "wolf_windup_long.wav": (0.70, 0.80),
           "wolf_lunge.wav": (0.14, 0.22), "wolf_bite.wav": (0.14, 0.22), "wolf_bay.wav": (0.34, 0.46), "wolf_run.wav": (0.10, 0.14),
@@ -52,6 +54,7 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "spider_notice.wav": -19.0, "spider_windup.wav": -19.4, "spider_windup_long.wav": -19.4, "spider_bite.wav": -18.0,
                 "snail_notice.wav": -19.0, "snail_windup.wav": -19.4, "snail_windup_long.wav": -19.4, "snail_spit.wav": -18.0,
                 "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0,
+                "boss_call.wav": -18.0, "boss_blow_charge.wav": -19.4, "boss_blow_charge_long.wav": -19.4, "boss_blow.wav": -17.0,
                 "wolf_notice.wav": -19.0, "wolf_windup.wav": -19.4, "wolf_windup_long.wav": -19.4, "wolf_bite.wav": -18.0,
                 "handover.wav": -19.4, "elixir.wav": -19.0,
                 "flying_beetle_notice.wav": -19.0, "flying_beetle_windup.wav": -19.4, "flying_beetle_windup_long.wav": -19.4}

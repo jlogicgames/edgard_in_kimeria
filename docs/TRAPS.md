@@ -232,6 +232,10 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Art and sound | `trap-stone`, `trap-shadow`, `trap-stone-lip` 24×8 (`loose`, `broken`; skin `forest`); active tier, lip outline at worst (`loose` / `broken`): 0.387 / 0.403 in `forest-0-platform` at y 8 (before #550; at y 128 the lip's outline measures 0.544, D131), 0.323 / 0.336 in `forest-2` at y 48 (D76; at y 8 over the dirt block forest-2 measured 0.251, under the floor, hence `lipTop`); since D144 (#648; the scenery behind the lips rose 16 px) the loose lip measures at worst 0.54 in `forest-0-platform` and 0.358 in `forest-2` (the latter with the canopy leaves added beside its column); grit is `KIND_GRIT` of the stone's own `KimeriaParticleSystem`; impact effects are #347. Consequence (D93): `stone_impact` |
 | Decision | D45, D48, D59 |
 
+The forest boss drops the same stones (its art, shadow, grit and `stone_impact`) as one of its attacks, aimed at the hero and
+gone half a second after landing; it is not this trap and has its own card
+([BOSS.md](BOSS.md#special-attacks-and-poise-625-d157), D157).
+
 ### Exploding stump (`ExplosiveStump`)
 
 | Field | Value |
@@ -516,6 +520,9 @@ one element (`clocked-column`), a reskin by the registry's rule.
 | Tests | `LanceRootTest` (step for step the ember fissure's phases, frames and column at both assist values; the warning equals the shared one; the chips; the sounds once per cycle and only in view; the load on `lance-test.tmx`), `ForestFissureTest` (the room: a walker who goes when a thrust ends passes at every offset), `FirstMeetingPocketTest.forestFissureTheFirstFissure`, `RoomReplayTest`, `AllocationBudgetTest.lanceRootsCycle` |
 | Art and sound | `trap-lance-root` 16×12 × 6 (`rest1`, `rest2`, `warn1`, `warn2`, `vent`, `spent`; `lance-root.grid`; moon rim) and `trap-lance-shaft` 8×16 × 4 (`shaft1`, `shaft2`: the column tile, swapped every 0.05 s so the bark rings climb; `top1`, `top2`: the 8 px bone tip; `lance-shaft.grid`; no rim, a repeating tile). The column is pale bleached wood round crimson heartwood with dark rings and the tip is bone: an ink outline vanishes on the night (D92), the pale edge carries the contrast. Active tier over the night at the placed roots: burl 0.449, shaft 0.529, tip 0.482 at worst (D76). Sounds `root_creak` (warning) and `root_thrust` (the thrust), heard only while the root or its column is in the camera view; checked in the running game by the author, 2026-11-24 ([#562](https://github.com/jlogicgames/edgard_in_kimeria/issues/562)). Every thrust, hit or miss, drops six bark chips from the upper column as it sinks and shows the `spent` frame for 0.4 s. Consequence (D93): `root_thrust` |
 | Decision | D91 (the clock and column), D129 (amends D91) |
+
+The forest boss raises the same roots (the sheets, the column and both sounds) as one of its attacks, five at once, 48 px tall,
+on its own clock ([BOSS.md](BOSS.md#special-attacks-and-poise-625-d157), D157).
 
 ## Proposed traps (D71, not built)
 

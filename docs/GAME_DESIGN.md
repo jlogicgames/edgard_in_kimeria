@@ -677,9 +677,9 @@ crumble under the sword or a stomp and burn under a fireball or a thrown torch, 
 The forest boss and the YellowMob were redrawn the same way on 2026-11-21 (colours: [ART_DIRECTION.md](ART_DIRECTION.md),
 section 1, Danger), with the same frames, timing and boxes. The boss is a horned warlord in blackened iron and a mulberry tabard
 with a long-hafted bearded axe (crescent edge with a lit bevel, a beard hooking down, the eye round the haft, a back spike).
-His two attacks read apart. The normal attack, which starts when the hero touches `NORMAL_BOX`, is low and level: he draws
+His axe has two attacks that read apart. The normal attack, which starts when the hero touches `NORMAL_BOX`, is low and level: he draws
 the axe back to his hip, crouches with it behind his heel (0.31 s, the eyes stay red), then sweeps it at knee height through
-`NORMAL_BOX`; the hero steps out of reach or hits him first, which interrupts it. The counter, which follows every landed
+`NORMAL_BOX`; the hero steps out of reach or hits him before the crouch, which interrupts it (D157). The counter, which follows every landed
 sword or fireball hit, is high and overhead: during its invulnerable, orange 1.15 s warning he raises the axe straight up over
 his horns, then lets it hang down his back with the eyes white, then chops down in front through `COUNTER_BOX`, chest to
 knee height; the hero jumps and retreats out of reach before it lands (1.35 s after the hit) and strikes back during the recovery. At rest
@@ -690,6 +690,11 @@ column of its hurtbox, and the boss's axe reaches each edge of its attack box on
 other frame that hurts (D10, `tools/test_enemy_sprites.py`). Grids: `art/objects/enemy/boss.grid`, `art/objects/enemy/yellow-mob.grid`.
 A killed YellowMob stays face down on that last frame as its body (D101): it twitches, crumbles and burns like the red mob's.
 The boss leaves none.
+
+**The boss's fight ([D157](DECISIONS.md#d157-the-forest-boss-gains-rocks-roots-a-blow-and-poise-625-amends-d13-2026-11-28), amends
+D13).** Besides the sweep and the counter the boss has three attacks built on Forest elements the player already knows:
+falling rocks, roots from the ground and a blow round itself. Where the hero stands decides which one comes, never chance,
+and a hit cannot interrupt the committed sweep or any of the three. Card and numbers: [BOSS.md](BOSS.md#special-attacks-and-poise-625-d157).
 
 Their warning, attack and death effects (the beetle's built, D100, the spider's, D102, the snail's, D106, and the flying beetle's, D145; the wolf's, D115, built and placed in `forest-glade`, #331) are listed in [#398](https://github.com/jlogicgames/edgard_in_kimeria/issues/398).
 A monster killed without bursting leaves its body, in a pose that differs from the living monster; the body rocks when

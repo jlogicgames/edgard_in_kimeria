@@ -147,6 +147,14 @@ class BossCombatTest {
         assertEquals(Boss.State.NORMAL, boss.getState());
     }
     private void sword() { pressed.add(Input.Keys.K); frames(1); }
+    /** Restarts the special attacks' cooldown, for a test about the sweep and the counter alone. */
+    private void holdSpecials() {
+        try {
+            var field = Boss.class.getDeclaredField("specialClock");
+            field.setAccessible(true);
+            field.setFloat(boss, 0);
+        } catch (ReflectiveOperationException e) { throw new AssertionError(e); }
+    }
     private void vulnerableAgain() {
         for (int frame = 0; frame < 180 && boss.isCounterSequence(); frame++) frames(1);
         assertFalse(boss.isCounterSequence(), "The counter should finish before the next accepted hit");
@@ -384,7 +392,7 @@ class BossCombatTest {
                 rows.put(region, (int) y / 32 + 1); return region;
             }
         };
-        Boss actor = new Boss(tagged, game, null, 0, 0);
+        Boss actor = new Boss(tagged, game, null, 0, 0, null);
         var field = Actor.class.getDeclaredField("animations"); field.setAccessible(true);
         Map<?, ?> animations = (Map<?, ?>) field.get(actor);
         Animation<?> normal = (Animation<?>) animations.get(Boss.State.NORMAL);
@@ -689,9 +697,9 @@ class BossCombatTest {
         assertFalse(level.player.isGotHit());
     }
 
-    @Test void interruptionOnWindupStrikeAndCompletionFrameCancelsOldDamageAndShake() {
-        for (int delay : new int[]{0, (int) (Boss.NORMAL_FRAME * 2 / REAL_STEP) + 1,
-            (int) Math.ceil(Boss.NORMAL_DURATION / REAL_STEP) - 1}) {
+    /** Since D157 the strike itself is poised ({@code BossSpecialsTest}): the first pose and the end of the sweep stay open. */
+    @Test void interruptionOnWindupAndCompletionFrameCancelsOldDamageAndShake() {
+        for (int delay : new int[]{0, (int) Math.ceil(Boss.NORMAL_DURATION / REAL_STEP) - 1}) {
             encounter(); startNormal(); outsideSwing(); frames(delay);
             inSwordRange(); sword();
             assertEquals(Boss.State.HURT, boss.getState(), "Delay=" + delay);
@@ -795,6 +803,7 @@ class BossCombatTest {
             outsideSwing(); frames(125);
             assertEquals(Boss.State.WALK, boss.getState());
             assertFalse(boss.isCounterSequence());
+            holdSpecials(); // D157: three rounds outlast the special cooldown, and a ready blow would come before the sweep
             inSwordRange(); frames(2);
         }
         assertFalse(level.player.isGotHit());
