@@ -393,7 +393,7 @@ parts that shape the code:
   that bypasses the loading screen, and the save only changes on level completion.
 - **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;
   *Continue* on the main menu loads a saved run into a fresh `StartData`.
-- **Leaving the game (D161):** `KimeriaGame.pause()`/`resume()` are the backends' calls, not the pause key. `pause()` opens the
+- **Leaving the game (D164):** `KimeriaGame.pause()`/`resume()` are the backends' calls, not the pause key. `pause()` opens the
   pause menu only over a running level and `updatePlay` holds one that becomes ready meanwhile. The LWJGL3 backend calls them
   when the window is minimized and, set in `Lwjgl3Launcher`, when it loses focus; the TeaVM backend calls them for a hidden
   page, and `WebLauncher` adds window `blur`. The focus-loss half is off in debug mode. A minimized desktop window keeps calling
@@ -521,7 +521,10 @@ enforce it, for different reasons, and neither replaces the other:
   measured values in the constant's Javadoc. The test fails, never skips, if the JVM cannot report per-thread allocation
   (`theProbeCanReadAllocatedBytes`). It sees every allocation on a path it runs (iterators, boxing, varargs, library internals) and
   nothing on a path it does not run. It is HotSpot only: escape analysis removes some allocations that a browser build would still pay,
-  and it says nothing about TeaVM, GC pauses or frame time.
+  and it says nothing about TeaVM, GC pauses or frame time. Before the warm-up the probe interns the string literals of the frame's
+  top-level class (`testsupport/StringLiterals`): HotSpot creates a method's missing literals on the thread that queues its
+  optimizing compile, which would otherwise be charged to whichever window that falls in
+  ([D161](DECISIONS.md#d161-the-allocation-probe-interns-the-test-classs-string-literals-first-464-2026-11-28-replaces-d159)).
 - **`tools/check_allocations.py`** (static; `./gradlew validateAllocations`, a dependency of `:core:check`, the desktop jar and the web
   release build; the same command runs in `.codex/hooks.json` as a PostToolUse and a Stop hook with `--hook`). It checks **changed
   lines** against `--base` (`auto` by default: the merge-base with `origin/main` when it exists, else HEAD; `HEAD` with `--hook`;

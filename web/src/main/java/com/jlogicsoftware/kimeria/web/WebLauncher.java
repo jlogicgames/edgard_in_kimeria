@@ -27,7 +27,7 @@ public class WebLauncher {
         keepAudioAwake();
         KimeriaGame game = new KimeriaGame(hasTouchScreen(), debugMode, new PageFullscreen(), prefersReducedMotion());
         new WebApplication(game, config);
-        // D161: a page that stays visible but loses focus pauses too; the backend only reports a hidden page.
+        // D164: a page that stays visible but loses focus pauses too; the backend only reports a hidden page.
         // Not in a debug run, where developer tools take the focus beside the game.
         if (!debugMode) pauseOnFocusLoss(game);
     }

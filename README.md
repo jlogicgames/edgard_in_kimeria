@@ -65,7 +65,7 @@ F7 restarts the hosted game, not the dev launcher/host.
 | Throw held object / fireball | L | Y (north button) |
 | Pause | Esc | Start |
 
-The game also pauses when you leave it: a hidden browser tab, a minimized window or a window that loses focus (D161).
+The game also pauses when you leave it: a hidden browser tab, a minimized window or a window that loses focus (D164).
 Choose Resume to go on.
 
 Touch devices show on-screen controls. Options sets the language and switches sound effects and music on or off, each saved

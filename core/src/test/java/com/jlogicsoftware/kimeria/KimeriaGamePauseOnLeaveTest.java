@@ -42,7 +42,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Leaving the game and coming back (D161), on the real KimeriaGame: {@code pause()} and {@code resume()} as the backends
+ * Leaving the game and coming back (D164), on the real KimeriaGame: {@code pause()} and {@code resume()} as the backends
  * call them (minimized, focus lost, tab hidden), with {@code updatePlay} and {@code renderOverlay} as the frames after.
  */
 class KimeriaGamePauseOnLeaveTest {

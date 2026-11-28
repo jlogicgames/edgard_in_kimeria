@@ -23,7 +23,7 @@ public class Lwjgl3Launcher {
         }
         config.setResizable(true);
         boolean debugMode = Boolean.getBoolean("kimeria.debug");
-        // D161: losing focus pauses the game, as minimizing does. Not in a debug run, where code is edited beside the game.
+        // D164: losing focus pauses the game, as minimizing does. Not in a debug run, where code is edited beside the game.
         config.setPauseWhenLostFocus(!debugMode);
         KimeriaGame game = new KimeriaGame(false, debugMode);
         // The Lwjgl3 audio config (sources, buffer size/count) is left at its defaults: buffer size and count only apply to

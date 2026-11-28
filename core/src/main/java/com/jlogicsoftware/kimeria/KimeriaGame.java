@@ -211,9 +211,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private final Runnable rebuildUnderBlack = () -> rebuildRoom(true);
     private boolean gameStarted = false;
     private boolean pendingFullscreenToggle = false;
-    /** The player has left (D161): between {@link #pause} and {@link #resume}, while a level never runs. */
+    /** The player has left (D164): between {@link #pause} and {@link #resume}, while a level never runs. */
     private boolean away;
-    /** The first frame after the player came back (D161): whatever brought them back acts on nothing. */
+    /** The first frame after the player came back (D164): whatever brought them back acts on nothing. */
     private boolean justReturned;
 
     private float timeScale = 1f;
@@ -596,7 +596,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         boolean touch = touchControls.isAvailable();
         intro.skipHint(IntroScreen.skipHintFor(touch, !touch && gamepad.isConnected())); // a touch device never polls the pad here
         touchControls.updateSkip(); // a tap on the skip button leaves; it never also turns a page
-        if (!justReturned) { // the press that brought the player back neither leaves nor turns a page (D161)
+        if (!justReturned) { // the press that brought the player back neither leaves nor turns a page (D164)
             if (touchControls.skipPressed() || introInput.keyPressed(Input.Keys.ESCAPE) || introInput.keyPressed(Input.Keys.BACK) || gamepad.back() || gamepad.pausePressed()) intro.skip();
             else if (pressed || gamepad.anyButtonPressed()) intro.turn();
         }
@@ -940,7 +940,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private void updatePlay(float frameSeconds, UiState stateAtFrameStart, boolean levelVisible) {
         // A stall (a dragged window, a hidden tab, sleep) arrives as one long frame: nothing in play may outrun the hero (D160).
         float dt = Math.min(frameSeconds, MAX_PLAY_STEP);
-        if (away) holdPlay(); // a level that became ready while the player was away starts paused (D161)
+        if (away) holdPlay(); // a level that became ready while the player was away starts paused (D164)
         // Age existing effects before combat/reset creates new ones: a slow frame must not
         // consume a newly landed hit's entire flash before it has been rendered once.
         if (levelVisible && level != null && gameStarted && !roomFade.active() && !deathFade.dark()
@@ -993,7 +993,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
 
     private void updateHealer(float dt) {
         boolean fresh = dialogueInput.skipPressed(Gdx.input);
-        if (justReturned) return; // the press that brought the player back answers nothing; its keys count as held (D161)
+        if (justReturned) return; // the press that brought the player back answers nothing; its keys count as held (D164)
         if (dialogueInput.keyPressed(Input.Keys.ESCAPE) || touchControls.pausePressed()) {
             pausedHealer = true;
             uiState = UiState.PAUSED;
@@ -1192,7 +1192,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      *                      activate the pause menu's Back/Resume
      */
     void renderOverlay(Batch batch, boolean acceptActions) {
-        // The last reader of the return frame ends it. The pause menu takes no input while the player is away or on that frame (D161).
+        // The last reader of the return frame ends it. The pause menu takes no input while the player is away or on that frame (D164).
         boolean held = uiState == UiState.PAUSED && (away || justReturned);
         justReturned = false;
         if (uiState == UiState.HEALER) {
@@ -1553,7 +1553,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     }
 
     /**
-     * The player has left (D161): the window is minimized or lost focus, or the browser tab is hidden. A running level
+     * The player has left (D164): the window is minimized or lost focus, or the browser tab is hidden. A running level
      * opens the pause menu on Resume; every other screen already waits for a press. The backends may call this several
      * times for one departure, and call it on exit and before {@link #create}, so it never toggles.
      */
@@ -1563,7 +1563,7 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
         holdPlay();
     }
 
-    /** The player is back (D161). Play stays paused until they choose Resume. Ignored unless {@link #pause} came first. */
+    /** The player is back (D164). Play stays paused until they choose Resume. Ignored unless {@link #pause} came first. */
     @Override
     public void resume() {
         if (!away) return;

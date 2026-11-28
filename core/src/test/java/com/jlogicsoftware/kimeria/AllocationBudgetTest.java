@@ -2263,13 +2263,8 @@ class AllocationBudgetTest {
     /**
      * A whole menu frame (#464, {@code menuFrame}): measured 0.0 to 1.0 B/frame per screen in 3 runs (2026-11-27); the same scene on the
      * code before #464 measured 872 (loading) to 20,464 (About) B/frame. The same 8 B ceiling as the other isolated paths.
-     * One window in some runs on GraalVM CE 25 reads 15.5 to 17.6 B/frame on the About rules page (D159, 2026-11-28: 2 of
-     * 10 isolated runs, 2 of 6 class runs): in the JFR recording looked at, one burst under 1 ms (238 Strings and their byte arrays,
-     * 19,224 B) attributed to a line of the compiled frame lambda that only does integer arithmetic; {@code -Xint} measured
-     * 0.0 on every screen. Hence the median of {@value #MENU_WINDOWS} windows: a per-frame allocation shows in all of them.
      */
     static final double MENU_FRAME_CEILING = 8;
-    private static final int MENU_WINDOWS = 3;
     /** The menu scene's cursor: down the middle of the screen over every button row, a new row each frame. */
     private static final int MENU_CURSOR_X = 320, MENU_CURSOR_TOP = 40, MENU_CURSOR_STEP = 41, MENU_CURSOR_STEPS = 7;
     private static final float THROW_X = 3328, THROW_Y = 300, THROW_VX = 220, THROW_VY = -110;
@@ -2934,18 +2929,15 @@ class AllocationBudgetTest {
                 Menu shown = menu;
                 String name = "menu frame " + screen[0] + (rules ? ", the rules page" : "");
                 hovers[0] = 0;
-                AllocationProbe.Frame frame = i -> {
+                double bytes = AllocationProbe.bytesPerFrame(i -> {
                     cursor.y = MENU_CURSOR_TOP + (i % MENU_CURSOR_STEPS) * MENU_CURSOR_STEP;
                     if (shown != null) shown.moveSelection(1);
                     overlay.beginFrame();
                     game.renderOverlay(batch, true);
                     overlay.topRight("60 FPS", 630, 4);
                     overlay.flushText(batch);
-                };
-                double[] bytes = new double[MENU_WINDOWS];
-                for (int w = 0; w < bytes.length; w++) bytes[w] = AllocationProbe.bytesPerFrame(frame);
-                java.util.Arrays.sort(bytes);
-                assertWithinBudget(name, MENU_FRAME_CEILING, bytes[bytes.length / 2]);
+                });
+                assertWithinBudget(name, MENU_FRAME_CEILING, bytes);
                 // The web start screen has one button and no hover blip; loading has no buttons.
                 if (shown != null && !screen[0].equals("WEB_START")) assertTrue(hovers[0] > 0, name + ": the cursor never reached a button");
                 assertEquals(cursor.y, viewport.unproject(unprojected.set(cursor.getX(), cursor.getY())).y, 0.5f, name + ": cursor mapping");

@@ -15,12 +15,16 @@ public final class AllocationProbe {
 
     private AllocationProbe() { }
 
-    /** Runs the warm-up frames, then the measured frames, and returns the average allocated bytes per measured frame. */
+    /**
+     * Runs the warm-up frames, then the measured frames, and returns the average allocated bytes per measured frame. The string
+     * literals of the class that made {@code frame} are interned first ({@link StringLiterals}, D161).
+     */
     public static double bytesPerFrame(Frame frame) {
         var bean = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
         if (!bean.isThreadAllocatedMemorySupported()) throw new AssertionError("ThreadMXBean allocated-bytes is not supported on this JVM");
         if (!bean.isThreadAllocatedMemoryEnabled()) bean.setThreadAllocatedMemoryEnabled(true);
         long thread = Thread.currentThread().getId();
+        StringLiterals.intern(frame.getClass().getNestHost());
         int index = 0;
         for (; index < WARMUP_FRAMES; index++) frame.run(index);
         long before = bean.getThreadAllocatedBytes(thread);
@@ -42,6 +46,8 @@ public final class AllocationProbe {
         if (!bean.isThreadAllocatedMemorySupported()) throw new AssertionError("ThreadMXBean allocated-bytes is not supported on this JVM");
         if (!bean.isThreadAllocatedMemoryEnabled()) bean.setThreadAllocatedMemoryEnabled(true);
         long thread = Thread.currentThread().getId();
+        StringLiterals.intern(a.getClass().getNestHost());
+        StringLiterals.intern(b.getClass().getNestHost());
         int index = 0;
         for (int w = 0; w < 2; w++) {
             enterA.run(); for (int i = 0; i < WARMUP_FRAMES; i++) a.run(index++);

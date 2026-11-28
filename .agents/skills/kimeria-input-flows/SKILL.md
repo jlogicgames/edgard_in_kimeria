@@ -53,7 +53,7 @@ a consumer. A menu mapping and a gameplay mapping may intentionally differ.
   movement and action with simultaneous pointers, drag/release and state changes.
   The README records the missing gameplay touch pause button; do not claim all
   touch flows are complete or add that feature without it being in scope.
-- Leaving the window or the tab (D161) pauses a running level through `KimeriaGame.pause()`, never `togglePause()`. The pause
+- Leaving the window or the tab (D164) pauses a running level through `KimeriaGame.pause()`, never `togglePause()`. The pause
   menu takes no input while the player is away, and the first frame back (`justReturned`) acts on nothing in the pause menu,
   the healer or a story page; a new screen that a stray press can change must honour it. `KimeriaGamePauseOnLeaveTest` lists
   every `UiState`.
