@@ -5294,6 +5294,22 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   nothing changes (D98).
 - **Gate:** `KimeriaGameLongFrameTest`.
 
+## D161. The allocation probe interns the test class's string literals first (#464, 2026-11-28, replaces D159)
+
+- **Cause of the D159 bursts:** when HotSpot queues an optimizing compile (C2 or Graal) of a method, the thread that asked for it
+  first creates the String objects that the method's class still lacks for its literals. The menu frame lambda lives in
+  `AllocationBudgetTest`; when its compile was queued inside a measured window, the test thread paid for the class's remaining
+  literals once. Load only moved that moment into or out of a window.
+- **Evidence:** on the code before D159, with 14 busy processes and one fresh JVM per run, 12 of 20 runs failed on GraalVM CE
+  25.0.2 (any menu screen, 17.7 to 18.3 B/frame), and Temurin 25.0.3 failed too. A JVMTI allocation agent caught one such window:
+  265 Strings and 265 byte arrays, 21,232 B (the whole measured excess), all literals of the test class, allocated at bytecode 0
+  of the frame lambda. With `-XX:TieredStopAtLevel=1` (no optimizing compiler) 40 of 40 loaded runs passed.
+- **Change:** `AllocationProbe` interns the string literals of the frame's nest host before the warm-up (`StringLiterals`); an
+  interned literal is found by the JVM, not created. This covers every probe user. `menuFrame` goes back to one window per screen;
+  the ceiling stays 8 B/frame. With the change, 150 loaded runs and 100 runs ten at a time passed.
+- **Limit:** a game class whose compile is queued inside a window still creates its own literals once. The largest, `Level`, has
+  about 8.5 KB of them (7 B/frame over 1200 frames); `KimeriaGame`, the menu frame's class, has 1.3 KB.
+
 ## D162. A tree with a big crown on every forest screen (#635, 2026-11-28)
 
 - **Status:** Accepted (author, 2026-11-28: crowns in round 3, the placement and its gaps). Built, then checked in the running
