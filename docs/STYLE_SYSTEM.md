@@ -132,8 +132,7 @@ The full list with links: [.agents/skills/README.md](../.agents/skills/README.md
 Each has an open issue whose checklist includes updating this page.
 
 - Principle 4 (D93): these hazards act without a sound or particles of their own:
-  - the falling platform, rotten log and rotten branch give way in silence ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444));
-  - whether the bomb and the exploding stump and root shake the screen is not decided yet ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448)).
+  - the falling platform, rotten log and rotten branch give way in silence ([#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444)).
 - Enemy warnings: the YellowMob and the bat have no notice or wind-up beat, and the RedMob's and the boss's wind-ups
   ignore the assist ([#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240)).
 - The playtest changes are not yet checked in the running game: sizes, trap read distance, impact feedback, and that no

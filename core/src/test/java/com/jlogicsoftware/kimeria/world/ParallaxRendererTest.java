@@ -2,6 +2,7 @@ package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import com.jlogicsoftware.kimeria.tiled.ForegroundGroup;
@@ -269,7 +270,7 @@ class ParallaxRendererTest {
         TiledMapData map = forest1();
         ParallaxRenderer renderer = new ParallaxRenderer(map);
         Rectangle room = new Rectangle(MOB_X, 0, 800, 368);
-        float shaken = 1.5f;   // the camera moves up to 1.5 px after visibleWorldRect was taken: the view is stale by that much
+        float shaken = ScreenShake.BLAST_AMPLITUDE_PX;   // the largest shake moves the camera after visibleWorldRect was taken: the view is stale by that much
         Rectangle view = new Rectangle(MOB_X + 100, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H);
         draw(renderer, view, room);
         SceneryLayer grove = layer(map, "grove");

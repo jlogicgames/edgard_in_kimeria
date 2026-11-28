@@ -517,6 +517,7 @@ Current ceilings (`AllocationBudgetTest`; measured values are in the Javadoc of 
 | Jump dust through `Level.fx()` | 8 | 0.0 |
 | Lever shake through `Level.activateTrigger` | 16 | 4.5 |
 | Lever grit burst through `Level.activateTrigger` | 16 | 4.6 |
+| A stump detonating every 60 frames in the real stone room, its blast frames drawn and the camera shake queried (#448, D156) | 8 | 0.0 in 3 runs (2026-11-28; headless: no sound is played) |
 | `BossHud.render` with an empowered boss | 8 | 0.0 in 3 runs (2026-11-27, in the boss room; was 96.0) |
 | forest-1 trap course (room 2) | 665 | 328.0 to 544.3 (the same before and after #430 removed the rain and sky, D92) |
 | forest-2 room 0 / room 1 / room 2 | 9,720 / 2,360 / 2,120 | 8,920.6 to 9,000.0 / 2,184.0 / 1,960.0 to 1,960.6 |

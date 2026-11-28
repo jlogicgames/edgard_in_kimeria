@@ -163,8 +163,8 @@ ROOM_H = ROWS * TILE
 # Bleed (D111): the camera top lies in 0..ORIGIN_Y, so a layer of vertical factor f trails the camera by at most
 # round(f * ORIGIN_Y) px (12.8 at the foreground's 1.6), and the screen shake moves the camera by up to SHAKE px after the view was
 # taken, which a layer of factor f shows as up to SHAKE * (1 + f) px. A factor-1 layer needs no art past the room (0 px), the others
-# at most 12.8 + 2.4 px; every layer gets one tile row (16 px) of margin, which covers all of it.
-SHAKE = 1.5                             # px, the largest camera shake (ScreenShake.LEVER_AMPLITUDE_PX, STONE_AMPLITUDE_PX); conservative: it is clamped to the room, so it never carries the view past the room's top or bottom
+# at most 12.8 + 3.2 px (SHAKE * 1.6 at the foreground); every layer gets one tile row (16 px) of margin, which covers all of it.
+SHAKE = 2.0                             # px, the largest camera shake (ScreenShake.BLAST_AMPLITUDE_PX); conservative: it is clamped to the room, so it never carries the view past the room's top or bottom
 BLEED_ROWS = 1                          # play layer rows past the room bottom (16 px of deep soil)
 MAP_ROWS = ROWS + BLEED_ROWS            # the rows of every layer that starts at the room top
 PLAY_ABOVE = 1                          # rows of the `play-above` layer (16 px over the room top)

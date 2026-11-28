@@ -2849,7 +2849,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   the hive, the thorn root and tuft ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446): `thorn_spring`, accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)), the exploding stump and root and the bomb; none needed for the thorn vine (D46) and for a pit's warning (static
   geometry, D3). Gaps, one issue each: the falling branch's landing [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443) (delivered: `branch_impact`, [D155](#d155-the-falling-branch-lands-with-chips-leaves-dust-and-a-rustle-and-no-shake-443-2026-11-28)); the falling platform and its log and
   branch skins [#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444); the puffball and the honey fungi [#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445) (delivered: `spore_puff`, and `puffball_burst` for the puffball since D125; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); the thorn root and tuft [#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446) (done); the RedMob's and
-  the boss's strikes [#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447) (delivered: `whip_crack`, `boss_sweep` and `boss_sweep_counter` play once per strike, hit or miss; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); whether blasts shake [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448). Enemy warnings (notice beats, wind-ups under the assist) are
+  the boss's strikes [#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447) (delivered: `whip_crack`, `boss_sweep` and `boss_sweep_counter` play once per strike, hit or miss; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); whether blasts shake [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448) (decided: [D156](#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). Enemy warnings (notice beats, wind-ups under the assist) are
   [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240). The table: STYLE_SYSTEM.md, "Known gaps"; the trap cards' "Art and sound" rows in TRAPS.md.
 - **Gate:** `TrapCatalogTest.everyTrapCardStatesTheConsequenceOfItsAct` (`:core:test`): the card of every catalogue trap
   holds exactly one `Consequence (D93):` statement, and it is one of three forms: sound names in backticks, each a file in
@@ -4560,6 +4560,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D136. The beetle's burst is seen, felt and heard ([#559](https://github.com/jlogicgames/edgard_in_kimeria/issues/559), 2026-11-24)
 
 - **Status:** Accepted (author, 2026-11-24, every recommendation of the proposal; sound A). The author accepted sound A at **-16.5 dBFS** (confirmed 2026-11-24): lowered 0.5 dB from the auditioned -16.0 because the voice-set balance test caps the spread at 3 dB (see below). Amends D100's "No shake". Built; the look, the feel and the sound checked in the running game by the author, 2026-11-24, desktop and web.
+- **Amended** by [D156](#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136) (2026-11-28): the shake has no 160 px range any more (`Beetle.SHAKE_RANGE` is gone); a survivor at any distance feels it.
 - **Amended** by [D149](#d149-the-ground-beetles-burst-kills-in-the-dome-it-is-seen-in-618-amends-d100-d136) (2026-11-27): the lethal shape, the flash, and where the burst's particles go. The test `theSprayStaysInsideTheBlastBox` named below is replaced by `everyParticleOfTheGroundBurstStaysInsideTheDome` (`BeetleFxTest`).
 - **Why:** playtest 2, F23 (D116): the burst "is not visible at all". D93 asks for an act to be seen and heard; D5 that what kills is what is seen.
 - **Decision (the lethal timing, the 80x32 box and the order of `Beetle.burst` are unchanged; everything is cosmetic):**
@@ -5128,3 +5129,26 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests:** `FallingTrapsTest` (once, at the landing, hit and miss; the floor line; no shake), `EnvironmentFxTest`,
   `AllocationBudgetTest.branchImpactThroughTheRealLevel`, `tools/test_generate_sounds.py`.
 
+## D156. Every blast the hero survives shakes the camera, at any distance ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448), 2026-11-28, amends D93, D136)
+
+- **Status:** Decided by the author, 2026-11-28. Built and tested headless; the look and the feel in the running game are not
+  yet checked ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+- **Problem:** the bomb and the exploding stump and root are the biggest blasts and did not shake the screen, while the falling
+  stone, a lever wall, the beetles' bursts and the boss did (audit [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17)).
+- **Decision:**
+  - The stump, the root and the bomb shake **2 px for 0.2 s** (`ScreenShake.BLAST_AMPLITUDE_PX`, `BLAST_SECONDS`), the heaviest
+    jolt in the game. The beetles keep 1.5 px for 0.15 s.
+  - **One rule for all five** (`Level.shakeAfterBlast`): a hero who survives feels it **at any distance**; a blast that kills him
+    starts none, because `Level.playerDied` clears the camera effects and the death beat (D81) is that blast's feedback. "At any
+    distance" removes the 160 px range of D136 for both beetles (`Beetle.SHAKE_RANGE` is gone).
+  - Only through `ScreenShake`, so the Screen shake option (D62) turns it off. The stronger running shake still wins.
+- **Code:** `ExplosiveTrap` now runs `onBlast` after its kill test (the "explosion" sound therefore follows "hit" on a lethal
+  frame) and draws the blast frames without making a `Rectangle` each frame (`blastBox()` did).
+- **Parallax:** the largest shake grew from 1.5 to 2 px, so `check_bleed`'s margin (`parallax_mock.SHAKE`) is 2 (1 + f) px. Eight
+  low clumps placed at top y 292 (D143's raised ones) ended 2 px short of it (last drawn row at screen y 364, needs 366): they
+  moved down to y 294 (`tools/parallax_game.py`), their `-foot` partners with them. The formula and its limits are unchanged.
+- **Tests:** `BlastShakeTest` (stump, root and bomb: full amplitude on the detonation frame for a far and a near survivor, none
+  during the warning or on a lethal blast, 0.2 s, zero offset with the option off), `FlyingBeetleTest` (a far survivor, a lethal
+  burst), `AllocationBudgetTest.blastShakeThroughTheRealLevel` (0.0 B/frame, ceiling 8).
+  **Changed test, by the decision:** `BeetleTest.aFarHeroFeelsNoShake` is now `aFarHeroFeelsTheShakeToo` (it asserted the 160 px
+  range). No tolerance changed.

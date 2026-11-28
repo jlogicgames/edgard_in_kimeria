@@ -464,17 +464,9 @@ public class FlyingBeetle extends Enemy<FlyingBeetle.State> implements CollideBo
         if (player != null && (heroOnIt || reaches(player.hitboxBoundsInto(heroScratch), cx, cy, floor))) player.collidedWithActor(false);
         if (level != null) level.beetleFx().burstAt(cx, cy, floor);
         if (game.playSounds()) game.playSound(Beetle.POP_SOUND);
-        if (level != null && player != null && !player.isGotHit() && feelsBurst(cx, cy))
-            level.fx().shake().start(ScreenShake.BURST_AMPLITUDE_PX, ScreenShake.BURST_SECONDS);
+        if (level != null) level.shakeAfterBlast(ScreenShake.BURST_AMPLITUDE_PX, ScreenShake.BURST_SECONDS);
         pendingRemoval = true;
         removeFromParent();
-    }
-
-    /** The hero's centre is within {@link Beetle#SHAKE_RANGE} of the burst. */
-    private boolean feelsBurst(float cx, float cy) {
-        player.hitboxBoundsInto(heroScratch);
-        float dx = heroScratch.x + heroScratch.width * HALF - cx, dy = heroScratch.y + heroScratch.height * HALF - cy;
-        return dx * dx + dy * dy <= Beetle.SHAKE_RANGE * Beetle.SHAKE_RANGE;
     }
 
     /** A fireball, a stone or a torch ({@code gotHit}) kills it without a burst; body contact is a stomp or nothing (harmless). */

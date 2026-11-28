@@ -702,8 +702,8 @@
   <object id="848" name="rise-fern-foot" gid="3252" x="376" y="384" width="384" height="32"/>
   <object id="849" name="clump-fern" gid="3231" x="-48" y="352" width="176" height="48"/>
   <object id="850" name="clump-fern-foot" gid="3245" x="-80" y="384" width="240" height="32"/>
-  <object id="851" name="clump-leaves" gid="3230" x="101" y="340" width="192" height="48"/>
-  <object id="852" name="clump-leaves-foot" gid="3244" x="69" y="372" width="256" height="32"/>
+  <object id="851" name="clump-leaves" gid="3230" x="101" y="342" width="192" height="48"/>
+  <object id="852" name="clump-leaves-foot" gid="3244" x="69" y="374" width="256" height="32"/>
   <object id="853" name="clump-grass" gid="3232" x="264" y="352" width="144" height="48"/>
   <object id="854" name="clump-grass-foot" gid="3246" x="232" y="384" width="208" height="32"/>
   <object id="855" name="clump-fern" gid="3231" x="386" y="352" width="176" height="48"/>
@@ -833,8 +833,8 @@
   <object id="964" name="clump-leaves-foot" gid="3244" x="811" y="384" width="256" height="32"/>
   <object id="965" name="tuft" gid="3229" x="1014" y="360" width="112" height="64"/>
   <object id="966" name="tuft-foot" gid="3243" x="982" y="392" width="176" height="32"/>
-  <object id="967" name="clump-grass" gid="3232" x="1101" y="340" width="144" height="48"/>
-  <object id="968" name="clump-grass-foot" gid="3246" x="1069" y="372" width="208" height="32"/>
+  <object id="967" name="clump-grass" gid="3232" x="1101" y="342" width="144" height="48"/>
+  <object id="968" name="clump-grass-foot" gid="3246" x="1069" y="374" width="208" height="32"/>
   <object id="969" name="clump-mixed" gid="3233" x="1223" y="352" width="208" height="48"/>
   <object id="970" name="clump-mixed-foot" gid="3247" x="1191" y="384" width="272" height="32"/>
  </objectgroup>
