@@ -213,6 +213,8 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
     private boolean pendingFullscreenToggle = false;
 
     private float timeScale = 1f;
+    /** The longest step one frame of play advances: the hero's own limit ({@code Player.update}), for the whole world (D160). */
+    private static final float MAX_PLAY_STEP = .05f;
     /** Set by a fall into a pit; the room is rebuilt at the start of the next frame (see {@link #rebuildRoom}). */
     private boolean roomResetPending = false;
     private final Vector2 panFrom = new Vector2(), panTo = new Vector2();
@@ -929,7 +931,9 @@ public class KimeriaGame extends ApplicationAdapter implements GameContext {
      * then the death fade, the room fade or the level advances. Separate so the death-to-control test drives this very
      * code (KimeriaGameDeathTimingTest, #341).
      */
-    private void updatePlay(float dt, UiState stateAtFrameStart, boolean levelVisible) {
+    private void updatePlay(float frameSeconds, UiState stateAtFrameStart, boolean levelVisible) {
+        // A stall (a dragged window, a hidden tab, sleep) arrives as one long frame: nothing in play may outrun the hero (D160).
+        float dt = Math.min(frameSeconds, MAX_PLAY_STEP);
         // Age existing effects before combat/reset creates new ones: a slow frame must not
         // consume a newly landed hit's entire flash before it has been rendered once.
         if (levelVisible && level != null && gameStarted && !roomFade.active() && !deathFade.dark()
