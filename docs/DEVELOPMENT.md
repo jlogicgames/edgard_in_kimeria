@@ -327,7 +327,9 @@ A fixed-timestep physics accumulator (matching the source projects) was tried an
 even at a rock-steady 60fps average, real frame durations wobble slightly around 1/60, so
 the accumulator would sometimes step physics twice in one rendered frame and zero times in
 the next — invisible in an FPS counter but visible as jittery movement. `Player` instead
-steps physics once per rendered frame with that frame's own (clamped) delta.
+steps physics once per rendered frame with that frame's own (clamped) delta. The whole of play takes the same step:
+`KimeriaGame.updatePlay` limits the frame time to 0.05 s before anything advances, so after a stall (a dragged window, a hidden
+tab, sleep) the world moves no further than the hero, and below 20 fps all of play slows down together (D160).
 
 ### Per-frame allocation
 

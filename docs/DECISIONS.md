@@ -5267,3 +5267,15 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   `fallingPlatformsGiveWayThroughTheRealLevel`. What in the JVM allocates it was not identified.
 - **Change:** each menu screen is measured in three consecutive windows (300 warm-up, 1200 measured frames each) and the median
   is held to the same ceiling of 8. A per-frame allocation shows in all three windows. The ceiling is not raised.
+
+## D160. One frame of play advances 0.05 s at most, for the whole world (2026-11-28)
+
+- **Bug:** neither backend limits frame time (desktop: the `nanoTime` gap; web: the `currentTimeMillis` gap, and
+  `requestAnimationFrame` stops in a hidden tab), and the game does not pause on a stall. `Player.update` limited its own step to
+  0.05 s while the world took the whole gap.
+- **Measured** (headless, `forest-0` lifts, one long `Level.update`): a rising lift left its rider from a 0.4 s frame, a
+  horizontal one from 0.5 s. A 30 s frame carried a lift about 1,500 px off its track, and it needs about as long to return.
+- **Decision:** `KimeriaGame.updatePlay` limits the frame time to 0.05 s before anything in play advances. Below 20 fps all of
+  play now runs in slow motion together; before, only the hero (and the boss, projectiles and flights) did. At 20 fps and above
+  nothing changes (D98).
+- **Gate:** `KimeriaGameLongFrameTest`.
