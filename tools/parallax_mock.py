@@ -636,7 +636,7 @@ def sprite_placements(scene):
 def draw_sprite(frame, key, x, y, w, h):
     anchor = contrast.SPRITES[key][contrast.SPRITE_ANCHOR]
     left = int(x + (w - frame.width) // 2)
-    top = int(y + h - frame.height) if anchor == 'floor' else int(y)
+    top = int(y + h - frame.height) if anchor == 'floor' else int(y) - contrast.TOP_LIFT.get(key, 0)
     return frame, left, top
 
 

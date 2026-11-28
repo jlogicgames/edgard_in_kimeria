@@ -165,6 +165,9 @@ SPRITE_ANCHOR = 4  # the columns of a SPRITES row used below
 SPRITE_GLOWS = 5
 ROW_CAMERA = 4  # the steady camera x of a result (None where no scenery moves)
 GLOWS = (1.0, GLOW_MIN)
+ESCALATOR_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/Escalator.java'
+# key -> px the game draws a 'top' sprite above its object's top edge: the lift's plank lies on that edge, the rider's line.
+TOP_LIFT = {'Escalator': java_int(ESCALATOR_JAVA, 'SURFACE_ROW')}
 
 # key -> (tier, sheet, frame (x, y, w, h), frame count to check, anchor, glow levels). Anchor 'floor': the frame's
 # bottom on the object's bottom edge; 'top': the frame's top on the object's top edge (world Y grows downward); 'view': as
@@ -1678,7 +1681,7 @@ def sprite_spots(key, x, y, w, h, root):
     for frame in frames(key):
         left = int(x + w / 2 - frame.width / 2)
         top = int(y) if anchor == 'top' else int(lip_top(root, x, y)) if anchor == 'view' else int(y + h - frame.height)
-        spots.append((frame, left, top))
+        spots.append((frame, left, top - TOP_LIFT.get(key, 0)))
     return spots
 
 
