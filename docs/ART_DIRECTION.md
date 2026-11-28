@@ -723,7 +723,7 @@ depends on it.
 
 | Item | Today in the code | Hook | Effect kind | New art | Web cost |
 | --- | --- | --- | --- | --- | --- |
-| **Vines sway; shake with a falling stone** | `ThornVine` (D46) already swings as a lethal pendulum (`angle()` feeds `lethalAt`, forest-2 only). No scenery vine exists. `FallingStone` has `landed()` (a protected no-op in `FallingTrap`). | New Tiled type `HangingVine` (non-lethal scenery, `Level.spawn` switch next to `ThornVine`). `FallingStone` gets `onImpact(Runnable)` set by `Level.spawnFallingTrap`, which calls `fx.groundShake(x, strength)`; each `HangingVine` within reach adds a decaying sway. The lethal `ThornVine` is **not** shaken (its drawn pose must equal its hitbox). | Movement only: rotation about the top centre, as `ThornVine.render` does. | `decor-vine` 8×40, 1 frame, vine `8a8a2a / 4a4a18`, leaves `3b2a5c / 7a5ab0`, contour `0b0814`. Not `trap-vine` (its thorn ball is trap art). | 1 draw per vine, no allocation. |
+| **Vines sway; shake with a falling stone** | `ThornVine` (D46) already swings as a lethal pendulum (`angle()` feeds `lethalAt`, forest-2 only). No scenery vine exists. `FallingStone` had `landed()` (a protected no-op in `FallingTrap`; replaced by `FallingTrap.onImpact`, D155). | New Tiled type `HangingVine` (non-lethal scenery, `Level.spawn` switch next to `ThornVine`). `FallingStone` gets `onImpact(Runnable)` set by `Level.spawnFallingTrap`, which calls `fx.groundShake(x, strength)`; each `HangingVine` within reach adds a decaying sway. The lethal `ThornVine` is **not** shaken (its drawn pose must equal its hitbox). | Movement only: rotation about the top centre, as `ThornVine.render` does. | `decor-vine` 8×40, 1 frame, vine `8a8a2a / 4a4a18`, leaves `3b2a5c / 7a5ab0`, contour `0b0814`. Not `trap-vine` (its thorn ball is trap art). | 1 draw per vine, no allocation. |
 | **Bush (decor) reacts when the player walks past** | No decor object exists. Bushes are part of the `Background` tile layer (`Level.renderBackground`), which stays as it is. | New Tiled type `Decor` (section 4): an animated sprite placed by hand, plays a brush-past animation when the hero walks past. | Sprite animation. | The decor sheets in section 4. | 1 draw per decor object, no pool needed. |
 | **Dust under the player on a jump** (**built**, step 2) | `Player.playerJump(dt)` is the single jump entry (ground jump and ladder hop branches; the wall jump branch went in D121). | After the ordinary ground branch only: `fx.dustPuff(feetX, feetY)` with `feetY = position.y + hitbox.offsetY + hitbox.height`. Y grows downward, so particles start at `feetY` and rise (negative vy). | **Particles**, `Torch` model. | **None.** | Section 3. |
 | **Lever lowers a wall: screen shake, optional ceiling dust** (**built**, steps 1 and 3) | `Level.activateTrigger` calls `performAction()` on each linked `Actionable`; `Wall` moves over `moveDurationSeconds` (private, no getter). `Level.shakeRemaining` and `cameraShakeOffset` already exist (boss feedback). | In `activateTrigger`, if an activated `Actionable` is a `Wall` with `movesVertically()`, call `fx.shake(...)` for the wall's move duration (add a `Wall` getter) and `fx.ceilingGrit(wallCenterX, roomTop)`. | Shake is a camera offset. Grit is **particles**. | **None.** | Section 3. |
@@ -775,6 +775,14 @@ depends on it.
   32, grit 32 to 48 slots. The warning (the growing ground shadow) was checked in the capture and reads before the fall. Checked in
   playtest 2 (2026-11-21, web build, [PLAYTEST_2.md](PLAYTEST_2.md)): the look on the real forest-0 tiles raised no remark,
   which the author accepted as the check (#368).
+- **Falling branch impact (#443, [D155](DECISIONS.md#d155-the-falling-branch-lands-with-chips-leaves-dust-and-a-rustle-and-no-shake-443-2026-11-28), 2026-11-28).** The branch's landing is a lighter
+  version of the stone's: `EnvironmentFx.branchImpact(centerX, floorY, width)` from the same `FallingTrap.onImpact` hook throws 6
+  dust puffs (`KIND_SMOKE`, 3 px, 0.3 to 0.5 s), 6 bark chips (`KIND_GRIT`, 1 to 2 px, 0.25 to 0.45 s; `a8703a` and `937049`, the
+  sheet's lighter barks, since its dark bark sits too close in lightness to the forest's `2c3f66`), 5 leaves (`KIND_LEAF`, 3 to 4 px, 0.5 to
+  0.9 s; `a98ae0` and `3b2a5c` in turn) that flutter down from the fallen limb, and 4 specks of debris (1.5 to 2.5 s). No shake and no
+  vine sway. Measured peaks in `EnvironmentFxTest`: with the lever burst of `forest-0-wall` 39 of 48 grit, with a stone 29 grit and
+  22 of 32 dust; the pools are unchanged. A branch, a stone and a lever burst at once would ask for 53 grit and drop the oldest 5:
+  no shipped room has a stone beside a branch.
 - **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
   (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
 - **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render
@@ -885,11 +893,12 @@ depends on it.
   `Level.vines` (cleared with the room, updated in `updateWorld`, drawn right after the decor, so behind platforms, objects and the hero).
   No collision, not an `Actionable`, not saved; the room rebuild recreates it at rest. World Y grows downward: `y` is the **top**
   (anchor) edge and must be the room's ceiling line or the bottom of a solid block (`forest-0` hangs its vines at y 80 under two slabs, #550, D131); the vine hangs to `y + 40`.
-- **The stone link.** `FallingStone.onImpact(Runnable)` is called once from `landed()`; `Level.spawnFallingTrap` sets it to
-  `Level.groundShake(x, strength)`, which calls `HangingVine.shake(x, strength)` on every vine of the room. The vine sways only if
+- **The stone link.** `FallingTrap.onImpact(Runnable)` is called once at the landing, for both falling traps; for a stone `Level.spawnFallingTrap`'s
+  callback runs `Level.groundShake(x, strength)`, which calls `HangingVine.shake(x, strength)` on every vine of the room. The vine sways only if
   its anchor is within `HangingVine.REACH` = 160 px of the stone's centre; there is no explicit id property, the link is
   geometric and `tools/check_tiled_links.py` requires a `FallingStone` of the same room within that reach (read from the Java
-  constant) so a vine that nothing can move fails the check. The branch (`FallingBranch`) does not shake vines. The doc's `fx.groundShake` is
+  constant) so a vine that nothing can move fails the check. The branch (`FallingBranch`) does not shake vines: its callback
+  throws its own impact (D155, section 3). The doc's `fx.groundShake` is
   `Level.groundShake`: with one listener a broadcast manager would be an empty indirection.
 - **Motion.** `angle = direction * A * exp(-t / 0.5 s) * sin(2 pi * 1.6 Hz * t)`, `A` = 14 degrees times the strength times
   `(1 - distance / REACH)`, started away from the stone, ending after 1.6 s; a stronger running swing is never cut by a weaker
@@ -1056,7 +1065,8 @@ Author-approved design, revised 2026-11-13. The whole point is doubt: the player
   stated in the PR with the measured value. The new code also passes `tools/check_allocations.py`.
 - `WallLessonTest` additions: a lever that lowers the wall starts one shake, one grit burst and one rumble request; a
   non-moving wall (`setActive(false)`) starts none. A jump requests one dust sound; with `playSounds()` false none is requested.
-- `FallingTrapsTest` addition: the stone's impact notifies exactly once; a branch does not.
+- `FallingTrapsTest` addition: the stone's impact notifies exactly once; a branch does not
+  (replaced by D155: the branch's landing notifies too).
 - `Decor` and vine tests: a hero walking past starts the brush animation once and it restarts only when
   finished; a standing hero or one outside the widened box starts nothing; a decor object has no
   collision block; vine sway never changes `ThornVine.lethalAt`/`everLethalIn`; an unknown `kind` fails

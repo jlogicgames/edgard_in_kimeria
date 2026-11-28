@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.GdxNativesLoader;
+import com.jlogicsoftware.kimeria.effects.EnvironmentFx;
+import com.jlogicsoftware.kimeria.effects.KimeriaParticleSystem;
 import com.jlogicsoftware.kimeria.ArtifactInventory;
 import com.jlogicsoftware.kimeria.Assets;
 import com.jlogicsoftware.kimeria.GameContext;
@@ -411,6 +413,68 @@ class FallingTrapsTest {
         Rectangle view = new Rectangle(0, 0, 320, 180);
         assertEquals(0f, l.cameraShakeOffset(view).len(), 0f);
         assertTrue(l.fx().dust().count() > 0 && l.fx().grit().count() > 0);
+    }
+
+    /** #443 (D155): a branch's landing throws dust, bark chips, leaves and debris, all on or above the floor line, and no shake. */
+    @Test void aLandingBranchThrowsDustChipsLeavesAndDebrisOnTheFloorLineWithoutAShake() {
+        Level l = level();
+        FallingBranch b = branch(l);
+        place(l, 148); // in the zone, left of the column: a miss
+        assertEquals(0, l.fx().dust().count() + l.fx().grit().count());
+        framesUntil(l, b, FallingTrap.State.SPENT, 600);
+        assertFalse(dead(l));
+        var dust = l.fx().dust();
+        var grit = l.fx().grit();
+        float floor = b.bodyBounds().y + b.bodyBounds().height;
+        assertEquals(320f, floor, 1e-3f);
+        assertEquals(EnvironmentFx.BRANCH_DUST, dust.count());
+        assertEquals(EnvironmentFx.BRANCH_CHIPS + EnvironmentFx.BRANCH_LEAVES + EnvironmentFx.BRANCH_DEBRIS, grit.count());
+        int leaves = 0;
+        float lowest = 0;
+        for (int i = 0; i < grit.count(); i++) {
+            if (grit.kind(i) == KimeriaParticleSystem.KIND_LEAF) leaves++;
+            else lowest = Math.max(lowest, grit.y(i) + grit.drawSize(i) / 2f);
+        }
+        assertEquals(EnvironmentFx.BRANCH_LEAVES, leaves);
+        assertEquals(floor, lowest, 1e-3f, "the debris rests exactly on the floor line");
+        for (int i = 0; i < dust.count(); i++) {
+            assertTrue(dust.y(i) + dust.drawSize(i) / 2f <= floor + 1e-3f, "dust " + i + " starts on the floor line");
+            assertTrue(dust.x(i) >= BRANCH_LEFT && dust.x(i) <= BRANCH_RIGHT, "dust " + i + " along the branch's width");
+        }
+        assertFalse(l.fx().shake().running(), "a branch is light: no shake");
+        // Through their whole life nothing reaches under the floor, growing dust and a tilted leaf included (larger Y is lower).
+        boolean debrisAtOneSecond = false;
+        for (int f = 1; f <= 170; f++) {
+            frame(l);
+            for (int i = 0; i < dust.count(); i++)
+                assertTrue(dust.y(i) + dust.drawSize(i) / 2f <= floor + 1e-3f, "dust " + i + " is below the floor at frame " + f);
+            for (int i = 0; i < grit.count(); i++) {
+                double tilt = Math.toRadians(grit.tilt(i));
+                double halfHeight = (Math.abs(Math.sin(tilt)) * grit.drawWidth(i) + Math.abs(Math.cos(tilt)) * grit.drawHeight(i)) / 2;
+                assertTrue(grit.y(i) + halfHeight <= floor + 1e-3f, "grit " + i + " is below the floor at frame " + f);
+            }
+            if (f == 60) debrisAtOneSecond = grit.count() == EnvironmentFx.BRANCH_DEBRIS;
+        }
+        assertTrue(debrisAtOneSecond, "after 1 s only the debris is left, still lying there");
+        assertEquals(0, dust.count() + grit.count(), "all faded after the longest life, 2.5 s");
+    }
+
+    @Test void theBranchPlaysBranchImpactOnceAndOnlyAtLandingHitOrMiss() {
+        for (float left : new float[]{148, 175}) { // beside the column (a miss), under it (a hit)
+            Level l = level();
+            FallingBranch b = branch(l);
+            sounds.clear();
+            place(l, left);
+            framesUntil(l, b, FallingTrap.State.FALLING, 600);
+            assertFalse(sounds.contains("branch_impact"), "silent before the landing, left=" + left);
+            framesUntil(l, b, FallingTrap.State.SPENT, 600);
+            assertTrue(b.isSpent(), "left=" + left);
+            for (int i = 0; i < 30; i++) frame(l);
+            assertEquals(left == 175, sounds.contains("hit"), "the death beat only on the hit: " + sounds);
+            assertEquals(1, sounds.stream().filter("branch_impact"::equals).count(), "left=" + left + " " + sounds);
+            assertFalse(sounds.contains("stone_impact"), "its own sound, left=" + left);
+        }
+        assertTrue(java.util.Arrays.asList(Assets.SOUND_EFFECTS).contains("branch_impact"), "the sound is preloaded");
     }
 
     @Test void stoneShadowGrowsThroughTheWarningThenTheStoneFallsAndKillsOnlyOnOverlap() {

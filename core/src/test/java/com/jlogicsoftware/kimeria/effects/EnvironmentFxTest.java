@@ -164,6 +164,37 @@ class EnvironmentFxTest {
         assertTrue(peak < EnvironmentFx.DUST_CAPACITY, "peak " + peak);
     }
 
+    /**
+     * D155: the heaviest loads a branch can meet fit both pools without dropping a particle. A lever's grit burst with a branch
+     * landing in it ({@code forest-0-wall} holds both), and a branch landing with a stone (no shipped room holds the two
+     * with a lever wall as well: those three at once would overflow the grit pool).
+     */
+    @Test void aBranchLandingWithALeverBurstOrAStoneFitsBothPools() {
+        for (boolean lever : new boolean[]{true, false}) {
+            int dustPeak = 0, gritPeak = 0;
+            for (long seed = 1; seed <= 40; seed++) {
+                for (float step : new float[]{1f / 30f, STEP, 1f / 144f}) {
+                    EnvironmentFx fx = fx(seed);
+                    if (lever) {
+                        fx.ceilingGrit(WALL_X, WALL_W, ROOM_TOP);
+                        for (float t = 0; t < EnvironmentFx.GRIT_EMIT_SECONDS / 2; t += step) fx.update(step);
+                    } else fx.stoneImpact(WALL_X, FEET_Y, 16);
+                    fx.dustPuff(FEET_X, FEET_Y);
+                    fx.branchImpact(FEET_X, FEET_Y, 32);
+                    for (int f = 0; f < Math.round(2f / step); f++) {
+                        dustPeak = Math.max(dustPeak, fx.dust().count());
+                        gritPeak = Math.max(gritPeak, fx.grit().count());
+                        fx.update(step);
+                    }
+                }
+            }
+            System.out.println("BRANCH WITH " + (lever ? "LEVER BURST" : "STONE") + " PEAK: dust " + dustPeak + " of "
+                + EnvironmentFx.DUST_CAPACITY + ", grit " + gritPeak + " of " + EnvironmentFx.GRIT_CAPACITY);
+            assertTrue(dustPeak < EnvironmentFx.DUST_CAPACITY, "dust peak " + dustPeak);
+            assertTrue(gritPeak < EnvironmentFx.GRIT_CAPACITY, "grit peak " + gritPeak);
+        }
+    }
+
     @Test void clearLeavesNoParticleAndStopsAnUnfinishedBurst() {
         EnvironmentFx fx = fx(1);
         fx.dustPuff(FEET_X, FEET_Y);

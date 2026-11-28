@@ -19,6 +19,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "disappear.wav": (0.45, 0.65), "boss_hit.wav": (0.19, 0.30), "boss_restore.wav": (0.32, 0.48), "button_click.wav": (0.10, 0.16),
           "dust_puff.wav": (0.10, 0.18), "wall_rumble.wav": (0.9, 1.1),
           "grit_fall.wav": (0.4, 0.6), "explosion.wav": (0.35, 0.55), "stone_impact.wav": (0.25, 0.35), "keepalive.wav": (0.9, 1.1),
+          "branch_impact.wav": (0.36, 0.48),
           "thread.wav": (0.18, 0.26), "deadfall_creak.wav": (0.5, 0.7), "deadfall_knock.wav": (0.14, 0.22),
           "bramble_rustle.wav": (0.30, 0.42), "bramble_lash.wav": (0.12, 0.20),
           "thorn_spring.wav": (0.18, 0.26),
@@ -59,7 +60,7 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
 EXPLOSION_RMS_DB = {"explosion.wav": -15.0}
 # Environment sounds (batch 3): quiet backgrounds, below every voice effect; same tolerance.
 AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rustle.wav": -27.0, "bramble_lash.wav": -21.0,
-                  "thorn_spring.wav": -26.0,
+                  "thorn_spring.wav": -26.0, "branch_impact.wav": -21.0,
                   "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0, "leghold_rattle.wav": -27.0, "leghold_snap.wav": -22.0, "root_thrust.wav": -21.6,
                   "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
                   "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0,

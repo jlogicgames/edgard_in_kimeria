@@ -40,6 +40,7 @@ public abstract class FallingTrap extends Entity {
     private final Rectangle swept = new Rectangle(), landed = new Rectangle();
     private State state = State.ARMED;
     private float warningTotal, warningElapsed, speed;
+    private Runnable onImpact = () -> { };
 
     /**
      * @param body          the authored rectangle: where the trap hangs and its lethal footprint
@@ -123,10 +124,13 @@ public abstract class FallingTrap extends Entity {
         if (canHurt && hero.get().overlaps(lands && spare ? landed : swept)) kill.run();
         if (lands) {
             state = State.SPENT;
-            landed();
+            onImpact.run();
         }
     }
 
-    /** Called once on impact, after the contact check. */
-    protected void landed() { }
+    /**
+     * Called once when the body lands, after the contact check, hit or miss (D73, D155: dust, chips, sound; #239 step 5: the
+     * stone's hanging vines sway). Cosmetic: nothing in the trap reads it.
+     */
+    public void onImpact(Runnable listener) { onImpact = listener; }
 }

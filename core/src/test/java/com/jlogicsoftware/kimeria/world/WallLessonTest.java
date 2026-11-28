@@ -110,7 +110,10 @@ class WallLessonTest {
         return level.objects.stream().filter(FallingBranch.class::isInstance).map(FallingBranch.class::cast).findFirst().orElseThrow();
     }
 
-    /** Geometry sweeps teleport the hero into the branch's column and let him stand there; the trap has its own tests. */
+    /**
+     * Geometry sweeps teleport the hero into the branch's column and let him stand there, and the walk to the lever drops the
+     * branch, whose debris (D155) would be counted as the lever's grit; the trap has its own tests.
+     */
     private void withoutTheBranch(Level level) { level.objects.removeIf(FallingBranch.class::isInstance); }
 
     /** A level whose hero stands in the wall room (index 2) at its safe entrance. */
@@ -540,6 +543,7 @@ class WallLessonTest {
 
     @Test void aLeverThatLowersTheWallStartsOneGritBurstAndOneRumbleAndOneGritSound() {
         Level level = freshRoom();
+        withoutTheBranch(level);
         walkToLever(level);
         sounds.clear(); loops.clear();
         assertEquals(0, level.fx().grit().count());
@@ -558,6 +562,7 @@ class WallLessonTest {
     @Test void withSoundOffTheLeverRequestsNoSoundButStillDropsGrit() {
         soundsOn = false;
         Level level = freshRoom();
+        withoutTheBranch(level);
         walkToLever(level);
         operate(level);
         assertTrue(sounds.isEmpty() && loops.isEmpty(), sounds + " " + loops);
@@ -566,6 +571,7 @@ class WallLessonTest {
 
     @Test void aWallThatCannotMoveStartsNoGritAndNoSound() {
         Level level = freshRoom();
+        withoutTheBranch(level);
         walkToLever(level);
         wall(level).setActive(false);
         sounds.clear(); loops.clear();
