@@ -29,27 +29,24 @@ class ParallaxRendererTest {
     @BeforeEach void setUp() { harness.setUp(); }
     @AfterEach void tearDown() { harness.restoreGlobals(); }
 
-    @Test void snapRoundsHalfUpAsJavaMathRound() {
-        assertEquals(1, ParallaxRenderer.snap(0.5)); assertEquals(0, ParallaxRenderer.snap(-0.5));
-        assertEquals(3, ParallaxRenderer.snap(2.5)); assertEquals(-1, ParallaxRenderer.snap(-1.5));
-        assertEquals(2, ParallaxRenderer.snap(2.4999)); assertEquals(-3, ParallaxRenderer.snap(-2.5000001));
-        for (double v = -50; v < 50; v += 0.125) assertEquals(Math.round(v), ParallaxRenderer.snap(v), "v = " + v);
+    @Test void theHorizontalOffsetIsTheFactorTimesTheCameraFromTheOriginNotSnapped() {
+        assertEquals(0f, screenX(0, 0, 12345.5f, 0), 1e-3f, "factor 0: fixed on screen");
+        assertEquals(-48f, screenX(0, FAR, 320, 0), 1e-3f);
+        assertEquals(-0.4f, screenX(0, MID, 1, 0), 1e-3f, "not rounded to 0 (#678)");
+        assertEquals(-0.8f, screenX(0, MID, 2, 0), 1e-3f, "not rounded to 1");
+        assertEquals(-2.5f, screenX(0, GROVE, 10, 0), 1e-3f);
+        assertEquals(2.5f, screenX(0, GROVE, -10, 0), 1e-3f);
+        assertEquals(-0.48f, screenX(0, FOREGROUND, MOB_X + 0.3f, MOB_X), 1e-3f, "a fraction of a pixel of camera");
     }
 
-    @Test void horizontalShiftIsTheFactorTimesTheCameraFromTheOrigin() {
-        assertEquals(0, ParallaxRenderer.shift(0, 12345, 0));
-        assertEquals(48, ParallaxRenderer.shift(FAR, 320, 0));
-        assertEquals(0, ParallaxRenderer.shift(MID, 1, 0), "0.4 px rounds to 0");
-        assertEquals(1, ParallaxRenderer.shift(MID, 2, 0), "0.8 px rounds to 1");
-    }
-
-    @Test void halfPixelOffsetsRoundUp() {
-        assertEquals(3, ParallaxRenderer.shift(GROVE, 10, 0), "0.25 x 10 = 2.5 rounds to 3");
-        assertEquals(-2, ParallaxRenderer.shift(GROVE, -10, 0), "-2.5 rounds half up to -2");
-    }
+    /** Screen x of the layer point {@code x} at the camera's left edge {@code camX}. */
+    private static float screenX(float x, double factor, float camX, double originX) { return ParallaxRenderer.worldX(x, factor, camX, originX) - camX; }
 
     @Test void aFactorOfOneIsThePlayLayerWhateverTheCamera() {
-        for (int cam : new int[]{0, 7, 1023, 8000}) assertEquals(100f, ParallaxRenderer.worldX(100, 1, cam, 0));
+        for (float cam : new float[]{0, 0.3f, 7, 1023.7f, 8000}) {
+            assertEquals(100f, ParallaxRenderer.worldX(100, 1, cam, 0));
+            assertEquals(MOB_X + 100, ParallaxRenderer.worldX(100, 1, cam, MOB_X), "relative to its room");
+        }
         for (int top : new int[]{0, 8}) assertEquals(96f, ParallaxRenderer.worldY(96, 1, top, FLOOR_CAMERA_TOP));
     }
 
@@ -139,12 +136,12 @@ class ParallaxRendererTest {
         Set<TextureRegion> moon = regionsOf(layer(map, "moon"));
         Rectangle room = new Rectangle(MOB_X, 0, 800, 368);
         float[] screen = new float[3];
-        float[] cameras = {MOB_X, MOB_X + 77, MOB_X + 160};
+        float[] cameras = {MOB_X, MOB_X + 77.3f, MOB_X + 159.5f};
         for (int i = 0; i < cameras.length; i++) {
             draw(renderer, new Rectangle(cameras[i], FLOOR_CAMERA_TOP, VIEW_W, VIEW_H), room);
             screen[i] = firstX(moon) - cameras[i];
         }
-        assertEquals(screen[0], screen[1]); assertEquals(screen[0], screen[2]);
+        assertEquals(screen[0], screen[1], 1e-3f); assertEquals(screen[0], screen[2], 1e-3f);
         assertEquals(27 * 16f, screen[0], "the first drawn tile of the moon on screen, the same in every world (the piece's corner tile at column 26 is transparent: no cell, no draw)");
     }
 
@@ -171,12 +168,44 @@ class ParallaxRendererTest {
         }
     }
 
-    /** The index of a cell of the layer drawn at the camera x {@code camX}, in a row drawn at every vertical position (a one-row layer's only row). */
+    /** The camera follows the hero sideways by fractions of a pixel: every layer glides with it, never stepping back and forth (#678). */
+    @Test void everyLayerGlidesWhileTheCameraMovesSideways() {
+        TiledMapData map = forest1();
+        ParallaxRenderer renderer = new ParallaxRenderer(map);
+        Rectangle room = new Rectangle(MOB_X, 0, 800, 368), view = new Rectangle(MOB_X, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H);
+        ForegroundGroup sharp = map.foregroundGroups.get(2), near = nearGroupOf(map, sharp);
+        for (int tenth = 0; tenth <= 100; tenth++) { // ten world pixels, in steps far below one
+            view.x = MOB_X + 4 + tenth / 10f;   // near the room's first camera, where its edge art (`play-above`) is on screen
+            draw(renderer, view, room);
+            for (SceneryLayer layer : map.sceneryLayers) {
+                int cell = visibleCell(layer, view.x);
+                double authored = layer.offsetX + cell % layer.columns * map.tileWidth;
+                assertDrawnAtScreenX(layer.cells[cell], view.x, authored - layer.parallaxX * view.x, layer.name);
+            }
+            for (ForegroundGroup group : new ForegroundGroup[]{sharp, near}) {
+                int piece = onScreenPiece(group);
+                float left = group.flipX[piece] ? group.x[piece] + group.width[piece] : group.x[piece];
+                assertDrawnAtScreenX(group.regions[piece], view.x, left - group.factorX * (view.x - group.roomX), group.name);
+            }
+        }
+    }
+
+    private void assertDrawnAtScreenX(TextureRegion region, float camLeft, double screenX, String what) {
+        float closest = Float.POSITIVE_INFINITY;
+        for (int i = 0; i < batch.drawnCount(); i++) {
+            if (batch.drawnRegion(i) != region) continue;
+            float off = (float) (batch.drawnX(i) - camLeft - screenX);
+            if (Math.abs(off) < Math.abs(closest)) closest = off;
+        }
+        assertEquals(0f, closest, 2e-3f, what + " at camera left " + camLeft + " is off its gliding place");
+    }
+
+    /** The index of a cell of the layer on screen at the camera x {@code camX}, in a row drawn at every vertical position (a one-row layer's only row). */
     private static int visibleCell(SceneryLayer layer, float camX) {
         for (int i = 0; i < layer.cells.length; i++) {
             int row = i / layer.columns;
-            float screenX = layer.offsetX + i % layer.columns * 16 - ParallaxRenderer.shift(layer.parallaxX, (int) camX, 0);
-            if (layer.cells[i] != null && (layer.rows == 1 || row >= 4 && row <= 18) && screenX >= 0 && screenX < VIEW_W) return i;
+            double screenX = layer.offsetX + i % layer.columns * 16 - layer.parallaxX * camX;
+            if (layer.cells[i] != null && (layer.rows == 1 || row >= 4 && row <= 18) && screenX > -16 && screenX < VIEW_W) return i;   // partly on screen counts
         }
         throw new AssertionError("nothing of " + layer.name + " is on screen at " + camX);
     }
@@ -202,7 +231,7 @@ class ParallaxRendererTest {
         ForegroundGroup sharp = map.foregroundGroups.get(2), near = nearGroupOf(map, sharp);
         Rectangle room = new Rectangle(MOB_X, 0, 800, 368);
         int camera = 100;
-        // a piece of each group that stays on screen at both cameras, drawn at the group's own factor: screenX = x - round(f * (camX - roomX))
+        // a piece of each group that stays on screen at both cameras, drawn at the group's own factor: screenX = x - f * (camX - roomX)
         for (ForegroundGroup group : new ForegroundGroup[]{sharp, near}) {
             double factor = group == near ? NEAR : FOREGROUND;
             Set<TextureRegion> first = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -211,7 +240,7 @@ class ParallaxRendererTest {
             draw(renderer, new Rectangle(MOB_X, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H), room);
             assertEquals(group.x[piece], firstX(first) - MOB_X, 1e-3f, group.name + " at the room's first camera");
             draw(renderer, new Rectangle(MOB_X + camera, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H), room);
-            assertEquals(group.x[piece] - Math.round(factor * camera), firstX(first) - (MOB_X + camera), 1e-3f, group.name + " " + camera + " px along");
+            assertEquals(group.x[piece] - factor * camera, firstX(first) - (MOB_X + camera), 1e-3, group.name + " " + camera + " px along");
         }
     }
 

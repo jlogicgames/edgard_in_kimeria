@@ -46,8 +46,8 @@ at the room's bottom edge (y 368) to reach the screen bottom. These rules are ch
 Vertical parallax: every layer moves in y by its own factor from that floor camera (ORIGIN_Y, below). The camera top still
 changes by up to 8 px (the room is 8 px taller than the view, so it follows the hero between room y 0 and ORIGIN_Y) and during a
 room change; there is no look up or down any more (D111), so no larger range is previewed or checked. The pictures are drawn in
-whole pixels, with offsets snapped as Math.round (half up); the game snaps only the horizontal offset (D154), so the bleed check
-uses its exact vertical one. `--room calm` also writes `preview-calm-walk.gif`.
+whole pixels, with offsets rounded half up; the game snaps neither offset (D154), so the bleed check uses its exact vertical
+one. `--room calm` also writes `preview-calm-walk.gif`.
 """
 import math
 from collections import namedtuple
@@ -549,12 +549,13 @@ def prop(layer, name, default=0.0):
 
 
 def jround(value):
-    """Java's Math.round (half up), as the game snaps a layer offset; Python's round() rounds half to even."""
+    """Half-up rounding (Python's round() rounds half to even): how the mock and the gate put a layer offset in whole pixels."""
     return math.floor(value + HALF_UP)
 
 
 def screen_x(x, factor, cam, room_x=ROOM_X):
-    """Game formula for a layer of factor f: screenX = (x - roomX) - f * (camX - roomX), x as authored relative to the room."""
+    """The game's screenX = (x - roomX) - f * (camX - roomX), x as authored relative to the room, with the offset in the whole pixels
+    the mock draws in: the game's is not snapped (D154), so at a whole camera x the two lie within half a pixel."""
     return x - jround(factor * (cam - room_x))
 
 

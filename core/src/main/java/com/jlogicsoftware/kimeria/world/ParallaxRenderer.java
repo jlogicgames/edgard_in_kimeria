@@ -12,20 +12,18 @@ import com.jlogicsoftware.kimeria.tiled.TiledMapData;
  * "Forest look and parallax layers"; #236). The back pass runs before {@link Level#renderBackground}, the front pass after the
  * fairy, the HUD stays its own later pass.
  *
- * <p>The maths is the card's, in world coordinates (the camera is Y-down): with the camera's left edge {@code camX}, snapped to whole
- * pixels as Java's {@link Math#round} (half up), and its true top edge {@code camTop}, a point of a layer of factor {@code f} sits on
- * screen at {@code x - round(f * (camX - originX))} horizontally and {@code (y - originY) - f * (camTop - originY)} vertically, so a
- * factor of 1 is the play layer. Scenery layers cover the whole map, their {@code originX} is 0; a foreground group's is its room's
- * left edge ({@code roomx}) and its objects are positioned relative to that room. {@code originY} is the room's floor-camera top
- * (see {@link #originY}), where every layer shows as authored. A clouds layer ({@code driftx}, {@code wrapx}) also moves by its drift,
+ * <p>The maths is the card's, in world coordinates (the camera is Y-down): with the camera's true left edge {@code camX} and top edge
+ * {@code camTop}, a point of a layer of factor {@code f} sits on screen at {@code x - f * (camX - originX)} horizontally and
+ * {@code (y - originY) - f * (camTop - originY)} vertically, so a factor of 1 is the play layer. Scenery layers cover the whole map,
+ * their {@code originX} is 0; a foreground group's is its room's left edge ({@code roomx}) and its objects are positioned relative to
+ * that room. {@code originY} is the room's floor-camera top (see {@link #originY}), where every layer shows as authored. A clouds layer ({@code driftx}, {@code wrapx}) also moves by its drift,
  * accumulated over game time ({@code update} runs inside {@code Level.update}: it stops while the game is paused, during a room fade and
  * after black in a death fade, and slows with the death slow motion) and wrapped, independent of the camera.
  *
- * <p>The horizontal parallax offsets are whole pixels added to the camera's true position, so a layer lines up with the play layer
- * whatever the camera's fraction. The vertical ones are not snapped (D154, #678): the camera top moves 8 px at most and slowly, and a
- * snapped offset would step every layer back and forth while it does. The cloud drift is not snapped either, so the clouds glide (the
- * world is drawn at screen resolution, on the screen or in the scene buffer), and the two copies of a drifting layer are exactly
- * {@code wrapx} apart, so the seam stays closed.
+ * <p>No offset is snapped to whole pixels (D154, #678): the camera moves by fractions of a pixel, and a snapped offset would step every
+ * layer back and forth by up to a pixel while it does. The cloud drift is not snapped either, so the clouds glide (the world is drawn
+ * at screen resolution, on the screen or in the scene buffer), and the two copies of a drifting layer are exactly {@code wrapx} apart,
+ * so the seam stays closed.
  *
  * <p>Scenery layers use the room's {@code originY} (a vertical shift measured from the floor camera), so across a room change a
  * map-wide layer holds its place only while the rooms share a floor camera top, as every forest room does (rooms of 368 px at y 0, top
@@ -36,7 +34,6 @@ import com.jlogicsoftware.kimeria.tiled.TiledMapData;
  * <p>Nothing here allocates per frame: regions are resolved at load, loops are indexed.
  */
 public final class ParallaxRenderer {
-    private static final double HALF_UP = 0.5;
     private static final float SAME_ROOM_X = 0.5f;
     /** Tiles drawn past each edge of the view: the camera's shake (up to 5 px) is applied after the view rectangle is taken. */
     private static final int CULL_TILES = 1;
@@ -51,14 +48,11 @@ public final class ParallaxRenderer {
 
     public boolean isEmpty() { return map.sceneryLayers.isEmpty() && map.foregroundGroups.isEmpty(); }
 
-    /** Java's {@link Math#round} on a double, half up: how a horizontal parallax offset is snapped to whole pixels. */
-    public static int snap(double value) { return (int) Math.floor(value + HALF_UP); }
-
-    /** How far a layer of {@code factor} trails the camera sideways: {@code round(factor * (cam - origin))}, in px. */
-    public static int shift(double factor, int cam, double origin) { return snap(factor * (cam - origin)); }
-
-    /** World x of a layer point whose map x is {@code x}: {@code x + camX - shift}, that is screen x {@code x - shift} plus the camera. */
-    public static float worldX(float x, double factor, int camX, double originX) { return x + camX - shift(factor, camX, originX); }
+    /**
+     * World x of a layer point whose x from {@code originX} is {@code x}: screen x {@code x - factor * (camX - originX)} plus the
+     * camera's left edge, not snapped; written so that a factor of 1 gives exactly {@code originX + x}.
+     */
+    public static float worldX(float x, double factor, float camX, double originX) { return x + (float) (originX + (1 - factor) * (camX - originX)); }
 
     /**
      * World y of a layer point whose map y is {@code y}: screen y {@code (y - originY) - factor * (camTop - originY)} plus the camera's
@@ -103,11 +97,10 @@ public final class ParallaxRenderer {
 
     /** The scenery layers, in file order, for the camera view {@code view} and the room whose floor camera top is {@code originY}. */
     public void renderBack(Batch batch, Rectangle view, float originY) {
-        int camX = snap(view.x);
         float packed = batch.getPackedColor();
         for (int i = 0; i < drift.length; i++) {
             SceneryLayer layer = map.sceneryLayers.get(i);
-            float baseX = layer.offsetX + camX - shift(layer.parallaxX, camX, 0);
+            float baseX = worldX(layer.offsetX, layer.parallaxX, view.x, 0);
             float baseY = worldY(layer.offsetY, layer.parallaxY, view.y, originY);
             if (layer.opacity != 1f) batch.setColor(1f, 1f, 1f, layer.opacity);
             if (layer.wrapX > 0) {
@@ -137,12 +130,11 @@ public final class ParallaxRenderer {
 
     /** The foreground groups of the room whose left edge is {@code room.x}, over the world in file order, each at its own factor. */
     public void renderFront(Batch batch, Rectangle view, Rectangle room, float originY) {
-        int camX = snap(view.x);
         float cullX = CULL_TILES * map.tileWidth, cullY = CULL_TILES * map.tileHeight;
         for (int g = 0; g < map.foregroundGroups.size(); g++) {
             ForegroundGroup group = map.foregroundGroups.get(g);
             if (Math.abs(group.roomX - room.x) > SAME_ROOM_X) continue;
-            float baseX = worldX(0, group.factorX, camX, group.roomX);   // the objects are relative to the room: screen x = x - round(f * (camX - roomX))
+            float baseX = worldX(0, group.factorX, view.x, group.roomX);   // the objects are relative to the room: screen x = x - f * (camX - roomX)
             float baseY = worldY(0, group.factorY, view.y, originY);
             for (int i = 0; i < group.count; i++) {
                 float x = baseX + group.x[i], y = baseY + group.y[i];

@@ -315,7 +315,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 - **Shared sky objects (author, 2026-11-19).** One moon and one set of clouds serve every world (Forest, Swamp, Steppe, Castle); in the
   Castle they are seen through the windows. The moon is fixed on screen (factor 0 in x and y): it never moves with the camera and sits
   at the same screen position in every room. The clouds drift continuously over time at a constant speed per cloud layer, independent of
-  the hero and the camera, and wrap at `wrapx`; the sketch uses 3 px/s. The drift is not snapped to whole pixels (only the horizontal camera parallax is), so the clouds glide.
+  the hero and the camera, and wrap at `wrapx`; the sketch uses 3 px/s. The drift is not snapped to whole pixels, so the clouds glide.
 - **Floor line and soil band (D144, [#648](https://github.com/jlogicgames/edgard_in_kimeria/issues/648), 2026-11-26).** The floor
   line of every forest room is **y 304**, so **64 px** of soil (four tile rows, y 304 to 368) show under it for the bottom foreground
   detail. Everything measured from the floor sits 16 px higher than before; the ceiling, sky, moon and clouds stay. The `far`,
@@ -338,7 +338,9 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   ([DEVELOPMENT.md](DEVELOPMENT.md#scenery-layers-and-the-foreground-parallax-236), D108). `python3 tools/parallax_game.py` writes the layers
   into the three forest maps from the sketch pieces; their play tileset is the terrain sketch (`assets/tiles/ForestTerrain.tsx`,
   `assets/images/Tileset/ForestTerrain.png`); the third-party `Tileset.png` and `Forest.tsx` are deleted (D112).
-- **Offset.** `x * (1 - factor)` from the camera, horizontally snapped to whole pixels (vertically not, see below). To match what Tiled shows, use the view centre measured from
+- **Offset.** `x * (1 - factor)` from the camera, **not snapped** to whole pixels on either axis
+  ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)): the camera moves by
+  fractions of a pixel, and a snapped offset stepped every layer back and forth while it did. To match what Tiled shows, use the view centre measured from
   the map's `parallaxoriginx` (Tiled lines the layers up when the view is centred on the origin), not the camera's left edge. The
   map-wide scenery layers (origin 0) never jump horizontally at a room change, and vertically only while the rooms share a floor camera top
   (all forest rooms do, `everyForestRoomSharesOneFloorCameraTop`); the foreground's origin is the new room, so it jumps, and `RoomFade` hides
@@ -347,10 +349,9 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 - **Vertical parallax (author, 2026-11-19).** Each layer's vertical factor is its horizontal factor (sky, stars, moon, clouds 0; far
   0.15, grove 0.25, mid 0.4, play 1, foreground 1.6), measured from the floor camera, so the steady frame is the authored one:
   `screenY = (y - originY) - f * (camTop - originY)`, with y the art's y in the room, originY = room y + 8 (`FallingTrapLayout.floorCameraTop`
-  for a 368 px room and the 360 px view) and camTop the camera's true top edge. The vertical offset is **not snapped** to whole
-  pixels ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)): the top moves slowly over 8 px, and a snapped offset stepped every layer back and forth while it did. The mock draws whole
+  for a 368 px room and the 360 px view) and camTop the camera's true top edge, not snapped (see Offset). The mock draws whole
   pixels: it is exact at the floor camera and within half a pixel of the game at any other camera top; its bleed check uses the
-  game's exact offset. The hero no longer looks up or down
+  game's exact vertical offset. The hero no longer looks up or down
   (D111): the camera top lies between the room top (0, with the follow focus at y 200 or higher) and 8 (at y 208 or lower, so on the floor). The focus is the top of the
   hero's box with 24 px of slack upward, and the camera eases to it ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)), so a jump from the floor leaves the top at 8. The top also moves during
   a room change, so a layer of factor f is seen at most 8 f px off its authored place (12.8 px at the foreground's 1.6), and the screen
@@ -370,7 +371,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 - **Foreground origin per room.** A factor of 1.6 cannot be authored on one map-wide layer: the layer would have to be about 10.6k px wide for forest-1
   (every room's art 1.6 times its length). The foreground is therefore an objectgroup `foreground` of tile objects, each room's pieces
   positioned relative to that room, and the game draws `screenX = (x - roomX) - f * (camX - roomX)` with f = 1.6, x the object's x relative to
-  the room origin, roomX the room's left edge and camX the camera's left edge (whole pixels). Tiled draws the group with one parallax origin,
+  the room origin, roomX the room's left edge and camX the camera's true left edge (the mock and its gate draw whole pixels; the game is never
+  more than half a pixel past the places the gate checks). Tiled draws the group with one parallax origin,
   so it shows the foreground correctly only for one room origin (the group's property `roomx`; the mock shows room 0): the other rooms' art is
   seen offset in Tiled. The game reads up to two groups per room (`foreground-<room>` at 1.6 and, drawn after every sharp group,
   `foreground-near-<room>` at 2.2; `roomx` the room's x in the map, objects relative to the room) and draws the current room's in file order. The mock (`tools/parallax_mock.py`) implements the formula for one room; `--check --game` reads the game
