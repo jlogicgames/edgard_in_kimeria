@@ -4946,7 +4946,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   kills and the free ways past; 2026-11-27 for the rest, approving the card with every recommendation). **Amended
   2026-11-27 after the author's playtests:** the mosquitoes are dots of 1 or 2 px that all fly freely, half as fast as
   first built; the swarm flies at 25 px/s; what kills is an 18×14 core inside the cloud; the flight has no sound and the two
-  sounds left are quiet whines. The author has not played this version ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)).
+  sounds left are quiet whines. The author checked this version in the game, on desktop and web, and accepted it
+  (2026-11-28, [#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)).
 - **Decision:**
   - **Look and shape.** An oval cloud, **22×18 px**, of 28 mosquitoes, **each a dot of 1 or 2 px** (the plain pixels of the
     hive's stingers). All fly freely over the whole cloud, each on a slow path of its own that is a fixed function of the

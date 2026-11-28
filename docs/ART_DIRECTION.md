@@ -1430,7 +1430,7 @@ the ground beetle (`effects.BeetleFx`).
   trial placements in all 24 other forest rooms gave a live outline of 0.295 to 0.834).
 
 **Forest mosquito swarm, built (#645, [D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240); the card approved by the author
-2026-11-27; redrawn as dots after the author's playtest the same day, the dots not yet judged by the author, #645).**
+2026-11-27; redrawn as dots after the author's playtest the same day; the dots accepted by the author in the game 2026-11-28, #645).**
 
 - **Sheet** `assets/images/objects/monster-mosquito.png`, six 2×1 frames, each a dot of 1 or 2 px: `dark1` (a pale wing and an
   ink body), `dark2` (the wing alone), `fed1` and `fed2` (the same with a rose body), `dead` (one dim pixel), `ember` (two

@@ -60,8 +60,8 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `boss_sweep_counter.wav` | synth, swept noise + thud (#447) | 0.40 s | -5.7 / -18.0 | the boss's counter sweep starts, hit or miss; accepted as its own sound, apart from `boss_sweep` | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | a honey fungus bursts, the same for the harmless and the false one (`Level`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `puffball_burst.wav` | synth, jet noise + rough thump and wheeze (#558) | 0.45 s | -11.2 / -21.5 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), once per cloud (`Level.puffballSound`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
-| `mosquito_scatter.wav` | synth, one wavering wing tone (#645) | 0.45 s | -23.8 / -31.0 | a sword swing scatters a swarm, once per swing (`MosquitoSwarm.hitBySword`) | second version, not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
-| `mosquito_die.wav` | synth, five sinking wing tones (#645) | 0.70 s | -18.1 / -31.0 | a swarm is killed by a stone, a fireball or a torch | second version, not heard yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
+| `mosquito_scatter.wav` | synth, one wavering wing tone (#645) | 0.45 s | -23.8 / -31.0 | a sword swing scatters a swarm, once per swing (`MosquitoSwarm.hitBySword`) | second version, accepted by the author 2026-11-28 ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
+| `mosquito_die.wav` | synth, five sinking wing tones (#645) | 0.70 s | -18.1 / -31.0 | a swarm is killed by a stone, a fireball or a torch | second version, accepted by the author 2026-11-28 ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
 
 Not effects and out of scope: `intro.wav` (project-original music, 16 s) and `main_menu.mp3` (music from the Flame/Rust versions, tracked in #189).
@@ -353,7 +353,8 @@ Its burst plays `beetle_pop` (one blast for both beetles), its death the shared 
 
 ### Forest mosquito swarm (#645, seeds 7602 and 7603, [D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240))
 
-Second version, 2026-11-27, not yet heard by the author ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)); the other generated files stay byte-identical.
+Second version, 2026-11-27, accepted by the author in the game 2026-11-28 ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645));
+the other generated files stay byte-identical.
 The author's playtest of the first three sounds: far too loud and unlike mosquitoes, which whine very quietly. The loop
 heard while a swarm was in view (`mosquito_whine`, seed 7601) is removed, so a swarm flies in silence. Previews:
 `art/audio/previews/mosquito_*.png`. Constants: `MOSQUITO_*`, `SCATTER_*`, `DIE_*` in `tools/audio/generate_sounds.py`.
