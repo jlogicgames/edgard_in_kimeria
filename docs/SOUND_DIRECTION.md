@@ -59,9 +59,9 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `whip_crack.wav` | synth, swept noise + driven crack (#447) | 0.16 s | -3.1 / -18.0 | the RedMob's whip starts its strike frame, hit or miss (D93, `RedMob`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `boss_sweep.wav` | synth, swept noise (#447) | 0.30 s | -7.1 / -18.0 | the boss's normal sweep starts its active frame, hit or miss (`Boss`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `boss_sweep_counter.wav` | synth, swept noise + thud (#447) | 0.40 s | -5.7 / -18.0 | the boss's counter sweep starts, hit or miss; accepted as its own sound, apart from `boss_sweep` | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
-| `boss_call.wav` | synth, voice (#625) | 0.60 s | -8.1 / -18.0 | the boss calls its falling rocks (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
-| `boss_blow_charge.wav`, `boss_blow_charge_long.wav` | synth, voice + hiss (#625) | 0.90 / 1.35 s | -4.4 / -19.4, -3.5 / -19.4 | the boss winds up its blow, the long one with the assist (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
-| `boss_blow.wav` | synth, swept noise + thud (#625) | 0.45 s | -3.7 / -17.0 | the boss's blow goes off, hit or miss (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
+| `boss_call.wav` | synth, voice (#625) | 0.60 s | -8.1 / -18.0 | the boss calls its falling rocks (`BossAttacks`) | accepted by the author 2026-11-28 ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
+| `boss_blow_charge.wav`, `boss_blow_charge_long.wav` | synth, voice + hiss (#625) | 0.90 / 1.35 s | -4.4 / -19.4, -3.5 / -19.4 | the boss winds up its blow, the long one with the assist (`BossAttacks`) | accepted by the author 2026-11-28 ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
+| `boss_blow.wav` | synth, swept noise + thud (#625) | 0.45 s | -3.7 / -17.0 | the boss's blow goes off, hit or miss (`BossAttacks`) | accepted by the author 2026-11-28 ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
 | `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | a honey fungus bursts, the same for the harmless and the false one (`Level`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `puffball_burst.wav` | synth, jet noise + rough thump and wheeze (#558) | 0.45 s | -11.2 / -21.5 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), once per cloud (`Level.puffballSound`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `platform_crack.wav` | synth, noise: snaps, grinding and crackle, no voice (#444) | 0.38 s | -10.1 / -21.0 | a falling platform, rotten log or rotten branch gives way, once, as it starts to drop (`Level.platformGaveWay`) | second version, accepted by the author 2026-11-28 ([#682](https://github.com/jlogicgames/edgard_in_kimeria/issues/682)) |
@@ -507,7 +507,7 @@ land with `stone_impact` (look-alikes share a sound, D93). All sit inside the vo
   under a hiss that grows to the end; exactly the blow's warning.
 - `boss_blow` (0.45 s): driven noise falling 2600 -> 250 Hz over a low thud.
 
-**Audition: not verified** ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)). Where they play:
+**Audition** ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)): the author accepted them on 2026-11-28, after a check in the running game. Where they play:
 `forest-boss` in `forest-2`, stand far for the call, close for the blow. Constants: `BOSS_CALL_*`, `BOSS_CHARGE_*`,
 `BOSS_BLOW_*` in `tools/audio/generate_sounds.py`; previews `art/audio/previews/boss_call.png`, `boss_blow_charge.png`,
 `boss_blow_charge_long.png`, `boss_blow.png`.
