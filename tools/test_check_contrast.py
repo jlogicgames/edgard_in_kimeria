@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Behavioural checks for the contrast tiers gate (tools/check_contrast.py, D76)."""
 import json
+import math
 import unittest
 import xml.etree.ElementTree as ET
 from unittest import mock
+import numpy as np
 from PIL import Image
 import check_contrast as gate
 
@@ -81,6 +83,21 @@ SNAIL_LEFT_END = 272
 SNAIL_RIGHT_END = 384
 SNAIL_BLOCK_FACE = 196
 SWEEP = (1, 0, 5, 1)  # x step, y from, y to, y step over the dark ground
+# The synthetic images of VectorizedTest: random colours, and alphas on both sides of ALPHA_MIN.
+SEED = 76
+SYNTHETIC_SPRITE = (7, 6)  # width, height
+SYNTHETIC_GROUND = (12, 10)
+SYNTHETIC_ALPHAS = (0, gate.ALPHA_MIN - 1, gate.ALPHA_MIN, gate.CHANNEL_MAX)
+SYNTHETIC_SPRITES = 4
+PAST_EDGE = 2  # positions this far past every side of the background: some, then none, of the sprite is on it
+BRIGHTENING = 1.6  # a glow that clips the light channels at 255
+SYNTHETIC_GLOWS = (1.0, gate.GLOW_MIN, BRIGHTENING)
+SOLID_SIZE = 8  # an opaque sprite this large, SOLID_AT up and left, hides all of a SMALL_GROUND: body pixels, no edge
+SMALL_GROUND = 3
+SOLID_AT = -2
+SWEEP_GROUND = (24, 20)  # a background wider and taller than the sprite the sweep places on it
+SYNTHETIC_SWEEP = (3, 0, 9, 2)  # x step, y from, y to, y step; from 0 a pair above or left of its pixel wraps, as in PIL
+SYNTHETIC_LIGHT_AT = (-2, -1)
 
 
 def square(colour, size=6, contour=None):
@@ -173,6 +190,106 @@ class MetricTest(unittest.TestCase):
         plain, _ = gate.measure(rim, background(), RIM_AT, RIM_AT)
         lit, _ = gate.measure(rim, gate.with_halo(background(), halo, HALO_CENTRE, HALO_CENTRE, BRIGHTEST), RIM_AT, RIM_AT)
         self.assertLess(lit, plain)
+
+
+def reference_measure(sprite, ground, x, y, glow=1.0):
+    """gate.measure written pixel by pixel."""
+    pairs, body = [], []
+    for j in range(sprite.height):
+        for i in range(sprite.width):
+            if not gate.is_opaque(sprite, i, j) or not (0 <= x + i < ground.width and 0 <= y + j < ground.height):
+                continue
+            s = gate.oklab(sprite.getpixel((i, j)), glow)
+            body.append(math.dist(s, gate.oklab(ground.getpixel((x + i, y + j)))))
+            for u, v in gate.NEIGHBOURS:
+                if not gate.is_opaque(sprite, i + u, j + v) and 0 <= x + i + u < ground.width and 0 <= y + j + v < ground.height:
+                    pairs.append(abs(s[0] - gate.oklab(ground.getpixel((x + i + u, y + j + v)))[0]))
+    if not body:
+        return None, None
+    return (sum(pairs) / len(pairs) if pairs else None), sum(body) / len(body)
+
+
+def reference_chroma_p90(sprite, glow=1.0):
+    """gate.chroma_p90 written pixel by pixel."""
+    chroma = sorted(math.hypot(*gate.oklab(sprite.getpixel((i, j)), glow)[1:])
+                    for j in range(sprite.height) for i in range(sprite.width) if gate.is_opaque(sprite, i, j))
+    return chroma[max(0, int(gate.CHROMA_PERCENTILE * len(chroma)) - 1)]
+
+
+def reference_swept_outline(pairs, ground, step_x, y_from, y_to, step_y, size, xs=None):
+    """gate.swept_outline written pair by pair."""
+    pixels, worst = ground.load(), (1.0, 0, 0)
+    for x in (range(0, ground.width - size, step_x) if xs is None else xs):
+        for y in range(y_from, min(y_to, ground.height - size), step_y):
+            total = 0.0
+            for lightness, dx, dy, added in pairs:
+                lit = tuple(min(gate.CHANNEL_MAX, c + a) for c, a in zip(pixels[x + dx, y + dy][:gate.RGB], added))
+                total += abs(lightness - gate.oklab(lit)[0])
+            outline = total / len(pairs)
+            if outline < worst[0]:
+                worst = (outline, x, y)
+    return worst
+
+
+class VectorizedTest(unittest.TestCase):
+    """The array code gives, to the last bit, what the pixel-by-pixel reference above gives."""
+
+    def setUp(self):
+        self.random = np.random.default_rng(SEED)
+
+    def noise(self, size, alphas=SYNTHETIC_ALPHAS):
+        """A test fixture, not artwork: random colours, each pixel's alpha drawn from `alphas`."""
+        width, height = size
+        pixels = self.random.integers(0, gate.CHANNEL_MAX, (height, width, gate.ALPHA + 1), dtype=np.uint8, endpoint=True)
+        pixels[..., gate.ALPHA] = self.random.choice(alphas, (height, width))
+        return Image.fromarray(pixels, 'RGBA')
+
+    def assert_same(self, sprite, ground, x, y, glow):
+        expected = reference_measure(sprite, ground, x, y, glow)
+        found = gate.measure(sprite, ground, x, y, glow)
+        self.assertEqual(found, expected, f'at ({x}, {y}) glow {glow}')
+        self.assertEqual([type(v) for v in found], [type(v) for v in expected])
+        return found
+
+    def test_measure_matches_the_reference_wherever_the_sprite_lies(self):
+        width, height = SYNTHETIC_SPRITE
+        measured, unmeasured = 0, 0
+        for _ in range(SYNTHETIC_SPRITES):
+            sprite, ground = self.noise(SYNTHETIC_SPRITE), self.noise(SYNTHETIC_GROUND)
+            for background_image in (ground, ground.convert('RGB')):
+                for x in range(-width - PAST_EDGE, ground.width + PAST_EDGE):
+                    for y in range(-height - PAST_EDGE, ground.height + PAST_EDGE):
+                        for glow in SYNTHETIC_GLOWS:
+                            body = self.assert_same(sprite, background_image, x, y, glow)[1]
+                            measured, unmeasured = measured + (body is not None), unmeasured + (body is None)
+        self.assertTrue(measured and unmeasured, 'both on the background and wholly off it')
+
+    def test_measure_matches_the_reference_with_nothing_opaque_or_no_edge(self):
+        ground = self.noise(SYNTHETIC_GROUND)
+        hidden = self.noise(SYNTHETIC_SPRITE, alphas=(0, gate.ALPHA_MIN - 1))
+        self.assertEqual(self.assert_same(hidden, ground, 1, 1, 1.0), (None, None))
+        solid = self.noise((SOLID_SIZE, SOLID_SIZE), alphas=(gate.CHANNEL_MAX,))
+        outline, body = self.assert_same(solid, self.noise((SMALL_GROUND, SMALL_GROUND)), SOLID_AT, SOLID_AT, 1.0)
+        self.assertIsNone(outline)
+        self.assertIsNotNone(body)
+        self.assertIsNotNone(self.assert_same(solid, ground, 1, 1, 1.0)[0], 'the box edge of a solid sprite is an edge')
+
+    def test_chroma_matches_the_reference(self):
+        for _ in range(SYNTHETIC_SPRITES):
+            sprite = self.noise(SYNTHETIC_SPRITE)
+            for glow in SYNTHETIC_GLOWS:
+                self.assertEqual(gate.chroma_p90(sprite, glow), reference_chroma_p90(sprite, glow))
+
+    def test_the_sweep_matches_the_reference_with_and_without_light(self):
+        size = max(SYNTHETIC_SPRITE)
+        for _ in range(SYNTHETIC_SPRITES):
+            sprite, light, ground = self.noise(SYNTHETIC_SPRITE), self.noise(SYNTHETIC_SPRITE), self.noise(SWEEP_GROUND)
+            flat = Image.new('RGBA', SWEEP_GROUND, FOREST_BLUE)  # every position ties: the first one wins
+            for lamp, under in ((None, ground), (light, ground), (None, flat)):
+                pairs = gate.edge_pairs(sprite, lamp, *SYNTHETIC_LIGHT_AT, 1.0)
+                for xs in (None, (0,), (1, 0)):
+                    self.assertEqual(gate.swept_outline(pairs, under, *SYNTHETIC_SWEEP, size, xs=xs),
+                                     reference_swept_outline(pairs, under, *SYNTHETIC_SWEEP, size, xs=xs))
 
 
 class RuleTest(unittest.TestCase):
@@ -641,15 +758,19 @@ class ClassificationTest(unittest.TestCase):
 
 
 class ShippedArtTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.shipped = gate.run()  # the unpatched run over the shipped files; the tests below only read it
+
     def test_shipped_decor_is_inside_the_decor_tier(self):
-        results, errors, _ = gate.run()
+        results, errors, _ = self.shipped
         decor = [e for e in errors if '(decor)' in e]
         self.assertEqual(decor, [])
         for key in ('Decor:bush', 'Decor:lookalike', 'HangingVine'):
             self.assertIn(key, results)
 
     def test_shipped_collectables_stay_active_over_their_halo(self):
-        results, errors, _ = gate.run()
+        results, errors, _ = self.shipped
         self.assertEqual([e for e in errors if 'Collectable' in e], [])
         for key in ('Collectable:Coin', 'Collectable:Bat', 'Collectable:Mushroom'):
             self.assertGreaterEqual(min(r[OUTLINE] for r in results[key]), gate.ACTIVE_OUTLINE_MIN)
