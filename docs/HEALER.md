@@ -65,6 +65,7 @@ active gameplay action keys confirm; controller A and gameplay action buttons co
 Navigation takes priority over confirmation, including the mirrored D-pad mappings.
 Touch/mouse selects a choice directly. Only Esc opens pause during the dialogue;
 Resume returns to the same line/choice with held inputs suppressed. Pausing freezes typing.
+Leaving the window does not pause the dialogue, which already waits for a press; the first frame back answers nothing (D164).
 The pause glitch processes the frozen dialogue (portraits, current text and choices); the
 pause menu is drawn crisply above it. The underlying gameplay room is never shown.
 

@@ -393,6 +393,11 @@ parts that shape the code:
   that bypasses the loading screen, and the save only changes on level completion.
 - **Continue vs Resume:** `UiState.PAUSED` and the pause menu's *Resume* continue the live run;
   *Continue* on the main menu loads a saved run into a fresh `StartData`.
+- **Leaving the game (D164):** `KimeriaGame.pause()`/`resume()` are the backends' calls, not the pause key. `pause()` opens the
+  pause menu only over a running level and `updatePlay` holds one that becomes ready meanwhile. The LWJGL3 backend calls them
+  when the window is minimized and, set in `Lwjgl3Launcher`, when it loses focus; the TeaVM backend calls them for a hidden
+  page, and `WebLauncher` adds window `blur`. The focus-loss half is off in debug mode. A minimized desktop window keeps calling
+  `render()`, so nothing may rely on frames stopping.
 
 ## Assets
 

@@ -413,6 +413,12 @@ public class Overlay {
         return Math.min(MAX_BUTTONS_W, width);
     }
 
+    /** Takes {@code mouseLogical} as where the cursor already rests: the next {@link #buttons} does not count it as a move. */
+    public void restPointer(Vector2 mouseLogical) {
+        hasLastMouse = true;
+        lastMouse.set(mouseLogical);
+    }
+
     /**
      * Draws {@code menu}'s button list starting at {@code startY} (top edge
      * of the first button), handles mouse hover/click and keyboard/gamepad
