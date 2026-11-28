@@ -1944,10 +1944,55 @@ def mosquito_die() -> list[float]:
     return finish_rms(out, DIE_RMS_DB, MOSQUITO_PEAK_CAP_DB)
 
 
+# ---------------------------------------------------------------- branch impact (#443, D155): "shhukh" and rustling leaves
+# No voice, no thud (the author's audition: a real branch falling): a rush of air through the crown as it lands, noise whose
+# band sinks, then the leaves rustling and settling, grains that thin out and fade. It plays once per falling branch.
+BRANCH_SWOOSH_SEED = 7801
+BRANCH_LEAVES_SEED = 7802
+BRANCH_IMPACT_DURATION = 0.42
+BRANCH_IMPACT_RMS_DB = -21.0
+BRANCH_IMPACT_PEAK_DB = -9.0  # the environment cap
+BRANCH_SWOOSH_SWEEP = (3200.0, 900.0)  # Hz centre, from and to: the "sh" sinking into "ukh"
+BRANCH_SWOOSH_BW = 1800.0    # Hz
+BRANCH_SWOOSH_ATTACK = 0.030  # s, it swells in
+BRANCH_SWOOSH_TAU = 0.075    # s, decay
+BRANCH_LEAVES = 34           # rustle grains
+BRANCH_LEAF_START = 0.020    # s, earliest grain
+BRANCH_LEAF_SPAN = 0.34      # s, the window the grains start in
+BRANCH_LEAF_CROWDING = 1.7   # a grain's start is span * u ** crowding: dense at the landing, thinning out
+BRANCH_LEAF_LEN = (0.012, 0.034)  # s, shortest and longest grain
+BRANCH_LEAF_BAND = (3800.0, 2600.0)   # Hz centre (varied by +-30 %), bandwidth
+BRANCH_LEAF_GAIN = 0.55      # against the swoosh (peak 1.0), times a random 0.4..1 level, falling to a third by the last
+BRANCH_LOWPASS_HZ = 6500.0
+BRANCH_DRIVE = 3.5           # tanh grit, and a lower crest factor
+
+
+def branch_impact() -> list[float]:
+    n = n_samples(BRANCH_IMPACT_DURATION)
+    rush = bandpass(noise(random.Random(BRANCH_SWOOSH_SEED), n),
+                    lambda t: lerp(BRANCH_SWOOSH_SWEEP[0], BRANCH_SWOOSH_SWEEP[1], t), BRANCH_SWOOSH_BW)
+    env = envelope(n, BRANCH_SWOOSH_ATTACK, BRANCH_SWOOSH_TAU)
+    rp = max(abs(v) for v in rush) or 1.0
+    mix = [v * e / rp for v, e in zip(rush, env)]
+    rng = random.Random(BRANCH_LEAVES_SEED)
+    for share in sorted(rng.random() ** BRANCH_LEAF_CROWDING for _ in range(BRANCH_LEAVES)):
+        nl = n_samples(rng.uniform(*BRANCH_LEAF_LEN))
+        grain = bandpass(noise(rng, nl), BRANCH_LEAF_BAND[0] * rng.uniform(0.7, 1.3), BRANCH_LEAF_BAND[1])
+        gp = max(abs(v) for v in grain) or 1.0
+        shaped = [v / gp * math.sin(math.pi * j / nl) ** 2 for j, v in enumerate(grain)]
+        level = BRANCH_LEAF_GAIN * rng.uniform(0.4, 1.0) * lerp(1.0, 1.0 / 3.0, share)
+        _add_at(mix, n_samples(BRANCH_LEAF_START + share * BRANCH_LEAF_SPAN), shaped, level)
+    mix = lowpass(mix, BRANCH_LOWPASS_HZ)
+    mp = max(abs(a) for a in mix) or 1.0
+    mix = [math.tanh(BRANCH_DRIVE * a / mp) for a in mix]
+    return finish_rms(mix, BRANCH_IMPACT_RMS_DB, BRANCH_IMPACT_PEAK_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
-               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "keepalive.wav": keepalive,
+               "grit_fall.wav": grit_fall, "explosion.wav": explosion, "stone_impact.wav": stone_impact, "branch_impact.wav": branch_impact,
+               "keepalive.wav": keepalive,
                "thread.wav": thread, "deadfall_creak.wav": deadfall_creak, "deadfall_knock.wav": deadfall_knock,
                "bramble_rustle.wav": bramble_rustle, "bramble_lash.wav": bramble_lash,
                "thorn_spring.wav": thorn_spring,

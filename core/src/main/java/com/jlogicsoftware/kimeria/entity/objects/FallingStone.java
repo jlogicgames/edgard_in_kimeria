@@ -75,7 +75,6 @@ public class FallingStone extends FallingTrap {
     private final float lipTop;
     private float trickleClock;
     private int trickleEmitted, trickles;
-    private Runnable onImpact = () -> { };
 
     /** @param lipTop the world y of the lip's top edge (validated on screen by {@code FallingTrapLayout}) */
     public FallingStone(Assets assets, Skin skin, Rectangle body, Rectangle zone, float landingBottom, float lipTop,
@@ -131,12 +130,6 @@ public class FallingStone extends FallingTrap {
                 dark ? DARK_R : LIGHT_R, dark ? DARK_G : LIGHT_G, dark ? DARK_B : LIGHT_B);
         }
     }
-
-    /** Called once when the stone lands (#239 step 5: the hanging vines sway). Cosmetic: nothing in the trap reads it. */
-    public void onImpact(Runnable listener) { onImpact = listener; }
-
-    @Override
-    protected void landed() { onImpact.run(); }
 
     /** True while the ground shadow is drawn: through the warning and the fall, until the stone lands. */
     public boolean shadowVisible() { return state() == State.WARNING || state() == State.FALLING; }

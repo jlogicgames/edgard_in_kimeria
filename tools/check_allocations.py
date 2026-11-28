@@ -49,6 +49,8 @@ HOT_METHODS = {
     ('effects/EnvironmentFx.java', 'emitGrit'): 'called from update while a grit burst is emitting',
     ('effects/EnvironmentFx.java', 'dustPuff'): 'called from Player.playerJump, which runs inside the player update',
     ('effects/EnvironmentFx.java', 'ceilingGrit'): 'called from Level.activateTrigger inside the player update',
+    ('effects/EnvironmentFx.java', 'branchImpact'): 'called from FallingTrap.update through its onImpact callback, in the frame a branch lands (#443)',
+    ('effects/EnvironmentFx.java', 'stoneImpact'): 'called from FallingTrap.update through its onImpact callback, in the frame a stone lands (#347)',
     ('effects/EnvironmentFx.java', 'thornSpecks'): 'called from Level.thornSprung, inside ThornTrap.update, in the frame a thorn root turns lethal (#446)',
     ('world/Level.java', 'thornSprung'): 'called from ThornTrap.update through its onSpring callback, in the frame a thorn trap turns lethal (#446)',
     ('effects/PuffballFx.java', 'release'): 'called from Puffball.update in the frame a cloud starts (#558)',

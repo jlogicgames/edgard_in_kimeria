@@ -340,7 +340,7 @@ public class Level implements WorldObject {
     /** Seconds the looping wall rumble still has to run (0 when it is not playing). */
     private float rumbleSeconds;
     private boolean rumbling;
-    private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall", STONE_IMPACT_SOUND = "stone_impact";
+    private static final String WALL_RUMBLE_SOUND = "wall_rumble", GRIT_FALL_SOUND = "grit_fall", STONE_IMPACT_SOUND = "stone_impact", BRANCH_IMPACT_SOUND = "branch_impact";
     private static final String DEADFALL_CREAK_SOUND = "deadfall_creak", DEADFALL_KNOCK_SOUND = "deadfall_knock";
     /** The bramble's warning rustle and its grow lash (#364, D89). */
     static final String BRAMBLE_RUSTLE_SOUND = "bramble_rustle", BRAMBLE_LASH_SOUND = "bramble_lash";
@@ -1247,20 +1247,26 @@ public class Level implements WorldObject {
         java.util.function.Supplier<Rectangle> hero = () -> player.hitboxBoundsInto(trapHeroScratch);
         java.util.function.BooleanSupplier grounded = () -> player.isOnGround();
         Runnable kill = () -> player.collidedWithActor(false);
-        FallingStone stone = spec.stone()
-            ? new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(), spec.lipTop(), game.trapWarnings(), hero, grounded, kill)
-            : null;
-        if (stone != null) {
-            float x = spec.body().x + spec.body().width / 2f;
-            float floor = spec.landing(), width = spec.body().width;
-            stone.onImpact(() -> {
+        float x = spec.body().x + spec.body().width / 2f;
+        float floor = spec.landing(), width = spec.body().width;
+        FallingTrap trap;
+        if (spec.stone()) {
+            trap = new FallingStone(assets, spec.skin(), spec.body(), spec.zone(), spec.landing(), spec.lipTop(), game.trapWarnings(), hero, grounded, kill);
+            trap.onImpact(() -> {
                 groundShake(x, HangingVine.STONE_STRENGTH);
                 fx.stoneImpact(x, floor, width);
                 fx.shake().start(ScreenShake.STONE_AMPLITUDE_PX, ScreenShake.STONE_SECONDS);
                 if (game.playSounds()) game.playSound(STONE_IMPACT_SOUND);
             });
-            objects.add(stone);
-        } else objects.add(new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill));
+        } else {
+            trap = new FallingBranch(assets, spec.body(), spec.zone(), spec.landing(), game.trapWarnings(), hero, grounded, kill);
+            // D155: lighter than the stone, with no shake and no swaying vines.
+            trap.onImpact(() -> {
+                fx.branchImpact(x, floor, width);
+                if (game.playSounds()) game.playSound(BRANCH_IMPACT_SOUND);
+            });
+        }
+        objects.add(trap);
     }
 
     /**

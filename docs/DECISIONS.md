@@ -1754,7 +1754,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **New skill:** `kimeria-sound`, the order of work of SOUND_DIRECTION.md.
 - **Why:** the audits each left a working system written in parallel; without one entry point and one workflow the
   next feature picks one system and misses the others.
-- **Not verified:** principle 4's gaps, found by the audit of [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17), are [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443) to [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448) (#447 is delivered, see D93) and, for enemies, [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240); whether the Codex import overwrites
+- **Not verified:** principle 4's gaps, found by the audit of [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17), are [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443) to [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448) (#443 and #447 are delivered, see D93) and, for enemies, [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240); whether the Codex import overwrites
   an existing `.agents/skills` folder of the same name (its code was read only as strings; `check_skills.py` fails if a
   shared skill turns into a pointer); Codex reading the `hookSpecificOutput` reminder (Claude Code's format). All three
   are checked in [#389](https://github.com/jlogicgames/edgard_in_kimeria/issues/389).
@@ -2847,7 +2847,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - Look-alikes share their sound: a sound never tells which of a D63 pair kills.
 - **Audit (measured from the code, not in the running game):** complete for the falling stone, the deadfall, the bramble,
   the hive, the thorn root and tuft ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446): `thorn_spring`, accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)), the exploding stump and root and the bomb; none needed for the thorn vine (D46) and for a pit's warning (static
-  geometry, D3). Gaps, one issue each: the falling branch's landing [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443); the falling platform and its log and
+  geometry, D3). Gaps, one issue each: the falling branch's landing [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443) (delivered: `branch_impact`, [D155](#d155-the-falling-branch-lands-with-chips-leaves-dust-and-a-rustle-and-no-shake-443-2026-11-28)); the falling platform and its log and
   branch skins [#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444); the puffball and the honey fungi [#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445) (delivered: `spore_puff`, and `puffball_burst` for the puffball since D125; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); the thorn root and tuft [#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446) (done); the RedMob's and
   the boss's strikes [#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447) (delivered: `whip_crack`, `boss_sweep` and `boss_sweep_counter` play once per strike, hit or miss; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); whether blasts shake [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448). Enemy warnings (notice beats, wind-ups under the assist) are
   [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240). The table: STYLE_SYSTEM.md, "Known gaps"; the trap cards' "Art and sound" rows in TRAPS.md.
@@ -5108,3 +5108,23 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Web run (2026-11-28, release build, a test ladder added to the served `forest-0` only, frames stepped by script):** a jump
   from the floor moved the picture by 0 px; climbing and falling moved it the full 8 px over many frames, at most 1 px between two
   frames. Not checked: desktop, a lift, and how it looks to a person.
+
+## D155. The falling branch lands with chips, leaves, dust and a rustle, and no shake (#443, 2026-11-28)
+
+- **Status:** The card and the choice of no shake approved by the author, 2026-11-28, before the code; the sound accepted by
+  the author the same day, in its second version.
+- **Context:** the falling branch landed silently, while its twin the falling stone got the D73 impact; principle 4 of D75, as
+  measured by [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17), asks that a
+  hazard is seen and heard when it acts.
+- **Decision:** on every landing, hit or miss, once: `EnvironmentFx.branchImpact` (6 dust puffs of 3 px, 6 bark chips, 5 violet
+  leaves, 4 specks of debris, all on or above the floor line) and the new generated `branch_impact.wav` (unvoiced: a sinking
+  rush of air and rustling leaves, seeds 7801/7802, 0.42 s, -21.0 dBFS). It is lighter than the stone's in count, size and level. **No screen shake** (the
+  shake stays the mark of heavy impacts) and the hanging vines do not sway (they answer the stone, D73).
+- **Rejected on audition:** the approved card's first sound, a voiced wooden thud with a twig crack (the voice read as an
+  "ou"). The author asked for the rush and rustle of a real branch falling, an unvoiced effect like `grit_fall`.
+- **How:** `onImpact` moved from `FallingStone` to `FallingTrap`, so both traps report their landing the same way.
+- **Pools unchanged:** peaks 39 of 48 grit with the lever burst of `forest-0-wall`, 29 grit and 22 of 32 dust with a stone
+  (`EnvironmentFxTest`). All three at once would overflow the grit pool by 5; no shipped room has a stone beside a branch.
+- **Tests:** `FallingTrapsTest` (once, at the landing, hit and miss; the floor line; no shake), `EnvironmentFxTest`,
+  `AllocationBudgetTest.branchImpactThroughTheRealLevel`, `tools/test_generate_sounds.py`.
+

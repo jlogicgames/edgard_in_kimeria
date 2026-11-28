@@ -37,6 +37,27 @@ public final class EnvironmentFx {
     /** Stone greys of the trap sprite: dark, mid, light. */
     private static final float[] CHIP_COLORS = {.357f, .345f, .439f, .478f, .467f, .553f, .604f, .592f, .678f};
 
+    /**
+     * A falling branch's landing (#443, D155), lighter than the stone's: dust puffs along its width, bark chips thrown out and
+     * down, violet leaves that flutter to the floor and a few specks of debris that lie there, then fade.
+     */
+    public static final int BRANCH_DUST = 6, BRANCH_CHIPS = 6, BRANCH_LEAVES = 5, BRANCH_DEBRIS = 4;
+    private static final float BRANCH_DUST_LIFE_MIN = .3f, BRANCH_DUST_LIFE_MAX = .5f;
+    private static final float BRANCH_DUST_RISE_MIN = 10, BRANCH_DUST_RISE_MAX = 22, BRANCH_DUST_DRIFT_SPEED = 30;
+    private static final float BRANCH_CHIP_LIFE_MIN = .25f, BRANCH_CHIP_LIFE_MAX = .45f, BRANCH_CHIP_SPEED = 80;
+    private static final float BRANCH_CHIP_START_RISE_PX = 9, BRANCH_CHIP_SIZE_MIN = 1, BRANCH_CHIP_SIZE_MAX = 2;
+    private static final float BRANCH_LEAF_LIFE_MIN = .5f, BRANCH_LEAF_LIFE_MAX = .9f, BRANCH_LEAF_RISE_MIN = 12, BRANCH_LEAF_RISE_MAX = 22;
+    private static final float BRANCH_LEAF_SIZE_MIN = 3, BRANCH_LEAF_SIZE_MAX = 4, BRANCH_LEAF_DRIFT_PX = 8;
+    private static final float BRANCH_LEAF_SWAY_MIN = 2, BRANCH_LEAF_SWAY_MAX = 4;
+    /** A leaf ends with its centre this fraction of its long side above the floor, so no tilt of it reaches below. */
+    private static final float BRANCH_LEAF_REST_FRACTION = .6f;
+    private static final float BRANCH_DEBRIS_LIFE_MIN = 1.5f, BRANCH_DEBRIS_LIFE_MAX = 2.5f, BRANCH_DEBRIS_OVERHANG_PX = 4;
+    private static final float BRANCH_DEBRIS_SIZE_MIN = 1, BRANCH_DEBRIS_SIZE_MAX = 2;
+    /** The falling branch's lighter barks (branch.grid {@code w a8703a}, {@code 5 937049}): its dark bark vanishes on the forest's `2c3f66`. */
+    private static final float[] BRANCH_BARK_COLORS = {.659f, .439f, .227f, .576f, .439f, .286f};
+    /** Its leaves (branch.grid {@code V a98ae0}, {@code v 3b2a5c}), taken in turn so most read on the dark backdrop. */
+    private static final float[] BRANCH_LEAF_COLORS = {.663f, .541f, .878f, .231f, .165f, .361f};
+
     /** The deadfall's ropes hit the snag (#363, D75): bark chips knocked off it fall a short way and fade. */
     public static final int BARK_CHIPS = 6;
     private static final float BARK_SPREAD_PX = 5, BARK_FALL_MIN = 20, BARK_FALL_MAX = 40, BARK_DRIFT_PX = 10;
@@ -135,6 +156,55 @@ public final class EnvironmentFx {
             grit.spawn(KimeriaParticleSystem.KIND_GRIT, x, floorY - size / 2f, x, floorY - size / 2f,
                 range(random, STONE_DEBRIS_LIFE_MIN, STONE_DEBRIS_LIFE_MAX), size,
                 CHIP_COLORS[c], CHIP_COLORS[c + GREEN], CHIP_COLORS[c + BLUE]);
+        }
+    }
+
+    /**
+     * A falling branch lands (D155). {@code floorY} is the floor line (the branch's bottom edge; larger Y is lower), so
+     * nothing is drawn under it. It shakes nothing.
+     */
+    public void branchImpact(float centerX, float floorY, float width) {
+        float half = width / 2f;
+        RandomXS128 random = dust.random();
+        for (int n = 0; n < BRANCH_DUST; n++) {
+            float startX = centerX + range(random, -half, half);
+            float life = range(random, BRANCH_DUST_LIFE_MIN, BRANCH_DUST_LIFE_MAX);
+            float away = startX < centerX ? -1 : 1;
+            float endX = startX + away * BRANCH_DUST_DRIFT_SPEED * life;
+            float endY = floorY - range(random, BRANCH_DUST_RISE_MIN, BRANCH_DUST_RISE_MAX) * life;
+            int c = random.nextInt(DUST_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            dust.spawn(KimeriaParticleSystem.KIND_SMOKE, startX, floorY - DUST_SIZE_PX / 2f, endX, endY, life,
+                DUST_SIZE_PX, DUST_COLORS[c], DUST_COLORS[c + GREEN], DUST_COLORS[c + BLUE]);
+        }
+        random = grit.random();
+        for (int n = 0; n < BRANCH_CHIPS; n++) {
+            float startX = centerX + range(random, -half, half);
+            float away = startX < centerX ? -1 : 1;
+            float life = range(random, BRANCH_CHIP_LIFE_MIN, BRANCH_CHIP_LIFE_MAX);
+            float size = range(random, BRANCH_CHIP_SIZE_MIN, BRANCH_CHIP_SIZE_MAX);
+            int c = random.nextInt(BRANCH_BARK_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, floorY - BRANCH_CHIP_START_RISE_PX,
+                startX + away * BRANCH_CHIP_SPEED * life * random.nextFloat(), floorY - size / 2f, life, size,
+                BRANCH_BARK_COLORS[c], BRANCH_BARK_COLORS[c + GREEN], BRANCH_BARK_COLORS[c + BLUE]);
+        }
+        for (int n = 0; n < BRANCH_LEAVES; n++) {
+            float startX = centerX + range(random, -half, half);
+            float away = startX < centerX ? -1 : 1;
+            float size = range(random, BRANCH_LEAF_SIZE_MIN, BRANCH_LEAF_SIZE_MAX);
+            int c = n % (BRANCH_LEAF_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawnLeaf(startX, floorY - range(random, BRANCH_LEAF_RISE_MIN, BRANCH_LEAF_RISE_MAX),
+                startX + away * BRANCH_LEAF_DRIFT_PX * random.nextFloat(), floorY - size * BRANCH_LEAF_REST_FRACTION,
+                range(random, BRANCH_LEAF_LIFE_MIN, BRANCH_LEAF_LIFE_MAX), size,
+                range(random, BRANCH_LEAF_SWAY_MIN, BRANCH_LEAF_SWAY_MAX), random.nextFloat(),
+                BRANCH_LEAF_COLORS[c], BRANCH_LEAF_COLORS[c + GREEN], BRANCH_LEAF_COLORS[c + BLUE]);
+        }
+        for (int n = 0; n < BRANCH_DEBRIS; n++) {
+            float x = centerX + range(random, -half - BRANCH_DEBRIS_OVERHANG_PX, half + BRANCH_DEBRIS_OVERHANG_PX);
+            float size = range(random, BRANCH_DEBRIS_SIZE_MIN, BRANCH_DEBRIS_SIZE_MAX);
+            int c = random.nextInt(BRANCH_BARK_COLORS.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, x, floorY - size / 2f, x, floorY - size / 2f,
+                range(random, BRANCH_DEBRIS_LIFE_MIN, BRANCH_DEBRIS_LIFE_MAX), size,
+                BRANCH_BARK_COLORS[c], BRANCH_BARK_COLORS[c + GREEN], BRANCH_BARK_COLORS[c + BLUE]);
         }
     }
 

@@ -198,6 +198,8 @@ class AllocationBudgetTest {
 
     /** Measured in 3 runs (#347): a 24-particle stone landing every 60 frames, spawn, update and render, like JUMP_DUST_CEILING. */
     static final double STONE_IMPACT_CEILING = 8;
+    /** A 21-particle branch landing every 60 frames (#443, branchImpactThroughTheRealLevel): measured 0.0 B/frame in the full suite and 0.1 in 3 isolated runs (2026-11-28). The same 8 B ceiling as the stone's. */
+    static final double BRANCH_IMPACT_CEILING = 8;
     /** Measured 2.8, 2.8, 2.8, 2.8, 2.8 and 0.0 B/frame in 6 runs (2026-11-18, #397 rework; the same 8 B ceiling as the other isolated paths); the 2.8 is a one-time ~3.4 KB in the first measurement of a fresh JVM, not a per-frame cost: a probe (2026-11-18) read 2.8 or 0.3 on its first run and 0.0 on every repeat in the same JVM, and 0.0 to 0.1 with either the ball's or the effect's render left out, so it is a one-time cost of the first run of that combined path whose source was not identified (JIT warm-up or a one-time lazy initialisation); no ball stops within the measured frames, so {@code playSounds()} is never reached here: a fireball flying through the real level, its halo drawn, its trail spawned, updated and drawn every frame, a new ball every 60 frames. */
     static final double FIREBALL_TRAIL_CEILING = 8;
     /** The cast's extra over the same room with no cast, B/frame (#503): one {@code new Fireball} per 60-frame cycle. Measured 5.6 B/frame (about 340 B per cast; median of 9 paired windows, full suite {@code --rerun-tasks}, 2026-11-19, 99 casts); 16 is about three times that, headroom for JIT variation. */
@@ -778,6 +780,20 @@ class AllocationBudgetTest {
         });
         assertTrue(peak[0] > 0, "the impact must actually throw particles in this scenario");
         assertWithinBudget("stone impact", STONE_IMPACT_CEILING, bytes);
+    }
+
+    /** A falling branch landing every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fx()} (#443, D155: dust, bark chips, leaves and debris), updated and drawn each frame. */
+    @Test void branchImpactThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", 2);
+        int[] peak = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) level.fx().branchImpact(100, 200, 32);
+            level.fx().update(STEP);
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().grit().count() + level.fx().dust().count());
+        });
+        assertTrue(peak[0] > 0, "the impact must actually throw particles in this scenario");
+        assertWithinBudget("branch impact", BRANCH_IMPACT_CEILING, bytes);
     }
 
     /**

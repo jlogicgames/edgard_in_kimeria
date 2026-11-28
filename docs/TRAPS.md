@@ -206,9 +206,9 @@ pit itself is the visible part) and `QuickSand` (a collision type that slows; it
 | Reset | room rebuild; the landed branch and the stub on the trunk stay as harmless scenery until then |
 | Taught in | `forest-0-wall` with `HINT_WALL_BRANCH` |
 | Load checks | `FallingTrapLayout.validate`; mirrored in `check_tiled_links.py` |
-| Tests | `FallingTrapsTest` (with the stub, D150), `WallLessonTest`, `tools/test_forest_trap_sprites.py` (the cue lies on the stub) |
-| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier (D76); worst outline over its three placements: resting 0.374, rustle 0.378, sag 0.393, falling 0.443 (`check_contrast.py`, 2026-11-27, D150). No impact feedback when it lands (no dust, sound or shake, unlike the stone's D73). Consequence (D93): none yet ([#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443)) |
-| Decision | D45, D48, D150 |
+| Tests | `FallingTrapsTest` (with the stub, D150, and the landing, D155), `EnvironmentFxTest` (pool capacity), `AllocationBudgetTest.branchImpactThroughTheRealLevel`, `WallLessonTest`, `tools/test_forest_trap_sprites.py` (the cue lies on the stub) |
+| Art and sound | `trap-branch` 32×16 × 4 (resting, rustle, sag, falling; grid `art/objects/forest-traps/branch.grid`), active tier (D76); worst outline over its three placements: resting 0.374, rustle 0.378, sag 0.393, falling 0.443 (`check_contrast.py`, 2026-11-27, D150). Landing (#443, [D155](DECISIONS.md#d155-the-falling-branch-lands-with-chips-leaves-dust-and-a-rustle-and-no-shake-443-2026-11-28)), once, hit or miss, lighter than the stone's: 6 dust puffs (3 px) along the branch's width, 6 chips of its two lighter barks thrown out and down, 5 leaves in its violets fluttering to the floor, 4 specks of debris lying there 1.5 to 2.5 s; everything on or above the floor line; no screen shake, and the hanging vines do not sway. Consequence (D93): `branch_impact` |
+| Decision | D45, D48, D150, D155 |
 
 ### Falling stone (`FallingStone`)
 
