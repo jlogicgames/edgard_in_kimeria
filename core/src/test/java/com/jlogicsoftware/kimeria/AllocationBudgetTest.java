@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.jlogicsoftware.kimeria.effects.CrownGlintFx;
 import com.jlogicsoftware.kimeria.effects.FlightFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.Shaders;
@@ -77,6 +78,9 @@ import com.jlogicsoftware.kimeria.ui.PlayfieldViewport;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import com.jlogicsoftware.kimeria.world.ParallaxRenderer;
+import com.jlogicsoftware.kimeria.world.Wind;
+import com.jlogicsoftware.kimeria.world.WindSpots;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -455,6 +459,54 @@ class AllocationBudgetTest {
         });
         assertTrue(batch.drawnCount() > 0, "the scenario must actually draw layers");
         assertWithinBudget("forest-1 parallax layers and foreground", PARALLAX_CEILING, bytes);
+    }
+
+    /**
+     * The wind's own cost (#593, D163) in forest-0's wall room (crown, mid and grove spots, the room's real trap columns and protected
+     * boxes): {@code Wind.update}, the layer bases, {@code CrownGlintFx.update}, the parallax back pass with the glints drawn between
+     * its layers and the crown glints, every frame, while the camera sweeps the room, over more than two gusts and their calm. Measured
+     * 0.0, 0.0 and 0.1 B/frame in 3 runs (2026-11-28, leaf patches drawn run by run); the same 8 B ceiling as the other isolated effects.
+     */
+    static final double WIND_GLINTS_CEILING = 8;
+    private static final int WIND_SWEEP_FRAMES = 600;
+
+    /** 0 to 1 and back over one cycle {@code t} of 0 to 1. */
+    private static float sweep(float t) { return t < 0.5f ? t * 2 : 2 - t * 2; }
+
+    @Test void windGustsAndCrownGlintsOverWholeGusts() {
+        Rectangle view = new Rectangle(0, 8, 640, 360);
+        Level level = harness.room("forest-0", "forest-0-wall", () -> view);
+        Rectangle room = new Rectangle(level.currentRoomBounds());
+        Wind wind = level.wind();
+        CrownGlintFx glints = level.glints();
+        ParallaxRenderer parallax = new ParallaxRenderer(level.map);
+        int mid = WindSpots.layerIndex(level.map, CrownGlintFx.MID), grove = WindSpots.layerIndex(level.map, CrownGlintFx.GROVE);
+        ParallaxRenderer.LayerOverlay overlay = new ParallaxRenderer.LayerOverlay() {
+            @Override public void afterLayer(com.badlogic.gdx.graphics.g2d.Batch b, int layer, float baseX, float baseY) {
+                if (layer == grove) glints.render(b, CrownGlintFx.GROVE, baseX, baseY);
+                else if (layer == mid) glints.render(b, CrownGlintFx.MID, baseX, baseY);
+            }
+        };
+        float originY = ParallaxRenderer.originY(room, view.height);
+        int[] peak = new int[CrownGlintFx.DEPTHS];
+        batch.record(1 << 16); // the log is allocated once here, then only written: the probe sees no allocation
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            float t = (i % WIND_SWEEP_FRAMES) / (float) WIND_SWEEP_FRAMES;
+            view.x = room.x + Math.max(0, room.width - view.width) * sweep(t);
+            wind.update(STEP);
+            view.y = originY * sweep(t); // the camera eases between the room top and the floor camera top (D154), never snapped
+            glints.setLayerBase(CrownGlintFx.MID, ParallaxRenderer.layerBaseX(level.map.sceneryLayers.get(mid), view.x),
+                ParallaxRenderer.layerBaseY(level.map.sceneryLayers.get(mid), view.y, originY));
+            glints.setLayerBase(CrownGlintFx.GROVE, ParallaxRenderer.layerBaseX(level.map.sceneryLayers.get(grove), view.x),
+                ParallaxRenderer.layerBaseY(level.map.sceneryLayers.get(grove), view.y, originY));
+            glints.update(STEP, wind, view);
+            parallax.renderBack(batch, view, originY, overlay);
+            glints.render(batch, CrownGlintFx.CROWN, 0, 0);
+            for (int d = 0; d < CrownGlintFx.DEPTHS; d++) peak[d] = Math.max(peak[d], glints.particles(d).count());
+        });
+        assertTrue(wind.gust() >= 2, "the scenario must run over whole gusts: " + wind.gust());
+        for (int d = 0; d < CrownGlintFx.DEPTHS; d++) assertTrue(peak[d] > 0, "depth " + d + " must light in this scenario");
+        assertWithinBudget("wind gusts and crown glints", WIND_GLINTS_CEILING, bytes);
     }
 
     /** The first-RedMob room (#375): the mob asleep, the refill. */

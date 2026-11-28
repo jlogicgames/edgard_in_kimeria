@@ -29,6 +29,7 @@ import com.jlogicsoftware.kimeria.effects.RoomRippleFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaBloodSystem;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.Firefly;
+import com.jlogicsoftware.kimeria.effects.CrownGlintFx;
 import com.jlogicsoftware.kimeria.effects.LeafFx;
 import com.jlogicsoftware.kimeria.effects.RippleEffect;
 import com.jlogicsoftware.kimeria.localization.Msg;
@@ -405,12 +406,90 @@ public class Level implements WorldObject {
     private void startLeaves() {
         RoomLayout.Room room = roomLayout.rooms.get(currentRoom);
         if (room.leaves() <= 0) { leafFx.start(room.bounds(), 0); return; }
-        com.badlogic.gdx.utils.FloatArray avoid = new com.badlogic.gdx.utils.FloatArray();
+        leafFx.start(room.bounds(), room.leaves(), trapColumns());
+    }
+
+    /** The current room's trap columns as (min, max) x pairs, each trap's x range plus the margin: no leaf and no wind glint starts there. */
+    private float[] trapColumns() {
+        com.badlogic.gdx.utils.FloatArray columns = new com.badlogic.gdx.utils.FloatArray();
         for (java.util.List<TiledObject> group : map.objectGroups.values()) for (TiledObject o : group) {
             if (!LEAF_AVOIDED.contains(o.type) || roomLayout.owner(o) != currentRoom) continue;
-            avoid.add(o.x - LEAF_AVOID_MARGIN_PX); avoid.add(o.x + o.width + LEAF_AVOID_MARGIN_PX);
+            columns.add(o.x - LEAF_AVOID_MARGIN_PX); columns.add(o.x + o.width + LEAF_AVOID_MARGIN_PX);
         }
-        leafFx.start(room.bounds(), room.leaves(), avoid.toArray());
+        return columns.toArray();
+    }
+
+    /** The map property that blows the wind through a map's crowns (#593). */
+    private static final String WIND_PROPERTY = "wind";
+    /** Objects no crown glint starts near (#593): the lever and what it drives, escalators, the checkpoint, what can be picked up and every monster, at their placed boxes. */
+    static final java.util.Set<String> GLINT_PROTECTED = java.util.Set.of("Trigger", "Actionable", "Escalator", "Checkpoint", "Collectable",
+        "FireballRefill", "Stone", "CarryableTorch", "Bat", "Beetle", "FlyingBeetle", "MosquitoSwarm", "Spider", "Snail", "Wolf", "RedMob", "YellowMob", "Boss");
+    /** The room's gusts (#593, D163) and the glints they light; both stay idle in a map without the {@value #WIND_PROPERTY} property. */
+    private final Wind wind = new Wind(CrownGlintFx.FOREST_WIND);
+    private final CrownGlintFx glints = new CrownGlintFx();
+    private boolean windy;
+    private WindSpots windSpots;
+    private int midLayer = -1, groveLayer = -1;
+    /** Draws a depth's glints straight after its scenery layer, so every nearer layer covers them. */
+    private final ParallaxRenderer.LayerOverlay glintOverlay = new ParallaxRenderer.LayerOverlay() {
+        @Override public void afterLayer(Batch batch, int layerIndex, float baseX, float baseY) {
+            if (layerIndex == groveLayer) glints.render(batch, CrownGlintFx.GROVE, baseX, baseY);
+            else if (layerIndex == midLayer) glints.render(batch, CrownGlintFx.MID, baseX, baseY);
+        }
+    };
+
+    public Wind wind() { return wind; }
+    public CrownGlintFx glints() { return glints; }
+
+    /** Room start, death, retry and revisit: the same gusts from the beginning (the seed is the room's id). */
+    private void startWind() {
+        glints.clear();
+        windy = map.propBool(WIND_PROPERTY, false);
+        if (!windy) return;
+        if (windSpots == null) windSpots = WindSpots.load();
+        midLayer = WindSpots.layerIndex(map, CrownGlintFx.MID);
+        groveLayer = WindSpots.layerIndex(map, CrownGlintFx.GROVE);
+        RoomLayout.Room room = roomLayout.rooms.get(currentRoom);
+        Rectangle bounds = room.bounds();
+        int seed = room.id().hashCode();
+        wind.reset(seed, bounds.x, bounds.x + bounds.width);
+        glints.start(seed, windSpots.forRoom(map, roomLayout, currentRoom, game.logicalResolution().x), trapColumns(), glintProtectedBoxes());
+    }
+
+    private static final int POLYLINE_XY = 2;
+
+    /** x, y, width and height of every protected object of the current room; a polyline route counts by its bounds. */
+    private com.badlogic.gdx.utils.FloatArray glintProtectedBoxes() {
+        com.badlogic.gdx.utils.FloatArray boxes = new com.badlogic.gdx.utils.FloatArray();
+        for (TiledObject o : map.layer("SpawnPoints")) {
+            if (!GLINT_PROTECTED.contains(o.type) || roomLayout.owner(o) != currentRoom) continue;
+            float left = o.x, top = o.y, right = o.x + o.width, bottom = o.y + o.height;
+            if (o.polyline != null) for (int i = 0; i + 1 < o.polyline.length; i += POLYLINE_XY) {
+                left = Math.min(left, o.polyline[i]); right = Math.max(right, o.polyline[i]);
+                top = Math.min(top, o.polyline[i + 1]); bottom = Math.max(bottom, o.polyline[i + 1]);
+            }
+            boxes.add(left, top, right - left, bottom - top);
+        }
+        return boxes;
+    }
+
+    /** The wind runs on the world's time: it holds in the pause menu, the healer scene and a room change, and slows with the death slow motion. */
+    private void updateWind(float dt) {
+        wind.update(dt);
+        Rectangle view = visibleWorldRect.get();
+        if (view != null) {
+            placeGlintLayer(CrownGlintFx.MID, midLayer, view);
+            placeGlintLayer(CrownGlintFx.GROVE, groveLayer, view);
+        }
+        glints.update(dt, wind, view);
+    }
+
+    /** Where {@code ParallaxRenderer.renderBack} will put the layer for this view. */
+    private void placeGlintLayer(int depth, int layerIndex, Rectangle view) {
+        if (layerIndex < 0) return;
+        com.jlogicsoftware.kimeria.tiled.SceneryLayer layer = map.sceneryLayers.get(layerIndex);
+        glints.setLayerBase(depth, ParallaxRenderer.layerBaseX(layer, view.x),
+            ParallaxRenderer.layerBaseY(layer, view.y, ParallaxRenderer.originY(currentRoomBounds(), view.height)));
     }
     private final FairyGuide fairy;
 
@@ -594,6 +673,7 @@ public class Level implements WorldObject {
         fallingPlatforms.clear(); staticPlatforms.clear();
         pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); snailFx.clear(); wolfFx.clear(); remainsFx.clear(); bossFx.clear();
         startLeaves();
+        startWind();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
         victory = completionSent = false;
@@ -810,6 +890,7 @@ public class Level implements WorldObject {
         addCollisions();
 
         startLeaves();
+        startWind();
         for (int i = 0, fireflies = map.propInt("fireflies", 0); i < fireflies; i++) {
             ambience.add(Firefly.smallGlow(new Vector2(map.widthPx(), map.heightPx()), FIREFLY_LIGHT));
         }
@@ -2076,6 +2157,7 @@ public class Level implements WorldObject {
         wolfFx.update(dt);
         remainsFx.update(dt);
         leafFx.update(dt);
+        if (windy) updateWind(dt);
         for (int i = 0; i < escalators.size(); i++) escalators.get(i).update(dt);
         for (int i = 0; i < fallingPlatforms.size(); i++) fallingPlatforms.get(i).update(dt);
         updateDecor(dt);
@@ -2140,11 +2222,12 @@ public class Level implements WorldObject {
     }
 
     public void render(Batch batch, Rectangle visibleWorldRect) {
-        if (!parallax.isEmpty()) parallax.renderBack(batch, visibleWorldRect, ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height));
+        if (!parallax.isEmpty()) parallax.renderBack(batch, visibleWorldRect, ParallaxRenderer.originY(currentRoomBounds(), visibleWorldRect.height), glintOverlay);
         // D122: a trunk is drawn behind the play tiles, so a tree whose branch hangs under a ledge passes behind that ledge.
         for (int i = 0; i < decor.size(); i++) if (decor.get(i).behindTiles()) decor.get(i).render(batch);
         renderBackground(batch, visibleWorldRect);
         for (int i = 0; i < decor.size(); i++) if (!decor.get(i).behindTiles()) decor.get(i).render(batch);
+        glints.render(batch, CrownGlintFx.CROWN, 0, 0); // on the crowns, under every object, trap and the hero (#593)
         for (int i = 0; i < vines.size(); i++) vines.get(i).render(batch);
         fairy.renderBehind(batch); // the target glows: light behind the objects, the objects stay crisp (D82)
         portal.render(batch); // behind every object and the hero: it marks the exit and never covers anything (#552)

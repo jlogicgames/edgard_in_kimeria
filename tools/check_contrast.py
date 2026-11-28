@@ -179,7 +179,15 @@ SPRITES = {
     'HangingVine': ('decor', 'objects/decor-vine.png', (0, 0, 8, 40), 1, 'top', FULL),
     'Decor:trunk': ('decor', 'objects/decor-trunk.png', (0, 0, 28, 288), 1, 'floor', FULL),  # #349: behind the branches
     'Decor:snag': ('decor', 'objects/decor-snag.png', (0, 0, 28, 200), 1, 'floor', FULL),  # D122: the snapped trunk
-    'Decor:crown': ('decor', 'objects/decor-crown.png', (0, 0, 96, 40), 1, 'top', FULL),  # #421: hung over a trunk
+    'Decor:trunk-knot': ('decor', 'objects/decor-trunk-knot.png', (0, 0, 28, 288), 1, 'floor', FULL),  # #635: the second trunk
+    # #635 (D162): the leaf crowns hung over a trunk from the room top (they replace #421's 96x40 crown)
+    'Decor:crown-droop': ('decor', 'objects/decor-crown-droop.png', (0, 0, 208, 160), 1, 'top', FULL),
+    'Decor:crown-broad': ('decor', 'objects/decor-crown-broad.png', (0, 0, 224, 128), 1, 'top', FULL),
+    'Decor:crown-round': ('decor', 'objects/decor-crown-round.png', (0, 0, 160, 144), 1, 'top', FULL),
+    # the same crowns in the fine-clump style (D162: the author keeps both styles)
+    'Decor:crown-droop-fine': ('decor', 'objects/decor-crown-droop-fine.png', (0, 0, 208, 160), 1, 'top', FULL),
+    'Decor:crown-broad-fine': ('decor', 'objects/decor-crown-broad-fine.png', (0, 0, 224, 128), 1, 'top', FULL),
+    'Decor:crown-round-fine': ('decor', 'objects/decor-crown-round-fine.png', (0, 0, 160, 144), 1, 'top', FULL),
     'ThornRoot': ('active', 'objects/trap-thorn-root.png', (0, 0, 16, 24), 1, 'floor', FULL),
     'ThornTuft': ('active', 'objects/trap-thorn-tuft.png', (0, 0, 16, 16), 1, 'floor', FULL),
     # #364 (D89): the bramble's clump at rest, at the root end of its box (`root=right` is the mirrored `Bramble-right`).
@@ -278,8 +286,11 @@ SPRITES = {
     'Deadfall:log': ('active', 'objects/trap-deadfall.png', (0, 0, 32, 16), 1, 'top', FULL),
     'Deadfall:vine': ('active', 'objects/trap-deadfall-vine.png', (0, 0, 24, 8), 1, 'top', FULL),
 }
+DECOR_MIRROR = '-mirror'  # the key suffix of a Decor drawn mirrored
 MIRRORED = {f'{key}-right': key for key in ('Deadfall', 'Deadfall:log', 'Deadfall:vine', 'Bramble')}
 MIRRORED.update({'Spider:wall-left': 'Spider:wall', 'Spider:wall-left-down': 'Spider:wall'})
+# A Decor with `mirror=true` is drawn flipped (Decor.render), so it is measured flipped: `Decor:<kind>-mirror` (#635).
+MIRRORED.update({f'{key}{DECOR_MIRROR}': key for key in SPRITES if key.startswith('Decor:')})
 SPRITES.update({mirrored: SPRITES[key] for mirrored, key in MIRRORED.items()})
 # Keys drawn upside down (a spider heading down a wall, Spider.renderWall).
 FLIPPED = {'Spider:wall-down': 'Spider:wall', 'Spider:wall-left-down': 'Spider:wall'}
@@ -985,7 +996,7 @@ def key_of(group, obj, props):
             return 'Platform:branch' + side, kind
         return kind if kind == 'Platform' else None, kind
     if kind == 'Decor':
-        return 'Decor:' + props.get('kind', 'bush'), kind
+        return 'Decor:' + props.get('kind', 'bush') + (DECOR_MIRROR if side else ''), kind
     if kind == 'Collectable':
         return 'Collectable:' + (props.get('item') or obj.get('name') or 'Coin').title(), kind
     if kind == 'Bramble':

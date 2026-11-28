@@ -57,7 +57,8 @@ equals its horizontal one. World Y grows downward.
    copy-only `stamp.py SPEC` prints grid text, which replaces that piece at the end of `art/parallax/forest/fg.grid` before the
    export. A new or resized sheet updates its entry in `tools/sprite_layouts.py` (`PARALLAX_LAYER_SHEETS`,
    `PARALLAX_SOFT_SHEETS`). A script under `art/` is held to `validateSpriteArt` (it copies, never paints) and
-   `validateNamedParameters` (no unnamed geometry).
+   `validateNamedParameters` (no unnamed geometry). After a change to `mid.grid` or `grove.grid` (pixels or their
+   `leaves` boxes, the wind's glints, D163) run `python3 tools/wind_spots.py` (`validateWindSpots`).
 2. **Placement:** the room lists in `tools/parallax_game.py` (`NEAR`, `MIDDLE`, `MORE_BOTTOM` and the per-forest lists). Never
    edit the installed layers or groups in a `.tmx` by hand: `tools/test_parallax_game.py` fails a map that differs from the
    installer. A new, widened or re-trapped room: add its lists, install, run the check and take the pieces it names for the

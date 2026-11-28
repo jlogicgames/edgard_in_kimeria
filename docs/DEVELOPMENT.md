@@ -163,6 +163,7 @@ prompts. `RangedStock` owns run/level ammunition; `Level` snapshots room stock.
       losing contact
 - [x] Falling branch and falling stone (#232, D45) — zone-triggered, shared D7 warning, lethal while falling; not yet in a shipped level
 - [x] Decor bush (#239 step 4) — cosmetic `Decor` object (`kind` = `bush`), brushes when the hero walks past; no collision; see [ART_DIRECTION.md](ART_DIRECTION.md) section 4
+- [x] Trees (#635, D162) — `Decor` trunks (`trunk`, `trunk-knot`, behind the play tiles) under big crowns hung from the room top (`crown-droop`, `crown-broad`, `crown-round`), about one per screen in the forest maps; see [ART_DIRECTION.md](ART_DIRECTION.md), "Trees and crowns"
 - [x] Hanging vine (#239 step 5) — cosmetic `HangingVine` object (no properties), sways when a falling stone lands within 160 px (off with the Screen shake option); needs a falling stone in its room (`tools/check_tiled_links.py`); see [ART_DIRECTION.md](ART_DIRECTION.md) section 4
 - [x] Honey fungus and false honey fungus (#295, D63) — Tiled types `HoneyFungus` (harmless, 16 golden `KimeriaParticleSystem` spores, no hitbox) and `FalseHoneyFungus` (lethal lime spore cloud, 1 s, hitbox = drawn 24x24; first the `trap-spores` sprite, now `SporeCloud` sparks and a ring, D152), one base class `FungusTrap` (idle, zone-triggered swell over the shared `TrapWarnings` duration, one burst, then spent; no re-arming); optional properties `zone`, `zoneLeft`, `zoneRight` (px, default 64); load-time placement rules in `Level.validateFungus` mirrored by `tools/check_tiled_links.py`; placed in forest-0 (x 150, 1804) and forest-2 canopy (x 1672)
 - [x] Escalator — patrol, carries the player (including vertically), trigger toggles it
@@ -305,6 +306,26 @@ it also retiles each play layer: no seam where two rooms' floors meet, soil inst
 `python3 tools/parallax_mock.py --check --game` checks the foreground of every room that has one against the map's objects
 (`validateParallax`), and the middle of every long room (D153). Every forest map has the layers; every room of the three forest maps
 has a foreground.
+
+### Wind and leaf glints ([#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593))
+
+The card is [ART_DIRECTION.md](ART_DIRECTION.md#wind-in-the-crowns-d163-593) (D163). A map with the map property `wind` gets gusts.
+
+- **`world.Wind`** is the gust model: `reset(seed, left, right)` on every room start, `update(dt)` only from `Level.updateWorld`, then
+  `gust`, `blowing`, `width`, `frontX(lag)`, `strength(lag)` and `intensityAt(x, lag)`. A stage passes its own `Wind.Profile`; the
+  forest's is `CrownGlintFx.FOREST_WIND`. Widths and periods come from the stateless `Wind.hash(seed, gust, salt)`, the seed from the
+  room's id, so desktop and web show the same gusts.
+- **Patches** are baked: `python3 tools/wind_spots.py` lays its typed masks on the art in the grids' `leaves` boxes and writes
+  `assets/wind/forest-spots.txt` (a patch per line: its top-left, then runs of leaf pixels).
+  Run it after any change to a crown grid, `mid.grid`, `grove.grid` or a glint colour; `validateWindSpots` (`--check`, in
+  `:core:check` and the release builds) fails a stale file, a sheet that differs from its grid or a colour over its limit. A new
+  crown joins once its grid types a box under its frame; its `Decor` kind must be the grid's name. `world.WindSpots` places the
+  patches into a room at load: crowns by `Decor`'s draw position and mirroring, in draw order (a later crown's frame removes the
+  earlier patches under it), mid and grove by walking the layer's cells (`SceneryLayer.gids`, `TiledMapData.tileSource`).
+- **`effects.CrownGlintFx`** lights them, one particle system per depth. Mid and grove particles stay in layer coordinates and are
+  drawn at the layer's base through `ParallaxRenderer.LayerOverlay`, right after their layer; `ParallaxRenderer.layerBaseX/Y` is
+  the one formula both the draw and the effect use (sideways snapped, vertically the camera's true top, D154), so a glint stays on
+  its leaf while the camera eases up and down (`WindRoomsTest`).
 
 Package layout:
 
@@ -560,7 +581,7 @@ normal-blend particles first, then the additive ones, with one blend switch per 
 normal blending. Each system owns one `RandomXS128` (`random()`, the algorithm behind `MathUtils.random`), seeded in the constructor, so
 a seed reproduces a run. World Y grows downward: a rising particle has an end Y smaller than its start Y.
 
-Eight kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
+Nine kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed peak of 0.7):
 
 | Kind | Blend | Size | Alpha | Used by |
 | --- | --- | --- | --- | --- |
@@ -572,6 +593,7 @@ Eight kinds (`t = 1 - life / maxLife`; the first three multiply alpha by a fixed
 | `KIND_ORBIT` | additive | `size` (constant) | ramped in and out over the first and last 25 % of life, full between | the portal, the soft lights and the room ripple (#552, D123, D124): rides an ellipse, spawned with `spawnOrbit` |
 | `KIND_DOME` | additive | as `KIND_GLOW`, half as tall | as `KIND_GLOW` | the flash of a burst on a surface (D147): the upper half of the dot, its flat edge on the particle's y |
 | `KIND_SPARK` | normal | head `size * (1 - 0.4 t)` and a streak up to 5 px back along its flight, closing as `(1 - t)^3` | `1` until `t = 0.7`, then down to `0.45` | the false honey fungus burst (#608, D152): it brakes along its line, `1 - (1 - t)^4` |
+| `KIND_GLINT` | normal | a patch: runs of native pixels from its top-left, never moving | its own peak, ramped in over the first 30 % and out over the last 50 % | the wind's gust glints, patches of leaf (D163), spawned with `spawnGlint` (the runs array is shared, not copied); `render(batch, region, offsetX, offsetY)` draws particles kept in a layer's coordinates |
 
 Owners:
 
@@ -603,6 +625,9 @@ Owners:
   burst per mushroom, so that is its peak) drawn with `Shaders.whiteQuad()`, and one slot of `effects.RingPool` (12 px radius, 3 px
   wide, 0.4 s). `FalseHoneyFungus` updates it only while the cloud is live and clears it with the hitbox.
 - **`effects.FlightFx`** (D132, #557, #541, #539) flies a cached sprite from A to B in screen space: a Bezier bowed up, `EASE_IN`/`EASE_OUT`/`EASE_IN_OUT`, whole pixels, a fade, a `KIND_FLAME` trail and an optional four-spark landing twinkle; 12 slots and 48 sparks, a full pool drops the new request. Two instances, the HUD's (`KimeriaGame`, started by `GameContext.startPickupFlight` after a pickup's state change) and the dialogue view's. A pause freezes it (it ages only in `update`), it uses real dt clamped to 1/20 s, and it is cleared on death, retry, level load and room change. `PickupSparksFx` is unchanged and plays first.
+- **`effects.CrownGlintFx`** (D163, owned by `Level`, `Level.glints()`) owns three systems of `KIND_GLINT` with `Shaders.whiteQuad()`:
+  **64** crown, **24** mid and **16** grove slots (most seen alive 42, 13, 7; one quad per run of a patch). A full pool skips the new glint instead
+  of dropping the oldest, and `CrownGlintFxTest` and `WindRoomsTest` hold the caps and the skip rate. Cleared with the room.
 - `SoftDot.region()`, `SoftDot.glowRegion()` and `Shaders.whiteQuad()` each return one cached `TextureRegion`; callers must not mutate it.
 
 `ParticleGoldenTest` pins the torch and blood numerically (positions, sizes, alphas at chosen frames of a fixed seed); it passed

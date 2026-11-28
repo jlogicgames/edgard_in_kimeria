@@ -13,9 +13,10 @@ VINE_SIZE = (8, 40)
 LOOKALIKE_SIZE = (24, 16)  # decor-lookalike: the same 24x16 tuft footprint as the active pair
 DULL_SPREAD = 0x30  # largest channel spread (max - min) of a look-alike colour: pale grey-lilac or bone, never saturated
 VINE_STEM_COLUMNS = (3, 4)  # the olive stem of decor-vine.grid, under the ceiling
-CROWN_SIZE = (96, 40)  # decor-crown (#421)
-CROWN_TRUNK_COLUMNS = range(37, 57)  # a trunk at crown x + 40, its 28 px frame drawn from x - 6 (D122): its cap rows' columns 3-22
-CROWN_CAP_ROWS = (32, 37)  # the trunk's top (y 32 in forest-0) and its rounded cap rows 1-4, in crown rows
+CROWN_SIZES = {'crown-droop': (208, 160), 'crown-broad': (224, 128), 'crown-round': (160, 144),  # #635 (D162)
+               'crown-droop-fine': (208, 160), 'crown-broad-fine': (224, 128), 'crown-round-fine': (160, 144)}
+CROWN_BARK = (-11, 12)  # the trunk's 23 px bark (its object x - 3 to x + 19), around the crown frame's middle column
+CROWN_CAP_ROWS = (16, 21)  # the trunk's top (room y 16) and its rounded cap rows 1-4, in crown rows (the crown hangs from y 0)
 BRANCH_JAVA = 'core/src/main/java/com/jlogicsoftware/kimeria/entity/objects/FallingBranch.java'
 BUNCH_TOP = 12  # trap-branch: the rows under the limb where only the cue's leaf bunch hangs in the two rest frames
 
@@ -103,19 +104,27 @@ class ForestTrapSpritesTest(unittest.TestCase):
         top = master.crop((0, 0, size[0], 1))
         self.assertTrue(all(top.getchannel('A').getpixel((x, 0)) == OPAQUE_ALPHA for x in VINE_STEM_COLUMNS), 'the stem touches the ceiling')
 
-    def test_the_decor_crown_is_one_frame_hung_from_its_top_row_with_its_middle_lobe_lowest(self):
-        size, frames = DECOR_SHEETS['crown']
-        self.assertEqual((CROWN_SIZE, ('crown',)), (size, frames))
-        master, colors = traps.sheet_image('decor:crown')
-        self.assertEqual(WORLD_IMAGES['decor-crown'], master.size)
-        self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
-        shipped = Image.open(traps.ROOT / 'assets/images/objects/decor-crown.png')
-        self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), 'run tools/forest_trap_sprites.py decor:crown')
-        alpha = master.getchannel('A')
-        self.assertEqual((0, size[1]), (alpha.getbbox()[1], alpha.getbbox()[BBOX_BOTTOM]), 'hung from its top row, 40 px deep')
-        self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
-        for x in CROWN_TRUNK_COLUMNS:  # the trunk's cap (its rows 1-4, under the crown's rows 32-36) must be covered
-            self.assertTrue(all(alpha.getpixel((x, y)) == OPAQUE_ALPHA for y in range(*CROWN_CAP_ROWS)), f'column {x}')
+    def test_each_decor_crown_is_one_frame_hung_from_its_top_row_over_its_trunk_cap(self):
+        for name, size in CROWN_SIZES.items():
+            with self.subTest(name):
+                self.assertEqual((size, (name,)), DECOR_SHEETS[name])
+                master, colors = traps.sheet_image(f'decor:{name}')
+                self.assertEqual(WORLD_IMAGES[f'decor-{name}'], master.size)
+                self.assertLessEqual(colors, WORLD_PALETTE_SIZE - 1)
+                shipped = Image.open(traps.ROOT / f'assets/images/objects/decor-{name}.png')
+                self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), f'run tools/forest_trap_sprites.py decor:{name}')
+                alpha = master.getchannel('A')
+                self.assertEqual(0, alpha.getbbox()[1], 'hung from its top row (world Y grows downward)')
+                self.assertTrue(set(alpha.tobytes()) <= {0, OPAQUE_ALPHA})
+                middle = size[0] // 2
+                for x in range(middle + CROWN_BARK[0], middle + CROWN_BARK[1]):  # the trunk's cap must be covered
+                    self.assertTrue(all(alpha.getpixel((x, y)) == OPAQUE_ALPHA for y in range(*CROWN_CAP_ROWS)), f'column {x}')
+
+    def test_the_second_trunk_matches_the_trunk_frame(self):
+        self.assertEqual(DECOR_SHEETS['trunk'][0], DECOR_SHEETS['trunk-knot'][0])  # #635: the same 28x288 frame and bark columns
+        master, _ = traps.sheet_image('decor:trunk-knot')
+        shipped = Image.open(traps.ROOT / 'assets/images/objects/decor-trunk-knot.png')
+        self.assertEqual(master.tobytes(), shipped.convert('RGBA').tobytes(), 'run tools/forest_trap_sprites.py decor:trunk-knot')
 
     def test_the_static_lookalike_is_one_pale_frame_resting_on_the_floor(self):
         size, frames = DECOR_SHEETS['lookalike']

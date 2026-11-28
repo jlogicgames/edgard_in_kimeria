@@ -126,6 +126,25 @@ public class TiledMapData {
         return null;
     }
 
+    /** Where a tile's pixels lie: the image file and the tile's top-left in it, px. */
+    public record TileSource(String image, int x, int y) { }
+
+    /** The source of a tile of any tileset, or null for no such tile; load time only (it allocates). Flip bits are ignored. */
+    public TileSource tileSource(int gid) {
+        gid &= GID_MASK;
+        if (gid <= 0) return null;
+        for (int i = tilesets.size() - 1; i >= 0; i--) {
+            Tileset ts = tilesets.get(i);
+            if (gid < ts.firstGid) continue;
+            int id = gid - ts.firstGid;
+            if (!ts.sheet.isEmpty())
+                return id < ts.tileCount ? new TileSource(ts.sheet, (id % ts.columns) * ts.tileWidth, (id / ts.columns) * ts.tileHeight) : null;
+            TileImage image = ts.images.get(id);
+            return image == null ? null : new TileSource(image.path, image.x, image.y);
+        }
+        return null;
+    }
+
     public static TiledMapData load(String tmxPath, Assets assets) {
         try {
             TiledMapData data = new TiledMapData();
@@ -286,11 +305,13 @@ public class TiledMapData {
         layer.driftX = layer.properties.containsKey("driftx") ? Float.parseFloat(layer.properties.get("driftx")) : 0;
         layer.wrapX = layer.properties.containsKey("wrapx") ? Float.parseFloat(layer.properties.get("wrapx")) : 0;
         layer.cells = new TextureRegion[layer.columns * layer.rows];
+        layer.gids = new int[layer.cells.length];
         String[] cells = dataEl.text.trim().split("\\s*,\\s*");
         for (int i = 0; i < layer.cells.length && i < cells.length; i++) {
             if (cells[i].isEmpty()) continue;
             long raw = Long.parseLong(cells[i].trim());
             if ((raw & ~(long) GID_MASK) != 0) throw new IllegalArgumentException("scenery layer " + layer.name + ", cell " + i + ": flipped and rotated tiles are not supported");
+            layer.gids[i] = (int) raw;
             layer.cells[i] = map.region((int) raw);
         }
         return layer;

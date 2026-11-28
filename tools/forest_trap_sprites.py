@@ -9,6 +9,7 @@ and the runtime export; it contains no drawing logic and no ImageDraw/putpixel c
 Grid format: `size W H`, `color <char> <RRGGBB>` lines (`.` is transparent), then for each
 frame `frame <name> [mirror]` or `frame <name> flip <other-frame>` (a horizontally flipped copy) followed by H rows of W characters (with `mirror`, the left W/2
 characters of each row: a symmetry aid for round shapes, like an editor's mirror mode). Frames form one horizontal strip.
+A frame may type `leaves <x> <y> <w> <h>` boxes (frame pixels) for the wind's glints (#593, tools/wind_spots.py); they are not drawn.
 """
 from pathlib import Path
 from PIL import Image
@@ -36,6 +37,7 @@ MIRROR_ARGS = 2  # frame <name> mirror
 FLIP_ARGS = 3  # frame <name> flip <other>
 HALF = 2
 FIRST_LINE = 1
+LEAVES_KEYWORD = 'leaves'
 # Sheets exported with the moon rim (D92, tools/moon_rim.py), by `layout` name: the active sheets whose ink contour falls
 # under the active floor on the night background (check_contrast.py), plus the false honey fungus so the pair stays alike.
 RIM_SHEETS = frozenset({'bomb', 'bramble', 'branch', 'deadfall', 'deadfall-bough', 'false-honey-fungus',
@@ -70,6 +72,8 @@ def parse(path):
         if not line or line.startswith('#'):
             continue
         keyword, *args = line.split()
+        if keyword == LEAVES_KEYWORD:
+            continue  # the wind's leaf boxes (#593), read by tools/wind_spots.py; they change no pixel
         if keyword == 'size' and len(args) == SIZE_ARGS:
             size = (int(args[0]), int(args[1]))
         elif keyword == 'color' and len(args) == COLOR_ARGS:

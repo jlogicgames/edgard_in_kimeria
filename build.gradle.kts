@@ -149,6 +149,24 @@ project(":core").tasks.named("check") { dependsOn(validateParallax) }
 project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateParallax) }
 project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateParallax) }
 
+val testWindSpotsGate = tasks.register<Exec>("testWindSpotsGate") {
+    group = "verification"
+    description = "Runs the unit tests of tools/wind_spots.py, so a broken gate fails the build."
+    workingDir = rootDir.resolve("tools")
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3",
+        "-m", "unittest", "test_wind_spots")
+}
+val validateWindSpots = tasks.register<Exec>("validateWindSpots") {
+    group = "verification"
+    description = "Fails on a stale assets/wind/forest-spots.txt or a wind glint colour too far from its leaf (docs/ART_DIRECTION.md, \"Wind in the crowns\")."
+    dependsOn(testWindSpotsGate)
+    workingDir = rootDir
+    commandLine(if (System.getProperty("os.name").startsWith("Windows")) "python" else "python3", "tools/wind_spots.py", "--check")
+}
+project(":core").tasks.named("check") { dependsOn(validateWindSpots) }
+project(":lwjgl3").tasks.matching { it.name == "jar" }.configureEach { dependsOn(validateWindSpots) }
+project(":web").tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { dependsOn(validateWindSpots) }
+
 // Style-system gates for docs and skills (D75, docs/STYLE_SYSTEM.md). They judge documentation and agent skills, which
 // ship nothing in the game, so they run in :core:check and not in the release builds.
 val testStyleSystemGates = tasks.register<Exec>("testStyleSystemGates") {

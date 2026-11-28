@@ -106,7 +106,7 @@ def move_object(map_name, group, offset_y, block, report, kept_cells):
             new_tag = with_attribute(tag, 'height', number(lifted(bottom) - y))
             if bottom != OLD_FLOOR:
                 report.append(f'review (ceiling block, its underside follows the floor): {label}')
-    elif kind in STAYING_TYPES or 'value="crown"' in body:
+    elif kind in STAYING_TYPES or 'value="crown-' in body:  # a crown (#635) hangs from the room top: it stays
         if kind in ZONE_TYPES:
             body = zone_lifted(body)
     elif group == 'Collisions' and h:

@@ -18,6 +18,8 @@ public final class SceneryLayer {
     public int columns, rows;
     /** Row-major regions, null for an empty cell. */
     public TextureRegion[] cells;
+    /** Row-major gids, 0 for an empty cell; read at load by what needs to know which tile a cell shows (the wind's leaf spots, #593). */
+    public int[] gids;
     /** Horizontal and vertical parallax factors (Tiled {@code parallaxx}, {@code parallaxy}; default 1), as doubles so 0.15 is the mock's 0.15, not the float 0.15000000596. */
     public double parallaxX = 1, parallaxY = 1;
     /** Tiled layer offsets in pixels ({@code offsetx}, {@code offsety}). */

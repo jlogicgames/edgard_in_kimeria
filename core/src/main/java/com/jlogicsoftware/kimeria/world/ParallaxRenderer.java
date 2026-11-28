@@ -95,13 +95,27 @@ public final class ParallaxRenderer {
         }
     }
 
+    /** World x of a scenery layer's origin (its cell 0) for the camera's true left edge (D154, not snapped), before any cloud drift. */
+    public static float layerBaseX(SceneryLayer layer, float camX) { return worldX(layer.offsetX, layer.parallaxX, camX, 0); }
+
+    /** World y of a scenery layer's origin for the camera's true top edge (D154, not snapped) in the room whose floor camera top is {@code originY}. */
+    public static float layerBaseY(SceneryLayer layer, float camTop, float originY) { return worldY(layer.offsetY, layer.parallaxY, camTop, originY); }
+
+    /** What is drawn between two scenery layers: called after each layer, with the layer's origin in the world (the wind's glints, #593). */
+    public interface LayerOverlay {
+        void afterLayer(Batch batch, int layerIndex, float baseX, float baseY);
+    }
+
     /** The scenery layers, in file order, for the camera view {@code view} and the room whose floor camera top is {@code originY}. */
-    public void renderBack(Batch batch, Rectangle view, float originY) {
+    public void renderBack(Batch batch, Rectangle view, float originY) { renderBack(batch, view, originY, null); }
+
+    /** As {@link #renderBack(Batch, Rectangle, float)}, with {@code overlay} (may be null) drawn after every layer, so a later layer covers it. */
+    public void renderBack(Batch batch, Rectangle view, float originY, LayerOverlay overlay) {
         float packed = batch.getPackedColor();
         for (int i = 0; i < drift.length; i++) {
             SceneryLayer layer = map.sceneryLayers.get(i);
-            float baseX = worldX(layer.offsetX, layer.parallaxX, view.x, 0);
-            float baseY = worldY(layer.offsetY, layer.parallaxY, view.y, originY);
+            float baseX = layerBaseX(layer, view.x);
+            float baseY = layerBaseY(layer, view.y, originY);
             if (layer.opacity != 1f) batch.setColor(1f, 1f, 1f, layer.opacity);
             if (layer.wrapX > 0) {
                 float shiftX = baseX + driftOffset(drift[i], layer.wrapX);
@@ -111,6 +125,10 @@ public final class ParallaxRenderer {
                 drawLayer(batch, layer, baseX, baseY, view);
             }
             if (layer.opacity != 1f) batch.setPackedColor(packed);
+            if (overlay != null) {
+                overlay.afterLayer(batch, i, baseX, baseY);
+                batch.setPackedColor(packed);
+            }
         }
     }
 
