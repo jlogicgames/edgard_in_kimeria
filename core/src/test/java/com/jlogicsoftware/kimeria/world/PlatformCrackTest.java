@@ -31,6 +31,8 @@ class PlatformCrackTest {
     private static final float HERO_FRAME = 48f, HERO_SHIFT_X = 8f;
     /** Frames before the warning ends in which nothing may happen yet, and the few after in which the drop must come. */
     private static final int MARGIN_FRAMES = 3;
+    /** .3 s of splinter flight: long enough to have a direction, shorter than any splinter's life (.35 s at least). */
+    private static final int FLIGHT_FRAMES = 18;
     private static final float BESIDE_THE_COLUMN = 96f;
     private static final float[][] LOG_WOOD = {{.541f, .353f, .188f}, {.753f, .541f, .298f}, {.937f, .902f, .769f}};
     private static final float[][] DEAD_WOOD = {{.478f, .431f, .424f}, {.722f, .678f, .612f}, {.937f, .902f, .769f}};
@@ -57,21 +59,30 @@ class PlatformCrackTest {
         assertTrue(platform.isFalling(), "the hero landed on it");
     }
 
+    /**
+     * Checked in the crack frame, then {@value #FLIGHT_FRAMES} frames of flight later (the particles only, the level stands
+     * still). The side is read from the flight: {@code Level.update} spawns the splinters after the particles' step, so in
+     * the crack frame each still sits at its random start beside the break and all six can be on one side of it (1 in 32).
+     */
     private void assertSplinters(Level level, FallingPlatform platform, float restY, float[][] wood) {
         KimeriaParticleSystem grit = level.fx().grit();
         assertEquals(EnvironmentFx.SPLINTERS, grit.count(), "the splinters of one break");
-        boolean left = false, right = false;
-        float centre = platform.getX() + platform.getWidth() / 2f;
         for (int i = 0; i < grit.count(); i++) {
             int n = i;
             assertEquals(KimeriaParticleSystem.KIND_GRIT, grit.kind(i));
             assertTrue(List.of(wood).stream().anyMatch(c -> Math.abs(c[0] - grit.red(n)) < EPSILON
                 && Math.abs(c[1] - grit.green(n)) < EPSILON && Math.abs(c[2] - grit.blue(n)) < EPSILON), "the platform's own wood");
             assertTrue(grit.y(i) > restY && grit.y(i) < restY + platform.getHeight(), "they start inside the platform, at the break");
-            left |= grit.x(i) < centre;
-            right |= grit.x(i) > centre;
         }
-        assertTrue(left && right, "they fly to both sides");
+        for (int frame = 0; frame < FLIGHT_FRAMES; frame++) grit.update(STEP);
+        assertEquals(EnvironmentFx.SPLINTERS, grit.count(), "all still in the air");
+        int left = 0, right = 0;
+        for (int i = 0; i < grit.count(); i++) {
+            if (grit.x(i) < grit.fromX(i)) left++;
+            if (grit.x(i) > grit.fromX(i)) right++;
+        }
+        assertEquals(EnvironmentFx.SPLINTERS / 2, left, "half fly to the left");
+        assertEquals(EnvironmentFx.SPLINTERS / 2, right, "half fly to the right");
     }
 
     @Test void theLogCracksOnceAtTheDropAndNotAtTheLanding() {
