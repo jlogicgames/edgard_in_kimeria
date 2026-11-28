@@ -83,7 +83,7 @@ FOREST_0 = {
     'forest-0-lever': (('near-canopy', -128, 0), ('near-fern', 488, 0), ('clump-leaves', 440, 304), ('vine-curtain', 76, 0)),
     # the #597 sample room: more stems and clumps than the others, so the giant leaves are not the only shapes
     'forest-0-ladder': (('near-fern', -88, 0), ('near-canopy', 948, 0), ('roots-curtain', 172, 0), ('rise-reeds', -32, 128),
-                        ('rise-reeds', 208, 128), ('rise-fern', 952, 112), ('clump-grass', 96, 292), ('clump-fern', 376, 304),
+                        ('rise-reeds', 208, 128), ('rise-fern', 952, 112), ('clump-grass', 96, 294), ('clump-fern', 376, 304),
                         ('clump-mixed', 624, 304), ('tuft', 624, 296), ('tuft', 150, 296)),
     'forest-0-wall': (('near-canopy', -88, 0), ('near-fern', 772, 0), ('vine-curtain', 76, 0)),
     'forest-0-platform': (('near-fern', -88, 0), ('near-sprig', 796, 0), ('rise-reeds', -50, 128)),
@@ -105,7 +105,7 @@ FOREST_2 = {
 # camera; `edge-giant-low-*` are clumps under the floor line. A room takes a side mass only where it passes rule B, the cover time,
 # the pit rule and the hidden share.
 # Since the author asked for more of them (2026-11-25), some `edge-giant-low-*` stand with their tips on the floor line (top y 272 or
-# 280 instead of 304); a few sharp low pieces in the lists above and below are raised the same way (y 292 to 296, tufts 284).
+# 280 instead of 304); a few sharp low pieces in the lists above and below are raised the same way (y 294 to 296, tufts 284; 294 was 292 until the 2 px blast shake, #448, D156).
 # The floor raise (#648) moved every piece standing from the bottom up 16 px with the floor. By hand where the moved objects or a
 # pit came under a piece: seven hanging curtains rise 16 px too (top -16), and two of forest-entry's low leaves stay at y 320.
 NEAR = {
@@ -181,13 +181,13 @@ MORE_BOTTOM = {
     'forest-1-traps': (('rise-reeds', 168, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 296), ('tuft', 229, 296),
                        ('clump-mixed', 516, 304)),
     'forest-1-mob': (('rise-reeds', 864, 128), ('clump-fern', -96, 304), ('clump-leaves', 53, 304), ('tuft', 216, 296),
-                     ('clump-mixed', 455, 292), ('clump-fern', 631, 304), ('tuft', 780, 296)),
+                     ('clump-mixed', 455, 294), ('clump-fern', 631, 304), ('tuft', 780, 296)),
     'forest-1-lever': (('rise-reeds', 240, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 296), ('tuft', 229, 296),
                        ('tuft', 324, 296), ('clump-grass', 539, 304)),
     'forest-1-spider': (('rise-reeds', 144, 128), ('rise-fern', 1272, 112), ('clump-fern', -96, 304),
-                        ('clump-leaves', 53, 292), ('clump-grass', 216, 304), ('clump-mixed', 338, 304),
+                        ('clump-leaves', 53, 294), ('clump-grass', 216, 304), ('clump-mixed', 338, 304),
                         ('clump-fern', 1162, 304)),
-    'forest-1-bramble': (('rise-reeds', 72, 128), ('clump-fern', -48, 304), ('clump-leaves', 101, 292), ('tuft', 264, 296),
+    'forest-1-bramble': (('rise-reeds', 72, 128), ('clump-fern', -48, 304), ('clump-leaves', 101, 294), ('tuft', 264, 296),
                          ('clump-mixed', 431, 304)),
     'forest-1-climb': (('rise-reeds', 576, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 296), ('tuft', 229, 296),
                        ('clump-mixed', 540, 304)),
@@ -205,13 +205,13 @@ MORE_BOTTOM = {
     'forest-0-wall': (('rise-reeds', 168, 128), ('rise-reeds', 840, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 296),
                       ('tuft', 229, 296), ('clump-fern', 444, 304), ('clump-leaves', 593, 304), ('tuft', 756, 284)),
     'forest-0-platform': (('rise-reeds', 168, 128), ('rise-reeds', 384, 128), ('clump-fern', -96, 304),
-                          ('clump-leaves', 53, 292), ('tuft', 216, 296), ('clump-mixed', 455, 304), ('clump-fern', 631, 304)),
+                          ('clump-leaves', 53, 294), ('tuft', 216, 296), ('clump-mixed', 455, 304), ('clump-fern', 631, 304)),
     'forest-0-stone': (('rise-reeds', 360, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 296), ('tuft', 229, 296),
-                       ('clump-fern', 324, 304), ('clump-leaves', 713, 292)),
+                       ('clump-fern', 324, 304), ('clump-leaves', 713, 294)),
     'forest-0-traps': (('rise-reeds', 168, 128), ('clump-fern', -96, 304), ('tuft', 53, 284), ('clump-mixed', 412, 304),
                        ('clump-fern', 588, 304)),
     'forest-entry': (('rise-fern', 696, 112), ('clump-fern', -96, 304), ('tuft', 53, 296), ('clump-mixed', 652, 304)),
-    'forest-walls': (('rise-fern', 408, 112), ('clump-fern', -48, 304), ('clump-leaves', 101, 292), ('clump-grass', 264, 304),
+    'forest-walls': (('rise-fern', 408, 112), ('clump-fern', -48, 304), ('clump-leaves', 101, 294), ('clump-grass', 264, 304),
                      ('clump-fern', 386, 304)),
     'forest-fissure': (('rise-reeds', 120, 128), ('clump-mixed', -96, 304), ('tuft', 80, 284), ('clump-fern', 175, 304),
                        ('tuft', 324, 296)),
@@ -221,7 +221,7 @@ MORE_BOTTOM = {
     'forest-hollow': (('clump-mixed', -96, 304), ('clump-mixed', 443, 304), ('clump-fern', 764, 296)),
     'forest-canopy': (('rise-reeds', 1104, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 304), ('clump-fern', 229, 304),
                       ('clump-fern', 450, 304), ('tuft', 599, 296), ('clump-fern', 694, 296), ('clump-leaves', 843, 304),
-                      ('tuft', 1014, 296), ('clump-grass', 1101, 292), ('clump-mixed', 1223, 304)),
+                      ('tuft', 1014, 296), ('clump-grass', 1101, 294), ('clump-mixed', 1223, 304)),
     'forest-boss': (('clump-fern', -96, 304), ('clump-leaves', 53, 304), ('clump-mixed', 216, 304), ('clump-fern', 392, 296)),
 }
 # The middle of the long rooms (#664, D153, author 2026-11-27: sample A of forest-1-spider): now and then a hanging piece between

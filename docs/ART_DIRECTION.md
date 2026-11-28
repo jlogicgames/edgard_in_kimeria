@@ -351,8 +351,8 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   (D111): the camera top lies between the room top (0, with the follow focus at y 200 or higher) and 8 (at y 208 or lower, so on the floor). The focus is the top of the
   hero's box with 24 px of slack upward, and the camera eases to it ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)), so a jump from the floor leaves the top at 8. The top also moves during
   a room change, so a layer of factor f is seen at most 8 f px off its authored place (12.8 px at the foreground's 1.6), and the screen
-  shake (at most `ScreenShake.LEVER_AMPLITUDE_PX` and `STONE_AMPLITUDE_PX`, 1.5 px, clamped to the room so it never carries the view
-  past the room's top or bottom) would add up to 1.5 (1 + f) px: the margin counts it anyway, conservatively. The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
+  shake (at most `ScreenShake.BLAST_AMPLITUDE_PX`, 2 px, clamped to the room so it never carries the view
+  past the room's top or bottom) would add up to 2 (1 + f) px: the margin counts it anyway, conservatively. The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
   32 above (`offsety` -32) and 16 below (far and grove `offsety` -16, D144), `play-above` 1 row and the deep soil 1 row (the ground's bottom row on the room's last row
   becomes its buried variant, tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the
   deep soil), the sky 24 rows. Over a hanging piece its `-top` (2 tile rows, room y -24 to 7) draws what it hangs from, open; under a
@@ -477,7 +477,7 @@ These are the only limits on the layers.
   its width in view. In most long rooms that is so for the tall stems: only a few of their stretches are free of traps for the
   whole sweep of a piece at factor 1.6, so several rooms take a stem partly out of view at an end.
 - **Bleed (vertical parallax).** `python3 tools/parallax_mock.py --check` (also `--game`) runs `check_bleed`: at every camera top from
-  0 to 8, the range the camera moves in (D111), no layer shows a cut edge, with a margin of 1.5 (1 + f) px for the screen shake (conservative:
+  0 to 8, the range the camera moves in (D111), no layer shows a cut edge, with a margin of 2 (1 + f) px for the screen shake (conservative:
   the shake is clamped to the room). Every layer of the map must be present (`play-above`, and `play-below` in the game map); a tile
   layer whose art touches its first image row must start above the screen, and a strip layer (sky, far, grove, mid) must end below
   it at its last drawn row; the play layer, `play-above` and `play-below` count as one stack (first and last drawn rows). Every foreground
@@ -783,6 +783,11 @@ depends on it.
   vine sway. Measured peaks in `EnvironmentFxTest`: with the lever burst of `forest-0-wall` 39 of 48 grit, with a stone 29 grit and
   22 of 32 dust; the pools are unchanged. A branch, a stone and a lever burst at once would ask for 53 grit and drop the oldest 5:
   no shipped room has a stone beside a branch.
+- **Blast shake (#448, [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136); the author, 2026-11-28).** The exploding stump and root and the bomb shake **2 px
+  for 0.2 s** when they go off, the beetles' bursts 1.5 px for 0.15 s, through `ScreenShake` only (off with the Screen shake
+  option, D62; the blast frames, the shader blast and the sounds stay). One rule for all five (`Level.shakeAfterBlast`): felt at
+  any distance by a hero who survives, none when the blast kills him, whose feedback is the death beat (D81). Not yet looked at
+  in the running game ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
 - **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
   (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
 - **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render
@@ -1238,8 +1243,8 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   it); 26 white and pale droplets 1 to 3 px (`KIND_FLAME`); 14 embers (`KIND_FLAME`, 2 px, `ff6b57`, one in three white)
   and 8 shell chips (`KIND_GRIT`, `86101f` and `9c2050`, 2 to 3 px) flung to the floor; 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising up to
   16 px over 0.40 to 0.60 s. Every particle is born and ends inside the dome, the droplets, embers and steam cut 2 px inside its
-  rim, so its upper corners stay empty (tested). A 1.5 px, 0.15 s shake through `ScreenShake` only for a hero within 160 px who survives (off with the
-  Screen shake option). No shader, no `RingPool`; no new hue.
+  rim, so its upper corners stay empty (tested). A 1.5 px, 0.15 s shake through `ScreenShake` for a hero who survives, at any distance (off with the
+  Screen shake option; [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). No shader, no `RingPool`; no new hue.
 - **Death** (a fireball or a stone): it flips onto its back (`dead`, a 4 px hop over 0.2 s) and stays as a body (D101). 0.08 s after
   the hit, once the fireball's flash is spent, 12 puffs in a ring (two pale `d8d6e8` to one grey `9a97ad`, 5 to 8 px, 0.4 to
   0.55 s) and five shell chips (`KIND_GRIT`, `9c2050` and `86101f`) knocked out to the floor. The look check of 2026-11-18 found the old

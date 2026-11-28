@@ -768,6 +768,30 @@ class AllocationBudgetTest {
         assertWithinBudget("lever grit", LEVER_GRIT_CEILING, bytes);
     }
 
+    /**
+     * A stump going off every {@link #BURST_CYCLE_FRAMES} frames in the real stone room, the hero clear of it (#448): the
+     * detonation frame ({@code ExplosiveTrap.update} with its kill test, {@code Level.explosiveBlast} and the shake), the
+     * blast frames drawn, and the camera shake query.
+     */
+    @Test void blastShakeThroughTheRealLevel() {
+        Level level = harness.roomOf("forest-0", STONE_ROOM);
+        ExplosiveTrap stump = level.objects.stream().filter(ExplosiveTrap.class::isInstance).map(ExplosiveTrap.class::cast).findFirst().orElseThrow();
+        float warning = TrapWarnings.DEFAULT_WARNING_SECONDS;
+        ExplosiveTrap.Snapshot lastFrame = new ExplosiveTrap.Snapshot(ExplosiveTrap.Phase.WINDUP, warning, warning);
+        Rectangle view = new Rectangle(level.currentRoomBounds().x, level.currentRoomBounds().y, 320, 180);
+        int[] shaken = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            if (i % BURST_CYCLE_FRAMES == 0) stump.restore(lastFrame);
+            level.fx().update(STEP);
+            stump.update(STEP);
+            stump.render(batch);
+            if (level.cameraShakeOffset(view).len2() > 0) shaken[0]++;
+        });
+        assertFalse(level.player.isGotHit(), "the hero is clear of the blast");
+        assertTrue(shaken[0] > 0, "the blast must shake the camera in this scenario");
+        assertWithinBudget("blast shake", BLAST_SHAKE_CEILING, bytes);
+    }
+
     /** A falling stone landing every {@link #BURST_CYCLE_FRAMES} frames through the real {@code Level.fx()} (#347: dust, chips and debris, plus the shake), updated and drawn each frame. */
     @Test void stoneImpactThroughTheRealLevel() {
         Level level = harness.roomOf("forest-0", 2);
@@ -1952,6 +1976,8 @@ class AllocationBudgetTest {
     private static final float THORN_BESIDE = 12;
     /** Measured 0.0 to 0.5 B/frame in 3 runs (#362, 2026-11-17, for the plank removed 2026-11-21; the rotten log has no animation): ten falling platforms at rest, update and render; the same 8 B ceiling as the other isolated paths. */
     static final double FALLING_PLATFORM_REST_CEILING = 8;
+    /** Measured 0.0 B/frame in 3 runs (#448, 2026-11-28): a stump detonating every 60 frames, its blast frames drawn and the shake queried. */
+    static final double BLAST_SHAKE_CEILING = 8;
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, FALLING_STONE_CUE_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     /**

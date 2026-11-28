@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.world;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
+import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
 import com.jlogicsoftware.kimeria.effects.KimeriaParticleSystem;
 import com.jlogicsoftware.kimeria.entity.enemy.FlyingBeetle;
@@ -657,6 +658,24 @@ class FlyingBeetleTest {
         assertEquals(specks.count(), kinds(specks, KimeriaParticleSystem.KIND_FLAME));
     }
 
+    /** The burst's shake (#448, D156): the ground beetle's numbers, for a survivor at any distance, none when it kills. */
+    @Test void aFarSurvivorFeelsTheBurstShake() {
+        Level level = level();
+        FlyingBeetle b = beetle(level);
+        level.player.position.set(b.centreX() + FAR_FROM_BURST, FLOOR - 48);
+        b.burst();
+        assertTrue(alive(level));
+        assertEquals(ScreenShake.BURST_AMPLITUDE_PX, level.fx().shake().currentAmplitude(), 1e-4f);
+    }
+
+    @Test void aLethalBurstStartsNoShake() {
+        Level level = level();
+        FlyingBeetle b = committed(level);
+        until(level, b::isRemoved, LONG_LIMIT);
+        assertFalse(alive(level));
+        assertFalse(level.fx().shake().running(), "the death beat is the feedback");
+    }
+
     private static int kinds(KimeriaParticleSystem system, int kind) {
         int n = 0;
         for (int i = 0; i < system.count(); i++) if (system.kind(i) == kind) n++;
@@ -700,6 +719,8 @@ class FlyingBeetleTest {
         b.hitBySword(level);
         assertFalse(alive(level), "melee is punished (D145)");
     }
+
+    private static final float FAR_FROM_BURST = 360;
 
     /** flying-beetle-climb.tmx: a one-way ledge across a line 10 tiles long to the left; the line's body bottom is y 280. */
     private static final float LEDGE_LEFT = 308, LEDGE_TOP = 272, LEDGE_WIDTH = 64, LINE_BOTTOM = 280;

@@ -73,7 +73,8 @@ public class ExplosiveTrap extends Entity {
     private final Kind kind;
     private final TrapWarnings warnings;
     private final Supplier<Rectangle> heroBody;
-    private final Rectangle triggerScratch = new Rectangle();
+    private final Rectangle triggerScratch = new Rectangle(), blastScratch = new Rectangle();
+    /** {@code onBlast} runs once at detonation, after the kill test, so it can tell whether the hero survived. */
     private final Runnable kill, onBlast;
     private final TextureRegion[] frames = new TextureRegion[SHEET_FRAMES], blast = new TextureRegion[BLAST_FRAMES];
     private Phase phase = Phase.IDLE;
@@ -134,10 +135,13 @@ public class ExplosiveTrap extends Entity {
     }
 
     /** The blast square, centred on the object. */
-    public Rectangle blastBox() { return blastBoxOf(position.x, position.y, size.x, size.y); }
+    public Rectangle blastBox() { return blastBoxInto(new Rectangle()); }
 
-    static Rectangle blastBoxOf(float x, float y, float w, float h) {
-        return new Rectangle(x + w / 2f - BLAST_SIZE / 2f, y + h / 2f - BLAST_SIZE / 2f, BLAST_SIZE, BLAST_SIZE);
+    /** {@link #blastBox()} written into {@code out} (returned), for the detonation and the blast's frames. */
+    private Rectangle blastBoxInto(Rectangle out) { return blastBoxOf(position.x, position.y, size.x, size.y, out); }
+
+    private static Rectangle blastBoxOf(float x, float y, float w, float h, Rectangle out) {
+        return out.set(x + w / 2f - BLAST_SIZE / 2f, y + h / 2f - BLAST_SIZE / 2f, BLAST_SIZE, BLAST_SIZE);
     }
 
     /** True when {@code area} is inside the blast square: a place the hero must be able to stand must not be. */
@@ -170,8 +174,8 @@ public class ExplosiveTrap extends Entity {
             if (phaseTime >= warningTotal) {
                 phase = Phase.BLAST;
                 phaseTime -= warningTotal;
+                if (hero != null && hero.overlaps(blastBoxInto(blastScratch))) kill.run();
                 onBlast.run();
-                if (hero != null && hero.overlaps(blastBox())) kill.run();
             }
         } else if (phase == Phase.BLAST) {
             phaseTime += dt;
@@ -200,7 +204,7 @@ public class ExplosiveTrap extends Entity {
         batch.draw(frames[frameIndex()], position.x + (size.x - w) / 2f, spriteBottom, w, h);
         int b = blastFrameIndex();
         if (b >= 0) {
-            Rectangle box = blastBox();
+            Rectangle box = blastBoxInto(blastScratch);
             // 32x32 art drawn at twice its size (64 px). World Y grows DOWNWARD (camera.setToOrtho(true)), so a frame
             // drawn at spriteBottom hangs 64 px below the sprite's top: 48 px under a 16 px stump. Subtracting
             // BLAST_DRAW_OFFSET_Y lifts it so its bottom row sits on the stump's bottom (author-tuned, #255).
@@ -227,7 +231,7 @@ public class ExplosiveTrap extends Entity {
         if (!(o.width > 0) || !(o.height > 0)) return "needs positive bounds";
         String open = ThornTrap.openFloorProblem(o, 0f, 0f, collisions, spawn, room);
         if (open != null) return open;
-        Rectangle blast = blastBoxOf(o.x, o.y, o.width, o.height);
+        Rectangle blast = blastBoxOf(o.x, o.y, o.width, o.height, new Rectangle());
         if (blast.x < room.x || blast.y < room.y || blast.x + blast.width > room.x + room.width
             || blast.y + blast.height > room.y + room.height) return "has its blast square leaving the room";
         for (Map.Entry<String, Rectangle> place : standing.entrySet())

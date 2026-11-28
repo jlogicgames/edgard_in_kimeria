@@ -439,6 +439,11 @@ public class Level implements WorldObject {
 
     public void shakeAfterBossAttack() { if (!victory) fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
     public void shakeAfterEmpoweredHit() { fx.shake().start(ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.BOSS_SECONDS); }
+    /**
+     * The jolt of a blast the hero survived, at any distance (#448, D156). Call it after the blast's kill test: a lethal
+     * one starts none, because {@link #playerDied} has cleared the camera and the death beat is its feedback.
+     */
+    public void shakeAfterBlast(float amplitudePx, float seconds) { if (!player.isGotHit()) fx.shake().start(amplitudePx, seconds); }
     public void clearCameraEffects() { fx.clear(); stopRumble(); }
 
     private void stopRumble() {
@@ -1048,6 +1053,7 @@ public class Level implements WorldObject {
                 case "Bomb" -> {
                     Bomb bomb = new Bomb(assets, game, this::queueSpawn, blast -> {
                         if (blast.overlaps(player.hitboxBoundsInto(trapHeroScratch))) player.collidedWithActor(false);
+                        shakeAfterBlast(ScreenShake.BLAST_AMPLITUDE_PX, ScreenShake.BLAST_SECONDS);
                     }, o.x, o.y, o.width, o.height);
                     Visit saved = visits.get(currentRoom);
                     if (saved != null && saved.traps().containsKey(o.id)) bomb.restore(saved.traps().get(o.id));
@@ -1106,7 +1112,7 @@ public class Level implements WorldObject {
                 case "ExplosiveStump", "ExplosiveRoot" -> {
                     ExplosiveTrap trap = ExplosiveTrap.fromMap(assets, game.trapWarnings(), o,
                         () -> player.canLeaveRoom() ? player.hitboxBoundsInto(trapHeroScratch) : null, () -> player.collidedWithActor(false),
-                        () -> { if (game.playSounds()) game.playSound("explosion"); });
+                        this::explosiveBlast);
                     objects.add(trap);
                     registerRoomStateOwner(o.id, trap);
                 }
@@ -1199,6 +1205,12 @@ public class Level implements WorldObject {
         if (game.playSounds()) game.playSound(THORN_SPRING_SOUND);
         if (thorn.kind() == ThornTrap.Kind.ROOT)
             fx.thornSpecks(thorn.position.x + thorn.size.x / 2f, thorn.position.y + thorn.size.y);
+    }
+
+    /** A stump or a root goes off (D47): its sound, then the jolt for a hero it did not kill (#448). */
+    private void explosiveBlast() {
+        if (game.playSounds()) game.playSound("explosion");
+        shakeAfterBlast(ScreenShake.BLAST_AMPLITUDE_PX, ScreenShake.BLAST_SECONDS);
     }
 
     /** A bramble cue is heard only while the bramble is inside the camera view: a clocked trap off screen must not tick every period. */

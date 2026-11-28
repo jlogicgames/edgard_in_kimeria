@@ -634,8 +634,10 @@ class BeetleTest {
         assertEquals(0, b.warningRemaining(), 0);
     }
 
-    /** The burst's shake (#559, D136): only a near hero who survives, only with the option on. */
+    /** The burst's shake (#559, D136; #448, D156): a hero who survives it, at any distance, only with the option on. */
     private static final Rectangle ROOM = new Rectangle(0, 0, 4000, 4000), VIEW = new Rectangle(100, 100, 640, 360);
+    /** Well beyond the 160 px the shake used to be limited to (D136). */
+    private static final float FAR_FROM_BURST = 360;
 
     @Test void aNearMissShakesTheCameraByTheBurstNumbers() {
         Level level = level();
@@ -644,7 +646,7 @@ class BeetleTest {
         until(level, b::isRemoved, 120);
         harness.held.clear();
         assertTrue(alive(level));
-        assertTrue(level.fx().shake().running(), "a survivor within range feels the burst");
+        assertTrue(level.fx().shake().running(), "a survivor feels the burst");
         assertEquals(ScreenShake.BURST_AMPLITUDE_PX, level.fx().shake().currentAmplitude(), .1f, "the burst's amplitude, at most a frame decayed");
         boolean moved = false;
         for (int f = 0; f < 4; f++) { frame(level); moved |= level.fx().shake().offset(ROOM, VIEW).len() > 0; }
@@ -659,14 +661,13 @@ class BeetleTest {
         assertFalse(level.fx().shake().running(), "the death beat is the feedback");
     }
 
-    @Test void aFarHeroFeelsNoShake() {
+    @Test void aFarHeroFeelsTheShakeToo() {
         Level level = level();
         Beetle b = beetle(level);
-        level.player.position.set(b.centreX() + Beetle.SHAKE_RANGE + 200, FLOOR - 48);
-        Rectangle hero = level.player.hitboxBounds();
-        assertTrue(Math.abs(hero.x + hero.width / 2f - b.centreX()) > Beetle.SHAKE_RANGE, "the hero is out of range");
+        level.player.position.set(b.centreX() + FAR_FROM_BURST, FLOOR - 48);
         b.burst();
-        assertFalse(level.fx().shake().running());
+        assertTrue(alive(level));
+        assertEquals(ScreenShake.BURST_AMPLITUDE_PX, level.fx().shake().currentAmplitude(), 1e-4f, "no range: any survivor feels it (D156)");
     }
 
     @Test void theShakeIsZeroWithTheAssistOptionOff() {
