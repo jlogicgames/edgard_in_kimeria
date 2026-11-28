@@ -385,7 +385,7 @@ Flame project's Flutter `FragmentProgram` shaders (already GLSL, just wrapped in
 
 ### Original synthesized sound effects
 
-Every sound effect is project-original (`jump`, `hit`, `bounce`, `collect`, `disappear`, `boss_hit`, `boss_restore`, `button_click`, `dust_puff`, `wall_rumble`, `grit_fall`, `explosion`, `stone_impact`, `branch_impact`, and the non-effect `keepalive`): synthesized by
+Every sound effect is project-original (`jump`, `hit`, `bounce`, `collect`, `disappear`, `boss_hit`, `boss_restore`, `button_click`, `dust_puff`, `wall_rumble`, `grit_fall`, `explosion`, `stone_impact`, `branch_impact`, `platform_crack`, and the non-effect `keepalive`): synthesized by
 `tools/audio/generate_sounds.py` (stdlib only, fixed random seeds, byte-identical on every run; 44.1 kHz,
 16-bit mono PCM). Licence: project-original, the same as `intro.wav`. Regenerate with
 `python3 tools/audio/generate_sounds.py`; every parameter is a named constant at the top of the script.

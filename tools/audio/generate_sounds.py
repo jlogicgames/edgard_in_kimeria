@@ -2059,6 +2059,67 @@ def branch_impact() -> list[float]:
     return finish_rms(mix, BRANCH_IMPACT_RMS_DB, BRANCH_IMPACT_PEAK_DB)
 
 
+# ---------------------------------------------------------------- falling platform, rotten log and rotten branch (#444, D93)
+# platform_crack: the wood gives way, the frame the platform starts to drop. No voice: nobody is there to make one (the
+# first version's /o/ was rejected by the author, #682). A fibre snaps, the break follows 35 ms later, then the wood grinds
+# apart (noise whose loudness jumps from grain to grain, its band sliding down) under a spray of crackles.
+# One sound for the log and the branch: both are wood.
+CRACK_SEED = 7701
+CRACK_DURATION = 0.38
+CRACK_SNAPS = ((0.006, 0.55), (0.041, 1.0))   # (start s, level): the fibre, then the break
+CRACK_SNAP_BAND = (1900.0, 2200.0)     # Hz centre, bandwidth
+CRACK_SNAP_ATTACK = 0.002              # s
+CRACK_SNAP_TAU = 0.012                 # s
+CRACK_SCRAPE_START = 0.045             # s
+CRACK_SCRAPE_SWEEP_HZ = (1500.0, 650.0)
+CRACK_SCRAPE_BW = 1300.0               # wide: a narrow band of noise would start to sound like a vowel
+CRACK_SCRAPE_ATTACK = 0.006            # s
+CRACK_SCRAPE_TAU = 0.170               # s
+CRACK_GRAIN_SECONDS = (0.006, 0.019)   # the stick and slip of the grinding: irregular, so it has no pitch
+CRACK_GRAIN_FLOOR = 0.15               # the quietest grain, against the loudest (1.0)
+CRACK_GRAIN_END = 0.2                  # a grain dies to this share of its own level
+CRACK_SCRAPE_GAIN = 1.0                # against the main snap (peak 1.0)
+CRACK_TICKS = 13                       # crackles over the grinding
+CRACK_TICK_START = 0.060               # s, earliest tick
+CRACK_TICK_SPAN = 0.290                # s, the window the ticks start in, one per equal share of it
+CRACK_TICK_LEN = (0.003, 0.008)        # s
+CRACK_TICK_BAND = (2400.0, 1600.0)
+CRACK_TICK_GAIN = (0.3, 0.6)           # against the main snap, drawn per tick, thinning to half by the last one
+CRACK_DRIVE = 4.0                      # tanh grit, and a lower crest factor
+CRACK_RMS_DB = -21.0
+CRACK_PEAK_DB = -9.0                   # the environment cap
+
+
+def platform_crack() -> list[float]:
+    rng = random.Random(CRACK_SEED)
+    n = n_samples(CRACK_DURATION)
+    out = [0.0] * n
+    for start, level in CRACK_SNAPS:
+        s = n_samples(start)
+        snap = bandpass(noise(rng, n - s), *CRACK_SNAP_BAND)
+        env = envelope(n - s, CRACK_SNAP_ATTACK, CRACK_SNAP_TAU)
+        shaped = [v * e for v, e in zip(snap, env)]
+        _add_at(out, s, shaped, level / (max(abs(v) for v in shaped) or 1.0))
+    s = n_samples(CRACK_SCRAPE_START)
+    m = n - s
+    scrape = bandpass(noise(rng, m), lambda t: lerp(*CRACK_SCRAPE_SWEEP_HZ, t), CRACK_SCRAPE_BW)
+    grains = []
+    while len(grains) < m:
+        length = n_samples(rng.uniform(*CRACK_GRAIN_SECONDS))
+        level = rng.uniform(CRACK_GRAIN_FLOOR, 1.0)
+        grains += [level * lerp(1.0, CRACK_GRAIN_END, j / length) * min(j / n_samples(0.001), 1.0) for j in range(length)]
+    env = envelope(m, CRACK_SCRAPE_ATTACK, CRACK_SCRAPE_TAU)
+    shaped = [v * g * e for v, g, e in zip(scrape, grains, env)]
+    _add_at(out, s, shaped, CRACK_SCRAPE_GAIN / (max(abs(v) for v in shaped) or 1.0))
+    share = CRACK_TICK_SPAN / CRACK_TICKS
+    for i in range(CRACK_TICKS):
+        start = n_samples(CRACK_TICK_START + (i + rng.random()) * share)
+        level = rng.uniform(*CRACK_TICK_GAIN) * lerp(1.0, 0.5, i / (CRACK_TICKS - 1))
+        _add_tick(rng, out, start, n_samples(rng.uniform(*CRACK_TICK_LEN)), CRACK_TICK_BAND, level)
+    peak = max(abs(v) for v in out) or 1.0
+    return finish_rms([math.tanh(CRACK_DRIVE * v / peak) for v in out], CRACK_RMS_DB, CRACK_PEAK_DB)
+
+
 GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.wav": collect,
                "disappear.wav": disappear, "boss_hit.wav": boss_hit, "boss_restore.wav": boss_restore,
                "button_click.wav": button_click, "dust_puff.wav": dust_puff, "wall_rumble.wav": wall_rumble,
@@ -2088,7 +2149,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "handover.wav": handover, "elixir.wav": elixir,
                "flying_beetle_notice.wav": flying_beetle_notice, "flying_beetle_windup.wav": flying_beetle_windup,
                "flying_beetle_windup_long.wav": flying_beetle_windup_long, "flying_beetle_dive.wav": flying_beetle_dive,
-               "mosquito_scatter.wav": mosquito_scatter, "mosquito_die.wav": mosquito_die}
+               "mosquito_scatter.wav": mosquito_scatter, "mosquito_die.wav": mosquito_die,
+               "platform_crack.wav": platform_crack}
 
 
 def generate(out_dir: Path) -> list[Path]:

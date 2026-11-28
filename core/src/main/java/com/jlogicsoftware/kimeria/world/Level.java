@@ -354,6 +354,10 @@ public class Level implements WorldObject {
     static final String PUFFBALL_BURST_SOUND = "puffball_burst";
     /** The thorn root's and tuft's spring (#446): one sound for the family. */
     private static final String THORN_SPRING_SOUND = "thorn_spring";
+    /** The falling platform, rotten log and rotten branch give way (#444): one crack, all are wood. */
+    private static final String PLATFORM_CRACK_SOUND = "platform_crack";
+    /** Where the break shows in the platform's frame: this share of its height under its top edge. */
+    private static final float PLATFORM_CRACK_DEPTH = .4f;
     /** The hanging hive's sounds (#365): the warning buzz, the stinger patter of a release, the knock-down. */
     private static final String HIVE_BUZZ_SOUND = "hive_buzz", STINGER_RAIN_SOUND = "stinger_rain", HIVE_FALL_SOUND = "hive_fall";
     /** The ember fissure's sounds (#366): the warning rumble and the jet's roar. */
@@ -1124,6 +1128,7 @@ public class Level implements WorldObject {
                 case "FallingPlatform" -> {
                     FallingPlatform platform = new FallingPlatform(assets, o.x, o.y, o.width, o.height, this::queueSpawn, game.trapWarnings(),
                         FallingPlatform.Skin.fromMap(o.prop("skin", "")), o.propBool("mirror", false));
+                    platform.onGiveWay(() -> platformGaveWay(platform));
                     fallingPlatforms.add(platform);
                     registerRoomStateOwner(o.id, platform);
                 }
@@ -1236,6 +1241,13 @@ public class Level implements WorldObject {
     private void explosiveBlast() {
         if (game.playSounds()) game.playSound("explosion");
         shakeAfterBlast(ScreenShake.BLAST_AMPLITUDE_PX, ScreenShake.BLAST_SECONDS);
+    }
+
+    /** A falling platform starts to drop (#444, D93): the crack, hit or miss, and splinters from the break. */
+    public void platformGaveWay(FallingPlatform platform) {
+        if (game.playSounds()) game.playSound(PLATFORM_CRACK_SOUND);
+        fx.splinters(platform.getX() + platform.getWidth() / 2f, platform.getY() + platform.getHeight() * PLATFORM_CRACK_DEPTH,
+            platform.getY() + platform.getHeight(), platform.skin() == FallingPlatform.Skin.BRANCH);
     }
 
     /** A bramble cue is heard only while the bramble is inside the camera view: a clocked trap off screen must not tick every period. */

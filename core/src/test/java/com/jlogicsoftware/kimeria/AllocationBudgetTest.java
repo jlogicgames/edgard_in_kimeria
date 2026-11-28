@@ -1784,6 +1784,52 @@ class AllocationBudgetTest {
         assertWithinBudget("thorn spring", THORN_SPRING_CEILING, bytes);
     }
 
+    /**
+     * Rotten logs giving way in turn (#444), one every {@value #BURST_CYCLE_FRAMES} frames: each platform's {@code update} and
+     * {@code render}, the drop listener to {@code Level.platformGaveWay} (the cue, its {@code playSounds()} test; the harness
+     * plays no sound) and {@code EnvironmentFx.splinters}, with the fx's {@code update} and {@code render}. {@code Level.update}
+     * itself is not on the path. Fresh platforms for every window: one unmeasured, so the JIT settles, then the median of
+     * {@value #PLATFORM_WINDOWS} measured ones (see the ceiling).
+     */
+    @Test void fallingPlatformsGiveWayThroughTheRealLevel() {
+        Level level = harness.roomOf("thorn-test", 0);
+        int[] peak = new int[1];
+        AllocationProbe.bytesPerFrame(breakingFrame(level, platformsAboutToBreak(level), peak));
+        double[] bytes = new double[PLATFORM_WINDOWS];
+        for (int w = 0; w < bytes.length; w++) {
+            level.fx().clear();
+            peak[0] = 0;
+            FallingPlatform[] platforms = platformsAboutToBreak(level);
+            bytes[w] = AllocationProbe.bytesPerFrame(breakingFrame(level, platforms, peak));
+            assertTrue(peak[0] > 0, "the splinters must actually fly in this scenario");
+            assertTrue(platforms[platforms.length - 1].getY() > FUNGUS_FLOOR, "the last platform must give way in the window");
+        }
+        java.util.Arrays.sort(bytes);
+        assertWithinBudget("falling platforms give way", PLATFORM_BREAK_CEILING, bytes[bytes.length / 2]);
+    }
+
+    /** {@value #PLATFORM_BREAKS} logs mid-warning, built before the probe, the k-th to give way in the probe's frame k seconds. */
+    private FallingPlatform[] platformsAboutToBreak(Level level) {
+        FallingPlatform[] platforms = new FallingPlatform[PLATFORM_BREAKS];
+        for (int k = 0; k < platforms.length; k++) {
+            FallingPlatform platform = new FallingPlatform(harness.assets(), k * FUNGUS_SPACING, FUNGUS_FLOOR, 2 * TRAP_TILE, TRAP_TILE, o -> { },
+                harness.game().trapWarnings());
+            platform.onGiveWay(() -> level.platformGaveWay(platform));
+            platform.restore(new FallingPlatform.Snapshot(k * FUNGUS_SPACING, FUNGUS_FLOOR, true, (k * BURST_CYCLE_FRAMES + 1) * STEP, 0f, true, 0f, false));
+            platforms[k] = platform;
+        }
+        return platforms;
+    }
+
+    private AllocationProbe.Frame breakingFrame(Level level, FallingPlatform[] platforms, int[] peak) {
+        return i -> {
+            level.fx().update(STEP);
+            for (int k = 0; k < platforms.length; k++) { platforms[k].update(STEP); platforms[k].render(batch); }
+            level.fx().render(batch);
+            peak[0] = Math.max(peak[0], level.fx().grit().count());
+        };
+    }
+
     /** The falling branch (#361): one at rest with its cracked-joint cue (the hero far), and a row of branches that the hero
      * walks under in turn, one every {@value #BRANCH_CYCLE_FRAMES} frames: rustle, sag, fall and land, {@code update} and
      * {@code render} each frame. The branches are built before the probe; the hero box is moved, never rebuilt. */
@@ -2040,6 +2086,16 @@ class AllocationBudgetTest {
     static final double FALLING_PLATFORM_REST_CEILING = 8;
     /** Measured 0.0 B/frame in 3 runs (#448, 2026-11-28): a stump detonating every 60 frames, its blast frames drawn and the shake queried. */
     static final double BLAST_SHAKE_CEILING = 8;
+    /** One break every second over the probe's 1,500 frames, the last 2 s before its end. */
+    private static final int PLATFORM_BREAKS = 24, PLATFORM_WINDOWS = 3;
+    /**
+     * #444, 2026-11-28: logs giving way. A single window run alone (GraalVM 25, its compiler and C2) measured 18.6 to 19.1
+     * B/frame, and one in nine still did after an unmeasured first window; with other tests before it, 0.0 to 0.5. A JFR recording
+     * put those {@code String} and {@code byte[]} objects on the back-edge of the compiled frame loop, in no game method, and
+     * {@code -Xint} measured 0.0. Hence the median of three windows, which an allocation in the game code cannot pass: it shows
+     * in all three. Measured 0.0 B/frame in 10 isolated runs. The same 8 B ceiling as the other isolated paths.
+     */
+    static final double PLATFORM_BREAK_CEILING = 8;
     static final double EXPLOSIVE_IDLE_TELL_CEILING = 8, FALLING_STONE_CUE_CEILING = 8, STONE_FIREBALL_CEILING = 8, FAIRY_GUIDE_CEILING = 8, HUD_CEILING = 8, HUD_HINT_CEILING = 8,
         CHECKLIST_CEILING = 8, FPS_LABEL_CEILING = 8, GAMEPAD_CEILING = 8, MENU_BACKDROP_CEILING = 8;
     /**
